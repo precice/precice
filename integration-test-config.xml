@@ -9,8 +9,6 @@
     <log-filter target="info"  component="tarch" switch="on"/>
             
     <!--<log-filter target="debug" component="precice::tests::" switch="on"/>-->
-
-    <!--<log-filter target="debug" component="precice::impl::SolverInterfaceImpl" switch="on"/>-->
         
     <log-output column-separator=" | " log-time-stamp="no" 
                 log-time-stamp-human-readable="no" log-machine-name="no" 
