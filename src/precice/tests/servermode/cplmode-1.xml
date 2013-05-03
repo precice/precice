@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <solver-interface dimensions="2">
+      <data:scalar name="ScalarData" />
+      <data:vector name="VectorData" />
+      
+      <mesh name="Mesh">
+         <use-data name="ScalarData"/>
+         <use-data name="VectorData"/>
+      </mesh>
+      <geometry:builtin-sphere of-mesh="Mesh">
+         <radius value="1.0"/>
+         <discretization-width value="1.0"/>
+      </geometry:builtin-sphere>
+      
+      
+      <participant name="ParticipantA">
+         <use-mesh name="Mesh"/>
+         <write-data name="ScalarData" mesh="Mesh"/>
+         <read-data  name="VectorData" mesh="Mesh"/>
+         <export:vtk/>
+      </participant>
+      
+      <participant name="ParticipantB">
+         <server:mpi-single/>
+         <use-mesh name="Mesh"/>
+         <write-data name="VectorData" mesh="Mesh"/>
+         <read-data  name="ScalarData" mesh="Mesh"/>
+         <export:vtk/>
+      </participant>
+      
+      <communication:mpi-single from="ParticipantA" to="ParticipantB"/>
+      
+      <coupling-scheme:explicit>
+         <participants first="ParticipantA" second="ParticipantB"/>
+         <max-timesteps value="5"/>
+         <timestep-length value="1.0"/>
+         <exchange data="ScalarData" mesh="Mesh" from="ParticipantA"/>
+         <exchange data="VectorData"  mesh="Mesh" from="ParticipantB"/>
+      </coupling-scheme:explicit>
+   </solver-interface>
+</precice-configuration>

@@ -1,0 +1,78 @@
+<?xml version="1.0"?>
+
+
+<precice-configuration>
+   <log-filter target="debug" component="precice" switch="on" />
+   
+   <solver-interface geometry-mode="yes" dimensions="2">   
+      <data:scalar name="ConsistentTPS"   />
+      <data:scalar name="ConservativeTPS" />
+      <data:vector name="ConsistentVS"    />
+      <data:vector name="ConservativeVS"  />
+      
+      <mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS">
+         <use-data name="ConsistentTPS"/>
+      </mesh>
+      <geometry:builtin-cuboid 
+            of-mesh="SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS">
+         <discretization-width value="0.1"/>                  
+         <length value="1.2; 1.2" />
+         <offset value="-0.1; 0.1"/>
+      </geometry:builtin-cuboid>
+      
+      <mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS">
+         <use-data name="ConservativeTPS"/>
+      </mesh>
+      <geometry:builtin-cuboid
+            of-mesh="SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS">
+         <discretization-width value="0.1"/>                  
+         <length value="1.2; 1.2"/>
+         <offset value="-0.1; -0.1"/>
+      </geometry:builtin-cuboid>
+      
+      <mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS">
+         <use-data name="ConsistentVS"/>
+      </mesh>
+      <geometry:builtin-cuboid 
+            of-mesh="SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS">
+         <discretization-width value="0.1"/>                  
+         <length value="1.2; 1.2"/>
+         <offset value="-0.1; -0.1"/>
+      </geometry:builtin-cuboid>
+      
+      <mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS">
+         <use-data name="ConservativeVS"/>
+      </mesh>
+      <geometry:builtin-cuboid 
+            of-mesh="SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS">
+         <discretization-width value="0.1" />                  
+         <length value="1.2; 1.2"/>
+         <offset value="-0.1; -0.1"/>
+      </geometry:builtin-cuboid>
+      
+      <participant name="TestAccessor">
+         <use-mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS"/>
+         <use-mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS"/>
+         <use-mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS"/>
+         <use-mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS"/>
+         <export:vtk timestep-interval="1" normals="yes"/>
+         <mapping:rbf-thin-plate-splines direction="write" constraint="consistent"     
+                  mesh="SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS"/>
+         <mapping:rbf-thin-plate-splines direction="write" constraint="conservative"    
+                  mesh="SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS"/>
+         <mapping:rbf-volume-splines direction="write" constraint="consistent"       
+                  mesh="SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS"/>
+         <mapping:rbf-volume-splines direction="write" constraint="conservative"  
+                  mesh="SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS"/>
+         <write-data name="ConsistentTPS" 
+                     mesh="SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS"/>
+         <write-data name="ConservativeTPS" 
+                     mesh="SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS"/>           
+         <write-data name="ConsistentVS" 
+                     mesh="SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS"/>
+         <write-data name="ConservativeVS" 
+                     mesh="SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS"/>
+      </participant>
+      
+   </solver-interface>
+</precice-configuration>

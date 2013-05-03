@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <log-filter target="debug" component="precice" switch="off" />
+   <solver-interface geometry-mode="yes" dimensions="3">       
+      <mesh name="custom-geometry">
+      </mesh>
+      <participant name="TestAccessor">
+         <use-mesh name="custom-geometry" />
+      </participant>
+   </solver-interface>
+</precice-configuration>

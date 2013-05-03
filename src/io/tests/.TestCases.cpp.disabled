@@ -1,0 +1,26 @@
+#include "TestCases.hpp"
+
+namespace precice {
+namespace io {
+namespace tests {
+
+
+TestCases:: TestCases ( const std::string & pathToSrc )
+:
+    TestCaseCollection ("io"),
+    _exportVTKTest (),
+    _exportConfigurationTest ( pathToSrc ),
+    _vrml10ParserTest ( pathToSrc ),
+    _importVRMLTest ( pathToSrc ),
+    _exportVRMLTest ( pathToSrc ),
+    _exportAndReimportVRMLTest ( pathToSrc )
+{
+    addTestCase (& _exportVTKTest);
+    addTestCase (& _exportConfigurationTest);
+    addTestCase (& _vrml10ParserTest);
+    addTestCase (& _importVRMLTest);
+    addTestCase (& _exportVRMLTest);
+    addTestCase (& _exportAndReimportVRMLTest);
+}
+
+}}} // namespace precice, io, tests

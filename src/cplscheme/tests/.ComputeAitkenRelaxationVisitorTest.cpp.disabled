@@ -1,0 +1,71 @@
+#include "ComputeAitkenRelaxationVisitorTest.hpp"
+#include "../impl/ComputeAitkenRelaxationVisitor.hpp"
+#include "mesh/Vertex.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/PropertyContainer.hpp"
+#include "utils/Parallel.hpp"
+#include "utils/Dimensions.hpp"
+#include "boost/any.hpp"
+#include <vector>
+
+namespace precice {
+namespace cplscheme {
+namespace tests {
+
+ComputeAitkenRelaxationVisitorTest:: ComputeAitkenRelaxationVisitorTest ()
+:
+   tarch::tests::TestCase ( "cplscheme::tests::ComputeAitkenRelaxationVisitorTest" )
+{}
+
+void ComputeAitkenRelaxationVisitorTest:: run ()
+{
+   using mesh::Mesh;
+   using mesh::Data;
+   using mesh::Vertex;
+   using mesh::PropertyContainer;
+   using utils::Vector;
+   using boost::any_cast;
+   using tarch::la::equals;
+
+   PRECICE_MASTER_ONLY {
+      preciceDebug ( "run()", "Entering" );
+
+      Mesh mesh ( "test-mesh", false );
+      int id = 0;
+      mesh.setVertexData ( Data("test-data", id, Data::TYPE_VECTOR) );
+      Vertex & v0 = mesh.createVertex ( Vector(0.0) );
+      Vertex & v1 = mesh.createVertex ( Vector(1.0) );
+      Vertex & v2 = mesh.createVertex ( Vector(2.0) );
+      Vertex & v3 = mesh.createVertex ( Vector(3.0) );
+      v0.setProperty ( id, Vector(0.0) );
+      v1.setProperty ( id, Vector(1.0) );
+      v2.setProperty ( id, Vector(2.0) );
+      v3.setProperty ( id, Vector(3.0) );
+
+      std::vector<PropertyContainer::PropertyType> oldData ( 4, Vector(0.0) );
+      std::vector<PropertyContainer::PropertyType> oldDataDelta ( 4, Vector(0.0) );
+
+      validateEquals ( oldData.size(), 4, "run()" );
+      validate ( dEquals(any_cast<Vector>(oldData[0]), Vector(0.0)), "run()");
+      validate ( dEquals(any_cast<Vector>(oldData[1]), Vector(0.0)), "run()");
+      validate ( dEquals(any_cast<Vector>(oldData[2]), Vector(0.0)), "run()");
+      validate ( dEquals(any_cast<Vector>(oldData[3]), Vector(0.0)), "run()");
+
+      validateEquals ( oldDataDelta.size(), 4, "run()" );
+      validate ( dEquals(any_cast<Vector>(oldDataDelta[0]), Vector(0.0)), "run()");
+      validate ( dEquals(any_cast<Vector>(oldDataDelta[1]), Vector(0.0)), "run()");
+      validate ( dEquals(any_cast<Vector>(oldDataDelta[2]), Vector(0.0)), "run()");
+      validate ( dEquals(any_cast<Vector>(oldDataDelta[3]), Vector(0.0)), "run()");
+
+      double omg = 1.0;
+      impl::ComputeAitkenRelaxationVisitor<Vector> aitken ( id, oldData, oldDataDelta, omg );
+      mesh.accept ( aitken );
+
+      omg = aitken.computeRelaxationFactor ();
+
+      preciceDebug ( "run()", "Leaving" );
+   }
+}
+
+}}} // namespace precice, cplscheme, tests

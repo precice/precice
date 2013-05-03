@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+<configuration>
+   <data:scalar name="Dummy"/>
+   <mesh name="Mesh">
+   </mesh>
+   <action:balance-vertex-positions timing="regular-prior" mesh="Mesh">
+      <convergence-tolerance value="1.0"/>
+      <max-iterations value="100"/>
+   </action:balance-vertex-positions>  
+</configuration>
+

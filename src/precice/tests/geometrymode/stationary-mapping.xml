@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <solver-interface geometry-mode="yes" dimensions="2">   
+      <data:vector name="Forces"/>
+      
+      <mesh name="Mesh">
+         <use-data name="Forces"/>
+      </mesh>
+      
+      <geometry:builtin-cuboid of-mesh="Mesh">
+         <discretization-width value="1.0"/>                  
+         <length value="1.0; 1.0"/>
+      </geometry:builtin-cuboid>
+     
+      <participant name="Accessor">
+         <use-mesh name="Mesh"/>
+         <export:vtk/>
+         <mapping:nearest-projection direction="write" mesh="Mesh" 
+                  constraint="conservative" timing="initial"/>
+         <write-data name="Forces" mesh="Mesh"/>
+      </participant>
+      
+   </solver-interface>
+</precice-configuration>

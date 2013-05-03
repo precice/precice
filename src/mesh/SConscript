@@ -1,0 +1,10 @@
+# This is file src/mesh/SConscript
+
+sources = [
+   Glob('*.cpp'),
+   Glob('tests/*.cpp'),
+   Glob('impl/*.cpp'),
+   Glob('config/*.cpp')   
+   ]
+   
+Return ('sources')

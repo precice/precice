@@ -1,0 +1,6 @@
+How to build the Fluent-preCICE adapter:
+
+1. create a directory lnamd64/2ddp/
+2. put the libraries of preCICE into that folder
+3. type: make "FLUENT_ARCH=lnamd64"
+4. go into lnamd64/2ddp and repeat the linking command used by make but with using mpicxx as linker

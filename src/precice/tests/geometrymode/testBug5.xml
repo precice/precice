@@ -1,0 +1,58 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <solver-interface geometry-mode="on" dimensions="3">
+      <data:vector name="Forces" />
+      <data:vector name="Velocities" />
+      <data:vector name="VelocityDeltas" />
+      <data:vector name="Displacements" />
+      <data:vector name="DisplacementDeltas" />
+
+      <spacetree:static-octree name="Tree0" 
+                 max-meshwidth="9.6/10.0"
+                 offset="4.6; 4.6; 4.6"
+                 halflength="5.0; 5.0; 5.0"
+                 />
+
+		<mesh name="WetSurface" flip-normals="no">
+			<use-spacetree name="Tree0"/>
+		</mesh>
+		<geometry:import of-mesh="WetSurface">
+			<filetype value="vrml"/>
+			<filename value="../src/precice/tests/geometrymode/testBug5-geometry.wrl"/>
+			<offset value="0.5;4.5;4.00"/>
+		</geometry:import>
+		
+		<mesh name="BigOutletCube" flip-normals="no">
+      </mesh>
+      <geometry:builtin-cuboid of-mesh="BigOutletCube">
+         <discretization-width value="2.5" />
+         <length value="3.85;5.0;2.0" />
+         <offset value="0.4;1.5;3.0"/>
+      </geometry:builtin-cuboid>
+
+      <mesh name="InletCube" flip-normals="no">
+      </mesh>
+      <geometry:builtin-cuboid of-mesh="InletCube">
+         <discretization-width value="2.5" />
+         <length value="2.0;2.0;2.0" />
+         <offset value="6.0;3.5;3.0"/>
+      </geometry:builtin-cuboid>
+
+       <mesh name="LowerCutCube" flip-normals="no">
+       </mesh>
+       <geometry:builtin-cuboid of-mesh="LowerCutCube">
+          <discretization-width value="2.5" />
+          <length value="3.5;3.0;2.0" />
+          <offset value="5.0;0.25;3.0"/>
+       </geometry:builtin-cuboid>
+		
+		<participant name="Peano">
+			<use-mesh name="WetSurface"/>
+			<use-mesh name="BigOutletCube"/>
+			<use-mesh name="InletCube"/>
+			<use-mesh name="LowerCutCube"/>
+         <export:vtk directory="" normals="on"/>
+		</participant>
+	</solver-interface>  
+</precice-configuration>

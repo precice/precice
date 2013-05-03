@@ -1,0 +1,155 @@
+\documentclass[11pt, oneside]{scrartcl}
+\usepackage{hyperref}
+\usepackage{mdwlist}  % for reduced space enumerations, itemizations (use {enumerate*} and {itemize*})
+\usepackage{listings}        % Code listings
+
+% Configure Hyperlinks appeareance
+\hypersetup
+{
+  %draft = true,          % Shut off all hyperlinks
+  colorlinks=true,        % Set off boxes around links (color text)
+  linkcolor=blue,
+  citecolor=blue,
+  urlcolor=blue
+}
+\urlstyle{rm}             % Set www links text to default text
+
+% Configure listing environment (for code listings):
+\lstdefinelanguage{PseudoCode}   % Define language style for code listings
+{
+   morekeywords={do, while, end, if},     % Keywords highlighted
+   sensitive=false                        % ??  
+}
+\lstset                          % general command to set parameter(s)
+{  
+   language=PseudoCode, % Use code style PseudoCode, others are C, C++, ...
+   basicstyle=\small,            % print whole listing small
+   keywordstyle=\color{black}\bfseries,
+                                       % underlined bold black keywords
+   identifierstyle=,             % nothing happens
+   commentstyle=\color{black}, % black comments
+   stringstyle=\ttfamily,      % typewriter type for strings
+   showstringspaces=false, % no special string spaces
+   tabsize=4,                 % number of spaces for one tabulator
+   captionpos=b,              % position of caption b= bottom, t = top
+   frame=lines,               % lines on top and bottom
+   gobble=0,                 % ``eat'' the first 12 letters -> indentation in latex
+   xleftmargin=5mm,        % margin to left page border
+   xrightmargin=5mm,    % margin to rigth page border
+   numbers=left,              % enumerate code lines on left side
+   numbersep=10mm,       % distance from numbers to code
+   numberstyle=\small%,     % number format and size
+   %backgroundcolor=\color{Gray}  
+}     
+
+\newcommand{\backtocontents}{\hyperref[contents]{Back to Contents.\ref*{contents}}}
+
+\title{\Large{preCICE} \\[5mm] \Huge{User's Guide}}
+
+%\author{by Bernhard Gatzhammer}
+
+\begin{document}
+
+\maketitle
+\tableofcontents \label{contents}
+
+\section{Introduction}
+
+preCICE stands for \textbf{pre}cise \textbf{c}ode \textbf{i}nteraction \textbf{c}oupling \textbf{e}nvironment. It has been written to facilitate partitioned coupled simulations, where partitioned is understood as a subdivisioning into separate systems of equations, surface coupled spatial discretization grids, and simulation softwares according to physical subproblems. preCICE has been written to deal with surface coupled problems, however, it is possible to perform volume coupling, too.
+
+Another main task of preCICE is to support simulation programs using hexahedral grids. Surface representations of geometries read into preCICE can be queried to obtain positional (inside, outside, on geometry) and related information for points and hexahedrons (or rectangles in 2D). This functionality can be combined with the coupling functionality such that the surface representation is identical to the coupling surface.
+
+This user's guide describes how to use preCICE to perform partitioned simulations, or as geometry interface.
+
+\backtocontents
+
+\section{Preparations}
+
+In order to use preCICE, first, a library has to be created from its source code. The solvers need to use the application programming interface (API) of preCICE in order to access coupling functionality, and the solver executables (or their interfaces for user programming) need to be linked to the preCICE library. This section describes how to accomplish this.
+
+\backtocontents
+
+\subsection{Build Prerequesits under Linux}
+
+\begin{itemize*} 
+\item Obtain a current version of preCICE (\url{http://www5.in.tum.de/wiki/index.php/PreCICE_Download}).
+
+\item The Boost C++ libraries (\url{http://www.boost.org/}) need to be available (no build or installation is necessary). To choose a suitable version of Boost, please check out the preCICE release notes. To make the location of Boost available to preCICE, set the environment variable \texttt{BOOST\_ROOT} to name the path to the Boost libraries root directory.
+
+\item In order to build preCICE, Python (version smaller than 3.0, \url{http://www.python.org/}) and SCons (\url{http://www.scons.org/}) need to be installed. If the Python extensions are intended to be used, NumPy (\url{http://numpy.scipy.org/}) needs to be installed in addition.
+
+\item If communication via MPI is required, a suitable  implementation of the MPI2.0 standard is required to be installed
+(\url{http://www.mcs.anl.gov/research/projects/mpich2/}, e.g.).
+
+\item The GNU g++/gcc compiler (\url{http://www.mingw.org/}) needs to be available.
+\end{itemize*}
+
+\backtocontents
+
+\subsection{Build Prerequesits under Windows}
+
+\begin{itemize*} 
+\item Obtain a current version of preCICE (\url{http://www5.in.tum.de/wiki/index.php/PreCICE_Download}).
+
+\item The Boost C++ libraries (\url{http://www.boost.org/}) need to be available, and the system and thread libraries need to be built when using socket communication. To choose a suitable version of Boost, please check out the preCICE release notes. To make the location of Boost available to preCICE, set the environment variable \texttt{BOOST\_ROOT} to name the path to the Boost libraries root directory.
+
+\item In order to build preCICE, Python (version smaller than 3.0, \url{http://www.python.org/}) and SCons (\url{http://www.scons.org/}) need to be installed. If the Python extensions are intended to be used, NumPy (\url{http://numpy.scipy.org/}) needs to be installed in addition.
+
+\item If communication via MPI is required, a suitable  implementation of the MPI2.0 standard is required to be installed
+(\url{http://www.mcs.anl.gov/research/projects/mpich2/}, e.g.).
+
+\item The MinGW g++/gcc compiler (\url{http://www.mingw.org/}) needs to be available. 
+\end{itemize*}
+
+\backtocontents
+
+\subsection{Building preCICE}
+
+Switch to the root directory of preCICE, containing the \texttt{SConstruct} files. On a Linux system type
+\begin{verbatim}
+scons
+\end{verbatim}
+On a Windows system type
+\begin{verbatim}
+scons -f SConstruct-windows
+\end{verbatim}
+This will start building a debug version of preCICE, and may take several minutes. To speed up the build, add the option \texttt{-jn}, where \texttt{n} is the number of cores
+involved in the build and has to be larger than 1 in order to see speedup.
+
+The following options can be enabled additionally, the first value is selected as default, when the option is not mentioned.
+\begin{itemize*}
+\item \texttt{build=debug/release} For a production scenario, release mode should be used.
+\item \texttt{mpi=on/off} MPI is used as communication between solvers.
+\item \texttt{python=on/off} Python is used to enable configurable Python actions scripts.
+\item \texttt{sockets=on/off} Sockets are used as communication between solvers and recommended between solver and server.
+\item \texttt{spirit2=on/off} Boost.Spirit is used for writing checkpoints and reading geometries from VRML 1.0 files.
+\end{itemize*}
+
+\backtocontents
+
+\section{Running a Simulation with preCICE}
+
+When running a solver in parallel, currently a preCICE server executable has to be run in addition. The server has all coupling data and communicates with the coupled solver (or its server, when also running in parallel). The parallel solver processes have to communicate with the server in order to read/write data from/to the coupling interface. To configure this use-case, the XML-tag \texttt{<server/>} has to be used in the configuration of the parallel participant (see XML reference). There, a communication method between solver processes and server has to be specified. The server executable is created in the build directory of preCICE (also containing the library), and is named \texttt{binprecice}. The possible console options for \texttt{binprecice} are obtained by running it without parameters. To run it as server type
+\begin{verbatim}
+./binprecice server SolverName ConfigName
+\end{verbatim}
+The  \texttt{SolverName} is the name of the configured participant, which is used to identify the solver in preCICE. The \texttt{ConfigName} is the preCICE XML configuration file used for the simulation. Server and solver processes can be started in any order. The server executable can currently only be run by one process.
+
+%\subsection{Using preCICE with your own program}
+
+%\subsection{Using preCICE with Peano}
+
+%\subsection{Using preCICE with Fluent}
+
+
+
+%\subsection{Using preCICE with Comsol}
+
+
+
+
+%\chapter{Simulations with preCICE}
+
+%\section{Configuring preCICE}
+      
+\end{document}

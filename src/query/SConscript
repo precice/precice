@@ -1,0 +1,8 @@
+# This is file src/query/SConscript
+
+sources = [
+   Glob('*.cpp'),
+   Glob('tests/*.cpp')
+   ]
+   
+Return ('sources')

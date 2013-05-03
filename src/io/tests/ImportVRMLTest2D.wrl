@@ -1,0 +1,52 @@
+#VRML V1.0 ascii
+
+# (C) Copyright MATRA DATAVISION 1997
+
+#  This file contents only Shaded representation of selected Shape 
+
+Separator {
+   Group {
+      DEF Shaded_representation_of_shape
+      Separator {
+         Coordinate3 {
+         	point	[
+         		 0 0 0,
+         		 1 0 0,
+         		 1 1 0,
+         		 0 1 0		 		 
+         	]
+         }
+         ShapeHints {
+         }
+         IndexedLineSet {
+         	coordIndex	[0, 1, 2, 3, 0, -1]
+         }
+         Info {
+            string "preCICE data"
+            fields [ SFString dataname SFString datatype MFFloat datavalues ]
+            dataname "Forces"
+            datadimensions 2
+            datavalues [ 1.0 1.0,
+                         2.0 2.0,
+                         3.0 3.0,
+                         4.0 4.0 ]
+         }
+         Info {
+            string "preCICE data"
+            fields [ SFString dataname SFString datatype MFFloat datavalues ]
+            dataname "Velocities"
+            datadimensions 2
+            datavalues [ 4.0 4.0,
+                         3.0 3.0,
+                         2.0 2.0,
+                         1.0 1.0 ]
+         }
+         Info {
+            string "preCICE property container"
+            fields [ SFString idname MFInt32 faces ]
+            idname "MyMesh-test-subid"
+            faces [ 0, 1, 2, 3 ]
+         }
+      }  
+   }
+}

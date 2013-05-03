@@ -1,0 +1,53 @@
+/**
+
+@dir mesh
+
+This directory provides the data structure for building meshes holding data. A
+mesh is either a polygon in 2D, consisting of vertices and edges, or triangulated
+in 3D, consisting of vertices, edges, and triangles. All those classes are derived
+from PropertyContainer, which allows to dynamically assign data values. Hence, the
+class Data does not hold the data values, but only give information about them. The
+actual values are stored in the vertex objects via the PropertyContainer
+implementation.
+    
+An example on how to create a triangulated mesh data structure is given here:
+    
+@code        
+#include "mesh/Vertex.hpp"
+#include "mesh/Edge.hpp"
+#include "mesh/Triangle.hpp"
+#include "mesh/Mesh.hpp"
+#include "utils/Dimensions.hpp" // defines utils::Vector
+ 
+// A mesh is the simplest way to create all needed objects
+bool invertNormals = false;
+Mesh mesh ( "MyMesh", invertNormals );
+
+// A mesh can assign properties to created vertices automatically
+std::string dataName ( "Forces" );
+Data::DataTypeConstants dataType = Data::TYPE_VECTOR;
+Data forceData ( dataName, dataID, dataType );
+mesh.setVertexData ( forceData );
+
+// Vertices form the base of a mesh, they hold the coordinates of a mesh.
+utils::Vector coordsVertex1 ( 0.0, 0.0, 0.0 );
+utils::Vector coordsVertex2 ( 1.0, 0.0, 0.0 );
+utils::Vector coordsVertex3 ( 0.0, 1.0, 0.0 );
+Vertex & v1 = mesh.createVertex ( coordsVertex1 );
+Vertex & v2 = mesh.createVertex ( coordsVertex2 );
+Vertex & v3 = mesh.createVertex ( coordsVertex3 );
+
+// Edges connect two vertices
+Edge & e1 = mesh.createEdge ( v1, v2 );
+Edge & e2 = mesh.createEdge ( v2, v3 );
+Edge & e3 = mesh.createEdge ( v3, v1 );
+
+// Triangles are setup from three edges
+Triangle & t = mesh.createTriangle ( e1, e2, e3 );
+
+// In order to operate on a mesh, it has to have a valid state
+mesh.computeState ();
+
+@endcode
+
+*/

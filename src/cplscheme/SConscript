@@ -1,0 +1,10 @@
+# This is file src/cplscheme/SConscript
+
+sources = [
+   Glob('*.cpp'),
+   Glob('impl/*.cpp'),
+   Glob('config/*.cpp'),
+   Glob('tests/*.cpp')
+   ]
+   
+Return ('sources')

@@ -1,0 +1,106 @@
+//
+//#include "Server.hpp"
+//
+//namespace precice {
+//namespace impl {
+//
+//
+//tarch::logging::Log Server:: _log ("precice::Server");
+//
+//
+//Server::Server() {
+//   // TODO Auto-generated constructor stub
+//
+//}
+//
+//Server::~Server() {
+//   // TODO Auto-generated destructor stub
+//}
+//
+//com::PtrICommunication Server::getCommunication()
+//{
+//    preciceAssertion ( _communication.get() != NULL );
+//    return _communication;
+//}
+//
+//int Server::getRank()
+//{
+//   return _rank;
+//}
+//
+//bool Server::getAdvance()
+//{
+//   return _advance;
+//}
+//
+//
+//void Server::submitRequestHeader_disabled(int requestID, int dataID)
+//{
+//   // 1. send request ID to server
+//   _communication->send(requestID, _rank);
+//
+//   // 2. send dataID to server
+//   _communication->send(dataID, _rank);
+//}
+//
+//void Server::submitRequestAdvance_disabled()
+//{
+//   // 1. submit request header
+//   int requestID = 1; // ID for advance request
+//   int dataID = 0;    // not required but must be sent since server is
+//                      // waiting for it
+//   submitRequestHeader_disabled(requestID, dataID);
+//
+//   // 2. wait for advance signal of server
+//   _communication->receive(_advance, _rank);
+//}
+//
+//
+//
+//
+//void Server::submitRequestMapDoubleToCouplingMesh_disabled(int dataID,
+//Vector coordinates, Vector data)
+//{
+//   // 1. submit request header
+//   submitRequestHeader_disabled(ClientServerHelper::_mapDoubleToCouplingMeshID,
+//                        dataID );
+//
+//   // 2. send no Elements (client will be blocked by this
+//   //    message until the requesteddata is available on sever)
+//   int noElement = 1;
+//   _communication->send(noElement, _rank);
+//
+//   // 3. send list of coordinates
+//   _communication->send(coordinates, _rank);
+//
+//   // 4. send list of data
+//   _communication->send(data, _rank);
+//
+//}
+//
+//Vector  Server::submitRequestMapDoubleFromCouplingMesh_disabled(int dataID,
+//         Vector coordinates)
+//{
+//   // 1. submit request header
+//   submitRequestHeader_disabled(ClientServerHelper::_mapDoubleFromCouplingMeshID,
+//                       dataID );
+//
+//   // 2. send no Elements (client will be blocked by this
+//   //    message until the requested data is available on sever)
+//   int noElement = 1;
+//   _communication->send(noElement, _rank);
+//
+//   // 3. send list of coordinates (blocks!)
+//   _communication->send(coordinates, _rank);
+//
+//   // 4. receive the mapped data
+//   Vector dataBuffer;
+//   _communication->receive(dataBuffer, _rank);
+//
+//   // 5. return the received data
+//   return dataBuffer;
+//}
+//
+//
+//}// impl
+//}// precice

@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <log-filter target="debug" component="precice" switch="off" />   
+   <solver-interface geometry-mode="yes" dimensions="3">    
+      <data:vector name="Displacements" />
+      <spacetree:dynamic-octree name="Tree" max-meshwidth="0.1" 
+                 halflength="0.9; 0.9; 0.9" offset="0.5; 0.5; 0.5"/>
+      <mesh name="Mesh">
+         <use-data name="Displacements"/>
+         <use-spacetree name="Tree"/>
+      </mesh> 
+      <geometry:builtin-cuboid of-mesh="Mesh">
+         <discretization-width value="0.1"/>                  
+         <length value="1.0; 1.0; 1.0"/>
+      </geometry:builtin-cuboid>
+      <participant name="Accessor">
+         <use-mesh name="Mesh"/>
+         <write-data name="Displacements" mesh="Mesh"/>
+         <action:add-to-coordinates timing="regular-prior" mesh="Mesh">
+            <source-data name="Displacements">
+         </action:add-to-coordinates>
+         <export:vtk/>
+      </participant>        
+   </solver-interface>
+   
+</precice-configuration>

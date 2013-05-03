@@ -1,0 +1,68 @@
+<?xml version="1.0"?>
+
+<precice-configuration>                                       
+   
+   <solver-interface dimensions="2">            
+      <data:vector name="Forces"/>
+      <data:vector name="Displacements"/>                 
+
+      <communication:sockets from="Fluent" to="Comsol"/>
+
+      <mesh name="WetSurfaceComsol">
+         <use-data name="Forces"/>
+         <use-data name="Displacements"/>
+      </mesh>
+      <mesh name="WetSurfaceFluent">
+         <use-data name="Displacements"/>
+      </mesh>
+      <mesh name="WetSurfaceCentroidsFluent">
+         <use-data name="Forces"/>
+      </mesh>
+  
+      <participant name="Fluent">
+         <use-mesh name="WetSurfaceComsol" offset="0.2; 0.2"/>
+         <own-mesh name="WetSurfaceFluent"/>
+         <own-mesh name="WetSurfaceCentroidsFluent"/>         
+         <mapping:nearest-projection from-mesh="WetSurfaceCentroidsFluent" to-mesh="WetSurfaceComsol" constraint="conservative" timing="initial"/>
+         <mapping:nearest-projection from-mesh="WetSurfaceComsol"          to-mesh="WetSurfaceFluent" constraint="consistent"   timing="initial"/>
+         <!--<write-data name="Forces"        mesh="WetSurfaceCentroidsFluent"/>
+         <read-data  name="Displacements" mesh="WetSurfaceFluent"/>-->
+         <export:vtk timestep-interval="10" normals="off" directory="fluent-output/"/>
+         <watch-point name="pointa-fluent" mesh="WetSurface" coordinate="0.6; 0.2"/>
+      </participant>
+      
+      <participant name="Comsol">
+         <use-mesh name="WetSurfaceComsol"/>
+	       <write-data name="Displacements"      mesh="WetSurface"/>
+         <write-data name="DisplacementDeltas" mesh="WetSurface"/>
+         <read-data  name="Forces"             mesh="WetSurface"/>
+         <export:vtk timestep-interval="10" normals="off" directory="comsol-output/"/>
+         <action:python timing="on-exchange-post" mesh="WetSurface">
+           <path name="./"/>
+           <module name="InitialKick"/>
+           <target-data name="Forces"/>
+         </action:python>
+         <action:divide-by-area timing="on-exchange-post" mesh="WetSurface">
+            <target-data name="Forces"/> 
+         </action:divide-by-area>
+      </participant>
+      
+      <coupling-scheme:implicit>
+         <participants first="Fluent" second="Comsol"/>
+         <max-time value="40.0"/>
+         <timestep-length value="1e-3" valid-digits="8"/>
+         <max-iterations value="40"/>
+	       <exchange data="Forces"             mesh="WetSurface" from="Fluent"/>
+	       <exchange data="Displacements"      mesh="WetSurface" from="Comsol"/>
+         <exchange data="DisplacementDeltas" mesh="WetSurface" from="Comsol"/>
+         <relative-convergence-measure data="DisplacementDeltas" mesh="WetSurface" limit="1e-4"/>
+         <post-processing:IQN-ILS data="DisplacementDeltas" mesh="WetSurface">
+            <initial-relaxation value="0.001"/>
+            <max-used-iterations value="50"/>
+            <timesteps-reused value="4"/>
+            <singularity-limit value="1e-10"/>
+         </post-processing:IQN-ILS>
+         <extrapolation-order value="2"/>
+      </coupling-scheme:implicit>      
+   </solver-interface>   
+</precice-configuration>  

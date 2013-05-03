@@ -1,0 +1,43 @@
+#ifndef PRECICE_UTILS_TESTS_NUMERICALCOMPARETEST_HPP_
+#define PRECICE_UTILS_TESTS_NUMERICALCOMPARETEST_HPP_
+
+#include "tarch/tests/TestCase.h"
+#include "tarch/logging/Log.h"
+
+namespace precice {
+namespace utils {
+namespace tests {
+
+
+class NumericalCompareTest
+:
+   public tarch::tests::TestCase
+{
+public:
+
+   NumericalCompareTest ();
+
+   virtual ~NumericalCompareTest() {};
+
+   virtual void run ();
+
+private:
+
+   static tarch::logging::Log _log;
+
+   void testNumericalGreaterThanEquals ();
+
+   void testNumericalGreaterThan ();
+
+   void testDNumericalEquals ();
+
+   void testDNumericalOneGreaterThan ();
+
+   void testDNumericalOneGreaterThanEquals ();
+
+   void testDNumericalAllGreaterThan ();
+};
+
+}}} // namespace precice, utils, tests
+
+#endif /* PRECICE_UTILS_TESTS_NUMERICALCOMPARETEST_HPP_ */

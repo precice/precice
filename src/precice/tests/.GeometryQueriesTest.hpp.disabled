@@ -1,0 +1,50 @@
+#ifndef PRECICE_TESTS_GEOMETRYQUERIESTEST_HPP_
+#define PRECICE_TESTS_GEOMETRYQUERIESTEST_HPP_
+
+#include "tarch/tests/TestCase.h"
+#include "tarch/logging/Log.h"
+
+namespace precice {
+namespace tests {
+
+/**
+ * @brief Provides tests for classes from namespace queries with geometries.
+ */
+class GeometryQueriesTest : public tarch::tests::TestCase
+{
+public:
+
+  /**
+   * @brief Constructor.
+   */
+  GeometryQueriesTest();
+
+  /**
+   * @brief Destructor, empty.
+   */
+  virtual ~GeometryQueriesTest() {}
+
+  /**
+   * @brief empty.
+   */
+  virtual void setUp() {}
+
+  /**
+   * @brief Runs all tests.
+   */
+  virtual void run();
+
+private:
+
+  static tarch::logging::Log _log;
+
+  void testSphereQueries();
+
+  void testDriftRatchetQueries();
+
+  void testNumericalAccuracy();
+};
+
+}} // namespace precice, tests
+
+#endif /* PRECICE_TESTS_GEOMETRYQUERIESTEST_HPP_ */

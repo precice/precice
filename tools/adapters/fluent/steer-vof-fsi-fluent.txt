@@ -1,0 +1,10 @@
+# Invoke fluent by: fluent 2ddp -g < steer-vof-fsi-fluent.txt
+rc fluent2.cas
+file/read-journal init-waves.scm
+file/read-journal init-fsi.scm
+solve/initialize/open-channel-auto-init 14 yes
+(init-flow)
+define/boundary-conditions/zone-type 14 wall
+#solve/patch/phase-2-air (air) mp 1 # Comment in, when patching is required for multiphase simulation
+file/read-journal solve-fsi.scm
+exit

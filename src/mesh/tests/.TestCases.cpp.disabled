@@ -1,0 +1,31 @@
+#include "TestCases.hpp"
+
+namespace precice {
+namespace mesh {
+namespace tests {
+
+TestCases:: TestCases ( const std::string & pathToSrc )
+:
+    TestCaseCollection ("mesh"),
+    _propertyContainerTest (),
+    _vertexTest (),
+    _edgeTest (),
+    _triangleTest (),
+    _meshTest (),
+    _groupTest (),
+    _mergeTest (),
+    _computeMeshStateTest (),
+    _dataConfigurationTest ( pathToSrc )
+{
+    addTestCase (& _propertyContainerTest);
+    addTestCase (& _vertexTest);
+    addTestCase (& _edgeTest);
+    addTestCase (& _triangleTest);
+    addTestCase (& _meshTest);
+    addTestCase (& _groupTest);
+    addTestCase (& _mergeTest);
+    addTestCase (& _computeMeshStateTest);
+    addTestCase (& _dataConfigurationTest);
+}
+
+}}} // namespace precice, mesh, tests

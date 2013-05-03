@@ -1,0 +1,33 @@
+#ifndef PRECICE_CONTAINER_TEST_COMPUTEMESHSTATETEST_HPP_
+#define PRECICE_CONTAINER_TEST_COMPUTEMESHSTATETEST_HPP_
+
+#include "tarch/tests/TestCase.h"
+#include "tarch/logging/Log.h"
+
+namespace precice {
+namespace mesh {
+namespace tests {
+
+/**
+ * @brief Provides tests for
+ */
+class ComputeMeshStateTest : public tarch::tests::TestCase
+{
+public:
+
+   ComputeMeshStateTest();
+
+   virtual ~ComputeMeshStateTest() {}
+
+   virtual void setUp () {}
+
+   virtual void run ();
+
+private:
+
+   static tarch::logging::Log _log;
+};
+
+}}} // namespace precice, mesh, test
+
+#endif /* PRECICE_CONTAINER_TEST_COMPUTEMESHSTATETEST_HPP_ */

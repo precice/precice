@@ -1,0 +1,75 @@
+
+#ifndef PRECICE_IMPL_CLIENTSERVERHELPER_HPP_
+#define PRECICE_IMPL_CLIENTSERVERHELPER_HPP_
+
+#include <vector>
+#include "utils/Dimensions.hpp"
+#include "utils/Helpers.hpp"
+#include "utils/LogFilter.h"
+#include "utils/PointerVector.hpp"
+#include "com/SharedPointer.hpp"
+#include "com/ICommunication.hpp"
+
+
+namespace precice {
+namespace impl {
+
+using utils::Vector;
+using utils::ptr_vector;
+
+class ClientServerHelper {
+public:
+
+   //@brief advance ID
+   enum RequestID{
+      ADVANCE,
+      WRITE_DOUBLE,
+      READ_DOUBLE
+   };
+
+
+
+   /*
+    * @brief constructor
+   */
+   ClientServerHelper();
+
+   /*
+    * @brief destructor
+   */
+   virtual ~ClientServerHelper();
+
+
+   /*
+    * @brief sends vector list to communication partner
+    */
+   void sendVectorList_disabled(std::vector<Vector> vectorList,
+         com::PtrICommunication communication, int rank);
+
+   /*
+    * @brief receives vector list from communication partner
+    */
+   ptr_vector<Vector> receiveVectorList_disabled(com::PtrICommunication communication,
+                                        int rank, int noElements);
+
+private:
+
+   /*
+    * @brief transform list of vectors into a list of doubles (MPI purpose)
+   */
+   double* covertVectorToDouble_disabled(std::vector<Vector> vectorList);
+
+   /*
+    * @brief transform list of doubles into a list of vectors (MPI purpose)
+    * (return by reference for speedup)
+   */
+   ptr_vector<Vector> covertDoubleToVector_disabled(const double* doubleList, int size);
+
+
+};
+
+}
+
+}
+
+#endif /* CLIENTSERVERHELPER_HPP_ */

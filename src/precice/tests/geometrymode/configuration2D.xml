@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+    
+   <log-filter target="" component="" switch="off" />
+    
+   <solver-interface geometry-mode="yes" dimensions="2">
+   
+      <data:vector name="Forces"  />
+      <data:vector name="Velocities"  />
+   
+      <spacetree:dynamic-octree name="spacetree"  max-meshwidth="0.5" 
+                                offset="20.0; 20.0" halflength="20.0; 20.0"/>
+                       
+      <mesh name="channel" flip-normals="yes"> 
+         <sub-id side="0"/>
+         <sub-id side="1"/>
+      </mesh>
+   
+      <mesh name="cylinder">
+         <use-data name="Forces"/>
+         <use-data name="Velocities"/>
+      </mesh>
+     
+      <mesh name="box-obstacle">
+         <use-spacetree name="spacetree"/>
+      </mesh>
+      
+      <geometry:builtin-cuboid of-mesh="channel"> 
+         <offset value="0.0; 0.0"/>
+         <discretization-width value="1.0"/>                   
+         <length value="20; 20"/>
+      </geometry:builtin-cuboid>
+   
+      <geometry:builtin-sphere of-mesh="cylinder">
+         <discretization-width value="1.0"/> 
+         <radius value="5.0"/>
+      </geometry:builtin-sphere>
+     
+      <geometry:builtin-cuboid of-mesh="box-obstacle">
+         <discretization-width value="1.0"/>
+         <length value="2.0; 2.0"/>
+      </geometry:builtin-cuboid>
+      
+      <participant name="TestAccessor">
+         <use-mesh name="channel"/>
+         <use-mesh name="cylinder"/>
+         <use-mesh name="box-obstacle"/>
+         <mapping:nearest-projection 
+            direction="write" mesh="cylinder" 
+            constraint="conservative" timing="incremental"/>
+         <mapping:nearest-projection 
+            direction="read" mesh="cylinder"
+            constraint="consistent" timing="incremental"/>
+         <write-data name="Forces"     mesh="cylinder"/>
+         <read-data  name="Velocities" mesh="cylinder"/>
+         <export:vtk/>
+      </participant>
+      
+   </solver-interface>
+</precice-configuration>

@@ -1,0 +1,54 @@
+#ifndef PRECICE_UTILS_TESTS_TESTCASES_HPP_
+#define PRECICE_UTILS_TESTS_TESTCASES_HPP_
+
+#include "utils/TestCaseCollection.hpp"
+#include "HelpersTest.hpp"
+#include "ParallelTest.hpp"
+#include "DimensionsTest.hpp"
+#include "NumericalCompareTest.hpp"
+#include "LinearAlgebraTest.hpp"
+#include "GeometryComputationsTest.hpp"
+#include "XMLTest.hpp"
+#include "ManageUniqueIDsTest.hpp"
+#include "StringTest.hpp"
+#include "PointerVectorTest.hpp"
+
+namespace precice {
+namespace utils {
+namespace tests {
+
+
+class TestCases
+:
+   public tarch::tests::TestCaseCollection
+{
+public:
+
+   TestCases ( const std::string & pathToSrcDirectory );
+
+private:
+
+   HelpersTest _helpersTest;
+
+   ParallelTest _parallelTest;
+
+   DimensionsTest _dimensionsTest;
+
+   NumericalCompareTest _numericalCompareTest;
+
+   LinearAlgebraTest _linearAlgebraTest;
+
+   GeometryComputationsTest _geometryComputationsTest;
+
+   XMLTest _xmlTest;
+
+   ManageUniqueIDsTest _uniqueIDsTest;
+
+   StringTest _stringTest;
+
+   PointerVectorTest _pointerVectorTest;
+};
+
+}}} // namespace precice, utils, tests
+
+#endif /* PRECICE_UTILS_TESTS_TESTCASES_HPP_ */

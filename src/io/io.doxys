@@ -1,0 +1,21 @@
+/**
+
+@dir io
+
+This directory defines classes to import and export the data structures of 
+component container into and from files. The main interfaces of the component are
+given by Export and Import. The following functionalities are
+currently implemented:
+
+Export:
+
+- Geometry VTK (geometry and data)
+- Geometry VRML 1.0 (full geometry state: geometry, data, and geometry IDs)
+- Simulation state TXT
+
+Import:
+
+- Geometry VRML 1.0 (full geometry state)
+- Simulation state TXT
+
+*/

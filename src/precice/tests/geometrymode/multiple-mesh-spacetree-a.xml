@@ -1,0 +1,43 @@
+<?xml version="1.0"?>
+
+<precice-configuration>    
+   <log-filter target="" component="" switch="off"/>
+    
+   <solver-interface geometry-mode="yes" dimensions="2">   
+      <spacetree:dynamic-octree name="Spacetree" max-meshwidth="0.5" 
+                                halflength="2.0; 2.0"/>
+                       
+      <mesh name="FirstMesh"> 
+      </mesh>
+   
+      <mesh name="SecondMesh">
+         <use-spacetree name="Spacetree"/>
+      </mesh>
+     
+      <mesh name="ThirdMesh">
+         <use-spacetree name="Spacetree"/>
+      </mesh>
+      
+      <geometry:builtin-cuboid of-mesh="FirstMesh"> 
+         <discretization-width value="1.0"/>                   
+         <length value="1; 1"/>
+      </geometry:builtin-cuboid>
+   
+      <geometry:builtin-cuboid of-mesh="SecondMesh">
+         <discretization-width value="1.0"/>                   
+         <length value="1; 1"/>
+      </geometry:builtin-cuboid>
+     
+      <geometry:builtin-cuboid of-mesh="ThirdMesh">
+         <discretization-width value="1.0"/>                   
+         <length value="1; 1"/>
+      </geometry:builtin-cuboid>
+      
+      <participant name="Accessor">
+         <use-mesh name="FirstMesh"/>
+         <use-mesh name="SecondMesh"/>
+         <use-mesh name="ThirdMesh"/>
+         <export:vtk/>
+      </participant>      
+   </solver-interface>
+</precice-configuration>

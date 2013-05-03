@@ -1,0 +1,203 @@
+#include "ExportVTK.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/Vertex.hpp"
+#include "mesh/Edge.hpp"
+#include "mesh/Triangle.hpp"
+#include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
+#include "utils/Globals.hpp"
+#include "tarch/la/WrappedVector.h"
+
+namespace precice {
+namespace io {
+
+tarch::logging::Log ExportVTK:: _log ( "precice::io::ExportVTK" );
+
+ExportVTK:: ExportVTK
+(
+   const std::string & path,
+   bool                plotNormals )
+:
+   AbstractExport ( path ),
+   _plotNormals ( plotNormals )
+{}
+
+int ExportVTK:: getType () const
+{
+  return constants::exportVTK();
+}
+
+void ExportVTK:: doExport
+(
+  const std::string & name,
+  mesh::Mesh &        mesh )
+{
+//  preciceTrace2 ( "doExport()", name, mesh.getName() );
+//  using tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter;
+//  using tarch::plotter::griddata::Writer;
+//  using tarch::plotter::griddata::unstructured::UnstructuredGridWriter;
+//  typedef boost::shared_ptr<UnstructuredGridWriter::VertexWriter> PtrVertexWriter;
+//  typedef boost::shared_ptr<Writer::VertexDataWriter> PtrVertexDataWriter;
+//  typedef boost::shared_ptr<UnstructuredGridWriter::CellWriter> PtrCellWriter;
+//  preciceAssertion ( name != std::string("") );
+//  std::string fileName ( getExportLocation() + name );
+//  VTKTextFileWriter vtkWriter; // ( fileName + ".vtk" );
+//
+//  // Setup vertex data writer
+//  std::map<int,PtrVertexDataWriter> vectorDataWriters;
+//  std::map<int,PtrVertexDataWriter> scalarDataWriters;
+//  foreach ( mesh::PtrData data, mesh.data() ) {
+//    if ( data->getType() == mesh::Data::TYPE_VECTOR ) {
+//      vectorDataWriters[data->getID()] = PtrVertexDataWriter(
+//          vtkWriter.createVertexDataWriter(data->getName(), utils::Def::DIM));
+//    }
+//    else if ( data->getType() == mesh::Data::TYPE_DOUBLE ) {
+//      scalarDataWriters[data->getID()] = PtrVertexDataWriter(
+//          vtkWriter.createVertexDataWriter(data->getName(), 1));
+//    }
+//    else {
+//      preciceError ( "doExport()", "Unknown data type to export!" );
+//    }
+//  }
+//  // Plot vertices
+//  PtrVertexWriter vertexWriter ( vtkWriter.createVertexWriter() );
+//  std::map<int,int> indexMap;
+//  foreach ( mesh::Vertex & vertex, mesh.vertices() ) {
+//    int index = vertexWriter->plotVertex ( vertex.getCoords() );
+//    preciceAssertion ( indexMap.count(vertex.getID()) == 0 );
+//    indexMap[vertex.getID()] = index;
+//  }
+//  preciceAssertion ( ! indexMap.empty() );
+////  vtkWriter.plotVertices ( vertexWriter );
+//
+//  // Plot vertex normals
+//  if ( _plotNormals ) {
+//    PtrVertexDataWriter normalsWriter (
+//        vtkWriter.createVertexDataWriter("VertexNormals", utils::Def::DIM) );
+//    foreach ( mesh::Vertex & vertex, mesh.vertices() ) {
+//      normalsWriter->plotVertex (indexMap[vertex.getID()], vertex.getNormal());
+//    }
+////    vtkWriter.plotPointData ( normalsWriter );
+//  }
+//
+//  // Plot vertex data
+//  if ( vectorDataWriters.size() + scalarDataWriters.size() > 0 ) {
+//    foreach ( mesh::PtrData data, mesh.data() ) {
+//      mesh::Data::Values & values = data->values();
+//      if ( data->getType() == mesh::Data::TYPE_VECTOR ) {
+//        utils::Vector viewTemp;
+//        foreach ( mesh::Vertex & vertex, mesh.vertices() ) {
+//          preciceAssertion ( utils::contained(data->getID(), vectorDataWriters) );
+//          assign(viewTemp) = tarch::la::slice<utils::Def::DIM> (
+//                             values, vertex.getID() * utils::Def::DIM );
+////          viewTemp = tarch::la::dview ( values, vertex.getID() );
+//          vectorDataWriters[data->getID()]->plotVertex (
+//              indexMap[vertex.getID()], viewTemp );
+//        }
+//      }
+//      else if ( data->getType() == mesh::Data::TYPE_DOUBLE ) {
+//        foreach ( mesh::Vertex & vertex, mesh.vertices() ) {
+//          preciceAssertion ( utils::contained(data->getID(), scalarDataWriters) );
+//          scalarDataWriters[data->getID()]->plotVertex (
+//            indexMap[vertex.getID()], values[vertex.getID()] );
+//        }
+//      }
+//    }
+////    typedef std::map<int,PtrVertexDataWriter>::value_type VectorPair;
+////    foreach ( VectorPair & pair, vectorDataWriters ) {
+////      vtkWriter.plotPointData ( *pair.second );
+////    }
+////    typedef std::map<int,VTKWriter::ScalarVertexDataWriter*>::value_type ScalarPair;
+////    foreach ( ScalarPair & pair, scalarDataWriters ) {
+////      vtkWriter.plotPointData ( *pair.second );
+////    }
+//  }
+//
+//
+//  // Plot edges
+//  if ( utils::Def::DIM == 2 ) {
+//    PtrCellWriter edgeWriter ( vtkWriter.createCellWriter() );
+//    foreach ( mesh::Edge & edge, mesh.edges() ) {
+//      int vertexIndices[2];
+//      int internalIndices[2];
+//      internalIndices[0] = edge.vertex(0).getID();
+//      internalIndices[1] = edge.vertex(1).getID();
+//
+//      for (int i=0; i < 2; i++) {
+//        std::map<int, int>::const_iterator iter;
+//        iter = indexMap.find ( internalIndices[i] );
+//        preciceAssertion (iter != indexMap.end());
+//        vertexIndices[i] = iter->second;
+//      }
+//
+////      int edgeNumber = edgeWriter.getNextFreeElementNumber ();
+//      edgeWriter->plotLine ( vertexIndices );
+//    }
+////    vtkWriter.plotElements ( edgeWriter );
+//  }
+//  // Plot edge normals
+//  if ( _plotNormals ) {
+//    VTKTextFileWriter vtkWriterEdgeNormals; // ( fileName + "-edgenormals.vtk" );
+//    PtrVertexWriter normalsOriginWriter (vtkWriterEdgeNormals.createVertexWriter());
+//    PtrVertexDataWriter normalsWriter (
+//        vtkWriterEdgeNormals.createVertexDataWriter("EdgeNormals", utils::Def::DIM) );
+//    foreach ( mesh::Edge & edge, mesh.edges() ) {
+////      int vertexID = normalsOriginWriter.getNextFreeVertexNumber ();
+//      int vertexID = normalsOriginWriter->plotVertex ( edge.getCenter() );
+//      normalsWriter->plotVertex ( vertexID, edge.getNormal() );
+//    }
+//    vtkWriterEdgeNormals.writeToFile ( fileName + "-edgenormals.vtk" );
+////    vtkWriterEdgeNormals.plotVertices ( normalsOriginWriter );
+////    vtkWriterEdgeNormals.plotPointData ( normalsWriter );
+//  }
+//
+//  // Plot triangles
+//  if ( utils::Def::DIM == 3 ) {
+//    PtrCellWriter triangleWriter ( vtkWriter.createCellWriter() );
+//    foreach ( mesh::Triangle & triangle, mesh.triangles() ) {
+//      int vertexIndices[3];
+//      int internalIndices[3];
+//      internalIndices[0] = triangle.edge(0).vertex(0).getID();
+//      internalIndices[1] = triangle.edge(0).vertex(1).getID();
+//      if ( (triangle.edge(1).vertex(0).getID() != internalIndices[0])
+//           && (triangle.edge(1).vertex(0).getID() != internalIndices[1]) )
+//      {
+//        internalIndices[2] = triangle.edge(1).vertex(0).getID();
+//      }
+//      else {
+//        internalIndices[2] = triangle.edge(1).vertex(1).getID();
+//      }
+//
+//      for (int i=0; i < 3; i++) {
+//        std::map<int, int>::const_iterator iter;
+//        iter = indexMap.find(internalIndices[i]);
+//        preciceAssertion (iter != indexMap.end());
+//        vertexIndices[i] = iter->second;
+//      }
+//
+////      int triangleNumber = triangleWriter.getNextFreeElementNumber ();
+//      triangleWriter->plotTriangle ( vertexIndices );
+//    }
+////    vtkWriter.plotElements ( triangleWriter );
+//
+//    // Plot triangle normals
+//    if ( _plotNormals ) {
+//      VTKTextFileWriter vtkWriterTriangleNormals; // ( fileName + "-trianglenormals.vtk" );
+//      PtrVertexWriter normalsOriginWriter (
+//          vtkWriterTriangleNormals.createVertexWriter() );
+//      PtrVertexDataWriter normalsWriter (
+//          vtkWriterTriangleNormals.createVertexDataWriter(
+//          "TriangleNormals", utils::Def::DIM) );
+//      foreach ( mesh::Triangle & triangle, mesh.triangles() ) {
+//        int id = normalsOriginWriter->plotVertex ( triangle.getCenter() );
+//        normalsWriter->plotVertex ( id, triangle.getNormal() );
+//      }
+////      vtkWriterTriangleNormals.plotVertices ( normalsOriginWriter );
+////      vtkWriterTriangleNormals.plotPointData ( normalsWriter );
+//      vtkWriterTriangleNormals.writeToFile ( fileName + "-trianglenormals.vtk" );
+//    }
+//  }
+//  vtkWriter.writeToFile ( fileName + ".vtk" );
+}
+
+
+}} // namespace precice, io

@@ -1,0 +1,65 @@
+#ifndef PRECICE_UTILS_WRAPPEDVECTOR_HPP_
+#define PRECICE_UTILS_WRAPPEDVECTOR_HPP_
+
+#include "tarch/la/WrappedVector.h"
+#include "utils/Dimensions.hpp"
+
+namespace tarch {
+namespace la {
+
+/**
+ * Returns a wrapped raw array, which is fully compatible to the la-functionality.
+ */
+template<typename Scalar>
+WrappedVector<PRECICE_DIMENSIONS,Scalar>& dwrap
+(
+  Scalar* toWrap )
+{
+  return reinterpret_cast<WrappedVector<PRECICE_DIMENSIONS,Scalar>&>(*toWrap);
+}
+
+template<typename Scalar>
+const WrappedVector<PRECICE_DIMENSIONS,Scalar>& dwrap
+(
+  const Scalar* toWrap )
+{
+  return reinterpret_cast<const WrappedVector<PRECICE_DIMENSIONS,Scalar>&>(*toWrap);
+}
+
+/**
+ * Returns a WrappedVector, that references Size elements of toSlice, the
+ * first element being at fromIndex * PRECICE_DIMENSIONS.
+ */
+template<typename Vector>
+  typename utils::LazyEnableIf<IsVector<Vector>::value,
+  utils::LazyType<WrappedVector<PRECICE_DIMENSIONS,typename VectorTraits<Vector>::Scalar>&>
+>::Type dslice
+(
+  Vector& toSlice,
+  int     sliceIndex)
+{
+  const int dim = PRECICE_DIMENSIONS;
+  assertion (VectorTraits<Vector>::size(toSlice) >= (sliceIndex + 1) * dim);
+  typedef typename VectorTraits<Vector>::Scalar Scalar;
+  return reinterpret_cast<WrappedVector<dim,Scalar>&>(
+      VectorTraits<Vector>::elem(sliceIndex*dim,toSlice));
+}
+
+template<typename Vector>
+  typename utils::LazyEnableIf<IsVector<Vector>::value,
+  utils::LazyType<const WrappedVector<PRECICE_DIMENSIONS,typename VectorTraits<Vector>::Scalar>&>
+>::Type dslice
+(
+  const Vector& toSlice,
+  int sliceIndex)
+{
+  const int dim = PRECICE_DIMENSIONS;
+  assertion (VectorTraits<Vector>::size(toSlice) >= (sliceIndex + 1) * dim);
+  typedef typename VectorTraits<Vector>::Scalar Scalar;
+  return reinterpret_cast<const WrappedVector<dim,Scalar>&>(
+      VectorTraits<Vector>::celem(sliceIndex*dim,toSlice));
+}
+
+}} // namespace tarch, la
+
+#endif /* PRECICE_UTILS_WRAPPEDVECTOR_HPP_ */

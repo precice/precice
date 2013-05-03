@@ -1,0 +1,20 @@
+#include "TestCases.hpp"
+
+namespace precice {
+namespace query {
+namespace tests {
+
+TestCases:: TestCases ()
+:
+    TestCaseCollection ("query"),
+    _findClosestTest (),
+    _findVoxelContentTest (),
+    _findClosestVertexVisitorTest ()
+{
+    addTestCase (& _findClosestTest);
+    addTestCase (& _findVoxelContentTest);
+    addTestCase (& _findClosestVertexVisitorTest);
+}
+
+}}} // namespace precice, query, tests
+

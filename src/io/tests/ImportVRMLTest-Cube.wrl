@@ -1,0 +1,81 @@
+#VRML V1.0 ascii
+
+# Blender V246
+
+# 'Switch' is used as a hack, to ensure it is not part of the drawing
+
+Separator {
+Switch {
+	DEF Material
+	Material {
+		diffuseColor 0.800000 0.800000 0.800000
+		specularColor 1.000000 1.000000 1.000000
+		shininess 0.500000 
+		transparency 0.000000 
+	}
+	Separator {
+		Coordinate3 {
+			point [
+				 1.000000 1.000000 -1.000000,
+				 1.000000 -1.000000 -1.000000,
+				 -1.000000 -1.000000 -1.000000,
+				 -1.000000 1.000000 -1.000000,
+				 1.000000 0.999999 1.000000,
+				 0.999999 -1.000001 1.000000,
+				 -1.000000 -1.000000 1.000000,
+				 -1.000000 1.000000 1.000000,
+			]
+		}
+		IndexedFaceSet {
+			coordIndex [
+				 4, 0, 7, -1,
+				 0, 3, 7, -1,
+				 2, 6, 7, -1,
+				 2, 7, 3, -1,
+				 1, 5, 2, -1,
+				 5, 6, 2, -1,
+				 0, 4, 1, -1,
+				 4, 5, 1, -1,
+				 4, 7, 6, -1,
+				 4, 6, 5, -1,
+				 0, 1, 2, -1,
+				 0, 2, 3, -1,
+			]
+		}
+		Info {
+         string "preCICE data"
+		   fields [ SFString dataname SFString datatype MFFloat datavalues ]
+		   dataname "Forces"
+         datadimensions 3
+         datavalues [ 
+            1.0 1.0 1.0,
+            2.0 2.0 2.0,
+            3.0 3.0 3.0,
+            4.0 4.0 4.0,
+            5.0 5.0 5.0,
+            6.0 6.0 6.0,
+            7.0 7.0 7.0,
+            8.0 8.0 8.0, 
+         ]
+		}
+		Info {
+         string "preCICE data"
+         fields [ SFString dataname SFString datatype MFFloat datavalues ]
+         dataname "Velocities"
+         datadimensions 3
+         datavalues [ 8.0 8.0 8.0,
+                      7.0 7.0 7.0,
+                      6.0 6.0 6.0,
+                      5.0 5.0 5.0,
+                      4.0 4.0 4.0,
+                      3.0 3.0 3.0,
+                      2.0 2.0 2.0,
+                      1.0 1.0 1.0, ]
+         
+      }
+	}
+
+	# Hidden Objects, in invisible layers
+
+}
+}

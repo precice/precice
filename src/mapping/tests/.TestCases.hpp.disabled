@@ -1,0 +1,33 @@
+#ifndef PRECICE_MAPPING_TESTCASES_HPP_
+#define PRECICE_MAPPING_TESTCASES_HPP_
+
+#include "utils/TestCaseCollection.hpp"
+#include "TestMappingLinearConservative.hpp"
+#include "TestMappingLinearConsistent.hpp"
+#include "TestMappingConfiguration.hpp"
+
+namespace precice {
+namespace mapping {
+namespace tests {
+
+
+class TestCases
+:
+   public tarch::tests::TestCaseCollection
+{
+public:
+
+   TestCases ( const std::string & pathToSrc );
+
+private:
+
+   TestMappingLinearConservative _testMappingLinearConservative;
+
+   TestMappingLinearConsistent _testMappingLinearConsistent;
+
+   TestMappingConfiguration _testMappingConfiguration;
+};
+
+}}} // namespace precice, mapping, tests
+
+#endif /* PRECICE_MAPPING_TESTCASES_HPP_ */

@@ -1,0 +1,25 @@
+#include "TestCases.hpp"
+
+namespace precice {
+namespace cplscheme {
+namespace tests {
+
+TestCases:: TestCases ( const std::string & pathToSrc )
+:
+   TestCaseCollection ( "cplscheme" ),
+   _absoluteConvergenceMeasureTest (),
+   _relativeConvergenceMeasureTest (),
+   _minIterationConvergenceMeasureTest (),
+   _hierarchicalAitkenPostProcessingTest (),
+   _explicitCouplingSchemeTest ( pathToSrc ),
+   _implicitCouplingSchemeTest ( pathToSrc )
+{
+  addTestCase ( & _absoluteConvergenceMeasureTest );
+  addTestCase ( & _relativeConvergenceMeasureTest );
+  addTestCase ( & _minIterationConvergenceMeasureTest );
+  addTestCase ( & _hierarchicalAitkenPostProcessingTest );
+  addTestCase ( & _explicitCouplingSchemeTest );
+  addTestCase ( & _implicitCouplingSchemeTest );
+}
+
+}}} // namespace precice, cplscheme, tests

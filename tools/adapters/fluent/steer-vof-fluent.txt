@@ -1,0 +1,12 @@
+# Invoke fluent by: fluent 2ddp -g < steer-vof-fluent.txt
+#
+# Before using this file, check that 
+# - the .cas file name is correct
+# - the id of the boundary used in open-channel-auto-init and zone-type is correct.
+#
+rc fluent.cas
+file/read-journal init-waves.scm
+solve/initialize/open-channel-auto-init 14 yes
+(init-flow)
+define/boundary-conditions/zone-type 14 wall
+exit

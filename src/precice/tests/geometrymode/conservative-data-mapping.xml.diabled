@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+
+
+<precice-configuration>
+   
+   <log-filter target="debug" component="precice" switch="off" />
+   
+   <coupling-interface geometry-mode="yes">   
+     
+      <data name="Forces" type="vector" />
+      <data name="Velocities" type="vector" />
+      
+      <mesh name="itest-cuboid" flip-normals="yes">
+         <use-data name="Forces" />
+         <use-data name="Velocities" />
+      </mesh> 
+      
+      <geometry of-mesh="itest-cuboid" type="builtin-cuboid">
+         <offset value0="-5.0" value1="-5.0" value2="-5.0" />
+         <discretization-width value="1.0" />                  
+         <length value0="10" value1="10" value2="10" />
+      </geometry>
+     
+      <participant name="TestAccessor">
+         <use-mesh name="itest-cuboid" />
+         <export neighbors="on"/>
+         <mapping direction="write" mesh="itest-cuboid" type="conservative-nearest-projection" />
+         <mapping direction="read" mesh="itest-cuboid" type="consistent-nearest-projection" />
+         <write-data name="Forces"     mesh="itest-cuboid" />
+         <read-data  name="Velocities" mesh="itest-cuboid" />
+      </participant>
+      
+   </coupling-interface>
+</precice-configuration>

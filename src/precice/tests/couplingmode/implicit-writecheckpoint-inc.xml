@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   
+   <log-filter target="debug" component="precice" switch="off"/>
+   
+   <solver-interface dimensions="3">
+      <data:vector name="Forces"/>
+      <data:vector name="Velocities"/>
+      
+      <communication:mpi-single from="SolverOne" to="SolverTwo"/>      
+      
+      <mesh name="Square" flip-normals="inside">
+         <use-data name="Forces"/>
+         <use-data name="Velocities"/>
+      </mesh>
+      
+      <geometry:builtin-cuboid of-mesh="Square">
+         <length value="1.0; 1.0; 1.0"/> 
+         <discretization-width value="1.0"/> 
+      </geometry:builtin-cuboid>
+      
+      <participant name="SolverOne">
+         <use-mesh name="Square"/>
+         <mapping:nearest-projection direction="write" mesh="Square"
+                  constraint="conservative" timing="incremental"/>
+         <mapping:nearest-projection direction="read" mesh="Square"                  
+                  constraint="consistent" timing="incremental"/>
+         <write-data name="Forces"    mesh="Square"/>
+         <read-data name="Velocities" mesh="Square"/>
+      </participant>
+      
+      <participant name="SolverTwo">
+         <use-mesh name="Square"/>
+         <write-data name="Velocities" mesh="Square"/>
+         <read-data name="Forces"      mesh="Square"/>
+      </participant>
+      
+      <coupling-scheme:implicit>
+         <participants first="SolverOne" second="SolverTwo"/> 
+         <max-timesteps value="4"/>
+         <timestep-length value="0.01"/>
+         <max-iterations value="100"/>
+         <checkpoint timestep-interval="4"/>
+         <min-iteration-convergence-measure 
+            min-iterations="5" data="Velocities" mesh="Square"/>
+         <exchange data="Forces"     mesh="Square" from="SolverOne"/>
+         <exchange data="Velocities" mesh="Square" from="SolverTwo"/>
+      </coupling-scheme:implicit>                           
+                  
+   </solver-interface>
+
+</precice-configuration>

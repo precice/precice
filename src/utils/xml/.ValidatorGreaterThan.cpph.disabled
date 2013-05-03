@@ -1,0 +1,81 @@
+#ifndef PRECICE_UTILS_VALIDATORGREATERTHAN_CPPH_
+#define PRECICE_UTILS_VALIDATORGREATERTHAN_CPPH_
+
+namespace precice {
+namespace utils {
+
+
+template< typename value_t >
+ValidatorGreaterThan<value_t>:: ValidatorGreaterThan ( value_t validationLimit )
+:
+   Validator<value_t> (),
+   _validationLimit (validationLimit)
+{}
+
+template< typename value_t >
+bool ValidatorGreaterThan<value_t>:: validateValue ( value_t value )
+{
+   return value > _validationLimit;
+}
+
+template< typename value_t >
+Validator<value_t> & ValidatorGreaterThan<value_t>:: clone () const
+{
+   Validator<value_t> * validator =
+      new ValidatorGreaterThan<value_t> (_validationLimit);
+   return *validator;
+}
+
+template< typename value_t >
+std::string ValidatorGreaterThan<value_t>:: getErrorMessage () const
+{
+   std::ostringstream stream;
+   stream << _validationLimit;
+   return std::string("Value must be > " + stream.str() + " !");
+}
+
+template< typename data_t >
+ValidatorGreaterThan< tarch::la::Vector<Def::DIM,data_t> >:: ValidatorGreaterThan
+(
+   tarch::la::Vector<Def::DIM,data_t> validationLimit )
+:
+   Validator<tarch::la::Vector<Def::DIM,data_t> >(),
+   _validationLimit (validationLimit)
+{}
+
+template< typename data_t >
+bool ValidatorGreaterThan< tarch::la::Vector<Def::DIM,data_t> >:: validateValue
+(
+   vector_t value )
+{
+   bool valid = true;
+   for (int i=0; i < Def::DIM; i++) {
+      valid &= value(i) > _validationLimit(i);
+   }
+   return valid;
+}
+
+template< typename data_t >
+Validator< tarch::la::Vector<Def::DIM,data_t> > &
+ValidatorGreaterThan< tarch::la::Vector<Def::DIM,data_t> >:: clone () const
+{
+   Validator< tarch::la::Vector<Def::DIM,data_t> > * validator =
+      new ValidatorGreaterThan< tarch::la::Vector<Def::DIM,data_t> > (_validationLimit);
+   return *validator;
+}
+
+template< typename data_t >
+std::string
+ValidatorGreaterThan< tarch::la::Vector<Def::DIM,data_t> >:: getErrorMessage
+(
+   void ) const
+{
+   std::ostringstream stream;
+   stream << _validationLimit;
+   return std::string("Value must be > " + stream.str() + " !");
+}
+
+
+}} // namespace precice, utils
+
+#endif /* PRECICE_UTILS_VALIDATORGREATERTHAN_CPPH_ */

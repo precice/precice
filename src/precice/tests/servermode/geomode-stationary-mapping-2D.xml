@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <solver-interface dimensions="2" geometry-mode="on">
+      <data:scalar name="ScalarData"/>
+      <data:vector name="VectorData"/>
+      
+      <mesh name="Mesh">
+         <use-data name="ScalarData"/>
+         <use-data name="VectorData"/>
+      </mesh>
+      
+      <geometry:builtin-cuboid of-mesh="Mesh">
+         <length value="2.0; 2.0"/>
+         <discretization-width value="2.0"/>
+         <offset value="-1.0; -1.0"/>
+      </geometry:builtin-cuboid>
+      
+      <participant name="Accessor">
+         <server:mpi-single/>
+         <use-mesh name="Mesh"/>
+         <mapping:nearest-projection direction="write" constraint="conservative" 
+                  mesh="Mesh" timing="initial"/>
+         <!--
+         <mapping:nearest-projection direction="read" constraint="consistent"  
+                  mesh="Mesh"  timing="initial"/>
+         -->
+         <write-data name="ScalarData" mesh="Mesh"/>
+         <write-data name="VectorData" mesh="Mesh"/>
+         <export:vtk/>
+      </participant>
+   </solver-interface>
+</precice-configuration>

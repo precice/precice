@@ -1,0 +1,170 @@
+This file should contain messages about changes to the API or XML configuration
+of preCICE, i.e. changes possibly affecting users of preCICE.
+
+Release v0.8:
+
+Released: 23.09.2012
+
+Download: http://www5.in.tum.de/forschung/precice/preCICE_v0_8.tar.gz
+
+Changelog v0.8:
+1) Modified form of command line state information when using implicit coupling. 
+   Now, iterations are numbered from 1..(#last), instead of 0..(#last-1).
+2) Bugfix for implicit coupling. Maximal iteration count is now obeyed exactly.
+3) Adapted internal use of MPI to work with the OpenMPI library.
+4) Increased compatibility for viewing XML configuration reference in browsers.
+
+Recommended Boost version: 1.45.0 (from [http://sourceforge.net/projects/boost/files/boost/1.45.0/ here])
+
+
+================================================================================
+Release v0.7:
+
+Released: 02.08.2012
+
+Download: http://www5.in.tum.de/forschung/precice/preCICE_v0_7.tar.gz
+
+Changelog v0.7:
+1) Added Fortran solver API
+2) Changed configuration of mapping:
+   * attributes "stationary" and "incremental" merged into "timing"
+   * "timing" can be "initial", "onadvance", "ondemand", and "incremental", where
+     "initial" corresponds to old value "stationary", "onadvance" recomputes the
+     mapping everytime in advance automatically, and "ondemand" requires calls
+     mapReadData() and mapWrittenData() from the solver.
+3) Added solver proxy executables in C, C++, and Fortran 77 to /tools/solverproxies/
+
+Recommended Boost version: 1.45.0 (from [http://sourceforge.net/projects/boost/files/boost/1.45.0/ here])
+
+
+================================================================================
+Release v0.6:
+
+Released: 14.06.2012
+
+Download: http://www5.in.tum.de/forschung/precice/preCICE_v0_6.tar.gz
+
+Changelog v0.6:
+1) Python Actions updated:
+   * Current simulation time is passed as additional parameter to Python method performAction().
+   * Actions are now grouped into supergroups prior- and post-advance. Within there, the ordering of actions executed is determined by the order they are defined in the XML configuration file.
+   * Python is initialized only once now, which enables to use global variables which can store state from call to call.
+2) Convergence measurements for implicit coupling modified:
+   * The data written by both solvers can now be used to measure convergence.
+   * All convergence measurements are executed every iteration, and residuals are printed.
+   * A convergence measure can be defined to be sufficient to cause convergence, regardless of other measures results.
+3) Data I/O has been extended:
+   * Plotting in every iteration can be configured in tag <export/> by attribute "every-iteration".
+   * Automatic file extension appending added (for configured file names).
+   * Output format for floating point numbers is 16 digits long.
+   * Data watch point now also writes current simulation time as output column.
+4) New API methods for block-writing/reading of data positions and for gaining data indices by positions.
+5) Build options extended by switches for Python actions (needs Python and NumPy) and socket communication (needs pthread library under linux).
+
+Recommended Boost version: 1.45.0 (from [http://sourceforge.net/projects/boost/files/boost/1.45.0/ here])
+
+
+================================================================================
+Release v0.5:
+
+1) Reduced runtime for importing VRML geometries.
+2) Added block write/read data methods. These methods greatly speedup parallel
+   runtime needed for reading and writing data values.
+3) Using log10 instead natural logarithm in thin plate spline radial basis function.
+4) XML configuration: tag <extrapolation> is renamed to <extrapolation-order>.
+5) Bugfix for consistent nearest projection mapping.
+
+
+================================================================================
+Release v0.4:
+
+1) Modified XML configuration:
+   All tags that had a type attribute before, now have the type in the name:
+   - e.g. <geometry ... type="builtin-cuboid"> ... </geometry> is now
+     <geometry:builtin-cuboid ...> ... </geometry:builtin-cuboid>
+   - same applies for <data>, <communication>, <server>, <mapping>, 
+     <coupling-scheme>, <export>, and <post-processing>
+   
+2) The XML parsing gives more and better detailed error messages:
+   - wrong tags and attributes do cause an error during parsing now
+   - XML format errors are enhanced by the <tag> trace
+   
+3) An XML configuration reference can be printed by running the preCIC executable
+   with the arguments "xml" and the max characters per line to print, e.g.
+   $ ./binprecice xml 80 > xml_reference.xml
+   Forward the output into an xml file to review it, it's quite longish.
+
+
+================================================================================
+Release v0.3.1:
+
+1) Bugfixes related to mapping with thin-plate-spline radial-basis-functions
+
+2) Default SCons build file added for build under linux. To invoke default build
+   it is sufficient to type "scons" in command line, omitting the "-f SConstruct-linux"
+   option.
+   
+3) Added build options "lib" and "bin". By default, both options are built. The
+   build options can be selected by specifying them on invoking scons, e.g.
+   "scons lib" builds only target lib, while "scons lib bin" builds the default
+   targets ("scons" does the same).
+   
+   
+================================================================================
+Release v0.3:
+
+
+1) Socket communication added to preCICE. The Boost Asio and Thread libraries
+   are used to provide a third communication method. The XML type is "sockets".
+
+2) XML configuration tag <coupling-interface> changed to <solver-interface>
+
+3) XML configuration of tag <communication> and tag <server> extended by attribute
+   context. The value of context depends on the communication type:
+   type "mpi": context decides on directory where port information is exchanged.
+               if an absolute path is given, the solvers can be started in
+               individual directories, since they know where too look for the
+               port information file then. The default value of "" means "this
+               directory".
+   type "sockets": context gives the port number used to connect. The default
+               value of "" means using port "51235".
+   type "files": context decides on directory where communication files are
+               written to and read from. More information see under type "mpi".
+
+
+================================================================================
+Release v0.2:
+
+1) XML configuration to export meshes has changed. There is no nesting into the
+   tag <mesh-export> any more, but single <export .../> tags for every type. The
+   attributes of <mesh-export> are shifted to the tag <export>, some examples
+   below:
+
+   <participant ...>      ...
+       
+      <!-- Export VTK to working directory -->
+      <export/> 
+      
+      <!-- Export VTK to path/, plot surface normals, trigger solvers with
+           required action (has to be treated by solver) -->
+      <export type="vtk" location="path/" normals="on" trigger-solver="on"/>
+      
+      <!-- Export VRML to working directory, export no spacetrees assigned to
+           meshes -->
+      <export type="vrml" spacetree="off"/>      
+      ...
+   </participant>
+   
+2) Spacetrees are now exported to the directory given in the <export> XML tag
+   in the configuration.
+   
+3) XML configuration of data mappings has changed. There is a new attribute
+   "constraint", which can have one of the values "conservative", "consistent".
+   This information was up to now included in the name of the mapping, i.e. in
+   the "type" attribute, and is now removed from there. This means that a mapping
+   which formerly had type "conservative-xyz", now is called "xyz" and has the
+   constraint "conservative". 
+   
+4) A new mapping of type "nearest-neighbor" is implemented. However, the mapping
+   is meant for comparsion with other methods and will lead to bad results in
+   all cases but almost identical meshes to map between.

@@ -1,0 +1,33 @@
+# This is file src/Sconscript
+
+sourcesCplscheme = [
+   Glob('cplscheme/*.cpp'),
+   Glob('cplscheme/impl/*.cpp'),
+   Glob('cplscheme/config/*.cpp'),
+   Glob('cplscheme/tests/*.cpp')
+   ]
+   
+sourcesAction = [
+   Glob('action/*.cpp'),
+   Glob('action/config/*.cpp'),
+   Glob('action/tests/*.cpp')
+   ]
+   
+sourcesPrecice = [
+   Glob('precice/*.cpp'),
+   Glob('precice/impl/*.cpp'),
+   Glob('precice/config/*.cpp'),
+   Glob('precice/tests/*.cpp'),
+   Glob('precice/tests/couplingmode/*.cpp'),
+   Glob('precice/tests/geometrymode/*.cpp'),
+   Glob('precice/tests/servermode/*.cpp'),
+   Glob('precice/adapters/c/*.cpp')
+   ]
+   
+sourcesAll = [ 
+   sourcesCplscheme,
+   sourcesAction,
+   sourcesPrecice
+   ]
+   
+Return ('sourcesAll')

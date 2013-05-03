@@ -1,0 +1,109 @@
+// Copyright (C) 2011 Technische Universitaet Muenchen
+// This file is part of the preCICE project. For conditions of distribution and
+// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
+#include "DynamicPeanotree3D.hpp"
+#include "spacetree/impl/DynamicTraversal.hpp"
+#include "query/FindVoxelContent.hpp"
+#include "query/FindClosest.hpp"
+
+namespace precice {
+namespace spacetree {
+
+tarch::logging::Log DynamicPeanotree3D:: _log("precice::spacetree::DynamicPeanotree3D");
+
+DynamicPeanotree3D:: DynamicPeanotree3D
+(
+  const utils::DynVector& center,
+  double halflength,
+  double refinementLimit )
+:
+  _center(center),
+  _halflength(halflength),
+  _refinementLimit(refinementLimit)
+{
+  exit(ASSERTION_EXIT_CODE); // Class implementation not yet finished!!
+}
+
+void DynamicPeanotree3D:: initialize
+(
+  mesh::Mesh& mesh )
+{
+  preciceTrace1 ( "initialize()", mesh.getName() );
+  preciceCheck ( _rootCell.content().empty(), "initialize()",
+                 "Initialize can be called only once (or after clearing)!" );
+  int dim = _center.size();
+  assertion2 ( mesh.getDimensions() == dim, mesh.getDimensions(), dim );
+  query::FindVoxelContent findVoxel ( _center, utils::DynVector(dim,_halflength),
+      query::FindVoxelContent::INCLUDE_BOUNDARY );
+  findVoxel ( mesh );
+  int verticesSize = _rootCell.content().vertices().size();
+  int edgesSize = _rootCell.content().edges().size();
+  int trianglesSize = _rootCell.content().triangles().size();
+  _rootCell.content().add ( findVoxel.content() );
+  _rootCell.setPosition(positionOnGeometry());
+  preciceCheck (
+      _rootCell.content().vertices().size() == verticesSize + mesh.vertices().size(),
+      "initialize()", "Not all vertices are contained int he spacetree!" );
+  preciceCheck (
+      _rootCell.content().edges().size() == edgesSize + mesh.edges().size(),
+      "initialize()", "Not all edges are contained int he spacetree!" );
+  preciceCheck (
+      _rootCell.content().triangles().size() == trianglesSize + mesh.triangles().size(),
+      "initialize()", "Not all triangles are contained int he spacetree!" );
+  mesh.addListener ( *this );
+}
+
+void DynamicPeanotree3D:: meshChanged ( mesh::Mesh& mesh )
+{
+  preciceTrace1 ( "meshChanged()", mesh.getName() );
+  clear();
+  initialize(mesh);
+}
+
+int DynamicPeanotree3D:: searchPosition
+(
+  const utils::DynVector& point )
+{
+  preciceTrace1 ( "searchPosition()", point );
+  impl::DynamicTraversal<impl::PeanotreeCell3D> traversal;
+  utils::DynVector halflengths(point.size(), _halflength);
+  return traversal.searchPosition ( _rootCell, point, _center, halflengths,
+                                    _refinementLimit );
+}
+
+void DynamicPeanotree3D:: searchDistance
+(
+  query::FindClosest& findClosest )
+{
+  preciceTrace1 ( "searchDistance()", findClosest.getSearchPoint() );
+  impl::DynamicTraversal<impl::PeanotreeCell3D> traversal;
+  utils::DynVector halflengths(findClosest.getSearchPoint().size(), _halflength);
+  traversal.searchDistance ( _rootCell, findClosest, _center, halflengths,
+                             _refinementLimit );
+}
+
+int DynamicPeanotree3D:: searchContent
+(
+  query::FindVoxelContent& findContent )
+{
+  preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
+                  findContent.getVoxelHalflengths() );
+  impl::DynamicTraversal<impl::PeanotreeCell3D> traversal;
+  utils::DynVector halflengths(findContent.getVoxelCenter().size(), _halflength);
+  return traversal.searchContent ( _rootCell, findContent, _center, halflengths,
+                                   _refinementLimit );
+}
+
+void DynamicPeanotree3D:: accept ( Visitor& visitor )
+{
+  utils::DynVector halflengths(_center.size(), _halflength);
+  _rootCell.accept(visitor, _center, halflengths);
+}
+
+void DynamicPeanotree3D:: clear()
+{
+  _rootCell.clear();
+  assertion(_rootCell.content().empty());
+}
+
+}} // namespace precice, spacetree

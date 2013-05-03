@@ -1,0 +1,167 @@
+#include "LinearAlgebraTest.hpp"
+#include "../LinearAlgebra.hpp"
+#include "../Parallel.hpp"
+#include "../NumericalCompare.hpp"
+#include "../Helpers.hpp"
+#include "la/Matrix.h"
+
+namespace precice {
+namespace utils {
+namespace tests {
+
+using utils::Vector;
+
+tarch::logging::Log LinearAlgebraTest:: _log ("utils::LinearAlgebraTest");
+
+LinearAlgebraTest:: LinearAlgebraTest ()
+:
+   TestCase ("utils::LinearAlgebraTest")
+{}
+
+void LinearAlgebraTest:: run ()
+{
+   PRECICE_MASTER_ONLY {
+      testComputeDeterminant ();
+      testSolveLinSystem ();
+      testNorms ();
+      testSign ();
+      testIndexMin ();
+   }
+}
+
+void LinearAlgebraTest:: testComputeDeterminant ()
+{
+   preciceDebug ("testComputeDeterminant()", "entering");
+
+   tarch::la::Matrix<3, 3, double> matrix;
+   matrix = 1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0,
+            7.0, 8.0, 9.0;
+   #ifdef Debug
+   std::ostringstream stream;
+   stream << "Matrix = " << matrix;
+   preciceDebug ("testComputeDeterminant", stream.str());
+   #endif
+   double determinant = utils::LinearAlgebra::det (matrix);
+   validateEquals (determinant, 0.0);    // by Matlab
+
+   matrix = 1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0,
+            2.0, 3.0, 2.0;
+   #ifdef Debug
+   std::ostringstream stream2;
+   stream2 << "Matrix = " << matrix;
+   preciceDebug ("testComputeDeterminant", stream2.str());
+   #endif
+   determinant = utils::LinearAlgebra::det (matrix);
+   validateEquals (determinant, 6.0);    // by Matlab
+
+   tarch::la::Matrix<2, 2, double> matrix2by2;
+   matrix2by2 = 1.0, 2.0, 3.0, 5.0;
+   #ifdef Debug
+   std::ostringstream stream3;
+   stream3 << "Matrix = " << matrix2by2;
+   preciceDebug ("testComputeDeterminant", stream3.str());
+   #endif
+   determinant = utils::LinearAlgebra::det (matrix2by2);
+   validateEquals (determinant, -1.0);    // by Matlab
+
+   matrix2by2 = 4.0, 2.0, 3.0, 5.0;
+   #ifdef Debug
+   std::ostringstream stream4;
+   stream4 << "Matrix = " << matrix2by2;
+   preciceDebug ("testComputeDeterminant", stream4.str());
+   #endif
+   determinant = utils::LinearAlgebra::det (matrix2by2);
+   validateEquals (determinant, 14.0);    // by Matlab
+
+   preciceDebug ("testComputeDeterminant()", "leaving");
+}
+
+void LinearAlgebraTest:: testSolveLinSystem ()
+{
+   preciceDebug ("testSolveLinearSystem()", "entering");
+
+   tarch::la::Matrix<2, 2, double> A;
+   A = 2.5, 7.0, 2.1, 5.4;
+   tarch::la::Vector<2, double> b;
+   b = 3.2, 1.7;
+
+   b = utils::LinearAlgebra::solveLinearSystem ( A, b );
+   validateNumericalEquals (b(0), -4.483333333333333);
+   validateNumericalEquals (b(1), 2.058333333333333);
+
+   tarch::la::Matrix<3, 3, double> matrix;
+   matrix = 1.0, 2.0, 3.0,
+            4.0, 5.0, 6.0,
+            2.0, 3.0, 2.0;
+   tarch::la::Vector<3, double> rhs;
+   rhs = 1.0, 2.0, 3.0;
+
+   rhs = utils::LinearAlgebra::solveLinearSystem (matrix, rhs);
+   validateNumericalEquals (rhs(0), -1.166666666666667);
+   validateNumericalEquals (rhs(1),  2.333333333333333);
+   validateNumericalEquals (rhs(2), -0.833333333333333);
+
+   matrix = 0.0, 1.0, 0.0,
+            0.0, 0.0, 1.0,
+            1.0, 1.0, 1.0;
+   rhs = 0.5, 0.5, 1.0;
+
+   rhs = utils::LinearAlgebra::solveLinearSystem (matrix, rhs);
+   validateNumericalEquals (rhs(0),  0.0);
+   validateNumericalEquals (rhs(1),  0.5);
+   validateNumericalEquals (rhs(2),  0.5);
+
+   preciceDebug ("testSolveLinearSystem()", "leaving");
+}
+
+void LinearAlgebraTest:: testNorms ()
+{
+   preciceDebug ("testNorms()", "entering");
+
+   Vector vec (0.0);
+   vec(0) = 1.0;
+   validateNumericalEquals (LinearAlgebra::twoNorm(vec), 1.0);
+   vec(1) = 1.0;
+   validateNumericalEquals (LinearAlgebra::twoNorm(vec), std::sqrt(2.0));
+
+   Vector vec2 (0.0);
+   validateNumericalEquals (LinearAlgebra::infNorm(vec2), 0.0);
+   vec2(0) = -1.0;
+   validateNumericalEquals (LinearAlgebra::infNorm(vec2), 1.0);
+   vec2(1) = 2.0;
+   validateNumericalEquals (LinearAlgebra::infNorm(vec2), 2.0);
+   vec2(0) = -3.0;
+   validateNumericalEquals (LinearAlgebra::infNorm(vec2), 3.0);
+
+   preciceDebug ("testNorms()", "entering");
+}
+
+void LinearAlgebraTest:: testSign ()
+{
+   preciceDebug ( "testSign", "Entering" );
+
+   double negative = -1.0;
+   double zero = 0.0;
+   double positive = 1.0;
+   validateEquals ( LinearAlgebra::sign(negative), -1 );
+   validateEquals ( LinearAlgebra::sign(zero), 0 );
+   validateEquals ( LinearAlgebra::sign(positive),  1 );
+
+   preciceDebug ( "testSign", "Leaving" );
+}
+
+void LinearAlgebraTest:: testIndexMin ()
+{
+   preciceDebug ( "testIndexMin()", "Entering" );
+
+   tarch::la::Vector<3, double> vec ( 2.0, 1.0, -3.0 );
+
+   validateEquals ( LinearAlgebra::indexMin(vec), 2 );
+   validateEquals ( LinearAlgebra::indexMin(vec.abs()), 1 );
+
+   preciceDebug ( "testIndexMin()", "Leaving" );
+}
+
+}}} // namespace precice, utils, tests

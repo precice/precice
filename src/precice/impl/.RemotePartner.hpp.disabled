@@ -1,0 +1,44 @@
+#ifndef PRECICE_IMPL_REMOTEPARTNER_HPP_
+#define PRECICE_IMPL_REMOTEPARTNER_HPP_
+
+#include "com/SharedPointer.hpp"
+#include <string>
+
+namespace precice {
+namespace impl {
+
+struct RemotePartner
+{
+  /*
+   * @brief default constructor
+  */
+  RemotePartner ();
+
+  /*
+   * @brief constructor
+  */
+  RemotePartner (
+    const com::PtrICommunication & com,
+    int                            id,
+    const std::string &            name );
+
+  /*
+   * @brief compare operato
+  */
+  bool operator== (
+    const RemotePartner & partner ) const;
+
+  // @brief communication object to the partner
+  com::PtrICommunication communication;
+
+  // @brief id of the partner
+  int participantID;
+
+  // @brief name of the partner
+  std::string name;
+
+};
+
+}} // namespace precice, impl
+
+#endif /* PRECICE_IMPL_REMOTEPARTNER_HPP_ */

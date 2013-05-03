@@ -1,0 +1,59 @@
+// Copyright (C) 2011 Technische Universitaet Muenchen
+// This file is part of the preCICE project. For conditions of distribution and
+// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
+#include "ConstantRelaxationPostProcessing.hpp"
+#include "../CouplingData.hpp"
+#include "mesh/Data.hpp"
+#include "mesh/Mesh.hpp"
+#include "tarch/la/DynamicVector.h"
+#include "utils/Globals.hpp"
+#include "utils/Dimensions.hpp"
+//#include "utils/NumericalCompare.hpp"
+
+namespace precice {
+namespace cplscheme {
+namespace impl {
+
+tarch::logging::Log ConstantRelaxationPostProcessing::
+  _log("precice::cplscheme::ConstantRelaxationPostProcessing");
+
+ConstantRelaxationPostProcessing:: ConstantRelaxationPostProcessing
+(
+  double relaxation,
+  int    dataID )
+:
+  PostProcessing(),
+  _relaxation(relaxation),
+  _dataID(dataID)
+{
+  preciceCheck((relaxation > 0.0) && (relaxation <= 1.0),
+               "ConstantRelaxationPostProcessing()",
+               "Relaxation factor for constant relaxation post processing "
+               << "hast to be larger than zero and smaller or equal than one!");
+}
+
+void ConstantRelaxationPostProcessing:: initialize
+(
+  DataMap& cplData )
+{
+  preciceCheck(utils::contained(_dataID, cplData), "initialize()",
+               "Data with ID " << _dataID
+               << " is not contained in data given at initialization!");
+}
+
+void ConstantRelaxationPostProcessing:: performPostProcessing
+(
+  DataMap& cplData )
+{
+  preciceTrace("performPostProcessing()");
+  double omega = _relaxation;
+  double oneMinusOmega = 1.0 - omega;
+  foreach (DataMap::value_type & pair, cplData){
+    utils::DynVector& values = * pair.second.values;
+    utils::DynVector& oldValues = pair.second.oldValues.column(0);
+    values *= omega;
+    values += oldValues * oneMinusOmega;
+  }
+}
+
+}}} // namespace precice, cplscheme, impl

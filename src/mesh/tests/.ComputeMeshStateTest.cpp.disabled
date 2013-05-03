@@ -1,0 +1,120 @@
+#include "ComputeMeshStateTest.hpp"
+#include "utils/Parallel.hpp"
+#include "../Vertex.hpp"
+#include "../Edge.hpp"
+#include "../Triangle.hpp"
+#include "../Mesh.hpp"
+#include "utils/Dimensions.hpp"
+//#include "utils/NumericalCompare.hpp"
+//#include "utils/LinearAlgebra.hpp"
+
+namespace precice {
+namespace mesh {
+namespace tests {
+
+using utils::Vector;
+
+tarch::logging::Log ComputeMeshStateTest::
+  _log ( "mesh::test::ComputeMeshStateTest" );
+
+ComputeMeshStateTest::ComputeMeshStateTest ()
+:
+  TestCase ("mesh::test::ComputeMeshStateTest")
+{}
+
+void ComputeMeshStateTest:: run ()
+{
+  bool flipNormals = true;
+  Mesh mesh ( "MyMesh", flipNormals );
+
+# ifdef Dim2
+  // Create mesh
+  Vertex & v1 = mesh.createVertex ( Vector(0.0, 0.0) );
+  Vertex & v2 = mesh.createVertex ( Vector(1.0, 0.0) );
+  Vertex & v3 = mesh.createVertex ( Vector(1.0, 1.0) );
+  //
+  //
+  // *****
+  Edge & e1 = mesh.createEdge ( v1, v2 );
+  //     *
+  //     *  <---
+  // *****
+  Edge & e2 = mesh.createEdge ( v2, v3 );
+  mesh.computeState ();
+
+  // Perform test validations
+  validate ( tarch::la::equals(e1.getCenter(), Vector(0.5, 0.0)) );
+  validate ( tarch::la::equals(e2.getCenter(), Vector(1.0, 0.5)) );
+  validateNumericalEquals ( e1.getEnclosingRadius(), 0.5 );
+  validateNumericalEquals ( e2.getEnclosingRadius(), 0.5 );
+  validate ( tarch::la::equals(e1.getNormal(), Vector(0.0, 1.0)) );
+  validate ( tarch::la::equals(e2.getNormal(), Vector(-1.0, 0.0)) );
+  validate ( tarch::la::equals(v1.getNormal(), Vector(0.0, 1.0)) );
+  validate ( tarch::la::equals(v2.getNormal(),
+             Vector(-std::sqrt(0.5), std::sqrt(0.5))) );
+  validate ( tarch::la::equals(v3.getNormal(), Vector(-1.0, 0.0)) );
+
+# elif defined(Dim3)
+
+  // Create mesh
+  Vertex & v1 = mesh.createVertex ( Vector(0.0, 0.0, 0.0) );
+  Vertex & v2 = mesh.createVertex ( Vector(1.0, 0.0, 1.0) );
+  Vertex & v3 = mesh.createVertex ( Vector(1.0, 1.0, 1.0) );
+  Vertex & v4 = mesh.createVertex ( Vector(2.0, 0.0, 2.0) );
+  Edge & e1 = mesh.createEdge ( v1, v2 );
+  Edge & e2 = mesh.createEdge ( v2, v3 );
+  Edge & e3 = mesh.createEdge ( v3, v1 );
+  Edge & e4 = mesh.createEdge ( v2, v4 );
+  Edge & e5 = mesh.createEdge ( v4, v3 );
+
+  //       *
+  //     * *
+  //   *   *
+  // *******
+  Triangle & t1 = mesh.createTriangle ( e1, e2, e3 );
+  //       *
+  //     * * *     <---
+  //   *   *   *
+  // *************
+  Triangle & t2 = mesh.createTriangle ( e4, e5, e2 );
+  mesh.computeState ();
+
+  // Perform test validations ( in the order of dependencies )
+  // Validate ComputeMeshStateAlphaVisitor results
+  validate ( tarch::la::equals(e1.getCenter(), Vector(0.5, 0.0, 0.5)) );
+  validate ( tarch::la::equals(e2.getCenter(), Vector(1.0, 0.5, 1.0)) );
+  validate ( tarch::la::equals(e3.getCenter(), Vector(0.5, 0.5, 0.5)) );
+  validate ( tarch::la::equals(e4.getCenter(), Vector(1.5, 0.0, 1.5)) );
+  validate ( tarch::la::equals(e5.getCenter(), Vector(1.5, 0.5, 1.5)) );
+  validateNumericalEquals ( e1.getEnclosingRadius(), std::sqrt(2.0)*0.5 );
+  validateNumericalEquals ( e2.getEnclosingRadius(), 0.5 );
+  validateNumericalEquals ( e3.getEnclosingRadius(), std::sqrt(3.0)*0.5 );
+  validateNumericalEquals ( e4.getEnclosingRadius(), std::sqrt(2.0)*0.5 );
+  validateNumericalEquals ( e5.getEnclosingRadius(), std::sqrt(3.0)*0.5 );
+  // Validate ComputeMeshStateBetaVisitor results
+  validate ( tarch::la::equals(t1.getCenter(),
+             Vector(2.0/3.0, 1.0/3.0, 2.0/3.0)) );
+  validate ( tarch::la::equals(t2.getCenter(),
+             Vector(4.0/3.0, 1.0/3.0, 4.0/3.0)) );
+  validateNumericalEquals ( t1.getEnclosingRadius(), 1.0 );
+  validateNumericalEquals ( t2.getEnclosingRadius(), 1.0 );
+  Vector normal ( 1.0, 0.0, -1.0 );
+  normal = normal / utils::LinearAlgebra::twoNorm(normal);
+  validateNumericalEquals ( utils::LinearAlgebra::twoNorm(normal), 1.0 );
+  validate ( tarch::la::equals(t1.getNormal(), normal) );
+  validate ( tarch::la::equals(t2.getNormal(), normal) );
+  // Validate ComputeMeshStateGammaVisitor results
+  validate ( tarch::la::equals(e1.getNormal(), normal) );
+  validate ( tarch::la::equals(e2.getNormal(), normal) );
+  validate ( tarch::la::equals(e3.getNormal(), normal) );
+  validate ( tarch::la::equals(e4.getNormal(), normal) );
+  validate ( tarch::la::equals(e5.getNormal(), normal) );
+  validate ( tarch::la::equals(v1.getNormal(), normal) );
+  validate ( tarch::la::equals(v2.getNormal(), normal) );
+  validate ( tarch::la::equals(v3.getNormal(), normal) );
+  validate ( tarch::la::equals(v4.getNormal(), normal) );
+
+# endif // elif defined(Dim3)
+}
+
+}}} // namespace precice, mesh, test

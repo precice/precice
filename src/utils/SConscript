@@ -1,0 +1,9 @@
+# This is file src/utils/SConscript
+
+sources = [
+   Glob('*.cpp'),
+   Glob('xml/*.cpp'),
+   Glob('tests/*.cpp')
+   ]
+   
+Return ('sources')

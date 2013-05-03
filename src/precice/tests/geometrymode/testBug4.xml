@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <log-filter target="debug" component="" switch="off"/>
+   <solver-interface geometry-mode="on" dimensions="3">
+   
+      <spacetree:static-octree name="Tree"
+                 max-meshwidth="1.0/16.0" offset="0.5; 0.5; 0.5"
+                 halflength="0.6; 0.6; 0.6"/>
+                 
+	   <mesh name="Sphere">
+         <use-spacetree name="Tree"/>
+      </mesh>	
+      	
+	   <geometry:builtin-sphere of-mesh="Sphere">
+         <radius value="0.15"/>
+         <discretization-width value="0.05"/>
+	      <offset value="0.3; 0.45; 0.3"/>
+      </geometry:builtin-sphere>
+      
+	   <participant name="Peano">
+	  	   <use-mesh name="Sphere"/>
+	  	   <export:vtk normals="on"/>
+	   </participant>
+	  
+   </solver-interface>  
+</precice-configuration>

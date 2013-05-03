@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <log-filter target="debug" component="precice" switch="off" />
+   <solver-interface geometry-mode="on" dimensions="3">
+      <spacetree:static-octree name="Tree" max-meshwidth="9.0/64" 
+                 offset="-1.7166666666666666; 0.2166666666666666; 0.25" 
+                 halflength="4.5; 4.5; 4.5" />
+      <mesh name="Pipe" flip-normals="no">
+         <use-spacetree name="Tree"/>
+      </mesh>
+      <geometry:import of-mesh="Pipe">
+         <filetype value="vrml"/>
+         <filename value="../src/precice/tests/geometrymode/testBug-geometry.wrl"/>
+         <offset value="-5.7166666666666666; 2.2166666666666666; 0.25"/>S
+      </geometry:import>
+      <participant name="TestAccessor">
+         <use-mesh name="Pipe"/>
+         <export:vtk normals="on"/>
+      </participant>
+   </solver-interface>
+</precice-configuration>

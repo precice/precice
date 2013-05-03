@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+
+<configuration>
+    <test-tag value="a" />
+    <test-tag value="a" />
+</configuration>  

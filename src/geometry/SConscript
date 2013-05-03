@@ -1,0 +1,9 @@
+# This is file src/geometry/SConscript
+   
+sources = [
+   Glob('*.cpp'),
+   Glob('config/*.cpp'),
+   Glob('tests/*.cpp')
+   ]   
+    
+Return ('sources')

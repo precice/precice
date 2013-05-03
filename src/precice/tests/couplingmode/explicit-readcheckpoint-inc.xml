@@ -1,0 +1,50 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   
+   <log-filter target="debug" component="precice" switch="off"/>
+   
+   <solver-interface dimensions="2" restart-mode="on">
+   
+      <data:vector name="Forces"/>
+      <data:vector name="Velocities"/>
+      
+      <communication:mpi-single from="SolverOne" to="SolverTwo"/>
+      
+      <mesh name="Test-Square" flip-normals="inside">
+         <use-data name="Forces"/>
+         <use-data name="Velocities"/>
+      </mesh>
+      
+      <geometry:builtin-cuboid of-mesh="Test-Square">
+         <length value="1.0; 1.0"/> 
+         <discretization-width value="0.1"/> 
+      </geometry:builtin-cuboid>
+      
+      <participant name="SolverOne">
+         <use-mesh name="Test-Square"/>
+         <mapping:nearest-projection direction="write" mesh="Test-Square"
+                  constraint="conservative" timing="incremental"/>
+         <mapping:nearest-projection direction="read" mesh="Test-Square" 
+                  constraint="consistent" timing="incremental"/>
+         <write-data name="Forces"     mesh="Test-Square"/>
+         <read-data  name="Velocities" mesh="Test-Square"/>
+      </participant>
+      
+      <participant name="SolverTwo">
+         <use-mesh name="Test-Square"/>
+         <write-data name="Velocities" mesh="Test-Square"/>
+         <read-data name="Forces"      mesh="Test-Square"/>
+      </participant>
+      
+      <coupling-scheme:explicit> 
+         <participants first="SolverOne" second="SolverTwo"/> 
+         <max-timesteps value="20"/>
+         <timestep-length value="1.0"/>
+         <exchange data="Forces"     mesh="Test-Square" from="SolverOne"/>
+         <exchange data="Velocities" mesh="Test-Square" from="SolverTwo"/>
+      </coupling-scheme:explicit>                           
+                  
+   </solver-interface>
+
+</precice-configuration>

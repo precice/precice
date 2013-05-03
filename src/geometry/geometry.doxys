@@ -1,0 +1,40 @@
+/**
+
+@dir "geometry"
+
+This directory contains functionality to create geometries from the data structure
+defined in component container. The class Geometry prescribes the interface
+and base implementation for all geometry factories. There are different kinds of
+geometries:
+
+- Builtin geometries (Cuboid, Sphere, DriftRatchet) are geometries which are 
+  hardcoded in preCICE
+
+- ImportGeoemtry uses parsers from component to read geometries from files.
+
+- CustomGeometry is used to allow external creation of a geometry by solvers
+  using preCICE as interface.
+  
+In order to create a geometry, first, a Mesh object has to be set-up. This mesh
+is then passed to the geometry, which constructs the mesh and returns the filled
+Mesh object back. An example is given below:
+
+@code
+#include "mesh/Mesh.hpp"
+#include "geometry/Cuboid.hpp"
+
+using namespace mesh;
+using namespace geometry;
+
+bool invertNormals = false;
+Mesh cuboidMesh ( "MyCuboid", invertNormals );
+
+Vector offset ( 0.0, 0.0, 0.0 ); // No offset, the "lower"-corner is in the origin
+double h = 0.1;                  // Discretization width (not implemented in 3D yet
+Vector dimensions ( 1.0, 3.0, 2.0 );
+Cuboid cuboidGeometry ( offset, h, dimensions );
+
+cuboidGeometry.create ( cuboidMesh ); // Creates cuboid geometry into mesh
+@endcode
+
+*/

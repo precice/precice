@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <solver-interface dimensions="3">   
+      <data:vector name="Forces"           />
+      <data:vector name="Displacements"    />
+      <data:vector name="OldDisplacements" />
+   
+      <mesh name="WetSurface">
+         <use-data name="Forces"/>
+         <use-data name="Displacements"/>
+         <use-data name="OldDisplacements"/>
+      </mesh>
+ 
+      <participant name="Flite">
+         <use-mesh name="WetSurface"	from="Calculix"/>
+         <mapping:rbf-thin-plate-splines direction="write" 
+                  constraint="conservative" mesh="WetSurface" timing="initial"/>
+         <mapping:rbf-thin-plate-splines direction="read" 
+                  constraint="consistent" mesh="WetSurface" timing="initial"/>
+         <write-data name="Forces"           mesh="WetSurface"/>
+         <read-data  name="Displacements"    mesh="WetSurface"/>
+         <read-data  name="OldDisplacements" mesh="WetSurface"/>
+         <export:vtk timestep-interval="1" normals="on"/>
+      </participant>
+      
+      <participant name="Calculix">
+         <use-mesh name="WetSurface" provide="on"/>
+         <write-data name="Displacements" mesh="WetSurface"/>
+         <read-data  name="Forces"        mesh="WetSurface"/>
+	      <export:vtk timestep-interval="1" normals="on"/>
+      </participant>
+    
+      <communication:mpi from="Flite" to="Calculix"/>
+      
+      <coupling-scheme:explicit> 
+         <participants first="Flite" second="Calculix"/> 
+         <max-time value="2.0e-5" />
+         <timestep-length value="1e-5" method="fixed"/>
+         <exchange data="Forces"        mesh="WetSurface" from="Flite" />
+         <exchange data="Displacements" mesh="WetSurface" from="Calculix" />
+      </coupling-scheme:explicit>                           
+   </solver-interface>
+</precice-configuration>

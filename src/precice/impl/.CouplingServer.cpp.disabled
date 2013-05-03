@@ -1,0 +1,2061 @@
+#include "CouplingServer.hpp"
+#include "Participant.hpp"
+#include "WatchPoint.hpp"
+#include "../config/CouplingConfiguration.hpp"
+#include "../config/ParticipantConfiguration.hpp"
+#include "../config/Configuration.hpp"
+#include "mesh/config/DataConfiguration.hpp"
+#include "mesh/config/MeshConfiguration.hpp"
+#include "mesh/Mesh.hpp"
+#include "mesh/Group.hpp"
+#include "mesh/PropertyContainer.hpp"
+#include "mesh/Vertex.hpp"
+#include "mesh/Edge.hpp"
+#include "mesh/Triangle.hpp"
+#include "io/ExportVTK.hpp"
+#include "io/ExportVRML.hpp"
+#include "io/SimulationStateIO.hpp"
+#include "query/FindClosest.hpp"
+#include "query/FindVoxelContent.hpp"
+#include "spacetree/config/SpacetreeConfiguration.hpp"
+#include "spacetree/AbstractSpacetree.hpp"
+#include "spacetree/ExportSpacetree.hpp"
+#include "spacetree/AbstractSpacetreeFactory.hpp"
+#include "com/CommunicationMPIPorts.hpp"
+#include "com/Constants.hpp"
+#include "com/ICommunication.hpp"
+#include "com/config/CommunicationConfiguration.hpp"
+#include "geometry/config/GeometryConfiguration.hpp"
+#include "geometry/AbstractGeometry.hpp"
+#include "geometry/ImportGeometry.hpp"
+#include "geometry/CommunicatedGeometry.hpp"
+#include "cplscheme/AbstractCouplingScheme.hpp"
+#include "cplscheme/config/CouplingSchemeConfiguration.hpp"
+#include "la/VectorOperations.hpp"
+#include "utils/Helpers.hpp"
+#include "utils/LogFilter.h"
+#include "utils/Parallel.hpp"
+#include "utils/String.hpp"
+//#include "utils/NumericalCompare.hpp"
+#include "mapping/AbstractMapping.hpp"
+#include "la/View.h"
+#include <set>
+#include <limits>
+#include "boost/tuple/tuple.hpp"
+
+namespace precice {
+namespace impl {
+
+using utils::Vector;
+using namespace impl;
+
+tarch::logging::Log CouplingServer:: _log ("precice::CouplingServer");
+
+CouplingServer:: CouplingServer ()
+:
+  _geometryMode ( false ),
+  _isRestartMode ( false ),
+//  _meshContexts (),
+//  _geometries (),
+  _meshIDs (),
+  _dataIDs (),
+//  _dataContexts (),
+  _exportVTKNeighbors (),
+  _participants (),
+//  _watchPoints (),
+  _alreadyPlotThisTimestep ( false ),
+  _autoInitialized ( false ),
+  _checkpointTimestepInterval ( -1 )
+//  _clientList ()
+{}
+
+CouplingServer:: ~CouplingServer ()
+{}
+
+void CouplingServer:: configure
+(
+  const std::string & configurationFileName )
+{
+  mesh::Mesh::resetGeometryIDsGlobally ();
+  mesh::Data::resetDataCount ();
+  impl::Participant::resetParticipantCount ();
+  config::Configuration configuration;
+  configuration.readFile ( configurationFileName );
+  preciceCheck ( configuration.isValid(),
+                 "configure()", "Invalid configuration file!" );
+# ifdef Debug
+  if ( ! tarch::logging::LogFilter::isConfigured() ) {
+    tarch::logging::LogFilter::configureLogFilter (
+        configuration.getLogFilterConfiguration() );
+  }
+# endif
+  const config::CouplingConfiguration & config =
+      configuration.getCouplingConfiguration();
+  preciceCheck ( config.isValid(),
+                 "configure()", "Invalid <coupling-interface> configuration!" );
+  configure ( config );
+}
+
+void CouplingServer:: configure
+(
+  const config::CouplingConfiguration & config )
+{
+  preciceTrace ( "configure()" );
+  using boost::get;
+  _geometryMode = config.isGeometryMode ();
+  _isRestartMode = config.isRestartMode ();
+//  _accessor = determineAccessingParticipant ( config );
+  _participants = config.getParticipantConfiguration()->getParticipants ();
+
+  if ( _geometryMode ) {
+    preciceInfo ( "configure", "Run in geometry mode" );
+    preciceCheck ( _participants.size() == 1, "configure()",
+                   "Only one participant can be defined in geometry mode!" );
+  }
+  else {
+    preciceCheck ( _participants.size() > 1,
+                   "configure()", "At least two participants need to be defined!" );
+    cplscheme::PtrCouplingSchemeConfiguration cplSchemeConfig =
+        config.getCouplingSchemeConfiguration ();
+    foreach ( const impl::PtrParticipant & participant, _participants ) {
+      participant->setCouplingScheme (
+          cplSchemeConfig->getCouplingScheme(participant->getName()) );
+    }
+
+    configureMeshExchange ();
+
+//    _couplingScheme = config.getCouplingSchemeConfiguration()->getCouplingScheme();
+//    _accessor->setCouplingScheme
+//                (config.getCouplingSchemeConfiguration()->getCouplingScheme());
+//    _accessor->setIsCouplingSchemeLocal(true);
+  }
+
+  // Retrieve all data involved in the simulation, even if not used by the
+  // accessor. The mapping for the data is setup on creation of the geometry.
+//  const mesh::PtrMeshConfiguration meshConfig = config.getMeshConfiguration ();
+//  foreach ( const mesh::PtrMesh & mesh, meshConfig->meshes() ) {
+//    foreach ( const mesh::PtrData & data, mesh->data() ) {
+//      preciceAssertion ( data->getID() == (int)_dataContexts.size() );
+//      _dataContexts.push_back ( DataContext() );
+//    }
+//  }
+
+  // Configure geometries and their contexts
+//  const geometry::PtrGeometryConfiguration geoConfig =
+//      config.getGeometryConfiguration ();
+//  preciceCheck ( geoConfig->geometries().size() == meshConfig->meshes().size(),
+//                 "configure()", "Number of meshes and geometries have to equal!" );
+//  foreach ( mesh::PtrMesh mesh, meshConfig->meshes() ) {
+//    if ( isUsingMesh(mesh->getName()) ) {
+//      preciceDebug ( "configure()", "Adding mesh \"" << mesh->getName()
+//                     << "\" with ID = " << mesh->getID() << " at index = "
+//                     << _meshContexts.size() );
+//      _meshContexts.push_back ( configureMeshContext(mesh, config) );
+//      geometry::PtrAbstractGeometry geo = geoConfig->getGeometry ( mesh->getName() );
+//      _geometries.push_back ( geo ); // geo might be NULL
+//    }
+//    else {
+//      // Also not used meshes are added, since this allows to use a std::vector
+//      // with mesh index equal to the mesh ID.
+//      preciceDebug ( "configure()", "Adding not used mesh \"" << mesh->getName()
+//                     << "\"" );
+//      _meshContexts.push_back ( impl::MeshContext() );
+//      _geometries.push_back ( geometry::PtrAbstractGeometry() );
+//    }
+//  }
+
+  // Add mesh and data IDs
+  foreach ( const mesh::PtrMesh & mesh, config.getMeshConfiguration()->meshes() ) {
+    std::pair<std::string,int> nameID;
+    foreach ( nameID, mesh->getNameIDPairs() ) {
+      preciceAssertion ( ! utils::contained(nameID.first, _meshIDs) );
+      _meshIDs[nameID.first] = nameID.second;
+    }
+    foreach ( const mesh::PtrData & data, mesh->data() ) {
+      if ( ! utils::contained(data->getName(), _dataIDs) ) {
+        _dataIDs[data->getName()] = data->getID ();
+      }
+      else {
+        preciceDebug ( "configure()", "DataID: " << data->getID()
+                                      << " _dataIDs: "
+                                      << _dataIDs[data->getName()] );
+        preciceAssertion ( _dataIDs[data->getName()] == data->getID() );
+      }
+    }
+  }
+
+  // configure the location and the access to the remote meshes
+  configureRemoteMeshAccess ( config );
+
+  // configure the location of the remote coupling scheme
+  if ( ! _geometryMode ) {
+    configureRemoteCouplingSchemes();
+  }
+}
+
+double CouplingServer:: initialize
+(
+  int participantID )
+{
+  preciceTrace ( "initialize()" );
+  using boost::get;
+
+# ifdef PRECICE_USE_MPI // Initialize MPI, if not done yet
+  if ( ! utils::Parallel::isInitialized() ) {
+    preciceDebug ( "initialize()", "Auto initializing MPI..." );
+    _autoInitialized = true;
+    utils::Parallel::initialize ( NULL, NULL );
+  }
+# endif // PRECICE_USE_MPI
+
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  PtrParticipant & participant = _participants[participantID];
+
+
+  // Create meshes from geometries
+//  preciceAssertion ( _meshContexts.size() == _geometries.size() );
+  foreach ( MeshContext & meshContext, participant->usedMeshContexts() ) {
+    createMeshContext ( participant, meshContext );
+  }
+//  for ( size_t i=0; i < _meshContexts.size(); i++ ) {
+//    if ( (! _meshContexts[i].isCreated) && participant->isMeshUsed(i) ) {
+//      createMeshContext ( participant, _geometries[i], _meshContexts[i] );
+//    }
+//  }
+//  _geometries.clear (); // Is not used anymore
+
+  foreach ( impl::PtrWatchPoint & watchPoint, participant->watchPoints() ) {
+    // TODO remote version: watchPoint->getMesh()->getID() ... remote ?
+    watchPoint->initialize ();
+  }
+
+  if ( ! _geometryMode ) { // Coupling mode of preCICE
+    preciceDebug ( "initialize()", "Setting up watch points..." );
+
+    double time = 0.0;
+    int timestep = 0;
+    if ( _isRestartMode ) {
+      preciceInfo ( "configure", "Reading simulation state for restart" );
+      io::SimulationStateIO stateIO ( io::SimulationStateIO::STANDARD_FILENAME );
+      stateIO.readState ( time, timestep );
+      participant->getCouplingScheme()->getStateHandle().requireAction (
+          Constants::READ_SIMULATION_CHECKPOINT );
+    }
+
+    preciceDebug ( "initialize()", "Initialize cplscheme..." );
+    initializeClientServerCommunication ( participant );
+    if ( participant->isCouplingSchemeLocal() ) {
+      // Initialize coupling scheme and possibly receive first coupling data
+      preciceDebug ( "initialize()", "Local initialization..." );
+
+      participant->getCouplingScheme()->initialize ( time, timestep );
+//      forwardData ( participant );
+    }
+    else {
+      preciceDebug ( "initialize()", "Remote initialization..." );
+      requestInitialzeCouplingScheme ( participant->getSupplierCouplingScheme(),
+                                       time, timestep );
+    }
+
+    if ( participant->getCouplingScheme()->getStateHandle().hasDataBeenExchanged() ) {
+      performDataActions ( participant, impl::AbstractDataAction::ON_EXCHANGE_POST );
+    }
+    // Plot output (if configured)
+    preciceDebug ( "initialize()", "Plot output..." );
+    if ( participant->exportContext().timestepInterval != -1 ) {
+      std::ostringstream suffix;
+      suffix << participant->getName() << ".init";
+      exportMesh ( participantID, suffix.str() );
+      if ( participant->exportContext().triggerSolverPlot ) {
+        participant->getCouplingScheme()->getStateHandle().requireAction (
+            Constants::PLOT_OUTPUT );
+      }
+    }
+
+    preciceInfo ( "initialize()",
+        participant->getCouplingScheme()->getStateHandle().printCouplingState() );
+    return participant->getCouplingScheme()->getStateHandle().getMaxLengthNextTimestep ();
+  }
+  return std::numeric_limits<double>::max ();
+}
+
+void CouplingServer:: initializeData
+(
+  int participantID )
+{
+  preciceTrace ( "initializeData()" );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+
+  if ( participant->isCouplingSchemeLocal() ) {
+    participant->getCouplingScheme()->initializeData ();
+//    forwardData ( participant );
+  }
+  else {
+    requestInitialzeCouplingSchemeData (
+      participant->getSupplierCouplingScheme() ) ;
+  }
+  if ( participant->getCouplingScheme()->getStateHandle().hasDataBeenExchanged() ) {
+    performDataActions ( participant, AbstractDataAction::ON_EXCHANGE_POST );
+  }
+  resetWrittenData ( participant );
+}
+
+double CouplingServer:: advance
+(
+  int    participantID,
+  double computedTimestepLength )
+{
+  preciceTrace2 ( "advance()", participantID, computedTimestepLength );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+
+  double remainingTimestepPart;
+  if ( _geometryMode ) {
+    resetWrittenData ( participant );
+    // Set remaining timestep part to be maximal high, to make no restrictions
+    remainingTimestepPart = std::numeric_limits<double>::max ();
+  }
+  else {
+    performDataActions ( participant, AbstractDataAction::ALWAYS_PRIOR );
+    if ( participant->getCouplingScheme()->getStateHandle().willDataBeExchanged(
+         computedTimestepLength) )
+    {
+      performDataActions ( participant, AbstractDataAction::ON_EXCHANGE_PRIOR );
+    }
+    if ( participant->isCouplingSchemeLocal() ) { //server
+      participant->getCouplingScheme()->advance ( computedTimestepLength );
+    }
+    else { //client
+      // submit the advance request
+      requestAdvance ( participant->getSupplierCouplingScheme(),
+        computedTimestepLength );
+    }
+
+    remainingTimestepPart = participant->getCouplingScheme()->
+                            getStateHandle().getMaxLengthNextTimestep ();
+
+    if ( participant->getCouplingScheme()->getStateHandle().hasDataBeenExchanged() ) {
+      performDataActions ( participant, AbstractDataAction::ON_EXCHANGE_POST );
+      if ( participant->getCouplingScheme()->getStateHandle().isCouplingTimestepComplete() ) {
+        performDataActions ( participant, AbstractDataAction::ON_ADVANCE_TIMESTEP_POST );
+      }
+    }
+
+    handleExports ( participant );
+    resetWrittenData ( participant );
+    resetDataIndices ( participant );
+
+    preciceInfo ( "advance()", participant->getCouplingScheme()->
+                               getStateHandle().printCouplingState() );
+  }
+  return remainingTimestepPart;
+}
+
+void CouplingServer:: finalize
+(
+  int participantID )
+{
+  preciceTrace1 ( "finalize()", participantID );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+
+  if ( ! _geometryMode ) {
+    if (participant->isCouplingSchemeLocal()) {
+      participant->getCouplingScheme()->finalize ();
+      participant->getCouplingScheme().reset();
+    }
+    else {
+      requestFinalize( participant->getSupplierCouplingScheme() );
+    }
+
+    // plot output (if configured)
+    if ( participant->exportContext().timestepInterval != -1 ) {
+      std::ostringstream suffix;
+      suffix << participant->getName() << ".final";
+      exportMesh ( participantID, suffix.str() );
+        if ( participant->exportContext().triggerSolverPlot ) {
+          participant->getCouplingScheme()->getStateHandle().requireAction (
+              Constants::PLOT_OUTPUT );
+        }
+    }
+    // Finalize MPI if initialized by precice
+#   ifdef PRECICE_USE_MPI
+    if ( _autoInitialized ) {
+      utils::Parallel::finalize ();
+    }
+#   endif
+  }
+}
+
+bool CouplingServer:: isCouplingOngoing
+(
+  int participantID )
+{
+  preciceTrace1 ( "isCouplingOngoing()", participantID );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+  if ( _geometryMode ) {
+    return true;
+  }
+  return participant->getCouplingScheme()->getStateHandle().isCouplingOngoing ();
+}
+
+bool CouplingServer:: isReadDataAvailable
+(
+  int participantID )
+{
+  preciceTrace1 ( "isReadDataAvailable()", participantID );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+  return participant->getCouplingScheme()->getStateHandle().hasDataBeenExchanged ();
+}
+
+bool CouplingServer:: isWriteDataRequired
+(
+  int    participantID,
+  double computedTimestepLength )
+{
+  preciceTrace1 ( "isWriteDataRequired()", participantID );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+  return participant->getCouplingScheme()->
+         getStateHandle().willDataBeExchanged ( computedTimestepLength );
+}
+
+bool CouplingServer:: isTimestepComplete
+(
+  int participantID )
+{
+  preciceTrace1 ( "isCouplingTimestepComplete()", participantID );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+  return participant->getCouplingScheme()->
+         getStateHandle().isCouplingTimestepComplete ();
+}
+
+bool CouplingServer:: isActionRequired
+(
+  int                 participantID,
+  const std::string & action )
+{
+  preciceTrace2 ( "isActionRequired()", participantID, action );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+  if ( participant->getCouplingScheme().get() == NULL ) {
+    preciceAssertion ( _geometryMode );
+    return false;
+  }
+  return participant->getCouplingScheme()->
+         getStateHandle().isActionRequired ( action );
+}
+
+void CouplingServer:: fulfilledAction
+(
+  int                 participantID,
+  const std::string & action )
+{
+  preciceTrace1 ( "fulfilledAction()", participantID );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  PtrParticipant & p = _participants[participantID];
+  if ( p->getCouplingScheme().get() == NULL ) {
+    preciceAssertion ( _geometryMode );
+    return;
+  }
+  p->getCouplingScheme()->getStateHandle().performedAction ( action );
+}
+
+int CouplingServer:: getParticipantID
+(
+  const std::string & participantName )
+{
+  for ( int i=0; i < (int)_participants.size(); i++ ) {
+    if ( _participants[i]->getName() == participantName ) {
+      return i;
+    }
+  }
+  preciceError ( "getParticipantID()", "No participant with name \""
+                 << participantName << "\"!" );
+}
+
+int CouplingServer:: getMeshID
+(
+  const std::string & meshName )
+{
+  preciceCheck( utils::contained(meshName, _meshIDs), "getMeshID()",
+                "Mesh with name \""<< meshName << "\" is not defined!" );
+  return _meshIDs[meshName];
+}
+
+int CouplingServer:: getDataID
+(
+  const std::string dataName )
+{
+  preciceCheck ( utils::contained(dataName, _dataIDs), "getDataID()",
+                 "Data with name \"" << dataName << "\" is not defined!" );
+  return _dataIDs[dataName];
+}
+
+ClosestMesh CouplingServer:: inquireClosestMesh
+(
+  int            participantID,
+  const Vector & inquiredPoint )
+{
+  preciceTrace2 ( "inquireClosestMesh()", participantID, inquiredPoint );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+
+  double absMinimalDistance = std::numeric_limits<double>::max();
+  ClosestMesh closestGeometry;
+  closestGeometry.position = Constants::OUTSIDE_OF_GEOMETRY;
+//  typedef impl::Participant::MeshConfig MeshConfig;
+  foreach ( impl::MeshContext & meshContext, participant->usedMeshContexts() ) {
+//    impl::MeshContext & meshContext = _meshContexts[meshConfig.id];
+    query::FindClosest findClosest ( inquiredPoint );
+    if ( meshContext.spacetree.get() != NULL ) {
+      meshContext.spacetree->acceptSearch ( findClosest );
+    }
+    else {
+      findClosest ( *(meshContext.mesh) );
+    }
+    preciceAssertion ( findClosest.hasFound() );
+    //      const std::map<int, query::ClosestElement> & closestElements =
+    //         findClosest.getAll ();
+    //      double absMinimalDistance = std::numeric_limits<double>::max();
+    //      std::map<int, query::ClosestElement>::const_iterator iter;
+    //PRECICE_FOR_ALL ( closestElements, iter ) {
+    //      const query::ClosestElement & element = iter->second;
+    const query::ClosestElement & element = findClosest.getClosest ();
+    if ( element.distance > tarch::la::NUMERICAL_ZERO_DIFFERENCE &&
+      closestGeometry.position == Constants::OUTSIDE_OF_GEOMETRY )
+    {
+      if ( absMinimalDistance > element.distance ) {
+        absMinimalDistance = element.distance;
+        closestGeometry.meshIDs = element.meshIDs;
+      }
+    }
+    else if ( element.distance < - tarch::la::NUMERICAL_ZERO_DIFFERENCE ) {
+      closestGeometry.position = Constants::INSIDE_OF_GEOMETRY;
+      if ( absMinimalDistance > std::abs(element.distance) ) {
+        absMinimalDistance = std::abs ( element.distance );
+        closestGeometry.meshIDs = element.meshIDs;
+      }
+    }
+    else if ( closestGeometry.position !=
+      Constants::INSIDE_OF_GEOMETRY )
+    {
+      closestGeometry.position = Constants::ON_GEOMETRY;
+      absMinimalDistance = std::abs (element.distance);
+      closestGeometry.meshIDs = element.meshIDs;
+    }
+  }
+  return closestGeometry;
+}
+
+VoxelPosition CouplingServer:: inquireVoxelPosition
+(
+  int            participantID,
+  const Vector & inquiryCenter,
+  const Vector & halfLengthVoxel )
+{
+  preciceTrace3 ( "inquireVoxelPosition()",
+                  participantID, inquiryCenter, halfLengthVoxel );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+
+  VoxelPosition voxelPosition;
+  Constants::PositionConstants pos = Constants::OUTSIDE_OF_GEOMETRY;
+  mesh::Group containedVisitables;
+//  typedef impl::Participant::MeshConfig MeshConfig;
+  foreach ( impl::MeshContext & meshContext, participant->usedMeshContexts() ) {
+    preciceDebug ( "inquireVoxelPosition()", "Query mesh \""
+                   << meshContext.mesh->getName() << "\" with "
+                   << meshContext.mesh->vertices().size() << " vertices" );
+//    impl::MeshContext & meshContext = _meshContexts[meshConfig.id];
+    Constants::PositionConstants oldPos = pos;
+    if ( meshContext.spacetree.get() != NULL ) {
+      // Query first including voxel boundaries. This enables to directly
+      // use cached information of spacetree cells, that do also include
+      // objects on boundaries.
+      query::FindVoxelContent findVoxelInclude (
+          inquiryCenter, halfLengthVoxel,
+          query::FindVoxelContent::INCLUDE_BOUNDARY );
+      pos = meshContext.spacetree->acceptVoxel ( findVoxelInclude );
+      if ( pos == Constants::ON_GEOMETRY ) {
+        query::FindVoxelContent findVoxel ( inquiryCenter, halfLengthVoxel,
+            query::FindVoxelContent::EXCLUDE_BOUNDARY );
+        findVoxel ( findVoxelInclude.content() );
+        if ( ! findVoxel.content().empty() ) {
+          containedVisitables.add ( findVoxel.content() );
+        }
+      }
+    }
+    // The goemetry does not have a spacetree
+    else {
+      preciceDebug ( "inquireVoxelPosition()", "Query geometry directly" );
+      query::FindVoxelContent findVoxel (
+          inquiryCenter, halfLengthVoxel, query::FindVoxelContent::EXCLUDE_BOUNDARY );
+      findVoxel ( *(meshContext.mesh) );
+      // If the voxel does have content
+      if ( ! findVoxel.content().empty() ) {
+        preciceDebug ( "inquireVoxelPosition()", "Query found objects" );
+        pos = Constants::ON_GEOMETRY;
+        containedVisitables.add ( findVoxel.content() );
+      }
+      // If the voxel is empty and not inside for any other checked geometry
+      else if ( oldPos != Constants::INSIDE_OF_GEOMETRY ) {
+        query::FindClosest findClosest ( inquiryCenter );
+        findClosest ( *(meshContext.mesh) );
+        preciceAssertion ( findClosest.hasFound() );
+        const query::ClosestElement & closest = findClosest.getClosest ();
+        pos = closest.distance > 0 ? Constants::OUTSIDE_OF_GEOMETRY
+            : Constants::INSIDE_OF_GEOMETRY;
+      }
+    }
+
+    if ( oldPos == Constants::INSIDE_OF_GEOMETRY ) {
+      pos = Constants::INSIDE_OF_GEOMETRY;
+    }
+    else if ( oldPos == Constants::ON_GEOMETRY &&
+              pos == Constants::OUTSIDE_OF_GEOMETRY )
+    {
+      pos = Constants::ON_GEOMETRY;
+    }
+  }
+
+  if ( pos == Constants::ON_GEOMETRY ) {
+    preciceAssertion ( containedVisitables.size() > 0 );
+    int geoID = mesh::PropertyContainer::INDEX_GEOMETRY_ID;
+    std::vector<int> ids;
+    foreach ( mesh::Vertex & vertex, containedVisitables.vertices() ) {
+      vertex.getProperties ( geoID, ids );
+    }
+    foreach ( mesh::Edge & edge, containedVisitables.edges() ) {
+      edge.getProperties ( geoID, ids );
+    }
+    foreach ( mesh::Triangle & triangle, containedVisitables.triangles() ) {
+      triangle.getProperties ( geoID, ids );
+    }
+    foreach ( int id, ids ) {
+      if ( ! utils::contained(id, voxelPosition.containedMeshIDs) ) {
+        voxelPosition.containedMeshIDs.push_back ( id );
+      }
+    }
+  }
+# ifdef Debug
+  if ( pos == Constants::INSIDE_OF_GEOMETRY ) {
+    preciceDebug ("inquireVoxelPosition()", "position = INSIDE" );
+  }
+  else if ( pos == Constants::OUTSIDE_OF_GEOMETRY ) {
+    preciceDebug ("inquireVoxelPosition()", "position = OUTSIDE" );
+  }
+  else {
+    preciceDebug ("inquireVoxelPosition()", "position = ON" );
+  }
+# endif
+
+  voxelPosition.queryVoxelPosition = pos;
+  return voxelPosition;
+}
+
+int CouplingServer:: setMeshVertex
+(
+  int                   participantID,
+  int                   meshID,
+  const utils::Vector & position )
+{
+  preciceTrace3 ( "setMeshVertex()", participantID, meshID, position );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+  preciceAssertion ( participant->isMeshUsed(meshID) );
+  impl::MeshContext & context = participant->meshContext ( meshID );
+  if ( context.meshRequirement == impl::MeshContext::FULL_PARTICIPANT_MESH ) {
+    preciceDebug ( "setMeshVertex()", "Create vertex for local full mesh" );
+    preciceAssertion ( context.participantMesh.use_count() > 0 );
+    int id = context.participantMesh->createVertex(position).getID();
+    context.participantMesh->allocateDataValues ();
+    return id;
+  }
+  else if ( context.meshRequirement == impl::MeshContext::FULL_MESH ) {
+    preciceDebug ( "setMeshVertex()", "Create vertex for full mesh" );
+    preciceAssertion ( context.mesh.use_count() > 0 );
+    int id = context.mesh->createVertex(position).getID();
+    context.mesh->allocateDataValues ();
+    return id;
+  }
+  else if ( context.meshRequirement == impl::MeshContext::VERTEX_SOLVER_MESH ) {
+    preciceDebug ( "setMeshVertex()", "Set vertex coordinates for vertex mesh" );
+    preciceAssertion ( context.participantMesh->vertices().size() == 1 );
+//    precicePrint ( "Set coords of participant mesh from "
+//                   << context.participantMesh->vertices()[0].getCoords()
+//                   << " to " << position );
+    context.participantMesh->vertices()[0].setCoords ( position );
+    return -1;
+  }
+  else if ( context.meshRequirement == context.NO_MESH ) {
+    preciceDebug ( "setMeshVertex()", "No local mesh required" );
+    return -1;
+  }
+  else if ( context.remote ) {
+    // TODO send request to server
+  }
+  return -1;
+}
+
+int CouplingServer:: setMeshEdge
+(
+  int participantID,
+  int meshID,
+  int firstVertexID,
+  int secondVertexID )
+{
+  preciceTrace4 ( "setMeshEdge()",
+                  participantID, meshID, firstVertexID, secondVertexID );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+  preciceAssertion ( participant->isMeshUsed(meshID) );
+  impl::MeshContext & context = participant->meshContext ( meshID );
+  mesh::PtrMesh mesh;
+  if ( context.meshRequirement == context.FULL_PARTICIPANT_MESH ) {
+    preciceAssertion ( context.participantMesh.use_count() > 0 );
+    mesh = context.participantMesh;
+  }
+  else if ( context.meshRequirement == context.FULL_MESH ) {
+    preciceAssertion ( context.mesh.use_count() > 0 );
+    mesh = context.mesh;
+  }
+  else {
+    preciceDebug ( "setMeshEdge()", "No (local) full mesh required" );
+    return -1;
+  }
+  preciceAssertion ( firstVertexID >= 0 );
+  preciceAssertion ( secondVertexID >= 0 );
+  preciceAssertion ( firstVertexID < (int)mesh->vertices().size() );
+  preciceAssertion ( secondVertexID < (int)mesh->vertices().size() );
+  mesh::Vertex & v0 = mesh->vertices()[firstVertexID];
+  mesh::Vertex & v1 = mesh->vertices()[secondVertexID];
+  return mesh->createEdge(v0, v1).getID ();
+}
+
+void CouplingServer:: setMeshTriangle
+(
+  int participantID,
+  int meshID,
+  int firstEdgeID,
+  int secondEdgeID,
+  int thirdEdgeID )
+{
+  preciceTrace5 ( "setMeshTriangle()", participantID, meshID, firstEdgeID,
+                  secondEdgeID, thirdEdgeID );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+  preciceAssertion ( participant->isMeshUsed(meshID) );
+  impl::MeshContext & context = participant->meshContext ( meshID );
+  mesh::PtrMesh mesh;
+  if ( context.meshRequirement == context.FULL_PARTICIPANT_MESH ) {
+    preciceAssertion ( context.participantMesh.use_count() > 0 );
+    mesh = context.participantMesh;
+  }
+  else if ( context.meshRequirement == context.FULL_MESH ) {
+    preciceAssertion ( context.mesh.use_count() > 0 );
+    mesh = context.mesh;
+  }
+  else {
+    preciceDebug ( "setMeshTriangle()", "No (local) full mesh required" );
+    return;
+  }
+  preciceAssertion ( firstEdgeID >= 0 );
+  preciceAssertion ( secondEdgeID >= 0 );
+  preciceAssertion ( thirdEdgeID >= 0 );
+  preciceAssertion ( (int)mesh->edges().size() > firstEdgeID );
+  preciceAssertion ( (int)mesh->edges().size() > secondEdgeID );
+  preciceAssertion ( (int)mesh->edges().size() > thirdEdgeID );
+  mesh::Edge & e0 = mesh->edges()[firstEdgeID];
+  mesh::Edge & e1 = mesh->edges()[secondEdgeID];
+  mesh::Edge & e2 = mesh->edges()[thirdEdgeID];
+  mesh->createTriangle ( e0, e1, e2 );
+}
+
+//void CouplingServer:: setDataPosition
+//(
+//  int                   meshID,
+//  const utils::Vector & position )
+//{
+//  preciceTrace2 ( "setDataPosition()", meshID, position );
+//  impl::MeshContext & context = _meshContexts[meshID];
+//  preciceAssertion ( context.used );
+//  if ( context.accessorMesh.use_count() > 0 ) {
+//    preciceAssertion ( context.accessorMesh->vertices().size() == 1 );
+//    context.accessorMesh->vertices()[0].setCoords ( position );
+//  }
+//}
+
+void CouplingServer:: writeData
+(
+  int                   participantID,
+  int                   dataID,
+  const utils::Vector & value )
+{
+  preciceTrace3 ( "writeData(Vector)", participantID, dataID, value );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( participantID < (int)_participants.size() );
+  impl::PtrParticipant & participant = _participants[participantID];
+  DataContext & context = participant->dataContext ( dataID );
+  int offset = context.indexCursor * utils::Def::DIM;
+  if ( context.mapping.use_count() > 0 ) {
+    preciceAssertion ( context.participantData.use_count() > 0 );
+    mesh::Data::Values & values = context.participantData->values();
+    preciceAssertion ( values.size() == utils::Def::DIM ); // TODO Remove
+    for ( int dim=0; dim < utils::Def::DIM; dim++ ) {
+      preciceAssertion ( dim < values.size() );
+//      precicePrint ( "Set values[" << dim << "] = " << values[dim] << " to " << value[dim] );
+      values[dim] = value[dim];
+    }
+    context.mapping->map ( context.participantData->getID(), dataID );
+  }
+  else {
+    preciceAssertion ( context.data.use_count() > 0 );
+    mesh::Data::Values & values = context.data->values();
+    for ( int dim=0; dim < utils::Def::DIM; dim++ ) {
+      preciceAssertion ( offset + dim < values.size() );
+      values[offset + dim] = value[dim];
+    }
+  }
+  context.indexCursor ++;
+}
+
+void CouplingServer:: writeData
+(
+  int    participantID,
+  int    dataID,
+  double value )
+{
+  preciceTrace2 ( "writeData(double)", dataID, value );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( participantID < (int)_participants.size() );
+  impl::PtrParticipant & participant = _participants[participantID];
+  DataContext & context = participant->dataContext ( dataID );
+  int offset = context.indexCursor;
+  if ( context.mapping.use_count() > 0 ) {
+    preciceAssertion ( context.participantData.use_count() > 0 );
+    mesh::Data::Values & values = context.participantData->values();
+    preciceAssertion ( values.size() == 1 );
+    values[0] = value;
+    context.mapping->map ( context.participantData->getID(), dataID );
+  }
+  else {
+    preciceAssertion ( context.data.use_count() > 0 );
+    mesh::Data::Values & values = context.data->values();
+    preciceAssertion ( offset < values.size() );
+    values[offset] = value;
+  }
+  context.indexCursor ++;
+}
+
+void CouplingServer:: readData
+(
+  int             participantID,
+  int             dataID,
+  utils::Vector & value )
+{
+  preciceTrace2 ( "readData(Vector)", dataID, value );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( participantID < (int)_participants.size() );
+  impl::PtrParticipant & participant = _participants[participantID];
+  DataContext & context = participant->dataContext ( dataID );
+  int offset = context.indexCursor * utils::Def::DIM;
+  if ( context.mapping.use_count() > 0 ) {
+    mesh::Data::Values & values = context.participantData->values ();
+    values = 0.0;
+//    precicePrint ( "1 : in data size = " << context.data->values().size()
+//                   << ", out data size = " << context.participantData->values().size() );
+    context.mapping->map ( dataID, context.participantData->getID() );
+    preciceAssertion ( context.participantData.use_count() > 0 );
+    for ( size_t dim=0; dim < utils::Def::DIM; dim++ ) {
+      preciceAssertion ( values.size() == utils::Def::DIM );
+      value[dim] = values[dim];
+    }
+  }
+  else {
+    preciceAssertion ( context.data.use_count() > 0 );
+    mesh::Data::Values & values = context.data->values();
+    for ( int dim=0; dim < utils::Def::DIM; dim++ ) {
+      preciceAssertion ( offset + dim < values.size() );
+//      precicePrint ( "value[" << dim << "] = " << value[dim] );
+//      precicePrint ( "assign values[" << offset << " + " << dim << "] = " << values[offset + dim] );
+      value[dim] = values[offset + dim];
+    }
+  }
+  context.indexCursor ++;
+}
+
+void CouplingServer:: readData
+(
+  int      participantID,
+  int      dataID,
+  double & value )
+{
+  preciceTrace2 ( "readData(double)", dataID, value );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( participantID < (int)_participants.size() );
+  impl::PtrParticipant & participant = _participants[participantID];
+  DataContext & context = participant->dataContext ( dataID );
+  int offset = context.indexCursor * utils::Def::DIM;
+  if ( context.mapping.use_count() > 0 ) {
+    mesh::Data::Values & values = context.participantData->values ();
+    values = 0.0;
+    context.mapping->map ( dataID, context.participantData->getID() );
+    preciceAssertion ( context.participantData.use_count() > 0 );
+    preciceAssertion ( values.size() == 1 );
+    value = values[0];
+  }
+  else {
+    preciceAssertion ( context.data.use_count() > 0 );
+    mesh::Data::Values & values = context.data->values();
+    preciceAssertion ( offset < values.size() );
+    value = values[offset];
+  }
+  context.indexCursor ++;
+  preciceDebug ( "readData(double)", "Read value = " << value );
+}
+
+void CouplingServer:: setExportLocation
+(
+  int                       participantID,
+  const std::string &       location,
+  io::Constants::ExportType exportType )
+{
+  preciceTrace3 ( "setExportLocation()", participantID, location, exportType );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+  const ExportContext & context = participant->exportContext ();
+  foreach ( const io::PtrAbstractExport & exporter, context.exports ) {
+    if ( (exportType == io::Constants::EXPORT_ALL)
+         || (exporter->getType() == exportType) )
+    {
+      exporter->setLocation ( location );
+    }
+  }
+}
+
+void CouplingServer:: exportMesh
+(
+  int                       participantID,
+  const std::string &       filenameSuffix,
+  io::Constants::ExportType exportType )
+{
+  preciceTrace3 ( "exportMesh()", participantID, filenameSuffix, exportType );
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  impl::PtrParticipant & participant = _participants[participantID];
+  const ExportContext & context = participant->exportContext ();
+  foreach ( const io::PtrAbstractExport & exporter, context.exports ) {
+    preciceDebug ( "exportMesh()", "Export type = " << exportType );
+    bool exportAll = exportType == io::Constants::EXPORT_ALL;
+    bool exportThis = exporter->getType() == exportType;
+    if ( exportAll || exportThis ) {
+      foreach ( impl::MeshContext & meshContext, participant->usedMeshContexts() ) {
+        std::string filename ( meshContext.mesh->getName() + "-" + filenameSuffix );
+        preciceDebug ( "exportMesh()", "Exporting mesh to file \""
+                       << filename << "\"" );
+        exporter->doExport ( filename, *meshContext.mesh );
+      }
+    }
+  }
+
+//  io::ExportConfiguration & config = participant->exportConfiguration ();
+//  for ( int iExport=0; iExport < config.getExportCount(); iExport++ ) {
+//    if ( (exportType == io::Constants::EXPORT_ALL)
+//        || (config.getExport(iExport).type == exportType) )
+//    {
+//      for ( size_t iGeo=0; iGeo < _meshContexts.size(); iGeo++ ) {
+//        config.getExport(iExport).abstractExport->doExport (
+//          _meshContexts[iGeo].mesh->getName() + "-" + filenameSuffix,
+//          *(_meshContexts[iGeo].mesh) );
+//      }
+//    }
+//  }
+  // Export spacetrees
+  foreach ( impl::MeshContext & meshContext, participant->usedMeshContexts() ) {
+    if ( meshContext.spacetree.get() != NULL ) {
+      spacetree::ExportSpacetree exportSpacetree (
+        meshContext.mesh->getName() + "-" + filenameSuffix + ".spacetree" );
+      exportSpacetree.doExport ( *meshContext.spacetree );
+    }
+  }
+  // Export neighbors
+  if ( context.plotNeighbors ) {
+    _exportVTKNeighbors.exportNeighbors ( filenameSuffix + ".neighbors" );
+  }
+}
+
+void CouplingServer:: integrateData
+(
+  int      participantID,
+  int      dataID,
+  double & integratedValue ) const
+{
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  const impl::PtrParticipant & participant = _participants[participantID];
+  const DataContext & context = participant->dataContext ( dataID );
+  integratedValue = la::sum ( context.data->values() );
+}
+
+void CouplingServer:: integrateData
+(
+  int             participantID,
+  int             dataID,
+  utils::Vector & integratedValue ) const
+{
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  const mesh::Data::Values & values =
+      _participants[participantID]->dataContext(dataID).data->values ();
+  // TODO write la functionality to directly sum vector components
+//  preciceAssertion ( dataID < (int)_dataContexts.size() );
+  integratedValue = 0.0;
+  for ( int i=0; i < values.size(); i += utils::Def::DIM ) {
+    for ( int dim=0; dim < utils::Def::DIM; dim++ ) {
+      integratedValue[dim] += values[i + dim];
+    }
+  }
+}
+
+//void CouplingServer:: resetData
+//(
+//  PtrParticipant & participant,
+//  int              dataID )
+//{
+//  preciceTrace2 ( "resetData()", participant->getName(), dataID );
+//  mesh::Data::Values & values = participant->dataContext(dataID).data->values ();
+//  values = 0.0;
+//}
+
+//MeshBuilder CouplingServer:: getMeshBuilder
+//(
+//   const std::string & meshName )
+//{
+//   using boost::get;
+//   foreach ( impl::MeshContext & meshContext, _meshContexts ) {
+//      if ( meshContext.mesh->getName() == meshName ) {
+//         preciceCheck ( ! meshContext.isCreatedBySolver, "getMeshBuilder()",
+//                        "The solver mesh \"" << meshName
+//                        << "\" cannot be retrieved after submission!" );
+//         return MeshBuilder ( meshContext.mesh );
+//      }
+//   }
+//   preciceError ( "getMeshBuilder()", "No mesh builder for mesh \"" << meshName
+//                  << "\" available!" );
+//}
+//
+//void CouplingServer:: submitMeshBuilder
+//(
+//   MeshBuilder builder )
+//{
+//   using boost::get;
+//   const std::string & meshName = builder.getMeshName();
+//
+//   // Create geometry with context and remove custom geometry to be created
+//   foreach ( impl::MeshContext & meshContext, _meshContexts ) {
+//      if ( meshContext.mesh->getName() == meshName ) {
+//         preciceCheck ( ! meshContext.isCreatedBySolver,
+//                        "submitMeshBuilder()", "Mesh " << meshName
+//                        << " cannot be submitted twice!" );
+//         preciceInfo ( "submitMeshBuilder()", "Mesh builder for mesh \""
+//                       << meshName << "\" submitted successfully" );
+//         return;
+//      }
+//   }
+//   preciceError ( "submitMeshBuilder()", "No mesh with name \""
+//                   << meshName << "\" to be submitted!");
+//}
+
+MeshHandle CouplingServer:: getMeshHandle
+(
+  int                 participantID,
+  const std::string & meshName )
+{
+  preciceAssertion ( participantID >= 0 );
+  preciceAssertion ( (int)_participants.size() > participantID );
+  const impl::PtrParticipant & participant = _participants[participantID];
+  foreach ( impl::MeshContext & context, participant->usedMeshContexts() ) {
+    if ( context.mesh->getName() == meshName ) {
+      return MeshHandle ( *context.mesh );
+    }
+  }
+  preciceError ( "getMeshHandle()", "Participant \"" << participant->getName()
+                 << "\" does not use mesh \"" << meshName << "\"!" );
+}
+
+//bool CouplingServer:: isUsingMesh
+//(
+//  const std::string & meshName )
+//{
+//  if ( _geometryMode ) {
+//    return true;
+//  }
+//  typedef impl::Participant::MeshConfig MeshConfig;
+//  preciceAssertion ( _accessor.use_count() > 0 );
+//  foreach ( const MeshConfig & meshConfig, _accessor->getUsedMeshes() ) {
+//    if ( meshConfig.name == meshName ) {
+//      return true;
+//    }
+//  }
+//  return false;
+//}
+
+void CouplingServer:: configureMeshExchange ()
+{
+  // Treat every participant as possible mesh provider
+  foreach ( impl::PtrParticipant provider, _participants ) {
+    foreach ( impl::MeshContext & providerContext, provider->usedMeshContexts() ) {
+      if ( providerContext.receiveMeshFrom.empty() ) {
+        // Treat every participant as possible receiver
+        foreach ( impl::PtrParticipant receiver, _participants ) {
+          foreach ( impl::MeshContext & receiverContext, receiver->usedMeshContexts() ) {
+            if ( (providerContext.mesh->getName() == receiverContext.mesh->getName())
+                 && (receiverContext.receiveMeshFrom == provider->getName()) )
+            {
+              preciceAssertion ( providerContext.meshRequirement
+                                 != providerContext.FULL_PARTICIPANT_MESH );
+              providerContext.meshRequirement = providerContext.FULL_MESH;
+              providerContext.provideMeshFor.push_back ( receiver->getName() );
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+impl::MeshContext CouplingServer:: configureMeshContext
+(
+  mesh::PtrMesh &                       mesh,
+  const config::CouplingConfiguration & config )
+{
+  preciceTrace2 ( "configureMeshContext()", mesh->getName(), mesh->getID() );
+  const mesh::PtrMeshConfiguration meshConfig = config.getMeshConfiguration ();
+  impl::MeshContext meshContext;
+  meshContext.mesh = mesh;
+  meshContext.used = true;
+
+//  meshContext.remote = config.meshIsStoredLocally(mesh);
+//
+//     // if mesh is not local assign the communication object to it
+//   if(!meshContext.remote){
+////      meshContext._communication = ...
+//   }
+//   else{
+//      //meshContext._communication = 0;
+//   }
+
+
+  if ( meshConfig->doesMeshUseSpacetree(mesh->getName()) ) {
+    preciceCheck ( _geometryMode, "configureMeshContext()",
+                   "Spacetrees are not supported for coupling mode yet!" );
+    std::string spacetreeName = meshConfig->getSpacetreeName ( mesh->getName() );
+    meshContext.spacetreeFactory =
+        config.getSpacetreeConfiguration(spacetreeName)->getSpacetreeFactory();
+  }
+  return meshContext;
+}
+
+void CouplingServer:: createMeshContext
+(
+  const PtrParticipant & participant,
+  impl::MeshContext &    meshContext )
+{
+  preciceTrace2 ( "createMeshContext()",
+                  participant->getName(), meshContext.mesh->getName() );
+  using boost::get;
+//  preciceAssertion ( meshContext.used );
+  mesh::PtrMesh mesh = meshContext.mesh;
+  geometry::PtrAbstractGeometry geometry = meshContext.geometry;
+  preciceAssertion ( mesh.use_count() > 0 );
+  std::string meshName ( mesh->getName() );
+  if ( _isRestartMode ) {
+    std::string fileName ( "precice-checkpoint-" + participant->getName()
+                           + "-" + meshName );
+    geometry::ImportGeometry * importGeo = new geometry::ImportGeometry (
+        Vector(0.0), fileName, geometry::ImportGeometry::VRML_1_FILE, true);
+    geometry = geometry::PtrAbstractGeometry ( importGeo );
+  }
+  else if ( (! _geometryMode) && (geometry.use_count() > 0) ) {
+//    MeshContext & context = participant->meshContext ( mesh->getID() );
+    Vector offset ( geometry->getOffset() );
+    offset += meshContext.localOffset;
+    preciceDebug ( "createMeshContext()", "Adding local offset = "
+                   << meshContext.localOffset << " to mesh " << mesh->getName() );
+    geometry->setOffset ( offset );
+  }
+
+  if ( ! meshContext.remote ) {
+    preciceAssertion ( ! (_geometryMode && (geometry.use_count() == 0)) );
+    if ( geometry.use_count() > 0 ) {
+      geometry->create ( *mesh );
+      preciceDebug ( "createMeshContext()", "Created geometry \"" << meshName
+                     << "\" with # vertices = " << mesh->vertices().size() );
+    }
+    else if ( ! meshContext.receiveMeshFrom.empty() ) {
+      Vector offset ( meshContext.localOffset );
+      std::string receiver ( participant->getName() );
+      std::string provider ( meshContext.receiveMeshFrom );
+      preciceDebug ( "createMeshContext()", "Receiving mesh from " << provider );
+      geometry::CommunicatedGeometry comGeo ( offset, receiver, provider );
+      comGeo.addReceiver ( receiver,  );
+      comGeo.create ( *mesh );
+    }
+    else if ( ! meshContext.provideMeshFor.empty() ) {
+      preciceDebug ( "createMeshContext()", "Sending mesh to ..." );
+      Vector offset ( 0.0 );
+      std::string provider ( participant->getName() );
+      geometry::CommunicatedGeometry comGeo ( offset, provider, provider );
+      foreach ( const std::string & receiver, meshContext.provideMeshFor ) {
+        preciceDebug ( "createMeshContext()", "   ... receiver " << receiver );
+        comGeo.addReceiver ( receiver );
+      }
+      comGeo.create ( *mesh );
+    }
+  }
+
+  // Retrieve name-ID pairs the mesh uses and store them for later use:
+  // Geometry mesh has to be created before calling getNameIDPairs()!!!
+//  std::pair<std::string,int> nameID;
+//  foreach ( nameID, mesh->getNameIDPairs() ) {
+//    preciceAssertion ( _meshIDs.count(nameID.first) == 0 );
+//    _meshIDs[nameID.first] = nameID.second;
+//    preciceDebug ( "createMeshContext()", "Adding geometry ID with name "
+//                   << nameID.first << " and ID " << nameID.second );
+//  }
+
+  // Create spacetree for the geometry, if configured so
+  spacetree::PtrAbstractSpacetreeFactory factory = meshContext.spacetreeFactory;
+  if ( factory.use_count() > 0 ) {
+    preciceCheck ( _geometryMode, "createMeshContext()",
+                   "Creating spacetree in coupling mode!" );
+    meshContext.spacetree = factory->createSpacetree ( *mesh );
+  }
+
+  // Create mappings for data of the mesh
+//  mesh::PtrMesh participantMesh;
+//  foreach ( mesh::PtrData data, mesh->data() ) {
+//    preciceAssertion ( (int)_dataContexts.size() > data->getID() );
+//    DataContext & dataContext = _dataContexts[data->getID()];
+//    preciceAssertion ( ! dataContext.used );
+//    dataContext.used = true;
+//    dataContext.data = data;
+//    dataContext.mesh = mesh;
+//    mapping::PtrAbstractMapping mapping;
+//    for ( int i=0; i < participant->getWriteDataCount(); i++ ) {
+//      if ( participant->getNameWriteData(i) == data->getName() ) {
+//        dataContext.mapping = participant->getWriteMapping ( i );
+//        if ( dataContext.mapping.use_count() > 0 ) {
+//          if ( participantMesh.use_count() == 0 ) {
+//            participantMesh = createParticipantMesh ( participant, mesh );
+//          }
+//          preciceDebug ( "createMeshContext()", "Set write mapping for data \""
+//                         << dataContext.data->getName() << "\": input mesh = "
+//                         << meshContext.participantMesh->getName()
+//                         << ", output mesh = " << mesh->getName() );
+//          dataContext.mapping->setMeshes ( meshContext.participantMesh, mesh );
+//        }
+//        break;
+//      }
+//    }
+//    for ( int i=0; i < participant->getReadDataCount(); i++ ) {
+//      if ( participant->getNameReadData(i) == data->getName() ) {
+//        preciceAssertion ( dataContext.mapping.use_count() == 0 );
+//        dataContext.mapping = participant->getReadMapping ( i );
+//        if ( dataContext.mapping.use_count() > 0 ) {
+//          if ( participantMesh.use_count() == 0 ) {
+//            participantMesh = createParticipantMesh ( participant, mesh );
+//          }
+//          preciceDebug ( "createMeshContext()", "Set read mapping for data \""
+//                         << dataContext.data->getName() << "\": input mesh = "
+//                         << mesh->getName() << ", output mesh = "
+//                         << meshContext.participantMesh->getName() );
+//          dataContext.mapping->setMeshes ( mesh, meshContext.participantMesh );
+//        }
+//        break;
+//      }
+//    }
+//  }
+//  // Copy accessor data into dataContexts (only if mapping is used).
+//  if ( participantMesh.use_count() > 0 ) {
+//    participant.addMesh ( mesh->getID(), participantMesh );
+//    preciceAssertion ( mesh->data().size() == participantMesh->data().size() );
+//    for ( size_t i=0; i < participantMesh->data().size(); i++ ) {
+//      int dataID = mesh->data()[i]->getID();
+//      _dataContexts[dataID].accessorData = participantMesh->data()[i];
+//      preciceAssertion ( mesh->data()[i]->getName()
+//                         == participantMesh->data()[i]->getName() );
+//    }
+//  }
+
+  // Load mesh context into write and read mesh actions. The mesh actions
+  // do decide internally, which geometries they do use and which not.
+//  int actionCount = participant->getDataActionCount ();
+//  for ( int indexAction=0; indexAction < actionCount; indexAction++ ) {
+//    participant->getDataAction(indexAction)->loadMeshContext ( meshContext );
+//  }
+}
+
+//void CouplingServer:: setupWatchPoints
+//(
+//   const Participant & participant )
+//{
+//   preciceDebug ( "setupWatchPoints()", "Entering" );
+//   for ( int i=0; i < participant.getWatchPointCount(); i++ ) {
+//      impl::Participant::WatchPointConfig config = participant.getWatchPoint (i);
+//      std::map<std::string, impl::PtrWatchPoint>::iterator iterWatchPoint;
+//      PRECICE_FOR_ALL ( _watchPoints, iterWatchPoint ) {
+//         if ( iterWatchPoint->first == config.namePoint ) {
+//            preciceError ( "setupWatchPoints()",
+//                            "Watch point \"" << config.namePoint
+//                            << "\" appears more than once!" );
+//         }
+//      }
+//      if ( ! isUsingMesh(config.nameGeometry) ) {
+//         preciceError ( "setupWatchPoints()", "Watch point refers to geometry \""
+//                         << config.nameGeometry
+//                         << "\", which is not used by the participant!" );
+//      }
+//      impl::PtrWatchPoint watchpoint (
+//         new impl::WatchPoint (config.coordinates,
+//                               getMesh(config.nameGeometry).mesh,
+//                               config.namePoint + ".watchpoint.txt") );
+//      _watchPoints[config.namePoint] = watchpoint;
+//      preciceDebug ( "setupWatchPoints()", "Adding watchpoint \""
+//                      << config.namePoint << "\"" );
+//   }
+//   preciceDebug ( "setupWatchPoints()", "Leaving" );
+//}
+
+void CouplingServer:: performDataActions
+(
+  const PtrParticipant &      participant,
+  AbstractDataAction::TimingConstants timing )
+{
+  preciceTrace1 ( "performDataActions()", timing );
+  int actionCount = participant->getDataActionCount ();
+  for ( int iAction=0; iAction < actionCount; iAction++ ) {
+    if ( participant->getDataAction(iAction)->getTiming() == timing ) {
+      // get mesh context remote?
+      if(participant->getDataAction(iAction)->getMeshContext(0)->remote){
+        requestPerformDataActions ( participant->getSupplierCouplingScheme(),
+          iAction );
+
+      }else{
+        participant->getDataAction(iAction)->performAction ();
+        //       dataAction(_, int actionID)
+      }
+    }
+  }
+}
+
+void CouplingServer:: handleExports
+(
+  const PtrParticipant & participant )
+{
+   const ExportContext & context = participant->exportContext ();
+   cplscheme::CouplingStateHandle state =
+       participant->getCouplingScheme()->getStateHandle();
+
+   if ( (context.timestepInterval != -1) && state.isCouplingTimestepComplete() ) {
+      if ( state.getTimestep() % context.timestepInterval == 0 ) {
+         std::ostringstream suffix;
+         suffix << participant->getName() << "." << state.getTimestep();
+         exportMesh ( participant->getID(), suffix.str() );
+         _alreadyPlotThisTimestep = true;
+         if ( context.triggerSolverPlot ) {
+           state.requireAction ( Constants::PLOT_OUTPUT );
+         }
+      }
+      // Export watch point data
+      foreach ( impl::PtrWatchPoint watchPoint, participant->watchPoints() ) {
+        watchPoint->exportPointData ();
+      }
+   }
+
+   // Checkpointing
+   if ( (state.getCheckpointTimestepInterval() != -1)
+        && (state.getTimestep() % state.getCheckpointTimestepInterval() == 0) )
+   {
+      preciceDebug ( "handleExports()", "Set require checkpoint" );
+      participant->getCouplingScheme()->getStateHandle().requireAction (
+         Constants::WRITE_SIMULATION_CHECKPOINT );
+      foreach ( const MeshContext & meshContext, participant->usedMeshContexts() ) {
+         io::ExportVRML exportVRML ( "", false );
+         std::string filename ( "precice-checkpoint-" + participant->getName()
+                                + "-" + meshContext.mesh->getName() );
+         exportVRML.doExportCheckpoint ( filename, *meshContext.mesh );
+      }
+      io::SimulationStateIO exportState ( io::SimulationStateIO::STANDARD_FILENAME );
+      exportState.writeState ( state.getTime(), state.getTimestep());
+   }
+}
+
+void CouplingServer:: resetWrittenData
+(
+  const PtrParticipant & participant )
+{
+  foreach ( DataContext & context, participant->writeDataContexts() ) {
+    context.data->values() = 0.0;
+  }
+  if ( participant->exportContext().plotNeighbors ) {
+    _exportVTKNeighbors.resetElements ();
+  }
+}
+
+void CouplingServer:: resetDataIndices
+(
+  const PtrParticipant & participant )
+{
+  foreach ( DataContext & context, participant->writeDataContexts() ) {
+    context.indexCursor = 0;
+  }
+  foreach ( DataContext & context, participant->readDataContexts() ) {
+    context.indexCursor = 0;
+  }
+}
+
+//void CouplingServer:: loadMeshIntoMapping
+//(
+//   impl::MeshContext &        meshContext,
+//   mapping::AbstractMapping & mapping )
+//{
+//   if ( meshContext.spacetree.get() != NULL ) {
+//      mapping.loadMesh ( meshContext.mesh, meshContext.spacetree );
+//   }
+//   else {
+//      mapping.loadMesh ( meshContext.mesh );
+//   }
+//}
+
+//impl::PtrParticipant CouplingServer:: determineAccessingParticipant
+//(
+//   const config::CouplingConfiguration & config )
+//{
+//   const std::vector<impl::PtrParticipant> &
+//      allParticipants = config.getParticipants ();
+//   size_t i;
+//   for ( i=0; i < allParticipants.size(); i++ ) {
+//      if ( allParticipants[i]->getName() == _accessorName ) {
+//         break;
+//      }
+//   }
+//   if ( i == allParticipants.size() ) {
+//      preciceError ( "determineAccessingParticipant(.)",
+//                      "Participant \"" << _accessorName << "\" is not given"
+//                      << " in configuration!" );
+//   }
+//   return allParticipants[i];
+//}
+
+//impl::MeshContext & CouplingServer:: getMesh
+//(
+//   const std::string & geometryName )
+//{
+//   for ( size_t i=0; i < _meshContexts.size(); i++ ) {
+//      if ( _meshContexts[i].mesh->getName() == geometryName ) {
+//         return _meshContexts[i];
+//      }
+//   }
+//   preciceError ( "getMesh(.)",
+//                   "No geometry with name \"" << geometryName << "\"!" );
+//}
+
+void CouplingServer:: checkDataReadyForMapping
+(
+   const DataContext & context )
+{
+   preciceCheck ( context.readyForMapping, "checkDataReadyForMapping()",
+                  "Data \"" << context.data->getName() << "\" of mesh \""
+                  << context.mesh->getName() << "\" is not ready for mapping!" );
+}
+
+mesh::PtrMesh CouplingServer:: createParticipantMesh
+(
+  const PtrParticipant & participant,
+  const mesh::PtrMesh &          mesh ) const
+{
+  std::string name ( participant->getName() + mesh->getName() );
+  bool flipNormals = mesh->isFlipNormals ();
+  mesh::Mesh * accessorMesh = new mesh::Mesh ( name, flipNormals );
+  foreach ( const mesh::PtrData & data, mesh->data() ) {
+    accessorMesh->createData ( data->getName(), data->getType() );
+  }
+  accessorMesh->createVertex ( 0.0 ); // TODO implement for non-instant mapping
+  accessorMesh->allocateDataValues ();
+  return mesh::PtrMesh ( accessorMesh );
+}
+
+//void CouplingServer:: forwardData
+//(
+//  const PtrParticipant & participant ) const
+//{
+//  if ( participant->getSameSchemeHolder() ) {
+//    cplscheme::PtrCouplingScheme scheme =
+//        participant->getCouplingPartner()->getCouplingScheme();
+//    participant->getCouplingScheme()->forwardData ( scheme );
+//  }
+//  else {
+//    com::PtrCommunication communication = participant->getComToCouplingPartner();
+//    participant->getCouplingScheme()->forwardData ( communication );
+//  }
+//}
+
+void CouplingServer:: performServerActions ( PtrParticipant & accessor )
+{
+  for(size_t p = 0; p < accessor->getClientList().size(); p++){
+    handleRequest ( accessor->getClientList()[p] );
+  }
+}
+
+
+void CouplingServer:: handleRequest
+(
+  RemotePartner & client )
+{
+  preciceTrace1 ( "handleRequest()", client.participantID );
+  bool requestsLeft = true;
+  while ( requestsLeft ) {
+    int requestID = -1;
+    client.communication->receive ( requestID, 0 );
+    preciceCheck ( requestID != -1, "handleRequest()",
+                   "RequestID = -1: Reception of RequestID failed" );
+    if ( requestID == Participant::ADVANCE ) {
+      handleRequestAdvance ( client );
+    }
+    else if ( requestID == Participant::FINAL_REQUEST ) {
+      handleRequestFinalize ( client );
+      requestsLeft = false;
+    }
+    else if ( requestID == Participant::SET_DATA_POSITION ) {
+      handleRequestSetDataPosition ( client );
+    }
+    else if ( requestID == Participant::WRITE_DOUBLE ) {
+      handleRequestWriteDataDouble ( client );
+    }
+    else if ( requestID == Participant::READ_DOUBLE ) {
+      handleRequestReadDataDouble ( client );
+    }
+    else if ( requestID == Participant::INITIALIZE_COUPLING_SCHEME ) {
+      handleRequestInitialzeCouplingScheme ( client );
+    }
+    else if ( requestID == Participant::INITIALIZE_COUPLING_SCHEME_DATA ) {
+      handleRequestInitialzeCouplingSchemeData ( client );
+    }
+    else if ( requestID == Participant::PEFORM_DATA_ACTION ) {
+      handleRequestPerformDataActions ( client );
+    }
+    else if ( requestID == Participant::FINALIZE ) {
+      handleRequestInitialzeCouplingScheme ( client );
+    }
+    else {
+      preciceError ( "handleRequest()",
+                     "Unknown RequestID \"" << requestID << "\"");
+    }
+  }
+}
+
+void CouplingServer:: handleRequestSetDataPosition
+(
+    RemotePartner & client )
+{
+  int meshID = -1;
+  client.communication->receive ( meshID, 0 );
+  Vector position;
+  client.communication->receive ( position, 0 );
+  setMeshVertex ( _participants[client.participantID]->getID(),
+    meshID, position );
+}
+
+
+void CouplingServer:: handleRequestWriteDataDouble
+(
+  RemotePartner & client )
+{
+  int dataID = -1;
+  client.communication->receive ( dataID, 0 );
+  preciceDebug ("handleRequestWriteDataDouble()", "Received DataID: " << dataID);
+  double data;
+  client.communication->receive ( data, 0 );
+  writeData ( _participants[client.participantID]->getID(), dataID, data );
+}
+
+void CouplingServer:: handleRequestReadDataDouble
+(
+  RemotePartner & client )
+{
+  int dataID = -1;
+  client.communication->receive ( dataID, 0 );
+  double data;
+  readData ( _participants[client.participantID]->getID(), dataID, data );
+  client.communication->send ( data, 0 ); // Send back result
+}
+
+void CouplingServer:: requestAdvance
+(
+  RemotePartner & server,
+  double        & dt )
+{
+  int requestID = Participant::ADVANCE;
+  server.communication->send ( requestID, 0 );
+  server.communication->send ( dt, 0 );
+
+  _participants[server.participantID]->getCouplingScheme()->
+    getStateHandle().receiveState ( server.communication );
+}
+
+void CouplingServer::handleRequestAdvance
+(
+  RemotePartner & client )
+{
+  int dt = -1;
+  client.communication->receive(dt,0);
+  _participants[client.participantID]->getCouplingScheme()->advance(dt);
+  _participants[client.participantID]->getCouplingScheme()->
+    getStateHandle().sendState( client.communication );
+}
+
+void CouplingServer:: requestSetDataPosition
+(
+  RemotePartner       & server,
+  int                   meshID,
+  const utils::Vector & position )
+{
+  server.communication->send ( Participant::SET_DATA_POSITION, 0 );
+  server.communication->send ( meshID, 0 );
+  server.communication->send ( position, 0 );
+}
+
+void CouplingServer:: requestWriteDataDouble
+(
+  RemotePartner & server,
+  int              dataID,
+  double           data )
+{
+  int requestID = Participant::WRITE_DOUBLE;
+  server.communication->send ( requestID, 0 );
+  server.communication->send ( dataID, 0 );
+  server.communication->send ( data, 0 );
+}
+
+double  CouplingServer:: requestReadDataDouble
+(
+  RemotePartner & server,
+  int             dataID )
+{
+  int requestID = Participant::READ_DOUBLE;
+  server.communication->send ( requestID, 0 );
+  server.communication->send ( dataID, 0 );
+  double value;
+  server.communication->receive ( value, 0 );
+  return value;
+}
+
+void CouplingServer:: requestInitialzeCouplingScheme
+(
+  RemotePartner & server,
+  double          startTime,
+  int             startTimesteps )
+{
+  preciceTrace1 ( "requestInitialzeCouplingScheme()", server.participantID );
+  int requestID =  impl::Participant::INITIALIZE_COUPLING_SCHEME;
+  server.communication->send ( requestID, 0 );
+  server.communication->send ( startTime, 0 );
+  server.communication->send ( startTimesteps, 0 );
+  _participants[server.participantID]->getCouplingScheme()->
+      getStateHandle().receiveState( server.communication );
+}
+
+
+void CouplingServer:: handleRequestInitialzeCouplingScheme
+(
+  RemotePartner & client )
+{
+  preciceTrace1 ( "handleRequestInitialzeCouplingScheme()",
+    client.participantID );
+  double startTime;
+  int    startTimesteps;
+  client.communication->receive ( startTime, 0 );
+  client.communication->receive ( startTimesteps, 0 );
+  _participants[client.participantID]->getCouplingScheme()->initialize
+    ( startTime, startTimesteps );
+  _participants[client.participantID]->getCouplingScheme()->
+    getStateHandle().sendState ( client.communication );
+}
+
+void CouplingServer:: requestInitialzeCouplingSchemeData
+(
+  RemotePartner & server )
+{
+  preciceTrace1 ( "requestInitialzeCouplingSchemeData()", server.participantID );
+  int requestID =  impl::Participant::INITIALIZE_COUPLING_SCHEME_DATA;
+  server.communication->send( requestID, 0 );
+  _participants[server.participantID]->getCouplingScheme()->
+    getStateHandle().receiveState ( server.communication );
+}
+
+
+void CouplingServer:: handleRequestInitialzeCouplingSchemeData
+(
+  RemotePartner & client )
+{
+  _participants[client.participantID]->getCouplingScheme()->initializeData();
+  _participants[client.participantID]->getCouplingScheme()->
+    getStateHandle().sendState ( client.communication );
+}
+
+
+
+void CouplingServer:: requestFinalize
+(
+  RemotePartner & server )
+{
+  int requestID =  impl::Participant::FINALIZE;
+  server.communication->send(requestID,0);
+  _participants[server.participantID]->getCouplingScheme()->
+    getStateHandle().receiveState ( server.communication );
+}
+
+void CouplingServer:: handleRequestFinalize
+(
+  RemotePartner & client )
+{
+  _participants[client.participantID]->getCouplingScheme()->finalize ();
+  _participants[client.participantID]->getCouplingScheme()->
+    getStateHandle().sendState ( client.communication );
+  _participants[client.participantID]->getCouplingScheme().reset ();
+}
+
+void CouplingServer:: requestPerformDataActions (
+  RemotePartner & server,
+  int             iAction )
+{
+  int requestID =  impl::Participant::PEFORM_DATA_ACTION;
+  server.communication->send ( requestID,0 );
+  server.communication->send ( iAction, 0 );
+}
+
+void CouplingServer:: handleRequestPerformDataActions
+(
+  RemotePartner & client )
+{
+  int iAction = -1;
+  client.communication->receive ( iAction, 0 );
+  _participants[client.participantID]->getDataAction(iAction)->performAction ();
+}
+
+
+void CouplingServer:: requestFinalRequest
+(
+  RemotePartner & server )
+{
+  preciceTrace1 ( "requestFinalRequest()", server.participantID );
+  int requestID =  impl::Participant::FINAL_REQUEST;
+  server.communication->send ( requestID,0 );
+}
+
+void CouplingServer:: handleRequestFinalRequest
+(
+  RemotePartner & client )
+{
+  preciceTrace1 ( "handleRequestFinalRequest()", client.participantID );
+  // do nothing (?)
+}
+
+void CouplingServer::configureRemoteMeshAccess
+(
+  const config::CouplingConfiguration & config )
+{
+  preciceTrace ( "configureRemoteMeshAccess()" );
+  // configure each participant
+  for( size_t a=0; a < _participants.size(); a++ ) {
+    PtrParticipant & accessor = _participants[a];
+    // go through all meshesContext ...
+    for ( size_t m=0; m < accessor->usedMeshContexts().size(); m++ ) {
+      impl::MeshContext * meshContext = & accessor->usedMeshContexts()[m];
+      // check whether the mesh is remote
+      if ( meshContext->remote ) { // remote
+        preciceDebug ( "configureRemoteMeshAccess()", "meshContext \""
+                       << meshContext->mesh->getName() << "\" is remote" );
+        // search for the mesh on the others participants
+        bool meshFound = false;
+        // go through all participants ...
+        for ( size_t p = 0; p < _participants.size(); p++ ) {
+          // and whether it is stored locally
+          if ( ! _participants[p]->usedMeshContexts()[m].remote ) {
+            preciceDebug ( "configureRemoteMeshAccess()",
+                           "Found that \"" << _participants[p]->getName()
+                           << "\" offers mesh \"" << meshContext->mesh->getName()
+                           << "\"" );
+            // server instance was found (exit the participant loop)
+            meshFound = true;
+
+            // get communication
+            com::PtrICommunication comm =
+            config.getCommunicationConfiguration()->
+            getCommunication ( accessor->getName(),
+              _participants[p]->getName() );
+            preciceAssertion ( comm.use_count() != 0 );
+
+            // create server and add to meshcontext and server list
+            RemotePartner server ( comm, p, _participants[p]->getName() );
+            meshContext->supplierMesh = server;
+            accessor->addServer ( server );
+          } // if mesh is local on participant p
+          if ( meshFound ) {
+            break;
+          }// mesh not found yet
+        } // participant loop
+        // check that the mesh was actually found
+        preciceCheck ( meshFound, "configureRemoteMeshAccess",
+                       "Mesh \"" << meshContext->mesh->getName()
+                       << "\" could not be found." );
+      }
+      else { // local
+        preciceDebug ( "configureRemoteMeshAccess()",
+                       "meshContext \"" << meshContext->mesh->getName() <<
+                       "\" is local" );
+        // if the mesh is local check if some other participant needs this mesh
+        // Therefore go through all participants ...
+        for ( size_t p=0; p < _participants.size(); p++ ) {
+          // ... and check whether they use it...
+          if ( _participants[p]->isMeshUsed (m) ) {
+            // ... and whether it is remote there
+            if( _participants[p]->usedMeshContexts()[m].remote ) {
+              com::PtrICommunication comm =
+              config.getCommunicationConfiguration()->
+              getCommunication( accessor->getName(),
+                _participants[p]->getName() );
+              preciceAssertion(comm.use_count() != 0);
+
+              // create new client and add to list
+              RemotePartner client ( comm, p, _participants[p]->getName() );
+              accessor->addClient ( client );
+            }// if mesh is remote on participant
+          }// if participant uses mesh
+        } //participant loop
+      }// if mesh is local else remote
+    } // meshContext loop
+  } // accessor loop
+  preciceDebug ( "configureRemoteMeshAccess()",
+                 "Finished on participant and mesh setup" );
+}
+
+void CouplingServer:: configureRemoteCouplingSchemes ()
+{
+  preciceDebug("configureRemoteCouplingSchemes()",
+    "Start coupling scheme setup");
+
+  // configure each participant
+  for( size_t a=0; a < _participants.size(); a++ ) {
+    PtrParticipant & accessor = _participants[a];
+
+    preciceDebug ( "configureRemoteCouplingSchemes()",
+                   "Check the coupling scheme of participant \""
+                   << accessor->getName()<< "\"" );
+
+    std::vector<int> associatedMeshContexts;
+
+    // go through all meshes ...
+    for ( size_t m=0; m < accessor->usedMeshContexts().size(); m++ ) {
+      impl::MeshContext * meshContext = & accessor->usedMeshContexts()[m];
+      preciceDebug ( "configureRemoteCouplingSchemes()",
+                     "Check the coupling scheme for meshContext \""
+                     << m << "\" of \"" << accessor->usedMeshContexts().size()-1
+                     << "\" on participant \"" << accessor->getName()<< "\"" );
+      preciceDebug ( "configureRemoteCouplingSchemes()",
+                     "Check the coupling scheme for remote mesh \""
+                     << meshContext->mesh->getName() << "\" on participant \""
+                     << accessor->getName()<< "\"" );
+      // ... and through all associated data ...
+      for ( size_t i=0; i < meshContext->mesh->data().size(); i++ ) {
+        preciceDebug ( "configureRemoteCouplingSchemes()",
+                       "Check the coupling scheme for dataID \""
+                       << meshContext->mesh->data()[i]->getID() << "\"");
+        // .. and check whether it is used ...
+        if ( accessor->getCouplingScheme()->
+             isDataUsed ( meshContext->mesh->data()[i]->getID() ) )
+        {
+          // ... add context id to list of associated meshContexts
+          if (! utils::contained( (int) m, associatedMeshContexts ) ) {
+            associatedMeshContexts.push_back ( m );
+          }
+          preciceDebug ( "configureRemoteCouplingSchemes()",
+                         "Found that participant \"" << accessor->getName()
+                         << "\" uses dataID \""
+                         << meshContext->mesh->data()[i]->getID()
+                         << "\" on mesh \"" << meshContext->mesh->getName()
+                         << "\"");
+          // ... and check whether it is remote
+          if( meshContext->remote && accessor->isCouplingSchemeLocal() ) {
+            preciceDebug ( "configureRemoteCouplingSchemes()",
+                           "Coupling scheme on participant \""
+                           << accessor->getName() << "\" is remote" );
+            accessor->setIsCouplingSchemeLocal ( false );
+            accessor->setSupplierCouplingScheme ( meshContext->supplierMesh );
+          } // if mesh is remote
+        }// if mesh is remote
+        //      else if( ! meshContext->remote ) { //mesh is local, hence receive init requests
+        //        // go through all participants
+        //        for ( size_t p=0; p < _participants.size(); p++ ) {
+        //          // and check whether participant is already set to be remote
+        //          // -> then client was already added to list and can be skipped
+        //          // -> otherwise check whether the coupling scheme is really local
+        //          if( _participants[p]->isCouplingSchemeLocal() ) {
+        //            // and check whether the mesh is remote and whether
+        //            // they use the data
+        //            if ( _participants[p]->usedMeshContexts()[m].remote
+        //                 && _participants[p]->getCouplingScheme()->
+        //                    isDataUsed ( meshContext->mesh->data()[i]->getID()) )
+        //            {
+        //              // set coupling scheme to be remote, request initialization
+        //              _participants[p]->setIsCouplingSchemeLocal ( false );
+        //            }//if data is used
+        //          }// if coupling scheme is local
+        //        }// participant loop
+        //      }// if mesh is local
+      } // data loop
+    } // mesh loop
+
+    preciceDebug ( "configureRemoteCouplingSchemes()",
+                   "Coupling scheme of participant \""
+                   << accessor->getName() << "\" has local state: "
+                   << accessor->isCouplingSchemeLocal() );
+
+    // make sure that for a remote coupling scheme really all meshes are remote
+    if ( !accessor->isCouplingSchemeLocal() ) {
+      // go through all meshes...
+      for ( size_t m = 0; m < associatedMeshContexts.size(); m++ ) {
+        impl::MeshContext * meshContext = &
+          accessor->usedMeshContexts()[associatedMeshContexts[m]];
+        // check that it is remote
+        if ( ! meshContext->remote ) {
+          preciceError ( "configureRemoteCouplingSchemes ()",
+                         "Mesh> \"" << meshContext->mesh->getName()
+                         << "\" on participant \"" << accessor->getName()
+                         << "\" is not remote, but associated to a remote"
+                         << " coupling scheme." );
+        } // if not remote
+        // check that it is supplied by the coupling scheme supplier
+        if ( accessor->getSupplierCouplingScheme().participantID !=
+             meshContext->supplierMesh.participantID)
+        {
+          preciceError ( "configureRemoteCouplingSchemes ()",
+                         "Mesh> \"" << meshContext->mesh->getName()
+                         << "\" and coupling scheme on \"" << accessor->getName()
+                         << "\" are not supplied by the same supplier." );
+        } // if different provider
+      }// loop over associated mesh contexts
+    }// if c.s. is remote
+
+    // check the server case (dummy communication)
+    if ( !accessor->isCouplingSchemeLocal() ) {
+      // get the coupling partner
+      std::vector<std::string> partnerNames = accessor->getCouplingScheme()->
+        getCouplingPartners ( accessor->getName() );
+      // for every partner
+      for ( size_t p = 0; p < partnerNames.size(); p++ ) {
+        // find the participant object
+        for ( size_t i = 0; i < _participants.size(); i++ ) {
+          PtrParticipant partner =
+            _participants[getParticipantID ( _participants[i]->getName() )];
+          if ( ! partner->isCouplingSchemeLocal() ) {
+            if ( partner->getSupplierCouplingScheme().name
+                 == accessor->getName() )
+            {
+              accessor->setSameSchemeHolder ( true );
+            } // if same scheme holders
+          } // if scheme is remote
+        } // for all participants
+      } // for all partner names
+    }// if c.s. is remote
+  } // participant loop
+}
+
+void CouplingServer:: initializeClientServerCommunication
+(
+  PtrParticipant & accessor )
+{
+  preciceTrace1 ( "initializeClientServerCommunication()", accessor->getName() );
+
+//  preciceDebug ( "initializeClientServerCommunication()", ""
+
+  // Server case: setup communication for all clients
+  for ( size_t c = 0; c < accessor->getClientList().size(); c++ ) {
+    RemotePartner & client = accessor->getClientList()[c];
+    com::PtrICommunication & comm = client.communication;
+    preciceAssertion(comm.use_count() != 0);
+
+    // check whether communication is already connected
+    if ( ! comm->isConnected() ) {
+      // check whether current client is also a server to avoid dead locks
+      if( utils::contained ( client, accessor->getServerList() ) ) {
+        // to avoid dead locks:
+        //  if the accessor id is higher than the client id, the accessor is
+        //  the master and accepts the request
+        //  otherwise it will request it in the server loop
+        if ( accessor->getID() > _participants[client.participantID]->getID() ) {
+          // accept communication
+          comm->acceptConnection ( accessor->getName(),
+            _participants[client.participantID]->getName()  );
+        } // if accessor is master
+      }// if client is also server
+      else {
+        // accept communication
+        comm->acceptConnection ( accessor->getName(),
+          _participants[client.participantID]->getName()  );
+      } // if client is no server
+    } // if not connected yet
+  }// client loop
+
+  // Client case: setup communication for all server
+  for ( size_t s = 0; s < accessor->getServerList().size(); s++ ) {
+    RemotePartner & server = accessor->getServerList()[s];
+    com::PtrICommunication & comm = server.communication;
+    preciceAssertion(comm.use_count() != 0);
+
+    // check whether communication is already connected
+    if ( ! comm->isConnected() ) {
+      // check whether current client is also a server to avoid dead locks
+      if( utils::contained ( server, accessor->getClientList() ) ) {
+        // to avoid dead locks:
+        //  if the accessor id is lower than the client id, the accessor is
+        //  the slave and requests the communication
+        //  otherwise it will request it in the server loop
+        if ( accessor->getID() < _participants[server.participantID]->getID() ) {
+          // request communication
+          comm->requestConnection ( _participants[server.participantID]
+            ->getName(), accessor->getName() );
+        } // if accessor is slave
+      }// if server is also client
+      else {
+        // request communication
+        comm->requestConnection ( _participants[server.participantID]->getName(),
+          accessor->getName() );
+      } // if client is no server
+    } // if not connected yet
+  }// server loop
+}
+
+}} // namespace precice, impl

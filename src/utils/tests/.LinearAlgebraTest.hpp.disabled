@@ -1,0 +1,40 @@
+#ifndef PRECICE_UTILS_TESTS_LINEARALGEBRATEST_HPP_
+#define PRECICE_UTILS_TESTS_LINEARALGEBRATEST_HPP_
+
+#include "tarch/tests/TestCase.h"
+#include "tarch/logging/Log.h"
+
+namespace precice {
+namespace utils {
+namespace tests {
+
+
+
+class LinearAlgebraTest
+:
+    public tarch::tests::TestCase
+{
+public:
+
+    LinearAlgebraTest ();
+
+    virtual void run ();
+
+private:
+
+    static tarch::logging::Log _log;
+
+    void testComputeDeterminant ();
+
+    void testSolveLinSystem ();
+
+    void testNorms ();
+
+    void testSign ();
+
+    void testIndexMin ();
+};
+
+}}} // namespace precice, utils, tests
+
+#endif /* PRECICE_UTILS_TESTS_LINEARALGEBRATEST_HPP_ */

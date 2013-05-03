@@ -1,0 +1,484 @@
+#ifndef PRECICE_IMPL_COUPLINGSERVER_HPP_
+#define PRECICE_IMPL_COUPLINGSERVER_HPP_
+
+#include "MeshContext.hpp"
+#include "DataContext.hpp"
+#include "AbstractDataAction.hpp"
+#include "SharedPointer.hpp"
+#include "../ClosestMesh.hpp"
+#include "../VoxelPosition.hpp"
+#include "../MeshHandle.hpp"
+#include "mapping/SharedPointer.hpp"
+#include "geometry/SharedPointer.hpp"
+#include "query/ExportVTKNeighbors.hpp"
+#include "RemotePartner.hpp"
+#include <string>
+
+namespace precice {
+  namespace config {
+    class CouplingConfiguration;
+  }
+  namespace tests {
+    class GeometryInterfaceTest;
+    class CouplingInterfaceTest;
+    class CouplingInterfaceTestRemote;
+  }
+}
+
+// ----------------------------------------------------------- CLASS DEFINITION
+
+namespace precice {
+namespace impl {
+
+class CouplingServer
+{
+public:
+
+  /**
+   * @brief Constructor.
+   */
+  CouplingServer ();
+
+  /**
+   * @brief Destructor, frees all used resources.
+   */
+  virtual ~CouplingServer ();
+
+
+  void configure (
+    const std::string & configurationFileName );
+
+  void configure (
+    const config::CouplingConfiguration & configuration );
+
+  double initialize (
+    int participantID );
+
+  void initializeData (
+    int participantID );
+
+  double advance (
+    int    participantID,
+    double computedTimestepLength );
+
+  void finalize (
+    int participantID );
+
+  bool isCouplingOngoing (
+    int participantID );
+
+  bool isReadDataAvailable (
+    int participantID );
+
+  bool isWriteDataRequired (
+    int    participantID,
+    double computedTimestepLength );
+
+  bool isTimestepComplete (
+    int participantID );
+
+  bool isActionRequired (
+    int participantID,
+    const std::string & action );
+
+  void fulfilledAction (
+    int                 participantID,
+    const std::string & action );
+
+  int getParticipantID (
+    const std::string & participantName );
+
+  int getMeshID (
+    const std::string & meshName );
+
+  int getDataID (
+    const std::string dataName );
+
+  ClosestMesh inquireClosestMesh (
+    int                   participantID,
+    const utils::Vector & inquiredPoint );
+
+  VoxelPosition inquireVoxelPosition (
+    int                   participantID,
+    const utils::Vector & inquiryCenter,
+    const utils::Vector & halfLengthVoxel );
+
+  int setMeshVertex (
+    int                   participantID,
+    int                   meshID,
+    const utils::Vector & position );
+
+  int setMeshEdge (
+    int participantID,
+    int meshID,
+    int firstVertexID,
+    int secondVertexID );
+
+  void setMeshTriangle (
+    int participantID,
+    int meshID,
+    int firstEdgeID,
+    int secondEdgeID,
+    int thirdEdgeID );
+
+  void writeData (
+    int                   participantID,
+    int                   dataID,
+    const utils::Vector & value );
+
+  void writeData (
+    int    participantID,
+    int    dataID,
+    double value );
+
+  void readData (
+    int             participantID,
+    int             dataID,
+    utils::Vector & value );
+
+  void readData (
+    int      participantID,
+    int      dataID,
+    double & value );
+
+  void setExportLocation (
+    int                       participantID,
+    const std::string &       location,
+    io::Constants::ExportType exportType = io::Constants::EXPORT_ALL );
+
+  void exportMesh (
+    int                       participantID,
+    const std::string &       filenameSuffix,
+    io::Constants::ExportType exportType = io::Constants::EXPORT_ALL );
+
+  void integrateData (
+    int      participantID,
+    int      dataID,
+    double & integratedValue ) const;
+
+  void integrateData (
+    int             participantID,
+    int             dataID,
+    utils::Vector & integratedValue ) const;
+
+  void scaleReadData (
+    int participantID );
+
+  MeshHandle getMeshHandle (
+    int                 participantID,
+    const std::string & meshName );
+
+private:
+
+  // @brief Used for writing debug information.
+  static tarch::logging::Log _log;
+
+  // @brief If true, the CouplingInterface is used by one solver only.
+  bool _geometryMode;
+
+  // @brief If true, the simulation continues from a written checkpoint.
+  bool _isRestartMode;
+
+  // @brief Map from geometry id to Geometry.
+//  std::vector<impl::MeshContext> _meshContexts;
+
+  // @brief Geometries to used to initially create meshes.
+//  std::vector<geometry::PtrAbstractGeometry> _geometries;
+
+  // @brief Geometry name to mesh ID mapping.
+  std::map<std::string,int> _meshIDs;
+
+  std::map<std::string,int> _dataIDs;
+
+  // @brief Map from data ID to Data.
+//  std::vector<DataContext> _dataContexts;
+
+  // @brief For plotting of used mesh neighbor-relations
+  query::ExportVTKNeighbors _exportVTKNeighbors;
+
+  // @brief Holds information about solvers participating in the coupled simulation.
+  std::vector<impl::PtrParticipant> _participants;
+
+//  std::map<std::string, impl::PtrWatchPoint> _watchPoints;
+
+  // @brief To avoid multiple plots during one subcycled global timestep.
+  bool _alreadyPlotThisTimestep;
+
+  // @brief True, if the accessors MPI is initialized by the CouplingInterface.
+  bool _autoInitialized;
+
+  // @brief Defines a timestep interval for global checkpointing
+  int _checkpointTimestepInterval;
+
+  std::vector<com::PtrICommunication> _communications;
+
+
+
+  /**
+   * @brief Exports geometries with data and watch point data.
+   */
+  void handleExports (
+    const PtrParticipant & participant );
+
+  /**
+   * @brief Adds exchanged data ids related to accessor to the coupling scheme.
+   *
+   * From the configuration it is only known which data a participant writes,
+   * which data he receives, and which data is exchanged within the coupling
+   * scheme. The data actually being sent and received in the coupling scheme,
+   * is defined by the intersection of data being written or read by the
+   * accessor and the data exchanged in the coupling scheme, respectively.
+   *
+   * Prerequesits:
+   * - _accessor is valid
+   * - _couplingScheme is valid
+   */
+  void addDataToCouplingScheme (
+    const cplscheme::CouplingSchemeConfiguration & config );
+
+  /**
+   * @brief Configures _couplingScheme to be ready to use.
+   *
+   * Prerequesits:
+   * - _couplingScheme holds a pointer to a valid coupling scheme object
+   * - all meshes of geometries are created
+   * - all data is added to _data
+   * - _accessor points to the accessor
+   */
+  void addMeshesToCouplingScheme ();
+
+  /**
+   * @brief Returns true, if the accessor uses the geometry with given name.
+   */
+  bool isUsingMesh (
+    const std::string & meshName );
+
+  /**
+   * @brief Determines participants providing meshes to other participants.
+   */
+  void configureMeshExchange ();
+
+  /**
+   * @brief Embeds a geometry into context information and data structures.
+   */
+  impl::MeshContext configureMeshContext (
+    mesh::PtrMesh &                       mesh,
+    const config::CouplingConfiguration & config );
+
+  /**
+   * @brief Creates the mesh and context data structure of a geometry.
+   */
+  void createMeshContext (
+    const PtrParticipant & participant,
+//    geometry::PtrAbstractGeometry  geometry,
+    impl::MeshContext &            meshContext );
+
+  /**
+   * @brief Returns a shared pointer to the custom geometry with given name.
+   */
+  //   CustomGeometryMeshTuple getCustomGeometry ( const std::string & name );
+
+//  void initializeWatchPoints ( const Participant & participant );
+
+  void performDataActions (
+    const PtrParticipant &      participant,
+    AbstractDataAction::TimingConstants timing );
+
+  /**
+   * @brief Resets written data, displacements and mesh neighbors to export.
+   */
+  void resetWrittenData (
+    const PtrParticipant & participant);
+
+//  void resetData (
+//    PtrParticipant & participant,
+//    int              dataID );
+
+  /**
+   * @brief Sets all dataContext value indices to zero.
+   */
+  void resetDataIndices (
+    const PtrParticipant & participant );
+
+  /**
+   * @brief Returns a reference to the geometry with given name.
+   */
+//  impl::MeshContext & getMesh (
+//    const std::string & meshName );
+
+  void checkDataReadyForMapping (
+    const DataContext & context );
+
+  mesh::PtrMesh createParticipantMesh (
+    const PtrParticipant & participant,
+    const mesh::PtrMesh &          mesh ) const;
+
+   /*
+    * @brief function handles all requests of all clients
+    * of the specified accessor
+   */
+   void performServerActions (
+     PtrParticipant & accessor );
+
+   /*
+    * @brief receive the actual request body from specified client
+   */
+   void handleRequest (
+     RemotePartner & client );
+
+   /*
+    * @brief sets data position for client
+   */
+   void handleRequestSetDataPosition (
+     RemotePartner & client );
+
+   /*
+    * @brief receives double value from client and maps it to respective mesh
+   */
+   void handleRequestWriteDataDouble (
+     RemotePartner & client );
+
+   /*
+    * @brief reads double value from mesh, maps it to
+    * respective mesh and sends mapped value to client
+   */
+   void  handleRequestReadDataDouble (
+     RemotePartner & client );
+
+   /*
+    * @brief request server to perform advance method of remote coupling scheme
+   */
+   void requestAdvance (
+     RemotePartner & server,
+     double        & dt );
+
+
+   /*
+    * @brief run advance method of remote coupling scheme of
+    * client and send back the new state
+   */
+   void handleRequestAdvance (
+     RemotePartner & client );
+
+   /*
+    * @brief request server to set data position to specified position
+   */
+   void requestSetDataPosition (
+     RemotePartner       & server,
+     int                   meshID,
+     const utils::Vector & position );
+
+   /*
+    * @brief request server to map double value to the coupling mesh
+   */
+   void requestWriteDataDouble (
+     RemotePartner & server,
+     int             dataID,
+     double          data );
+
+   /*
+    * @brief request a mapping of double values from the coupling Mesh
+    * mapped value is returned
+   */
+   double requestReadDataDouble (
+     RemotePartner & server,
+     int             dataID );
+
+   /*
+    * @brief request initialization of remote coupling scheme
+    * on server and receive new coupling state
+   */
+   void requestInitialzeCouplingScheme (
+     RemotePartner & server,
+     double          startTime,
+     int             startTimesteps );
+
+   /*
+    * @brief initialize remote coupling scheme of client and
+    * send new coupling state to client
+   */
+   void handleRequestInitialzeCouplingScheme (
+     RemotePartner & client );
+
+   /*
+    * @brief request initialization of remote coupling scheme
+    * data on server and receive new coupling state
+   */
+   void requestInitialzeCouplingSchemeData (
+     RemotePartner & server );
+
+   /*
+    * @brief initialize data of remote coupling scheme of client and
+    * send new coupling state to client
+   */
+   void handleRequestInitialzeCouplingSchemeData (
+      RemotePartner & client );
+
+   /*
+    * @brief request finalization of remote coupling scheme on server and
+    * receive final coupling state
+   */
+   void requestFinalize (
+     RemotePartner & server );
+
+   /*
+    * @brief finalize the remote coupling scheme of client and
+    * send final coupling state to client
+   */
+   void handleRequestFinalize (
+     RemotePartner & client );
+
+   /*
+    * @brief request server to perform specified data action
+   */
+   void requestPerformDataActions (
+     RemotePartner & server, int iAction );
+
+   /*
+    * @brief perform remote data action specified by client
+   */
+   void handleRequestPerformDataActions (
+     RemotePartner & client );
+
+   /*
+    * @brief gives signal to server that no further request will
+    * be sent for the current time step
+   */
+   void requestFinalRequest (
+     RemotePartner & server );
+
+   /*
+    * @brief receives the final request signal of client
+   */
+   void handleRequestFinalRequest (
+     RemotePartner & client );
+
+   /*
+    * @brief configures the client and server list of all participants
+    * and specifies the server location of remote meshes
+   */
+   void configureRemoteMeshAccess (
+     const config::CouplingConfiguration & config );
+
+   /*
+    * @brief checks for coupling scheme of all participants
+    * whether it uses remote data and determine the scheme supplier
+   */
+   void configureRemoteCouplingSchemes ();
+
+   /*
+    * @brief initializes the communication to all clients
+    * and servers in the respective lists of the specified accessor
+   */
+   void initializeClientServerCommunication (
+     PtrParticipant & accessor );
+
+  // @brief To allow white box tests.
+  friend class tests::CouplingInterfaceTest;
+  friend class tests::CouplingInterfaceTestRemote;
+  friend class tests::GeometryInterfaceTest;
+};
+
+}} // namespace precice, impl
+
+#endif /* PRECICE_IMPL_COUPLINGSERVER_HPP_ */

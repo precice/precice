@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   
+   <log-filter target="debug" component="precice" switch="off"/>
+   
+   <solver-interface dimensions="2">
+      <data:vector name="Forces"        />
+      <data:vector name="Displacements" />
+      
+      <mesh name="MeshForces">
+         <use-data name="Forces"/>
+      </mesh>      
+      <mesh name="MeshDisplacements">
+         <use-data name="Displacements"/>
+      </mesh>
+      
+      <communication:mpi-single from="SolverA" to="SolverB"/>
+               
+      <participant name="SolverA">
+         <use-mesh name="MeshForces"        from="SolverB"/>
+         <use-mesh name="MeshDisplacements" from="SolverB"/>
+         <mapping:rbf-thin-plate-splines direction="write" 
+                  constraint="conservative" mesh="MeshForces" timing="initial"/>
+         <mapping:rbf-thin-plate-splines direction="read" 
+                  constraint="consistent" mesh="MeshDisplacements" timing="initial"/>
+         <write-data name="Forces"        mesh="MeshForces"/>
+         <read-data  name="Displacements" mesh="MeshDisplacements"/>
+      </participant>
+      
+      <participant name="SolverB">
+         <use-mesh name="MeshForces"        provide="yes"/>
+         <use-mesh name="MeshDisplacements" provide="yes"/>
+         <write-data name="Displacements" mesh="MeshDisplacements"/>
+         <read-data  name="Forces"        mesh="MeshForces"/>
+      </participant>
+      
+      <coupling-scheme:explicit>
+         <participants first="SolverA" second="SolverB"/>
+         <max-timesteps value="2"/>
+         <timestep-length value="1.0"/>
+         <exchange data="Forces"        mesh="MeshForces"        from="SolverA"/>
+         <exchange data="Displacements" mesh="MeshDisplacements" from="SolverB"/>
+      </coupling-scheme:explicit>   
+   </solver-interface>
+</precice-configuration>

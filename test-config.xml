@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+
+<!-- Configuration for running all unit tests --> 
+
+<configuration>
+
+  <run-tests>
+    <log-filter target=""      component=""      switch="off"/>
+    <log-filter target="info"  component="tarch" switch="on"/>
+    <!--<log-filter target="debug" component="precice::mesh::test" switch="on"/>-->
+    
+    <log-output column-separator=" | " log-time-stamp="no" 
+                log-time-stamp-human-readable="yes" log-machine-name="no" 
+                log-message-type="no" log-trace="yes" log-output-file=""/>
+  </run-tests>
+
+</configuration>

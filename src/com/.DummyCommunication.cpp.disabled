@@ -1,0 +1,106 @@
+
+#include "DummyCommunication.hpp"
+
+namespace precice {
+namespace com {
+
+DummyCommunication:: DummyCommunication ()
+{}
+
+DummyCommunication:: ~DummyCommunication ()
+{}
+
+ bool DummyCommunication:: isConnected ()
+{
+  return true;
+}
+
+void DummyCommunication:: acceptConnection (
+  const std::string & nameAcceptor,
+  const std::string & nameRequester )
+{}
+
+void DummyCommunication:: requestConnection (
+  const std::string & nameAcceptor,
+  const std::string & nameRequester )
+{}
+
+void DummyCommunication:: closeConnection ()
+{}
+
+
+void DummyCommunication:: send (
+  const std::string & itemToSend,
+  int                 rankReceiver )
+{}
+
+void DummyCommunication:: send (
+  const utils::Vector & itemToSend,
+  int                   rankReceiver )
+{}
+
+
+void DummyCommunication:: send (
+  mesh::Data::Values & itemToSend,
+  int                  rankReceiver )
+{}
+
+void DummyCommunication:: send (
+  double itemToSend,
+  int    rankReceiver )
+{}
+
+void DummyCommunication:: send (
+  int itemToSend,
+  int rankReceiver )
+{}
+
+void DummyCommunication:: send (
+  bool itemToSend,
+  int  rankReceiver )
+{}
+
+void DummyCommunication:: receive (
+  std::string & itemToReceive,
+  int           rankSender )
+{}
+
+void DummyCommunication:: receive (
+  utils::Vector & itemToReceive,
+  int             rankSender )
+{}
+
+void DummyCommunication:: receive (
+  mesh::Data::Values & itemToReceive,
+  int                  rankSender ) {}
+
+void DummyCommunication:: receive (
+  double & itemToReceive,
+  int      rankSender )
+{}
+
+void DummyCommunication:: receive (
+  int & itemToReceive,
+  int   rankSender )
+{}
+
+void DummyCommunication:: receive (
+  bool & itemToReceive,
+  int    rankSender )
+{}
+
+void DummyCommunication:: sendreceive (
+  const utils::Vector & itemToSend,
+  int                   rankReceiver,
+  utils::Vector       & itemToReceive,
+  int                   rankSender )
+{}
+
+void DummyCommunication:: sendreceive (
+  int   itemToSend,
+  int   rankReceiver,
+  int & itemToReceive,
+  int   rankSender )
+{}
+
+}} // com, precice

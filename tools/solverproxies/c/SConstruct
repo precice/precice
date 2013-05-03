@@ -1,0 +1,12 @@
+# precice/src/adapters/c/SConstruct
+
+envCompile = Environment ( 
+   CPPPATH    = ['.'],
+   LIBPATH    = ['#../../../../build/debug-dim2-mpi-serial/'],
+   LIBS       = ['precice']
+   )
+  
+envCompile.Object ('SolverDummy.c')
+
+envLink = envCompile.Clone (CC='g++')
+envLink.Program('SolverDummy.o')

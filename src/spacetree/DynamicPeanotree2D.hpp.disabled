@@ -1,0 +1,64 @@
+// Copyright (C) 2011 Technische Universitaet Muenchen
+// This file is part of the preCICE project. For conditions of distribution and
+// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
+#ifndef DynamicPeanotree2D2D
+#define DynamicPeanotree2D2D
+
+#include "spacetree/Spacetree.hpp"
+#include "spacetree/impl/PeanotreeCell2D.hpp"
+#include "utils/Dimensions.hpp"
+#include "tarch/logging/Log.h"
+
+namespace precice {
+namespace spacetree {
+
+/**
+ * @brief Quad- (2D), DynamicPeanotree2D (3D).
+ */
+class DynamicPeanotree2D : public Spacetree
+{
+public:
+
+  DynamicPeanotree2D (
+    const utils::DynVector& center,
+    double halflength,
+    double refinementLimit );
+
+  virtual ~DynamicPeanotree2D() {}
+
+  virtual void initialize ( mesh::Mesh& content );
+
+  virtual void meshChanged ( mesh::Mesh& mesh );
+
+  virtual int searchPosition ( const utils::DynVector& point );
+
+  /**
+   * @brief Spacetree accelerated distance search.
+   */
+  virtual void searchDistance ( query::FindClosest& findClosest );
+
+  /**
+   * @brief Spacetree accelerated voxel content search.
+   */
+  virtual int searchContent ( query::FindVoxelContent& find );
+
+  virtual void accept ( Visitor& visitor );
+
+  virtual void clear();
+
+private:
+
+  static tarch::logging::Log _log;
+
+  utils::DynVector _center;
+
+  double _halflength;
+
+  double _refinementLimit;
+
+  impl::PeanotreeCell2D _rootCell;
+};
+
+}} // namespace precice, spacetree
+
+#endif /* DynamicPeanotree2D2D */

@@ -1,0 +1,71 @@
+#ifndef PRECICE_UTILS_VALIDATORGREATERTHAN_HPP_
+#define PRECICE_UTILS_VALIDATORGREATERTHAN_HPP_
+
+#include "Validator.hpp"
+#include "../Dimensions.hpp"
+#include <string>
+
+namespace precice {
+namespace utils {
+
+
+template< typename value_t >
+class ValidatorGreaterThan
+:
+   public Validator<value_t>
+{
+public:
+
+   ValidatorGreaterThan ( value_t validationLimit );
+
+   virtual ~ValidatorGreaterThan() {};
+
+   virtual bool validateValue ( value_t value );
+
+   virtual Validator<value_t> & clone () const;
+
+   virtual std::string getErrorMessage () const;
+
+private:
+
+   ValidatorGreaterThan ( const ValidatorGreaterThan<value_t> & rhs );
+
+   ValidatorGreaterThan<value_t> & operator= ( const ValidatorGreaterThan<value_t> & rhs );
+
+   value_t _validationLimit;
+};
+
+
+template< typename data_t >
+class ValidatorGreaterThan< tarch::la::Vector<Def::DIM,data_t> >
+:
+   public Validator< tarch::la::Vector<Def::DIM,data_t> >
+{
+public:
+
+   typedef tarch::la::Vector<Def::DIM,data_t> vector_t;
+
+   ValidatorGreaterThan ( vector_t validationLimit );
+
+   virtual ~ValidatorGreaterThan() {};
+
+   virtual bool validateValue ( vector_t value );
+
+   virtual Validator<vector_t> & clone () const;
+
+   virtual std::string getErrorMessage () const;
+
+private:
+
+   ValidatorGreaterThan ( const ValidatorGreaterThan<vector_t> & rhs );
+
+   ValidatorGreaterThan<vector_t> & operator= ( const ValidatorGreaterThan<vector_t> & rhs );
+
+   vector_t _validationLimit;
+};
+
+}} // namespace precice, utils
+
+#include "ValidatorGreaterThan.cpph"
+
+#endif /* PRECICE_UTILS_VALIDATORGREATERTHAN_HPP_ */

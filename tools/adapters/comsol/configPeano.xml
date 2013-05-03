@@ -1,0 +1,119 @@
+<?xml version="1.0"?>
+
+<!--
+   - This runs a fluid simulation 
+   - on a 2D regular Cartesian grid (trivialgrid).
+   - (C) 2008 Tobias Neckel
+   -->
+<configuration>
+   
+   <!--
+      Switches debug output from different components on / off. If no switch is
+      defined for a component in Debug mode, the default is on, i.e. the filter
+      works with a black list.
+      -->
+   
+   <log-filter target="debug" component="parallel" switch="off" />
+   <log-filter target="debug" component="grid"     rank="*" switch="off" />
+   <log-filter target="debug" component="trivialgrid"   switch="off" />
+   <log-filter target="debug" component="geometry" switch="off" />
+   <log-filter target="debug" component="output"   switch="off" />
+   <log-filter target="debug" component="scenario" switch="off" />
+   <log-filter target="debug" component="stacks"   switch="off" />
+   <log-filter target="debug" component="pegsi"    switch="off" />
+   <log-filter target="debug" component="fluid"    switch="on" />
+   <log-filter target="debug" component="precice"  switch="off" />
+   <log-filter target="debug" component="utils"    switch="off" />
+   <log-filter target="debug" component="plotter"  switch="off" />
+   <log-filter target="debug" component="petsc"    switch="off" />
+   
+   
+   <run-peano-fluid>
+      <experiment-name> Sphere in Channel Scenario </experiment-name>
+
+      <stack name="std-vector" block-size="3800" />
+      
+      <!-- Explanation for domain size:
+        -- 
+	-- The actual domain of the benchmark has a length of l=2.5 and height of h=0.41.
+	-- In order to not to change the length of the domain when refining the grid,
+	-- the length is adapted to be l = 3 * 0.41 * n. In order to not to influence the
+	-- vortex street, l > 2.5 is a second condition. As a result, l = 2.46. The height 
+	-- is kept, since it is critical on the results. 
+	-- The spacetree sidelengths h0 and h1 are then chosen to be h0 = h1 = 9*h.
+	-->
+      <domain x0="-3.69" x1="-3.69" h0="11.07" h1="11.07" />
+      
+      <precice>
+        <coupling-config filename="configPrecice.xml"/>
+
+         <!-- Only needed for adaptive grid -->
+         <domain max-meshwidth="0.41/9" />
+         <geometry-addon name="channel"        max-meshwidth="0.41/9" />
+         <geometry-addon name="channel-side-1"  max-meshwidth="0.41/9" />
+         <geometry-addon name="channel-side-2"  max-meshwidth="0.41/9" />
+         <geometry-addon name="channel-side-3"  max-meshwidth="0.41/9" />
+         <geometry-addon name="Geometry"       max-meshwidth="0.41/27" />
+      </precice>
+      
+      <!--
+      <trivialgrid use-mesh-stretching="no" >
+         <number-of-cells nx0="500" nx1="83" />
+      </trivialgrid>
+      -->
+      
+      <solver name="PETSc" 
+            type="CG"
+            max-iterations="400"
+            preconditioner="JACOBI"
+            relative-tolerance="1e-7"
+            absolute-tolerance="1e-7"
+            divergence-tolerance="1e5"
+            />
+
+      <ode   solver="euler-explicit"
+             start-time="0.0"
+             end-time="20.0"
+             number-of-time-steps="50000"
+             print-delta="1"
+             />
+      
+      <fluid name="obstacle-in-channel"
+            inlet-dimension-x0="0.0" 
+            inlet-dimension-x1="0.41"
+            inlet-offset-x0="0.0"
+            inlet-offset-x1="1.64"
+            outlet-dimension-x0="0.0"
+            outlet-dimension-x1="0.41"
+            velocity-mean-value="0.2"
+            velocity-profile="parabola"
+            characteristic-length="0.1"
+            initiate-velocity-everywhere="yes"
+            Re="20.0"
+            eta="1.0"
+            rho="1000.0"
+            adjustment-factor="1.0"
+            element-type="dlinear" 
+            use-divergence-correction="yes"
+            use-moving-geometry="yes"
+            >
+<!--
+         <refinement-criterion surplus-calculator-type="five-point"
+                               tolerance-l2="5e-3"
+                               tolerance-max="5e-3"
+                               />
+-->
+      </fluid>
+
+
+      
+      <plotter name="vtk" 
+             path="./peano-output"
+             filename="sphere-in-channel" 
+             use-standard-file-name-extension="yes" 
+             use-binary-format="no"
+             plot-leaves-only="yes" 
+             plot-vertex-type="yes" />          
+   </run-peano-fluid>  
+   
+</configuration>  

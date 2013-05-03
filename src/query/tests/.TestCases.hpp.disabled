@@ -1,0 +1,33 @@
+#ifndef PRECICE_QUERY_TESTCASES_HPP_
+#define PRECICE_QUERY_TESTCASES_HPP_
+
+#include "utils/TestCaseCollection.hpp"
+#include "FindClosestTest.hpp"
+#include "FindVoxelContentTest.hpp"
+#include "FindClosestVertexVisitorTest.hpp"
+
+namespace precice {
+namespace query {
+namespace tests {
+
+
+class TestCases
+:
+   public tarch::tests::TestCaseCollection
+{
+public:
+
+	TestCases ();
+
+private:
+
+    FindClosestTest _findClosestTest;
+
+    FindVoxelContentTest _findVoxelContentTest;
+
+    FindClosestVertexVisitorTest _findClosestVertexVisitorTest;
+};
+
+}}} // namespace precice, query, tests
+
+#endif /* PRECICE_QUERY_TESTCASES_HPP_*/

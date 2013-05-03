@@ -1,5 +1,7 @@
 # The following files are ignored by Git
 *.[oa]
 *~
+*.pyc
 .cproject
 .project
+

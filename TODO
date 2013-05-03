@@ -1,0 +1,23 @@
+OPEN:
+
+- 27.08.12, BG: Bugfix for Fluent restart with changed coordinates of preCICE mesh and Fluent mesh nodes
+- 22.04.10, BG: Write demonstration test cases for src docu
+- 04.09.09, BG: Write interface wrapper for cplscheme::AbstractCouplingScheme to 
+                replace individual forwarding functions in CouplingInterface.
+- 07.06.09, BG: implement proper normal computation for vertices in 3D
+
+DONE:
+
+- 27.08.12, BG: Change coupling state info output to plot last iteration instead of 0th of next timestep
+- 26.04.10, BG: Modify sending/receiving of vector data to a direct one
+- 09.11.09, BG: clean up auto/manual geometry system  
+- 02.09.09, BG: (Think about) Implement Properties with double and int
+- 22.04.09, BG: replace .h with .hpp
+- 11.06.09, BG: edges as closest neighbors for Dim3
+- 23.04.09, BG: implement proper config(filename) configuration with logfilters and so on..
+- 22.04.09, BG: implement (created) test case for mesh/ScaleProperty
+
+
+REMOVED: 
+
+- 20.07.09: Replace precice::CouplingInterface::_data map by vector

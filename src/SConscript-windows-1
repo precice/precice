@@ -1,0 +1,70 @@
+# This is file src/Sconscript
+
+sourcesUtils = [
+   Glob('utils/*.cpp'),
+   Glob('utils/xml/*.cpp'),
+   Glob('utils/tests/*.cpp')
+  ]
+  
+sourcesMesh = [
+   Glob('mesh/*.cpp'),
+   Glob('mesh/tests/*.cpp'),
+   Glob('mesh/impl/*.cpp'),
+   Glob('mesh/config/*.cpp')   
+   ]
+   
+sourcesMeshNew = [
+   Glob('meshnew/*.cpp'),
+   Glob('meshnew/tests/*.cpp')
+   ]
+   
+sourcesIO = [
+   Glob('io/*.cpp'),
+   Glob('io/impl/*.cpp'),
+   Glob('io/config/*.cpp'),
+   Glob('io/tests/*.cpp')
+   ]
+   
+sourcesGeometry = [
+   Glob('geometry/*.cpp'),
+   Glob('geometry/config/*.cpp'),
+   Glob('geometry/tests/*.cpp')
+   ]   
+  
+sourcesQuery = [
+   Glob('query/*.cpp'),
+   Glob('query/tests/*.cpp')
+   ]
+   
+sourcesSpacetree = [
+   Glob('spacetree/*.cpp'),
+   Glob('spacetree/impl/*.cpp'),
+   Glob('spacetree/config/*.cpp'),
+   Glob('spacetree/tests/*.cpp')
+   ]
+   
+sourcesMapping = [
+   Glob('mapping/*.cpp'),
+   Glob('mapping/config/*.cpp'),
+   Glob('mapping/tests/*.cpp')
+   ]
+   
+sourcesCom = [
+   Glob('com/*.cpp'),
+   #Glob('com/impl/*.cpp'),
+   Glob('com/config/*.cpp'),
+   Glob('com/tests/*.cpp')
+   ]
+   
+sourcesAll = [ 
+   sourcesUtils,
+   sourcesMesh,
+   sourcesIO,
+   sourcesGeometry,
+   sourcesQuery,
+   sourcesSpacetree,
+   sourcesMapping,
+   sourcesCom
+   ]
+   
+Return ('sourcesAll')

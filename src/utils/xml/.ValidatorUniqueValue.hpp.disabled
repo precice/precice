@@ -1,0 +1,45 @@
+#ifndef PRECICE_UTILS_VALIDATORUNIQUEVALUE_HPP_
+#define PRECICE_UTILS_VALIDATORUNIQUEVALUE_HPP_
+
+#include "Validator.hpp"
+#include "tarch/logging/Log.h"
+#include <set>
+
+namespace precice {
+namespace utils {
+
+
+template< typename value_t >
+class ValidatorUniqueValue
+:
+   public Validator<value_t>
+{
+public:
+
+   ValidatorUniqueValue ();
+
+   virtual ~ValidatorUniqueValue() {};
+
+   virtual bool validateValue ( value_t value );
+
+   virtual Validator<value_t> & clone () const;
+
+   virtual std::string getErrorMessage () const;
+
+private:
+
+   static tarch::logging::Log _log;
+
+   ValidatorUniqueValue ( const ValidatorUniqueValue<value_t> & rhs );
+
+   ValidatorUniqueValue<value_t> &
+   operator= ( const ValidatorUniqueValue<value_t> & rhs );
+
+   std::set<value_t> _readValues;
+};
+
+#include "ValidatorUniqueValue.cpph"
+
+}} // namespace precice, utils
+
+#endif /* PRECICE_UTILS_VALIDATORUNIQUEVALUE_HPP_ */

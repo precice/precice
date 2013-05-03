@@ -1,0 +1,38 @@
+# tools/fluent/tests/SConstruct
+#
+# SCons buildfile for fluent test cases
+#
+##########################################
+
+import os;
+import sys;
+  
+##### Determine precice root path from environment variable
+#
+preciceRoot = os.getenv ('PRECICE_ROOT')
+if ( preciceRoot == None ):
+   print 'ERROR: Environment variable PRECICE_ROOT not defined!'
+   sys.exit(1)
+else:
+   print 'Using environment variable PRECICE_ROOT =', preciceRoot
+
+##### Declare build variables for adapter comsol-precice
+#
+cppdefines = [ 'TEST' ]   
+libpath = []   
+libs = []
+cpppath = ['../src/']   
+ccflags = []
+
+##### Setup build environment and issue builds
+#   
+env = Environment (
+   CPPDEFINES = cppdefines,  # defines for preprocessor (#define xyz)
+   LIBPATH    = libpath,     # path to libraries used
+   LIBS       = libs,        # libraries used (without prefix "lib" and suffix ".a"/".so"/...)
+   CPPPATH    = cpppath,     # pathes where the preprocessor should look for files
+   CCFLAGS    = ccflags,     # flags for the c/c++ compilers
+   CXX = 'g++'             # the c++ compiler that should be used
+   )
+
+env.Program ('test_fluent', ['main.cpp', '../src/wave_profile_udf.c'])

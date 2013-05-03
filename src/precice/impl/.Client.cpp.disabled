@@ -1,0 +1,53 @@
+#include "Client.hpp"
+
+namespace precice {
+namespace impl {
+
+Client::Client()
+{
+   //TODO_ZANDERN implement
+}
+
+Client::Client(
+   int rank,
+   com::PtrICommunication communication)
+: _communication(communication),
+  _rank(rank),
+  _advance(false),
+  _usedMeshes()
+{
+
+}
+
+Client::~Client()
+{
+   //TODO_ZANDERN implement
+}
+
+int Client::getRank()
+{
+   return _rank;
+}
+
+bool Client::getAdvance()
+{
+   return _advance;
+}
+
+void Client::setAdvance(bool state)
+{
+   _advance = state;
+}
+
+void Client::addUsedMesh(std::string name)
+{
+   _usedMeshes.push_back(name);
+}
+
+const com::PtrICommunication Client::getCommmunication()
+{
+    preciceAssertion ( _communication.get() != NULL );
+    return _communication;
+}
+}  // namespace impl
+}  // namespace precice

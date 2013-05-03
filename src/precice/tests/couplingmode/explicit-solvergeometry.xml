@@ -1,0 +1,56 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   
+   <log-filter target="debug" component="precice" switch="off" />
+   
+   <solver-interface dimensions="3">
+   
+      <data:vector name="Forces"         />
+      <data:vector name="Velocities"      />
+      <data:vector name="Displacements"  />
+      
+      <communication:mpi-single from="SolverOne" to="SolverTwo" />
+      
+      <mesh name="SolverGeometry" flip-normals="inside">
+         <use-data name="Forces" />
+         <use-data name="Velocities" />
+         <use-data name="Displacements" />
+      </mesh>
+               
+      <participant name="SolverOne">
+         <use-mesh name="SolverGeometry" offset="10.0; 10.0; 10.0" from="SolverTwo" />
+         <mapping:nearest-projection direction="write" mesh="SolverGeometry"
+                  constraint="conservative" timing="incremental" />
+         <mapping:nearest-projection direction="read" mesh="SolverGeometry"
+                  constraint="consistent" timing="incremental" />
+         <write-data name="Forces"        mesh="SolverGeometry" />
+         <read-data  name="Velocities"    mesh="SolverGeometry" />
+         <read-data  name="Displacements" mesh="SolverGeometry" />
+         <action:add-to-coordinates mesh="SolverGeometry" timing="on-exchange-post">
+            <source-data name="Displacements"/> 
+         </action:add-to-coordinates>
+      </participant>
+      
+      <participant name="SolverTwo">
+         <use-mesh name="SolverGeometry" provide="yes" />
+         <write-data name="Displacements" mesh="SolverGeometry" />
+         <write-data name="Velocities"    mesh="SolverGeometry" />
+         <read-data name="Forces"         mesh="SolverGeometry" />
+         <action:add-to-coordinates mesh="SolverGeometry" timing="regular-prior">
+            <source-data name="Displacements"/> 
+         </action:add-to-coordinates>
+      </participant>
+      
+      <coupling-scheme:explicit>
+         <participants first="SolverOne" second="SolverTwo" /> 
+         <max-timesteps value="5" /> 
+         <timestep-length value="0.01" />
+         <exchange data="Forces"        mesh="SolverGeometry" from="SolverOne" />
+         <exchange data="Velocities"    mesh="SolverGeometry" from="SolverTwo" />
+         <exchange data="Displacements" mesh="SolverGeometry" from="SolverTwo" />
+      </coupling-scheme:explicit>
+                   
+   </solver-interface>
+
+</precice-configuration>

@@ -1,0 +1,42 @@
+#ifndef PRECICE_MAPPING_MAPPINGNEARESTPROJECTION_HPP_
+#define PRECICE_MAPPING_MAPPINGNEARESTPROJECTION_HPP_
+
+#include "Mapping.hpp"
+#include <list>
+#include <vector>
+
+namespace precice {
+namespace mapping {
+
+/**
+ * @brief
+ */
+class MappingNearestProjection : public Mapping
+{
+public:
+
+  MappingNearestProjection();
+
+  virtual ~MappingNearestProjection() {}
+
+  virtual void computeMapping();
+
+  virtual bool hasComputedMapping();
+
+  virtual void map (
+    int inputDataID,
+    int outputDataID );
+
+private:
+
+  static tarch::logging::Log _log;
+
+  typedef std::list<query::InterpolationElement> InterpolationElements;
+  std::vector<InterpolationElements> _weights;
+
+  bool _hasComputedMapping;
+};
+
+}} // namespace precice, mapping
+
+#endif /* PRECICE_MAPPING_MAPPINGNEARESTPROJECTION_HPP_ */

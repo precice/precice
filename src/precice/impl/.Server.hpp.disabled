@@ -1,0 +1,95 @@
+#ifndef PRECICE_IMPL_SERVER_HPP_
+#define PRECICE_IMPL_SERVER_HPP_
+
+#include "com/SharedPointer.hpp"
+#include "com/ICommunication.hpp"
+#include "SharedPointer.hpp"
+#include "utils/Dimensions.hpp"
+#include "ClientServerHelper.hpp"
+
+namespace precice {
+namespace impl {
+
+using utils::Vector;
+
+struct Server  {
+
+//public:
+
+   // TODO_ZANDERN delete if server stays struct
+//   /*
+//    * @brief Constructor
+//   */
+//   Server();
+//
+//   /*
+//    * @brief Destructor
+//   */
+//   virtual ~Server();
+//
+//   /*
+//    * @brief sends request header to server
+//   */
+//   void submitRequestHeader_disabled(int requestID, int dataID);
+//
+//   /*
+//    * @brief tells server that client is ready to advance
+//    * blocks until final advance signal form server is received
+//   */
+//   void submitRequestAdvance_disabled();
+//
+//   /*
+//    * @brief request a mapping of double values to the coupling Mesh
+//    * blocks until data is stored on server
+//   */
+//   void submitRequestMapDoubleToCouplingMesh_disabled(int dataID,
+//   Vector coordinates, Vector data);
+//
+//   /*
+//    * @brief request a mapping of double values from the coupling Mesh
+//    * blocks until data is received by client
+//   */
+//   Vector  submitRequestMapDoubleFromCouplingMesh_disabled(int dataID,
+//            Vector coordinates);
+//
+//   /*
+//    * @brief get communication object (TODO check whether save)
+//   */
+//   com::PtrICommunication getCommunication();
+//
+//   /*
+//    * @brief get MPI Rank of client
+//   */
+//   int getRank();
+//
+//   /*
+//    * @brief get information whether client is ready to advance
+//   */
+//   bool getAdvance();
+
+//private:
+
+
+   //@brief communication object to server instance
+   com::PtrICommunication communication;
+
+   //@brief MPI rank of server
+   int rank;
+
+   // @brief advance state of server
+   bool advance;
+
+   // @brief Used for writing debug information.
+   static tarch::logging::Log log;
+
+   // @brief list of meshes that are stored on this server
+   std::vector<std::string> usedMeshes;
+
+
+
+}; // Server
+
+}// impl
+}// precice
+
+#endif /* SERVER_HPP_ */

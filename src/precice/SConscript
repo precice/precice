@@ -1,0 +1,11 @@
+# This is file src/precice/SConscript
+
+sources = [
+   Glob('*.cpp'),
+   Glob('impl/*.cpp'),
+   Glob('config/*.cpp'),
+   Glob('tests/*.cpp'),
+   Glob('adapters/c/*.cpp')
+   ]
+     
+Return ('sources')
