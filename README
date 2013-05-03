@@ -3,10 +3,13 @@ This is the README file for preCICE
 
 Project description
 
-preCICE stands for Precise Code Interaction Coupling Environment.
+preCICE stands for Precise Code Interaction Coupling Environment. Its main 
+component is a library that can be used by simulation programs to be coupled
+together in a partitioned way.
 
 
 Project documentation
 
-The website of preCICE can be found at http://www5.in.tum.de/wiki/index.php/PreCICE_Webpage.
-A user's or developer's guide can be retrieved from there.
+The website of preCICE can be found at 
+http://www5.in.tum.de/wiki/index.php/PreCICE_Webpage. A user's or developer's 
+guide can be retrieved from there.
