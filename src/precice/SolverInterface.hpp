@@ -38,7 +38,7 @@ namespace precice {
  * -# Create an object of SolverInterface with SolverInterface()
  * -# Configure the object with SolverInterface::configure()
  * -# Initialize preCICE with SolverInterface::initialize()
- * -# Advance to the next timestep with SolverInterface::advance()
+ * -# Advance to the next (time)step with SolverInterface::advance()
  * -# Finalize preCICE with SolverInterface::finalize()
  */
 class SolverInterface
