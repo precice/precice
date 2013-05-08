@@ -18,6 +18,27 @@ cxx = 'g++'
 env = Environment()
 conf = Configure(env) # For checking libraries
 
+##### Determine build directory
+#
+buildDir = ARGUMENTS.get('builddir', 'build')
+buildpath = buildDir + '/'
+
+##### Determine build mode
+#
+build = ARGUMENTS.get('build', 'debug')
+if build == 'debug':
+   cppdefines.append('Debug')
+   cppdefines.append('Asserts')
+   ccflags.append('-g3')
+   ccflags.append('-O0')
+   buildpath += "debug"
+elif build == 'release':
+   ccflags.append('-O3')
+   buildpath += "release"    
+else:
+   print "ERROR: Argument 'build' must be either 'debug' or 'release'!"
+   sys.exit(1)
+
 print '\nEnvironment variables:'
 print '(have to be defined by the user to configure build)'
 
@@ -194,27 +215,6 @@ else:
 #else:
 #   print "ERROR: Attribute 'statistics' must be = 'on' or 'off'!"
 #   sys.exit(1)
-
-##### Determine build directory
-#
-buildDir = ARGUMENTS.get('builddir', 'build')
-buildpath = buildDir + '/'
-
-##### Determine build mode
-#
-build = ARGUMENTS.get('build', 'debug')
-if build == 'debug':
-   cppdefines.append('Debug')
-   cppdefines.append('Asserts')
-   ccflags.append('-g3')
-   ccflags.append('-O0')
-   buildpath += "debug"
-elif build == 'release':
-   ccflags.append('-O3')
-   buildpath += "release"    
-else:
-   print "ERROR: Argument 'build' must be either 'debug' or 'release'!"
-   sys.exit(1)
 
 ##### Determine, which compiler should be used
 #
