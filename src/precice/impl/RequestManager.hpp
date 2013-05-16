@@ -229,6 +229,15 @@ public:
     int fourthVertexID );
 
   /**
+   * @brief Requests write block scalar data from server.
+   */
+  void requestWriteBlockScalarData (
+    int     dataID,
+    int     size,
+    int*    valueIndices,
+    double* values );
+
+  /**
    * @brief Requests write scalar data from server.
    */
   void requestWriteScalarData (
@@ -252,6 +261,15 @@ public:
     int     dataID,
     int     valueIndex,
     double* value );
+
+  /**
+   * @brief Requests read block scalar data from server.
+   */
+  void requestReadBlockScalarData (
+    int     dataID,
+    int     size,
+    int*    valueIndices,
+    double* values );
 
   /**
    * @brief Requests read scalar data from server.
@@ -340,9 +358,11 @@ private:
     REQUEST_SET_MESH_QUAD,
     REQUEST_SET_MESH_QUAD_WITH_EDGES,
     REQUEST_WRITE_SCALAR_DATA,
+    REQUEST_WRITE_BLOCK_SCALAR_DATA,
     REQUEST_WRITE_VECTOR_DATA,
     REQUEST_WRITE_BLOCK_VECTOR_DATA,
     REQUEST_READ_SCALAR_DATA,
+    REQUEST_READ_BLOCK_SCALAR_DATA,
     REQUEST_READ_VETOR_DATA,
     REQUEST_READ_BLOCK_VECTOR_DATA,
     REQUEST_MAP_WRITTEN_DATA,
@@ -487,6 +507,11 @@ private:
   void handleRequestSetMeshQuadWithEdges ( int rankSender );
 
   /**
+   * @brief Handles request write block scalar data from client.
+   */
+  void handleRequestWriteBlockScalarData ( int rankSender );
+
+  /**
    * @brief Handles request write scalar data from client.
    */
   void handleRequestWriteScalarData ( int rankSender );
@@ -500,6 +525,11 @@ private:
    * @brief Handles request write vector data from client.
    */
   void handleRequestWriteVectorData ( int rankSender );
+
+  /**
+   * @brief Handles request read block scalar data from client.
+   */
+  void handleRequestReadBlockScalarData ( int rankSender );
 
   /**
    * @brief Handles request read scalar data from client.

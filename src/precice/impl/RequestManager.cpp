@@ -154,6 +154,9 @@ void RequestManager:: handleRequests()
     case REQUEST_SET_MESH_QUAD_WITH_EDGES:
       handleRequestSetMeshQuadWithEdges(rankSender);
       break;
+    case REQUEST_WRITE_BLOCK_SCALAR_DATA:
+      handleRequestWriteBlockScalarData(rankSender);
+      break;
     case REQUEST_WRITE_SCALAR_DATA:
       handleRequestWriteScalarData(rankSender);
       break;
@@ -162,6 +165,9 @@ void RequestManager:: handleRequests()
       break;
     case REQUEST_WRITE_VECTOR_DATA:
       handleRequestWriteVectorData(rankSender);
+      break;
+    case REQUEST_READ_BLOCK_SCALAR_DATA:
+      handleRequestReadBlockScalarData(rankSender);
       break;
     case REQUEST_READ_SCALAR_DATA:
       handleRequestReadScalarData(rankSender);
@@ -585,6 +591,20 @@ void RequestManager:: requestSetMeshQuadWithEdges
   _com->send(data, 5, 0);
 }
 
+void RequestManager:: requestWriteBlockScalarData (
+  int     dataID,
+  int     size,
+  int*    valueIndices,
+  double* values )
+{
+  preciceTrace2("requestWriteBlockScalarData()", dataID, size);
+  _com->send(REQUEST_WRITE_BLOCK_SCALAR_DATA, 0);
+  _com->send(dataID, 0);
+  _com->send(size, 0);
+  _com->send(valueIndices, size, 0);
+  _com->send(values, size, 0);
+}
+
 void RequestManager:: requestWriteScalarData
 (
   int    dataID,
@@ -623,6 +643,20 @@ void RequestManager:: requestWriteVectorData
   _com->send(dataID, 0);
   _com->send(valueIndex, 0);
   _com->send(value, _interface.getDimensions(), 0);
+}
+
+void RequestManager:: requestReadBlockScalarData (
+  int     dataID,
+  int     size,
+  int*    valueIndices,
+  double* values )
+{
+  preciceTrace2("requestReadBlockScalarData()", dataID, size);
+  _com->send(REQUEST_READ_BLOCK_SCALAR_DATA, 0);
+  _com->send(dataID, 0);
+  _com->send(size, 0);
+  _com->send(valueIndices, size, 0);
+  _com->receive(values, size, 0);
 }
 
 void RequestManager:: requestReadScalarData
@@ -1130,6 +1164,24 @@ void RequestManager:: handleRequestWriteScalarData
   _interface.writeScalarData(dataID, index, data);
 }
 
+void RequestManager:: handleRequestWriteBlockScalarData
+(
+  int rankSender )
+{
+  preciceTrace1("handleRequestWriteBlockScalarData()", rankSender);
+  int dataID = -1;
+  _com->receive(dataID, rankSender);
+  int size = -1;
+  _com->receive(size, rankSender);
+  int* indices = new int[size];
+  _com->receive(indices, size, rankSender);
+  double* data = new double[size];
+  _com->receive(data, size, rankSender);
+  _interface.writeBlockScalarData(dataID, size, indices, data);
+  delete[] indices;
+  delete[] data;
+}
+
 void RequestManager:: handleRequestWriteBlockVectorData
 (
   int rankSender )
@@ -1174,6 +1226,24 @@ void RequestManager:: handleRequestReadScalarData
   double data;
   _interface.readScalarData(dataID, index, data);
   _com->send(data, rankSender); // Send back result
+}
+
+void RequestManager:: handleRequestReadBlockScalarData
+(
+  int rankSender )
+{
+  preciceTrace1("handleRequestReadBlockScalarData()", rankSender);
+  int dataID = -1;
+  _com->receive(dataID, rankSender);
+  int size = -1;
+  _com->receive(size, rankSender);
+  int* indices = new int[size];
+  _com->receive(indices, size, rankSender);
+  double* data = new double[size];
+  _interface.readBlockScalarData(dataID, size, indices, data);
+  _com->send(data, size, rankSender);
+  delete[] indices;
+  delete[] data;
 }
 
 void RequestManager:: handleRequestReadBlockVectorData

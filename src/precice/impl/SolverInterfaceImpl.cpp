@@ -1751,7 +1751,7 @@ void SolverInterfaceImpl:: writeBlockScalarData
   assertion(valueIndices != NULL);
   assertion(values != NULL);
   if (_clientMode){
-    //_requestManager->requestWriteBlockScalarData(dataID, size, valueIndices, values);
+    _requestManager->requestWriteBlockScalarData(dataID, size, valueIndices, values);
   }
   else {
     DataContext& context = _accessor->dataContext(dataID);
@@ -1911,7 +1911,7 @@ void SolverInterfaceImpl:: readBlockScalarData
   assertion(valueIndices != NULL);
   assertion(values != NULL);
   if (_clientMode){
-    //_requestManager->requestReadBlockScalarData(dataID, size, valueIndices, values);
+    _requestManager->requestReadBlockScalarData(dataID, size, valueIndices, values);
   }
   else {
     DataContext& context = _accessor->dataContext(dataID);
