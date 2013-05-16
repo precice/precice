@@ -318,19 +318,24 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
                              cplInterface);
     double maxDt = cplInterface.initialize();
     int forcesID = cplInterface.getDataID("Forces");
+    int pressuresID = cplInterface.getDataID("Pressures");
     int velocitiesID = cplInterface.getDataID("Velocities");
+    int temperaturesID = cplInterface.getDataID("Temperatures");
     int meshID = cplInterface.getMeshID("Test-Square");
     VertexHandle vertices = cplInterface.getMeshHandle("Test-Square").vertices();
     int size = vertices.size();
     DynamicVector<double> writePositions(size*3);
     DynamicVector<double> getWritePositions(size*3);
     DynamicVector<double> forces(size*3);
+    DynamicVector<double> pressures(size);
     DynamicVector<int> writeIDs(size);
     DynamicVector<int> getWriteIDs(size);
     DynamicVector<double> readPositions(size*3);
     DynamicVector<double> getReadPositions(size*3);
     DynamicVector<double> velocities(size*3);
+    DynamicVector<double> temperatures(size);
     DynamicVector<double> expectedVelocities(size*3);
+    DynamicVector<double> expectedTemperatures(size);
     DynamicVector<int> readIDs(size);
     DynamicVector<int> getReadIDs(size);
 
@@ -346,8 +351,10 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
       for (VertexIterator it = vertices.begin(); it != vertices.end(); it++){
         Vector3D force ( Vector3D(counter) + wrap<3,double>(it.vertexCoords()) );
         for (int dim=0; dim<3; dim++) forces[it.vertexID()*3+dim] = force[dim];
+        pressures[it.vertexID()] = counter + it.vertexCoords()[0];
       }
       cplInterface.writeBlockVectorData(forcesID, size, raw(writeIDs), raw(forces));
+      cplInterface.writeBlockScalarData(pressuresID, size, raw(writeIDs), raw(pressures));
 
       cplInterface.getWritePositions(meshID, size, raw(writeIDs),
                                      raw(getWritePositions));
@@ -366,15 +373,19 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
             readPositions[index] = it.vertexCoords()[dim];
             expectedVelocities[index] = counter + it.vertexCoords()[dim];
           }
-
+          expectedTemperatures[it.vertexID()] = counter + it.vertexCoords()[0];
         }
         cplInterface.resetReadPositions(meshID);
         cplInterface.setReadPositions(meshID, size, raw(readPositions), raw(readIDs));
         cplInterface.mapReadData(meshID);
         cplInterface.readBlockVectorData(velocitiesID, size, raw(readIDs),
                                          raw(velocities));
+        cplInterface.readBlockScalarData(temperaturesID, size, raw(readIDs),
+                                         raw(temperatures));
         validateWithParams2(equals(velocities, expectedVelocities),
                             velocities, expectedVelocities);
+        validateWithParams2(equals(temperatures, expectedTemperatures),
+        		            temperatures, expectedTemperatures);
 
         cplInterface.getReadPositions(meshID, size, raw(readIDs),
                                       raw(getReadPositions));
@@ -395,14 +406,19 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
                                cplInterface );
     double maxDt = cplInterface.initialize ();
     int forcesID = cplInterface.getDataID ( "Forces" );
+    int pressuresID = cplInterface.getDataID("Pressures");
     int velocitiesID = cplInterface.getDataID ( "Velocities" );
+    int temperaturesID = cplInterface.getDataID("Temperatures");
     VertexHandle vertices = cplInterface.getMeshHandle("Test-Square").vertices();
     // SolverTwo does not start the coupled simulation and has, hence,
     // already received the first data to be validated.
     for ( VertexIterator it = vertices.begin(); it != vertices.end(); it++ ){
       Vector3D force ( 0.0 );
-      cplInterface.readVectorData ( forcesID, it.vertexID(), raw(force) );
-      validate ( equals(force, Vector3D(counter) + wrap<3,double>(it.vertexCoords())) );
+      double pressure = 0.0;
+      cplInterface.readVectorData(forcesID, it.vertexID(), raw(force));
+      cplInterface.readScalarData(pressureID, it.vertexID(), raw(pressure));
+      validate(equals(force, Vector3D(counter) + wrap<3,double>(it.vertexCoords())) );
+      validate(equals(pressure, counter + it.vertexCoords()[0]));
     }
     counter += 1.0;
 
@@ -410,13 +426,18 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
       for ( VertexIterator it = vertices.begin(); it != vertices.end(); it++ ){
         Vector3D vel ( Vector3D(counter - 1.0) + wrap<3,double>(it.vertexCoords()) );
         cplInterface.writeVectorData ( velocitiesID, it.vertexID(), raw(vel) );
+        double temperature = counter - 1.0 + it.vertexCoords()[0];
+        cplInterface.writeScalarData(temperaturesID, it.vertexID(), temperature);
       }
       maxDt = cplInterface.advance ( maxDt );
       if ( cplInterface.isCouplingOngoing() ) {
         for ( VertexIterator it = vertices.begin(); it != vertices.end(); it++ ){
           Vector3D force ( 0.0 );
-          cplInterface.readVectorData ( forcesID, it.vertexID(), raw(force) );
+          double pressure = 0.0;
+          cplInterface.readVectorData(forcesID, it.vertexID(), raw(force));
+          cplInterface.readScalarData(pressuresID, it.vertexID(), pressure);
           validate ( equals(force, Vector3D(counter) + wrap<3,double>(it.vertexCoords())) );
+          validate(equals(pressure, counter + it.vertexCoords()[0]));
         }
         counter += 1.0;
       }
