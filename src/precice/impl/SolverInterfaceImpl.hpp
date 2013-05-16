@@ -452,7 +452,7 @@ public:
    * the number of vector values. In 2D, the z-components are removed.
    *
    * @param dataID [IN] ID of the data to be written.
-   * @param size [IN] Number of indices, and number of values * dimensions.
+   * @param size [IN] Number of valueIndices, and number of values * dimensions.
    * @param values [IN] Values of the data to be written.
    */
   void writeBlockVectorData (
@@ -475,6 +475,19 @@ public:
     int           dataID,
     int           valueIndex,
     const double* value );
+
+  /**
+   * @brief Writes scalar data values given as block.
+   *
+   * @param dataID [IN] ID of the data to be written.
+   * @param size [IN] Number of valueIndices, and number of values.
+   * @param values [IN] Values of the data to be written.
+   */
+  void writeBlockScalarData (
+    int     dataID,
+    int     size,
+    int*    valueIndices,
+    double* values );
 
   /**
    * @brief Write scalar data to the geometry interface
@@ -519,6 +532,19 @@ public:
     int     dataID,
     int     valueIndex,
     double* value );
+
+  /**
+   * @brief Reads scalar data values given as block.
+   *
+   * @param dataID [IN] ID of the data to be written.
+   * @param size [IN] Number of valueIndices, and number of values.
+   * @param values [IN] Values of the data to be written.
+   */
+  void readBlockScalarData (
+    int     dataID,
+    int     size,
+    int*    valueIndices,
+    double* values );
 
   /**
    * @brief Read scalar data from the geometry interface.
