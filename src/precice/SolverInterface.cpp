@@ -351,6 +351,16 @@ void SolverInterface:: writeVectorData
   _impl->writeVectorData(dataID, valueIndex, value);
 }
 
+void SolverInterface:: writeBlockScalarData
+(
+  int     dataID,
+  int     size,
+  int*    valueIndices,
+  double* values )
+{
+  _impl->writeBlockScalarData(dataID, size, valueIndices, values);
+}
+
 void SolverInterface:: writeScalarData
 (
   int    dataID,
@@ -377,6 +387,16 @@ void SolverInterface:: readVectorData
   double* value )
 {
   return _impl->readVectorData ( dataID, valueIndex, value );
+}
+
+void SolverInterface:: readBlockScalarData
+(
+  int     dataID,
+  int     size,
+  int*    valueIndices,
+  double* values )
+{
+  _impl->readBlockScalarData(dataID, size, valueIndices, values);
 }
 
 void SolverInterface:: readScalarData

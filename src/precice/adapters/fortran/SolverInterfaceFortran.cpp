@@ -272,6 +272,17 @@ void precicef_write_vdata_
   impl->writeVectorData(*dataID, *valueIndex, dataValue);
 }
 
+void precicef_write_bsdata_
+(
+  const int* dataID,
+  const int* size,
+  int*       valueIndices,
+  double*    values )
+{
+  assertion(impl != NULL);
+  impl->writeBlockScalarData(*dataID, *size, valueIndices, values);
+}
+
 void precicef_write_sdata_
 (
   const int*    dataID,
@@ -301,6 +312,17 @@ void precicef_read_vdata_
 {
   assertion(impl != NULL);
   impl->readVectorData(*dataID, *valueIndex, dataValue);
+}
+
+void precicef_read_bsdata_
+(
+  const int* dataID,
+  const int* size,
+  int*       valueIndices,
+  double*    values )
+{
+  assertion(impl != NULL);
+  impl->readBlockScalarData(*dataID, *size, valueIndices, values);
 }
 
 void precicef_read_sdata_

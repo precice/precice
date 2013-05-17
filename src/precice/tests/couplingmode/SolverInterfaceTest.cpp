@@ -160,6 +160,7 @@ void SolverInterfaceTest:: testExplicit()
     validateEquals(timesteps, 10);
   }
 
+  #ifndef PRECICE_NO_SOCKETS
   if (utils::Parallel::getProcessRank() == 0){
     runSolver("SolverOne", "/explicit-sockets.xml",
               timesteps, time);
@@ -173,6 +174,7 @@ void SolverInterfaceTest:: testExplicit()
     validateEquals(timesteps, 10);
   }
   utils::Parallel::synchronizeProcesses(); // close all sockets before continuing
+  #endif // not PRECICE_NO_SOCKETS
 
   if (utils::Parallel::getProcessRank() == 0){
     runSolver("SolverOne", "/explicit-files.xml",
@@ -416,7 +418,7 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
       Vector3D force ( 0.0 );
       double pressure = 0.0;
       cplInterface.readVectorData(forcesID, it.vertexID(), raw(force));
-      cplInterface.readScalarData(pressureID, it.vertexID(), raw(pressure));
+      cplInterface.readScalarData(pressuresID, it.vertexID(), pressure);
       validate(equals(force, Vector3D(counter) + wrap<3,double>(it.vertexCoords())) );
       validate(equals(pressure, counter + it.vertexCoords()[0]));
     }
