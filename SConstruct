@@ -7,73 +7,103 @@ import sys
 
 ##### Initialize build variables
 #
-cpppath = [ '#src' ]
-cppdefines = [ 'tarch=tarchp2' ]
-ccflags = [ '-fPIC' ]
-libpath = []
-libs = []
-linkerflags = []
+#cpppath = []
+#cppdefines = []
+#ccflags = []
+#libpath = []
+#libs = []
+#linkerflags = []
 cxx = 'g++'
 
-env = Environment()
-conf = Configure(env) # For checking libraries
+env = Environment()   # For configuring build variables
+conf = Configure(env) # For checking libraries, headers, ...
+
+env.Append(CPPPATH = ['#src'])
+env.Append(CPPDEFINES = ['tarch=tarchp2'])
+env.Append(CCFLAGS = ['-fPIC'])
 
 ##### Determine build directory
 #
 buildDir = ARGUMENTS.get('builddir', 'build')
 buildpath = buildDir + '/'
 
-##### Determine build mode
 #
-build = ARGUMENTS.get('build', 'debug')
-if build == 'debug':
-   cppdefines.append('Debug')
-   cppdefines.append('Asserts')
-   ccflags.append('-g3')
-   ccflags.append('-O0')
-   buildpath += "debug"
-elif build == 'release':
-   ccflags.append('-O3')
-   buildpath += "release"    
-else:
-   print "ERROR: Argument 'build' must be either 'debug' or 'release'!"
+#
+#### Check build options
+#
+#
+print
+print 'Checking build options ...'
+
+build = ARGUMENTS.get('build', 'debug')    
+if build != 'debug' and build != 'release': 
+   print "ERROR: Option 'build' must be either 'debug' or 'release'! (default: debug)"
    sys.exit(1)
 
-print '\nEnvironment variables:'
+useMPI = ARGUMENTS.get('mpi', 'on')
+if useMPI != 'on' and useMPI != 'off':  
+   print "ERROR: Option 'mpi' must be either 'on' or 'off'! (default: on)"
+   sys.exit(1)
+   
+useSockets = ARGUMENTS.get('sockets', 'on')
+if useSockets != 'on' and useSockets != 'off': 
+   print "ERROR: Option 'sockets' must be either 'on' or 'off'! (default: on)"
+   sys.exit(1)
+   
+hasSpirit2 = ARGUMENTS.get('spirit2', 'on')
+if hasSpirit2 != 'on' and hasSpirit2 != 'off':
+   print "ERROR: Option 'spirit2' must be either 'on' or 'off'! (default: on)"
+   sys.exit(1)
+   
+usePython = ARGUMENTS.get('python', 'on')
+if hasSpirit2 != 'on' and hasSpirit2 != 'off':
+   print "ERROR: Option 'python' must be 'on' or 'off'! (default: on)"
+   sys.exit(1)   
+   
+gprof = ARGUMENTS.get('gprof', 'off') # Read command line parameter
+if gprof != 'on' and gprof != 'off':
+   print "ERROR: Option 'gprof' must be = 'on' or 'off'! (default: off)"
+   sys.exit(1) 
+   
+cxx = ARGUMENTS.get('compiler', 'g++')
+if cxx != 'g++' and cxx != 'icc':
+   print "ERROR: Option 'cxx' must be either 'g++' or 'icc'! (default: g++)"
+   sys.exit(1)
+   
+print '... done'
+
+#
+#
+#### Fetch environment variables
+#
+#
+
+print
+print 'Environment variables used for build ...'
 print '(have to be defined by the user to configure build)'
 
-##### Determine Boost root path from environment variable
-#
 boostRootPath = os.getenv('BOOST_ROOT')
 if (boostRootPath == None):
    print 'ERROR: BOOST_ROOT must be defined!'
    sys.exit(1)
 else:
    print 'BOOST_ROOT =', boostRootPath
-   cpppath.append(boostRootPath)
+   env.Append(CPPPATH = [boostRootPath])
    
-##### Determine path to peano root from environment variable
-#
 tarchSrc = os.getenv('TARCH_SRC')
 if ((tarchSrc == None) or (tarchSrc == "")):
    print 'TARCH_SRC = ./src/ (default)'
    tarchSrc = './src/'
 else:
    print 'TARCH_SRC =', tarchSrc
-   cpppath.append(tarchSrc)
 
-##### Determine, whether MPI should be used
-#
-useMPI = ARGUMENTS.get('mpi', 'on')
 if useMPI == 'on':
-   # Determine MPI library path
    mpiLibPath = os.getenv('PRECICE_MPI_LIB_PATH')
    if ((mpiLibPath == None) or (mpiLibPath == "")):
       mpiLibPath = '/usr/lib/'
       print 'PRECICE_MPI_LIB_PATH = ' + mpiLibPath + ' (default)'  
    else:
       print 'PRECICE_MPI_LIB_PATH =', mpiLibPath
-   libpath.append(mpiLibPath)
    
    # Determine MPI library name
    mpiLib = os.getenv('PRECICE_MPI_LIB')
@@ -82,45 +112,37 @@ if useMPI == 'on':
       print 'PRECICE_MPI_LIB = ' + mpiLib + ' (default)'
    else:
       print 'PRECICE_MPI_LIB =', mpiLib   
-   libs.append(mpiLib)
-   if conf.CheckLib('rt'):
-      libs.append('rt') # To be compatible with tarch::utils::Watch clock_gettime
-   if (mpiLib == 'mpich'): # MPICH1/2 library
-      if conf.CheckLib('mpl'):
-         libs.append('mpl')          
-   elif (mpiLib == 'mpi'): # OpenMPI library
-      if conf.CheckLib('mpi_cxx'):
-         libs.append('mpi_cxx')
-   
-   # Determine MPI include path
+
    mpiIncPath = os.getenv('PRECICE_MPI_INC_PATH')
    if ((mpiIncPath == None) or (mpiIncPath == "")):
       mpiIncPath = '/usr/include/mpich2'
       print 'PRECICE_MPI_INC_PATH = ' + mpiIncPath + ' (default)'
    else:
       print 'PRECICE_MPI_INC_PATH =', mpiIncPath   
-   cpppath.append(mpiIncPath) 
-elif useMPI == 'off':
-   cppdefines.append ('PRECICE_NO_MPI')
-   libs.append('rt') # To be compatible with tarch::utils::Watch clock_gettime
-   buildpath += "-nompi"
-else:
-   print "ERROR: Argument 'useMPI' must be either 'on' or 'off'!"
-   sys.exit(1)
    
-##### Determine use of socket communication
-#
-useSockets = ARGUMENTS.get('sockets', 'on')
+
 if useSockets == 'on':
-    #ccflags.append('-pthread')
-    linkerflags.append('-pthread')
-elif useSockets == 'off':
-    cppdefines.append('PRECICE_NO_SOCKETS')
-    buildpath += "-nosockets"
-else:
-    print "ERROR: Attribute 'sockets' must be either 'on' or 'off'!"
-    sys.exit(1)
-   
+   socketLibPath = os.getenv('PRECICE_SOCKET_LIB_PATH')
+   if ((socketLibPath == None) or (socketLibPath == "")):
+      socketLibPath = '/usr/lib/'
+      print 'PRECICE_SOCKET_LIB_PATH = ' + socketLibPath + ' (default)'  
+   else:
+      print 'PRECICE_SOCKET_LIB_PATH =', socketLibPath
+      
+   socketLib = os.getenv('PRECICE_SOCKET_LIB')
+   if ((socketLib == None) or (socketLib == "")):
+      socketLib = 'pthread'
+      print 'PRECICE_SOCKET_LIB = ' + socketLib + ' (default)'
+   else:
+      print 'PRECICE_SOCKET_LIB =', socketLib
+      
+   socketIncPath = os.getenv('PRECICE_SOCKET_INC_PATH')
+   if ((socketIncPath == None) or (socketIncPath == "")):
+      socketIncPath = '/usr/include/'
+      print 'PRECICE_SOCKET_INC_PATH = ' + socketIncPath + ' (default)'
+   else:
+      print 'PRECICE_SOCKET_INC_PATH =', socketIncPath
+
 ##### Determine activation of SAGA Grid library
 #
 #useSAGA = ARGUMENTS.get('saga', 'off')
@@ -131,135 +153,170 @@ else:
 #    libs.append('xyz')
 #    libpath.append('/opt/saga-1.5.4/lib/')
 
-##### Determine whether Boost.Spirit 2.0 is available
-#
-hasSpirit2 = ARGUMENTS.get('spirit2', 'on')
-if hasSpirit2 == 'on':
-   pass
-elif hasSpirit2 == 'off':
-   cppdefines.append ('PRECICE_NO_SPIRIT2')
-   buildpath += "-nospirit2"
-else:
-   print "ERROR: Argument 'spirit2' must be either 'on' or 'off'!"
-   sys.exit(1)
-
 ##### Determine whether Python scripting extensions should be enabled
 #
-usePython = ARGUMENTS.get('python', 'on')
 if usePython == 'on':
-   # Determine Python library path
    pythonLibPath = os.getenv('PRECICE_PYTHON_LIB_PATH')
    if ((pythonLibPath == None) or (pythonLibPath == "")):
       pythonLibPath = '/usr/lib/'
       print 'PRECICE_PYTHON_LIB_PATH = ' + pythonLibPath + ' (default)'  
    else:
       print 'PRECICE_PYTHON_LIB_PATH =', pythonLibPath
-   libpath.append(pythonLibPath)
    
-   # Determine Python library name
    pythonLib = os.getenv('PRECICE_PYTHON_LIB')
    if ((pythonLib == None) or (pythonLib == "")):
-      pythonLib = 'python2.6'
+      pythonLib = 'python2.7'
       print 'PRECICE_PYTHON_LIB = ' + pythonLib + ' (default)'  
    else:
       print 'PRECICE_PYTHON_LIB =', pythonLib
-   libs.append(pythonLib)
    
-   # Determine Python include path
    pythonIncPath = os.getenv('PRECICE_PYTHON_INC_PATH')
    if ((pythonIncPath == None) or (pythonIncPath == "")):
-      pythonIncPath = '/usr/include/python2.6/'
+      pythonIncPath = '/usr/include/python2.7/'
       print 'PRECICE_PYTHON_INC_PATH = ' + pythonIncPath + ' (default)'  
    else:
       print 'PRECICE_PYTHON_INC_PATH =', pythonIncPath
-   cpppath.append(pythonIncPath)
    
    # Determine NumPy include path
    numpyIncPath = os.getenv('PRECICE_NUMPY_INC_PATH')
    if ((numpyIncPath == None) or (numpyIncPath == "")):
-      numpyIncPath = '/usr/include/python2.6/numpy/'
+      numpyIncPath = '/usr/include/python2.7/numpy/'
       print 'PRECICE_NUMPY_INC_PATH = ' + numpyIncPath + ' (default)'  
    else:
       print 'PRECICE_NUMPY_INC_PATH =', numpyIncPath
-   cpppath.append(numpyIncPath) 
-elif usePython == 'off':
-   buildpath += "-nopython"
-   cppdefines.append('PRECICE_NO_PYTHON')
-else:
-   print "ERROR: argument 'python' must be 'on' or 'off'!"
-   sys.exit(1)    
 
-##### Determine use of profiling information
-#
-gprof = ARGUMENTS.get('gprof', 'off') # Read command line parameter
-if gprof == 'off':
-   pass
-elif gprof == 'on':
-   ccflags.append('-p')
-   ccflags.append('-pg')
-   linkerflags.append('-p')
-   linkerflags.append('-pg')
-   buildpath += "-gprof"
-else:
-   print "ERROR: Attribute 'gprof' must be = 'on' or 'off'!"
-   sys.exit(1)
-   
-##### Determine activation of statistics computation
-#
-#computeStatistics = ARGUMENTS.get('statistics', 'off')
-#if computeStatistics == 'off':
-#   pass
-#elif computeStatistics == 'on':
-#   cppdefines.append('PRECICE_STATISTICS')
-#   buildpath += "-stat"
-#else:
-#   print "ERROR: Attribute 'statistics' must be = 'on' or 'off'!"
-#   sys.exit(1)
-
-##### Determine, which compiler should be used
-#
-cxx = ARGUMENTS.get('compiler', 'g++')
-if cxx=='icc':
-   libpath.append ('/usr/lib/')
-   libs.append ('stdc++')
-   if build == 'debug':
-      #      ccflags.append('-Weffc++')
-      ccflags.append('-align')   
-   elif build == 'release':
-      ccflags.append('-w')
-      #      ccflags.append('-vec-report') # Gibt aus wenn vectorisiert wurde
-      ccflags.append('-fast')
-      ccflags.append('-align')
-      ccflags.append('-ansi-alias')
-elif cxx == 'g++':
-   pass
-else:
-   print "ERROR: Argument 'cxx' must be either 'g++' or 'icc'!"
-   sys.exit(1)
+print '... done'
 
 ##### Determine build path
 #
-#buildDir = ARGUMENTS.get('builddir', 'build')
 buildpathTarch = buildDir + '/tarch/' + build
-#buildpath = buildDir + '/' + build + buildpathParallel + buildpathPython
+#libpath.append ('#' + buildpath), 'sourcesParallelDelta'
+env.Append(LIBPATH = [('#' + buildpath), 'sourcesParallelDelta'])
 
-#libpath.append ('#' + buildpathTarch)
-libpath.append ('#' + buildpath), 'sourcesParallelDelta'
+
+
+#
+#
+#### Modify environment according to fetched variables
+#
+#
+
+print
+print 'Configuring build variables ...'
+
+if build == 'debug':
+   env.Append(CPPDEFINES = ['Debug', 'Asserts'])
+   env.Append(CCFLAGS = ['-g3', '-O0'])
+   buildpath += "debug"
+elif build == 'release':
+   env.Append(CCFLAGS = ['-O3'])
+   buildpath += "release"    
+
+
+env.Append(CPPPATH = [boostRootPath])
+env.Append(CPPPATH = [tarchSrc])
+
+
+if useMPI == 'on':
+   env.Append(LIBPATH = [mpiLibPath])
+   if not conf.CheckLib(mpiLib):
+      print "ERROR: No mpi library '" + mpiLib + "' found!"
+      sys.exit(1)
+   env.Append(LIBS = [mpiLib])
+
+   if conf.CheckLib('rt'):
+      env.Append(LIBS = ['rt']) # To be compatible with tarch::utils::Watch clock_gettime
+   if (mpiLib == 'mpich'): # MPICH1/2/3 library
+      if conf.CheckLib('mpl'):
+         env.Append(LIBS = ['mpl'])
+      if conf.CheckLib('pthread'):
+         env.Append(LIBS = ['pthread'])
+   elif (mpiLib == 'mpi'): # OpenMPI library
+      if conf.CheckLib('mpi_cxx'):
+         env.Append(LIBS = ['mpi_cxx'])
+         
+   env.Append(CPPPATH = [mpiIncPath])
+   if not conf.CheckHeader('mpi.h'):
+      print "ERROR: No mpi header 'mpi.h' found!"
+      sys.exit(1)
+   
+elif useMPI == 'off':
+   env.Append(CPPDEFINES = ['PRECICE_NO_MPI'])
+   if conf.CheckLib('rt'):
+      env.Append(LIBS = ['rt']) # To be compatible with tarch::utils::Watch clock_gettime
+   buildpath += "-nompi"
+
+
+if useSockets == 'on':
+    env.Append(LIBPATH = [socketLibPath])
+    env.Append(LIBS = [socketLib])
+    env.Append(CPPPATH = [socketIncPath]) 
+    #env.Append(LINKFLAGS = ['-pthread']) # Maybe better???
+elif useSockets == 'off':
+    env.Append(CPPDEFINES = ['PRECICE_NO_SOCKETS'])
+    buildpath += "-nosockets"
+
+
+if hasSpirit2 == 'on':
+   pass
+elif hasSpirit2 == 'off':
+   env.Append(CPPDEFINES = ['PRECICE_NO_SPIRIT2'])
+   buildpath += "-nospirit2"
+
+if usePython == 'on':
+   env.Append(LIBPATH = [pythonLibPath])
+   env.Append(LIBS = [pythonLib])  
+   env.Append(CPPPATH = [pythonIncPath, numpyIncPath]) 
+elif usePython == 'off':
+   buildpath += "-nopython"
+   env.Append(CPPDEFINES = ['PRECICE_NO_PYTHON'])
+
+
+if gprof == 'off':
+   pass
+elif gprof == 'on':
+   env.Append(CCFLAGS = ['-p', '-pg'])
+   env.Append(LINKFLAGS = ['-p', '-pg'])
+   buildpath += "-gprof"
+
+
+if cxx=='icc':
+   env.Append(LIBPATH = ['/usr/lib/'])
+   env.Append(LIBS = ['stdc++'])
+   if build == 'debug':
+      env.Append(CCFLAGS = ['-align'])
+   elif build == 'release':
+      env.Append(CCFLAGS = ['-w', '-fast', '-align', '-ansi-alias'])
+elif cxx == 'g++':
+   pass
+print '... done'
+
+env.Replace(CXX = cxx)
+env.Replace(ENV = os.environ)
 
 env = conf.Finish() # Used to check libraries
 
 ##### Setup construction environment
 #
-env = Environment ( 
-   CPPDEFINES = cppdefines, # defines for preprocessor (#define xyz)
-   LIBPATH    = libpath,    # path to libraries used
-   LIBS       = libs,       # libraries used (without prefix "lib" and suffix ".a"/".so"/...)
-   CPPPATH    = cpppath,    # pathes where the preprocessor should look for files
-   CCFLAGS    = ccflags,    # flags for the c/c++ compilers
-   LINKFLAGS  = linkerflags,# flags given to the linker
-   CXX        = cxx,        # the c++ compiler that should be used
-   ENV        = os.environ  # propagates environment variables to scons  
-   )
+#env.Append(CPPDEFINES = [cppdefines])
+#env.Append(LIBPATH = [libpath])
+#env.Append(LIBS = [libs])
+#env.Append(CPPPATH = [cpppath])
+#env.Append(CCFLAGS = [ccflags])
+#env.Append(LINKFLAGS = [linkerflags])
+
+
+
+#env = Environment ( 
+#   CPPDEFINES = cppdefines, # defines for preprocessor (#define xyz)
+#   LIBPATH    = libpath,    # path to libraries used
+#   LIBS       = libs,       # libraries used (without prefix "lib" and suffix ".a"/".so"/...)
+#   CPPPATH    = cpppath,    # pathes where the preprocessor should look for files
+#   CCFLAGS    = ccflags,    # flags for the c/c++ compilers
+#   LINKFLAGS  = linkerflags,# flags given to the linker
+#   CXX        = cxx,        # the c++ compiler that should be used
+#   ENV        = os.environ  # propagates environment variables to scons  
+#   )
     
 (sourcesTarch) = SConscript (
    tarchSrc + '/tarch/SConscript-preCICE',
@@ -275,7 +332,8 @@ env = Environment (
 
 sourcesBoost = []
 if useSockets == 'on':
-    print "\nCopy boost sources for socket communication to build ..."
+    print
+    print "Copy boost sources for socket communication to build ..."
     if not os.path.exists(buildpath + "/boost/"):
        Execute(Mkdir(buildpath + "/boost/"))
     for file in Glob(boostRootPath + "/libs/system/src/*"):
@@ -283,6 +341,7 @@ if useSockets == 'on':
     for file in Glob(boostRootPath + "/libs/thread/src/pthread/*"):
        Execute(Copy(buildpath + "/boost/", file))  
     sourcesBoost = Glob(buildpath + '/boost/*.cpp')
+    print "... done"
     
 
 lib = env.StaticLibrary (
