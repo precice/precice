@@ -243,6 +243,17 @@ void precicec_writeVectorData
   impl->writeVectorData ( dataID, valueIndex, dataValue );
 }
 
+void precicec_writeBlockScalarData
+(
+  int     dataID,
+  int     size,
+  int*    valueIndices,
+  double* values )
+{
+  assertion(impl != NULL);
+  impl->writeBlockScalarData(dataID, size, valueIndices, values);
+}
+
 void precicec_writeScalarData
 (
   int    dataID,
@@ -272,6 +283,17 @@ void precicec_readVectorData
 {
   assertion ( impl != NULL );
   impl->readVectorData (dataID, valueIndex, dataValue);
+}
+
+void precicec_readBlockScalarData
+(
+  int     dataID,
+  int     size,
+  int*    valueIndices,
+  double* values )
+{
+  assertion(impl != NULL);
+  impl->readBlockScalarData(dataID, size, valueIndices, values);
 }
 
 void precicec_readScalarData

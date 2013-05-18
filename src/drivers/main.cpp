@@ -77,9 +77,9 @@ int main ( int argc, char** argv )
     std::cout << "   Configuration file = " << configFile << std::endl;
     std::cout << "   Path to sources = " << argv[3] << std::endl;
     std::list<TopLevelConfiguration*> configs =
-        ConfigurationRegistry::getInstance().readFile( configFile, "configuration" );
+        ConfigurationRegistry::getInstance().readFile(configFile, "configuration");
     if (configs.empty()) {
-      log.error( "main()", "config file " + configFile + " not found or invalid!" );
+      log.error("main()", "config file " + configFile + " not found or invalid!");
       return 1;
     }
     foreach ( TopLevelConfiguration* config, configs ){

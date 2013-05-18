@@ -1740,6 +1740,44 @@ void SolverInterfaceImpl:: writeVectorData
   }
 }
 
+void SolverInterfaceImpl:: writeBlockScalarData
+(
+  int     dataID,
+  int     size,
+  int*    valueIndices,
+  double* values )
+{
+  preciceTrace2("writeBlockScalarData()", dataID, size);
+  assertion(valueIndices != NULL);
+  assertion(values != NULL);
+  if (_clientMode){
+    _requestManager->requestWriteBlockScalarData(dataID, size, valueIndices, values);
+  }
+  else {
+    DataContext& context = _accessor->dataContext(dataID);
+    impl::MappingContext& mapContext = context.mappingContext;
+    if (mapContext.mapping.get() == NULL){
+      utils::DynVector& valuesInternal = context.data->values();
+      for (int i=0; i < size; i++){
+        assertion2(i < valuesInternal.size(), i, valuesInternal.size());
+        valuesInternal[valueIndices[i]] = values[i];
+      }
+    }
+    else {
+      preciceCheck(mapContext.timing != mapping::MappingConfiguration::INCREMENTAL,
+                   "writeBlockScalarData()",
+                   "Writing block scalar data cannot be used with incremental "
+                   << "mapping!");
+      assertion(context.localData.get() != NULL);
+      utils::DynVector& valuesInternal = context.localData->values();
+      for (int i=0; i < size; i++){
+        assertion2(i < valuesInternal.size(), i, valuesInternal.size());
+        valuesInternal[valueIndices[i]] = values[i];
+      }
+    }
+  }
+}
+
 void SolverInterfaceImpl:: writeScalarData
 (
   int    dataID,
@@ -1860,6 +1898,46 @@ void SolverInterfaceImpl:: readVectorData
   if (_dimensions == 2) preciceDebug("read value = " << tarch::la::wrap<2>(value));
   if (_dimensions == 3) preciceDebug("read value = " << tarch::la::wrap<3>(value));
 # endif
+}
+
+void SolverInterfaceImpl:: readBlockScalarData
+(
+  int     dataID,
+  int     size,
+  int*    valueIndices,
+  double* values )
+{
+  preciceTrace2("readBlockScalarData()", dataID, size);
+  assertion(valueIndices != NULL);
+  assertion(values != NULL);
+  if (_clientMode){
+    _requestManager->requestReadBlockScalarData(dataID, size, valueIndices, values);
+  }
+  else {
+    DataContext& context = _accessor->dataContext(dataID);
+    impl::MappingContext& mapContext = context.mappingContext;
+    if (mapContext.mapping.get() == NULL){
+      utils::DynVector& valuesInternal = context.data->values();
+      for (int i=0; i < size; i++){
+        assertion2(valueIndices[i] < valuesInternal.size(),
+        		   valueIndices[i], valuesInternal.size());
+        values[i] = valuesInternal[valueIndices[i]];
+      }
+    }
+    else {
+      preciceCheck(mapContext.timing != mapping::MappingConfiguration::INCREMENTAL,
+                   "readBlockScalarData()",
+                   "Reading block scalar data cannot be used with incremental "
+                   << "mapping!");
+      assertion(context.localData.get() != NULL);
+      utils::DynVector& valuesInternal = context.localData->values();
+      for (int i=0; i < size; i++){
+        assertion2(valueIndices[i] < valuesInternal.size(),
+        	       valueIndices[i], valuesInternal.size());
+        values[i] = valuesInternal[valueIndices[i]];
+      }
+    }
+  }
 }
 
 void SolverInterfaceImpl:: readScalarData
