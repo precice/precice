@@ -165,6 +165,15 @@ void precicec_writeVectorData (
   const double* dataValue );
 
 /**
+ * @brief See precice::SolverInterface::writeBlockScalarData().
+ */
+void precicec_writeBlockScalarData (
+  int     dataID,
+  int     size,
+  int*    valueIndices,
+  double* values );
+
+/**
  * @brief Writes scalar floating point data to the coupling mesh.
  *
  * @param dataID [IN] ID of the data to be written. Obtained by getDataID().
@@ -205,6 +214,15 @@ void precicec_readVectorData (
   int     dataID,
   int     valueIndex,
   double* dataValue );
+
+/**
+ * @brief See precice::SolverInterface::readBlockScalarData().
+ */
+void precicec_readBlockScalarData (
+  int     dataID,
+  int     size,
+  int*    valueIndices,
+  double* values );
 
 /**
  * @brief Reads scalar foating point data from the coupling mesh.

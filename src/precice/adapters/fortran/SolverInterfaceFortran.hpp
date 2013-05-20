@@ -344,6 +344,25 @@ void precicef_write_vdata_(
   const double* dataValue );
 
 /**
+ * @brief See precice::SolverInterface::writeBlockScalarData.
+ *
+ * Fortran syntax:
+ * precicef_write_bsdata(
+ *   INTEGER dataID,
+ *   INTEGER size,
+ *   INTEGER valueIndices,
+ *   DOUBLE PRECISION values(size) )
+ *
+ * IN:  dataID, size, valueIndices, values
+ * OUT: -
+ */
+void precicef_write_bsdata_(
+  const int* dataID,
+  const int* size,
+  int*       valueIndices,
+  double*    values );
+
+/**
  * @brief precice::SolverInterface::writeScalarData.
  *
  * Fortran syntax:
@@ -395,6 +414,25 @@ void precicef_read_vdata_(
   const int* dataID,
   const int* valueIndex,
   double*    dataValue );
+
+/**
+ * @brief See precice::SolverInterface::readBlockScalarData.
+ *
+ * Fortran syntax:
+ * precicef_read_bsdata(
+ *   INTEGER dataID,
+ *   INTEGER size,
+ *   INTEGER valueIndices,
+ *   DOUBLE PRECISION values(size) )
+ *
+ * IN:  dataID, size, valueIndices
+ * OUT: values
+ */
+void precicef_read_bsdata_(
+  const int* dataID,
+  const int* size,
+  int*       valueIndices,
+  double*    values );
 
 /**
  * @brief precice::SolverInterface::readScalarData.
