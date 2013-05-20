@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 
+<!-- Case with one FASTEST and two APEs meshes -->
 <precice-configuration>
    <log-filter target="debug" component="" switch="off"/>
    <log-filter target="info"  component="" switch="on"/>
-
-      <solver-interface dimensions="3">   
+   
+   <solver-interface dimensions="3">   
       <data:vector name="AcousticPressures"/>
       <data:vector name="AcousticVelocities"/>
    
@@ -86,5 +87,82 @@
          <exchange data="AcousticPressures"  mesh="AcousticSurface" from="FASTEST"/>
          <exchange data="AcousticVelocities" mesh="AcousticSurface" from="FASTEST"/>
       </coupling-scheme:explicit>
+   </solver-interface>
+</precice-configuration>
+
+
+<!-- FSA Case with three solvers and two (parallel) coupling schemes -->
+<precice-configuration>
+   <log-filter target="debug" component="" switch="off"/>
+   <log-filter target="info"  component="" switch="on"/>
+
+   <solver-interface dimensions="3">   
+      <data:scalar name="AcousticPressures"/>
+      <data:vector name="AcousticVelocities"/>
+      <data:vector name="Forces"/>
+      <data:vector name="Displacements"/>
+   
+      <mesh name="AcousticSurfaceFASTEST">
+         <use-data name="AcousticPressures"/>
+         <use-data name="AcousticVelocities"/>
+      </mesh>
+      <mesh name="WetSurfaceForcesFASTEST">
+         <use-data name="Forces"/>
+      </mesh>
+      <mesh name="WetSurfaceDisplacementsFASTEST">
+         <use-data name="Displacements"/>
+      </mesh>
+      
+      <mesh name="AcousticSurfacePressuresAPEs">
+         <use-data name="AcousticPressures"/>
+      </mesh>
+      <mesh name="AcousticSurfaceVelocitiesAPEs">
+         <use-data name="AcousticVelocities"/>
+      </mesh>
+      
+      <mesh name="WetSurfaceFEAP">
+         <use-data name="Forces"/>
+         <use-data name="Displacements"/>
+      </mesh>
+      
+      <participant name="FASTEST">
+         <use-mesh name="AcousticSurfaceFASTEST" provide="yes"/>
+         <use-mesh name="WetSurfaceForcesFASTEST" provide="yes"/>
+         <use-mesh name="WetSurfaceDisplacementsFASTEST" provide="yes"/>
+         <use-mesh name="WetSurfaceFEAP" from="FEAP"/>
+         <mapping:xyz from="WetSurfaceFEAP" to="WetSurfaceDisplacementsFASTEST"/>
+         <mapping:xyz from="WetSurfaceForcesFASTEST" to="WetSurfaceFEAP"/>
+      </participant>
+      
+      <participant name="APEs">
+         <use-mesh name="AcousticSurfacePressuresAPEs" provide="yes"/>
+         <use-mesh name="AcousticSurfaceVelocitiesAPEs" provide="yes"/>
+         <use-mesh name="AcousticSurfaceFASTEST" from="FASTEST"/>
+         <mapping:xyz from="AcousticSurfaceFASTEST" to="AcousticSurfacePressuresAPEs"/>
+         <mapping:xyz from="AcousticSurfaceFASTEST" to="AcousticSurfaceVelocitiesAPEs"/>
+      </participant>
+      
+      <participant name="FEAP">
+         <use-mesh name="WetSurfaceFEAP" provide="yes"/>
+      </participant>
+      
+      <communication:sockets from="FASTEST" to="APEs"/>
+      <communication:sockets from="FASTEST" to="FEAP"/>
+      
+      <coupling-scheme:explicit> 
+         <participants first="FASTEST" second="APEs"/> 
+         <max-timesteps value="10"/>
+         <timestep-length value="0.001"/>
+         <exchange data="AcousticPressures"  mesh="AcousticSurface" from="FASTEST"/>
+         <exchange data="AcousticVelocities" mesh="AcousticSurface" from="FASTEST"/>
+      </coupling-scheme:explicit>
+      
+      <coupling-scheme:implicit> 
+         <participants first="FASTEST" second="FEAP"/> 
+         <max-timesteps value="10" />
+         <timestep-length value="0.001"/>
+         <exchange data="Forces" mesh="WetSurfaceFEAP" from="FEAP"/>
+         <exchange data="Displacements" mesh="WetSurfaceFEAP" from="FEAP"/>
+      </coupling-scheme:implicit>
    </solver-interface>
 </precice-configuration>
