@@ -39,10 +39,12 @@ void SolverInterfaceTest:: run()
     testConfiguration();
   }
   typedef utils::Parallel Par;
+  precicePrint("Ho");
   if (Par::getCommunicatorSize() > 1){
     std::vector<int> ranksWanted;
     ranksWanted += 0, 1;
     MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    precicePrint("Hi");
     if (Par::getProcessRank() <= 1){
       Par::setGlobalCommunicator(comm);
       testMethod(testExplicit);
@@ -63,6 +65,16 @@ void SolverInterfaceTest:: run()
 #     endif // not PRECICE_NO_SPIRIT2
       testMethod(testStationaryMappingWithSolverMesh);
       testMethod(testBug);
+      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+    }
+  }
+  if (Par::getCommunicatorSize() > 2){
+    std::vector<int> ranksWanted;
+    ranksWanted += 0, 1, 2;
+    MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    if (Par::getProcessRank() <= 2){
+      Par::setGlobalCommunicator(comm);
+      testMethod(testMultiSolver);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -1698,6 +1710,67 @@ void SolverInterfaceTest:: testBug()
     double dt = precice.initialize();
     while(precice.isCouplingOngoing()){
       precice.advance(dt);
+    }
+    precice.finalize();
+  }
+}
+
+void SolverInterfaceTest:: testMultiSolver()
+{
+  preciceTrace("testMultiSolver()");
+
+  typedef utils::Vector2D Vector2D;
+  using namespace tarch::la;
+  std::string config = _pathToTests + "experimental-multi-solver.xml";
+
+  int rank = utils::Parallel::getProcessRank();
+  assertion1((rank == 0) || (rank == 1) || (rank == 2), rank);
+  std::string solverName;
+  if (rank == 0) solverName = std::string("SolverOne");
+  else if (rank == 1) solverName = std::string("SolverTwo");
+  else solverName = std::string("SolverThree");
+
+  if (solverName == std::string("SolverOne")){
+    SolverInterface precice(solverName, 0, 1);
+    configureSolverInterface(config, precice);
+    int meshID = precice.getMeshID("Mesh");
+    int dataID = precice.getDataID("Data");
+    precice.setMeshVertex(meshID, raw(utils::Vector2D(0.0, 0.0)));
+    double dt = precice.initialize();
+    while (precice.isCouplingOngoing()){
+      precice.writeVectorData(dataID, 0, raw(Vector2D(1.0, 2.0)));
+      dt = precice.advance(dt);
+    }
+    precice.finalize();
+  }
+  else if (solverName == std::string("SolverTwo")){
+    SolverInterface precice(solverName, 0, 1);
+    configureSolverInterface(config, precice);
+    int meshID = precice.getMeshID("Mesh");
+    int dataID = precice.getDataID("Data");
+    precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
+    double dt = precice.initialize();
+    while (precice.isCouplingOngoing()){
+      Vector2D data;
+      precice.readVectorData(dataID, 0, raw(data));
+      validate(equals(data, Vector2D(1.0, 2.0)));
+      dt = precice.advance(dt);
+    }
+    precice.finalize();
+  }
+  else {
+    assertion1(solverName == std::string("SolverThree"), solverName);
+    SolverInterface precice(solverName, 0, 1);
+    configureSolverInterface(config, precice);
+    int meshID = precice.getMeshID("Mesh");
+    int dataID = precice.getDataID("Data");
+    precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
+    double dt = precice.initialize();
+    while (precice.isCouplingOngoing()){
+      Vector2D data;
+      precice.readVectorData(dataID, 0, raw(data));
+      validate(equals(data, Vector2D(1.0, 2.0)));
+      dt = precice.advance(dt);
     }
     precice.finalize();
   }

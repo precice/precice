@@ -21,7 +21,7 @@
 #include <boost/range/algorithm.hpp>
 
 #include "tarch/tests/TestCaseFactory.h"
-registerIntegrationTest(precice::tests::SolverInterfaceTestGeometry)
+//registerIntegrationTest(precice::tests::SolverInterfaceTestGeometry)
 
 namespace precice {
 namespace tests {

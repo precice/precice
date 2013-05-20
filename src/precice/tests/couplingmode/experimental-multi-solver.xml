@@ -3,7 +3,7 @@
 <precice-configuration>
    <log-filter target="debug" component="" switch="off"/>
    
-   <solver-interface dimensions="3">   
+   <solver-interface dimensions="2">   
       <data:vector name="Data"/>
    
       <mesh name="Mesh">

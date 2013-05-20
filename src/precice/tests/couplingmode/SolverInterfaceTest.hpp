@@ -172,6 +172,14 @@ private:
    */
   void testBug();
 
+  /**
+   * @brief Three solvers are coupled in a fork S2 <-> S1 <-> S3.
+   *
+   * Both couplings are explicit, solver 1 provides the mesh to the other two
+   * solvers.
+   */
+  void testMultiSolver();
+
 # endif // defined( not PRECICE_NO_MPI )
 };
 
