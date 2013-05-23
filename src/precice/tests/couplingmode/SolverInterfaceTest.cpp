@@ -39,7 +39,9 @@ void SolverInterfaceTest:: run()
     testConfiguration();
   }
   typedef utils::Parallel Par;
-  precicePrint("Ho");
+  //int size = 0;
+  //MPI_Comm_size(Par::getCommunicatorWorld(), &size);
+  //precicePrint("Size = " << size);
   if (Par::getCommunicatorSize() > 1){
     std::vector<int> ranksWanted;
     ranksWanted += 0, 1;
