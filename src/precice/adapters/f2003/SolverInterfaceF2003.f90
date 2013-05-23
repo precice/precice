@@ -37,129 +37,137 @@ module PreCICE_solver_if_module
       use, intrinsic :: iso_c_binding
     end subroutine precicef_finalize
 
-!TODO!    subroutine precicef_get_dims(dimensions) &
-!TODO!      &  bind(c, name='precicef_get_dims_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      integer(kind=c_int) :: dimensions
-!TODO!    end subroutine precicef_get_dims
-!TODO!
-!TODO!    subroutine precicef_ongoing(isOngoing) &
-!TODO!      &  bind(c, name='precicef_ongoing_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      integer(kind=c_int) :: isOngoing
-!TODO!    end subroutine precicef_ongoing
-!TODO!
-!TODO!    subroutine precicef_write_data_required(computedTimestepLength, &
-!TODO!      &                                     isRequired) &
-!TODO!      &  bind(c, name='precicef_write_data_required_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      real(kind=c_double) :: computedTimestepLength
-!TODO!      integer(kind=c_int) :: isRequired
-!TODO!    end subroutine precicef_write_data_required
-!TODO!
-!TODO!    subroutine precicef_read_data_available(isAvailable) &
-!TODO!      &  bind(c, name='precicef_read_data_available_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      integer(kind=c_int) :: isAvailable
-!TODO!    end subroutine precicef_read_data_available
-!TODO!
-!TODO!    subroutine precicef_action_required(action, isRequired, lengthAction) &
-!TODO!      &  bind(c, name='precicef_action_required_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      character(kind=c_char), dimension(*) :: action
-!TODO!      integer(kind=c_int) :: isRequired
-!TODO!      integer(kind=c_int), value :: lengthAction
-!TODO!    end subroutine precicef_action_required
-!TODO!
-!TODO!    subroutine precicef_fulfilled_action(action, lengthAction) &
-!TODO!      &  bind(c, name='precicef_fulfilled_action_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      character(kind=c_char), dimension(*) :: action
-!TODO!      integer(kind=c_int), value :: lengthAction
-!TODO!    end subroutine precicef_fulfilled_action
-!TODO!
-!TODO!    subroutine precicef_get_mesh_id(geometryName, meshID, lengthGeometryName) &
-!TODO!      &  bind(c, name='precicef_get_mesh_id_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      character(kind=c_char), dimension(*) :: geometryName
-!TODO!      integer(kind=c_int) :: meshID
-!TODO!      integer(kind=c_int), value :: lengthGeometryName
-!TODO!    end subroutine precicef_get_mesh_id
-!TODO!
-!TODO!    subroutine precicef_has_data(dataName, hasData, lengthDataName) &
-!TODO!      &  bind(c, name='precicef_has_data_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      character(kind=c_char), dimension(*) :: dataName
-!TODO!      integer(kind=c_int) :: hasData
-!TODO!      integer(kind=c_int), value :: lengthDataName
-!TODO!    end subroutine precicef_has_data
-!TODO!
-!TODO!    subroutine precicef_get_data_id(dataName, dataID, lengthDataName) &
-!TODO!      &  bind(c, name='precicef_get_data_id_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      character(kind=c_char), dimension(*) :: dataName
-!TODO!      integer(kind=c_int) :: dataID
-!TODO!      integer(kind=c_int), value :: lengthDataName
-!TODO!    end subroutine precicef_get_data_id
-!TODO!
-!TODO!    subroutine precicef_set_vertex(meshID, position, vertexID) &
-!TODO!      &  bind(c, name='precicef_set_vertex_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      integer(kind=c_int) :: meshID
-!TODO!      real(kind=c_double) :: position
-!TODO!      integer(kind=c_int) :: vertexID
-!TODO!    end subroutine precicef_set_vertex
-!TODO!
-!TODO!    subroutine precicef_set_read_pos(meshID, position, vertexID) &
-!TODO!      &  bind(c, name='precicef_set_read_pos_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      integer(kind=c_int) :: meshID
-!TODO!      real(kind=c_double) :: position
-!TODO!      integer(kind=c_int) :: positionID
-!TODO!    end subroutine precicef_set_read_pos
-!TODO!
-!TODO!    subroutine precicef_write_pos(meshID, position, vertexID) &
-!TODO!      &  bind(c, name='precicef_set_write_pos_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      integer(kind=c_int) :: meshID
-!TODO!      real(kind=c_double) :: position
-!TODO!      integer(kind=c_int) :: positionID
-!TODO!    end subroutine precicef_set_write_pos
-!TODO!
-!TODO!    subroutine precicef_set_edge(meshID, firstVertexID, secondVertexID, &
-!TODO!      &                          edgeID) &
-!TODO!      &  bind(c, name='precicef_set_edge_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      integer(kind=c_int) :: meshID
-!TODO!      integer(kind=c_int) :: firstVertexID
-!TODO!      integer(kind=c_int) :: secondVertexID
-!TODO!      integer(kind=c_int) :: edgeID
-!TODO!    end subroutine precicef_set_edge
-!TODO!
-!TODO!    subroutine precicef_set_triangle(meshID, firstEdgeID, secondEdgeID, &
-!TODO!      &                              thirdEdgeID) &
-!TODO!      &  bind(c, name='precicef_set_edge_')
-!TODO!
-!TODO!      use, intrinsic :: iso_c_binding
-!TODO!      integer(kind=c_int) :: meshID
-!TODO!      integer(kind=c_int) :: firstEdgeID
-!TODO!      integer(kind=c_int) :: secondEdgeID
-!TODO!      integer(kind=c_int) :: thirdEdgeID
-!TODO!    end subroutine precicef_set_triangle
+    subroutine precicef_get_dims(dimensions) &
+      &  bind(c, name='precicef_get_dims_')
 
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: dimensions
+    end subroutine precicef_get_dims
+
+    subroutine precicef_ongoing(isOngoing) &
+      &  bind(c, name='precicef_ongoing_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: isOngoing
+    end subroutine precicef_ongoing
+
+    subroutine precicef_write_data_required(computedTimestepLength, &
+      &                                     isRequired) &
+      &  bind(c, name='precicef_write_data_required_')
+
+      use, intrinsic :: iso_c_binding
+      real(kind=c_double) :: computedTimestepLength
+      integer(kind=c_int) :: isRequired
+    end subroutine precicef_write_data_required
+
+    subroutine precicef_read_data_available(isAvailable) &
+      &  bind(c, name='precicef_read_data_available_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: isAvailable
+    end subroutine precicef_read_data_available
+
+    subroutine precicef_action_required(action, isRequired, lengthAction) &
+      &  bind(c, name='precicef_action_required_')
+
+      use, intrinsic :: iso_c_binding
+      character(kind=c_char), dimension(*) :: action
+      integer(kind=c_int) :: isRequired
+      integer(kind=c_int), value :: lengthAction
+    end subroutine precicef_action_required
+
+    subroutine precicef_fulfilled_action(action, lengthAction) &
+      &  bind(c, name='precicef_fulfilled_action_')
+
+      use, intrinsic :: iso_c_binding
+      character(kind=c_char), dimension(*) :: action
+      integer(kind=c_int), value :: lengthAction
+    end subroutine precicef_fulfilled_action
+
+    subroutine precicef_get_mesh_id(geometryName, meshID, lengthGeometryName) &
+      &  bind(c, name='precicef_get_mesh_id_')
+
+      use, intrinsic :: iso_c_binding
+      character(kind=c_char), dimension(*) :: geometryName
+      integer(kind=c_int) :: meshID
+      integer(kind=c_int), value :: lengthGeometryName
+    end subroutine precicef_get_mesh_id
+
+    subroutine precicef_has_data(dataName, hasData, lengthDataName) &
+      &  bind(c, name='precicef_has_data_')
+
+      use, intrinsic :: iso_c_binding
+      character(kind=c_char), dimension(*) :: dataName
+      integer(kind=c_int) :: hasData
+      integer(kind=c_int), value :: lengthDataName
+    end subroutine precicef_has_data
+
+    subroutine precicef_get_data_id(dataName, dataID, lengthDataName) &
+      &  bind(c, name='precicef_get_data_id_')
+
+      use, intrinsic :: iso_c_binding
+      character(kind=c_char), dimension(*) :: dataName
+      integer(kind=c_int) :: dataID
+      integer(kind=c_int), value :: lengthDataName
+    end subroutine precicef_get_data_id
+
+    subroutine precicef_set_vertex(meshID, position, vertexID) &
+      &  bind(c, name='precicef_set_vertex_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: meshID
+      real(kind=c_double) :: position
+      integer(kind=c_int) :: vertexID
+    end subroutine precicef_set_vertex
+
+    subroutine precicef_set_read_pos(meshID, position, vertexID) &
+      &  bind(c, name='precicef_set_read_pos_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: meshID
+      real(kind=c_double) :: position
+      integer(kind=c_int) :: vertexID
+    end subroutine precicef_set_read_pos
+
+    subroutine precicef_write_pos(meshID, position, vertexID) &
+      &  bind(c, name='precicef_set_write_pos_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: meshID
+      real(kind=c_double) :: position
+      integer(kind=c_int) :: vertexID
+    end subroutine precicef_write_pos
+
+    subroutine precicef_set_edge(meshID, firstVertexID, secondVertexID, &
+      &                          edgeID) &
+      &  bind(c, name='precicef_set_edge_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: meshID
+      integer(kind=c_int) :: firstVertexID
+      integer(kind=c_int) :: secondVertexID
+      integer(kind=c_int) :: edgeID
+    end subroutine precicef_set_edge
+
+    subroutine precicef_set_triangle(meshID, firstEdgeID, secondEdgeID, &
+      &                              thirdEdgeID) &
+      &  bind(c, name='precicef_set_triangle_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: meshID
+      integer(kind=c_int) :: firstEdgeID
+      integer(kind=c_int) :: secondEdgeID
+      integer(kind=c_int) :: thirdEdgeID
+    end subroutine precicef_set_triangle
+
+    subroutine precicef_read_sdata(dataID, valueIndex, dataValue) &
+      &  bind(c, name='precicef_read_sdata__')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: dataID
+      integer(kind=c_int) :: valueIndex
+      real(kind=c_double) :: dataValue
+    end subroutine precicef_read_sdata
     !!! TO BE CONTINUED ...
 
   end interface
