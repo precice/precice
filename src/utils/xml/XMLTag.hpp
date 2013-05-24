@@ -19,7 +19,7 @@ namespace utils {
 
 
 /**
- * @brief Represents an XML tag to be configured automatically
+ * @brief Represents an XML tag to be configured automatically.
  */
 class XMLTag
 {
@@ -50,6 +50,9 @@ public:
     virtual void xmlEndTagCallback ( XMLTag& callingTag ) =0;
   };
 
+  /**
+   * @brief Types of occurrences of an XML tag.
+   */
   enum Occurrence {
     OCCUR_NOT_OR_ONCE,
     OCCUR_ONCE,
@@ -82,7 +85,10 @@ public:
   void setDocumentation(const std::string& documentation);
 
   /**
-   * @brief Adds a namespace to the tag. Only used for correct XML format.
+   * @brief Adds a namespace to the tag.
+   *
+   * Only used for outputting correct XML format, such that, e.g., internet
+   * browsers display no errors when viewing an XML configuration.
    */
   void addNamespace( const std::string& namespaceName );
 
