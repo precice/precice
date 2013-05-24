@@ -183,6 +183,16 @@ public:
    int getTimesteps() const;
 
    /**
+    * @brief Returns the maximal time to be computed.
+    */
+   double getMaxTime() const;
+
+   /**
+    * @brief Returns the maximal timesteps to be computed.
+    */
+   int getMaxTimesteps() const;
+
+   /**
     * @brief Returns current subiteration number in timestep.
     */
    int getSubIteration() const
@@ -212,12 +222,22 @@ public:
    double getThisTimestepRemainder() const;
 
    /**
+    * @brief Returns part of the current timestep that has been computed already.
+    */
+   double getComputedTimestepPart() const;
+
+   /**
     * @brief Returns the maximal length of the next timestep to be computed.
     *
     * If no timestep length is prescribed by the coupling scheme, always the
     * maximal double accuracy floating point number value is returned.
     */
    double getNextTimestepMaxLength() const;
+
+   /**
+    * @brief Returns the number of valid digits when compare times.
+    */
+   int getValidDigits() const;
 
    /**
     * @brief Returns true, when the coupled simulation is still ongoing.
@@ -323,26 +343,9 @@ protected:
    CouplingData* getReceiveData ( int dataID );
 
    /**
-    * @brief Returns the timestep length of the current time step.
-    *
-    * If the solver determines the timestep length, UNDEFINED_TIMESTEP_LENGTH
-    * is returned.
-    */
-   //double getTimestepLength() const;
-
-   /**
-    * @brief Returns part of the current timestep that has been computed already.
-    */
-   double getComputedTimestepPart() const;
-
-   /**
     * @brief Sets value for computed timestep part.
     */
    void setComputedTimestepPart ( double computedTimestepPart );
-
-   double getMaxTime() const;
-
-   int getMaxTimesteps() const;
 
    /**
     * @brief Sets flag to determine whether data has been exchanged in the last
@@ -421,11 +424,6 @@ protected:
     */
    std::string printActionsState() const;
 
-   /**
-    * @brief Returns the number of valid digits when compare times.
-    */
-   int getValidDigits() const;
-
 private:
 
    // @brief Logging device.
@@ -448,8 +446,6 @@ private:
    int _subIteration;
 
    int _checkpointTimestepInterval;
-
-   //double _maxLengthNextTimestep;
 
    bool _isCouplingOngoing;
 

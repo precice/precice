@@ -32,7 +32,7 @@ namespace precice {
 namespace cplscheme {
 
 /**
- * @brief Configuration for a coupling scheme, parser for xml coupling tag.
+ * @brief Configuration for coupling schemes.
  */
 class CouplingSchemeConfiguration : public utils::XMLTag::Listener
 {
@@ -40,6 +40,11 @@ public:
 
    /**
     * @brief Constructor.
+    *
+    * @param parent [IN] Used to add subtags to hierarchical XML structure.
+    * @param meshConfig [IN] For checking if a used mesh is defined.
+    * @param comConfig [IN] For checking if a communication between participants
+    *        to be coupled is defined.
     */
    CouplingSchemeConfiguration (
      utils::XMLTag&                            parent,
@@ -47,15 +52,13 @@ public:
      const com::PtrCommunicationConfiguration& comConfig );
 
    /**
-    * @brief Parses the XML information in xmlReader to a configuration.
+    * @brief Destructor, empty.
     */
-   //bool parseSubtag ( utils::XMLTag::XMLReader* xmlReader );
+   virtual ~CouplingSchemeConfiguration() {}
 
    /**
-    * @brief Returns true, if configuration has taken place and is valid.
+    * @brief Check, if a coupling scheme is configured for a participant.
     */
-   //bool isValid () const;
-
    bool hasCouplingScheme ( const std::string& participantName ) const;
 
    /**
@@ -177,6 +180,7 @@ private:
 
    bool _isValid;
 
+   // @brief Map from participant name to coupling scheme
    std::map<std::string,PtrCouplingScheme> _couplingSchemes;
 
    void addTypespecifcSubtags (

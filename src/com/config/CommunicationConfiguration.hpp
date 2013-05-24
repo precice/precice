@@ -38,6 +38,8 @@ public:
     */
    CommunicationConfiguration ( utils::XMLTag& parent );
 
+   virtual ~CommunicationConfiguration() {}
+
    //bool parseSubtag ( utils::XMLTag::XMLReader* xmlReader );
 
 //   bool isValid() const
