@@ -120,22 +120,22 @@ module PreCICE_solver_if_module
       integer(kind=c_int) :: vertexID
     end subroutine precicef_set_vertex
 
-    subroutine precicef_set_read_pos(meshID, position, vertexID) &
+    subroutine precicef_set_read_pos(meshID, position, positionID) &
       &  bind(c, name='precicef_set_read_pos_')
 
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: meshID
-      real(kind=c_double) :: position
-      integer(kind=c_int) :: vertexID
+      real(kind=c_double) :: position(3)
+      integer(kind=c_int) :: positionID
     end subroutine precicef_set_read_pos
 
-    subroutine precicef_write_pos(meshID, position, vertexID) &
+    subroutine precicef_write_pos(meshID, position, positionID) &
       &  bind(c, name='precicef_set_write_pos_')
 
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: meshID
       real(kind=c_double) :: position
-      integer(kind=c_int) :: vertexID
+      integer(kind=c_int) :: positionID
     end subroutine precicef_write_pos
 
     subroutine precicef_set_edge(meshID, firstVertexID, secondVertexID, &
