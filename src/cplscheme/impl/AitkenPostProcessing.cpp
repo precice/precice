@@ -48,6 +48,15 @@ void AitkenPostProcessing:: initialize
   double initializer = std::numeric_limits<double>::max();
   utils::DynVector toAppend ( entries, initializer );
   _residuals.append(toAppend);
+
+  // Append column for old values if not done by coupling scheme yet
+  foreach (DataMap::value_type& pair, cpldata){
+    int cols = pair.second.oldValues.cols();
+    if (cols < 1){
+      pair.second.oldValues.append(CouplingData::DataMatrix(
+        pair.second.values->size(), 1, 0.0));
+    }
+  }
 }
 
 void AitkenPostProcessing:: performPostProcessing

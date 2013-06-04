@@ -74,6 +74,15 @@ void IQNILSPostProcessing:: initialize
    _oldResiduals.append(DataValues(entries, init));
    _matrixCols.push_front(0);
    _firstIteration = true;
+
+   // Append column for old values if not done by coupling scheme yet
+   foreach (DataMap::value_type& pair, cplData){
+     int cols = pair.second.oldValues.cols();
+     if (cols < 1){
+       pair.second.oldValues.append(CouplingData::DataMatrix(
+         pair.second.values->size(), 1, 0.0));
+     }
+   }
 }
 
 void IQNILSPostProcessing:: performPostProcessing
