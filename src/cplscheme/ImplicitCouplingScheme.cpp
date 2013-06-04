@@ -211,25 +211,25 @@ void ImplicitCouplingScheme:: initializeData()
   performedAction(constants::actionWriteInitialData());
 }
 
-void ImplicitCouplingScheme:: addComputedTime
-(
-  double timeToAdd )
-{
-  preciceTrace2("addComputedTime()", timeToAdd, getTime());
-  preciceCheck(isCouplingOngoing(), "addComputedTime()",
-               "Invalid call of addComputedTime() after simulation end!");
-
-  // Check validness
-  double eps = std::pow(10.0, -1 * getValidDigits());
-  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
-  preciceCheck(greaterThanZero, "addComputedTime()", "The computed timestep length "
-               << "exceeds the maximum timestep limit for this time step!");
-
-  setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);
-  setTime(getTime() + timeToAdd);
-  //setSubIteration(getSubIteration() + 1);
-  //_totalIterations++;
-}
+//void ImplicitCouplingScheme:: addComputedTime
+//(
+//  double timeToAdd )
+//{
+//  preciceTrace2("addComputedTime()", timeToAdd, getTime());
+//  preciceCheck(isCouplingOngoing(), "addComputedTime()",
+//               "Invalid call of addComputedTime() after simulation end!");
+//
+//  // Check validness
+//  double eps = std::pow(10.0, -1 * getValidDigits());
+//  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
+//  preciceCheck(greaterThanZero, "addComputedTime()", "The computed timestep length "
+//               << "exceeds the maximum timestep limit for this time step!");
+//
+//  setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);
+//  setTime(getTime() + timeToAdd);
+//  //setSubIteration(getSubIteration() + 1);
+//  //_totalIterations++;
+//}
 
 void ImplicitCouplingScheme:: advance()
 {
@@ -560,22 +560,26 @@ void ImplicitCouplingScheme:: newConvergenceMeasurements()
 //   return remainder;
 //}
 
-std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners
-(
-  const std::string& accessorName ) const
+std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
 
-  if(accessorName == _firstParticipant ){
-    partnerNames.push_back(_secondParticipant );
-  }
-  else if(accessorName == _secondParticipant){
-    partnerNames.push_back(_firstParticipant );
+  if(_doesFirstStep){
+    partnerNames.push_back(_firstParticipant);
   }
   else {
-    preciceError("getCouplingPartners()",
-                   "No coupling partner could be found." );
+    partnerNames.push_back(_secondParticipant);
   }
+//  if(accessorName == _firstParticipant ){
+//    partnerNames.push_back(_secondParticipant );
+//  }
+//  else if(accessorName == _secondParticipant){
+//    partnerNames.push_back(_firstParticipant );
+//  }
+//  else {
+//    preciceError("getCouplingPartners()",
+//                   "No coupling partner could be found." );
+//  }
   return partnerNames;
 }
 
@@ -622,9 +626,10 @@ std::string ImplicitCouplingScheme:: printCouplingState() const
 
 void ImplicitCouplingScheme:: exportState
 (
-  io::TXTWriter& writer ) const
+  const std::string& filenamePrefix ) const
 {
   if (not _doesFirstStep){
+    io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
     foreach (const CouplingScheme::DataMap::value_type& dataMap, getSendData()){
       writer.write(dataMap.second.oldValues);
     }
@@ -637,9 +642,12 @@ void ImplicitCouplingScheme:: exportState
   }
 }
 
-void ImplicitCouplingScheme:: importState(io::TXTReader& reader)
+void ImplicitCouplingScheme:: importState
+(
+  const std::string& filenamePrefix )
 {
   if (not _doesFirstStep){
+    io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
     foreach (CouplingScheme::DataMap::value_type& dataMap, getSendData()){
       reader.read(dataMap.second.oldValues);
     }

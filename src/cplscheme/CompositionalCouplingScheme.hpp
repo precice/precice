@@ -72,8 +72,7 @@ public:
    /*
     * @brief returns list of all coupling partners
     */
-   virtual std::vector<std::string> getCouplingPartners (
-     const std::string& accessorName ) const;
+   virtual std::vector<std::string> getCouplingPartners() const;
 
    virtual void sendState (
      com::PtrCommunication communication,
@@ -85,9 +84,9 @@ public:
 
    virtual std::string printCouplingState() const;
 
-   virtual void exportState(io::TXTWriter& writer) const;
+   virtual void exportState(const std::string& filenamePrefix) const;
 
-   virtual void importState(io::TXTReader& reader);
+   virtual void importState(const std::string& filenamePrefix);
 
 private:
 

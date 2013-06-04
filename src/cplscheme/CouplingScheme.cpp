@@ -260,6 +260,24 @@ bool CouplingScheme:: isInitialized() const
   return _isInitialized;
 }
 
+void CouplingScheme:: addComputedTime
+(
+  double timeToAdd )
+{
+  preciceTrace2("addComputedTime()", timeToAdd, _time);
+  preciceCheck(isCouplingOngoing(), "addComputedTime()",
+               "Invalid call of addComputedTime() after simulation end!");
+
+  // Check validness
+  double eps = std::pow(10.0, -1 * _validDigits);
+  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
+  preciceCheck(greaterThanZero, "addComputedTime()", "The computed timestep length "
+               << "exceeds the maximum timestep limit for this time step!");
+
+  _computedTimestepPart += timeToAdd;
+  _time += timeToAdd;
+}
+
 bool CouplingScheme:: isDataUsed
 (
   int dataID)

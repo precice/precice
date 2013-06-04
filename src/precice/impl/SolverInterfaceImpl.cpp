@@ -274,8 +274,8 @@ double SolverInterfaceImpl:: initialize()
     _couplingScheme->initialize(time, timestep);
     if (_restartMode){
       preciceInfo("initialize()", "Reading coupling scheme state for restart");
-      io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
-      _couplingScheme->importState(txtReader);
+      //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
+      _couplingScheme->importState(_checkpointFileName);
     }
     double dt = _couplingScheme->getNextTimestepMaxLength();
     std::set<action::Action::Timing> timings;
@@ -2452,8 +2452,8 @@ void SolverInterfaceImpl:: handleExports()
       }
       io::SimulationStateIO exportState(_checkpointFileName + "_simstate.txt");
       exportState.writeState(_couplingScheme->getTime(), timestep, _numberAdvanceCalls);
-      io::TXTWriter exportCouplingSchemeState(_checkpointFileName + "_cplscheme.txt");
-      _couplingScheme->exportState(exportCouplingSchemeState);
+      //io::TXTWriter exportCouplingSchemeState(_checkpointFileName + "_cplscheme.txt");
+      _couplingScheme->exportState(_checkpointFileName);
     }
   }
 }

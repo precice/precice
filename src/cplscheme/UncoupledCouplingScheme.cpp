@@ -80,9 +80,7 @@ void UncoupledCouplingScheme:: finalize()
   preciceTrace ( "finalize()" );
 }
 
-std::vector<std::string> UncoupledCouplingScheme:: getCouplingPartners
-(
-   const std::string& accessorName ) const
+std::vector<std::string> UncoupledCouplingScheme:: getCouplingPartners() const
 {
   return std::vector<std::string>();
 }

@@ -26,9 +26,16 @@ void CompositionalCouplingScheme:: addParallelCouplingScheme
 {
   preciceTrace("addParallelCouplingScheme()");
   _couplingSchemes.push_back(couplingScheme);
+  assertion2(couplingScheme->getMaxTimesteps() == getMaxTimesteps(),
+             couplingScheme->getMaxTimesteps(), getMaxTimesteps());
+  assertion2(couplingScheme->getTimestepLength() == getTimestepLength(),
+             couplingScheme->getTimestepLength(), getTimestepLength());
+  assertion2(couplingScheme->getValidDigits() == getValidDigits(),
+             couplingScheme->getValidDigits(), getValidDigits());
 }
 
-void CompositionalCouplingScheme:: initialize (
+void CompositionalCouplingScheme:: initialize
+(
   double startTime,
   int    startTimestep )
 {
@@ -60,10 +67,12 @@ void CompositionalCouplingScheme:: addComputedTime
   double timeToAdd )
 {
   preciceTrace1("addComputedTime()", timeToAdd);
+  CouplingScheme::addComputedTime(timeToAdd);
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
     couplingScheme->addComputedTime(timeToAdd);
+    assertion2(couplingScheme->getTime() == getTime(),
+               couplingScheme->getTime(), getTime());
   }
-  setTime(_couplingSchemes[0]->getTime()); // Assume all have equal time
 }
 
 void CompositionalCouplingScheme:: advance()
@@ -94,14 +103,12 @@ void CompositionalCouplingScheme:: finalize()
   }
 }
 
-std::vector<std::string> CompositionalCouplingScheme:: getCouplingPartners
-(
-  const std::string& accessorName ) const
+std::vector<std::string> CompositionalCouplingScheme:: getCouplingPartners() const
 {
   std::vector<std::string> partners;
   std::vector<std::string> subpartners;
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
-    subpartners = couplingScheme->getCouplingPartners(accessorName);
+    subpartners = couplingScheme->getCouplingPartners();
     partners.insert(partners.end(), subpartners.begin(), subpartners.end());
   }
   return partners;
@@ -131,24 +138,46 @@ void CompositionalCouplingScheme:: receiveState
 
 std::string CompositionalCouplingScheme:: printCouplingState() const
 {
-  // TODO How to unite states?
-}
-
-void CompositionalCouplingScheme:: exportState(io::TXTWriter& writer) const
-{
-  preciceTrace("exportState()");
+  std::string state;
+  std::vector<std::string> partners;
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
-    // TODO Hand down filename, not writer.
-    //couplingScheme->exportState(writer);
+    if (not state.empty()){
+      state += "\n";
+    }
+    partners = couplingScheme->getCouplingPartners();
+    assertion1(partners.size() == 1, partners.size());
+    state += "Coupling to ";
+    state += partners[0];
+    state += ":\n";
+    state += couplingScheme->printCouplingState();
   }
 }
 
-void CompositionalCouplingScheme:: importState(io::TXTReader& reader)
+void CompositionalCouplingScheme:: exportState
+(
+  const std::string& filenamePrefix ) const
+{
+  preciceTrace("exportState()");
+  int enumerator = 0;
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    std::ostringstream stream;
+    stream << filenamePrefix << "_" << enumerator;
+    couplingScheme->exportState(stream.str());
+    enumerator++;
+  }
+}
+
+void CompositionalCouplingScheme:: importState
+(
+  const std::string& filenamePrefix )
 {
   preciceTrace("importState()");
+  int enumerator = 0;
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
-    // TODO Hand down filename, not reader.
-    //couplingScheme->importState(writer);
+    std::ostringstream stream;
+    stream << filenamePrefix << "_" << enumerator;
+    couplingScheme->importState(stream.str());
+    enumerator++;
   }
 }
 

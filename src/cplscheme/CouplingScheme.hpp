@@ -128,7 +128,7 @@ public:
    /**
     * @brief Adds newly computed time. Has to be called before every advance.
     */
-   virtual void addComputedTime ( double timeToAdd ) =0;
+   virtual void addComputedTime( double timeToAdd );
 
    /**
     * @brief Exchanges data and updates the state of the coupling scheme.
@@ -153,8 +153,7 @@ public:
    /*
     * @brief returns list of all coupling partners
    */
-   virtual std::vector<std::string> getCouplingPartners (
-     const std::string& accessorName ) const =0;
+   virtual std::vector<std::string> getCouplingPartners () const =0;
 
    /**
     * @brief Returns true, if data will be exchanged when calling advance().
@@ -275,9 +274,19 @@ public:
     */
    virtual std::string printCouplingState() const =0;
 
-   virtual void exportState(io::TXTWriter& writer) const =0;
+   /**
+    * @brief Exports the state of the coupling scheme to file/s.
+    *
+    * Used for checkpointing.
+    */
+   virtual void exportState(const std::string& filenamePrefix) const =0;
 
-   virtual void importState(io::TXTReader& reader) = 0;
+   /**
+    * @brief Imports the state of the coupling scheme from file/s.
+    *
+    * Used for checkpointing.
+    */
+   virtual void importState(const std::string& filenamePrefix) = 0;
 
    virtual void sendState (
      com::PtrCommunication communication,
