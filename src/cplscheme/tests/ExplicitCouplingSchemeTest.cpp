@@ -144,12 +144,6 @@ void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig);
 
   utils::configure(root, configurationPath);
-  //validate(success);
-  //validate(dataConfig->isValid());
-  //validate(meshConfig->isValid());
-  //validate(comConfig->isValid());
-  //validate(geoConfig.isValid());
-  //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
   com::PtrCommunication com = comConfig->getCommunication("participant0", "participant1");
 

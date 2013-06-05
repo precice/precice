@@ -4,7 +4,7 @@
 #ifndef PRECICE_CPLSCHEME_EXPLICITCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_EXPLICITCOUPLINGSCHEME_HPP_
 
-#include "CouplingScheme.hpp"
+#include "BaseCouplingScheme.hpp"
 #include "Constants.hpp"
 #include "com/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -15,7 +15,7 @@
 namespace precice {
 namespace cplscheme {
 
-class ExplicitCouplingScheme : public CouplingScheme
+class ExplicitCouplingScheme : public BaseCouplingScheme
 {
 public:
 

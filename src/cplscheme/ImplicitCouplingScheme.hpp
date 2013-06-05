@@ -4,10 +4,10 @@
 #ifndef PRECICE_CPLSCHEME_IMPLICITCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_IMPLICITCOUPLINGSCHEME_HPP_
 
-#include "cplscheme/CouplingScheme.hpp"
-#include "cplscheme/SharedPointer.hpp"
-#include "cplscheme/Constants.hpp"
-#include "cplscheme/impl/SharedPointer.hpp"
+#include "BaseCouplingScheme.hpp"
+#include "SharedPointer.hpp"
+#include "Constants.hpp"
+#include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/PropertyContainer.hpp"
@@ -33,7 +33,7 @@ namespace cplscheme {
 /**
  * @brief Coupling scheme with iterations per timestep to achieve strong solution.
  */
-class ImplicitCouplingScheme : public CouplingScheme
+class ImplicitCouplingScheme : public BaseCouplingScheme
 {
 public:
 
@@ -211,6 +211,9 @@ private:
   int _iterationToPlot;
   int _timestepToPlot;
   double _timeToPlot;
+
+  // @brief Number of iterations in current timestep.
+  int _iterations;
 
   // @brief Number of total iterations performed.
   int _totalIterations;

@@ -24,7 +24,7 @@ ExplicitCouplingScheme:: ExplicitCouplingScheme
   com::PtrCommunication communication,
   constants::TimesteppingMethod dtMethod)
 :
-  CouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
+  BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _doesFirstStep(false),
@@ -161,7 +161,7 @@ void ExplicitCouplingScheme:: sendState
   int                   rankReceiver)
 {
   communication->startSendPackage(0);
-  CouplingScheme::sendState(communication, rankReceiver);
+  BaseCouplingScheme::sendState(communication, rankReceiver);
   communication->finishSendPackage();
 }
 
@@ -171,7 +171,7 @@ void ExplicitCouplingScheme:: receiveState
   int                   rankSender)
 {
   communication->startSendPackage(0);
-  CouplingScheme::receiveState(communication, rankSender);
+  BaseCouplingScheme::receiveState(communication, rankSender);
   communication->finishSendPackage();
 }
 

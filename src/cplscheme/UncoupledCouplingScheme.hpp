@@ -4,7 +4,7 @@
 #ifndef PRECICE_CPLSCHEME_UNCOUPLEDCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_UNCOUPLEDCOUPLINGSCHEME_HPP_
 
-#include "CouplingScheme.hpp"
+#include "BaseCouplingScheme.hpp"
 #include "tarch/logging/Log.h"
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -12,7 +12,7 @@
 namespace precice {
 namespace cplscheme {
 
-class UncoupledCouplingScheme : public CouplingScheme
+class UncoupledCouplingScheme : public BaseCouplingScheme
 {
 public:
 

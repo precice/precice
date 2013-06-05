@@ -32,7 +32,7 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
 :
-  CouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
+  BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _doesFirstStep(false),
@@ -48,6 +48,7 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   _iterationToPlot(0),
   _timestepToPlot(0),
   _timeToPlot(0.0),
+  _iterations(0),
   _totalIterations(0),
   _participantSetsDt(false),
   _participantReceivesDt(false)
@@ -227,7 +228,7 @@ void ImplicitCouplingScheme:: initializeData()
 //
 //  setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);
 //  setTime(getTime() + timeToAdd);
-//  //setSubIteration(getSubIteration() + 1);
+//  //setSubIteration(_iterations + 1);
 //  //_totalIterations++;
 //}
 
@@ -269,10 +270,10 @@ void ImplicitCouplingScheme:: advance()
       //writeResidual(*(getSendData().begin()->second.values),
       //              getSendData().begin()->second.oldValues.column(0));
       convergence = measureConvergence();
-      assertion2((getSubIteration() <= _maxIterations) || (_maxIterations == -1),
-                 getSubIteration(), _maxIterations);
+      assertion2((_iterations <= _maxIterations) || (_maxIterations == -1),
+                 _iterations, _maxIterations);
       // Stop, when maximal iteration count (given in config) is reached
-      if (getSubIteration() == _maxIterations-1){
+      if (_iterations == _maxIterations-1){
         convergence = true;
       }
       if (convergence){
@@ -324,7 +325,7 @@ void ImplicitCouplingScheme:: advance()
     if (not convergence){
       preciceDebug("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
-      setSubIteration(getSubIteration() + 1);
+      _iterations++;
       _totalIterations++;
       // The computed timestep part equals the timestep length, since the
       // timestep remainder is zero. Subtract the timestep length do another
@@ -336,10 +337,10 @@ void ImplicitCouplingScheme:: advance()
       preciceDebug("Convergence achieved");
       _iterationsWriter.writeData("Timesteps", getTimesteps());
       _iterationsWriter.writeData("Total Iterations", _totalIterations);
-      _iterationsWriter.writeData("Iterations", getSubIteration());
-      int converged = getSubIteration() < _maxIterations ? 1 : 0;
+      _iterationsWriter.writeData("Iterations", _iterations);
+      int converged = _iterations < _maxIterations ? 1 : 0;
       _iterationsWriter.writeData("Convergence", converged);
-      setSubIteration(0);
+      _iterations = 0;
     }
     setHasDataBeenExchanged(true);
     setComputedTimestepPart(0.0);
@@ -351,7 +352,7 @@ void ImplicitCouplingScheme:: advance()
   if (not convergence){
     _timestepToPlot = getTimesteps();
     _timeToPlot = getTime();
-    _iterationToPlot = getSubIteration();
+    _iterationToPlot = _iterations;
   }
   else {
     _iterationToPlot++;
@@ -590,9 +591,9 @@ void ImplicitCouplingScheme:: sendState
 {
   preciceTrace1("sendState()", rankReceiver);
   communication->startSendPackage(rankReceiver );
-  CouplingScheme::sendState(communication, rankReceiver );
+  BaseCouplingScheme::sendState(communication, rankReceiver );
   communication->send(_maxIterations, rankReceiver );
-  communication->send(getSubIteration(), rankReceiver );
+  communication->send(_iterations, rankReceiver );
   communication->send(_totalIterations, rankReceiver );
   communication->finishSendPackage();
 }
@@ -604,11 +605,11 @@ void ImplicitCouplingScheme:: receiveState
 {
   preciceTrace1("receiveState()", rankSender);
   communication->startReceivePackage(rankSender);
-  CouplingScheme::receiveState(communication, rankSender);
+  BaseCouplingScheme::receiveState(communication, rankSender);
   communication->receive(_maxIterations, rankSender);
   int subIteration = -1;
   communication->receive(subIteration, rankSender);
-  setSubIteration(subIteration);
+  _iterations = subIteration;
   communication->receive(_totalIterations, rankSender);
   communication->finishReceivePackage();
 }
@@ -616,7 +617,7 @@ void ImplicitCouplingScheme:: receiveState
 std::string ImplicitCouplingScheme:: printCouplingState() const
 {
   std::ostringstream os;
-  os << " it " << _iterationToPlot; //getSubIteration();
+  os << " it " << _iterationToPlot; //_iterations;
   if(_maxIterations != -1 ){
     os << " of " << _maxIterations;
   }
@@ -630,10 +631,10 @@ void ImplicitCouplingScheme:: exportState
 {
   if (not _doesFirstStep){
     io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
-    foreach (const CouplingScheme::DataMap::value_type& dataMap, getSendData()){
+    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
       writer.write(dataMap.second.oldValues);
     }
-    foreach (const CouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
+    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
       writer.write(dataMap.second.oldValues);
     }
     if (_postProcessing.get() != NULL){
@@ -648,10 +649,10 @@ void ImplicitCouplingScheme:: importState
 {
   if (not _doesFirstStep){
     io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
-    foreach (CouplingScheme::DataMap::value_type& dataMap, getSendData()){
+    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
       reader.read(dataMap.second.oldValues);
     }
-    foreach (CouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
+    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
       reader.read(dataMap.second.oldValues);
     }
     if (_postProcessing.get() != NULL){

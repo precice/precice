@@ -2,6 +2,8 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CompositionalCouplingScheme.hpp"
+#include "utils/Globals.hpp"
+#include <limits>
 
 namespace precice {
 namespace cplscheme {
@@ -9,29 +11,12 @@ namespace cplscheme {
 tarch::logging::Log CompositionalCouplingScheme::
    _log("precice::cplscheme::CompositionalCouplingScheme");
 
-CompositionalCouplingScheme:: CompositionalCouplingScheme
-(
-  PtrCouplingScheme initialCouplingScheme )
-:
-  CouplingScheme(
-    initialCouplingScheme->CouplingScheme::getMaxTime(),
-    initialCouplingScheme->getMaxTimesteps(),
-    initialCouplingScheme->getTimestepLength(),
-    initialCouplingScheme->getValidDigits())
-{}
-
-void CompositionalCouplingScheme:: addParallelCouplingScheme
+void CompositionalCouplingScheme:: addCouplingScheme
 (
   PtrCouplingScheme couplingScheme )
 {
-  preciceTrace("addParallelCouplingScheme()");
+  preciceTrace("addCouplingScheme()");
   _couplingSchemes.push_back(couplingScheme);
-  assertion2(couplingScheme->getMaxTimesteps() == getMaxTimesteps(),
-             couplingScheme->getMaxTimesteps(), getMaxTimesteps());
-  assertion2(couplingScheme->getTimestepLength() == getTimestepLength(),
-             couplingScheme->getTimestepLength(), getTimestepLength());
-  assertion2(couplingScheme->getValidDigits() == getValidDigits(),
-             couplingScheme->getValidDigits(), getValidDigits());
 }
 
 void CompositionalCouplingScheme:: initialize
@@ -40,16 +25,27 @@ void CompositionalCouplingScheme:: initialize
   int    startTimestep )
 {
   preciceTrace2("initialize()", startTime, startTimestep);
-  setTime(startTime);
-  setTimesteps(startTimestep);
+  //setTime(startTime);
+  //setTimesteps(startTimestep);
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
     couplingScheme->initialize(startTime, startTimestep);
-    setHasDataBeenExchanged(couplingScheme->hasDataBeenExchanged() || hasDataBeenExchanged());
-    if (getTimestepLength() > couplingScheme->getTimestepLength()){
-      setTimestepLength(couplingScheme->getTimestepLength());
-    }
+    //setHasDataBeenExchanged(couplingScheme->hasDataBeenExchanged() || hasDataBeenExchanged());
+    //if (getTimestepLength() > couplingScheme->getTimestepLength()){
+    //  setTimestepLength(couplingScheme->getTimestepLength());
+    //}
   }
-  setIsInitialized(true);
+  //setIsInitialized(true);
+}
+
+bool CompositionalCouplingScheme:: isInitialized() const
+{
+  preciceTrace("isInitialized()");
+  bool isInitialized = true;
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    isInitialized &= couplingScheme->isInitialized();
+  }
+  preciceDebug("return " << isInitialized);
+  return isInitialized;
 }
 
 void CompositionalCouplingScheme:: initializeData()
@@ -57,7 +53,6 @@ void CompositionalCouplingScheme:: initializeData()
   preciceTrace("initializeData()");
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
     couplingScheme->initializeData();
-    setHasDataBeenExchanged(couplingScheme->hasDataBeenExchanged() || hasDataBeenExchanged());
   }
 }
 
@@ -67,31 +62,31 @@ void CompositionalCouplingScheme:: addComputedTime
   double timeToAdd )
 {
   preciceTrace1("addComputedTime()", timeToAdd);
-  CouplingScheme::addComputedTime(timeToAdd);
+  //CouplingScheme::addComputedTime(timeToAdd);
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
     couplingScheme->addComputedTime(timeToAdd);
-    assertion2(couplingScheme->getTime() == getTime(),
-               couplingScheme->getTime(), getTime());
+    //assertion2(couplingScheme->getTime() == getTime(),
+    //           couplingScheme->getTime(), getTime());
   }
 }
 
 void CompositionalCouplingScheme:: advance()
 {
   preciceTrace("advance()");
-  setHasDataBeenExchanged(false);
-  setIsCouplingTimestepComplete(true); // Merged with coupling schemes' states
+//  setHasDataBeenExchanged(false);
+//  setIsCouplingTimestepComplete(true); // Merged with coupling schemes' states
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
     couplingScheme->advance();
-    setHasDataBeenExchanged(
-      couplingScheme->hasDataBeenExchanged() || hasDataBeenExchanged());
-    setIsCouplingTimestepComplete(
-      couplingScheme->isCouplingTimestepComplete() && isCouplingTimestepComplete());
-    if (getTimestepLength() > couplingScheme->getTimestepLength()){
-      setTimestepLength(couplingScheme->getTimestepLength());
-    }
-    if (getComputedTimestepPart() > couplingScheme->getComputedTimestepPart()){
-      setComputedTimestepPart(couplingScheme->getComputedTimestepPart());
-    }
+//    setHasDataBeenExchanged(
+//      couplingScheme->hasDataBeenExchanged() || hasDataBeenExchanged());
+//    setIsCouplingTimestepComplete(
+//      couplingScheme->isCouplingTimestepComplete() && isCouplingTimestepComplete());
+//    if (getTimestepLength() > couplingScheme->getTimestepLength()){
+//      setTimestepLength(couplingScheme->getTimestepLength());
+//    }
+//    if (getComputedTimestepPart() > couplingScheme->getComputedTimestepPart()){
+//      setComputedTimestepPart(couplingScheme->getComputedTimestepPart());
+//    }
   }
 }
 
@@ -103,8 +98,31 @@ void CompositionalCouplingScheme:: finalize()
   }
 }
 
+//bool CompositionalCouplingScheme:: isDataUsed
+//(
+//  int dataID )
+//{
+//  preciceTrace1("isDataUsed()", dataID);
+//  bool isUsed = false;
+//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//    isUsed |= couplingScheme->isDataUsed(dataID);
+//  }
+//  return isUsed;
+//}
+//
+//bool CompositionalCouplingScheme:: isDataUsed()
+//{
+//  preciceTrace("isDataUsed()");
+//  bool isUsed = false;
+//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//    isUsed |= couplingScheme->isDataUsed();
+//  }
+//  return isUsed;
+//}
+
 std::vector<std::string> CompositionalCouplingScheme:: getCouplingPartners() const
 {
+  preciceTrace("getCouplingPartners()");
   std::vector<std::string> partners;
   std::vector<std::string> subpartners;
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
@@ -114,25 +132,220 @@ std::vector<std::string> CompositionalCouplingScheme:: getCouplingPartners() con
   return partners;
 }
 
-void CompositionalCouplingScheme:: sendState
+bool CompositionalCouplingScheme:: willDataBeExchanged
 (
-  com::PtrCommunication communication,
-  int                   rankReceiver )
+  double lastSolverTimestepLength ) const
 {
-  preciceTrace("sendState()");
+  preciceTrace1("willDataBeExchanged()", lastSolverTimestepLength);
+  bool willBeExchanged = false;
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
-    couplingScheme->sendState(communication, rankReceiver);
+    willBeExchanged |= couplingScheme->willDataBeExchanged(lastSolverTimestepLength);
+  }
+  preciceDebug("return " << willBeExchanged);
+  return willBeExchanged;
+}
+
+bool CompositionalCouplingScheme:: hasDataBeenExchanged() const
+{
+  preciceTrace("hasDataBeenExchanged()");
+  bool hasBeenExchanged = false;
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    hasBeenExchanged |= couplingScheme->hasDataBeenExchanged();
+  }
+  preciceDebug("return " << hasBeenExchanged);
+  return hasBeenExchanged;
+}
+
+double CompositionalCouplingScheme:: getTime() const
+{
+  preciceTrace("getTime()");
+  double time = std::numeric_limits<double>::max();
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    if (couplingScheme->getTime() < time){
+      time = couplingScheme->getTime();
+    }
+  }
+  preciceDebug("return " << time);
+  return time;
+}
+
+int CompositionalCouplingScheme:: getTimesteps() const
+{
+  preciceTrace("getTimesteps()");
+  int timesteps = std::numeric_limits<int>::max();
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    if (couplingScheme->getTimesteps() < timesteps){
+      timesteps = couplingScheme->getTimesteps();
+    }
+  }
+  preciceDebug("return " << timesteps);
+  return timesteps;
+}
+
+double CompositionalCouplingScheme:: getMaxTime() const
+{
+  preciceTrace("getMaxTime()");
+  double maxTime = 0.0;
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    if (couplingScheme->getMaxTime() > maxTime){
+      maxTime = couplingScheme->getMaxTime();
+    }
+  }
+  preciceDebug("return " << maxTime);
+  return maxTime;
+}
+
+int CompositionalCouplingScheme:: getMaxTimesteps() const
+{
+  preciceTrace("getMaxTimesteps()");
+  int maxTimesteps = 0;
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    if (couplingScheme->getMaxTimesteps() > maxTimesteps){
+      maxTimesteps = couplingScheme->getMaxTimesteps();
+    }
+  }
+  preciceDebug("return " << maxTimesteps);
+  return maxTimesteps;
+}
+
+//int CompositionalCouplingScheme:: getSubIteration() const
+//{
+//  preciceTrace("getSubIteration()");
+//  int subiteration = false;
+//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//    isSubiterating |= couplingScheme->getSubIteration();
+//  }
+//  return isSubiterating;
+//}
+
+bool CompositionalCouplingScheme:: hasTimestepLength() const
+{
+  preciceTrace("hasTimestepLength()");
+  bool hasIt = false;
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    hasIt |= couplingScheme->hasTimestepLength();
+  }
+  preciceDebug("return " << hasIt);
+  return hasIt;
+}
+
+double CompositionalCouplingScheme:: getTimestepLength() const
+{
+  preciceTrace("getTimestepLength()");
+  double timestepLength = std::numeric_limits<double>::max();
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    if (couplingScheme->getTimestepLength() < timestepLength){
+      timestepLength = couplingScheme->getTimestepLength();
+    }
+  }
+  preciceDebug("return " << timestepLength);
+  return timestepLength;
+}
+
+double CompositionalCouplingScheme:: getThisTimestepRemainder() const
+{
+  preciceTrace("getThisTimestepRemainder()");
+  double maxRemainder = 0.0;
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    if (couplingScheme->getThisTimestepRemainder() > maxRemainder){
+      maxRemainder = couplingScheme->getThisTimestepRemainder();
+    }
+  }
+  preciceDebug("return " << maxRemainder);
+  return maxRemainder;
+}
+
+double CompositionalCouplingScheme:: getComputedTimestepPart() const
+{
+  preciceTrace("getComputedTimestepPart()");
+  double timestepPart = std::numeric_limits<double>::max();
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    if (couplingScheme->getComputedTimestepPart() < timestepPart){
+      timestepPart = couplingScheme->getComputedTimestepPart();
+    }
+  }
+  preciceDebug("return " << timestepPart);
+  return timestepPart;
+}
+
+double CompositionalCouplingScheme:: getNextTimestepMaxLength() const
+{
+  preciceTrace("getNextTimestepMaxLength()");
+  double maxLength = std::numeric_limits<double>::max();
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    if (couplingScheme->getNextTimestepMaxLength() < maxLength){
+      maxLength = couplingScheme->getNextTimestepMaxLength();
+    }
+  }
+  preciceDebug("return " << maxLength);
+  return maxLength;
+}
+
+bool CompositionalCouplingScheme:: isCouplingOngoing() const
+{
+  preciceTrace("isCouplingOngoing()");
+  bool isOngoing = false;
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    isOngoing |= couplingScheme->isCouplingOngoing();
+  }
+  preciceDebug("return " << isOngoing);
+  return isOngoing;
+}
+
+bool CompositionalCouplingScheme:: isCouplingTimestepComplete() const
+{
+  preciceTrace("isCouplingTimestepComplete()");
+  bool isComplete = true;
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    isComplete &= couplingScheme->isCouplingTimestepComplete();
+  }
+  preciceDebug("return " << isComplete);
+  return isComplete;
+}
+
+bool CompositionalCouplingScheme:: isActionRequired
+(
+  const std::string& actionName) const
+{
+  preciceTrace1("isActionRequired()", actionName);
+  bool isRequired = false;
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    isRequired |= couplingScheme->isActionRequired(actionName);
+  }
+  preciceDebug("return " << isRequired);
+  return isRequired;
+}
+
+void CompositionalCouplingScheme:: performedAction
+(
+  const std::string& actionName)
+{
+  preciceTrace1("performedAction()", actionName);
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    couplingScheme->performedAction(actionName);
   }
 }
 
-void CompositionalCouplingScheme:: receiveState
-(
-  com::PtrCommunication communication,
-  int                   rankSender )
+int CompositionalCouplingScheme:: getCheckpointTimestepInterval() const
 {
-  preciceTrace("receiveState()");
+  preciceTrace("getCheckpointTimestepInterval()");
+  int interval = std::numeric_limits<int>::max();
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
-    couplingScheme->receiveState(communication, rankSender);
+    if (couplingScheme->getCheckpointTimestepInterval() < interval){
+      interval = couplingScheme->getCheckpointTimestepInterval();
+    }
+  }
+  preciceDebug("return " << interval);
+  return interval;
+}
+
+void CompositionalCouplingScheme:: requireAction
+(
+  const std::string& actionName )
+{
+  preciceTrace1("requireAction()", actionName);
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    couplingScheme->requireAction(actionName);
   }
 }
 
@@ -151,6 +364,7 @@ std::string CompositionalCouplingScheme:: printCouplingState() const
     state += ":\n";
     state += couplingScheme->printCouplingState();
   }
+  return state;
 }
 
 void CompositionalCouplingScheme:: exportState
@@ -178,6 +392,28 @@ void CompositionalCouplingScheme:: importState
     stream << filenamePrefix << "_" << enumerator;
     couplingScheme->importState(stream.str());
     enumerator++;
+  }
+}
+
+void CompositionalCouplingScheme:: sendState
+(
+  com::PtrCommunication communication,
+  int                   rankReceiver )
+{
+  preciceTrace("sendState()");
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    couplingScheme->sendState(communication, rankReceiver);
+  }
+}
+
+void CompositionalCouplingScheme:: receiveState
+(
+  com::PtrCommunication communication,
+  int                   rankSender )
+{
+  preciceTrace("receiveState()");
+  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+    couplingScheme->receiveState(communication, rankSender);
   }
 }
 
