@@ -57,30 +57,9 @@ public:
   static const double UNDEFINED_TIMESTEP_LENGTH;
 
   /**
-   * @brief Constructor.
-   */
-  //CouplingScheme (
-  //  double maxTime,
-  //  int    maxTimesteps,
-  //  double timestepLength,
-  //  int    validDigits ) =0;
-
-  /**
    * @brief Destructor.
    */
   virtual ~CouplingScheme() {}
-
-  /**
-   * @brief Adds another coupling scheme in parallel to this scheme.
-   *
-   * If this coupling scheme is a normal coupling scheme, an object of
-   * CompositionalCouplingScheme will be created that contains this and the
-   * new scheme in parallel. If this coupling scheme is already a composed
-   * scheme, the new scheme will be added as another parallel scheme.
-   *
-   * @return Pointer to composition of coupling schemes.
-   */
-  //virtual PtrCouplingScheme addSchemeInParallel(PtrCouplingScheme scheme) = 0;
 
   /**
    * @brief Initializes the coupling scheme and establishes a communiation
@@ -120,7 +99,7 @@ public:
   /*
    * @brief returns list of all coupling partners
    */
-  virtual std::vector<std::string> getCouplingPartners () const =0;
+  virtual std::vector<std::string> getCouplingPartners() const =0;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
@@ -253,7 +232,7 @@ public:
    *
    * Used for checkpointing.
    */
-  virtual void importState(const std::string& filenamePrefix) = 0;
+  virtual void importState(const std::string& filenamePrefix) =0;
 
   /**
    * @brief Send the state of the coupling scheme to another remote scheme.

@@ -2,6 +2,7 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CompositionalCouplingScheme.hpp"
+#include "Constants.hpp"
 #include "utils/Globals.hpp"
 #include <limits>
 
@@ -10,6 +11,13 @@ namespace cplscheme {
 
 tarch::logging::Log CompositionalCouplingScheme::
    _log("precice::cplscheme::CompositionalCouplingScheme");
+
+CompositionalCouplingScheme:: CompositionalCouplingScheme()
+:
+  _couplingSchemes(),
+  _activeSchemesBegin(_couplingSchemes.begin()),
+  _activeSchemesEnd(_couplingSchemes.end())
+{}
 
 void CompositionalCouplingScheme:: addCouplingScheme
 (
@@ -25,16 +33,10 @@ void CompositionalCouplingScheme:: initialize
   int    startTimestep )
 {
   preciceTrace2("initialize()", startTime, startTimestep);
-  //setTime(startTime);
-  //setTimesteps(startTimestep);
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
     couplingScheme->initialize(startTime, startTimestep);
-    //setHasDataBeenExchanged(couplingScheme->hasDataBeenExchanged() || hasDataBeenExchanged());
-    //if (getTimestepLength() > couplingScheme->getTimestepLength()){
-    //  setTimestepLength(couplingScheme->getTimestepLength());
-    //}
   }
-  //setIsInitialized(true);
+  determineActiveCouplingSchemes();
 }
 
 bool CompositionalCouplingScheme:: isInitialized() const
@@ -56,38 +58,24 @@ void CompositionalCouplingScheme:: initializeData()
   }
 }
 
-
 void CompositionalCouplingScheme:: addComputedTime
 (
   double timeToAdd )
 {
   preciceTrace1("addComputedTime()", timeToAdd);
-  //CouplingScheme::addComputedTime(timeToAdd);
-  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
-    couplingScheme->addComputedTime(timeToAdd);
-    //assertion2(couplingScheme->getTime() == getTime(),
-    //           couplingScheme->getTime(), getTime());
+  for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++){
+    (*it)->addComputedTime(timeToAdd);
   }
 }
 
 void CompositionalCouplingScheme:: advance()
 {
   preciceTrace("advance()");
-//  setHasDataBeenExchanged(false);
-//  setIsCouplingTimestepComplete(true); // Merged with coupling schemes' states
-  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
-    couplingScheme->advance();
-//    setHasDataBeenExchanged(
-//      couplingScheme->hasDataBeenExchanged() || hasDataBeenExchanged());
-//    setIsCouplingTimestepComplete(
-//      couplingScheme->isCouplingTimestepComplete() && isCouplingTimestepComplete());
-//    if (getTimestepLength() > couplingScheme->getTimestepLength()){
-//      setTimestepLength(couplingScheme->getTimestepLength());
-//    }
-//    if (getComputedTimestepPart() > couplingScheme->getComputedTimestepPart()){
-//      setComputedTimestepPart(couplingScheme->getComputedTimestepPart());
-//    }
-  }
+  do {
+    for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++){
+      (*it)->advance();
+    }
+  } while(determineActiveCouplingSchemes());
 }
 
 void CompositionalCouplingScheme:: finalize()
@@ -138,8 +126,8 @@ bool CompositionalCouplingScheme:: willDataBeExchanged
 {
   preciceTrace1("willDataBeExchanged()", lastSolverTimestepLength);
   bool willBeExchanged = false;
-  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
-    willBeExchanged |= couplingScheme->willDataBeExchanged(lastSolverTimestepLength);
+  for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++){
+    willBeExchanged |= (*it)->willDataBeExchanged(lastSolverTimestepLength);
   }
   preciceDebug("return " << willBeExchanged);
   return willBeExchanged;
@@ -149,8 +137,9 @@ bool CompositionalCouplingScheme:: hasDataBeenExchanged() const
 {
   preciceTrace("hasDataBeenExchanged()");
   bool hasBeenExchanged = false;
-  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
-    hasBeenExchanged |= couplingScheme->hasDataBeenExchanged();
+  // Question: Does it suffice to only check the active ones?
+  for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++){
+    hasBeenExchanged |= (*it)->hasDataBeenExchanged();
   }
   preciceDebug("return " << hasBeenExchanged);
   return hasBeenExchanged;
@@ -415,6 +404,79 @@ void CompositionalCouplingScheme:: receiveState
   foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
     couplingScheme->receiveState(communication, rankSender);
   }
+}
+
+bool CompositionalCouplingScheme:: determineActiveCouplingSchemes()
+{
+  bool newActiveSchemes = false;
+  std::string writeCheckpoint = constants::actionWriteIterationCheckpoint();
+  std::string readCheckpoint = constants::actionReadIterationCheckpoint();
+  if (_activeSchemesBegin == _activeSchemesEnd){
+    // First call after initialization of all coupling schemes. All coupling
+    // schemes are set active up to (but not including) the first explicit
+    // scheme after an implicit scheme.
+    _activeSchemesBegin = _couplingSchemes.begin();
+    _activeSchemesEnd = _couplingSchemes.begin();
+    advanceActiveCouplingSchemes();
+    newActiveSchemes = true;
+  }
+  else {
+    // Redetermine active schemes. First, all preceding explicit schemes are
+    // removed. Then, all remaining implicit schemes are checked for the
+    // convergence of iterations (this is given when an iteration checkpoint
+    // should be created). If all are converged, a next set of active schemes
+    // is determined.
+
+    // Remove preceding explicit schemes
+    while (_activeSchemesBegin != _activeSchemesEnd){
+      bool explicitScheme = true;
+      explicitScheme &= not (*_activeSchemesBegin)->isActionRequired(writeCheckpoint);
+      explicitScheme &= not (*_activeSchemesBegin)->isActionRequired(readCheckpoint);
+      if (explicitScheme) _activeSchemesBegin++;
+    }
+
+    // Check implicit schemes for convergence and remove if converged
+    bool converged = true;
+    for (SchemesIt it=_activeSchemesBegin; it != _activeSchemesEnd; it++){
+      if ((*it)->isActionRequired(readCheckpoint)){
+        converged = false;
+        break;
+      }
+    }
+    if (converged) _activeSchemesBegin = _activeSchemesEnd;
+
+    // Determine next set of active schemes if current is empty
+    if (_activeSchemesBegin == _activeSchemesEnd){
+      if (_activeSchemesBegin == _couplingSchemes.end()){
+        // All coupling schemes are through
+        _activeSchemesBegin = _couplingSchemes.begin();
+        _activeSchemesEnd = _couplingSchemes.begin();
+        advanceActiveCouplingSchemes();
+        // newActiveSchemes stays false, since the current it/dt is complete
+      }
+      else {
+        advanceActiveCouplingSchemes();
+        newActiveSchemes = true;
+      }
+    }
+  }
+  return newActiveSchemes;
+}
+
+void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
+{
+  std::string writeCheckpoint = constants::actionWriteIterationCheckpoint();
+  bool iterating = false;
+  while (_activeSchemesEnd != _couplingSchemes.end()){
+    if ((*_activeSchemesEnd)->isActionRequired(writeCheckpoint)){
+      iterating = true;
+    }
+    if (iterating && (not (*_activeSchemesEnd)->isActionRequired(writeCheckpoint))){
+      break;
+    }
+    _activeSchemesEnd++;
+  }
+  assertion(_activeSchemesBegin != _activeSchemesEnd);
 }
 
 }} // namespace precice, cplscheme
