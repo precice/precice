@@ -106,7 +106,7 @@ void SolverInterfaceImpl:: configure
   const std::string& configurationFileName )
 {
   typedef tarch::logging::CommandLineLogger Logger;
-  // By default, debuggin is turned on with a filter list entry. This removes
+  // By default, debugging is turned on with a filter list entry. This removes
   // entry and turns off all debug messages until configuration.
   Logger::getInstance().clearFilterList();
   Logger::FilterListEntry filter("", true); // All off
