@@ -57,7 +57,7 @@ void SpacetreeTestScenarios:: testSearchPosition()
     mesh->createEdge(v30, v31);
     mesh->createEdge(v31, v32);
     mesh->createEdge(v32, v0);
-    mesh->computeState();
+    mesh->computeState(true);
 
     // Create and initialize spacetree
     utils::DynVector center(Vector2D(0.5, 0.5));
@@ -457,7 +457,7 @@ void SpacetreeTestScenarios:: testSearchPosition()
     mesh->createTriangle ( e001to101, e101to111, e001to111 ); // z = 1
     mesh->createTriangle ( e001to011, e001to111, e011to111 );
 
-    mesh->computeState();
+    mesh->computeState(true);
 
     // Create and initialize spacetree
     utils::DynVector center(dim, 0.5);
@@ -992,7 +992,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
     mesh->createEdge ( v30, v31 );
     mesh->createEdge ( v31, v32 );
     mesh->createEdge ( v32, v0 );
-    mesh->computeState ();
+    mesh->computeState (true);
 
     // Create and initialize spacetree
     utils::DynVector center(Vector2D(0.5, 0.5));
@@ -1130,7 +1130,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
     mesh->createTriangle ( e001to101, e101to111, e001to111 ); // z = 1
     mesh->createTriangle ( e001to011, e001to111, e011to111 );
 
-    mesh->computeState ();
+    mesh->computeState (true);
 
     // Create and initialize spacetree
     utils::DynVector center(dim, 0.5);
@@ -1560,7 +1560,7 @@ void SpacetreeTestScenarios:: testSearchContentEdges()
   mesh::Edge& e1 = mesh->createEdge(v1, v2);
   mesh::Edge& e2 = mesh->createEdge(v0, v2);
   mesh->createTriangle(e2, e1, e0);
-  mesh->computeState();
+  mesh->computeState(true);
 
   utils::DynVector center(dim), halflengths(dim);
   center = 0.5, 0.5, 0.5;
@@ -1594,6 +1594,8 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   int min = Spacetree::minElementsToRefineCell;
   Spacetree::minElementsToRefineCell = 1;
   int dim = offset.size();
+  bool computeNormals = false;
+  if (dim == 2) computeNormals = true;
   assertion ( not tarch::la::oneGreater(offset, utils::DynVector(dim,1.0)) );
   assertion ( tarch::la::allGreater(offset, utils::DynVector(dim,-1.0)) );
   bool flipNormals = false;
@@ -1602,8 +1604,10 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   utils::DynVector coords1(offset);
   mesh::Vertex& v0 = mesh->createVertex(coords0);
   mesh::Vertex& v1 = mesh->createVertex(coords1);
+  mesh::Vertex& v2 = mesh->createVertex(coords1);
+  mesh::Vertex& v3 = mesh->createVertex(coords0);
   mesh->createEdge(v0, v1);
-  mesh->createEdge(v1, v0); // To form a closed polygon
+  mesh->createEdge(v2, v3);
 
   utils::DynVector center(dim, 0.0);
   utils::DynVector halflengths(dim, 1.0);
@@ -1637,9 +1641,11 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   // Outside
   coords0[testDim] = sign * 1.5;
   coords1[testDim] = sign * 2.0;
-  v0.setCoords ( coords0 );
-  v1.setCoords ( coords1 );
-  mesh->computeState();
+  v0.setCoords(coords0);
+  v1.setCoords(coords1);
+  v2.setCoords(coords1);
+  v3.setCoords(coords0);
+  mesh->computeState(computeNormals);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug("  outside i= " << i);
@@ -1663,7 +1669,9 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   coords1[testDim] = sign * 2.0;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
-  mesh->computeState();
+  v2.setCoords(coords1);
+  v3.setCoords(coords0);
+  mesh->computeState(computeNormals);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "outside i= " << i );
@@ -1685,7 +1693,9 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   coords1[testDim] = sign * 2.0;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
-  mesh->computeState();
+  v2.setCoords(coords1);
+  v3.setCoords(coords0);
+  mesh->computeState(computeNormals);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "outside i= " << i );
@@ -1708,7 +1718,9 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   coords1[testDim] = sign * 2.0;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
-  mesh->computeState();
+  v2.setCoords(coords1);
+  v3.setCoords(coords0);
+  mesh->computeState(computeNormals);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "outside i= " << i );
@@ -1731,7 +1743,9 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   coords1[testDim] = sign * 1.5;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
-  mesh->computeState();
+  v2.setCoords(coords1);
+  v3.setCoords(coords0);
+  mesh->computeState(computeNormals);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "outside i= " << i );
@@ -1755,7 +1769,9 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   coords1[testDim] = sign * 2.0;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
-  mesh->computeState();
+  v2.setCoords(coords1);
+  v3.setCoords(coords0);
+  mesh->computeState(computeNormals);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "outside i= " << i );
@@ -1779,7 +1795,9 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   coords1[testDim] = sign * 0.7;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
-  mesh->computeState();
+  v2.setCoords(coords1);
+  v3.setCoords(coords0);
+  mesh->computeState(computeNormals);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "outside i= " << i );
@@ -1886,7 +1904,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -1911,7 +1929,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -1936,7 +1954,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -1961,7 +1979,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -1987,7 +2005,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2013,7 +2031,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2039,7 +2057,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2065,7 +2083,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2092,7 +2110,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2119,7 +2137,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2146,7 +2164,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2173,7 +2191,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2200,7 +2218,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2227,7 +2245,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2254,7 +2272,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2284,7 +2302,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2314,7 +2332,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );
@@ -2344,7 +2362,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
   v2.setCoords ( coords2 );
-  mesh->computeState();
+  mesh->computeState(true);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
     preciceDebug ( "i= " << i );

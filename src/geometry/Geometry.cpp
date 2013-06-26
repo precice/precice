@@ -39,8 +39,13 @@ void Geometry:: create
       vertex.setCoords ( temp );
     }
   }
-  seed.computeState ();
-  allocateDataValues ( seed );
+  bool computeNormals = false;
+  if (seed.content().size() != seed.content().vertices().size()){
+    // Also edges, triangles or quads are present to derive normals.
+    computeNormals = true;
+  }
+  seed.computeState(computeNormals);
+  allocateDataValues(seed);
 }
 
 void Geometry:: allocateDataValues ( mesh::Mesh & mesh )

@@ -213,6 +213,8 @@ void FindVoxelContentTest:: performTestEdges
   mesh::Vertex& v0 = mesh.createVertex(coords0);
   mesh::Vertex& v1 = mesh.createVertex(coords1);
   mesh.createEdge(v0, v1);
+  bool computeNormals = true;
+  if (dim == 3) computeNormals = false;
 
   DynVector center(dim, 0.0);
   DynVector halflengths(dim, 1.0);
@@ -233,7 +235,7 @@ void FindVoxelContentTest:: performTestEdges
   coords1[testDim] = sign * 3.0;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
-  mesh.computeState ();
+  mesh.computeState(computeNormals);
   findIncluded(mesh);
   findExcluded(mesh);
   int sizeEdges = findIncluded.content().edges().size();
@@ -246,7 +248,7 @@ void FindVoxelContentTest:: performTestEdges
   coords1[testDim] = sign * 2.0;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
-  mesh.computeState ();
+  mesh.computeState(computeNormals);
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
@@ -259,7 +261,7 @@ void FindVoxelContentTest:: performTestEdges
   coords1[testDim] = sign * 2.0;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
-  mesh.computeState ();
+  mesh.computeState(computeNormals);
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
@@ -272,7 +274,7 @@ void FindVoxelContentTest:: performTestEdges
   coords1[testDim] = sign * 2.0;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
-  mesh.computeState ();
+  mesh.computeState(computeNormals);
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
@@ -285,7 +287,7 @@ void FindVoxelContentTest:: performTestEdges
   coords1[testDim] = sign * 1.5;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
-  mesh.computeState ();
+  mesh.computeState(computeNormals);
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
@@ -298,7 +300,7 @@ void FindVoxelContentTest:: performTestEdges
   coords1[testDim] = sign * 2.0;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
-  mesh.computeState ();
+  mesh.computeState(computeNormals);
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
@@ -311,7 +313,7 @@ void FindVoxelContentTest:: performTestEdges
   coords1[testDim] = sign * 0.7;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
-  mesh.computeState ();
+  mesh.computeState(computeNormals);
   findIncluded(mesh);
   findExcluded(mesh);
   sizeEdges = findIncluded.content().edges().size();
@@ -320,7 +322,7 @@ void FindVoxelContentTest:: performTestEdges
   validateEquals(sizeEdges, 3);
 }
 
-void FindVoxelContentTest :: testZeroVoxel ()
+void FindVoxelContentTest:: testZeroVoxel ()
 {
   preciceTrace("testZeroVoxel()");
   int dim = 2;
@@ -416,7 +418,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   int size = findIncluded.content().triangles().size();
@@ -432,7 +434,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -448,7 +450,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -464,7 +466,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -480,7 +482,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -496,7 +498,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -512,7 +514,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -528,7 +530,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -544,7 +546,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -560,7 +562,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -576,7 +578,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -592,7 +594,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -608,7 +610,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -624,7 +626,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -640,7 +642,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -656,7 +658,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -675,7 +677,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -694,7 +696,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
 //  if((sign = -1) && (testDim == 1) && (secondDimension == 2) && (thirdDimension == 0)){
 //    precicePrint("------------------------------ sign = " << sign << ", testDim = " << testDim
@@ -723,7 +725,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -742,7 +744,7 @@ void FindVoxelContentTest:: performTestTriangles
   v0.setCoords(coords0);
   v1.setCoords(coords1);
   v2.setCoords(coords2);
-  mesh.computeState ();
+  mesh.computeState(true);
   findIncluded(mesh);
   findExcluded(mesh);
   size = findIncluded.content().triangles().size();
@@ -768,7 +770,7 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
   mesh::Edge* e1 = & mesh.createEdge(*v1, *v2);
   mesh::Edge* e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   query::FindVoxelContent find (
     voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
@@ -784,7 +786,7 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   find.clear ();
   find(mesh);
@@ -799,7 +801,7 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   find.clear ();
   find(mesh);
@@ -824,7 +826,7 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
   mesh::Edge* e1 = & mesh.createEdge(*v1, *v2);
   mesh::Edge* e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   query::FindVoxelContent find (
     voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
@@ -840,7 +842,7 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   find.clear ();
   find(mesh);
@@ -855,7 +857,7 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   find.clear ();
   find(mesh);
@@ -880,7 +882,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   mesh::Edge* e1 = & mesh.createEdge(*v1, *v2);
   mesh::Edge* e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   query::FindVoxelContent find (
     voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
@@ -896,7 +898,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   find.clear ();
   find(mesh);
@@ -911,7 +913,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   find.clear ();
   find(mesh);
@@ -926,7 +928,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   find.clear ();
   find(mesh);
@@ -941,7 +943,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   find.clear ();
   find(mesh);
@@ -956,7 +958,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   find.clear ();
   find(mesh);
@@ -971,7 +973,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   find.clear ();
   find(mesh);
@@ -996,7 +998,7 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   mesh::Edge* e1 = & mesh.createEdge(*v1, *v2);
   mesh::Edge* e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   query::FindVoxelContent findIncluded (
     voxelCenter, voxelHalflengths, FindVoxelContent::INCLUDE_BOUNDARY);
@@ -1017,7 +1019,7 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   findIncluded.clear ();
   findIncluded(mesh);
@@ -1036,7 +1038,7 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   findIncluded.clear ();
   findIncluded(mesh);
@@ -1055,7 +1057,7 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   findIncluded.clear ();
   findIncluded(mesh);
@@ -1074,7 +1076,7 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   findIncluded.clear ();
   findIncluded(mesh);
@@ -1093,7 +1095,7 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   findIncluded.clear ();
   findIncluded(mesh);
@@ -1112,7 +1114,7 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   findIncluded.clear ();
   findIncluded(mesh);
@@ -1131,7 +1133,7 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
   mesh.createTriangle(*e0, *e1, *e2);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   findIncluded.clear ();
   findIncluded(mesh);
@@ -1195,12 +1197,12 @@ void FindVoxelContentTest:: testQueryCube ()
   mesh.createTriangle(e010to110, e010to011, e110to011); // y = 1
   mesh.createTriangle(e110to111, e110to011, e011to111);
 
-  mesh.createTriangle(e000to100, e010to100, e000to010); // z = 0
+  mesh.createTriangle(e010to100, e000to100, e000to010); // z = 0
   mesh.createTriangle(e010to100, e010to110, e100to110);
   mesh.createTriangle(e001to101, e101to111, e001to111); // z = 1
   mesh.createTriangle(e001to011, e001to111, e011to111);
 
-  mesh.computeState ();
+  mesh.computeState(true);
 
   io::ExportVTK exportMesh(true);
   exportMesh.doExport("FindVoxelContentTest-testQueryCube", mesh);
@@ -1657,7 +1659,7 @@ void FindVoxelContentTest:: testQueryCube ()
   // Invert mesh normal and perform all queries again, results have to be same
   flipNormals = true;
   mesh.setFlipNormals(flipNormals);
-  mesh.computeState ();
+  mesh.computeState(true);
 
   // Vertex queries with halflengths = 1.0/3.0
   {

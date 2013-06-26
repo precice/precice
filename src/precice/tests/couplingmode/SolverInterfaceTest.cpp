@@ -470,9 +470,13 @@ void SolverInterfaceTest:: testExplicitWithSolverGeometry ()
       cplInterface );
     validateEquals ( cplInterface.getDimensions(), 3 );
     int meshID = cplInterface.getMeshID ( "SolverGeometry" );
-    int i0 = cplInterface.setMeshVertex ( meshID, raw(utils::Vector3D(1.0)) );
-    int i1 = cplInterface.setMeshVertex ( meshID, raw(utils::Vector3D(2.0)) );
-    cplInterface.setMeshEdge ( meshID, i0, i1 );
+    int i0 = cplInterface.setMeshVertex(meshID, raw(utils::Vector3D(0.0,0.0,0.0)));
+    int i1 = cplInterface.setMeshVertex(meshID, raw(utils::Vector3D(1.0,0.0,0.0)));
+    int i2 = cplInterface.setMeshVertex(meshID, raw(utils::Vector3D(0.0,1.0,0.0)));
+    int e0 = cplInterface.setMeshEdge(meshID, i0, i1);
+    int e1 = cplInterface.setMeshEdge(meshID, i1, i2);
+    int e2 = cplInterface.setMeshEdge(meshID, i2, i0);
+    cplInterface.setMeshTriangle(meshID, e0, e1, e2);
     double dt = cplInterface.initialize();
     while ( cplInterface.isCouplingOngoing() ){
       time += dt;
@@ -548,10 +552,10 @@ void SolverInterfaceTest:: testExplicitWithDisplacingGeometry()
       int i1 = cplInterface.setMeshVertex ( meshID, raw(one) );
       int i2 = cplInterface.setMeshVertex ( meshID, raw(two) );
       int i3 = cplInterface.setMeshVertex ( meshID, raw(three) );
-      cplInterface.setMeshEdge ( meshID, i0, i1 );
-      cplInterface.setMeshEdge ( meshID, i1, i3 );
-      cplInterface.setMeshEdge ( meshID, i3, i2 );
-      cplInterface.setMeshEdge ( meshID, i2, i0 );
+//      cplInterface.setMeshEdge ( meshID, i0, i1 );
+//      cplInterface.setMeshEdge ( meshID, i1, i3 );
+//      cplInterface.setMeshEdge ( meshID, i3, i2 );
+//      cplInterface.setMeshEdge ( meshID, i2, i0 );
 
       double dt = cplInterface.initialize();
       int displacementsID = cplInterface.getDataID ( "Displacements" );

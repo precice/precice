@@ -243,7 +243,7 @@ void GeometryTestScenarios:: createMesh
     mesh.createTriangle ( e001to101, e101to111, e001to111 ); // z = 1
     mesh.createTriangle ( e001to011, e001to111, e011to111 );
   }
-  mesh.computeState ();
+  mesh.computeState (true);
 }
 
 void GeometryTestScenarios:: addToPointQueryScenario

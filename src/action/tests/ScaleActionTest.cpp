@@ -51,7 +51,7 @@ void ScaleActionTest:: testDivideByArea()
    Vertex& v2 = mesh->createVertex(utils::Vector2D(1.0, 1.0));
    mesh->createEdge(v0, v1);
    mesh->createEdge(v1, v2);
-   mesh->computeState();
+   mesh->computeState(true);
    mesh->allocateDataValues();
    utils::DynVector& values = data->values();
    assignList(values) = 2.0, 3.0, 4.0;

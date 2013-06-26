@@ -170,7 +170,7 @@ void BalanceVertexPositionAction:: performAction
         vertex.setCoords ( projectedPoint );
       }
     }
-    mesh->computeState();
+    mesh->computeState(true);
     //precicePrint ( "Error measure = " << errorMeasure );
     errorMeasure = std::sqrt(errorMeasure);
     iterations ++;

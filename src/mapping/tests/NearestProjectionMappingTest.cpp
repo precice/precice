@@ -48,7 +48,7 @@ void NearestProjectionMappingTest:: testConservativeIncremental()
   Vertex& v1 = outMesh->createVertex ( Vector2D(0.0, 0.0) );
   Vertex& v2 = outMesh->createVertex ( Vector2D(1.0, 1.0) );
   outMesh->createEdge ( v1, v2 );
-  outMesh->computeState();
+  outMesh->computeState(true);
   outMesh->allocateDataValues();
 
   PtrMesh inMesh ( new Mesh("InMesh", dimensions, false) );
@@ -102,7 +102,7 @@ void NearestProjectionMappingTest:: testConsistentIncremental()
   Vertex& v1 = inMesh->createVertex(Vector2D(0.0, 0.0));
   Vertex& v2 = inMesh->createVertex(Vector2D(1.0, 1.0));
   inMesh->createEdge(v1, v2);
-  inMesh->computeState();
+  inMesh->computeState(true);
   inMesh->allocateDataValues();
   double valueVertex1 = 1.0;
   double valueVertex2 = 2.0;
@@ -163,7 +163,7 @@ void NearestProjectionMappingTest:: testConservativeNonIncremental()
   Vertex& v1 = outMesh->createVertex ( Vector2D(0.0, 0.0) );
   Vertex& v2 = outMesh->createVertex ( Vector2D(1.0, 1.0) );
   outMesh->createEdge ( v1, v2 );
-  outMesh->computeState();
+  outMesh->computeState(true);
   outMesh->allocateDataValues();
 
   PtrMesh inMesh ( new Mesh("InMesh", dimensions, false) );
@@ -224,7 +224,7 @@ void NearestProjectionMappingTest:: testConsistentNonIncremental()
   Vertex& v1 = inMesh->createVertex ( Vector2D(0.0, 0.0) );
   Vertex& v2 = inMesh->createVertex ( Vector2D(1.0, 1.0) );
   inMesh->createEdge ( v1, v2 );
-  inMesh->computeState();
+  inMesh->computeState(true);
   inMesh->allocateDataValues();
   double valueVertex1 = 1.0;
   double valueVertex2 = 2.0;

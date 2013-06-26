@@ -106,7 +106,7 @@ void ModifyCoordinatesActionTest:: testAddToCoordinates ()
    Vertex& v0 = mesh->createVertex ( Vector2D(0.0) );
    Vertex& v1 = mesh->createVertex ( Vector2D(1.0) );
    Edge & edge = mesh->createEdge ( v0, v1 );
-   mesh->computeState ();
+   mesh->computeState(true);
    mesh->allocateDataValues ();
    utils::DynVector& values = data->values ();
 
@@ -151,7 +151,7 @@ void ModifyCoordinatesActionTest:: testSubtractFromCoordinates ()
    Vertex& v0 = mesh->createVertex ( Vector2D(0.0) );
    Vertex& v1 = mesh->createVertex ( Vector2D(1.0) );
    Edge& edge = mesh->createEdge ( v0, v1 );
-   mesh->computeState ();
+   mesh->computeState(true);
    mesh->allocateDataValues ();
    utils::DynVector& values = data->values ();
 

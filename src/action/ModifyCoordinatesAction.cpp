@@ -65,7 +65,7 @@ void ModifyCoordinatesAction:: performAction
   else {
     preciceError ( "performAction()", "Unknown mode type!" );
   }
-  getMesh()->computeState();
+  getMesh()->computeState(true);
   getMesh()->notifyListeners();
 }
 
