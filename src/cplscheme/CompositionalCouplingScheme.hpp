@@ -25,8 +25,8 @@ namespace cplscheme {
  * their execution sequence. The schemes are executed from first added to last
  * added, following the rule that implicit schemes need to be converged before
  * executing the next explicit scheme/s.
- * An example with implicit schemes I1, I2, I3, I4, I5 and explicit
- * schemes E1, E2, E3, E4 is given here. The schemes are added in the sequence
+ * An example with implicit schemes I1, ..., I5 and explicit
+ * schemes E1, ..., E4 is given here. The schemes are added in the sequence
  *
  *   I1, I2, E1, E2, I3, E3, I4, I5, E4
  *
