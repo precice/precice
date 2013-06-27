@@ -44,6 +44,7 @@ void ConstantRelaxationPostProcessing:: initialize
   foreach (DataMap::value_type& pair, cplData){
     int cols = pair.second.oldValues.cols();
     if (cols < 1){
+      assertion1(pair.second.values->size() > 0, pair.first);
       pair.second.oldValues.append(CouplingData::DataMatrix(
         pair.second.values->size(), 1, 0.0));
     }

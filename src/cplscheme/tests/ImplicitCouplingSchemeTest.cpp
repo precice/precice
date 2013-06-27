@@ -96,10 +96,6 @@ void ImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
 
   utils::configure(root, path);
   validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != NULL);
-  //validate ( dataConfig->isValid() );
-  //validate ( meshConfig->isValid() );
-  //validate ( comConfig->isValid() );
-  //validate ( cplSchemeConfig.isValid() );
   meshConfig->setMeshSubIDs();
 }
 
