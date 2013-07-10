@@ -52,7 +52,7 @@ void ExportVTKTest:: testExportPolygonalMesh()
   mesh.createEdge (v2, v3);
   mesh.createEdge (v3, v1);
 
-  mesh.computeState(true);
+  mesh.computeState();
 
   bool exportNormals = true;
   ExportVTK exportVTK(exportNormals);
@@ -78,7 +78,7 @@ void ExportVTKTest:: testExportTriangulatedMesh()
   mesh::Edge& e2 = mesh.createEdge (v2, v3);
   mesh::Edge& e3 = mesh.createEdge (v3, v1);
   mesh.createTriangle (e1, e2, e3);
-  mesh.computeState(true);
+  mesh.computeState();
 
   bool exportNormals = true;
   ExportVTK exportVTK(exportNormals);
@@ -131,7 +131,7 @@ void ExportVTKTest:: testExportQuadMesh()
   mesh.createQuad(e8, e7, e11, e3);
   mesh.createQuad(e9, e1, e10, e5);
 
-  mesh.computeState(true);
+  mesh.computeState();
 
   bool exportNormals = true;
   ExportVTK exportVTK(exportNormals);

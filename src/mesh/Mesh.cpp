@@ -296,14 +296,27 @@ void Mesh:: allocateDataValues()
   }
 }
 
-void Mesh:: computeState
-(
-  bool computeNormals )
+void Mesh:: computeState()
 {
   preciceTrace("computeState()");
   using utils::DynVector;
   using utils::Vector2D;
   using utils::Vector3D;
+
+  // Compute normals only if faces to derive normal information are available
+  bool computeNormals = true;
+  size_t size2DFaces = _content.edges().size();
+  size_t size3DFaces = _content.triangles().size() + _content.quads().size();
+  if (_dimensions == 2){
+    if (size2DFaces == 0){
+      computeNormals = false;
+    }
+  }
+  else if (size3DFaces == 0){
+    assertion1(_dimensions == 3, _dimensions);
+    computeNormals = false;
+  }
+
   // Compute edge centers, enclosing radius, and (in 2D) edge normals
   DynVector center(_dimensions);
   DynVector distanceToCenter(_dimensions);
@@ -505,7 +518,11 @@ void Mesh:: computeState
     if (computeNormals){
       foreach (Edge& edge, _content.edges()){
         double length = tarch::la::norm2(edge.getNormal());
-        assertionMsg(tarch::la::greater(length,0.0), edge.vertex(0).getCoords() << " " << edge.vertex(1).getCoords());
+        assertionMsg(tarch::la::greater(length,0.0),
+          "Edge vertex coords: (" << edge.vertex(0).getCoords() << "), ("
+          << edge.vertex(1).getCoords()
+          << "). Hint: Could be inconsistent triangle/quad orientation or "
+          << "dangling edge. ");
         edge.setNormal(edge.getNormal() / length);
       }
     }

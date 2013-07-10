@@ -64,7 +64,7 @@ void BalanceVertexPositionActionTest:: testSmoothCircle ()
   }
   size = (int)mesh->vertices().size();
   mesh->createEdge ( mesh->vertices()[size-1], mesh->vertices()[0] );
-  mesh->computeState(true);
+  mesh->computeState();
   io::ExportVTK exportVTK ( true );
   exportVTK.doExport ( "BalanceVertexPositionActionTest-testSmoothCircle-init.vtk",
                        *mesh );
@@ -151,7 +151,7 @@ void BalanceVertexPositionActionTest:: testSmoothHexahedron()
   mesh->createTriangle(e001to101, e101to111, e001to111); // z = 1
   mesh->createTriangle(e001to011, e001to111, e011to111);
 
-  mesh->computeState(true);
+  mesh->computeState();
   io::ExportVTK exportVTK(true);
   exportVTK.doExport("BalanceVertexPositionActionTest-testSmoothHexahedron-init.vtk",
                      *mesh);

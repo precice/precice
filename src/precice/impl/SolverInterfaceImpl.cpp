@@ -1327,8 +1327,10 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   preciceTrace4("setMeshTriangleWithEdges()", meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
   if (_clientMode){
-    _requestManager->requestSetMeshTriangleWithEdges(meshID, firstVertexID, secondVertexID,
-                                    thirdVertexID);
+    _requestManager->requestSetMeshTriangleWithEdges(meshID,
+                                                     firstVertexID,
+                                                     secondVertexID,
+                                                     thirdVertexID);
     return;
   }
   MeshContext& context = _accessor->meshContext(meshID);
@@ -2087,12 +2089,6 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
 void SolverInterfaceImpl:: runServer()
 {
   assertion(_serverMode);
-//  int argc = 0;
-//  char* arg = new char[8];
-//  strcpy(arg, "precice");
-//  char** argv = &arg;
-//  utils::Parallel::initialize ( &argc, &argv, _accessorName + "Server" );
-//  delete[] arg;
   initializeClientServerCommunication();
   _requestManager->handleRequests();
 }

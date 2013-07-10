@@ -91,7 +91,7 @@ void MeshTest:: testComputeState()
     //     *  <---
     // *****
     Edge& e2 = mesh.createEdge ( v2, v3 );
-    mesh.computeState (true);
+    mesh.computeState();
 
     // Perform test validations
     using tarch::la::equals;
@@ -130,7 +130,7 @@ void MeshTest:: testComputeState()
     //   *   *   *
     // *************
     Triangle& t2 = mesh.createTriangle ( e4, e5, e2 );
-    mesh.computeState (true);
+    mesh.computeState();
 
     // Perform test validations
     using tarch::la::equals;
@@ -187,7 +187,7 @@ void MeshTest:: testComputeState()
 
     Quad& q0 = mesh.createQuad(e0, e1, e2, e3); // in x-y-plane
     Quad& q1 = mesh.createQuad(e4, e5, e6, e3); // in z-y-plane
-    mesh.computeState(true);
+    mesh.computeState();
 
     // Perform test validations
     using tarch::la::equals;
@@ -390,7 +390,7 @@ void MeshTest:: testDemonstration ()
     validateEquals ( mesh.getNameIDPairs().count("MyMesh-sub-id"), 1 );
 
     // Compute the state of the mesh elements (vertices, edges, triangles)
-    mesh.computeState(true);
+    mesh.computeState();
 
     // Allocate memory for the data values of set data. Before data value access
     // leads to assertions.

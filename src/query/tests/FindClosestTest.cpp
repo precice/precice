@@ -265,7 +265,7 @@ void FindClosestTest:: testFindClosestDistanceToTriangles ()
   mesh::Edge& e1 = mesh.createEdge ( v1, v2 );
   mesh::Edge& e2 = mesh.createEdge ( v2, v0 );
   mesh.createTriangle ( e0, e1, e2 );
-  mesh.computeState(true);
+  mesh.computeState();
 
   // Prepare and issue queries
   std::vector<Vector3D> queries;
@@ -415,7 +415,7 @@ void FindClosestTest:: testMultipleGeometryIDs ()
   face.addParent ( mesh.setSubID("face-2") );
   int idFace = mesh.getID ( "Mesh-face-2" );
   int idsVertices[2];
-  mesh.computeState(true);
+  mesh.computeState();
   for (int i=0; i < 2; i++){
     std::ostringstream stream;
     stream << "vertex-" << i;
@@ -473,7 +473,7 @@ void FindClosestTest:: testWeigthsOfVertices ()
   mesh::Vertex& vertex1 = mesh.createVertex (Vector2D(0.0, 0.0));
   mesh::Vertex& vertex2 = mesh.createVertex (Vector2D(1.0, 0.0));
   mesh.createEdge (vertex1, vertex2);
-  mesh.computeState(true);
+  mesh.computeState();
 
   // Query elements
   query::FindClosest findClosest (Vector2D(0.3, 1.0));

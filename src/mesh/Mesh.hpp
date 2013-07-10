@@ -248,14 +248,13 @@ public:
   /**
    * @brief Necessary before any geom. operations can be performed on the mesh.
    *
-   * Normals of vertices, edges, and triangles are computed, if parameter
-   * computeNormals is true. If only vertices or vertices and edges (in 3d) are
-   * given, no proper normals can be computed and the flag needs to be set to
-   * false in order to avoid dividing by zero on normalization of the normals.
+   * If no edges (in 2d) or triangles/quads (in 3d) are
+   * given, no normals are computed in order to avoid dividing by zero on
+   * normalization of the vertex normals.
    *
    * Circumcircles of edges and triangles are computed.
    */
-  void computeState(bool computeNormals);
+  void computeState();
 
   /**
    * @brief Removes all mesh elements and data values (does not remove data).

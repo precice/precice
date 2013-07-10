@@ -96,7 +96,7 @@ void ImportVRMLTest:: testImportSquare()
   validateNumericalEquals(velocities[7], 1.0);
 
   // Compute mesh state and export to vtk file
-  mesh.computeState(true);
+  mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
   out.doExport("ImportVRMLTest2D", mesh);
@@ -112,7 +112,7 @@ void ImportVRMLTest:: testImportCube()
   mesh::PtrData dataVelocities = mesh.createData("Velocities", dim);
   ImportVRML in(_pathToTests);
   in.doImportCheckpoint("ImportVRMLTest-Cube.wrl", mesh);
-  mesh.computeState(true);
+  mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
   out.doExport("ImportVRMLTest-Cube", mesh);
@@ -125,7 +125,7 @@ void ImportVRMLTest:: testImportSphere()
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in(_pathToTests);
   in.doImport("ImportVRMLTest-Sphere.wrl", mesh);
-  mesh.computeState(true);
+  mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
   out.doExport("ImportVRMLTest-Sphere", mesh);
@@ -138,7 +138,7 @@ void ImportVRMLTest:: testImportApe ()
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in(_pathToTests);
   in.doImport("ImportVRMLTest-Ape.wrl", mesh);
-  mesh.computeState (true);
+  mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
   out.doExport("ImportVRMLTest-Ape", mesh);
@@ -151,7 +151,7 @@ void ImportVRMLTest:: testImportBunny()
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in(_pathToTests);
   in.doImport("ImportVRMLTest-Bunny.wrl", mesh);
-  mesh.computeState (true);
+  mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
   out.doExport("ImportVRMLTest-Bunny", mesh);
@@ -164,7 +164,7 @@ void ImportVRMLTest:: testImportDragon()
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in(_pathToTests);
   in.doImport("ImportVRMLTest-Dragon.wrl", mesh);
-  mesh.computeState(true);
+  mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
   out.doExport("ImportVRMLTest-Dragon", mesh);
@@ -177,7 +177,7 @@ void ImportVRMLTest:: testImportReactorPipe()
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in ( _pathToTests );
   in.doImport("ImportVRMLTest-ReactorPipeCut.wrl", mesh);
-  mesh.computeState(true);
+  mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
   out.doExport("ImportVRMLTest-ReactorPipeCut", mesh);

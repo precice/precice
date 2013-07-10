@@ -1353,7 +1353,8 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
   { // Tests A: first mesh no spacetree, second, third spacetree
     SolverInterface interface("Accessor", 0, 1);
     impl::SolverInterfaceImpl* impl = interface._impl;
-    interface.configure(_pathToTests + "multiple-mesh-spacetree-a.xml");
+    std::string configName = _pathToTests + "multiple-mesh-spacetree-a.xml";
+    configureSolverInterface(configName, interface);
     validateEquals(interface.getDimensions(), 2);
     interface.initialize();
     std::vector<int> meshIDs;
@@ -1437,7 +1438,8 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
   { // Tests B: first mesh has spacetree, second, third not
     SolverInterface interface("Accessor", 0, 1);
     impl::SolverInterfaceImpl* impl = interface._impl;
-    interface.configure(_pathToTests + "multiple-mesh-spacetree-b.xml");
+    std::string configName = _pathToTests + "multiple-mesh-spacetree-b.xml";
+    configureSolverInterface(configName, interface);
     validateEquals(interface.getDimensions(), 2);
     interface.initialize();
     std::vector<int> meshIDs;

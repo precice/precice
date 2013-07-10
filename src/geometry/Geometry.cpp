@@ -39,12 +39,7 @@ void Geometry:: create
       vertex.setCoords ( temp );
     }
   }
-  bool computeNormals = false;
-  if (seed.content().size() != seed.content().vertices().size()){
-    // Also edges, triangles or quads are present to derive normals.
-    computeNormals = true;
-  }
-  seed.computeState(computeNormals);
+  seed.computeState();
   allocateDataValues(seed);
 }
 
