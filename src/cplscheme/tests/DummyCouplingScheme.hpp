@@ -89,7 +89,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual int getTimesteps() const { assertion(false); }
+  virtual int getTimesteps() const { return _timesteps; }
 
   /**
    * @brief Not implemented.
@@ -129,7 +129,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool isCouplingOngoing() const { assertion(false); }
+  virtual bool isCouplingOngoing() const;
 
   /**
    * @brief Not implemented.

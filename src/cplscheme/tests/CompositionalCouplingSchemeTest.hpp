@@ -61,6 +61,11 @@ private:
 # ifndef PRECICE_NO_MPI
 
   /**
+   * @brief Runs different explicit/implicit compositions with dummy.
+   */
+  void testDummySchemeCompositions();
+
+  /**
    * @brief Runs a three solver linear composition with explicit schemes.
    */
   void testExplicitSchemeComposition1();

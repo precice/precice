@@ -15,7 +15,7 @@ tarch::logging::Log CompositionalCouplingScheme::
 CompositionalCouplingScheme:: CompositionalCouplingScheme()
 :
   _couplingSchemes(),
-  _activeSchemesBegin(_couplingSchemes.begin()),
+  _activeSchemesBegin(_couplingSchemes.end()),
   _activeSchemesEnd(_couplingSchemes.end())
 {}
 
@@ -408,10 +408,12 @@ void CompositionalCouplingScheme:: receiveState
 
 bool CompositionalCouplingScheme:: determineActiveCouplingSchemes()
 {
+  preciceTrace("determineActiveCouplingSchemes()");
   bool newActiveSchemes = false;
   std::string writeCheckpoint = constants::actionWriteIterationCheckpoint();
   std::string readCheckpoint = constants::actionReadIterationCheckpoint();
   if (_activeSchemesBegin == _activeSchemesEnd){
+    preciceDebug("Case After Init");
     // First call after initialization of all coupling schemes. All coupling
     // schemes are set active up to (but not including) the first explicit
     // scheme after an implicit scheme.
@@ -421,6 +423,7 @@ bool CompositionalCouplingScheme:: determineActiveCouplingSchemes()
     newActiveSchemes = true;
   }
   else {
+    preciceDebug("Normal Case");
     // Redetermine active schemes. First, all preceding explicit schemes are
     // removed. Then, all remaining implicit schemes are checked for the
     // convergence of iterations (this is given when an iteration checkpoint
@@ -433,6 +436,8 @@ bool CompositionalCouplingScheme:: determineActiveCouplingSchemes()
       explicitScheme &= not (*_activeSchemesBegin)->isActionRequired(writeCheckpoint);
       explicitScheme &= not (*_activeSchemesBegin)->isActionRequired(readCheckpoint);
       if (explicitScheme) _activeSchemesBegin++;
+      else break;
+      preciceDebug("Remove preceding explicit scheme");
     }
 
     // Check implicit schemes for convergence and remove if converged
@@ -440,14 +445,19 @@ bool CompositionalCouplingScheme:: determineActiveCouplingSchemes()
     for (SchemesIt it=_activeSchemesBegin; it != _activeSchemesEnd; it++){
       if ((*it)->isActionRequired(readCheckpoint)){
         converged = false;
+        preciceDebug("Non converged implicit scheme");
         break;
       }
     }
-    if (converged) _activeSchemesBegin = _activeSchemesEnd;
+    if (converged) {
+      preciceDebug("Active implicit schemes converged");
+      _activeSchemesBegin = _activeSchemesEnd;
+    }
 
     // Determine next set of active schemes if current is empty
     if (_activeSchemesBegin == _activeSchemesEnd){
       if (_activeSchemesBegin == _couplingSchemes.end()){
+        preciceDebug("Through with all coupling schemes");
         // All coupling schemes are through
         _activeSchemesBegin = _couplingSchemes.begin();
         _activeSchemesEnd = _couplingSchemes.begin();
@@ -455,6 +465,7 @@ bool CompositionalCouplingScheme:: determineActiveCouplingSchemes()
         // newActiveSchemes stays false, since the current it/dt is complete
       }
       else {
+        preciceDebug("Coupling schemes remaining");
         advanceActiveCouplingSchemes();
         newActiveSchemes = true;
       }
@@ -465,13 +476,16 @@ bool CompositionalCouplingScheme:: determineActiveCouplingSchemes()
 
 void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 {
+  preciceTrace("advanceActiveCouplingSchemes()");
   std::string writeCheckpoint = constants::actionWriteIterationCheckpoint();
   bool iterating = false;
   while (_activeSchemesEnd != _couplingSchemes.end()){
     if ((*_activeSchemesEnd)->isActionRequired(writeCheckpoint)){
+      preciceDebug("Found implicit scheme");
       iterating = true;
     }
     if (iterating && (not (*_activeSchemesEnd)->isActionRequired(writeCheckpoint))){
+      preciceDebug("Found explicit scheme after implicit scheme");
       break;
     }
     _activeSchemesEnd++;

@@ -19,6 +19,7 @@ DummyCouplingScheme:: DummyCouplingScheme
   int maxTimesteps )
 :
   _numberIterations(numberIterations),
+  _iterations(0),
   _maxTimesteps(maxTimesteps),
   _timesteps(0),
   _isInitialized(false),
@@ -39,7 +40,7 @@ void DummyCouplingScheme:: initialize
 
 void DummyCouplingScheme:: advance()
 {
-  preciceTrace("advance()");
+  preciceTrace2("advance()", _iterations, _timesteps);
   assertion(_isInitialized);
   assertion(_isOngoing);
   _iterations++;
@@ -59,6 +60,12 @@ void DummyCouplingScheme:: finalize()
   assertion(not _isOngoing);
 }
 
+bool DummyCouplingScheme:: isCouplingOngoing() const
+{
+  if (_timesteps < _maxTimesteps) return true;
+  return false;
+}
+
 bool DummyCouplingScheme:: isActionRequired
 (
   const std::string& actionName ) const
@@ -67,15 +74,18 @@ bool DummyCouplingScheme:: isActionRequired
   if (_numberIterations > 1){
     if (actionName == constants::actionWriteIterationCheckpoint()){
       if (_iterations == 0) {
+        preciceDebug("return true");
         return true;
       }
     }
     else if (actionName == constants::actionReadIterationCheckpoint()){
-      if (_iterations < _numberIterations) {
+      if (_iterations != 0) {
+        preciceDebug("return true");
         return true;
       }
     }
   }
+  preciceDebug("return false");
   return false;
 }
 
