@@ -66,9 +66,24 @@ private:
   void testDummySchemeCompositions();
 
   /**
-   * @brief Runs a three solver linear composition with explicit schemes.
+   * @brief Runs a three solver composition of explicit schemes.
    */
   void testExplicitSchemeComposition1();
+
+  /**
+   * @brief Runs a three solver composition of implicit schemes.
+   */
+  void testImplicitSchemeComposition();
+
+  /**
+   * @brief Runs a three solver composition, S1 <-impl.-> S2 <-expl.-> S3.
+   */
+  void testImplicitExplicitSchemeComposition();
+
+  /**
+   * @brief Setup three solver coupling using XML-configuration.
+   */
+  void setupAndRunThreeSolverCoupling(const std::string& configFilename);
 
   /**
    * @brief Takes a configured coupling scheme and performs explicit coupling.
