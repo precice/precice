@@ -31,7 +31,6 @@ BaseCouplingScheme:: BaseCouplingScheme
   _time(0.0),
   _computedTimestepPart(0.0),
   _timesteps(0),
-  //_subIteration(0),
   _checkpointTimestepInterval(-1),
   _isCouplingOngoing(true),
   _isCouplingTimestepComplete(false),
@@ -54,17 +53,6 @@ BaseCouplingScheme:: BaseCouplingScheme
       "BaseCouplingScheme()", "Valid digits of timestep length has to be "
       << "between 1 and 16!");
 }
-
-//PtrCouplingScheme BaseCouplingScheme:: addSchemeInParallel
-//(
-//  PtrCouplingScheme scheme )
-//{
-//  PtrCouplingScheme thisScheme(this);
-//  PtrCouplingScheme composition();
-//  composition->addSchemeInParallel(thisScheme);
-//  composition->addSchemeInParallel(scheme);
-//  return composition;
-//}
 
 void BaseCouplingScheme:: addDataToSend
 (
@@ -273,33 +261,17 @@ void BaseCouplingScheme:: addComputedTime
   preciceCheck(isCouplingOngoing(), "addComputedTime()",
                "Invalid call of addComputedTime() after simulation end!");
 
-  // Check validness
-  double eps = std::pow(10.0, -1 * _validDigits);
-  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
-  preciceCheck(greaterThanZero, "addComputedTime()", "The computed timestep length "
-               << "exceeds the maximum timestep limit for this time step!");
-
   _computedTimestepPart += timeToAdd;
   _time += timeToAdd;
-}
 
-//bool BaseCouplingScheme:: isDataUsed
-//(
-//  int dataID)
-//{
-//  return(utils::contained(dataID, getSendData())) ||
-//        (utils::contained(dataID, getReceiveData()));
-//}
-//
-//bool BaseCouplingScheme:: isDataUsed()
-//{
-//  if(_sendData.size() > 0 || _receiveData.size() > 0){
-//    return true;
-//  }
-//  else {
-//    return false;
-//  }
-//}
+  // Check validness
+  double eps = std::pow(10.0, -1 * _validDigits);
+  bool valid = tarch::la::greaterEquals(getThisTimestepRemainder(), 0.0, eps);
+  preciceCheck(valid, "addComputedTime()", "The computed timestep length of "
+               << timeToAdd << " exceeds the maximum timestep limit of "
+               << _timestepLength - _computedTimestepPart + timeToAdd
+               << " for this time step!");
+}
 
 bool BaseCouplingScheme:: willDataBeExchanged
 (

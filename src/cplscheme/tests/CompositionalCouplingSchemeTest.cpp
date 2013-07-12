@@ -7,9 +7,7 @@
 #include "../CompositionalCouplingScheme.hpp"
 #include "../ExplicitCouplingScheme.hpp"
 #include "../Constants.hpp"
-//#include "cplscheme/ImplicitCouplingScheme.hpp"
-#include "cplscheme/config/CouplingSchemeConfiguration.hpp"
-//#include "cplscheme/Constants.hpp"
+#include "../config/CouplingSchemeConfiguration.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
@@ -20,10 +18,7 @@
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
-//#include "utils/Parallel.hpp"
-//#include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
-//#include "tarch/la/WrappedVector.h"
 #include "utils/Dimensions.hpp"
 #include <vector>
 
@@ -65,6 +60,9 @@ void CompositionalCouplingSchemeTest:: run ()
       Par::setGlobalCommunicator(comm) ;
       validateEquals(Par::getCommunicatorSize(), 3);
       testMethod(testExplicitSchemeComposition1);
+      testMethod(testImplicitSchemeComposition);
+      testMethod(testImplicitExplicitSchemeComposition);
+      testMethod(testExplicitImplicitSchemeComposition);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -449,14 +447,15 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     while (composition.isCouplingOngoing()){
       composition.advance();
       advances++;
-//      if (advances%3 == 0){
-//        validate(scheme1->isActionRequired(writeIterationCheckpoint));
-//        validateEquals(scheme1->getTimesteps(), advances/3);
-//      }
-//      else {
-//        validate(scheme1->isActionRequired(readIterationCheckpoint));
-//        validateEquals(scheme1->getTimesteps(), (advances-(advances%3))/3);
-//      }
+      if (advances % 4 >= 3){
+        validate(scheme1->isActionRequired(writeIterationCheckpoint));
+        validateEquals(scheme1->getTimesteps(), (advances-(advances%4)+4)/4);
+      }
+      else if (advances % 4 != 0){
+        validate(scheme1->isActionRequired(readIterationCheckpoint));
+      }
+      validateEquals(scheme2->getTimesteps(), (advances+1)/4);
+      validateEquals(scheme2->getTimesteps(), (advances+1)/4);
     }
     composition.finalize();
     validateEquals(advances, 40);
@@ -471,12 +470,42 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
 void CompositionalCouplingSchemeTest:: testExplicitSchemeComposition1()
 {
   preciceTrace("testExplicitSchemeComposition1()");
+  std::string configPath(_pathToTests + "multi-solver-coupling-1.xml");
+  setupAndRunThreeSolverCoupling(configPath);
+}
+
+void CompositionalCouplingSchemeTest:: testImplicitSchemeComposition()
+{
+  preciceTrace("testImplicitSchemeComposition()");
+  std::string configPath(_pathToTests + "multi-solver-coupling-2.xml");
+  setupAndRunThreeSolverCoupling(configPath);
+}
+
+void CompositionalCouplingSchemeTest:: testImplicitExplicitSchemeComposition()
+{
+  preciceTrace("testImplicitExplicitSchemeComposition()");
+  std::string configPath(_pathToTests + "multi-solver-coupling-3.xml");
+  setupAndRunThreeSolverCoupling(configPath);
+}
+
+void CompositionalCouplingSchemeTest:: testExplicitImplicitSchemeComposition()
+{
+  preciceTrace("testExplicitImplicitSchemeComposition()");
+  std::string configPath(_pathToTests + "multi-solver-coupling-4.xml");
+  setupAndRunThreeSolverCoupling(configPath);
+}
+
+void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
+(
+  const std::string& configFilename)
+{
+  preciceTrace1("setupThreeSolverCoupling()", configFilename);
   using namespace mesh;
   utils::Parallel::synchronizeProcesses();
   assertion(utils::Parallel::getCommunicatorSize() > 1);
   mesh::PropertyContainer::resetPropertyIDCounter();
 
-  std::string configurationPath(_pathToTests + "multi-solver-coupling-1.xml");
+  std::string configurationPath(configFilename);
   std::string nameParticipant0("Participant0");
   std::string nameParticipant1("Participant1");
   std::string nameParticipant2("Participant2");
@@ -542,6 +571,9 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
   Vector3D valueData1(1.0);
   Vector3D valueData2(1.0);
 
+  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
+
   double computedTime = 0.0;
   int computedTimesteps = 0;
 
@@ -551,31 +583,25 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
     validateEquals(cplScheme->isCouplingTimestepComplete(), false);
     validateEquals(cplScheme->isCouplingOngoing(), true);
     while (cplScheme->isCouplingOngoing()){
-//      dataValues0[vertex.getID()] = valueData0;
       validateNumericalEquals(0.1, cplScheme->getNextTimestepMaxLength());
-      computedTime += cplScheme->getNextTimestepMaxLength();
-      computedTimesteps++;
+      if (cplScheme->isActionRequired(writeIterationCheckpoint)){
+        cplScheme->performedAction(writeIterationCheckpoint);
+      }
       cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
       cplScheme->advance();
-      validate(cplScheme->isCouplingTimestepComplete());
+      if (cplScheme->isActionRequired(readIterationCheckpoint)){
+        cplScheme->performedAction(readIterationCheckpoint);
+      }
+      else {
+        validate(cplScheme->isCouplingTimestepComplete());
+        computedTime += cplScheme->getNextTimestepMaxLength();
+        computedTimesteps++;
+      }
       validateNumericalEquals(computedTime, cplScheme->getTime());
       validateEquals(computedTimesteps, cplScheme->getTimesteps());
-//      if (cplScheme->isCouplingOngoing()){
-//        // No receive takes place for the participant that has started the
-//        // coupled simulation, in the last advance call
-//        Vector3D value;
-//        assign(value) = tarch::la::slice<3>(dataValues1, vertex.getID() * 3);
-//        validate ( tarch::la::equals(value, valueData1) );
-//      }
       validate(cplScheme->hasDataBeenExchanged());
-//      // Increment data values, to test if send/receive operations are also
-//      // correct in following timesteps.
-//      valueData0 += 1.0;
-//      valueData1 += Vector3D ( 1.0 );
     }
     cplScheme->finalize();
-//    // Validate results
-//    validateNumericalEquals ( computedTime, 1.0 );
     validateEquals(computedTimesteps, 10);
     validateEquals(cplScheme->isCouplingTimestepComplete(), true);
     validateEquals(cplScheme->isCouplingOngoing(), false);
@@ -587,31 +613,25 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
     validateEquals(cplScheme->isCouplingTimestepComplete(), false);
     validateEquals(cplScheme->isCouplingOngoing(), true);
     while (cplScheme->isCouplingOngoing()){
-//      dataValues0[vertex.getID()] = valueData0;
       validateNumericalEquals(0.1, cplScheme->getNextTimestepMaxLength());
-      computedTime += cplScheme->getNextTimestepMaxLength();
-      computedTimesteps++;
+      if (cplScheme->isActionRequired(writeIterationCheckpoint)){
+        cplScheme->performedAction(writeIterationCheckpoint);
+      }
       cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
       cplScheme->advance();
-      validate(cplScheme->isCouplingTimestepComplete());
+      if (cplScheme->isActionRequired(readIterationCheckpoint)){
+        cplScheme->performedAction(readIterationCheckpoint);
+      }
+      else {
+        validate(cplScheme->isCouplingTimestepComplete());
+        computedTime += cplScheme->getNextTimestepMaxLength();
+        computedTimesteps++;
+      }
       validateNumericalEquals(computedTime, cplScheme->getTime());
       validateEquals(computedTimesteps, cplScheme->getTimesteps());
-//      if (cplScheme->isCouplingOngoing()){
-//        // No receive takes place for the participant that has started the
-//        // coupled simulation, in the last advance call
-//        Vector3D value;
-//        assign(value) = tarch::la::slice<3>(dataValues1, vertex.getID() * 3);
-//        validate ( tarch::la::equals(value, valueData1) );
-//      }
       validate(cplScheme->hasDataBeenExchanged());
-//      // Increment data values, to test if send/receive operations are also
-//      // correct in following timesteps.
-//      valueData0 += 1.0;
-//      valueData1 += Vector3D ( 1.0 );
     }
     cplScheme->finalize();
-//    // Validate results
-//    validateNumericalEquals ( computedTime, 1.0 );
     validateEquals(computedTimesteps, 10);
     validateEquals(cplScheme->isCouplingTimestepComplete(), true);
     validateEquals(cplScheme->isCouplingOngoing(), false);
@@ -624,31 +644,25 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
     validateEquals(cplScheme->isCouplingTimestepComplete(), false);
     validateEquals(cplScheme->isCouplingOngoing(), true);
     while (cplScheme->isCouplingOngoing()){
-//      dataValues0[vertex.getID()] = valueData0;
       validateNumericalEquals(0.1, cplScheme->getNextTimestepMaxLength());
-      computedTime += cplScheme->getNextTimestepMaxLength();
-      computedTimesteps++;
+      if (cplScheme->isActionRequired(writeIterationCheckpoint)){
+        cplScheme->performedAction(writeIterationCheckpoint);
+      }
       cplScheme->addComputedTime(cplScheme->getNextTimestepMaxLength());
       cplScheme->advance();
-      validate(cplScheme->isCouplingTimestepComplete());
+      if (cplScheme->isActionRequired(readIterationCheckpoint)){
+        cplScheme->performedAction(readIterationCheckpoint);
+      }
+      else {
+        validate(cplScheme->isCouplingTimestepComplete());
+        computedTime += cplScheme->getNextTimestepMaxLength();
+        computedTimesteps++;
+      }
       validateNumericalEquals(computedTime, cplScheme->getTime());
       validateEquals(computedTimesteps, cplScheme->getTimesteps());
-//      if (cplScheme->isCouplingOngoing()){
-//        // No receive takes place for the participant that has started the
-//        // coupled simulation, in the last advance call
-//        Vector3D value;
-//        assign(value) = tarch::la::slice<3>(dataValues1, vertex.getID() * 3);
-//        validate ( tarch::la::equals(value, valueData1) );
-//      }
       validate(cplScheme->hasDataBeenExchanged());
-//      // Increment data values, to test if send/receive operations are also
-//      // correct in following timesteps.
-//      valueData0 += 1.0;
-//      valueData1 += Vector3D ( 1.0 );
     }
     cplScheme->finalize();
-//    // Validate results
-//    validateNumericalEquals ( computedTime, 1.0 );
     validateEquals(computedTimesteps, 10);
     validateEquals(cplScheme->isCouplingTimestepComplete(), true);
     validateEquals(cplScheme->isCouplingOngoing(), false);

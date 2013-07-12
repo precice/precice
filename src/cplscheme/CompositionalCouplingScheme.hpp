@@ -317,6 +317,9 @@ private:
   // @brief Iterator to behind the end of coupling schemes currently active.
   SchemesIt _activeSchemesEnd;
 
+  // @brief Stores time added since last call of advance.
+  double _lastAddedTime;
+
   /**
    * @brief Determines the current set of active coupling schemes.
    *

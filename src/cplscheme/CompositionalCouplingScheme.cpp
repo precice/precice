@@ -16,7 +16,8 @@ CompositionalCouplingScheme:: CompositionalCouplingScheme()
 :
   _couplingSchemes(),
   _activeSchemesBegin(_couplingSchemes.end()),
-  _activeSchemesEnd(_couplingSchemes.end())
+  _activeSchemesEnd(_couplingSchemes.end()),
+  _lastAddedTime(0.0)
 {}
 
 void CompositionalCouplingScheme:: addCouplingScheme
@@ -66,16 +67,26 @@ void CompositionalCouplingScheme:: addComputedTime
   for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++){
     (*it)->addComputedTime(timeToAdd);
   }
+  _lastAddedTime += timeToAdd;
 }
 
 void CompositionalCouplingScheme:: advance()
 {
   preciceTrace("advance()");
+  bool moreSchemesToHandle = false;
   do {
     for (SchemesIt it = _activeSchemesBegin; it != _activeSchemesEnd; it++){
       (*it)->advance();
     }
-  } while(determineActiveCouplingSchemes());
+    moreSchemesToHandle = determineActiveCouplingSchemes();
+    if (moreSchemesToHandle){
+      // The new schemes to be handled in this advance also need the time that
+      // has been computed so far. This time can't be added in the solver call
+      // to addComputedTime(), since there the schemes are not active yet.
+      addComputedTime(_lastAddedTime);
+    }
+  } while (moreSchemesToHandle);
+  _lastAddedTime = 0.0;
 }
 
 void CompositionalCouplingScheme:: finalize()
@@ -435,9 +446,13 @@ bool CompositionalCouplingScheme:: determineActiveCouplingSchemes()
       bool explicitScheme = true;
       explicitScheme &= not (*_activeSchemesBegin)->isActionRequired(writeCheckpoint);
       explicitScheme &= not (*_activeSchemesBegin)->isActionRequired(readCheckpoint);
-      if (explicitScheme) _activeSchemesBegin++;
-      else break;
-      preciceDebug("Remove preceding explicit scheme");
+      if (explicitScheme) {
+        _activeSchemesBegin++;
+        preciceDebug("Remove preceding explicit scheme");
+      }
+      else {
+        break;
+      }
     }
 
     // Check implicit schemes for convergence and remove if converged
@@ -471,6 +486,7 @@ bool CompositionalCouplingScheme:: determineActiveCouplingSchemes()
       }
     }
   }
+  preciceDebug("return newActiveSchemes=" << newActiveSchemes);
   return newActiveSchemes;
 }
 
@@ -489,6 +505,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
       break;
     }
     _activeSchemesEnd++;
+    preciceDebug("Advanced active schemes by one new scheme");
   }
   assertion(_activeSchemesBegin != _activeSchemesEnd);
 }

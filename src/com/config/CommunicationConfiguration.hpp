@@ -24,11 +24,6 @@ public:
    typedef boost::tuple<PtrCommunication,std::string,std::string> ComTuple;
 
    /**
-    * @brief Returns the name of this configurations enclosing tag.
-    */
-   //static const std::string& getTag();
-
-   /**
     * @brief Creates a not auto-configurable config, to use createCommunicatio().
     */
    CommunicationConfiguration();
@@ -39,13 +34,6 @@ public:
    CommunicationConfiguration ( utils::XMLTag& parent );
 
    virtual ~CommunicationConfiguration() {}
-
-   //bool parseSubtag ( utils::XMLTag::XMLReader* xmlReader );
-
-//   bool isValid() const
-//   {
-//      return _isValid;
-//   }
 
    /**
     * @brief Returns the communication object for the given user names.
@@ -64,15 +52,6 @@ public:
    {
       return _communications;
    }
-
-   /**
-    * @brief Adds a communication object of given type. For manual configuration.
-    */
-//   void addCommunication (
-//      const std::string& type,
-//      const std::string& from,
-//      const std::string& to,
-//      const std::string& context );
 
    virtual void xmlTagCallback ( utils::XMLTag& callingTag );
 
@@ -100,8 +79,6 @@ private:
    const std::string VALUE_SOCKETS;
 
    std::vector<ComTuple> _communications;
-
-   //bool _isValid;
 
    void checkDuplicates (
      const std::string& from,

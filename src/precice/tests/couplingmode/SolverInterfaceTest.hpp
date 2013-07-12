@@ -178,7 +178,11 @@ private:
    * Both couplings are explicit, solver 1 provides the mesh to the other two
    * solvers.
    */
-  void testMultiSolver();
+  void testThreeSolvers();
+
+  void runThreeSolvers (
+      const std::string& configFilename,
+      int                expectedCallsOfAdvance );
 
 # endif // defined( not PRECICE_NO_MPI )
 };

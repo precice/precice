@@ -81,6 +81,11 @@ private:
   void testImplicitExplicitSchemeComposition();
 
   /**
+   * @brief Runs a three solver composition, S1 <-expl.-> S2 <-impl.-> S3.
+   */
+  void testExplicitImplicitSchemeComposition();
+
+  /**
    * @brief Setup three solver coupling using XML-configuration.
    */
   void setupAndRunThreeSolverCoupling(const std::string& configFilename);

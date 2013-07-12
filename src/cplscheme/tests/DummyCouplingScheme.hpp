@@ -54,7 +54,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual void addComputedTime(double timeToAdd) { assertion(false); }
+  virtual void addComputedTime(double timeToAdd) { /* Do nothing */ }
 
   /**
    * @brief

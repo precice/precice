@@ -53,7 +53,7 @@ CommunicationConfiguration:: CommunicationConfiguration
   using namespace utils;
   std::string doc;
   std::list<XMLTag> tags;
-  XMLTag::Occurrence occ = XMLTag::OCCUR_ONCE_OR_MORE;
+  XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   {
     XMLTag tag(*this, VALUE_SOCKETS, occ, TAG);
     doc = "Communication via Sockets.";
