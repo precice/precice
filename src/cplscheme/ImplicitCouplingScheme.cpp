@@ -238,9 +238,6 @@ void ImplicitCouplingScheme:: advance()
   checkCompletenessRequiredActions();
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
-  //double remainder = getThisTimestepRemainder();
-  //computedTimestepLength = cutOffInvalidDigits(computedTimestepLength );
-  //setTime(getTime() + computedTimestepLength );
   double eps = std::pow(10.0, -1 * getValidDigits());
   bool convergence = false;
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)){
@@ -264,11 +261,6 @@ void ImplicitCouplingScheme:: advance()
       _communication->finishReceivePackage();
     }
     else {
-      //_residualWriterL1.writeData("Iterations", _totalIterations);
-      //_residualWriterL2.writeData("Iterations", _totalIterations);
-      //_amplificationWriter.writeData("Iterations", _totalIterations);
-      //writeResidual(*(getSendData().begin()->second.values),
-      //              getSendData().begin()->second.oldValues.column(0));
       convergence = measureConvergence();
       assertion2((_iterations <= _maxIterations) || (_maxIterations == -1),
                  _iterations, _maxIterations);
@@ -319,7 +311,6 @@ void ImplicitCouplingScheme:: advance()
       else {
         _communication->finishSendPackage();
       }
-      //setMaxLengthNextTimestep(getTimestepLength() );
     }
 
     if (not convergence){
@@ -537,30 +528,6 @@ void ImplicitCouplingScheme:: newConvergenceMeasurements()
    }
 }
 
-//bool ImplicitCouplingScheme:: computeCouplingOngoing ()
-//{
-//   bool timeLeft = tarch::la::greater(getMaxTime(), getTime()) ||
-//                   (getMaxTime() == UNDEFINED_TIME );
-//   bool timestepsLeft = (getMaxTimesteps() > getTimesteps()) ||
-//                        (getMaxTimesteps() == UNDEFINED_TIMESTEPS);
-//
-//   return timeLeft && timestepsLeft;
-//}
-
-//double ImplicitCouplingScheme:: getTimestepRemainder
-//(
-//   double computedTimestepLength ) const
-//{
-//   double remainder = getTimestepLength()
-//                      - (_computedTimeCurrentIteration + computedTimestepLength);
-//   preciceCheck(tarch::la::greaterEquals(remainder, 0.0),
-//                  "getTimestepRemainder()",
-//                  "Computed timestep length (" << computedTimestepLength
-//                  << ") is not allowed to be larger than the prescribed one ("
-//                  << remainder << ")!");
-//   return remainder;
-//}
-
 std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
@@ -571,16 +538,6 @@ std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners() const
   else {
     partnerNames.push_back(_secondParticipant);
   }
-//  if(accessorName == _firstParticipant ){
-//    partnerNames.push_back(_secondParticipant );
-//  }
-//  else if(accessorName == _secondParticipant){
-//    partnerNames.push_back(_firstParticipant );
-//  }
-//  else {
-//    preciceError("getCouplingPartners()",
-//                   "No coupling partner could be found." );
-//  }
   return partnerNames;
 }
 
