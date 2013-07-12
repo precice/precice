@@ -32,16 +32,18 @@ public:
    */
   typedef std::map<int,CouplingData> DataMap;
 
-  virtual int getDataID () const =0;
+  /**
+   * @brief Destructor, empty.
+   */
+  virtual ~PostProcessing() {}
 
-  virtual void initialize (
-    DataMap & cpldata ) =0;
+  virtual int getDataID() const =0;
 
-  virtual void performPostProcessing (
-    DataMap & cpldata ) =0;
+  virtual void initialize(DataMap & cpldata) =0;
 
-  virtual void iterationsConverged (
-    DataMap & cpldata) =0;
+  virtual void performPostProcessing(DataMap & cpldata) =0;
+
+  virtual void iterationsConverged(DataMap & cpldata) =0;
 
   virtual void exportState(io::TXTWriter& writer) {}
 

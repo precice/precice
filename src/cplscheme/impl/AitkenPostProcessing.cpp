@@ -41,57 +41,59 @@ void AitkenPostProcessing:: initialize
 (
   DataMap& cpldata )
 {
-  preciceCheck ( utils::contained(_dataID, cpldata), "initialize()",
-                 "Data with ID " << _dataID
-                 << " is not contained in data given at initialization!" );
+  preciceCheck(utils::contained(_dataID, cpldata), "initialize()",
+               "Data with ID " << _dataID
+               << " is not contained in data given at initialization!" );
   size_t entries = cpldata[_dataID].values->size();
+  assertion(entries > 0);
   double initializer = std::numeric_limits<double>::max();
-  utils::DynVector toAppend ( entries, initializer );
+  utils::DynVector toAppend(entries, initializer);
   _residuals.append(toAppend);
+
+  // Append column for old values if not done by coupling scheme yet
+  foreach (DataMap::value_type& pair, cpldata){
+    int cols = pair.second.oldValues.cols();
+    if (cols < 1){
+      assertion1(pair.second.values->size() > 0, pair.first);
+      pair.second.oldValues.append(CouplingData::DataMatrix(
+        pair.second.values->size(), 1, 0.0));
+    }
+  }
 }
 
 void AitkenPostProcessing:: performPostProcessing
 (
   DataMap& cplData )
 {
-  preciceTrace ( "performPostProcessing()" );
+  preciceTrace("performPostProcessing()");
   typedef utils::DynVector DataValues;
   using namespace tarch::la;
 
   // Compute aitken relaxation factor
-  assertion ( utils::contained(_dataID, cplData) );
+  assertion(utils::contained(_dataID, cplData));
   DataValues& values = *cplData[_dataID].values;
   DataValues& oldValues = cplData[_dataID].oldValues.column(0);
 
   // Compute current residuals
-  DataValues residuals ( values );
+  DataValues residuals(values);
   residuals -= oldValues;
 
   // Compute residual deltas and temporarily store it in _residuals
-  DataValues residualDeltas ( _residuals );
+  DataValues residualDeltas(_residuals);
   residualDeltas *= -1.0;
   residualDeltas += residuals;
 
-  // compute fraction of aitken factor with residuals and residual deltas
-  double nominator = dot(_residuals, residualDeltas);
-  double denominator = dot(residualDeltas, residualDeltas);
-
-  // Store residuals for next iteration
-  _residuals = residuals;
-
-  //precicePrint ( "old aitken = " << _aitkenFactor );
-  //precicePrint ( "nom = " << nominator << ", denom = " << denominator );
-
   // Select/compute aitken factor depending on current iteration count
-  if ( _iterationCounter == 0 ) {
+  if (_iterationCounter == 0){
     _aitkenFactor = sign(_aitkenFactor) * min(
-      utils::Vector2D(_initialRelaxation, std::abs(_aitkenFactor)));
+                    utils::Vector2D(_initialRelaxation, std::abs(_aitkenFactor)));
   }
   else {
-    //      _aitkenFactor += (_aitkenFactor - 1.0) * (nominator / denominator);
+    // compute fraction of aitken factor with residuals and residual deltas
+    double nominator = dot(_residuals, residualDeltas);
+    double denominator = dot(residualDeltas, residualDeltas);
     _aitkenFactor = -_aitkenFactor * (nominator / denominator);
   }
-//  preciceInfo ( "Computed relaxation factor = " << _aitkenFactor );
 
   // Perform relaxation with aitken factor
   double omega = _aitkenFactor;
@@ -104,14 +106,17 @@ void AitkenPostProcessing:: performPostProcessing
       values[i] += oldValues[i] * oneMinusOmega;
     }
   }
-  _iterationCounter ++;
+
+  // Store residuals for next iteration
+  _residuals = residuals;
+
+  _iterationCounter++;
 }
 
 void AitkenPostProcessing:: iterationsConverged
 (
   DataMap& cplData )
 {
-  //   precicePrint ( "Called iterationsConverged() of aitken post-processing!" );
   _iterationCounter = 0;
   assign(_residuals) = std::numeric_limits<double>::max();
 }

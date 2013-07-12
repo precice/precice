@@ -202,11 +202,10 @@ void SolverInterfaceTestRemote:: testGeometryMode()
       mesh::Data::resetDataCount();
       impl::Participant::resetParticipantCount();
       config::Configuration config;
-      utils::configure ( config.getXMLTag(), configFilename );
-      //validate ( config.isValid() );
-      server.configure ( config.getSolverInterfaceConfiguration() );
+      utils::configure(config.getXMLTag(), configFilename);
+      server.configure(config.getSolverInterfaceConfiguration());
 
-      validateEquals ( server.getDimensions(), dim );
+      validateEquals(server.getDimensions(), dim);
       server.runServer();
     }
   }

@@ -126,6 +126,7 @@ void ImplicitCouplingScheme:: initialize
   int    startTimestep )
 {
   preciceTrace2("initialize()", startTime, startTimestep);
+  assertion(not isInitialized());
   assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion1(startTimestep >= 0, startTimestep);
   assertion(_communication->isConnected());
@@ -137,7 +138,7 @@ void ImplicitCouplingScheme:: initialize
     setupConvergenceMeasures(); // needs _couplingData configured
     setupDataMatrices(); // Reserve memory and initialize data with zero
     if (_postProcessing.get() != NULL){
-      _postProcessing->initialize(getSendData());
+      _postProcessing->initialize(getSendData()); // Reserve memory, initialize
     }
   }
   else if (_postProcessing.get() != NULL){
@@ -410,10 +411,10 @@ void ImplicitCouplingScheme:: setupDataMatrices()
   // Reserve storage for convergence measurement of send and receive data values
   foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
     assertion(convMeasure.data != NULL);
-    assertion1(convMeasure.data->oldValues.size() == 0,
-               convMeasure.data->oldValues.size())
-    convMeasure.data->oldValues.append(CouplingData::DataMatrix(
-        convMeasure.data->values->size(), 1, 0.0));
+    if (convMeasure.data->oldValues.cols() < 1){
+      convMeasure.data->oldValues.append(CouplingData::DataMatrix(
+          convMeasure.data->values->size(), 1, 0.0));
+    }
   }
   // Reserve storage for extrapolation of send data values
   if (_extrapolationOrder > 0){

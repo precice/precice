@@ -161,9 +161,12 @@ ActionConfiguration:: ActionConfiguration
   }
   {
     XMLTag tag(*this, NAME_PYTHON, occ, TAG);
-    tag.setDocumentation("Calls Python script to execute action.");
+    doc = "Calls Python script to execute action.";
+    doc += " See preCICE file \"src/action/PythonAction.py\" for an overview.";
+    tag.setDocumentation(doc);
     XMLTag tagModulePath(*this, TAG_MODULE_PATH, XMLTag::OCCUR_NOT_OR_ONCE);
     doc = "Directory path to Python module, i.e. script file.";
+    doc = " If it doesn't occur, the current path is used";
     tagModulePath.setDocumentation(doc);
     XMLTag tagModule(*this, TAG_MODULE_NAME, XMLTag::OCCUR_ONCE);
     tagModule.setDocumentation("File name of Python module, i.e. script file.");
@@ -174,9 +177,11 @@ ActionConfiguration:: ActionConfiguration
     tag.addSubtag(tagModule);
     XMLTag tagOptionalSourceData(*this, TAG_SOURCE_DATA, XMLTag::OCCUR_NOT_OR_ONCE);
     doc = "Source data to be read is handed to the Python module.";
+    doc += " Can be omitted, if only a target data is needed.";
     tagOptionalSourceData.setDocumentation(doc);
     XMLTag tagOptionalTargetData(*this, TAG_TARGET_DATA, XMLTag::OCCUR_NOT_OR_ONCE);
     doc = "Target data to be read and written to is handed to the Python module.";
+    doc = " Can be omitted, if only source data is needed.";
     tagOptionalTargetData.setDocumentation(doc);
     tagOptionalSourceData.addAttribute(attrName);
     tagOptionalTargetData.addAttribute(attrName);
@@ -203,7 +208,8 @@ ActionConfiguration:: ActionConfiguration
   //tag.addAttribute ( attrType );
 
   XMLAttribute<std::string> attrTiming ( ATTR_TIMING );
-  attrTiming.setDocumentation("Determines when the action is executed.");
+  doc = "Determines when (relative to advancing the coupling scheme) the action is executed.";
+  attrTiming.setDocumentation(doc);
   ValidatorEquals<std::string> validRegularPrior ( VALUE_REGULAR_PRIOR );
   ValidatorEquals<std::string> validRegularPost ( VALUE_REGULAR_POST );
   ValidatorEquals<std::string> validOnExchangePrior ( VALUE_ON_EXCHANGE_PRIOR );

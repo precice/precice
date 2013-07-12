@@ -67,6 +67,7 @@ void IQNILSPostProcessing:: initialize
                 "Data with ID " << _dataID << " is not contained in data "
                 "given at initialization!");
    size_t entries = cplData[_dataID].values->size();
+   assertion(entries > 0);
    double init = 0.0;
    assertion(_oldXTilde.size() == 0);
    assertion(_oldResiduals.size() == 0);
@@ -74,6 +75,16 @@ void IQNILSPostProcessing:: initialize
    _oldResiduals.append(DataValues(entries, init));
    _matrixCols.push_front(0);
    _firstIteration = true;
+
+   // Append column for old values if not done by coupling scheme yet
+   foreach (DataMap::value_type& pair, cplData){
+     int cols = pair.second.oldValues.cols();
+     if (cols < 1){
+       assertion1(pair.second.values->size() > 0, pair.first);
+       pair.second.oldValues.append(CouplingData::DataMatrix(
+         pair.second.values->size(), 1, 0.0));
+     }
+   }
 }
 
 void IQNILSPostProcessing:: performPostProcessing

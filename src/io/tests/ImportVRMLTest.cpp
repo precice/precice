@@ -138,7 +138,7 @@ void ImportVRMLTest:: testImportApe ()
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in(_pathToTests);
   in.doImport("ImportVRMLTest-Ape.wrl", mesh);
-  mesh.computeState ();
+  mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
   out.doExport("ImportVRMLTest-Ape", mesh);
@@ -151,7 +151,7 @@ void ImportVRMLTest:: testImportBunny()
   mesh::Mesh mesh("MyMesh", dim, false);
   ImportVRML in(_pathToTests);
   in.doImport("ImportVRMLTest-Bunny.wrl", mesh);
-  mesh.computeState ();
+  mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
   out.doExport("ImportVRMLTest-Bunny", mesh);

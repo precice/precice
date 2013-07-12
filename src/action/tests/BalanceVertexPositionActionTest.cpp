@@ -64,7 +64,7 @@ void BalanceVertexPositionActionTest:: testSmoothCircle ()
   }
   size = (int)mesh->vertices().size();
   mesh->createEdge ( mesh->vertices()[size-1], mesh->vertices()[0] );
-  mesh->computeState ();
+  mesh->computeState();
   io::ExportVTK exportVTK ( true );
   exportVTK.doExport ( "BalanceVertexPositionActionTest-testSmoothCircle-init.vtk",
                        *mesh );

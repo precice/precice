@@ -39,8 +39,8 @@ void Geometry:: create
       vertex.setCoords ( temp );
     }
   }
-  seed.computeState ();
-  allocateDataValues ( seed );
+  seed.computeState();
+  allocateDataValues(seed);
 }
 
 void Geometry:: allocateDataValues ( mesh::Mesh & mesh )

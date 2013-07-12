@@ -1327,8 +1327,10 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   preciceTrace4("setMeshTriangleWithEdges()", meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
   if (_clientMode){
-    _requestManager->requestSetMeshTriangleWithEdges(meshID, firstVertexID, secondVertexID,
-                                    thirdVertexID);
+    _requestManager->requestSetMeshTriangleWithEdges(meshID,
+                                                     firstVertexID,
+                                                     secondVertexID,
+                                                     thirdVertexID);
     return;
   }
   MeshContext& context = _accessor->meshContext(meshID);
@@ -2087,12 +2089,6 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
 void SolverInterfaceImpl:: runServer()
 {
   assertion(_serverMode);
-//  int argc = 0;
-//  char* arg = new char[8];
-//  strcpy(arg, "precice");
-//  char** argv = &arg;
-//  utils::Parallel::initialize ( &argc, &argv, _accessorName + "Server" );
-//  delete[] arg;
   initializeClientServerCommunication();
   _requestManager->handleRequests();
 }
@@ -2330,10 +2326,11 @@ void SolverInterfaceImpl:: mapReadData()
     bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
     bool hasMapping = context.readMappingContext.mapping.use_count() > 0;
-    bool isIncremental = context.readMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL;
+    bool isIncremental = context.readMappingContext.timing
+                         == mapping::MappingConfiguration::INCREMENTAL;
     if (mapNow && hasMapping && (not isIncremental)){
-      //bool compute = not context.writeMappingContext.isStationary;
-      //compute |= not context.writeMappingContext.mapping->hasComputedMapping();
+      // Compute mapping only when the mapping has not been computed. For timing
+      // initial, this is the case only once.
       if (not context.readMappingContext.mapping->hasComputedMapping()){
         preciceDebug("Compute read mapping for mesh \"" << context.mesh->getName() << "\"");
         context.readMappingContext.mapping->computeMapping();
@@ -2366,7 +2363,7 @@ void SolverInterfaceImpl:: mapReadData()
     }
   }
 
-  // Clear non-stationary, non-incremental mappings
+  // Clear non-initial, non-incremental mappings
   foreach (impl::MeshContext& context, _accessor->usedMeshContexts()){
     bool hasMapping = context.readMappingContext.mapping.use_count() > 0;
     if (hasMapping){

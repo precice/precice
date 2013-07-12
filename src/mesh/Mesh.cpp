@@ -302,6 +302,21 @@ void Mesh:: computeState()
   using utils::DynVector;
   using utils::Vector2D;
   using utils::Vector3D;
+
+  // Compute normals only if faces to derive normal information are available
+  bool computeNormals = true;
+  size_t size2DFaces = _content.edges().size();
+  size_t size3DFaces = _content.triangles().size() + _content.quads().size();
+  if (_dimensions == 2){
+    if (size2DFaces == 0){
+      computeNormals = false;
+    }
+  }
+  else if (size3DFaces == 0){
+    assertion1(_dimensions == 3, _dimensions);
+    computeNormals = false;
+  }
+
   // Compute edge centers, enclosing radius, and (in 2D) edge normals
   DynVector center(_dimensions);
   DynVector distanceToCenter(_dimensions);
@@ -313,7 +328,7 @@ void Mesh:: computeState()
     distanceToCenter = edge.vertex(0).getCoords();
     distanceToCenter -= edge.getCenter();
     edge.setEnclosingRadius(tarch::la::norm2(distanceToCenter));
-    if (_dimensions == 2){
+    if (_dimensions == 2 && computeNormals){
       // Compute normal
       Vector2D vectorA = edge.vertex(1).getCoords();
       vectorA -= edge.vertex(0).getCoords();
@@ -375,30 +390,32 @@ void Mesh:: computeState()
       maxDistance = distance2 > maxDistance ? distance2 : maxDistance;
       triangle.setEnclosingRadius(maxDistance);
 
-      // Compute normal
-      Vector3D vectorA;
-      Vector3D vectorB;
-      vectorA = triangle.edge(1).getCenter(); // edge() is faster than vertex()
-      vectorA -= triangle.edge(0).getCenter();
-      vectorB = triangle.edge(2).getCenter();
-      vectorB -= triangle.edge(0).getCenter();
-      // Compute cross-product of vector A and vector B
-      Vector3D normal;
-      normal = tarch::la::cross(vectorA, vectorB, normal);
-      if ( _flipNormals ){
-        normal *= -1.0; // Invert direction if counterclockwise
-      }
+      // Compute normals
+      if (computeNormals){
+        Vector3D vectorA;
+        Vector3D vectorB;
+        vectorA = triangle.edge(1).getCenter(); // edge() is faster than vertex()
+        vectorA -= triangle.edge(0).getCenter();
+        vectorB = triangle.edge(2).getCenter();
+        vectorB -= triangle.edge(0).getCenter();
+        // Compute cross-product of vector A and vector B
+        Vector3D normal;
+        normal = tarch::la::cross(vectorA, vectorB, normal);
+        if ( _flipNormals ){
+          normal *= -1.0; // Invert direction if counterclockwise
+        }
 
-      // Accumulate area-weighted normal in associated vertices and edges
-      for (int i=0; i < 3; i++){
-        triangle.edge(i).setNormal(triangle.edge(i).getNormal() + normal);
-        triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + normal);
-      }
+        // Accumulate area-weighted normal in associated vertices and edges
+        for (int i=0; i < 3; i++){
+          triangle.edge(i).setNormal(triangle.edge(i).getNormal() + normal);
+          triangle.vertex(i).setNormal(triangle.vertex(i).getNormal() + normal);
+        }
 
-      // Normalize triangle normal
-      double length = tarch::la::norm2(normal);
-      normal /= length;
-      triangle.setNormal(normal);
+        // Normalize triangle normal
+        double length = tarch::la::norm2(normal);
+        normal /= length;
+        triangle.setNormal(normal);
+      }
     }
 
     // Compute quad centers, radius, and normals
@@ -446,67 +463,78 @@ void Mesh:: computeState()
       maxDistance = distance3 > maxDistance ? distance3 : maxDistance;
       quad.setEnclosingRadius(maxDistance);
 
-      // Compute normal (assuming all vertices are on same plane)
-      //
-      // Two triangles are thought by splitting the quad from vertex 0 to 2.
-      // The cross prodcut of the outer edges of the triangles is used to compute
-      // the normal direction and area of the triangles. The direction must be
-      // the same, while the areas differ in general. The normals are added up
-      // and divided by 2 to get the area of the overall quad, since the length
-      // does correspond to the parallelogram spanned by the vectors of the
-      // cross product, which is twice the area of the corresponding triangles.
-      Vector3D vectorA;
-      Vector3D vectorB;
-      vectorA = quad.vertex(2).getCoords();
-      vectorA -= quad.vertex(1).getCoords();
-      vectorB = quad.vertex(0).getCoords();
-      vectorB -= quad.vertex(1).getCoords();
-      // Compute cross-product of vector A and vector B
-      Vector3D normal;
-      tarch::la::cross(vectorA, vectorB, normal);
 
-      vectorA = quad.vertex(0).getCoords();
-      vectorA -= quad.vertex(3).getCoords();
-      vectorB = quad.vertex(2).getCoords();
-      vectorB -= quad.vertex(3).getCoords();
-      Vector3D normalSecondPart;
-      tarch::la::cross(vectorA, vectorB, normalSecondPart);
+      // Compute normals (assuming all vertices are on same plane)
+      if (computeNormals){
+        // Two triangles are thought by splitting the quad from vertex 0 to 2.
+        // The cross prodcut of the outer edges of the triangles is used to compute
+        // the normal direction and area of the triangles. The direction must be
+        // the same, while the areas differ in general. The normals are added up
+        // and divided by 2 to get the area of the overall quad, since the length
+        // does correspond to the parallelogram spanned by the vectors of the
+        // cross product, which is twice the area of the corresponding triangles.
+        Vector3D vectorA;
+        Vector3D vectorB;
+        vectorA = quad.vertex(2).getCoords();
+        vectorA -= quad.vertex(1).getCoords();
+        vectorB = quad.vertex(0).getCoords();
+        vectorB -= quad.vertex(1).getCoords();
+        // Compute cross-product of vector A and vector B
+        Vector3D normal;
+        tarch::la::cross(vectorA, vectorB, normal);
 
-      assertion2(tarch::la::equals(
-                 normal/tarch::la::norm2(normal),
-                 normalSecondPart/tarch::la::norm2(normalSecondPart)),
-                 normal, normalSecondPart);
-      normal += normalSecondPart;
-      normal *= 0.5;
+        vectorA = quad.vertex(0).getCoords();
+        vectorA -= quad.vertex(3).getCoords();
+        vectorB = quad.vertex(2).getCoords();
+        vectorB -= quad.vertex(3).getCoords();
+        Vector3D normalSecondPart;
+        tarch::la::cross(vectorA, vectorB, normalSecondPart);
 
-      if ( _flipNormals ){
-        normal *= -1.0; // Invert direction if counterclockwise
+        assertion2(tarch::la::equals(
+                   normal/tarch::la::norm2(normal),
+                   normalSecondPart/tarch::la::norm2(normalSecondPart)),
+                   normal, normalSecondPart);
+        normal += normalSecondPart;
+        normal *= 0.5;
+
+        if ( _flipNormals ){
+          normal *= -1.0; // Invert direction if counterclockwise
+        }
+
+        // Accumulate area-weighted normal in associated vertices and edges
+        for (int i=0; i < 4; i++){
+          quad.edge(i).setNormal(quad.edge(i).getNormal() + normal);
+          quad.vertex(i).setNormal(quad.vertex(i).getNormal() + normal);
+        }
+
+        // Normalize quad normal
+        double length = tarch::la::norm2(normal);
+        normal /= length;
+        quad.setNormal(normal);
       }
-
-      // Accumulate area-weighted normal in associated vertices and edges
-      for (int i=0; i < 4; i++){
-        quad.edge(i).setNormal(quad.edge(i).getNormal() + normal);
-        quad.vertex(i).setNormal(quad.vertex(i).getNormal() + normal);
-      }
-
-      // Normalize quad normal
-      double length = tarch::la::norm2(normal);
-      normal /= length;
-      quad.setNormal(normal);
     }
 
     // Normalize edge normals (only done in 3D)
-    foreach (Edge& edge, _content.edges()){
-      double length = tarch::la::norm2(edge.getNormal());
-      edge.setNormal(edge.getNormal() / length);
+    if (computeNormals){
+      foreach (Edge& edge, _content.edges()){
+        double length = tarch::la::norm2(edge.getNormal());
+        assertionMsg(tarch::la::greater(length,0.0),
+          "Edge vertex coords: (" << edge.vertex(0).getCoords() << "), ("
+          << edge.vertex(1).getCoords()
+          << "). Hint: Could be inconsistent triangle/quad orientation or "
+          << "dangling edge. ");
+        edge.setNormal(edge.getNormal() / length);
+      }
     }
   }
 
-
   // Normalize vertex normals
-  foreach (Vertex& vertex, _content.vertices()){
-    double length = tarch::la::norm2(vertex.getNormal());
-    vertex.setNormal(vertex.getNormal() / length);
+  if (computeNormals){
+    foreach (Vertex& vertex, _content.vertices()){
+      double length = tarch::la::norm2(vertex.getNormal());
+      assertion(tarch::la::greater(length,0.0));
+      vertex.setNormal(vertex.getNormal() / length);
+    }
   }
 }
 

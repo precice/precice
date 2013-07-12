@@ -248,8 +248,11 @@ public:
   /**
    * @brief Necessary before any geom. operations can be performed on the mesh.
    *
-   * Normals of vertices, edges, and triangles are computed. Circumcircles of
-   * edges and triangles are computed.
+   * If no edges (in 2d) or triangles/quads (in 3d) are
+   * given, no normals are computed in order to avoid dividing by zero on
+   * normalization of the vertex normals.
+   *
+   * Circumcircles of edges and triangles are computed.
    */
   void computeState();
 
