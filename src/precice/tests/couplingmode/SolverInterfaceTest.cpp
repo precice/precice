@@ -1724,69 +1724,9 @@ void SolverInterfaceTest:: testThreeSolvers()
   int expectedCallsOfAdvance = 10;
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
 
-//  typedef utils::Vector2D Vector2D;
-//  using namespace tarch::la;
-//  std::string config = _pathToTests + "three-solver-explicit-explicit.xml";
-//
-//  int rank = utils::Parallel::getProcessRank();
-//  assertion1((rank == 0) || (rank == 1) || (rank == 2), rank);
-//  std::string solverName;
-//  if (rank == 0) solverName = std::string("SolverOne");
-//  else if (rank == 1) solverName = std::string("SolverTwo");
-//  else solverName = std::string("SolverThree");
-//
-//  int callsOfAdvance = 0;
-//
-//  if (solverName == std::string("SolverOne")){
-//    SolverInterface precice(solverName, 0, 1);
-//    configureSolverInterface(config, precice);
-//    int meshID = precice.getMeshID("Mesh");
-//    int dataID = precice.getDataID("Data");
-//    precice.setMeshVertex(meshID, raw(utils::Vector2D(0.0, 0.0)));
-//    double dt = precice.initialize();
-//    while (precice.isCouplingOngoing()){
-//      precice.writeVectorData(dataID, 0, raw(Vector2D(1.0, 2.0)));
-//      dt = precice.advance(dt);
-//      callsOfAdvance++;
-//    }
-//    precice.finalize();
-//    validateEquals(callsOfAdvance, 10);
-//  }
-//  else if (solverName == std::string("SolverTwo")){
-//    SolverInterface precice(solverName, 0, 1);
-//    configureSolverInterface(config, precice);
-//    int meshID = precice.getMeshID("Mesh");
-//    int dataID = precice.getDataID("Data");
-//    precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
-//    double dt = precice.initialize();
-//    while (precice.isCouplingOngoing()){
-//      Vector2D data;
-//      precice.readVectorData(dataID, 0, raw(data));
-//      validate(equals(data, Vector2D(1.0, 2.0)));
-//      dt = precice.advance(dt);
-//      callsOfAdvance++;
-//    }
-//    precice.finalize();
-//    validateEquals(callsOfAdvance, 10);
-//  }
-//  else {
-//    assertion1(solverName == std::string("SolverThree"), solverName);
-//    SolverInterface precice(solverName, 0, 1);
-//    configureSolverInterface(config, precice);
-//    int meshID = precice.getMeshID("Mesh");
-//    int dataID = precice.getDataID("Data");
-//    precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
-//    double dt = precice.initialize();
-//    while (precice.isCouplingOngoing()){
-//      Vector2D data;
-//      precice.readVectorData(dataID, 0, raw(data));
-//      validate(equals(data, Vector2D(1.0, 2.0)));
-//      dt = precice.advance(dt);
-//      callsOfAdvance++;
-//    }
-//    precice.finalize();
-//    validateEquals(callsOfAdvance, 10);
-//  }
+  configFilename(_pathToTests + "three-sovler-implicit-explicit.xml");
+  int expectedCallsOfAdvance = 30;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
 }
 
 void SolverInterfaceTest:: runThreeSolvers

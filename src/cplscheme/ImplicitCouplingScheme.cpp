@@ -198,17 +198,17 @@ void ImplicitCouplingScheme:: initializeData()
                "initializeData()", "Not required data initialization!");
   assertion(not _doesFirstStep);
   foreach (DataMap::value_type & pair, getSendData()){
-    utils::DynVector & oldValues = pair.second.oldValues.column(0);
+    utils::DynVector& oldValues = pair.second.oldValues.column(0);
     oldValues = *pair.second.values;
 
     // For extrapolation, treat the initial value as old timestep value
-    std::cout << std::endl;
+    //std::cout << std::endl;
     pair.second.oldValues.shiftSetFirst(oldValues);
-    sendData(_communication);
-    _communication->startReceivePackage(0);
-    receiveData(_communication);
-    _communication->finishReceivePackage();
-    setHasDataBeenExchanged(true);
+    //sendData(_communication);
+    //_communication->startReceivePackage(0);
+    //receiveData(_communication);
+    //_communication->finishReceivePackage();
+    //setHasDataBeenExchanged(true);
   }
   performedAction(constants::actionWriteInitialData());
 }
