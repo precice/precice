@@ -71,11 +71,16 @@ int main ( int argc, char** argv )
   if (runTests){
     assertion(not runServer);
     assertion(not runHelp);
-    std::cout << "PreCICE running tests..." << std::endl;
+    PRECICE_MASTER_ONLY{
+      std::cout << "PreCICE running tests..." << std::endl;
+    }
     std::string configFile(argv[2]);
     precice::utils::Globals::setPathToSources(argv[3]);
-    std::cout << "   Configuration file = " << configFile << std::endl;
-    std::cout << "   Path to sources = " << argv[3] << std::endl;
+    PRECICE_MASTER_ONLY{
+      std::cout << "   Configuration file = " << configFile << std::endl;
+      std::cout << "   Path to sources = " << argv[3] << std::endl;
+    }
+    ConfigurationRegistry::getInstance().initTopLevelConfigurationFactories();
     std::list<TopLevelConfiguration*> configs =
         ConfigurationRegistry::getInstance().readFile(configFile, "configuration");
     if (configs.empty()) {
