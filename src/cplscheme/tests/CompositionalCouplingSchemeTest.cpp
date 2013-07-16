@@ -174,17 +174,52 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     while (composition.isCouplingOngoing()){
       composition.advance();
       advances++;
-      if (advances%2 == 0){
-        validate(scheme1->isActionRequired(writeIterationCheckpoint));
-        validate(scheme2->isActionRequired(writeIterationCheckpoint));
-      }
-      else {
+      if (advances%2 == 1){
         validate(scheme1->isActionRequired(readIterationCheckpoint));
         validate(scheme2->isActionRequired(readIterationCheckpoint));
+      }
+      else if (advances%2 == 0){
+        validate(scheme1->isActionRequired(writeIterationCheckpoint));
+        validate(scheme2->isActionRequired(writeIterationCheckpoint));
       }
     }
     composition.finalize();
     validateEquals(advances, 20);
+    validateEquals(scheme1->getTimesteps(), 10);
+    validateEquals(scheme2->getTimesteps(), 10);
+  }
+  { // Test two implicit dummy coupling schemes with different iteration number
+    preciceDebug("Test I(2), I(2)");
+    int numberIterations = 2;
+    int maxTimesteps = 10;
+    PtrCouplingScheme scheme1(
+      new DummyCouplingScheme(numberIterations, maxTimesteps));
+    numberIterations = 3;
+    PtrCouplingScheme scheme2(
+      new DummyCouplingScheme(numberIterations, maxTimesteps));
+    CompositionalCouplingScheme composition;
+    composition.addCouplingScheme(scheme1);
+    composition.addCouplingScheme(scheme2);
+    composition.initialize(0.0, 0);
+    int advances = 0;
+    while (composition.isCouplingOngoing()){
+      composition.advance();
+      advances++;
+      if (advances%3 == 2){
+        validate(scheme1->isActionRequired(writeIterationCheckpoint));
+        validate(scheme2->isActionRequired(readIterationCheckpoint));
+      }
+      else if (advances%3 == 1){
+        validate(scheme1->isActionRequired(readIterationCheckpoint));
+        validate(scheme2->isActionRequired(readIterationCheckpoint));
+      }
+      else if (advances%3 == 0){
+        validate(scheme1->isActionRequired(writeIterationCheckpoint));
+        validate(scheme2->isActionRequired(writeIterationCheckpoint));
+      }
+    }
+    composition.finalize();
+    validateEquals(advances, 30);
     validateEquals(scheme1->getTimesteps(), 10);
     validateEquals(scheme2->getTimesteps(), 10);
   }

@@ -131,7 +131,7 @@ void ImplicitCouplingScheme:: initialize
   assertion1(startTimestep >= 0, startTimestep);
   assertion(_communication->isConnected());
   preciceCheck(not getSendData().empty(), "initialize()",
-               "No send data configured!");
+               "No send data configured! Use explicit scheme for one-way coupling.");
   setTime(startTime);
   setTimesteps(startTimestep);
   if (not _doesFirstStep){

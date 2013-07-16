@@ -302,14 +302,34 @@ public:
 
 private:
 
-  typedef std::list<PtrCouplingScheme> Schemes;
-  typedef std::list<PtrCouplingScheme>::iterator SchemesIt;
+  struct Scheme {
+    PtrCouplingScheme scheme;
+
+    // @brief Excludes converged implicit schemes from some operations.
+    //
+    // When several implicit schemes are iterating their point of convergence
+    // will be different in general. Converged schemes are automatically advanced
+    // to the next timestep and are put on hold until all schemes are converged.
+    //
+    // This assumes that a once converged scheme does not leave the convergence
+    // region again.
+    bool onHold;
+
+    Scheme(PtrCouplingScheme scheme)
+    : scheme(scheme), onHold(false) {}
+  };
+
+  typedef std::list<Scheme> Schemes;
+  typedef std::list<Scheme>::iterator SchemesIt;
+  //typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
 
   // @brief Logging device.
   static tarch::logging::Log _log;
 
   // @brief Coupling schemes to be executed in parallel.
   Schemes _couplingSchemes;
+
+  //Schemes _activeCouplingSchemes;
 
   // @brief Iterator to begin of coupling schemes currently active.
   SchemesIt _activeSchemesBegin;

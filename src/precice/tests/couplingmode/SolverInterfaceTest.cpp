@@ -1721,24 +1721,40 @@ void SolverInterfaceTest:: testThreeSolvers()
 {
   preciceTrace("testThreeSolvers()");
   std::string configFilename(_pathToTests + "three-solver-explicit-explicit.xml");
-  int expectedCallsOfAdvance = 10;
+  std::vector<int> expectedCallsOfAdvance;
+  expectedCallsOfAdvance += 10, 10, 10;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
+
+  configFilename = _pathToTests + "three-solver-implicit-implicit.xml";
+  expectedCallsOfAdvance.clear();
+  expectedCallsOfAdvance += 30, 30, 20;
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
 
   configFilename = _pathToTests + "three-solver-implicit-explicit.xml";
-  expectedCallsOfAdvance = 30;
+  expectedCallsOfAdvance.clear();
+  expectedCallsOfAdvance += 30, 30, 10;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
+
+  configFilename = _pathToTests + "three-solver-explicit-implicit.xml";
+  expectedCallsOfAdvance.clear();
+  expectedCallsOfAdvance += 30, 10, 30;
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
 }
 
 void SolverInterfaceTest:: runThreeSolvers
 (
-  const std::string& configFilename,
-  int                expectedCallsOfAdvance )
+  const std::string&      configFilename,
+  const std::vector<int>& expectedCallsOfAdvance )
 {
   preciceTrace2("runThreeSolvers", configFilename, expectedCallsOfAdvance);
 
   typedef utils::Vector2D Vector2D;
   int rank = utils::Parallel::getProcessRank();
   assertion1((rank == 0) || (rank == 1) || (rank == 2), rank);
+
+  std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
+  std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
+
   std::string solverName;
   if (rank == 0) solverName = std::string("SolverOne");
   else if (rank == 1) solverName = std::string("SolverTwo");
@@ -1749,49 +1765,67 @@ void SolverInterfaceTest:: runThreeSolvers
     SolverInterface precice(solverName, 0, 1);
     configureSolverInterface(configFilename, precice);
     int meshID = precice.getMeshID("Mesh");
-    int dataID = precice.getDataID("Data");
+    //int dataID = precice.getDataID("Data");
     precice.setMeshVertex(meshID, raw(utils::Vector2D(0.0, 0.0)));
     double dt = precice.initialize();
     while (precice.isCouplingOngoing()){
-      precice.writeVectorData(dataID, 0, raw(Vector2D(1.0, 2.0)));
+      //precice.writeVectorData(dataID, 0, raw(Vector2D(1.0, 2.0)));
+      if (precice.isActionRequired(writeIterCheckpoint)){
+        precice.fulfilledAction(writeIterCheckpoint);
+      }
       dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)){
+        precice.fulfilledAction(readIterCheckpoint);
+      }
       callsOfAdvance++;
     }
     precice.finalize();
-    validateEquals(callsOfAdvance, expectedCallsOfAdvance);
+    validateEquals(callsOfAdvance, expectedCallsOfAdvance[0]);
   }
   else if (solverName == std::string("SolverTwo")){
     SolverInterface precice(solverName, 0, 1);
     configureSolverInterface(configFilename, precice);
     int meshID = precice.getMeshID("Mesh");
-    int dataID = precice.getDataID("Data");
+    //int dataID = precice.getDataID("Data");
     precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
     double dt = precice.initialize();
     while (precice.isCouplingOngoing()){
-      Vector2D data;
-      precice.readVectorData(dataID, 0, raw(data));
+      //Vector2D data;
+      //precice.readVectorData(dataID, 0, raw(data));
+      if (precice.isActionRequired(writeIterCheckpoint)){
+        precice.fulfilledAction(writeIterCheckpoint);
+      }
       dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)){
+        precice.fulfilledAction(readIterCheckpoint);
+      }
       callsOfAdvance++;
     }
     precice.finalize();
-    validateEquals(callsOfAdvance, expectedCallsOfAdvance);
+    validateEquals(callsOfAdvance, expectedCallsOfAdvance[1]);
   }
   else {
     assertion1(solverName == std::string("SolverThree"), solverName);
     SolverInterface precice(solverName, 0, 1);
     configureSolverInterface(configFilename, precice);
     int meshID = precice.getMeshID("Mesh");
-    int dataID = precice.getDataID("Data");
+    //int dataID = precice.getDataID("Data");
     precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
     double dt = precice.initialize();
     while (precice.isCouplingOngoing()){
-      Vector2D data;
-      precice.readVectorData(dataID, 0, raw(data));
+      //Vector2D data;
+      //precice.readVectorData(dataID, 0, raw(data));
+      if (precice.isActionRequired(writeIterCheckpoint)){
+        precice.fulfilledAction(writeIterCheckpoint);
+      }
       dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)){
+        precice.fulfilledAction(readIterCheckpoint);
+      }
       callsOfAdvance++;
     }
     precice.finalize();
-    validateEquals(callsOfAdvance, expectedCallsOfAdvance);
+    validateEquals(callsOfAdvance, expectedCallsOfAdvance[2]);
   }
 }
 

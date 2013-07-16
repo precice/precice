@@ -8,6 +8,7 @@
 #include "tarch/logging/Log.h"
 #include "precice/SolverInterface.hpp"
 #include <string>
+#include <vector>
 
 namespace precice {
 namespace tests {
@@ -181,8 +182,8 @@ private:
   void testThreeSolvers();
 
   void runThreeSolvers (
-      const std::string& configFilename,
-      int                expectedCallsOfAdvance );
+      const std::string&      configFilename,
+      const std::vector<int>& expectedCallsOfAdvance );
 
 # endif // defined( not PRECICE_NO_MPI )
 };
