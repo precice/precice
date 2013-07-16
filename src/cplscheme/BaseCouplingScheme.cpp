@@ -440,15 +440,18 @@ std::string BaseCouplingScheme:: printActionsState () const
 
 void BaseCouplingScheme:: checkCompletenessRequiredActions ()
 {
-   preciceTrace("checkCompletenessRequiredActions()");
-   if(! _actions.empty()) {
-      foreach(const std::string & action, _actions) {
-         preciceInfo("checkCompletenessRequiredActions()",
-                       "Required action \"" << action << "\" not fulfilled!");
+  preciceTrace("checkCompletenessRequiredActions()");
+  if(not _actions.empty()){
+    std::ostringstream stream;
+    foreach(const std::string & action, _actions){
+      if (not stream.str().empty()){
+        stream << ", ";
       }
-      preciceError("checkCompletenessRequiredActions()",
-                     "Unfulfilled required actions!");
-   }
+      stream << action;
+    }
+    preciceError("checkCompletenessRequiredActions()",
+                 "Unfulfilled required actions: " << stream.str() << "!");
+  }
 }
 
 int BaseCouplingScheme:: getValidDigits () const
