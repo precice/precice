@@ -1724,8 +1724,8 @@ void SolverInterfaceTest:: testThreeSolvers()
   int expectedCallsOfAdvance = 10;
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
 
-  configFilename(_pathToTests + "three-sovler-implicit-explicit.xml");
-  int expectedCallsOfAdvance = 30;
+  configFilename = _pathToTests + "three-solver-implicit-explicit.xml";
+  expectedCallsOfAdvance = 30;
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
 }
 
