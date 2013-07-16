@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<!--
+  -- Configuration for tests 
+  -- * CompositionalCouplingScheme::testExplicitImplicitSchemeComposition()
+  -->
+<configuration>
+   <data:scalar name="Data0"/>
+   <data:vector name="Data1"/>
+   <data:vector name="Data2"/>
+   <mesh name="Mesh">
+      <use-data name="Data0"/>
+      <use-data name="Data1"/>
+      <use-data name="Data2"/>
+   </mesh>
+   <geometry:builtin-sphere of-mesh="Mesh">
+      <radius value="1.0"/>
+      <discretization-width value="0.2"/>
+   </geometry:builtin-sphere>
+   <communication:mpi from="Participant0" to="Participant1"/>
+   <communication:mpi from="Participant1" to="Participant2"/>
+   <coupling-scheme:explicit>  
+      <participants first="Participant0" second="Participant1"/>
+      <timestep-length value="0.1" method="fixed"/>
+      <max-time value="1.0"/> 
+      <max-timesteps value="10"/>
+      <exchange data="Data0" mesh="Mesh" from="Participant0"/>
+      <exchange data="Data1" mesh="Mesh" from="Participant1"/>
+   </coupling-scheme:explicit>
+   <coupling-scheme:implicit>  
+      <participants first="Participant1" second="Participant2"/>
+      <timestep-length value="0.1" method="fixed"/>
+      <max-time value="1.0"/> 
+      <max-timesteps value="10"/>
+      <max-iterations value="10"/>
+      <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="Mesh"/>
+      <exchange data="Data1" mesh="Mesh" from="Participant1"/>
+      <exchange data="Data2" mesh="Mesh" from="Participant2"/>
+   </coupling-scheme:implicit>
+</configuration>
