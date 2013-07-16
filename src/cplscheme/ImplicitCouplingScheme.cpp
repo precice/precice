@@ -152,6 +152,9 @@ void ImplicitCouplingScheme:: initialize
 
   // Determine data initialization
   bool doesReceiveData = not _doesFirstStep;
+
+  // If the second participant initializes data, the first receive for the
+  // second participant is done in initializeData() instead of initialize().
   foreach (DataMap::value_type & pair, getSendData()){
     if (pair.second.initialize){
       preciceCheck(not _doesFirstStep, "initialize()",
@@ -162,6 +165,8 @@ void ImplicitCouplingScheme:: initialize
       break;
     }
   }
+  // If the second participant initializes data, the first receive for the first
+  // participant is done in initialize() instead of andvance().
   foreach (DataMap::value_type & pair, getReceiveData()){
     if (pair.second.initialize){
       preciceCheck(_doesFirstStep, "initialize()",
@@ -192,6 +197,7 @@ void ImplicitCouplingScheme:: initialize
 
 void ImplicitCouplingScheme:: initializeData()
 {
+  preciceTrace("initializeData()");
   preciceCheck(isInitialized(), "initializeData()",
                "initializeData() can be called after initialize() only!");
   preciceCheck(isActionRequired(constants::actionWriteInitialData()),
@@ -202,13 +208,16 @@ void ImplicitCouplingScheme:: initializeData()
     oldValues = *pair.second.values;
 
     // For extrapolation, treat the initial value as old timestep value
-    //std::cout << std::endl;
-    pair.second.oldValues.shiftSetFirst(oldValues);
-    //sendData(_communication);
-    //_communication->startReceivePackage(0);
-    //receiveData(_communication);
-    //_communication->finishReceivePackage();
-    //setHasDataBeenExchanged(true);
+    pair.second.oldValues.shiftSetFirst(*pair.second.values);
+
+    // The second participant sends the initialized data to the first particpant
+    // here, which receives the data on call of initialize().
+    sendData(_communication);
+    _communication->startReceivePackage(0);
+    // This receive replaces the receive in initialize().
+    receiveData(_communication);
+    _communication->finishReceivePackage();
+    setHasDataBeenExchanged(true);
   }
   performedAction(constants::actionWriteInitialData());
 }
@@ -366,10 +375,12 @@ void ImplicitCouplingScheme:: timestepCompleted()
 
 void ImplicitCouplingScheme:: finalize()
 {
-   preciceTrace("finalize()" );
+   preciceTrace("finalize()");
    checkCompletenessRequiredActions();
    preciceCheck(isInitialized(), "finalize()",
-                  "finalize() can be called after initialize() only!");
+                "Called finalize() before initialize()!");
+   preciceCheck(not isCouplingOngoing(), "finalize()",
+                "Called finalize() while isCouplingOngoing() returns true!");
 }
 
 void ImplicitCouplingScheme:: initializeTXTWriters()
