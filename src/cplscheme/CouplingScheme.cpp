@@ -9,6 +9,7 @@
 #include "utils/Parallel.hpp"
 #include <set>
 #include <limits>
+#include <sstream>
 
 namespace precice {
 namespace cplscheme {
@@ -359,36 +360,40 @@ double CouplingScheme:: getNextTimestepMaxLength() const
 
 bool CouplingScheme:: isCouplingOngoing() const
 {
+  preciceTrace("isCouplingOngoing()");
   double eps = std::pow(10.0, -1 * _validDigits);
   using namespace tarch::la;
   bool timeLeft = greater(_maxTime, _time, eps) || equals(_maxTime, UNDEFINED_TIME);
   bool timestepsLeft = (_maxTimesteps > _timesteps)
                        || (_maxTimesteps == UNDEFINED_TIMESTEPS);
+  preciceDebug("return " << timeLeft && timestepsLeft);
   return timeLeft && timestepsLeft;
 }
 
 bool CouplingScheme:: isCouplingTimestepComplete() const
 {
-   return _isCouplingTimestepComplete;
+  preciceTrace1("isCouplingTimestepComplete()", _isCouplingTimestepComplete);
+  return _isCouplingTimestepComplete;
 }
 
 bool CouplingScheme:: isActionRequired
 (
   const std::string& actionName) const
 {
-   return _actions.count(actionName) > 0;
+
+  return _actions.count(actionName) > 0;
 }
 
 void CouplingScheme:: performedAction
 (
   const std::string& actionName)
 {
-   _actions.erase(actionName);
+  _actions.erase(actionName);
 }
 
 int CouplingScheme:: getCheckpointTimestepInterval() const
 {
-   return _checkpointTimestepInterval;
+  return _checkpointTimestepInterval;
 }
 
 void CouplingScheme:: requireAction
@@ -434,7 +439,7 @@ std::string CouplingScheme:: printBasicState
   return os.str ();
 }
 
-std::string CouplingScheme:: printActionsState () const
+std::string CouplingScheme:: printActionsState() const
 {
    std::ostringstream os;
    foreach(const std::string & actionName, _actions) {
@@ -443,20 +448,23 @@ std::string CouplingScheme:: printActionsState () const
    return os.str ();
 }
 
-void CouplingScheme:: checkCompletenessRequiredActions ()
+void CouplingScheme:: checkCompletenessRequiredActions()
 {
-   preciceTrace("checkCompletenessRequiredActions()");
-   if(! _actions.empty()) {
-      foreach(const std::string & action, _actions) {
-         preciceInfo("checkCompletenessRequiredActions()",
-                       "Required action \"" << action << "\" not fulfilled!");
+  preciceTrace("checkCompletenessRequiredActions()");
+  if(not _actions.empty()){
+    std::ostringstream stream;
+    foreach(const std::string & action, _actions){
+      if (not stream.str().empty()){
+        stream << ", ";
       }
-      preciceError("checkCompletenessRequiredActions()",
-                     "Unfulfilled required actions!");
-   }
+      stream << action;
+    }
+    preciceError("checkCompletenessRequiredActions()",
+                 "Unfulfilled required actions: " << stream.str() << "!");
+  }
 }
 
-int CouplingScheme:: getValidDigits () const
+int CouplingScheme:: getValidDigits() const
 {
   return _validDigits;
 }
