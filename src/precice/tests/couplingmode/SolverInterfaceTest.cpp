@@ -1768,7 +1768,6 @@ void SolverInterfaceTest:: runThreeSolvers
     //int dataID = precice.getDataID("Data");
     precice.setMeshVertex(meshID, raw(utils::Vector2D(0.0, 0.0)));
     double dt = precice.initialize();
-    validate(precice.isInitialized());
     while (precice.isCouplingOngoing()){
       //precice.writeVectorData(dataID, 0, raw(Vector2D(1.0, 2.0)));
       if (precice.isActionRequired(writeIterCheckpoint)){
@@ -1790,7 +1789,6 @@ void SolverInterfaceTest:: runThreeSolvers
     //int dataID = precice.getDataID("Data");
     precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
     double dt = precice.initialize();
-    validate(precice.isInitialized());
     while (precice.isCouplingOngoing()){
       //Vector2D data;
       //precice.readVectorData(dataID, 0, raw(data));
@@ -1814,7 +1812,6 @@ void SolverInterfaceTest:: runThreeSolvers
     //int dataID = precice.getDataID("Data");
     precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
     double dt = precice.initialize();
-    validate(precice.isInitialized());
     while (precice.isCouplingOngoing()){
       //Vector2D data;
       //precice.readVectorData(dataID, 0, raw(data));
