@@ -185,21 +185,13 @@ std::string ExplicitCouplingScheme:: printCouplingState() const
 std::vector<std::string> ExplicitCouplingScheme:: getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
+  // Add non-local participant
   if(_doesFirstStep){
-    partnerNames.push_back(_firstParticipant);
-  }
-  else {
     partnerNames.push_back(_secondParticipant);
   }
-//  if(accessorName == _firstParticipant){
-//    partnerNames.push_back(_secondParticipant);
-//  }
-//  else if(accessorName == _secondParticipant){
-//    partnerNames.push_back(_firstParticipant);
-//  }
-//  else {
-//    preciceError("getCouplingPartners()", "No coupling partner could be found.");
-//  }
+  else {
+    partnerNames.push_back(_firstParticipant);
+  }
   return partnerNames;
 }
 

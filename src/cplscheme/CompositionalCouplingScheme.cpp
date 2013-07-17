@@ -383,9 +383,8 @@ std::string CompositionalCouplingScheme:: printCouplingState() const
     }
     partners = scheme.scheme->getCouplingPartners();
     assertion1(partners.size() == 1, partners.size());
-    state += "Coupling to ";
     state += partners[0];
-    state += ":\n";
+    state += ": ";
     state += scheme.scheme->printCouplingState();
   }
   return state;

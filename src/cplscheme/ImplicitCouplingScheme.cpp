@@ -332,10 +332,14 @@ void ImplicitCouplingScheme:: advance()
       // timestep remainder is zero. Subtract the timestep length do another
       // coupling iteration.
       assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
+      _timestepToPlot = getTimesteps()+1;
+      _timeToPlot = getTime();
+      _iterationToPlot = _iterations;
       setTime(getTime() - getComputedTimestepPart());
     }
     else {
       preciceDebug("Convergence achieved");
+      _iterationToPlot++;
       _iterationsWriter.writeData("Timesteps", getTimesteps());
       _iterationsWriter.writeData("Total Iterations", _totalIterations);
       _iterationsWriter.writeData("Iterations", _iterations);
@@ -350,14 +354,16 @@ void ImplicitCouplingScheme:: advance()
   // When the iterations of one timestep are converged, the old time, timesteps,
   // and iteration should be plotted, and not the 0th of the new timestep. Thus,
   // the plot values are only updated when no convergence was achieved.
-  if (not convergence){
-    _timestepToPlot = getTimesteps();
-    _timeToPlot = getTime();
-    _iterationToPlot = _iterations;
-  }
-  else {
-    _iterationToPlot++;
-  }
+//  if (not convergence){
+//    _timestepToPlot = getTimesteps()+1;
+//    //_timeToPlot = getTime();
+//    _iterationToPlot = _iterations;
+//  }
+//  else {
+//    //_timestepToPlot = getTimesteps();
+//    //_timeToPlot = getTime();
+//    _iterationToPlot++;
+//  }
 }
 
 void ImplicitCouplingScheme:: timestepCompleted()
@@ -544,11 +550,12 @@ std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
 
+  // Add non-local participant
   if(_doesFirstStep){
-    partnerNames.push_back(_firstParticipant);
+    partnerNames.push_back(_secondParticipant);
   }
   else {
-    partnerNames.push_back(_secondParticipant);
+    partnerNames.push_back(_firstParticipant);
   }
   return partnerNames;
 }
@@ -586,11 +593,11 @@ void ImplicitCouplingScheme:: receiveState
 std::string ImplicitCouplingScheme:: printCouplingState() const
 {
   std::ostringstream os;
-  os << " it " << _iterationToPlot; //_iterations;
+  os << "it " << _iterationToPlot; //_iterations;
   if(_maxIterations != -1 ){
     os << " of " << _maxIterations;
   }
-  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << std::endl << printActionsState();
+  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
   return os.str();
 }
 
