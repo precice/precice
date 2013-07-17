@@ -486,9 +486,11 @@ bool CompositionalCouplingScheme:: determineActiveCouplingSchemes()
         converged = false;
         preciceDebug("Non converged implicit scheme");
       }
-      else if (it->scheme->isActionRequired(writeCheckpoint)){
+      else if (it->scheme->isActionRequired(writeCheckpoint)
+               || not it->scheme->isCouplingOngoing())
+      {
         it->onHold = true;
-        preciceDebug("Put converged implicit scheme on hold");
+        preciceDebug("Put converged/finished implicit scheme on hold");
       }
     }
     if (converged) {

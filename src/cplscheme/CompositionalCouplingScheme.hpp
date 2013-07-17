@@ -50,6 +50,12 @@ namespace cplscheme {
  * actions constants::actionWrite/ReadIterationCheckpoint() is used to find out
  * about whether a coupling scheme does perform iterations.
  *
+ * When, in an active set of implicit coupling schemes, a scheme is converged but
+ * others not, the converged scheme is put on hold until all schemes in the
+ * active set are converged. This assumes that the converged state of a coupling
+ * scheme is not deteriorated by the further iteration of the
+ * remaining non-converged schemes.
+ *
  * The execution of each scheme does not only depend on this sequence, but also
  * on how the participants are configured to be first and second in the schemes.
  * If not configured properly, a deadlock might be created.
@@ -302,7 +308,11 @@ public:
 
 private:
 
+  /**
+   * @brief Groups a coupling scheme with additional associated variables.
+   */
   struct Scheme {
+    // @brief The actual coupling scheme
     PtrCouplingScheme scheme;
 
     // @brief Excludes converged implicit schemes from some operations.
@@ -315,6 +325,9 @@ private:
     // region again.
     bool onHold;
 
+    /**
+     * @brief Constructor.
+     */
     Scheme(PtrCouplingScheme scheme)
     : scheme(scheme), onHold(false) {}
   };
@@ -343,7 +356,10 @@ private:
   /**
    * @brief Determines the current set of active coupling schemes.
    *
-   * @return True, if active schemes have changed.
+   * Is called in advance, after all active sub-schemes are advanced.
+   *
+   * @return True, if active schemes have changed and should be treated within
+   *         the same call of advance().
    */
   bool determineActiveCouplingSchemes();
 
