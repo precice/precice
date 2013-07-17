@@ -1,6 +1,6 @@
 #include <iostream>
 #include <sstream>
-#include "../../src/precice/SolverInterface.hpp"
+#include "../../../src/precice/SolverInterface.hpp"
 //#include "mpi.h"
 
 /**

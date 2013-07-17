@@ -11,17 +11,16 @@ import sys;
 #
 cppdefines = []   
 libpath = [ 
-   '../../build/release-nompi-nosockets-nospirit2-nopython/' # Path to preCICE library
-   #'../../build/release/'
+   '../../../build/debug/' # Path to preCICE library
    ]      
 libs = [ 
-   'precice'  # preCICE library 
-   #'python2.6', # Python library (shared)
-   #'pthread' 
+   'precice',  # preCICE library 
+   'python2.7', # Python library (shared)
+   'pthread' 
    ]
 cpppath = []   
 ccflags = []   
-cxx = 'g++'      # For systems offering mpicxx compiler
+cxx = 'mpicxx'      # For systems offering mpicxx compiler
 
 
 #ccflags.append('-g3')
