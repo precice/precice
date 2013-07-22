@@ -149,6 +149,71 @@ public:
 
   virtual void importState(io::TXTReader& reader);
 
+protected: //TODO nur für funktionen erlaubt, nicht für member variablen
+
+  // @brief True, if local participant is the one starting the explicit scheme.
+    bool _doesFirstStep;
+
+  // @brief Communication device to the other coupling participant.
+    com::PtrCommunication _communication;
+
+  // @brief Post-processing method to speedup iteration convergence.
+    impl::PtrPostProcessing _postProcessing;
+
+  // @brief Limit of iterations during one timestep.
+    int _maxIterations;
+
+  // @brief Number of iteration in current timestep.
+    int _iterationToPlot;
+    int _timestepToPlot;
+    double _timeToPlot;
+
+  // @brief Number of total iterations performed.
+    int _totalIterations;
+
+  // @brief Responsible for monitoring iteration count over timesteps.
+    io::TXTTableWriter _iterationsWriter;
+
+  // @brief Extrapolation order of coupling data for first iteration of every dt.
+    int _extrapolationOrder;
+
+  // @brief Determines, if the dt length is set received from the other participant
+    bool _participantReceivesDt;
+
+  // @brief Determines, if the timestep length is set by the participant.
+    bool _participantSetsDt;
+
+  /**
+   * @brief Updates internal state of coupling scheme for next timestep.
+   */
+    void timestepCompleted();
+
+  /**
+   * @brief Sets up _dataStorage to store data values of last timestep.
+   *
+   * Every send data has an entry in _dataStorage. Every Entry is a vector
+   * of data values with length according to the total number of values on all
+   * meshes. The ordering of the data values corresponds to that in the meshes
+   * and the ordering of the meshes to that in _couplingData.
+   */
+    void setupDataMatrices();
+
+    void setupConvergenceMeasures();
+
+    void newConvergenceMeasurements();
+
+  /**
+    * @brief Updates the convergence measurement of local send data.
+    */
+   bool measureConvergence();
+
+   void extrapolateData();
+
+  /**
+     * @brief Initializes the txt writers for writing residuals, iterations, ...
+     */
+    void initializeTXTWriters();
+
 private:
 
   /**
@@ -175,18 +240,9 @@ private:
   // @brief Second participant name.
   std::string _secondParticipant;
 
-  // @brief True, if local participant is the one starting the explicit scheme.
-  bool _doesFirstStep;
-
-  // @brief Communication device to the other coupling participant.
-  com::PtrCommunication _communication;
-
-  // @brief Responsible for monitoring iteration count over timesteps.
-  io::TXTTableWriter _iterationsWriter;
-
   // @brief Writes residuals to file.
 //  io::TXTTableWriter _residualWriterL1;
-//  io::TXTTableWriter _residualWriterL2;
+//  io::TXT_communicationTableWriter _residualWriterL2;
 
   // @brief Writes value amplification to file.
 //  io::TXTTableWriter _amplificationWriter;
@@ -198,60 +254,6 @@ private:
   // Before initialization, only dataID and measure variables are filled. Then,
   // the data is fetched from send and receive data assigned to the cpl scheme.
   std::vector<ConvergenceMeasure> _convergenceMeasures;
-
-  // @brief Post-processing method to speedup iteration convergence.
-  impl::PtrPostProcessing _postProcessing;
-
-  // @brief Extrapolation order of coupling data for first iteration of every dt.
-  int _extrapolationOrder;
-
-  // @brief Limit of iterations during one timestep.
-  int _maxIterations;
-
-  // @brief Number of iteration in current timestep.
-  int _iterationToPlot;
-  int _timestepToPlot;
-  double _timeToPlot;
-
-  // @brief Number of total iterations performed.
-  int _totalIterations;
-
-  // @brief Determines, if the timestep length is set by the participant.
-  bool _participantSetsDt;
-
-  // @brief Determines, if the dt length is set received from the other participant
-  bool _participantReceivesDt;
-
-  /**
-   * @brief Initializes the txt writers for writing residuals, iterations, ...
-   */
-  void initializeTXTWriters();
-
-  /**
-   * @brief Sets up _dataStorage to store data values of last timestep.
-   *
-   * Every send data has an entry in _dataStorage. Every Entry is a vector
-   * of data values with length according to the total number of values on all
-   * meshes. The ordering of the data values corresponds to that in the meshes
-   * and the ordering of the meshes to that in _couplingData.
-   */
-  void setupDataMatrices();
-
-  void setupConvergenceMeasures();
-
-  void newConvergenceMeasurements();
-
-  /**
-   * @brief Updates internal state of coupling scheme for next timestep.
-   */
-  void timestepCompleted();
-
-  /**
-   * @brief Updates the convergence measurement of local send data.
-   */
-  bool measureConvergence();
-
-  void extrapolateData();
 
 //  void writeResidual (
 //    const utils::DynVector& values,
