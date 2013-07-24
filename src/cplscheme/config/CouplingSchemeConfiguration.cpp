@@ -5,6 +5,7 @@
 #include "cplscheme/config/PostProcessingConfiguration.hpp"
 #include "cplscheme/ExplicitCouplingScheme.hpp"
 #include "cplscheme/ImplicitCouplingScheme.hpp"
+#include "cplscheme/ParallelImplicitCouplingScheme.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/RelativeConvergenceMeasure.hpp"
@@ -70,6 +71,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   ATTR_SUFFICES("suffices"),
   VALUE_EXPLICIT("explicit"),
   VALUE_IMPLICIT("implicit"),
+  VALUE_PARALLEL_IMPLICIT("parallel-implicit"),
   VALUE_UNCOUPLED("uncoupled"),
   VALUE_FIXED("fixed"),
   VALUE_FIRST_PARTICIPANT("first-participant"),
@@ -94,6 +96,11 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   {
     XMLTag tag(*this, VALUE_IMPLICIT, occ, TAG);
     addTypespecifcSubtags(VALUE_IMPLICIT, tag);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PARALLEL_IMPLICIT, occ, TAG);
+    addTypespecifcSubtags(VALUE_PARALLEL_IMPLICIT, tag);
     tags.push_back(tag);
   }
   {
@@ -204,7 +211,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double limit = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_IMPLICIT);
+    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices);
   }
   else if ( tag.getName() == TAG_REL_CONV_MEASURE ) {
@@ -212,7 +219,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double limit = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_IMPLICIT);
+    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     addRelativeConvergenceMeasure(dataName, meshName, limit, suffices);
   }
   else if ( tag.getName() == TAG_RES_REL_CONV_MEASURE ) {
@@ -220,7 +227,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double limit = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_IMPLICIT);
+    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices);
   }
   else if ( tag.getName() == TAG_MIN_ITER_CONV_MEASURE ) {
@@ -228,7 +235,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     int minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_IMPLICIT);
+    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices);
   }
   else if (tag.getName() == TAG_EXCHANGE){
@@ -258,11 +265,11 @@ void CouplingSchemeConfiguration:: xmlTagCallback
                                 nameParticipant, initialize));
   }
   else if (tag.getName() == TAG_MAX_ITERATIONS){
-    assertion(_config.type == VALUE_IMPLICIT);
+    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     _config.maxIterations = tag.getIntAttributeValue(ATTR_VALUE);
   }
   else if (tag.getName() == TAG_EXTRAPOLATION){
-    assertion(_config.type == VALUE_IMPLICIT);
+    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     _config.extrapolationOrder = tag.getIntAttributeValue(ATTR_VALUE);
   }
 //  else if ( tag.getName() == PostProcessingConfiguration::TAG ) {
@@ -300,6 +307,15 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
       _couplingSchemes[accessor] = scheme;
       _config = Config();
     }
+    else if (_config.type == VALUE_PARALLEL_IMPLICIT){
+          std::string accessor(_config.participant);
+          PtrCouplingScheme scheme = createParallelImplicitCouplingScheme(accessor);
+          _couplingSchemes[accessor] = scheme;
+          accessor = _config.secondParticipant;
+          scheme = createParallelImplicitCouplingScheme(accessor);
+          _couplingSchemes[accessor] = scheme;
+          _config = Config();
+        }
     else if (_config.type == VALUE_UNCOUPLED){
       assertion(false);
     }
@@ -347,6 +363,17 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
     addTagExtrapolation(tag);
     addTagPostProcessing(tag);
   }
+  else if ( type == VALUE_PARALLEL_IMPLICIT ) {
+      addTagParticipants(tag);
+      addTagExchange(tag);
+      addTagAbsoluteConvergenceMeasure(tag);
+      addTagRelativeConvergenceMeasure(tag);
+      addTagResidualRelativeConvergenceMeasure(tag);
+      addTagMinIterationConvergenceMeasure(tag);
+      addTagMaxIterations(tag);
+      addTagExtrapolation(tag);
+      addTagPostProcessing(tag);
+    }
   else if (type == VALUE_UNCOUPLED){
   }
   else {
@@ -642,6 +669,38 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createImplicitCouplingScheme
 //      scheme->addDataToReceive ( data, initialize );
 //    }
 //  }
+
+  // Add convergence measures
+  using boost::get;
+  for (size_t i=0; i < _config.convMeasures.size(); i++){
+    int dataID = get<0>(_config.convMeasures[i]);
+    bool suffices = get<1>(_config.convMeasures[i]);
+    impl::PtrConvergenceMeasure measure = get<2>(_config.convMeasures[i]);
+    scheme->addConvergenceMeasure(dataID, suffices, measure);
+  }
+
+  // Set relaxation parameters
+  if (_postProcConfig->getPostProcessing().get() != NULL){
+    scheme->setIterationPostProcessing(_postProcConfig->getPostProcessing());
+  }
+  return PtrCouplingScheme(scheme);
+}
+
+PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingScheme
+(
+  const std::string& accessor ) const
+{
+  assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
+  com::PtrCommunication com = _comConfig->getCommunication (
+      _config.participant, _config.secondParticipant );
+  ParallelImplicitCouplingScheme* scheme = new ParallelImplicitCouplingScheme (
+      _config.maxTime, _config.maxTimesteps, _config.timestepLength,
+      _config.validDigits, _config.participant, _config.secondParticipant,
+      accessor, com, _config.maxIterations, _config.dtMethod );
+  scheme->setCheckointTimestepInterval(_config.checkpointTimestepInterval);
+  scheme->setExtrapolationOrder ( _config.extrapolationOrder );
+
+  addDataToBeExchanged(*scheme, accessor);
 
   // Add convergence measures
   using boost::get;

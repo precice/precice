@@ -178,6 +178,7 @@ protected: //TODO nur für funktionen erlaubt, nicht für member variablen
     int _extrapolationOrder;
 
   // @brief Determines, if the dt length is set received from the other participant
+    //TODO ins neue serialcoupling runter
     bool _participantReceivesDt;
 
   // @brief Determines, if the timestep length is set by the participant.
@@ -207,7 +208,7 @@ protected: //TODO nur für funktionen erlaubt, nicht für member variablen
     */
    bool measureConvergence();
 
-   void extrapolateData();
+   void extrapolateData(DataMap& data);
 
   /**
      * @brief Initializes the txt writers for writing residuals, iterations, ...

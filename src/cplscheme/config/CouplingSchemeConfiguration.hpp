@@ -6,6 +6,7 @@
 
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/ImplicitCouplingScheme.hpp"
+#include "cplscheme/ParallelImplicitCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -123,6 +124,7 @@ private:
 
    const std::string VALUE_EXPLICIT;
    const std::string VALUE_IMPLICIT;
+   const std::string VALUE_PARALLEL_IMPLICIT;
    const std::string VALUE_UNCOUPLED;
    const std::string VALUE_FIXED;
    const std::string VALUE_FIRST_PARTICIPANT;
@@ -240,6 +242,9 @@ private:
 
    PtrCouplingScheme createImplicitCouplingScheme (
      const std::string & accessor ) const;
+
+   PtrCouplingScheme createParallelImplicitCouplingScheme (
+        const std::string & accessor ) const;
 
    /*
     * @brief returns name of the actual scheme holder (i.e. server name)

@@ -299,7 +299,7 @@ void ImplicitCouplingScheme:: advance()
       _communication->send(convergence, 0);
       if (isCouplingOngoing()){
         if (convergence && (_extrapolationOrder > 0)){
-          extrapolateData(); // Also stores data
+          extrapolateData(getSendData()); // Also stores data
         }
         else { // Store data for conv. measurement, post-processing, or extrapolation
           foreach (DataMap::value_type& pair, getSendData()){
@@ -495,13 +495,13 @@ bool ImplicitCouplingScheme:: measureConvergence()
   return allConverged || oneSuffices;
 }
 
-void ImplicitCouplingScheme:: extrapolateData()
+void ImplicitCouplingScheme:: extrapolateData(DataMap& data)
 {
    preciceTrace("extrapolateData()");
    bool startWithFirstOrder = (getTimesteps() == 1) && (_extrapolationOrder == 2);
    if((_extrapolationOrder == 1) || startWithFirstOrder ){
       preciceInfo("extrapolateData()", "Performing first order extrapolation" );
-      foreach(DataMap::value_type & pair, getSendData() ){
+      foreach(DataMap::value_type & pair, data ){
          assertion(pair.second.oldValues.cols() > 1 );
          utils::DynVector & values = *pair.second.values;
          pair.second.oldValues.column(0) = values;    // = x^t
@@ -512,7 +512,7 @@ void ImplicitCouplingScheme:: extrapolateData()
    }
    else if(_extrapolationOrder == 2 ){
       preciceInfo("extrapolateData()", "Performing second order extrapolation" );
-      foreach(DataMap::value_type & pair, getSendData() ) {
+      foreach(DataMap::value_type & pair, data ) {
          assertion(pair.second.oldValues.cols() > 2 );
          utils::DynVector & values = *pair.second.values;
          pair.second.oldValues.column(0) = values;        // = x^t                                     // = 2.5 x^t

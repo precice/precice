@@ -138,14 +138,14 @@ void ImplicitCouplingSchemeTest:: testExtrapolateData()
 
   (*cplData->values)[0] = 1.0;
   scheme.setTimesteps(scheme.getTimesteps() + 1);
-  scheme.extrapolateData();
+  scheme.extrapolateData(scheme.getSendData());
   validateNumericalEquals((*cplData->values)[0], 2.0);
   validateNumericalEquals(cplData->oldValues(0,0), 2.0);
   validateNumericalEquals(cplData->oldValues(0,1), 1.0);
 
   (*cplData->values)[0] = 4.0;
   scheme.setTimesteps(scheme.getTimesteps() + 1);
-  scheme.extrapolateData();
+  scheme.extrapolateData(scheme.getSendData());
   validateNumericalEquals((*cplData->values)[0], 7.0);
   validateNumericalEquals(cplData->oldValues(0,0), 7.0);
   validateNumericalEquals(cplData->oldValues(0,1), 4.0);
@@ -171,7 +171,7 @@ void ImplicitCouplingSchemeTest:: testExtrapolateData()
 
   (*cplData->values)[0] = 1.0;
   scheme2.setTimesteps ( scheme2.getTimesteps() + 1 );
-  scheme2.extrapolateData ();
+  scheme2.extrapolateData (scheme2.getSendData());
   validateNumericalEquals ( (*cplData->values)[0], 2.0 );
   validateNumericalEquals ( cplData->oldValues(0,0), 2.0 );
   validateNumericalEquals ( cplData->oldValues(0,1), 1.0 );
@@ -179,7 +179,7 @@ void ImplicitCouplingSchemeTest:: testExtrapolateData()
 
   (*cplData->values)[0] = 4.0;
   scheme2.setTimesteps ( scheme2.getTimesteps() + 1 );
-  scheme2.extrapolateData ();
+  scheme2.extrapolateData (scheme2.getSendData());
   validateNumericalEquals ( (*cplData->values)[0], 8.0 );
   validateNumericalEquals ( cplData->oldValues(0,0), 8.0 );
   validateNumericalEquals ( cplData->oldValues(0,1), 4.0 );

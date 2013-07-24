@@ -33,7 +33,10 @@ ParallelImplicitCouplingScheme:: ParallelImplicitCouplingScheme
   constants::TimesteppingMethod dtMethod )
 :
   ImplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-        secondParticipant,localParticipant,communication,maxIterations,dtMethod)
+        secondParticipant,localParticipant,communication,maxIterations,dtMethod),
+  _allData (),
+  _hasToSendInitData (false),
+  _hasToReceiveInitData (false)
 {}
 
 ParallelImplicitCouplingScheme:: ~ParallelImplicitCouplingScheme()
@@ -58,102 +61,111 @@ void ParallelImplicitCouplingScheme:: initialize
   if (not _doesFirstStep){ // second participant
     setupConvergenceMeasures(); // needs _couplingData configured
     setupDataMatrices(); // Reserve memory and initialize data with zero
+    mergeData(); // merge send and receive data for all pp calls
     if (_postProcessing.get() != NULL){
-      _postProcessing->initialize(getSendData()); // Reserve memory, initialize
+      _postProcessing->initialize(getAllData()); // Reserve memory, initialize
     }
   }
-  else if (_postProcessing.get() != NULL){ //first participant
-    int dataID = _postProcessing->getDataID();
-    //TODO
-    preciceCheck(getSendData(dataID) == NULL, "initialize()",
-                 "A post-processing can be defined for data of second "
-                 << "participant only!");
-  }
-
-  requireAction(constants::actionWriteIterationCheckpoint());
-
-  // Determine data initialization TODO kommt wahrscheinlich raus
-  bool doesReceiveData = not _doesFirstStep;
-
-  // If the second participant initializes data, the first receive for the
-  // second participant is done in initializeData() instead of initialize().
-  foreach (DataMap::value_type & pair, getSendData()){
-    if (pair.second.initialize){
-      preciceCheck(not _doesFirstStep, "initialize()",
-                   "Only second participant can initialize data!");
-      requireAction(constants::actionWriteInitialData());
-      preciceDebug("Initialized data to be written");
-      doesReceiveData = false;
-      break;
-    }
-  }
-  // If the second participant initializes data, the first receive for the first
-  // participant is done in initialize() instead of advance().
-  // TODO kommt wohl so ähnlich ins initializeData, hier nicht!
-  foreach (DataMap::value_type & pair, getReceiveData()){
-    if (pair.second.initialize){
-      preciceCheck(_doesFirstStep, "initialize()",
-                   "Only first participant can receive initial data!");
-      preciceDebug("Initialized data to be received");
-      doesReceiveData = true;
-    }
-  }
-
-  if (doesReceiveData && isCouplingOngoing()){
-    preciceDebug("Receiving data");
-    _communication->startReceivePackage(0);
-    if (_participantReceivesDt){ //geht im parallelen sowieso nicht, variable ins
-      // neue implicit runter ziehen
-      double dt = UNDEFINED_TIMESTEP_LENGTH;
-      _communication->receive(dt, 0);
-      preciceDebug("received timestep length of " << dt);
-      assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-      setTimestepLength(dt);
-      //setMaxLengthNextTimestep(dt);
-    }
-    receiveData(_communication);
-    _communication->finishReceivePackage();
-    setHasDataBeenExchanged(true);
-  } // TODO bis hier wahrscheinlich raus
 
 
   initializeTXTWriters();
+
+
+  foreach (DataMap::value_type & pair, getSendData()){
+    if (pair.second.initialize){
+      _hasToSendInitData = true;
+      break;
+    }
+  }
+  foreach (DataMap::value_type & pair, getReceiveData()){
+    if (pair.second.initialize){
+      _hasToReceiveInitData = true;
+      break;
+    }
+  }
+
+  if(_hasToSendInitData){
+    requireAction(constants::actionWriteInitialData());
+  }
+
   setIsInitialized(true);
+
 }
 
 void ParallelImplicitCouplingScheme:: initializeData()
 {
-
   preciceTrace("initializeData()");
   preciceCheck(isInitialized(), "initializeData()",
-               "initializeData() can be called after initialize() only!");
-  preciceCheck(isActionRequired(constants::actionWriteInitialData()),
-               "initializeData()", "Not required data initialization!");
+     "initializeData() can be called after initialize() only!");
 
-  //TODO wird nur für 2. gemacht
-  foreach (DataMap::value_type & pair, getSendData()){
-    utils::DynVector& oldValues = pair.second.oldValues.column(0);
-    oldValues = *pair.second.values;
-
-    // For extrapolation, treat the initial value as old timestep value
-    pair.second.oldValues.shiftSetFirst(*pair.second.values);
+  if(not _hasToSendInitData && not _hasToReceiveInitData){
+    preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
+    return;
   }
 
-  //TODO gleiche Schleife über receive daten, da die auch gespeichert werden müssen
+  preciceCheck(not (_hasToSendInitData && isActionRequired(constants::actionWriteInitialData())),
+     "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+
+  setHasDataBeenExchanged(false);
 
 
-  //TODO checken ob initialized werden soll, 1. und 2.
-  //TODO F: send, receive, S: receive, send
-  // The second participant sends the initialized data to the first particpant
-  // here, which receives the data on call of initialize().
-  sendData(_communication); // TODO sendet immer alle Daten
-  _communication->startReceivePackage(0);
-  // This receive replaces the receive in initialize().
-  receiveData(_communication);
-  _communication->finishReceivePackage();
-  setHasDataBeenExchanged(true);
+  //F: send, receive, S: receive, send
+  if(_doesFirstStep){
+    if(_hasToSendInitData){
+      _communication->startSendPackage(0);
+      sendData(_communication);
+      _communication->finishSendPackage();
+    }
+    if(_hasToReceiveInitData){
+      _communication->startReceivePackage(0);
+      receiveData(_communication);
+      _communication->finishReceivePackage();
 
-  performedAction(constants::actionWriteInitialData());
+      setHasDataBeenExchanged(true);
+    }
+
+  }
+
+  else{ // second participant
+    if(_hasToReceiveInitData){
+
+      // second participant has to save values for extrapolation
+      foreach (DataMap::value_type & pair, getReceiveData()){
+        utils::DynVector& oldValues = pair.second.oldValues.column(0);
+        oldValues = *pair.second.values;
+        // For extrapolation, treat the initial value as old timestep value
+        pair.second.oldValues.shiftSetFirst(*pair.second.values);
+      }
+
+      _communication->startReceivePackage(0);
+      receiveData(_communication);
+      _communication->finishReceivePackage();
+
+      setHasDataBeenExchanged(true);
+
+    }
+    if(_hasToSendInitData){
+
+      foreach (DataMap::value_type & pair, getSendData()){
+        utils::DynVector& oldValues = pair.second.oldValues.column(0);
+        oldValues = *pair.second.values;
+        // For extrapolation, treat the initial value as old timestep value
+        pair.second.oldValues.shiftSetFirst(*pair.second.values);
+      }
+
+      _communication->startSendPackage(0);
+      sendData(_communication);
+      _communication->finishSendPackage();
+
+
+    }
+
+  }
+
+  //in order to check in advance if initializeData has been called (if necessary)
+  _hasToSendInitData = false;
+  _hasToReceiveInitData = false;
+
 }
 
 
@@ -161,13 +173,18 @@ void ParallelImplicitCouplingScheme:: advance()
 {
   preciceTrace2("advance()", getTimesteps(), getTime());
   checkCompletenessRequiredActions();
+
+  //TODO checken ob hasToSend etc false, da nur dann initialData aufgerufen wurde
+  preciceCheck(!_hasToReceiveInitData && !_hasToSendInitData, "advance()",
+     "initializeData() needs to be called before advance if data has to be initialized!");
+
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
   double eps = std::pow(10.0, -1 * getValidDigits());
   bool convergence = false;
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)){
     preciceDebug("Computed full length of iteration");
-    if (_doesFirstStep){ //FIrst participant
+    if (_doesFirstStep){ //First participant
       _communication->startSendPackage(0);
       sendData(_communication);
       _communication->finishSendPackage();
@@ -187,8 +204,7 @@ void ParallelImplicitCouplingScheme:: advance()
       receiveData(_communication);
       _communication->finishReceivePackage();
 
-      convergence = measureConvergence(); //TODO nochmal checken ob nicht gleicher fall
-      //wie bei extrapolate
+      convergence = measureConvergence();
 
       assertion2((getSubIteration() <= _maxIterations) || (_maxIterations == -1),
                  getSubIteration(), _maxIterations);
@@ -198,7 +214,6 @@ void ParallelImplicitCouplingScheme:: advance()
       }
       if (convergence){
         if (_postProcessing.get() != NULL){
-          //TODO embraceData in dieser Klasse (receive und send in eine Map mergen)
           _postProcessing->iterationsConverged(getAllData());
         }
         newConvergenceMeasurements();
@@ -212,9 +227,7 @@ void ParallelImplicitCouplingScheme:: advance()
 
       if (isCouplingOngoing()){
         if (convergence && (_extrapolationOrder > 0)){
-          //TODO muss auch über alle daten gehen -> extrapolateData so umschreiben
-          // im oberen, dass argument hat
-          extrapolateData(); // Also stores data
+          extrapolateData(getAllData()); // Also stores data
         }
         else { // Store data for conv. measurement, post-processing, or extrapolation
           foreach (DataMap::value_type& pair, getSendData()){
@@ -275,5 +288,13 @@ void ParallelImplicitCouplingScheme:: advance()
   }
 }
 
+void ParallelImplicitCouplingScheme:: mergeData()
+{
+  preciceTrace("mergeData()");
+  assertion1(!_doesFirstStep, "Only the second participant should do the pp." );
+  _allData.insert(getSendData().begin(),getSendData().end());
+  _allData.insert(getReceiveData().begin(),getReceiveData().end());
+
+}
 
 }} // namespace precice, cplscheme

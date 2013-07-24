@@ -29,7 +29,7 @@ ConstantRelaxationPostProcessing:: ConstantRelaxationPostProcessing
   preciceCheck((relaxation > 0.0) && (relaxation <= 1.0),
                "ConstantRelaxationPostProcessing()",
                "Relaxation factor for constant relaxation post processing "
-               << "hast to be larger than zero and smaller or equal than one!");
+               << "has to be larger than zero and smaller or equal than one!");
 }
 
 void ConstantRelaxationPostProcessing:: initialize

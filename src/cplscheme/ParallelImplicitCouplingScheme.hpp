@@ -97,9 +97,31 @@ public:
 
 private:
 
+  /**
+  * @brief Returns all data (receive and send
+  */
+  DataMap& getAllData()
+  {
+    assertion1(!_doesFirstStep, "Only the second participant should do the pp." );
+     return _allData;
+  }
+
+  // @brief to carry initData information from initialize to initData
+  bool _hasToSendInitData;
+
+  // @brief to carry initData information from initialize to initData
+  bool _hasToReceiveInitData;
+
+
+
   // @brief Logging device.
   static tarch::logging::Log _log;
 
+  // @brief Map from data ID -> all data (receive and send) with that ID
+  DataMap _allData;
+
+  // @brief merges send in receive data into one map (for parallel post-processing)
+  void mergeData();
 
   friend class tests::ParallelImplicitCouplingSchemeTest;
 };
