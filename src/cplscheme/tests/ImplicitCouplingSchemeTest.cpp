@@ -43,7 +43,6 @@ ImplicitCouplingSchemeTest:: ImplicitCouplingSchemeTest ()
   _pathToTests (),
   MY_WRITE_CHECKPOINT ( constants::actionWriteIterationCheckpoint() ),
   MY_READ_CHECKPOINT ( constants::actionReadIterationCheckpoint() )
-  //_root(utils::getRootTag())
 {}
 
 void ImplicitCouplingSchemeTest:: setUp ()
@@ -70,6 +69,7 @@ void ImplicitCouplingSchemeTest:: run ()
       testMethod(testConfiguredAbsConvergenceMeasureSynchronized);
       testMethod(testMinIterConvergenceMeasureSynchronized);
       testMethod(testMinIterConvergenceMeasureSynchronizedWithSubcycling);
+      testMethod(testInitializeData);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -248,6 +248,7 @@ void ImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    validIterations += 5, 5, 5;
    connect ( "participant0", "participant1", nameLocalParticipant, communication );
    runCoupling ( cplScheme, nameLocalParticipant, meshConfig, validIterations );
+   communication->closeConnection();
 }
 
 //void ImplicitCouplingSchemeTest:: testAbsConvergenceMeasureAsync ()
@@ -366,6 +367,7 @@ void ImplicitCouplingSchemeTest:: testConfiguredAbsConvergenceMeasureSynchronize
    connect ( "participant0", "participant1", nameLocalParticipant, com );
    runCoupling ( *cplSchemeConfig.getCouplingScheme(nameLocalParticipant),
                  nameLocalParticipant, *meshConfig, validIterations );
+   com->closeConnection();
 }
 
 void ImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronized ()
@@ -429,6 +431,7 @@ void ImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronized ()
    validIterations += 3, 3, 3;
    connect ( "participant0", "participant1", nameLocalParticipant, communication );
    runCoupling ( cplScheme, nameLocalParticipant, meshConfig, validIterations );
+   communication->closeConnection();
 }
 
 //void ImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureAsync ()
@@ -755,6 +758,112 @@ void ImplicitCouplingSchemeTest::
    connect ( "participant0", "participant1", nameLocalParticipant, communication );
    runCouplingWithSubcycling (
       cplScheme, nameLocalParticipant, meshConfig, validIterations );
+   communication->closeConnection();
+}
+
+void ImplicitCouplingSchemeTest:: testInitializeData()
+{
+  preciceTrace("testInitializeData()");
+  utils::Parallel::synchronizeProcesses();
+
+  utils::XMLTag root = utils::getRootTag();
+
+  // Create a data configuration, to simplify configuration of data
+
+  mesh::PtrDataConfiguration dataConfig(new mesh::DataConfiguration(root));
+  dataConfig->setDimensions(3);
+  dataConfig->addData("Data0", 1);
+  dataConfig->addData("Data1", 3);
+
+  mesh::MeshConfiguration meshConfig(root, dataConfig);
+  meshConfig.setDimensions(3);
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
+  mesh->createData("Data0", 1);
+  mesh->createData("Data1", 3);
+  mesh->createVertex(Vector3D(0.0));
+  mesh->allocateDataValues();
+  meshConfig.addMesh(mesh);
+
+  // Create all parameters necessary to create an ImplicitCouplingScheme object
+  com::PtrCommunication communication(new com::MPIDirectCommunication);
+  double maxTime = 1.0;
+  int maxTimesteps = 3;
+  double timestepLength = 0.1;
+  std::string nameParticipant0("participant0");
+  std::string nameParticipant1("participant1");
+  std::string nameLocalParticipant("");
+  int sendDataIndex = -1;
+  int receiveDataIndex = -1;
+  bool initData = false;
+  if (utils::Parallel::getProcessRank() == 0){
+     nameLocalParticipant = nameParticipant0;
+     sendDataIndex = 0;
+     receiveDataIndex = 1;
+  }
+  else if (utils::Parallel::getProcessRank() == 1){
+     nameLocalParticipant = nameParticipant1;
+     sendDataIndex = 1;
+     receiveDataIndex = 0;
+     initData = true;
+  }
+
+  // Create the coupling scheme object
+  cplscheme::ImplicitCouplingScheme cplScheme(
+     maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+     nameLocalParticipant, communication, 100, constants::FIXED_DT);
+  cplScheme.addDataToSend(mesh->data()[sendDataIndex], initData);
+  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], not initData);
+
+  // Add convergence measures
+  int minIterations = 3;
+  impl::PtrConvergenceMeasure minIterationConvMeasure1 (
+        new impl::MinIterationConvergenceMeasure(minIterations) );
+  cplScheme.addConvergenceMeasure (
+        mesh->data()[1]->getID(), false, minIterationConvMeasure1 );
+  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, communication);
+
+  std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
+  std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
+
+  cplScheme.initialize(0.0, 0);
+
+  if (nameLocalParticipant == nameParticipant0){
+    validate(cplScheme.hasDataBeenExchanged());
+    utils::DynVector& values = mesh->data(1)->values();
+    validateWithParams1(tarch::la::equals(values, Vector3D(1.0, 2.0, 3.0)), values);
+    mesh->data(0)->values() = 4.0;
+    while (cplScheme.isCouplingOngoing()){
+      if (cplScheme.isActionRequired(writeIterationCheckpoint)){
+        cplScheme.performedAction(writeIterationCheckpoint);
+      }
+      if (cplScheme.isActionRequired(readIterationCheckpoint)){
+        cplScheme.performedAction(readIterationCheckpoint);
+      }
+      cplScheme.addComputedTime(timestepLength);
+      cplScheme.advance();
+    }
+  }
+  else {
+    assertion(nameLocalParticipant == nameParticipant1);
+    validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    utils::DynVector& values = mesh->data(0)->values();
+    validateWithParams1(tarch::la::equals(values(0), 0.0), values);
+    mesh->data(1)->values() = Vector3D(1.0, 2.0, 3.0);
+    cplScheme.initializeData();
+    validate(cplScheme.hasDataBeenExchanged());
+    validateWithParams1(tarch::la::equals(values(0), 4.0), values);
+    while (cplScheme.isCouplingOngoing()){
+      if (cplScheme.isActionRequired(writeIterationCheckpoint)){
+        cplScheme.performedAction(writeIterationCheckpoint);
+      }
+      cplScheme.addComputedTime(timestepLength);
+      cplScheme.advance();
+      if (cplScheme.isActionRequired(readIterationCheckpoint)){
+        cplScheme.performedAction(readIterationCheckpoint);
+      }
+    }
+  }
+  cplScheme.finalize();
 }
 
 void ImplicitCouplingSchemeTest:: runCouplingWithSubcycling

@@ -11,13 +11,12 @@ import sys;
 #
 cppdefines = []   
 libpath = [ 
-   '../../../build/debug/', # Path to preCICE library
-   '/usr/lib/'
+   '../../../build/debug/' # Path to preCICE library
    ]      
 libs = [ 
    'precice',  # preCICE library 
-   'python2.7' # Python library (shared)
-   #'pthread' 
+   'python2.7', # Python library (shared)
+   'pthread' 
    ]
 cpppath = []   
 ccflags = []   

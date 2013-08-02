@@ -165,6 +165,11 @@ private:
   void testMinIterConvergenceMeasureSynchronizedWithSubcycling();
 
   /**
+   * @brief Tests the initialize data functionality.
+   */
+  void testInitializeData();
+
+  /**
    * @brief Performs and validates implicit coupled simulation with subcycling.
    */
   void runCouplingWithSubcycling (
