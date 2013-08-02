@@ -1,6 +1,6 @@
 #include "fsi.h"
-#include "../../../../src/precice/adapters/c/SolverInterfaceC.h"
-#include "../../../../src/precice/adapters/c/Constants.h"
+#include "../../../../../src/precice/adapters/c/SolverInterfaceC.h"
+#include "../../../../../src/precice/adapters/c/Constants.h"
 #include <float.h>
 #include <math.h>
 #include <string.h>
@@ -129,7 +129,10 @@ void fsi_write_and_advance()
   int current_size = -1;
 
   /*Message("  (%d) write_and_advance 1\n", myid);*/
-  if (! subcycling){
+  if (subcycling){
+    Message("  (%d) In subcycle, skip writing\n", myid);
+  }
+  else {
     if (!did_gather_write_positions){
       Message("  (%d) Gather write positions\n", myid);
       gather_write_positions();
@@ -199,6 +202,36 @@ void fsi_grid_motion(Domain* domain, Dynamic_Thread* dt, real time, real dtime)
   Message("\n(%d) Entering GRID_MOTION\n", myid);
   int meshID = precicec_getMeshID("WetSurface");
   int current_thread_size = -1;
+
+#if !RP_HOST /* Serial or node */
+if (thread_index == dynamic_thread_size){
+  Message ("   Reset thread index\n");
+  thread_index = 0;
+}
+Message("  (%d) Thread index = %d\n", myid, thread_index);
+Thread* face_thread  = DT_THREAD(dt);
+
+
+if (strncmp("gridmotions", dt->profile_udf_name, 11) != 0){
+  Message("  (%d) ERROR: called gridmotions for invalid dynamic thread: %s\n",
+          myid, dt->profile_udf_name);
+  exit(1);
+}
+if (face_thread == NULL){
+  Message("  (%d) ERROR: face_thread == NULL\n", myid);
+  exit(1);
+}
+if (!did_gather_read_positions){
+  gather_read_positions(dt);
+}
+else {
+  /* Read positions can change in parallel mode when load-balancing occurs */
+  current_thread_size = check_read_positions(dt);
+  if (current_thread_size != -1){
+    regather_read_positions(dt, current_thread_size);
+  }
+}
+
   if (skip_grid_motion){
     if (thread_index >= dynamic_thread_size-1){
       skip_grid_motion = BOOL_FALSE;
@@ -207,34 +240,8 @@ void fsi_grid_motion(Domain* domain, Dynamic_Thread* dt, real time, real dtime)
     Message("  (%d) Skipping first round grid motion\n", myid);
     return;
   }
-  #if !RP_HOST /* Serial or node */
-  if (thread_index == dynamic_thread_size){
-    Message ("   Reset thread index\n");
-    thread_index = 0;
-  }
-  Message("  (%d) Thread index = %d\n", myid, thread_index);
-  Thread* face_thread  = DT_THREAD(dt);
 
-
-  if (strncmp("gridmotions", dt->profile_udf_name, 11) != 0){
-    Message("  (%d) ERROR: called gridmotions for invalid dynamic thread: %s\n",
-            myid, dt->profile_udf_name);
-    exit(1);
-  }
-  if (face_thread == NULL){
-    Message("  (%d) ERROR: face_thread == NULL\n", myid);
-    exit(1);
-  }
-  if (!did_gather_read_positions){
-    gather_read_positions(dt);
-  }
-  else {
-    /* Read positions can change in parallel mode when load-balancing occurs */
-    current_thread_size = check_read_positions(dt);
-    if (current_thread_size != -1){
-      regather_read_positions(dt, current_thread_size);
-    }
-  }
+  /* Here the code was before */
 
   /*indexNode = 0;*/
   SET_DEFORMING_THREAD_FLAG(THREAD_T0(face_thread));

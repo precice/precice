@@ -1,6 +1,17 @@
 How to build the Fluent-preCICE adapter:
 
-1. create a directory lnamd64/2ddp/
-2. put the libraries of preCICE into that folder
-3. type: make "FLUENT_ARCH=lnamd64"
-4. go into lnamd64/2ddp and repeat the linking command used by make but with using mpicxx as linker
+1. Create a directory lnamd64/2ddp/ for serial execution
+   and for parallel execution add a /2ddp_host/ and /2ddp_node/.
+2. put the libraries of preCICE and python2.7 into the lnamd64 folder.
+3. Type: make "FLUENT_ARCH=lnamd64" to start the build. Add a "clean" to clean it.
+4. Copy the lnamd64 folder into, e.g., a libudf folder where fluent is run.
+
+Preparing a Fluent .cas file for FSI simulations:
+
+- Hook the UDF, e.g., by manage
+- Define one user defined memory for the faces
+- Set a user defined mesh motion according to function "gridmotions" 
+
+Preparing the preCICE XML configuration:
+- The number of valid digits for the timestep length needs to be 8, since fluent
+  has only a single precision timestep length. Set this in the tag <timestep-length ... valid-digits="8"/>
