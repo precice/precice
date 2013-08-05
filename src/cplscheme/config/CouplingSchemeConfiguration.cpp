@@ -308,14 +308,14 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
       _config = Config();
     }
     else if (_config.type == VALUE_PARALLEL_IMPLICIT){
-          std::string accessor(_config.participant);
-          PtrCouplingScheme scheme = createParallelImplicitCouplingScheme(accessor);
-          _couplingSchemes[accessor] = scheme;
-          accessor = _config.secondParticipant;
-          scheme = createParallelImplicitCouplingScheme(accessor);
-          _couplingSchemes[accessor] = scheme;
-          _config = Config();
-        }
+      std::string accessor(_config.participant);
+      PtrCouplingScheme scheme = createParallelImplicitCouplingScheme(accessor);
+      _couplingSchemes[accessor] = scheme;
+      accessor = _config.secondParticipant;
+      scheme = createParallelImplicitCouplingScheme(accessor);
+      _couplingSchemes[accessor] = scheme;
+      _config = Config();
+    }
     else if (_config.type == VALUE_UNCOUPLED){
       assertion(false);
     }
@@ -342,6 +342,7 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
   //const std::string& name,
   utils::XMLTag&     tag  )
 {
+  preciceTrace1( "addTypespecifcSubtags()", type );
   addTransientLimitTags(tag);
   _config.type = type;
   //_config.name = name;
@@ -351,6 +352,17 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
   if (type == VALUE_EXPLICIT){
     addTagParticipants(tag);
     addTagExchange(tag);
+  }
+  else if ( type == VALUE_PARALLEL_IMPLICIT ) {
+    addTagParticipants(tag);
+    addTagExchange(tag);
+    addTagAbsoluteConvergenceMeasure(tag);
+    addTagRelativeConvergenceMeasure(tag);
+    addTagResidualRelativeConvergenceMeasure(tag);
+    addTagMinIterationConvergenceMeasure(tag);
+    addTagMaxIterations(tag);
+    addTagExtrapolation(tag);
+    addTagPostProcessing(tag);
   }
   else if ( type == VALUE_IMPLICIT ) {
     addTagParticipants(tag);
@@ -363,17 +375,6 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
     addTagExtrapolation(tag);
     addTagPostProcessing(tag);
   }
-  else if ( type == VALUE_PARALLEL_IMPLICIT ) {
-      addTagParticipants(tag);
-      addTagExchange(tag);
-      addTagAbsoluteConvergenceMeasure(tag);
-      addTagRelativeConvergenceMeasure(tag);
-      addTagResidualRelativeConvergenceMeasure(tag);
-      addTagMinIterationConvergenceMeasure(tag);
-      addTagMaxIterations(tag);
-      addTagExtrapolation(tag);
-      addTagPostProcessing(tag);
-    }
   else if (type == VALUE_UNCOUPLED){
   }
   else {
@@ -469,18 +470,6 @@ void CouplingSchemeConfiguration:: addTagAbsoluteConvergenceMeasure
   tag.addSubtag(tagConvergenceMeasure);
 }
 
-void CouplingSchemeConfiguration:: addTagRelativeConvergenceMeasure
-(
-  utils::XMLTag& tag )
-{
-  using namespace utils;
-  XMLTag tagConvergenceMeasure(*this, TAG_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
-  addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
-  XMLAttribute<double> attrLimit(ATTR_LIMIT);
-  tagConvergenceMeasure.addAttribute(attrLimit);
-  tag.addSubtag(tagConvergenceMeasure);
-}
-
 void CouplingSchemeConfiguration:: addTagResidualRelativeConvergenceMeasure
 (
   utils::XMLTag& tag )
@@ -488,6 +477,18 @@ void CouplingSchemeConfiguration:: addTagResidualRelativeConvergenceMeasure
   using namespace utils;
   XMLTag tagConvergenceMeasure(*this, TAG_RES_REL_CONV_MEASURE,
                                XMLTag::OCCUR_ARBITRARY );
+  addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
+  XMLAttribute<double> attrLimit(ATTR_LIMIT);
+  tagConvergenceMeasure.addAttribute(attrLimit);
+  tag.addSubtag(tagConvergenceMeasure);
+}
+
+void CouplingSchemeConfiguration:: addTagRelativeConvergenceMeasure
+(
+  utils::XMLTag& tag )
+{
+  using namespace utils;
+  XMLTag tagConvergenceMeasure(*this, TAG_REL_CONV_MEASURE, XMLTag::OCCUR_ARBITRARY);
   addBaseAttributesTagConvergenceMeasure(tagConvergenceMeasure);
   XMLAttribute<double> attrLimit(ATTR_LIMIT);
   tagConvergenceMeasure.addAttribute(attrLimit);
@@ -548,9 +549,18 @@ void CouplingSchemeConfiguration:: addTagPostProcessing
 (
   utils::XMLTag& tag )
 {
-  _postProcConfig = PtrPostProcessingConfiguration(
-                    new PostProcessingConfiguration(tag, _meshConfig));
+  //TODO falls keine andere lösung gefunden, hier fallunterscheidung nach coupling
+  //machen
+  preciceTrace1( "addTagPostProcessing()",tag.getFullName());
+  if(_postProcConfig.get()==NULL){
+    _postProcConfig = PtrPostProcessingConfiguration(
+                          new PostProcessingConfiguration(_meshConfig));
+  }
+  _postProcConfig->connectTags(tag);
+
+
 }
+
 
 void CouplingSchemeConfiguration:: addAbsoluteConvergenceMeasure
 (
@@ -645,6 +655,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createImplicitCouplingScheme
 (
   const std::string& accessor ) const
 {
+  preciceTrace("createImplicitCouplingScheme()");
   assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );
@@ -690,6 +701,8 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 (
   const std::string& accessor ) const
 {
+  preciceTrace1 ( "createParallelImplicitCouplingScheme()",
+          _postProcConfig->getPostProcessing() );
   assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );

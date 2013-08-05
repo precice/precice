@@ -23,7 +23,6 @@ public:
     * @brief Constructor.
     */
    PostProcessingConfiguration (
-     utils::XMLTag&                    parent,
      const mesh::PtrMeshConfiguration& meshConfig );
 
    /**
@@ -55,6 +54,11 @@ public:
     * @brief Removes configured post-processing.
     */
    void clear();
+
+   /**
+   * @brief Connect tags.
+   */
+   void connectTags( utils::XMLTag& tag );
 
 private:
 

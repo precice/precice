@@ -29,7 +29,6 @@ tarch::logging::Log PostProcessingConfiguration::
 
 PostProcessingConfiguration:: PostProcessingConfiguration
 (
-  utils::XMLTag&                    parent,
   const mesh::PtrMeshConfiguration& meshConfig )
 :
   TAG("post-processing"),
@@ -51,49 +50,44 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   _config()
 {
   assertion(meshConfig.get() != NULL);
+}
+
+void PostProcessingConfiguration:: connectTags(
+    utils::XMLTag&                    parent){
+
   using namespace utils;
 
-  XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
-  std::list<XMLTag> tags;
-  {
-    XMLTag tag(*this, VALUE_CONSTANT, occ, TAG);
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_AITKEN, occ, TAG);
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_HIERARCHICAL_AITKEN, occ, TAG);
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_IQNILS, occ, TAG);
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
+    XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
+    std::list<XMLTag> tags;
+    {
+      XMLTag tag(*this, VALUE_CONSTANT, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
+    {
+      XMLTag tag(*this, VALUE_AITKEN, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
+    {
+      XMLTag tag(*this, VALUE_HIERARCHICAL_AITKEN, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
+    {
+      XMLTag tag(*this, VALUE_IQNILS, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
 
-//  XMLAttribute<std::string> attrType(ATTR_TYPE );
-//  ValidatorEquals<std::string> validConstant(VALUE_CONSTANT );
-//  ValidatorEquals<std::string> validAitken(VALUE_AITKEN );
-//  ValidatorEquals<std::string> validHierarchAitken(VALUE_HIERARCHICAL_AITKEN );
-//  ValidatorEquals<std::string> validIQNILS(VALUE_IQNILS );
-//  attrType.setValidator (
-//    validConstant || validAitken || validHierarchAitken|| validIQNILS );
-//  tag.addAttribute(attrType );
+    XMLAttribute<std::string> attrData(ATTR_DATA);
+    XMLAttribute<std::string> attrMesh(ATTR_MESH);
 
-  XMLAttribute<std::string> attrData(ATTR_DATA);
-  XMLAttribute<std::string> attrMesh(ATTR_MESH);
-
-  foreach (XMLTag& tag, tags){
-    tag.addAttribute(attrData);
-    tag.addAttribute(attrMesh);
-    parent.addSubtag(tag);
-  }
-
+    foreach (XMLTag& tag, tags){
+      tag.addAttribute(attrData);
+      tag.addAttribute(attrMesh);
+      parent.addSubtag(tag);
+    }
 }
 
 //bool PostProcessingConfiguration:: parseSubtag

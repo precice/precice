@@ -23,6 +23,7 @@ namespace precice {
   namespace cplscheme {
     namespace tests {
       class ImplicitCouplingSchemeTest;
+      class ParallelImplicitCouplingSchemeTest;
     }
   }
 }
@@ -263,6 +264,7 @@ private:
      const std::string& accessor) const;
 
    friend class tests::ImplicitCouplingSchemeTest; // For whitebox tests
+   friend class tests::ParallelImplicitCouplingSchemeTest; // For whitebox tests
 };
 
 }} // namespace precice, cplscheme
