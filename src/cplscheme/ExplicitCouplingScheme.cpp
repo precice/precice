@@ -24,7 +24,7 @@ ExplicitCouplingScheme:: ExplicitCouplingScheme
   com::PtrCommunication communication,
   constants::TimesteppingMethod dtMethod)
 :
-  CouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
+  BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _doesFirstStep(false),
@@ -92,23 +92,23 @@ void ExplicitCouplingScheme:: initialize
   setIsInitialized(true);
 }
 
-void ExplicitCouplingScheme:: addComputedTime
-(
-  double timeToAdd)
-{
-  preciceTrace1("addComputedTime()", timeToAdd);
-  preciceCheck(isCouplingOngoing(), "addComputedTime()",
-                 "Invalid call of addComputedTime() after simulation end!");
-
-  // Check validness
-  double eps = std::pow(10.0, -1 * getValidDigits());
-  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
-  preciceCheck(greaterThanZero, "addComputedTime()", "The computed timestep length "
-               << "exceeds the maximum timestep limit for this time step!");
-
-  setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);
-  setTime(getTime() + timeToAdd);
-}
+//void ExplicitCouplingScheme:: addComputedTime
+//(
+//  double timeToAdd)
+//{
+//  preciceTrace1("addComputedTime()", timeToAdd);
+//  preciceCheck(isCouplingOngoing(), "addComputedTime()",
+//                 "Invalid call of addComputedTime() after simulation end!");
+//
+//  // Check validness
+//  double eps = std::pow(10.0, -1 * getValidDigits());
+//  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
+//  preciceCheck(greaterThanZero, "addComputedTime()", "The computed timestep length "
+//               << "exceeds the maximum timestep limit for this time step!");
+//
+//  setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);
+//  setTime(getTime() + timeToAdd);
+//}
 
 void ExplicitCouplingScheme:: advance()
 {
@@ -161,7 +161,7 @@ void ExplicitCouplingScheme:: sendState
   int                   rankReceiver)
 {
   communication->startSendPackage(0);
-  CouplingScheme::sendState(communication, rankReceiver);
+  BaseCouplingScheme::sendState(communication, rankReceiver);
   communication->finishSendPackage();
 }
 
@@ -171,7 +171,7 @@ void ExplicitCouplingScheme:: receiveState
   int                   rankSender)
 {
   communication->startSendPackage(0);
-  CouplingScheme::receiveState(communication, rankSender);
+  BaseCouplingScheme::receiveState(communication, rankSender);
   communication->finishSendPackage();
 }
 
@@ -182,19 +182,15 @@ std::string ExplicitCouplingScheme:: printCouplingState() const
    return os.str();
 }
 
-std::vector<std::string> ExplicitCouplingScheme:: getCouplingPartners
-(
-  const std::string& accessorName) const
+std::vector<std::string> ExplicitCouplingScheme:: getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
-  if(accessorName == _firstParticipant){
+  // Add non-local participant
+  if(_doesFirstStep){
     partnerNames.push_back(_secondParticipant);
   }
-  else if(accessorName == _secondParticipant){
-    partnerNames.push_back(_firstParticipant);
-  }
   else {
-    preciceError("getCouplingPartners()", "No coupling partner could be found.");
+    partnerNames.push_back(_firstParticipant);
   }
   return partnerNames;
 }

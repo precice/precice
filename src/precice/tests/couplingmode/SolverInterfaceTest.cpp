@@ -66,6 +66,16 @@ void SolverInterfaceTest:: run()
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
+  if (Par::getCommunicatorSize() > 2){
+    std::vector<int> ranksWanted;
+    ranksWanted += 0, 1, 2;
+    MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    if (Par::getProcessRank() <= 2){
+      Par::setGlobalCommunicator(comm);
+      testMethod(testThreeSolvers);
+      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+    }
+  }
 # endif // not PRECICE_NO_MPI
 }
 
@@ -1704,6 +1714,118 @@ void SolverInterfaceTest:: testBug()
       precice.advance(dt);
     }
     precice.finalize();
+  }
+}
+
+void SolverInterfaceTest:: testThreeSolvers()
+{
+  preciceTrace("testThreeSolvers()");
+  std::string configFilename(_pathToTests + "three-solver-explicit-explicit.xml");
+  std::vector<int> expectedCallsOfAdvance;
+  expectedCallsOfAdvance += 10, 10, 10;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
+
+  configFilename = _pathToTests + "three-solver-implicit-implicit.xml";
+  expectedCallsOfAdvance.clear();
+  expectedCallsOfAdvance += 30, 30, 20;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
+
+  configFilename = _pathToTests + "three-solver-implicit-explicit.xml";
+  expectedCallsOfAdvance.clear();
+  expectedCallsOfAdvance += 30, 30, 10;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
+
+  configFilename = _pathToTests + "three-solver-explicit-implicit.xml";
+  expectedCallsOfAdvance.clear();
+  expectedCallsOfAdvance += 30, 10, 30;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
+}
+
+void SolverInterfaceTest:: runThreeSolvers
+(
+  const std::string&      configFilename,
+  const std::vector<int>& expectedCallsOfAdvance )
+{
+  preciceTrace2("runThreeSolvers", configFilename, expectedCallsOfAdvance);
+
+  typedef utils::Vector2D Vector2D;
+  int rank = utils::Parallel::getProcessRank();
+  assertion1((rank == 0) || (rank == 1) || (rank == 2), rank);
+
+  std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
+  std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
+
+  std::string solverName;
+  if (rank == 0) solverName = std::string("SolverOne");
+  else if (rank == 1) solverName = std::string("SolverTwo");
+  else solverName = std::string("SolverThree");
+  int callsOfAdvance = 0;
+
+  if (solverName == std::string("SolverOne")){
+    SolverInterface precice(solverName, 0, 1);
+    configureSolverInterface(configFilename, precice);
+    int meshID = precice.getMeshID("Mesh");
+    //int dataID = precice.getDataID("Data");
+    precice.setMeshVertex(meshID, raw(utils::Vector2D(0.0, 0.0)));
+    double dt = precice.initialize();
+    while (precice.isCouplingOngoing()){
+      //precice.writeVectorData(dataID, 0, raw(Vector2D(1.0, 2.0)));
+      if (precice.isActionRequired(writeIterCheckpoint)){
+        precice.fulfilledAction(writeIterCheckpoint);
+      }
+      dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)){
+        precice.fulfilledAction(readIterCheckpoint);
+      }
+      callsOfAdvance++;
+    }
+    precice.finalize();
+    validateEquals(callsOfAdvance, expectedCallsOfAdvance[0]);
+  }
+  else if (solverName == std::string("SolverTwo")){
+    SolverInterface precice(solverName, 0, 1);
+    configureSolverInterface(configFilename, precice);
+    int meshID = precice.getMeshID("Mesh");
+    //int dataID = precice.getDataID("Data");
+    precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
+    double dt = precice.initialize();
+    while (precice.isCouplingOngoing()){
+      //Vector2D data;
+      //precice.readVectorData(dataID, 0, raw(data));
+      if (precice.isActionRequired(writeIterCheckpoint)){
+        precice.fulfilledAction(writeIterCheckpoint);
+      }
+      dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)){
+        precice.fulfilledAction(readIterCheckpoint);
+      }
+      callsOfAdvance++;
+    }
+    precice.finalize();
+    validateEquals(callsOfAdvance, expectedCallsOfAdvance[1]);
+  }
+  else {
+    assertion1(solverName == std::string("SolverThree"), solverName);
+    SolverInterface precice(solverName, 0, 1);
+    configureSolverInterface(configFilename, precice);
+    int meshID = precice.getMeshID("Mesh");
+    //int dataID = precice.getDataID("Data");
+    precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
+    double dt = precice.initialize();
+    while (precice.isCouplingOngoing()){
+      //Vector2D data;
+      //precice.readVectorData(dataID, 0, raw(data));
+      if (precice.isActionRequired(writeIterCheckpoint)){
+        precice.fulfilledAction(writeIterCheckpoint);
+      }
+      dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)){
+        precice.fulfilledAction(readIterCheckpoint);
+      }
+      callsOfAdvance++;
+    }
+    precice.finalize();
+    validateEquals(callsOfAdvance, expectedCallsOfAdvance[2]);
   }
 }
 

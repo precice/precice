@@ -4,25 +4,10 @@
 #ifndef PRECICE_CPLSCHEME_COUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_COUPLINGSCHEME_HPP_
 
-#include "CouplingData.hpp"
-#include "mesh/Data.hpp"
+#include "SharedPointer.hpp"
 #include "com/SharedPointer.hpp"
-#include "com/Constants.hpp"
-#include "utils/PointerVector.hpp"
-#include "tarch/logging/Log.h"
-#include <set>
-#include <map>
 #include <string>
-#include <ostream>
 #include <vector>
-#include <limits>
-
-namespace precice {
-  namespace io {
-    class TXTWriter;
-    class TXTReader;
-  }
-}
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -30,7 +15,7 @@ namespace precice {
 namespace cplscheme {
 
 /**
- * @brief Abstract base class for all coupling schemes.
+ * @brief Interface for all coupling schemes.
  *
  * ! General description
  * A coupling scheme computes the actions to be done by the coupled participants
@@ -71,403 +56,207 @@ public:
   //        dynamically during the coupling.
   static const double UNDEFINED_TIMESTEP_LENGTH;
 
-   /**
-    * @brief Constructor.
-    */
-   CouplingScheme (
-     double maxTime,
-     int    maxTimesteps,
-     double timestepLength,
-     int    validDigits );
-
-   /**
-    * @brief Destructor.
-    */
-   virtual ~CouplingScheme() {}
-
-   /**
-    * @brief Adds data to be sent on data exchange and possibly be modified during
-    *        coupling iterations.
-    */
-   void addDataToSend (
-      mesh::PtrData data,
-      bool          initialize );
-
-   /**
-    * @brief Adds data to be received on data exchange.
-    */
-   void addDataToReceive (
-      mesh::PtrData data,
-      bool          initialize );
-
-   /**
-    * @brief Sets the checkpointing timestep interval.
-    */
-   void setCheckointTimestepInterval ( int timestepInterval );
-
-   /**
-    * @brief Initializes the coupling scheme and establishes a communiation
-    *        connection to the coupling partner.
-    */
-   virtual void initialize (
-      double startTime,
-      int    startTimesteps ) =0;
-
-   /**
-    * @brief Returns true, if initialize has been called.
-    */
-   bool isInitialized() const;
-
-   /**
-    * @brief Initializes the data for first implicit coupling scheme iteration.
-    *
-    * Has to be called after initialize() and before advance().
-    */
-   virtual void initializeData() =0;
-
-   /**
-    * @brief Adds newly computed time. Has to be called before every advance.
-    */
-   virtual void addComputedTime ( double timeToAdd ) =0;
-
-   /**
-    * @brief Exchanges data and updates the state of the coupling scheme.
-    */
-   virtual void advance() =0;
-
-   /**
-    * @brief Finalizes the coupling and disconnects communication.
-    */
-   virtual void finalize() =0;
-
-   /*
-    * @brief checks whether data with specified id is used
+  /**
+   * @brief Destructor.
    */
-   bool isDataUsed ( int dataID );
+  virtual ~CouplingScheme() {}
 
-   /*
-    * @brief checks whether any data is used
+  /**
+   * @brief Initializes the coupling scheme and establishes a communiation
+   *        connection to the coupling partner.
    */
-   bool isDataUsed();
+  virtual void initialize (
+     double startTime,
+     int    startTimesteps ) =0;
 
-   /*
-    * @brief returns list of all coupling partners
+  /**
+   * @brief Returns true, if initialize has been called.
    */
-   virtual std::vector<std::string> getCouplingPartners (
-     const std::string& accessorName ) const =0;
-
-   /**
-    * @brief Returns true, if data will be exchanged when calling advance().
-    *
-    * Also returns true after the last call of advance() at the end of the
-    * simulation.
-    *
-    * @param lastSolverTimestepLength [IN] The length of the last timestep
-    *        computed by the solver calling willDataBeExchanged().
-    */
-   bool willDataBeExchanged ( double lastSolverTimestepLength ) const;
-
-   /**
-    * @brief Returns true, if data has been exchanged in last call of advance().
-    */
-   bool hasDataBeenExchanged() const;
-
-   /**
-    * @brief Returns the currently computed time of the coupling scheme.
-    */
-   double getTime() const;
-
-   /**
-    * @brief Returns the currently computed timesteps of the coupling scheme.
-    */
-   int getTimesteps() const;
-
-   /**
-    * @brief Returns current subiteration number in timestep.
-    */
-   int getSubIteration() const
-   {
-     return _subIteration;
-   }
-
-   /**
-    * @brief Returns true, if timestep length is prescribed by the cpl scheme.
-    */
-   bool hasTimestepLength() const;
-
-   /**
-    * @brief Returns the timestep length, if one is given by the coupling scheme.
-    *
-    * An assertion is thrown, if no valid timestep is given. Check with
-    * hasTimestepLength().
-    */
-   double getTimestepLength() const;
-
-   /**
-    * @brief Returns the remaining timestep length of the current time step.
-    *
-    * If no timestep length is precribed by the coupling scheme, always 0.0 is
-    * returned.
-    */
-   double getThisTimestepRemainder() const;
-
-   /**
-    * @brief Returns the maximal length of the next timestep to be computed.
-    *
-    * If no timestep length is prescribed by the coupling scheme, always the
-    * maximal double accuracy floating point number value is returned.
-    */
-   double getNextTimestepMaxLength() const;
-
-   /**
-    * @brief Returns true, when the coupled simulation is still ongoing.
-    */
-   bool isCouplingOngoing() const;
-
-   /**
-    * @brief Returns true, when the accessor can advance to the next timestep.
-    */
-   bool isCouplingTimestepComplete() const;
-
-   /**
-    * @brief Returns true, if the given action has to be performed by the accessor.
-    */
-   bool isActionRequired ( const std::string& actionName ) const;
-
-   /**
-    * @brief Tells the coupling scheme that the accessor has performed the given
-    *        action.
-    */
-   void performedAction ( const std::string& actionName );
-
-   /**
-    * @brief Returns the checkpointing timestep interval.
-    */
-   int getCheckpointTimestepInterval() const;
-
-   /**
-    * @brief Sets an action required to be performed by the accessor.
-    */
-   void requireAction ( const std::string& actionName );
-
-   /**
-    * @brief Returns a string representation of the current coupling state.
-    */
-   virtual std::string printCouplingState() const =0;
-
-   virtual void exportState(io::TXTWriter& writer) const =0;
-
-   virtual void importState(io::TXTReader& reader) = 0;
-
-   virtual void sendState (
-     com::PtrCommunication communication,
-     int                   rankReceiver );
-
-   virtual void receiveState (
-     com::PtrCommunication communication,
-     int                   rankSender );
-
-protected:
-
-   typedef std::map<int,CouplingData> DataMap;
-
-   struct State {
-     int id;
-     std::string name;
-   };
-
-   /**
-    * @brief Sends data sendDataIDs given in mapCouplingData with communication.
-    */
-   std::vector<int> sendData ( com::PtrCommunication communication );
-
-   /**
-    * @brief Receives data sendDataIDs given in mapCouplingData with communication.
-    */
-   std::vector<int> receiveData ( com::PtrCommunication communication );
-
-   /**
-    * @brief Returns all data to be sent.
-    */
-   const DataMap& getSendData() const
-   {
-      return _sendData;
-   }
-
-   const DataMap& getReceiveData() const
-   {
-      return _receiveData;
-   }
-
-   /**
-    * @brief Returns all data to be sent.
-    */
-   DataMap& getSendData()
-   {
-      return _sendData;
-   }
-
-   DataMap& getReceiveData()
-   {
-      return _receiveData;
-   }
-
-   /**
-    * @brief Sets the values
-    */
-   CouplingData* getSendData ( int dataID );
-
-   /**
-    * @brief Returns all data to be received with data ID as given.
-    */
-   CouplingData* getReceiveData ( int dataID );
-
-   /**
-    * @brief Returns the timestep length of the current time step.
-    *
-    * If the solver determines the timestep length, UNDEFINED_TIMESTEP_LENGTH
-    * is returned.
-    */
-   //double getTimestepLength() const;
-
-   /**
-    * @brief Returns part of the current timestep that has been computed already.
-    */
-   double getComputedTimestepPart() const;
-
-   /**
-    * @brief Sets value for computed timestep part.
-    */
-   void setComputedTimestepPart ( double computedTimestepPart );
-
-   double getMaxTime() const;
-
-   int getMaxTimesteps() const;
-
-   /**
-    * @brief Sets flag to determine whether data has been exchanged in the last
-    *        coupling iteration.
-    */
-   void setHasDataBeenExchanged ( bool hasDataBeenExchanged );
-
-   /**
-    * @brief Sets the compouted time of the coupling scheme.
-    *
-    * Used from subclasses and when a checkpoint has been read.
-    */
-   void setTime ( double time )
-   {
-      _time = time;
-   }
-
-   /**
-    * @brief Sets the computed timesteps of the coupling scheme.
-    *
-    * Used from subclasses and when a checkpoint has been read.
-    */
-   void setTimesteps ( int timesteps )
-   {
-      _timesteps = timesteps;
-   }
-
-   void setTimestepLength ( double timestepLength )
-   {
-     _timestepLength = timestepLength;
-   }
-
-   void setSubIteration ( int subIteration )
-   {
-     _subIteration = subIteration;
-   }
-
-//   void setMaxLengthNextTimestep ( double limit )
-//   {
-//      _maxLengthNextTimestep = limit;
-//   }
-
-   void setIsCouplingTimestepComplete ( bool isCouplingTimestepComplete )
-   {
-      _isCouplingTimestepComplete = isCouplingTimestepComplete;
-   }
-
-   void setIsInitialized ( bool isInitialized )
-   {
-     _isInitialized = isInitialized;
-   }
-
-   /**
-    * @brief If any required actions are open, an error message is issued.
-    */
-   void checkCompletenessRequiredActions();
-
-   /**
-    * @brief Returns a string representing the basic state w/o actions.
-    */
-   std::string printBasicState() const;
-
-   /**
-    * @brief As the version without parameters, but with changed timestep and time.
-    *
-    * This version is used by the ImplicitCouplingScheme at the moment, which
-    * needs to use the last timestep in the plotting when the iterations of
-    * a timestep are converged.
-    */
-   std::string printBasicState(
-     int    timesteps,
-     double time) const;
-
-   /**
-    * @brief Returns a string representing the required actions.
-    */
-   std::string printActionsState() const;
-
-   /**
-    * @brief Returns the number of valid digits when compare times.
-    */
-   int getValidDigits() const;
-
-private:
-
-   // @brief Logging device.
-   static tarch::logging::Log _log;
-
-   double _maxTime;
-
-   int _maxTimesteps;
-
-   double _timestepLength;
-
-   int _validDigits;
-
-   double _time;
-
-   double _computedTimestepPart;
-
-   int _timesteps;
-
-   int _subIteration;
-
-   int _checkpointTimestepInterval;
-
-   //double _maxLengthNextTimestep;
-
-   bool _isCouplingOngoing;
-
-   bool _isCouplingTimestepComplete;
-
-   // @brief True, if data has been exchanged between solvers.
-   bool _hasDataBeenExchanged;
-
-   // @brief True, if coupling has been initialized.
-   bool _isInitialized;
-
-   std::set<std::string> _actions;
-
-   // @brief Map from data ID -> all send data with that ID
-   DataMap _sendData;
-
-   // @brief Map from data ID -> all receive data with that ID
-   DataMap _receiveData;
+  virtual bool isInitialized() const =0;
+
+  /**
+   * @brief Initializes the data for first implicit coupling scheme iteration.
+   *
+   * Has to be called after initialize() and before advance().
+   */
+  virtual void initializeData() =0;
+
+  /**
+   * @brief Adds newly computed time. Has to be called before every advance.
+   */
+  virtual void addComputedTime(double timeToAdd) =0;
+
+  /**
+   * @brief Exchanges data and updates the state of the coupling scheme.
+   */
+  virtual void advance() =0;
+
+  /**
+   * @brief Finalizes the coupling and disconnects communication.
+   */
+  virtual void finalize() =0;
+
+  /*
+   * @brief returns list of all coupling partners
+   */
+  virtual std::vector<std::string> getCouplingPartners() const =0;
+
+  /**
+   * @brief Returns true, if data will be exchanged when calling advance().
+   *
+   * Also returns true after the last call of advance() at the end of the
+   * simulation.
+   *
+   * @param lastSolverTimestepLength [IN] The length of the last timestep
+   *        computed by the solver calling willDataBeExchanged().
+   */
+  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const =0;
+
+  /**
+   * @brief Returns true, if data has been exchanged in last call of advance().
+   */
+  virtual bool hasDataBeenExchanged() const =0;
+
+  /**
+   * @brief Returns the currently computed time of the coupling scheme.
+   */
+  virtual double getTime() const =0;
+
+  /**
+   * @brief Returns the currently computed timesteps of the coupling scheme.
+   */
+  virtual int getTimesteps() const =0;
+
+  /**
+   * @brief Returns the maximal time to be computed.
+   */
+  virtual double getMaxTime() const =0;
+
+  /**
+   * @brief Returns the maximal timesteps to be computed.
+   */
+  virtual int getMaxTimesteps() const =0;
+
+  /**
+   * @brief Returns current subiteration number in timestep.
+   */
+  //virtual int getSubIteration() const =0;
+
+  /**
+   * @brief Returns true, if timestep length is prescribed by the cpl scheme.
+   */
+  virtual bool hasTimestepLength() const =0;
+
+  /**
+   * @brief Returns the timestep length, if one is given by the coupling scheme.
+   *
+   * An assertion is thrown, if no valid timestep is given. Check with
+   * hasTimestepLength().
+   */
+  virtual double getTimestepLength() const =0;
+
+  /**
+   * @brief Returns the remaining timestep length of the current time step.
+   *
+   * This is not necessarily the timestep length limit the solver has to obeye
+   * which is returned by getNextTimestepMaxLength().
+   *
+   * If no timestep length is precribed by the coupling scheme, always 0.0 is
+   * returned.
+   */
+  virtual double getThisTimestepRemainder() const =0;
+
+  /**
+   * @brief Returns part of the current timestep that has been computed already.
+   */
+  virtual double getComputedTimestepPart() const =0;
+
+  /**
+   * @brief Returns the maximal length of the next timestep to be computed.
+   *
+   * If no timestep length is prescribed by the coupling scheme, always the
+   * maximal double accuracy floating point number value is returned.
+   */
+  virtual double getNextTimestepMaxLength() const =0;
+
+  /**
+   * @brief Returns the number of valid digits when compare times.
+   */
+  //virtual int getValidDigits() const =0;
+
+  /**
+   * @brief Returns true, when the coupled simulation is still ongoing.
+   */
+  virtual bool isCouplingOngoing() const =0;
+
+  /**
+   * @brief Returns true, when the accessor can advance to the next timestep.
+   */
+  virtual bool isCouplingTimestepComplete() const =0;
+
+  /**
+   * @brief Returns true, if the given action has to be performed by the accessor.
+   */
+  virtual bool isActionRequired(const std::string& actionName) const =0;
+
+  /**
+   * @brief Tells the coupling scheme that the accessor has performed the given
+   *        action.
+   */
+  virtual void performedAction(const std::string& actionName) =0;
+
+  /**
+   * @brief Returns the checkpointing timestep interval.
+   */
+  virtual int getCheckpointTimestepInterval() const =0;
+
+  /**
+   * @brief Sets an action required to be performed by the accessor.
+   */
+  virtual void requireAction(const std::string& actionName) =0;
+
+  /**
+   * @brief Returns a string representation of the current coupling state.
+   */
+  virtual std::string printCouplingState() const =0;
+
+  /**
+   * @brief Exports the state of the coupling scheme to file/s.
+   *
+   * Used for checkpointing.
+   */
+  virtual void exportState(const std::string& filenamePrefix) const =0;
+
+  /**
+   * @brief Imports the state of the coupling scheme from file/s.
+   *
+   * Used for checkpointing.
+   */
+  virtual void importState(const std::string& filenamePrefix) =0;
+
+  /**
+   * @brief Send the state of the coupling scheme to another remote scheme.
+   *
+   * Used in client-server approach for parallel solvers. There, the solver
+   * interface does hold a coupling scheme with no data but state. The state
+   * is transferred between the solver coupling scheme and the server coupling
+   * scheme via sendState and receiveState.
+   */
+  virtual void sendState (
+    com::PtrCommunication communication,
+    int                   rankReceiver ) =0;
+
+  /**
+   * @brief Receive the state of the coupling scheme from another remote scheme.
+   *
+   * Used in client-server approach for parallel solvers. There, the solver
+   * interface does hold a coupling scheme with no data but state. The state
+   * is transferred between the solver coupling scheme and the server coupling
+   * scheme via sendState and receiveState.
+   */
+  virtual void receiveState (
+    com::PtrCommunication communication,
+    int                   rankSender ) =0;
 };
 
 }} // namespace precice, cplscheme

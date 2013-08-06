@@ -32,7 +32,7 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
 :
-  CouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
+  BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _doesFirstStep(false),
@@ -48,6 +48,7 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   _iterationToPlot(0),
   _timestepToPlot(0),
   _timeToPlot(0.0),
+  _iterations(0),
   _totalIterations(0),
   _participantSetsDt(false),
   _participantReceivesDt(false)
@@ -130,7 +131,7 @@ void ImplicitCouplingScheme:: initialize
   assertion1(startTimestep >= 0, startTimestep);
   assertion(_communication->isConnected());
   preciceCheck(not getSendData().empty(), "initialize()",
-               "No send data configured!");
+               "No send data configured! Use explicit scheme for one-way coupling.");
   setTime(startTime);
   setTimesteps(startTimestep);
   if (not _doesFirstStep){
@@ -221,25 +222,25 @@ void ImplicitCouplingScheme:: initializeData()
   performedAction(constants::actionWriteInitialData());
 }
 
-void ImplicitCouplingScheme:: addComputedTime
-(
-  double timeToAdd )
-{
-  preciceTrace2("addComputedTime()", timeToAdd, getTime());
-  preciceCheck(isCouplingOngoing(), "addComputedTime()",
-               "Invalid call of addComputedTime() after simulation end!");
-
-  // Check validness
-  double eps = std::pow(10.0, -1 * getValidDigits());
-  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
-  preciceCheck(greaterThanZero, "addComputedTime()", "The computed timestep length "
-               << "exceeds the maximum timestep limit for this time step!");
-
-  setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);
-  setTime(getTime() + timeToAdd);
-  //setSubIteration(getSubIteration() + 1);
-  //_totalIterations++;
-}
+//void ImplicitCouplingScheme:: addComputedTime
+//(
+//  double timeToAdd )
+//{
+//  preciceTrace2("addComputedTime()", timeToAdd, getTime());
+//  preciceCheck(isCouplingOngoing(), "addComputedTime()",
+//               "Invalid call of addComputedTime() after simulation end!");
+//
+//  // Check validness
+//  double eps = std::pow(10.0, -1 * getValidDigits());
+//  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
+//  preciceCheck(greaterThanZero, "addComputedTime()", "The computed timestep length "
+//               << "exceeds the maximum timestep limit for this time step!");
+//
+//  setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);
+//  setTime(getTime() + timeToAdd);
+//  //setSubIteration(_iterations + 1);
+//  //_totalIterations++;
+//}
 
 void ImplicitCouplingScheme:: advance()
 {
@@ -247,9 +248,6 @@ void ImplicitCouplingScheme:: advance()
   checkCompletenessRequiredActions();
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
-  //double remainder = getThisTimestepRemainder();
-  //computedTimestepLength = cutOffInvalidDigits(computedTimestepLength );
-  //setTime(getTime() + computedTimestepLength );
   double eps = std::pow(10.0, -1 * getValidDigits());
   bool convergence = false;
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)){
@@ -273,16 +271,11 @@ void ImplicitCouplingScheme:: advance()
       _communication->finishReceivePackage();
     }
     else {
-      //_residualWriterL1.writeData("Iterations", _totalIterations);
-      //_residualWriterL2.writeData("Iterations", _totalIterations);
-      //_amplificationWriter.writeData("Iterations", _totalIterations);
-      //writeResidual(*(getSendData().begin()->second.values),
-      //              getSendData().begin()->second.oldValues.column(0));
       convergence = measureConvergence();
-      assertion2((getSubIteration() <= _maxIterations) || (_maxIterations == -1),
-                 getSubIteration(), _maxIterations);
+      assertion2((_iterations <= _maxIterations) || (_maxIterations == -1),
+                 _iterations, _maxIterations);
       // Stop, when maximal iteration count (given in config) is reached
-      if (getSubIteration() == _maxIterations-1){
+      if (_iterations == _maxIterations-1){
         convergence = true;
       }
       if (convergence){
@@ -328,28 +321,31 @@ void ImplicitCouplingScheme:: advance()
       else {
         _communication->finishSendPackage();
       }
-      //setMaxLengthNextTimestep(getTimestepLength() );
     }
 
     if (not convergence){
       preciceDebug("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
-      setSubIteration(getSubIteration() + 1);
+      _iterations++;
       _totalIterations++;
       // The computed timestep part equals the timestep length, since the
       // timestep remainder is zero. Subtract the timestep length do another
       // coupling iteration.
       assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
+      _timestepToPlot = getTimesteps()+1;
+      _timeToPlot = getTime();
+      _iterationToPlot = _iterations;
       setTime(getTime() - getComputedTimestepPart());
     }
     else {
       preciceDebug("Convergence achieved");
+      _iterationToPlot++;
       _iterationsWriter.writeData("Timesteps", getTimesteps());
       _iterationsWriter.writeData("Total Iterations", _totalIterations);
-      _iterationsWriter.writeData("Iterations", getSubIteration());
-      int converged = getSubIteration() < _maxIterations ? 1 : 0;
+      _iterationsWriter.writeData("Iterations", _iterations);
+      int converged = _iterations < _maxIterations ? 1 : 0;
       _iterationsWriter.writeData("Convergence", converged);
-      setSubIteration(0);
+      _iterations = 0;
     }
     setHasDataBeenExchanged(true);
     setComputedTimestepPart(0.0);
@@ -358,14 +354,16 @@ void ImplicitCouplingScheme:: advance()
   // When the iterations of one timestep are converged, the old time, timesteps,
   // and iteration should be plotted, and not the 0th of the new timestep. Thus,
   // the plot values are only updated when no convergence was achieved.
-  if (not convergence){
-    _timestepToPlot = getTimesteps();
-    _timeToPlot = getTime();
-    _iterationToPlot = getSubIteration();
-  }
-  else {
-    _iterationToPlot++;
-  }
+//  if (not convergence){
+//    _timestepToPlot = getTimesteps()+1;
+//    //_timeToPlot = getTime();
+//    _iterationToPlot = _iterations;
+//  }
+//  else {
+//    //_timestepToPlot = getTimesteps();
+//    //_timeToPlot = getTime();
+//    _iterationToPlot++;
+//  }
 }
 
 void ImplicitCouplingScheme:: timestepCompleted()
@@ -550,45 +548,16 @@ void ImplicitCouplingScheme:: newConvergenceMeasurements()
    }
 }
 
-//bool ImplicitCouplingScheme:: computeCouplingOngoing ()
-//{
-//   bool timeLeft = tarch::la::greater(getMaxTime(), getTime()) ||
-//                   (getMaxTime() == UNDEFINED_TIME );
-//   bool timestepsLeft = (getMaxTimesteps() > getTimesteps()) ||
-//                        (getMaxTimesteps() == UNDEFINED_TIMESTEPS);
-//
-//   return timeLeft && timestepsLeft;
-//}
-
-//double ImplicitCouplingScheme:: getTimestepRemainder
-//(
-//   double computedTimestepLength ) const
-//{
-//   double remainder = getTimestepLength()
-//                      - (_computedTimeCurrentIteration + computedTimestepLength);
-//   preciceCheck(tarch::la::greaterEquals(remainder, 0.0),
-//                  "getTimestepRemainder()",
-//                  "Computed timestep length (" << computedTimestepLength
-//                  << ") is not allowed to be larger than the prescribed one ("
-//                  << remainder << ")!");
-//   return remainder;
-//}
-
-std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners
-(
-  const std::string& accessorName ) const
+std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
 
-  if(accessorName == _firstParticipant ){
-    partnerNames.push_back(_secondParticipant );
-  }
-  else if(accessorName == _secondParticipant){
-    partnerNames.push_back(_firstParticipant );
+  // Add non-local participant
+  if(_doesFirstStep){
+    partnerNames.push_back(_secondParticipant);
   }
   else {
-    preciceError("getCouplingPartners()",
-                   "No coupling partner could be found." );
+    partnerNames.push_back(_firstParticipant);
   }
   return partnerNames;
 }
@@ -600,9 +569,9 @@ void ImplicitCouplingScheme:: sendState
 {
   preciceTrace1("sendState()", rankReceiver);
   communication->startSendPackage(rankReceiver );
-  CouplingScheme::sendState(communication, rankReceiver );
+  BaseCouplingScheme::sendState(communication, rankReceiver );
   communication->send(_maxIterations, rankReceiver );
-  communication->send(getSubIteration(), rankReceiver );
+  communication->send(_iterations, rankReceiver );
   communication->send(_totalIterations, rankReceiver );
   communication->finishSendPackage();
 }
@@ -614,11 +583,11 @@ void ImplicitCouplingScheme:: receiveState
 {
   preciceTrace1("receiveState()", rankSender);
   communication->startReceivePackage(rankSender);
-  CouplingScheme::receiveState(communication, rankSender);
+  BaseCouplingScheme::receiveState(communication, rankSender);
   communication->receive(_maxIterations, rankSender);
   int subIteration = -1;
   communication->receive(subIteration, rankSender);
-  setSubIteration(subIteration);
+  _iterations = subIteration;
   communication->receive(_totalIterations, rankSender);
   communication->finishReceivePackage();
 }
@@ -626,23 +595,24 @@ void ImplicitCouplingScheme:: receiveState
 std::string ImplicitCouplingScheme:: printCouplingState() const
 {
   std::ostringstream os;
-  os << " it " << _iterationToPlot; //getSubIteration();
+  os << "it " << _iterationToPlot; //_iterations;
   if(_maxIterations != -1 ){
     os << " of " << _maxIterations;
   }
-  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << std::endl << printActionsState();
+  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
   return os.str();
 }
 
 void ImplicitCouplingScheme:: exportState
 (
-  io::TXTWriter& writer ) const
+  const std::string& filenamePrefix ) const
 {
   if (not _doesFirstStep){
-    foreach (const CouplingScheme::DataMap::value_type& dataMap, getSendData()){
+    io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
+    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
       writer.write(dataMap.second.oldValues);
     }
-    foreach (const CouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
+    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
       writer.write(dataMap.second.oldValues);
     }
     if (_postProcessing.get() != NULL){
@@ -651,13 +621,16 @@ void ImplicitCouplingScheme:: exportState
   }
 }
 
-void ImplicitCouplingScheme:: importState(io::TXTReader& reader)
+void ImplicitCouplingScheme:: importState
+(
+  const std::string& filenamePrefix )
 {
   if (not _doesFirstStep){
-    foreach (CouplingScheme::DataMap::value_type& dataMap, getSendData()){
+    io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
+    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
       reader.read(dataMap.second.oldValues);
     }
-    foreach (CouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
+    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
       reader.read(dataMap.second.oldValues);
     }
     if (_postProcessing.get() != NULL){

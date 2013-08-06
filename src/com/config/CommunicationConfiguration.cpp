@@ -19,12 +19,6 @@ namespace com {
 tarch::logging::Log CommunicationConfiguration::
    _log("precice::com::CommunicationConfiguration");
 
-//const std::string & CommunicationConfiguration:: getTag()
-//{
-//  static std::string tag("communication");
-//  return tag;
-//}
-
 CommunicationConfiguration:: CommunicationConfiguration()
 :
   TAG("communication"),
@@ -38,7 +32,6 @@ CommunicationConfiguration:: CommunicationConfiguration()
   VALUE_FILES("files"),
   VALUE_SOCKETS("sockets"),
   _communications()
-  //_isValid(false)
 {}
 
 CommunicationConfiguration:: CommunicationConfiguration
@@ -56,12 +49,11 @@ CommunicationConfiguration:: CommunicationConfiguration
   VALUE_FILES("files"),
   VALUE_SOCKETS("sockets"),
   _communications()
-  //_isValid(false)
 {
   using namespace utils;
   std::string doc;
   std::list<XMLTag> tags;
-  XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
+  XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   {
     XMLTag tag(*this, VALUE_SOCKETS, occ, TAG);
     doc = "Communication via Sockets.";

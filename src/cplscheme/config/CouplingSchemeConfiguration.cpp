@@ -6,6 +6,7 @@
 #include "cplscheme/ExplicitCouplingScheme.hpp"
 #include "cplscheme/ImplicitCouplingScheme.hpp"
 #include "cplscheme/ParallelImplicitCouplingScheme.hpp"
+#include "cplscheme/CompositionalCouplingScheme.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/RelativeConvergenceMeasure.hpp"
@@ -79,22 +80,29 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   _meshConfig(meshConfig),
   _comConfig(comConfig),
   _isValid(false),
-  _couplingSchemes()
+  _couplingSchemes(),
+  _couplingSchemeCompositions()
 {
   using namespace utils;
-  preciceCheck ( _couplingSchemes.size() == 0, "parseSubtag()",
-                 "Only one tag <coupling-scheme> can be defined!" );
+  //preciceCheck ( _couplingSchemes.size() == 0, "parseSubtag()",
+  //               "Only one tag <coupling-scheme> can be defined!" );
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
+  std::string doc;
   {
     XMLTag tag(*this, VALUE_EXPLICIT, occ, TAG);
-    tag.setDocumentation("Explicit coupling scheme with alternating computation of solvers");
+    doc = "Explicit coupling scheme according to conventional serial";
+    doc += " staggered prcedure (CSS).";
+    tag.setDocumentation(doc);
     addTypespecifcSubtags(VALUE_EXPLICIT, tag);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_IMPLICIT, occ, TAG);
+    doc = "Implicit coupling scheme according to block Gauss-Seidel iterations.";
+    doc += " Improved implicit iterations are achieved by using a post-processing.";
+    tag.setDocumentation(doc);
     addTypespecifcSubtags(VALUE_IMPLICIT, tag);
     tags.push_back(tag);
   }
@@ -105,54 +113,17 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   }
   {
     XMLTag tag(*this, VALUE_UNCOUPLED, occ, TAG);
+    doc = "Coupling scheme for using geometry mode, i.e., for a solver that uses";
+    doc += " preCICE without coupling to another solver.";
+    tag.setDocumentation(doc);
     addTypespecifcSubtags(VALUE_UNCOUPLED, tag);
     tags.push_back(tag);
   }
-
-//  utils::XMLAttribute<std::string> attrType ( ATTR_TYPE );
-//  utils::ValidatorEquals<std::string> validExplicitScheme ( VALUE_EXPLICIT );
-//  utils::ValidatorEquals<std::string> validImplicitScheme ( VALUE_IMPLICIT );
-//  utils::ValidatorEquals<std::string> validUncoupledScheme ( VALUE_UNCOUPLED );
-//  attrType.setValidator ( validExplicitScheme || validImplicitScheme ||
-//                          validUncoupledScheme );
-//  tag.addAttribute ( attrType );
 
   foreach (XMLTag& tag, tags){
     parent.addSubtag(tag);
   }
 }
-
-//bool CouplingSchemeConfiguration:: parseSubtag
-//(
-//  utils::XMLTag::XMLReader* xmlReader )
-//{
-//  preciceCheck ( _couplingSchemes.size() == 0, "parseSubtag()",
-//                 "Only one tag <coupling-scheme> can be defined!" );
-//  utils::XMLTag tag ( TAG, utils::XMLTag::OCCUR_ONCE );
-//
-//  utils::XMLAttribute<std::string> attrType ( ATTR_TYPE );
-//  utils::ValidatorEquals<std::string> validExplicitScheme ( VALUE_EXPLICIT );
-//  utils::ValidatorEquals<std::string> validImplicitScheme ( VALUE_IMPLICIT );
-//  utils::ValidatorEquals<std::string> validUncoupledScheme ( VALUE_UNCOUPLED );
-//  attrType.setValidator ( validExplicitScheme || validImplicitScheme ||
-//                          validUncoupledScheme );
-//  tag.addAttribute ( attrType );
-//
-//  utils::XMLTag tagPostProcessing ( PostProcessingConfiguration::TAG,
-//                                    utils::XMLTag::OCCUR_NOT_OR_ONCE );
-//  tag.addSubtag ( tagPostProcessing );
-//
-//  _isValid = tag.parse ( xmlReader, *this );
-//  return _isValid;
-//}
-
-//bool CouplingSchemeConfiguration:: isValid () const
-//{
-//  bool valid = true;
-//  valid &= _isValid;
-//  valid &= _couplingSchemes.size() == 2;
-//  return valid;
-//}
 
 bool CouplingSchemeConfiguration:: hasCouplingScheme
 (
@@ -179,8 +150,6 @@ void CouplingSchemeConfiguration:: xmlTagCallback
   if (tag.getNamespace() == TAG){
     _config.type = tag.getName();
     _postProcConfig->clear();
-    //_config.name = tag.getStringAttributeValue(ATTR_NAME);
-    //addTypespecifcSubtags(_config.type, name, tag );
   }
   else if (tag.getName() == TAG_CHECKPOINT){
     _config.checkpointTimestepInterval =
@@ -272,15 +241,6 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     _config.extrapolationOrder = tag.getIntAttributeValue(ATTR_VALUE);
   }
-//  else if ( tag.getName() == PostProcessingConfiguration::TAG ) {
-//    PostProcessingConfiguration config ( _meshConfig );
-//    if ( config.parseSubtag(xmlReader) ) {
-//      _config.postProcessing = config.getPostProcessing ();
-//    }
-//    else {
-//      return false;
-//    }
-//  }
 }
 
 void CouplingSchemeConfiguration:: xmlEndTagCallback
@@ -292,19 +252,23 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
     if (_config.type == VALUE_EXPLICIT){
       std::string accessor(_config.participant);
       PtrCouplingScheme scheme = createExplicitCouplingScheme(accessor);
-      _couplingSchemes[accessor] = scheme;
+      addCouplingScheme(scheme, accessor);
+      //_couplingSchemes[accessor] = scheme;
       accessor = _config.secondParticipant;
       scheme = createExplicitCouplingScheme(accessor);
-      _couplingSchemes[accessor] = scheme;
+      addCouplingScheme(scheme, accessor);
+      //_couplingSchemes[accessor] = scheme;
       _config = Config();
     }
     else if (_config.type == VALUE_IMPLICIT){
       std::string accessor(_config.participant);
       PtrCouplingScheme scheme = createImplicitCouplingScheme(accessor);
-      _couplingSchemes[accessor] = scheme;
+      addCouplingScheme(scheme, accessor);
+      //_couplingSchemes[accessor] = scheme;
       accessor = _config.secondParticipant;
       scheme = createImplicitCouplingScheme(accessor);
-      _couplingSchemes[accessor] = scheme;
+      addCouplingScheme(scheme, accessor);
+      //_couplingSchemes[accessor] = scheme;
       _config = Config();
     }
     else if (_config.type == VALUE_PARALLEL_IMPLICIT){
@@ -331,9 +295,32 @@ void CouplingSchemeConfiguration:: addCouplingScheme
   const std::string& participantName )
 {
   preciceTrace1 ( "addCouplingScheme()", participantName );
-  assertion1 ( _couplingSchemes.find(participantName) == _couplingSchemes.end(),
-               participantName );
-  _couplingSchemes[participantName] = cplScheme;
+  if (_couplingSchemes.find(participantName) != _couplingSchemes.end()){
+    preciceDebug("Coupling scheme exists already for participant");
+    if (_couplingSchemeCompositions.find(participantName)
+        != _couplingSchemeCompositions.end())
+    {
+      preciceDebug("Coupling scheme composition exists already for participant");
+      // Fetch the composition and add the new scheme.
+      assertion(_couplingSchemeCompositions[participantName] != NULL);
+      _couplingSchemeCompositions[participantName]->addCouplingScheme(cplScheme);
+    }
+    else {
+      preciceDebug("No composition exists for the participant");
+      // No composition exists, thus, the existing scheme is no composition.
+      // Create a new composition, add the already existing and new scheme, and
+      // overwrite the existing scheme with the composition.
+      CompositionalCouplingScheme* composition = new CompositionalCouplingScheme();
+      composition->addCouplingScheme(_couplingSchemes[participantName]);
+      composition->addCouplingScheme(cplScheme);
+      _couplingSchemes[participantName] = PtrCouplingScheme(composition);
+    }
+  }
+  else {
+    preciceDebug("No coupling scheme exists for the participant");
+    // Store the new coupling scheme.
+    _couplingSchemes[participantName] = cplScheme;
+  }
 }
 
 void CouplingSchemeConfiguration:: addTypespecifcSubtags
@@ -635,7 +622,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createExplicitCouplingScheme
 (
   const std::string& accessor ) const
 {
-  assertion ( not utils::contained(accessor, _couplingSchemes) );
+  //assertion ( not utils::contained(accessor, _couplingSchemes) );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );
   ExplicitCouplingScheme* scheme = new ExplicitCouplingScheme (
@@ -654,7 +641,8 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createImplicitCouplingScheme
   const std::string& accessor ) const
 {
   preciceTrace("createImplicitCouplingScheme()");
-  assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
+  //assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
+
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );
   ImplicitCouplingScheme* scheme = new ImplicitCouplingScheme (
@@ -750,8 +738,8 @@ CouplingSchemeConfiguration:: getTimesteppingMethod
 
 void CouplingSchemeConfiguration:: addDataToBeExchanged
 (
-  CouplingScheme&    scheme,
-  const std::string& accessor) const
+  BaseCouplingScheme& scheme,
+  const std::string&  accessor) const
 {
   using boost::get;
   foreach (const Config::Exchange& tuple, _config.exchanges){

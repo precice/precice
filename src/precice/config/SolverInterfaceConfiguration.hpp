@@ -28,9 +28,6 @@ class SolverInterfaceConfiguration : public utils::XMLTag::Listener
 {
 public:
 
-  // @brief Name of xml tag for this class in configuration file
-  //static const std::string& getTag();
-
   /**
    * @brief Constructor.
    */
@@ -41,31 +38,15 @@ public:
    *
    * Deletes geometry configuration and coupling scheme configuration.
    */
-  ~SolverInterfaceConfiguration() {}
+  virtual ~SolverInterfaceConfiguration() {}
 
   /**
-   * @brief Reads the information parsed from an xml-file.
-   */
-  //bool parseSubtag ( utils::XMLTag::XMLReader* xmlReader );
-
-  /**
-   * @returns Returns true, if the xml-file parsing was successful.
-   */
-  //bool isValid() const;
-
-  /**
-   * @brief Callback function required for use of automatic configuration.
-   *
-   * Is called by utils::XMLTag on automatic configuration every time an xml
-   * tag and its attributes have been read.
-   * @param callingTag [IN] XML tag currently read.
-   * @param xmlReader  [IN] XML Reader responsible for reading the tag.
-   * @return True, if the corresponding actions could be successfully performed.
+   * @brief Callback method required when using utils::XMLTag.
    */
   virtual void xmlTagCallback ( utils::XMLTag& callingTag );
 
   /**
-   * @brief Adds UncoupledCouplingScheme in case of geometry mode.
+   * @brief Callback method required when using utils::XMLTag.
    */
   virtual void xmlEndTagCallback ( utils::XMLTag& callingTag );
 
@@ -74,16 +55,25 @@ public:
    */
   int getDimensions() const;
 
+  /**
+   * @brief Returns true if preCICE is to be used as pure geometry interface.
+   */
   bool isGeometryMode() const
   {
     return _geometryMode;
   }
 
+  /**
+   * @brief For manual configuration in test cases.
+   */
   void setGeometryMode()
   {
     _geometryMode = true;
   }
 
+  /**
+   * @brief Returns true if a restart checkpoint should be read.
+   */
   bool isRestartMode() const
   {
     return _restartMode;
@@ -119,50 +109,49 @@ public:
     return _couplingSchemeConfiguration;
   }
 
+  /**
+   * @brief For manual configuration in test cases.
+   */
   void setDataConfiguration ( mesh::PtrDataConfiguration config )
   {
     _dataConfiguration = config;
   }
 
+  /**
+   * @brief For manual configuration in test cases.
+   */
   void setMeshConfiguration ( mesh::PtrMeshConfiguration config )
   {
     _meshConfiguration = config;
   }
 
   /**
-   * @brief For manual configuration.
+   * @brief For manual configuration in test cases.
    */
    void setGeometryConfiguration ( geometry::PtrGeometryConfiguration config )
    {
      _geometryConfiguration = config;
    }
 
+   /**
+    * @brief For manual configuration in test cases.
+    */
    void setParticipantConfiguration ( PtrParticipantConfiguration config )
    {
      _participantConfiguration = config;
    }
-
-   /**
-    * @brief Is meant for test cases only!
-    */
-//   void setIsValid()
-//   {
-//     _isValid = true;
-//   }
 
 private:
 
   // @brief Logging device.
   static tarch::logging::Log _log;
 
+  // Tag and subtag names used within this configuration.
   const std::string TAG;
   const std::string ATTR_DIMENSIONS;
   const std::string ATTR_GEOMETRY_MODE;
   const std::string ATTR_RESTART_MODE;
   const std::string ATTR_SPACETREE_NAME;
-
-  // @brief True, when a valid xml-tag has been parsed.
-  //bool _isValid;
 
   // @brief Spatial dimension of problem to be solved. Either 2 or 3.
   int _dimensions;
@@ -174,7 +163,10 @@ private:
   bool _restartMode;
 
   // @brief Participating solvers in the coupled simulation.
-  std::vector<impl::PtrParticipant> _participants;
+  //std::vector<impl::PtrParticipant> _participants;
+
+  // @brief Index (in _participants) of solver accessing the interface.
+  //int _indexAccessor;
 
   mesh::PtrDataConfiguration _dataConfiguration;
 
@@ -184,24 +176,11 @@ private:
 
   geometry::PtrGeometryConfiguration _geometryConfiguration;
 
-  // @brief Spacetree name -> spacetree configuration for that geometry.
   spacetree::PtrSpacetreeConfiguration _spacetreeConfiguration;
 
   PtrParticipantConfiguration _participantConfiguration;
 
-  // @brief Holds coupling information between participants.
   cplscheme::PtrCouplingSchemeConfiguration _couplingSchemeConfiguration;
-
-  // @brief Index (in participant vector) of solver accessing the interface.
-  int _indexAccessor;
-
-//  int getDataDimensions ( const std::string& typeName );
-
-//  int readDimensions ( utils::XMLTag::XMLReader* xmlReader );
-//
-//  bool readGeometryMode ( utils::XMLTag::XMLReader* xmlReader );
-//
-//  bool readRestartMode ( utils::XMLTag::XMLReader* xmlReader );
 };
 
 }} // namespace precice, config

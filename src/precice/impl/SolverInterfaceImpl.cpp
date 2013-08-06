@@ -106,7 +106,7 @@ void SolverInterfaceImpl:: configure
   const std::string& configurationFileName )
 {
   typedef tarch::logging::CommandLineLogger Logger;
-  // By default, debuggin is turned on with a filter list entry. This removes
+  // By default, debugging is turned on with a filter list entry. This removes
   // entry and turns off all debug messages until configuration.
   Logger::getInstance().clearFilterList();
   Logger::FilterListEntry filter("", true); // All off
@@ -274,8 +274,8 @@ double SolverInterfaceImpl:: initialize()
     _couplingScheme->initialize(time, timestep);
     if (_restartMode){
       preciceInfo("initialize()", "Reading coupling scheme state for restart");
-      io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
-      _couplingScheme->importState(txtReader);
+      //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
+      _couplingScheme->importState(_checkpointFileName);
     }
     double dt = _couplingScheme->getNextTimestepMaxLength();
     std::set<action::Action::Timing> timings;
@@ -2449,8 +2449,8 @@ void SolverInterfaceImpl:: handleExports()
       }
       io::SimulationStateIO exportState(_checkpointFileName + "_simstate.txt");
       exportState.writeState(_couplingScheme->getTime(), timestep, _numberAdvanceCalls);
-      io::TXTWriter exportCouplingSchemeState(_checkpointFileName + "_cplscheme.txt");
-      _couplingScheme->exportState(exportCouplingSchemeState);
+      //io::TXTWriter exportCouplingSchemeState(_checkpointFileName + "_cplscheme.txt");
+      _couplingScheme->exportState(_checkpointFileName);
     }
   }
 }

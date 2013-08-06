@@ -4,7 +4,7 @@
 #ifndef PRECICE_CPLSCHEME_EXPLICITCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_EXPLICITCOUPLINGSCHEME_HPP_
 
-#include "CouplingScheme.hpp"
+#include "BaseCouplingScheme.hpp"
 #include "Constants.hpp"
 #include "com/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -15,7 +15,7 @@
 namespace precice {
 namespace cplscheme {
 
-class ExplicitCouplingScheme : public CouplingScheme
+class ExplicitCouplingScheme : public BaseCouplingScheme
 {
 public:
 
@@ -57,7 +57,7 @@ public:
    /**
     * @brief Adds newly computed time. Has to be called before every advance.
     */
-   void addComputedTime ( double timeToAdd );
+   //void addComputedTime ( double timeToAdd );
 
    /**
     * @brief Advances within the coupling scheme.
@@ -72,8 +72,7 @@ public:
    /*
     * @brief returns list of all coupling partners
     */
-   virtual std::vector<std::string> getCouplingPartners (
-     const std::string & accessorName ) const;
+   virtual std::vector<std::string> getCouplingPartners () const;
 
    virtual void sendState (
      com::PtrCommunication communication,
@@ -85,9 +84,9 @@ public:
 
    virtual std::string printCouplingState() const;
 
-   virtual void exportState(io::TXTWriter& writer) const {}
+   virtual void exportState(const std::string& filenamePrefix) const {}
 
-   virtual void importState(io::TXTReader& reader) {}
+   virtual void importState(const std::string& filenamePrefix) {}
 
 private:
 

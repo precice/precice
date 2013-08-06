@@ -18,7 +18,7 @@ UncoupledCouplingScheme:: UncoupledCouplingScheme
   int                validDigits,
   const std::string& participant )
 :
-  CouplingScheme ( maxTime, maxTimesteps, UNDEFINED_TIMESTEP_LENGTH,
+  BaseCouplingScheme ( maxTime, maxTimesteps, UNDEFINED_TIMESTEP_LENGTH,
                    validDigits ),
   _participant ( participant )
 {}
@@ -80,9 +80,7 @@ void UncoupledCouplingScheme:: finalize()
   preciceTrace ( "finalize()" );
 }
 
-std::vector<std::string> UncoupledCouplingScheme:: getCouplingPartners
-(
-   const std::string& accessorName ) const
+std::vector<std::string> UncoupledCouplingScheme:: getCouplingPartners() const
 {
   return std::vector<std::string>();
 }
@@ -93,7 +91,7 @@ void UncoupledCouplingScheme:: sendState
   int                   rankReceiver )
 {
   communication->startSendPackage ( rankReceiver );
-  CouplingScheme::sendState ( communication, rankReceiver );
+  BaseCouplingScheme::sendState ( communication, rankReceiver );
   communication->finishSendPackage();
 }
 
@@ -103,7 +101,7 @@ void UncoupledCouplingScheme:: receiveState
   int                   rankSender )
 {
   communication->startReceivePackage ( rankSender );
-  CouplingScheme::receiveState ( communication, rankSender );
+  BaseCouplingScheme::receiveState ( communication, rankSender );
   communication->finishReceivePackage();
 }
 

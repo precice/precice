@@ -26,8 +26,10 @@ PythonActionTest:: PythonActionTest()
 
 void PythonActionTest:: run()
 {
-  testMethod(testAllMethods);
-  testMethod(testOmitMethods);
+  PRECICE_MASTER_ONLY{
+    testMethod(testAllMethods);
+    testMethod(testOmitMethods);
+  }
 }
 
 void PythonActionTest:: testAllMethods()

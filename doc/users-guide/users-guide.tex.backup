@@ -162,26 +162,9 @@ The association of the solvers in the same communication tag to attributes \text
   ...
 </coupling-scheme:explicit>
 \end{verbatim}
-where the association of solvers to the attributes \texttt{first} and \texttt{second} of tag \texttt{participants} determines the execution sequence relative to one coupling. This configuration will create an explicit coupling scheme for solver $S1$, an implicit coupling scheme for $S3$ and an explicit as well as an implicit coupling scheme for solver $S2$. While the sequence of first giving the implicit and then the explicit scheme has no importance for $S1$ and $S3$, it is crucial for the coupling sequence in $S2$. In the described setup, in $S2$ the implicit coupling scheme will first be iterated until convergence, before the explixit coupling scheme is executed (in every timestep). There will be no additional iteration necessary to execute the explicit scheme in $S2$, since it is triggered in the same iteration that leads to the convergence of the implicit scheme.
+This configuration will create an explicit coupling scheme for solver $S1$, an implicit coupling scheme for $S3$ and an explicit as well as an implicit coupling scheme for solver $S2$. While the sequence of first giving the implicit and then the explicit scheme has no importance for $S1$ and $S3$, it is crucial for the coupling sequence in $S2$. In the described setup, the implicit coupling scheme will first be iterated until convergence, before the explixit coupling scheme is executed (in every timestep). There will be no additional iteration necessary to execute the explicit scheme, however, since it is triggered in the same iteration that leads to the convergence of the implicit scheme. Looking at the computation sequence of the coupled solvers, we would first observe the repeated execution of $S2$ and $S3$ until convergence followed by one execution of $S1$. This sequence ensures that a converged coupling state of $S2$ and $S3$ is achieved before the explicit coupling is executed which might be crucial to obtain stability also in the explicit coupling.
 
-While the execution of the different coupling schemes of one solver is sequentialized, the overall execution is not. Thus, looking at the overall computation sequence of the coupled solvers, we would first observe one computation of $S1$ and $S2$, followed by repeated computations of $S3$ and $S2$ until the convergence of the implicit scheme. If in the expicit coupling scheme the first and second participant would be exchanged, $S1$ would have to wait until the convergence of the implicit coupling until it computes its timestep. This sequence ensures that a converged coupling state of $S2$ and $S3$ is achieved before the explicit coupling is executed in $S1$ which might be crucial to obtain stability also in the explicit coupling. 
-
-If the sequence of coupling schemes would be inversed, first, the explicit coupling scheme would be executed in $S2$ and, in the following, implicit iterations would follow taking the results from the computation of $S1$ as fixed.
-
-For a general setup of coupling schemes $C1, C2, C3, ...$, the following rules apply for one time step:
-\begin{itemize*}
-\item The sequence of schemes is executed from left to right.
-\item Explicit schemes are executed once.
-\item Implicit schemes are iterated until convergence.
-\item When several explicit schemes are in a sequence not broken by implicit schemes, they are executed together.
-\item When several implicit schemes are in a sequence not broken by explicit schemes, they are iterated together.
-\item When one or several implicit schemes follow one or several expicit schemes, the first iteration of the implicit schemes is done in the same call to \texttt{advance()}.
-\item When one or several explicit schemes follow one or several implicit schemes, the execution of the explicit schemes is done in the same call to \texttt{advance()} that lead to the convergence of all preceding implicit schemes.
-\item When during the iteration of several implicit schemes an implicit scheme is converged but the others not, the converged scheme is hold back (in converged status) until all other implicit schemes iterating together are also converged.
-\end{itemize*}
-
-
-
+If the sequence of coupling schemes would be inversed, first, the explicit coupling scheme would be executed and, in the following, implicit iterations would follow taking th results from the explicit coupling as fixed.
 
 
 
