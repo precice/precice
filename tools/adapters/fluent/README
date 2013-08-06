@@ -1,16 +1,63 @@
-How to build the Fluent-preCICE adapter:
+1. How to build the Fluent-preCICE adapter:
 
-1. Create a directory lnamd64/2ddp/ for serial execution
-   and for parallel execution add a /2ddp_host/ and /2ddp_node/.
-2. put the libraries of preCICE and python2.7 into the lnamd64 folder.
-3. Type: make "FLUENT_ARCH=lnamd64" to start the build. Add a "clean" to clean it.
-4. Copy the lnamd64 folder into, e.g., a libudf folder where fluent is run.
+* Create a directory lnamd64/2ddp/ for serial execution
+    and for parallel execution add a /2ddp_host/ and /2ddp_node/.
+* Put the libraries of preCICE and python2.7 into the lnamd64 folder.
+* Adapt src/makefile line 14 "SOURCES=...": There are several main udf files
+    - fsi_udf.c: For FSI simulations. Needs fsi.c.
+    - wave_profile_udf.c: For wave simulations with inflow profile. Needs 
+      wave_profile.c.
+    - wave_maker_udf.c: For wave simulations with moving wall. Needs 
+      wave_maker.c.
+    - fsi_and_wave_profile_udf.c: For FSI + wave simulations. Needs fsi.c and 
+      wave_profile.c.
+    The variable SOURCES needs one one main udf file and the correspoding .c files.
+* Type: make "FLUENT_ARCH=lnamd64" to start the build. Add a "clean" to clean it.
+* Copy the lnamd64 folder into, e.g., a libudf folder where fluent is run.
 
-Preparing a Fluent .cas file for FSI simulations:
+--------------------------------------------------------------------------------
 
-- Hook the UDF, e.g., by manage
-- Define one user defined memory for the faces
-- Set a user defined mesh motion according to function "gridmotions" 
+2. Preparing a Fluent .cas file for UDF function usage:
+
+- Copy the lnamd64 udf lib folder to the simulation folder into /libudf/
+- In Fluent, go to top menu Define->User Defined->Functions...->Manage... and 
+  load the libudf folder. The names of the udf functions should appear in the 
+  Fluent command line window.
+- Define a function hook at Initialization.
+- Define one user defined memory for the faces.
+
+--------------------------------------------------------------------------------
+
+3. Preparing a Fluent .cas file for FSI simulations
+
+- Perform the steps in 1. and 2.
+- Set a user defined mesh motion according to function "gridmotions".
+
+--------------------------------------------------------------------------------
+
+4. Preparing a Fluent .cas file for Wave simulations
+
+Go through the menus on the left and perform the following steps:
+- General: Set transient simulation and gravity in y-direction = -9.81
+- Models: Set Multiphase VOF explicit with Implicit body force formulation activated
+- Materials: Air and water-liquid (from Fluent Database) are needed
+- Phases: Name phases "phase-1-air" and set air as material, as well as 
+  "phase-2-water" with water as material
+- Cell Zone Conditions: Activate in operating conditions "Specified operating 
+  density" and keep default value.
+- Boundary Conditions:
+  + Set the top boundary to pressure outflow
+  + Set the left boundary to velocity inlet and set for Phase mixture the 
+    x- and y- velocity components to follow the corresponding UDFs, for 
+    Phase-2-water set the volume fraction UDF
+- Dynamic Mesh: 
+  + Set the structure boundary to follow the UDF
+  + Set the domain to be deforming/remeshing as needed
+- Reference values: Only needed for writing output (since Fluent usese 
+  dimensionless values)
+- Solution methods: 
+  + Set the PISO (pressure implicit) scheme and as volume fraction scheme the 
+    Modified HRIC scheme
 
 Preparing the preCICE XML configuration:
 - The number of valid digits for the timestep length needs to be 8, since fluent
