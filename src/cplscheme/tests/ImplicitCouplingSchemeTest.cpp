@@ -126,7 +126,7 @@ void ImplicitCouplingSchemeTest:: testExtrapolateData()
 
   scheme.addDataToSend(data, true);
   scheme.setExtrapolationOrder(1);
-  scheme.setupDataMatrices();
+  scheme.setupDataMatrices(scheme.getSendData());
   CouplingData* cplData = scheme.getSendData(dataID);
   validate(cplData != NULL);
   validateEquals(cplData->values->size(), 1);
@@ -158,7 +158,7 @@ void ImplicitCouplingSchemeTest:: testExtrapolateData()
 
   scheme2.addDataToSend ( data, false );
   scheme2.setExtrapolationOrder ( 2 );
-  scheme2.setupDataMatrices ();
+  scheme2.setupDataMatrices (scheme2.getSendData());
   cplData = scheme2.getSendData ( dataID );
   validate ( cplData != NULL );
   validateEquals ( cplData->values->size(), 1 );

@@ -60,7 +60,8 @@ void ParallelImplicitCouplingScheme:: initialize
   setTimesteps(startTimestep);
   if (not _doesFirstStep){ // second participant
     setupConvergenceMeasures(); // needs _couplingData configured
-    setupDataMatrices(); // Reserve memory and initialize data with zero
+    //TODO funzt nicht, da werte kopiert werden
+    setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
     mergeData(); // merge send and receive data for all pp calls
     if (_postProcessing.get() != NULL){
       _postProcessing->initialize(getAllData()); // Reserve memory, initialize
@@ -129,19 +130,23 @@ void ParallelImplicitCouplingScheme:: initializeData()
   else{ // second participant
     if(_hasToReceiveInitData){
 
-      // second participant has to save values for extrapolation
-      foreach (DataMap::value_type & pair, getReceiveData()){
-        utils::DynVector& oldValues = pair.second.oldValues.column(0);
-        oldValues = *pair.second.values;
-        // For extrapolation, treat the initial value as old timestep value
-        pair.second.oldValues.shiftSetFirst(*pair.second.values);
-      }
 
       _communication->startReceivePackage(0);
       receiveData(_communication);
       _communication->finishReceivePackage();
 
       setHasDataBeenExchanged(true);
+
+
+      // second participant has to save values for extrapolation
+      foreach (DataMap::value_type & pair, getReceiveData()){
+        utils::DynVector& oldValues = pair.second.oldValues.column(0);
+        oldValues = *pair.second.values;
+        // For extrapolation, treat the initial value as old timestep value
+        pair.second.oldValues.shiftSetFirst(*pair.second.values);
+        preciceDebug("Shift columns for receive data " << pair.first);
+        preciceDebug("columns for receive data " << pair.second.oldValues.cols());
+      }
 
     }
     if(_hasToSendInitData){
@@ -151,6 +156,9 @@ void ParallelImplicitCouplingScheme:: initializeData()
         oldValues = *pair.second.values;
         // For extrapolation, treat the initial value as old timestep value
         pair.second.oldValues.shiftSetFirst(*pair.second.values);
+        preciceDebug("old Values in initializeData: " << oldValues);
+        preciceDebug("Shift columns for send data " << pair.first);
+        preciceDebug("columns for send data " << pair.second.oldValues.cols());
       }
 
       _communication->startSendPackage(0);
@@ -174,7 +182,6 @@ void ParallelImplicitCouplingScheme:: advance()
   preciceTrace2("advance()", getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
-  //TODO checken ob hasToSend etc false, da nur dann initialData aufgerufen wurde
   preciceCheck(!_hasToReceiveInitData && !_hasToSendInitData, "advance()",
      "initializeData() needs to be called before advance if data has to be initialized!");
 
@@ -205,6 +212,18 @@ void ParallelImplicitCouplingScheme:: advance()
       _communication->finishReceivePackage();
 
       convergence = measureConvergence();
+
+      //TODO Debug
+      if(not _doesFirstStep){
+        foreach (DataMap::value_type& pair, getSendData()){
+          preciceDebug("after MC: " << pair.second.oldValues.column(0));
+        }
+      }
+      if(not _doesFirstStep){
+        foreach (DataMap::value_type& pair, getAllData()){
+          preciceDebug("after MC (ALL DATA): " << pair.second.oldValues.column(0));
+        }
+      }
 
       assertion2((getSubIteration() <= _maxIterations) || (_maxIterations == -1),
                  getSubIteration(), _maxIterations);
@@ -242,12 +261,10 @@ void ParallelImplicitCouplingScheme:: advance()
           }
         }
         sendData(_communication);
-        _communication->finishSendPackage();
+      }
 
-      }
-      else {
-        _communication->finishSendPackage();
-      }
+      _communication->finishSendPackage();
+
     }
 
     // both participants
@@ -292,6 +309,7 @@ void ParallelImplicitCouplingScheme:: mergeData()
 {
   preciceTrace("mergeData()");
   assertion1(!_doesFirstStep, "Only the second participant should do the pp." );
+  _allData.clear();
   _allData.insert(getSendData().begin(),getSendData().end());
   _allData.insert(getReceiveData().begin(),getReceiveData().end());
 

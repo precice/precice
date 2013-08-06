@@ -549,8 +549,6 @@ void CouplingSchemeConfiguration:: addTagPostProcessing
 (
   utils::XMLTag& tag )
 {
-  //TODO falls keine andere lösung gefunden, hier fallunterscheidung nach coupling
-  //machen
   preciceTrace1( "addTagPostProcessing()",tag.getFullName());
   if(_postProcConfig.get()==NULL){
     _postProcConfig = PtrPostProcessingConfiguration(

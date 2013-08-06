@@ -63,6 +63,7 @@ void ConstantRelaxationPostProcessing:: performPostProcessing
     utils::DynVector& oldValues = pair.second.oldValues.column(0);
     values *= omega;
     values += oldValues * oneMinusOmega;
+    preciceDebug("pp values" << values);
   }
 }
 

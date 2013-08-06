@@ -135,7 +135,7 @@ void ImplicitCouplingScheme:: initialize
   setTimesteps(startTimestep);
   if (not _doesFirstStep){
     setupConvergenceMeasures(); // needs _couplingData configured
-    setupDataMatrices(); // Reserve memory and initialize data with zero
+    setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
     if (_postProcessing.get() != NULL){
       _postProcessing->initialize(getSendData()); // Reserve memory, initialize
     }
@@ -424,7 +424,7 @@ void ImplicitCouplingScheme:: initializeTXTWriters()
 //  }
 }
 
-void ImplicitCouplingScheme:: setupDataMatrices()
+void ImplicitCouplingScheme:: setupDataMatrices(DataMap& data)
 {
   preciceTrace("setupDataMatrices()");
   // Reserve storage for convergence measurement of send and receive data values
@@ -437,7 +437,7 @@ void ImplicitCouplingScheme:: setupDataMatrices()
   }
   // Reserve storage for extrapolation of send data values
   if (_extrapolationOrder > 0){
-    foreach (DataMap::value_type& pair, getSendData()){
+    foreach (DataMap::value_type& pair, data){
       int cols = pair.second.oldValues.cols();
       assertion1(cols <= 1, cols);
       pair.second.oldValues.append(CouplingData::DataMatrix(
@@ -476,6 +476,7 @@ bool ImplicitCouplingScheme:: measureConvergence()
     assertion(convMeasure.data != NULL);
     assertion(convMeasure.measure.get() != NULL);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
+    preciceDebug("old values in convergence "<< oldValues);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values);
     if (not convMeasure.measure->isConvergence()){
       //preciceDebug("Local convergence = false");
@@ -502,6 +503,7 @@ void ImplicitCouplingScheme:: extrapolateData(DataMap& data)
    if((_extrapolationOrder == 1) || startWithFirstOrder ){
       preciceInfo("extrapolateData()", "Performing first order extrapolation" );
       foreach(DataMap::value_type & pair, data ){
+         preciceDebug("Extrapolate data: " << pair.first);
          assertion(pair.second.oldValues.cols() > 1 );
          utils::DynVector & values = *pair.second.values;
          pair.second.oldValues.column(0) = values;    // = x^t

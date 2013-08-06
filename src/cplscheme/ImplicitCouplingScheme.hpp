@@ -197,7 +197,7 @@ protected: //TODO nur für funktionen erlaubt, nicht für member variablen
    * meshes. The ordering of the data values corresponds to that in the meshes
    * and the ordering of the meshes to that in _couplingData.
    */
-    void setupDataMatrices();
+    void setupDataMatrices(DataMap& data);
 
     void setupConvergenceMeasures();
 
