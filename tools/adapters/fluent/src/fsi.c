@@ -66,7 +66,7 @@ void regather_write_positions(int current_size);
 void fsi_init(Domain* domain)
 {
   int precice_process_id = -1; /* Process ID given to preCICE */
-  Message("\nEntering fsi_init\n");
+  printf("\nEntering fsi_init\n");
 
   #if !PARALLEL
   precice_process_id = 0;
@@ -118,12 +118,12 @@ void fsi_init(Domain* domain)
 
   Message("  (%d) Synchronizing Fluent processes\n", myid);
   PRF_GSYNC();
-  Message("(%d) Leaving INIT\n", myid);
+  printf("(%d) Leaving INIT\n", myid);
 }
 
 void fsi_write_and_advance()
 {
-  Message("(%d) Entering ON_DEMAND(write_and_andvance)\n", myid);
+  printf("(%d) Entering ON_DEMAND(write_and_andvance)\n", myid);
   int ongoing;
   int subcycling = ! precicec_isWriteDataRequired(CURRENT_TIMESTEP);
   int current_size = -1;
@@ -194,66 +194,60 @@ void fsi_write_and_advance()
   }
   #endif /* !RP_NODE */
 
-  Message("(%d) Leaving ON_DEMAND(write_and_advance)\n", myid);
+  printf("(%d) Leaving ON_DEMAND(write_and_advance)\n", myid);
 }
 
 void fsi_grid_motion(Domain* domain, Dynamic_Thread* dt, real time, real dtime)
 {
-  Message("\n(%d) Entering GRID_MOTION\n", myid);
+  printf("\n(%d) Entering GRID_MOTION\n", myid);
   int meshID = precicec_getMeshID("WetSurface");
   int current_thread_size = -1;
 
-#if !RP_HOST /* Serial or node */
-if (thread_index == dynamic_thread_size){
-  Message ("   Reset thread index\n");
-  thread_index = 0;
-}
-Message("  (%d) Thread index = %d\n", myid, thread_index);
-Thread* face_thread  = DT_THREAD(dt);
-
-
-if (strncmp("gridmotions", dt->profile_udf_name, 11) != 0){
-  Message("  (%d) ERROR: called gridmotions for invalid dynamic thread: %s\n",
-          myid, dt->profile_udf_name);
-  exit(1);
-}
-if (face_thread == NULL){
-  Message("  (%d) ERROR: face_thread == NULL\n", myid);
-  exit(1);
-}
-if (!did_gather_read_positions){
-  gather_read_positions(dt);
-}
-else {
-  /* Read positions can change in parallel mode when load-balancing occurs */
-  current_thread_size = check_read_positions(dt);
-  if (current_thread_size != -1){
-    regather_read_positions(dt, current_thread_size);
+  #if !RP_HOST /* Serial or node */
+  if (thread_index == dynamic_thread_size){
+    printf ("   Reset thread index\n");
+    thread_index = 0;
   }
-}
+  printf("  (%d) Thread index = %d\n", myid, thread_index);
+  Thread* face_thread  = DT_THREAD(dt);
+
+  if (strncmp("gridmotions", dt->profile_udf_name, 11) != 0){
+    printf("  (%d) ERROR: called gridmotions for invalid dynamic thread: %s\n",
+            myid, dt->profile_udf_name);
+    exit(1);
+  }
+  if (face_thread == NULL){
+    printf("  (%d) ERROR: face_thread == NULL\n", myid);
+    exit(1);
+  }
+  if (!did_gather_read_positions){
+    gather_read_positions(dt);
+  }
+  else {
+    /* Read positions can change in parallel mode when load-balancing occurs */
+    current_thread_size = check_read_positions(dt);
+    if (current_thread_size != -1){
+      regather_read_positions(dt, current_thread_size);
+    }
+  }
+  #endif /* !RP_HOST */
 
   if (skip_grid_motion){
     if (thread_index >= dynamic_thread_size-1){
       skip_grid_motion = BOOL_FALSE;
     }
     thread_index++;
-    Message("  (%d) Skipping first round grid motion\n", myid);
+    printf("  (%d) Skipping first round grid motion\n", myid);
     return;
   }
 
   /* Here the code was before */
 
-  /*indexNode = 0;*/
+  #if !RP_HOST
   SET_DEFORMING_THREAD_FLAG(THREAD_T0(face_thread));
   #endif /* !RP_HOST */
 
-  printf("  (%d) -- 1\n", myid);
-  fflush(stdout);
-
   precicec_mapReadData(meshID); /* Collective call necessary */
-
-  printf("  (%d) -- 2\n", myid);
-  fflush(stdout);
 
   #if !RP_HOST /* Serial or node */
   read_displacements(dt);
@@ -275,12 +269,12 @@ else {
     precicec_finalize();
   }
 
-  Message("(%d) Leaving GRID_MOTION\n", myid);
+  printf("(%d) Leaving GRID_MOTION\n", myid);
 }
 
 void fsi_plot_coords()
 {
-  Message("(%d) Entering ON_DEMAND(plot_coords)\n", myid);
+  printf("(%d) Entering ON_DEMAND(plot_coords)\n", myid);
 
   #if !RP_HOST
   int i=0, n=0;
@@ -358,11 +352,12 @@ void fsi_plot_coords()
   }
   #endif /* ! RP_HOST */
 
-  Message("(%d) Leaving ON_DEMAND(plot_coords)\n", myid);
+  printf("(%d) Leaving ON_DEMAND(plot_coords)\n", myid);
 }
 
 void count_dynamic_threads()
 {
+  printf("(%d) Entering count_dynamic_threads()\n", myid);
   Domain *domain = NULL;
   Dynamic_Thread* dynamic_thread = NULL;
   Thread* face_thread = NULL;
@@ -416,10 +411,12 @@ void count_dynamic_threads()
     dynamic_thread = dynamic_thread->next;
   }
   Message("  (%d) ... %d\n", myid, dynamic_thread_size);
+  printf("(%d) Leaving count_dynamic_threads()\n", myid);
 }
 
 void gather_write_positions()
 {
+  printf("(%d) Entering gather_write_positions()\n", myid);
   #if !RP_HOST
   int meshID = precicec_getMeshID("WetSurface");
   int i = 0;
@@ -505,10 +502,12 @@ void gather_write_positions()
   /* Setup precice index tables for checkpoint and load balancing */
   #if !RP_NODE /* Host or serial */
   #endif /* ! RP_NODE */
+  printf("(%d) Leaving gather_write_positions()\n", myid);
 }
 
 void gather_read_positions(Dynamic_Thread* dt)
 {
+  printf("(%d) Entering gather_read_positions()\n", myid);
   Thread* face_thread  = DT_THREAD(dt);
   Node* node;
   face_t face;
@@ -532,7 +531,7 @@ void gather_read_positions(Dynamic_Thread* dt)
   } end_f_loop(face, face_thread);
 
   /* Get initial coordinates and reset update marking */
-  Message("  (%d) Reallocating %d initial positions ...\n", myid, wet_nodes_size);
+  printf("  (%d) Reallocating %d initial positions ...\n", myid, wet_nodes_size);
   initial_coords = (double*) realloc(initial_coords, wet_nodes_size * ND_ND * sizeof(double));
   displacements = (double*) realloc(displacements, wet_nodes_size * ND_ND * sizeof(double));
   displ_indices = (int*) realloc(displ_indices, wet_nodes_size * sizeof(int));
@@ -558,13 +557,14 @@ void gather_read_positions(Dynamic_Thread* dt)
       }
     }
   } end_f_loop(face, face_thread);
-  Message("  (%d) Set %d (of %d) displacement read positions ...\n", myid,
+  printf("  (%d) Set %d (of %d) displacement read positions ...\n", myid,
           array_index - wet_nodes_size + dynamic_thread_node_size[thread_index],
           dynamic_thread_node_size[thread_index]);
 
   if (thread_index == dynamic_thread_size - 1){
     did_gather_read_positions = BOOL_TRUE;
   }
+  printf("(%d) Leaving gather_read_positions()\n", myid);
 }
 
 
