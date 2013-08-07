@@ -44,7 +44,7 @@ void AitkenPostProcessing:: initialize
   preciceCheck(utils::contained(_dataID, cpldata), "initialize()",
                "Data with ID " << _dataID
                << " is not contained in data given at initialization!" );
-  size_t entries = cpldata[_dataID].values->size();
+  size_t entries = cpldata[_dataID]->values->size();
   assertion(entries > 0);
   double initializer = std::numeric_limits<double>::max();
   utils::DynVector toAppend(entries, initializer);
@@ -52,11 +52,11 @@ void AitkenPostProcessing:: initialize
 
   // Append column for old values if not done by coupling scheme yet
   foreach (DataMap::value_type& pair, cpldata){
-    int cols = pair.second.oldValues.cols();
+    int cols = pair.second->oldValues.cols();
     if (cols < 1){
-      assertion1(pair.second.values->size() > 0, pair.first);
-      pair.second.oldValues.append(CouplingData::DataMatrix(
-        pair.second.values->size(), 1, 0.0));
+      assertion1(pair.second->values->size() > 0, pair.first);
+      pair.second->oldValues.append(CouplingData::DataMatrix(
+        pair.second->values->size(), 1, 0.0));
     }
   }
 }
@@ -71,8 +71,8 @@ void AitkenPostProcessing:: performPostProcessing
 
   // Compute aitken relaxation factor
   assertion(utils::contained(_dataID, cplData));
-  DataValues& values = *cplData[_dataID].values;
-  DataValues& oldValues = cplData[_dataID].oldValues.column(0);
+  DataValues& values = *cplData[_dataID]->values;
+  DataValues& oldValues = cplData[_dataID]->oldValues.column(0);
 
   // Compute current residuals
   DataValues residuals(values);
@@ -99,8 +99,8 @@ void AitkenPostProcessing:: performPostProcessing
   double omega = _aitkenFactor;
   double oneMinusOmega = 1.0 - omega;
   foreach ( DataMap::value_type& pair, cplData ) {
-    DataValues& values = *pair.second.values;
-    DataValues& oldValues = pair.second.oldValues.column(0);
+    DataValues& values = *pair.second->values;
+    DataValues& oldValues = pair.second->oldValues.column(0);
     values *= omega;
     for ( int i=0; i < values.size(); i++ ) {
       values[i] += oldValues[i] * oneMinusOmega;

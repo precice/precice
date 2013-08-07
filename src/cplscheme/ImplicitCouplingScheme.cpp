@@ -156,7 +156,7 @@ void ImplicitCouplingScheme:: initialize
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
   foreach (DataMap::value_type & pair, getSendData()){
-    if (pair.second.initialize){
+    if (pair.second->initialize){
       preciceCheck(not _doesFirstStep, "initialize()",
                    "Only second participant can initialize data!");
       requireAction(constants::actionWriteInitialData());
@@ -168,7 +168,7 @@ void ImplicitCouplingScheme:: initialize
   // If the second participant initializes data, the first receive for the first
   // participant is done in initialize() instead of andvance().
   foreach (DataMap::value_type & pair, getReceiveData()){
-    if (pair.second.initialize){
+    if (pair.second->initialize){
       preciceCheck(_doesFirstStep, "initialize()",
                    "Only first participant can receive initial data!");
       preciceDebug("Initialized data to be received");
@@ -204,11 +204,11 @@ void ImplicitCouplingScheme:: initializeData()
                "initializeData()", "Not required data initialization!");
   assertion(not _doesFirstStep);
   foreach (DataMap::value_type & pair, getSendData()){
-    utils::DynVector& oldValues = pair.second.oldValues.column(0);
-    oldValues = *pair.second.values;
+    utils::DynVector& oldValues = pair.second->oldValues.column(0);
+    oldValues = *pair.second->values;
 
     // For extrapolation, treat the initial value as old timestep value
-    pair.second.oldValues.shiftSetFirst(*pair.second.values);
+    pair.second->oldValues.shiftSetFirst(*pair.second->values);
 
     // The second participant sends the initialized data to the first particpant
     // here, which receives the data on call of initialize().
@@ -296,13 +296,13 @@ void ImplicitCouplingScheme:: advance()
         }
         else { // Store data for conv. measurement, post-processing, or extrapolation
           foreach (DataMap::value_type& pair, getSendData()){
-            if (pair.second.oldValues.size() > 0){
-              pair.second.oldValues.column(0) = *pair.second.values;
+            if (pair.second->oldValues.size() > 0){
+              pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
           foreach (DataMap::value_type& pair, getReceiveData()){
-            if (pair.second.oldValues.size() > 0){
-              pair.second.oldValues.column(0) = *pair.second.values;
+            if (pair.second->oldValues.size() > 0){
+              pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
         }
@@ -436,10 +436,10 @@ void ImplicitCouplingScheme:: setupDataMatrices(DataMap& data)
   // Reserve storage for extrapolation of send data values
   if (_extrapolationOrder > 0){
     foreach (DataMap::value_type& pair, data){
-      int cols = pair.second.oldValues.cols();
+      int cols = pair.second->oldValues.cols();
       assertion1(cols <= 1, cols);
-      pair.second.oldValues.append(CouplingData::DataMatrix(
-          pair.second.values->size(), _extrapolationOrder + 1 - cols, 0.0));
+      pair.second->oldValues.append(CouplingData::DataMatrix(
+          pair.second->values->size(), _extrapolationOrder + 1 - cols, 0.0));
     }
   }
 }
@@ -502,20 +502,20 @@ void ImplicitCouplingScheme:: extrapolateData(DataMap& data)
       preciceInfo("extrapolateData()", "Performing first order extrapolation" );
       foreach(DataMap::value_type & pair, data ){
          preciceDebug("Extrapolate data: " << pair.first);
-         assertion(pair.second.oldValues.cols() > 1 );
-         utils::DynVector & values = *pair.second.values;
-         pair.second.oldValues.column(0) = values;    // = x^t
+         assertion(pair.second->oldValues.cols() > 1 );
+         utils::DynVector & values = *pair.second->values;
+         pair.second->oldValues.column(0) = values;    // = x^t
          values *= 2.0;                                  // = 2 * x^t
-         values -= pair.second.oldValues.column(1);   // = 2*x^t - x^(t-1)
-         pair.second.oldValues.shiftSetFirst(values );
+         values -= pair.second->oldValues.column(1);   // = 2*x^t - x^(t-1)
+         pair.second->oldValues.shiftSetFirst(values );
       }
    }
    else if(_extrapolationOrder == 2 ){
       preciceInfo("extrapolateData()", "Performing second order extrapolation" );
       foreach(DataMap::value_type & pair, data ) {
-         assertion(pair.second.oldValues.cols() > 2 );
-         utils::DynVector & values = *pair.second.values;
-         pair.second.oldValues.column(0) = values;        // = x^t                                     // = 2.5 x^t
+         assertion(pair.second->oldValues.cols() > 2 );
+         utils::DynVector & values = *pair.second->values;
+         pair.second->oldValues.column(0) = values;        // = x^t                                     // = 2.5 x^t
 //         utils::DynVector & valuesOld1 = pair.second.oldValues.getColumn(1);
 //         utils::DynVector & valuesOld2 = pair.second.oldValues.getColumn(2);
 //         for(int i=0; i < values.size(); i++ ) {
@@ -523,13 +523,13 @@ void ImplicitCouplingScheme:: extrapolateData(DataMap& data)
 //            values[i] += valuesOld2[i] * 3.0; // =
 //         }
          values *= 2.5;                                      // = 2.5 x^t
-         utils::DynVector & valuesOld1 = pair.second.oldValues.column(1);
-         utils::DynVector & valuesOld2 = pair.second.oldValues.column(2);
+         utils::DynVector & valuesOld1 = pair.second->oldValues.column(1);
+         utils::DynVector & valuesOld2 = pair.second->oldValues.column(2);
          for(int i=0; i < values.size(); i++ ){
             values[i] -= valuesOld1[i] * 2.0; // = 2.5x^t - 2x^(t-1)
             values[i] += valuesOld2[i] * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
          }
-         pair.second.oldValues.shiftSetFirst(values );
+         pair.second->oldValues.shiftSetFirst(values );
          //preciceDebug("extrapolateData()", "extrapolated data to \""
          //               << *pair.second.values );
       }
@@ -610,10 +610,10 @@ void ImplicitCouplingScheme:: exportState
   if (not _doesFirstStep){
     io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
     foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
-      writer.write(dataMap.second.oldValues);
+      writer.write(dataMap.second->oldValues);
     }
     foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
-      writer.write(dataMap.second.oldValues);
+      writer.write(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != NULL){
       _postProcessing->exportState(writer);
@@ -628,10 +628,10 @@ void ImplicitCouplingScheme:: importState
   if (not _doesFirstStep){
     io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
     foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
-      reader.read(dataMap.second.oldValues);
+      reader.read(dataMap.second->oldValues);
     }
     foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
-      reader.read(dataMap.second.oldValues);
+      reader.read(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != NULL){
       _postProcessing->importState(reader);

@@ -16,6 +16,7 @@ typedef boost::shared_ptr<ConvergenceMeasure> PtrConvergenceMeasure;
 class PostProcessing;
 typedef boost::shared_ptr<PostProcessing> PtrPostProcessing;
 
+
 }}} // namespace precice, cplscheme, impl
 
 #endif /* PRECICE_CPLSCHEME_IMPL__SHAREDPOINTER_HPP_ */

@@ -66,7 +66,7 @@ void IQNILSPostProcessing:: initialize
    preciceCheck(utils::contained(_dataID, cplData), "initialize()",
                 "Data with ID " << _dataID << " is not contained in data "
                 "given at initialization!");
-   size_t entries = cplData[_dataID].values->size();
+   size_t entries = cplData[_dataID]->values->size();
    assertion(entries > 0);
    double init = 0.0;
    assertion(_oldXTilde.size() == 0);
@@ -78,11 +78,11 @@ void IQNILSPostProcessing:: initialize
 
    // Append column for old values if not done by coupling scheme yet
    foreach (DataMap::value_type& pair, cplData){
-     int cols = pair.second.oldValues.cols();
+     int cols = pair.second->oldValues.cols();
      if (cols < 1){
-       assertion1(pair.second.values->size() > 0, pair.first);
-       pair.second.oldValues.append(CouplingData::DataMatrix(
-         pair.second.values->size(), 1, 0.0));
+       assertion1(pair.second->values->size() > 0, pair.first);
+       pair.second->oldValues.append(CouplingData::DataMatrix(
+         pair.second->values->size(), 1, 0.0));
      }
    }
 }
@@ -96,9 +96,9 @@ void IQNILSPostProcessing:: performPostProcessing
   assertion1(utils::contained(_dataID, cplData), _dataID);
   assertion2(_oldResiduals.size() == _oldXTilde.size(),
              _oldResiduals.size(), _oldXTilde.size());
-  DataValues& values = *cplData[_dataID].values;
+  DataValues& values = *cplData[_dataID]->values;
   //preciceDebug("Untouched values = " << values);
-  const DataValues& oldValues = cplData[_dataID].oldValues.column(0);
+  const DataValues& oldValues = cplData[_dataID]->oldValues.column(0);
   //preciceDebug("Old values = " << oldValues);
 
   // Compute current residual: vertex-data - oldData
@@ -122,9 +122,9 @@ void IQNILSPostProcessing:: performPostProcessing
     foreach (DataMap::value_type& pair, cplData){
       if (pair.first != _dataID){
         //            precicePrint("   More data ...");
-        DataValues & values = *pair.second.values;
+        DataValues & values = *pair.second->values;
         values *= _initialRelaxation;                   // new * omg
-        residuals = pair.second.oldValues.column(0);  // old
+        residuals = pair.second->oldValues.column(0);  // old
         residuals *= 1.0 - _initialRelaxation;          // (1-omg) * old
         values += residuals;                   // (1-omg) * old + new * omg
       }
@@ -218,12 +218,12 @@ void IQNILSPostProcessing:: performPostProcessing
 
     foreach (DataMap::value_type & pair, cplData){
       if (pair.first != _dataID){
-        residuals = *pair.second.values;                 // = x_tilde
-        residuals -= pair.second.oldValues.column(0); // = x_tilde - x^k = r^k
+        residuals = *pair.second->values;                 // = x_tilde
+        residuals -= pair.second->oldValues.column(0); // = x_tilde - x^k = r^k
         // Perform update with Wc
         residuals += Wc;                                 // = Wc + r^k
-        residuals += pair.second.oldValues.column(0); // = x^k + Wc + r^k
-        *pair.second.values = residuals;
+        residuals += pair.second->oldValues.column(0); // = x^k + Wc + r^k
+        *pair.second->values = residuals;
       }
     }
     //preciceDebug("performPostprocessing()", "Postprocessed values = " << values);

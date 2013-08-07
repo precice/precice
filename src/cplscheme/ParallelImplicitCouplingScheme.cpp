@@ -60,7 +60,6 @@ void ParallelImplicitCouplingScheme:: initialize
   setTimesteps(startTimestep);
   if (not _doesFirstStep){ // second participant
     setupConvergenceMeasures(); // needs _couplingData configured
-    //TODO funzt nicht, da werte kopiert werden
     setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
     mergeData(); // merge send and receive data for all pp calls
     if (_postProcessing.get() != NULL){
@@ -73,13 +72,13 @@ void ParallelImplicitCouplingScheme:: initialize
 
 
   foreach (DataMap::value_type & pair, getSendData()){
-    if (pair.second.initialize){
+    if (pair.second->initialize){
       _hasToSendInitData = true;
       break;
     }
   }
   foreach (DataMap::value_type & pair, getReceiveData()){
-    if (pair.second.initialize){
+    if (pair.second->initialize){
       _hasToReceiveInitData = true;
       break;
     }
@@ -140,25 +139,25 @@ void ParallelImplicitCouplingScheme:: initializeData()
 
       // second participant has to save values for extrapolation
       foreach (DataMap::value_type & pair, getReceiveData()){
-        utils::DynVector& oldValues = pair.second.oldValues.column(0);
-        oldValues = *pair.second.values;
+        utils::DynVector& oldValues = pair.second->oldValues.column(0);
+        oldValues = *pair.second->values;
         // For extrapolation, treat the initial value as old timestep value
-        pair.second.oldValues.shiftSetFirst(*pair.second.values);
+        pair.second->oldValues.shiftSetFirst(*pair.second->values);
         preciceDebug("Shift columns for receive data " << pair.first);
-        preciceDebug("columns for receive data " << pair.second.oldValues.cols());
+        preciceDebug("columns for receive data " << pair.second->oldValues.cols());
       }
 
     }
     if(_hasToSendInitData){
 
       foreach (DataMap::value_type & pair, getSendData()){
-        utils::DynVector& oldValues = pair.second.oldValues.column(0);
-        oldValues = *pair.second.values;
+        utils::DynVector& oldValues = pair.second->oldValues.column(0);
+        oldValues = *pair.second->values;
         // For extrapolation, treat the initial value as old timestep value
-        pair.second.oldValues.shiftSetFirst(*pair.second.values);
+        pair.second->oldValues.shiftSetFirst(*pair.second->values);
         preciceDebug("old Values in initializeData: " << oldValues);
         preciceDebug("Shift columns for send data " << pair.first);
-        preciceDebug("columns for send data " << pair.second.oldValues.cols());
+        preciceDebug("columns for send data " << pair.second->oldValues.cols());
       }
 
       _communication->startSendPackage(0);
@@ -216,12 +215,12 @@ void ParallelImplicitCouplingScheme:: advance()
       //TODO Debug
       if(not _doesFirstStep){
         foreach (DataMap::value_type& pair, getSendData()){
-          preciceDebug("after MC: " << pair.second.oldValues.column(0));
+          preciceDebug("after MC: " << pair.second->oldValues.column(0));
         }
       }
       if(not _doesFirstStep){
         foreach (DataMap::value_type& pair, getAllData()){
-          preciceDebug("after MC (ALL DATA): " << pair.second.oldValues.column(0));
+          preciceDebug("after MC (ALL DATA): " << pair.second->oldValues.column(0));
         }
       }
 
@@ -250,13 +249,13 @@ void ParallelImplicitCouplingScheme:: advance()
         }
         else { // Store data for conv. measurement, post-processing, or extrapolation
           foreach (DataMap::value_type& pair, getSendData()){
-            if (pair.second.oldValues.size() > 0){
-              pair.second.oldValues.column(0) = *pair.second.values;
+            if (pair.second->oldValues.size() > 0){
+              pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
           foreach (DataMap::value_type& pair, getReceiveData()){
-            if (pair.second.oldValues.size() > 0){
-              pair.second.oldValues.column(0) = *pair.second.values;
+            if (pair.second->oldValues.size() > 0){
+              pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
         }
@@ -309,7 +308,7 @@ void ParallelImplicitCouplingScheme:: mergeData()
 {
   preciceTrace("mergeData()");
   assertion1(!_doesFirstStep, "Only the second participant should do the pp." );
-  _allData.clear();
+  assertion1(_allData.empty(), "This function should only be called once.");
   _allData.insert(getSendData().begin(),getSendData().end());
   _allData.insert(getReceiveData().begin(),getReceiveData().end());
 

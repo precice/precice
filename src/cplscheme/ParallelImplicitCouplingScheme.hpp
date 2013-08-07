@@ -103,7 +103,6 @@ private:
   DataMap& getAllData()
   {
     assertion1(!_doesFirstStep, "Only the second participant should do the pp." );
-    mergeData();
      return _allData;
   }
 

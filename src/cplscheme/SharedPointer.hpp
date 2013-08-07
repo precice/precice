@@ -6,6 +6,7 @@
 
 #include "boost/smart_ptr.hpp"
 
+
 namespace precice {
 namespace cplscheme {
 
@@ -18,6 +19,9 @@ typedef boost::shared_ptr<CouplingSchemeConfiguration> PtrCouplingSchemeConfigur
 
 class PostProcessingConfiguration;
 typedef boost::shared_ptr<PostProcessingConfiguration> PtrPostProcessingConfiguration;
+
+struct CouplingData;
+typedef boost::shared_ptr<CouplingData> PtrCouplingData;
 
 }} // namespace precice, cplscheme
 

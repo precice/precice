@@ -308,7 +308,7 @@ public:
 
 protected:
 
-   typedef std::map<int,CouplingData> DataMap;
+   typedef std::map<int,PtrCouplingData> DataMap;
 
    struct State {
      int id;

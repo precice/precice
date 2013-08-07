@@ -6,6 +6,7 @@
 
 #include <map>
 #include <vector>
+#include "../SharedPointer.hpp"
 
 namespace precice {
    namespace cplscheme {
@@ -30,7 +31,7 @@ public:
   /**
    * @brief Map from data ID to data values.
    */
-  typedef std::map<int,CouplingData> DataMap;
+  typedef std::map<int,PtrCouplingData> DataMap;
 
   /**
    * @brief Destructor, empty.

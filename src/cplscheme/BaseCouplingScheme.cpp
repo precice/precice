@@ -61,8 +61,8 @@ void BaseCouplingScheme:: addDataToSend
 {
   int id = data->getID();
   if(! utils::contained(id, _sendData)) {
-    CouplingData cplData(& (data->values()), initialize);
-    DataMap::value_type pair = std::make_pair (id, cplData);
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+    DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _sendData.insert(pair);
   }
   else {
@@ -79,8 +79,8 @@ void BaseCouplingScheme:: addDataToReceive
 {
    int id = data->getID();
    if(! utils::contained(id, _receiveData)) {
-      CouplingData cplData = CouplingData(& data->values(), initialize);
-      DataMap::value_type pair = std::make_pair (id, cplData);
+      PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+      DataMap::value_type pair = std::make_pair (id, ptrCplData);
       _receiveData.insert(pair);
    }
    else {
@@ -161,9 +161,9 @@ std::vector<int> BaseCouplingScheme:: sendData
 
   std::vector<int> sentDataIDs;
   foreach (DataMap::value_type& pair, _sendData){
-    int size = pair.second.values->size ();
+    int size = pair.second->values->size ();
     if (size > 0){
-      communication->send(tarch::la::raw(*pair.second.values), size, 0);
+      communication->send(tarch::la::raw(*pair.second->values), size, 0);
     }
     sentDataIDs.push_back(pair.first);
   }
@@ -181,9 +181,9 @@ std::vector<int> BaseCouplingScheme:: receiveData
 
   std::vector<int> receivedDataIDs;
   foreach(DataMap::value_type & pair, _receiveData){
-    int size = pair.second.values->size ();
+    int size = pair.second->values->size ();
     if (size > 0){
-      communication->receive(tarch::la::raw(*pair.second.values), size, 0);
+      communication->receive(tarch::la::raw(*pair.second->values), size, 0);
     }
     receivedDataIDs.push_back(pair.first);
   }
@@ -198,7 +198,7 @@ CouplingData* BaseCouplingScheme:: getSendData
   preciceTrace1("getSendData()", dataID);
   DataMap::iterator iter = _sendData.find(dataID);
   if(iter != _sendData.end()){
-    return & iter->second;
+    return  &(*(iter->second));
   }
   return NULL;
 }
@@ -210,7 +210,7 @@ CouplingData* BaseCouplingScheme:: getReceiveData
   preciceTrace1("getReceiveData()", dataID);
   DataMap::iterator iter = _receiveData.find(dataID);
   if(iter != _receiveData.end()){
-    return & iter->second;
+    return  &(*(iter->second));
   }
   return NULL;
 }
