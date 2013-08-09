@@ -425,6 +425,7 @@ void ImplicitCouplingScheme:: initializeTXTWriters()
 void ImplicitCouplingScheme:: setupDataMatrices(DataMap& data)
 {
   preciceTrace("setupDataMatrices()");
+  preciceDebug("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
   foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
     assertion(convMeasure.data != NULL);
@@ -437,6 +438,7 @@ void ImplicitCouplingScheme:: setupDataMatrices(DataMap& data)
   if (_extrapolationOrder > 0){
     foreach (DataMap::value_type& pair, data){
       int cols = pair.second->oldValues.cols();
+      preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
       assertion1(cols <= 1, cols);
       pair.second->oldValues.append(CouplingData::DataMatrix(
           pair.second->values->size(), _extrapolationOrder + 1 - cols, 0.0));

@@ -60,8 +60,8 @@ void ParallelImplicitCouplingScheme:: initialize
   setTimesteps(startTimestep);
   if (not _doesFirstStep){ // second participant
     setupConvergenceMeasures(); // needs _couplingData configured
-    setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
     mergeData(); // merge send and receive data for all pp calls
+    setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
     if (_postProcessing.get() != NULL){
       _postProcessing->initialize(getAllData()); // Reserve memory, initialize
     }
@@ -144,7 +144,7 @@ void ParallelImplicitCouplingScheme:: initializeData()
         // For extrapolation, treat the initial value as old timestep value
         pair.second->oldValues.shiftSetFirst(*pair.second->values);
         preciceDebug("Shift columns for receive data " << pair.first);
-        preciceDebug("columns for receive data " << pair.second->oldValues.cols());
+        preciceDebug("Columns for receive data " << pair.second->oldValues.cols());
       }
 
     }
