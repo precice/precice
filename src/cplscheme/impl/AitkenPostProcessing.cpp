@@ -22,11 +22,11 @@ tarch::logging::Log AitkenPostProcessing::
 AitkenPostProcessing:: AitkenPostProcessing
 (
   double initialRelaxation,
-  int    dataID )
+  std::vector<int>    dataIDs )
 :
   PostProcessing (),
   _initialRelaxation ( initialRelaxation ),
-  _dataID ( dataID ),
+  _dataIDs ( dataIDs ),
   _aitkenFactor ( initialRelaxation ),
   _iterationCounter ( 0 ),
   _residuals ()
@@ -41,10 +41,10 @@ void AitkenPostProcessing:: initialize
 (
   DataMap& cpldata )
 {
-  preciceCheck(utils::contained(_dataID, cpldata), "initialize()",
-               "Data with ID " << _dataID
+  preciceCheck(utils::contained(*_dataIDs.begin(), cpldata), "initialize()",
+               "Data with ID " << *_dataIDs.begin()
                << " is not contained in data given at initialization!" );
-  size_t entries = cpldata[_dataID]->values->size();
+  size_t entries = cpldata[*_dataIDs.begin()]->values->size();
   assertion(entries > 0);
   double initializer = std::numeric_limits<double>::max();
   utils::DynVector toAppend(entries, initializer);
@@ -70,9 +70,9 @@ void AitkenPostProcessing:: performPostProcessing
   using namespace tarch::la;
 
   // Compute aitken relaxation factor
-  assertion(utils::contained(_dataID, cplData));
-  DataValues& values = *cplData[_dataID]->values;
-  DataValues& oldValues = cplData[_dataID]->oldValues.column(0);
+  assertion(utils::contained(*_dataIDs.begin(), cplData));
+  DataValues& values = *cplData[*_dataIDs.begin()]->values;
+  DataValues& oldValues = cplData[*_dataIDs.begin()]->oldValues.column(0);
 
   // Compute current residuals
   DataValues residuals(values);

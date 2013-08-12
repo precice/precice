@@ -38,7 +38,7 @@ public:
    */
   virtual ~PostProcessing() {}
 
-  virtual int getDataID() const =0;
+  virtual std::vector<int> getDataIDs() const =0;
 
   virtual void initialize(DataMap & cpldata) =0;
 

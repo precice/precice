@@ -142,10 +142,10 @@ void ImplicitCouplingScheme:: initialize
     }
   }
   else if (_postProcessing.get() != NULL){
-    int dataID = _postProcessing->getDataID();
+    int dataID = *(_postProcessing->getDataIDs().begin());
     preciceCheck(getSendData(dataID) == NULL, "initialize()",
-                 "A post-processing can be defined for data of second "
-                 << "participant only!");
+                 "In case of serial coupling, post-processing can be defined for "
+                 << "data of second participant only!");
   }
 
   requireAction(constants::actionWriteIterationCheckpoint());

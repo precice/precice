@@ -18,13 +18,13 @@ public:
 
    ConstantRelaxationPostProcessing (
       double relaxation,
-      int    dataID );
+      std::vector<int>    dataIDs );
 
    virtual ~ConstantRelaxationPostProcessing() {}
 
-   virtual int getDataID () const
+   virtual std::vector<int> getDataIDs () const
    {
-      return _dataID;
+      return _dataIDs;
    }
 
    virtual void initialize ( DataMap & cplData );
@@ -40,7 +40,7 @@ private:
 
    double _relaxation;
 
-   int _dataID;
+   std::vector<int> _dataIDs;
 };
 
 }}} // namespace precice, cplscheme, impl

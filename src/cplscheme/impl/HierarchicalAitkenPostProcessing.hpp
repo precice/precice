@@ -19,13 +19,13 @@ public:
 
   HierarchicalAitkenPostProcessing (
     double initialRelaxation,
-    int    dataID );
+    std::vector<int> dataIDs );
 
   virtual ~HierarchicalAitkenPostProcessing () {};
 
-  virtual int getDataID () const
+  virtual  std::vector<int> getDataIDs () const
   {
-    return _dataID;
+    return _dataIDs;
   }
 
   virtual void initialize ( DataMap & cplData );
@@ -40,7 +40,7 @@ private:
 
   double _initialRelaxation;
 
-  int _dataID;
+  std::vector<int> _dataIDs;
 
   std::vector<double> _aitkenFactors;
 

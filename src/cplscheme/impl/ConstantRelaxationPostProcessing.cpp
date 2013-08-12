@@ -20,11 +20,11 @@ tarch::logging::Log ConstantRelaxationPostProcessing::
 ConstantRelaxationPostProcessing:: ConstantRelaxationPostProcessing
 (
   double relaxation,
-  int    dataID )
+  std::vector<int>    dataIDs )
 :
   PostProcessing(),
   _relaxation(relaxation),
-  _dataID(dataID)
+  _dataIDs(dataIDs)
 {
   preciceCheck((relaxation > 0.0) && (relaxation <= 1.0),
                "ConstantRelaxationPostProcessing()",
@@ -36,8 +36,8 @@ void ConstantRelaxationPostProcessing:: initialize
 (
   DataMap& cplData )
 {
-  preciceCheck(utils::contained(_dataID, cplData), "initialize()",
-               "Data with ID " << _dataID
+  preciceCheck(utils::contained(*_dataIDs.begin(), cplData), "initialize()",
+               "Data with ID " << *_dataIDs.begin()
                << " is not contained in data given at initialization!");
 
   // Append column for old values if not done by coupling scheme yet

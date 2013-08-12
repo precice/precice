@@ -26,13 +26,13 @@ public:
       int    maxIterationsUsed,
       int    timestepsReused,
       double singularityLimit,
-      int    dataID );
+      std::vector<int>    dataIDs );
 
    virtual ~IQNILSPostProcessing() {};
 
-   virtual int getDataID () const
+   virtual std::vector<int> getDataIDs () const
    {
-      return _dataID;
+      return _dataIDs;
    }
 
    virtual void initialize (
@@ -64,7 +64,7 @@ private:
 
    double _singularityLimit;
 
-   int _dataID;
+   std::vector<int> _dataIDs;
 
    bool _firstIteration;
 

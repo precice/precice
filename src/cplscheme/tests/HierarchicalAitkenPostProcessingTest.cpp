@@ -29,6 +29,9 @@ void HierarchicalAitkenPostProcessingTest:: run ()
     preciceTrace ( "run()" );
     impl::PostProcessing::DataMap dataMap;
     int dataID = 0;
+    std::vector<int> dataIDs;
+    dataIDs.push_back(dataID);
+
     utils::DynVector highF ( 5 );
     utils::DynVector midF ( 5 );
     utils::DynVector lowF ( 5 );
@@ -49,7 +52,7 @@ void HierarchicalAitkenPostProcessingTest:: run ()
     dataMap.insert ( std::make_pair(dataID, ptrCplData));
 
     double initRelaxation = 1.0;
-    impl::HierarchicalAitkenPostProcessing hierarchAitken ( initRelaxation, dataID );
+    impl::HierarchicalAitkenPostProcessing hierarchAitken ( initRelaxation, dataIDs);
     hierarchAitken.initialize ( dataMap );
     hierarchAitken.performPostProcessing ( dataMap );
 

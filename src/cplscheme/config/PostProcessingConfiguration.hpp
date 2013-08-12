@@ -70,6 +70,7 @@ private:
    const std::string TAG_MAX_USED_ITERATIONS;
    const std::string TAG_TIMESTEPS_REUSED;
    const std::string TAG_SINGULARITY_LIMIT;
+   const std::string TAG_PROCESS;
 
    const std::string ATTR_DATA;
    const std::string ATTR_MESH;
@@ -89,7 +90,7 @@ private:
 
    struct ConfigurationData
    {
-      int dataID;
+      std::vector<int> dataIDs;
       //std::string type;
       double relaxationFactor;
       int maxIterationsUsed;
@@ -98,7 +99,7 @@ private:
 
       ConfigurationData ()
       :
-         dataID ( -1 ),
+         dataIDs (),
          //type ( "" ),
          relaxationFactor ( 0.0 ),
          maxIterationsUsed ( 0 ),

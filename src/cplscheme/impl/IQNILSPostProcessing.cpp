@@ -28,14 +28,14 @@ IQNILSPostProcessing:: IQNILSPostProcessing
   int    maxIterationsUsed,
   int    timestepsReused,
   double singularityLimit,
-  int    dataID)
+  std::vector<int>    dataIDs)
 :
   PostProcessing(),
   _initialRelaxation(initialRelaxation),
   _maxIterationsUsed(maxIterationsUsed),
   _timestepsReused(timestepsReused),
   _singularityLimit(singularityLimit),
-  _dataID(dataID),
+  _dataIDs(dataIDs),
   _firstIteration(true),
   _oldXTilde(),
   _oldResiduals(),
@@ -63,10 +63,11 @@ void IQNILSPostProcessing:: initialize
 (
    DataMap& cplData )
 {
-   preciceCheck(utils::contained(_dataID, cplData), "initialize()",
-                "Data with ID " << _dataID << " is not contained in data "
+   preciceCheck(utils::contained(*_dataIDs.begin(), cplData), "initialize()",
+                "Data with ID " << *_dataIDs.begin() << " is not contained in data "
                 "given at initialization!");
-   size_t entries = cplData[_dataID]->values->size();
+   //TODO erweitern
+   size_t entries = cplData[*_dataIDs.begin()]->values->size();
    assertion(entries > 0);
    double init = 0.0;
    assertion(_oldXTilde.size() == 0);
@@ -93,12 +94,17 @@ void IQNILSPostProcessing:: performPostProcessing
 {
   preciceTrace("performPostProcessing()");
   using namespace tarch::la;
-  assertion1(utils::contained(_dataID, cplData), _dataID);
+  assertion1(utils::contained(*_dataIDs.begin(), cplData), *_dataIDs.begin());
   assertion2(_oldResiduals.size() == _oldXTilde.size(),
              _oldResiduals.size(), _oldXTilde.size());
-  DataValues& values = *cplData[_dataID]->values;
+  //TODO 2ter datensatz an values dranhängen
+  //TODO kopieren wie residuals unten
+  DataValues& values = *cplData[*_dataIDs.begin()]->values;
+  //values.append(*cplData[_dataID2]->values);
+
   //preciceDebug("Untouched values = " << values);
-  const DataValues& oldValues = cplData[_dataID]->oldValues.column(0);
+  //TODO hier genauso
+  const DataValues& oldValues = cplData[*_dataIDs.begin()]->oldValues.column(0);
   //preciceDebug("Old values = " << oldValues);
 
   // Compute current residual: vertex-data - oldData
@@ -119,8 +125,9 @@ void IQNILSPostProcessing:: performPostProcessing
     //      precicePrint("   Performing constant relaxation with omg = " << _initialRelaxation);
 
     // Perform underrelaxation with initial relaxation factor for rest of data.
+    // TODO beide ausschließen
     foreach (DataMap::value_type& pair, cplData){
-      if (pair.first != _dataID){
+      if (pair.first != *_dataIDs.begin()){
         //            precicePrint("   More data ...");
         DataValues & values = *pair.second->values;
         values *= _initialRelaxation;                   // new * omg
@@ -217,7 +224,8 @@ void IQNILSPostProcessing:: performPostProcessing
     values += residuals; // = x^k + Wc + r^k
 
     foreach (DataMap::value_type & pair, cplData){
-      if (pair.first != _dataID){
+      //TODO beide ausschließen
+      if (pair.first != *_dataIDs.begin()){
         residuals = *pair.second->values;                 // = x_tilde
         residuals -= pair.second->oldValues.column(0); // = x_tilde - x^k = r^k
         // Perform update with Wc
@@ -228,6 +236,7 @@ void IQNILSPostProcessing:: performPostProcessing
     }
     //preciceDebug("performPostprocessing()", "Postprocessed values = " << values);
   }
+  //TODO set all values back from copies to original
   _firstIteration = false;
 }
 
