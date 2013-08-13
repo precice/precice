@@ -66,8 +66,9 @@ void IQNILSPostProcessing:: initialize
    preciceCheck(utils::contained(*_dataIDs.begin(), cplData), "initialize()",
                 "Data with ID " << *_dataIDs.begin() << " is not contained in data "
                 "given at initialization!");
-   //TODO erweitern
+   //we assume that all coupling data vectors have the same length
    size_t entries = cplData[*_dataIDs.begin()]->values->size();
+   entries *= _dataIDs.size();
    assertion(entries > 0);
    double init = 0.0;
    assertion(_oldXTilde.size() == 0);
@@ -93,18 +94,22 @@ void IQNILSPostProcessing:: performPostProcessing
    DataMap& cplData)
 {
   preciceTrace("performPostProcessing()");
+  preciceCheck(_dataIDs.size()<=2 && _dataIDs.size()>=1,"performPostProcessing()",
+                      "The number of coupling data vectors has to be 1 or 2");
   using namespace tarch::la;
   assertion1(utils::contained(*_dataIDs.begin(), cplData), *_dataIDs.begin());
   assertion2(_oldResiduals.size() == _oldXTilde.size(),
              _oldResiduals.size(), _oldXTilde.size());
-  //TODO 2ter datensatz an values dranhängen
-  //TODO kopieren wie residuals unten
-  DataValues& values = *cplData[*_dataIDs.begin()]->values;
-  //values.append(*cplData[_dataID2]->values);
+
+  DataValues values;
+  DataValues oldValues;
+  //TODO stimmt das so?
+  for(std::vector<int>::iterator it = _dataIDs.begin(); it != _dataIDs.end(); ++it) {
+      values.append(*(cplData[*it]->values));
+      oldValues.append(cplData[*it]->oldValues.column(0));
+  }
 
   //preciceDebug("Untouched values = " << values);
-  //TODO hier genauso
-  const DataValues& oldValues = cplData[*_dataIDs.begin()]->oldValues.column(0);
   //preciceDebug("Old values = " << oldValues);
 
   // Compute current residual: vertex-data - oldData
@@ -125,9 +130,8 @@ void IQNILSPostProcessing:: performPostProcessing
     //      precicePrint("   Performing constant relaxation with omg = " << _initialRelaxation);
 
     // Perform underrelaxation with initial relaxation factor for rest of data.
-    // TODO beide ausschließen
     foreach (DataMap::value_type& pair, cplData){
-      if (pair.first != *_dataIDs.begin()){
+      if (pair.first != *_dataIDs.begin() && pair.first != *(_dataIDs.end()-1)){
         //            precicePrint("   More data ...");
         DataValues & values = *pair.second->values;
         values *= _initialRelaxation;                   // new * omg
@@ -224,8 +228,7 @@ void IQNILSPostProcessing:: performPostProcessing
     values += residuals; // = x^k + Wc + r^k
 
     foreach (DataMap::value_type & pair, cplData){
-      //TODO beide ausschließen
-      if (pair.first != *_dataIDs.begin()){
+      if (pair.first != *_dataIDs.begin() && pair.first != *(_dataIDs.end()-1)){
         residuals = *pair.second->values;                 // = x_tilde
         residuals -= pair.second->oldValues.column(0); // = x_tilde - x^k = r^k
         // Perform update with Wc
@@ -236,8 +239,22 @@ void IQNILSPostProcessing:: performPostProcessing
     }
     //preciceDebug("performPostprocessing()", "Postprocessed values = " << values);
   }
-  //TODO set all values back from copies to original
+  int valueLength = values.size()/_dataIDs.size();
+  preciceDebug("copying values back, valueLength: " << valueLength);
+  //TODO set all values back from copies to original, so richtig???
+  for(std::vector<int>::iterator it = _dataIDs.begin(); it != _dataIDs.end(); ++it) {
+        //*(cplData[*it]->values)[i] = values//+ (it-_dataIDs.begin())*valueLength;
+        //cplData[*it]->oldValues.column(0) = oldValues;
+        for(int i=0;i<valueLength;i++){
+          preciceDebug("copying values back, values, id: " << *it <<" i: " <<i);
+          (*(cplData[*it]->values))[i] = values[i+(it-_dataIDs.begin())*valueLength];
+          cplData[*it]->oldValues.column(0)[i] = oldValues[i+(it-_dataIDs.begin())*valueLength];
+        }
+    }
+  preciceDebug("copied values back, values size: " << cplData[*_dataIDs.begin()]->values->size());
+  preciceDebug("copied values back, oldValues size: " << cplData[*_dataIDs.begin()]->oldValues.column(0).size());
   _firstIteration = false;
+  //TODO free notwendig?
 }
 
 void IQNILSPostProcessing:: iterationsConverged

@@ -224,10 +224,10 @@ void ParallelImplicitCouplingScheme:: advance()
         }
       }
 
-      assertion2((getSubIteration() <= _maxIterations) || (_maxIterations == -1),
-                 getSubIteration(), _maxIterations);
+      assertion2((_iterations <= _maxIterations) || (_maxIterations == -1),
+                    _iterations, _maxIterations);
       // Stop, when maximal iteration count (given in config) is reached
-      if (getSubIteration() == _maxIterations-1){
+      if (_iterations == _maxIterations-1){
         convergence = true;
       }
       if (convergence){
@@ -270,7 +270,7 @@ void ParallelImplicitCouplingScheme:: advance()
     if (not convergence){
       preciceDebug("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
-      setSubIteration(getSubIteration() + 1);
+      _iterations++;
       _totalIterations++;
       // The computed timestep part equals the timestep length, since the
       // timestep remainder is zero. Subtract the timestep length do another
@@ -285,7 +285,7 @@ void ParallelImplicitCouplingScheme:: advance()
       _iterationsWriter.writeData("Iterations", getSubIteration());
       int converged = getSubIteration() < _maxIterations ? 1 : 0;
       _iterationsWriter.writeData("Convergence", converged);
-      setSubIteration(0);
+      _iterations = 0;
     }
     setHasDataBeenExchanged(true);
     setComputedTimestepPart(0.0);
@@ -297,7 +297,7 @@ void ParallelImplicitCouplingScheme:: advance()
   if (not convergence){
     _timestepToPlot = getTimesteps();
     _timeToPlot = getTime();
-    _iterationToPlot = getSubIteration();
+    _iterationToPlot = _iterations;
   }
   else {
     _iterationToPlot++;

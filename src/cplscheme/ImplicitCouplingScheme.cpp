@@ -297,11 +297,16 @@ void ImplicitCouplingScheme:: advance()
         else { // Store data for conv. measurement, post-processing, or extrapolation
           foreach (DataMap::value_type& pair, getSendData()){
             if (pair.second->oldValues.size() > 0){
+              preciceDebug("set oldValues to values for sendData, id: " << pair.first);
+              preciceDebug("size oldValues: " << pair.second->oldValues.column(0).size());
+              preciceDebug("size values: " << pair.second->values->size());
               pair.second->oldValues.column(0) = *pair.second->values;
+              preciceDebug("set oldValues to values: worked");
             }
           }
           foreach (DataMap::value_type& pair, getReceiveData()){
             if (pair.second->oldValues.size() > 0){
+              preciceDebug("set oldValues to values for sendData, id: " << pair.first);
               pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
