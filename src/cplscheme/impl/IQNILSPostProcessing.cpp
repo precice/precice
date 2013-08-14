@@ -80,6 +80,8 @@ void IQNILSPostProcessing:: initialize
 
    // Append column for old values if not done by coupling scheme yet
    foreach (DataMap::value_type& pair, cplData){
+     assertion2(pair.second->values->size() == entries/_dataIDs.size(),
+                pair.second->values->size(), entries/_dataIDs.size());
      int cols = pair.second->oldValues.cols();
      if (cols < 1){
        assertion1(pair.second->values->size() > 0, pair.first);
@@ -103,10 +105,9 @@ void IQNILSPostProcessing:: performPostProcessing
 
   DataValues values;
   DataValues oldValues;
-  //TODO stimmt das so?
-  for(std::vector<int>::iterator it = _dataIDs.begin(); it != _dataIDs.end(); ++it) {
-      values.append(*(cplData[*it]->values));
-      oldValues.append(cplData[*it]->oldValues.column(0));
+  foreach (int id, _dataIDs){
+    values.append(*(cplData[id]->values));
+    oldValues.append(cplData[id]->oldValues.column(0));
   }
 
   //preciceDebug("Untouched values = " << values);
@@ -240,21 +241,23 @@ void IQNILSPostProcessing:: performPostProcessing
     //preciceDebug("performPostprocessing()", "Postprocessed values = " << values);
   }
   int valueLength = values.size()/_dataIDs.size();
-  preciceDebug("copying values back, valueLength: " << valueLength);
-  //TODO set all values back from copies to original, so richtig???
-  for(std::vector<int>::iterator it = _dataIDs.begin(); it != _dataIDs.end(); ++it) {
-        //*(cplData[*it]->values)[i] = values//+ (it-_dataIDs.begin())*valueLength;
-        //cplData[*it]->oldValues.column(0) = oldValues;
-        for(int i=0;i<valueLength;i++){
-          preciceDebug("copying values back, values, id: " << *it <<" i: " <<i);
-          (*(cplData[*it]->values))[i] = values[i+(it-_dataIDs.begin())*valueLength];
-          cplData[*it]->oldValues.column(0)[i] = oldValues[i+(it-_dataIDs.begin())*valueLength];
-        }
+  preciceDebug("Copying values back, valueLength: " << valueLength);
+  // Set all values back from copies to original
+  int dataIndex = 0;
+  foreach(int id, _dataIDs){
+    utils::DynVector& valuesPart = *(cplData[id]->values);
+    utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
+    int offset = dataIndex*valueLength;
+    for(int i=0; i<valueLength; i++){
+      preciceDebug("Copying values back, values, id: " << id <<" i: " << i);
+      valuesPart[i] = values[i + offset];
+      oldValuesPart[i] = oldValues[i + offset];
     }
+    dataIndex++;
+  }
   preciceDebug("copied values back, values size: " << cplData[*_dataIDs.begin()]->values->size());
   preciceDebug("copied values back, oldValues size: " << cplData[*_dataIDs.begin()]->oldValues.column(0).size());
   _firstIteration = false;
-  //TODO free notwendig?
 }
 
 void IQNILSPostProcessing:: iterationsConverged
