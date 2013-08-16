@@ -282,8 +282,8 @@ void ParallelImplicitCouplingScheme:: advance()
       preciceDebug("Convergence achieved");
       _iterationsWriter.writeData("Timesteps", getTimesteps());
       _iterationsWriter.writeData("Total Iterations", _totalIterations);
-      _iterationsWriter.writeData("Iterations", getSubIteration());
-      int converged = getSubIteration() < _maxIterations ? 1 : 0;
+      _iterationsWriter.writeData("Iterations", _iterations);
+      int converged = _iterations < _maxIterations ? 1 : 0;
       _iterationsWriter.writeData("Convergence", converged);
       _iterations = 0;
     }

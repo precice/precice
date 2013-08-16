@@ -186,14 +186,6 @@ public:
   virtual int getMaxTimesteps() const;
 
   /**
-   * @brief Returns current subiteration number in timestep.
-   */
-  virtual int getSubIteration() const
-  {
-    return _subIteration;
-  }
-
-  /**
    * @brief Returns true, if timestep length is prescribed by the cpl scheme.
    */
   virtual bool hasTimestepLength() const;
@@ -397,11 +389,6 @@ protected:
      _timestepLength = timestepLength;
    }
 
-   void setSubIteration ( int subIteration )
-   {
-     _subIteration = subIteration;
-   }
-
 //   void setMaxLengthNextTimestep ( double limit )
 //   {
 //      _maxLengthNextTimestep = limit;
@@ -461,8 +448,6 @@ private:
    double _computedTimestepPart;
 
    int _timesteps;
-
-   int _subIteration;
 
    int _checkpointTimestepInterval;
 
