@@ -70,9 +70,9 @@ private:
    const std::string TAG_MAX_USED_ITERATIONS;
    const std::string TAG_TIMESTEPS_REUSED;
    const std::string TAG_SINGULARITY_LIMIT;
-   const std::string TAG_PROCESS;
+   const std::string TAG_DATA;
 
-   const std::string ATTR_DATA;
+   const std::string ATTR_NAME;
    const std::string ATTR_MESH;
    //const std::string ATTR_TYPE;
    const std::string ATTR_VALUE;
@@ -85,6 +85,8 @@ private:
    //bool _isValid;
 
    const mesh::PtrMeshConfiguration _meshConfig;
+
+   std::string _meshName;
 
    impl::PtrPostProcessing _postProcessing;
 
