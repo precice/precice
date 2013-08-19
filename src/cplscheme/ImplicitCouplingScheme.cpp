@@ -51,7 +51,9 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   _iterations(0),
   _totalIterations(0),
   _participantSetsDt(false),
-  _participantReceivesDt(false)
+  _participantReceivesDt(false),
+  _hasToReceiveInitData(false),
+  _hasToSendInitData(false)
 {
   preciceCheck(_firstParticipant != _secondParticipant,
                "ImplicitCouplingScheme()", "First participant and "
@@ -150,33 +152,73 @@ void ImplicitCouplingScheme:: initialize
 
   requireAction(constants::actionWriteIterationCheckpoint());
 
-  // Determine data initialization
-  bool doesReceiveData = not _doesFirstStep;
 
-  // If the second participant initializes data, the first receive for the
-  // second participant is done in initializeData() instead of initialize().
+
+
   foreach (DataMap::value_type & pair, getSendData()){
     if (pair.second->initialize){
       preciceCheck(not _doesFirstStep, "initialize()",
                    "Only second participant can initialize data!");
-      requireAction(constants::actionWriteInitialData());
       preciceDebug("Initialized data to be written");
-      doesReceiveData = false;
+      _hasToSendInitData = true;
       break;
     }
   }
-  // If the second participant initializes data, the first receive for the first
-  // participant is done in initialize() instead of andvance().
+
   foreach (DataMap::value_type & pair, getReceiveData()){
     if (pair.second->initialize){
       preciceCheck(_doesFirstStep, "initialize()",
                    "Only first participant can receive initial data!");
       preciceDebug("Initialized data to be received");
-      doesReceiveData = true;
+      _hasToReceiveInitData = true;
     }
   }
 
-  if (doesReceiveData && isCouplingOngoing()){
+   // If the second participant initializes data, the first receive for the
+   // second participant is done in initializeData() instead of initialize().
+  if ((not _doesFirstStep) && (not _hasToSendInitData) && isCouplingOngoing()){
+    preciceDebug("Receiving data");
+    _communication->startReceivePackage(0);
+    if (_participantReceivesDt){
+      double dt = UNDEFINED_TIMESTEP_LENGTH;
+      _communication->receive(dt, 0);
+      preciceDebug("received timestep length of " << dt);
+      assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
+      setTimestepLength(dt);
+    }
+    receiveData(_communication);
+    _communication->finishReceivePackage();
+    setHasDataBeenExchanged(true);
+  }
+
+  if(_hasToSendInitData){
+    requireAction(constants::actionWriteInitialData());
+  }
+
+  initializeTXTWriters();
+  setIsInitialized(true);
+}
+
+void ImplicitCouplingScheme:: initializeData()
+{
+  preciceTrace("initializeData()");
+  preciceCheck(isInitialized(), "initializeData()",
+     "initializeData() can be called after initialize() only!");
+
+  if((not _hasToSendInitData) && (not _hasToReceiveInitData)){
+    preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
+    return;
+  }
+
+  preciceCheck(not (_hasToSendInitData && isActionRequired(constants::actionWriteInitialData())),
+     "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+
+  setHasDataBeenExchanged(false);
+
+
+
+  if (_hasToReceiveInitData && isCouplingOngoing()){
+    assertion(_doesFirstStep);
     preciceDebug("Receiving data");
     _communication->startReceivePackage(0);
     if (_participantReceivesDt){
@@ -191,35 +233,32 @@ void ImplicitCouplingScheme:: initialize
     _communication->finishReceivePackage();
     setHasDataBeenExchanged(true);
   }
-  initializeTXTWriters();
-  setIsInitialized(true);
-}
 
-void ImplicitCouplingScheme:: initializeData()
-{
-  preciceTrace("initializeData()");
-  preciceCheck(isInitialized(), "initializeData()",
-               "initializeData() can be called after initialize() only!");
-  preciceCheck(isActionRequired(constants::actionWriteInitialData()),
-               "initializeData()", "Not required data initialization!");
-  assertion(not _doesFirstStep);
-  foreach (DataMap::value_type & pair, getSendData()){
-    utils::DynVector& oldValues = pair.second->oldValues.column(0);
-    oldValues = *pair.second->values;
 
-    // For extrapolation, treat the initial value as old timestep value
-    pair.second->oldValues.shiftSetFirst(*pair.second->values);
 
-    // The second participant sends the initialized data to the first particpant
-    // here, which receives the data on call of initialize().
-    sendData(_communication);
-    _communication->startReceivePackage(0);
-    // This receive replaces the receive in initialize().
-    receiveData(_communication);
-    _communication->finishReceivePackage();
-    setHasDataBeenExchanged(true);
+  if (_hasToSendInitData && isCouplingOngoing()){
+    assertion(not _doesFirstStep);
+    foreach (DataMap::value_type & pair, getSendData()){
+      utils::DynVector& oldValues = pair.second->oldValues.column(0);
+      oldValues = *pair.second->values;
+
+      // For extrapolation, treat the initial value as old timestep value
+      pair.second->oldValues.shiftSetFirst(*pair.second->values);
+
+      // The second participant sends the initialized data to the first particpant
+      // here, which receives the data on call of initialize().
+      sendData(_communication);
+      _communication->startReceivePackage(0);
+      // This receive replaces the receive in initialize().
+      receiveData(_communication);
+      _communication->finishReceivePackage();
+      setHasDataBeenExchanged(true);
+    }
   }
-  performedAction(constants::actionWriteInitialData());
+
+  //in order to check in advance if initializeData has been called (if necessary)
+  _hasToSendInitData = false;
+  _hasToReceiveInitData = false;
 }
 
 //void ImplicitCouplingScheme:: addComputedTime
@@ -246,6 +285,10 @@ void ImplicitCouplingScheme:: advance()
 {
   preciceTrace2("advance()", getTimesteps(), getTime());
   checkCompletenessRequiredActions();
+
+  preciceCheck(!_hasToReceiveInitData && !_hasToSendInitData, "advance()",
+     "initializeData() needs to be called before advance if data has to be initialized!");
+
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
   double eps = std::pow(10.0, -1 * getValidDigits());
@@ -439,7 +482,7 @@ void ImplicitCouplingScheme:: setupDataMatrices(DataMap& data)
           convMeasure.data->values->size(), 1, 0.0));
     }
   }
-  // Reserve storage for extrapolation of send data values
+  // Reserve storage for extrapolation of data values
   if (_extrapolationOrder > 0){
     foreach (DataMap::value_type& pair, data){
       int cols = pair.second->oldValues.cols();

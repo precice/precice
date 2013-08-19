@@ -106,12 +106,6 @@ private:
      return _allData;
   }
 
-  // @brief to carry initData information from initialize to initData
-  bool _hasToSendInitData;
-
-  // @brief to carry initData information from initialize to initData
-  bool _hasToReceiveInitData;
-
 
 
   // @brief Logging device.

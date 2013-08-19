@@ -14,9 +14,6 @@
 namespace precice {
    namespace cplscheme {
       class CouplingScheme;
-//      namespace tests {
-//        class ImplicitCouplingSchemeTest;
-//      }
    }
    namespace mesh {
       class MeshConfiguration;
@@ -30,7 +27,7 @@ namespace cplscheme {
 namespace tests {
 
 /**
- * @brief Tests class ImplicitCouplingScheme.
+ * @brief Tests class ParallelImplicitCouplingSchemeTest.
  */
 class ParallelImplicitCouplingSchemeTest : public tarch::tests::TestCase
 {
@@ -77,11 +74,21 @@ private:
    */
   void testParseConfigurationWithRelaxation ();
 
+  /**
+   * @brief Tests the initialize data functionality.
+   */
+  void testInitializeData();
+
+  void connect (
+      const std::string&     participant0,
+      const std::string&     participant1,
+      const std::string&     localParticipant,
+      com::PtrCommunication& communication ) const;
+
 
 
 # endif // not PRECICE_NO_MPI
 
-//  friend class tests::ImplicitCouplingSchemeTest;
 };
 
 }}} // namespace precice, cplscheme, tests

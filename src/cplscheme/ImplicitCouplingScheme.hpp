@@ -227,6 +227,12 @@ protected: //TODO nur für funktionen erlaubt, nicht für member variablen
   // @brief Determines, if the dt length is set received from the other participant
   bool _participantReceivesDt;
 
+  // @brief to carry initData information from initialize to initData
+  bool _hasToSendInitData;
+
+  // @brief to carry initData information from initialize to initData
+  bool _hasToReceiveInitData;
+
   /**
    * @brief Initializes the txt writers for writing residuals, iterations, ...
    */

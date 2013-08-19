@@ -17,7 +17,7 @@ namespace precice {
 namespace cplscheme {
 
 tarch::logging::Log ParallelImplicitCouplingScheme::
-    _log("precice::cplscheme::ImplicitCouplingScheme" );
+    _log("precice::cplscheme::ParallelImplicitCouplingScheme" );
 
 ParallelImplicitCouplingScheme:: ParallelImplicitCouplingScheme
 (
@@ -34,9 +34,7 @@ ParallelImplicitCouplingScheme:: ParallelImplicitCouplingScheme
 :
   ImplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
         secondParticipant,localParticipant,communication,maxIterations,dtMethod),
-  _allData (),
-  _hasToSendInitData (false),
-  _hasToReceiveInitData (false)
+  _allData ()
 {}
 
 ParallelImplicitCouplingScheme:: ~ParallelImplicitCouplingScheme()
@@ -138,26 +136,30 @@ void ParallelImplicitCouplingScheme:: initializeData()
 
 
       // second participant has to save values for extrapolation
-      foreach (DataMap::value_type & pair, getReceiveData()){
-        utils::DynVector& oldValues = pair.second->oldValues.column(0);
-        oldValues = *pair.second->values;
-        // For extrapolation, treat the initial value as old timestep value
-        pair.second->oldValues.shiftSetFirst(*pair.second->values);
-        preciceDebug("Shift columns for receive data " << pair.first);
-        preciceDebug("Columns for receive data " << pair.second->oldValues.cols());
+      if (_extrapolationOrder > 0){
+        foreach (DataMap::value_type & pair, getReceiveData()){
+          utils::DynVector& oldValues = pair.second->oldValues.column(0);
+          oldValues = *pair.second->values;
+          // For extrapolation, treat the initial value as old timestep value
+          pair.second->oldValues.shiftSetFirst(*pair.second->values);
+          preciceDebug("Shift columns for receive data " << pair.first);
+          preciceDebug("Columns for receive data " << pair.second->oldValues.cols());
+        }
       }
 
     }
     if(_hasToSendInitData){
 
-      foreach (DataMap::value_type & pair, getSendData()){
-        utils::DynVector& oldValues = pair.second->oldValues.column(0);
-        oldValues = *pair.second->values;
-        // For extrapolation, treat the initial value as old timestep value
-        pair.second->oldValues.shiftSetFirst(*pair.second->values);
-        preciceDebug("old Values in initializeData: " << oldValues);
-        preciceDebug("Shift columns for send data " << pair.first);
-        preciceDebug("columns for send data " << pair.second->oldValues.cols());
+      if (_extrapolationOrder > 0){
+        foreach (DataMap::value_type & pair, getSendData()){
+          utils::DynVector& oldValues = pair.second->oldValues.column(0);
+          oldValues = *pair.second->values;
+          // For extrapolation, treat the initial value as old timestep value
+          pair.second->oldValues.shiftSetFirst(*pair.second->values);
+          preciceDebug("old Values in initializeData: " << oldValues);
+          preciceDebug("Shift columns for send data " << pair.first);
+          preciceDebug("columns for send data " << pair.second->oldValues.cols());
+        }
       }
 
       _communication->startSendPackage(0);

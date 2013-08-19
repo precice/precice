@@ -52,12 +52,14 @@ void ImplicitCouplingSchemeTest:: setUp ()
 
 void ImplicitCouplingSchemeTest:: run ()
 {
+  preciceTrace("run()");
 # ifndef PRECICE_NO_MPI
   PRECICE_MASTER_ONLY {
     testMethod(testParseConfigurationWithRelaxation);
     testMethod(testExtrapolateData);
   }
   typedef utils::Parallel Par;
+  preciceDebug("CommunicatorSize: " << Par::getCommunicatorSize());
   if (Par::getCommunicatorSize() > 1){
     // Do only use process 0 and 1 for the following tests
     std::vector<int> ranks;
@@ -828,6 +830,7 @@ void ImplicitCouplingSchemeTest:: testInitializeData()
   cplScheme.initialize(0.0, 0);
 
   if (nameLocalParticipant == nameParticipant0){
+    cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
     utils::DynVector& values = mesh->data(1)->values();
     validateWithParams1(tarch::la::equals(values, Vector3D(1.0, 2.0, 3.0)), values);
@@ -846,6 +849,7 @@ void ImplicitCouplingSchemeTest:: testInitializeData()
   else {
     assertion(nameLocalParticipant == nameParticipant1);
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    cplScheme.performedAction(constants::actionWriteInitialData());
     utils::DynVector& values = mesh->data(0)->values();
     validateWithParams1(tarch::la::equals(values(0), 0.0), values);
     mesh->data(1)->values() = Vector3D(1.0, 2.0, 3.0);
