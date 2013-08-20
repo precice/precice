@@ -100,7 +100,7 @@ public:
    */
   virtual void initialize (
     double startTime,
-    int    startTimestep );
+    int    startTimestep ) =0;
 
   /**
    * @brief Initializes data with written values.
@@ -109,12 +109,8 @@ public:
    * - initialize() has been called.
    * - advance() has NOT yet been called.
    */
-  virtual void initializeData();
+  virtual void initializeData() =0;
 
-  /**
-   * @brief Adds newly computed time. Has to be called before every advance.
-   */
-  //void addComputedTime ( double timeToAdd );
 
   /**
    * @brief Advances within the coupling scheme (not necessarily in time).
@@ -122,7 +118,7 @@ public:
    * Preconditions:
    * - initialize() has been called.
    */
-  virtual void advance();
+  virtual void advance() =0;
 
   /**
    * @brief Finalizes the coupling scheme.
@@ -150,17 +146,131 @@ public:
 
 protected:
 
+  // @return True, if local participant is the one starting the explicit scheme.
+  bool doesFirstStep(){
+    return _doesFirstStep;
+  }
+
+  // @return Communication device to the other coupling participant.
+  com::PtrCommunication getCommunication(){
+    return _communication;
+  }
+
+  // @brief Responsible for monitoring iteration count over timesteps.
+  io::TXTTableWriter _iterationsWriter;
+
+  void setIterationToPlot(int iterationToPlot){
+    _iterationToPlot = iterationToPlot;
+  }
+
+  void setTimestepToPlot(int timestepToPlot){
+    _timestepToPlot = timestepToPlot;
+  }
+
+  void setTimeToPlot(double timeToPlot){
+    _timeToPlot = timeToPlot;
+  }
+
+  // @return Post-processing method to speedup iteration convergence.
+  impl::PtrPostProcessing getPostProcessing(){
+    return _postProcessing;
+  }
+
+  void setHasToSendInitData(bool hasToSendInitData){
+    _hasToSendInitData = hasToSendInitData;
+  }
+
+  void setHasToReceiveInitData(bool hasToReceiveInitData){
+    _hasToReceiveInitData = hasToReceiveInitData;
+  }
+
+  bool hasToSendInitData(){
+    return _hasToSendInitData;
+  }
+
+  bool hasToReceiveInitData(){
+    return _hasToReceiveInitData;
+  }
+
+  bool participantReceivesDt(){
+    return _participantReceivesDt;
+  }
+
+  bool participantSetsDt(){
+    return _participantSetsDt;
+  }
+
+  void setIterations(int iterations){
+    _iterations = iterations;
+  }
+
+  int getIterations(){
+    return _iterations;
+  }
+
+  int getTotalIterations(){
+    return _totalIterations;
+  }
+
+  void increaseIterations(){
+    _iterations++;
+  }
+
+  void increaseTotalIterations(){
+    _totalIterations++;
+  }
+
+  void increaseIterationToPlot(){
+    _iterationToPlot++;
+  }
+
+  int getMaxIterations(){
+    return _maxIterations;
+  }
+
+  int getExtrapolationOrder(){
+    return _extrapolationOrder;
+  }
+
+  /**
+   * @brief Initializes the txt writers for writing residuals, iterations, ...
+   */
+  void initializeTXTWriters();
+
+  /**
+   * @brief Sets up _dataStorage to store data values of last timestep.
+   *
+   * Every send data has an entry in _dataStorage. Every Entry is a vector
+   * of data values with length according to the total number of values on all
+   * meshes. The ordering of the data values corresponds to that in the meshes
+   * and the ordering of the meshes to that in _couplingData.
+   */
+  void setupDataMatrices(DataMap& data);
+
+  void setupConvergenceMeasures();
+
+  void newConvergenceMeasurements();
+
+  /**
+   * @brief Updates internal state of coupling scheme for next timestep.
+   */
+  void timestepCompleted();
+
+  /**
+   * @brief Updates the convergence measurement of local send data.
+   */
+  bool measureConvergence();
+
+  void extrapolateData(DataMap& data);
+
+private:
+
   // @brief True, if local participant is the one starting the explicit scheme.
     bool _doesFirstStep;
 
   // @brief Communication device to the other coupling participant.
     com::PtrCommunication _communication;
 
-  // @brief Responsible for monitoring iteration count over timesteps.
-    io::TXTTableWriter _iterationsWriter;
-
-
-protected: //TODO nur für funktionen erlaubt, nicht für member variablen
 
   /**
    * @brief Holds relevant variables to perform a convergence measurement.
@@ -233,36 +343,6 @@ protected: //TODO nur für funktionen erlaubt, nicht für member variablen
   // @brief to carry initData information from initialize to initData
   bool _hasToReceiveInitData;
 
-  /**
-   * @brief Initializes the txt writers for writing residuals, iterations, ...
-   */
-  void initializeTXTWriters();
-
-  /**
-   * @brief Sets up _dataStorage to store data values of last timestep.
-   *
-   * Every send data has an entry in _dataStorage. Every Entry is a vector
-   * of data values with length according to the total number of values on all
-   * meshes. The ordering of the data values corresponds to that in the meshes
-   * and the ordering of the meshes to that in _couplingData.
-   */
-  void setupDataMatrices(DataMap& data);
-
-  void setupConvergenceMeasures();
-
-  void newConvergenceMeasurements();
-
-  /**
-   * @brief Updates internal state of coupling scheme for next timestep.
-   */
-  void timestepCompleted();
-
-  /**
-   * @brief Updates the convergence measurement of local send data.
-   */
-  bool measureConvergence();
-
-  void extrapolateData(DataMap& data);
 
 //  void writeResidual (
 //    const utils::DynVector& values,

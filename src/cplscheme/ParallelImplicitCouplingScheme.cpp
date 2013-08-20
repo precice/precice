@@ -51,17 +51,17 @@ void ParallelImplicitCouplingScheme:: initialize
   assertion(not isInitialized());
   assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion1(startTimestep >= 0, startTimestep);
-  assertion(_communication->isConnected());
+  assertion(getCommunication()->isConnected());
   preciceCheck(not getSendData().empty(), "initialize()",
                "No send data configured!");
   setTime(startTime);
   setTimesteps(startTimestep);
-  if (not _doesFirstStep){ // second participant
+  if (not doesFirstStep()){ // second participant
     setupConvergenceMeasures(); // needs _couplingData configured
     mergeData(); // merge send and receive data for all pp calls
     setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
-    if (_postProcessing.get() != NULL){
-      _postProcessing->initialize(getAllData()); // Reserve memory, initialize
+    if (getPostProcessing().get() != NULL){
+      getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
     }
   }
 
@@ -71,18 +71,18 @@ void ParallelImplicitCouplingScheme:: initialize
 
   foreach (DataMap::value_type & pair, getSendData()){
     if (pair.second->initialize){
-      _hasToSendInitData = true;
+      setHasToSendInitData(true);
       break;
     }
   }
   foreach (DataMap::value_type & pair, getReceiveData()){
     if (pair.second->initialize){
-      _hasToReceiveInitData = true;
+      setHasToReceiveInitData(true);
       break;
     }
   }
 
-  if(_hasToSendInitData){
+  if(hasToSendInitData()){
     requireAction(constants::actionWriteInitialData());
   }
 
@@ -96,28 +96,28 @@ void ParallelImplicitCouplingScheme:: initializeData()
   preciceCheck(isInitialized(), "initializeData()",
      "initializeData() can be called after initialize() only!");
 
-  if(not _hasToSendInitData && not _hasToReceiveInitData){
+  if(not hasToSendInitData() && not hasToReceiveInitData()){
     preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
     return;
   }
 
-  preciceCheck(not (_hasToSendInitData && isActionRequired(constants::actionWriteInitialData())),
+  preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
      "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
 
   //F: send, receive, S: receive, send
-  if(_doesFirstStep){
-    if(_hasToSendInitData){
-      _communication->startSendPackage(0);
-      sendData(_communication);
-      _communication->finishSendPackage();
+  if(doesFirstStep()){
+    if(hasToSendInitData()){
+      getCommunication()->startSendPackage(0);
+      sendData(getCommunication());
+      getCommunication()->finishSendPackage();
     }
-    if(_hasToReceiveInitData){
-      _communication->startReceivePackage(0);
-      receiveData(_communication);
-      _communication->finishReceivePackage();
+    if(hasToReceiveInitData()){
+      getCommunication()->startReceivePackage(0);
+      receiveData(getCommunication());
+      getCommunication()->finishReceivePackage();
 
       setHasDataBeenExchanged(true);
     }
@@ -125,18 +125,18 @@ void ParallelImplicitCouplingScheme:: initializeData()
   }
 
   else{ // second participant
-    if(_hasToReceiveInitData){
+    if(hasToReceiveInitData()){
 
 
-      _communication->startReceivePackage(0);
-      receiveData(_communication);
-      _communication->finishReceivePackage();
+      getCommunication()->startReceivePackage(0);
+      receiveData(getCommunication());
+      getCommunication()->finishReceivePackage();
 
       setHasDataBeenExchanged(true);
 
 
       // second participant has to save values for extrapolation
-      if (_extrapolationOrder > 0){
+      if (getExtrapolationOrder() > 0){
         foreach (DataMap::value_type & pair, getReceiveData()){
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
@@ -148,9 +148,9 @@ void ParallelImplicitCouplingScheme:: initializeData()
       }
 
     }
-    if(_hasToSendInitData){
+    if(hasToSendInitData()){
 
-      if (_extrapolationOrder > 0){
+      if (getExtrapolationOrder() > 0){
         foreach (DataMap::value_type & pair, getSendData()){
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
@@ -162,9 +162,9 @@ void ParallelImplicitCouplingScheme:: initializeData()
         }
       }
 
-      _communication->startSendPackage(0);
-      sendData(_communication);
-      _communication->finishSendPackage();
+      getCommunication()->startSendPackage(0);
+      sendData(getCommunication());
+      getCommunication()->finishSendPackage();
 
 
     }
@@ -172,8 +172,8 @@ void ParallelImplicitCouplingScheme:: initializeData()
   }
 
   //in order to check in advance if initializeData has been called (if necessary)
-  _hasToSendInitData = false;
-  _hasToReceiveInitData = false;
+  setHasToSendInitData(false);
+  setHasToReceiveInitData(false);
 
 }
 
@@ -183,7 +183,7 @@ void ParallelImplicitCouplingScheme:: advance()
   preciceTrace2("advance()", getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
-  preciceCheck(!_hasToReceiveInitData && !_hasToSendInitData, "advance()",
+  preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
      "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
@@ -192,61 +192,50 @@ void ParallelImplicitCouplingScheme:: advance()
   bool convergence = false;
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)){
     preciceDebug("Computed full length of iteration");
-    if (_doesFirstStep){ //First participant
-      _communication->startSendPackage(0);
-      sendData(_communication);
-      _communication->finishSendPackage();
-      _communication->startReceivePackage(0);
-      _communication->receive(convergence, 0);
+    if (doesFirstStep()){ //First participant
+      getCommunication()->startSendPackage(0);
+      sendData(getCommunication());
+      getCommunication()->finishSendPackage();
+      getCommunication()->startReceivePackage(0);
+      getCommunication()->receive(convergence, 0);
       if (convergence){
         timestepCompleted();
       }
       if (isCouplingOngoing()){
-        receiveData(_communication);
+        receiveData(getCommunication());
       }
-      _communication->finishReceivePackage();
+      getCommunication()->finishReceivePackage();
     }
     else { // second participant
 
-      _communication->startReceivePackage(0);
-      receiveData(_communication);
-      _communication->finishReceivePackage();
+      getCommunication()->startReceivePackage(0);
+      receiveData(getCommunication());
+      getCommunication()->finishReceivePackage();
 
       convergence = measureConvergence();
 
-      //TODO Debug
-      if(not _doesFirstStep){
-        foreach (DataMap::value_type& pair, getSendData()){
-          preciceDebug("after MC: " << pair.second->oldValues.column(0));
-        }
-      }
-      if(not _doesFirstStep){
-        foreach (DataMap::value_type& pair, getAllData()){
-          preciceDebug("after MC (ALL DATA): " << pair.second->oldValues.column(0));
-        }
-      }
 
-      assertion2((_iterations <= _maxIterations) || (_maxIterations == -1),
-                    _iterations, _maxIterations);
+      assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
+                    getIterations(), getMaxIterations());
       // Stop, when maximal iteration count (given in config) is reached
-      if (_iterations == _maxIterations-1){
+      if (getIterations() == getMaxIterations()-1){
         convergence = true;
       }
       if (convergence){
-        if (_postProcessing.get() != NULL){
-          _postProcessing->iterationsConverged(getAllData());
+        if (getPostProcessing().get() != NULL){
+          getPostProcessing()->iterationsConverged(getAllData());
         }
         newConvergenceMeasurements();
         timestepCompleted();
       }
-      else if (_postProcessing.get() != NULL){
-        _postProcessing->performPostProcessing(getAllData());
+      else if (getPostProcessing().get() != NULL){
+        getPostProcessing()->performPostProcessing(getAllData());
       }
-      _communication->startSendPackage(0);
-      _communication->send(convergence, 0);
+      getCommunication()->startSendPackage(0);
+      getCommunication()->send(convergence, 0);
 
       if (isCouplingOngoing()){
-        if (convergence && (_extrapolationOrder > 0)){
+        if (convergence && (getExtrapolationOrder() > 0)){
           extrapolateData(getAllData()); // Also stores data
         }
         else { // Store data for conv. measurement, post-processing, or extrapolation
@@ -261,10 +250,10 @@ void ParallelImplicitCouplingScheme:: advance()
             }
           }
         }
-        sendData(_communication);
+        sendData(getCommunication());
       }
 
-      _communication->finishSendPackage();
+      getCommunication()->finishSendPackage();
 
     }
 
@@ -272,8 +261,8 @@ void ParallelImplicitCouplingScheme:: advance()
     if (not convergence){
       preciceDebug("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
-      _iterations++;
-      _totalIterations++;
+      increaseIterations();
+      increaseTotalIterations();
       // The computed timestep part equals the timestep length, since the
       // timestep remainder is zero. Subtract the timestep length do another
       // coupling iteration.
@@ -283,11 +272,11 @@ void ParallelImplicitCouplingScheme:: advance()
     else {
       preciceDebug("Convergence achieved");
       _iterationsWriter.writeData("Timesteps", getTimesteps());
-      _iterationsWriter.writeData("Total Iterations", _totalIterations);
-      _iterationsWriter.writeData("Iterations", _iterations);
-      int converged = _iterations < _maxIterations ? 1 : 0;
+      _iterationsWriter.writeData("Total Iterations", getTotalIterations());
+      _iterationsWriter.writeData("Iterations", getIterations());
+      int converged = getIterations() < getMaxIterations() ? 1 : 0;
       _iterationsWriter.writeData("Convergence", converged);
-      _iterations = 0;
+      setIterations(0);
     }
     setHasDataBeenExchanged(true);
     setComputedTimestepPart(0.0);
@@ -297,19 +286,19 @@ void ParallelImplicitCouplingScheme:: advance()
   // and iteration should be plotted, and not the 0th of the new timestep. Thus,
   // the plot values are only updated when no convergence was achieved.
   if (not convergence){
-    _timestepToPlot = getTimesteps();
-    _timeToPlot = getTime();
-    _iterationToPlot = _iterations;
+    setTimestepToPlot(getTimesteps());
+    setTimeToPlot(getTime());
+    setIterationToPlot(getIterations());
   }
   else {
-    _iterationToPlot++;
+    increaseIterationToPlot();
   }
 }
 
 void ParallelImplicitCouplingScheme:: mergeData()
 {
   preciceTrace("mergeData()");
-  assertion1(!_doesFirstStep, "Only the second participant should do the pp." );
+  assertion1(!doesFirstStep(), "Only the second participant should do the pp." );
   assertion1(_allData.empty(), "This function should only be called once.");
   _allData.insert(getSendData().begin(),getSendData().end());
   _allData.insert(getReceiveData().begin(),getReceiveData().end());

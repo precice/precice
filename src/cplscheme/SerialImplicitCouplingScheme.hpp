@@ -1,13 +1,14 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_CPLSCHEME_PARALLELIMPLICITCOUPLINGSCHEME_HPP_
-#define PRECICE_CPLSCHEME_PARALLELIMPLICITCOUPLINGSCHEME_HPP_
+#ifndef PRECICE_CPLSCHEME_SERIALIMPLICITCOUPLINGSCHEME_HPP_
+#define PRECICE_CPLSCHEME_SERIALIMPLICITCOUPLINGSCHEME_HPP_
 
-#include "cplscheme/ImplicitCouplingScheme.hpp"
-#include "cplscheme/SharedPointer.hpp"
-#include "cplscheme/Constants.hpp"
-#include "cplscheme/impl/SharedPointer.hpp"
+#include "ImplicitCouplingScheme.hpp"
+#include "BaseCouplingScheme.hpp"
+#include "SharedPointer.hpp"
+#include "Constants.hpp"
+#include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/PropertyContainer.hpp"
@@ -20,7 +21,7 @@
 namespace precice {
   namespace cplscheme {
     namespace tests {
-      class ParallelImplicitCouplingSchemeTest;
+      class SerialImplicitCouplingSchemeTest;
     }
   }
 }
@@ -31,9 +32,9 @@ namespace precice {
 namespace cplscheme {
 
 /**
- * @brief Coupling scheme which lets the participants run in parallel to each other.
+ * @brief Coupling scheme with iterations per timestep to achieve strong solution.
  */
-class ParallelImplicitCouplingScheme : public ImplicitCouplingScheme
+class SerialImplicitCouplingScheme : public ImplicitCouplingScheme
 {
 public:
 
@@ -51,8 +52,7 @@ public:
    * @param monitorIterations [IN] If true, a txt file monitoring iterations is
    *                          written.
    */
-  // call superconstructor in implementation
-  ParallelImplicitCouplingScheme (
+  SerialImplicitCouplingScheme (
     double                maxTime,
     int                   maxTimesteps,
     double                timestepLength,
@@ -67,7 +67,8 @@ public:
   /**
    * @brief Destructor.
    */
-  virtual ~ParallelImplicitCouplingScheme();
+  virtual ~SerialImplicitCouplingScheme();
+
 
   /**
    * @brief Initializes the coupling scheme.
@@ -94,32 +95,13 @@ public:
   virtual void advance();
 
 
-
-private:
-
-  /**
-  * @brief Returns all data (receive and send
-  */
-  DataMap& getAllData()
-  {
-    assertion1(!doesFirstStep(), "Only the second participant should do the pp." );
-     return _allData;
-  }
-
-
-
   // @brief Logging device.
   static tarch::logging::Log _log;
 
-  // @brief Map from data ID -> all data (receive and send) with that ID
-  DataMap _allData;
 
-  // @brief merges send in receive data into one map (for parallel post-processing)
-  void mergeData();
-
-  friend class tests::ParallelImplicitCouplingSchemeTest;
+  friend class tests::SerialImplicitCouplingSchemeTest;
 };
 
 }} // namespace precice, cplscheme
 
-#endif /* PRECICE_CPLSCHEME_PARALLELIMPLICITCOUPLINGSCHEME_HPP_ */
+#endif /* PRECICE_CPLSCHEME_SERIALIMPLICITCOUPLINGSCHEME_HPP_ */

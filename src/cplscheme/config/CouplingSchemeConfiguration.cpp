@@ -4,7 +4,7 @@
 #include "CouplingSchemeConfiguration.hpp"
 #include "cplscheme/config/PostProcessingConfiguration.hpp"
 #include "cplscheme/ExplicitCouplingScheme.hpp"
-#include "cplscheme/ImplicitCouplingScheme.hpp"
+#include "cplscheme/SerialImplicitCouplingScheme.hpp"
 #include "cplscheme/ParallelImplicitCouplingScheme.hpp"
 #include "cplscheme/CompositionalCouplingScheme.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
@@ -71,7 +71,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   ATTR_FROM("from"),
   ATTR_SUFFICES("suffices"),
   VALUE_EXPLICIT("explicit"),
-  VALUE_IMPLICIT("implicit"),
+  VALUE_SERIAL_IMPLICIT("serial-implicit"),
   VALUE_PARALLEL_IMPLICIT("parallel-implicit"),
   VALUE_UNCOUPLED("uncoupled"),
   VALUE_FIXED("fixed"),
@@ -99,11 +99,11 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
     tags.push_back(tag);
   }
   {
-    XMLTag tag(*this, VALUE_IMPLICIT, occ, TAG);
+    XMLTag tag(*this, VALUE_SERIAL_IMPLICIT, occ, TAG);
     doc = "Implicit coupling scheme according to block Gauss-Seidel iterations.";
     doc += " Improved implicit iterations are achieved by using a post-processing.";
     tag.setDocumentation(doc);
-    addTypespecifcSubtags(VALUE_IMPLICIT, tag);
+    addTypespecifcSubtags(VALUE_SERIAL_IMPLICIT, tag);
     tags.push_back(tag);
   }
   {
@@ -180,7 +180,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double limit = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices);
   }
   else if ( tag.getName() == TAG_REL_CONV_MEASURE ) {
@@ -188,7 +188,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double limit = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     addRelativeConvergenceMeasure(dataName, meshName, limit, suffices);
   }
   else if ( tag.getName() == TAG_RES_REL_CONV_MEASURE ) {
@@ -196,7 +196,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double limit = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices);
   }
   else if ( tag.getName() == TAG_MIN_ITER_CONV_MEASURE ) {
@@ -204,7 +204,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     int minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices);
   }
   else if (tag.getName() == TAG_EXCHANGE){
@@ -234,11 +234,11 @@ void CouplingSchemeConfiguration:: xmlTagCallback
                                 nameParticipant, initialize));
   }
   else if (tag.getName() == TAG_MAX_ITERATIONS){
-    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     _config.maxIterations = tag.getIntAttributeValue(ATTR_VALUE);
   }
   else if (tag.getName() == TAG_EXTRAPOLATION){
-    assertion(_config.type == VALUE_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
     _config.extrapolationOrder = tag.getIntAttributeValue(ATTR_VALUE);
   }
 }
@@ -260,13 +260,13 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
     }
-    else if (_config.type == VALUE_IMPLICIT){
+    else if (_config.type == VALUE_SERIAL_IMPLICIT){
       std::string accessor(_config.participant);
-      PtrCouplingScheme scheme = createImplicitCouplingScheme(accessor);
+      PtrCouplingScheme scheme = createSerialImplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
       //_couplingSchemes[accessor] = scheme;
       accessor = _config.secondParticipant;
-      scheme = createImplicitCouplingScheme(accessor);
+      scheme = createSerialImplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
@@ -351,7 +351,7 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
     addTagExtrapolation(tag);
     addTagPostProcessing(tag);
   }
-  else if ( type == VALUE_IMPLICIT ) {
+  else if ( type == VALUE_SERIAL_IMPLICIT ) {
     addTagParticipants(tag);
     addTagExchange(tag);
     addTagAbsoluteConvergenceMeasure(tag);
@@ -636,7 +636,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createExplicitCouplingScheme
   return PtrCouplingScheme(scheme);
 }
 
-PtrCouplingScheme CouplingSchemeConfiguration:: createImplicitCouplingScheme
+PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingScheme
 (
   const std::string& accessor ) const
 {
@@ -645,7 +645,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createImplicitCouplingScheme
 
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );
-  ImplicitCouplingScheme* scheme = new ImplicitCouplingScheme (
+  SerialImplicitCouplingScheme* scheme = new SerialImplicitCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
       accessor, com, _config.maxIterations, _config.dtMethod );

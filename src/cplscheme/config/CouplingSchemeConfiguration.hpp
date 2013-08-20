@@ -5,7 +5,7 @@
 #define PRECICE_CPLSCHEME_COUPLINGSCHEMECONFIGURATION_HPP_
 
 #include "cplscheme/CouplingScheme.hpp"
-#include "cplscheme/ImplicitCouplingScheme.hpp"
+#include "cplscheme/SerialImplicitCouplingScheme.hpp"
 #include "cplscheme/ParallelImplicitCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
@@ -24,7 +24,7 @@ namespace precice {
     class CompositionalCouplingScheme;
     class BaseCouplingScheme;
     namespace tests {
-      class ImplicitCouplingSchemeTest;
+      class SerialImplicitCouplingSchemeTest;
       class ParallelImplicitCouplingSchemeTest;
     }
   }
@@ -129,7 +129,7 @@ private:
   const std::string ATTR_SUFFICES;
 
   const std::string VALUE_EXPLICIT;
-  const std::string VALUE_IMPLICIT;
+  const std::string VALUE_SERIAL_IMPLICIT;
   const std::string VALUE_PARALLEL_IMPLICIT;
   const std::string VALUE_UNCOUPLED;
   const std::string VALUE_FIXED;
@@ -248,7 +248,7 @@ private:
   PtrCouplingScheme createExplicitCouplingScheme (
     const std::string & accessor ) const;
 
-  PtrCouplingScheme createImplicitCouplingScheme (
+  PtrCouplingScheme createSerialImplicitCouplingScheme (
     const std::string & accessor ) const;
 
   PtrCouplingScheme createParallelImplicitCouplingScheme (
@@ -271,7 +271,7 @@ private:
     const std::string&  accessor) const;
 
 
-   friend class tests::ImplicitCouplingSchemeTest; // For whitebox tests
+   friend class tests::SerialImplicitCouplingSchemeTest; // For whitebox tests
    friend class tests::ParallelImplicitCouplingSchemeTest; // For whitebox tests
 
 };
