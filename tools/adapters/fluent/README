@@ -1,8 +1,8 @@
-1. How to build the Fluent-preCICE adapter:
-
-* Create a directory lnamd64/2ddp/ for serial execution
+1. How to build the Fluent-preCICE adapter: 
+* Go to tools/adapters/fluent
+* Create a subdirectory lnamd64/2ddp/ for serial execution
     and for parallel execution add a /2ddp_host/ and /2ddp_node/.
-* Put the libraries of preCICE and python2.7 into the lnamd64 folder.
+* Put the libraries of preCICE and python2.7 (libpython2.7.so) into the lnamd64 folder.
 * Adapt src/makefile line 14 "SOURCES=...": There are several main udf files
     - fsi_udf.c: For FSI simulations. Needs fsi.c.
     - wave_profile_udf.c: For wave simulations with inflow profile. Needs 
@@ -13,29 +13,35 @@
       wave_profile.c.
     The variable SOURCES needs one one main udf file and the correspoding .c files.
 * Type: make "FLUENT_ARCH=lnamd64" to start the build. Add a "clean" to clean it.
-* Copy the lnamd64 folder into, e.g., a libudf folder where fluent is run.
 
 --------------------------------------------------------------------------------
 
-2. Preparing a Fluent .cas file for UDF function usage:
+2. How to start Fluent
+- start the binary from your simulation folder
+- set double precision, processing options (serial or parallel) and the dimension
+(for parallel select also "show more", "parallel settings", "mpi types" -> open mpi
+
+
+3. Preparing a Fluent .cas file for UDF function usage:
 
 - Copy the lnamd64 udf lib folder to the simulation folder into /libudf/
+- Start Fluent and open the .msh or .cas file to be used
 - In Fluent, go to top menu Define->User Defined->Functions...->Manage... and 
   load the libudf folder. The names of the udf functions should appear in the 
-  Fluent command line window.
-- Define a function hook at Initialization.
-- Define one user defined memory for the faces.
+  Fluent command line window. (only necessary  if not yet included in the .cas file)
+- Define a function hook at Initialization. (see udf manueal, define -> user defined -> function hooks)
+- Define 1 user defined memory for the faces. (define -> user defined -> memory -> 1; adds one additional double to each face for precice face ids)
 
 --------------------------------------------------------------------------------
 
-3. Preparing a Fluent .cas file for FSI simulations
+4. Preparing a Fluent .cas file for FSI simulations
 
-- Perform the steps in 1. and 2.
+- Perform the steps in 1.,2. and 3.
 - Set a user defined mesh motion according to function "gridmotions".
 
 --------------------------------------------------------------------------------
 
-4. Preparing a Fluent .cas file for Wave simulations
+5. Preparing a Fluent .cas file for Wave simulations
 
 Go through the menus on the left and perform the following steps:
 - General: Set transient simulation and gravity in y-direction = -9.81
