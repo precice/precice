@@ -169,7 +169,10 @@ ActionConfiguration:: ActionConfiguration
     doc = " If it doesn't occur, the current path is used";
     tagModulePath.setDocumentation(doc);
     XMLTag tagModule(*this, TAG_MODULE_NAME, XMLTag::OCCUR_ONCE);
-    tagModule.setDocumentation("File name of Python module, i.e. script file.");
+    doc = "Name of Python module, i.e. Python script file without file ending. ";
+    doc += "The module name has to differ from existing (library) modules, ";
+    doc += "otherwise, the existing module will be loaded instead of the user script.";
+    tagModule.setDocumentation(doc);
     XMLAttribute<std::string> attrName(ATTR_NAME);
     tagModulePath.addAttribute(attrName);
     tagModule.addAttribute(attrName);
@@ -441,6 +444,18 @@ void ActionConfiguration:: createAction()
   if (mesh.get() == NULL){
     std::ostringstream stream;
     stream << "Data action uses mesh \"" << _configuredAction.mesh
+           << "\" which is not configured";
+    throw stream.str();
+  }
+  if ((not _configuredAction.sourceData.empty()) && (sourceDataID == -1)){
+    std::ostringstream stream;
+    stream << "Data action uses source data \"" << _configuredAction.sourceData
+           << "\" which is not configured";
+    throw stream.str();
+  }
+  if ((not _configuredAction.targetData.empty()) && (targetDataID == -1)){
+    std::ostringstream stream;
+    stream << "Data action uses target data \"" << _configuredAction.targetData
            << "\" which is not configured";
     throw stream.str();
   }
