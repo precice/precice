@@ -48,8 +48,6 @@ int main(int argc, char **argv)
   STRUCTURE_INFO("Density = " << density);
   STRUCTURE_INFO("Gravity = " << gravity);
 
-  //DynVector translVelocityChange(dimensions, 0.0);
-
   if ( not cplInterface.hasMesh(meshName) ){
     STRUCTURE_INFO("Mesh \"" << meshName << "\" required for coupling!");
     exit(-1);
@@ -79,10 +77,6 @@ int main(int argc, char **argv)
   if (cplInterface.hasData("VelocityDeltas")){
     velocityDeltasID = cplInterface.getDataID("VelocityDeltas");
   }
-
-  DynVector fixture(dimensions, 0.0);
-  bool fixStructure = false;
-  STRUCTURE_INFO("Fix structure = " << fixStructure);
 
   DynVector nodes(handle.vertices().size()*dimensions);
   tarch::la::DynamicVector<int> faces;
@@ -125,9 +119,19 @@ int main(int argc, char **argv)
 
   Structure0815 structure(dimensions, density, gravity, nodes, faces);
 
+  bool fixStructure = false;
   if (fixStructure){ // Fix the structure (only rotations possible)
+    DynVector fixture(dimensions, 0.0);
     structure.fixPoint(fixture);
   }
+
+  bool fixTranslations = true;
+  if (fixTranslations){
+    tarch::la::DynamicVector<bool> fixedDirections(dimensions, false);
+    fixedDirections[0] = true;
+    structure.fixTranslations(fixedDirections);
+  }
+
 
   // Main timestepping/iteration loop
   while (cplInterface.isCouplingOngoing()){
