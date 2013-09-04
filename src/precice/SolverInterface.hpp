@@ -336,7 +336,9 @@ public:
   /**
    * @brief Sets spatial position for data to be written.
    *
-   * @return ID for data to be written from given position.
+   * @return ID for data to be written from given position. ID is always 0 when
+   *         an incremental mapping is configured and is -1, i.e., not used,
+   *         when no write-mapping is configured.
    */
   int setWritePosition (
     int           meshID,
@@ -344,6 +346,13 @@ public:
 
   /**
    * @brief Sets several spatial positions for data to be written.
+   *
+   * Pre-conditions:
+   * - A not incremental write-mapping is configured for the mesh with given
+   *   meshID.
+   * Post-conditions:
+   * - If no write mapping is configured, the ids are not changed.
+   * - If a (not incremental) write mapping is configured, the ids are filled.
    *
    * @param ids [OUT] IDs for data to be written from given positions.
    */
@@ -386,7 +395,9 @@ public:
   /**
    * @brief Sets spatial position for data to be read.
    *
-   * @return ID for data to be read to given position.
+   * @return ID for data to be read to given position. ID is always 0 when
+   *         an incremental mapping is configured and is -1, i.e., not used,
+   *         when no read-mapping is configured.
    */
   int setReadPosition (
     int           meshID,
@@ -394,6 +405,13 @@ public:
 
   /**
    * @brief Sets several spatial positions for data to be read.
+   *
+   * Pre-conditions:
+   * - A not incremental read-mapping is configured for the mesh with given
+   *   meshID.
+   * Post-conditions:
+   * - If no read mapping is configured, the ids are not changed.
+   * - If a (not incremental) read mapping is configured, the ids are filled.
    *
    * @param ids [OUT] IDs for data to be read to given positions.
    */
