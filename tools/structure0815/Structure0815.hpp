@@ -47,6 +47,16 @@ public:
    */
   void fixTranslations(const tarch::la::DynamicVector<bool>& fixedDirections);
 
+  /**
+   * @brief Sets the centerOfGravity and totalVolume manually.
+   *
+   * This can be useful, when the structure surface is shaped such that not
+   * every node is visible from the origin.
+   */
+  void fixCharacteristics(
+    const DynVector& centerOfGravity,
+    double           totalVolume);
+
   DynVector& forces() { return _forces; }
 
   DynVector& displacements() { return _displacements; }
@@ -99,6 +109,7 @@ private:
   tarch::la::DynamicVector<bool> _fixedTranslationDirections;
   bool _fixed;
   DynVector _fixture;
+  bool _fixedCharacteristics;
   precice::io::TXTTableWriter _statisticsWriter;
 
   /**

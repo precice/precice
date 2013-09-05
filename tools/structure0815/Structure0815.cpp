@@ -33,6 +33,7 @@ Structure0815:: Structure0815
   _fixedTranslationDirections(dim, false),
   _fixed(false),
   _fixture(dim, 0.0),
+  _fixedCharacteristics(false),
   _statisticsWriter("structure0815-statistics.txt")
 {
   double totalVolume = 0.0;
@@ -82,6 +83,20 @@ void Structure0815:: fixTranslations
 {
   _fixedTranslationDirections = fixedDirections;
   STRUCTURE_INFO("Fixed translations: " << fixedDirections);
+}
+
+void Structure0815:: fixCharacteristics
+(
+  const DynVector& centerOfGravity,
+  double           totalVolume )
+{
+  _fixedCharacteristics = true;
+  _centerOfGravity = centerOfGravity;
+  _totalMass = totalVolume * _density;
+  STRUCTURE_INFO("Fixed characteristics!");
+  STRUCTURE_INFO("Center of gravity: " << _centerOfGravity);
+  STRUCTURE_INFO("Total mass: " << _totalMass);
+  STRUCTURE_INFO("Total volume: " << totalVolume);
 }
 
 void Structure0815:: iterate
@@ -175,10 +190,12 @@ void Structure0815:: timestep(double dt)
   DynVector centerOfGravity(_dim, 0.0);
   double totalMass = 0.0;
   double totalVolume = 0.0;
-  computeCharacteristics(centerOfGravity, totalMass, totalVolume);
-  STRUCTURE_INFO("Center of gravity delta: " << _centerOfGravity - centerOfGravity);
-  STRUCTURE_INFO("Total mass delta: " << _totalMass - totalMass);
-  STRUCTURE_INFO("Total volume delta: " << _totalMass/_density - totalVolume);
+  if (not _fixedCharacteristics){
+    computeCharacteristics(centerOfGravity, totalMass, totalVolume);
+    STRUCTURE_INFO("Center of gravity delta: " << _centerOfGravity - centerOfGravity);
+    STRUCTURE_INFO("Total mass delta: " << _totalMass - totalMass);
+    STRUCTURE_INFO("Total volume delta: " << _totalMass/_density - totalVolume);
+  }
 
   _statisticsWriter.writeData(TIMESTEPS, _timesteps);
   _statisticsWriter.writeData(TIME, _time);
