@@ -105,6 +105,8 @@ void IQNILSPostProcessing:: performPostProcessing
 
   DataValues values;
   DataValues oldValues;
+  preciceDebug("dataId size " << _dataIDs.size());
+  preciceDebug("cplData size " << cplData.size());
   foreach (int id, _dataIDs){
     values.append(*(cplData[id]->values));
     oldValues.append(cplData[id]->oldValues.column(0));
@@ -116,18 +118,18 @@ void IQNILSPostProcessing:: performPostProcessing
   // Compute current residual: vertex-data - oldData
   DataValues residuals(values);
   residuals -= oldValues;
+  preciceDebug("values = " << values);
+  preciceDebug("oldValues = " << oldValues);
   preciceDebug("Residuals = " << residuals);
 
   if (_firstIteration && (_matrixCols.size() < 2)){
     preciceDebug("   Performing underrelaxation");
     _oldXTilde = values; // Store x tilde
     _oldResiduals = residuals; // Store current residual
-
     // Perform underrelaxation with residual: x_new = x_old + omega * res
     residuals *= _initialRelaxation;
     residuals += oldValues;
     values = residuals;
-
     //      precicePrint("   Performing constant relaxation with omg = " << _initialRelaxation);
 
     // Perform underrelaxation with initial relaxation factor for rest of data.
@@ -136,7 +138,7 @@ void IQNILSPostProcessing:: performPostProcessing
         //            precicePrint("   More data ...");
         DataValues & values = *pair.second->values;
         values *= _initialRelaxation;                   // new * omg
-        residuals = pair.second->oldValues.column(0);  // old
+        DataValues & residuals = pair.second->oldValues.column(0);  // old
         residuals *= 1.0 - _initialRelaxation;          // (1-omg) * old
         values += residuals;                   // (1-omg) * old + new * omg
       }
@@ -220,7 +222,7 @@ void IQNILSPostProcessing:: performPostProcessing
         backSubstitution(R, b, c);
         multiply(_matrixW, c, Wc); // = Wc
         //preciceDebug("performPostProcessing()", "   _matrixW = " << _matrixW);
-        //preciceDebug("performPostProcessing()", "   c = " << c);
+        preciceDebug("c = " << c);
       }
     }
     //preciceDebug("performPostProcessing()", "   oldValues = " << oldValues);
@@ -230,7 +232,7 @@ void IQNILSPostProcessing:: performPostProcessing
 
     foreach (DataMap::value_type & pair, cplData){
       if (pair.first != *_dataIDs.begin() && pair.first != *(_dataIDs.end()-1)){
-        residuals = *pair.second->values;                 // = x_tilde
+        DataValues & residuals = *pair.second->values;                 // = x_tilde
         residuals -= pair.second->oldValues.column(0); // = x_tilde - x^k = r^k
         // Perform update with Wc
         residuals += Wc;                                 // = Wc + r^k
@@ -249,14 +251,14 @@ void IQNILSPostProcessing:: performPostProcessing
     utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
     int offset = dataIndex*valueLength;
     for(int i=0; i<valueLength; i++){
-      preciceDebug("Copying values back, values, id: " << id <<" i: " << i);
+      //preciceDebug("Copying values back, values, id: " << id <<" i: " << i);
       valuesPart[i] = values[i + offset];
       oldValuesPart[i] = oldValues[i + offset];
     }
     dataIndex++;
   }
-  preciceDebug("copied values back, values size: " << cplData[*_dataIDs.begin()]->values->size());
-  preciceDebug("copied values back, oldValues size: " << cplData[*_dataIDs.begin()]->oldValues.column(0).size());
+  //preciceDebug("copied values back, values size: " << cplData[*_dataIDs.begin()]->values->size());
+  //preciceDebug("copied values back, oldValues size: " << cplData[*_dataIDs.begin()]->oldValues.column(0).size());
   _firstIteration = false;
 }
 
