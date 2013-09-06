@@ -65,7 +65,7 @@ void ParallelImplicitCouplingScheme:: initialize
     }
   }
 
-
+  requireAction(constants::actionWriteIterationCheckpoint());
   initializeTXTWriters();
 
 
