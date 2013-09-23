@@ -278,14 +278,10 @@ void SerialImplicitCouplingScheme:: advance()
       // timestep remainder is zero. Subtract the timestep length do another
       // coupling iteration.
       assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
-      setTimestepToPlot(getTimesteps()+1);
-      setTimeToPlot(getTime());
-      setIterationToPlot(getIterations());
       setTime(getTime() - getComputedTimestepPart());
     }
     else {
       preciceDebug("Convergence achieved");
-      increaseIterationToPlot();
       _iterationsWriter.writeData("Timesteps", getTimesteps());
       _iterationsWriter.writeData("Total Iterations", getTotalIterations());
       _iterationsWriter.writeData("Iterations", getIterations());
@@ -295,6 +291,18 @@ void SerialImplicitCouplingScheme:: advance()
     }
     setHasDataBeenExchanged(true);
     setComputedTimestepPart(0.0);
+  }//subcycling completed
+
+  // When the iterations of one timestep are converged, the old time, timesteps,
+  // and iteration should be plotted, and not the 0th of the new timestep. Thus,
+  // the plot values are only updated when no convergence was achieved.
+  if (not convergence){
+    setTimestepToPlot(getTimesteps());
+    setTimeToPlot(getTime());
+    setIterationToPlot(getIterations());
+  }
+  else {
+    increaseIterationToPlot();
   }
 
 }
