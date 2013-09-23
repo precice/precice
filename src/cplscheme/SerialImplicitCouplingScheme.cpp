@@ -57,6 +57,8 @@ void SerialImplicitCouplingScheme:: initialize
     setupConvergenceMeasures(); // needs _couplingData configured
     setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
     if (getPostProcessing().get() != NULL){
+      preciceCheck(getPostProcessing()->getDataIDs().size()==1 ,"initialize()",
+                    "For serial coupling, the number of coupling data vectors has to be 1");
       getPostProcessing()->initialize(getSendData()); // Reserve memory, initialize
     }
   }

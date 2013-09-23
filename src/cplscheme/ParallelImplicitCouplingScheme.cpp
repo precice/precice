@@ -61,6 +61,8 @@ void ParallelImplicitCouplingScheme:: initialize
     mergeData(); // merge send and receive data for all pp calls
     setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
     if (getPostProcessing().get() != NULL){
+      preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
+              "For parallel coupling, the number of coupling data vectors has to be 2");
       getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
     }
   }

@@ -66,9 +66,17 @@ void IQNILSPostProcessing:: initialize
    preciceCheck(utils::contained(*_dataIDs.begin(), cplData), "initialize()",
                 "Data with ID " << *_dataIDs.begin() << " is not contained in data "
                 "given at initialization!");
-   //we assume that all coupling data vectors have the same length
-   size_t entries = cplData[*_dataIDs.begin()]->values->size();
-   entries *= _dataIDs.size();
+
+   size_t entries=0;
+   if(_dataIDs.size()==1){
+     entries = cplData[_dataIDs.at(0)]->values->size();
+   }
+   else{
+     assertion(_dataIDs.size()==2);
+     entries = cplData[_dataIDs.at(0)]->values->size() +
+         cplData[_dataIDs.at(1)]->values->size();
+   }
+
    assertion(entries > 0);
    double init = 0.0;
    assertion(_oldXTilde.size() == 0);
@@ -80,8 +88,6 @@ void IQNILSPostProcessing:: initialize
 
    // Append column for old values if not done by coupling scheme yet
    foreach (DataMap::value_type& pair, cplData){
-     assertion2(pair.second->values->size() == entries/_dataIDs.size(),
-                pair.second->values->size(), entries/_dataIDs.size());
      int cols = pair.second->oldValues.cols();
      if (cols < 1){
        assertion1(pair.second->values->size() > 0, pair.first);
@@ -96,8 +102,9 @@ void IQNILSPostProcessing:: performPostProcessing
    DataMap& cplData)
 {
   preciceTrace("performPostProcessing()");
-  preciceCheck(_dataIDs.size()<=2 && _dataIDs.size()>=1,"performPostProcessing()",
-                      "The number of coupling data vectors has to be 1 or 2");
+  //there is already a preciceCheck in cplscheme->initialize
+  assertion1(_dataIDs.size()<=2 && _dataIDs.size()>=1,
+                      "The number of coupling data vectors should be 1 or 2");
   using namespace tarch::la;
   assertion1(utils::contained(*_dataIDs.begin(), cplData), *_dataIDs.begin());
   assertion2(_oldResiduals.size() == _oldXTilde.size(),
@@ -242,20 +249,21 @@ void IQNILSPostProcessing:: performPostProcessing
     }
     //preciceDebug("performPostprocessing()", "Postprocessed values = " << values);
   }
-  int valueLength = values.size()/_dataIDs.size();
-  preciceDebug("Copying values back, valueLength: " << valueLength);
+
+
   // Set all values back from copies to original
-  int dataIndex = 0;
+  int offset = 0;
   foreach(int id, _dataIDs){
+    int size = cplData[id]->values->size();
+    preciceDebug("Copying values back, size: " << size);
     utils::DynVector& valuesPart = *(cplData[id]->values);
     utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
-    int offset = dataIndex*valueLength;
-    for(int i=0; i<valueLength; i++){
+    for(int i=0; i<size; i++){
       //preciceDebug("Copying values back, values, id: " << id <<" i: " << i);
       valuesPart[i] = values[i + offset];
       oldValuesPart[i] = oldValues[i + offset];
     }
-    dataIndex++;
+    offset += size;
   }
   //preciceDebug("copied values back, values size: " << cplData[*_dataIDs.begin()]->values->size());
   //preciceDebug("copied values back, oldValues size: " << cplData[*_dataIDs.begin()]->oldValues.column(0).size());
