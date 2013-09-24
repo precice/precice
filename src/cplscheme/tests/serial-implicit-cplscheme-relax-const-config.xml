@@ -33,8 +33,8 @@
       <max-iterations value="100"/>
       <exchange data="data0" mesh="mesh" from="participant0" />
       <exchange data="data1" mesh="mesh" from="participant1" />
-      <post-processing:constant  mesh="mesh">
-      	 <data name="data0"/>
+      <post-processing:constant>
+      	 <data name="data0" mesh="mesh"/>
          <relaxation value="0.01" />
       </post-processing:constant>
       <absolute-convergence-measure 
