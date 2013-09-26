@@ -39,19 +39,27 @@ AitkenPostProcessing:: AitkenPostProcessing
 
 void AitkenPostProcessing:: initialize
 (
-  DataMap& cpldata )
+  DataMap& cplData )
 {
   preciceCheck(utils::contained(*_dataIDs.begin(), cpldata), "initialize()",
                "Data with ID " << *_dataIDs.begin()
                << " is not contained in data given at initialization!" );
-  size_t entries = cpldata[*_dataIDs.begin()]->values->size();
+  size_t entries=0;
+  if(_dataIDs.size()==1){
+    entries = cplData[_dataIDs.at(0)]->values->size();
+  }
+  else{
+    assertion(_dataIDs.size()==2);
+    entries = cplData[_dataIDs.at(0)]->values->size() +
+        cplData[_dataIDs.at(1)]->values->size();
+  }
   assertion(entries > 0);
   double initializer = std::numeric_limits<double>::max();
   utils::DynVector toAppend(entries, initializer);
   _residuals.append(toAppend);
 
   // Append column for old values if not done by coupling scheme yet
-  foreach (DataMap::value_type& pair, cpldata){
+  foreach (DataMap::value_type& pair, cplData){
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
       assertion1(pair.second->values->size() > 0, pair.first);
@@ -71,6 +79,8 @@ void AitkenPostProcessing:: performPostProcessing
 
   // Compute aitken relaxation factor
   assertion(utils::contained(*_dataIDs.begin(), cplData));
+
+  //TODO hier genauso wie IQN
   DataValues& values = *cplData[*_dataIDs.begin()]->values;
   DataValues& oldValues = cplData[*_dataIDs.begin()]->oldValues.column(0);
 

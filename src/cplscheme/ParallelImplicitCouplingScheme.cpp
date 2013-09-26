@@ -145,8 +145,6 @@ void ParallelImplicitCouplingScheme:: initializeData()
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
           pair.second->oldValues.shiftSetFirst(*pair.second->values);
-          preciceDebug("Shift columns for receive data " << pair.first);
-          preciceDebug("Columns for receive data " << pair.second->oldValues.cols());
         }
       }
 
@@ -159,9 +157,6 @@ void ParallelImplicitCouplingScheme:: initializeData()
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
           pair.second->oldValues.shiftSetFirst(*pair.second->values);
-          preciceDebug("old Values in initializeData: " << oldValues);
-          preciceDebug("Shift columns for send data " << pair.first);
-          preciceDebug("columns for send data " << pair.second->oldValues.cols());
         }
       }
 
@@ -169,15 +164,12 @@ void ParallelImplicitCouplingScheme:: initializeData()
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
 
-
     }
-
   }
 
   //in order to check in advance if initializeData has been called (if necessary)
   setHasToSendInitData(false);
   setHasToReceiveInitData(false);
-
 }
 
 

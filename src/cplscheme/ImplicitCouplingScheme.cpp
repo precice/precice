@@ -233,7 +233,7 @@ bool ImplicitCouplingScheme:: measureConvergence()
     assertion(convMeasure.data != NULL);
     assertion(convMeasure.measure.get() != NULL);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
-    preciceDebug("old values in convergence "<< oldValues);
+    preciceDebug("new values in convergence "<< *convMeasure.data->values);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values);
     if (not convMeasure.measure->isConvergence()){
       //preciceDebug("Local convergence = false");

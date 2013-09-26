@@ -8,6 +8,7 @@
 #include "tarch/tests/TestCase.h"
 #include "tarch/logging/Log.h"
 #include "utils/xml/XMLTag.hpp"
+#include "cplscheme/SharedPointer.hpp"
 #include <string>
 #include <vector>
 
@@ -53,6 +54,9 @@ public:
    */
   virtual void run();
 
+  typedef std::map<int,PtrCouplingData> DataMap;
+  typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
+
 private:
 
   // @brief Logging device.
@@ -78,6 +82,11 @@ private:
    * @brief Tests the initialize data functionality.
    */
   void testInitializeData();
+
+  /**
+   * @brief Tests the correct postprocessing for VIQN-like vector data
+   */
+  void testVIQNPP();
 
   void connect (
       const std::string&     participant0,
