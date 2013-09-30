@@ -125,9 +125,6 @@ void IQNILSPostProcessing:: performPostProcessing
   // Compute current residual: vertex-data - oldData
   DataValues residuals(values);
   residuals -= oldValues;
-  preciceDebug("values = " << values);
-  preciceDebug("oldValues = " << oldValues);
-  preciceDebug("Residuals = " << residuals);
 
   if (_firstIteration && (_matrixCols.size() < 2)){
     preciceDebug("   Performing underrelaxation");

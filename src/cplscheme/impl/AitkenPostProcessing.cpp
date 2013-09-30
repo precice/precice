@@ -41,7 +41,7 @@ void AitkenPostProcessing:: initialize
 (
   DataMap& cplData )
 {
-  preciceCheck(utils::contained(*_dataIDs.begin(), cpldata), "initialize()",
+  preciceCheck(utils::contained(*_dataIDs.begin(), cplData), "initialize()",
                "Data with ID " << *_dataIDs.begin()
                << " is not contained in data given at initialization!" );
   size_t entries=0;
@@ -80,9 +80,12 @@ void AitkenPostProcessing:: performPostProcessing
   // Compute aitken relaxation factor
   assertion(utils::contained(*_dataIDs.begin(), cplData));
 
-  //TODO hier genauso wie IQN
-  DataValues& values = *cplData[*_dataIDs.begin()]->values;
-  DataValues& oldValues = cplData[*_dataIDs.begin()]->oldValues.column(0);
+  DataValues values;
+  DataValues oldValues;
+  foreach (int id, _dataIDs){
+    values.append(*(cplData[id]->values));
+    oldValues.append(cplData[id]->oldValues.column(0));
+  }
 
   // Compute current residuals
   DataValues residuals(values);
@@ -104,6 +107,8 @@ void AitkenPostProcessing:: performPostProcessing
     double denominator = dot(residualDeltas, residualDeltas);
     _aitkenFactor = -_aitkenFactor * (nominator / denominator);
   }
+
+  preciceDebug("AitkenFactor: " << _aitkenFactor);
 
   // Perform relaxation with aitken factor
   double omega = _aitkenFactor;
