@@ -11,7 +11,7 @@
 #----------------------------------------------------------------------#
 # User modifiable section.
 #----------------------------------------------------------------------#
-SOURCES=fsi.c fsi_udf.c
+SOURCES=fsi.c wave_profile.c fsi_and_wave_profile_udf.c
 FLUENT_INC=/home/software/ansys/ansys_121_64bit/v121/fluent
 
 # Precompiled User Object files (for example .o files from .f sources)

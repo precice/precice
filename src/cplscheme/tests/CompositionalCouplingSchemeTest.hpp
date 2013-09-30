@@ -58,12 +58,12 @@ private:
   // @brief Path to src directory.
   std::string _pathToTests;
 
-# ifndef PRECICE_NO_MPI
-
   /**
    * @brief Runs different explicit/implicit compositions with dummy.
    */
   void testDummySchemeCompositions();
+
+# ifndef PRECICE_NO_MPI
 
   /**
    * @brief Runs a three solver composition of explicit schemes.

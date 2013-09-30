@@ -10,19 +10,19 @@ import sys;
 
 ##### Determine boost root path from environment variable
 #
-boostRootPath = os.getenv ( 'BOOST_ROOT' )
+boostRootPath = os.getenv ( 'PRECICE_BOOST_ROOT' )
 if ( boostRootPath == None ):
-   print 'ERROR: Environment variable BOOST_ROOT not defined!'
+   print 'ERROR: Environment variable PRECICE_BOOST_ROOT not defined!'
    sys.exit(1)
 else:
-   print 'Using environment variable BOOST_ROOT =', boostRootPath
+   print 'Using environment variable PRECICE_BOOST_ROOT =', boostRootPath
 
-tarchSrc = os.getenv ('TARCH_SRC')
+tarchSrc = os.getenv ('PRECICE_TARCH_SRC')
 if ( tarchSrc == None ):
-   print 'ERROR: Environment variable TARCH_SRC not defined!'
+   print 'ERROR: Environment variable PRECICE_TARCH_SRC not defined!'
    sys.exit(1)
 else:
-   print 'Using environment variable TARCH_SRC =', tarchSrc
+   print 'Using environment variable PRECICE_TARCH_SRC =', tarchSrc
    
 preciceRoot = os.getenv ('PRECICE_ROOT')
 if ( preciceRoot == None ):
@@ -46,10 +46,10 @@ cpppath = [
    preciceRoot + '/src/'
    ]   
 ccflags = []
-cxx = 'mpicxx'      # For systems offering mpicxx compiler
+cxx = 'mpicxx.mpich2'      # For systems offering mpicxx compiler
 
 libpath.append('/usr/lib/')   
-libs.append('python2.6')
+libs.append('python2.7')
 
 ##### Read command line arguments
 #
