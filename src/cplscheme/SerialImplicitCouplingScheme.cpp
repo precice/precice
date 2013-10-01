@@ -139,8 +139,6 @@ void SerialImplicitCouplingScheme:: initializeData()
 
   setHasDataBeenExchanged(false);
 
-
-
   if (hasToReceiveInitData() && isCouplingOngoing()){
     assertion(doesFirstStep());
     preciceDebug("Receiving data");

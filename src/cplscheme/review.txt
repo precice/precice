@@ -1,0 +1,16 @@
+Questions and todos before merging the i10 branch back to master
+
+- ImplicitCouplingScheme
+	- Is the ImplicitCouplingScheme an abstract class?
+  	  --> If yes, adapt documentation.  
+	--> Adapt some documentation (methods have /** */ doc)
+	- Do all methods work for Serial and ParallelI.C.?
+  	  --> If not, adapt.  
+	--> Refactor protected member variables.
+
+- SerialImplicitCouplingScheme
+	--> Adapt documentation in SerialImplicitCouplingScheme
+	- How has initializeData() been changed/written now?
+  
+- ParallelImplicitCouplingScheme
+	- How does mergeData() work? Does it "copy" data?

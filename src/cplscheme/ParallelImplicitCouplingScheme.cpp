@@ -71,7 +71,6 @@ void ParallelImplicitCouplingScheme:: initialize
   requireAction(constants::actionWriteIterationCheckpoint());
   initializeTXTWriters();
 
-
   foreach (DataMap::value_type & pair, getSendData()){
     if (pair.second->initialize){
       setHasToSendInitData(true);
@@ -90,7 +89,6 @@ void ParallelImplicitCouplingScheme:: initialize
   }
 
   setIsInitialized(true);
-
 }
 
 void ParallelImplicitCouplingScheme:: initializeData()
@@ -109,7 +107,6 @@ void ParallelImplicitCouplingScheme:: initializeData()
 
   setHasDataBeenExchanged(false);
 
-
   //F: send, receive, S: receive, send
   if(doesFirstStep()){
     if(hasToSendInitData()){
@@ -121,22 +118,16 @@ void ParallelImplicitCouplingScheme:: initializeData()
       getCommunication()->startReceivePackage(0);
       receiveData(getCommunication());
       getCommunication()->finishReceivePackage();
-
       setHasDataBeenExchanged(true);
     }
-
   }
 
   else{ // second participant
     if(hasToReceiveInitData()){
-
-
       getCommunication()->startReceivePackage(0);
       receiveData(getCommunication());
       getCommunication()->finishReceivePackage();
-
       setHasDataBeenExchanged(true);
-
 
       // second participant has to save values for extrapolation
       if (getExtrapolationOrder() > 0){
@@ -147,10 +138,8 @@ void ParallelImplicitCouplingScheme:: initializeData()
           pair.second->oldValues.shiftSetFirst(*pair.second->values);
         }
       }
-
     }
     if(hasToSendInitData()){
-
       if (getExtrapolationOrder() > 0){
         foreach (DataMap::value_type & pair, getSendData()){
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
@@ -159,11 +148,9 @@ void ParallelImplicitCouplingScheme:: initializeData()
           pair.second->oldValues.shiftSetFirst(*pair.second->values);
         }
       }
-
       getCommunication()->startSendPackage(0);
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
-
     }
   }
 
@@ -208,7 +195,6 @@ void ParallelImplicitCouplingScheme:: advance()
       getCommunication()->finishReceivePackage();
 
       convergence = measureConvergence();
-
 
       assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
                     getIterations(), getMaxIterations());
