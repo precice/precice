@@ -9,6 +9,7 @@
 #include "utils/Globals.hpp"
 
 using precice::utils::DynVector;
+using precice::utils::Vector2D;
 using namespace precice;
 using tarch::la::raw;
 
@@ -130,6 +131,70 @@ int main(int argc, char **argv)
     tarch::la::DynamicVector<bool> fixedDirections(dimensions, false);
     fixedDirections[0] = true;
     structure.fixTranslations(fixedDirections);
+  }
+
+  bool fixCharacteristics = false;
+  if (fixCharacteristics){
+    // Floating structure with anti-motion device scenario
+
+//    // Anti-motion devices are rotated by 45 degree downwards
+//    DynVector centerOfGravity(2, 0.0);
+//    double volumeLeftLeg = 0.000107;
+//    double volumeRightLeg = 0.000107;
+//    double volumeTrunkUpper = 0.048232;
+//    double volumeTrunkLower = 0.001743;
+//    double volumeTrunkLowerLeftTriangle = 0.000006;
+//    double volumeTrunkLowerRightTriangle = 0.000006;
+//    double totalVolume = volumeLeftLeg + volumeRightLeg + volumeTrunkUpper
+//                         + volumeTrunkLower + volumeTrunkLowerLeftTriangle
+//                         + volumeTrunkLowerRightTriangle;
+//
+//    Vector2D cogLeftLeg(4.74418, 0.44418);
+//    Vector2D cogRightLeg(5.25582, 0.44418);
+//    Vector2D cogTrunkUpper(5.0,0.50177);
+//    Vector2D cogTrunkLower(5.0,0.45177);
+//
+//    Vector2D triangleA(4.75,0.45354);
+//    Vector2D triangleB(4.75354,0.45354);
+//    Vector2D triangleC(4.75354,0.45);
+//    Vector2D cogTrunkLowerRightTriangle = triangleA;
+//    cogTrunkLowerRightTriangle += triangleB;
+//    cogTrunkLowerRightTriangle += triangleC;
+//    cogTrunkLowerRightTriangle /= 3.0;
+//
+//    triangleA = 5.25,    0.45354;
+//    triangleB = 5.24646, 0.45354;
+//    triangleC = 5.24646, 0.45;
+//    Vector2D cogTrunkLowerLeftTriangle = triangleA;
+//    cogTrunkLowerLeftTriangle += triangleB;
+//    cogTrunkLowerLeftTriangle += triangleC;
+//    cogTrunkLowerLeftTriangle /= 3.0;
+//
+//    centerOfGravity = cogLeftLeg * volumeLeftLeg;
+//    centerOfGravity += cogRightLeg * volumeRightLeg;
+//    centerOfGravity += cogTrunkUpper * volumeTrunkUpper;
+//    centerOfGravity += cogTrunkLower * volumeTrunkLower;
+//    centerOfGravity += cogTrunkLowerRightTriangle * volumeTrunkLowerRightTriangle;
+//    centerOfGravity += cogTrunkLowerLeftTriangle * volumeTrunkLowerLeftTriangle;
+//    centerOfGravity /= totalVolume;
+
+    // Anti-motion devices are facing downwards (rotated by 90 degrees)
+    DynVector centerOfGravity(2, 0.0);
+    double volumeLeftLeg = 0.0001;
+    double volumeRightLeg = 0.0001;
+    double volumeTrunk = 0.05;
+    double totalVolume = volumeLeftLeg + volumeRightLeg + volumeTrunk;
+
+    Vector2D cogLeftLeg(-0.2475, -0.01);
+    Vector2D cogRightLeg(0.2475, -0.01);
+    Vector2D cogTrunk(0.0,0.05);
+
+    centerOfGravity = cogLeftLeg * volumeLeftLeg;
+    centerOfGravity += cogRightLeg * volumeRightLeg;
+    centerOfGravity += cogTrunk * volumeTrunk;
+    centerOfGravity /= totalVolume;
+
+    structure.fixCharacteristics(centerOfGravity, totalVolume);
   }
 
 
