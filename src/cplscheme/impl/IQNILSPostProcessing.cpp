@@ -112,11 +112,23 @@ void IQNILSPostProcessing:: performPostProcessing
 
   DataValues values;
   DataValues oldValues;
+
+  //TODO tmp, just some experiment
+  //norm[id]=tarch::la::norm2(*(cplData[id]->values));
+  double norm[_dataIDs.size()];
+  if(_dataIDs.size()==1){
+    norm[0]=1.0;
+  }
+  else{
+    norm[0]=0.1463e5;
+    norm[1]=1.195e-3;
+  }
+
   preciceDebug("dataId size " << _dataIDs.size());
   preciceDebug("cplData size " << cplData.size());
   foreach (int id, _dataIDs){
-    values.append(*(cplData[id]->values));
-    oldValues.append(cplData[id]->oldValues.column(0));
+    values.append((*(cplData[id]->values))/norm[id]);
+    oldValues.append((cplData[id]->oldValues.column(0))/norm[id]);
   }
 
   //preciceDebug("Untouched values = " << values);
@@ -257,8 +269,8 @@ void IQNILSPostProcessing:: performPostProcessing
     utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
     for(int i=0; i<size; i++){
       //preciceDebug("Copying values back, values, id: " << id <<" i: " << i);
-      valuesPart[i] = values[i + offset];
-      oldValuesPart[i] = oldValues[i + offset];
+      valuesPart[i] = values[i + offset]*norm[id];
+      oldValuesPart[i] = oldValues[i + offset]*norm[id];
     }
     offset += size;
   }
