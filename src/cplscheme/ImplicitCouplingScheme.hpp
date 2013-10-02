@@ -31,9 +31,15 @@ namespace precice {
 namespace cplscheme {
 
 /**
- * TODO Abstract class, add to docu.
+ * Abstract class that provides the basic functionalities for implicit coupling,
+ * i.e. subiterating in every timestep to converge towards the strong solution.
+ * The functionalities that differ for the classcial serial coupling and the
+ * parallel coupling are implemented in the subclasses SerialImplicitCouplingScheme
+ * and ParallelImplicitCouplingScheme.
+ * Please look at ./coupling_steering.pdf for a brief sketch of the differences
+ * between the serial and parallel implicit coupling.
  *
- * @brief Coupling scheme with iterations per timestep to achieve strong solution.
+ * @brief Abstract coupling scheme with iterations per timestep to achieve strong solution.
  */
 class ImplicitCouplingScheme : public BaseCouplingScheme
 {
@@ -42,12 +48,11 @@ public:
   /**
    * @brief Constructor.
    *
-   * TODO adapt params docu, e.g., first and second participant
    *
    * @param maxTime [IN] Simulation time limit, or UNDEFINED_TIME.
    * @param maxTimesteps [IN] Simulation timestep limit, or UNDEFINED_TIMESTEPS.
    * @param timestepLength [IN] Simulation timestep length.
-   * @param firstParticipant [IN] Name of participant starting simulation.
+   * @param firstParticipant [IN] Name of first participant in coupling.
    * @param secondParticipant [IN] Name of second participant in coupling.
    * @param localParticipant [IN] Name of participant using this coupling scheme.
    * @param communication [IN] Communication object for com. between participants.
@@ -150,19 +155,19 @@ public:
 
 protected:
 
-  // @return True, if local participant is the one starting the explicit scheme.
+  /**
+   * @return True, if local participant is the one starting the explicit scheme.
+   */
   bool doesFirstStep(){
     return _doesFirstStep;
   }
 
-  // @return Communication device to the other coupling participant.
+  /**
+   * @return Communication device to the other coupling participant.
+   */
   com::PtrCommunication getCommunication(){
     return _communication;
   }
-
-  // TODO Refactor to getter/setter/other method or make private
-  // @brief Responsible for monitoring iteration count over timesteps.
-  io::TXTTableWriter _iterationsWriter;
 
   void setIterationToPlot(int iterationToPlot){
     _iterationToPlot = iterationToPlot;
@@ -237,6 +242,10 @@ protected:
     return _extrapolationOrder;
   }
 
+  //io::TXTTableWriter getIterationsWriter(){
+  //  return _iterationsWriter;
+ // }
+
   /**
    * @brief Initializes the txt writers for writing residuals, iterations, ...
    */
@@ -267,6 +276,9 @@ protected:
   bool measureConvergence();
 
   void extrapolateData(DataMap& data);
+
+  // @brief Responsible for monitoring iteration count over timesteps.
+  io::TXTTableWriter _iterationsWriter;
 
 private:
 

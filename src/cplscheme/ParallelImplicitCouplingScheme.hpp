@@ -31,24 +31,22 @@ namespace precice {
 namespace cplscheme {
 
 /**
- *  TODO Refine documentation
  *
- * @brief Coupling scheme which lets the participants run in parallel to each other.
+ * @brief Parallel coupling scheme which lets the participants run in parallel to each other.
  */
 class ParallelImplicitCouplingScheme : public ImplicitCouplingScheme
 {
 public:
 
   /**
-   * TODO adapt documentation.
    *
    * @brief Constructor.
    *
    * @param maxTime [IN] Simulation time limit, or UNDEFINED_TIME.
    * @param maxTimesteps [IN] Simulation timestep limit, or UNDEFINED_TIMESTEPS.
    * @param timestepLength [IN] Simulation timestep length.
-   * @param firstParticipant [IN] Name of participant starting simulation.
-   * @param secondParticipant [IN] Name of second participant in coupling.
+   * @param firstParticipant [IN] Name of first participant.
+   * @param secondParticipant [IN] Name of second participant who does the pp.
    * @param localParticipant [IN] Name of participant using this coupling scheme.
    * @param communication [IN] Communication object for com. between participants.
    * @param maxIterations [IN] Maximal iterations per coupling timestep.
