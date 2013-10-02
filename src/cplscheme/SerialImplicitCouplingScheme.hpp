@@ -32,6 +32,8 @@ namespace precice {
 namespace cplscheme {
 
 /**
+ * TODO Adapt documentation.
+ *
  * @brief Coupling scheme with iterations per timestep to achieve strong solution.
  */
 class SerialImplicitCouplingScheme : public ImplicitCouplingScheme

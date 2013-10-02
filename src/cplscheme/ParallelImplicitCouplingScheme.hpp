@@ -31,6 +31,8 @@ namespace precice {
 namespace cplscheme {
 
 /**
+ *  TODO Refine documentation
+ *
  * @brief Coupling scheme which lets the participants run in parallel to each other.
  */
 class ParallelImplicitCouplingScheme : public ImplicitCouplingScheme
@@ -38,6 +40,8 @@ class ParallelImplicitCouplingScheme : public ImplicitCouplingScheme
 public:
 
   /**
+   * TODO adapt documentation.
+   *
    * @brief Constructor.
    *
    * @param maxTime [IN] Simulation time limit, or UNDEFINED_TIME.
@@ -106,15 +110,13 @@ private:
      return _allData;
   }
 
-
-
   // @brief Logging device.
   static tarch::logging::Log _log;
 
   // @brief Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;
 
-  // @brief merges send in receive data into one map (for parallel post-processing)
+  // @brief merges send and receive data into one map (for parallel post-processing)
   void mergeData();
 
   friend class tests::ParallelImplicitCouplingSchemeTest;

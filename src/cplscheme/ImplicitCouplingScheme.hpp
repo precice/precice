@@ -31,6 +31,8 @@ namespace precice {
 namespace cplscheme {
 
 /**
+ * TODO Abstract class, add to docu.
+ *
  * @brief Coupling scheme with iterations per timestep to achieve strong solution.
  */
 class ImplicitCouplingScheme : public BaseCouplingScheme
@@ -39,6 +41,8 @@ public:
 
   /**
    * @brief Constructor.
+   *
+   * TODO adapt params docu, e.g., first and second participant
    *
    * @param maxTime [IN] Simulation time limit, or UNDEFINED_TIME.
    * @param maxTimesteps [IN] Simulation timestep limit, or UNDEFINED_TIMESTEPS.
@@ -156,6 +160,7 @@ protected:
     return _communication;
   }
 
+  // TODO Refactor to getter/setter/other method or make private
   // @brief Responsible for monitoring iteration count over timesteps.
   io::TXTTableWriter _iterationsWriter;
 
@@ -270,7 +275,6 @@ private:
 
   // @brief Communication device to the other coupling participant.
     com::PtrCommunication _communication;
-
 
   /**
    * @brief Holds relevant variables to perform a convergence measurement.
