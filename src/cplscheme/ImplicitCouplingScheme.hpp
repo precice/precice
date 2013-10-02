@@ -242,14 +242,10 @@ protected:
     return _extrapolationOrder;
   }
 
-  //io::TXTTableWriter getIterationsWriter(){
-  //  return _iterationsWriter;
- // }
+  io::TXTTableWriter& getIterationsWriter(){
+    return _iterationsWriter;
+  }
 
-  /**
-   * @brief Initializes the txt writers for writing residuals, iterations, ...
-   */
-  void initializeTXTWriters();
 
   /**
    * @brief Sets up _dataStorage to store data values of last timestep.
@@ -277,16 +273,21 @@ protected:
 
   void extrapolateData(DataMap& data);
 
-  // @brief Responsible for monitoring iteration count over timesteps.
-  io::TXTTableWriter _iterationsWriter;
+  /**
+   * @brief Initializes the txt writers for writing residuals, iterations, ...
+   */
+  void initializeTXTWriters();
 
 private:
 
   // @brief True, if local participant is the one starting the explicit scheme.
-    bool _doesFirstStep;
+  bool _doesFirstStep;
 
   // @brief Communication device to the other coupling participant.
-    com::PtrCommunication _communication;
+  com::PtrCommunication _communication;
+
+  // @brief Responsible for monitoring iteration count over timesteps.
+  io::TXTTableWriter _iterationsWriter;
 
   /**
    * @brief Holds relevant variables to perform a convergence measurement.
