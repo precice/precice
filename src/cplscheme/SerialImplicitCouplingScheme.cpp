@@ -287,11 +287,11 @@ void SerialImplicitCouplingScheme:: advance()
     }
     else {
       preciceDebug("Convergence achieved");
-      _iterationsWriter.writeData("Timesteps", getTimesteps());
-      _iterationsWriter.writeData("Total Iterations", getTotalIterations());
-      _iterationsWriter.writeData("Iterations", getIterations());
+      getIterationsWriter().writeData("Timesteps", getTimesteps());
+      getIterationsWriter().writeData("Total Iterations", getTotalIterations());
+      getIterationsWriter().writeData("Iterations", getIterations());
       int converged = getIterations() < getMaxIterations() ? 1 : 0;
-      _iterationsWriter.writeData("Convergence", converged);
+      getIterationsWriter().writeData("Convergence", converged);
       setIterations(0);
     }
     setHasDataBeenExchanged(true);
