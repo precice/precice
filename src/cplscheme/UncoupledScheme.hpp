@@ -12,14 +12,14 @@
 namespace precice {
 namespace cplscheme {
 
-class UncoupledCouplingScheme : public BaseCouplingScheme
+class UncoupledScheme : public BaseCouplingScheme
 {
 public:
 
   /**
    * @brief Constructor.
    */
-  UncoupledCouplingScheme (
+  UncoupledScheme (
     double             maxTime,
     int                maxTimesteps,
     int                validDigits,
@@ -28,7 +28,7 @@ public:
   /**
    * @brief Destructor, virtual because of virtual functions.
    */
-  virtual ~UncoupledCouplingScheme() {}
+  virtual ~UncoupledScheme() {}
 
   /**
    * @brief Initializes the coupling scheme.

@@ -12,21 +12,21 @@ namespace cplscheme {
 namespace tests {
 
 /**
- * @brief Provides tests for class UncoupledCouplingScheme.
+ * @brief Provides tests for class UncoupledScheme.
  */
-class UncoupledCouplingSchemeTest : public tarch::tests::TestCase
+class UncoupledSchemeTest : public tarch::tests::TestCase
 {
 public:
 
   /**
    * @brief Constructor.
    */
-  UncoupledCouplingSchemeTest ();
+  UncoupledSchemeTest ();
 
   /**
    * @brief Destructor.
    */
-  virtual ~UncoupledCouplingSchemeTest () {}
+  virtual ~UncoupledSchemeTest () {}
 
   /**
    * @brief Prepares running test cases, empty.
