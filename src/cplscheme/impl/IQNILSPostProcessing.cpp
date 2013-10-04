@@ -28,7 +28,8 @@ IQNILSPostProcessing:: IQNILSPostProcessing
   int    maxIterationsUsed,
   int    timestepsReused,
   double singularityLimit,
-  std::vector<int>    dataIDs)
+  std::vector<int> dataIDs,
+  std::map<int,double> scalings)
 :
   PostProcessing(),
   _initialRelaxation(initialRelaxation),
@@ -36,6 +37,7 @@ IQNILSPostProcessing:: IQNILSPostProcessing
   _timestepsReused(timestepsReused),
   _singularityLimit(singularityLimit),
   _dataIDs(dataIDs),
+  _scalings(scalings),
   _firstIteration(true),
   _oldXTilde(),
   _oldResiduals(),
@@ -105,6 +107,8 @@ void IQNILSPostProcessing:: performPostProcessing
   //there is already a preciceCheck in cplscheme->initialize
   assertion1(_dataIDs.size()<=2 && _dataIDs.size()>=1,
                       "The number of coupling data vectors should be 1 or 2");
+  assertion1(_dataIDs.size() == _scalings.size(),
+                        "Every id should have a scaling and v.v.");
   using namespace tarch::la;
   assertion1(utils::contained(*_dataIDs.begin(), cplData), *_dataIDs.begin());
   assertion2(_oldResiduals.size() == _oldXTilde.size(),
@@ -113,22 +117,13 @@ void IQNILSPostProcessing:: performPostProcessing
   DataValues values;
   DataValues oldValues;
 
-  //TODO tmp, just some experiment
-  //norm[id]=tarch::la::norm2(*(cplData[id]->values));
-  double norm[_dataIDs.size()];
-  if(_dataIDs.size()==1){
-    norm[0]=1.0;
-  }
-  else{
-    norm[0]=0.1463e5;
-    norm[1]=1.195e-3;
-  }
-
   preciceDebug("dataId size " << _dataIDs.size());
   preciceDebug("cplData size " << cplData.size());
   foreach (int id, _dataIDs){
-    values.append((*(cplData[id]->values))/norm[id]);
-    oldValues.append((cplData[id]->oldValues.column(0))/norm[id]);
+    double factor = _scalings[id];
+    preciceDebug("Scaling Factor " << factor << " for id: " << id);
+    values.append((*(cplData[id]->values))/factor);
+    oldValues.append((cplData[id]->oldValues.column(0))/factor);
   }
 
   //preciceDebug("Untouched values = " << values);
@@ -263,14 +258,15 @@ void IQNILSPostProcessing:: performPostProcessing
   // Set all values back from copies to original
   int offset = 0;
   foreach(int id, _dataIDs){
+    double factor = _scalings[id];
     int size = cplData[id]->values->size();
     preciceDebug("Copying values back, size: " << size);
     utils::DynVector& valuesPart = *(cplData[id]->values);
     utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
     for(int i=0; i<size; i++){
       //preciceDebug("Copying values back, values, id: " << id <<" i: " << i);
-      valuesPart[i] = values[i + offset]*norm[id];
-      oldValuesPart[i] = oldValues[i + offset]*norm[id];
+      valuesPart[i] = values[i + offset]*factor;
+      oldValuesPart[i] = oldValues[i + offset]*factor;
     }
     offset += size;
   }

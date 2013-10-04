@@ -249,9 +249,12 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
+  std::map<int, double> scalings;
+  scalings.insert(std::make_pair(0,1.0));
+  scalings.insert(std::make_pair(1,1.0));
 
   cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation,maxIterationsUsed,
-      timestepsReused, singularityLimit, dataIDs);
+      timestepsReused, singularityLimit, dataIDs, scalings);
 
   //init displacements
   utils::DynVector dvalues;

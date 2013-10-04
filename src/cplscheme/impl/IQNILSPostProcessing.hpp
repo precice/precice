@@ -26,7 +26,8 @@ public:
       int    maxIterationsUsed,
       int    timestepsReused,
       double singularityLimit,
-      std::vector<int>    dataIDs );
+      std::vector<int>    dataIDs,
+      std::map<int,double>    scalings);
 
    virtual ~IQNILSPostProcessing() {};
 
@@ -65,6 +66,8 @@ private:
    double _singularityLimit;
 
    std::vector<int> _dataIDs;
+
+   std::map<int,double> _scalings;
 
    bool _firstIteration;
 

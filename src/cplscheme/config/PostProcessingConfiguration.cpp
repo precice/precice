@@ -40,6 +40,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_DATA("data"),
   ATTR_NAME("name"),
   ATTR_MESH("mesh"),
+  ATTR_SCALING("scaling"),
   ATTR_VALUE("value"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
@@ -104,7 +105,7 @@ void PostProcessingConfiguration:: connectTags(
 //  ValidatorEquals<std::string> validIQNILS(VALUE_IQNILS );
 //  attrType.setValidator (
 //    validConstant || validAitken || validHierarchAitken|| validIQNILS );
-//  tag.addAttribute(attrType );
+//  tag.addAttribute(attrType );value
 //
 //  XMLAttribute<std::string> attrData(ATTR_DATA );
 //  tag.addAttribute(attrData );
@@ -133,18 +134,28 @@ void PostProcessingConfiguration:: xmlTagCallback
 {
   preciceTrace1("xmlTagCallback()", callingTag.getFullName());
 
+  if (callingTag.getNamespace() == TAG){
+      _config.type = callingTag.getName();
+  }
+
   if (callingTag.getName() == TAG_RELAX){
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
   }
   else if (callingTag.getName() == TAG_DATA){
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
     _meshName = callingTag.getStringAttributeValue(ATTR_MESH);
+    double scaling = 1.0;
+    if(_config.type == VALUE_IQNILS){
+      scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
+    }
+
 
     foreach(mesh::PtrMesh mesh, _meshConfig->meshes() ) {
       if(mesh->getName() == _meshName ) {
         foreach(mesh::PtrData data, mesh->data() ) {
           if (dataName == data->getName()){
             _config.dataIDs.push_back(data->getID());
+            _config.scalings.insert(std::make_pair(data->getID(),scaling));
           }
         }
       }
@@ -198,7 +209,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
           new impl::IQNILSPostProcessing(
           _config.relaxationFactor, _config.maxIterationsUsed,
           _config.timestepsReused, _config.singularityLimit,
-          _config.dataIDs) );
+          _config.dataIDs, _config.scalings) );
     }
     else {
       assertion(false );
@@ -278,6 +289,11 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
     XMLAttribute<std::string> attrName(ATTR_NAME);
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
+    XMLAttribute<double> attrScaling(ATTR_SCALING);
+    attrScaling.setDefaultValue(1.0);
+    attrScaling.setDocumentation("If the absolute values of two coupling variables"
+         " differ too much, a scaling improves the performance of VIQN");
+    tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);

@@ -74,7 +74,7 @@ private:
 
    const std::string ATTR_NAME;
    const std::string ATTR_MESH;
-   //const std::string ATTR_TYPE;
+   const std::string ATTR_SCALING;
    const std::string ATTR_VALUE;
 
    const std::string VALUE_CONSTANT;
@@ -93,7 +93,8 @@ private:
    struct ConfigurationData
    {
       std::vector<int> dataIDs;
-      //std::string type;
+      std::map<int,double> scalings;
+      std::string type;
       double relaxationFactor;
       int maxIterationsUsed;
       int timestepsReused;
@@ -102,7 +103,8 @@ private:
       ConfigurationData ()
       :
          dataIDs (),
-         //type ( "" ),
+         scalings(),
+         type ( "" ),
          relaxationFactor ( 0.0 ),
          maxIterationsUsed ( 0 ),
          timestepsReused ( 0 ),
