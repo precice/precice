@@ -1,39 +1,39 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#include "UncoupledCouplingSchemeTest.hpp"
-#include "cplscheme/UncoupledCouplingScheme.hpp"
+#include "UncoupledSchemeTest.hpp"
+#include "cplscheme/UncoupledScheme.hpp"
 #include "utils/Parallel.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
-registerTest(precice::cplscheme::tests::UncoupledCouplingSchemeTest)
+registerTest(precice::cplscheme::tests::UncoupledSchemeTest)
 
 namespace precice {
 namespace cplscheme {
 namespace tests {
 
-tarch::logging::Log UncoupledCouplingSchemeTest::
-   _log ( "precice::cplscheme::tests::UncoupledCouplingSchemeTest" );
+tarch::logging::Log UncoupledSchemeTest::
+   _log ( "precice::cplscheme::tests::UncoupledSchemeTest" );
 
-UncoupledCouplingSchemeTest:: UncoupledCouplingSchemeTest ()
+UncoupledSchemeTest:: UncoupledSchemeTest ()
 :
-   TestCase ( "precice::cplscheme::tests::UncoupledCouplingSchemeTest" )
+   TestCase ( "precice::cplscheme::tests::UncoupledSchemeTest" )
 {}
 
-void UncoupledCouplingSchemeTest:: run ()
+void UncoupledSchemeTest:: run ()
 {
   PRECICE_MASTER_ONLY {
     testMethod ( testBasics );
   }
 }
 
-void UncoupledCouplingSchemeTest:: testBasics ()
+void UncoupledSchemeTest:: testBasics ()
 {
   preciceTrace ( "testBasics()" );
-  typedef UncoupledCouplingScheme CplScheme;
+  typedef UncoupledScheme CplScheme;
   double maxTime = 10.0;
   int maxTimesteps = CplScheme::UNDEFINED_TIMESTEPS;
-  UncoupledCouplingScheme cplscheme ( maxTime, maxTimesteps, 14, "TestParticipant" );
+  UncoupledScheme cplscheme ( maxTime, maxTimesteps, 14, "TestParticipant" );
   cplscheme.initialize ( 0.0, 0 );
   validate ( not cplscheme.isCouplingTimestepComplete() );
 

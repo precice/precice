@@ -15,7 +15,7 @@
 #include "utils/xml/ValidatorOr.hpp"
 #include "geometry/Geometry.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
-#include "cplscheme/UncoupledCouplingScheme.hpp"
+#include "cplscheme/UncoupledScheme.hpp"
 #include <limits>
 
 namespace precice {
@@ -129,7 +129,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
         int maxTimesteps = cplscheme::CouplingScheme::UNDEFINED_TIMESTEPS;
         int validDigits = 10;
         cplscheme::PtrCouplingScheme cplScheme (
-            new cplscheme::UncoupledCouplingScheme(maxTime, maxTimesteps,
+            new cplscheme::UncoupledScheme(maxTime, maxTimesteps,
             validDigits, name) );
         _couplingSchemeConfiguration->addCouplingScheme ( cplScheme, name );
       }

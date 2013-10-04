@@ -9,6 +9,11 @@ Structure0815:: Structure0815
   const DynVector& vertices,
   const tarch::la::DynamicVector<int> faces )
 :
+  TIMESTEPS("Timesteps"),
+  TIME("Time"),
+  CENTEROFGRAVITY("Center-of-gravity"),
+  TOTALMASS("Total mass"),
+  TOTALVOLUME("Total volume"),
   _dim(dim),
   _density(density),
   _gravity(gravity),
@@ -25,64 +30,42 @@ Structure0815:: Structure0815
   _displacements(vertices.size(), 0.0),
   _oldDisplacements(vertices.size(), 0.0),
   _displacementDeltas(vertices.size(), 0.0),
+  _fixedTranslationDirections(dim, false),
   _fixed(false),
-  _fixture(dim, 0.0)
+  _fixture(dim, 0.0),
+  _fixedCharacteristics(false),
+  _statisticsWriter("structure0815-statistics.txt")
 {
   double totalVolume = 0.0;
-  DynVector zero(_dim, 0.0);
-  if (_dim == 2){
-    DynVector coords0(zero);
-    DynVector coords1(zero);
-    for (int iEdge=0; iEdge < _faces.size()/2; iEdge++){
-      int index = iEdge * 2;
-      for (int i=0; i<_dim; i++){
-        coords0[i] = _vertices[_faces[index] * _dim + i];
-        coords1[i] = _vertices[_faces[index+1] * _dim + i];
-      }
-      typedef precice::utils::GeometryComputations GeoComp;
-      double area = GeoComp::triangleArea(zero, coords0, coords1);
-      area = std::abs(area); // since it comes out signed from cross-prod
-      totalVolume += area;
-      if (not tarch::la::equals(area, 0.0)){
-        _centerOfGravity += (coords0 + coords1) * area / 3.0;
-      }
-    }
+  computeCharacteristics(_centerOfGravity, _totalMass, totalVolume);
+  STRUCTURE_INFO("Center of gravity: " << _centerOfGravity);
+  STRUCTURE_INFO("Total mass: " << _totalMass);
+  STRUCTURE_INFO("Total volume: " << totalVolume);
+
+  _statisticsWriter.addData(TIMESTEPS, precice::io::TXTTableWriter::INT );
+  _statisticsWriter.addData(TIME, precice::io::TXTTableWriter::DOUBLE );
+  if (dim == 2){
+    _statisticsWriter.addData(CENTEROFGRAVITY, precice::io::TXTTableWriter::VECTOR2D);
+  }
+  else {
+    _statisticsWriter.addData(CENTEROFGRAVITY, precice::io::TXTTableWriter::VECTOR3D);
+  }
+  _statisticsWriter.addData(TOTALMASS, precice::io::TXTTableWriter::DOUBLE);
+  _statisticsWriter.addData(TOTALVOLUME, precice::io::TXTTableWriter::DOUBLE);
+
+  _statisticsWriter.writeData(TIMESTEPS, _timesteps);
+  _statisticsWriter.writeData(TIME, _time);
+  if (dim == 2){
+    precice::utils::Vector2D centerOfGravity(_centerOfGravity);
+    _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity);
   }
   else {
     assertion1(_dim == 3, _dim);
-    DynVector coords0(zero);
-    DynVector coords1(zero);
-    DynVector coords2(zero);
-    DynVector vec01(zero);
-    DynVector vec02(zero);
-    DynVector vec03(zero);
-    DynVector crossVec(zero);
-    for (int iTriangle=0; iTriangle < _faces.size()/3; iTriangle++){
-      int index = iTriangle * 3;
-      for (int i=0; i<_dim; i++){
-        coords0[i] = _vertices[_faces[index] * _dim + i];
-        coords1[i] = _vertices[_faces[index+1] * _dim + i];
-        coords2[i] = _vertices[_faces[index+2] * _dim + i];
-      }
-      vec01 = coords1;
-      vec01 -= coords0;
-      vec02 = coords2;
-      vec02 -= coords0;
-      vec03 = zero;
-      vec03 -= coords0;
-      crossVec = tarch::la::cross(vec01, vec02, crossVec);
-      //STRUCTURE_DEBUG("crossVector=" << crossVec);
-      double volume = tarch::la::dot(crossVec, vec03) / 6.0;
-      volume = std::abs(volume);
-      //STRUCTURE_DEBUG("v0=" << coords0 << ", v1=" << coords1 << ", v2=" << coords2 << ", volume=" << volume);
-      totalVolume += volume;
-      if (not tarch::la::equals(volume, 0.0)){
-        _centerOfGravity += (coords0 + coords1 + coords2) * volume / 4.0;
-      }
-    }
+    precice::utils::Vector3D centerOfGravity(_centerOfGravity);
+    _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity);
   }
-  _totalMass = totalVolume * _density;
-  _centerOfGravity /= totalVolume;
+  _statisticsWriter.writeData(TOTALMASS, _totalMass);
+  _statisticsWriter.writeData(TOTALVOLUME, totalVolume);
 }
 
 void Structure0815:: fixPoint
@@ -91,6 +74,29 @@ void Structure0815:: fixPoint
 {
   _fixed = true;
   _fixture = fixture;
+  STRUCTURE_INFO("Fixed point at: " << fixture << " (only rotations possible)");
+}
+
+void Structure0815:: fixTranslations
+(
+  const tarch::la::DynamicVector<bool>& fixedDirections )
+{
+  _fixedTranslationDirections = fixedDirections;
+  STRUCTURE_INFO("Fixed translations: " << fixedDirections);
+}
+
+void Structure0815:: fixCharacteristics
+(
+  const DynVector& centerOfGravity,
+  double           totalVolume )
+{
+  _fixedCharacteristics = true;
+  _centerOfGravity = centerOfGravity;
+  _totalMass = totalVolume * _density;
+  STRUCTURE_INFO("Fixed characteristics!");
+  STRUCTURE_INFO("Center of gravity: " << _centerOfGravity);
+  STRUCTURE_INFO("Total mass: " << _totalMass);
+  STRUCTURE_INFO("Total volume: " << totalVolume);
 }
 
 void Structure0815:: iterate
@@ -120,9 +126,9 @@ void Structure0815:: iterate
     totalTorque += torque;
   }
 
-  STRUCTURE_DEBUG("Total mass = " << _totalMass);
+  //STRUCTURE_DEBUG("Total mass = " << _totalMass);
   STRUCTURE_DEBUG("Total force = " << totalForce);
-  STRUCTURE_DEBUG("Center of gravity = " << _centerOfGravity);
+  //STRUCTURE_DEBUG("Center of gravity = " << _centerOfGravity);
   STRUCTURE_DEBUG("Total torque = " << totalTorque);
 
   DynVector translVelocityDelta(zero);
@@ -130,6 +136,11 @@ void Structure0815:: iterate
     // Compute values of next timestep
     translVelocityDelta = (totalForce / _totalMass) * dt;
     STRUCTURE_DEBUG("translVelocityDelta = " << translVelocityDelta);
+  }
+  for (int i=0; i < _dim; i++){
+    if (_fixedTranslationDirections[i]){
+      translVelocityDelta[i] = 0.0;
+    }
   }
 
   // Set values of next timestep
@@ -175,5 +186,98 @@ void Structure0815:: timestep(double dt)
   _oldDisplacements = _displacements;
   _time += dt;
   _timesteps++;
+
+  DynVector centerOfGravity(_dim, 0.0);
+  double totalMass = 0.0;
+  double totalVolume = 0.0;
+  if (not _fixedCharacteristics){
+    computeCharacteristics(centerOfGravity, totalMass, totalVolume);
+    STRUCTURE_INFO("Center of gravity delta: " << _centerOfGravity - centerOfGravity);
+    STRUCTURE_INFO("Total mass delta: " << _totalMass - totalMass);
+    STRUCTURE_INFO("Total volume delta: " << _totalMass/_density - totalVolume);
+  }
+
+  _statisticsWriter.writeData(TIMESTEPS, _timesteps);
+  _statisticsWriter.writeData(TIME, _time);
+  if (_dim == 2){
+    precice::utils::Vector2D centerOfGravity2D(centerOfGravity);
+    _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity2D);
+  }
+  else {
+    assertion1(_dim == 3, _dim);
+    precice::utils::Vector3D centerOfGravity3D(centerOfGravity);
+    _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity3D);
+  }
+  _statisticsWriter.writeData(TOTALMASS, totalMass);
+  _statisticsWriter.writeData(TOTALVOLUME, totalVolume);
+}
+
+void Structure0815:: computeCharacteristics
+(
+  DynVector& centerOfGravity,
+  double&    totalMass,
+  double&    totalVolume )
+{
+  DynVector zero(_dim, 0.0);
+  centerOfGravity = zero;
+  totalMass = 0.0;
+  totalVolume = 0.0;
+
+  if (_dim == 2){
+    DynVector coords0(zero);
+    DynVector coords1(zero);
+    for (int iEdge=0; iEdge < _faces.size()/2; iEdge++){
+      int index = iEdge * 2;
+      for (int i=0; i<_dim; i++){
+        coords0[i] = _vertices[_faces[index] * _dim + i];
+        coords0[i] += _displacements[_faces[index] * _dim + i];
+        coords1[i] = _vertices[_faces[index+1] * _dim + i];
+        coords1[i] += _displacements[_faces[index+1] * _dim + i];
+      }
+      typedef precice::utils::GeometryComputations GeoComp;
+      double area = GeoComp::triangleArea(zero, coords0, coords1);
+      area = std::abs(area); // since it comes out signed from cross-prod
+      totalVolume += area;
+      if (not tarch::la::equals(area, 0.0)){
+        centerOfGravity += (coords0 + coords1) * area / 3.0;
+      }
+    }
+  }
+  else {
+    assertion1(_dim == 3, _dim);
+    DynVector coords0(zero);
+    DynVector coords1(zero);
+    DynVector coords2(zero);
+    DynVector vec01(zero);
+    DynVector vec02(zero);
+    DynVector vec03(zero);
+    DynVector crossVec(zero);
+    for (int iTriangle=0; iTriangle < _faces.size()/3; iTriangle++){
+      int index = iTriangle * 3;
+      for (int i=0; i<_dim; i++){
+        coords0[i] = _vertices[_faces[index] * _dim + i];
+        coords0[i] += _displacements[_faces[index] * _dim + i];
+        coords1[i] = _vertices[_faces[index+1] * _dim + i];
+        coords1[i] += _displacements[_faces[index+1] * _dim + i];
+        coords2[i] = _vertices[_faces[index+2] * _dim + i];
+        coords2[i] += _displacements[_faces[index+2] * _dim + i];
+      }
+      vec01 = coords1;
+      vec01 -= coords0;
+      vec02 = coords2;
+      vec02 -= coords0;
+      vec03 = zero;
+      vec03 -= coords0;
+      crossVec = tarch::la::cross(vec01, vec02, crossVec);
+      double volume = tarch::la::dot(crossVec, vec03) / 6.0;
+      volume = std::abs(volume);
+      totalVolume += volume;
+      if (not tarch::la::equals(volume, 0.0)){
+        centerOfGravity += (coords0 + coords1 + coords2) * volume / 4.0;
+      }
+    }
+  }
+  totalMass = totalVolume * _density;
+  centerOfGravity /= totalVolume;
 }
 
