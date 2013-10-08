@@ -36,7 +36,7 @@
       <communication:mpi-single from="SolverOne" to="SolverTwo"/>
       <communication:mpi-single from="SolverOne" to="SolverThree"/>
       
-      <coupling-scheme:implicit> 
+      <coupling-scheme:serial-implicit> 
          <participants first="SolverOne" second="SolverTwo"/> 
          <max-timesteps value="10"/>
          <timestep-length value="1.0"/>
@@ -44,7 +44,7 @@
          <min-iteration-convergence-measure min-iterations="3" data="Data1" mesh="Mesh"/>
          <exchange data="Data0" mesh="Mesh" from="SolverOne"/>
          <exchange data="Data1" mesh="Mesh" from="SolverTwo"/>
-      </coupling-scheme:implicit>   
+      </coupling-scheme:serial-implicit>   
       
       <coupling-scheme:explicit> 
          <participants first="SolverOne" second="SolverThree"/> 

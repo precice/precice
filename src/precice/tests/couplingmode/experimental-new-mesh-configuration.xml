@@ -157,12 +157,12 @@
          <exchange data="AcousticVelocities" mesh="AcousticSurface" from="FASTEST"/>
       </coupling-scheme:explicit>
       
-      <coupling-scheme:implicit> 
+      <coupling-scheme:serial-implicit> 
          <participants first="FASTEST" second="FEAP"/> 
          <max-timesteps value="10" />
          <timestep-length value="0.001"/>
          <exchange data="Forces" mesh="WetSurfaceFEAP" from="FEAP"/>
          <exchange data="Displacements" mesh="WetSurfaceFEAP" from="FEAP"/>
-      </coupling-scheme:implicit>
+      </coupling-scheme:serial-implicit>
    </solver-interface>
 </precice-configuration>

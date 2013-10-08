@@ -36,7 +36,7 @@
          <read-data name="Forces"      mesh="Square"/>
       </participant>
       
-      <coupling-scheme:implicit>
+      <coupling-scheme:serial-implicit>
          <participants first="SolverOne" second="SolverTwo"/> 
          <max-timesteps value="6"/>
          <max-time value="0.10"/>
@@ -46,7 +46,7 @@
             min-iterations="5" data="Velocities" mesh="Square"/>
          <exchange data="Forces"     mesh="Square" from="SolverOne"/>
          <exchange data="Velocities" mesh="Square" from="SolverTwo"/>
-      </coupling-scheme:implicit>                           
+      </coupling-scheme:serial-implicit>                           
                   
    </solver-interface>
 

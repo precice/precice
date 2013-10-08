@@ -19,7 +19,7 @@
    </geometry:builtin-sphere>
    <communication:mpi from="Participant0" to="Participant1"/>
    <communication:mpi from="Participant1" to="Participant2"/>
-   <coupling-scheme:implicit>  
+   <coupling-scheme:serial-implicit>  
       <participants first="Participant0" second="Participant1"/>
       <timestep-length value="0.1" method="fixed"/>
       <max-time value="1.0"/> 
@@ -28,8 +28,8 @@
       <min-iteration-convergence-measure min-iterations="3" data="Data1" mesh="Mesh"/>
       <exchange data="Data0" mesh="Mesh" from="Participant0"/>
       <exchange data="Data1" mesh="Mesh" from="Participant1"/>
-   </coupling-scheme:implicit>
-   <coupling-scheme:implicit>  
+   </coupling-scheme:serial-implicit>
+   <coupling-scheme:serial-implicit>  
       <participants first="Participant1" second="Participant2"/>
       <timestep-length value="0.1" method="fixed"/>
       <max-time value="1.0"/> 
@@ -38,5 +38,5 @@
       <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="Mesh"/>
       <exchange data="Data1" mesh="Mesh" from="Participant1"/>
       <exchange data="Data2" mesh="Mesh" from="Participant2"/>
-   </coupling-scheme:implicit>
+   </coupling-scheme:serial-implicit>
 </configuration>

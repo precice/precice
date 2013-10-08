@@ -47,7 +47,7 @@
          </action:divide-by-area>
       </participant>
       
-      <coupling-scheme:implicit>
+      <coupling-scheme:serial-implicit>
          <participants first="Fluent" second="Comsol"/>
          <max-time value="40.0"/>
          <timestep-length value="1e-3" valid-digits="8"/>
@@ -63,6 +63,6 @@
             <singularity-limit value="1e-10"/>
          </post-processing:IQN-ILS>
          <extrapolation-order value="2"/>
-      </coupling-scheme:implicit>      
+      </coupling-scheme:serial-implicit>      
    </solver-interface>   
 </precice-configuration>  

@@ -44,7 +44,7 @@
          <exchange data="Data1" mesh="Mesh" from="SolverTwo"/>
       </coupling-scheme:explicit>   
       
-      <coupling-scheme:implicit> 
+      <coupling-scheme:serial-implicit> 
          <participants first="SolverOne" second="SolverThree"/> 
          <max-timesteps value="10"/>
          <timestep-length value="1.0"/>
@@ -52,6 +52,6 @@
          <min-iteration-convergence-measure min-iterations="3" data="Data2" mesh="Mesh"/>
          <exchange data="Data0" mesh="Mesh" from="SolverOne"/>
          <exchange data="Data2" mesh="Mesh" from="SolverThree"/>
-      </coupling-scheme:implicit>                  
+      </coupling-scheme:serial-implicit>                  
    </solver-interface>
 </precice-configuration>
