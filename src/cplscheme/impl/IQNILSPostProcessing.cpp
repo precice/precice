@@ -264,7 +264,7 @@ void IQNILSPostProcessing:: performPostProcessing
     DataValues Wc(_residuals.size(), 0.0);
 
     // Calculate QR decomposition of matrix V and solve Rc = -Qr
-    DataValues c(_matrixV.cols(), 0.0);
+    DataValues c;
     bool linearDependence = true;
     while (linearDependence){
       preciceDebug("   Compute Newton factors");
@@ -290,7 +290,7 @@ void IQNILSPostProcessing:: performPostProcessing
         //precicePrint("Q_T.cols() = " << transpose(Q).cols() << ", Q_T.rows() = " << transpose(Q).rows());
         multiply(transpose(Q), _residuals, b); // = Qr
         b *= -1.0; // = -Qr
-        //DataValues c(b.size(), 0.0);
+        c.append(b.size(), 0.0);
         //preciceDebug("performPostProcessing()", "   R = " << R);
         //preciceDebug("performPostProcessing()", "   b = " << b);
         backSubstitution(R, b, c);
