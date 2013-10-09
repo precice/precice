@@ -290,6 +290,7 @@ void IQNILSPostProcessing:: performPostProcessing
         //precicePrint("Q_T.cols() = " << transpose(Q).cols() << ", Q_T.rows() = " << transpose(Q).rows());
         multiply(transpose(Q), _residuals, b); // = Qr
         b *= -1.0; // = -Qr
+        assertion1(c.size() == 0, c.size());
         c.append(b.size(), 0.0);
         //preciceDebug("performPostProcessing()", "   R = " << R);
         //preciceDebug("performPostProcessing()", "   b = " << b);
