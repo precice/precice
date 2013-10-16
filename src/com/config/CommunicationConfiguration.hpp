@@ -71,6 +71,7 @@ private:
    const std::string ATTR_FROM;
    const std::string ATTR_TO;
    const std::string ATTR_PORT;
+   const std::string ATTR_NETWORK;
    const std::string ATTR_EXCHANGE_DIRECTORY;
 
    const std::string VALUE_MPI;

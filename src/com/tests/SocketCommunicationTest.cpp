@@ -47,7 +47,7 @@ void SocketCommunicationTest:: run()
 void SocketCommunicationTest:: testSendAndReceive()
 {
   preciceTrace ( "testSendAndReceiveString()" );
-  SocketCommunication com(51234);
+  SocketCommunication com("lo", 51234, "");
   if ( utils::Parallel::getProcessRank() == 0 ){
     com.acceptConnection("process0", "process1", 0, 1);
     {
@@ -139,7 +139,7 @@ void SocketCommunicationTest:: testSendAndReceive()
 void SocketCommunicationTest:: testParallelClient()
 {
   preciceTrace ( "testParallelClient()" );
-  SocketCommunication com(51235);
+  SocketCommunication com("lo", 51235, "");
   int rank = utils::Parallel::getProcessRank();
   if ( rank == 0 ){
     preciceDebug("branch rank 0");
@@ -158,7 +158,7 @@ void SocketCommunicationTest:: testParallelClient()
   }
   else if ( (rank == 1) || (rank == 2) ){
     preciceDebug("branch rank 1, 2");
-    com.requestConnection("client", "server", rank-1, 2);
+    com.requestConnection("server", "client", rank-1, 2);
     validateEquals ( com.getRemoteCommunicatorSize(), 1 );
     std::ostringstream rankMsg;
     rankMsg << "process " << rank-1;
@@ -180,13 +180,13 @@ void SocketCommunicationTest:: testParallelClient()
 void SocketCommunicationTest:: testReceiveFromAnyClient()
 {
   preciceTrace ( "testReceiveFromAnyClient()" );
-  SocketCommunication com(51236);
+  SocketCommunication com("lo", 51236, "");
   int rank = utils::Parallel::getProcessRank();
   int rank0 = 0;
   int rank1 = 1;
   int rank2 = 0;
   if ( rank == 0 ){
-    com.requestConnection("client", "server", 0, 2);
+    com.requestConnection("server", "client", 0, 2);
     int msg = 0;
     com.send(msg, rank2);
     int sender = com.receive(msg, rank2);
@@ -196,7 +196,7 @@ void SocketCommunicationTest:: testReceiveFromAnyClient()
     com.send(msg, rank2);
   }
   else if ( rank == 1 ){
-    com.requestConnection("client", "server", 1, 2);
+    com.requestConnection("server", "client", 1, 2);
     int msg = -1;
     int sender = com.receive(msg, rank2);
     validateEquals(sender, rank2);
