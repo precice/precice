@@ -83,13 +83,17 @@ void SocketCommunication:: acceptConnection
       strncpy(request.ifr_name, itNameInterface->if_name, IFNAMSIZ); // Copy interface name
       int ifNameLength = strlen(itNameInterface->if_name);
       request.ifr_name[ifNameLength] = 0; // Add C-string 0
-      preciceCheck(ioctl(querySocket, SIOCGIFADDR, &request) >= 0,
-                   "acceptConnection()", "Could not obtain network IP from "
-                   << "network \"" << itNameInterface->if_name << "\"");
-      preciceDebug(itNameInterface->if_name << ": "
-                   << inet_ntoa(((struct sockaddr_in*) &request.ifr_addr)->sin_addr));
-      if(strcmp(itNameInterface->if_name, _network.c_str()) == 0){
-        address << inet_ntoa(((struct sockaddr_in*) &request.ifr_addr)->sin_addr);
+      if (ioctl(querySocket, SIOCGIFADDR, &request) >= 0){
+        preciceDebug(itNameInterface->if_name << ": "
+                     << inet_ntoa(((struct sockaddr_in*) &request.ifr_addr)->sin_addr));
+        if(strcmp(itNameInterface->if_name, _network.c_str()) == 0){
+          address << inet_ntoa(((struct sockaddr_in*) &request.ifr_addr)->sin_addr);
+        }
+      }
+      else {
+        preciceCheck(strcmp(itNameInterface->if_name, _network.c_str()) != 0,
+                     "acceptConnection()", "Could not obtain network IP from "
+                     << "network \"" << itNameInterface->if_name << "\"");
       }
       itNameInterface++;
     }
