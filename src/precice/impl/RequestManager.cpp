@@ -109,6 +109,9 @@ void RequestManager:: handleRequests()
     case REQUEST_SET_MESH_VERTEX:
       handleRequestSetMeshVertex(rankSender);
       break;
+    case REQUEST_GET_MESH_VERTEX_SIZE:
+      handleRequestGetMeshVertexSize(rankSender);
+      break;
     case REQUEST_SET_WRITE_POSITION:
       handleRequestSetWritePosition(rankSender);
       break;
@@ -367,13 +370,25 @@ int RequestManager:: requestSetMeshVertex
   int               meshID,
   utils::DynVector& position )
 {
-  preciceTrace ( "requestSetMeshVertex()" );
-  _com->send ( REQUEST_SET_MESH_VERTEX, 0 );
-  _com->send ( meshID, 0 );
-  _com->send ( tarch::la::raw(position), position.size(), 0 );
+  preciceTrace("requestSetMeshVertex()");
+  _com->send(REQUEST_SET_MESH_VERTEX, 0);
+  _com->send(meshID, 0);
+  _com->send(tarch::la::raw(position), position.size(), 0);
   int index = -1;
-  _com->receive ( index, 0 );
+  _com->receive(index, 0);
   return index;
+}
+
+int RequestManager:: requestGetMeshVertexSize
+(
+  int meshID)
+{
+  preciceTrace1("requestGetMeshVertexSize()", meshID);
+  _com->send(REQUEST_GET_MESH_VERTEX_SIZE, 0);
+  _com->send(meshID, 0);
+  int size = -1;
+  _com->receive(size, 0);
+  return size;
 }
 
 int RequestManager:: requestSetWritePosition
@@ -928,6 +943,17 @@ void RequestManager:: handleRequestSetMeshVertex
   _com->receive(position, _interface.getDimensions(), rankSender);
   int index = _interface.setMeshVertex(meshID, position);
   _com->send(index, rankSender);
+}
+
+void RequestManager:: handleRequestGetMeshVertexSize
+(
+  int rankSender )
+{
+  preciceTrace1("handleRequestGetMeshVertexSize()", rankSender);
+  int meshID = -1;
+  _com->receive(meshID, rankSender);
+  int size = _interface.getMeshVertexSize(meshID);
+  _com->send(size, rankSender);
 }
 
 void RequestManager:: handleRequestSetWritePosition

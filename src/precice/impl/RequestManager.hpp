@@ -105,6 +105,11 @@ public:
     utils::DynVector& position );
 
   /**
+   * @brief Requests get size of vertices of preCICE mesh.
+   */
+  int requestGetMeshVertexSize(int meshID);
+
+  /**
    * @brief Requests set write data position from server.
    */
   int requestSetWritePosition (
@@ -342,6 +347,7 @@ private:
     REQUEST_INQUIRE_CLOSEST_MESH,
     REQUEST_INQUIRE_VOXEL_POSITION,
     REQUEST_SET_MESH_VERTEX,
+    REQUEST_GET_MESH_VERTEX_SIZE,
     REQUEST_SET_WRITE_POSITION,
     REQUEST_SET_WRITE_POSITIONS,
     REQUEST_GET_WRITE_POSITIONS,
@@ -430,6 +436,11 @@ private:
    * @brief Handles request set mesh vertex from client.
    */
   void handleRequestSetMeshVertex ( int rankSender );
+
+  /**
+   * @brief Handles request get mesh vertex size from client.
+   */
+  void handleRequestGetMeshVertexSize(int rankSender);
 
   /**
    * @brief Handles request set write data position from client.

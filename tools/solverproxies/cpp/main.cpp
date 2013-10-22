@@ -40,22 +40,52 @@ int main (int argc, char **argv)
   using namespace precice;
   using namespace precice::constants;
 
-  if (argc < 3 || argc > 4){
-    PRINT("Usage: ./solverproxy configurationFileName proxyName [computation time in seconds]");
+  if (argc == 1 || (argc != 3 && argc != 7)){
+    PRINT("Usage: ./solverproxy configFile proxyName [meshName readDataName writeDataName computationTimeInSeconds]");
+    PRINT("");
+    PRINT("Parameters in [] are optional, but are needed together.");
+    PRINT("If optional parameters are given, the proxy writes and reads data.");
+    PRINT("");
+    PRINT("Parameter description");
+    PRINT("  configurationFile: Path and filename of preCICE configuration");
+    PRINT("  proxyName:         Proxy participant name in preCICE configuration");
+    PRINT("  meshName:          Mesh in preCICE configuration that carries read and write data");
+    PRINT("  readDataName:      Data in preCICE config. that is read by this proxy");
+    PRINT("  writeDataName:     Data in preCICE config. that is written by this proxy");
+    PRINT("  computationTimeInSeconds: Time waited by proxy in every computation cycle");
     return 1;
   }
   std::string configFileName(argv[1]);
-  std::string dummyName(argv[2]);
+  std::string proxyName(argv[2]);
+  bool readWriteData = false;
+  std::string meshName;
+  std::string readDataName;
+  std::string writeDataName;
   double computationTime = 0.0;
-  if (argc == 4){
-    computationTime = atof(argv[3]);
+  if (argc > 3){
+    readWriteData = true;
+    meshName = argv[3];
+    readDataName = argv[4];
+    writeDataName = argv[5];
+    computationTime = atof(argv[6]);
   }
 
-  SolverInterface interface(dummyName, comm_rank, comm_size);
+  SolverInterface interface(proxyName, comm_rank, comm_size);
   interface.configure(configFileName);
 
   double computedTime = 0.0;
   int computedTimeSteps = 0;
+
+  int meshID = -1;
+  int readDataID = -1;
+  int writeDataID = -1;
+  int dimensions = -1;
+  if (readWriteData){
+    meshID = interface.getMeshID(meshName);
+    readDataID = interface.getDataID(readDataName);
+    writeDataID = interface.getDataID(writeDataName);
+    dimensions = interface.getDimensions();
+  }
 
   if (interface.isActionRequired(actionReadSimulationCheckpoint())){
     interface.fulfilledAction(actionReadSimulationCheckpoint());
@@ -63,8 +93,24 @@ int main (int argc, char **argv)
 
   double dt = interface.initialize();
 
+  int dataSize = -1;
+  double* data = NULL;
+  int* dataIndices = NULL;
+  if (readWriteData){
+    dataSize = interface.getMeshVertexSize(meshID);
+    data = new double[dataSize*dimensions];
+    dataIndices = new int[dataSize];
+    for (int i=0; i < dataSize; i++){
+      dataIndices[i] = i;
+    }
+  }
+
   double mpi_start_time = MPI_Wtime();
   double mpi_compute_time = 0.0;
+
+  if (readWriteData && interface.isReadDataAvailable()){
+    interface.readBlockVectorData(readDataID, dataSize, dataIndices, data);
+  }
 
   while (interface.isCouplingOngoing()){
     // When an implicit coupling scheme is used, checkpointing is required
@@ -84,7 +130,15 @@ int main (int argc, char **argv)
     computedTime += dt;
     computedTimeSteps++;
 
+    if (readWriteData){
+      interface.writeBlockVectorData(writeDataID, dataSize, dataIndices, data);
+    }
+
     dt = interface.advance(dt);
+
+    if (readWriteData && interface.isReadDataAvailable()){
+      interface.readBlockVectorData(readDataID, dataSize, dataIndices, data);
+    }
 
     if (interface.isActionRequired(actionWriteSimulationCheckpoint())){
       interface.fulfilledAction(actionWriteSimulationCheckpoint());

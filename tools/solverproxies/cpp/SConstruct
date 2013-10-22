@@ -25,8 +25,8 @@ ccflags = []
 cxx = 'mpicxx.mpich2'      # For systems offering mpicxx compiler
 
 
-#ccflags.append('-g3')
-ccflags.append('-O3')
+ccflags.append('-g3')
+#ccflags.append('-O3')
 
 #libpath.append (preciceRoot + '/build/' + buildmode + '-dim2-nompi/')
 
@@ -43,4 +43,4 @@ env = Environment (
    ENV        = os.environ  # propagates environment variables to scons  
    )
    
-env.Program ( 'solverdummy-debug', Glob('*.cpp') )
+env.Program ( 'solverproxy-debug', Glob('*.cpp') )
