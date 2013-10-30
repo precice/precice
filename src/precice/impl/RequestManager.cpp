@@ -28,7 +28,7 @@ RequestManager:: RequestManager
 
 void RequestManager:: handleRequests()
 {
-  preciceTrace("handleRequest()");
+  preciceTrace("handleRequests()");
   bool requestsLeft = true;
   int clientCommSize = _com->getRemoteCommunicatorSize();
   int clientCounter = 0;
@@ -381,7 +381,7 @@ int RequestManager:: requestSetMeshVertex
 
 int RequestManager:: requestGetMeshVertexSize
 (
-  int meshID)
+  int meshID )
 {
   preciceTrace1("requestGetMeshVertexSize()", meshID);
   _com->send(REQUEST_GET_MESH_VERTEX_SIZE, 0);

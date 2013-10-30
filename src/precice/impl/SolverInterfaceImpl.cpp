@@ -829,7 +829,7 @@ int SolverInterfaceImpl:: getMeshVertexSize
   preciceTrace1("getMeshVertexSize()", meshID);
   int size = 0;
   if (_clientMode){
-    //size = _requestManager->requestGetMeshVertexSize(meshID);
+    size = _requestManager->requestGetMeshVertexSize(meshID);
   }
   else {
     MeshContext& context = _accessor->meshContext(meshID);

@@ -101,6 +101,7 @@ void MPIPortsCommunication:: requestConnection
   std::ifstream inFile;
   do {
     inFile.open ( portFilename.c_str(), std::ios::in );
+    usleep(100000);
   } while ( not inFile );
   inFile.getline ( _portname, MPI_MAX_PORT_NAME );
   inFile.close();
