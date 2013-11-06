@@ -99,7 +99,7 @@ void NearestNeighborMapping:: map
     for ( size_t i=0; i < outSize; i++ ){
       int inputIndex = _vertexIndices[i] * valueDimensions;
       for ( int dim=0; dim < valueDimensions; dim++ ){
-        outputValues[i+dim] = inputValues[inputIndex+dim];
+        outputValues[(i*valueDimensions)+dim] = inputValues[inputIndex+dim];
       }
     }
   }
@@ -110,7 +110,7 @@ void NearestNeighborMapping:: map
     for ( size_t i=0; i < inSize; i++ ){
       int outputIndex = _vertexIndices[i] * valueDimensions;
       for ( int dim=0; dim < valueDimensions; dim++ ){
-        outputValues[outputIndex+dim] += inputValues[i+dim];
+        outputValues[outputIndex+dim] += inputValues[(i*valueDimensions)+dim];
       }
     }
   }
