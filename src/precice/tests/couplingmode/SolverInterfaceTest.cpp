@@ -488,6 +488,10 @@ void SolverInterfaceTest:: testExplicitWithSolverGeometry ()
     int e2 = cplInterface.setMeshEdge(meshID, i2, i0);
     cplInterface.setMeshTriangle(meshID, e0, e1, e2);
     double dt = cplInterface.initialize();
+
+    int size = cplInterface.getMeshVertexSize(meshID);
+    validateEquals(size, 3);
+
     while ( cplInterface.isCouplingOngoing() ){
       time += dt;
       dt = cplInterface.advance(dt);
@@ -527,6 +531,11 @@ void SolverInterfaceTest:: testExplicitWithDisplacingGeometry()
           _pathToTests + "/explicit-solvergeometry.xml",
           cplInterface );
       double dt = cplInterface.initialize();
+
+      int meshID = cplInterface.getMeshID("SolverGeometry");
+      int size = cplInterface.getMeshVertexSize(meshID);
+      validateEquals(size, 4);
+
       while (cplInterface.isCouplingOngoing()){
          MeshHandle handle = cplInterface.getMeshHandle("SolverGeometry");
          VertexIterator iter = handle.vertices().begin();

@@ -385,6 +385,11 @@ public:
     const double* position );
 
   /**
+   * @brief Returns the number of vertices of a mesh.
+   */
+  int getMeshVertexSize(int meshID);
+
+  /**
    * @brief Set an edge of a solver mesh.
    *
    * @return Index of the edge to be used when setting a triangle.

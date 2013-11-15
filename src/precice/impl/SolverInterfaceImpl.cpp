@@ -822,6 +822,24 @@ int SolverInterfaceImpl:: setMeshVertex
   return index;
 }
 
+int SolverInterfaceImpl:: getMeshVertexSize
+(
+  int meshID )
+{
+  preciceTrace1("getMeshVertexSize()", meshID);
+  int size = 0;
+  if (_clientMode){
+    size = _requestManager->requestGetMeshVertexSize(meshID);
+  }
+  else {
+    MeshContext& context = _accessor->meshContext(meshID);
+    assertion(context.mesh.get() != NULL);
+    size = context.mesh->vertices().size();
+  }
+  preciceDebug("return " << size);
+  return size;
+}
+
 void SolverInterfaceImpl:: resetWritePositions
 (
   int meshID )

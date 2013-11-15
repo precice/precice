@@ -26,6 +26,7 @@ CommunicationConfiguration:: CommunicationConfiguration()
   ATTR_FROM("from"),
   ATTR_TO("to"),
   ATTR_PORT("port"),
+  ATTR_NETWORK("network"),
   ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
   VALUE_MPI("mpi"),
   VALUE_MPI_SINGLE("mpi-single"),
@@ -43,6 +44,7 @@ CommunicationConfiguration:: CommunicationConfiguration
   ATTR_FROM("from"),
   ATTR_TO("to"),
   ATTR_PORT("port"),
+  ATTR_NETWORK("network"),
   ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
   VALUE_MPI("mpi"),
   VALUE_MPI_SINGLE("mpi-single"),
@@ -64,6 +66,21 @@ CommunicationConfiguration:: CommunicationConfiguration
     attrPort.setDocumentation(doc);
     attrPort.setDefaultValue(51235);
     tag.addAttribute(attrPort);
+
+    XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);
+    doc = "Network name to be used for socket communiation. ";
+    doc += "Default is \"lo\", i.e., the local host loopback.";
+    attrNetwork.setDocumentation(doc);
+    attrNetwork.setDefaultValue("lo");
+    tag.addAttribute(attrNetwork);
+
+    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
+    doc = "Directory where connection information is exchanged. By default, the ";
+    doc += "directory of startup is chosen, and both solvers have to be started ";
+    doc += "in the same directory.";
+    attrExchangeDirectory.setDocumentation(doc);
+    attrExchangeDirectory.setDefaultValue("");
+    tag.addAttribute(attrExchangeDirectory);
 
     tags.push_back(tag);
   }
@@ -94,7 +111,7 @@ CommunicationConfiguration:: CommunicationConfiguration
     tag.setDocumentation(doc);
 
     XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
-    doc = "Directory where communication files are exchanged. By default, the ";
+    doc = "Directory where ip address is exchanged by file. By default, the ";
     doc += "directory of startup is chosen, and both solvers have to be started ";
     doc += "in the same directory.";
     attrExchangeDirectory.setDocumentation(doc);
@@ -227,8 +244,10 @@ PtrCommunication CommunicationConfiguration:: createCommunication
           << "when preCICE is compiled with argument \"sockets=on\"";
     throw error.str();
 #   else
+    std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
     int port = tag.getIntAttributeValue(ATTR_PORT);
-    com = com::PtrCommunication(new com::SocketCommunication(port));
+    std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
+    com = com::PtrCommunication(new com::SocketCommunication(network, port, dir));
 #   endif // PRECICE_NO_SOCKETS
   }
   else if (tag.getName() == VALUE_MPI){

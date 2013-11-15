@@ -52,18 +52,18 @@ if build != 'debug' and build != 'release':
 print "build      = " + str(build) + " ('debug' or 'release')"
 
 cxx = ARGUMENTS.get('compiler', 'g++')
-if cxx != 'g++' and cxx != 'icc' and cxx != 'mpicxx':
-   print "ERROR: Option 'compiler' must be either 'g++' or 'icc' or 'mpicxx'! (default: g++)"
+if cxx != 'g++' and cxx != 'icc' and cxx[0:4] != 'mpic':
+   print "ERROR: Option 'compiler' must be one of 'g++', 'icc', or starting with 'mpic'! (default: g++)"
    Exit(1)
-print "compiler   = " + cxx + " (Compiler used for building. 'g++', 'icc' or 'mpicxx')"
+print "compiler   = " + cxx + " (Compiler used for building. Can be one of 'g++', 'icc', or starting with 'mpic'.)"
 
 useMPI = ARGUMENTS.get('mpi', 'on')
 if useMPI != 'on' and useMPI != 'off':  
    print "ERROR: Option 'mpi' must be either 'on' or 'off'! (default: on)"
    Exit(1)
 print "mpi        = " + useMPI + " (Enables MPI-based communication and running coupling tests.)"
-if (useMPI == 'off') and (cxx == 'mpicxx'):
-   print "ERROR: Option 'compiler' can be set to 'mpicxx' only when using MPI!"
+if (useMPI == 'off') and (cxx[0:4] == 'mpic'):
+   print "ERROR: Option 'compiler' can be set to an MPI compiler wrapper only when using MPI!"
    Exit(1)
    
 useSockets = ARGUMENTS.get('sockets', 'on')
@@ -297,7 +297,7 @@ if useBoostSpirit2 == 'off':
       
 
 if useMPI == 'on':
-   if not cxx == 'mpicxx':
+   if not (cxx[0:4] == 'mpic'):
       env.AppendUnique(LIBPATH = [mpiLibPath])
       if not uniqueCheckLib(conf, mpiLib):
          errorMissingLib(mpiLib, 'MPI')
@@ -348,7 +348,8 @@ if gprof == 'off':
 elif gprof == 'on':
    env.Append(CCFLAGS = ['-p', '-pg'])
    env.Append(LINKFLAGS = ['-p', '-pg'])
-   buildpath += "-gprof"
+   buildpath += "-gprof"
+
 print '... done'
 
 env = conf.Finish() # Used to check libraries

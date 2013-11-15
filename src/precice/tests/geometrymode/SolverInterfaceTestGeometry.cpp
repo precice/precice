@@ -927,6 +927,9 @@ void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
     geo.setMeshEdge ( meshID, v2, v3 );
     geo.setMeshEdge ( meshID, v3, v0 );
 
+    int size = geo.getMeshVertexSize(meshID);
+    validateEquals(size, 4);
+
     MeshHandle handle = geo.getMeshHandle(meshName);
     VertexHandle vertices = handle.vertices();
     EdgeHandle edges = handle.edges();

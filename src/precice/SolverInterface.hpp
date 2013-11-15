@@ -459,6 +459,11 @@ public:
     const double* position );
 
   /**
+   * @brief Returns the number of vertices of a mesh.
+   */
+  int getMeshVertexSize(int meshID);
+
+  /**
    * @brief Sets surface mesh edge from vertex IDs, returns edge ID.
    */
   int setMeshEdge (

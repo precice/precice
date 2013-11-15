@@ -106,6 +106,8 @@ private:
   const std::string ATTR_COORDINATE;
   const std::string ATTR_COMMUNICATION;
   const std::string ATTR_CONTEXT;
+  const std::string ATTR_NETWORK;
+  const std::string ATTR_EXCHANGE_DIRECTORY;
 
   int _dimensions;
 

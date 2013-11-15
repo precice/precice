@@ -54,13 +54,13 @@ void ExplicitCouplingSchemeTest:: run ()
     Par::Communicator comm = Par::getRestrictedCommunicator(ranks);
     if ( Par::getProcessRank() <= 1 ){
       Par::setGlobalCommunicator(comm) ;
-      validateEquals ( Par::getCommunicatorSize(), 2 );
-      testMethod ( testSimpleExplicitCoupling );
-      testMethod ( testConfiguredSimpleExplicitCoupling );
-      testMethod ( testExplicitCouplingFirstParticipantSetsDt );
-      //testMethod ( testExplicitCouplingSecondParticipantSetsDt );
-      testMethod ( testExplicitCouplingWithSubcycling );
-      testMethod ( testConfiguredExplicitCouplingWithSubcycling );
+      validateEquals(Par::getCommunicatorSize(), 2);
+      testMethod(testSimpleExplicitCoupling);
+      testMethod(testConfiguredSimpleExplicitCoupling);
+      testMethod(testExplicitCouplingFirstParticipantSetsDt);
+      testMethod(testDataInitialization);
+      testMethod(testExplicitCouplingWithSubcycling);
+      testMethod(testConfiguredExplicitCouplingWithSubcycling);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -238,6 +238,71 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
     validateEquals ( computedTimesteps, 4 );
     validateEquals ( cplScheme.isCouplingTimestepComplete(), true );
     validateEquals ( cplScheme.isCouplingOngoing(), false );
+  }
+}
+
+void ExplicitCouplingSchemeTest:: testDataInitialization()
+{
+  preciceTrace("testDataInitialization()");
+  using namespace mesh;
+  utils::Parallel::synchronizeProcesses();
+  assertion(utils::Parallel::getCommunicatorSize() > 1);
+  mesh::PropertyContainer::resetPropertyIDCounter();
+
+  std::string configurationPath(_pathToTests + "explicit-coupling-datainit.xml");
+
+  std::string localParticipant("");
+  if (utils::Parallel::getProcessRank() == 0){
+    localParticipant = "participant0";
+  }
+  else if (utils::Parallel::getProcessRank() == 1){
+    localParticipant = "participant1";
+  }
+  utils::XMLTag root = utils::getRootTag();
+  PtrDataConfiguration dataConfig(new DataConfiguration(root));
+  dataConfig->setDimensions(2);
+  PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
+  meshConfig->setDimensions(2);
+  com::PtrCommunicationConfiguration comConfig(new com::CommunicationConfiguration(root));
+  geometry::GeometryConfiguration geoConfig(root, meshConfig);
+  geoConfig.setDimensions(2);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig);
+
+  utils::configure(root, configurationPath);
+  meshConfig->setMeshSubIDs();
+  com::PtrCommunication com = comConfig->getCommunication("participant0", "participant1");
+
+  geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
+  connect("participant0", "participant1", localParticipant, com);
+  CouplingScheme& cplScheme = *cplSchemeConfig.getCouplingScheme(localParticipant);
+
+  validateEquals(meshConfig->meshes().size(), 1);
+  mesh::PtrMesh mesh = meshConfig->meshes()[0];
+  validateEquals(mesh->data().size(), 2);
+  utils::DynVector& dataValues0 = mesh->data()[0]->values();
+  utils::DynVector& dataValues1 = mesh->data()[1]->values();
+
+  if (localParticipant == std::string("participant0")){
+    cplScheme.initialize(0.0, 0);
+    validate(cplScheme.hasDataBeenExchanged());
+    validate(not cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    validateNumericalEquals(dataValues0[0], 0.0);
+    validateNumericalEquals(dataValues1[0], 1.0);
+    cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
+    cplScheme.advance();
+    validate(not cplScheme.isCouplingOngoing());
+    cplScheme.finalize();
+  }
+  else if (localParticipant == std::string("participant1")){
+    cplScheme.initialize(0.0, 0);
+    validate(not cplScheme.hasDataBeenExchanged());
+    validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
+    dataValues1[0] = 1.0;
+    cplScheme.initializeData();
+    cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
+    cplScheme.advance();
+    validate(not cplScheme.isCouplingOngoing());
+    cplScheme.finalize();
   }
 }
 

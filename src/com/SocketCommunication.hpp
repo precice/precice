@@ -46,7 +46,10 @@ public:
   /**
    * @brief Constructor.
    */
-  SocketCommunication ( int port );
+  SocketCommunication (
+    const std::string& network,
+    int                port,
+    const std::string& addressExchangeDirectory );
 
   /**
    * @brief Destructor.
@@ -213,8 +216,14 @@ private:
 
   static tarch::logging::Log _log;
 
+  // @brief Name of network to communicate over.
+  std::string _network;
+
   // @brief Port used for socket connection.
   int _port;
+
+  // @brief Directory where IP address is exchanged by file.
+  std::string _ipExchangeDirectory;
 
   // @brief Local process rank sent as query.
   int _processRank;
