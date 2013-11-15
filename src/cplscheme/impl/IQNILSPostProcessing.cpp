@@ -309,7 +309,6 @@ void IQNILSPostProcessing:: performPostProcessing
     foreach (int id, _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
       DataValues& values = *(data->values);
-      assertion2(c.size() == values.size(), c.size(), values.size());
       assertion2(_secondaryMatricesW[id].cols() == c.size(),
                  _secondaryMatricesW[id].cols(), c.size());
       multiply(_secondaryMatricesW[id], c, values);
