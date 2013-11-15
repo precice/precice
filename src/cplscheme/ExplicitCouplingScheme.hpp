@@ -48,11 +48,17 @@ public:
      int    startTimestep );
 
    /**
-    * @brief Initializes the data for first implicit coupling scheme iteration.
+    * @brief Initializes data for first participant from second participant.
     *
-    * Has to be called after initialize() and before advance().
+    * If this method is not used, the first participant has zero initial values
+    * for its read data, before receiving data in advance(). If non-zero values
+    * are needed, this has to be configured in the coupling-scheme XML
+    * exchange-data tags. A call of initializeData() is then mandatory for the
+    * second participant. It has to be called after initialize() and before
+    * advance(). The second participant has to write the initial data values
+    * to preCICE after initialize() and before initializeData().
     */
-   virtual void initializeData() {}
+   virtual void initializeData();
 
    /**
     * @brief Adds newly computed time. Has to be called before every advance.
