@@ -83,7 +83,7 @@ void ExplicitCouplingScheme:: initialize
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
   foreach (DataMap::value_type & pair, getSendData()){
-    if (pair.second.initialize){
+    if (pair.second->initialize){
       preciceCheck(not _doesFirstStep, "initialize()",
                    "Only second participant can initialize data!");
       requireAction(constants::actionWriteInitialData());
@@ -95,7 +95,7 @@ void ExplicitCouplingScheme:: initialize
   // If the second participant initializes data, the first receive for the first
   // participant is done in initialize() instead of advance().
   foreach (DataMap::value_type & pair, getReceiveData()){
-    if (pair.second.initialize){
+    if (pair.second->initialize){
       preciceCheck(_doesFirstStep, "initialize()",
                    "Only first participant can receive initial data!");
       preciceDebug("Initialized data to be received");
