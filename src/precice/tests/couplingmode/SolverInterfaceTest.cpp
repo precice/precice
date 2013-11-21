@@ -48,6 +48,7 @@ void SolverInterfaceTest:: run()
       testMethod(testExplicit);
       testMethod(testExplicitWithSubcycling);
       testMethod(testExplicitWithDataExchange);
+      testMethod(testExplicitWithDataInitialization);
       testMethod(testExplicitWithBlockDataExchange);
       testMethod(testExplicitWithSolverGeometry);
       testMethod(testExplicitWithDisplacingGeometry);
@@ -310,6 +311,60 @@ void SolverInterfaceTest:: testExplicitWithDataExchange()
         }
         counter += 1.0;
       }
+    }
+    cplInterface.finalize();
+  }
+}
+
+void SolverInterfaceTest:: testExplicitWithDataInitialization()
+{
+  preciceTrace("testExplicitWithDataInitialization()");
+  using namespace tarch::la;
+  assertion(utils::Parallel::getCommunicatorSize() > 1);
+  mesh::Mesh::resetGeometryIDsGlobally();
+  using utils::Vector3D;
+
+  if (utils::Parallel::getProcessRank() == 0){
+    SolverInterface cplInterface("SolverOne", 0, 1);
+    configureSolverInterface(_pathToTests + "/explicit-data-init.xml", cplInterface);
+    int meshID = cplInterface.getMeshID("Mesh");
+    cplInterface.setMeshVertex(meshID, raw(Vector3D(1.0,2.0,3.0)));
+    double maxDt = cplInterface.initialize();
+    int dataAID = cplInterface.getDataID("DataOne");
+    int dataBID = cplInterface.getDataID("DataTwo");
+    double valueDataB = 0.0;
+    cplInterface.readScalarData(dataBID, 0, valueDataB);
+    validateNumericalEquals(2.0, valueDataB);
+    while (cplInterface.isCouplingOngoing()){
+      Vector3D valueDataA(1.0, 1.0, 1.0);
+      cplInterface.writeVectorData(dataAID, 0, raw(valueDataA));
+      maxDt = cplInterface.advance(maxDt);
+      cplInterface.readScalarData(dataBID, 0, valueDataB);
+      validateNumericalEquals(2.5, valueDataB);
+    }
+    cplInterface.finalize();
+  }
+  else if (utils::Parallel::getProcessRank() == 1){
+    SolverInterface cplInterface("SolverTwo", 0, 1);
+    configureSolverInterface(_pathToTests + "/explicit-data-init.xml", cplInterface);
+    int meshID = cplInterface.getMeshID("Mesh");
+    Vector3D pos(0.0);
+    cplInterface.setReadPosition(meshID, raw(pos));
+    cplInterface.setWritePosition(meshID, raw(pos));
+    double maxDt = cplInterface.initialize();
+    int dataAID = cplInterface.getDataID("DataOne");
+    int dataBID = cplInterface.getDataID("DataTwo");
+    cplInterface.writeScalarData(dataBID, 0, 2.0);
+    cplInterface.initializeData();
+    Vector3D valueDataA;
+    cplInterface.readVectorData(dataAID, 0, raw(valueDataA));
+    Vector3D expected(1.0, 1.0, 1.0);
+    validateWithParams2(equals(valueDataA, expected), valueDataA, expected);
+    while (cplInterface.isCouplingOngoing()){
+      cplInterface.writeScalarData(dataBID, 0, 2.5);
+      maxDt = cplInterface.advance(maxDt);
+      cplInterface.readVectorData(dataAID, 0, raw(valueDataA));
+      validateWithParams2(equals(valueDataA, expected), valueDataA, expected);
     }
     cplInterface.finalize();
   }

@@ -317,6 +317,7 @@ void SolverInterfaceImpl:: initializeData ()
       std::set<action::Action::Timing> timings;
       if (_couplingScheme->hasDataBeenExchanged()){
         timings.insert(action::Action::ON_EXCHANGE_POST);
+        mapReadData();
       }
       performDataActions(timings, 0.0, 0.0, 0.0, dt);
       resetWrittenData();

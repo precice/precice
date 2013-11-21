@@ -278,9 +278,10 @@ void ExplicitCouplingSchemeTest:: testDataInitialization()
 
   validateEquals(meshConfig->meshes().size(), 1);
   mesh::PtrMesh mesh = meshConfig->meshes()[0];
-  validateEquals(mesh->data().size(), 2);
+  validateEquals(mesh->data().size(), 3);
   utils::DynVector& dataValues0 = mesh->data()[0]->values();
   utils::DynVector& dataValues1 = mesh->data()[1]->values();
+  utils::DynVector& dataValues2 = mesh->data()[2]->values();
 
   if (localParticipant == std::string("participant0")){
     cplScheme.initialize(0.0, 0);
@@ -288,6 +289,7 @@ void ExplicitCouplingSchemeTest:: testDataInitialization()
     validate(not cplScheme.isActionRequired(constants::actionWriteInitialData()));
     validateNumericalEquals(dataValues0[0], 0.0);
     validateNumericalEquals(dataValues1[0], 1.0);
+    dataValues2[0] = 2.0;
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
     cplScheme.advance();
     validate(not cplScheme.isCouplingOngoing());
@@ -299,6 +301,7 @@ void ExplicitCouplingSchemeTest:: testDataInitialization()
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues1[0] = 1.0;
     cplScheme.initializeData();
+    validateNumericalEquals(dataValues2[0], 2.0);
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
     cplScheme.advance();
     validate(not cplScheme.isCouplingOngoing());
