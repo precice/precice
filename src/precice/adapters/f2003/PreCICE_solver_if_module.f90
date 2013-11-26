@@ -117,7 +117,7 @@ module PreCICE_solver_if_module
 
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: meshID
-      real(kind=c_double) :: position
+      real(kind=c_double) :: position(3)
       integer(kind=c_int) :: vertexID
     end subroutine precicef_set_vertex
 
@@ -177,7 +177,7 @@ module PreCICE_solver_if_module
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: dataID
       integer(kind=c_int) :: valueIndex
-      real(kind=c_double) :: dataValue(3) 
+      real(kind=c_double) :: dataValue(:) 
     end subroutine precicef_read_vdata
 
     subroutine precicef_write_sdata( dataID, valueIndex, dataValue) &
@@ -195,8 +195,21 @@ module PreCICE_solver_if_module
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: dataID
       integer(kind=c_int) :: valueIndex
-      real(kind=c_double) :: dataValue(3) 
+      real(kind=c_double) :: dataValue(:) 
     end subroutine precicef_write_vdata
+
+    subroutine precicef_write_data_available(isAvailable) &
+      &  bind(c, name='precicef_write_data_available_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: isAvailable
+    end subroutine precicef_write_data_available
+    
+    subroutine precicef_initialize_data() &
+      &  bind(c, name='precicef_initialize_data_')
+
+      use, intrinsic :: iso_c_binding
+    end subroutine precicef_initialize_data
 
     !!! TO BE CONTINUED ...
 
