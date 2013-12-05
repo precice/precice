@@ -20,6 +20,13 @@ module PreCICE_consts_module
       integer(kind=c_int), value :: lengthNameAction
     end subroutine precicef_action_write_iter_checkp
 
+    subroutine precicef_action_write_initial_data(nameAction, lengthNameAction) &
+      &        bind(c, name="precicef_action_write_initial_data_")
+      use, intrinsic :: iso_c_binding
+      character(kind=c_char), dimension(*) :: nameAction
+      integer(kind=c_int), value :: lengthNameAction
+    end subroutine precicef_action_write_initial_data
+
     subroutine precicef_action_read_iter_checkp(nameAction, lengthNameAction) &
       &        bind(c, name="precicef_action_read_iter_checkp_")
       use, intrinsic :: iso_c_binding

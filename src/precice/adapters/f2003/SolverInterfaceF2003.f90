@@ -18,6 +18,7 @@ module PreCICE_solver_if_module
       integer(kind=c_int), value :: lengthConfigFileName
     end subroutine precicef_create
 
+
     subroutine precicef_initialize(timestepLengthLimit) &
       &  bind(c, name='precicef_initialize_')
 
@@ -72,8 +73,8 @@ module PreCICE_solver_if_module
 
       use, intrinsic :: iso_c_binding
       character(kind=c_char), dimension(*) :: action
-      integer(kind=c_int) :: isRequired
-      integer(kind=c_int), value :: lengthAction
+      integer(kind=c_int)                  :: isRequired
+      integer(kind=c_int), value           :: lengthAction
     end subroutine precicef_action_required
 
     subroutine precicef_fulfilled_action(action, lengthAction) &
@@ -81,7 +82,7 @@ module PreCICE_solver_if_module
 
       use, intrinsic :: iso_c_binding
       character(kind=c_char), dimension(*) :: action
-      integer(kind=c_int), value :: lengthAction
+      integer(kind=c_int), value           :: lengthAction
     end subroutine precicef_fulfilled_action
 
     subroutine precicef_get_mesh_id(geometryName, meshID, lengthGeometryName) &
@@ -89,8 +90,8 @@ module PreCICE_solver_if_module
 
       use, intrinsic :: iso_c_binding
       character(kind=c_char), dimension(*) :: geometryName
-      integer(kind=c_int) :: meshID
-      integer(kind=c_int), value :: lengthGeometryName
+      integer(kind=c_int)                  :: meshID
+      integer(kind=c_int), value           :: lengthGeometryName
     end subroutine precicef_get_mesh_id
 
     subroutine precicef_has_data(dataName, hasData, lengthDataName) &
@@ -98,8 +99,8 @@ module PreCICE_solver_if_module
 
       use, intrinsic :: iso_c_binding
       character(kind=c_char), dimension(*) :: dataName
-      integer(kind=c_int) :: hasData
-      integer(kind=c_int), value :: lengthDataName
+      integer(kind=c_int)                  :: hasData
+      integer(kind=c_int), value           :: lengthDataName
     end subroutine precicef_has_data
 
     subroutine precicef_get_data_id(dataName, dataID, lengthDataName) &
@@ -107,8 +108,8 @@ module PreCICE_solver_if_module
 
       use, intrinsic :: iso_c_binding
       character(kind=c_char), dimension(*) :: dataName
-      integer(kind=c_int) :: dataID
-      integer(kind=c_int), value :: lengthDataName
+      integer(kind=c_int)                  :: dataID
+      integer(kind=c_int), value           :: lengthDataName
     end subroutine precicef_get_data_id
 
     subroutine precicef_set_vertex(meshID, position, vertexID) &
@@ -116,7 +117,7 @@ module PreCICE_solver_if_module
 
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: meshID
-      real(kind=c_double) :: position
+      real(kind=c_double) :: position(3)
       integer(kind=c_int) :: vertexID
     end subroutine precicef_set_vertex
 
@@ -125,18 +126,19 @@ module PreCICE_solver_if_module
 
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: meshID
+      !real(kind=c_double) :: position
       real(kind=c_double) :: position(3)
       integer(kind=c_int) :: positionID
     end subroutine precicef_set_read_pos
 
-    subroutine precicef_write_pos(meshID, position, positionID) &
+    subroutine precicef_set_write_pos(meshID, position, positionID) &
       &  bind(c, name='precicef_set_write_pos_')
 
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: meshID
-      real(kind=c_double) :: position
+      real(kind=c_double) :: position(3)
       integer(kind=c_int) :: positionID
-    end subroutine precicef_write_pos
+    end subroutine precicef_set_write_pos
 
     subroutine precicef_set_edge(meshID, firstVertexID, secondVertexID, &
       &                          edgeID) &
@@ -159,15 +161,56 @@ module PreCICE_solver_if_module
       integer(kind=c_int) :: secondEdgeID
       integer(kind=c_int) :: thirdEdgeID
     end subroutine precicef_set_triangle
-
-    subroutine precicef_read_sdata(dataID, valueIndex, dataValue) &
-      &  bind(c, name='precicef_read_sdata__')
+ 
+    subroutine precicef_read_sdata( dataID, valueIndex, dataValue) &
+      &  bind(c, name='precicef_read_sdata_')
 
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: dataID
       integer(kind=c_int) :: valueIndex
-      real(kind=c_double) :: dataValue
+      real(kind=c_double) :: dataValue   
     end subroutine precicef_read_sdata
+
+    subroutine precicef_read_vdata( dataID, valueIndex, dataValue) &
+      &  bind(c, name='precicef_read_vdata_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: dataID
+      integer(kind=c_int) :: valueIndex
+      real(kind=c_double) :: dataValue(*)
+    end subroutine precicef_read_vdata
+
+    subroutine precicef_write_sdata( dataID, valueIndex, dataValue) &
+      &  bind(c, name='precicef_write_sdata_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: dataID
+      integer(kind=c_int) :: valueIndex
+      real(kind=c_double) :: dataValue   
+    end subroutine precicef_write_sdata
+
+    subroutine precicef_write_vdata( dataID, valueIndex, dataValue) &
+      &  bind(c, name='precicef_write_vdata_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: dataID
+      integer(kind=c_int) :: valueIndex
+      real(kind=c_double), dimension(*) :: dataValue 
+    end subroutine precicef_write_vdata
+
+    subroutine precicef_write_data_available(isAvailable) &
+      &  bind(c, name='precicef_write_data_available_')
+
+      use, intrinsic :: iso_c_binding
+      integer(kind=c_int) :: isAvailable
+    end subroutine precicef_write_data_available
+    
+    subroutine precicef_initialize_data() &
+      &  bind(c, name='precicef_initialize_data_')
+
+      use, intrinsic :: iso_c_binding
+    end subroutine precicef_initialize_data
+
     !!! TO BE CONTINUED ...
 
   end interface
