@@ -19,13 +19,13 @@ public:
 
    AitkenPostProcessing (
       double initialRelaxationFactor,
-      int    dataID );
+      std::vector<int>    dataIDs );
 
    virtual ~AitkenPostProcessing() {}
 
-   virtual int getDataID() const
+   virtual std::vector<int> getDataIDs() const
    {
-      return _dataID;
+      return _dataIDs;
    }
 
    virtual void initialize ( DataMap& cpldata );
@@ -40,7 +40,7 @@ private:
 
    double _initialRelaxation;
 
-   int _dataID;
+   std::vector<int> _dataIDs;
 
    double _aitkenFactor;
 

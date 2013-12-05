@@ -6,6 +6,7 @@
 
 #include <map>
 #include <vector>
+#include "../SharedPointer.hpp"
 
 namespace precice {
    namespace cplscheme {
@@ -30,18 +31,20 @@ public:
   /**
    * @brief Map from data ID to data values.
    */
-  typedef std::map<int,CouplingData> DataMap;
+  typedef std::map<int,PtrCouplingData> DataMap;
 
-  virtual int getDataID () const =0;
+  /**
+   * @brief Destructor, empty.
+   */
+  virtual ~PostProcessing() {}
 
-  virtual void initialize (
-    DataMap & cpldata ) =0;
+  virtual std::vector<int> getDataIDs() const =0;
 
-  virtual void performPostProcessing (
-    DataMap & cpldata ) =0;
+  virtual void initialize(DataMap & cpldata) =0;
 
-  virtual void iterationsConverged (
-    DataMap & cpldata) =0;
+  virtual void performPostProcessing(DataMap & cpldata) =0;
+
+  virtual void iterationsConverged(DataMap & cpldata) =0;
 
   virtual void exportState(io::TXTWriter& writer) {}
 

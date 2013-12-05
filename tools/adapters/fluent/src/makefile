@@ -11,11 +11,11 @@
 #----------------------------------------------------------------------#
 # User modifiable section.
 #----------------------------------------------------------------------#
-SOURCES=fsi.c wave_profile.c fsi_and_wave_profile_udf.c
+SOURCES=fsi.c fsi_udf.c
 FLUENT_INC=/home/software/ansys/ansys_121_64bit/v121/fluent
 
 # Precompiled User Object files (for example .o files from .f sources)
-USER_OBJECTS=../libprecice.a ../libpython2.6.so
+USER_OBJECTS=../libprecice.a ../libpython2.7.so
 
 #----------------------------------------------------------------------#
 # Build targets (do not modify below this line).
@@ -163,7 +163,7 @@ lnx86 lnx86_rh8:
 	$(MAKE) $(TARGET) "CFLAGS=$(CFLAGS_LNX86)" "LDFLAGS=$(LDFLAGS_LNX86)"
 
 lnamd64:
-	$(MAKE) $(TARGET) LD=mpicxx "CFLAGS=$(CFLAGS_LNAMD64)" "LDFLAGS=$(LDFLAGS_LNAMD64)"
+	$(MAKE) $(TARGET) LD=mpicxx.mpich2 "CFLAGS=$(CFLAGS_LNAMD64)" "LDFLAGS=$(LDFLAGS_LNAMD64)"
 
 lnia64:
 	$(MAKE) $(TARGET) "CFLAGS=$(CFLAGS_LNIA64)" "LDFLAGS=$(LDFLAGS_LNIA64)" "LD=$(CC)"

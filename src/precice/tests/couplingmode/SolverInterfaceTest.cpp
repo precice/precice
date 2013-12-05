@@ -48,6 +48,7 @@ void SolverInterfaceTest:: run()
       testMethod(testExplicit);
       testMethod(testExplicitWithSubcycling);
       testMethod(testExplicitWithDataExchange);
+      testMethod(testExplicitWithDataInitialization);
       testMethod(testExplicitWithBlockDataExchange);
       testMethod(testExplicitWithSolverGeometry);
       testMethod(testExplicitWithDisplacingGeometry);
@@ -63,6 +64,16 @@ void SolverInterfaceTest:: run()
 #     endif // not PRECICE_NO_SPIRIT2
       testMethod(testStationaryMappingWithSolverMesh);
       testMethod(testBug);
+      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+    }
+  }
+  if (Par::getCommunicatorSize() > 2){
+    std::vector<int> ranksWanted;
+    ranksWanted += 0, 1, 2;
+    MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    if (Par::getProcessRank() <= 2){
+      Par::setGlobalCommunicator(comm);
+      testMethod(testThreeSolvers);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -305,6 +316,60 @@ void SolverInterfaceTest:: testExplicitWithDataExchange()
   }
 }
 
+void SolverInterfaceTest:: testExplicitWithDataInitialization()
+{
+  preciceTrace("testExplicitWithDataInitialization()");
+  using namespace tarch::la;
+  assertion(utils::Parallel::getCommunicatorSize() > 1);
+  mesh::Mesh::resetGeometryIDsGlobally();
+  using utils::Vector3D;
+
+  if (utils::Parallel::getProcessRank() == 0){
+    SolverInterface cplInterface("SolverOne", 0, 1);
+    configureSolverInterface(_pathToTests + "/explicit-data-init.xml", cplInterface);
+    int meshID = cplInterface.getMeshID("Mesh");
+    cplInterface.setMeshVertex(meshID, raw(Vector3D(1.0,2.0,3.0)));
+    double maxDt = cplInterface.initialize();
+    int dataAID = cplInterface.getDataID("DataOne");
+    int dataBID = cplInterface.getDataID("DataTwo");
+    double valueDataB = 0.0;
+    cplInterface.readScalarData(dataBID, 0, valueDataB);
+    validateNumericalEquals(2.0, valueDataB);
+    while (cplInterface.isCouplingOngoing()){
+      Vector3D valueDataA(1.0, 1.0, 1.0);
+      cplInterface.writeVectorData(dataAID, 0, raw(valueDataA));
+      maxDt = cplInterface.advance(maxDt);
+      cplInterface.readScalarData(dataBID, 0, valueDataB);
+      validateNumericalEquals(2.5, valueDataB);
+    }
+    cplInterface.finalize();
+  }
+  else if (utils::Parallel::getProcessRank() == 1){
+    SolverInterface cplInterface("SolverTwo", 0, 1);
+    configureSolverInterface(_pathToTests + "/explicit-data-init.xml", cplInterface);
+    int meshID = cplInterface.getMeshID("Mesh");
+    Vector3D pos(0.0);
+    cplInterface.setReadPosition(meshID, raw(pos));
+    cplInterface.setWritePosition(meshID, raw(pos));
+    double maxDt = cplInterface.initialize();
+    int dataAID = cplInterface.getDataID("DataOne");
+    int dataBID = cplInterface.getDataID("DataTwo");
+    cplInterface.writeScalarData(dataBID, 0, 2.0);
+    cplInterface.initializeData();
+    Vector3D valueDataA;
+    cplInterface.readVectorData(dataAID, 0, raw(valueDataA));
+    Vector3D expected(1.0, 1.0, 1.0);
+    validateWithParams2(equals(valueDataA, expected), valueDataA, expected);
+    while (cplInterface.isCouplingOngoing()){
+      cplInterface.writeScalarData(dataBID, 0, 2.5);
+      maxDt = cplInterface.advance(maxDt);
+      cplInterface.readVectorData(dataAID, 0, raw(valueDataA));
+      validateWithParams2(equals(valueDataA, expected), valueDataA, expected);
+    }
+    cplInterface.finalize();
+  }
+}
+
 void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
 {
   preciceTrace("testExplicitWithBlockDataExchange()");
@@ -470,10 +535,18 @@ void SolverInterfaceTest:: testExplicitWithSolverGeometry ()
       cplInterface );
     validateEquals ( cplInterface.getDimensions(), 3 );
     int meshID = cplInterface.getMeshID ( "SolverGeometry" );
-    int i0 = cplInterface.setMeshVertex ( meshID, raw(utils::Vector3D(1.0)) );
-    int i1 = cplInterface.setMeshVertex ( meshID, raw(utils::Vector3D(2.0)) );
-    cplInterface.setMeshEdge ( meshID, i0, i1 );
+    int i0 = cplInterface.setMeshVertex(meshID, raw(utils::Vector3D(0.0,0.0,0.0)));
+    int i1 = cplInterface.setMeshVertex(meshID, raw(utils::Vector3D(1.0,0.0,0.0)));
+    int i2 = cplInterface.setMeshVertex(meshID, raw(utils::Vector3D(0.0,1.0,0.0)));
+    int e0 = cplInterface.setMeshEdge(meshID, i0, i1);
+    int e1 = cplInterface.setMeshEdge(meshID, i1, i2);
+    int e2 = cplInterface.setMeshEdge(meshID, i2, i0);
+    cplInterface.setMeshTriangle(meshID, e0, e1, e2);
     double dt = cplInterface.initialize();
+
+    int size = cplInterface.getMeshVertexSize(meshID);
+    validateEquals(size, 3);
+
     while ( cplInterface.isCouplingOngoing() ){
       time += dt;
       dt = cplInterface.advance(dt);
@@ -513,18 +586,23 @@ void SolverInterfaceTest:: testExplicitWithDisplacingGeometry()
           _pathToTests + "/explicit-solvergeometry.xml",
           cplInterface );
       double dt = cplInterface.initialize();
-      while ( cplInterface.isCouplingOngoing() ){
-         MeshHandle handle = cplInterface.getMeshHandle ( "SolverGeometry" );
+
+      int meshID = cplInterface.getMeshID("SolverGeometry");
+      int size = cplInterface.getMeshVertexSize(meshID);
+      validateEquals(size, 4);
+
+      while (cplInterface.isCouplingOngoing()){
+         MeshHandle handle = cplInterface.getMeshHandle("SolverGeometry");
          VertexIterator iter = handle.vertices().begin();
-         validate ( equals(wrap<3,double>(iter.vertexCoords()), zero) );
+         validate(equals(wrap<3,double>(iter.vertexCoords()), zero));
          iter++;
-         validate ( equals(wrap<3,double>(iter.vertexCoords()), one) );
+         validate(equals(wrap<3,double>(iter.vertexCoords()), one));
          iter++;
-         validate ( equals(wrap<3,double>(iter.vertexCoords()), two) );
+         validate(equals(wrap<3,double>(iter.vertexCoords()), two));
          iter++;
-         validate ( equals(wrap<3,double>(iter.vertexCoords()), three) );
+         validate(equals(wrap<3,double>(iter.vertexCoords()), three));
          iter++;
-         validate ( not (iter != handle.vertices().end()) );
+         validate(not (iter != handle.vertices().end()) );
 
          time += dt;
          timesteps++;
@@ -543,37 +621,37 @@ void SolverInterfaceTest:: testExplicitWithDisplacingGeometry()
       configureSolverInterface (
           _pathToTests + "/explicit-solvergeometry.xml",
           cplInterface );
-      int meshID = cplInterface.getMeshID ( "SolverGeometry" );
-      int i0 = cplInterface.setMeshVertex ( meshID, raw(zero) );
-      int i1 = cplInterface.setMeshVertex ( meshID, raw(one) );
-      int i2 = cplInterface.setMeshVertex ( meshID, raw(two) );
-      int i3 = cplInterface.setMeshVertex ( meshID, raw(three) );
-      cplInterface.setMeshEdge ( meshID, i0, i1 );
-      cplInterface.setMeshEdge ( meshID, i1, i3 );
-      cplInterface.setMeshEdge ( meshID, i3, i2 );
-      cplInterface.setMeshEdge ( meshID, i2, i0 );
+      int meshID = cplInterface.getMeshID("SolverGeometry");
+      int i0 = cplInterface.setMeshVertex(meshID, raw(zero));
+      int i1 = cplInterface.setMeshVertex(meshID, raw(one));
+      int i2 = cplInterface.setMeshVertex(meshID, raw(two));
+      int i3 = cplInterface.setMeshVertex(meshID, raw(three));
+//      cplInterface.setMeshEdge ( meshID, i0, i1 );
+//      cplInterface.setMeshEdge ( meshID, i1, i3 );
+//      cplInterface.setMeshEdge ( meshID, i3, i2 );
+//      cplInterface.setMeshEdge ( meshID, i2, i0 );
 
       double dt = cplInterface.initialize();
-      int displacementsID = cplInterface.getDataID ( "Displacements" );
+      int displacementsID = cplInterface.getDataID("Displacements");
 
-      while ( cplInterface.isCouplingOngoing() ){
-         MeshHandle handle = cplInterface.getMeshHandle ( "SolverGeometry" );
+      while (cplInterface.isCouplingOngoing()){
+         MeshHandle handle = cplInterface.getMeshHandle("SolverGeometry");
          VertexIterator iter = handle.vertices().begin();
-         validate ( equals(wrap<3,double>(iter.vertexCoords()), zero) );
+         validate(equals(wrap<3,double>(iter.vertexCoords()), zero));
          iter++;
-         validate ( equals(wrap<3,double>(iter.vertexCoords()), one) );
+         validate(equals(wrap<3,double>(iter.vertexCoords()), one));
          iter++;
-         validate ( equals(wrap<3,double>(iter.vertexCoords()), two) );
+         validate(equals(wrap<3,double>(iter.vertexCoords()), two));
          iter++;
-         validate ( equals(wrap<3,double>(iter.vertexCoords()), three) );
+         validate(equals(wrap<3,double>(iter.vertexCoords()), three));
          iter++;
-         validate ( not (iter != handle.vertices().end()) );
+         validate(not (iter != handle.vertices().end()));
 
          // Add displacements
-         cplInterface.writeVectorData ( displacementsID, i0, raw(Vector3D(1.0)) );
-         cplInterface.writeVectorData ( displacementsID, i1, raw(Vector3D(2.0)) );
-         cplInterface.writeVectorData ( displacementsID, i2, raw(Vector3D(3.0)) );
-         cplInterface.writeVectorData ( displacementsID, i3, raw(Vector3D(4.0)) );
+         cplInterface.writeVectorData(displacementsID, i0, raw(Vector3D(1.0)));
+         cplInterface.writeVectorData(displacementsID, i1, raw(Vector3D(2.0)));
+         cplInterface.writeVectorData(displacementsID, i2, raw(Vector3D(3.0)));
+         cplInterface.writeVectorData(displacementsID, i3, raw(Vector3D(4.0)));
 
          // modify coordinates by displacements
          zero += Vector3D(1.0);
@@ -1687,19 +1765,131 @@ void SolverInterfaceTest:: testBug()
     for(int i=0; i < slices-1; i++){
       // Build cylinder/channel geometry
       precice.setMeshTriangleWithEdges(meshID, i*4, (i*4)+1, (i+1)*4);
-      precice.setMeshTriangleWithEdges(meshID, (i+1)*4, ((i+1)*4)+1, (i*4)+1);
+      precice.setMeshTriangleWithEdges(meshID, (i+1)*4, (i*4)+1, ((i+1)*4)+1);
       precice.setMeshTriangleWithEdges(meshID, i*4+1, (i*4)+2, (i+1)*4+1);
-      precice.setMeshTriangleWithEdges(meshID, (i+1)*4+1, ((i+1)*4)+2, (i*4)+2);
+      precice.setMeshTriangleWithEdges(meshID, (i+1)*4+1, (i*4)+2, ((i+1)*4)+2);
       precice.setMeshTriangleWithEdges(meshID, i*4+2, (i*4)+3, (i+1)*4+2);
-      precice.setMeshTriangleWithEdges(meshID, (i+1)*4+2, ((i+1)*4)+3, (i*4)+3);
+      precice.setMeshTriangleWithEdges(meshID, (i+1)*4+2, (i*4)+3, ((i+1)*4)+3);
       precice.setMeshTriangleWithEdges(meshID, i*4+3, (i*4), (i+1)*4+3);
-      precice.setMeshTriangleWithEdges(meshID, (i+1)*4+3, (i+1)*4, i*4);
+      precice.setMeshTriangleWithEdges(meshID, (i+1)*4+3, i*4, (i+1)*4);
     }
     double dt = precice.initialize();
     while(precice.isCouplingOngoing()){
       precice.advance(dt);
     }
     precice.finalize();
+  }
+}
+
+void SolverInterfaceTest:: testThreeSolvers()
+{
+  preciceTrace("testThreeSolvers()");
+  std::string configFilename(_pathToTests + "three-solver-explicit-explicit.xml");
+  std::vector<int> expectedCallsOfAdvance;
+  expectedCallsOfAdvance += 10, 10, 10;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
+
+  configFilename = _pathToTests + "three-solver-implicit-implicit.xml";
+  expectedCallsOfAdvance.clear();
+  expectedCallsOfAdvance += 30, 30, 20;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
+
+  configFilename = _pathToTests + "three-solver-implicit-explicit.xml";
+  expectedCallsOfAdvance.clear();
+  expectedCallsOfAdvance += 30, 30, 10;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
+
+  configFilename = _pathToTests + "three-solver-explicit-implicit.xml";
+  expectedCallsOfAdvance.clear();
+  expectedCallsOfAdvance += 30, 10, 30;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
+}
+
+void SolverInterfaceTest:: runThreeSolvers
+(
+  const std::string&      configFilename,
+  const std::vector<int>& expectedCallsOfAdvance )
+{
+  preciceTrace2("runThreeSolvers", configFilename, expectedCallsOfAdvance);
+
+  typedef utils::Vector2D Vector2D;
+  int rank = utils::Parallel::getProcessRank();
+  assertion1((rank == 0) || (rank == 1) || (rank == 2), rank);
+
+  std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
+  std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
+
+  std::string solverName;
+  if (rank == 0) solverName = std::string("SolverOne");
+  else if (rank == 1) solverName = std::string("SolverTwo");
+  else solverName = std::string("SolverThree");
+  int callsOfAdvance = 0;
+
+  if (solverName == std::string("SolverOne")){
+    SolverInterface precice(solverName, 0, 1);
+    configureSolverInterface(configFilename, precice);
+    int meshID = precice.getMeshID("Mesh");
+    //int dataID = precice.getDataID("Data");
+    precice.setMeshVertex(meshID, raw(utils::Vector2D(0.0, 0.0)));
+    double dt = precice.initialize();
+    while (precice.isCouplingOngoing()){
+      //precice.writeVectorData(dataID, 0, raw(Vector2D(1.0, 2.0)));
+      if (precice.isActionRequired(writeIterCheckpoint)){
+        precice.fulfilledAction(writeIterCheckpoint);
+      }
+      dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)){
+        precice.fulfilledAction(readIterCheckpoint);
+      }
+      callsOfAdvance++;
+    }
+    precice.finalize();
+    validateEquals(callsOfAdvance, expectedCallsOfAdvance[0]);
+  }
+  else if (solverName == std::string("SolverTwo")){
+    SolverInterface precice(solverName, 0, 1);
+    configureSolverInterface(configFilename, precice);
+    int meshID = precice.getMeshID("Mesh");
+    //int dataID = precice.getDataID("Data");
+    precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
+    double dt = precice.initialize();
+    while (precice.isCouplingOngoing()){
+      //Vector2D data;
+      //precice.readVectorData(dataID, 0, raw(data));
+      if (precice.isActionRequired(writeIterCheckpoint)){
+        precice.fulfilledAction(writeIterCheckpoint);
+      }
+      dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)){
+        precice.fulfilledAction(readIterCheckpoint);
+      }
+      callsOfAdvance++;
+    }
+    precice.finalize();
+    validateEquals(callsOfAdvance, expectedCallsOfAdvance[1]);
+  }
+  else {
+    assertion1(solverName == std::string("SolverThree"), solverName);
+    SolverInterface precice(solverName, 0, 1);
+    configureSolverInterface(configFilename, precice);
+    int meshID = precice.getMeshID("Mesh");
+    //int dataID = precice.getDataID("Data");
+    precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0)));
+    double dt = precice.initialize();
+    while (precice.isCouplingOngoing()){
+      //Vector2D data;
+      //precice.readVectorData(dataID, 0, raw(data));
+      if (precice.isActionRequired(writeIterCheckpoint)){
+        precice.fulfilledAction(writeIterCheckpoint);
+      }
+      dt = precice.advance(dt);
+      if (precice.isActionRequired(readIterCheckpoint)){
+        precice.fulfilledAction(readIterCheckpoint);
+      }
+      callsOfAdvance++;
+    }
+    precice.finalize();
+    validateEquals(callsOfAdvance, expectedCallsOfAdvance[2]);
   }
 }
 

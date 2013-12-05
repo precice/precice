@@ -14,16 +14,14 @@ namespace precice {
 namespace config {
 
 /**
- * @brief Main class for XML configuration of preCICE.
+ * @brief Main class for preCICE XML configuration tree.
+ *
+ * The configuration process is triggered by fetching the root tag with method
+ * getXMLTag() and calling its parse() method.
  */
 class Configuration : public utils::XMLTag::Listener
 {
 public:
-
-  /**
-   * @brief Returns the name of the enclosing XML-tag.
-   */
-  //static const std::string& getTag();
 
   /**
    * @brief Constructor.
@@ -31,14 +29,14 @@ public:
   Configuration();
 
   /**
-   * @brief Returns root xml tag representation.
+   * @brief Destructor, empty.
    */
-  utils::XMLTag& getXMLTag();
+  virtual ~Configuration() {}
 
   /**
-   * @brief Reads the information parsed from an xml-file.
+   * @brief Returns root xml tag to start the automatic configuration process.
    */
-  //bool parseSubtag ( utils::XMLTag::XMLReader* xmlReader );
+  utils::XMLTag& getXMLTag();
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -53,11 +51,6 @@ public:
    * @return True, if successful.
    */
   virtual void xmlEndTagCallback ( utils::XMLTag& tag );
-
-  /**
-   * @brief Returns true, if configuration has validly taken place.
-   */
-  //bool isValid() const;
 
   /**
    * @brief Returns log filter configuration.
@@ -79,10 +72,8 @@ private:
   // @brief Logging device.
   static tarch::logging::Log _log;
 
+  // @brief Root tag of preCICE configuration.
   utils::XMLTag _tag;
-
-  // @brief Flag to signal validity of configuration.
-  //bool _isValid;
 
   LogFilterConfiguration _logFilterConfig;
 

@@ -4,7 +4,7 @@
 #ifndef PRECICE_CPLSCHEME_EXPLICITCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_EXPLICITCOUPLINGSCHEME_HPP_
 
-#include "CouplingScheme.hpp"
+#include "BaseCouplingScheme.hpp"
 #include "Constants.hpp"
 #include "com/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -15,7 +15,7 @@
 namespace precice {
 namespace cplscheme {
 
-class ExplicitCouplingScheme : public CouplingScheme
+class ExplicitCouplingScheme : public BaseCouplingScheme
 {
 public:
 
@@ -48,16 +48,22 @@ public:
      int    startTimestep );
 
    /**
-    * @brief Initializes the data for first implicit coupling scheme iteration.
+    * @brief Initializes data for first participant from second participant.
     *
-    * Has to be called after initialize() and before advance().
+    * If this method is not used, the first participant has zero initial values
+    * for its read data, before receiving data in advance(). If non-zero values
+    * are needed, this has to be configured in the coupling-scheme XML
+    * exchange-data tags. A call of initializeData() is then mandatory for the
+    * second participant. It has to be called after initialize() and before
+    * advance(). The second participant has to write the initial data values
+    * to preCICE after initialize() and before initializeData().
     */
-   virtual void initializeData() {}
+   virtual void initializeData();
 
    /**
     * @brief Adds newly computed time. Has to be called before every advance.
     */
-   void addComputedTime ( double timeToAdd );
+   //void addComputedTime ( double timeToAdd );
 
    /**
     * @brief Advances within the coupling scheme.
@@ -72,8 +78,7 @@ public:
    /*
     * @brief returns list of all coupling partners
     */
-   virtual std::vector<std::string> getCouplingPartners (
-     const std::string & accessorName ) const;
+   virtual std::vector<std::string> getCouplingPartners () const;
 
    virtual void sendState (
      com::PtrCommunication communication,
@@ -85,9 +90,9 @@ public:
 
    virtual std::string printCouplingState() const;
 
-   virtual void exportState(io::TXTWriter& writer) const {}
+   virtual void exportState(const std::string& filenamePrefix) const {}
 
-   virtual void importState(io::TXTReader& reader) {}
+   virtual void importState(const std::string& filenamePrefix) {}
 
 private:
 

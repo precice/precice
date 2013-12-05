@@ -4,10 +4,10 @@
 #ifndef PRECICE_CPLSCHEME_IMPLICITCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_IMPLICITCOUPLINGSCHEME_HPP_
 
-#include "cplscheme/CouplingScheme.hpp"
-#include "cplscheme/SharedPointer.hpp"
-#include "cplscheme/Constants.hpp"
-#include "cplscheme/impl/SharedPointer.hpp"
+#include "BaseCouplingScheme.hpp"
+#include "SharedPointer.hpp"
+#include "Constants.hpp"
+#include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/PropertyContainer.hpp"
@@ -31,19 +31,28 @@ namespace precice {
 namespace cplscheme {
 
 /**
- * @brief Coupling scheme with iterations per timestep to achieve strong solution.
+ * Abstract class that provides the basic functionalities for implicit coupling,
+ * i.e. subiterating in every timestep to converge towards the strong solution.
+ * The functionalities that differ for the classcial serial coupling and the
+ * parallel coupling are implemented in the subclasses SerialImplicitCouplingScheme
+ * and ParallelImplicitCouplingScheme.
+ * Please look at ./coupling_steering.pdf for a brief sketch of the differences
+ * between the serial and parallel implicit coupling.
+ *
+ * @brief Abstract coupling scheme with iterations per timestep to achieve strong solution.
  */
-class ImplicitCouplingScheme : public CouplingScheme
+class ImplicitCouplingScheme : public BaseCouplingScheme
 {
 public:
 
   /**
    * @brief Constructor.
    *
+   *
    * @param maxTime [IN] Simulation time limit, or UNDEFINED_TIME.
    * @param maxTimesteps [IN] Simulation timestep limit, or UNDEFINED_TIMESTEPS.
    * @param timestepLength [IN] Simulation timestep length.
-   * @param firstParticipant [IN] Name of participant starting simulation.
+   * @param firstParticipant [IN] Name of first participant in coupling.
    * @param secondParticipant [IN] Name of second participant in coupling.
    * @param localParticipant [IN] Name of participant using this coupling scheme.
    * @param communication [IN] Communication object for com. between participants.
@@ -100,7 +109,7 @@ public:
    */
   virtual void initialize (
     double startTime,
-    int    startTimestep );
+    int    startTimestep ) =0;
 
   /**
    * @brief Initializes data with written values.
@@ -109,12 +118,8 @@ public:
    * - initialize() has been called.
    * - advance() has NOT yet been called.
    */
-  virtual void initializeData();
+  virtual void initializeData() =0;
 
-  /**
-   * @brief Adds newly computed time. Has to be called before every advance.
-   */
-  void addComputedTime ( double timeToAdd );
 
   /**
    * @brief Advances within the coupling scheme (not necessarily in time).
@@ -122,7 +127,7 @@ public:
    * Preconditions:
    * - initialize() has been called.
    */
-  virtual void advance();
+  virtual void advance() =0;
 
   /**
    * @brief Finalizes the coupling scheme.
@@ -132,8 +137,7 @@ public:
   /*
    * @brief returns list of all coupling partners
    */
-  virtual std::vector<std::string> getCouplingPartners (
-    const std::string& accessorName ) const;
+  virtual std::vector<std::string> getCouplingPartners () const;
 
   virtual void sendState (
     com::PtrCommunication communication,
@@ -145,11 +149,145 @@ public:
 
   virtual std::string printCouplingState() const;
 
-  virtual void exportState(io::TXTWriter& writer) const;
+  virtual void exportState(const std::string& filenamePrefix) const;
 
-  virtual void importState(io::TXTReader& reader);
+  virtual void importState(const std::string& filenamePrefix);
+
+protected:
+
+  /**
+   * @return True, if local participant is the one starting the explicit scheme.
+   */
+  bool doesFirstStep(){
+    return _doesFirstStep;
+  }
+
+  /**
+   * @return Communication device to the other coupling participant.
+   */
+  com::PtrCommunication getCommunication(){
+    return _communication;
+  }
+
+  void setIterationToPlot(int iterationToPlot){
+    _iterationToPlot = iterationToPlot;
+  }
+
+  void setTimestepToPlot(int timestepToPlot){
+    _timestepToPlot = timestepToPlot;
+  }
+
+  void setTimeToPlot(double timeToPlot){
+    _timeToPlot = timeToPlot;
+  }
+
+  // @return Post-processing method to speedup iteration convergence.
+  impl::PtrPostProcessing getPostProcessing(){
+    return _postProcessing;
+  }
+
+  void setHasToSendInitData(bool hasToSendInitData){
+    _hasToSendInitData = hasToSendInitData;
+  }
+
+  void setHasToReceiveInitData(bool hasToReceiveInitData){
+    _hasToReceiveInitData = hasToReceiveInitData;
+  }
+
+  bool hasToSendInitData(){
+    return _hasToSendInitData;
+  }
+
+  bool hasToReceiveInitData(){
+    return _hasToReceiveInitData;
+  }
+
+  bool participantReceivesDt(){
+    return _participantReceivesDt;
+  }
+
+  bool participantSetsDt(){
+    return _participantSetsDt;
+  }
+
+  void setIterations(int iterations){
+    _iterations = iterations;
+  }
+
+  int getIterations(){
+    return _iterations;
+  }
+
+  int getTotalIterations(){
+    return _totalIterations;
+  }
+
+  void increaseIterations(){
+    _iterations++;
+  }
+
+  void increaseTotalIterations(){
+    _totalIterations++;
+  }
+
+  void increaseIterationToPlot(){
+    _iterationToPlot++;
+  }
+
+  int getMaxIterations(){
+    return _maxIterations;
+  }
+
+  int getExtrapolationOrder(){
+    return _extrapolationOrder;
+  }
+
+  io::TXTTableWriter& getIterationsWriter(){
+    return _iterationsWriter;
+  }
+
+
+  /**
+   * @brief Sets up _dataStorage to store data values of last timestep.
+   *
+   * Every send data has an entry in _dataStorage. Every Entry is a vector
+   * of data values with length according to the total number of values on all
+   * meshes. The ordering of the data values corresponds to that in the meshes
+   * and the ordering of the meshes to that in _couplingData.
+   */
+  void setupDataMatrices(DataMap& data);
+
+  void setupConvergenceMeasures();
+
+  void newConvergenceMeasurements();
+
+  /**
+   * @brief Updates internal state of coupling scheme for next timestep.
+   */
+  void timestepCompleted();
+
+  /**
+   * @brief Updates the convergence measurement of local send data.
+   */
+  bool measureConvergence();
+
+  void extrapolateData(DataMap& data);
+
+  /**
+   * @brief Initializes the txt writers for writing residuals, iterations, ...
+   */
+  void initializeTXTWriters();
 
 private:
+
+  // @brief True, if local participant is the one starting the explicit scheme.
+  bool _doesFirstStep;
+
+  // @brief Communication device to the other coupling participant.
+  com::PtrCommunication _communication;
+
+  // @brief Responsible for monitoring iteration count over timesteps.
+  io::TXTTableWriter _iterationsWriter;
 
   /**
    * @brief Holds relevant variables to perform a convergence measurement.
@@ -175,18 +313,9 @@ private:
   // @brief Second participant name.
   std::string _secondParticipant;
 
-  // @brief True, if local participant is the one starting the explicit scheme.
-  bool _doesFirstStep;
-
-  // @brief Communication device to the other coupling participant.
-  com::PtrCommunication _communication;
-
-  // @brief Responsible for monitoring iteration count over timesteps.
-  io::TXTTableWriter _iterationsWriter;
-
   // @brief Writes residuals to file.
 //  io::TXTTableWriter _residualWriterL1;
-//  io::TXTTableWriter _residualWriterL2;
+//  io::TXT_communicationTableWriter _residualWriterL2;
 
   // @brief Writes value amplification to file.
 //  io::TXTTableWriter _amplificationWriter;
@@ -213,6 +342,9 @@ private:
   int _timestepToPlot;
   double _timeToPlot;
 
+  // @brief Number of iterations in current timestep.
+  int _iterations;
+
   // @brief Number of total iterations performed.
   int _totalIterations;
 
@@ -222,36 +354,12 @@ private:
   // @brief Determines, if the dt length is set received from the other participant
   bool _participantReceivesDt;
 
-  /**
-   * @brief Initializes the txt writers for writing residuals, iterations, ...
-   */
-  void initializeTXTWriters();
+  // @brief to carry initData information from initialize to initData
+  bool _hasToSendInitData;
 
-  /**
-   * @brief Sets up _dataStorage to store data values of last timestep.
-   *
-   * Every send data has an entry in _dataStorage. Every Entry is a vector
-   * of data values with length according to the total number of values on all
-   * meshes. The ordering of the data values corresponds to that in the meshes
-   * and the ordering of the meshes to that in _couplingData.
-   */
-  void setupDataMatrices();
+  // @brief to carry initData information from initialize to initData
+  bool _hasToReceiveInitData;
 
-  void setupConvergenceMeasures();
-
-  void newConvergenceMeasurements();
-
-  /**
-   * @brief Updates internal state of coupling scheme for next timestep.
-   */
-  void timestepCompleted();
-
-  /**
-   * @brief Updates the convergence measurement of local send data.
-   */
-  bool measureConvergence();
-
-  void extrapolateData();
 
 //  void writeResidual (
 //    const utils::DynVector& values,

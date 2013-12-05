@@ -29,6 +29,9 @@ void HierarchicalAitkenPostProcessingTest:: run ()
     preciceTrace ( "run()" );
     impl::PostProcessing::DataMap dataMap;
     int dataID = 0;
+    std::vector<int> dataIDs;
+    dataIDs.push_back(dataID);
+
     utils::DynVector highF ( 5 );
     utils::DynVector midF ( 5 );
     utils::DynVector lowF ( 5 );
@@ -41,21 +44,22 @@ void HierarchicalAitkenPostProcessingTest:: run ()
     temp = midF; temp *= 2.0; values += temp;
     temp = lowF; temp *= 4.0; values += temp;
     bool initializeValues = false;
-    CouplingData data ( &values, initializeValues );
+    PtrCouplingData ptrCplData = PtrCouplingData(new CouplingData(
+                  &values,initializeValues));
     temp = values;
     temp *= 2.0;
-    data.oldValues.appendFront ( temp );
-    dataMap.insert ( std::make_pair(dataID, data) );
+    ptrCplData->oldValues.appendFront ( temp );
+    dataMap.insert ( std::make_pair(dataID, ptrCplData));
 
     double initRelaxation = 1.0;
-    impl::HierarchicalAitkenPostProcessing hierarchAitken ( initRelaxation, dataID );
+    impl::HierarchicalAitkenPostProcessing hierarchAitken ( initRelaxation, dataIDs);
     hierarchAitken.initialize ( dataMap );
     hierarchAitken.performPostProcessing ( dataMap );
 
-    dataMap[dataID].oldValues.column(0) = *dataMap[dataID].values;
-    temp = highF; temp *= 0.5; *dataMap[dataID].values -= temp;
-    temp = midF; temp *= 0.1; *dataMap[dataID].values -= temp;
-    temp = lowF; temp *= 1.5; *dataMap[dataID].values -= temp;
+    dataMap[dataID]->oldValues.column(0) = *dataMap[dataID]->values;
+    temp = highF; temp *= 0.5; *dataMap[dataID]->values -= temp;
+    temp = midF; temp *= 0.1; *dataMap[dataID]->values -= temp;
+    temp = lowF; temp *= 1.5; *dataMap[dataID]->values -= temp;
     hierarchAitken.performPostProcessing ( dataMap );
   }
 }

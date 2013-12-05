@@ -265,6 +265,13 @@ int SolverInterface:: setMeshVertex
   return _impl->setMeshVertex ( meshID, position );
 }
 
+int SolverInterface:: getMeshVertexSize
+(
+  int meshID)
+{
+  return _impl->getMeshVertexSize(meshID);
+}
+
 int SolverInterface:: setMeshEdge
 (
   int meshID,

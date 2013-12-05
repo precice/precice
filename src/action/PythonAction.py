@@ -2,18 +2,20 @@ mySourceData = 0
 myTargetData = 0
 
 #
-# This function is called first. It can be omitted, if not needed. Its
-# parameters are the source data, followed by the target data, which are
-# omitted (selectively or both) if not mentioned in the preCICE configuration.
+# This function is called first at configured timing. It can be omitted, if not 
+# needed. Its parameters are time, the source data, followed by the target data. 
+# Source and target data can be omitted (selectively or both) by not mentioning 
+# them in the preCICE XML configuration (see the configuration reference).
 #
 def performAction(time, sourceData, targetData):
+    # Usage example 1:
     global mySourceData
     global myTargetData
     mySourceData = sourceData # store (reference to) sourceData for later use
     myTargetData = targetData # store (reference to) targetData for later use
-    # Usage example:
+    # Usage example 2:
     # for i in range(data.size):
-    #     data[i] = data[i] + 1
+    #     data[i] = data[i] + 1 # Add 1 to each data component
     #     i = i + 1
     
 #
@@ -21,16 +23,16 @@ def performAction(time, sourceData, targetData):
 # after performAction, and can also be omitted.
 #
 def vertexCallback(id, coords, normal):
-    global mySourceData
-    global myTargetData
     # Usage example:
-    # myTargetData[id] += coords[0] + mySourceData[id]
+    global mySourceData # Make global data set in performAction visible
+    global myTargetData
+    # myTargetData[id] += coords[0] + mySourceData[id] # Add data to vertex coords
     
 #
 # This function is called at last, if not omitted.
 #
 def postAction():
-    global mySourceData
+    global mySourceData # Make global data set in performAction visible
     global myTargetData
     # Do something ...
     

@@ -129,11 +129,61 @@ The following options can be enabled additionally, the first value is selected a
 
 \section{Running a Simulation with preCICE}
 
+\subsection{Parallel Solvers}
+
 When running a solver in parallel, currently a preCICE server executable has to be run in addition. The server has all coupling data and communicates with the coupled solver (or its server, when also running in parallel). The parallel solver processes have to communicate with the server in order to read/write data from/to the coupling interface. To configure this use-case, the XML-tag \texttt{<server/>} has to be used in the configuration of the parallel participant (see XML reference). There, a communication method between solver processes and server has to be specified. The server executable is created in the build directory of preCICE (also containing the library), and is named \texttt{binprecice}. The possible console options for \texttt{binprecice} are obtained by running it without parameters. To run it as server type
 \begin{verbatim}
 ./binprecice server SolverName ConfigName
 \end{verbatim}
 The  \texttt{SolverName} is the name of the configured participant, which is used to identify the solver in preCICE. The \texttt{ConfigName} is the preCICE XML configuration file used for the simulation. Server and solver processes can be started in any order. The server executable can currently only be run by one process.
+
+\subsection{Coupling Multiple Solvers}
+
+One preCICE adapter, i.e., implementational link of a solver's interface with the preCICE API, can couple more than just two solvers. The multi-solver coupling is specified by the XML configuration of preCICE by a sequence of one-to-one solver couplings. In a simple two-solver coupling one XML tag \texttt{communication}, one tag \texttt{coupling-scheme}  as well as two tags \texttt{participant}, describing the solvers, are needed. In general, every solver needs to be described by an own tag \texttt{participant} and every coupling between two solver has to be described by a \texttt{communication} and \texttt{coupling-scheme} tag. 
+
+We first consider an example of three solvers $S1, S2, S3$, where $S1$ should be coupled to $S2$ by an explicit coupling scheme and $S2$ should be coupled to $S3$ by an implicit coupling scheme. This implies that solver $S1$ is coupled only indirectly via $S2$ to solver $S3$. In the XML configuration, we describe the solvers by tags
+\begin{verbatim}
+<participant name="S1"> ... </participant>
+<participant name="S2"> ... </participant>
+<participant name="S3"> ... </participant>
+\end{verbatim}
+and we need to define communications between them
+\begin{verbatim}
+<communication:... from="S1" to="S2">
+<communication:... from="S2" to="S3">\end{verbatim}
+The association of the solvers in the same communication tag to attributes \texttt{from} and \texttt{to} does not matter here. Then, the coupling schemes need to be configured as
+\begin{verbatim}
+<coupling-scheme:implicit>
+  <participants first="S2" second="S3"/>
+  ...
+</coupling-scheme:implicit>
+<coupling-scheme:explicit>
+  <participants first="S1" second="S2"/>
+  ...
+</coupling-scheme:explicit>
+\end{verbatim}
+where the association of solvers to the attributes \texttt{first} and \texttt{second} of tag \texttt{participants} determines the execution sequence relative to one coupling. This configuration will create an explicit coupling scheme for solver $S1$, an implicit coupling scheme for $S3$ and an explicit as well as an implicit coupling scheme for solver $S2$. While the sequence of first giving the implicit and then the explicit scheme has no importance for $S1$ and $S3$, it is crucial for the coupling sequence in $S2$. In the described setup, in $S2$ the implicit coupling scheme will first be iterated until convergence, before the explixit coupling scheme is executed (in every timestep). There will be no additional iteration necessary to execute the explicit scheme in $S2$, since it is triggered in the same iteration that leads to the convergence of the implicit scheme.
+
+While the execution of the different coupling schemes of one solver is sequentialized, the overall execution is not. Thus, looking at the overall computation sequence of the coupled solvers, we would first observe one computation of $S1$ and $S2$, followed by repeated computations of $S3$ and $S2$ until the convergence of the implicit scheme. If in the expicit coupling scheme the first and second participant would be exchanged, $S1$ would have to wait until the convergence of the implicit coupling until it computes its timestep. This sequence ensures that a converged coupling state of $S2$ and $S3$ is achieved before the explicit coupling is executed in $S1$ which might be crucial to obtain stability also in the explicit coupling. 
+
+If the sequence of coupling schemes would be inversed, first, the explicit coupling scheme would be executed in $S2$ and, in the following, implicit iterations would follow taking the results from the computation of $S1$ as fixed.
+
+For a general setup of coupling schemes $C1, C2, C3, ...$, the following rules apply for one time step:
+\begin{itemize*}
+\item The sequence of schemes is executed from left to right.
+\item Explicit schemes are executed once.
+\item Implicit schemes are iterated until convergence.
+\item When several explicit schemes are in a sequence not broken by implicit schemes, they are executed together.
+\item When several implicit schemes are in a sequence not broken by explicit schemes, they are iterated together.
+\item When one or several implicit schemes follow one or several expicit schemes, the first iteration of the implicit schemes is done in the same call to \texttt{advance()}.
+\item When one or several explicit schemes follow one or several implicit schemes, the execution of the explicit schemes is done in the same call to \texttt{advance()} that lead to the convergence of all preceding implicit schemes.
+\item When during the iteration of several implicit schemes an implicit scheme is converged but the others not, the converged scheme is hold back (in converged status) until all other implicit schemes iterating together are also converged.
+\end{itemize*}
+
+
+
+
+
 
 %\subsection{Using preCICE with your own program}
 

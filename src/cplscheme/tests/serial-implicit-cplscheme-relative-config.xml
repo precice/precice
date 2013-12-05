@@ -12,7 +12,7 @@
    
    <communication:mpi-single from="participant0" to="participant1" />
 
-   <coupling-scheme type="implicit"> 
+   <coupling-scheme type="serial-implicit"> 
       <participants first="participant0" second="participant1" />
       <timestep-length value="1e-1" />
       <max-time value="1.0" />

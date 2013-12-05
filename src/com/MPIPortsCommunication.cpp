@@ -69,7 +69,7 @@ void MPIPortsCommunication:: acceptConnection
   // To give the file first a "wrong" name prevents early reading errors
   rename( (portFilename + "~").c_str(), portFilename.c_str() );
 
-  preciceDebug ( "Calling MPI_Comm_accept()" );
+  preciceDebug("Calling MPI_Comm_accept() with portname = " << _portname);
   MPI_Comm localComm = utils::Parallel::getLocalCommunicator();
   MPI_Comm_accept ( _portname, MPI_INFO_NULL, 0, localComm, &communicator() );
   if ( utils::Parallel::getLocalProcessRank() == 0 ){
@@ -101,12 +101,13 @@ void MPIPortsCommunication:: requestConnection
   std::ifstream inFile;
   do {
     inFile.open ( portFilename.c_str(), std::ios::in );
+    usleep(100000);
   } while ( not inFile );
   inFile.getline ( _portname, MPI_MAX_PORT_NAME );
   inFile.close();
   preciceDebug ( "Read connection info \"" + std::string(_portname) +
                  "\" from file " + portFilename );
-  preciceDebug ( "Calling MPI_Comm_connect()" );
+  preciceDebug("Calling MPI_Comm_connect() with portname = " << _portname);
   MPI_Comm localComm = utils::Parallel::getLocalCommunicator();
   MPI_Comm_connect ( _portname, MPI_INFO_NULL, 0, localComm, &communicator() );
   _isConnection = true;

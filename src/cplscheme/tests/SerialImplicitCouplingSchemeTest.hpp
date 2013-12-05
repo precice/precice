@@ -1,8 +1,8 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_CPLSCHEME_TESTS_IMPLICITCOUPLINGSCHEMETEST_HPP_
-#define PRECICE_CPLSCHEME_TESTS_IMPLICITCOUPLINGSCHEMETEST_HPP_
+#ifndef PRECICE_CPLSCHEME_TESTS_SERIALIMPLICITCOUPLINGSCHEMETEST_HPP_
+#define PRECICE_CPLSCHEME_TESTS_SERIALIMPLICITCOUPLINGSCHEMETEST_HPP_
 
 #include "com/SharedPointer.hpp"
 #include "tarch/tests/TestCase.h"
@@ -14,9 +14,6 @@
 namespace precice {
    namespace cplscheme {
       class CouplingScheme;
-//      namespace tests {
-//        class ImplicitCouplingSchemeTest;
-//      }
    }
    namespace mesh {
       class MeshConfiguration;
@@ -30,21 +27,21 @@ namespace cplscheme {
 namespace tests {
 
 /**
- * @brief Tests class ImplicitCouplingScheme.
+ * @brief Tests class SerialImplicitCouplingScheme.
  */
-class ImplicitCouplingSchemeTest : public tarch::tests::TestCase
+class SerialImplicitCouplingSchemeTest : public tarch::tests::TestCase
 {
 public:
 
   /**
    * @brief Constructor.
    */
-  ImplicitCouplingSchemeTest();
+  SerialImplicitCouplingSchemeTest();
 
   /**
    * @brief Destructor.
    */
-  virtual ~ImplicitCouplingSchemeTest() {}
+  virtual ~SerialImplicitCouplingSchemeTest() {}
 
   /**
    * @brief Sets path to test directory.
@@ -165,6 +162,11 @@ private:
   void testMinIterConvergenceMeasureSynchronizedWithSubcycling();
 
   /**
+   * @brief Tests the initialize data functionality.
+   */
+  void testInitializeData();
+
+  /**
    * @brief Performs and validates implicit coupled simulation with subcycling.
    */
   void runCouplingWithSubcycling (
@@ -190,9 +192,8 @@ private:
 
 # endif // not PRECICE_NO_MPI
 
-//  friend class tests::ImplicitCouplingSchemeTest;
 };
 
 }}} // namespace precice, cplscheme, tests
 
-#endif /* PRECICE_CPLSCHEME_TESTS_IMPLICITCOUPLINGSCHEMETEST_HPP_ */
+#endif /* PRECICE_CPLSCHEME_TESTS_SERIALIMPLICITCOUPLINGSCHEMETEST_HPP_ */

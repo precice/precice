@@ -51,7 +51,8 @@ void XMLTag:: setDocumentation
   _doc = documentation;
 }
 
-void XMLTag:: addNamespace(
+void XMLTag:: addNamespace
+(
   const std::string& namespaceName )
 {
   _namespaces.push_back(namespaceName);
@@ -292,7 +293,7 @@ void XMLTag:: parseSubtag
           && (tag->getOccurrence() == OCCUR_ONCE
               || tag->getOccurrence() == OCCUR_NOT_OR_ONCE))
       {
-        std::string error = "Tag <" + tag->getName() +
+        std::string error = "Tag <" + tag->getFullName() +
                             "> is not allowed to occur multiple times";
         throw error;
       }

@@ -85,6 +85,11 @@ private:
    void testExplicitCouplingFirstParticipantSetsDt();
 
    /**
+    * @brief Test from XML configuration to test data initialization.
+    */
+   void testDataInitialization();
+
+   /**
     * @brief Configured test with second participant setting timestep length.
     */
    //void testExplicitCouplingSecondParticipantSetsDt();

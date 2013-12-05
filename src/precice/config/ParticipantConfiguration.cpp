@@ -56,6 +56,8 @@ ParticipantConfiguration:: ParticipantConfiguration
   ATTR_COORDINATE("coordinate"),
   ATTR_COMMUNICATION("communication"),
   ATTR_CONTEXT("context"),
+  ATTR_NETWORK("network"),
+  ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
   _dimensions(0),
   _meshConfig(meshConfiguration),
   _geometryConfig(geometryConfiguration),
@@ -176,6 +178,21 @@ ParticipantConfiguration:: ParticipantConfiguration
     attrPort.setDefaultValue(51235);
     tagServer.addAttribute(attrPort);
 
+    XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);
+    doc = "Network name to be used for socket communiation. ";
+    doc += "Default is \"lo\", i.e., the local host loopback.";
+    attrNetwork.setDocumentation(doc);
+    attrNetwork.setDefaultValue("lo");
+    tagServer.addAttribute(attrNetwork);
+
+    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
+    doc = "Directory where connection information is exchanged. By default, the ";
+    doc += "directory of startup is chosen, and both solvers have to be started ";
+    doc += "in the same directory.";
+    attrExchangeDirectory.setDocumentation(doc);
+    attrExchangeDirectory.setDefaultValue("");
+    tagServer.addAttribute(attrExchangeDirectory);
+
     serverTags.push_back(tagServer);
   }
   {
@@ -186,7 +203,7 @@ ParticipantConfiguration:: ParticipantConfiguration
     doc += "with startup in separated communication spaces.";
     tagServer.setDocumentation(doc);
 
-    XMLAttribute<std::string> attrExchangeDirectory("exchange-directory");
+    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
     doc = "Directory where connection information is exchanged. By default, the ";
     doc += "directory of startup is chosen, and both solvers have to be started ";
     doc += "in the same directory.";

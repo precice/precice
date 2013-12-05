@@ -4,7 +4,7 @@
 #ifndef PRECICE_CPLSCHEME_UNCOUPLEDCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_UNCOUPLEDCOUPLINGSCHEME_HPP_
 
-#include "CouplingScheme.hpp"
+#include "BaseCouplingScheme.hpp"
 #include "tarch/logging/Log.h"
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -12,14 +12,14 @@
 namespace precice {
 namespace cplscheme {
 
-class UncoupledCouplingScheme : public CouplingScheme
+class UncoupledScheme : public BaseCouplingScheme
 {
 public:
 
   /**
    * @brief Constructor.
    */
-  UncoupledCouplingScheme (
+  UncoupledScheme (
     double             maxTime,
     int                maxTimesteps,
     int                validDigits,
@@ -28,7 +28,7 @@ public:
   /**
    * @brief Destructor, virtual because of virtual functions.
    */
-  virtual ~UncoupledCouplingScheme() {}
+  virtual ~UncoupledScheme() {}
 
   /**
    * @brief Initializes the coupling scheme.
@@ -62,8 +62,7 @@ public:
   /*
    * @brief returns list of all coupling partners
    */
-  virtual std::vector<std::string> getCouplingPartners (
-    const std::string& accessorName ) const;
+  virtual std::vector<std::string> getCouplingPartners () const;
 
   virtual void sendState (
     com::PtrCommunication communication,
@@ -75,9 +74,9 @@ public:
 
   virtual std::string printCouplingState() const;
 
-  virtual void exportState(io::TXTWriter& writer) const {}
+  virtual void exportState(const std::string& filenamePrefix) const {}
 
-  virtual void importState(io::TXTReader& reader) {}
+  virtual void importState(const std::string& filenamePrefix) {}
 
 private:
 

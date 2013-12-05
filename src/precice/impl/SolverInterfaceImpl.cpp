@@ -106,7 +106,7 @@ void SolverInterfaceImpl:: configure
   const std::string& configurationFileName )
 {
   typedef tarch::logging::CommandLineLogger Logger;
-  // By default, debuggin is turned on with a filter list entry. This removes
+  // By default, debugging is turned on with a filter list entry. This removes
   // entry and turns off all debug messages until configuration.
   Logger::getInstance().clearFilterList();
   Logger::FilterListEntry filter("", true); // All off
@@ -274,8 +274,8 @@ double SolverInterfaceImpl:: initialize()
     _couplingScheme->initialize(time, timestep);
     if (_restartMode){
       preciceInfo("initialize()", "Reading coupling scheme state for restart");
-      io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
-      _couplingScheme->importState(txtReader);
+      //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
+      _couplingScheme->importState(_checkpointFileName);
     }
     double dt = _couplingScheme->getNextTimestepMaxLength();
     std::set<action::Action::Timing> timings;
@@ -317,6 +317,7 @@ void SolverInterfaceImpl:: initializeData ()
       std::set<action::Action::Timing> timings;
       if (_couplingScheme->hasDataBeenExchanged()){
         timings.insert(action::Action::ON_EXCHANGE_POST);
+        mapReadData();
       }
       performDataActions(timings, 0.0, 0.0, 0.0, dt);
       resetWrittenData();
@@ -820,6 +821,24 @@ int SolverInterfaceImpl:: setMeshVertex
     preciceDebug("Vertex index = " << index);
   }
   return index;
+}
+
+int SolverInterfaceImpl:: getMeshVertexSize
+(
+  int meshID )
+{
+  preciceTrace1("getMeshVertexSize()", meshID);
+  int size = 0;
+  if (_clientMode){
+    size = _requestManager->requestGetMeshVertexSize(meshID);
+  }
+  else {
+    MeshContext& context = _accessor->meshContext(meshID);
+    assertion(context.mesh.get() != NULL);
+    size = context.mesh->vertices().size();
+  }
+  preciceDebug("return " << size);
+  return size;
 }
 
 void SolverInterfaceImpl:: resetWritePositions
@@ -1327,8 +1346,10 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   preciceTrace4("setMeshTriangleWithEdges()", meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
   if (_clientMode){
-    _requestManager->requestSetMeshTriangleWithEdges(meshID, firstVertexID, secondVertexID,
-                                    thirdVertexID);
+    _requestManager->requestSetMeshTriangleWithEdges(meshID,
+                                                     firstVertexID,
+                                                     secondVertexID,
+                                                     thirdVertexID);
     return;
   }
   MeshContext& context = _accessor->meshContext(meshID);
@@ -2087,12 +2108,6 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
 void SolverInterfaceImpl:: runServer()
 {
   assertion(_serverMode);
-//  int argc = 0;
-//  char* arg = new char[8];
-//  strcpy(arg, "precice");
-//  char** argv = &arg;
-//  utils::Parallel::initialize ( &argc, &argv, _accessorName + "Server" );
-//  delete[] arg;
   initializeClientServerCommunication();
   _requestManager->handleRequests();
 }
@@ -2330,10 +2345,11 @@ void SolverInterfaceImpl:: mapReadData()
     bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
     bool hasMapping = context.readMappingContext.mapping.use_count() > 0;
-    bool isIncremental = context.readMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL;
+    bool isIncremental = context.readMappingContext.timing
+                         == mapping::MappingConfiguration::INCREMENTAL;
     if (mapNow && hasMapping && (not isIncremental)){
-      //bool compute = not context.writeMappingContext.isStationary;
-      //compute |= not context.writeMappingContext.mapping->hasComputedMapping();
+      // Compute mapping only when the mapping has not been computed. For timing
+      // initial, this is the case only once.
       if (not context.readMappingContext.mapping->hasComputedMapping()){
         preciceDebug("Compute read mapping for mesh \"" << context.mesh->getName() << "\"");
         context.readMappingContext.mapping->computeMapping();
@@ -2366,7 +2382,7 @@ void SolverInterfaceImpl:: mapReadData()
     }
   }
 
-  // Clear non-stationary, non-incremental mappings
+  // Clear non-initial, non-incremental mappings
   foreach (impl::MeshContext& context, _accessor->usedMeshContexts()){
     bool hasMapping = context.readMappingContext.mapping.use_count() > 0;
     if (hasMapping){
@@ -2452,8 +2468,8 @@ void SolverInterfaceImpl:: handleExports()
       }
       io::SimulationStateIO exportState(_checkpointFileName + "_simstate.txt");
       exportState.writeState(_couplingScheme->getTime(), timestep, _numberAdvanceCalls);
-      io::TXTWriter exportCouplingSchemeState(_checkpointFileName + "_cplscheme.txt");
-      _couplingScheme->exportState(exportCouplingSchemeState);
+      //io::TXTWriter exportCouplingSchemeState(_checkpointFileName + "_cplscheme.txt");
+      _couplingScheme->exportState(_checkpointFileName);
     }
   }
 }

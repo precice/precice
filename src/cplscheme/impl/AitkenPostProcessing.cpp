@@ -22,11 +22,11 @@ tarch::logging::Log AitkenPostProcessing::
 AitkenPostProcessing:: AitkenPostProcessing
 (
   double initialRelaxation,
-  int    dataID )
+  std::vector<int>    dataIDs )
 :
   PostProcessing (),
   _initialRelaxation ( initialRelaxation ),
-  _dataID ( dataID ),
+  _dataIDs ( dataIDs ),
   _aitkenFactor ( initialRelaxation ),
   _iterationCounter ( 0 ),
   _residuals ()
@@ -39,79 +39,99 @@ AitkenPostProcessing:: AitkenPostProcessing
 
 void AitkenPostProcessing:: initialize
 (
-  DataMap& cpldata )
+  DataMap& cplData )
 {
-  preciceCheck ( utils::contained(_dataID, cpldata), "initialize()",
-                 "Data with ID " << _dataID
-                 << " is not contained in data given at initialization!" );
-  size_t entries = cpldata[_dataID].values->size();
+  preciceCheck(utils::contained(*_dataIDs.begin(), cplData), "initialize()",
+               "Data with ID " << *_dataIDs.begin()
+               << " is not contained in data given at initialization!" );
+  size_t entries=0;
+  if(_dataIDs.size()==1){
+    entries = cplData[_dataIDs.at(0)]->values->size();
+  }
+  else{
+    assertion(_dataIDs.size()==2);
+    entries = cplData[_dataIDs.at(0)]->values->size() +
+        cplData[_dataIDs.at(1)]->values->size();
+  }
+  assertion(entries > 0);
   double initializer = std::numeric_limits<double>::max();
-  utils::DynVector toAppend ( entries, initializer );
+  utils::DynVector toAppend(entries, initializer);
   _residuals.append(toAppend);
+
+  // Append column for old values if not done by coupling scheme yet
+  foreach (DataMap::value_type& pair, cplData){
+    int cols = pair.second->oldValues.cols();
+    if (cols < 1){
+      assertion1(pair.second->values->size() > 0, pair.first);
+      pair.second->oldValues.append(CouplingData::DataMatrix(
+        pair.second->values->size(), 1, 0.0));
+    }
+  }
 }
 
 void AitkenPostProcessing:: performPostProcessing
 (
   DataMap& cplData )
 {
-  preciceTrace ( "performPostProcessing()" );
+  preciceTrace("performPostProcessing()");
   typedef utils::DynVector DataValues;
   using namespace tarch::la;
 
   // Compute aitken relaxation factor
-  assertion ( utils::contained(_dataID, cplData) );
-  DataValues& values = *cplData[_dataID].values;
-  DataValues& oldValues = cplData[_dataID].oldValues.column(0);
+  assertion(utils::contained(*_dataIDs.begin(), cplData));
+
+  DataValues values;
+  DataValues oldValues;
+  foreach (int id, _dataIDs){
+    values.append(*(cplData[id]->values));
+    oldValues.append(cplData[id]->oldValues.column(0));
+  }
 
   // Compute current residuals
-  DataValues residuals ( values );
+  DataValues residuals(values);
   residuals -= oldValues;
 
   // Compute residual deltas and temporarily store it in _residuals
-  DataValues residualDeltas ( _residuals );
+  DataValues residualDeltas(_residuals);
   residualDeltas *= -1.0;
   residualDeltas += residuals;
 
-  // compute fraction of aitken factor with residuals and residual deltas
-  double nominator = dot(_residuals, residualDeltas);
-  double denominator = dot(residualDeltas, residualDeltas);
-
-  // Store residuals for next iteration
-  _residuals = residuals;
-
-  //precicePrint ( "old aitken = " << _aitkenFactor );
-  //precicePrint ( "nom = " << nominator << ", denom = " << denominator );
-
   // Select/compute aitken factor depending on current iteration count
-  if ( _iterationCounter == 0 ) {
+  if (_iterationCounter == 0){
     _aitkenFactor = sign(_aitkenFactor) * min(
-      utils::Vector2D(_initialRelaxation, std::abs(_aitkenFactor)));
+                    utils::Vector2D(_initialRelaxation, std::abs(_aitkenFactor)));
   }
   else {
-    //      _aitkenFactor += (_aitkenFactor - 1.0) * (nominator / denominator);
+    // compute fraction of aitken factor with residuals and residual deltas
+    double nominator = dot(_residuals, residualDeltas);
+    double denominator = dot(residualDeltas, residualDeltas);
     _aitkenFactor = -_aitkenFactor * (nominator / denominator);
   }
-//  preciceInfo ( "Computed relaxation factor = " << _aitkenFactor );
+
+  preciceDebug("AitkenFactor: " << _aitkenFactor);
 
   // Perform relaxation with aitken factor
   double omega = _aitkenFactor;
   double oneMinusOmega = 1.0 - omega;
   foreach ( DataMap::value_type& pair, cplData ) {
-    DataValues& values = *pair.second.values;
-    DataValues& oldValues = pair.second.oldValues.column(0);
+    DataValues& values = *pair.second->values;
+    DataValues& oldValues = pair.second->oldValues.column(0);
     values *= omega;
     for ( int i=0; i < values.size(); i++ ) {
       values[i] += oldValues[i] * oneMinusOmega;
     }
   }
-  _iterationCounter ++;
+
+  // Store residuals for next iteration
+  _residuals = residuals;
+
+  _iterationCounter++;
 }
 
 void AitkenPostProcessing:: iterationsConverged
 (
   DataMap& cplData )
 {
-  //   precicePrint ( "Called iterationsConverged() of aitken post-processing!" );
   _iterationCounter = 0;
   assign(_residuals) = std::numeric_limits<double>::max();
 }

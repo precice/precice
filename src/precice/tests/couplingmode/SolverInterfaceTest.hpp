@@ -8,6 +8,7 @@
 #include "tarch/logging/Log.h"
 #include "precice/SolverInterface.hpp"
 #include <string>
+#include <vector>
 
 namespace precice {
 namespace tests {
@@ -75,6 +76,14 @@ private:
    * @brief One solver uses incremental position set, read/write methods.
    */
   void testExplicitWithDataExchange();
+
+  /**
+   * @brief The second solver initializes the data of the first.
+   *
+   * A mapping ist employed for the second solver, i.e., at the end of
+   * initializeData(), the mapping needs to be invoked.
+   */
+  void testExplicitWithDataInitialization();
 
   /**
    * @brief One solver uses block set/get/read/write methods.
@@ -171,6 +180,18 @@ private:
    * - Mapping is done on Flite side with RBF
    */
   void testBug();
+
+  /**
+   * @brief Three solvers are coupled in a fork S2 <-> S1 <-> S3.
+   *
+   * Both couplings are explicit, solver 1 provides the mesh to the other two
+   * solvers.
+   */
+  void testThreeSolvers();
+
+  void runThreeSolvers (
+      const std::string&      configFilename,
+      const std::vector<int>& expectedCallsOfAdvance );
 
 # endif // defined( not PRECICE_NO_MPI )
 };

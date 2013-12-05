@@ -32,7 +32,7 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
 :
-  CouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
+  BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _doesFirstStep(false),
@@ -48,9 +48,12 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   _iterationToPlot(0),
   _timestepToPlot(0),
   _timeToPlot(0.0),
+  _iterations(0),
   _totalIterations(0),
   _participantSetsDt(false),
-  _participantReceivesDt(false)
+  _participantReceivesDt(false),
+  _hasToReceiveInitData(false),
+  _hasToSendInitData(false)
 {
   preciceCheck(_firstParticipant != _secondParticipant,
                "ImplicitCouplingScheme()", "First participant and "
@@ -119,244 +122,6 @@ void ImplicitCouplingScheme:: setIterationPostProcessing
   _postProcessing = postProcessing;
 }
 
-void ImplicitCouplingScheme:: initialize
-(
-  double startTime,
-  int    startTimestep )
-{
-  preciceTrace2("initialize()", startTime, startTimestep);
-  assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
-  assertion1(startTimestep >= 0, startTimestep);
-  assertion(_communication->isConnected());
-  preciceCheck(not getSendData().empty(), "initialize()",
-               "No send data configured!");
-  setTime(startTime);
-  setTimesteps(startTimestep);
-  if (not _doesFirstStep){
-    setupConvergenceMeasures(); // needs _couplingData configured
-    setupDataMatrices(); // Reserve memory and initialize data with zero
-    if (_postProcessing.get() != NULL){
-      _postProcessing->initialize(getSendData());
-    }
-  }
-  else if (_postProcessing.get() != NULL){
-    int dataID = _postProcessing->getDataID();
-    preciceCheck(getSendData(dataID) == NULL, "initialize()",
-                 "A post-processing can be defined for data of second "
-                 << "participant only!");
-  }
-
-  requireAction(constants::actionWriteIterationCheckpoint());
-
-  // Determine data initialization
-  bool doesReceiveData = not _doesFirstStep;
-  foreach (DataMap::value_type & pair, getSendData()){
-    if (pair.second.initialize){
-      preciceCheck(not _doesFirstStep, "initialize()",
-                   "Only second participant can initialize data!");
-      requireAction(constants::actionWriteInitialData());
-      preciceDebug("Initialized data to be written");
-      doesReceiveData = false;
-      break;
-    }
-  }
-  foreach (DataMap::value_type & pair, getReceiveData()){
-    if (pair.second.initialize){
-      preciceCheck(_doesFirstStep, "initialize()",
-                   "Only first participant can receive initial data!");
-      preciceDebug("Initialized data to be received");
-      doesReceiveData = true;
-    }
-  }
-
-  if (doesReceiveData && isCouplingOngoing()){
-    preciceDebug("Receiving data");
-    _communication->startReceivePackage(0);
-    if (_participantReceivesDt){
-      double dt = UNDEFINED_TIMESTEP_LENGTH;
-      _communication->receive(dt, 0);
-      preciceDebug("received timestep length of " << dt);
-      assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-      setTimestepLength(dt);
-      //setMaxLengthNextTimestep(dt);
-    }
-    receiveData(_communication);
-    _communication->finishReceivePackage();
-    setHasDataBeenExchanged(true);
-  }
-  initializeTXTWriters();
-  setIsInitialized(true);
-}
-
-void ImplicitCouplingScheme:: initializeData()
-{
-  preciceCheck(isInitialized(), "initializeData()",
-               "initializeData() can be called after initialize() only!");
-  preciceCheck(isActionRequired(constants::actionWriteInitialData()),
-               "initializeData()", "Not required data initialization!");
-  assertion(not _doesFirstStep);
-  foreach (DataMap::value_type & pair, getSendData()){
-    utils::DynVector & oldValues = pair.second.oldValues.column(0);
-    oldValues = *pair.second.values;
-
-    // For extrapolation, treat the initial value as old timestep value
-    std::cout << std::endl;
-    pair.second.oldValues.shiftSetFirst(oldValues);
-    sendData(_communication);
-    _communication->startReceivePackage(0);
-    receiveData(_communication);
-    _communication->finishReceivePackage();
-    setHasDataBeenExchanged(true);
-  }
-  performedAction(constants::actionWriteInitialData());
-}
-
-void ImplicitCouplingScheme:: addComputedTime
-(
-  double timeToAdd )
-{
-  preciceTrace2("addComputedTime()", timeToAdd, getTime());
-  preciceCheck(isCouplingOngoing(), "addComputedTime()",
-               "Invalid call of addComputedTime() after simulation end!");
-
-  // Check validness
-  double eps = std::pow(10.0, -1 * getValidDigits());
-  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
-  preciceCheck(greaterThanZero, "addComputedTime()", "The computed timestep length "
-               << "exceeds the maximum timestep limit for this time step!");
-
-  setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);
-  setTime(getTime() + timeToAdd);
-  //setSubIteration(getSubIteration() + 1);
-  //_totalIterations++;
-}
-
-void ImplicitCouplingScheme:: advance()
-{
-  preciceTrace2("advance()", getTimesteps(), getTime());
-  checkCompletenessRequiredActions();
-  setHasDataBeenExchanged(false);
-  setIsCouplingTimestepComplete(false);
-  //double remainder = getThisTimestepRemainder();
-  //computedTimestepLength = cutOffInvalidDigits(computedTimestepLength );
-  //setTime(getTime() + computedTimestepLength );
-  double eps = std::pow(10.0, -1 * getValidDigits());
-  bool convergence = false;
-  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)){
-    preciceDebug("Computed full length of iteration");
-    if (_doesFirstStep){
-      _communication->startSendPackage(0);
-      if (_participantSetsDt){
-        preciceDebug("sending timestep length of " << getComputedTimestepPart());
-        _communication->send(getComputedTimestepPart(), 0);
-      }
-      sendData(_communication);
-      _communication->finishSendPackage();
-      _communication->startReceivePackage(0);
-      _communication->receive(convergence, 0);
-      if (convergence){
-        timestepCompleted();
-      }
-      if (isCouplingOngoing()){
-        receiveData(_communication);
-      }
-      _communication->finishReceivePackage();
-    }
-    else {
-      //_residualWriterL1.writeData("Iterations", _totalIterations);
-      //_residualWriterL2.writeData("Iterations", _totalIterations);
-      //_amplificationWriter.writeData("Iterations", _totalIterations);
-      //writeResidual(*(getSendData().begin()->second.values),
-      //              getSendData().begin()->second.oldValues.column(0));
-      convergence = measureConvergence();
-      assertion2((getSubIteration() <= _maxIterations) || (_maxIterations == -1),
-                 getSubIteration(), _maxIterations);
-      // Stop, when maximal iteration count (given in config) is reached
-      if (getSubIteration() == _maxIterations-1){
-        convergence = true;
-      }
-      if (convergence){
-        if (_postProcessing.get() != NULL){
-          _postProcessing->iterationsConverged(getSendData());
-        }
-        newConvergenceMeasurements();
-        timestepCompleted();
-      }
-      else if (_postProcessing.get() != NULL){
-        _postProcessing->performPostProcessing(getSendData());
-      }
-      _communication->startSendPackage(0);
-      _communication->send(convergence, 0);
-      if (isCouplingOngoing()){
-        if (convergence && (_extrapolationOrder > 0)){
-          extrapolateData(); // Also stores data
-        }
-        else { // Store data for conv. measurement, post-processing, or extrapolation
-          foreach (DataMap::value_type& pair, getSendData()){
-            if (pair.second.oldValues.size() > 0){
-              pair.second.oldValues.column(0) = *pair.second.values;
-            }
-          }
-          foreach (DataMap::value_type& pair, getReceiveData()){
-            if (pair.second.oldValues.size() > 0){
-              pair.second.oldValues.column(0) = *pair.second.values;
-            }
-          }
-        }
-        sendData(_communication);
-        _communication->finishSendPackage();
-        _communication->startReceivePackage(0);
-        if (_participantReceivesDt){
-          double dt = UNDEFINED_TIMESTEP_LENGTH;
-          _communication->receive(dt, 0);
-          assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-          setTimestepLength(dt);
-        }
-        receiveData(_communication);
-        _communication->finishReceivePackage();
-      }
-      else {
-        _communication->finishSendPackage();
-      }
-      //setMaxLengthNextTimestep(getTimestepLength() );
-    }
-
-    if (not convergence){
-      preciceDebug("No convergence achieved");
-      requireAction(constants::actionReadIterationCheckpoint());
-      setSubIteration(getSubIteration() + 1);
-      _totalIterations++;
-      // The computed timestep part equals the timestep length, since the
-      // timestep remainder is zero. Subtract the timestep length do another
-      // coupling iteration.
-      assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
-      setTime(getTime() - getComputedTimestepPart());
-    }
-    else {
-      preciceDebug("Convergence achieved");
-      _iterationsWriter.writeData("Timesteps", getTimesteps());
-      _iterationsWriter.writeData("Total Iterations", _totalIterations);
-      _iterationsWriter.writeData("Iterations", getSubIteration());
-      int converged = getSubIteration() < _maxIterations ? 1 : 0;
-      _iterationsWriter.writeData("Convergence", converged);
-      setSubIteration(0);
-    }
-    setHasDataBeenExchanged(true);
-    setComputedTimestepPart(0.0);
-  }
-
-  // When the iterations of one timestep are converged, the old time, timesteps,
-  // and iteration should be plotted, and not the 0th of the new timestep. Thus,
-  // the plot values are only updated when no convergence was achieved.
-  if (not convergence){
-    _timestepToPlot = getTimesteps();
-    _timeToPlot = getTime();
-    _iterationToPlot = getSubIteration();
-  }
-  else {
-    _iterationToPlot++;
-  }
-}
 
 void ImplicitCouplingScheme:: timestepCompleted()
 {
@@ -373,10 +138,12 @@ void ImplicitCouplingScheme:: timestepCompleted()
 
 void ImplicitCouplingScheme:: finalize()
 {
-   preciceTrace("finalize()" );
+   preciceTrace("finalize()");
    checkCompletenessRequiredActions();
    preciceCheck(isInitialized(), "finalize()",
-                  "finalize() can be called after initialize() only!");
+                "Called finalize() before initialize()!");
+   preciceCheck(not isCouplingOngoing(), "finalize()",
+                "Called finalize() while isCouplingOngoing() returns true!");
 }
 
 void ImplicitCouplingScheme:: initializeTXTWriters()
@@ -412,24 +179,26 @@ void ImplicitCouplingScheme:: initializeTXTWriters()
 //  }
 }
 
-void ImplicitCouplingScheme:: setupDataMatrices()
+void ImplicitCouplingScheme:: setupDataMatrices(DataMap& data)
 {
   preciceTrace("setupDataMatrices()");
+  preciceDebug("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
   foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
     assertion(convMeasure.data != NULL);
-    assertion1(convMeasure.data->oldValues.size() == 0,
-               convMeasure.data->oldValues.size())
-    convMeasure.data->oldValues.append(CouplingData::DataMatrix(
-        convMeasure.data->values->size(), 1, 0.0));
+    if (convMeasure.data->oldValues.cols() < 1){
+      convMeasure.data->oldValues.append(CouplingData::DataMatrix(
+          convMeasure.data->values->size(), 1, 0.0));
+    }
   }
-  // Reserve storage for extrapolation of send data values
+  // Reserve storage for extrapolation of data values
   if (_extrapolationOrder > 0){
-    foreach (DataMap::value_type& pair, getSendData()){
-      int cols = pair.second.oldValues.cols();
+    foreach (DataMap::value_type& pair, data){
+      int cols = pair.second->oldValues.cols();
+      preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
       assertion1(cols <= 1, cols);
-      pair.second.oldValues.append(CouplingData::DataMatrix(
-          pair.second.values->size(), _extrapolationOrder + 1 - cols, 0.0));
+      pair.second->oldValues.append(CouplingData::DataMatrix(
+          pair.second->values->size(), _extrapolationOrder + 1 - cols, 0.0));
     }
   }
 }
@@ -483,27 +252,28 @@ bool ImplicitCouplingScheme:: measureConvergence()
   return allConverged || oneSuffices;
 }
 
-void ImplicitCouplingScheme:: extrapolateData()
+void ImplicitCouplingScheme:: extrapolateData(DataMap& data)
 {
    preciceTrace("extrapolateData()");
    bool startWithFirstOrder = (getTimesteps() == 1) && (_extrapolationOrder == 2);
    if((_extrapolationOrder == 1) || startWithFirstOrder ){
       preciceInfo("extrapolateData()", "Performing first order extrapolation" );
-      foreach(DataMap::value_type & pair, getSendData() ){
-         assertion(pair.second.oldValues.cols() > 1 );
-         utils::DynVector & values = *pair.second.values;
-         pair.second.oldValues.column(0) = values;    // = x^t
+      foreach(DataMap::value_type & pair, data ){
+         preciceDebug("Extrapolate data: " << pair.first);
+         assertion(pair.second->oldValues.cols() > 1 );
+         utils::DynVector & values = *pair.second->values;
+         pair.second->oldValues.column(0) = values;    // = x^t
          values *= 2.0;                                  // = 2 * x^t
-         values -= pair.second.oldValues.column(1);   // = 2*x^t - x^(t-1)
-         pair.second.oldValues.shiftSetFirst(values );
+         values -= pair.second->oldValues.column(1);   // = 2*x^t - x^(t-1)
+         pair.second->oldValues.shiftSetFirst(values );
       }
    }
    else if(_extrapolationOrder == 2 ){
       preciceInfo("extrapolateData()", "Performing second order extrapolation" );
-      foreach(DataMap::value_type & pair, getSendData() ) {
-         assertion(pair.second.oldValues.cols() > 2 );
-         utils::DynVector & values = *pair.second.values;
-         pair.second.oldValues.column(0) = values;        // = x^t                                     // = 2.5 x^t
+      foreach(DataMap::value_type & pair, data ) {
+         assertion(pair.second->oldValues.cols() > 2 );
+         utils::DynVector & values = *pair.second->values;
+         pair.second->oldValues.column(0) = values;        // = x^t                                     // = 2.5 x^t
 //         utils::DynVector & valuesOld1 = pair.second.oldValues.getColumn(1);
 //         utils::DynVector & valuesOld2 = pair.second.oldValues.getColumn(2);
 //         for(int i=0; i < values.size(); i++ ) {
@@ -511,13 +281,13 @@ void ImplicitCouplingScheme:: extrapolateData()
 //            values[i] += valuesOld2[i] * 3.0; // =
 //         }
          values *= 2.5;                                      // = 2.5 x^t
-         utils::DynVector & valuesOld1 = pair.second.oldValues.column(1);
-         utils::DynVector & valuesOld2 = pair.second.oldValues.column(2);
+         utils::DynVector & valuesOld1 = pair.second->oldValues.column(1);
+         utils::DynVector & valuesOld2 = pair.second->oldValues.column(2);
          for(int i=0; i < values.size(); i++ ){
             values[i] -= valuesOld1[i] * 2.0; // = 2.5x^t - 2x^(t-1)
             values[i] += valuesOld2[i] * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
          }
-         pair.second.oldValues.shiftSetFirst(values );
+         pair.second->oldValues.shiftSetFirst(values );
          //preciceDebug("extrapolateData()", "extrapolated data to \""
          //               << *pair.second.values );
       }
@@ -536,45 +306,16 @@ void ImplicitCouplingScheme:: newConvergenceMeasurements()
    }
 }
 
-//bool ImplicitCouplingScheme:: computeCouplingOngoing ()
-//{
-//   bool timeLeft = tarch::la::greater(getMaxTime(), getTime()) ||
-//                   (getMaxTime() == UNDEFINED_TIME );
-//   bool timestepsLeft = (getMaxTimesteps() > getTimesteps()) ||
-//                        (getMaxTimesteps() == UNDEFINED_TIMESTEPS);
-//
-//   return timeLeft && timestepsLeft;
-//}
-
-//double ImplicitCouplingScheme:: getTimestepRemainder
-//(
-//   double computedTimestepLength ) const
-//{
-//   double remainder = getTimestepLength()
-//                      - (_computedTimeCurrentIteration + computedTimestepLength);
-//   preciceCheck(tarch::la::greaterEquals(remainder, 0.0),
-//                  "getTimestepRemainder()",
-//                  "Computed timestep length (" << computedTimestepLength
-//                  << ") is not allowed to be larger than the prescribed one ("
-//                  << remainder << ")!");
-//   return remainder;
-//}
-
-std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners
-(
-  const std::string& accessorName ) const
+std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
 
-  if(accessorName == _firstParticipant ){
-    partnerNames.push_back(_secondParticipant );
-  }
-  else if(accessorName == _secondParticipant){
-    partnerNames.push_back(_firstParticipant );
+  // Add non-local participant
+  if(_doesFirstStep){
+    partnerNames.push_back(_secondParticipant);
   }
   else {
-    preciceError("getCouplingPartners()",
-                   "No coupling partner could be found." );
+    partnerNames.push_back(_firstParticipant);
   }
   return partnerNames;
 }
@@ -586,9 +327,9 @@ void ImplicitCouplingScheme:: sendState
 {
   preciceTrace1("sendState()", rankReceiver);
   communication->startSendPackage(rankReceiver );
-  CouplingScheme::sendState(communication, rankReceiver );
+  BaseCouplingScheme::sendState(communication, rankReceiver );
   communication->send(_maxIterations, rankReceiver );
-  communication->send(getSubIteration(), rankReceiver );
+  communication->send(_iterations, rankReceiver );
   communication->send(_totalIterations, rankReceiver );
   communication->finishSendPackage();
 }
@@ -600,11 +341,11 @@ void ImplicitCouplingScheme:: receiveState
 {
   preciceTrace1("receiveState()", rankSender);
   communication->startReceivePackage(rankSender);
-  CouplingScheme::receiveState(communication, rankSender);
+  BaseCouplingScheme::receiveState(communication, rankSender);
   communication->receive(_maxIterations, rankSender);
   int subIteration = -1;
   communication->receive(subIteration, rankSender);
-  setSubIteration(subIteration);
+  _iterations = subIteration;
   communication->receive(_totalIterations, rankSender);
   communication->finishReceivePackage();
 }
@@ -612,24 +353,25 @@ void ImplicitCouplingScheme:: receiveState
 std::string ImplicitCouplingScheme:: printCouplingState() const
 {
   std::ostringstream os;
-  os << " it " << _iterationToPlot; //getSubIteration();
+  os << "it " << _iterationToPlot; //_iterations;
   if(_maxIterations != -1 ){
     os << " of " << _maxIterations;
   }
-  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << std::endl << printActionsState();
+  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
   return os.str();
 }
 
 void ImplicitCouplingScheme:: exportState
 (
-  io::TXTWriter& writer ) const
+  const std::string& filenamePrefix ) const
 {
   if (not _doesFirstStep){
-    foreach (const CouplingScheme::DataMap::value_type& dataMap, getSendData()){
-      writer.write(dataMap.second.oldValues);
+    io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
+    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
+      writer.write(dataMap.second->oldValues);
     }
-    foreach (const CouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
-      writer.write(dataMap.second.oldValues);
+    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
+      writer.write(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != NULL){
       _postProcessing->exportState(writer);
@@ -637,14 +379,17 @@ void ImplicitCouplingScheme:: exportState
   }
 }
 
-void ImplicitCouplingScheme:: importState(io::TXTReader& reader)
+void ImplicitCouplingScheme:: importState
+(
+  const std::string& filenamePrefix )
 {
   if (not _doesFirstStep){
-    foreach (CouplingScheme::DataMap::value_type& dataMap, getSendData()){
-      reader.read(dataMap.second.oldValues);
+    io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
+    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
+      reader.read(dataMap.second->oldValues);
     }
-    foreach (CouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
-      reader.read(dataMap.second.oldValues);
+    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
+      reader.read(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != NULL){
       _postProcessing->importState(reader);

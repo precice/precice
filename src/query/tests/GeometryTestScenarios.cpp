@@ -35,30 +35,30 @@ GeometryTestScenarios::PointQueryScenario:: PointQueryScenario
 (
   int dim )
 :
-  mesh ( "PointQueryScenarioMesh", dim, false ),
-  queryCoords (),
-  validDistances (),
-  validDistanceVectors ()
+  mesh("PointQueryScenarioMesh", dim, false),
+  queryCoords(),
+  validDistances(),
+  validDistanceVectors()
 {}
 
 GeometryTestScenarios::PositionQueryScenario:: PositionQueryScenario
 (
   int dim )
 :
-  mesh ( "PositionQueryScenarioMesh", dim, false ),
-  queryCoords (),
-  validPositions ()
+  mesh("PositionQueryScenarioMesh", dim, false),
+  queryCoords(),
+  validPositions()
 {}
 
 GeometryTestScenarios::VoxelQueryScenario:: VoxelQueryScenario
 (
   int dim )
 :
-  mesh ( "VoxelQueryScenarioMesh", dim, false ),
-  queryCenters (),
-  queryHalflengths (),
-  includeBoundaries (),
-  validPositions ()
+  mesh("VoxelQueryScenarioMesh", dim, false),
+  queryCenters(),
+  queryHalflengths(),
+  includeBoundaries(),
+  validPositions()
 {}
 
 const GeometryTestScenarios::PointQueryScenario&
@@ -72,7 +72,7 @@ GeometryTestScenarios:: pointQueryScenario
 
     // Create query mesh (square in 2D, cube in 3D)
     mesh::Mesh& mesh = _pointQueryScenario->mesh;
-    createMesh ( mesh );
+    createMesh(mesh);
 
     // Create query positions and valid results
     for ( int testDim=0; testDim < dim; testDim++ ){
@@ -184,66 +184,67 @@ void GeometryTestScenarios:: createMesh
   mesh::Mesh& mesh )
 {
   using namespace mesh;
-  if ( mesh.getDimensions() == 2 ){
+  if (mesh.getDimensions() == 2){
     using utils::Vector2D;
-    Vertex& v00 = mesh.createVertex ( Vector2D(-1.0, -1.0) );
-    Vertex& v10 = mesh.createVertex ( Vector2D( 1.0, -1.0) );
-    Vertex& v01 = mesh.createVertex ( Vector2D(-1.0,  1.0) );
-    Vertex& v11 = mesh.createVertex ( Vector2D( 1.0,  1.0) );
-    mesh.createEdge ( v00, v10 );
-    mesh.createEdge ( v10, v11 );
-    mesh.createEdge ( v11, v01 );
-    mesh.createEdge ( v01, v00 );
+    Vertex& v00 = mesh.createVertex(Vector2D(-1.0, -1.0));
+    Vertex& v10 = mesh.createVertex(Vector2D( 1.0, -1.0));
+    Vertex& v01 = mesh.createVertex(Vector2D(-1.0,  1.0));
+    Vertex& v11 = mesh.createVertex(Vector2D( 1.0,  1.0));
+    mesh.createEdge(v00, v10);
+    mesh.createEdge(v10, v11);
+    mesh.createEdge(v11, v01);
+    mesh.createEdge(v01, v00);
   }
   else {
+    assertion1(mesh.getDimensions() == 3, mesh.getDimensions());
     using utils::Vector3D;
-    Vertex& v000 = mesh.createVertex ( Vector3D(-1.0, -1.0, -1.0) );
-    Vertex& v001 = mesh.createVertex ( Vector3D(-1.0, -1.0,  1.0) );
-    Vertex& v010 = mesh.createVertex ( Vector3D(-1.0,  1.0, -1.0) );
-    Vertex& v011 = mesh.createVertex ( Vector3D(-1.0,  1.0,  1.0) );
-    Vertex& v100 = mesh.createVertex ( Vector3D( 1.0, -1.0, -1.0) );
-    Vertex& v101 = mesh.createVertex ( Vector3D( 1.0, -1.0,  1.0) );
-    Vertex& v110 = mesh.createVertex ( Vector3D( 1.0,  1.0, -1.0) );
-    Vertex& v111 = mesh.createVertex ( Vector3D( 1.0,  1.0,  1.0) );
+    Vertex& v000 = mesh.createVertex(Vector3D(-1.0, -1.0, -1.0));
+    Vertex& v001 = mesh.createVertex(Vector3D(-1.0, -1.0,  1.0));
+    Vertex& v010 = mesh.createVertex(Vector3D(-1.0,  1.0, -1.0)); //
+    Vertex& v011 = mesh.createVertex(Vector3D(-1.0,  1.0,  1.0));
+    Vertex& v100 = mesh.createVertex(Vector3D( 1.0, -1.0, -1.0)); //
+    Vertex& v101 = mesh.createVertex(Vector3D( 1.0, -1.0,  1.0));
+    Vertex& v110 = mesh.createVertex(Vector3D( 1.0,  1.0, -1.0));
+    Vertex& v111 = mesh.createVertex(Vector3D( 1.0,  1.0,  1.0));
 
-    Edge& e000to100 = mesh.createEdge ( v000, v100 );
-    Edge& e010to110 = mesh.createEdge ( v010, v110 );
-    Edge& e001to101 = mesh.createEdge ( v001, v101 );
-    Edge& e011to111 = mesh.createEdge ( v011, v111 );
+    Edge& e000to100 = mesh.createEdge(v000, v100);
+    Edge& e010to110 = mesh.createEdge(v010, v110);
+    Edge& e001to101 = mesh.createEdge(v001, v101);
+    Edge& e011to111 = mesh.createEdge(v011, v111);
 
-    Edge& e000to010 = mesh.createEdge ( v000, v010 );
-    Edge& e100to110 = mesh.createEdge ( v100, v110 );
-    Edge& e001to011 = mesh.createEdge ( v001, v011 );
-    Edge& e101to111 = mesh.createEdge ( v101, v111 );
+    Edge& e000to010 = mesh.createEdge(v000, v010);
+    Edge& e100to110 = mesh.createEdge(v100, v110);
+    Edge& e001to011 = mesh.createEdge(v001, v011);
+    Edge& e101to111 = mesh.createEdge(v101, v111);
 
-    Edge& e000to001 = mesh.createEdge ( v000, v001 );
-    Edge& e100to101 = mesh.createEdge ( v100, v101 );
-    Edge& e010to011 = mesh.createEdge ( v010, v011 );
-    Edge& e110to111 = mesh.createEdge ( v110, v111 );
-    Edge& e010to001 = mesh.createEdge ( v010, v001 );
+    Edge& e000to001 = mesh.createEdge(v000, v001);
+    Edge& e100to101 = mesh.createEdge(v100, v101);
+    Edge& e010to011 = mesh.createEdge(v010, v011);
+    Edge& e110to111 = mesh.createEdge(v110, v111);
+    Edge& e010to001 = mesh.createEdge(v010, v001);
 
-    Edge& e100to111 = mesh.createEdge ( v100, v111 );
-    Edge& e100to001 = mesh.createEdge ( v100, v001 );
-    Edge& e110to011 = mesh.createEdge ( v110, v011 );
-    Edge& e010to100 = mesh.createEdge ( v010, v100 );
-    Edge& e001to111 = mesh.createEdge ( v001, v111 );
+    Edge& e100to111 = mesh.createEdge(v100, v111);
+    Edge& e100to001 = mesh.createEdge(v100, v001);
+    Edge& e110to011 = mesh.createEdge(v110, v011);
+    Edge& e010to100 = mesh.createEdge(v010, v100); //
+    Edge& e001to111 = mesh.createEdge(v001, v111);
 
-    mesh.createTriangle ( e000to001, e010to001, e000to010 ); // x = 0
-    mesh.createTriangle ( e010to011, e010to001, e001to011 );
-    mesh.createTriangle ( e100to101, e100to111, e101to111 ); // x = 1
-    mesh.createTriangle ( e100to110, e110to111, e100to111 );
+    mesh.createTriangle(e000to001, e010to001, e000to010); // x = 0
+    mesh.createTriangle(e010to011, e010to001, e001to011);
+    mesh.createTriangle(e100to101, e100to111, e101to111); // x = 1
+    mesh.createTriangle(e100to110, e110to111, e100to111);
 
-    mesh.createTriangle ( e000to100, e100to001, e000to001 ); // y = 0
-    mesh.createTriangle ( e100to101, e001to101, e100to001 );
-    mesh.createTriangle ( e010to110, e010to011, e110to011 ); // y = 1
-    mesh.createTriangle ( e110to111, e110to011, e011to111 );
+    mesh.createTriangle(e000to100, e100to001, e000to001); // y = 0
+    mesh.createTriangle(e100to101, e001to101, e100to001);
+    mesh.createTriangle(e010to110, e010to011, e110to011); // y = 1
+    mesh.createTriangle(e110to111, e110to011, e011to111);
 
-    mesh.createTriangle ( e000to100, e010to100, e000to010 ); // z = 0
-    mesh.createTriangle ( e010to100, e010to110, e100to110 );
-    mesh.createTriangle ( e001to101, e101to111, e001to111 ); // z = 1
-    mesh.createTriangle ( e001to011, e001to111, e011to111 );
+    mesh.createTriangle(e000to100, e000to010, e010to100); // z = 0
+    mesh.createTriangle(e010to100, e010to110, e100to110);
+    mesh.createTriangle(e001to101, e101to111, e001to111); // z = 1
+    mesh.createTriangle(e001to011, e001to111, e011to111);
   }
-  mesh.computeState ();
+  mesh.computeState();
 }
 
 void GeometryTestScenarios:: addToPointQueryScenario

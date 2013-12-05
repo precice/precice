@@ -24,7 +24,7 @@ ExplicitCouplingScheme:: ExplicitCouplingScheme
   com::PtrCommunication communication,
   constants::TimesteppingMethod dtMethod)
 :
-  CouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
+  BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _doesFirstStep(false),
@@ -76,7 +76,34 @@ void ExplicitCouplingScheme:: initialize
   assertion(_communication->isConnected());
   setTime(startTime);
   setTimesteps(startTimestep);
-  if((not _doesFirstStep) && isCouplingOngoing()){
+
+  // Determine data initialization
+  bool doesReceiveData = not _doesFirstStep;
+
+  // If the second participant initializes data, the first receive for the
+  // second participant is done in initializeData() instead of initialize().
+  foreach (DataMap::value_type & pair, getSendData()){
+    if (pair.second->initialize){
+      preciceCheck(not _doesFirstStep, "initialize()",
+                   "Only second participant can initialize data!");
+      requireAction(constants::actionWriteInitialData());
+      preciceDebug("Initialized data to be written");
+      doesReceiveData = false;
+      break;
+    }
+  }
+  // If the second participant initializes data, the first receive for the first
+  // participant is done in initialize() instead of advance().
+  foreach (DataMap::value_type & pair, getReceiveData()){
+    if (pair.second->initialize){
+      preciceCheck(_doesFirstStep, "initialize()",
+                   "Only first participant can receive initial data!");
+      preciceDebug("Initialized data to be received");
+      doesReceiveData = true;
+    }
+  }
+
+  if(doesReceiveData && isCouplingOngoing()){
     preciceDebug("Receiving data...");
     _communication->startReceivePackage(0);
     if (_participantReceivesDt){
@@ -92,22 +119,23 @@ void ExplicitCouplingScheme:: initialize
   setIsInitialized(true);
 }
 
-void ExplicitCouplingScheme:: addComputedTime
-(
-  double timeToAdd)
+void ExplicitCouplingScheme:: initializeData()
 {
-  preciceTrace1("addComputedTime()", timeToAdd);
-  preciceCheck(isCouplingOngoing(), "addComputedTime()",
-                 "Invalid call of addComputedTime() after simulation end!");
-
-  // Check validness
-  double eps = std::pow(10.0, -1 * getValidDigits());
-  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
-  preciceCheck(greaterThanZero, "addComputedTime()", "The computed timestep length "
-               << "exceeds the maximum timestep limit for this time step!");
-
-  setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);
-  setTime(getTime() + timeToAdd);
+  preciceTrace("initializeData()");
+  preciceCheck(isInitialized(), "initializeData()",
+               "initializeData() can be called after initialize() only!");
+  preciceCheck(isActionRequired(constants::actionWriteInitialData()),
+               "initializeData()", "Not required data initialization!");
+  assertion(not _doesFirstStep);
+  // The second participant sends the initialized data to the first particpant
+  // here, which receives the data on call of initialize().
+  sendData(_communication);
+  _communication->startReceivePackage(0);
+  // This receive replaces the receive in initialize().
+  receiveData(_communication);
+  _communication->finishReceivePackage();
+  setHasDataBeenExchanged(true);
+  performedAction(constants::actionWriteInitialData());
 }
 
 void ExplicitCouplingScheme:: advance()
@@ -161,7 +189,7 @@ void ExplicitCouplingScheme:: sendState
   int                   rankReceiver)
 {
   communication->startSendPackage(0);
-  CouplingScheme::sendState(communication, rankReceiver);
+  BaseCouplingScheme::sendState(communication, rankReceiver);
   communication->finishSendPackage();
 }
 
@@ -171,7 +199,7 @@ void ExplicitCouplingScheme:: receiveState
   int                   rankSender)
 {
   communication->startSendPackage(0);
-  CouplingScheme::receiveState(communication, rankSender);
+  BaseCouplingScheme::receiveState(communication, rankSender);
   communication->finishSendPackage();
 }
 
@@ -182,19 +210,15 @@ std::string ExplicitCouplingScheme:: printCouplingState() const
    return os.str();
 }
 
-std::vector<std::string> ExplicitCouplingScheme:: getCouplingPartners
-(
-  const std::string& accessorName) const
+std::vector<std::string> ExplicitCouplingScheme:: getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
-  if(accessorName == _firstParticipant){
+  // Add non-local participant
+  if(_doesFirstStep){
     partnerNames.push_back(_secondParticipant);
   }
-  else if(accessorName == _secondParticipant){
-    partnerNames.push_back(_firstParticipant);
-  }
   else {
-    preciceError("getCouplingPartners()", "No coupling partner could be found.");
+    partnerNames.push_back(_firstParticipant);
   }
   return partnerNames;
 }

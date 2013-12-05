@@ -41,19 +41,24 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, false));
-  PtrData inData = inMesh->createData("InData", 1);
-  int inDataID = inData->getID();
+  PtrData inDataScalar = inMesh->createData("InDataScalar", 1);
+  PtrData inDataVector = inMesh->createData("InDataVector", 2);
+  int inDataScalarID = inDataScalar->getID();
+  int inDataVectorID = inDataVector->getID();
   Vertex& inVertex0 = inMesh->createVertex(Vector2D(0.0));
   Vertex& inVertex1 = inMesh->createVertex(Vector2D(1.0));
   inMesh->allocateDataValues();
-  utils::DynVector& inValues = inData->values();
-  inValues[0] = 1.0;
-  inValues[1] = 2.0;
+  utils::DynVector& inValuesScalar = inDataScalar->values();
+  utils::DynVector& inValuesVector = inDataVector->values();
+  inValuesScalar = 1.0, 2.0;
+  inValuesVector = 1.0, 2.0, 3.0, 4.0;
 
   // Create mesh to map to
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, false));
-  PtrData outData = outMesh->createData("OutData", 1);
-  int outDataID = outData->getID();
+  PtrData outDataScalar = outMesh->createData("OutDataScalar", 1);
+  PtrData outDataVector = outMesh->createData("OutDataVector", 2);
+  int outDataScalarID = outDataScalar->getID();
+  int outDataVectorID = outDataVector->getID();
   Vertex& outVertex0 = outMesh->createVertex(Vector2D(0.0));
   Vertex& outVertex1 = outMesh->createVertex(Vector2D(1.0));
   outMesh->allocateDataValues();
@@ -65,37 +70,53 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
 
   // Map data with coinciding vertices, has to result in equal values.
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
-  const utils::DynVector& outValues = outData->values();
+  mapping.map(inDataScalarID, outDataScalarID);
+  const utils::DynVector& outValuesScalar = outDataScalar->values();
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(outValues[0], inValues[0]);
-  validateNumericalEquals(outValues[1], inValues[1]);
+  validateNumericalEquals(outValuesScalar[0], inValuesScalar[0]);
+  validateNumericalEquals(outValuesScalar[1], inValuesScalar[1]);
+  mapping.map(inDataVectorID, outDataVectorID);
+  const utils::DynVector& outValuesVector = outDataVector->values();
+  validateWithParams2(tarch::la::equals(inValuesVector, outValuesVector),
+                            inValuesVector, outValuesVector);
 
   // Map data with almost coinciding vertices, has to result in equal values.
   inVertex0.setCoords(outVertex0.getCoords() + Vector2D(0.1));
   inVertex1.setCoords(outVertex1.getCoords() + Vector2D(0.1));
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataScalarID, outDataScalarID);
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(outValues[0], inValues[0]);
-  validateNumericalEquals(outValues[1], inValues[1]);
+  validateNumericalEquals(outValuesScalar[0], inValuesScalar[0]);
+  validateNumericalEquals(outValuesScalar[1], inValuesScalar[1]);
+  mapping.map(inDataVectorID, outDataVectorID);
+  validateWithParams2(tarch::la::equals(inValuesVector, outValuesVector),
+                            inValuesVector, outValuesVector);
 
   // Map data with exchanged vertices, has to result in exchanged values.
   inVertex0.setCoords(outVertex1.getCoords());
   inVertex1.setCoords(outVertex0.getCoords());
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataScalarID, outDataScalarID);
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(outValues[1], inValues[0]);
-  validateNumericalEquals(outValues[0], inValues[1]);
+  validateNumericalEquals(outValuesScalar[1], inValuesScalar[0]);
+  validateNumericalEquals(outValuesScalar[0], inValuesScalar[1]);
+  mapping.map(inDataVectorID, outDataVectorID);
+  utils::DynVector expected(4);
+  expected = 3.0, 4.0, 1.0, 2.0;
+  validateWithParams2(tarch::la::equals(expected, outValuesVector),
+                      expected, outValuesVector);
 
   // Map data with coinciding output vertices, has to result in same values.
   outVertex1.setCoords(outVertex0.getCoords());
   mapping.computeMapping();
-  mapping.map(inDataID, outDataID);
+  mapping.map(inDataScalarID, outDataScalarID);
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(outValues[1], inValues[1]);
-  validateNumericalEquals(outValues[0], inValues[1]);
+  validateNumericalEquals(outValuesScalar[1], inValuesScalar[1]);
+  validateNumericalEquals(outValuesScalar[0], inValuesScalar[1]);
+  mapping.map(inDataVectorID, outDataVectorID);
+  expected = 3.0, 4.0, 3.0, 4.0;
+  validateWithParams2(tarch::la::equals(expected, outValuesVector),
+                      expected, outValuesVector);
 }
 
 void NearestNeighborMappingTest:: testConservativeNonIncremental()

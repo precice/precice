@@ -105,7 +105,7 @@ void ExportVRML:: writeGeometry
       outFile << "         " << vertex.getCoords()[0]
               << " "      << vertex.getCoords()[1]
               << " "      << vertex.getCoords()[2]
-                                                                                                                       << ","      << std::endl;
+              << ","      << std::endl;
     }
     assertion ( vertexIndices.count(vertex.getID()) == 0 );
     vertexIndices[vertex.getID()] = vertexIndex;

@@ -44,6 +44,9 @@ public:
 
   /**
    * @brief Performs the find operation on the content of the container.
+   *
+   * In two dimensions, the content edges need to have valid normals. In three
+   * dimensions, the triangles need to have valid normals.
    */
   template<typename CONTAINER_T>
   bool operator()( CONTAINER_T& container );

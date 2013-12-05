@@ -25,7 +25,7 @@
       <read  data="data0" mesh="mesh" />
    </participant>
    -->
-   <coupling-scheme:implicit> 
+   <coupling-scheme:serial-implicit> 
       <participants first="participant0" second="participant1" />
       <timestep-length value="1e-1" />
       <max-time value="1.0" />
@@ -33,13 +33,14 @@
       <max-iterations value="100"/>
       <exchange data="data0" mesh="mesh" from="participant0" />
       <exchange data="data1" mesh="mesh" from="participant1" />
-      <post-processing:constant data="data0" mesh="mesh">
+      <post-processing:constant>
+      	 <data name="data0" mesh="mesh"/>
          <relaxation value="0.01" />
       </post-processing:constant>
       <absolute-convergence-measure 
          data="data1" 
          mesh="mesh"
          limit="1.7320508075688772" />
-   </coupling-scheme:implicit>
+   </coupling-scheme:serial-implicit>
 
 </configuration>

@@ -29,7 +29,6 @@ tarch::logging::Log PostProcessingConfiguration::
 
 PostProcessingConfiguration:: PostProcessingConfiguration
 (
-  utils::XMLTag&                    parent,
   const mesh::PtrMeshConfiguration& meshConfig )
 :
   TAG("post-processing"),
@@ -38,8 +37,10 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_MAX_USED_ITERATIONS("max-used-iterations"),
   TAG_TIMESTEPS_REUSED("timesteps-reused"),
   TAG_SINGULARITY_LIMIT("singularity-limit"),
-  ATTR_DATA("data"),
+  TAG_DATA("data"),
+  ATTR_NAME("name"),
   ATTR_MESH("mesh"),
+  ATTR_SCALING("scaling"),
   ATTR_VALUE("value"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
@@ -51,48 +52,40 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   _config()
 {
   assertion(meshConfig.get() != NULL);
+}
+
+void PostProcessingConfiguration:: connectTags(
+    utils::XMLTag&                    parent){
+
   using namespace utils;
 
-  XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
-  std::list<XMLTag> tags;
-  {
-    XMLTag tag(*this, VALUE_CONSTANT, occ, TAG);
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_AITKEN, occ, TAG);
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_HIERARCHICAL_AITKEN, occ, TAG);
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_IQNILS, occ, TAG);
-    addTypeSpecificSubtags(tag);
-    tags.push_back(tag);
-  }
+    XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
+    std::list<XMLTag> tags;
+    {
+      XMLTag tag(*this, VALUE_CONSTANT, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
+    {
+      XMLTag tag(*this, VALUE_AITKEN, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
+    {
+      XMLTag tag(*this, VALUE_HIERARCHICAL_AITKEN, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
+    {
+      XMLTag tag(*this, VALUE_IQNILS, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
 
-//  XMLAttribute<std::string> attrType(ATTR_TYPE );
-//  ValidatorEquals<std::string> validConstant(VALUE_CONSTANT );
-//  ValidatorEquals<std::string> validAitken(VALUE_AITKEN );
-//  ValidatorEquals<std::string> validHierarchAitken(VALUE_HIERARCHICAL_AITKEN );
-//  ValidatorEquals<std::string> validIQNILS(VALUE_IQNILS );
-//  attrType.setValidator (
-//    validConstant || validAitken || validHierarchAitken|| validIQNILS );
-//  tag.addAttribute(attrType );
+    foreach (XMLTag& tag, tags){
+      parent.addSubtag(tag);
+    }
 
-  XMLAttribute<std::string> attrData(ATTR_DATA);
-  XMLAttribute<std::string> attrMesh(ATTR_MESH);
-
-  foreach (XMLTag& tag, tags){
-    tag.addAttribute(attrData);
-    tag.addAttribute(attrMesh);
-    parent.addSubtag(tag);
-  }
 
 }
 
@@ -112,7 +105,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
 //  ValidatorEquals<std::string> validIQNILS(VALUE_IQNILS );
 //  attrType.setValidator (
 //    validConstant || validAitken || validHierarchAitken|| validIQNILS );
-//  tag.addAttribute(attrType );
+//  tag.addAttribute(attrType );value
 //
 //  XMLAttribute<std::string> attrData(ATTR_DATA );
 //  tag.addAttribute(attrData );
@@ -140,30 +133,41 @@ void PostProcessingConfiguration:: xmlTagCallback
   utils::XMLTag& callingTag )
 {
   preciceTrace1("xmlTagCallback()", callingTag.getFullName());
+
   if (callingTag.getNamespace() == TAG){
-    std::string dataName = callingTag.getStringAttributeValue(ATTR_DATA);
-    std::string meshName = callingTag.getStringAttributeValue(ATTR_MESH);
+      _config.type = callingTag.getName();
+  }
+
+  if (callingTag.getName() == TAG_RELAX){
+    _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
+  }
+  else if (callingTag.getName() == TAG_DATA){
+    std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
+    _meshName = callingTag.getStringAttributeValue(ATTR_MESH);
+    double scaling = 1.0;
+    if(_config.type == VALUE_IQNILS){
+      scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
+    }
+
+
     foreach(mesh::PtrMesh mesh, _meshConfig->meshes() ) {
-      if(mesh->getName() == meshName ) {
+      if(mesh->getName() == _meshName ) {
         foreach(mesh::PtrData data, mesh->data() ) {
           if (dataName == data->getName()){
-            assertion(_config.dataID == -1 );
-            _config.dataID = data->getID();
+            _config.dataIDs.push_back(data->getID());
+            _config.scalings.insert(std::make_pair(data->getID(),scaling));
           }
         }
       }
     }
-    if (_config.dataID == -1){
+
+    if (_config.dataIDs.empty()){
       std::ostringstream stream;
       stream << "Data with name \"" << dataName << "\" associated to mesh \""
-             << meshName << "\" not found on configuration of post-processing";
+             << _meshName << "\" not found on configuration of post-processing";
       throw stream.str();
     }
-    //_config.type = callingTag.getName();
-    //addTypeSpecificSubtags(callingTag );
-  }
-  else if (callingTag.getName() == TAG_RELAX){
-    _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
+
   }
   else if (callingTag.getName() == TAG_INIT_RELAX){
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
@@ -188,24 +192,24 @@ void PostProcessingConfiguration:: xmlEndTagCallback
     if (callingTag.getName() == VALUE_CONSTANT){
       _postProcessing = impl::PtrPostProcessing (
           new impl::ConstantRelaxationPostProcessing (
-          _config.relaxationFactor, _config.dataID) );
+          _config.relaxationFactor, _config.dataIDs) );
     }
     else if (callingTag.getName() == VALUE_AITKEN){
       _postProcessing = impl::PtrPostProcessing (
           new impl::AitkenPostProcessing(
-          _config.relaxationFactor, _config.dataID) );
+          _config.relaxationFactor, _config.dataIDs) );
     }
     else if (callingTag.getName() == VALUE_HIERARCHICAL_AITKEN){
       _postProcessing = impl::PtrPostProcessing (
           new impl::HierarchicalAitkenPostProcessing (
-          _config.relaxationFactor, _config.dataID) );
+          _config.relaxationFactor, _config.dataIDs) );
     }
     else if (callingTag.getName() == VALUE_IQNILS){
       _postProcessing = impl::PtrPostProcessing (
           new impl::IQNILSPostProcessing(
           _config.relaxationFactor, _config.maxIterationsUsed,
           _config.timestepsReused, _config.singularityLimit,
-          _config.dataID) );
+          _config.dataIDs, _config.scalings) );
     }
     else {
       assertion(false );
@@ -229,18 +233,39 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLAttribute<double> attrValue(ATTR_VALUE );
     tagRelax.addAttribute(attrValue );
     tag.addSubtag(tagRelax );
+
+    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
+    XMLAttribute<std::string> attrName(ATTR_NAME);
+    XMLAttribute<std::string> attrMesh(ATTR_MESH);
+    tagData.addAttribute(attrName);
+    tagData.addAttribute(attrMesh);
+    tag.addSubtag(tagData);
   }
   else if (tag.getName() == VALUE_AITKEN){
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
     XMLAttribute<double> attrValue(ATTR_VALUE );
     tagInitRelax.addAttribute(attrValue );
     tag.addSubtag(tagInitRelax );
+
+    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
+    XMLAttribute<std::string> attrName(ATTR_NAME);
+    XMLAttribute<std::string> attrMesh(ATTR_MESH);
+    tagData.addAttribute(attrName);
+    tagData.addAttribute(attrMesh);
+    tag.addSubtag(tagData);
   }
   else if (tag.getName() == VALUE_HIERARCHICAL_AITKEN){
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
     XMLAttribute<double> attrValue(ATTR_VALUE );
     tagInitRelax.addAttribute(attrValue );
     tag.addSubtag(tagInitRelax );
+
+    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
+    XMLAttribute<std::string> attrName(ATTR_NAME);
+    XMLAttribute<std::string> attrMesh(ATTR_MESH);
+    tagData.addAttribute(attrName);
+    tagData.addAttribute(attrMesh);
+    tag.addSubtag(tagData);
   }
   else if (tag.getName() == VALUE_IQNILS){
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
@@ -260,6 +285,18 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLTag tagSingularityLimit(*this, TAG_SINGULARITY_LIMIT, XMLTag::OCCUR_ONCE );
     tagSingularityLimit.addAttribute(attrDoubleValue );
     tag.addSubtag(tagSingularityLimit );
+
+    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
+    XMLAttribute<std::string> attrName(ATTR_NAME);
+    XMLAttribute<std::string> attrMesh(ATTR_MESH);
+    XMLAttribute<double> attrScaling(ATTR_SCALING);
+    attrScaling.setDefaultValue(1.0);
+    attrScaling.setDocumentation("If the absolute values of two coupling variables"
+         " differ too much, a scaling improves the performance of VIQN");
+    tagData.addAttribute(attrScaling);
+    tagData.addAttribute(attrName);
+    tagData.addAttribute(attrMesh);
+    tag.addSubtag(tagData);
   }
   else {
     preciceError("addTypeSpecificSubtag()", "Post-processing of type \""

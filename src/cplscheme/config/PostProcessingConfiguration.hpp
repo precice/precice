@@ -23,7 +23,6 @@ public:
     * @brief Constructor.
     */
    PostProcessingConfiguration (
-     utils::XMLTag&                    parent,
      const mesh::PtrMeshConfiguration& meshConfig );
 
    /**
@@ -56,6 +55,11 @@ public:
     */
    void clear();
 
+   /**
+   * @brief Connect tags.
+   */
+   void connectTags( utils::XMLTag& tag );
+
 private:
 
    static tarch::logging::Log _log;
@@ -66,10 +70,11 @@ private:
    const std::string TAG_MAX_USED_ITERATIONS;
    const std::string TAG_TIMESTEPS_REUSED;
    const std::string TAG_SINGULARITY_LIMIT;
+   const std::string TAG_DATA;
 
-   const std::string ATTR_DATA;
+   const std::string ATTR_NAME;
    const std::string ATTR_MESH;
-   //const std::string ATTR_TYPE;
+   const std::string ATTR_SCALING;
    const std::string ATTR_VALUE;
 
    const std::string VALUE_CONSTANT;
@@ -81,12 +86,15 @@ private:
 
    const mesh::PtrMeshConfiguration _meshConfig;
 
+   std::string _meshName;
+
    impl::PtrPostProcessing _postProcessing;
 
    struct ConfigurationData
    {
-      int dataID;
-      //std::string type;
+      std::vector<int> dataIDs;
+      std::map<int,double> scalings;
+      std::string type;
       double relaxationFactor;
       int maxIterationsUsed;
       int timestepsReused;
@@ -94,8 +102,9 @@ private:
 
       ConfigurationData ()
       :
-         dataID ( -1 ),
-         //type ( "" ),
+         dataIDs (),
+         scalings(),
+         type ( "" ),
          relaxationFactor ( 0.0 ),
          maxIterationsUsed ( 0 ),
          timestepsReused ( 0 ),

@@ -1,29 +1,29 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#include "UncoupledCouplingScheme.hpp"
+#include "UncoupledScheme.hpp"
 #include "com/Communication.hpp"
 #include <limits>
 
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log UncoupledCouplingScheme::
-  _log ( "precice::cplscheme::UncoupledCouplingScheme" );
+tarch::logging::Log UncoupledScheme::
+  _log ( "precice::cplscheme::UncoupledScheme" );
 
-UncoupledCouplingScheme:: UncoupledCouplingScheme
+UncoupledScheme:: UncoupledScheme
 (
   double             maxTime,
   int                maxTimesteps,
   int                validDigits,
   const std::string& participant )
 :
-  CouplingScheme ( maxTime, maxTimesteps, UNDEFINED_TIMESTEP_LENGTH,
+  BaseCouplingScheme ( maxTime, maxTimesteps, UNDEFINED_TIMESTEP_LENGTH,
                    validDigits ),
   _participant ( participant )
 {}
 
-void UncoupledCouplingScheme:: initialize
+void UncoupledScheme:: initialize
 (
   double startTime,
   int    startTimestep )
@@ -36,12 +36,12 @@ void UncoupledCouplingScheme:: initialize
   setIsInitialized(true);
 }
 
-void UncoupledCouplingScheme:: initializeData ()
+void UncoupledScheme:: initializeData ()
 {
   preciceTrace ( "initializeData()" );
 }
 
-void UncoupledCouplingScheme:: addComputedTime
+void UncoupledScheme:: addComputedTime
 (
   double timeToAdd )
 {
@@ -57,7 +57,7 @@ void UncoupledCouplingScheme:: addComputedTime
   setTime(getTime() + timeToAdd);
 }
 
-void UncoupledCouplingScheme:: advance()
+void UncoupledScheme:: advance()
 {
   preciceTrace("advance()");
   checkCompletenessRequiredActions();
@@ -75,39 +75,37 @@ void UncoupledCouplingScheme:: advance()
   //}
 }
 
-void UncoupledCouplingScheme:: finalize()
+void UncoupledScheme:: finalize()
 {
   preciceTrace ( "finalize()" );
 }
 
-std::vector<std::string> UncoupledCouplingScheme:: getCouplingPartners
-(
-   const std::string& accessorName ) const
+std::vector<std::string> UncoupledScheme:: getCouplingPartners() const
 {
   return std::vector<std::string>();
 }
 
-void UncoupledCouplingScheme:: sendState
+void UncoupledScheme:: sendState
 (
   com::PtrCommunication communication,
   int                   rankReceiver )
 {
   communication->startSendPackage ( rankReceiver );
-  CouplingScheme::sendState ( communication, rankReceiver );
+  BaseCouplingScheme::sendState ( communication, rankReceiver );
   communication->finishSendPackage();
 }
 
-void UncoupledCouplingScheme:: receiveState
+void UncoupledScheme:: receiveState
 (
   com::PtrCommunication communication,
   int                   rankSender )
 {
   communication->startReceivePackage ( rankSender );
-  CouplingScheme::receiveState ( communication, rankSender );
+  BaseCouplingScheme::receiveState ( communication, rankSender );
   communication->finishReceivePackage();
 }
 
-std::string UncoupledCouplingScheme:: printCouplingState () const
+std::string UncoupledScheme:: printCouplingState () const
 {
   std::ostringstream os;
   os << printBasicState() << " | " << printActionsState();

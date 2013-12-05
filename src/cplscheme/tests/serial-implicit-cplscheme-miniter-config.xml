@@ -2,22 +2,17 @@
 
 <configuration>
 
-   <data:scalar name="data0"/>
-   <data:vector name="data1"/>
+   <data:scalar name="data0"  />
+   <data:vector name="data1"  />
 
    <mesh name="mesh">
       <use-data name="data0" />
       <use-data name="data1" />
    </mesh>
    
-   <geometry:builtin-sphere of-mesh="mesh">
-      <radius value="1.0" />
-      <discretization-width value="0.2" />      
-   </geometry:builtin-sphere>
-   
    <communication:mpi-single from="participant0" to="participant1" />
 
-   <coupling-scheme:implicit> 
+   <coupling-scheme type="serial-implicit"> 
       <participants first="participant0" second="participant1" />
       <timestep-length value="1e-1" />
       <max-time value="1.0" />
@@ -25,10 +20,10 @@
       <max-iterations value="100" />
       <exchange data="data0" mesh="mesh" from="participant0" />
       <exchange data="data1" mesh="mesh" from="participant1" />
-      <absolute-convergence-measure 
+      <min-iteration-convergence-measure 
          data="data1" 
-         mesh="mesh" 
-         limit="1.7320508075688772" />
-   </coupling-scheme:implicit>
+         mesh="mesh"
+         min-iteration-limit="3" />
+   </coupling-scheme>
 
 </configuration>

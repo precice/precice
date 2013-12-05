@@ -91,7 +91,7 @@ void MeshTest:: testComputeState()
     //     *  <---
     // *****
     Edge& e2 = mesh.createEdge ( v2, v3 );
-    mesh.computeState ();
+    mesh.computeState();
 
     // Perform test validations
     using tarch::la::equals;
@@ -130,7 +130,7 @@ void MeshTest:: testComputeState()
     //   *   *   *
     // *************
     Triangle& t2 = mesh.createTriangle ( e4, e5, e2 );
-    mesh.computeState ();
+    mesh.computeState();
 
     // Perform test validations
     using tarch::la::equals;

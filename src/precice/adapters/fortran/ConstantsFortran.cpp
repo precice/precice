@@ -32,6 +32,17 @@ void precicef_action_write_iter_checkp_
   }
 }
 
+void precicef_action_write_initial_data_(
+  char* nameAction,
+  int   lengthNameAction )
+{
+  const std::string& name = precice::constants::actionWriteInitialData();
+  assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);
+  for (int i=0; i < name.size(); i++){
+    nameAction[i] = name[i];
+  }
+}
+
 void precicef_action_read_iter_checkp_
 (
   char* nameAction,

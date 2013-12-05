@@ -51,6 +51,17 @@ void precicef_create_(
 void precicef_initialize_( double* timestepLengthLimit );
 
 /**
+ * @brief See precice::SolverInterface::initializeData().
+ *
+ * Fortran syntax:
+ * precicef_intialize_data()
+ *
+ * IN: -
+ * OUT: -
+ */
+void precicef_initialize_data_();
+
+/**
  * @brief See precice::SolverInterface::advance().
  *
  * Fortran syntax:

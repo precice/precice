@@ -48,6 +48,12 @@ void precicef_initialize_
   *timestepLengthLimit = impl->initialize();
 }
 
+void precicef_initialize_data_()
+{
+  assertion(impl != NULL);
+  impl->initializeData();
+}
+
 void precicef_advance_
 (
   double* timestepLengthLimit)

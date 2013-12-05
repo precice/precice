@@ -5,6 +5,7 @@
 
 #include "SocketCommunication.hpp"
 #include <sstream>
+#include <fstream>
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
@@ -17,9 +18,13 @@ tarch::logging::Log SocketCommunication:: _log("precice::com::SocketCommunicatio
 
 SocketCommunication:: SocketCommunication
 (
-  int port )
+  const std::string& network,
+  int                port,
+  const std::string& ipExchangeDirectory )
 :
+  _network(network),
   _port(port),
+  _ipExchangeDirectory(ipExchangeDirectory),
   _processRank(-1),
   _isConnected(false),
   _remoteCommunicatorSize(0),
@@ -59,8 +64,54 @@ void SocketCommunication:: acceptConnection
   preciceTrace2("acceptCommunication()", nameAcceptor, nameRequester);
   preciceCheck ( acceptorCommunicatorSize == 1, "acceptConnection()",
                  "Acceptor of socket connection can only have one process!" );
+  std::string ipFilename(_ipExchangeDirectory + "." + nameRequester + "-portname");
   using asio::ip::tcp;
   try {
+    std::ostringstream address;
+    // Query for IP address
+    int querySocket = socket(AF_INET, SOCK_STREAM, 0);
+    assertion(querySocket >= 0);
+    preciceDebug("Looking for IP address of network \"" << _network << "\"");
+    struct ifreq request;
+    struct if_nameindex* nameInterface = if_nameindex();
+    assertion(nameInterface);
+    struct if_nameindex* itNameInterface = nameInterface;
+    while (itNameInterface && itNameInterface->if_name){
+      preciceCheck(strlen(itNameInterface->if_name) < IFNAMSIZ,
+                   "acceptConnection()", "Network interface \" "
+                   << itNameInterface->if_name << "\" has too long name");
+      strncpy(request.ifr_name, itNameInterface->if_name, IFNAMSIZ); // Copy interface name
+      int ifNameLength = strlen(itNameInterface->if_name);
+      request.ifr_name[ifNameLength] = 0; // Add C-string 0
+      if (ioctl(querySocket, SIOCGIFADDR, &request) >= 0){
+        preciceDebug(itNameInterface->if_name << ": "
+                     << inet_ntoa(((struct sockaddr_in*) &request.ifr_addr)->sin_addr));
+        if(strcmp(itNameInterface->if_name, _network.c_str()) == 0){
+          address << inet_ntoa(((struct sockaddr_in*) &request.ifr_addr)->sin_addr);
+        }
+      }
+      else {
+        preciceCheck(strcmp(itNameInterface->if_name, _network.c_str()) != 0,
+                     "acceptConnection()", "Could not obtain network IP from "
+                     << "network \"" << itNameInterface->if_name << "\"");
+      }
+      itNameInterface++;
+    }
+    if_freenameindex(nameInterface);
+    close(querySocket);
+    preciceCheck(not address.str().empty(), "acceptConnection()",
+                 "Network \"" << _network << "\" not found for socket connection!");
+
+    // Write server address to file
+    preciceDebug("Writing server ip address to file " << ipFilename);
+    std::ofstream outFile;
+    outFile.open ((ipFilename +  "~").c_str(), std::ios::out);
+    outFile << address.str();
+    outFile.close();
+    // To give the file first a "wrong" name prevents early reading errors
+    rename( (ipFilename + "~").c_str(), ipFilename.c_str() );
+
+    preciceDebug("Accept connection at " << address.str() << ":" << _port);
     tcp::acceptor acceptor(*_ioService, tcp::endpoint(tcp::v4(), _port));
     PtrSocket socket ( new tcp::socket(*_ioService) );
     acceptor.accept(*socket); // Waits until connection
@@ -94,9 +145,16 @@ void SocketCommunication:: acceptConnection
     acceptor.close();
   }
   catch (std::exception& e){
-    preciceError("acceptConnection()", "Accepting connection at port (" << _port
-                 << ") failed: " << e.what());
+    preciceError("acceptConnection()", "Accepting connection at port " << _port
+                 << " failed: " << e.what());
   }
+
+  //if ( utils::Parallel::getLocalProcessRank() == 0 ){
+  if (remove(ipFilename.c_str()) != 0){
+    preciceWarning("acceptConnection()", "Could not remove ip address file \""
+                   << ipFilename << "\"!" );
+  }
+
   _queryWork = PtrWork(new asio::io_service::work(*_ioService));
   _queryThread = boost::thread(&SocketCommunication::onThreadRun, this);
 }
@@ -111,13 +169,35 @@ void SocketCommunication:: requestConnection
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
   using asio::ip::tcp;
   try {
-    PtrSocket socket ( new Socket(*_ioService) );
+    // Read server address from file
+    std::string ipFilename(_ipExchangeDirectory + "." + nameRequester + "-portname");
+    preciceDebug("Reading server ip address from file " << ipFilename);
+    std::ifstream inFile;
+    do {
+      inFile.open(ipFilename.c_str(), std::ios::in);
+    } while (not inFile);
+    std::string serverAddress;
+    inFile >> serverAddress;
+    //inFile.getline(serverAddress, MPI_MAX_PORT_NAME);
+    inFile.close();
+    preciceDebug("Read connection info \"" << serverAddress
+                 << "\" from file " << ipFilename);
+
+    PtrSocket socket(new Socket(*_ioService));
     std::ostringstream portStream;
     portStream << _port;
-    tcp::resolver::query query(tcp::v4(), "127.0.0.1", portStream.str().c_str());
+//    std::string ipaddress;
+//    if (_network.compare("lo") == 0){
+//      ipaddress = "127.0.0.1"; // Address of localhost
+//    }
+//    else {
+//      assertion(false); // Not yet implemented
+//    }
+    tcp::resolver::query query(tcp::v4(), serverAddress.c_str(), portStream.str().c_str());
     while (not _isConnected){ // since resolver does not wait until server is up
       tcp::resolver resolver(*_ioService);
       tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
+      preciceDebug("Request connection at " << endpoint);
       boost::system::error_code error = asio::error::host_not_found;
       socket->connect(endpoint, error);
       _isConnected = not error;

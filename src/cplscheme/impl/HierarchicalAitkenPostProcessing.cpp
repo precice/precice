@@ -16,10 +16,10 @@ tarch::logging::Log HierarchicalAitkenPostProcessing::
 HierarchicalAitkenPostProcessing:: HierarchicalAitkenPostProcessing
 (
   double initialRelaxation,
-  int    dataID )
+  std::vector<int>    dataIDs )
 :
   _initialRelaxation ( initialRelaxation ),
-  _dataID ( dataID ),
+  _dataIDs ( dataIDs ),
   _aitkenFactors (),
   _iterationCounter (),
   _residual ()
@@ -36,10 +36,10 @@ void HierarchicalAitkenPostProcessing:: initialize
   DataMap & cplData )
 {
   preciceTrace ( "initialize()" );
-  preciceCheck ( utils::contained(_dataID, cplData), "initialize()",
-                 "Data with ID " << _dataID
+  preciceCheck ( utils::contained(*_dataIDs.begin(), cplData), "initialize()",
+                 "Data with ID " << *_dataIDs.begin()
                  << " is not contained in data given at initialization!" );
-  size_t entries = cplData[_dataID].values->size(); // Add zero boundaries
+  size_t entries = cplData[*_dataIDs.begin()]->values->size(); // Add zero boundaries
   assertion ( (entries - 1) % 2 == 0  ); // entries has to be an odd number
   double initializer = std::numeric_limits<double>::max ();
   tarch::la::DynamicVector<double> toAppend ( entries, initializer );
@@ -55,6 +55,15 @@ void HierarchicalAitkenPostProcessing:: initialize
   }
   assertion ( totalEntries == entries );
 //  precicePrint ( "HierarchicalAitkenPostProcessing: level count = " << _aitkenFactors.size() );
+
+  // Append column for old values if not done by coupling scheme yet
+  foreach (DataMap::value_type& pair, cplData){
+    int cols = pair.second->oldValues.cols();
+    if (cols < 1){
+      pair.second->oldValues.append(CouplingData::DataMatrix(
+        pair.second->values->size(), 1, 0.0));
+    }
+  }
 }
 
 void HierarchicalAitkenPostProcessing:: performPostProcessing
@@ -65,9 +74,9 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
   typedef utils::DynVector DataValues;
 
   // Compute aitken relaxation factor
-  assertion ( utils::contained(_dataID, cplData) );
-  DataValues & values = *cplData[_dataID].values;
-  DataValues & oldValues = cplData[_dataID].oldValues.column(0);
+  assertion ( utils::contained(*_dataIDs.begin(), cplData) );
+  DataValues & values = *cplData[*_dataIDs.begin()]->values;
+  DataValues & oldValues = cplData[*_dataIDs.begin()]->oldValues.column(0);
 
   // Compute current residuals
   DataValues residual ( values );
@@ -126,8 +135,8 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
   double omega = _aitkenFactors[0];
   double oneMinusOmega = 1.0 - omega;
   foreach ( DataMap::value_type & pair, cplData ) {
-    DataValues & values = *pair.second.values;
-    DataValues & oldValues = pair.second.oldValues.column(0);
+    DataValues & values = *pair.second->values;
+    DataValues & oldValues = pair.second->oldValues.column(0);
     values[0] = values[0] * omega + oldValues[0] * oneMinusOmega;
     values[entries-1] = values[entries-1] * omega + oldValues[entries-1] * oneMinusOmega;
   }

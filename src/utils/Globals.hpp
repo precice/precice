@@ -135,7 +135,7 @@
 #define preciceError(methodname, message) \
    { \
       std::ostringstream conv; \
-      conv << "[PRECICE] ERROR: " << message; \
+      conv << PRECICE_PROCESS_RANK_STREAM << " [PRECICE] ERROR: " << message; \
       PRECICE_LOGGING_DEVICE.error (methodname, conv.str()); \
       std::abort(); \
    }

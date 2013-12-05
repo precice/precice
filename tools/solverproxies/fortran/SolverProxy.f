@@ -4,6 +4,7 @@
       CHARACTER*100 config
       CHARACTER*(*) meshName
       PARAMETER (meshName = 'WetSurface')
+      CHARACTER*50 writeInitialData
       CHARACTER*50 readSimCheckp
       CHARACTER*50 writeSimCheckp
       CHARACTER*50 readItCheckp
@@ -15,6 +16,7 @@
       INTEGER bool
       DOUBLE PRECISION dtlimit
             
+      CALL precicef_action_write_initial_data(writeInitialData)
       CALL precicef_action_read_sim_checkp(readSimCheckp)
       CALL precicef_action_write_sim_checkp(writeSimCheckp)
       CALL precicef_action_read_iter_checkp(readItCheckp)
@@ -27,6 +29,12 @@
       commsize = 1
       CALL precicef_create(name, config, rank, commsize)      
       CALL precicef_initialize(dtlimit)            
+
+      CALL precicef_action_required(writeInitialData, bool)
+      IF (bool.EQ.1) THEN
+        WRITE (*,*) 'Writing initial data'
+        CALL precicef_initialize_data()
+      ENDIF
 
       CALL precicef_action_required(readSimCheckp, bool)
       IF (bool.EQ.1) THEN
