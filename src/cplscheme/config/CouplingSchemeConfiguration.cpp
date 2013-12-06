@@ -3,7 +3,7 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CouplingSchemeConfiguration.hpp"
 #include "cplscheme/config/PostProcessingConfiguration.hpp"
-#include "cplscheme/ExplicitCouplingScheme.hpp"
+#include "cplscheme/SerialExplicitCouplingScheme.hpp"
 #include "cplscheme/SerialImplicitCouplingScheme.hpp"
 #include "cplscheme/ParallelImplicitCouplingScheme.hpp"
 #include "cplscheme/CompositionalCouplingScheme.hpp"
@@ -625,7 +625,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createExplicitCouplingScheme
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );
-  ExplicitCouplingScheme* scheme = new ExplicitCouplingScheme (
+  SerialExplicitCouplingScheme* scheme = new SerialExplicitCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
       accessor, com, _config.dtMethod );

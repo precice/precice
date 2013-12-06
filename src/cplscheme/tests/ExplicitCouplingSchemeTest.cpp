@@ -2,7 +2,7 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ExplicitCouplingSchemeTest.hpp"
-#include "cplscheme/ExplicitCouplingScheme.hpp"
+#include "cplscheme/SerialExplicitCouplingScheme.hpp"
 #include "cplscheme/ImplicitCouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "cplscheme/Constants.hpp"
@@ -107,7 +107,7 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
     receiveDataIndex = 0;
   }
   constants::TimesteppingMethod dtMethod = constants::FIXED_DT;
-  cplscheme::ExplicitCouplingScheme cplScheme (
+  cplscheme::SerialExplicitCouplingScheme cplScheme (
     maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
     nameParticipant1, localParticipant, communication, dtMethod );
   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
@@ -565,7 +565,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
     receiveDataIndex = 0;
   }
   constants::TimesteppingMethod dtMethod = constants::FIXED_DT;
-  cplscheme::ExplicitCouplingScheme cplScheme (
+  cplscheme::SerialExplicitCouplingScheme cplScheme (
     maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
     nameParticipant1, localParticipant, communication, dtMethod );
   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
