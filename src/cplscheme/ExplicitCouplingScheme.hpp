@@ -94,6 +94,48 @@ public:
 
    virtual void importState(const std::string& filenamePrefix) {}
 
+protected:
+
+   /**
+    * @return True, if local participant is the one starting the explicit scheme.
+    */
+   bool doesFirstStep(){
+     return _doesFirstStep;
+   }
+
+
+   /**
+    * @return Communication device to the other coupling participant.
+    */
+   com::PtrCommunication getCommunication(){
+     return _communication;
+   }
+
+
+   void setHasToSendInitData(bool hasToSendInitData){
+       _hasToSendInitData = hasToSendInitData;
+     }
+
+     void setHasToReceiveInitData(bool hasToReceiveInitData){
+       _hasToReceiveInitData = hasToReceiveInitData;
+     }
+
+     bool hasToSendInitData(){
+       return _hasToSendInitData;
+     }
+
+     bool hasToReceiveInitData(){
+       return _hasToReceiveInitData;
+     }
+
+     bool participantReceivesDt(){
+       return _participantReceivesDt;
+     }
+
+     bool participantSetsDt(){
+       return _participantSetsDt;
+     }
+
 private:
 
    // @brief Logging device.
@@ -114,6 +156,12 @@ private:
    bool _participantSetsDt;
 
    bool _participantReceivesDt;
+
+   // @brief to carry initData information from initialize to initData
+   bool _hasToSendInitData;
+
+   // @brief to carry initData information from initialize to initData
+   bool _hasToReceiveInitData;
 };
 
 }} // namespace precice, cplscheme

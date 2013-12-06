@@ -166,16 +166,17 @@ void SerialImplicitCouplingScheme:: initializeData()
 
       // For extrapolation, treat the initial value as old timestep value
       pair.second->oldValues.shiftSetFirst(*pair.second->values);
-
-      // The second participant sends the initialized data to the first particpant
-      // here, which receives the data on call of initialize().
-      sendData(getCommunication());
-      getCommunication()->startReceivePackage(0);
-      // This receive replaces the receive in initialize().
-      receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
-      setHasDataBeenExchanged(true);
     }
+
+    // The second participant sends the initialized data to the first particpant
+    // here, which receives the data on call of initialize().
+    sendData(getCommunication());
+    getCommunication()->startReceivePackage(0);
+    // This receive replaces the receive in initialize().
+    receiveData(getCommunication());
+    getCommunication()->finishReceivePackage();
+    setHasDataBeenExchanged(true);
+
   }
 
   //in order to check in advance if initializeData has been called (if necessary)
