@@ -244,7 +244,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
 
 void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
 {
-  preciceTrace("testDataInitialization()");
+  preciceTrace("testSerialDataInitialization()");
   using namespace mesh;
   utils::Parallel::synchronizeProcesses();
   assertion(utils::Parallel::getCommunicatorSize() > 1);
@@ -314,7 +314,7 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
 
 void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
 {
-  preciceTrace("testDataInitialization()");
+  preciceTrace("testParallelDataInitialization()");
   using namespace mesh;
   utils::Parallel::synchronizeProcesses();
   assertion(utils::Parallel::getCommunicatorSize() > 1);
