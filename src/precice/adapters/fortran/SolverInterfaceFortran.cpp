@@ -207,7 +207,7 @@ void precicef_set_vertex_
 void precicef_set_read_pos_
 (
   const int*    meshID,
-  const double* position(3),
+  const double* position,
   int*          positionID )
 {
   assertion(impl != NULL);

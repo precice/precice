@@ -18,7 +18,7 @@
 namespace precice {
   namespace cplscheme {
     namespace tests {
-      //class SerialExplicitCouplingSchemeTest;
+      class ExplicitCouplingSchemeTest;
     }
   }
 }
@@ -95,7 +95,7 @@ public:
   static tarch::logging::Log _log;
 
 
-  //friend class tests::SerialExplicitCouplingSchemeTest;
+  friend class tests::ExplicitCouplingSchemeTest;
 };
 
 }} // namespace precice, cplscheme

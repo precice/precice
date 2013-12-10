@@ -29,12 +29,12 @@
       <exchange data="Data0" mesh="Mesh" from="Participant0"/>
       <exchange data="Data1" mesh="Mesh" from="Participant1"/>
    </coupling-scheme:serial-implicit>
-   <coupling-scheme:explicit>  
+   <coupling-scheme:serial-explicit>  
       <participants first="Participant1" second="Participant2"/>
       <timestep-length value="0.1" method="fixed"/>
       <max-time value="1.0"/> 
       <max-timesteps value="10"/>
       <exchange data="Data1" mesh="Mesh" from="Participant1"/>
       <exchange data="Data2" mesh="Mesh" from="Participant2"/>
-   </coupling-scheme:explicit>
+   </coupling-scheme:serial-explicit>
 </configuration>

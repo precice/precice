@@ -15,12 +15,12 @@
       <discretization-width value="0.2"/>
    </geometry:builtin-sphere>
    <communication:mpi from="participant0" to="participant1"/>
-   <coupling-scheme:explicit>  
+   <coupling-scheme:serial-explicit>  
       <participants first="participant0" second="participant1"/>
       <timestep-length value="0.1" method="fixed"/>
       <max-time value="1.0"/> 
       <max-timesteps value="10"/>
       <exchange data="data0" mesh="mesh" from="participant0"/>
       <exchange data="data1" mesh="mesh" from="participant1"/>
-   </coupling-scheme:explicit>
+   </coupling-scheme:serial-explicit>
 </configuration>
