@@ -177,7 +177,7 @@ module PreCICE_solver_if_module
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: dataID
       integer(kind=c_int) :: valueIndex
-      real(kind=c_double) :: dataValue(:) 
+      real(kind=c_double) :: dataValue(*)
     end subroutine precicef_read_vdata
 
     subroutine precicef_write_sdata( dataID, valueIndex, dataValue) &
@@ -195,7 +195,7 @@ module PreCICE_solver_if_module
       use, intrinsic :: iso_c_binding
       integer(kind=c_int) :: dataID
       integer(kind=c_int) :: valueIndex
-      real(kind=c_double) :: dataValue(:) 
+      real(kind=c_double), dimension(*) :: dataValue 
     end subroutine precicef_write_vdata
 
     subroutine precicef_write_data_available(isAvailable) &
