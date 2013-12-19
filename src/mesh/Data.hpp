@@ -114,7 +114,7 @@ public:
   /**
    * @brief Sets owning mesh.
    */
-  void setMesh ( Mesh* mesh );
+  //void setMesh ( Mesh* mesh );
 
   /**
    * @brief Returns pointer to mesh owning the data set.
