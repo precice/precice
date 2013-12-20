@@ -66,13 +66,13 @@ int Data:: getDimensions() const
    return _dimensions;
 }
 
-void Data:: setMesh
-(
-  Mesh* mesh )
-{
-  assertion ( mesh != NULL );
-  _mesh = mesh;
-}
+//void Data:: setMesh
+//(
+//  Mesh* mesh )
+//{
+//  assertion ( mesh != NULL );
+//  _mesh = mesh;
+//}
 
 Mesh* Data:: mesh()
 {
