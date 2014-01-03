@@ -1,0 +1,85 @@
+<?xml version="1.0"?>
+
+<!-- FSI Fluent-Comsol example -->
+<precice-configuration>
+   <log-filter target="debug" component="" switch="off"/>
+   <log-filter target="info"  component="" switch="on"/>
+   
+   <solver-interface dimensions="3">   
+      <data:vector name="Stresses"/>
+      <data:vector name="Displacements"/>
+   
+      <mesh name="FluentNodes" participant="Fluent">
+         <use-data name="Displacements"/>
+      </mesh>
+      <mesh name="FluentCellCenters" participant="Fluent">
+         <use-data name="Stresses"/>   
+      </mesh>
+      <mesh name="ComsolNodes" participant="Comsol">
+         <use-data name="Displacements"/>   
+         <use-data name="Stresses"/>
+      </mesh>
+      
+      <participant name="Fluent">
+         <write-data name="Stresses" mesh="FluentCellCenters"/>
+         <read-data  name="Displacements" mesh="FluentNodes"/>
+         <mapping:nearest-projection
+            from="FluentCellCenters" to="ComsolNodes"
+            constraint="consistent" timing="initial"/>
+         <mapping:nearest-projection
+            from="ComsolNodes" to="FluentNodes"
+            constraint="consistent" timing="initial"/>
+      </participant>
+      
+      <participant name="Comsol">
+         <write-data name="Displacements" mesh="ComsolNodes"/>
+         <read-data  name="Stresses"      mesh="ComsolNodes"/>
+      </participant>
+      
+      <communication:sockets from="Fluent" to="Comsol"/>
+      
+      <coupling-scheme:serial-explicit> 
+         <participants first="Fluent" second="Comsol"/> 
+         <max-timesteps value="10" />
+         <timestep-length value="0.001" />
+         <exchange data="Displacements" mesh="ComsolNodes" from="Comsol"/>
+         <exchange data="Stresses"      mesh="ComsolNodes" from="Comsol"/>
+      </coupling-scheme:serial-explicit>
+   </solver-interface>
+</precice-configuration>
+
+
+<!-- Case with matching meshes -->
+<precice-configuration>
+   <log-filter target="debug" component="" switch="off"/>
+   <log-filter target="info"  component="" switch="on"/>
+
+      <solver-interface dimensions="3">   
+      <data:vector name="Data"/>
+   
+      <mesh name="SovlerANodes" participant="SolverA">
+         <use-data name="Data"/>
+      </mesh>
+      <mesh name="SovlerBNodes" participant="SolverB">
+         <use-data name="Data"/>
+      </mesh>
+      
+      <participant name="SolverA">
+         <write-data name="Data" mesh="SolverANodes"/>
+      </participant>
+      
+      <participant name="SolverB">
+         <read-data name="Data" mesh="SolverBNodes"/>
+         <mapping:trivial from="SolverANodes" to="SolverBNodes"/>
+      </participant>
+      
+      <communication:sockets from="SolverA" to="SolverB"/>
+      
+      <coupling-scheme:serial-explicit> 
+         <participants first="SolverA" second="SolverB"/> 
+         <max-timesteps value="10" />
+         <timestep-length value="0.001" />
+         <exchange data="Data" mesh="SolverANodes" from="SolverA"/>
+      </coupling-scheme:serial-explicit>
+   </solver-interface>
+</precice-configuration>
