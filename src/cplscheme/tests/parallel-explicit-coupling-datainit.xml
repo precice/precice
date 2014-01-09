@@ -14,12 +14,12 @@
       <discretization-width value="0.2"/>
    </geometry:builtin-sphere>
    <communication:mpi from="participant0" to="participant1"/>
-   <coupling-scheme:explicit>  
+   <coupling-scheme:parallel-explicit>  
       <participants first="participant0" second="participant1"/>
       <timestep-length value="0.1" method="fixed"/>
       <max-timesteps value="1"/>
       <exchange data="data0" mesh="mesh" from="participant1"/>
       <exchange data="data1" mesh="mesh" from="participant1" initialize="on"/>
-      <exchange data="data2" mesh="mesh" from="participant0"/>
-   </coupling-scheme:explicit>
+      <exchange data="data2" mesh="mesh" from="participant0" initialize="on"/>
+   </coupling-scheme:parallel-explicit>
 </configuration>

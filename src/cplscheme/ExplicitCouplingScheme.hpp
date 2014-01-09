@@ -45,7 +45,7 @@ public:
     */
    virtual void initialize (
      double startTime,
-     int    startTimestep );
+     int    startTimestep ) = 0;
 
    /**
     * @brief Initializes data for first participant from second participant.
@@ -53,12 +53,13 @@ public:
     * If this method is not used, the first participant has zero initial values
     * for its read data, before receiving data in advance(). If non-zero values
     * are needed, this has to be configured in the coupling-scheme XML
-    * exchange-data tags. A call of initializeData() is then mandatory for the
-    * second participant. It has to be called after initialize() and before
+    * exchange-data tags. This method can nevertheless also be called if no
+    * initialization is necessary. Then it is simply skipped.
+    * It has to be called after initialize() and before
     * advance(). The second participant has to write the initial data values
     * to preCICE after initialize() and before initializeData().
     */
-   virtual void initializeData();
+   virtual void initializeData() = 0;
 
    /**
     * @brief Adds newly computed time. Has to be called before every advance.
@@ -68,7 +69,7 @@ public:
    /**
     * @brief Advances within the coupling scheme.
     */
-   virtual void advance();
+   virtual void advance() = 0;
 
    /**
     * @brief Finalizes the coupling scheme.
@@ -94,6 +95,48 @@ public:
 
    virtual void importState(const std::string& filenamePrefix) {}
 
+protected:
+
+   /**
+    * @return True, if local participant is the one starting the explicit scheme.
+    */
+   bool doesFirstStep(){
+     return _doesFirstStep;
+   }
+
+
+   /**
+    * @return Communication device to the other coupling participant.
+    */
+   com::PtrCommunication getCommunication(){
+     return _communication;
+   }
+
+
+   void setHasToSendInitData(bool hasToSendInitData){
+       _hasToSendInitData = hasToSendInitData;
+     }
+
+     void setHasToReceiveInitData(bool hasToReceiveInitData){
+       _hasToReceiveInitData = hasToReceiveInitData;
+     }
+
+     bool hasToSendInitData(){
+       return _hasToSendInitData;
+     }
+
+     bool hasToReceiveInitData(){
+       return _hasToReceiveInitData;
+     }
+
+     bool participantReceivesDt(){
+       return _participantReceivesDt;
+     }
+
+     bool participantSetsDt(){
+       return _participantSetsDt;
+     }
+
 private:
 
    // @brief Logging device.
@@ -114,6 +157,12 @@ private:
    bool _participantSetsDt;
 
    bool _participantReceivesDt;
+
+   // @brief to carry initData information from initialize to initData
+   bool _hasToSendInitData;
+
+   // @brief to carry initData information from initialize to initData
+   bool _hasToReceiveInitData;
 };
 
 }} // namespace precice, cplscheme

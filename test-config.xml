@@ -8,13 +8,8 @@
     <log-filter target=""      component=""      switch="off"/>
     <log-filter target="info"  component="tarch" switch="on"/>
     
-    <!--<log-filter target="debug" component="precice::cplscheme::tests::ImplicitCouplingSchemeTest" switch="off"/>
-    <log-filter target="debug" component="precice::cplscheme::tests::ParallelImplicitCouplingSchemeTest" switch="on"/>
-    <log-filter target="debug" component="precice::cplscheme::CompositionalCouplingScheme" switch="off"/>
-    <log-filter target="debug" component="precice::cplscheme::ParallelImplicitCouplingScheme" switch="on"/>
-    <log-filter target="debug" component="precice::cplscheme::ImplicitCouplingScheme" switch="on"/>
-    <log-filter target="debug" component="precice::cplscheme::ExplicitCouplingScheme" switch="off"/>
-    <log-filter target="debug" component="precice::cplscheme::BaseCouplingScheme" switch="off"/>-->
+    <log-filter target="debug" component="precice::cplscheme::tests::ExplicitCouplingSchemeTest" switch="on"/>
+    
     
     <log-output column-separator=" | " log-time-stamp="no" 
                 log-time-stamp-human-readable="no" log-machine-name="no" 

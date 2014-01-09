@@ -128,7 +128,8 @@ private:
   const std::string ATTR_FROM;
   const std::string ATTR_SUFFICES;
 
-  const std::string VALUE_EXPLICIT;
+  const std::string VALUE_SERIAL_EXPLICIT;
+  const std::string VALUE_PARALLEL_EXPLICIT;
   const std::string VALUE_SERIAL_IMPLICIT;
   const std::string VALUE_PARALLEL_IMPLICIT;
   const std::string VALUE_UNCOUPLED;
@@ -245,8 +246,11 @@ private:
     const std::string & dataName,
     const std::string & meshName ) const;
 
-  PtrCouplingScheme createExplicitCouplingScheme (
+  PtrCouplingScheme createSerialExplicitCouplingScheme (
     const std::string & accessor ) const;
+
+  PtrCouplingScheme createParallelExplicitCouplingScheme (
+      const std::string & accessor ) const;
 
   PtrCouplingScheme createSerialImplicitCouplingScheme (
     const std::string & accessor ) const;

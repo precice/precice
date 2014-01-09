@@ -85,9 +85,16 @@ private:
    void testExplicitCouplingFirstParticipantSetsDt();
 
    /**
-    * @brief Test from XML configuration to test data initialization.
+    * @brief Test from XML configuration to test data initialization for serial
+    * coupling.
     */
-   void testDataInitialization();
+   void testSerialDataInitialization();
+
+   /**
+    * @brief Test from XML configuration to test data initialization for parallel
+    * coupling.
+    */
+   void testParallelDataInitialization();
 
    /**
     * @brief Configured test with second participant setting timestep length.

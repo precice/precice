@@ -3,7 +3,8 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CouplingSchemeConfiguration.hpp"
 #include "cplscheme/config/PostProcessingConfiguration.hpp"
-#include "cplscheme/ExplicitCouplingScheme.hpp"
+#include "cplscheme/ParallelExplicitCouplingScheme.hpp"
+#include "cplscheme/SerialExplicitCouplingScheme.hpp"
 #include "cplscheme/SerialImplicitCouplingScheme.hpp"
 #include "cplscheme/ParallelImplicitCouplingScheme.hpp"
 #include "cplscheme/CompositionalCouplingScheme.hpp"
@@ -70,7 +71,8 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   ATTR_TIMESTEP_INTERVAL("timestep-interval"),
   ATTR_FROM("from"),
   ATTR_SUFFICES("suffices"),
-  VALUE_EXPLICIT("explicit"),
+  VALUE_SERIAL_EXPLICIT("serial-explicit"),
+  VALUE_PARALLEL_EXPLICIT("parallel-explicit"),
   VALUE_SERIAL_IMPLICIT("serial-implicit"),
   VALUE_PARALLEL_IMPLICIT("parallel-implicit"),
   VALUE_UNCOUPLED("uncoupled"),
@@ -90,12 +92,21 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
   std::string doc;
+
   {
-    XMLTag tag(*this, VALUE_EXPLICIT, occ, TAG);
+    XMLTag tag(*this, VALUE_SERIAL_EXPLICIT, occ, TAG);
     doc = "Explicit coupling scheme according to conventional serial";
-    doc += " staggered prcedure (CSS).";
+    doc += " staggered procedure (CSS).";
     tag.setDocumentation(doc);
-    addTypespecifcSubtags(VALUE_EXPLICIT, tag);
+    addTypespecifcSubtags(VALUE_SERIAL_EXPLICIT, tag);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PARALLEL_EXPLICIT, occ, TAG);
+    doc = "Explicit coupling scheme according to conventional parallel";
+    doc += " staggered procedure (CPS).";
+    tag.setDocumentation(doc);
+    addTypespecifcSubtags(VALUE_PARALLEL_EXPLICIT, tag);
     tags.push_back(tag);
   }
   {
@@ -249,13 +260,24 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
 {
   preciceTrace1("xmlEndTagCallback()", tag.getFullName());
   if (tag.getNamespace() == TAG){
-    if (_config.type == VALUE_EXPLICIT){
+    if (_config.type == VALUE_SERIAL_EXPLICIT){
       std::string accessor(_config.participant);
-      PtrCouplingScheme scheme = createExplicitCouplingScheme(accessor);
+      PtrCouplingScheme scheme = createSerialExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
       //_couplingSchemes[accessor] = scheme;
       accessor = _config.secondParticipant;
-      scheme = createExplicitCouplingScheme(accessor);
+      scheme = createSerialExplicitCouplingScheme(accessor);
+      addCouplingScheme(scheme, accessor);
+      //_couplingSchemes[accessor] = scheme;
+      _config = Config();
+    }
+    else if (_config.type == VALUE_PARALLEL_EXPLICIT){
+      std::string accessor(_config.participant);
+      PtrCouplingScheme scheme = createParallelExplicitCouplingScheme(accessor);
+      addCouplingScheme(scheme, accessor);
+      //_couplingSchemes[accessor] = scheme;
+      accessor = _config.secondParticipant;
+      scheme = createParallelExplicitCouplingScheme(accessor);
       addCouplingScheme(scheme, accessor);
       //_couplingSchemes[accessor] = scheme;
       _config = Config();
@@ -284,7 +306,7 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
       assertion(false);
     }
     else {
-      assertion(false);
+      assertion1(false,_config.type);
     }
   }
 }
@@ -336,7 +358,11 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
 
   addTagCheckpoint(tag);
 
-  if (type == VALUE_EXPLICIT){
+  if (type == VALUE_SERIAL_EXPLICIT){
+    addTagParticipants(tag);
+    addTagExchange(tag);
+  }
+  else if (type == VALUE_PARALLEL_EXPLICIT){
     addTagParticipants(tag);
     addTagExchange(tag);
   }
@@ -618,14 +644,32 @@ mesh::PtrData CouplingSchemeConfiguration:: getData
 }
 
 
-PtrCouplingScheme CouplingSchemeConfiguration:: createExplicitCouplingScheme
+PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingScheme
 (
   const std::string& accessor ) const
 {
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );
-  ExplicitCouplingScheme* scheme = new ExplicitCouplingScheme (
+  SerialExplicitCouplingScheme* scheme = new SerialExplicitCouplingScheme (
+      _config.maxTime, _config.maxTimesteps, _config.timestepLength,
+      _config.validDigits, _config.participant, _config.secondParticipant,
+      accessor, com, _config.dtMethod );
+  scheme->setCheckointTimestepInterval ( _config.checkpointTimestepInterval );
+
+  addDataToBeExchanged(*scheme, accessor);
+
+  return PtrCouplingScheme(scheme);
+}
+
+PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingScheme
+(
+  const std::string& accessor ) const
+{
+  //assertion ( not utils::contained(accessor, _couplingSchemes) );
+  com::PtrCommunication com = _comConfig->getCommunication (
+      _config.participant, _config.secondParticipant );
+  ParallelExplicitCouplingScheme* scheme = new ParallelExplicitCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
       accessor, com, _config.dtMethod );
