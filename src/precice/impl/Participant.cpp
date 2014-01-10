@@ -33,6 +33,8 @@ Participant:: Participant
   _exportContexts(),
   _actions (),
   _meshContexts ( meshConfig->meshes().size(), NULL ),
+  _readMappingContexts(),
+  _writeMappingContexts(),
   _usedMeshContexts (),
   _dataContexts ( meshConfig->getDataConfiguration()->data().size(), NULL ),
   _writeDataContexts (),

@@ -52,12 +52,6 @@ struct MeshContext
    // @brief Geometry creating the mesh. Can be empty.
    geometry::PtrGeometry geometry;
 
-   // @brief Mapping used when writing data to the mesh. Can be empty.
-   MappingContext writeMappingContext;
-
-   // @brief Mapping used when reading data from the mesh. Can be empty.
-   MappingContext readMappingContext;
-
    /**
     * @brief Constructor.
     */
@@ -70,9 +64,7 @@ struct MeshContext
      receiveMeshFrom ( "" ),
      provideMesh ( false ),
      localOffset ( dimensions, 0.0 ),
-     geometry (),
-     writeMappingContext (),
-     readMappingContext ()
+     geometry ()
    {}
 };
 

@@ -31,9 +31,9 @@ MappingConfiguration:: MappingConfiguration
 :
   TAG("mapping"),
   ATTR_DIRECTION("direction"),
-  ATTR_MESH("mesh"),
+  ATTR_FROM("from"),
+  ATTR_TO("to"),
   ATTR_TIMING("timing"),
-  //ATTR_INCREMENTAL("incremental"),
   ATTR_TYPE("type"),
   ATTR_CONSTRAINT("constraint"),
   ATTR_SHAPE_PARAM("shape-parameter"),
@@ -121,7 +121,8 @@ MappingConfiguration:: MappingConfiguration
   attrDirection.setValidator ( validDirectionWrite || validDirectionRead );
 
 
-  XMLAttribute<std::string> attrMesh(ATTR_MESH);
+  XMLAttribute<std::string> attrFromMesh(ATTR_FROM);
+  XMLAttribute<std::string> attrToMesh(ATTR_TO);
 
 //  XMLAttribute<std::string> attrType ( ATTR_TYPE );
   typedef ValidatorEquals<std::string> ValidString;
@@ -159,7 +160,8 @@ MappingConfiguration:: MappingConfiguration
 
   foreach (XMLTag& tag, tags){
     tag.addAttribute(attrDirection);
-    tag.addAttribute(attrMesh);
+    tag.addAttribute(attrFromMesh);
+    tag.addAttribute(attrToMesh);
     tag.addAttribute(attrConstraint);
     tag.addAttribute(attrTiming);
     //tag.addAttribute(attrIncremental);
@@ -238,7 +240,8 @@ void MappingConfiguration:: xmlTagCallback
   preciceTrace1("xmlTagCallback()", tag.getName());
   if (tag.getNamespace() == TAG){
     std::string dir = tag.getStringAttributeValue(ATTR_DIRECTION);
-    std::string mesh = tag.getStringAttributeValue(ATTR_MESH);
+    std::string fromMesh = tag.getStringAttributeValue(ATTR_FROM);
+    std::string toMesh = tag.getStringAttributeValue(ATTR_TO);
     std::string type = tag.getName(); //StringAttributeValue(ATTR_TYPE);
     std::string constraint = tag.getStringAttributeValue(ATTR_CONSTRAINT);
     Timing timing = getTiming(tag.getStringAttributeValue(ATTR_TIMING));
@@ -252,7 +255,7 @@ void MappingConfiguration:: xmlTagCallback
       supportRadius = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS);
     }
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
-        mesh, timing, shapeParameter, supportRadius);
+        fromMesh, toMesh, timing, shapeParameter, supportRadius);
     checkDuplicates ( configuredMapping );
     _mappings.push_back ( configuredMapping );
   }
@@ -279,16 +282,17 @@ MappingConfiguration:: mappings()
 void MappingConfiguration:: addMapping
 (
   const PtrMapping&    mapping,
-  const mesh::PtrMesh& mesh,
+  const mesh::PtrMesh& fromMesh,
+  const mesh::PtrMesh& toMesh,
   Direction            direction,
-  //bool                 isIncremental,
   Timing               timing )
 {
   preciceTrace3("addMapping()", mesh, direction, timing);
   //assertion ( !((timing == INITIALLY) && isIncremental) );
   ConfiguredMapping configuredMapping;
   configuredMapping.mapping = mapping;
-  configuredMapping.mesh = mesh;
+  configuredMapping.fromMesh = fromMesh;
+  configuredMapping.toMesh = toMesh;
   configuredMapping.direction = direction;
   //configuredMapping.isIncremental = isIncremental;
   configuredMapping.timing = timing;
@@ -301,7 +305,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   const std::string& direction,
   const std::string& type,
   const std::string& constraint,
-  const std::string& meshName,
+  const std::string& fromMeshName,
+  const std::string& toMeshName,
   Timing             timing,
   //bool               incremental,
   double             shapeParameter,
@@ -311,10 +316,14 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
                 shapeParameter, supportRadius);
   using namespace mapping;
   ConfiguredMapping configuredMapping;
-  mesh::PtrMesh mesh(_meshConfig->getMesh(meshName));
-  preciceCheck(mesh.get() != NULL, "createMapping()",
-               "Mesh \"" << meshName << "\" not defined at creation of mapping!");
-  configuredMapping.mesh = mesh;
+  mesh::PtrMesh fromMesh(_meshConfig->getMesh(fromMeshName));
+  mesh::PtrMesh toMesh(_meshConfig->getMesh(toMeshName));
+  preciceCheck(fromMesh.get() != NULL, "createMapping()",
+               "Mesh \"" << fromMeshName << "\" not defined at creation of mapping!");
+  preciceCheck(toMesh.get() != NULL, "createMapping()",
+               "Mesh \"" << toMeshName << "\" not defined at creation of mapping!");
+  configuredMapping.fromMesh = fromMesh;
+  configuredMapping.toMesh = toMesh;
   //preciceCheck(not ((timing == INITIALLY) && incremental), "xmlTagCallback()",
   //             "A mapping cannot be both stationary and incremental!");
   configuredMapping.timing = timing;
@@ -412,11 +421,14 @@ void MappingConfiguration:: checkDuplicates
   const ConfiguredMapping & mapping )
 {
   foreach ( const ConfiguredMapping & configuredMapping, _mappings ) {
-    bool sameMesh = mapping.mesh->getName() == configuredMapping.mesh->getName();
-    bool sameDir = mapping.direction == configuredMapping.direction;
-    preciceCheck ( !(sameMesh && sameDir), "checkDuplicates()",
-                   "There cannot be two mappings for mesh \""
-                   << mapping.mesh->getName() << "\" with same direction!" );
+    bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
+    bool sameToMesh = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
+    preciceCheck ( !sameFromMesh, "checkDuplicates()",
+                   "There cannot be two mappings from mesh \""
+                   << mapping.fromMesh->getName() << "\"" );
+    preciceCheck ( !sameToMesh, "checkDuplicates()",
+                       "There cannot be two mappings to mesh \""
+                       << mapping.toMesh->getName() << "\"" );
   }
 }
 

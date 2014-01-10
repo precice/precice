@@ -182,6 +182,12 @@ private:
   // @brief All mesh contexts involved in a simulation, mesh ID == index.
   std::vector<MeshContext*> _meshContexts;
 
+  // @brief Read mapping contexts used by the participant.
+  std::vector<MappingContext*> _readMappingContexts;
+
+  // @brief Write mapping contexts used by the participant.
+  std::vector<MappingContext*> _writeMappingContexts;
+
   // @brief Mesh contexts used by the participant.
   utils::ptr_vector<MeshContext> _usedMeshContexts;
 

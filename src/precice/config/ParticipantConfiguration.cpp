@@ -3,6 +3,7 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ParticipantConfiguration.hpp"
 #include "precice/impl/MeshContext.hpp"
+#include "precice/impl/MappingContext.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
@@ -503,16 +504,29 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   // Set input/output meshes for data mappings and mesh requirements
   typedef mapping::MappingConfiguration::ConfiguredMapping ConfMapping;
   foreach (const ConfMapping& confMapping, _mappingConfig->mappings()){
-    int meshID = confMapping.mesh->getID();
-    preciceCheck(participant->isMeshUsed(meshID), "finishParticipantConfiguration()",
+    int fromMeshID = confMapping.fromMesh->getID();
+    int toMeshID = confMapping.toMesh->getID();
+    preciceCheck(participant->isMeshUsed(fromMeshID), "finishParticipantConfiguration()",
         "Participant \"" << participant->getName() << "\" has mapping"
-        << " to/from mesh \"" << confMapping.mesh->getName() << "\" which he does not use!");
-    impl::MeshContext& meshContext = participant->meshContext(meshID);
+        << " from mesh \"" << confMapping.fromMesh->getName() << "\" which he does not use!");
+    preciceCheck(participant->isMeshUsed(toMeshID), "finishParticipantConfiguration()",
+            "Participant \"" << participant->getName() << "\" has mapping"
+            << " to mesh \"" << confMapping.toMesh->getName() << "\" which he does not use!");
+
+
+    impl::MeshContext& fromMeshContext = participant->meshContext(fromMeshID);
+    impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
 
     if (confMapping.direction == mapping::MappingConfiguration::WRITE){
       mapping::PtrMapping& map = meshContext.writeMappingContext.mapping;
       assertion(map.get() == NULL);
       map = confMapping.mapping;
+
+      MappingContext mappingContext();
+      // participant.addWriteMappingContext
+      //context muss wohl hier erzeugt werden
+
+
       if (map->getInputRequirement() > meshContext.meshRequirement){
         meshContext.meshRequirement = map->getInputRequirement();
       }
