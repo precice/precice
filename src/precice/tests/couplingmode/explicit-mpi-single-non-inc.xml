@@ -45,7 +45,7 @@
       
       <communication:mpi-single from="SolverOne" to="SolverTwo"/>
       
-      <coupling-scheme:explicit> 
+      <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverTwo"/> 
          <max-timesteps value="10" />
          <timestep-length value="1.0" />
@@ -53,7 +53,7 @@
          <exchange data="Pressures"  mesh="Test-Square" from="SolverOne"/>
          <exchange data="Velocities" mesh="Test-Square" from="SolverTwo"/>
          <exchange data="Temperatures" mesh="Test-Square" from="SolverTwo"/>
-      </coupling-scheme:explicit>                           
+      </coupling-scheme:serial-explicit>                           
                   
    </solver-interface>
 

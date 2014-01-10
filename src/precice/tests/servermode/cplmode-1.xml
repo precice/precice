@@ -33,12 +33,12 @@
       
       <communication:mpi-single from="ParticipantA" to="ParticipantB"/>
       
-      <coupling-scheme:explicit>
+      <coupling-scheme:serial-explicit>
          <participants first="ParticipantA" second="ParticipantB"/>
          <max-timesteps value="5"/>
          <timestep-length value="1.0"/>
          <exchange data="ScalarData" mesh="Mesh" from="ParticipantA"/>
          <exchange data="VectorData"  mesh="Mesh" from="ParticipantB"/>
-      </coupling-scheme:explicit>
+      </coupling-scheme:serial-explicit>
    </solver-interface>
 </precice-configuration>

@@ -34,12 +34,12 @@
     
       <communication:mpi from="Flite" to="Calculix"/>
       
-      <coupling-scheme:explicit> 
+      <coupling-scheme:serial-explicit> 
          <participants first="Flite" second="Calculix"/> 
          <max-time value="2.0e-5" />
          <timestep-length value="1e-5" method="fixed"/>
          <exchange data="Forces"        mesh="WetSurface" from="Flite" />
          <exchange data="Displacements" mesh="WetSurface" from="Calculix" />
-      </coupling-scheme:explicit>                           
+      </coupling-scheme:serial-explicit>                           
    </solver-interface>
 </precice-configuration>

@@ -57,7 +57,7 @@
          </action:divide-by-area>
       </participant>
       
-      <coupling-scheme:explicit>
+      <coupling-scheme:serial-explicit>
          <participants first="Peano" second="Comsol" />
          <max-time value="1.0" />
          <timestep-length value="0.1" />
@@ -66,7 +66,7 @@
          <exchange data="Velocities"     mesh="Sphere" from="Comsol"/>
          <exchange data="Displacements"  mesh="Sphere" from="Comsol"/>
          <exchange data="VelocityDeltas" mesh="Sphere" from="Comsol"/>
-      </coupling-scheme:explicit>
+      </coupling-scheme:serial-explicit>
       
    </solver-interface>
 </precice-configuration>

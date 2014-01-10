@@ -37,14 +37,14 @@
          <read-data name="Forces"      mesh="Test-Square"/>
       </participant>
       
-      <coupling-scheme:explicit> 
+      <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverTwo"/> 
          <max-timesteps value="10"/>
          <timestep-length value="1.0"/>
          <checkpoint timestep-interval="10"/>
          <exchange data="Forces"     mesh="Test-Square" from="SolverOne"/>
          <exchange data="Velocities" mesh="Test-Square" from="SolverTwo"/>
-      </coupling-scheme:explicit>                           
+      </coupling-scheme:serial-explicit>                           
                   
    </solver-interface>
 

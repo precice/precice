@@ -80,7 +80,7 @@ private:
   /**
    * @brief The second solver initializes the data of the first.
    *
-   * A mapping ist employed for the second solver, i.e., at the end of
+   * A mapping is employed for the second solver, i.e., at the end of
    * initializeData(), the mapping needs to be invoked.
    */
   void testExplicitWithDataInitialization();

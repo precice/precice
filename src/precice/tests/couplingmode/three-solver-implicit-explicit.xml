@@ -46,12 +46,12 @@
          <exchange data="Data1" mesh="Mesh" from="SolverTwo"/>
       </coupling-scheme:serial-implicit>   
       
-      <coupling-scheme:explicit> 
+      <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverThree"/> 
          <max-timesteps value="10"/>
          <timestep-length value="1.0"/>
          <exchange data="Data0" mesh="Mesh" from="SolverOne"/>
          <exchange data="Data2" mesh="Mesh" from="SolverThree"/>
-      </coupling-scheme:explicit>                  
+      </coupling-scheme:serial-explicit>                  
    </solver-interface>
 </precice-configuration>

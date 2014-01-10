@@ -333,6 +333,7 @@ void SolverInterfaceTest:: testExplicitWithDataInitialization()
     int dataAID = cplInterface.getDataID("DataOne");
     int dataBID = cplInterface.getDataID("DataTwo");
     double valueDataB = 0.0;
+    cplInterface.initializeData();
     cplInterface.readScalarData(dataBID, 0, valueDataB);
     validateNumericalEquals(2.0, valueDataB);
     while (cplInterface.isCouplingOngoing()){
@@ -355,6 +356,8 @@ void SolverInterfaceTest:: testExplicitWithDataInitialization()
     int dataAID = cplInterface.getDataID("DataOne");
     int dataBID = cplInterface.getDataID("DataTwo");
     cplInterface.writeScalarData(dataBID, 0, 2.0);
+    //sagen dass daten jetzt geschrieben
+    cplInterface.fulfilledAction(precice::constants::actionWriteInitialData());
     cplInterface.initializeData();
     Vector3D valueDataA;
     cplInterface.readVectorData(dataAID, 0, raw(valueDataA));

@@ -36,13 +36,13 @@
       <communication:mpi-single from="SolverOne" to="SolverTwo"/>
       <communication:mpi-single from="SolverOne" to="SolverThree"/>
       
-      <coupling-scheme:explicit> 
+      <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverTwo"/> 
          <max-timesteps value="10"/>
          <timestep-length value="1.0"/>
          <exchange data="Data0" mesh="Mesh" from="SolverOne"/>
          <exchange data="Data1" mesh="Mesh" from="SolverTwo"/>
-      </coupling-scheme:explicit>   
+      </coupling-scheme:serial-explicit>   
       
       <coupling-scheme:serial-implicit> 
          <participants first="SolverOne" second="SolverThree"/> 
