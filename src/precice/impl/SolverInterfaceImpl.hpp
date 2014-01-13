@@ -664,7 +664,7 @@ private:
   /**
    * @brief Determines participants providing meshes to other participants.
    */
-  void configureCommunicatedGeometries (
+  void configureSolverGeometries (
     const com::PtrCommunicationConfiguration& comConfig );
 
   /**

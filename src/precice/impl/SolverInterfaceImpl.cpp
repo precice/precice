@@ -168,7 +168,7 @@ void SolverInterfaceImpl:: configure
     preciceInfo("configure()", "[PRECICE] Run in coupling mode");
     preciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
-    configureCommunicatedGeometries(config.getCommunicationConfiguration());
+    configureSolverGeometries(config.getCommunicationConfiguration());
   }
 
   // Set coupling scheme. In geometry mode, an uncoupled scheme is automatically
@@ -1928,45 +1928,53 @@ void SolverInterfaceImpl:: configureCommunications
   }
 }
 
-void SolverInterfaceImpl:: configureCommunicatedGeometries
+void SolverInterfaceImpl:: configureSolverGeometries
 (
   const com::PtrCommunicationConfiguration& comConfig )
 {
-  preciceTrace ( "configureCommunicatedGeometries()" );
+  preciceTrace ( "configureSolverGeometries()" );
   foreach ( MeshContext& context, _accessor->usedMeshContexts() ) {
     if ( context.provideMesh ) { // Accessor provides geometry
-      preciceCheck ( context.receiveMeshFrom.empty(), "configureCommunicatedGeometries()",
+      preciceCheck ( context.receiveMeshFrom.empty(), "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot provide "
                      << "and receive mesh " << context.mesh->getName() << "!" );
-      utils::DynVector offset ( _dimensions, 0.0 );
-      std::string provider ( _accessorName );
-      geometry::CommunicatedGeometry* comGeo =
-          new geometry::CommunicatedGeometry ( offset, provider, provider );
+
       bool addedReceiver = false;
       foreach ( PtrParticipant receiver, _participants ){
         foreach ( MeshContext& receiverContext, receiver->usedMeshContexts() ){
           bool doesReceive = receiverContext.receiveMeshFrom == _accessorName;
           doesReceive &= receiverContext.mesh->getName() == context.mesh->getName();
           if ( doesReceive ){
+        	preciceCheck ( !addedReceiver, "configureSolverGeometries()",
+        			"At the momentan preCICE allows only for one receiver per mesh. "
+        			<< "Mesh \"" << context.mesh->getName() << "\" is received "
+        			<< "more than once.");
             preciceDebug ( "   ... receiver " << receiver );
+            utils::DynVector offset ( _dimensions, 0.0 );
+			std::string provider ( _accessorName );
+			geometry::CommunicatedGeometry* comGeo =
+                      new geometry::CommunicatedGeometry ( offset, provider, provider );
             com::PtrCommunication com =
                 comConfig->getCommunication ( receiver->getName(), provider );
             comGeo->addReceiver ( receiver->getName(), com );
+            context.geometry = geometry::PtrGeometry ( comGeo );
             addedReceiver = true;
           }
         }
       }
-      preciceCheck ( addedReceiver, "configureCommunicatedGeometries()", "No receivers "
-                     << " defined for mesh \"" << context.mesh->getName()
-                     << "\" provided by participant \"" << _accessorName << "!" );
-      preciceCheck ( context.geometry.use_count() == 0, "configureCommunicatedGeometries()",
+      if(!addedReceiver){
+    	  preciceDebug ( "No receiver found, create SolverGeometry");
+    	  //TODO
+    	  context.geometry = geometry::PtrGeometry ( solverGeo );
+      }
+      preciceCheck ( context.geometry.use_count() == 0, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot provide "
                      << "the geometry of mesh \"" << context.mesh->getName()
                      << " in addition to a defined geometry!" );
-      context.geometry = geometry::PtrGeometry ( comGeo );
+
     }
     else if ( not context.receiveMeshFrom.empty() ) { // Accessor receives geometry
-      preciceCheck ( not context.provideMesh, "configureCommunicatedGeometries()",
+      preciceCheck ( not context.provideMesh, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot provide "
                      << "and receive mesh " << context.mesh->getName() << "!" );
       utils::DynVector offset ( _dimensions, 0.0 );
@@ -1977,7 +1985,7 @@ void SolverInterfaceImpl:: configureCommunicatedGeometries
           new geometry::CommunicatedGeometry ( offset, receiver, provider );
       com::PtrCommunication com = comConfig->getCommunication ( receiver, provider );
       comGeo->addReceiver ( receiver, com );
-      preciceCheck ( context.geometry.use_count() == 0, "configureCommunicatedGeometries()",
+      preciceCheck ( context.geometry.use_count() == 0, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot receive "
                      << "the geometry of mesh \"" << context.mesh->getName()
                      << " in addition to a defined geometry!" );
@@ -2003,22 +2011,6 @@ void SolverInterfaceImpl:: createMeshContext
         utils::DynVector(_dimensions, 0.0), fileName,
         geometry::ImportGeometry::VRML_1_FILE, true);
     geometry = geometry::PtrGeometry ( importGeo );
-    bool importLocal = meshContext.writeMappingContext.localMesh.get() != NULL;
-    importLocal &= meshContext.writeMappingContext.timing != mapping::MappingConfiguration::INCREMENTAL;
-    if (importLocal){
-      fileName = "precice_checkpoint_" + _accessorName + "_" + meshName + "_localwrite";
-      geometry::ImportGeometry importGeo(utils::DynVector(_dimensions, 0.0),
-          fileName, geometry::ImportGeometry::VRML_1_FILE, true);
-      importGeo.create(*meshContext.writeMappingContext.localMesh);
-    }
-    importLocal = meshContext.readMappingContext.localMesh.get() != NULL;
-    importLocal &= meshContext.readMappingContext.timing != mapping::MappingConfiguration::INCREMENTAL;
-    if (importLocal){
-      fileName = "precice_checkpoint_" + _accessorName + "_" + meshName + "_localread";
-      geometry::ImportGeometry importGeo(utils::DynVector(_dimensions, 0.0),
-          fileName, geometry::ImportGeometry::VRML_1_FILE, true);
-      importGeo.create(*meshContext.readMappingContext.localMesh);
-    }
   }
   else if ( (not _geometryMode) && (geometry.use_count() > 0) ){
     utils::DynVector offset(geometry->getOffset());
@@ -2042,20 +2034,17 @@ void SolverInterfaceImpl:: createMeshContext
     meshContext.spacetree->addMesh(mesh);
   }
 
+  //TODO maybe this has to be moved to geometry
   // Create default vertex for incremental mapping participant meshes
-  if (meshContext.writeMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
-    mesh::PtrMesh& localMesh = meshContext.writeMappingContext.localMesh;
-    assertion(localMesh != meshContext.mesh);
+  if (meshContext.fromMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+	//TODO better solution for the following
+	preciceCheck(typeid(*meshContext.geometry).name()!="CommunicatedGeometry",
+				   "createMeshContext()",
+				   "You cannot communicate a mesh with an incremental mapping");
+    mesh::PtrMesh& mesh = meshContext.mesh;
     assertion(localMesh->vertices().size() == 0);
-    localMesh->createVertex(utils::DynVector(_dimensions,0.0));
-    localMesh->allocateDataValues();
-  }
-  if (meshContext.readMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
-    mesh::PtrMesh & localMesh = meshContext.readMappingContext.localMesh;
-    assertion(localMesh != meshContext.mesh);
-    assertion(localMesh->vertices().size() == 0);
-    localMesh->createVertex(utils::DynVector(_dimensions,0.0));
-    localMesh->allocateDataValues();
+    mesh->createVertex(utils::DynVector(_dimensions,0.0));
+    mesh->allocateDataValues();
   }
 }
 
@@ -2236,16 +2225,6 @@ void SolverInterfaceImpl:: handleExports()
         std::string filename("precice_checkpoint_" + _accessorName
                              + "_" + meshContext.mesh->getName());
         exportVRML.doExportCheckpoint(filename, *meshContext.mesh);
-        if (meshContext.writeMappingContext.localMesh.get() != NULL){
-          filename = "precice_checkpoint_" + _accessorName + "_" +
-                     meshContext.mesh->getName() + "_" + "localwrite";
-          exportVRML.doExportCheckpoint(filename, *meshContext.writeMappingContext.localMesh);
-        }
-        if (meshContext.readMappingContext.localMesh.get() != NULL){
-          filename = "precice_checkpoint_" + _accessorName + "_" +
-                     meshContext.mesh->getName() + "_" + "localread";
-          exportVRML.doExportCheckpoint(filename, *meshContext.readMappingContext.localMesh);
-        }
       }
       io::SimulationStateIO exportState(_checkpointFileName + "_simstate.txt");
       exportState.writeState(_couplingScheme->getTime(), timestep, _numberAdvanceCalls);
