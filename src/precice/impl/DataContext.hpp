@@ -18,20 +18,20 @@ struct DataContext
 {
   bool used;
 
-  mesh::PtrData data;
+  mesh::PtrData fromData;
 
-  mesh::PtrData localData;
+  mesh::PtrData toData;
 
-  mesh::PtrMesh mesh;
+  mesh::PtrMesh fromMesh;
 
-  MappingContext mappingContext;
+  MappingContext fromMappingContext;
 
   DataContext():
     used(false),
-    data(),
-    localData(),
-    mesh(),
-    mappingContext()
+    fromData(),
+    toData(),
+    fromMesh(),
+    fromMappingContext()
   {}
 };
 

@@ -119,9 +119,9 @@ void Participant:: addWriteData
   checkDuplicatedData ( data );
   assertion ( data->getID() < (int)_dataContexts.size() );
   DataContext* context = new DataContext ();
-  context->data = data;
-  context->mesh = mesh;
-  context->localData = context->data;
+  context->fromData = data;
+  context->fromMesh = mesh;
+  context->toData = context->fromData;
   _dataContexts[data->getID()] = context;
   _writeDataContexts.push_back ( context );
 }
@@ -134,11 +134,35 @@ void Participant:: addReadData
   checkDuplicatedData ( data );
   assertion ( data->getID() < (int)_dataContexts.size() );
   DataContext* context = new DataContext ();
-  context->data = data;
-  context->mesh = mesh;
-  context->localData = context->data;
+  context->fromData = data;
+  context->fromMesh = mesh;
+  context->toData = context->fromData;
   _dataContexts[data->getID()] = context;
   _readDataContexts.push_back ( context );
+}
+
+void Participant::addReadMappingContext
+(
+  MappingContext* mappingContext)
+{
+  _readMappingContexts.push_back(mappingContext);
+}
+
+void Participant::addWriteMappingContext
+(
+  MappingContext* mappingContext)
+{
+  _readMappingContexts.push_back(mappingContext);
+}
+
+const std::vector<MappingContext*>& readMappingContexts() const
+{
+  return _readMappingContexts;
+}
+
+const std::vector<MappingContext*>& writeMappingContexts() const
+{
+  return _writeMappingContexts;
 }
 
 const DataContext& Participant:: dataContext

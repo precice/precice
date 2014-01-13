@@ -22,6 +22,8 @@ namespace impl {
  */
 struct MeshContext
 {
+   //
+   mesh::Ptr
    // @brief Mesh holding the geometry data structure.
    mesh::PtrMesh mesh;
 
@@ -52,6 +54,9 @@ struct MeshContext
    // @brief Geometry creating the mesh. Can be empty.
    geometry::PtrGeometry geometry;
 
+   // @brief Mapping used when mapping data from the mesh. Can be empty.
+  MappingContext fromMappingContext;
+
    /**
     * @brief Constructor.
     */
@@ -64,7 +69,8 @@ struct MeshContext
      receiveMeshFrom ( "" ),
      provideMesh ( false ),
      localOffset ( dimensions, 0.0 ),
-     geometry ()
+     geometry (),
+     fromMappingContext()
    {}
 };
 

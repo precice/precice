@@ -790,38 +790,6 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
   return VoxelPosition(pos, containedMeshIDs);
 }
 
-int SolverInterfaceImpl:: setMeshVertex
-(
-  int           meshID,
-  const double* position )
-{
-  preciceTrace1("setMeshVertex()", meshID);
-  int index = -1;
-  if (_restartMode){
-    preciceDebug("Ignoring vertex, since restart mode is active");
-    return index;
-  }
-  utils::DynVector internalPosition(_dimensions);
-  for ( int dim=0; dim < _dimensions; dim++ ){
-    internalPosition[dim] = position[dim];
-  }
-  preciceDebug( "position = " << internalPosition );
-  if ( _clientMode ){
-    index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
-  }
-  else {
-    MeshContext & context = _accessor->meshContext ( meshID );
-    if (context.meshRequirement == mapping::Mapping::FULL){
-      preciceDebug("Set mesh vertex");
-      assertion(context.writeMappingContext.mapping.use_count() == 0);
-      assertion(context.readMappingContext.mapping.use_count() == 0);
-      index = context.mesh->createVertex(internalPosition).getID();
-      context.mesh->allocateDataValues();
-    }
-    preciceDebug("Vertex index = " << index);
-  }
-  return index;
-}
 
 int SolverInterfaceImpl:: getMeshVertexSize
 (
@@ -841,48 +809,31 @@ int SolverInterfaceImpl:: getMeshVertexSize
   return size;
 }
 
-void SolverInterfaceImpl:: resetWritePositions
+void SolverInterfaceImpl:: resetMesh
 (
   int meshID )
 {
-  preciceTrace1("resetWritePositions()", meshID);
+  preciceTrace1("resetMesh()", meshID);
   impl::MeshContext& context = _accessor->meshContext(meshID);
-  bool hasMapping = context.writeMappingContext.mapping.use_count() > 0;
-  bool isIncremental = context.writeMappingContext.timing
-                       == mapping::MappingConfiguration::INCREMENTAL;
-  bool isStationary = context.writeMappingContext.timing
-                      == mapping::MappingConfiguration::INITIAL;
+  bool hasMapping = context.fromMappingContext.mapping.use_count() > 0;
+  bool isIncremental = context.fromMappingContext.timing
+						 == mapping::MappingConfiguration::INCREMENTAL;
+  bool isStationary = context.fromMappingContext.timing
+  						 == mapping::MappingConfiguration::INITIAL;
+
   if ( hasMapping && (not isIncremental) && (not isStationary) ) {
-    preciceDebug ( "Clear write mesh positions for mesh \""
+    preciceDebug ( "Clear mesh positions for mesh \""
                    << context.mesh->getName() << "\"" );
-    context.writeMappingContext.localMesh->clear ();
+    context.mesh->clear ();
   }
 }
 
-void SolverInterfaceImpl:: resetReadPositions
-(
-  int meshID )
-{
-  preciceTrace1 ( "resetReadPositions()", meshID );
-  impl::MeshContext& context = _accessor->meshContext(meshID);
-  bool hasMapping = context.readMappingContext.mapping.use_count() > 0;
-  bool isIncremental = context.readMappingContext.timing
-                       == mapping::MappingConfiguration::INCREMENTAL;
-  bool isStationary = context.readMappingContext.timing
-                      == mapping::MappingConfiguration::INITIAL;
-  if ( hasMapping && (not isIncremental) && (not isStationary)  ) {
-    preciceDebug ( "Clear read mesh positions for mesh \""
-                   << context.mesh->getName() << "\"" );
-    context.readMappingContext.localMesh->clear ();
-  }
-}
-
-int SolverInterfaceImpl:: setWritePosition
+int SolverInterfaceImpl:: setMeshVertex
 (
   int           meshID,
   const double* position )
 {
-  preciceTrace1 ( "setWritePosition()", meshID );
+  preciceTrace1 ( "setMeshVertex()", meshID );
   utils::DynVector internalPosition(_dimensions);
   for ( int dim=0; dim < _dimensions; dim++ ){
     internalPosition[dim] = position[dim];
@@ -890,317 +841,167 @@ int SolverInterfaceImpl:: setWritePosition
   preciceDebug("Position = " << internalPosition);
   int index = -1;
   if ( _clientMode ){
-    index = _requestManager->requestSetWritePosition ( meshID, internalPosition );
+    index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
   }
   else {
     MeshContext& context = _accessor->meshContext(meshID);
-    if (context.writeMappingContext.mapping.get() == NULL){
-      preciceDebug("No write position required");
-    }
-    else {
-      mesh::PtrMesh mesh(context.writeMappingContext.localMesh);
-      if (context.writeMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
-        preciceDebug("Set temporary write position");
-        assertion(mesh->vertices().size() == 1);
-        mesh->vertices()[0].setCoords(internalPosition);
-        context.writeMappingContext.mapping->computeMapping();
-        index = 0;
-      }
-      else {
-        preciceDebug("Set write position");
-        index = mesh->createVertex(internalPosition).getID();
-        mesh->allocateDataValues();
-      }
-    }
+	mesh::PtrMesh mesh(context.mesh);
+	if (context.writeMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+      preciceDebug("Set temporary write position");
+	  assertion(mesh->vertices().size() == 1);
+	  mesh->vertices()[0].setCoords(internalPosition);
+	  context.fromMappingContext.mapping->computeMapping();
+	  index = 0;
+	}
+	else {
+	  preciceDebug("Set write position");
+	  index = mesh->createVertex(internalPosition).getID();
+	  mesh->allocateDataValues();
+	}
+
   }
   return index;
 }
 
-void SolverInterfaceImpl:: setWritePositions
+void SolverInterfaceImpl:: setMeshVertices
 (
   int     meshID,
   int     size,
   double* positions,
   int*    ids )
 {
-  preciceTrace2("setWritePositions()", meshID, size);
+  preciceTrace2("setMeshVertices()", meshID, size);
   if (_clientMode){
-    _requestManager->requestSetWritePositions(meshID, size, positions, ids);
+    _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
   else {
     MeshContext& context = _accessor->meshContext(meshID);
-    if (context.writeMappingContext.mapping.get() == NULL){
-      preciceDebug("No write position required");
+    mesh::PtrMesh mesh(context.mesh);
+    utils::DynVector internalPosition(_dimensions);
+    if (context.fromMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+      preciceDebug("Set temporary position");
+      assertionMsg(size == 1, size);
+      assertion(mesh->vertices().size() == 1);
+      for ( int dim=0; dim < _dimensions; dim++ ){
+        internalPosition[dim] = positions[dim];
+      }
+      mesh->vertices()[0].setCoords(internalPosition);
+      context.fromMappingContext.mapping->computeMapping();
+      ids[0] = 0;
     }
     else {
-      mesh::PtrMesh mesh(context.writeMappingContext.localMesh);
-      utils::DynVector internalPosition(_dimensions);
-      if (context.writeMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
-        preciceDebug("Set temporary write position");
-        assertionMsg(size == 1, size);
-        assertion(mesh->vertices().size() == 1);
-        for ( int dim=0; dim < _dimensions; dim++ ){
-          internalPosition[dim] = positions[dim];
+      preciceDebug("Set positions");
+      for (int i=0; i < size; i++){
+        for (int dim=0; dim < _dimensions; dim++){
+          internalPosition[dim] = positions[i*_dimensions + dim];
         }
-        mesh->vertices()[0].setCoords(internalPosition);
-        context.writeMappingContext.mapping->computeMapping();
-        ids[0] = 0;
+        ids[i] = mesh->createVertex(internalPosition).getID();
       }
-      else {
-        preciceDebug("Set write positions");
-        for (int i=0; i < size; i++){
-          for (int dim=0; dim < _dimensions; dim++){
-            internalPosition[dim] = positions[i*_dimensions + dim];
-          }
-          ids[i] = mesh->createVertex(internalPosition).getID();
-        }
-        mesh->allocateDataValues();
-      }
+      mesh->allocateDataValues();
     }
   }
 }
 
-void SolverInterfaceImpl:: getWritePositions
+void SolverInterfaceImpl:: getMeshVertices
 (
   int     meshID,
   int     size,
   int*    ids,
   double* positions )
 {
-  preciceTrace2("getWritePositions()", meshID, size);
+  preciceTrace2("getMeshVertices()", meshID, size);
   if (_clientMode){
-    _requestManager->requestGetWritePositions(meshID, size, ids, positions);
+    _requestManager->requestGetMeshVertices(meshID, size, ids, positions);
   }
   else {
     MeshContext& context = _accessor->meshContext(meshID);
-    if (context.writeMappingContext.mapping.get() == NULL){
-      preciceWarning("getWritePositions()", "No write positions available!");
+
+    mesh::PtrMesh mesh(context.mesh);
+    utils::DynVector internalPosition(_dimensions);
+    if (context.fromMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+      preciceDebug("Get temporary position");
+      assertionMsg(size == 1, size);
+      assertion(mesh->vertices().size() == 1);
+      internalPosition = mesh->vertices()[0].getCoords();
+      for (int dim=0; dim < _dimensions; dim++){
+        positions[dim] = internalPosition[dim];
+      }
     }
     else {
-      mesh::PtrMesh mesh(context.writeMappingContext.localMesh);
-      utils::DynVector internalPosition(_dimensions);
-      if (context.writeMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
-        preciceDebug("Get temporary write position");
-        assertionMsg(size == 1, size);
-        assertion(mesh->vertices().size() == 1);
-        internalPosition = mesh->vertices()[0].getCoords();
+      preciceDebug("Get positions");
+      assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
+      for (int i=0; i < size; i++){
+        int id = ids[i];
+        assertion2(id < mesh->vertices().size(), mesh->vertices().size(), id);
+        internalPosition = mesh->vertices()[id].getCoords();
         for (int dim=0; dim < _dimensions; dim++){
-          positions[dim] = internalPosition[dim];
-        }
-      }
-      else {
-        preciceDebug("Get write positions");
-        assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
-        for (int i=0; i < size; i++){
-          int id = ids[i];
-          assertion2(id < mesh->vertices().size(), mesh->vertices().size(), id);
-          internalPosition = mesh->vertices()[id].getCoords();
-          for (int dim=0; dim < _dimensions; dim++){
-            positions[id*_dimensions + dim] = internalPosition[dim];
-          }
+          positions[id*_dimensions + dim] = internalPosition[dim];
         }
       }
     }
   }
 }
 
-void SolverInterfaceImpl:: getWriteIDsFromPositions (
+void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
   int     meshID,
   int     size,
   double* positions,
   int*    ids )
 {
-  preciceTrace2("getWriteIDsFromPositions()", meshID, size);
+  preciceTrace2("getMeshVertexIDsFromPositions()", meshID, size);
   if (_clientMode){
-    _requestManager->requestGetWriteIDsFromPositions(meshID, size, positions, ids);
+    _requestManager->requestGetMeshVertexIDsFromPositions(meshID, size, positions, ids);
   }
   else {
     MeshContext& context = _accessor->meshContext(meshID);
-    if (context.writeMappingContext.mapping.get() == NULL){
-      preciceWarning("getWriteIDsFromPositions()", "No write ids available!");
+
+    mesh::PtrMesh mesh(context.mesh);
+    if (context.fromMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+      preciceDebug("Get temporary id --> 0");
+      assertionMsg(size == 1, size);
+      assertion(mesh->vertices().size() == 1);
+      ids[0] = 0;
     }
     else {
-      mesh::PtrMesh mesh(context.writeMappingContext.localMesh);
-      if (context.writeMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
-        preciceDebug("Get temporary write id --> 0");
-        assertionMsg(size == 1, size);
-        assertion(mesh->vertices().size() == 1);
-        ids[0] = 0;
-      }
-      else {
-        preciceDebug("Get write ids");
-        utils::DynVector internalPosition(_dimensions);
-        utils::DynVector position(_dimensions);
-        assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
-        for (int i=0; i < size; i++){
-          for (int dim=0; dim < _dimensions; dim++){
-            position[dim] = positions[i*_dimensions+dim];
-          }
-          int j=0;
-          for (; j < mesh->vertices().size(); j++){
-            internalPosition = mesh->vertices()[j].getCoords();
-            if (equals(internalPosition, position)){
-              ids[i] = j;
-              break;
-            }
-          }
-          preciceCheck(j < mesh->vertices().size(), "getWriteIDsFromPositions()",
-                       "Position " << i << "=" << position << " unknown!");
+      preciceDebug("Get ids");
+      utils::DynVector internalPosition(_dimensions);
+      utils::DynVector position(_dimensions);
+      assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
+      for (int i=0; i < size; i++){
+        for (int dim=0; dim < _dimensions; dim++){
+          position[dim] = positions[i*_dimensions+dim];
         }
+        int j=0;
+        for (; j < mesh->vertices().size(); j++){
+          internalPosition = mesh->vertices()[j].getCoords();
+          if (equals(internalPosition, position)){
+            ids[i] = j;
+            break;
+          }
+        }
+        preciceCheck(j < mesh->vertices().size(), "getMeshVertexIDsFromPositions()",
+                     "Position " << i << "=" << position << " unknown!");
       }
     }
   }
 }
 
 
-int SolverInterfaceImpl:: getWriteNodesSize
+int SolverInterfaceImpl:: getMeshVertexSize
 (
   int meshID )
 {
-  preciceTrace1("getWriteNodesSize()", meshID);
+  preciceTrace1("getMeshVertexSize()", meshID);
   if (_clientMode){
-    return _requestManager->requestGetWriteNodesSize(meshID);
+    return _requestManager->requestGetMeshVertexSize(meshID);
   }
   else {
     MeshContext& context = _accessor->meshContext(meshID);
-    if (context.writeMappingContext.mapping.get() == NULL){
-      return 0;
-    }
-    else {
-      mesh::PtrMesh mesh(context.writeMappingContext.localMesh);
-      return mesh->vertices().size();
-    }
+    mesh::PtrMesh mesh(context.mesh);
+    return mesh->vertices().size();
   }
 }
 
-
-int SolverInterfaceImpl:: setReadPosition
-(
-  int           meshID,
-  const double* position )
-{
-  preciceTrace1("setReadPosition()", meshID);
-  utils::DynVector internalPosition(_dimensions);
-  for ( int dim=0; dim < _dimensions; dim++ ){
-    internalPosition[dim] = position[dim];
-  }
-  preciceDebug("Position = " << internalPosition);
-  int index = -1;
-  if ( _clientMode ){
-    index = _requestManager->requestSetReadPosition(meshID, internalPosition);
-  }
-  else {
-    MeshContext& context = _accessor->meshContext(meshID);
-    if ( context.readMappingContext.mapping.get() == NULL){
-      preciceDebug("No read position required");
-      index = -1;
-    }
-    else {
-      mesh::PtrMesh mesh(context.readMappingContext.localMesh);
-      if ( context.readMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL ){
-        preciceDebug("Set temporary read position");
-        assertion1(mesh->vertices().size() == 1, mesh->vertices().size());
-        mesh->vertices()[0].setCoords(internalPosition);
-        context.readMappingContext.mapping->computeMapping();
-        index = 0;
-      }
-      else {
-        preciceDebug("Set read position");
-        index = mesh->createVertex(internalPosition).getID();
-        mesh->allocateDataValues();
-      }
-    }
-  }
-  return index;
-}
-
-void SolverInterfaceImpl:: setReadPositions
-(
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
-{
-  preciceTrace2("setReadPositions()", meshID, size);
-  if (_clientMode){
-    _requestManager->requestSetReadPositions(meshID, size, positions, ids);
-  }
-  else {
-    MeshContext& context = _accessor->meshContext(meshID);
-    if (context.readMappingContext.mapping.get() == NULL){
-      preciceWarning("setReadPositions()", "No read position required!");
-    }
-    else {
-      mesh::PtrMesh mesh(context.readMappingContext.localMesh);
-      utils::DynVector internalPosition(_dimensions);
-      if (context.readMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
-        preciceDebug("Set temporary read position");
-        assertionMsg(size == 1, size);
-        assertion(mesh->vertices().size() == 1);
-        for ( int dim=0; dim < _dimensions; dim++ ){
-          internalPosition[dim] = positions[dim];
-        }
-        mesh->vertices()[0].setCoords(internalPosition);
-        context.readMappingContext.mapping->computeMapping();
-        ids[0] = 0;
-      }
-      else {
-        preciceDebug("Set read positions");
-        for (int i=0; i < size; i++){
-          for (int dim=0; dim < _dimensions; dim++){
-            internalPosition[dim] = positions[i*_dimensions + dim];
-          }
-          ids[i] = mesh->createVertex(internalPosition).getID();
-        }
-        mesh->allocateDataValues();
-      }
-    }
-  }
-}
-
-void SolverInterfaceImpl:: getReadPositions
-(
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions )
-{
-  preciceTrace2("getReadPositions()", meshID, size);
-  if (_clientMode){
-    _requestManager->requestGetReadPositions(meshID, size, ids, positions);
-  }
-  else {
-    MeshContext& context = _accessor->meshContext(meshID);
-    if (context.readMappingContext.mapping.get() == NULL){
-      preciceWarning("getReadPositions()", "No read positions available!");
-    }
-    else {
-      mesh::PtrMesh mesh(context.readMappingContext.localMesh);
-      utils::DynVector internalPosition(_dimensions);
-      if (context.readMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
-        preciceDebug("Get temporary read position");
-        assertionMsg(size == 1, size);
-        assertion(mesh->vertices().size() == 1);
-        internalPosition = mesh->vertices()[0].getCoords();
-        for (int dim=0; dim < _dimensions; dim++){
-          positions[dim] = internalPosition[dim];
-        }
-      }
-      else {
-        preciceDebug("Get read positions");
-        assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
-        for (int i=0; i < size; i++){
-          int id = ids[i];
-          assertion2(id < mesh->vertices().size(), mesh->vertices().size(), id);
-          internalPosition = mesh->vertices()[id].getCoords();
-          for (int dim=0; dim < _dimensions; dim++){
-            positions[id*_dimensions + dim] = internalPosition[dim];
-          }
-        }
-      }
-    }
-  }
-}
 
 void SolverInterfaceImpl:: getReadIDsFromPositions (
   int     meshID,
@@ -1250,25 +1051,6 @@ void SolverInterfaceImpl:: getReadIDsFromPositions (
   }
 }
 
-int SolverInterfaceImpl:: getReadNodesSize
-(
-  int meshID )
-{
-  preciceTrace1("getReadNodesSize()", meshID);
-  if (_clientMode){
-    return _requestManager->requestGetReadNodesSize(meshID);
-  }
-  else {
-    MeshContext& context = _accessor->meshContext(meshID);
-    if (context.readMappingContext.mapping.get() == NULL){
-      return 0;
-    }
-    else {
-      mesh::PtrMesh mesh(context.readMappingContext.localMesh);
-      return mesh->vertices().size();
-    }
-  }
-}
 
 int SolverInterfaceImpl:: setMeshEdge
 (
@@ -1594,10 +1376,10 @@ void SolverInterfaceImpl:: mapWrittenData
     return;
   }
   impl::MeshContext& context = _accessor->meshContext(meshID);
-  impl::MappingContext& mappingContext = context.writeMappingContext;
+  impl::MappingContext& mappingContext = context.fromMappingContext;
   if (mappingContext.mapping.get() == NULL){
-    preciceWarning("mapWrittenData()", "Mesh \"" << context.mesh->getName()
-                   << "\" has no write data to be mapped!");
+    preciceError("mapWrittenData()", "Mesh \"" << context.mesh->getName()
+                   << "\" has no write mapping");
     return;
   }
   else if (mappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
@@ -1610,12 +1392,12 @@ void SolverInterfaceImpl:: mapWrittenData
     mappingContext.mapping->computeMapping();
   }
   foreach (impl::DataContext& context, _accessor->writeDataContexts()){
-    if (context.mesh->getID() == meshID){
-      int inDataID = context.localData->getID();
-      int outDataID = context.data->getID();
+    if (context.fromMesh->getID() == meshID){
+      int inDataID = context.fromData->getID();
+      int outDataID = context.toData->getID();
       assign(context.data->values()) = 0.0;
-      preciceDebug("Map data \"" << context.data->getName()
-                   << "\" to mesh \"" << context.mesh->getName() << "\"");
+      preciceDebug("Map data \"" << context.fromData->getName()
+                   << "\" from mesh \"" << context.fromMesh->getName() << "\"");
       mappingContext.mapping->map(inDataID, outDataID);
     }
   }
@@ -1633,10 +1415,10 @@ void SolverInterfaceImpl:: mapReadData
     return;
   }
   impl::MeshContext& context = _accessor->meshContext(meshID);
-  impl::MappingContext& mappingContext = context.readMappingContext;
+  impl::MappingContext& mappingContext = context.fromMappingContext;
   if (mappingContext.mapping.get() == NULL){
-    preciceWarning("mapReadData()", "Mesh \"" << context.mesh->getName()
-                   << "\" has no read data to be mapped!");
+    preciceError("mapReadData()", "Mesh \"" << context.mesh->getName()
+                   << "\" has no read mapping!");
     return;
   }
   else if (mappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
@@ -1649,18 +1431,18 @@ void SolverInterfaceImpl:: mapReadData
     mappingContext.mapping->computeMapping();
   }
   foreach (impl::DataContext& context, _accessor->readDataContexts()){
-    if (context.mesh->getID() == meshID){
-      int inDataID = context.data->getID();
-      int outDataID = context.localData->getID();
+    if (context.fromMesh->getID() == meshID){
+      int inDataID = context.fromData->getID();
+      int outDataID = context.toData->getID();
       assign(context.localData->values()) = 0.0;
-      preciceDebug("Map read data \"" << context.data->getName()
-                   << "\" from mesh \"" << context.mesh->getName() << "\"");
+      preciceDebug("Map data \"" << context.fromData->getName()
+                   << "\" from mesh \"" << context.fromMesh->getName() << "\"");
       mappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
-      int max = context.localData->values().size();
+      int max = context.toData->values().size();
       std::ostringstream stream;
       for (int i=0; (i < max) && (i < 10); i++){
-        stream << context.localData->values()[i] << " ";
+        stream << context.toData->values()[i] << " ";
       }
       preciceDebug("First mapped values = " << stream.str());
 #     endif
@@ -2260,7 +2042,7 @@ void SolverInterfaceImpl:: createMeshContext
     meshContext.spacetree->addMesh(mesh);
   }
 
-  // Create default vertex for temporary participant meshes
+  // Create default vertex for incremental mapping participant meshes
   if (meshContext.writeMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
     mesh::PtrMesh& localMesh = meshContext.writeMappingContext.localMesh;
     assertion(localMesh != meshContext.mesh);
@@ -2283,19 +2065,21 @@ void SolverInterfaceImpl:: mapWrittenData()
   using namespace mapping;
   MappingConfiguration::Timing timing;
   // Compute mappings
-  foreach (impl::MeshContext& context, _accessor->usedMeshContexts()){
-    bool hasMapping = context.writeMappingContext.mapping.get() != NULL;
-    timing = context.writeMappingContext.timing;
-    bool rightTime = timing == MappingConfiguration::ON_ADVANCE;
-    rightTime |= timing == MappingConfiguration::INITIAL;
-    if (hasMapping && rightTime){
-      bool hasComputed = context.writeMappingContext.mapping->hasComputedMapping();
-      if (not hasComputed){
-        preciceDebug("Compute write mapping for mesh \"" << context.mesh->getName() << "\"");
-        context.writeMappingContext.mapping->computeMapping();
-      }
-    }
+  foreach (impl::MappingContext& context, _accessor->writeMappingContexts()){
+	timing = context.timing;
+	bool rightTime = timing == MappingConfiguration::ON_ADVANCE;
+	rightTime |= timing == MappingConfiguration::INITIAL;
+	bool hasComputed = context.mapping->hasComputedMapping();
+	if (rightTime && not hasComputed){
+	  preciceDebug("Compute write mapping from mesh \""
+			  << _accessor->meshContext(context.fromMeshID).mesh->getName()
+			  << "\" to mesh \""
+			  << _accessor->meshContext(context.toMeshID).mesh->getName()
+			  << "\".");
+	  context.mapping->computeMapping();
+	}
   }
+
   // Map data
   foreach (impl::DataContext& context, _accessor->writeDataContexts()){
     timing = context.mappingContext.timing;
@@ -2304,17 +2088,17 @@ void SolverInterfaceImpl:: mapWrittenData()
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasMapped = context.mappingContext.hasMappedData;
     if (hasMapping && rightTime && (not hasMapped)){
-      int inDataID = context.localData->getID();
-      int outDataID = context.data->getID();
-      preciceDebug("Map data \"" << context.data->getName()
-                   << "\" to mesh \"" << context.mesh->getName() << "\"");
+      int inDataID = context.fromData->getID();
+      int outDataID = context.toData->getID();
+      preciceDebug("Map data \"" << context.fromData->getName()
+                   << "\" from mesh \"" << context.fromMesh->getName() << "\"");
       assign(context.data->values()) = 0.0;
-      context.mappingContext.mapping->map(inDataID, outDataID);
+      context.fromMappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
-      int max = context.data->values().size();
+      int max = context.fromData->values().size();
       std::ostringstream stream;
       for (int i=0; (i < max) && (i < 10); i++){
-        stream << context.data->values()[i] << " ";
+        stream << context.toData->values()[i] << " ";
       }
       preciceDebug("First mapped values = " << stream.str() );
 #     endif
@@ -2322,16 +2106,15 @@ void SolverInterfaceImpl:: mapWrittenData()
   }
 
   // Clear non-stationary, non-incremental mappings
-  foreach (impl::MeshContext& context, _accessor->usedMeshContexts()){
-    bool hasMapping = context.writeMappingContext.mapping.use_count() > 0;
-    bool isIncremental = context.writeMappingContext.timing
+  foreach (impl::MappingContext& context, _accessor->writeMappingContexts()){
+    bool isIncremental = context.timing
                          == MappingConfiguration::INCREMENTAL;
-    bool isStationary = context.writeMappingContext.timing
+    bool isStationary = context.timing
                         == MappingConfiguration::INITIAL;
-    if (hasMapping && (not isIncremental) && (not isStationary)){
-        context.writeMappingContext.mapping->clear();
+    if ((not isIncremental) && (not isStationary)){
+        context.mapping->clear();
     }
-    context.writeMappingContext.hasMappedData = false;
+    context.hasMappedData = false;
   }
 }
 
@@ -2340,22 +2123,23 @@ void SolverInterfaceImpl:: mapReadData()
   preciceTrace("mapReadData()");
   mapping::MappingConfiguration::Timing timing;
   // Compute mappings
-  foreach (impl::MeshContext& context, _accessor->usedMeshContexts()){
-    timing = context.readMappingContext.timing;
-    bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
-    mapNow |= timing == mapping::MappingConfiguration::INITIAL;
-    bool hasMapping = context.readMappingContext.mapping.use_count() > 0;
-    bool isIncremental = context.readMappingContext.timing
-                         == mapping::MappingConfiguration::INCREMENTAL;
-    if (mapNow && hasMapping && (not isIncremental)){
-      // Compute mapping only when the mapping has not been computed. For timing
-      // initial, this is the case only once.
-      if (not context.readMappingContext.mapping->hasComputedMapping()){
-        preciceDebug("Compute read mapping for mesh \"" << context.mesh->getName() << "\"");
-        context.readMappingContext.mapping->computeMapping();
-      }
-    }
+  foreach (impl::MappingContext& context, _accessor->readMappingContexts()){
+  	timing = context.timing;
+  	bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
+	mapNow |= timing == mapping::MappingConfiguration::INITIAL;
+	bool isIncremental = context.timing
+						 == mapping::MappingConfiguration::INCREMENTAL;
+  	bool hasComputed = context.mapping->hasComputedMapping();
+  	if (rightTime && (not isIncremental) && not hasComputed){
+  	  preciceDebug("Compute read mapping from mesh \""
+  			  << _accessor->meshContext(context.fromMeshID).mesh->getName()
+  			  << "\" to mesh \""
+  			  << _accessor->meshContext(context.toMeshID).mesh->getName()
+  			  << "\".");
+  	  context.mapping->computeMapping();
+  	}
   }
+
   // Map data
   foreach (impl::DataContext& context, _accessor->readDataContexts()){
     timing = context.mappingContext.timing;
@@ -2365,17 +2149,17 @@ void SolverInterfaceImpl:: mapReadData()
     bool isIncremental = context.mappingContext.timing == mapping::MappingConfiguration::INCREMENTAL;
     bool hasMapped = context.mappingContext.hasMappedData;
     if (mapNow && hasMapping && (not isIncremental) && (not hasMapped)){
-      int inDataID = context.data->getID();
-      int outDataID = context.localData->getID();
+      int inDataID = context.fromData->getID();
+      int outDataID = context.toData->getID();
       assign(context.localData->values()) = 0.0;
-      preciceDebug("Map read data \"" << context.data->getName()
-                   << "\" from mesh \"" << context.mesh->getName() << "\"");
-      context.mappingContext.mapping->map(inDataID, outDataID);
+      preciceDebug("Map read data \"" << context.fromData->getName()
+                   << "\" from mesh \"" << context.fromMesh->getName() << "\"");
+      context.mappingContext.fromMapping->map(inDataID, outDataID);
 #     ifdef Debug
       int max = context.localData->values().size();
       std::ostringstream stream;
       for (int i=0; (i < max) && (i < 10); i++){
-        stream << context.localData->values()[i] << " ";
+        stream << context.toData->values()[i] << " ";
       }
       preciceDebug("First mapped values = " << stream.str());
 #     endif
@@ -2383,17 +2167,14 @@ void SolverInterfaceImpl:: mapReadData()
   }
 
   // Clear non-initial, non-incremental mappings
-  foreach (impl::MeshContext& context, _accessor->usedMeshContexts()){
-    bool hasMapping = context.readMappingContext.mapping.use_count() > 0;
-    if (hasMapping){
-      bool isIncremental = context.readMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL;
-      bool isStationary = context.readMappingContext.timing
-                          == mapping::MappingConfiguration::INITIAL;
-      if ((not isIncremental) && (not isStationary)){
-        context.readMappingContext.mapping->clear();
-      }
-      context.readMappingContext.hasMappedData = false;
-    }
+  foreach (impl::MappingContext& context, _accessor->readMappingContexts()){
+	bool isIncremental = context.timing == mapping::MappingConfiguration::INCREMENTAL;
+	bool isStationary = context.timing
+					  == mapping::MappingConfiguration::INITIAL;
+	if ((not isIncremental) && (not isStationary)){
+	  context.mapping->clear();
+	}
+	context.hasMappedData = false;
   }
 }
 

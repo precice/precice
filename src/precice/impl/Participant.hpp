@@ -110,6 +110,14 @@ public:
 
   utils::ptr_vector<MeshContext>& usedMeshContexts();
 
+  void addReadMappingContext(MappingContext* mappingContext);
+
+  void addWriteMappingContext(MappingContext* mappingContext);
+
+  const std::vector<MappingContext*>& readMappingContexts() const;
+
+  const std::vector<MappingContext*>& writeMappingContexts() const;
+
   void addWatchPoint ( const PtrWatchPoint& watchPoint );
 
   std::vector<PtrWatchPoint>& watchPoints();

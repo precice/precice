@@ -139,9 +139,6 @@ private:
 
   void finishParticipantConfiguration ( const impl::PtrParticipant& participant );
 
-  void setLocalData (
-    impl::DataContext&   dataContext,
-    const mesh::PtrMesh& mesh );
 };
 
 }} // namespace precice, config

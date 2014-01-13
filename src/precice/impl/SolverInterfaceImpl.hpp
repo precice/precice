@@ -258,122 +258,54 @@ public:
     const std::set<int>& meshIDs );
 
   /**
-   * @brief Resets local mesh with given ID used for mapping of write data.
+   * @brief Resets mesh with given ID.
    *
-   * Has to be called, everytime the write positions for data to be mapped
+   * Has to be called, everytime the positions for data to be mapped
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  void resetWritePositions ( int meshID );
+  void resetMesh ( int meshID );
 
   /**
-   * @brief Resets local mesh with given ID used for mapping of read data.
+   * @brief Sets several spatial positions for a mesh.
    *
-   * Has to be called, everytime the read positions for data to be mapped
-   * changes. Only has an effect, if the mapping used is non-stationary and
-   * non-incremental.
+   * @param ids [OUT] IDs for data from given positions.
    */
-  void resetReadPositions ( int meshID );
-
-  /**
-   * @brief Set position of solver data node to write data to a preCICE mesh.
-   *
-   * @return Index to be used when writing data.
-   */
-  int setWritePosition (
-    int           meshID,
-    const double* position );
-
-  /**
-   * @brief Sets several spatial positions for data to be written.
-   *
-   * @param ids [OUT] IDs for data to be written from given positions.
-   */
-  void setWritePositions (
+  void setMeshVertices (
     int     meshID,
     int     size,
     double* positions,
     int*    ids );
 
   /**
-   * @brief Gets spatial positions for writing data for given IDs.
+   * @brief Gets spatial positions of vertices for given IDs.
    *
    * @param ids [IN] IDs obtained when setting write positions.
    * @param positions [OUT] Positions corresponding to IDs.
    */
-  void getWritePositions (
+  void getWriteVertices (
     int     meshID,
     int     size,
     int*    ids,
     double* positions );
 
   /**
-   * @brief Gets write data ids from positions.
+   * @brief Gets vertex data ids from positions.
    *
    * @param size [IN] Number of positions, ids.
    * @param positions [IN] Positions (x,y,z,x,y,z,...) to find ids for.
    * @param ids [OUT] IDs corresponding to positions.
    */
-  void getWriteIDsFromPositions (
+  void getMeshVertexIDsFromPositions (
     int     meshID,
     int     size,
     double* positions,
     int*    ids );
 
   /**
-   * @brief Returns the number of nodes of a write data mesh.
+   * @brief Returns the number of nodes of a mesh.
    */
-  int getWriteNodesSize ( int meshID );
-
-  /**
-   * @brief Set position of solver data node to read data from a preCICE mesh.
-   *
-   * @return Index to be used when reading data.
-   */
-  int setReadPosition (
-    int           meshID,
-    const double* position );
-
-  /**
-   * @brief Sets several spatial positions for data to be read.
-   *
-   * @param ids [OUT] IDs for data to be read to given positions.
-   */
-  void setReadPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
-
-  /**
-   * @brief Gets spatial positions for reading data for given IDs.
-   *
-   * @param ids [IN] IDs obtained when setting read positions.
-   * @param positions [OUT] Positions corresponding to IDs.
-   */
-  void getReadPositions (
-    int     meshID,
-    int     size,
-    int*    ids,
-    double* positions );
-
-  /**
-   * @brief Gets read data ids from positions.
-   *
-   * @param size [IN] Number of positions, ids.
-   * @param positions [IN] Positions (x,y,z,x,y,z,...) to find ids for.
-   * @param ids [OUT] IDs corresponding to positions.
-   */
-  void getReadIDsFromPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
-
-  /**
-   * @brief Returns the number of nodes of a read data mesh.
-   */
-  int getReadNodesSize ( int meshID );
+  int getMeshVertexSize ( int meshID );
 
   /**
    * @brief Set the position of a solver mesh vertex.
