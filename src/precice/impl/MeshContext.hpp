@@ -54,7 +54,7 @@ struct MeshContext
    geometry::PtrGeometry geometry;
 
    // @brief Mapping used when mapping data from the mesh. Can be empty.
-  MappingContext fromMappingContext;
+  MappingContext mappingContext;
 
    /**
     * @brief Constructor.
@@ -69,7 +69,7 @@ struct MeshContext
      provideMesh ( false ),
      localOffset ( dimensions, 0.0 ),
      geometry (),
-     fromMappingContext()
+     mappingContext()
    {}
 };
 

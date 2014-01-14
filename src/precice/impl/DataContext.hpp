@@ -22,16 +22,16 @@ struct DataContext
 
   mesh::PtrData toData;
 
-  mesh::PtrMesh fromMesh;
+  mesh::PtrMesh mesh;
 
-  MappingContext fromMappingContext;
+  MappingContext mappingContext;
 
   DataContext():
     used(false),
     fromData(),
     toData(),
-    fromMesh(),
-    fromMappingContext()
+    mesh(),
+    mappingContext()
   {}
 };
 

@@ -120,7 +120,7 @@ void Participant:: addWriteData
   assertion ( data->getID() < (int)_dataContexts.size() );
   DataContext* context = new DataContext ();
   context->fromData = data;
-  context->fromMesh = mesh;
+  context->mesh = mesh;
   context->toData = context->fromData;
   _dataContexts[data->getID()] = context;
   _writeDataContexts.push_back ( context );
@@ -134,9 +134,9 @@ void Participant:: addReadData
   checkDuplicatedData ( data );
   assertion ( data->getID() < (int)_dataContexts.size() );
   DataContext* context = new DataContext ();
-  context->fromData = data;
-  context->fromMesh = mesh;
-  context->toData = context->fromData;
+  context->toData = data;
+  context->mesh = mesh;
+  context->fromData = context->toData;
   _dataContexts[data->getID()] = context;
   _readDataContexts.push_back ( context );
 }
