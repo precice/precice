@@ -3,7 +3,10 @@
 <configuration>
    <mesh name="TestMesh"></mesh>
    <mesh name="TestMeshTwo"></mesh>
-   <mapping:nearest-projection direction="write" mesh="TestMesh" constraint="conservative" timing="incremental"/>
-   <mapping:nearest-projection direction="read" mesh="TestMesh" constraint="consistent"/>
-   <mapping:nearest-projection direction="write" mesh="TestMeshTwo" constraint="conservative" timing="onadvance"/>
+   <mapping:nearest-projection direction="write" from="TestMesh" to="TestMeshTwo"
+   				 constraint="conservative" timing="incremental"/>
+   <mapping:nearest-projection direction="read" from="TestMesh" to="TestMeshTwo"
+   				 constraint="consistent"/>
+   <mapping:nearest-projection direction="write" from="TestMeshTwo" to="TestMesh"
+   				 constraint="conservative" timing="onadvance"/>
 </configuration>

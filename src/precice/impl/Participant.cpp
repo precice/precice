@@ -4,6 +4,7 @@
 #include "Participant.hpp"
 #include "DataContext.hpp"
 #include "MeshContext.hpp"
+#include "MappingContext.hpp"
 #include "action/Action.hpp"
 #include "WatchPoint.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -49,6 +50,8 @@ Participant:: ~Participant()
   _usedMeshContexts.deleteElements();
   _readDataContexts.deleteElements();
   _writeDataContexts.deleteElements();
+  _readMappingContexts.deleteElements();
+  _writeMappingContexts.deleteElements();
   _participantsSize--;
 }
 
@@ -155,12 +158,12 @@ void Participant::addWriteMappingContext
   _readMappingContexts.push_back(mappingContext);
 }
 
-const std::vector<MappingContext*>& readMappingContexts() const
+const utils::ptr_vector<MappingContext>& Participant::readMappingContexts() const
 {
   return _readMappingContexts;
 }
 
-const std::vector<MappingContext*>& writeMappingContexts() const
+const utils::ptr_vector<MappingContext>& Participant::writeMappingContexts() const
 {
   return _writeMappingContexts;
 }

@@ -287,7 +287,7 @@ void MappingConfiguration:: addMapping
   Direction            direction,
   Timing               timing )
 {
-  preciceTrace3("addMapping()", mesh, direction, timing);
+  preciceTrace3("addMapping()", fromMesh, direction, timing);
   //assertion ( !((timing == INITIALLY) && isIncremental) );
   ConfiguredMapping configuredMapping;
   configuredMapping.mapping = mapping;

@@ -200,14 +200,15 @@ public:
   std::set<int> getMeshIDs();
 
   /**
-   * @brief Returns true, if the data with given name is used.
+   * @brief Returns true, if the data with given name is used in the given mesh.
    */
-  bool hasData ( const std::string& dataName ) const;
+  bool hasData ( const std::string& dataName, int meshID ) const;
 
   /**
    * @brief Returns data id corresponding to the given name (from configuration)
+   * and mesh.
    */
-  int getDataID ( const std::string& dataName );
+  int getDataID ( const std::string& dataName, int meshID );
 
   /**
    * @brief Find out position of point relative to geometries.
@@ -583,7 +584,8 @@ private:
   // @brief Geometry name to mesh ID mapping.
   std::map<std::string,int> _meshIDs;
 
-  std::map<std::string,int> _dataIDs;
+  //@brief dataIDs referenced by meshID and data name
+  std::map<int,std::map<std::string,int>> _dataIDs;
 
   // @brief For plotting of used mesh neighbor-relations
   query::ExportVTKNeighbors _exportVTKNeighbors;

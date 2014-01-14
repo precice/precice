@@ -50,17 +50,20 @@ void MappingConfigurationTest:: run()
     validateEquals(mappingConfig.mappings().size(), 3);
     //validateEquals(mappingConfig.mappings()[0].isIncremental, true);
     validateEquals(mappingConfig.mappings()[0].timing, MappingConfiguration::INCREMENTAL);
-    validateEquals(mappingConfig.mappings()[0].mesh, meshConfig->meshes()[0]);
+    validateEquals(mappingConfig.mappings()[0].fromMesh, meshConfig->meshes()[0]);
+    validateEquals(mappingConfig.mappings()[0].toMesh, meshConfig->meshes()[1]);
     validateEquals(mappingConfig.mappings()[0].direction, MappingConfiguration::WRITE);
 
     //validateEquals(mappingConfig.mappings()[1].isIncremental, false);
     validateEquals(mappingConfig.mappings()[1].timing, MappingConfiguration::INITIAL);
-    validateEquals(mappingConfig.mappings()[1].mesh, meshConfig->meshes()[0]);
+    validateEquals(mappingConfig.mappings()[1].fromMesh, meshConfig->meshes()[0]);
+    validateEquals(mappingConfig.mappings()[1].toMesh, meshConfig->meshes()[1]);
     validateEquals(mappingConfig.mappings()[1].direction, MappingConfiguration::READ);
 
     //validateEquals(mappingConfig.mappings()[2].isIncremental, false);
     validateEquals(mappingConfig.mappings()[2].timing, MappingConfiguration::ON_ADVANCE);
-    validateEquals(mappingConfig.mappings()[2].mesh, meshConfig->meshes()[1]);
+    validateEquals(mappingConfig.mappings()[2].fromMesh, meshConfig->meshes()[1]);
+    validateEquals(mappingConfig.mappings()[2].toMesh, meshConfig->meshes()[0]);
     validateEquals(mappingConfig.mappings()[2].direction, MappingConfiguration::WRITE);
   }
 }

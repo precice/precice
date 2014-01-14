@@ -41,6 +41,7 @@
 #include "geometry/Geometry.hpp"
 #include "geometry/ImportGeometry.hpp"
 #include "geometry/CommunicatedGeometry.hpp"
+#include "geometry/SolverGeometry.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/Globals.hpp"
@@ -196,14 +197,7 @@ void SolverInterfaceImpl:: configure
       _meshIDs[nameID.first] = nameID.second;
     }
     foreach (const mesh::PtrData& data, mesh->data()){
-      if (not utils::contained(data->getName(), _dataIDs)){
-        _dataIDs[data->getName()] = data->getID();
-      }
-      else {
-        preciceDebug("DataID: " << data->getID() << " _dataIDs: "
-                     << _dataIDs[data->getName()]);
-        assertion2(_dataIDs[data->getName()] == data->getID(),
-                   _dataIDs[data->getName()], data->getID());
+      _dataIDs[mesh->getID()][data->getName()] = data->getID();
       }
     }
     std::string meshName = mesh->getName();
@@ -494,20 +488,21 @@ std::set<int> SolverInterfaceImpl:: getMeshIDs()
 
 bool SolverInterfaceImpl:: hasData
 (
-  const std::string& dataName ) const
+  const std::string& dataName, int meshID ) const
 {
-  preciceTrace1 ( "hasData()", dataName );
-  return utils::contained ( dataName, _dataIDs );
+  preciceTrace2 ( "hasData()", dataName, meshID );
+  return _dataIDs[meshID][dataName]!=NULL;
 }
 
 int SolverInterfaceImpl:: getDataID
 (
-  const std::string& dataName )
+  const std::string& dataName, int meshID )
 {
-  preciceTrace1 ( "getDataID()", dataName );
-  preciceCheck ( utils::contained(dataName, _dataIDs), "getDataID()",
-                 "Data with name \"" << dataName << "\" is not defined!" );
-  return _dataIDs[dataName];
+  preciceTrace2 ( "getDataID()", dataName, meshID );
+  preciceCheck ( hasData(dataName, meshID), "getDataID()",
+                 "Data with name \"" << dataName << "\" is not defined on mesh with ID \""
+                 << meshID << "\".");
+  return _dataIDs[meshID][dataName];
 }
 
 int SolverInterfaceImpl:: inquirePosition
@@ -815,10 +810,10 @@ void SolverInterfaceImpl:: resetMesh
 {
   preciceTrace1("resetMesh()", meshID);
   impl::MeshContext& context = _accessor->meshContext(meshID);
-  bool hasMapping = context.mappingContext.mapping.use_count() > 0;
-  bool isIncremental = context.mappingContext.timing
+  bool hasMapping = context.fromMappingContext.mapping.use_count() > 0;
+  bool isIncremental = context.fromMappingContext.timing
 						 == mapping::MappingConfiguration::INCREMENTAL;
-  bool isStationary = context.mappingContext.timing
+  bool isStationary = context.fromMappingContext.timing
   						 == mapping::MappingConfiguration::INITIAL;
 
   if ( hasMapping && (not isIncremental) && (not isStationary) ) {
@@ -846,11 +841,11 @@ int SolverInterfaceImpl:: setMeshVertex
   else {
     MeshContext& context = _accessor->meshContext(meshID);
 	mesh::PtrMesh mesh(context.mesh);
-	if (context.mappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+	if (context.fromMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
       preciceDebug("Set temporary write position");
 	  assertion(mesh->vertices().size() == 1);
 	  mesh->vertices()[0].setCoords(internalPosition);
-	  context.mappingContext.mapping->computeMapping();
+	  context.fromMappingContext.mapping->computeMapping();
 	  index = 0;
 	}
 	else {
@@ -878,7 +873,7 @@ void SolverInterfaceImpl:: setMeshVertices
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     utils::DynVector internalPosition(_dimensions);
-    if (context.mappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+    if (context.fromMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
       preciceDebug("Set temporary position");
       assertionMsg(size == 1, size);
       assertion(mesh->vertices().size() == 1);
@@ -886,7 +881,7 @@ void SolverInterfaceImpl:: setMeshVertices
         internalPosition[dim] = positions[dim];
       }
       mesh->vertices()[0].setCoords(internalPosition);
-      context.mappingContext.mapping->computeMapping();
+      context.fromMappingContext.mapping->computeMapping();
       ids[0] = 0;
     }
     else {
@@ -918,7 +913,7 @@ void SolverInterfaceImpl:: getMeshVertices
 
     mesh::PtrMesh mesh(context.mesh);
     utils::DynVector internalPosition(_dimensions);
-    if (context.mappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+    if (context.fromMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
       preciceDebug("Get temporary position");
       assertionMsg(size == 1, size);
       assertion(mesh->vertices().size() == 1);
@@ -956,7 +951,7 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     MeshContext& context = _accessor->meshContext(meshID);
 
     mesh::PtrMesh mesh(context.mesh);
-    if (context.mappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+    if (context.fromMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
       preciceDebug("Get temporary id --> 0");
       assertionMsg(size == 1, size);
       assertion(mesh->vertices().size() == 1);
@@ -1312,7 +1307,7 @@ void SolverInterfaceImpl:: mapWrittenData
     return;
   }
   impl::MeshContext& context = _accessor->meshContext(meshID);
-  impl::MappingContext& mappingContext = context.mappingContext;
+  impl::MappingContext& mappingContext = context.fromMappingContext;
   if (mappingContext.mapping.get() == NULL){
     preciceError("mapWrittenData()", "Mesh \"" << context.mesh->getName()
                    << "\" has no write mapping");
@@ -1351,7 +1346,7 @@ void SolverInterfaceImpl:: mapReadData
     return;
   }
   impl::MeshContext& context = _accessor->meshContext(meshID);
-  impl::MappingContext& mappingContext = context.mappingContext;
+  impl::MappingContext& mappingContext = context.fromMappingContext;
   if (mappingContext.mapping.get() == NULL){
     preciceError("mapReadData()", "Mesh \"" << context.mesh->getName()
                    << "\" has no read mapping!");
@@ -1367,7 +1362,7 @@ void SolverInterfaceImpl:: mapReadData
     mappingContext.mapping->computeMapping();
   }
   foreach (impl::DataContext& context, _accessor->readDataContexts()){
-    if (meshmesh->getID() == meshID){
+    if (context.mesh->getID() == meshID){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       assign(context.toData->values()) = 0.0;
@@ -1408,7 +1403,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
                  "writeBlockVectorData()",
                  "Writing block vector data cannot be used with incremental "
                  << "mapping!");
-    assertion(context.localData.get() != NULL);
+    assertion(context.fromData.get() != NULL);
     utils::DynVector& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       int offsetInternal = valueIndices[i]*_dimensions;
@@ -1444,7 +1439,7 @@ void SolverInterfaceImpl:: writeVectorData
   }
   else {
     DataContext& context = _accessor->dataContext(dataID);
-    assertion(context.localData.get() != NULL);
+    assertion(context.fromData.get() != NULL);
     impl::MappingContext& mapContext = context.mappingContext;
     utils::DynVector& values = context.fromData->values();
     if (mapContext.timing == mapping::MappingConfiguration::INCREMENTAL){
@@ -1485,7 +1480,7 @@ void SolverInterfaceImpl:: writeBlockScalarData
                  "writeBlockScalarData()",
                  "Writing block scalar data cannot be used with incremental "
                  << "mapping!");
-    assertion(context.localData.get() != NULL);
+    assertion(context.fromData.get() != NULL);
     utils::DynVector& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       assertion2(i < valuesInternal.size(), i, valuesInternal.size());
@@ -1508,7 +1503,7 @@ void SolverInterfaceImpl:: writeScalarData
   }
   else {
     DataContext& context = _accessor->dataContext(dataID);
-    assertion(context.localData.use_count() > 0);
+    assertion(context.fromData.use_count() > 0);
     impl::MappingContext& mapContext = context.mappingContext;
     utils::DynVector& values = context.fromData->values();
     bool hasMapping = mapContext.mapping.get() != NULL;
@@ -1574,7 +1569,7 @@ void SolverInterfaceImpl:: readVectorData
   }
   else {
     DataContext& context = _accessor->dataContext(dataID);
-    assertion(context.localData.use_count() > 0);
+    assertion(context.toData.use_count() > 0);
     utils::DynVector& values = context.toData->values();
     impl::MappingContext& mapContext = context.mappingContext;
     bool hasMapping = mapContext.mapping.get() != NULL;
@@ -1622,7 +1617,7 @@ void SolverInterfaceImpl:: readBlockScalarData
                  "readBlockScalarData()",
                  "Reading block scalar data cannot be used with incremental "
                  << "mapping!");
-    assertion(context.localData.get() != NULL);
+    assertion(context.toData.get() != NULL);
     utils::DynVector& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
       assertion2(valueIndices[i] < valuesInternal.size(),
@@ -1646,7 +1641,7 @@ void SolverInterfaceImpl:: readScalarData
   }
   else {
     DataContext& context = _accessor->dataContext(dataID);
-    assertion(context.localData.use_count() > 0);
+    assertion(context.toData.use_count() > 0);
     utils::DynVector& values = context.toData->values();
     impl::MappingContext& mapContext = context.mappingContext;
     bool hasMapping = mapContext.mapping.get() != NULL;
@@ -1838,7 +1833,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
                 "At the moment preCICE allows only for one receiver per mesh. "
                 << "Mesh \"" << context.mesh->getName() << "\" is received "
                 << "more than once.");
-            preciceCheck (context.mappingContext.timing!=mapping::MappingConfiguration::INCREMENTAL,
+            preciceCheck (context.fromMappingContext.timing!=mapping::MappingConfiguration::INCREMENTAL,
                          "configureSolverGeometries()", "A communicated geometry cannot "
                             << "define an incremental mapping. ");
             preciceDebug ( "   ... receiver " << receiver );
@@ -1930,13 +1925,13 @@ void SolverInterfaceImpl:: createMeshContext
 
   //TODO maybe this has to be moved to geometry
   // Create default vertex for incremental mapping participant meshes
-  if (meshContext.mappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+  if (meshContext.fromMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
 	//TODO better solution for the following
-	preciceCheck(typeid(*meshContext.geometry).name()!="CommunicatedGeometry",
+    preciceCheck(typeid(*meshContext.geometry).name()!="CommunicatedGeometry",
 				   "createMeshContext()",
 				   "You cannot communicate a mesh with an incremental mapping");
     mesh::PtrMesh& mesh = meshContext.mesh;
-    assertion(localMesh->vertices().size() == 0);
+    assertion(mesh->vertices().size() == 0);
     mesh->createVertex(utils::DynVector(_dimensions,0.0));
     mesh->allocateDataValues();
   }
@@ -1949,18 +1944,18 @@ void SolverInterfaceImpl:: mapWrittenData()
   MappingConfiguration::Timing timing;
   // Compute mappings
   foreach (impl::MappingContext& context, _accessor->writeMappingContexts()){
-	timing = context.timing;
-	bool rightTime = timing == MappingConfiguration::ON_ADVANCE;
-	rightTime |= timing == MappingConfiguration::INITIAL;
-	bool hasComputed = context.mapping->hasComputedMapping();
-	if (rightTime && not hasComputed){
-	  preciceDebug("Compute write mapping from mesh \""
-			  << _accessor->meshContext(context.fromMeshID).mesh->getName()
-			  << "\" to mesh \""
-			  << _accessor->meshContext(context.toMeshID).mesh->getName()
-			  << "\".");
-	  context.mapping->computeMapping();
-	}
+    timing = context.timing;
+    bool rightTime = timing == MappingConfiguration::ON_ADVANCE;
+    rightTime |= timing == MappingConfiguration::INITIAL;
+    bool hasComputed = context.mapping->hasComputedMapping();
+    if (rightTime && not hasComputed){
+      preciceDebug("Compute write mapping from mesh \""
+          << _accessor->meshContext(context.fromMeshID).mesh->getName()
+          << "\" to mesh \""
+          << _accessor->meshContext(context.toMeshID).mesh->getName()
+          << "\".");
+      context.mapping->computeMapping();
+    }
   }
 
   // Map data
@@ -2039,7 +2034,7 @@ void SolverInterfaceImpl:: mapReadData()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
-      int max = context.localData->values().size();
+      int max = context.toData->values().size();
       std::ostringstream stream;
       for (int i=0; (i < max) && (i < 10); i++){
         stream << context.toData->values()[i] << " ";

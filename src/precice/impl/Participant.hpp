@@ -28,6 +28,7 @@ namespace precice {
   namespace impl {
     struct DataContext;
     struct MeshContext;
+    struct MappingContext;
   }
   namespace com {
     class Communication;
@@ -114,9 +115,9 @@ public:
 
   void addWriteMappingContext(MappingContext* mappingContext);
 
-  const std::vector<MappingContext*>& readMappingContexts() const;
+  const utils::ptr_vector<MappingContext>& readMappingContexts() const;
 
-  const std::vector<MappingContext*>& writeMappingContexts() const;
+  const utils::ptr_vector<MappingContext>& writeMappingContexts() const;
 
   void addWatchPoint ( const PtrWatchPoint& watchPoint );
 
@@ -191,10 +192,10 @@ private:
   std::vector<MeshContext*> _meshContexts;
 
   // @brief Read mapping contexts used by the participant.
-  std::vector<MappingContext*> _readMappingContexts;
+  utils::ptr_vector<MappingContext> _readMappingContexts;
 
   // @brief Write mapping contexts used by the participant.
-  std::vector<MappingContext*> _writeMappingContexts;
+  utils::ptr_vector<MappingContext> _writeMappingContexts;
 
   // @brief Mesh contexts used by the participant.
   utils::ptr_vector<MeshContext> _usedMeshContexts;

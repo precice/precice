@@ -612,23 +612,23 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   validateEquals(precice.getDimensions(), 2);
   precice.initialize();
   int dataID = precice.getDataID("Forces");
-  //int meshID = precice.getMeshID("Mesh");
+  int meshID = precice.getMeshID("SolverMesh");
   int indices[4];
   double values[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
   double x[2];
   x[0] = 0.0; x[1] = 0.0;
-  indices[0] = precice.setWritePosition(dataID, x);
+  indices[0] = precice.setMeshVertex(meshID, x);
   x[0] = 1.0; x[1] = 0.0;
-  indices[1] = precice.setWritePosition(dataID, x);
+  indices[1] = precice.setMeshVertex(meshID, x);
   x[0] = 1.0; x[1] = 1.0;
-  indices[2] = precice.setWritePosition(dataID, x);
+  indices[2] = precice.setMeshVertex(meshID, x);
   x[0] = 0.0; x[1] = 1.0;
-  indices[3] = precice.setWritePosition(dataID, x);
+  indices[3] = precice.setMeshVertex(meshID, x);
   precice.writeBlockVectorData(dataID, 4, indices, values);
 
   // Validate results
   impl::PtrParticipant p = precice._impl->_accessor;
-  mesh::PtrData data = p->_dataContexts[0]->localData;
+  mesh::PtrData data = p->_dataContexts[0]->toData;
   validate(data.get() != NULL);
   utils::DynVector& writtenValues = data->values();
   validateEquals(writtenValues.size(), 8);
@@ -658,8 +658,8 @@ void SolverInterfaceTestGeometry:: testConservativeIncrementalDataMapping()
   validateEquals(participant->getName(), "TestAccessor");
   validateEquals(participant->_meshContexts.size(), 1);
   validate(participant->_meshContexts[0] != NULL);
-  validate(participant->_meshContexts[0]->writeMappingContext.mapping.use_count() > 0);
-  validate(participant->_meshContexts[0]->readMappingContext.mapping.use_count() > 0);
+  validate(participant->_meshContexts[0]->fromMappingContext.mapping.use_count() > 0);
+  validate(participant->_meshContexts[1]->fromMappingContext.mapping.use_count() > 0);
 
   using tarch::la::raw;
   for ( int j=-10; j < 10; j+=2 ) {
@@ -667,7 +667,7 @@ void SolverInterfaceTestGeometry:: testConservativeIncrementalDataMapping()
       // From -10 to +10 in every dimension
       Vector2D currentPoint ((double)i, (double)j);
       Vector2D data(1.0);
-      int index = geoInterface.setWritePosition ( meshID, raw(currentPoint) );
+      int index = geoInterface.setMeshVertex ( meshID, raw(currentPoint) );
       geoInterface.writeVectorData ( dataID, index, raw(data) );
     }
   }
@@ -678,7 +678,7 @@ void SolverInterfaceTestGeometry:: testConservativeIncrementalDataMapping()
   Vector2D temp;
   validateEquals(geoInterface._impl->_participants.size(), 1);
   validate((int)participant->_dataContexts.size() > dataID);
-  utils::DynVector& values = participant->_dataContexts[dataID]->data->values();
+  utils::DynVector& values = participant->_dataContexts[dataID]->toData->values();
   for (int index=0; index < values.size() / 2; index++){
     assignList(temp) = values[index*2], values[index*2 +1];
 //    assign(temp) = tarch::la::slice<dim>(values, index*dim);
@@ -708,7 +708,7 @@ void SolverInterfaceTestGeometry:: testConsistentIncrementalDataMapping ()
   validateEquals ( geoInterface._impl->_participants.size(), 1 );
   impl::PtrParticipant participant = geoInterface._impl->_participants[0];
   validate ( (int)participant->_dataContexts.size() > dataID );
-  utils::DynVector& velocities = participant->_dataContexts[dataID]->data->values();
+  utils::DynVector& velocities = participant->_dataContexts[dataID]->fromData->values();
   assign(velocities) = 5.0;
 
   Vector2D counter ( 0.0 );
@@ -721,7 +721,7 @@ void SolverInterfaceTestGeometry:: testConsistentIncrementalDataMapping ()
       datavector += 0.0, 0.0;
       Vector2D data ( 0.0 );
       using tarch::la::raw;
-      int index = geoInterface.setReadPosition ( meshID, raw(currentPoint) );
+      int index = geoInterface.setMeshVertex ( meshID, raw(currentPoint) );
       geoInterface.readVectorData ( dataID, index, raw(data) );
       validate ( tarch::la::equals(data, Vector2D(5.0) ) );
     }
@@ -742,13 +742,13 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     int meshID = interface.getMeshID (
         "SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS" );
     Vector2D position ( 0.0, 0.0 );
-    int i0 = interface.setWritePosition ( meshID, raw(position) );
+    int i0 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 1.0, 0.0;
-    int i1 = interface.setWritePosition ( meshID, raw(position) );
+    int i1 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 1.0, 1.0;
-    int i2 = interface.setWritePosition ( meshID, raw(position) );
+    int i2 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 0.0, 1.0;
-    int i3 = interface.setWritePosition ( meshID, raw(position) );
+    int i3 = interface.setMeshVertex ( meshID, raw(position) );
     int dataID = interface.getDataID ( "ConsistentTPS" );
     double data = 0.0;
     interface.writeScalarData ( dataID, i0, data );
@@ -765,13 +765,13 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     int meshID = interface.getMeshID (
         "SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS" );
     Vector2D position(0.0, 0.0);
-    int i0 = interface.setWritePosition(meshID, raw(position));
+    int i0 = interface.setMeshVertex(meshID, raw(position));
     assignList(position) = 1.0, 0.0;
-    int i1 = interface.setWritePosition(meshID, raw(position));
+    int i1 = interface.setMeshVertex(meshID, raw(position));
     assignList(position) = 1.0, 1.0;
-    int i2 = interface.setWritePosition(meshID, raw(position));
+    int i2 = interface.setMeshVertex(meshID, raw(position));
     assignList(position) = 0.0, 1.0;
-    int i3 = interface.setWritePosition(meshID, raw(position));
+    int i3 = interface.setMeshVertex(meshID, raw(position));
     int dataID = interface.getDataID("ConservativeTPS");
     double data = 0.0;
     interface.writeScalarData(dataID, i0, data);
@@ -788,13 +788,13 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     int meshID = interface.getMeshID (
         "SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS" );
     Vector2D position ( 0.0, 0.0 );
-    int i0 = interface.setWritePosition ( meshID, raw(position) );
+    int i0 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 1.0, 0.0;
-    int i1 = interface.setWritePosition ( meshID, raw(position) );
+    int i1 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 1.0, 1.0;
-    int i2 = interface.setWritePosition ( meshID, raw(position) );
+    int i2 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 0.0, 1.0;
-    int i3 = interface.setWritePosition ( meshID, raw(position) );
+    int i3 = interface.setMeshVertex ( meshID, raw(position) );
     int dataID = interface.getDataID ( "ConsistentVS" );
     Vector2D data ( 0.0, 0.0 );
     interface.writeVectorData ( dataID, i0, raw(data) );
@@ -811,13 +811,13 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     int meshID = interface.getMeshID (
         "SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS" );
     Vector2D position ( 0.0, 0.0 );
-    int i0 = interface.setWritePosition ( meshID, raw(position) );
+    int i0 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 1.0, 0.0;
-    int i1 = interface.setWritePosition ( meshID, raw(position) );
+    int i1 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 1.0, 1.0;
-    int i2 = interface.setWritePosition ( meshID, raw(position) );
+    int i2 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 0.0, 1.0;
-    int i3 = interface.setWritePosition ( meshID, raw(position) );
+    int i3 = interface.setMeshVertex ( meshID, raw(position) );
     int dataID = interface.getDataID ( "ConservativeVS" );
     Vector2D data ( 0.0, 0.0 );
     interface.writeVectorData ( dataID, i0, raw(data) );
