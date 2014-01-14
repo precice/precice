@@ -157,105 +157,13 @@ VoxelPosition SolverInterface:: inquireVoxelPosition
                                        includeBoundaries, meshIDs );
 }
 
-void SolverInterface:: resetWritePositions
+void SolverInterface:: resetMesh
 (
   int meshID )
 {
-  _impl->resetWritePositions(meshID);
+  _impl->resetMesh(meshID);
 }
 
-void SolverInterface:: resetReadPositions
-(
-  int meshID )
-{
-  _impl->resetReadPositions(meshID);
-}
-
-int SolverInterface:: setWritePosition
-(
-  int           meshID,
-  const double* position )
-{
-  return _impl->setWritePosition(meshID, position);
-}
-
-void SolverInterface:: setWritePositions
-(
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
-{
-  _impl->setWritePositions(meshID, size, positions, ids);
-}
-
-void SolverInterface:: getWritePositions
-(
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions )
-{
-  _impl->getWritePositions(meshID, size, ids, positions);
-}
-
-void SolverInterface:: getWriteIDsFromPositions
-(
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
-{
-  _impl->getWriteIDsFromPositions(meshID, size, positions, ids);
-}
-
-int SolverInterface:: getWriteNodesSize ( int meshID )
-{
-  return _impl->getWriteNodesSize(meshID);
-}
-
-int SolverInterface:: setReadPosition
-(
-  int           meshID,
-  const double* position )
-{
-  return _impl->setReadPosition(meshID, position);
-}
-
-void SolverInterface:: setReadPositions
-(
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
-{
-  _impl->setReadPositions(meshID, size, positions, ids);
-}
-
-void SolverInterface:: getReadPositions
-(
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions )
-{
-  _impl->getReadPositions(meshID, size, ids, positions);
-}
-
-void SolverInterface:: getReadIDsFromPositions
-(
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
-{
-  _impl->getReadIDsFromPositions(meshID, size, positions, ids);
-}
-
-int SolverInterface:: getReadNodesSize ( int meshID )
-{
-  return _impl->getReadNodesSize(meshID);
-}
 
 int SolverInterface:: setMeshVertex
 (
@@ -270,6 +178,36 @@ int SolverInterface:: getMeshVertexSize
   int meshID)
 {
   return _impl->getMeshVertexSize(meshID);
+}
+
+void SolverInterface:: setMeshVertices
+(
+  int     meshID,
+  int     size,
+  double* positions,
+  int*    ids )
+{
+  _impl->setMeshVertices(meshID, size, positions, ids);
+}
+
+void SolverInterface:: getMeshVertices
+(
+  int     meshID,
+  int     size,
+  int*    ids,
+  double* positions )
+{
+  _impl->getMeshVertices(meshID, size, ids, positions);
+}
+
+void SolverInterface:: getMeshVertexIDsFromPositions
+(
+  int     meshID,
+  int     size,
+  double* positions,
+  int*    ids )
+{
+  _impl->getMeshVertexIDsFromPositions(meshID, size, positions, ids);
 }
 
 int SolverInterface:: setMeshEdge

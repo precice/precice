@@ -316,140 +316,13 @@ public:
     const std::set<int>& meshIDs );
 
   /**
-   * @brief Resets local mesh with given ID used for mapping of write data.
+   * @brief Resets mesh with given ID.
    *
-   * Has to be called, everytime the write positions for data to be mapped
+   * Has to be called, everytime the positions for data to be mapped
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  void resetWritePositions ( int meshID );
-
-  /**
-   * @brief Resets local mesh with given ID used for mapping of read data.
-   *
-   * Has to be called, everytime the read positions for data to be mapped
-   * changes. Only has an effect, if the mapping used is non-stationary and
-   * non-incremental.
-   */
-  void resetReadPositions ( int meshID );
-
-  /**
-   * @brief Sets spatial position for data to be written.
-   *
-   * @return ID for data to be written from given position. ID is always 0 when
-   *         an incremental mapping is configured and is -1, i.e., not used,
-   *         when no write-mapping is configured.
-   */
-  int setWritePosition (
-    int           meshID,
-    const double* position );
-
-  /**
-   * @brief Sets several spatial positions for data to be written.
-   *
-   * Pre-conditions:
-   * - A not incremental write-mapping is configured for the mesh with given
-   *   meshID.
-   * Post-conditions:
-   * - If no write mapping is configured, the ids are not changed.
-   * - If a (not incremental) write mapping is configured, the ids are filled.
-   *
-   * @param ids [OUT] IDs for data to be written from given positions.
-   */
-  void setWritePositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
-
-  /**
-   * @brief Gets spatial positions for writing data for given IDs.
-   *
-   * @param ids [IN] IDs obtained when setting write positions.
-   * @param positions [OUT] Positions corresponding to IDs.
-   */
-  void getWritePositions (
-    int     meshID,
-    int     size,
-    int*    ids,
-    double* positions );
-
-  /**
-   * @brief Gets write data ids from positions.
-   *
-   * @param size [IN] Number of positions, ids.
-   * @param positions [IN] Positions (x,y,z,x,y,z,...) to find ids for.
-   * @param ids [OUT] IDs corresponding to positions.
-   */
-  void getWriteIDsFromPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
-
-  /**
-   * @brief Returns the number of nodes of a write data mesh.
-   */
-  int getWriteNodesSize ( int meshID );
-
-  /**
-   * @brief Sets spatial position for data to be read.
-   *
-   * @return ID for data to be read to given position. ID is always 0 when
-   *         an incremental mapping is configured and is -1, i.e., not used,
-   *         when no read-mapping is configured.
-   */
-  int setReadPosition (
-    int           meshID,
-    const double* position );
-
-  /**
-   * @brief Sets several spatial positions for data to be read.
-   *
-   * Pre-conditions:
-   * - A not incremental read-mapping is configured for the mesh with given
-   *   meshID.
-   * Post-conditions:
-   * - If no read mapping is configured, the ids are not changed.
-   * - If a (not incremental) read mapping is configured, the ids are filled.
-   *
-   * @param ids [OUT] IDs for data to be read to given positions.
-   */
-  void setReadPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
-
-  /**
-   * @brief Gets spatial positions for reading data for given IDs.
-   *
-   * @param ids [IN] IDs obtained when setting read positions.
-   * @param positions [OUT] Positions corresponding to IDs.
-   */
-  void getReadPositions (
-    int     meshID,
-    int     size,
-    int*    ids,
-    double* positions );
-
-  /**
-   * @brief Gets read data ids from positions.
-   *
-   * @param size [IN] Number of positions, ids.
-   * @param positions [IN] Positions (x,y,z,x,y,z,...) to find ids for.
-   * @param ids [OUT] IDs corresponding to positions.
-   */
-  void getReadIDsFromPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
-
-  /**
-   * @brief Returns the number of nodes of a read data mesh.
-   */
-  int getReadNodesSize ( int meshID );
+  void resetMesh ( int meshID );
 
   /**
    * @brief Sets position of surface mesh vertex, returns ID.
@@ -462,6 +335,49 @@ public:
    * @brief Returns the number of vertices of a mesh.
    */
   int getMeshVertexSize(int meshID);
+
+  /**
+   * @brief Sets several spatial vertex positions.
+   *
+   * Pre-conditions:
+   * - A not incremental write-mapping is configured for the mesh with given
+   *   meshID.
+   * Post-conditions:
+   * - If no write mapping is configured, the ids are not changed.
+   * - If a (not incremental) write mapping is configured, the ids are filled.
+   *
+   * @param ids [OUT] IDs for data to be written from given positions.
+   */
+  void setMeshVertices (
+    int     meshID,
+    int     size,
+    double* positions,
+    int*    ids );
+
+  /**
+   * @brief Gets spatial vertex positions for given IDs.
+   *
+   * @param ids [IN] IDs obtained when setting write positions.
+   * @param positions [OUT] Positions corresponding to IDs.
+   */
+  void getMeshVertices (
+    int     meshID,
+    int     size,
+    int*    ids,
+    double* positions );
+
+  /**
+   * @brief Gets mesh vertex IDs from positions.
+   *
+   * @param size [IN] Number of positions, ids.
+   * @param positions [IN] Positions (x,y,z,x,y,z,...) to find ids for.
+   * @param ids [OUT] IDs corresponding to positions.
+   */
+  void getMeshVertexIDsFromPositions (
+    int     meshID,
+    int     size,
+    double* positions,
+    int*    ids );
 
   /**
    * @brief Sets surface mesh edge from vertex IDs, returns edge ID.
