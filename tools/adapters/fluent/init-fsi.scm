@@ -11,5 +11,9 @@
    (rp-var-define 'udf/checkpoint 0 'int #f)
 )
 
+(rpsetvar 'udf/convergence 1)
+(rpsetvar 'udf/ongoing 1)
+(rpsetvar 'udf/iterate 0)
+(rpsetvar 'udf/checkpoint 0)
 (rpsetvar 'dynamesh/update-in-timestep/residual-criterion -1.0)
 (init-flow)

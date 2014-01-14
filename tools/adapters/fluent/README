@@ -16,11 +16,16 @@
 
 --------------------------------------------------------------------------------
 
-2. How to start Fluent
-- start the binary from your simulation folder
+2.1 How to start Fluent with GUI
+- start the binary "fluent" from your simulation folder
 - set double precision, processing options (serial or parallel) and the dimension
 (for parallel select also "show more", "parallel settings", "mpi types" -> open mpi
 
+2.2 How to start Fluent without GUI
+- serial:   fluent 2ddp -g < steer-fluent.txt
+- parallel: fluent 2ddp -g -t4 -mpi=openmpi < steer-fluent.txt
+  (-t4 sets 4 processes for computations)
+  (steer-fluent.txt drives Fluent, can also be done by hand)
 
 3. Preparing a Fluent .cas file for UDF function usage:
 
@@ -38,6 +43,10 @@
 
 - Perform the steps in 1.,2. and 3.
 - Set a user defined mesh motion according to function "gridmotions".
+- When the parabolic inflow profile is needed, you have to read it from file 
+  parabolic.prof, using the boundary conditions dialog box. Check, whether the
+  number of points in parabolic.prof is way more than the elements at the inflow
+  and that the velocities in the file are correct.
 
 --------------------------------------------------------------------------------
 
