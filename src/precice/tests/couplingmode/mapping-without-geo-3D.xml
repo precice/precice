@@ -35,12 +35,12 @@
          <read-data  name="Forces"        mesh="MeshForces"/>
       </participant>
       
-      <coupling-scheme:explicit>
+      <coupling-scheme:serial-explicit>
          <participants first="SolverA" second="SolverB"/>
          <max-timesteps value="2"/>
          <timestep-length value="1.0"/>
          <exchange data="Forces"        mesh="MeshForces"        from="SolverA"/>
          <exchange data="Displacements" mesh="MeshDisplacements" from="SolverB"/>
-      </coupling-scheme:explicit>   
+      </coupling-scheme:serial-explicit>   
    </solver-interface>
 </precice-configuration>

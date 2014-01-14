@@ -38,13 +38,13 @@
          </action:divide-by-area>
       </participant>
       
-      <coupling-scheme:explicit> 
+      <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverTwo" /> 
          <max-timesteps value="10" />
          <timestep-length value="0.01" />
          <exchange data="Forces"     mesh="Test-Square" from="SolverTwo"/>
          <exchange data="Velocities" mesh="Test-Square" from="SolverOne" />
-      </coupling-scheme:explicit>
+      </coupling-scheme:serial-explicit>
                    
    </solver-interface>
 

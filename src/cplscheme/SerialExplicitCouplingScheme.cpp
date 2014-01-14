@@ -44,8 +44,6 @@ void SerialExplicitCouplingScheme:: initialize
   assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion1(startTimestep >= 0, startTimestep);
   assertion(getCommunication()->isConnected());
-  preciceCheck(not getSendData().empty(), "initialize()",
-               "No send data configured! Use explicit scheme for one-way coupling.");
   setTime(startTime);
   setTimesteps(startTimestep);
 
