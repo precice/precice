@@ -283,7 +283,7 @@ public:
    * @param ids [IN] IDs obtained when setting write positions.
    * @param positions [OUT] Positions corresponding to IDs.
    */
-  void getWriteVertices (
+  void getMeshVertices (
     int     meshID,
     int     size,
     int*    ids,
@@ -315,11 +315,6 @@ public:
   int setMeshVertex (
     int           meshID,
     const double* position );
-
-  /**
-   * @brief Returns the number of vertices of a mesh.
-   */
-  int getMeshVertexSize(int meshID);
 
   /**
    * @brief Set an edge of a solver mesh.

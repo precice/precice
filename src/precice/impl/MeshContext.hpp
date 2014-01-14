@@ -22,8 +22,7 @@ namespace impl {
  */
 struct MeshContext
 {
-   //
-   mesh::Ptr
+
    // @brief Mesh holding the geometry data structure.
    mesh::PtrMesh mesh;
 

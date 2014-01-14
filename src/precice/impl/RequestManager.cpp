@@ -112,35 +112,14 @@ void RequestManager:: handleRequests()
     case REQUEST_GET_MESH_VERTEX_SIZE:
       handleRequestGetMeshVertexSize(rankSender);
       break;
-    case REQUEST_SET_WRITE_POSITION:
-      handleRequestSetWritePosition(rankSender);
+    case REQUEST_SET_MESH_VERTICES:
+      handleRequestSetMeshVertices(rankSender);
       break;
-    case REQUEST_SET_WRITE_POSITIONS:
-      handleRequestSetWritePositions(rankSender);
+    case REQUEST_GET_MESH_VERTICES:
+      handleRequestGetMeshVertices(rankSender);
       break;
-    case REQUEST_GET_WRITE_POSITIONS:
-      handleRequestGetWritePositions(rankSender);
-      break;
-    case REQUEST_GET_WRITE_IDS_FROM_POSITIONS:
-      handleRequestGetWriteIDsFromPositions(rankSender);
-      break;
-    case REQUEST_GET_WRITE_NODES_SIZE:
-      handleRequestGetWriteNodesSize(rankSender);
-      break;
-    case REQUEST_SET_READ_POSITION:
-      handleRequestSetReadPosition(rankSender);
-      break;
-    case REQUEST_SET_READ_POSITIONS:
-      handleRequestSetReadPositions(rankSender);
-      break;
-    case REQUEST_GET_READ_POSITIONS:
-      handleRequestGetReadPositions(rankSender);
-      break;
-    case REQUEST_GET_READ_IDS_FROM_POSITIONS:
-      handleRequestGetReadIDsFromPositions(rankSender);
-      break;
-    case REQUEST_GET_READ_NODES_SIZE:
-      handleRequestGetReadNodesSize(rankSender);
+    case REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS:
+      handleRequestGetMeshVertexIDsFromPositions(rankSender);
       break;
     case REQUEST_SET_MESH_EDGE:
       handleRequestSetMeshEdge(rankSender);
@@ -391,147 +370,51 @@ int RequestManager:: requestGetMeshVertexSize
   return size;
 }
 
-int RequestManager:: requestSetWritePosition
-(
-  int               meshID,
-  utils::DynVector& position )
-{
-  preciceTrace("requestSetWritePosition()");
-  _com->send(REQUEST_SET_WRITE_POSITION, 0);
-  _com->send(meshID, 0);
-  _com->send(tarch::la::raw(position), position.size(), 0);
-  int index = -1;
-  _com->receive(index, 0);
-  return index;
-}
-
-void RequestManager:: requestSetWritePositions
+void RequestManager:: requestSetMeshVertices
 (
   int     meshID,
   int     size,
   double* positions,
   int*    ids )
 {
-  preciceTrace("requestSetWritePositions()");
-  _com->send(REQUEST_SET_WRITE_POSITIONS, 0);
+  preciceTrace("requestSetMeshVertices()");
+  _com->send(REQUEST_SET_MESH_VERTICES, 0);
   _com->send(meshID, 0);
   _com->send(size, 0);
   _com->send(positions, size*_interface.getDimensions(), 0);
   _com->receive(ids, size, 0);
 }
 
-void RequestManager:: requestGetWritePositions
+void RequestManager:: requestGetMeshVertices
 (
   int     meshID,
   int     size,
   int*    ids,
   double* positions )
 {
-  preciceTrace("requestGetWritePositions()");
-  _com->send(REQUEST_GET_WRITE_POSITIONS, 0);
+  preciceTrace("requestGetMeshVertices()");
+  _com->send(REQUEST_GET_MESH_VERTICES, 0);
   _com->send(meshID, 0);
   _com->send(size, 0);
   _com->send(ids, size, 0);
   _com->receive(positions, size*_interface.getDimensions(), 0);
 }
 
-void RequestManager:: requestGetWriteIDsFromPositions
+void RequestManager:: requestGetMeshVertexIDsFromPositions
 (
   int     meshID,
   int     size,
   double* positions,
   int*    ids )
 {
-  preciceTrace1("requestGetWriteIDsFromPositions()", size);
-  _com->send(REQUEST_GET_WRITE_IDS_FROM_POSITIONS, 0);
+  preciceTrace1("requestGetMeshVertexIDsFromPositions()", size);
+  _com->send(REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS, 0);
   _com->send(meshID, 0);
   _com->send(size, 0);
   _com->send(positions, size*_interface.getDimensions(), 0);
   _com->receive(ids, size, 0);
 }
 
-int RequestManager:: requestGetWriteNodesSize
-(
-  int meshID )
-{
-  preciceTrace1("requestGetWriteNodesSize()", meshID);
-  _com->send(REQUEST_GET_WRITE_NODES_SIZE, 0);
-  _com->send(meshID, 0);
-  int size = 0;
-  _com->receive(size, 0);
-  return size;
-}
-
-int RequestManager:: requestSetReadPosition
-(
-  int               meshID,
-  utils::DynVector& position )
-{
-  preciceTrace("requestSetReadPosition()");
-  _com->send(REQUEST_SET_READ_POSITION, 0);
-  _com->send(meshID, 0);
-  _com->send(tarch::la::raw(position), position.size(), 0);
-  int index = -1;
-  _com->receive(index, 0);
-  return index;
-}
-
-void RequestManager:: requestSetReadPositions
-(
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
-{
-  preciceTrace("requestSetReadPositions()");
-  _com->send(REQUEST_SET_READ_POSITIONS, 0);
-  _com->send(meshID, 0);
-  _com->send(size, 0);
-  _com->send(positions, size*_interface.getDimensions(), 0);
-  _com->receive(ids, size, 0);
-}
-
-void RequestManager:: requestGetReadPositions
-(
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions )
-{
-  preciceTrace("requestGetReadPositions()");
-  _com->send(REQUEST_GET_READ_POSITIONS, 0);
-  _com->send(meshID, 0);
-  _com->send(size, 0);
-  _com->send(ids, size, 0);
-  _com->receive(positions, size*_interface.getDimensions(), 0);
-}
-
-void RequestManager:: requestGetReadIDsFromPositions
-(
-  int     meshID,
-  int     size,
-  double* positions,
-  int*    ids )
-{
-  preciceTrace1("requestGetReadIDsFromPositions()", size);
-  _com->send(REQUEST_GET_READ_IDS_FROM_POSITIONS, 0);
-  _com->send(meshID, 0);
-  _com->send(size, 0);
-  _com->send(positions, size*_interface.getDimensions(), 0);
-  _com->receive(ids, size, 0);
-}
-
-int RequestManager:: requestGetReadNodesSize
-(
-  int meshID )
-{
-  preciceTrace1("requestGetReadNodesSize()", meshID);
-  _com->send(REQUEST_GET_READ_NODES_SIZE, 0);
-  _com->send(meshID, 0);
-  int size = 0;
-  _com->receive(size, 0);
-  return size;
-}
 
 int RequestManager:: requestSetMeshEdge
 (
@@ -956,28 +839,12 @@ void RequestManager:: handleRequestGetMeshVertexSize
   _com->send(size, rankSender);
 }
 
-void RequestManager:: handleRequestSetWritePosition
-(
-  int rankSender )
-{
-  preciceTrace1("handleRequestSetWritePosition()", rankSender);
-  //com::PtrCommunication com = _accessor->getClientServerCommunication();
-  int meshID = -1;
-  _com->receive(meshID, rankSender);
-  double position[_interface.getDimensions()];
-  _com->receive(position, _interface.getDimensions(), rankSender);
-  int index = _interface.setWritePosition(meshID, position);
-//  if (_accessor->meshContext(meshID).writeMappingContext.isIncremental){
-//    _lockServerToClient = rankSender;
-//  }
-  _com->send(index, rankSender);
-}
 
-void RequestManager:: handleRequestSetWritePositions
+void RequestManager:: handleRequestSetMeshVertices
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestSetWritePositions()", rankSender);
+  preciceTrace1("handleRequestSetMeshVertices()", rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
   int size = -1;
@@ -986,17 +853,17 @@ void RequestManager:: handleRequestSetWritePositions
   double* positions = new double[size*_interface.getDimensions()];
   _com->receive(positions, size*_interface.getDimensions(), rankSender);
   int* ids = new int[size];
-  _interface.setWritePositions(meshID, size, positions, ids);
+  _interface.setMeshVertices(meshID, size, positions, ids);
   _com->send(ids, size, rankSender);
   delete[] positions;
   delete[] ids;
 }
 
-void RequestManager:: handleRequestGetWritePositions
+void RequestManager:: handleRequestGetMeshVertices
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestGetWritePositions()", rankSender);
+  preciceTrace1("handleRequestGetMeshVertices()", rankSender);
   int meshID = -1;
   int size = -1;
   _com->receive(meshID, rankSender);
@@ -1005,17 +872,17 @@ void RequestManager:: handleRequestGetWritePositions
   int* ids = new int[size];
   double* positions = new double[size*_interface.getDimensions()];
   _com->receive(ids, size, rankSender);
-  _interface.getWritePositions(meshID, size, ids, positions);
+  _interface.getMeshVertices(meshID, size, ids, positions);
   _com->send(positions, size*_interface.getDimensions(), rankSender);
   delete[] ids;
   delete[] positions;
 }
 
-void RequestManager:: handleRequestGetWriteIDsFromPositions
+void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestGetWriteIDsFromPositions()", rankSender);
+  preciceTrace1("handleRequestGetMeshVertexIDsFromPositions()", rankSender);
   int meshID = -1;
   int size = -1;
   _com->receive(meshID, rankSender);
@@ -1024,105 +891,10 @@ void RequestManager:: handleRequestGetWriteIDsFromPositions
   int* ids = new int[size];
   double* positions = new double[size*_interface.getDimensions()];
   _com->receive(positions, size*_interface.getDimensions(), rankSender);
-  _interface.getWriteIDsFromPositions(meshID, size, positions, ids);
+  _interface.getMeshVertexIDsFromPositions(meshID, size, positions, ids);
   _com->send(ids, size, rankSender);
   delete[] ids;
   delete[] positions;
-}
-
-void RequestManager:: handleRequestGetWriteNodesSize
-(
-  int rankSender )
-{
-  preciceTrace1("handleRequestGetWriteNodesSize()", rankSender);
-  int meshID = -1;
-  _com->receive(meshID, rankSender);
-  int size = _interface.getWriteNodesSize(meshID);
-  _com->send(size, rankSender);
-}
-
-void RequestManager:: handleRequestSetReadPosition
-(
-  int rankSender )
-{
-  preciceTrace1("handleRequestSetReadPosition()", rankSender);
-  int meshID = -1;
-  _com->receive (meshID, rankSender);
-  double position[_interface.getDimensions()];
-  _com->receive(position, _interface.getDimensions(), rankSender);
-//  if (_accessor->meshContext(meshID).readMappingContext.isIncremental){
-//    _lockServerToClient = rankSender;
-//  }
-  int index = _interface.setReadPosition(meshID, position);
-  _com->send(index, rankSender);
-}
-
-void RequestManager:: handleRequestSetReadPositions
-(
-  int rankSender )
-{
-  preciceTrace1("handleRequestSetReadPositions()", rankSender);
-  int meshID = -1;
-  _com->receive(meshID, rankSender);
-  int size = -1;
-  _com->receive(size, rankSender);
-  assertionMsg(size > 0, size);
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(positions, size*_interface.getDimensions(), rankSender);
-  int* ids = new int[size];
-  _interface.setReadPositions(meshID, size, positions, ids);
-  _com->send(ids, size, rankSender);
-  delete[] positions;
-  delete[] ids;
-}
-
-void RequestManager:: handleRequestGetReadPositions
-(
-  int rankSender )
-{
-  preciceTrace1("handleRequestGetReadPositions()", rankSender);
-  int meshID = -1;
-  int size = -1;
-  _com->receive(meshID, rankSender);
-  _com->receive(size, rankSender);
-  assertionMsg(size > 0, size);
-  int* ids = new int[size];
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(ids, size, rankSender);
-  _interface.getReadPositions(meshID, size, ids, positions);
-  _com->send(positions, size*_interface.getDimensions(), rankSender);
-  delete[] ids;
-  delete[] positions;
-}
-
-void RequestManager:: handleRequestGetReadIDsFromPositions
-(
-  int rankSender )
-{
-  preciceTrace1("handleRequestGetReadIDsFromPositions()", rankSender);
-  int meshID = -1;
-  int size = -1;
-  _com->receive(meshID, rankSender);
-  _com->receive(size, rankSender);
-  assertionMsg(size > 0, size);
-  int* ids = new int[size];
-  double* positions = new double[size*_interface.getDimensions()];
-  _com->receive(positions, size*_interface.getDimensions(), rankSender);
-  _interface.getReadIDsFromPositions(meshID, size, positions, ids);
-  _com->send(ids, size, rankSender);
-  delete[] ids;
-  delete[] positions;
-}
-
-void RequestManager:: handleRequestGetReadNodesSize
-(
-  int rankSender )
-{
-  preciceTrace1("handleRequestGetReadNodesSize()", rankSender);
-  int meshID = -1;
-  _com->receive(meshID, rankSender);
-  int size = _interface.getReadNodesSize(meshID);
-  _com->send(size, rankSender);
 }
 
 void RequestManager:: handleRequestSetMeshEdge
