@@ -41,12 +41,6 @@ struct MeshContext
    // @brief True, if accessor does create the geometry of the mesh.
    bool provideMesh;
 
-   // @brief True, if accessor has to provide write positions on initialization.
-   bool provideWritePositions;
-
-   // @brief True, if accessor has to provide read positions on initialization.
-   bool provideReadPositions;
-
    // @brief Offset only applied to meshes local to the accessor.
    utils::DynVector localOffset;
 
@@ -54,7 +48,10 @@ struct MeshContext
    geometry::PtrGeometry geometry;
 
    // @brief Mapping used when mapping data from the mesh. Can be empty.
-  MappingContext fromMappingContext;
+   MappingContext fromMappingContext;
+
+   // @brief Mapping used when mapping data to the mesh. Can be empty.
+   MappingContext toMappingContext;
 
    /**
     * @brief Constructor.
@@ -69,7 +66,8 @@ struct MeshContext
      provideMesh ( false ),
      localOffset ( dimensions, 0.0 ),
      geometry (),
-     fromMappingContext()
+     fromMappingContext(),
+     toMappingContext()
    {}
 };
 

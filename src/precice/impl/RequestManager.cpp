@@ -160,24 +160,24 @@ void RequestManager:: handleRequests()
     case REQUEST_READ_BLOCK_VECTOR_DATA:
       handleRequestReadBlockVectorData(rankSender);
       break;
-    case REQUEST_MAP_WRITTEN_DATA:
+    case REQUEST_MAP_DATA_FROM:
       preciceDebug("Request map written data by rank " << rankSender);
       clientCounter++;
       assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
-        handleRequestMapWrittenData(clientRanks);
+        handleRequestMapDataFrom(clientRanks);
         clientCounter = 0;
         clientRanks.clear();
       }
       break;
-    case REQUEST_MAP_READ_DATA:
+    case REQUEST_MAP_DATA_TO:
       preciceDebug("Request map read data by rank " << rankSender);
       clientCounter++;
       assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
-        handleRequestMapReadData(clientRanks);
+        handleRequestMapDataTo(clientRanks);
         clientCounter = 0;
         clientRanks.clear();
       }
@@ -598,23 +598,23 @@ void RequestManager:: requestReadVectorData
   _com->receive(value, _interface.getDimensions(), 0);
 }
 
-void RequestManager:: requestMapWrittenData
+void RequestManager:: requestMapDataFrom
 (
   int meshID )
 {
-  preciceTrace1("requestMapWrittenData()", meshID);
-  _com->send(REQUEST_MAP_WRITTEN_DATA, 0);
+  preciceTrace1("requestMapDataFrom()", meshID);
+  _com->send(REQUEST_MAP_DATA_FROM, 0);
   int ping;
   _com->receive(ping, 0);
   _com->send(meshID, 0);
 }
 
-void RequestManager:: requestMapReadData
+void RequestManager:: requestMapDataTo
 (
   int meshID )
 {
-  preciceTrace1("requestMapReadData()", meshID);
-  _com->send(REQUEST_MAP_READ_DATA, 0);
+  preciceTrace1("requestMapDataTo()", meshID);
+  _com->send(REQUEST_MAP_DATA_TO, 0);
   int ping;
   _com->receive(ping, 0);
   _com->send(meshID, 0);
@@ -1076,7 +1076,7 @@ void RequestManager:: handleRequestReadVectorData
   _com->send(data, _interface.getDimensions(), rankSender);
 }
 
-void RequestManager:: handleRequestMapWrittenData
+void RequestManager:: handleRequestMapDataFrom
 (
   const std::list<int>& clientRanks )
 {
@@ -1091,19 +1091,19 @@ void RequestManager:: handleRequestMapWrittenData
     _com->send(ping, *iter);
     int meshID;
     _com->receive(meshID, *iter);
-    preciceCheck(meshID == oldMeshID, "handleRequestMapWrittenData()",
+    preciceCheck(meshID == oldMeshID, "handleRequestMapDataFrom()",
                  "Ambiguous mesh ID when calling map written data from "
                  << "several processes!");
     oldMeshID = meshID;
   }
-  _interface.mapWrittenData(oldMeshID);
+  _interface.mapDataFrom(oldMeshID);
 }
 
-void RequestManager:: handleRequestMapReadData
+void RequestManager:: handleRequestMapDataTo
 (
   const std::list<int>& clientRanks )
 {
-  preciceTrace("handleRequestMapReadData()");
+  preciceTrace("handleRequestMapDataTo()");
   std::list<int>::const_iterator iter = clientRanks.begin();
   int ping = 0;
   _com->send(ping, *iter);
@@ -1114,12 +1114,12 @@ void RequestManager:: handleRequestMapReadData
     _com->send(ping, *iter);
     int meshID;
     _com->receive(meshID, *iter);
-    preciceCheck(meshID == oldMeshID, "handleRequestMapReadData()",
+    preciceCheck(meshID == oldMeshID, "handleRequestMapDataTo()",
                  "Ambiguous mesh IDs (" << meshID << " and " << oldMeshID
                  <<  ") when calling map read data from several processes!");
     oldMeshID = meshID;
   }
-  _interface.mapReadData(oldMeshID);
+  _interface.mapDataTo(oldMeshID);
 }
 
 void RequestManager:: handleRequestExportMesh

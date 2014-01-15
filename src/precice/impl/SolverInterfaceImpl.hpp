@@ -370,12 +370,12 @@ public:
    *
    * Is automatically called in advance, if not called manually before.
    */
-  void mapWrittenData(int meshID);
+  void mapDataFrom(int meshID);
 
   /**
    * @brief Computes and maps all data to be read from mesh with given ID.
    */
-  void mapReadData(int meshID);
+  void mapDataTo(int meshID);
 
   /**
    * @brief Writes vector data values given as block.

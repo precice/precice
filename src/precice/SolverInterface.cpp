@@ -262,18 +262,18 @@ void SolverInterface:: setMeshQuadWithEdges
                               fourthVertexID);
 }
 
-void SolverInterface:: mapWrittenData
+void SolverInterface:: mapDataFrom
 (
   int meshID )
 {
-  _impl->mapWrittenData(meshID);
+  _impl->mapDataFrom(meshID);
 }
 
-void SolverInterface:: mapReadData
+void SolverInterface:: mapDataTo
 (
   int meshID )
 {
-  _impl->mapReadData(meshID);
+  _impl->mapDataTo(meshID);
 }
 
 

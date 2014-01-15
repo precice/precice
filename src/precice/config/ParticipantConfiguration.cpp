@@ -561,6 +561,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     }
 
     fromMeshContext.fromMappingContext = mappingContext;
+    toMeshContext.toMappingContext = mappingContext;
 
 
 
