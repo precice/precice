@@ -61,7 +61,7 @@ void SocketCommunication:: acceptConnection
   int                acceptorProcessRank,
   int                acceptorCommunicatorSize )
 {
-  preciceTrace2("acceptCommunication()", nameAcceptor, nameRequester);
+  preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
   preciceCheck ( acceptorCommunicatorSize == 1, "acceptConnection()",
                  "Acceptor of socket connection can only have one process!" );
   std::string ipFilename(_ipExchangeDirectory + "." + nameRequester + "-portname");
@@ -108,7 +108,7 @@ void SocketCommunication:: acceptConnection
     outFile.open ((ipFilename +  "~").c_str(), std::ios::out);
     outFile << address.str();
     outFile.close();
-    // To give the file first a "wrong" name prevents early reading errors
+    // To give the file first a different name prevents early reading errors
     rename( (ipFilename + "~").c_str(), ipFilename.c_str() );
 
     preciceDebug("Accept connection at " << address.str() << ":" << _port);
@@ -178,7 +178,6 @@ void SocketCommunication:: requestConnection
     } while (not inFile);
     std::string serverAddress;
     inFile >> serverAddress;
-    //inFile.getline(serverAddress, MPI_MAX_PORT_NAME);
     inFile.close();
     preciceDebug("Read connection info \"" << serverAddress
                  << "\" from file " << ipFilename);
@@ -186,13 +185,6 @@ void SocketCommunication:: requestConnection
     PtrSocket socket(new Socket(*_ioService));
     std::ostringstream portStream;
     portStream << _port;
-//    std::string ipaddress;
-//    if (_network.compare("lo") == 0){
-//      ipaddress = "127.0.0.1"; // Address of localhost
-//    }
-//    else {
-//      assertion(false); // Not yet implemented
-//    }
     tcp::resolver::query query(tcp::v4(), serverAddress.c_str(), portStream.str().c_str());
     while (not _isConnected){ // since resolver does not wait until server is up
       tcp::resolver resolver(*_ioService);
@@ -208,21 +200,21 @@ void SocketCommunication:: requestConnection
         timer.wait();
       }
     }
-    _sockets.push_back(socket);
+    _sockets.push_back(socket); // Only one socket in requrestConnection possible
 
-    send ( requesterProcessRank, 0 );
-    send ( requesterCommunicatorSize, 0 );
+    send(requesterProcessRank, 0);
+    send(requesterCommunicatorSize, 0);
     int remoteSize = 0;
     int remoteRank = -1;
     // Activates sending of queries before actual content. Has to be done after
     // calls to send.
     _processRank = requesterProcessRank;
-    receive ( remoteRank, 0 );
-    receive ( remoteSize, 0 );
-    preciceCheck ( remoteRank == 0, "requestConnection()", "Acceptor base rank "
-                   << "has to be 0 but is " << remoteRank << "!" );
-    preciceCheck ( remoteSize == 1, "requestConnection()", "Acceptor communicator "
-                   << "size has to be == 1!" );
+    receive(remoteRank, 0);
+    receive(remoteSize, 0);
+    preciceCheck(remoteRank == 0, "requestConnection()", "Acceptor base rank "
+                 << "has to be 0 but is " << remoteRank << "!");
+    preciceCheck(remoteSize == 1, "requestConnection()", "Acceptor communicator "
+                 << "size has to be == 1!");
     _remoteCommunicatorSize = remoteSize;
   }
   catch (std::exception& e){

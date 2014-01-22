@@ -69,7 +69,10 @@ public:
   virtual int getRemoteCommunicatorSize();
 
   /**
-   * @brief Connects to another participant, which has to call requestConnection().
+   * @brief Accepts connection from participant, which has to call requestConnection().
+   *
+   * If several connections are going in to a server, the server has to call this
+   * method, while the clients have to call requestConnection().
    *
    * @param nameAcceptor [IN] Name of calling participant.
    * @param nameRequester [IN] Name of remote participant to connect to.
@@ -81,7 +84,10 @@ public:
     int                acceptorCommunicatorSize );
 
   /**
-   * @brief Connects to another participant, which has to call acceptConnection().
+   * @brief Requests connection from participant, which has to call acceptConnection().
+   *
+   * If several connections are going in to a server, the clients have to call this
+   * method, while the server has to call acceptConnection().
    *
    * @param nameAcceptor [IN] Name of remote participant to connect to.
    * @param nameReuester [IN] Name of calling participant.
@@ -99,17 +105,26 @@ public:
    */
   virtual void closeConnection();
 
+  /**
+   * @brief Is empty.
+   */
   virtual void startSendPackage ( int rankReceiver );
 
+  /**
+   * @brief Is empty.
+   */
   virtual void finishSendPackage();
 
   /**
-   * @brief Starts to receive messages from rankSender.
+   * @brief Just returns rank of sender.
    *
    * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
   virtual int startReceivePackage ( int rankSender );
 
+  /**
+   * @brief Is empty.
+   */
   virtual void finishReceivePackage();
 
   /**
@@ -254,8 +269,10 @@ private:
   // @brief Buffers for receiving entries in _clientQueries.
   std::vector<int> _clientQueryBuffers;
 
+  // @brief Mutex used to lock access to clientQueries
   boost::mutex _requestMutex;
 
+  // @brief Used to set (server) main thread asleep while waiting for client send
   boost::condition _requestCondition;
 
   /**
