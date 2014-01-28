@@ -196,7 +196,11 @@ void SolverInterfaceImpl:: configure
       assertion(not utils::contained(nameID.first, _meshIDs));
       _meshIDs[nameID.first] = nameID.second;
     }
+    assertion(_dataIDs.find(mesh->getID())==_dataIDs.end());
+    _dataIDs[mesh->getID()] = std::map<std::string,int>();
+    assertion(_dataIDs.find(mesh->getID())!=_dataIDs.end());
     foreach (const mesh::PtrData& data, mesh->data()){
+      assertion(_dataIDs[mesh->getID()].find(data->getName())==_dataIDs[mesh->getID()].end());
       _dataIDs[mesh->getID()][data->getName()] = data->getID();
     }
     std::string meshName = mesh->getName();
@@ -487,10 +491,13 @@ std::set<int> SolverInterfaceImpl:: getMeshIDs()
 
 bool SolverInterfaceImpl:: hasData
 (
-  const std::string& dataName, int meshID ) const
+  const std::string& dataName, int meshID )
 {
   preciceTrace2 ( "hasData()", dataName, meshID );
-  return _dataIDs[meshID][dataName]!=NULL;
+  preciceCheck ( _dataIDs.find(meshID)!=_dataIDs.end(), "hasData()",
+                   "No mesh with meshID \"" << meshID << "\" is defined");
+  std::map<std::string,int>& sub_dataIDs =  _dataIDs[meshID];
+  return sub_dataIDs.find(dataName)!= sub_dataIDs.end();
 }
 
 int SolverInterfaceImpl:: getDataID

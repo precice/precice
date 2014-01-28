@@ -18,6 +18,13 @@
          <use-data name="Temperatures"/>
       </mesh>
       
+      <mesh name="MeshOne">
+         <use-data name="Forces"/>
+         <use-data name="Velocities"/>
+         <use-data name="Pressures"/>
+         <use-data name="Temperatures"/>
+      </mesh>
+      
       <geometry:builtin-cuboid of-mesh="Test-Square">
          <length value="1.0; 1.0; 1.0"/> 
          <discretization-width value="0.1"/> 
@@ -25,14 +32,15 @@
       
       <participant name="SolverOne">
          <use-mesh name="Test-Square" />
-         <mapping:nearest-projection direction="write" mesh="Test-Square"
+         <use-mesh name="MeshOne" provide="yes" />
+         <mapping:nearest-projection direction="write" from="MeshOne" to="Test-Square"
                   constraint="conservative" timing="onadvance"/>
-         <mapping:nearest-projection direction="read" mesh="Test-Square"
+         <mapping:nearest-projection direction="read" from="Test-Square" to="MeshOne"
                   constraint="consistent" timing="ondemand"/>
-         <write-data name="Forces"       mesh="Test-Square"/>
-         <write-data name="Pressures"    mesh="Test-Square"/>
-         <read-data  name="Velocities"   mesh="Test-Square"/>
-         <read-data  name="Temperatures" mesh="Test-Square"/>
+         <write-data name="Forces"       mesh="MeshOne"/>
+         <write-data name="Pressures"    mesh="MeshOne"/>
+         <read-data  name="Velocities"   mesh="MeshOne"/>
+         <read-data  name="Temperatures" mesh="MeshOne"/>
       </participant>
       
       <participant name="SolverTwo">
@@ -49,8 +57,8 @@
          <participants first="SolverOne" second="SolverTwo"/> 
          <max-timesteps value="10" />
          <timestep-length value="1.0" />
-         <exchange data="Forces"     mesh="Test-Square" from="SolverOne"/>
-         <exchange data="Pressures"  mesh="Test-Square" from="SolverOne"/>
+         <exchange data="Forces"     mesh="MeshOne" from="SolverOne"/>
+         <exchange data="Pressures"  mesh="MeshOne" from="SolverOne"/>
          <exchange data="Velocities" mesh="Test-Square" from="SolverTwo"/>
          <exchange data="Temperatures" mesh="Test-Square" from="SolverTwo"/>
       </coupling-scheme:serial-explicit>                           

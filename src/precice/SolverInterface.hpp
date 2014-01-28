@@ -259,12 +259,12 @@ public:
   /**
    * @brief Returns true, if the data with given name is used.
    */
-  bool hasData ( const std::string& dataName ) const;
+  bool hasData ( const std::string& dataName, int meshID ) const;
 
   /**
    * @brief Returns data id corresponding to the given name (from configuration)
    */
-  int getDataID ( const std::string& dataName );
+  int getDataID ( const std::string& dataName, int meshID );
 
   /**
    * @brief Find out position of point relative to geometries.

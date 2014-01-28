@@ -597,7 +597,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
       "Participant \"" << participant->getName() << "\" has to use mesh \""
       << dataContext.mesh->getName() << "\" when writing data to it!");
 
-    foreach (impl::MappingContext& mappingContext, participant->writeMappingContexts()){
+    foreach (impl::MappingContext& mappingContext, participant->readMappingContexts()){
       if(mappingContext.toMeshID==toMeshID){
         dataContext.mappingContext = mappingContext;
         impl::MeshContext& meshContext = participant->meshContext(mappingContext.fromMeshID);

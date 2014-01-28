@@ -117,16 +117,16 @@ std::set<int> SolverInterface:: getMeshIDs()
 
 bool SolverInterface:: hasData
 (
-  const std::string& dataName ) const
+  const std::string& dataName, int meshID ) const
 {
-  return _impl->hasData ( dataName );
+  return _impl->hasData ( dataName, meshID );
 }
 
 int SolverInterface:: getDataID
 (
-  const std::string& dataName )
+  const std::string& dataName, int meshID )
 {
-  return _impl->getDataID ( dataName );
+  return _impl->getDataID ( dataName, meshID );
 }
 
 int SolverInterface:: inquirePosition

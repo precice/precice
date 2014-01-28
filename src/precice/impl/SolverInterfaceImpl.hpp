@@ -202,7 +202,7 @@ public:
   /**
    * @brief Returns true, if the data with given name is used in the given mesh.
    */
-  bool hasData ( const std::string& dataName, int meshID ) const;
+  bool hasData ( const std::string& dataName, int meshID );
 
   /**
    * @brief Returns data id corresponding to the given name (from configuration)
@@ -585,7 +585,7 @@ private:
   std::map<std::string,int> _meshIDs;
 
   //@brief dataIDs referenced by meshID and data name
-  std::map<int,std::map<std::string,int>> _dataIDs;
+  std::map<int,std::map<std::string,int> > _dataIDs;
 
   // @brief For plotting of used mesh neighbor-relations
   query::ExportVTKNeighbors _exportVTKNeighbors;

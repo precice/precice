@@ -6,12 +6,20 @@
       <data:scalar name="ScalarData"/>
       <data:vector name="VectorData"/>
       
-      <mesh name="Mesh">
+      <mesh name="CuboidMesh">
          <use-data name="ScalarData"/>
          <use-data name="VectorData"/>
       </mesh>
       
-      <geometry:builtin-cuboid of-mesh="Mesh">
+      <mesh name="AccessorMeshScalar">
+         <use-data name="ScalarData"/>
+      </mesh>
+      
+      <mesh name="AccessorMeshVector">
+         <use-data name="VectorData"/>
+      </mesh>
+      
+      <geometry:builtin-cuboid of-mesh="CuboidMesh">
          <length value="2.0; 2.0"/>
          <discretization-width value="2.0"/>
          <offset value="-1.0; -1.0"/>
@@ -19,15 +27,17 @@
       
       <participant name="Accessor">
          <server:mpi-single/>
-         <use-mesh name="Mesh"/>
+         <use-mesh name="CuboidMesh"/>
+         <use-mesh name="AccessorMeshScalar" provide="yes"/>
+         <use-mesh name="AccessorMeshVector" provide="yes"/>
          <mapping:nearest-projection direction="write" constraint="conservative" 
-                  mesh="Mesh" timing="initial"/>
+                  from="AccessorMeshScalar" to="CuboidMesh" timing="initial"/>
          <!--
          <mapping:nearest-projection direction="read" constraint="consistent"  
                   mesh="Mesh"  timing="initial"/>
          -->
-         <write-data name="ScalarData" mesh="Mesh"/>
-         <write-data name="VectorData" mesh="Mesh"/>
+         <write-data name="ScalarData" mesh="AccessorMeshScalar"/>
+         <write-data name="VectorData" mesh="AccessorMeshVector"/>
          <export:vtk/>
       </participant>
    </solver-interface>

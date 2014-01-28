@@ -368,7 +368,7 @@ void SolverInterfaceTestGeometry:: testDataActions()
   configureSolverInterface(_pathToTests + "testDataActions.xml", geo);
   impl::SolverInterfaceImpl* impl = geo._impl;
   int meshID = geo.getMeshID("Box");
-  int dataID = geo.getDataID("VectorData");
+  int dataID = geo.getDataID("VectorData", meshID);
   geo.initialize();
   mesh::PtrMesh mesh = impl->_accessor->meshContext(meshID).mesh;
   std::vector<utils::Vector3D> coords ( mesh->vertices().size() );
@@ -611,8 +611,8 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   configureSolverInterface(_pathToTests + "stationary-mapping.xml", precice);
   validateEquals(precice.getDimensions(), 2);
   precice.initialize();
-  int dataID = precice.getDataID("Forces");
   int meshID = precice.getMeshID("SolverMesh");
+  int dataID = precice.getDataID("Forces", meshID);
   int indices[4];
   double values[] = {1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0};
   double x[2];
@@ -650,8 +650,8 @@ void SolverInterfaceTestGeometry:: testConservativeIncrementalDataMapping()
   configureSolverInterface(_pathToTests + "2D.xml", geoInterface);
   validateEquals(geoInterface.getDimensions(), 2);
   geoInterface.initialize();
-  int dataID = geoInterface.getDataID("Forces");
   int meshID = geoInterface.getMeshID("itest-cuboid");
+  int dataID = geoInterface.getDataID("Forces", meshID);
 
   validateEquals(geoInterface._impl->_participants.size(), 1);
   impl::PtrParticipant participant = geoInterface._impl->_participants[0];
@@ -703,8 +703,8 @@ void SolverInterfaceTestGeometry:: testConsistentIncrementalDataMapping ()
                              geoInterface );
   validateEquals ( geoInterface.getDimensions(), 2 );
   geoInterface.initialize();
-  int dataID = geoInterface.getDataID ( "Velocities" );
   int meshID = geoInterface.getMeshID ( "itest-cuboid" );
+  int dataID = geoInterface.getDataID ( "Velocities", meshID );
   validateEquals ( geoInterface._impl->_participants.size(), 1 );
   impl::PtrParticipant participant = geoInterface._impl->_participants[0];
   validate ( (int)participant->_dataContexts.size() > dataID );
@@ -749,7 +749,7 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     int i2 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 0.0, 1.0;
     int i3 = interface.setMeshVertex ( meshID, raw(position) );
-    int dataID = interface.getDataID ( "ConsistentTPS" );
+    int dataID = interface.getDataID ( "ConsistentTPS", meshID );
     double data = 0.0;
     interface.writeScalarData ( dataID, i0, data );
     data = 2.0;
@@ -772,7 +772,7 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     int i2 = interface.setMeshVertex(meshID, raw(position));
     assignList(position) = 0.0, 1.0;
     int i3 = interface.setMeshVertex(meshID, raw(position));
-    int dataID = interface.getDataID("ConservativeTPS");
+    int dataID = interface.getDataID("ConservativeTPS", meshID);
     double data = 0.0;
     interface.writeScalarData(dataID, i0, data);
     data = 2.0;
@@ -795,7 +795,7 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     int i2 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 0.0, 1.0;
     int i3 = interface.setMeshVertex ( meshID, raw(position) );
-    int dataID = interface.getDataID ( "ConsistentVS" );
+    int dataID = interface.getDataID ( "ConsistentVS", meshID );
     Vector2D data ( 0.0, 0.0 );
     interface.writeVectorData ( dataID, i0, raw(data) );
     assignList(data) = 2.0, 2.0;
@@ -818,7 +818,7 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     int i2 = interface.setMeshVertex ( meshID, raw(position) );
     assignList(position) = 0.0, 1.0;
     int i3 = interface.setMeshVertex ( meshID, raw(position) );
-    int dataID = interface.getDataID ( "ConservativeVS" );
+    int dataID = interface.getDataID ( "ConservativeVS", meshID );
     Vector2D data ( 0.0, 0.0 );
     interface.writeVectorData ( dataID, i0, raw(data) );
     assignList(data) = 2.0, 2.0;
@@ -1313,7 +1313,8 @@ void SolverInterfaceTestGeometry:: testUpdateSpacetree()
     interface.exportMesh(filename.str() + "0");
 
     MeshHandle handle = interface.getMeshHandle("Mesh");
-    int dataID = interface.getDataID(constants::dataDisplacements());
+    int meshID = interface.getMeshID ("Mesh");
+    int dataID = interface.getDataID(constants::dataDisplacements(), meshID);
     double value[dim];
     value[0] = 0.1;
 
