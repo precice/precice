@@ -188,7 +188,8 @@ void precicef_get_mesh_id_(
 void precicef_has_data_(
   const char* dataName,
   int*        hasData,
-  int         lengthDataName );
+  int         lengthDataName,
+  int         meshID);
 
 /**
  * @brief See precice::SolverInterface::getDataID().
@@ -208,7 +209,8 @@ void precicef_has_data_(
 void precicef_get_data_id_(
   const char* dataName,
   int*        dataID,
-  int         lengthDataName );
+  int         lengthDataName,
+  int         meshID );
 
 /**
  * @brief See precice::SolverInterface::setMeshVertex().
@@ -227,39 +229,6 @@ void precicef_set_vertex_(
   const double* position,
   int*          vertexID );
 
-/**
- * @brief See precice::SolverInterface::setReadPosition().
- *
- * Fortran syntax:
- * precicef_set_read_pos(
- *   INTEGER          meshID,
- *   DOUBLE PRECISION position(3),
- *   INTEGER          positionID )
- *
- * IN:  meshID, position
- * OUT: positionID
- */
-void precicef_set_read_pos_(
-  const int*    meshID,
-  const double* position,
-  int*          positionID );
-
-/**
- * @brief See precice::SolverInterface::setWritePosition().
- *
- * Fortran syntax:
- * precicef_set_write_pos(
- *   INTEGER          meshID,
- *   DOUBLE PRECISION position(dim),
- *   INTEGER          positionID )
- *
- * IN:  meshID, position
- * OUT: positionID
- */
-void precicef_set_write_pos_(
-  const int*    meshID,
-  const double* position,
-  int*          positionID );
 
 /**
  * @brief See precice::SolverInterface::setMeshEdge().
@@ -463,26 +432,26 @@ void precicef_read_sdata_(
   double*    dataValue );
 
 /**
- * @brief See precice::SolverInterface::mapWrittenData().
+ * @brief See precice::SolverInterface::mapDataTo().
  *
  * Fortran syntax:
- * precicef_map_written_data( INTEGER meshID )
+ * precicef_map_data_to( INTEGER meshID )
  *
  * IN:  meshID
  * OUT: -
  */
-void precicef_map_written_data_( const int* meshID );
+void precicef_map_data_to_( const int* meshID );
 
 /**
- * @brief See precice::SolverInterface::mapReadData().
+ * @brief See precice::SolverInterface::mapDataFrom().
  *
  * Fortran syntax:
- * precicef_map_read_data( INTEGER meshID )
+ * precicef_map_data_from( INTEGER meshID )
  *
  * IN:  meshID
  * OUT: -
  */
-void precicef_map_read_data_( const int* meshID );
+void precicef_map_data_from_( const int* meshID );
 
 /**
  * @brief See precice::SolverInterface::exportMesh().

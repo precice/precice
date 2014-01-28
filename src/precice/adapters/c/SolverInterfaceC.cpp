@@ -111,18 +111,18 @@ int precicec_getMeshID ( const char* geometryName )
   return impl->getMeshID (stringGeometryName);
 }
 
-int precicec_hasData ( const char* dataName )
+int precicec_hasData ( const char* dataName, int meshID )
 {
   assertion ( impl != NULL );
   std::string stringDataName (dataName);
-  return impl->hasData (stringDataName);
+  return impl->hasData (stringDataName, meshID);
 }
 
-int precicec_getDataID ( const char* dataName )
+int precicec_getDataID ( const char* dataName, int meshID )
 {
   assertion ( impl != NULL );
   std::string stringDataName (dataName);
-  return impl->getDataID (stringDataName);
+  return impl->getDataID (stringDataName, meshID);
 }
 
 int precicec_setMeshVertex
@@ -134,25 +134,8 @@ int precicec_setMeshVertex
   return impl->setMeshVertex ( meshID, position );
 }
 
-int precicec_setReadPosition
-(
-  int           meshID,
-  const double* position )
-{
-  assertion ( impl != NULL );
-  return impl->setReadPosition ( meshID, position );
-}
 
-int precicec_setWritePosition
-(
-  int           meshID,
-  const double* position )
-{
-  assertion ( impl != NULL );
-  return impl->setWritePosition ( meshID, position );
-}
-
-void precicec_getReadPositions
+void precicec_getMeshVertices
 (
   int     meshID,
   int     size,
@@ -160,34 +143,16 @@ void precicec_getReadPositions
   double* positions )
 {
   assertion(impl != NULL);
-  impl->getReadPositions(meshID, size, ids, positions);
+  impl->getMeshVertices(meshID, size, ids, positions);
 }
 
-void precicec_getWritePositions
-(
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions )
-{
-  assertion(impl != NULL);
-  impl->getWritePositions(meshID, size, ids, positions);
-}
 
-int precicec_getWriteNodesSize
+int precicec_getMeshVertexSize
 (
   int meshID )
 {
   assertion(impl != NULL);
-  return impl->getWriteNodesSize(meshID);
-}
-
-int precicec_getReadNodesSize
-(
-  int meshID )
-{
-  assertion(impl != NULL);
-  return impl->getReadNodesSize(meshID);
+  return impl->getMeshVertexSize(meshID);
 }
 
 int precicec_setMeshEdge
@@ -306,16 +271,16 @@ void precicec_readScalarData
   impl->readScalarData (dataID, valueIndex, *dataValue);
 }
 
-void precicec_mapWrittenData ( int meshID )
+void precicec_mapDataTo ( int meshID )
 {
   assertion ( impl != NULL );
-  impl->mapWrittenData(meshID);
+  impl->mapDataTo(meshID);
 }
 
-void precicec_mapReadData ( int meshID )
+void precicec_mapDataFrom ( int meshID )
 {
   assertion ( impl != NULL );
-  impl->mapReadData(meshID);
+  impl->mapDataFrom(meshID);
 }
 
 void precicec_exportMesh

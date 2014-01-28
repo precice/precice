@@ -629,7 +629,6 @@ void SolverInterfaceTest:: testExplicitWithDisplacingGeometry()
 //      cplInterface.setMeshEdge ( meshID, i2, i0 );
 
       double dt = cplInterface.initialize();
-      int meshID = cplInterface.getMeshID("SolverGeometry");
       int displacementsID = cplInterface.getDataID("Displacements", meshID);
 
       while (cplInterface.isCouplingOngoing()){
@@ -1355,7 +1354,6 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
     int forcesID = couplingInterface.getDataID("Forces", meshID);
     int velocitiesID = couplingInterface.getDataID("Velocities", meshID);
 
-    int meshID = couplingInterface.getMeshID("Square");
     double pos[2];
     // Set mesh positions
     pos[0] = 0.0; pos[1] = 0.0;
