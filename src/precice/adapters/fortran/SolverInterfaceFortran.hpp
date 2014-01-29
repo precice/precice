@@ -188,8 +188,8 @@ void precicef_get_mesh_id_(
 void precicef_has_data_(
   const char* dataName,
   int*        hasData,
-  int         lengthDataName,
-  int         meshID);
+  int         meshID,
+  int         lengthDataName);
 
 /**
  * @brief See precice::SolverInterface::getDataID().
@@ -209,8 +209,8 @@ void precicef_has_data_(
 void precicef_get_data_id_(
   const char* dataName,
   int*        dataID,
-  int         lengthDataName,
-  int         meshID );
+  int         meshID,
+  int         lengthDataName);
 
 /**
  * @brief See precice::SolverInterface::setMeshVertex().
