@@ -516,12 +516,12 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     impl::MeshContext& fromMeshContext = participant->meshContext(fromMeshID);
     impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
 
-    precice::impl::MappingContext mappingContext;
-    mappingContext.fromMeshID = fromMeshID;
-    mappingContext.toMeshID = toMeshID;
-    mappingContext.timing = confMapping.timing;
+    precice::impl::MappingContext* mappingContext = new precice::impl::MappingContext();
+    mappingContext->fromMeshID = fromMeshID;
+    mappingContext->toMeshID = toMeshID;
+    mappingContext->timing = confMapping.timing;
 
-    mapping::PtrMapping& map = mappingContext.mapping;
+    mapping::PtrMapping& map = mappingContext->mapping;
     assertion(map.get() == NULL);
     map = confMapping.mapping;
 
@@ -532,24 +532,9 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     map->setMeshes(input, output);
 
     if (confMapping.direction == mapping::MappingConfiguration::WRITE){
-      participant->addWriteMappingContext(&mappingContext);
-      if (map->getInputRequirement() > toMeshContext.meshRequirement){
-        toMeshContext.meshRequirement = map->getInputRequirement();
-      }
-      if (confMapping.timing == mapping::MappingConfiguration::INITIAL
-          || (confMapping.timing != mapping::MappingConfiguration::INCREMENTAL))
-      {
-        if ( toMeshContext.meshRequirement == mapping::Mapping::TEMPORARY ){
-          toMeshContext.meshRequirement = mapping::Mapping::VERTEX;
-        }
-      }
-
-    }
-    else {
-      assertion(confMapping.direction == mapping::MappingConfiguration::READ);
-      participant->addReadMappingContext(&mappingContext);
-      if (map->getOutputRequirement() > fromMeshContext.meshRequirement){
-        fromMeshContext.meshRequirement = map->getOutputRequirement();
+      participant->addWriteMappingContext(mappingContext);
+      if (map->getInputRequirement() > fromMeshContext.meshRequirement){
+        fromMeshContext.meshRequirement = map->getInputRequirement();
       }
       if (confMapping.timing == mapping::MappingConfiguration::INITIAL
           || (confMapping.timing != mapping::MappingConfiguration::INCREMENTAL))
@@ -558,10 +543,25 @@ void ParticipantConfiguration:: finishParticipantConfiguration
           fromMeshContext.meshRequirement = mapping::Mapping::VERTEX;
         }
       }
+
+    }
+    else {
+      assertion(confMapping.direction == mapping::MappingConfiguration::READ);
+      participant->addReadMappingContext(mappingContext);
+      if (map->getOutputRequirement() > toMeshContext.meshRequirement){
+        toMeshContext.meshRequirement = map->getOutputRequirement();
+      }
+      if (confMapping.timing == mapping::MappingConfiguration::INITIAL
+          || (confMapping.timing != mapping::MappingConfiguration::INCREMENTAL))
+      {
+        if ( toMeshContext.meshRequirement == mapping::Mapping::TEMPORARY ){
+          toMeshContext.meshRequirement = mapping::Mapping::VERTEX;
+        }
+      }
     }
 
-    fromMeshContext.fromMappingContext = mappingContext;
-    toMeshContext.toMappingContext = mappingContext;
+    fromMeshContext.fromMappingContext = *mappingContext;
+    toMeshContext.toMappingContext = *mappingContext;
 
 
 

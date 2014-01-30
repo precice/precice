@@ -35,8 +35,8 @@
          <mapping:nearest-projection direction="read" 
                from="itest-cuboid" to="SolverMesh" 
                constraint="consistent" timing="incremental" />
-         <write-data name="Forces"     mesh="itest-cuboid" />
-         <read-data  name="Velocities" mesh="itest-cuboid" />
+         <write-data name="Forces"     mesh="SolverMesh" />
+         <read-data  name="Velocities" mesh="SolverMesh" />
       </participant>
       
    </solver-interface>

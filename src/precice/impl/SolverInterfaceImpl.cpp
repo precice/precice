@@ -164,6 +164,7 @@ void SolverInterfaceImpl:: configure
     preciceInfo("configure()", "[PRECICE] Run in geometry mode");
     preciceCheck(_participants.size() == 1, "configure()",
                  "Only one participant can be defined in geometry mode!");
+    configureSolverGeometries(config.getCommunicationConfiguration());
   }
   else if (not _clientMode){
     preciceInfo("configure()", "[PRECICE] Run in coupling mode");
@@ -1848,6 +1849,10 @@ void SolverInterfaceImpl:: configureSolverGeometries
       preciceCheck ( context.receiveMeshFrom.empty(), "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot provide "
                      << "and receive mesh " << context.mesh->getName() << "!" );
+      preciceCheck ( context.geometry.use_count() == 0, "configureSolverGeometries()",
+                           "Participant \"" << _accessorName << "\" cannot provide "
+                           << "the geometry of mesh \"" << context.mesh->getName()
+                           << " in addition to a defined geometry!" );
 
       bool addedReceiver = false;
       foreach ( PtrParticipant receiver, _participants ){
@@ -1878,14 +1883,10 @@ void SolverInterfaceImpl:: configureSolverGeometries
       if(!addedReceiver){
     	  preciceDebug ( "No receiver found, create SolverGeometry");
     	  utils::DynVector offset ( _dimensions, 0.0 );
-    	  geometry::SolverGeometry* solverGeo =
-    	          new geometry::SolverGeometry ( offset);
-    	  context.geometry = geometry::PtrGeometry ( solverGeo );
+    	  context.geometry = geometry::PtrGeometry (
+    	                  new geometry::SolverGeometry ( offset) );
       }
-      preciceCheck ( context.geometry.use_count() == 0, "configureSolverGeometries()",
-                     "Participant \"" << _accessorName << "\" cannot provide "
-                     << "the geometry of mesh \"" << context.mesh->getName()
-                     << " in addition to a defined geometry!" );
+      assertion(context.geometry.use_count() > 0);
 
     }
     else if ( not context.receiveMeshFrom.empty() ) { // Accessor receives geometry
@@ -1951,7 +1952,7 @@ void SolverInterfaceImpl:: createMeshContext
 
   //TODO maybe this has to be moved to geometry
   // Create default vertex for incremental mapping participant meshes
-  if (meshContext.fromMappingContext.timing == mapping::MappingConfiguration::INCREMENTAL){
+  if (meshContext.meshRequirement == mapping::Mapping::TEMPORARY){
 	//TODO better solution for the following
     preciceCheck(typeid(*meshContext.geometry).name()!="CommunicatedGeometry",
 				   "createMeshContext()",

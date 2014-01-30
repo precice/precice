@@ -48,7 +48,7 @@
       </geometry:builtin-cuboid>
       
       <participant name="TestAccessor">
-         <use-mesh name="channel"/>
+         <use-mesh name="channel" />
          <use-mesh name="cylinder"/>
          <use-mesh name="AccessorMesh" provide="yes"/>
          <use-mesh name="box-obstacle"/>

@@ -18,12 +18,6 @@
       
       <participant name="TestAccessor">
          <use-mesh name="box-obstacle" />
-         <mapping:nearest-projection direction="write" mesh="box-obstacle" 
-                                     constraint="conservative"
-                                     timing="incremental" />
-         <mapping:nearest-projection direction="read" mesh="box-obstacle" 
-                                     constraint="consistent"
-                                     timing="incremental"/>
          <write-data name="Forces"     mesh="box-obstacle" />
          <read-data  name="Velocities" mesh="box-obstacle" />
          <export:vtk timestep-interval="10" trigger-solver="on" directory="location1"/>

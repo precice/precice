@@ -24,7 +24,7 @@
          <export:vtk/>
          <mapping:nearest-projection direction="write" from="SolverMesh"  
                   to="GeoMesh" constraint="conservative" timing="initial"/>
-         <write-data name="Forces" mesh="Mesh"/>
+         <write-data name="Forces" mesh="SolverMesh"/>
       </participant>
       
    </solver-interface>

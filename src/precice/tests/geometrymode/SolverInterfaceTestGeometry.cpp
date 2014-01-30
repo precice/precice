@@ -100,6 +100,7 @@ void SolverInterfaceTestGeometry:: testConfiguration()
 {
   preciceTrace ( "testConfiguration()" );
   mesh::Mesh::resetGeometryIDsGlobally ();
+  preciceDebug ( "Test 2D configuration");
   { // 2D
     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
     configureSolverInterface (
@@ -108,6 +109,7 @@ void SolverInterfaceTestGeometry:: testConfiguration()
     geoInterface.initialize ();
     geoInterface.exportMesh ( "testConfiguration2D" );
   }
+  preciceDebug ( "Test 3D configuration");
   { // 3D
     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
     configureSolverInterface (
@@ -131,11 +133,17 @@ void SolverInterfaceTestGeometry:: testSearchQuery()
       configureSolverInterface ( _pathToTests + "3D.xml",
                                  geoInterface );
     }
+
+    int meshID = geoInterface.getMeshID("SolverMesh");
+    utils::DynVector pos(dim,0.0);
+    geoInterface.setMeshVertex(meshID,raw(pos));
+
+
     geoInterface.initialize();
     _geoID = geoInterface.getMeshID("itest-cuboid");
 
     std::set<int> ids;
-    utils::DynVector pos(dim,0.0);
+    assign(pos) = 0.0;
     ClosestMesh closest = geoInterface.inquireClosestMesh (raw(pos), ids);
     validateEquals ( closest.meshIDs()[0], _geoID );
     validateEquals ( closest.position(), constants::positionOutsideOfGeometry() );
@@ -175,6 +183,11 @@ void SolverInterfaceTestGeometry:: testVoxelQuery()
        configureSolverInterface ( _pathToTests + "3D.xml",
                                   geoInterface );
      }
+
+     int meshID = geoInterface.getMeshID("SolverMesh");
+     utils::DynVector posVertex(dim,0.0);
+     geoInterface.setMeshVertex(meshID,raw(posVertex));
+
      geoInterface.initialize();
      _geoID = geoInterface.getMeshID ("itest-cuboid");
 
