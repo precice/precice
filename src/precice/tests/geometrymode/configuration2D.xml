@@ -21,6 +21,11 @@
          <use-data name="Forces"/>
          <use-data name="Velocities"/>
       </mesh>
+      
+      <mesh name="AccessorMesh">
+         <use-data name="Forces"/>
+         <use-data name="Velocities"/>
+      </mesh>
      
       <mesh name="box-obstacle">
          <use-spacetree name="spacetree"/>
@@ -45,15 +50,16 @@
       <participant name="TestAccessor">
          <use-mesh name="channel"/>
          <use-mesh name="cylinder"/>
+         <use-mesh name="AccessorMesh" provide="yes"/>
          <use-mesh name="box-obstacle"/>
          <mapping:nearest-projection 
-            direction="write" mesh="cylinder" 
+            direction="write" from="AccessorMesh" to="cylinder"
             constraint="conservative" timing="incremental"/>
          <mapping:nearest-projection 
-            direction="read" mesh="cylinder"
-            constraint="consistent" timing="incremental"/>
-         <write-data name="Forces"     mesh="cylinder"/>
-         <read-data  name="Velocities" mesh="cylinder"/>
+            direction="read" from="cylinder" to="AccessorMesh"
+            constraint="consistent" timing="initial"/>
+         <write-data name="Forces"     mesh="AccessorMesh"/>
+         <read-data  name="Velocities" mesh="AccessorMesh"/>
          <export:vtk/>
       </participant>
       

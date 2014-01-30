@@ -37,7 +37,8 @@ Participant:: Participant
   _readMappingContexts(),
   _writeMappingContexts(),
   _usedMeshContexts (),
-  _dataContexts ( meshConfig->getDataConfiguration()->data().size(), NULL ),
+  //TODO not sure if the 2 here always works
+  _dataContexts ( meshConfig->getDataConfiguration()->data().size()*2, NULL ),
   _writeDataContexts (),
   _readDataContexts (),
   _clientServerCommunication ()

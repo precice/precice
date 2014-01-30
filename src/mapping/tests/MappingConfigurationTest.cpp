@@ -46,17 +46,17 @@ void MappingConfigurationTest:: run()
     utils::configure(tag, file);
     //validate ( success );
 
-    validateEquals(meshConfig->meshes().size(), 2);
+    validateEquals(meshConfig->meshes().size(), 3);
     validateEquals(mappingConfig.mappings().size(), 3);
     //validateEquals(mappingConfig.mappings()[0].isIncremental, true);
     validateEquals(mappingConfig.mappings()[0].timing, MappingConfiguration::INCREMENTAL);
     validateEquals(mappingConfig.mappings()[0].fromMesh, meshConfig->meshes()[0]);
-    validateEquals(mappingConfig.mappings()[0].toMesh, meshConfig->meshes()[1]);
+    validateEquals(mappingConfig.mappings()[0].toMesh, meshConfig->meshes()[2]);
     validateEquals(mappingConfig.mappings()[0].direction, MappingConfiguration::WRITE);
 
     //validateEquals(mappingConfig.mappings()[1].isIncremental, false);
     validateEquals(mappingConfig.mappings()[1].timing, MappingConfiguration::INITIAL);
-    validateEquals(mappingConfig.mappings()[1].fromMesh, meshConfig->meshes()[0]);
+    validateEquals(mappingConfig.mappings()[1].fromMesh, meshConfig->meshes()[2]);
     validateEquals(mappingConfig.mappings()[1].toMesh, meshConfig->meshes()[1]);
     validateEquals(mappingConfig.mappings()[1].direction, MappingConfiguration::READ);
 
