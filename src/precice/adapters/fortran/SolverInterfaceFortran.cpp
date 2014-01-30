@@ -169,8 +169,8 @@ void precicef_has_data_
 (
   const char* dataName,
   int*        hasData,
-  int         lengthDataName,
-  int         meshID)
+  int         meshID,
+  int         lengthDataName)
 {
   assertion(impl != NULL);
   int strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
@@ -187,8 +187,8 @@ void precicef_get_data_id_
 (
   const char* dataName,
   int*        dataID,
-  int         lengthDataName,
-  int         meshID )
+  int         meshID,
+  int         lengthDataName)
 {
   assertion(impl != NULL);
   int strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
