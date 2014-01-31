@@ -384,12 +384,12 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param dataID [IN] ID of the data to be written.
+   * @param fromDataID [IN] ID of the data to be written.
    * @param size [IN] Number of valueIndices, and number of values * dimensions.
    * @param values [IN] Values of the data to be written.
    */
   void writeBlockVectorData (
-    int     dataID,
+    int     fromDataID,
     int     size,
     int*    valueIndices,
     double* values );
@@ -400,24 +400,24 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param dataID       [IN] ID of the data to be written, e.g. 1 = forces
+   * @param fromDataID       [IN] ID of the data to be written, e.g. 1 = forces
    * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
    * @param dataValue    [IN] Value of the data to be written
    */
   void writeVectorData (
-    int           dataID,
+    int           fromDataID,
     int           valueIndex,
     const double* value );
 
   /**
    * @brief Writes scalar data values given as block.
    *
-   * @param dataID [IN] ID of the data to be written.
+   * @param fromDataID [IN] ID of the data to be written.
    * @param size [IN] Number of valueIndices, and number of values.
    * @param values [IN] Values of the data to be written.
    */
   void writeBlockScalarData (
-    int     dataID,
+    int     fromDataID,
     int     size,
     int*    valueIndices,
     double* values );
@@ -427,12 +427,12 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param dataID       [IN] ID of the data to be written (2 = temperature, e.g.)
+   * @param fromDataID       [IN] ID of the data to be written (2 = temperature, e.g.)
    * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
    * @param dataValue    [IN] Value of the data to be written
    */
   void writeScalarData(
-    int    dataID,
+    int    fromDataID,
     int    valueIndex,
     double value );
 
@@ -443,13 +443,13 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param dataID [IN] ID of the data to be read.
+   * @param toDataID [IN] ID of the data to be read.
    * @param size [IN] Number of indices, and number of values * dimensions.
    * @param valueIndices [IN] Indices (from setReadPosition()) of data values.
    * @param values [IN] Values of the data to be read.
    */
   void readBlockVectorData (
-    int     dataID,
+    int     toDataID,
     int     size,
     int*    valueIndices,
     double* values );
@@ -457,24 +457,24 @@ public:
   /**
    * @brief Reads vector data from the coupling mesh.
    *
-   * @param dataID       [IN]  ID of the data to be read, e.g. 1 = forces
+   * @param toDataID       [IN]  ID of the data to be read, e.g. 1 = forces
    * @param dataPosition [IN]  Position (coordinate, e.g.) of data to be read
    * @param dataValue    [OUT] Read data value
    */
   void readVectorData (
-    int     dataID,
+    int     toDataID,
     int     valueIndex,
     double* value );
 
   /**
    * @brief Reads scalar data values given as block.
    *
-   * @param dataID [IN] ID of the data to be written.
+   * @param toDataID [IN] ID of the data to be written.
    * @param size [IN] Number of valueIndices, and number of values.
    * @param values [IN] Values of the data to be written.
    */
   void readBlockScalarData (
-    int     dataID,
+    int     toDataID,
     int     size,
     int*    valueIndices,
     double* values );
@@ -484,12 +484,12 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param dataID       [IN]  ID of the data to be read, e.g. 2 = temperatures
+   * @param toDataID       [IN]  ID of the data to be read, e.g. 2 = temperatures
    * @param dataPosition [IN]  Position (coordinate, e.g.) of data to be read
    * @param dataValue    [OUT] Read data value
    */
   void readScalarData (
-    int     dataID,
+    int     toDataID,
     int     valueIndex,
     double& value );
 

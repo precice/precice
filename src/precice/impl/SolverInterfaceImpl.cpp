@@ -856,9 +856,10 @@ int SolverInterfaceImpl:: setMeshVertex
   else {
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
+    preciceDebug("MeshRequirement: " << context.meshRequirement);
     if (context.meshRequirement == mapping::Mapping::TEMPORARY && context.provideMesh){
       preciceDebug("Set temporary write position");
-      assertion(mesh->vertices().size() == 1);
+      assertion1(mesh->vertices().size() == 1, mesh->vertices().size());
       mesh->vertices()[0].setCoords(internalPosition);
       if(context.fromMappingContext.mapping.use_count() > 0){
         context.fromMappingContext.mapping->computeMapping();
@@ -869,7 +870,7 @@ int SolverInterfaceImpl:: setMeshVertex
       index = 0;
     }
     else {
-      preciceDebug("Set write position");
+      preciceDebug("Create Vertex");
       index = mesh->createVertex(internalPosition).getID();
       mesh->allocateDataValues();
     }
@@ -1411,27 +1412,27 @@ void SolverInterfaceImpl:: mapDataTo
 
 void SolverInterfaceImpl:: writeBlockVectorData
 (
-  int     dataID,
+  int     fromDataID,
   int     size,
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("writeBlockVectorData()", dataID, size);
+  preciceTrace2("writeBlockVectorData()", fromDataID, size);
   assertion(valueIndices != NULL);
   assertion(values != NULL);
   if (_clientMode){
-    _requestManager->requestWriteBlockVectorData(dataID, size, valueIndices, values);
+    _requestManager->requestWriteBlockVectorData(fromDataID, size, valueIndices, values);
   }
   else {
-    DataContext& context = _accessor->dataContext(dataID);
+    DataContext& context = _accessor->dataContext(fromDataID);
     impl::MappingContext& mapContext = context.mappingContext;
 
     preciceCheck(mapContext.timing != mapping::MappingConfiguration::INCREMENTAL,
                  "writeBlockVectorData()",
                  "Writing block vector data cannot be used with incremental "
                  << "mapping!");
-    assertion(context.fromData.get() != NULL);
-    utils::DynVector& valuesInternal = context.fromData->values();
+    assertion(context.toData.get() != NULL);
+    utils::DynVector& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
       int offsetInternal = valueIndices[i]*_dimensions;
       int offset = i*_dimensions;
@@ -1446,11 +1447,11 @@ void SolverInterfaceImpl:: writeBlockVectorData
 
 void SolverInterfaceImpl:: writeVectorData
 (
-  int           dataID,
+  int           fromDataID,
   int           valueIndex,
   const double* value )
 {
-  preciceTrace2 ( "writeVectorData()", dataID, valueIndex );
+  preciceTrace2 ( "writeVectorData()", fromDataID, valueIndex );
 # ifdef Debug
   if (_dimensions == 2) preciceDebug("value = " << tarch::la::wrap<2>(value));
   if (_dimensions == 3) preciceDebug("value = " << tarch::la::wrap<3>(value));
@@ -1462,19 +1463,19 @@ void SolverInterfaceImpl:: writeVectorData
     for (int dim=0; dim < _dimensions; dim++){
       valueCopy[dim] = value[dim];
     }
-    _requestManager->requestWriteVectorData(dataID, valueIndex, tarch::la::raw(valueCopy));
+    _requestManager->requestWriteVectorData(fromDataID, valueIndex, tarch::la::raw(valueCopy));
   }
   else {
-    DataContext& context = _accessor->dataContext(dataID);
-    assertion(context.fromData.get() != NULL);
+    DataContext& context = _accessor->dataContext(fromDataID);
+    assertion(context.toData.get() != NULL);
     impl::MappingContext& mapContext = context.mappingContext;
-    utils::DynVector& values = context.fromData->values();
+    utils::DynVector& values = context.toData->values();
     if (mapContext.timing == mapping::MappingConfiguration::INCREMENTAL){
       preciceDebug("Map incrementally");
       for (int dim=0; dim < _dimensions; dim++){
         values[dim] = value[dim];
       }
-      mapContext.mapping->map(context.fromData->getID(), dataID);
+      mapContext.mapping->map(fromDataID, context.toData->getID());
     }
     else {
       preciceDebug("Write value directly");
@@ -1489,26 +1490,26 @@ void SolverInterfaceImpl:: writeVectorData
 
 void SolverInterfaceImpl:: writeBlockScalarData
 (
-  int     dataID,
+  int     fromDataID,
   int     size,
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("writeBlockScalarData()", dataID, size);
+  preciceTrace2("writeBlockScalarData()", fromDataID, size);
   assertion(valueIndices != NULL);
   assertion(values != NULL);
   if (_clientMode){
-    _requestManager->requestWriteBlockScalarData(dataID, size, valueIndices, values);
+    _requestManager->requestWriteBlockScalarData(fromDataID, size, valueIndices, values);
   }
   else {
-    DataContext& context = _accessor->dataContext(dataID);
+    DataContext& context = _accessor->dataContext(fromDataID);
     impl::MappingContext& mapContext = context.mappingContext;
     preciceCheck(mapContext.timing != mapping::MappingConfiguration::INCREMENTAL,
                  "writeBlockScalarData()",
                  "Writing block scalar data cannot be used with incremental "
                  << "mapping!");
-    assertion(context.fromData.get() != NULL);
-    utils::DynVector& valuesInternal = context.fromData->values();
+    assertion(context.toData.get() != NULL);
+    utils::DynVector& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
       assertion2(i < valuesInternal.size(), i, valuesInternal.size());
       valuesInternal[valueIndices[i]] = values[i];
@@ -1518,27 +1519,27 @@ void SolverInterfaceImpl:: writeBlockScalarData
 
 void SolverInterfaceImpl:: writeScalarData
 (
-  int    dataID,
+  int    fromDataID,
   int    valueIndex,
   double value )
 {
-  preciceTrace3("writeScalarData()", dataID, valueIndex, value );
+  preciceTrace3("writeScalarData()", fromDataID, valueIndex, value );
   preciceCheck(valueIndex >= -1, "writeScalarData()", "Invalid value index ("
                << valueIndex << ") when writing scalar data!");
   if (_clientMode){
-    _requestManager->requestWriteScalarData(dataID, valueIndex, value);
+    _requestManager->requestWriteScalarData(fromDataID, valueIndex, value);
   }
   else {
-    DataContext& context = _accessor->dataContext(dataID);
-    assertion(context.fromData.use_count() > 0);
+    DataContext& context = _accessor->dataContext(fromDataID);
+    assertion(context.toData.use_count() > 0);
     impl::MappingContext& mapContext = context.mappingContext;
-    utils::DynVector& values = context.fromData->values();
+    utils::DynVector& values = context.toData->values();
     bool hasMapping = mapContext.mapping.get() != NULL;
     bool isIncremental = mapContext.timing == mapping::MappingConfiguration::INCREMENTAL;
     if (isIncremental){
       preciceDebug("Map incrementally");
       values[0] = value;
-      mapContext.mapping->map(context.fromData->getID(), dataID);
+      mapContext.mapping->map(fromDataID, context.toData->getID());
     }
     else {
       preciceDebug("Write value directly");
@@ -1550,26 +1551,26 @@ void SolverInterfaceImpl:: writeScalarData
 
 void SolverInterfaceImpl:: readBlockVectorData
 (
-  int     dataID,
+  int     toDataID,
   int     size,
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("readBlockVectorData()", dataID, size);
+  preciceTrace2("readBlockVectorData()", toDataID, size);
   assertion(valueIndices != NULL);
   assertion(values != NULL);
   if (_clientMode){
-    _requestManager->requestReadBlockVectorData(dataID, size, valueIndices, values);
+    _requestManager->requestReadBlockVectorData(toDataID, size, valueIndices, values);
   }
   else {
-    DataContext& context = _accessor->dataContext(dataID);
+    DataContext& context = _accessor->dataContext(toDataID);
     impl::MappingContext& mapContext = context.mappingContext;
     preciceCheck(mapContext.timing != mapping::MappingConfiguration::INCREMENTAL,
                  "readBlockVectorData()",
                  "Reading block vector data cannot be used with incremental "
                  << "mapping!");
-    assertion(context.toData.get() != NULL);
-    utils::DynVector& valuesInternal = context.toData->values();
+    assertion(context.fromData.get() != NULL);
+    utils::DynVector& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       int offsetInternal = valueIndices[i] * _dimensions;
       int offset = i * _dimensions;
@@ -1584,27 +1585,28 @@ void SolverInterfaceImpl:: readBlockVectorData
 
 void SolverInterfaceImpl:: readVectorData
 (
-  int     dataID,
+  int     toDataID,
   int     valueIndex,
   double* value )
 {
-  preciceTrace2("readVectorData()", dataID, valueIndex);
+  preciceTrace2("readVectorData()", toDataID, valueIndex);
   preciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
                << valueIndex << " )when reading vector data!");
   if (_clientMode){
-    _requestManager->requestReadVectorData(dataID, valueIndex, value);
+    _requestManager->requestReadVectorData(toDataID, valueIndex, value);
   }
   else {
-    DataContext& context = _accessor->dataContext(dataID);
-    assertion(context.toData.use_count() > 0);
-    utils::DynVector& values = context.toData->values();
+    DataContext& context = _accessor->dataContext(toDataID);
+    assertion(context.fromData.use_count() > 0);
+    utils::DynVector& values = context.fromData->values();
     impl::MappingContext& mapContext = context.mappingContext;
     bool hasMapping = mapContext.mapping.get() != NULL;
     bool isIncremental = mapContext.timing == mapping::MappingConfiguration::INCREMENTAL;
     if (isIncremental){
-      preciceDebug("Map incrementally");
-      assign(context.toData->values()) = 0.0;
-      mapContext.mapping->map(dataID, context.toData->getID());
+      preciceDebug("Map incrementally from dataID: " << context.fromData->getID()
+                      << " to dataID: " << toDataID);
+      assign(context.fromData->values()) = 0.0;
+      mapContext.mapping->map(context.fromData->getID(), toDataID );
       for (int dim=0; dim < _dimensions; dim++){
         value[dim] = values[dim];
       }
@@ -1626,26 +1628,26 @@ void SolverInterfaceImpl:: readVectorData
 
 void SolverInterfaceImpl:: readBlockScalarData
 (
-  int     dataID,
+  int     toDataID,
   int     size,
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("readBlockScalarData()", dataID, size);
+  preciceTrace2("readBlockScalarData()", toDataID, size);
   assertion(valueIndices != NULL);
   assertion(values != NULL);
   if (_clientMode){
-    _requestManager->requestReadBlockScalarData(dataID, size, valueIndices, values);
+    _requestManager->requestReadBlockScalarData(toDataID, size, valueIndices, values);
   }
   else {
-    DataContext& context = _accessor->dataContext(dataID);
+    DataContext& context = _accessor->dataContext(toDataID);
     impl::MappingContext& mapContext = context.mappingContext;
     preciceCheck(mapContext.timing != mapping::MappingConfiguration::INCREMENTAL,
                  "readBlockScalarData()",
                  "Reading block scalar data cannot be used with incremental "
                  << "mapping!");
-    assertion(context.toData.get() != NULL);
-    utils::DynVector& valuesInternal = context.toData->values();
+    assertion(context.fromData.get() != NULL);
+    utils::DynVector& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       assertion2(valueIndices[i] < valuesInternal.size(),
                valueIndices[i], valuesInternal.size());
@@ -1656,27 +1658,27 @@ void SolverInterfaceImpl:: readBlockScalarData
 
 void SolverInterfaceImpl:: readScalarData
 (
-  int     dataID,
+  int     toDataID,
   int     valueIndex,
   double& value )
 {
-  preciceTrace3("readScalarData()", dataID, valueIndex, value);
+  preciceTrace3("readScalarData()", toDataID, valueIndex, value);
   preciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
                << valueIndex << " )when reading vector data!");
   if (_clientMode){
-    _requestManager->requestReadScalarData(dataID, valueIndex, value);
+    _requestManager->requestReadScalarData(toDataID, valueIndex, value);
   }
   else {
-    DataContext& context = _accessor->dataContext(dataID);
-    assertion(context.toData.use_count() > 0);
-    utils::DynVector& values = context.toData->values();
+    DataContext& context = _accessor->dataContext(toDataID);
+    assertion(context.fromData.use_count() > 0);
+    utils::DynVector& values = context.fromData->values();
     impl::MappingContext& mapContext = context.mappingContext;
     bool hasMapping = mapContext.mapping.get() != NULL;
     bool isIncremental = mapContext.timing == mapping::MappingConfiguration::INCREMENTAL;
     if (isIncremental){
       preciceDebug("Map incrementally");
-      assign(context.toData->values()) = 0.0;
-      mapContext.mapping->map(dataID, context.toData->getID());
+      assign(context.fromData->values()) = 0.0;
+      mapContext.mapping->map(context.fromData->getID(), toDataID );
       value = values[0];
     }
     else {
@@ -1957,6 +1959,7 @@ void SolverInterfaceImpl:: createMeshContext
     preciceCheck(typeid(*meshContext.geometry).name()!="CommunicatedGeometry",
 				   "createMeshContext()",
 				   "You cannot communicate a mesh with an incremental mapping");
+    preciceDebug("Create Vertex");
     mesh::PtrMesh& mesh = meshContext.mesh;
     assertion(mesh->vertices().size() == 0);
     mesh->createVertex(utils::DynVector(_dimensions,0.0));
@@ -2073,13 +2076,13 @@ void SolverInterfaceImpl:: mapReadData()
 
   // Clear non-initial, non-incremental mappings
   foreach (impl::MappingContext& context, _accessor->readMappingContexts()){
-	bool isIncremental = context.timing == mapping::MappingConfiguration::INCREMENTAL;
-	bool isStationary = context.timing
-					  == mapping::MappingConfiguration::INITIAL;
-	if ((not isIncremental) && (not isStationary)){
-	  context.mapping->clear();
-	}
-	context.hasMappedData = false;
+    bool isIncremental = context.timing == mapping::MappingConfiguration::INCREMENTAL;
+    bool isStationary = context.timing
+              == mapping::MappingConfiguration::INITIAL;
+    if ((not isIncremental) && (not isStationary)){
+      context.mapping->clear();
+    }
+    context.hasMappedData = false;
   }
 }
 

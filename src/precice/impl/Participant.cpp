@@ -104,9 +104,9 @@ void Participant:: useMesh
 //  if ( spacetree.use_count() > 0 ) {
 //    spacetree->setCenter ( spacetree->getCenter() + localOffset );
 //  }
-  if ( provideMesh ) {
-    context->meshRequirement = mapping::Mapping::FULL;
-  }
+//  if ( provideMesh ) {
+//    context->meshRequirement = mapping::Mapping::FULL;
+//  }
 
   _meshContexts[mesh->getID()] = context;
   _usedMeshContexts.push_back ( context );

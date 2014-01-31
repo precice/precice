@@ -10,6 +10,22 @@
       <data:vector name="ConsistentVS"    />
       <data:vector name="ConservativeVS"  />
       
+      <mesh name="SolverMesh-ConsistentTPS">
+         <use-data name="ConsistentTPS"/>
+      </mesh>
+      
+      <mesh name="SolverMesh-ConservativeTPS">
+         <use-data name="ConservativeTPS"/>
+      </mesh>
+      
+      <mesh name="SolverMesh-ConsistentVS">
+         <use-data name="ConsistentVS"/>
+      </mesh>
+      
+      <mesh name="SolverMesh-ConservativeVS">
+         <use-data name="ConservativeVS"/>
+      </mesh>
+      
       <mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS">
          <use-data name="ConsistentTPS"/>
       </mesh>
@@ -51,27 +67,35 @@
       </geometry:builtin-cuboid>
       
       <participant name="TestAccessor">
+         <use-mesh name="SolverMesh-ConsistentTPS" provide="yes"/>
+         <use-mesh name="SolverMesh-ConservativeTPS" provide="yes"/>
+         <use-mesh name="SolverMesh-ConsistentVS" provide="yes"/>
+         <use-mesh name="SolverMesh-ConservativeVS" provide="yes"/>
          <use-mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS"/>
          <use-mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS"/>
          <use-mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS"/>
          <use-mesh name="SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS"/>
          <export:vtk timestep-interval="1" normals="yes"/>
-         <mapping:rbf-thin-plate-splines direction="write" constraint="consistent"     
-                  mesh="SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS"/>
-         <mapping:rbf-thin-plate-splines direction="write" constraint="conservative"    
-                  mesh="SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS"/>
-         <mapping:rbf-volume-splines direction="write" constraint="consistent"       
-                  mesh="SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS"/>
+         <mapping:rbf-thin-plate-splines direction="write" constraint="consistent" 
+         		  from="SolverMesh-ConsistentTPS"    
+                  to="SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS"/>
+         <mapping:rbf-thin-plate-splines direction="write" constraint="conservative"   
+                  from="SolverMesh-ConservativeTPS"  
+                  to="SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS"/>
+         <mapping:rbf-volume-splines direction="write" constraint="consistent"     
+                  from="SolverMesh-ConsistentVS"   
+                  to="SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS"/>
          <mapping:rbf-volume-splines direction="write" constraint="conservative"  
-                  mesh="SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS"/>
+                  from="SolverMesh-ConservativeVS" 
+                  to="SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS"/>
          <write-data name="ConsistentTPS" 
-                     mesh="SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS"/>
+                     mesh="SolverMesh-ConsistentTPS"/>
          <write-data name="ConservativeTPS" 
-                     mesh="SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS"/>           
+                     mesh="SolverMesh-ConservativeTPS"/>           
          <write-data name="ConsistentVS" 
-                     mesh="SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS"/>
+                     mesh="SolverMesh-ConsistentVS"/>
          <write-data name="ConservativeVS" 
-                     mesh="SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS"/>
+                     mesh="SolverMesh-ConservativeVS"/>
       </participant>
       
    </solver-interface>

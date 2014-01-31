@@ -134,12 +134,12 @@ void SolverInterfaceTestGeometry:: testSearchQuery()
                                  geoInterface );
     }
 
+    geoInterface.initialize();
+
     int meshID = geoInterface.getMeshID("SolverMesh");
     utils::DynVector pos(dim,0.0);
     geoInterface.setMeshVertex(meshID,raw(pos));
 
-
-    geoInterface.initialize();
     _geoID = geoInterface.getMeshID("itest-cuboid");
 
     std::set<int> ids;
@@ -184,11 +184,13 @@ void SolverInterfaceTestGeometry:: testVoxelQuery()
                                   geoInterface );
      }
 
+     geoInterface.initialize();
+
      int meshID = geoInterface.getMeshID("SolverMesh");
      utils::DynVector posVertex(dim,0.0);
      geoInterface.setMeshVertex(meshID,raw(posVertex));
 
-     geoInterface.initialize();
+
      _geoID = geoInterface.getMeshID ("itest-cuboid");
 
      // Voxel completely contained in center
@@ -623,7 +625,7 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   SolverInterface precice("Accessor", 0, 1);
   configureSolverInterface(_pathToTests + "stationary-mapping.xml", precice);
   validateEquals(precice.getDimensions(), 2);
-  precice.initialize();
+
   int meshID = precice.getMeshID("SolverMesh");
   int dataID = precice.getDataID("Forces", meshID);
   int indices[4];
@@ -639,9 +641,16 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   indices[3] = precice.setMeshVertex(meshID, x);
   precice.writeBlockVectorData(dataID, 4, indices, values);
 
+  precice.initialize();
+  preciceDebug ( "preCICE initialized");
   // Validate results
   impl::PtrParticipant p = precice._impl->_accessor;
-  mesh::PtrData data = p->_dataContexts[0]->toData;
+  preciceDebug ( "Participant found");
+  validate(p != NULL);
+  preciceDebug ( "dataContexts: " << p->_dataContexts << " and dataID: " << dataID);
+  validate(p->_dataContexts[dataID] != NULL);
+  mesh::PtrData data = p->_dataContexts[dataID]->toData;
+  preciceDebug ( "ToData found");
   validate(data.get() != NULL);
   utils::DynVector& writtenValues = data->values();
   validateEquals(writtenValues.size(), 8);
@@ -716,7 +725,7 @@ void SolverInterfaceTestGeometry:: testConsistentIncrementalDataMapping ()
                              geoInterface );
   validateEquals ( geoInterface.getDimensions(), 2 );
   geoInterface.initialize();
-  int meshID = geoInterface.getMeshID ( "itest-cuboid" );
+  int meshID = geoInterface.getMeshID ( "SolverMesh" );
   int dataID = geoInterface.getDataID ( "Velocities", meshID );
   validateEquals ( geoInterface._impl->_participants.size(), 1 );
   impl::PtrParticipant participant = geoInterface._impl->_participants[0];
@@ -750,19 +759,19 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
   interface.initialize();
   using utils::Vector2D;
 
-  // Set data positions and write data for consistent thin plate splines
+  // Set write data for consistent thin plate splines
   {
-    int meshID = interface.getMeshID (
-        "SolverInterfaceTestGeometry-testMappingRBF-ConsistentTPS" );
+    int solverMeshID = interface.getMeshID("SolverMesh-ConsistentTPS");
+    // set positions
     Vector2D position ( 0.0, 0.0 );
-    int i0 = interface.setMeshVertex ( meshID, raw(position) );
+    int i0 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 1.0, 0.0;
-    int i1 = interface.setMeshVertex ( meshID, raw(position) );
+    int i1 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 1.0, 1.0;
-    int i2 = interface.setMeshVertex ( meshID, raw(position) );
+    int i2 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 0.0, 1.0;
-    int i3 = interface.setMeshVertex ( meshID, raw(position) );
-    int dataID = interface.getDataID ( "ConsistentTPS", meshID );
+    int i3 = interface.setMeshVertex ( solverMeshID, raw(position) );
+    int dataID = interface.getDataID ( "ConsistentTPS", solverMeshID );
     double data = 0.0;
     interface.writeScalarData ( dataID, i0, data );
     data = 2.0;
@@ -773,19 +782,19 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     interface.writeScalarData ( dataID, i3, data );
   }
 
-  // Set data positions and write data for conservative thin plate splines
+  // Set  write data for conservative thin plate splines
   {
-    int meshID = interface.getMeshID (
-        "SolverInterfaceTestGeometry-testMappingRBF-ConservativeTPS" );
-    Vector2D position(0.0, 0.0);
-    int i0 = interface.setMeshVertex(meshID, raw(position));
+    int solverMeshID = interface.getMeshID("SolverMesh-ConservativeTPS");
+    // set positions
+    Vector2D position ( 0.0, 0.0 );
+    int i0 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 1.0, 0.0;
-    int i1 = interface.setMeshVertex(meshID, raw(position));
+    int i1 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 1.0, 1.0;
-    int i2 = interface.setMeshVertex(meshID, raw(position));
+    int i2 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 0.0, 1.0;
-    int i3 = interface.setMeshVertex(meshID, raw(position));
-    int dataID = interface.getDataID("ConservativeTPS", meshID);
+    int i3 = interface.setMeshVertex ( solverMeshID, raw(position) );
+    int dataID = interface.getDataID("ConservativeTPS", solverMeshID);
     double data = 0.0;
     interface.writeScalarData(dataID, i0, data);
     data = 2.0;
@@ -796,19 +805,19 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     interface.writeScalarData(dataID, i3, data);
   }
 
-  // Set data positions and write data for consistent volume splines
+  // Set write data for consistent volume splines
   {
-    int meshID = interface.getMeshID (
-        "SolverInterfaceTestGeometry-testMappingRBF-ConsistentVS" );
+    int solverMeshID = interface.getMeshID("SolverMesh-ConsistentVS");
+    // set positions
     Vector2D position ( 0.0, 0.0 );
-    int i0 = interface.setMeshVertex ( meshID, raw(position) );
+    int i0 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 1.0, 0.0;
-    int i1 = interface.setMeshVertex ( meshID, raw(position) );
+    int i1 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 1.0, 1.0;
-    int i2 = interface.setMeshVertex ( meshID, raw(position) );
+    int i2 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 0.0, 1.0;
-    int i3 = interface.setMeshVertex ( meshID, raw(position) );
-    int dataID = interface.getDataID ( "ConsistentVS", meshID );
+    int i3 = interface.setMeshVertex ( solverMeshID, raw(position) );
+    int dataID = interface.getDataID ( "ConsistentVS", solverMeshID );
     Vector2D data ( 0.0, 0.0 );
     interface.writeVectorData ( dataID, i0, raw(data) );
     assignList(data) = 2.0, 2.0;
@@ -819,19 +828,19 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
     interface.writeVectorData ( dataID, i3, raw(data) );
   }
 
-  // Set data positions and write data for conservative volume splines
+  // Set write data for conservative volume splines
   {
-    int meshID = interface.getMeshID (
-        "SolverInterfaceTestGeometry-testMappingRBF-ConservativeVS" );
+    int solverMeshID = interface.getMeshID("SolverMesh-ConservativeVS");
+    // set positions
     Vector2D position ( 0.0, 0.0 );
-    int i0 = interface.setMeshVertex ( meshID, raw(position) );
+    int i0 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 1.0, 0.0;
-    int i1 = interface.setMeshVertex ( meshID, raw(position) );
+    int i1 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 1.0, 1.0;
-    int i2 = interface.setMeshVertex ( meshID, raw(position) );
+    int i2 = interface.setMeshVertex ( solverMeshID, raw(position) );
     assignList(position) = 0.0, 1.0;
-    int i3 = interface.setMeshVertex ( meshID, raw(position) );
-    int dataID = interface.getDataID ( "ConservativeVS", meshID );
+    int i3 = interface.setMeshVertex ( solverMeshID, raw(position) );
+    int dataID = interface.getDataID ( "ConservativeVS", solverMeshID );
     Vector2D data ( 0.0, 0.0 );
     interface.writeVectorData ( dataID, i0, raw(data) );
     assignList(data) = 2.0, 2.0;

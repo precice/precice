@@ -527,7 +527,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
     const mesh::PtrMesh& input = fromMeshContext.mesh;
     const mesh::PtrMesh& output = toMeshContext.mesh;
-    preciceDebug("Configure write mapping for input=" << input->getName()
+    preciceDebug("Configure mapping for input=" << input->getName()
            << ", output=" << output->getName());
     map->setMeshes(input, output);
 
@@ -548,6 +548,8 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     else {
       assertion(confMapping.direction == mapping::MappingConfiguration::READ);
       participant->addReadMappingContext(mappingContext);
+      preciceDebug("Output requirement = " << map->getOutputRequirement()
+                 << ", mesh requirement = " << toMeshContext.meshRequirement);
       if (map->getOutputRequirement() > toMeshContext.meshRequirement){
         toMeshContext.meshRequirement = map->getOutputRequirement();
       }
