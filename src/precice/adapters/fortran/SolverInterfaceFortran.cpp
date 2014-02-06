@@ -214,6 +214,17 @@ void precicef_set_read_pos_
   *positionID = impl->setReadPosition(*meshID, position);
 }
 
+void precicef_set_read_poss_
+(
+  const int*    meshID,
+  const int*    size,
+  const double* positions,
+  int*          positionIDs )
+{
+  assertion(impl != NULL);
+  impl->setReadPositions(*meshID, *size, positions, positionIDs);
+}
+
 void precicef_set_write_pos_
 (
   const int*    meshID,
@@ -222,6 +233,17 @@ void precicef_set_write_pos_
 {
   assertion(impl != NULL);
   *positionID = impl->setWritePosition(*meshID, position);
+}
+
+void precicef_set_write_poss_
+(
+  const int*    meshID,
+  const int*    size,
+  const double* positions,
+  int*          positionIDs )
+{
+  assertion(impl != NULL);
+  impl->setWritePositions(*meshID, *size, positions, positionIDs);
 }
 
 void precicef_set_edge_

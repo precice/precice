@@ -245,6 +245,25 @@ void precicef_set_read_pos_(
   int*          positionID );
 
 /**
+ * @brief See precice::SolverInterface::setReadPositions().
+ *
+ * Fortran syntax:
+ * precicef_set_read_poss(
+ *   INTEGER          meshID,
+ *   INTEGER          size,
+ *   DOUBLE PRECISION positions(dim*size),
+ *   INTEGER          positionIDs(size) )
+ *
+ * IN:  meshID, size, positions
+ * OUT: positionIDs
+ */
+void precicef_set_read_poss_(
+  const int*    meshID,
+  const int*    size,
+  const double* positions,
+  int*          positionIDs );
+
+/**
  * @brief See precice::SolverInterface::setWritePosition().
  *
  * Fortran syntax:
@@ -260,6 +279,25 @@ void precicef_set_write_pos_(
   const int*    meshID,
   const double* position,
   int*          positionID );
+
+/**
+ * @brief See precice::SolverInterface::setWritePositions().
+ *
+ * Fortran syntax:
+ * precicef_set_write_poss(
+ *   INTEGER          meshID,
+ *   INTEGER          size,
+ *   DOUBLE PRECISION positions(dim*size),
+ *   INTEGER          positionIDs(size) )
+ *
+ * IN:  meshID, size, positions
+ * OUT: positionIDs
+ */
+void precicef_set_write_poss_(
+  const int*    meshID,
+  const int*    size,
+  const double* positions,
+  int*          positionIDs );
 
 /**
  * @brief See precice::SolverInterface::setMeshEdge().
