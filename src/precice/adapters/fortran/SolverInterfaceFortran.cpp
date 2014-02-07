@@ -218,7 +218,7 @@ void precicef_set_read_poss_
 (
   const int*    meshID,
   const int*    size,
-  const double* positions,
+  double*       positions,
   int*          positionIDs )
 {
   assertion(impl != NULL);
@@ -239,7 +239,7 @@ void precicef_set_write_poss_
 (
   const int*    meshID,
   const int*    size,
-  const double* positions,
+  double*       positions,
   int*          positionIDs )
 {
   assertion(impl != NULL);

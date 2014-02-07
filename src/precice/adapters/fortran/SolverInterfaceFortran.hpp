@@ -260,7 +260,7 @@ void precicef_set_read_pos_(
 void precicef_set_read_poss_(
   const int*    meshID,
   const int*    size,
-  const double* positions,
+  double*       positions,
   int*          positionIDs );
 
 /**
@@ -296,7 +296,7 @@ void precicef_set_write_pos_(
 void precicef_set_write_poss_(
   const int*    meshID,
   const int*    size,
-  const double* positions,
+  double*       positions,
   int*          positionIDs );
 
 /**
