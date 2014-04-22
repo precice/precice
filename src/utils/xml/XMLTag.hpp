@@ -286,14 +286,14 @@ struct NoPListener : public XMLTag::Listener
 XMLTag getRootTag();
 
 /**
- * @brief Configures the given confugration from file configurationFilename.
+ * @brief Configures the given configuration from file configurationFilename.
  */
 void configure (
   XMLTag&            tag,
   const std::string& configurationFilename );
 
 ///**
-// * @brief Configures the given confugration from file configurationFilename.
+// * @brief Configures the given configuration from file configurationFilename.
 // */
 //template< typename CONFIG_T >
 //bool configure

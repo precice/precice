@@ -38,7 +38,7 @@ void printMPITestWarning(){
 
 int main ( int argc, char** argv )
 {
-  // By default, debuggin is turned on with a filter list entry. This removes
+  // By default, debugging is turned on with a filter list entry. This removes
   // entry and turns off all debug messages until configuration.
   using namespace tarch::logging;
   CommandLineLogger::getInstance().clearFilterList();
