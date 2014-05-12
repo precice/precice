@@ -46,6 +46,6 @@ used only internally.
 
 The hierarchical dependencies of different components is as follows:
 
-\image component-dependencies.png
+\image html component-dependencies.png
 
 */
