@@ -137,9 +137,9 @@ public:
    */
   virtual int getMaxTimesteps() const =0;
 
-  /**
-   * @brief Returns current subiteration number in timestep.
-   */
+  //
+  // @brief Returns current subiteration number in timestep.
+  //
   //virtual int getSubIteration() const =0;
 
   /**
@@ -179,9 +179,9 @@ public:
    */
   virtual double getNextTimestepMaxLength() const =0;
 
-  /**
-   * @brief Returns the number of valid digits when compare times.
-   */
+  //
+  // @brief Returns the number of valid digits when compare times.
+  //
   //virtual int getValidDigits() const =0;
 
   /**
