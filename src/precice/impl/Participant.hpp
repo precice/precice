@@ -103,6 +103,8 @@ public:
 
   bool isMeshUsed ( int meshID ) const;
 
+  bool isDataUsed ( int dataID ) const;
+
   const MeshContext& meshContext ( int meshID ) const;
 
   MeshContext& meshContext ( int meshID );

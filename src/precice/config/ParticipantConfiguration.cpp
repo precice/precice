@@ -533,16 +533,19 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
     if (confMapping.direction == mapping::MappingConfiguration::WRITE){
       participant->addWriteMappingContext(mappingContext);
-      if (map->getInputRequirement() > fromMeshContext.meshRequirement){
-        fromMeshContext.meshRequirement = map->getInputRequirement();
+      std::cout << "input: " << map->getInputRequirement() << std::endl;
+      std::cout << "meshReq: " << toMeshContext.meshRequirement << std::endl;
+      if (map->getInputRequirement() > toMeshContext.meshRequirement){
+        toMeshContext.meshRequirement = map->getInputRequirement();
       }
       if (confMapping.timing == mapping::MappingConfiguration::INITIAL
           || (confMapping.timing != mapping::MappingConfiguration::INCREMENTAL))
       {
-        if ( fromMeshContext.meshRequirement == mapping::Mapping::TEMPORARY ){
-          fromMeshContext.meshRequirement = mapping::Mapping::VERTEX;
+        if ( toMeshContext.meshRequirement == mapping::Mapping::TEMPORARY ){
+          toMeshContext.meshRequirement = mapping::Mapping::VERTEX;
         }
       }
+      std::cout << "after: " << toMeshContext.meshRequirement << std::endl;
 
     }
     else {

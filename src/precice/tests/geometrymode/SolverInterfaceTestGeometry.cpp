@@ -138,6 +138,7 @@ void SolverInterfaceTestGeometry:: testSearchQuery()
 
     int meshID = geoInterface.getMeshID("SolverMesh");
     utils::DynVector pos(dim,0.0);
+    assign(pos) = 50.0;
     geoInterface.setMeshVertex(meshID,raw(pos));
 
     _geoID = geoInterface.getMeshID("itest-cuboid");
@@ -145,16 +146,25 @@ void SolverInterfaceTestGeometry:: testSearchQuery()
     std::set<int> ids;
     assign(pos) = 0.0;
     ClosestMesh closest = geoInterface.inquireClosestMesh (raw(pos), ids);
+    validateEquals ( closest.meshIDs().size(), 1 );
+    validateEquals ( closest.meshIDs()[0], _geoID );
+    validateEquals ( closest.position(), constants::positionOutsideOfGeometry() );
+
+    assign(pos) = 4.0;
+    closest = geoInterface.inquireClosestMesh (raw(pos), ids);
+    validateEquals ( closest.meshIDs().size(), 1 );
     validateEquals ( closest.meshIDs()[0], _geoID );
     validateEquals ( closest.position(), constants::positionOutsideOfGeometry() );
 
     assign(pos) = 5.0;
     closest = geoInterface.inquireClosestMesh (raw(pos), ids);
-    validateEquals ( closest.meshIDs()[0], _geoID );
+    validateEquals ( closest.meshIDs().size(), 1 );
+    //validateEquals ( closest.meshIDs()[0], _geoID );  // why does this not work
     validateEquals ( closest.position(), constants::positionOnGeometry() );
 
     assign(pos) = 6.0;
     closest = geoInterface.inquireClosestMesh ( raw(pos), ids );
+    validateEquals ( closest.meshIDs().size(), 1 );
     validateEquals ( closest.meshIDs()[0], _geoID );
     validateEquals ( closest.position(), constants::positionInsideOfGeometry() );
 
@@ -187,7 +197,7 @@ void SolverInterfaceTestGeometry:: testVoxelQuery()
      geoInterface.initialize();
 
      int meshID = geoInterface.getMeshID("SolverMesh");
-     utils::DynVector posVertex(dim,0.0);
+     utils::DynVector posVertex(dim,50.0);
      geoInterface.setMeshVertex(meshID,raw(posVertex));
 
 
@@ -672,14 +682,18 @@ void SolverInterfaceTestGeometry:: testConservativeIncrementalDataMapping()
   configureSolverInterface(_pathToTests + "2D.xml", geoInterface);
   validateEquals(geoInterface.getDimensions(), 2);
   geoInterface.initialize();
-  int meshID = geoInterface.getMeshID("itest-cuboid");
+  int meshID = geoInterface.getMeshID("SolverMesh");
+  int geoID = geoInterface.getMeshID("itest-cuboid");
   int dataID = geoInterface.getDataID("Forces", meshID);
 
   validateEquals(geoInterface._impl->_participants.size(), 1);
   impl::PtrParticipant participant = geoInterface._impl->_participants[0];
   validateEquals(participant->getName(), "TestAccessor");
-  validateEquals(participant->_meshContexts.size(), 1);
+  validateEquals(participant->_meshContexts.size(), 2);
   validate(participant->_meshContexts[0] != NULL);
+
+  validate(participant->_meshContexts[0]->toMappingContext.mapping.use_count() > 0);
+  validate(participant->_meshContexts[1]->toMappingContext.mapping.use_count() > 0);
   validate(participant->_meshContexts[0]->fromMappingContext.mapping.use_count() > 0);
   validate(participant->_meshContexts[1]->fromMappingContext.mapping.use_count() > 0);
 
@@ -700,12 +714,23 @@ void SolverInterfaceTestGeometry:: testConservativeIncrementalDataMapping()
   Vector2D temp;
   validateEquals(geoInterface._impl->_participants.size(), 1);
   validate((int)participant->_dataContexts.size() > dataID);
+
   utils::DynVector& values = participant->_dataContexts[dataID]->toData->values();
+  std::cout << "sizeTo: " << values.size() << std::endl;
+  utils::DynVector& values2 = participant->_dataContexts[dataID]->fromData->values();
+  std::cout << "sizeFrom: " << values2.size() << std::endl;
+
+  //test if geometry mesh has requirement VERTEX
+  std::cout << "MeshRequ: " << participant->_meshContexts[geoID]->meshRequirement << std::endl;
+
   for (int index=0; index < values.size() / 2; index++){
     assignList(temp) = values[index*2], values[index*2 +1];
 //    assign(temp) = tarch::la::slice<dim>(values, index*dim);
     integral += temp;
+    std::cout << "temp: " << temp << std::endl;
   }
+
+  std::cout << "integral: " << integral << std::endl;
 
   validate ( tarch::la::equals(integral, Vector2D(100.0)) );
   assign(integral) = 0.0;

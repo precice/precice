@@ -38,7 +38,7 @@ Participant:: Participant
   _writeMappingContexts(),
   _usedMeshContexts (),
   //TODO not sure if the 2 here always works
-  _dataContexts ( meshConfig->getDataConfiguration()->data().size()*2, NULL ),
+  _dataContexts ( meshConfig->getDataConfiguration()->data().size()*meshConfig->meshes().size(), NULL ),
   _writeDataContexts (),
   _readDataContexts (),
   _clientServerCommunication ()
@@ -214,6 +214,14 @@ bool Participant:: isMeshUsed
 {
   assertion ( (meshID >= 0) && (meshID < (int)_meshContexts.size()) );
   return _meshContexts[meshID] != NULL;
+}
+
+bool Participant:: isDataUsed
+(
+  int dataID ) const
+{
+  assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
+  return _dataContexts[dataID] != NULL;
 }
 
 const MeshContext& Participant:: meshContext

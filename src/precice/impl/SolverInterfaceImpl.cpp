@@ -1424,6 +1424,8 @@ void SolverInterfaceImpl:: writeBlockVectorData
     _requestManager->requestWriteBlockVectorData(fromDataID, size, valueIndices, values);
   }
   else {
+    preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
+                 "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     impl::MappingContext& mapContext = context.mappingContext;
 
@@ -1466,6 +1468,8 @@ void SolverInterfaceImpl:: writeVectorData
     _requestManager->requestWriteVectorData(fromDataID, valueIndex, tarch::la::raw(valueCopy));
   }
   else {
+    preciceCheck(_accessor->isDataUsed(fromDataID), "writeVectorData()",
+             "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.get() != NULL);
     impl::MappingContext& mapContext = context.mappingContext;
@@ -1502,6 +1506,8 @@ void SolverInterfaceImpl:: writeBlockScalarData
     _requestManager->requestWriteBlockScalarData(fromDataID, size, valueIndices, values);
   }
   else {
+    preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockScalarData()",
+                 "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     impl::MappingContext& mapContext = context.mappingContext;
     preciceCheck(mapContext.timing != mapping::MappingConfiguration::INCREMENTAL,
@@ -1530,6 +1536,8 @@ void SolverInterfaceImpl:: writeScalarData
     _requestManager->requestWriteScalarData(fromDataID, valueIndex, value);
   }
   else {
+    preciceCheck(_accessor->isDataUsed(fromDataID), "writeScalarData()",
+                 "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.use_count() > 0);
     impl::MappingContext& mapContext = context.mappingContext;
@@ -1563,6 +1571,8 @@ void SolverInterfaceImpl:: readBlockVectorData
     _requestManager->requestReadBlockVectorData(toDataID, size, valueIndices, values);
   }
   else {
+    preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
+                 "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     impl::MappingContext& mapContext = context.mappingContext;
     preciceCheck(mapContext.timing != mapping::MappingConfiguration::INCREMENTAL,
@@ -1596,6 +1606,8 @@ void SolverInterfaceImpl:: readVectorData
     _requestManager->requestReadVectorData(toDataID, valueIndex, value);
   }
   else {
+    preciceCheck(_accessor->isDataUsed(toDataID), "readVectorData()",
+                     "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
     utils::DynVector& values = context.fromData->values();
@@ -1640,6 +1652,8 @@ void SolverInterfaceImpl:: readBlockScalarData
     _requestManager->requestReadBlockScalarData(toDataID, size, valueIndices, values);
   }
   else {
+    preciceCheck(_accessor->isDataUsed(toDataID), "readBlockScalarData()",
+                     "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     impl::MappingContext& mapContext = context.mappingContext;
     preciceCheck(mapContext.timing != mapping::MappingConfiguration::INCREMENTAL,
@@ -1669,6 +1683,8 @@ void SolverInterfaceImpl:: readScalarData
     _requestManager->requestReadScalarData(toDataID, valueIndex, value);
   }
   else {
+    preciceCheck(_accessor->isDataUsed(toDataID), "readScalarData()",
+                     "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
     utils::DynVector& values = context.fromData->values();
