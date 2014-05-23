@@ -271,16 +271,16 @@ void precicec_readScalarData
   impl->readScalarData (dataID, valueIndex, *dataValue);
 }
 
-void precicec_mapDataTo ( int meshID )
+void precicec_mapWriteDataFrom ( int fromMeshID )
 {
   assertion ( impl != NULL );
-  impl->mapDataTo(meshID);
+  impl->mapWriteDataFrom(fromMeshID);
 }
 
-void precicec_mapDataFrom ( int meshID )
+void precicec_mapReadDataFrom ( int fromMeshID )
 {
   assertion ( impl != NULL );
-  impl->mapDataFrom(meshID);
+  impl->mapReadDataFrom(fromMeshID);
 }
 
 void precicec_exportMesh

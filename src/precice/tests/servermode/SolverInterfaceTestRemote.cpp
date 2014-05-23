@@ -398,7 +398,7 @@ void SolverInterfaceTestRemote:: testGeometryModeParallelStationaryMapping()
 
       // IMPLEMENT WRITE BLOCK SCALAR DATA
       interface.writeBlockVectorData(vectorDataID, 4, indices, vectorValues);
-      interface.mapDataFrom(meshIDVector);
+      interface.mapWriteDataFrom(meshIDVector);
 
       // Let the written data of both processes be accumulated
 //      interface._impl->_accessor->getClientServerCommunication()->send(

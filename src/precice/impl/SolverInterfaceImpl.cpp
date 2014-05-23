@@ -1323,24 +1323,24 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   }
 }
 
-void SolverInterfaceImpl:: mapDataFrom
+void SolverInterfaceImpl:: mapWriteDataFrom
 (
-  int meshID )
+  int fromMeshID )
 {
-  preciceTrace1("mapDataFrom(int)", meshID);
+  preciceTrace1("mapWriteDataFrom(int)", fromMeshID);
   if (_clientMode){
-    _requestManager->requestMapDataFrom(meshID);
+    _requestManager->requestMapWriteDataFrom(fromMeshID);
     return;
   }
-  impl::MeshContext& context = _accessor->meshContext(meshID);
+  impl::MeshContext& context = _accessor->meshContext(fromMeshID);
   impl::MappingContext& mappingContext = context.fromMappingContext;
   if (mappingContext.mapping.use_count() == 0){
-    preciceError("mapDataFrom()", "From mesh \"" << context.mesh->getName()
+    preciceError("mapWriteDataFrom()", "From mesh \"" << context.mesh->getName()
                    << "\", there is no mapping defined");
     return;
   }
   else if (context.meshRequirement == mapping::Mapping::TEMPORARY){
-    preciceWarning("mapDataFrom()", "From mesh \"" << context.mesh->getName()
+    preciceWarning("mapWriteDataFrom()", "From mesh \"" << context.mesh->getName()
                    << "\", the incremental write mapping needs not to be mapped!");
     return;
   }
@@ -1349,7 +1349,7 @@ void SolverInterfaceImpl:: mapDataFrom
     mappingContext.mapping->computeMapping();
   }
   foreach (impl::DataContext& context, _accessor->writeDataContexts()){
-    if (context.mesh->getID() == meshID){
+    if (context.mesh->getID() == fromMeshID){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       assign(context.toData->values()) = 0.0;
@@ -1363,38 +1363,38 @@ void SolverInterfaceImpl:: mapDataFrom
 }
 
 
-void SolverInterfaceImpl:: mapDataTo
+void SolverInterfaceImpl:: mapReadDataFrom
 (
-  int meshID )
+  int fromMeshID )
 {
-  preciceTrace1 ("mapDataTo(int)", meshID);
+  preciceTrace1 ("mapReadDataFrom(int)", fromMeshID);
   if (_clientMode){
-    _requestManager->requestMapDataTo(meshID);
+    _requestManager->requestMapReadDataFrom(fromMeshID);
     return;
   }
-  impl::MeshContext& context = _accessor->meshContext(meshID);
-  impl::MappingContext& mappingContext = context.toMappingContext;
+  impl::MeshContext& context = _accessor->meshContext(fromMeshID);
+  impl::MappingContext& mappingContext = context.fromMappingContext;
   if (mappingContext.mapping.use_count() == 0){
-    preciceError("mapDataTo()", "To mesh \"" << context.mesh->getName()
-                   << "\", there is no read mapping defined!");
+    preciceError("mapReadDataFrom()", "From mesh \"" << context.mesh->getName()
+                   << "\", there is no mapping defined!");
     return;
   }
   else if (context.meshRequirement == mapping::Mapping::TEMPORARY){
-    preciceWarning("mapDataTo()", "To mesh \"" << context.mesh->getName()
-                   << "\", the incremental read mapping needs not to be mapped!");
+    preciceWarning("mapReadDataFrom()", "From mesh \"" << context.mesh->getName()
+                   << "\", the incremental mapping needs not to be mapped!");
     return;
   }
   if (not mappingContext.mapping->hasComputedMapping()){
-    preciceDebug("Compute mapping to mesh \"" << context.mesh->getName() << "\"");
+    preciceDebug("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
     mappingContext.mapping->computeMapping();
   }
   foreach (impl::DataContext& context, _accessor->readDataContexts()){
-    if (context.mesh->getID() == meshID){
+    if (context.mesh->getID() == fromMeshID){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       assign(context.toData->values()) = 0.0;
       preciceDebug("Map data \"" << context.fromData->getName()
-                   << "\" to mesh \"" << context.mesh->getName() << "\"");
+                   << "\" from mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
@@ -1434,7 +1434,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
                  "Writing block vector data cannot be used with incremental "
                  << "mapping!");
     assertion(context.toData.get() != NULL);
-    utils::DynVector& valuesInternal = context.toData->values();
+    utils::DynVector& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       int offsetInternal = valueIndices[i]*_dimensions;
       int offset = i*_dimensions;
@@ -1473,7 +1473,7 @@ void SolverInterfaceImpl:: writeVectorData
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.get() != NULL);
     impl::MappingContext& mapContext = context.mappingContext;
-    utils::DynVector& values = context.toData->values();
+    utils::DynVector& values = context.fromData->values();
     if (mapContext.timing == mapping::MappingConfiguration::INCREMENTAL){
       preciceDebug("Map incrementally");
       for (int dim=0; dim < _dimensions; dim++){
@@ -1515,7 +1515,7 @@ void SolverInterfaceImpl:: writeBlockScalarData
                  "Writing block scalar data cannot be used with incremental "
                  << "mapping!");
     assertion(context.toData.get() != NULL);
-    utils::DynVector& valuesInternal = context.toData->values();
+    utils::DynVector& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       assertion2(i < valuesInternal.size(), i, valuesInternal.size());
       valuesInternal[valueIndices[i]] = values[i];
@@ -1580,7 +1580,7 @@ void SolverInterfaceImpl:: readBlockVectorData
                  "Reading block vector data cannot be used with incremental "
                  << "mapping!");
     assertion(context.fromData.get() != NULL);
-    utils::DynVector& valuesInternal = context.fromData->values();
+    utils::DynVector& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
       int offsetInternal = valueIndices[i] * _dimensions;
       int offset = i * _dimensions;
@@ -1610,14 +1610,14 @@ void SolverInterfaceImpl:: readVectorData
                      "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
-    utils::DynVector& values = context.fromData->values();
+    utils::DynVector& values = context.toData->values();
     impl::MappingContext& mapContext = context.mappingContext;
     bool hasMapping = mapContext.mapping.get() != NULL;
     bool isIncremental = mapContext.timing == mapping::MappingConfiguration::INCREMENTAL;
     if (isIncremental){
       preciceDebug("Map incrementally from dataID: " << context.fromData->getID()
                       << " to dataID: " << toDataID);
-      assign(context.fromData->values()) = 0.0;
+      assign(context.toData->values()) = 0.0;
       mapContext.mapping->map(context.fromData->getID(), toDataID );
       for (int dim=0; dim < _dimensions; dim++){
         value[dim] = values[dim];
@@ -1661,7 +1661,7 @@ void SolverInterfaceImpl:: readBlockScalarData
                  "Reading block scalar data cannot be used with incremental "
                  << "mapping!");
     assertion(context.fromData.get() != NULL);
-    utils::DynVector& valuesInternal = context.fromData->values();
+    utils::DynVector& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
       assertion2(valueIndices[i] < valuesInternal.size(),
                valueIndices[i], valuesInternal.size());
@@ -1687,13 +1687,13 @@ void SolverInterfaceImpl:: readScalarData
                      "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
-    utils::DynVector& values = context.fromData->values();
+    utils::DynVector& values = context.toData->values();
     impl::MappingContext& mapContext = context.mappingContext;
     bool hasMapping = mapContext.mapping.get() != NULL;
     bool isIncremental = mapContext.timing == mapping::MappingConfiguration::INCREMENTAL;
     if (isIncremental){
       preciceDebug("Map incrementally");
-      assign(context.fromData->values()) = 0.0;
+      assign(context.toData->values()) = 0.0;
       mapContext.mapping->map(context.fromData->getID(), toDataID );
       value = values[0];
     }

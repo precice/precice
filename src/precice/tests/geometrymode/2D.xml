@@ -21,7 +21,7 @@
       
       <geometry:builtin-cuboid of-mesh="itest-cuboid">
          <offset value="-5.0; -5.0" />
-         <discretization-width value="1.0" />                  
+         <discretization-width value="1.0; 1.0" />                  
          <length value="10; 10"/>
       </geometry:builtin-cuboid>
      
@@ -31,10 +31,10 @@
          <export:vtk/>
          <mapping:nearest-projection direction="write" 
                from="SolverMesh" to="itest-cuboid" 
-               constraint="conservative" timing="incremental" />
+               constraint="conservative" timing="initial" />
          <mapping:nearest-projection direction="read" 
                from="itest-cuboid" to="SolverMesh" 
-               constraint="consistent" timing="incremental" />
+               constraint="consistent" timing="initial" />
          <write-data name="Forces"     mesh="SolverMesh" />
          <read-data  name="Velocities" mesh="SolverMesh" />
       </participant>

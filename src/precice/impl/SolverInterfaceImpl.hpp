@@ -366,16 +366,16 @@ public:
     int fourthVertexID );
 
   /**
-   * @brief Computes and maps all data written to mesh with given ID.
+   * @brief Computes and maps all write data mapped from mesh with given ID.
    *
    * Is automatically called in advance, if not called manually before.
    */
-  void mapDataFrom(int meshID);
+  void mapWriteDataFrom(int fromMeshID);
 
   /**
-   * @brief Computes and maps all data to be read from mesh with given ID.
+   * @brief Computes and maps all read data mapped from mesh with given ID.
    */
-  void mapDataTo(int meshID);
+  void mapReadDataFrom(int fromMeshID);
 
   /**
    * @brief Writes vector data values given as block.

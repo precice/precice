@@ -156,7 +156,7 @@ void Participant::addWriteMappingContext
 (
   MappingContext* mappingContext)
 {
-  _readMappingContexts.push_back(mappingContext);
+  _writeMappingContexts.push_back(mappingContext);
 }
 
 const utils::ptr_vector<MappingContext>& Participant::readMappingContexts() const

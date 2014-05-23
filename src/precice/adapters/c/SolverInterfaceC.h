@@ -222,16 +222,15 @@ void precicec_readScalarData (
   double* dataValue );
 
 /**
- * @brief Computes and maps all data written to mesh with given ID.
+ * @brief Computes and maps all write data mapped from mesh with given ID.
  *
- * Is automatically called in advance, if not called manually before.
  */
-void precicec_mapDataFrom ( int meshID );
+void precicec_mapWriteDataFrom ( int fromMeshID );
 
 /**
- * @brief Computes and maps all data to be read from mesh with given ID.
+ * @brief Computes and maps all read data mapped from mesh with given ID.
  */
-void precicec_mapDataTo ( int meshID );
+void precicec_mapReadDataFrom ( int fromMeshID );
 
 /**
  * @brief Exports the coupling mesh to a vtk file

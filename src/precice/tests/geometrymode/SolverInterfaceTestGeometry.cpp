@@ -653,6 +653,7 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
 
   precice.initialize();
   preciceDebug ( "preCICE initialized");
+  precice.mapWriteDataFrom(meshID);
   // Validate results
   impl::PtrParticipant p = precice._impl->_accessor;
   preciceDebug ( "Participant found");
@@ -663,15 +664,16 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   preciceDebug ( "ToData found");
   validate(data.get() != NULL);
   utils::DynVector& writtenValues = data->values();
+
   validateEquals(writtenValues.size(), 8);
   validateNumericalEquals(writtenValues[0], 1.0);
   validateNumericalEquals(writtenValues[1], 2.0);
   validateNumericalEquals(writtenValues[2], 3.0);
   validateNumericalEquals(writtenValues[3], 4.0);
-  validateNumericalEquals(writtenValues[4], 5.0);
-  validateNumericalEquals(writtenValues[5], 6.0);
-  validateNumericalEquals(writtenValues[6], 7.0);
-  validateNumericalEquals(writtenValues[7], 8.0);
+  validateNumericalEquals(writtenValues[4], 7.0); //order is different than above
+  validateNumericalEquals(writtenValues[5], 8.0);
+  validateNumericalEquals(writtenValues[6], 5.0);
+  validateNumericalEquals(writtenValues[7], 6.0);
 }
 
 void SolverInterfaceTestGeometry:: testConservativeIncrementalDataMapping()
@@ -715,22 +717,18 @@ void SolverInterfaceTestGeometry:: testConservativeIncrementalDataMapping()
   validateEquals(geoInterface._impl->_participants.size(), 1);
   validate((int)participant->_dataContexts.size() > dataID);
 
-  utils::DynVector& values = participant->_dataContexts[dataID]->toData->values();
-  std::cout << "sizeTo: " << values.size() << std::endl;
-  utils::DynVector& values2 = participant->_dataContexts[dataID]->fromData->values();
-  std::cout << "sizeFrom: " << values2.size() << std::endl;
+  geoInterface.mapWriteDataFrom(meshID);
 
-  //test if geometry mesh has requirement VERTEX
-  std::cout << "MeshRequ: " << participant->_meshContexts[geoID]->meshRequirement << std::endl;
+  utils::DynVector& values = participant->_dataContexts[dataID]->toData->values();
+
+  //test if geometry mesh has requirement FULL
+  validateEquals(participant->_meshContexts[geoID]->meshRequirement,mapping::Mapping::FULL);
 
   for (int index=0; index < values.size() / 2; index++){
     assignList(temp) = values[index*2], values[index*2 +1];
 //    assign(temp) = tarch::la::slice<dim>(values, index*dim);
     integral += temp;
-    std::cout << "temp: " << temp << std::endl;
   }
-
-  std::cout << "integral: " << integral << std::endl;
 
   validate ( tarch::la::equals(integral, Vector2D(100.0)) );
   assign(integral) = 0.0;
@@ -758,17 +756,28 @@ void SolverInterfaceTestGeometry:: testConsistentIncrementalDataMapping ()
   utils::DynVector& velocities = participant->_dataContexts[dataID]->fromData->values();
   assign(velocities) = 5.0;
 
+  std::vector<int> indices(100);
+
   Vector2D counter ( 0.0 );
   std::vector<double> coords;
-  std::vector<double> datavector;
   for ( counter(0)=0.0; counter(0) < 10.0; counter(0) +=1.0 ) {
     for ( counter(1)=0.0; counter(1) < 10.0; counter(1) +=1.0 ) {
       Vector2D currentPoint ( -10.0 + 2.0 * counter );
       coords += currentPoint[0], currentPoint[1];
-      datavector += 0.0, 0.0;
-      Vector2D data ( 0.0 );
       using tarch::la::raw;
       int index = geoInterface.setMeshVertex ( meshID, raw(currentPoint) );
+      indices[counter(0)*10+counter(1)] = index;
+    }
+  }
+
+  geoInterface.advance ( 1.0 );
+
+  for ( counter(0)=0.0; counter(0) < 10.0; counter(0) +=1.0 ) {
+    for ( counter(1)=0.0; counter(1) < 10.0; counter(1) +=1.0 ) {
+      Vector2D currentPoint ( -10.0 + 2.0 * counter );
+      Vector2D data ( 0.0 );
+      using tarch::la::raw;
+      int index =  indices[counter(0)*10+counter(1)];
       geoInterface.readVectorData ( dataID, index, raw(data) );
       validate ( tarch::la::equals(data, Vector2D(5.0) ) );
     }

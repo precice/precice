@@ -323,20 +323,20 @@ void precicef_read_sdata_
   impl->readScalarData(*dataID, *valueIndex, *dataValue);
 }
 
-void precicef_map_data_to_
+void precicef_map_write_data_from_
 (
-  const int* meshID )
+  const int* fromMeshID )
 {
   assertion(impl != NULL);
-  impl->mapDataTo(*meshID);
+  impl->mapWriteDataFrom(*fromMeshID);
 }
 
-void precicef_map_data_from_
+void precicef_map_read_data_from_
 (
-  const int* meshID )
+  const int* fromMeshID )
 {
   assertion(impl != NULL);
-  impl->mapDataFrom(*meshID);
+  impl->mapReadDataFrom(*fromMeshID);
 }
 
 void precicef_export_mesh_

@@ -432,26 +432,26 @@ void precicef_read_sdata_(
   double*    dataValue );
 
 /**
- * @brief See precice::SolverInterface::mapDataTo().
+ * @brief See precice::SolverInterface::mapWriteDataFrom().
  *
  * Fortran syntax:
- * precicef_map_data_to( INTEGER meshID )
+ * precicef_map_write_data_from( INTEGER fromMeshID )
  *
- * IN:  meshID
+ * IN:  fromMeshID
  * OUT: -
  */
-void precicef_map_data_to_( const int* meshID );
+void precicef_map_write_data_from_( const int* fromMeshID );
 
 /**
- * @brief See precice::SolverInterface::mapDataFrom().
+ * @brief See precice::SolverInterface::mapReadDataFrom().
  *
  * Fortran syntax:
- * precicef_map_data_from( INTEGER meshID )
+ * precicef_map_read_data_from( INTEGER fromMeshID )
  *
- * IN:  meshID
+ * IN:  fromMeshID
  * OUT: -
  */
-void precicef_map_data_from_( const int* meshID );
+void precicef_map_read_data_from_( const int* fromMeshID );
 
 /**
  * @brief See precice::SolverInterface::exportMesh().

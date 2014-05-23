@@ -8,7 +8,7 @@
     <log-filter target=""      component=""      switch="off"/>
     <log-filter target="info"  component="tarch" switch="on"/>
     
-    <log-filter target="debug" component="precice::cplscheme::tests::ExplicitCouplingSchemeTest" switch="off"/>
+    <log-filter target="debug" component="precice::cplscheme::tests::CompositionalCouplingSchemeTest" switch="on"/>
     
     
     <log-output column-separator=" | " log-time-stamp="no" 
