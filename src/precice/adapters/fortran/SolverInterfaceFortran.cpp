@@ -331,12 +331,12 @@ void precicef_map_write_data_from_
   impl->mapWriteDataFrom(*fromMeshID);
 }
 
-void precicef_map_read_data_from_
+void precicef_map_read_data_to_
 (
-  const int* fromMeshID )
+  const int* toMeshID )
 {
   assertion(impl != NULL);
-  impl->mapReadDataFrom(*fromMeshID);
+  impl->mapReadDataTo(*toMeshID);
 }
 
 void precicef_export_mesh_

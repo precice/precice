@@ -373,9 +373,9 @@ public:
   void mapWriteDataFrom(int fromMeshID);
 
   /**
-   * @brief Computes and maps all read data mapped from mesh with given ID.
+   * @brief Computes and maps all read data mapped to mesh with given ID.
    */
-  void mapReadDataFrom(int fromMeshID);
+  void mapReadDataTo(int toMeshID);
 
   /**
    * @brief Writes vector data values given as block.

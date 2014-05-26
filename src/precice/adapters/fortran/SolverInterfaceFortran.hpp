@@ -443,15 +443,15 @@ void precicef_read_sdata_(
 void precicef_map_write_data_from_( const int* fromMeshID );
 
 /**
- * @brief See precice::SolverInterface::mapReadDataFrom().
+ * @brief See precice::SolverInterface::mapReadDataTo().
  *
  * Fortran syntax:
- * precicef_map_read_data_from( INTEGER fromMeshID )
+ * precicef_map_read_data_to( INTEGER toMeshID )
  *
- * IN:  fromMeshID
+ * IN:  zoMeshID
  * OUT: -
  */
-void precicef_map_read_data_from_( const int* fromMeshID );
+void precicef_map_read_data_to_( const int* toMeshID );
 
 /**
  * @brief See precice::SolverInterface::exportMesh().

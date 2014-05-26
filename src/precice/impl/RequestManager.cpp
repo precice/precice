@@ -171,13 +171,13 @@ void RequestManager:: handleRequests()
         clientRanks.clear();
       }
       break;
-    case REQUEST_MAP_READ_DATA_FROM:
+    case REQUEST_MAP_READ_DATA_TO:
       preciceDebug("Request map read data by rank " << rankSender);
       clientCounter++;
       assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
-        handleRequestMapReadDataFrom(clientRanks);
+        handleRequestMapReadDataTo(clientRanks);
         clientCounter = 0;
         clientRanks.clear();
       }
@@ -609,15 +609,15 @@ void RequestManager:: requestMapWriteDataFrom
   _com->send(fromMeshID, 0);
 }
 
-void RequestManager:: requestMapReadDataFrom
+void RequestManager:: requestMapReadDataTo
 (
-  int fromMeshID )
+  int toMeshID )
 {
-  preciceTrace1("requestMapReadDataFrom()", fromMeshID);
-  _com->send(REQUEST_MAP_READ_DATA_FROM, 0);
+  preciceTrace1("requestMapReadDataTo()", toMeshID);
+  _com->send(REQUEST_MAP_READ_DATA_TO, 0);
   int ping;
   _com->receive(ping, 0);
-  _com->send(fromMeshID, 0);
+  _com->send(toMeshID, 0);
 }
 
 void RequestManager:: requestExportMesh
@@ -1099,11 +1099,11 @@ void RequestManager:: handleRequestMapWriteDataFrom
   _interface.mapWriteDataFrom(oldMeshID);
 }
 
-void RequestManager:: handleRequestMapReadDataFrom
+void RequestManager:: handleRequestMapReadDataTo
 (
   const std::list<int>& clientRanks )
 {
-  preciceTrace("handleRequestMapReadDataFrom()");
+  preciceTrace("handleRequestMapReadDataTo()");
   std::list<int>::const_iterator iter = clientRanks.begin();
   int ping = 0;
   _com->send(ping, *iter);
@@ -1119,7 +1119,7 @@ void RequestManager:: handleRequestMapReadDataFrom
                  <<  ") when calling map read data from several processes!");
     oldMeshID = meshID;
   }
-  _interface.mapReadDataFrom(oldMeshID);
+  _interface.mapReadDataTo(oldMeshID);
 }
 
 void RequestManager:: handleRequestExportMesh

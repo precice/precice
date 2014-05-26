@@ -28,9 +28,9 @@
          <use-mesh name="MeshOne" provide="yes"/>
          <use-mesh name="SolverGeometry" offset="10.0; 10.0; 10.0" from="SolverTwo" />
          <mapping:nearest-projection direction="write" from="MeshOne" to="SolverGeometry"
-                  constraint="conservative" timing="incremental" />
+                  constraint="conservative" timing="initial" />
          <mapping:nearest-projection direction="read" from="SolverGeometry" to="MeshOne"
-                  constraint="consistent" timing="incremental" />
+                  constraint="consistent" timing="initial" />
          <write-data name="Forces"        mesh="MeshOne" />
          <read-data  name="Velocities"    mesh="MeshOne" />
          <read-data  name="Displacements" mesh="MeshOne" />
@@ -53,7 +53,7 @@
          <participants first="SolverOne" second="SolverTwo" /> 
          <max-timesteps value="5" /> 
          <timestep-length value="0.01" />
-         <exchange data="Forces"        mesh="MeshOne" from="SolverOne" />
+         <exchange data="Forces"        mesh="SolverGeometry" from="SolverOne" />
          <exchange data="Velocities"    mesh="SolverGeometry" from="SolverTwo" />
          <exchange data="Displacements" mesh="SolverGeometry" from="SolverTwo" />
       </coupling-scheme:serial-explicit>

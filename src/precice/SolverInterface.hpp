@@ -436,10 +436,10 @@ public:
     int fourthVertexID );
 
   /**
-   * @brief Computes and maps all read data mapped from the mesh with given ID.
+   * @brief Computes and maps all read data mapped to the mesh with given ID.
    *
    */
-  void mapReadDataFrom ( int fromMeshID );
+  void mapReadDataTo ( int toMeshID );
 
   /**
    * @brief Computes and maps all write data mapped from the mesh with given ID.

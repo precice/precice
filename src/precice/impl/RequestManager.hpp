@@ -258,7 +258,7 @@ public:
   /**
    * @brief Requests read mapping data from server.
    */
-  void requestMapReadDataFrom ( int fromMeshID );
+  void requestMapReadDataTo( int toMeshID );
 
   /**
    * @brief Requests export mesh from server.
@@ -314,7 +314,7 @@ private:
     REQUEST_READ_VETOR_DATA,
     REQUEST_READ_BLOCK_VECTOR_DATA,
     REQUEST_MAP_WRITE_DATA_FROM,
-    REQUEST_MAP_READ_DATA_FROM,
+    REQUEST_MAP_READ_DATA_TO,
     REQUEST_EXPORT_MESH,
     REQUEST_INTEGRATE_SCALAR_DATA,
     REQUEST_INTEGRATE_VECTOR_DATA,
@@ -472,7 +472,7 @@ private:
   /**
    * @brief Handles request map read data from client.
    */
-  void handleRequestMapReadDataFrom ( const std::list<int>& clientRanks );
+  void handleRequestMapReadDataTo ( const std::list<int>& clientRanks );
 
   /**
    * @brief Handles request export mesh from client.

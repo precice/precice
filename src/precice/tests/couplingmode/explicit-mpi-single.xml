@@ -30,7 +30,7 @@
          <mapping:nearest-projection direction="write" from="MeshOne" to="Test-Square"
                   constraint="conservative" timing="onadvance"/>
          <mapping:nearest-projection direction="read" from="Test-Square" to="MeshOne"
-                  constraint="consistent" timing="incremental" />
+                  constraint="consistent" timing="onadvance" />
          <write-data name="Forces"     mesh="MeshOne" />
          <read-data  name="Velocities" mesh="MeshOne" />
       </participant>
@@ -47,7 +47,7 @@
          <participants first="SolverOne" second="SolverTwo" /> 
          <max-timesteps value="10" />
          <timestep-length value="1.0" />
-         <exchange data="Forces"     mesh="MeshOne" from="SolverOne" />
+         <exchange data="Forces"     mesh="Test-Square" from="SolverOne" />
          <exchange data="Velocities" mesh="Test-Square" from="SolverTwo" />
       </coupling-scheme:serial-explicit>                           
                   

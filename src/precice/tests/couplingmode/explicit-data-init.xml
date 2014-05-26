@@ -42,7 +42,7 @@
          <max-timesteps value="5"/>
          <timestep-length value="1.0"/>
          <exchange data="DataOne" mesh="MeshOne" from="SolverOne"/>
-         <exchange data="DataTwo" mesh="MeshTwo" from="SolverTwo" initialize="on"/>
+         <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" initialize="on"/>
       </coupling-scheme:serial-explicit>                           
                   
    </solver-interface>

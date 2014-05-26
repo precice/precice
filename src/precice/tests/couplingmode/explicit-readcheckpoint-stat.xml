@@ -47,7 +47,7 @@
          <participants first="SolverOne" second="SolverTwo"/> 
          <max-timesteps value="20"/>
          <timestep-length value="1.0"/>
-         <exchange data="Forces"     mesh="MeshOne" from="SolverOne"/>
+         <exchange data="Forces"     mesh="Test-Square" from="SolverOne"/>
          <exchange data="Velocities" mesh="Test-Square" from="SolverTwo"/>
       </coupling-scheme:serial-explicit>                           
                   

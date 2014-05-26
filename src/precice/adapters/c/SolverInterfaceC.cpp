@@ -277,10 +277,10 @@ void precicec_mapWriteDataFrom ( int fromMeshID )
   impl->mapWriteDataFrom(fromMeshID);
 }
 
-void precicec_mapReadDataFrom ( int fromMeshID )
+void precicec_mapReadDataTo ( int toMeshID )
 {
   assertion ( impl != NULL );
-  impl->mapReadDataFrom(fromMeshID);
+  impl->mapReadDataTo(toMeshID);
 }
 
 void precicec_exportMesh

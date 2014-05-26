@@ -828,7 +828,7 @@ void SolverInterfaceImpl:: resetMesh
 
   preciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
             << " must not be reseted");
-  preciceCheck(!hasMapping, "resetMesh()", "A mesh with no mappings"
+  preciceCheck(hasMapping, "resetMesh()", "A mesh with no mappings"
               << " must not be reseted");
   preciceCheck(!isTemporary, "resetMesh()", "A temporary mesh"
                 << " must not be reseted");
@@ -861,9 +861,9 @@ int SolverInterfaceImpl:: setMeshVertex
       preciceDebug("Set temporary write position");
       assertion1(mesh->vertices().size() == 1, mesh->vertices().size());
       mesh->vertices()[0].setCoords(internalPosition);
-      if(context.fromMappingContext.mapping.use_count() > 0){
-        context.fromMappingContext.mapping->computeMapping();
-      }
+//      if(context.fromMappingContext.mapping.use_count() > 0){
+//        context.fromMappingContext.mapping->computeMapping();
+//      }
       if(context.toMappingContext.mapping.use_count() > 0){
         context.toMappingContext.mapping->computeMapping();
       }
@@ -1363,17 +1363,17 @@ void SolverInterfaceImpl:: mapWriteDataFrom
 }
 
 
-void SolverInterfaceImpl:: mapReadDataFrom
+void SolverInterfaceImpl:: mapReadDataTo
 (
-  int fromMeshID )
+  int toMeshID )
 {
-  preciceTrace1 ("mapReadDataFrom(int)", fromMeshID);
+  preciceTrace1 ("mapReadDataFrom(int)", toMeshID);
   if (_clientMode){
-    _requestManager->requestMapReadDataFrom(fromMeshID);
+    _requestManager->requestMapReadDataTo(toMeshID);
     return;
   }
-  impl::MeshContext& context = _accessor->meshContext(fromMeshID);
-  impl::MappingContext& mappingContext = context.fromMappingContext;
+  impl::MeshContext& context = _accessor->meshContext(toMeshID);
+  impl::MappingContext& mappingContext = context.toMappingContext;
   if (mappingContext.mapping.use_count() == 0){
     preciceError("mapReadDataFrom()", "From mesh \"" << context.mesh->getName()
                    << "\", there is no mapping defined!");
@@ -1389,7 +1389,7 @@ void SolverInterfaceImpl:: mapReadDataFrom
     mappingContext.mapping->computeMapping();
   }
   foreach (impl::DataContext& context, _accessor->readDataContexts()){
-    if (context.mesh->getID() == fromMeshID){
+    if (context.mesh->getID() == toMeshID){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       assign(context.toData->values()) = 0.0;
@@ -1541,7 +1541,7 @@ void SolverInterfaceImpl:: writeScalarData
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.use_count() > 0);
     impl::MappingContext& mapContext = context.mappingContext;
-    utils::DynVector& values = context.toData->values();
+    utils::DynVector& values = context.fromData->values();
     bool hasMapping = mapContext.mapping.get() != NULL;
     bool isIncremental = mapContext.timing == mapping::MappingConfiguration::INCREMENTAL;
     if (isIncremental){
@@ -2017,6 +2017,7 @@ void SolverInterfaceImpl:: mapWrittenData()
       preciceDebug("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
       assign(context.toData->values()) = 0.0;
+      preciceDebug("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
       int max = context.fromData->values().size();
