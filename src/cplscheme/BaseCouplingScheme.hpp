@@ -107,7 +107,7 @@ public:
   /**
    * @brief Sets the checkpointing timestep interval.
    */
-  void setCheckointTimestepInterval (int timestepInterval);
+  void setCheckPointTimestepInterval (int timestepInterval);
 
   /**
    * @brief Initializes the coupling scheme and establishes a communiation

@@ -90,7 +90,7 @@ void BaseCouplingScheme:: addDataToReceive
    }
 }
 
-void BaseCouplingScheme:: setCheckointTimestepInterval
+void BaseCouplingScheme:: setCheckPointTimestepInterval
 (
   int timestepInterval)
 {
