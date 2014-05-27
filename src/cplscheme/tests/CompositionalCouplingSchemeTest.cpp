@@ -59,10 +59,10 @@ void CompositionalCouplingSchemeTest:: run ()
     if (Par::getProcessRank() <= 2){
       Par::setGlobalCommunicator(comm) ;
       validateEquals(Par::getCommunicatorSize(), 3);
-      testMethod(testExplicitSchemeComposition1);
-      testMethod(testImplicitSchemeComposition);
-      testMethod(testImplicitExplicitSchemeComposition);
-      testMethod(testExplicitImplicitSchemeComposition);
+      // testMethod(testExplicitSchemeComposition1);
+      // testMethod(testImplicitSchemeComposition);
+      // testMethod(testImplicitExplicitSchemeComposition);
+      // testMethod(testExplicitImplicitSchemeComposition);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
