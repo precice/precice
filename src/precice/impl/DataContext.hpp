@@ -31,7 +31,7 @@ struct DataContext
     used(false),
     fromData(),
     toData(),
-    mesh(),
+    //mesh(),
     mappingContext()
   {}
 };

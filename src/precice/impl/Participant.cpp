@@ -125,6 +125,7 @@ void Participant:: addWriteData
   DataContext* context = new DataContext ();
   context->fromData = data;
   context->mesh = mesh;
+  // will be overwritten later if a mapping exists
   context->toData = context->fromData;
   _dataContexts[data->getID()] = context;
   _writeDataContexts.push_back ( context );
@@ -140,6 +141,7 @@ void Participant:: addReadData
   DataContext* context = new DataContext ();
   context->toData = data;
   context->mesh = mesh;
+  // will be overwritten later if a mapping exists
   context->fromData = context->toData;
   _dataContexts[data->getID()] = context;
   _readDataContexts.push_back ( context );
