@@ -34,7 +34,7 @@
          <write-data name="Forces"        mesh="MeshOne" />
          <read-data  name="Velocities"    mesh="MeshOne" />
          <read-data  name="Displacements" mesh="MeshOne" />
-         <action:add-to-coordinates mesh="MeshOne" timing="on-exchange-post">
+         <action:add-to-coordinates mesh="SolverGeometry" timing="on-exchange-post">
             <source-data name="Displacements"/> 
          </action:add-to-coordinates>
       </participant>

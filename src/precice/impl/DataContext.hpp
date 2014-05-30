@@ -12,7 +12,8 @@ namespace precice {
 namespace impl {
 
 /**
- * @brief Stores one Data object with related context.
+ * @brief Stores one Data object with related context. If this dataContext is not associated with a mapping,
+ * fromData and toData refer to the same data object.
  */
 struct DataContext
 {

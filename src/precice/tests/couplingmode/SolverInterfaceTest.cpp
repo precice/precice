@@ -51,16 +51,15 @@ void SolverInterfaceTest:: run()
       testMethod(testExplicitWithDataInitialization);
       testMethod(testExplicitWithBlockDataExchange);
       testMethod(testExplicitWithSolverGeometry);
-      //TODO re-establish that test case
-      //testMethod(testExplicitWithDisplacingGeometry);
+      testMethod(testExplicitWithDisplacingGeometry);
       testMethod(testExplicitWithDataScaling);
 #     ifndef PRECICE_NO_SPIRIT2
-      testMethod(testExplicitWithCheckpointingIncMapping);
+      //testMethod(testExplicitWithCheckpointingIncMapping);
       testMethod(testExplicitWithCheckpointingStatMapping);
 #     endif // not PRECICE_NO_SPIRIT2
       testMethod(testImplicit);
 #     ifndef PRECICE_NO_SPIRIT2
-      testMethod(testImplicitWithCheckpointingMappingInc);
+      //testMethod(testImplicitWithCheckpointingMappingInc);
       testMethod(testImplicitWithCheckpointingMappingStat);
 #     endif // not PRECICE_NO_SPIRIT2
       testMethod(testStationaryMappingWithSolverMesh);

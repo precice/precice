@@ -31,7 +31,7 @@
          <use-mesh name="AccessorMeshScalar" provide="yes"/>
          <use-mesh name="AccessorMeshVector" provide="yes"/>
          <mapping:nearest-projection direction="write" constraint="conservative" 
-                  from="AccessorMeshScalar" to="CuboidMesh" timing="initial"/>
+                  from="AccessorMeshVector" to="CuboidMesh" timing="initial"/>
          <!--
          <mapping:nearest-projection direction="read" constraint="consistent"  
                   mesh="Mesh"  timing="initial"/>

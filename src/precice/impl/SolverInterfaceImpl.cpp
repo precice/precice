@@ -1878,22 +1878,29 @@ void SolverInterfaceImpl:: configureSolverGeometries
           bool doesReceive = receiverContext.receiveMeshFrom == _accessorName;
           doesReceive &= receiverContext.mesh->getName() == context.mesh->getName();
           if ( doesReceive ){
-            preciceCheck ( !addedReceiver, "configureSolverGeometries()",
-                "At the moment preCICE allows only for one receiver per mesh. "
-                << "Mesh \"" << context.mesh->getName() << "\" is received "
-                << "more than once.");
+//            preciceCheck ( !addedReceiver, "configureSolverGeometries()",
+//                "At the moment preCICE allows only for one receiver per mesh. "
+//                << "Mesh \"" << context.mesh->getName() << "\" is received "
+//                << "more than once.");
             preciceCheck (context.fromMappingContext.timing!=mapping::MappingConfiguration::INCREMENTAL,
                          "configureSolverGeometries()", "A communicated geometry cannot "
                             << "define an incremental mapping. ");
             preciceDebug ( "   ... receiver " << receiver );
             utils::DynVector offset ( _dimensions, 0.0 );
             std::string provider ( _accessorName );
-            geometry::CommunicatedGeometry* comGeo =
-                      new geometry::CommunicatedGeometry ( offset, provider, provider );
+            geometry::CommunicatedGeometry* comGeo;
+            if(!addedReceiver){
+              comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider );
+              context.geometry = geometry::PtrGeometry ( comGeo );
+            }
+            else{
+              preciceDebug ( "Futher receiver added.");
+            }
+
             com::PtrCommunication com =
                 comConfig->getCommunication ( receiver->getName(), provider );
             comGeo->addReceiver ( receiver->getName(), com );
-            context.geometry = geometry::PtrGeometry ( comGeo );
+
             addedReceiver = true;
           }
         }

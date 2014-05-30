@@ -11,7 +11,7 @@
     <log-filter target="debug" component="precice::tests" switch="on"/>
     <log-filter target="debug" component="precice::impl" switch="off"/>
     <log-filter target="debug" component="precice::impl::SolverInterfaceImpl" switch="off"/>
-    <log-filter target="debug" component="precice::cplscheme::SerialExplicitCouplingScheme" switch="off"/>
+    <log-filter target="debug" component="precice::geometry::CommunicatedGeometry" switch="on"/>
 
 
 
