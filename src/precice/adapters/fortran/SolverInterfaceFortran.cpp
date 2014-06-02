@@ -168,14 +168,14 @@ void precicef_get_mesh_id_
 void precicef_has_data_
 (
   const char* dataName,
-  int         meshID,
+  int*        meshID,
   int*        hasData,
   int         lengthDataName)
 {
   assertion(impl != NULL);
   int strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
   string stringDataName(dataName, strippedLength);
-  if (impl->hasData(stringDataName, meshID)){
+  if (impl->hasData(stringDataName, *meshID)){
     *hasData = 1;
   }
   else {
@@ -186,7 +186,7 @@ void precicef_has_data_
 void precicef_get_data_id_
 (
   const char* dataName,
-  int         meshID,
+  int*        meshID,
   int*        dataID,
   int         lengthDataName
 )
@@ -194,7 +194,7 @@ void precicef_get_data_id_
   assertion(impl != NULL);
   int strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
   string stringDataName(dataName, strippedLength);
-  *dataID = impl->getDataID(stringDataName, meshID);
+  *dataID = impl->getDataID(stringDataName, *meshID);
 }
 
 void precicef_set_vertex_
