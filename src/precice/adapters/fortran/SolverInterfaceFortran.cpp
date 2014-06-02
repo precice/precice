@@ -168,7 +168,7 @@ void precicef_get_mesh_id_
 void precicef_has_data_
 (
   const char* dataName,
-  int*        meshID,
+  const int*  meshID,
   int*        hasData,
   int         lengthDataName)
 {
@@ -186,7 +186,7 @@ void precicef_has_data_
 void precicef_get_data_id_
 (
   const char* dataName,
-  int*        meshID,
+  const int*  meshID,
   int*        dataID,
   int         lengthDataName
 )

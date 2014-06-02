@@ -189,7 +189,7 @@ void precicef_get_mesh_id_(
  */
 void precicef_has_data_(
   const char* dataName,
-  int*        meshID,
+  const int*  meshID,
   int*        hasData,
   int         lengthDataName);
 
@@ -213,7 +213,7 @@ void precicef_has_data_(
  */
 void precicef_get_data_id_(
   const char* dataName,
-  int*        meshID,
+  const int*  meshID,
   int*        dataID,
   int         lengthDataName);
 
@@ -322,7 +322,7 @@ void precicef_set_triangle_we_(
  *
  * IN:  dataID, size, valueIndices, values
  * OUT: -
- */precicef_get_data_id_
+ */
 void precicef_write_bvdata_(
   const int* dataID,
   const int* size,
