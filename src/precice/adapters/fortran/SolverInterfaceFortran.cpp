@@ -169,13 +169,12 @@ void precicef_has_data_
 (
   const char* dataName,
   int*        hasData,
-  int         meshID,
-  int         lengthDataName)
+  int         lengthDataName )
 {
   assertion(impl != NULL);
   int strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
   string stringDataName(dataName, strippedLength);
-  if (impl->hasData(stringDataName, meshID)){
+  if (impl->hasData(stringDataName)){
     *hasData = 1;
   }
   else {
@@ -187,13 +186,12 @@ void precicef_get_data_id_
 (
   const char* dataName,
   int*        dataID,
-  int         meshID,
-  int         lengthDataName)
+  int         lengthDataName )
 {
   assertion(impl != NULL);
   int strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
   string stringDataName(dataName, strippedLength);
-  *dataID = impl->getDataID(stringDataName, meshID);
+  *dataID = impl->getDataID(stringDataName);
 }
 
 void precicef_set_vertex_
@@ -204,6 +202,48 @@ void precicef_set_vertex_
 {
   assertion(impl != NULL);
   *vertexID = impl->setMeshVertex(*meshID, position);
+}
+
+void precicef_set_read_pos_
+(
+  const int*    meshID,
+  const double* position,
+  int*          positionID )
+{
+  assertion(impl != NULL);
+  *positionID = impl->setReadPosition(*meshID, position);
+}
+
+void precicef_set_read_poss_
+(
+  const int*    meshID,
+  const int*    size,
+  double*       positions,
+  int*          positionIDs )
+{
+  assertion(impl != NULL);
+  impl->setReadPositions(*meshID, *size, positions, positionIDs);
+}
+
+void precicef_set_write_pos_
+(
+  const int*    meshID,
+  const double* position,
+  int*          positionID )
+{
+  assertion(impl != NULL);
+  *positionID = impl->setWritePosition(*meshID, position);
+}
+
+void precicef_set_write_poss_
+(
+  const int*    meshID,
+  const int*    size,
+  double*       positions,
+  int*          positionIDs )
+{
+  assertion(impl != NULL);
+  impl->setWritePositions(*meshID, *size, positions, positionIDs);
 }
 
 void precicef_set_edge_
@@ -323,20 +363,20 @@ void precicef_read_sdata_
   impl->readScalarData(*dataID, *valueIndex, *dataValue);
 }
 
-void precicef_map_write_data_from_
+void precicef_map_written_data_
 (
-  const int* fromMeshID )
+  const int* meshID )
 {
   assertion(impl != NULL);
-  impl->mapWriteDataFrom(*fromMeshID);
+  impl->mapWrittenData(*meshID);
 }
 
-void precicef_map_read_data_to_
+void precicef_map_read_data_
 (
-  const int* toMeshID )
+  const int* meshID )
 {
   assertion(impl != NULL);
-  impl->mapReadDataTo(*toMeshID);
+  impl->mapReadData(*meshID);
 }
 
 void precicef_export_mesh_

@@ -188,8 +188,7 @@ void precicef_get_mesh_id_(
 void precicef_has_data_(
   const char* dataName,
   int*        hasData,
-  int         meshID,
-  int         lengthDataName);
+  int         lengthDataName );
 
 /**
  * @brief See precice::SolverInterface::getDataID().
@@ -209,8 +208,7 @@ void precicef_has_data_(
 void precicef_get_data_id_(
   const char* dataName,
   int*        dataID,
-  int         meshID,
-  int         lengthDataName);
+  int         lengthDataName );
 
 /**
  * @brief See precice::SolverInterface::setMeshVertex().
@@ -229,6 +227,77 @@ void precicef_set_vertex_(
   const double* position,
   int*          vertexID );
 
+/**
+ * @brief See precice::SolverInterface::setReadPosition().
+ *
+ * Fortran syntax:
+ * precicef_set_read_pos(
+ *   INTEGER          meshID,
+ *   DOUBLE PRECISION position(3),
+ *   INTEGER          positionID )
+ *
+ * IN:  meshID, position
+ * OUT: positionID
+ */
+void precicef_set_read_pos_(
+  const int*    meshID,
+  const double* position,
+  int*          positionID );
+
+/**
+ * @brief See precice::SolverInterface::setReadPositions().
+ *
+ * Fortran syntax:
+ * precicef_set_read_poss(
+ *   INTEGER          meshID,
+ *   INTEGER          size,
+ *   DOUBLE PRECISION positions(dim*size),
+ *   INTEGER          positionIDs(size) )
+ *
+ * IN:  meshID, size, positions
+ * OUT: positionIDs
+ */
+void precicef_set_read_poss_(
+  const int*    meshID,
+  const int*    size,
+  double*       positions,
+  int*          positionIDs );
+
+/**
+ * @brief See precice::SolverInterface::setWritePosition().
+ *
+ * Fortran syntax:
+ * precicef_set_write_pos(
+ *   INTEGER          meshID,
+ *   DOUBLE PRECISION position(dim),
+ *   INTEGER          positionID )
+ *
+ * IN:  meshID, position
+ * OUT: positionID
+ */
+void precicef_set_write_pos_(
+  const int*    meshID,
+  const double* position,
+  int*          positionID );
+
+/**
+ * @brief See precice::SolverInterface::setWritePositions().
+ *
+ * Fortran syntax:
+ * precicef_set_write_poss(
+ *   INTEGER          meshID,
+ *   INTEGER          size,
+ *   DOUBLE PRECISION positions(dim*size),
+ *   INTEGER          positionIDs(size) )
+ *
+ * IN:  meshID, size, positions
+ * OUT: positionIDs
+ */
+void precicef_set_write_poss_(
+  const int*    meshID,
+  const int*    size,
+  double*       positions,
+  int*          positionIDs );
 
 /**
  * @brief See precice::SolverInterface::setMeshEdge().
@@ -432,26 +501,26 @@ void precicef_read_sdata_(
   double*    dataValue );
 
 /**
- * @brief See precice::SolverInterface::mapWriteDataFrom().
+ * @brief See precice::SolverInterface::mapWrittenData().
  *
  * Fortran syntax:
- * precicef_map_write_data_from( INTEGER fromMeshID )
+ * precicef_map_written_data( INTEGER meshID )
  *
- * IN:  fromMeshID
+ * IN:  meshID
  * OUT: -
  */
-void precicef_map_write_data_from_( const int* fromMeshID );
+void precicef_map_written_data_( const int* meshID );
 
 /**
- * @brief See precice::SolverInterface::mapReadDataTo().
+ * @brief See precice::SolverInterface::mapReadData().
  *
  * Fortran syntax:
- * precicef_map_read_data_to( INTEGER toMeshID )
+ * precicef_map_read_data( INTEGER meshID )
  *
- * IN:  zoMeshID
+ * IN:  meshID
  * OUT: -
  */
-void precicef_map_read_data_to_( const int* toMeshID );
+void precicef_map_read_data_( const int* meshID );
 
 /**
  * @brief See precice::SolverInterface::exportMesh().
