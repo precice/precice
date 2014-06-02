@@ -203,8 +203,9 @@ void precicef_has_data_(
  * Fortran syntax:
  * precicef_get_data_id(
  *   CHARACTER dataName(*),
+ *   INTEGER   meshID,
  *   INTEGER   dataID,
- *   INTEGER   meshID )
+)
  *
  * IN:  dataName
  * IN:  meshID
@@ -212,9 +213,9 @@ void precicef_has_data_(
  */
 void precicef_get_data_id_(
   const char* dataName,
+  int         meshID,
   int*        dataID,
-  int         lengthDataName,
-  int         meshID);
+  int         lengthDataName);
 
 /**
  * @brief See precice::SolverInterface::setMeshVertex().
