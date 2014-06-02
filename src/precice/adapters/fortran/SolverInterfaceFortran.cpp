@@ -169,12 +169,13 @@ void precicef_has_data_
 (
   const char* dataName,
   int*        hasData,
-  int         lengthDataName )
+  int         lengthDataName,
+  int         meshID)
 {
   assertion(impl != NULL);
   int strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
   string stringDataName(dataName, strippedLength);
-  if (impl->hasData(stringDataName)){
+  if (impl->hasData(stringDataName, meshID)){
     *hasData = 1;
   }
   else {
@@ -186,12 +187,13 @@ void precicef_get_data_id_
 (
   const char* dataName,
   int*        dataID,
-  int         lengthDataName )
+  int         lengthDataName,
+  int         meshID)
 {
   assertion(impl != NULL);
   int strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
   string stringDataName(dataName, strippedLength);
-  *dataID = impl->getDataID(stringDataName);
+  *dataID = impl->getDataID(stringDataName, meshID);
 }
 
 void precicef_set_vertex_
@@ -204,17 +206,7 @@ void precicef_set_vertex_
   *vertexID = impl->setMeshVertex(*meshID, position);
 }
 
-void precicef_set_read_pos_
-(
-  const int*    meshID,
-  const double* position,
-  int*          positionID )
-{
-  assertion(impl != NULL);
-  *positionID = impl->setReadPosition(*meshID, position);
-}
-
-void precicef_set_read_poss_
+void precicef_set_vertices_
 (
   const int*    meshID,
   const int*    size,
@@ -222,28 +214,7 @@ void precicef_set_read_poss_
   int*          positionIDs )
 {
   assertion(impl != NULL);
-  impl->setReadPositions(*meshID, *size, positions, positionIDs);
-}
-
-void precicef_set_write_pos_
-(
-  const int*    meshID,
-  const double* position,
-  int*          positionID )
-{
-  assertion(impl != NULL);
-  *positionID = impl->setWritePosition(*meshID, position);
-}
-
-void precicef_set_write_poss_
-(
-  const int*    meshID,
-  const int*    size,
-  double*       positions,
-  int*          positionIDs )
-{
-  assertion(impl != NULL);
-  impl->setWritePositions(*meshID, *size, positions, positionIDs);
+  impl->setMeshVertices(*meshID, *size, positions, positionIDs);
 }
 
 void precicef_set_edge_
@@ -363,20 +334,20 @@ void precicef_read_sdata_
   impl->readScalarData(*dataID, *valueIndex, *dataValue);
 }
 
-void precicef_map_written_data_
+void precicef_map_write_data_from_
 (
   const int* meshID )
 {
   assertion(impl != NULL);
-  impl->mapWrittenData(*meshID);
+  impl->mapWriteDataFrom(*meshID);
 }
 
-void precicef_map_read_data_
+void precicef_map_read_data_to_
 (
   const int* meshID )
 {
   assertion(impl != NULL);
-  impl->mapReadData(*meshID);
+  impl->mapReadDataTo(*meshID);
 }
 
 void precicef_export_mesh_
