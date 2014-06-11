@@ -17,7 +17,6 @@
 #include <string>
 #include <ostream>
 #include <vector>
-#include <limits>
 
 namespace precice {
   namespace io {
@@ -110,44 +109,14 @@ public:
   void setCheckPointTimestepInterval (int timestepInterval);
 
   /**
-   * @brief Initializes the coupling scheme and establishes a communiation
-   *        connection to the coupling partner.
-   */
-  virtual void initialize (
-     double startTime,
-     int    startTimesteps ) =0;
-
-  /**
    * @brief Returns true, if initialize has been called.
    */
   virtual bool isInitialized() const;
 
   /**
-   * @brief Initializes the data for first implicit coupling scheme iteration.
-   *
-   * Has to be called after initialize() and before advance().
-   */
-  virtual void initializeData() =0;
-
-  /**
    * @brief Adds newly computed time. Has to be called before every advance.
    */
   virtual void addComputedTime(double timeToAdd);
-
-  /**
-   * @brief Exchanges data and updates the state of the coupling scheme.
-   */
-  virtual void advance() =0;
-
-  /**
-   * @brief Finalizes the coupling and disconnects communication.
-   */
-  virtual void finalize() =0;
-
-  /*
-   * @brief returns list of all coupling partners
-   */
-  virtual std::vector<std::string> getCouplingPartners() const =0;
 
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
@@ -254,25 +223,6 @@ public:
    * @brief Sets an action required to be performed by the accessor.
    */
   virtual void requireAction (const std::string& actionName);
-
-  /**
-   * @brief Returns a string representation of the current coupling state.
-   */
-  virtual std::string printCouplingState() const =0;
-
-  /**
-   * @brief Exports the state of the coupling scheme to file/s.
-   *
-   * Used for checkpointing.
-   */
-  virtual void exportState (const std::string& filenamePrefix) const =0;
-
-  /**
-   * @brief Imports the state of the coupling scheme from file/s.
-   *
-   * Used for checkpointing.
-   */
-  virtual void importState (const std::string& filenamePrefix) = 0;
 
   /**
    * @brief Send the state of the coupling scheme to another remote scheme.

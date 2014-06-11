@@ -78,6 +78,14 @@ public:
    * @brief Initializes the data for first implicit coupling scheme iteration.
    *
    * Has to be called after initialize() and before advance().
+   * If this method is not used, the first participant has zero initial values
+   * for its read data, before receiving data in advance(). If non-zero values
+   * are needed, this has to be configured in the coupling-scheme XML
+   * exchange-data tags. This method can nevertheless also be called if no
+   * initialization is necessary. Then it is simply skipped.
+   * It has to be called after initialize() and before
+   * advance(). The second participant has to write the initial data values
+   * to preCICE after initialize() and before initializeData().
    */
   virtual void initializeData() =0;
 
@@ -88,6 +96,11 @@ public:
 
   /**
    * @brief Exchanges data and updates the state of the coupling scheme.
+   
+   * Preconditions:
+   * - initialize() has been called.
+   *
+   * Does not necessarily advances in time.
    */
   virtual void advance() =0;
 

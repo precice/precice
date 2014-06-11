@@ -305,14 +305,6 @@ int BaseCouplingScheme:: getTimesteps() const
   return _timesteps;
 }
 
-//double BaseCouplingScheme:: getTimestepLength() const
-//{
-//  if (tarch::la::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)){
-//    return _computedTimestepPart;
-//  }
-//  return _timestepLength;
-//}
-
 double BaseCouplingScheme:: getThisTimestepRemainder() const
 {
   preciceTrace("getTimestepRemainder()");
@@ -322,21 +314,6 @@ double BaseCouplingScheme:: getThisTimestepRemainder() const
   }
   preciceDebug("return " << remainder);
   return remainder;
-//  preciceTrace1("getTimestepRemainder()", computedTimestepLength);
-//  if(tarch::la::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)){
-//    preciceDebug("Returning 0.0, since no timestep length is defined");
-//    return 0.0;
-//  }
-//  double computedTimestepPart =
-//      _time + computedTimestepLength - (_timesteps * _timestepLength);
-//  double remainder = _timestepLength - computedTimestepPart;
-//  double eps = std::pow(10.0, -1 * _validDigits);
-//  preciceCheck(tarch::la::greaterEquals(remainder, 0.0, eps),
-//                 "getTimestepRemainder()",
-//                 "Computed timestep length (" << computedTimestepLength <<
-//                 ") is not allowed to be larger than the prescribed one ("
-//                 << remainder << ")! With " << _validDigits << " valid digits.");
-//  return remainder;
 }
 
 double BaseCouplingScheme:: getNextTimestepMaxLength() const
