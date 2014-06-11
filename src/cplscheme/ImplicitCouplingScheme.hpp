@@ -105,31 +105,6 @@ public:
   void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
 
   /**
-   * @brief Initializes the coupling scheme.
-   */
-  virtual void initialize (
-    double startTime,
-    int    startTimestep ) =0;
-
-  /**
-   * @brief Initializes data with written values.
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   * - advance() has NOT yet been called.
-   */
-  virtual void initializeData() =0;
-
-
-  /**
-   * @brief Advances within the coupling scheme (not necessarily in time).
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   */
-  virtual void advance() =0;
-
-  /**
    * @brief Finalizes the coupling scheme.
    */
   virtual void finalize();
