@@ -255,8 +255,7 @@ bool ImplicitCouplingScheme:: measureConvergence()
 void ImplicitCouplingScheme:: extrapolateData(DataMap& data)
 {
    preciceTrace("extrapolateData()");
-   bool startWithFirstOrder = (getTimesteps() == 1) && (_extrapolationOrder == 2);
-   if((_extrapolationOrder == 1) || startWithFirstOrder ){
+   if((_extrapolationOrder == 1) || getTimesteps() == 1) {
       preciceInfo("extrapolateData()", "Performing first order extrapolation" );
       foreach(DataMap::value_type & pair, data ){
          preciceDebug("Extrapolate data: " << pair.first);
@@ -265,7 +264,7 @@ void ImplicitCouplingScheme:: extrapolateData(DataMap& data)
          pair.second->oldValues.column(0) = values;    // = x^t
          values *= 2.0;                                  // = 2 * x^t
          values -= pair.second->oldValues.column(1);   // = 2*x^t - x^(t-1)
-         pair.second->oldValues.shiftSetFirst(values );
+         pair.second->oldValues.shiftSetFirst(values ); // shift old values to the right
       }
    }
    else if(_extrapolationOrder == 2 ){
@@ -283,11 +282,9 @@ void ImplicitCouplingScheme:: extrapolateData(DataMap& data)
          values *= 2.5;                                      // = 2.5 x^t
          utils::DynVector & valuesOld1 = pair.second->oldValues.column(1);
          utils::DynVector & valuesOld2 = pair.second->oldValues.column(2);
-         for(int i=0; i < values.size(); i++ ){
-            values[i] -= valuesOld1[i] * 2.0; // = 2.5x^t - 2x^(t-1)
-            values[i] += valuesOld2[i] * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
-         }
-         pair.second->oldValues.shiftSetFirst(values );
+	 values -= valuesOld1 * 2.0; // = 2.5x^t - 2x^(t-1)
+	 values += valuesOld2 * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
+	 pair.second->oldValues.shiftSetFirst(values);
          //preciceDebug("extrapolateData()", "extrapolated data to \""
          //               << *pair.second.values );
       }
