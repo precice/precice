@@ -7,7 +7,6 @@
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "tarch/plotter/globaldata/TXTTableWriter.h"
-#include <limits>
 
 namespace precice {
 namespace cplscheme {
