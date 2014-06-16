@@ -6,15 +6,6 @@
 namespace precice {
 namespace utils {
 
-void initializeZero ( double & toInitialize )
-{
-   toInitialize = 0.0;
-}
-
-void initializeZero ( int & toInitialize )
-{
-   toInitialize = 0;
-}
 
 std::string getTypeName(const double& var)
 {
