@@ -11,7 +11,6 @@
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
 #include "tarch/plotter/globaldata/TXTTableWriter.h"
-#include <limits>
 
 namespace precice {
 namespace cplscheme {
