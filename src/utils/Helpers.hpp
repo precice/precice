@@ -7,6 +7,7 @@
 //#include <sstream>
 //#include <iostream>
 #include <cstdlib>
+#include <algorithm>
 #include <vector>
 #include <map>
 #include <set>
@@ -59,21 +60,14 @@ void initializeZero ( int& toInitialize );
  * @brief Returns true, if given element is in vector, otherwise false.
  *
  * Requirements:
- * - element_t must be comparable by ==
+ * - ELEMENT_T must be comparable by ==
  */
-template<typename ELEMENT_T>
-bool contained (
-  const ELEMENT_T&              element,
-  const std::vector<ELEMENT_T>& vector )
+template <typename ELEMENT_T> 
+const bool contained(const ELEMENT_T& element, const std::vector<ELEMENT_T>& vec) 
 {
-  for ( size_t i=0; i < vector.size(); i++ ) {
-    if ( vector[i] == element ) {
-       return true;
-    }
-  }
-  return false;
+  return std::find(vec.begin(), vec.end(), element) != vec.end();
 }
-
+  
 template<typename KEY_T, typename ELEMENT_T>
 bool contained (
   const KEY_T&                     key,
