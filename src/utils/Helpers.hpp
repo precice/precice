@@ -28,16 +28,6 @@ inline bool xOR ( bool lhs, bool rhs )
    return (lhs && (!rhs)) || ((!lhs) && rhs);
 }
 
-/**
- * @brief Initializes a double variable to 0.0.
- */
-void initializeZero ( double& toInitialize );
-
-/**
- * @brief Initializes an int variable to 0.
- */
-void initializeZero ( int& toInitialize );
-
 ///**
 // * @brief Returns the corresponding zero value/object to value_t.
 // */
