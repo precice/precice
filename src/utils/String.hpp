@@ -16,21 +16,6 @@ std::string wrapText (
   int                indentation );
 
 /**
- * @brief Tokenizes a string into substrings separated by delimiters.
- *
- * An example:
- * - string to tokenize    : "example++string++to++tokenize"
- * - delimiter             : "++"
- * - result vector entries : "example", "string", "to", "tokenize"
- *
- * @param toTokenize [IN] String to be tokenized.
- * @param delimiter  [IN] Delimiting characters, used to separate tokens.
- */
-std::vector<std::string> tokenize (
-  const std::string & toTokenize,
-  const std::string & delimiter );
-
-/**
  * @brief Checks if filename has the given extension, if not appends it.
  *
  * @return filename with extension.

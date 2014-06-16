@@ -30,8 +30,6 @@ private:
 
    static tarch::logging::Log _log;
 
-   void testTokenize();
-
    void testWrapText();
 
    void testCheckAppendExtension();
