@@ -15,7 +15,7 @@ std::string wrapText (
   int                indentation )
 {
   std::vector<std::string> tokens;
-  boost::algorithm::split(tokens, text, boost::algorithm::is_any_of(" "));
+  boost::algorithm::split(tokens, text, boost::algorithm::is_space());
   assertion((int)tokens.size() > 0);
   std::string wrapped;
   int length = 0;
