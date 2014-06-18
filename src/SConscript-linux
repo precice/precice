@@ -85,21 +85,40 @@ sourcesDrivers = [
     Glob('drivers/*.cpp')
 ]
 
-sourcesAllNoMain = [ 
-    sourcesUtils,
-    sourcesMesh,
-    sourcesIO,
-    sourcesGeometry,
-    sourcesQuery,
-    sourcesSpacetree,
-    sourcesMapping,
-    sourcesCom,
-    sourcesCplscheme,
-    sourcesAction,
-    sourcesPrecice    
-] 
+sourcesTarchLA = [
+   Glob('tarch/la/*.cpp'),
+   Glob('tarch/la/traits/*.cpp'),
+   Glob('tarch/la/tests/*.cpp')
+]
+   
+sourcesTarchMulticore = [
+   Glob('tarch/multicore/*.cpp')
+]
+   
+sourcesTarchLogging = [
+   Glob('tarch/logging/*.cpp'),
+   Glob('tarch/logging/configurations/*.cpp')
+]
+   
+sourcesTarchTests = [
+   Glob('tarch/tests/*.cpp'),
+   Glob('tarch/tests/configurations/*.cpp')
+]
 
-sourcesAll = [ 
+sourcesTarch = [
+   Glob('tarch/configuration/*.cpp'),
+   Glob('tarch/irr/*.cpp'),
+   sourcesTarchLA,
+   sourcesTarchMulticore,
+   sourcesTarchLogging,
+   Glob('tarch/services/*.cpp'),
+   sourcesTarchTests,
+]
+
+
+
+sourcesAllNoMain = [
+    sourcesTarch,
     sourcesUtils,
     sourcesMesh,
     sourcesIO,
@@ -111,6 +130,10 @@ sourcesAll = [
     sourcesCplscheme,
     sourcesAction,
     sourcesPrecice,
+] 
+
+sourcesAll = [ 
+    sourcesAllNoMain,
     sourcesDrivers    
 ]
 

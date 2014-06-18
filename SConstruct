@@ -7,13 +7,13 @@ import os
 ##################################################################### FUNCTIONS
 
 def uniqueCheckLib(conf, lib):
-    """ Checks for a library and appends it to env only if not already appended. """
+    """ Checks for a library and appends it to env if not already appended. """
     if conf.CheckLib(lib, autoadd=0):
         conf.env.AppendUnique(LIBS = [lib])
         return True
     else:
         return False
-		
+        
 def errorMissingLib(lib, usage):
     print "ERROR: Library '" + lib + "' (needed for " + usage + ") not found!"
     Exit(1) 
@@ -21,7 +21,6 @@ def errorMissingLib(lib, usage):
 def errorMissingHeader(header, usage):
     print "ERROR: Header '" + header + "' (needed for " + usage + ") not found or does not compile!"
     Exit(1)
-
     
 def oprint(name, value, description):
     """ Pretty prints an option with value and description. """    
@@ -31,7 +30,6 @@ def vprint(name, value, default=True):
     """ Pretty prints an environment variabe with value and modified or not. """
     mod = "(default)" if default else "(modified)"
     print "{:10} {:25} = {}".format(mod, name, value)
-
 
 def checkset_var(varname, default):
     """ Checks if environment variable is set, use default otherwise and print the value. """    
@@ -50,7 +48,7 @@ env = Environment()   # For configuring build variables
 conf = Configure(env) # For checking libraries, headers, ...
 
 env.Append(CPPPATH = ['#src'])
-env.Append(CPPDEFINES = ['tarch=tarchp2']) # Was (!) needed for linking to Peano 1
+# env.Append(CPPDEFINES = ['tarch=tarchp2']) # Was (!) needed for linking to Peano 1
 
 # Produce position independent code for dynamic linking. makes a difference on the m68k, PowerPC and SPARC.
 env.Append(CCFLAGS = ['-fPIC'])
@@ -127,13 +125,6 @@ print
 print 'Environment variables used for this build ...'
 print '(have to be defined by the user to configure build)'
 
-tarchSrc = os.getenv('PRECICE_TARCH_SRC')
-if not tarchSrc:
-    vprint("PRECICE_TARCH_SRC", "./src/")
-    tarchSrc = './src/'
-else:
-    vprint('PRECICE_TARCH_SRC', tarchSrc, False)
-
 boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
 
 if useBoostInstallation == 'on':
@@ -190,8 +181,6 @@ print 'Configuring build variables ...'
 
 env.Replace(ENV = os.environ)
 
-buildpathTarch = buildDir + '/tarch/' + build
-#libpath.append ('#' + buildpath), 'sourcesParallelDelta'
 env.Append(LIBPATH = [('#' + buildpath)])
 
 
@@ -216,14 +205,11 @@ elif build == 'release':
     buildpath += "release"    
 
 
-env.AppendUnique(CPPPATH = [tarchSrc])
-
 
 if useBoostInstallation == 'on':
     #env.AppendUnique(CPPPATH = [boostIncPath])
     # The socket implementation is based on Boost libs
     if useSockets=='on':
-        print boostLibPath
         env.AppendUnique(LIBPATH = [boostLibPath])
     if not uniqueCheckLib(conf, boostSystemLib):
         errorMissingLib(boostSystemLib, 'Boost')
@@ -301,14 +287,8 @@ env = conf.Finish() # Used to check libraries
     
 #--------------------------------------------- Define sources and build targets
     
-(sourcesTarch) = SConscript (
-    tarchSrc + '/tarch/SConscript-preCICE',
-    variant_dir = buildpathTarch, 
-    duplicate = 0
-)
-
 (sourcesPreCICE, sourcesPreCICEMain) = SConscript (
-    'src/SConscript-linux', 
+    'src/SConscript-linux',
     variant_dir = buildpath, 
     duplicate = 0
 )
@@ -330,7 +310,6 @@ if (useSockets == 'on') and (useBoostInstallation == 'off'):
 lib = env.StaticLibrary (
     target = buildpath + '/libprecice',
     source = [ 
-        sourcesTarch, 
         sourcesPreCICE,
         sourcesBoost
     ]
@@ -339,7 +318,6 @@ lib = env.StaticLibrary (
 bin = env.Program ( 
     target = buildpath + '/binprecice',
     source = [ 
-        sourcesTarch, 
         sourcesPreCICEMain,
         sourcesBoost
     ]
@@ -367,6 +345,5 @@ for target in map(str, BUILD_TARGETS):
 print
 print "Targets:   " + buildTargets
 print "Buildpath: " + buildpath
-#print "  Buildpath tarch: " + buildpathTarch
 print
    
