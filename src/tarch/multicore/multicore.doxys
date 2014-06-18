@@ -1,0 +1,23 @@
+/**
+
+ @dir "Multicore"
+ 
+ This directory contains some services for the shared memory parallelisation. 
+ While the memory parallelisation is controlled by the compile options 
+ $-DSharedTBB$ and $-DSharedOMP$, just remove this directory from your build, if 
+ you don't want to use the parallelisation.
+ 
+ If you wanna distinguish in your code between multicore and no-multicore variants, 
+ please use
+\code
+#include "tarch/multicore/MulticoreDefinitions.h"
+\endcode
+and  
+\code
+#if defined(SharedMemoryParallelisation)
+\endcode
+ With the symbol $SharedMemoryParallelisation$, you make your code independent of 
+ OpenMP or TBB.  
+
+ */
+ 

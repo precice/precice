@@ -1,0 +1,217 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_DYNAMICVECTOR_CPPH_
+#define _TARCH_LA_DYNAMICVECTOR_CPPH_
+
+#include "VectorAssign.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Scalar>
+DynamicVector<Scalar>::DynamicVector()
+:
+  _values(NULL),
+  _size(0)
+{}
+
+template<typename Scalar>
+DynamicVector<Scalar>::DynamicVector ( int size )
+:
+  _values (new Scalar[size]),
+  _size (size)
+{
+  assertion1 (size >= 0, size);
+}
+
+template<typename Scalar>
+DynamicVector<Scalar>::DynamicVector (
+  int           size,
+  const Scalar& initialValue
+) :
+  _values (new Scalar[size]),
+  _size (size)
+{
+  assertion1 (size >= 0, size);
+  assign(*this) = initialValue;
+}
+
+template<typename Scalar>
+DynamicVector<Scalar>::DynamicVector (
+  const DynamicVector<Scalar>& toCopy
+) :
+  _values (new Scalar[toCopy.size()]),
+  _size (toCopy.size())
+{
+  assign(*this) = toCopy;
+}
+
+template<typename Scalar>
+template<typename VECTOR>
+DynamicVector<Scalar>::DynamicVector (
+  const VECTOR& toCopy,
+  typename utils::EnableIf< IsVector<VECTOR>::value,void*>::Type
+) :
+  _values (new Scalar[toCopy.size()]),
+  _size (toCopy.size())
+{
+  assign(*this) = toCopy;
+}
+
+template<typename Scalar>
+DynamicVector<Scalar>::~DynamicVector()
+{
+  if (_size > 0) {
+    assertion (_values != NULL);
+    delete[] _values;
+  }
+}
+
+template<typename Scalar>
+DynamicVector<Scalar>& DynamicVector<Scalar>::operator= (
+  const DynamicVector<Scalar>& toAssign
+) {
+  assertion2 (toAssign.size() == _size, toAssign.size(), _size);
+  assign(*this) = toAssign;
+  return *this;
+}
+
+template<typename Scalar>
+template<typename VECTOR>
+  typename utils::EnableIf< IsVector<VECTOR>::value,
+  DynamicVector<Scalar>&
+>::Type DynamicVector<Scalar>::operator= (
+  const VECTOR& toAssign
+) {
+  assertion2 (toAssign.size() == _size, toAssign.size(), _size);
+  assign(*this) = toAssign;
+  return *this;
+}
+
+template<typename Scalar>
+VectorAssignList<DynamicVector<Scalar> > DynamicVector<Scalar>::operator=(
+  const Scalar& value
+) {
+  assertion(_size > 0);
+  _values[0] = value;
+  return VectorAssignList<DynamicVector<Scalar> >(*this,1);
+}
+
+template<typename Scalar>
+int DynamicVector<Scalar>::size () const
+{
+  return _size;
+}
+
+template<typename Scalar>
+template<typename Vector>
+  typename utils::EnableIf<IsVector<Vector>::value,
+  void
+>::Type DynamicVector<Scalar>::append (
+  const Vector& toAppend
+) {
+  assertion1 (toAppend.size() >= 0, toAppend.size());
+  Scalar* oldValues = _values;
+  int oldSize = _size;
+  _size += toAppend.size();
+  _values = new Scalar[_size];
+  if (oldSize > 0) {
+    for (int i=0; i < oldSize; i++) {
+      _values[i] = oldValues[i];
+    }
+    delete[] oldValues;
+  }
+  for (int i=0; i < toAppend.size(); i++) {
+    _values[oldSize + i] = toAppend[i];
+  }
+}
+
+
+template<typename Scalar>
+void DynamicVector<Scalar>::append (
+  const Scalar& toAppend
+) {
+  Scalar* oldValues = _values;
+  _size ++;
+  _values = new Scalar[_size];
+  if (_size > 1) {
+    for (int i=0; i < _size-1; i++) {
+      _values[i] = oldValues[i];
+    }
+    delete[] oldValues;
+  }
+  _values[_size-1] = toAppend;
+}
+
+template<typename Scalar>
+void DynamicVector<Scalar>::append (
+  int           size,
+  const Scalar& toAppend
+) {
+  assertion1 (size > 0, size);
+  Scalar* oldValues = _values;
+  int oldSize = _size;
+  _size += size;
+  _values = new Scalar[_size];
+  if (oldSize > 0) {
+    for (int i=0; i < oldSize; i++) {
+      _values[i] = oldValues[i];
+    }
+    delete[] oldValues;
+  }
+  for (int i=0; i < size; i++) {
+    _values[oldSize + i] = toAppend;
+  }
+}
+
+template<typename Scalar>
+void DynamicVector<Scalar>::clear ()
+{
+  if (_size > 0) {
+    assertion (_values != NULL);
+    assertion (_size > 0);
+    delete[] _values;
+    _size = 0;
+  }
+}
+
+template<typename Scalar>
+const Scalar & DynamicVector<Scalar>::operator[] (
+  int index
+) const {
+  assertion1 (index >= 0, index);
+  assertion1 (index < _size, index);
+  return _values[index];
+}
+
+template<typename Scalar>
+Scalar & DynamicVector<Scalar>::operator[] (
+  int index
+) {
+  assertion1 (index >= 0, index);
+  assertion1 (index < _size, index);
+  return _values[index];
+}
+
+template<typename Scalar>
+const Scalar & DynamicVector<Scalar>::operator() (
+  int index
+) const {
+  assertion1 (index >= 0, index);
+  assertion1 (index < _size, index);
+  return _values[index];
+}
+
+template<typename Scalar>
+Scalar & DynamicVector<Scalar>::operator() (
+  int index
+) {
+  assertion1 (index >= 0, index);
+  assertion1 (index < _size, index);
+  return _values[index];
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_DYNAMICVECTOR_CPPH_ */

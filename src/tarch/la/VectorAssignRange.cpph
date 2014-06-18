@@ -1,0 +1,74 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_VECTORASSIGNRANGE_CPPH_
+#define _TARCH_LA_VECTORASSIGNRANGE_CPPH_
+
+#include "tarch/la/VectorAssignRange.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+  VectorAssignRange<Vector>
+>::Type assignRange (
+  Vector & vector,int start,int stop
+) {
+  return VectorAssignRange<Vector> ( vector,start,stop );
+}
+
+template<typename Vector>
+VectorAssignRange<Vector>::VectorAssignRange (Vector& vector,int start,int stop)
+:
+  _vector(vector),_start(start),_stop(stop)
+{}
+
+template<typename Vector>
+VectorAssignRange<Vector>::~VectorAssignRange()
+{
+}
+
+template<typename Vector>
+VectorAssignRange<Vector> & VectorAssignRange<Vector>::operator= (const typename Traits::Scalar & toAssign)
+{
+  assertion1(_start>=0, _start);
+  assertion2(_start<Traits::size(_vector), _start,Traits::size(_vector));
+  assertion1(_stop>=0, _stop);
+  assertion2(_stop<Traits::size(_vector), _stop, Traits::size(_vector));
+  int i;
+  const int rangeLength=_stop-_start+1;
+  assertion1 ( _stop < Traits::size(_vector), _vector );
+  for(i=0;i<rangeLength;i ++){
+  Traits::elem(_start+i, _vector) = toAssign;
+  }
+  return *this;
+}
+template<typename Vector>
+VectorAssignRange<Vector> & VectorAssignRange<Vector>::operator= (const typename Traits::ThisVector & toAssign)
+{
+  assertion1(_start>=0, _start);
+  assertion2(_start<Traits::size(_vector), _start,Traits::size(_vector));
+  assertion1(_stop>=0, _stop);
+  assertion2(_stop<Traits::size(_vector), _stop, Traits::size(_vector));
+  int i;
+  const int rangeLength=_stop-_start+1;
+  assertion1(rangeLength==Traits::size(toAssign),Traits::size(toAssign));
+  assertion1 ( _stop < Traits::size(_vector), _vector );
+  for(i=0;i<rangeLength;i ++){
+  Traits::elem(_start+i, _vector) = Traits::celem(i, toAssign);
+  }
+  return *this;
+}
+//template<typename Vector>
+//VectorAssignRange<Vector> & VectorAssignRange<Vector>::operator, (const typename Traits::Scalar & toAssign)
+//{
+//  assertion1 ( _index < Traits::size(_vector), _vector );
+//  Traits::elem(_index, _vector) = toAssign;
+//  _index ++;
+//  return *this;
+//}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_VECTORASSIGNRANGE_CPPH_ */

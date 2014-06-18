@@ -1,0 +1,62 @@
+/**
+
+ @dir "Parallel Architecture"
+ 
+ If you don't want to use Peano's parallel facilities, remove this directory 
+ from your build path. Otherwise, you have to use $-DParallel$ to switch on the 
+ parallelisation that is scattered among the whole application.
+ 
+ @image html tag-stack.png
+
+ - Alle Msgs sind mit DaStGen modelliert
+ - Alle DaStGen-Generate holen sich bei ServiceRepository? einen eigenen Tag, 
+   d.h. wir senden (fast) nie verschiedene Msgs ueber den gleichen Tag.  
+ - Technisch machen wir das relativ einfach:
+   - Ganz wenige Msgs schicke ich direkt (blockierend). So z.B. die Startup-Msg
+   - Die meisten nicht blockierend, d.h. die sind Fire&Forget.
+ - Generell gehoeren die in drei verschiedene Klassen, die aber (siehe 
+   Tag-Vergabe) dynamisch sind, d.h. ich weiss die Nummernkreise nicht wirklich.
+ - Technisch ist das alles ueber Services geloest, d.h. nahezu alles hier ist 
+   ein Service.
+ - Services haben einen poll-Mechanismus fuer in der Queue noch liegende 
+   Messages.
+ - Den kann man eigentlich fuer alles wunderbar nutzen, d.h. wir brauchen die 
+   ganzen verteilten Dinge nicht.
+   
+   
+ !!! Services
+ 
+ Die Services muss ich jetzt noch erweitern, so dass die genau wissen, zu 
+ welchem Tag sie gehoeren. Bisher haben Services keinen Tag. Das muss ich noch 
+ erweitern. 
+ 
+ !!! DaStGen Messages
+ 
+ All the messages used by the parallel component are modelled with DaStGen. 
+ The dastgen subdirectory holds these models and the generated C++ classes are 
+ to be found in records. To regenerate the code, type in 
+ \code
+ java -jar releases/tools/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/ActivationMessage.def src/tarch/parallel/messages 
+ java -jar releases/tools/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/JobRequestMessage.def src/tarch/parallel/messages 
+ java -jar releases/tools/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/NodePoolAnswerMessage.def src/tarch/parallel/messages 
+ java -jar releases/tools/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/RegisterAtNodePoolMessage.def src/tarch/parallel/messages 
+ java -jar releases/tools/DaStGen.jar --plugin PeanoSnippetGenerator --naming PeanoNameTranslator src/tarch/parallel/dastgen/WorkerRequestMessage.def src/tarch/parallel/messages 
+ \endcode 
+ This is if your prompt is in the directory that also contains the src 
+ directory. If you start from a different base directory, please adopt the paths 
+ in the statement above.
+
+ There are four different messages used by the parallel component. They reflect 
+ the standard sequence of message interchange you find in our software. In the 
+ following table, I ordered them temporarily.
+
+|| Message                  || Semantics || Message content || From || To 
+| RegisterAtNodePoolMessage |  Inform the node pool (rank 0) that there's an additional node on the supercomputer. | Name of the node | All ranks besides 0 | send this to rank 0 (where the node pool is administered). 
+| JobRequestMessage         |  Inform the node pool (rank 0) that a rank is waiting for a job to do. | - | Any rank (besides 0) that is idle | to rank 0 (node pool rank).  
+| ActivationMessage         |  Inform an idle rank that there's a new master from which it will receive (application-specific) data soon. Might also hold a terminate command. After this message is received, the addressee starts to work until it finishes and returns send a JobRequestMessage again. | Either rank of new master node or -1, i.e. please terminate as the application is shutting down. | Rank 0 (node pool manager) | to idle rank.   
+| WorkerRequestMessage      |  Ask the node pool whether there is a idle rank available that might assist. Whenever such a message arrives at the node pool, this is the starting point for some new activation messages if there are idle ranks. | Number of workers a rank could use. | Any working rank | to rank 0 (node pool).  
+| NodePoolAnswerMessage     |  Inform a waiting node that it has been assigned a new co-worker. Might also tell the node that there are no idle ranks available anymore. | Either rank of new master node or -1, i.e. please terminate as the application is shutting down. For a WorkerRequestMessage with content $k$, the node pool might send back up to $k$ NodePoolAnswerMessages. | Rank 0 (node pool manager) | to rank who has sent a WorkerRequestMessage before.  
+ 
+ */
+ 
+ 

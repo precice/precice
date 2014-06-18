@@ -1,0 +1,11 @@
+#include "tarch/services/ServiceRepository.h"
+
+template <class ServiceName>
+tarch::services::ServiceFactory<ServiceName>::ServiceFactory(const std::string& serviceName) {
+  tarch::services::ServiceRepository::getInstance().addService( &ServiceName::getInstance(), serviceName );
+}
+
+
+template <class ServiceName>
+tarch::services::ServiceFactory<ServiceName>::~ServiceFactory() {
+}

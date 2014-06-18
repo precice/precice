@@ -1,0 +1,71 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_VECTORASSIGNLIST_CPPH_
+#define _TARCH_LA_VECTORASSIGNLIST_CPPH_
+
+#include "tarch/la/VectorAssignList.h"
+
+#ifdef Parallel
+#include "tarch/parallel/Node.h"
+#endif
+
+
+namespace tarch {
+namespace la {
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+  VectorAssignList<Vector>
+>::Type assignList (
+  Vector & vector
+) {
+  return VectorAssignList<Vector> ( vector );
+}
+
+template<typename Vector>
+VectorAssignList<Vector>::VectorAssignList (Vector& vector)
+:
+  _vector(vector), _index(0)
+{}
+
+template<typename Vector>
+VectorAssignList<Vector>::VectorAssignList(
+  Vector& vector,
+  int     index)
+: _vector(vector),
+  _index(index)
+{}
+
+template<typename Vector>
+VectorAssignList<Vector>::~VectorAssignList()
+{
+  // Assert, that the number of assigned components equals the vectors size
+  #ifdef Parallel
+  assertionEquals2( _index, Traits::size(_vector), _vector, tarch::parallel::Node::getInstance().getRank() );
+  #else
+  assertionEquals1( _index, Traits::size(_vector), _vector );
+  #endif
+}
+
+template<typename Vector>
+VectorAssignList<Vector> & VectorAssignList<Vector>::operator= (const typename Traits::Scalar & toAssign)
+{
+  assertion1 ( _index < Traits::size(_vector), _vector );
+  Traits::elem(_index, _vector) = toAssign;
+  _index ++;
+  return *this;
+}
+
+template<typename Vector>
+VectorAssignList<Vector> & VectorAssignList<Vector>::operator, (const typename Traits::Scalar & toAssign)
+{
+  assertion1 ( _index < Traits::size(_vector), _vector );
+  Traits::elem(_index, _vector) = toAssign;
+  _index ++;
+  return *this;
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_VECTORASSIGNLIST_CPPH_ */

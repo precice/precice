@@ -1,0 +1,45 @@
+
+sourcesLA = [
+   Glob('la/*.cpp'),
+   Glob('la/traits/*.cpp'),
+   Glob('la/tests/*.cpp')
+   ]
+   
+sourcesMulticore = [
+   Glob('multicore/*.cpp')
+   ]
+   
+sourcesLogging = [
+   Glob('logging/*.cpp'),
+   Glob('logging/configurations/*.cpp')
+   ]
+   
+sourcesTests = [
+   Glob('tests/*.cpp'),
+   Glob('tests/configurations/*.cpp')
+   ]
+   
+sources = [
+   Glob('*.cpp'), 
+   Glob('compiler/*.cpp'),
+   Glob('configuration/*.cpp'),
+   Glob('irr/*.cpp'),
+   Glob('xmlwriter/*.cpp'),
+   Glob('argument/*.cpp'),
+   sourcesLA,
+   sourcesMulticore,
+   sourcesLogging,
+   Glob('services/*.cpp'),
+   sourcesTests,
+   Glob('utils/*.cpp'),
+   Glob('timing/*.cpp'),
+   ]
+
+sourcesParallelDelta = [
+   Glob('parallel/*.cpp'),
+   Glob('parallel/configuration/*.cpp'),
+   Glob('parallel/messages/*.cpp'),
+   Glob('parallel/strategy/*.cpp'),
+   ]
+   
+Return ('sources', 'sourcesParallelDelta')

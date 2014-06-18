@@ -1,0 +1,56 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_VECTORASSIGN_CPPH_
+#define _TARCH_LA_VECTORASSIGN_CPPH_
+
+#include "tarch/la/VectorAssign.cpph"
+#include "tarch/compiler/CompilerSpecificSettings.h"
+#include "tarch/Assertions.h"
+
+
+namespace tarch {
+namespace la {
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+  VectorAssign<Vector>&
+>::Type assign (
+  Vector& vector
+) {
+  return reinterpret_cast<VectorAssign<Vector>&>(vector);
+}
+
+template<typename Vector>
+Vector& VectorAssign<Vector>::operator= (
+  const typename Traits::Scalar & toAssign
+) {
+ for (int i=0; i < Traits::size(reinterpret_cast<Vector&>(*this)); i++) {
+  Traits::elem(i, reinterpret_cast<Vector&>(*this)) = toAssign;
+ }
+ return reinterpret_cast<Vector&>(*this);
+}
+
+template<typename Vector>
+template<typename RVector>
+ typename utils::EnableIf< IsVector<RVector>::value,
+ Vector&
+>::Type VectorAssign<Vector>::operator= (
+  const RVector& toAssign
+) {
+  typedef VectorTraits<RVector> RTraits;
+  assertionEquals( reinterpret_cast<Vector&>(*this).size(), toAssign.size() );
+  int size = reinterpret_cast<Vector&>(*this).size(); // Necessary for vectorization
+  typedef typename Traits::Scalar Scalar;
+  #ifdef CompilerICC
+  #pragma ivdep
+  #endif
+  for (int i=0; i < size; i++) {
+    reinterpret_cast<Vector&>(*this)[i] = toAssign[i];
+  }
+  return reinterpret_cast<Vector&>(*this);
+}
+
+}} // tarch, la
+
+#endif /* _TARCH_LA_VECTORASSIGN_CPPH_ */

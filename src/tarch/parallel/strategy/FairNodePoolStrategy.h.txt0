@@ -1,0 +1,125 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _PARALLEL_FAIR_NODE_POOL_STRATEGY_H_
+#define _PARALLEL_FAIR_NODE_POOL_STRATEGY_H_
+
+#include "parallel/NodePoolStrategy.h"
+#include "parallel/NodePoolListEntry.h"
+#include "utils/Log.h"
+
+
+namespace peano {
+  namespace parallel {
+    class FairNodePoolStrategy;
+  }
+}
+
+/**
+ * Node Pool Strategy: Fair
+ *
+ * This is a very simple node pool strategy.
+ *
+ * @author Tobias Weinzierl
+ * @version $Revision: 1.6 $
+ */
+class peano::parallel::FairNodePoolStrategy: public peano::parallel::NodePoolStrategy {
+  private:
+
+    typedef std::list<NodePoolListEntry>   NodeContainer;
+
+    /**
+     * Logging Device
+     */
+    static tarch::utils::Log _log;
+
+    /**
+     * How long shall the fillQueue() command wait at most for an incoming
+     * message?
+     */
+    clock_t _nodePoolWaitTime;
+
+    /**
+     * The ist the list of active nodes. Every entry corresponds to one node.
+     * If the entry is set, the node is working already and the server is not
+     * allowed to deploy another job on this node. If the entry isn't set, there
+     * is a job request message in the queue and the server is allowed to send
+     * a job. Therefore, in the beginning, all the entries are set. For the very
+     * first entry, corresponding to the server node, the invariant holds, that
+     * this entry is set always.
+     */
+    NodeContainer _nodes;
+
+    /**
+     * Holds the request history, i.e. which node did the last requests for new
+     * workers?
+     */
+    typedef std::list<int>                 RequestHistory;
+
+    /**
+     * This list contains the last reservations done on the cluster. Its
+     * elements are ordered historically, i.e. the last entry contains the
+     * rank of the proces that has done the last successful worker reservation.
+     * Whenever a new reservation is done by any rank, all the entries belonging
+     * to this rank in _workerReservationHistory are removed. Afterwards, a
+     * new entry holding the rank is added at the beginning of the list.
+     */
+    RequestHistory      _workerReservationHistory;
+
+    /**
+     * If rank is contained within the worker history _workerReservationHistory
+     * it is removed. Is called by insertNodeIntoReservationHistory() before the
+     * actual new value is inserted and after a job request message, too.
+     */
+    void removeNodeFromReservationHistory(int rank);
+
+    /**
+     * Removes old entries from worker history and inserts a new value at the
+     * start of the history.
+     */
+    void insertNodeIntoReservationHistory(const WorkerRequestMessage& request);
+
+    /**
+     * Sort Request Queue
+     *
+     * Takes the history and sorts the request queue accordingly.
+     */
+    void sortRequestQueueAccordingToHistory( RequestQueue& queue );
+
+    void logHistory() const;
+    void logQueue( const RequestQueue& queue ) const;
+
+  public:
+	/**
+	 * Constructor
+	 *
+	 * Construct all the attributes.
+	 */
+    FairNodePoolStrategy(int nodePoolWaitTime);
+    virtual ~FairNodePoolStrategy();
+
+    virtual bool hasIdleNode() const;
+
+    virtual NodePoolListEntry extractIdleNode();
+
+    virtual WorkerRequestMessage getElementFromRequestQueue(RequestQueue& queue);
+
+    virtual void addNode(int rank);
+    virtual void removeNode( int rank );
+
+    virtual int  getNumberOfIdleNodes() const;
+
+    virtual void setNodeIdle( int rank );
+    virtual int  reserveNode();
+
+    virtual bool hasRegisteredNode() const;
+    virtual bool hasRegisteredNode(int rank) const;
+    virtual void clearRegisteredNodes();
+    virtual int  getNumberOfRegisteredNodes() const;
+
+    virtual std::string toString() const;
+
+    virtual void fillWorkerRequestQueue(RequestQueue& queue);
+};
+
+#endif

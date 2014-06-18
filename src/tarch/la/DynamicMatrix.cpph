@@ -1,0 +1,86 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_DYNAMICMATRIX_CPPH_
+#define _TARCH_LA_DYNAMICMATRIX_CPPH_
+
+#include "tarch/la/DynamicMatrix.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Scalar>
+DynamicMatrix<Scalar>::DynamicMatrix ():
+  _rows(0),
+  _cols(0),
+  _values()
+{}
+
+template<typename Scalar>
+DynamicMatrix<Scalar>::DynamicMatrix (
+  int rows,
+  int cols
+) :
+  _rows(rows),
+  _cols(cols),
+  _values(rows*cols)
+{
+  assertion (rows >= 0);
+  assertion (cols >= 0);
+}
+
+template<typename Scalar>
+DynamicMatrix<Scalar>::DynamicMatrix (
+  int           rows,
+  int           cols,
+  const Scalar& initialValue
+) :
+  _rows(rows),
+  _cols(cols),
+  _values(rows*cols, initialValue)
+{
+  assertion (_rows >= 0);
+  assertion (_cols >= 0);
+}
+
+template<typename Scalar>
+int DynamicMatrix<Scalar>::rows() const
+{
+  return _rows;
+}
+
+template<typename Scalar>
+int DynamicMatrix<Scalar>::cols() const
+{
+  return _cols;
+}
+
+template<typename Scalar>
+int DynamicMatrix<Scalar>::size() const
+{
+  return static_cast<int>(_values.size());
+}
+
+template<typename Scalar>
+Scalar& DynamicMatrix<Scalar>::operator() (
+  int rowIndex,
+  int colIndex
+) {
+  assertion ((rowIndex >= 0) && (rowIndex < _rows));
+  assertion ((colIndex >= 0) && (colIndex < _cols));
+  return _values[rowIndex * _cols + colIndex];
+}
+
+template<typename Scalar>
+const Scalar& DynamicMatrix<Scalar>::operator() (
+  int rowIndex,
+  int colIndex
+) const {
+  assertion ((rowIndex >= 0) && (rowIndex < _rows));
+  assertion ((colIndex >= 0) && (colIndex < _cols));
+  return _values[rowIndex * _cols + colIndex];
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_DYNAMICMATRIX_CPPH_ */
