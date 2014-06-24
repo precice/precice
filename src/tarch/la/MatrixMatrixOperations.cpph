@@ -1,0 +1,130 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_MATRIXMATRIXOPERATIONS_CPPH_
+#define _TARCH_LA_MATRIXMATRIXOPERATIONS_CPPH_
+
+#include "tarch/la/MatrixMatrixOperations.h"
+#include "tarch/la/ScalarOperations.h"
+
+namespace tarch {
+namespace la {
+
+template<typename LMatrix, typename RMatrix, typename ResultMatrix>
+  typename utils::EnableIf<
+  IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value && IsMatrix<ResultMatrix>::value,
+  void
+>::Type multiply (
+  const LMatrix& lMatrix,
+  const RMatrix& rMatrix,
+  ResultMatrix&  result
+) {
+  typedef MatrixTraits<LMatrix> Left;
+  typedef MatrixTraits<RMatrix> Right;
+  typedef MatrixTraits<ResultMatrix> Result;
+  assertion (Left::cols(lMatrix) == Right::rows(rMatrix));
+  assertion (Left::rows(lMatrix) == Result::rows(result));
+  assertion (Right::cols(rMatrix) == Result::cols(result));
+
+  assign(result) = 0;
+  for (int i=0; i < Left::rows(lMatrix); i++) {
+    for (int j=0; j < Right::cols(rMatrix); j++) {
+      for (int k=0; k < Left::cols(lMatrix); k++) {
+        Result::elem(i,j,result) += Left::celem(i,k,lMatrix) * Right::celem(k,j,rMatrix);
+      }
+    }
+  }
+}
+
+template<typename LMatrix, typename RMatrix>
+  typename utils::EnableIf<
+  IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value,
+  bool
+>::Type operator== (
+  const LMatrix& lMatrix,
+  const RMatrix& rMatrix
+) {
+  typedef MatrixTraits<LMatrix> Left;
+  typedef MatrixTraits<RMatrix> Right;
+  assertion (Left::rows(lMatrix) == Right::rows(rMatrix));
+  assertion (Left::cols(lMatrix) == Right::cols(rMatrix));
+
+  for (int i=0; i < Left::rows(lMatrix); i++) {
+    for (int j=0; j < Right::cols(rMatrix); j++) {
+      if (Left::celem(i,j,lMatrix) != Right::celem(i,j,rMatrix)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template<typename LMatrix, typename RMatrix>
+  typename utils::EnableIf<
+  IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value /*&& EqualScalars<LMatrix,RMatrix>::value*/,
+  bool
+>::Type equals (
+  const LMatrix&                         lMatrix,
+  const RMatrix&                         rMatrix,
+  typename MatrixTraits<LMatrix>::Scalar tolerance
+) {
+  typedef MatrixTraits<LMatrix> Left;
+  typedef MatrixTraits<RMatrix> Right;
+  assertion (Left::rows(lMatrix) == Right::rows(rMatrix));
+  assertion (Left::cols(lMatrix) == Right::cols(rMatrix));
+
+  for (int i=0; i < Left::rows(lMatrix); i++) {
+    for (int j=0; j < Right::cols(rMatrix); j++) {
+      if (not equals(Left::celem(i,j,lMatrix), Right::celem(i,j,rMatrix), tolerance)) {
+        return false;
+      }
+    }
+  }
+  return true;
+}
+
+template<typename LMatrix, typename RMatrix>
+  typename utils::EnableIf<
+  IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value,
+  LMatrix
+>::Type operator+ (
+  const LMatrix& lMatrix,
+  const RMatrix& rMatrix
+) {
+  typedef MatrixTraits<LMatrix> Left;
+  typedef MatrixTraits<RMatrix> Right;
+  assertion (Left::rows(lMatrix) == Right::rows(rMatrix));
+  assertion (Left::cols(lMatrix) == Right::cols(rMatrix));
+  LMatrix result(lMatrix);
+  for (int i=0; i < Left::rows(lMatrix); i++) {
+    for (int j=0; j < Left::cols(lMatrix); j++) {
+          Left::elem(i,j,result) = Left::celem(i,j,lMatrix) + Right::celem(i,j,rMatrix);
+    }
+  }
+  return result;
+}
+
+template<typename LMatrix, typename RMatrix>
+  typename utils::EnableIf<
+  IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value,
+  int
+>::Type equalsReturnIndex (
+  const LMatrix& lMatrix,
+  const RMatrix& rMatrix,
+  typename MatrixTraits<LMatrix>::Scalar tolerance
+  ){
+  typedef MatrixTraits<LMatrix> Left;
+  typedef MatrixTraits<RMatrix> Right;
+  assertion (Left::rows(lMatrix) == Right::rows(rMatrix));
+  assertion (Left::cols(lMatrix) == Right::cols(rMatrix));
+  for (int i=0; i < Left::rows(lMatrix); i++) {
+      for (int j=0; j < Left::cols(lMatrix); j++) {
+          if(std::abs(Left::celem(i,j,lMatrix) - Right::celem(i,j,rMatrix))>tolerance) return i;
+      }
+  }
+  return -1;
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_MATRIXMATRIXOPERATIONS_CPPH_ */

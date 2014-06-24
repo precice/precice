@@ -1,0 +1,20 @@
+#include "tarch/parallel/Node.h"
+
+
+template <class Message>
+void tarch::parallel::NodePool::broadcastToWorkingNodes(Message& message, int tag) {
+  assertion1( Node::getInstance().isGlobalMaster(), Node::getInstance().getRank() );
+  assertion1( _isAlive, Node::getInstance().getRank() );
+  assertion1( _strategy!=0, Node::getInstance().getRank() );
+
+  logTraceInWith2Arguments( "broadcastToWorkingNodes(Message, int tag)", message.toString(), tag );
+
+  assertionEquals(Node::getInstance().getGlobalMasterRank(),0);
+  for (int rank=1; rank<Node::getInstance().getNumberOfNodes(); rank++) {
+    if (!(_strategy->isIdleNode(rank))) {
+      message.send(rank,tag, true);
+      logDebug( "broadcastToWorkingNodes(Message, int tag)", "sent message " << message.toString() << " to node " << rank << " on tag " << tag );
+    }
+  }
+  logTraceOut( "broadcastToWorkingNodes(Message, int tag)" );
+}

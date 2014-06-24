@@ -1,0 +1,169 @@
+
+    /**
+     * Receive all the Dangling Messages Pending in the MPI Buffers
+     *
+     * This operation checks all the receive buffers whether there are any
+     * messages to be received. This operation should be called whenever a
+     * blocking operation cannot be executed, as any message might not be
+     * able to arrive for the MPI buffers being full.
+     *
+     * If the operation is passed the alsoCallReplyToMessages operation it
+     * also invokes replyToMessages(). By default this flag is true, so
+     * replyToMessages() is invoked (and actually will do something if the
+     * process is running on the node pool server node). It is to be set
+     * false by any operation within replyToMessages() to avoid infinite
+     * recursion.
+     *
+     * The actual receiveDanglingMessagesFromReceiveBuffers() operation is
+     * called twice with a sleepDuringCommunication() call. This operation
+     * is sometimes useful if a node is overloaded to allow other threads
+     * to work on their job and make waiting processes sleep.
+     *
+     * @todo Multicore: Should run in a thread of its own. However, we have to
+     *                  ensure that then no receiveDangling is called. See todo
+     *                  in Node.
+     */
+    void receiveDanglingMessages(bool alsoCallReplyToMessages = true);
+
+    /**
+     * Intialise all MPI Datatypes
+     *
+     * Calls the initDatatype() operation of each message as well as each
+     * dof. The operation's implementation concerning the user-defined
+     * datatypes has been moved to initUserDefinedDatatypes() in
+     * Node_dofs.cpp as users extending Peano for a new dof shall have to
+     * change or extend only one small file.
+     */
+    static void initAllDatatypes();
+
+    /**
+     * Counterpart of initAllDatatypes().
+     */
+    static void shutdownAllDatatypes();
+
+    /**
+     * Delegate.
+     */
+    std::string getNodePoolStrategy() const;
+
+    /**
+     * @return Node pool wait time in clock ticks.
+     */
+    int getNodePoolWaitTime() const;
+    
+    
+    /**
+     * @return Maximum buffer size to be used whenever one sends several messages.
+     */
+    int getBufferSize() const;
+    
+
+    /**
+     * @see initAllDatatypes()
+     */
+    static void initUserDefinedDatatypes();
+
+   /**
+     * @see initAllDatatypes()
+     */
+    static void shutdownUserDefinedDatatypes();
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+// ===============================================================
+Implementierung:
+
+#include "Components.h"
+
+#ifdef ComponentGrid
+#include "parallel/grid/StartIterationMessage.h"
+#include "parallel/grid/FinishIterationMessage.h"
+#include "parallel/grid/JoinStatusMessage.h"
+#include "parallel/grid/ForkMessage.h"
+#endif
+
+
+#include "parallel/NodePool.h"
+#include "parallel/JobRequestMessage.h"
+#include "parallel/WorkerRequestMessage.h"
+#include "parallel/NodePoolAnswerMessage.h"
+#include "parallel/RegisterAtNodePoolMessage.h"
+#include "utils/Watch.h"
+#include "utils/CompilerSpecificSettings.h"
+
+
+
+
+
+void tarch::parallel::Node::shutdownAllDatatypes() {
+  logTraceIn( "shutdownAllDatatypes()" );
+
+  #ifdef ComponentGrid
+  StartIterationMessage::shutdownDatatype();
+  FinishIterationMessage::shutdownDatatype();
+  ForkMessage::shutdownDatatype();
+  JoinStatusMessage::shutdownDatatype();
+  #endif
+
+  JobRequestMessage::shutdownDatatype();
+  WorkerRequestMessage::shutdownDatatype();
+  NodePoolAnswerMessage::shutdownDatatype();
+  RegisterAtNodePoolMessage::shutdownDatatype();
+  shutdownUserDefinedDatatypes();
+
+  logTraceOut( "shutdownAllDatatypes()" );
+}
+
+
+
+
+void tarch::parallel::Node::receiveDanglingMessages(bool alsoCallReplyToMessages) {
+  MPI_Status status;
+  int  flag        = 0;
+  MPI_Iprobe(
+     MPI_ANY_SOURCE, MPI_ANY_TAG,
+     tarch::parallel::Node::getInstance().getCommunicator(), &flag, &status
+  );
+  if (flag) {
+    if (
+      Node::getInstance().isMasterProcessAndNodePool() &&
+      alsoCallReplyToMessages
+    ) {
+      NodePool::getInstance().replyToMessages();
+    }
+    receiveDanglingMessagesFromReceiveBuffers();
+  }
+}
+
+
+void tarch::parallel::Node::setParallelConfiguration(
+  const parallel::ParallelConfiguration& parallelConfiguration
+) {
+  assertion( parallelConfiguration.isValid() );
+  _parallelConfiguration = parallelConfiguration;
+}
+
+
+int tarch::parallel::Node::getBufferSize() const {
+  assertion1( _parallelConfiguration.isValid(), getRank() );
+  return _parallelConfiguration.getBufferSize();
+}
+
+
+std::string tarch::parallel::Node::getNodePoolStrategy() const {
+  assertion( _parallelConfiguration.isValid() );
+  return _parallelConfiguration.getNodePoolStrategy();
+}
+
+
+int tarch::parallel::Node::getNodePoolWaitTime() const {
+  assertion( _parallelConfiguration.isValid() );
+  return _parallelConfiguration.getNodePoolWaitTime()  * CLOCKS_PER_SEC / 1000;
+}

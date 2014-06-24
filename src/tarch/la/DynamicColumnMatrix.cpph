@@ -1,0 +1,175 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_DYNAMICCOLUMNMATRIX_CPPH_
+#define _TARCH_LA_DYNAMICCOLUMNMATRIX_CPPH_
+
+#include "tarch/la/DynamicColumnMatrix.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Scalar>
+DynamicColumnMatrix<Scalar>::DynamicColumnMatrix () :
+  _rows(0),
+  _columnVectors()
+{}
+
+template<typename Scalar>
+DynamicColumnMatrix<Scalar>::DynamicColumnMatrix (
+  int rows,
+  int cols
+) :
+  _rows(rows),
+  _columnVectors(cols, DynamicVector<Scalar>(rows))
+{
+  assertion (this->rows() >= 0);
+  assertion (this->cols() >= 0);
+}
+
+template<typename Scalar>
+DynamicColumnMatrix<Scalar>::DynamicColumnMatrix (
+  int           rows,
+  int           cols,
+  const Scalar& initialValue
+) :
+  _rows(rows),
+  _columnVectors(cols, DynamicVector<Scalar>(rows, initialValue))
+{
+  assertion (this->rows() >= 0);
+  assertion (this->cols() >= 0);
+}
+
+template<typename Scalar>
+int DynamicColumnMatrix<Scalar>::rows() const
+{
+  return _rows;
+}
+
+template<typename Scalar>
+int DynamicColumnMatrix<Scalar>::cols() const
+{
+  return static_cast<int>(_columnVectors.size());
+}
+
+template<typename Scalar>
+int DynamicColumnMatrix<Scalar>::size() const
+{
+  return static_cast<int>(_columnVectors.size()) * _rows;
+}
+
+template<typename Scalar>
+const DynamicVector<Scalar>& DynamicColumnMatrix<Scalar>::column (
+  int colIndex
+) const {
+  assertion ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())));
+  return _columnVectors[colIndex];
+}
+
+template<typename Scalar>
+DynamicVector<Scalar>& DynamicColumnMatrix<Scalar>::column (
+  int colIndex
+) {
+  assertion ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())));
+  return _columnVectors[colIndex];
+}
+
+template<typename Scalar>
+void DynamicColumnMatrix<Scalar>::appendFront (
+  const DynamicVector<Scalar>& columnVector
+) {
+  assertion ((columnVector.size() == _rows) || (_columnVectors.size() == 0));
+  _columnVectors.push_front (DynamicVector<Scalar>(columnVector));
+  _rows = _columnVectors[0].size();
+//  _columnVectors.push_back (new DynamicVector<Scalar>(columnVector));
+//  _rows = columnVector.size();
+//  // Shift cyclic to make new column first one
+//  DynamicVector<Scalar> * last = _columnVectors.back();
+//  for (size_t i=_columnVectors.size()-1; i > 0; i--) {
+//    _columnVectors[i] = _columnVectors[i-1];
+//  }
+//  _columnVectors[0] = last;
+}
+
+template<typename Scalar>
+void DynamicColumnMatrix<Scalar>::append (
+  const DynamicVector<Scalar>& columnVector
+) {
+  assertion ((columnVector.size() == _rows) || (_columnVectors.size() == 0));
+  _columnVectors.push_back (DynamicVector<Scalar>(columnVector));
+  _rows = columnVector.size();
+}
+
+template<typename Scalar>
+void DynamicColumnMatrix<Scalar>::append (
+  const DynamicColumnMatrix<Scalar>& matrix
+) {
+  assertion ((_rows == matrix._rows) || (_columnVectors.size() == 0));
+  for (size_t i=0; i < matrix._columnVectors.size(); i++) {
+     append (matrix._columnVectors[i]);
+  }
+}
+
+template<typename Scalar>
+void DynamicColumnMatrix<Scalar>::shiftSetFirst (
+  const DynamicVector<Scalar>& columnVector
+) {
+  assertion (columnVector.size() == _rows);
+  assertion (_columnVectors.size() > 0);
+  _columnVectors.pop_back ();
+  appendFront (columnVector);
+//  DynamicVector<Scalar> * last = _columnVectors.back();
+//  for (size_t i=_columnVectors.size()-1; i > 0; i--) {
+//    _columnVectors[i] = _columnVectors[i-1];
+//  }
+//  _columnVectors[0] = last;
+//  *_columnVectors[0] = columnVector;
+}
+
+template<typename Scalar>
+void DynamicColumnMatrix<Scalar>::remove (
+  int colIndex
+) {
+  assertion ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())));
+  typename std::deque<DynamicVector<Scalar> >::iterator iter = _columnVectors.begin();
+  std::advance (iter, colIndex);
+  _columnVectors.erase (iter);
+  if (_columnVectors.size() == 0) {
+    _rows = 0; // To make it possible to append a column of any new size
+  }
+}
+
+template<typename Scalar>
+void DynamicColumnMatrix<Scalar>::clear ()
+{
+//  for (size_t i=0; i < _columnVectors.size(); i++) {
+//    assertion (_columnVectors[i] != NULL);
+//    delete _columnVectors[i];
+//  }
+  _columnVectors.clear ();
+  _rows = 0;
+}
+
+template<typename Scalar>
+Scalar& DynamicColumnMatrix<Scalar>::operator() (
+  int rowIndex,
+  int colIndex
+) {
+  assertion ((rowIndex >= 0) && (rowIndex < _rows));
+  assertion ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())));
+  return _columnVectors[colIndex][rowIndex];
+}
+
+template<typename Scalar>
+const Scalar& DynamicColumnMatrix<Scalar>::operator() (
+  int rowIndex,
+  int colIndex
+) const {
+  assertion ((rowIndex >= 0) && (rowIndex < _rows));
+  assertion ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())));
+  return _columnVectors[colIndex][rowIndex];
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_DYNAMICCOLUMNMATRIX_CPPH_ */

@@ -1,0 +1,301 @@
+#include "parallel/FairNodePoolStrategy.h"
+#include "parallel/Node.h"
+#include "utils/Globals.h"
+//#include "utils/XMLStatisticsBuilder.h"
+
+
+using namespace peano;
+
+
+tarch::utils::Log parallel::FairNodePoolStrategy::_log( "parallel::FairNodePoolStrategy" );
+
+
+parallel::FairNodePoolStrategy::FairNodePoolStrategy(int nodePoolWaitTime):
+  NodePoolStrategy(),
+  _nodePoolWaitTime(nodePoolWaitTime),
+  _nodes(),
+  _workerReservationHistory() {
+  assertion(nodePoolWaitTime>=0);
+}
+
+
+parallel::FairNodePoolStrategy::~FairNodePoolStrategy() {
+}
+
+
+void parallel::FairNodePoolStrategy::fillWorkerRequestQueue(RequestQueue& queue) {
+  clock_t                   timeOutTimeStamp                = clock() + _nodePoolWaitTime;
+
+  assertion(_nodePoolWaitTime==0 || timeOutTimeStamp > clock() );
+
+  RequestHistory::size_type requestHistorySizeAtLastTimeout = _workerReservationHistory.size();
+  if (requestHistorySizeAtLastTimeout<THREE_POWER_D) {
+    requestHistorySizeAtLastTimeout = THREE_POWER_D;
+  }
+
+  //clock_t startWhileLoopTime = clock();
+  bool noTimeOut                   = true;
+  bool queueSizeSmallerThanHistory = true;
+  bool hasIdleNodes                = true;
+
+  while (
+    WorkerRequestMessage::isMessageInQueue() ||
+    ( noTimeOut && queueSizeSmallerThanHistory && hasIdleNode() )
+  ) {
+    if ( WorkerRequestMessage::isMessageInQueue() ) {
+      WorkerRequestMessage message;
+      message.receive(MPI_ANY_SOURCE);
+      queue.push_back( message );
+    }
+    noTimeOut                   = clock() <= timeOutTimeStamp;
+    queueSizeSmallerThanHistory = queue.size() < requestHistorySizeAtLastTimeout;
+    hasIdleNodes                = hasIdleNode();
+  }
+
+  //tarch::utils::XMLStatisticsBuilder statisticsBuilder( _log, "fillWorkerRequestQueue()", "node-pool-answer-task", false);
+  //statisticsBuilder.addAttribute( "queue-fill-time", static_cast<int>(clock() -  startWhileLoopTime) );
+  //statisticsBuilder.addAttribute( "queue-size", static_cast<int>(queue.size()) );
+  //statisticsBuilder.closeOpeningTag();
+  //tarch::utils::XMLStatisticsBuilder terminationStatistics( _log, "fillWorkerRequestQueue()", "termination-reasons", false);
+  //terminationStatistics.addAttribute( "wait-time-expired", !noTimeOut );
+  //terminationStatistics.addAttribute( "queue-size-exceeds-history-size", !queueSizeSmallerThanHistory );
+  //terminationStatistics.addAttribute( "has-idle-nodes", hasIdleNodes );
+  //terminationStatistics.close();
+
+  sortRequestQueueAccordingToHistory(queue);
+}
+
+
+void parallel::FairNodePoolStrategy::removeNodeFromReservationHistory(int rank) {
+  _workerReservationHistory.remove(rank);
+}
+
+
+void parallel::FairNodePoolStrategy::insertNodeIntoReservationHistory(const WorkerRequestMessage& request) {
+  _workerReservationHistory.remove(request.getSenderRank());
+  _workerReservationHistory.push_back(request.getSenderRank());
+}
+
+
+void parallel::FairNodePoolStrategy::logHistory() const {
+  if (_workerReservationHistory.empty()) {
+	_log.debug( "logHistory()", "history is empty" );
+  }
+  else {
+    std::ostringstream msg;
+    msg << "history: ";
+
+	for (RequestHistory::const_iterator p = _workerReservationHistory.begin(); p != _workerReservationHistory.end(); p++ ) {
+	   msg << *p << ",";
+	}
+
+	_log.debug( "logHistory()", msg.str() );
+  }
+}
+
+
+void parallel::FairNodePoolStrategy::logQueue( const RequestQueue& queue ) const {
+  if (queue.empty()) {
+	_log.debug( "logQueue()", "queue is empty" );
+  }
+  else {
+    std::ostringstream msg;
+    msg << "queue: ";
+
+	for (RequestQueue::const_iterator p = queue.begin(); p != queue.end(); p++ ) {
+	   msg << p->getSenderRank() << ",";
+	}
+	_log.debug( "logQueue()", msg.str() );
+  }
+}
+
+
+void parallel::FairNodePoolStrategy::sortRequestQueueAccordingToHistory( RequestQueue& queue ) {
+  #ifdef Debug
+	_log.debug( "sortRequestQueueAccordingToHistory(RequestQueue)", "sort queue" );
+  logQueue( queue );
+  logHistory();
+  #endif
+
+  int permutations = 0;
+
+  RequestHistory::const_iterator pHistory = _workerReservationHistory.begin();
+  while (
+    ( pHistory!=_workerReservationHistory.end() ) &&
+    ( permutations!=(int)queue.size() )
+  ) {
+    RequestQueue::iterator pQueue = queue.begin();
+    while (pQueue != queue.end() ) {
+      if (pQueue->getSenderRank()==*pHistory) {
+        WorkerRequestMessage queueElement = *pQueue;
+        queue.erase(pQueue);
+        queue.push_back(queueElement);
+        pQueue = queue.end();
+        permutations++;
+        #ifdef Debug
+        std::ostringstream msg;
+        msg << "took query from node " << *pHistory << " and wrote it to the end of the query queue";
+        _log.debug( "sortRequestQueueAccordingToHistory(...)", msg.str() );
+        #endif
+      }
+      else {
+        pQueue++;
+      }
+    }
+    pHistory++;
+  }
+
+  #ifdef Debug
+  if (permutations>0) {
+  	_log.debug( "sortRequestQueueAccordingToHistory(RequestQueue)", "permuted queue entries" );
+    logQueue( queue );
+    logHistory();
+  }
+  else {
+	_log.debug( "sortRequestQueueAccordingToHistory(RequestQueue)", "no permutation necessary" );
+  }
+  #endif
+}
+
+
+parallel::WorkerRequestMessage parallel::FairNodePoolStrategy::getElementFromRequestQueue(RequestQueue& queue) {
+  assertion( !queue.empty() );
+  sortRequestQueueAccordingToHistory( queue );
+  WorkerRequestMessage result = queue.front();
+  queue.pop_front();
+  insertNodeIntoReservationHistory(result);
+  return result;
+}
+
+
+void parallel::FairNodePoolStrategy::addNode(int rank) {
+  assertion( !hasRegisteredNode(rank) );
+  NodePoolListEntry newEntry(rank);
+  #ifdef Debug
+  _log.debug( "addNode(int,string)", "added node " + newEntry.toString() );
+  #endif
+  _nodes.push_back( newEntry ) ;
+  _nodes.sort();
+}
+
+
+void parallel::FairNodePoolStrategy::removeNode( int rank ) {
+  assertion( hasRegisteredNode(rank) );
+  removeNodeFromReservationHistory(rank);
+
+  for (
+    NodeContainer::iterator p = _nodes.begin();
+    p != _nodes.end();
+    p++
+  ) {
+    if ( p->getRank() == rank ) {
+      #ifdef Debug
+      _log.debug( "removeNode(int)", "remove entry " + p->toString() );
+      #endif
+      _nodes.erase(p);
+      _nodes.sort();
+      return;
+    }
+  }
+}
+
+
+bool parallel::FairNodePoolStrategy::hasIdleNode() const {
+  return !_nodes.empty() &&
+         _nodes.front().isIdle();
+}
+
+
+int parallel::FairNodePoolStrategy::getNumberOfIdleNodes() const {
+  int result = 0;
+  NodeContainer::const_iterator p = _nodes.begin();
+  while (p != _nodes.end()&& p->isIdle() ) {
+	p++;
+	result++;
+  }
+  return result;
+}
+
+
+parallel::NodePoolListEntry parallel::FairNodePoolStrategy::extractIdleNode() {
+  assertion(hasIdleNode());
+  NodePoolListEntry result = _nodes.front();
+  _nodes.pop_front();
+  return result;
+}
+
+
+void parallel::FairNodePoolStrategy::setNodeIdle( int rank ) {
+  removeNodeFromReservationHistory( rank );
+
+  for (
+    NodeContainer::iterator p = _nodes.begin();
+    p != _nodes.end();
+    p++
+  ) {
+    if ( p->getRank() == rank ) {
+      p->deActivate();
+    }
+  }
+
+  _nodes.sort();
+}
+
+
+int parallel::FairNodePoolStrategy::reserveNode() {
+	NodePoolListEntry result = extractIdleNode();
+
+  #ifdef Debug
+  std::ostringstream msg;
+  msg << "found free node: " << result;
+  _log.debug( "getFreeNode(int)", msg.str() );
+  #endif
+
+  result.activate();
+  _nodes.push_back(result);
+  _nodes.sort();
+
+  return result.getRank();
+}
+
+
+bool parallel::FairNodePoolStrategy::hasRegisteredNode() const {
+  return !_nodes.empty();
+}
+
+
+bool parallel::FairNodePoolStrategy::hasRegisteredNode(int rank) const {
+  for (
+    NodeContainer::const_iterator p = _nodes.begin();
+    p != _nodes.end();
+    p++
+  ) {
+    if ( p->getRank() == rank ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+
+void parallel::FairNodePoolStrategy::clearRegisteredNodes() {
+  _nodes.clear();
+}
+
+
+int parallel::FairNodePoolStrategy::getNumberOfRegisteredNodes() const {
+  return _nodes.size();
+}
+
+
+std::string parallel::FairNodePoolStrategy::toString() const {
+  std::ostringstream result;
+  for (
+    NodeContainer::const_iterator p = _nodes.begin();
+    p != _nodes.end();
+    p++
+  ) {
+	result << *p;
+  }
+  return result.str();
+}

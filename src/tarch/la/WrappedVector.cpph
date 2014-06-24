@@ -1,0 +1,94 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_WRAPPEDVECTOR_CPPH_
+#define _TARCH_LA_WRAPPEDVECTOR_CPPH_
+
+namespace tarch {
+namespace la {
+
+template<int Size, typename Scalar>
+int WrappedVector<Size,Scalar>::size () const
+{
+  return Size;
+}
+
+template<int Size, typename Scalar>
+Scalar& WrappedVector<Size,Scalar>::operator[](
+  int index
+) {
+  assertion1 (index >= 0, index);
+  assertion1 (index < Size, index);
+  return reinterpret_cast<Scalar*>(this)[index];
+}
+
+template<int Size, typename Scalar>
+const Scalar& WrappedVector<Size,Scalar>::operator[](
+  int index
+) const {
+  assertion1 (index >= 0, index);
+  assertion1 (index < Size, index);
+  return reinterpret_cast<const Scalar*>(this)[index];
+}
+
+template<int Size, typename Scalar>
+WrappedVector<Size,Scalar>& WrappedVector<Size,Scalar>::operator= (
+  const WrappedVector<Size,Scalar>& toAssign
+) {
+  assign(*this) = toAssign;
+  return *this;
+}
+
+template<int Size, typename Scalar>
+template<typename Vector>
+  typename utils::EnableIf<IsVector<Vector>::value,
+  WrappedVector<Size,Scalar>&
+>::Type WrappedVector<Size,Scalar>::operator= (
+  const Vector& toAssign
+) {
+  assign(*this) = toAssign;
+  return *this;
+}
+
+template<int Size, typename Scalar>
+WrappedVector<Size,Scalar>& wrap (
+  Scalar* toWrap
+) {
+  return reinterpret_cast<WrappedVector<Size,Scalar>&>(*toWrap);
+}
+
+template<int Size, typename Scalar>
+const WrappedVector<Size,Scalar>& wrap (
+  const Scalar* toWrap
+) {
+  return reinterpret_cast<const WrappedVector<Size,Scalar>&>(*toWrap);
+}
+
+template<int Size, typename Vector>
+  typename utils::LazyEnableIf<IsVector<Vector>::value,
+  utils::LazyType<WrappedVector<Size,typename VectorTraits<Vector>::Scalar>&>
+>::Type slice (
+  Vector& toSlice,
+  int     fromIndex
+) {
+  assertion (VectorTraits<Vector>::size(toSlice) >= fromIndex + Size);
+  typedef typename VectorTraits<Vector>::Scalar Scalar;
+  return reinterpret_cast<WrappedVector<Size,Scalar>&>(VectorTraits<Vector>::elem(fromIndex,toSlice));
+}
+
+template<int Size, typename Vector>
+  typename utils::LazyEnableIf<IsVector<Vector>::value,
+  utils::LazyType<const WrappedVector<Size,typename VectorTraits<Vector>::Scalar>&>
+>::Type slice (
+  const Vector& toSlice,
+  int           fromIndex
+) {
+  assertion (VectorTraits<Vector>::size(toSlice) >= fromIndex + Size);
+  typedef typename VectorTraits<Vector>::Scalar Scalar;
+  return reinterpret_cast<const WrappedVector<Size,Scalar>&>(VectorTraits<Vector>::celem(fromIndex,toSlice));
+}
+
+} // namespace la
+} // namespace tarch
+
+#endif /* _TARCH_LA_WRAPPEDVECTOR_CPPH_ */

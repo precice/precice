@@ -1,0 +1,457 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_VECTORVECTOROPERATIONS_CPPH_
+#define _TARCH_LA_VECTORVECTOROPERATIONS_CPPH_
+
+
+#include "tarch/la/VectorVectorOperations.h"
+#include "tarch/compiler/CompilerSpecificSettings.h"
+#include "tarch/Assertions.h"
+
+
+namespace tarch {
+namespace la {
+
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+  LVector&
+>::Type operator+= (
+  LVector&       lVector,
+  const RVector& rVector
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  int size = LTraits::size(lVector); // Necessary for vectorization
+  #ifdef CompilerICC
+  #pragma ivdep
+  #endif
+  for ( int i=0; i < size; i++ ) {
+    lVector[i] += rVector[i];
+  }
+  return lVector;
+}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+  LVector&
+>::Type operator-= (
+  LVector&       lVector,
+  const RVector& rVector
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+    LTraits::elem(i,lVector) -= RTraits::celem(i,rVector);
+  }
+  return lVector;
+}
+
+//template<typename LVector, typename RVector>
+//  typename utils::EnableIf<IsVector<LVector>::value && IsVector<RVector>::value,
+//  LVector&
+//>::Type operator*= (
+//  LVector&       lVector,
+//  const RVector& rVector
+//) {
+//  typedef VectorTraits<LVector> LTraits;
+//  typedef VectorTraits<RVector> RTraits;
+//  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+//  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+//    LTraits::elem(i,lVector) *= RTraits::celem(i,rVector);
+//  }
+//  return lVector;
+//}
+
+//template<typename LVector, typename RVector>
+//  typename utils::EnableIf<IsVector<LVector>::value && IsVector<RVector>::value,
+//  LVector&
+//>::Type operator/= (
+//  LVector&       lVector,
+//  const RVector& rVector
+//) {
+//  typedef VectorTraits<LVector> LTraits;
+//  typedef VectorTraits<RVector> RTraits;
+//  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+//  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+//    LTraits::elem(i,lVector) /= RTraits::celem(i,rVector);
+//  }
+//  return lVector;
+//}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+  LVector
+>::Type operator+ (
+  const LVector& lVector,
+  const RVector& rVector
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  LVector result(lVector);
+  const int size = LTraits::size(lVector);
+  for ( int i=0; i < size; i++ ) {
+    LTraits::elem(i,result) =  LTraits::celem(i,lVector) + RTraits::celem(i,rVector);
+  }
+  return result;
+}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+  LVector
+>::Type operator- (
+  const LVector& lVector,
+  const RVector& rVector
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  LVector result(lVector);
+  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+    LTraits::elem(i,result) =  LTraits::celem(i,lVector) - RTraits::celem(i,rVector);
+  }
+  return result;
+}
+
+template<typename LVector, typename RVector, typename ResultVector>
+  typename utils::EnableIf<
+  IsVector<LVector>::value && IsVector<RVector>::value && IsVector<ResultVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+  ResultVector&
+>::Type multiplyComponents (
+  const LVector& lVector,
+  const RVector& rVector,
+  ResultVector&  result
+) {
+  typedef VectorTraits<LVector> LT;
+  typedef VectorTraits<RVector> RT;
+  typedef VectorTraits<ResultVector> ResT;
+  assertion (LT::size(lVector) == RT::size(rVector));
+  assertion (RT::size(rVector) == ResT::size(result));
+
+  for (int i=0; i < LT::size(lVector); i++){
+    ResT::elem(i,result) = LT::celem(i,lVector) * RT::celem(i,rVector);
+  }
+  return result;
+}
+
+template<typename LVector, typename RVector>
+  typename utils::LazyEnableIf<
+  IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+  utils::LazyType<typename VectorTraits<LVector>::Scalar>
+>::Type operator* (
+  const LVector& lVector,
+  const RVector& rVector
+) {
+  return dot(lVector, rVector);
+}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<LVector>::value && IsVector<RVector>::value,
+  LVector
+>::Type operator/ (
+  const LVector& lVector,
+  const RVector& rVector
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  LVector result(lVector);
+  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+    LTraits::elem(i,result) =  LTraits::celem(i,lVector) / RTraits::celem(i,rVector);
+  }
+  return result;
+}
+
+//template<typename LVector, typename RVector>
+//  typename utils::EnableIf<IsVector<LVector>::value && IsVector<RVector>::value
+//  && IsEqual<typename VectorTraits<LVector>::Scalar,
+//             typename VectorTraits<RVector>::Scalar>::value,
+//LVector>::Type operator* (
+//  const LVector& lVector,
+//  const RVector& rVector
+//) {
+//  typedef VectorTraits<LVector> LTraits;
+//  typedef VectorTraits<RVector> RTraits;
+//  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+//  LVector result(lVector);
+//  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+//    LTraits::elem(i,result) =  LTraits::celem(i,lVector) * RTraits::celem(i,rVector);
+//  }
+//  return result;
+//}
+
+//template<typename LVector, typename RVector>
+//  typename utils::EnableIf<IsVector<LVector>::value && IsVector<RVector>::value
+//  && IsEqual<typename VectorTraits<LVector>::Scalar,
+//             typename VectorTraits<RVector>::Scalar>::value,
+//LVector>::Type operator/ (
+//  const LVector& lVector,
+//  const RVector& rVector
+//) {
+//  typedef VectorTraits<LVector> LTraits;
+//  typedef VectorTraits<RVector> RTraits;
+//  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+//  LVector result(lVector);
+//  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+//    LTraits::elem(i,result) =  LTraits::celem(i,lVector) / RTraits::celem(i,rVector);
+//  }
+//  return result;
+//}
+
+template<typename LVector, typename RVector>
+  inline
+  typename utils::LazyEnableIf<
+  IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+  utils::LazyType<typename VectorTraits<LVector>::Scalar>
+>::Type dot (
+  const LVector & lVector,
+  const RVector & rVector
+) {
+  assertion ( lVector.size() == rVector.size() );
+  assertion ( lVector.size() > 0 );
+  typename VectorTraits<LVector>::Scalar result = lVector[0] * rVector[0];
+  int size = lVector.size(); // Necessary for vectorization
+  #ifdef CompilerICC
+  #pragma ivdep
+  #endif
+  for ( int i=1; i < size; i++ ) {
+    result += lVector[i] * rVector[i];
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+  Vector&
+>::Type cross
+(
+  const Vector& lVector,
+  const Vector& rVector,
+  Vector&       result
+) {
+  typedef VectorTraits<Vector> Traits;
+  assertion ( Traits::size(lVector) == 3 );
+  assertion ( Traits::size(rVector) == 3 );
+  assertion ( Traits::size(result) == 3 );
+  assign(result) = lVector;
+  Traits::elem(0,result) = Traits::celem(1,lVector) * Traits::celem(2,rVector)
+                           - Traits::celem(2,lVector) * Traits::celem(1,rVector);
+  Traits::elem(1,result) = Traits::celem(2,lVector) * Traits::celem(0,rVector)
+                           - Traits::celem(0,lVector) * Traits::celem(2,rVector);
+  Traits::elem(2,result) = Traits::celem(0,lVector) * Traits::celem(1,rVector)
+                           - Traits::celem(1,lVector) * Traits::celem(0,rVector);
+  return result;
+}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+  bool
+>::Type equals (
+  const LVector&                         lVector,
+  const RVector&                         rVector,
+  typename VectorTraits<LVector>::Scalar tolerance
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+    if ( la::abs(LTraits::celem(i,lVector) - RTraits::celem(i,rVector)) > tolerance ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<RVector,LVector>::value*/,
+  bool
+>::Type firstGreater (
+  const LVector&                         lVector,
+  const RVector&                         rVector,
+  typename VectorTraits<LVector>::Scalar tolerance
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+    if ( LTraits::celem(i,lVector) - RTraits::celem(i,rVector) > tolerance ) {
+      return true;
+    }
+    else if ( RTraits::celem(i,rVector) - LTraits::celem(i,lVector) > tolerance ) {
+      return false;
+    }
+  }
+  return false;
+}
+
+template<typename LVector, typename RVector>
+  inline
+  typename utils::EnableIf<
+  IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<RVector,LVector>::value*/,
+  bool
+>::Type oneGreater (
+  const LVector&                         lVector,
+  const RVector&                         rVector,
+  typename VectorTraits<LVector>::Scalar tolerance
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+    if ( LTraits::celem(i,lVector) - RTraits::celem(i,rVector) > tolerance ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<RVector,LVector>::value*/,
+  bool
+>::Type oneGreaterEquals (
+  const LVector&                         lVector,
+  const RVector&                         rVector,
+  typename VectorTraits<LVector>::Scalar tolerance
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+    if ( LTraits::celem(i,lVector) - RTraits::celem(i,rVector) >= - tolerance ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<RVector,LVector>::value*/,
+  bool
+>::Type allGreater (
+  const LVector&                         lVector,
+  const RVector&                         rVector,
+  typename VectorTraits<LVector>::Scalar tolerance
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+    if ( LTraits::celem(i,lVector) - RTraits::celem(i,rVector) <= tolerance ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<RVector>::value && IsVector<LVector>::value,
+  bool
+>::Type allGreaterEquals (
+  const LVector&                         lVector,
+  const RVector&                         rVector,
+  typename VectorTraits<LVector>::Scalar tolerance
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+    if ( LTraits::celem(i,lVector) - RTraits::celem(i,rVector) < -tolerance ) {
+      return false;
+    }
+  }
+  return true;
+}
+
+//template<typename LVector, typename RVector>
+//  typename utils::EnableIf<
+//  IsVector<LVector>::value
+//  && IsVector<RVector>::value
+//  && IsEqual<typename VectorTraits<LVector>::Scalar,
+//             typename VectorTraits<RVector>::Scalar>::value
+//  && IsInteger<typename VectorTraits<LVector>::Scalar>,
+//bool>::Type equals (
+//  const LVector& lVector,
+//  const RVector& rVector
+//) {
+//  typedef VectorTraits<LVector> LTraits;
+//  typedef VectorTraits<RVector> RTraits;
+//  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+//  for ( int i=0; i < LTraits::size(lVector); i++ ) {
+//    if (LTraits::celem(i,result) !=  LTraits::celem(i,lVector)) {
+//      return false;
+//    }
+//  }
+//  return true;
+//}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+  bool
+>::Type operator== (
+  const LVector& lVector,
+  const RVector& rVector
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  for (int i=0; i < LTraits::size(lVector); i++) {
+    if (LTraits::celem(i,lVector) != RTraits::celem(i,rVector)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+  bool
+>::Type operator!= (
+  const LVector& lVector,
+  const RVector& rVector
+) {
+  typedef VectorTraits<LVector> LTraits;
+  typedef VectorTraits<RVector> RTraits;
+  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
+  for (int i=0; i < LTraits::size(lVector); i++) {
+    if (LTraits::celem(i,lVector) == RTraits::celem(i,rVector)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+template<typename LVector, typename RVector>
+  typename utils::EnableIf<
+  IsVector<LVector>::value && IsVector<RVector>::value,
+  int
+>::Type equalsReturnIndex (
+  const LVector& lVector,
+  const RVector& rVector,
+  typename VectorTraits<LVector>::Scalar tolerance
+  ){
+  typedef VectorTraits<LVector> Left;
+  typedef VectorTraits<RVector> Right;
+  assertion ( Left::size(lVector) == Right::size(rVector) );
+  for (int i=0; i < Left::size(lVector); i++) {
+          if(std::abs(Left::celem(i,lVector) - Right::celem(i,rVector))>tolerance) return i;
+  }
+  return -1;
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_VECTORVECTOROPERATIONS_CPPH_ */

@@ -1,0 +1,88 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_MATRIXOPERATIONS_CPPH_
+#define _TARCH_LA_MATRIXOPERATIONS_CPPH_
+
+#include "tarch/la/MatrixOperations.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Matrix>
+  typename utils::LazyEnableIf< IsMatrix<Matrix>::value,
+  utils::LazyType<typename MatrixTraits<Matrix>::Scalar>
+>::Type det3x3 (
+  const Matrix& matrix
+) {
+  typedef MatrixTraits<Matrix> T;
+  assertion (T::rows(matrix) == 3);
+  assertion (T::cols(matrix) == 3);
+  typename T::Scalar result = 0;
+  result += T::celem(0,0,matrix) * T::celem(1,1,matrix) * T::celem(2,2,matrix);
+  result += T::celem(0,1,matrix) * T::celem(1,2,matrix) * T::celem(2,0,matrix);
+  result += T::celem(0,2,matrix) * T::celem(1,0,matrix) * T::celem(2,1,matrix);
+  result -= T::celem(2,0,matrix) * T::celem(1,1,matrix) * T::celem(0,2,matrix);
+  result -= T::celem(2,1,matrix) * T::celem(1,2,matrix) * T::celem(0,0,matrix);
+  result -= T::celem(2,2,matrix) * T::celem(1,0,matrix) * T::celem(0,1,matrix);
+  return result;
+}
+
+
+template<typename Matrix>
+  typename utils::LazyEnableIf< IsMatrix<Matrix>::value,
+  utils::LazyType<typename MatrixTraits<Matrix>::Scalar>
+>::Type sum (const Matrix& matrix) {
+  typedef tarch::la::MatrixTraits<Matrix> Traits;
+  typename Traits::Scalar result = 0;
+  for (int i=0; i < Traits::rows(matrix); i++) {
+    for (int j=0; j < Traits::cols(matrix); j++) {
+      result += std::abs( Traits::celem(i,j,matrix) );
+    }
+  }
+  return result;
+}
+
+
+template<typename Matrix>
+  typename utils::EnableIf< IsMatrix<Matrix>::value,
+Matrix>::Type sqrt (
+  const Matrix&                                matrix
+  ){
+  typedef MatrixTraits<Matrix> Traits;
+  Matrix result(matrix);
+  for (int i=0; i < Traits::rows(matrix); i++) {
+      for (int j=0; j < Traits::cols(matrix); j++) {
+          Traits::elem(i,j,result) = std::sqrt(Traits::celem(i,j,matrix));
+      }
+    }
+   return result;
+}
+
+
+
+}} // namespace tarch, la
+
+template<typename Matrix>
+  typename tarch::utils::EnableIf< tarch::la::IsMatrix<Matrix>::value,
+  std::ostream&
+>::Type operator<< (
+  std::ostream& os,
+  const Matrix& matrix
+) {
+  typedef tarch::la::MatrixTraits<Matrix> Traits;
+  for (int i=0; i < Traits::rows(matrix); i++) {
+    for (int j=0; j < Traits::cols(matrix); j++) {
+      os << Traits::celem(i,j,matrix);
+      if (j + 1 < Traits::cols(matrix)) {
+        os << ", ";
+      }
+    }
+    if (i + 1 < Traits::rows(matrix)) {
+      os << "; ";
+    }
+  }
+  return os;
+}
+
+#endif /* _TARCH_LA_MATRIXOPERATIONS_CPPH_ */

@@ -1,0 +1,55 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_MATRIXASSSIGN_CPPH_
+#define _TARCH_LA_MATRIXASSSIGN_CPPH_
+
+#include "tarch/la/MatrixAssign.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Matrix>
+  typename utils::EnableIf<IsMatrix<Matrix>::value,
+  MatrixAssign<Matrix>&
+>::Type assign (
+  Matrix& matrix
+) {
+  return reinterpret_cast<MatrixAssign<Matrix>&>(matrix);
+}
+
+template<typename Matrix>
+Matrix& MatrixAssign<Matrix>::operator= (const typename Traits::Scalar& toAssign)
+{
+  int rows = Traits::rows(reinterpret_cast<Matrix&>(*this));
+  int cols = Traits::cols(reinterpret_cast<Matrix&>(*this));
+  for (int i=0; i < rows; i++) {
+    for (int j=0; j < cols; j++) {
+      Traits::elem(i,j,reinterpret_cast<Matrix&>(*this)) = toAssign;
+    }
+  }
+  return reinterpret_cast<Matrix&>(*this);
+}
+
+template<typename Matrix>
+template<typename RMatrix>
+  typename utils::EnableIf< IsMatrix<RMatrix>::value,
+  Matrix&
+>::Type MatrixAssign<Matrix>::operator= (const RMatrix& toAssign)
+{
+  typedef MatrixTraits<RMatrix> RTraits;
+  assertion (Traits::rows(reinterpret_cast<Matrix&>(*this)) == RTraits::rows(toAssign));
+  assertion (Traits::cols(reinterpret_cast<Matrix&>(*this)) == RTraits::cols(toAssign));
+  int rows = RTraits::rows(toAssign);
+  int cols = RTraits::cols(toAssign);
+  for (int i=0; i < rows; i++) {
+    for (int j=0; j < cols; j++) {
+      Traits::elem(i,j,reinterpret_cast<Matrix&>(*this)) = RTraits::celem(i,j,toAssign);
+    }
+  }
+  return reinterpret_cast<Matrix&>(*this);
+}
+
+}} // tarch, la
+
+#endif /* _TARCH_LA_MATRIXASSSIGN_CPPH_ */

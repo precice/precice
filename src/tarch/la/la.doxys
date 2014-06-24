@@ -1,0 +1,100 @@
+
+/**
+@dir "la"
+
+!! Linear Algebra component
+
+This component contains numeric base types such as vectors and matrices and 
+defines arithmetic operations for them.
+
+!!! Functionality and Types
+
+The main design idea of the la component is to separate functionality from types,
+i.e., the types are mainly data containers, while the functionalty is factored out
+and can be used by all compatible types. 
+
+Currently there exist vector and matrix types (Vector, DynamicVector, Matrix,
+DynamicMatrixm DynamicColumnMatrix) and wrapper types that give a different view
+onto the same type (WrappedType for C-style arrays, TransposedMatrix for zero
+overhead transposing a matrix). 
+
+The functionality is split into files that are named according to the involved
+types. MatrixVectorOperations.h, e.g., offers functionalities that involve matrix
+and vector types. Most of the functionalities are already included in the files
+of the corresponding types, which makes them available automatically when a type
+is used.
+
+!!! Compatibility of Types with Functionality and Traits
+
+In order to make a type compatible with the offered functionality, type traits
+are used (which are in the directory la/traits/). A trait defines a bridge from
+a generic interface, created by the template parameters in the functionalities, to
+the specific types which should be made compatible (see tarch/la/traits/VectorTraits.h
+for examples). In addition, a type needs to be defined as vector or matrix in
+order to activate the functionality for that class of types. This is done by the
+tarch::la::IsVector and tarch::la::IsMatrix traits.
+
+!!! EnableIf Templates
+
+The functionalities for vector and matrix types is written accepting generic 
+types as parameters. In order to limit the possible types to only valid ones
+(e.g., only vectors for the vector-two-norm) EnableIf templates are used
+(see tarch/utils/EnableIf.h). With help of them, a function or class can be
+activated for suitable types only and will be invisible for non-suitable types.
+The code style used can be seen in the following example
+
+@code
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+  int
+>::Type indexMax (const Vector& vector);
+@endcode
+
+We have here the function indexMax() from VectorOperations.h. It takes one generic
+argument. Since this function makes only sense for vector types, EnableIf is
+used to enforce that condition. The EnableIf basically sits at the position of
+the return type of indexMax(). It has a typedef (EnableIf<...>::Type), which defines
+the actual return type of indexMax(). This is the second argument of the EnableIf
+template, by convention, the return type is always written above the function name.
+In this case it is an int. The first argument of the EnableIf template defines
+the conditions to be met, in order to make the function visible to a type. In this
+case, the only condition to be met is that the type has to be Vector which
+is ensured by the IsVector template.
+
+A more complicated example is depicted here
+
+@code
+template<typename LVector, typename RVector>
+  typename utils::LazyEnableIf<
+  IsVector<LVector>::value && IsVector<RVector>::value && EqualScalars<LVector,RVector>::value,
+  utils::LazyType<typename VectorTraits<LVector>::Scalar>
+>::Type dot (
+  const LVector& lVector,
+  const RVector& rVector
+);
+@endcode
+
+This is the declaration of the dot (or inner) product of two vector types. The
+function accepts to generic parameters lVector and rVector. Here, the second form
+of an EnableIf template is used, called LazyEnableIf. The reason for that choice
+is related to the return type of dot(), which is a scalar. The question is, which
+scalar type is the right one: that of lVector or that of rVector? In order to
+prevent this kind of question and possible confusion by choosing one of the types,
+the function is only enabled, if both vectors have the same scalar type. This can
+be seen in the enabling conditions, which are three in this case. The first two
+ensure that lVector as well as rVector are vector types, while the third condition
+makes sure that both vectors have the same scalar type. Then, it doesn't matter
+which scalar is chosen as return type, here is that of lVector. Naively, one could
+take
+
+@code
+typename VectorTraits<LVector>::Scalar
+@endcode
+
+as return type. This works well as long LVector is always a vector type. However,
+when LVector is not a vector type, Scalar is not defined and this can cause
+problems with certain compilers. In order to circumvent these problems, the
+return type is made a LazyType (see tarch::utils::LazyType), and the LazyEnableIf
+will only extract the template argument of LazyType and take it as return type
+when the enabling conditions evaluate to true, i.e., if LVector is a vector type.
+*/
