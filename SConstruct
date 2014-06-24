@@ -22,14 +22,20 @@ def errorMissingHeader(header, usage):
     print "ERROR: Header '" + header + "' (needed for " + usage + ") not found or does not compile!"
     Exit(1)
     
-def oprint(name, value, description):
-    """ Pretty prints an option with value and description. """    
-    print "{:10} = {:6} ({})".format(name, value, description)
+def print_options(vars):
+    """ Print all build option and if they have been modified from their default value. """    
+    for opt in vars.options:
+        try:
+            is_default = vars.args[opt.key] == opt.default
+        except KeyError:
+            is_default = True
+        vprint(opt.key, env[opt.key], is_default, opt.help)
 
-def vprint(name, value, default=True):
+def vprint(name, value, default=True, description = None):
     """ Pretty prints an environment variabe with value and modified or not. """
     mod = "(default)" if default else "(modified)"
-    print "{:10} {:25} = {}".format(mod, name, value)
+    desc = "   " + description if description else ""
+    print "{:10} {:25} = {!s:6}{}".format(mod, name, value, desc)
 
 def checkset_var(varname, default):
     """ Checks if environment variable is set, use default otherwise and print the value. """    
@@ -42,17 +48,16 @@ def checkset_var(varname, default):
     return var
 
 def compiler_validator(key, value, environment):
+    """ Validator function for the compiler option. Checks if the given compiler is either (g++ or icc) or an MPI compiler. """
     if value in ["g++", "icc"] or value.startswith("mpic"):
         return True
     else:
         return False
         
 
-
 ########################################################################## MAIN
     
 vars = Variables(None, ARGUMENTS)
-
 
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
 vars.Add(EnumVariable('build', 'Build type, either release or debug', "debug", allowed_values=('release', 'debug')))
@@ -64,8 +69,10 @@ vars.Add(BoolVariable("spirit2", "Used for parsing VRML file geometries and chec
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", True))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 
+
 env = Environment(variables = vars)   # For configuring build variables
 conf = Configure(env) # For checking libraries, headers, ...
+
 
 Help(vars.GenerateHelpText(env))
 env.Append(CPPPATH = ['#src'])
@@ -77,20 +84,16 @@ env.Append(CCFLAGS = ['-fPIC'])
 
 #---------------------------------------------------------- Check build options
 
-
-
 print
-print 'Checking build options ...'
-print "(to be given on call of scons as 'OPTION=VALUE ...')"
-oprint("OPTION", "VALUE", "DESCRIPTION")
+print "Build options ..."
+print_options(vars)
 
 buildpath = os.path.join(env["builddir"], "") # Ensures to have a trailing slash
 
 if not env["mpi"] and env["compiler"].startswith('mpic'):
     print "ERROR: Option 'compiler' must be set to an MPI compiler wrapper only when using MPI!"
     Exit(1)
-   
-   
+      
 print '... done'
 
 
@@ -284,18 +287,14 @@ if env["sockets"] and not env["boost_inst"]:
 
 lib = env.StaticLibrary (
     target = buildpath + '/libprecice',
-    source = [ 
-        sourcesPreCICE,
-        sourcesBoost
-    ]
+    source = [sourcesPreCICE,
+              sourcesBoost]
 )
    
 bin = env.Program ( 
     target = buildpath + '/binprecice',
-    source = [ 
-        sourcesPreCICEMain,
-        sourcesBoost
-    ]
+    source = [sourcesPreCICEMain,
+              sourcesBoost]
 )
 
 Default(lib, bin)
@@ -316,7 +315,7 @@ for target in map(str, BUILD_TARGETS):
 
 
 ##### Print build summary
-#
+
 print
 print "Targets:   " + buildTargets
 print "Buildpath: " + buildpath
