@@ -37,7 +37,8 @@ SerialImplicitCouplingScheme:: ~SerialImplicitCouplingScheme()
 {}
 
 
-
+// SerialExplicitCouplingScheme::initialize and SerialImplicitCouplingScheme::initialize
+// are identical now
 void SerialImplicitCouplingScheme:: initialize
 (
   double startTime,
@@ -48,13 +49,17 @@ void SerialImplicitCouplingScheme:: initialize
   assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion1(startTimestep >= 0, startTimestep);
   assertion(getCommunication()->isConnected());
+  // This currently does not fail, though description suggests it should in some cases for explicit coupling.
   preciceCheck(not getSendData().empty(), "initialize()",
                "No send data configured! Use explicit scheme for one-way coupling.");
   setTime(startTime);
   setTimesteps(startTimestep);
+  
   if (not doesFirstStep()){
-    setupConvergenceMeasures(); // needs _couplingData configured
-    setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
+    if (not _convergenceMeasures.empty()) {
+      setupConvergenceMeasures(); // needs _couplingData configured
+      setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
+    }
     if (getPostProcessing().get() != NULL){
       preciceCheck(getPostProcessing()->getDataIDs().size()==1 ,"initialize()",
                     "For serial coupling, the number of coupling data vectors has to be 1");
@@ -67,11 +72,12 @@ void SerialImplicitCouplingScheme:: initialize
                  "In case of serial coupling, post-processing can be defined for "
                  << "data of second participant only!");
   }
-
-  requireAction(constants::actionWriteIterationCheckpoint());
-
-
-
+  
+  // This test is valid, if only implicit schemes have convergence measures.
+  // It currently holds, we will maybe find something better
+  if (not _convergenceMeasures.empty()) {
+      requireAction(constants::actionWriteIterationCheckpoint());
+  }
 
   foreach (DataMap::value_type & pair, getSendData()){
     if (pair.second->initialize){

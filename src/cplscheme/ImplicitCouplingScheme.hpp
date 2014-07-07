@@ -253,17 +253,6 @@ protected:
    */
   void initializeTXTWriters();
 
-private:
-
-  // @brief True, if local participant is the one starting the explicit scheme.
-  bool _doesFirstStep;
-
-  // @brief Communication device to the other coupling participant.
-  com::PtrCommunication _communication;
-
-  // @brief Responsible for monitoring iteration count over timesteps.
-  io::TXTTableWriter _iterationsWriter;
-
   /**
    * @brief Holds relevant variables to perform a convergence measurement.
    */
@@ -274,6 +263,23 @@ private:
     bool suffices;
     impl::PtrConvergenceMeasure measure;
   };
+  
+  // @brief All convergence measures of coupling iterations.
+  //
+  // Before initialization, only dataID and measure variables are filled. Then,
+  // the data is fetched from send and receive data assigned to the cpl scheme.
+  std::vector<ConvergenceMeasure> _convergenceMeasures;
+    
+private:
+
+  // @brief True, if local participant is the one starting the explicit scheme.
+  bool _doesFirstStep;
+
+  // @brief Communication device to the other coupling participant.
+  com::PtrCommunication _communication;
+
+  // @brief Responsible for monitoring iteration count over timesteps.
+  io::TXTTableWriter _iterationsWriter;
 
   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
 
@@ -296,12 +302,6 @@ private:
 //  io::TXTTableWriter _amplificationWriter;
 
   typedef boost::tuple<int,impl::PtrConvergenceMeasure> MeasureTuple;
-
-  // @brief All convergence measures of coupling iterations.
-  //
-  // Before initialization, only dataID and measure variables are filled. Then,
-  // the data is fetched from send and receive data assigned to the cpl scheme.
-  std::vector<ConvergenceMeasure> _convergenceMeasures;
 
   // @brief Post-processing method to speedup iteration convergence.
   impl::PtrPostProcessing _postProcessing;

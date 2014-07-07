@@ -13,7 +13,10 @@
 #include "mesh/Mesh.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Helpers.hpp"
-#include "boost/tuple/tuple.hpp"
+// #include "boost/tuple/tuple.hpp" // ???
+
+#include "impl/SharedPointer.hpp"
+
 
 namespace precice {
   namespace cplscheme {
@@ -96,6 +99,34 @@ public:
 
 
   friend class tests::ExplicitCouplingSchemeTest;
+
+// private:
+// Below inserted from ImplicitCouplingScheme.hpp
+  
+  struct ConvergenceMeasure
+  {
+    int dataID;
+    CouplingData* data;
+    bool suffices;
+    impl::PtrConvergenceMeasure measure;
+  };
+  
+  std::vector<ConvergenceMeasure> _convergenceMeasures;
+
+  void setupDataMatrices(DataMap& data);
+
+  void setupConvergenceMeasures();
+
+  impl::PtrPostProcessing _postProcessing;
+  
+  impl::PtrPostProcessing getPostProcessing(){
+    return _postProcessing;
+  }
+
+  int _extrapolationOrder;
+
+  void initializeTXTWriters();
+
 };
 
 }} // namespace precice, cplscheme
