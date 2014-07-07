@@ -89,6 +89,8 @@ void SerialExplicitCouplingScheme:: initialize
   setIsInitialized(true);
 }
 
+// SerialExplicitCouplingScheme::initializeData and SerialImplicitCouplingScheme::initializeData
+// are identical now
 void SerialExplicitCouplingScheme:: initializeData()
 {
   preciceTrace("initializeData()");
@@ -125,9 +127,17 @@ void SerialExplicitCouplingScheme:: initializeData()
   }
 
 
-
   if (hasToSendInitData() && isCouplingOngoing()){
     assertion(not doesFirstStep());
+    foreach (DataMap::value_type & pair, getSendData()){
+      if (pair.second->oldValues.cols() == 0)
+	break;
+      utils::DynVector& oldValues = pair.second->oldValues.column(0);
+      oldValues = *pair.second->values;
+
+      // For extrapolation, treat the initial value as old timestep value
+      pair.second->oldValues.shiftSetFirst(*pair.second->values);
+    }
 
     // The second participant sends the initialized data to the first particpant
     // here, which receives the data on call of initialize().
@@ -137,7 +147,6 @@ void SerialExplicitCouplingScheme:: initializeData()
     receiveData(getCommunication());
     getCommunication()->finishReceivePackage();
     setHasDataBeenExchanged(true);
-
   }
 
   //in order to check in advance if initializeData has been called (if necessary)

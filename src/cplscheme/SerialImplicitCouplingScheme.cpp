@@ -122,6 +122,8 @@ void SerialImplicitCouplingScheme:: initialize
       }
 }
 
+// SerialExplicitCouplingScheme::initializeData and SerialImplicitCouplingScheme::initializeData
+// are identical now
 void SerialImplicitCouplingScheme:: initializeData()
 {
   preciceTrace("initializeData()");
@@ -133,6 +135,8 @@ void SerialImplicitCouplingScheme:: initializeData()
     return;
   }
 
+  preciceDebug("Initializing Data ...");
+  
   preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
      "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
 
@@ -156,10 +160,11 @@ void SerialImplicitCouplingScheme:: initializeData()
   }
 
 
-
   if (hasToSendInitData() && isCouplingOngoing()){
     assertion(not doesFirstStep());
     foreach (DataMap::value_type & pair, getSendData()){
+      if (pair.second->oldValues.cols() == 0)
+	break;
       utils::DynVector& oldValues = pair.second->oldValues.column(0);
       oldValues = *pair.second->values;
 
@@ -175,7 +180,6 @@ void SerialImplicitCouplingScheme:: initializeData()
     receiveData(getCommunication());
     getCommunication()->finishReceivePackage();
     setHasDataBeenExchanged(true);
-
   }
 
   //in order to check in advance if initializeData has been called (if necessary)
