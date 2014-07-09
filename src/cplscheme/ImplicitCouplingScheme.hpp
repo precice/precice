@@ -260,9 +260,6 @@ protected:
     
 private:
 
-  // @brief Communication device to the other coupling participant.
-  com::PtrCommunication _communication;
-
   // @brief Responsible for monitoring iteration count over timesteps.
   io::TXTTableWriter _iterationsWriter;
 
@@ -273,11 +270,6 @@ private:
   // @brief Logging device.
   static tarch::logging::Log _log;
 
-  // @brief First participant name.
-  std::string _firstParticipant;
-
-  // @brief Second participant name.
-  std::string _secondParticipant;
 
   // @brief Writes residuals to file.
 //  io::TXTTableWriter _residualWriterL1;
@@ -307,12 +299,6 @@ private:
 
   // @brief Number of total iterations performed.
   int _totalIterations;
-
-  // @brief Determines, if the timestep length is set by the participant.
-  bool _participantSetsDt;
-
-  // @brief Determines, if the dt length is set received from the other participant
-  bool _participantReceivesDt;
 
   // @brief to carry initData information from initialize to initData
   bool _hasToSendInitData;

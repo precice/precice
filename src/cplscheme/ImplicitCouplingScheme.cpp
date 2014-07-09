@@ -31,10 +31,9 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
 :
-  BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
-  _firstParticipant(firstParticipant),
-  _secondParticipant(secondParticipant),
-  _communication(communication),
+  BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits,
+		     firstParticipant, secondParticipant, localParticipant,
+		     communication, maxIterations, dtMethod),
   _iterationsWriter("iterations-" + localParticipant + ".txt"),
   //_residualWriterL1("residualL1-" + localParticipant + ".txt"),
   //_residualWriterL2("residualL2-" + localParticipant + ".txt"),
@@ -48,42 +47,11 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   _timeToPlot(0.0),
   _iterations(0),
   _totalIterations(0),
-  _participantSetsDt(false),
-  _participantReceivesDt(false),
   _hasToReceiveInitData(false),
   _hasToSendInitData(false)
 {
-  preciceCheck(_firstParticipant != _secondParticipant,
-               "ImplicitCouplingScheme()", "First participant and "
-               << "second participant must have different names!");
-  if (dtMethod == constants::FIXED_DT){
-    preciceCheck(not tarch::la::equals(timestepLength, UNDEFINED_TIMESTEP_LENGTH),
-        "ImplicitCouplingScheme()", "Timestep length value has to be given "
-        << "when the fixed timestep length method is chosen for an implicit "
-        << "coupling scheme!");
-  }
-  if (localParticipant == _firstParticipant){
-    _doesFirstStep = true;
-    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT){
-      _participantSetsDt = true;
-      setTimestepLength(UNDEFINED_TIMESTEP_LENGTH);
-    }
-  }
-  else if (localParticipant == _secondParticipant){
-    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT){
-      _participantReceivesDt = true;
-    }
-  }
-  else {
-    preciceError("initialize()", "Name of local participant \""
-                 << localParticipant << "\" does not match any "
-                 << "participant specified for the coupling scheme!");
-  }
-  preciceCheck((maxIterations > 0) || (maxIterations == -1),
-               "ImplicitCouplingState()",
-               "Maximal iteration limit has to be larger than zero!");
-  assertion(_communication.use_count() > 0);
 }
+
 
 ImplicitCouplingScheme:: ~ImplicitCouplingScheme()
 {}

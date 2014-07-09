@@ -6,6 +6,7 @@
 
 #include "CouplingScheme.hpp"
 #include "CouplingData.hpp"
+#include "Constants.hpp"
 #include "SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "com/SharedPointer.hpp"
@@ -70,6 +71,18 @@ public:
      int    maxTimesteps,
      double timestepLength,
      int    validDigits );
+
+  BaseCouplingScheme (
+    double                maxTime,
+    int                   maxTimesteps,
+    double                timestepLength,
+    int                   validDigits,
+    const std::string&    firstParticipant,
+    const std::string&    secondParticipant,
+    const std::string&    localParticipant,
+    com::PtrCommunication communication,
+    int                   maxIterations,
+    constants::TimesteppingMethod dtMethod );
 
   /**
    * @brief Destructor, virtual.
@@ -394,7 +407,23 @@ protected:
    /**
     * @brief Returns a string representing the required actions.
     */
-   std::string printActionsState() const;
+  std::string printActionsState() const;
+
+  // @brief First participant name.
+  std::string _firstParticipant;
+
+  // @brief Second participant name.
+  std::string _secondParticipant;
+  
+  // @brief Communication device to the other coupling participant.
+  com::PtrCommunication _communication;
+
+  // @brief Determines, if the timestep length is set by the participant.
+  bool _participantSetsDt;
+  
+  // @brief Determines, if the dt length is set received from the other participant
+  bool _participantReceivesDt;
+
 
 private:
 

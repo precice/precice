@@ -105,19 +105,6 @@ private:
    // @brief Logging device.
    static tarch::logging::Log _log;
 
-   // @brief Name of participant starting the explicit coupling scheme.
-   std::string _firstParticipant;
-
-   // @brief Name of participant waiting for data from first participant.
-   std::string _secondParticipant;
-
-   // @brief Communication device to the other coupling participant.
-   com::PtrCommunication _communication;
-
-   bool _participantSetsDt;
-
-   bool _participantReceivesDt;
-
    // @brief to carry initData information from initialize to initData
    bool _hasToSendInitData;
 

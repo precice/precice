@@ -55,6 +55,101 @@ BaseCouplingScheme:: BaseCouplingScheme
       << "between 1 and 16!");
 }
 
+BaseCouplingScheme::BaseCouplingScheme
+(
+  double                maxTime,
+  int                   maxTimesteps,
+  double                timestepLength,
+  int                   validDigits,
+  const std::string&    firstParticipant,
+  const std::string&    secondParticipant,
+  const std::string&    localParticipant,
+  com::PtrCommunication communication,
+  int                   maxIterations,
+  constants::TimesteppingMethod dtMethod )
+  :
+  _maxTime(maxTime),
+  _maxTimesteps(maxTimesteps),
+  _timestepLength(timestepLength),
+  _doesFirstStep(false),
+  _validDigits(validDigits),
+  _time(0.0),
+  _computedTimestepPart(0.0),
+  _timesteps(0),
+  _checkpointTimestepInterval(-1),
+  _isCouplingOngoing(true),
+  _isCouplingTimestepComplete(false),
+  _hasDataBeenExchanged(false),
+  _isInitialized(false),
+  _actions (),
+  _sendData (),
+  _receiveData (),
+  _firstParticipant(firstParticipant),
+  _secondParticipant(secondParticipant),
+  _communication(communication),
+//_iterationsWriter("iterations-" + localParticipant + ".txt"),
+  //_residualWriterL1("residualL1-" + localParticipant + ".txt"),
+  //_residualWriterL2("residualL2-" + localParticipant + ".txt"),
+  //_amplificationWriter("amplification-" + localParticipant + ".txt"),
+//  _convergenceMeasures(),
+//  _postProcessing(),
+//  _extrapolationOrder(0),
+//  _maxIterations(maxIterations),
+//  _iterationToPlot(0),
+//  _timestepToPlot(0),
+//  _timeToPlot(0.0),
+//  _iterations(0),
+//  _totalIterations(0),
+  _participantSetsDt(false),
+  _participantReceivesDt(false)
+//  _hasToReceiveInitData(false),
+//  _hasToSendInitData(false)
+{
+  preciceCheck (
+     not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+     "BaseCouplingScheme()", "Maximum time has to be larger than zero!");
+  preciceCheck (
+     not ((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
+     "BaseCouplingScheme()", "Maximum timestep number has to be larger than zero!");
+  preciceCheck (
+     not ((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
+     "BaseCouplingScheme()", "Timestep length has to be larger than zero!");
+  preciceCheck((_validDigits >= 1) && (_validDigits < 17),
+      "BaseCouplingScheme()", "Valid digits of timestep length has to be "
+	       << "between 1 and 16!");
+  preciceCheck(_firstParticipant != _secondParticipant,
+	       "ImplicitCouplingScheme()", "First participant and "
+               << "second participant must have different names! Called from BaseCoupling.");
+  if (dtMethod == constants::FIXED_DT){
+    preciceCheck(hasTimestepLength(), "ImplicitCouplingScheme()",
+      "Timestep length value has to be given "
+        << "when the fixed timestep length method is chosen for an implicit "
+        << "coupling scheme!");
+  }
+  if (localParticipant == _firstParticipant){
+    _doesFirstStep = true;
+    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT){
+      _participantSetsDt = true;
+      setTimestepLength(UNDEFINED_TIMESTEP_LENGTH);
+    }
+  }
+  else if (localParticipant == _secondParticipant){
+    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT){
+      _participantReceivesDt = true;
+    }
+  }
+  else {
+    preciceError("initialize()", "Name of local participant \""
+                 << localParticipant << "\" does not match any "
+                 << "participant specified for the coupling scheme!");
+  }
+  preciceCheck((maxIterations > 0) || (maxIterations == -1),
+               "ImplicitCouplingState()",
+               "Maximal iteration limit has to be larger than zero!");
+  assertion(_communication.use_count() > 0);
+}
+
+
 void BaseCouplingScheme:: addDataToSend
 (
   mesh::PtrData data,

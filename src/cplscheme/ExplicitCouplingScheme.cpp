@@ -24,42 +24,39 @@ ExplicitCouplingScheme:: ExplicitCouplingScheme
   com::PtrCommunication communication,
   constants::TimesteppingMethod dtMethod)
 :
-  BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
-  _firstParticipant(firstParticipant),
-  _secondParticipant(secondParticipant),
-  _communication(communication),
-  _participantSetsDt(false),
-  _participantReceivesDt(false),
+  BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits,
+		     firstParticipant, secondParticipant, localParticipantName,
+		     communication, 1, dtMethod),
   _hasToReceiveInitData(false),
   _hasToSendInitData(false)
 {
-  preciceCheck(_firstParticipant != _secondParticipant,
-               "ExplicitCouplingScheme()", "First participant and "
-               << "second participant must be different!");
-  if (dtMethod == constants::FIXED_DT){
-    preciceCheck(hasTimestepLength(), "ExplicitCouplingScheme()",
-        "Timestep length value has to be given "
-        << "when the fixed timestep length method is chosen for an explicit "
-        << "coupling scheme!");
-  }
-  if (localParticipantName == _firstParticipant){
-    _doesFirstStep = true;
-    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT){
-      _participantSetsDt = true;
-      setTimestepLength(UNDEFINED_TIMESTEP_LENGTH);
-    }
-  }
-  else if (localParticipantName == _secondParticipant){
-    if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT){
-      _participantReceivesDt = true;
-    }
-  }
-  else {
-    preciceError("initialize()", "Name of local participant \""
-                 << localParticipantName << "\" does not match any "
-                 << "participant specified for the coupling scheme!");
-  }
-  assertion(communication.use_count() > 0);
+  // preciceCheck(_firstParticipant != _secondParticipant,
+  //              "ExplicitCouplingScheme()", "First participant and "
+  //              << "second participant must be different!");
+  // if (dtMethod == constants::FIXED_DT){
+  //   preciceCheck(hasTimestepLength(), "ExplicitCouplingScheme()",
+  //       "Timestep length value has to be given "
+  //       << "when the fixed timestep length method is chosen for an explicit "
+  //       << "coupling scheme!");
+  // }
+  // if (localParticipantName == _firstParticipant){
+  //   _doesFirstStep = true;
+  //   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT){
+  //     _participantSetsDt = true;
+  //     setTimestepLength(UNDEFINED_TIMESTEP_LENGTH);
+  //   }
+  // }
+  // else if (localParticipantName == _secondParticipant){
+  //   if (dtMethod == constants::FIRST_PARTICIPANT_SETS_DT){
+  //     _participantReceivesDt = true;
+  //   }
+  // }
+  // else {
+  //   preciceError("initialize()", "Name of local participant \""
+  //                << localParticipantName << "\" does not match any "
+  //                << "participant specified for the coupling scheme!");
+  // }
+  // assertion(communication.use_count() > 0);
 }
 
 ExplicitCouplingScheme:: ~ExplicitCouplingScheme()
