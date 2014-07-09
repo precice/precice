@@ -16,7 +16,7 @@
 #include "tarch/logging/Log.h"
 #include "utils/Helpers.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
-#include "boost/tuple/tuple.hpp"
+#include "boost/tuple/tuple.hpp" // ??
 
 namespace precice {
   namespace cplscheme {
@@ -64,13 +64,6 @@ public:
     com::PtrCommunication communication,
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod);
-
-  /**
-   * @brief Initializes the coupling scheme.
-   */
-  virtual void initialize (
-    double startTime,
-    int    startTimestep );
 
   /**
    * @brief Advances within the coupling scheme (not necessarily in time).

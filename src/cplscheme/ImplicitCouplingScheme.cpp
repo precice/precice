@@ -34,13 +34,9 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits,
 		     firstParticipant, secondParticipant, localParticipant,
 		     communication, maxIterations, dtMethod),
-  _iterationsWriter("iterations-" + localParticipant + ".txt"),
   //_residualWriterL1("residualL1-" + localParticipant + ".txt"),
   //_residualWriterL2("residualL2-" + localParticipant + ".txt"),
   //_amplificationWriter("amplification-" + localParticipant + ".txt"),
-  _convergenceMeasures(),
-  _postProcessing(),
-  _extrapolationOrder(0),
   _maxIterations(maxIterations),
   _iterationToPlot(0),
   _timestepToPlot(0),
@@ -94,84 +90,9 @@ void ImplicitCouplingScheme:: timestepCompleted()
     requireAction(constants::actionWriteIterationCheckpoint());
   }
 }
-  
-  
-void ImplicitCouplingScheme:: initializeTXTWriters()
-{
-  _iterationsWriter.addData("Timesteps", io::TXTTableWriter::INT );
-  _iterationsWriter.addData("Total Iterations", io::TXTTableWriter::INT );
-  _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
-  _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
-//  _residualWriterL1.addData("Iterations", io::TXTTableWriter::INT );
-//  _residualWriterL2.addData ("Iterations", io::TXTTableWriter::INT );
-//  _amplificationWriter.addData("Iterations", io::TXTTableWriter::INT );
-//  _residualWriterL1.addData("L1-Residual", io::TXTTableWriter::DOUBLE );
-//  _residualWriterL2.addData("L2-Residual", io::TXTTableWriter::DOUBLE );
-//  _amplificationWriter.addData("Amplification" ,io::TXTTableWriter::DOUBLE );
-//  int entries = 0;
-//  if(getSendData().size() > 0 ){
-//    entries = (int)getSendData().begin()->second.values->size();
-//  }
-//  int levels = 1;
-//  int treatedEntries = 2;
-//  int entriesCurrentLevel = 1;
-//  while (treatedEntries < entries){
-//    treatedEntries += entriesCurrentLevel;
-//    levels ++;
-//    entriesCurrentLevel *= 2;
-//  }
-//  if (treatedEntries == entries){
-//    for (int i=0; i < levels; i++ ){
-//      _residualWriterL1.addData("L1-Residual-level-"+i, io::TXTTableWriter::DOUBLE);
-//      _residualWriterL2.addData("L2-Residual-level-"+i, io::TXTTableWriter::DOUBLE);
-//      _amplificationWriter.addData("Amplification-level-"+i,io::TXTTableWriter::DOUBLE);
-//    }
-//  }
-}
 
-void ImplicitCouplingScheme:: setupDataMatrices(DataMap& data)
-{
-  preciceTrace("setupDataMatrices()");
-  preciceDebug("Data size: " << data.size());
-  // Reserve storage for convergence measurement of send and receive data values
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
-    assertion(convMeasure.data != NULL);
-    if (convMeasure.data->oldValues.cols() < 1){
-      convMeasure.data->oldValues.append(CouplingData::DataMatrix(
-          convMeasure.data->values->size(), 1, 0.0));
-    }
-  }
-  // Reserve storage for extrapolation of data values
-  if (_extrapolationOrder > 0){
-    foreach (DataMap::value_type& pair, data){
-      int cols = pair.second->oldValues.cols();
-      preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
-      assertion1(cols <= 1, cols);
-      pair.second->oldValues.append(CouplingData::DataMatrix(
-          pair.second->values->size(), _extrapolationOrder + 1 - cols, 0.0));
-    }
-  }
-}
-
-void ImplicitCouplingScheme:: setupConvergenceMeasures()
-{
-  preciceTrace("setupConvergenceMeasures()");
-  assertion(not doesFirstStep());
-  preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
-      "At least one convergence measure has to be defined for "
-      << "an implicit coupling scheme!");
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
-    int dataID = convMeasure.dataID;
-    if ((getSendData(dataID) != NULL)){
-      convMeasure.data = getSendData(dataID);
-    }
-    else {
-      convMeasure.data = getReceiveData(dataID);
-      assertion(convMeasure.data != NULL);
-    }
-  }
-}
-
+ 
+ 
 bool ImplicitCouplingScheme:: measureConvergence()
 {
   preciceTrace("measureLocalConvergence()");

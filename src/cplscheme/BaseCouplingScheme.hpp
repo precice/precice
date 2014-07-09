@@ -13,6 +13,8 @@
 #include "com/Constants.hpp"
 #include "utils/PointerVector.hpp"
 #include "tarch/logging/Log.h"
+#include "impl/SharedPointer.hpp"
+#include "io/TXTTableWriter.hpp"
 #include <set>
 #include <map>
 #include <string>
@@ -260,7 +262,14 @@ public:
    * @brief Finalizes the coupling scheme.
    */
   virtual void finalize();
-  
+
+  /**
+   * @brief Initializes the coupling scheme.
+   */
+  virtual void initialize (
+    double startTime,
+    int    startTimestep );
+  
   /**
    * @brief Initializes data with written values.
    *
@@ -272,7 +281,13 @@ public:
 
   
 protected:
+  
+  io::TXTTableWriter& getIterationsWriter() {
+    return _iterationsWriter;
+  }
 
+
+  
    typedef std::map<int,PtrCouplingData> DataMap;
 
    struct State {
@@ -427,13 +442,11 @@ protected:
   
   // @brief Determines, if the dt length is set received from the other participant
   bool _participantReceivesDt;
-
-  /**
-    * @return Communication device to the other coupling participant.
-    */
-   com::PtrCommunication getCommunication(){
-     return _communication;
-   }
+  
+  // @return Communication device to the other coupling participant.
+  com::PtrCommunication getCommunication(){
+    return _communication;
+  }
 
 
   void setHasToSendInitData(bool hasToSendInitData){
@@ -462,12 +475,55 @@ protected:
   
   // Make these two private again
   // @brief to carry initData information from initialize to initData
-   bool _hasToSendInitData;
+  bool _hasToSendInitData;
 
-   // @brief to carry initData information from initialize to initData
-   bool _hasToReceiveInitData;
+  // @brief to carry initData information from initialize to initData
+  bool _hasToReceiveInitData;
+
+  //@brief Holds relevant variables to perform a convergence measurement.
+  struct ConvergenceMeasure
+  {
+    int dataID;
+    CouplingData* data;
+    bool suffices;
+    impl::PtrConvergenceMeasure measure;
+  };
+
+  // @brief All convergence measures of coupling iterations.
+  //
+  // Before initialization, only dataID and measure variables are filled. Then,
+  // the data is fetched from send and receive data assigned to the cpl scheme.
+  std::vector<ConvergenceMeasure> _convergenceMeasures;
+  
+  /**
+   * @brief Sets up _dataStorage to store data values of last timestep.
+   *
+   * Every send data has an entry in _dataStorage. Every Entry is a vector
+   * of data values with length according to the total number of values on all
+   * meshes. The ordering of the data values corresponds to that in the meshes
+   * and the ordering of the meshes to that in _couplingData.
+   */
+  void setupDataMatrices(DataMap& data);
+
+  void setupConvergenceMeasures();
+
+  // @brief Post-processing method to speedup iteration convergence.
+  impl::PtrPostProcessing _postProcessing;
+  
+  impl::PtrPostProcessing getPostProcessing(){
+    return _postProcessing;
+  }
+
+  // @brief Extrapolation order of coupling data for first iteration of every dt.
+  int _extrapolationOrder;
+
+  void initializeTXTWriters();
+
   
 private:
+  // @brief Responsible for monitoring iteration count over timesteps.
+  io::TXTTableWriter _iterationsWriter;
+
 
    // @brief Logging device.
    static tarch::logging::Log _log;

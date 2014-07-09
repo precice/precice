@@ -64,13 +64,6 @@ public:
     constants::TimesteppingMethod dtMethod);
 
   /**
-   * @brief Initializes the coupling scheme.
-   */
-  virtual void initialize (
-    double startTime,
-    int    startTimestep );
-
-  /**
    * @brief Advances within the coupling scheme.
    *
    * Preconditions:
@@ -86,29 +79,6 @@ public:
 // private:
 // Below inserted from ImplicitCouplingScheme.hpp
   
-  struct ConvergenceMeasure
-  {
-    int dataID;
-    CouplingData* data;
-    bool suffices;
-    impl::PtrConvergenceMeasure measure;
-  };
-  
-  std::vector<ConvergenceMeasure> _convergenceMeasures;
-
-  void setupDataMatrices(DataMap& data);
-
-  void setupConvergenceMeasures();
-
-  impl::PtrPostProcessing _postProcessing;
-  
-  impl::PtrPostProcessing getPostProcessing(){
-    return _postProcessing;
-  }
-
-  int _extrapolationOrder;
-
-  void initializeTXTWriters();
 
 };
 

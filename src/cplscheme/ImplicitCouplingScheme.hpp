@@ -120,13 +120,6 @@ public:
 
 protected:
 
-  /**
-   * @return Communication device to the other coupling participant.
-   */
-  com::PtrCommunication getCommunication(){
-    return _communication;
-  }
-
   void setIterationToPlot(int iterationToPlot){
     _iterationToPlot = iterationToPlot;
   }
@@ -137,35 +130,6 @@ protected:
 
   void setTimeToPlot(double timeToPlot){
     _timeToPlot = timeToPlot;
-  }
-
-  // @return Post-processing method to speedup iteration convergence.
-  impl::PtrPostProcessing getPostProcessing(){
-    return _postProcessing;
-  }
-
-  void setHasToSendInitData(bool hasToSendInitData){
-    _hasToSendInitData = hasToSendInitData;
-  }
-
-  void setHasToReceiveInitData(bool hasToReceiveInitData){
-    _hasToReceiveInitData = hasToReceiveInitData;
-  }
-
-  bool hasToSendInitData(){
-    return _hasToSendInitData;
-  }
-
-  bool hasToReceiveInitData(){
-    return _hasToReceiveInitData;
-  }
-
-  bool participantReceivesDt(){
-    return _participantReceivesDt;
-  }
-
-  bool participantSetsDt(){
-    return _participantSetsDt;
   }
 
   void setIterations(int iterations){
@@ -200,22 +164,7 @@ protected:
     return _extrapolationOrder;
   }
 
-  io::TXTTableWriter& getIterationsWriter(){
-    return _iterationsWriter;
-  }
 
-
-  /**
-   * @brief Sets up _dataStorage to store data values of last timestep.
-   *
-   * Every send data has an entry in _dataStorage. Every Entry is a vector
-   * of data values with length according to the total number of values on all
-   * meshes. The ordering of the data values corresponds to that in the meshes
-   * and the ordering of the meshes to that in _couplingData.
-   */
-  void setupDataMatrices(DataMap& data);
-
-  void setupConvergenceMeasures();
 
   void newConvergenceMeasurements();
 
@@ -231,32 +180,8 @@ protected:
 
   void extrapolateData(DataMap& data);
 
-  /**
-   * @brief Initializes the txt writers for writing residuals, iterations, ...
-   */
-  void initializeTXTWriters();
 
-  /**
-   * @brief Holds relevant variables to perform a convergence measurement.
-   */
-  struct ConvergenceMeasure
-  {
-    int dataID;
-    CouplingData* data;
-    bool suffices;
-    impl::PtrConvergenceMeasure measure;
-  };
-  
-  // @brief All convergence measures of coupling iterations.
-  //
-  // Before initialization, only dataID and measure variables are filled. Then,
-  // the data is fetched from send and receive data assigned to the cpl scheme.
-  std::vector<ConvergenceMeasure> _convergenceMeasures;
-    
 private:
-
-  // @brief Responsible for monitoring iteration count over timesteps.
-  io::TXTTableWriter _iterationsWriter;
 
   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
 
@@ -275,11 +200,7 @@ private:
 
   typedef boost::tuple<int,impl::PtrConvergenceMeasure> MeasureTuple;
 
-  // @brief Post-processing method to speedup iteration convergence.
-  impl::PtrPostProcessing _postProcessing;
 
-  // @brief Extrapolation order of coupling data for first iteration of every dt.
-  int _extrapolationOrder;
 
   // @brief Limit of iterations during one timestep.
   int _maxIterations;

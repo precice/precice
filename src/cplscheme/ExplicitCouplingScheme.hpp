@@ -34,14 +34,14 @@ public:
      constants::TimesteppingMethod dtMethod );
 
 
-   /**
-    * @brief Initializes the coupling scheme.
-    *
-    * Sets up communication to coupling partner, initializes coupling state.
-    */
-   virtual void initialize (
-     double startTime,
-     int    startTimestep ) = 0;
+   // /**
+   //  * @brief Initializes the coupling scheme.
+   //  *
+   //  * Sets up communication to coupling partner, initializes coupling state.
+   //  */
+   // virtual void initialize (
+   //   double startTime,
+   //   int    startTimestep ) = 0;
 
    /*
     * @brief returns list of all coupling partners
