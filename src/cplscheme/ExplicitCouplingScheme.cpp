@@ -26,9 +26,7 @@ ExplicitCouplingScheme:: ExplicitCouplingScheme
 :
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits,
 		     firstParticipant, secondParticipant, localParticipantName,
-		     communication, 1, dtMethod),
-  _hasToReceiveInitData(false),
-  _hasToSendInitData(false)
+		     communication, 1, dtMethod)
 {}
 
 

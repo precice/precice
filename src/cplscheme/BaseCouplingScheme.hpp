@@ -260,8 +260,17 @@ public:
    * @brief Finalizes the coupling scheme.
    */
   virtual void finalize();
+  
+  /**
+   * @brief Initializes data with written values.
+   *
+   * Preconditions:
+   * - initialize() has been called.
+   * - advance() has NOT yet been called.
+   */
+  virtual void initializeData();
 
-
+  
 protected:
 
    typedef std::map<int,PtrCouplingData> DataMap;
@@ -419,7 +428,45 @@ protected:
   // @brief Determines, if the dt length is set received from the other participant
   bool _participantReceivesDt;
 
+  /**
+    * @return Communication device to the other coupling participant.
+    */
+   com::PtrCommunication getCommunication(){
+     return _communication;
+   }
 
+
+  void setHasToSendInitData(bool hasToSendInitData){
+    _hasToSendInitData = hasToSendInitData;
+  }
+
+  void setHasToReceiveInitData(bool hasToReceiveInitData){
+    _hasToReceiveInitData = hasToReceiveInitData;
+  }
+
+  bool hasToSendInitData(){
+    return _hasToSendInitData;
+  }
+
+  bool hasToReceiveInitData(){
+    return _hasToReceiveInitData;
+  }
+
+  bool participantReceivesDt(){
+    return _participantReceivesDt;
+  }
+
+  bool participantSetsDt(){
+    return _participantSetsDt;
+  }
+  
+  // Make these two private again
+  // @brief to carry initData information from initialize to initData
+   bool _hasToSendInitData;
+
+   // @brief to carry initData information from initialize to initData
+   bool _hasToReceiveInitData;
+  
 private:
 
    // @brief Logging device.
@@ -457,7 +504,9 @@ private:
    DataMap _sendData;
 
    // @brief Map from data ID -> all receive data with that ID
-   DataMap _receiveData;
+  DataMap _receiveData;
+
+
 };
 
 }} // namespace precice, cplscheme

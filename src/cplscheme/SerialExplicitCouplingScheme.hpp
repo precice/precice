@@ -71,27 +71,16 @@ public:
     int    startTimestep );
 
   /**
-   * @brief Initializes data with written values.
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   * - advance() has NOT yet been called.
-   */
-  virtual void initializeData();
-
-  /**
    * @brief Advances within the coupling scheme.
    *
    * Preconditions:
    * - initialize() has been called.
    */
   virtual void advance();
-
-
+
   // @brief Logging device.
   static tarch::logging::Log _log;
-
-
+
   friend class tests::ExplicitCouplingSchemeTest;
 
 // private:

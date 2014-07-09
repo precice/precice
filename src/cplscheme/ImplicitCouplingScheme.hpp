@@ -295,13 +295,6 @@ private:
   // @brief Number of total iterations performed.
   int _totalIterations;
 
-  // @brief to carry initData information from initialize to initData
-  bool _hasToSendInitData;
-
-  // @brief to carry initData information from initialize to initData
-  bool _hasToReceiveInitData;
-
-
 //  void writeResidual (
 //    const utils::DynVector& values,
 //    const utils::DynVector& oldValues );

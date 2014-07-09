@@ -72,40 +72,11 @@ protected:
    }
 
 
-   void setHasToSendInitData(bool hasToSendInitData){
-       _hasToSendInitData = hasToSendInitData;
-     }
-
-     void setHasToReceiveInitData(bool hasToReceiveInitData){
-       _hasToReceiveInitData = hasToReceiveInitData;
-     }
-
-     bool hasToSendInitData(){
-       return _hasToSendInitData;
-     }
-
-     bool hasToReceiveInitData(){
-       return _hasToReceiveInitData;
-     }
-
-     bool participantReceivesDt(){
-       return _participantReceivesDt;
-     }
-
-     bool participantSetsDt(){
-       return _participantSetsDt;
-     }
-
 private:
 
    // @brief Logging device.
    static tarch::logging::Log _log;
 
-   // @brief to carry initData information from initialize to initData
-   bool _hasToSendInitData;
-
-   // @brief to carry initData information from initialize to initData
-   bool _hasToReceiveInitData;
 };
 
 }} // namespace precice, cplscheme

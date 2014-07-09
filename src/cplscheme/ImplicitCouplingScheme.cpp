@@ -46,9 +46,7 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   _timestepToPlot(0),
   _timeToPlot(0.0),
   _iterations(0),
-  _totalIterations(0),
-  _hasToReceiveInitData(false),
-  _hasToSendInitData(false)
+  _totalIterations(0)
 {}
 
 void ImplicitCouplingScheme:: setExtrapolationOrder
