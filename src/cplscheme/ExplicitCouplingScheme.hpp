@@ -47,11 +47,6 @@ public:
      double startTime,
      int    startTimestep ) = 0;
 
-   /**
-    * @brief Finalizes the coupling scheme.
-    */
-   virtual void finalize();
-
    /*
     * @brief returns list of all coupling partners
     */

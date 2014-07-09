@@ -216,6 +216,17 @@ CouplingData* BaseCouplingScheme:: getReceiveData
   return NULL;
 }
 
+void BaseCouplingScheme::finalize()
+{
+   preciceTrace("finalize()");
+   checkCompletenessRequiredActions();
+   preciceCheck(isInitialized(), "finalize()",
+                "Called finalize() before initialize()!");
+   preciceCheck(not isCouplingOngoing(), "finalize()",
+                "Called finalize() while isCouplingOngoing() returns true!");
+}
+
+
 bool BaseCouplingScheme:: hasTimestepLength() const
 {
   return not tarch::la::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH);

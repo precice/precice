@@ -104,11 +104,6 @@ public:
    */
   void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
 
-  /**
-   * @brief Finalizes the coupling scheme.
-   */
-  virtual void finalize();
-
   /*
    * @brief returns list of all coupling partners
    */

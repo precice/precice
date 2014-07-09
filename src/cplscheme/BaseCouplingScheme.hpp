@@ -248,6 +248,12 @@ public:
     com::PtrCommunication communication,
     int                   rankSender );
 
+  /**
+   * @brief Finalizes the coupling scheme.
+   */
+  virtual void finalize();
+
+
 protected:
 
    typedef std::map<int,PtrCouplingData> DataMap;

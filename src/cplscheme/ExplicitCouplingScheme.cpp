@@ -67,12 +67,6 @@ ExplicitCouplingScheme:: ~ExplicitCouplingScheme()
 }
 
 
-void ExplicitCouplingScheme:: finalize()
-{
-   preciceTrace("finalize()");
-   checkCompletenessRequiredActions();
-}
-
 void ExplicitCouplingScheme:: sendState
 (
   com::PtrCommunication communication,

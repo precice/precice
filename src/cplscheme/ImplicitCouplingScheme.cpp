@@ -133,17 +133,8 @@ void ImplicitCouplingScheme:: timestepCompleted()
     requireAction(constants::actionWriteIterationCheckpoint());
   }
 }
-
-void ImplicitCouplingScheme:: finalize()
-{
-   preciceTrace("finalize()");
-   checkCompletenessRequiredActions();
-   preciceCheck(isInitialized(), "finalize()",
-                "Called finalize() before initialize()!");
-   preciceCheck(not isCouplingOngoing(), "finalize()",
-                "Called finalize() while isCouplingOngoing() returns true!");
-}
-
+  
+  
 void ImplicitCouplingScheme:: initializeTXTWriters()
 {
   _iterationsWriter.addData("Timesteps", io::TXTTableWriter::INT );
