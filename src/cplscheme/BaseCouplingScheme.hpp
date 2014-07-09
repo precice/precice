@@ -257,6 +257,16 @@ protected:
      std::string name;
    };
 
+  // @brief True, if local participant is the one starting the explicit scheme.
+  bool _doesFirstStep;  // Make this private again later
+  
+  /**
+   * @return True, if local participant is the one starting the explicit scheme.
+   */
+  bool doesFirstStep() const {
+    return _doesFirstStep;
+  }
+  
    /**
     * @brief Sends data sendDataIDs given in mapCouplingData with communication.
     */

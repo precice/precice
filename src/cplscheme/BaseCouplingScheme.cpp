@@ -27,6 +27,7 @@ BaseCouplingScheme:: BaseCouplingScheme
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _timestepLength(timestepLength),
+  _doesFirstStep(false),
   _validDigits(validDigits),
   _time(0.0),
   _computedTimestepPart(0.0),

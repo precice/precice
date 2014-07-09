@@ -73,15 +73,7 @@ public:
 
 protected:
 
-   /**
-    * @return True, if local participant is the one starting the explicit scheme.
-    */
-   bool doesFirstStep(){
-     return _doesFirstStep;
-   }
-
-
-   /**
+  /**
     * @return Communication device to the other coupling participant.
     */
    com::PtrCommunication getCommunication(){
@@ -123,9 +115,6 @@ private:
 
    // @brief Name of participant waiting for data from first participant.
    std::string _secondParticipant;
-
-   // @brief True, if local participant is the one starting the explicit scheme.
-   bool _doesFirstStep;
 
    // @brief Communication device to the other coupling participant.
    com::PtrCommunication _communication;

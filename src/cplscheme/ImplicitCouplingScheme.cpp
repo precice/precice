@@ -34,7 +34,6 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
-  _doesFirstStep(false),
   _communication(communication),
   _iterationsWriter("iterations-" + localParticipant + ".txt"),
   //_residualWriterL1("residualL1-" + localParticipant + ".txt"),
@@ -205,7 +204,7 @@ void ImplicitCouplingScheme:: setupDataMatrices(DataMap& data)
 void ImplicitCouplingScheme:: setupConvergenceMeasures()
 {
   preciceTrace("setupConvergenceMeasures()");
-  assertion(not _doesFirstStep);
+  assertion(not doesFirstStep());
   preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
       "At least one convergence measure has to be defined for "
       << "an implicit coupling scheme!");
@@ -307,7 +306,7 @@ std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners() const
   std::vector<std::string> partnerNames;
 
   // Add non-local participant
-  if(_doesFirstStep){
+  if(doesFirstStep()){
     partnerNames.push_back(_secondParticipant);
   }
   else {
@@ -361,7 +360,7 @@ void ImplicitCouplingScheme:: exportState
 (
   const std::string& filenamePrefix ) const
 {
-  if (not _doesFirstStep){
+  if (not doesFirstStep()){
     io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
     foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
       writer.write(dataMap.second->oldValues);
@@ -379,7 +378,7 @@ void ImplicitCouplingScheme:: importState
 (
   const std::string& filenamePrefix )
 {
-  if (not _doesFirstStep){
+  if (not doesFirstStep()){
     io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
     foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
       reader.read(dataMap.second->oldValues);

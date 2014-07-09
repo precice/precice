@@ -27,7 +27,6 @@ ExplicitCouplingScheme:: ExplicitCouplingScheme
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
-  _doesFirstStep(false),
   _communication(communication),
   _participantSetsDt(false),
   _participantReceivesDt(false),
@@ -105,7 +104,7 @@ std::vector<std::string> ExplicitCouplingScheme:: getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
   // Add non-local participant
-  if(_doesFirstStep){
+  if(doesFirstStep()){
     partnerNames.push_back(_secondParticipant);
   }
   else {
