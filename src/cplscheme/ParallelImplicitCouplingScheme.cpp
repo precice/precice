@@ -36,10 +36,6 @@ ParallelImplicitCouplingScheme:: ParallelImplicitCouplingScheme
   _allData ()
 {}
 
-ParallelImplicitCouplingScheme:: ~ParallelImplicitCouplingScheme()
-{}
-
-
 
 void ParallelImplicitCouplingScheme:: initialize
 (

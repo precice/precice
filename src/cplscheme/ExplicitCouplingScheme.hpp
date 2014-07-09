@@ -33,10 +33,6 @@ public:
      com::PtrCommunication communication,
      constants::TimesteppingMethod dtMethod );
 
-   /**
-    * @brief Destructor, virtual because of virtual functions.
-    */
-   virtual ~ExplicitCouplingScheme();
 
    /**
     * @brief Initializes the coupling scheme.

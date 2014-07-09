@@ -33,9 +33,6 @@ SerialImplicitCouplingScheme:: SerialImplicitCouplingScheme
         secondParticipant,localParticipant,communication,maxIterations,dtMethod)
 {}
 
-SerialImplicitCouplingScheme:: ~SerialImplicitCouplingScheme()
-{}
-
 
 // SerialExplicitCouplingScheme::initialize and SerialImplicitCouplingScheme::initialize
 // are identical now

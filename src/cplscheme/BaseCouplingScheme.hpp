@@ -85,11 +85,6 @@ public:
     constants::TimesteppingMethod dtMethod );
 
   /**
-   * @brief Destructor, virtual.
-   */
-  virtual ~BaseCouplingScheme() {}
-
-  /**
    * @brief Adds another coupling scheme in parallel to this scheme.
    *
    * If this coupling scheme is a normal coupling scheme, an object of

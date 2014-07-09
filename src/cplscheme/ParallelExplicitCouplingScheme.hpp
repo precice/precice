@@ -61,12 +61,6 @@ public:
     constants::TimesteppingMethod dtMethod);
 
   /**
-   * @brief Destructor.
-   */
-  virtual ~ParallelExplicitCouplingScheme();
-
-
-  /**
    * @brief Initializes the coupling scheme.
    */
   virtual void initialize (

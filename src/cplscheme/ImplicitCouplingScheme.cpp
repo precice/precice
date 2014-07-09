@@ -49,11 +49,6 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   _totalIterations(0),
   _hasToReceiveInitData(false),
   _hasToSendInitData(false)
-{
-}
-
-
-ImplicitCouplingScheme:: ~ImplicitCouplingScheme()
 {}
 
 void ImplicitCouplingScheme:: setExtrapolationOrder

@@ -73,11 +73,6 @@ public:
     constants::TimesteppingMethod dtMethod);
 
   /**
-   * @brief Destructor.
-   */
-  virtual ~ImplicitCouplingScheme();
-
-  /**
    * @brief Sets order of predictor of interface values for first participant.
    *
    * The first participant in the implicit coupling scheme has to take some

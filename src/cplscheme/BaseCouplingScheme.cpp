@@ -148,8 +148,7 @@ BaseCouplingScheme::BaseCouplingScheme
                "Maximal iteration limit has to be larger than zero!");
   assertion(_communication.use_count() > 0);
 }
-
-
+  
 void BaseCouplingScheme:: addDataToSend
 (
   mesh::PtrData data,

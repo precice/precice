@@ -30,8 +30,6 @@ ParallelExplicitCouplingScheme:: ParallelExplicitCouplingScheme
         secondParticipant,localParticipant,communication,dtMethod)
 {}
 
-ParallelExplicitCouplingScheme:: ~ParallelExplicitCouplingScheme()
-{}
 
 void ParallelExplicitCouplingScheme:: initialize
 (

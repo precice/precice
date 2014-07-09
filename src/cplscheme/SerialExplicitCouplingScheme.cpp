@@ -35,10 +35,6 @@ SerialExplicitCouplingScheme:: SerialExplicitCouplingScheme
   _convergenceMeasures()  
 {}
 
-SerialExplicitCouplingScheme:: ~SerialExplicitCouplingScheme()
-{}
-  
-
 // SerialExplicitCouplingScheme::initialize and SerialImplicitCouplingScheme::initialize
 // are identical now
 void SerialExplicitCouplingScheme:: initialize
