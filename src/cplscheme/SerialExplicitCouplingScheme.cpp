@@ -3,37 +3,30 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SerialExplicitCouplingScheme.hpp"
 #include "Constants.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
-#include "tarch/plotter/globaldata/TXTTableWriter.h"
-
-#include "impl/PostProcessing.hpp"
 
 namespace precice {
 namespace cplscheme {
 
 tarch::logging::Log SerialExplicitCouplingScheme::
-    _log("precice::cplscheme::SerialExplicitCouplingScheme" );
+_log("precice::cplscheme::SerialExplicitCouplingScheme" );
 
 SerialExplicitCouplingScheme:: SerialExplicitCouplingScheme
 (
-  double                maxTime,
-  int                   maxTimesteps,
-  double                timestepLength,
-  int                   validDigits,
-  const std::string&    firstParticipant,
-  const std::string&    secondParticipant,
-  const std::string&    localParticipant,
-  com::PtrCommunication communication,
-  constants::TimesteppingMethod dtMethod )
-:
+ double                maxTime,
+ int                   maxTimesteps,
+ double                timestepLength,
+ int                   validDigits,
+ const std::string&    firstParticipant,
+ const std::string&    secondParticipant,
+ const std::string&    localParticipant,
+ com::PtrCommunication communication,
+ constants::TimesteppingMethod dtMethod )
+  :
   ExplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
 			 secondParticipant,localParticipant,communication,dtMethod)
 {}
-
-// SerialExplicitCouplingScheme::initialize and SerialImplicitCouplingScheme::initialize
-// are identical now
 
 void SerialExplicitCouplingScheme:: advance()
 {
@@ -69,8 +62,5 @@ void SerialExplicitCouplingScheme:: advance()
     setComputedTimestepPart(0.0);
   }
 }
-
-
-
 
 }} // namespace precice, cplscheme

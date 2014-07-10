@@ -16,27 +16,27 @@ namespace precice {
 namespace cplscheme {
 
 tarch::logging::Log ImplicitCouplingScheme::
-    _log("precice::cplscheme::ImplicitCouplingScheme" );
+_log("precice::cplscheme::ImplicitCouplingScheme" );
 
 ImplicitCouplingScheme:: ImplicitCouplingScheme
 (
-  double                maxTime,
-  int                   maxTimesteps,
-  double                timestepLength,
-  int                   validDigits,
-  const std::string&    firstParticipant,
-  const std::string&    secondParticipant,
-  const std::string&    localParticipant,
-  com::PtrCommunication communication,
-  int                   maxIterations,
-  constants::TimesteppingMethod dtMethod )
-:
+ double                maxTime,
+ int                   maxTimesteps,
+ double                timestepLength,
+ int                   validDigits,
+ const std::string&    firstParticipant,
+ const std::string&    secondParticipant,
+ const std::string&    localParticipant,
+ com::PtrCommunication communication,
+ int                   maxIterations,
+ constants::TimesteppingMethod dtMethod )
+  :
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits,
 		     firstParticipant, secondParticipant, localParticipant,
 		     communication, maxIterations, dtMethod),
-  //_residualWriterL1("residualL1-" + localParticipant + ".txt"),
-  //_residualWriterL2("residualL2-" + localParticipant + ".txt"),
-  //_amplificationWriter("amplification-" + localParticipant + ".txt"),
+//_residualWriterL1("residualL1-" + localParticipant + ".txt"),
+//_residualWriterL2("residualL2-" + localParticipant + ".txt"),
+//_amplificationWriter("amplification-" + localParticipant + ".txt"),
   _maxIterations(maxIterations),
   _iterationToPlot(0),
   _timestepToPlot(0),
@@ -47,7 +47,7 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
 
 void ImplicitCouplingScheme:: setExtrapolationOrder
 (
-  int order )
+ int order )
 {
   preciceCheck((order == 0) || (order == 1) || (order == 2),
                "setExtrapolationOrder()", "Extrapolation order has to be "
@@ -57,9 +57,9 @@ void ImplicitCouplingScheme:: setExtrapolationOrder
 
 void ImplicitCouplingScheme:: addConvergenceMeasure
 (
-  int                         dataID,
-  bool                        suffices,
-  impl::PtrConvergenceMeasure measure )
+ int                         dataID,
+ bool                        suffices,
+ impl::PtrConvergenceMeasure measure )
 {
   ConvergenceMeasure convMeasure;
   convMeasure.dataID = dataID;
@@ -71,7 +71,7 @@ void ImplicitCouplingScheme:: addConvergenceMeasure
 
 void ImplicitCouplingScheme:: setIterationPostProcessing
 (
-  impl::PtrPostProcessing postProcessing )
+ impl::PtrPostProcessing postProcessing )
 {
   assertion(postProcessing.get() != NULL);
   _postProcessing = postProcessing;
@@ -91,7 +91,7 @@ void ImplicitCouplingScheme:: timestepCompleted()
   }
 }
 
- 
+
  
 bool ImplicitCouplingScheme:: measureConvergence()
 {
@@ -125,53 +125,53 @@ bool ImplicitCouplingScheme:: measureConvergence()
 
 void ImplicitCouplingScheme:: extrapolateData(DataMap& data)
 {
-   preciceTrace("extrapolateData()");
-   if((_extrapolationOrder == 1) || getTimesteps() == 1) {
-      preciceInfo("extrapolateData()", "Performing first order extrapolation" );
-      foreach(DataMap::value_type & pair, data ){
-         preciceDebug("Extrapolate data: " << pair.first);
-         assertion(pair.second->oldValues.cols() > 1 );
-         utils::DynVector & values = *pair.second->values;
-         pair.second->oldValues.column(0) = values;    // = x^t
-         values *= 2.0;                                  // = 2 * x^t
-         values -= pair.second->oldValues.column(1);   // = 2*x^t - x^(t-1)
-         pair.second->oldValues.shiftSetFirst(values ); // shift old values to the right
-      }
-   }
-   else if(_extrapolationOrder == 2 ){
-      preciceInfo("extrapolateData()", "Performing second order extrapolation" );
-      foreach(DataMap::value_type & pair, data ) {
-         assertion(pair.second->oldValues.cols() > 2 );
-         utils::DynVector & values = *pair.second->values;
-         pair.second->oldValues.column(0) = values;        // = x^t                                     // = 2.5 x^t
-//         utils::DynVector & valuesOld1 = pair.second.oldValues.getColumn(1);
-//         utils::DynVector & valuesOld2 = pair.second.oldValues.getColumn(2);
-//         for(int i=0; i < values.size(); i++ ) {
-//            values[i] -= valuesOld1[i] * 3.0; // =
-//            values[i] += valuesOld2[i] * 3.0; // =
-//         }
-         values *= 2.5;                                      // = 2.5 x^t
-         utils::DynVector & valuesOld1 = pair.second->oldValues.column(1);
-         utils::DynVector & valuesOld2 = pair.second->oldValues.column(2);
-	 values -= valuesOld1 * 2.0; // = 2.5x^t - 2x^(t-1)
-	 values += valuesOld2 * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
-	 pair.second->oldValues.shiftSetFirst(values);
-         //preciceDebug("extrapolateData()", "extrapolated data to \""
-         //               << *pair.second.values );
-      }
-   }
-   else {
-      preciceError("extrapolateData()", "Called extrapolation with order != 1,2!" );
-   }
+  preciceTrace("extrapolateData()");
+  if((_extrapolationOrder == 1) || getTimesteps() == 1) {
+    preciceInfo("extrapolateData()", "Performing first order extrapolation" );
+    foreach(DataMap::value_type & pair, data ){
+      preciceDebug("Extrapolate data: " << pair.first);
+      assertion(pair.second->oldValues.cols() > 1 );
+      utils::DynVector & values = *pair.second->values;
+      pair.second->oldValues.column(0) = values;    // = x^t
+      values *= 2.0;                                  // = 2 * x^t
+      values -= pair.second->oldValues.column(1);   // = 2*x^t - x^(t-1)
+      pair.second->oldValues.shiftSetFirst(values ); // shift old values to the right
+    }
+  }
+  else if(_extrapolationOrder == 2 ){
+    preciceInfo("extrapolateData()", "Performing second order extrapolation" );
+    foreach(DataMap::value_type & pair, data ) {
+      assertion(pair.second->oldValues.cols() > 2 );
+      utils::DynVector & values = *pair.second->values;
+      pair.second->oldValues.column(0) = values;        // = x^t                                     // = 2.5 x^t
+      //         utils::DynVector & valuesOld1 = pair.second.oldValues.getColumn(1);
+      //         utils::DynVector & valuesOld2 = pair.second.oldValues.getColumn(2);
+      //         for(int i=0; i < values.size(); i++ ) {
+      //            values[i] -= valuesOld1[i] * 3.0; // =
+      //            values[i] += valuesOld2[i] * 3.0; // =
+      //         }
+      values *= 2.5;                                      // = 2.5 x^t
+      utils::DynVector & valuesOld1 = pair.second->oldValues.column(1);
+      utils::DynVector & valuesOld2 = pair.second->oldValues.column(2);
+      values -= valuesOld1 * 2.0; // = 2.5x^t - 2x^(t-1)
+      values += valuesOld2 * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
+      pair.second->oldValues.shiftSetFirst(values);
+      //preciceDebug("extrapolateData()", "extrapolated data to \""
+      //               << *pair.second.values );
+    }
+  }
+  else {
+    preciceError("extrapolateData()", "Called extrapolation with order != 1,2!" );
+  }
 }
 
 void ImplicitCouplingScheme:: newConvergenceMeasurements()
 {
-   preciceTrace("newConvergenceMeasurements()");
-   foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
-     assertion(convMeasure.measure.get() != NULL);
-     convMeasure.measure->newMeasurementSeries();
-   }
+  preciceTrace("newConvergenceMeasurements()");
+  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
+    assertion(convMeasure.measure.get() != NULL);
+    convMeasure.measure->newMeasurementSeries();
+  }
 }
 
 std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners() const
@@ -190,8 +190,8 @@ std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners() const
 
 void ImplicitCouplingScheme:: sendState
 (
-  com::PtrCommunication communication,
-  int                   rankReceiver )
+ com::PtrCommunication communication,
+ int                   rankReceiver )
 {
   preciceTrace1("sendState()", rankReceiver);
   communication->startSendPackage(rankReceiver );
@@ -204,8 +204,8 @@ void ImplicitCouplingScheme:: sendState
 
 void ImplicitCouplingScheme:: receiveState
 (
-  com::PtrCommunication communication,
-  int                   rankSender )
+ com::PtrCommunication communication,
+ int                   rankSender )
 {
   preciceTrace1("receiveState()", rankSender);
   communication->startReceivePackage(rankSender);
@@ -231,7 +231,7 @@ std::string ImplicitCouplingScheme:: printCouplingState() const
 
 void ImplicitCouplingScheme:: exportState
 (
-  const std::string& filenamePrefix ) const
+ const std::string& filenamePrefix ) const
 {
   if (not doesFirstStep()){
     io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
@@ -249,7 +249,7 @@ void ImplicitCouplingScheme:: exportState
 
 void ImplicitCouplingScheme:: importState
 (
-  const std::string& filenamePrefix )
+ const std::string& filenamePrefix )
 {
   if (not doesFirstStep()){
     io::TXTReader reader(filenamePrefix + "_cplscheme.txt");

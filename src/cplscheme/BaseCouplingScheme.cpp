@@ -4,30 +4,26 @@
 #include "BaseCouplingScheme.hpp"
 #include "CompositionalCouplingScheme.hpp"
 #include "mesh/Mesh.hpp"
-#include "mesh/Data.hpp"
 #include "com/Communication.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Parallel.hpp"
 #include "impl/PostProcessing.hpp"
-#include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
-#include <set>
 #include <limits>
 
 namespace precice {
 namespace cplscheme {
 
 tarch::logging::Log BaseCouplingScheme::
-   _log("precice::cplscheme::BaseCouplingScheme");
+_log("precice::cplscheme::BaseCouplingScheme");
 
 BaseCouplingScheme:: BaseCouplingScheme
 (
-  double maxTime,
-  int    maxTimesteps,
-  double timestepLength,
-  int    validDigits)
-:
+ double maxTime,
+ int    maxTimesteps,
+ double timestepLength,
+ int    validDigits)
+  :
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _timestepLength(timestepLength),
@@ -49,36 +45,36 @@ BaseCouplingScheme:: BaseCouplingScheme
   _iterationsWriter("iterations-unknown.txt")
 {
   preciceCheck (
-     not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-     "BaseCouplingScheme()", "Maximum time has to be larger than zero!");
+		not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+		"BaseCouplingScheme()", "Maximum time has to be larger than zero!");
   preciceCheck (
-     not ((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
-     "BaseCouplingScheme()", "Maximum timestep number has to be larger than zero!");
+		not ((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
+		"BaseCouplingScheme()", "Maximum timestep number has to be larger than zero!");
   preciceCheck (
-     not ((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
-     "BaseCouplingScheme()", "Timestep length has to be larger than zero!");
+		not ((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
+		"BaseCouplingScheme()", "Timestep length has to be larger than zero!");
   preciceCheck((_validDigits >= 1) && (_validDigits < 17),
-      "BaseCouplingScheme()", "Valid digits of timestep length has to be "
-      << "between 1 and 16!");
+	       "BaseCouplingScheme()", "Valid digits of timestep length has to be "
+	       << "between 1 and 16!");
 }
 
 BaseCouplingScheme::BaseCouplingScheme
 (
-  double                maxTime,
-  int                   maxTimesteps,
-  double                timestepLength,
-  int                   validDigits,
-  const std::string&    firstParticipant,
-  const std::string&    secondParticipant,
-  const std::string&    localParticipant,
-  com::PtrCommunication communication,
-  int                   maxIterations,
-  constants::TimesteppingMethod dtMethod )
+ double                maxTime,
+ int                   maxTimesteps,
+ double                timestepLength,
+ int                   validDigits,
+ const std::string&    firstParticipant,
+ const std::string&    secondParticipant,
+ const std::string&    localParticipant,
+ com::PtrCommunication communication,
+ int                   maxIterations,
+ constants::TimesteppingMethod dtMethod )
   :
   _maxTime(maxTime),
-  _maxTimesteps(maxTimesteps),
-  _timestepLength(timestepLength),
-  _doesFirstStep(false),
+   _maxTimesteps(maxTimesteps),
+   _timestepLength(timestepLength),
+   _doesFirstStep(false),
   _validDigits(validDigits),
   _time(0.0),
   _computedTimestepPart(0.0),
@@ -95,8 +91,8 @@ BaseCouplingScheme::BaseCouplingScheme
   _secondParticipant(secondParticipant),
   _communication(communication),
   _iterationsWriter("iterations-" + localParticipant + ".txt"),
-  //_residualWriterL1("residualL1-" + localParticipant + ".txt"),
-  //_residualWriterL2("residualL2-" + localParticipant + ".txt"),
+//_residualWriterL1("residualL1-" + localParticipant + ".txt"),
+//_residualWriterL2("residualL2-" + localParticipant + ".txt"),
 //_amplificationWriter("amplification-" + localParticipant + ".txt"),
   _convergenceMeasures(),
   _postProcessing(),
@@ -113,25 +109,25 @@ BaseCouplingScheme::BaseCouplingScheme
   _hasToSendInitData(false)
 {
   preciceCheck (
-     not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-     "BaseCouplingScheme()", "Maximum time has to be larger than zero!");
+		not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+		"BaseCouplingScheme()", "Maximum time has to be larger than zero!");
   preciceCheck (
-     not ((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
-     "BaseCouplingScheme()", "Maximum timestep number has to be larger than zero!");
+		not ((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
+		"BaseCouplingScheme()", "Maximum timestep number has to be larger than zero!");
   preciceCheck (
-     not ((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
-     "BaseCouplingScheme()", "Timestep length has to be larger than zero!");
+		not ((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
+		"BaseCouplingScheme()", "Timestep length has to be larger than zero!");
   preciceCheck((_validDigits >= 1) && (_validDigits < 17),
-      "BaseCouplingScheme()", "Valid digits of timestep length has to be "
+	       "BaseCouplingScheme()", "Valid digits of timestep length has to be "
 	       << "between 1 and 16!");
   preciceCheck(_firstParticipant != _secondParticipant,
 	       "ImplicitCouplingScheme()", "First participant and "
                << "second participant must have different names! Called from BaseCoupling.");
   if (dtMethod == constants::FIXED_DT){
     preciceCheck(hasTimestepLength(), "ImplicitCouplingScheme()",
-      "Timestep length value has to be given "
-        << "when the fixed timestep length method is chosen for an implicit "
-        << "coupling scheme!");
+		 "Timestep length value has to be given "
+		 << "when the fixed timestep length method is chosen for an implicit "
+		 << "coupling scheme!");
   }
   if (localParticipant == _firstParticipant){
     _doesFirstStep = true;
@@ -155,11 +151,11 @@ BaseCouplingScheme::BaseCouplingScheme
                "Maximal iteration limit has to be larger than zero!");
   assertion(_communication.use_count() > 0);
 }
-  
+
 void BaseCouplingScheme:: addDataToSend
 (
-  mesh::PtrData data,
-  bool          initialize)
+ mesh::PtrData data,
+ bool          initialize)
 {
   int id = data->getID();
   if(! utils::contained(id, _sendData)) {
@@ -169,40 +165,34 @@ void BaseCouplingScheme:: addDataToSend
   }
   else {
     preciceError("addDataToSend()", "Data \"" << data->getName()
-        << "\" of mesh \"" << data->mesh()->getName() << "\" cannot be "
-        << "added twice for sending!");
+		 << "\" of mesh \"" << data->mesh()->getName() << "\" cannot be "
+		 << "added twice for sending!");
   }
 }
 
 void BaseCouplingScheme:: addDataToReceive
 (
-   mesh::PtrData data,
-   bool          initialize)
+ mesh::PtrData data,
+ bool          initialize)
 {
-   int id = data->getID();
-   if(! utils::contained(id, _receiveData)) {
-      PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
-      DataMap::value_type pair = std::make_pair (id, ptrCplData);
-      _receiveData.insert(pair);
-   }
-   else {
-      preciceError("addDataToReceive()", "Data \"" << data->getName()
-                     << "\" of mesh \"" << data->mesh()->getName() << "\" cannot be "
-                     << "added twice for receiving!");
-   }
+  int id = data->getID();
+  if(! utils::contained(id, _receiveData)) {
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+    DataMap::value_type pair = std::make_pair (id, ptrCplData);
+    _receiveData.insert(pair);
+  }
+  else {
+    preciceError("addDataToReceive()", "Data \"" << data->getName()
+		 << "\" of mesh \"" << data->mesh()->getName() << "\" cannot be "
+		 << "added twice for receiving!");
+  }
 }
 
-void BaseCouplingScheme:: setCheckPointTimestepInterval
-(
-  int timestepInterval)
-{
-  _checkpointTimestepInterval = timestepInterval;
-}
 
 void BaseCouplingScheme:: sendState
 (
-  com::PtrCommunication communication,
-  int                   rankReceiver)
+ com::PtrCommunication communication,
+ int                   rankReceiver)
 {
   preciceTrace("sendState()");
   assertion(communication.get() != NULL);
@@ -226,8 +216,8 @@ void BaseCouplingScheme:: sendState
 
 void BaseCouplingScheme:: receiveState
 (
-  com::PtrCommunication communication,
-  int                   rankSender)
+ com::PtrCommunication communication,
+ int                   rankSender)
 {
   preciceTrace("receiveState()");
   assertion(communication.get() != NULL);
@@ -255,7 +245,7 @@ void BaseCouplingScheme:: receiveState
 
 std::vector<int> BaseCouplingScheme:: sendData
 (
-  com::PtrCommunication communication)
+ com::PtrCommunication communication)
 {
   preciceTrace("sendData()");
   assertion(communication.get() != NULL);
@@ -275,7 +265,7 @@ std::vector<int> BaseCouplingScheme:: sendData
 
 std::vector<int> BaseCouplingScheme:: receiveData
 (
-  com::PtrCommunication communication)
+ com::PtrCommunication communication)
 {
   preciceTrace("receiveData()");
   assertion(communication.get() != NULL);
@@ -295,7 +285,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
 
 CouplingData* BaseCouplingScheme:: getSendData
 (
-  int dataID)
+ int dataID)
 {
   preciceTrace1("getSendData()", dataID);
   DataMap::iterator iter = _sendData.find(dataID);
@@ -319,12 +309,12 @@ CouplingData* BaseCouplingScheme:: getReceiveData
 
 void BaseCouplingScheme::finalize()
 {
-   preciceTrace("finalize()");
-   checkCompletenessRequiredActions();
-   preciceCheck(isInitialized(), "finalize()",
-                "Called finalize() before initialize()!");
-   preciceCheck(not isCouplingOngoing(), "finalize()",
-                "Called finalize() while isCouplingOngoing() returns true!");
+  preciceTrace("finalize()");
+  checkCompletenessRequiredActions();
+  preciceCheck(isInitialized(), "finalize()",
+	       "Called finalize() before initialize()!");
+  preciceCheck(not isCouplingOngoing(), "finalize()",
+	       "Called finalize() while isCouplingOngoing() returns true!");
 }
 
 
@@ -339,36 +329,9 @@ double BaseCouplingScheme:: getTimestepLength() const
   return _timestepLength;
 }
 
-double BaseCouplingScheme:: getComputedTimestepPart() const
-{
-  return _computedTimestepPart;
-}
-
-void BaseCouplingScheme:: setComputedTimestepPart
-(
-  double computedTimestepPart)
-{
-  _computedTimestepPart = computedTimestepPart;
-}
-
-double BaseCouplingScheme:: getMaxTime() const
-{
-  return _maxTime;
-}
-
-int BaseCouplingScheme:: getMaxTimesteps() const
-{
-  return _maxTimesteps;
-}
-
-bool BaseCouplingScheme:: isInitialized() const
-{
-  return _isInitialized;
-}
-
 void BaseCouplingScheme:: addComputedTime
 (
-  double timeToAdd )
+ double timeToAdd )
 {
   preciceTrace2("addComputedTime()", timeToAdd, _time);
   preciceCheck(isCouplingOngoing(), "addComputedTime()",
@@ -388,7 +351,7 @@ void BaseCouplingScheme:: addComputedTime
 
 bool BaseCouplingScheme:: willDataBeExchanged
 (
-  double lastSolverTimestepLength) const
+ double lastSolverTimestepLength) const
 {
   preciceTrace1("willDataBeExchanged()", lastSolverTimestepLength);
   double eps = std::pow(10.0, -1 * _validDigits);
@@ -403,7 +366,7 @@ bool BaseCouplingScheme:: hasDataBeenExchanged() const
 
 void BaseCouplingScheme:: setHasDataBeenExchanged
 (
-  bool hasDataBeenExchanged)
+ bool hasDataBeenExchanged)
 {
   _hasDataBeenExchanged = hasDataBeenExchanged;
 }
@@ -448,39 +411,39 @@ bool BaseCouplingScheme:: isCouplingOngoing() const
   using namespace tarch::la;
   bool timeLeft = greater(_maxTime, _time, eps) || equals(_maxTime, UNDEFINED_TIME);
   bool timestepsLeft = (_maxTimesteps > _timesteps)
-                       || (_maxTimesteps == UNDEFINED_TIMESTEPS);
+    || (_maxTimesteps == UNDEFINED_TIMESTEPS);
   return timeLeft && timestepsLeft;
 }
 
 bool BaseCouplingScheme:: isCouplingTimestepComplete() const
 {
-   return _isCouplingTimestepComplete;
+  return _isCouplingTimestepComplete;
 }
 
 bool BaseCouplingScheme:: isActionRequired
 (
-  const std::string& actionName) const
+ const std::string& actionName) const
 {
-   return _actions.count(actionName) > 0;
+  return _actions.count(actionName) > 0;
 }
 
 void BaseCouplingScheme:: performedAction
 (
-  const std::string& actionName)
+ const std::string& actionName)
 {
-   _actions.erase(actionName);
+  _actions.erase(actionName);
 }
 
 int BaseCouplingScheme:: getCheckpointTimestepInterval() const
 {
-   return _checkpointTimestepInterval;
+  return _checkpointTimestepInterval;
 }
 
 void BaseCouplingScheme:: requireAction
 (
-  const std::string& actionName)
+ const std::string& actionName)
 {
-   _actions.insert(actionName);
+  _actions.insert(actionName);
 }
 
 std::string BaseCouplingScheme:: printBasicState() const
@@ -492,8 +455,8 @@ std::string BaseCouplingScheme:: printBasicState() const
 
 std::string BaseCouplingScheme:: printBasicState
 (
-  int    timesteps,
-  double time ) const
+ int    timesteps,
+ double time ) const
 {
   std::ostringstream os;
   os << "dt# " << timesteps;
@@ -508,10 +471,10 @@ std::string BaseCouplingScheme:: printBasicState
     os << " | dt " << _timestepLength;
   }
   if((_timestepLength != UNDEFINED_TIMESTEP_LENGTH)
-       || (_maxTime != UNDEFINED_TIME))
-  {
-    os << " | max dt " << getNextTimestepMaxLength();
-  }
+     || (_maxTime != UNDEFINED_TIME))
+    {
+      os << " | max dt " << getNextTimestepMaxLength();
+    }
   os << " | ongoing ";
   isCouplingOngoing() ? os << "yes" : os << "no";
   os << " | dt complete ";
@@ -521,11 +484,11 @@ std::string BaseCouplingScheme:: printBasicState
 
 std::string BaseCouplingScheme:: printActionsState () const
 {
-   std::ostringstream os;
-   foreach(const std::string & actionName, _actions) {
-      os << actionName << " | ";
-   }
-   return os.str ();
+  std::ostringstream os;
+  foreach(const std::string & actionName, _actions) {
+    os << actionName << " | ";
+  }
+  return os.str ();
 }
 
 void BaseCouplingScheme:: checkCompletenessRequiredActions ()
@@ -551,8 +514,8 @@ int BaseCouplingScheme:: getValidDigits () const
 
 void BaseCouplingScheme::initialize
 (
-  double startTime,
-  int    startTimestep)
+ double startTime,
+ int    startTimestep)
 {
   preciceTrace2("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
@@ -572,7 +535,7 @@ void BaseCouplingScheme::initialize
     }
     if (getPostProcessing().get() != NULL){
       preciceCheck(getPostProcessing()->getDataIDs().size()==1 ,"initialize()",
-                    "For serial coupling, the number of coupling data vectors has to be 1");
+		   "For serial coupling, the number of coupling data vectors has to be 1");
       getPostProcessing()->initialize(getSendData()); // Reserve memory, initialize
     }
   }
@@ -586,9 +549,9 @@ void BaseCouplingScheme::initialize
   // This test is valid, if only implicit schemes have convergence measures.
   // It currently holds, we will maybe find something better
   if (not _convergenceMeasures.empty()) {
-      requireAction(constants::actionWriteIterationCheckpoint());
+    requireAction(constants::actionWriteIterationCheckpoint());
   }
-  
+    
   foreach (DataMap::value_type & pair, getSendData()){
     if (pair.second->initialize){
       preciceCheck(not doesFirstStep(), "initialize()",
@@ -609,8 +572,8 @@ void BaseCouplingScheme::initialize
   }
 
   
-   // If the second participant initializes data, the first receive for the
-   // second participant is done in initializeData() instead of initialize().
+  // If the second participant initializes data, the first receive for the
+  // second participant is done in initializeData() instead of initialize().
   if ((not doesFirstStep()) && (not hasToSendInitData()) && isCouplingOngoing()){
     preciceDebug("Receiving data");
     getCommunication()->startReceivePackage(0);
@@ -638,7 +601,7 @@ void BaseCouplingScheme::initializeData()
 {
   preciceTrace("initializeData()");
   preciceCheck(isInitialized(), "initializeData()",
-     "initializeData() can be called after initialize() only!");
+	       "initializeData() can be called after initialize() only!");
 
   if((not hasToSendInitData()) && (not hasToReceiveInitData())){
     preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
@@ -648,7 +611,7 @@ void BaseCouplingScheme::initializeData()
   preciceDebug("Initializing Data ...");
   
   preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-     "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+	       "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
@@ -707,7 +670,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
     assertion(convMeasure.data != NULL);
     if (convMeasure.data->oldValues.cols() < 1){
       convMeasure.data->oldValues.append(CouplingData::DataMatrix(
-          convMeasure.data->values->size(), 1, 0.0));
+								  convMeasure.data->values->size(), 1, 0.0));
     }
   }
   // Reserve storage for extrapolation of data values
@@ -717,7 +680,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
       preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
       assertion1(cols <= 1, cols);
       pair.second->oldValues.append(CouplingData::DataMatrix(
-          pair.second->values->size(), _extrapolationOrder + 1 - cols, 0.0));
+							     pair.second->values->size(), _extrapolationOrder + 1 - cols, 0.0));
     }
   }
 }
@@ -727,8 +690,8 @@ void BaseCouplingScheme::setupConvergenceMeasures()
   preciceTrace("setupConvergenceMeasures()");
   assertion(not doesFirstStep());
   preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
-      "At least one convergence measure has to be defined for "
-      << "an implicit coupling scheme!");
+	       "At least one convergence measure has to be defined for "
+	       << "an implicit coupling scheme!");
   foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
     int dataID = convMeasure.dataID;
     if ((getSendData(dataID) != NULL)){

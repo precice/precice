@@ -10,8 +10,6 @@
 #include "mesh/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace cplscheme {
 
@@ -19,63 +17,41 @@ class ExplicitCouplingScheme : public BaseCouplingScheme
 {
 public:
 
-   /**
-    * @brief Constructor.
-    */
-   ExplicitCouplingScheme (
-     double                maxTime,
-     int                   maxTimesteps,
-     double                timestepLength,
-     int                   validDigits,
-     const std::string&    firstParticipant,
-     const std::string&    secondParticipant,
-     const std::string&    localParticipantName,
-     com::PtrCommunication communication,
-     constants::TimesteppingMethod dtMethod );
+  ExplicitCouplingScheme (
+			  double                maxTime,
+			  int                   maxTimesteps,
+			  double                timestepLength,
+			  int                   validDigits,
+			  const std::string&    firstParticipant,
+			  const std::string&    secondParticipant,
+			  const std::string&    localParticipantName,
+			  com::PtrCommunication communication,
+			  constants::TimesteppingMethod dtMethod );
 
 
-   // /**
-   //  * @brief Initializes the coupling scheme.
-   //  *
-   //  * Sets up communication to coupling partner, initializes coupling state.
-   //  */
-   // virtual void initialize (
-   //   double startTime,
-   //   int    startTimestep ) = 0;
+  /*
+   * @brief returns list of all coupling partners
+   */
+  virtual std::vector<std::string> getCouplingPartners () const;
 
-   /*
-    * @brief returns list of all coupling partners
-    */
-   virtual std::vector<std::string> getCouplingPartners () const;
+  virtual void sendState (
+			  com::PtrCommunication communication,
+			  int                   rankReceiver );
 
-   virtual void sendState (
-     com::PtrCommunication communication,
-     int                   rankReceiver );
+  virtual void receiveState (
+			     com::PtrCommunication communication,
+			     int                   rankSender );
 
-   virtual void receiveState (
-     com::PtrCommunication communication,
-     int                   rankSender );
+  virtual std::string printCouplingState() const;
 
-   virtual std::string printCouplingState() const;
+  virtual void exportState(const std::string& filenamePrefix) const {}
 
-   virtual void exportState(const std::string& filenamePrefix) const {}
-
-   virtual void importState(const std::string& filenamePrefix) {}
-
-protected:
-
-  /**
-    * @return Communication device to the other coupling participant.
-    */
-   com::PtrCommunication getCommunication(){
-     return _communication;
-   }
-
+  virtual void importState(const std::string& filenamePrefix) {}
 
 private:
 
-   // @brief Logging device.
-   static tarch::logging::Log _log;
+  // @brief Logging device.
+  static tarch::logging::Log _log;
 
 };
 

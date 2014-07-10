@@ -3,34 +3,31 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SerialImplicitCouplingScheme.hpp"
 #include "impl/PostProcessing.hpp"
-#include "impl/ConvergenceMeasure.hpp"
 #include "Constants.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
-#include "tarch/plotter/globaldata/TXTTableWriter.h"
 
 namespace precice {
 namespace cplscheme {
 
 tarch::logging::Log SerialImplicitCouplingScheme::
-    _log("precice::cplscheme::SerialImplicitCouplingScheme" );
+_log("precice::cplscheme::SerialImplicitCouplingScheme" );
 
 SerialImplicitCouplingScheme:: SerialImplicitCouplingScheme
 (
-  double                maxTime,
-  int                   maxTimesteps,
-  double                timestepLength,
-  int                   validDigits,
-  const std::string&    firstParticipant,
-  const std::string&    secondParticipant,
-  const std::string&    localParticipant,
-  com::PtrCommunication communication,
-  int                   maxIterations,
-  constants::TimesteppingMethod dtMethod )
-:
+ double                maxTime,
+ int                   maxTimesteps,
+ double                timestepLength,
+ int                   validDigits,
+ const std::string&    firstParticipant,
+ const std::string&    secondParticipant,
+ const std::string&    localParticipant,
+ com::PtrCommunication communication,
+ int                   maxIterations,
+ constants::TimesteppingMethod dtMethod )
+  :
   ImplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-        secondParticipant,localParticipant,communication,maxIterations,dtMethod)
+			 secondParticipant,localParticipant,communication,maxIterations,dtMethod)
 {}
 
 
@@ -38,15 +35,15 @@ void SerialImplicitCouplingScheme:: advance()
 {
   preciceTrace2("advance()", getTimesteps(), getTime());
   //tmp debug -> here wrong values
-            foreach (DataMap::value_type & pair, getReceiveData()){
-                  utils::DynVector& values = *pair.second->values;
-                  preciceDebug("Begin advance, New Values: " << values);
-            }
+  foreach (DataMap::value_type & pair, getReceiveData()){
+    utils::DynVector& values = *pair.second->values;
+    preciceDebug("Begin advance, New Values: " << values);
+  }
   checkCompletenessRequiredActions();
 
   preciceCheck(not hasToReceiveInitData() && not hasToSendInitData(), "advance()",
-     "initializeData() needs to be called before advance if data has to be initialized!");
-
+	       "initializeData() needs to be called before advance if data has to be initialized!");
+  
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
   double eps = std::pow(10.0, -1 * getValidDigits());
@@ -123,7 +120,7 @@ void SerialImplicitCouplingScheme:: advance()
         getCommunication()->finishSendPackage();
       }
     }
-
+    
     if (not convergence){
       preciceDebug("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
@@ -159,7 +156,7 @@ void SerialImplicitCouplingScheme:: advance()
   else {
     increaseIterationToPlot();
   }
-
+  
 }
 
 }} // namespace precice, cplscheme

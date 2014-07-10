@@ -9,23 +9,14 @@
 #include "Constants.hpp"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
-#include "mesh/Vertex.hpp"
-#include "mesh/PropertyContainer.hpp"
-#include "mesh/Mesh.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Helpers.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "boost/tuple/tuple.hpp"
 
-namespace precice {
-  namespace cplscheme {
-    namespace tests {
-      class ImplicitCouplingSchemeTest;
-    }
-  }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
+namespace precice { namespace cplscheme { namespace tests {
+class ImplicitCouplingSchemeTest;
+} } }
 
 namespace precice {
 namespace cplscheme {
@@ -44,7 +35,7 @@ namespace cplscheme {
 class ImplicitCouplingScheme : public BaseCouplingScheme
 {
 public:
-
+  
   /**
    * @brief Constructor.
    *
@@ -61,17 +52,17 @@ public:
    *                          written.
    */
   ImplicitCouplingScheme (
-    double                maxTime,
-    int                   maxTimesteps,
-    double                timestepLength,
-    int                   validDigits,
-    const std::string&    firstParticipant,
-    const std::string&    secondParticipant,
-    const std::string&    localParticipant,
-    com::PtrCommunication communication,
-    int                   maxIterations,
-    constants::TimesteppingMethod dtMethod);
-
+			  double                maxTime,
+			  int                   maxTimesteps,
+			  double                timestepLength,
+			  int                   validDigits,
+			  const std::string&    firstParticipant,
+			  const std::string&    secondParticipant,
+			  const std::string&    localParticipant,
+			  com::PtrCommunication communication,
+			  int                   maxIterations,
+			  constants::TimesteppingMethod dtMethod);
+  
   /**
    * @brief Sets order of predictor of interface values for first participant.
    *
@@ -85,33 +76,33 @@ public:
    * Currently, an order 1 predictor is implement besides that.
    */
   void setExtrapolationOrder ( int order );
-
+  
   /**
    * @brief Adds a measure to determine the convergence of coupling iterations.
    */
   void addConvergenceMeasure (
-    int                         dataID,
-    bool                        suffices,
-    impl::PtrConvergenceMeasure measure );
-
+			      int                         dataID,
+			      bool                        suffices,
+			      impl::PtrConvergenceMeasure measure );
+  
   /**
    * @brief Set a coupling iteration post-processing technique.
    */
   void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
-
+  
   /*
    * @brief returns list of all coupling partners
    */
   virtual std::vector<std::string> getCouplingPartners () const;
-
+  
   virtual void sendState (
-    com::PtrCommunication communication,
-    int                   rankReceiver );
-
+			  com::PtrCommunication communication,
+			  int                   rankReceiver );
+  
   virtual void receiveState (
-    com::PtrCommunication communication,
-    int                   rankSender );
-
+			     com::PtrCommunication communication,
+			     int                   rankSender );
+  
   virtual std::string printCouplingState() const;
 
   virtual void exportState(const std::string& filenamePrefix) const;
@@ -120,51 +111,49 @@ public:
 
 protected:
 
-  void setIterationToPlot(int iterationToPlot){
+  void setIterationToPlot(int iterationToPlot) {
     _iterationToPlot = iterationToPlot;
   }
 
-  void setTimestepToPlot(int timestepToPlot){
+  void setTimestepToPlot(int timestepToPlot) {
     _timestepToPlot = timestepToPlot;
   }
 
-  void setTimeToPlot(double timeToPlot){
+  void setTimeToPlot(double timeToPlot) {
     _timeToPlot = timeToPlot;
   }
 
-  void setIterations(int iterations){
+  void setIterations(int iterations) {
     _iterations = iterations;
   }
 
-  int getIterations(){
+  int getIterations() {
     return _iterations;
   }
 
-  int getTotalIterations(){
+  int getTotalIterations() {
     return _totalIterations;
   }
 
-  void increaseIterations(){
+  void increaseIterations() {
     _iterations++;
   }
 
-  void increaseTotalIterations(){
+  void increaseTotalIterations() {
     _totalIterations++;
   }
 
-  void increaseIterationToPlot(){
+  void increaseIterationToPlot() {
     _iterationToPlot++;
   }
 
-  int getMaxIterations(){
+  int getMaxIterations() {
     return _maxIterations;
   }
 
-  int getExtrapolationOrder(){
+  int getExtrapolationOrder() {
     return _extrapolationOrder;
   }
-
-
 
   void newConvergenceMeasurements();
 
@@ -184,42 +173,52 @@ protected:
 private:
 
   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-
+  
   typedef tarch::la::DynamicVector<double> DataVector;
-
-  // @brief Logging device.
+  
+  /**
+   * @brief Logging device.
+   */
   static tarch::logging::Log _log;
-
+  
 
   // @brief Writes residuals to file.
-//  io::TXTTableWriter _residualWriterL1;
-//  io::TXT_communicationTableWriter _residualWriterL2;
-
+  //  io::TXTTableWriter _residualWriterL1;
+  //  io::TXT_communicationTableWriter _residualWriterL2;
+  
   // @brief Writes value amplification to file.
-//  io::TXTTableWriter _amplificationWriter;
+  //  io::TXTTableWriter _amplificationWriter;
 
   typedef boost::tuple<int,impl::PtrConvergenceMeasure> MeasureTuple;
-
-
-
-  // @brief Limit of iterations during one timestep.
+  
+  /**
+   * @brief Limit of iterations during one timestep.
+   */
   int _maxIterations;
-
-  // @brief Number of iteration in current timestep.
+  
+  /**
+   * @brief Number of iteration in current timestep.
+   */
   int _iterationToPlot;
+  
   int _timestepToPlot;
+  
   double _timeToPlot;
 
-  // @brief Number of iterations in current timestep.
+  /**
+   * @brief Number of iterations in current timestep.
+   */
   int _iterations;
-
-  // @brief Number of total iterations performed.
+  
+  /**
+   * @brief Number of total iterations performed.
+   */
   int _totalIterations;
-
-//  void writeResidual (
-//    const utils::DynVector& values,
-//    const utils::DynVector& oldValues );
-
+  
+  //  void writeResidual (
+  //    const utils::DynVector& values,
+  //    const utils::DynVector& oldValues );
+  
   friend class tests::ImplicitCouplingSchemeTest;
 };
 

@@ -4,36 +4,34 @@
 #include "ExplicitCouplingScheme.hpp"
 #include "com/Communication.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Parallel.hpp"
 
 namespace precice {
 namespace cplscheme {
 
 tarch::logging::Log ExplicitCouplingScheme::
-   _log("precice::cplscheme::ExplicitCouplingScheme");
+_log("precice::cplscheme::ExplicitCouplingScheme");
 
 ExplicitCouplingScheme:: ExplicitCouplingScheme
 (
-  double                maxTime,
-  int                   maxTimesteps,
-  double                timestepLength,
-  int                   validDigits,
-  const std::string&    firstParticipant,
-  const std::string&    secondParticipant,
-  const std::string&    localParticipantName,
-  com::PtrCommunication communication,
-  constants::TimesteppingMethod dtMethod)
-:
+ double                maxTime,
+ int                   maxTimesteps,
+ double                timestepLength,
+ int                   validDigits,
+ const std::string&    firstParticipant,
+ const std::string&    secondParticipant,
+ const std::string&    localParticipantName,
+ com::PtrCommunication communication,
+ constants::TimesteppingMethod dtMethod)
+  :
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits,
 		     firstParticipant, secondParticipant, localParticipantName,
 		     communication, 1, dtMethod)
 {}
 
-
 void ExplicitCouplingScheme:: sendState
 (
-  com::PtrCommunication communication,
-  int                   rankReceiver)
+ com::PtrCommunication communication,
+ int                   rankReceiver)
 {
   communication->startSendPackage(0);
   BaseCouplingScheme::sendState(communication, rankReceiver);
@@ -42,8 +40,8 @@ void ExplicitCouplingScheme:: sendState
 
 void ExplicitCouplingScheme:: receiveState
 (
-  com::PtrCommunication communication,
-  int                   rankSender)
+ com::PtrCommunication communication,
+ int                   rankSender)
 {
   communication->startSendPackage(0);
   BaseCouplingScheme::receiveState(communication, rankSender);
@@ -52,9 +50,9 @@ void ExplicitCouplingScheme:: receiveState
 
 std::string ExplicitCouplingScheme:: printCouplingState() const
 {
-   std::ostringstream os;
-   os << printBasicState() << " | " << printActionsState();
-   return os.str();
+  std::ostringstream os;
+  os << printBasicState() << " | " << printActionsState();
+  return os.str();
 }
 
 std::vector<std::string> ExplicitCouplingScheme:: getCouplingPartners() const
