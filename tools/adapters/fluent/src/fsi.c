@@ -254,9 +254,6 @@ void fsi_grid_motion(Domain* domain, Dynamic_Thread* dt, real time, real dtime)
   thread_index++;
   #endif /* !RP_HOST */
 
-  printf("  (%d) -- 3\n", myid);
-  fflush(stdout);
-
   #if !RP_NODE
   Message("  (%d) convergence=%d, iterate=%d, couplingOngoing=%d\n",
           myid, RP_Get_Integer("udf/convergence"), RP_Get_Integer("udf/iterate"),
@@ -315,10 +312,10 @@ void fsi_plot_coords()
             }
             if (NODE_MARK(node) != 1234){
               NODE_MARK(node) = 1234;
-              if (i < 2){
-                Message("coords: %.16E, %.16E\n", NODE_COORD(node)[0], NODE_COORD(node)[1]);
+              /*if (i < 2){*/
+                /*Message("coords: %.16E, %.16E\n", NODE_COORD(node)[0], NODE_COORD(node)[1]);*/
                 /*fflush(stdout);*/
-              }
+              /*}*/
               i++;
             }
           }
@@ -410,7 +407,7 @@ void count_dynamic_threads()
     }
     dynamic_thread = dynamic_thread->next;
   }
-  Message("  (%d) ... %d\n", myid, dynamic_thread_size);
+  printf("  (%d) ... %d\n", myid, dynamic_thread_size);
   printf("(%d) Leaving count_dynamic_threads()\n", myid);
 }
 
@@ -546,10 +543,10 @@ void gather_read_positions(Dynamic_Thread* dt)
             coords[dim] = NODE_COORD(node)[dim];
             initial_coords[array_index*ND_ND+dim] = coords[dim];
           }
-          if (array_index < 10){
+          /*if (array_index < 10){
             printf("  (%d) initial coord %.16E\n", myid, initial_coords[array_index*ND_ND]);
             fflush(stdout);
-          }
+          }*/
           node_index = precicec_setReadPosition(meshID, coords);
           displ_indices[array_index] = node_index;
           array_index++;
@@ -600,16 +597,16 @@ void read_displacements(Dynamic_Thread* dt)
           node = F_NODE(face, face_thread, n);
           if (NODE_POS_NEED_UPDATE(node)){
             NODE_POS_UPDATED(node);
-            if (i < 4){
+            /*if (i < 4){
               printf("  (%d) init %.16E, %.16E\n", myid, initial_coords[i],
                      initial_coords[i+1]);
               printf("  (%d) displ %.16E, %.16E\n", myid, displacements[i],
                      displacements[i+1]);
               fflush(stdout);
-            }
+            }*/
             for (dim=0; dim < ND_ND; dim++){
               NODE_COORD(node)[dim] = initial_coords[i+dim] + displacements[i+dim];
-              displacements[i+dim] = NODE_COORD(node)[dim] - NODE_COORD_N(node)[dim]; /* store delta for rbf mesh motion */
+              /* displacements[i+dim] = NODE_COORD(node)[dim] - NODE_COORD_N(node)[dim];  store delta for rbf mesh motion */
               if (fabs(displacements[i+dim]) > fabs(max_displ_delta)){
                 max_displ_delta = displacements[i + dim];
               }
@@ -807,10 +804,10 @@ void regather_read_positions(Dynamic_Thread* dt, int thread_new_size)
   precicec_readBlockVectorData(displID, all_size, all_indices, all_displ);
   precicec_getReadPositions(meshID, all_size, all_indices, all_coords);
   for (i=0; i < all_size*ND_ND; i++){
-    /*if (i < 4) {
-      printf("  (%d) displ %.16E\n", myid, all_displ[i]);
+    if (i < all_size*ND_ND) {
+      printf("  (%d) coods %.16E\n", myid, all_coords[i]);
       fflush(stdout);
-    }*/
+    }
     all_coords[i] += all_displ[i];
   }
 
@@ -824,7 +821,7 @@ void regather_read_positions(Dynamic_Thread* dt, int thread_new_size)
           NODE_MARK(node) = 12345;
           for (j=0; j < all_size; j++){ /* Find position index in all positions */
             for (dim=0; dim < ND_ND; dim++){ /* Vector equality comp */
-              if (i < 1){
+              if (i < 10){
                 printf("  (%d) %.16E == %.16E\n", myid, NODE_COORD(node)[dim],
                        all_coords[j*ND_ND+dim]);
                 fflush(stdout);

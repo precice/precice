@@ -1,0 +1,63 @@
+/**
+\page "Multilevel visualisation with tecplot"
+\author Tobias Neckel
+
+In order to be able to visualise multiple level data, we introduced a 
+corresponding adapter (GridEventHandle2TECWriter4FluidLevelAdapter) at least for 
+the fluid component and modified the tecplot-writer classes where necessary. 
+This work has been done by Atanas Atanasov.
+
+In the following, we just want to describe some main features to keep track of 
+what is going on.
+
+The basic idea is to run over the grid and write out (in one single run) a set 
+of levels individually. We use several zones in tecplot to accomplish this. In 
+the end, there is one single data file containing several zones corresponding to  
+the level information. 
+
+The configuration allows the specification of a minimum and maximum level to be 
+plotted individually, all higher levels (i.e. finer resolution) than the maximum 
+one are put into a default zone (working like the usual "cell-leaves-only" 
+adapter (GridEventHandle2TECWriter4FluidAdapter)). 
+
+The problem for plotting is, once again, the offset of the hanging nodes' 
+indices. This offset has to be specified in advance (constructor of the writer) 
+in order to be able to write out globally valid vertex numbers for hanging nodes 
+(i.e. non-persistent vertices) 
+which are necessary to set up the correct connectivity list for the cells (in 
+particular for the cells touching one hanging node). That is why we came up with 
+the following approach (see image below for levels 0, 1, and 2):
+- Write out coordinates of persistent nodes of each separate level in separate
+  temporary files. These files are merged into the beginning of the 
+  corresponding zone's coordinate data and filled up with dummy zero data. 
+  Analogue for the velocity data. 
+- Write out coordinates of non-persistent nodes of the complete tree in one 
+  single temporary file. Analogue for the velocities?
+- Write out cell connectivity list (having correct global vertex numbers for 
+  both persistent and non-persistent vertices due to offset of number of #all# 
+  persistent vertices of the complete grid). Analogue for cell data.  
+- Merge all temporary files for each level zone successively into the output 
+  file. 
+  
+\image html plotter_TECWriter_visMultilevel.gif
+  
+So the interpretation of this approach is as follows:
+- only one single grid run necessary
+- only the minimum persistent level data which is necessary is also written 
+  (green).
+- dummy zero data is written for the persistent data of the other zones (in 
+  order to get consistent number of vertices(-data)). This is specified to be 
+  multiple zero data by the special ?? format (light-red, not really 
+  multiplied!).
+- non-persistent data are written only once to a temporary file but 
+  included in all (individual) zones (red). For all other data than coordinates, 
+  this currently means having only 0.0 (again special format!?). 
+- cell data / connectivity lists are only written as far as they are necessary 
+  
+!! Open points
+- Binary writing ok?
+- Specification in config existent/working?
+- Special format for multiple (zero) data also working in velocities of 
+  non-persistent nodes?
+
+*/

@@ -1,0 +1,142 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_GRAMSCHMIDT_CPPH_
+#define _TARCH_LA_GRAMSCHMIDT_CPPH_
+
+#include "tarch/la/GramSchmidt.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Matrix>
+  typename utils::EnableIf<IsMatrix<Matrix>::value,
+  void
+>::Type modifiedGramSchmidt (
+  Matrix& A,
+  Matrix& Q,
+  Matrix& R
+) {
+  typedef MatrixTraits<Matrix> Traits;
+  assertion (Traits::rows(A) == Traits::rows(Q));
+  assertion (Traits::cols(A) == Traits::cols(Q));
+  assertion (Traits::cols(A) == Traits::rows(R));
+  assertion (Traits::cols(A) == Traits::cols(R));
+
+  for (int i=0; i < Traits::rows(A); i++){
+    Traits::elem(i,0,Q) = Traits::celem(i,0,A);
+  }
+
+  for (int k=0; k < Traits::cols(A); k++){
+    // Compute norm of k-th column vector of (modified) A
+    Traits::elem(k,k,R) = 0.0;
+    for (int i=0; i < Traits::rows(A); i++){
+      Traits::elem(k,k,R) += std::pow(Traits::celem(i,k,A), 2);
+    }
+    Traits::elem(k,k,R) = std::sqrt(Traits::celem(k,k,R));
+
+    // Normalize k-th column of matrix Q
+    for (int i=0; i < Traits::rows(A); i++){
+      Traits::elem(i,k,Q) = Traits::celem(i,k,A) / Traits::celem(k,k,R);
+    }
+
+    // Compute entries in R and next orthonormal vector
+    for (int j=k+1; j < Traits::cols(A); j++){
+      // Compute entries of R from current Q and A
+      for (int i=0; i < Traits::rows(A); i++){
+        Traits::elem(k,j,R) += Traits::celem(i,k,Q) * Traits::celem(i,j,A);
+      }
+      // Subtract contributions from computed to open orthonormal vectors
+      for (int i=0; i < Traits::rows(A); i++){
+        Traits::elem(i,j,A) -= Traits::celem(i,k,Q) * Traits::celem(k,j,R);
+      }
+    }
+  }
+}
+
+//template< typename MAT_A_T, typename MAT_Q_T, typename MAT_R_T >
+//typename boost::enable_if_c<
+//   IsMatrix<MAT_A_T>::value && IsMatrix<MAT_Q_T>::value && IsMatrix<MAT_R_T>::value
+//>::type modifiedGramSchmidtC
+//(
+//   MAT_A_T & A,
+//   MAT_Q_T & Q,
+//   MAT_R_T & R )
+//{
+//   typedef MatrixTraits<MAT_A_T> ATraits;
+//   typedef MatrixTraits<MAT_Q_T> QTraits;
+//   typedef MatrixTraits<MAT_R_T> RTraits;
+//   typedef MatrixColumn<MAT_A_T> ACol;
+//   typedef MatrixColumn<MAT_Q_T> QCol;
+//   typedef MatrixColumn<MAT_R_T> RCol;
+//
+//   assertion ( ATraits::rows(A) == QTraits::rows(Q) );
+//   assertion ( ATraits::cols(A) == QTraits::cols(Q) );
+//   assertion ( ATraits::cols(A) == RTraits::rows(R) );
+//   assertion ( ATraits::cols(A) == RTraits::cols(R) );
+//
+//   QCol Qcol0 ( Q, 0 );
+//   assign ( Qcol0, ACol(A,0) );
+//
+//   for (int k=0; k < ATraits::cols(A); k++) {
+//      ACol Acolk ( A, k );
+//      QCol Qcolk ( Q, k );
+//
+//      // Compute norm of k-th column vector of (modified) A
+//      RTraits::elem(k,k,R) = norm ( Acolk );
+//
+//      // Normalize k-th column of matrix Q
+////      precicePrint ( "Assigning matrix columns!" );
+////      assign ( Qcolk, Acolk );
+//      assign ( Qcolk, Acolk );
+//      Qcolk /= RTraits::celem(k,k,R);
+//
+//      // Compute entries in R and next orthonormal vector
+//      for (int j=k+1; j < ATraits::cols(A); j++) {
+//         // Compute entries of R from current Q and A
+//         RTraits::elem(k,j,R) = dot( Qcolk, ACol(A,j) );
+//         // Subtract contributions from computed to open orthonormal vectors
+//         for (int i=0; i < ATraits::rows(A); i++) {
+//            ATraits::elem(i,j,A) -= QTraits::celem(i,k,Q) * RTraits::celem(k,j,R);
+//         }
+//      }
+//   }
+//}
+
+//template< typename Type >
+//void tarch::la::modifiedGramSchmidt(
+//  DynamicColumnMatrix<Type>& A,
+//  DynamicColumnMatrix<Type>& Q,
+//  DynamicColumnMatrix<Type>& R
+//) {
+//  assertion ( A.rows() == Q.rows() );
+//  assertion ( A.cols() == Q.cols() );
+//  assertion ( A.cols() == R.rows() );
+//  assertion ( A.cols() == R.cols() );
+//
+//  Q.getColumn(0) = A.getColumn(0);
+//  for (int k=0; k < A.cols(); k++) {
+//    DynamicVector<Type> & Qcol = Q.getColumn(k);
+//    // Compute norm of k-th column vector of (modified) A
+//    R(k,k) = A.getColumn(k).norm();
+//    // Normalize k-th column of matrix Q
+//    Qcol = A.getColumn(k);
+//    Qcol /= R(k,k);
+//    // Compute entries in R and next orthonormal vector
+//    for (int j=k+1; j < A.cols(); j++) {
+//      // Compute entries of R from current Q and A
+//      R(k,j) = dot(Q.getColumn(k), A.getColumn(j));
+//      // Subtract contributions from computed to open orthonormal vectors
+//      DynamicVector<Type> & Acol = A.getColumn(j);
+//      for (int i=0; i < A.rows(); i++) {
+//        Acol(i) -= Qcol(i) * R(k,j);
+//      }
+//      //A.getColumn(j) -= Q.getColumn(k) * R(k,j);
+//    }
+//  }
+//}
+
+}}
+
+
+#endif /* PRECICE_LA_GRAMSCHMIDT_HPP */

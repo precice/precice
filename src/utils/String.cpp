@@ -3,6 +3,8 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "String.hpp"
 #include "tarch/Assertions.h"
+#include "boost/algorithm/string/split.hpp"
+#include "boost/algorithm/string/classification.hpp"
 
 namespace precice {
 namespace utils {
@@ -12,7 +14,8 @@ std::string wrapText (
   int                linewidth,
   int                indentation )
 {
-  std::vector<std::string> tokens = tokenize(text, " ");
+  std::vector<std::string> tokens;
+  boost::algorithm::split(tokens, text, boost::algorithm::is_space());
   assertion((int)tokens.size() > 0);
   std::string wrapped;
   int length = 0;
@@ -37,28 +40,6 @@ std::string wrapText (
   }
   wrapped += tokens.back();
   return wrapped;
-}
-
-std::vector<std::string> tokenize
-(
-   const std::string & toTokenize,
-   const std::string & delimiter )
-{
-   std::string::size_type lengthDelimiter = delimiter.size();
-   std::vector<std::string> tokens;
-   std::string::size_type startPosition = 0;
-   std::string::size_type location = toTokenize.find ( delimiter, startPosition );
-   while ( location != std::string::npos ) {
-      if ( location > startPosition ) {
-         tokens.push_back ( toTokenize.substr(startPosition, location - startPosition) );
-      }
-      startPosition = location + lengthDelimiter;
-      location = toTokenize.find ( delimiter, startPosition );
-   }
-   if ( (location > startPosition) && (startPosition != toTokenize.size()) ) {
-      tokens.push_back ( toTokenize.substr(startPosition, location - startPosition) );
-   }
-   return tokens;
 }
 
 std::string& checkAppendExtension

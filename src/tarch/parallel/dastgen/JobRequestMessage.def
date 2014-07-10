@@ -1,0 +1,16 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+Packed-Type: short int;
+
+/**
+ * @author Tobias Weinzierl
+ * @version $Revision: 1.3 $
+ */
+class tarch::parallel::messages::JobRequestMessage {
+  /**
+   * Empty messages are not supported by MPI. Thus, I introduced this dummy
+   * variable never read nor written. 
+   */
+  parallelise persistent packed bool dummy;
+};

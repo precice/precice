@@ -253,6 +253,7 @@ void precicef_set_vertices_(
   double*       positions,
   int*          positionIDs );
 
+
 /**
  * @brief See precice::SolverInterface::setMeshEdge().
  *

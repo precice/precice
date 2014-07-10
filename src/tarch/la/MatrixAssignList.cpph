@@ -1,0 +1,63 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_MATRIXASSSIGNLIST_CPPH_
+#define _TARCH_LA_MATRIXASSSIGNLIST_CPPH_
+
+#include "tarch/la/MatrixAssignList.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Matrix>
+  typename utils::EnableIf<IsMatrix<Matrix>::value,
+  MatrixAssignList<Matrix>
+>::Type assignList (
+  Matrix& matrix
+) {
+  return MatrixAssignList<Matrix>(matrix);
+}
+
+template<typename Matrix>
+MatrixAssignList<Matrix>::MatrixAssignList ( Matrix & matrix ) :
+  _matrix(matrix), _rowIndex(0), _colIndex(0)
+{}
+
+template<typename Matrix>
+MatrixAssignList<Matrix>::~MatrixAssignList()
+{
+  assertion ( _rowIndex == Traits::rows(_matrix) );
+  assertion ( _colIndex == 0 );
+}
+
+template<typename Matrix>
+MatrixAssignList<Matrix>& MatrixAssignList<Matrix>::operator= (const typename Traits::Scalar & toAssign)
+{
+  assertion ( _rowIndex < Traits::rows(_matrix) );
+  assertion ( _colIndex < Traits::cols(_matrix) );
+  Traits::elem(_rowIndex, _colIndex, _matrix) = toAssign;
+  _colIndex ++;
+  if (_colIndex == Traits::cols(_matrix)) {
+    _colIndex = 0;
+    _rowIndex ++;
+  }
+  return *this;
+}
+
+template<typename Matrix>
+MatrixAssignList<Matrix>& MatrixAssignList<Matrix>::operator, (const typename Traits::Scalar & toAssign)
+{
+  assertion (_rowIndex < Traits::rows(_matrix));
+  assertion (_colIndex < Traits::cols(_matrix));
+  Traits::elem(_rowIndex, _colIndex, _matrix) = toAssign;
+  _colIndex ++;
+  if (_colIndex == Traits::cols(_matrix)) {
+    _colIndex = 0;
+    _rowIndex ++;
+  }
+  return *this;
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_MATRIXASSSIGNLIST_CPPH_ */

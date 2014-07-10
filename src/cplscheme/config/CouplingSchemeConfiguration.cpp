@@ -655,7 +655,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
       accessor, com, _config.dtMethod );
-  scheme->setCheckointTimestepInterval ( _config.checkpointTimestepInterval );
+  scheme->setCheckPointTimestepInterval ( _config.checkpointTimestepInterval );
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -673,7 +673,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
       accessor, com, _config.dtMethod );
-  scheme->setCheckointTimestepInterval ( _config.checkpointTimestepInterval );
+  scheme->setCheckPointTimestepInterval ( _config.checkpointTimestepInterval );
 
   addDataToBeExchanged(*scheme, accessor);
 
@@ -693,7 +693,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
       accessor, com, _config.maxIterations, _config.dtMethod );
-  scheme->setCheckointTimestepInterval(_config.checkpointTimestepInterval);
+  scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
   scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 
   addDataToBeExchanged(*scheme, accessor);
@@ -740,7 +740,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
       accessor, com, _config.maxIterations, _config.dtMethod );
-  scheme->setCheckointTimestepInterval(_config.checkpointTimestepInterval);
+  scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
   scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 
   addDataToBeExchanged(*scheme, accessor);

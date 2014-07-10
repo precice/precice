@@ -1,0 +1,178 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_VECTORSCALAROPERATIONS_CPPH_
+#define _TARCH_LA_VECTORSCALAROPERATIONS_CPPH_
+
+#include "tarch/la/VectorScalarOperations.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector&>::Type operator*= (
+  Vector&                                      vector,
+  const typename VectorTraits<Vector>::Scalar& scalar
+) {
+  typedef VectorTraits<Vector> Traits;
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,vector) *= scalar;
+  }
+  return vector;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector&>::Type operator/= (
+  Vector&                                      vector,
+  const typename VectorTraits<Vector>::Scalar& scalar
+) {
+  typedef VectorTraits<Vector> Traits;
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,vector) /= scalar;
+  }
+  return vector;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector&>::Type operator+= (
+  Vector&                                      vector,
+  const typename VectorTraits<Vector>::Scalar& scalar
+) {
+  typedef VectorTraits<Vector> Traits;
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,vector) += scalar;
+  }
+  return vector;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector&>::Type operator-= (
+  Vector &                                      vector,
+  const typename VectorTraits<Vector>::Scalar & scalar
+) {
+  typedef VectorTraits<Vector> Traits;
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,vector) -= scalar;
+  }
+  return vector;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector>::Type operator* (
+  const Vector&                                vector,
+  const typename VectorTraits<Vector>::Scalar& scalar
+) {
+  typedef VectorTraits<Vector> Traits;
+  Vector result(vector);
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,result) = Traits::celem(i,vector) * scalar;
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector>::Type operator/ (
+  const Vector&                                vector,
+  const typename VectorTraits<Vector>::Scalar& scalar
+) {
+  typedef VectorTraits<Vector> Traits;
+  Vector result(vector);
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,result) = Traits::celem(i,vector) / scalar;
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector>::Type operator+ (
+  const Vector&                                vector,
+  const typename VectorTraits<Vector>::Scalar& scalar
+) {
+  typedef VectorTraits<Vector> Traits;
+  Vector result(vector);
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,result) = Traits::celem(i,vector) + scalar;
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector>::Type operator- (
+  const Vector&                                vector,
+  const typename VectorTraits<Vector>::Scalar& scalar
+) {
+  typedef VectorTraits<Vector> Traits;
+  Vector result(vector);
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,result) = Traits::celem(i,vector) - scalar;
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector>::Type operator* (
+  const typename VectorTraits<Vector>::Scalar& scalar,
+  const Vector&                                vector
+) {
+  typedef VectorTraits<Vector> Traits;
+  Vector result(vector);
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,result) = Traits::celem(i,vector) * scalar;
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector>::Type operator+ (
+  const typename VectorTraits<Vector>::Scalar& scalar,
+  const Vector&                                vector
+) {
+  typedef VectorTraits<Vector> Traits;
+  Vector result(vector);
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,result) = Traits::celem(i,vector) + scalar;
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector>::Type operator- (
+  const typename VectorTraits<Vector>::Scalar& scalar,
+  const Vector&                                vector
+) {
+  typedef VectorTraits<Vector> Traits;
+  Vector result(vector);
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,result) = scalar - Traits::celem(i,vector);
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+Vector>::Type operator% (
+    const Vector&                                vector,
+    const typename VectorTraits<Vector>::Scalar& scalar
+){
+  typedef VectorTraits<Vector> Traits;
+  Vector result(vector);
+  for (int i=0; i < Traits::size(vector); i++) {
+    Traits::elem(i,result) = Traits::celem(i,vector) % scalar;
+  }
+    return result;
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_VECTORSCALAROPERATIONS_CPPH_ */

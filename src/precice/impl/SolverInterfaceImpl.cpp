@@ -46,7 +46,6 @@
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/String.hpp"
 #include "mapping/Mapping.hpp"
 #include <set>
 #include <limits>

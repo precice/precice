@@ -1,0 +1,26 @@
+#include "tarch/tests/TestCaseRegistry.h"
+
+
+template <class TestName>
+tarch::tests::TestCaseFactory<TestName>::TestCaseFactory(
+  Type type,
+  const std::string& fullQualifiedTestName
+) {
+  _test = new TestName;
+  _test->setTestCaseName(fullQualifiedTestName);
+
+  switch (type) {
+    case IntegrationTest:
+      tarch::tests::TestCaseRegistry::getInstance().addIntegrationTestCase( fullQualifiedTestName, _test );
+      break;
+    case UnitTest:
+      tarch::tests::TestCaseRegistry::getInstance().addTestCase( fullQualifiedTestName, _test );
+      break;
+  }
+}
+
+
+template <class TestName>
+tarch::tests::TestCaseFactory<TestName>::~TestCaseFactory() {
+  delete _test;
+}

@@ -1,0 +1,29 @@
+/**
+
+ @dir "T-Arch"
+ 
+T-Arch stands for technical architectures and encloses various helping functionalities 
+which are used in Peano as well as in other pojects. 
+ 
+ @image html MrT.jpg
+
+The following table gives a brief over all components and their usage.
+
+|| Component  || Function || Authors and/or detailed knowledge || Detailed Documentation available
+| argument | command line parser (used only by scenario generator | ML | yes
+| compiler | specific compiler settings (for Peano and also maybe other t-arch components | TW | no
+| configuration | top-level xml-configuration reader interface (functionality has to be implemented in specific project) | TW | no
+| irr | xml reader | extern, modified by TW (BG, PN) | no
+| la | dynamic and static vectors and matrices, basic LA operations (Gram-Schmidt, LU decomposition) | TW, BG | yes
+| logging | logger, to configure over logger-tag | TW, AA | yes
+| multicore | shared memory parallelization (services e.g. semaphore, lock) | TW | yes
+| parallel | distributed memory parallelization | TW, ML | yes
+| plotter | write out data in different formats, grid data (e.g. vtk) as well as global data (e.g. table with drag coeff.) | TW, PN, ML | no
+| services | ? | TW | yes?
+| tests | unit tests | WE, TW | some (also Dissertation BG)
+| timing | time measurement | TW, ML | some
+| utils | only needed by la | BG | some
+| xmlwriter | xml writer ?| ML | no 
+ 
+ 
+ */

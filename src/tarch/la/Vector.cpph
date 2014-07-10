@@ -1,0 +1,174 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_VECTOR_CPPH_
+#define _TARCH_LA_VECTOR_CPPH_
+
+#include "Vector.h"
+#include "tarch/Assertions.h"
+#include "tarch/la/traits/VectorTraits.h"
+
+namespace tarch {
+namespace la {
+
+template<int Size, typename Scalar>
+Vector<Size,Scalar>::Vector ():
+  _values()
+{}
+
+template<int Size, typename Scalar>
+template<typename VECTOR>
+  typename utils::EnableIf< IsVector<VECTOR>::value,
+  Vector<Size,Scalar>&
+>::Type Vector<Size,Scalar>::operator= (
+  const VECTOR& toAssign
+) {
+  assign(*this) = toAssign;
+  return *this;
+}
+
+template<int Size, typename Scalar>
+VectorAssignList<Vector<Size,Scalar> > Vector<Size,Scalar>::operator=(
+  const Scalar& value
+) {
+  assertion(Size > 0);
+  _values[0] = value;
+  return VectorAssignList<Vector<Size,Scalar> >(*this,1);
+}
+
+template<int Size, typename Scalar>
+template<typename VECTOR>
+Vector<Size,Scalar>::Vector (
+  const VECTOR& toCopy,
+  typename utils::EnableIf< IsVector<VECTOR>::value,void*>::Type
+) :
+  _values()
+{
+  assign(*this) = toCopy;
+}
+
+
+template<int Size, typename Scalar>
+Vector<Size,Scalar>::Vector
+(
+  const Scalar& initialValue
+) :
+  _values()
+{
+  for (int i=0; i < Size; i++) {
+    _values[i] = initialValue;
+  }
+}
+
+template<int Size, typename Scalar>
+Vector<Size,Scalar>::Vector
+(
+  const Scalar& initialValue0,
+  const Scalar& initialValue1
+) :
+  _values()
+{
+  assertion (Size == 2);
+  _values[0] = initialValue0;
+  _values[1] = initialValue1;
+}
+
+template<int Size, typename Scalar>
+Vector<Size,Scalar>::Vector
+(
+  const Scalar& initialValue0,
+  const Scalar& initialValue1,
+  const Scalar& initialValue2
+) :
+  _values()
+{
+  assertion (Size == 3);
+  _values[0] = initialValue0;
+  _values[1] = initialValue1;
+  _values[2] = initialValue2;
+}
+
+template<int Size, typename Scalar>
+Vector<Size,Scalar>::Vector
+(
+  const Scalar& initialValue0,
+  const Scalar& initialValue1,
+  const Scalar& initialValue2,
+  const Scalar& initialValue3
+) :
+  _values()
+{
+  assertion (Size == 4);
+  _values[0] = initialValue0;
+  _values[1] = initialValue1;
+  _values[2] = initialValue2;
+  _values[3] = initialValue3;
+}
+
+//template<int Size, typename Scalar>
+//template<typename VECTOR>
+//  typename utils::EnableIf<IsVector<VECTOR>::value,
+//Vector<Size,Scalar>&>::Type Vector<Size,Scalar>::operator= (const VECTOR& assign)
+//{
+//  typedef VectorTraits<VECTOR> Traits;
+//  assertion ( Traits::size(assign) == Size );
+//  for (int i=0; i < Size; i++) {
+//    _values[i] = Traits::celem(i,assign);
+//  }
+//  return *this;
+//}
+
+//template<int Size, typename Scalar>
+//Vector<Size,Scalar>& Vector<Size,Scalar>::operator= (const Scalar& assign)
+//{
+//  for (int i=0; i < Size; i++) {
+//    _values[i] = assign;
+//  }
+//  return *this;
+//}
+
+template<int Size, typename Scalar>
+int Vector<Size,Scalar>:: size () const
+{
+  return Size;
+}
+
+template<int Size, typename Scalar>
+const Scalar & Vector<Size,Scalar>:: operator[] ( int index ) const
+{
+//#pragma GCC diagnostic push // Save Warning configuration
+//#pragma GCC diagnostic ignored "-Warray-bounds"
+  assertion ( index >= 0 );
+  assertion ( index < Size );
+  return _values[index];
+//#pragma GCC diagnostic pop
+}
+
+template<int Size, typename Scalar>
+Scalar & Vector<Size,Scalar>:: operator[] ( int index )
+{
+  assertion ( index >= 0 );
+  assertion ( index < Size );
+  return _values[index];
+}
+
+template<int Size, typename Scalar>
+const Scalar & Vector<Size,Scalar>:: operator() ( int index ) const
+{
+  assertion ( index >= 0 );
+  assertion ( index < Size );
+  return _values[index];
+}
+
+template<int Size, typename Scalar>
+Scalar & Vector<Size,Scalar>:: operator() ( int index )
+{
+  assertion ( index >= 0 );
+  assertion2 ( index < Size, index, Size );
+  return _values[index];
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_VECTOR_CPPH_ */
+

@@ -1,0 +1,26 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+
+package tarch {
+  package logging {
+    package cca {
+      interface Log {
+        debug  (in int timeStamp, in string timeStampHumanReadable, in int rank, in string machine, in string trace, in string message);
+        info   (in int timeStamp, in string timeStampHumanReadable, in int rank, in string machine, in string trace, in string message);
+        warning(in int timeStamp, in string timeStampHumanReadable, in int rank, in string machine, in string trace, in string message);
+        error  (in int timeStamp, in string timeStampHumanReadable, in int rank, in string machine, in string trace, in string message);
+      }
+
+      interface LogFilter {
+        addDebugBlackListEntry(in int rank, in string trace );
+        addDebugWhiteListEntry(in int rank, in string trace );
+
+        addInfoBlackListEntry(in int rank, in string trace );
+        addInfoWhiteListEntry(in int rank, in string trace );
+            
+        clearFilterList();
+      }
+    }
+  }
+}

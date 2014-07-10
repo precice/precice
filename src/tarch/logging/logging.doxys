@@ -1,0 +1,118 @@
+/**
+ @page "03. Adding Behaviour"
+ 
+ !!! Configuration Files
+ 
+ PeProt gives you a configuration blueprint that you can later adopt to fit to 
+ your solver's needs. We'll start with a short example how to do so. In this 
+ example, we take existing configurations and add them to our configuration.
+ 
+ Each program run corresponds to an object of a corresponding top level 
+ configuration, i.e. a class inheriting from tarch::configuration::TopLevelConfiguration.
+ This class corresponds to a top level xml tag.
+ It is generated automatically by PeProt.
+ All the PDE specific stuff of the configuration will be subtags of this tag in 
+ the xml file, and the top level configuration class will hold a class attribute 
+ for each of this tags.
+ 
+ First, open your configuration tag and add a few lines on logging. For example,
+ \code
+<?xml version="1.0"?>
+<peano-configuration>
+  <run-puregrid-on-regular-grid>
+  </run-puregrid-on-regular-grid>
+</peano-configuration>
+\endcode  
+ becomes
+ \code
+<?xml version="1.0"?>
+<peano-configuration>
+  <run-puregrid-on-regular-grid>
+    <!--
+      - Switches debug output from different components on / off. If no switch is
+      - defined for a component in Debug mode, the default is on, i.e. the filter
+      - works with a black list.
+      --> 
+    <log-filter target="debug" component="peano::kernel"  switch="off" /> -->
+  </run-puregrid-on-regular-grid>
+</peano-configuration>
+ \endcode
+ 
+ Your code won't accept the xml file anymore, as it does not recognise the new
+ subtag log-filter. The runtime error will look similar to "invalid top level tag". 
+ However, there's already a class that can interprete this 
+ tag. It is tarch::logging::configurations::LogFilterConfiguration. Open your 
+ top level configuration header and add the top level configuration class an 
+ attribute of type LogFilterConfiguration.
+ \code
+   #include "tarch/logging/configurations/LogFilterConfiguration.h"
+   ...
+   class peano::applications::puregrid::configurations::TestConfigurationForRegularGrid: ...
+     private:
+       tarch::logging::configurations::LogFilterConfiguration       _logConfiguration;
+     public:
+       ...
+       
+       tarch::logging::configurations::LogFilterConfiguration       getLogConfiguration() const;
+ \endcode
+ Also add a getter for the corresponding attribute.
+ 
+ The implementation of the getter is straightforward
+ \code
+ tarch::logging::configurations::LogFilterConfiguration
+   peano::applications::puregrid::configurations::TestConfigurationForRegularGrid::getLogConfiguration() const {
+   return _logConfiguration;
+ }
+ \endcode
+ and there's nothing interesting about it. However, our top level configuration 
+ has to know that it has to delegate the parsing of the corresponding xml 
+ entries to its attribute. Change to the implementation of parseSubtag() and 
+ insert something similar to the following code:
+ \code 
+  while(
+    (xmlReader->getNodeType()!=tarch::irr::io::EXN_ELEMENT_END) &&
+    (xmlReader->read() )
+  ) {
+    if ( xmlReader->getNodeType()==tarch::irr::io::EXN_ELEMENT ) {
+      if ( xmlReader->getNodeName() == _logConfiguration.getTag() ) {
+        _logConfiguration.parseSubtag(xmlReader);
+      }
+      // @todo Here, we can add configurations for further subtags
+    }
+  }
+
+  if (
+    (xmlReader->getNodeType()!=tarch::irr::io::EXN_ELEMENT_END) ||
+    (xmlReader->getNodeName()!=getTag())
+  ) {
+   // @todo Plot an error message and make isValid() return false.
+  }
+ \endcode
+ 
+ Finally, we have to adopt our runner to use the extended configuration 
+ functionality. Thus, open your runner and go straight to implementation of the 
+ run() operation. You should analyse and interprete your configuration there to 
+ ensure that (on a parallel computer) each node configures the same way. Insert
+ the following lines right at the beginning of your file:
+ \code
+  tarch::logging::CommandLineLogger::getInstance().addFilterListEntries( configuration.getLogConfiguration().getBlacklist() );
+ \endcode
+ and
+ \code
+   tarch::logging::CommandLineLogger::getInstance().clearFilterList();
+ \endcode
+ right before the code exists.
+  
+
+ Here are some further remarks:
+ 
+ - If you wanna add configuration of your own, have a look at 
+   tarch::logging::configurations::LogFilterConfiguration and implement a 
+   corresponding class yourown. Then, integrate it into your top level 
+   configuration.
+ - You should not plot meaningful error messages if your configuration file 
+   ain't valid.
+ - Adopt toXMLString() as the comment points out.  
+  
+ 
+ */

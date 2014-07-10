@@ -24,65 +24,8 @@ StringTest:: StringTest()
 void StringTest:: run()
 {
   PRECICE_MASTER_ONLY {
-    testMethod(testTokenize);
     testMethod(testWrapText);
     testMethod(testCheckAppendExtension);
-  }
-}
-
-void StringTest:: testTokenize()
-{
-  preciceTrace("tokenize()");
-
-  std::vector<std::string> tokens;
-
-  std::string stringA("This-is-a-test");
-  std::string delimiterA("-");
-  tokens = tokenize ( stringA, delimiterA);
-  validateEquals(tokens.size(), 4);
-  validateEquals(tokens[0], std::string("This"));
-  validateEquals(tokens[1], std::string("is"));
-  validateEquals(tokens[2], std::string("a"));
-  validateEquals(tokens[3], std::string("test"));
-
-  std::string stringB("This::is::another::test");
-  std::string delimiterB("::");
-  tokens = tokenize(stringB, delimiterB);
-  validateEquals(tokens.size(), 4);
-  validateEquals(tokens[0], std::string("This"));
-  validateEquals(tokens[1], std::string("is"));
-  validateEquals(tokens[2], std::string("another"));
-  validateEquals(tokens[3], std::string("test"));
-
-  std::string stringC("::Test");
-  std::string delimiterC("::");
-  tokens = tokenize(stringC, delimiterC);
-  validateEquals(tokens.size(), 1 );
-  validateEquals(tokens[0], std::string("Test"));
-
-  std::string stringD("Test::");
-  std::string delimiterD("::");
-  tokens = tokenize(stringD, delimiterD);
-  validateEquals(tokens.size(), 1);
-  validateEquals(tokens[0], std::string("Test"));
-
-  std::string stringE("::This::is:another::test::");
-  std::string delimiterE("::");
-  tokens = tokenize ( stringE, delimiterE);
-  validateEquals(tokens.size(), 3);
-  validateEquals(tokens[0], std::string("This"));
-  validateEquals(tokens[1], std::string("is:another"));
-  validateEquals(tokens[2], std::string("test"));
-
-  {
-    std::string string(" This is another test ");
-    std::string delimiter(" ");
-    tokens = tokenize(string, delimiter);
-    validateEquals(tokens.size(), 4 );
-    validateEquals(tokens[0], std::string("This"));
-    validateEquals(tokens[1], std::string("is"));
-    validateEquals(tokens[2], std::string("another"));
-    validateEquals(tokens[3], std::string("test"));
   }
 }
 

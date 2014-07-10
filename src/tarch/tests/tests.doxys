@@ -1,0 +1,23 @@
+/**
+@dir "tests"
+
+!! Unit test component
+
+This component holds a unit test environment and an XML configuration using the
+component configuration.
+
+!!! Usage
+
+When a class X should be tested, a unit test class, e.g., named XTest has to be
+created which is derived from TestCase. XTest implements the method run()
+of TestCase to trigger the tests and uses the macro runMethod(testMethodName) in
+method run() to call a test method implemented in XTest. This enables the correct
+logging output during the test cases. In order to register XTest as unit test, the
+macro registerTest(namespaceofxtest::XTest) has to be called in the .c/.cpp 
+implementation of XTest. It is possible to distinguish unit and integration tests,
+where the latter is recognized by using a different registration macro called
+registerIntegrationTest(...).
+
+To see an example, check out the classes in la/tests/.
+
+*/

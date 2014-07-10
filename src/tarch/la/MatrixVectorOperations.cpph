@@ -1,0 +1,145 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_MATRIXVECTOROPERATIONS_CPPH_
+#define _TARCH_LA_MATRIXVECTOROPERATIONS_CPPH_
+
+#include "MatrixVectorOperations.h"
+#include "MatrixOperations.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Matrix, typename Vector, typename Result>
+  typename utils::EnableIf<
+  IsMatrix<Matrix>::value && IsVector<Vector>::value && IsVector<Result>::value,
+  Result&
+>::Type multiply (
+  const Matrix& matrix,
+  const Vector& vector,
+  Result&       result )
+{
+  assertion ((void*)(&vector) != (void*)(&result));
+  typedef MatrixTraits<Matrix> MTraits;
+  typedef VectorTraits<Vector> VTraits;
+  typedef VectorTraits<Result> RTraits;
+  assertion2 (RTraits::size(result) == MTraits::rows(matrix), RTraits::size(result), MTraits::rows(matrix) );
+  assertion2 (VTraits::size(vector) == MTraits::cols(matrix), VTraits::size(vector), MTraits::cols(matrix));
+  assign(result) = 0;
+  for (int i=0; i < MTraits::rows(matrix); i++) {
+    for (int j=0; j < MTraits::cols(matrix); j++) {
+      RTraits::elem(i,result) += MTraits::celem(i,j,matrix) * VTraits::celem(j,vector);
+    }
+  }
+  return result;
+}
+
+template<typename Matrix, typename Vector>
+  typename utils::EnableIf<
+  IsMatrix<Matrix>::value && IsVector<Vector>::value,
+  Vector
+>::Type operator* (
+  const Matrix& matrix,
+  const Vector& vector )
+{
+  Vector result (vector);
+  assign(result) = 0;
+  return multiply(matrix,vector,result);
+}
+
+template<typename Matrix, typename Vector, typename Result>
+  typename utils::EnableIf<
+  IsMatrix<Matrix>::value && IsVector<Vector>::value && IsVector<Vector>::value,
+  Result&
+>::Type solveSystem3x3 (
+  const Matrix& matrix,
+  const Vector& rhs,
+  Result&       result
+) {
+  typedef MatrixTraits<Matrix> MT;
+  typedef VectorTraits<Vector> VT;
+  typedef VectorTraits<Result> ResT;
+  assertion (MT::rows(matrix) == VT::size(rhs));
+  assertion (MT::cols(matrix) == ResT::size(result));
+  typename MT::Scalar detMatrix = det3x3(matrix);
+
+  for (int col=0; col < 3; col++) {
+    Matrix mod (matrix);
+    for (int row=0; row < 3; row++) {
+      MT::elem(row,col,mod) = VT::celem(row,rhs);
+    }
+    ResT::elem(col,result) = det3x3(mod) / detMatrix;
+  }
+  return result;
+}
+
+//template< typename Matrix, typename Vector, typename Result >
+//typename boost::enable_if_c<
+//   IsMatrix<Matrix>::value && IsVector<Vector>::value && IsVector<Result>::value
+//   && IsColumnMatrix<Matrix>::value
+//>::type multMatrixVector
+//(
+//   const Matrix & matrix,
+//   const Vector & vector,
+//   Result & result)
+//{
+//   typedef MatrixTraits<Matrix> MatTraits;
+//   typedef VectorTraits<Vector> VecTraits;
+//   typedef VectorTraits<Result> ResultTraits;
+//   preciceAssertion ( ResultTraits::size(result) == MatTraits::rows(matrix) );
+//   preciceAssertion ( VecTraits::size(vector) == MatTraits::cols(matrix) );
+//   for ( size_t j=0; j < MatTraits::cols(matrix); j++ ) {
+//      for ( size_t i=0; i < MatTraits::rows(matrix); i++ ) {
+//         ResultTraits::elem(i,result) +=
+//               MatTraits::celem(i,j,matrix) * VecTraits::celem(j,vector);
+//      }
+//   }
+//}
+
+template<typename Matrix, typename Vector>
+  typename utils::EnableIf< IsMatrix<Matrix>::value && IsVector<Vector>::value,
+  void
+>::Type forwardSubstitution (
+  const Matrix& matrix,
+  const Vector& rhs,
+  Vector&       x
+) {
+  typedef MatrixTraits<Matrix> MT;
+  typedef VectorTraits<Vector> VT;
+  assertion (MT::cols(matrix) == MT::rows(matrix));
+  assertion (MT::cols(matrix) == VT::size(rhs));
+  assertion (MT::cols(matrix) == VT::size(x));
+  VT::elem(0,x) = VT::celem(0,rhs);
+  for (int i=1; i < MT::rows(matrix); i++){
+    VT::elem(i,x) = VT::celem(i,rhs);
+    for (int j=0; j < i; j++ ){
+      VT::elem(i,x) -= MT::celem(i,j,matrix) * VT::celem(j,x);
+    }
+  }
+}
+
+template<typename Matrix, typename Vector>
+  typename utils::EnableIf< IsMatrix<Matrix>::value && IsVector<Vector>::value,
+  void
+>::Type backSubstitution (
+  const Matrix& matrix,
+  const Vector& rhs,
+  Vector&       x
+) {
+  typedef MatrixTraits<Matrix> MT;
+  typedef VectorTraits<Vector> VT;
+  assertion (MT::cols(matrix) == MT::rows(matrix));
+  assertion (MT::cols(matrix) == VT::size(rhs));
+  assertion (MT::cols(matrix) == VT::size(x));
+  for (int i=MT::rows(matrix)-1; i >= 0; i--){
+    VT::elem(i,x) = VT::celem(i,rhs);
+    for (int j=i+1; j < MT::rows(matrix); j++ ){
+      VT::elem(i,x) -= MT::celem(i,j,matrix) * VT::celem(j,x);
+    }
+    VT::elem(i,x) /= MT::celem(i,i,matrix);
+  }
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_MATRIXVECTOROPERATIONS_CPPH_ */

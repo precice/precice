@@ -1,0 +1,298 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_VECTOR_OPERATIONS_CPPH_
+#define _TARCH_LA_VECTOR_OPERATIONS_CPPH_
+
+#include "tarch/la/VectorOperations.h"
+
+namespace tarch {
+namespace la {
+
+template<typename Vector>
+  typename utils::LazyEnableIf< IsVector<Vector>::value,
+  utils::LazyType<typename VectorTraits<Vector>::Scalar>
+>::Type norm1 (
+  const Vector & vector
+) {
+  typedef VectorTraits<Vector> Traits;
+  assertion ( Traits::size(vector) > 0 );
+  typename Traits::Scalar result = la::abs(Traits::celem(0,vector));
+  for (int i=1; i < Traits::size(vector); i++) {
+    result += la::abs(Traits::celem(i,vector));
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::LazyEnableIf< IsVector<Vector>::value,
+  utils::LazyType<typename VectorTraits<Vector>::Scalar>
+>::Type norm2 (
+  const Vector & vector
+) {
+  typedef VectorTraits<Vector> Traits;
+  assertion ( Traits::size(vector) > 0 );
+  typename Traits::Scalar result = Traits::celem(0,vector) * Traits::celem(0,vector);
+  for ( int i=1; i < Traits::size(vector); i++ ) {
+    result += Traits::celem(i,vector) * Traits::celem(i,vector);
+  }
+  return std::sqrt(result);
+}
+
+/**
+ * Computes the absolute component values of a vector into a new vector.
+ * Does not change the original vector.
+ */
+//template<typename Vector>
+//  typename utils::EnableIf< IsVector<Vector>::value,
+//Vector&>::Type abs
+//(
+//  const Vector& vector,
+//  Vector&       result )
+//{
+//  typedef VectorTraits<Vector> Traits;
+//  assertion (Traits::size(vector) > 0);
+//  assertion (Traits::size(vector) == Traits::size(result));
+//  for (int i=0; i < Traits::size(vector); i++) {
+//    Traits::elem(i,result) = std::abs(Traits::celem(i,vector));
+//  }
+//  return result;
+//}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+  Vector
+>::Type abs (
+  const Vector& vector
+) {
+  Vector result(vector);
+  return abs(vector, result);
+}
+
+template<typename VectorA, typename VectorB>
+  typename utils::EnableIf< IsVector<VectorA>::value && IsVector<VectorB>::value,
+  VectorB&
+>::Type abs (
+  const VectorA& vector, 
+  VectorB&       result
+) {
+  typedef VectorTraits<VectorA> TraitsA;
+  typedef VectorTraits<VectorB> TraitsB;
+  assertion (TraitsA::size(vector) == TraitsB::size(result));
+  for (int i=0; i < TraitsA::size(vector); i++) {
+    TraitsB::elem(i,result) = ::tarch::la::abs(TraitsA::celem(i,vector));
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::LazyEnableIf< IsVector<Vector>::value,
+  utils::LazyType<typename VectorTraits<Vector>::Scalar>
+>::Type sum (
+  const Vector & vector
+) {
+  typedef VectorTraits<Vector> Traits;
+  assertion ( Traits::size(vector) > 0 );
+  typename Traits::Scalar result = Traits::celem(0,vector);
+  for ( int i=1; i < Traits::size(vector); i++ ) {
+    result += Traits::celem(i,vector);
+  }
+  return result;
+}
+
+template<typename VectorA, typename VectorB>
+  typename utils::EnableIf< IsVector<VectorA>::value && IsVector<VectorB>::value,
+  VectorB&
+>::Type sumSubvectors (
+  const VectorA& vector,
+  VectorB& result
+) {
+  typedef VectorTraits<VectorA> ATraits;
+  typedef VectorTraits<VectorB> BTraits;
+  int vectorSize = ATraits::size(vector);
+  int subvectorSize = BTraits::size(result);
+  assertion(vectorSize > 0);
+  assertion(subvectorSize > 0);
+  assertion2(vectorSize % subvectorSize == 0, vectorSize, subvectorSize);
+  // Assign first subvector to have inital value for sum
+  for (int j=0; j < subvectorSize; j++){
+    BTraits::elem(j,result) = ATraits::celem(j,vector);
+  }
+  // Sum up rest of subvectors
+  for (int i=subvectorSize; i < vectorSize; i+=subvectorSize){
+    for (int j=0; j < subvectorSize; j++){
+      BTraits::elem(j,result) += ATraits::celem(i+j,vector);
+    }
+  }
+  return result;
+}
+
+template<typename Vector>
+  typename utils::LazyEnableIf< IsVector<Vector>::value,
+  utils::LazyType<typename VectorTraits<Vector>::Scalar>
+>::Type volume (
+  const Vector & vector
+) {
+  typedef VectorTraits<Vector> Traits;
+  assertion ( Traits::size(vector) > 0 );
+  typename Traits::Scalar result = Traits::celem(0,vector);
+  for ( int i=1; i < Traits::size(vector); i++ ) {
+    result *= Traits::celem(i,vector);
+  }
+  return result;
+}
+
+template<typename Vector>
+  inline
+  typename utils::EnableIf< IsVector<Vector>::value,
+  int
+>::Type indexMax (
+  const Vector & vector
+) {
+  typedef VectorTraits<Vector> Traits;
+  assertion ( Traits::size(vector) > 0 );
+  int indexMax = 0;
+  for ( int i=1; i < Traits::size(vector); i++ ) {
+    indexMax = Traits::celem(i,vector) > Traits::celem(indexMax,vector) ?
+               i : indexMax;
+  }
+  return indexMax;
+}
+
+template<typename Vector>
+  inline
+  typename utils::EnableIf< IsVector<Vector>::value,
+  int
+>::Type indexMin (
+  const Vector & vector
+) {
+  typedef VectorTraits<Vector> Traits;
+  assertion ( Traits::size(vector) > 0 );
+  int indexMin = 0;
+  for ( int i=1; i < Traits::size(vector); i++ ) {
+    indexMin = Traits::celem(i,vector) < Traits::celem(indexMin,vector) ?
+               i : indexMin;
+  }
+  return indexMin;
+}
+
+template<typename Vector>
+  inline
+  typename utils::LazyEnableIf< IsVector<Vector>::value,
+  utils::LazyType<typename VectorTraits<Vector>::Scalar>
+>::Type max (
+  const Vector& vector
+) {
+  typedef VectorTraits<Vector> T;
+  typename T::Scalar largest = T::celem(0,vector);
+  for (int i=1; i < T::size(vector); i++) {
+    if (largest < T::celem(i,vector)) {
+      largest = T::celem(i,vector);
+    }
+  }
+  return largest;
+}
+
+template<typename Vector>
+  inline
+  typename utils::LazyEnableIf< IsVector<Vector>::value,
+  utils::LazyType<typename VectorTraits<Vector>::Scalar>
+>::Type min (
+  const Vector& vector
+) {
+  typedef VectorTraits<Vector> T;
+  typename T::Scalar smallest = T::celem(0,vector);
+  for (int i=1; i < T::size(vector); i++) {
+    if (smallest > T::celem(i,vector)) {
+      smallest = T::celem(i,vector);
+    }
+  }
+  return smallest;
+}
+
+template<typename Vector>
+  typename utils::LazyEnableIf< IsVector<Vector>::value,
+  utils::LazyType<typename VectorTraits<Vector>::Scalar*>
+>::Type raw (
+  Vector& vector
+) {
+  assertion(VectorTraits<Vector>::size(vector) > 0);
+  return & VectorTraits<Vector>::elem(0,vector);
+}
+
+template<typename Vector>
+  typename utils::LazyEnableIf< IsVector<Vector>::value,
+  utils::LazyType<const typename VectorTraits<Vector>::Scalar*>
+>::Type raw (
+  const Vector& vector
+) {
+  assertion(VectorTraits<Vector>::size(vector) > 0);
+  return & VectorTraits<Vector>::celem(0,vector);
+}
+
+template<typename Vector>
+  typename utils::EnableIf< IsVector<Vector>::value,
+  Vector
+>::Type sqrt (
+  const Vector& vector
+) {
+  typedef VectorTraits<Vector> T;
+  assertion ( T ::size(vector) > 0 );
+  Vector result(vector);
+    for (int i=0; i < T::size(vector); i++) {
+        T::elem(i,result) = std::sqrt(T::celem(i,vector));
+    }
+  return result;
+}
+
+/**
+ * Pipes the elements of a vector into a std::string and returns the string.
+ */
+template<typename Vector>
+  std::string toString (
+      const Vector& vector
+) {
+  std::stringstream ss;
+  ss <<vector;
+  return ss.str();
+}
+
+template<int Size, typename Scalar>
+tarch::la::Vector<Size, int>
+integer(const tarch::la::Vector<Size, Scalar>& toConvert)
+{
+  Vector<Size, int> c;
+  for(int k=0; k<Size; k++)
+          c[k] = (int)toConvert[k];
+  return c;
+}
+
+template<int Size, typename Scalar>
+tarch::la::Vector<Size, double>
+Double(const tarch::la::Vector<Size, Scalar>& toConvert) {
+  Vector<Size, double> c;
+  for(int k=0; k<Size; k++)
+          c[k] = (double)toConvert[k];
+  return c;
+}
+
+}} // namespace tarch, la
+
+template<typename Vector>
+  typename tarch::utils::EnableIf< tarch::la::IsVector<Vector>::value,
+  std::ostream&
+>::Type operator<< (
+  std::ostream & os,
+  const Vector & vector
+) {
+  typedef tarch::la::VectorTraits<Vector> Traits;
+  for ( int i=0; i < Traits::size(vector); i++ ) {
+    os << Traits::celem(i,vector);
+    if ( i + 1 < Traits::size(vector) ) {
+      os << ", ";
+    }
+  }
+  return os;
+}
+
+#endif /* _TARCH_LA_VECTOR_OPERATIONS_CPPH_ */

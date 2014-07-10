@@ -1,0 +1,16 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#include "tarch/parallel/MPIConstants.h"
+
+Packed-Type: short int;
+
+Constant: MPI_MAX_NAME_STRING_ADDED_ONE;
+
+/**
+ * @author Tobias Weinzierl
+ * @version $Revision: 1.3 $
+ */
+class tarch::parallel::messages::RegisterAtNodePoolMessage {
+  parallelise persistent short int nodeName[MPI_MAX_NAME_STRING_ADDED_ONE];
+};

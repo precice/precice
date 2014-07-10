@@ -10,7 +10,7 @@ directory, and the following components exist currently:
 - $utils$ contains functionality serving as technical basis for all other
   components.
 - $mesh$ holds the coupling mesh and coupling data classes, which form the base
-  of all othe components.
+  of all other components.
 - $geometry$ provides functionality to create coupling mesh geometries.
 - $io$ implements import and export of the coupling mesh and data.
 - $query$ holds classes to perform geometrical queries on geometries.
@@ -46,6 +46,6 @@ used only internally.
 
 The hierarchical dependencies of different components is as follows:
 
-\image component-dependencies.png
+\image html component-dependencies.png
 
 */

@@ -1,0 +1,73 @@
+// Copyright (C) 2009 Technische Universitaet Muenchen
+// This file is part of the Peano project. For conditions of distribution and
+// use, please see the copyright notice at www5.in.tum.de/peano
+#ifndef _TARCH_LA_MATRIX_CPPH_
+#define _TARCH_LA_MATRIX_CPPH_
+
+#include "Matrix.h"
+#include "tarch/Assertions.h"
+
+namespace tarch {
+namespace la {
+
+template<int Rows, int Cols, typename Scalar>
+Matrix<Rows,Cols,Scalar>::Matrix():
+  _values()
+{}
+
+template<int Rows, int Cols, typename Scalar>
+Matrix<Rows,Cols,Scalar>::Matrix (
+  const Scalar& initialValue
+) :
+  _values()
+{
+  for (int i=0; i < Rows*Cols; i++) {
+    _values[i] = initialValue;
+  }
+}
+
+template<int Rows, int Cols, typename Scalar>
+int Matrix<Rows,Cols,Scalar>::rows() const
+{
+  return Rows;
+}
+
+template<int Rows, int Cols, typename Scalar>
+int Matrix<Rows,Cols,Scalar>::cols() const
+{
+  return Cols;
+}
+
+template<int Rows, int Cols, typename Scalar>
+int Matrix<Rows,Cols,Scalar>::size() const
+{
+  return Rows * Cols;
+}
+
+template<int Rows, int Cols, typename Scalar>
+Scalar & Matrix<Rows,Cols,Scalar>::operator() (
+  int rowIndex,
+  int colIndex
+) {
+  assertion ( rowIndex >= 0 );
+  assertion ( colIndex >= 0 );
+  assertion ( rowIndex < Rows );
+  assertion ( colIndex < Cols );
+  return _values[rowIndex * Cols + colIndex];
+}
+
+template<int Rows, int Cols, typename Scalar>
+const Scalar & Matrix<Rows,Cols,Scalar>::operator() (
+  int rowIndex,
+  int colIndex ) const
+{
+  assertion ( rowIndex >= 0 );
+  assertion ( colIndex >= 0 );
+  assertion ( rowIndex < Rows );
+  assertion ( colIndex < Cols );
+  return _values[rowIndex * Cols + colIndex];
+}
+
+}} // namespace tarch, la
+
+#endif /* _TARCH_LA_MATRIX_CPPH_ */
