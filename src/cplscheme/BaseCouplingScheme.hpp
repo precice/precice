@@ -179,6 +179,11 @@ public:
    * hasTimestepLength().
    */
   virtual double getTimestepLength() const;
+
+  /*
+   * @brief returns list of all coupling partners
+   */
+  virtual std::vector<std::string> getCouplingPartners() const;
   
   /**
    * @brief Returns the remaining timestep length of the current time step.
@@ -286,6 +291,9 @@ public:
   
   
 protected:
+
+  // temp function to make refactoring clearer
+  void receiveAndSetDt();
   
   io::TXTTableWriter& getIterationsWriter() {
     return _iterationsWriter;

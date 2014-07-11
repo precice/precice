@@ -48,9 +48,10 @@ void SerialImplicitCouplingScheme:: advance()
   setIsCouplingTimestepComplete(false);
   double eps = std::pow(10.0, -1 * getValidDigits());
   bool convergence = false;
-  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)){
+  
+  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)) {
     preciceDebug("Computed full length of iteration");
-    if (doesFirstStep()){
+    if (doesFirstStep()) {
       getCommunication()->startSendPackage(0);
       if (participantSetsDt()){
         preciceDebug("sending timestep length of " << getComputedTimestepPart());
@@ -107,12 +108,7 @@ void SerialImplicitCouplingScheme:: advance()
         sendData(getCommunication());
         getCommunication()->finishSendPackage();
         getCommunication()->startReceivePackage(0);
-        if (participantReceivesDt()){
-          double dt = UNDEFINED_TIMESTEP_LENGTH;
-          getCommunication()->receive(dt, 0);
-          assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-          setTimestepLength(dt);
-        }
+	receiveAndSetDt();
         receiveData(getCommunication());
         getCommunication()->finishReceivePackage();
       }

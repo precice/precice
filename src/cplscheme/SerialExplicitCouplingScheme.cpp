@@ -30,12 +30,15 @@ SerialExplicitCouplingScheme:: SerialExplicitCouplingScheme
 
 void SerialExplicitCouplingScheme:: advance()
 {
-  preciceTrace("advance()");
+  preciceTrace2("advance()", getTimesteps(), getTime());
   checkCompletenessRequiredActions();
+  preciceCheck(not hasToReceiveInitData() && not hasToSendInitData(), "advance()",
+	       "initializeData() needs to be called before advance if data has to be initialized!");
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
   double eps = std::pow(10.0, -1 * getValidDigits());
-  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)){
+  
+  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)) {
     setIsCouplingTimestepComplete(true);
     setTimesteps(getTimesteps() + 1);
     preciceDebug("Sending data...");
@@ -49,12 +52,7 @@ void SerialExplicitCouplingScheme:: advance()
     if (isCouplingOngoing() || doesFirstStep()){
       preciceDebug("Receiving data...");
       getCommunication()->startReceivePackage(0);
-      if (participantReceivesDt()){
-        double dt = UNDEFINED_TIMESTEP_LENGTH;
-        getCommunication()->receive(dt, 0);
-        assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-        setTimestepLength(dt);
-      }
+      receiveAndSetDt();
       receiveData(getCommunication());
       getCommunication()->finishReceivePackage();
     }

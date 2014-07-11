@@ -43,7 +43,7 @@ void ExplicitCouplingScheme:: receiveState
  com::PtrCommunication communication,
  int                   rankSender)
 {
-  communication->startSendPackage(0);
+  communication->startSendPackage(rankSender);
   BaseCouplingScheme::receiveState(communication, rankSender);
   communication->finishSendPackage();
 }
@@ -53,19 +53,6 @@ std::string ExplicitCouplingScheme:: printCouplingState() const
   std::ostringstream os;
   os << printBasicState() << " | " << printActionsState();
   return os.str();
-}
-
-std::vector<std::string> ExplicitCouplingScheme:: getCouplingPartners() const
-{
-  std::vector<std::string> partnerNames;
-  // Add non-local participant
-  if(doesFirstStep()){
-    partnerNames.push_back(_secondParticipant);
-  }
-  else {
-    partnerNames.push_back(_firstParticipant);
-  }
-  return partnerNames;
 }
 
 

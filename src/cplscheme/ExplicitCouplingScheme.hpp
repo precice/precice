@@ -29,11 +29,6 @@ public:
 			  constants::TimesteppingMethod dtMethod );
 
 
-  /*
-   * @brief returns list of all coupling partners
-   */
-  virtual std::vector<std::string> getCouplingPartners () const;
-
   virtual void sendState (
 			  com::PtrCommunication communication,
 			  int                   rankReceiver );

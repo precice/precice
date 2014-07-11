@@ -152,6 +152,19 @@ BaseCouplingScheme::BaseCouplingScheme
   assertion(_communication.use_count() > 0);
 }
 
+
+// temp function to make refactoring clearer
+void BaseCouplingScheme::receiveAndSetDt()
+{
+  if (participantReceivesDt()){
+    double dt = UNDEFINED_TIMESTEP_LENGTH;
+    getCommunication()->receive(dt, 0);
+    assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
+    setTimestepLength(dt);
+  }
+}
+
+
 void BaseCouplingScheme:: addDataToSend
 (
  mesh::PtrData data,
@@ -380,6 +393,22 @@ int BaseCouplingScheme:: getTimesteps() const
 {
   return _timesteps;
 }
+
+
+std::vector<std::string> BaseCouplingScheme::getCouplingPartners() const
+{
+  std::vector<std::string> partnerNames;
+
+  // Add non-local participant
+  if(doesFirstStep()){
+    partnerNames.push_back(_secondParticipant);
+  }
+  else {
+    partnerNames.push_back(_firstParticipant);
+  }
+  return partnerNames;
+}
+
 
 double BaseCouplingScheme:: getThisTimestepRemainder() const
 {

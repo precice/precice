@@ -174,20 +174,6 @@ void ImplicitCouplingScheme:: newConvergenceMeasurements()
   }
 }
 
-std::vector<std::string> ImplicitCouplingScheme:: getCouplingPartners() const
-{
-  std::vector<std::string> partnerNames;
-
-  // Add non-local participant
-  if(doesFirstStep()){
-    partnerNames.push_back(_secondParticipant);
-  }
-  else {
-    partnerNames.push_back(_firstParticipant);
-  }
-  return partnerNames;
-}
-
 void ImplicitCouplingScheme:: sendState
 (
  com::PtrCommunication communication,
