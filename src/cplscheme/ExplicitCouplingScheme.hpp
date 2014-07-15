@@ -28,15 +28,6 @@ public:
 			  com::PtrCommunication communication,
 			  constants::TimesteppingMethod dtMethod );
 
-
-  virtual void sendState (
-			  com::PtrCommunication communication,
-			  int                   rankReceiver );
-
-  virtual void receiveState (
-			     com::PtrCommunication communication,
-			     int                   rankSender );
-
   virtual std::string printCouplingState() const;
 
   virtual void exportState(const std::string& filenamePrefix) const {}

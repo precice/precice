@@ -513,8 +513,63 @@ protected:
    * @brief Extrapolation order of coupling data for first iteration of every dt.
    */
   int _extrapolationOrder;
-
+  
   void initializeTXTWriters();
+
+  // Später private machen?
+  
+  /**
+   * @brief Number of iteration in current timestep.
+   */
+  int _iterationToPlot;
+  
+  int _timestepToPlot;
+  
+  double _timeToPlot;
+  
+  void setIterationToPlot(int iterationToPlot) {
+    _iterationToPlot = iterationToPlot;
+  }
+
+  void setTimestepToPlot(int timestepToPlot) {
+    _timestepToPlot = timestepToPlot;
+  }
+
+  void setTimeToPlot(double timeToPlot) {
+    _timeToPlot = timeToPlot;
+  }
+
+  void setIterations(int iterations) {
+    _iterations = iterations;
+  }
+
+  int getIterations() {
+    return _iterations;
+  }
+
+  int getTotalIterations() {
+    return _totalIterations;
+  }
+
+  void increaseIterations() {
+    _iterations++;
+  }
+
+  void increaseTotalIterations() {
+    _totalIterations++;
+  }
+
+  void increaseIterationToPlot() {
+    _iterationToPlot++;
+  }
+
+  int getMaxIterations() const {
+    return _maxIterations;
+  }
+
+  int getExtrapolationOrder() {
+    return _extrapolationOrder;
+  }
 
   
 private:
@@ -534,6 +589,21 @@ private:
   double _maxTime;
   
   int _maxTimesteps;
+
+  /**
+   * @brief Number of iterations in current timestep.
+   */
+  int _iterations;
+  
+  /**
+   * @brief Limit of iterations during one timestep.
+   */
+  int _maxIterations;
+  
+  /**
+   * @brief Number of total iterations performed.
+   */
+  int _totalIterations;
   
   double _timestepLength;
   

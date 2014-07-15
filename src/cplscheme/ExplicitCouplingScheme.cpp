@@ -28,26 +28,6 @@ ExplicitCouplingScheme:: ExplicitCouplingScheme
 		     communication, 1, dtMethod)
 {}
 
-void ExplicitCouplingScheme:: sendState
-(
- com::PtrCommunication communication,
- int                   rankReceiver)
-{
-  communication->startSendPackage(0);
-  BaseCouplingScheme::sendState(communication, rankReceiver);
-  communication->finishSendPackage();
-}
-
-void ExplicitCouplingScheme:: receiveState
-(
- com::PtrCommunication communication,
- int                   rankSender)
-{
-  communication->startSendPackage(rankSender);
-  BaseCouplingScheme::receiveState(communication, rankSender);
-  communication->finishSendPackage();
-}
-
 std::string ExplicitCouplingScheme:: printCouplingState() const
 {
   std::ostringstream os;

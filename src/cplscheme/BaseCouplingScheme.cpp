@@ -97,12 +97,12 @@ BaseCouplingScheme::BaseCouplingScheme
   _convergenceMeasures(),
   _postProcessing(),
   _extrapolationOrder(0),
-//  _maxIterations(maxIterations),
-//  _iterationToPlot(0),
-//  _timestepToPlot(0),
-//  _timeToPlot(0.0),
-//  _iterations(0),
-//  _totalIterations(0),
+  _maxIterations(maxIterations),
+  _iterationToPlot(0),
+  _timestepToPlot(0),
+  _timeToPlot(0.0),
+  _iterations(0),
+  _totalIterations(0),
   _participantSetsDt(false),
   _participantReceivesDt(false),
   _hasToReceiveInitData(false),
@@ -207,7 +207,8 @@ void BaseCouplingScheme:: sendState
  com::PtrCommunication communication,
  int                   rankReceiver)
 {
-  preciceTrace("sendState()");
+  preciceTrace1("sendState()", rankReceiver);
+  communication->startSendPackage(rankReceiver );
   assertion(communication.get() != NULL);
   assertion(communication->isConnected());
   communication->send(_maxTime, rankReceiver);
@@ -222,9 +223,14 @@ void BaseCouplingScheme:: sendState
   communication->send(_isCouplingTimestepComplete, rankReceiver);
   communication->send(_hasDataBeenExchanged, rankReceiver);
   communication->send((int)_actions.size(), rankReceiver);
-  foreach(const std::string& action, _actions){
+  foreach(const std::string& action, _actions) {
     communication->send(action, rankReceiver);
   }
+  communication->send(_maxIterations, rankReceiver );
+  communication->send(_iterations, rankReceiver );
+  communication->send(_totalIterations, rankReceiver );
+  communication->finishSendPackage();
+
 }
 
 void BaseCouplingScheme:: receiveState
@@ -232,7 +238,8 @@ void BaseCouplingScheme:: receiveState
  com::PtrCommunication communication,
  int                   rankSender)
 {
-  preciceTrace("receiveState()");
+  preciceTrace1("receiveState()", rankSender);
+  communication->startReceivePackage(rankSender);
   assertion(communication.get() != NULL);
   assertion(communication->isConnected());
   communication->receive(_maxTime, rankSender);
@@ -249,11 +256,18 @@ void BaseCouplingScheme:: receiveState
   int actionsSize = 0;
   communication->receive(actionsSize, rankSender);
   _actions.clear();
-  for (int i=0; i < actionsSize; i++){
+  for (int i=0; i < actionsSize; i++) {
     std::string action;
     communication->receive(action, rankSender);
     _actions.insert(action);
   }
+  communication->receive(_maxIterations, rankSender);
+  int subIteration = -1;
+  communication->receive(subIteration, rankSender);
+  _iterations = subIteration;
+  communication->receive(_totalIterations, rankSender);
+  communication->finishReceivePackage();
+
 }
 
 std::vector<int> BaseCouplingScheme:: sendData

@@ -90,14 +90,6 @@ public:
    */
   void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
   
-  virtual void sendState (
-			  com::PtrCommunication communication,
-			  int                   rankReceiver );
-  
-  virtual void receiveState (
-			     com::PtrCommunication communication,
-			     int                   rankSender );
-  
   virtual std::string printCouplingState() const;
 
   virtual void exportState(const std::string& filenamePrefix) const;
@@ -105,50 +97,6 @@ public:
   virtual void importState(const std::string& filenamePrefix);
 
 protected:
-
-  void setIterationToPlot(int iterationToPlot) {
-    _iterationToPlot = iterationToPlot;
-  }
-
-  void setTimestepToPlot(int timestepToPlot) {
-    _timestepToPlot = timestepToPlot;
-  }
-
-  void setTimeToPlot(double timeToPlot) {
-    _timeToPlot = timeToPlot;
-  }
-
-  void setIterations(int iterations) {
-    _iterations = iterations;
-  }
-
-  int getIterations() {
-    return _iterations;
-  }
-
-  int getTotalIterations() {
-    return _totalIterations;
-  }
-
-  void increaseIterations() {
-    _iterations++;
-  }
-
-  void increaseTotalIterations() {
-    _totalIterations++;
-  }
-
-  void increaseIterationToPlot() {
-    _iterationToPlot++;
-  }
-
-  int getMaxIterations() {
-    return _maxIterations;
-  }
-
-  int getExtrapolationOrder() {
-    return _extrapolationOrder;
-  }
 
   void newConvergenceMeasurements();
 
@@ -185,30 +133,6 @@ private:
   //  io::TXTTableWriter _amplificationWriter;
 
   typedef boost::tuple<int,impl::PtrConvergenceMeasure> MeasureTuple;
-  
-  /**
-   * @brief Limit of iterations during one timestep.
-   */
-  int _maxIterations;
-  
-  /**
-   * @brief Number of iteration in current timestep.
-   */
-  int _iterationToPlot;
-  
-  int _timestepToPlot;
-  
-  double _timeToPlot;
-
-  /**
-   * @brief Number of iterations in current timestep.
-   */
-  int _iterations;
-  
-  /**
-   * @brief Number of total iterations performed.
-   */
-  int _totalIterations;
   
   //  void writeResidual (
   //    const utils::DynVector& values,

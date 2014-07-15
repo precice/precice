@@ -33,16 +33,7 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
   :
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits,
 		     firstParticipant, secondParticipant, localParticipant,
-		     communication, maxIterations, dtMethod),
-//_residualWriterL1("residualL1-" + localParticipant + ".txt"),
-//_residualWriterL2("residualL2-" + localParticipant + ".txt"),
-//_amplificationWriter("amplification-" + localParticipant + ".txt"),
-  _maxIterations(maxIterations),
-  _iterationToPlot(0),
-  _timestepToPlot(0),
-  _timeToPlot(0.0),
-  _iterations(0),
-  _totalIterations(0)
+		     communication, maxIterations, dtMethod)
 {}
 
 void ImplicitCouplingScheme:: setExtrapolationOrder
@@ -174,42 +165,13 @@ void ImplicitCouplingScheme:: newConvergenceMeasurements()
   }
 }
 
-void ImplicitCouplingScheme:: sendState
-(
- com::PtrCommunication communication,
- int                   rankReceiver )
-{
-  preciceTrace1("sendState()", rankReceiver);
-  communication->startSendPackage(rankReceiver );
-  BaseCouplingScheme::sendState(communication, rankReceiver );
-  communication->send(_maxIterations, rankReceiver );
-  communication->send(_iterations, rankReceiver );
-  communication->send(_totalIterations, rankReceiver );
-  communication->finishSendPackage();
-}
-
-void ImplicitCouplingScheme:: receiveState
-(
- com::PtrCommunication communication,
- int                   rankSender )
-{
-  preciceTrace1("receiveState()", rankSender);
-  communication->startReceivePackage(rankSender);
-  BaseCouplingScheme::receiveState(communication, rankSender);
-  communication->receive(_maxIterations, rankSender);
-  int subIteration = -1;
-  communication->receive(subIteration, rankSender);
-  _iterations = subIteration;
-  communication->receive(_totalIterations, rankSender);
-  communication->finishReceivePackage();
-}
-
+
 std::string ImplicitCouplingScheme:: printCouplingState() const
 {
   std::ostringstream os;
   os << "it " << _iterationToPlot; //_iterations;
-  if(_maxIterations != -1 ){
-    os << " of " << _maxIterations;
+  if(getMaxIterations() != -1 ){
+    os << " of " << getMaxIterations();
   }
   os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
   return os.str();
