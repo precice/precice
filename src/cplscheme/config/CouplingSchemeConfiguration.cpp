@@ -317,11 +317,9 @@ void CouplingSchemeConfiguration:: addCouplingScheme
   const std::string& participantName )
 {
   preciceTrace1 ( "addCouplingScheme()", participantName );
-  if (_couplingSchemes.find(participantName) != _couplingSchemes.end()){
+  if (utils::contained(participantName, _couplingSchemes)) {
     preciceDebug("Coupling scheme exists already for participant");
-    if (_couplingSchemeCompositions.find(participantName)
-        != _couplingSchemeCompositions.end())
-    {
+    if (utils::contained(participantName, _couplingSchemeCompositions)) {
       preciceDebug("Coupling scheme composition exists already for participant");
       // Fetch the composition and add the new scheme.
       assertion(_couplingSchemeCompositions[participantName] != NULL);
