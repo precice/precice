@@ -63,20 +63,7 @@ public:
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod);
   
-  /**
-   * @brief Sets order of predictor of interface values for first participant.
-   *
-   * The first participant in the implicit coupling scheme has to take some
-   * initial guess for the interface values computed by the second participant.
-   * In order to improve this initial guess, an extrapolation from previous
-   * timesteps can be performed.
-   *
-   * The standard predictor is of order zero, i.e., simply the converged values
-   * of the last timestep are taken as initial guess for the coupling iterations.
-   * Currently, an order 1 predictor is implement besides that.
-   */
-  void setExtrapolationOrder ( int order );
-  
+ 
   /// @brief Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure (
     int                         dataID,

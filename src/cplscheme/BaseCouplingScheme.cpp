@@ -344,6 +344,16 @@ void BaseCouplingScheme::finalize()
 	       "Called finalize() while isCouplingOngoing() returns true!");
 }
 
+void BaseCouplingScheme:: setExtrapolationOrder
+(
+  int order)
+{
+  preciceCheck((order == 0) || (order == 1) || (order == 2),
+               "setExtrapolationOrder()", "Extrapolation order has to be "
+               << " 0, 1, or 2!");
+  _extrapolationOrder = order;
+}
+
 
 bool BaseCouplingScheme:: hasTimestepLength() const
 {

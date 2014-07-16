@@ -235,6 +235,20 @@ public:
    * - advance() has NOT yet been called.
    */
   virtual void initializeData();
+
+  /**
+   * @brief Sets order of predictor of interface values for first participant.
+   *
+   * The first participant in the implicit coupling scheme has to take some
+   * initial guess for the interface values computed by the second participant.
+   * In order to improve this initial guess, an extrapolation from previous
+   * timesteps can be performed.
+   *
+   * The standard predictor is of order zero, i.e., simply the converged values
+   * of the last timestep are taken as initial guess for the coupling iterations.
+   * Currently, an order 1 predictor is implement besides that.
+   */
+  void setExtrapolationOrder ( int order );
   
   
 protected:
@@ -253,7 +267,7 @@ protected:
     std::string name;
   };
  
-  /// @return True, if local participant is the one starting the explicit scheme.
+  /// @return True, if local participant is the one starting the scheme.
   bool doesFirstStep() const {
     return _doesFirstStep;
   }
@@ -261,9 +275,7 @@ protected:
   /// @brief Sends data sendDataIDs given in mapCouplingData with communication.
   std::vector<int> sendData ( com::PtrCommunication communication );
   
-  /**
-   * @brief Receives data sendDataIDs given in mapCouplingData with communication.
-   */
+  /// @brief Receives data sendDataIDs given in mapCouplingData with communication.
   std::vector<int> receiveData ( com::PtrCommunication communication );
 
   /// @brief Returns all data to be sent.
