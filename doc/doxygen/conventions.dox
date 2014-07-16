@@ -1,0 +1,50 @@
+/**
+
+@page conventions General Conventions
+
+This tutorial describes general and coding conventions used in preCICE.
+
+--
+
+@section coding-convections Coding Conventions
+
+@subsection Indention
+
+Regarding indention, we follow the <a href="https://www.kernel.org/doc/Documentation/CodingStyle">Linux Kernel Coding Style</a>.
+
+We do not indent namespaces since three or so levels of nested namespaces fill the offset without adding any viable information.
+
+Using Emacs you get the indention style using this snippet.
+
+@code{.el}
+(setq c-basic-offset 2)
+(c-add-style "my-cc-style"
+  '("linux"
+    (c-offsets-alist . (
+			(innamespace . 0)
+			(namespace-open . 0)
+			(namespace-close . 0)
+			))))
+
+(setq c-default-style "my-cc-style")
+@endcode
+
+@section dimensions-ordering Dimension-Ordering
+
+Under dimension-ordering, the ordering of some indices associated to a 
+multi-dimensional structure (e.g., cell) in a specific way is understood. The 
+index 0 is associated to the object which has coordinates nearest to 0 for all 
+dimensions. Index 1 is given to the object with coordinates nearest to zero, 
+besides for dimension 1. The following example illustrates the ordering. The 
+example shows the numbering of sub-cells in a 2D cube:
+
+@verbatim
+      ---------
+      | 2 | 3 |
+dim 2 |-------|
+  ^   | 0 | 1 |
+  |   ---------  
+   --> dim 1
+@endverbatim
+
+*/
