@@ -29,6 +29,23 @@ Using Emacs you get the indention style using this snippet.
 (setq c-default-style "my-cc-style")
 @endcode
 
+@subsection Documentation
+We use <a href="http://doxygen.org">Doxygen</a> for source code documentation. A generic documentation template for a class, function or variable:
+@verbatim
+/**
+ * @brief Some brief description of the object.
+ *
+ * Some more verbose documentation.
+ */
+ class SolveAllProblems : public ProblemSolver
+@endverbatim
+For a one-line documentation you should use
+@verbatim
+/// @brief Eat an apple
+void eatApple(Apple a)
+@endverbatim
+
+
 @section dimensions-ordering Dimension-Ordering
 
 Under dimension-ordering, the ordering of some indices associated to a 
