@@ -10,18 +10,16 @@
 #include "tarch/logging/Log.h"
 #include "utils/Helpers.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
-#include "boost/tuple/tuple.hpp" // ??
+#include "boost/tuple/tuple.hpp" // ??
 
-namespace precice { namespace cplscheme { namespace tests {
+namespace precice { namespace cplscheme { namespace tests {
 class SerialImplicitCouplingSchemeTest;
-} } }
+} } }
 
 namespace precice {
 namespace cplscheme {
 
-/**
- * @brief Serial coupling scheme with iterations per timestep to achieve strong solution.
- */
+/// @brief Serial coupling scheme with iterations per timestep to achieve strong solution.
 class SerialImplicitCouplingScheme : public ImplicitCouplingScheme
 {
 public:
@@ -37,20 +35,19 @@ public:
    * @param localParticipant [IN] Name of participant using this coupling scheme.
    * @param communication [IN] Communication object for com. between participants.
    * @param maxIterations [IN] Maximal iterations per coupling timestep.
-   * @param monitorIterations [IN] If true, a txt file monitoring iterations is
-   *                          written.
+   * @param monitorIterations [IN] If true, a txt file monitoring iterations is written.
    */
   SerialImplicitCouplingScheme (
-				double                maxTime,
-				int                   maxTimesteps,
-				double                timestepLength,
-				int                   validDigits,
-				const std::string&    firstParticipant,
-				const std::string&    secondParticipant,
-				const std::string&    localParticipant,
-				com::PtrCommunication communication,
-				int                   maxIterations,
-				constants::TimesteppingMethod dtMethod);
+    double                maxTime,
+    int                   maxTimesteps,
+    double                timestepLength,
+    int                   validDigits,
+    const std::string&    firstParticipant,
+    const std::string&    secondParticipant,
+    const std::string&    localParticipant,
+    com::PtrCommunication communication,
+    int                   maxIterations,
+    constants::TimesteppingMethod dtMethod);
   
   /**
    * @brief Advances within the coupling scheme (not necessarily in time).
@@ -59,10 +56,10 @@ public:
    * - initialize() has been called.
    */
   virtual void advance();
-  
-  // @brief Logging device.
+  
+  /// @brief Logging device.
   static tarch::logging::Log _log;
-  
+  
   friend class tests::SerialImplicitCouplingSchemeTest;
 };
 

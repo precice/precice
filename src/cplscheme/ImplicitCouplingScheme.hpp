@@ -14,9 +14,9 @@
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "boost/tuple/tuple.hpp"
 
-namespace precice { namespace cplscheme { namespace tests {
+namespace precice { namespace cplscheme { namespace tests {
 class ImplicitCouplingSchemeTest;
-} } }
+} } }
 
 namespace precice {
 namespace cplscheme {
@@ -52,16 +52,16 @@ public:
    *                          written.
    */
   ImplicitCouplingScheme (
-			  double                maxTime,
-			  int                   maxTimesteps,
-			  double                timestepLength,
-			  int                   validDigits,
-			  const std::string&    firstParticipant,
-			  const std::string&    secondParticipant,
-			  const std::string&    localParticipant,
-			  com::PtrCommunication communication,
-			  int                   maxIterations,
-			  constants::TimesteppingMethod dtMethod);
+    double                maxTime,
+    int                   maxTimesteps,
+    double                timestepLength,
+    int                   validDigits,
+    const std::string&    firstParticipant,
+    const std::string&    secondParticipant,
+    const std::string&    localParticipant,
+    com::PtrCommunication communication,
+    int                   maxIterations,
+    constants::TimesteppingMethod dtMethod);
   
   /**
    * @brief Sets order of predictor of interface values for first participant.
@@ -77,17 +77,13 @@ public:
    */
   void setExtrapolationOrder ( int order );
   
-  /**
-   * @brief Adds a measure to determine the convergence of coupling iterations.
-   */
+  /// @brief Adds a measure to determine the convergence of coupling iterations.
   void addConvergenceMeasure (
-			      int                         dataID,
-			      bool                        suffices,
-			      impl::PtrConvergenceMeasure measure );
+    int                         dataID,
+    bool                        suffices,
+    impl::PtrConvergenceMeasure measure );
   
-  /**
-   * @brief Set a coupling iteration post-processing technique.
-   */
+  /// @brief Set a coupling iteration post-processing technique.
   void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
   
   virtual std::string printCouplingState() const;
@@ -100,14 +96,10 @@ protected:
 
   void newConvergenceMeasurements();
 
-  /**
-   * @brief Updates internal state of coupling scheme for next timestep.
-   */
+  /// @brief Updates internal state of coupling scheme for next timestep.
   void timestepCompleted();
 
-  /**
-   * @brief Updates the convergence measurement of local send data.
-   */
+  /// @brief Updates the convergence measurement of local send data.
   bool measureConvergence();
 
   void extrapolateData(DataMap& data);
@@ -119,17 +111,15 @@ private:
   
   typedef tarch::la::DynamicVector<double> DataVector;
   
-  /**
-   * @brief Logging device.
-   */
+  /// @brief Logging device.
   static tarch::logging::Log _log;
   
 
-  // @brief Writes residuals to file.
+  /// @brief Writes residuals to file.
   //  io::TXTTableWriter _residualWriterL1;
   //  io::TXT_communicationTableWriter _residualWriterL2;
   
-  // @brief Writes value amplification to file.
+  /// @brief Writes value amplification to file.
   //  io::TXTTableWriter _amplificationWriter;
 
   typedef boost::tuple<int,impl::PtrConvergenceMeasure> MeasureTuple;

@@ -9,8 +9,6 @@
 #include <string>
 #include <vector>
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace cplscheme {
 
@@ -45,20 +43,16 @@ namespace cplscheme {
 class CouplingScheme
 {
 public:
-
-  // @brief Does not define a time limit for the coupled simulation.
+  
+  /// @brief Does not define a time limit for the coupled simulation.
   static const double UNDEFINED_TIME;
 
-  // @brief Does not define a timestep limit for the coupled simulation.
+  /// @brief Does not define a timestep limit for the coupled simulation.
   static const int UNDEFINED_TIMESTEPS;
 
-  // @brief To be used, when the coupling timestep length is determined
-  //        dynamically during the coupling.
+  /// @brief To be used, when the coupling timestep length is determined dynamically during the coupling.
   static const double UNDEFINED_TIMESTEP_LENGTH;
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~CouplingScheme() {}
 
   /**
@@ -66,12 +60,10 @@ public:
    *        connection to the coupling partner.
    */
   virtual void initialize (
-     double startTime,
-     int    startTimesteps ) =0;
+    double startTime,
+    int    startTimesteps ) =0;
 
-  /**
-   * @brief Returns true, if initialize has been called.
-   */
+  /// @brief Returns true, if initialize has been called.
   virtual bool isInitialized() const =0;
 
   /**
@@ -89,9 +81,7 @@ public:
    */
   virtual void initializeData() =0;
 
-  /**
-   * @brief Adds newly computed time. Has to be called before every advance.
-   */
+  /// @brief Adds newly computed time. Has to be called before every advance.
   virtual void addComputedTime(double timeToAdd) =0;
 
   /**
@@ -104,17 +94,13 @@ public:
    */
   virtual void advance() =0;
 
-  /**
-   * @brief Finalizes the coupling and disconnects communication.
-   */
+  /// @brief Finalizes the coupling and disconnects communication.
   virtual void finalize() =0;
 
-  /*
-   * @brief returns list of all coupling partners
-   */
+  /// @brief Returns list of all coupling partners.
   virtual std::vector<std::string> getCouplingPartners() const =0;
 
-  /**
+  /*
    * @brief Returns true, if data will be exchanged when calling advance().
    *
    * Also returns true after the last call of advance() at the end of the
@@ -125,29 +111,19 @@ public:
    */
   virtual bool willDataBeExchanged(double lastSolverTimestepLength) const =0;
 
-  /**
-   * @brief Returns true, if data has been exchanged in last call of advance().
-   */
+  /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenExchanged() const =0;
 
-  /**
-   * @brief Returns the currently computed time of the coupling scheme.
-   */
+  /// @brief Returns the currently computed time of the coupling scheme.
   virtual double getTime() const =0;
 
-  /**
-   * @brief Returns the currently computed timesteps of the coupling scheme.
-   */
+  /// @brief Returns the currently computed timesteps of the coupling scheme.
   virtual int getTimesteps() const =0;
 
-  /**
-   * @brief Returns the maximal time to be computed.
-   */
+  /// @brief Returns the maximal time to be computed.
   virtual double getMaxTime() const =0;
 
-  /**
-   * @brief Returns the maximal timesteps to be computed.
-   */
+  /// @brief Returns the maximal timesteps to be computed.
   virtual int getMaxTimesteps() const =0;
 
   //
@@ -155,9 +131,7 @@ public:
   //
   //virtual int getSubIteration() const =0;
 
-  /**
-   * @brief Returns true, if timestep length is prescribed by the cpl scheme.
-   */
+  /// @brief Returns true, if timestep length is prescribed by the cpl scheme.
   virtual bool hasTimestepLength() const =0;
 
   /**
@@ -179,9 +153,7 @@ public:
    */
   virtual double getThisTimestepRemainder() const =0;
 
-  /**
-   * @brief Returns part of the current timestep that has been computed already.
-   */
+  /// @brief Returns part of the current timestep that has been computed already.
   virtual double getComputedTimestepPart() const =0;
 
   /**
@@ -197,40 +169,25 @@ public:
   //
   //virtual int getValidDigits() const =0;
 
-  /**
-   * @brief Returns true, when the coupled simulation is still ongoing.
-   */
+  /// @brief Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const =0;
 
-  /**
-   * @brief Returns true, when the accessor can advance to the next timestep.
-   */
+  /// @brief Returns true, when the accessor can advance to the next timestep.
   virtual bool isCouplingTimestepComplete() const =0;
 
-  /**
-   * @brief Returns true, if the given action has to be performed by the accessor.
-   */
+  /// @brief Returns true, if the given action has to be performed by the accessor.
   virtual bool isActionRequired(const std::string& actionName) const =0;
 
-  /**
-   * @brief Tells the coupling scheme that the accessor has performed the given
-   *        action.
-   */
+  /// @brief Tells the coupling scheme that the accessor has performed the given action.
   virtual void performedAction(const std::string& actionName) =0;
 
-  /**
-   * @brief Returns the checkpointing timestep interval.
-   */
+  /// @brief Returns the checkpointing timestep interval.
   virtual int getCheckpointTimestepInterval() const =0;
 
-  /**
-   * @brief Sets an action required to be performed by the accessor.
-   */
+  /// @brief Sets an action required to be performed by the accessor.
   virtual void requireAction(const std::string& actionName) =0;
 
-  /**
-   * @brief Returns a string representation of the current coupling state.
-   */
+  /// @brief Returns a string representation of the current coupling state.
   virtual std::string printCouplingState() const =0;
 
   /**

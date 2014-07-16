@@ -14,15 +14,15 @@ _log("precice::cplscheme::SerialExplicitCouplingScheme" );
 
 SerialExplicitCouplingScheme:: SerialExplicitCouplingScheme
 (
- double                maxTime,
- int                   maxTimesteps,
- double                timestepLength,
- int                   validDigits,
- const std::string&    firstParticipant,
- const std::string&    secondParticipant,
- const std::string&    localParticipant,
- com::PtrCommunication communication,
- constants::TimesteppingMethod dtMethod )
+  double                maxTime,
+  int                   maxTimesteps,
+  double                timestepLength,
+  int                   validDigits,
+  const std::string&    firstParticipant,
+  const std::string&    secondParticipant,
+  const std::string&    localParticipant,
+  com::PtrCommunication communication,
+  constants::TimesteppingMethod dtMethod )
   :
   ExplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
 			 secondParticipant,localParticipant,communication,dtMethod)

@@ -19,10 +19,10 @@ _log("precice::cplscheme::BaseCouplingScheme");
 
 BaseCouplingScheme:: BaseCouplingScheme
 (
- double maxTime,
- int    maxTimesteps,
- double timestepLength,
- int    validDigits)
+  double maxTime,
+  int    maxTimesteps,
+  double timestepLength,
+  int    validDigits)
   :
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
@@ -45,14 +45,14 @@ BaseCouplingScheme:: BaseCouplingScheme
   _iterationsWriter("iterations-unknown.txt")
 {
   preciceCheck (
-		not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-		"BaseCouplingScheme()", "Maximum time has to be larger than zero!");
+    not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+    "BaseCouplingScheme()", "Maximum time has to be larger than zero!");
   preciceCheck (
-		not ((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
-		"BaseCouplingScheme()", "Maximum timestep number has to be larger than zero!");
+    not ((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
+    "BaseCouplingScheme()", "Maximum timestep number has to be larger than zero!");
   preciceCheck (
-		not ((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
-		"BaseCouplingScheme()", "Timestep length has to be larger than zero!");
+    not ((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
+    "BaseCouplingScheme()", "Timestep length has to be larger than zero!");
   preciceCheck((_validDigits >= 1) && (_validDigits < 17),
 	       "BaseCouplingScheme()", "Valid digits of timestep length has to be "
 	       << "between 1 and 16!");
@@ -60,21 +60,21 @@ BaseCouplingScheme:: BaseCouplingScheme
 
 BaseCouplingScheme::BaseCouplingScheme
 (
- double                maxTime,
- int                   maxTimesteps,
- double                timestepLength,
- int                   validDigits,
- const std::string&    firstParticipant,
- const std::string&    secondParticipant,
- const std::string&    localParticipant,
- com::PtrCommunication communication,
- int                   maxIterations,
- constants::TimesteppingMethod dtMethod )
+  double                maxTime,
+  int                   maxTimesteps,
+  double                timestepLength,
+  int                   validDigits,
+  const std::string&    firstParticipant,
+  const std::string&    secondParticipant,
+  const std::string&    localParticipant,
+  com::PtrCommunication communication,
+  int                   maxIterations,
+  constants::TimesteppingMethod dtMethod )
   :
   _maxTime(maxTime),
    _maxTimesteps(maxTimesteps),
    _timestepLength(timestepLength),
-   _doesFirstStep(false),
+  _doesFirstStep(false),
   _validDigits(validDigits),
   _time(0.0),
   _computedTimestepPart(0.0),
@@ -108,21 +108,21 @@ BaseCouplingScheme::BaseCouplingScheme
   _hasToReceiveInitData(false),
   _hasToSendInitData(false)
 {
-  preciceCheck (
-		not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
-		"BaseCouplingScheme()", "Maximum time has to be larger than zero!");
-  preciceCheck (
-		not ((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
-		"BaseCouplingScheme()", "Maximum timestep number has to be larger than zero!");
-  preciceCheck (
-		not ((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
-		"BaseCouplingScheme()", "Timestep length has to be larger than zero!");
+  preciceCheck(
+    not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
+    "BaseCouplingScheme()", "Maximum time has to be larger than zero!");
+  preciceCheck(
+    not ((maxTimesteps != UNDEFINED_TIMESTEPS) && (maxTimesteps < 0)),
+    "BaseCouplingScheme()", "Maximum timestep number has to be larger than zero!");
+  preciceCheck(
+    not ((timestepLength != UNDEFINED_TIMESTEP_LENGTH) && (timestepLength < 0.0)),
+    "BaseCouplingScheme()", "Timestep length has to be larger than zero!");
   preciceCheck((_validDigits >= 1) && (_validDigits < 17),
 	       "BaseCouplingScheme()", "Valid digits of timestep length has to be "
 	       << "between 1 and 16!");
   preciceCheck(_firstParticipant != _secondParticipant,
 	       "ImplicitCouplingScheme()", "First participant and "
-               << "second participant must have different names! Called from BaseCoupling.");
+	       << "second participant must have different names! Called from BaseCoupling.");
   if (dtMethod == constants::FIXED_DT){
     preciceCheck(hasTimestepLength(), "ImplicitCouplingScheme()",
 		 "Timestep length value has to be given "
@@ -143,12 +143,12 @@ BaseCouplingScheme::BaseCouplingScheme
   }
   else {
     preciceError("initialize()", "Name of local participant \""
-                 << localParticipant << "\" does not match any "
-                 << "participant specified for the coupling scheme!");
+		 << localParticipant << "\" does not match any "
+		 << "participant specified for the coupling scheme!");
   }
   preciceCheck((maxIterations > 0) || (maxIterations == -1),
-               "ImplicitCouplingState()",
-               "Maximal iteration limit has to be larger than zero!");
+	       "ImplicitCouplingState()",
+	       "Maximal iteration limit has to be larger than zero!");
   assertion(_communication.use_count() > 0);
 }
 
@@ -167,8 +167,8 @@ void BaseCouplingScheme::receiveAndSetDt()
 
 void BaseCouplingScheme:: addDataToSend
 (
- mesh::PtrData data,
- bool          initialize)
+  mesh::PtrData data,
+  bool          initialize)
 {
   int id = data->getID();
   if(! utils::contained(id, _sendData)) {
@@ -185,8 +185,8 @@ void BaseCouplingScheme:: addDataToSend
 
 void BaseCouplingScheme:: addDataToReceive
 (
- mesh::PtrData data,
- bool          initialize)
+  mesh::PtrData data,
+  bool          initialize)
 {
   int id = data->getID();
   if(! utils::contained(id, _receiveData)) {
@@ -204,8 +204,8 @@ void BaseCouplingScheme:: addDataToReceive
 
 void BaseCouplingScheme:: sendState
 (
- com::PtrCommunication communication,
- int                   rankReceiver)
+  com::PtrCommunication communication,
+  int                   rankReceiver)
 {
   preciceTrace1("sendState()", rankReceiver);
   communication->startSendPackage(rankReceiver );
@@ -235,8 +235,8 @@ void BaseCouplingScheme:: sendState
 
 void BaseCouplingScheme:: receiveState
 (
- com::PtrCommunication communication,
- int                   rankSender)
+  com::PtrCommunication communication,
+  int                   rankSender)
 {
   preciceTrace1("receiveState()", rankSender);
   communication->startReceivePackage(rankSender);
@@ -272,7 +272,7 @@ void BaseCouplingScheme:: receiveState
 
 std::vector<int> BaseCouplingScheme:: sendData
 (
- com::PtrCommunication communication)
+  com::PtrCommunication communication)
 {
   preciceTrace("sendData()");
   assertion(communication.get() != NULL);
@@ -292,7 +292,7 @@ std::vector<int> BaseCouplingScheme:: sendData
 
 std::vector<int> BaseCouplingScheme:: receiveData
 (
- com::PtrCommunication communication)
+  com::PtrCommunication communication)
 {
   preciceTrace("receiveData()");
   assertion(communication.get() != NULL);
@@ -312,7 +312,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
 
 CouplingData* BaseCouplingScheme:: getSendData
 (
- int dataID)
+  int dataID)
 {
   preciceTrace1("getSendData()", dataID);
   DataMap::iterator iter = _sendData.find(dataID);
@@ -324,7 +324,7 @@ CouplingData* BaseCouplingScheme:: getSendData
 
 CouplingData* BaseCouplingScheme:: getReceiveData
 (
- int dataID)
+  int dataID)
 {
   preciceTrace1("getReceiveData()", dataID);
   DataMap::iterator iter = _receiveData.find(dataID);
@@ -358,11 +358,11 @@ double BaseCouplingScheme:: getTimestepLength() const
 
 void BaseCouplingScheme:: addComputedTime
 (
- double timeToAdd )
+  double timeToAdd )
 {
   preciceTrace2("addComputedTime()", timeToAdd, _time);
   preciceCheck(isCouplingOngoing(), "addComputedTime()",
-               "Invalid call of addComputedTime() after simulation end!");
+	       "Invalid call of addComputedTime() after simulation end!");
 
   _computedTimestepPart += timeToAdd;
   _time += timeToAdd;
@@ -371,14 +371,14 @@ void BaseCouplingScheme:: addComputedTime
   double eps = std::pow(10.0, -1 * _validDigits);
   bool valid = tarch::la::greaterEquals(getThisTimestepRemainder(), 0.0, eps);
   preciceCheck(valid, "addComputedTime()", "The computed timestep length of "
-               << timeToAdd << " exceeds the maximum timestep limit of "
-               << _timestepLength - _computedTimestepPart + timeToAdd
-               << " for this time step!");
+	       << timeToAdd << " exceeds the maximum timestep limit of "
+	       << _timestepLength - _computedTimestepPart + timeToAdd
+	       << " for this time step!");
 }
 
 bool BaseCouplingScheme:: willDataBeExchanged
 (
- double lastSolverTimestepLength) const
+  double lastSolverTimestepLength) const
 {
   preciceTrace1("willDataBeExchanged()", lastSolverTimestepLength);
   double eps = std::pow(10.0, -1 * _validDigits);
@@ -393,7 +393,7 @@ bool BaseCouplingScheme:: hasDataBeenExchanged() const
 
 void BaseCouplingScheme:: setHasDataBeenExchanged
 (
- bool hasDataBeenExchanged)
+  bool hasDataBeenExchanged)
 {
   _hasDataBeenExchanged = hasDataBeenExchanged;
 }
@@ -465,14 +465,14 @@ bool BaseCouplingScheme:: isCouplingTimestepComplete() const
 
 bool BaseCouplingScheme:: isActionRequired
 (
- const std::string& actionName) const
+  const std::string& actionName) const
 {
   return _actions.count(actionName) > 0;
 }
 
 void BaseCouplingScheme:: performedAction
 (
- const std::string& actionName)
+  const std::string& actionName)
 {
   _actions.erase(actionName);
 }
@@ -484,7 +484,7 @@ int BaseCouplingScheme:: getCheckpointTimestepInterval() const
 
 void BaseCouplingScheme:: requireAction
 (
- const std::string& actionName)
+  const std::string& actionName)
 {
   _actions.insert(actionName);
 }
@@ -498,8 +498,8 @@ std::string BaseCouplingScheme:: printBasicState() const
 
 std::string BaseCouplingScheme:: printBasicState
 (
- int    timesteps,
- double time ) const
+  int    timesteps,
+  double time ) const
 {
   std::ostringstream os;
   os << "dt# " << timesteps;
@@ -515,9 +515,9 @@ std::string BaseCouplingScheme:: printBasicState
   }
   if((_timestepLength != UNDEFINED_TIMESTEP_LENGTH)
      || (_maxTime != UNDEFINED_TIME))
-    {
-      os << " | max dt " << getNextTimestepMaxLength();
-    }
+  {
+    os << " | max dt " << getNextTimestepMaxLength();
+  }
   os << " | ongoing ";
   isCouplingOngoing() ? os << "yes" : os << "no";
   os << " | dt complete ";
@@ -541,12 +541,12 @@ void BaseCouplingScheme:: checkCompletenessRequiredActions ()
     std::ostringstream stream;
     foreach(const std::string & action, _actions){
       if (not stream.str().empty()){
-        stream << ", ";
+	stream << ", ";
       }
       stream << action;
     }
     preciceError("checkCompletenessRequiredActions()",
-                 "Unfulfilled required actions: " << stream.str() << "!");
+		 "Unfulfilled required actions: " << stream.str() << "!");
   }
 }
 
@@ -557,8 +557,8 @@ int BaseCouplingScheme:: getValidDigits () const
 
 void BaseCouplingScheme::initialize
 (
- double startTime,
- int    startTimestep)
+  double startTime,
+  int    startTimestep)
 {
   preciceTrace2("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
@@ -567,7 +567,7 @@ void BaseCouplingScheme::initialize
   assertion(getCommunication()->isConnected());
   // This currently does not fail, though description suggests it should in some cases for explicit coupling. 
   preciceCheck(not getSendData().empty(), "initialize()",
-               "No send data configured! Use explicit scheme for one-way coupling.");
+	       "No send data configured! Use explicit scheme for one-way coupling.");
   setTime(startTime);
   setTimesteps(startTimestep);
 
@@ -585,8 +585,8 @@ void BaseCouplingScheme::initialize
   else if (getPostProcessing().get() != NULL){
     int dataID = *(getPostProcessing()->getDataIDs().begin());
     preciceCheck(getSendData(dataID) == NULL, "initialize()",
-                 "In case of serial coupling, post-processing can be defined for "
-                 << "data of second participant only!");
+		 "In case of serial coupling, post-processing can be defined for "
+		 << "data of second participant only!");
   }
 
   // This test is valid, if only implicit schemes have convergence measures.
@@ -594,11 +594,11 @@ void BaseCouplingScheme::initialize
   if (not _convergenceMeasures.empty()) {
     requireAction(constants::actionWriteIterationCheckpoint());
   }
-    
+    
   foreach (DataMap::value_type & pair, getSendData()){
     if (pair.second->initialize){
       preciceCheck(not doesFirstStep(), "initialize()",
-                   "Only second participant can initialize data!");
+		   "Only second participant can initialize data!");
       preciceDebug("Initialized data to be written");
       setHasToSendInitData(true);
       break;
@@ -608,7 +608,7 @@ void BaseCouplingScheme::initialize
   foreach (DataMap::value_type & pair, getReceiveData()){
     if (pair.second->initialize){
       preciceCheck(doesFirstStep(), "initialize()",
-                   "Only first participant can receive initial data!");
+		   "Only first participant can receive initial data!");
       preciceDebug("Initialized data to be received");
       setHasToReceiveInitData(true);
     }
@@ -713,7 +713,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
     assertion(convMeasure.data != NULL);
     if (convMeasure.data->oldValues.cols() < 1){
       convMeasure.data->oldValues.append(CouplingData::DataMatrix(
-								  convMeasure.data->values->size(), 1, 0.0));
+					   convMeasure.data->values->size(), 1, 0.0));
     }
   }
   // Reserve storage for extrapolation of data values
@@ -723,7 +723,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
       preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
       assertion1(cols <= 1, cols);
       pair.second->oldValues.append(CouplingData::DataMatrix(
-							     pair.second->values->size(), _extrapolationOrder + 1 - cols, 0.0));
+				      pair.second->values->size(), _extrapolationOrder + 1 - cols, 0.0));
     }
   }
 }

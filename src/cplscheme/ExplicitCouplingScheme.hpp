@@ -18,15 +18,15 @@ class ExplicitCouplingScheme : public BaseCouplingScheme
 public:
 
   ExplicitCouplingScheme (
-			  double                maxTime,
-			  int                   maxTimesteps,
-			  double                timestepLength,
-			  int                   validDigits,
-			  const std::string&    firstParticipant,
-			  const std::string&    secondParticipant,
-			  const std::string&    localParticipantName,
-			  com::PtrCommunication communication,
-			  constants::TimesteppingMethod dtMethod );
+    double                maxTime,
+    int                   maxTimesteps,
+    double                timestepLength,
+    int                   validDigits,
+    const std::string&    firstParticipant,
+    const std::string&    secondParticipant,
+    const std::string&    localParticipantName,
+    com::PtrCommunication communication,
+    constants::TimesteppingMethod dtMethod );
 
   virtual std::string printCouplingState() const;
 
@@ -36,7 +36,7 @@ public:
 
 private:
 
-  // @brief Logging device.
+  /// @brief Logging device.
   static tarch::logging::Log _log;
 
 };

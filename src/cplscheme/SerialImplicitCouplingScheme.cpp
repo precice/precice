@@ -152,7 +152,6 @@ void SerialImplicitCouplingScheme:: advance()
   else {
     increaseIterationToPlot();
   }
-  
 }
 
 }} // namespace precice, cplscheme

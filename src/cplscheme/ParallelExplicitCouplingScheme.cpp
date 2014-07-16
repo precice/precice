@@ -12,7 +12,7 @@ namespace precice {
 namespace cplscheme {
 
 tarch::logging::Log ParallelExplicitCouplingScheme::
-    _log("precice::cplscheme::ParallelExplicitCouplingScheme" );
+_log("precice::cplscheme::ParallelExplicitCouplingScheme" );
 
 ParallelExplicitCouplingScheme:: ParallelExplicitCouplingScheme
 (
@@ -25,9 +25,9 @@ ParallelExplicitCouplingScheme:: ParallelExplicitCouplingScheme
   const std::string&    localParticipant,
   com::PtrCommunication communication,
   constants::TimesteppingMethod dtMethod )
-:
+  :
   ExplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-        secondParticipant,localParticipant,communication,dtMethod)
+			 secondParticipant,localParticipant,communication,dtMethod)
 {}
 
 
@@ -71,7 +71,7 @@ void ParallelExplicitCouplingScheme:: initializeData()
 {
   preciceTrace("initializeData()");
   preciceCheck(isInitialized(), "initializeData()",
-     "initializeData() can be called after initialize() only!");
+	       "initializeData() can be called after initialize() only!");
 
   if(not hasToSendInitData() && not hasToReceiveInitData()){
     preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
@@ -79,7 +79,7 @@ void ParallelExplicitCouplingScheme:: initializeData()
   }
 
   preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-     "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+	       "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
@@ -122,7 +122,7 @@ void ParallelExplicitCouplingScheme:: advance()
   preciceTrace("advance()");
   checkCompletenessRequiredActions();
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-       "initializeData() needs to be called before advance if data has to be initialized!");
+	       "initializeData() needs to be called before advance if data has to be initialized!");
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
 
@@ -179,8 +179,5 @@ void ParallelExplicitCouplingScheme:: advance()
     setComputedTimestepPart(0.0);
   }
 }
-
-
-
 
 }} // namespace precice, cplscheme

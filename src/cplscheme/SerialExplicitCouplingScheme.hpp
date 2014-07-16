@@ -10,16 +10,14 @@
 #include "tarch/logging/Log.h"
 #include "utils/Helpers.hpp"
 
-namespace precice { namespace cplscheme { namespace tests {
+namespace precice { namespace cplscheme { namespace tests {
 class ExplicitCouplingSchemeTest;
-} } }
+} } }
 
 namespace precice {
 namespace cplscheme {
 
-/**
- * @brief Serial coupling scheme without iterations per timestep.
- */
+/// @brief Serial coupling scheme without iterations per timestep.
 class SerialExplicitCouplingScheme : public ExplicitCouplingScheme
 {
 public:
@@ -34,19 +32,18 @@ public:
    * @param secondParticipant [IN] Name of second participant in coupling.
    * @param localParticipant [IN] Name of participant using this coupling scheme.
    * @param communication [IN] Communication object for com. between participants.
-   * @param monitorIterations [IN] If true, a txt file monitoring iterations is
-   *                          written.
+   * @param monitorIterations [IN] If true, a txt file monitoring iterations is written.
    */
   SerialExplicitCouplingScheme (
-				double                maxTime,
-				int                   maxTimesteps,
-				double                timestepLength,
-				int                   validDigits,
-				const std::string&    firstParticipant,
-				const std::string&    secondParticipant,
-				const std::string&    localParticipant,
-				com::PtrCommunication communication,
-				constants::TimesteppingMethod dtMethod);
+    double                maxTime,
+    int                   maxTimesteps,
+    double                timestepLength,
+    int                   validDigits,
+    const std::string&    firstParticipant,
+    const std::string&    secondParticipant,
+    const std::string&    localParticipant,
+    com::PtrCommunication communication,
+    constants::TimesteppingMethod dtMethod);
   
   /**
    * @brief Advances within the coupling scheme.
@@ -55,10 +52,10 @@ public:
    * - initialize() has been called.
    */
   virtual void advance();
-  
-  // @brief Logging device.
+  
+  /// @brief Logging device.
   static tarch::logging::Log _log;
-  
+  
   friend class tests::ExplicitCouplingSchemeTest;
 
 };

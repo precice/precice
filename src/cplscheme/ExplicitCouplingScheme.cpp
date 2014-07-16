@@ -13,15 +13,15 @@ _log("precice::cplscheme::ExplicitCouplingScheme");
 
 ExplicitCouplingScheme:: ExplicitCouplingScheme
 (
- double                maxTime,
- int                   maxTimesteps,
- double                timestepLength,
- int                   validDigits,
- const std::string&    firstParticipant,
- const std::string&    secondParticipant,
- const std::string&    localParticipantName,
- com::PtrCommunication communication,
- constants::TimesteppingMethod dtMethod)
+  double                maxTime,
+  int                   maxTimesteps,
+  double                timestepLength,
+  int                   validDigits,
+  const std::string&    firstParticipant,
+  const std::string&    secondParticipant,
+  const std::string&    localParticipantName,
+  com::PtrCommunication communication,
+  constants::TimesteppingMethod dtMethod)
   :
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits,
 		     firstParticipant, secondParticipant, localParticipantName,

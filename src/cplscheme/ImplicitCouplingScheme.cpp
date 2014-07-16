@@ -20,16 +20,16 @@ _log("precice::cplscheme::ImplicitCouplingScheme" );
 
 ImplicitCouplingScheme:: ImplicitCouplingScheme
 (
- double                maxTime,
- int                   maxTimesteps,
- double                timestepLength,
- int                   validDigits,
- const std::string&    firstParticipant,
- const std::string&    secondParticipant,
- const std::string&    localParticipant,
- com::PtrCommunication communication,
- int                   maxIterations,
- constants::TimesteppingMethod dtMethod )
+  double                maxTime,
+  int                   maxTimesteps,
+  double                timestepLength,
+  int                   validDigits,
+  const std::string&    firstParticipant,
+  const std::string&    secondParticipant,
+  const std::string&    localParticipant,
+  com::PtrCommunication communication,
+  int                   maxIterations,
+  constants::TimesteppingMethod dtMethod )
   :
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits,
 		     firstParticipant, secondParticipant, localParticipant,
@@ -38,7 +38,7 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
 
 void ImplicitCouplingScheme:: setExtrapolationOrder
 (
- int order )
+  int order )
 {
   preciceCheck((order == 0) || (order == 1) || (order == 2),
                "setExtrapolationOrder()", "Extrapolation order has to be "
@@ -48,9 +48,9 @@ void ImplicitCouplingScheme:: setExtrapolationOrder
 
 void ImplicitCouplingScheme:: addConvergenceMeasure
 (
- int                         dataID,
- bool                        suffices,
- impl::PtrConvergenceMeasure measure )
+  int                         dataID,
+  bool                        suffices,
+  impl::PtrConvergenceMeasure measure )
 {
   ConvergenceMeasure convMeasure;
   convMeasure.dataID = dataID;
@@ -62,7 +62,7 @@ void ImplicitCouplingScheme:: addConvergenceMeasure
 
 void ImplicitCouplingScheme:: setIterationPostProcessing
 (
- impl::PtrPostProcessing postProcessing )
+  impl::PtrPostProcessing postProcessing )
 {
   assertion(postProcessing.get() != NULL);
   _postProcessing = postProcessing;
@@ -165,7 +165,7 @@ void ImplicitCouplingScheme:: newConvergenceMeasurements()
   }
 }
 
-
+
 std::string ImplicitCouplingScheme:: printCouplingState() const
 {
   std::ostringstream os;
@@ -179,7 +179,7 @@ std::string ImplicitCouplingScheme:: printCouplingState() const
 
 void ImplicitCouplingScheme:: exportState
 (
- const std::string& filenamePrefix ) const
+  const std::string& filenamePrefix ) const
 {
   if (not doesFirstStep()){
     io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
@@ -197,7 +197,7 @@ void ImplicitCouplingScheme:: exportState
 
 void ImplicitCouplingScheme:: importState
 (
- const std::string& filenamePrefix )
+  const std::string& filenamePrefix )
 {
   if (not doesFirstStep()){
     io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
