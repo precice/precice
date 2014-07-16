@@ -48,8 +48,8 @@ def checkset_var(varname, default):
     return var
 
 def compiler_validator(key, value, environment):
-    """ Validator function for the compiler option. Checks if the given compiler is either (g++ or icc) or an MPI compiler. """
-    if value in ["g++", "icc"] or value.startswith("mpic"):
+    """ Validator function for the compiler option. Checks if the given compiler is either (g++ or icc or clang++) or an MPI compiler. """
+    if value in ["g++", "icc", "clang++"] or value.startswith("mpic"):
         return True
     else:
         return False
@@ -61,7 +61,7 @@ vars = Variables(None, ARGUMENTS)
 
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
 vars.Add(EnumVariable('build', 'Build type, either release or debug', "debug", allowed_values=('release', 'debug')))
-vars.Add("compiler", "Compiler must be either g++ or icc or starting with mpic when using MPI.", "g++", validator=compiler_validator)
+vars.Add("compiler", "Compiler must be either g++ or icc or clang++ or starting with mpic when using MPI.", "g++", validator=compiler_validator)
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
 vars.Add(BoolVariable("sockets", "Enables Socket-based communication.", True))
 vars.Add(BoolVariable("boost_inst", "Enable if Boost is available compiled and installed.", False))
@@ -151,7 +151,6 @@ if env["python"]:
 print '... done'
 
 
-
 #---------------------------- Modify environment according to fetched variables
 
 print
@@ -160,7 +159,6 @@ print 'Configuring build variables ...'
 env.Replace(ENV = os.environ)
 
 env.Append(LIBPATH = [('#' + buildpath)])
-
 
 if env["compiler"] == 'icc':
     env.AppendUnique(LIBPATH = ['/usr/lib/'])
@@ -171,6 +169,8 @@ if env["compiler"] == 'icc':
         env.Append(CCFLAGS = ['-w', '-fast', '-align', '-ansi-alias'])
 elif env["compiler"] == 'g++':
     pass
+elif env["compiler"] == "clang++":
+    env.Append(CCFLAGS = ["-stdlib=libc++"])
     
 env.Replace(CXX = env["compiler"])
 
@@ -224,7 +224,6 @@ elif not env["mpi"]:
 uniqueCheckLib(conf, 'rt') # To work with tarch::utils::Watch::clock_gettime
 
 
-
 if env["sockets"]:
     env.AppendUnique(LIBPATH = [socketLibPath])
     uniqueCheckLib(conf, socketLib)
@@ -262,7 +261,6 @@ print '... done'
 
 env = conf.Finish() # Used to check libraries
 
-    
 #--------------------------------------------- Define sources and build targets
     
 (sourcesPreCICE, sourcesPreCICEMain) = SConscript (
