@@ -168,8 +168,8 @@ if env["compiler"] == 'icc':
 elif env["compiler"] == 'g++':
     pass
 elif env["compiler"] == "clang++":
-    env.Append(CCFLAGS = ["-stdlib=libc++"])
-    
+    env['ENV']['TERM'] = os.environ['TERM'] # colored compile messages from clang
+
 env.Replace(CXX = env["compiler"])
 
 
