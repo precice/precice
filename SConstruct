@@ -156,8 +156,6 @@ print '... done'
 print
 print 'Configuring build variables ...'
 
-env.Replace(ENV = os.environ)
-
 env.Append(LIBPATH = [('#' + buildpath)])
 
 if env["compiler"] == 'icc':
