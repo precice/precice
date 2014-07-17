@@ -76,7 +76,7 @@ template<typename Type>
   inline
   typename utils::EnableIf<not IsVector<Type>::value,
   bool
->:: Type smallerEquals (
+>::Type smallerEquals (
   Type lhs,
   Type rhs,
   Type tolerance
