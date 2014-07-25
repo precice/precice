@@ -3,7 +3,6 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "UncoupledScheme.hpp"
 #include "com/Communication.hpp"
-#include <limits>
 
 namespace precice {
 namespace cplscheme {

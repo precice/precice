@@ -5,40 +5,25 @@
 #define PRECICE_CPLSCHEME_SERIALIMPLICITCOUPLINGSCHEME_HPP_
 
 #include "ImplicitCouplingScheme.hpp"
-#include "BaseCouplingScheme.hpp"
 #include "SharedPointer.hpp"
-#include "Constants.hpp"
 #include "impl/SharedPointer.hpp"
-#include "io/TXTTableWriter.hpp"
-#include "mesh/Vertex.hpp"
-#include "mesh/PropertyContainer.hpp"
-#include "mesh/Mesh.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Helpers.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
-#include "boost/tuple/tuple.hpp"
+#include "boost/tuple/tuple.hpp" // ??
 
-namespace precice {
-  namespace cplscheme {
-    namespace tests {
-      class SerialImplicitCouplingSchemeTest;
-    }
-  }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
+namespace precice { namespace cplscheme { namespace tests {
+class SerialImplicitCouplingSchemeTest;
+} } }
 
 namespace precice {
 namespace cplscheme {
 
-/**
- *
- * @brief Serial coupling scheme with iterations per timestep to achieve strong solution.
- */
+/// @brief Serial coupling scheme with iterations per timestep to achieve strong solution.
 class SerialImplicitCouplingScheme : public ImplicitCouplingScheme
 {
 public:
-
+  
   /**
    * @brief Constructor.
    *
@@ -50,8 +35,7 @@ public:
    * @param localParticipant [IN] Name of participant using this coupling scheme.
    * @param communication [IN] Communication object for com. between participants.
    * @param maxIterations [IN] Maximal iterations per coupling timestep.
-   * @param monitorIterations [IN] If true, a txt file monitoring iterations is
-   *                          written.
+   * @param monitorIterations [IN] If true, a txt file monitoring iterations is written.
    */
   SerialImplicitCouplingScheme (
     double                maxTime,
@@ -64,29 +48,7 @@ public:
     com::PtrCommunication communication,
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod);
-
-  /**
-   * @brief Destructor.
-   */
-  virtual ~SerialImplicitCouplingScheme();
-
-
-  /**
-   * @brief Initializes the coupling scheme.
-   */
-  virtual void initialize (
-    double startTime,
-    int    startTimestep );
-
-  /**
-   * @brief Initializes data with written values.
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   * - advance() has NOT yet been called.
-   */
-  virtual void initializeData();
-
+  
   /**
    * @brief Advances within the coupling scheme (not necessarily in time).
    *
@@ -94,12 +56,10 @@ public:
    * - initialize() has been called.
    */
   virtual void advance();
-
-
-  // @brief Logging device.
+  
+  /// @brief Logging device.
   static tarch::logging::Log _log;
-
-
+  
   friend class tests::SerialImplicitCouplingSchemeTest;
 };
 
