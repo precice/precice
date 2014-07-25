@@ -512,7 +512,7 @@ std::string BaseCouplingScheme:: printBasicState
   double time ) const
 {
   std::ostringstream os;
-  os << "dt# " << timesteps;
+  os << "dt# " << timesteps+1;
   if(_maxTimesteps != UNDEFINED_TIMESTEPS){
     os << " of " << _maxTimesteps;
   }
