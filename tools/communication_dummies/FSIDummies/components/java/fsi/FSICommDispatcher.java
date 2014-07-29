@@ -57,20 +57,20 @@ public class FSICommDispatcher implements FSIComm {
      return !_destinations.isEmpty();
   }
   
-  public void transferCoordinates(final double coord[]) {
+  public void transferCoordinates(final int coordId[],final int offsets[],final String hosts[]) {
     for(FSIComm port: _destinations)
-      port.transferCoordinates(coord);
+      port.transferCoordinates(coordId,offsets,hosts);
   }
   
-  public void transferCoordinatesParallel(final double coord[]) {
+  public void transferCoordinatesParallel(final int coordId[],final int offsets[],final String hosts[]) {
     for(FSIComm port: _destinations)
-      port.transferCoordinatesParallel(coord);
+      port.transferCoordinatesParallel(coordId,offsets,hosts);
   }
   
-  public void transferCoordinatesForIntegerEnums(final double coord[]) {
+  public void transferCoordinatesForIntegerEnums(final int coordId[],final int offsets[],final String hosts[]) {
     for(FSIComm port: _destinations){
       
-      port.transferCoordinates(coord);
+      port.transferCoordinates(coordId,offsets,hosts);
       
     }
   }

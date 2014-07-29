@@ -15,11 +15,17 @@ subroutine  fsi_fsicommc2socket_plain_port_destroy_instance(self) bind(c)
 end subroutine fsi_fsicommc2socket_plain_port_destroy_instance
 
 subroutine  fsi_fsicommc2socket_plain_port_transferCoordinates(self,&
-	coord,coord_len) bind(c)
+	coordId,coordId_len,&
+	offsets,offsets_len,&
+	hosts,hosts_len) bind(c)
      use, intrinsic :: iso_c_binding
      integer(kind=c_long_long)::self
-     	real(kind=c_double),intent(in),dimension(*)::coord
-	integer(kind=c_int),intent(in)::coord_len
+     	integer(kind=c_int),intent(in),dimension(*)::coordId
+	integer(kind=c_int),intent(in)::coordId_len
+	integer(kind=c_int),intent(in),dimension(*)::offsets
+	integer(kind=c_int),intent(in)::offsets_len
+	integer(kind=c_int),intent(in)::hosts_len
+	type(c_ptr),dimension(*),intent(in)::hosts
 
 end subroutine fsi_fsicommc2socket_plain_port_transferCoordinates
 subroutine  fsi_fsicommc2socket_plain_port_transferData(self,&

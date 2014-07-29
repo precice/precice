@@ -162,22 +162,28 @@ readDoubleData(data,data_len);
 
   public void invoke_transferCoordinates() throws 
          de.tum.ascodt.utils.exceptions.ASCoDTException{
-     int coord_len=readIntData();
-double []coord=new double[coord_len];
-readDoubleData(coord,coord_len);
+     int coordId_len=readIntData();
+int []coordId=new int[coordId_len];
+readIntData(coordId,coordId_len);
+int offsets_len=readIntData();
+int []offsets=new int[offsets_len];
+readIntData(offsets,offsets_len);
+int hosts_len=readIntData();
+String []hosts=new String[hosts_len];
+readStringData(hosts,hosts_len);
 
-     transferCoordinates(coord);
+     transferCoordinates(coordId,offsets,hosts);
      
   }
   public void invoke_transferCoordinatesParallel() throws 
          de.tum.ascodt.utils.exceptions.ASCoDTException{
     
   }
-  public void transferCoordinates(final double coord[]) {
-     _destination.transferCoordinates(coord);
+  public void transferCoordinates(final int coordId[],final int offsets[],final String hosts[]) {
+     _destination.transferCoordinates(coordId,offsets,hosts);
   }
-  public void transferCoordinatesParallel(final double coord[]) {
-     _destination.transferCoordinatesParallel(coord);
+  public void transferCoordinatesParallel(final int coordId[],final int offsets[],final String hosts[]) {
+     _destination.transferCoordinatesParallel(coordId,offsets,hosts);
   }
   
   

@@ -10,17 +10,50 @@
 //
 
 #include "fsi/FSIDummyBAbstractImplementation.h"
+#include "fsi/FSIDummyCommunicator.h"
 #include <string>
+#include <hash_map>
 namespace fsi { 
 
      class FSIDummyBImplementation;
+
 }
 
 class fsi::FSIDummyBImplementation : public fsi::FSIDummyBAbstractImplementation{
-     public:
+private:
+	int _pointsSize;
+	bool _initialized;
+	int* _localIds;
+	double* _data;
+	__gnu_cxx::hash_map<int,fsi::FSIDummyCommunicator*> _comms;
+	const int getHostId(
+			const int pointId,
+			const int* offsets,
+			const int offset_len) const;
+	fsi::FSIDummyCommunicator* getCommunicator(
+			const int commId,const std::string commid);
+
+//	double* _localCoordinatesX;
+//	double* _localCoordinatesY;
+
+public:
+
           FSIDummyBImplementation();
           ~FSIDummyBImplementation();
-          void transferCoordinates(const double* coord, const int coord_len);
+          void setCoordinates(
+        		  int* localIds,
+        		  //double* coordinatesX,
+        		  //double* coordinatesY,
+        		  const int pointsSize);
+          void setData(double* data);
+          void transferCoordinates(
+        		  const int* coordIds,
+        		  const int coord_len,
+        		  const int* offsets,
+        		  const int offsets_len,
+        		  const std::string* commids,
+        		  const int commids_len
+          );
           void transferData(const double* data, const int data_len);
 };     
 

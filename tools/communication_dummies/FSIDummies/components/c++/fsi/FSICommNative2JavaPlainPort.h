@@ -39,8 +39,8 @@ class fsi::FSICommNative2JavaPlainPort: public fsi::FSIComm{
   public:
     FSICommNative2JavaPlainPort(JavaVM* jvm,jobject obj);
     ~FSICommNative2JavaPlainPort();
-    void transferCoordinates(const double* coord, const int coord_len);  
-    void transferCoordinatesParallel(const double* coord, const int coord_len);
+    void transferCoordinates(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len);  
+    void transferCoordinatesParallel(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len);
    
     void transferData(const double* data, const int data_len);  
     void transferDataParallel(const double* data, const int data_len);

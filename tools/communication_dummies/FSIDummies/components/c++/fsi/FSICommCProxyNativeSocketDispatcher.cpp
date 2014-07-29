@@ -40,13 +40,16 @@ void fsi_fsicomm_f2c_nsd_destroy_instance_(long long* ptr){
 }
 
 #ifdef _WIN32
-void FSI_FSICOMM_F2C_NSD_TRANSFERCOORDINATES(long long* ref,double* coord, int* coord_len){
+void FSI_FSICOMM_F2C_NSD_TRANSFERCOORDINATES(long long* ref,int* coordId,int* coordId_len,int* offsets,int* offsets_len,char** hosts,int* hosts_len){
 #else
-void fsi_fsicomm_f2c_nsd_transfercoordinates_(long long* ref,double* coord, int* coord_len){
+void fsi_fsicomm_f2c_nsd_transfercoordinates_(long long* ref,int* coordId,int* coordId_len,int* offsets,int* offsets_len,char** hosts,int* hosts_len){
 #endif
     
-     
-     ((fsi::FSICommNativeSocketDispatcher*)*ref)->transferCoordinates(coord,*coord_len);
+     std::string* hosts_str=new std::string[*hosts_len];
+for(int i=0;i<*hosts_len;i++)
+hosts_str[i]=hosts[i];
+
+     ((fsi::FSICommNativeSocketDispatcher*)*ref)->transferCoordinates(coordId,*coordId_len,offsets,*offsets_len,hosts_str,*hosts_len);
 }
 #ifdef _WIN32
 void FSI_FSICOMM_F2C_NSD_TRANSFERDATA(long long* ref,double* data, int* data_len){

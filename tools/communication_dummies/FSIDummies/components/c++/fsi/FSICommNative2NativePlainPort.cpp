@@ -35,13 +35,13 @@ fsi::FSICommNative2NativePlainPort::~FSICommNative2NativePlainPort(){
 void fsi::FSICommNative2NativePlainPort::connect(fsi::FSIComm* destination){
   _destination=destination;
 }
-void fsi::FSICommNative2NativePlainPort::transferCoordinates(const double* coord, const int coord_len){
+void fsi::FSICommNative2NativePlainPort::transferCoordinates(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len){
      assert(_destination!=NULL);
-     _destination->transferCoordinates(coord,coord_len);
+     _destination->transferCoordinates(coordId,coordId_len,offsets,offsets_len,hosts,hosts_len);
 }
-void fsi::FSICommNative2NativePlainPort::transferCoordinatesParallel(const double* coord, const int coord_len){
+void fsi::FSICommNative2NativePlainPort::transferCoordinatesParallel(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len){
      assert(_destination!=NULL);
-     _destination->transferCoordinatesParallel(coord,coord_len);
+     _destination->transferCoordinatesParallel(coordId,coordId_len,offsets,offsets_len,hosts,hosts_len);
 }
 void fsi::FSICommNative2NativePlainPort::transferData(const double* data, const int data_len){
      assert(_destination!=NULL);

@@ -49,14 +49,14 @@ bool fsi::FSICommNativeDispatcher::isConnected() const{
 }
 
 
-void fsi::FSICommNativeDispatcher::transferCoordinates(const double* coord, const int coord_len){
+void fsi::FSICommNativeDispatcher::transferCoordinates(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len){
     for(unsigned int i=0;i<_destinations.size();i++)
-          _destinations[i]->transferCoordinates(coord,coord_len);
+          _destinations[i]->transferCoordinates(coordId,coordId_len,offsets,offsets_len,hosts,hosts_len);
 }
 
-void fsi::FSICommNativeDispatcher::transferCoordinatesParallel(const double* coord, const int coord_len){
+void fsi::FSICommNativeDispatcher::transferCoordinatesParallel(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len){
     for(unsigned int i=0;i<_destinations.size();i++)
-          _destinations[i]->transferCoordinatesParallel(coord,coord_len);
+          _destinations[i]->transferCoordinatesParallel(coordId,coordId_len,offsets,offsets_len,hosts,hosts_len);
 }
 void fsi::FSICommNativeDispatcher::transferData(const double* data, const int data_len){
     for(unsigned int i=0;i<_destinations.size();i++)

@@ -56,15 +56,30 @@ subroutine transferData(this,&
 data,data_len)
 end subroutine transferData
 subroutine transferCoordinates(this,&
-	coord,coord_len)
+	coordId,coordId_len,&
+	offsets,offsets_len,&
+	hosts,hosts_len)
      use, intrinsic :: iso_c_binding
      class(FSIComm2SocketPort)::this
-     	real(8),intent(in),dimension(*)::coord
-	integer,intent(in)::coord_len
+     	integer,intent(in),dimension(*)::coordId
+	integer,intent(in)::coordId_len
+	integer,intent(in),dimension(*)::offsets
+	integer,intent(in)::offsets_len
+	character(*),intent(in),dimension(*)::hosts
+	integer,intent(in)::hosts_len
+	type(c_ptr),dimension(hosts_len) :: hostsPtrArray
+	integer::hosts_ns
+	character(255), dimension(hosts_len), target :: hostsFSArray
+	do hosts_ns = 1, hosts_len
+		hostsFSArray(hosts_ns) = hosts(hosts_ns)// C_NULL_CHAR
+		hostsPtrArray(hosts_ns) = C_LOC(hostsFSArray(hosts_ns))
+	end do
 
      
      call fsi_fsicommc2socket_plain_port_transferCoordinates(this%reference,&
-coord,coord_len)
+coordId,coordId_len,&
+offsets,offsets_len,&
+hosts,hosts_len)
 end subroutine transferCoordinates
 
 end module  fsi_FSIComm2SocketPort

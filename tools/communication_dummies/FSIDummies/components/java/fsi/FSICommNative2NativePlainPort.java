@@ -61,11 +61,11 @@ public class FSICommNative2NativePlainPort extends FSICommAbstractPort {
      _ref=ref;
   }
 
-  public void transferCoordinates(final double coord[]) {
+  public void transferCoordinates(final int coordId[],final int offsets[],final String hosts[]) {
     //DO NOTHING HERE
   }
   
-   public void transferCoordinatesParallel(final double coord[]) {
+   public void transferCoordinatesParallel(final int coordId[],final int offsets[],final String hosts[]) {
     //DO NOTHING HERE
   }
   

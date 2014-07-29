@@ -149,6 +149,12 @@ include_directories("../../src")
 include_directories("../../components/c++")
 
 include("sources.cmake")
+SET(CPP_FILES
+	${CPP_FILES}
+     ../../src/fsi/FSIDummyCommunicator.cpp
+ 
+)
+
 include("targets.cmake")
 
 target_link_libraries("fsi.FSIDummyB"

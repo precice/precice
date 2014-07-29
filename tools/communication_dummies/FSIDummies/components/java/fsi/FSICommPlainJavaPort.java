@@ -15,18 +15,18 @@ public class FSICommPlainJavaPort extends FSICommAbstractPort {
   }
   
 
-  public void transferCoordinates(final double coord[]) {
+  public void transferCoordinates(final int coordId[],final int offsets[],final String hosts[]) {
    // if (_destination!=null) {
       //_destination.lock();
-      _destination.transferCoordinates(coord);
+      _destination.transferCoordinates(coordId,offsets,hosts);
       //_destination.unlock();
     //}
   }
   
-  public void transferCoordinatesParallel(final double coord[]) {
+  public void transferCoordinatesParallel(final int coordId[],final int offsets[],final String hosts[]) {
    // if (_destination!=null) {
       //_destination.lock();
-      _destination.transferCoordinatesParallel(coord);
+      _destination.transferCoordinatesParallel(coordId,offsets,hosts);
       //_destination.unlock();
     //}
   }

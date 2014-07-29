@@ -11,7 +11,7 @@ package fsi {
   	test();
   }
   interface FSIComm{
-  	transferCoordinates(in double coord[]);
+  	transferCoordinates(in int coordId[],in int offsets[],in string hosts[]);
   	transferData(in double data[]);
  
   }

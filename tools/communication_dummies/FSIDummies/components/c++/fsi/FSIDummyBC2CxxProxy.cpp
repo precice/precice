@@ -339,13 +339,30 @@ void invoker_transferCoordinates(void** ref,int newsockfd, int buffer_size,char*
 ,MPI_Comm communicator, int methodId
 #endif
 ){
-  int coord_len=0;
-readData((char*)&coord_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
-double* coord=new double[coord_len];
-readData((char*)coord,sizeof(double)*coord_len,rcvBuffer,newsockfd,buffer_size);
+  int coordId_len=0;
+readData((char*)&coordId_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int* coordId=new int[coordId_len];
+readData((char*)coordId,sizeof(int)*coordId_len,rcvBuffer,newsockfd,buffer_size);
+int offsets_len=0;
+readData((char*)&offsets_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int* offsets=new int[offsets_len];
+readData((char*)offsets,sizeof(int)*offsets_len,rcvBuffer,newsockfd,buffer_size);
+int hosts_len=0;
+readData((char*)&hosts_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+char (* hosts)[255]=new char[hosts_len][255];
+std::string* hosts_data=new std::string[hosts_len];
+for(int i=0;i<hosts_len;i++){
+	int hosts_data_len=0;
+	readData((char*)&hosts_data_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+	readData((char*)hosts[i],hosts_data_len<255?hosts_data_len:255,rcvBuffer,newsockfd,buffer_size);
+	hosts[i][hosts_data_len]='\0';
+	hosts_data[i]=hosts[i];
+}
 
-  ((fsi::FSIDummyBImplementation*)*ref)->transferCoordinates(coord,coord_len);
-  delete [] coord;
+  ((fsi::FSIDummyBImplementation*)*ref)->transferCoordinates(coordId,coordId_len,offsets,offsets_len,hosts_data,hosts_len);
+  delete [] coordId;
+delete [] offsets;
+delete [] hosts;
 
 }
 
@@ -356,18 +373,41 @@ void parallel_master_invoker_transferCoordinates(void** ref,int newsockfd, int b
 #endif
 ){
  	
-  int coord_len=0;
-readData((char*)&coord_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
-double* coord=new double[coord_len];
-readData((char*)coord,sizeof(double)*coord_len,rcvBuffer,newsockfd,buffer_size);
+  int coordId_len=0;
+readData((char*)&coordId_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int* coordId=new int[coordId_len];
+readData((char*)coordId,sizeof(int)*coordId_len,rcvBuffer,newsockfd,buffer_size);
+int offsets_len=0;
+readData((char*)&offsets_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int* offsets=new int[offsets_len];
+readData((char*)offsets,sizeof(int)*offsets_len,rcvBuffer,newsockfd,buffer_size);
+int hosts_len=0;
+readData((char*)&hosts_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+char (* hosts)[255]=new char[hosts_len][255];
+std::string* hosts_data=new std::string[hosts_len];
+for(int i=0;i<hosts_len;i++){
+	int hosts_data_len=0;
+	readData((char*)&hosts_data_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+	readData((char*)hosts[i],hosts_data_len<255?hosts_data_len:255,rcvBuffer,newsockfd,buffer_size);
+	hosts[i][hosts_data_len]='\0';
+	hosts_data[i]=hosts[i];
+}
 
   #ifdef Parallel
   broadcastParallelData((char*)&methodId,sizeof(int),communicator);
-  broadcastParallelData((char*)&coord_len,sizeof(int),communicator);
-broadcastParallelData((char*)coord,sizeof(double)*coord_len,communicator);
+  broadcastParallelData((char*)&coordId_len,sizeof(int),communicator);
+broadcastParallelData((char*)coordId,sizeof(int)*coordId_len,communicator);
+broadcastParallelData((char*)&offsets_len,sizeof(int),communicator);
+broadcastParallelData((char*)offsets,sizeof(int)*offsets_len,communicator);
+broadcastParallelData((char*)&hosts_len,sizeof(int),communicator);
+for(int i=0;i<hosts_len;i++){
+	int hosts_data_len=hosts_data[i].size();
+	broadcastParallelData((char*)&hosts_data_len,sizeof(int),communicator);
+	broadcastParallelData((char*)hosts[i],hosts_data_len<255?hosts_data_len:255,communicator);
+}
 
   #endif
-  ((fsi::FSIDummyBImplementation*)*ref)->transferCoordinates(coord,coord_len);
+  ((fsi::FSIDummyBImplementation*)*ref)->transferCoordinates(coordId,coordId_len,offsets,offsets_len,hosts_data,hosts_len);
   //int ack=1;
   //sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
 }
@@ -377,12 +417,27 @@ void parallel_worker_invoker_transferCoordinates(void** ref
 #endif
 ){
   #ifdef Parallel
-  int coord_len=0;
-broadcastParallelData((char*)&coord_len,sizeof(int),newsockfd);
-double* coord=new double[coord_len];
-broadcastParallelData((char*)coord,sizeof(double)*coord_len,newsockfd);
+  int coordId_len=0;
+broadcastParallelData((char*)&coordId_len,sizeof(int),newsockfd);
+int* coordId=new int[coordId_len];
+broadcastParallelData((char*)coordId,sizeof(int)*coordId_len,newsockfd);
+int offsets_len=0;
+broadcastParallelData((char*)&offsets_len,sizeof(int),newsockfd);
+int* offsets=new int[offsets_len];
+broadcastParallelData((char*)offsets,sizeof(int)*offsets_len,newsockfd);
+int hosts_len=0;
+broadcastParallelData((char*)&hosts_len,sizeof(int),newsockfd);
+char (* hosts)[255]=new char[hosts_len][255];
+std::string * hosts_data = new std::string[hosts_len];
+for(int i=0;i<hosts_len;i++){
+	int hosts_data_len=0;
+	broadcastParallelData((char*)&hosts_data_len,sizeof(int),newsockfd);
+	broadcastParallelData((char*)hosts[i],hosts_data_len<255?hosts_data_len:255,newsockfd);
+	hosts[i][hosts_data_len]='\0';
+	hosts_data[i]=hosts[i];
+}
 
-  ((fsi::FSIDummyBImplementation*)*ref)->transferCoordinates(coord,coord_len);
+  ((fsi::FSIDummyBImplementation*)*ref)->transferCoordinates(coordId,coordId_len,offsets,offsets_len,hosts_data,hosts_len);
   #endif		  
 } 
 

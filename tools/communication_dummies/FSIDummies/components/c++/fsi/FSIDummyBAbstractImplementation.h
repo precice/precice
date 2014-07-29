@@ -26,7 +26,7 @@ class fsi::FSIDummyBAbstractImplementation: public Component ,public fsi::FSICom
        FSIDummyBAbstractImplementation();
        virtual ~FSIDummyBAbstractImplementation();
 		void transferDataParallel(const double* data, const int data_len);
-		void transferCoordinatesParallel(const double* coord, const int coord_len);
+		void transferCoordinatesParallel(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len);
 };     
 
 

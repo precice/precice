@@ -16,10 +16,10 @@ void fsi_fsicommc2socket_plain_port_create_server_instance_(long long* ptr,int& 
 void fsi_fsicommc2socket_plain_port_destroy_instance_(long long* ptr);
 #endif
 #ifdef _WIN32
-void FSI_FSICOMMC2SOCKET_PLAIN_PORT_TRANSFERCOORDINATES(long long* ref,double* coord, int* coord_len);
+void FSI_FSICOMMC2SOCKET_PLAIN_PORT_TRANSFERCOORDINATES(long long* ref,int* coordId,int* coordId_len,int* offsets,int* offsets_len,char** hosts,int* hosts_len);
 
 #else
-void fsi_fsicommc2socket_plain_port_transfercoordinates_(long long* ref,double* coord, int* coord_len);
+void fsi_fsicommc2socket_plain_port_transfercoordinates_(long long* ref,int* coordId,int* coordId_len,int* offsets,int* offsets_len,char** hosts,int* hosts_len);
 
 #endif
 #ifdef _WIN32

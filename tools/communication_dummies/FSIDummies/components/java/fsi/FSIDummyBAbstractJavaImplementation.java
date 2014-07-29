@@ -115,13 +115,17 @@ public abstract class FSIDummyBAbstractJavaImplementation extends SocketComponen
  
   
 
-  public void transferCoordinates(final double coord[]) {
+  public void transferCoordinates(final int coordId[],final int offsets[],final String hosts[]) {
     //__SWITCH_SYNC_ASYNC__
     try{
          int methodId=5;
          sendIntData(methodId);
-         sendIntData(coord.length);
-sendDoubleData(coord);
+         sendIntData(coordId.length);
+sendIntData(coordId);
+sendIntData(offsets.length);
+sendIntData(offsets);
+sendIntData(hosts.length);
+sendStringData(hosts);
 
            
     }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
@@ -129,13 +133,17 @@ sendDoubleData(coord);
     }  
   }
 
-  public void transferCoordinatesParallel(final double coord[]) {
+  public void transferCoordinatesParallel(final int coordId[],final int offsets[],final String hosts[]) {
     //__SWITCH_SYNC_ASYNC__
     try{
          int methodId=5+1;
          sendIntData(methodId);
-         sendIntData(coord.length);
-sendDoubleData(coord);
+         sendIntData(coordId.length);
+sendIntData(coordId);
+sendIntData(offsets.length);
+sendIntData(offsets);
+sendIntData(hosts.length);
+sendStringData(hosts);
 
            
     }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){

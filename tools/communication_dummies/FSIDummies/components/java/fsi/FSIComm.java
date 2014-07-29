@@ -28,8 +28,8 @@ public interface FSIComm  {
   //void unlock();
   
 
-  public void transferCoordinates(final double coord[]);
-  public void transferCoordinatesParallel(final double coord[]);
+  public void transferCoordinates(final int coordId[],final int offsets[],final String hosts[]);
+  public void transferCoordinatesParallel(final int coordId[],final int offsets[],final String hosts[]);
 
   public void transferData(final double data[]);
   public void transferDataParallel(final double data[]);

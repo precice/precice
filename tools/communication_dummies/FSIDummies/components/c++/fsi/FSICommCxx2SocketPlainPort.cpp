@@ -237,7 +237,7 @@ int
 #endif
 }
 
-void fsi::FSICommCxx2SocketPlainPort::transferCoordinates(const double* coord, const int coord_len){
+void fsi::FSICommCxx2SocketPlainPort::transferCoordinates(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len){
      //assert(_destination!=NULL);
      #ifdef _WIN32
 #else
@@ -249,13 +249,21 @@ fcntl(_newsockfd, F_SETFL, flags);
 
      int methodId=5;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-     sendData((char*)&coord_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-sendData((char*)coord,sizeof(double)*coord_len,_sendBuffer,_newsockfd,_buffer_size);
+     sendData((char*)&coordId_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)coordId,sizeof(int)*coordId_len,_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)&offsets_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)offsets,sizeof(int)*offsets_len,_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)&hosts_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+for(int i=0;i<hosts_len;i++){
+	int data_size=hosts[i].size();
+	sendData((char*)&data_size,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+	sendData((char*)hosts[i].c_str(),hosts[i].size()<255?hosts[i].size():255,_sendBuffer,_newsockfd,_buffer_size);
+}
 
      
 }
 
-void fsi::FSICommCxx2SocketPlainPort::transferCoordinatesParallel(const double* coord, const int coord_len){
+void fsi::FSICommCxx2SocketPlainPort::transferCoordinatesParallel(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len){
      //assert(_destination!=NULL);
 #ifdef _WIN32
 #else
@@ -266,8 +274,16 @@ void fsi::FSICommCxx2SocketPlainPort::transferCoordinatesParallel(const double* 
 #endif
      int methodId=6;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-     sendData((char*)&coord_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-sendData((char*)coord,sizeof(double)*coord_len,_sendBuffer,_newsockfd,_buffer_size);
+     sendData((char*)&coordId_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)coordId,sizeof(int)*coordId_len,_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)&offsets_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)offsets,sizeof(int)*offsets_len,_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)&hosts_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+for(int i=0;i<hosts_len;i++){
+	int data_size=hosts[i].size();
+	sendData((char*)&data_size,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+	sendData((char*)hosts[i].c_str(),hosts[i].size()<255?hosts[i].size():255,_sendBuffer,_newsockfd,_buffer_size);
+}
 
      
      //int ack=0;

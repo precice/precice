@@ -28,7 +28,7 @@ void fsi::FSIDummyAImplementation::transferAllData(){
 	double coordinates [2];
 	coordinates[0]=0.0;
 	coordinates[1]=0.0;
-	_b->transferCoordinates(coordinates,2);
+	//_b->transferCoordinates(coordinates,2);
 }
 
 void fsi::FSIDummyAImplementation::test(){

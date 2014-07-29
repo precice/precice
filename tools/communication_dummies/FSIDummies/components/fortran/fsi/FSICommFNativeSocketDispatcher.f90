@@ -69,25 +69,48 @@ subroutine transferData(this,&
 data,data_len)
 end subroutine transferData
 subroutine transferCoordinates_internal(this,&
-	coord,coord_len)
+	coordId,coordId_len,&
+	offsets,offsets_len,&
+	hosts,hosts_len)
      use, intrinsic :: iso_c_binding
      class(FSICommNativeSocketDispatcher)::this
-     	real(kind=c_double),intent(in),dimension(*)::coord
-	integer(kind=c_int),intent(in)::coord_len
+     	integer(kind=c_int),intent(in),dimension(*)::coordId
+	integer(kind=c_int),intent(in)::coordId_len
+	integer(kind=c_int),intent(in),dimension(*)::offsets
+	integer(kind=c_int),intent(in)::offsets_len
+	integer(kind=c_int),intent(in)::hosts_len
+	type(c_ptr),dimension(*),intent(in)::hosts
 
      call fsi_fsicomm_f2c_nsd_transferCoordinates(this%reference,&
-coord,coord_len)
+coordId,coordId_len,&
+offsets,offsets_len,&
+hosts,hosts_len)
 end subroutine transferCoordinates_internal
 
 subroutine transferCoordinates(this,&
-	coord,coord_len)
+	coordId,coordId_len,&
+	offsets,offsets_len,&
+	hosts,hosts_len)
      use, intrinsic :: iso_c_binding
      class(FSICommNativeSocketDispatcher)::this
-     	real(8),intent(in),dimension(*)::coord
-	integer,intent(in)::coord_len
+     	integer,intent(in),dimension(*)::coordId
+	integer,intent(in)::coordId_len
+	integer,intent(in),dimension(*)::offsets
+	integer,intent(in)::offsets_len
+	character(*),intent(in),dimension(*)::hosts
+	integer,intent(in)::hosts_len
+	type(c_ptr),dimension(hosts_len) :: hostsPtrArray
+	integer::hosts_ns
+	character(255), dimension(hosts_len), target :: hostsFSArray
+	do hosts_ns = 1, hosts_len
+		hostsFSArray(hosts_ns) = hosts(hosts_ns)// C_NULL_CHAR
+		hostsPtrArray(hosts_ns) = C_LOC(hostsFSArray(hosts_ns))
+	end do
 
      call this%transferCoordinates_internal(&
-coord,coord_len)
+coordId,coordId_len,&
+offsets,offsets_len,&
+hostsPtrArray,hosts_len)
 end subroutine transferCoordinates
 
 end module  fsi_FSICommFNativeSocketDispatcher
