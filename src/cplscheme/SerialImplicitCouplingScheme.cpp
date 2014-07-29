@@ -144,12 +144,11 @@ void SerialImplicitCouplingScheme:: advance()
   // When the iterations of one timestep are converged, the old time, timesteps,
   // and iteration should be plotted, and not the 0th of the new timestep. Thus,
   // the plot values are only updated when no convergence was achieved.
-  if (not convergence){
-    setTimestepToPlot(getTimesteps());
-    setTimeToPlot(getTime());
-    setIterationToPlot(getIterations());
-  }
-  else {
+  setTimestepToPlot(getTimesteps());
+  setTimeToPlot(getTime());
+  setIterationToPlot(getIterations());
+  
+  if (convergence) {
     increaseIterationToPlot();
   }
 }
