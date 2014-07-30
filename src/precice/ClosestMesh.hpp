@@ -9,7 +9,7 @@
 
 namespace precice {
   namespace impl {
-    class ClosestMeshImplementation;
+    struct ClosestMeshImplementation;
   }
 }
 

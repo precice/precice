@@ -45,7 +45,6 @@ void MatrixTest::testConstruction ()
   validateEquals (matrix(0,0), 1);
   validateEquals (matrix(0,1), 1);
 
-  Matrix<1,2,int> matrix2(matrix);
   validateEquals (matrix(0,0), 1);
   validateEquals (matrix(0,1), 1);
 

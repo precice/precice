@@ -774,7 +774,6 @@ void SolverInterfaceTestGeometry:: testConsistentIncrementalDataMapping ()
 
   for ( counter(0)=0.0; counter(0) < 10.0; counter(0) +=1.0 ) {
     for ( counter(1)=0.0; counter(1) < 10.0; counter(1) +=1.0 ) {
-      Vector2D currentPoint ( -10.0 + 2.0 * counter );
       Vector2D data ( 0.0 );
       using tarch::la::raw;
       int index =  indices[counter(0)*10+counter(1)];

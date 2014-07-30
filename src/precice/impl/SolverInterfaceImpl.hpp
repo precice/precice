@@ -286,7 +286,7 @@ public:
    */
   void getMeshVertices (
     int     meshID,
-    int     size,
+    size_t  size,
     int*    ids,
     double* positions );
 
@@ -299,7 +299,7 @@ public:
    */
   void getMeshVertexIDsFromPositions (
     int     meshID,
-    int     size,
+    size_t  size,
     double* positions,
     int*    ids );
 

@@ -65,7 +65,6 @@ public:
   >::Type read(VECTOR& vector)
   {
     typedef tarch::la::VectorTraits<VECTOR> T;
-    char skip;
     for (int i=0; i < T::size(vector); i++){
       _file >> T::elem(i,vector);
     }
@@ -73,10 +72,10 @@ public:
 
 private:
 
-  // @brief Logging device.
+  /// @brief Logging device.
   static tarch::logging::Log _log;
 
-  // @brief Filestream.
+  /// @brief Filestream.
   std::ifstream _file;
 };
 

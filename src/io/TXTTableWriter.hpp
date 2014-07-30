@@ -115,8 +115,6 @@ private:
   std::vector<Data>::const_iterator _writeIterator;
 
   std::ofstream _outputStream;
-
-  bool _startedWriting;
 };
 
 }} // namespace precice, io

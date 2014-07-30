@@ -58,13 +58,12 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
   utils::DynVector length(2, 1.0);
   geometry::Cuboid cuboid(offset, dx, length);
   // Set geoemtry sub-ids
-  int sideIndex = 0;
   std::string nameSubID0("side-0");
   mesh.setSubID(nameSubID0);
-  sideIndex = 1;
+
   std::string nameSubID1 = "side-1";
   mesh.setSubID(nameSubID1);
-  sideIndex = 2;
+
   std::string nameSubID2 = "side-2";
   mesh.setSubID(nameSubID2);
   mesh::PtrData data = mesh.createData("TestData", 2);

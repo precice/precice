@@ -256,7 +256,7 @@ void SolverInterfaceTest:: testExplicitWithDataExchange()
     configureSolverInterface(_pathToTests + "/explicit-mpi-single.xml", cplInterface);
 
     int meshOneID = cplInterface.getMeshID("MeshOne");
-    int squareID = cplInterface.getMeshID("Test-Square");
+    /* int squareID = */ cplInterface.getMeshID("Test-Square");
     int forcesID = cplInterface.getDataID("Forces", meshOneID);
     int velocitiesID = cplInterface.getDataID("Velocities", meshOneID);
     int indices[8];
@@ -531,8 +531,8 @@ void SolverInterfaceTest:: testExplicitWithSolverGeometry ()
 
   mesh::Mesh::resetGeometryIDsGlobally ();
 
-  int timesteps;
-  double time;
+  int timesteps = 0;
+  double time = 0;
 
   if ( utils::Parallel::getProcessRank() == 0 ){
     runSolver ( "SolverOne",
@@ -574,8 +574,8 @@ void SolverInterfaceTest:: testExplicitWithDisplacingGeometry()
 
    using namespace tarch::la;
    using utils::Vector3D;
-   int timesteps;
-   double time;
+   int timesteps = 0;
+   double time = 0;
 
    Vector3D zero (0.0);
    Vector3D one ( zero );
@@ -925,7 +925,7 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
 
     double dt = couplingInterface.initialize();
     int forcesID = couplingInterface.getDataID("Forces", meshOneID);
-    int velocitiesID = couplingInterface.getDataID("Velocities", meshOneID);
+    /*int velocitiesID =*/ couplingInterface.getDataID("Velocities", meshOneID);
     validateEquals(solverOne->_meshContexts.size(), 2);
 
     while (couplingInterface.isCouplingOngoing()){
@@ -1467,7 +1467,7 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
     SolverInterface couplingInterface("SolverOne", 0, 1);
     configureSolverInterface(_pathToTests + "/implicit-readcheckpoint-stat.xml", couplingInterface);
     int meshID = couplingInterface.getMeshID("Square");
-    int forcesID = couplingInterface.getDataID("Forces", meshID);
+    /*int forcesID =*/ couplingInterface.getDataID("Forces", meshID);
     int velocitiesID = couplingInterface.getDataID("Velocities", meshID);
     double maxDt = couplingInterface.initialize();
     validate(couplingInterface.isActionRequired(actionReadSimulationCheckpoint()));
@@ -1510,7 +1510,7 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
     configureSolverInterface(_pathToTests + "/implicit-readcheckpoint-stat.xml", couplingInterface);
     int meshID = couplingInterface.getMeshID("Square");
     int forcesID = couplingInterface.getDataID("Forces", meshID);
-    int velocitiesID = couplingInterface.getDataID("Velocities", meshID);
+    /*int velocitiesID =*/ couplingInterface.getDataID("Velocities", meshID);
     double maxDt = couplingInterface.initialize();
     validate(couplingInterface.isActionRequired(actionReadSimulationCheckpoint()));
     couplingInterface.fulfilledAction(actionReadSimulationCheckpoint());
@@ -1866,7 +1866,6 @@ void SolverInterfaceTest:: runThreeSolvers
   else if (solverName == std::string("SolverTwo")){
     SolverInterface precice(solverName, 0, 1);
     configureSolverInterface(configFilename, precice);
-    int meshID = precice.getMeshID("Mesh");
     //int dataID = precice.getDataID("Data");
     //precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0))); //no use here
     double dt = precice.initialize();
@@ -1889,7 +1888,6 @@ void SolverInterfaceTest:: runThreeSolvers
     assertion1(solverName == std::string("SolverThree"), solverName);
     SolverInterface precice(solverName, 0, 1);
     configureSolverInterface(configFilename, precice);
-    int meshID = precice.getMeshID("Mesh");
     //int dataID = precice.getDataID("Data");
     //precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0))); //no use here
     double dt = precice.initialize();

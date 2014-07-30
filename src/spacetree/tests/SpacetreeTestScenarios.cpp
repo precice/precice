@@ -1580,7 +1580,8 @@ void SpacetreeTestScenarios:: testSearchContentEdges()
   //precicePrint("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   //assertion(false);
 
-  int pos = tree->searchContent(find);
+  tree->searchContent(find);
+
   validateEquals(find.content().size(), 1);
 }
 

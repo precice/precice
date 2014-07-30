@@ -21,7 +21,7 @@ typedef boost::shared_ptr<WatchPoint> PtrWatchPoint;
 class AbstractDataAction;
 typedef boost::shared_ptr<AbstractDataAction> PtrAbstractDataAction;
 
-class MeshContext;
+struct MeshContext;
 typedef boost::shared_ptr<MeshContext> PtrMeshContext;
 
 // TODO delete if really not requierd

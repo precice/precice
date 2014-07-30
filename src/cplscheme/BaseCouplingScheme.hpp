@@ -531,8 +531,6 @@ private:
   
   int _checkpointTimestepInterval;
   
-  bool _isCouplingOngoing;
-  
   bool _isCouplingTimestepComplete;
 
   /// @brief to carry initData information from initialize to initData

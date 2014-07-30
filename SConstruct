@@ -156,6 +156,8 @@ print 'Configuring build variables ...'
 
 env.Append(LIBPATH = [('#' + buildpath)])
 
+env.Append(CCFLAGS= ['-Wall'])
+
 if env["compiler"] == 'icc':
     env.AppendUnique(LIBPATH = ['/usr/lib/'])
     env.Append(LIBS = ['stdc++'])
@@ -167,6 +169,7 @@ elif env["compiler"] == 'g++':
     pass
 elif env["compiler"] == "clang++":
     env['ENV']['TERM'] = os.environ['TERM'] # colored compile messages from clang
+    env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
 
 env.Replace(CXX = env["compiler"])
 

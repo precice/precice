@@ -9,7 +9,7 @@
 #include "tarch/logging/Log.h"
 #include <string>
 
-class _object;
+struct _object;
 typedef _object PyObject;
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -59,8 +59,6 @@ private:
   PyObject* _moduleNameObject;
 
   PyObject* _module;
-
-  PyObject* _dataArgs;
 
   PyObject* _sourceValues;
 

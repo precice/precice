@@ -925,7 +925,7 @@ void SolverInterfaceImpl:: setMeshVertices
 void SolverInterfaceImpl:: getMeshVertices
 (
   int     meshID,
-  int     size,
+  size_t  size,
   int*    ids,
   double* positions )
 {
@@ -950,8 +950,8 @@ void SolverInterfaceImpl:: getMeshVertices
     else {
       preciceDebug("Get positions");
       assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
-      for (int i=0; i < size; i++){
-        int id = ids[i];
+      for (size_t i=0; i < size; i++){
+        size_t id = ids[i];
         assertion2(id < mesh->vertices().size(), mesh->vertices().size(), id);
         internalPosition = mesh->vertices()[id].getCoords();
         for (int dim=0; dim < _dimensions; dim++){
@@ -964,7 +964,7 @@ void SolverInterfaceImpl:: getMeshVertices
 
 void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
   int     meshID,
-  int     size,
+  size_t  size,
   double* positions,
   int*    ids )
 {
@@ -987,12 +987,12 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
       utils::DynVector internalPosition(_dimensions);
       utils::DynVector position(_dimensions);
       assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
-      for (int i=0; i < size; i++){
+      for (size_t i=0; i < size; i++){
         for (int dim=0; dim < _dimensions; dim++){
           position[dim] = positions[i*_dimensions+dim];
         }
-        int j=0;
-        for (; j < mesh->vertices().size(); j++){
+	size_t j=0;
+        for (j=0; j < mesh->vertices().size(); j++){
           internalPosition = mesh->vertices()[j].getCoords();
           if (equals(internalPosition, position)){
             ids[i] = j;
@@ -1541,7 +1541,6 @@ void SolverInterfaceImpl:: writeScalarData
     assertion(context.toData.use_count() > 0);
     impl::MappingContext& mapContext = context.mappingContext;
     utils::DynVector& values = context.fromData->values();
-    bool hasMapping = mapContext.mapping.get() != NULL;
     bool isIncremental = mapContext.timing == mapping::MappingConfiguration::INCREMENTAL;
     if (isIncremental){
       preciceDebug("Map incrementally");
@@ -1611,7 +1610,6 @@ void SolverInterfaceImpl:: readVectorData
     assertion(context.fromData.use_count() > 0);
     utils::DynVector& values = context.toData->values();
     impl::MappingContext& mapContext = context.mappingContext;
-    bool hasMapping = mapContext.mapping.get() != NULL;
     bool isIncremental = mapContext.timing == mapping::MappingConfiguration::INCREMENTAL;
     if (isIncremental){
       preciceDebug("Map incrementally from dataID: " << context.fromData->getID()
@@ -1688,7 +1686,6 @@ void SolverInterfaceImpl:: readScalarData
     assertion(context.fromData.use_count() > 0);
     utils::DynVector& values = context.toData->values();
     impl::MappingContext& mapContext = context.mappingContext;
-    bool hasMapping = mapContext.mapping.get() != NULL;
     bool isIncremental = mapContext.timing == mapping::MappingConfiguration::INCREMENTAL;
     if (isIncremental){
       preciceDebug("Map incrementally");
@@ -1887,7 +1884,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
             preciceDebug ( "   ... receiver " << receiver );
             utils::DynVector offset ( _dimensions, 0.0 );
             std::string provider ( _accessorName );
-            geometry::CommunicatedGeometry* comGeo;
+            geometry::CommunicatedGeometry* comGeo = NULL;
             if(!addedReceiver){
               comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider );
               context.geometry = geometry::PtrGeometry ( comGeo );

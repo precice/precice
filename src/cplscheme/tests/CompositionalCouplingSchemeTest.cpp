@@ -737,12 +737,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
   validateEquals(meshConfig->meshes().size(), 1);
   mesh::PtrMesh mesh = meshConfig->meshes()[0];
   validateEquals(mesh->data().size(), 3);
-  utils::DynVector& dataValues0 = mesh->data()[0]->values();
-  utils::DynVector& dataValues1 = mesh->data()[1]->values();
-  utils::DynVector& dataValues2 = mesh->data()[2]->values();
   validate(mesh->vertices().size() > 0);
-  mesh::Vertex& vertex = mesh->vertices()[0];
-  double valueData0 = 1.0;
   Vector3D valueData1(1.0);
   Vector3D valueData2(1.0);
 
