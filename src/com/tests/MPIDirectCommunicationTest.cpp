@@ -85,31 +85,10 @@ void MPIDirectCommunicationTest:: testSendReceiveThreeProcesses ()
   MPI_Comm comm = utils::Parallel::getRestrictedCommunicator ( ranks );
   if ( utils::Parallel::getProcessRank() < 3 ) {
     utils::Parallel::setGlobalCommunicator(comm);
-    // MPIDirectCommunication communication ();
     std::string nameProcess0 ( "one" );
     std::string nameProcess1 ( "two" );
     std::string nameProcess2 ( "three" );
 
-    if ( utils::Parallel::getProcessRank() == 0 ) {
-      //      communication.acceptConnection ( nameEven, nameOdd );
-      //      int message = 1;
-      //      communication.send ( message, 0 );
-      //      communication.receive ( message, 0 );
-      //      validateEquals ( message, 2, "testSendReceive()" );
-      //      communication.closeConnection ();
-    }
-    else if ( utils::Parallel::getProcessRank() == 1 ) {
-      //      communication.requestConnection ( nameEven, nameOdd );
-      //      int message = -1;
-      //      communication.receive ( message, 0 );
-      //      validateEquals ( message, 1, "testSendReceive()" );
-      //      message = 2;
-      //      communication.send ( message, 0 );
-      //      communication.closeConnection ();
-    }
-    else if ( utils::Parallel::getProcessRank() == 2 ) {
-
-    }
     utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
   }
 }
