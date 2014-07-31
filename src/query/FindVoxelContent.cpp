@@ -1063,20 +1063,6 @@ bool FindVoxelContent:: computeIntersection
   // Compute signed areas of triangle and intersection point
   Vector3D normal ( triangle.getNormal() );
   int indexMin = tarch::la::indexMax ( abs(normal,normal) );
-  int indices[2];
-  if (indexMin == 0){
-    indices[0] = 1;
-    indices[1] = 2;
-  }
-  else if (indexMin == 1){
-    indices[0] = 0;
-    indices[1] = 2;
-  }
-  else {
-    assertion1 ( indexMin == 3, indexMin );
-    indices[0] = 0;
-    indices[1] = 1;
-  }
   result = Geocomp::containedInTriangle (
       Geocomp::projectVector(triangle.vertex(0).getCoords(), indexMin),
       Geocomp::projectVector(triangle.vertex(1).getCoords(), indexMin),

@@ -133,9 +133,11 @@ void SolverInterfaceTest:: testConfiguration()
 
   meshContexts = comsol->_meshContexts;
   validateEquals(meshContexts.size(), 3);
-  validateEquals(meshContexts[0],NULL);
+  // Can be replaced by nullptr as soon as we have C++11 available.
+  validateEquals(meshContexts[0], static_cast<void*>(NULL));
   validateEquals(meshContexts[1]->mesh->getName(), std::string("ComsolNodes"));
-  validateEquals(meshContexts[2],NULL);
+    // Can be replaced by nullptr as soon as we have C++11 available.
+  validateEquals(meshContexts[2], static_cast<void*>(NULL));
   validateEquals(comsol->_usedMeshContexts.size(), 1);
 }
 

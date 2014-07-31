@@ -1975,7 +1975,7 @@ void SolverInterfaceImpl:: createMeshContext
   // Create default vertex for incremental mapping participant meshes
   if (meshContext.meshRequirement == mapping::Mapping::TEMPORARY){
 	//TODO better solution for the following
-    preciceCheck(typeid(*meshContext.geometry).name()!="CommunicatedGeometry",
+    preciceCheck(typeid(*meshContext.geometry) != typeid(geometry::CommunicatedGeometry),
 				   "createMeshContext()",
 				   "You cannot communicate a mesh with an incremental mapping");
     preciceDebug("Create Vertex");
