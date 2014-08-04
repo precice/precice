@@ -83,8 +83,8 @@ int main (int argc, char **argv)
   int dimensions = -1;
   if (readWriteData){
     meshID = interface.getMeshID(meshName);
-    readDataID = interface.getDataID(readDataName);
-    writeDataID = interface.getDataID(writeDataName);
+    readDataID = interface.getDataID(readDataName, meshID);
+    writeDataID = interface.getDataID(writeDataName, meshID);
     dimensions = interface.getDimensions();
   }
 

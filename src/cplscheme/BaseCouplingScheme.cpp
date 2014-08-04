@@ -574,8 +574,8 @@ void BaseCouplingScheme::initialize
   assertion1(startTimestep >= 0, startTimestep);
   assertion(getCommunication()->isConnected());
   // This currently does not fail, though description suggests it should in some cases for explicit coupling. 
-  preciceCheck(not getSendData().empty(), "initialize()",
-	       "No send data configured! Use explicit scheme for one-way coupling.");
+  //preciceCheck(not getSendData().empty(), "initialize()",
+//	       "No send data configured! Use explicit scheme for one-way coupling.");
   setTime(startTime);
   setTimesteps(startTimestep);
 
