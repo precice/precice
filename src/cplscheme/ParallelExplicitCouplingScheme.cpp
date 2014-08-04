@@ -3,7 +3,6 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ParallelExplicitCouplingScheme.hpp"
 #include "Constants.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "tarch/plotter/globaldata/TXTTableWriter.h"
@@ -47,20 +46,20 @@ void ParallelExplicitCouplingScheme:: initialize
   setTimesteps(startTimestep);
 
 
-  foreach (DataMap::value_type & pair, getSendData()){
-    if (pair.second->initialize){
+  foreach (DataMap::value_type & pair, getSendData()) {
+    if (pair.second->initialize) {
       setHasToSendInitData(true);
       break;
     }
   }
-  foreach (DataMap::value_type & pair, getReceiveData()){
-    if (pair.second->initialize){
+  foreach (DataMap::value_type & pair, getReceiveData()) {
+    if (pair.second->initialize) {
       setHasToReceiveInitData(true);
       break;
     }
   }
 
-  if(hasToSendInitData()){
+  if (hasToSendInitData()) {
     requireAction(constants::actionWriteInitialData());
   }
 
@@ -84,13 +83,13 @@ void ParallelExplicitCouplingScheme:: initializeData()
   setHasDataBeenExchanged(false);
 
   //F: send, receive, S: receive, send
-  if(doesFirstStep()){
-    if(hasToSendInitData()){
+  if (doesFirstStep()) {
+    if (hasToSendInitData()) {
       getCommunication()->startSendPackage(0);
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
     }
-    if(hasToReceiveInitData()){
+    if (hasToReceiveInitData()) {
       getCommunication()->startReceivePackage(0);
       receiveData(getCommunication());
       getCommunication()->finishReceivePackage();
@@ -98,14 +97,14 @@ void ParallelExplicitCouplingScheme:: initializeData()
     }
   }
 
-  else{ // second participant
-    if(hasToReceiveInitData()){
+  else { // second participant
+    if (hasToReceiveInitData()) {
       getCommunication()->startReceivePackage(0);
       receiveData(getCommunication());
       getCommunication()->finishReceivePackage();
       setHasDataBeenExchanged(true);
     }
-    if(hasToSendInitData()){
+    if (hasToSendInitData()) {
       getCommunication()->startSendPackage(0);
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
@@ -127,14 +126,14 @@ void ParallelExplicitCouplingScheme:: advance()
   setIsCouplingTimestepComplete(false);
 
   double eps = std::pow(10.0, -1 * getValidDigits());
-  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)){
+  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)) {
     setIsCouplingTimestepComplete(true);
     setTimesteps(getTimesteps() + 1);
 
-    if(doesFirstStep()){
+    if (doesFirstStep()) {
       preciceDebug("Sending data...");
       getCommunication()->startSendPackage(0);
-      if (participantSetsDt()){
+      if (participantSetsDt()) {
         getCommunication()->send(getComputedTimestepPart(), 0);
       }
       sendData(getCommunication());
@@ -142,7 +141,7 @@ void ParallelExplicitCouplingScheme:: advance()
 
       preciceDebug("Receiving data...");
       getCommunication()->startReceivePackage(0);
-      if (participantReceivesDt()){
+      if (participantReceivesDt()) {
         double dt = UNDEFINED_TIMESTEP_LENGTH;
         getCommunication()->receive(dt, 0);
         assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
@@ -156,7 +155,7 @@ void ParallelExplicitCouplingScheme:: advance()
     else{ //second participant
       preciceDebug("Receiving data...");
       getCommunication()->startReceivePackage(0);
-      if (participantReceivesDt()){
+      if (participantReceivesDt()) {
         double dt = UNDEFINED_TIMESTEP_LENGTH;
         getCommunication()->receive(dt, 0);
         assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
@@ -168,7 +167,7 @@ void ParallelExplicitCouplingScheme:: advance()
 
       preciceDebug("Sending data...");
       getCommunication()->startSendPackage(0);
-      if (participantSetsDt()){
+      if (participantSetsDt()) {
         getCommunication()->send(getComputedTimestepPart(), 0);
       }
       sendData(getCommunication());

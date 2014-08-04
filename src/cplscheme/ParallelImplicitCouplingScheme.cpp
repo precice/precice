@@ -5,7 +5,6 @@
 #include "impl/PostProcessing.hpp"
 #include "impl/ConvergenceMeasure.hpp"
 #include "Constants.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 #include "io/TXTWriter.hpp"
@@ -51,11 +50,11 @@ void ParallelImplicitCouplingScheme:: initialize
                "No send data configured!");
   setTime(startTime);
   setTimesteps(startTimestep);
-  if (not doesFirstStep()){ // second participant
+  if (not doesFirstStep()) { // second participant
     setupConvergenceMeasures(); // needs _couplingData configured
     mergeData(); // merge send and receive data for all pp calls
     setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
-    if (getPostProcessing().get() != NULL){
+    if (getPostProcessing().get() != NULL) {
       preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
 		   "For parallel coupling, the number of coupling data vectors has to be 2, not: "
 		   << getPostProcessing()->getDataIDs().size());
@@ -66,20 +65,20 @@ void ParallelImplicitCouplingScheme:: initialize
   requireAction(constants::actionWriteIterationCheckpoint());
   initializeTXTWriters();
 
-  foreach (DataMap::value_type & pair, getSendData()){
-    if (pair.second->initialize){
+  foreach (DataMap::value_type & pair, getSendData()) {
+    if (pair.second->initialize) {
       setHasToSendInitData(true);
       break;
     }
   }
-  foreach (DataMap::value_type & pair, getReceiveData()){
-    if (pair.second->initialize){
+  foreach (DataMap::value_type & pair, getReceiveData()) {
+    if (pair.second->initialize) {
       setHasToReceiveInitData(true);
       break;
     }
   }
 
-  if(hasToSendInitData()){
+  if (hasToSendInitData()) {
     requireAction(constants::actionWriteInitialData());
   }
 
@@ -92,7 +91,7 @@ void ParallelImplicitCouplingScheme:: initializeData()
   preciceCheck(isInitialized(), "initializeData()",
 	       "initializeData() can be called after initialize() only!");
 
-  if(not hasToSendInitData() && not hasToReceiveInitData()){
+  if (not hasToSendInitData() && not hasToReceiveInitData()) {
     preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
     return;
   }
@@ -102,14 +101,14 @@ void ParallelImplicitCouplingScheme:: initializeData()
 
   setHasDataBeenExchanged(false);
 
-  //F: send, receive, S: receive, send
-  if(doesFirstStep()){
-    if(hasToSendInitData()){
+  // F: send, receive, S: receive, send
+  if (doesFirstStep()) {
+    if(hasToSendInitData()) {
       getCommunication()->startSendPackage(0);
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
     }
-    if(hasToReceiveInitData()){
+    if (hasToReceiveInitData()) {
       getCommunication()->startReceivePackage(0);
       receiveData(getCommunication());
       getCommunication()->finishReceivePackage();
@@ -117,8 +116,8 @@ void ParallelImplicitCouplingScheme:: initializeData()
     }
   }
 
-  else{ // second participant
-    if(hasToReceiveInitData()){
+  else { // second participant
+    if (hasToReceiveInitData()) {
       getCommunication()->startReceivePackage(0);
       receiveData(getCommunication());
       getCommunication()->finishReceivePackage();
@@ -134,9 +133,9 @@ void ParallelImplicitCouplingScheme:: initializeData()
         }
       }
     }
-    if(hasToSendInitData()){
-      if (getExtrapolationOrder() > 0){
-        foreach (DataMap::value_type & pair, getSendData()){
+    if (hasToSendInitData()) {
+      if (getExtrapolationOrder() > 0) {
+        foreach (DataMap::value_type & pair, getSendData()) {
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
@@ -149,7 +148,7 @@ void ParallelImplicitCouplingScheme:: initializeData()
     }
   }
 
-  //in order to check in advance if initializeData has been called (if necessary)
+  // in order to check in advance if initializeData has been called (if necessary)
   setHasToSendInitData(false);
   setHasToReceiveInitData(false);
 }
@@ -167,18 +166,18 @@ void ParallelImplicitCouplingScheme:: advance()
   setIsCouplingTimestepComplete(false);
   double eps = std::pow(10.0, -1 * getValidDigits());
   bool convergence = false;
-  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)){
+  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)) {
     preciceDebug("Computed full length of iteration");
-    if (doesFirstStep()){ //First participant
+    if (doesFirstStep()) { //First participant
       getCommunication()->startSendPackage(0);
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
       getCommunication()->startReceivePackage(0);
       getCommunication()->receive(convergence, 0);
-      if (convergence){
+      if (convergence) {
         timestepCompleted();
       }
-      if (isCouplingOngoing()){
+      if (isCouplingOngoing()) {
         receiveData(getCommunication());
       }
       getCommunication()->finishReceivePackage();
@@ -194,47 +193,45 @@ void ParallelImplicitCouplingScheme:: advance()
       assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
 		 getIterations(), getMaxIterations());
       // Stop, when maximal iteration count (given in config) is reached
-      if (getIterations() == getMaxIterations()-1){
+      if (getIterations() == getMaxIterations()-1) {
         convergence = true;
       }
-      if (convergence){
-        if (getPostProcessing().get() != NULL){
+      if (convergence) {
+        if (getPostProcessing().get() != NULL) {
           getPostProcessing()->iterationsConverged(getAllData());
         }
         newConvergenceMeasurements();
         timestepCompleted();
       }
-      else if (getPostProcessing().get() != NULL){
+      else if (getPostProcessing().get() != NULL) {
         getPostProcessing()->performPostProcessing(getAllData());
       }
       getCommunication()->startSendPackage(0);
       getCommunication()->send(convergence, 0);
 
-      if (isCouplingOngoing()){
+      if (isCouplingOngoing()) {
         if (convergence && (getExtrapolationOrder() > 0)){
           extrapolateData(getAllData()); // Also stores data
         }
         else { // Store data for conv. measurement, post-processing, or extrapolation
-          foreach (DataMap::value_type& pair, getSendData()){
+          foreach (DataMap::value_type& pair, getSendData()) {
             if (pair.second->oldValues.size() > 0){
               pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
-          foreach (DataMap::value_type& pair, getReceiveData()){
-            if (pair.second->oldValues.size() > 0){
+          foreach (DataMap::value_type& pair, getReceiveData()) {
+            if (pair.second->oldValues.size() > 0) {
               pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
         }
         sendData(getCommunication());
       }
-
       getCommunication()->finishSendPackage();
-
     }
 
     // both participants
-    if (not convergence){
+    if (not convergence) {
       preciceDebug("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
       increaseIterations();
@@ -261,7 +258,7 @@ void ParallelImplicitCouplingScheme:: advance()
   // When the iterations of one timestep are converged, the old time, timesteps,
   // and iteration should be plotted, and not the 0th of the new timestep. Thus,
   // the plot values are only updated when no convergence was achieved.
-  if (not convergence){
+  if (not convergence) {
     setTimestepToPlot(getTimesteps());
     setTimeToPlot(getTime());
     setIterationToPlot(getIterations());
@@ -274,10 +271,10 @@ void ParallelImplicitCouplingScheme:: advance()
 void ParallelImplicitCouplingScheme:: mergeData()
 {
   preciceTrace("mergeData()");
-  assertion1(!doesFirstStep(), "Only the second participant should do the pp." );
+  assertion1(!doesFirstStep(), "Only the second participant should do the post processing." );
   assertion1(_allData.empty(), "This function should only be called once.");
-  _allData.insert(getSendData().begin(),getSendData().end());
-  _allData.insert(getReceiveData().begin(),getReceiveData().end());
+  _allData.insert(getSendData().begin(), getSendData().end());
+  _allData.insert(getReceiveData().begin(), getReceiveData().end());
 
 }
 

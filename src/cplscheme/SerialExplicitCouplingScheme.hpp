@@ -8,7 +8,6 @@
 #include "Constants.hpp"
 #include "com/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
-#include "utils/Helpers.hpp"
 
 namespace precice { namespace cplscheme { namespace tests {
 class ExplicitCouplingSchemeTest;

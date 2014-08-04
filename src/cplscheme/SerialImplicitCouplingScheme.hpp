@@ -5,12 +5,9 @@
 #define PRECICE_CPLSCHEME_SERIALIMPLICITCOUPLINGSCHEME_HPP_
 
 #include "ImplicitCouplingScheme.hpp"
+#include "Constants.hpp"
 #include "SharedPointer.hpp"
-#include "impl/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
-#include "utils/Helpers.hpp"
-#include "tarch/la/DynamicColumnMatrix.h"
-#include "boost/tuple/tuple.hpp" // ??
 
 namespace precice { namespace cplscheme { namespace tests {
 class SerialImplicitCouplingSchemeTest;

@@ -15,16 +15,16 @@ _log("precice::cplscheme::SerialImplicitCouplingScheme" );
 
 SerialImplicitCouplingScheme:: SerialImplicitCouplingScheme
 (
- double                maxTime,
- int                   maxTimesteps,
- double                timestepLength,
- int                   validDigits,
- const std::string&    firstParticipant,
- const std::string&    secondParticipant,
- const std::string&    localParticipant,
- com::PtrCommunication communication,
- int                   maxIterations,
- constants::TimesteppingMethod dtMethod )
+  double                maxTime,
+  int                   maxTimesteps,
+  double                timestepLength,
+  int                   validDigits,
+  const std::string&    firstParticipant,
+  const std::string&    secondParticipant,
+  const std::string&    localParticipant,
+  com::PtrCommunication communication,
+  int                   maxIterations,
+  constants::TimesteppingMethod dtMethod )
   :
   ImplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
 			 secondParticipant,localParticipant,communication,maxIterations,dtMethod)
@@ -35,7 +35,7 @@ void SerialImplicitCouplingScheme:: advance()
 {
   preciceTrace2("advance()", getTimesteps(), getTime());
   //tmp debug -> here wrong values
-  foreach (DataMap::value_type & pair, getReceiveData()){
+  foreach (DataMap::value_type & pair, getReceiveData()) {
     utils::DynVector& values = *pair.second->values;
     preciceDebug("Begin advance, New Values: " << values);
   }
@@ -53,7 +53,7 @@ void SerialImplicitCouplingScheme:: advance()
     preciceDebug("Computed full length of iteration");
     if (doesFirstStep()) {
       getCommunication()->startSendPackage(0);
-      if (participantSetsDt()){
+      if (participantSetsDt()) {
         preciceDebug("sending timestep length of " << getComputedTimestepPart());
         getCommunication()->send(getComputedTimestepPart(), 0);
       }
@@ -61,10 +61,10 @@ void SerialImplicitCouplingScheme:: advance()
       getCommunication()->finishSendPackage();
       getCommunication()->startReceivePackage(0);
       getCommunication()->receive(convergence, 0);
-      if (convergence){
+      if (convergence) {
         timestepCompleted();
       }
-      if (isCouplingOngoing()){
+      if (isCouplingOngoing()) {
         receiveData(getCommunication());
       }
       getCommunication()->finishReceivePackage();
@@ -77,29 +77,29 @@ void SerialImplicitCouplingScheme:: advance()
       if (getIterations() == getMaxIterations()-1){
         convergence = true;
       }
-      if (convergence){
+      if (convergence) {
         if (getPostProcessing().get() != NULL){
           getPostProcessing()->iterationsConverged(getSendData());
         }
         newConvergenceMeasurements();
         timestepCompleted();
       }
-      else if (getPostProcessing().get() != NULL){
+      else if (getPostProcessing().get() != NULL) {
         getPostProcessing()->performPostProcessing(getSendData());
       }
       getCommunication()->startSendPackage(0);
       getCommunication()->send(convergence, 0);
-      if (isCouplingOngoing()){
+      if (isCouplingOngoing()) {
         if (convergence && (getExtrapolationOrder() > 0)){
           extrapolateData(getSendData()); // Also stores data
         }
         else { // Store data for conv. measurement, post-processing, or extrapolation
-          foreach (DataMap::value_type& pair, getSendData()){
+          foreach (DataMap::value_type& pair, getSendData()) {
             if (pair.second->oldValues.size() > 0){
               pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
-          foreach (DataMap::value_type& pair, getReceiveData()){
+          foreach (DataMap::value_type& pair, getReceiveData()) {
             if (pair.second->oldValues.size() > 0){
               pair.second->oldValues.column(0) = *pair.second->values;
             }
@@ -117,7 +117,7 @@ void SerialImplicitCouplingScheme:: advance()
       }
     }
     
-    if (not convergence){
+    if (not convergence) {
       preciceDebug("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
       increaseIterations();

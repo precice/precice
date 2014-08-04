@@ -5,15 +5,9 @@
 #define PRECICE_CPLSCHEME_PARALLELEXPLICITCOUPLINGSCHEME_HPP_
 
 #include "ExplicitCouplingScheme.hpp"
-#include "BaseCouplingScheme.hpp"
 #include "Constants.hpp"
-#include "io/TXTTableWriter.hpp"
-#include "mesh/Vertex.hpp"
-#include "mesh/PropertyContainer.hpp"
-#include "mesh/Mesh.hpp"
+#include "SharedPointer.hpp"
 #include "tarch/logging/Log.h"
-#include "utils/Helpers.hpp"
-#include "boost/tuple/tuple.hpp"
 
 namespace precice { namespace cplscheme { namespace tests {
 //class ParallelExplicitCouplingSchemeTest;
