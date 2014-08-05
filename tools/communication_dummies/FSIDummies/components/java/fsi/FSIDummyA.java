@@ -8,7 +8,7 @@
 package fsi;
 
 
-public interface FSIDummyA extends fsi.FSITest,fsi.FSIData,de.tum.ascodt.repository.entities.CxxReverseRemoteSocketComponent {
+public interface FSIDummyA extends fsi.FSIData,de.tum.ascodt.repository.entities.CxxReverseRemoteSocketComponent {
 
   public static final String Implementation = "";
   

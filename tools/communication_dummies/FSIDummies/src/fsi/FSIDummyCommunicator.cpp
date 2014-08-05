@@ -39,11 +39,16 @@ void fsi::FSIDummyCommunicator::addPointId(const int pointId){
 void fsi::FSIDummyCommunicator::flush(){
 	connect();
 	_data2Transfer.resize(_pointIds.size());
+	std::cout<<"data to send:"<<std::endl;
 	for(unsigned int i=0;i<_pointIds.size();i++)
 	{
 		_data2Transfer[i]=_data[_pointIds[i]];
+		std::cout<<"data "<<i<<":"<<_data2Transfer[i]<<std::endl;
 	}
 	_comm->transferData(&_pointIds[0],_pointIds.size(),&_data2Transfer[0],_data2Transfer.size());
+	int ack;
+	_comm->dataAck(ack);
+	std::cout<<"data flushed"<<std::endl;
 	// do transfer
 
 }

@@ -1,6 +1,7 @@
 #include "fsi/FSICommNativeDispatcher.h"
 #include <algorithm>
 
+#ifdef JAVA
 JNIEXPORT void JNICALL Java_fsi_FSICommNativeDispatcher_createInstance(JNIEnv *env, jobject obj){
   JavaVM* jvm;
   env->GetJavaVM(&jvm);
@@ -23,7 +24,7 @@ JNIEXPORT void JNICALL Java_fsi_FSICommNativeDispatcher_connect(JNIEnv *env, job
 JNIEXPORT void JNICALL Java_fsi_FSICommNativeDispatcher_disconnect(JNIEnv *env, jobject obj,jlong ref,jlong destination){
   ((fsi::FSICommNativeDispatcher*)ref)->disconnect((fsi::FSIComm*)destination);
 }
-
+#endif
 
 fsi::FSICommNativeDispatcher::FSICommNativeDispatcher(){
 

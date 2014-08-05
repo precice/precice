@@ -2,9 +2,10 @@
 #define FSI_FSICOMMNATIVE2NATIVEPLAINPORT_H_ 
 
 #include "fsi/FSIComm.h"
-#include <jni.h> 
 #include <iostream>
 
+#ifdef JAVA
+#include <jni.h> 
 #ifdef __cplusplus
   extern "C" {
 #endif
@@ -18,6 +19,7 @@ JNIEXPORT void JNICALL Java_fsi_FSICommNative2NativePlainPort_connect(JNIEnv *en
 
 #ifdef __cplusplus
   }
+#endif
 #endif
 
 namespace fsi { 

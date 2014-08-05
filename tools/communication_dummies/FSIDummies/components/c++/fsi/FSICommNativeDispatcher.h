@@ -10,6 +10,7 @@ namespace fsi {
      class FSICommNativeDispatcher;
 }
 
+#ifdef JAVA
 #include <jni.h> 
 
 #ifdef __cplusplus
@@ -26,6 +27,8 @@ JNIEXPORT void JNICALL Java_fsi_FSICommNativeDispatcher_disconnect(JNIEnv *env, 
 
 #ifdef __cplusplus
   }
+#endif
+
 #endif
 
 class fsi::FSICommNativeDispatcher: public fsi::FSIComm{

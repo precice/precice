@@ -10,7 +10,6 @@
 //
 #include "fsi/FSICommNativeDispatcher.h"
 
-#include "fsi/FSITest.h"
 #include "fsi/FSIData.h"
 
 #include "Component.h"
@@ -21,7 +20,7 @@ namespace fsi {
 
 
 
-class fsi::FSIDummyAAbstractImplementation: public Component ,public fsi::FSITest,public fsi::FSIData{
+class fsi::FSIDummyAAbstractImplementation: public Component ,public fsi::FSIData{
      protected:
        fsi::FSICommNativeDispatcher* _b;
    
@@ -34,8 +33,8 @@ class fsi::FSIDummyAAbstractImplementation: public Component ,public fsi::FSITes
        void connectb(fsi::FSICommNativeDispatcher* port);
        void disconnectb();
  
+		void dataAckParallel(int& ack);
 		void transferDataParallel(const int* coordId, const int coordId_len,const double* data, const int data_len);
-		void testParallel();
 };     
 
 

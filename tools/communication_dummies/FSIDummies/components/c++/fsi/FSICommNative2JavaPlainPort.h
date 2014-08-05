@@ -2,7 +2,7 @@
 #define FSI_FSICOMM2NATIVE2JAVAPLAINPORT_H_ 
 
 #include "fsi/FSIComm.h"
-#include <jni.h> 
+
 #include <iostream>
 //
 // ASCoDT - Advanced Scientific Computing Development Toolkit
@@ -11,6 +11,9 @@
 //
 // Authors: Tobias Weinzierl, Atanas Atanasov   
 //
+
+#ifdef JAVA
+#include <jni.h> 
 #ifdef __cplusplus
   extern "C" {
 #endif
@@ -49,4 +52,5 @@ class fsi::FSICommNative2JavaPlainPort: public fsi::FSIComm{
     void endDataTransferParallel(int& ack);
    
 };
+#endif
 #endif

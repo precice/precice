@@ -1,5 +1,7 @@
 #include "fsi/FSICommNative2JavaPlainPort.h"
 
+#ifdef JAVA
+
 JNIEXPORT void JNICALL Java_fsi_FSICommNative2JavaPlainPort_createInstance(JNIEnv *env, jobject obj){
   JavaVM* jvm;
   env->GetJavaVM(&jvm);
@@ -16,6 +18,8 @@ JNIEXPORT void JNICALL Java_fsi_FSICommNative2JavaPlainPort_destroyInstance(JNIE
   delete ((fsi::FSICommNative2JavaPlainPort*)ref);
   
 }
+
+
 
 fsi::FSICommNative2JavaPlainPort::FSICommNative2JavaPlainPort(JavaVM* jvm,jobject obj):
      _jvm(jvm),
@@ -121,3 +125,4 @@ env->SetIntArrayRegion(ack_jni,0,1,(jint*)&ack);
 
   }
 }
+#endif

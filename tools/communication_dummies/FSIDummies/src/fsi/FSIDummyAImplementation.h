@@ -19,6 +19,7 @@ class FSIDummyAImplementation;
 
 class fsi::FSIDummyAImplementation : public fsi::FSIDummyAAbstractImplementation{
 private:
+	pthread_mutex_t _mutex;
 	__gnu_cxx::hash_map<int,int> _global2LocalCoordMapping;
 	std::vector<std::string> _mids;
 	std::vector<int> _globalCoordIds;
@@ -26,11 +27,11 @@ private:
 	double* _data;
 	int* _localCoordIds;
 	int _numberOfPoints;
-	void transferGlobalIds();
-	void receiveAllData();
-	void gatherMids();
-	void gatherDomainDescriptions();
+
+	//void gatherMids();
+	//void gatherDomainDescriptions();
 public:
+	static FSIDummyAImplementation* singleton;
 	FSIDummyAImplementation();
 	~FSIDummyAImplementation();
 	void gatherMids();
@@ -41,7 +42,11 @@ public:
 	void transferData(
 			const int* coordIds, const int coordIds_len,
 			const double* data, const int data_len);
-	void test();
+	void dataAck(int& ack);
+	void startDataTransfer();
+	void endDataTransfer(int& ack);
+	void transferGlobalIds();
+	void receiveAllData();
 };     
 
 

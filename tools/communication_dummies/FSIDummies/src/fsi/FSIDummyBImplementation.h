@@ -13,14 +13,16 @@
 #include "fsi/FSIDummyCommunicator.h"
 #include <string>
 #include <hash_map>
+#include <pthread.h>
 namespace fsi { 
 
-     class FSIDummyBImplementation;
+class FSIDummyBImplementation;
 
 }
 
 class fsi::FSIDummyBImplementation : public fsi::FSIDummyBAbstractImplementation{
 private:
+	pthread_mutex_t _mutex;
 	int _pointsSize;
 	bool _initialized;
 	int* _localIds;
@@ -33,31 +35,37 @@ private:
 	fsi::FSIDummyCommunicator* getCommunicator(
 			const int commId,const std::string commid);
 
-//	double* _localCoordinatesX;
-//	double* _localCoordinatesY;
+	//	double* _localCoordinatesX;
+	//	double* _localCoordinatesY;
 
 public:
+	static FSIDummyBImplementation* singleton;
 
-          FSIDummyBImplementation();
-          ~FSIDummyBImplementation();
-          void setCoordinates(
-        		  int* localIds,
-        		  //double* coordinatesX,
-        		  //double* coordinatesY,
-        		  const int pointsSize);
-          void setData(double* data);
-          void transferCoordinates(
-        		  const int* coordIds,
-        		  const int coord_len,
-        		  const int* offsets,
-        		  const int offsets_len,
-        		  const std::string* commids,
-        		  const int commids_len
-          );
-          void flush();
-          void transferData(
-        		  const int* coordIds, const int coordIds_len,
-        		  const double* data, const int data_len);
+	FSIDummyBImplementation();
+	~FSIDummyBImplementation();
+	void setCoordinates(
+			int* localIds,
+			//double* coordinatesX,
+			//double* coordinatesY,
+			const int pointsSize);
+	void setData(double* data);
+	void transferCoordinates(
+			const int* coordIds,
+			const int coord_len,
+			const int* offsets,
+			const int offsets_len,
+			const std::string* commids,
+			const int commids_len
+	);
+	void flush();
+	void dataAck(int& ack){
+
+	}
+	void transferData(
+			const int* coordIds, const int coordIds_len,
+			const double* data, const int data_len);
+	void startDataTransfer();
+	void endDataTransfer(int& ack);
 };     
 
 

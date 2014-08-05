@@ -5,8 +5,8 @@
 #include <cstdlib>
 #include "math.h"
 
-//#include "fsi/FSIDummyAImplementation.h"
-//#include "fsi/FSIDummyBImplementation.h"
+#include "fsi/FSIDummyAImplementation.h"
+
 /**
  * @brief For printing to the command line.
  *
@@ -18,11 +18,12 @@
     conv << message; \
     std::cout << conv.str() << std::endl; \
   }
-
+extern "C" void main_loop_(bool);
 int main(int argc, char** argv)
 {
   std::cout << "Running communication proxy" << std::endl;
-  MPI_Init(&argc, &argv);
+  int provided;
+  MPI_Init_thread(&argc,&argv,MPI_THREAD_MULTIPLE ,&provided);
 
   if (argc == 1 || argc != 3){
     PRINT("Usage: ./proxy proX proY");
@@ -102,22 +103,26 @@ int main(int argc, char** argv)
     data[k]=0.0;
   }
 //
-//    main_loop_fsi_(false);
+  main_loop_(false);
 //
-//    fsi::FSIDmmyAImplementation::singleton->setCoordIds(&coords[0],coords.size());
-//    fsi::FSIDmmyAImplementation::singleton->setData(data);
-//    fsi::FSIDmmyAImplementation::singleton->gatherMids();
-//    fsi::FSIDmmyAImplementation::singleton->gatherDomainDescriptions();
-//    fsi::FSIDmmyAImplementation::singleton->transferGlobalIds();
-//    fsi::FSIDmmyAImplementation::singleton->receiveAllData();
+  fsi::FSIDummyAImplementation::singleton->setCoordIds(&ids[0],pointSize);
+  fsi::FSIDummyAImplementation::singleton->setData(data);
+  std::cout<<"finished setting data A"<<std::endl;
+  fsi::FSIDummyAImplementation::singleton->gatherMids();
+  fsi::FSIDummyAImplementation::singleton->gatherDomainDescriptions();
+  std::cout<<"finished mid gathering A"<<std::endl;
+  fsi::FSIDummyAImplementation::singleton->transferGlobalIds();
+  fsi::FSIDummyAImplementation::singleton->receiveAllData();
 
   //check if received data is correct
   for(int k=0;k<pointSize;k++){
-    if(data[k]!=coordX[k]*coordY[k]*coordY[k]){
-      PRINT("ERROR" << "(" << rankX << "," << rankY << "), k:" << k);
+    if(data[k]!=coordX[k]*coordY[k]*coordY[k]+1.0){
+      PRINT("ERROR" << "(" << rankX << "," << rankY << "), k:" << k<<" received: "<<data[k]<<" expected:"<<coordX[k]*coordY[k]*coordY[k]+1.0);
     }
   }
-
+  
+  PRINT("SUCCESS!");
+  
 
   MPI_Finalize();
   std::cout << "Stop communication proxy" << std::endl;

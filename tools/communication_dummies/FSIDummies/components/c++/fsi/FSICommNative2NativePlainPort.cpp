@@ -2,6 +2,7 @@
 #include <assert.h>
 #include "Component.h"
 
+#ifdef JAVA
 JNIEXPORT void JNICALL Java_fsi_FSICommNative2NativePlainPort_createInstance(JNIEnv *env, jobject obj){
   JavaVM* jvm;
   env->GetJavaVM(&jvm);
@@ -22,6 +23,7 @@ JNIEXPORT void JNICALL Java_fsi_FSICommNative2NativePlainPort_connect(JNIEnv *en
   ((fsi::FSICommNative2NativePlainPort*)ref)->connect(dynamic_cast<fsi::FSIComm*>((Component*)destination));
 }
 
+#endif 
 
 fsi::FSICommNative2NativePlainPort::FSICommNative2NativePlainPort():
      _destination(0){

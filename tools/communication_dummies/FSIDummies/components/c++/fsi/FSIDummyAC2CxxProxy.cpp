@@ -29,9 +29,7 @@
 #include "tinyxml_ascodt.h"
 #include <hash_map>
 #include <vector>
-#ifdef Parallel
-#include <mpi.h>
-#endif
+
 
 #include "fsi/FSIDummyAImplementation.h"
 
@@ -367,6 +365,50 @@ void invoker_disconnect_client_dispatcher_b(void** ref,void** dispatcherRef, voi
  ((fsi::FSICommNativeDispatcher*)*dispatcherRef)->disconnect((fsi::FSIComm*)(*portRef));
 }
 
+void invoker_dataAck(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+#ifdef Parallel
+,MPI_Comm communicator, int methodId
+#endif
+){
+  int ack;
+readData((char*)&ack,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+
+  ((fsi::FSIDummyAImplementation*)*ref)->dataAck(ack);
+  sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
+
+}
+
+
+void parallel_master_invoker_dataAck(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+#ifdef Parallel
+,MPI_Comm communicator, int methodId
+#endif
+){
+ 	
+  int ack;
+readData((char*)&ack,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+
+  #ifdef Parallel
+  broadcastParallelData((char*)&methodId,sizeof(int),communicator);
+  broadcastParallelData((char*)&ack,sizeof(int),communicator);
+
+  #endif
+  ((fsi::FSIDummyAImplementation*)*ref)->dataAck(ack);
+  //int ack=1;
+  //sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
+}
+void parallel_worker_invoker_dataAck(void** ref
+#ifdef Parallel
+,MPI_Comm newsockfd
+#endif
+){
+  #ifdef Parallel
+  int ack;
+broadcastParallelData((char*)&ack,sizeof(int),newsockfd);
+
+  ((fsi::FSIDummyAImplementation*)*ref)->dataAck(ack);
+  #endif		  
+} 
 void invoker_transferData(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
 #ifdef Parallel
 ,MPI_Comm communicator, int methodId
@@ -431,42 +473,6 @@ double* data=new double[data_len];
 broadcastParallelData((char*)data,sizeof(double)*data_len,newsockfd);
 
   ((fsi::FSIDummyAImplementation*)*ref)->transferData(coordId,coordId_len,data,data_len);
-  #endif		  
-} 
-void invoker_test(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
-#ifdef Parallel
-,MPI_Comm communicator, int methodId
-#endif
-){
-  
-  ((fsi::FSIDummyAImplementation*)*ref)->test();
-  
-}
-
-
-void parallel_master_invoker_test(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
-#ifdef Parallel
-,MPI_Comm communicator, int methodId
-#endif
-){
- 	
-  
-  #ifdef Parallel
-  broadcastParallelData((char*)&methodId,sizeof(int),communicator);
-  
-  #endif
-  ((fsi::FSIDummyAImplementation*)*ref)->test();
-  //int ack=1;
-  //sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
-}
-void parallel_worker_invoker_test(void** ref
-#ifdef Parallel
-,MPI_Comm newsockfd
-#endif
-){
-  #ifdef Parallel
-  
-  ((fsi::FSIDummyAImplementation*)*ref)->test();
   #endif		  
 } 
 
@@ -549,7 +555,7 @@ clientfd,int bufferSize
 ){
      char *sendBuffer=new char[bufferSize];
      char *rcvBuffer=new char[bufferSize];
-     void (*invokers[21])(void**,int,int,char*,char*
+     void (*invokers[18])(void**,int,int,char*,char*
 #ifdef Parallel
 	 ,MPI_Comm,int
 #endif     
@@ -560,10 +566,10 @@ clientfd,int bufferSize
      invokers[4]=invoker_disconnect_client_dispatcher_b;
 invokers[3]=invoker_connect_client_dispatcher_b;
 invokers[2]=invoker_create_client_port_for_b;
+invokers[17]=parallel_master_invoker_dataAck;
+invokers[16]=invoker_dataAck;
 invokers[15]=parallel_master_invoker_transferData;
 invokers[14]=invoker_transferData;
-invokers[20]=parallel_master_invoker_test;
-invokers[19]=invoker_test;
 
      
      while(methodId!=1){
@@ -586,10 +592,10 @@ invokers[19]=invoker_test;
 #ifdef Parallel
 void parallel_worker_loop(void* ref,
 MPI_Comm clientfd){
-     void (*parallel_worker_invokers[21])(void**,MPI_Comm);
+     void (*parallel_worker_invokers[18])(void**,MPI_Comm);
      int methodId=0;
-     parallel_worker_invokers[14]=parallel_worker_invoker_transferData;
-parallel_worker_invokers[19]=parallel_worker_invoker_test;
+     parallel_worker_invokers[16]=parallel_worker_invoker_dataAck;
+parallel_worker_invokers[14]=parallel_worker_invoker_transferData;
 
      while(methodId!=1){
           broadcastParallelData((char*)&methodId,sizeof(int),clientfd);
@@ -635,7 +641,9 @@ void startMPIDaemon(FSI_FSIDUMMYA_arg& arg){
 int rank = -1;
 MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 if(rank>0){
-	 parallel_deamon_run(&arg);
+	pthread_t task;
+	pthread_create(&task,NULL,parallel_deamon_run,&arg);
+	//parallel_deamon_run(&arg);
 }
 #endif     
 }
@@ -691,7 +699,7 @@ void initialiseXMLDaemons(FSI_FSIDUMMYA_arg& arg){
           __gnu_cxx::hash_map<int,int> componentPorts;
           __gnu_cxx::hash_map<int,std::string> componentHosts;
           __gnu_cxx::hash_map<int,void*> dispatchers;
-          void (*invokers[21])(void**,void**,void**,char* host,int port,int buffer_size);
+          void (*invokers[18])(void**,void**,void**,char* host,int port,int buffer_size);
           
            invokers[4]=invoker_disconnect_client_dispatcher_b;
 invokers[3]=invoker_connect_client_dispatcher_b;
@@ -753,7 +761,7 @@ void initialiseXMLConnections(FSI_FSIDUMMYA_arg& arg){
           __gnu_cxx::hash_map<int,int> componentPorts;
           __gnu_cxx::hash_map<int,std::string> componentHosts;
           __gnu_cxx::hash_map<int,void*> dispatchers;
-          void (*invokers[21])(void**,void**,void**,char* host,int port,int buffer_size);
+          void (*invokers[18])(void**,void**,void**,char* host,int port,int buffer_size);
           
            invokers[4]=invoker_disconnect_client_dispatcher_b;
 invokers[3]=invoker_connect_client_dispatcher_b;
@@ -904,10 +912,11 @@ void initialise_(FSI_FSIDUMMYA_arg& arg,bool joinable){
 
 
 #ifdef _WIN32
-void DESTROY(FSI_FSIDUMMYA_arg& arg){
+void DESTROY(FSI_FSIDUMMYA_arg& arg, bool joinable){
 #else
-void destroy_(FSI_FSIDUMMYA_arg& arg){
+void destroy_(FSI_FSIDUMMYA_arg& arg, bool joinable){
 #endif
+if(joinable){
 #ifdef _WIN32
   closesocket(arg.daemon_serverfd);
   if(arg.java_client_flag)
@@ -923,7 +932,7 @@ void destroy_(FSI_FSIDUMMYA_arg& arg){
 #ifdef _WIN32
   WSACleanup();
 #endif   
-
+}
 }
 
 #ifdef _WIN32
@@ -950,16 +959,18 @@ void main_loop_(bool joinable){
 #ifdef _WIN32
   INITIALISE(daemon_args,joinable);
   SOCKET_LOOP(daemon_args,joinable);
-  DESTROY(daemon_args);     
+  DESTROY(daemon_args,joinable);     
 #else  
   initialise_(daemon_args,joinable);
   socket_loop_(daemon_args,joinable);
-  destroy_(daemon_args);  
+  destroy_(daemon_args,joinable);  
 #endif
   
 }
 
 }
+
+
 
 
 

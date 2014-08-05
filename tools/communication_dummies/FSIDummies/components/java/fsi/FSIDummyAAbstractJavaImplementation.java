@@ -115,31 +115,6 @@ public abstract class FSIDummyAAbstractJavaImplementation extends SocketComponen
  
   
 
-  public void test() {
-    //__SWITCH_SYNC_ASYNC__
-    try{
-         int methodId=19;
-         sendIntData(methodId);
-         
-           
-    }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
-       de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
-    }  
-  }
-
-  public void testParallel() {
-    //__SWITCH_SYNC_ASYNC__
-    try{
-         int methodId=19+1;
-         sendIntData(methodId);
-         
-           
-    }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
-       de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
-    }  
-  }
-    
-
   public void transferData(final int coordId[],final double data[]) {
     //__SWITCH_SYNC_ASYNC__
     try{
@@ -167,6 +142,35 @@ sendIntData(data.length);
 sendDoubleData(data);
 
            
+    }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
+       de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
+    }  
+  }
+    
+
+  public void dataAck(int ack[]) {
+    //__SWITCH_SYNC_ASYNC__
+    try{
+         int methodId=16;
+         sendIntData(methodId);
+         sendIntData(ack);
+
+         readIntData(ack,1);
+  
+    }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
+       de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
+    }  
+  }
+
+  public void dataAckParallel(int ack[]) {
+    //__SWITCH_SYNC_ASYNC__
+    try{
+         int methodId=16+1;
+         sendIntData(methodId);
+         sendIntData(ack);
+
+         readIntData(ack,1);
+  
     }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
        de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
     }  

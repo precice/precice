@@ -5,8 +5,7 @@
 #include <cstdlib>
 #include "math.h"
 
-//#include "fsi/FSIDummyAImplementation.h"
-//#include "fsi/FSIDummyBImplementation.h"
+#include "fsi/FSIDummyBImplementation.h"
 /**
  * @brief For printing to the command line.
  *
@@ -18,17 +17,18 @@
     conv << message; \
     std::cout << conv.str() << std::endl; \
   }
-
+extern "C" void main_loop_(bool);
 int main(int argc, char** argv)
 {
   std::cout << "Running communication proxy" << std::endl;
-  MPI_Init(&argc, &argv);
+  int provided;
+  MPI_Init_thread(&argc,&argv,MPI_THREAD_MULTIPLE ,&provided);
 
   if (argc == 1 || argc != 3){
     PRINT("Usage: ./proxy proX proY");
     return 1;
   }
-
+  std::cout<<"argv2:"<<argv[2]<<std::endl;
   int proX = atoi(argv[1]);
   int proY = atoi(argv[2]);
 
@@ -72,10 +72,7 @@ int main(int argc, char** argv)
   double offsetX = (rankX-1)* (N/proX);
   double offsetY = (rankY-1)* (N/proY);
 
-  std::cout << "Servus ..." << rank << " of " << size;
-  std::cout << " (" << rankX << "," << rankY << ")";
-  std::cout << " (" << chunkX << "," << chunkY << ")";
-  std::cout << " (" << offsetX << "," << offsetY << ")" <<std::endl;
+ 
 
   double dx = 1.0 / N;
   double dy = 1.0 / N;
@@ -90,21 +87,24 @@ int main(int argc, char** argv)
   for(int k=0;k<pointSize;k++){
     ids[k] = round((coordX[k]/dx)+(coordY[k]/dy)*N);
   }
-  for(int k=0;k<pointSize;k++){
-    std::cout << ids[k] <<", " << std::endl;
-  }
+ 
 
 
   PRINT("Second Step:B");
   //B sends data
 
   for(int k=0;k<pointSize;k++){
-    data[k]=coordX[k]*coordY[k]*coordY[k];
+    data[k]=coordX[k]*coordY[k]*coordY[k]+1.0;
   }
 
-  //main_loop_fsi_(true);
+  main_loop_(false);
+  fsi::FSIDummyBImplementation::singleton->setCoordinates(&ids[0],pointSize);
+  fsi::FSIDummyBImplementation::singleton->setData(data);
+  int a = 20;
+  while(true){
+	a=a+30;
 
-
+  }
   MPI_Finalize();
   std::cout << "Stop communication proxy" << std::endl;
   return 0;

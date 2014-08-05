@@ -29,9 +29,7 @@
 #include "tinyxml_ascodt.h"
 #include <hash_map>
 #include <vector>
-#ifdef Parallel
-#include <mpi.h>
-#endif
+
 
 #include "fsi/FSIDummyBImplementation.h"
 
@@ -549,7 +547,7 @@ clientfd,int bufferSize
 ){
      char *sendBuffer=new char[bufferSize];
      char *rcvBuffer=new char[bufferSize];
-     void (*invokers[21])(void**,int,int,char*,char*
+     void (*invokers[18])(void**,int,int,char*,char*
 #ifdef Parallel
 	 ,MPI_Comm,int
 #endif     
@@ -585,7 +583,7 @@ invokers[5]=invoker_transferCoordinates;
 #ifdef Parallel
 void parallel_worker_loop(void* ref,
 MPI_Comm clientfd){
-     void (*parallel_worker_invokers[21])(void**,MPI_Comm);
+     void (*parallel_worker_invokers[18])(void**,MPI_Comm);
      int methodId=0;
      parallel_worker_invokers[9]=parallel_worker_invoker_endDataTransfer;
 parallel_worker_invokers[7]=parallel_worker_invoker_startDataTransfer;
@@ -635,7 +633,9 @@ void startMPIDaemon(FSI_FSIDUMMYB_arg& arg){
 int rank = -1;
 MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 if(rank>0){
-	 parallel_deamon_run(&arg);
+	pthread_t task;
+	pthread_create(&task,NULL,parallel_deamon_run,&arg);
+	//parallel_deamon_run(&arg);
 }
 #endif     
 }
@@ -691,7 +691,7 @@ void initialiseXMLDaemons(FSI_FSIDUMMYB_arg& arg){
           __gnu_cxx::hash_map<int,int> componentPorts;
           __gnu_cxx::hash_map<int,std::string> componentHosts;
           __gnu_cxx::hash_map<int,void*> dispatchers;
-          void (*invokers[21])(void**,void**,void**,char* host,int port,int buffer_size);
+          void (*invokers[18])(void**,void**,void**,char* host,int port,int buffer_size);
           
            
           for(tinyxml2::XMLElement* e = root->FirstChildElement("component"); e != NULL; e = e->NextSiblingElement("component"))
@@ -750,7 +750,7 @@ void initialiseXMLConnections(FSI_FSIDUMMYB_arg& arg){
           __gnu_cxx::hash_map<int,int> componentPorts;
           __gnu_cxx::hash_map<int,std::string> componentHosts;
           __gnu_cxx::hash_map<int,void*> dispatchers;
-          void (*invokers[21])(void**,void**,void**,char* host,int port,int buffer_size);
+          void (*invokers[18])(void**,void**,void**,char* host,int port,int buffer_size);
           
            
           for(tinyxml2::XMLElement* e = root->FirstChildElement("component"); e != NULL; e = e->NextSiblingElement("component"))
@@ -898,10 +898,11 @@ void initialise_(FSI_FSIDUMMYB_arg& arg,bool joinable){
 
 
 #ifdef _WIN32
-void DESTROY(FSI_FSIDUMMYB_arg& arg){
+void DESTROY(FSI_FSIDUMMYB_arg& arg, bool joinable){
 #else
-void destroy_(FSI_FSIDUMMYB_arg& arg){
+void destroy_(FSI_FSIDUMMYB_arg& arg, bool joinable){
 #endif
+if(joinable){
 #ifdef _WIN32
   closesocket(arg.daemon_serverfd);
   if(arg.java_client_flag)
@@ -917,7 +918,7 @@ void destroy_(FSI_FSIDUMMYB_arg& arg){
 #ifdef _WIN32
   WSACleanup();
 #endif   
-
+}
 }
 
 #ifdef _WIN32
@@ -944,16 +945,18 @@ void main_loop_(bool joinable){
 #ifdef _WIN32
   INITIALISE(daemon_args,joinable);
   SOCKET_LOOP(daemon_args,joinable);
-  DESTROY(daemon_args);     
+  DESTROY(daemon_args,joinable);     
 #else  
   initialise_(daemon_args,joinable);
   socket_loop_(daemon_args,joinable);
-  destroy_(daemon_args);  
+  destroy_(daemon_args,joinable);  
 #endif
   
 }
 
 }
+
+
 
 
 
