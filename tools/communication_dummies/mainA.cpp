@@ -3,9 +3,10 @@
 #include <string>
 #include <sstream>
 #include <cstdlib>
+#include "math.h"
 
-#include "fsi/FSIDummyAImplementation.h"
-#include "fsi/FSIDummyBImplementation.h"
+//#include "fsi/FSIDummyAImplementation.h"
+//#include "fsi/FSIDummyBImplementation.h"
 /**
  * @brief For printing to the command line.
  *
@@ -23,14 +24,13 @@ int main(int argc, char** argv)
   std::cout << "Running communication proxy" << std::endl;
   MPI_Init(&argc, &argv);
 
-  if (argc == 1 || argc != 4){
-    PRINT("Usage: ./proxy proX proY first/second=0/1");
+  if (argc == 1 || argc != 3){
+    PRINT("Usage: ./proxy proX proY");
     return 1;
   }
 
   int proX = atoi(argv[1]);
   int proY = atoi(argv[2]);
-  bool doesFirstStep = not atof(argv[3]);
 
   int size;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -67,6 +67,7 @@ int main(int argc, char** argv)
   double* coordX = new double[pointSize];
   double* coordY = new double[pointSize];
   double* data = new double[pointSize];
+  int* ids = new int[pointSize];
 
   double offsetX = (rankX-1)* (N/proX);
   double offsetY = (rankY-1)* (N/proY);
@@ -81,60 +82,41 @@ int main(int argc, char** argv)
 
   for(int i=1;i<=chunkX;i++){
     for(int j=1;j<=chunkY;j++){
-      coordX[(j-1)*chunkX +i-1] = (i-1)*dx + offsetX;
-      coordY[(j-1)*chunkX +i-1] = (j-1)*dy + offsetY;
+      coordX[(j-1)*chunkX +i-1] = (i-1)*dx + offsetX*dx;
+      coordY[(j-1)*chunkX +i-1] = (j-1)*dy + offsetY*dy;
     }
   }
 
-
-  if(doesFirstStep){
-    PRINT("First Step:A");
-    main_loop_fsi_A_(false);
-	
-   fsi::FSIDmmyAImplementation::singleton->setCoordIds(&coords[0],coords.size());	
-   fsi::FSIDmmyAImplementation::singleton->setData(data);	
-   fsi::FSIDmmyAImplementation::singleton->gatherMids();	
-   fsi::FSIDmmyAImplementation::singleton->gatherDomainDescriptions();
-   fsi::FSIDmmyAImplementation::singleton->transferGlobalIds();
-   fsi::FSIDmmyAImplementation::singleton->receiveAllData(); 	
-   for(int k=0;k<pointSize;k++){
-      if(data[k]!=coordX[k]*coordY[k]*coordY[k]){
-        PRINT("ERROR" << "(" << rankX << "," << rankY << "), k:" << k);
-      }
-    }
-
-   // for(int k=0;k<pointSize;k++){
-   //   data[k]=coordX[k]*coordY[k]*coordY[k];
-   // }
-
-    //send data
-
+  for(int k=0;k<pointSize;k++){
+    ids[k] = round((coordX[k]/dx)+(coordY[k]/dy)*N);
   }
-  else{
-    for(int k=0;k<pointSize;k++){
-      data[k]=0.0;
-    }
-    PRINT("Second Step:B");
-    main_loop_fsi_B_(true);
-    
-    
-
-    //receive data
-
-
+  for(int k=0;k<pointSize;k++){
+    std::cout << ids[k] <<", " << std::endl;
   }
 
-//  std::ostringstream myStream;
-//  myStream << "(" << rankX << "," << rankY << ")";
-//  for(int k=0;k<pointSize;k++){
-//    myStream << data[k] << ", ";
-//  }
-//  std::cout << myStream.str() << std::endl;
 
+  PRINT("First Step:A");
+  //A sets coordinates and receives data
 
+  for(int k=0;k<pointSize;k++){
+    data[k]=0.0;
+  }
+//
+//    main_loop_fsi_(false);
+//
+//    fsi::FSIDmmyAImplementation::singleton->setCoordIds(&coords[0],coords.size());
+//    fsi::FSIDmmyAImplementation::singleton->setData(data);
+//    fsi::FSIDmmyAImplementation::singleton->gatherMids();
+//    fsi::FSIDmmyAImplementation::singleton->gatherDomainDescriptions();
+//    fsi::FSIDmmyAImplementation::singleton->transferGlobalIds();
+//    fsi::FSIDmmyAImplementation::singleton->receiveAllData();
 
-
-  //MPI_Wtime();
+  //check if received data is correct
+  for(int k=0;k<pointSize;k++){
+    if(data[k]!=coordX[k]*coordY[k]*coordY[k]){
+      PRINT("ERROR" << "(" << rankX << "," << rankY << "), k:" << k);
+    }
+  }
 
 
   MPI_Finalize();

@@ -44,4 +44,5 @@ env = Environment (
    ENV        = os.environ  # propagates environment variables to scons  
    )
    
-env.Program ( 'comproxy-release', Glob('*.cpp') )
+env.Program ( 'dummyA', Glob('mainA.cpp') )
+env.Program ( 'dummyB', Glob('mainB.cpp') )
