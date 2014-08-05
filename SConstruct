@@ -35,7 +35,7 @@ def vprint(name, value, default=True, description = None):
     """ Pretty prints an environment variabe with value and modified or not. """
     mod = "(default)" if default else "(modified)"
     desc = "   " + description if description else ""
-    print "{:10} {:25} = {!s:6}{}".format(mod, name, value, desc)
+    print "{0:10} {1:25} = {2!s:8}{3}".format(mod, name, value, desc)
 
 def checkset_var(varname, default):
     """ Checks if environment variable is set, use default otherwise and print the value. """    
