@@ -22,8 +22,10 @@ namespace fsi {
 class fsi::FSIComm {
   public:
     virtual ~FSIComm(){}
-     virtual void transferData(const double* data, const int data_len)=0;
-     virtual void transferDataParallel(const double* data, const int data_len)=0;
+     virtual void endDataTransfer(int& ack)=0;
+     virtual void endDataTransferParallel(int& ack)=0;
+     virtual void startDataTransfer()=0;
+     virtual void startDataTransferParallel()=0;
      virtual void transferCoordinates(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len)=0;
      virtual void transferCoordinatesParallel(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len)=0;
 

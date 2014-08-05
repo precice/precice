@@ -10,15 +10,20 @@ package fsi {
   interface FSITest{
   	test();
   }
+  interface FSIData{
+  	transferData(in int coordId[],in double data[]);
+  }
   interface FSIComm{
   	transferCoordinates(in int coordId[],in int offsets[],in string hosts[]);
-  	transferData(in double data[]);
- 
+  	startDataTransfer();
+  	endDataTransfer(inout int ack);
+  	
   }
   @target = cxx_remote_socket
-  class FSIDummyA implements-all fsi.FSITest uses fsi.FSIComm as b{
+  class FSIDummyA implements-all fsi.FSITest, fsi.FSIData uses fsi.FSIComm as b{
   
   }
+  
   
 
 }

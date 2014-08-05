@@ -66,14 +66,25 @@ hosts_str[i]=hosts[i];
 }
 #endif
 #ifdef _WIN32
-void FSI_FSICOMMC2SOCKET_PLAIN_PORT_TRANSFERDATA(long long* ref,double* data, int* data_len){
+void FSI_FSICOMMC2SOCKET_PLAIN_PORT_STARTDATATRANSFER(long long* ref){
      
-     ((fsi::FSICommCxx2SocketPlainPort*)*ref)->transferData(data,*data_len);
+     ((fsi::FSICommCxx2SocketPlainPort*)*ref)->startDataTransfer();
 }
 #else
-void fsi_fsicommc2socket_plain_port_transferdata_(long long* ref,double* data, int* data_len){
+void fsi_fsicommc2socket_plain_port_startdatatransfer_(long long* ref){
      
-     ((fsi::FSICommCxx2SocketPlainPort*)*ref)->transferData(data,*data_len);
+     ((fsi::FSICommCxx2SocketPlainPort*)*ref)->startDataTransfer();
+}
+#endif
+#ifdef _WIN32
+void FSI_FSICOMMC2SOCKET_PLAIN_PORT_ENDDATATRANSFER(long long* ref,int* ack){
+     
+     ((fsi::FSICommCxx2SocketPlainPort*)*ref)->endDataTransfer(*ack);
+}
+#else
+void fsi_fsicommc2socket_plain_port_enddatatransfer_(long long* ref,int* ack){
+     
+     ((fsi::FSICommCxx2SocketPlainPort*)*ref)->endDataTransfer(*ack);
 }
 #endif
 }

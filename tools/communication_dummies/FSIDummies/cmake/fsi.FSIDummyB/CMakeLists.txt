@@ -140,6 +140,17 @@ if(LINKER_IS_LD)
     set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -static")
   endif()
 endif()
+
+OPTION (Parallel "Enable parallel" off)
+
+if(Parallel)
+	set(CMAKE_CXX_COMPILER "/home/atanasoa/intel/impi/4.1.3.049/intel64/bin/mpiicpc")
+	
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DParallel -mt_mpi ")
+	
+endif(Parallel)
+
+
 # ==============================================================================
 # }}} Flags
 
@@ -151,7 +162,8 @@ include_directories("../../components/c++")
 include("sources.cmake")
 SET(CPP_FILES
 	${CPP_FILES}
-     ../../src/fsi/FSIDummyCommunicator.cpp
+    ../../components/c++/fsi/FSIDataCxx2SocketPlainPort.cpp
+    ../../src/fsi/FSIDummyCommunicator.cpp
  
 )
 

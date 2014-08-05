@@ -31,8 +31,11 @@ public interface FSIComm  {
   public void transferCoordinates(final int coordId[],final int offsets[],final String hosts[]);
   public void transferCoordinatesParallel(final int coordId[],final int offsets[],final String hosts[]);
 
-  public void transferData(final double data[]);
-  public void transferDataParallel(final double data[]);
+  public void startDataTransfer();
+  public void startDataTransferParallel();
+
+  public void endDataTransfer(int ack[]);
+  public void endDataTransferParallel(int ack[]);
 
 
 }

@@ -367,6 +367,72 @@ void invoker_disconnect_client_dispatcher_b(void** ref,void** dispatcherRef, voi
  ((fsi::FSICommNativeDispatcher*)*dispatcherRef)->disconnect((fsi::FSIComm*)(*portRef));
 }
 
+void invoker_transferData(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+#ifdef Parallel
+,MPI_Comm communicator, int methodId
+#endif
+){
+  int coordId_len=0;
+readData((char*)&coordId_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int* coordId=new int[coordId_len];
+readData((char*)coordId,sizeof(int)*coordId_len,rcvBuffer,newsockfd,buffer_size);
+int data_len=0;
+readData((char*)&data_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+double* data=new double[data_len];
+readData((char*)data,sizeof(double)*data_len,rcvBuffer,newsockfd,buffer_size);
+
+  ((fsi::FSIDummyAImplementation*)*ref)->transferData(coordId,coordId_len,data,data_len);
+  delete [] coordId;
+delete [] data;
+
+}
+
+
+void parallel_master_invoker_transferData(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+#ifdef Parallel
+,MPI_Comm communicator, int methodId
+#endif
+){
+ 	
+  int coordId_len=0;
+readData((char*)&coordId_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int* coordId=new int[coordId_len];
+readData((char*)coordId,sizeof(int)*coordId_len,rcvBuffer,newsockfd,buffer_size);
+int data_len=0;
+readData((char*)&data_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+double* data=new double[data_len];
+readData((char*)data,sizeof(double)*data_len,rcvBuffer,newsockfd,buffer_size);
+
+  #ifdef Parallel
+  broadcastParallelData((char*)&methodId,sizeof(int),communicator);
+  broadcastParallelData((char*)&coordId_len,sizeof(int),communicator);
+broadcastParallelData((char*)coordId,sizeof(int)*coordId_len,communicator);
+broadcastParallelData((char*)&data_len,sizeof(int),communicator);
+broadcastParallelData((char*)data,sizeof(double)*data_len,communicator);
+
+  #endif
+  ((fsi::FSIDummyAImplementation*)*ref)->transferData(coordId,coordId_len,data,data_len);
+  //int ack=1;
+  //sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
+}
+void parallel_worker_invoker_transferData(void** ref
+#ifdef Parallel
+,MPI_Comm newsockfd
+#endif
+){
+  #ifdef Parallel
+  int coordId_len=0;
+broadcastParallelData((char*)&coordId_len,sizeof(int),newsockfd);
+int* coordId=new int[coordId_len];
+broadcastParallelData((char*)coordId,sizeof(int)*coordId_len,newsockfd);
+int data_len=0;
+broadcastParallelData((char*)&data_len,sizeof(int),newsockfd);
+double* data=new double[data_len];
+broadcastParallelData((char*)data,sizeof(double)*data_len,newsockfd);
+
+  ((fsi::FSIDummyAImplementation*)*ref)->transferData(coordId,coordId_len,data,data_len);
+  #endif		  
+} 
 void invoker_test(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
 #ifdef Parallel
 ,MPI_Comm communicator, int methodId
@@ -483,7 +549,7 @@ clientfd,int bufferSize
 ){
      char *sendBuffer=new char[bufferSize];
      char *rcvBuffer=new char[bufferSize];
-     void (*invokers[14])(void**,int,int,char*,char*
+     void (*invokers[21])(void**,int,int,char*,char*
 #ifdef Parallel
 	 ,MPI_Comm,int
 #endif     
@@ -494,8 +560,10 @@ clientfd,int bufferSize
      invokers[4]=invoker_disconnect_client_dispatcher_b;
 invokers[3]=invoker_connect_client_dispatcher_b;
 invokers[2]=invoker_create_client_port_for_b;
-invokers[13]=parallel_master_invoker_test;
-invokers[12]=invoker_test;
+invokers[15]=parallel_master_invoker_transferData;
+invokers[14]=invoker_transferData;
+invokers[20]=parallel_master_invoker_test;
+invokers[19]=invoker_test;
 
      
      while(methodId!=1){
@@ -518,9 +586,10 @@ invokers[12]=invoker_test;
 #ifdef Parallel
 void parallel_worker_loop(void* ref,
 MPI_Comm clientfd){
-     void (*parallel_worker_invokers[14])(void**,MPI_Comm);
+     void (*parallel_worker_invokers[21])(void**,MPI_Comm);
      int methodId=0;
-     parallel_worker_invokers[12]=parallel_worker_invoker_test;
+     parallel_worker_invokers[14]=parallel_worker_invoker_transferData;
+parallel_worker_invokers[19]=parallel_worker_invoker_test;
 
      while(methodId!=1){
           broadcastParallelData((char*)&methodId,sizeof(int),clientfd);
@@ -622,7 +691,7 @@ void initialiseXMLDaemons(FSI_FSIDUMMYA_arg& arg){
           __gnu_cxx::hash_map<int,int> componentPorts;
           __gnu_cxx::hash_map<int,std::string> componentHosts;
           __gnu_cxx::hash_map<int,void*> dispatchers;
-          void (*invokers[14])(void**,void**,void**,char* host,int port,int buffer_size);
+          void (*invokers[21])(void**,void**,void**,char* host,int port,int buffer_size);
           
            invokers[4]=invoker_disconnect_client_dispatcher_b;
 invokers[3]=invoker_connect_client_dispatcher_b;
@@ -684,7 +753,7 @@ void initialiseXMLConnections(FSI_FSIDUMMYA_arg& arg){
           __gnu_cxx::hash_map<int,int> componentPorts;
           __gnu_cxx::hash_map<int,std::string> componentHosts;
           __gnu_cxx::hash_map<int,void*> dispatchers;
-          void (*invokers[14])(void**,void**,void**,char* host,int port,int buffer_size);
+          void (*invokers[21])(void**,void**,void**,char* host,int port,int buffer_size);
           
            invokers[4]=invoker_disconnect_client_dispatcher_b;
 invokers[3]=invoker_connect_client_dispatcher_b;

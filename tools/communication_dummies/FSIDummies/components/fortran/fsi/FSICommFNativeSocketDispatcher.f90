@@ -13,8 +13,10 @@ type, public :: FSICommNativeSocketDispatcher
      
      	procedure,public::transferCoordinates
 	procedure,private::transferCoordinates_internal
-	procedure,public::transferData
-	procedure,private::transferData_internal
+	procedure,public::startDataTransfer
+	procedure,private::startDataTransfer_internal
+	procedure,public::endDataTransfer
+	procedure,private::endDataTransfer_internal
 
 end type FSICommNativeSocketDispatcher
 contains
@@ -47,27 +49,38 @@ subroutine destroyDispatcherInstance(this)
 
 end subroutine destroyDispatcherInstance
 
-subroutine transferData_internal(this,&
-	data,data_len)
+subroutine endDataTransfer_internal(this,&
+	ack)
      use, intrinsic :: iso_c_binding
      class(FSICommNativeSocketDispatcher)::this
-     	real(kind=c_double),intent(in),dimension(*)::data
-	integer(kind=c_int),intent(in)::data_len
+     	integer(kind=c_int),intent(inout)::ack
 
-     call fsi_fsicomm_f2c_nsd_transferData(this%reference,&
-data,data_len)
-end subroutine transferData_internal
+     call fsi_fsicomm_f2c_nsd_endDataTransfer(this%reference,&
+ack)
+end subroutine endDataTransfer_internal
 
-subroutine transferData(this,&
-	data,data_len)
+subroutine endDataTransfer(this,&
+	ack)
      use, intrinsic :: iso_c_binding
      class(FSICommNativeSocketDispatcher)::this
-     	real(8),intent(in),dimension(*)::data
-	integer,intent(in)::data_len
+     	integer,intent(inout)::ack
 
-     call this%transferData_internal(&
-data,data_len)
-end subroutine transferData
+     call this%endDataTransfer_internal(&
+ack)
+end subroutine endDataTransfer
+subroutine startDataTransfer_internal(this)
+     use, intrinsic :: iso_c_binding
+     class(FSICommNativeSocketDispatcher)::this
+     
+     call fsi_fsicomm_f2c_nsd_startDataTransfer(this%reference)
+end subroutine startDataTransfer_internal
+
+subroutine startDataTransfer(this)
+     use, intrinsic :: iso_c_binding
+     class(FSICommNativeSocketDispatcher)::this
+     
+     call this%startDataTransfer_internal()
+end subroutine startDataTransfer
 subroutine transferCoordinates_internal(this,&
 	coordId,coordId_len,&
 	offsets,offsets_len,&

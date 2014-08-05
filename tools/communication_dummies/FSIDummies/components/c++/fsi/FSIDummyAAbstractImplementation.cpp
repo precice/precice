@@ -21,6 +21,9 @@ fsi::FSIDummyAAbstractImplementation::~FSIDummyAAbstractImplementation(){
     _b=NULL;
  }
  
+void fsi::FSIDummyAAbstractImplementation::transferDataParallel(const int* coordId, const int coordId_len,const double* data, const int data_len){
+     // @todo Insert your code here
+}
 void fsi::FSIDummyAAbstractImplementation::testParallel(){
      // @todo Insert your code here
 }

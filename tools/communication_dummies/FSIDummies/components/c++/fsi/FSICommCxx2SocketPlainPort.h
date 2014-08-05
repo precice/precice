@@ -80,8 +80,11 @@ class fsi::FSICommCxx2SocketPlainPort: public fsi::FSIComm{
     void transferCoordinates(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len);  
     void transferCoordinatesParallel(const int* coordId, const int coordId_len,const int* offsets, const int offsets_len,const std::string* hosts, const int hosts_len);
    
-    void transferData(const double* data, const int data_len);  
-    void transferDataParallel(const double* data, const int data_len);
+    void startDataTransfer();  
+    void startDataTransferParallel();
+   
+    void endDataTransfer(int& ack);  
+    void endDataTransferParallel(int& ack);
    
 };
 

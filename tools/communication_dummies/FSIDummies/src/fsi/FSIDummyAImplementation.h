@@ -8,22 +8,40 @@
 //
 // Authors: Tobias Weinzierl, Atanas Atanasov   
 //
-
+#include <mpi.h>
 #include "fsi/FSIDummyAAbstractImplementation.h"
 #include <string>
+#include <hash_map>
 namespace fsi { 
 
-     class FSIDummyAImplementation;
+class FSIDummyAImplementation;
 }
 
 class fsi::FSIDummyAImplementation : public fsi::FSIDummyAAbstractImplementation{
 private:
-	void transferAllData();
-
+	__gnu_cxx::hash_map<int,int> _global2LocalCoordMapping;
+	std::vector<std::string> _mids;
+	std::vector<int> _globalCoordIds;
+	std::vector<int> _globaOffsets;
+	double* _data;
+	int* _localCoordIds;
+	int _numberOfPoints;
+	void transferGlobalIds();
+	void receiveAllData();
+	void gatherMids();
+	void gatherDomainDescriptions();
 public:
-          FSIDummyAImplementation();
-          ~FSIDummyAImplementation();
-          void test();
+	FSIDummyAImplementation();
+	~FSIDummyAImplementation();
+	void gatherMids();
+	void gatherDomainDescriptions();
+
+	void setCoordIds(int* coordIds,const int numberOfPoints);
+	void setData(double* data);
+	void transferData(
+			const int* coordIds, const int coordIds_len,
+			const double* data, const int data_len);
+	void test();
 };     
 
 

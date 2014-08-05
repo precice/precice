@@ -70,11 +70,20 @@ public class FSICommNative2NativePlainPort extends FSICommAbstractPort {
   }
   
 
-  public void transferData(final double data[]) {
+  public void startDataTransfer() {
     //DO NOTHING HERE
   }
   
-   public void transferDataParallel(final double data[]) {
+   public void startDataTransferParallel() {
+    //DO NOTHING HERE
+  }
+  
+
+  public void endDataTransfer(int ack[]) {
+    //DO NOTHING HERE
+  }
+  
+   public void endDataTransferParallel(int ack[]) {
     //DO NOTHING HERE
   }
   

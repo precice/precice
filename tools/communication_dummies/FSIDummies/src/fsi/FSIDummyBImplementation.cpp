@@ -76,6 +76,12 @@ void fsi::FSIDummyBImplementation::transferCoordinates(
 
 }
 
+void fsi::FSIDummyBImplementation::flush(){
+	__gnu_cxx::hash_map<int,fsi::FSIDummyCommunicator*>::iterator it;
+	for(it=_comms.begin();it!=_comms.end();++it){
+		(*it).second->flush();
+	}
+}
 fsi::FSIDummyCommunicator* fsi::FSIDummyBImplementation::getCommunicator(const int commId,const std::string commid){
 	__gnu_cxx::hash_map<int,fsi::FSIDummyCommunicator*>::iterator it = _comms.find(commId);
 	if(it==_comms.end()){
@@ -95,6 +101,8 @@ const int fsi::FSIDummyBImplementation::getHostId(
 	}
 	return -1;
 }
-void fsi::FSIDummyBImplementation::transferData(const double* data, const int data_len){
+void fsi::FSIDummyBImplementation::transferData(
+		const int* coordIds,const int coordIds_len,
+		const double* data,const int data_len){
 	// @todo Insert your code here
 }

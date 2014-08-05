@@ -247,7 +247,7 @@ flags |= O_NONBLOCK;
 fcntl(_newsockfd, F_SETFL, flags);
 #endif
 
-     int methodId=12;
+     int methodId=19;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      
      
@@ -262,7 +262,7 @@ void fsi::FSITestCxx2SocketPlainPort::testParallel(){
      flags ^= O_NONBLOCK;
      fcntl(_newsockfd, F_SETFL, flags);
 #endif
-     int methodId=13;
+     int methodId=20;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      
      

@@ -38,6 +38,17 @@ if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
                            ""
                            FORCE)
 endif()
+
+OPTION (Parallel "Enable parallel" off)
+
+if(Parallel)
+	set(CMAKE_CXX_COMPILER "/home/atanasoa/intel/impi/4.1.3.049/intel64/bin/mpiicpc")
+	
+	set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DParallel -mt_mpi ")
+	
+endif(Parallel)
+
+
 # ==============================================================================
 # }}} General
 

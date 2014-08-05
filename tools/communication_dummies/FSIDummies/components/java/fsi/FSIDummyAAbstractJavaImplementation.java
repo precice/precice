@@ -118,7 +118,7 @@ public abstract class FSIDummyAAbstractJavaImplementation extends SocketComponen
   public void test() {
     //__SWITCH_SYNC_ASYNC__
     try{
-         int methodId=12;
+         int methodId=19;
          sendIntData(methodId);
          
            
@@ -130,9 +130,42 @@ public abstract class FSIDummyAAbstractJavaImplementation extends SocketComponen
   public void testParallel() {
     //__SWITCH_SYNC_ASYNC__
     try{
-         int methodId=12+1;
+         int methodId=19+1;
          sendIntData(methodId);
          
+           
+    }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
+       de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
+    }  
+  }
+    
+
+  public void transferData(final int coordId[],final double data[]) {
+    //__SWITCH_SYNC_ASYNC__
+    try{
+         int methodId=14;
+         sendIntData(methodId);
+         sendIntData(coordId.length);
+sendIntData(coordId);
+sendIntData(data.length);
+sendDoubleData(data);
+
+           
+    }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
+       de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
+    }  
+  }
+
+  public void transferDataParallel(final int coordId[],final double data[]) {
+    //__SWITCH_SYNC_ASYNC__
+    try{
+         int methodId=14+1;
+         sendIntData(methodId);
+         sendIntData(coordId.length);
+sendIntData(coordId);
+sendIntData(data.length);
+sendDoubleData(data);
+
            
     }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
        de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);

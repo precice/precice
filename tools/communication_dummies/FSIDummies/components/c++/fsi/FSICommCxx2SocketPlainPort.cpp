@@ -290,7 +290,7 @@ for(int i=0;i<hosts_len;i++){
      //readData((char*)&ack,sizeof(int),_rcvBuffer,_newsockfd,_buffer_size);
          
 }
-void fsi::FSICommCxx2SocketPlainPort::transferData(const double* data, const int data_len){
+void fsi::FSICommCxx2SocketPlainPort::startDataTransfer(){
      //assert(_destination!=NULL);
      #ifdef _WIN32
 #else
@@ -302,13 +302,11 @@ fcntl(_newsockfd, F_SETFL, flags);
 
      int methodId=7;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-     sendData((char*)&data_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-sendData((char*)data,sizeof(double)*data_len,_sendBuffer,_newsockfd,_buffer_size);
-
+     
      
 }
 
-void fsi::FSICommCxx2SocketPlainPort::transferDataParallel(const double* data, const int data_len){
+void fsi::FSICommCxx2SocketPlainPort::startDataTransferParallel(){
      //assert(_destination!=NULL);
 #ifdef _WIN32
 #else
@@ -319,10 +317,45 @@ void fsi::FSICommCxx2SocketPlainPort::transferDataParallel(const double* data, c
 #endif
      int methodId=8;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-     sendData((char*)&data_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-sendData((char*)data,sizeof(double)*data_len,_sendBuffer,_newsockfd,_buffer_size);
-
      
+     
+     //int ack=0;
+     //readData((char*)&ack,sizeof(int),_rcvBuffer,_newsockfd,_buffer_size);
+         
+}
+void fsi::FSICommCxx2SocketPlainPort::endDataTransfer(int& ack){
+     //assert(_destination!=NULL);
+     #ifdef _WIN32
+#else
+int flags;
+flags = fcntl(_newsockfd, F_GETFL, 0);
+flags ^= O_NONBLOCK;
+fcntl(_newsockfd, F_SETFL, flags);
+#endif
+
+     int methodId=9;
+     sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+     sendData((char*)&ack,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+
+     readData((char*)&ack,sizeof(int),_rcvBuffer,_newsockfd,_buffer_size);
+
+}
+
+void fsi::FSICommCxx2SocketPlainPort::endDataTransferParallel(int& ack){
+     //assert(_destination!=NULL);
+#ifdef _WIN32
+#else
+     int flags;
+     flags = fcntl(_newsockfd, F_GETFL, 0);
+     flags ^= O_NONBLOCK;
+     fcntl(_newsockfd, F_SETFL, flags);
+#endif
+     int methodId=10;
+     sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+     sendData((char*)&ack,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+
+     readData((char*)&ack,sizeof(int),_rcvBuffer,_newsockfd,_buffer_size);
+
      //int ack=0;
      //readData((char*)&ack,sizeof(int),_rcvBuffer,_newsockfd,_buffer_size);
          

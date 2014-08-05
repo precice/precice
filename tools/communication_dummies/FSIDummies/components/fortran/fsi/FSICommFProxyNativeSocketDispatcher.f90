@@ -26,11 +26,15 @@ subroutine  fsi_fsicomm_f2c_nsd_transferCoordinates(self,&
 	type(c_ptr),dimension(*),intent(in)::hosts
 
 end subroutine fsi_fsicomm_f2c_nsd_transferCoordinates
-subroutine  fsi_fsicomm_f2c_nsd_transferData(self,&
-	data,data_len) bind(c)
+subroutine  fsi_fsicomm_f2c_nsd_startDataTransfer(self) bind(c)
      use, intrinsic :: iso_c_binding
      integer(kind=c_long_long)::self
-     	real(kind=c_double),intent(in),dimension(*)::data
-	integer(kind=c_int),intent(in)::data_len
+     
+end subroutine fsi_fsicomm_f2c_nsd_startDataTransfer
+subroutine  fsi_fsicomm_f2c_nsd_endDataTransfer(self,&
+	ack) bind(c)
+     use, intrinsic :: iso_c_binding
+     integer(kind=c_long_long)::self
+     	integer(kind=c_int),intent(inout)::ack
 
-end subroutine fsi_fsicomm_f2c_nsd_transferData
+end subroutine fsi_fsicomm_f2c_nsd_endDataTransfer

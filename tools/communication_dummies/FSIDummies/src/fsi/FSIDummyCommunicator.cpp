@@ -1,13 +1,35 @@
 #include "fsi/FSIDummyCommunicator.h"
+#include "fsi/FSIDataCxx2SocketPlainPort.h"
 
+#include <stdlib.h>
 fsi::FSIDummyCommunicator::FSIDummyCommunicator(std::string hostname):
 _hostname(hostname),
-_data(NULL)
+_data(NULL),
+_comm(NULL)
 {
-
 }
 
+fsi::FSIDummyCommunicator::~FSIDummyCommunicator(){
+	if(_comm){
+		disconnect();
+	}
+}
 
+void fsi::FSIDummyCommunicator::connect(){
+	if(_comm==NULL){
+		std::string hostname = _hostname.substr(0,_hostname.find(":"));
+		std::string port = _hostname.substr(_hostname.find(":")+1,_hostname.size()-_hostname.find(":"));
+		const char* buffer_size = getenv("FSI_FSIDUMMYB_BUFFER_SIZE");
+		_comm= new fsi::FSIDataCxx2SocketPlainPort(
+				(char*)hostname.c_str(),atoi(port.c_str()),atoi(buffer_size)
+		);
+	}
+}
+
+void fsi::FSIDummyCommunicator::disconnect(){
+	delete _comm;
+	_comm = NULL;
+}
 void fsi::FSIDummyCommunicator::setData(double* data){
 	_data=data;
 }
@@ -15,12 +37,13 @@ void fsi::FSIDummyCommunicator::addPointId(const int pointId){
 	_pointIds.push_back(pointId);
 }
 void fsi::FSIDummyCommunicator::flush(){
-	std::vector<double> data2Transfer;
-	data2Transfer.resize(_pointIds.size());
+	connect();
+	_data2Transfer.resize(_pointIds.size());
 	for(unsigned int i=0;i<_pointIds.size();i++)
 	{
-		data2Transfer[i]=_data[_pointIds[i]];
+		_data2Transfer[i]=_data[_pointIds[i]];
 	}
+	_comm->transferData(&_pointIds[0],_pointIds.size(),&_data2Transfer[0],_data2Transfer.size());
 	// do transfer
 
 }

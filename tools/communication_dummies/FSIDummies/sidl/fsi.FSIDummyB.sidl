@@ -10,7 +10,5 @@ package fsi {
 
   @target = cxx_remote_socket
   class FSIDummyB implements-all fsi.FSIComm{
-  }
-  
-
+  }  
 }

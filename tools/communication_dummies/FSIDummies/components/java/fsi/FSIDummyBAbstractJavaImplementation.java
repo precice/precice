@@ -152,29 +152,54 @@ sendStringData(hosts);
   }
     
 
-  public void transferData(final double data[]) {
+  public void startDataTransfer() {
     //__SWITCH_SYNC_ASYNC__
     try{
          int methodId=7;
          sendIntData(methodId);
-         sendIntData(data.length);
-sendDoubleData(data);
-
+         
            
     }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
        de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
     }  
   }
 
-  public void transferDataParallel(final double data[]) {
+  public void startDataTransferParallel() {
     //__SWITCH_SYNC_ASYNC__
     try{
          int methodId=7+1;
          sendIntData(methodId);
-         sendIntData(data.length);
-sendDoubleData(data);
-
+         
            
+    }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
+       de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
+    }  
+  }
+    
+
+  public void endDataTransfer(int ack[]) {
+    //__SWITCH_SYNC_ASYNC__
+    try{
+         int methodId=9;
+         sendIntData(methodId);
+         sendIntData(ack);
+
+         readIntData(ack,1);
+  
+    }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
+       de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
+    }  
+  }
+
+  public void endDataTransferParallel(int ack[]) {
+    //__SWITCH_SYNC_ASYNC__
+    try{
+         int methodId=9+1;
+         sendIntData(methodId);
+         sendIntData(ack);
+
+         readIntData(ack,1);
+  
     }catch(de.tum.ascodt.utils.exceptions.ASCoDTException e){
        de.tum.ascodt.plugin.utils.exceptions.ErrorWriterDevice.getInstance().println(e);
     }  

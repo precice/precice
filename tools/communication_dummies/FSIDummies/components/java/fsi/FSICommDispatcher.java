@@ -74,20 +74,37 @@ public class FSICommDispatcher implements FSIComm {
       
     }
   }
-  public void transferData(final double data[]) {
+  public void startDataTransfer() {
     for(FSIComm port: _destinations)
-      port.transferData(data);
+      port.startDataTransfer();
   }
   
-  public void transferDataParallel(final double data[]) {
+  public void startDataTransferParallel() {
     for(FSIComm port: _destinations)
-      port.transferDataParallel(data);
+      port.startDataTransferParallel();
   }
   
-  public void transferDataForIntegerEnums(final double data[]) {
+  public void startDataTransferForIntegerEnums() {
     for(FSIComm port: _destinations){
       
-      port.transferData(data);
+      port.startDataTransfer();
+      
+    }
+  }
+  public void endDataTransfer(int ack[]) {
+    for(FSIComm port: _destinations)
+      port.endDataTransfer(ack);
+  }
+  
+  public void endDataTransferParallel(int ack[]) {
+    for(FSIComm port: _destinations)
+      port.endDataTransferParallel(ack);
+  }
+  
+  public void endDataTransferForIntegerEnums(int ack[]) {
+    for(FSIComm port: _destinations){
+      
+      port.endDataTransfer(ack);
       
     }
   }

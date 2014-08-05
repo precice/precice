@@ -58,13 +58,22 @@ void fsi::FSICommNativeDispatcher::transferCoordinatesParallel(const int* coordI
     for(unsigned int i=0;i<_destinations.size();i++)
           _destinations[i]->transferCoordinatesParallel(coordId,coordId_len,offsets,offsets_len,hosts,hosts_len);
 }
-void fsi::FSICommNativeDispatcher::transferData(const double* data, const int data_len){
+void fsi::FSICommNativeDispatcher::startDataTransfer(){
     for(unsigned int i=0;i<_destinations.size();i++)
-          _destinations[i]->transferData(data,data_len);
+          _destinations[i]->startDataTransfer();
 }
 
-void fsi::FSICommNativeDispatcher::transferDataParallel(const double* data, const int data_len){
+void fsi::FSICommNativeDispatcher::startDataTransferParallel(){
     for(unsigned int i=0;i<_destinations.size();i++)
-          _destinations[i]->transferDataParallel(data,data_len);
+          _destinations[i]->startDataTransferParallel();
+}
+void fsi::FSICommNativeDispatcher::endDataTransfer(int& ack){
+    for(unsigned int i=0;i<_destinations.size();i++)
+          _destinations[i]->endDataTransfer(ack);
+}
+
+void fsi::FSICommNativeDispatcher::endDataTransferParallel(int& ack){
+    for(unsigned int i=0;i<_destinations.size();i++)
+          _destinations[i]->endDataTransferParallel(ack);
 }
 

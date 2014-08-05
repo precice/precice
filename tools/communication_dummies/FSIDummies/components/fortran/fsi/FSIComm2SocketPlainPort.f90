@@ -11,7 +11,8 @@ type, public :: FSIComm2SocketPort
      procedure,public::create_port_client_instance_for_c
      procedure,public::destroyPortInstance
      procedure,public::transferCoordinates
-procedure,public::transferData
+procedure,public::startDataTransfer
+procedure,public::endDataTransfer
 
 end type FSIComm2SocketPort
 contains
@@ -44,17 +45,23 @@ subroutine destroyPortInstance(this)
 
 end subroutine destroyPortInstance
 
-subroutine transferData(this,&
-	data,data_len)
+subroutine endDataTransfer(this,&
+	ack)
      use, intrinsic :: iso_c_binding
      class(FSIComm2SocketPort)::this
-     	real(8),intent(in),dimension(*)::data
-	integer,intent(in)::data_len
+     	integer,intent(inout)::ack
 
      
-     call fsi_fsicommc2socket_plain_port_transferData(this%reference,&
-data,data_len)
-end subroutine transferData
+     call fsi_fsicommc2socket_plain_port_endDataTransfer(this%reference,&
+ack)
+end subroutine endDataTransfer
+subroutine startDataTransfer(this)
+     use, intrinsic :: iso_c_binding
+     class(FSIComm2SocketPort)::this
+     
+     
+     call fsi_fsicommc2socket_plain_port_startDataTransfer(this%reference)
+end subroutine startDataTransfer
 subroutine transferCoordinates(this,&
 	coordId,coordId_len,&
 	offsets,offsets_len,&

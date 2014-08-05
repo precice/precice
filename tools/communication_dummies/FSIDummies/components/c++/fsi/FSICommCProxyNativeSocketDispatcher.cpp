@@ -52,13 +52,22 @@ hosts_str[i]=hosts[i];
      ((fsi::FSICommNativeSocketDispatcher*)*ref)->transferCoordinates(coordId,*coordId_len,offsets,*offsets_len,hosts_str,*hosts_len);
 }
 #ifdef _WIN32
-void FSI_FSICOMM_F2C_NSD_TRANSFERDATA(long long* ref,double* data, int* data_len){
+void FSI_FSICOMM_F2C_NSD_STARTDATATRANSFER(long long* ref){
 #else
-void fsi_fsicomm_f2c_nsd_transferdata_(long long* ref,double* data, int* data_len){
+void fsi_fsicomm_f2c_nsd_startdatatransfer_(long long* ref){
 #endif
     
      
-     ((fsi::FSICommNativeSocketDispatcher*)*ref)->transferData(data,*data_len);
+     ((fsi::FSICommNativeSocketDispatcher*)*ref)->startDataTransfer();
+}
+#ifdef _WIN32
+void FSI_FSICOMM_F2C_NSD_ENDDATATRANSFER(long long* ref,int* ack){
+#else
+void fsi_fsicomm_f2c_nsd_enddatatransfer_(long long* ref,int* ack){
+#endif
+    
+     
+     ((fsi::FSICommNativeSocketDispatcher*)*ref)->endDataTransfer(*ack);
 }
 
 

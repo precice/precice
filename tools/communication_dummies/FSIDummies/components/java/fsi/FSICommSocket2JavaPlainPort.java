@@ -19,7 +19,7 @@ public class FSICommSocket2JavaPlainPort extends FSICommAbstractSocketPort
   private java.util.concurrent.ExecutorService _executor;
   public FSICommSocket2JavaPlainPort(String host,int port) throws de.tum.ascodt.utils.exceptions.ASCoDTException {
     super(host,port);
-    _invokers = new  FSICommSocketInvoker[27];
+    _invokers = new  FSICommSocketInvoker[29];
     	_invokers[5]= new FSICommSocketInvoker(){
 		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
 			invoke_transferCoordinates();
@@ -32,12 +32,22 @@ public class FSICommSocket2JavaPlainPort extends FSICommAbstractSocketPort
 	};
 	_invokers[7]= new FSICommSocketInvoker(){
 		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
-			invoke_transferData();
+			invoke_startDataTransfer();
 		}
 	};
 	_invokers[8]= new FSICommSocketInvoker(){
 		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
-			invoke_transferDataParallel();
+			invoke_startDataTransferParallel();
+		}
+	};
+	_invokers[9]= new FSICommSocketInvoker(){
+		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
+			invoke_endDataTransfer();
+		}
+	};
+	_invokers[10]= new FSICommSocketInvoker(){
+		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
+			invoke_endDataTransferParallel();
 		}
 	};
 
@@ -45,7 +55,7 @@ public class FSICommSocket2JavaPlainPort extends FSICommAbstractSocketPort
   
   public FSICommSocket2JavaPlainPort() throws de.tum.ascodt.utils.exceptions.ASCoDTException {
     super();
-    _invokers = new  FSICommSocketInvoker[27];
+    _invokers = new  FSICommSocketInvoker[29];
     	_invokers[5]= new FSICommSocketInvoker(){
 		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
 			invoke_transferCoordinates();
@@ -58,12 +68,22 @@ public class FSICommSocket2JavaPlainPort extends FSICommAbstractSocketPort
 	};
 	_invokers[7]= new FSICommSocketInvoker(){
 		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
-			invoke_transferData();
+			invoke_startDataTransfer();
 		}
 	};
 	_invokers[8]= new FSICommSocketInvoker(){
 		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
-			invoke_transferDataParallel();
+			invoke_startDataTransferParallel();
+		}
+	};
+	_invokers[9]= new FSICommSocketInvoker(){
+		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
+			invoke_endDataTransfer();
+		}
+	};
+	_invokers[10]= new FSICommSocketInvoker(){
+		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
+			invoke_endDataTransferParallel();
 		}
 	};
 
@@ -138,24 +158,43 @@ public class FSICommSocket2JavaPlainPort extends FSICommAbstractSocketPort
      super.close();
   }
 
-  public void invoke_transferData() throws 
+  public void invoke_endDataTransfer() throws 
          de.tum.ascodt.utils.exceptions.ASCoDTException{
-     int data_len=readIntData();
-double []data=new double[data_len];
-readDoubleData(data,data_len);
+     int [] ack= new int[1];
+readIntData(ack,1);
 
-     transferData(data);
-     
+     endDataTransfer(ack);
+     sendIntData(ack);
+
   }
-  public void invoke_transferDataParallel() throws 
+  public void invoke_endDataTransferParallel() throws 
          de.tum.ascodt.utils.exceptions.ASCoDTException{
     
   }
-  public void transferData(final double data[]) {
-     _destination.transferData(data);
+  public void endDataTransfer(int ack[]) {
+     _destination.endDataTransfer(ack);
   }
-  public void transferDataParallel(final double data[]) {
-     _destination.transferDataParallel(data);
+  public void endDataTransferParallel(int ack[]) {
+     _destination.endDataTransferParallel(ack);
+  }
+  
+  
+
+  public void invoke_startDataTransfer() throws 
+         de.tum.ascodt.utils.exceptions.ASCoDTException{
+     
+     startDataTransfer();
+     
+  }
+  public void invoke_startDataTransferParallel() throws 
+         de.tum.ascodt.utils.exceptions.ASCoDTException{
+    
+  }
+  public void startDataTransfer() {
+     _destination.startDataTransfer();
+  }
+  public void startDataTransferParallel() {
+     _destination.startDataTransferParallel();
   }
   
   

@@ -54,7 +54,10 @@ public:
         		  const std::string* commids,
         		  const int commids_len
           );
-          void transferData(const double* data, const int data_len);
+          void flush();
+          void transferData(
+        		  const int* coordIds, const int coordIds_len,
+        		  const double* data, const int data_len);
 };     
 
 

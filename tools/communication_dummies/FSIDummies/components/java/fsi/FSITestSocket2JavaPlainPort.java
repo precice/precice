@@ -19,13 +19,13 @@ public class FSITestSocket2JavaPlainPort extends FSITestAbstractSocketPort
   private java.util.concurrent.ExecutorService _executor;
   public FSITestSocket2JavaPlainPort(String host,int port) throws de.tum.ascodt.utils.exceptions.ASCoDTException {
     super(host,port);
-    _invokers = new  FSITestSocketInvoker[212];
-    	_invokers[12]= new FSITestSocketInvoker(){
+    _invokers = new  FSITestSocketInvoker[219];
+    	_invokers[19]= new FSITestSocketInvoker(){
 		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
 			invoke_test();
 		}
 	};
-	_invokers[13]= new FSITestSocketInvoker(){
+	_invokers[20]= new FSITestSocketInvoker(){
 		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
 			invoke_testParallel();
 		}
@@ -35,13 +35,13 @@ public class FSITestSocket2JavaPlainPort extends FSITestAbstractSocketPort
   
   public FSITestSocket2JavaPlainPort() throws de.tum.ascodt.utils.exceptions.ASCoDTException {
     super();
-    _invokers = new  FSITestSocketInvoker[212];
-    	_invokers[12]= new FSITestSocketInvoker(){
+    _invokers = new  FSITestSocketInvoker[219];
+    	_invokers[19]= new FSITestSocketInvoker(){
 		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
 			invoke_test();
 		}
 	};
-	_invokers[13]= new FSITestSocketInvoker(){
+	_invokers[20]= new FSITestSocketInvoker(){
 		public void invoke() throws de.tum.ascodt.utils.exceptions.ASCoDTException{
 			invoke_testParallel();
 		}

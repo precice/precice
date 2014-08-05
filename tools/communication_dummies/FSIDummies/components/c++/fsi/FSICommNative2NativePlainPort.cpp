@@ -43,12 +43,20 @@ void fsi::FSICommNative2NativePlainPort::transferCoordinatesParallel(const int* 
      assert(_destination!=NULL);
      _destination->transferCoordinatesParallel(coordId,coordId_len,offsets,offsets_len,hosts,hosts_len);
 }
-void fsi::FSICommNative2NativePlainPort::transferData(const double* data, const int data_len){
+void fsi::FSICommNative2NativePlainPort::startDataTransfer(){
      assert(_destination!=NULL);
-     _destination->transferData(data,data_len);
+     _destination->startDataTransfer();
 }
-void fsi::FSICommNative2NativePlainPort::transferDataParallel(const double* data, const int data_len){
+void fsi::FSICommNative2NativePlainPort::startDataTransferParallel(){
      assert(_destination!=NULL);
-     _destination->transferDataParallel(data,data_len);
+     _destination->startDataTransferParallel();
+}
+void fsi::FSICommNative2NativePlainPort::endDataTransfer(int& ack){
+     assert(_destination!=NULL);
+     _destination->endDataTransfer(ack);
+}
+void fsi::FSICommNative2NativePlainPort::endDataTransferParallel(int& ack){
+     assert(_destination!=NULL);
+     _destination->endDataTransferParallel(ack);
 }
 

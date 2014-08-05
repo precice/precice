@@ -34,18 +34,37 @@ public class FSICommPlainJavaPort extends FSICommAbstractPort {
   
   
 
-  public void transferData(final double data[]) {
+  public void startDataTransfer() {
    // if (_destination!=null) {
       //_destination.lock();
-      _destination.transferData(data);
+      _destination.startDataTransfer();
       //_destination.unlock();
     //}
   }
   
-  public void transferDataParallel(final double data[]) {
+  public void startDataTransferParallel() {
    // if (_destination!=null) {
       //_destination.lock();
-      _destination.transferDataParallel(data);
+      _destination.startDataTransferParallel();
+      //_destination.unlock();
+    //}
+  }
+  
+  
+  
+
+  public void endDataTransfer(int ack[]) {
+   // if (_destination!=null) {
+      //_destination.lock();
+      _destination.endDataTransfer(ack);
+      //_destination.unlock();
+    //}
+  }
+  
+  public void endDataTransferParallel(int ack[]) {
+   // if (_destination!=null) {
+      //_destination.lock();
+      _destination.endDataTransferParallel(ack);
       //_destination.unlock();
     //}
   }

@@ -67,31 +67,57 @@ for(int i=0;i<hosts_len;i++)
      
   }
 }
-void fsi::FSICommNative2JavaPlainPort::transferData(const double* data, const int data_len){
+void fsi::FSICommNative2JavaPlainPort::startDataTransfer(){
   JNIEnv* env;
   int status=_jvm->GetEnv((void**)&env,JNI_VERSION_1_6);
   jclass cls=env->GetObjectClass(_obj);
-  jmethodID mid = env->GetMethodID(cls,"transferData","([D)V");
+  jmethodID mid = env->GetMethodID(cls,"startDataTransfer","()V");
   
   if(mid){
-     jdoubleArray data_jni=env->NewDoubleArray(data_len);
-env->SetDoubleArrayRegion(data_jni,0,data_len,(jdouble*)data);
-
-     env->CallVoidMethod(_obj,mid,data_jni);
+     
+     env->CallVoidMethod(_obj,mid);
      
   }
 }
-void fsi::FSICommNative2JavaPlainPort::transferDataParallel(const double* data, const int data_len){
+void fsi::FSICommNative2JavaPlainPort::startDataTransferParallel(){
   JNIEnv* env;
   int status=_jvm->GetEnv((void**)&env,JNI_VERSION_1_6);
   jclass cls=env->GetObjectClass(_obj);
-  jmethodID mid = env->GetMethodID(cls,"transferDataParallel","([D)V");
+  jmethodID mid = env->GetMethodID(cls,"startDataTransferParallel","()V");
   
   if(mid){
-     jdoubleArray data_jni=env->NewDoubleArray(data_len);
-env->SetDoubleArrayRegion(data_jni,0,data_len,(jdouble*)data);
-
-     env->CallVoidMethod(_obj,mid,data_jni);
      
+     env->CallVoidMethod(_obj,mid);
+     
+  }
+}
+void fsi::FSICommNative2JavaPlainPort::endDataTransfer(int& ack){
+  JNIEnv* env;
+  int status=_jvm->GetEnv((void**)&env,JNI_VERSION_1_6);
+  jclass cls=env->GetObjectClass(_obj);
+  jmethodID mid = env->GetMethodID(cls,"endDataTransfer","([I)V");
+  
+  if(mid){
+     jintArray ack_jni=env->NewIntArray(1);
+env->SetIntArrayRegion(ack_jni,0,1,(jint*)&ack);
+
+     env->CallVoidMethod(_obj,mid,ack_jni);
+     env->GetIntArrayRegion(ack_jni,0,1,(jint*)&ack);
+
+  }
+}
+void fsi::FSICommNative2JavaPlainPort::endDataTransferParallel(int& ack){
+  JNIEnv* env;
+  int status=_jvm->GetEnv((void**)&env,JNI_VERSION_1_6);
+  jclass cls=env->GetObjectClass(_obj);
+  jmethodID mid = env->GetMethodID(cls,"endDataTransferParallel","([I)V");
+  
+  if(mid){
+     jintArray ack_jni=env->NewIntArray(1);
+env->SetIntArrayRegion(ack_jni,0,1,(jint*)&ack);
+
+     env->CallVoidMethod(_obj,mid,ack_jni);
+     env->GetIntArrayRegion(ack_jni,0,1,(jint*)&ack);
+
   }
 }

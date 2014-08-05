@@ -4,6 +4,8 @@
 #include <sstream>
 #include <cstdlib>
 
+#include "fsi/FSIDummyAImplementation.h"
+#include "fsi/FSIDummyBImplementation.h"
 /**
  * @brief For printing to the command line.
  *
@@ -86,28 +88,39 @@ int main(int argc, char** argv)
 
 
   if(doesFirstStep){
-    PRINT("First Step");
-
-    for(int k=0;k<pointSize;k++){
-      data[k]=coordX[k]*coordY[k]*coordY[k];
+    PRINT("First Step:A");
+    main_loop_fsi_A_(false);
+	
+   fsi::FSIDmmyAImplementation::singleton->setCoordIds(&coords[0],coords.size());	
+   fsi::FSIDmmyAImplementation::singleton->setData(data);	
+   fsi::FSIDmmyAImplementation::singleton->gatherMids();	
+   fsi::FSIDmmyAImplementation::singleton->gatherDomainDescriptions();
+   fsi::FSIDmmyAImplementation::singleton->transferGlobalIds();
+   fsi::FSIDmmyAImplementation::singleton->receiveAllData(); 	
+   for(int k=0;k<pointSize;k++){
+      if(data[k]!=coordX[k]*coordY[k]*coordY[k]){
+        PRINT("ERROR" << "(" << rankX << "," << rankY << "), k:" << k);
+      }
     }
+
+   // for(int k=0;k<pointSize;k++){
+   //   data[k]=coordX[k]*coordY[k]*coordY[k];
+   // }
 
     //send data
 
   }
   else{
-    PRINT("Second Step");
     for(int k=0;k<pointSize;k++){
       data[k]=0.0;
     }
+    PRINT("Second Step:B");
+    main_loop_fsi_B_(true);
+    
+    
 
     //receive data
 
-    for(int k=0;k<pointSize;k++){
-      if(data[k]!=coordX[k]*coordY[k]*coordY[k]){
-        PRINT("ERROR" << "(" << rankX << "," << rankY << "), k:" << k);
-      }
-    }
 
   }
 

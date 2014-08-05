@@ -283,55 +283,84 @@ void invoker_destroy_instance(void** ref,int,int,char*,char*
       delete ((fsi::FSIDummyBImplementation*)*ref);
   
 }
-void invoker_transferData(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+void invoker_endDataTransfer(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
 #ifdef Parallel
 ,MPI_Comm communicator, int methodId
 #endif
 ){
-  int data_len=0;
-readData((char*)&data_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
-double* data=new double[data_len];
-readData((char*)data,sizeof(double)*data_len,rcvBuffer,newsockfd,buffer_size);
+  int ack;
+readData((char*)&ack,sizeof(int),rcvBuffer,newsockfd,buffer_size);
 
-  ((fsi::FSIDummyBImplementation*)*ref)->transferData(data,data_len);
-  delete [] data;
+  ((fsi::FSIDummyBImplementation*)*ref)->endDataTransfer(ack);
+  sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
 
 }
 
 
-void parallel_master_invoker_transferData(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+void parallel_master_invoker_endDataTransfer(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
 #ifdef Parallel
 ,MPI_Comm communicator, int methodId
 #endif
 ){
  	
-  int data_len=0;
-readData((char*)&data_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
-double* data=new double[data_len];
-readData((char*)data,sizeof(double)*data_len,rcvBuffer,newsockfd,buffer_size);
+  int ack;
+readData((char*)&ack,sizeof(int),rcvBuffer,newsockfd,buffer_size);
 
   #ifdef Parallel
   broadcastParallelData((char*)&methodId,sizeof(int),communicator);
-  broadcastParallelData((char*)&data_len,sizeof(int),communicator);
-broadcastParallelData((char*)data,sizeof(double)*data_len,communicator);
+  broadcastParallelData((char*)&ack,sizeof(int),communicator);
 
   #endif
-  ((fsi::FSIDummyBImplementation*)*ref)->transferData(data,data_len);
+  ((fsi::FSIDummyBImplementation*)*ref)->endDataTransfer(ack);
   //int ack=1;
   //sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
 }
-void parallel_worker_invoker_transferData(void** ref
+void parallel_worker_invoker_endDataTransfer(void** ref
 #ifdef Parallel
 ,MPI_Comm newsockfd
 #endif
 ){
   #ifdef Parallel
-  int data_len=0;
-broadcastParallelData((char*)&data_len,sizeof(int),newsockfd);
-double* data=new double[data_len];
-broadcastParallelData((char*)data,sizeof(double)*data_len,newsockfd);
+  int ack;
+broadcastParallelData((char*)&ack,sizeof(int),newsockfd);
 
-  ((fsi::FSIDummyBImplementation*)*ref)->transferData(data,data_len);
+  ((fsi::FSIDummyBImplementation*)*ref)->endDataTransfer(ack);
+  #endif		  
+} 
+void invoker_startDataTransfer(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+#ifdef Parallel
+,MPI_Comm communicator, int methodId
+#endif
+){
+  
+  ((fsi::FSIDummyBImplementation*)*ref)->startDataTransfer();
+  
+}
+
+
+void parallel_master_invoker_startDataTransfer(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+#ifdef Parallel
+,MPI_Comm communicator, int methodId
+#endif
+){
+ 	
+  
+  #ifdef Parallel
+  broadcastParallelData((char*)&methodId,sizeof(int),communicator);
+  
+  #endif
+  ((fsi::FSIDummyBImplementation*)*ref)->startDataTransfer();
+  //int ack=1;
+  //sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
+}
+void parallel_worker_invoker_startDataTransfer(void** ref
+#ifdef Parallel
+,MPI_Comm newsockfd
+#endif
+){
+  #ifdef Parallel
+  
+  ((fsi::FSIDummyBImplementation*)*ref)->startDataTransfer();
   #endif		  
 } 
 void invoker_transferCoordinates(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
@@ -520,7 +549,7 @@ clientfd,int bufferSize
 ){
      char *sendBuffer=new char[bufferSize];
      char *rcvBuffer=new char[bufferSize];
-     void (*invokers[14])(void**,int,int,char*,char*
+     void (*invokers[21])(void**,int,int,char*,char*
 #ifdef Parallel
 	 ,MPI_Comm,int
 #endif     
@@ -528,8 +557,10 @@ clientfd,int bufferSize
      invokers[0]=invoker_create_instance;
      invokers[1]=invoker_destroy_instance;
      int methodId=0;
-     invokers[8]=parallel_master_invoker_transferData;
-invokers[7]=invoker_transferData;
+     invokers[10]=parallel_master_invoker_endDataTransfer;
+invokers[9]=invoker_endDataTransfer;
+invokers[8]=parallel_master_invoker_startDataTransfer;
+invokers[7]=invoker_startDataTransfer;
 invokers[6]=parallel_master_invoker_transferCoordinates;
 invokers[5]=invoker_transferCoordinates;
 
@@ -554,9 +585,10 @@ invokers[5]=invoker_transferCoordinates;
 #ifdef Parallel
 void parallel_worker_loop(void* ref,
 MPI_Comm clientfd){
-     void (*parallel_worker_invokers[14])(void**,MPI_Comm);
+     void (*parallel_worker_invokers[21])(void**,MPI_Comm);
      int methodId=0;
-     parallel_worker_invokers[7]=parallel_worker_invoker_transferData;
+     parallel_worker_invokers[9]=parallel_worker_invoker_endDataTransfer;
+parallel_worker_invokers[7]=parallel_worker_invoker_startDataTransfer;
 parallel_worker_invokers[5]=parallel_worker_invoker_transferCoordinates;
 
      while(methodId!=1){
@@ -659,7 +691,7 @@ void initialiseXMLDaemons(FSI_FSIDUMMYB_arg& arg){
           __gnu_cxx::hash_map<int,int> componentPorts;
           __gnu_cxx::hash_map<int,std::string> componentHosts;
           __gnu_cxx::hash_map<int,void*> dispatchers;
-          void (*invokers[14])(void**,void**,void**,char* host,int port,int buffer_size);
+          void (*invokers[21])(void**,void**,void**,char* host,int port,int buffer_size);
           
            
           for(tinyxml2::XMLElement* e = root->FirstChildElement("component"); e != NULL; e = e->NextSiblingElement("component"))
@@ -718,7 +750,7 @@ void initialiseXMLConnections(FSI_FSIDUMMYB_arg& arg){
           __gnu_cxx::hash_map<int,int> componentPorts;
           __gnu_cxx::hash_map<int,std::string> componentHosts;
           __gnu_cxx::hash_map<int,void*> dispatchers;
-          void (*invokers[14])(void**,void**,void**,char* host,int port,int buffer_size);
+          void (*invokers[21])(void**,void**,void**,char* host,int port,int buffer_size);
           
            
           for(tinyxml2::XMLElement* e = root->FirstChildElement("component"); e != NULL; e = e->NextSiblingElement("component"))

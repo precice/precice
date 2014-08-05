@@ -23,10 +23,17 @@ void fsi_fsicommc2socket_plain_port_transfercoordinates_(long long* ref,int* coo
 
 #endif
 #ifdef _WIN32
-void FSI_FSICOMMC2SOCKET_PLAIN_PORT_TRANSFERDATA(long long* ref,double* data, int* data_len);
+void FSI_FSICOMMC2SOCKET_PLAIN_PORT_STARTDATATRANSFER(long long* ref);
 
 #else
-void fsi_fsicommc2socket_plain_port_transferdata_(long long* ref,double* data, int* data_len);
+void fsi_fsicommc2socket_plain_port_startdatatransfer_(long long* ref);
+
+#endif
+#ifdef _WIN32
+void FSI_FSICOMMC2SOCKET_PLAIN_PORT_ENDDATATRANSFER(long long* ref,int* ack);
+
+#else
+void fsi_fsicommc2socket_plain_port_enddatatransfer_(long long* ref,int* ack);
 
 #endif
 }
