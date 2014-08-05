@@ -64,58 +64,20 @@ public:
     constants::TimesteppingMethod dtMethod);
   
  
-  /// @brief Adds a measure to determine the convergence of coupling iterations.
-  void addConvergenceMeasure (
-    int                         dataID,
-    bool                        suffices,
-    impl::PtrConvergenceMeasure measure );
-  
-  /// @brief Set a coupling iteration post-processing technique.
-  void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
   
   virtual std::string printCouplingState() const;
-
-  virtual void exportState(const std::string& filenamePrefix) const;
-
-  virtual void importState(const std::string& filenamePrefix);
-
-protected:
-
-  void newConvergenceMeasurements();
-
-  /// @brief Updates internal state of coupling scheme for next timestep.
-  void timestepCompleted();
-
-  /// @brief Updates the convergence measurement of local send data.
-  bool measureConvergence();
-
-  void extrapolateData(DataMap& data);
 
 
 private:
 
-  typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
+  // typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
   
-  typedef tarch::la::DynamicVector<double> DataVector;
+  // typedef tarch::la::DynamicVector<double> DataVector;
   
   /// @brief Logging device.
   static tarch::logging::Log _log;
   
-
-  /// @brief Writes residuals to file.
-  //  io::TXTTableWriter _residualWriterL1;
-  //  io::TXT_communicationTableWriter _residualWriterL2;
-  
-  /// @brief Writes value amplification to file.
-  //  io::TXTTableWriter _amplificationWriter;
-
-  typedef boost::tuple<int,impl::PtrConvergenceMeasure> MeasureTuple;
-  
-  //  void writeResidual (
-  //    const utils::DynVector& values,
-  //    const utils::DynVector& oldValues );
-  
-  friend class tests::ImplicitCouplingSchemeTest;
+// friend class tests::ImplicitCouplingSchemeTest;
 };
 
 }} // namespace precice, cplscheme

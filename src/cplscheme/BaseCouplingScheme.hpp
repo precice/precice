@@ -250,8 +250,27 @@ public:
    */
   void setExtrapolationOrder ( int order );
   
+  typedef std::map<int,PtrCouplingData> DataMap; // move that back to protected
+
+  void extrapolateData(DataMap& data);
+
+  /// @brief Adds a measure to determine the convergence of coupling iterations.
+  void addConvergenceMeasure (
+    int                         dataID,
+    bool                        suffices,
+    impl::PtrConvergenceMeasure measure );
+  
+  /// @brief Set a coupling iteration post-processing technique.
+  void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
+
+  virtual void exportState(const std::string& filenamePrefix) const;
+
+  virtual void importState(const std::string& filenamePrefix);
   
 protected:
+
+  /// @brief Updates internal state of coupling scheme for next timestep.
+  void timestepCompleted();
 
   // temp function to make refactoring clearer
   void receiveAndSetDt();
@@ -260,8 +279,6 @@ protected:
     return _iterationsWriter;
   }
 
-  typedef std::map<int,PtrCouplingData> DataMap;
-  
   struct State {
     int id;
     std::string name;
@@ -395,7 +412,6 @@ protected:
     return _participantSetsDt;
   }
   
-
   /// @brief Holds relevant variables to perform a convergence measurement.
   struct ConvergenceMeasure
   {
@@ -405,12 +421,20 @@ protected:
     impl::PtrConvergenceMeasure measure;
   };
 
-  // @brief All convergence measures of coupling iterations.
-  //
-  // Before initialization, only dataID and measure variables are filled. Then,
-  // the data is fetched from send and receive data assigned to the cpl scheme.
+  /**
+   * @brief All convergence measures of coupling iterations.
+   *
+   * Before initialization, only dataID and measure variables are filled. Then,
+   * the data is fetched from send and receive data assigned to the cpl scheme.
+   */
   std::vector<ConvergenceMeasure> _convergenceMeasures;
-  
+
+  void setupConvergenceMeasures();
+
+  void newConvergenceMeasurements();
+
+  bool measureConvergence();
+
   /**
    * @brief Sets up _dataStorage to store data values of last timestep.
    *
@@ -421,8 +445,6 @@ protected:
    */
   void setupDataMatrices(DataMap& data);
 
-  void setupConvergenceMeasures();
-
   /// @brief Post-processing method to speedup iteration convergence.
   impl::PtrPostProcessing _postProcessing;
   
@@ -430,13 +452,12 @@ protected:
     return _postProcessing;
   }
 
+
   /// @brief Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder;
   
   void initializeTXTWriters();
 
-  // Später private machen?
-  
   /// @brief Number of iteration in current timestep.
   int _iterationToPlot;
   

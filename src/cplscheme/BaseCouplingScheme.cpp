@@ -7,8 +7,10 @@
 #include "com/Communication.hpp"
 #include "utils/Globals.hpp"
 #include "impl/PostProcessing.hpp"
+#include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
+#include "boost/tuple/tuple.hpp"
 #include <limits>
 
 namespace precice {
@@ -122,7 +124,7 @@ BaseCouplingScheme::BaseCouplingScheme
 	       "ImplicitCouplingScheme()", "First participant and "
 	       << "second participant must have different names! Called from BaseCoupling.");
   if (dtMethod == constants::FIXED_DT){
-    preciceCheck(hasTimestepLength(), "ImplicitCouplingScheme()",
+    preciceCheck(hasTimestepLength(), "ImplicitCouplingScheme()",
 		 "Timestep length value has to be given "
 		 << "when the fixed timestep length method is chosen for an implicit "
 		 << "coupling scheme!");
@@ -351,6 +353,44 @@ void BaseCouplingScheme:: setExtrapolationOrder
                << " 0, 1, or 2!");
   _extrapolationOrder = order;
 }
+
+
+void BaseCouplingScheme::extrapolateData(DataMap& data)
+{
+  preciceTrace("extrapolateData()");
+  if ((_extrapolationOrder == 1) || getTimesteps() == 1) {
+    preciceInfo("extrapolateData()", "Performing first order extrapolation" );
+    foreach(DataMap::value_type & pair, data ){
+      preciceDebug("Extrapolate data: " << pair.first);
+      assertion(pair.second->oldValues.cols() > 1 );
+      utils::DynVector & values = *pair.second->values;
+      pair.second->oldValues.column(0) = values;     // = x^t
+      values *= 2.0;                                 // = 2*x^t
+      values -= pair.second->oldValues.column(1);    // = 2*x^t - x^(t-1)
+      pair.second->oldValues.shiftSetFirst(values ); // shift old values to the right
+    }
+  }
+  else if (_extrapolationOrder == 2 ) {
+    preciceInfo("extrapolateData()", "Performing second order extrapolation" );
+    foreach(DataMap::value_type & pair, data ) {
+      assertion(pair.second->oldValues.cols() > 2 );
+      utils::DynVector & values = *pair.second->values;
+      utils::DynVector & valuesOld1 = pair.second->oldValues.column(1);
+      utils::DynVector & valuesOld2 = pair.second->oldValues.column(2);
+
+      pair.second->oldValues.column(0) = values;        // = x^t 
+      values *= 2.5;                                    // = 2.5 x^t
+      values -= valuesOld1 * 2.0; // = 2.5x^t - 2x^(t-1)
+      values += valuesOld2 * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
+      pair.second->oldValues.shiftSetFirst(values);
+    }
+  }
+  else {
+    preciceError("extrapolateData()", "Called extrapolation with order != 1,2!" );
+  }
+}
+
+
 
 
 bool BaseCouplingScheme:: hasTimestepLength() const
@@ -736,6 +776,15 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
   }
 }
 
+void BaseCouplingScheme::setIterationPostProcessing
+(
+  impl::PtrPostProcessing postProcessing )
+{
+  assertion(postProcessing.get() != NULL);
+  _postProcessing = postProcessing;
+}
+
+
 void BaseCouplingScheme::setupConvergenceMeasures()
 {
   preciceTrace("setupConvergenceMeasures()");
@@ -755,6 +804,63 @@ void BaseCouplingScheme::setupConvergenceMeasures()
   }
 }
 
+void BaseCouplingScheme::newConvergenceMeasurements()
+{
+  preciceTrace("newConvergenceMeasurements()");
+  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
+    assertion(convMeasure.measure.get() != NULL);
+    convMeasure.measure->newMeasurementSeries();
+  }
+}
+
+
+void BaseCouplingScheme::addConvergenceMeasure
+(
+  int                         dataID,
+  bool                        suffices,
+  impl::PtrConvergenceMeasure measure )
+{
+  ConvergenceMeasure convMeasure;
+  convMeasure.dataID = dataID;
+  convMeasure.data = NULL;
+  convMeasure.suffices = suffices;
+  convMeasure.measure = measure;
+  _convergenceMeasures.push_back(convMeasure);
+}
+
+ 
+bool BaseCouplingScheme:: measureConvergence()
+{
+  preciceTrace("measureLocalConvergence()");
+  using boost::get;
+  bool allConverged = true;
+  bool oneSuffices = false;
+  assertion(_convergenceMeasures.size() > 0);
+  foreach(ConvergenceMeasure& convMeasure, _convergenceMeasures){
+    assertion(convMeasure.data != NULL);
+    assertion(convMeasure.measure.get() != NULL);
+    utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
+    convMeasure.measure->measure(oldValues, *convMeasure.data->values);
+    if (not convMeasure.measure->isConvergence()){
+      //preciceDebug("Local convergence = false");
+      allConverged = false;
+    }
+    else if (convMeasure.suffices == true){
+      oneSuffices = true;
+    }
+    preciceInfo("measureConvergence()", convMeasure.measure->printState());
+  }
+  if (allConverged){
+    preciceInfo("measureConvergence()", "All converged");
+  }
+  else if (oneSuffices){
+    preciceInfo("measureConvergence()", "Sufficient measure converged");
+  }
+  return allConverged || oneSuffices;
+}
+
+
+
 void BaseCouplingScheme::initializeTXTWriters()
 {
   _iterationsWriter.addData("Timesteps", io::TXTTableWriter::INT );
@@ -762,6 +868,53 @@ void BaseCouplingScheme::initializeTXTWriters()
   _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
   _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
 }
-  
+
+
+void BaseCouplingScheme:: exportState(const std::string& filenamePrefix ) const
+{
+  if (not doesFirstStep()) {
+    io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
+    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
+      writer.write(dataMap.second->oldValues);
+    }
+    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
+      writer.write(dataMap.second->oldValues);
+    }
+    if (_postProcessing.get() != NULL){
+      _postProcessing->exportState(writer);
+    }
+  }
+}
+
+void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
+{
+  if (not doesFirstStep()) {
+    io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
+    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
+      reader.read(dataMap.second->oldValues);
+    }
+    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
+      reader.read(dataMap.second->oldValues);
+    }
+    if (_postProcessing.get() != NULL){
+      _postProcessing->importState(reader);
+    }
+  }
+}
+
+void BaseCouplingScheme::timestepCompleted()
+{
+  preciceTrace2("timestepCompleted()", getTimesteps(), getTime());
+  preciceInfo("timestepCompleted()", "Timestep completed");
+  setIsCouplingTimestepComplete(true);
+  setTimesteps(getTimesteps() + 1 );
+  //setTime(getTimesteps() * getTimestepLength() ); // Removes numerical errors
+  if (isCouplingOngoing()){
+    preciceDebug("Setting require create checkpoint");
+    requireAction(constants::actionWriteIterationCheckpoint());
+  }
+}
+
+
 
 }} // namespace precice, cplscheme
