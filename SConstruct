@@ -49,8 +49,8 @@ def checkset_var(varname, default):
 
 def compiler_validator(key, value, environment):
     """ Validator function for the compiler option. Checks if the given compiler is either (g++ or icc or clang++) or an MPI compiler. """
-    if not value in ["g++", "icc", "clang++"] or value.startswith("mpic"):
-        raise Exception("Invalid value for compiler, must be on off g++, icc, clang++ or start with mpic*")
+    if not (value in ["g++", "icc", "clang++"] or value.startswith("mpic")):
+        raise Exception("Invalid value for compiler, must be one of g++, icc, clang++ or start with mpic*")
         
 
 ########################################################################## MAIN
