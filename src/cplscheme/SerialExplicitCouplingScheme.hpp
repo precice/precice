@@ -4,7 +4,7 @@
 #ifndef PRECICE_CPLSCHEME_SERIALEXPLICITCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_SERIALEXPLICITCOUPLINGSCHEME_HPP_
 
-#include "ExplicitCouplingScheme.hpp"
+#include "SerialCouplingScheme.hpp"
 #include "Constants.hpp"
 #include "com/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
@@ -17,7 +17,7 @@ namespace precice {
 namespace cplscheme {
 
 /// @brief Serial coupling scheme without iterations per timestep.
-class SerialExplicitCouplingScheme : public ExplicitCouplingScheme
+class SerialExplicitCouplingScheme : public SerialCouplingScheme
 {
 public:
   

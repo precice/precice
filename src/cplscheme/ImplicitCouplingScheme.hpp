@@ -65,7 +65,7 @@ public:
   
  
   
-  virtual std::string printCouplingState() const;
+//  virtual std::string printCouplingState() const;
 
 
 private:

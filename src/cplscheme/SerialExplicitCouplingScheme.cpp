@@ -24,8 +24,8 @@ SerialExplicitCouplingScheme:: SerialExplicitCouplingScheme
   com::PtrCommunication communication,
   constants::TimesteppingMethod dtMethod )
   :
-  ExplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-			 secondParticipant,localParticipant,communication,dtMethod)
+  SerialCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
+		       secondParticipant,localParticipant,communication, 1, dtMethod)
 {}
 
 void SerialExplicitCouplingScheme:: advance()

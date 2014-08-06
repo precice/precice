@@ -36,15 +36,15 @@ ImplicitCouplingScheme:: ImplicitCouplingScheme
 		     communication, maxIterations, dtMethod)
 {}
 
-std::string ImplicitCouplingScheme:: printCouplingState() const
-{
-  std::ostringstream os;
-  os << "it " << _iterationToPlot; //_iterations;
-  if(getMaxIterations() != -1 ){
-    os << " of " << getMaxIterations();
-  }
-  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
-  return os.str();
-}
+// std::string ImplicitCouplingScheme:: printCouplingState() const
+// {
+//   std::ostringstream os;
+//   os << "it " << _iterationToPlot; //_iterations;
+//   if(getMaxIterations() != -1 ){
+//     os << " of " << getMaxIterations();
+//   }
+//   os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
+//   return os.str();
+// }
 
 }} // namespace precice, cplscheme

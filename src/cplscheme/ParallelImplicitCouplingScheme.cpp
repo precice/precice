@@ -30,7 +30,7 @@ ParallelImplicitCouplingScheme:: ParallelImplicitCouplingScheme
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
   :
-  ImplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
+  ParallelCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
 			 secondParticipant,localParticipant,communication,maxIterations,dtMethod),
   _allData ()
 {}
@@ -103,7 +103,7 @@ void ParallelImplicitCouplingScheme:: initializeData()
 
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
-    if(hasToSendInitData()) {
+    if (hasToSendInitData()) {
       getCommunication()->startSendPackage(0);
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
@@ -268,14 +268,17 @@ void ParallelImplicitCouplingScheme:: advance()
   }
 }
 
-void ParallelImplicitCouplingScheme:: mergeData()
+std::string ParallelImplicitCouplingScheme:: printCouplingState() const
 {
-  preciceTrace("mergeData()");
-  assertion1(!doesFirstStep(), "Only the second participant should do the post processing." );
-  assertion1(_allData.empty(), "This function should only be called once.");
-  _allData.insert(getSendData().begin(), getSendData().end());
-  _allData.insert(getReceiveData().begin(), getReceiveData().end());
-
+  std::ostringstream os;
+  os << "it " << _iterationToPlot; //_iterations;
+  if(getMaxIterations() != -1 ){
+    os << " of " << getMaxIterations();
+  }
+  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
+  return os.str();
 }
+
+
 
 }} // namespace precice, cplscheme

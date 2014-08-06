@@ -537,6 +537,17 @@ void BaseCouplingScheme:: requireAction
   _actions.insert(actionName);
 }
 
+std::string BaseCouplingScheme::printCouplingState() const
+{
+  std::ostringstream os;
+  os << "it " << _iterationToPlot; //_iterations;
+  if (getMaxIterations() != -1 ) {
+    os << " of " << getMaxIterations();
+  }
+  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
+  return os.str();
+}
+
 std::string BaseCouplingScheme:: printBasicState() const
 {
   std::ostringstream os;
@@ -624,13 +635,13 @@ void BaseCouplingScheme::initialize
       setupConvergenceMeasures(); // needs _couplingData configured
       setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
     }
-    if (getPostProcessing().get() != NULL){
+    if (getPostProcessing().get() != NULL) {
       preciceCheck(getPostProcessing()->getDataIDs().size()==1 ,"initialize()",
 		   "For serial coupling, the number of coupling data vectors has to be 1");
       getPostProcessing()->initialize(getSendData()); // Reserve memory, initialize
     }
   }
-  else if (getPostProcessing().get() != NULL){
+  else if (getPostProcessing().get() != NULL) {
     int dataID = *(getPostProcessing()->getDataIDs().begin());
     preciceCheck(getSendData(dataID) == NULL, "initialize()",
 		 "In case of serial coupling, post-processing can be defined for "
@@ -644,7 +655,7 @@ void BaseCouplingScheme::initialize
   }
     
   foreach (DataMap::value_type & pair, getSendData()){
-    if (pair.second->initialize){
+    if (pair.second->initialize) {
       preciceCheck(not doesFirstStep(), "initialize()",
 		   "Only second participant can initialize data!");
       preciceDebug("Initialized data to be written");
@@ -654,7 +665,7 @@ void BaseCouplingScheme::initialize
   }
 
   foreach (DataMap::value_type & pair, getReceiveData()){
-    if (pair.second->initialize){
+    if (pair.second->initialize) {
       preciceCheck(doesFirstStep(), "initialize()",
 		   "Only first participant can receive initial data!");
       preciceDebug("Initialized data to be received");
@@ -665,10 +676,10 @@ void BaseCouplingScheme::initialize
   
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
-  if ((not doesFirstStep()) && (not hasToSendInitData()) && isCouplingOngoing()){
+  if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
     preciceDebug("Receiving data");
     getCommunication()->startReceivePackage(0);
-    if (participantReceivesDt()){
+    if (participantReceivesDt()) {
       double dt = UNDEFINED_TIMESTEP_LENGTH;
       getCommunication()->receive(dt, 0);
       preciceDebug("received timestep length of " << dt);
@@ -680,7 +691,7 @@ void BaseCouplingScheme::initialize
     setHasDataBeenExchanged(true);
   }
 
-  if(hasToSendInitData()){
+  if (hasToSendInitData()) {
     requireAction(constants::actionWriteInitialData());
   }
   
@@ -694,7 +705,7 @@ void BaseCouplingScheme::initializeData()
   preciceCheck(isInitialized(), "initializeData()",
 	       "initializeData() can be called after initialize() only!");
 
-  if((not hasToSendInitData()) && (not hasToReceiveInitData())){
+  if (not hasToSendInitData() && not hasToReceiveInitData()) {
     preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
     return;
   }
@@ -706,7 +717,7 @@ void BaseCouplingScheme::initializeData()
 
   setHasDataBeenExchanged(false);
 
-  if (hasToReceiveInitData() && isCouplingOngoing()){
+  if (hasToReceiveInitData() && isCouplingOngoing()) {
     assertion(_doesFirstStep);
     preciceDebug("Receiving data");
     getCommunication()->startReceivePackage(0);
@@ -723,19 +734,18 @@ void BaseCouplingScheme::initializeData()
     setHasDataBeenExchanged(true);
   }
 
-
-  if (hasToSendInitData() && isCouplingOngoing()){
+  if (hasToSendInitData() && isCouplingOngoing()) {
     assertion(not _doesFirstStep);
-    foreach (DataMap::value_type & pair, getSendData()){
-      if (pair.second->oldValues.cols() == 0)
-	break;
-      utils::DynVector& oldValues = pair.second->oldValues.column(0);
-      oldValues = *pair.second->values;
-
-      // For extrapolation, treat the initial value as old timestep value
-      pair.second->oldValues.shiftSetFirst(*pair.second->values);
+    if (getExtrapolationOrder() > 0) {
+      foreach (DataMap::value_type & pair, getSendData()) {
+	if (pair.second->oldValues.cols() == 0)
+	  break;
+	utils::DynVector& oldValues = pair.second->oldValues.column(0);
+	oldValues = *pair.second->values;
+	// For extrapolation, treat the initial value as old timestep value
+	pair.second->oldValues.shiftSetFirst(*pair.second->values);
+      }
     }
-
     // The second participant sends the initialized data to the first particpant
     // here, which receives the data on call of initialize().
     sendData(getCommunication());

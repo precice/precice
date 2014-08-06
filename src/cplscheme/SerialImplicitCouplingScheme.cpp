@@ -26,7 +26,7 @@ SerialImplicitCouplingScheme:: SerialImplicitCouplingScheme
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
   :
-  ImplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
+  SerialCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
 			 secondParticipant,localParticipant,communication,maxIterations,dtMethod)
 {}
 

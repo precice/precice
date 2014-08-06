@@ -4,7 +4,7 @@
 #ifndef PRECICE_CPLSCHEME_PARALLELIMPLICITCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_PARALLELIMPLICITCOUPLINGSCHEME_HPP_
 
-#include "cplscheme/ImplicitCouplingScheme.hpp"
+#include "ParallelCouplingScheme.hpp"
 #include "Constants.hpp"
 #include "SharedPointer.hpp"
 #include "tarch/logging/Log.h"
@@ -17,7 +17,7 @@ namespace precice {
 namespace cplscheme {
 
 /// @brief Parallel coupling scheme which lets the participants run in parallel to each other.
-class ParallelImplicitCouplingScheme : public ImplicitCouplingScheme
+class ParallelImplicitCouplingScheme : public ParallelCouplingScheme
 {
 public:
 /**
@@ -70,24 +70,15 @@ public:
    */
   virtual void advance();
 
+  virtual std::string printCouplingState() const;
   
 private:
-
-  /// @brief Returns all data (receive and send)
-  DataMap& getAllData()
-    {
-      assertion1(!doesFirstStep(), "Only the second participant should do the post processing." );
-      return _allData;
-    }
 
   /// @brief Logging device.
   static tarch::logging::Log _log;
 
   /// @brief Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;
-
-  /// @brief merges send and receive data into one map (for parallel post-processing)
-  void mergeData();
 
   friend class tests::ParallelImplicitCouplingSchemeTest;
 };

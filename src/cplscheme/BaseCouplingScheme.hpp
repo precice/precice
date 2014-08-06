@@ -359,6 +359,8 @@ protected:
   
   /// @brief If any required actions are open, an error message is issued.
   void checkCompletenessRequiredActions();
+
+  virtual std::string printCouplingState() const;
   
   /// @brief Returns a string representing the basic state w/o actions.
   std::string printBasicState() const;

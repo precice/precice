@@ -28,11 +28,11 @@ public:
     com::PtrCommunication communication,
     constants::TimesteppingMethod dtMethod );
 
-  virtual std::string printCouplingState() const;
+  // virtual std::string printCouplingState() const;
 
-  virtual void exportState(const std::string& filenamePrefix) const {}
+  // virtual void exportState(const std::string& filenamePrefix) const {}
 
-  virtual void importState(const std::string& filenamePrefix) {}
+  // virtual void importState(const std::string& filenamePrefix) {}
 
 private:
 
