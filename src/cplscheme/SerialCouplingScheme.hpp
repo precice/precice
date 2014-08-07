@@ -25,21 +25,26 @@ public:
  * @param communication [IN] Communication object for com. between participants.
  * @param monitorIterations [IN] If true, a txt file monitoring iterations is written.
  */
-SerialCouplingScheme (
-  double                maxTime,
-  int                   maxTimesteps,
-  double                timestepLength,
-  int                   validDigits,
-  const std::string&    firstParticipant,
-  const std::string&    secondParticipant,
-  const std::string&    localParticipant,
-  com::PtrCommunication communication,
-  int                   maxIterations,
-  constants::TimesteppingMethod dtMethod);
+  SerialCouplingScheme (
+    double                maxTime,
+    int                   maxTimesteps,
+    double                timestepLength,
+    int                   validDigits,
+    const std::string&    firstParticipant,
+    const std::string&    secondParticipant,
+    const std::string&    localParticipant,
+    com::PtrCommunication communication,
+    int                   maxIterations,
+    constants::TimesteppingMethod dtMethod);
 
+  virtual void initialize(double startTime, int startTimestep);
+  
 /// @brief Logging device.
-static tarch::logging::Log _log;
+  static tarch::logging::Log _log;
 
+
+
+  
 };
 
 }}

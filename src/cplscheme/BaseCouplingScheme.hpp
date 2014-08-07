@@ -7,7 +7,7 @@
 #include "CouplingScheme.hpp"
 #include "CouplingData.hpp"
 #include "Constants.hpp"
-#include "SharedPointer.hpp"
+#include "SharedPointer.hpp" 
 #include "mesh/Data.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/Constants.hpp"
@@ -225,9 +225,7 @@ public:
   virtual void finalize();
 
   /// @brief Initializes the coupling scheme.
-  virtual void initialize (
-    double startTime,
-    int    startTimestep );
+  virtual void initialize(double startTime, int startTimestep ) = 0;
     
   /**
    * @brief Initializes data with written values.
