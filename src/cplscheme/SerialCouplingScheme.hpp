@@ -43,7 +43,7 @@ public:
 
   virtual void advance();
   
-/// @brief Logging device.
+  /// @brief Logging device.
   static tarch::logging::Log _log;
 
 

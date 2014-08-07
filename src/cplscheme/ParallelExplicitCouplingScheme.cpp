@@ -35,56 +35,6 @@ ParallelExplicitCouplingScheme:: ParallelExplicitCouplingScheme
   couplingMode = Explicit; 
 }
 
-void ParallelExplicitCouplingScheme:: initializeData()
-{
-  preciceTrace("initializeData()");
-  preciceCheck(isInitialized(), "initializeData()",
-	       "initializeData() can be called after initialize() only!");
-
-  if(not hasToSendInitData() && not hasToReceiveInitData()){
-    preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
-    return;
-  }
-
-  preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-	       "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
-
-  setHasDataBeenExchanged(false);
-
-  //F: send, receive, S: receive, send
-  if (doesFirstStep()) {
-    if (hasToSendInitData()) {
-      getCommunication()->startSendPackage(0);
-      sendData(getCommunication());
-      getCommunication()->finishSendPackage();
-    }
-    if (hasToReceiveInitData()) {
-      getCommunication()->startReceivePackage(0);
-      receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
-      setHasDataBeenExchanged(true);
-    }
-  }
-
-  else { // second participant
-    if (hasToReceiveInitData()) {
-      getCommunication()->startReceivePackage(0);
-      receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
-      setHasDataBeenExchanged(true);
-    }
-    if (hasToSendInitData()) {
-      getCommunication()->startSendPackage(0);
-      sendData(getCommunication());
-      getCommunication()->finishSendPackage();
-    }
-  }
-
-  //in order to check in advance if initializeData has been called (if necessary)
-  setHasToSendInitData(false);
-  setHasToReceiveInitData(false);
-}
-
 void ParallelExplicitCouplingScheme:: advance()
 {
   preciceTrace("advance()");
@@ -121,7 +71,7 @@ void ParallelExplicitCouplingScheme:: advance()
       setHasDataBeenExchanged(true);
     }
 
-    else{ //second participant
+    else { //second participant
       preciceDebug("Receiving data...");
       getCommunication()->startReceivePackage(0);
       if (participantReceivesDt()) {

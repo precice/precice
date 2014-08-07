@@ -49,15 +49,6 @@ public:
     constants::TimesteppingMethod dtMethod);
 
   /**
-   * @brief Initializes data with written values.
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   * - advance() has NOT yet been called.
-   */
-  virtual void initializeData();
-
-  /**
    * @brief Advances within the coupling scheme (not necessarily in time).
    *
    * Preconditions:
@@ -71,9 +62,6 @@ private:
 
   /// @brief Logging device.
   static tarch::logging::Log _log;
-
-  /// @brief Map from data ID -> all data (receive and send) with that ID
-  DataMap _allData;
 
   friend class tests::ParallelImplicitCouplingSchemeTest;
 };

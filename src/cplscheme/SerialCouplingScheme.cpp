@@ -169,7 +169,6 @@ void SerialCouplingScheme::initializeData()
 void SerialCouplingScheme:: advance()
 {
   preciceTrace2("advance()", getTimesteps(), getTime());
-//tmp debug -> here wrong values
   foreach (DataMap::value_type & pair, getReceiveData()) {
     utils::DynVector& values = *pair.second->values;
     preciceDebug("Begin advance, New Values: " << values);
@@ -233,12 +232,12 @@ void SerialCouplingScheme:: advance()
 	convergence = measureConvergence();
 	assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
 		   getIterations(), getMaxIterations());
-// Stop, when maximal iteration count (given in config) is reached
-	if (getIterations() == getMaxIterations()-1){
+        // Stop, when maximal iteration count (given in config) is reached
+	if (getIterations() == getMaxIterations()-1) {
 	  convergence = true;
 	}
 	if (convergence) {
-	  if (getPostProcessing().get() != NULL){
+	  if (getPostProcessing().get() != NULL) {
 	    getPostProcessing()->iterationsConverged(getSendData());
 	  }
 	  newConvergenceMeasurements();
@@ -299,11 +298,11 @@ void SerialCouplingScheme:: advance()
       }
       setHasDataBeenExchanged(true);
       setComputedTimestepPart(0.0);
-    }//subcycling completed
-
-// When the iterations of one timestep are converged, the old time, timesteps,
-// and iteration should be plotted, and not the 0th of the new timestep. Thus,
-// the plot values are only updated when no convergence was achieved.
+    } //subcycling completed
+    
+    // When the iterations of one timestep are converged, the old time, timesteps,
+    // and iteration should be plotted, and not the 0th of the new timestep. Thus,
+    // the plot values are only updated when no convergence was achieved.
     setTimestepToPlot(getTimesteps());
     setTimeToPlot(getTime());
     setIterationToPlot(getIterations());

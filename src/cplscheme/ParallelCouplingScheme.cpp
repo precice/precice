@@ -26,10 +26,7 @@ ParallelCouplingScheme::ParallelCouplingScheme
   _allData ()
 {}
 
-
-
-
-void ParallelCouplingScheme:: initialize
+void ParallelCouplingScheme::initialize
 (
   double startTime,
   int    startTimestep )
@@ -80,9 +77,6 @@ void ParallelCouplingScheme:: initialize
   setIsInitialized(true);
 }
 
-
-
-// identisch für explizit und implizit, bei extraPolationOrder == 0 und init der DataMap
 void ParallelCouplingScheme::initializeData()
 {
   preciceTrace("initializeData()");
@@ -101,7 +95,7 @@ void ParallelCouplingScheme::initializeData()
 
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
-    if(hasToSendInitData()) {
+    if (hasToSendInitData()) {
       getCommunication()->startSendPackage(0);
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
@@ -122,7 +116,7 @@ void ParallelCouplingScheme::initializeData()
       setHasDataBeenExchanged(true);
 
       // second participant has to save values for extrapolation
-      if (getExtrapolationOrder() > 0) {
+      if (couplingMode == Implicit and getExtrapolationOrder() > 0){
         foreach (DataMap::value_type & pair, getReceiveData()){
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
@@ -132,7 +126,7 @@ void ParallelCouplingScheme::initializeData()
       }
     }
     if (hasToSendInitData()) {
-      if (getExtrapolationOrder() > 0) {
+      if (couplingMode == Implicit and getExtrapolationOrder() > 0) {
         foreach (DataMap::value_type & pair, getSendData()) {
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
@@ -151,6 +145,7 @@ void ParallelCouplingScheme::initializeData()
   setHasToReceiveInitData(false);
 }
 
+
 void ParallelCouplingScheme::mergeData()
 {
   preciceTrace("mergeData()");
@@ -158,8 +153,6 @@ void ParallelCouplingScheme::mergeData()
   assertion1(_allData.empty(), "This function should only be called once.");
   _allData.insert(getSendData().begin(), getSendData().end());
   _allData.insert(getReceiveData().begin(), getReceiveData().end());
-
 }
-
 
 }}

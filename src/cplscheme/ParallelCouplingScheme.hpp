@@ -46,8 +46,6 @@ private:
   /// @brief Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;
 
-
-
 };
 
 }}

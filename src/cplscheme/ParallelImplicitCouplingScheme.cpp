@@ -31,80 +31,10 @@ ParallelImplicitCouplingScheme:: ParallelImplicitCouplingScheme
   constants::TimesteppingMethod dtMethod )
   :
   ParallelCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-			 secondParticipant,localParticipant,communication,maxIterations,dtMethod),
-  _allData ()
+			 secondParticipant,localParticipant,communication,maxIterations,dtMethod)
 {
   couplingMode = Implicit;
 }
-
-void ParallelImplicitCouplingScheme:: initializeData()
-{
-  preciceTrace("initializeData()");
-  preciceCheck(isInitialized(), "initializeData()",
-	       "initializeData() can be called after initialize() only!");
-
-  if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
-    return;
-  }
-
-  preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-	       "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
-
-  setHasDataBeenExchanged(false);
-
-  // F: send, receive, S: receive, send
-  if (doesFirstStep()) {
-    if (hasToSendInitData()) {
-      getCommunication()->startSendPackage(0);
-      sendData(getCommunication());
-      getCommunication()->finishSendPackage();
-    }
-    if (hasToReceiveInitData()) {
-      getCommunication()->startReceivePackage(0);
-      receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
-      setHasDataBeenExchanged(true);
-    }
-  }
-
-  else { // second participant
-    if (hasToReceiveInitData()) {
-      getCommunication()->startReceivePackage(0);
-      receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
-      setHasDataBeenExchanged(true);
-
-      // second participant has to save values for extrapolation
-      if (getExtrapolationOrder() > 0){
-        foreach (DataMap::value_type & pair, getReceiveData()){
-          utils::DynVector& oldValues = pair.second->oldValues.column(0);
-          oldValues = *pair.second->values;
-          // For extrapolation, treat the initial value as old timestep value
-          pair.second->oldValues.shiftSetFirst(*pair.second->values);
-        }
-      }
-    }
-    if (hasToSendInitData()) {
-      if (getExtrapolationOrder() > 0) {
-        foreach (DataMap::value_type & pair, getSendData()) {
-          utils::DynVector& oldValues = pair.second->oldValues.column(0);
-          oldValues = *pair.second->values;
-          // For extrapolation, treat the initial value as old timestep value
-          pair.second->oldValues.shiftSetFirst(*pair.second->values);
-        }
-      }
-      getCommunication()->startSendPackage(0);
-      sendData(getCommunication());
-      getCommunication()->finishSendPackage();
-    }
-  }
-
-  // in order to check in advance if initializeData has been called (if necessary)
-  setHasToSendInitData(false);
-  setHasToReceiveInitData(false);
-}
-
 
 void ParallelImplicitCouplingScheme:: advance()
 {
@@ -230,7 +160,5 @@ std::string ParallelImplicitCouplingScheme:: printCouplingState() const
   os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
   return os.str();
 }
-
-
 
 }} // namespace precice, cplscheme

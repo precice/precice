@@ -9,10 +9,6 @@
 #include "SharedPointer.hpp"
 #include "tarch/logging/Log.h"
 
-namespace precice { namespace cplscheme { namespace tests {
-//class ParallelExplicitCouplingSchemeTest;
-} } }
-
 namespace precice {
 namespace cplscheme {
 
@@ -20,7 +16,6 @@ namespace cplscheme {
 class ParallelExplicitCouplingScheme : public ParallelCouplingScheme
 {
 public:
-
   /**
    * @brief Constructor.
    *
@@ -45,15 +40,6 @@ public:
     constants::TimesteppingMethod dtMethod);
 
   /**
-   * @brief Initializes data with written values.
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   * - advance() has NOT yet been called.
-   */
-  virtual void initializeData();
-
-  /**
    * @brief Advances within the coupling scheme.
    *
    * Preconditions:
@@ -63,8 +49,6 @@ public:
 
   /// @brief Logging device.
   static tarch::logging::Log _log;
-
-  //friend class tests::ParallelExplicitCouplingSchemeTest;
 };
 
 }} // namespace precice, cplscheme
