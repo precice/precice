@@ -28,7 +28,7 @@ ParallelCouplingScheme::ParallelCouplingScheme
 
 
 
-// identisch, bis auf das if(not doesFirstStep()). 
+
 void ParallelCouplingScheme:: initialize
 (
   double startTime,
@@ -43,21 +43,22 @@ void ParallelCouplingScheme:: initialize
                "No send data configured!");
   setTime(startTime);
   setTimesteps(startTimestep);
-  if (not doesFirstStep()) { // second participant
-    // NOTE: Block sollte nur ausgeführt werden für implizites Schema
-    setupConvergenceMeasures(); // needs _couplingData configured
-    mergeData(); // merge send and receive data for all pp calls
-    setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
-    if (getPostProcessing().get() != NULL) {
-      preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
-		   "For parallel coupling, the number of coupling data vectors has to be 2, not: "
-		   << getPostProcessing()->getDataIDs().size());
-      getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
+  if (couplingMode == Implicit) {
+    if (not doesFirstStep()) { // second participant
+      setupConvergenceMeasures(); // needs _couplingData configured
+      mergeData(); // merge send and receive data for all pp calls
+      setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
+      if (getPostProcessing().get() != NULL) {
+	preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
+		     "For parallel coupling, the number of coupling data vectors has to be 2, not: "
+		     << getPostProcessing()->getDataIDs().size());
+	getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
+      }
     }
-  }
 
-  requireAction(constants::actionWriteIterationCheckpoint());
-  initializeTXTWriters();
+    requireAction(constants::actionWriteIterationCheckpoint());
+    initializeTXTWriters();
+  }
 
   foreach (DataMap::value_type & pair, getSendData()) {
     if (pair.second->initialize) {
@@ -75,11 +76,13 @@ void ParallelCouplingScheme:: initialize
   if (hasToSendInitData()) {
     requireAction(constants::actionWriteInitialData());
   }
+
   setIsInitialized(true);
 }
 
 
-// identisch für explizit und implizit
+
+// identisch für explizit und implizit, bei extraPolationOrder == 0 und init der DataMap
 void ParallelCouplingScheme::initializeData()
 {
   preciceTrace("initializeData()");

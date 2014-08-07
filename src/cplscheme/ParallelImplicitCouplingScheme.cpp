@@ -33,56 +33,8 @@ ParallelImplicitCouplingScheme:: ParallelImplicitCouplingScheme
   ParallelCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
 			 secondParticipant,localParticipant,communication,maxIterations,dtMethod),
   _allData ()
-{}
-
-
-void ParallelImplicitCouplingScheme:: initialize
-(
-  double startTime,
-  int    startTimestep )
 {
-  preciceTrace2("initialize()", startTime, startTimestep);
-  assertion(not isInitialized());
-  assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
-  assertion1(startTimestep >= 0, startTimestep);
-  assertion(getCommunication()->isConnected());
-  preciceCheck(not getSendData().empty(), "initialize()",
-               "No send data configured!");
-  setTime(startTime);
-  setTimesteps(startTimestep);
-  if (not doesFirstStep()) { // second participant
-    setupConvergenceMeasures(); // needs _couplingData configured
-    mergeData(); // merge send and receive data for all pp calls
-    setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
-    if (getPostProcessing().get() != NULL) {
-      preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
-		   "For parallel coupling, the number of coupling data vectors has to be 2, not: "
-		   << getPostProcessing()->getDataIDs().size());
-      getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
-    }
-  }
-
-  requireAction(constants::actionWriteIterationCheckpoint());
-  initializeTXTWriters();
-
-  foreach (DataMap::value_type & pair, getSendData()) {
-    if (pair.second->initialize) {
-      setHasToSendInitData(true);
-      break;
-    }
-  }
-  foreach (DataMap::value_type & pair, getReceiveData()) {
-    if (pair.second->initialize) {
-      setHasToReceiveInitData(true);
-      break;
-    }
-  }
-
-  if (hasToSendInitData()) {
-    requireAction(constants::actionWriteInitialData());
-  }
-
-  setIsInitialized(true);
+  couplingMode = Implicit;
 }
 
 void ParallelImplicitCouplingScheme:: initializeData()

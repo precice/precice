@@ -2,9 +2,13 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ParallelExplicitCouplingScheme.hpp"
+#include "impl/PostProcessing.hpp"
+#include "impl/ConvergenceMeasure.hpp"
 #include "Constants.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
+#include "io/TXTWriter.hpp"
+#include "io/TXTReader.hpp"
 #include "tarch/plotter/globaldata/TXTTableWriter.h"
 
 namespace precice {
@@ -27,43 +31,8 @@ ParallelExplicitCouplingScheme:: ParallelExplicitCouplingScheme
   :
   ParallelCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
 			 secondParticipant,localParticipant,communication, 1, dtMethod)
-{}
-
-
-void ParallelExplicitCouplingScheme:: initialize
-(
-  double startTime,
-  int    startTimestep )
 {
-  preciceTrace2("initialize()", startTime, startTimestep);
-  assertion(not isInitialized());
-  assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
-  assertion1(startTimestep >= 0, startTimestep);
-  assertion(getCommunication()->isConnected());
-  preciceCheck(not getSendData().empty(), "initialize()",
-               "No send data configured!");
-  setTime(startTime);
-  setTimesteps(startTimestep);
-
-
-  foreach (DataMap::value_type & pair, getSendData()) {
-    if (pair.second->initialize) {
-      setHasToSendInitData(true);
-      break;
-    }
-  }
-  foreach (DataMap::value_type & pair, getReceiveData()) {
-    if (pair.second->initialize) {
-      setHasToReceiveInitData(true);
-      break;
-    }
-  }
-
-  if (hasToSendInitData()) {
-    requireAction(constants::actionWriteInitialData());
-  }
-
-  setIsInitialized(true);
+  couplingMode = Explicit; 
 }
 
 void ParallelExplicitCouplingScheme:: initializeData()

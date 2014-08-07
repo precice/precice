@@ -48,11 +48,6 @@ public:
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod);
 
-  /// @brief Initializes the coupling scheme.
-  virtual void initialize (
-    double startTime,
-    int    startTimestep );
-
   /**
    * @brief Initializes data with written values.
    *

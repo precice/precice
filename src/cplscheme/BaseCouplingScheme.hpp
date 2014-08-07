@@ -73,6 +73,8 @@ public:
     com::PtrCommunication communication,
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod );
+
+  enum {Explicit, Implicit} couplingMode; 
   
   /**
    * @brief Adds another coupling scheme in parallel to this scheme.

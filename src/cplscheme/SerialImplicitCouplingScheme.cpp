@@ -28,7 +28,9 @@ SerialImplicitCouplingScheme:: SerialImplicitCouplingScheme
   :
   SerialCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
 			 secondParticipant,localParticipant,communication,maxIterations,dtMethod)
-{}
+{
+  couplingMode = Implicit;
+}
 
 
 void SerialImplicitCouplingScheme:: advance()

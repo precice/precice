@@ -43,7 +43,8 @@ BaseCouplingScheme:: BaseCouplingScheme
   _actions(),
   _sendData(),
   _receiveData (),
-  _iterationsWriter("iterations-unknown.txt")
+  _iterationsWriter("iterations-unknown.txt"),
+  couplingMode(Explicit)
 {
   preciceCheck (
     not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
