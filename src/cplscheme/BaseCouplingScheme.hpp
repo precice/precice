@@ -234,7 +234,7 @@ public:
    * - initialize() has been called.
    * - advance() has NOT yet been called.
    */
-  virtual void initializeData();
+  virtual void initializeData() = 0;
 
   /**
    * @brief Sets order of predictor of interface values for first participant.

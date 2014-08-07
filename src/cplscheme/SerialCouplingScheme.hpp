@@ -38,6 +38,8 @@ public:
     constants::TimesteppingMethod dtMethod);
 
   virtual void initialize(double startTime, int startTimestep);
+
+  virtual void initializeData();
   
 /// @brief Logging device.
   static tarch::logging::Log _log;
