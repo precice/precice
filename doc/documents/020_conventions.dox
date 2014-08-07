@@ -29,6 +29,18 @@ Using Emacs you get the indention style using this snippet.
 (setq c-default-style "my-cc-style")
 @endcode
 
+@subsection debug Debug Output and Checks
+
+Before using some precice* debugging methods you should set preciceTrace(methodName) at the beginning of the function.
+
+- preciceError(methodName, message) unconditionally aborts the program. Should be used to catch user errors such as invalid configuration parameter combinations.
+- preciceCheck(check, methodName, errorMessage) checks if check == true and otherwise emits errorMessage and aborts program. Should be used like \c preciceError.
+- assertion(check) behaves like \c preciceCheck but should be used for programming errors and should therefore never happen to the user.
+- precicePrint(stream) unconditionally prints a message.
+- preciceDebug(stream) prints a debug message, depending on global log level configuration.
+- preciceInfo(stream) prints an info message, depending on global log level configuration.
+- preciceWarning(stream) prints a warning message, depending on global log level configuration.
+
 @subsection Documentation
 We use <a href="http://doxygen.org">Doxygen</a> for source code documentation. A generic documentation template for a class, function or variable:
 @verbatim
@@ -42,7 +54,7 @@ We use <a href="http://doxygen.org">Doxygen</a> for source code documentation. A
 For a one-line documentation you should use
 @verbatim
 /// @brief Eat an apple
-void eatApple(Apple a)
+void eatApple(Apple a);
 @endverbatim
 
 
