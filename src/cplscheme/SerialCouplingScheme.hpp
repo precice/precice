@@ -40,6 +40,8 @@ public:
   virtual void initialize(double startTime, int startTimestep);
 
   virtual void initializeData();
+
+  virtual void advance();
   
 /// @brief Logging device.
   static tarch::logging::Log _log;

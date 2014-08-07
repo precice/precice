@@ -26,6 +26,7 @@ BaseCouplingScheme:: BaseCouplingScheme
   double timestepLength,
   int    validDigits)
   :
+  couplingMode(Explicit),
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _timestepLength(timestepLength),
@@ -43,8 +44,7 @@ BaseCouplingScheme:: BaseCouplingScheme
   _actions(),
   _sendData(),
   _receiveData (),
-  _iterationsWriter("iterations-unknown.txt"),
-  couplingMode(Explicit)
+  _iterationsWriter("iterations-unknown.txt")
 {
   preciceCheck (
     not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -461,9 +461,8 @@ int BaseCouplingScheme:: getTimesteps() const
 std::vector<std::string> BaseCouplingScheme::getCouplingPartners() const
 {
   std::vector<std::string> partnerNames;
-
   // Add non-local participant
-  if(doesFirstStep()){
+  if (doesFirstStep()) {
     partnerNames.push_back(_secondParticipant);
   }
   else {

@@ -16,11 +16,6 @@
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 
-namespace precice { namespace io {
-class TXTWriter;
-class TXTReader;
-} }
-
 namespace precice {
 namespace cplscheme {
 
