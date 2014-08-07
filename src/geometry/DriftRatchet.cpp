@@ -70,10 +70,7 @@ DriftRatchet:: DriftRatchet
    _minRadius ( minRadius ),
    _shapeParameter ( shapeParameter ),
    _length ( length ),
-   _pores ( pores ),
-   _wallIndex ( wallIndex ),
-   _inflowIndex ( inflowIndex ),
-   _outflowIndex ( outflowIndex )
+   _pores ( pores )
 {}
 
 

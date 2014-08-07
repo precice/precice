@@ -25,7 +25,7 @@ namespace la {
  * all vector types.
  */
 template<int Size, typename Scalar>
-struct Vector
+class Vector
 {
 private:
   Scalar _values[Size];

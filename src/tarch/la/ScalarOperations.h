@@ -47,7 +47,7 @@ namespace tarch {
       Type tolerance = NUMERICAL_ZERO_DIFFERENCE);
 
     /**
-     * Returns true, if lhs is greater or euqal within a tolerance.
+     * Returns true, if lhs is greater or equal within a tolerance.
      */
     template<typename Type>
       typename utils::EnableIf<not IsVector<Type>::value,

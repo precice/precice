@@ -16,6 +16,11 @@
          <use-data name="Velocities"/>
       </mesh>
       
+      <mesh name="MeshOne">
+         <use-data name="Forces"/>
+         <use-data name="Velocities"/>
+      </mesh>
+      
       <geometry:builtin-cuboid of-mesh="Test-Square">
          <length value="1.0; 1.0"/> 
          <discretization-width value="0.1"/> 
@@ -23,12 +28,13 @@
       
       <participant name="SolverOne">
          <use-mesh name="Test-Square"/>
-         <mapping:nearest-projection direction="write" mesh="Test-Square"
+         <use-mesh name="MeshOne" provide="yes"/>
+         <mapping:nearest-projection direction="write" from="MeshOne" to="Test-Square"
                   constraint="conservative" timing="incremental"/>
-         <mapping:nearest-projection direction="read" mesh="Test-Square" 
+         <mapping:nearest-projection direction="read" from="Test-Square" to="MeshOne" 
                   constraint="consistent" timing="incremental"/>
-         <write-data name="Forces"     mesh="Test-Square"/>
-         <read-data  name="Velocities" mesh="Test-Square"/>
+         <write-data name="Forces"     mesh="MeshOne"/>
+         <read-data  name="Velocities" mesh="MeshOne"/>
       </participant>
       
       <participant name="SolverTwo">

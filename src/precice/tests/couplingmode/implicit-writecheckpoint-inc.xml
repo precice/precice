@@ -22,10 +22,6 @@
       
       <participant name="SolverOne">
          <use-mesh name="Square"/>
-         <mapping:nearest-projection direction="write" mesh="Square"
-                  constraint="conservative" timing="incremental"/>
-         <mapping:nearest-projection direction="read" mesh="Square"                  
-                  constraint="consistent" timing="incremental"/>
          <write-data name="Forces"    mesh="Square"/>
          <read-data name="Velocities" mesh="Square"/>
       </participant>

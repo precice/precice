@@ -34,7 +34,6 @@ PythonAction:: PythonAction
   _isInitialized(false),
   _moduleNameObject(NULL),
   _module(NULL),
-  _dataArgs(NULL),
   _sourceValues(NULL),
   _targetValues(NULL),
   _performAction(NULL),

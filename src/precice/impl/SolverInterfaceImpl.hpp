@@ -200,14 +200,15 @@ public:
   std::set<int> getMeshIDs();
 
   /**
-   * @brief Returns true, if the data with given name is used.
+   * @brief Returns true, if the data with given name is used in the given mesh.
    */
-  bool hasData ( const std::string& dataName ) const;
+  bool hasData ( const std::string& dataName, int meshID );
 
   /**
    * @brief Returns data id corresponding to the given name (from configuration)
+   * and mesh.
    */
-  int getDataID ( const std::string& dataName );
+  int getDataID ( const std::string& dataName, int meshID );
 
   /**
    * @brief Find out position of point relative to geometries.
@@ -258,122 +259,54 @@ public:
     const std::set<int>& meshIDs );
 
   /**
-   * @brief Resets local mesh with given ID used for mapping of write data.
+   * @brief Resets mesh with given ID.
    *
-   * Has to be called, everytime the write positions for data to be mapped
+   * Has to be called, everytime the positions for data to be mapped
    * changes. Only has an effect, if the mapping used is non-stationary and
    * non-incremental.
    */
-  void resetWritePositions ( int meshID );
+  void resetMesh ( int meshID );
 
   /**
-   * @brief Resets local mesh with given ID used for mapping of read data.
+   * @brief Sets several spatial positions for a mesh.
    *
-   * Has to be called, everytime the read positions for data to be mapped
-   * changes. Only has an effect, if the mapping used is non-stationary and
-   * non-incremental.
+   * @param ids [OUT] IDs for data from given positions.
    */
-  void resetReadPositions ( int meshID );
-
-  /**
-   * @brief Set position of solver data node to write data to a preCICE mesh.
-   *
-   * @return Index to be used when writing data.
-   */
-  int setWritePosition (
-    int           meshID,
-    const double* position );
-
-  /**
-   * @brief Sets several spatial positions for data to be written.
-   *
-   * @param ids [OUT] IDs for data to be written from given positions.
-   */
-  void setWritePositions (
+  void setMeshVertices (
     int     meshID,
     int     size,
     double* positions,
     int*    ids );
 
   /**
-   * @brief Gets spatial positions for writing data for given IDs.
+   * @brief Gets spatial positions of vertices for given IDs.
    *
    * @param ids [IN] IDs obtained when setting write positions.
    * @param positions [OUT] Positions corresponding to IDs.
    */
-  void getWritePositions (
+  void getMeshVertices (
     int     meshID,
-    int     size,
+    size_t  size,
     int*    ids,
     double* positions );
 
   /**
-   * @brief Gets write data ids from positions.
+   * @brief Gets vertex data ids from positions.
    *
    * @param size [IN] Number of positions, ids.
    * @param positions [IN] Positions (x,y,z,x,y,z,...) to find ids for.
    * @param ids [OUT] IDs corresponding to positions.
    */
-  void getWriteIDsFromPositions (
+  void getMeshVertexIDsFromPositions (
     int     meshID,
-    int     size,
+    size_t  size,
     double* positions,
     int*    ids );
 
   /**
-   * @brief Returns the number of nodes of a write data mesh.
+   * @brief Returns the number of nodes of a mesh.
    */
-  int getWriteNodesSize ( int meshID );
-
-  /**
-   * @brief Set position of solver data node to read data from a preCICE mesh.
-   *
-   * @return Index to be used when reading data.
-   */
-  int setReadPosition (
-    int           meshID,
-    const double* position );
-
-  /**
-   * @brief Sets several spatial positions for data to be read.
-   *
-   * @param ids [OUT] IDs for data to be read to given positions.
-   */
-  void setReadPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
-
-  /**
-   * @brief Gets spatial positions for reading data for given IDs.
-   *
-   * @param ids [IN] IDs obtained when setting read positions.
-   * @param positions [OUT] Positions corresponding to IDs.
-   */
-  void getReadPositions (
-    int     meshID,
-    int     size,
-    int*    ids,
-    double* positions );
-
-  /**
-   * @brief Gets read data ids from positions.
-   *
-   * @param size [IN] Number of positions, ids.
-   * @param positions [IN] Positions (x,y,z,x,y,z,...) to find ids for.
-   * @param ids [OUT] IDs corresponding to positions.
-   */
-  void getReadIDsFromPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
-
-  /**
-   * @brief Returns the number of nodes of a read data mesh.
-   */
-  int getReadNodesSize ( int meshID );
+  int getMeshVertexSize ( int meshID );
 
   /**
    * @brief Set the position of a solver mesh vertex.
@@ -383,11 +316,6 @@ public:
   int setMeshVertex (
     int           meshID,
     const double* position );
-
-  /**
-   * @brief Returns the number of vertices of a mesh.
-   */
-  int getMeshVertexSize(int meshID);
 
   /**
    * @brief Set an edge of a solver mesh.
@@ -438,16 +366,16 @@ public:
     int fourthVertexID );
 
   /**
-   * @brief Computes and maps all data written to mesh with given ID.
+   * @brief Computes and maps all write data mapped from mesh with given ID.
    *
    * Is automatically called in advance, if not called manually before.
    */
-  void mapWrittenData(int meshID);
+  void mapWriteDataFrom(int fromMeshID);
 
   /**
-   * @brief Computes and maps all data to be read from mesh with given ID.
+   * @brief Computes and maps all read data mapped to mesh with given ID.
    */
-  void mapReadData(int meshID);
+  void mapReadDataTo(int toMeshID);
 
   /**
    * @brief Writes vector data values given as block.
@@ -456,12 +384,12 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param dataID [IN] ID of the data to be written.
+   * @param fromDataID [IN] ID of the data to be written.
    * @param size [IN] Number of valueIndices, and number of values * dimensions.
    * @param values [IN] Values of the data to be written.
    */
   void writeBlockVectorData (
-    int     dataID,
+    int     fromDataID,
     int     size,
     int*    valueIndices,
     double* values );
@@ -472,24 +400,24 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param dataID       [IN] ID of the data to be written, e.g. 1 = forces
+   * @param fromDataID       [IN] ID of the data to be written, e.g. 1 = forces
    * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
    * @param dataValue    [IN] Value of the data to be written
    */
   void writeVectorData (
-    int           dataID,
+    int           fromDataID,
     int           valueIndex,
     const double* value );
 
   /**
    * @brief Writes scalar data values given as block.
    *
-   * @param dataID [IN] ID of the data to be written.
+   * @param fromDataID [IN] ID of the data to be written.
    * @param size [IN] Number of valueIndices, and number of values.
    * @param values [IN] Values of the data to be written.
    */
   void writeBlockScalarData (
-    int     dataID,
+    int     fromDataID,
     int     size,
     int*    valueIndices,
     double* values );
@@ -499,12 +427,12 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param dataID       [IN] ID of the data to be written (2 = temperature, e.g.)
+   * @param fromDataID       [IN] ID of the data to be written (2 = temperature, e.g.)
    * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
    * @param dataValue    [IN] Value of the data to be written
    */
   void writeScalarData(
-    int    dataID,
+    int    fromDataID,
     int    valueIndex,
     double value );
 
@@ -515,13 +443,13 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param dataID [IN] ID of the data to be read.
+   * @param toDataID [IN] ID of the data to be read.
    * @param size [IN] Number of indices, and number of values * dimensions.
    * @param valueIndices [IN] Indices (from setReadPosition()) of data values.
    * @param values [IN] Values of the data to be read.
    */
   void readBlockVectorData (
-    int     dataID,
+    int     toDataID,
     int     size,
     int*    valueIndices,
     double* values );
@@ -529,24 +457,24 @@ public:
   /**
    * @brief Reads vector data from the coupling mesh.
    *
-   * @param dataID       [IN]  ID of the data to be read, e.g. 1 = forces
+   * @param toDataID       [IN]  ID of the data to be read, e.g. 1 = forces
    * @param dataPosition [IN]  Position (coordinate, e.g.) of data to be read
    * @param dataValue    [OUT] Read data value
    */
   void readVectorData (
-    int     dataID,
+    int     toDataID,
     int     valueIndex,
     double* value );
 
   /**
    * @brief Reads scalar data values given as block.
    *
-   * @param dataID [IN] ID of the data to be written.
+   * @param toDataID [IN] ID of the data to be written.
    * @param size [IN] Number of valueIndices, and number of values.
    * @param values [IN] Values of the data to be written.
    */
   void readBlockScalarData (
-    int     dataID,
+    int     toDataID,
     int     size,
     int*    valueIndices,
     double* values );
@@ -556,12 +484,12 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param dataID       [IN]  ID of the data to be read, e.g. 2 = temperatures
+   * @param toDataID       [IN]  ID of the data to be read, e.g. 2 = temperatures
    * @param dataPosition [IN]  Position (coordinate, e.g.) of data to be read
    * @param dataValue    [OUT] Read data value
    */
   void readScalarData (
-    int     dataID,
+    int     toDataID,
     int     valueIndex,
     double& value );
 
@@ -656,7 +584,8 @@ private:
   // @brief Geometry name to mesh ID mapping.
   std::map<std::string,int> _meshIDs;
 
-  std::map<std::string,int> _dataIDs;
+  //@brief dataIDs referenced by meshID and data name
+  std::map<int,std::map<std::string,int> > _dataIDs;
 
   // @brief For plotting of used mesh neighbor-relations
   query::ExportVTKNeighbors _exportVTKNeighbors;
@@ -732,7 +661,7 @@ private:
   /**
    * @brief Determines participants providing meshes to other participants.
    */
-  void configureCommunicatedGeometries (
+  void configureSolverGeometries (
     const com::PtrCommunicationConfiguration& comConfig );
 
   /**

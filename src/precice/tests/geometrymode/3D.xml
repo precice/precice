@@ -1,6 +1,8 @@
 <?xml version="1.0"?>
 
+
 <precice-configuration>
+   
    <log-filter target="debug" component="precice" switch="off" />
    
    <solver-interface geometry-mode="yes" dimensions="3">   
@@ -12,21 +14,29 @@
          <use-data name="Velocities" />
       </mesh>
       
+      <mesh name="SolverMesh" flip-normals="yes">
+         <use-data name="Forces" />
+         <use-data name="Velocities" />
+      </mesh>
+      
       <geometry:builtin-cuboid of-mesh="itest-cuboid">
          <offset value="-5.0; -5.0; -5.0" />
          <discretization-width value="1.0" />                  
-         <length value="10; 10; 10" />
+         <length value="10; 10; 10"/>
       </geometry:builtin-cuboid>
      
       <participant name="TestAccessor">
          <use-mesh name="itest-cuboid" />
+         <use-mesh name="SolverMesh" provide="yes" />
          <export:vtk/>
-         <mapping:nearest-projection direction="write" mesh="itest-cuboid" 
-                  constraint="conservative" timing="incremental" />
-         <mapping:nearest-projection direction="read" mesh="itest-cuboid" 
-                  constraint="consistent" timing="incremental" />
-         <write-data name="Forces"     mesh="itest-cuboid" />
-         <read-data  name="Velocities" mesh="itest-cuboid" />
+         <mapping:nearest-projection direction="write" 
+               from="SolverMesh" to="itest-cuboid" 
+               constraint="conservative" timing="incremental" />
+         <mapping:nearest-projection direction="read" 
+               from="itest-cuboid" to="SolverMesh" 
+               constraint="consistent" timing="incremental" />
+         <write-data name="Forces"     mesh="SolverMesh" />
+         <read-data  name="Velocities" mesh="SolverMesh" />
       </participant>
       
    </solver-interface>

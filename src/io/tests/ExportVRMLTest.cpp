@@ -80,19 +80,15 @@ void ExportVRMLTest:: testExportCuboid()
     utils::DynVector length(dim, 5.0);
     geometry::Cuboid cuboid ( offset, h, length );
 
-    int sideIndex = 0;
     std::string name ( "side-0" );
     mesh.setSubID ( name );
 
-    sideIndex = 1;
     name = "side-1";
     mesh.setSubID ( name );
 
-    sideIndex = 2;
     name = "side-2";
     mesh.setSubID ( name );
 
-    sideIndex = 3;
     name = "side-3";
     mesh.setSubID ( name );
     mesh.createData ( "Data", dim );

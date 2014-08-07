@@ -5,37 +5,23 @@
 #define PRECICE_CPLSCHEME_SERIALEXPLICITCOUPLINGSCHEME_HPP_
 
 #include "ExplicitCouplingScheme.hpp"
-#include "BaseCouplingScheme.hpp"
 #include "Constants.hpp"
-#include "io/TXTTableWriter.hpp"
-#include "mesh/Vertex.hpp"
-#include "mesh/PropertyContainer.hpp"
-#include "mesh/Mesh.hpp"
+#include "com/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Helpers.hpp"
-#include "boost/tuple/tuple.hpp"
 
-namespace precice {
-  namespace cplscheme {
-    namespace tests {
-      class ExplicitCouplingSchemeTest;
-    }
-  }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
+namespace precice { namespace cplscheme { namespace tests {
+class ExplicitCouplingSchemeTest;
+} } }
 
 namespace precice {
 namespace cplscheme {
 
-/**
- *
- * @brief Serial coupling scheme without iterations per timestep.
- */
+/// @brief Serial coupling scheme without iterations per timestep.
 class SerialExplicitCouplingScheme : public ExplicitCouplingScheme
 {
 public:
-
+  
   /**
    * @brief Constructor.
    *
@@ -46,8 +32,7 @@ public:
    * @param secondParticipant [IN] Name of second participant in coupling.
    * @param localParticipant [IN] Name of participant using this coupling scheme.
    * @param communication [IN] Communication object for com. between participants.
-   * @param monitorIterations [IN] If true, a txt file monitoring iterations is
-   *                          written.
+   * @param monitorIterations [IN] If true, a txt file monitoring iterations is written.
    */
   SerialExplicitCouplingScheme (
     double                maxTime,
@@ -59,29 +44,7 @@ public:
     const std::string&    localParticipant,
     com::PtrCommunication communication,
     constants::TimesteppingMethod dtMethod);
-
-  /**
-   * @brief Destructor.
-   */
-  virtual ~SerialExplicitCouplingScheme();
-
-
-  /**
-   * @brief Initializes the coupling scheme.
-   */
-  virtual void initialize (
-    double startTime,
-    int    startTimestep );
-
-  /**
-   * @brief Initializes data with written values.
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   * - advance() has NOT yet been called.
-   */
-  virtual void initializeData();
-
+  
   /**
    * @brief Advances within the coupling scheme.
    *
@@ -89,13 +52,12 @@ public:
    * - initialize() has been called.
    */
   virtual void advance();
-
-
-  // @brief Logging device.
+  
+  /// @brief Logging device.
   static tarch::logging::Log _log;
-
-
+  
   friend class tests::ExplicitCouplingSchemeTest;
+
 };
 
 }} // namespace precice, cplscheme

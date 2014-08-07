@@ -10,7 +10,14 @@
       <data:vector name="Displacements"   />
       <data:vector name="VelocityDeltas"  />
       
-      <mesh name="Sphere" flip-normals="no">
+      <mesh name="PeanoNodes" flip-normals="no">
+         <use-data name="Forces" />
+         <use-data name="Velocities" />
+         <use-data name="Displacements" />
+         <use-data name="VelocityDeltas" />
+      </mesh>
+      
+      <mesh name="ComsolNodes" flip-normals="no">
          <use-data name="Forces" />
          <use-data name="Velocities" />
          <use-data name="Displacements" />
@@ -28,31 +35,34 @@
       </geometry:builtin-cuboid>
       
       <participant name="Peano">
-         <use-mesh name="Sphere" offset="2.0; 2.0; 2.0" from="Comsol"/>
+         <use-mesh name="PeanoNodes" provide="yes" />
+         <use-mesh name="ComsolNodes" offset="2.0; 2.0; 2.0" from="Comsol"/>
          <use-mesh name="Boundingbox" />
-         <mapping:nearest-projection direction="write" mesh="Sphere" 
+         <mapping:nearest-projection direction="write" from="PeanoNodes"
+                  to="ComsolNodes" 
                   constraint="conservative" timing="incremental" />
-         <mapping:nearest-projection direction="read" mesh="Sphere" 
+         <mapping:nearest-projection direction="read" from="ComsolNodes"
+                  to="PeanoNodes" 
                   constraint="consistent" timing="incremental" />
-         <write-data name="Forces"         mesh="Sphere" />
-         <read-data  name="Displacements"  mesh="Sphere" />
-         <read-data  name="Velocities"     mesh="Sphere" />
-         <read-data  name="VelocityDeltas" mesh="Sphere" />
-         <action:add-to-coordinates mesh="Sphere" timing="on-exchange-post">
+         <write-data name="Forces"         mesh="PeanoNodes" />
+         <read-data  name="Displacements"  mesh="PeanoNodes" />
+         <read-data  name="Velocities"     mesh="PeanoNodes" />
+         <read-data  name="VelocityDeltas" mesh="PeanoNodes" />
+         <action:add-to-coordinates mesh="PeanoNodes" timing="on-exchange-post">
             <source-data name="Displacements"/>   
          </action:add-to-coordinates>
          <export:vtk timestep-interval="100" directory="output/"/>
          <export:vtk timestep-interval="100" directory=""/>   
-         <watch-point name="pointa" mesh="Sphere" coordinate="1.0; 1.0" />
+         <watch-point name="pointa" mesh="PeanoNodes" coordinate="1.0; 1.0" />
       </participant>
       
       <participant name="Comsol">
-         <use-mesh name="Sphere" provide="yes" />
-         <write-data name="Displacements"  mesh="Sphere" />
-         <write-data name="Velocities"     mesh="Sphere" />
-         <write-data name="VelocityDeltas" mesh="Sphere" />
-         <read-data  name="Forces"         mesh="Sphere" />
-         <action:divide-by-area mesh="Sphere" timing="on-exchange-post">
+         <use-mesh name="ComsolNodes" provide="yes" />
+         <write-data name="Displacements"  mesh="ComsolNodes" />
+         <write-data name="Velocities"     mesh="ComsolNodes" />
+         <write-data name="VelocityDeltas" mesh="ComsolNodes" />
+         <read-data  name="Forces"         mesh="ComsolNodes" />
+         <action:divide-by-area mesh="ComsolNodes" timing="on-exchange-post">
             <target-data name="Forces"/>   
          </action:divide-by-area>
       </participant>
@@ -62,10 +72,10 @@
          <max-time value="1.0" />
          <timestep-length value="0.1" />
          <checkpoint timestep-interval="10" />
-         <exchange data="Forces"         mesh="Sphere" from="Peano"/>
-         <exchange data="Velocities"     mesh="Sphere" from="Comsol"/>
-         <exchange data="Displacements"  mesh="Sphere" from="Comsol"/>
-         <exchange data="VelocityDeltas" mesh="Sphere" from="Comsol"/>
+         <exchange data="Forces"         mesh="PeanoNodes" from="Peano"/>
+         <exchange data="Velocities"     mesh="ComsolNodes" from="Comsol"/>
+         <exchange data="Displacements"  mesh="ComsolNodes" from="Comsol"/>
+         <exchange data="VelocityDeltas" mesh="ComsolNodes" from="Comsol"/>
       </coupling-scheme:serial-explicit>
       
    </solver-interface>

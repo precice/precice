@@ -22,6 +22,7 @@ namespace impl {
  */
 struct MeshContext
 {
+
    // @brief Mesh holding the geometry data structure.
    mesh::PtrMesh mesh;
 
@@ -40,23 +41,17 @@ struct MeshContext
    // @brief True, if accessor does create the geometry of the mesh.
    bool provideMesh;
 
-   // @brief True, if accessor has to provide write positions on initialization.
-   bool provideWritePositions;
-
-   // @brief True, if accessor has to provide read positions on initialization.
-   bool provideReadPositions;
-
    // @brief Offset only applied to meshes local to the accessor.
    utils::DynVector localOffset;
 
    // @brief Geometry creating the mesh. Can be empty.
    geometry::PtrGeometry geometry;
 
-   // @brief Mapping used when writing data to the mesh. Can be empty.
-   MappingContext writeMappingContext;
+   // @brief Mapping used when mapping data from the mesh. Can be empty.
+   MappingContext fromMappingContext;
 
-   // @brief Mapping used when reading data from the mesh. Can be empty.
-   MappingContext readMappingContext;
+   // @brief Mapping used when mapping data to the mesh. Can be empty.
+   MappingContext toMappingContext;
 
    /**
     * @brief Constructor.
@@ -71,8 +66,8 @@ struct MeshContext
      provideMesh ( false ),
      localOffset ( dimensions, 0.0 ),
      geometry (),
-     writeMappingContext (),
-     readMappingContext ()
+     fromMappingContext(),
+     toMappingContext()
    {}
 };
 

@@ -12,15 +12,16 @@ namespace precice {
 namespace impl {
 
 /**
- * @brief Stores one Data object with related context.
+ * @brief Stores one Data object with related context. If this dataContext is not associated with a mapping,
+ * fromData and toData refer to the same data object.
  */
 struct DataContext
 {
   bool used;
 
-  mesh::PtrData data;
+  mesh::PtrData fromData;
 
-  mesh::PtrData localData;
+  mesh::PtrData toData;
 
   mesh::PtrMesh mesh;
 
@@ -28,9 +29,9 @@ struct DataContext
 
   DataContext():
     used(false),
-    data(),
-    localData(),
-    mesh(),
+    fromData(),
+    toData(),
+    //mesh(),
     mappingContext()
   {}
 };

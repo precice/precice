@@ -66,13 +66,6 @@ void WatchPointTest:: run ()
       validate ( vectorValues.size() > vertex.getID() );
       doubleValues[vertex.getID()] = 1.0;
     }
-    foreach ( mesh::Vertex& vertex, mesh->vertices() ) {
-      int offset = vertex.getID() * dim;
-      for ( int dim=0; dim < dim; dim++ ) {
-        validate ( vectorValues.size() > offset + dim );
-        vectorValues[offset + dim] = 2.0;
-      }
-    }
     watchpoint0.exportPointData(1.0);
     watchpoint1.exportPointData(1.0);
   }

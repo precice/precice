@@ -17,13 +17,13 @@ struct CouplingData
 {
   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
 
-  // @brief Data values of current iteration.
+  /// @brief Data values of current iteration.
   utils::DynVector* values;
 
-  // @brief Data values of previous iteration (1st col) and previous timesteps.
+  /// @brief Data values of previous iteration (1st col) and previous timesteps.
   DataMatrix oldValues;
 
-  // @brief True, if the data values are initialized by a participant.
+  /// @brief True, if the data values are initialized by a participant.
   bool initialize;
 
   /**
@@ -32,9 +32,9 @@ struct CouplingData
    * Necessary when compiler creates template code for std::map::operator[].
    */
   CouplingData ()
-  {
-    assertion ( false );
-  }
+    {
+      assertion ( false );
+    }
 
   /**
    * @brief Constructor.
@@ -42,13 +42,13 @@ struct CouplingData
   CouplingData (
     utils::DynVector* values,
     bool              initialize )
-  :
+    :
     values ( values ),
     oldValues (),
     initialize ( initialize )
-  {
-    assertion ( values != NULL );
-  }
+    {
+      assertion ( values != NULL );
+    }
 };
 
 }} // namespace precice, cplscheme

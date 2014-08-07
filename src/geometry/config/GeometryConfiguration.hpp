@@ -41,11 +41,6 @@ public:
      mesh::PtrMeshConfiguration meshConfig );
 
    /**
-    * @brief Destructor.
-    */
-   ~GeometryConfiguration();
-
-   /**
     * @brief Sets the spatial dimensions of the geometries to be configured.
     */
    void setDimensions ( int dimensions );

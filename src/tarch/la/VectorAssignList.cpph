@@ -5,6 +5,7 @@
 #define _TARCH_LA_VECTORASSIGNLIST_CPPH_
 
 #include "tarch/la/VectorAssignList.h"
+#include "tarch/la/VectorOperations.h"
 
 #ifdef Parallel
 #include "tarch/parallel/Node.h"

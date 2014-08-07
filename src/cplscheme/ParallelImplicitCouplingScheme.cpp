@@ -11,13 +11,12 @@
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
 #include "tarch/plotter/globaldata/TXTTableWriter.h"
-#include <limits>
 
 namespace precice {
 namespace cplscheme {
 
 tarch::logging::Log ParallelImplicitCouplingScheme::
-    _log("precice::cplscheme::ParallelImplicitCouplingScheme" );
+_log("precice::cplscheme::ParallelImplicitCouplingScheme" );
 
 ParallelImplicitCouplingScheme:: ParallelImplicitCouplingScheme
 (
@@ -31,15 +30,11 @@ ParallelImplicitCouplingScheme:: ParallelImplicitCouplingScheme
   com::PtrCommunication communication,
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
-:
+  :
   ImplicitCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-        secondParticipant,localParticipant,communication,maxIterations,dtMethod),
+			 secondParticipant,localParticipant,communication,maxIterations,dtMethod),
   _allData ()
 {}
-
-ParallelImplicitCouplingScheme:: ~ParallelImplicitCouplingScheme()
-{}
-
 
 
 void ParallelImplicitCouplingScheme:: initialize
@@ -62,8 +57,8 @@ void ParallelImplicitCouplingScheme:: initialize
     setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
     if (getPostProcessing().get() != NULL){
       preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
-              "For parallel coupling, the number of coupling data vectors has to be 2, not: "
-              << getPostProcessing()->getDataIDs().size());
+		   "For parallel coupling, the number of coupling data vectors has to be 2, not: "
+		   << getPostProcessing()->getDataIDs().size());
       getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
     }
   }
@@ -95,7 +90,7 @@ void ParallelImplicitCouplingScheme:: initializeData()
 {
   preciceTrace("initializeData()");
   preciceCheck(isInitialized(), "initializeData()",
-     "initializeData() can be called after initialize() only!");
+	       "initializeData() can be called after initialize() only!");
 
   if(not hasToSendInitData() && not hasToReceiveInitData()){
     preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
@@ -103,7 +98,7 @@ void ParallelImplicitCouplingScheme:: initializeData()
   }
 
   preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-     "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+	       "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
@@ -166,7 +161,7 @@ void ParallelImplicitCouplingScheme:: advance()
   checkCompletenessRequiredActions();
 
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-     "initializeData() needs to be called before advance if data has to be initialized!");
+	       "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
@@ -197,7 +192,7 @@ void ParallelImplicitCouplingScheme:: advance()
       convergence = measureConvergence();
 
       assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
-                    getIterations(), getMaxIterations());
+		 getIterations(), getMaxIterations());
       // Stop, when maximal iteration count (given in config) is reached
       if (getIterations() == getMaxIterations()-1){
         convergence = true;

@@ -45,8 +45,10 @@ public:
   {
     // @brief Mapping object.
     PtrMapping mapping;
-    // @brief Remote mesh to map to/from
-    mesh::PtrMesh mesh;
+    // @brief Remote mesh to map from
+    mesh::PtrMesh fromMesh;
+    // @brief Remote mesh to map to
+    mesh::PtrMesh toMesh;
     // @brief Direction of mapping (important to set input and output mesh).
     Direction direction;
     // @brief When the mapping should be executed.
@@ -99,9 +101,9 @@ public:
    */
   void addMapping (
     const PtrMapping&    mapping,
-    const mesh::PtrMesh& mesh,
+    const mesh::PtrMesh& fromMesh,
+    const mesh::PtrMesh& toMesh,
     Direction            direction,
-    //bool                 isIncremental,
     Timing               timing );
 
   void resetMappings() { _mappings.clear(); }
@@ -114,9 +116,9 @@ private:
   const std::string TAG;
 
   const std::string ATTR_DIRECTION;
-  const std::string ATTR_MESH;
+  const std::string ATTR_FROM;
+  const std::string ATTR_TO;
   const std::string ATTR_TIMING;
-  //const std::string ATTR_INCREMENTAL;
   const std::string ATTR_TYPE;
   const std::string ATTR_CONSTRAINT;
   const std::string ATTR_SHAPE_PARAM;
@@ -151,9 +153,9 @@ private:
     const std::string& direction,
     const std::string& type,
     const std::string& constraint,
-    const std::string& meshName,
+    const std::string& fromMeshName,
+    const std::string& toMeshName,
     Timing             timing,
-    //bool               incremental,
     double             shapeParameter,
     double             supportRadius ) const;
 

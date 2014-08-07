@@ -15,23 +15,14 @@
 #include "utils/Helpers.hpp"
 #include "boost/tuple/tuple.hpp"
 
-namespace precice {
-  namespace cplscheme {
-    namespace tests {
-      //class ParallelExplicitCouplingSchemeTest;
-    }
-  }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
+namespace precice { namespace cplscheme { namespace tests {
+//class ParallelExplicitCouplingSchemeTest;
+} } }
 
 namespace precice {
 namespace cplscheme {
 
-/**
- *
- * @brief Serial coupling scheme without iterations per timestep.
- */
+/// @brief Serial coupling scheme without iterations per timestep.
 class ParallelExplicitCouplingScheme : public ExplicitCouplingScheme
 {
 public:
@@ -46,8 +37,7 @@ public:
    * @param secondParticipant [IN] Name of second participant in coupling.
    * @param localParticipant [IN] Name of participant using this coupling scheme.
    * @param communication [IN] Communication object for com. between participants.
-   * @param monitorIterations [IN] If true, a txt file monitoring iterations is
-   *                          written.
+   * @param monitorIterations [IN] If true, a txt file monitoring iterations is written.
    */
   ParallelExplicitCouplingScheme (
     double                maxTime,
@@ -60,15 +50,7 @@ public:
     com::PtrCommunication communication,
     constants::TimesteppingMethod dtMethod);
 
-  /**
-   * @brief Destructor.
-   */
-  virtual ~ParallelExplicitCouplingScheme();
-
-
-  /**
-   * @brief Initializes the coupling scheme.
-   */
+  /// @brief Initializes the coupling scheme.
   virtual void initialize (
     double startTime,
     int    startTimestep );
@@ -90,10 +72,8 @@ public:
    */
   virtual void advance();
 
-
-  // @brief Logging device.
+  /// @brief Logging device.
   static tarch::logging::Log _log;
-
 
   //friend class tests::ParallelExplicitCouplingSchemeTest;
 };

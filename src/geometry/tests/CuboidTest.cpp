@@ -121,9 +121,7 @@ void CuboidTest:: testSubIDs2D ()
   double discretizationWidth = 1.0;
   utils::DynVector sidelengths ( 2, 1.0 );
   Cuboid cuboid ( offset, discretizationWidth, sidelengths );
-  int sideIndex = 1;
   mesh.setSubID ( "side-1" );
-  sideIndex = 2;
   mesh.setSubID ( "side-2" );
   cuboid.create ( mesh );
   int id = mesh.getID ( "test-cuboid" );
