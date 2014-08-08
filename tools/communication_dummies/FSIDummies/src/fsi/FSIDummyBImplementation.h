@@ -25,9 +25,10 @@ private:
 	pthread_mutex_t _mutex;
 	int _pointsSize;
 	bool _initialized;
-	int* _localIds;
+	int* _coordIds;
 	double* _data;
 	__gnu_cxx::hash_map<int,fsi::FSIDummyCommunicator*> _comms;
+	__gnu_cxx::hash_map<int,int> _global2LocalCoordMapping;
 	const int getHostId(
 			const int pointId,
 			const int* offsets,
@@ -44,7 +45,7 @@ public:
 	FSIDummyBImplementation();
 	~FSIDummyBImplementation();
 	void setCoordinates(
-			int* localIds,
+			int* coordIds,
 			//double* coordinatesX,
 			//double* coordinatesY,
 			const int pointsSize);

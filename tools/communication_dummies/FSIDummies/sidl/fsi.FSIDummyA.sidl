@@ -17,6 +17,8 @@ package fsi {
   	endDataTransfer(inout int ack);
   	
   }
+  
+  
   @target = cxx_remote_socket
   class FSIDummyA implements-all fsi.FSIData uses fsi.FSIComm as b{
   }

@@ -105,6 +105,7 @@ int main(int argc, char** argv)
 //
   main_loop_(false);
 //
+  std::cout<<"start setting data A"<<std::endl;
   fsi::FSIDummyAImplementation::singleton->setCoordIds(&ids[0],pointSize);
   fsi::FSIDummyAImplementation::singleton->setData(data);
   std::cout<<"finished setting data A"<<std::endl;
@@ -116,7 +117,7 @@ int main(int argc, char** argv)
 
   //check if received data is correct
   for(int k=0;k<pointSize;k++){
-    if(data[k]!=coordX[k]*coordY[k]*coordY[k]+1.0){
+    if(abs(data[k]-(coordX[k]*coordY[k]*coordY[k]+1.0))>0.01){
       PRINT("ERROR" << "(" << rankX << "," << rankY << "), k:" << k<<" received: "<<data[k]<<" expected:"<<coordX[k]*coordY[k]*coordY[k]+1.0);
     }
   }

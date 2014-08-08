@@ -17,7 +17,14 @@
     conv << message; \
     std::cout << conv.str() << std::endl; \
   }
+extern "C" struct FSI_FSIDUMMYB_arg;
+extern "C" FSI_FSIDUMMYB_arg daemon_args;
 extern "C" void main_loop_(bool);
+extern "C" void initialise_(FSI_FSIDUMMYB_arg& arg,bool joinable);
+
+extern "C" void bind_component_(FSI_FSIDUMMYB_arg& arg,bool joinable);
+extern "C" void socket_loop_(FSI_FSIDUMMYB_arg& arg,bool joinable);
+extern "C" void destroy_(FSI_FSIDUMMYB_arg& arg,bool joinable);  
 int main(int argc, char** argv)
 {
   std::cout << "Running communication proxy" << std::endl;
@@ -97,14 +104,20 @@ int main(int argc, char** argv)
     data[k]=coordX[k]*coordY[k]*coordY[k]+1.0;
   }
 
-  main_loop_(false);
+  initialise_(daemon_args,false);
   fsi::FSIDummyBImplementation::singleton->setCoordinates(&ids[0],pointSize);
   fsi::FSIDummyBImplementation::singleton->setData(data);
+  
+  bind_component_(daemon_args,false);
+  socket_loop_(daemon_args,false);
+  //main_loop_(false);
   int a = 20;
   while(true){
 	a=a+30;
 
   }
+  destroy_(daemon_args,false);  
+  
   MPI_Finalize();
   std::cout << "Stop communication proxy" << std::endl;
   return 0;

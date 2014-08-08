@@ -880,6 +880,23 @@ void initialise_(FSI_FSIDUMMYB_arg& arg,bool joinable){
      
 
    
+   /*if(arg.java_client_flag)         
+     open_client(arg.hostname.c_str(),arg.client_port.c_str(),arg.java_serverfd,arg.java_clientfd);
+
+   bind_server(arg.daemon_port.c_str(),arg.daemon_serverfd,arg.number_of_workers);
+   startSocketDaemons(arg);
+   initialiseXMLConnections(arg);
+   if(arg.joinable)
+     server_deamon_run(&arg);
+   startMPIDaemon(arg);*/
+}
+
+
+#ifdef _WIN32
+void BIND_COMPONENT(FSI_FSIDUMMYB_arg& arg,bool joinable){
+#else
+void bind_component_(FSI_FSIDUMMYB_arg& arg,bool joinable){
+#endif
    if(arg.java_client_flag)         
      open_client(arg.hostname.c_str(),arg.client_port.c_str(),arg.java_serverfd,arg.java_clientfd);
 
@@ -890,9 +907,6 @@ void initialise_(FSI_FSIDUMMYB_arg& arg,bool joinable){
      server_deamon_run(&arg);
    startMPIDaemon(arg);
 }
-
-
-
 
 
 #ifdef _WIN32
@@ -946,21 +960,8 @@ void main_loop_(bool joinable){
   DESTROY(daemon_args,joinable);     
 #else  
   initialise_(daemon_args,joinable);
+  bind_component_(daemon_args,joinable);
   socket_loop_(daemon_args,joinable);
-  destroy_(daemon_args,joinable);  
-#endif
-  
-}
-
-}
-
-
-
-
-
-
-
-gs,joinable);
   destroy_(daemon_args,joinable);  
 #endif
   

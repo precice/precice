@@ -5,7 +5,8 @@
 fsi::FSIDummyCommunicator::FSIDummyCommunicator(std::string hostname):
 _hostname(hostname),
 _data(NULL),
-_comm(NULL)
+_comm(NULL),
+_globalToLocalPointMapping(NULL)
 {
 }
 
@@ -30,11 +31,17 @@ void fsi::FSIDummyCommunicator::disconnect(){
 	delete _comm;
 	_comm = NULL;
 }
+
 void fsi::FSIDummyCommunicator::setData(double* data){
 	_data=data;
 }
+
 void fsi::FSIDummyCommunicator::addPointId(const int pointId){
 	_pointIds.push_back(pointId);
+}
+
+void fsi::FSIDummyCommunicator::setPointMapping(__gnu_cxx::hash_map<int,int>* globalToLocalPointMapping){
+	_globalToLocalPointMapping= globalToLocalPointMapping;
 }
 void fsi::FSIDummyCommunicator::flush(){
 	connect();
@@ -42,7 +49,7 @@ void fsi::FSIDummyCommunicator::flush(){
 	std::cout<<"data to send:"<<std::endl;
 	for(unsigned int i=0;i<_pointIds.size();i++)
 	{
-		_data2Transfer[i]=_data[_pointIds[i]];
+		_data2Transfer[i]=_data[(*_globalToLocalPointMapping)[_pointIds[i]]];
 		std::cout<<"data "<<i<<":"<<_data2Transfer[i]<<std::endl;
 	}
 	_comm->transferData(&_pointIds[0],_pointIds.size(),&_data2Transfer[0],_data2Transfer.size());

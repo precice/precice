@@ -1,11 +1,13 @@
+#include <mpi.h>
 #include "fsi/FSIDummyBImplementation.h"
 #include "fsi/FSIDummyCommunicator.h"
+
 #include <assert.h>
 fsi::FSIDummyBImplementation* fsi::FSIDummyBImplementation::singleton=NULL;
 fsi::FSIDummyBImplementation::FSIDummyBImplementation():
 	_pointsSize(0),
 	_initialized(false),
-	_localIds(NULL),
+	_coordIds(NULL),
 	_data(NULL){
 	singleton=this;
 	//	_localCoordinatesX(NULL),
@@ -38,17 +40,21 @@ void fsi::FSIDummyBImplementation::setData(double* data){
 }
 
 void fsi::FSIDummyBImplementation::setCoordinates(
-		int* localIds,
+		int* coordIds,
 //		double* coordinatesX,
 //		double* coordinatesY,
 		const int pointsSize){
+	pthread_mutex_lock(&_mutex);
 //	assert(coordinatesX);
 //	assert(coordinatesY);
 //	assert(_localIds);
-	_localIds=localIds;
+	_coordIds=coordIds;
 //	_localCoordinatesX=coordinatesX;
 //	_localCoordinatesY=coordinatesY;
 	_pointsSize=pointsSize;
+	for(unsigned int i = 0 ; i< _pointsSize ;i++)
+		_global2LocalCoordMapping[_coordIds[i]]=i;
+	pthread_mutex_unlock(&_mutex);
 
 }
 
@@ -66,17 +72,20 @@ void fsi::FSIDummyBImplementation::transferCoordinates(
 	int commId=-1;
 	for(int i=0;i<coord_len;i++){
 		for(int k=0;k<_pointsSize;k++)
-			if(coordIds[i]==_localIds[k]){
+			if(coordIds[i]==_coordIds[k]){
 				commId=getHostId(i,offsets,offsets_len);
 
 				assert(commId>=0);
-
+				getCommunicator(commId,commids[commId])->setPointMapping(&_global2LocalCoordMapping);
 				getCommunicator(commId,commids[commId])->addPointId(coordIds[i]);
 				getCommunicator(commId,commids[commId])->setData(_data);
 			}
 		//std::cout<<"coord["<<i<<"]:"<<coord[i]<<std::endl;
 
 	}
+
+	std::cout<<"end receiving coord"<<std::endl;
+
 	//std::cout<<"end receiving coord"<<std::endl;
 	pthread_mutex_unlock(&_mutex);
 }
@@ -112,6 +121,7 @@ const int fsi::FSIDummyBImplementation::getHostId(
 
 void fsi::FSIDummyBImplementation::startDataTransfer(){
 	flush();
+	MPI_Barrier(MPI_COMM_WORLD);
 }
 void fsi::FSIDummyBImplementation::endDataTransfer(int& ack){
 	//fsi::FSIDummyBImplementation::MPI_Barrier();
