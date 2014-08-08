@@ -633,9 +633,7 @@ void startMPIDaemon(FSI_FSIDUMMYB_arg& arg){
 int rank = -1;
 MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 if(rank>0){
-	pthread_t task;
-	pthread_create(&task,NULL,parallel_deamon_run,&arg);
-	//parallel_deamon_run(&arg);
+	 parallel_deamon_run(&arg);
 }
 #endif     
 }
@@ -949,6 +947,20 @@ void main_loop_(bool joinable){
 #else  
   initialise_(daemon_args,joinable);
   socket_loop_(daemon_args,joinable);
+  destroy_(daemon_args,joinable);  
+#endif
+  
+}
+
+}
+
+
+
+
+
+
+
+gs,joinable);
   destroy_(daemon_args,joinable);  
 #endif
   
