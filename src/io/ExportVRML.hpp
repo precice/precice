@@ -59,11 +59,8 @@ public:
 
 private:
 
-  // @brief Logging device.
+  /// @brief Logging device.
   static tarch::logging::Log _log;
-
-  // @brief By default set true: plot vertex normals, false: no normals plotting
-  bool _plotNormals;
 
   void openFile (
     std::ofstream&     outFile,

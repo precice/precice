@@ -5,21 +5,26 @@
    <solver-interface geometry-mode="yes" dimensions="2">   
       <data:vector name="Forces"/>
       
-      <mesh name="Mesh">
+      <mesh name="GeoMesh">
          <use-data name="Forces"/>
       </mesh>
       
-      <geometry:builtin-cuboid of-mesh="Mesh">
+      <mesh name="SolverMesh">
+         <use-data name="Forces"/>
+      </mesh>
+      
+      <geometry:builtin-cuboid of-mesh="GeoMesh">
          <discretization-width value="1.0"/>                  
          <length value="1.0; 1.0"/>
       </geometry:builtin-cuboid>
      
       <participant name="Accessor">
-         <use-mesh name="Mesh"/>
+         <use-mesh name="SolverMesh" provide="yes"/>
+         <use-mesh name="GeoMesh"/>
          <export:vtk/>
-         <mapping:nearest-projection direction="write" mesh="Mesh" 
-                  constraint="conservative" timing="initial"/>
-         <write-data name="Forces" mesh="Mesh"/>
+         <mapping:nearest-projection direction="write" from="SolverMesh"  
+                  to="GeoMesh" constraint="conservative" timing="initial"/>
+         <write-data name="Forces" mesh="SolverMesh"/>
       </participant>
       
    </solver-interface>

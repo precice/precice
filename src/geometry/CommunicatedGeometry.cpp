@@ -11,7 +11,7 @@
 namespace precice {
 namespace geometry {
 
-tarch::logging::Log CommunicatedGeometry:: _log ( "precice::geometry::CommunicateGeometry" );
+tarch::logging::Log CommunicatedGeometry:: _log ( "precice::geometry::CommunicatedGeometry" );
 
 CommunicatedGeometry:: CommunicatedGeometry
 (

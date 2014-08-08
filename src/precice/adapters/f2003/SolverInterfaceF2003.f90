@@ -94,13 +94,14 @@ module PreCICE_solver_if_module
       integer(kind=c_int), value           :: lengthGeometryName
     end subroutine precicef_get_mesh_id
 
-    subroutine precicef_has_data(dataName, hasData, lengthDataName) &
+    subroutine precicef_has_data(dataName, hasData, lengthDataName, meshID) &
       &  bind(c, name='precicef_has_data_')
 
       use, intrinsic :: iso_c_binding
       character(kind=c_char), dimension(*) :: dataName
       integer(kind=c_int)                  :: hasData
       integer(kind=c_int), value           :: lengthDataName
+      integer(kind=c_int)                  :: meshID
     end subroutine precicef_has_data
 
     subroutine precicef_get_data_id(dataName, dataID, lengthDataName) &
@@ -110,6 +111,7 @@ module PreCICE_solver_if_module
       character(kind=c_char), dimension(*) :: dataName
       integer(kind=c_int)                  :: dataID
       integer(kind=c_int), value           :: lengthDataName
+      integer(kind=c_int)                  :: meshID
     end subroutine precicef_get_data_id
 
     subroutine precicef_set_vertex(meshID, position, vertexID) &
@@ -120,25 +122,6 @@ module PreCICE_solver_if_module
       real(kind=c_double) :: position(3)
       integer(kind=c_int) :: vertexID
     end subroutine precicef_set_vertex
-
-    subroutine precicef_set_read_pos(meshID, position, positionID) &
-      &  bind(c, name='precicef_set_read_pos_')
-
-      use, intrinsic :: iso_c_binding
-      integer(kind=c_int) :: meshID
-      !real(kind=c_double) :: position
-      real(kind=c_double) :: position(3)
-      integer(kind=c_int) :: positionID
-    end subroutine precicef_set_read_pos
-
-    subroutine precicef_set_write_pos(meshID, position, positionID) &
-      &  bind(c, name='precicef_set_write_pos_')
-
-      use, intrinsic :: iso_c_binding
-      integer(kind=c_int) :: meshID
-      real(kind=c_double) :: position(3)
-      integer(kind=c_int) :: positionID
-    end subroutine precicef_set_write_pos
 
     subroutine precicef_set_edge(meshID, firstVertexID, secondVertexID, &
       &                          edgeID) &

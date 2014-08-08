@@ -3,6 +3,7 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ParticipantConfiguration.hpp"
 #include "precice/impl/MeshContext.hpp"
+#include "precice/impl/MappingContext.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "precice/impl/WatchPoint.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
@@ -503,81 +504,106 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   // Set input/output meshes for data mappings and mesh requirements
   typedef mapping::MappingConfiguration::ConfiguredMapping ConfMapping;
   foreach (const ConfMapping& confMapping, _mappingConfig->mappings()){
-    int meshID = confMapping.mesh->getID();
-    preciceCheck(participant->isMeshUsed(meshID), "finishParticipantConfiguration()",
+    int fromMeshID = confMapping.fromMesh->getID();
+    int toMeshID = confMapping.toMesh->getID();
+    preciceCheck(participant->isMeshUsed(fromMeshID), "finishParticipantConfiguration()",
         "Participant \"" << participant->getName() << "\" has mapping"
-        << " to/from mesh \"" << confMapping.mesh->getName() << "\" which he does not use!");
-    impl::MeshContext& meshContext = participant->meshContext(meshID);
+        << " from mesh \"" << confMapping.fromMesh->getName() << "\" which he does not use!");
+    preciceCheck(participant->isMeshUsed(toMeshID), "finishParticipantConfiguration()",
+            "Participant \"" << participant->getName() << "\" has mapping"
+            << " to mesh \"" << confMapping.toMesh->getName() << "\" which he does not use!");
+
+    impl::MeshContext& fromMeshContext = participant->meshContext(fromMeshID);
+    impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
+
+    precice::impl::MappingContext* mappingContext = new precice::impl::MappingContext();
+    mappingContext->fromMeshID = fromMeshID;
+    mappingContext->toMeshID = toMeshID;
+    mappingContext->timing = confMapping.timing;
+
+    mapping::PtrMapping& map = mappingContext->mapping;
+    assertion(map.get() == NULL);
+    map = confMapping.mapping;
+
+    const mesh::PtrMesh& input = fromMeshContext.mesh;
+    const mesh::PtrMesh& output = toMeshContext.mesh;
+    preciceDebug("Configure mapping for input=" << input->getName()
+           << ", output=" << output->getName());
+    map->setMeshes(input, output);
 
     if (confMapping.direction == mapping::MappingConfiguration::WRITE){
-      mapping::PtrMapping& map = meshContext.writeMappingContext.mapping;
-      assertion(map.get() == NULL);
-      map = confMapping.mapping;
-      if (map->getInputRequirement() > meshContext.meshRequirement){
-        meshContext.meshRequirement = map->getInputRequirement();
-      }
-      if (meshContext.writeMappingContext.localMesh.get() == NULL){
-        meshContext.writeMappingContext.localMesh = copy(meshContext.mesh);
-      }
-      const mesh::PtrMesh& input = meshContext.writeMappingContext.localMesh;
-      const mesh::PtrMesh& output = meshContext.mesh;
-      preciceDebug("Configure write mapping for input=" << input->getName()
-                   << ", output=" << output->getName());
-      map->setMeshes(input, output);
-      meshContext.writeMappingContext.timing = confMapping.timing;
-      //meshContext.writeMappingContext.isIncremental = confMapping.isIncremental;
+      participant->addWriteMappingContext(mappingContext);
     }
     else {
       assertion(confMapping.direction == mapping::MappingConfiguration::READ);
-      mapping::PtrMapping& map = meshContext.readMappingContext.mapping;
-      assertion(map.get() == NULL);
-      map = confMapping.mapping;
-      if (map->getOutputRequirement() > meshContext.meshRequirement){
-        meshContext.meshRequirement = map->getOutputRequirement();
-      }
-      if (meshContext.readMappingContext.localMesh.get() == NULL){
-        meshContext.readMappingContext.localMesh = copy(meshContext.mesh);
-      }
-      const mesh::PtrMesh& input = meshContext.mesh;
-      const mesh::PtrMesh& output = meshContext.readMappingContext.localMesh;
-      preciceDebug("Configure read mapping for input=" << input->getName()
-                   << ", output=" << output->getName());
-      map->setMeshes(input, output);
-      meshContext.readMappingContext.timing = confMapping.timing;
-      //meshContext.readMappingContext.isIncremental = confMapping.isIncremental;
+      participant->addReadMappingContext(mappingContext);
     }
-    if (confMapping.timing == mapping::MappingConfiguration::INITIAL
-        || (confMapping.timing != mapping::MappingConfiguration::INCREMENTAL))
+
+    if (map->getInputRequirement() > fromMeshContext.meshRequirement){
+      fromMeshContext.meshRequirement = map->getInputRequirement();
+    }
+    if (map->getOutputRequirement() > toMeshContext.meshRequirement){
+      toMeshContext.meshRequirement = map->getOutputRequirement();
+    }
+
+    if (confMapping.timing != mapping::MappingConfiguration::INCREMENTAL
+    		&& toMeshContext.meshRequirement == mapping::Mapping::TEMPORARY)
     {
-      if ( meshContext.meshRequirement == mapping::Mapping::TEMPORARY ){
-        meshContext.meshRequirement = mapping::Mapping::VERTEX;
-      }
+      toMeshContext.meshRequirement = mapping::Mapping::VERTEX;
     }
+    if (confMapping.timing != mapping::MappingConfiguration::INCREMENTAL
+            && fromMeshContext.meshRequirement == mapping::Mapping::TEMPORARY)
+    {
+      fromMeshContext.meshRequirement = mapping::Mapping::VERTEX;
+    }
+
+    fromMeshContext.fromMappingContext = *mappingContext;
+    toMeshContext.toMappingContext = *mappingContext;
   }
   _mappingConfig->resetMappings();
 
   // Set participant data for data contexts
   foreach (impl::DataContext& dataContext, participant->writeDataContexts()){
-    int meshID = dataContext.mesh->getID();
-    preciceCheck(participant->isMeshUsed(meshID), "finishParticipant()",
+    int fromMeshID = dataContext.mesh->getID();
+    preciceCheck(participant->isMeshUsed(fromMeshID), "finishParticipant()",
         "Participant \"" << participant->getName() << "\" has to use mesh \""
         << dataContext.mesh->getName() << "\" when writing data to it!");
-    impl::MeshContext& meshContext = participant->meshContext(meshID);
-    if (meshContext.writeMappingContext.mapping.get() != NULL){
-      dataContext.mappingContext = meshContext.writeMappingContext;
-      setLocalData(dataContext, meshContext.mesh);
+
+    foreach (impl::MappingContext& mappingContext, participant->writeMappingContexts()){
+      if(mappingContext.fromMeshID==fromMeshID){
+        dataContext.mappingContext = mappingContext;
+        impl::MeshContext& meshContext = participant->meshContext(mappingContext.toMeshID);
+        foreach (mesh::PtrData data, meshContext.mesh->data()){
+          if(data->getName()==dataContext.fromData->getName()){
+            dataContext.toData = data;
+          }
+        }
+        preciceCheck(dataContext.fromData!=dataContext.toData,"finishParticipant()",
+              "The mesh \"" << meshContext.mesh->getName() << "\" needs to use the data \""
+              << dataContext.fromData->getName() << "\"! to allow the write mapping");
+      }
     }
   }
+
   foreach (impl::DataContext& dataContext, participant->readDataContexts()){
-    int meshID = dataContext.mesh->getID();
-    preciceCheck(participant->isMeshUsed(meshID), "finishParticipant()",
-                 "Participant \"" << participant->getName()
-                 << "\" has to use mesh \"" << dataContext.mesh->getName()
-                 << "\" when reading data from it!");
-    impl::MeshContext & meshContext = participant->meshContext(meshID);
-    if (meshContext.readMappingContext.mapping.get() != NULL){
-      dataContext.mappingContext = meshContext.readMappingContext;
-      setLocalData(dataContext, meshContext.mesh);
+    int toMeshID = dataContext.mesh->getID();
+    preciceCheck(participant->isMeshUsed(toMeshID), "finishParticipant()",
+      "Participant \"" << participant->getName() << "\" has to use mesh \""
+      << dataContext.mesh->getName() << "\" when writing data to it!");
+
+    foreach (impl::MappingContext& mappingContext, participant->readMappingContexts()){
+      if(mappingContext.toMeshID==toMeshID){
+        dataContext.mappingContext = mappingContext;
+        impl::MeshContext& meshContext = participant->meshContext(mappingContext.fromMeshID);
+        foreach (mesh::PtrData data, meshContext.mesh->data()){
+          if(data->getName()==dataContext.toData->getName()){
+            dataContext.fromData = data;
+          }
+        }
+        preciceCheck(dataContext.toData!=dataContext.fromData,"finishParticipant()",
+              "The mesh \"" << meshContext.mesh->getName() << "\" needs to use the data \""
+              << dataContext.toData->getName() << "\"! to allow the read mapping");
+      }
     }
   }
 
@@ -618,22 +644,5 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   _watchPointConfigs.clear ();
 }
 
-void ParticipantConfiguration:: setLocalData
-(
-  impl::DataContext&   dataContext,
-  const mesh::PtrMesh& mesh )
-{
-  preciceTrace2("setLocalData()", dataContext.data->getName(), mesh->getName());
-  int dataID = dataContext.data->getID();
-  std::string dataName = mesh->data(dataID)->getName();
-  const mesh::PtrMesh& localMesh = dataContext.mappingContext.localMesh;
-  foreach (const mesh::PtrData& data, localMesh->data()){
-    if (data->getName() == dataName){
-      dataContext.localData = data;
-      break;
-    }
-  }
-  assertion(dataContext.localData.get() != NULL);
-}
 
 }} // namespace precice, config

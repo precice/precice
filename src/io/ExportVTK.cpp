@@ -81,8 +81,8 @@ void ExportVTK::exportGeometry
 
   // Plot triangles
   if(mesh.getDimensions() == 3) {
-    int sizeTriangles = mesh.triangles().size();
-    int sizeQuads = mesh.quads().size();
+    size_t sizeTriangles = mesh.triangles().size();
+    size_t sizeQuads = mesh.quads().size();
     outFile << "CELLS " << sizeTriangles + sizeQuads << " "
             << sizeTriangles * 4 + sizeQuads * 5 << std::endl << std::endl;
     foreach(mesh::Triangle& triangle, mesh.triangles()){

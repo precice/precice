@@ -22,8 +22,7 @@ ExportVRML:: ExportVRML
 (
   bool plotNormals )
 :
-  Export(),
-  _plotNormals ( plotNormals )
+  Export()
 {}
 
 int ExportVRML:: getType() const

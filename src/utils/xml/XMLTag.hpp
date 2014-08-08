@@ -32,6 +32,7 @@ public:
    */
   struct Listener
   {
+    virtual ~Listener() {};
     /**
      * @brief Callback at begin of XML tag.
      *

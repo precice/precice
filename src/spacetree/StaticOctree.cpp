@@ -48,7 +48,7 @@ void StaticOctree:: initialize()
   int dim = _center.size();
   query::FindVoxelContent findVoxel ( _center, utils::DynVector(dim,_halflength),
       query::FindVoxelContent::INCLUDE_BOUNDARY );
-  int size = 0;
+  size_t size = 0;
   foreach (mesh::PtrMesh mesh, _meshes){
     assertion2(mesh->getDimensions() == dim, mesh->getDimensions(), dim);
     size += mesh->content().size();

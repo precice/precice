@@ -12,6 +12,12 @@
       
       <communication:mpi-single from="SolverOne" to="SolverTwo" />
       
+      <mesh name="MeshOne">
+         <use-data name="Forces" />
+         <use-data name="Velocities" />
+         <use-data name="Displacements" />
+      </mesh>
+      
       <mesh name="SolverGeometry" flip-normals="inside">
          <use-data name="Forces" />
          <use-data name="Velocities" />
@@ -19,14 +25,15 @@
       </mesh>
                
       <participant name="SolverOne">
+         <use-mesh name="MeshOne" provide="yes"/>
          <use-mesh name="SolverGeometry" offset="10.0; 10.0; 10.0" from="SolverTwo" />
-         <mapping:nearest-projection direction="write" mesh="SolverGeometry"
-                  constraint="conservative" timing="incremental" />
-         <mapping:nearest-projection direction="read" mesh="SolverGeometry"
-                  constraint="consistent" timing="incremental" />
-         <write-data name="Forces"        mesh="SolverGeometry" />
-         <read-data  name="Velocities"    mesh="SolverGeometry" />
-         <read-data  name="Displacements" mesh="SolverGeometry" />
+         <mapping:nearest-projection direction="write" from="MeshOne" to="SolverGeometry"
+                  constraint="conservative" timing="initial" />
+         <mapping:nearest-projection direction="read" from="SolverGeometry" to="MeshOne"
+                  constraint="consistent" timing="initial" />
+         <write-data name="Forces"        mesh="MeshOne" />
+         <read-data  name="Velocities"    mesh="MeshOne" />
+         <read-data  name="Displacements" mesh="MeshOne" />
          <action:add-to-coordinates mesh="SolverGeometry" timing="on-exchange-post">
             <source-data name="Displacements"/> 
          </action:add-to-coordinates>

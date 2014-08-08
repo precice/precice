@@ -111,9 +111,6 @@ private:
   double _shapeParameter;
   double _length;
   double _pores;
-  int    _wallIndex;
-  int    _inflowIndex;
-  int    _outflowIndex;
 
   /**
    * This method is used to compute g (?).

@@ -44,7 +44,8 @@ void VertexTest:: test ()
   validate ( tarch::la::equals(normal, utils::Vector3D(0.0)) );
 
   void* mesh = static_cast<void*> ( vertex.mesh() );
-  validateEquals ( mesh, NULL );
+  // Can be replaced by nullptr as soon as we have C++11 available.
+  validateEquals ( mesh, static_cast<void*>(NULL) );
 }
 
 }}} // namespace precice, mesh, tests

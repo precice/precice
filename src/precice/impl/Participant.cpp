@@ -4,6 +4,7 @@
 #include "Participant.hpp"
 #include "DataContext.hpp"
 #include "MeshContext.hpp"
+#include "MappingContext.hpp"
 #include "action/Action.hpp"
 #include "WatchPoint.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -33,8 +34,11 @@ Participant:: Participant
   _exportContexts(),
   _actions (),
   _meshContexts ( meshConfig->meshes().size(), NULL ),
+  _readMappingContexts(),
+  _writeMappingContexts(),
   _usedMeshContexts (),
-  _dataContexts ( meshConfig->getDataConfiguration()->data().size(), NULL ),
+  //TODO not sure if the 2 here always works
+  _dataContexts ( meshConfig->getDataConfiguration()->data().size()*meshConfig->meshes().size(), NULL ),
   _writeDataContexts (),
   _readDataContexts (),
   _clientServerCommunication ()
@@ -47,6 +51,8 @@ Participant:: ~Participant()
   _usedMeshContexts.deleteElements();
   _readDataContexts.deleteElements();
   _writeDataContexts.deleteElements();
+  _readMappingContexts.deleteElements();
+  _writeMappingContexts.deleteElements();
   _participantsSize--;
 }
 
@@ -98,9 +104,9 @@ void Participant:: useMesh
 //  if ( spacetree.use_count() > 0 ) {
 //    spacetree->setCenter ( spacetree->getCenter() + localOffset );
 //  }
-  if ( provideMesh ) {
-    context->meshRequirement = mapping::Mapping::FULL;
-  }
+//  if ( provideMesh ) {
+//    context->meshRequirement = mapping::Mapping::FULL;
+//  }
 
   _meshContexts[mesh->getID()] = context;
   _usedMeshContexts.push_back ( context );
@@ -117,9 +123,10 @@ void Participant:: addWriteData
   checkDuplicatedData ( data );
   assertion ( data->getID() < (int)_dataContexts.size() );
   DataContext* context = new DataContext ();
-  context->data = data;
+  context->fromData = data;
   context->mesh = mesh;
-  context->localData = context->data;
+  // will be overwritten later if a mapping exists
+  context->toData = context->fromData;
   _dataContexts[data->getID()] = context;
   _writeDataContexts.push_back ( context );
 }
@@ -132,11 +139,36 @@ void Participant:: addReadData
   checkDuplicatedData ( data );
   assertion ( data->getID() < (int)_dataContexts.size() );
   DataContext* context = new DataContext ();
-  context->data = data;
+  context->toData = data;
   context->mesh = mesh;
-  context->localData = context->data;
+  // will be overwritten later if a mapping exists
+  context->fromData = context->toData;
   _dataContexts[data->getID()] = context;
   _readDataContexts.push_back ( context );
+}
+
+void Participant::addReadMappingContext
+(
+  MappingContext* mappingContext)
+{
+  _readMappingContexts.push_back(mappingContext);
+}
+
+void Participant::addWriteMappingContext
+(
+  MappingContext* mappingContext)
+{
+  _writeMappingContexts.push_back(mappingContext);
+}
+
+const utils::ptr_vector<MappingContext>& Participant::readMappingContexts() const
+{
+  return _readMappingContexts;
+}
+
+const utils::ptr_vector<MappingContext>& Participant::writeMappingContexts() const
+{
+  return _writeMappingContexts;
 }
 
 const DataContext& Participant:: dataContext
@@ -184,6 +216,14 @@ bool Participant:: isMeshUsed
 {
   assertion ( (meshID >= 0) && (meshID < (int)_meshContexts.size()) );
   return _meshContexts[meshID] != NULL;
+}
+
+bool Participant:: isDataUsed
+(
+  int dataID ) const
+{
+  assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
+  return _dataContexts[dataID] != NULL;
 }
 
 const MeshContext& Participant:: meshContext

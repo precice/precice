@@ -19,8 +19,11 @@ struct MappingContext
   // @brief Data mapping.
   mapping::PtrMapping mapping;
 
-  // @brief Local solver mesh to map to/from.
-  mesh::PtrMesh localMesh;
+  // @brief id of mesh from which is mapped
+  int fromMeshID;
+
+  // @brief id of mesh to which is mapped
+  int toMeshID;
 
   // @brief Time of execution of mapping.
   mapping::MappingConfiguration::Timing timing;
@@ -36,7 +39,8 @@ struct MappingContext
    */
   MappingContext()
   : mapping(),
-    localMesh(),
+    fromMeshID(-1),
+    toMeshID(-1),
     timing(mapping::MappingConfiguration::INITIAL),
     //isIncremental(false),
     hasMappedData(false)

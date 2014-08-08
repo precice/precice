@@ -8,25 +8,31 @@
       <data:vector name="DataOne"/>
       <data:scalar name="DataTwo"/>
    
-      <mesh name="Mesh">
+      <mesh name="MeshOne">
+         <use-data name="DataOne"/>
+         <use-data name="DataTwo"/>
+      </mesh>
+      
+      <mesh name="MeshTwo">
          <use-data name="DataOne"/>
          <use-data name="DataTwo"/>
       </mesh>
       
       <participant name="SolverOne">
-         <use-mesh name="Mesh" provide="on"/>
-         <write-data name="DataOne" mesh="Mesh"/>
-         <read-data  name="DataTwo" mesh="Mesh"/>
+         <use-mesh name="MeshOne" provide="on"/>
+         <write-data name="DataOne" mesh="MeshOne"/>
+         <read-data  name="DataTwo" mesh="MeshOne"/>
       </participant>
       
       <participant name="SolverTwo">
-         <use-mesh name="Mesh" from="SolverOne"/>
-         <mapping:nearest-neighbor direction="write" mesh="Mesh"
+         <use-mesh name="MeshOne" from="SolverOne"/>
+         <use-mesh name="MeshTwo" provide="on"/>
+         <mapping:nearest-neighbor direction="write" from="MeshTwo" to="MeshOne"
           	      constraint="conservative" timing="initial"/>
-         <mapping:nearest-neighbor direction="read" mesh="Mesh"
+         <mapping:nearest-neighbor direction="read" from="MeshOne" to="MeshTwo"
                   constraint="consistent" timing="initial"/>
-         <write-data name="DataTwo" mesh="Mesh"/>
-         <read-data  name="DataOne"     mesh="Mesh"/>
+         <write-data name="DataTwo" mesh="MeshTwo"/>
+         <read-data  name="DataOne"     mesh="MeshTwo"/>
       </participant>
       
       <communication:mpi-single from="SolverOne" to="SolverTwo" />
@@ -35,8 +41,8 @@
          <participants first="SolverOne" second="SolverTwo"/> 
          <max-timesteps value="5"/>
          <timestep-length value="1.0"/>
-         <exchange data="DataOne" mesh="Mesh" from="SolverOne"/>
-         <exchange data="DataTwo" mesh="Mesh" from="SolverTwo" initialize="on"/>
+         <exchange data="DataOne" mesh="MeshOne" from="SolverOne"/>
+         <exchange data="DataTwo" mesh="MeshOne" from="SolverTwo" initialize="on"/>
       </coupling-scheme:serial-explicit>                           
                   
    </solver-interface>

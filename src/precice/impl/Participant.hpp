@@ -28,6 +28,7 @@ namespace precice {
   namespace impl {
     struct DataContext;
     struct MeshContext;
+    struct MappingContext;
   }
   namespace com {
     class Communication;
@@ -102,6 +103,8 @@ public:
 
   bool isMeshUsed ( int meshID ) const;
 
+  bool isDataUsed ( int dataID ) const;
+
   const MeshContext& meshContext ( int meshID ) const;
 
   MeshContext& meshContext ( int meshID );
@@ -109,6 +112,14 @@ public:
   const utils::ptr_vector<MeshContext>& usedMeshContexts() const;
 
   utils::ptr_vector<MeshContext>& usedMeshContexts();
+
+  void addReadMappingContext(MappingContext* mappingContext);
+
+  void addWriteMappingContext(MappingContext* mappingContext);
+
+  const utils::ptr_vector<MappingContext>& readMappingContexts() const;
+
+  const utils::ptr_vector<MappingContext>& writeMappingContexts() const;
 
   void addWatchPoint ( const PtrWatchPoint& watchPoint );
 
@@ -181,6 +192,12 @@ private:
 
   // @brief All mesh contexts involved in a simulation, mesh ID == index.
   std::vector<MeshContext*> _meshContexts;
+
+  // @brief Read mapping contexts used by the participant.
+  utils::ptr_vector<MappingContext> _readMappingContexts;
+
+  // @brief Write mapping contexts used by the participant.
+  utils::ptr_vector<MappingContext> _writeMappingContexts;
 
   // @brief Mesh contexts used by the participant.
   utils::ptr_vector<MeshContext> _usedMeshContexts;

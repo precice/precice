@@ -76,7 +76,7 @@ int precicec_getMeshID ( const char* geometryName );
 /**
  * @brief Returns true (!=0), if data with given name is available.
  */
-int precicec_hasData ( const char* dataName );
+int precicec_hasData ( const char* dataName, int meshID );
 
 /**
  * @brief Returns the data id belonging to the given name.
@@ -85,35 +85,20 @@ int precicec_hasData ( const char* dataName );
  * configuration file. The data id obtained can be used to read and write
  * data to and from the coupling mesh.
  */
-int precicec_getDataID ( const char* dataName );
+int precicec_getDataID ( const char* dataName, int meshID );
 
 int precicec_setMeshVertex (
   int           meshID,
   const double* position );
 
-int precicec_setReadPosition (
-  int           meshID,
-  const double* position );
-
-int precicec_setWritePosition (
-  int           meshID,
-  const double* position );
-
-void precicec_getReadPositions (
+void precicec_getMeshVertices (
   int     meshID,
   int     size,
   int*    ids,
   double* positions );
 
-void precicec_getWritePositions (
-  int     meshID,
-  int     size,
-  int*    ids,
-  double* positions );
+int precicec_getMeshVertexSize ( int meshID );
 
-int precicec_getWriteNodesSize ( int meshID );
-
-int precicec_getReadNodesSize ( int meshID );
 
 int precicec_setMeshEdge (
   int meshID,
@@ -237,16 +222,15 @@ void precicec_readScalarData (
   double* dataValue );
 
 /**
- * @brief Computes and maps all data written to mesh with given ID.
+ * @brief Computes and maps all write data mapped from mesh with given ID.
  *
- * Is automatically called in advance, if not called manually before.
  */
-void precicec_mapWrittenData ( int meshID );
+void precicec_mapWriteDataFrom ( int fromMeshID );
 
 /**
- * @brief Computes and maps all data to be read from mesh with given ID.
+ * @brief Computes and maps all read data mapped to mesh with given ID.
  */
-void precicec_mapReadData ( int meshID );
+void precicec_mapReadDataTo ( int toMeshID );
 
 /**
  * @brief Exports the coupling mesh to a vtk file

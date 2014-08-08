@@ -110,82 +110,31 @@ public:
   int requestGetMeshVertexSize(int meshID);
 
   /**
-   * @brief Requests set write data position from server.
+   * @brief Requests set vertex positions from server.
    */
-  int requestSetWritePosition (
-    int               meshID,
-    utils::DynVector& position );
-
-  /**
-   * @brief Requests set write data positions from server.
-   */
-  void requestSetWritePositions (
+  void requestSetMeshVertices (
     int     meshID,
     int     size,
     double* positions,
     int*    ids );
 
   /**
-   * @brief Requests get write data positions from server.
+   * @brief Requests get vertex positions from server.
    */
-  void requestGetWritePositions (
+  void requestGetMeshVertices (
     int     meshID,
     int     size,
     int*    ids,
     double* positions );
 
   /**
-   * @brief Requests get write data ids from server.
+   * @brief Requests get vertex ids from server.
    */
-  void requestGetWriteIDsFromPositions (
+  void requestGetMeshVertexIDsFromPositions (
     int     meshID,
     int     size,
     double* positions,
     int*    ids );
-
-  /**
-   * @brief Request get write data nodes size.
-   */
-  int requestGetWriteNodesSize ( int meshID );
-
-  /**
-   * @brief Requests set read data position from server.
-   */
-  int requestSetReadPosition (
-    int               meshID,
-    utils::DynVector& position );
-
-  /**
-   * @brief Requests set read data positions from server.
-   */
-  void requestSetReadPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
-
-  /**
-   * @brief Requests get read data positions from server.
-   */
-  void requestGetReadPositions (
-    int     meshID,
-    int     size,
-    int*    ids,
-    double* positions );
-
-  /**
-   * @brief Requests get read data ids from server.
-   */
-  void requestGetReadIDsFromPositions (
-    int     meshID,
-    int     size,
-    double* positions,
-    int*    ids );
-
-  /**
-   * @brief Request get read data nodes size.
-   */
-  int requestGetReadNodesSize ( int meshID );
 
   /**
    * @brief Requests set mesh edge from server.
@@ -302,14 +251,14 @@ public:
     double* value );
 
   /**
-   * @brief Requests map written data from server.
+   * @brief Requests write mapping data from server.
    */
-  void requestMapWrittenData ( int meshID );
+  void requestMapWriteDataFrom ( int fromMeshID );
 
   /**
-   * @brief Requests map read data from server.
+   * @brief Requests read mapping data from server.
    */
-  void requestMapReadData ( int meshID );
+  void requestMapReadDataTo( int toMeshID );
 
   /**
    * @brief Requests export mesh from server.
@@ -348,16 +297,9 @@ private:
     REQUEST_INQUIRE_VOXEL_POSITION,
     REQUEST_SET_MESH_VERTEX,
     REQUEST_GET_MESH_VERTEX_SIZE,
-    REQUEST_SET_WRITE_POSITION,
-    REQUEST_SET_WRITE_POSITIONS,
-    REQUEST_GET_WRITE_POSITIONS,
-    REQUEST_GET_WRITE_IDS_FROM_POSITIONS,
-    REQUEST_GET_WRITE_NODES_SIZE,
-    REQUEST_SET_READ_POSITION,
-    REQUEST_SET_READ_POSITIONS,
-    REQUEST_GET_READ_POSITIONS,
-    REQUEST_GET_READ_IDS_FROM_POSITIONS,
-    REQUEST_GET_READ_NODES_SIZE,
+    REQUEST_SET_MESH_VERTICES,
+    REQUEST_GET_MESH_VERTICES,
+    REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS,
     REQUEST_SET_MESH_EDGE,
     REQUEST_SET_MESH_TRIANGLE,
     REQUEST_SET_MESH_TRIANGLE_WITH_EDGES,
@@ -371,8 +313,8 @@ private:
     REQUEST_READ_BLOCK_SCALAR_DATA,
     REQUEST_READ_VETOR_DATA,
     REQUEST_READ_BLOCK_VECTOR_DATA,
-    REQUEST_MAP_WRITTEN_DATA,
-    REQUEST_MAP_READ_DATA,
+    REQUEST_MAP_WRITE_DATA_FROM,
+    REQUEST_MAP_READ_DATA_TO,
     REQUEST_EXPORT_MESH,
     REQUEST_INTEGRATE_SCALAR_DATA,
     REQUEST_INTEGRATE_VECTOR_DATA,
@@ -443,54 +385,19 @@ private:
   void handleRequestGetMeshVertexSize(int rankSender);
 
   /**
-   * @brief Handles request set write data position from client.
+   * @brief Handles request set vertex positions from client.
    */
-  void handleRequestSetWritePosition ( int rankSender );
+  void handleRequestSetMeshVertices ( int rankSender );
 
   /**
-   * @brief Handles request set write data positions from client.
+   * @brief Handles request get vertex positions from client.
    */
-  void handleRequestSetWritePositions ( int rankSender );
+  void handleRequestGetMeshVertices ( int rankSender );
 
   /**
-   * @brief Handles request get write data positions from client.
+   * @brief Handles request get vertex IDs from client.
    */
-  void handleRequestGetWritePositions ( int rankSender );
-
-  /**
-   * @brief Handles request get write data IDs from client.
-   */
-  void handleRequestGetWriteIDsFromPositions ( int rankSender );
-
-  /**
-   * @brief Handles request get write data nodes size;
-   */
-  void handleRequestGetWriteNodesSize ( int rankSender );
-
-  /**
-   * @brief Handles request set read data position from client.
-   */
-  void handleRequestSetReadPosition ( int rankSender );
-
-  /**
-   * @brief Handles request set read data positions from client.
-   */
-  void handleRequestSetReadPositions ( int rankSender );
-
-  /**
-   * @brief Handles request get read data positions from client.
-   */
-  void handleRequestGetReadPositions ( int rankSender );
-
-  /**
-   * @brief Handles request get read data IDs from client.
-   */
-  void handleRequestGetReadIDsFromPositions ( int rankSender );
-
-  /**
-   * @brief Handles request get read data nodes size;
-   */
-  void handleRequestGetReadNodesSize ( int rankSender );
+  void handleRequestGetMeshVertexIDsFromPositions ( int rankSender );
 
   /**
    * @brief Handles request set mesh edge from client.
@@ -560,12 +467,12 @@ private:
   /**
    * @brief Handles request map written data from client.
    */
-  void handleRequestMapWrittenData ( const std::list<int>& clientRanks );
+  void handleRequestMapWriteDataFrom ( const std::list<int>& clientRanks );
 
   /**
    * @brief Handles request map read data from client.
    */
-  void handleRequestMapReadData ( const std::list<int>& clientRanks );
+  void handleRequestMapReadDataTo ( const std::list<int>& clientRanks );
 
   /**
    * @brief Handles request export mesh from client.

@@ -132,9 +132,6 @@ GeometryConfiguration:: GeometryConfiguration
   }
 }
 
-GeometryConfiguration:: ~GeometryConfiguration()
-{}
-
 void GeometryConfiguration:: setDimensions
 (
   int dimensions )

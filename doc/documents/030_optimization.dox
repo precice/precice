@@ -1,10 +1,8 @@
 /**
 
-@page "06 Performance Optimization"
+@page optimization Performance Optimization
 
-!!! Code Performance Optimization
-
-\n This tutorial states when and how to optimize code written for preCICE. In 
+This tutorial states when and how to optimize code written for preCICE. In 
 general, the code development process looks as follows:
 
 -# Implement new functionalities with best-practices of OOP.
