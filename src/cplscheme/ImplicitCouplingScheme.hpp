@@ -62,12 +62,7 @@ public:
     com::PtrCommunication communication,
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod);
-  
- 
-  
-//  virtual std::string printCouplingState() const;
-
-
+   
 private:
 
   // typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;

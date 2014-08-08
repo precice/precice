@@ -267,7 +267,7 @@ protected:
   /// @brief Updates internal state of coupling scheme for next timestep.
   void timestepCompleted();
 
-  // temp function to make refactoring clearer
+  /// @brief Receives and set the timestep length, if this participant is the one to receive
   void receiveAndSetDt();
   
   io::TXTTableWriter& getIterationsWriter() {

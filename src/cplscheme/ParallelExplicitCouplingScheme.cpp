@@ -60,26 +60,15 @@ void ParallelExplicitCouplingScheme:: advance()
 
       preciceDebug("Receiving data...");
       getCommunication()->startReceivePackage(0);
-      if (participantReceivesDt()) {
-        double dt = UNDEFINED_TIMESTEP_LENGTH;
-        getCommunication()->receive(dt, 0);
-        assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-        setTimestepLength(dt);
-      }
+      receiveAndSetDt();
       receiveData(getCommunication());
       getCommunication()->finishReceivePackage();
       setHasDataBeenExchanged(true);
     }
-
     else { //second participant
       preciceDebug("Receiving data...");
       getCommunication()->startReceivePackage(0);
-      if (participantReceivesDt()) {
-        double dt = UNDEFINED_TIMESTEP_LENGTH;
-        getCommunication()->receive(dt, 0);
-        assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-        setTimestepLength(dt);
-      }
+      receiveAndSetDt();
       receiveData(getCommunication());
       getCommunication()->finishReceivePackage();
       setHasDataBeenExchanged(true);

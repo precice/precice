@@ -157,9 +157,11 @@ BaseCouplingScheme::BaseCouplingScheme
 // temp function to make refactoring clearer
 void BaseCouplingScheme::receiveAndSetDt()
 {
+  preciceTrace("receiveAndSetDt()");
   if (participantReceivesDt()){
     double dt = UNDEFINED_TIMESTEP_LENGTH;
     getCommunication()->receive(dt, 0);
+    preciceDebug("Received timestep length of " << dt);
     assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
     setTimestepLength(dt);
   }

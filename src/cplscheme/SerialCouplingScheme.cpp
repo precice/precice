@@ -83,13 +83,7 @@ void SerialCouplingScheme::initialize
   if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
     preciceDebug("Receiving data");
     getCommunication()->startReceivePackage(0);
-    if (participantReceivesDt()) {
-      double dt = UNDEFINED_TIMESTEP_LENGTH;
-      getCommunication()->receive(dt, 0);
-      preciceDebug("received timestep length of " << dt);
-      assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-      setTimestepLength(dt);
-    }
+    receiveAndSetDt();
     receiveData(getCommunication());
     getCommunication()->finishReceivePackage();
     setHasDataBeenExchanged(true);
@@ -126,14 +120,7 @@ void SerialCouplingScheme::initializeData()
     assertion(doesFirstStep());
     preciceDebug("Receiving data");
     getCommunication()->startReceivePackage(0);
-    if (participantReceivesDt()){
-      double dt = UNDEFINED_TIMESTEP_LENGTH;
-      getCommunication()->receive(dt, 0);
-      preciceDebug("received timestep length of " << dt);
-      assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-      setTimestepLength(dt);
-      //setMaxLengthNextTimestep(dt);
-    }
+    receiveAndSetDt();
     receiveData(getCommunication());
     getCommunication()->finishReceivePackage();
     setHasDataBeenExchanged(true);

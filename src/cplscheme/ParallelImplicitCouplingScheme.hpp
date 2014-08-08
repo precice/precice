@@ -56,8 +56,6 @@ public:
    */
   virtual void advance();
 
-  virtual std::string printCouplingState() const;
-  
 private:
 
   /// @brief Logging device.

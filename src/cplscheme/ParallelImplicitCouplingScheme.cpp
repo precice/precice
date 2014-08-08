@@ -65,7 +65,6 @@ void ParallelImplicitCouplingScheme:: advance()
       getCommunication()->finishReceivePackage();
     }
     else { // second participant
-
       getCommunication()->startReceivePackage(0);
       receiveData(getCommunication());
       getCommunication()->finishReceivePackage();
@@ -148,17 +147,6 @@ void ParallelImplicitCouplingScheme:: advance()
   else {
     increaseIterationToPlot();
   }
-}
-
-std::string ParallelImplicitCouplingScheme:: printCouplingState() const
-{
-  std::ostringstream os;
-  os << "it " << _iterationToPlot; //_iterations;
-  if(getMaxIterations() != -1 ){
-    os << " of " << getMaxIterations();
-  }
-  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
-  return os.str();
 }
 
 }} // namespace precice, cplscheme
