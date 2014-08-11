@@ -119,11 +119,6 @@ private:
   void testExplicitWithDataScaling();
 
   /**
-   * @brief Explicit coupled checkpointing with incremental data mapping.
-   */
-  void testExplicitWithCheckpointingIncMapping();
-
-  /**
    * @brief Explicit coupled checkpointing with stationary data mapping.
    */
   void testExplicitWithCheckpointingStatMapping();
@@ -138,11 +133,6 @@ private:
    *        performs a subcycling.
    */
   void testImplicitWithSubcycling();
-
-  /**
-   * @brief Implicit coupled checkpointing with incremental data mapping.
-   */
-  void testImplicitWithCheckpointingMappingInc();
 
   /**
    * @brief Implicit coupled checkpointing with stationary data mapping.
