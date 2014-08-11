@@ -30,10 +30,6 @@ private:
 
    static tarch::logging::Log _log;
 
-   void testConservativeIncremental();
-
-   void testConsistentIncremental();
-
    void testConservativeNonIncremental();
 
    void testConsistentNonIncremental();

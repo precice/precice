@@ -55,20 +55,17 @@ public:
    * @brief Specifies requirements for the input and output meshes of a mapping.
    *
    * Different mapping types have different requirements on the meshes involved
-   * in the mapping, while the input and ouput mesh holding the data to map can
+   * in the mapping, while the input and output mesh holding the data to map can
    * have different requirements. FULL requires a mesh consisting of vertices
    * connected by edges and faces. VERTEX requires a mesh consisting of vertices
-   * only. TEMPORARY requires only vertices, too, but can map data incrementally,
-   * i.e. only one vertex is required to map data to/from that vertex.
+   * only.
    */
   enum MeshRequirement {
     UNDEFINED = 0,
-    // @brief One vertex with suitable temporary coordinates only.
-    TEMPORARY = 1,
     // @brief Vertices only.
-    VERTEX = 2,
-    // @brief Full vef mesh.
-    FULL = 3
+    VERTEX = 1,
+    // @brief Full mesh.
+    FULL = 2
   };
 
   /**

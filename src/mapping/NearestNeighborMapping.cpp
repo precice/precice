@@ -18,15 +18,8 @@ NearestNeighborMapping:: NearestNeighborMapping
   _hasComputedMapping(false),
   _vertexIndices()
 {
-  if ( constraint == CONSISTENT ){
-    setInputRequirement(VERTEX);
-    setOutputRequirement(TEMPORARY);
-  }
-  else {
-    assertion1(getConstraint() == CONSERVATIVE, getConstraint());
-    setInputRequirement(TEMPORARY);
-    setOutputRequirement(VERTEX);
-  }
+  setInputRequirement(VERTEX);
+  setOutputRequirement(VERTEX);
 }
 
 void NearestNeighborMapping:: computeMapping()

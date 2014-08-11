@@ -30,7 +30,7 @@
          <mapping:nearest-projection direction="write" from="MeshOne" to="Test-Square"
                   constraint="conservative"/>
          <mapping:nearest-projection direction="read" from="Test-Square" to="MeshOne"
-                  constraint="consistent" timing="incremental" />
+                  constraint="consistent" timing="onadvance" />
          <write-data name="Forces"     mesh="MeshOne" />
          <read-data  name="Velocities" mesh="MeshOne" />
       </participant>

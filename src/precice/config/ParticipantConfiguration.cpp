@@ -546,17 +546,6 @@ void ParticipantConfiguration:: finishParticipantConfiguration
       toMeshContext.meshRequirement = map->getOutputRequirement();
     }
 
-    if (confMapping.timing != mapping::MappingConfiguration::INCREMENTAL
-    		&& toMeshContext.meshRequirement == mapping::Mapping::TEMPORARY)
-    {
-      toMeshContext.meshRequirement = mapping::Mapping::VERTEX;
-    }
-    if (confMapping.timing != mapping::MappingConfiguration::INCREMENTAL
-            && fromMeshContext.meshRequirement == mapping::Mapping::TEMPORARY)
-    {
-      fromMeshContext.meshRequirement = mapping::Mapping::VERTEX;
-    }
-
     fromMeshContext.fromMappingContext = *mappingContext;
     toMeshContext.toMappingContext = *mappingContext;
   }

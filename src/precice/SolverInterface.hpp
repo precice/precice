@@ -585,17 +585,6 @@ public:
     int                exportType = constants::exportAll() );
 
   /**
-   * @brief Integrates all values of Vector type data with id dataID.
-   */
-  void integrateScalarData (
-    int     dataID,
-    double& integratedValue );
-
-  void integrateVectorData (
-    int     dataID,
-    double* integratedValue );
-
-  /**
    * @brief Scales data values according to configuration.
    *
    * Currently, the only scaling supported is a division of the data values

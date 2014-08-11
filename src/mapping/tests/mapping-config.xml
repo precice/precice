@@ -5,7 +5,7 @@
    <mesh name="TestMeshTwo"></mesh>
    <mesh name="TestMeshThree"></mesh>
    <mapping:nearest-projection direction="write" from="TestMesh" to="TestMeshThree"
-   				 constraint="conservative" timing="incremental"/>
+   				 constraint="conservative" timing="ondemand"/>
    <mapping:nearest-projection direction="read" from="TestMeshThree" to="TestMeshTwo"
    				 constraint="consistent"/>
    <mapping:nearest-projection direction="write" from="TestMeshTwo" to="TestMesh"

@@ -185,12 +185,6 @@ void RequestManager:: handleRequests()
     case REQUEST_EXPORT_MESH:
       handleRequestExportMesh(rankSender);
       break;
-    case REQUEST_INTEGRATE_SCALAR_DATA:
-      handleRequestIntegrateScalarData(rankSender);
-      break;
-    case REQUEST_INTEGRATE_VECTOR_DATA:
-      handleRequestIntegrateVectorData(rankSender);
-      break;
     case REQUEST_PING:
       //bool ping = true;
       _com->send(true, rankSender);
@@ -629,28 +623,6 @@ void RequestManager:: requestExportMesh
   _com->send(REQUEST_EXPORT_MESH, 0);
   _com->send(filenameSuffix, 0);
   _com->send(exportType, 0);
-}
-
-void RequestManager:: requestIntegrateScalarData
-(
-  int     dataID,
-  double& integratedValue )
-{
-  preciceTrace("requestIntegrateScalarData()");
-  _com->send(REQUEST_INTEGRATE_SCALAR_DATA, 0);
-  _com->send(dataID, 0);
-  _com->receive(integratedValue, 0);
-}
-
-void RequestManager:: requestIntegrateVectorData
-(
-  int     dataID,
-  double* integratedValue )
-{
-  preciceTrace("requestIntegrateVectorData()");
-  _com->send(REQUEST_INTEGRATE_VECTOR_DATA, 0);
-  _com->send(dataID, 0);
-  _com->receive(integratedValue, _interface.getDimensions(), 0);
 }
 
 void RequestManager:: handleRequestInitialze
@@ -1134,28 +1106,5 @@ void RequestManager:: handleRequestExportMesh
   _interface.exportMesh(filenameSuffix, exportType);
 }
 
-void RequestManager:: handleRequestIntegrateScalarData
-(
-  int rankSender )
-{
-  preciceTrace1("handleRequestIntegrateScalarData()", rankSender);
-  int dataID = -1;
-  _com->receive(dataID, rankSender);
-  double data = 0.0;
-  _interface.integrateData(dataID, data);
-  _com->send(data, rankSender);
-}
-
-void RequestManager:: handleRequestIntegrateVectorData
-(
-  int rankSender )
-{
-  preciceTrace1("handleRequestIntegrateVectorData()", rankSender);
-  int dataID = -1;
-  _com->receive(dataID, rankSender);
-  double data[_interface.getDimensions()];
-  _interface.integrateData(dataID, data);
-  _com->send(data, _interface.getDimensions(), rankSender);
-}
 
 }} // namespace precice, impl

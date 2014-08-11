@@ -369,21 +369,6 @@ void SolverInterface:: exportMesh
   _impl->exportMesh ( filenameSuffix, exportType );
 }
 
-void SolverInterface:: integrateScalarData
-(
-  int     dataID,
-  double& integratedValue )
-{
-  _impl->integrateData ( dataID, integratedValue );
-}
-
-void SolverInterface:: integrateVectorData
-(
-  int     dataID,
-  double* integratedValue )
-{
-  _impl->integrateData ( dataID, integratedValue );
-}
 
 MeshHandle SolverInterface:: getMeshHandle
 (

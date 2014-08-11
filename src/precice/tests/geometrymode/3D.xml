@@ -31,10 +31,10 @@
          <export:vtk/>
          <mapping:nearest-projection direction="write" 
                from="SolverMesh" to="itest-cuboid" 
-               constraint="conservative" timing="incremental" />
+               constraint="conservative" timing="onadvance" />
          <mapping:nearest-projection direction="read" 
                from="itest-cuboid" to="SolverMesh" 
-               constraint="consistent" timing="incremental" />
+               constraint="consistent" timing="onadvance" />
          <write-data name="Forces"     mesh="SolverMesh" />
          <read-data  name="Velocities" mesh="SolverMesh" />
       </participant>
