@@ -52,8 +52,6 @@ public:
     Direction direction;
     // @brief When the mapping should be executed.
     Timing timing;
-    // @brief Is true, if the mapping is done incremental for each value.
-    //bool isIncremental;
   };
 
   // @brief Name of xml tag for this class in configuration file

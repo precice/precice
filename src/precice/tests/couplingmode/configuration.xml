@@ -40,10 +40,10 @@
          <use-mesh name="Boundingbox" />
          <mapping:nearest-projection direction="write" from="PeanoNodes"
                   to="ComsolNodes" 
-                  constraint="conservative" timing="incremental" />
+                  constraint="conservative" timing="onadvance" />
          <mapping:nearest-projection direction="read" from="ComsolNodes"
                   to="PeanoNodes" 
-                  constraint="consistent" timing="incremental" />
+                  constraint="consistent" timing="onadvance" />
          <write-data name="Forces"         mesh="PeanoNodes" />
          <read-data  name="Displacements"  mesh="PeanoNodes" />
          <read-data  name="Velocities"     mesh="PeanoNodes" />

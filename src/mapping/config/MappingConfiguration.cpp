@@ -297,7 +297,6 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   const std::string& fromMeshName,
   const std::string& toMeshName,
   Timing             timing,
-  //bool               incremental,
   double             shapeParameter,
   double             supportRadius ) const
 {
@@ -313,10 +312,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
                "Mesh \"" << toMeshName << "\" not defined at creation of mapping!");
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh = toMesh;
-  //preciceCheck(not ((timing == INITIALLY) && incremental), "xmlTagCallback()",
-  //             "A mapping cannot be both stationary and incremental!");
   configuredMapping.timing = timing;
-  //configuredMapping.isIncremental = incremental;
 
   if (direction == VALUE_WRITE){
     configuredMapping.direction =  WRITE;
