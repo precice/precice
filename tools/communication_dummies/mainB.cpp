@@ -105,9 +105,9 @@ int main(int argc, char** argv)
   }
 
   initialise_(daemon_args,false);
-  fsi::FSIDummyBImplementation::singleton->setCoordinates(&ids[0],pointSize);
+  fsi::FSIDummyBImplementation::singleton->setCoordinates(ids,pointSize);
   fsi::FSIDummyBImplementation::singleton->setData(data);
-  
+  std::cout<<"rank:"<<rank<<"bind cmp"<<std::endl;
   bind_component_(daemon_args,false);
   socket_loop_(daemon_args,false);
   //main_loop_(false);
