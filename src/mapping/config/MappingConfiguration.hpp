@@ -34,8 +34,7 @@ public:
   {
     INITIAL,
     ON_ADVANCE,
-    ON_DEMAND,
-    INCREMENTAL
+    ON_DEMAND
   };
 
   /**
@@ -141,7 +140,6 @@ private:
   const std::string VALUE_TIMING_INITIAL;
   const std::string VALUE_TIMING_ON_ADVANCE;
   const std::string VALUE_TIMING_ON_DEMAND;
-  const std::string VALUE_TIMING_INCREMENTAL;
 
   mesh::PtrMeshConfiguration _meshConfig;
 

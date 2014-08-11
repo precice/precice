@@ -60,6 +60,7 @@ void CompositionalCouplingSchemeTest:: run ()
       Par::setGlobalCommunicator(comm) ;
       validateEquals(Par::getCommunicatorSize(), 3);
       testMethod(testExplicitSchemeComposition1);
+      //TODO did produce a deadlock on Benjamin's laptop
       //testMethod(testImplicitSchemeComposition);
       //testMethod(testImplicitExplicitSchemeComposition);
       //testMethod(testExplicitImplicitSchemeComposition);

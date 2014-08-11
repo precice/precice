@@ -55,7 +55,6 @@ MappingConfiguration:: MappingConfiguration
   VALUE_TIMING_INITIAL("initial"),
   VALUE_TIMING_ON_ADVANCE("onadvance"),
   VALUE_TIMING_ON_DEMAND("ondemand"),
-  VALUE_TIMING_INCREMENTAL("incremental"),
   _meshConfig(meshConfiguration),
   //_isValid(false),
   _mappings()
@@ -151,12 +150,7 @@ MappingConfiguration:: MappingConfiguration
   ValidString validInitial(VALUE_TIMING_INITIAL);
   ValidString validOnAdvance(VALUE_TIMING_ON_ADVANCE);
   ValidString validOnDemand(VALUE_TIMING_ON_DEMAND);
-  ValidString validIncremental(VALUE_TIMING_INCREMENTAL);
-  attrTiming.setValidator(validInitial || validOnAdvance || validOnDemand
-                          || validIncremental);
-
-  //XMLAttribute<bool> attrIncremental(ATTR_INCREMENTAL);
-  //attrIncremental.setDefaultValue(false);
+  attrTiming.setValidator(validInitial || validOnAdvance || validOnDemand);
 
   foreach (XMLTag& tag, tags){
     tag.addAttribute(attrDirection);
@@ -217,10 +211,6 @@ MappingConfiguration:: MappingConfiguration
 //  attrStationary.setDefaultValue ( false );
 //  tagMapping.addAttribute ( attrStationary );
 //
-//  XMLAttribute<bool> attrIncremental ( ATTR_INCREMENTAL );
-//  attrIncremental.setDefaultValue ( false );
-//  tagMapping.addAttribute ( attrIncremental );
-//
 //  XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
 //  attrShapeParam.setDefaultValue ( 0.0 );
 //  tagMapping.addAttribute ( attrShapeParam );
@@ -245,7 +235,6 @@ void MappingConfiguration:: xmlTagCallback
     std::string type = tag.getName(); //StringAttributeValue(ATTR_TYPE);
     std::string constraint = tag.getStringAttributeValue(ATTR_CONSTRAINT);
     Timing timing = getTiming(tag.getStringAttributeValue(ATTR_TIMING));
-    //bool incremental = tag.getBooleanAttributeValue(ATTR_INCREMENTAL);
     double shapeParameter = 0.0;
     double supportRadius = 0.0;
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
@@ -443,9 +432,6 @@ MappingConfiguration::Timing MappingConfiguration:: getTiming(
   }
   else if (timing == VALUE_TIMING_ON_DEMAND){
     return ON_DEMAND;
-  }
-  else if (timing == VALUE_TIMING_INCREMENTAL){
-    return INCREMENTAL;
   }
   preciceError("getTiming()", "Unknown timing value \"" << timing << "\"!");
 }
