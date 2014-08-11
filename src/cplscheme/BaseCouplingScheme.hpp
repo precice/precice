@@ -69,6 +69,7 @@ public:
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod );
 
+  /// @brief Sets whether explicit or implicit coupling is being done.
   enum {Explicit, Implicit} couplingMode; 
   
   /**
@@ -274,11 +275,6 @@ protected:
     return _iterationsWriter;
   }
 
-  struct State {
-    int id;
-    std::string name;
-  };
- 
   /// @return True, if local participant is the one starting the scheme.
   bool doesFirstStep() const {
     return _doesFirstStep;
@@ -323,7 +319,7 @@ protected:
   void setHasDataBeenExchanged ( bool hasDataBeenExchanged );
   
   /**
-   * @brief Sets the compouted time of the coupling scheme.
+   * @brief Sets the computed time of the coupling scheme.
    *
    * Used from subclasses and when a checkpoint has been read.
    */
@@ -355,6 +351,11 @@ protected:
   /// @brief If any required actions are open, an error message is issued.
   void checkCompletenessRequiredActions();
 
+  /**
+   * @brief Returns coupling state information.
+   * 
+   * Includes current iteration, max iterations, time, timestep and action.
+   */
   virtual std::string printCouplingState() const;
   
   /// @brief Returns a string representing the basic state w/o actions.
@@ -441,27 +442,13 @@ protected:
    * and the ordering of the meshes to that in _couplingData.
    */
   void setupDataMatrices(DataMap& data);
-
-  /// @brief Post-processing method to speedup iteration convergence.
-  impl::PtrPostProcessing _postProcessing;
   
   impl::PtrPostProcessing getPostProcessing() {
     return _postProcessing;
   }
 
-
-  /// @brief Extrapolation order of coupling data for first iteration of every dt.
-  int _extrapolationOrder;
-  
   void initializeTXTWriters();
 
-  /// @brief Number of iteration in current timestep.
-  int _iterationToPlot;
-  
-  int _timestepToPlot;
-  
-  double _timeToPlot;
-  
   void setIterationToPlot(int iterationToPlot) {
     _iterationToPlot = iterationToPlot;
   }
@@ -533,23 +520,36 @@ private:
   
   /// @brief Number of total iterations performed.
   int _totalIterations;
+
+  /// @brief Number of iteration in current timestep.
+  int _iterationToPlot;
+
+  int _timesteps;
+  
+  int _timestepToPlot;
+  
+  double _timeToPlot;
   
   double _timestepLength;
   
-  int _validDigits;
-  
   double _time;
-  
+
   double _computedTimestepPart;
+
+  /// @brief Extrapolation order of coupling data for first iteration of every dt.
+  int _extrapolationOrder;
+
+  int _validDigits;
   
   /// @brief True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep; 
   
-  int _timesteps;
-  
   int _checkpointTimestepInterval;
   
   bool _isCouplingTimestepComplete;
+
+    /// @brief Post-processing method to speedup iteration convergence.
+  impl::PtrPostProcessing _postProcessing;
 
   /// @brief to carry initData information from initialize to initData
   bool _hasToSendInitData;

@@ -2,7 +2,6 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "BaseCouplingScheme.hpp"
-#include "CompositionalCouplingScheme.hpp"
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
 #include "utils/Globals.hpp"
@@ -10,7 +9,6 @@
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
-#include "boost/tuple/tuple.hpp"
 #include <limits>
 
 namespace precice {
@@ -29,12 +27,12 @@ BaseCouplingScheme:: BaseCouplingScheme
   couplingMode(Explicit),
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
+  _timesteps(0),
   _timestepLength(timestepLength),
-  _validDigits(validDigits),
   _time(0.0),
   _computedTimestepPart(0.0),
+  _validDigits(validDigits),
   _doesFirstStep(false),
-  _timesteps(0),
   _checkpointTimestepInterval(-1),
   _isCouplingTimestepComplete(false),
   _hasToSendInitData(false),
@@ -76,14 +74,6 @@ BaseCouplingScheme::BaseCouplingScheme
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _convergenceMeasures(),
-  _postProcessing(),
-//_residualWriterL1("residualL1-" + localParticipant + ".txt"),
-//_residualWriterL2("residualL2-" + localParticipant + ".txt"),
-//_amplificationWriter("amplification-" + localParticipant + ".txt"),
-  _extrapolationOrder(0),
-  _iterationToPlot(0),
-  _timestepToPlot(0),
-  _timeToPlot(0.0),
   _communication(communication),
   _participantSetsDt(false),
   _participantReceivesDt(false),
@@ -92,14 +82,19 @@ BaseCouplingScheme::BaseCouplingScheme
   _iterations(0),
   _maxIterations(maxIterations),
   _totalIterations(0),
+  _iterationToPlot(0),
+  _timesteps(0),
+  _timestepToPlot(0),
+  _timeToPlot(0.0),
   _timestepLength(timestepLength),
-  _validDigits(validDigits),
   _time(0.0),
   _computedTimestepPart(0.0),
+  _extrapolationOrder(0),
+  _validDigits(validDigits),
   _doesFirstStep(false),
-  _timesteps(0),
   _checkpointTimestepInterval(-1),
   _isCouplingTimestepComplete(false),
+  _postProcessing(),
   _hasToSendInitData(false),
   _hasToReceiveInitData(false),
   _hasDataBeenExchanged(false),
@@ -154,7 +149,6 @@ BaseCouplingScheme::BaseCouplingScheme
 }
 
 
-// temp function to make refactoring clearer
 void BaseCouplingScheme::receiveAndSetDt()
 {
   preciceTrace("receiveAndSetDt()");
@@ -283,8 +277,8 @@ std::vector<int> BaseCouplingScheme:: sendData
 
   std::vector<int> sentDataIDs;
   foreach (DataMap::value_type& pair, _sendData){
-    int size = pair.second->values->size ();
-    if (size > 0){
+    int size = pair.second->values->size();
+    if (size > 0) {
       communication->send(tarch::la::raw(*pair.second->values), size, 0);
     }
     sentDataIDs.push_back(pair.first);
@@ -319,7 +313,7 @@ CouplingData* BaseCouplingScheme:: getSendData
 {
   preciceTrace1("getSendData()", dataID);
   DataMap::iterator iter = _sendData.find(dataID);
-  if(iter != _sendData.end()){
+  if (iter != _sendData.end()) {
     return  &(*(iter->second));
   }
   return NULL;
@@ -331,7 +325,7 @@ CouplingData* BaseCouplingScheme:: getReceiveData
 {
   preciceTrace1("getReceiveData()", dataID);
   DataMap::iterator iter = _receiveData.find(dataID);
-  if(iter != _receiveData.end()){
+  if (iter != _receiveData.end()) {
     return  &(*(iter->second));
   }
   return NULL;
@@ -392,9 +386,6 @@ void BaseCouplingScheme::extrapolateData(DataMap& data)
     preciceError("extrapolateData()", "Called extrapolation with order != 1,2!" );
   }
 }
-
-
-
 
 bool BaseCouplingScheme:: hasTimestepLength() const
 {
@@ -671,7 +662,7 @@ void BaseCouplingScheme::setupConvergenceMeasures()
 void BaseCouplingScheme::newConvergenceMeasurements()
 {
   preciceTrace("newConvergenceMeasurements()");
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
+  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures) {
     assertion(convMeasure.measure.get() != NULL);
     convMeasure.measure->newMeasurementSeries();
   }
@@ -695,29 +686,28 @@ void BaseCouplingScheme::addConvergenceMeasure
  
 bool BaseCouplingScheme:: measureConvergence()
 {
-  preciceTrace("measureLocalConvergence()");
-  using boost::get;
+  preciceTrace("measureConvergence()");
   bool allConverged = true;
   bool oneSuffices = false;
   assertion(_convergenceMeasures.size() > 0);
-  foreach(ConvergenceMeasure& convMeasure, _convergenceMeasures){
+  foreach(ConvergenceMeasure& convMeasure, _convergenceMeasures) {
     assertion(convMeasure.data != NULL);
     assertion(convMeasure.measure.get() != NULL);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values);
-    if (not convMeasure.measure->isConvergence()){
+    if (not convMeasure.measure->isConvergence()) {
       //preciceDebug("Local convergence = false");
       allConverged = false;
     }
-    else if (convMeasure.suffices == true){
+    else if (convMeasure.suffices == true) {
       oneSuffices = true;
     }
     preciceInfo("measureConvergence()", convMeasure.measure->printState());
   }
-  if (allConverged){
+  if (allConverged) {
     preciceInfo("measureConvergence()", "All converged");
   }
-  else if (oneSuffices){
+  else if (oneSuffices) {
     preciceInfo("measureConvergence()", "Sufficient measure converged");
   }
   return allConverged || oneSuffices;
@@ -738,13 +728,13 @@ void BaseCouplingScheme:: exportState(const std::string& filenamePrefix ) const
 {
   if (not doesFirstStep()) {
     io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
-    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
+    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()) {
       writer.write(dataMap.second->oldValues);
     }
-    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
+    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()) {
       writer.write(dataMap.second->oldValues);
     }
-    if (_postProcessing.get() != NULL){
+    if (_postProcessing.get() != NULL) {
       _postProcessing->exportState(writer);
     }
   }
@@ -754,10 +744,10 @@ void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
 {
   if (not doesFirstStep()) {
     io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
-    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()){
+    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()) {
       reader.read(dataMap.second->oldValues);
     }
-    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()){
+    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()) {
       reader.read(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != NULL){
@@ -773,7 +763,7 @@ void BaseCouplingScheme::timestepCompleted()
   setIsCouplingTimestepComplete(true);
   setTimesteps(getTimesteps() + 1 );
   //setTime(getTimesteps() * getTimestepLength() ); // Removes numerical errors
-  if (isCouplingOngoing()){
+  if (isCouplingOngoing()) {
     preciceDebug("Setting require create checkpoint");
     requireAction(constants::actionWriteIterationCheckpoint());
   }
