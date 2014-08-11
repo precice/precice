@@ -36,6 +36,7 @@ void fsi::FSIDummyAImplementation::setCoordIds(int* coordIds,const int numberOfP
 	pthread_mutex_lock(&_mutex);
 	_localCoordIds=coordIds;
 	_numberOfPoints=numberOfPoints;
+
 	for(unsigned int i = 0 ; i< numberOfPoints ;i++)
 		_global2LocalCoordMapping[coordIds[i]]=i;
 	pthread_mutex_unlock(&_mutex);
@@ -57,6 +58,7 @@ void fsi::FSIDummyAImplementation::transferGlobalIds(){
 	int rank;
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 	if(rank==0){
+
 		_b->transferCoordinatesParallel(
 				&_globalCoordIds[0],
 				_globalCoordIds.size(),
@@ -79,6 +81,7 @@ void fsi::FSIDummyAImplementation::receiveAllData(){
 		_b->startDataTransferParallel();
 		_b->endDataTransfer(ack);
 	}
+	MPI_Barrier(MPI_COMM_WORLD);
 	//pthread_mutex_unlock(&_mutex);
 }
 
@@ -92,9 +95,8 @@ void fsi::FSIDummyAImplementation::gatherDomainDescriptions(){
 
 	if(comm_size>0)
 		if(rank!=0){
-
-			MPI_Send(&_numberOfPoints,1,MPI_INT,0,1000,MPI_COMM_WORLD);
-			MPI_Send(&_localCoordIds,_numberOfPoints,MPI_INT,0,1001,MPI_COMM_WORLD);
+			MPI_Send(&_numberOfPoints,1,MPI_INT,0,4000,MPI_COMM_WORLD);
+			MPI_Send(_localCoordIds,_numberOfPoints,MPI_INT,0,10001,MPI_COMM_WORLD);
 		}else{
 			//			int pieces=
 			//					_parameters.parallel.numProcessors[0]*
@@ -111,12 +113,13 @@ void fsi::FSIDummyAImplementation::gatherDomainDescriptions(){
 				_globaOffsets.push_back(prefixSum);
 				int numberOfPoints=0;
 				MPI_Status status;
-				MPI_Recv (&numberOfPoints,1, MPI_INT,i, 1000, MPI_COMM_WORLD,&status);
+				MPI_Recv (&numberOfPoints,1, MPI_INT,i, 4000, MPI_COMM_WORLD,&status);
 				//assert(number_of_bytes>0);
-				std::vector<int> coordIds(_numberOfPoints);
-				MPI_Recv (&coordIds[0],numberOfPoints,MPI_INT,i,1001,MPI_COMM_WORLD,&status);
-				for(unsigned int i=0;i<numberOfPoints;i++)
-					_globalCoordIds.push_back(coordIds[i]);
+				std::vector<int> coordIds;
+				coordIds.resize(numberOfPoints);
+				MPI_Recv (&coordIds[0],numberOfPoints,MPI_INT,i,10001,MPI_COMM_WORLD,&status);
+				for(unsigned int k=0;k<numberOfPoints;k++)
+					_globalCoordIds.push_back(coordIds[k]);
 				prefixSum+=numberOfPoints;
 
 			}
@@ -148,13 +151,13 @@ void fsi::FSIDummyAImplementation::gatherDomainDescriptions(){
 
 }
 void fsi::FSIDummyAImplementation::gatherMids(){
+
 	std::string mid=retrieveSocketAddress();
 	_mids.push_back(mid);
 	int comm_size=0;
 	int rank = 0;
 	MPI_Comm_size(MPI_COMM_WORLD,&comm_size);
 	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-
 	if(comm_size>0)
 		if(rank!=0){
 
@@ -162,8 +165,8 @@ void fsi::FSIDummyAImplementation::gatherMids(){
 			bytes.push_back('\0');
 			int num_of_bytes=(int)bytes.size();
 			//assert(num_of_bytes>0);
-			MPI_Send(&num_of_bytes,1,MPI_INT,0,1000,MPI_COMM_WORLD);
-			MPI_Send(&bytes[0],num_of_bytes,MPI_BYTE,0,1000,MPI_COMM_WORLD);
+			MPI_Send(&num_of_bytes,1,MPI_INT,0,2000,MPI_COMM_WORLD);
+			MPI_Send(&bytes[0],num_of_bytes,MPI_BYTE,0,2001,MPI_COMM_WORLD);
 		}else{
 			//			int pieces=
 			//					_parameters.parallel.numProcessors[0]*
@@ -173,10 +176,10 @@ void fsi::FSIDummyAImplementation::gatherMids(){
 			{
 				int number_of_bytes=0;
 				MPI_Status status;
-				MPI_Recv (&number_of_bytes,1, MPI_INT,i, 1000, MPI_COMM_WORLD,&status);
+				MPI_Recv (&number_of_bytes,1, MPI_INT,i, 2000, MPI_COMM_WORLD,&status);
 				//assert(number_of_bytes>0);
 				std::vector<char> buff(number_of_bytes);
-				MPI_Recv (&buff[0],number_of_bytes,MPI_BYTE,i,1000,MPI_COMM_WORLD,&status);
+				MPI_Recv (&buff[0],number_of_bytes,MPI_BYTE,i,2001,MPI_COMM_WORLD,&status);
 				std::cout<<"rank:"<<i<<" mid:"<<std::string(&buff[0])<<std::endl;
 				_mids.push_back(std::string(&buff[0]));
 			}
@@ -193,8 +196,11 @@ void fsi::FSIDummyAImplementation::transferData(
 		const int* coordIds, const int coordIds_len,
 		const double* data, const int data_len){
 	pthread_mutex_lock(&_mutex);
-	for(unsigned int i=0;i<data_len;i++)
+	int rank= 0;
+	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+	for(unsigned int i=0;i<data_len;i++){
 		_data[_global2LocalCoordMapping[coordIds[i]]]=data[i];
+	}
 	pthread_mutex_unlock(&_mutex);
 }
 

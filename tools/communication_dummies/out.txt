@@ -1,0 +1,523 @@
+Running communication proxy
+Running communication proxy
+Servus ...0 of 2 (1,1) (5,10) (0,0)
+Servus ...1 of 2 (2,1) (5,10) (5,0)
+5, 
+6, 
+7, 
+8, 
+9, 
+15, 
+16, 
+17, 
+18, 
+19, 
+25, 
+26, 
+27, 
+28, 
+29, 
+35, 
+36, 
+37, 
+38, 
+39, 
+45, 
+46, 
+47, 
+48, 
+49, 
+55, 
+56, 
+57, 
+58, 
+59, 
+65, 
+66, 
+67, 
+68, 
+69, 
+75, 
+76, 
+77, 
+78, 
+79, 
+85, 
+86, 
+87, 
+88, 
+89, 
+95, 
+96, 
+97, 
+98, 
+99, 
+0, 
+1, 
+2, 
+3, 
+4, 
+10, 
+11, 
+12, 
+13, 
+14, 
+20, 
+21, 
+22, 
+23, 
+24First Step:A
+, 
+30, 
+31, 
+32, 
+33, 
+34, 
+40, 
+41, 
+42, 
+43, 
+44, 
+50, 
+51, 
+52, 
+53, 
+54, 
+60, 
+61, 
+62, 
+63, 
+64, 
+70, 
+71, 
+72, 
+73, 
+74, 
+80, 
+81, 
+82, 
+83, 
+84, 
+90, 
+91, 
+92, 
+93, 
+94, 
+First Step:A
+rank:0init cmp
+initializing FSIA
+rank:1init cmp
+initializing FSIA
+coord:5
+coord:6
+coord:7
+coord:8
+coord:9
+coord:15
+coord:16
+coord:17
+coord:18
+coord:19
+coord:25
+coord:26
+coord:27
+coord:28
+coord:29
+coord:35
+coord:36
+coord:37
+coord:38
+coord:39
+coord:45
+coord:46
+coord:47
+coord:48
+coord:49
+coord:55
+coord:56
+coord:57
+coord:58
+coord:59
+coord:65
+coord:66
+coord:67
+coord:68
+coord:69
+coord:75
+coord:76
+coord:77
+coord:78
+coord:79
+coord:85
+coord:86
+coord:87
+coord:88
+coord:89
+coord:95
+coord:96
+coord:97
+coord:98
+coord:99
+coord:0
+coord:1
+coord:2
+coord:3
+coord:4
+coord:10
+coord:11
+coord:12
+coord:13
+coord:14
+coord:20
+lo: [127.0.0.1]
+eth0: [131.159.36.220]
+coord:21
+coord:22
+coord:23
+coord:24
+coord:30
+coord:31
+coord:32
+coord:33
+coord:34
+coord:40
+coord:41
+coord:42
+coord:43
+coord:44
+coord:50
+coord:51
+coord:52
+coord:53
+coord:54
+coord:60
+coord:61
+coord:62
+coord:63
+coord:64
+coord:70
+coord:71
+coord:72
+coord:73
+coord:74
+coord:80
+coord:81
+coord:82
+coord:83
+coord:84
+coord:90
+coord:91
+coord:92
+coord:93
+coord:94
+gathering mid on rank:1
+send coord:5
+send coord:6
+send coord:7
+send coord:8
+send coord:9
+send coord:15
+send coord:16
+send coord:17
+send coord:18
+send coord:19
+send coord:25
+send coord:26
+send coord:27
+send coord:28
+send coord:29
+send coord:35
+send coord:36
+send coord:37
+send coord:38
+send coord:39
+send coord:45
+send coord:46
+send coord:47
+send coord:48
+send coord:49
+send coord:55
+send coord:56
+send coord:57
+send coord:58
+send coord:59
+send coord:65
+send coord:66
+send coord:67
+send coord:68
+send coord:69
+send coord:75
+send coord:76lo: [127.0.0.1]
+eth0: [131.159.36.220]
+
+send coord:77
+send coord:78
+send coord:79
+send coord:85
+send coord:86
+send coord:87
+send coord:88
+send coord:89
+send coord:95
+send coord:96
+send coord:97
+send coord:98
+send coord:99
+rank:1bind cmp
+gathering mid on rank:0
+rank:1 mid:127.0.0.1:40016
+rcv coord:39776128
+rcv coord:0
+rcv coord:50
+rcv coord:0
+rcv coord:33
+rcv coord:0
+rcv coord:0
+rcv coord:0
+rcv coord:19
+rcv coord:9
+rcv coord:0
+rcv coord:0
+rcv coord:33
+rcv coord:0
+rcv coord:0
+rcv coord:0
+rcv coord:25
+rcv coord:10
+rcv coord:0
+rcv coord:0
+rcv coord:33
+rcv coord:0
+rcv coord:0
+rcv coord:0
+rcv coord:26
+rcv coord:11
+rcv coord:0
+rcv coord:0
+rcv coord:33
+rcv coord:0
+rcv coord:0
+rcv coord:0
+rcv coord:27
+rcv coord:12
+rcv coord:0
+rcv coord:0
+rcv coord:33
+rcv coord:0
+rcv coord:0
+rcv coord:0
+rcv coord:28
+rcv coord:13
+rcv coord:0
+rcv coord:0
+rcv coord:33
+rcv coord:0
+rcv coord:0
+rcv coord:0
+rcv coord:29
+rcv coord:14
+rank:0bind cmp
+establish connection from xml id:2050216096 host:127.0.0.1 port:60016
+transfering coords
+glob coord:0
+glob coord:1
+glob coord:2
+glob coord:3
+glob coord:4
+glob coord:10
+glob coord:11
+glob coord:12
+glob coord:13
+glob coord:14
+glob coord:20
+glob coord:21
+glob coord:22
+glob coord:23
+glob coord:24
+glob coord:30
+glob coord:31
+glob coord:32
+glob coord:33
+glob coord:34
+glob coord:40
+glob coord:41
+glob coord:42
+glob coord:43
+glob coord:44
+glob coord:50
+glob coord:51
+glob coord:52
+glob coord:53
+glob coord:54
+glob coord:60
+glob coord:61
+glob coord:62
+glob coord:63
+glob coord:64
+glob coord:70
+glob coord:71
+glob coord:72
+glob coord:73
+glob coord:74
+glob coord:80
+glob coord:81
+glob coord:82
+glob coord:83
+glob coord:84
+glob coord:90
+glob coord:91
+glob coord:92
+glob coord:93
+glob coord:94
+glob coord:39776128
+glob coord:0
+glob coord:50
+glob coord:0
+glob coord:33
+glob coord:0
+glob coord:0
+glob coord:0
+glob coord:19
+glob coord:9
+glob coord:0
+glob coord:0
+glob coord:33
+glob coord:0
+glob coord:0
+glob coord:0
+glob coord:25
+glob coord:10
+glob coord:0
+glob coord:0
+glob coord:33
+glob coord:0
+glob coord:0
+glob coord:0
+glob coord:26
+glob coord:11
+glob coord:0
+glob coord:0
+glob coord:33
+glob coord:0
+glob coord:0
+glob coord:0
+glob coord:27
+glob coord:12
+glob coord:0
+glob coord:0
+glob coord:33
+glob coord:0
+glob coord:0
+glob coord:0
+glob coord:28
+glob coord:13
+glob coord:0
+glob coord:0
+glob coord:33
+glob coord:0
+glob coord:0
+glob coord:0
+glob coord:29
+glob coord:14
+server accepted
+recv data:1on rank:0with id:0
+recv data:1on rank:0with id:1
+recv data:1on rank:0with id:2
+recv data:1on rank:0with id:3
+recv data:1on rank:0with id:4
+recv data:1on rank:0with id:10
+recv data:1.001on rank:0with id:11
+recv data:1.002on rank:0with id:12
+recv data:1.003on rank:0with id:13
+recv data:1.004on rank:0with id:14
+recv data:1on rank:0with id:20
+recv data:1.004on rank:0with id:21
+recv data:1.008on rank:0with id:22
+recv data:1.012on rank:0with id:23
+recv data:1.016on rank:0with id:24
+recv data:1on rank:0with id:30
+recv data:1.009on rank:0with id:31
+recv data:1.018on rank:0with id:32
+recv data:1.027on rank:0with id:33
+recv data:1.036on rank:0with id:34
+recv data:1on rank:0with id:40
+recv data:1.016on rank:0with id:41
+recv data:1.032on rank:0with id:42
+recv data:1.048on rank:0with id:43
+recv data:1.064on rank:0with id:44
+recv data:1on rank:0with id:50
+recv data:1.025on rank:0with id:51
+recv data:1.05on rank:0with id:52
+recv data:1.075on rank:0with id:53
+recv data:1.1on rank:0with id:54
+recv data:1on rank:0with id:60
+recv data:1.036on rank:0with id:61
+recv data:1.072on rank:0with id:62
+recv data:1.108on rank:0with id:63
+recv data:1.144on rank:0with id:64
+recv data:1on rank:0with id:70
+recv data:1.049on rank:0with id:71
+recv data:1.098on rank:0with id:72
+recv data:1.147on rank:0with id:73
+recv data:1.196on rank:0with id:74
+recv data:1on rank:0with id:80
+recv data:1.064on rank:0with id:81
+recv data:1.128on rank:0with id:82
+recv data:1.192on rank:0with id:83
+recv data:1.256on rank:0with id:84
+recv data:1on rank:0with id:90
+recv data:1.081on rank:0with id:91
+recv data:1.162on rank:0with id:92
+recv data:1.243on rank:0with id:93
+recv data:1.324on rank:0with id:94
+server accepted
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:50
+recv data:1on rank:1with id:0
+recv data:1.027on rank:1with id:33
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.009on rank:1with id:19
+recv data:1on rank:1with id:9
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.027on rank:1with id:33
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.02on rank:1with id:25
+recv data:1on rank:1with id:10
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.027on rank:1with id:33
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.024on rank:1with id:26
+recv data:1.001on rank:1with id:11
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.027on rank:1with id:33
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.028on rank:1with id:27
+recv data:1.002on rank:1with id:12
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.027on rank:1with id:33
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.032on rank:1with id:28
+recv data:1.003on rank:1with id:13
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.027on rank:1with id:33
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1on rank:1with id:0
+recv data:1.036on rank:1with id:29
+recv data:1.004on rank:1with id:14
+SUCCESS!

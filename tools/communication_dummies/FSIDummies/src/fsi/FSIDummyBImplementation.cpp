@@ -67,7 +67,8 @@ void fsi::FSIDummyBImplementation::transferCoordinates(
 		  const int commids_len
 ){
 	pthread_mutex_lock(&_mutex);
-	std::cout<<"start receiving coord"<<std::endl;
+	int rank;
+	MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 
 	int commId=-1;
 	for(int i=0;i<coord_len;i++){
@@ -84,7 +85,6 @@ void fsi::FSIDummyBImplementation::transferCoordinates(
 
 	}
 
-	std::cout<<"end receiving coord"<<std::endl;
 
 	//std::cout<<"end receiving coord"<<std::endl;
 	pthread_mutex_unlock(&_mutex);

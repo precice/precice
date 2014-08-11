@@ -18,7 +18,14 @@
     conv << message; \
     std::cout << conv.str() << std::endl; \
   }
+extern "C" struct FSI_FSIDUMMYA_arg;
+extern "C" FSI_FSIDUMMYA_arg daemon_args;
 extern "C" void main_loop_(bool);
+extern "C" void initialise_(FSI_FSIDUMMYA_arg& arg,bool joinable);
+
+extern "C" void bind_component_(FSI_FSIDUMMYA_arg& arg,bool joinable);
+extern "C" void socket_loop_(FSI_FSIDUMMYA_arg& arg,bool joinable);
+extern "C" void destroy_(FSI_FSIDUMMYA_arg& arg,bool joinable);  
 int main(int argc, char** argv)
 {
   std::cout << "Running communication proxy" << std::endl;
@@ -103,28 +110,37 @@ int main(int argc, char** argv)
     data[k]=0.0;
   }
 //
-  main_loop_(false);
-//
-  std::cout<<"start setting data A"<<std::endl;
-  fsi::FSIDummyAImplementation::singleton->setCoordIds(&ids[0],pointSize);
+std::cout<<"rank:"<<rank<<"init cmp"<<std::endl;  
+initialise_(daemon_args,false);
+  fsi::FSIDummyAImplementation::singleton->setCoordIds(ids,pointSize);
   fsi::FSIDummyAImplementation::singleton->setData(data);
-  std::cout<<"finished setting data A"<<std::endl;
   fsi::FSIDummyAImplementation::singleton->gatherMids();
   fsi::FSIDummyAImplementation::singleton->gatherDomainDescriptions();
-  std::cout<<"finished mid gathering A"<<std::endl;
+  MPI_Barrier(MPI_COMM_WORLD);
+  std::cout<<"rank:"<<rank<<"bind cmp"<<std::endl;
+  bind_component_(daemon_args,false);
+  socket_loop_(daemon_args,false);
+  
+//
   fsi::FSIDummyAImplementation::singleton->transferGlobalIds();
   fsi::FSIDummyAImplementation::singleton->receiveAllData();
 
   //check if received data is correct
+  std::cout << "Performaning validation" << std::endl;
+  bool hasFailed=false;
   for(int k=0;k<pointSize;k++){
     if(abs(data[k]-(coordX[k]*coordY[k]*coordY[k]+1.0))>0.01){
-      PRINT("ERROR" << "(" << rankX << "," << rankY << "), k:" << k<<" received: "<<data[k]<<" expected:"<<coordX[k]*coordY[k]*coordY[k]+1.0);
+      PRINT("ERROR" << "(" << rankX << "," << rankY <<","<<rank<< "), k:" << k<<" received: "<<data[k]<<" expected:"<<coordX[k]*coordY[k]*coordY[k]+1.0);
+      hasFailed=true;
     }
   }
+  if(hasFailed){
+	PRINT("FAIL!");
+  }else{ 
+  	PRINT("SUCCESS!");
+  }
+  //destroy_(daemon_args,false);  
   
-  PRINT("SUCCESS!");
-  
-
   MPI_Finalize();
   std::cout << "Stop communication proxy" << std::endl;
   return 0;

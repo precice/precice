@@ -641,7 +641,10 @@ void startMPIDaemon(FSI_FSIDUMMYA_arg& arg){
 int rank = -1;
 MPI_Comm_rank(MPI_COMM_WORLD,&rank);
 if(rank>0){
-	 parallel_deamon_run(&arg);
+	  pthread_t task;
+       //tasks.push_back(task);
+       pthread_create(&task,NULL,parallel_deamon_run,&arg);
+	 //parallel_deamon_run(&arg);
 }
 #endif     
 }
@@ -891,7 +894,7 @@ void initialise_(FSI_FSIDUMMYA_arg& arg,bool joinable){
      
      initialiseXMLDaemons(arg);
      initialiseParallel(arg);
-     
+
 
    
    /*if(arg.java_client_flag)         
