@@ -31,6 +31,8 @@ int main(int argc, char** argv)
   std::cout << "Running communication proxy" << std::endl;
   int provided;
   MPI_Init_thread(&argc,&argv,MPI_THREAD_MULTIPLE ,&provided);
+  std::cout << "provided: " << provided << " , TM: "
+      << MPI_THREAD_MULTIPLE << std::endl;
 
   if (argc == 1 || argc != 3){
     PRINT("Usage: ./proxy proX proY");
@@ -134,6 +136,20 @@ initialise_(daemon_args,false);
       hasFailed=true;
     }
   }
+
+  fsi::FSIDummyAImplementation::singleton->receiveAllData();
+
+  //check if received data is correct
+  std::cout << "Performaning validation" << std::endl;
+  bool hasFailed=false;
+  for(int k=0;k<pointSize;k++){
+    if(abs(data[k]-(coordX[k]*coordY[k]*coordY[k]+1.0))>0.01){
+      PRINT("ERROR" << "(" << rankX << "," << rankY <<","<<rank<< "), k:" << k<<" received: "<<data[k]<<" expected:"<<coordX[k]*coordY[k]*coordY[k]+1.0);
+      hasFailed=true;
+    }
+  }
+
+
   if(hasFailed){
 	PRINT("FAIL!");
   }else{ 

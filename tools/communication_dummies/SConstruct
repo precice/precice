@@ -27,8 +27,8 @@ cpppath = [
     ]   
 ccflags = []   
 #cxx = '/home/atanasoa/intel/impi/4.1.3.049/intel64/bin/mpiicpc'
-#cxx = '/home/uekerman/Software/openmpi-1.8.1/ompi/tools/wrappers/mpicc.1'
-cxx = 'mpicxx'
+cxx = '/home/uekerman/Software/openmpi-1.8.1/bin/mpicxx'
+#cxx = 'mpicxx'
 
 # For systems offering mpicxx compiler
 
