@@ -89,8 +89,12 @@ int
                          tries--;
 #ifdef _WIN32
 						 Sleep(1000);
+
 #else
 						 sleep(1);
+						 getaddrinfo(hostname, port_str.str().c_str(), &hints, &result);
+             sockfd = socket(result->ai_family, result->ai_socktype,
+                             result->ai_protocol);
 #endif	
                 }   
          newsockfd=sockfd;
