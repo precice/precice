@@ -29,6 +29,8 @@ public:
 
   virtual void initializeData();
 
+  virtual void advance();
+
   
 protected:
   /// @brief merges send and receive data into one map (for parallel post-processing)
@@ -46,6 +48,9 @@ private:
   /// @brief Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;
 
+  virtual void explicitAdvance();
+
+  virtual void implicitAdvance();
 };
 
 }}

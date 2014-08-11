@@ -48,17 +48,7 @@ public:
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod);
 
-  /**
-   * @brief Advances within the coupling scheme (not necessarily in time).
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   */
-  virtual void advance();
-
 private:
-
-  /// @brief Logging device.
   static tarch::logging::Log _log;
 
   friend class tests::ParallelImplicitCouplingSchemeTest;
