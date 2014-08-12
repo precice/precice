@@ -68,7 +68,8 @@ vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", True
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 
 
-env = Environment(variables = vars)   # For configuring build variables
+env = Environment(variables = vars, ENV = os.environ)   # For configuring build variables
+# env = Environment(ENV = os.environ)
 conf = Configure(env) # For checking libraries, headers, ...
 
 
