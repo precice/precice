@@ -1709,6 +1709,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
                            << " in addition to a defined geometry!" );
 
       bool addedReceiver = false;
+      geometry::CommunicatedGeometry* comGeo = NULL;
       foreach ( PtrParticipant receiver, _participants ){
         foreach ( MeshContext& receiverContext, receiver->usedMeshContexts() ){
           bool doesReceive = receiverContext.receiveMeshFrom == _accessorName;
@@ -1717,13 +1718,13 @@ void SolverInterfaceImpl:: configureSolverGeometries
             preciceDebug ( "   ... receiver " << receiver );
             utils::DynVector offset ( _dimensions, 0.0 );
             std::string provider ( _accessorName );
-            geometry::CommunicatedGeometry* comGeo = NULL;
+
             if(!addedReceiver){
               comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider );
               context.geometry = geometry::PtrGeometry ( comGeo );
             }
             else{
-              preciceDebug ( "Futher receiver added.");
+              preciceDebug ( "Further receiver added.");
             }
 
             com::PtrCommunication com =
