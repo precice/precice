@@ -4,11 +4,10 @@
 #ifndef PRECICE_CPLSCHEME_SERIALEXPLICITCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_SERIALEXPLICITCOUPLINGSCHEME_HPP_
 
-#include "ExplicitCouplingScheme.hpp"
+#include "SerialCouplingScheme.hpp"
 #include "Constants.hpp"
 #include "com/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
-#include "utils/Helpers.hpp"
 
 namespace precice { namespace cplscheme { namespace tests {
 class ExplicitCouplingSchemeTest;
@@ -18,7 +17,7 @@ namespace precice {
 namespace cplscheme {
 
 /// @brief Serial coupling scheme without iterations per timestep.
-class SerialExplicitCouplingScheme : public ExplicitCouplingScheme
+class SerialExplicitCouplingScheme : public SerialCouplingScheme
 {
 public:
   
@@ -44,14 +43,6 @@ public:
     const std::string&    localParticipant,
     com::PtrCommunication communication,
     constants::TimesteppingMethod dtMethod);
-  
-  /**
-   * @brief Advances within the coupling scheme.
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   */
-  virtual void advance();
   
   /// @brief Logging device.
   static tarch::logging::Log _log;

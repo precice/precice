@@ -4,13 +4,10 @@
 #ifndef PRECICE_CPLSCHEME_SERIALIMPLICITCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_SERIALIMPLICITCOUPLINGSCHEME_HPP_
 
-#include "ImplicitCouplingScheme.hpp"
+#include "SerialCouplingScheme.hpp"
+#include "Constants.hpp"
 #include "SharedPointer.hpp"
-#include "impl/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
-#include "utils/Helpers.hpp"
-#include "tarch/la/DynamicColumnMatrix.h"
-#include "boost/tuple/tuple.hpp" // ??
 
 namespace precice { namespace cplscheme { namespace tests {
 class SerialImplicitCouplingSchemeTest;
@@ -20,7 +17,7 @@ namespace precice {
 namespace cplscheme {
 
 /// @brief Serial coupling scheme with iterations per timestep to achieve strong solution.
-class SerialImplicitCouplingScheme : public ImplicitCouplingScheme
+class SerialImplicitCouplingScheme : public SerialCouplingScheme
 {
 public:
   
@@ -48,14 +45,6 @@ public:
     com::PtrCommunication communication,
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod);
-  
-  /**
-   * @brief Advances within the coupling scheme (not necessarily in time).
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   */
-  virtual void advance();
   
   /// @brief Logging device.
   static tarch::logging::Log _log;

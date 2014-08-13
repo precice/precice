@@ -28,12 +28,12 @@ ExplicitCouplingScheme:: ExplicitCouplingScheme
 		     communication, 1, dtMethod)
 {}
 
-std::string ExplicitCouplingScheme:: printCouplingState() const
-{
-  std::ostringstream os;
-  os << printBasicState() << " | " << printActionsState();
-  return os.str();
-}
+// std::string ExplicitCouplingScheme:: printCouplingState() const
+// {
+//   std::ostringstream os;
+//   os << printBasicState() << " | " << printActionsState();
+//   return os.str();
+// }
 
 
 }} // namespace precice, cplscheme

@@ -4,29 +4,18 @@
 #ifndef PRECICE_CPLSCHEME_PARALLELEXPLICITCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_PARALLELEXPLICITCOUPLINGSCHEME_HPP_
 
-#include "ExplicitCouplingScheme.hpp"
-#include "BaseCouplingScheme.hpp"
+#include "ParallelCouplingScheme.hpp"
 #include "Constants.hpp"
-#include "io/TXTTableWriter.hpp"
-#include "mesh/Vertex.hpp"
-#include "mesh/PropertyContainer.hpp"
-#include "mesh/Mesh.hpp"
+#include "SharedPointer.hpp"
 #include "tarch/logging/Log.h"
-#include "utils/Helpers.hpp"
-#include "boost/tuple/tuple.hpp"
-
-namespace precice { namespace cplscheme { namespace tests {
-//class ParallelExplicitCouplingSchemeTest;
-} } }
 
 namespace precice {
 namespace cplscheme {
 
 /// @brief Serial coupling scheme without iterations per timestep.
-class ParallelExplicitCouplingScheme : public ExplicitCouplingScheme
+class ParallelExplicitCouplingScheme : public ParallelCouplingScheme
 {
 public:
-
   /**
    * @brief Constructor.
    *
@@ -50,32 +39,10 @@ public:
     com::PtrCommunication communication,
     constants::TimesteppingMethod dtMethod);
 
-  /// @brief Initializes the coupling scheme.
-  virtual void initialize (
-    double startTime,
-    int    startTimestep );
 
-  /**
-   * @brief Initializes data with written values.
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   * - advance() has NOT yet been called.
-   */
-  virtual void initializeData();
-
-  /**
-   * @brief Advances within the coupling scheme.
-   *
-   * Preconditions:
-   * - initialize() has been called.
-   */
-  virtual void advance();
-
+private:
   /// @brief Logging device.
   static tarch::logging::Log _log;
-
-  //friend class tests::ParallelExplicitCouplingSchemeTest;
 };
 
 }} // namespace precice, cplscheme
