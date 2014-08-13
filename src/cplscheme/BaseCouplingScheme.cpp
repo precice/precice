@@ -24,7 +24,7 @@ BaseCouplingScheme:: BaseCouplingScheme
   double timestepLength,
   int    validDigits)
   :
-  couplingMode(Explicit),
+  _couplingMode(Undefined),
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _timesteps(0),
@@ -115,7 +115,7 @@ BaseCouplingScheme::BaseCouplingScheme
     "BaseCouplingScheme()", "Timestep length has to be larger than zero!");
   preciceCheck((_validDigits >= 1) && (_validDigits < 17),
 	       "BaseCouplingScheme()", "Valid digits of timestep length has to be "
-	       << "between 1 and 16!");
+               << "between 1 and 16!");
   preciceCheck(_firstParticipant != _secondParticipant,
 	       "ImplicitCouplingScheme()", "First participant and "
 	       << "second participant must have different names! Called from BaseCoupling.");

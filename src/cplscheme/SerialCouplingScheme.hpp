@@ -34,8 +34,10 @@ public:
     const std::string&    secondParticipant,
     const std::string&    localParticipant,
     com::PtrCommunication communication,
-    int                   maxIterations,
-    constants::TimesteppingMethod dtMethod);
+    constants::TimesteppingMethod dtMethod,
+    CouplingMode          cplMode,
+    int                   maxIterations = 1
+    );
 
   virtual void initialize(double startTime, int startTimestep);
 
@@ -46,9 +48,6 @@ public:
   /// @brief Logging device.
   static tarch::logging::Log _log;
 
-
-
-  
 };
 
 }}

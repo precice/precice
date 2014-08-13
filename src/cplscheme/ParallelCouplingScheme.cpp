@@ -18,13 +18,21 @@ ParallelCouplingScheme::ParallelCouplingScheme
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
   com::PtrCommunication communication,
-  int                   maxIterations,
-  constants::TimesteppingMethod dtMethod )
+  constants::TimesteppingMethod dtMethod,
+  CouplingMode          cplMode,
+  int                   maxIterations)
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-		     secondParticipant,localParticipant,communication,maxIterations,dtMethod),
+                     secondParticipant,localParticipant,communication,maxIterations,dtMethod),
   _allData ()
-{}
+{
+  _couplingMode = cplMode;
+  // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
+  assertion(_couplingMode != Undefined);
+  if (_couplingMode == Explicit) {
+    assertion(maxIterations == 1);
+  }
+}
 
 void ParallelCouplingScheme::initialize
 (
@@ -40,16 +48,16 @@ void ParallelCouplingScheme::initialize
                "No send data configured!");
   setTime(startTime);
   setTimesteps(startTimestep);
-  if (couplingMode == Implicit) {
+  if (_couplingMode == Implicit) {
     if (not doesFirstStep()) { // second participant
       setupConvergenceMeasures(); // needs _couplingData configured
       mergeData(); // merge send and receive data for all pp calls
       setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
       if (getPostProcessing().get() != NULL) {
-	preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
-		     "For parallel coupling, the number of coupling data vectors has to be 2, not: "
-		     << getPostProcessing()->getDataIDs().size());
-	getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
+        preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
+                     "For parallel coupling, the number of coupling data vectors has to be 2, not: "
+                     << getPostProcessing()->getDataIDs().size());
+        getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
       }
     }
 
@@ -81,7 +89,7 @@ void ParallelCouplingScheme::initializeData()
 {
   preciceTrace("initializeData()");
   preciceCheck(isInitialized(), "initializeData()",
-	       "initializeData() can be called after initialize() only!");
+               "initializeData() can be called after initialize() only!");
 
   if (not hasToSendInitData() && not hasToReceiveInitData()) {
     preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
@@ -89,7 +97,7 @@ void ParallelCouplingScheme::initializeData()
   }
 
   preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-	       "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+               "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
@@ -116,7 +124,7 @@ void ParallelCouplingScheme::initializeData()
       setHasDataBeenExchanged(true);
 
       // second participant has to save values for extrapolation
-      if (couplingMode == Implicit and getExtrapolationOrder() > 0){
+      if (_couplingMode == Implicit and getExtrapolationOrder() > 0){
         foreach (DataMap::value_type & pair, getReceiveData()){
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
@@ -126,7 +134,7 @@ void ParallelCouplingScheme::initializeData()
       }
     }
     if (hasToSendInitData()) {
-      if (couplingMode == Implicit and getExtrapolationOrder() > 0) {
+      if (_couplingMode == Implicit and getExtrapolationOrder() > 0) {
         foreach (DataMap::value_type & pair, getSendData()) {
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
@@ -147,10 +155,10 @@ void ParallelCouplingScheme::initializeData()
 
 void ParallelCouplingScheme::advance()
 {
-  if (couplingMode == Explicit) {
+  if (_couplingMode == Explicit) {
     explicitAdvance();
   }
-  else if (couplingMode == Implicit) {
+  else if (_couplingMode == Implicit) {
     implicitAdvance();
   }
 }
@@ -160,7 +168,7 @@ void ParallelCouplingScheme::explicitAdvance()
   preciceTrace("advance()");
   checkCompletenessRequiredActions();
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-	       "initializeData() needs to be called before advance if data has to be initialized!");
+               "initializeData() needs to be called before advance if data has to be initialized!");
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
 
@@ -213,7 +221,7 @@ void ParallelCouplingScheme::implicitAdvance()
   checkCompletenessRequiredActions();
 
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-	       "initializeData() needs to be called before advance if data has to be initialized!");
+               "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
@@ -244,7 +252,7 @@ void ParallelCouplingScheme::implicitAdvance()
       convergence = measureConvergence();
 
       assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
-		 getIterations(), getMaxIterations());
+                 getIterations(), getMaxIterations());
       // Stop, when maximal iteration count (given in config) is reached
       if (getIterations() == getMaxIterations()-1) {
         convergence = true;
