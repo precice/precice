@@ -267,20 +267,6 @@ public:
     const std::string& filenameSuffix,
     int                exportType );
 
-  /**requestGetWritePositions
-   * @brief Requests integrate scalar data from server.
-   */
-  void requestIntegrateScalarData (
-    int     dataID,
-    double& integratedValue );
-
-  /**
-   * @brief Requests integrate vector data from server.
-   */
-  void requestIntegrateVectorData (
-    int     dataID,
-    double* integratedValue );
-
 private:
 
   /**
@@ -316,8 +302,6 @@ private:
     REQUEST_MAP_WRITE_DATA_FROM,
     REQUEST_MAP_READ_DATA_TO,
     REQUEST_EXPORT_MESH,
-    REQUEST_INTEGRATE_SCALAR_DATA,
-    REQUEST_INTEGRATE_VECTOR_DATA,
     REQUEST_PING // Used in tests only
   };
 
@@ -479,15 +463,6 @@ private:
    */
   void handleRequestExportMesh ( int rankSender );
 
-  /**
-   * @brief Handles request integrate scalar data from client.
-   */
-  void handleRequestIntegrateScalarData ( int rankSender );
-
-  /**
-   * @brief Handles request integrate vector data from client.
-   */
-  void handleRequestIntegrateVectorData ( int rankSender );
 };
 
 }} // namespace precice, impl

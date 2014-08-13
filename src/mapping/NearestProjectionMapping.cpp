@@ -20,11 +20,11 @@ NearestProjectionMapping:: NearestProjectionMapping
 {
   if (constraint == CONSISTENT){
     setInputRequirement(FULL);
-    setOutputRequirement(TEMPORARY);
+    setOutputRequirement(VERTEX);
   }
   else {
     assertion1(constraint == CONSERVATIVE, constraint);
-    setInputRequirement(TEMPORARY);
+    setInputRequirement(VERTEX);
     setOutputRequirement(FULL);
   }
 }

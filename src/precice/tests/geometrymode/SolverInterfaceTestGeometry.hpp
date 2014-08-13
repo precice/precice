@@ -66,13 +66,6 @@ private:
   void testConservativeStationaryDataMapping();
 
   /**
-   * @brief Tests conservation of written data, integration and reset of data.
-   */
-  void testConservativeIncrementalDataMapping();
-
-  void testConsistentIncrementalDataMapping();
-
-  /**
    * @brief Tests mapping with radial basis functions.
    */
   void testMappingRBF();

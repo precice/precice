@@ -20,7 +20,7 @@ public:
   /**
    * Constructor
    *
-   * @sTmp
+   * Tmp
    */
   XMLWriter(std::string sTmp);
   XMLWriter(const std::string& sTmp, const std::string& headerInfo);

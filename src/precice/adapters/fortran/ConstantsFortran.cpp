@@ -11,7 +11,7 @@ extern"C" {
 void precicef_name_config_
 (
   char*  nameConfig,
-  size_t lengthNameConfig )
+  int lengthNameConfig )
 {
   const std::string& name = precice::constants::nameConfiguration();
   assertion2(name.size() < lengthNameConfig, name.size(), lengthNameConfig);
@@ -23,7 +23,7 @@ void precicef_name_config_
 void precicef_action_write_iter_checkp_
 (
   char*  nameAction,
-  size_t lengthNameAction )
+  int lengthNameAction )
 {
   const std::string& name = precice::constants::actionWriteIterationCheckpoint();
   assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);
@@ -34,7 +34,7 @@ void precicef_action_write_iter_checkp_
 
 void precicef_action_write_initial_data_(
   char*  nameAction,
-  size_t lengthNameAction )
+  int lengthNameAction )
 {
   const std::string& name = precice::constants::actionWriteInitialData();
   assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);
@@ -46,7 +46,7 @@ void precicef_action_write_initial_data_(
 void precicef_action_read_iter_checkp_
 (
   char*  nameAction,
-  size_t lengthNameAction )
+  int lengthNameAction )
 {
   const std::string& name = precice::constants::actionReadIterationCheckpoint();
   assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);
@@ -59,7 +59,7 @@ void precicef_action_read_iter_checkp_
 void precicef_action_write_sim_checkp_
 (
   char*  nameAction,
-  size_t lengthNameAction )
+  int lengthNameAction )
 {
   const std::string& name = precice::constants::actionWriteSimulationCheckpoint();
   assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);
@@ -71,7 +71,7 @@ void precicef_action_write_sim_checkp_
 void precicef_action_read_sim_checkp_
 (
   char*  nameAction,
-  size_t lengthNameAction )
+  int lengthNameAction )
 {
   const std::string& name = precice::constants::actionReadSimulationCheckpoint();
   assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);

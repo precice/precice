@@ -34,8 +34,7 @@ public:
   {
     INITIAL,
     ON_ADVANCE,
-    ON_DEMAND,
-    INCREMENTAL
+    ON_DEMAND
   };
 
   /**
@@ -53,8 +52,6 @@ public:
     Direction direction;
     // @brief When the mapping should be executed.
     Timing timing;
-    // @brief Is true, if the mapping is done incremental for each value.
-    //bool isIncremental;
   };
 
   // @brief Name of xml tag for this class in configuration file
@@ -141,7 +138,6 @@ private:
   const std::string VALUE_TIMING_INITIAL;
   const std::string VALUE_TIMING_ON_ADVANCE;
   const std::string VALUE_TIMING_ON_DEMAND;
-  const std::string VALUE_TIMING_INCREMENTAL;
 
   mesh::PtrMeshConfiguration _meshConfig;
 

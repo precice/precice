@@ -24,7 +24,7 @@
          <!--<mapping:nearest-projection direction="write" mesh="Test-Square"
                   constraint="conservative"/>
          <mapping:nearest-projection direction="read" mesh="Test-Square"
-                  constraint="consistent" timing="incremental" />-->
+                  constraint="consistent" timing="onadvance" />-->
          <write-data name="Forces"     mesh="Test-Square" />
          <read-data  name="Velocities" mesh="Test-Square" />
       </participant>

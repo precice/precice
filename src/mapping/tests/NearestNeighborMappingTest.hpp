@@ -43,9 +43,6 @@ private:
   // @brief Logging device.
   static tarch::logging::Log _log;
 
-  /**
-   * @brief Tests incremental computation of mapping and mapping.
-   */
   void testConsistentNonIncremental();
 
   void testConservativeNonIncremental();
