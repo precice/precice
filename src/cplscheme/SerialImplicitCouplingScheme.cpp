@@ -27,9 +27,7 @@ SerialImplicitCouplingScheme:: SerialImplicitCouplingScheme
   constants::TimesteppingMethod dtMethod )
   :
   SerialCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-			 secondParticipant,localParticipant,communication,maxIterations,dtMethod)
-{
-  couplingMode = Implicit;
-}
+		       secondParticipant,localParticipant,communication,maxIterations,dtMethod, Implicit)
+{}
 
 }} // namespace precice, cplscheme

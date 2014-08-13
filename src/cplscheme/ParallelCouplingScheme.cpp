@@ -19,12 +19,20 @@ ParallelCouplingScheme::ParallelCouplingScheme
   const std::string&    localParticipant,
   com::PtrCommunication communication,
   int                   maxIterations,
-  constants::TimesteppingMethod dtMethod )
+  constants::TimesteppingMethod dtMethod,
+  CouplingMode          cplMode)
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
 		     secondParticipant,localParticipant,communication,maxIterations,dtMethod),
   _allData ()
-{}
+{
+  _couplingMode = cplMode;
+  // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
+  assertion(_couplingMode != Undefined);
+  if (_couplingMode == Explicit) {
+    assertion(maxIterations == 1);
+  }
+}
 
 void ParallelCouplingScheme::initialize
 (
@@ -40,7 +48,7 @@ void ParallelCouplingScheme::initialize
                "No send data configured!");
   setTime(startTime);
   setTimesteps(startTimestep);
-  if (couplingMode == Implicit) {
+  if (_couplingMode == Implicit) {
     if (not doesFirstStep()) { // second participant
       setupConvergenceMeasures(); // needs _couplingData configured
       mergeData(); // merge send and receive data for all pp calls
@@ -116,7 +124,7 @@ void ParallelCouplingScheme::initializeData()
       setHasDataBeenExchanged(true);
 
       // second participant has to save values for extrapolation
-      if (couplingMode == Implicit and getExtrapolationOrder() > 0){
+      if (_couplingMode == Implicit and getExtrapolationOrder() > 0){
         foreach (DataMap::value_type & pair, getReceiveData()){
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
@@ -126,7 +134,7 @@ void ParallelCouplingScheme::initializeData()
       }
     }
     if (hasToSendInitData()) {
-      if (couplingMode == Implicit and getExtrapolationOrder() > 0) {
+      if (_couplingMode == Implicit and getExtrapolationOrder() > 0) {
         foreach (DataMap::value_type & pair, getSendData()) {
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
@@ -147,10 +155,10 @@ void ParallelCouplingScheme::initializeData()
 
 void ParallelCouplingScheme::advance()
 {
-  if (couplingMode == Explicit) {
+  if (_couplingMode == Explicit) {
     explicitAdvance();
   }
-  else if (couplingMode == Implicit) {
+  else if (_couplingMode == Implicit) {
     implicitAdvance();
   }
 }

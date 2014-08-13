@@ -35,7 +35,8 @@ public:
     const std::string&    localParticipant,
     com::PtrCommunication communication,
     int                   maxIterations,
-    constants::TimesteppingMethod dtMethod);
+    constants::TimesteppingMethod dtMethod,
+    CouplingMode          cplMode);
 
   virtual void initialize(double startTime, int startTimestep);
 

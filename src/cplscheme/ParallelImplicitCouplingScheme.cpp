@@ -31,10 +31,8 @@ ParallelImplicitCouplingScheme:: ParallelImplicitCouplingScheme
   constants::TimesteppingMethod dtMethod )
   :
   ParallelCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-			 secondParticipant,localParticipant,communication,maxIterations,dtMethod)
-{
-  couplingMode = Implicit;
-}
+			 secondParticipant,localParticipant,communication,maxIterations,dtMethod, Implicit)
+{}
 
 
 }} // namespace precice, cplscheme

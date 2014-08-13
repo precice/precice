@@ -17,11 +17,19 @@ SerialCouplingScheme::SerialCouplingScheme
   const std::string&    localParticipant,
   com::PtrCommunication communication,
   int                   maxIterations,
-  constants::TimesteppingMethod dtMethod )
+  constants::TimesteppingMethod dtMethod,
+  CouplingMode          cplMode)
   :
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits, firstParticipant,
 		     secondParticipant, localParticipant, communication, maxIterations, dtMethod)
-{}
+{
+  _couplingMode = cplMode;
+  // Coupling mode must be either Explicit or Implicit when using SerialCouplingScheme.
+  assertion(_couplingMode != Undefined);
+  if (_couplingMode == Explicit) {
+    assertion(maxIterations == 1);
+  }
+}
 
 void SerialCouplingScheme::initialize
 (
@@ -38,7 +46,7 @@ void SerialCouplingScheme::initialize
   setTime(startTime);
   setTimesteps(startTimestep);
   
-  if (couplingMode == Implicit) {
+  if (_couplingMode == Implicit) {
     if (not doesFirstStep()) {
       if (not _convergenceMeasures.empty()) {
 	setupConvergenceMeasures(); // needs _couplingData configured
@@ -169,7 +177,7 @@ void SerialCouplingScheme:: advance()
   setIsCouplingTimestepComplete(false);
   double eps = std::pow(10.0, -1 * getValidDigits());
 
-  if (couplingMode == Explicit) {
+  if (_couplingMode == Explicit) {
     if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)) {
       setIsCouplingTimestepComplete(true);
       setTimesteps(getTimesteps() + 1);
@@ -192,7 +200,7 @@ void SerialCouplingScheme:: advance()
       setComputedTimestepPart(0.0);
     }
   }
-  else if (couplingMode == Implicit) {  
+  else if (_couplingMode == Implicit) {  
     bool convergence = true;
   
     if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)) {

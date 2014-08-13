@@ -69,8 +69,7 @@ public:
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod );
 
-  /// @brief Sets whether explicit or implicit coupling is being done.
-  enum {Explicit, Implicit} couplingMode; 
+  enum CouplingMode {Explicit, Implicit, Undefined};
   
   /**
    * @brief Adds another coupling scheme in parallel to this scheme.
@@ -264,6 +263,9 @@ public:
   virtual void importState(const std::string& filenamePrefix);
   
 protected:
+
+  /// @brief Sets whether explicit or implicit coupling is being done.
+  CouplingMode _couplingMode;
 
   /// @brief Updates internal state of coupling scheme for next timestep.
   void timestepCompleted();

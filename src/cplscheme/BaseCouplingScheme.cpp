@@ -24,7 +24,7 @@ BaseCouplingScheme:: BaseCouplingScheme
   double timestepLength,
   int    validDigits)
   :
-  couplingMode(Explicit),
+  _couplingMode(Undefined),
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _timesteps(0),
