@@ -6,6 +6,7 @@
 
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
+#include "cplscheme/impl/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "com/SharedPointer.hpp"

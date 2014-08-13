@@ -2,7 +2,7 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ParallelImplicitCouplingSchemeTest.hpp"
-#include "cplscheme/ParallelImplicitCouplingScheme.hpp"
+#include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "cplscheme/config/PostProcessingConfiguration.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
@@ -144,9 +144,9 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   }
 
   // Create the coupling scheme object
-  cplscheme::ParallelImplicitCouplingScheme cplScheme(
+  cplscheme::ParallelCouplingScheme cplScheme(
      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-     nameLocalParticipant, communication, 100, constants::FIXED_DT);
+     nameLocalParticipant, communication, constants::FIXED_DT, BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], initData);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], initData);
 
