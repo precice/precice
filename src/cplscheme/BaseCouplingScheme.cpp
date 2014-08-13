@@ -764,9 +764,9 @@ void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
 
 
 void BaseCouplingScheme:: updateTimeAndIterations(bool convergence){
+  _totalIterations++;
   if(not convergence){
     _iterations++;
-    _totalIterations++;
     // The computed timestep part equals the timestep length, since the
     // timestep remainder is zero. Subtract the timestep length do another
     // coupling iteration.
@@ -791,7 +791,7 @@ void BaseCouplingScheme::timestepCompleted()
 }
 
 bool BaseCouplingScheme::maxIterationsReached(){
-  return _iterations == _maxIterations-1;
+  return _iterations == _maxIterations;
 }
 
 
