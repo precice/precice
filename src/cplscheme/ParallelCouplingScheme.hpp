@@ -22,7 +22,7 @@ public:
     constants::TimesteppingMethod dtMethod,
     CouplingMode          cplMode,
     int                   maxIterations = 1)
-;
+    ;
   
   /// @brief Logging device.
   static tarch::logging::Log _log;

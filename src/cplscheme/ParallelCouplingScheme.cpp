@@ -23,7 +23,7 @@ ParallelCouplingScheme::ParallelCouplingScheme
   int                   maxIterations)
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-		     secondParticipant,localParticipant,communication,maxIterations,dtMethod),
+                     secondParticipant,localParticipant,communication,maxIterations,dtMethod),
   _allData ()
 {
   _couplingMode = cplMode;
@@ -54,10 +54,10 @@ void ParallelCouplingScheme::initialize
       mergeData(); // merge send and receive data for all pp calls
       setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
       if (getPostProcessing().get() != NULL) {
-	preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
-		     "For parallel coupling, the number of coupling data vectors has to be 2, not: "
-		     << getPostProcessing()->getDataIDs().size());
-	getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
+        preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
+                     "For parallel coupling, the number of coupling data vectors has to be 2, not: "
+                     << getPostProcessing()->getDataIDs().size());
+        getPostProcessing()->initialize(getAllData()); // Reserve memory, initialize
       }
     }
 
@@ -89,7 +89,7 @@ void ParallelCouplingScheme::initializeData()
 {
   preciceTrace("initializeData()");
   preciceCheck(isInitialized(), "initializeData()",
-	       "initializeData() can be called after initialize() only!");
+               "initializeData() can be called after initialize() only!");
 
   if (not hasToSendInitData() && not hasToReceiveInitData()) {
     preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
@@ -97,7 +97,7 @@ void ParallelCouplingScheme::initializeData()
   }
 
   preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
-	       "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
+               "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
 
   setHasDataBeenExchanged(false);
 
@@ -168,7 +168,7 @@ void ParallelCouplingScheme::explicitAdvance()
   preciceTrace("advance()");
   checkCompletenessRequiredActions();
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-	       "initializeData() needs to be called before advance if data has to be initialized!");
+               "initializeData() needs to be called before advance if data has to be initialized!");
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
 
@@ -221,7 +221,7 @@ void ParallelCouplingScheme::implicitAdvance()
   checkCompletenessRequiredActions();
 
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
-	       "initializeData() needs to be called before advance if data has to be initialized!");
+               "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
@@ -252,7 +252,7 @@ void ParallelCouplingScheme::implicitAdvance()
       convergence = measureConvergence();
 
       assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
-		 getIterations(), getMaxIterations());
+                 getIterations(), getMaxIterations());
       // Stop, when maximal iteration count (given in config) is reached
       if (getIterations() == getMaxIterations()-1) {
         convergence = true;

@@ -550,7 +550,7 @@ private:
   
   bool _isCouplingTimestepComplete;
 
-    /// @brief Post-processing method to speedup iteration convergence.
+  /// @brief Post-processing method to speedup iteration convergence.
   impl::PtrPostProcessing _postProcessing;
 
   /// @brief to carry initData information from initialize to initData

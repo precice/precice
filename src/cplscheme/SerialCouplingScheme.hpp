@@ -37,7 +37,7 @@ public:
     constants::TimesteppingMethod dtMethod,
     CouplingMode          cplMode,
     int                   maxIterations = 1
-);
+    );
 
   virtual void initialize(double startTime, int startTimestep);
 
@@ -48,9 +48,6 @@ public:
   /// @brief Logging device.
   static tarch::logging::Log _log;
 
-
-
-  
 };
 
 }}
