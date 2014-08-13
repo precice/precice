@@ -3,10 +3,8 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CouplingSchemeConfiguration.hpp"
 #include "cplscheme/config/PostProcessingConfiguration.hpp"
-#include "cplscheme/ParallelExplicitCouplingScheme.hpp"
-#include "cplscheme/SerialExplicitCouplingScheme.hpp"
-#include "cplscheme/SerialImplicitCouplingScheme.hpp"
-#include "cplscheme/ParallelImplicitCouplingScheme.hpp"
+#include "cplscheme/SerialCouplingScheme.hpp"
+#include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/CompositionalCouplingScheme.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
@@ -649,10 +647,10 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );
-  SerialExplicitCouplingScheme* scheme = new SerialExplicitCouplingScheme (
+  SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
-      accessor, com, _config.dtMethod );
+      accessor, com, _config.dtMethod, BaseCouplingScheme::Explicit );
   scheme->setCheckPointTimestepInterval ( _config.checkpointTimestepInterval );
 
   addDataToBeExchanged(*scheme, accessor);
@@ -667,10 +665,10 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );
-  ParallelExplicitCouplingScheme* scheme = new ParallelExplicitCouplingScheme (
+  ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
-      accessor, com, _config.dtMethod );
+      accessor, com, _config.dtMethod, BaseCouplingScheme::Explicit );
   scheme->setCheckPointTimestepInterval ( _config.checkpointTimestepInterval );
 
   addDataToBeExchanged(*scheme, accessor);
@@ -687,10 +685,10 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
 
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );
-  SerialImplicitCouplingScheme* scheme = new SerialImplicitCouplingScheme (
+  SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
-      accessor, com, _config.maxIterations, _config.dtMethod );
+      accessor, com, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
   scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
   scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 
@@ -734,10 +732,10 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
   assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participant, _config.secondParticipant );
-  ParallelImplicitCouplingScheme* scheme = new ParallelImplicitCouplingScheme (
+  ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participant, _config.secondParticipant,
-      accessor, com, _config.maxIterations, _config.dtMethod );
+      accessor, com, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
   scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
   scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 

@@ -19,9 +19,10 @@ public:
     const std::string&    secondParticipant,
     const std::string&    localParticipant,
     com::PtrCommunication communication,
-    int                   maxIterations,
     constants::TimesteppingMethod dtMethod,
-    CouplingMode          cplMode);
+    CouplingMode          cplMode,
+    int                   maxIterations = 1)
+;
   
   /// @brief Logging device.
   static tarch::logging::Log _log;

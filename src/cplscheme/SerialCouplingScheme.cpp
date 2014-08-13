@@ -16,9 +16,9 @@ SerialCouplingScheme::SerialCouplingScheme
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
   com::PtrCommunication communication,
-  int                   maxIterations,
   constants::TimesteppingMethod dtMethod,
-  CouplingMode          cplMode)
+  CouplingMode          cplMode,
+  int                   maxIterations)
   :
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits, firstParticipant,
 		     secondParticipant, localParticipant, communication, maxIterations, dtMethod)
