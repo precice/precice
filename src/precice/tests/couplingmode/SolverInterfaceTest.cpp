@@ -861,7 +861,7 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
     validateEquals(solverOne->getName(), "SolverOne");
     double dt = couplingInterface.initialize();
     int meshOneID = couplingInterface.getMeshID("MeshOne");
-    int forcesID = couplingInterface.getDataID("Forces", meshOneID);
+    /*int forcesID = */ couplingInterface.getDataID("Forces", meshOneID);
     validateEquals(solverOne->_meshContexts.size(), 2);
     mesh::PtrMesh mesh = solverOne->_meshContexts[0]->mesh;
     utils::Vector2D integral(0.0);
@@ -886,7 +886,7 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
     validateEquals(solverTwo->getName(), "SolverTwo");
     double dt = couplingInterface.initialize();
     int squareID = couplingInterface.getMeshID("Test-Square");
-    int dataID = couplingInterface.getDataID("Velocities", squareID);
+    /*int dataID = */ couplingInterface.getDataID("Velocities", squareID);
     validateEquals(solverTwo->_meshContexts.size(), 2);
     mesh::PtrMesh mesh = solverTwo->_meshContexts[0]->mesh;
     utils::Vector2D integral(0.0);

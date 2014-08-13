@@ -15,7 +15,7 @@ void precicef_name_config_
 {
   const std::string& name = precice::constants::nameConfiguration();
   assertion2(name.size() < lengthNameConfig, name.size(), lengthNameConfig);
-  for (int i=0; i < name.size(); i++){
+  for (size_t i=0; i < name.size(); i++){
     nameConfig[i] = name[i];
   }
 }
@@ -27,7 +27,7 @@ void precicef_action_write_iter_checkp_
 {
   const std::string& name = precice::constants::actionWriteIterationCheckpoint();
   assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);
-  for (int i=0; i < name.size(); i++){
+  for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
 }
@@ -38,7 +38,7 @@ void precicef_action_write_initial_data_(
 {
   const std::string& name = precice::constants::actionWriteInitialData();
   assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);
-  for (int i=0; i < name.size(); i++){
+  for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
 }
@@ -50,7 +50,7 @@ void precicef_action_read_iter_checkp_
 {
   const std::string& name = precice::constants::actionReadIterationCheckpoint();
   assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);
-  for (int i=0; i < name.size(); i++){
+  for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
 }
@@ -63,7 +63,7 @@ void precicef_action_write_sim_checkp_
 {
   const std::string& name = precice::constants::actionWriteSimulationCheckpoint();
   assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);
-  for (int i=0; i < name.size(); i++){
+  for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
 }
@@ -75,7 +75,7 @@ void precicef_action_read_sim_checkp_
 {
   const std::string& name = precice::constants::actionReadSimulationCheckpoint();
   assertion2(name.size() < lengthNameAction, name.size(), lengthNameAction);
-  for (int i=0; i < name.size(); i++){
+  for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
 }

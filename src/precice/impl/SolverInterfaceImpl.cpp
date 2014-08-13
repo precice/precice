@@ -1356,7 +1356,6 @@ void SolverInterfaceImpl:: writeBlockVectorData
     preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
                  "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
-    impl::MappingContext& mapContext = context.mappingContext;
 
     assertion(context.toData.get() != NULL);
     utils::DynVector& valuesInternal = context.fromData->values();
@@ -1397,7 +1396,6 @@ void SolverInterfaceImpl:: writeVectorData
              "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.get() != NULL);
-    impl::MappingContext& mapContext = context.mappingContext;
     utils::DynVector& values = context.fromData->values();
     assertion1(valueIndex >= 0, valueIndex);
     int offset = valueIndex * _dimensions;
@@ -1425,7 +1423,6 @@ void SolverInterfaceImpl:: writeBlockScalarData
     preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockScalarData()",
                  "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
-    impl::MappingContext& mapContext = context.mappingContext;
     assertion(context.toData.get() != NULL);
     utils::DynVector& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
@@ -1452,7 +1449,6 @@ void SolverInterfaceImpl:: writeScalarData
                  "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.use_count() > 0);
-    impl::MappingContext& mapContext = context.mappingContext;
     utils::DynVector& values = context.fromData->values();
     assertion1(valueIndex >= 0, valueIndex);
     values[valueIndex] = value;
@@ -1477,7 +1473,6 @@ void SolverInterfaceImpl:: readBlockVectorData
     preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
                  "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
-    impl::MappingContext& mapContext = context.mappingContext;
     assertion(context.fromData.get() != NULL);
     utils::DynVector& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
@@ -1510,7 +1505,6 @@ void SolverInterfaceImpl:: readVectorData
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
     utils::DynVector& values = context.toData->values();
-    impl::MappingContext& mapContext = context.mappingContext;
     assertion1 (valueIndex >= 0, valueIndex);
     int offset = valueIndex * _dimensions;
     for (int dim=0; dim < _dimensions; dim++){
@@ -1541,7 +1535,6 @@ void SolverInterfaceImpl:: readBlockScalarData
     preciceCheck(_accessor->isDataUsed(toDataID), "readBlockScalarData()",
                      "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
-    impl::MappingContext& mapContext = context.mappingContext;
     assertion(context.fromData.get() != NULL);
     utils::DynVector& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
@@ -1570,29 +1563,11 @@ void SolverInterfaceImpl:: readScalarData
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
     utils::DynVector& values = context.toData->values();
-    impl::MappingContext& mapContext = context.mappingContext;
     value = values[valueIndex];
 
   }
   preciceDebug("Read value = " << value);
 }
-
-//void SolverInterfaceImpl:: setExportLocation
-//(
-//  const std::string& location,
-//  int                exportType )
-//{
-//  preciceTrace2 ( "setExportLocation()", location, exportType );
-//  assertion ( not _clientMode ); // TODO implement
-//  const ExportContext& context = _accessor->exportContext ();
-//  foreach ( const io::PtrExport & exporter, context.exports ) {
-//    bool exportAll = exportType == constants::exportAll();
-//    bool exportThis = exporter->getType() == exportType;
-//    if ( exportAll || exportThis ) {
-//      exporter->setLocation ( location );
-//    }
-//  }
-//}
 
 void SolverInterfaceImpl:: exportMesh
 (

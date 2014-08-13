@@ -4,4 +4,6 @@
 *.pyc
 .cproject
 .project
-
+.sconsign.dblite
+\#*#
+core
