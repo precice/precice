@@ -5,7 +5,6 @@
 #include "DummyCouplingScheme.hpp"
 #include "../SharedPointer.hpp"
 #include "../CompositionalCouplingScheme.hpp"
-#include "../ExplicitCouplingScheme.hpp"
 #include "../Constants.hpp"
 #include "../config/CouplingSchemeConfiguration.hpp"
 #include "mesh/PropertyContainer.hpp"

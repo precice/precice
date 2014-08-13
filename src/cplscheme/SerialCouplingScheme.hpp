@@ -5,6 +5,10 @@
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
 
+namespace precice { namespace cplscheme { namespace tests {
+class SerialImplicitCouplingSchemeTest;
+} } }
+
 
 namespace precice {
 namespace cplscheme {
@@ -47,6 +51,8 @@ public:
   
   /// @brief Logging device.
   static tarch::logging::Log _log;
+
+  friend class tests::SerialImplicitCouplingSchemeTest;
 
 };
 
