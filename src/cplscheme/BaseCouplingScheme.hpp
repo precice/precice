@@ -451,41 +451,10 @@ protected:
 
   void initializeTXTWriters();
 
-  void setIterationToPlot(int iterationToPlot) {
-    _iterationToPlot = iterationToPlot;
-  }
+  void advanceTXTWriters();
 
-  void setTimestepToPlot(int timestepToPlot) {
-    _timestepToPlot = timestepToPlot;
-  }
+  void updateTimeAndIterations(bool convergence);
 
-  void setTimeToPlot(double timeToPlot) {
-    _timeToPlot = timeToPlot;
-  }
-
-  void setIterations(int iterations) {
-    _iterations = iterations;
-  }
-
-  int getIterations() {
-    return _iterations;
-  }
-
-  int getTotalIterations() {
-    return _totalIterations;
-  }
-
-  void increaseIterations() {
-    _iterations++;
-  }
-
-  void increaseTotalIterations() {
-    _totalIterations++;
-  }
-
-  void increaseIterationToPlot() {
-    _iterationToPlot++;
-  }
 
   int getMaxIterations() const {
     return _maxIterations;
@@ -494,6 +463,8 @@ protected:
   int getExtrapolationOrder() {
     return _extrapolationOrder;
   }
+
+  bool maxIterationsReached();
 
   
 private:
@@ -523,14 +494,7 @@ private:
   /// @brief Number of total iterations performed.
   int _totalIterations;
 
-  /// @brief Number of iteration in current timestep.
-  int _iterationToPlot;
-
   int _timesteps;
-  
-  int _timestepToPlot;
-  
-  double _timeToPlot;
   
   double _timestepLength;
   

@@ -79,13 +79,10 @@ BaseCouplingScheme::BaseCouplingScheme
   _participantReceivesDt(false),
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
-  _iterations(0),
+  _iterations(1),
   _maxIterations(maxIterations),
-  _totalIterations(0),
-  _iterationToPlot(0),
-  _timesteps(0),
-  _timestepToPlot(0),
-  _timeToPlot(0.0),
+  _totalIterations(1),
+  _timesteps(1),
   _timestepLength(timestepLength),
   _time(0.0),
   _computedTimestepPart(0.0),
@@ -533,11 +530,11 @@ void BaseCouplingScheme:: requireAction
 std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
-  os << "it " << _iterationToPlot; //_iterations;
+  os << "it " << _iterations; //_iterations;
   if (getMaxIterations() != -1 ) {
     os << " of " << getMaxIterations();
   }
-  os << " | " << printBasicState(_timestepToPlot, _timeToPlot) << " | " << printActionsState();
+  os << " | " << printBasicState(_timesteps, _time) << " | " << printActionsState();
   return os.str();
 }
 
@@ -723,6 +720,15 @@ void BaseCouplingScheme::initializeTXTWriters()
   _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
 }
 
+void BaseCouplingScheme::advanceTXTWriters()
+{
+  _iterationsWriter.writeData("Timesteps", _timesteps);
+  _iterationsWriter.writeData("Total Iterations", _totalIterations);
+  _iterationsWriter.writeData("Iterations", _iterations);
+  int converged = _iterations < _maxIterations ? 1 : 0;
+  _iterationsWriter.writeData("Convergence", converged);
+}
+
 
 void BaseCouplingScheme:: exportState(const std::string& filenamePrefix ) const
 {
@@ -756,6 +762,21 @@ void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
   }
 }
 
+
+void BaseCouplingScheme:: updateTimeAndIterations(bool convergence){
+  if(not convergence){
+    _iterations++;
+    _totalIterations++;
+    // The computed timestep part equals the timestep length, since the
+    // timestep remainder is zero. Subtract the timestep length do another
+    // coupling iteration.
+    assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
+    _time = _time - _computedTimestepPart;
+  } else{
+    _iterations = 1;
+  }
+}
+
 void BaseCouplingScheme::timestepCompleted()
 {
   preciceTrace2("timestepCompleted()", getTimesteps(), getTime());
@@ -767,6 +788,10 @@ void BaseCouplingScheme::timestepCompleted()
     preciceDebug("Setting require create checkpoint");
     requireAction(constants::actionWriteIterationCheckpoint());
   }
+}
+
+bool BaseCouplingScheme::maxIterationsReached(){
+  return _iterations == _maxIterations-1;
 }
 
 

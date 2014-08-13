@@ -251,10 +251,10 @@ void ParallelCouplingScheme::implicitAdvance()
 
       convergence = measureConvergence();
 
-      assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
-                 getIterations(), getMaxIterations());
+      //assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
+      //           getIterations(), getMaxIterations());
       // Stop, when maximal iteration count (given in config) is reached
-      if (getIterations() == getMaxIterations()-1) {
+      if (maxIterationsReached()) {
         convergence = true;
       }
       if (convergence) {
@@ -295,38 +295,15 @@ void ParallelCouplingScheme::implicitAdvance()
     if (not convergence) {
       preciceDebug("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
-      increaseIterations();
-      increaseTotalIterations();
-      // The computed timestep part equals the timestep length, since the
-      // timestep remainder is zero. Subtract the timestep length do another
-      // coupling iteration.
-      assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
-      setTime(getTime() - getComputedTimestepPart());
     }
     else {
       preciceDebug("Convergence achieved");
-      getIterationsWriter().writeData("Timesteps", getTimesteps());
-      getIterationsWriter().writeData("Total Iterations", getTotalIterations());
-      getIterationsWriter().writeData("Iterations", getIterations());
-      int converged = getIterations() < getMaxIterations() ? 1 : 0;
-      getIterationsWriter().writeData("Convergence", converged);
-      setIterations(0);
+      advanceTXTWriters();
     }
+    updateTimeAndIterations(convergence);
     setHasDataBeenExchanged(true);
     setComputedTimestepPart(0.0);
   } // subcycling complete
-
-  // When the iterations of one timestep are converged, the old time, timesteps,
-  // and iteration should be plotted, and not the 0th of the new timestep. Thus,
-  // the plot values are only updated when no convergence was achieved.
-  if (not convergence) {
-    setTimestepToPlot(getTimesteps());
-    setTimeToPlot(getTime());
-    setIterationToPlot(getIterations());
-  }
-  else {
-    increaseIterationToPlot();
-  }
 }
 
 
