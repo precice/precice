@@ -16,7 +16,7 @@
 
 - The coupling scheme module has been undergone major refactoring. Configuration file semantics have not changed.
 
-- The SConstruct file has undergone a major refactoring giving more detailed information about all options and variables used. 
+- The SConstruct file has undergone a major refactoring giving more detailed information about all options and variables used.
 
 - Issue 24 http://vmbungartz6.informatik.tu-muenchen.de/gatzhamm/precice/issues/24 has been resolved. The \c iterations-SOLVER.txt file contains now the correct number of iterations and is also flushed directly after every timestep.
 
