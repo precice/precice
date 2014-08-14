@@ -167,7 +167,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  cplScheme.initialize(0.0, 0);
+  cplScheme.initialize(0.0, 1);
 
 
 
@@ -185,11 +185,11 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
         cplScheme.performedAction(writeIterationCheckpoint);
       }
+      cplScheme.addComputedTime(timestepLength);
+      cplScheme.advance();
       if (cplScheme.isActionRequired(readIterationCheckpoint)){
         cplScheme.performedAction(readIterationCheckpoint);
       }
-      cplScheme.addComputedTime(timestepLength);
-      cplScheme.advance();
     }
   }
   else {

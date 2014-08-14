@@ -769,6 +769,7 @@ void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
 
 
 void BaseCouplingScheme:: updateTimeAndIterations(bool convergence){
+  preciceTrace("updateTimeAndIterations()");
   _totalIterations++;
   if(not convergence){
     _iterations++;
@@ -779,6 +780,11 @@ void BaseCouplingScheme:: updateTimeAndIterations(bool convergence){
     _time = _time - _computedTimestepPart;
   } else{
     _iterations = 1;
+    _timesteps = _timesteps + 1;
+    if (isCouplingOngoing()) {
+      preciceDebug("Setting require create checkpoint");
+      requireAction(constants::actionWriteIterationCheckpoint());
+    }
   }
 }
 
@@ -787,12 +793,6 @@ void BaseCouplingScheme::timestepCompleted()
   preciceTrace2("timestepCompleted()", getTimesteps(), getTime());
   preciceInfo("timestepCompleted()", "Timestep completed");
   setIsCouplingTimestepComplete(true);
-  setTimesteps(getTimesteps() + 1 );
-  //setTime(getTimesteps() * getTimestepLength() ); // Removes numerical errors
-  if (isCouplingOngoing()) {
-    preciceDebug("Setting require create checkpoint");
-    requireAction(constants::actionWriteIterationCheckpoint());
-  }
 }
 
 bool BaseCouplingScheme::maxIterationsReached(){
