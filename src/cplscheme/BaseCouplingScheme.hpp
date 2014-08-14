@@ -466,6 +466,8 @@ protected:
 
   bool maxIterationsReached();
 
+  /// @brief Smallest number, taking validDigists into account: eps = std::pow(10.0, -1 * validDigits)
+  const double _eps;
   
 private:
 

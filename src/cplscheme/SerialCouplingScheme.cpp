@@ -175,10 +175,9 @@ void SerialCouplingScheme:: advance()
   
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
-  double eps = std::pow(10.0, -1 * getValidDigits());
 
   if (_couplingMode == Explicit) {
-    if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)) {
+    if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       setIsCouplingTimestepComplete(true);
       setTimesteps(getTimesteps() + 1);
       preciceDebug("Sending data...");
@@ -203,7 +202,7 @@ void SerialCouplingScheme:: advance()
   else if (_couplingMode == Implicit) {  
     bool convergence = true;
   
-    if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)) {
+    if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       preciceDebug("Computed full length of iteration");
       if (doesFirstStep()) {
         getCommunication()->startSendPackage(0);

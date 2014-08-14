@@ -24,9 +24,10 @@ BaseCouplingScheme:: BaseCouplingScheme
   double timestepLength,
   int    validDigits)
   :
+  _couplingMode(Undefined),
+  _eps(std::pow(10.0, -1 * validDigits)),
   _participantSetsDt(false),
   _participantReceivesDt(false),
-  _couplingMode(Undefined),
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _iterations(-1),
@@ -80,6 +81,7 @@ BaseCouplingScheme::BaseCouplingScheme
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _convergenceMeasures(),
+  _eps(std::pow(10.0, -1 * validDigits)),
   _communication(communication),
   _participantSetsDt(false),
   _participantReceivesDt(false),
@@ -413,8 +415,7 @@ void BaseCouplingScheme:: addComputedTime
   _time += timeToAdd;
 
   // Check validness
-  double eps = std::pow(10.0, -1 * _validDigits);
-  bool valid = tarch::la::greaterEquals(getThisTimestepRemainder(), 0.0, eps);
+  bool valid = tarch::la::greaterEquals(getThisTimestepRemainder(), 0.0, _eps);
   preciceCheck(valid, "addComputedTime()", "The computed timestep length of "
 	       << timeToAdd << " exceeds the maximum timestep limit of "
 	       << _timestepLength - _computedTimestepPart + timeToAdd
@@ -426,9 +427,8 @@ bool BaseCouplingScheme:: willDataBeExchanged
   double lastSolverTimestepLength) const
 {
   preciceTrace1("willDataBeExchanged()", lastSolverTimestepLength);
-  double eps = std::pow(10.0, -1 * _validDigits);
   double remainder = getThisTimestepRemainder() - lastSolverTimestepLength;
-  return not tarch::la::greater(remainder, 0.0, eps);
+  return not tarch::la::greater(remainder, 0.0, _eps);
 }
 
 bool BaseCouplingScheme:: hasDataBeenExchanged() const
@@ -494,9 +494,8 @@ double BaseCouplingScheme:: getNextTimestepMaxLength() const
 
 bool BaseCouplingScheme:: isCouplingOngoing() const
 {
-  double eps = std::pow(10.0, -1 * _validDigits);
   using namespace tarch::la;
-  bool timeLeft = greater(_maxTime, _time, eps) || equals(_maxTime, UNDEFINED_TIME);
+  bool timeLeft = greater(_maxTime, _time, _eps) || equals(_maxTime, UNDEFINED_TIME);
   bool timestepsLeft = (_maxTimesteps >= _timesteps)
     || (_maxTimesteps == UNDEFINED_TIMESTEPS);
   return timeLeft && timestepsLeft;

@@ -172,8 +172,7 @@ void ParallelCouplingScheme::explicitAdvance()
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
 
-  double eps = std::pow(10.0, -1 * getValidDigits());
-  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)) {
+  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     setIsCouplingTimestepComplete(true);
     setTimesteps(getTimesteps() + 1);
 
@@ -225,10 +224,8 @@ void ParallelCouplingScheme::implicitAdvance()
 
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
-  double eps = std::pow(10.0, -1 * getValidDigits());
   bool convergence = false;
-  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, eps)) {
-    // bis hier identisch mit Explicit, von vorne
+  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     preciceDebug("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
       getCommunication()->startSendPackage(0);
