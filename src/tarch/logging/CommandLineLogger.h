@@ -146,14 +146,8 @@ class tarch::logging::CommandLineLogger: public tarch::services::Service {
      */
     static std::string::size_type _indent;
 
-    /**
-     * @todo
-     */
     static const std::string::size_type NumberOfIndentSpaces;
 
-    /**
-     * @todo
-     */
     static const std::string::size_type NumberOfStandardColumnSpaces;
 
     /**

@@ -23,9 +23,7 @@ namespace tarch {
  * Node Pool Strategy: Fair
  *
  * This is a very simple node pool strategy.
- *
- * @todo I have to write some comments
- *
+  *
  * @author Tobias Weinzierl
  * @version $Revision: 1.6 $
  */

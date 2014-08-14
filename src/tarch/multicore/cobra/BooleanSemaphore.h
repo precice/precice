@@ -56,8 +56,6 @@ class tarch::multicore::BooleanSemaphore {
 
     /**
      * Send task to background
-     *
-     * @todo Currently not supported, i.e. application might starve.
      */
     static void sendCurrentTaskToBack(const std::string& methodTrace);
 
