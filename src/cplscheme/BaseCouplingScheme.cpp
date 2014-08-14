@@ -24,13 +24,19 @@ BaseCouplingScheme:: BaseCouplingScheme
   double timestepLength,
   int    validDigits)
   :
+  _participantSetsDt(false),
+  _participantReceivesDt(false),
   _couplingMode(Undefined),
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
+  _iterations(-1),
+  _maxIterations(-1),
+  _totalIterations(-1),
   _timesteps(0),
   _timestepLength(timestepLength),
   _time(0.0),
   _computedTimestepPart(0.0),
+  _extrapolationOrder(0),
   _validDigits(validDigits),
   _doesFirstStep(false),
   _checkpointTimestepInterval(-1),
@@ -351,8 +357,8 @@ void BaseCouplingScheme:: setExtrapolationOrder
 
 void BaseCouplingScheme::extrapolateData(DataMap& data)
 {
-  preciceTrace("extrapolateData()");
-  if ((_extrapolationOrder == 1) || getTimesteps() == 1) {
+  preciceTrace1("extrapolateData()", _timesteps);
+  if ((_extrapolationOrder == 1) || getTimesteps() == 2) { //timesteps is increased before extrapolate is called
     preciceInfo("extrapolateData()", "Performing first order extrapolation" );
     foreach(DataMap::value_type & pair, data ){
       preciceDebug("Extrapolate data: " << pair.first);
@@ -491,7 +497,7 @@ bool BaseCouplingScheme:: isCouplingOngoing() const
   double eps = std::pow(10.0, -1 * _validDigits);
   using namespace tarch::la;
   bool timeLeft = greater(_maxTime, _time, eps) || equals(_maxTime, UNDEFINED_TIME);
-  bool timestepsLeft = (_maxTimesteps > _timesteps)
+  bool timestepsLeft = (_maxTimesteps >= _timesteps)
     || (_maxTimesteps == UNDEFINED_TIMESTEPS);
   return timeLeft && timestepsLeft;
 }
@@ -551,7 +557,7 @@ std::string BaseCouplingScheme:: printBasicState
   double time ) const
 {
   std::ostringstream os;
-  os << "dt# " << timesteps+1;
+  os << "dt# " << timesteps;
   if(_maxTimesteps != UNDEFINED_TIMESTEPS){
     os << " of " << _maxTimesteps;
   }

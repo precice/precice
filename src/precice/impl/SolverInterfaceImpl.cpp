@@ -262,7 +262,7 @@ double SolverInterfaceImpl:: initialize()
 
     // Initialize coupling state
     double time = 0.0;
-    int timestep = 0;
+    int timestep = 1;
     if (_restartMode){
       preciceInfo("initialize()", "Reading simulation state for restart");
       io::SimulationStateIO stateIO(_checkpointFileName + "_simstate.txt");
@@ -1916,17 +1916,19 @@ void SolverInterfaceImpl:: handleExports()
 {
   preciceTrace("handleExports()");
   assertion(not _clientMode);
+  //timesteps was already incremented before
+  int timesteps = _couplingScheme->getTimesteps()-1;
   foreach (const io::ExportContext& context, _accessor->exportContexts()){
     if (_couplingScheme->isCouplingTimestepComplete() || context.everyIteration){
       if (context.timestepInterval != -1){
-        if (_couplingScheme->getTimesteps() % context.timestepInterval == 0){
+        if (timesteps % context.timestepInterval == 0){
           if (context.everyIteration){
             std::ostringstream everySuffix;
             everySuffix << _accessorName << ".it" << _numberAdvanceCalls;
             exportMesh(everySuffix.str());
           }
           std::ostringstream suffix;
-          suffix << _accessorName << ".dt" << _couplingScheme->getTimesteps();
+          suffix << _accessorName << ".dt" << _couplingScheme->getTimesteps()-1;
           exportMesh(suffix.str());
           if (context.triggerSolverPlot){
             _couplingScheme->requireAction(constants::actionPlotOutput());
@@ -1944,8 +1946,7 @@ void SolverInterfaceImpl:: handleExports()
 
     // Checkpointing
     int checkpointingInterval = _couplingScheme->getCheckpointTimestepInterval();
-    int timestep = _couplingScheme->getTimesteps();
-    if ((checkpointingInterval != -1) && (timestep % checkpointingInterval == 0)){
+    if ((checkpointingInterval != -1) && (timesteps % checkpointingInterval == 0)){
       preciceDebug("Set require checkpoint");
       _couplingScheme->requireAction(constants::actionWriteSimulationCheckpoint());
       foreach (const MeshContext& meshContext, _accessor->usedMeshContexts()){
@@ -1955,7 +1956,8 @@ void SolverInterfaceImpl:: handleExports()
         exportVRML.doExportCheckpoint(filename, *meshContext.mesh);
       }
       io::SimulationStateIO exportState(_checkpointFileName + "_simstate.txt");
-      exportState.writeState(_couplingScheme->getTime(), timestep, _numberAdvanceCalls);
+
+      exportState.writeState(_couplingScheme->getTime(),_couplingScheme->getTimesteps(), _numberAdvanceCalls);
       //io::TXTWriter exportCouplingSchemeState(_checkpointFileName + "_cplscheme.txt");
       _couplingScheme->exportState(_checkpointFileName);
     }

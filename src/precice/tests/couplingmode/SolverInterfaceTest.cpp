@@ -678,37 +678,6 @@ void SolverInterfaceTest:: testExplicitWithDisplacingGeometry()
    }
 }
 
-//void SolverInterfaceTest:: testCoupledSimulationWithPreCoupledTimesteps ()
-//{
-//   preciceDebug ( "testCoupledSimulationWithPreCoupledTimesteps()",
-//                   "Entering" );
-//
-//   int timesteps = 0;
-//   double time = 0.0;
-//
-//   if ( utils::Parallel::getProcessRank() == 0 ) {
-//      runSolver ( "SolverOne",   preciceDebug ( "testTrivialCoupledSimulationWithDataExchange", "Entering" );
-//                  "/SolverInterfaceTest-precomputations-config.xml",
-//                  timesteps, time );
-//      validateEquals ( timesteps, 20,
-//                       "testCoupledSimulationWithPreCoupledTimesteps" );
-//      validateNumericalEquals ( time, 0.2,
-//                                "testCoupledSimulationWithPreCoupledTimesteps" );
-//   }
-//   else if ( utils::Parallel::getProcessRank() == 1 ) {
-//      runSolver ( "SolverTwo",
-//                  "/SolverInterfaceTest-precomputations-config.xml",
-//                  timesteps, time );
-//      validateEquals ( timesteps, 10,
-//                       "testCoupledSimulationWithPreCoupledTimesteps" );
-//      validateNumericalEquals ( time, 0.1,
-//                                "testCoupledSimulationWithPreCoupledTimesteps" );
-//   }
-//
-//   preciceDebug ( "testCoupledSimulationWithPreCoupledTimesteps()",
-//                   "Leaving" );
-//}
-
 void SolverInterfaceTest:: testExplicitWithDataScaling()
 {
   preciceTrace ( "testExplicitWithDataScaling" );
