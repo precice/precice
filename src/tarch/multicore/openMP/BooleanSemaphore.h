@@ -48,12 +48,6 @@ class tarch::multicore::BooleanSemaphore {
     BooleanSemaphore();
     ~BooleanSemaphore();
 
-
-    /**
-     * Send task to the background
-     *
-     * @todo Not implemented yet. See TBB version.
-     */
     static void sendCurrentTaskToBack(const std::string& methodTrace);
     static void continueWithTask();
 };

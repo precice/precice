@@ -50,8 +50,6 @@ class tarch::multicore::cobra::Core {
     /**
      * Configure the whole thing.
      *
-     * @todo Es waere schoen, wenn Cobra default Thread-zahlen akzeptieren wuerde
-     *
      * @param numberOfThreads Numer of threads that shall be used. This
      *        parameter has to be greater than zero (which defines the number
      *        of threads)
