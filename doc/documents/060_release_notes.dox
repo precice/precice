@@ -12,7 +12,9 @@
 
 - Documentation is now generated using Doxygen instead of unmaintened DoxyS. See https://ipvs.informatik.uni-stuttgart.de/sgs/precice/ for recent source code documentation. You will find this and further changelogs included there.
 
-- The coupling scheme module has been undergone major refactoring. Configuration file semantics have not changed. 
+- The test suite gives an return code of 1 if a test fails. The makes automated testing easier.
+
+- The coupling scheme module has been undergone major refactoring. Configuration file semantics have not changed.
 
 - The SConstruct file has undergone a major refactoring giving more detailed information about all options and variables used. 
 

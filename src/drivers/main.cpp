@@ -104,11 +104,15 @@ int main ( int argc, char** argv )
       return 1;
     }
     printMPITestWarning();
+    int errors = 0;
     foreach ( TopLevelConfiguration* config, configs ){
-      config->interpreteConfiguration();
+      errors += config->interpreteConfiguration();
     }
     ConfigurationRegistry::getInstance().freeConfigurations(configs);
     printMPITestWarning();
+    if (errors != 0) {
+      return 1;
+    }
   }
   else if ( runServer ){
     assertion(not runTests);
