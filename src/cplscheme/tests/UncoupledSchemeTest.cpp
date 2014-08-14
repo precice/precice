@@ -34,7 +34,7 @@ void UncoupledSchemeTest:: testBasics ()
   double maxTime = 10.0;
   int maxTimesteps = CplScheme::UNDEFINED_TIMESTEPS;
   UncoupledScheme cplscheme ( maxTime, maxTimesteps, 14, "TestParticipant" );
-  cplscheme.initialize ( 0.0, 0 );
+  cplscheme.initialize ( 0.0, 1 );
   validate ( not cplscheme.isCouplingTimestepComplete() );
 
   cplscheme.addComputedTime(1.0);

@@ -553,7 +553,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
   std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
 
   if ( nameParticipant == nameParticipant0 ) {
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validate ( not cplScheme.isCouplingTimestepComplete() );
     validate ( cplScheme.isActionRequired(MY_WRITE_CHECKPOINT) );
     validate ( not cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -583,7 +583,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         computedTime += maxLengthTimestep;
         computedTimesteps ++;
         validateNumericalEquals ( computedTime, cplScheme.getTime() );
-        validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+        validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
         validateEquals ( iterationCount, *iterValidIterations );
@@ -625,7 +625,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
   }
 
   else if ( nameParticipant == nameParticipant1 ) {
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validate ( not cplScheme.isCouplingTimestepComplete() );
     validate ( cplScheme.isActionRequired(MY_WRITE_CHECKPOINT) );
     validate ( not cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -658,7 +658,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         computedTime += maxLengthTimestep;
         computedTimesteps ++;
         validateNumericalEquals ( computedTime, cplScheme.getTime() );
-        validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+        validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
         // The iterations are enforced by the controlled decrease of the
         // change of data written
         validateEquals ( iterationCount, *iterValidIterations );
@@ -833,7 +833,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  cplScheme.initialize(0.0, 0);
+  cplScheme.initialize(0.0, 1);
 
   if (nameLocalParticipant == nameParticipant0){
     cplScheme.initializeData();
@@ -905,7 +905,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
 
   if ( nameParticipant == nameParticipant0 ) {
     iterationCount++; // different handling due to subcycling
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validate ( not cplScheme.isCouplingTimestepComplete() );
     validate ( cplScheme.isActionRequired(MY_WRITE_CHECKPOINT) );
     validate ( not cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -932,7 +932,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
         computedTime += maxTimestepLength;
         computedTimesteps ++;
         validateNumericalEquals ( computedTime, cplScheme.getTime() );
-        validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+        validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
         validateEquals ( iterationCount, *iterValidIterations );
@@ -988,7 +988,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
 
   else if ( nameParticipant == nameParticipant1 ) {
     iterationCount++; // different handling due to subcycling
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validate ( not cplScheme.isCouplingTimestepComplete() );
     validate ( cplScheme.isActionRequired(MY_WRITE_CHECKPOINT) );
     validate ( not cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -1021,7 +1021,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
         computedTime += maxTimestepLength;
         computedTimesteps ++;
         validateNumericalEquals ( computedTime, cplScheme.getTime() );
-        validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+        validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
         validateEquals ( iterationCount, *iterValidIterations );

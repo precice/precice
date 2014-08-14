@@ -36,6 +36,7 @@ void DummyCouplingScheme:: initialize
   _isInitialized = true;
   _isOngoing = true;
   _timesteps = startTimesteps;
+  _iterations=1;
 }
 
 void DummyCouplingScheme:: advance()
@@ -43,14 +44,14 @@ void DummyCouplingScheme:: advance()
   preciceTrace2("advance()", _iterations, _timesteps);
   assertion(_isInitialized);
   assertion(_isOngoing);
-  _iterations++;
   if (_iterations == _numberIterations){
-    _timesteps++;
     if (_timesteps == _maxTimesteps){
       _isOngoing = false;
     }
+    _timesteps++;
     _iterations = 0;
   }
+  _iterations++;
 }
 
 void DummyCouplingScheme:: finalize()
@@ -62,7 +63,7 @@ void DummyCouplingScheme:: finalize()
 
 bool DummyCouplingScheme:: isCouplingOngoing() const
 {
-  if (_timesteps < _maxTimesteps) return true;
+  if (_timesteps <= _maxTimesteps) return true;
   return false;
 }
 
@@ -73,13 +74,13 @@ bool DummyCouplingScheme:: isActionRequired
   preciceTrace1("isActionRequired()", actionName);
   if (_numberIterations > 1){
     if (actionName == constants::actionWriteIterationCheckpoint()){
-      if (_iterations == 0) {
+      if (_iterations == 1) {
         preciceDebug("return true");
         return true;
       }
     }
     else if (actionName == constants::actionReadIterationCheckpoint()){
-      if (_iterations != 0) {
+      if (_iterations != 1) {
         preciceDebug("return true");
         return true;
       }

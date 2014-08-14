@@ -82,7 +82,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
       new DummyCouplingScheme(numberIterations, maxTimesteps));
     CompositionalCouplingScheme composition;
     composition.addCouplingScheme(scheme);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -90,7 +90,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     }
     composition.finalize();
     validateEquals(advances, 10);
-    validateEquals(scheme->getTimesteps(), 10);
+    validateEquals(scheme->getTimesteps()-1, 10);
   }
   { // Test one implicit dummy coupling scheme
     preciceDebug("Test I(2)");
@@ -100,7 +100,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
       new DummyCouplingScheme(numberIterations, maxTimesteps));
     CompositionalCouplingScheme composition;
     composition.addCouplingScheme(scheme);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -108,7 +108,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     }
     composition.finalize();
     validateEquals(advances, 20);
-    validateEquals(scheme->getTimesteps(), 10);
+    validateEquals(scheme->getTimesteps()-1, 10);
   }
   { // Test two explicit dummy coupling schemes
     preciceDebug("Test E, E");
@@ -121,7 +121,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     CompositionalCouplingScheme composition;
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -129,8 +129,8 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     }
     composition.finalize();
     validateEquals(advances, 10);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test three explicit dummy coupling schemes
     preciceDebug("Test E, E, E");
@@ -146,7 +146,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
     composition.addCouplingScheme(scheme3);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -154,9 +154,9 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     }
     composition.finalize();
     validateEquals(advances, 10);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
-    validateEquals(scheme3->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
+    validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test two implicit dummy coupling schemes
     preciceDebug("Test I(2), I(2)");
@@ -169,7 +169,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     CompositionalCouplingScheme composition;
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -185,8 +185,8 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     }
     composition.finalize();
     validateEquals(advances, 20);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test two implicit dummy coupling schemes with different iteration number
     preciceDebug("Test I(2), I(3)");
@@ -200,7 +200,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     CompositionalCouplingScheme composition;
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -220,8 +220,8 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     }
     composition.finalize();
     validateEquals(advances, 30);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test three implicit dummy coupling schemes
     preciceDebug("Test I(2), I(2), I(2)");
@@ -237,7 +237,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
     composition.addCouplingScheme(scheme3);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -255,9 +255,9 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     }
     composition.finalize();
     validateEquals(advances, 20);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
-    validateEquals(scheme3->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
+    validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test three implicit dummy coupling schemes
     preciceDebug("Test I(3), I(4), I(2)");
@@ -275,7 +275,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
     composition.addCouplingScheme(scheme3);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -303,9 +303,9 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     }
     composition.finalize();
     validateEquals(advances, 40);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
-    validateEquals(scheme3->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
+    validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test E, I(2)
     preciceDebug("Test E, I(2)");
@@ -319,24 +319,24 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     CompositionalCouplingScheme composition;
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
       advances++;
       if (advances%2 == 0){
         validate(scheme2->isActionRequired(writeIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), advances/2);
+        validateEquals(scheme1->getTimesteps()-1, advances/2);
       }
       else {
         validate(scheme2->isActionRequired(readIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances+1)/2);
+        validateEquals(scheme1->getTimesteps()-1, (advances+1)/2);
       }
     }
     composition.finalize();
     validateEquals(advances, 20);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test I(2), E
     preciceDebug("Test I(2), E");
@@ -350,24 +350,24 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     CompositionalCouplingScheme composition;
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
       advances++;
       if (advances%2 == 0){
         validate(scheme1->isActionRequired(writeIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), advances/2);
+        validateEquals(scheme1->getTimesteps()-1, advances/2);
       }
       else {
         validate(scheme1->isActionRequired(readIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances-1)/2);
+        validateEquals(scheme1->getTimesteps()-1, (advances-1)/2);
       }
     }
     composition.finalize();
     validateEquals(advances, 20);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test E, I(3)
     preciceDebug("Test E, I(3)");
@@ -381,24 +381,24 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     CompositionalCouplingScheme composition;
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
       advances++;
       if (advances%3 == 0){
         validate(scheme2->isActionRequired(writeIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), advances/3);
+        validateEquals(scheme1->getTimesteps()-1, advances/3);
       }
       else {
         validate(scheme2->isActionRequired(readIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances+(3-advances%3))/3);
+        validateEquals(scheme1->getTimesteps()-1, (advances+(3-advances%3))/3);
       }
     }
     composition.finalize();
     validateEquals(advances, 30);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test I(3), E
     preciceDebug("Test I(3), E");
@@ -412,24 +412,24 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     CompositionalCouplingScheme composition;
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
       advances++;
       if (advances%3 == 0){
         validate(scheme1->isActionRequired(writeIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), advances/3);
+        validateEquals(scheme1->getTimesteps()-1, advances/3);
       }
       else {
         validate(scheme1->isActionRequired(readIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances-(advances%3))/3);
+        validateEquals(scheme1->getTimesteps()-1, (advances-(advances%3))/3);
       }
     }
     composition.finalize();
     validateEquals(advances, 30);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test E, I(2), I(2)
     preciceDebug("Test E, I(2), I(2)");
@@ -446,7 +446,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
     composition.addCouplingScheme(scheme3);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -454,19 +454,19 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
       if (advances%2 == 0){
         validate(scheme2->isActionRequired(writeIterationCheckpoint));
         validate(scheme3->isActionRequired(writeIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), advances/2);
+        validateEquals(scheme1->getTimesteps()-1, advances/2);
       }
       else {
         validate(scheme2->isActionRequired(readIterationCheckpoint));
         validate(scheme3->isActionRequired(readIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances+1)/2);
+        validateEquals(scheme1->getTimesteps()-1, (advances+1)/2);
       }
     }
     composition.finalize();
     validateEquals(advances, 20);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
-    validateEquals(scheme3->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
+    validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test E, I(2), I(3)
     preciceDebug("Test E, I(2), I(3)");
@@ -484,32 +484,32 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
     composition.addCouplingScheme(scheme3);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
       advances++;
       if (advances%3 == 0){
-        validateEquals(scheme1->getTimesteps(), advances/3);
+        validateEquals(scheme1->getTimesteps()-1, advances/3);
         validate(scheme2->isActionRequired(writeIterationCheckpoint));
         validate(scheme3->isActionRequired(writeIterationCheckpoint));
       }
       else if (advances%3 == 1){
         validate(scheme2->isActionRequired(readIterationCheckpoint));
         validate(scheme3->isActionRequired(readIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances+2)/3);
+        validateEquals(scheme1->getTimesteps()-1, (advances+2)/3);
       }
       else if (advances%3 == 2){
         validate(scheme2->isActionRequired(writeIterationCheckpoint));
         validate(scheme3->isActionRequired(readIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances+1)/3);
+        validateEquals(scheme1->getTimesteps()-1, (advances+1)/3);
       }
     }
     composition.finalize();
     validateEquals(advances, 30);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
-    validateEquals(scheme3->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
+    validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test I(2), I(2), E
     preciceDebug("Test I(2), I(2), E");
@@ -526,7 +526,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
     composition.addCouplingScheme(scheme3);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -534,23 +534,23 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
       if (advances%2 == 0){
         validate(scheme1->isActionRequired(writeIterationCheckpoint));
         validate(scheme2->isActionRequired(writeIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), advances/2);
-        validateEquals(scheme2->getTimesteps(), advances/2);
-        validateEquals(scheme3->getTimesteps(), advances/2);
+        validateEquals(scheme1->getTimesteps()-1, advances/2);
+        validateEquals(scheme2->getTimesteps()-1, advances/2);
+        validateEquals(scheme3->getTimesteps()-1, advances/2);
       }
       else {
         validate(scheme1->isActionRequired(readIterationCheckpoint));
         validate(scheme2->isActionRequired(readIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances-1)/2);
-        validateEquals(scheme2->getTimesteps(), (advances-1)/2);
-        validateEquals(scheme3->getTimesteps(), (advances-1)/2);
+        validateEquals(scheme1->getTimesteps()-1, (advances-1)/2);
+        validateEquals(scheme2->getTimesteps()-1, (advances-1)/2);
+        validateEquals(scheme3->getTimesteps()-1, (advances-1)/2);
       }
     }
     composition.finalize();
     validateEquals(advances, 20);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
-    validateEquals(scheme3->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
+    validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test I(2), I(2), E
     preciceDebug("Test I(3), I(2), E");
@@ -568,7 +568,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
     composition.addCouplingScheme(scheme3);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
@@ -576,30 +576,30 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
       if (advances%3 == 0){
         validate(scheme1->isActionRequired(writeIterationCheckpoint));
         validate(scheme2->isActionRequired(writeIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), advances/3);
-        validateEquals(scheme2->getTimesteps(), advances/3);
-        validateEquals(scheme3->getTimesteps(), advances/3);
+        validateEquals(scheme1->getTimesteps()-1, advances/3);
+        validateEquals(scheme2->getTimesteps()-1, advances/3);
+        validateEquals(scheme3->getTimesteps()-1, advances/3);
       }
       else if (advances%3 == 1){
         validate(scheme1->isActionRequired(readIterationCheckpoint));
         validate(scheme2->isActionRequired(readIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances-1)/3);
-        validateEquals(scheme2->getTimesteps(), (advances-1)/3);
-        validateEquals(scheme3->getTimesteps(), (advances-1)/3);
+        validateEquals(scheme1->getTimesteps()-1, (advances-1)/3);
+        validateEquals(scheme2->getTimesteps()-1, (advances-1)/3);
+        validateEquals(scheme3->getTimesteps()-1, (advances-1)/3);
       }
       else if (advances%3 == 2){
         validate(scheme1->isActionRequired(readIterationCheckpoint));
         validate(scheme2->isActionRequired(writeIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances-2)/3);
-        validateEquals(scheme2->getTimesteps(), (advances+1)/3);
-        validateEquals(scheme3->getTimesteps(), (advances-2)/3);
+        validateEquals(scheme1->getTimesteps()-1, (advances-2)/3);
+        validateEquals(scheme2->getTimesteps()-1, (advances+1)/3);
+        validateEquals(scheme3->getTimesteps()-1, (advances-2)/3);
       }
     }
     composition.finalize();
     validateEquals(advances, 30);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
-    validateEquals(scheme3->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
+    validateEquals(scheme3->getTimesteps()-1, 10);
   }
   {
     preciceDebug("Test I(3), E, I(2)");
@@ -617,26 +617,26 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     composition.addCouplingScheme(scheme1);
     composition.addCouplingScheme(scheme2);
     composition.addCouplingScheme(scheme3);
-    composition.initialize(0.0, 0);
+    composition.initialize(0.0, 1);
     int advances = 0;
     while (composition.isCouplingOngoing()){
       composition.advance();
       advances++;
       if (advances % 4 >= 3){
         validate(scheme1->isActionRequired(writeIterationCheckpoint));
-        validateEquals(scheme1->getTimesteps(), (advances-(advances%4)+4)/4);
+        validateEquals(scheme1->getTimesteps()-1, (advances-(advances%4)+4)/4);
       }
       else if (advances % 4 != 0){
         validate(scheme1->isActionRequired(readIterationCheckpoint));
       }
-      validateEquals(scheme2->getTimesteps(), (advances+1)/4);
-      validateEquals(scheme2->getTimesteps(), (advances+1)/4);
+      validateEquals(scheme2->getTimesteps()-1, (advances+1)/4);
+      validateEquals(scheme2->getTimesteps()-1, (advances+1)/4);
     }
     composition.finalize();
     validateEquals(advances, 40);
-    validateEquals(scheme1->getTimesteps(), 10);
-    validateEquals(scheme2->getTimesteps(), 10);
-    validateEquals(scheme3->getTimesteps(), 10);
+    validateEquals(scheme1->getTimesteps()-1, 10);
+    validateEquals(scheme2->getTimesteps()-1, 10);
+    validateEquals(scheme3->getTimesteps()-1, 10);
   }
 }
 
@@ -748,7 +748,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
   int computedTimesteps = 0;
 
   if (participantName == std::string("Participant0")){
-    cplScheme->initialize(0.0, 0);
+    cplScheme->initialize(0.0, 1);
     validate(not cplScheme->hasDataBeenExchanged());
     validateEquals(cplScheme->isCouplingTimestepComplete(), false);
     validateEquals(cplScheme->isCouplingOngoing(), true);
@@ -768,7 +768,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
         computedTimesteps++;
       }
       validateNumericalEquals(computedTime, cplScheme->getTime());
-      validateEquals(computedTimesteps, cplScheme->getTimesteps());
+      validateEquals(computedTimesteps, cplScheme->getTimesteps()-1);
       validate(cplScheme->hasDataBeenExchanged());
     }
     cplScheme->finalize();
@@ -778,7 +778,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
     validate(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
   }
   else if (participantName == std::string("Participant1")){
-    cplScheme->initialize(0.0, 0);
+    cplScheme->initialize(0.0, 1);
     validate(cplScheme->hasDataBeenExchanged());
     validateEquals(cplScheme->isCouplingTimestepComplete(), false);
     validateEquals(cplScheme->isCouplingOngoing(), true);
@@ -798,7 +798,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
         computedTimesteps++;
       }
       validateNumericalEquals(computedTime, cplScheme->getTime());
-      validateEquals(computedTimesteps, cplScheme->getTimesteps());
+      validateEquals(computedTimesteps, cplScheme->getTimesteps()-1);
       validate(cplScheme->hasDataBeenExchanged());
     }
     cplScheme->finalize();
@@ -809,7 +809,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
   }
   else {
     assertion1(participantName == std::string("Participant2"), participantName);
-    cplScheme->initialize(0.0, 0);
+    cplScheme->initialize(0.0, 1);
     validate(cplScheme->hasDataBeenExchanged());
     validateEquals(cplScheme->isCouplingTimestepComplete(), false);
     validateEquals(cplScheme->isCouplingOngoing(), true);
@@ -829,7 +829,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
         computedTimesteps++;
       }
       validateNumericalEquals(computedTime, cplScheme->getTime());
-      validateEquals(computedTimesteps, cplScheme->getTimesteps());
+      validateEquals(computedTimesteps, cplScheme->getTimesteps()-1);
       validate(cplScheme->hasDataBeenExchanged());
     }
     cplScheme->finalize();

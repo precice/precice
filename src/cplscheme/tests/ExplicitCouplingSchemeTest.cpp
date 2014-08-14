@@ -194,7 +194,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
   int computedTimesteps = 0;
   if ( localParticipant == std::string("participant0") ){
     double dt = 0.3;
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validateEquals ( cplScheme.isCouplingTimestepComplete(), false );
     validateEquals ( cplScheme.isCouplingOngoing(), true );
     while ( cplScheme.isCouplingOngoing() ){
@@ -204,7 +204,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
       cplScheme.advance();
       validate ( cplScheme.isCouplingTimestepComplete() );
       validateNumericalEquals ( computedTime, cplScheme.getTime() );
-      validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+      validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
       if ( cplScheme.isCouplingOngoing() ){
         validate ( cplScheme.hasDataBeenExchanged() );
       }
@@ -217,7 +217,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
   }
   else {
     assertion1 ( localParticipant == std::string("participant1"), localParticipant );
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validateEquals ( cplScheme.isCouplingTimestepComplete(), false );
     validateEquals ( cplScheme.isCouplingOngoing(), true );
     while ( cplScheme.isCouplingOngoing() ){
@@ -227,7 +227,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
       cplScheme.advance();
       validate ( cplScheme.isCouplingTimestepComplete() );
       validateNumericalEquals ( computedTime, cplScheme.getTime() );
-      validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+      validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
       if ( cplScheme.isCouplingOngoing() ){
         validate ( cplScheme.hasDataBeenExchanged() );
       }
@@ -283,7 +283,7 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
   utils::DynVector& dataValues2 = mesh->data()[2]->values();
 
   if (localParticipant == std::string("participant0")){
-    cplScheme.initialize(0.0, 0);
+    cplScheme.initialize(0.0, 1);
     validate(not cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
@@ -296,7 +296,7 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
     cplScheme.finalize();
   }
   else if (localParticipant == std::string("participant1")){
-    cplScheme.initialize(0.0, 0);
+    cplScheme.initialize(0.0, 1);
     validate(not cplScheme.hasDataBeenExchanged());
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues1[0] = 1.0;
@@ -353,7 +353,7 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
   utils::DynVector& dataValues2 = mesh->data()[2]->values();
 
   if (localParticipant == std::string("participant0")){
-    cplScheme.initialize(0.0, 0);
+    cplScheme.initialize(0.0, 1);
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues2[0] = 3.0;
     cplScheme.performedAction(constants::actionWriteInitialData());
@@ -369,7 +369,7 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
     cplScheme.finalize();
   }
   else if (localParticipant == std::string("participant1")){
-    cplScheme.initialize(0.0, 0);
+    cplScheme.initialize(0.0, 1);
     validate(not cplScheme.hasDataBeenExchanged());
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     dataValues1[0] = 1.0;
@@ -410,7 +410,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
   int computedTimesteps = 0;
 
   if ( participantName == std::string("participant0") ) {
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validate ( not cplScheme.hasDataBeenExchanged() );
     validateEquals ( cplScheme.isActionRequired(constants::actionWriteIterationCheckpoint()), false );
     validateEquals ( cplScheme.isActionRequired(constants::actionReadIterationCheckpoint()), false );
@@ -424,7 +424,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
       cplScheme.advance();
       validate ( cplScheme.isCouplingTimestepComplete() );
       validateNumericalEquals ( computedTime, cplScheme.getTime() );
-      validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+      validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
       validateEquals ( cplScheme.isActionRequired("WriteIterationCheckpoint"),
                        false );
       validateEquals ( cplScheme.isActionRequired("ReadIterationCheckpoint"),
@@ -458,7 +458,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
     validate ( cplScheme.getNextTimestepMaxLength() > 0.0 );
   }
   else if ( participantName == std::string("participant1") ) {
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validate ( cplScheme.hasDataBeenExchanged() );
     double value = dataValues0[vertex.getID()];
     validateNumericalEquals ( value, valueData0 );
@@ -478,7 +478,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
       cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
       cplScheme.advance();
       validateNumericalEquals ( computedTime, cplScheme.getTime() );
-      validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+      validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
       validateEquals (
         cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"),
         false );
@@ -630,7 +630,7 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
   assertion ( (participantName == nameParticipant0) ||
     (participantName == nameParticipant1) );
   if ( participantName == nameParticipant0 ) {
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     double dtDesired = cplScheme.getNextTimestepMaxLength() / 2.0;
     double dtUsed = dtDesired;
     validate ( ! cplScheme.hasDataBeenExchanged() );
@@ -696,7 +696,7 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
   }
   else if ( participantName == nameParticipant1 ) {
     // Start coupling
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     // Validate current coupling status
     validate ( cplScheme.hasDataBeenExchanged() );
     validateNumericalEquals ( dataValues0[vertex.getID()], valueData0 );
@@ -716,7 +716,7 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
       cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
       cplScheme.advance();
       validateNumericalEquals ( computedTime, cplScheme.getTime() );
-      validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+      validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
       validateEquals (
         cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"),
         false );
