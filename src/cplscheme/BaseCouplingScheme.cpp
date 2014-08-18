@@ -727,7 +727,7 @@ void BaseCouplingScheme::initializeTXTWriters()
 
 void BaseCouplingScheme::advanceTXTWriters()
 {
-  _iterationsWriter.writeData("Timesteps", _timesteps);
+  _iterationsWriter.writeData("Timesteps", _timesteps-1);
   _iterationsWriter.writeData("Total Iterations", _totalIterations);
   _iterationsWriter.writeData("Iterations", _iterations);
   int converged = _iterations < _maxIterations ? 1 : 0;
