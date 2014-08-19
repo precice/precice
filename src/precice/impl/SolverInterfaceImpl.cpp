@@ -1438,7 +1438,51 @@ void SolverInterfaceImpl:: writeBlockVectorData
   if (_clientMode){
     _requestManager->requestWriteBlockVectorData(fromDataID, size, valueIndices, values);
   }
-  else {
+  else if(_slaveMode){
+      com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+      com->send(size, 0);
+      com->send(valueIndices, size, 0);
+      com->send(values, size*_dimensions, 0);
+  }
+  else if (_masterMode){
+    preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
+                 "You try to write to data that is not defined for " << _accessor->getName());
+    DataContext& context = _accessor->dataContext(fromDataID);
+    assertion(context.toData.get() != NULL);
+    utils::DynVector& valuesInternal = context.fromData->values();
+    for (int i=0; i < size; i++){
+      int offsetInternal = valueIndices[i]*_dimensions;
+      int offset = i*_dimensions;
+      for (int dim=0; dim < _dimensions; dim++){
+        assertion2(offset+dim < valuesInternal.size(),
+                   offset+dim, valuesInternal.size());
+        valuesInternal[offsetInternal + dim] = values[offset + dim];
+      }
+    }
+
+    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
+      int slaveSize = -1;
+      com->receive(slaveSize, rankSender);
+      int* slaveIndices = new int[slaveSize];
+      com->receive(slaveIndices, slaveSize, rankSender);
+      double* slaveValues = new double[slaveSize*_dimensions];
+      com->receive(slaveValues, slaveSize*_dimensions, rankSender);
+      for (int i=0; i < slaveSize; i++){
+        int offsetInternal = slaveIndices[i]*_dimensions;
+        int offset = i*_dimensions;
+        for (int dim=0; dim < _dimensions; dim++){
+          assertion2(offset+dim < valuesInternal.size(),
+                     offset+dim, valuesInternal.size());
+          valuesInternal[offsetInternal + dim] = slaveValues[offset + dim];
+        }
+      }
+      delete[] slaveIndices;
+      delete[] slaveValues;
+    }
+
+  }
+  else { //couplingMode
     preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
                  "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
@@ -1555,7 +1599,50 @@ void SolverInterfaceImpl:: readBlockVectorData
   if (_clientMode){
     _requestManager->requestReadBlockVectorData(toDataID, size, valueIndices, values);
   }
-  else {
+  else if(_slaveMode){
+    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+    com->send(size, 0);
+    com->send(valueIndices, size, 0);
+    com->receive(values, size*_dimensions, 0);
+  }
+  else if(_masterMode){
+    preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
+                     "You try to read from data that is not defined for " << _accessor->getName());
+    DataContext& context = _accessor->dataContext(toDataID);
+    assertion(context.fromData.get() != NULL);
+    utils::DynVector& valuesInternal = context.toData->values();
+    for (int i=0; i < size; i++){
+      int offsetInternal = valueIndices[i] * _dimensions;
+      int offset = i * _dimensions;
+      for (int dim=0; dim < _dimensions; dim++){
+        assertion2(offsetInternal+dim < valuesInternal.size(),
+                   offsetInternal+dim, valuesInternal.size());
+        values[offset + dim] = valuesInternal[offsetInternal + dim];
+      }
+    }
+
+    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
+      int slaveSize = -1;
+      com->receive(slaveSize, rankSender);
+      int* slaveIndices = new int[slaveSize];
+      com->receive(slaveIndices, slaveSize, rankSender);
+      double* slaveValues = new double[slaveSize*_dimensions];
+      for (int i=0; i < slaveSize; i++){
+        int offsetInternal = slaveIndices[i] * _dimensions;
+        int offset = i * _dimensions;
+        for (int dim=0; dim < _dimensions; dim++){
+          assertion2(offsetInternal+dim < valuesInternal.size(),
+                     offsetInternal+dim, valuesInternal.size());
+          slaveValues[offset + dim] = valuesInternal[offsetInternal + dim];
+        }
+      }
+      com->send(slaveValues, slaveSize*_dimensions, rankSender);
+      delete[] slaveIndices;
+      delete[] slaveValues;
+    }
+  }
+  else { //couplingMode
     preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
                  "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
