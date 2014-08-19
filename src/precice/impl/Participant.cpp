@@ -37,11 +37,11 @@ Participant:: Participant
   _readMappingContexts(),
   _writeMappingContexts(),
   _usedMeshContexts (),
-  //TODO not sure if the 2 here always works
   _dataContexts ( meshConfig->getDataConfiguration()->data().size()*meshConfig->meshes().size(), NULL ),
   _writeDataContexts (),
   _readDataContexts (),
-  _clientServerCommunication ()
+  _clientServerCommunication (),
+  _masterSlaveCommunication ()
 {
   _participantsSize ++;
 }
@@ -324,17 +324,24 @@ com::PtrCommunication Participant:: getClientServerCommunication() const
   return _clientServerCommunication;
 }
 
-//bool Participant:: isServer()
-//{
-//  return _isServer;
-//}
-//
-//void Participant:: setIsServer
-//(
-//  bool value )
-//{
-//  _isServer = value;
-//}
+bool Participant:: useMaster()
+{
+  return _masterSlaveCommunication.use_count() > 0;
+}
+
+void Participant:: setMasterSlaveCommunication
+(
+  com::PtrCommunication communication )
+{
+  assertion ( communication.use_count() > 0 );
+  _masterSlaveCommunication = communication;
+}
+
+com::PtrCommunication Participant:: getMasterSlaveCommunication() const
+{
+  return _masterSlaveCommunication;
+}
+
 
 }} // namespace precice, impl
 

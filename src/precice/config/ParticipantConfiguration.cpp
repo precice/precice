@@ -45,6 +45,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   TAG_USE_MESH("use-mesh"),
   TAG_WATCH_POINT("watch-point"),
   TAG_SERVER("server"),
+  TAG_MASTER("master"),
   ATTR_NAME("name"),
   ATTR_SOURCE_DATA("source-data"),
   ATTR_TARGET_DATA("target-data"),
@@ -225,6 +226,58 @@ ParticipantConfiguration:: ParticipantConfiguration
   }
   foreach (XMLTag& tagServer, serverTags){
     tag.addSubtag(tagServer);
+  }
+
+  std::list<XMLTag> masterTags;
+  XMLTag::Occurrence masterOcc = XMLTag::OCCUR_NOT_OR_ONCE;
+  {
+    XMLTag tagMaster(*this, "sockets", masterOcc, TAG_MASTER);
+    doc = "TODO";
+    doc += "The communication between participant and server is done by sockets.";
+    tagMaster.setDocumentation(doc);
+
+    XMLAttribute<int> attrPort("port");
+    doc = "Port number to be used by server for socket communiation.";
+    attrPort.setDocumentation(doc);
+    attrPort.setDefaultValue(51235);
+    tagMaster.addAttribute(attrPort);
+
+    XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);
+    doc = "Network name to be used for socket communiation. ";
+    doc += "Default is \"lo\", i.e., the local host loopback.";
+    attrNetwork.setDocumentation(doc);
+    attrNetwork.setDefaultValue("lo");
+    tagMaster.addAttribute(attrNetwork);
+
+    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
+    doc = "Directory where connection information is exchanged. By default, the ";
+    doc += "directory of startup is chosen, and both solvers have to be started ";
+    doc += "in the same directory.";
+    attrExchangeDirectory.setDocumentation(doc);
+    attrExchangeDirectory.setDefaultValue("");
+    tagMaster.addAttribute(attrExchangeDirectory);
+
+    masterTags.push_back(tagMaster);
+  }
+  {
+    XMLTag tagMaster(*this, "mpi", masterOcc, TAG_MASTER);
+    doc = "TODO";
+    doc += "The communication between participant and server is done by mpi ";
+    doc += "with startup in separated communication spaces.";
+    tagMaster.setDocumentation(doc);
+
+    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
+    doc = "Directory where connection information is exchanged. By default, the ";
+    doc += "directory of startup is chosen, and both solvers have to be started ";
+    doc += "in the same directory.";
+    attrExchangeDirectory.setDocumentation(doc);
+    attrExchangeDirectory.setDefaultValue("");
+    tagMaster.addAttribute(attrExchangeDirectory);
+
+    masterTags.push_back(tagMaster);
+  }
+  foreach (XMLTag& tagMaster, masterTags){
+    tag.addSubtag(tagMaster);
   }
 
 //  XMLAttribute<std::string> attrCom(ATTR_COMMUNICATION);
@@ -425,6 +478,11 @@ void ParticipantConfiguration:: xmlTagCallback
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication com = comConfig.createCommunication(tag);
     _participants.back()->setClientServerCommunication(com);
+  }
+  else if (tag.getNamespace() == TAG_MASTER){
+    com::CommunicationConfiguration comConfig;
+    com::PtrCommunication com = comConfig.createCommunication(tag);
+    _participants.back()->setMasterSlaveCommunication(com);
   }
 }
 

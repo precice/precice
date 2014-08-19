@@ -74,6 +74,8 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _restartMode(false),
   _serverMode(serverMode),
   _clientMode(false),
+  _slaveMode(false),
+  _masterMode(false),
   _meshIDs(),
   _dataIDs(),
   _exportVTKNeighbors(),
@@ -148,7 +150,29 @@ void SolverInterfaceImpl:: configure
   _geometryMode = config.isGeometryMode ();
   _restartMode = config.isRestartMode ();
   _accessor = determineAccessingParticipant(config);
+
+  preciceCheck(not (_accessor->useServer() && _accessor->useMaster()),
+                     "configure()", "You cannot use a server and a master.");
+  preciceCheck(not (_serverMode && _accessor->useMaster()),
+                       "configure()", "You cannot use a master in server mode.");
+
   _clientMode = (not _serverMode) && _accessor->useServer();
+
+  if(_accessor->useMaster()){
+    preciceCheck(_accessorCommunicatorSize>=2,
+                         "configure()", "You cannot use a master with a serial participant.");
+    if(_accessorProcessRank==0){
+      _masterMode = true;
+      _accessorCommunicatorSize = 1;
+    }
+    else{
+      _slaveMode = true;
+      _accessorCommunicatorSize =  _accessorCommunicatorSize - 1;
+      _accessorProcessRank = _accessorProcessRank -1;
+    }
+  }
+
+
   _participants = config.getParticipantConfiguration()->getParticipants();
   configureCommunications(config.getCommunicationConfiguration());
 
@@ -158,6 +182,12 @@ void SolverInterfaceImpl:: configure
   if (_clientMode){
     preciceInfo("configure()", "[PRECICE] Run in client mode");
   }
+  if (_masterMode){
+    preciceInfo("configure()", "[PRECICE] Run in master mode");
+  }
+  if (_slaveMode){
+    preciceInfo("configure()", "[PRECICE] Run in slave mode");
+  }
 
   if (_geometryMode){
     preciceInfo("configure()", "[PRECICE] Run in geometry mode");
@@ -165,7 +195,7 @@ void SolverInterfaceImpl:: configure
                  "Only one participant can be defined in geometry mode!");
     configureSolverGeometries(config.getCommunicationConfiguration());
   }
-  else if (not _clientMode){
+  else if (not _clientMode && not _slaveMode){
     preciceInfo("configure()", "[PRECICE] Run in coupling mode");
     preciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
@@ -216,6 +246,9 @@ void SolverInterfaceImpl:: configure
   if (_clientMode){
     initializeClientServerCommunication();
   }
+  if (_masterMode || _slaveMode){
+    initializeMasterSlaveCommunication();
+  }
 }
 
 double SolverInterfaceImpl:: initialize()
@@ -229,9 +262,9 @@ double SolverInterfaceImpl:: initialize()
   }
   else {
     // Setup communication
-    if (not _geometryMode){
-      preciceInfo("initialize()", "Setting up communication to coupling partner/s");
+    if ((not _geometryMode) && (not _slaveMode)){
       typedef std::map<std::string,Communication>::value_type ComPair;
+      preciceInfo("initialize()", "Setting up communication to coupling partner/s " );
       foreach (ComPair& comPair, _communications){
         com::PtrCommunication& communication = comPair.second.communication;
         std::string localName = _accessorName;
@@ -2080,6 +2113,24 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
   else {
     preciceInfo ( "initializeClientServerCom.()", "Setting up communication to server" );
     com->requestConnection( _accessorName + "Server", _accessorName,
+                            _accessorProcessRank, _accessorCommunicatorSize );
+  }
+}
+
+void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
+{
+  preciceTrace ( "initializeMasterSlaveCom.()" );
+  com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+  assertion(com.get() != NULL);
+  if ( _masterMode ){
+    preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to slaves" );
+    com->acceptConnection ( _accessorName + "Master", _accessorName,
+                            _accessorProcessRank, _accessorCommunicatorSize);
+  }
+  else {
+    assertion(_slaveMode);
+    preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to master" );
+    com->requestConnection( _accessorName + "Master", _accessorName,
                             _accessorProcessRank, _accessorCommunicatorSize );
   }
 }
