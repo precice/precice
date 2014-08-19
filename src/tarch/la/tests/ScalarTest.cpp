@@ -30,7 +30,6 @@ void ScalarTest::run ()
 
 void ScalarTest::testComparison()
 {
-  // @todo Whoever wrote this has never tested it with CLX
   #if !defined(CompilerCLX)
   double a = 1.0;
   double b = 2.0;

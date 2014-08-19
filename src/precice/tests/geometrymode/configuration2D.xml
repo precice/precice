@@ -54,7 +54,7 @@
          <use-mesh name="box-obstacle"/>
          <mapping:nearest-projection 
             direction="write" from="AccessorMesh" to="cylinder"
-            constraint="conservative" timing="incremental"/>
+            constraint="conservative" timing="onadvance"/>
          <mapping:nearest-projection 
             direction="read" from="cylinder" to="AccessorMesh"
             constraint="consistent" timing="initial"/>

@@ -1,0 +1,28 @@
+/**
+
+@page release_notes Release Notes
+
+\b precice-20140814
+
+- preCICE now uses symmetrical mesh descriptions. This means mappings can be switched from one solver to another at run-time. This comes with changes to the API as well as the configuration file of preCICE. Please have a look at http://vmbungartz6.informatik.tu-muenchen.de/gatzhamm/precice/wikis/Symmetric_Mesh_Treatment, where we give detailed information on how to adjust your adapter. Alya and OpenFOAM have already been ported to the new description.
+
+- preCICE has been ported to the Clang / LLVM compiler. You can use the option \c compiler=clang++ as an scons option to use this new feature.
+
+- Default compile options now include \c -Wall, enabling all compiler warnings. A lot smaller caveats and at least one bug has been found by eliminating warnings.
+
+- Documentation is now generated using Doxygen instead of unmaintened DoxyS. See https://ipvs.informatik.uni-stuttgart.de/sgs/precice/ for recent source code documentation. You will find this and further changelogs included there.
+
+- The test suite gives an return code of 1 if a test fails. The makes automated testing easier.
+
+- The coupling scheme module has been undergone major refactoring. Configuration file semantics have not changed.
+
+- The SConstruct file has undergone a major refactoring giving more detailed information about all options and variables used.
+
+- Issue 24 http://vmbungartz6.informatik.tu-muenchen.de/gatzhamm/precice/issues/24 has been resolved. The \c iterations-SOLVER.txt file contains now the correct number of iterations and is also flushed directly after every timestep.
+
+- Incremental mapping is not supported any longer. Also \c integrateScalarData and \c integrateVectorData were erased from the API.
+
+- The tarch library has been integrated into the preCICE source code. The external tarch is not needed anymore.
+
+*/
+

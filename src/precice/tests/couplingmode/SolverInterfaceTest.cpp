@@ -54,12 +54,10 @@ void SolverInterfaceTest:: run()
       testMethod(testExplicitWithDisplacingGeometry);
       testMethod(testExplicitWithDataScaling);
 #     ifndef PRECICE_NO_SPIRIT2
-      //testMethod(testExplicitWithCheckpointingIncMapping);
       testMethod(testExplicitWithCheckpointingStatMapping);
 #     endif // not PRECICE_NO_SPIRIT2
       testMethod(testImplicit);
 #     ifndef PRECICE_NO_SPIRIT2
-      //testMethod(testImplicitWithCheckpointingMappingInc);
       testMethod(testImplicitWithCheckpointingMappingStat);
 #     endif // not PRECICE_NO_SPIRIT2
       testMethod(testStationaryMappingWithSolverMesh);
@@ -680,37 +678,6 @@ void SolverInterfaceTest:: testExplicitWithDisplacingGeometry()
    }
 }
 
-//void SolverInterfaceTest:: testCoupledSimulationWithPreCoupledTimesteps ()
-//{
-//   preciceDebug ( "testCoupledSimulationWithPreCoupledTimesteps()",
-//                   "Entering" );
-//
-//   int timesteps = 0;
-//   double time = 0.0;
-//
-//   if ( utils::Parallel::getProcessRank() == 0 ) {
-//      runSolver ( "SolverOne",   preciceDebug ( "testTrivialCoupledSimulationWithDataExchange", "Entering" );
-//                  "/SolverInterfaceTest-precomputations-config.xml",
-//                  timesteps, time );
-//      validateEquals ( timesteps, 20,
-//                       "testCoupledSimulationWithPreCoupledTimesteps" );
-//      validateNumericalEquals ( time, 0.2,
-//                                "testCoupledSimulationWithPreCoupledTimesteps" );
-//   }
-//   else if ( utils::Parallel::getProcessRank() == 1 ) {
-//      runSolver ( "SolverTwo",
-//                  "/SolverInterfaceTest-precomputations-config.xml",
-//                  timesteps, time );
-//      validateEquals ( timesteps, 10,
-//                       "testCoupledSimulationWithPreCoupledTimesteps" );
-//      validateNumericalEquals ( time, 0.1,
-//                                "testCoupledSimulationWithPreCoupledTimesteps" );
-//   }
-//
-//   preciceDebug ( "testCoupledSimulationWithPreCoupledTimesteps()",
-//                   "Leaving" );
-//}
-
 void SolverInterfaceTest:: testExplicitWithDataScaling()
 {
   preciceTrace ( "testExplicitWithDataScaling" );
@@ -762,137 +729,6 @@ void SolverInterfaceTest:: testExplicitWithDataScaling()
   }
 }
 
-void SolverInterfaceTest:: testExplicitWithCheckpointingIncMapping()
-{
-  preciceTrace("testExplicitWithCheckpointingIncMapping()");
-  assertion(utils::Parallel::getCommunicatorSize() > 1);
-  mesh::Mesh::resetGeometryIDsGlobally();
-  using namespace tarch::la;
-  using namespace precice::constants;
-  int timesteps = 0;
-  double time = 0.0;
-
-  if (utils::Parallel::getProcessRank() == 0){
-    SolverInterface couplingInterface("SolverOne", 0, 1);
-    configureSolverInterface(_pathToTests + "/explicit-writecheckpoint-inc.xml",
-                             couplingInterface);
-    validateEquals ( couplingInterface.getDimensions(), 2 );
-    impl::PtrParticipant solverOne = couplingInterface._impl->_participants[0];
-    validateEquals ( solverOne->getName(), "SolverOne" );
-    double dt = couplingInterface.initialize();
-    int meshOneID = couplingInterface.getMeshID("MeshOne");
-    int dataID = couplingInterface.getDataID("Forces", meshOneID);
-    validateEquals(solverOne->_meshContexts.size(), 2);
-    while (couplingInterface.isCouplingOngoing()){
-      validate(solverOne->_dataContexts.size() > 0);
-      impl::DataContext* dataContext = solverOne->_dataContexts[dataID];
-      validate(dataContext != NULL);
-      mesh::PtrData data = dataContext->fromData;
-      validateEquals(dataID, data->getID());
-      utils::DynVector& values = data->values();
-      assign(values) = 1.0;
-      time += dt;
-      dt = couplingInterface.advance(dt);
-      timesteps++;
-      if (couplingInterface.isActionRequired(actionWriteSimulationCheckpoint())){
-        validateEquals(timesteps, 10);
-        couplingInterface.fulfilledAction(actionWriteSimulationCheckpoint());
-      }
-    }
-    couplingInterface.finalize();
-
-    validateEquals(timesteps, 10);
-    validateEquals(time, 10.0);
-  }
-  else if (utils::Parallel::getProcessRank() == 1){
-    SolverInterface couplingInterface("SolverTwo", 0, 1);
-    configureSolverInterface(_pathToTests + "/explicit-writecheckpoint-inc.xml",
-                             couplingInterface );
-    validateEquals(couplingInterface.getDimensions(), 2);
-    impl::PtrParticipant solverTwo = couplingInterface._impl->_participants[1];
-    validateEquals(solverTwo->getName(), "SolverTwo");
-    double dt = couplingInterface.initialize();
-    int squareID = couplingInterface.getMeshID("Test-Square");
-    int dataID = couplingInterface.getDataID("Velocities", squareID);
-    validateEquals(solverTwo->_meshContexts.size(), 2);
-    while (couplingInterface.isCouplingOngoing()){
-      validate(solverTwo->_dataContexts.size() > 0);
-      impl::DataContext* dataContext = solverTwo->_dataContexts[dataID];
-      validate(dataContext != NULL);
-      mesh::PtrData fromData = dataContext->fromData;
-      mesh::PtrData toData = dataContext->toData;
-      // no mapping, so fromData and toData should be the same data
-      validateEquals(fromData->getID(), toData->getID());
-      validateEquals(dataID, fromData->getID());
-      utils::DynVector& values = fromData->values();
-      assign(values) = 2.0;
-      time += dt;
-      dt = couplingInterface.advance(dt);
-      timesteps++;
-      if (couplingInterface.isActionRequired(actionWriteSimulationCheckpoint())){
-        validateEquals(timesteps, 10);
-        couplingInterface.fulfilledAction(actionWriteSimulationCheckpoint());
-      }
-    }
-    couplingInterface.finalize();
-
-    validateEquals(timesteps, 10);
-    validateEquals(time, 10.0);
-  }
-
-  if (utils::Parallel::getProcessRank() == 0){
-    SolverInterface couplingInterface("SolverOne", 0, 1);
-    configureSolverInterface(_pathToTests + "/explicit-readcheckpoint-inc.xml",
-                             couplingInterface);
-    impl::PtrParticipant solverOne = couplingInterface._impl->_participants[0];
-    validateEquals(solverOne->getName(), "SolverOne");
-    double dt = couplingInterface.initialize();
-    int meshOneID = couplingInterface.getMeshID("MeshOne");
-    int dataID = couplingInterface.getDataID("Forces", meshOneID);
-    validateEquals(solverOne->_meshContexts.size(), 2);
-    mesh::PtrMesh mesh = solverOne->_meshContexts[0]->mesh;
-    utils::Vector2D integral(0.0);
-    couplingInterface.integrateVectorData(dataID, raw(integral));
-    validate(tarch::la::equals(integral, utils::Vector2D(40.0)));
-    validate(couplingInterface.isActionRequired(actionReadSimulationCheckpoint()));
-    couplingInterface.fulfilledAction(actionReadSimulationCheckpoint());
-
-    while (couplingInterface.isCouplingOngoing()){
-      time += dt;
-      dt = couplingInterface.advance(dt);
-      timesteps++;
-    }
-    couplingInterface.finalize();
-
-    validateEquals(timesteps, 20);
-    validateEquals(time, 20.0);
-  }
-  else if (utils::Parallel::getProcessRank() == 1){
-    SolverInterface couplingInterface("SolverTwo", 0, 1);
-    configureSolverInterface(_pathToTests + "/explicit-readcheckpoint-inc.xml",
-                             couplingInterface);
-    impl::PtrParticipant solverTwo = couplingInterface._impl->_participants[1];
-    validateEquals(solverTwo->getName(), "SolverTwo");
-    double dt = couplingInterface.initialize();
-    int squareID = couplingInterface.getMeshID("Test-Square");
-    int dataID = couplingInterface.getDataID("Velocities", squareID);
-    validateEquals(solverTwo->_meshContexts.size(), 2);
-    mesh::PtrMesh mesh = solverTwo->_meshContexts[0]->mesh;
-    utils::Vector2D integral(0.0);
-    couplingInterface.integrateVectorData(dataID, raw(integral));
-    validate(tarch::la::equals(integral, utils::Vector2D(80.0)));
-    validate(couplingInterface.isActionRequired(actionReadSimulationCheckpoint()));
-    couplingInterface.fulfilledAction(actionReadSimulationCheckpoint());
-    while (couplingInterface.isCouplingOngoing()){
-      time += dt;
-      dt = couplingInterface.advance(dt);
-      timesteps++;
-    }
-    couplingInterface.finalize();
-    validateEquals(timesteps, 20);
-    validateEquals(time, 20.0);
-  }
-}
 
 void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
 {
@@ -994,13 +830,10 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
     validateEquals(solverOne->getName(), "SolverOne");
     double dt = couplingInterface.initialize();
     int meshOneID = couplingInterface.getMeshID("MeshOne");
-    int forcesID = couplingInterface.getDataID("Forces", meshOneID);
+    /*int forcesID = */ couplingInterface.getDataID("Forces", meshOneID);
     validateEquals(solverOne->_meshContexts.size(), 2);
     mesh::PtrMesh mesh = solverOne->_meshContexts[0]->mesh;
     utils::Vector2D integral(0.0);
-    couplingInterface.integrateVectorData(forcesID, raw(integral));
-    validateWithMessage(tarch::la::equals(integral, utils::Vector2D(4.0)),
-                        integral);
     validate(couplingInterface.isActionRequired(actionReadSimulationCheckpoint()));
     couplingInterface.fulfilledAction(actionReadSimulationCheckpoint());
 
@@ -1022,12 +855,10 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
     validateEquals(solverTwo->getName(), "SolverTwo");
     double dt = couplingInterface.initialize();
     int squareID = couplingInterface.getMeshID("Test-Square");
-    int dataID = couplingInterface.getDataID("Velocities", squareID);
+    /*int dataID = */ couplingInterface.getDataID("Velocities", squareID);
     validateEquals(solverTwo->_meshContexts.size(), 2);
     mesh::PtrMesh mesh = solverTwo->_meshContexts[0]->mesh;
     utils::Vector2D integral(0.0);
-    couplingInterface.integrateVectorData(dataID, raw(integral));
-    validate(tarch::la::equals(integral, utils::Vector2D(8.0)));
     validate(couplingInterface.isActionRequired(actionReadSimulationCheckpoint()));
     couplingInterface.fulfilledAction(actionReadSimulationCheckpoint());
     while (couplingInterface.isCouplingOngoing()){
@@ -1105,250 +936,6 @@ void SolverInterfaceTest:: testImplicit()
   }
 }
 
-void SolverInterfaceTest:: testImplicitWithSubcycling()
-{
-//   preciceTrace ( "testImplicitWithSubcycling()" );
-//   assertion ( utils::Parallel::getCommunicatorSize() > 1  );
-//
-//   int timesteps = 0;
-//   double time = 0.0;
-//
-//   if ( utils::Parallel::getProcessRank() == 0 ) {
-//      SolverInterface couplingInterface ( "SolverOne" );
-//      couplingInterface.configure (
-//         _pathToTests +
-//         "/SolverInterfaceTest-implicit-subcycling-config.xml" );
-//      double dt = couplingInterface.initialize ();
-//      int dataID = couplingInterface.getDataID ( "Forces" );
-//      validateEquals ( couplingInterface._meshContexts.size(), 1, "testCheckpoint" );
-//      while ( couplingInterface.isCouplingOngoing() ) {
-//         mesh::PtrMesh mesh = couplingInterface._meshContexts[0].mesh;
-//         foreach ( mesh::Vertex & vertex, mesh->vertices() ) {
-//            vertex.setProperty ( dataID, Vector(1.0) );
-//         }
-//         time += dt;
-//         dt = couplingInterface.advance ( dt );
-//         timesteps++;
-//         if ( couplingInterface.isActionRequired(
-//              Constants::NAME_WRITE_SIMULATION_CHECKPOINT) )
-//         {
-//            validateEquals ( timesteps, 10, "testExplicitWithCheckpointingIncMapping" );
-//            couplingInterface.fulfilledAction (
-//               Constants::NAME_WRITE_SIMULATION_CHECKPOINT );
-//         }
-//      }
-//      couplingInterface.finalize ();
-//
-//      validateEquals ( timesteps, 10, "testExplicitWithCheckpointingIncMapping" );
-//      validateEquals ( time, 10.0, "testExplicitWithCheckpointingIncMapping" );
-//   }
-//   else if ( utils::Parallel::getProcessRank() == 1 ) {
-//      SolverInterface couplingInterface ( "SolverTwo" );
-//      couplingInterface.configure (
-//         _pathToTests +
-//         "/SolverInterfaceTest-writecheckpoint-config.xml" );
-//      double dt = couplingInterface.initialize ();
-//      int dataID = couplingInterface.getDataID ( "Velocities" );
-//      validateEquals ( couplingInterface._meshContexts.size(), 1, "testCheckpoint" );
-//      while ( couplingInterface.isCouplingOngoing() ) {
-//         mesh::PtrMesh mesh = couplingInterface._meshContexts[0].mesh;
-//         foreach ( mesh::Vertex & vertex, mesh->vertices() ) {
-//            vertex.setProperty ( dataID, Vector(2.0) );
-//         }
-//         time += dt;
-//         dt = couplingInterface.advance ( dt );
-//         timesteps++;
-//         if ( couplingInterface.isActionRequired(
-//              Constants::NAME_WRITE_SIMULATION_CHECKPOINT) )
-//         {
-//            validateEquals ( timesteps, 10, "testExplicitWithCheckpointingIncMapping" );
-//            couplingInterface.fulfilledAction (
-//               Constants::NAME_WRITE_SIMULATION_CHECKPOINT );
-//         }
-//      }
-//      couplingInterface.finalize ();
-//
-//      validateEquals ( timesteps, 10, "testExplicitWithCheckpointingIncMapping" );
-//      validateEquals ( time, 10.0, "testExplicitWithCheckpointingIncMapping" );
-//   }
-}
-
-void SolverInterfaceTest:: testImplicitWithCheckpointingMappingInc()
-{
-  preciceTrace("testImplicitWithCheckpointingMappingInc()");
-  assertion(utils::Parallel::getCommunicatorSize() > 1);
-  double state = 0.0;
-  double checkpoint = 0.0;
-  int iterationCount = 0;
-  double initialStateChange = 5.0;
-  double stateChange = initialStateChange;
-  int computedTimesteps = 0;
-  using namespace precice::constants;
-
-  if (utils::Parallel::getProcessRank() == 0){
-    SolverInterface couplingInterface("SolverOne", 0, 1);
-    configureSolverInterface(_pathToTests + "/implicit-writecheckpoint-inc.xml", couplingInterface);
-    impl::PtrParticipant solverOne = couplingInterface._impl->_participants[0];
-    validateEquals(solverOne->getName(), "SolverOne");
-    int meshID = couplingInterface.getMeshID("Square");
-    int dataID = couplingInterface.getDataID("Forces", meshID);
-    double maxDt = couplingInterface.initialize();
-
-    while (couplingInterface.isCouplingOngoing()){
-      if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())){
-        couplingInterface.fulfilledAction(actionWriteIterationCheckpoint());
-        checkpoint = state;
-        iterationCount = 1;
-      }
-      validate(solverOne->_dataContexts.size() > 0);
-      impl::DataContext* dataContext = solverOne->_dataContexts[dataID];
-      validate(dataContext != NULL);
-      mesh::PtrData fromData = dataContext->fromData;
-      mesh::PtrData toData = dataContext->toData;
-      // no mapping, so fromData and toData should be the same data
-      validateEquals(fromData->getID(), toData->getID());
-      validateEquals(dataID, fromData->getID());
-      utils::DynVector& values = fromData->values();
-      assign(values) = 1.0;
-      if (couplingInterface.isActionRequired(actionReadIterationCheckpoint())){
-        couplingInterface.fulfilledAction(actionReadIterationCheckpoint());
-        state = checkpoint;
-      }
-      iterationCount++;
-      stateChange = initialStateChange / (double)iterationCount;
-      state += stateChange;
-      maxDt = couplingInterface.advance(maxDt);
-      if (couplingInterface.isTimestepComplete()){
-        computedTimesteps ++;
-      }
-      if (couplingInterface.isActionRequired(actionWriteSimulationCheckpoint())){
-        validateEquals(computedTimesteps, 4);
-        couplingInterface.fulfilledAction(actionWriteSimulationCheckpoint());
-      }
-    }
-    couplingInterface.finalize();
-    validateEquals(computedTimesteps, 4);
-  }
-  else if (utils::Parallel::getProcessRank() == 1){
-    SolverInterface couplingInterface("SolverTwo", 0, 1);
-    configureSolverInterface(_pathToTests + "/implicit-writecheckpoint-inc.xml", couplingInterface);
-    impl::PtrParticipant solverTwo = couplingInterface._impl->_participants[1];
-    validateEquals(solverTwo->getName(), "SolverTwo");
-    int meshID = couplingInterface.getMeshID("Square");
-    int dataID = couplingInterface.getDataID("Velocities", meshID);
-    double maxDt = couplingInterface.initialize();
-
-    while (couplingInterface.isCouplingOngoing()){
-      if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())){
-        couplingInterface.fulfilledAction(actionWriteIterationCheckpoint());
-        checkpoint = state;
-        iterationCount = 1;
-      }
-      validate(solverTwo->_dataContexts.size() > 0);
-      impl::DataContext* dataContext = solverTwo->_dataContexts[dataID];
-      validate(dataContext != NULL);
-      mesh::PtrData fromData = dataContext->fromData;
-      mesh::PtrData toData = dataContext->toData;
-      // no mapping, so fromData and toData should be the same data
-      validateEquals(fromData->getID(), toData->getID());
-      validateEquals(dataID, fromData->getID());
-      utils::DynVector& values = fromData->values();
-      assign(values) = 2.0;
-      if (couplingInterface.isActionRequired(actionReadIterationCheckpoint())){
-        couplingInterface.fulfilledAction(actionReadIterationCheckpoint());
-        state = checkpoint;
-        iterationCount ++;
-      }
-      stateChange = initialStateChange / (double)iterationCount;
-      state += stateChange;
-      maxDt = couplingInterface.advance(maxDt);
-      if (couplingInterface.isTimestepComplete()){
-        computedTimesteps++;
-      }
-      if (couplingInterface.isActionRequired(actionWriteSimulationCheckpoint())){
-        validateEquals(computedTimesteps, 4);
-        couplingInterface.fulfilledAction(actionWriteSimulationCheckpoint());
-      }
-    }
-    couplingInterface.finalize();
-    validateEquals(computedTimesteps, 4);
-  }
-
-  if (utils::Parallel::getProcessRank() == 0){
-    SolverInterface couplingInterface("SolverOne", 0, 1);
-    configureSolverInterface(_pathToTests + "/implicit-readcheckpoint-inc.xml", couplingInterface);
-    impl::PtrParticipant solverOne = couplingInterface._impl->_participants[0];
-    validateEquals(solverOne->getName(), "SolverOne");
-    double maxDt = couplingInterface.initialize();
-    validate(couplingInterface.isActionRequired(actionReadSimulationCheckpoint()));
-    couplingInterface.fulfilledAction(actionReadSimulationCheckpoint());
-    int meshID = couplingInterface.getMeshID("Square");
-    int dataID = couplingInterface.getDataID("Forces", meshID);
-    validateEquals(solverOne->_meshContexts.size(), 2);
-    mesh::PtrMesh mesh = solverOne->_meshContexts[0]->mesh;
-    utils::Vector3D integral(0.0);
-    couplingInterface.integrateVectorData(dataID, raw(integral));
-    validateWithMessage(tarch::la::equals(integral, utils::Vector3D(8.0)), integral);
-
-    while (couplingInterface.isCouplingOngoing()){
-      if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())){
-        couplingInterface.fulfilledAction(actionWriteIterationCheckpoint());
-        checkpoint = state;
-        iterationCount = 1;
-      }
-      if (couplingInterface.isActionRequired(actionReadIterationCheckpoint())){
-        couplingInterface.fulfilledAction(actionReadIterationCheckpoint());
-        state = checkpoint;
-      }
-      iterationCount ++;
-      stateChange = initialStateChange / (double)iterationCount;
-      state += stateChange;
-      maxDt = couplingInterface.advance(maxDt);
-      if (couplingInterface.isTimestepComplete()){
-        computedTimesteps ++;
-      }
-    }
-    couplingInterface.finalize();
-    validateEquals(computedTimesteps, 6);
-  }
-  else if (utils::Parallel::getProcessRank() == 1){
-    SolverInterface couplingInterface("SolverTwo", 0, 1);
-    configureSolverInterface(_pathToTests + "/implicit-readcheckpoint-inc.xml", couplingInterface);
-    impl::PtrParticipant solverTwo = couplingInterface._impl->_participants[1];
-    validateEquals(solverTwo->getName(), "SolverTwo");
-    double maxDt = couplingInterface.initialize();
-    validate(couplingInterface.isActionRequired(actionReadSimulationCheckpoint()));
-    couplingInterface.fulfilledAction(actionReadSimulationCheckpoint());
-    int meshID = couplingInterface.getMeshID("Square");
-    int dataID = couplingInterface.getDataID("Velocities", meshID);
-    validateEquals(solverTwo->_meshContexts.size(), 2);
-    mesh::PtrMesh mesh = solverTwo->_meshContexts[0]->mesh;
-    utils::Vector3D integral(0.0);
-    couplingInterface.integrateVectorData(dataID, raw(integral));
-    validateWithMessage(tarch::la::equals(integral, utils::Vector3D(16.0)), integral);
-
-    while (couplingInterface.isCouplingOngoing()){
-      if (couplingInterface.isActionRequired(actionWriteIterationCheckpoint())){
-        couplingInterface.fulfilledAction(actionWriteIterationCheckpoint());
-        checkpoint = state;
-        iterationCount = 1;
-      }
-      if (couplingInterface.isActionRequired(actionReadIterationCheckpoint())){
-        couplingInterface.fulfilledAction(actionReadIterationCheckpoint());
-        state = checkpoint;
-        iterationCount ++;
-      }
-      stateChange = initialStateChange / (double)iterationCount;
-      state += stateChange;
-      maxDt = couplingInterface.advance(maxDt);
-      if (couplingInterface.isTimestepComplete()){
-        computedTimesteps++;
-      }
-    }
-    couplingInterface.finalize();
-    validateEquals(computedTimesteps, 6);
-  }
-}
 
 void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
 {

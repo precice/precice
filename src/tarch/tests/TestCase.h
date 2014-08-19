@@ -54,8 +54,6 @@ namespace tarch {
  * at the end of the implementation file.
  * @author Tobias Weinzierl, Wolfgang Eckhardt
  * @version $Revision: 1.31 $
- *
- * @todo Doku fuer macros vervollstaendigen!
  */
 class tarch::tests::TestCase {
   protected:

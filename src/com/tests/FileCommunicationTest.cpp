@@ -29,9 +29,9 @@ void FileCommunicationTest:: run()
   typedef utils::Parallel Par;
   if ( Par::getCommunicatorSize() >= 2 ){
     if ( Par::getProcessRank() < 2 ){
-      //TODO: was necessary for running on ben's laptop, donno why
-      //testMethod ( testSimpleSendReceive );
-      //testMethod ( testMultipleExchanges );
+      //TODO: are not working on Benjamin's laptop
+      testMethod ( testSimpleSendReceive );
+      testMethod ( testMultipleExchanges );
     }
   }
 }

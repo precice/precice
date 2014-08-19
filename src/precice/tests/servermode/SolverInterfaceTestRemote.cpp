@@ -177,11 +177,6 @@ void SolverInterfaceTestRemote:: testGeometryMode()
       value = 2.0;
       interface.writeScalarData ( dataID, posIndex2, value );
 
-      // Test integrate data
-      interface.integrateScalarData ( dataID, value );
-      //TODO does not work nicely with the current to/from-Data design, also only needed for Peano
-      //validate ( equals(value, 3.0) );
-
       // Test read data (not really good test...)
       dataID = interface.getDataID ( "VectorData", meshIDVector );
       DynVector readValue(dim, 2.0);
@@ -192,10 +187,6 @@ void SolverInterfaceTestRemote:: testGeometryMode()
       interface.exportMesh ( "remote" );
 
       interface.advance(1.0);
-
-      // Test integrate data
-      interface.integrateScalarData ( dataID, value );
-      validate ( equals(value, 0.0) );
 
       interface.finalize();
     }
@@ -306,11 +297,6 @@ void SolverInterfaceTestRemote:: testGeometryModeParallel()
       interface._impl->_requestManager->requestPing();
       utils::Parallel::synchronizeLocalProcesses();
 
-      //removed from interface since only needed for Peano
-      // Test integrate data
-      //interface.integrateScalarData(dataID, value);
-      //validate(equals(value, 6.0));
-
       // Test read data (not really good test...)
       assign(pos) = 0.0;
       posIndex = interface.setMeshVertex(meshIDVector, raw(pos));
@@ -325,10 +311,6 @@ void SolverInterfaceTestRemote:: testGeometryModeParallel()
       interface.exportMesh(filename.str());
 
       interface.advance(1.0);
-
-      // Test integrate data
-      interface.integrateScalarData(dataID, value);
-      validate(equals(value, 0.0));
 
       interface.finalize();
     }
@@ -414,13 +396,6 @@ void SolverInterfaceTestRemote:: testGeometryModeParallelStationaryMapping()
 //      interface._impl->_accessor->getClientServerCommunication()->receive(ping, 0);
 //      utils::Parallel::synchronizeLocalProcesses();
       interface.exportMesh("testGeometryModeParallelStationaryMapping");
-
-      // Test integrate data
-      double vectorIntegral[dim];
-      interface.integrateVectorData(vectorDataID, vectorIntegral);
-      for (int i=0; i < dim; i++){
-        validateNumericalEqualsWithParams1(vectorIntegral[i], 20.0, i);
-      }
 
       interface.finalize();
     }

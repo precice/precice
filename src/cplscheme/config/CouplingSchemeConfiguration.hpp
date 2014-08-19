@@ -5,9 +5,8 @@
 #define PRECICE_CPLSCHEME_COUPLINGSCHEMECONFIGURATION_HPP_
 
 #include "cplscheme/CouplingScheme.hpp"
-#include "cplscheme/SerialImplicitCouplingScheme.hpp"
-#include "cplscheme/ParallelImplicitCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
+#include "cplscheme/impl/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "com/SharedPointer.hpp"

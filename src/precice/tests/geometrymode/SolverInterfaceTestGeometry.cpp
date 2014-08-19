@@ -63,8 +63,6 @@ void SolverInterfaceTestGeometry:: run()
     testMethod(testVoxelQueryChannelFour);
     testMethod(testVoxelQueryEpsBox);
     testMethod(testConservativeStationaryDataMapping);
-    testMethod(testConservativeIncrementalDataMapping);
-    testMethod(testConsistentIncrementalDataMapping);
     testMethod(testMappingRBF);
     testMethod(testCustomGeometryCreation);
 #   ifndef PRECICE_NO_SPIRIT2
@@ -676,112 +674,6 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   validateNumericalEquals(writtenValues[7], 6.0);
 }
 
-void SolverInterfaceTestGeometry:: testConservativeIncrementalDataMapping()
-{
-  preciceTrace("testConservativeIncrementalDataMapping()");
-  using utils::Vector2D;
-  SolverInterface geoInterface("TestAccessor", 0, 1);
-  configureSolverInterface(_pathToTests + "2D.xml", geoInterface);
-  validateEquals(geoInterface.getDimensions(), 2);
-  geoInterface.initialize();
-  int meshID = geoInterface.getMeshID("SolverMesh");
-  int geoID = geoInterface.getMeshID("itest-cuboid");
-  int dataID = geoInterface.getDataID("Forces", meshID);
-
-  validateEquals(geoInterface._impl->_participants.size(), 1);
-  impl::PtrParticipant participant = geoInterface._impl->_participants[0];
-  validateEquals(participant->getName(), "TestAccessor");
-  validateEquals(participant->_meshContexts.size(), 2);
-  validate(participant->_meshContexts[0] != NULL);
-
-  validate(participant->_meshContexts[0]->toMappingContext.mapping.use_count() > 0);
-  validate(participant->_meshContexts[1]->toMappingContext.mapping.use_count() > 0);
-  validate(participant->_meshContexts[0]->fromMappingContext.mapping.use_count() > 0);
-  validate(participant->_meshContexts[1]->fromMappingContext.mapping.use_count() > 0);
-
-  using tarch::la::raw;
-  for ( int j=-10; j < 10; j+=2 ) {
-    for ( int i=-10; i < 10; i+=2 ) {
-      // From -10 to +10 in every dimension
-      Vector2D currentPoint ((double)i, (double)j);
-      Vector2D data(1.0);
-      int index = geoInterface.setMeshVertex ( meshID, raw(currentPoint) );
-      geoInterface.writeVectorData ( dataID, index, raw(data) );
-    }
-  }
-
-  geoInterface.exportMesh("testConservativeIncrementalDataMapping");
-
-  Vector2D integral(0.0);
-  Vector2D temp;
-  validateEquals(geoInterface._impl->_participants.size(), 1);
-  validate((int)participant->_dataContexts.size() > dataID);
-
-  geoInterface.mapWriteDataFrom(meshID);
-
-  utils::DynVector& values = participant->_dataContexts[dataID]->toData->values();
-
-  //test if geometry mesh has requirement FULL
-  validateEquals(participant->_meshContexts[geoID]->meshRequirement,mapping::Mapping::FULL);
-
-  for (int index=0; index < values.size() / 2; index++){
-    assignList(temp) = values[index*2], values[index*2 +1];
-//    assign(temp) = tarch::la::slice<dim>(values, index*dim);
-    integral += temp;
-  }
-
-  validate ( tarch::la::equals(integral, Vector2D(100.0)) );
-  assign(integral) = 0.0;
-  geoInterface.integrateVectorData ( dataID, tarch::la::raw(integral) );
-  validate ( tarch::la::equals(integral, Vector2D(100.0)) );
-  geoInterface.advance ( 1.0 );
-  geoInterface.integrateVectorData ( dataID, tarch::la::raw(integral) );
-  validate ( tarch::la::equals(integral, Vector2D(0.0)) );
-}
-
-void SolverInterfaceTestGeometry:: testConsistentIncrementalDataMapping ()
-{
-  preciceTrace ( "testConsistentIncrementalDataMapping()" );
-  using utils::Vector2D;
-  SolverInterface geoInterface ( "TestAccessor", 0, 1 );
-  configureSolverInterface ( _pathToTests + "2D.xml",
-                             geoInterface );
-  validateEquals ( geoInterface.getDimensions(), 2 );
-  geoInterface.initialize();
-  int meshID = geoInterface.getMeshID ( "SolverMesh" );
-  int dataID = geoInterface.getDataID ( "Velocities", meshID );
-  validateEquals ( geoInterface._impl->_participants.size(), 1 );
-  impl::PtrParticipant participant = geoInterface._impl->_participants[0];
-  validate ( (int)participant->_dataContexts.size() > dataID );
-  utils::DynVector& velocities = participant->_dataContexts[dataID]->fromData->values();
-  assign(velocities) = 5.0;
-
-  std::vector<int> indices(100);
-
-  Vector2D counter ( 0.0 );
-  std::vector<double> coords;
-  for ( counter(0)=0.0; counter(0) < 10.0; counter(0) +=1.0 ) {
-    for ( counter(1)=0.0; counter(1) < 10.0; counter(1) +=1.0 ) {
-      Vector2D currentPoint ( -10.0 + 2.0 * counter );
-      coords += currentPoint[0], currentPoint[1];
-      using tarch::la::raw;
-      int index = geoInterface.setMeshVertex ( meshID, raw(currentPoint) );
-      indices[counter(0)*10+counter(1)] = index;
-    }
-  }
-
-  geoInterface.advance ( 1.0 );
-
-  for ( counter(0)=0.0; counter(0) < 10.0; counter(0) +=1.0 ) {
-    for ( counter(1)=0.0; counter(1) < 10.0; counter(1) +=1.0 ) {
-      Vector2D data ( 0.0 );
-      using tarch::la::raw;
-      int index =  indices[counter(0)*10+counter(1)];
-      geoInterface.readVectorData ( dataID, index, raw(data) );
-      validate ( tarch::la::equals(data, Vector2D(5.0) ) );
-    }
-  }
-}
 
 void SolverInterfaceTestGeometry:: testMappingRBF()
 {

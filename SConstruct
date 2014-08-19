@@ -35,7 +35,7 @@ def vprint(name, value, default=True, description = None):
     """ Pretty prints an environment variabe with value and modified or not. """
     mod = "(default)" if default else "(modified)"
     desc = "   " + description if description else ""
-    print "{:10} {:25} = {!s:6}{}".format(mod, name, value, desc)
+    print "{0:10} {1:25} = {2!s:8}{3}".format(mod, name, value, desc)
 
 def checkset_var(varname, default):
     """ Checks if environment variable is set, use default otherwise and print the value. """    
@@ -49,8 +49,8 @@ def checkset_var(varname, default):
 
 def compiler_validator(key, value, environment):
     """ Validator function for the compiler option. Checks if the given compiler is either (g++ or icc or clang++) or an MPI compiler. """
-    if not value in ["g++", "icc", "clang++"] or value.startswith("mpic"):
-        raise Exception("Invalid value for compiler, must be on off g++, icc, clang++ or start with mpic*")
+    if not (value in ["g++", "icc", "clang++"] or value.startswith("mpic")):
+        raise Exception("Invalid value for compiler, must be one of g++, icc, clang++ or start with mpic*")
         
 
 ########################################################################## MAIN
@@ -68,7 +68,8 @@ vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", True
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 
 
-env = Environment(variables = vars)   # For configuring build variables
+env = Environment(variables = vars, ENV = os.environ)   # For configuring build variables
+# env = Environment(ENV = os.environ)
 conf = Configure(env) # For checking libraries, headers, ...
 
 

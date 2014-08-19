@@ -515,16 +515,6 @@ public:
     const std::string& filenameSuffix,
     int                exportType = constants::exportAll() );
 
-  /**
-   * @brief Integrates all values of Vector type data with id dataID.
-   */
-  void integrateData (
-    int     dataID,
-    double* integratedValue );
-
-  void integrateData (
-    int     dataID,
-    double& integratedValue );
 
   /**
    * @brief Scales data values according to configuration.

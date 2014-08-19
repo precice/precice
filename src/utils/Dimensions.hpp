@@ -50,9 +50,7 @@ int linearize
   return index;
 }
 
-/**
- * @brief Provides mappings of indices for dimensions 2 and 3.
- */
+/// @brief Provides mappings of indices for dimensions 2 and 3.
 template< int dimension > struct IndexMaps {};
 
 template<> struct IndexMaps<2>

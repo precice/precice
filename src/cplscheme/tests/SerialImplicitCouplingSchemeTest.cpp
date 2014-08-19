@@ -2,7 +2,7 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SerialImplicitCouplingSchemeTest.hpp"
-#include "cplscheme/SerialImplicitCouplingScheme.hpp"
+#include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "cplscheme/config/PostProcessingConfiguration.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
@@ -123,8 +123,9 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   int maxIterations = 1;
 
   // Test first order extrapolation
-  SerialImplicitCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
-      accessor, com, maxIterations, constants::FIXED_DT);
+  SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
+                              accessor, com, constants::FIXED_DT,
+                              BaseCouplingScheme::Implicit, maxIterations);
 
   scheme.addDataToSend(data, true);
   scheme.setExtrapolationOrder(1);
@@ -155,8 +156,9 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   // Test second order extrapolation
   assign(*cplData->values) = 0.0;
   assign(cplData->oldValues) = 0.0;
-  SerialImplicitCouplingScheme scheme2 ( maxTime, maxTimesteps, dt, 16, first, second,
-      accessor, com, maxIterations, constants::FIXED_DT );
+  SerialCouplingScheme scheme2 ( maxTime, maxTimesteps, dt, 16, first, second,
+                                 accessor, com, constants::FIXED_DT,
+                                 BaseCouplingScheme::Implicit, maxIterations);
 
   scheme2.addDataToSend ( data, false );
   scheme2.setExtrapolationOrder ( 2 );
@@ -233,9 +235,10 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    }
 
    // Create the coupling scheme object
-   cplscheme::SerialImplicitCouplingScheme cplScheme (
+   cplscheme::SerialCouplingScheme cplScheme (
        maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
-       nameParticipant1, nameLocalParticipant, communication, 100, constants::FIXED_DT );
+       nameParticipant1, nameLocalParticipant, communication, constants::FIXED_DT,
+       BaseCouplingScheme::Implicit, 100);
    cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
    cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false );
 
@@ -415,9 +418,10 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
    }
 
    // Create the coupling scheme object
-   cplscheme::SerialImplicitCouplingScheme cplScheme (
-      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, communication, 100, constants::FIXED_DT );
+   cplscheme::SerialCouplingScheme cplScheme (
+     maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
+     nameLocalParticipant, communication, constants::FIXED_DT,
+     BaseCouplingScheme::Implicit, 100);
    cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
    cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false );
 
@@ -549,7 +553,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
   std::vector<int>::const_iterator iterValidIterations = validIterations.begin();
 
   if ( nameParticipant == nameParticipant0 ) {
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validate ( not cplScheme.isCouplingTimestepComplete() );
     validate ( cplScheme.isActionRequired(MY_WRITE_CHECKPOINT) );
     validate ( not cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -579,7 +583,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         computedTime += maxLengthTimestep;
         computedTimesteps ++;
         validateNumericalEquals ( computedTime, cplScheme.getTime() );
-        validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+        validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
         validateEquals ( iterationCount, *iterValidIterations );
@@ -621,7 +625,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
   }
 
   else if ( nameParticipant == nameParticipant1 ) {
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validate ( not cplScheme.isCouplingTimestepComplete() );
     validate ( cplScheme.isActionRequired(MY_WRITE_CHECKPOINT) );
     validate ( not cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -654,7 +658,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         computedTime += maxLengthTimestep;
         computedTimesteps ++;
         validateNumericalEquals ( computedTime, cplScheme.getTime() );
-        validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+        validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
         // The iterations are enforced by the controlled decrease of the
         // change of data written
         validateEquals ( iterationCount, *iterValidIterations );
@@ -745,9 +749,10 @@ void SerialImplicitCouplingSchemeTest::
    }
 
    // Create the coupling scheme object
-   cplscheme::SerialImplicitCouplingScheme cplScheme (
+   cplscheme::SerialCouplingScheme cplScheme (
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, communication, 100, constants::FIXED_DT );
+      nameLocalParticipant, communication, constants::FIXED_DT,
+      BaseCouplingScheme::Implicit, 100);
    cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
    cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false );
 
@@ -810,9 +815,10 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
   }
 
   // Create the coupling scheme object
-  cplscheme::SerialImplicitCouplingScheme cplScheme(
+  cplscheme::SerialCouplingScheme cplScheme(
      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-     nameLocalParticipant, communication, 100, constants::FIXED_DT);
+     nameLocalParticipant, communication, constants::FIXED_DT,
+     BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], initData);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], not initData);
 
@@ -827,7 +833,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
 
-  cplScheme.initialize(0.0, 0);
+  cplScheme.initialize(0.0, 1);
 
   if (nameLocalParticipant == nameParticipant0){
     cplScheme.initializeData();
@@ -899,7 +905,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
 
   if ( nameParticipant == nameParticipant0 ) {
     iterationCount++; // different handling due to subcycling
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validate ( not cplScheme.isCouplingTimestepComplete() );
     validate ( cplScheme.isActionRequired(MY_WRITE_CHECKPOINT) );
     validate ( not cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -926,7 +932,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
         computedTime += maxTimestepLength;
         computedTimesteps ++;
         validateNumericalEquals ( computedTime, cplScheme.getTime() );
-        validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+        validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
         validateEquals ( iterationCount, *iterValidIterations );
@@ -982,7 +988,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
 
   else if ( nameParticipant == nameParticipant1 ) {
     iterationCount++; // different handling due to subcycling
-    cplScheme.initialize ( 0.0, 0 );
+    cplScheme.initialize ( 0.0, 1 );
     validate ( not cplScheme.isCouplingTimestepComplete() );
     validate ( cplScheme.isActionRequired(MY_WRITE_CHECKPOINT) );
     validate ( not cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -1015,7 +1021,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
         computedTime += maxTimestepLength;
         computedTimesteps ++;
         validateNumericalEquals ( computedTime, cplScheme.getTime() );
-        validateEquals ( computedTimesteps, cplScheme.getTimesteps() );
+        validateEquals ( computedTimesteps, cplScheme.getTimesteps()-1 );
         // The iteration number is enforced by the controlled decrease of the
         // change of data written
         validateEquals ( iterationCount, *iterValidIterations );

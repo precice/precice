@@ -48,8 +48,7 @@ void UncoupledScheme:: addComputedTime
   preciceCheck ( isCouplingOngoing(), "addComputedTime()",
                  "Invalid call of addComputedTime() after simulation end!" );
 # ifdef Asserts
-  double eps = std::pow ( 10.0, -1 * getValidDigits() );
-  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, eps);
+  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, _eps);
   assertion1(greaterThanZero, timeToAdd);
 # endif // Asserts
   setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);
@@ -63,7 +62,6 @@ void UncoupledScheme:: advance()
   setIsCouplingTimestepComplete ( false );
   //double remainder = getTimestepRemainder ( computedTimestepLength );
   //setTime ( getTime() + computedTimestepLength );
-  //double eps = std::pow ( 10.0, -1 * getValidDigits() );
   //if ( tarch::la::equals(getThisTimestepRemainder(), 0.0, eps) ){
   setIsCouplingTimestepComplete ( true );
   setTimesteps ( getTimesteps() + 1 );

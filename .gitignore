@@ -4,4 +4,7 @@
 *.pyc
 .cproject
 .project
-
+.sconsign.dblite
+.sconf_temp
+\#*#
+core

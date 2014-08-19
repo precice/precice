@@ -72,12 +72,14 @@ void TXTTableWriter:: writeData
   if ( _writeIterator == _data.end() ) {
     _writeIterator = _data.begin();
     _outputStream << "\n";
-    _outputStream.flush ();
   }
   assertion2 ( _writeIterator->name == name, _writeIterator->name, name );
   assertion1 ( _writeIterator->type == INT, _writeIterator->type );
   _outputStream << value << "  ";
   _writeIterator ++;
+  if ( _writeIterator == _data.end() ) {
+    _outputStream.flush ();
+  }
 }
 
 void TXTTableWriter:: writeData
@@ -89,12 +91,14 @@ void TXTTableWriter:: writeData
   if ( _writeIterator == _data.end() ) {
     _writeIterator = _data.begin();
     _outputStream << "\n";
-    _outputStream.flush ();
   }
   assertion2 ( _writeIterator->name == name, _writeIterator->name, name );
   assertion1 ( _writeIterator->type == DOUBLE, _writeIterator->type );
   _outputStream << value << "  ";
   _writeIterator ++;
+  if ( _writeIterator == _data.end() ) {
+    _outputStream.flush ();
+  }
 }
 
 void TXTTableWriter:: writeData
@@ -106,7 +110,6 @@ void TXTTableWriter:: writeData
   if ( _writeIterator == _data.end() ) {
     _writeIterator = _data.begin();
     _outputStream << "\n";
-    _outputStream.flush ();
   }
   assertion2 ( _writeIterator->name == name, _writeIterator->name, name );
   assertion1 ( _writeIterator->type == VECTOR2D, _writeIterator->type );
@@ -114,6 +117,9 @@ void TXTTableWriter:: writeData
     _outputStream << value[i] << "  ";
   }
   _writeIterator ++;
+  if ( _writeIterator == _data.end() ) {
+    _outputStream.flush ();
+  }
 }
 
 void TXTTableWriter:: writeData
@@ -125,7 +131,6 @@ void TXTTableWriter:: writeData
   if ( _writeIterator == _data.end() ) {
     _writeIterator = _data.begin();
     _outputStream << "\n";
-    _outputStream.flush ();
   }
   assertion2 ( _writeIterator->name == name, _writeIterator->name, name );
   assertion1 ( _writeIterator->type == VECTOR3D, _writeIterator->type );
@@ -133,6 +138,9 @@ void TXTTableWriter:: writeData
     _outputStream << value[i] << "  ";
   }
   _writeIterator ++;
+  if ( _writeIterator == _data.end() ) {
+    _outputStream.flush ();
+  }
 }
 
 void TXTTableWriter:: close ()

@@ -9,13 +9,6 @@
 namespace precice {
 namespace constants {
 
-/**
- * @brief Physical dimensionality preCICE is compiled for.
- *
- * PreCICE has to be compiled for 2D and 3D problems separately.
- */
-//int dimensions ();
-
 int positionInsideOfGeometry();
 int positionOutsideOfGeometry();
 int positionOnGeometry();

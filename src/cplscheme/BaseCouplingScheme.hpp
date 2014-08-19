@@ -7,7 +7,7 @@
 #include "CouplingScheme.hpp"
 #include "CouplingData.hpp"
 #include "Constants.hpp"
-#include "SharedPointer.hpp"
+#include "SharedPointer.hpp" 
 #include "mesh/Data.hpp"
 #include "com/SharedPointer.hpp"
 #include "com/Constants.hpp"
@@ -15,11 +15,6 @@
 #include "tarch/logging/Log.h"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
-
-namespace precice { namespace io {
-class TXTWriter;
-class TXTReader;
-} }
 
 namespace precice {
 namespace cplscheme {
@@ -73,6 +68,8 @@ public:
     com::PtrCommunication communication,
     int                   maxIterations,
     constants::TimesteppingMethod dtMethod );
+
+  enum CouplingMode {Explicit, Implicit, Undefined};
   
   /**
    * @brief Adds another coupling scheme in parallel to this scheme.
@@ -223,9 +220,7 @@ public:
   virtual void finalize();
 
   /// @brief Initializes the coupling scheme.
-  virtual void initialize (
-    double startTime,
-    int    startTimestep );
+  virtual void initialize(double startTime, int startTimestep ) = 0;
     
   /**
    * @brief Initializes data with written values.
@@ -234,7 +229,7 @@ public:
    * - initialize() has been called.
    * - advance() has NOT yet been called.
    */
-  virtual void initializeData();
+  virtual void initializeData() = 0;
 
   /**
    * @brief Sets order of predictor of interface values for first participant.
@@ -250,23 +245,38 @@ public:
    */
   void setExtrapolationOrder ( int order );
   
+  typedef std::map<int,PtrCouplingData> DataMap; // move that back to protected
+
+  void extrapolateData(DataMap& data);
+
+  /// @brief Adds a measure to determine the convergence of coupling iterations.
+  void addConvergenceMeasure (
+    int                         dataID,
+    bool                        suffices,
+    impl::PtrConvergenceMeasure measure );
+  
+  /// @brief Set a coupling iteration post-processing technique.
+  void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
+
+  virtual void exportState(const std::string& filenamePrefix) const;
+
+  virtual void importState(const std::string& filenamePrefix);
   
 protected:
 
-  // temp function to make refactoring clearer
+  /// @brief Sets whether explicit or implicit coupling is being done.
+  CouplingMode _couplingMode;
+
+  /// @brief Updates internal state of coupling scheme for next timestep.
+  void timestepCompleted();
+
+  /// @brief Receives and set the timestep length, if this participant is the one to receive
   void receiveAndSetDt();
   
   io::TXTTableWriter& getIterationsWriter() {
     return _iterationsWriter;
   }
 
-  typedef std::map<int,PtrCouplingData> DataMap;
-  
-  struct State {
-    int id;
-    std::string name;
-  };
- 
   /// @return True, if local participant is the one starting the scheme.
   bool doesFirstStep() const {
     return _doesFirstStep;
@@ -311,7 +321,7 @@ protected:
   void setHasDataBeenExchanged ( bool hasDataBeenExchanged );
   
   /**
-   * @brief Sets the compouted time of the coupling scheme.
+   * @brief Sets the computed time of the coupling scheme.
    *
    * Used from subclasses and when a checkpoint has been read.
    */
@@ -342,6 +352,13 @@ protected:
   
   /// @brief If any required actions are open, an error message is issued.
   void checkCompletenessRequiredActions();
+
+  /**
+   * @brief Returns coupling state information.
+   * 
+   * Includes current iteration, max iterations, time, timestep and action.
+   */
+  virtual std::string printCouplingState() const;
   
   /// @brief Returns a string representing the basic state w/o actions.
   std::string printBasicState() const;
@@ -395,7 +412,6 @@ protected:
     return _participantSetsDt;
   }
   
-
   /// @brief Holds relevant variables to perform a convergence measurement.
   struct ConvergenceMeasure
   {
@@ -405,12 +421,20 @@ protected:
     impl::PtrConvergenceMeasure measure;
   };
 
-  // @brief All convergence measures of coupling iterations.
-  //
-  // Before initialization, only dataID and measure variables are filled. Then,
-  // the data is fetched from send and receive data assigned to the cpl scheme.
+  /**
+   * @brief All convergence measures of coupling iterations.
+   *
+   * Before initialization, only dataID and measure variables are filled. Then,
+   * the data is fetched from send and receive data assigned to the cpl scheme.
+   */
   std::vector<ConvergenceMeasure> _convergenceMeasures;
-  
+
+  void setupConvergenceMeasures();
+
+  void newConvergenceMeasurements();
+
+  bool measureConvergence();
+
   /**
    * @brief Sets up _dataStorage to store data values of last timestep.
    *
@@ -420,65 +444,17 @@ protected:
    * and the ordering of the meshes to that in _couplingData.
    */
   void setupDataMatrices(DataMap& data);
-
-  void setupConvergenceMeasures();
-
-  /// @brief Post-processing method to speedup iteration convergence.
-  impl::PtrPostProcessing _postProcessing;
   
   impl::PtrPostProcessing getPostProcessing() {
     return _postProcessing;
   }
 
-  /// @brief Extrapolation order of coupling data for first iteration of every dt.
-  int _extrapolationOrder;
-  
   void initializeTXTWriters();
 
-  // Später private machen?
-  
-  /// @brief Number of iteration in current timestep.
-  int _iterationToPlot;
-  
-  int _timestepToPlot;
-  
-  double _timeToPlot;
-  
-  void setIterationToPlot(int iterationToPlot) {
-    _iterationToPlot = iterationToPlot;
-  }
+  void advanceTXTWriters();
 
-  void setTimestepToPlot(int timestepToPlot) {
-    _timestepToPlot = timestepToPlot;
-  }
+  void updateTimeAndIterations(bool convergence);
 
-  void setTimeToPlot(double timeToPlot) {
-    _timeToPlot = timeToPlot;
-  }
-
-  void setIterations(int iterations) {
-    _iterations = iterations;
-  }
-
-  int getIterations() {
-    return _iterations;
-  }
-
-  int getTotalIterations() {
-    return _totalIterations;
-  }
-
-  void increaseIterations() {
-    _iterations++;
-  }
-
-  void increaseTotalIterations() {
-    _totalIterations++;
-  }
-
-  void increaseIterationToPlot() {
-    _iterationToPlot++;
-  }
 
   int getMaxIterations() const {
     return _maxIterations;
@@ -488,6 +464,10 @@ protected:
     return _extrapolationOrder;
   }
 
+  bool maxIterationsReached();
+
+  /// @brief Smallest number, taking validDigists into account: eps = std::pow(10.0, -1 * validDigits)
+  const double _eps;
   
 private:
 
@@ -515,23 +495,29 @@ private:
   
   /// @brief Number of total iterations performed.
   int _totalIterations;
+
+  int _timesteps;
   
   double _timestepLength;
   
-  int _validDigits;
-  
   double _time;
-  
+
   double _computedTimestepPart;
+
+  /// @brief Extrapolation order of coupling data for first iteration of every dt.
+  int _extrapolationOrder;
+
+  int _validDigits;
   
   /// @brief True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep; 
   
-  int _timesteps;
-  
   int _checkpointTimestepInterval;
   
   bool _isCouplingTimestepComplete;
+
+  /// @brief Post-processing method to speedup iteration convergence.
+  impl::PtrPostProcessing _postProcessing;
 
   /// @brief to carry initData information from initialize to initData
   bool _hasToSendInitData;
