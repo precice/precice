@@ -163,12 +163,12 @@ void SolverInterfaceImpl:: configure
                          "configure()", "You cannot use a master with a serial participant.");
     if(_accessorProcessRank==0){
       _masterMode = true;
-      _accessorCommunicatorSize = 1;
+      //_accessorCommunicatorSize = 1;
     }
     else{
       _slaveMode = true;
-      _accessorCommunicatorSize =  _accessorCommunicatorSize - 1;
-      _accessorProcessRank = _accessorProcessRank -1;
+      //_accessorCommunicatorSize =  _accessorCommunicatorSize - 1;
+      //_accessorProcessRank = _accessorProcessRank -1;
     }
   }
 
@@ -275,12 +275,24 @@ double SolverInterfaceImpl:: initialize()
                      << remoteName << " could not be created! Check compile "
                      "flags used!");
         if (comPair.second.isRequesting){
-          communication->requestConnection(remoteName, localName,
-              _accessorProcessRank, _accessorCommunicatorSize);
+          if(_masterMode){
+            communication->requestConnection(remoteName, localName,
+                          _accessorProcessRank, 1);
+          }
+          else {
+            communication->requestConnection(remoteName, localName,
+                          _accessorProcessRank, _accessorCommunicatorSize);
+          }
         }
         else {
-          communication->acceptConnection(localName, remoteName,
-              _accessorProcessRank, _accessorCommunicatorSize);
+          if(_masterMode){
+            communication->acceptConnection(localName, remoteName,
+                          _accessorProcessRank, 1);
+          }
+          else {
+            communication->acceptConnection(localName, remoteName,
+                          _accessorProcessRank, _accessorCommunicatorSize);
+          }
         }
       }
     }
@@ -901,7 +913,48 @@ void SolverInterfaceImpl:: setMeshVertices
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
-  else {
+  else if(_slaveMode){
+    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+    com->send(size, 0);
+    com->send(positions, size*_dimensions, 0);
+    com->receive(ids, size, 0);
+  }
+  else if(_masterMode){
+    MeshContext& context = _accessor->meshContext(meshID);
+    mesh::PtrMesh mesh(context.mesh);
+    preciceDebug("Set own positions");
+    utils::DynVector internalPosition(_dimensions);
+    for (int i=0; i < size; i++){
+      for (int dim=0; dim < _dimensions; dim++){
+        internalPosition[dim] = positions[i*_dimensions + dim];
+      }
+      ids[i] = mesh->createVertex(internalPosition).getID();
+    }
+
+
+    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
+      int slaveSize = -1;
+      com->receive(slaveSize, rankSender);
+      assertionMsg(slaveSize > 0, size);
+      double* positions = new double[slaveSize*_dimensions];
+      com->receive(positions, slaveSize*_dimensions, rankSender);
+      int* slaveIds = new int[slaveSize];
+      utils::DynVector internalPosition(_dimensions);
+      preciceDebug("Set positions from slave rank " << rankSender);
+      for (int i=0; i < slaveSize; i++){
+        for (int dim=0; dim < _dimensions; dim++){
+          internalPosition[dim] = positions[i*_dimensions + dim];
+        }
+        ids[i] = mesh->createVertex(internalPosition).getID();
+      }
+      com->send(slaveIds, slaveSize, rankSender);
+      delete[] positions;
+      delete[] slaveIds;
+    }
+
+  }
+  else { //couplingMode
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     utils::DynVector internalPosition(_dimensions);
@@ -2125,13 +2178,13 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   if ( _masterMode ){
     preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to slaves" );
     com->acceptConnection ( _accessorName + "Master", _accessorName,
-                            _accessorProcessRank, _accessorCommunicatorSize);
+                            _accessorProcessRank, 1);
   }
   else {
     assertion(_slaveMode);
     preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to master" );
     com->requestConnection( _accessorName + "Master", _accessorName,
-                            _accessorProcessRank, _accessorCommunicatorSize );
+                            _accessorProcessRank-1, _accessorCommunicatorSize-1 );
   }
 }
 
