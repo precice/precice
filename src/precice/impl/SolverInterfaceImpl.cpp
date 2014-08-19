@@ -260,9 +260,13 @@ double SolverInterfaceImpl:: initialize()
     preciceDebug("Request perform initializations");
     _requestManager->requestInitialize();
   }
+  else if(_slaveMode){
+    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+    _couplingScheme->receiveState(com, 0);
+  }
   else {
     // Setup communication
-    if ((not _geometryMode) && (not _slaveMode)){
+    if (not _geometryMode){
       typedef std::map<std::string,Communication>::value_type ComPair;
       preciceInfo("initialize()", "Setting up communication to coupling partner/s " );
       foreach (ComPair& comPair, _communications){
@@ -338,6 +342,14 @@ double SolverInterfaceImpl:: initialize()
         }
       }
     }
+
+    if(_masterMode){
+      com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+      for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
+        _couplingScheme->sendState(com, rankSlave);
+      }
+    }
+
     preciceInfo("initialize()", _couplingScheme->printCouplingState());
   }
   return _couplingScheme->getNextTimestepMaxLength();
@@ -378,7 +390,25 @@ double SolverInterfaceImpl:: advance
   if (_clientMode){
     _requestManager->requestAdvance(computedTimestepLength);
   }
+  else if(_slaveMode){
+    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+    com->send(computedTimestepLength, 0);
+    _couplingScheme->receiveState(com, 0);
+  }
   else {
+
+    if(_masterMode){
+      com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+      for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
+        double dt;
+        com->receive(dt, rankSlave);
+        preciceCheck(tarch::la::equals(dt, computedTimestepLength), "advance()",
+                   "Ambiguous timestep length when calling request advance from "
+                   << "several processes!");
+      }
+    }
+
+
     // Update the coupling scheme time state. Necessary to get correct remainder.
     _couplingScheme->addComputedTime(computedTimestepLength);
 
@@ -421,6 +451,14 @@ double SolverInterfaceImpl:: advance
     preciceInfo("advance()", _couplingScheme->printCouplingState());
     handleExports();
     resetWrittenData();
+
+    if(_masterMode){
+      com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+      for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
+        _couplingScheme->sendState(com, rankSlave);
+      }
+    }
+
   }
   return _couplingScheme->getNextTimestepMaxLength();
 }
@@ -432,6 +470,10 @@ void SolverInterfaceImpl:: finalize()
                "initialize() has to be called before finalize()");
   _couplingScheme->finalize();
   _couplingScheme.reset();
+
+  if(_slaveMode || _masterMode){
+    _accessor->getMasterSlaveCommunication()->closeConnection();
+  }
   if (_clientMode){
     _requestManager->requestFinalize();
     _accessor->getClientServerCommunication()->closeConnection();
@@ -946,7 +988,7 @@ void SolverInterfaceImpl:: setMeshVertices
         for (int dim=0; dim < _dimensions; dim++){
           internalPosition[dim] = positions[i*_dimensions + dim];
         }
-        ids[i] = mesh->createVertex(internalPosition).getID();
+        slaveIds[i] = mesh->createVertex(internalPosition).getID();
       }
       com->send(slaveIds, slaveSize, rankSender);
       delete[] positions;
