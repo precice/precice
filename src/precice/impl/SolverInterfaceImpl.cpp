@@ -163,12 +163,9 @@ void SolverInterfaceImpl:: configure
                          "configure()", "You cannot use a master with a serial participant.");
     if(_accessorProcessRank==0){
       _masterMode = true;
-      //_accessorCommunicatorSize = 1;
     }
     else{
       _slaveMode = true;
-      //_accessorCommunicatorSize =  _accessorCommunicatorSize - 1;
-      //_accessorProcessRank = _accessorProcessRank -1;
     }
   }
 
