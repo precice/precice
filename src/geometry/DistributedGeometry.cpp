@@ -23,32 +23,13 @@ DistributedGeometry:: DistributedGeometry
   const int                rank,
   const int                size)
 :
-  Geometry ( offset ),
-  _accessorName ( accessor ),
-  _providerName ( provider ),
-  _receivers (),
+  CommunicatedGeometry ( offset, accessor, provider ),
   _masterSlaveCommunication ( masterSlaveCom ),
   _vertexDistribution (),
   _rank(rank),
   _size(size)
 {
   preciceTrace2 ( "DistributedGeometry()", accessor, provider );
-}
-
-void DistributedGeometry:: addReceiver
-(
-  const std::string&     receiver,
-  com::PtrCommunication com )
-{
-  preciceTrace1 ( "addReceiver()", receiver );
-  assertion ( com.get() != NULL );
-  preciceCheck ( ! utils::contained(receiver, _receivers),
-                 "addReceiver()", "Receiver \"" << receiver
-                 << "\" has been added already to communicated geometry!" );
-  preciceCheck ( receiver != _providerName, "addReceiver()",
-                 "Receiver \"" << receiver << "\" cannot be the same as "
-                 << "provider in communicated geometry!" );
-  _receivers[receiver] = com;
 }
 
 void DistributedGeometry:: specializedCreate

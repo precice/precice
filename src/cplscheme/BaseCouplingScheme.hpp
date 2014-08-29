@@ -285,8 +285,14 @@ protected:
   /// @brief Sends data sendDataIDs given in mapCouplingData with communication.
   std::vector<int> sendData ( com::PtrCommunication communication );
   
-  /// @brief Receives data sendDataIDs given in mapCouplingData with communication.
+  /// @brief Receives data receiveDataIDs given in mapCouplingData with communication.
   std::vector<int> receiveData ( com::PtrCommunication communication );
+
+  /// @brief Gathers data sendDataIDs given in mapCouplingData at master.
+  void gatherData ( com::PtrCommunication communication, int comRank, int comSize );
+
+  /// @brief Scatters data receiveDataIDs given in mapCouplingData at master.
+  void scatterData ( com::PtrCommunication communication, int comRank, int comSize );
 
   /// @brief Returns all data to be sent.
   const DataMap& getSendData() const {

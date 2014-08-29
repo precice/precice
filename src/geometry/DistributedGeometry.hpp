@@ -4,7 +4,7 @@
 #ifndef PRECICE_GEOMETRY_DISTRIBUTEDGEOMETRY_HPP_
 #define PRECICE_GEOMETRY_DISTRIBUTEDGEOMETRY_HPP_
 
-#include "Geometry.hpp"
+#include "CommunicatedGeometry.hpp"
 #include "com/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
 #include "tarch/logging/Log.h"
@@ -18,7 +18,7 @@ namespace geometry {
  * @brief Creates the mesh by copying another remote mesh via communication. In contrast to CommunicatedGeometry
  * the mesh is distributed amongst several processors.
  */
-class DistributedGeometry : public Geometry
+class DistributedGeometry : public CommunicatedGeometry
 {
 public:
 
@@ -32,9 +32,6 @@ public:
 
   virtual ~DistributedGeometry() {}
 
-  void addReceiver (
-    const std::string&     receiver,
-    com::PtrCommunication com );
 
 protected:
 
@@ -47,12 +44,6 @@ private:
 
   // @brief Logging device.
   static tarch::logging::Log _log;
-
-  std::string _accessorName;
-
-  std::string _providerName;
-
-  std::map<std::string,com::PtrCommunication> _receivers;
 
   com::PtrCommunication _masterSlaveCommunication;
 

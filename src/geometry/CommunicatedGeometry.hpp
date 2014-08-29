@@ -44,13 +44,14 @@ private:
   // @brief Logging device.
   static tarch::logging::Log _log;
 
+protected:
   std::string _accessorName;
 
   std::string _providerName;
 
   std::map<std::string,com::PtrCommunication> _receivers;
 
-  com::PtrCommunication _communication;
+  //com::PtrCommunication _communication;
 };
 
 }} // namespace precice, geometry

@@ -312,6 +312,46 @@ std::vector<int> BaseCouplingScheme:: receiveData
   return receivedDataIDs;
 }
 
+void BaseCouplingScheme:: gatherData
+(
+  com::PtrCommunication communication, int comRank, int comSize )
+{
+  preciceTrace("gatherData()");
+  assertion(communication.get() != NULL);
+  assertion(communication->isConnected());
+
+  // TODO from here some way to the vertexDistribution must be found
+
+  std::vector<int> sentDataIDs;
+  foreach (DataMap::value_type& pair, _sendData){
+//    int size = pair.second->values->size();
+//    if (size > 0) {
+//      communication->send(tarch::la::raw(*pair.second->values), size, 0);
+//    }
+//    sentDataIDs.push_back(pair.first);
+  }
+  preciceDebug("Number of sent data sets = " << sentDataIDs.size());
+}
+
+void BaseCouplingScheme:: scatterData
+(
+  com::PtrCommunication communication, int comRank, int comSize )
+{
+  preciceTrace("scatterData()");
+  assertion(communication.get() != NULL);
+  assertion(communication->isConnected());
+
+  std::vector<int> receivedDataIDs;
+  foreach(DataMap::value_type & pair, _receiveData){
+//    int size = pair.second->values->size ();
+//    if (size > 0){
+//      communication->receive(tarch::la::raw(*pair.second->values), size, 0);
+//    }
+//    receivedDataIDs.push_back(pair.first);
+  }
+  preciceDebug("Number of received data sets = " << receivedDataIDs.size());
+}
+
 CouplingData* BaseCouplingScheme:: getSendData
 (
   int dataID)

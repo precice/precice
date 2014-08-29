@@ -227,6 +227,19 @@ public:
   virtual void receiveState (
     com::PtrCommunication communication,
     int                   rankSender ) =0;
+
+  //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
+  virtual void gatherData (
+    com::PtrCommunication communication,
+    int comRank,
+    int comSize ){}
+
+  //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
+  virtual void scatterData (
+      com::PtrCommunication communication,
+      int comRank,
+      int comSize ){}
+
 };
 
 }} // namespace precice, cplscheme

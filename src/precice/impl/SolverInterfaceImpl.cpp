@@ -41,6 +41,7 @@
 #include "geometry/Geometry.hpp"
 #include "geometry/ImportGeometry.hpp"
 #include "geometry/CommunicatedGeometry.hpp"
+#include "geometry/DistributedGeometry.hpp"
 #include "geometry/SolverGeometry.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
@@ -390,7 +391,9 @@ double SolverInterfaceImpl:: advance
   else if(_slaveMode){
     com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
     com->send(computedTimestepLength, 0);
+    _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize);
     _couplingScheme->receiveState(com, 0);
+    _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize);
   }
   else {
 
@@ -403,6 +406,7 @@ double SolverInterfaceImpl:: advance
                    "Ambiguous timestep length when calling request advance from "
                    << "several processes!");
       }
+      _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize);
     }
 
 
@@ -454,6 +458,7 @@ double SolverInterfaceImpl:: advance
       for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
         _couplingScheme->sendState(com, rankSlave);
       }
+      _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize);
     }
 
   }
@@ -952,47 +957,47 @@ void SolverInterfaceImpl:: setMeshVertices
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
-  else if(_slaveMode){
-    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-    com->send(size, 0);
-    com->send(positions, size*_dimensions, 0);
-    com->receive(ids, size, 0);
-  }
-  else if(_masterMode){
-    MeshContext& context = _accessor->meshContext(meshID);
-    mesh::PtrMesh mesh(context.mesh);
-    preciceDebug("Set own positions");
-    utils::DynVector internalPosition(_dimensions);
-    for (int i=0; i < size; i++){
-      for (int dim=0; dim < _dimensions; dim++){
-        internalPosition[dim] = positions[i*_dimensions + dim];
-      }
-      ids[i] = mesh->createVertex(internalPosition).getID();
-    }
-
-
-    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
-      int slaveSize = -1;
-      com->receive(slaveSize, rankSender);
-      assertionMsg(slaveSize > 0, size);
-      double* positions = new double[slaveSize*_dimensions];
-      com->receive(positions, slaveSize*_dimensions, rankSender);
-      int* slaveIds = new int[slaveSize];
-      utils::DynVector internalPosition(_dimensions);
-      preciceDebug("Set positions from slave rank " << rankSender);
-      for (int i=0; i < slaveSize; i++){
-        for (int dim=0; dim < _dimensions; dim++){
-          internalPosition[dim] = positions[i*_dimensions + dim];
-        }
-        slaveIds[i] = mesh->createVertex(internalPosition).getID();
-      }
-      com->send(slaveIds, slaveSize, rankSender);
-      delete[] positions;
-      delete[] slaveIds;
-    }
-
-  }
+//  else if(_slaveMode){
+//    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+//    com->send(size, 0);
+//    com->send(positions, size*_dimensions, 0);
+//    com->receive(ids, size, 0);
+//  }
+//  else if(_masterMode){
+//    MeshContext& context = _accessor->meshContext(meshID);
+//    mesh::PtrMesh mesh(context.mesh);
+//    preciceDebug("Set own positions");
+//    utils::DynVector internalPosition(_dimensions);
+//    for (int i=0; i < size; i++){
+//      for (int dim=0; dim < _dimensions; dim++){
+//        internalPosition[dim] = positions[i*_dimensions + dim];
+//      }
+//      ids[i] = mesh->createVertex(internalPosition).getID();
+//    }
+//
+//
+//    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+//    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
+//      int slaveSize = -1;
+//      com->receive(slaveSize, rankSender);
+//      assertionMsg(slaveSize > 0, size);
+//      double* positions = new double[slaveSize*_dimensions];
+//      com->receive(positions, slaveSize*_dimensions, rankSender);
+//      int* slaveIds = new int[slaveSize];
+//      utils::DynVector internalPosition(_dimensions);
+//      preciceDebug("Set positions from slave rank " << rankSender);
+//      for (int i=0; i < slaveSize; i++){
+//        for (int dim=0; dim < _dimensions; dim++){
+//          internalPosition[dim] = positions[i*_dimensions + dim];
+//        }
+//        slaveIds[i] = mesh->createVertex(internalPosition).getID();
+//      }
+//      com->send(slaveIds, slaveSize, rankSender);
+//      delete[] positions;
+//      delete[] slaveIds;
+//    }
+//
+//  }
   else { //couplingMode
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
@@ -1477,50 +1482,50 @@ void SolverInterfaceImpl:: writeBlockVectorData
   if (_clientMode){
     _requestManager->requestWriteBlockVectorData(fromDataID, size, valueIndices, values);
   }
-  else if(_slaveMode){
-      com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-      com->send(size, 0);
-      com->send(valueIndices, size, 0);
-      com->send(values, size*_dimensions, 0);
-  }
-  else if (_masterMode){
-    preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
-                 "You try to write to data that is not defined for " << _accessor->getName());
-    DataContext& context = _accessor->dataContext(fromDataID);
-    assertion(context.toData.get() != NULL);
-    utils::DynVector& valuesInternal = context.fromData->values();
-    for (int i=0; i < size; i++){
-      int offsetInternal = valueIndices[i]*_dimensions;
-      int offset = i*_dimensions;
-      for (int dim=0; dim < _dimensions; dim++){
-        assertion2(offset+dim < valuesInternal.size(),
-                   offset+dim, valuesInternal.size());
-        valuesInternal[offsetInternal + dim] = values[offset + dim];
-      }
-    }
-
-    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
-      int slaveSize = -1;
-      com->receive(slaveSize, rankSender);
-      int* slaveIndices = new int[slaveSize];
-      com->receive(slaveIndices, slaveSize, rankSender);
-      double* slaveValues = new double[slaveSize*_dimensions];
-      com->receive(slaveValues, slaveSize*_dimensions, rankSender);
-      for (int i=0; i < slaveSize; i++){
-        int offsetInternal = slaveIndices[i]*_dimensions;
-        int offset = i*_dimensions;
-        for (int dim=0; dim < _dimensions; dim++){
-          assertion2(offset+dim < valuesInternal.size(),
-                     offset+dim, valuesInternal.size());
-          valuesInternal[offsetInternal + dim] = slaveValues[offset + dim];
-        }
-      }
-      delete[] slaveIndices;
-      delete[] slaveValues;
-    }
-
-  }
+//  else if(_slaveMode){
+//      com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+//      com->send(size, 0);
+//      com->send(valueIndices, size, 0);
+//      com->send(values, size*_dimensions, 0);
+//  }
+//  else if (_masterMode){
+//    preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
+//                 "You try to write to data that is not defined for " << _accessor->getName());
+//    DataContext& context = _accessor->dataContext(fromDataID);
+//    assertion(context.toData.get() != NULL);
+//    utils::DynVector& valuesInternal = context.fromData->values();
+//    for (int i=0; i < size; i++){
+//      int offsetInternal = valueIndices[i]*_dimensions;
+//      int offset = i*_dimensions;
+//      for (int dim=0; dim < _dimensions; dim++){
+//        assertion2(offset+dim < valuesInternal.size(),
+//                   offset+dim, valuesInternal.size());
+//        valuesInternal[offsetInternal + dim] = values[offset + dim];
+//      }
+//    }
+//
+//    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+//    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
+//      int slaveSize = -1;
+//      com->receive(slaveSize, rankSender);
+//      int* slaveIndices = new int[slaveSize];
+//      com->receive(slaveIndices, slaveSize, rankSender);
+//      double* slaveValues = new double[slaveSize*_dimensions];
+//      com->receive(slaveValues, slaveSize*_dimensions, rankSender);
+//      for (int i=0; i < slaveSize; i++){
+//        int offsetInternal = slaveIndices[i]*_dimensions;
+//        int offset = i*_dimensions;
+//        for (int dim=0; dim < _dimensions; dim++){
+//          assertion2(offset+dim < valuesInternal.size(),
+//                     offset+dim, valuesInternal.size());
+//          valuesInternal[offsetInternal + dim] = slaveValues[offset + dim];
+//        }
+//      }
+//      delete[] slaveIndices;
+//      delete[] slaveValues;
+//    }
+//
+//  }
   else { //couplingMode
     preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
                  "You try to write to data that is not defined for " << _accessor->getName());
@@ -1638,49 +1643,49 @@ void SolverInterfaceImpl:: readBlockVectorData
   if (_clientMode){
     _requestManager->requestReadBlockVectorData(toDataID, size, valueIndices, values);
   }
-  else if(_slaveMode){
-    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-    com->send(size, 0);
-    com->send(valueIndices, size, 0);
-    com->receive(values, size*_dimensions, 0);
-  }
-  else if(_masterMode){
-    preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
-                     "You try to read from data that is not defined for " << _accessor->getName());
-    DataContext& context = _accessor->dataContext(toDataID);
-    assertion(context.fromData.get() != NULL);
-    utils::DynVector& valuesInternal = context.toData->values();
-    for (int i=0; i < size; i++){
-      int offsetInternal = valueIndices[i] * _dimensions;
-      int offset = i * _dimensions;
-      for (int dim=0; dim < _dimensions; dim++){
-        assertion2(offsetInternal+dim < valuesInternal.size(),
-                   offsetInternal+dim, valuesInternal.size());
-        values[offset + dim] = valuesInternal[offsetInternal + dim];
-      }
-    }
-
-    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
-      int slaveSize = -1;
-      com->receive(slaveSize, rankSender);
-      int* slaveIndices = new int[slaveSize];
-      com->receive(slaveIndices, slaveSize, rankSender);
-      double* slaveValues = new double[slaveSize*_dimensions];
-      for (int i=0; i < slaveSize; i++){
-        int offsetInternal = slaveIndices[i] * _dimensions;
-        int offset = i * _dimensions;
-        for (int dim=0; dim < _dimensions; dim++){
-          assertion2(offsetInternal+dim < valuesInternal.size(),
-                     offsetInternal+dim, valuesInternal.size());
-          slaveValues[offset + dim] = valuesInternal[offsetInternal + dim];
-        }
-      }
-      com->send(slaveValues, slaveSize*_dimensions, rankSender);
-      delete[] slaveIndices;
-      delete[] slaveValues;
-    }
-  }
+//  else if(_slaveMode){
+//    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+//    com->send(size, 0);
+//    com->send(valueIndices, size, 0);
+//    com->receive(values, size*_dimensions, 0);
+//  }
+//  else if(_masterMode){
+//    preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
+//                     "You try to read from data that is not defined for " << _accessor->getName());
+//    DataContext& context = _accessor->dataContext(toDataID);
+//    assertion(context.fromData.get() != NULL);
+//    utils::DynVector& valuesInternal = context.toData->values();
+//    for (int i=0; i < size; i++){
+//      int offsetInternal = valueIndices[i] * _dimensions;
+//      int offset = i * _dimensions;
+//      for (int dim=0; dim < _dimensions; dim++){
+//        assertion2(offsetInternal+dim < valuesInternal.size(),
+//                   offsetInternal+dim, valuesInternal.size());
+//        values[offset + dim] = valuesInternal[offsetInternal + dim];
+//      }
+//    }
+//
+//    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+//    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
+//      int slaveSize = -1;
+//      com->receive(slaveSize, rankSender);
+//      int* slaveIndices = new int[slaveSize];
+//      com->receive(slaveIndices, slaveSize, rankSender);
+//      double* slaveValues = new double[slaveSize*_dimensions];
+//      for (int i=0; i < slaveSize; i++){
+//        int offsetInternal = slaveIndices[i] * _dimensions;
+//        int offset = i * _dimensions;
+//        for (int dim=0; dim < _dimensions; dim++){
+//          assertion2(offsetInternal+dim < valuesInternal.size(),
+//                     offsetInternal+dim, valuesInternal.size());
+//          slaveValues[offset + dim] = valuesInternal[offsetInternal + dim];
+//        }
+//      }
+//      com->send(slaveValues, slaveSize*_dimensions, rankSender);
+//      delete[] slaveIndices;
+//      delete[] slaveValues;
+//    }
+//  }
   else { //couplingMode
     preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
                  "You try to read from data that is not defined for " << _accessor->getName());
@@ -1907,7 +1912,14 @@ void SolverInterfaceImpl:: configureSolverGeometries
             std::string provider ( _accessorName );
 
             if(!addedReceiver){
-              comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider );
+              if(_masterMode||_slaveMode){
+                comGeo = new geometry::DistributedGeometry ( offset, provider, provider,
+                                              _accessor->getMasterSlaveCommunication(),
+                                           _accessorProcessRank, _accessorCommunicatorSize );
+              }
+              else{
+                comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider );
+              }
               context.geometry = geometry::PtrGeometry ( comGeo );
             }
             else{
