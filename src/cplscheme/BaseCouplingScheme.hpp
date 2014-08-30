@@ -15,6 +15,7 @@
 #include "tarch/logging/Log.h"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
+#include <map>
 
 namespace precice {
 namespace cplscheme {
@@ -289,10 +290,12 @@ protected:
   std::vector<int> receiveData ( com::PtrCommunication communication );
 
   /// @brief Gathers data sendDataIDs given in mapCouplingData at master.
-  void gatherData ( com::PtrCommunication communication, int comRank, int comSize );
+  void gatherData ( com::PtrCommunication communication, int comRank,
+                    int comSize, std::map<int,int> vertexDistribution, int dim );
 
   /// @brief Scatters data receiveDataIDs given in mapCouplingData at master.
-  void scatterData ( com::PtrCommunication communication, int comRank, int comSize );
+  void scatterData ( com::PtrCommunication communication, int comRank,
+                     int comSize, std::map<int,int> vertexDistribution, int dim );
 
   /// @brief Returns all data to be sent.
   const DataMap& getSendData() const {
@@ -547,6 +550,9 @@ private:
   
   /// @brief Responsible for monitoring iteration count over timesteps.
   io::TXTTableWriter _iterationsWriter;
+
+  int getVertexOffset(std::map<int,int> vertexDistribution, int rank, int dim);
+
 
 };
 

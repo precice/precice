@@ -25,7 +25,6 @@ DistributedGeometry:: DistributedGeometry
 :
   CommunicatedGeometry ( offset, accessor, provider ),
   _masterSlaveCommunication ( masterSlaveCom ),
-  _vertexDistribution (),
   _rank(rank),
   _size(size)
 {
@@ -94,5 +93,6 @@ void DistributedGeometry:: specializedCreate
                   << "\" but is neither provider nor receiver!" );
   }
 }
+
 
 }} // namespace precice, geometry

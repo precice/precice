@@ -6,6 +6,7 @@
 
 #include "utils/Dimensions.hpp"
 #include "tarch/logging/Log.h"
+#include <map>
 
 namespace precice {
    namespace mesh {
@@ -66,6 +67,10 @@ public:
     return _offset;
   }
 
+  std::map<int,int> getVertexDistribution(){
+    return _vertexDistribution;
+  }
+
 protected:
 
   /**
@@ -82,12 +87,15 @@ protected:
    */
   virtual void allocateDataValues ( mesh::Mesh& mesh );
 
+  std::map<int,int> _vertexDistribution;
+
 private:
 
   static tarch::logging::Log _log;
 
   // @brief Offset of reference point of geometry from zero point
   utils::DynVector _offset;
+
 };
 
 }} // namespace precice, geometry

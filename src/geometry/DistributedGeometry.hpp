@@ -47,8 +47,6 @@ private:
 
   com::PtrCommunication _masterSlaveCommunication;
 
-  std::map<int,int> _vertexDistribution;
-
   int _rank;
 
   int _size;

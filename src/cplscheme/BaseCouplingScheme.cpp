@@ -314,43 +314,89 @@ std::vector<int> BaseCouplingScheme:: receiveData
 
 void BaseCouplingScheme:: gatherData
 (
-  com::PtrCommunication communication, int comRank, int comSize )
+  com::PtrCommunication communication, int comRank, int comSize,
+  std::map<int,int> vertexDistribution, int dim)
 {
   preciceTrace("gatherData()");
   assertion(communication.get() != NULL);
   assertion(communication->isConnected());
+  assertion(comSize>1);
 
-  // TODO from here some way to the vertexDistribution must be found
-
-  std::vector<int> sentDataIDs;
-  foreach (DataMap::value_type& pair, _sendData){
-//    int size = pair.second->values->size();
-//    if (size > 0) {
-//      communication->send(tarch::la::raw(*pair.second->values), size, 0);
-//    }
-//    sentDataIDs.push_back(pair.first);
+  if(comRank>0){ //slave
+    foreach (DataMap::value_type& pair, _sendData){
+      int size = pair.second->values->size();
+      if (size > 0) {
+        communication->send(tarch::la::raw(*pair.second->values), size, 0);
+      }
+    }
   }
-  preciceDebug("Number of sent data sets = " << sentDataIDs.size());
+  else{ //master
+    assertion(comRank==0);
+    foreach (DataMap::value_type& pair, _sendData){
+      utils::DynVector& valuesMaster = *pair.second->values;
+      double* valuesSlave;
+      for(int rankSlave = 1; rankSlave < comSize; rankSlave++){
+        int vertexCount = vertexDistribution[rankSlave];
+        int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
+        if (vertexCount > 0) {
+          communication->receive(valuesSlave, vertexCount, rankSlave-1);
+          for(int i=0; i<vertexCount;i++){
+            valuesMaster[i+offset] = valuesSlave[i];
+          }
+        }
+      }
+    }
+  }
 }
 
 void BaseCouplingScheme:: scatterData
 (
-  com::PtrCommunication communication, int comRank, int comSize )
+  com::PtrCommunication communication, int comRank, int comSize,
+  std::map<int,int> vertexDistribution, int dim)
 {
   preciceTrace("scatterData()");
   assertion(communication.get() != NULL);
   assertion(communication->isConnected());
+  assertion(comSize>1);
 
-  std::vector<int> receivedDataIDs;
-  foreach(DataMap::value_type & pair, _receiveData){
-//    int size = pair.second->values->size ();
-//    if (size > 0){
-//      communication->receive(tarch::la::raw(*pair.second->values), size, 0);
-//    }
-//    receivedDataIDs.push_back(pair.first);
+  if(comRank>0){ //slave
+    foreach (DataMap::value_type& pair, _receiveData){
+      int size = pair.second->values->size();
+      if (size > 0) {
+        communication->receive(tarch::la::raw(*pair.second->values), size, 0);
+      }
+    }
   }
-  preciceDebug("Number of received data sets = " << receivedDataIDs.size());
+  else{ //master
+    assertion(comRank==0);
+    foreach (DataMap::value_type& pair, _receiveData){
+      utils::DynVector& valuesMaster = *pair.second->values;
+      double* valuesSlave;
+      for(int rankSlave = 1; rankSlave < comSize; rankSlave++){
+        int vertexCount = vertexDistribution[rankSlave];
+        int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
+        if (vertexCount > 0) {
+          for(int i=0; i<vertexCount;i++){
+            valuesSlave[i] = valuesMaster[i+offset];
+          }
+          communication->send(valuesSlave, vertexCount, rankSlave-1);
+        }
+      }
+    }
+  }
 }
+
+int BaseCouplingScheme:: getVertexOffset(
+    std::map<int,int> vertexDistribution,
+    int rank,
+    int dim)
+  {
+    int sum=0;
+    for(int i=0;i<rank;i++){
+      sum += vertexDistribution[i];
+    }
+    return sum*dim;
+  }
 
 CouplingData* BaseCouplingScheme:: getSendData
 (

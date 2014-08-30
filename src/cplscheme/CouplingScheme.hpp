@@ -8,6 +8,7 @@
 #include "com/SharedPointer.hpp"
 #include <string>
 #include <vector>
+#include <map>
 
 namespace precice {
 namespace cplscheme {
@@ -232,13 +233,17 @@ public:
   virtual void gatherData (
     com::PtrCommunication communication,
     int comRank,
-    int comSize ){}
+    int comSize,
+    std::map<int,int> vertexDistribution,
+    int dim){}
 
   //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
   virtual void scatterData (
-      com::PtrCommunication communication,
-      int comRank,
-      int comSize ){}
+    com::PtrCommunication communication,
+    int comRank,
+    int comSize,
+    std::map<int,int> vertexDistribution,
+    int dim){}
 
 };
 

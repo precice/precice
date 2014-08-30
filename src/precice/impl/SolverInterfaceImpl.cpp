@@ -391,9 +391,20 @@ double SolverInterfaceImpl:: advance
   else if(_slaveMode){
     com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
     com->send(computedTimestepLength, 0);
-    _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize);
+
+    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
+      if(not context.geometry->getVertexDistribution().empty()){
+        _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize,
+            context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+      }
+    }
     _couplingScheme->receiveState(com, 0);
-    _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize);
+    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
+      if(not context.geometry->getVertexDistribution().empty()){
+        _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
+            context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+      }
+    }
   }
   else {
 
@@ -406,7 +417,13 @@ double SolverInterfaceImpl:: advance
                    "Ambiguous timestep length when calling request advance from "
                    << "several processes!");
       }
-      _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize);
+      //for all mesh context, if distributed, dann gather aufrufen und mesh mitgeben
+      foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
+        if(not context.geometry->getVertexDistribution().empty()){
+          _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize,
+              context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+        }
+      }
     }
 
 
@@ -458,7 +475,12 @@ double SolverInterfaceImpl:: advance
       for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
         _couplingScheme->sendState(com, rankSlave);
       }
-      _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize);
+      foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
+        if(not context.geometry->getVertexDistribution().empty()){
+          _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
+                          context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+        }
+      }
     }
 
   }

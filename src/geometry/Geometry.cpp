@@ -19,7 +19,8 @@ Geometry:: Geometry
 (
   const utils::DynVector& offset )
 :
-  _offset (offset)
+  _offset (offset),
+  _vertexDistribution()
 {}
 
 void Geometry:: create
@@ -47,5 +48,6 @@ void Geometry:: allocateDataValues ( mesh::Mesh & mesh )
 {
   mesh.allocateDataValues ();
 }
+
 
 }} // namespace precice, geometry
