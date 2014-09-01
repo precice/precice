@@ -172,6 +172,7 @@ void BaseCouplingScheme:: addDataToSend
   mesh::PtrData data,
   bool          initialize)
 {
+  preciceTrace("addDataToSend()");
   int id = data->getID();
   if(! utils::contained(id, _sendData)) {
     PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
@@ -190,6 +191,7 @@ void BaseCouplingScheme:: addDataToReceive
   mesh::PtrData data,
   bool          initialize)
 {
+  preciceTrace("addDataToReceive()");
   int id = data->getID();
   if(! utils::contained(id, _receiveData)) {
     PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
@@ -334,15 +336,18 @@ void BaseCouplingScheme:: gatherData
     assertion(comRank==0);
     foreach (DataMap::value_type& pair, _sendData){
       utils::DynVector& valuesMaster = *pair.second->values;
-      double* valuesSlave;
       for(int rankSlave = 1; rankSlave < comSize; rankSlave++){
         int vertexCount = vertexDistribution[rankSlave];
         int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
+        preciceDebug("Number of vertices = " << vertexCount <<", offset: " << offset);
+        preciceDebug("Size ValuesMaster = " << valuesMaster.size() );
         if (vertexCount > 0) {
-          communication->receive(valuesSlave, vertexCount, rankSlave-1);
-          for(int i=0; i<vertexCount;i++){
+          double* valuesSlave = new double[vertexCount*dim];
+          communication->receive(valuesSlave, vertexCount*dim, rankSlave-1);
+          for(int i=0; i<vertexCount*dim;i++){
             valuesMaster[i+offset] = valuesSlave[i];
           }
+          delete valuesSlave;
         }
       }
     }
@@ -371,15 +376,16 @@ void BaseCouplingScheme:: scatterData
     assertion(comRank==0);
     foreach (DataMap::value_type& pair, _receiveData){
       utils::DynVector& valuesMaster = *pair.second->values;
-      double* valuesSlave;
       for(int rankSlave = 1; rankSlave < comSize; rankSlave++){
         int vertexCount = vertexDistribution[rankSlave];
         int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
         if (vertexCount > 0) {
-          for(int i=0; i<vertexCount;i++){
+          double* valuesSlave = new double[vertexCount*dim];
+          for(int i=0; i<vertexCount*dim;i++){
             valuesSlave[i] = valuesMaster[i+offset];
           }
-          communication->send(valuesSlave, vertexCount, rankSlave-1);
+          communication->send(valuesSlave, vertexCount*dim, rankSlave-1);
+          delete valuesSlave;
         }
       }
     }

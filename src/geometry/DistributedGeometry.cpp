@@ -39,6 +39,7 @@ void DistributedGeometry:: specializedCreate
   preciceCheck ( _receivers.size() > 0, "specializedCreate()",
                  "No receivers specified for communicated geometry to create "
                  << "mesh \"" << seed.getName() << "\"!" );
+  _isDistributed = true;
   if ( _accessorName == _providerName ) {
 
     if(_rank>0){ //slave
@@ -48,16 +49,18 @@ void DistributedGeometry:: specializedCreate
       assertion(_rank==0);
       assertion(_size>1);
       _vertexDistribution[0]=seed.vertices().size();
-      mesh::PtrMesh slaveMesh;
+      mesh::Mesh slaveMesh("SlaveMesh", seed.getDimensions(), seed.isFlipNormals());
+      mesh::Mesh& rSlaveMesh = slaveMesh;
 
       for(int rankSlave = 1; rankSlave < _size; rankSlave++){
         //slaves have ranks from 0 to size-2
         //TODO better rewrite accept/request connection
-        com::CommunicateMesh(_masterSlaveCommunication).receiveMesh ( *slaveMesh, rankSlave-1);
-        _vertexDistribution[rankSlave]=slaveMesh->vertices().size();
-        int dim = slaveMesh->getDimensions();
+        rSlaveMesh.clear();
+        com::CommunicateMesh(_masterSlaveCommunication).receiveMesh ( rSlaveMesh, rankSlave-1);
+        _vertexDistribution[rankSlave]=rSlaveMesh.vertices().size();
+        int dim = rSlaveMesh.getDimensions();
         utils::DynVector coord(dim);
-        foreach ( const mesh::Vertex& vertex, slaveMesh->vertices() ){
+        foreach ( const mesh::Vertex& vertex, rSlaveMesh.vertices() ){
             coord = vertex.getCoords();
             seed.createVertex(coord);
         }

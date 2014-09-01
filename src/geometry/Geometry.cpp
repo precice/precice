@@ -19,8 +19,9 @@ Geometry:: Geometry
 (
   const utils::DynVector& offset )
 :
-  _offset (offset),
-  _vertexDistribution()
+  _vertexDistribution(),
+  _isDistributed(false),
+  _offset (offset)
 {}
 
 void Geometry:: create

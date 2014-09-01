@@ -193,7 +193,7 @@ void SolverInterfaceImpl:: configure
                  "Only one participant can be defined in geometry mode!");
     configureSolverGeometries(config.getCommunicationConfiguration());
   }
-  else if (not _clientMode && not _slaveMode){
+  else if (not _clientMode){
     preciceInfo("configure()", "[PRECICE] Run in coupling mode");
     preciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
@@ -259,6 +259,10 @@ double SolverInterfaceImpl:: initialize()
     _requestManager->requestInitialize();
   }
   else if(_slaveMode){
+    preciceDebug("Perform initializations");
+    foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
+      createMeshContext(meshContext);
+    }
     com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
     _couplingScheme->receiveState(com, 0);
   }
@@ -393,14 +397,14 @@ double SolverInterfaceImpl:: advance
     com->send(computedTimestepLength, 0);
 
     foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-      if(not context.geometry->getVertexDistribution().empty()){
+      if( context.geometry->isDistributed()){
         _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize,
             context.geometry->getVertexDistribution(), context.mesh->getDimensions());
       }
     }
     _couplingScheme->receiveState(com, 0);
     foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-      if(not context.geometry->getVertexDistribution().empty()){
+      if( context.geometry->isDistributed()){
         _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
             context.geometry->getVertexDistribution(), context.mesh->getDimensions());
       }
@@ -417,9 +421,8 @@ double SolverInterfaceImpl:: advance
                    "Ambiguous timestep length when calling request advance from "
                    << "several processes!");
       }
-      //for all mesh context, if distributed, dann gather aufrufen und mesh mitgeben
       foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-        if(not context.geometry->getVertexDistribution().empty()){
+        if( context.geometry->isDistributed()){
           _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize,
               context.geometry->getVertexDistribution(), context.mesh->getDimensions());
         }
@@ -476,7 +479,7 @@ double SolverInterfaceImpl:: advance
         _couplingScheme->sendState(com, rankSlave);
       }
       foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-        if(not context.geometry->getVertexDistribution().empty()){
+        if( context.geometry->isDistributed()){
           _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
                           context.geometry->getVertexDistribution(), context.mesh->getDimensions());
         }
@@ -1935,6 +1938,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
 
             if(!addedReceiver){
               if(_masterMode||_slaveMode){
+                //TODO in the end every geometry should be distributed
                 comGeo = new geometry::DistributedGeometry ( offset, provider, provider,
                                               _accessor->getMasterSlaveCommunication(),
                                            _accessorProcessRank, _accessorCommunicatorSize );

@@ -71,6 +71,10 @@ public:
     return _vertexDistribution;
   }
 
+  bool isDistributed(){
+    return _isDistributed;
+  }
+
 protected:
 
   /**
@@ -88,6 +92,8 @@ protected:
   virtual void allocateDataValues ( mesh::Mesh& mesh );
 
   std::map<int,int> _vertexDistribution;
+
+  bool _isDistributed;
 
 private:
 
