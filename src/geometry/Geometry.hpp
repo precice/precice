@@ -6,6 +6,8 @@
 
 #include "utils/Dimensions.hpp"
 #include "tarch/logging/Log.h"
+#include "com/CommunicateMesh.hpp"
+#include "com/Communication.hpp"
 #include <map>
 
 namespace precice {
@@ -75,6 +77,23 @@ public:
     return _isDistributed;
   }
 
+  bool isProvided(){
+    return _isProvided;
+  }
+
+  void setProvided ( bool provided)
+  {
+    _isProvided = provided;
+  }
+
+  void collectDistribution(
+    mesh::Mesh& seed,
+    com::PtrCommunication   masterSlaveCom,
+    const int               rank,
+    const int               size);
+
+
+
 protected:
 
   /**
@@ -91,11 +110,13 @@ protected:
    */
   virtual void allocateDataValues ( mesh::Mesh& mesh );
 
+private:
+
   std::map<int,int> _vertexDistribution;
 
   bool _isDistributed;
 
-private:
+  bool _isProvided;
 
   static tarch::logging::Log _log;
 

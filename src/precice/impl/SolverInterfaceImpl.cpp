@@ -41,7 +41,6 @@
 #include "geometry/Geometry.hpp"
 #include "geometry/ImportGeometry.hpp"
 #include "geometry/CommunicatedGeometry.hpp"
-#include "geometry/DistributedGeometry.hpp"
 #include "geometry/SolverGeometry.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
@@ -1936,52 +1935,55 @@ void SolverInterfaceImpl:: configureSolverGeometries
                            "Participant \"" << _accessorName << "\" cannot provide "
                            << "the geometry of mesh \"" << context.mesh->getName()
                            << " in addition to a defined geometry!" );
+      if(not _slaveMode){
 
-      bool addedReceiver = false;
-      geometry::CommunicatedGeometry* comGeo = NULL;
-      foreach ( PtrParticipant receiver, _participants ){
-        foreach ( MeshContext& receiverContext, receiver->usedMeshContexts() ){
-          bool doesReceive = receiverContext.receiveMeshFrom == _accessorName;
-          doesReceive &= receiverContext.mesh->getName() == context.mesh->getName();
-          if ( doesReceive ){
-            preciceDebug ( "   ... receiver " << receiver );
-            utils::DynVector offset ( _dimensions, 0.0 );
-            std::string provider ( _accessorName );
+        bool addedReceiver = false;
+        geometry::CommunicatedGeometry* comGeo = NULL;
+        foreach ( PtrParticipant receiver, _participants ){
+          foreach ( MeshContext& receiverContext, receiver->usedMeshContexts() ){
+            bool doesReceive = receiverContext.receiveMeshFrom == _accessorName;
+            doesReceive &= receiverContext.mesh->getName() == context.mesh->getName();
+            if ( doesReceive ){
+              preciceDebug ( "   ... receiver " << receiver );
+              utils::DynVector offset ( _dimensions, 0.0 );
+              std::string provider ( _accessorName );
 
-            if(!addedReceiver){
-              if(_masterMode||_slaveMode){
-                //TODO in the end every geometry should be distributed
-                comGeo = new geometry::DistributedGeometry ( offset, provider, provider,
-                                              _accessor->getMasterSlaveCommunication(),
-                                           _accessorProcessRank, _accessorCommunicatorSize );
+              if(!addedReceiver){
+                comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider );
+                context.geometry = geometry::PtrGeometry ( comGeo );
               }
               else{
-                comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider );
+                preciceDebug ( "Further receiver added.");
               }
-              context.geometry = geometry::PtrGeometry ( comGeo );
-            }
-            else{
-              preciceDebug ( "Further receiver added.");
-            }
 
-            com::PtrCommunication com =
-                comConfig->getCommunication ( receiver->getName(), provider );
-            comGeo->addReceiver ( receiver->getName(), com );
+              com::PtrCommunication com =
+                  comConfig->getCommunication ( receiver->getName(), provider );
+              comGeo->addReceiver ( receiver->getName(), com );
 
-            addedReceiver = true;
+              addedReceiver = true;
+            }
           }
         }
+        if(!addedReceiver){
+          preciceDebug ( "No receiver found, create SolverGeometry");
+          utils::DynVector offset ( _dimensions, 0.0 );
+          context.geometry = geometry::PtrGeometry (
+                          new geometry::SolverGeometry ( offset) );
+        }
       }
-      if(!addedReceiver){
-    	  preciceDebug ( "No receiver found, create SolverGeometry");
-    	  utils::DynVector offset ( _dimensions, 0.0 );
-    	  context.geometry = geometry::PtrGeometry (
-    	                  new geometry::SolverGeometry ( offset) );
+      else{
+        assertion(_slaveMode);
+        // slaves should communicate the geometry to other participants (for the moment)
+        utils::DynVector offset ( _dimensions, 0.0 );
+        context.geometry = geometry::PtrGeometry (
+                                  new geometry::SolverGeometry ( offset) );
       }
+
+      context.geometry->setProvided(true); //only provided meshes are distributed for the moment
       assertion(context.geometry.use_count() > 0);
 
     }
-    else if ( not context.receiveMeshFrom.empty() ) { // Accessor receives geometry
+    else if ( not context.receiveMeshFrom.empty() && not _slaveMode) { // Accessor receives geometry
       preciceCheck ( not context.provideMesh, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot provide "
                      << "and receive mesh " << context.mesh->getName() << "!" );
@@ -2030,9 +2032,15 @@ void SolverInterfaceImpl:: createMeshContext
 
   assertion(not (_geometryMode && (geometry.use_count() == 0)));
   if (geometry.use_count() > 0){
-    geometry->create(*mesh);
-    preciceDebug("Created geometry \"" << meshName
-                 << "\" with # vertices = " << mesh->vertices().size());
+    if((_masterMode||_slaveMode) && geometry->isProvided()){
+      geometry->collectDistribution(*mesh,_accessor->getMasterSlaveCommunication(),
+              _accessorProcessRank, _accessorCommunicatorSize );
+    }
+    if(!_slaveMode || geometry->isProvided()){
+      geometry->create(*mesh);
+      preciceDebug("Created geometry \"" << meshName
+                   << "\" with # vertices = " << mesh->vertices().size());
+    }
   }
 
   // Create spacetree for the geometry, if configured so

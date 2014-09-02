@@ -379,6 +379,7 @@ void BaseCouplingScheme:: scatterData
       for(int rankSlave = 1; rankSlave < comSize; rankSlave++){
         int vertexCount = vertexDistribution[rankSlave];
         int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
+        std::cout << "DEBUGGGG: " << valuesMaster.size() << " offset: " << offset << " count "<< vertexCount << std::endl;
         if (vertexCount > 0) {
           double* valuesSlave = new double[vertexCount*dim];
           for(int i=0; i<vertexCount*dim;i++){
