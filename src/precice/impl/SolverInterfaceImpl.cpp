@@ -265,6 +265,12 @@ double SolverInterfaceImpl:: initialize()
     }
     com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
     _couplingScheme->receiveState(com, 0);
+    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
+      if( context.geometry->isDistributed()){
+        _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
+            context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+      }
+    }
   }
   else {
     // Setup communication
@@ -349,6 +355,12 @@ double SolverInterfaceImpl:: initialize()
       com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
       for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
         _couplingScheme->sendState(com, rankSlave);
+      }
+      foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
+        if( context.geometry->isDistributed()){
+          _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
+                          context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+        }
       }
     }
 
