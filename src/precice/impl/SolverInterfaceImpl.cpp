@@ -257,52 +257,41 @@ double SolverInterfaceImpl:: initialize()
     preciceDebug("Request perform initializations");
     _requestManager->requestInitialize();
   }
-  else if(_slaveMode){
-    preciceDebug("Perform initializations");
-    foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
-      createMeshContext(meshContext);
-    }
-    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-    _couplingScheme->receiveState(com, 0);
-    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-      if( context.geometry->isDistributed()){
-        _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
-            context.geometry->getVertexDistribution(), context.mesh->getDimensions());
-      }
-    }
-  }
   else {
     // Setup communication
     if (not _geometryMode){
-      typedef std::map<std::string,Communication>::value_type ComPair;
-      preciceInfo("initialize()", "Setting up communication to coupling partner/s " );
-      foreach (ComPair& comPair, _communications){
-        com::PtrCommunication& communication = comPair.second.communication;
-        std::string localName = _accessorName;
-        if (_serverMode) localName += "Server";
-        std::string remoteName(comPair.first);
-        preciceCheck(communication.get() != NULL, "initialize()",
-                     "Communication from " << localName << " to participant "
-                     << remoteName << " could not be created! Check compile "
-                     "flags used!");
-        if (comPair.second.isRequesting){
-          if(_masterMode){
-            communication->requestConnection(remoteName, localName,
-                          _accessorProcessRank, 1);
+
+      if(not _slaveMode){
+        typedef std::map<std::string,Communication>::value_type ComPair;
+        preciceInfo("initialize()", "Setting up communication to coupling partner/s " );
+        foreach (ComPair& comPair, _communications){
+          com::PtrCommunication& communication = comPair.second.communication;
+          std::string localName = _accessorName;
+          if (_serverMode) localName += "Server";
+          std::string remoteName(comPair.first);
+          preciceCheck(communication.get() != NULL, "initialize()",
+                       "Communication from " << localName << " to participant "
+                       << remoteName << " could not be created! Check compile "
+                       "flags used!");
+          if (comPair.second.isRequesting){
+            if(_masterMode){
+              communication->requestConnection(remoteName, localName,
+                            _accessorProcessRank, 1);
+            }
+            else {
+              communication->requestConnection(remoteName, localName,
+                            _accessorProcessRank, _accessorCommunicatorSize);
+            }
           }
           else {
-            communication->requestConnection(remoteName, localName,
-                          _accessorProcessRank, _accessorCommunicatorSize);
-          }
-        }
-        else {
-          if(_masterMode){
-            communication->acceptConnection(localName, remoteName,
-                          _accessorProcessRank, 1);
-          }
-          else {
-            communication->acceptConnection(localName, remoteName,
-                          _accessorProcessRank, _accessorCommunicatorSize);
+            if(_masterMode){
+              communication->acceptConnection(localName, remoteName,
+                            _accessorProcessRank, 1);
+            }
+            else {
+              communication->acceptConnection(localName, remoteName,
+                            _accessorProcessRank, _accessorCommunicatorSize);
+            }
           }
         }
       }
@@ -312,58 +301,56 @@ double SolverInterfaceImpl:: initialize()
     foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
       createMeshContext(meshContext);
     }
-    foreach (PtrWatchPoint& watchPoint, _accessor->watchPoints()){
-      watchPoint->initialize();
-    }
 
-    // Initialize coupling state
-    double time = 0.0;
-    int timestep = 1;
-    if (_restartMode){
-      preciceInfo("initialize()", "Reading simulation state for restart");
-      io::SimulationStateIO stateIO(_checkpointFileName + "_simstate.txt");
-      stateIO.readState(time, timestep, _numberAdvanceCalls);
-    }
-    _couplingScheme->initialize(time, timestep);
-    if (_restartMode){
-      preciceInfo("initialize()", "Reading coupling scheme state for restart");
-      //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
-      _couplingScheme->importState(_checkpointFileName);
-    }
-    double dt = _couplingScheme->getNextTimestepMaxLength();
-    std::set<action::Action::Timing> timings;
-    timings.insert(action::Action::ALWAYS_POST);
-    if (_couplingScheme->hasDataBeenExchanged()){
-      timings.insert(action::Action::ON_EXCHANGE_POST);
-      mapReadData();
-    }
-    performDataActions(timings, 0.0, 0.0, 0.0, dt);
-    preciceDebug("Plot output...");
-    foreach (const io::ExportContext& context, _accessor->exportContexts()){
-      if (context.timestepInterval != -1){
-        std::ostringstream suffix;
-        suffix << _accessorName << ".init";
-        exportMesh(suffix.str());
-        if (context.triggerSolverPlot){
-          _couplingScheme->requireAction(constants::actionPlotOutput());
+    if(not _slaveMode){
+      //TODO not yet sure how to treat watchpoints
+      foreach (PtrWatchPoint& watchPoint, _accessor->watchPoints()){
+        watchPoint->initialize();
+      }
+
+      // Initialize coupling state
+      double time = 0.0;
+      int timestep = 1;
+      if (_restartMode){
+        preciceInfo("initialize()", "Reading simulation state for restart");
+        io::SimulationStateIO stateIO(_checkpointFileName + "_simstate.txt");
+        stateIO.readState(time, timestep, _numberAdvanceCalls);
+      }
+      _couplingScheme->initialize(time, timestep);
+      if (_restartMode){
+        preciceInfo("initialize()", "Reading coupling scheme state for restart");
+        //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
+        _couplingScheme->importState(_checkpointFileName);
+      }
+      double dt = _couplingScheme->getNextTimestepMaxLength();
+      std::set<action::Action::Timing> timings;
+      timings.insert(action::Action::ALWAYS_POST);
+      if (_couplingScheme->hasDataBeenExchanged()){
+        timings.insert(action::Action::ON_EXCHANGE_POST);
+        mapReadData();
+      }
+      performDataActions(timings, 0.0, 0.0, 0.0, dt);
+      preciceDebug("Plot output...");
+      foreach (const io::ExportContext& context, _accessor->exportContexts()){
+        if (context.timestepInterval != -1){
+          std::ostringstream suffix;
+          suffix << _accessorName << ".init";
+          exportMesh(suffix.str());
+          if (context.triggerSolverPlot){
+            _couplingScheme->requireAction(constants::actionPlotOutput());
+          }
         }
       }
     }
 
-    if(_masterMode){
-      com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-      for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
-        _couplingScheme->sendState(com, rankSlave);
-      }
-      foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-        if( context.geometry->isDistributed()){
-          _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
-                          context.geometry->getVertexDistribution(), context.mesh->getDimensions());
-        }
-      }
+    if(_masterMode || _slaveMode){
+      scatterData();
+      syncState();
     }
 
-    preciceInfo("initialize()", _couplingScheme->printCouplingState());
+    if(not _slaveMode){
+      preciceInfo("initialize()", _couplingScheme->printCouplingState());
+    }
   }
   return _couplingScheme->getNextTimestepMaxLength();
 }
@@ -403,98 +390,61 @@ double SolverInterfaceImpl:: advance
   if (_clientMode){
     _requestManager->requestAdvance(computedTimestepLength);
   }
-  else if(_slaveMode){
-    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-    com->send(computedTimestepLength, 0);
-
-    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-      if( context.geometry->isDistributed()){
-        _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize,
-            context.geometry->getVertexDistribution(), context.mesh->getDimensions());
-      }
-    }
-    _couplingScheme->receiveState(com, 0);
-    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-      if( context.geometry->isDistributed()){
-        _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
-            context.geometry->getVertexDistribution(), context.mesh->getDimensions());
-      }
-    }
-  }
   else {
 
-    if(_masterMode){
-      com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-      for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
-        double dt;
-        com->receive(dt, rankSlave);
-        preciceCheck(tarch::la::equals(dt, computedTimestepLength), "advance()",
-                   "Ambiguous timestep length when calling request advance from "
-                   << "several processes!");
-      }
-      foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-        if( context.geometry->isDistributed()){
-          _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize,
-              context.geometry->getVertexDistribution(), context.mesh->getDimensions());
-        }
-      }
+    if(_masterMode || _slaveMode){
+      syncTimestep(computedTimestepLength);
+      gatherData();
     }
 
+    if(not _slaveMode){
+      // Update the coupling scheme time state. Necessary to get correct remainder.
+      _couplingScheme->addComputedTime(computedTimestepLength);
 
-    // Update the coupling scheme time state. Necessary to get correct remainder.
-    _couplingScheme->addComputedTime(computedTimestepLength);
-
-    double timestepLength = 0.0; // Length of (full) current dt
-    double timestepPart = 0.0;   // Length of computed part of (full) curr. dt
-    if (_geometryMode){
-      timestepLength = computedTimestepLength;
-      timestepPart = computedTimestepLength;
-    }
-    else {
-      //double timestepLength = 0.0;
-      if (_couplingScheme->hasTimestepLength()){
-        timestepLength = _couplingScheme->getTimestepLength();
+      double timestepLength = 0.0; // Length of (full) current dt
+      double timestepPart = 0.0;   // Length of computed part of (full) curr. dt
+      if (_geometryMode){
+        timestepLength = computedTimestepLength;
+        timestepPart = computedTimestepLength;
       }
       else {
-        timestepLength = computedTimestepLength;
-      }
-      timestepPart = timestepLength - _couplingScheme->getThisTimestepRemainder();
-    }
-    double time = _couplingScheme->getTime();
-    mapWrittenData();
-    std::set<action::Action::Timing> timings;
-    timings.insert(action::Action::ALWAYS_PRIOR);
-    if (_couplingScheme->willDataBeExchanged(0.0)){
-      timings.insert(action::Action::ON_EXCHANGE_PRIOR);
-    }
-    performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
-    preciceDebug("Advancing coupling scheme");
-    _couplingScheme->advance();
-    timings.clear();
-    timings.insert(action::Action::ALWAYS_POST);
-    if (_couplingScheme->hasDataBeenExchanged()){
-      timings.insert(action::Action::ON_EXCHANGE_POST);
-    }
-    if (_couplingScheme->isCouplingTimestepComplete()){
-      timings.insert(action::Action::ON_TIMESTEP_COMPLETE_POST);
-    }
-    performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
-    mapReadData();
-    preciceInfo("advance()", _couplingScheme->printCouplingState());
-    handleExports();
-    resetWrittenData();
-
-    if(_masterMode){
-      com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-      for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
-        _couplingScheme->sendState(com, rankSlave);
-      }
-      foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-        if( context.geometry->isDistributed()){
-          _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
-                          context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+        //double timestepLength = 0.0;
+        if (_couplingScheme->hasTimestepLength()){
+          timestepLength = _couplingScheme->getTimestepLength();
         }
+        else {
+          timestepLength = computedTimestepLength;
+        }
+        timestepPart = timestepLength - _couplingScheme->getThisTimestepRemainder();
       }
+      double time = _couplingScheme->getTime();
+      mapWrittenData();
+      std::set<action::Action::Timing> timings;
+      timings.insert(action::Action::ALWAYS_PRIOR);
+      if (_couplingScheme->willDataBeExchanged(0.0)){
+        timings.insert(action::Action::ON_EXCHANGE_PRIOR);
+      }
+      performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
+      preciceDebug("Advancing coupling scheme");
+      _couplingScheme->advance();
+      timings.clear();
+      timings.insert(action::Action::ALWAYS_POST);
+      if (_couplingScheme->hasDataBeenExchanged()){
+        timings.insert(action::Action::ON_EXCHANGE_POST);
+      }
+      if (_couplingScheme->isCouplingTimestepComplete()){
+        timings.insert(action::Action::ON_TIMESTEP_COMPLETE_POST);
+      }
+      performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
+      mapReadData();
+      preciceInfo("advance()", _couplingScheme->printCouplingState());
+      handleExports();
+      resetWrittenData();
+    }
+
+    if(_masterMode || _slaveMode){
+      scatterData();
+      syncState();
     }
 
   }
@@ -2371,5 +2321,82 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
                             _accessorProcessRank-1, _accessorCommunicatorSize-1 );
   }
 }
+
+void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
+{
+  assertion(_masterMode || _slaveMode);
+  com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+  if(_slaveMode){
+    com->send(computedTimestepLength, 0);
+  }
+  else if(_masterMode){
+    for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
+      double dt;
+      com->receive(dt, rankSlave);
+      preciceCheck(tarch::la::equals(dt, computedTimestepLength), "advance()",
+                 "Ambiguous timestep length when calling request advance from "
+                 << "several processes!");
+    }
+  }
+}
+
+void SolverInterfaceImpl:: syncState()
+{
+  assertion(_masterMode || _slaveMode);
+  com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+  if(_slaveMode){
+    _couplingScheme->receiveState(com, 0);
+  }
+  else if(_masterMode){
+    for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
+      _couplingScheme->sendState(com, rankSlave);
+    }
+  }
+}
+
+void SolverInterfaceImpl:: gatherData()
+{
+  assertion(_masterMode || _slaveMode);
+  com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+  if(_slaveMode){
+    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
+      if( context.geometry->isDistributed()){
+        _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize,
+        context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+      }
+    }
+  }
+  else if(_masterMode){
+    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
+      if( context.geometry->isDistributed()){
+        _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize,
+            context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+      }
+    }
+  }
+}
+
+void SolverInterfaceImpl:: scatterData()
+{
+  assertion(_masterMode || _slaveMode);
+  com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+  if(_slaveMode){
+    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
+      if( context.geometry->isDistributed()){
+        _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
+            context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+      }
+    }
+  }
+  else if(_masterMode){
+    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
+      if( context.geometry->isDistributed()){
+        _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
+                        context.geometry->getVertexDistribution(), context.mesh->getDimensions());
+      }
+    }
+  }
+}
+
 
 }} // namespace precice, impl

@@ -726,9 +726,29 @@ private:
   void initializeClientServerCommunication();
 
   /**
-   * @brief Initializes communication between data server and client.
+   * @brief Initializes communication between master and slaves.
    */
   void initializeMasterSlaveCommunication();
+
+  /**
+   * @brief syncs the timestep between slaves and master (all timesteps should be the same!)
+   */
+  void syncTimestep(double computedTimestepLength);
+
+  /**
+   * @brief master sends state to slaves
+   */
+  void syncState();
+
+  /**
+   * @brief sends data from slaves to master
+   */
+  void gatherData();
+
+  /**
+   * @brief sends data from master to slaves
+   */
+  void scatterData();
 
   // @brief To allow white box tests.
   friend class tests::SolverInterfaceTest;
