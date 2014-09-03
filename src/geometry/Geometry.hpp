@@ -86,7 +86,13 @@ public:
     _isProvided = provided;
   }
 
-  void collectDistribution(
+  void gatherMesh(
+    mesh::Mesh& seed,
+    com::PtrCommunication   masterSlaveCom,
+    const int               rank,
+    const int               size);
+
+  void scatterMesh(
     mesh::Mesh& seed,
     com::PtrCommunication   masterSlaveCom,
     const int               rank,
