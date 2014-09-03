@@ -4,40 +4,18 @@
 #include <sstream>
 #include <cstdlib>
 #include "math.h"
+#include "MPIAscodtCommunication.h"
 
-#include "fsi/FSIDummyBImplementation.h"
-/**
- * @brief For printing to the command line.
- *
- * @param message  An input stream such as: "Blabla = " << variable << ", ..."
- */
-#define PRINT(message) \
-  { \
-    std::ostringstream conv; \
-    conv << message; \
-    std::cout << conv.str() << std::endl; \
-  }
-extern "C" struct FSI_FSIDUMMYB_arg;
-extern "C" FSI_FSIDUMMYB_arg daemon_args;
-extern "C" void main_loop_(bool);
-extern "C" void initialise_(FSI_FSIDUMMYB_arg& arg,bool joinable);
 
-extern "C" void bind_component_(FSI_FSIDUMMYB_arg& arg,bool joinable);
-extern "C" void socket_loop_(FSI_FSIDUMMYB_arg& arg,bool joinable);
-extern "C" void destroy_(FSI_FSIDUMMYB_arg& arg,bool joinable);  
 int main(int argc, char** argv)
 {
-  std::cout << "Running communication proxy" << std::endl;
+  std::cout << "Running communication dummy" << std::endl;
   int provided;
-  MPI_Init_thread(&argc,&argv,MPI_THREAD_MULTIPLE ,&provided);
 
-  if (argc == 1 || argc != 3){
-    PRINT("Usage: ./proxy proX proY");
-    return 1;
-  }
-  std::cout<<"argv2:"<<argv[2]<<std::endl;
-  int proX = atoi(argv[1]);
-  int proY = atoi(argv[2]);
+  //do we really need this here? might be a problem for solvers that create normal MPI?
+  MPI_Init_thread(&argc,&argv,MPI_THREAD_MULTIPLE ,&provided);
+  std::cout <<  "TM: " << MPI_THREAD_MULTIPLE << std::endl;
+
 
   int size;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -45,81 +23,89 @@ int main(int argc, char** argv)
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  if (proX * proY != size){
-    PRINT("proX * proY should be size");
+  if (size!=5){
+    std::cout << "Please run with 5 mpi processes" << std::endl;
     return 1;
   }
 
-  int rankX = rank % proX +1;
-  int rankY = rank / proX + 1;
+  MPIAscodtCommunication com;
 
-  int N = 10;
-
-  int chunkX, chunkY;
-
-  if(rankX < proX){
-    chunkX  = N / proX;
-  }
-  else{
-    chunkX = N / proX + N % proX;
-  }
-  if(rankY < proY){
-    chunkY  = N / proY;
-  }
-  else{
-    chunkY = N / proY + N % proY;
+  if(rank==0){
+    int vertexTable[] = {1,0,1,1,0,2,2,4,4,4};
+    int adressTable[] = {0,1,2,3,4}; //TODO what exactly do we need here?
+    com.acceptConnection(vertexTable, adressTable);
   }
 
-  int pointSize = chunkX*chunkY;
-  double* coordX = new double[pointSize];
-  double* coordY = new double[pointSize];
-  double* data = new double[pointSize];
-  int* ids = new int[pointSize];
-
-  double offsetX = (rankX-1)* (N/proX);
-  double offsetY = (rankY-1)* (N/proY);
-
- 
-
-  double dx = 1.0 / N;
-  double dy = 1.0 / N;
-
-  for(int i=1;i<=chunkX;i++){
-    for(int j=1;j<=chunkY;j++){
-      coordX[(j-1)*chunkX +i-1] = (i-1)*dx + offsetX*dx;
-      coordY[(j-1)*chunkX +i-1] = (j-1)*dy + offsetY*dy;
-    }
+  int numberOfVertices;
+  if(rank==0){
+    numberOfVertices=2;
+  }
+  else if(rank==1){
+    numberOfVertices=3;
+  }
+  else if(rank==2){
+    numberOfVertices=2;
+  }
+  else if(rank==3){
+    numberOfVertices=0;
+  }
+  else if(rank==4){
+    numberOfVertices=3;
   }
 
-  for(int k=0;k<pointSize;k++){
-    ids[k] = round((coordX[k]/dx)+(coordY[k]/dy)*N);
+  //receive
+  double *pData = NULL;
+
+  if(rank==0){
+    double data[] ={0.0,0.0};
+    pData = &data[0];
+    com.receive(data,2);
   }
- 
-
-
-  PRINT("Second Step:B");
-  //B sends data
-
-  for(int k=0;k<pointSize;k++){
-    data[k]=coordX[k]*coordY[k]*coordY[k]+1.0;
+  else if(rank==1){
+    double data[] ={0.0,0.0,0.0};
+    pData = &data[0];
+    com.receive(data,3);
+  }
+  else if(rank==2){
+    double data[] ={0.0,0.0};
+    pData = &data[0];
+    com.receive(data,2);
+  }
+  else if(rank==3){
+    double data[] ={};
+    pData = &data[0];
+    com.receive(data,0);
+  }
+  else if(rank==4){
+    double data[] ={0.0,0.0,0.0};
+    pData = &data[0];
+    com.receive(data,3);
   }
 
-  initialise_(daemon_args,false);
-  fsi::FSIDummyBImplementation::singleton->setCoordinates(ids,pointSize);
-  fsi::FSIDummyBImplementation::singleton->setData(data);
-  std::cout<<"rank:"<<rank<<"bind cmp"<<std::endl;
-  bind_component_(daemon_args,false);
-  socket_loop_(daemon_args,false);
-  //main_loop_(false);
-  int a = 20;
-  while(true){
-	a=a+30;
-
+  //modify data
+  for(int i=0;i<numberOfVertices;i++){
+    pData[i] = pData[i] + rank + 1;
   }
-  destroy_(daemon_args,false);  
-  
+
+  //send data
+  if(rank==0){
+    com.send(pData,2);
+  }
+  else if(rank==1){
+    com.send(pData,3);
+  }
+  else if(rank==2){
+    com.send(pData,2);
+  }
+  else if(rank==3){
+    com.send(pData,0);
+  }
+  else if(rank==4){
+    com.send(pData,3);
+  }
+
   MPI_Finalize();
-  std::cout << "Stop communication proxy" << std::endl;
+  std::cout << "Stop communication dummy, rank: " << rank << std::endl;
   return 0;
 }
 

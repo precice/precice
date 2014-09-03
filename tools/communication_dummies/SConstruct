@@ -43,6 +43,9 @@ cpppath.append('FSIDummies/src/')
 
 ####### CCA component sources #########
 
+sourcesInterface = [
+    Glob('MPIAscodtCommunication.cpp')
+]
 
 sourcesCCADummyA = [
     Glob('FSIDummies/components/c++/fsi/FSIDummyAAbstractImplementation.cpp'),
@@ -84,6 +87,7 @@ env.Program (
     target = 'dummyA',
     source = [
 	sourcesCCADummyA,
+	sourcesInterface,
 	Glob('mainA.cpp')
 	
     ]
@@ -93,8 +97,7 @@ env.Program (
     target = 'dummyB',
     source = [
 	Glob('mainB.cpp'),
+	sourcesInterface,
 	sourcesCCADummyB
     ]
     )   
-#env.Program ( 'dummyA', Glob('mainA.cpp') )
-#env.Program ( 'dummyB', Glob('mainB.cpp') )

@@ -4,43 +4,18 @@
 #include <sstream>
 #include <cstdlib>
 #include "math.h"
+#include "MPIAscodtCommunication.h"
 
-#include "fsi/FSIDummyAImplementation.h"
 
-/**
- * @brief For printing to the command line.
- *
- * @param message  An input stream such as: "Blabla = " << variable << ", ..."
- */
-#define PRINT(message) \
-  { \
-    std::ostringstream conv; \
-    conv << message; \
-    std::cout << conv.str() << std::endl; \
-  }
-extern "C" struct FSI_FSIDUMMYA_arg;
-extern "C" FSI_FSIDUMMYA_arg daemon_args;
-extern "C" void main_loop_(bool);
-extern "C" void initialise_(FSI_FSIDUMMYA_arg& arg,bool joinable);
-
-extern "C" void bind_component_(FSI_FSIDUMMYA_arg& arg,bool joinable);
-extern "C" void socket_loop_(FSI_FSIDUMMYA_arg& arg,bool joinable);
-extern "C" void destroy_(FSI_FSIDUMMYA_arg& arg,bool joinable);  
 int main(int argc, char** argv)
 {
-  std::cout << "Running communication proxy" << std::endl;
+  std::cout << "Running communication dummy" << std::endl;
   int provided;
+
+  //do we really need this here? might be a problem for solvers that create normal MPI?
   MPI_Init_thread(&argc,&argv,MPI_THREAD_MULTIPLE ,&provided);
-  std::cout << "provided: " << provided << " , TM: "
-      << MPI_THREAD_MULTIPLE << std::endl;
+  std::cout <<  "TM: " << MPI_THREAD_MULTIPLE << std::endl;
 
-  if (argc == 1 || argc != 3){
-    PRINT("Usage: ./proxy proX proY");
-    return 1;
-  }
-
-  int proX = atoi(argv[1]);
-  int proY = atoi(argv[2]);
 
   int size;
   MPI_Comm_size(MPI_COMM_WORLD, &size);
@@ -48,117 +23,94 @@ int main(int argc, char** argv)
   int rank;
   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
 
-  if (proX * proY != size){
-    PRINT("proX * proY should be size");
+  if (size!=3){
+    std::cout << "Please run with 3 mpi processes" << std::endl;
     return 1;
   }
 
-  int rankX = rank % proX +1;
-  int rankY = rank / proX + 1;
+  MPIAscodtCommunication com;
 
-  int N = 10;
-
-  int chunkX, chunkY;
-
-  if(rankX < proX){
-    chunkX  = N / proX;
-  }
-  else{
-    chunkX = N / proX + N % proX;
-  }
-  if(rankY < proY){
-    chunkY  = N / proY;
-  }
-  else{
-    chunkY = N / proY + N % proY;
+  if(rank==0){
+    int vertexTable[] = {0,0,1,0,1,1,2,0,1,2};
+    int adressTable[] = {0,1,2}; //TODO what exactly do we need here?
+    com.requestConnection(vertexTable, adressTable);
   }
 
-  int pointSize = chunkX*chunkY;
-  double* coordX = new double[pointSize];
-  double* coordY = new double[pointSize];
-  double* data = new double[pointSize];
-  int* ids = new int[pointSize];
-
-  double offsetX = (rankX-1)* (N/proX);
-  double offsetY = (rankY-1)* (N/proY);
-
-  std::cout << "Servus ..." << rank << " of " << size;
-  std::cout << " (" << rankX << "," << rankY << ")";
-  std::cout << " (" << chunkX << "," << chunkY << ")";
-  std::cout << " (" << offsetX << "," << offsetY << ")" <<std::endl;
-
-  double dx = 1.0 / N;
-  double dy = 1.0 / N;
-
-  for(int i=1;i<=chunkX;i++){
-    for(int j=1;j<=chunkY;j++){
-      coordX[(j-1)*chunkX +i-1] = (i-1)*dx + offsetX*dx;
-      coordY[(j-1)*chunkX +i-1] = (j-1)*dy + offsetY*dy;
-    }
+  int numberOfVertices;
+  if(rank==0){
+    numberOfVertices=4;
+  }
+  else if(rank==1){
+    numberOfVertices=4;
+  }
+  else if(rank==2){
+    numberOfVertices=2;
   }
 
-  for(int k=0;k<pointSize;k++){
-    ids[k] = round((coordX[k]/dx)+(coordY[k]/dy)*N);
-  }
-  for(int k=0;k<pointSize;k++){
-    std::cout << ids[k] <<", " << std::endl;
-  }
+  // send and receive
 
+  double *pData = NULL;
 
-  PRINT("First Step:A");
-  //A sets coordinates and receives data
-
-  for(int k=0;k<pointSize;k++){
-    data[k]=0.0;
+  if(rank==0){
+    double data[]={10.0,20.0,30.0,80.0};
+    pData = &data[0];
+    com.send(pData,4);
+    com.receive(pData,4);
   }
-//
-std::cout<<"rank:"<<rank<<"init cmp"<<std::endl;  
-initialise_(daemon_args,false);
-  fsi::FSIDummyAImplementation::singleton->setCoordIds(ids,pointSize);
-  fsi::FSIDummyAImplementation::singleton->setData(data);
-  fsi::FSIDummyAImplementation::singleton->gatherMids();
-  fsi::FSIDummyAImplementation::singleton->gatherDomainDescriptions();
-  MPI_Barrier(MPI_COMM_WORLD);
-  std::cout<<"rank:"<<rank<<"bind cmp"<<std::endl;
-  bind_component_(daemon_args,false);
-  socket_loop_(daemon_args,false);
+  else if(rank==1){
+    double data[]={30.0,50.0,60.0,90.0};
+    pData = &data[0];
+    com.send(pData,4);
+    com.receive(pData,4);
+  }
+  else if(rank==2){
+    double data[]={70.0,100.0};
+    pData = &data[0];
+    com.send(pData,2);
+    com.receive(pData,2);
+  }
   
-//
-  fsi::FSIDummyAImplementation::singleton->transferGlobalIds();
-  fsi::FSIDummyAImplementation::singleton->receiveAllData();
-
-  //check if received data is correct
-  std::cout << "Performaning validation" << std::endl;
-  bool hasFailed=false;
-  for(int k=0;k<pointSize;k++){
-    if(abs(data[k]-(coordX[k]*coordY[k]*coordY[k]+1.0))>0.01){
-      PRINT("ERROR" << "(" << rankX << "," << rankY <<","<<rank<< "), k:" << k<<" received: "<<data[k]<<" expected:"<<coordX[k]*coordY[k]*coordY[k]+1.0);
-      hasFailed=true;
-    }
-  }
-
-  fsi::FSIDummyAImplementation::singleton->receiveAllData();
-
-  //check if received data is correct
-  std::cout << "Performaning validation" << std::endl;
-  bool hasFailed=false;
-  for(int k=0;k<pointSize;k++){
-    if(abs(data[k]-(coordX[k]*coordY[k]*coordY[k]+1.0))>0.01){
-      PRINT("ERROR" << "(" << rankX << "," << rankY <<","<<rank<< "), k:" << k<<" received: "<<data[k]<<" expected:"<<coordX[k]*coordY[k]*coordY[k]+1.0);
-      hasFailed=true;
-    }
-  }
-
-
-  if(hasFailed){
-	PRINT("FAIL!");
-  }else{ 
-  	PRINT("SUCCESS!");
-  }
-  //destroy_(daemon_args,false);  
   
+  //check if everything worked out well
+  bool correct = true;
+
+  if(rank==0){
+    double expectedData[]={12.0,21.0,32.0,85.0};
+    for(int i=0;i<4;i++){
+      if(pData[i]!=expectedData[i]){
+        std::cout << "Error: " << pData[i] << " instead of " << expectedData[i]
+                       << " on rank " << rank << std::endl;
+        correct = false;
+      }
+    }
+  }
+  else if(rank==1){
+    double expectedData[]={32.0,51.0,63.0,95.0};
+    for(int i=0;i<4;i++){
+      if(pData[i]!=expectedData[i]){
+        std::cout << "Error: " << pData[i] << " instead of " << expectedData[i]
+                       << " on rank " << rank << std::endl;
+        correct = false;
+      }
+    }
+  }
+  else if(rank==2){
+    double expectedData[]={73.0,105.0};
+    for(int i=0;i<2;i++){
+      if(pData[i]!=expectedData[i]){
+        std::cout << "Error: " << pData[i] << " instead of " << expectedData[i]
+                       << " on rank " << rank << std::endl;
+        correct = false;
+      }
+    }
+  }
+
+  if(correct){
+    std::cout << "Everything worked out well for rank: " << rank << std::endl;
+  }
+
   MPI_Finalize();
-  std::cout << "Stop communication proxy" << std::endl;
+  std::cout << "Stop communication dummy" << std::endl;
   return 0;
 }
 
