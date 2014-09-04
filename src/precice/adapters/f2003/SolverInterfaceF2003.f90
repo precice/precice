@@ -94,24 +94,24 @@ module PreCICE_solver_if_module
       integer(kind=c_int), value           :: lengthGeometryName
     end subroutine precicef_get_mesh_id
 
-    subroutine precicef_has_data(dataName, hasData, lengthDataName, meshID) &
+    subroutine precicef_has_data(dataName, meshID, hasData, lengthDataName) &
       &  bind(c, name='precicef_has_data_')
 
       use, intrinsic :: iso_c_binding
       character(kind=c_char), dimension(*) :: dataName
+      integer(kind=c_int)                  :: meshID
       integer(kind=c_int)                  :: hasData
       integer(kind=c_int), value           :: lengthDataName
-      integer(kind=c_int)                  :: meshID
     end subroutine precicef_has_data
 
-    subroutine precicef_get_data_id(dataName, dataID, lengthDataName) &
+    subroutine precicef_get_data_id(dataName, meshID, dataID, lengthDataName) &
       &  bind(c, name='precicef_get_data_id_')
 
       use, intrinsic :: iso_c_binding
       character(kind=c_char), dimension(*) :: dataName
+      integer(kind=c_int)                  :: meshID
       integer(kind=c_int)                  :: dataID
       integer(kind=c_int), value           :: lengthDataName
-      integer(kind=c_int)                  :: meshID
     end subroutine precicef_get_data_id
 
     subroutine precicef_set_vertex(meshID, position, vertexID) &
