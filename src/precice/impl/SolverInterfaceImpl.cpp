@@ -336,6 +336,8 @@ double SolverInterfaceImpl:: initialize()
       syncState();
     }
 
+    std::cout << "DEBUG " << _couplingScheme->hasDataBeenExchanged() << " Rank " << _accessorProcessRank<< std::endl;
+
     if (_couplingScheme->hasDataBeenExchanged()){
       timings.insert(action::Action::ON_EXCHANGE_POST);
       mapReadData();
@@ -1951,7 +1953,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
       assertion(context.geometry.use_count() > 0);
 
     }
-    else if ( not context.receiveMeshFrom.empty() && not _slaveMode) { // Accessor receives geometry
+    else if ( not context.receiveMeshFrom.empty()) { // Accessor receives geometry
       preciceCheck ( not context.provideMesh, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot provide "
                      << "and receive mesh " << context.mesh->getName() << "!" );
@@ -2026,7 +2028,8 @@ void SolverInterfaceImpl:: mapWrittenData()
     bool rightTime = timing == MappingConfiguration::ON_ADVANCE;
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
-    if (rightTime && not hasComputed){
+    bool isNotEmpty = not _accessor->meshContext(context.fromMeshID).mesh->vertices().empty();
+    if (rightTime && not hasComputed && isNotEmpty){
       preciceDebug("Compute write mapping from mesh \""
           << _accessor->meshContext(context.fromMeshID).mesh->getName()
           << "\" to mesh \""
@@ -2047,7 +2050,8 @@ void SolverInterfaceImpl:: mapWrittenData()
     bool rightTime = timing == MappingConfiguration::ON_ADVANCE;
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasMapped = context.mappingContext.hasMappedData;
-    if (hasMapping && rightTime && (not hasMapped)){
+    bool isNotEmpty = context.fromData->values().size()>0;
+    if (hasMapping && rightTime && (not hasMapped) && isNotEmpty){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       preciceDebug("Map data \"" << context.fromData->getName()
@@ -2087,7 +2091,9 @@ void SolverInterfaceImpl:: mapReadData()
   	bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
   	bool hasComputed = context.mapping->hasComputedMapping();
-  	if (mapNow && not hasComputed){
+  	bool isNotEmpty = not _accessor->meshContext(context.toMeshID).mesh->vertices().empty();
+  	std::cout << _accessor->meshContext(context.toMeshID).mesh->vertices().size() << std::endl;
+  	if (mapNow && not hasComputed && isNotEmpty){
   	  preciceDebug("Compute read mapping from mesh \""
   			  << _accessor->meshContext(context.fromMeshID).mesh->getName()
   			  << "\" to mesh \""
@@ -2108,7 +2114,8 @@ void SolverInterfaceImpl:: mapReadData()
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
     bool hasMapping = context.mappingContext.mapping.get() != NULL;
     bool hasMapped = context.mappingContext.hasMappedData;
-    if (mapNow && hasMapping && (not hasMapped)){
+    bool isNotEmpty = context.toData->values().size()>0;
+    if (mapNow && hasMapping && (not hasMapped) && isNotEmpty){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       assign(context.toData->values()) = 0.0;
