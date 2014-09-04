@@ -17,12 +17,20 @@ CommunicatedGeometry:: CommunicatedGeometry
 (
   const utils::DynVector&  offset,
   const std::string&       accessor,
-  const std::string&       provider )
+  const std::string&       provider,
+  com::PtrCommunication   masterSlaveCom,
+  int                     rank,
+  int                     size,
+  int                     dimensions)
 :
   Geometry ( offset ),
   _accessorName ( accessor ),
   _providerName ( provider ),
-  _receivers ()
+  _receivers (),
+  _masterSlaveCom(masterSlaveCom),
+  _rank(rank),
+  _size(size),
+  _dimensions(dimensions)
 {
   preciceTrace2 ( "CommunicatedGeometry()", accessor, provider );
 }
@@ -52,32 +60,92 @@ void CommunicatedGeometry:: specializedCreate
                  "No receivers specified for communicated geometry to create "
                  << "mesh \"" << seed.getName() << "\"!" );
   if ( _accessorName == _providerName ) {
-    preciceCheck ( seed.vertices().size() > 0,
-                   "specializedCreate()", "Participant \"" << _accessorName
-                   << "\" provides an invalid (possibly empty) mesh \""
-                   << seed.getName() << "\"!" );
-    typedef std::map<std::string,com::PtrCommunication>::value_type Pair;
-    foreach ( Pair & pair, _receivers ) {
-      if ( ! pair.second->isConnected() ) {
-        pair.second->acceptConnection ( _providerName, pair.first, 0, 1 );
+    if(_size>1){
+      gatherMesh(seed);
+    }
+    if(_rank==0){
+      preciceCheck ( seed.vertices().size() > 0,
+                     "specializedCreate()", "Participant \"" << _accessorName
+                     << "\" provides an invalid (possibly empty) mesh \""
+                     << seed.getName() << "\"!" );
+      typedef std::map<std::string,com::PtrCommunication>::value_type Pair;
+      foreach ( Pair & pair, _receivers ) {
+        if ( ! pair.second->isConnected() ) {
+          pair.second->acceptConnection ( _providerName, pair.first, 0, 1 );
+        }
+        com::CommunicateMesh(pair.second).sendMesh ( seed, 0 );
       }
-      com::CommunicateMesh(pair.second).sendMesh ( seed, 0 );
     }
   }
   else if ( utils::contained(_accessorName, _receivers) ) {
-    assertion ( seed.vertices().size() == 0 );
-    assertion ( utils::contained(_accessorName, _receivers) );
-    com::PtrCommunication com ( _receivers[_accessorName] );
-    if ( ! com->isConnected() ) {
-      com->requestConnection ( _providerName, _accessorName, 0, 1 );
+    if(_rank==0){
+      assertion ( seed.vertices().size() == 0 );
+      assertion ( utils::contained(_accessorName, _receivers) );
+      com::PtrCommunication com ( _receivers[_accessorName] );
+      if ( ! com->isConnected() ) {
+        com->requestConnection ( _providerName, _accessorName, 0, 1 );
+      }
+      com::CommunicateMesh(com).receiveMesh ( seed, 0 );
     }
-    com::CommunicateMesh(com).receiveMesh ( seed, 0 );
+    if(_size>1){
+      scatterMesh(seed);
+    }
   }
   else {
     preciceError( "specializedCreate()", "Participant \"" << _accessorName
                   << "\" uses a communicated geometry to create mesh \""
                   << seed.getName()
                   << "\" but is neither provider nor receiver!" );
+  }
+}
+
+void CommunicatedGeometry:: gatherMesh(
+    mesh::Mesh& seed)
+{
+  preciceTrace1 ( "gatherMesh()", rank );
+
+  if(_rank>0){ //slave
+    com::CommunicateMesh(_masterSlaveCom).sendMesh ( seed, 0 );
+  }
+  else{ //master
+    assertion(rank==0);
+    assertion(size>1);
+    _vertexDistribution[0]=seed.vertices().size();
+    mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
+    mesh::Mesh& rSlaveMesh = slaveMesh;
+
+    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+      //slaves have ranks from 0 to size-2
+      //TODO better rewrite accept/request connection
+      rSlaveMesh.clear();
+      com::CommunicateMesh(_masterSlaveCom).receiveMesh ( rSlaveMesh, rankSlave-1);
+      _vertexDistribution[rankSlave]=rSlaveMesh.vertices().size();
+      utils::DynVector coord(_dimensions);
+      foreach ( const mesh::Vertex& vertex, rSlaveMesh.vertices() ){
+          coord = vertex.getCoords();
+          seed.createVertex(coord);
+      }
+    }
+  }
+}
+
+void CommunicatedGeometry:: scatterMesh(
+    mesh::Mesh& seed)
+{
+  preciceTrace1 ( "scatterMesh()", rank );
+
+  if(_rank>0){ //slave
+    com::CommunicateMesh(_masterSlaveCom).receiveMesh ( seed, 0);
+  }
+  else{ //master
+    assertion(rank==0);
+    assertion(size>1);
+    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+      //slaves have ranks from 0 to size-2
+      //TODO better rewrite accept/request connection
+      //at the moment complete mesh is sent to every slave
+      com::CommunicateMesh(_masterSlaveCom).sendMesh ( seed, rankSlave-1 );
+    }
   }
 }
 

@@ -24,7 +24,11 @@ public:
   CommunicatedGeometry (
     const utils::DynVector& offset,
     const std::string&      accessor,
-    const std::string&      provider );
+    const std::string&      provider,
+    com::PtrCommunication   masterSlaveCom,
+    int                     rank,
+    int                     size,
+    int                     dimensions);
 
   virtual ~CommunicatedGeometry() {}
 
@@ -41,17 +45,28 @@ protected:
 
 private:
 
+  void gatherMesh(
+    mesh::Mesh& seed);
+
+  void scatterMesh(
+    mesh::Mesh& seed);
+
   // @brief Logging device.
   static tarch::logging::Log _log;
 
-protected:
   std::string _accessorName;
 
   std::string _providerName;
 
   std::map<std::string,com::PtrCommunication> _receivers;
 
-  //com::PtrCommunication _communication;
+  com::PtrCommunication _masterSlaveCom;
+
+  int _rank;
+
+  int _size;
+
+  int _dimensions;
 };
 
 }} // namespace precice, geometry

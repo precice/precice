@@ -87,11 +87,13 @@ public:
   /// @brief Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend (
     mesh::PtrData data,
+    mesh::PtrMesh mesh,
     bool          initialize );
   
   /// @brief Adds data to be received on data exchange.
   void addDataToReceive (
     mesh::PtrData data,
+    mesh::PtrMesh mesh,
     bool          initialize );
   
   /// @brief Sets the checkpointing timestep interval.

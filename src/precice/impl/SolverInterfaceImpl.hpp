@@ -740,16 +740,6 @@ private:
    */
   void syncState();
 
-  /**
-   * @brief sends data from slaves to master
-   */
-  void gatherData();
-
-  /**
-   * @brief sends data from master to slaves
-   */
-  void scatterData();
-
   // @brief To allow white box tests.
   friend class tests::SolverInterfaceTest;
   friend class tests::SolverInterfaceTestRemote;

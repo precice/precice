@@ -73,33 +73,6 @@ public:
     return _vertexDistribution;
   }
 
-  bool isDistributed(){
-    return _isDistributed;
-  }
-
-  bool isProvided(){
-    return _isProvided;
-  }
-
-  void setProvided ( bool provided)
-  {
-    _isProvided = provided;
-  }
-
-  void gatherMesh(
-    mesh::Mesh& seed,
-    com::PtrCommunication   masterSlaveCom,
-    const int               rank,
-    const int               size);
-
-  void scatterMesh(
-    mesh::Mesh& seed,
-    com::PtrCommunication   masterSlaveCom,
-    const int               rank,
-    const int               size);
-
-
-
 protected:
 
   /**
@@ -119,10 +92,6 @@ protected:
 private:
 
   std::map<int,int> _vertexDistribution;
-
-  bool _isDistributed;
-
-  bool _isProvided;
 
   static tarch::logging::Log _log;
 

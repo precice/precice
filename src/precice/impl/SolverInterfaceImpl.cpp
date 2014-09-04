@@ -331,7 +331,8 @@ double SolverInterfaceImpl:: initialize()
     }
 
     if(_masterMode || _slaveMode){
-      scatterData();
+      _couplingScheme->scatterData(_accessor->getMasterSlaveCommunication(),
+                            _accessorProcessRank, _accessorCommunicatorSize);
       syncState();
     }
 
@@ -428,7 +429,8 @@ double SolverInterfaceImpl:: advance
     mapWrittenData();
 
     if(_masterMode || _slaveMode){
-      gatherData();
+      _couplingScheme->gatherData(_accessor->getMasterSlaveCommunication(),
+                                  _accessorProcessRank, _accessorCommunicatorSize);
     }
 
     if(not _slaveMode){
@@ -453,7 +455,8 @@ double SolverInterfaceImpl:: advance
     }
 
     if(_masterMode || _slaveMode){
-      scatterData();
+      _couplingScheme->scatterData(_accessor->getMasterSlaveCommunication(),
+                                  _accessorProcessRank, _accessorCommunicatorSize);
     }
 
     mapReadData();
@@ -2005,18 +2008,9 @@ void SolverInterfaceImpl:: createMeshContext
 
   assertion(not (_geometryMode && (geometry.use_count() == 0)));
   if (geometry.use_count() > 0){
-    if((_masterMode||_slaveMode) && geometry->isProvided()){
-      geometry->gatherMesh(*mesh,_accessor->getMasterSlaveCommunication(),
-              _accessorProcessRank, _accessorCommunicatorSize );
-    }
     geometry->create(*mesh);
     preciceDebug("Created geometry \"" << meshName
                  << "\" with # vertices = " << mesh->vertices().size());
-    if((_masterMode||_slaveMode) && not geometry->isProvided()){
-      geometry->scatterMesh(*mesh,_accessor->getMasterSlaveCommunication(),
-              _accessorProcessRank, _accessorCommunicatorSize );
-    }
-
   }
 
   // Create spacetree for the geometry, if configured so
@@ -2380,49 +2374,6 @@ void SolverInterfaceImpl:: syncState()
   }
 }
 
-void SolverInterfaceImpl:: gatherData()
-{
-  assertion(_masterMode || _slaveMode);
-  com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-  if(_slaveMode){
-    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-      if( context.geometry->isDistributed()){
-        _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize,
-        context.geometry->getVertexDistribution(), context.mesh->getDimensions());
-      }
-    }
-  }
-  else if(_masterMode){
-    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-      if( context.geometry->isDistributed()){
-        _couplingScheme->gatherData(com, _accessorProcessRank, _accessorCommunicatorSize,
-            context.geometry->getVertexDistribution(), context.mesh->getDimensions());
-      }
-    }
-  }
-}
-
-void SolverInterfaceImpl:: scatterData()
-{
-  assertion(_masterMode || _slaveMode);
-  com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-  if(_slaveMode){
-    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-      if( context.geometry->isDistributed()){
-        _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
-            context.geometry->getVertexDistribution(), context.mesh->getDimensions());
-      }
-    }
-  }
-  else if(_masterMode){
-    foreach ( const impl::MeshContext& context, _accessor->usedMeshContexts() ){
-      if( context.geometry->isDistributed()){
-        _couplingScheme->scatterData(com, _accessorProcessRank, _accessorCommunicatorSize,
-                        context.geometry->getVertexDistribution(), context.mesh->getDimensions());
-      }
-    }
-  }
-}
 
 
 }} // namespace precice, impl

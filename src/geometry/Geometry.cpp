@@ -20,8 +20,6 @@ Geometry:: Geometry
   const utils::DynVector& offset )
 :
   _vertexDistribution(),
-  _isDistributed(false),
-  _isProvided(false),
   _offset (offset)
 {}
 
@@ -50,79 +48,5 @@ void Geometry:: allocateDataValues ( mesh::Mesh & mesh )
 {
   mesh.allocateDataValues ();
 }
-
-void Geometry:: gatherMesh(
-    mesh::Mesh& seed,
-    com::PtrCommunication   masterSlaveCom,
-    const int               rank,
-    const int               size)
-{
-  preciceTrace1 ( "gatherMesh()", rank );
-  _isDistributed = true;
-
-  if(rank>0){ //slave
-    com::CommunicateMesh(masterSlaveCom).sendMesh ( seed, 0 );
-  }
-  else{ //master
-    assertion(rank==0);
-    assertion(size>1);
-    _vertexDistribution[0]=seed.vertices().size();
-    mesh::Mesh slaveMesh("SlaveMesh", seed.getDimensions(), seed.isFlipNormals());
-    mesh::Mesh& rSlaveMesh = slaveMesh;
-
-    for(int rankSlave = 1; rankSlave < size; rankSlave++){
-      //slaves have ranks from 0 to size-2
-      //TODO better rewrite accept/request connection
-      rSlaveMesh.clear();
-      com::CommunicateMesh(masterSlaveCom).receiveMesh ( rSlaveMesh, rankSlave-1);
-      _vertexDistribution[rankSlave]=rSlaveMesh.vertices().size();
-      int dim = rSlaveMesh.getDimensions();
-      utils::DynVector coord(dim);
-      foreach ( const mesh::Vertex& vertex, rSlaveMesh.vertices() ){
-          coord = vertex.getCoords();
-          seed.createVertex(coord);
-      }
-    }
-  }
-}
-
-void Geometry:: scatterMesh(
-    mesh::Mesh& seed,
-    com::PtrCommunication   masterSlaveCom,
-    const int               rank,
-    const int               size)
-{
-//TODO create vertices at slave nodes
-
-//  preciceTrace1 ( "scatterMesh()", rank );
-//  _isDistributed = true;
-//
-//  if(rank>0){ //slave
-//    com::CommunicateMesh(masterSlaveCom).sendMesh ( seed, 0 );
-//  }
-//  else{ //master
-//    assertion(rank==0);
-//    assertion(size>1);
-//    _vertexDistribution[0]=seed.vertices().size();
-//    mesh::Mesh slaveMesh("SlaveMesh", seed.getDimensions(), seed.isFlipNormals());
-//    mesh::Mesh& rSlaveMesh = slaveMesh;
-//
-//    for(int rankSlave = 1; rankSlave < size; rankSlave++){
-//      //slaves have ranks from 0 to size-2
-//      //TODO better rewrite accept/request connection
-//      rSlaveMesh.clear();
-//      com::CommunicateMesh(masterSlaveCom).receiveMesh ( rSlaveMesh, rankSlave-1);
-//      _vertexDistribution[rankSlave]=rSlaveMesh.vertices().size();
-//      int dim = rSlaveMesh.getDimensions();
-//      utils::DynVector coord(dim);
-//      foreach ( const mesh::Vertex& vertex, rSlaveMesh.vertices() ){
-//          coord = vertex.getCoords();
-//          seed.createVertex(coord);
-//      }
-//    }
-//  }
-}
-
-
 
 }} // namespace precice, geometry
