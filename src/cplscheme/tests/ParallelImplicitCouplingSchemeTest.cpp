@@ -12,6 +12,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
@@ -147,8 +148,8 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   cplscheme::ParallelCouplingScheme cplScheme(
      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
      nameLocalParticipant, communication, constants::FIXED_DT, BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], initData);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], initData);
+  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
+  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, initData);
 
 
 
@@ -252,6 +253,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0,1.0));
   scalings.insert(std::make_pair(1,1.0));
+  mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
 
   cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation,maxIterationsUsed,
       timestepsReused, singularityLimit, dataIDs, scalings);
@@ -269,7 +271,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   dcol1.append(1.0);
   dcol1.append(1.0);
 
-  PtrCouplingData dpcd(new CouplingData(&dvalues,false));
+  PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false));
 
   //init forces
   utils::DynVector fvalues;
@@ -282,7 +284,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   fcol1.append(0.2);
   fcol1.append(0.2);
 
-  PtrCouplingData fpcd(new CouplingData(&fvalues,false));
+  PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false));
 
   DataMap data;
   data.insert(std::pair<int,PtrCouplingData>(0,dpcd));

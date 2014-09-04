@@ -62,6 +62,7 @@ void CommunicatedGeometry:: specializedCreate
   if ( _accessorName == _providerName ) {
     if(_size>1){
       gatherMesh(seed);
+      seed.setDistributionType(mesh::Mesh::EXACT);
     }
     if(_rank==0){
       preciceCheck ( seed.vertices().size() > 0,
@@ -89,6 +90,7 @@ void CommunicatedGeometry:: specializedCreate
     }
     if(_size>1){
       scatterMesh(seed);
+      seed.setDistributionType(mesh::Mesh::ALL);
     }
   }
   else {
@@ -102,15 +104,15 @@ void CommunicatedGeometry:: specializedCreate
 void CommunicatedGeometry:: gatherMesh(
     mesh::Mesh& seed)
 {
-  preciceTrace1 ( "gatherMesh()", rank );
+  preciceTrace1 ( "gatherMesh()", _rank );
 
   if(_rank>0){ //slave
     com::CommunicateMesh(_masterSlaveCom).sendMesh ( seed, 0 );
   }
   else{ //master
-    assertion(rank==0);
-    assertion(size>1);
-    _vertexDistribution[0]=seed.vertices().size();
+    assertion(_rank==0);
+    assertion(_size>1);
+    seed.getVertexDistribution()[0]=seed.vertices().size();
     mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
     mesh::Mesh& rSlaveMesh = slaveMesh;
 
@@ -119,7 +121,7 @@ void CommunicatedGeometry:: gatherMesh(
       //TODO better rewrite accept/request connection
       rSlaveMesh.clear();
       com::CommunicateMesh(_masterSlaveCom).receiveMesh ( rSlaveMesh, rankSlave-1);
-      _vertexDistribution[rankSlave]=rSlaveMesh.vertices().size();
+      seed.getVertexDistribution()[rankSlave]=rSlaveMesh.vertices().size();
       utils::DynVector coord(_dimensions);
       foreach ( const mesh::Vertex& vertex, rSlaveMesh.vertices() ){
           coord = vertex.getCoords();
@@ -132,14 +134,14 @@ void CommunicatedGeometry:: gatherMesh(
 void CommunicatedGeometry:: scatterMesh(
     mesh::Mesh& seed)
 {
-  preciceTrace1 ( "scatterMesh()", rank );
+  preciceTrace1 ( "scatterMesh()", _rank );
 
   if(_rank>0){ //slave
     com::CommunicateMesh(_masterSlaveCom).receiveMesh ( seed, 0);
   }
   else{ //master
-    assertion(rank==0);
-    assertion(size>1);
+    assertion(_rank==0);
+    assertion(_size>1);
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
       //slaves have ranks from 0 to size-2
       //TODO better rewrite accept/request connection

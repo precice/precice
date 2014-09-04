@@ -7,6 +7,8 @@
 #include "../CouplingData.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
+#include "mesh/SharedPointer.hpp"
+#include "mesh/Mesh.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::cplscheme::tests::HierarchicalAitkenPostProcessingTest)
@@ -44,8 +46,9 @@ void HierarchicalAitkenPostProcessingTest:: run ()
     temp = midF; temp *= 2.0; values += temp;
     temp = lowF; temp *= 4.0; values += temp;
     bool initializeValues = false;
+    mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
     PtrCouplingData ptrCplData = PtrCouplingData(new CouplingData(
-                  &values,initializeValues));
+                  &values,dummyMesh,initializeValues));
     temp = values;
     temp *= 2.0;
     ptrCplData->oldValues.appendFront ( temp );

@@ -223,11 +223,13 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string nameParticipant = tag.getStringAttributeValue(ATTR_FROM);
     bool initialize = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
     mesh::PtrData exchangeData;
+    mesh::PtrMesh exchangeMesh;
     foreach (mesh::PtrMesh mesh, _meshConfig->meshes()){
       if ( mesh->getName() == nameMesh ) {
         foreach ( mesh::PtrData data, mesh->data() ) {
           if ( data->getName() == nameData ) {
             exchangeData = data;
+            exchangeMesh = mesh;
             break;
           }
         }
@@ -240,7 +242,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
       throw stream.str();
     }
     _config.exchanges.push_back(boost::make_tuple(exchangeData,
-                                nameParticipant, initialize));
+                    exchangeMesh, nameParticipant, initialize));
   }
   else if (tag.getName() == TAG_MAX_ITERATIONS){
     assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
@@ -784,17 +786,18 @@ void CouplingSchemeConfiguration:: addDataToBeExchanged
   using boost::get;
   foreach (const Config::Exchange& tuple, _config.exchanges){
     mesh::PtrData data = get<0>(tuple);
-    const std::string& from = get<1>(tuple);
+    mesh::PtrMesh mesh = get<1>(tuple);
+    const std::string& from = get<2>(tuple);
     if (from.compare(_config.participant) && from.compare(_config.secondParticipant)){
       throw std::string("Participant \"" + from + "\" is not configured for coupling scheme");
     }
 
-    bool initialize = get<2>(tuple);
+    bool initialize = get<3>(tuple);
     if (from == accessor){
-      scheme.addDataToSend(data, initialize);
+      scheme.addDataToSend(data, mesh, initialize);
     }
     else {
-      scheme.addDataToReceive(data, initialize);
+      scheme.addDataToReceive(data, mesh, initialize);
     }
   }
 }

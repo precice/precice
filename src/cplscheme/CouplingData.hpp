@@ -23,6 +23,8 @@ struct CouplingData
   /// @brief Data values of previous iteration (1st col) and previous timesteps.
   DataMatrix oldValues;
 
+  mesh::PtrMesh mesh;
+
   /// @brief True, if the data values are initialized by a participant.
   bool initialize;
 
@@ -41,13 +43,16 @@ struct CouplingData
    */
   CouplingData (
     utils::DynVector* values,
+    mesh::PtrMesh       mesh,
     bool              initialize )
     :
     values ( values ),
     oldValues (),
+    mesh(mesh),
     initialize ( initialize )
     {
       assertion ( values != NULL );
+      assertion ( mesh.use_count()>0);
     }
 };
 

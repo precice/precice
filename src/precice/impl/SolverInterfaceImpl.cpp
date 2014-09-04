@@ -1911,51 +1911,43 @@ void SolverInterfaceImpl:: configureSolverGeometries
                            "Participant \"" << _accessorName << "\" cannot provide "
                            << "the geometry of mesh \"" << context.mesh->getName()
                            << " in addition to a defined geometry!" );
-      if(not _slaveMode){
 
-        bool addedReceiver = false;
-        geometry::CommunicatedGeometry* comGeo = NULL;
-        foreach ( PtrParticipant receiver, _participants ){
-          foreach ( MeshContext& receiverContext, receiver->usedMeshContexts() ){
-            bool doesReceive = receiverContext.receiveMeshFrom == _accessorName;
-            doesReceive &= receiverContext.mesh->getName() == context.mesh->getName();
-            if ( doesReceive ){
-              preciceDebug ( "   ... receiver " << receiver );
-              utils::DynVector offset ( _dimensions, 0.0 );
-              std::string provider ( _accessorName );
+      bool addedReceiver = false;
+      geometry::CommunicatedGeometry* comGeo = NULL;
+      foreach ( PtrParticipant receiver, _participants ){
+        foreach ( MeshContext& receiverContext, receiver->usedMeshContexts() ){
+          bool doesReceive = receiverContext.receiveMeshFrom == _accessorName;
+          doesReceive &= receiverContext.mesh->getName() == context.mesh->getName();
+          if ( doesReceive ){
+            preciceDebug ( "   ... receiver " << receiver );
+            utils::DynVector offset ( _dimensions, 0.0 );
+            std::string provider ( _accessorName );
 
-              if(!addedReceiver){
-                comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider );
-                context.geometry = geometry::PtrGeometry ( comGeo );
-              }
-              else{
-                preciceDebug ( "Further receiver added.");
-              }
-
-              com::PtrCommunication com =
-                  comConfig->getCommunication ( receiver->getName(), provider );
-              comGeo->addReceiver ( receiver->getName(), com );
-
-              addedReceiver = true;
+            if(!addedReceiver){
+              comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider,
+                               _accessor->getMasterSlaveCommunication(), _accessorProcessRank,
+                                _accessorCommunicatorSize, _dimensions);
+              context.geometry = geometry::PtrGeometry ( comGeo );
             }
+            else{
+              preciceDebug ( "Further receiver added.");
+            }
+
+            com::PtrCommunication com =
+                comConfig->getCommunication ( receiver->getName(), provider );
+            comGeo->addReceiver ( receiver->getName(), com );
+
+            addedReceiver = true;
           }
         }
-        if(!addedReceiver){
-          preciceDebug ( "No receiver found, create SolverGeometry");
-          utils::DynVector offset ( _dimensions, 0.0 );
-          context.geometry = geometry::PtrGeometry (
-                          new geometry::SolverGeometry ( offset) );
-        }
       }
-      else{
-        assertion(_slaveMode);
-        // slaves should communicate the geometry to other participants (for the moment)
+      if(!addedReceiver){
+        preciceDebug ( "No receiver found, create SolverGeometry");
         utils::DynVector offset ( _dimensions, 0.0 );
         context.geometry = geometry::PtrGeometry (
-                                  new geometry::SolverGeometry ( offset) );
+                        new geometry::SolverGeometry ( offset) );
       }
 
-      context.geometry->setProvided(true); //only provided meshes are distributed for the moment
       assertion(context.geometry.use_count() > 0);
 
     }
@@ -1968,7 +1960,9 @@ void SolverInterfaceImpl:: configureSolverGeometries
       std::string provider ( context.receiveMeshFrom );
       preciceDebug ( "Receiving mesh from " << provider );
       geometry::CommunicatedGeometry * comGeo =
-          new geometry::CommunicatedGeometry ( offset, receiver, provider );
+          new geometry::CommunicatedGeometry ( offset, receiver, provider,
+              _accessor->getMasterSlaveCommunication(), _accessorProcessRank,
+              _accessorCommunicatorSize, _dimensions );
       com::PtrCommunication com = comConfig->getCommunication ( receiver, provider );
       comGeo->addReceiver ( receiver, com );
       preciceCheck ( context.geometry.use_count() == 0, "configureSolverGeometries()",
@@ -2038,6 +2032,10 @@ void SolverInterfaceImpl:: mapWrittenData()
           << "\" to mesh \""
           << _accessor->meshContext(context.toMeshID).mesh->getName()
           << "\".");
+      preciceCheck(context.mapping->getConstraint()==mapping::Mapping::CONSERVATIVE
+            || not _masterMode, "mapReadData()",
+           "For point2point runs only conservative write mappings are allowed ");
+
       context.mapping->computeMapping();
     }
   }
@@ -2095,6 +2093,10 @@ void SolverInterfaceImpl:: mapReadData()
   			  << "\" to mesh \""
   			  << _accessor->meshContext(context.toMeshID).mesh->getName()
   			  << "\".");
+  	  preciceCheck(context.mapping->getConstraint()==mapping::Mapping::CONSISTENT
+  	        || not _masterMode, "mapReadData()",
+           "For point2point runs only consistent read mappings are allowed ");
+
   	  context.mapping->computeMapping();
   	}
   }

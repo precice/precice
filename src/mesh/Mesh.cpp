@@ -38,7 +38,9 @@ Mesh:: Mesh
   _manageEdgeIDs(),
   _manageTriangleIDs(),
   _manageQuadIDs(),
-  _listeners()
+  _listeners(),
+  _vertexDistribution(),
+  _distributionType(UNDEFINED)
 {
   if (_managerPropertyIDs == NULL){
     _managerPropertyIDs = new utils::ManageUniqueIDs;

@@ -8,7 +8,6 @@
 #include "tarch/logging/Log.h"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
-#include <map>
 
 namespace precice {
    namespace mesh {
@@ -69,9 +68,6 @@ public:
     return _offset;
   }
 
-  std::map<int,int> getVertexDistribution(){
-    return _vertexDistribution;
-  }
 
 protected:
 
@@ -90,8 +86,6 @@ protected:
   virtual void allocateDataValues ( mesh::Mesh& mesh );
 
 private:
-
-  std::map<int,int> _vertexDistribution;
 
   static tarch::logging::Log _log;
 

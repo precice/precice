@@ -109,8 +109,8 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
   cplscheme::SerialCouplingScheme cplScheme (
     maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
     nameParticipant1, localParticipant, communication, dtMethod, BaseCouplingScheme::Explicit );
-  cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
-  cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false );
+  cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh , false );
+  cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh , false );
   connect ( nameParticipant0, nameParticipant1, localParticipant, communication );
   runSimpleExplicitCoupling ( cplScheme, localParticipant, meshConfig );
 }
@@ -556,8 +556,8 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
   cplscheme::SerialCouplingScheme cplScheme (
     maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
     nameParticipant1, localParticipant, communication, dtMethod, BaseCouplingScheme::Explicit );
-  cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
-  cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false);
+  cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh , false);
+  cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh , false);
   connect ( nameParticipant0, nameParticipant1, localParticipant, communication );
   runExplicitCouplingWithSubcycling ( cplScheme, localParticipant, meshConfig );
 }

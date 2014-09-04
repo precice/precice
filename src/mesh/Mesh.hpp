@@ -54,6 +54,12 @@ public:
     virtual void meshChanged ( Mesh& mesh ) =0;
   };
 
+  enum DistributionType{
+    UNDEFINED,
+    EXACT,
+    ALL
+  };
+
   typedef utils::ptr_vector<Vertex>            VertexContainer;
   typedef utils::ptr_vector<Edge>              EdgeContainer;
   typedef utils::ptr_vector<Triangle>          TriangleContainer;
@@ -272,6 +278,18 @@ public:
    */
   void notifyListeners();
 
+  std::map<int,int>& getVertexDistribution(){
+    return _vertexDistribution;
+  }
+
+  DistributionType getDistributionType(){
+    return _distributionType;
+  }
+
+  void setDistributionType(DistributionType type){
+    _distributionType = type;
+  }
+
 private:
 
   // @brief Logging device.
@@ -311,6 +329,10 @@ private:
 
   // @brief Mesh listeners interested in mesh changes.
   std::list<MeshListener*> _listeners;
+
+  std::map<int,int> _vertexDistribution;
+
+  DistributionType _distributionType;
 };
 
 }} // namespace precice, mesh

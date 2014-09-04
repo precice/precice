@@ -170,38 +170,38 @@ void BaseCouplingScheme::receiveAndSetDt()
 void BaseCouplingScheme:: addDataToSend
 (
   mesh::PtrData data,
+  mesh::PtrMesh mesh,
   bool          initialize)
 {
   preciceTrace("addDataToSend()");
   int id = data->getID();
   if(! utils::contained(id, _sendData)) {
-    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize));
     DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _sendData.insert(pair);
   }
   else {
     preciceError("addDataToSend()", "Data \"" << data->getName()
-		 << "\" of mesh \"" << data->mesh()->getName() << "\" cannot be "
-		 << "added twice for sending!");
+		 << "\" cannot be added twice for sending!");
   }
 }
 
 void BaseCouplingScheme:: addDataToReceive
 (
   mesh::PtrData data,
+  mesh::PtrMesh mesh,
   bool          initialize)
 {
   preciceTrace("addDataToReceive()");
   int id = data->getID();
   if(! utils::contained(id, _receiveData)) {
-    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize));
     DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _receiveData.insert(pair);
   }
   else {
     preciceError("addDataToReceive()", "Data \"" << data->getName()
-		 << "\" of mesh \"" << data->mesh()->getName() << "\" cannot be "
-		 << "added twice for receiving!");
+		 << "\" cannot be added twice for receiving!");
   }
 }
 
@@ -316,8 +316,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
 
 void BaseCouplingScheme:: gatherData
 (
-  com::PtrCommunication communication, int comRank, int comSize,
-  std::map<int,int> vertexDistribution, int dim)
+  com::PtrCommunication communication, int comRank, int comSize)
 {
   preciceTrace("gatherData()");
   assertion(communication.get() != NULL);
@@ -336,18 +335,36 @@ void BaseCouplingScheme:: gatherData
     assertion(comRank==0);
     foreach (DataMap::value_type& pair, _sendData){
       utils::DynVector& valuesMaster = *pair.second->values;
+      std::map<int,int>& vertexDistribution = pair.second->mesh->getVertexDistribution();
+      int dim = pair.second->mesh->getDimensions();
+
       for(int rankSlave = 1; rankSlave < comSize; rankSlave++){
-        int vertexCount = vertexDistribution[rankSlave];
-        int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
-        preciceDebug("Number of vertices = " << vertexCount <<", offset: " << offset);
-        preciceDebug("Size ValuesMaster = " << valuesMaster.size() );
-        if (vertexCount > 0) {
-          double* valuesSlave = new double[vertexCount*dim];
-          communication->receive(valuesSlave, vertexCount*dim, rankSlave-1);
-          for(int i=0; i<vertexCount*dim;i++){
-            valuesMaster[i+offset] = valuesSlave[i];
+        if(pair.second->mesh->getDistributionType()==mesh::Mesh::EXACT){
+          int vertexCount = vertexDistribution[rankSlave];
+          int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
+          preciceDebug("Number of vertices = " << vertexCount <<", offset: " << offset);
+          preciceDebug("Size ValuesMaster = " << valuesMaster.size() );
+          if (vertexCount > 0) {
+            double* valuesSlave = new double[vertexCount*dim];
+            communication->receive(valuesSlave, vertexCount*dim, rankSlave-1);
+            for(int i=0; i<vertexCount*dim;i++){
+              valuesMaster[i+offset] = valuesSlave[i];
+            }
+            delete valuesSlave;
           }
-          delete valuesSlave;
+        } else if(pair.second->mesh->getDistributionType()==mesh::Mesh::ALL){
+          int size = pair.second->values->size();
+          if (size > 0) {
+            double* valuesSlave = new double[size];
+            communication->receive(valuesSlave, size, rankSlave-1);
+            for(int i=0; i<size;i++){
+              valuesMaster[i] += valuesSlave[i];
+            }
+            delete valuesSlave;
+          }
+        }
+        else{
+          assertion(false);
         }
       }
     }
@@ -356,8 +373,7 @@ void BaseCouplingScheme:: gatherData
 
 void BaseCouplingScheme:: scatterData
 (
-  com::PtrCommunication communication, int comRank, int comSize,
-  std::map<int,int> vertexDistribution, int dim)
+  com::PtrCommunication communication, int comRank, int comSize)
 {
   preciceTrace("scatterData()");
   assertion(communication.get() != NULL);
@@ -375,18 +391,32 @@ void BaseCouplingScheme:: scatterData
   else{ //master
     assertion(comRank==0);
     foreach (DataMap::value_type& pair, _receiveData){
+
       utils::DynVector& valuesMaster = *pair.second->values;
+      std::map<int,int>& vertexDistribution = pair.second->mesh->getVertexDistribution();
+      int dim = pair.second->mesh->getDimensions();
+
       for(int rankSlave = 1; rankSlave < comSize; rankSlave++){
-        int vertexCount = vertexDistribution[rankSlave];
-        int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
-        std::cout << "DEBUGGGG: " << valuesMaster.size() << " offset: " << offset << " count "<< vertexCount << std::endl;
-        if (vertexCount > 0) {
-          double* valuesSlave = new double[vertexCount*dim];
-          for(int i=0; i<vertexCount*dim;i++){
-            valuesSlave[i] = valuesMaster[i+offset];
+        if(pair.second->mesh->getDistributionType()==mesh::Mesh::EXACT){
+          int vertexCount = vertexDistribution[rankSlave];
+          int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
+          if (vertexCount > 0) {
+            double* valuesSlave = new double[vertexCount*dim];
+            for(int i=0; i<vertexCount*dim;i++){
+              valuesSlave[i] = valuesMaster[i+offset];
+            }
+            communication->send(valuesSlave, vertexCount*dim, rankSlave-1);
+            delete valuesSlave;
           }
-          communication->send(valuesSlave, vertexCount*dim, rankSlave-1);
-          delete valuesSlave;
+        }
+        else if(pair.second->mesh->getDistributionType()==mesh::Mesh::ALL){
+          int size = pair.second->values->size();
+          if (size > 0) {
+            communication->send(tarch::la::raw(*pair.second->values), size, rankSlave-1);
+          }
+        }
+        else{
+          assertion(false);
         }
       }
     }
@@ -394,7 +424,7 @@ void BaseCouplingScheme:: scatterData
 }
 
 int BaseCouplingScheme:: getVertexOffset(
-    std::map<int,int> vertexDistribution,
+    std::map<int,int>& vertexDistribution,
     int rank,
     int dim)
   {

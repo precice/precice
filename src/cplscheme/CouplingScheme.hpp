@@ -233,17 +233,13 @@ public:
   virtual void gatherData (
     com::PtrCommunication communication,
     int comRank,
-    int comSize,
-    std::map<int,int> vertexDistribution,
-    int dim){}
+    int comSize){}
 
   //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
   virtual void scatterData (
     com::PtrCommunication communication,
     int comRank,
-    int comSize,
-    std::map<int,int> vertexDistribution,
-    int dim){}
+    int comSize){}
 
 };
 

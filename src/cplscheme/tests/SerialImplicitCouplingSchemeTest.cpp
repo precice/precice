@@ -127,7 +127,7 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
                               accessor, com, constants::FIXED_DT,
                               BaseCouplingScheme::Implicit, maxIterations);
 
-  scheme.addDataToSend(data, true);
+  scheme.addDataToSend(data, mesh, true);
   scheme.setExtrapolationOrder(1);
   scheme.setupDataMatrices(scheme.getSendData());
   CouplingData* cplData = scheme.getSendData(dataID);
@@ -160,7 +160,7 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
                                  accessor, com, constants::FIXED_DT,
                                  BaseCouplingScheme::Implicit, maxIterations);
 
-  scheme2.addDataToSend ( data, false );
+  scheme2.addDataToSend ( data, mesh, false );
   scheme2.setExtrapolationOrder ( 2 );
   scheme2.setupDataMatrices (scheme2.getSendData());
   cplData = scheme2.getSendData ( dataID );
@@ -239,8 +239,8 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
        maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
        nameParticipant1, nameLocalParticipant, communication, constants::FIXED_DT,
        BaseCouplingScheme::Implicit, 100);
-   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
-   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false );
+   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh, false );
+   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh, false );
 
    double convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
    impl::PtrConvergenceMeasure absoluteConvMeasure1 (
@@ -422,8 +422,8 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
      nameLocalParticipant, communication, constants::FIXED_DT,
      BaseCouplingScheme::Implicit, 100);
-   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
-   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false );
+   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh, false );
+   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh, false );
 
    // Add convergence measures
    int minIterations = 3;
@@ -753,8 +753,8 @@ void SerialImplicitCouplingSchemeTest::
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
       nameLocalParticipant, communication, constants::FIXED_DT,
       BaseCouplingScheme::Implicit, 100);
-   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
-   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false );
+   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh, false );
+   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh, false );
 
    // Add convergence measures
    int minIterations = 3;
@@ -819,8 +819,8 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
      nameLocalParticipant, communication, constants::FIXED_DT,
      BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], initData);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], not initData);
+  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
+  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, not initData);
 
   // Add convergence measures
   int minIterations = 3;

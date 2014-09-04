@@ -19,7 +19,6 @@ Geometry:: Geometry
 (
   const utils::DynVector& offset )
 :
-  _vertexDistribution(),
   _offset (offset)
 {}
 
