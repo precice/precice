@@ -335,36 +335,22 @@ void BaseCouplingScheme:: gatherData
     assertion(comRank==0);
     foreach (DataMap::value_type& pair, _sendData){
       utils::DynVector& valuesMaster = *pair.second->values;
-      std::map<int,int>& vertexDistribution = pair.second->mesh->getVertexDistribution();
+      std::map<int,std::vector<int> >& vertexDistribution = pair.second->mesh->getVertexDistribution();
       int dim = pair.second->mesh->getDimensions();
-
       for(int rankSlave = 1; rankSlave < comSize; rankSlave++){
-        if(pair.second->mesh->getDistributionType()==mesh::Mesh::EXACT){
-          int vertexCount = vertexDistribution[rankSlave];
-          int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
-          preciceDebug("Number of vertices = " << vertexCount <<", offset: " << offset);
-          preciceDebug("Size ValuesMaster = " << valuesMaster.size() );
-          if (vertexCount > 0) {
-            double* valuesSlave = new double[vertexCount*dim];
-            communication->receive(valuesSlave, vertexCount*dim, rankSlave-1);
-            for(int i=0; i<vertexCount*dim;i++){
-              valuesMaster[i+offset] = valuesSlave[i];
+        std::vector<int>& globalIndices = vertexDistribution[rankSlave];
+        int numberOfVertices = globalIndices.size();
+        preciceDebug("Number of vertices = " << numberOfVertices);
+        preciceDebug("Size ValuesMaster = " << valuesMaster.size() );
+        if (numberOfVertices > 0) {
+          double* valuesSlave = new double[numberOfVertices*dim];
+          communication->receive(valuesSlave, numberOfVertices*dim, rankSlave-1);
+          for(int i=0; i<numberOfVertices;i++){
+            for(int j=0;j<dim;j++){
+              valuesMaster[globalIndices[i]*dim+j] = valuesSlave[i*dim+j];
             }
-            delete valuesSlave;
           }
-        } else if(pair.second->mesh->getDistributionType()==mesh::Mesh::ALL){
-          int size = pair.second->values->size();
-          if (size > 0) {
-            double* valuesSlave = new double[size];
-            communication->receive(valuesSlave, size, rankSlave-1);
-            for(int i=0; i<size;i++){
-              valuesMaster[i] += valuesSlave[i];
-            }
-            delete valuesSlave;
-          }
-        }
-        else{
-          assertion(false);
+          delete valuesSlave;
         }
       }
     }
@@ -391,32 +377,23 @@ void BaseCouplingScheme:: scatterData
   else{ //master
     assertion(comRank==0);
     foreach (DataMap::value_type& pair, _receiveData){
-
       utils::DynVector& valuesMaster = *pair.second->values;
-      std::map<int,int>& vertexDistribution = pair.second->mesh->getVertexDistribution();
+      std::map<int,std::vector<int> >& vertexDistribution = pair.second->mesh->getVertexDistribution();
       int dim = pair.second->mesh->getDimensions();
-
       for(int rankSlave = 1; rankSlave < comSize; rankSlave++){
-        if(pair.second->mesh->getDistributionType()==mesh::Mesh::EXACT){
-          int vertexCount = vertexDistribution[rankSlave];
-          int offset = getVertexOffset(vertexDistribution,rankSlave,dim);
-          if (vertexCount > 0) {
-            double* valuesSlave = new double[vertexCount*dim];
-            for(int i=0; i<vertexCount*dim;i++){
-              valuesSlave[i] = valuesMaster[i+offset];
+        std::vector<int>& globalIndices = vertexDistribution[rankSlave];
+        int numberOfVertices = globalIndices.size();
+        preciceDebug("Number of vertices = " << numberOfVertices);
+        preciceDebug("Size ValuesMaster = " << valuesMaster.size() );
+        if (numberOfVertices > 0) {
+          double* valuesSlave = new double[numberOfVertices*dim];
+          for(int i=0; i<numberOfVertices;i++){
+            for(int j=0;j<dim;j++){
+              valuesSlave[i*dim+j] = valuesMaster[globalIndices[i]*dim+j];
             }
-            communication->send(valuesSlave, vertexCount*dim, rankSlave-1);
-            delete valuesSlave;
           }
-        }
-        else if(pair.second->mesh->getDistributionType()==mesh::Mesh::ALL){
-          int size = pair.second->values->size();
-          if (size > 0) {
-            communication->send(tarch::la::raw(*pair.second->values), size, rankSlave-1);
-          }
-        }
-        else{
-          assertion(false);
+          communication->send(valuesSlave, numberOfVertices*dim, rankSlave-1);
+          delete valuesSlave;
         }
       }
     }

@@ -278,7 +278,7 @@ public:
    */
   void notifyListeners();
 
-  std::map<int,int>& getVertexDistribution(){
+  std::map<int,std::vector<int> >& getVertexDistribution(){
     return _vertexDistribution;
   }
 
@@ -330,7 +330,7 @@ private:
   // @brief Mesh listeners interested in mesh changes.
   std::list<MeshListener*> _listeners;
 
-  std::map<int,int> _vertexDistribution;
+  std::map<int,std::vector<int> > _vertexDistribution;
 
   DistributionType _distributionType;
 };

@@ -112,7 +112,14 @@ void CommunicatedGeometry:: gatherMesh(
   else{ //master
     assertion(_rank==0);
     assertion(_size>1);
-    seed.getVertexDistribution()[0]=seed.vertices().size();
+
+    int numberOfVertices = 0;
+    //vertices of master mesh part do already exist
+    foreach ( const mesh::Vertex& vertex, seed.vertices() ){
+      seed.getVertexDistribution()[0].push_back(numberOfVertices);
+      numberOfVertices++;
+    }
+
     mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
     mesh::Mesh& rSlaveMesh = slaveMesh;
 
@@ -121,11 +128,12 @@ void CommunicatedGeometry:: gatherMesh(
       //TODO better rewrite accept/request connection
       rSlaveMesh.clear();
       com::CommunicateMesh(_masterSlaveCom).receiveMesh ( rSlaveMesh, rankSlave-1);
-      seed.getVertexDistribution()[rankSlave]=rSlaveMesh.vertices().size();
       utils::DynVector coord(_dimensions);
       foreach ( const mesh::Vertex& vertex, rSlaveMesh.vertices() ){
           coord = vertex.getCoords();
           seed.createVertex(coord);
+          seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
+          numberOfVertices++;
       }
     }
   }
@@ -147,6 +155,11 @@ void CommunicatedGeometry:: scatterMesh(
       //TODO better rewrite accept/request connection
       //at the moment complete mesh is sent to every slave
       com::CommunicateMesh(_masterSlaveCom).sendMesh ( seed, rankSlave-1 );
+      int numberOfVertices = 0;
+      foreach ( const mesh::Vertex& vertex, seed.vertices() ){
+        seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
+        numberOfVertices++;
+      }
     }
   }
 }
