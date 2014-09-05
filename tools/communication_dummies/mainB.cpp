@@ -4,7 +4,7 @@
 #include <sstream>
 #include <cstdlib>
 #include "math.h"
-#include "MPIAscodtCommunication.h"
+#include "SocketAscodtCommunication.h"
 
 
 int main(int argc, char** argv)
@@ -28,11 +28,12 @@ int main(int argc, char** argv)
     return 1;
   }
 
-  MPIAscodtCommunication com;
+  SocketAscodtCommunication com;
 
   if(rank==0){
     int vertexTable[] = {1,0,1,1,0,2,2,4,4,4};
-    int adressTable[] = {0,1,2,3,4}; //TODO what exactly do we need here?
+    //maybe change to strings, compare comment in MainA.cpp
+    int adressTable[] = {0,1,2,3,4};
     com.acceptConnection(vertexTable, adressTable);
   }
 
@@ -47,6 +48,7 @@ int main(int argc, char** argv)
     numberOfVertices=2;
   }
   else if(rank==3){
+    //rank 3 has no vertices
     numberOfVertices=0;
   }
   else if(rank==4){
@@ -81,6 +83,11 @@ int main(int argc, char** argv)
     pData = &data[0];
     com.receive(data,3);
   }
+  //all receives are blocking, so all we have an implicit barrier here
+
+
+  //TODO as an intermediate step, you could also add another test here,
+  // if B already received the right data
 
   //modify data
   for(int i=0;i<numberOfVertices;i++){

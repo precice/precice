@@ -44,9 +44,10 @@ cpppath.append('FSIDummies/src/')
 ####### CCA component sources #########
 
 sourcesInterface = [
-    Glob('MPIAscodtCommunication.cpp')
+    Glob('SocketAscodtCommunication.cpp')
 ]
 
+#TODO change to ASCoDTSocketCommunication
 sourcesCCADummyA = [
     Glob('FSIDummies/components/c++/fsi/FSIDummyAAbstractImplementation.cpp'),
     Glob('FSIDummies/components/c++/fsi/FSIDummyAC2CxxProxy.cpp'),
