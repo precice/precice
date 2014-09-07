@@ -347,7 +347,7 @@ void BaseCouplingScheme:: gatherData
           communication->receive(valuesSlave, numberOfVertices*dim, rankSlave-1);
           for(int i=0; i<numberOfVertices;i++){
             for(int j=0;j<dim;j++){
-              valuesMaster[globalIndices[i]*dim+j] = valuesSlave[i*dim+j];
+              valuesMaster[globalIndices[i]*dim+j] += valuesSlave[i*dim+j];
             }
           }
           delete valuesSlave;
