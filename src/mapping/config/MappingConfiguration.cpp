@@ -5,6 +5,7 @@
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
+#include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
@@ -52,6 +53,7 @@ MappingConfiguration:: MappingConfiguration
   VALUE_RBF_CTPS_C2("rbf-compact-tps-c2"),
   VALUE_RBF_CPOLYNOMIAL_C0("rbf-compact-polynomial-c0"),
   VALUE_RBF_CPOLYNOMIAL_C6("rbf-compact-polynomial-c6"),
+  VALUE_PETRBF_GAUSSIAN("petrbf-gaussian"),
   VALUE_TIMING_INITIAL("initial"),
   VALUE_TIMING_ON_ADVANCE("onadvance"),
   VALUE_TIMING_ON_DEMAND("ondemand"),
@@ -113,6 +115,12 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrSupportRadius);
     tags.push_back(tag);
   }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_GAUSSIAN, occ, TAG);
+    tag.addAttribute(attrShapeParam);
+    tags.push_back(tag);
+  }
+
 
   XMLAttribute<std::string> attrDirection ( ATTR_DIRECTION );
   ValidatorEquals<std::string> validDirectionWrite ( VALUE_WRITE );
@@ -393,6 +401,11 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<CompactPolynomialC6>(
         constraintValue, CompactPolynomialC6(supportRadius)) );
+  }
+  else if (type == VALUE_PETRBF_GAUSSIAN){
+    configuredMapping.mapping = PtrMapping(
+        new PetRadialBasisFctMapping<PetGaussian>(
+          constraintValue, PetGaussian(shapeParameter)));
   }
   else {
     preciceError ( "getMapping()", "Unknown mapping type!" );
