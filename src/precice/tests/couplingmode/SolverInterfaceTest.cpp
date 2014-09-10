@@ -828,8 +828,21 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
                              couplingInterface);
     impl::PtrParticipant solverOne = couplingInterface._impl->_participants[0];
     validateEquals(solverOne->getName(), "SolverOne");
-    double dt = couplingInterface.initialize();
+
     int meshOneID = couplingInterface.getMeshID("MeshOne");
+
+    double pos[2];
+    // Set mesh positions
+    pos[0] = 0.0; pos[1] = 0.0;
+    couplingInterface.setMeshVertex(meshOneID, pos);
+    pos[0] = 1.0; pos[1] = 0.0;
+    couplingInterface.setMeshVertex(meshOneID, pos);
+    pos[0] = 1.0; pos[1] = 1.0;
+    couplingInterface.setMeshVertex(meshOneID, pos);
+    pos[0] = 0.0; pos[1] = 1.0;
+    couplingInterface.setMeshVertex(meshOneID, pos);
+
+    double dt = couplingInterface.initialize();
     /*int forcesID = */ couplingInterface.getDataID("Forces", meshOneID);
     validateEquals(solverOne->_meshContexts.size(), 2);
     mesh::PtrMesh mesh = solverOne->_meshContexts[0]->mesh;

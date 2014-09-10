@@ -1755,7 +1755,7 @@ void SolverInterfaceImpl:: createMeshContext
     std::string fileName("precice_checkpoint_" + _accessorName + "_" + meshName);
     geometry::ImportGeometry* importGeo = new geometry::ImportGeometry (
         utils::DynVector(_dimensions, 0.0), fileName,
-        geometry::ImportGeometry::VRML_1_FILE, true);
+        geometry::ImportGeometry::VRML_1_FILE, true, not meshContext.provideMesh);
     geometry = geometry::PtrGeometry ( importGeo );
   }
   else if ( (not _geometryMode) && (geometry.use_count() > 0) ){

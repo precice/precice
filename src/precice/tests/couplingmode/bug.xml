@@ -47,7 +47,7 @@
          <participants first="Flite" second="Calculix"/> 
          <max-time value="2.0e-5" />
          <timestep-length value="1e-5" method="fixed"/>
-         <exchange data="Forces"        mesh="FliteNodes" from="Flite" />
+         <exchange data="Forces"        mesh="CalculixNodes" from="Flite" />
          <exchange data="Displacements" mesh="CalculixNodes" from="Calculix" />
       </coupling-scheme:serial-explicit>                           
    </solver-interface>
