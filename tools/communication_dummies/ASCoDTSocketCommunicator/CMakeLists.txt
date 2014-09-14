@@ -16,4 +16,11 @@ set(CMAKE_INSTALL_PREFIX "${CMAKE_CURRENT_SOURCE_DIR}" CACHE PATH "")
 # ==============================================================================
 # }}} General
 
+# Options {{{
+# ==============================================================================
+option(PARALLEL "Whether to build parallel (MPI-based) implementation." OFF)
+# ==============================================================================
+# }}} Options
 
+add_subdirectory(cmake/precice.A)
+add_subdirectory(cmake/precice.B)
