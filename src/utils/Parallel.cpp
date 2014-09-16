@@ -7,6 +7,7 @@
 #include "utils/Globals.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include <map>
+#include "petsc.h"
 
 namespace precice {
 namespace utils {
@@ -143,6 +144,7 @@ void Parallel:: initialize
     }
   }
 # endif // not PRECICE_NO_MPI
+  PetscInitialize(argc, argv, "", NULL);
   _isInitialized = true;
 }
 
@@ -155,6 +157,7 @@ void Parallel:: finalize()
     MPI_Finalize();
   }
 # endif // not PRECICE_NO_MPI
+  PetscFinalize();
 }
 
 int Parallel:: getProcessRank()
