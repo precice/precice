@@ -104,6 +104,17 @@ print '(have to be defined by the user to configure build)'
 
 boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
 
+
+# import pdb; pdb.set_trace()
+# petsc
+PETSC_DIR = env["ENV"]["PETSC_DIR"]
+PETSC_ARCH = env["ENV"]["PETSC_ARCH"]
+env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
+                      os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
+env.Append(LIBS = ['petsc'])
+env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
+# env.Replace(CXX = "mpic++")
+
 if env["boost_inst"]:
     if env["sockets"]:
         boostLibPath = checkset_var('PRECICE_BOOST_LIB_PATH', "/usr/lib/")
