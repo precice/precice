@@ -212,6 +212,17 @@ Scalar & DynamicVector<Scalar>::operator() (
   return _values[index];
 }
 
+template<typename Scalar>
+void DynamicVector<Scalar>::print() const
+{
+  printf("==== Dynamic Vector of size %i  ====\n", _size);
+  for (int i=0; i < _size; i++) {
+    printf("% 6.4f  ", _values[i]);
+  }
+  printf("\n");
+}
+
+
 }} // namespace tarch, la
 
 #endif /* _TARCH_LA_DYNAMICVECTOR_CPPH_ */
