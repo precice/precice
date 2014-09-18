@@ -11,36 +11,79 @@
 
 namespace petsc {
 
-Vector::Vector(size_t size, std::string name)
+
+Vector::Vector(MPI_Comm comm, std::string name)
 {
   PetscErrorCode ierr = 0;
   ierr = VecCreate(PETSC_COMM_WORLD, &vector); CHKERRV(ierr);
-  ierr = VecSetSizes(vector, PETSC_DECIDE, size); CHKERRV(ierr);
-  ierr = VecSetFromOptions(vector); CHKERRV(ierr);
-  if (!name.empty())
-    ierr = PetscObjectSetName( (PetscObject)vector, name.c_str()); CHKERRV(ierr);
+  setName(name);
 }
 
 Vector::Vector(Vec &v, std::string name)
 {
-  PetscErrorCode ierr = 0;
   vector = v;
-  if (!name.empty())
-    ierr = PetscObjectSetName( (PetscObject)vector, name.c_str()); CHKERRV(ierr);
+  setName(name);
 }
 
-Vector::Vector(const Vector &v, std::string name)
+Vector::Vector(Vector &v, std::string name)
 {
   PetscErrorCode ierr = 0;
   ierr = VecDuplicate(v.vector, &vector); CHKERRV(ierr);
-  if (!name.empty())
-    ierr = PetscObjectSetName( (PetscObject)vector, name.c_str()); CHKERRV(ierr);    
+  setName(name);
 }
+
+Vector::Vector(Mat &m, std::string name)
+{
+  PetscErrorCode ierr = 0;
+  ierr = MatGetVecs(m, &vector, NULL); CHKERRV(ierr); // a vector with the same number of rows
+  setName(name);
+}
+
+Vector::Vector(Matrix &m, std::string name)
+{
+  PetscErrorCode ierr = 0;
+  ierr = MatGetVecs(m.matrix, NULL, &vector); CHKERRV(ierr); // a vector with the same number of rows
+  setName(name);
+}
+
+// Vector::Vector(const Vector &v, std::string name)
+// {
+//   PetscErrorCode ierr = 0;
+//   ierr = VecDuplicate(v.vector, &vector); CHKERRV(ierr);
+//   if (!name.empty())
+//     ierr = PetscObjectSetName( (PetscObject)vector, name.c_str()); CHKERRV(ierr);    
+// }
 
 Vector::~Vector()
 {
   PetscErrorCode ierr = 0;
   ierr = VecDestroy(&vector); CHKERRV(ierr);
+}
+
+void Vector::init(PetscInt rows)
+{
+  PetscErrorCode ierr = 0;
+  ierr = VecSetSizes(vector, PETSC_DECIDE, rows); CHKERRV(ierr);
+  ierr = VecSetFromOptions(vector); CHKERRV(ierr);
+}
+
+void Vector::setName(std::string name)
+{
+  PetscErrorCode ierr = 0;
+  ierr = PetscObjectSetName((PetscObject) vector, name.c_str()); CHKERRV(ierr); 
+}
+
+std::string Vector::getName()
+{
+  const char *cstr;
+  PetscObjectGetName((PetscObject) vector, &cstr); 
+  return cstr;    
+}
+
+void Vector::setValue(PetscInt row, PetscScalar value)
+{
+  PetscErrorCode ierr = 0;
+  VecSetValue(vector, row, value, INSERT_VALUES); CHKERRV(ierr);
 }
 
 void Vector::arange(double start, double stop)
@@ -110,10 +153,16 @@ void Vector::view()
 }
 
 
-Matrix::Matrix(MPI_Comm comm)
+/////////////////////////////////////////////////////////////////////////
+
+Matrix::Matrix(MPI_Comm comm, std::string name)
   :
   communicator(comm)
-{ }
+{
+  PetscErrorCode ierr = 0;
+  ierr = MatCreate(communicator, &matrix); CHKERRV(ierr);
+  setName(name);
+}
   
 
 Matrix::~Matrix()
@@ -122,26 +171,38 @@ Matrix::~Matrix()
   ierr = MatDestroy(&matrix); CHKERRV(ierr);
 }
 
+void Matrix::reset()
+{
+  PetscErrorCode ierr = 0;
+  std::string name = getName();
+  ierr = MatDestroy(&matrix); CHKERRV(ierr);
+  ierr = MatCreate(communicator, &matrix); CHKERRV(ierr);
+  setName(name);
+}
+
 void Matrix::create(size_t rows, size_t cols, std::string name)
 {
   PetscErrorCode ierr = 0;
-  ierr = MatCreate(communicator, &matrix); CHKERRV(ierr);
   ierr = MatSetType(matrix, MATDENSE);
   ierr = MatSetSizes(matrix, PETSC_DECIDE, PETSC_DECIDE, rows, cols); CHKERRV(ierr);
-  // ierr = MatSetFromOptions(matrix); CHKERRV(ierr);
+  ierr = MatSetFromOptions(matrix); CHKERRV(ierr);
   ierr = MatSetUp(matrix); CHKERRV(ierr); 
   // ierr = MatAssemblyBegin(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   // ierr = MatAssemblyEnd(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
-  if (not name.empty()) {
-    ierr = PetscObjectSetName( (PetscObject)matrix, name.c_str()); CHKERRV(ierr);
-  }
-
+  setName(name);
 }
 
 void Matrix::setName(std::string name)
 {
   PetscErrorCode ierr = 0;
   ierr = PetscObjectSetName((PetscObject) matrix, name.c_str()); CHKERRV(ierr); 
+}
+
+std::string Matrix::getName()
+{
+  const char *cstr;
+  PetscObjectGetName((PetscObject) matrix, &cstr); 
+  return cstr;    
 }
 
 

@@ -7,16 +7,29 @@
 
 namespace petsc {
 
+class Matrix;
+
 class Vector
 {
 public:
   Vec vector;
-  
-  Vector(size_t size, std::string name = "");
+  Vector(MPI_Comm comm, std::string name = "");
   Vector(Vec &v, std::string name = "");
-  Vector(const Vector &v, std::string name = "");
+  Vector(Vector &v, std::string name = "");
+
+  //@brief Constructs a vector with the same number of rows.
+  Vector(Mat &m, std::string name = "");
+
+  Vector(Matrix &m, std::string name = "");
 
   ~Vector();
+
+  void init(PetscInt rows);
+
+  void setName(std::string name);
+  std::string getName();
+
+  void setValue(PetscInt row, PetscScalar value);
 
   void arange(double start, double stop);
 
@@ -29,6 +42,8 @@ public:
   void write(std::string filename);
 
   void view();
+  
+  
 };
   
 class Matrix
@@ -39,13 +54,16 @@ public:
   MPI_Comm communicator;
 
   Matrix() { };
-  Matrix(MPI_Comm comm);
+  Matrix(MPI_Comm comm, std::string name = "");
 
   ~Matrix();
+
+  void reset();
 
   void create(size_t rows, size_t cols, std::string name = "");
 
   void setName(std::string name);
+  std::string getName();
   
   void assemble();
   
@@ -56,6 +74,9 @@ public:
   void write(std::string filename);
   
   void view();
+
+private:
+  std::string _name;
 
 };
 }
