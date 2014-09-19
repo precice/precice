@@ -10,6 +10,13 @@
 #include <limits>
 #include <typeinfo>
 
+#include <iostream>
+using std::cout;
+using std::endl;
+
+#include "petnum.hpp"
+#include "petscmat.h"
+
 namespace precice {
 namespace mapping {
 
@@ -79,6 +86,10 @@ private:
   tarch::la::DynamicVector<int> _pivotsCLU;
 
   tarch::la::DynamicMatrix<double> _matrixA;
+
+  petsc::Matrix _matCLU;
+
+  petsc::Matrix _matA;
 };
 
 /**
@@ -93,19 +104,19 @@ class PetThinPlateSplines
 public:
 
   bool hasCompactSupport() const
-    { return false; }
+  { return false; }
 
   double getSupportRadius() const
-    { return std::numeric_limits<double>::max(); }
+  { return std::numeric_limits<double>::max(); }
 
   double evaluate ( double radius ) const
-    {
-      double result = 0.0;
-      if (tarch::la::greater(radius, 0.0)){
-        result = std::log10(radius) * std::pow(radius, 2);
-      }
-      return result;
+  {
+    double result = 0.0;
+    if (tarch::la::greater(radius, 0.0)){
+      result = std::log10(radius) * std::pow(radius, 2);
     }
+    return result;
+  }
 };
 
 /**
@@ -123,15 +134,15 @@ public:
     : _cPow2(std::pow(c, 2)) {}
 
   bool hasCompactSupport() const
-    { return false; }
+  { return false; }
 
   double getSupportRadius() const
-    { return std::numeric_limits<double>::max(); }
+  { return std::numeric_limits<double>::max(); }
 
   double evaluate ( double radius ) const
-    {
-      return std::sqrt(_cPow2 + std::pow(radius, 2));
-    }
+  {
+    return std::sqrt(_cPow2 + std::pow(radius, 2));
+  }
 
 private:
 
@@ -152,22 +163,22 @@ public:
 
   PetInverseMultiquadrics ( double c )
     : _cPow2(std::pow(c, 2))
-    {
-      preciceCheck(tarch::la::greater(c, 0.0), "InverseMultiquadrics()",
-                   "Shape parameter for radial-basis-function inverse multiquadric"
-                   << " has to be larger than zero!");
-    }
+  {
+    preciceCheck(tarch::la::greater(c, 0.0), "InverseMultiquadrics()",
+                 "Shape parameter for radial-basis-function inverse multiquadric"
+                 << " has to be larger than zero!");
+  }
 
   bool hasCompactSupport() const
-    { return false; }
+  { return false; }
 
   double getSupportRadius() const
-    { return std::numeric_limits<double>::max(); }
+  { return std::numeric_limits<double>::max(); }
 
   double evaluate ( double radius ) const
-    {
-      return 1.0 / std::sqrt(_cPow2 + std::pow(radius, 2));
-    }
+  {
+    return 1.0 / std::sqrt(_cPow2 + std::pow(radius, 2));
+  }
 
 private:
 
@@ -189,15 +200,15 @@ class PetVolumeSplines
 public:
 
   bool hasCompactSupport() const
-    { return false; }
+  { return false; }
 
   double getSupportRadius() const
-    { return std::numeric_limits<double>::max(); }
+  { return std::numeric_limits<double>::max(); }
 
   double evaluate ( double radius ) const
-    {
-      return radius;
-    }
+  {
+    return radius;
+  }
 };
 
 /**
@@ -214,22 +225,22 @@ public:
 
   PetGaussian ( double shape )
     : _shape(shape)
-    {
-      preciceCheck(tarch::la::greater(_shape, 0.0), "Gaussian()",
-                   "Shape parameter for radial-basis-function gaussian"
-                   << " has to be larger than zero!");
-    }
+  {
+    preciceCheck(tarch::la::greater(_shape, 0.0), "Gaussian()",
+                 "Shape parameter for radial-basis-function gaussian"
+                 << " has to be larger than zero!");
+  }
 
   bool hasCompactSupport() const
-    { return false; }
+  { return false; }
 
   double getSupportRadius() const
-    { return std::numeric_limits<double>::max(); }
+  { return std::numeric_limits<double>::max(); }
 
   double evaluate ( double radius ) const
-    {
-      return std::exp( - std::pow(_shape*radius,2.0) );
-    }
+  {
+    return std::exp( - std::pow(_shape*radius,2.0) );
+  }
 
 private:
 
@@ -255,27 +266,27 @@ public:
 
   PetCompactThinPlateSplinesC2 ( double supportRadius )
     : _r(supportRadius)
-    {
-      preciceCheck(tarch::la::greater(_r, 0.0), "CompactThinPlateSplinesC2()",
-                   "Support radius for radial-basis-function compact thin-plate-splines c2"
-                   << " has to be larger than zero!");
-    }
+  {
+    preciceCheck(tarch::la::greater(_r, 0.0), "CompactThinPlateSplinesC2()",
+                 "Support radius for radial-basis-function compact thin-plate-splines c2"
+                 << " has to be larger than zero!");
+  }
 
   bool hasCompactSupport() const
-    { return true; }
+  { return true; }
 
   double getSupportRadius() const
-    { return _r; }
+  { return _r; }
 
   double evaluate ( double radius ) const
-    {
-      if (radius >= _r) return 0.0;
-      double p = radius / _r;
-      using std::pow;
-      using std::log;
-      return 1.0 - 30.0*pow(p,2.0) - 10.0*pow(p,3.0) + 45.0*pow(p,4.0)
-        - 6.0*pow(p,5.0) - 60.0*log(pow(p,pow(p,3.0)));
-    }
+  {
+    if (radius >= _r) return 0.0;
+    double p = radius / _r;
+    using std::pow;
+    using std::log;
+    return 1.0 - 30.0*pow(p,2.0) - 10.0*pow(p,3.0) + 45.0*pow(p,4.0)
+      - 6.0*pow(p,5.0) - 60.0*log(pow(p,pow(p,3.0)));
+  }
 
 private:
 
@@ -301,23 +312,23 @@ public:
 
   PetCompactPolynomialC0 ( double supportRadius )
     : _r(supportRadius)
-    {
-      preciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC0()",
-                   "Support radius for radial-basis-function compact polynomial c0"
-                   << " has to be larger than zero!");
-    }
+  {
+    preciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC0()",
+                 "Support radius for radial-basis-function compact polynomial c0"
+                 << " has to be larger than zero!");
+  }
 
   bool hasCompactSupport() const
-    { return true; }
+  { return true; }
 
   double getSupportRadius() const
-    { return _r; }
+  { return _r; }
 
   double evaluate ( double radius ) const
-    {
-      if (radius >= _r) return 0.0;
-      return std::pow(1.0 - radius/_r, 2.0);
-    }
+  {
+    if (radius >= _r) return 0.0;
+    return std::pow(1.0 - radius/_r, 2.0);
+  }
 
 private:
 
@@ -343,25 +354,25 @@ public:
 
   PetCompactPolynomialC6 ( double supportRadius )
     : _r(supportRadius)
-    {
-      preciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC6()",
-                   "Support radius for radial-basis-function compact polynomial c6"
-                   << " has to be larger than zero!");
-    }
+  {
+    preciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC6()",
+                 "Support radius for radial-basis-function compact polynomial c6"
+                 << " has to be larger than zero!");
+  }
 
   bool hasCompactSupport() const
-    { return true; }
+  { return true; }
 
   double getSupportRadius() const
-    { return _r; }
+  { return _r; }
 
   double evaluate ( double radius ) const
-    {
-      if (radius >= _r) return 0.0;
-      double p = radius / _r;
-      using std::pow;
-      return pow(1.0-p,8.0) * (32.0*pow(p,3.0) + 25.0*pow(p,2.0) + 8.0*p + 1.0);
-    }
+  {
+    if (radius >= _r) return 0.0;
+    double p = radius / _r;
+    using std::pow;
+    return pow(1.0-p,8.0) * (32.0*pow(p,3.0) + 25.0*pow(p,2.0) + 8.0*p + 1.0);
+  }
 
 private:
 
@@ -387,8 +398,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _basisFunction ( function ),
   _matrixCLU (),
   _pivotsCLU (),
-  _matrixA ()
+  _matrixA (),
+  _matCLU(PETSC_COMM_SELF, "CLU"),
+  _matA(PETSC_COMM_SELF, "A")
 {
+  PetscInitializeNoArguments();
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
 }
@@ -413,21 +427,40 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
   int inputSize = (int)inMesh->vertices().size();
   int outputSize = (int)outMesh->vertices().size();
+  cout << "computeMapping Input Size " << inputSize << endl;
+  cout << "computeMapping Dimensions " << dimensions << endl;
+  cout << "computeMapping Output Size " << outputSize << endl;
   int polyparams = 1 + dimensions;
+  PetscErrorCode ierr = 0;
   assertion1(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees
+  cout << "n = "  << n << endl;
   _matrixCLU = DynamicMatrix<double>(n, n, 0.0);
   _pivotsCLU.clear();
   _pivotsCLU.append(n, 0);
   _matrixA = DynamicMatrix<double>(outputSize, n, 0.0);
+
+  // ierr = MatCreate(PETSC_COMM_SELF, &_matCLU.matrix); CHKERRV(ierr);
+  _matCLU.reset();
+  ierr = MatSetType(_matCLU.matrix, MATSBAIJ); CHKERRV(ierr); // create symmetric, block sparse matrix.
+  ierr = MatSetSizes(_matCLU.matrix, PETSC_DECIDE, PETSC_DECIDE, n, n); CHKERRV(ierr);
+  ierr = MatSetOption(_matCLU.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
+  ierr = MatSetUp(_matCLU.matrix); CHKERRV(ierr);
+  // ierr = MatCreate(PETSC_COMM_SELF, &_matA.matrix); CHKERRV(ierr);
+  _matA.reset();
+  ierr = MatSetType(_matA.matrix, MATAIJ); CHKERRV(ierr); // create sparse matrix.
+  ierr = MatSetSizes(_matA.matrix, PETSC_DECIDE, PETSC_DECIDE, outputSize, n); CHKERRV(ierr);
+  ierr = MatSetUp(_matA.matrix); CHKERRV(ierr);
+
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
   utils::DynVector distance(dimensions);
-  foreach (const mesh::Vertex& iVertex, inMesh->vertices()){
-    for (int j=iVertex.getID(); j < inputSize; j++){
-      distance = iVertex.getCoords();
-      distance -= inMesh->vertices()[j].getCoords();
+  foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
+    for (int j=iVertex.getID(); j < inputSize; j++) {
+      distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
       _matrixCLU(i,j) = _basisFunction.evaluate(norm2(distance));
+      ierr = MatSetValue(_matCLU.matrix, i, j, _basisFunction.evaluate(norm2(distance)), INSERT_VALUES);
+      CHKERRV(ierr); 
 #     ifdef Asserts
       if (_matrixCLU(i,j) == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "C matrix element has value inf. "
@@ -441,26 +474,32 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 #     endif
     }
     _matrixCLU(i,inputSize) = 1.0;
-    for (int dim=0; dim < dimensions; dim++){
-      _matrixCLU(i,inputSize+1+dim) = iVertex.getCoords()[dim];
+    MatSetValue(_matCLU.matrix, i, inputSize, 1.0, INSERT_VALUES);
+    for (int dim=0; dim < dimensions; dim++) {
+      _matrixCLU(i, inputSize+1+dim) = iVertex.getCoords()[dim];
+      ierr = MatSetValue(_matCLU.matrix, i, inputSize+1+dim, iVertex.getCoords()[dim], INSERT_VALUES); CHKERRV(ierr);
     }
     i++;
   }
+  _matCLU.assemble();
+
   // Copy values of upper right part of C to lower left part
   for (int i=0; i < n; i++){
     for (int j=i+1; j < n; j++){
-      _matrixCLU(j,i) = _matrixCLU(i,j);
+      _matrixCLU(j,i) = _matrixCLU(i,j); // not needed for petsc
     }
   }
-
+  // cout << "================ CLU ================" << endl;
+  // _matrixCLU.print();
+  // _matCLU.view();
   // Fill _matrixA with values
   i = 0;
   foreach (const mesh::Vertex& iVertex, outMesh->vertices()){
     int j = 0;
     foreach (const mesh::Vertex& jVertex, inMesh->vertices()){
-      distance = iVertex.getCoords();
-      distance -= jVertex.getCoords();
+      distance = iVertex.getCoords() - jVertex.getCoords();
       _matrixA(i,j) = _basisFunction.evaluate(norm2(distance));
+      ierr = MatSetValue(_matA.matrix, i, j, _basisFunction.evaluate(norm2(distance)), INSERT_VALUES); CHKERRV(ierr); 
 #     ifdef Asserts
       if (_matrixA(i,j) == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "A matrix element has value inf. "
@@ -477,9 +516,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     _matrixA(i,inputSize) = 1.0;
     for (int dim=0; dim < dimensions; dim++){
       _matrixA(i,inputSize+1+dim) = iVertex.getCoords()[dim];
+      ierr = MatSetValue(_matA.matrix, i, inputSize+1+dim, iVertex.getCoords()[dim], INSERT_VALUES); CHKERRV(ierr); 
     }
     i++;
   }
+  _matA.assemble();
+  // cout << "================= A =================" << endl;
+  // _matrixA.print();
+  // _matA.view();
+  
 
 # ifdef PRECICE_STATISTICS
   static int computeIndex = 0;
@@ -504,7 +549,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
 //  preciceDebug ( "Matrix C = " << _matrixCLU );
   lu(_matrixCLU, _pivotsCLU);  // Compute LU decomposition
-
+  _matrixCLU.print();
   int rankDeficiency = 0;
   for (int i=0; i < n; i++){
     if (equals(_matrixCLU(i,i), 0.0)){
@@ -529,8 +574,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
   preciceTrace("clear()");
   _matrixCLU = tarch::la::DynamicMatrix<double>();
+  _matCLU.reset();
   _pivotsCLU.clear();
   _matrixA = tarch::la::DynamicMatrix<double>();
+  _matA.reset();
   _hasComputedMapping = false;
 }
 
@@ -545,31 +592,47 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
   using namespace tarch::la;
-
+  PetscErrorCode ierr = 0;
+  petsc::Vector inVals(PETSC_COMM_SELF, "Input Values");
+  petsc::Vector outVals(PETSC_COMM_SELF, "Output Values");
   utils::DynVector& inValues = input()->data(inputDataID)->values();
   utils::DynVector& outValues = output()->data(outputDataID)->values();
+
+  inVals.init(input()->data(inputDataID)->values().size());
+  outVals.init(output()->data(outputDataID)->values().size());
+  
   int valueDim = input()->data(inputDataID)->getDimensions();
   assertion2(valueDim == output()->data(outputDataID)->getDimensions(),
              valueDim, output()->data(outputDataID)->getDimensions());
   int polyparams = 1 + input()->getDimensions();
 
-  if (getConstraint() == CONSERVATIVE){
+  if (getConstraint() == CONSERVATIVE) {
     preciceDebug("Map conservative");
     static int mappingIndex = 0;
     DynamicVector<double> Au(_matrixCLU.rows(), 0.0);
     DynamicVector<double> y(_matrixCLU.rows(), 0.0);
     DynamicVector<double> in(_matrixA.rows(), 0.0);
     DynamicVector<double> out(_matrixCLU.rows(), 0.0);
-
+    petsc::Vector vAu(_matCLU, "Au");
+    petsc::Vector vy(_matCLU, "y");
+    petsc::Vector vout(_matCLU, "out");
+    petsc::Vector vin(_matA, "in");
     preciceDebug("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
     preciceDebug("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
     preciceDebug("in size=" << in.size() << ", out size=" << out.size());
 
-    for (int dim=0; dim < valueDim; dim++){
-      for (int i=0; i < in.size(); i++){ // Fill input data values
+    for (int dim=0; dim < valueDim; dim++) {
+      for (int i=0; i < in.size(); i++) { // Fill input data values
         int index = i*valueDim + dim;
         in[i] = inValues[index];
+        vin.setValue(i, inValues[index]);
       }
+      vin.assemble();
+      cout << "Conservative mapping" << endl;
+      vin.view();
+      cout << "in.print():" << endl;
+      in.print();
+      cout << "Print fertig." << endl;
 #     ifdef PRECICE_STATISTICS
       std::ostringstream stream;
       stream << "invec-dim" << dim << "-" << mappingIndex << ".mat";
@@ -577,6 +640,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 #     endif
 
       multiply(transpose(_matrixA), in, Au); // Multiply by transposed of A
+      cout << "Vector Au = ", Au.print();
       // Account for pivoting in LU decomposition of C
       assertion2(Au.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
       for ( int i=0; i < Au.size(); i++ ){
@@ -604,6 +668,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     DynamicVector<double> y(_matrixCLU.rows(), 0.0);
     DynamicVector<double> in(_matrixCLU.rows(), 0.0);
     DynamicVector<double> out(_matrixA.rows(), 0.0);
+    petsc::Vector vp(_matCLU, "p");
+    petsc::Vector vy(_matCLU, "y");
+    petsc::Vector vin(_matCLU, "in");
+    petsc::Vector vout(_matA, "out");
+    // Setup KSP solve here
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++){
       // Fill input from input data values (last polyparams entries remain zero)
@@ -611,18 +680,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
         int index = i*valueDim + dim;
         in[i] = inValues[index];
       }
+      // Do KSPSolve() here
       // Account for pivoting in LU decomposition of C
       assertion2(in.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
-      for (int i=0; i < in.size(); i++){
+      for (int i=0; i < in.size(); i++) {
         double temp = in[i];
         in[i] = in[_pivotsCLU[i]];
         in[_pivotsCLU[i]] = temp;
       }
-      forwardSubstitution(_matrixCLU, in, y);
-      backSubstitution(_matrixCLU, y, p);
-      multiply(_matrixA, p, out );
+      forwardSubstitution(_matrixCLU, in, y); // CLU^-1 * in = y  (lower triangle of CLU)
+      backSubstitution(_matrixCLU, y, p);     // CLU^-1 * y = p (upper triangle of CLU)
+      multiply(_matrixA, p, out );            // out = A * p
       // Copy mapped data to ouptut data values
-      for (int i=0; i < out.size(); i++){
+      for (int i=0; i < out.size(); i++) {
         outValues[i*valueDim + dim] = out[i];
       }
     }

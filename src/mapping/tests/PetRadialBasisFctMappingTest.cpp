@@ -27,14 +27,14 @@ PetRadialBasisFctMappingTest:: PetRadialBasisFctMappingTest()
 
 void PetRadialBasisFctMappingTest:: run()
 {
-  testMethod(testPetThinPlateSplines);
-  testMethod(testPetMultiquadrics);
-  testMethod(testPetInverseMultiquadrics);
-  testMethod(testPetVolumeSplines);
+  // testMethod(testPetThinPlateSplines);
+  // testMethod(testPetMultiquadrics);
+  // testMethod(testPetInverseMultiquadrics);
+  // testMethod(testPetVolumeSplines);
   testMethod(testPetGaussian);
-  testMethod(testPetCompactThinPlateSplinesC2);
-  testMethod(testPetCompactPolynomialC0);
-  testMethod(testPetCompactPolynomialC6);
+  // testMethod(testPetCompactThinPlateSplinesC2);
+//   testMethod(testPetCompactPolynomialC0);
+//   testMethod(testPetCompactPolynomialC6);
 }
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
