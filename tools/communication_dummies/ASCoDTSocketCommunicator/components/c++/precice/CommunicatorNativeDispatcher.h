@@ -38,8 +38,8 @@ class precice::CommunicatorNativeDispatcher: public precice::Communicator{
     void connect(precice::Communicator* ref);
     void disconnect(precice::Communicator* ref);
     bool isConnected() const;
-    void setData(const double* data, const int data_len);  
-    void setDataParallel(const double* data, const int data_len);
+    void setData(const double data,const int index,const int rank,int& tag);  
+    void setDataParallel(const double data,const int index,const int rank,int& tag);
    
 };
 

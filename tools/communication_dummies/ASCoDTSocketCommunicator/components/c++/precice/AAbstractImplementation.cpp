@@ -21,10 +21,10 @@ precice::AAbstractImplementation::~AAbstractImplementation(){
     _b=NULL;
  }
  
-void precice::AAbstractImplementation::initializeVertexesParallel(const int* vertexes, const int vertexes_len){
+void precice::AAbstractImplementation::initializeParallel(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len){
      // @todo Insert your code here
 }
-void precice::AAbstractImplementation::initializeAddressesParallel(const std::string* addresses, const int addresses_len){
+void precice::AAbstractImplementation::acknowledgeParallel(const int identifier,int& tag){
      // @todo Insert your code here
 }
 void precice::AAbstractImplementation::mainParallel(){

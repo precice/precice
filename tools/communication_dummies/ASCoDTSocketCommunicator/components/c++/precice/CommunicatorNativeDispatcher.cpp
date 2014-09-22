@@ -49,13 +49,13 @@ bool precice::CommunicatorNativeDispatcher::isConnected() const{
 }
 
 
-void precice::CommunicatorNativeDispatcher::setData(const double* data, const int data_len){
+void precice::CommunicatorNativeDispatcher::setData(const double data,const int index,const int rank,int& tag){
     for(unsigned int i=0;i<_destinations.size();i++)
-          _destinations[i]->setData(data,data_len);
+          _destinations[i]->setData(data,index,rank,tag);
 }
 
-void precice::CommunicatorNativeDispatcher::setDataParallel(const double* data, const int data_len){
+void precice::CommunicatorNativeDispatcher::setDataParallel(const double data,const int index,const int rank,int& tag){
     for(unsigned int i=0;i<_destinations.size();i++)
-          _destinations[i]->setDataParallel(data,data_len);
+          _destinations[i]->setDataParallel(data,index,rank,tag);
 }
 

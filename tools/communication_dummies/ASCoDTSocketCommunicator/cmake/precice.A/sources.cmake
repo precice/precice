@@ -18,5 +18,6 @@ set(CPP_FILES
 set(CPP_FILES
    	${CPP_FILES}
    ../../src/precice/gatherAddresses.cpp
+   ../../src/precice/cantorPairing.cpp
    ../../components/c++/precice/CommunicatorCxx2SocketPlainPort.cpp 
 )

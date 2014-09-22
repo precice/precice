@@ -38,11 +38,11 @@ class precice::InitializerNativeDispatcher: public precice::Initializer{
     void connect(precice::Initializer* ref);
     void disconnect(precice::Initializer* ref);
     bool isConnected() const;
-    void initializeAddresses(const std::string* addresses, const int addresses_len);  
-    void initializeAddressesParallel(const std::string* addresses, const int addresses_len);
+    void acknowledge(const int identifier,int& tag);  
+    void acknowledgeParallel(const int identifier,int& tag);
    
-    void initializeVertexes(const int* vertexes, const int vertexes_len);  
-    void initializeVertexesParallel(const int* vertexes, const int vertexes_len);
+    void initialize(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len);  
+    void initializeParallel(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len);
    
 };
 

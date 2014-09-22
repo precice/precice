@@ -49,14 +49,14 @@ void precice_communicatorc2socket_plain_port_destroy_instance_(long long *ptr){
 
 
 #ifdef _WIN32
-void PRECICE_COMMUNICATORC2SOCKET_PLAIN_PORT_SETDATA(long long* ref,double* data, int* data_len){
+void PRECICE_COMMUNICATORC2SOCKET_PLAIN_PORT_SETDATA(long long* ref,double* data,int* index,int* rank,int* tag){
      
-     ((precice::CommunicatorCxx2SocketPlainPort*)*ref)->setData(data,*data_len);
+     ((precice::CommunicatorCxx2SocketPlainPort*)*ref)->setData(*data,*index,*rank,*tag);
 }
 #else
-void precice_communicatorc2socket_plain_port_setdata_(long long* ref,double* data, int* data_len){
+void precice_communicatorc2socket_plain_port_setdata_(long long* ref,double* data,int* index,int* rank,int* tag){
      
-     ((precice::CommunicatorCxx2SocketPlainPort*)*ref)->setData(data,*data_len);
+     ((precice::CommunicatorCxx2SocketPlainPort*)*ref)->setData(*data,*index,*rank,*tag);
 }
 #endif
 }

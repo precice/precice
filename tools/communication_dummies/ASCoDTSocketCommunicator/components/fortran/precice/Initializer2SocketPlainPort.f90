@@ -10,8 +10,8 @@ type, public :: Initializer2SocketPort
      procedure,public::create_port_client_instance
      procedure,public::create_port_client_instance_for_c
      procedure,public::destroyPortInstance
-     procedure,public::initializeAddresses
-procedure,public::initializeVertexes
+     procedure,public::acknowledge
+procedure,public::initialize
 
 end type Initializer2SocketPort
 contains
@@ -44,19 +44,9 @@ subroutine destroyPortInstance(this)
 
 end subroutine destroyPortInstance
 
-subroutine initializeVertexes(this,&
+subroutine initialize(this,&
+	addresses,addresses_len,&
 	vertexes,vertexes_len)
-     use, intrinsic :: iso_c_binding
-     class(Initializer2SocketPort)::this
-     	integer,intent(in),dimension(*)::vertexes
-	integer,intent(in)::vertexes_len
-
-     
-     call precice_initializerc2socket_plain_port_initializeVertexes(this%reference,&
-vertexes,vertexes_len)
-end subroutine initializeVertexes
-subroutine initializeAddresses(this,&
-	addresses,addresses_len)
      use, intrinsic :: iso_c_binding
      class(Initializer2SocketPort)::this
      	character(*),intent(in),dimension(*)::addresses
@@ -64,14 +54,30 @@ subroutine initializeAddresses(this,&
 	type(c_ptr),dimension(addresses_len) :: addressesPtrArray
 	integer::addresses_ns
 	character(255), dimension(addresses_len), target :: addressesFSArray
+	integer,intent(in),dimension(*)::vertexes
+	integer,intent(in)::vertexes_len
 	do addresses_ns = 1, addresses_len
 		addressesFSArray(addresses_ns) = addresses(addresses_ns)// C_NULL_CHAR
 		addressesPtrArray(addresses_ns) = C_LOC(addressesFSArray(addresses_ns))
 	end do
 
      
-     call precice_initializerc2socket_plain_port_initializeAddresses(this%reference,&
-addresses,addresses_len)
-end subroutine initializeAddresses
+     call precice_initializerc2socket_plain_port_initialize(this%reference,&
+addresses,addresses_len,&
+vertexes,vertexes_len)
+end subroutine initialize
+subroutine acknowledge(this,&
+	identifier,&
+	tag)
+     use, intrinsic :: iso_c_binding
+     class(Initializer2SocketPort)::this
+     	integer,intent(in)::identifier
+	integer,intent(inout)::tag
+
+     
+     call precice_initializerc2socket_plain_port_acknowledge(this%reference,&
+identifier,&
+tag)
+end subroutine acknowledge
 
 end module  precice_Initializer2SocketPort

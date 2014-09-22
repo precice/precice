@@ -11,12 +11,12 @@ package precice {
   }
   
   interface Initializer {
-  	initializeAddresses(in string addresses[]);
-  	initializeVertexes(in int vertexes[]);
+  	acknowledge(in int identifier, inout int tag);
+  	initialize(in string addresses[], in int vertexes[]);
   }
   
   interface Communicator {
-  	setData(in double data[]);
+  	setData(in double data, in int index, in int rank, inout int tag);
   }
   
   @target = cxx_remote_socket

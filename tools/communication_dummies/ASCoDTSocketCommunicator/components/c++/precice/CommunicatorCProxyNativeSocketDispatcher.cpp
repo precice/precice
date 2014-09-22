@@ -40,13 +40,13 @@ void precice_communicator_f2c_nsd_destroy_instance_(long long* ptr){
 }
 
 #ifdef _WIN32
-void PRECICE_COMMUNICATOR_F2C_NSD_SETDATA(long long* ref,double* data, int* data_len){
+void PRECICE_COMMUNICATOR_F2C_NSD_SETDATA(long long* ref,double* data,int* index,int* rank,int* tag){
 #else
-void precice_communicator_f2c_nsd_setdata_(long long* ref,double* data, int* data_len){
+void precice_communicator_f2c_nsd_setdata_(long long* ref,double* data,int* index,int* rank,int* tag){
 #endif
     
      
-     ((precice::CommunicatorNativeSocketDispatcher*)*ref)->setData(data,*data_len);
+     ((precice::CommunicatorNativeSocketDispatcher*)*ref)->setData(*data,*index,*rank,*tag);
 }
 
 

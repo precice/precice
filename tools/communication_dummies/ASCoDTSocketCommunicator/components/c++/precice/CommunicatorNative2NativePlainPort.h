@@ -33,8 +33,8 @@ class precice::CommunicatorNative2NativePlainPort: public precice::Communicator{
     ~CommunicatorNative2NativePlainPort();
     
     void connect(precice::Communicator*);
-    void setData(const double* data, const int data_len);  
-    void setDataParallel(const double* data, const int data_len);
+    void setData(const double data,const int index,const int rank,int& tag);  
+    void setDataParallel(const double data,const int index,const int rank,int& tag);
    
 };
 

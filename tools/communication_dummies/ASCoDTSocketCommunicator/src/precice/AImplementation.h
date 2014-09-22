@@ -28,21 +28,46 @@ public:
   main();
 
   void
-  initializeAddresses(std::string const* addresses,
-                      int const          addresses_size);
+  task();
+
+  bool
+  initialize();
 
   void
-  initializeVertexes(int const* vertexes,
-                     int const  vertexes_size);
+  acknowledge(int identifier, int& tag);
 
   void
-  send(std::string const address, double const* data, int const data_size);
+  initialize(std::string const* addresses,
+             int                addresses_size,
+             int const*         vertexes,
+             int                vertexes_size);
+
+  void
+  send();
+
+  // void
+  // send(std::string const address, double const* data, int const data_size);
+
+  void
+  send(double data, int index, int b_rank);
 
 private:
   std::vector<std::string> _addresses;
   std::vector<std::string> _b_addresses;
 
-  pthread_mutex_t _mutex;
+  std::vector<int> _vertexes;
+  std::vector<int> _b_vertexes;
+
+  int const _rank;
+  int       _counter;
+
+  std::vector<double> _data;
+
+  pthread_mutex_t _task_mutex;
+
+  pthread_mutex_t _initialize_mutex;
+  pthread_cond_t  _initialize_cond;
+  bool            _initialized;
 };
 
 #endif

@@ -22,7 +22,7 @@
 #include <string.h>
 #include <sstream>
 
-precice::CommunicatorCxx2SocketPlainPort::CommunicatorCxx2SocketPlainPort(char* host,int port,int buffer_size):
+precice::CommunicatorCxx2SocketPlainPort::CommunicatorCxx2SocketPlainPort(char const* host,int port,int buffer_size):
      _buffer_size(buffer_size){
      _rcvBuffer=new char[_buffer_size];
      _sendBuffer=new char[_buffer_size];
@@ -56,7 +56,7 @@ precice::CommunicatorCxx2SocketPlainPort::~CommunicatorCxx2SocketPlainPort(){
 //     return _newsockfd;
 //}
 
-void precice::CommunicatorCxx2SocketPlainPort::open_client(char* hostname,int port,
+void precice::CommunicatorCxx2SocketPlainPort::open_client(char const* hostname,int port,
 #ifdef _WIN32
 SOCKET
 #else
@@ -237,25 +237,28 @@ int
 #endif
 }
 
-void precice::CommunicatorCxx2SocketPlainPort::setData(const double* data, const int data_len){
+void precice::CommunicatorCxx2SocketPlainPort::setData(const double data,const int index,const int rank,int& tag){
      //assert(_destination!=NULL);
      #ifdef _WIN32
 #else
 int flags;
 flags = fcntl(_newsockfd, F_GETFL, 0);
-flags |= O_NONBLOCK;
+flags ^= O_NONBLOCK;
 fcntl(_newsockfd, F_SETFL, flags);
 #endif
 
      int methodId=5;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-     sendData((char*)&data_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-sendData((char*)data,sizeof(double)*data_len,_sendBuffer,_newsockfd,_buffer_size);
+     sendData((char*)&data,sizeof(double),_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)&index,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)&rank,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)&tag,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
 
-     
+     readData((char*)&tag,sizeof(int),_rcvBuffer,_newsockfd,_buffer_size);
+
 }
 
-void precice::CommunicatorCxx2SocketPlainPort::setDataParallel(const double* data, const int data_len){
+void precice::CommunicatorCxx2SocketPlainPort::setDataParallel(const double data,const int index,const int rank,int& tag){
      //assert(_destination!=NULL);
 #ifdef _WIN32
 #else
@@ -266,10 +269,13 @@ void precice::CommunicatorCxx2SocketPlainPort::setDataParallel(const double* dat
 #endif
      int methodId=6;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-     sendData((char*)&data_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
-sendData((char*)data,sizeof(double)*data_len,_sendBuffer,_newsockfd,_buffer_size);
+     sendData((char*)&data,sizeof(double),_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)&index,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)&rank,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
+sendData((char*)&tag,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
 
-     
+     readData((char*)&tag,sizeof(int),_rcvBuffer,_newsockfd,_buffer_size);
+
      //int ack=0;
      //readData((char*)&ack,sizeof(int),_rcvBuffer,_newsockfd,_buffer_size);
          

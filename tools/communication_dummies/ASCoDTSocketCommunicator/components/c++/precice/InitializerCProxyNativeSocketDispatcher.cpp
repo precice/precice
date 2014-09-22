@@ -40,25 +40,25 @@ void precice_initializer_f2c_nsd_destroy_instance_(long long* ptr){
 }
 
 #ifdef _WIN32
-void PRECICE_INITIALIZER_F2C_NSD_INITIALIZEADDRESSES(long long* ref,char** addresses,int* addresses_len){
+void PRECICE_INITIALIZER_F2C_NSD_ACKNOWLEDGE(long long* ref,int* identifier,int* tag){
 #else
-void precice_initializer_f2c_nsd_initializeaddresses_(long long* ref,char** addresses,int* addresses_len){
+void precice_initializer_f2c_nsd_acknowledge_(long long* ref,int* identifier,int* tag){
+#endif
+    
+     
+     ((precice::InitializerNativeSocketDispatcher*)*ref)->acknowledge(*identifier,*tag);
+}
+#ifdef _WIN32
+void PRECICE_INITIALIZER_F2C_NSD_INITIALIZE(long long* ref,char** addresses,int* addresses_len,int* vertexes,int* vertexes_len){
+#else
+void precice_initializer_f2c_nsd_initialize_(long long* ref,char** addresses,int* addresses_len,int* vertexes,int* vertexes_len){
 #endif
     
      std::string* addresses_str=new std::string[*addresses_len];
 for(int i=0;i<*addresses_len;i++)
 addresses_str[i]=addresses[i];
 
-     ((precice::InitializerNativeSocketDispatcher*)*ref)->initializeAddresses(addresses_str,*addresses_len);
-}
-#ifdef _WIN32
-void PRECICE_INITIALIZER_F2C_NSD_INITIALIZEVERTEXES(long long* ref,int* vertexes,int* vertexes_len){
-#else
-void precice_initializer_f2c_nsd_initializevertexes_(long long* ref,int* vertexes,int* vertexes_len){
-#endif
-    
-     
-     ((precice::InitializerNativeSocketDispatcher*)*ref)->initializeVertexes(vertexes,*vertexes_len);
+     ((precice::InitializerNativeSocketDispatcher*)*ref)->initialize(addresses_str,*addresses_len,vertexes,*vertexes_len);
 }
 
 

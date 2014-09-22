@@ -16,10 +16,10 @@ void precice_communicatorc2socket_plain_port_create_server_instance_(long long* 
 void precice_communicatorc2socket_plain_port_destroy_instance_(long long* ptr);
 #endif
 #ifdef _WIN32
-void PRECICE_COMMUNICATORC2SOCKET_PLAIN_PORT_SETDATA(long long* ref,double* data, int* data_len);
+void PRECICE_COMMUNICATORC2SOCKET_PLAIN_PORT_SETDATA(long long* ref,double* data,int* index,int* rank,int* tag);
 
 #else
-void precice_communicatorc2socket_plain_port_setdata_(long long* ref,double* data, int* data_len);
+void precice_communicatorc2socket_plain_port_setdata_(long long* ref,double* data,int* index,int* rank,int* tag);
 
 #endif
 }

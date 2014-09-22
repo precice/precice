@@ -22,7 +22,7 @@
 #include <string.h>
 #include <sstream>
 
-precice::MainCxx2SocketPlainPort::MainCxx2SocketPlainPort(char* host,int port,int buffer_size):
+precice::MainCxx2SocketPlainPort::MainCxx2SocketPlainPort(char const* host,int port,int buffer_size):
      _buffer_size(buffer_size){
      _rcvBuffer=new char[_buffer_size];
      _sendBuffer=new char[_buffer_size];
@@ -56,7 +56,7 @@ precice::MainCxx2SocketPlainPort::~MainCxx2SocketPlainPort(){
 //     return _newsockfd;
 //}
 
-void precice::MainCxx2SocketPlainPort::open_client(char* hostname,int port,
+void precice::MainCxx2SocketPlainPort::open_client(char const* hostname,int port,
 #ifdef _WIN32
 SOCKET
 #else

@@ -46,25 +46,41 @@ subroutine destroyDispatcherInstance(this)
 end subroutine destroyDispatcherInstance
 
 subroutine setData_internal(this,&
-	data,data_len)
+	data,&
+	index,&
+	rank,&
+	tag)
      use, intrinsic :: iso_c_binding
      class(CommunicatorNativeSocketDispatcher)::this
-     	real(kind=c_double),intent(in),dimension(*)::data
-	integer(kind=c_int),intent(in)::data_len
+     	real(kind=c_double),intent(in)::data
+	integer(kind=c_int),intent(in)::index
+	integer(kind=c_int),intent(in)::rank
+	integer(kind=c_int),intent(inout)::tag
 
      call precice_communicator_f2c_nsd_setData(this%reference,&
-data,data_len)
+data,&
+index,&
+rank,&
+tag)
 end subroutine setData_internal
 
 subroutine setData(this,&
-	data,data_len)
+	data,&
+	index,&
+	rank,&
+	tag)
      use, intrinsic :: iso_c_binding
      class(CommunicatorNativeSocketDispatcher)::this
-     	real(8),intent(in),dimension(*)::data
-	integer,intent(in)::data_len
+     	real(8),intent(in)::data
+	integer,intent(in)::index
+	integer,intent(in)::rank
+	integer,intent(inout)::tag
 
      call this%setData_internal(&
-data,data_len)
+data,&
+index,&
+rank,&
+tag)
 end subroutine setData
 
 end module  precice_CommunicatorFNativeSocketDispatcher

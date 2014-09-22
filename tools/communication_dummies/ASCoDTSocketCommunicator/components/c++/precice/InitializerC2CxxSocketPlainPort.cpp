@@ -49,31 +49,31 @@ void precice_initializerc2socket_plain_port_destroy_instance_(long long *ptr){
 
 
 #ifdef _WIN32
-void PRECICE_INITIALIZERC2SOCKET_PLAIN_PORT_INITIALIZEADDRESSES(long long* ref,char** addresses,int* addresses_len){
-     std::string* addresses_str=new std::string[*addresses_len];
-for(int i=0;i<*addresses_len;i++)
-addresses_str[i]=addresses[i];
-
-     ((precice::InitializerCxx2SocketPlainPort*)*ref)->initializeAddresses(addresses_str,*addresses_len);
+void PRECICE_INITIALIZERC2SOCKET_PLAIN_PORT_ACKNOWLEDGE(long long* ref,int* identifier,int* tag){
+     
+     ((precice::InitializerCxx2SocketPlainPort*)*ref)->acknowledge(*identifier,*tag);
 }
 #else
-void precice_initializerc2socket_plain_port_initializeaddresses_(long long* ref,char** addresses,int* addresses_len){
-     std::string* addresses_str=new std::string[*addresses_len];
-for(int i=0;i<*addresses_len;i++)
-addresses_str[i]=addresses[i];
-
-     ((precice::InitializerCxx2SocketPlainPort*)*ref)->initializeAddresses(addresses_str,*addresses_len);
+void precice_initializerc2socket_plain_port_acknowledge_(long long* ref,int* identifier,int* tag){
+     
+     ((precice::InitializerCxx2SocketPlainPort*)*ref)->acknowledge(*identifier,*tag);
 }
 #endif
 #ifdef _WIN32
-void PRECICE_INITIALIZERC2SOCKET_PLAIN_PORT_INITIALIZEVERTEXES(long long* ref,int* vertexes,int* vertexes_len){
-     
-     ((precice::InitializerCxx2SocketPlainPort*)*ref)->initializeVertexes(vertexes,*vertexes_len);
+void PRECICE_INITIALIZERC2SOCKET_PLAIN_PORT_INITIALIZE(long long* ref,char** addresses,int* addresses_len,int* vertexes,int* vertexes_len){
+     std::string* addresses_str=new std::string[*addresses_len];
+for(int i=0;i<*addresses_len;i++)
+addresses_str[i]=addresses[i];
+
+     ((precice::InitializerCxx2SocketPlainPort*)*ref)->initialize(addresses_str,*addresses_len,vertexes,*vertexes_len);
 }
 #else
-void precice_initializerc2socket_plain_port_initializevertexes_(long long* ref,int* vertexes,int* vertexes_len){
-     
-     ((precice::InitializerCxx2SocketPlainPort*)*ref)->initializeVertexes(vertexes,*vertexes_len);
+void precice_initializerc2socket_plain_port_initialize_(long long* ref,char** addresses,int* addresses_len,int* vertexes,int* vertexes_len){
+     std::string* addresses_str=new std::string[*addresses_len];
+for(int i=0;i<*addresses_len;i++)
+addresses_str[i]=addresses[i];
+
+     ((precice::InitializerCxx2SocketPlainPort*)*ref)->initialize(addresses_str,*addresses_len,vertexes,*vertexes_len);
 }
 #endif
 }

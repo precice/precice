@@ -29,7 +29,7 @@ class precice::CommunicatorCxx2SocketPlainPort: public precice::Communicator{
     int _buffer_size;
     char *_rcvBuffer;
     char *_sendBuffer;
-    void open_client(char* hostname,int port,
+    void open_client(char const* hostname,int port,
     #ifdef _WIN32
     SOCKET
     #else
@@ -71,14 +71,14 @@ class precice::CommunicatorCxx2SocketPlainPort: public precice::Communicator{
     #endif 
     &newsockfd);
   public:
-    CommunicatorCxx2SocketPlainPort(char* host,int port,int buffer_size);
+    CommunicatorCxx2SocketPlainPort(char const* host,int port,int buffer_size);
      CommunicatorCxx2SocketPlainPort(int port,int buffer_size);
     ~CommunicatorCxx2SocketPlainPort();
     //int getSockfd();
     //int getNewsockfd();
     
-    void setData(const double* data, const int data_len);  
-    void setDataParallel(const double* data, const int data_len);
+    void setData(const double data,const int index,const int rank,int& tag);  
+    void setDataParallel(const double data,const int index,const int rank,int& tag);
    
 };
 

@@ -44,15 +44,23 @@ subroutine destroyPortInstance(this)
 end subroutine destroyPortInstance
 
 subroutine setData(this,&
-	data,data_len)
+	data,&
+	index,&
+	rank,&
+	tag)
      use, intrinsic :: iso_c_binding
      class(Communicator2SocketPort)::this
-     	real(8),intent(in),dimension(*)::data
-	integer,intent(in)::data_len
+     	real(8),intent(in)::data
+	integer,intent(in)::index
+	integer,intent(in)::rank
+	integer,intent(inout)::tag
 
      
      call precice_communicatorc2socket_plain_port_setData(this%reference,&
-data,data_len)
+data,&
+index,&
+rank,&
+tag)
 end subroutine setData
 
 end module  precice_Communicator2SocketPort

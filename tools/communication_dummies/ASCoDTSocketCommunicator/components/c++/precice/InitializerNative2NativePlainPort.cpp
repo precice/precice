@@ -35,20 +35,20 @@ precice::InitializerNative2NativePlainPort::~InitializerNative2NativePlainPort()
 void precice::InitializerNative2NativePlainPort::connect(precice::Initializer* destination){
   _destination=destination;
 }
-void precice::InitializerNative2NativePlainPort::initializeAddresses(const std::string* addresses, const int addresses_len){
+void precice::InitializerNative2NativePlainPort::acknowledge(const int identifier,int& tag){
      assert(_destination!=NULL);
-     _destination->initializeAddresses(addresses,addresses_len);
+     _destination->acknowledge(identifier,tag);
 }
-void precice::InitializerNative2NativePlainPort::initializeAddressesParallel(const std::string* addresses, const int addresses_len){
+void precice::InitializerNative2NativePlainPort::acknowledgeParallel(const int identifier,int& tag){
      assert(_destination!=NULL);
-     _destination->initializeAddressesParallel(addresses,addresses_len);
+     _destination->acknowledgeParallel(identifier,tag);
 }
-void precice::InitializerNative2NativePlainPort::initializeVertexes(const int* vertexes, const int vertexes_len){
+void precice::InitializerNative2NativePlainPort::initialize(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len){
      assert(_destination!=NULL);
-     _destination->initializeVertexes(vertexes,vertexes_len);
+     _destination->initialize(addresses,addresses_len,vertexes,vertexes_len);
 }
-void precice::InitializerNative2NativePlainPort::initializeVertexesParallel(const int* vertexes, const int vertexes_len){
+void precice::InitializerNative2NativePlainPort::initializeParallel(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len){
      assert(_destination!=NULL);
-     _destination->initializeVertexesParallel(vertexes,vertexes_len);
+     _destination->initializeParallel(addresses,addresses_len,vertexes,vertexes_len);
 }
 

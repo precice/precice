@@ -49,22 +49,22 @@ bool precice::InitializerNativeDispatcher::isConnected() const{
 }
 
 
-void precice::InitializerNativeDispatcher::initializeAddresses(const std::string* addresses, const int addresses_len){
+void precice::InitializerNativeDispatcher::acknowledge(const int identifier,int& tag){
     for(unsigned int i=0;i<_destinations.size();i++)
-          _destinations[i]->initializeAddresses(addresses,addresses_len);
+          _destinations[i]->acknowledge(identifier,tag);
 }
 
-void precice::InitializerNativeDispatcher::initializeAddressesParallel(const std::string* addresses, const int addresses_len){
+void precice::InitializerNativeDispatcher::acknowledgeParallel(const int identifier,int& tag){
     for(unsigned int i=0;i<_destinations.size();i++)
-          _destinations[i]->initializeAddressesParallel(addresses,addresses_len);
+          _destinations[i]->acknowledgeParallel(identifier,tag);
 }
-void precice::InitializerNativeDispatcher::initializeVertexes(const int* vertexes, const int vertexes_len){
+void precice::InitializerNativeDispatcher::initialize(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len){
     for(unsigned int i=0;i<_destinations.size();i++)
-          _destinations[i]->initializeVertexes(vertexes,vertexes_len);
+          _destinations[i]->initialize(addresses,addresses_len,vertexes,vertexes_len);
 }
 
-void precice::InitializerNativeDispatcher::initializeVertexesParallel(const int* vertexes, const int vertexes_len){
+void precice::InitializerNativeDispatcher::initializeParallel(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len){
     for(unsigned int i=0;i<_destinations.size();i++)
-          _destinations[i]->initializeVertexesParallel(vertexes,vertexes_len);
+          _destinations[i]->initializeParallel(addresses,addresses_len,vertexes,vertexes_len);
 }
 

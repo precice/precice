@@ -21,13 +21,13 @@ precice::BAbstractImplementation::~BAbstractImplementation(){
     _a=NULL;
  }
  
-void precice::BAbstractImplementation::setDataParallel(const double* data, const int data_len){
+void precice::BAbstractImplementation::setDataParallel(const double data,const int index,const int rank,int& tag){
      // @todo Insert your code here
 }
-void precice::BAbstractImplementation::initializeVertexesParallel(const int* vertexes, const int vertexes_len){
+void precice::BAbstractImplementation::initializeParallel(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len){
      // @todo Insert your code here
 }
-void precice::BAbstractImplementation::initializeAddressesParallel(const std::string* addresses, const int addresses_len){
+void precice::BAbstractImplementation::acknowledgeParallel(const int identifier,int& tag){
      // @todo Insert your code here
 }
 void precice::BAbstractImplementation::mainParallel(){

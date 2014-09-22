@@ -11,10 +11,10 @@ type, public :: InitializerNativeSocketDispatcher
      procedure,public::destroyDispatcherInstance
      
      
-     	procedure,public::initializeAddresses
-	procedure,private::initializeAddresses_internal
-	procedure,public::initializeVertexes
-	procedure,private::initializeVertexes_internal
+     	procedure,public::acknowledge
+	procedure,private::acknowledge_internal
+	procedure,public::initialize
+	procedure,private::initialize_internal
 
 end type InitializerNativeSocketDispatcher
 contains
@@ -47,40 +47,24 @@ subroutine destroyDispatcherInstance(this)
 
 end subroutine destroyDispatcherInstance
 
-subroutine initializeVertexes_internal(this,&
+subroutine initialize_internal(this,&
+	addresses,addresses_len,&
 	vertexes,vertexes_len)
-     use, intrinsic :: iso_c_binding
-     class(InitializerNativeSocketDispatcher)::this
-     	integer(kind=c_int),intent(in),dimension(*)::vertexes
-	integer(kind=c_int),intent(in)::vertexes_len
-
-     call precice_initializer_f2c_nsd_initializeVertexes(this%reference,&
-vertexes,vertexes_len)
-end subroutine initializeVertexes_internal
-
-subroutine initializeVertexes(this,&
-	vertexes,vertexes_len)
-     use, intrinsic :: iso_c_binding
-     class(InitializerNativeSocketDispatcher)::this
-     	integer,intent(in),dimension(*)::vertexes
-	integer,intent(in)::vertexes_len
-
-     call this%initializeVertexes_internal(&
-vertexes,vertexes_len)
-end subroutine initializeVertexes
-subroutine initializeAddresses_internal(this,&
-	addresses,addresses_len)
      use, intrinsic :: iso_c_binding
      class(InitializerNativeSocketDispatcher)::this
      	integer(kind=c_int),intent(in)::addresses_len
 	type(c_ptr),dimension(*),intent(in)::addresses
+	integer(kind=c_int),intent(in),dimension(*)::vertexes
+	integer(kind=c_int),intent(in)::vertexes_len
 
-     call precice_initializer_f2c_nsd_initializeAddresses(this%reference,&
-addresses,addresses_len)
-end subroutine initializeAddresses_internal
+     call precice_initializer_f2c_nsd_initialize(this%reference,&
+addresses,addresses_len,&
+vertexes,vertexes_len)
+end subroutine initialize_internal
 
-subroutine initializeAddresses(this,&
-	addresses,addresses_len)
+subroutine initialize(this,&
+	addresses,addresses_len,&
+	vertexes,vertexes_len)
      use, intrinsic :: iso_c_binding
      class(InitializerNativeSocketDispatcher)::this
      	character(*),intent(in),dimension(*)::addresses
@@ -88,13 +72,41 @@ subroutine initializeAddresses(this,&
 	type(c_ptr),dimension(addresses_len) :: addressesPtrArray
 	integer::addresses_ns
 	character(255), dimension(addresses_len), target :: addressesFSArray
+	integer,intent(in),dimension(*)::vertexes
+	integer,intent(in)::vertexes_len
 	do addresses_ns = 1, addresses_len
 		addressesFSArray(addresses_ns) = addresses(addresses_ns)// C_NULL_CHAR
 		addressesPtrArray(addresses_ns) = C_LOC(addressesFSArray(addresses_ns))
 	end do
 
-     call this%initializeAddresses_internal(&
-addressesPtrArray,addresses_len)
-end subroutine initializeAddresses
+     call this%initialize_internal(&
+addressesPtrArray,addresses_len,&
+vertexes,vertexes_len)
+end subroutine initialize
+subroutine acknowledge_internal(this,&
+	identifier,&
+	tag)
+     use, intrinsic :: iso_c_binding
+     class(InitializerNativeSocketDispatcher)::this
+     	integer(kind=c_int),intent(in)::identifier
+	integer(kind=c_int),intent(inout)::tag
+
+     call precice_initializer_f2c_nsd_acknowledge(this%reference,&
+identifier,&
+tag)
+end subroutine acknowledge_internal
+
+subroutine acknowledge(this,&
+	identifier,&
+	tag)
+     use, intrinsic :: iso_c_binding
+     class(InitializerNativeSocketDispatcher)::this
+     	integer,intent(in)::identifier
+	integer,intent(inout)::tag
+
+     call this%acknowledge_internal(&
+identifier,&
+tag)
+end subroutine acknowledge
 
 end module  precice_InitializerFNativeSocketDispatcher

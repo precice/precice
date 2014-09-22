@@ -22,8 +22,8 @@ namespace precice {
 class precice::Communicator {
   public:
     virtual ~Communicator(){}
-     virtual void setData(const double* data, const int data_len)=0;
-     virtual void setDataParallel(const double* data, const int data_len)=0;
+     virtual void setData(const double data,const int index,const int rank,int& tag)=0;
+     virtual void setDataParallel(const double data,const int index,const int rank,int& tag)=0;
 
 
 };

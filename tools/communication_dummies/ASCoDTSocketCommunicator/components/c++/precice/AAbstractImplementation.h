@@ -34,8 +34,8 @@ class precice::AAbstractImplementation: public Component ,public precice::Main,p
        void connectb(precice::InitializerNativeDispatcher* port);
        void disconnectb();
  
-		void initializeVertexesParallel(const int* vertexes, const int vertexes_len);
-		void initializeAddressesParallel(const std::string* addresses, const int addresses_len);
+		void initializeParallel(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len);
+		void acknowledgeParallel(const int identifier,int& tag);
 		void mainParallel();
 };     
 

@@ -28,21 +28,53 @@ public:
   main();
 
   void
-  initializeAddresses(std::string const* addresses,
-                      int const          addresses_size);
+  task();
+
+  bool
+  initialize();
 
   void
-  initializeVertexes(int const* vertexes,
-                     int const  vertexes_size);
+  acknowledge(int identifier, int& tag);
 
   void
-  setData(double const* data, int const data_size);
+  initialize(std::string const* addresses,
+             int                addresses_size,
+             int const*         vertexes,
+             int                vertexes_size);
+
+  void
+  receive();
+
+  // void
+  // setData(double const* data, int const data_size);
+
+  void
+  setData(double data, int index, int a_rank, int& tag);
 
 private:
   std::vector<std::string> _addresses;
   std::vector<std::string> _a_addresses;
 
-  pthread_mutex_t _mutex;
+  std::vector<int> _vertexes;
+  std::vector<int> _a_vertexes;
+
+  int const _rank;
+  int       _counter;
+
+  std::vector<double> _data;
+
+  // Prevents multiple overlapping executions of `task()`, what could occur by,
+  // for example, rapidly clicking the start button for the current component
+  // through ASCoDT GUI.
+  pthread_mutex_t _task_mutex;
+
+  pthread_mutex_t _initialize_mutex;
+  pthread_cond_t  _initialize_cond;
+
+  bool _initialized;
+
+  pthread_mutex_t _receive_mutex;
+  pthread_cond_t  _receive_cond;
 };
 
 #endif

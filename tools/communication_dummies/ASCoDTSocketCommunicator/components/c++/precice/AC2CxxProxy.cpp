@@ -369,58 +369,7 @@ void invoker_disconnect_client_dispatcher_b(void** ref,void** dispatcherRef, voi
  ((precice::InitializerNativeDispatcher*)*dispatcherRef)->disconnect((precice::Initializer*)(*portRef));
 }
 
-void invoker_initializeVertexes(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
-#ifdef Parallel
-,MPI_Comm communicator, int methodId
-#endif
-){
-  int vertexes_len=0;
-readData((char*)&vertexes_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
-int* vertexes=new int[vertexes_len];
-readData((char*)vertexes,sizeof(int)*vertexes_len,rcvBuffer,newsockfd,buffer_size);
-
-  ((precice::AImplementation*)*ref)->initializeVertexes(vertexes,vertexes_len);
-  delete [] vertexes;
-
-}
-
-
-void parallel_master_invoker_initializeVertexes(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
-#ifdef Parallel
-,MPI_Comm communicator, int methodId
-#endif
-){
- 	
-  int vertexes_len=0;
-readData((char*)&vertexes_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
-int* vertexes=new int[vertexes_len];
-readData((char*)vertexes,sizeof(int)*vertexes_len,rcvBuffer,newsockfd,buffer_size);
-
-  #ifdef Parallel
-  broadcastParallelData((char*)&methodId,sizeof(int),communicator);
-  broadcastParallelData((char*)&vertexes_len,sizeof(int),communicator);
-broadcastParallelData((char*)vertexes,sizeof(int)*vertexes_len,communicator);
-
-  #endif
-  ((precice::AImplementation*)*ref)->initializeVertexes(vertexes,vertexes_len);
-  //int ack=1;
-  //sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
-}
-void parallel_worker_invoker_initializeVertexes(void** ref
-#ifdef Parallel
-,MPI_Comm newsockfd
-#endif
-){
-  #ifdef Parallel
-  int vertexes_len=0;
-broadcastParallelData((char*)&vertexes_len,sizeof(int),newsockfd);
-int* vertexes=new int[vertexes_len];
-broadcastParallelData((char*)vertexes,sizeof(int)*vertexes_len,newsockfd);
-
-  ((precice::AImplementation*)*ref)->initializeVertexes(vertexes,vertexes_len);
-  #endif		  
-} 
-void invoker_initializeAddresses(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+void invoker_initialize(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
 #ifdef Parallel
 ,MPI_Comm communicator, int methodId
 #endif
@@ -436,14 +385,19 @@ for(int i=0;i<addresses_len;i++){
 	addresses[i][addresses_data_len]='\0';
 	addresses_data[i]=addresses[i];
 }
+int vertexes_len=0;
+readData((char*)&vertexes_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int* vertexes=new int[vertexes_len];
+readData((char*)vertexes,sizeof(int)*vertexes_len,rcvBuffer,newsockfd,buffer_size);
 
-  ((precice::AImplementation*)*ref)->initializeAddresses(addresses_data,addresses_len);
+  ((precice::AImplementation*)*ref)->initialize(addresses_data,addresses_len,vertexes,vertexes_len);
   delete [] addresses;
+delete [] vertexes;
 
 }
 
 
-void parallel_master_invoker_initializeAddresses(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+void parallel_master_invoker_initialize(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
 #ifdef Parallel
 ,MPI_Comm communicator, int methodId
 #endif
@@ -460,6 +414,10 @@ for(int i=0;i<addresses_len;i++){
 	addresses[i][addresses_data_len]='\0';
 	addresses_data[i]=addresses[i];
 }
+int vertexes_len=0;
+readData((char*)&vertexes_len,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int* vertexes=new int[vertexes_len];
+readData((char*)vertexes,sizeof(int)*vertexes_len,rcvBuffer,newsockfd,buffer_size);
 
   #ifdef Parallel
   broadcastParallelData((char*)&methodId,sizeof(int),communicator);
@@ -469,13 +427,15 @@ for(int i=0;i<addresses_len;i++){
 	broadcastParallelData((char*)&addresses_data_len,sizeof(int),communicator);
 	broadcastParallelData((char*)addresses[i],addresses_data_len<255?addresses_data_len:255,communicator);
 }
+broadcastParallelData((char*)&vertexes_len,sizeof(int),communicator);
+broadcastParallelData((char*)vertexes,sizeof(int)*vertexes_len,communicator);
 
   #endif
-  ((precice::AImplementation*)*ref)->initializeAddresses(addresses_data,addresses_len);
+  ((precice::AImplementation*)*ref)->initialize(addresses_data,addresses_len,vertexes,vertexes_len);
   //int ack=1;
   //sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
 }
-void parallel_worker_invoker_initializeAddresses(void** ref
+void parallel_worker_invoker_initialize(void** ref
 #ifdef Parallel
 ,MPI_Comm newsockfd
 #endif
@@ -492,8 +452,63 @@ for(int i=0;i<addresses_len;i++){
 	addresses[i][addresses_data_len]='\0';
 	addresses_data[i]=addresses[i];
 }
+int vertexes_len=0;
+broadcastParallelData((char*)&vertexes_len,sizeof(int),newsockfd);
+int* vertexes=new int[vertexes_len];
+broadcastParallelData((char*)vertexes,sizeof(int)*vertexes_len,newsockfd);
 
-  ((precice::AImplementation*)*ref)->initializeAddresses(addresses_data,addresses_len);
+  ((precice::AImplementation*)*ref)->initialize(addresses_data,addresses_len,vertexes,vertexes_len);
+  #endif		  
+} 
+void invoker_acknowledge(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+#ifdef Parallel
+,MPI_Comm communicator, int methodId
+#endif
+){
+  int identifier;
+readData((char*)&identifier,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int tag;
+readData((char*)&tag,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+
+  ((precice::AImplementation*)*ref)->acknowledge(identifier,tag);
+  sendData((char*)&tag,sizeof(int),sendBuffer,newsockfd,buffer_size);
+
+}
+
+
+void parallel_master_invoker_acknowledge(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+#ifdef Parallel
+,MPI_Comm communicator, int methodId
+#endif
+){
+ 	
+  int identifier;
+readData((char*)&identifier,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int tag;
+readData((char*)&tag,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+
+  #ifdef Parallel
+  broadcastParallelData((char*)&methodId,sizeof(int),communicator);
+  broadcastParallelData((char*)&identifier,sizeof(int),communicator);
+broadcastParallelData((char*)&tag,sizeof(int),communicator);
+
+  #endif
+  ((precice::AImplementation*)*ref)->acknowledge(identifier,tag);
+  //int ack=1;
+  //sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
+}
+void parallel_worker_invoker_acknowledge(void** ref
+#ifdef Parallel
+,MPI_Comm newsockfd
+#endif
+){
+  #ifdef Parallel
+  int identifier;
+broadcastParallelData((char*)&identifier,sizeof(int),newsockfd);
+int tag;
+broadcastParallelData((char*)&tag,sizeof(int),newsockfd);
+
+  ((precice::AImplementation*)*ref)->acknowledge(identifier,tag);
   #endif		  
 } 
 void invoker_main(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
@@ -635,16 +650,20 @@ clientfd,int bufferSize
      invokers[9]=invoker_disconnect_client_dispatcher_b;
 invokers[8]=invoker_connect_client_dispatcher_b;
 invokers[7]=invoker_create_client_port_for_b;
-invokers[13]=parallel_master_invoker_initializeVertexes;
-invokers[12]=invoker_initializeVertexes;
-invokers[11]=parallel_master_invoker_initializeAddresses;
-invokers[10]=invoker_initializeAddresses;
+invokers[13]=parallel_master_invoker_initialize;
+invokers[12]=invoker_initialize;
+invokers[11]=parallel_master_invoker_acknowledge;
+invokers[10]=invoker_acknowledge;
 invokers[18]=parallel_master_invoker_main;
 invokers[17]=invoker_main;
 
      
      while(methodId!=1){
           readData((char*)&methodId,sizeof(int),rcvBuffer,clientfd,bufferSize);
+          
+     if(methodId < 0)
+       break;
+          
           invokers[methodId](&ref,clientfd,bufferSize,rcvBuffer,sendBuffer
 #ifdef Parallel
 	 		,communicator,methodId
@@ -665,8 +684,8 @@ void parallel_worker_loop(void* ref,
 MPI_Comm clientfd){
      void (*parallel_worker_invokers[19])(void**,MPI_Comm);
      int methodId=0;
-     parallel_worker_invokers[12]=parallel_worker_invoker_initializeVertexes;
-parallel_worker_invokers[10]=parallel_worker_invoker_initializeAddresses;
+     parallel_worker_invokers[12]=parallel_worker_invoker_initialize;
+parallel_worker_invokers[10]=parallel_worker_invoker_acknowledge;
 parallel_worker_invokers[17]=parallel_worker_invoker_main;
 
      while(methodId!=1){

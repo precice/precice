@@ -1,16 +1,14 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <diagram>
-    <component xsi:type="socketComponent" host="127.0.0.1" port="50108" name="precice.A" reference="oid0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-        <inputPort className="precice.Main" classId="0" index="758366720"/>
-        <inputPort className="precice.Initializer" classId="1" index="186463284"/>
-        <outputPort xsi:type="usePort" alias="b" createId="7" connectId="8" disconnectId="9" className="b:precice.Initializer" classId="0" index="2040790818"/>
+    <component xsi:type="socketComponent" host="127.0.0.1" port="50000" name="precice.A" reference="oid0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <inputPort className="precice.Main" classId="0" index="2081284649"/>
+        <inputPort className="precice.Initializer" classId="1" index="1196877260"/>
+        <outputPort xsi:type="usePort" alias="b" createId="7" connectId="8" disconnectId="9" className="b:precice.Initializer" classId="0" index="1035681719"/>
     </component>
-    <component xsi:type="socketComponent" host="127.0.0.1" port="50112" name="precice.B" reference="oid1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
-        <inputPort className="precice.Communicator" classId="0" index="740835659"/>
-        <inputPort className="precice.Main" classId="1" index="1062899365"/>
-        <inputPort className="precice.Initializer" classId="2" index="1015091036"/>
-        <outputPort xsi:type="usePort" alias="a" createId="7" connectId="8" disconnectId="9" className="a:precice.Initializer" classId="0" index="16459403"/>
+    <component xsi:type="socketComponent" host="127.0.0.1" port="50004" name="precice.B" reference="oid1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <inputPort className="precice.Communicator" classId="0" index="1030191317"/>
+        <inputPort className="precice.Main" classId="1" index="1081126121"/>
+        <inputPort className="precice.Initializer" classId="2" index="1946962024"/>
+        <outputPort xsi:type="usePort" alias="a" createId="7" connectId="8" disconnectId="9" className="a:precice.Initializer" classId="0" index="443401706"/>
     </component>
-    <connection source="2040790818" destination="1015091036"/>
-    <connection source="16459403" destination="186463284"/>
 </diagram>

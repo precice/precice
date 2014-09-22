@@ -29,7 +29,7 @@ class precice::InitializerCxx2SocketPlainPort: public precice::Initializer{
     int _buffer_size;
     char *_rcvBuffer;
     char *_sendBuffer;
-    void open_client(char* hostname,int port,
+    void open_client(char const* hostname,int port,
     #ifdef _WIN32
     SOCKET
     #else
@@ -71,17 +71,17 @@ class precice::InitializerCxx2SocketPlainPort: public precice::Initializer{
     #endif 
     &newsockfd);
   public:
-    InitializerCxx2SocketPlainPort(char* host,int port,int buffer_size);
+    InitializerCxx2SocketPlainPort(char const* host,int port,int buffer_size);
      InitializerCxx2SocketPlainPort(int port,int buffer_size);
     ~InitializerCxx2SocketPlainPort();
     //int getSockfd();
     //int getNewsockfd();
     
-    void initializeAddresses(const std::string* addresses, const int addresses_len);  
-    void initializeAddressesParallel(const std::string* addresses, const int addresses_len);
+    void acknowledge(const int identifier,int& tag);  
+    void acknowledgeParallel(const int identifier,int& tag);
    
-    void initializeVertexes(const int* vertexes, const int vertexes_len);  
-    void initializeVertexesParallel(const int* vertexes, const int vertexes_len);
+    void initialize(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len);  
+    void initializeParallel(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len);
    
 };
 

@@ -35,12 +35,12 @@ precice::CommunicatorNative2NativePlainPort::~CommunicatorNative2NativePlainPort
 void precice::CommunicatorNative2NativePlainPort::connect(precice::Communicator* destination){
   _destination=destination;
 }
-void precice::CommunicatorNative2NativePlainPort::setData(const double* data, const int data_len){
+void precice::CommunicatorNative2NativePlainPort::setData(const double data,const int index,const int rank,int& tag){
      assert(_destination!=NULL);
-     _destination->setData(data,data_len);
+     _destination->setData(data,index,rank,tag);
 }
-void precice::CommunicatorNative2NativePlainPort::setDataParallel(const double* data, const int data_len){
+void precice::CommunicatorNative2NativePlainPort::setDataParallel(const double data,const int index,const int rank,int& tag){
      assert(_destination!=NULL);
-     _destination->setDataParallel(data,data_len);
+     _destination->setDataParallel(data,index,rank,tag);
 }
 

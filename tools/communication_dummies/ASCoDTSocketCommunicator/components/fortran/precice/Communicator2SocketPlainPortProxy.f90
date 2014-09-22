@@ -15,10 +15,15 @@ subroutine  precice_communicatorc2socket_plain_port_destroy_instance(self) bind(
 end subroutine precice_communicatorc2socket_plain_port_destroy_instance
 
 subroutine  precice_communicatorc2socket_plain_port_setData(self,&
-	data,data_len) bind(c)
+	data,&
+	index,&
+	rank,&
+	tag) bind(c)
      use, intrinsic :: iso_c_binding
      integer(kind=c_long_long)::self
-     	real(kind=c_double),intent(in),dimension(*)::data
-	integer(kind=c_int),intent(in)::data_len
+     	real(kind=c_double),intent(in)::data
+	integer(kind=c_int),intent(in)::index
+	integer(kind=c_int),intent(in)::rank
+	integer(kind=c_int),intent(inout)::tag
 
 end subroutine precice_communicatorc2socket_plain_port_setData

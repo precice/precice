@@ -35,9 +35,9 @@ class precice::BAbstractImplementation: public Component ,public precice::Main,p
        void connecta(precice::InitializerNativeDispatcher* port);
        void disconnecta();
  
-		void setDataParallel(const double* data, const int data_len);
-		void initializeVertexesParallel(const int* vertexes, const int vertexes_len);
-		void initializeAddressesParallel(const std::string* addresses, const int addresses_len);
+		void setDataParallel(const double data,const int index,const int rank,int& tag);
+		void initializeParallel(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len);
+		void acknowledgeParallel(const int identifier,int& tag);
 		void mainParallel();
 };     
 

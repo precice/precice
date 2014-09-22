@@ -39,8 +39,8 @@ class precice::CommunicatorNative2JavaPlainPort: public precice::Communicator{
   public:
     CommunicatorNative2JavaPlainPort(JavaVM* jvm,jobject obj);
     ~CommunicatorNative2JavaPlainPort();
-    void setData(const double* data, const int data_len);  
-    void setDataParallel(const double* data, const int data_len);
+    void setData(const double data,const int index,const int rank,int& tag);  
+    void setDataParallel(const double data,const int index,const int rank,int& tag);
    
 };
 #endif
