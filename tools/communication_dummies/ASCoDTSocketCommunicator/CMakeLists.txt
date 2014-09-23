@@ -22,5 +22,5 @@ option(PARALLEL "Whether to build parallel (MPI-based) implementation." OFF)
 # ==============================================================================
 # }}} Options
 
-add_subdirectory(cmake/precice.B)
 add_subdirectory(cmake/precice.A)
+add_subdirectory(cmake/precice.B)

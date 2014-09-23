@@ -9,7 +9,7 @@ package precice {
   @target = cxx_remote_socket
   class B implements-all precice.Main,
                          precice.Initializer,
-                         precice.Communicator
+                         precice.Receiver
           uses           precice.Initializer as a {
   }
 }

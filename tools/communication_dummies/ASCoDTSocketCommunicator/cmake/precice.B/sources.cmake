@@ -19,4 +19,5 @@ set(CPP_FILES
    	${CPP_FILES}
    ../../src/precice/gatherAddresses.cpp
    ../../src/precice/cantorPairing.cpp
+   ../../components/c++/precice/ReceiverCxx2SocketPlainPort.cpp 
 )

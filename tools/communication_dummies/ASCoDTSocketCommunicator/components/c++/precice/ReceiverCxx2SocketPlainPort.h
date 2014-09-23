@@ -1,7 +1,7 @@
-#ifndef PRECICE_COMMUNICATORCXX2SOCKETPLAINPORT_H_
-#define PRECICE_COMMUNICATORCXX2SOCKETPLAINPORT_H_ 
+#ifndef PRECICE_RECEIVERCXX2SOCKETPLAINPORT_H_
+#define PRECICE_RECEIVERCXX2SOCKETPLAINPORT_H_ 
 
-#include "precice/Communicator.h"
+#include "precice/Receiver.h"
 #include <iostream>
 #include <string>
 #ifdef _WIN32
@@ -9,10 +9,10 @@
 #endif
 namespace precice { 
 
-     class CommunicatorCxx2SocketPlainPort;
+     class ReceiverCxx2SocketPlainPort;
 }
 
-class precice::CommunicatorCxx2SocketPlainPort: public precice::Communicator{
+class precice::ReceiverCxx2SocketPlainPort: public precice::Receiver{
   private:
     #ifdef _WIN32
     SOCKET
@@ -71,14 +71,14 @@ class precice::CommunicatorCxx2SocketPlainPort: public precice::Communicator{
     #endif 
     &newsockfd);
   public:
-    CommunicatorCxx2SocketPlainPort(char const* host,int port,int buffer_size);
-     CommunicatorCxx2SocketPlainPort(int port,int buffer_size);
-    ~CommunicatorCxx2SocketPlainPort();
+    ReceiverCxx2SocketPlainPort(char const* host,int port,int buffer_size);
+     ReceiverCxx2SocketPlainPort(int port,int buffer_size);
+    ~ReceiverCxx2SocketPlainPort();
     //int getSockfd();
     //int getNewsockfd();
     
-    void setData(const double data,const int index,const int rank,int& tag);  
-    void setDataParallel(const double data,const int index,const int rank,int& tag);
+    void receive(const double data,const int index,const int rank,int& tag);  
+    void receiveParallel(const double data,const int index,const int rank,int& tag);
    
 };
 

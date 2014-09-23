@@ -1,7 +1,7 @@
-#ifndef PRECICE_COMMUNICATORNATIVESOCKETDISPATCHER_H_
-#define PRECICE_COMMUNICATORNATIVESOCKETDISPATCHER_H_ 
+#ifndef PRECICE_RECEIVERNATIVESOCKETDISPATCHER_H_
+#define PRECICE_RECEIVERNATIVESOCKETDISPATCHER_H_ 
 
-#include "precice/CommunicatorNativeDispatcher.h"
+#include "precice/ReceiverNativeDispatcher.h"
 #include <iostream>
 #include <vector>
 #ifdef _WIN32
@@ -9,7 +9,7 @@
 #endif
 namespace precice { 
 
-     class CommunicatorNativeSocketDispatcher;
+     class ReceiverNativeSocketDispatcher;
 }
 
 
@@ -27,7 +27,7 @@ namespace precice {
 #endif
 
 
-class precice::CommunicatorNativeSocketDispatcher: public precice::CommunicatorNativeDispatcher{
+class precice::ReceiverNativeSocketDispatcher: public precice::ReceiverNativeDispatcher{
   private:
    
     #ifdef _WIN32
@@ -91,9 +91,9 @@ class precice::CommunicatorNativeSocketDispatcher: public precice::CommunicatorN
 	&newsockfd);
     
   public:
-    CommunicatorNativeSocketDispatcher(char* host,int port,int bufferSize);
-    CommunicatorNativeSocketDispatcher(int port,int bufferSize);
-    ~CommunicatorNativeSocketDispatcher();
+    ReceiverNativeSocketDispatcher(char* host,int port,int bufferSize);
+    ReceiverNativeSocketDispatcher(int port,int bufferSize);
+    ~ReceiverNativeSocketDispatcher();
     void dispatch();
   
     

@@ -1,4 +1,4 @@
-#include "precice/CommunicatorNativeSocketDispatcher.h"
+#include "precice/ReceiverNativeSocketDispatcher.h"
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -24,52 +24,52 @@
 
 #ifdef _WIN32
 #include <windows.h>
-DWORD WINAPI Communicator_dispatch_loop(void *arg){
-     ((precice::CommunicatorNativeSocketDispatcher*) arg)->dispatch();
+DWORD WINAPI Receiver_dispatch_loop(void *arg){
+     ((precice::ReceiverNativeSocketDispatcher*) arg)->dispatch();
 }
 #else
 
 #include <pthread.h>
-void* Communicator_dispatch_loop(void *arg){
-     ((precice::CommunicatorNativeSocketDispatcher*) arg)->dispatch();
+void* Receiver_dispatch_loop(void *arg){
+     ((precice::ReceiverNativeSocketDispatcher*) arg)->dispatch();
 }
 #endif
 
-precice::CommunicatorNativeSocketDispatcher::CommunicatorNativeSocketDispatcher(char* host,int port,int bufferSize):
+precice::ReceiverNativeSocketDispatcher::ReceiverNativeSocketDispatcher(char* host,int port,int bufferSize):
      _buffer_size(bufferSize){
      _rcvBuffer=new char[_buffer_size];
      _sendBuffer=new char[_buffer_size];
      
-     precice::CommunicatorNativeSocketDispatcher::open(host,port,_sockfd,_newsockfd);
+     precice::ReceiverNativeSocketDispatcher::open(host,port,_sockfd,_newsockfd);
      #ifdef _WIN32
-     CreateThread(NULL, 0, Communicator_dispatch_loop, this, 0, NULL);
+     CreateThread(NULL, 0, Receiver_dispatch_loop, this, 0, NULL);
      #else
      pthread_t task;
-     pthread_create(&task, NULL,Communicator_dispatch_loop, this);
+     pthread_create(&task, NULL,Receiver_dispatch_loop, this);
 	 #endif
 }
 
-precice::CommunicatorNativeSocketDispatcher::CommunicatorNativeSocketDispatcher(int port,int bufferSize):
+precice::ReceiverNativeSocketDispatcher::ReceiverNativeSocketDispatcher(int port,int bufferSize):
       _buffer_size(bufferSize){
      _rcvBuffer=new char[_buffer_size];
      _sendBuffer=new char[_buffer_size];
-     //precice::CommunicatorNativeSocketDispatcher::open(port,_sockfd,_newsockfd);
+     //precice::ReceiverNativeSocketDispatcher::open(port,_sockfd,_newsockfd);
       #ifdef _WIN32
-     CreateThread(NULL, 0, Communicator_dispatch_loop, this, 0, NULL);
+     CreateThread(NULL, 0, Receiver_dispatch_loop, this, 0, NULL);
      #else
      pthread_t task;
-     pthread_create(&task, NULL,Communicator_dispatch_loop, this);
+     pthread_create(&task, NULL,Receiver_dispatch_loop, this);
 	 #endif
 }
-precice::CommunicatorNativeSocketDispatcher::~CommunicatorNativeSocketDispatcher(){
+precice::ReceiverNativeSocketDispatcher::~ReceiverNativeSocketDispatcher(){
      delete [] _rcvBuffer;
      delete [] _sendBuffer;
-     precice::CommunicatorNativeSocketDispatcher::close(_sockfd,_newsockfd);
+     precice::ReceiverNativeSocketDispatcher::close(_sockfd,_newsockfd);
      
 }
 
 
-void precice::CommunicatorNativeSocketDispatcher::open(char* hostname,int port,
+void precice::ReceiverNativeSocketDispatcher::open(char* hostname,int port,
 #ifdef _WIN32
     SOCKET
 #else
@@ -111,7 +111,7 @@ void precice::CommunicatorNativeSocketDispatcher::open(char* hostname,int port,
 }
 
 /*
-void precice::CommunicatorNativeSocketDispatcher::open(int port,int &sockfd,int &newsockfd){
+void precice::ReceiverNativeSocketDispatcher::open(int port,int &sockfd,int &newsockfd){
           socklen_t clilen;
 
           struct sockaddr_in serv_addr, cli_addr;
@@ -134,7 +134,7 @@ void precice::CommunicatorNativeSocketDispatcher::open(int port,int &sockfd,int 
 }
 */
 
-void precice::CommunicatorNativeSocketDispatcher::sendData(char* data, size_t numberOfBytes, char* sendBuffer,
+void precice::ReceiverNativeSocketDispatcher::sendData(char* data, size_t numberOfBytes, char* sendBuffer,
 #ifdef _WIN32
     SOCKET
 #else
@@ -178,7 +178,7 @@ newsockfd,int bufferSize){
 }
 
 
-void precice::CommunicatorNativeSocketDispatcher::readData(char* data,size_t size_of_data,char* readBuffer,
+void precice::ReceiverNativeSocketDispatcher::readData(char* data,size_t size_of_data,char* readBuffer,
 #ifdef _WIN32
     SOCKET
 #else
@@ -224,7 +224,7 @@ newsockfd, int bufferSize){
 }
 
 
-void precice::CommunicatorNativeSocketDispatcher::close(
+void precice::ReceiverNativeSocketDispatcher::close(
 #ifdef _WIN32
     SOCKET
 #else
@@ -251,27 +251,27 @@ void precice::CommunicatorNativeSocketDispatcher::close(
 #endif
 }
 
-void connect_Communicator(void* ref,precice::Communicator* port){
+void connect_Receiver(void* ref,precice::Receiver* port){
     
-     ((precice::CommunicatorNativeSocketDispatcher*)ref)->connect(port);
+     ((precice::ReceiverNativeSocketDispatcher*)ref)->connect(port);
 }
 
-void disconnect_Communicator(void* ref,precice::Communicator* port){
-     ((precice::CommunicatorNativeSocketDispatcher*)ref)->disconnect(port);
+void disconnect_Receiver(void* ref,precice::Receiver* port){
+     ((precice::ReceiverNativeSocketDispatcher*)ref)->disconnect(port);
      delete port;
 }
 
-void precice::CommunicatorNativeSocketDispatcher::dispatch(){
+void precice::ReceiverNativeSocketDispatcher::dispatch(){
      int methodId=0;
      long long ref;
-     void (*invokers[2])(void*,precice::Communicator*);
-     invokers[0]=&connect_Communicator;
-     invokers[1]=&disconnect_Communicator;
+     void (*invokers[2])(void*,precice::Receiver*);
+     invokers[0]=&connect_Receiver;
+     invokers[1]=&disconnect_Receiver;
      do{
           readData((char*)&methodId,sizeof(int),_rcvBuffer,_newsockfd,_buffer_size);
           if(methodId!=-1){
                readData((char*)&ref,sizeof(long long),_rcvBuffer,_newsockfd,_buffer_size);
-               (*invokers[methodId])(this,(precice::Communicator*)ref);
+               (*invokers[methodId])(this,(precice::Receiver*)ref);
           }
      }while(methodId!=-1);
 }

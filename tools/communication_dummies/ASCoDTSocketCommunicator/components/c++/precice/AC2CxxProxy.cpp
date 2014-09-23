@@ -369,6 +369,71 @@ void invoker_disconnect_client_dispatcher_b(void** ref,void** dispatcherRef, voi
  ((precice::InitializerNativeDispatcher*)*dispatcherRef)->disconnect((precice::Initializer*)(*portRef));
 }
 
+void invoker_receive(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+#ifdef Parallel
+,MPI_Comm communicator, int methodId
+#endif
+){
+  double data;
+readData((char*)&data,sizeof(double),rcvBuffer,newsockfd,buffer_size);
+int index;
+readData((char*)&index,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int rank;
+readData((char*)&rank,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int tag;
+readData((char*)&tag,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+
+  ((precice::AImplementation*)*ref)->receive(data,index,rank,tag);
+  sendData((char*)&tag,sizeof(int),sendBuffer,newsockfd,buffer_size);
+
+}
+
+
+void parallel_master_invoker_receive(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
+#ifdef Parallel
+,MPI_Comm communicator, int methodId
+#endif
+){
+ 	
+  double data;
+readData((char*)&data,sizeof(double),rcvBuffer,newsockfd,buffer_size);
+int index;
+readData((char*)&index,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int rank;
+readData((char*)&rank,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+int tag;
+readData((char*)&tag,sizeof(int),rcvBuffer,newsockfd,buffer_size);
+
+  #ifdef Parallel
+  broadcastParallelData((char*)&methodId,sizeof(int),communicator);
+  broadcastParallelData((char*)&data,sizeof(double),communicator);
+broadcastParallelData((char*)&index,sizeof(int),communicator);
+broadcastParallelData((char*)&rank,sizeof(int),communicator);
+broadcastParallelData((char*)&tag,sizeof(int),communicator);
+
+  #endif
+  ((precice::AImplementation*)*ref)->receive(data,index,rank,tag);
+  //int ack=1;
+  //sendData((char*)&ack,sizeof(int),sendBuffer,newsockfd,buffer_size);
+}
+void parallel_worker_invoker_receive(void** ref
+#ifdef Parallel
+,MPI_Comm newsockfd
+#endif
+){
+  #ifdef Parallel
+  double data;
+broadcastParallelData((char*)&data,sizeof(double),newsockfd);
+int index;
+broadcastParallelData((char*)&index,sizeof(int),newsockfd);
+int rank;
+broadcastParallelData((char*)&rank,sizeof(int),newsockfd);
+int tag;
+broadcastParallelData((char*)&tag,sizeof(int),newsockfd);
+
+  ((precice::AImplementation*)*ref)->receive(data,index,rank,tag);
+  #endif		  
+} 
 void invoker_initialize(void** ref,int newsockfd, int buffer_size,char* rcvBuffer, char* sendBuffer
 #ifdef Parallel
 ,MPI_Comm communicator, int methodId
@@ -647,15 +712,17 @@ clientfd,int bufferSize
      invokers[0]=invoker_create_instance;
      invokers[1]=invoker_destroy_instance;
      int methodId=0;
-     invokers[9]=invoker_disconnect_client_dispatcher_b;
-invokers[8]=invoker_connect_client_dispatcher_b;
-invokers[7]=invoker_create_client_port_for_b;
-invokers[13]=parallel_master_invoker_initialize;
-invokers[12]=invoker_initialize;
-invokers[11]=parallel_master_invoker_acknowledge;
-invokers[10]=invoker_acknowledge;
-invokers[18]=parallel_master_invoker_main;
-invokers[17]=invoker_main;
+     invokers[4]=invoker_disconnect_client_dispatcher_b;
+invokers[3]=invoker_connect_client_dispatcher_b;
+invokers[2]=invoker_create_client_port_for_b;
+invokers[18]=parallel_master_invoker_receive;
+invokers[17]=invoker_receive;
+invokers[8]=parallel_master_invoker_initialize;
+invokers[7]=invoker_initialize;
+invokers[6]=parallel_master_invoker_acknowledge;
+invokers[5]=invoker_acknowledge;
+invokers[13]=parallel_master_invoker_main;
+invokers[12]=invoker_main;
 
      
      while(methodId!=1){
@@ -684,9 +751,10 @@ void parallel_worker_loop(void* ref,
 MPI_Comm clientfd){
      void (*parallel_worker_invokers[19])(void**,MPI_Comm);
      int methodId=0;
-     parallel_worker_invokers[12]=parallel_worker_invoker_initialize;
-parallel_worker_invokers[10]=parallel_worker_invoker_acknowledge;
-parallel_worker_invokers[17]=parallel_worker_invoker_main;
+     parallel_worker_invokers[17]=parallel_worker_invoker_receive;
+parallel_worker_invokers[7]=parallel_worker_invoker_initialize;
+parallel_worker_invokers[5]=parallel_worker_invoker_acknowledge;
+parallel_worker_invokers[12]=parallel_worker_invoker_main;
 
      while(methodId!=1){
           broadcastParallelData((char*)&methodId,sizeof(int),clientfd);
@@ -717,7 +785,7 @@ void* server_deamon_run(void* daemon_args){
       int clientfd=0;
 #endif
       accept_on_server(((PRECICE_A_arg*)daemon_args)->daemon_serverfd,clientfd);
-      std::cout<<"server accepted"<<std::endl;
+      //std::cout<<"server accepted"<<std::endl;
       socket_worker_loop(
       	((PRECICE_A_arg*)daemon_args)->ref,
       	clientfd,
@@ -790,9 +858,9 @@ void initialiseXMLDaemons(PRECICE_A_arg& arg){
           __gnu_cxx::hash_map<int,void*> dispatchers;
           void (*invokers[19])(void**,void**,void**,char* host,int port,int buffer_size);
           
-           invokers[9]=invoker_disconnect_client_dispatcher_b;
-invokers[8]=invoker_connect_client_dispatcher_b;
-invokers[7]=invoker_create_client_port_for_b;
+           invokers[4]=invoker_disconnect_client_dispatcher_b;
+invokers[3]=invoker_connect_client_dispatcher_b;
+invokers[2]=invoker_create_client_port_for_b;
 
           for(tinyxml2::XMLElement* e = root->FirstChildElement("component"); e != NULL; e = e->NextSiblingElement("component"))
           {
@@ -852,9 +920,9 @@ void initialiseXMLConnections(PRECICE_A_arg& arg){
           __gnu_cxx::hash_map<int,void*> dispatchers;
           void (*invokers[19])(void**,void**,void**,char* host,int port,int buffer_size);
           
-           invokers[9]=invoker_disconnect_client_dispatcher_b;
-invokers[8]=invoker_connect_client_dispatcher_b;
-invokers[7]=invoker_create_client_port_for_b;
+           invokers[4]=invoker_disconnect_client_dispatcher_b;
+invokers[3]=invoker_connect_client_dispatcher_b;
+invokers[2]=invoker_create_client_port_for_b;
 
           for(tinyxml2::XMLElement* e = root->FirstChildElement("component"); e != NULL; e = e->NextSiblingElement("component"))
           {

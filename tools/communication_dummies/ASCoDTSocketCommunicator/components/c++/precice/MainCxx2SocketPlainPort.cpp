@@ -247,7 +247,7 @@ flags |= O_NONBLOCK;
 fcntl(_newsockfd, F_SETFL, flags);
 #endif
 
-     int methodId=17;
+     int methodId=12;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      
      
@@ -262,7 +262,7 @@ void precice::MainCxx2SocketPlainPort::mainParallel(){
      flags ^= O_NONBLOCK;
      fcntl(_newsockfd, F_SETFL, flags);
 #endif
-     int methodId=18;
+     int methodId=13;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      
      

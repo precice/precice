@@ -15,13 +15,14 @@ package precice {
   	initialize(in string addresses[], in int vertexes[]);
   }
   
-  interface Communicator {
-  	setData(in double data, in int index, in int rank, inout int tag);
+  interface Receiver {
+  	receive(in double data, in int index, in int rank, inout int tag);
   }
   
   @target = cxx_remote_socket
   class A implements-all precice.Main,
-                         precice.Initializer
+                         precice.Initializer,
+                         precice.Receiver
           uses           precice.Initializer as b {
   }
 }

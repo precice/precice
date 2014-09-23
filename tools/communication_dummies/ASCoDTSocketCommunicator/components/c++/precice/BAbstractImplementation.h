@@ -12,7 +12,7 @@
 
 #include "precice/Main.h"
 #include "precice/Initializer.h"
-#include "precice/Communicator.h"
+#include "precice/Receiver.h"
 
 #include "Component.h"
 namespace precice { 
@@ -22,7 +22,7 @@ namespace precice {
 
 
 
-class precice::BAbstractImplementation: public Component ,public precice::Main,public precice::Initializer,public precice::Communicator{
+class precice::BAbstractImplementation: public Component ,public precice::Main,public precice::Initializer,public precice::Receiver{
      protected:
        precice::InitializerNativeDispatcher* _a;
    
@@ -35,7 +35,7 @@ class precice::BAbstractImplementation: public Component ,public precice::Main,p
        void connecta(precice::InitializerNativeDispatcher* port);
        void disconnecta();
  
-		void setDataParallel(const double data,const int index,const int rank,int& tag);
+		void receiveParallel(const double data,const int index,const int rank,int& tag);
 		void initializeParallel(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len);
 		void acknowledgeParallel(const int identifier,int& tag);
 		void mainParallel();

@@ -21,7 +21,7 @@ precice::BAbstractImplementation::~BAbstractImplementation(){
     _a=NULL;
  }
  
-void precice::BAbstractImplementation::setDataParallel(const double data,const int index,const int rank,int& tag){
+void precice::BAbstractImplementation::receiveParallel(const double data,const int index,const int rank,int& tag){
      // @todo Insert your code here
 }
 void precice::BAbstractImplementation::initializeParallel(const std::string* addresses, const int addresses_len,const int* vertexes, const int vertexes_len){

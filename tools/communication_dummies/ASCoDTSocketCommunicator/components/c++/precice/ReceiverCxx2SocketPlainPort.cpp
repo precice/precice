@@ -1,4 +1,4 @@
-#include "precice/CommunicatorCxx2SocketPlainPort.h"
+#include "precice/ReceiverCxx2SocketPlainPort.h"
 #ifdef _WIN32
 #include <winsock2.h>
 #include <ws2tcpip.h>
@@ -22,41 +22,41 @@
 #include <string.h>
 #include <sstream>
 
-precice::CommunicatorCxx2SocketPlainPort::CommunicatorCxx2SocketPlainPort(char const* host,int port,int buffer_size):
+precice::ReceiverCxx2SocketPlainPort::ReceiverCxx2SocketPlainPort(char const* host,int port,int buffer_size):
      _buffer_size(buffer_size){
      _rcvBuffer=new char[_buffer_size];
      _sendBuffer=new char[_buffer_size];
-     precice::CommunicatorCxx2SocketPlainPort::open_client(host,port,_sockfd,_newsockfd);
+     precice::ReceiverCxx2SocketPlainPort::open_client(host,port,_sockfd,_newsockfd);
      
 }
 
-precice::CommunicatorCxx2SocketPlainPort::CommunicatorCxx2SocketPlainPort(int port,int buffer_size):
+precice::ReceiverCxx2SocketPlainPort::ReceiverCxx2SocketPlainPort(int port,int buffer_size):
     _buffer_size(buffer_size){
     _rcvBuffer=new char[_buffer_size];
     _sendBuffer=new char[_buffer_size];
-    //precice::CommunicatorCxx2SocketPlainPort::open_server(port,_sockfd,_newsockfd);
+    //precice::ReceiverCxx2SocketPlainPort::open_server(port,_sockfd,_newsockfd);
 }
 
-precice::CommunicatorCxx2SocketPlainPort::~CommunicatorCxx2SocketPlainPort(){
+precice::ReceiverCxx2SocketPlainPort::~ReceiverCxx2SocketPlainPort(){
      int method=-1;
      sendData((char*)&method,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      
      delete [] _rcvBuffer;
      delete [] _sendBuffer;
      
-     precice::CommunicatorCxx2SocketPlainPort::close(_sockfd,_newsockfd);
+     precice::ReceiverCxx2SocketPlainPort::close(_sockfd,_newsockfd);
      
 }
 
 
-//int precice::CommunicatorCxx2SocketPlainPort::getSockfd(){
+//int precice::ReceiverCxx2SocketPlainPort::getSockfd(){
 //     return _sockfd;
 //}
-//int precice::CommunicatorCxx2SocketPlainPort::getNewsockfd(){
+//int precice::ReceiverCxx2SocketPlainPort::getNewsockfd(){
 //     return _newsockfd;
 //}
 
-void precice::CommunicatorCxx2SocketPlainPort::open_client(char const* hostname,int port,
+void precice::ReceiverCxx2SocketPlainPort::open_client(char const* hostname,int port,
 #ifdef _WIN32
 SOCKET
 #else
@@ -98,7 +98,7 @@ int
 }
 
 /*
-void precice::CommunicatorCxx2SocketPlainPort::open_server(int port,int &sockfd,int &newsockfd){
+void precice::ReceiverCxx2SocketPlainPort::open_server(int port,int &sockfd,int &newsockfd){
           socklen_t clilen;
 
           struct sockaddr_in serv_addr, cli_addr;
@@ -121,7 +121,7 @@ void precice::CommunicatorCxx2SocketPlainPort::open_server(int port,int &sockfd,
 }
 */
 
-void precice::CommunicatorCxx2SocketPlainPort::sendData(char* data, size_t numberOfBytes, char* sendBuffer,
+void precice::ReceiverCxx2SocketPlainPort::sendData(char* data, size_t numberOfBytes, char* sendBuffer,
 #ifdef _WIN32
 SOCKET
 #else
@@ -165,7 +165,7 @@ newsockfd,int bufferSize){
 }
 
 
-void precice::CommunicatorCxx2SocketPlainPort::readData(char* data,size_t size_of_data,char* readBuffer,
+void precice::ReceiverCxx2SocketPlainPort::readData(char* data,size_t size_of_data,char* readBuffer,
 #ifdef _WIN32
 SOCKET
 #else
@@ -210,7 +210,7 @@ newsockfd, int bufferSize){
 }
 
 
-void precice::CommunicatorCxx2SocketPlainPort::close(
+void precice::ReceiverCxx2SocketPlainPort::close(
 #ifdef _WIN32
 SOCKET
 #else
@@ -237,7 +237,7 @@ int
 #endif
 }
 
-void precice::CommunicatorCxx2SocketPlainPort::setData(const double data,const int index,const int rank,int& tag){
+void precice::ReceiverCxx2SocketPlainPort::receive(const double data,const int index,const int rank,int& tag){
      //assert(_destination!=NULL);
      #ifdef _WIN32
 #else
@@ -247,7 +247,7 @@ flags ^= O_NONBLOCK;
 fcntl(_newsockfd, F_SETFL, flags);
 #endif
 
-     int methodId=5;
+     int methodId=17;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      sendData((char*)&data,sizeof(double),_sendBuffer,_newsockfd,_buffer_size);
 sendData((char*)&index,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
@@ -258,7 +258,7 @@ sendData((char*)&tag,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
 
 }
 
-void precice::CommunicatorCxx2SocketPlainPort::setDataParallel(const double data,const int index,const int rank,int& tag){
+void precice::ReceiverCxx2SocketPlainPort::receiveParallel(const double data,const int index,const int rank,int& tag){
      //assert(_destination!=NULL);
 #ifdef _WIN32
 #else
@@ -267,7 +267,7 @@ void precice::CommunicatorCxx2SocketPlainPort::setDataParallel(const double data
      flags ^= O_NONBLOCK;
      fcntl(_newsockfd, F_SETFL, flags);
 #endif
-     int methodId=6;
+     int methodId=18;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      sendData((char*)&data,sizeof(double),_sendBuffer,_newsockfd,_buffer_size);
 sendData((char*)&index,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);

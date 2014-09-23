@@ -42,32 +42,47 @@ public:
              int const*         vertexes,
              int                vertexes_size);
 
-  void
+  bool
   send();
 
-  // void
-  // send(std::string const address, double const* data, int const data_size);
-
-  void
+  bool
   send(double data, int index, int b_rank);
 
+  void
+  receive();
+
+  void
+  receive(double data, int index, int b_rank, int& tag);
+
+  bool
+  validate();
+
 private:
-  std::vector<std::string> _addresses;
-  std::vector<std::string> _b_addresses;
-
-  std::vector<int> _vertexes;
-  std::vector<int> _b_vertexes;
-
   int const _rank;
-  int       _counter;
+
+  std::vector<std::string> _addresses;
+  std::vector<int>         _vertexes;
+
+  std::vector<std::string> _b_addresses;
+  std::vector<int>         _b_vertexes;
 
   std::vector<double> _data;
 
+  int _counter;
+
+  bool _initialized;
+  bool _received;
+
+  // Prevents multiple overlapping executions of `task()`, what could occur by,
+  // for example, rapidly clicking the start button for the current component
+  // through ASCoDT GUI.
   pthread_mutex_t _task_mutex;
 
   pthread_mutex_t _initialize_mutex;
   pthread_cond_t  _initialize_cond;
-  bool            _initialized;
+
+  pthread_mutex_t _receive_mutex;
+  pthread_cond_t  _receive_cond;
 };
 
 #endif

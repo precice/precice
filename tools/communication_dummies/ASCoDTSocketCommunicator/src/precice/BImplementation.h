@@ -42,26 +42,36 @@ public:
              int const*         vertexes,
              int                vertexes_size);
 
+  bool
+  send();
+
+  bool
+  send(double data, int index, int a_rank);
+
   void
   receive();
 
-  // void
-  // setData(double const* data, int const data_size);
+  void
+  receive(double data, int index, int a_rank, int& tag);
 
   void
-  setData(double data, int index, int a_rank, int& tag);
+  process();
 
 private:
-  std::vector<std::string> _addresses;
-  std::vector<std::string> _a_addresses;
-
-  std::vector<int> _vertexes;
-  std::vector<int> _a_vertexes;
-
   int const _rank;
-  int       _counter;
+
+  std::vector<std::string> _addresses;
+  std::vector<int>         _vertexes;
+
+  std::vector<std::string> _a_addresses;
+  std::vector<int>         _a_vertexes;
 
   std::vector<double> _data;
+
+  int _counter;
+
+  bool _initialized;
+  bool _received;
 
   // Prevents multiple overlapping executions of `task()`, what could occur by,
   // for example, rapidly clicking the start button for the current component
@@ -70,8 +80,6 @@ private:
 
   pthread_mutex_t _initialize_mutex;
   pthread_cond_t  _initialize_cond;
-
-  bool _initialized;
 
   pthread_mutex_t _receive_mutex;
   pthread_cond_t  _receive_cond;

@@ -1,9 +1,9 @@
-module precice_CommunicatorFNativeSocketDispatcher
+module precice_ReceiverFNativeSocketDispatcher
 use, intrinsic :: iso_c_binding
 implicit none
 
 
-type, public :: CommunicatorNativeSocketDispatcher
+type, public :: ReceiverNativeSocketDispatcher
      integer(kind=c_long_long )::reference
      contains
      procedure,public::createClientDispatcherInstanceForC
@@ -11,25 +11,25 @@ type, public :: CommunicatorNativeSocketDispatcher
      procedure,public::destroyDispatcherInstance
      
      
-     	procedure,public::setData
-	procedure,private::setData_internal
+     	procedure,public::receive
+	procedure,private::receive_internal
 
-end type CommunicatorNativeSocketDispatcher
+end type ReceiverNativeSocketDispatcher
 contains
 subroutine createClientDispatcherInstanceForC(this,host,port,buffer_size)
-    class(CommunicatorNativeSocketDispatcher)::this
+    class(ReceiverNativeSocketDispatcher)::this
     character(kind=c_char),dimension(*)::host
     integer(kind=c_int)::port
     integer(kind=c_int)::buffer_size
     this%reference=0
-    call precice_communicator_f2c_nsd_create_client_instance(this%reference,host,port,buffer_size)
+    call precice_receiver_f2c_nsd_create_client_instance(this%reference,host,port,buffer_size)
     
     
 
 end subroutine createClientDispatcherInstanceForC
 
 subroutine createClientDispatcherInstance(this,host,port,buffer_size)
-    class(CommunicatorNativeSocketDispatcher)::this
+    class(ReceiverNativeSocketDispatcher)::this
     character(*)::host
     integer::port
     integer::buffer_size
@@ -40,47 +40,47 @@ subroutine createClientDispatcherInstance(this,host,port,buffer_size)
 end subroutine createClientDispatcherInstance
 
 subroutine destroyDispatcherInstance(this)
-     class(CommunicatorNativeSocketDispatcher)::this
-     call precice_communicator_f2c_nsd_destroy_instance(this%reference)
+     class(ReceiverNativeSocketDispatcher)::this
+     call precice_receiver_f2c_nsd_destroy_instance(this%reference)
 
 end subroutine destroyDispatcherInstance
 
-subroutine setData_internal(this,&
+subroutine receive_internal(this,&
 	data,&
 	index,&
 	rank,&
 	tag)
      use, intrinsic :: iso_c_binding
-     class(CommunicatorNativeSocketDispatcher)::this
+     class(ReceiverNativeSocketDispatcher)::this
      	real(kind=c_double),intent(in)::data
 	integer(kind=c_int),intent(in)::index
 	integer(kind=c_int),intent(in)::rank
 	integer(kind=c_int),intent(inout)::tag
 
-     call precice_communicator_f2c_nsd_setData(this%reference,&
+     call precice_receiver_f2c_nsd_receive(this%reference,&
 data,&
 index,&
 rank,&
 tag)
-end subroutine setData_internal
+end subroutine receive_internal
 
-subroutine setData(this,&
+subroutine receive(this,&
 	data,&
 	index,&
 	rank,&
 	tag)
      use, intrinsic :: iso_c_binding
-     class(CommunicatorNativeSocketDispatcher)::this
+     class(ReceiverNativeSocketDispatcher)::this
      	real(8),intent(in)::data
 	integer,intent(in)::index
 	integer,intent(in)::rank
 	integer,intent(inout)::tag
 
-     call this%setData_internal(&
+     call this%receive_internal(&
 data,&
 index,&
 rank,&
 tag)
-end subroutine setData
+end subroutine receive
 
-end module  precice_CommunicatorFNativeSocketDispatcher
+end module  precice_ReceiverFNativeSocketDispatcher

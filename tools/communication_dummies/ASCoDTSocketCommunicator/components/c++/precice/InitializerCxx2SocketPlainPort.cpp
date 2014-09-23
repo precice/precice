@@ -247,7 +247,7 @@ flags ^= O_NONBLOCK;
 fcntl(_newsockfd, F_SETFL, flags);
 #endif
 
-     int methodId=10;
+     int methodId=5;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      sendData((char*)&identifier,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
 sendData((char*)&tag,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
@@ -265,7 +265,7 @@ void precice::InitializerCxx2SocketPlainPort::acknowledgeParallel(const int iden
      flags ^= O_NONBLOCK;
      fcntl(_newsockfd, F_SETFL, flags);
 #endif
-     int methodId=11;
+     int methodId=6;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      sendData((char*)&identifier,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
 sendData((char*)&tag,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
@@ -286,7 +286,7 @@ flags |= O_NONBLOCK;
 fcntl(_newsockfd, F_SETFL, flags);
 #endif
 
-     int methodId=12;
+     int methodId=7;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      sendData((char*)&addresses_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
 for(int i=0;i<addresses_len;i++){
@@ -309,7 +309,7 @@ void precice::InitializerCxx2SocketPlainPort::initializeParallel(const std::stri
      flags ^= O_NONBLOCK;
      fcntl(_newsockfd, F_SETFL, flags);
 #endif
-     int methodId=13;
+     int methodId=8;
      sendData((char*) &methodId, sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
      sendData((char*)&addresses_len,sizeof(int),_sendBuffer,_newsockfd,_buffer_size);
 for(int i=0;i<addresses_len;i++){
