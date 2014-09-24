@@ -74,23 +74,15 @@ void IQNILSPostProcessing:: initialize
 {
   preciceTrace1("initialize()", cplData.size());
   size_t entries=0;
-  if(_dataIDs.size() == 1){
-    preciceCheck(utils::contained(_dataIDs[0], cplData), "initialize()",
-                 "Data with ID " << _dataIDs[0] << " is not contained in data "
+
+  for(size_t i=0;i<_dataIDs.size();i++){
+    preciceCheck(utils::contained(_dataIDs[i], cplData), "initialize()",
+                 "Data with ID " << _dataIDs[i] << " is not contained in data "
                  "given at initialization!");
-    entries = cplData[_dataIDs[0]]->values->size();
+    entries += cplData[_dataIDs[i]]->values->size();
   }
-  else{
-    assertion1(_dataIDs.size()==2, _dataIDs.size());
-    preciceCheck(utils::contained(_dataIDs[0], cplData), "initialize()",
-                 "Data with ID " << _dataIDs[0] << " is not contained in data "
-                 "given at initialization!");
-    preciceCheck(utils::contained(_dataIDs[1], cplData), "initialize()",
-                 "Data with ID " << _dataIDs[1] << " is not contained in data "
-                 "given at initialization!");
-    entries = cplData[_dataIDs[0]]->values->size() +
-              cplData[_dataIDs[1]]->values->size();
-  }
+
+
 
   assertion(entries > 0);
   double init = 0.0;
