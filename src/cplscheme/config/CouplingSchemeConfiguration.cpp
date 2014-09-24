@@ -219,7 +219,8 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double limit = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT
+        || _config.type == VALUE_MULTI);
     addAbsoluteConvergenceMeasure(dataName, meshName, limit, suffices);
   }
   else if ( tag.getName() == TAG_REL_CONV_MEASURE ) {
@@ -227,7 +228,8 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double limit = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT
+        || _config.type == VALUE_MULTI);
     addRelativeConvergenceMeasure(dataName, meshName, limit, suffices);
   }
   else if ( tag.getName() == TAG_RES_REL_CONV_MEASURE ) {
@@ -235,7 +237,8 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     double limit = tag.getDoubleAttributeValue(ATTR_LIMIT);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT
+        || _config.type == VALUE_MULTI);
     addResidualRelativeConvergenceMeasure(dataName, meshName, limit, suffices);
   }
   else if ( tag.getName() == TAG_MIN_ITER_CONV_MEASURE ) {
@@ -243,7 +246,8 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string meshName = tag.getStringAttributeValue(ATTR_MESH);
     int minIterations = tag.getIntAttributeValue(ATTR_MIN_ITERATIONS);
     bool suffices = tag.getBooleanAttributeValue(ATTR_SUFFICES);
-    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT
+        || _config.type == VALUE_MULTI);
     addMinIterationConvergenceMeasure(dataName, meshName, minIterations, suffices);
   }
   else if (tag.getName() == TAG_EXCHANGE){
@@ -274,11 +278,13 @@ void CouplingSchemeConfiguration:: xmlTagCallback
                   nameParticipantFrom,nameParticipantTo, initialize));
   }
   else if (tag.getName() == TAG_MAX_ITERATIONS){
-    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT
+        || _config.type == VALUE_MULTI);
     _config.maxIterations = tag.getIntAttributeValue(ATTR_VALUE);
   }
   else if (tag.getName() == TAG_EXTRAPOLATION){
-    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT);
+    assertion(_config.type == VALUE_SERIAL_IMPLICIT || _config.type == VALUE_PARALLEL_IMPLICIT
+        || _config.type == VALUE_MULTI);
     _config.extrapolationOrder = tag.getIntAttributeValue(ATTR_VALUE);
   }
 }
@@ -899,13 +905,14 @@ void CouplingSchemeConfiguration:: addDataToBeExchanged
     const std::string& from = get<1>(tuple);
     const std::string& to = get<2>(tuple);
 
-    preciceCheck(to == from,"addDataToBeExchanged()",
+    preciceCheck(to != from,"addDataToBeExchanged()",
         "You cannot define an exchange from and to the same participant");
 
-    if (from.compare(_config.participants[0]) && from.compare(_config.participants[1])){
+    if (not(utils::contained(from, _config.participants) || from == _config.controller)){
       throw std::string("Participant \"" + from + "\" is not configured for coupling scheme");
     }
-    if (to.compare(_config.participants[0]) && to.compare(_config.participants[1])){
+
+    if (not(utils::contained(to, _config.participants) || to == _config.controller)){
       throw std::string("Participant \"" + to + "\" is not configured for coupling scheme");
     }
 
@@ -928,17 +935,18 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
   MultiCouplingScheme& scheme,
   const std::string&  accessor) const
 {
+  preciceTrace ( "addMultiDataToBeExchanged()");
   using boost::get;
   foreach (const Config::Exchange& tuple, _config.exchanges){
     mesh::PtrData data = get<0>(tuple);
     const std::string& from = get<1>(tuple);
     const std::string& to = get<2>(tuple);
 
-    if (utils::contained(from, _config.participants) || from == _config.controller){
+    if (not(utils::contained(from, _config.participants) || from == _config.controller)){
       throw std::string("Participant \"" + from + "\" is not configured for coupling scheme");
     }
 
-    if (utils::contained(to, _config.participants) || to == _config.controller){
+    if (not(utils::contained(to, _config.participants) || to == _config.controller)){
       throw std::string("Participant \"" + to + "\" is not configured for coupling scheme");
     }
 
@@ -946,27 +954,30 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
     if (from == accessor){
       int index = 0;
       foreach(const std::string& participant, _config.participants){
+        preciceDebug("from: " << from << ", to: " << to << ", participant: " << participant);
         if(to == participant){
           break;
         }
         index++;
       }
-      assertion(index < static_cast<int>(_config.participants.size()));
+      assertion2(index < _config.participants.size(), index, _config.participants.size());
       scheme.addDataToSend(data, initialize, index);
     }
     else {
       int index = 0;
       foreach(const std::string& participant, _config.participants){
-        if(to == participant){
+        preciceDebug("from: " << from << ", to: " << to << ", participant: " << participant);
+        if(from == participant){
           break;
         }
         index++;
       }
-      assertion(index< static_cast<int>(_config.participants.size()));
+      assertion2(index < _config.participants.size(), index, _config.participants.size());
       scheme.addDataToReceive(data, initialize, index);
     }
   }
 }
+
 
 
 

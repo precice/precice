@@ -123,8 +123,6 @@ void IQNILSPostProcessing:: performPostProcessing
 {
   preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
   using namespace tarch::la;
-  // There is already a preciceCheck in cplscheme->initialize
-  assertion1(_dataIDs.size()<=2 && _dataIDs.size()>=1, _dataIDs.size());
   assertion2(_dataIDs.size() == _scalings.size(), _dataIDs.size(), _scalings.size());
   assertion2(_oldResiduals.size() == _oldXTilde.size(),
              _oldResiduals.size(), _oldXTilde.size());

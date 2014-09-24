@@ -49,6 +49,8 @@ protected:
 private:
   void sendData();
   void receiveData();
+  void setupConvergenceMeasures();
+  CouplingData* getData ( int dataID );
 
   /// @brief Communication device to the other coupling participant.
   std::vector<com::PtrCommunication> _communications;

@@ -47,8 +47,9 @@ void MultiCouplingScheme::initialize
   setTime(startTime);
   setTimesteps(startTimestep);
 
-  setupConvergenceMeasures(); // needs _couplingData configured
+
   mergeData(); // merge send and receive data for all pp calls
+  setupConvergenceMeasures(); // needs _couplingData configured
   setupDataMatrices(_allData); // Reserve memory and initialize data with zero
   if (getPostProcessing().get() != NULL) {
     preciceCheck(getPostProcessing()->getDataIDs().size()>=3 ,"initialize()",
@@ -288,6 +289,33 @@ void MultiCouplingScheme:: receiveData()
       }
     }
   }
+}
+
+
+void MultiCouplingScheme::setupConvergenceMeasures()
+{
+  preciceTrace("setupConvergenceMeasures()");
+  assertion(not doesFirstStep());
+  preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
+         "At least one convergence measure has to be defined for "
+         << "an implicit coupling scheme!");
+  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
+    int dataID = convMeasure.dataID;
+    convMeasure.data = getData(dataID);
+    assertion(convMeasure.data != NULL);
+  }
+}
+
+CouplingData* MultiCouplingScheme:: getData
+(
+  int dataID)
+{
+  preciceTrace1("getData()", dataID);
+  DataMap::iterator iter = _allData.find(dataID);
+  if (iter != _allData.end()) {
+    return  &(*(iter->second));
+  }
+  return NULL;
 }
 
 }}
