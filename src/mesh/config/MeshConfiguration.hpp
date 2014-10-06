@@ -91,6 +91,14 @@ public:
 
   void addMesh ( const mesh::PtrMesh& mesh );
 
+  std::map<std::string, std::vector<std::string> >& getNeededMeshes(){
+    return _neededMeshes;
+  }
+
+  void addNeededMesh(
+    const std::string& participant,
+    const std::string& mesh);
+
 private:
 
 //  struct ConfiguredMesh
@@ -136,6 +144,9 @@ private:
 
   // @brief Mesh name -> spacetree name the geometry uses.
   std::map<std::string,std::string> _spacetreeNames;
+
+  // @brief to check later if all meshes that any coupling scheme needs are actually used by the participants
+  std::map<std::string,std::vector<std::string> > _neededMeshes;
 };
 
 }} // namespace precice, mesh

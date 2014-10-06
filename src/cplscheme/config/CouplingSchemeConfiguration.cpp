@@ -39,7 +39,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
 (
   utils::XMLTag&                            parent,
   const mesh::PtrMeshConfiguration&         meshConfig,
-  const com::PtrCommunicationConfiguration& comConfig )
+  const com::PtrCommunicationConfiguration& comConfig)
 :
   TAG("coupling-scheme"),
   TAG_PARTICIPANTS("participants"),
@@ -635,8 +635,20 @@ void CouplingSchemeConfiguration:: addTagPostProcessing
 {
   preciceTrace1( "addTagPostProcessing()",tag.getFullName());
   if(_postProcConfig.get()==NULL){
+    std::string controllerName;
+    if(_config.type == VALUE_MULTI){
+      preciceCheck(_config.controller!="","addDataToBeExchanged()",
+            "You can only add a post processing after defining coupling participants");
+      controllerName = _config.controller;
+    }
+    else{
+      preciceCheck(_config.participants.size()>=2,"addDataToBeExchanged()",
+            "You can only add a post processing after defining coupling participants");
+      controllerName = _config.participants[1];
+    }
     _postProcConfig = PtrPostProcessingConfiguration(
-                          new PostProcessingConfiguration(_meshConfig));
+                          new PostProcessingConfiguration(_meshConfig,
+                          controllerName));
   }
   _postProcConfig->connectTags(tag);
 
@@ -654,6 +666,14 @@ void CouplingSchemeConfiguration:: addAbsoluteConvergenceMeasure
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
   int dataID = getData(dataName, meshName)->getID();
   _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, measure));
+
+  preciceCheck(_config.participants.size()>=2,"addDataToBeExchanged()",
+      "You can only add convergence measures after defining coupling participants");
+  if(_config.type == VALUE_MULTI){
+    _meshConfig->addNeededMesh(_config.controller,meshName);
+  } else{
+    _meshConfig->addNeededMesh(_config.participants[1],meshName);
+  }
 }
 
 void CouplingSchemeConfiguration:: addRelativeConvergenceMeasure
@@ -667,6 +687,14 @@ void CouplingSchemeConfiguration:: addRelativeConvergenceMeasure
       new impl::RelativeConvergenceMeasure(limit) );
   int dataID = getData(dataName, meshName)->getID();
   _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, measure));
+
+  preciceCheck(_config.participants.size()>=2,"addDataToBeExchanged()",
+      "You can only add convergence measures after defining coupling participants");
+  if(_config.type == VALUE_MULTI){
+    _meshConfig->addNeededMesh(_config.controller,meshName);
+  } else{
+    _meshConfig->addNeededMesh(_config.participants[1],meshName);
+  }
 }
 
 void CouplingSchemeConfiguration:: addResidualRelativeConvergenceMeasure
@@ -680,6 +708,14 @@ void CouplingSchemeConfiguration:: addResidualRelativeConvergenceMeasure
       new impl::ResidualRelativeConvergenceMeasure(limit) );
   int dataID = getData(dataName, meshName)->getID();
   _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, measure));
+
+  preciceCheck(_config.participants.size()>=2,"addDataToBeExchanged()",
+      "You can only add convergence measures after defining coupling participants");
+  if(_config.type == VALUE_MULTI){
+    _meshConfig->addNeededMesh(_config.controller,meshName);
+  } else{
+    _meshConfig->addNeededMesh(_config.participants[1],meshName);
+  }
 }
 
 void CouplingSchemeConfiguration:: addMinIterationConvergenceMeasure
@@ -694,6 +730,13 @@ void CouplingSchemeConfiguration:: addMinIterationConvergenceMeasure
   int dataID = getData(dataName, meshName)->getID();
   _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, measure));
 
+  preciceCheck(_config.participants.size()>=2,"addDataToBeExchanged()",
+      "You can only add convergence measures after defining coupling participants");
+  if(_config.type == VALUE_MULTI){
+    _meshConfig->addNeededMesh(_config.controller,meshName);
+  } else{
+    _meshConfig->addNeededMesh(_config.participants[1],meshName);
+  }
 }
 
 mesh::PtrData CouplingSchemeConfiguration:: getData
@@ -916,6 +959,9 @@ void CouplingSchemeConfiguration:: addDataToBeExchanged
       throw std::string("Participant \"" + to + "\" is not configured for coupling scheme");
     }
 
+    _meshConfig->addNeededMesh(from, data->mesh()->getName());
+    _meshConfig->addNeededMesh(to, data->mesh()->getName());
+
     bool initialize = get<3>(tuple);
     if (from == accessor){
       scheme.addDataToSend(data, initialize);
@@ -950,6 +996,9 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
       throw std::string("Participant \"" + to + "\" is not configured for coupling scheme");
     }
 
+    _meshConfig->addNeededMesh(from, data->mesh()->getName());
+    _meshConfig->addNeededMesh(to, data->mesh()->getName());
+
     bool initialize = get<3>(tuple);
     if (from == accessor){
       int index = 0;
@@ -977,6 +1026,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
     }
   }
 }
+
 
 
 

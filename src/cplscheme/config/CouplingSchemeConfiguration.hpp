@@ -53,7 +53,7 @@ public:
   CouplingSchemeConfiguration (
     utils::XMLTag&                            parent,
     const mesh::PtrMeshConfiguration&         meshConfig,
-    const com::PtrCommunicationConfiguration& comConfig );
+    const com::PtrCommunicationConfiguration& comConfig);
 
   /**
    * @brief Destructor, empty.
@@ -91,6 +91,7 @@ public:
   void addCouplingScheme (
     PtrCouplingScheme  cplScheme,
     const std::string& participantName );
+
 
 private:
 

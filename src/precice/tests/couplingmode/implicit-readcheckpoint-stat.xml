@@ -40,8 +40,8 @@
          <max-iterations value="100"/>
          <min-iteration-convergence-measure 
             min-iterations="5" data="Velocities" mesh="Square"/>
-         <exchange data="Forces"     mesh="Square" from="SolverOne"/>
-         <exchange data="Velocities" mesh="Square" from="SolverTwo"/>
+         <exchange data="Forces"     mesh="Square" from="SolverOne" to="SolverTwo"/>
+         <exchange data="Velocities" mesh="Square" from="SolverTwo" to="SolverOne"/>
       </coupling-scheme:serial-implicit>                           
                   
    </solver-interface>

@@ -23,7 +23,8 @@ public:
     * @brief Constructor.
     */
    PostProcessingConfiguration (
-     const mesh::PtrMeshConfiguration& meshConfig );
+     const mesh::PtrMeshConfiguration& meshConfig,
+     const std::string& controllerName);
 
    /**
     * @brief Parses the XML information in xmlReader to a configuration.
@@ -89,6 +90,8 @@ private:
    std::string _meshName;
 
    impl::PtrPostProcessing _postProcessing;
+
+   const std::string& _controllerName;
 
    struct ConfigurationData
    {
