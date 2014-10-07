@@ -29,8 +29,7 @@ tarch::logging::Log PostProcessingConfiguration::
 
 PostProcessingConfiguration:: PostProcessingConfiguration
 (
-  const mesh::PtrMeshConfiguration& meshConfig,
-  const std::string& controllerName)
+  const mesh::PtrMeshConfiguration& meshConfig)
 :
   TAG("post-processing"),
   TAG_RELAX("relaxation" ),
@@ -50,7 +49,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   //_isValid(false),
   _meshConfig(meshConfig),
   _postProcessing(),
-  _controllerName(controllerName),
+  _neededMeshes(),
   _config()
 {
   assertion(meshConfig.get() != NULL);
@@ -171,7 +170,7 @@ void PostProcessingConfiguration:: xmlTagCallback
     }
 
 
-    _meshConfig->addNeededMesh(_controllerName,_meshName);
+    _neededMeshes.push_back(_meshName);
 
 
   }

@@ -158,7 +158,7 @@ private:
     typedef boost::tuple<mesh::PtrData,std::string, std::string,bool> Exchange;
     std::vector<Exchange> exchanges;
     // @brief Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<boost::tuple<int,bool,impl::PtrConvergenceMeasure> > convMeasures;
+    std::vector<boost::tuple<int,bool,std::string,impl::PtrConvergenceMeasure> > convMeasures;
     int maxIterations;
     int extrapolationOrder;
 
@@ -294,9 +294,12 @@ private:
     MultiCouplingScheme& scheme,
     const std::string&  accessor) const;
 
+  void checkIfDataIsExchanged(
+    int dataID) const;
 
-   friend class tests::SerialImplicitCouplingSchemeTest; // For whitebox tests
-   friend class tests::ParallelImplicitCouplingSchemeTest; // For whitebox tests
+
+  friend class tests::SerialImplicitCouplingSchemeTest; // For whitebox tests
+  friend class tests::ParallelImplicitCouplingSchemeTest; // For whitebox tests
 
 };
 

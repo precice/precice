@@ -157,9 +157,9 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
                           " needs to use the mesh " << neededMesh <<
                           " if he wants to exchange data in the coupling scheme.");
             }
+            participantFound = true;
+            break;
           }
-          participantFound = true;
-          break;
         }
         assertion(participantFound);
       }

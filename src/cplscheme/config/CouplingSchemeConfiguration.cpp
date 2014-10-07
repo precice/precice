@@ -274,6 +274,8 @@ void CouplingSchemeConfiguration:: xmlTagCallback
              << "\" not defined at definition of coupling scheme";
       throw stream.str();
     }
+    _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
+    _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
     _config.exchanges.push_back(boost::make_tuple(exchangeData,
                   nameParticipantFrom,nameParticipantTo, initialize));
   }
@@ -635,24 +637,10 @@ void CouplingSchemeConfiguration:: addTagPostProcessing
 {
   preciceTrace1( "addTagPostProcessing()",tag.getFullName());
   if(_postProcConfig.get()==NULL){
-    std::string controllerName;
-    if(_config.type == VALUE_MULTI){
-      preciceCheck(_config.controller!="","addDataToBeExchanged()",
-            "You can only add a post processing after defining coupling participants");
-      controllerName = _config.controller;
-    }
-    else{
-      preciceCheck(_config.participants.size()>=2,"addDataToBeExchanged()",
-            "You can only add a post processing after defining coupling participants");
-      controllerName = _config.participants[1];
-    }
     _postProcConfig = PtrPostProcessingConfiguration(
-                          new PostProcessingConfiguration(_meshConfig,
-                          controllerName));
+                          new PostProcessingConfiguration(_meshConfig));
   }
   _postProcConfig->connectTags(tag);
-
-
 }
 
 
@@ -663,17 +651,10 @@ void CouplingSchemeConfiguration:: addAbsoluteConvergenceMeasure
   double             limit,
   bool               suffices )
 {
+  preciceTrace( "addAbsoluteConvergenceMeasure()");
   impl::PtrConvergenceMeasure measure(new impl::AbsoluteConvergenceMeasure(limit));
   int dataID = getData(dataName, meshName)->getID();
-  _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, measure));
-
-  preciceCheck(_config.participants.size()>=2,"addDataToBeExchanged()",
-      "You can only add convergence measures after defining coupling participants");
-  if(_config.type == VALUE_MULTI){
-    _meshConfig->addNeededMesh(_config.controller,meshName);
-  } else{
-    _meshConfig->addNeededMesh(_config.participants[1],meshName);
-  }
+  _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, meshName, measure));
 }
 
 void CouplingSchemeConfiguration:: addRelativeConvergenceMeasure
@@ -683,18 +664,11 @@ void CouplingSchemeConfiguration:: addRelativeConvergenceMeasure
   double             limit,
   bool               suffices )
 {
+  preciceTrace( "addRelativeConvergenceMeasure()");
   impl::PtrConvergenceMeasure measure (
       new impl::RelativeConvergenceMeasure(limit) );
   int dataID = getData(dataName, meshName)->getID();
-  _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, measure));
-
-  preciceCheck(_config.participants.size()>=2,"addDataToBeExchanged()",
-      "You can only add convergence measures after defining coupling participants");
-  if(_config.type == VALUE_MULTI){
-    _meshConfig->addNeededMesh(_config.controller,meshName);
-  } else{
-    _meshConfig->addNeededMesh(_config.participants[1],meshName);
-  }
+  _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, meshName, measure));
 }
 
 void CouplingSchemeConfiguration:: addResidualRelativeConvergenceMeasure
@@ -704,18 +678,11 @@ void CouplingSchemeConfiguration:: addResidualRelativeConvergenceMeasure
   double             limit,
   bool               suffices )
 {
+  preciceTrace( "addResidualRelativeConvergenceMeasure()");
   impl::PtrConvergenceMeasure measure (
       new impl::ResidualRelativeConvergenceMeasure(limit) );
   int dataID = getData(dataName, meshName)->getID();
-  _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, measure));
-
-  preciceCheck(_config.participants.size()>=2,"addDataToBeExchanged()",
-      "You can only add convergence measures after defining coupling participants");
-  if(_config.type == VALUE_MULTI){
-    _meshConfig->addNeededMesh(_config.controller,meshName);
-  } else{
-    _meshConfig->addNeededMesh(_config.participants[1],meshName);
-  }
+  _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, meshName, measure));
 }
 
 void CouplingSchemeConfiguration:: addMinIterationConvergenceMeasure
@@ -725,18 +692,11 @@ void CouplingSchemeConfiguration:: addMinIterationConvergenceMeasure
   int                minIterations,
   bool               suffices )
 {
+  preciceTrace( "addMinIterationConvergenceMeasure()");
   impl::PtrConvergenceMeasure measure (
       new impl::MinIterationConvergenceMeasure(minIterations) );
   int dataID = getData(dataName, meshName)->getID();
-  _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, measure));
-
-  preciceCheck(_config.participants.size()>=2,"addDataToBeExchanged()",
-      "You can only add convergence measures after defining coupling participants");
-  if(_config.type == VALUE_MULTI){
-    _meshConfig->addNeededMesh(_config.controller,meshName);
-  } else{
-    _meshConfig->addNeededMesh(_config.participants[1],meshName);
-  }
+  _config.convMeasures.push_back(boost::make_tuple(dataID, suffices, meshName, measure));
 }
 
 mesh::PtrData CouplingSchemeConfiguration:: getData
@@ -762,6 +722,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
 (
   const std::string& accessor ) const
 {
+  preciceTrace1("createSerialExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
@@ -780,6 +741,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
 (
   const std::string& accessor ) const
 {
+  preciceTrace1("createParallelExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
@@ -798,7 +760,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
 (
   const std::string& accessor ) const
 {
-  preciceTrace("createImplicitCouplingScheme()");
+  preciceTrace1("createSerialImplicitCouplingScheme()", accessor);
   //assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
 
   com::PtrCommunication com = _comConfig->getCommunication (
@@ -817,12 +779,21 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
   for (size_t i=0; i < _config.convMeasures.size(); i++){
     int dataID = get<0>(_config.convMeasures[i]);
     bool suffices = get<1>(_config.convMeasures[i]);
-    impl::PtrConvergenceMeasure measure = get<2>(_config.convMeasures[i]);
+    std::string neededMesh = get<2>(_config.convMeasures[i]);
+    impl::PtrConvergenceMeasure measure = get<3>(_config.convMeasures[i]);
+    _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
+    checkIfDataIsExchanged(dataID);
     scheme->addConvergenceMeasure(dataID, suffices, measure);
   }
 
   // Set relaxation parameters
   if (_postProcConfig->getPostProcessing().get() != NULL){
+    foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
+      _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
+    }
+    foreach(const int dataID, _postProcConfig->getPostProcessing()->getDataIDs() ){
+      checkIfDataIsExchanged(dataID);
+    }
     scheme->setIterationPostProcessing(_postProcConfig->getPostProcessing());
   }
   return PtrCouplingScheme(scheme);
@@ -832,8 +803,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 (
   const std::string& accessor ) const
 {
-  preciceTrace1 ( "createParallelImplicitCouplingScheme()",
-          _postProcConfig->getPostProcessing() );
+  preciceTrace1("createParallelImplicitCouplingScheme()", accessor);
   assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
   com::PtrCommunication com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
@@ -851,12 +821,21 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
   for (size_t i=0; i < _config.convMeasures.size(); i++){
     int dataID = get<0>(_config.convMeasures[i]);
     bool suffices = get<1>(_config.convMeasures[i]);
-    impl::PtrConvergenceMeasure measure = get<2>(_config.convMeasures[i]);
+    std::string neededMesh = get<2>(_config.convMeasures[i]);
+    impl::PtrConvergenceMeasure measure = get<3>(_config.convMeasures[i]);
+    _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
+    checkIfDataIsExchanged(dataID);
     scheme->addConvergenceMeasure(dataID, suffices, measure);
   }
 
   // Set relaxation parameters
   if (_postProcConfig->getPostProcessing().get() != NULL){
+    foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
+      _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
+    }
+    foreach(const int dataID, _postProcConfig->getPostProcessing()->getDataIDs() ){
+      checkIfDataIsExchanged(dataID);
+    }
     scheme->setIterationPostProcessing(_postProcConfig->getPostProcessing());
   }
   return PtrCouplingScheme(scheme);
@@ -866,8 +845,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
 (
   const std::string& accessor ) const
 {
-  preciceTrace1 ( "createMultiCouplingScheme()",
-          _postProcConfig->getPostProcessing() );
+  preciceTrace1("createMultiCouplingScheme()", accessor);
   assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
 
   BaseCouplingScheme* scheme;
@@ -907,12 +885,22 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
   for (size_t i=0; i < _config.convMeasures.size(); i++){
     int dataID = get<0>(_config.convMeasures[i]);
     bool suffices = get<1>(_config.convMeasures[i]);
-    impl::PtrConvergenceMeasure measure = get<2>(_config.convMeasures[i]);
+    std::string neededMesh = get<2>(_config.convMeasures[i]);
+    impl::PtrConvergenceMeasure measure = get<3>(_config.convMeasures[i]);
+    _meshConfig->addNeededMesh(_config.controller,neededMesh);
+    checkIfDataIsExchanged(dataID);
     scheme->addConvergenceMeasure(dataID, suffices, measure);
   }
 
   // Set relaxation parameters
   if (_postProcConfig->getPostProcessing().get() != NULL){
+    foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
+      _meshConfig->addNeededMesh(_config.controller,neededMesh);
+    }
+    foreach(const int dataID, _postProcConfig->getPostProcessing()->getDataIDs() ){
+      checkIfDataIsExchanged(dataID);
+    }
+
     scheme->setIterationPostProcessing(_postProcConfig->getPostProcessing());
   }
   return PtrCouplingScheme(scheme);
@@ -942,6 +930,7 @@ void CouplingSchemeConfiguration:: addDataToBeExchanged
   BaseCouplingScheme& scheme,
   const std::string&  accessor) const
 {
+  preciceTrace ( "addDataToBeExchanged()");
   using boost::get;
   foreach (const Config::Exchange& tuple, _config.exchanges){
     mesh::PtrData data = get<0>(tuple);
@@ -958,9 +947,6 @@ void CouplingSchemeConfiguration:: addDataToBeExchanged
     if (not(utils::contained(to, _config.participants) || to == _config.controller)){
       throw std::string("Participant \"" + to + "\" is not configured for coupling scheme");
     }
-
-    _meshConfig->addNeededMesh(from, data->mesh()->getName());
-    _meshConfig->addNeededMesh(to, data->mesh()->getName());
 
     bool initialize = get<3>(tuple);
     if (from == accessor){
@@ -996,9 +982,6 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
       throw std::string("Participant \"" + to + "\" is not configured for coupling scheme");
     }
 
-    _meshConfig->addNeededMesh(from, data->mesh()->getName());
-    _meshConfig->addNeededMesh(to, data->mesh()->getName());
-
     bool initialize = get<3>(tuple);
     if (from == accessor){
       int index = 0;
@@ -1025,6 +1008,23 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
       scheme.addDataToReceive(data, initialize, index);
     }
   }
+}
+
+void CouplingSchemeConfiguration:: checkIfDataIsExchanged
+(
+  int dataID) const
+{
+  bool hasFound = false;
+  using boost::get;
+  foreach (const Config::Exchange& tuple, _config.exchanges){
+    mesh::PtrData data = get<0>(tuple);
+    if( data->getID()==dataID){
+      hasFound = true;
+    }
+  }
+  preciceCheck(hasFound,"checkIfDataIsExchanged()",
+        "You need to exchange every data that you use for convergence measures"
+        <<" and/or the iteration post-processing");
 }
 
 

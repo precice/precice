@@ -266,6 +266,7 @@ void MeshConfiguration:: addNeededMesh(
   const std::string& participant,
   const std::string& mesh)
 {
+  preciceTrace2 ( "addNeededMesh()", participant, mesh );
   if(_neededMeshes.count(participant)==0){
     std::vector<std::string> meshes;
     meshes.push_back(mesh);
