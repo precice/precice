@@ -61,8 +61,8 @@ void SolverInterfaceTest:: run()
       testMethod(testImplicitWithCheckpointingMappingStat);
 #     endif // not PRECICE_NO_SPIRIT2
       testMethod(testStationaryMappingWithSolverMesh);
-      //TODO uncomment
-      //testMethod(testBug);
+      //TODO not working no riemann (benjamin's laptop)
+      testMethod(testBug);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
