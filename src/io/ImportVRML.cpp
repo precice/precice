@@ -98,7 +98,6 @@ void ImportVRML:: doImport
                    i + 1, vrmlParser.coordinates.size());
         vertices += &mesh.createVertex(wrap<2,double>(&vrmlParser.coordinates[i]));
       }
-      std::cout << "DEBUG1 :" << vertices.size() << std::endl;
       // Construct edge indices from parsed data.
       // The parsed data has the form: i0, ..., in, -1, i0, ..., im, -1, ...., -1
       //assertion(vrmlParser.indices.size() > 2);
@@ -134,6 +133,33 @@ void ImportVRML:: doImport
         mesh::Edge& edge1 = getEdge(*v1, *v2, mesh, adjacencyList);
         mesh::Edge& edge2 = getEdge(*v2, *v0, mesh, adjacencyList);
         mesh.createTriangle(edge0, edge1, edge2);
+      }
+    }
+  }
+  else{
+    //for provided meshes, no vertices need to be created,
+    //but we check if the once given by the user coincide with the once read from file
+
+    preciceCheck(vrmlParser.coordinates.size()/dimensions == mesh.vertices().size(),
+        "doImport()",
+        "For the mesh " << mesh.getName() << ", " << mesh.vertices().size()
+        << " vertices were set, while " << vrmlParser.coordinates.size()/dimensions
+        << " vertices are read from file for restart.");
+    if (dimensions == 2){
+      for (size_t i=0; i < mesh.vertices().size(); i++){
+        preciceCheck((mesh.vertices()[i].getCoords()[0] == vrmlParser.coordinates[i*2])
+             && (mesh.vertices()[i].getCoords()[1] == vrmlParser.coordinates[i*2+1])                                                                ,
+            "doImport()","For mesh " << mesh.getName() << " the vertices that were set"
+            << " do not coincide with those read from file.");
+      }
+    }
+    else { // 3D
+      for (size_t i=0; i < mesh.vertices().size(); i++){
+        preciceCheck((mesh.vertices()[i].getCoords()[0] == vrmlParser.coordinates[i*3])
+             && (mesh.vertices()[i].getCoords()[1] == vrmlParser.coordinates[i*3+1])
+             && (mesh.vertices()[i].getCoords()[2] == vrmlParser.coordinates[i*3+2])   ,
+            "doImport()","For mesh " << mesh.getName() << " the vertices that were set"
+            << " do not coincide with those read from file.");
       }
     }
   }
