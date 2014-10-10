@@ -23,7 +23,7 @@ public:
     * @brief Constructor.
     */
    PostProcessingConfiguration (
-     const mesh::PtrMeshConfiguration& meshConfig );
+     const mesh::PtrMeshConfiguration& meshConfig);
 
    /**
     * @brief Parses the XML information in xmlReader to a configuration.
@@ -60,6 +60,10 @@ public:
    */
    void connectTags( utils::XMLTag& tag );
 
+   std::vector<std::string>& getNeededMeshes(){
+     return _neededMeshes;
+   }
+
 private:
 
    static tarch::logging::Log _log;
@@ -89,6 +93,8 @@ private:
    std::string _meshName;
 
    impl::PtrPostProcessing _postProcessing;
+
+   std::vector<std::string> _neededMeshes;
 
    struct ConfigurationData
    {

@@ -61,6 +61,7 @@ void SolverInterfaceTest:: run()
       testMethod(testImplicitWithCheckpointingMappingStat);
 #     endif // not PRECICE_NO_SPIRIT2
       testMethod(testStationaryMappingWithSolverMesh);
+      //TODO not working no riemann (benjamin's laptop)
       testMethod(testBug);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
@@ -72,6 +73,17 @@ void SolverInterfaceTest:: run()
     if (Par::getProcessRank() <= 2){
       Par::setGlobalCommunicator(comm);
       testMethod(testThreeSolvers);
+      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+    }
+  }
+  Par::synchronizeProcesses();
+  if (Par::getCommunicatorSize() > 3){
+    std::vector<int> ranksWanted;
+    ranksWanted += 0, 1, 2 , 3;
+    MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    if (Par::getProcessRank() <= 3){
+      Par::setGlobalCommunicator(comm);
+      testMethod(testMultiCoupling);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -1508,6 +1520,163 @@ void SolverInterfaceTest:: runThreeSolvers
     precice.finalize();
     validateEquals(callsOfAdvance, expectedCallsOfAdvance[2]);
   }
+}
+
+void SolverInterfaceTest:: testMultiCoupling()
+{
+  preciceTrace("testMultiCoupling()");
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+
+  mesh::Mesh::resetGeometryIDsGlobally();
+
+  std::vector<utils::DynVector> positions;
+  utils::DynVector position(2);
+  assignList(position) = 0.0, 0.0;
+  positions.push_back(position);
+  assignList(position) = 1.0, 0.0;
+  positions.push_back(position);
+  assignList(position) = 1.0, 1.0;
+  positions.push_back(position);
+  assignList(position) = 0.0, 1.0;
+  positions.push_back(position);
+
+  std::vector<utils::DynVector> datas;
+  utils::DynVector data(2);
+  assignList(data) = 1.0, 1.0;
+  datas.push_back(data);
+  assignList(data) = 2.0, 2.0;
+  datas.push_back(position);
+  assignList(data) = 3.0, 3.0;
+  datas.push_back(data);
+  assignList(data) = 4.0, 5.0;
+  datas.push_back(data);
+
+  std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
+  std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
+
+  if (utils::Parallel::getProcessRank() < 3){
+    int meshID = -1;
+    int dataWriteID = -1;
+    int dataReadID = -1;
+
+    std::string participant = "";
+
+    if (utils::Parallel::getProcessRank() == 0){
+      participant = "SOLIDZ1";
+    }
+    else if (utils::Parallel::getProcessRank() == 1){
+      participant = "SOLIDZ2";
+    }
+    else if (utils::Parallel::getProcessRank() == 2){
+      participant = "SOLIDZ3";
+    }
+
+    SolverInterface precice(participant, 0, 1);
+    configureSolverInterface(_pathToTests + "/multi.xml", precice);
+    validateEquals(precice.getDimensions(),2);
+
+    if (utils::Parallel::getProcessRank() == 0){
+      meshID = precice.getMeshID("SOLIDZ_Mesh1");
+      dataWriteID = precice.getDataID("Displacements1", meshID);
+      dataReadID = precice.getDataID("Forces1", meshID);
+    }
+    else if (utils::Parallel::getProcessRank() == 1){
+      meshID = precice.getMeshID("SOLIDZ_Mesh2");
+      dataWriteID = precice.getDataID("Displacements2", meshID);
+      dataReadID = precice.getDataID("Forces2", meshID);
+    }
+    else if (utils::Parallel::getProcessRank() == 2){
+      meshID = precice.getMeshID("SOLIDZ_Mesh3");
+      dataWriteID = precice.getDataID("Displacements3", meshID);
+      dataReadID = precice.getDataID("Forces3", meshID);
+    }
+
+    std::vector<int> vertexIDs;
+    int vertexID = -1;
+    for (size_t i=0; i < 4; i++){
+      vertexID = precice.setMeshVertex(meshID, raw(positions[i]));
+      vertexIDs.push_back(vertexID);
+    }
+
+    precice.initialize();
+
+    for (size_t i=0; i < 4; i++){
+      precice.writeVectorData(dataWriteID, vertexIDs[i], raw(datas[i]));
+    }
+
+    if (precice.isActionRequired(writeIterCheckpoint)){
+      precice.fulfilledAction(writeIterCheckpoint);
+    }
+    precice.advance(0.0001);
+    if (precice.isActionRequired(readIterCheckpoint)){
+      precice.fulfilledAction(readIterCheckpoint);
+    }
+
+    for (size_t i=0; i < 4; i++){
+      precice.readVectorData(dataReadID, vertexIDs[i], raw(datas[i]));
+    }
+
+    validateNumericalEquals(datas[0][0],1.00000000000000002082e-03);
+    validateNumericalEquals(datas[0][1],1.00000000000000002082e-03);
+    validateNumericalEquals(datas[1][0],0.00000000000000000000e+00);
+    validateNumericalEquals(datas[1][1],1.00000000000000002082e-03);
+    validateNumericalEquals(datas[2][0],3.00000000000000006245e-03);
+    validateNumericalEquals(datas[2][1],3.00000000000000006245e-03);
+    validateNumericalEquals(datas[3][0],4.00000000000000008327e-03);
+    validateNumericalEquals(datas[3][1],5.00000000000000010408e-03);
+
+    //precice.finalize();
+
+  }
+  else {
+    assertion(utils::Parallel::getProcessRank() == 3);
+    SolverInterface precice("NASTIN", 0, 1);
+    configureSolverInterface(_pathToTests + "/multi.xml", precice);
+    validateEquals(precice.getDimensions(),2);
+    int meshID1 = precice.getMeshID("NASTIN_Mesh1");
+    int meshID2 = precice.getMeshID("NASTIN_Mesh2");
+    int meshID3 = precice.getMeshID("NASTIN_Mesh3");
+    int dataWriteID1 = precice.getDataID("Forces1", meshID1);
+    int dataWriteID2 = precice.getDataID("Forces2", meshID2);
+    int dataWriteID3 = precice.getDataID("Forces3", meshID3);
+
+    std::vector<int> vertexIDs1;
+    int vertexID = -1;
+    for (size_t i=0; i < 4; i++){
+      vertexID = precice.setMeshVertex(meshID1, raw(positions[i]));
+      vertexIDs1.push_back(vertexID);
+    }
+    std::vector<int> vertexIDs2;
+    for (size_t i=0; i < 4; i++){
+      vertexID = precice.setMeshVertex(meshID2, raw(positions[i]));
+      vertexIDs2.push_back(vertexID);
+    }
+    std::vector<int> vertexIDs3;
+    for (size_t i=0; i < 4; i++){
+      vertexID = precice.setMeshVertex(meshID3, raw(positions[i]));
+      vertexIDs3.push_back(vertexID);
+    }
+
+    precice.initialize();
+
+    for (size_t i=0; i < 4; i++){
+      precice.writeVectorData(dataWriteID1, vertexIDs1[i], raw(datas[i]));
+      precice.writeVectorData(dataWriteID2, vertexIDs2[i], raw(datas[i]));
+      precice.writeVectorData(dataWriteID3, vertexIDs3[i], raw(datas[i]));
+    }
+
+    if (precice.isActionRequired(writeIterCheckpoint)){
+      precice.fulfilledAction(writeIterCheckpoint);
+    }
+    precice.advance(0.0001);
+    if (precice.isActionRequired(readIterCheckpoint)){
+      precice.fulfilledAction(readIterCheckpoint);
+    }
+
+    //precice.finalize();
+
+  }
+
 }
 
 #endif // defined( not PRECICE_NO_MPI )

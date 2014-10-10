@@ -37,7 +37,8 @@ MeshConfiguration:: MeshConfiguration
   _meshes(),
   _setMeshSubIDs(),
   _meshSubIDs(),
-  _spacetreeNames()
+  _spacetreeNames(),
+  _neededMeshes()
 {
   using namespace utils;
   std::string doc;
@@ -261,5 +262,19 @@ const std::string& MeshConfiguration:: getSpacetreeName
   return _spacetreeNames.find(meshName)->second;
 }
 
+void MeshConfiguration:: addNeededMesh(
+  const std::string& participant,
+  const std::string& mesh)
+{
+  preciceTrace2 ( "addNeededMesh()", participant, mesh );
+  if(_neededMeshes.count(participant)==0){
+    std::vector<std::string> meshes;
+    meshes.push_back(mesh);
+    _neededMeshes.insert(std::pair<std::string,std::vector<std::string> >(participant, meshes));
+  }
+  else if(not utils::contained(mesh,_neededMeshes.find(participant)->second)){
+    _neededMeshes.find(participant)->second.push_back(mesh);
+  }
+}
 
 }} // namespace precice, mesh

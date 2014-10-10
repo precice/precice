@@ -50,8 +50,8 @@
          <participants first="SolverA" second="SolverB"/>
          <max-timesteps value="2"/>
          <timestep-length value="1.0"/>
-         <exchange data="Forces"        mesh="MeshForcesB"        from="SolverA"/>
-         <exchange data="Displacements" mesh="MeshDisplacementsB" from="SolverB"/>
+         <exchange data="Forces"        mesh="MeshForcesB"        from="SolverA" to="SolverB"/>
+         <exchange data="Displacements" mesh="MeshDisplacementsB" from="SolverB" to="SolverA"/>
       </coupling-scheme:serial-explicit>   
    </solver-interface>
 </precice-configuration>

@@ -32,14 +32,14 @@
          <participants first="SolverOne" second="SolverTwo"/> 
          <max-timesteps value="10"/>
          <timestep-length value="1.0"/>
-         <exchange data="Data" mesh="Mesh" from="SolverOne"/>
+         <exchange data="Data" mesh="Mesh" from="SolverOne" to="SolverTwo"/>
       </coupling-scheme:serial-explicit>   
       
       <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverThree"/> 
          <max-timesteps value="10"/>
          <timestep-length value="1.0"/>
-         <exchange data="Data" mesh="Mesh" from="SolverOne"/>
+         <exchange data="Data" mesh="Mesh" from="SolverOne" to="SolverThree"/>
       </coupling-scheme:serial-explicit>                  
    </solver-interface>
 </precice-configuration>

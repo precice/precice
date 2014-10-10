@@ -5,6 +5,7 @@
 #define PRECICE_CPLSCHEME_COUPLINGSCHEMECONFIGURATION_HPP_
 
 #include "cplscheme/CouplingScheme.hpp"
+#include "cplscheme/MultiCouplingScheme.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
@@ -52,7 +53,7 @@ public:
   CouplingSchemeConfiguration (
     utils::XMLTag&                            parent,
     const mesh::PtrMeshConfiguration&         meshConfig,
-    const com::PtrCommunicationConfiguration& comConfig );
+    const com::PtrCommunicationConfiguration& comConfig);
 
   /**
    * @brief Destructor, empty.
@@ -91,6 +92,7 @@ public:
     PtrCouplingScheme  cplScheme,
     const std::string& participantName );
 
+
 private:
 
   // @brief Logging device.
@@ -98,6 +100,7 @@ private:
 
   const std::string TAG;
   const std::string TAG_PARTICIPANTS;
+  const std::string TAG_PARTICIPANT;
   const std::string TAG_EXCHANGE;
   const std::string TAG_MAX_TIME;
   const std::string TAG_MAX_TIMESTEPS;
@@ -125,12 +128,15 @@ private:
   const std::string ATTR_NAME;
   const std::string ATTR_TIMESTEP_INTERVAL;
   const std::string ATTR_FROM;
+  const std::string ATTR_TO;
   const std::string ATTR_SUFFICES;
+  const std::string ATTR_CONTROL;
 
   const std::string VALUE_SERIAL_EXPLICIT;
   const std::string VALUE_PARALLEL_EXPLICIT;
   const std::string VALUE_SERIAL_IMPLICIT;
   const std::string VALUE_PARALLEL_IMPLICIT;
+  const std::string VALUE_MULTI;
   const std::string VALUE_UNCOUPLED;
   const std::string VALUE_FIXED;
   const std::string VALUE_FIRST_PARTICIPANT;
@@ -140,18 +146,19 @@ private:
     std::string type;
     std::string name;
     int checkpointTimestepInterval;
-    std::string participant;
-    std::string secondParticipant;
+    std::vector<std::string> participants;
+    std::string controller;
+    bool setController;
     double maxTime;
     int maxTimesteps;
     double timestepLength;
     int validDigits;
     constants::TimesteppingMethod dtMethod;
     // @brief Tuples of exchange data, mesh, and participant name.
-    typedef boost::tuple<mesh::PtrData,std::string,bool> Exchange;
+    typedef boost::tuple<mesh::PtrData,std::string, std::string,bool> Exchange;
     std::vector<Exchange> exchanges;
     // @brief Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<boost::tuple<int,bool,impl::PtrConvergenceMeasure> > convMeasures;
+    std::vector<boost::tuple<int,bool,std::string,impl::PtrConvergenceMeasure> > convMeasures;
     int maxIterations;
     int extrapolationOrder;
 
@@ -160,8 +167,9 @@ private:
       type ( "" ),
       name ( "" ),
       checkpointTimestepInterval ( -1 ),
-      participant ( "" ),
-      secondParticipant ( "" ),
+      participants (),
+      controller ( "" ),
+      setController( false ),
       maxTime ( CouplingScheme::UNDEFINED_TIME ),
       maxTimesteps ( CouplingScheme::UNDEFINED_TIMESTEPS ),
       timestepLength ( CouplingScheme::UNDEFINED_TIMESTEP_LENGTH ),
@@ -198,6 +206,8 @@ private:
   void addTransientLimitTags ( utils::XMLTag& tag );
 
   void addTagParticipants ( utils::XMLTag& tag );
+
+  void addTagParticipant ( utils::XMLTag& tag );
 
   void addTagExchange ( utils::XMLTag& tag );
 
@@ -257,6 +267,9 @@ private:
   PtrCouplingScheme createParallelImplicitCouplingScheme (
     const std::string & accessor ) const;
 
+  PtrCouplingScheme createMultiCouplingScheme (
+      const std::string & accessor ) const;
+
   /*
    * @brief returns name of the actual scheme holder (i.e. server name)
    */
@@ -273,9 +286,20 @@ private:
     BaseCouplingScheme& scheme,
     const std::string&  accessor) const;
 
+  /**
+   * @brief Adds configured exchange data to be sent or received to scheme.
+   * Only used specifically for MultiCouplingScheme
+   */
+  void addMultiDataToBeExchanged(
+    MultiCouplingScheme& scheme,
+    const std::string&  accessor) const;
 
-   friend class tests::SerialImplicitCouplingSchemeTest; // For whitebox tests
-   friend class tests::ParallelImplicitCouplingSchemeTest; // For whitebox tests
+  void checkIfDataIsExchanged(
+    int dataID) const;
+
+
+  friend class tests::SerialImplicitCouplingSchemeTest; // For whitebox tests
+  friend class tests::ParallelImplicitCouplingSchemeTest; // For whitebox tests
 
 };
 

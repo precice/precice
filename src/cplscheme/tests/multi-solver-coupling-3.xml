@@ -26,15 +26,15 @@
       <max-timesteps value="10"/>
       <max-iterations value="10"/>
       <min-iteration-convergence-measure min-iterations="3" data="Data1" mesh="Mesh"/>
-      <exchange data="Data0" mesh="Mesh" from="Participant0"/>
-      <exchange data="Data1" mesh="Mesh" from="Participant1"/>
+      <exchange data="Data0" mesh="Mesh" from="Participant0" to="Participant1"/>
+      <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant0"/>
    </coupling-scheme:serial-implicit>
    <coupling-scheme:serial-explicit>  
       <participants first="Participant1" second="Participant2"/>
       <timestep-length value="0.1" method="fixed"/>
       <max-time value="1.0"/> 
       <max-timesteps value="10"/>
-      <exchange data="Data1" mesh="Mesh" from="Participant1"/>
-      <exchange data="Data2" mesh="Mesh" from="Participant2"/>
+      <exchange data="Data1" mesh="Mesh" from="Participant1" to="Participant2"/>
+      <exchange data="Data2" mesh="Mesh" from="Participant2" to="Participant1"/>
    </coupling-scheme:serial-explicit>
 </configuration>

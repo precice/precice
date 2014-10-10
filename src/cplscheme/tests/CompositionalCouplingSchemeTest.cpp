@@ -692,9 +692,9 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
   com::PtrCommunicationConfiguration comConfig(new com::CommunicationConfiguration(root));
-  geometry::GeometryConfiguration geoConfig(root, meshConfig);
-  geoConfig.setDimensions(3);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig);
+  geometry::PtrGeometryConfiguration geoConfig(new geometry::GeometryConfiguration(root, meshConfig));
+  geoConfig->setDimensions(3);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig );
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
@@ -703,7 +703,7 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
   com::PtrCommunication com1 =
       comConfig->getCommunication(nameParticipant1, nameParticipant2);
 
-  geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
+  geoConfig->geometries()[0]->create(*meshConfig->meshes()[0]);
 
   if (utils::Parallel::getProcessRank() == 0){
     localParticipant = nameParticipant0;

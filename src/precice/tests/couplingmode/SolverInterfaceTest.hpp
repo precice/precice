@@ -179,6 +179,12 @@ private:
    */
   void testThreeSolvers();
 
+  /**
+   * @brief Four solvers are multi-coupled.
+   *
+   */
+  void testMultiCoupling();
+
   void runThreeSolvers (
       const std::string&      configFilename,
       const std::vector<int>& expectedCallsOfAdvance );
