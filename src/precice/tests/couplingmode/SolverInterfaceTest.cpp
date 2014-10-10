@@ -63,6 +63,7 @@ void SolverInterfaceTest:: run()
       testMethod(testStationaryMappingWithSolverMesh);
       //TODO not working no riemann (benjamin's laptop)
       testMethod(testBug);
+      testMethod(testNASTINMeshRestart);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -1677,6 +1678,171 @@ void SolverInterfaceTest:: testMultiCoupling()
 
   }
 
+}
+
+void SolverInterfaceTest:: testNASTINMeshRestart()
+{
+  preciceTrace("testNASTINMeshRestart()");
+  assertion(utils::Parallel::getCommunicatorSize() == 2);
+
+  std::vector<std::string> restartFiles;
+  restartFiles.push_back("precice_checkpoint_NASTIN_NASTIN_Mesh.wrl");
+  restartFiles.push_back("precice_checkpoint_NASTIN_SOLIDZ_Mesh.wrl");
+  restartFiles.push_back("precice_checkpoint_NASTIN_simstate.txt");
+  restartFiles.push_back("precice_checkpoint_SOLIDZ_cplscheme.txt");
+  restartFiles.push_back("precice_checkpoint_SOLIDZ_SOLIDZ_Mesh.wrl");
+  restartFiles.push_back("precice_checkpoint_SOLIDZ_simstate.txt");
+
+  foreach(std::string& restartFile, restartFiles){
+    std::ifstream  src((_pathToTests + restartFile).c_str(), std::ifstream::in);
+    std::ofstream  dst(restartFile.c_str(), std::ifstream::out);
+    dst << src.rdbuf();
+  }
+
+  std::string readSimCheckpoint(constants::actionReadSimulationCheckpoint());
+
+  mesh::Mesh::resetGeometryIDsGlobally();
+  int meshSize = 27;
+
+  double positions[meshSize*2];
+
+  int meshID = -1;
+
+  std::string participant = "";
+
+  if (utils::Parallel::getProcessRank() == 0){
+    participant = "NASTIN";
+  }
+  else if (utils::Parallel::getProcessRank() == 1){
+    participant = "SOLIDZ";
+  }
+
+  SolverInterface precice(participant, 0, 1);
+  configureSolverInterface(_pathToTests + "/nastin-restart-config.xml", precice);
+  validateEquals(precice.getDimensions(),2);
+
+  if (utils::Parallel::getProcessRank() == 0){
+    meshID = precice.getMeshID("NASTIN_Mesh");
+    positions[0] = 3.0000000000000000;
+    positions[1] = 0.59999999999999998;
+    positions[2] = 4.0000000000000000;
+    positions[3] = 1.3999999999999999;
+    positions[4] = 4.0000000000000000;
+    positions[5] = 1.6000000000000001;
+    positions[6] = 3.0000000000000000;
+    positions[7] = 1.8000000000000000;
+    positions[8] = 3.0000000000000000;
+    positions[9] = 1.6000000000000001;
+    positions[10] = 3.0000000000000000;
+    positions[11] = 2.0000000000000000;
+    positions[12] = 4.0000000000000000,
+    positions[13] = 0.80000000000000004;
+    positions[14] = 4.0000000000000000;
+    positions[15] = 1.0000000000000000;
+    positions[16] = 3.0000000000000000;
+    positions[17] = 0.0000000000000000;
+    positions[18] = 3.0000000000000000;
+    positions[19] = 0.20000000000000001;
+    positions[20] = 4.0000000000000000;
+    positions[21] = 0.40000000000000002;
+    positions[22] = 4.0000000000000000;
+    positions[23] = 0.59999999999999998;
+    positions[24] = 4.0000000000000000;
+    positions[25] = 1.2000000000000000;
+    positions[26] = 3.0000000000000000;
+    positions[27] = 0.40000000000000002;
+    positions[28] = 4.0000000000000000;
+    positions[29] = 1.8000000000000000;
+    positions[30] = 4.0000000000000000;
+    positions[31] = 0.20000000000000001;
+    positions[32] = 3.0000000000000000;
+    positions[33] = 1.3999999999999999;
+    positions[34] = 3.0000000000000000;
+    positions[35] = 1.2000000000000000;
+    positions[36] = 3.0000000000000000;
+    positions[37] = 1.0000000000000000;
+    positions[38] = 3.0000000000000000;
+    positions[39] = 0.80000000000000004;
+    positions[40] = 3.5000000000000000;
+    positions[41] = 2.0000000000000000;
+    positions[42] = 4.0000000000000000;
+    positions[43] = 2.0000000000000000;
+    positions[44] = 3.8332999999999999;
+    positions[45] = 2.0000000000000000;
+    positions[46] = 3.6667000000000001;
+    positions[47] = 2.0000000000000000;
+    positions[48] = 3.1667000000000001;
+    positions[49] = 2.0000000000000000;
+    positions[50] = 3.3332999999999999;
+    positions[51] = 2.0000000000000000;
+    positions[52] = 4.0000000000000000;
+    positions[53] = 0.0000000000000000;
+  }
+  else if (utils::Parallel::getProcessRank() == 1){
+    meshID = precice.getMeshID("SOLIDZ_Mesh");
+    positions[0] = 4.0000000000000000;
+    positions[1] = 0.40000000000000002;
+    positions[2] = 4.0000000000000000;
+    positions[3] = 0.59999999999999998;
+    positions[4] = 4.0000000000000000;
+    positions[5] = 1.3999999999999999;
+    positions[6] = 4.0000000000000000;
+    positions[7] = 1.6000000000000001;
+    positions[8] = 3.0000000000000000;
+    positions[9] = 1.6000000000000001;
+    positions[10] = 3.0000000000000000;
+    positions[11] = 1.3999999999999999;
+    positions[12] = 3.0000000000000000;
+    positions[13] = 0.59999999999999998;
+    positions[14] = 3.0000000000000000;
+    positions[15] = 0.40000000000000002;
+    positions[16] = 3.0000000000000000;
+    positions[17] = 1.0000000000000000;
+    positions[18] = 4.0000000000000000;
+    positions[19] = 1.0000000000000000;
+    positions[20] = 3.0000000000000000;
+    positions[21] = 0.80000000000000004;
+    positions[22] = 4.0000000000000000;
+    positions[23] = 1.2000000000000000;
+    positions[24] = 4.0000000000000000;
+    positions[25] = 0.80000000000000004;
+    positions[26] = 3.3332999999999999;
+    positions[27] = 2.0000000000000000;
+    positions[28] = 3.1667000000000001;
+    positions[29] = 2.0000000000000000;
+    positions[30] = 3.8332999999999999;
+    positions[31] = 2.0000000000000000;
+    positions[32] = 3.6667000000000001;
+    positions[33] = 2.0000000000000000;
+    positions[34] = 3.0000000000000000;
+    positions[35] = 1.2000000000000000;
+    positions[36] = 3.0000000000000000;
+    positions[37] = 0.0000000000000000;
+    positions[38] = 3.0000000000000000;
+    positions[39] = 0.20000000000000001;
+    positions[40] = 4.0000000000000000;
+    positions[41] = 1.8000000000000000;
+    positions[42] = 4.0000000000000000;
+    positions[43] = 2.0000000000000000;
+    positions[44] = 3.0000000000000000;
+    positions[45] = 1.8000000000000000;
+    positions[46] = 3.0000000000000000;
+    positions[47] = 2.0000000000000000;
+    positions[48] = 4.0000000000000000;
+    positions[49] = 0.0000000000000000;
+    positions[50] = 4.0000000000000000;
+    positions[51] = 0.20000000000000001;
+    positions[52] = 3.5000000000000000;
+    positions[53] = 2.0000000000000000;
+  }
+
+
+  if (precice.isActionRequired(readSimCheckpoint)){
+    precice.fulfilledAction(readSimCheckpoint);
+  }
+  int vertexIDs[meshSize];
+  precice.setMeshVertices(meshID, meshSize, positions, vertexIDs);
+  precice.initialize();
 }
 
 #endif // defined( not PRECICE_NO_MPI )
