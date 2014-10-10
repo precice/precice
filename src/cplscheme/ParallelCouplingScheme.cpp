@@ -44,11 +44,10 @@ void ParallelCouplingScheme::initialize
   assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion1(startTimestep >= 0, startTimestep);
   assertion(getCommunication()->isConnected());
-  preciceCheck(not getSendData().empty(), "initialize()",
-               "No send data configured!");
   setTime(startTime);
   setTimesteps(startTimestep);
   if (_couplingMode == Implicit) {
+    preciceCheck(not getSendData().empty(), "initialize()", "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) { // second participant
       setupConvergenceMeasures(); // needs _couplingData configured
       mergeData(); // merge send and receive data for all pp calls
