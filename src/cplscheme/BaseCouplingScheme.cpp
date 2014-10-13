@@ -150,7 +150,6 @@ BaseCouplingScheme::BaseCouplingScheme
   preciceCheck((maxIterations > 0) || (maxIterations == -1),
 	       "ImplicitCouplingState()",
 	       "Maximal iteration limit has to be larger than zero!");
-  assertion(_communication.use_count() > 0);
 }
 
 

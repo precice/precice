@@ -98,7 +98,7 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
 
   std::string location = "";
   io::ImportVRML importMesh(location);
-  importMesh.doImportCheckpoint(filename, reimportedMesh);
+  importMesh.doImportCheckpoint(filename, reimportedMesh, true);
 
   // Validate mesh information
   validateEquals(reimportedMesh.vertices().size(), vertexCount);

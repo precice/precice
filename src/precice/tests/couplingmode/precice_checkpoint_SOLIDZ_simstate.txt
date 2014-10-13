@@ -1,0 +1,5 @@
+preCICE simulation state
+
+time 0.0005
+timestep 6
+advancecalls 30

@@ -16,7 +16,7 @@ namespace precice {
 namespace mapping {
 
 tarch::logging::Log MappingConfiguration::
-    _log ( "precice::config::ParticipantConfiguration" );
+    _log ( "precice::config::MappingConfiguration" );
 
 //const std::string& MappingConfiguration:: getTag ()
 //{

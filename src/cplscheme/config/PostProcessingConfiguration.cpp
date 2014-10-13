@@ -29,7 +29,7 @@ tarch::logging::Log PostProcessingConfiguration::
 
 PostProcessingConfiguration:: PostProcessingConfiguration
 (
-  const mesh::PtrMeshConfiguration& meshConfig )
+  const mesh::PtrMeshConfiguration& meshConfig)
 :
   TAG("post-processing"),
   TAG_RELAX("relaxation" ),
@@ -49,6 +49,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   //_isValid(false),
   _meshConfig(meshConfig),
   _postProcessing(),
+  _neededMeshes(),
   _config()
 {
   assertion(meshConfig.get() != NULL);
@@ -167,6 +168,10 @@ void PostProcessingConfiguration:: xmlTagCallback
              << _meshName << "\" not found on configuration of post-processing";
       throw stream.str();
     }
+
+
+    _neededMeshes.push_back(_meshName);
+
 
   }
   else if (callingTag.getName() == TAG_INIT_RELAX){

@@ -179,6 +179,19 @@ private:
    */
   void testThreeSolvers();
 
+  /**
+   * @brief Four solvers are multi-coupled.
+   *
+   */
+  void testMultiCoupling();
+
+  /**
+   * @brief All NASTIN meshes are restarted. One provided as well as one "from"
+   * are tested.
+   *
+   */
+  void testNASTINMeshRestart();
+
   void runThreeSolvers (
       const std::string&      configFilename,
       const std::vector<int>& expectedCallsOfAdvance );

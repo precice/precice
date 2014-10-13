@@ -1,0 +1,81 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <log-filter target="debug" component="" switch="off"/>
+   <log-filter target="debug" component="precice::cplscheme::BaseCouplingScheme" switch="off"/>
+   <log-filter target="debug" component="precice::impl::SolverInterfaceImpl" switch="on"/>
+   <log-filter target="debug" component="precice::geometry::CommunicatedGeometry" switch="off"/>
+   <log-filter target="info"  component="" switch="on"/>
+
+   <log-output column-separator=" | " log-time-stamp="no"  
+               log-time-stamp-human-readable="yes" log-machine-name="no" 
+               log-message-type="no" log-trace="yes"/> 
+   
+   <solver-interface dimensions="2" restart-mode="1">   
+      <data:vector name="Forces"/>  
+      <data:vector name="Displacements"/> 
+      <data:vector name="DisplacementDeltas"/> 
+   
+      <mesh name="NASTIN_Mesh">
+         <use-data name="DisplacementDeltas"/>
+         <use-data name="Forces"/>
+      </mesh>
+
+      <mesh name="SOLIDZ_Mesh">
+         <use-data name="Displacements"/>
+         <use-data name="DisplacementDeltas"/>
+         <use-data name="Forces"/>
+      </mesh>
+
+      <participant name="NASTIN">
+         <use-mesh name="NASTIN_Mesh" provide="yes"/>
+         <use-mesh name="SOLIDZ_Mesh" from="SOLIDZ"/>
+         <write-data name="Forces" mesh="NASTIN_Mesh"/>
+         <read-data  name="DisplacementDeltas" mesh="NASTIN_Mesh"/>
+         <mapping:nearest-neighbor
+            direction="write" from="NASTIN_Mesh" to="SOLIDZ_Mesh"
+            constraint="conservative" timing="initial"/>  
+         <mapping:nearest-neighbor
+	          direction="read" from="SOLIDZ_Mesh" to="NASTIN_Mesh"
+            constraint="consistent" timing="initial"/>
+      </participant>
+      
+      <participant name="SOLIDZ">
+	       <use-mesh name="SOLIDZ_Mesh" provide="yes"/>
+         <write-data name="Displacements" mesh="SOLIDZ_Mesh"/>
+         <write-data name="DisplacementDeltas" mesh="SOLIDZ_Mesh"/>
+         <read-data  name="Forces"      mesh="SOLIDZ_Mesh"/>
+      </participant>
+      
+      <communication:mpi-single from="NASTIN" to="SOLIDZ" />
+      
+      <coupling-scheme:parallel-implicit>
+         <participants first="NASTIN" second="SOLIDZ"/>
+         <max-time value="40.0"/>
+         <timestep-length value="1e-4" valid-digits="8"/> 
+ 	       <exchange data="Forces"        mesh="SOLIDZ_Mesh" from="NASTIN" to="SOLIDZ"/> 
+         <exchange data="Displacements" mesh="SOLIDZ_Mesh" from="SOLIDZ" to="NASTIN"/>
+         <exchange data="DisplacementDeltas" mesh="SOLIDZ_Mesh" from="SOLIDZ" to="NASTIN"/>
+         <checkpoint timestep-interval="5">
+         <max-iterations value="50"/>
+         <relative-convergence-measure data="Displacements" 
+                   mesh="SOLIDZ_Mesh" limit="1e-3"/>
+         <relative-convergence-measure data="Forces" 
+                   mesh="SOLIDZ_Mesh" limit="1e-3"/>
+         <extrapolation-order value="2"/>
+         <post-processing:IQN-ILS>
+            <data name="DisplacementDeltas" mesh="SOLIDZ_Mesh">
+            <data name="Forces" mesh="SOLIDZ_Mesh">
+            <initial-relaxation value="1.0"/>
+            <max-used-iterations value="50"/>
+            <timesteps-reused value="5"/>
+            <singularity-limit value="1e-12"/>
+         </post-processing:IQN-ILS>
+      </coupling-scheme:parallel-implicit>
+
+
+
+   </solver-interface>
+</precice-configuration>
+
+

@@ -38,7 +38,8 @@ public:
    const utils::DynVector& offset,
    const std::string&      fileName,
    FileType                fileType,
-   bool                    importCheckpoint );
+   bool                    importCheckpoint,
+   bool                    createMesh);
 
   /**
    * @brief Destructor.
@@ -60,6 +61,7 @@ private:
    FileType _fileType;
 
    bool _importCheckpoint;
+   bool _createMesh;
 };
 
 }} // namespace precice, geometry

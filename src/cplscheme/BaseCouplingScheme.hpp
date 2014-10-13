@@ -394,6 +394,7 @@ protected:
   
   /// @return Communication device to the other coupling participant.
   com::PtrCommunication getCommunication() {
+    assertion(_communication.use_count() > 0);
     return _communication;
   }
 
