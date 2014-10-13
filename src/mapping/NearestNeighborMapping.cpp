@@ -109,4 +109,10 @@ void NearestNeighborMapping:: map
   }
 }
 
+bool NearestNeighborMapping::doesVertexContribute(
+  int index)
+{
+  return utils::contained(index,_vertexIndices);
+}
+
 }} // namespace precice, mapping

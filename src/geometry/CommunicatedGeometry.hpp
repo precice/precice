@@ -6,6 +6,7 @@
 
 #include "Geometry.hpp"
 #include "com/SharedPointer.hpp"
+#include "mapping/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
 #include "tarch/logging/Log.h"
 #include <string>
@@ -35,6 +36,10 @@ public:
   void addReceiver (
     const std::string&     receiver,
     com::PtrCommunication com );
+
+  void setBoundingFromMapping(mapping::PtrMapping mapping);
+
+  void setBoundingToMapping(mapping::PtrMapping mapping);
 
 protected:
 
@@ -67,6 +72,10 @@ private:
   int _size;
 
   int _dimensions;
+
+  mapping::PtrMapping _boundingFromMapping;
+
+  mapping::PtrMapping _boundingToMapping;
 };
 
 }} // namespace precice, geometry

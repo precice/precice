@@ -1971,6 +1971,10 @@ void SolverInterfaceImpl:: configureSolverGeometries
                      "Participant \"" << _accessorName << "\" cannot receive "
                      << "the geometry of mesh \"" << context.mesh->getName()
                      << " in addition to a defined geometry!" );
+      if(_slaveMode){
+        comGeo->setBoundingFromMapping(context.fromMappingContext.mapping);
+        comGeo->setBoundingToMapping(context.toMappingContext.mapping);
+      }
       context.geometry = geometry::PtrGeometry ( comGeo );
     }
   }

@@ -52,6 +52,8 @@ public:
     int inputDataID,
     int outputDataID );
 
+  virtual bool doesVertexContribute(int index);
+
 private:
 
   // @brief Logging device.

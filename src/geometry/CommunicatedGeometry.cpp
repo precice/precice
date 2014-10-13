@@ -4,7 +4,9 @@
 #include "CommunicatedGeometry.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "mapping/Mapping.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
 
@@ -30,7 +32,9 @@ CommunicatedGeometry:: CommunicatedGeometry
   _masterSlaveCom(masterSlaveCom),
   _rank(rank),
   _size(size),
-  _dimensions(dimensions)
+  _dimensions(dimensions),
+  _boundingFromMapping(),
+  _boundingToMapping()
 {
   preciceTrace2 ( "CommunicatedGeometry()", accessor, provider );
 }
@@ -62,7 +66,6 @@ void CommunicatedGeometry:: specializedCreate
   if ( _accessorName == _providerName ) {
     if(_size>1){
       gatherMesh(seed);
-      seed.setDistributionType(mesh::Mesh::EXACT);
     }
     if(_rank==0){
       preciceCheck ( seed.vertices().size() > 0,
@@ -90,7 +93,6 @@ void CommunicatedGeometry:: specializedCreate
     }
     if(_size>1){
       scatterMesh(seed);
-      seed.setDistributionType(mesh::Mesh::ALL);
     }
   }
   else {
@@ -143,9 +145,45 @@ void CommunicatedGeometry:: scatterMesh(
     mesh::Mesh& seed)
 {
   preciceTrace1 ( "scatterMesh()", _rank );
+  using tarch::la::raw;
 
   if(_rank>0){ //slave
+
     com::CommunicateMesh(_masterSlaveCom).receiveMesh ( seed, 0);
+
+    _boundingFromMapping->computeMapping();
+    _boundingToMapping->computeMapping();
+
+    mesh::Mesh boundingMesh("BoundingMesh", _dimensions, seed.isFlipNormals());
+
+    foreach ( const mesh::Vertex& vertex, seed.vertices() ){
+      boundingMesh.createVertex(vertex.getCoords());
+    }
+    seed.clear();
+
+    preciceDebug("Before: Bounding Mesh vertices: " << boundingMesh.vertices().size()
+        << ", seed vertices: " << seed.vertices().size());
+
+    std::vector<int> globalVertexIDs;
+    int verticesSize = boundingMesh.vertices().size();
+    for(int i=0; i < verticesSize; i++){
+      if(_boundingFromMapping->doesVertexContribute(i)||_boundingToMapping->doesVertexContribute(i)){
+        seed.createVertex(boundingMesh.vertices()[i].getCoords());
+        globalVertexIDs.push_back(i);
+      }
+    }
+    _boundingFromMapping->clear();
+    _boundingToMapping->clear();
+
+    preciceDebug("After: Bounding Mesh vertices: " << boundingMesh.vertices().size()
+        << ", seed vertices: " << seed.vertices().size());
+
+    int numberOfVertices = globalVertexIDs.size();
+    _masterSlaveCom->send(numberOfVertices,0);
+    if(numberOfVertices!=0){
+      _masterSlaveCom->send(raw(globalVertexIDs),numberOfVertices,0);
+    }
+
   }
   else{ //master
     assertion(_rank==0);
@@ -153,15 +191,28 @@ void CommunicatedGeometry:: scatterMesh(
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
       //slaves have ranks from 0 to size-2
       //TODO better rewrite accept/request connection
-      //at the moment complete mesh is sent to every slave
       com::CommunicateMesh(_masterSlaveCom).sendMesh ( seed, rankSlave-1 );
-      int numberOfVertices = 0;
-      foreach ( const mesh::Vertex& vertex, seed.vertices() ){
-        seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
-        numberOfVertices++;
+      int numberOfVertices = -1;
+      _masterSlaveCom->receive(numberOfVertices,rankSlave-1);
+      std::vector<int> globalVertexIDs(numberOfVertices,-1);
+      if(numberOfVertices!=0){
+        _masterSlaveCom->receive(raw(globalVertexIDs),numberOfVertices,rankSlave-1);
       }
+      seed.getVertexDistribution()[rankSlave] = globalVertexIDs;
     }
   }
+}
+
+void CommunicatedGeometry:: setBoundingFromMapping(
+    mapping::PtrMapping mapping)
+{
+  _boundingFromMapping = mapping;
+}
+
+void CommunicatedGeometry:: setBoundingToMapping(
+    mapping::PtrMapping mapping)
+{
+  _boundingToMapping = mapping;
 }
 
 }} // namespace precice, geometry

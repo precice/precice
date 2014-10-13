@@ -54,12 +54,6 @@ public:
     virtual void meshChanged ( Mesh& mesh ) =0;
   };
 
-  enum DistributionType{
-    UNDEFINED,
-    EXACT,
-    ALL
-  };
-
   typedef utils::ptr_vector<Vertex>            VertexContainer;
   typedef utils::ptr_vector<Edge>              EdgeContainer;
   typedef utils::ptr_vector<Triangle>          TriangleContainer;
@@ -282,13 +276,6 @@ public:
     return _vertexDistribution;
   }
 
-  DistributionType getDistributionType(){
-    return _distributionType;
-  }
-
-  void setDistributionType(DistributionType type){
-    _distributionType = type;
-  }
 
 private:
 
@@ -332,7 +319,6 @@ private:
 
   std::map<int,std::vector<int> > _vertexDistribution;
 
-  DistributionType _distributionType;
 };
 
 }} // namespace precice, mesh

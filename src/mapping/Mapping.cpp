@@ -67,5 +67,11 @@ void Mapping:: setOutputRequirement
   _outputRequirement = requirement;
 }
 
+bool Mapping::doesVertexContribute(
+  int index)
+{
+  return true;
+}
+
 }} // namespace precice, mapping
 
