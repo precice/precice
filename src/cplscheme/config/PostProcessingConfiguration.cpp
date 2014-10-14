@@ -226,6 +226,7 @@ void PostProcessingConfiguration:: clear()
 {
   _config = ConfigurationData();
   _postProcessing = impl::PtrPostProcessing();
+  _neededMeshes.clear();
 }
 
 void PostProcessingConfiguration:: addTypeSpecificSubtags

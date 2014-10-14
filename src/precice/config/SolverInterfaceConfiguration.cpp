@@ -155,7 +155,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
               preciceCheck(meshFound,"xmlEndTagCallback()",
                           "The participant "<< neededMeshes.first <<
                           " needs to use the mesh " << neededMesh <<
-                          " if he wants to exchange data in the coupling scheme.");
+                          " if he wants to use it in the coupling scheme.");
             }
             participantFound = true;
             break;
