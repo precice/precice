@@ -443,7 +443,7 @@ void GeometryConfiguration:: addImportGeometry()
   if (_readData.filetype == std::string("vrml")){
     bool importCheckpoint = false; // Only mesh topology is imported.
     importGeometry = new ImportGeometry(_readData.offset, _readData.filename,
-                                        ImportGeometry::VRML_1_FILE, importCheckpoint);
+                                        ImportGeometry::VRML_1_FILE, importCheckpoint, true);
   }
   assertion(importGeometry != NULL);
   _geometries.push_back(PtrGeometry(importGeometry));

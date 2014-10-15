@@ -16,12 +16,14 @@ ImportGeometry:: ImportGeometry
   const utils::DynVector& offset,
   const std::string&      fileName,
   FileType                fileType,
-  bool                    importCheckpoint )
+  bool                    importCheckpoint,
+  bool                    createMesh)
 :
    Geometry ( offset ),
    _fileName ( fileName ),
    _fileType ( fileType ),
-   _importCheckpoint ( importCheckpoint )
+   _importCheckpoint ( importCheckpoint ),
+   _createMesh( createMesh )
 {}
 
 void ImportGeometry:: specializedCreate
@@ -31,7 +33,7 @@ void ImportGeometry:: specializedCreate
   if ( _fileType == VRML_1_FILE ){
     io::ImportVRML import ( "" );
     if ( _importCheckpoint ){
-      import.doImportCheckpoint ( _fileName, seed );
+      import.doImportCheckpoint ( _fileName, seed, _createMesh );
     }
     else {
       import.doImport ( _fileName, seed );

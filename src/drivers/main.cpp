@@ -55,31 +55,25 @@ int main ( int argc, char** argv )
   bool runServer = false;
   bool runHelp = false;
 
-  bool wrongParameters = false;
-  if (argc == 3){
-    if (std::string(argv[1]) == std::string("xml")){
+  bool wrongParameters = true;
+
+  if (argc >= 3) {
+    std::string action(argv[1]);
+    if ( action == "xml" and argc >= 3 ) {
+      wrongParameters = false;
       runHelp = true;
     }
-    else {
-      wrongParameters = true;
-    }
-  }
-  else if (argc == 4){
-    if ( std::string(argv[1]) == std::string("server") ){
+    if ( action == "server" and argc >= 4 ) {
+      wrongParameters = false;
       runServer = true;
     }
-    else if ( std::string(argv[1]) == std::string("test") ){
+    if ( action == "test" and argc >= 4 ) {
+      wrongParameters = false;
       runTests = true;
     }
-    else {
-      wrongParameters = true;
-    }
   }
-  else {
-    wrongParameters = true;
-  }
-
-  if (wrongParameters){
+    
+  if (wrongParameters) {
     printUsage();
     return 1;
   }
@@ -98,7 +92,7 @@ int main ( int argc, char** argv )
     }
     ConfigurationRegistry::getInstance().initTopLevelConfigurationFactories();
     std::list<TopLevelConfiguration*> configs =
-        ConfigurationRegistry::getInstance().readFile(configFile, "configuration");
+      ConfigurationRegistry::getInstance().readFile(configFile, "configuration");
     if (configs.empty()) {
       log.error("main()", "config file " + configFile + " not found or invalid!");
       return 1;

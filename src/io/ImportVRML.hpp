@@ -55,12 +55,15 @@ public:
 
    void doImportCheckpoint (
       const std::string& name,
-      mesh::Mesh&        mesh );
+      mesh::Mesh&        mesh,
+      bool               createMesh);
 
 private:
 
    // @brief Logging device.
    static tarch::logging::Log _log;
+
+   bool _createMesh;
 
    void doImport (
       const std::string& name,

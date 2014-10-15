@@ -53,9 +53,9 @@
          <participants first="SolverOne" second="SolverTwo" /> 
          <max-timesteps value="5" /> 
          <timestep-length value="0.01" />
-         <exchange data="Forces"        mesh="SolverGeometry" from="SolverOne" />
-         <exchange data="Velocities"    mesh="SolverGeometry" from="SolverTwo" />
-         <exchange data="Displacements" mesh="SolverGeometry" from="SolverTwo" />
+         <exchange data="Forces"        mesh="SolverGeometry" from="SolverOne" to="SolverTwo"/>
+         <exchange data="Velocities"    mesh="SolverGeometry" from="SolverTwo" to="SolverOne"/>
+         <exchange data="Displacements" mesh="SolverGeometry" from="SolverTwo" to="SolverOne"/>
       </coupling-scheme:serial-explicit>
                    
    </solver-interface>

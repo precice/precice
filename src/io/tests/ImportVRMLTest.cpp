@@ -62,7 +62,7 @@ void ImportVRMLTest:: testImportSquare()
   mesh.setSubID("test-subid");
 
   ImportVRML in(_pathToTests);
-  in.doImportCheckpoint("ImportVRMLTest2D.wrl", mesh);
+  in.doImportCheckpoint("ImportVRMLTest2D.wrl", mesh, true);
 
   validateEquals(mesh.vertices().size(), 4);
   validateEquals(mesh.edges().size(), 4);
@@ -111,7 +111,7 @@ void ImportVRMLTest:: testImportCube()
   mesh::PtrData dataForces = mesh.createData("Forces", dim);
   mesh::PtrData dataVelocities = mesh.createData("Velocities", dim);
   ImportVRML in(_pathToTests);
-  in.doImportCheckpoint("ImportVRMLTest-Cube.wrl", mesh);
+  in.doImportCheckpoint("ImportVRMLTest-Cube.wrl", mesh, true);
   mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);

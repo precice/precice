@@ -28,7 +28,8 @@ ImportVRML:: ImportVRML
 (
   const std::string& location )
 :
-  Import(location)
+  Import(location),
+  _createMesh(true)
 {
 # ifdef PRECICE_NO_SPIRIT2
   preciceError("ImportVRML()",
@@ -47,9 +48,12 @@ void ImportVRML:: doImport
 void ImportVRML:: doImportCheckpoint
 (
   const std::string& name,
-  mesh::Mesh&        mesh )
+  mesh::Mesh&        mesh,
+  bool               createMesh)
 {
+  _createMesh = createMesh;
   doImport(name, mesh, true);
+  _createMesh = true;
 }
 
 void ImportVRML:: doImport
@@ -83,49 +87,80 @@ void ImportVRML:: doImport
                "Parsing of file " << filename << " failed! Left over: "
                << std::endl << std::string(first, last));
 
+  //TODO for provided geo ... just do a check if coord coinside
+
   // Construct vertex coordinates from parsed information
-  std::vector<mesh::Vertex*> vertices;
-  if (dimensions == 2){
-    for (size_t i=0; i < vrmlParser.coordinates.size(); i+=2){
-      assertion2(i + 1 < vrmlParser.coordinates.size(),
-                 i + 1, vrmlParser.coordinates.size());
-      vertices += &mesh.createVertex(wrap<2,double>(&vrmlParser.coordinates[i]));
-    }
-    // Construct edge indices from parsed data.
-    // The parsed data has the form: i0, ..., in, -1, i0, ..., im, -1, ...., -1
-    //assertion(vrmlParser.indices.size() > 2);
-    std::vector<tarch::la::Vector<2,int> > indices;
-    for (size_t i=0; i < vrmlParser.indices.size(); i++){
-      if (vrmlParser.indices[i+1] == -1){
-        i++;
+  if(_createMesh){
+    std::vector<mesh::Vertex*> vertices;
+    if (dimensions == 2){
+      for (size_t i=0; i < vrmlParser.coordinates.size(); i+=2){
+        assertion2(i + 1 < vrmlParser.coordinates.size(),
+                   i + 1, vrmlParser.coordinates.size());
+        vertices += &mesh.createVertex(wrap<2,double>(&vrmlParser.coordinates[i]));
       }
-      else {
-        assertion(vertices[vrmlParser.indices[i]] != NULL);
-        assertion(vertices[vrmlParser.indices[i+1]] != NULL);
-        mesh.createEdge(*vertices[vrmlParser.indices[i]],
-                        *vertices[vrmlParser.indices[i+1]]);
+      // Construct edge indices from parsed data.
+      // The parsed data has the form: i0, ..., in, -1, i0, ..., im, -1, ...., -1
+      //assertion(vrmlParser.indices.size() > 2);
+      std::vector<tarch::la::Vector<2,int> > indices;
+      for (size_t i=0; i < vrmlParser.indices.size(); i++){
+        if (vrmlParser.indices[i+1] == -1){
+          i++;
+        }
+        else {
+          assertion(vertices[vrmlParser.indices[i]] != NULL);
+          assertion(vertices[vrmlParser.indices[i+1]] != NULL);
+          mesh.createEdge(*vertices[vrmlParser.indices[i]],
+                          *vertices[vrmlParser.indices[i+1]]);
+        }
+      }
+    }
+    else { // 3D
+      // Create vertices
+      for (size_t i=0; i < vrmlParser.coordinates.size(); i+=3){
+        assertion2(i + 2 < vrmlParser.coordinates.size(),
+                   i + 2, vrmlParser.coordinates.size());
+        vertices += &mesh.createVertex(wrap<3,double>(&vrmlParser.coordinates[i]));
+      }
+
+      // Construct triangle indices from parsed data.
+      std::vector<std::list<mesh::Edge*> > adjacencyList(vertices.size());
+      for (size_t i=0; i < vrmlParser.indices.size(); i += 3){
+        assertion(i + 2 < vrmlParser.indices.size());
+        mesh::Vertex* v0 = vertices[vrmlParser.indices[i]];
+        mesh::Vertex* v1 = vertices[vrmlParser.indices[i+1]];
+        mesh::Vertex* v2 = vertices[vrmlParser.indices[i+2]];
+        mesh::Edge& edge0 = getEdge(*v0, *v1, mesh, adjacencyList);
+        mesh::Edge& edge1 = getEdge(*v1, *v2, mesh, adjacencyList);
+        mesh::Edge& edge2 = getEdge(*v2, *v0, mesh, adjacencyList);
+        mesh.createTriangle(edge0, edge1, edge2);
       }
     }
   }
-  else { // 3D
-    // Create vertices
-    for (size_t i=0; i < vrmlParser.coordinates.size(); i+=3){
-      assertion2(i + 2 < vrmlParser.coordinates.size(),
-                 i + 2, vrmlParser.coordinates.size());
-      vertices += &mesh.createVertex(wrap<3,double>(&vrmlParser.coordinates[i]));
-    }
+  else{
+    //for provided meshes, no vertices need to be created,
+    //but we check if the once given by the user coincide with the once read from file
 
-    // Construct triangle indices from parsed data.
-    std::vector<std::list<mesh::Edge*> > adjacencyList(vertices.size());
-    for (size_t i=0; i < vrmlParser.indices.size(); i += 3){
-      assertion(i + 2 < vrmlParser.indices.size());
-      mesh::Vertex* v0 = vertices[vrmlParser.indices[i]];
-      mesh::Vertex* v1 = vertices[vrmlParser.indices[i+1]];
-      mesh::Vertex* v2 = vertices[vrmlParser.indices[i+2]];
-      mesh::Edge& edge0 = getEdge(*v0, *v1, mesh, adjacencyList);
-      mesh::Edge& edge1 = getEdge(*v1, *v2, mesh, adjacencyList);
-      mesh::Edge& edge2 = getEdge(*v2, *v0, mesh, adjacencyList);
-      mesh.createTriangle(edge0, edge1, edge2);
+    preciceCheck(vrmlParser.coordinates.size()/dimensions == mesh.vertices().size(),
+        "doImport()",
+        "For the mesh " << mesh.getName() << ", " << mesh.vertices().size()
+        << " vertices were set, while " << vrmlParser.coordinates.size()/dimensions
+        << " vertices are read from file for restart.");
+    if (dimensions == 2){
+      for (size_t i=0; i < mesh.vertices().size(); i++){
+        preciceCheck((mesh.vertices()[i].getCoords()[0] == vrmlParser.coordinates[i*2])
+             && (mesh.vertices()[i].getCoords()[1] == vrmlParser.coordinates[i*2+1])                                                                ,
+            "doImport()","For mesh " << mesh.getName() << " the vertices that were set"
+            << " do not coincide with those read from file.");
+      }
+    }
+    else { // 3D
+      for (size_t i=0; i < mesh.vertices().size(); i++){
+        preciceCheck((mesh.vertices()[i].getCoords()[0] == vrmlParser.coordinates[i*3])
+             && (mesh.vertices()[i].getCoords()[1] == vrmlParser.coordinates[i*3+1])
+             && (mesh.vertices()[i].getCoords()[2] == vrmlParser.coordinates[i*3+2])   ,
+            "doImport()","For mesh " << mesh.getName() << " the vertices that were set"
+            << " do not coincide with those read from file.");
+      }
     }
   }
 

@@ -4,6 +4,7 @@
 #include "SolverInterfaceConfiguration.hpp"
 #include "ParticipantConfiguration.hpp"
 #include "precice/impl/Participant.hpp"
+#include "precice/impl/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
@@ -133,6 +134,36 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
             validDigits, name) );
         _couplingSchemeConfiguration->addCouplingScheme ( cplScheme, name );
       }
+    }
+    else{
+
+
+      //test if both participants do have the exchange meshes
+      typedef std::map<std::string, std::vector<std::string> >::value_type neededMeshPair;
+      foreach (const neededMeshPair& neededMeshes, _meshConfiguration->getNeededMeshes()){
+        bool participantFound = false;
+        foreach(const impl::PtrParticipant& participant, _participantConfiguration->getParticipants()){
+          if(participant->getName()==neededMeshes.first){
+            foreach(const std::string& neededMesh ,neededMeshes.second){
+              bool meshFound = false;
+              foreach(impl::MeshContext& meshContext , participant->usedMeshContexts()){
+                if(meshContext.mesh->getName()==neededMesh){
+                  meshFound = true;
+                  break;
+                }
+              }
+              preciceCheck(meshFound,"xmlEndTagCallback()",
+                          "The participant "<< neededMeshes.first <<
+                          " needs to use the mesh " << neededMesh <<
+                          " if he wants to use it in the coupling scheme.");
+            }
+            participantFound = true;
+            break;
+          }
+        }
+        assertion(participantFound);
+      }
+
     }
   }
 }

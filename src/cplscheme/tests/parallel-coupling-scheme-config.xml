@@ -1,8 +1,0 @@
-<?xml version="1.0"?>
-
-<!-- This is an example for a serial coupling scheme, consisting of an
-  -   uncoupled simulation preceded by an explicit coupling scheme 
-  --> 
-
-<coupling scheme="serial">
-</coupling>
