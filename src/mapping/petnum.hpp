@@ -65,7 +65,7 @@ public:
   void setName(std::string name);
   std::string getName();
   
-  void assemble();
+  void assemble(MatAssemblyType type = MAT_FINAL_ASSEMBLY);
   
   void fill_with_randoms();
   
