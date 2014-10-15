@@ -16,6 +16,7 @@ using std::endl;
 
 #include "petnum.hpp"
 #include "petscmat.h"
+#include "petscksp.h"
 
 namespace precice {
 namespace mapping {
@@ -459,8 +460,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     for (int j=iVertex.getID(); j < inputSize; j++) {
       distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
       _matrixCLU(i,j) = _basisFunction.evaluate(norm2(distance));
-      ierr = MatSetValue(_matCLU.matrix, i, j, _basisFunction.evaluate(norm2(distance)), INSERT_VALUES);
-      CHKERRV(ierr); 
+      ierr = MatSetValue(_matCLU.matrix, i, j, _basisFunction.evaluate(norm2(distance)), INSERT_VALUES); CHKERRV(ierr); 
 #     ifdef Asserts
       if (_matrixCLU(i,j) == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "C matrix element has value inf. "
@@ -481,7 +481,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     i++;
   }
-  _matCLU.assemble();
+
+  // Petsc requires that all diagonal entries are set, even if set to zero.
+  _matCLU.assemble(MAT_FLUSH_ASSEMBLY);
+  petsc::Vector zeros(_matCLU);
+  MatDiagonalSet(_matCLU.matrix, zeros.vector, ADD_VALUES);
+  _matCLU.assemble(MAT_FINAL_ASSEMBLY);
 
   // Copy values of upper right part of C to lower left part
   for (int i=0; i < n; i++){
@@ -524,7 +529,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // cout << "================= A =================" << endl;
   // _matrixA.print();
   // _matA.view();
-  
 
 # ifdef PRECICE_STATISTICS
   static int computeIndex = 0;
@@ -548,14 +552,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 # endif // PRECICE_STATISTICS
 
 //  preciceDebug ( "Matrix C = " << _matrixCLU );
-  lu(_matrixCLU, _pivotsCLU);  // Compute LU decomposition
+  cout << "=============== CLU Before LU =======" << endl;
   _matrixCLU.print();
+  _matCLU.view();
+  
+  lu(_matrixCLU, _pivotsCLU);  // Compute LU decomposition
   int rankDeficiency = 0;
   for (int i=0; i < n; i++){
     if (equals(_matrixCLU(i,i), 0.0)){
       rankDeficiency++;
     }
   }
+  cout << "Rank Deficieny = " << rankDeficiency << endl;
+  _matrixCLU.print();
   if (rankDeficiency > 0){
     preciceWarning("computeMapping()", "Interpolation matrix C has rank "
                    << "deficiency of " << rankDeficiency);
@@ -595,6 +604,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   PetscErrorCode ierr = 0;
   petsc::Vector inVals(PETSC_COMM_SELF, "Input Values");
   petsc::Vector outVals(PETSC_COMM_SELF, "Output Values");
+  KSP solver; // erstmal hier, später dann evtl. global, da dann die Lösungsinformationen aus computeMapping behalten werden können.
   utils::DynVector& inValues = input()->data(inputDataID)->values();
   utils::DynVector& outValues = output()->data(outputDataID)->values();
 
@@ -629,10 +639,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       }
       vin.assemble();
       cout << "Conservative mapping" << endl;
-      vin.view();
-      cout << "in.print():" << endl;
-      in.print();
-      cout << "Print fertig." << endl;
+      // vin.view();
+      // cout << "in.print():" << endl;
+      // in.print();
+      // cout << "Print fertig." << endl;
 #     ifdef PRECICE_STATISTICS
       std::ostringstream stream;
       stream << "invec-dim" << dim << "-" << mappingIndex << ".mat";
@@ -640,7 +650,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 #     endif
 
       multiply(transpose(_matrixA), in, Au); // Multiply by transposed of A
-      cout << "Vector Au = ", Au.print();
+      // cout << "Vector Au = ", Au.print();
       // Account for pivoting in LU decomposition of C
       assertion2(Au.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
       for ( int i=0; i < Au.size(); i++ ){
@@ -664,6 +674,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   }
   else { // Map consistent
     preciceDebug("Map consistent");
+    cout << "Map consistent." << endl;
     DynamicVector<double> p(_matrixCLU.rows(), 0.0);
     DynamicVector<double> y(_matrixCLU.rows(), 0.0);
     DynamicVector<double> in(_matrixCLU.rows(), 0.0);
@@ -672,15 +683,22 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     petsc::Vector vy(_matCLU, "y");
     petsc::Vector vin(_matCLU, "in");
     petsc::Vector vout(_matA, "out");
-    // Setup KSP solve here
+    KSPCreate(PETSC_COMM_SELF, &solver);
+    // KSPSetFromOptions(solver);
+    _matCLU.view();
+    KSPSetOperators(solver, _matCLU.matrix, _matCLU.matrix );
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++){
       // Fill input from input data values (last polyparams entries remain zero)
       for (int i=0; i < in.size() - polyparams; i++){
         int index = i*valueDim + dim;
         in[i] = inValues[index];
+        VecSetValue(vin.vector, i, inValues[index], INSERT_VALUES);
       }
+      vin.assemble();
       // Do KSPSolve() here
+      // ierr = PCSetType()
+      ierr = KSPSolve(solver, vin.vector, vp.vector); CHKERRV(ierr);
       // Account for pivoting in LU decomposition of C
       assertion2(in.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
       for (int i=0; i < in.size(); i++) {
@@ -691,6 +709,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       forwardSubstitution(_matrixCLU, in, y); // CLU^-1 * in = y  (lower triangle of CLU)
       backSubstitution(_matrixCLU, y, p);     // CLU^-1 * y = p (upper triangle of CLU)
       multiply(_matrixA, p, out );            // out = A * p
+      out.print();
       // Copy mapped data to ouptut data values
       for (int i=0; i < out.size(); i++) {
         outValues[i*valueDim + dim] = out[i];
