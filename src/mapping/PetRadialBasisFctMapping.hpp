@@ -308,6 +308,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       VecRestoreArray(out.vector, &vecArray);
     }
   }
+  KSPDestroy(&solver);
 }
 
 }} // namespace precice, mapping
