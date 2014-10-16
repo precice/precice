@@ -135,7 +135,17 @@ private:
   const std::string VALUE_RBF_CTPS_C2;
   const std::string VALUE_RBF_CPOLYNOMIAL_C0;
   const std::string VALUE_RBF_CPOLYNOMIAL_C6;
+
+  const std::string VALUE_PETRBF_TPS;
+  const std::string VALUE_PETRBF_MULTIQUADRICS;
+  const std::string VALUE_PETRBF_INV_MULTIQUADRICS;
+  const std::string VALUE_PETRBF_VOLUME_SPLINES;
   const std::string VALUE_PETRBF_GAUSSIAN;
+  const std::string VALUE_PETRBF_CTPS_C2;
+  const std::string VALUE_PETRBF_CPOLYNOMIAL_C0;
+  const std::string VALUE_PETRBF_CPOLYNOMIAL_C6;
+
+  
   const std::string VALUE_TIMING_INITIAL;
   const std::string VALUE_TIMING_ON_ADVANCE;
   const std::string VALUE_TIMING_ON_DEMAND;

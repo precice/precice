@@ -53,7 +53,16 @@ MappingConfiguration:: MappingConfiguration
   VALUE_RBF_CTPS_C2("rbf-compact-tps-c2"),
   VALUE_RBF_CPOLYNOMIAL_C0("rbf-compact-polynomial-c0"),
   VALUE_RBF_CPOLYNOMIAL_C6("rbf-compact-polynomial-c6"),
+
+  VALUE_PETRBF_TPS("petrbf-thin-plate-splines"),
+  VALUE_PETRBF_MULTIQUADRICS("petrbf-multiquadrics"),
+  VALUE_PETRBF_INV_MULTIQUADRICS("petrbf-inverse-multiquadrics"),
+  VALUE_PETRBF_VOLUME_SPLINES("petrbf-volume-splines"),
   VALUE_PETRBF_GAUSSIAN("petrbf-gaussian"),
+  VALUE_PETRBF_CTPS_C2("petrbf-compact-tps-c2"),
+  VALUE_PETRBF_CPOLYNOMIAL_C0("petrbf-compact-polynomial-c0"),
+  VALUE_PETRBF_CPOLYNOMIAL_C6("petrbf-compact-polynomial-c6"),
+
   VALUE_TIMING_INITIAL("initial"),
   VALUE_TIMING_ON_ADVANCE("onadvance"),
   VALUE_TIMING_ON_DEMAND("ondemand"),
@@ -115,12 +124,45 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrSupportRadius);
     tags.push_back(tag);
   }
+  // ---- Petsc RBF declarations ----
+  {
+    XMLTag tag(*this, VALUE_PETRBF_TPS, occ, TAG);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_MULTIQUADRICS, occ, TAG);
+    tag.addAttribute(attrShapeParam);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_INV_MULTIQUADRICS, occ, TAG);
+    tag.addAttribute(attrShapeParam);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_VOLUME_SPLINES, occ, TAG);
+    tags.push_back(tag);
+  }
   {
     XMLTag tag(*this, VALUE_PETRBF_GAUSSIAN, occ, TAG);
     tag.addAttribute(attrShapeParam);
     tags.push_back(tag);
   }
-
+  {
+    XMLTag tag(*this, VALUE_PETRBF_CTPS_C2, occ, TAG);
+    tag.addAttribute(attrSupportRadius);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_CPOLYNOMIAL_C0, occ, TAG);
+    tag.addAttribute(attrSupportRadius);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_CPOLYNOMIAL_C6, occ, TAG);
+    tag.addAttribute(attrSupportRadius);
+    tags.push_back(tag);
+  }
 
   XMLAttribute<std::string> attrDirection ( ATTR_DIRECTION );
   ValidatorEquals<std::string> validDirectionWrite ( VALUE_WRITE );
@@ -402,10 +444,43 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
       new RadialBasisFctMapping<CompactPolynomialC6>(
         constraintValue, CompactPolynomialC6(supportRadius)) );
   }
+    else if (type == VALUE_PETRBF_TPS){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, ThinPlateSplines()) );
+  }
+  else if (type == VALUE_PETRBF_MULTIQUADRICS){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<Multiquadrics>(
+        constraintValue, Multiquadrics(shapeParameter)) );
+  }
+  else if (type == VALUE_PETRBF_INV_MULTIQUADRICS){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<InverseMultiquadrics>(
+        constraintValue, InverseMultiquadrics(shapeParameter)) );
+  }
+  else if (type == VALUE_PETRBF_VOLUME_SPLINES){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, VolumeSplines()) );
+  }
   else if (type == VALUE_PETRBF_GAUSSIAN){
     configuredMapping.mapping = PtrMapping(
-        new PetRadialBasisFctMapping<PetGaussian>(
-          constraintValue, PetGaussian(shapeParameter)));
+        new PetRadialBasisFctMapping<Gaussian>(
+          constraintValue, Gaussian(shapeParameter)));
+  }
+  else if (type == VALUE_PETRBF_CTPS_C2){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(
+        constraintValue, CompactThinPlateSplinesC2(supportRadius)) );
+  }
+  else if (type == VALUE_PETRBF_CPOLYNOMIAL_C0){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<CompactPolynomialC0>(
+        constraintValue, CompactPolynomialC0(supportRadius)) );
+  }
+  else if (type == VALUE_PETRBF_CPOLYNOMIAL_C6){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<CompactPolynomialC6>(
+        constraintValue, CompactPolynomialC6(supportRadius)) );
   }
   else {
     preciceError ( "getMapping()", "Unknown mapping type!" );
