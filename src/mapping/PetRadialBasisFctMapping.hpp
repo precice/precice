@@ -675,55 +675,29 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   }
   else { // Map consistent
     preciceDebug("Map consistent");
-    cout << "Map consistent." << endl;
-    DynamicVector<double> p(_matrixCLU.rows(), 0.0);
-    DynamicVector<double> y(_matrixCLU.rows(), 0.0);
-    DynamicVector<double> in(_matrixCLU.rows(), 0.0);
-    DynamicVector<double> out(_matrixA.rows(), 0.0);
     petsc::Vector vp(_matCLU, "p");
-    petsc::Vector vy(_matCLU, "y");
     petsc::Vector vin(_matCLU, "in");
     petsc::Vector vout(_matA, "out");
     KSPCreate(PETSC_COMM_SELF, &solver);
     KSPSetOperators(solver, _matCLU.matrix, _matCLU.matrix );
     KSPSetFromOptions(solver);
-    // _matCLU.view();
 
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++){
       // Fill input from input data values (last polyparams entries remain zero)
-      for (int i=0; i < in.size() - polyparams; i++){
-        int index = i*valueDim + dim;
-        in[i] = inValues[index];
-        VecSetValue(vin.vector, i, inValues[index], INSERT_VALUES);
+      int size  = vin.getSize();
+      for (int i=0; i < size - polyparams; i++){
+        VecSetValue(vin.vector, i, inValues[i*valueDim + dim], INSERT_VALUES);
       }
       vin.assemble();
-      // Do KSPSolve() here
-      cout << "KSPSolve Start" << endl;
       ierr = KSPSolve(solver, vin.vector, vp.vector); CHKERRV(ierr);
-      cout << "KSPSolve Stop" << endl;
       ierr = MatMult(_matA.matrix, vp.vector, vout.vector); CHKERRV(ierr);
             
-      // Account for pivoting in LU decomposition of C
-      assertion2(in.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
-      for (int i=0; i < in.size(); i++) {
-        double temp = in[i];
-        in[i] = in[_pivotsCLU[i]];
-        in[_pivotsCLU[i]] = temp;
-      }
-      forwardSubstitution(_matrixCLU, in, y); // CLU^-1 * in = y  (lower triangle of CLU)
-      backSubstitution(_matrixCLU, y, p);     // CLU^-1 * y = p (upper triangle of CLU)
-      multiply(_matrixA, p, out );            // out = A * p
-      cout << "===== Vector out ====="<<endl;
-      out.print();
-      vout.view(); 
-      // _matrixA.print();
-      // _matA.view();
       // Copy mapped data to ouptut data values
       PetscScalar *outArray;
       ierr = VecGetArray(vout.vector, &outArray);
-      for (int i=0; i < out.size(); i++) {
-        // outValues[i*valueDim + dim] = out[i];
+      size = vout.getSize();
+      for (int i=0; i < size; i++) {
         outValues[i*valueDim + dim] = outArray[i];
       }
       VecRestoreArray(vout.vector, &outArray);

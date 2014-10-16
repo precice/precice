@@ -29,6 +29,8 @@ public:
   void setName(std::string name);
   std::string getName();
 
+  int getSize();
+
   void setValue(PetscInt row, PetscScalar value);
 
   void arange(double start, double stop);

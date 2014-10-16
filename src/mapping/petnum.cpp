@@ -80,6 +80,15 @@ std::string Vector::getName()
   return cstr;    
 }
 
+
+int Vector::getSize()
+{
+  std::cout << "Called getSize" << std::endl;
+  PetscInt size;
+  VecGetSize(vector, &size);
+  return size;
+}
+
 void Vector::setValue(PetscInt row, PetscScalar value)
 {
   PetscErrorCode ierr = 0;
