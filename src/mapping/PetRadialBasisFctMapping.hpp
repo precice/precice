@@ -525,14 +525,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
              input()->getDimensions(), output()->getDimensions());
   using namespace tarch::la;
   PetscErrorCode ierr = 0;
-  petsc::Vector inVals(PETSC_COMM_SELF, "Input Values");
-  petsc::Vector outVals(PETSC_COMM_SELF, "Output Values");
   utils::DynVector& inValues = input()->data(inputDataID)->values();
   utils::DynVector& outValues = output()->data(outputDataID)->values();
 
-  inVals.init(input()->data(inputDataID)->values().size());
-  outVals.init(output()->data(outputDataID)->values().size());
-  
   int valueDim = input()->data(inputDataID)->getDimensions();
   assertion2(valueDim == output()->data(outputDataID)->getDimensions(),
              valueDim, output()->data(outputDataID)->getDimensions());
@@ -546,60 +541,60 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   if (getConstraint() == CONSERVATIVE) {
     preciceDebug("Map conservative");
     static int mappingIndex = 0;
-    petsc::Vector vAu(_matrixC, "Au");
-    petsc::Vector vy(_matrixC, "y");
-    petsc::Vector vout(_matrixC, "out");
-    petsc::Vector vin(_matrixA, "in");
+    petsc::Vector Au(_matrixC, "Au");
+    petsc::Vector out(_matrixC, "out");
+    petsc::Vector in(_matrixA, "in");
 
     for (int dim=0; dim < valueDim; dim++) {
-      int size = vin.getSize();
+      int size = in.getSize();
       for (int i=0; i < size; i++) { // Fill input data values
-        vin.setValue(i, inValues[i*valueDim + dim]);
+        in.setValue(i, inValues[i*valueDim + dim]);
       }
-      vin.assemble();
+      in.assemble();
 
-      ierr = MatMultTranspose(_matrixA.matrix, vin.vector, vAu.vector); CHKERRV(ierr);
-      ierr = KSPSolve(solver, vAu.vector, vout.vector); CHKERRV(ierr);
-      
+      ierr = MatMultTranspose(_matrixA.matrix, in.vector, Au.vector); CHKERRV(ierr);
+      ierr = KSPSolve(solver, Au.vector, out.vector); CHKERRV(ierr);
+      VecChop(out.vector, 1e-9);
       // Copy mapped data to output data values
       PetscScalar *outArray;
-      ierr = VecGetArray(vout.vector, &outArray);
-      size = vout.getSize();
+      ierr = VecGetArray(out.vector, &outArray);
+      size = out.getSize();
       for (int i=0; i < size-polyparams; i++){
         outValues[i*valueDim + dim] = outArray[i];
       }
-      VecRestoreArray(vout.vector, &outArray);
+      VecRestoreArray(out.vector, &outArray);
     }
     mappingIndex++;
   }
   else { // Map consistent
     preciceDebug("Map consistent");
-    petsc::Vector vp(_matrixC, "p");
-    petsc::Vector vin(_matrixC, "in");
-    petsc::Vector vout(_matrixA, "out");
+    petsc::Vector p(_matrixC, "p");
+    petsc::Vector in(_matrixC, "in");
+    petsc::Vector out(_matrixA, "out");
     PetscScalar *vecArray;
 
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++){
       // Fill input from input data values (last polyparams entries remain zero)
-      ierr = VecGetArray(vin.vector, &vecArray);
-      int size  = vin.getSize();
+      ierr = VecGetArray(in.vector, &vecArray);
+      int size  = in.getSize();
       for (int i=0; i < size - polyparams; i++){
         vecArray[i] = inValues[i*valueDim + dim];
       }
-      VecRestoreArray(vin.vector, &vecArray);
-      vin.assemble();
+      VecRestoreArray(in.vector, &vecArray);
+      in.assemble();
       
-      ierr = KSPSolve(solver, vin.vector, vp.vector); CHKERRV(ierr);
-      ierr = MatMult(_matrixA.matrix, vp.vector, vout.vector); CHKERRV(ierr);
-            
+      ierr = KSPSolve(solver, in.vector, p.vector); CHKERRV(ierr);
+      ierr = MatMult(_matrixA.matrix, p.vector, out.vector); CHKERRV(ierr);
+
+      VecChop(out.vector, 1e-9);
       // Copy mapped data to output data values
-      ierr = VecGetArray(vout.vector, &vecArray);
-      size = vout.getSize();
+      ierr = VecGetArray(out.vector, &vecArray);
+      size = out.getSize();
       for (int i=0; i < size; i++) {
         outValues[i*valueDim + dim] = vecArray[i];
       }
-      VecRestoreArray(vout.vector, &vecArray);
+      VecRestoreArray(out.vector, &vecArray);
     }
   }
 }
