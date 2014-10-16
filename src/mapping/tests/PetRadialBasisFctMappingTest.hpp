@@ -44,6 +44,9 @@ public:
 
 private:
 
+  /// @brief Petsc uses iterative methods to solve the linear system.
+  const double tolerance;
+
   // @brief Logging device.
   static tarch::logging::Log _log;
 

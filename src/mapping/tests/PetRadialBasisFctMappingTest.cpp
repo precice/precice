@@ -22,19 +22,20 @@ tarch::logging::Log PetRadialBasisFctMappingTest::
 
 PetRadialBasisFctMappingTest:: PetRadialBasisFctMappingTest()
 :
-  TestCase ( "precice::mapping::tests::PetRadialBasisFctMappingTest" )
+  TestCase ( "precice::mapping::tests::PetRadialBasisFctMappingTest" ),
+  tolerance(1e-5)
 {}
 
 void PetRadialBasisFctMappingTest:: run()
 {
-  // testMethod(testPetThinPlateSplines);
-  // testMethod(testPetMultiquadrics);
-  // testMethod(testPetInverseMultiquadrics);
-  // testMethod(testPetVolumeSplines);
+  testMethod(testPetThinPlateSplines);
+  testMethod(testPetMultiquadrics);
+  testMethod(testPetInverseMultiquadrics);
+  testMethod(testPetVolumeSplines);
   testMethod(testPetGaussian);
-  // testMethod(testPetCompactThinPlateSplinesC2);
-//   testMethod(testPetCompactPolynomialC0);
-//   testMethod(testPetCompactPolynomialC6);
+  testMethod(testPetCompactThinPlateSplinesC2);
+  testMethod(testPetCompactPolynomialC0);
+  testMethod(testPetCompactPolynomialC6);
 }
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
@@ -193,7 +194,7 @@ void PetRadialBasisFctMappingTest:: perform2DTestConsistentMapping
   mapping.map ( inDataID, outDataID );
   double value = outData->values()[0];
   validateEquals ( mapping.hasComputedMapping(), true );
-  validateNumericalEquals ( value, 1.0 );
+  validateNumericalEqualsWithEps ( value, 1.0, tolerance );
 
   vertex.setCoords ( Vector2D(0.0, 0.5) );
   mapping.computeMapping ();
@@ -207,14 +208,14 @@ void PetRadialBasisFctMappingTest:: perform2DTestConsistentMapping
   mapping.map ( inDataID, outDataID );
   value = outData->values()[0];
   validateEquals ( mapping.hasComputedMapping(), true );
-  validateNumericalEquals ( value, 1.0 );
+  validateNumericalEqualsWithEps ( value, 1.0, tolerance );
 
   vertex.setCoords ( Vector2D(1.0, 0.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   value = outData->values()[0];
   validateEquals ( mapping.hasComputedMapping(), true );
-  validateNumericalEquals ( value, 2.0 );
+  validateNumericalEqualsWithEps ( value, 2.0, tolerance );
 
   vertex.setCoords ( Vector2D(1.0, 0.5) );
   mapping.computeMapping ();
@@ -228,7 +229,7 @@ void PetRadialBasisFctMappingTest:: perform2DTestConsistentMapping
   mapping.map ( inDataID, outDataID );
   value = outData->values()[0];
   validateEquals ( mapping.hasComputedMapping(), true );
-  validateNumericalEquals ( value, 2.0 );
+  validateNumericalEqualsWithEps ( value, 2.0, tolerance );
 
   vertex.setCoords ( Vector2D(0.5, 0.0) );
   mapping.computeMapping ();
@@ -288,28 +289,28 @@ void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(0.5, 0.5, 1.0, 1.0)) );
+  validate ( equals(values, tarch::la::Vector<4,double>(0.5, 0.5, 1.0, 1.0), tolerance) );
 
   vertex0.setCoords ( Vector2D(0.0, 0.5) );
   vertex1.setCoords ( Vector2D(1.0, 0.5) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(0.5, 1.0, 1.0, 0.5)) );
+  validate ( equals(values, tarch::la::Vector<4,double>(0.5, 1.0, 1.0, 0.5), tolerance) );
 
   vertex0.setCoords ( Vector2D(0.0, 1.0) );
   vertex1.setCoords ( Vector2D(1.0, 0.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(0.0, 2.0, 0.0, 1.0)) );
-
+  validate ( equals(values, tarch::la::Vector<4,double>(0.0, 2.0, 0.0, 1.0), tolerance) );
+  
   vertex0.setCoords ( Vector2D(0.0, 0.0) );
   vertex1.setCoords ( Vector2D(1.0, 1.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(1.0, 0.0, 2.0, 0.0)) );
+  validate ( equals(values, tarch::la::Vector<4,double>(1.0, 0.0, 2.0, 0.0), tolerance) );
 
   vertex0.setCoords ( Vector2D(0.4, 0.5) );
   vertex1.setCoords ( Vector2D(0.6, 0.5) );
@@ -359,14 +360,14 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping
   mapping.map(inDataID, outDataID);
   double value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 1.0);
+  validateNumericalEqualsWithEps(value, 1.0, tolerance);
 
   vertex.setCoords(Vector3D(0.0, 0.5, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 1.0);
+  validateNumericalEqualsWithEps(value, 1.0, tolerance);
 
   vertex.setCoords(Vector3D(0.5, 0.5, 0.0));
   mapping.computeMapping();
@@ -380,35 +381,35 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 1.0);
+  validateNumericalEqualsWithEps(value, 1.0, tolerance);
 
   vertex.setCoords(Vector3D(1.0, 1.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 1.0);
+  validateNumericalEqualsWithEps(value, 1.0, tolerance);
 
   vertex.setCoords(Vector3D(0.0, 0.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 2.0);
+  validateNumericalEqualsWithEps(value, 2.0, tolerance);
 
   vertex.setCoords(Vector3D(1.0, 0.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 2.0);
+  validateNumericalEqualsWithEps(value, 2.0, tolerance);
 
   vertex.setCoords(Vector3D(1.0, 1.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 2.0);
+  validateNumericalEqualsWithEps(value, 2.0, tolerance);
 
   vertex.setCoords(Vector3D(0.5, 0.5, 1.0));
   mapping.computeMapping();
@@ -422,7 +423,7 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 1.5);
+  validateNumericalEqualsWithEps(value, 1.5, tolerance);
 
   vertex.setCoords(Vector3D(1.0, 0.0, 0.5));
   mapping.computeMapping();
@@ -443,7 +444,7 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 1.5);
+  validateNumericalEqualsWithEps(value, 1.5, tolerance);
 
   vertex.setCoords(Vector3D(0.5, 0.5, 0.5));
   mapping.computeMapping();
@@ -494,7 +495,7 @@ void PetRadialBasisFctMappingTest:: perform3DTestConservativeMapping
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   validateEquals(mapping.hasComputedMapping(), true);
-  validateWithParams1(tarch::la::equals(sum(values), expectedSum), values);
+  validateWithParams1(tarch::la::equals(sum(values), expectedSum, tolerance), values);
 
 //  vertex0.setCoords ( Vector2D(0.0, 0.5) );
 //  vertex1.setCoords ( Vector2D(1.0, 0.5) );
