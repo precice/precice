@@ -41,70 +41,70 @@ void PetRadialBasisFctMappingTest:: run()
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
 {
   preciceTrace ( "testPetThinPlateSplines" );
-  PetThinPlateSplines fct;
-  PetRadialBasisFctMapping<PetThinPlateSplines> consistentMap2D(Mapping::CONSISTENT, fct);
+  ThinPlateSplines fct;
+  PetRadialBasisFctMapping<ThinPlateSplines> consistentMap2D(Mapping::CONSISTENT, fct);
   perform2DTestConsistentMapping(consistentMap2D);
-  PetRadialBasisFctMapping<PetThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, fct);
+  PetRadialBasisFctMapping<ThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, fct);
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<PetThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, fct);
+  PetRadialBasisFctMapping<ThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, fct);
   perform2DTestConservativeMapping(conservativeMap2D);
-  PetRadialBasisFctMapping<PetThinPlateSplines> conservativeMap3D(Mapping::CONSERVATIVE, fct);
+  PetRadialBasisFctMapping<ThinPlateSplines> conservativeMap3D(Mapping::CONSERVATIVE, fct);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
 void PetRadialBasisFctMappingTest:: testPetMultiquadrics()
 {
   preciceTrace ( "testPetMultiquadrics" );
-  PetMultiquadrics fct(1e-3);
-  PetRadialBasisFctMapping<PetMultiquadrics> consistentMap2D(Mapping::CONSISTENT, fct);
+  Multiquadrics fct(1e-3);
+  PetRadialBasisFctMapping<Multiquadrics> consistentMap2D(Mapping::CONSISTENT, fct);
   perform2DTestConsistentMapping(consistentMap2D);
-  PetRadialBasisFctMapping<PetMultiquadrics> consistentMap3D(Mapping::CONSISTENT, fct);
+  PetRadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, fct);
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<PetMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, fct);
+  PetRadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, fct);
   perform2DTestConservativeMapping(conservativeMap2D);
-  PetRadialBasisFctMapping<PetMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, fct);
+  PetRadialBasisFctMapping<Multiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, fct);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
 void PetRadialBasisFctMappingTest:: testPetInverseMultiquadrics()
 {
   preciceTrace ( "testInverseMultiquadrics" );
-  PetInverseMultiquadrics fct(1e-3);
-  PetRadialBasisFctMapping<PetInverseMultiquadrics> consistentMap2D(Mapping::CONSISTENT, fct);
+  InverseMultiquadrics fct(1e-3);
+  PetRadialBasisFctMapping<InverseMultiquadrics> consistentMap2D(Mapping::CONSISTENT, fct);
   perform2DTestConsistentMapping(consistentMap2D);
-  PetRadialBasisFctMapping<PetInverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, fct);
+  PetRadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, fct);
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<PetInverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, fct);
+  PetRadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, fct);
   perform2DTestConservativeMapping(conservativeMap2D);
-  PetRadialBasisFctMapping<PetInverseMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, fct);
+  PetRadialBasisFctMapping<InverseMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, fct);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
 void PetRadialBasisFctMappingTest:: testPetVolumeSplines()
 {
   preciceTrace ( "testVolumeSplines" );
-  PetVolumeSplines fct;
-  PetRadialBasisFctMapping<PetVolumeSplines> consistentMap2D(Mapping::CONSISTENT, fct);
+  VolumeSplines fct;
+  PetRadialBasisFctMapping<VolumeSplines> consistentMap2D(Mapping::CONSISTENT, fct);
   perform2DTestConsistentMapping(consistentMap2D);
-  PetRadialBasisFctMapping<PetVolumeSplines> consistentMap3D(Mapping::CONSISTENT, fct);
+  PetRadialBasisFctMapping<VolumeSplines> consistentMap3D(Mapping::CONSISTENT, fct);
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<PetVolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, fct);
+  PetRadialBasisFctMapping<VolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, fct);
   perform2DTestConservativeMapping(conservativeMap2D);
-  PetRadialBasisFctMapping<PetVolumeSplines> conservativeMap3D(Mapping::CONSERVATIVE, fct);
+  PetRadialBasisFctMapping<VolumeSplines> conservativeMap3D(Mapping::CONSERVATIVE, fct);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
 void PetRadialBasisFctMappingTest:: testPetGaussian()
 {
   preciceTrace ( "testGaussian" );
-  PetGaussian fct(1.0);
-  PetRadialBasisFctMapping<PetGaussian> consistentMap2D(Mapping::CONSISTENT, fct);
+  Gaussian fct(1.0);
+  PetRadialBasisFctMapping<Gaussian> consistentMap2D(Mapping::CONSISTENT, fct);
   perform2DTestConsistentMapping(consistentMap2D);
-  PetRadialBasisFctMapping<PetGaussian> consistentMap3D(Mapping::CONSISTENT, fct);
+  PetRadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, fct);
   perform3DTestConsistentMapping(consistentMap3D);
-  PetRadialBasisFctMapping<PetGaussian> conservativeMap2D(Mapping::CONSERVATIVE, fct);
+  PetRadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, fct);
   perform2DTestConservativeMapping(conservativeMap2D);
-  PetRadialBasisFctMapping<PetGaussian> conservativeMap3D(Mapping::CONSERVATIVE, fct);
+  PetRadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, fct);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -112,8 +112,8 @@ void PetRadialBasisFctMappingTest:: testPetCompactThinPlateSplinesC2()
 {
   preciceTrace ( "testCompactThinPlateSplinesC2" );
   double supportRadius = 1.2;
-  PetCompactThinPlateSplinesC2 fct(supportRadius);
-  typedef PetRadialBasisFctMapping<PetCompactThinPlateSplinesC2> Mapping;
+  CompactThinPlateSplinesC2 fct(supportRadius);
+  typedef PetRadialBasisFctMapping<CompactThinPlateSplinesC2> Mapping;
   Mapping consistentMap2D(Mapping::CONSISTENT, fct);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, fct);
@@ -128,8 +128,8 @@ void PetRadialBasisFctMappingTest:: testPetCompactPolynomialC0()
 {
   preciceTrace ( "testCompactPolynomialC0" );
   double supportRadius = 1.2;
-  PetCompactPolynomialC0 fct(supportRadius);
-  typedef PetRadialBasisFctMapping<PetCompactPolynomialC0> Mapping;
+  CompactPolynomialC0 fct(supportRadius);
+  typedef PetRadialBasisFctMapping<CompactPolynomialC0> Mapping;
   Mapping consistentMap2D(Mapping::CONSISTENT, fct);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, fct);
@@ -144,8 +144,8 @@ void PetRadialBasisFctMappingTest:: testPetCompactPolynomialC6()
 {
   preciceTrace ( "testCompactPolynomialC6" );
   double supportRadius = 1.2;
-  PetCompactPolynomialC6 fct(supportRadius);
-  typedef PetRadialBasisFctMapping<PetCompactPolynomialC6> Mapping;
+  CompactPolynomialC6 fct(supportRadius);
+  typedef PetRadialBasisFctMapping<CompactPolynomialC6> Mapping;
   Mapping consistentMap2D(Mapping::CONSISTENT, fct);
   perform2DTestConsistentMapping(consistentMap2D);
   Mapping consistentMap3D(Mapping::CONSISTENT, fct);

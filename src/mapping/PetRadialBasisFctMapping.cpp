@@ -6,10 +6,4 @@
 namespace precice {
 namespace mapping {
 
-tarch::logging::Log PetInverseMultiquadrics:: _log("precice::mapping::PetInverseMultiquadrics");
-tarch::logging::Log PetGaussian:: _log("precice::mapping::PetGaussian");
-tarch::logging::Log PetCompactThinPlateSplinesC2:: _log("precice::mapping::PetCompactThinPlateSplinesC2");
-tarch::logging::Log PetCompactPolynomialC0:: _log("precice::mapping::PetCompactPolynomialC0");
-tarch::logging::Log PetCompactPolynomialC6:: _log("precice::mapping::PetCompactPolynomialC6");
-
 }} // namespace precice, mapping
