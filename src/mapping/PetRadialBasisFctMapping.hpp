@@ -518,7 +518,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 #     endif
       j++;
     }
-    _matrixA(i,inputSize) = 1.0;
+    _matrixA(i, inputSize) = 1.0;
+    ierr = MatSetValue(_matA.matrix, i, inputSize, 1.0, INSERT_VALUES); CHKERRV(ierr); 
     for (int dim=0; dim < dimensions; dim++){
       _matrixA(i,inputSize+1+dim) = iVertex.getCoords()[dim];
       ierr = MatSetValue(_matA.matrix, i, inputSize+1+dim, iVertex.getCoords()[dim], INSERT_VALUES); CHKERRV(ierr); 
@@ -526,9 +527,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     i++;
   }
   _matA.assemble();
-  // cout << "================= A =================" << endl;
-  // _matrixA.print();
-  // _matA.view();
+  cout << "================= A =================" << endl;
+  _matrixA.print();
+  _matA.view();
 
 # ifdef PRECICE_STATISTICS
   static int computeIndex = 0;
@@ -552,9 +553,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 # endif // PRECICE_STATISTICS
 
 //  preciceDebug ( "Matrix C = " << _matrixCLU );
-  cout << "=============== CLU Before LU =======" << endl;
-  _matrixCLU.print();
-  _matCLU.view();
+  // cout << "=============== CLU Before LU =======" << endl;
+  // _matrixCLU.print();
+  // _matCLU.view();
   
   lu(_matrixCLU, _pivotsCLU);  // Compute LU decomposition
   int rankDeficiency = 0;
@@ -563,8 +564,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       rankDeficiency++;
     }
   }
-  cout << "Rank Deficieny = " << rankDeficiency << endl;
-  _matrixCLU.print();
+  // cout << "Rank Deficieny = " << rankDeficiency << endl;
+  // _matrixCLU.print();
   if (rankDeficiency > 0){
     preciceWarning("computeMapping()", "Interpolation matrix C has rank "
                    << "deficiency of " << rankDeficiency);
@@ -684,9 +685,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     petsc::Vector vin(_matCLU, "in");
     petsc::Vector vout(_matA, "out");
     KSPCreate(PETSC_COMM_SELF, &solver);
-    // KSPSetFromOptions(solver);
-    _matCLU.view();
     KSPSetOperators(solver, _matCLU.matrix, _matCLU.matrix );
+    KSPSetFromOptions(solver);
+    // _matCLU.view();
+
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++){
       // Fill input from input data values (last polyparams entries remain zero)
@@ -697,8 +699,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       }
       vin.assemble();
       // Do KSPSolve() here
-      // ierr = PCSetType()
+      cout << "KSPSolve Start" << endl;
       ierr = KSPSolve(solver, vin.vector, vp.vector); CHKERRV(ierr);
+      cout << "KSPSolve Stop" << endl;
+      ierr = MatMult(_matA.matrix, vp.vector, vout.vector); CHKERRV(ierr);
+            
       // Account for pivoting in LU decomposition of C
       assertion2(in.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
       for (int i=0; i < in.size(); i++) {
@@ -709,11 +714,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       forwardSubstitution(_matrixCLU, in, y); // CLU^-1 * in = y  (lower triangle of CLU)
       backSubstitution(_matrixCLU, y, p);     // CLU^-1 * y = p (upper triangle of CLU)
       multiply(_matrixA, p, out );            // out = A * p
+      cout << "===== Vector out ====="<<endl;
       out.print();
+      vout.view(); 
+      // _matrixA.print();
+      // _matA.view();
       // Copy mapped data to ouptut data values
+      PetscScalar *outArray;
+      ierr = VecGetArray(vout.vector, &outArray);
       for (int i=0; i < out.size(); i++) {
-        outValues[i*valueDim + dim] = out[i];
+        // outValues[i*valueDim + dim] = out[i];
+        outValues[i*valueDim + dim] = outArray[i];
       }
+      VecRestoreArray(vout.vector, &outArray);
     }
   }
 }
