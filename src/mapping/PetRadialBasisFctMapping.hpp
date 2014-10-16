@@ -82,15 +82,9 @@ private:
   /// @brief Radial basis function type used in interpolation.
   RADIAL_BASIS_FUNCTION_T _basisFunction;
 
-  tarch::la::DynamicMatrix<double> _matrixCLU;
+  petsc::Matrix _matrixC;
 
-  tarch::la::DynamicVector<int> _pivotsCLU;
-
-  tarch::la::DynamicMatrix<double> _matrixA;
-
-  petsc::Matrix _matCLU;
-
-  petsc::Matrix _matA;
+  petsc::Matrix _matrixA;
 };
 
 /**
@@ -397,13 +391,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   Mapping ( constraint ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
-  _matrixCLU (),
-  _pivotsCLU (),
-  _matrixA (),
-  _matCLU(PETSC_COMM_SELF, "CLU"),
-  _matA(PETSC_COMM_SELF, "A")
+  _matrixC(PETSC_COMM_SELF, "C"),
+  _matrixA(PETSC_COMM_SELF, "A")
 {
-  PetscInitializeNoArguments();
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
 }
@@ -428,30 +418,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
   int inputSize = (int)inMesh->vertices().size();
   int outputSize = (int)outMesh->vertices().size();
-  cout << "computeMapping Input Size " << inputSize << endl;
-  cout << "computeMapping Dimensions " << dimensions << endl;
-  cout << "computeMapping Output Size " << outputSize << endl;
   int polyparams = 1 + dimensions;
   PetscErrorCode ierr = 0;
   assertion1(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees
-  cout << "n = "  << n << endl;
-  _matrixCLU = DynamicMatrix<double>(n, n, 0.0);
-  _pivotsCLU.clear();
-  _pivotsCLU.append(n, 0);
-  _matrixA = DynamicMatrix<double>(outputSize, n, 0.0);
 
-  // ierr = MatCreate(PETSC_COMM_SELF, &_matCLU.matrix); CHKERRV(ierr);
-  _matCLU.reset();
-  ierr = MatSetType(_matCLU.matrix, MATSBAIJ); CHKERRV(ierr); // create symmetric, block sparse matrix.
-  ierr = MatSetSizes(_matCLU.matrix, PETSC_DECIDE, PETSC_DECIDE, n, n); CHKERRV(ierr);
-  ierr = MatSetOption(_matCLU.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
-  ierr = MatSetUp(_matCLU.matrix); CHKERRV(ierr);
-  // ierr = MatCreate(PETSC_COMM_SELF, &_matA.matrix); CHKERRV(ierr);
-  _matA.reset();
-  ierr = MatSetType(_matA.matrix, MATAIJ); CHKERRV(ierr); // create sparse matrix.
-  ierr = MatSetSizes(_matA.matrix, PETSC_DECIDE, PETSC_DECIDE, outputSize, n); CHKERRV(ierr);
-  ierr = MatSetUp(_matA.matrix); CHKERRV(ierr);
+  _matrixC.reset(); 
+  ierr = MatSetType(_matrixC.matrix, MATSBAIJ); CHKERRV(ierr); // create symmetric, block sparse matrix.
+  ierr = MatSetSizes(_matrixC.matrix, PETSC_DECIDE, PETSC_DECIDE, n, n); CHKERRV(ierr);
+  ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
+  ierr = MatSetUp(_matrixC.matrix); CHKERRV(ierr);
+
+  _matrixA.reset();
+  ierr = MatSetType(_matrixA.matrix, MATAIJ); CHKERRV(ierr); // create sparse matrix.
+  ierr = MatSetSizes(_matrixA.matrix, PETSC_DECIDE, PETSC_DECIDE, outputSize, n); CHKERRV(ierr);
+  ierr = MatSetUp(_matrixA.matrix); CHKERRV(ierr);
 
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
@@ -459,117 +440,61 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
     for (int j=iVertex.getID(); j < inputSize; j++) {
       distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
-      _matrixCLU(i,j) = _basisFunction.evaluate(norm2(distance));
-      ierr = MatSetValue(_matCLU.matrix, i, j, _basisFunction.evaluate(norm2(distance)), INSERT_VALUES); CHKERRV(ierr); 
+      double coeff = _basisFunction.evaluate(norm2(distance));
+      ierr = MatSetValue(_matrixC.matrix, i, j, coeff, INSERT_VALUES); CHKERRV(ierr); 
 #     ifdef Asserts
-      if (_matrixCLU(i,j) == std::numeric_limits<double>::infinity()){
+      if (coeff == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "C matrix element has value inf. "
                      << "i = " << i << ", j = " << j
                      << ", coords i = " << iVertex.getCoords() << ", coords j = "
                      << inMesh->vertices()[j].getCoords() << ", dist = "
                      << distance << ", norm2 = " << norm2(distance) << ", rbf = "
-                     << _basisFunction.evaluate(norm2(distance))
+                     << coeff
                      << ", rbf type = " << typeid(_basisFunction).name());
       }
 #     endif
     }
-    _matrixCLU(i,inputSize) = 1.0;
-    MatSetValue(_matCLU.matrix, i, inputSize, 1.0, INSERT_VALUES);
+    MatSetValue(_matrixC.matrix, i, inputSize, 1.0, INSERT_VALUES);
     for (int dim=0; dim < dimensions; dim++) {
-      _matrixCLU(i, inputSize+1+dim) = iVertex.getCoords()[dim];
-      ierr = MatSetValue(_matCLU.matrix, i, inputSize+1+dim, iVertex.getCoords()[dim], INSERT_VALUES); CHKERRV(ierr);
+      ierr = MatSetValue(_matrixC.matrix, i, inputSize+1+dim, iVertex.getCoords()[dim], INSERT_VALUES); CHKERRV(ierr);
     }
     i++;
   }
 
   // Petsc requires that all diagonal entries are set, even if set to zero.
-  _matCLU.assemble(MAT_FLUSH_ASSEMBLY);
-  petsc::Vector zeros(_matCLU);
-  MatDiagonalSet(_matCLU.matrix, zeros.vector, ADD_VALUES);
-  _matCLU.assemble(MAT_FINAL_ASSEMBLY);
+  _matrixC.assemble(MAT_FLUSH_ASSEMBLY);
+  petsc::Vector zeros(_matrixC);
+  MatDiagonalSet(_matrixC.matrix, zeros.vector, ADD_VALUES);
+  _matrixC.assemble(MAT_FINAL_ASSEMBLY);
 
-  // Copy values of upper right part of C to lower left part
-  for (int i=0; i < n; i++){
-    for (int j=i+1; j < n; j++){
-      _matrixCLU(j,i) = _matrixCLU(i,j); // not needed for petsc
-    }
-  }
-  // cout << "================ CLU ================" << endl;
-  // _matrixCLU.print();
-  // _matCLU.view();
-  // Fill _matrixA with values
   i = 0;
   foreach (const mesh::Vertex& iVertex, outMesh->vertices()){
     int j = 0;
     foreach (const mesh::Vertex& jVertex, inMesh->vertices()){
       distance = iVertex.getCoords() - jVertex.getCoords();
-      _matrixA(i,j) = _basisFunction.evaluate(norm2(distance));
-      ierr = MatSetValue(_matA.matrix, i, j, _basisFunction.evaluate(norm2(distance)), INSERT_VALUES); CHKERRV(ierr); 
+      double coeff = _basisFunction.evaluate(norm2(distance));
+      ierr = MatSetValue(_matrixA.matrix, i, j, coeff, INSERT_VALUES); CHKERRV(ierr); 
 #     ifdef Asserts
-      if (_matrixA(i,j) == std::numeric_limits<double>::infinity()){
+      if (coeff == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "A matrix element has value inf. "
                      << "i = " << i << ", j = " << j
                      << ", coords i = " << iVertex.getCoords() << ", coords j = "
                      << jVertex.getCoords() << ", dist = "
                      << distance << ", norm2 = " << norm2(distance) << ", rbf = "
-                     << _basisFunction.evaluate(norm2(distance))
+                     << coeff
                      << ", rbf type = " << typeid(_basisFunction).name());
       }
 #     endif
       j++;
     }
-    _matrixA(i, inputSize) = 1.0;
-    ierr = MatSetValue(_matA.matrix, i, inputSize, 1.0, INSERT_VALUES); CHKERRV(ierr); 
+    ierr = MatSetValue(_matrixA.matrix, i, inputSize, 1.0, INSERT_VALUES); CHKERRV(ierr); 
     for (int dim=0; dim < dimensions; dim++){
-      _matrixA(i,inputSize+1+dim) = iVertex.getCoords()[dim];
-      ierr = MatSetValue(_matA.matrix, i, inputSize+1+dim, iVertex.getCoords()[dim], INSERT_VALUES); CHKERRV(ierr); 
+      ierr = MatSetValue(_matrixA.matrix, i, inputSize+1+dim, iVertex.getCoords()[dim], INSERT_VALUES); CHKERRV(ierr); 
     }
     i++;
   }
-  _matA.assemble();
-  // cout << "================= A =================" << endl;
-  // _matrixA.print();
-  // _matA.view();
+  _matrixA.assemble();
 
-# ifdef PRECICE_STATISTICS
-  static int computeIndex = 0;
-  std::ostringstream streamC;
-  if (getConstraint() == CONSERVATIVE){
-    streamC << "conservative-matrixC-" << computeIndex << ".mat";
-  }
-  else {
-    streamC << "consistent-matrixC-" << computeIndex << ".mat";
-  }
-  io::TXTWriter::write(_matrixCLU, streamC.str());
-  std::ostringstream streamA;
-  if (getConstraint() == CONSERVATIVE){
-    streamA << "conservative-matrixA-" << computeIndex << ".mat";
-  }
-  else {
-    streamA << "consistent-matrixA-" << computeIndex << ".mat";
-  }
-  io::TXTWriter::write(_matrixA, streamA.str());
-  computeIndex++;
-# endif // PRECICE_STATISTICS
-
-//  preciceDebug ( "Matrix C = " << _matrixCLU );
-  // cout << "=============== CLU Before LU =======" << endl;
-  // _matrixCLU.print();
-  // _matCLU.view();
-  
-  lu(_matrixCLU, _pivotsCLU);  // Compute LU decomposition
-  int rankDeficiency = 0;
-  for (int i=0; i < n; i++){
-    if (equals(_matrixCLU(i,i), 0.0)){
-      rankDeficiency++;
-    }
-  }
-  // cout << "Rank Deficieny = " << rankDeficiency << endl;
-  // _matrixCLU.print();
-  if (rankDeficiency > 0){
-    preciceWarning("computeMapping()", "Interpolation matrix C has rank "
-                   << "deficiency of " << rankDeficiency);
-  }
   _hasComputedMapping = true;
 }
 
@@ -583,11 +508,8 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
   preciceTrace("clear()");
-  _matrixCLU = tarch::la::DynamicMatrix<double>();
-  _matCLU.reset();
-  _pivotsCLU.clear();
-  _matrixA = tarch::la::DynamicMatrix<double>();
-  _matA.reset();
+  _matrixC.reset();
+  _matrixA.reset();
   _hasComputedMapping = false;
 }
 
@@ -616,76 +538,34 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
              valueDim, output()->data(outputDataID)->getDimensions());
   int polyparams = 1 + input()->getDimensions();
 
-  KSP solver; // erstmal hier, später dann evtl. global, da dann die Lösungsinformationen aus computeMapping behalten werden können.
+  KSP solver;
   KSPCreate(PETSC_COMM_SELF, &solver);
-  KSPSetOperators(solver, _matCLU.matrix, _matCLU.matrix);
+  KSPSetOperators(solver, _matrixC.matrix, _matrixC.matrix);
   KSPSetFromOptions(solver);
 
   if (getConstraint() == CONSERVATIVE) {
     preciceDebug("Map conservative");
-    cout << "Conservative mapping" << endl;
     static int mappingIndex = 0;
-    DynamicVector<double> Au(_matrixCLU.rows(), 0.0);
-    DynamicVector<double> y(_matrixCLU.rows(), 0.0);
-    DynamicVector<double> in(_matrixA.rows(), 0.0);
-    DynamicVector<double> out(_matrixCLU.rows(), 0.0);
-    petsc::Vector vAu(_matCLU, "Au");
-    petsc::Vector vy(_matCLU, "y");
-    petsc::Vector vout(_matCLU, "out");
-    petsc::Vector vin(_matA, "in");
-    preciceDebug("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
-    preciceDebug("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
-    preciceDebug("in size=" << in.size() << ", out size=" << out.size());
+    petsc::Vector vAu(_matrixC, "Au");
+    petsc::Vector vy(_matrixC, "y");
+    petsc::Vector vout(_matrixC, "out");
+    petsc::Vector vin(_matrixA, "in");
 
     for (int dim=0; dim < valueDim; dim++) {
       int size = vin.getSize();
       for (int i=0; i < size; i++) { // Fill input data values
-        int index = i*valueDim + dim;
-        in[i] = inValues[index];
-        vin.setValue(i, inValues[index]);
+        vin.setValue(i, inValues[i*valueDim + dim]);
       }
       vin.assemble();
 
-      // vin.view();
-      // cout << "in.print():" << endl;
-      // in.print();
-      // cout << "Print fertig." << endl;
-#     ifdef PRECICE_STATISTICS
-      std::ostringstream stream;
-      stream << "invec-dim" << dim << "-" << mappingIndex << ".mat";
-      io::TXTWriter::write(in, stream.str());
-#     endif
-
-      multiply(transpose(_matrixA), in, Au); // Multiply by transposed of A
-      ierr = MatMultTranspose(_matA.matrix, vin.vector, vAu.vector); CHKERRV(ierr);
-      cout << "=========== Au before transpose ======== " << endl;
-      Au.print(); vAu.view();
-      // Account for pivoting in LU decomposition of C
-      assertion2(Au.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
-      for ( int i=0; i < Au.size(); i++ ){
-        double temp = Au[i];
-        Au[i] = Au[_pivotsCLU[i]];
-        Au[_pivotsCLU[i]] = temp;
-      }
-      forwardSubstitution(_matrixCLU, Au, y);
-      backSubstitution(_matrixCLU, y, out);
+      ierr = MatMultTranspose(_matrixA.matrix, vin.vector, vAu.vector); CHKERRV(ierr);
       ierr = KSPSolve(solver, vAu.vector, vout.vector); CHKERRV(ierr);
-      cout << "========= out ==========="<<endl;
-      out.print();
-      vout.view();
-      
       
       // Copy mapped data to output data values
-#     ifdef PRECICE_STATISTICS
-      std::ostringstream stream2;
-      stream2 << "outvec-dim" << dim << "-" << mappingIndex << ".mat";
-      io::TXTWriter::write(out, stream2.str());
-#     endif
       PetscScalar *outArray;
       ierr = VecGetArray(vout.vector, &outArray);
       size = vout.getSize();
       for (int i=0; i < size-polyparams; i++){
-//        outValues[i*valueDim + dim] = out[i];
         outValues[i*valueDim + dim] = outArray[i];
       }
       VecRestoreArray(vout.vector, &outArray);
@@ -694,32 +574,32 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   }
   else { // Map consistent
     preciceDebug("Map consistent");
-    petsc::Vector vp(_matCLU, "p");
-    petsc::Vector vin(_matCLU, "in");
-    petsc::Vector vout(_matA, "out");
-    // KSPCreate(PETSC_COMM_SELF, &solver);
-    // KSPSetOperators(solver, _matCLU.matrix, _matCLU.matrix );
-    // KSPSetFromOptions(solver);
+    petsc::Vector vp(_matrixC, "p");
+    petsc::Vector vin(_matrixC, "in");
+    petsc::Vector vout(_matrixA, "out");
+    PetscScalar *vecArray;
 
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++){
       // Fill input from input data values (last polyparams entries remain zero)
+      ierr = VecGetArray(vin.vector, &vecArray);
       int size  = vin.getSize();
       for (int i=0; i < size - polyparams; i++){
-        vin.setValue(i, inValues[i*valueDim + dim]);
+        vecArray[i] = inValues[i*valueDim + dim];
       }
+      VecRestoreArray(vin.vector, &vecArray);
       vin.assemble();
+      
       ierr = KSPSolve(solver, vin.vector, vp.vector); CHKERRV(ierr);
-      ierr = MatMult(_matA.matrix, vp.vector, vout.vector); CHKERRV(ierr);
+      ierr = MatMult(_matrixA.matrix, vp.vector, vout.vector); CHKERRV(ierr);
             
-      // Copy mapped data to ouptut data values
-      PetscScalar *outArray;
-      ierr = VecGetArray(vout.vector, &outArray);
+      // Copy mapped data to output data values
+      ierr = VecGetArray(vout.vector, &vecArray);
       size = vout.getSize();
       for (int i=0; i < size; i++) {
-        outValues[i*valueDim + dim] = outArray[i];
+        outValues[i*valueDim + dim] = vecArray[i];
       }
-      VecRestoreArray(vout.vector, &outArray);
+      VecRestoreArray(vout.vector, &vecArray);
     }
   }
 }
