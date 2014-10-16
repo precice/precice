@@ -83,7 +83,6 @@ std::string Vector::getName()
 
 int Vector::getSize()
 {
-  std::cout << "Called getSize" << std::endl;
   PetscInt size;
   VecGetSize(vector, &size);
   return size;
@@ -92,7 +91,7 @@ int Vector::getSize()
 void Vector::setValue(PetscInt row, PetscScalar value)
 {
   PetscErrorCode ierr = 0;
-  VecSetValue(vector, row, value, INSERT_VALUES); CHKERRV(ierr);
+  ierr = VecSetValue(vector, row, value, INSERT_VALUES); CHKERRV(ierr);
 }
 
 void Vector::arange(double start, double stop)

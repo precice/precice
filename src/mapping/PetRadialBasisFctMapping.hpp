@@ -527,9 +527,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     i++;
   }
   _matA.assemble();
-  cout << "================= A =================" << endl;
-  _matrixA.print();
-  _matA.view();
+  // cout << "================= A =================" << endl;
+  // _matrixA.print();
+  // _matA.view();
 
 # ifdef PRECICE_STATISTICS
   static int computeIndex = 0;
@@ -605,7 +605,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   PetscErrorCode ierr = 0;
   petsc::Vector inVals(PETSC_COMM_SELF, "Input Values");
   petsc::Vector outVals(PETSC_COMM_SELF, "Output Values");
-  KSP solver; // erstmal hier, später dann evtl. global, da dann die Lösungsinformationen aus computeMapping behalten werden können.
   utils::DynVector& inValues = input()->data(inputDataID)->values();
   utils::DynVector& outValues = output()->data(outputDataID)->values();
 
@@ -617,8 +616,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
              valueDim, output()->data(outputDataID)->getDimensions());
   int polyparams = 1 + input()->getDimensions();
 
+  KSP solver; // erstmal hier, später dann evtl. global, da dann die Lösungsinformationen aus computeMapping behalten werden können.
+  KSPCreate(PETSC_COMM_SELF, &solver);
+  KSPSetOperators(solver, _matCLU.matrix, _matCLU.matrix);
+  KSPSetFromOptions(solver);
+
   if (getConstraint() == CONSERVATIVE) {
     preciceDebug("Map conservative");
+    cout << "Conservative mapping" << endl;
     static int mappingIndex = 0;
     DynamicVector<double> Au(_matrixCLU.rows(), 0.0);
     DynamicVector<double> y(_matrixCLU.rows(), 0.0);
@@ -633,13 +638,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     preciceDebug("in size=" << in.size() << ", out size=" << out.size());
 
     for (int dim=0; dim < valueDim; dim++) {
-      for (int i=0; i < in.size(); i++) { // Fill input data values
+      int size = vin.getSize();
+      for (int i=0; i < size; i++) { // Fill input data values
         int index = i*valueDim + dim;
         in[i] = inValues[index];
         vin.setValue(i, inValues[index]);
       }
       vin.assemble();
-      cout << "Conservative mapping" << endl;
+
       // vin.view();
       // cout << "in.print():" << endl;
       // in.print();
@@ -651,7 +657,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 #     endif
 
       multiply(transpose(_matrixA), in, Au); // Multiply by transposed of A
-      // cout << "Vector Au = ", Au.print();
+      ierr = MatMultTranspose(_matA.matrix, vin.vector, vAu.vector); CHKERRV(ierr);
+      cout << "=========== Au before transpose ======== " << endl;
+      Au.print(); vAu.view();
       // Account for pivoting in LU decomposition of C
       assertion2(Au.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
       for ( int i=0; i < Au.size(); i++ ){
@@ -661,15 +669,26 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       }
       forwardSubstitution(_matrixCLU, Au, y);
       backSubstitution(_matrixCLU, y, out);
+      ierr = KSPSolve(solver, vAu.vector, vout.vector); CHKERRV(ierr);
+      cout << "========= out ==========="<<endl;
+      out.print();
+      vout.view();
+      
+      
       // Copy mapped data to output data values
 #     ifdef PRECICE_STATISTICS
       std::ostringstream stream2;
       stream2 << "outvec-dim" << dim << "-" << mappingIndex << ".mat";
       io::TXTWriter::write(out, stream2.str());
 #     endif
-      for (int i=0; i < out.size()-polyparams; i++){
-        outValues[i*valueDim + dim] = out[i];
+      PetscScalar *outArray;
+      ierr = VecGetArray(vout.vector, &outArray);
+      size = vout.getSize();
+      for (int i=0; i < size-polyparams; i++){
+//        outValues[i*valueDim + dim] = out[i];
+        outValues[i*valueDim + dim] = outArray[i];
       }
+      VecRestoreArray(vout.vector, &outArray);
     }
     mappingIndex++;
   }
@@ -678,16 +697,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     petsc::Vector vp(_matCLU, "p");
     petsc::Vector vin(_matCLU, "in");
     petsc::Vector vout(_matA, "out");
-    KSPCreate(PETSC_COMM_SELF, &solver);
-    KSPSetOperators(solver, _matCLU.matrix, _matCLU.matrix );
-    KSPSetFromOptions(solver);
+    // KSPCreate(PETSC_COMM_SELF, &solver);
+    // KSPSetOperators(solver, _matCLU.matrix, _matCLU.matrix );
+    // KSPSetFromOptions(solver);
 
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++){
       // Fill input from input data values (last polyparams entries remain zero)
       int size  = vin.getSize();
       for (int i=0; i < size - polyparams; i++){
-        VecSetValue(vin.vector, i, inValues[i*valueDim + dim], INSERT_VALUES);
+        vin.setValue(i, inValues[i*valueDim + dim]);
       }
       vin.assemble();
       ierr = KSPSolve(solver, vin.vector, vp.vector); CHKERRV(ierr);
