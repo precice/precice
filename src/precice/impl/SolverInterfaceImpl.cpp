@@ -1109,6 +1109,7 @@ int SolverInterfaceImpl:: setMeshEdge
   else {
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::FULL ){
+      preciceDebug("Full mesh required.");
       mesh::PtrMesh& mesh = context.mesh;
       assertion1(firstVertexID >= 0, firstVertexID);
       assertion1(secondVertexID >= 0, secondVertexID);
@@ -1933,6 +1934,12 @@ void SolverInterfaceImpl:: configureSolverGeometries
             }
             else{
               preciceDebug ( "Further receiver added.");
+            }
+
+            // meshRequirement has to be copied from "from" to provide", since
+            // mapping are only defined at "provide"
+            if(receiverContext.meshRequirement > context.meshRequirement){
+              context.meshRequirement = receiverContext.meshRequirement;
             }
 
             com::PtrCommunication com =
