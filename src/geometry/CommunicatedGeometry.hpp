@@ -56,6 +56,12 @@ private:
   void scatterMesh(
     mesh::Mesh& seed);
 
+  void computeBoundingMappings();
+
+  void clearBoundingMappings();
+
+  bool doesVertexContribute(int vertexID);
+
   // @brief Logging device.
   static tarch::logging::Log _log;
 

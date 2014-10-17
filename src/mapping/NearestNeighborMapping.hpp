@@ -52,7 +52,7 @@ public:
     int inputDataID,
     int outputDataID );
 
-  virtual bool doesVertexContribute(int index);
+  virtual bool doesVertexContribute(int vertexID);
 
 private:
 

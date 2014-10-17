@@ -110,9 +110,9 @@ void NearestNeighborMapping:: map
 }
 
 bool NearestNeighborMapping::doesVertexContribute(
-  int index)
+  int vertexID)
 {
-  return utils::contained(index,_vertexIndices);
+  return utils::contained(vertexID,_vertexIndices);
 }
 
 }} // namespace precice, mapping

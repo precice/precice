@@ -68,7 +68,7 @@ void Mapping:: setOutputRequirement
 }
 
 bool Mapping::doesVertexContribute(
-  int index)
+  int vertexID)
 {
   return true;
 }

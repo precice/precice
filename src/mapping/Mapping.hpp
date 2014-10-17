@@ -133,7 +133,7 @@ public:
     int inputDataID,
     int outputDataID ) =0;
 
-  virtual bool doesVertexContribute(int index);
+  virtual bool doesVertexContribute(int vertexID);
 
 protected:
 
