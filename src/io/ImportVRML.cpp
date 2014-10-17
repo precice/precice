@@ -87,8 +87,6 @@ void ImportVRML:: doImport
                "Parsing of file " << filename << " failed! Left over: "
                << std::endl << std::string(first, last));
 
-  //TODO for provided geo ... just do a check if coord coinside
-
   // Construct vertex coordinates from parsed information
   if(_createMesh){
     std::vector<mesh::Vertex*> vertices;

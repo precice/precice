@@ -276,6 +276,8 @@ public:
     return _vertexDistribution;
   }
 
+  void addMesh(Mesh& deltaMesh);
+
 
 private:
 

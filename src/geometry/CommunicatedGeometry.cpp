@@ -131,12 +131,13 @@ void CommunicatedGeometry:: gatherMesh(
       rSlaveMesh.clear();
       com::CommunicateMesh(_masterSlaveCom).receiveMesh ( rSlaveMesh, rankSlave-1);
       utils::DynVector coord(_dimensions);
-      foreach ( const mesh::Vertex& vertex, rSlaveMesh.vertices() ){
-          coord = vertex.getCoords();
-          seed.createVertex(coord);
-          seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
-          numberOfVertices++;
+      seed.addMesh(rSlaveMesh);
+
+      for(int i = 0; i < rSlaveMesh.vertices().size(); i++){
+        seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
+        numberOfVertices++;
       }
+      //TODO dann testen 1 nastin, 3 solidz
     }
   }
 }
@@ -159,6 +160,7 @@ void CommunicatedGeometry:: scatterMesh(
     foreach ( const mesh::Vertex& vertex, seed.vertices() ){
       boundingMesh.createVertex(vertex.getCoords());
     }
+    //TODO auch edges erzeugen etc.
     seed.clear();
 
     preciceDebug("Before: Bounding Mesh vertices: " << boundingMesh.vertices().size()
@@ -170,6 +172,8 @@ void CommunicatedGeometry:: scatterMesh(
       if(_boundingFromMapping->doesVertexContribute(i)||_boundingToMapping->doesVertexContribute(i)){
         seed.createVertex(boundingMesh.vertices()[i].getCoords());
         globalVertexIDs.push_back(i);
+        //TODO hier wirds komplizierter, nur edges zwischen 2 contributing hinzufügen
+        //TODO auch doesVertexContr für projection mapping implementieren
       }
     }
     _boundingFromMapping->clear();
