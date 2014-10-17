@@ -17,6 +17,7 @@ using std::endl;
 #include "petnum.hpp"
 #include "petscmat.h"
 #include "petscksp.h"
+#include "petsclog.h"
 
 namespace precice {
 namespace mapping {
@@ -145,11 +146,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
   utils::DynVector distance(dimensions);
+  int logCLoop = 1;
+  PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
+  cout << "Pre C Loop" << endl;
+  PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
   foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
     for (int j=iVertex.getID(); j < inputSize; j++) {
       distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
       double coeff = _basisFunction.evaluate(norm2(distance));
-      ierr = MatSetValue(_matrixC.matrix, i, j, coeff, INSERT_VALUES); CHKERRV(ierr); 
+      if ( not equals(coeff, 0.0)) {
+        ierr = MatSetValue(_matrixC.matrix, i, j, coeff, INSERT_VALUES); CHKERRV(ierr);
+      }
 #     ifdef Asserts
       if (coeff == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "C matrix element has value inf. "
@@ -168,20 +175,30 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     i++;
   }
+  PetscLogEventEnd(logCLoop, 0, 0, 0, 0);
+  cout << "Post C Loop" << endl;
 
   // Petsc requires that all diagonal entries are set, even if set to zero.
   _matrixC.assemble(MAT_FLUSH_ASSEMBLY);
   petsc::Vector zeros(_matrixC);
   MatDiagonalSet(_matrixC.matrix, zeros.vector, ADD_VALUES);
-  _matrixC.assemble(MAT_FINAL_ASSEMBLY);
+  cout << "Assemble C final start" << endl;
+  _matrixC.assemble(MAT_FINAL_ASSEMBLY); // overlap for com and comp possible
+  cout << "Assemble C final stop" << endl;
 
+  int logALoop = 1;
+  PetscLogEventRegister("Filling Matrix A", 0, &logALoop);
+  cout << "Pre A Loop" << endl;
+  PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   i = 0;
   foreach (const mesh::Vertex& iVertex, outMesh->vertices()){
     int j = 0;
     foreach (const mesh::Vertex& jVertex, inMesh->vertices()){
       distance = iVertex.getCoords() - jVertex.getCoords();
       double coeff = _basisFunction.evaluate(norm2(distance));
-      ierr = MatSetValue(_matrixA.matrix, i, j, coeff, INSERT_VALUES); CHKERRV(ierr); 
+      if ( not equals(coeff, 0.0)) {
+        ierr = MatSetValue(_matrixA.matrix, i, j, coeff, INSERT_VALUES); CHKERRV(ierr);
+      }
 #     ifdef Asserts
       if (coeff == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "A matrix element has value inf. "
@@ -201,6 +218,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     i++;
   }
+  PetscLogEventEnd(logALoop, 0, 0, 0, 0);
   _matrixA.assemble();
 
   _hasComputedMapping = true;
