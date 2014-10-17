@@ -23,7 +23,7 @@ tarch::logging::Log PetRadialBasisFctMappingTest::
 PetRadialBasisFctMappingTest:: PetRadialBasisFctMappingTest()
 :
   TestCase ( "precice::mapping::tests::PetRadialBasisFctMappingTest" ),
-  tolerance(1e-5)
+  tolerance(1e-7)
 {}
 
 void PetRadialBasisFctMappingTest:: run()

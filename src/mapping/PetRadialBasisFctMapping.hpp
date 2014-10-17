@@ -6,7 +6,6 @@
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
 #include "tarch/la/LUDecomposition.h"
-#include "tarch/la/TransposedMatrix.h"
 #include "io/TXTWriter.hpp"
 #include <limits>
 #include <typeinfo>
@@ -23,7 +22,7 @@ namespace precice {
 namespace mapping {
 
 /**
- * @brief Mapping with radial basis functions.
+ * @brief Mapping with radial basis functions using the Petsc library to solve the resulting system.
  *
  * With help of the input data points and values an interpolant is constructed.
  * The interpolant is formed by a weighted sum of conditionally positive radial
@@ -43,35 +42,29 @@ public:
    *
    * @param constraint [IN] Specifies mapping to be consistent or conservative.
    * @param function [IN] Radial basis function used for mapping.
+   * @param solverRtol [IN] Relative tolerance for the linear solver.
+   * 
+   * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
   PetRadialBasisFctMapping (
     Constraint              constraint,
-    RADIAL_BASIS_FUNCTION_T function );
+    RADIAL_BASIS_FUNCTION_T function,
+    double                  solverRtol = 1e-9);
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// @brief Destructor, empty.
   virtual ~PetRadialBasisFctMapping() {}
 
-  /**
-   * @brief Computes the mapping coefficients from the in- and output mesh.
-   */
+  /// @brief Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping();
 
-  /**
-   * @brief Returns true, if computeMapping() has been called.
-   */
+  /// @brief Returns true, if computeMapping() has been called.
   virtual bool hasComputedMapping();
 
-  /**
-   * @brief Removes a computed mapping.
-   */
+  /// @brief Removes a computed mapping.
   virtual void clear();
 
   /// @brief Maps input data to output data from input mesh to output mesh.
-  virtual void map (
-    int inputDataID,
-    int outputDataID );
+  virtual void map ( int inputDataID, int outputDataID );
 
 private:
 
@@ -86,6 +79,8 @@ private:
   petsc::Matrix _matrixC;
 
   petsc::Matrix _matrixA;
+
+  double solverRtol;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -97,13 +92,15 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
 (
   Constraint              constraint,
-  RADIAL_BASIS_FUNCTION_T function )
+  RADIAL_BASIS_FUNCTION_T function,
+  double                  solverRtol)
   :
   Mapping ( constraint ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
   _matrixC(PETSC_COMM_SELF, "C"),
-  _matrixA(PETSC_COMM_SELF, "A")
+  _matrixA(PETSC_COMM_SELF, "A"),
+  solverRtol(solverRtol)
 {
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
@@ -247,6 +244,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   KSP solver;
   KSPCreate(PETSC_COMM_SELF, &solver);
   KSPSetOperators(solver, _matrixC.matrix, _matrixC.matrix);
+  KSPSetTolerances(solver, solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetFromOptions(solver);
 
   if (getConstraint() == CONSERVATIVE) {
