@@ -1,4 +1,5 @@
 #pragma once
+#ifndef PRECICE_NO_PETSC
 
 #include "mapping/Mapping.hpp"
 #include "RadialBasisFctMapping.hpp"
@@ -51,7 +52,7 @@ public:
   /// @brief Destructor, empty.
   virtual ~PetRadialBasisFctMapping()
   {
-      KSPDestroy(&_solver);
+    KSPDestroy(&_solver);
   }
 
   /// @brief Computes the mapping coefficients from the in- and output mesh.
@@ -329,3 +330,4 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
 }} // namespace precice, mapping
 
+#endif

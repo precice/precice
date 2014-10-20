@@ -1,3 +1,4 @@
+#ifndef PRECICE_NO_PETSC
 #pragma once
 
 #include "tarch/tests/TestCase.h"
@@ -90,3 +91,4 @@ private:
 }}} // namespace precice, mapping, tests
 
 
+#endif

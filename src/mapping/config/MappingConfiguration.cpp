@@ -460,7 +460,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
       new RadialBasisFctMapping<CompactPolynomialC6>(
         constraintValue, CompactPolynomialC6(supportRadius)) );
   }
-    else if (type == VALUE_PETRBF_TPS){
+# ifndef PRECICE_NO_PETSC
+  else if (type == VALUE_PETRBF_TPS){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, ThinPlateSplines(), solverRtol) );
   }
@@ -498,6 +499,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
       new PetRadialBasisFctMapping<CompactPolynomialC6>(
         constraintValue, CompactPolynomialC6(supportRadius), solverRtol) );
   }
+# endif
   else {
     preciceError ( "getMapping()", "Unknown mapping type!" );
   }

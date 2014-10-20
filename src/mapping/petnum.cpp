@@ -1,12 +1,12 @@
+#ifndef PRECICE_NO_PETSC
+
 #include <string>
-#include <iostream>
 #include <cstdlib>
 #include <cstdio>
 #include <ctime>
 #include <limits>
 #include "petnum.hpp"
 
-// #include "petscksp.h"
 #include "petscviewer.h" 
 
 namespace petsc {
@@ -276,9 +276,8 @@ void Matrix::view()
   ierr = PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_DENSE); CHKERRV(ierr);
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr); 
-  //ierr = MatView(matrix, PETSC_VIEWER_DRAW_WORLD); CHKERRV(ierr);
-  //char c;
-  //std::cin>>c;
 }
 
 }
+
+#endif

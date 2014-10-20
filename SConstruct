@@ -64,6 +64,7 @@ vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupli
 vars.Add(BoolVariable("sockets", "Enables Socket-based communication.", True))
 vars.Add(BoolVariable("boost_inst", "Enable if Boost is available compiled and installed.", False))
 vars.Add(BoolVariable("spirit2", "Used for parsing VRML file geometries and checkpointing.", True))
+vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", True))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 
@@ -105,14 +106,16 @@ print '(have to be defined by the user to configure build)'
 boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
 
 
-# import pdb; pdb.set_trace()
-# petsc
-PETSC_DIR = env["ENV"]["PETSC_DIR"]
-PETSC_ARCH = env["ENV"]["PETSC_ARCH"]
-env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
-                      os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
-env.Append(LIBS = ['petsc'])
-env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
+if env["petsc"]:
+    PETSC_DIR = checkset_var("PETSC_DIR", "")
+    PETSC_ARCH = checkset_var("PETSC_ARCH", "")
+    env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
+                          os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
+    env.Append(LIBS = ['petsc'])
+    env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
+else:
+    env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
+    
 # env.Replace(CXX = "mpic++")
 
 if env["boost_inst"]:

@@ -1,3 +1,4 @@
+#ifndef PRECICE_NO_PETSC
 #pragma once
 
 #include <string>
@@ -82,3 +83,5 @@ private:
 
 };
 }
+
+#endif
