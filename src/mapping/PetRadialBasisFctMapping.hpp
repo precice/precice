@@ -49,7 +49,10 @@ public:
     double                  solverRtol = 1e-9);
 
   /// @brief Destructor, empty.
-  virtual ~PetRadialBasisFctMapping() {}
+  virtual ~PetRadialBasisFctMapping()
+  {
+      KSPDestroy(&_solver);
+  }
 
   /// @brief Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping();
@@ -77,7 +80,9 @@ private:
 
   petsc::Matrix _matrixA;
 
-  double solverRtol;
+  KSP _solver;
+
+  double _solverRtol;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -97,10 +102,12 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _basisFunction ( function ),
   _matrixC(PETSC_COMM_SELF, "C"),
   _matrixA(PETSC_COMM_SELF, "A"),
-  solverRtol(solverRtol)
+  _solverRtol(solverRtol)
 {
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
+
+  KSPCreate(PETSC_COMM_SELF, &_solver);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -138,6 +145,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatSetType(_matrixA.matrix, MATAIJ); CHKERRV(ierr); // create sparse matrix.
   ierr = MatSetSizes(_matrixA.matrix, PETSC_DECIDE, PETSC_DECIDE, outputSize, n); CHKERRV(ierr);
   ierr = MatSetUp(_matrixA.matrix); CHKERRV(ierr);
+
+  KSPReset(_solver);
 
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
@@ -213,7 +222,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyBegin(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   ierr = MatAssemblyEnd(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   ierr = MatAssemblyEnd(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
-  
+
+  KSPSetOperators(_solver, _matrixC.matrix, _matrixC.matrix);
+  KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+  KSPSetFromOptions(_solver);
+
   _hasComputedMapping = true;
 }
 
@@ -252,11 +265,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
              valueDim, output()->data(outputDataID)->getDimensions());
   int polyparams = 1 + input()->getDimensions();
 
-  KSP solver;
-  KSPCreate(PETSC_COMM_SELF, &solver);
-  KSPSetOperators(solver, _matrixC.matrix, _matrixC.matrix);
-  KSPSetTolerances(solver, solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
-  KSPSetFromOptions(solver);
 
   if (getConstraint() == CONSERVATIVE) {
     preciceDebug("Map conservative");
@@ -273,7 +281,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       in.assemble();
 
       ierr = MatMultTranspose(_matrixA.matrix, in.vector, Au.vector); CHKERRV(ierr);
-      ierr = KSPSolve(solver, Au.vector, out.vector); CHKERRV(ierr);
+      ierr = KSPSolve(_solver, Au.vector, out.vector); CHKERRV(ierr);
       VecChop(out.vector, 1e-9);
       // Copy mapped data to output data values
       PetscScalar *outArray;
@@ -304,7 +312,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       VecRestoreArray(in.vector, &vecArray);
       in.assemble();
       
-      ierr = KSPSolve(solver, in.vector, p.vector); CHKERRV(ierr);
+      ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);
       ierr = MatMult(_matrixA.matrix, p.vector, out.vector); CHKERRV(ierr);
 
       VecChop(out.vector, 1e-9);
@@ -317,7 +325,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       VecRestoreArray(out.vector, &vecArray);
     }
   }
-  KSPDestroy(&solver);
 }
 
 }} // namespace precice, mapping
