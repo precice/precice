@@ -2046,9 +2046,6 @@ void SolverInterfaceImpl:: mapWrittenData()
           << "\" to mesh \""
           << _accessor->meshContext(context.toMeshID).mesh->getName()
           << "\".");
-      preciceCheck(context.mapping->getConstraint()==mapping::Mapping::CONSERVATIVE
-            || not _masterMode, "mapReadData()",
-           "For point2point runs only conservative write mappings are allowed ");
 
       context.mapping->computeMapping();
     }
@@ -2110,9 +2107,6 @@ void SolverInterfaceImpl:: mapReadData()
   			  << "\" to mesh \""
   			  << _accessor->meshContext(context.toMeshID).mesh->getName()
   			  << "\".");
-  	  preciceCheck(context.mapping->getConstraint()==mapping::Mapping::CONSISTENT
-  	        || not _masterMode, "mapReadData()",
-           "For point2point runs only consistent read mappings are allowed ");
 
   	  context.mapping->computeMapping();
   	}

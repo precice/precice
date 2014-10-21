@@ -564,12 +564,25 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   foreach (const ConfMapping& confMapping, _mappingConfig->mappings()){
     int fromMeshID = confMapping.fromMesh->getID();
     int toMeshID = confMapping.toMesh->getID();
+
     preciceCheck(participant->isMeshUsed(fromMeshID), "finishParticipantConfiguration()",
         "Participant \"" << participant->getName() << "\" has mapping"
         << " from mesh \"" << confMapping.fromMesh->getName() << "\" which he does not use!");
     preciceCheck(participant->isMeshUsed(toMeshID), "finishParticipantConfiguration()",
             "Participant \"" << participant->getName() << "\" has mapping"
             << " to mesh \"" << confMapping.toMesh->getName() << "\" which he does not use!");
+    if(participant->useMaster()){
+      if((confMapping.direction == mapping::MappingConfiguration::WRITE &&
+          confMapping.mapping->getConstraint()==mapping::Mapping::CONSISTENT) ||
+         (confMapping.direction == mapping::MappingConfiguration::READ &&
+          confMapping.mapping->getConstraint()==mapping::Mapping::CONSERVATIVE)){
+        preciceError ( "finishParticipantConfiguration()",
+                       "If a participant uses a master parallelization, only the mapping"
+                    << " combinations read-consistent and write-conservative are allowed");
+      }
+    }
+
+
 
     impl::MeshContext& fromMeshContext = participant->meshContext(fromMeshID);
     impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
