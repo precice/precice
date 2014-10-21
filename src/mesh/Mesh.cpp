@@ -300,7 +300,7 @@ void Mesh:: allocateDataValues()
 void Mesh:: computeState()
 {
   preciceTrace("computeState()");
-  assertion1(_dimensions==2 || _dimensions==2, _dimensions);
+  assertion1(_dimensions==2 || _dimensions==3, _dimensions);
   using utils::DynVector;
   using utils::Vector2D;
   using utils::Vector3D;
@@ -534,8 +534,13 @@ void Mesh:: computeState()
   if (computeNormals){
     foreach (Vertex& vertex, _content.vertices()){
       double length = tarch::la::norm2(vertex.getNormal());
-      assertion(tarch::la::greater(length,0.0));
-      vertex.setNormal(vertex.getNormal() / length);
+
+      // i (benjamin) changed this since there can be cases where a node has no edge though
+      // the mesh has edges in general, e.g. after filtering
+      //assertion(tarch::la::greater(length,0.0));
+      if(tarch::la::greater(length,0.0)){
+        vertex.setNormal(vertex.getNormal() / length);
+      }
     }
   }
 }

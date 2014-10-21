@@ -147,7 +147,7 @@ bool NearestProjectionMapping::doesVertexContribute(
     for (size_t i=0; i < input()->vertices().size(); i++){
       InterpolationElements& elems = _weights[i];
       foreach ( query::InterpolationElement& elem, elems ){
-        if(elem.element->getID()==vertexID && elem.weight!=0.0){
+        if(elem.element->getID()==vertexID){ // && elem.weight!=0.0){
           return true;
         }
       }
