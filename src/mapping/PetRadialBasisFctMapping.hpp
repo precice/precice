@@ -155,12 +155,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int logCLoop = 1;
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
   PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
+  PetscInt colIdx[n];
+  PetscScalar colVals[n];
   foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
+    PetscInt colNum = 0;
     for (int j=iVertex.getID(); j < inputSize; j++) {
       distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
       double coeff = _basisFunction.evaluate(norm2(distance));
       if ( not equals(coeff, 0.0)) {
-        ierr = MatSetValue(_matrixC.matrix, i, j, coeff, INSERT_VALUES); CHKERRV(ierr);
+        colVals[colNum] = coeff;
+        colIdx[colNum] = j;
+        colNum++;
       }
 #     ifdef Asserts
       if (coeff == std::numeric_limits<double>::infinity()){
@@ -174,10 +179,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
 #     endif
     }
-    MatSetValue(_matrixC.matrix, i, inputSize, 1, INSERT_VALUES);
+    colVals[colNum] = 1;
+    colIdx[colNum] = inputSize;
+    colNum++;
     for (int dim=0; dim < dimensions; dim++) {
-      ierr = MatSetValue(_matrixC.matrix, i, inputSize+1+dim, iVertex.getCoords()[dim], INSERT_VALUES); CHKERRV(ierr);
+      colVals[colNum] = iVertex.getCoords()[dim];
+      colIdx[colNum] = inputSize+1+dim;
+      colNum++;
     }
+    ierr = MatSetValues(_matrixC.matrix, 1, &i, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
     i++;
   }
   PetscLogEventEnd(logCLoop, 0, 0, 0, 0);
@@ -193,12 +203,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   i = 0;
   foreach (const mesh::Vertex& iVertex, outMesh->vertices()) {
+    PetscInt colNum = 0;
     int j = 0;
     foreach (const mesh::Vertex& jVertex, inMesh->vertices()) {
       distance = iVertex.getCoords() - jVertex.getCoords();
       double coeff = _basisFunction.evaluate(norm2(distance));
       if ( not equals(coeff, 0.0)) {
-        ierr = MatSetValue(_matrixA.matrix, i, j, coeff, INSERT_VALUES); CHKERRV(ierr);
+        colVals[colNum] = coeff;
+        colIdx[colNum] = j;
+        colNum++;
       }
 #     ifdef Asserts
       if (coeff == std::numeric_limits<double>::infinity()){
@@ -215,8 +228,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
     ierr = MatSetValue(_matrixA.matrix, i, inputSize, 1.0, INSERT_VALUES); CHKERRV(ierr); 
     for (int dim=0; dim < dimensions; dim++) {
-      ierr = MatSetValue(_matrixA.matrix, i, inputSize+1+dim, iVertex.getCoords()[dim], INSERT_VALUES); CHKERRV(ierr);
+      colVals[colNum] = iVertex.getCoords()[dim];
+      colIdx[colNum] = inputSize+1+dim;
+      colNum++;
     }
+    ierr = MatSetValues(_matrixA.matrix, 1, &i, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
     i++;
   }
   PetscLogEventEnd(logALoop, 0, 0, 0, 0);
