@@ -19,13 +19,11 @@ Using Emacs you get the indention style using this snippet.
 @code{.el}
 (setq c-basic-offset 2)
 (c-add-style "my-cc-style"
-  '("linux"
-    (c-offsets-alist . (
-			(innamespace . 0)
-			(namespace-open . 0)
-			(namespace-close . 0)
-			))))
-
+             '("bsd" (c-offsets-alist . (
+                                         (innamespace . 0)
+                                         (namespace-open . 0)
+                                         (namespace-close . 0)
+                                         ))))
 (setq c-default-style "my-cc-style")
 @endcode
 
