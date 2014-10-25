@@ -120,6 +120,7 @@ private:
   const std::string ATTR_CONSTRAINT;
   const std::string ATTR_SHAPE_PARAM;
   const std::string ATTR_SUPPORT_RADIUS;
+  const std::string ATTR_SOLVER_RTOL;
 
   const std::string VALUE_WRITE;
   const std::string VALUE_READ;
@@ -135,6 +136,16 @@ private:
   const std::string VALUE_RBF_CTPS_C2;
   const std::string VALUE_RBF_CPOLYNOMIAL_C0;
   const std::string VALUE_RBF_CPOLYNOMIAL_C6;
+
+  const std::string VALUE_PETRBF_TPS;
+  const std::string VALUE_PETRBF_MULTIQUADRICS;
+  const std::string VALUE_PETRBF_INV_MULTIQUADRICS;
+  const std::string VALUE_PETRBF_VOLUME_SPLINES;
+  const std::string VALUE_PETRBF_GAUSSIAN;
+  const std::string VALUE_PETRBF_CTPS_C2;
+  const std::string VALUE_PETRBF_CPOLYNOMIAL_C0;
+  const std::string VALUE_PETRBF_CPOLYNOMIAL_C6;
+  
   const std::string VALUE_TIMING_INITIAL;
   const std::string VALUE_TIMING_ON_ADVANCE;
   const std::string VALUE_TIMING_ON_DEMAND;
@@ -153,7 +164,8 @@ private:
     const std::string& toMeshName,
     Timing             timing,
     double             shapeParameter,
-    double             supportRadius ) const;
+    double             supportRadius,
+    double             solverRtol) const;
 
   void checkDuplicates ( const ConfiguredMapping& mapping );
 

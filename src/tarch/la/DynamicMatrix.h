@@ -82,7 +82,9 @@ public:
    */
   const Scalar& operator() (int rowIndex, int colIndex ) const;
 
-
+  /// @brief Prints the matrix to stdout.
+  void print() const;
+  
   // No more methods here? They are all generic free methods now!
 };
 

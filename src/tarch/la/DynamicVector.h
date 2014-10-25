@@ -173,6 +173,8 @@ public:
    */
   Scalar& operator() (int index);
 
+  void print() const;
+
   // No more methods here? They are all generic free methods now!
 };
 

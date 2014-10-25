@@ -81,6 +81,19 @@ const Scalar& DynamicMatrix<Scalar>::operator() (
   return _values[rowIndex * _cols + colIndex];
 }
 
+template<typename Scalar>
+void DynamicMatrix<Scalar>::print() const
+{
+  printf("==== Dynamic Matrix of size %i x %i ====\n", _rows, _cols);
+  for (int row=0; row < _rows ; row++) {
+    for (int col=0; col < _cols; col++) {
+      printf("% 6.4f", _values[row*_cols + col]);
+    }
+    printf("\n");
+  }
+}
+
+
 }} // namespace tarch, la
 
 #endif /* _TARCH_LA_DYNAMICMATRIX_CPPH_ */

@@ -5,6 +5,7 @@
 #include "mapping/NearestNeighborMapping.hpp"
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
+#include "mapping/PetRadialBasisFctMapping.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
@@ -38,6 +39,7 @@ MappingConfiguration:: MappingConfiguration
   ATTR_CONSTRAINT("constraint"),
   ATTR_SHAPE_PARAM("shape-parameter"),
   ATTR_SUPPORT_RADIUS("support-radius"),
+  ATTR_SOLVER_RTOL("solver-rtol"),
   VALUE_WRITE("write"),
   VALUE_READ("read"),
   VALUE_CONSISTENT("consistent"),
@@ -52,6 +54,16 @@ MappingConfiguration:: MappingConfiguration
   VALUE_RBF_CTPS_C2("rbf-compact-tps-c2"),
   VALUE_RBF_CPOLYNOMIAL_C0("rbf-compact-polynomial-c0"),
   VALUE_RBF_CPOLYNOMIAL_C6("rbf-compact-polynomial-c6"),
+
+  VALUE_PETRBF_TPS("petrbf-thin-plate-splines"),
+  VALUE_PETRBF_MULTIQUADRICS("petrbf-multiquadrics"),
+  VALUE_PETRBF_INV_MULTIQUADRICS("petrbf-inverse-multiquadrics"),
+  VALUE_PETRBF_VOLUME_SPLINES("petrbf-volume-splines"),
+  VALUE_PETRBF_GAUSSIAN("petrbf-gaussian"),
+  VALUE_PETRBF_CTPS_C2("petrbf-compact-tps-c2"),
+  VALUE_PETRBF_CPOLYNOMIAL_C0("petrbf-compact-polynomial-c0"),
+  VALUE_PETRBF_CPOLYNOMIAL_C6("petrbf-compact-polynomial-c6"),
+
   VALUE_TIMING_INITIAL("initial"),
   VALUE_TIMING_ON_ADVANCE("onadvance"),
   VALUE_TIMING_ON_DEMAND("ondemand"),
@@ -64,6 +76,7 @@ MappingConfiguration:: MappingConfiguration
 
   XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
   XMLAttribute<double> attrSupportRadius ( ATTR_SUPPORT_RADIUS );
+  XMLAttribute<double> attrSolverRtol ( ATTR_SOLVER_RTOL );
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
@@ -110,6 +123,53 @@ MappingConfiguration:: MappingConfiguration
   }
   {
     XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C6, occ, TAG);
+    tag.addAttribute(attrSupportRadius);
+    tags.push_back(tag);
+  }
+  // ---- Petsc RBF declarations ----
+  {
+    XMLTag tag(*this, VALUE_PETRBF_TPS, occ, TAG);
+    tag.addAttribute(attrSolverRtol);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_MULTIQUADRICS, occ, TAG);
+    tag.addAttribute(attrShapeParam);
+    tag.addAttribute(attrSolverRtol);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_INV_MULTIQUADRICS, occ, TAG);
+    tag.addAttribute(attrShapeParam);
+    tag.addAttribute(attrSolverRtol);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_VOLUME_SPLINES, occ, TAG);
+    tag.addAttribute(attrSolverRtol);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_GAUSSIAN, occ, TAG);
+    tag.addAttribute(attrSolverRtol);
+    tag.addAttribute(attrShapeParam);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_CTPS_C2, occ, TAG);
+    tag.addAttribute(attrSolverRtol);
+    tag.addAttribute(attrSupportRadius);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_CPOLYNOMIAL_C0, occ, TAG);
+    tag.addAttribute(attrSolverRtol);
+    tag.addAttribute(attrSupportRadius);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_PETRBF_CPOLYNOMIAL_C6, occ, TAG);
+    tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrSupportRadius);
     tags.push_back(tag);
   }
@@ -237,14 +297,19 @@ void MappingConfiguration:: xmlTagCallback
     Timing timing = getTiming(tag.getStringAttributeValue(ATTR_TIMING));
     double shapeParameter = 0.0;
     double supportRadius = 0.0;
+    double solverRtol = 1e-9;
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
     }
     if (tag.hasAttribute(ATTR_SUPPORT_RADIUS)){
       supportRadius = tag.getDoubleAttributeValue(ATTR_SUPPORT_RADIUS);
     }
+    if (tag.hasAttribute(ATTR_SOLVER_RTOL)){
+      solverRtol = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL);
+    }
+        
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
-        fromMesh, toMesh, timing, shapeParameter, supportRadius);
+      fromMesh, toMesh, timing, shapeParameter, supportRadius, solverRtol);
     checkDuplicates ( configuredMapping );
     _mappings.push_back ( configuredMapping );
   }
@@ -298,7 +363,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   const std::string& toMeshName,
   Timing             timing,
   double             shapeParameter,
-  double             supportRadius ) const
+  double             supportRadius,
+  double             solverRtol) const
 {
   preciceTrace5("createMapping()", direction, type, timing,
                 shapeParameter, supportRadius);
@@ -394,6 +460,46 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
       new RadialBasisFctMapping<CompactPolynomialC6>(
         constraintValue, CompactPolynomialC6(supportRadius)) );
   }
+# ifndef PRECICE_NO_PETSC
+  else if (type == VALUE_PETRBF_TPS){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, ThinPlateSplines(), solverRtol) );
+  }
+  else if (type == VALUE_PETRBF_MULTIQUADRICS){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<Multiquadrics>(
+        constraintValue, Multiquadrics(shapeParameter), solverRtol) );
+  }
+  else if (type == VALUE_PETRBF_INV_MULTIQUADRICS){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<InverseMultiquadrics>(
+        constraintValue, InverseMultiquadrics(shapeParameter), solverRtol) );
+  }
+  else if (type == VALUE_PETRBF_VOLUME_SPLINES){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, VolumeSplines(), solverRtol) );
+  }
+  else if (type == VALUE_PETRBF_GAUSSIAN){
+    configuredMapping.mapping = PtrMapping(
+        new PetRadialBasisFctMapping<Gaussian>(
+          constraintValue, Gaussian(shapeParameter), solverRtol));
+  }
+  else if (type == VALUE_PETRBF_CTPS_C2){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(
+        constraintValue, CompactThinPlateSplinesC2(supportRadius), solverRtol) );
+  }
+  else if (type == VALUE_PETRBF_CPOLYNOMIAL_C0){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<CompactPolynomialC0>(
+        constraintValue, CompactPolynomialC0(supportRadius), solverRtol) );
+  }
+  else if (type == VALUE_PETRBF_CPOLYNOMIAL_C6){
+    configuredMapping.mapping = PtrMapping (
+      new PetRadialBasisFctMapping<CompactPolynomialC6>(
+        constraintValue, CompactPolynomialC6(supportRadius), solverRtol) );
+  }
+# endif
   else {
     preciceError ( "getMapping()", "Unknown mapping type!" );
   }
