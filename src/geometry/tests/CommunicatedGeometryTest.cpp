@@ -80,6 +80,7 @@ void CommunicatedGeometryTest:: testScatterMesh ()
 
   if(utils::Parallel::getProcessRank() == 1){//Master
     masterSlaveCom->acceptConnection ( "NASTINMaster", "NASTINSlaves", 0, 1);
+    masterSlaveCom->setRankOffset(1);
   }
   else if(utils::Parallel::getProcessRank() == 2){//Slave1
     masterSlaveCom->requestConnection( "NASTINMaster", "NASTINSlaves", 0, 2 );
@@ -241,6 +242,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
 
   if(utils::Parallel::getProcessRank() == 1){//Master
     masterSlaveCom->acceptConnection ( "SOLIDZMaster", "SOLIDZSlaves", 0, 1);
+    masterSlaveCom->setRankOffset(1);
   }
   else if(utils::Parallel::getProcessRank() == 2){//Slave1
     masterSlaveCom->requestConnection( "SOLIDZMaster", "SOLIDZSlaves", 0, 2 );

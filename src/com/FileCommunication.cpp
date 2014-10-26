@@ -37,6 +37,7 @@ FileCommunication:: FileCommunication
   _binary ( binaryMode ),
   _comDirectory(communicationDirectory)
 {
+  _rankOffset = 0;
   _sendFile.setf ( std::ios::showpoint );
   _sendFile.setf ( std::ios::fixed );
   _sendFile << std::setprecision(16);

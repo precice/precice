@@ -2343,16 +2343,21 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   preciceTrace ( "initializeMasterSlaveCom.()" );
   com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
   assertion(com.get() != NULL);
+  //slaves create new communicator with ranks 0 to size-2
+  //therefore, the master uses a rankOffset and the slaves have to call request
+  // with that offset
+  int rankOffset = 1;
   if ( _masterMode ){
     preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to slaves" );
     com->acceptConnection ( _accessorName + "Master", _accessorName,
                             _accessorProcessRank, 1);
+    com->setRankOffset(rankOffset);
   }
   else {
     assertion(_slaveMode);
     preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to master" );
     com->requestConnection( _accessorName + "Master", _accessorName,
-                            _accessorProcessRank-1, _accessorCommunicatorSize-1 );
+                            _accessorProcessRank-rankOffset, _accessorCommunicatorSize-rankOffset );
   }
 }
 
@@ -2364,7 +2369,7 @@ void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
     com->send(computedTimestepLength, 0);
   }
   else if(_masterMode){
-    for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
+    for(int rankSlave = 1; rankSlave < _accessorCommunicatorSize; rankSlave++){
       double dt;
       com->receive(dt, rankSlave);
       preciceCheck(tarch::la::equals(dt, computedTimestepLength), "advance()",
@@ -2382,7 +2387,7 @@ void SolverInterfaceImpl:: syncState()
     _couplingScheme->receiveState(com, 0);
   }
   else if(_masterMode){
-    for(int rankSlave = 0; rankSlave < _accessorCommunicatorSize-1; rankSlave++){
+    for(int rankSlave = 1; rankSlave < _accessorCommunicatorSize; rankSlave++){
       _couplingScheme->sendState(com, rankSlave);
     }
   }

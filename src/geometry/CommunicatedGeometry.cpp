@@ -129,10 +129,8 @@ void CommunicatedGeometry:: gatherMesh(
     mesh::Mesh& rSlaveMesh = slaveMesh;
 
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      //slaves have ranks from 0 to size-2
-      //TODO better rewrite accept/request connection
       rSlaveMesh.clear();
-      com::CommunicateMesh(_masterSlaveCom).receiveMesh ( rSlaveMesh, rankSlave-1);
+      com::CommunicateMesh(_masterSlaveCom).receiveMesh ( rSlaveMesh, rankSlave);
       utils::DynVector coord(_dimensions);
       seed.addMesh(rSlaveMesh);
 
@@ -219,14 +217,12 @@ void CommunicatedGeometry:: scatterMesh(
     assertion(_rank==0);
     assertion(_size>1);
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      //slaves have ranks from 0 to size-2
-      //TODO better rewrite accept/request connection
-      com::CommunicateMesh(_masterSlaveCom).sendMesh ( seed, rankSlave-1 );
+      com::CommunicateMesh(_masterSlaveCom).sendMesh ( seed, rankSlave );
       int numberOfVertices = -1;
-      _masterSlaveCom->receive(numberOfVertices,rankSlave-1);
+      _masterSlaveCom->receive(numberOfVertices,rankSlave);
       std::vector<int> globalVertexIDs(numberOfVertices,-1);
       if(numberOfVertices!=0){
-        _masterSlaveCom->receive(raw(globalVertexIDs),numberOfVertices,rankSlave-1);
+        _masterSlaveCom->receive(raw(globalVertexIDs),numberOfVertices,rankSlave);
       }
       seed.getVertexDistribution()[rankSlave] = globalVertexIDs;
     }
