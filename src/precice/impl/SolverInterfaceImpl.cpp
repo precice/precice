@@ -245,6 +245,7 @@ void SolverInterfaceImpl:: configure
   }
   if (_masterMode || _slaveMode){
     initializeMasterSlaveCommunication();
+    _couplingScheme->setRankAndSize(_accessorProcessRank, _accessorCommunicatorSize);
   }
 }
 
@@ -310,40 +311,45 @@ double SolverInterfaceImpl:: initialize()
       foreach (PtrWatchPoint& watchPoint, _accessor->watchPoints()){
         watchPoint->initialize();
       }
+    }
 
       // Initialize coupling state
       double time = 0.0;
       int timestep = 1;
+
+    if(not _slaveMode){  //TODO
       if (_restartMode){
         preciceInfo("initialize()", "Reading simulation state for restart");
         io::SimulationStateIO stateIO(_checkpointFileName + "_simstate.txt");
         stateIO.readState(time, timestep, _numberAdvanceCalls);
       }
-      _couplingScheme->initialize(time, timestep);
+    }
+
+    _couplingScheme->initialize(time, timestep);
+
+    if(not _slaveMode){  //TODO
       if (_restartMode){
         preciceInfo("initialize()", "Reading coupling scheme state for restart");
         //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
         _couplingScheme->importState(_checkpointFileName);
       }
-      dt = _couplingScheme->getNextTimestepMaxLength();
-
-      timings.insert(action::Action::ALWAYS_POST);
     }
+
+    dt = _couplingScheme->getNextTimestepMaxLength();
+
+    timings.insert(action::Action::ALWAYS_POST);
+
 
     if(_masterMode || _slaveMode){
-      _couplingScheme->scatterData(_accessor->getMasterSlaveCommunication(),
-                            _accessorProcessRank, _accessorCommunicatorSize);
       syncState();
     }
-
-    std::cout << "DEBUG " << _couplingScheme->hasDataBeenExchanged() << " Rank " << _accessorProcessRank<< std::endl;
 
     if (_couplingScheme->hasDataBeenExchanged()){
       timings.insert(action::Action::ON_EXCHANGE_POST);
       mapReadData();
     }
 
-    if(not _slaveMode){
+    if(not _slaveMode){ //TODO
       performDataActions(timings, 0.0, 0.0, 0.0, dt);
       preciceDebug("Plot output...");
       foreach (const io::ExportContext& context, _accessor->exportContexts()){
@@ -356,6 +362,9 @@ double SolverInterfaceImpl:: initialize()
           }
         }
       }
+    }
+
+    if(not _slaveMode){
       preciceInfo("initialize()", _couplingScheme->printCouplingState());
     }
   }
@@ -380,7 +389,9 @@ void SolverInterfaceImpl:: initializeData ()
         timings.insert(action::Action::ON_EXCHANGE_POST);
         mapReadData();
       }
-      performDataActions(timings, 0.0, 0.0, 0.0, dt);
+      if(not _slaveMode){ //TODO
+        performDataActions(timings, 0.0, 0.0, 0.0, dt);
+      }
       resetWrittenData();
     }
   }
@@ -407,44 +418,44 @@ double SolverInterfaceImpl:: advance
     double timestepPart = 0.0;   // Length of computed part of (full) curr. dt
     double time = 0.0;
 
-    if(not _slaveMode){
-      // Update the coupling scheme time state. Necessary to get correct remainder.
-      _couplingScheme->addComputedTime(computedTimestepLength);
 
-      if (_geometryMode){
-        timestepLength = computedTimestepLength;
-        timestepPart = computedTimestepLength;
+    // Update the coupling scheme time state. Necessary to get correct remainder.
+    _couplingScheme->addComputedTime(computedTimestepLength);
+
+    if (_geometryMode){
+      timestepLength = computedTimestepLength;
+      timestepPart = computedTimestepLength;
+    }
+    else {
+      //double timestepLength = 0.0;
+      if (_couplingScheme->hasTimestepLength()){
+        timestepLength = _couplingScheme->getTimestepLength();
       }
       else {
-        //double timestepLength = 0.0;
-        if (_couplingScheme->hasTimestepLength()){
-          timestepLength = _couplingScheme->getTimestepLength();
-        }
-        else {
-          timestepLength = computedTimestepLength;
-        }
-        timestepPart = timestepLength - _couplingScheme->getThisTimestepRemainder();
+        timestepLength = computedTimestepLength;
       }
-      time = _couplingScheme->getTime();
+      timestepPart = timestepLength - _couplingScheme->getThisTimestepRemainder();
     }
+    time = _couplingScheme->getTime();
+
 
     mapWrittenData();
 
-    if(_masterMode || _slaveMode){
-      _couplingScheme->gatherData(_accessor->getMasterSlaveCommunication(),
-                                  _accessorProcessRank, _accessorCommunicatorSize);
-    }
+    std::set<action::Action::Timing> timings;
 
     if(not _slaveMode){
       //TODO dataActions not yet clear how they should work in a distributed setting
-      std::set<action::Action::Timing> timings;
       timings.insert(action::Action::ALWAYS_PRIOR);
       if (_couplingScheme->willDataBeExchanged(0.0)){
         timings.insert(action::Action::ON_EXCHANGE_PRIOR);
       }
       performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
-      preciceDebug("Advancing coupling scheme");
-      _couplingScheme->advance();
+    }
+
+    preciceDebug("Advancing coupling scheme");
+    _couplingScheme->advance();
+
+    if(not _slaveMode){ //TODO
       timings.clear();
       timings.insert(action::Action::ALWAYS_POST);
       if (_couplingScheme->hasDataBeenExchanged()){
@@ -454,11 +465,6 @@ double SolverInterfaceImpl:: advance
         timings.insert(action::Action::ON_TIMESTEP_COMPLETE_POST);
       }
       performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
-    }
-
-    if(_masterMode || _slaveMode){
-      _couplingScheme->scatterData(_accessor->getMasterSlaveCommunication(),
-                                  _accessorProcessRank, _accessorCommunicatorSize);
     }
 
     mapReadData();
@@ -2343,6 +2349,7 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   preciceTrace ( "initializeMasterSlaveCom.()" );
   com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
   assertion(com.get() != NULL);
+  _couplingScheme->setMasterSlaveCommunication(com);
   //slaves create new communicator with ranks 0 to size-2
   //therefore, the master uses a rankOffset and the slaves have to call request
   // with that offset

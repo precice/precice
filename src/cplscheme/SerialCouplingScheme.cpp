@@ -40,7 +40,6 @@ void SerialCouplingScheme::initialize
   assertion(not isInitialized());
   assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion1(startTimestep >= 0, startTimestep);
-  assertion(getCommunication()->isConnected());
   setTime(startTime);
   setTimesteps(startTimestep);
   
@@ -89,10 +88,10 @@ void SerialCouplingScheme::initialize
   // second participant is done in initializeData() instead of initialize().
   if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
     preciceDebug("Receiving data");
-    getCommunication()->startReceivePackage(0);
+    startReceivePackage();
     receiveAndSetDt();
     receiveData(getCommunication());
-    getCommunication()->finishReceivePackage();
+    finishReceivePackage();
     setHasDataBeenExchanged(true);
   }
 
@@ -123,13 +122,13 @@ void SerialCouplingScheme::initializeData()
 
   setHasDataBeenExchanged(false);
 
-  if (hasToReceiveInitData() && isCouplingOngoing()) {
+  if (hasToReceiveInitData() && isCouplingOngoing() )  {
     assertion(doesFirstStep());
     preciceDebug("Receiving data");
-    getCommunication()->startReceivePackage(0);
+    startReceivePackage();
     receiveAndSetDt();
     receiveData(getCommunication());
-    getCommunication()->finishReceivePackage();
+    finishReceivePackage();
     setHasDataBeenExchanged(true);
   }
 
@@ -148,10 +147,10 @@ void SerialCouplingScheme::initializeData()
     // The second participant sends the initialized data to the first particpant
     // here, which receives the data on call of initialize().
     sendData(getCommunication());
-    getCommunication()->startReceivePackage(0);
+    startReceivePackage();
     // This receive replaces the receive in initialize().
     receiveData(getCommunication());
-    getCommunication()->finishReceivePackage();
+    finishReceivePackage();
     setHasDataBeenExchanged(true);
   }
 
@@ -180,19 +179,17 @@ void SerialCouplingScheme:: advance()
       setIsCouplingTimestepComplete(true);
       setTimesteps(getTimesteps() + 1);
       preciceDebug("Sending data...");
-      getCommunication()->startSendPackage(0);
-      if (participantSetsDt()){
-        getCommunication()->send(getComputedTimestepPart(), 0);
-      }
+      startSendPackage();
+      sendDt();
       sendData(getCommunication());
-      getCommunication()->finishSendPackage();
+      finishSendPackage();
 
       if (isCouplingOngoing() || doesFirstStep()){
         preciceDebug("Receiving data...");
-        getCommunication()->startReceivePackage(0);
+        startReceivePackage();
         receiveAndSetDt();
         receiveData(getCommunication());
-        getCommunication()->finishReceivePackage();
+        finishReceivePackage();
       }
       setHasDataBeenExchanged(true);
       setComputedTimestepPart(0.0);
@@ -204,27 +201,22 @@ void SerialCouplingScheme:: advance()
     if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       preciceDebug("Computed full length of iteration");
       if (doesFirstStep()) {
-        getCommunication()->startSendPackage(0);
-        if (participantSetsDt()) {
-          preciceDebug("sending timestep length of " << getComputedTimestepPart());
-          getCommunication()->send(getComputedTimestepPart(), 0);
-        }
+        startSendPackage();
+        sendDt();
         sendData(getCommunication());
-        getCommunication()->finishSendPackage();
-        getCommunication()->startReceivePackage(0);
-        getCommunication()->receive(convergence, 0);
+        finishSendPackage();
+        startReceivePackage();
+        getCommunication()->receive(convergence, 0); //TODO
         if (convergence) {
           timestepCompleted();
         }
         if (isCouplingOngoing()) {
           receiveData(getCommunication());
         }
-        getCommunication()->finishReceivePackage();
+        finishReceivePackage();
       }
       else {
-        convergence = measureConvergence();
-        //assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
-        //           getIterations(), getMaxIterations());
+        convergence = measureConvergence(); //TODO
         // Stop, when maximal iteration count (given in config) is reached
         if (maxIterationsReached()) {
           convergence = true;
@@ -239,8 +231,8 @@ void SerialCouplingScheme:: advance()
         else if (getPostProcessing().get() != NULL) {
           getPostProcessing()->performPostProcessing(getSendData());
         }
-        getCommunication()->startSendPackage(0);
-        getCommunication()->send(convergence, 0);
+        startSendPackage();
+        getCommunication()->send(convergence, 0); //TODO
         if (isCouplingOngoing()) {
           if (convergence && (getExtrapolationOrder() > 0)){
             extrapolateData(getSendData()); // Also stores data
@@ -258,14 +250,14 @@ void SerialCouplingScheme:: advance()
             }
           }
           sendData(getCommunication());
-          getCommunication()->finishSendPackage();
-          getCommunication()->startReceivePackage(0);
+          finishSendPackage();
+          startReceivePackage();
           receiveAndSetDt();
           receiveData(getCommunication());
-          getCommunication()->finishReceivePackage();
+          finishReceivePackage();
         }
         else {
-          getCommunication()->finishSendPackage();
+          finishSendPackage();
         }
       }
     

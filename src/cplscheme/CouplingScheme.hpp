@@ -230,16 +230,17 @@ public:
     int                   rankSender ) =0;
 
   //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
-  virtual void gatherData (
-    com::PtrCommunication communication,
-    int comRank,
-    int comSize){}
+  virtual void gatherData (){}
 
   //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
-  virtual void scatterData (
-    com::PtrCommunication communication,
-    int comRank,
-    int comSize){}
+  virtual void scatterData (){}
+
+  //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
+  virtual void setMasterSlaveCommunication(
+    com::PtrCommunication com){}
+
+  //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
+  virtual void setRankAndSize(int rank, int size){}
 
 };
 

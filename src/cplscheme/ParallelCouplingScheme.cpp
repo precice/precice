@@ -43,7 +43,6 @@ void ParallelCouplingScheme::initialize
   assertion(not isInitialized());
   assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion1(startTimestep >= 0, startTimestep);
-  assertion(getCommunication()->isConnected());
   setTime(startTime);
   setTimesteps(startTimestep);
   if (_couplingMode == Implicit) {
@@ -103,23 +102,23 @@ void ParallelCouplingScheme::initializeData()
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (hasToSendInitData()) {
-      getCommunication()->startSendPackage(0);
+      startSendPackage();
       sendData(getCommunication());
-      getCommunication()->finishSendPackage();
+      finishSendPackage();
     }
     if (hasToReceiveInitData()) {
-      getCommunication()->startReceivePackage(0);
+      startReceivePackage();
       receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
+      finishReceivePackage();
       setHasDataBeenExchanged(true);
     }
   }
 
   else { // second participant
     if (hasToReceiveInitData()) {
-      getCommunication()->startReceivePackage(0);
+      startReceivePackage();
       receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
+      finishReceivePackage();
       setHasDataBeenExchanged(true);
 
       // second participant has to save values for extrapolation
@@ -141,9 +140,9 @@ void ParallelCouplingScheme::initializeData()
           pair.second->oldValues.shiftSetFirst(*pair.second->values);
         }
       }
-      getCommunication()->startSendPackage(0);
+      startSendPackage();
       sendData(getCommunication());
-      getCommunication()->finishSendPackage();
+      finishSendPackage();
     }
   }
 
@@ -177,35 +176,31 @@ void ParallelCouplingScheme::explicitAdvance()
 
     if (doesFirstStep()) {
       preciceDebug("Sending data...");
-      getCommunication()->startSendPackage(0);
-      if (participantSetsDt()) {
-        getCommunication()->send(getComputedTimestepPart(), 0);
-      }
+      startSendPackage();
+      sendDt();
       sendData(getCommunication());
-      getCommunication()->finishSendPackage();
+      finishSendPackage();
 
       preciceDebug("Receiving data...");
-      getCommunication()->startReceivePackage(0);
+      startReceivePackage();
       receiveAndSetDt();
       receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
+      finishReceivePackage();
       setHasDataBeenExchanged(true);
     }
     else { //second participant
       preciceDebug("Receiving data...");
-      getCommunication()->startReceivePackage(0);
+      startReceivePackage();
       receiveAndSetDt();
       receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
+      finishReceivePackage();
       setHasDataBeenExchanged(true);
 
       preciceDebug("Sending data...");
-      getCommunication()->startSendPackage(0);
-      if (participantSetsDt()) {
-        getCommunication()->send(getComputedTimestepPart(), 0);
-      }
+      startSendPackage();
+      sendDt();
       sendData(getCommunication());
-      getCommunication()->finishSendPackage();
+      finishSendPackage();
     }
 
     //both participants
@@ -227,28 +222,26 @@ void ParallelCouplingScheme::implicitAdvance()
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     preciceDebug("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
-      getCommunication()->startSendPackage(0);
+      startSendPackage();
       sendData(getCommunication());
-      getCommunication()->finishSendPackage();
-      getCommunication()->startReceivePackage(0);
-      getCommunication()->receive(convergence, 0);
+      finishSendPackage();
+      startReceivePackage();
+      getCommunication()->receive(convergence, 0); //TODO
       if (convergence) {
         timestepCompleted();
       }
       if (isCouplingOngoing()) {
         receiveData(getCommunication());
       }
-      getCommunication()->finishReceivePackage();
+      finishReceivePackage();
     }
     else { // second participant
-      getCommunication()->startReceivePackage(0);
+      startReceivePackage();
       receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
+      finishReceivePackage();
 
       convergence = measureConvergence();
 
-      //assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
-      //           getIterations(), getMaxIterations());
       // Stop, when maximal iteration count (given in config) is reached
       if (maxIterationsReached()) {
         convergence = true;
@@ -263,8 +256,8 @@ void ParallelCouplingScheme::implicitAdvance()
       else if (getPostProcessing().get() != NULL) {
         getPostProcessing()->performPostProcessing(getAllData());
       }
-      getCommunication()->startSendPackage(0);
-      getCommunication()->send(convergence, 0);
+      startSendPackage();
+      getCommunication()->send(convergence, 0); //TODO
 
       if (isCouplingOngoing()) {
         if (convergence && (getExtrapolationOrder() > 0)){
@@ -284,7 +277,7 @@ void ParallelCouplingScheme::implicitAdvance()
         }
         sendData(getCommunication());
       }
-      getCommunication()->finishSendPackage();
+      finishSendPackage();
     }
 
     // both participants
