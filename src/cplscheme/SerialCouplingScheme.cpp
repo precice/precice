@@ -206,7 +206,7 @@ void SerialCouplingScheme:: advance()
         sendData(getCommunication());
         finishSendPackage();
         startReceivePackage();
-        getCommunication()->receive(convergence, 0); //TODO
+        convergence = receiveConvergence();
         if (convergence) {
           timestepCompleted();
         }
@@ -232,7 +232,7 @@ void SerialCouplingScheme:: advance()
           getPostProcessing()->performPostProcessing(getSendData());
         }
         startSendPackage();
-        getCommunication()->send(convergence, 0); //TODO
+        sendConvergence(convergence);
         if (isCouplingOngoing()) {
           if (convergence && (getExtrapolationOrder() > 0)){
             extrapolateData(getSendData()); // Also stores data

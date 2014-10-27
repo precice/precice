@@ -226,7 +226,7 @@ void ParallelCouplingScheme::implicitAdvance()
       sendData(getCommunication());
       finishSendPackage();
       startReceivePackage();
-      getCommunication()->receive(convergence, 0); //TODO
+      convergence = receiveConvergence();
       if (convergence) {
         timestepCompleted();
       }
@@ -257,7 +257,7 @@ void ParallelCouplingScheme::implicitAdvance()
         getPostProcessing()->performPostProcessing(getAllData());
       }
       startSendPackage();
-      getCommunication()->send(convergence, 0); //TODO
+      sendConvergence(convergence);
 
       if (isCouplingOngoing()) {
         if (convergence && (getExtrapolationOrder() > 0)){

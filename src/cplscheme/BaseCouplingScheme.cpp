@@ -757,6 +757,39 @@ void BaseCouplingScheme:: finishSendPackage()
   }
 }
 
+void BaseCouplingScheme:: sendConvergence(bool convergence)
+{
+  preciceTrace("sendConvergence()");
+  if(not _slaveMode){
+    assertion(_communication.get() != NULL);
+    assertion(_communication->isConnected());
+    _communication->send(convergence, 0);
+  }
+}
+
+bool BaseCouplingScheme:: receiveConvergence()
+{
+  preciceTrace("sendConvergence()");
+  bool convergence = false;
+  if(not _slaveMode){
+    assertion(_communication.get() != NULL);
+    assertion(_communication->isConnected());
+    _communication->receive(convergence, 0);
+  }
+  if(_slaveMode){
+    assertion(_masterSlavecommunication.get() != NULL);
+    assertion(_masterSlavecommunication->isConnected());
+    _masterSlavecommunication->receive(convergence, 0);
+  }
+  if(_masterMode){
+    assertion(not _slaveMode);
+    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+      _masterSlavecommunication->send(convergence, rankSlave);
+    }
+  }
+  return convergence;
+}
+
 void BaseCouplingScheme:: checkCompletenessRequiredActions ()
 {
   preciceTrace("checkCompletenessRequiredActions()");

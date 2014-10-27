@@ -439,6 +439,18 @@ protected:
 
   void finishSendPackage();
 
+  /**
+   * @brief Sends information if coupling scheme is converged (implicit coupling)
+   * to other participant
+   */
+  void sendConvergence(bool convergence);
+
+  /**
+   * @brief Receives information if coupling scheme is converged (implicit coupling)
+   * from other participant and distributes that information then to all slaves
+   */
+  bool receiveConvergence();
+
   /// @brief Holds relevant variables to perform a convergence measurement.
   struct ConvergenceMeasure
   {
