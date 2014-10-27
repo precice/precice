@@ -23,18 +23,12 @@ CommunicatedGeometry:: CommunicatedGeometry
   const utils::DynVector&  offset,
   const std::string&       accessor,
   const std::string&       provider,
-  com::PtrCommunication   masterSlaveCom,
-  int                     rank,
-  int                     size,
   int                     dimensions)
 :
   Geometry ( offset ),
   _accessorName ( accessor ),
   _providerName ( provider ),
   _receivers (),
-  _masterSlaveCom(masterSlaveCom),
-  _rank(rank),
-  _size(size),
   _dimensions(dimensions),
   _boundingFromMapping(),
   _boundingToMapping()
@@ -67,10 +61,10 @@ void CommunicatedGeometry:: specializedCreate
                  "No receivers specified for communicated geometry to create "
                  << "mesh \"" << seed.getName() << "\"!" );
   if ( _accessorName == _providerName ) {
-    if(_size>1){
+    if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ){
       gatherMesh(seed);
     }
-    if(_rank==0){
+    if(not utils::MasterSlave::_slaveMode){
       preciceCheck ( seed.vertices().size() > 0,
                      "specializedCreate()", "Participant \"" << _accessorName
                      << "\" provides an invalid (possibly empty) mesh \""
@@ -85,7 +79,7 @@ void CommunicatedGeometry:: specializedCreate
     }
   }
   else if ( utils::contained(_accessorName, _receivers) ) {
-    if(_rank==0){
+    if(not utils::MasterSlave::_slaveMode){
       assertion ( seed.vertices().size() == 0 );
       assertion ( utils::contained(_accessorName, _receivers) );
       com::PtrCommunication com ( _receivers[_accessorName] );
@@ -94,7 +88,7 @@ void CommunicatedGeometry:: specializedCreate
       }
       com::CommunicateMesh(com).receiveMesh ( seed, 0 );
     }
-    if(_size>1){
+    if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
       scatterMesh(seed);
     }
   }
@@ -109,14 +103,14 @@ void CommunicatedGeometry:: specializedCreate
 void CommunicatedGeometry:: gatherMesh(
     mesh::Mesh& seed)
 {
-  preciceTrace1 ( "gatherMesh()", _rank );
+  preciceTrace1 ( "gatherMesh()", utils::MasterSlave::_rank );
 
-  if(_rank>0){ //slave
-    com::CommunicateMesh(_masterSlaveCom).sendMesh ( seed, 0 );
+  if(utils::MasterSlave::_rank>0){ //slave
+    com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( seed, 0 );
   }
   else{ //master
-    assertion(_rank==0);
-    assertion(_size>1);
+    assertion(utils::MasterSlave::_rank==0);
+    assertion(utils::MasterSlave::_size>1);
 
     int numberOfVertices = 0;
     //vertices of master mesh part do already exist
@@ -128,9 +122,9 @@ void CommunicatedGeometry:: gatherMesh(
     mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
     mesh::Mesh& rSlaveMesh = slaveMesh;
 
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
       rSlaveMesh.clear();
-      com::CommunicateMesh(_masterSlaveCom).receiveMesh ( rSlaveMesh, rankSlave);
+      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( rSlaveMesh, rankSlave);
       utils::DynVector coord(_dimensions);
       seed.addMesh(rSlaveMesh);
 
@@ -145,12 +139,12 @@ void CommunicatedGeometry:: gatherMesh(
 void CommunicatedGeometry:: scatterMesh(
     mesh::Mesh& seed)
 {
-  preciceTrace1 ( "scatterMesh()", _rank );
+  preciceTrace1 ( "scatterMesh()", utils::MasterSlave::_rank );
   using tarch::la::raw;
 
-  if(_rank>0){ //slave
+  if(utils::MasterSlave::_rank>0){ //slave
 
-    com::CommunicateMesh(_masterSlaveCom).receiveMesh ( seed, 0);
+    com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( seed, 0);
 
     seed.computeState();
     computeBoundingMappings();
@@ -159,7 +153,7 @@ void CommunicatedGeometry:: scatterMesh(
 
     preciceDebug("Bounding mesh. #vertices: " << seed.vertices().size()
          <<", #edges: " << seed.edges().size()
-         <<", #triangles: " << seed.triangles().size() << ", rank: " << _rank);
+         <<", #triangles: " << seed.triangles().size() << ", rank: " << utils::MasterSlave::_rank);
 
     std::vector<int> globalVertexIDs;
     std::map<int, mesh::Vertex*> vertexMap;
@@ -204,25 +198,25 @@ void CommunicatedGeometry:: scatterMesh(
 
     preciceDebug("Filtered mesh. #vertices: " << seed.vertices().size()
          <<", #edges: " << seed.edges().size()
-         <<", #triangles: " << seed.triangles().size() << ", rank: " << _rank);
+         <<", #triangles: " << seed.triangles().size() << ", rank: " << utils::MasterSlave::_rank);
 
     int numberOfVertices = globalVertexIDs.size();
-    _masterSlaveCom->send(numberOfVertices,0);
+    utils::MasterSlave::_communication->send(numberOfVertices,0);
     if(numberOfVertices!=0){
-      _masterSlaveCom->send(raw(globalVertexIDs),numberOfVertices,0);
+      utils::MasterSlave::_communication->send(raw(globalVertexIDs),numberOfVertices,0);
     }
 
   }
   else{ //master
-    assertion(_rank==0);
-    assertion(_size>1);
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      com::CommunicateMesh(_masterSlaveCom).sendMesh ( seed, rankSlave );
+    assertion(utils::MasterSlave::_rank==0);
+    assertion(utils::MasterSlave::_size>1);
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( seed, rankSlave );
       int numberOfVertices = -1;
-      _masterSlaveCom->receive(numberOfVertices,rankSlave);
+      utils::MasterSlave::_communication->receive(numberOfVertices,rankSlave);
       std::vector<int> globalVertexIDs(numberOfVertices,-1);
       if(numberOfVertices!=0){
-        _masterSlaveCom->receive(raw(globalVertexIDs),numberOfVertices,rankSlave);
+        utils::MasterSlave::_communication->receive(raw(globalVertexIDs),numberOfVertices,rankSlave);
       }
       seed.getVertexDistribution()[rankSlave] = globalVertexIDs;
     }

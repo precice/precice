@@ -8,6 +8,7 @@
 #include "com/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
+#include "utils/MasterSlave.hpp"
 #include "tarch/logging/Log.h"
 #include <string>
 #include <map>
@@ -26,9 +27,6 @@ public:
     const utils::DynVector& offset,
     const std::string&      accessor,
     const std::string&      provider,
-    com::PtrCommunication   masterSlaveCom,
-    int                     rank,
-    int                     size,
     int                     dimensions);
 
   virtual ~CommunicatedGeometry() {}
@@ -70,12 +68,6 @@ private:
   std::string _providerName;
 
   std::map<std::string,com::PtrCommunication> _receivers;
-
-  com::PtrCommunication _masterSlaveCom;
-
-  int _rank;
-
-  int _size;
 
   int _dimensions;
 

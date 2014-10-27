@@ -270,12 +270,6 @@ protected:
   /// @brief Sets whether explicit or implicit coupling is being done.
   CouplingMode _couplingMode;
 
-  // @brief If true, the interface uses a master-slave concept and this process is a slave.
-  bool _slaveMode;
-
-  // @brief If true, the interface uses a master-slave concept and this process is the master.
-  bool _masterMode;
-
   /// @brief Updates internal state of coupling scheme for next timestep.
   void timestepCompleted();
 
@@ -505,12 +499,6 @@ protected:
 
   bool maxIterationsReached();
 
-  void setMasterSlaveCommunication(com::PtrCommunication com){
-    _masterSlavecommunication = com;
-  }
-
-  void setRankAndSize(int rank, int size);
-
   /// @brief Smallest number, taking validDigists into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
   
@@ -518,9 +506,6 @@ private:
 
   /// @brief Communication device to the other coupling participant.
   com::PtrCommunication _communication;
-
-  /// @brief Communication device between master and slave of this participant
-  com::PtrCommunication _masterSlavecommunication;
 
   /// @brief Determines, if the timestep length is set by the participant.
   bool _participantSetsDt;
@@ -589,12 +574,6 @@ private:
   
   /// @brief Responsible for monitoring iteration count over timesteps.
   io::TXTTableWriter _iterationsWriter;
-
-  /// @brief Rank if master-slave scheme is used
-  int _rank;
-
-  /// @brief Size if master-slave scheme is used
-  int _size;
 
   int getVertexOffset(std::map<int,int>& vertexDistribution, int rank, int dim);
 

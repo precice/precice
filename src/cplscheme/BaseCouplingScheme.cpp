@@ -5,6 +5,7 @@
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
 #include "utils/Globals.hpp"
+#include "utils/MasterSlave.hpp"
 #include "impl/PostProcessing.hpp"
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
@@ -25,8 +26,6 @@ BaseCouplingScheme:: BaseCouplingScheme
   int    validDigits)
   :
   _couplingMode(Undefined),
-  _slaveMode(false),
-  _masterMode(false),
   _eps(std::pow(10.0, -1 * validDigits)),
   _participantSetsDt(false),
   _participantReceivesDt(false),
@@ -51,9 +50,7 @@ BaseCouplingScheme:: BaseCouplingScheme
   _actions(),
   _sendData(),
   _receiveData (),
-  _iterationsWriter("iterations-unknown.txt"),
-  _rank(-1),
-  _size(-1)
+  _iterationsWriter("iterations-unknown.txt")
 {
   preciceCheck (
     not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -82,14 +79,11 @@ BaseCouplingScheme::BaseCouplingScheme
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
   :
-  _slaveMode(false),
-  _masterMode(false),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _convergenceMeasures(),
   _eps(std::pow(10.0, -1 * validDigits)),
   _communication(communication),
-  _masterSlavecommunication(),
   _participantSetsDt(false),
   _participantReceivesDt(false),
   _maxTime(maxTime),
@@ -114,9 +108,7 @@ BaseCouplingScheme::BaseCouplingScheme
   _actions(),
   _sendData(),
   _receiveData(),
-  _iterationsWriter("iterations-" + localParticipant + ".txt"),
-  _rank(-1),
-  _size(-1)
+  _iterationsWriter("iterations-" + localParticipant + ".txt")
 {
   preciceCheck(
     not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -167,19 +159,19 @@ void BaseCouplingScheme:: receiveAndSetDt()
   preciceTrace("receiveAndSetDt()");
   if (participantReceivesDt()){
     double dt = UNDEFINED_TIMESTEP_LENGTH;
-    if(not _slaveMode){
+    if(not utils::MasterSlave::_slaveMode){
       getCommunication()->receive(dt, 0);
       preciceDebug("Received timestep length of " << dt);
       assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
       setTimestepLength(dt);
     }
-    if(_masterMode){
-      for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-        _masterSlavecommunication->send(dt, rankSlave);
+    if(utils::MasterSlave::_masterMode){
+      for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+        utils::MasterSlave::_communication->send(dt, rankSlave);
       }
     }
-    if(_slaveMode){
-      _masterSlavecommunication->receive(dt, 0);
+    if(utils::MasterSlave::_slaveMode){
+      utils::MasterSlave::_communication->receive(dt, 0);
       assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
       setTimestepLength(dt);
     }
@@ -188,7 +180,7 @@ void BaseCouplingScheme:: receiveAndSetDt()
 
 void BaseCouplingScheme:: sendDt(){
   preciceTrace("sendDt()");
-  if (participantSetsDt() && not _slaveMode){
+  if (participantSetsDt() && not utils::MasterSlave::_slaveMode){
     preciceDebug("sending timestep length of " << getComputedTimestepPart());
     getCommunication()->send(getComputedTimestepPart(), 0);
   }
@@ -308,12 +300,12 @@ std::vector<int> BaseCouplingScheme:: sendData
 {
   preciceTrace("sendData()");
 
-  if(_slaveMode || _masterMode){
+  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     gatherData();
   }
 
   std::vector<int> sentDataIDs;
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     assertion(communication.get() != NULL);
     assertion(communication->isConnected());
     foreach (DataMap::value_type& pair, _sendData){
@@ -334,7 +326,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
 {
   preciceTrace("receiveData()");
   std::vector<int> receivedDataIDs;
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     assertion(communication.get() != NULL);
     assertion(communication->isConnected());
 
@@ -348,7 +340,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
     preciceDebug("Number of received data sets = " << receivedDataIDs.size());
   }
 
-  if(_slaveMode || _masterMode){
+  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     scatterData();
   }
 
@@ -359,33 +351,33 @@ void BaseCouplingScheme:: gatherData
 ()
 {
   preciceTrace("gatherData()");
-  assertion(_masterSlavecommunication.get() != NULL);
-  assertion(_masterSlavecommunication->isConnected());
-  assertion(_size>1);
-  assertion(_rank!=-1);
+  assertion(utils::MasterSlave::_communication.get() != NULL);
+  assertion(utils::MasterSlave::_communication->isConnected());
+  assertion(utils::MasterSlave::_size>1);
+  assertion(utils::MasterSlave::_rank!=-1);
 
-  if(_rank>0){ //slave
+  if(utils::MasterSlave::_rank>0){ //slave
     foreach (DataMap::value_type& pair, _sendData){
       int size = pair.second->values->size();
       if (size > 0) {
-        _masterSlavecommunication->send(tarch::la::raw(*pair.second->values), size, 0);
+        utils::MasterSlave::_communication->send(tarch::la::raw(*pair.second->values), size, 0);
       }
     }
   }
   else{ //master
-    assertion(_rank==0);
+    assertion(utils::MasterSlave::_rank==0);
     foreach (DataMap::value_type& pair, _sendData){
       utils::DynVector& valuesMaster = *pair.second->values;
       std::map<int,std::vector<int> >& vertexDistribution = pair.second->mesh->getVertexDistribution();
       int dim = pair.second->mesh->getDimensions();
-      for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+      for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
         std::vector<int>& globalIndices = vertexDistribution[rankSlave];
         int numberOfVertices = globalIndices.size();
         preciceDebug("Number of vertices = " << numberOfVertices);
         preciceDebug("Size ValuesMaster = " << valuesMaster.size() );
         if (numberOfVertices > 0) {
           double* valuesSlave = new double[numberOfVertices*dim];
-          _masterSlavecommunication->receive(valuesSlave, numberOfVertices*dim, rankSlave);
+          utils::MasterSlave::_communication->receive(valuesSlave, numberOfVertices*dim, rankSlave);
           for(int i=0; i<numberOfVertices;i++){
             for(int j=0;j<dim;j++){
               valuesMaster[globalIndices[i]*dim+j] += valuesSlave[i*dim+j];
@@ -402,26 +394,26 @@ void BaseCouplingScheme:: scatterData
 ()
 {
   preciceTrace("scatterData()");
-  assertion(_masterSlavecommunication.get() != NULL);
-  assertion(_masterSlavecommunication->isConnected());
-  assertion(_size>1);
-  assertion(_rank!=-1);
+  assertion(utils::MasterSlave::_communication.get() != NULL);
+  assertion(utils::MasterSlave::_communication->isConnected());
+  assertion(utils::MasterSlave::_size>1);
+  assertion(utils::MasterSlave::_rank!=-1);
 
-  if(_rank>0){ //slave
+  if(utils::MasterSlave::_rank>0){ //slave
     foreach (DataMap::value_type& pair, _receiveData){
       int size = pair.second->values->size();
       if (size > 0) {
-        _masterSlavecommunication->receive(tarch::la::raw(*pair.second->values), size, 0);
+        utils::MasterSlave::_communication->receive(tarch::la::raw(*pair.second->values), size, 0);
       }
     }
   }
   else{ //master
-    assertion(_rank==0);
+    assertion(utils::MasterSlave::_rank==0);
     foreach (DataMap::value_type& pair, _receiveData){
       utils::DynVector& valuesMaster = *pair.second->values;
       std::map<int,std::vector<int> >& vertexDistribution = pair.second->mesh->getVertexDistribution();
       int dim = pair.second->mesh->getDimensions();
-      for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+      for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
         std::vector<int>& globalIndices = vertexDistribution[rankSlave];
         int numberOfVertices = globalIndices.size();
         preciceDebug("Number of vertices = " << numberOfVertices);
@@ -433,7 +425,7 @@ void BaseCouplingScheme:: scatterData
               valuesSlave[i*dim+j] = valuesMaster[globalIndices[i]*dim+j];
             }
           }
-          _masterSlavecommunication->send(valuesSlave, numberOfVertices*dim, rankSlave);
+          utils::MasterSlave::_communication->send(valuesSlave, numberOfVertices*dim, rankSlave);
           delete valuesSlave;
         }
       }
@@ -731,28 +723,28 @@ std::string BaseCouplingScheme:: printActionsState () const
 
 void BaseCouplingScheme:: startReceivePackage()
 {
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     getCommunication()->startReceivePackage(0);
   }
 }
 
 void BaseCouplingScheme:: finishReceivePackage()
 {
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     getCommunication()->finishReceivePackage();
   }
 }
 
 void BaseCouplingScheme:: startSendPackage()
 {
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     getCommunication()->startSendPackage(0);
   }
 }
 
 void BaseCouplingScheme:: finishSendPackage()
 {
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     getCommunication()->finishSendPackage();
   }
 }
@@ -760,7 +752,7 @@ void BaseCouplingScheme:: finishSendPackage()
 void BaseCouplingScheme:: sendConvergence(bool convergence)
 {
   preciceTrace("sendConvergence()");
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     assertion(_communication.get() != NULL);
     assertion(_communication->isConnected());
     _communication->send(convergence, 0);
@@ -771,20 +763,20 @@ bool BaseCouplingScheme:: receiveConvergence()
 {
   preciceTrace("sendConvergence()");
   bool convergence = false;
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     assertion(_communication.get() != NULL);
     assertion(_communication->isConnected());
     _communication->receive(convergence, 0);
   }
-  if(_slaveMode){
-    assertion(_masterSlavecommunication.get() != NULL);
-    assertion(_masterSlavecommunication->isConnected());
-    _masterSlavecommunication->receive(convergence, 0);
+  if(utils::MasterSlave::_slaveMode){
+    assertion(utils::MasterSlave::_communication.get() != NULL);
+    assertion(utils::MasterSlave::_communication->isConnected());
+    utils::MasterSlave::_communication->receive(convergence, 0);
   }
-  if(_masterMode){
-    assertion(not _slaveMode);
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      _masterSlavecommunication->send(convergence, rankSlave);
+  if(utils::MasterSlave::_masterMode){
+    assertion(not utils::MasterSlave::_slaveMode);
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      utils::MasterSlave::_communication->send(convergence, rankSlave);
     }
   }
   return convergence;
@@ -921,7 +913,7 @@ bool BaseCouplingScheme:: measureConvergence()
 
 void BaseCouplingScheme::initializeTXTWriters()
 {
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     _iterationsWriter.addData("Timesteps", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Total Iterations", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
@@ -931,7 +923,7 @@ void BaseCouplingScheme::initializeTXTWriters()
 
 void BaseCouplingScheme::advanceTXTWriters()
 {
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     _iterationsWriter.writeData("Timesteps", _timesteps-1);
     _iterationsWriter.writeData("Total Iterations", _totalIterations);
     _iterationsWriter.writeData("Iterations", _iterations);
@@ -991,7 +983,7 @@ void BaseCouplingScheme:: updateTimeAndIterations(bool convergence){
 void BaseCouplingScheme:: timestepCompleted()
 {
   preciceTrace2("timestepCompleted()", getTimesteps(), getTime());
-  if(not _slaveMode){
+  if(not utils::MasterSlave::_slaveMode){
     preciceInfo("timestepCompleted()", "Timestep completed");
   }
   setIsCouplingTimestepComplete(true);
@@ -1007,15 +999,6 @@ bool BaseCouplingScheme:: maxIterationsReached(){
   return _iterations == _maxIterations;
 }
 
-void BaseCouplingScheme:: setRankAndSize(int rank, int size){
-  preciceTrace2("setRankAndSize()", rank, size);
-  _rank = rank;
-  _size = size;
-  assertion(_rank != -1 && _size != -1);
-  _slaveMode = (_rank != 0);
-  _masterMode = (_rank == 0);
-  preciceDebug("slaveMode: " << _slaveMode <<", masterMode: " << _masterMode);
-}
 
 
 

@@ -568,12 +568,6 @@ private:
   // @brief If true, the interface uses a server to operate on coupling data.
   bool _clientMode;
 
-  // @brief If true, the interface uses a master-slave concept and this process is a slave.
-  bool _slaveMode;
-
-  // @brief If true, the interface uses a master-slave concept and this process is the master.
-  bool _masterMode;
-
   // @brief Communication when for client-server mode.
   //com::PtrCommunication _clientServerCommunication;
 

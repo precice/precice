@@ -46,6 +46,7 @@
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/MasterSlave.hpp"
 #include "mapping/Mapping.hpp"
 #include <set>
 #include <limits>
@@ -74,8 +75,6 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _restartMode(false),
   _serverMode(serverMode),
   _clientMode(false),
-  _slaveMode(false),
-  _masterMode(false),
   _meshIDs(),
   _dataIDs(),
   _exportVTKNeighbors(),
@@ -159,16 +158,8 @@ void SolverInterfaceImpl:: configure
   _clientMode = (not _serverMode) && _accessor->useServer();
 
   if(_accessor->useMaster()){
-    preciceCheck(_accessorCommunicatorSize>=2,
-                         "configure()", "You cannot use a master with a serial participant.");
-    if(_accessorProcessRank==0){
-      _masterMode = true;
-    }
-    else{
-      _slaveMode = true;
-    }
+    utils::MasterSlave::configure(_accessorProcessRank, _accessorCommunicatorSize);
   }
-
 
   _participants = config.getParticipantConfiguration()->getParticipants();
   configureCommunications(config.getCommunicationConfiguration());
@@ -178,12 +169,6 @@ void SolverInterfaceImpl:: configure
   }
   if (_clientMode){
     preciceInfo("configure()", "[PRECICE] Run in client mode");
-  }
-  if (_masterMode){
-    preciceInfo("configure()", "[PRECICE] Run in master mode");
-  }
-  if (_slaveMode){
-    preciceInfo("configure()", "[PRECICE] Run in slave mode");
   }
 
   if (_geometryMode){
@@ -243,10 +228,11 @@ void SolverInterfaceImpl:: configure
   if (_clientMode){
     initializeClientServerCommunication();
   }
-  if (_masterMode || _slaveMode){
+  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
     initializeMasterSlaveCommunication();
-    _couplingScheme->setRankAndSize(_accessorProcessRank, _accessorCommunicatorSize);
   }
+  preciceDebug("slaveMode: " << utils::MasterSlave::_slaveMode
+                  <<", masterMode: " << utils::MasterSlave::_masterMode);
 }
 
 double SolverInterfaceImpl:: initialize()
@@ -262,7 +248,7 @@ double SolverInterfaceImpl:: initialize()
     // Setup communication
     if (not _geometryMode){
 
-      if(not _slaveMode){
+      if(not utils::MasterSlave::_slaveMode){
         typedef std::map<std::string,Communication>::value_type ComPair;
         preciceInfo("initialize()", "Setting up communication to coupling partner/s " );
         foreach (ComPair& comPair, _communications){
@@ -275,7 +261,7 @@ double SolverInterfaceImpl:: initialize()
                        << remoteName << " could not be created! Check compile "
                        "flags used!");
           if (comPair.second.isRequesting){
-            if(_masterMode){
+            if(utils::MasterSlave::_masterMode){
               communication->requestConnection(remoteName, localName,
                             _accessorProcessRank, 1);
             }
@@ -285,7 +271,7 @@ double SolverInterfaceImpl:: initialize()
             }
           }
           else {
-            if(_masterMode){
+            if(utils::MasterSlave::_masterMode){
               communication->acceptConnection(localName, remoteName,
                             _accessorProcessRank, 1);
             }
@@ -306,7 +292,7 @@ double SolverInterfaceImpl:: initialize()
     std::set<action::Action::Timing> timings;
     double dt = 0.0;
 
-    if(not _slaveMode){
+    if(not utils::MasterSlave::_slaveMode){
       //TODO not yet sure how to treat watchpoints
       foreach (PtrWatchPoint& watchPoint, _accessor->watchPoints()){
         watchPoint->initialize();
@@ -317,7 +303,7 @@ double SolverInterfaceImpl:: initialize()
       double time = 0.0;
       int timestep = 1;
 
-    if(not _slaveMode){  //TODO
+    if(not utils::MasterSlave::_slaveMode){  //TODO
       if (_restartMode){
         preciceInfo("initialize()", "Reading simulation state for restart");
         io::SimulationStateIO stateIO(_checkpointFileName + "_simstate.txt");
@@ -327,7 +313,7 @@ double SolverInterfaceImpl:: initialize()
 
     _couplingScheme->initialize(time, timestep);
 
-    if(not _slaveMode){  //TODO
+    if(not utils::MasterSlave::_slaveMode){  //TODO
       if (_restartMode){
         preciceInfo("initialize()", "Reading coupling scheme state for restart");
         //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
@@ -340,7 +326,7 @@ double SolverInterfaceImpl:: initialize()
     timings.insert(action::Action::ALWAYS_POST);
 
 
-    if(_masterMode || _slaveMode){
+    if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
       syncState();
     }
 
@@ -349,7 +335,7 @@ double SolverInterfaceImpl:: initialize()
       mapReadData();
     }
 
-    if(not _slaveMode){ //TODO
+    if(not utils::MasterSlave::_slaveMode){ //TODO
       performDataActions(timings, 0.0, 0.0, 0.0, dt);
       preciceDebug("Plot output...");
       foreach (const io::ExportContext& context, _accessor->exportContexts()){
@@ -364,7 +350,7 @@ double SolverInterfaceImpl:: initialize()
       }
     }
 
-    if(not _slaveMode){
+    if(not utils::MasterSlave::_slaveMode){
       preciceInfo("initialize()", _couplingScheme->printCouplingState());
     }
   }
@@ -389,7 +375,7 @@ void SolverInterfaceImpl:: initializeData ()
         timings.insert(action::Action::ON_EXCHANGE_POST);
         mapReadData();
       }
-      if(not _slaveMode){ //TODO
+      if(not utils::MasterSlave::_slaveMode){ //TODO
         performDataActions(timings, 0.0, 0.0, 0.0, dt);
       }
       resetWrittenData();
@@ -410,7 +396,7 @@ double SolverInterfaceImpl:: advance
   }
   else {
 
-    if(_masterMode || _slaveMode){
+    if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
       syncTimestep(computedTimestepLength);
     }
 
@@ -443,7 +429,7 @@ double SolverInterfaceImpl:: advance
 
     std::set<action::Action::Timing> timings;
 
-    if(not _slaveMode){
+    if(not utils::MasterSlave::_slaveMode){
       //TODO dataActions not yet clear how they should work in a distributed setting
       timings.insert(action::Action::ALWAYS_PRIOR);
       if (_couplingScheme->willDataBeExchanged(0.0)){
@@ -455,7 +441,7 @@ double SolverInterfaceImpl:: advance
     preciceDebug("Advancing coupling scheme");
     _couplingScheme->advance();
 
-    if(not _slaveMode){ //TODO
+    if(not utils::MasterSlave::_slaveMode){ //TODO
       timings.clear();
       timings.insert(action::Action::ALWAYS_POST);
       if (_couplingScheme->hasDataBeenExchanged()){
@@ -469,7 +455,7 @@ double SolverInterfaceImpl:: advance
 
     mapReadData();
 
-    if(not _slaveMode){
+    if(not utils::MasterSlave::_slaveMode){
       //TODO not yet clear how export works on distributed data
       preciceInfo("advance()", _couplingScheme->printCouplingState());
       handleExports();
@@ -477,7 +463,7 @@ double SolverInterfaceImpl:: advance
 
     resetWrittenData();
 
-    if(_masterMode || _slaveMode){
+    if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
       syncState();
     }
 
@@ -493,7 +479,7 @@ void SolverInterfaceImpl:: finalize()
   _couplingScheme->finalize();
   _couplingScheme.reset();
 
-  if(_slaveMode || _masterMode){
+  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     _accessor->getMasterSlaveCommunication()->closeConnection();
   }
   if (_clientMode){
@@ -1933,9 +1919,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
             std::string provider ( _accessorName );
 
             if(!addedReceiver){
-              comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider,
-                               _accessor->getMasterSlaveCommunication(), _accessorProcessRank,
-                                _accessorCommunicatorSize, _dimensions);
+              comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider,_dimensions);
               context.geometry = geometry::PtrGeometry ( comGeo );
             }
             else{
@@ -1975,16 +1959,14 @@ void SolverInterfaceImpl:: configureSolverGeometries
       std::string provider ( context.receiveMeshFrom );
       preciceDebug ( "Receiving mesh from " << provider );
       geometry::CommunicatedGeometry * comGeo =
-          new geometry::CommunicatedGeometry ( offset, receiver, provider,
-              _accessor->getMasterSlaveCommunication(), _accessorProcessRank,
-              _accessorCommunicatorSize, _dimensions );
+          new geometry::CommunicatedGeometry ( offset, receiver, provider, _dimensions );
       com::PtrCommunication com = comConfig->getCommunication ( receiver, provider );
       comGeo->addReceiver ( receiver, com );
       preciceCheck ( context.geometry.use_count() == 0, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot receive "
                      << "the geometry of mesh \"" << context.mesh->getName()
                      << " in addition to a defined geometry!" );
-      if(_slaveMode){
+      if(utils::MasterSlave::_slaveMode){
         comGeo->setBoundingFromMapping(context.fromMappingContext.mapping);
         comGeo->setBoundingToMapping(context.toMappingContext.mapping);
       }
@@ -2349,19 +2331,19 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   preciceTrace ( "initializeMasterSlaveCom.()" );
   com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
   assertion(com.get() != NULL);
-  _couplingScheme->setMasterSlaveCommunication(com);
+  utils::MasterSlave::_communication = com;
   //slaves create new communicator with ranks 0 to size-2
   //therefore, the master uses a rankOffset and the slaves have to call request
   // with that offset
   int rankOffset = 1;
-  if ( _masterMode ){
+  if ( utils::MasterSlave::_masterMode ){
     preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to slaves" );
     com->acceptConnection ( _accessorName + "Master", _accessorName,
                             _accessorProcessRank, 1);
     com->setRankOffset(rankOffset);
   }
   else {
-    assertion(_slaveMode);
+    assertion(utils::MasterSlave::_slaveMode);
     preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to master" );
     com->requestConnection( _accessorName + "Master", _accessorName,
                             _accessorProcessRank-rankOffset, _accessorCommunicatorSize-rankOffset );
@@ -2370,12 +2352,12 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 
 void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
 {
-  assertion(_masterMode || _slaveMode);
+  assertion(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode);
   com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-  if(_slaveMode){
+  if(utils::MasterSlave::_slaveMode){
     com->send(computedTimestepLength, 0);
   }
-  else if(_masterMode){
+  else if(utils::MasterSlave::_masterMode){
     for(int rankSlave = 1; rankSlave < _accessorCommunicatorSize; rankSlave++){
       double dt;
       com->receive(dt, rankSlave);
@@ -2388,12 +2370,12 @@ void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
 
 void SolverInterfaceImpl:: syncState()
 {
-  assertion(_masterMode || _slaveMode);
+  assertion(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode);
   com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-  if(_slaveMode){
+  if(utils::MasterSlave::_slaveMode){
     _couplingScheme->receiveState(com, 0);
   }
-  else if(_masterMode){
+  else if(utils::MasterSlave::_masterMode){
     for(int rankSlave = 1; rankSlave < _accessorCommunicatorSize; rankSlave++){
       _couplingScheme->sendState(com, rankSlave);
     }
