@@ -188,7 +188,17 @@ elif env["build"] == 'release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"    
 
+if env["petsc"]:
+    env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
+                          os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
+    env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
+    if not uniqueCheckLib(conf, "petsc"):
+        errorMissingLib("petsc", "Petsc")
+else:
+    env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
 
+
+    
 if env["boost_inst"]:
     #env.AppendUnique(CPPPATH = [boostIncPath])
     # The socket implementation is based on Boost libs
@@ -257,14 +267,6 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PYTHON'])
 
 
-if env["petsc"]:
-    env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
-                          os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
-    env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
-    if not conf.CheckLibWithHeader("petsc", "petsc.h", language = "C"):
-        errorMissingHeader("petsc.h", "Petsc")
-else:
-    env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
 
 
 if env["gprof"]:
