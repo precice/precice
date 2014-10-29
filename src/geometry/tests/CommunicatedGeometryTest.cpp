@@ -95,8 +95,6 @@ void CommunicatedGeometryTest:: testScatterMesh ()
   int dimensions = 2;
   bool flipNormals = false;
   utils::DynVector offset ( dimensions, 0.0 );
-  int rank, size;
-
 
   if (utils::Parallel::getProcessRank() == 0){ //SOLIDZ
     utils::MasterSlave::_slaveMode = false;
@@ -264,8 +262,6 @@ void CommunicatedGeometryTest:: testGatherMesh ()
   int dimensions = 2;
   bool flipNormals = false;
   utils::DynVector offset ( dimensions, 0.0 );
-  int rank, size;
-
 
   if (utils::Parallel::getProcessRank() == 0){ //SOLIDZ
     utils::MasterSlave::_slaveMode = false;
