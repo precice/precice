@@ -31,6 +31,8 @@ public:
 
   static double l2norm(const DynVector& vec);
 
+  static double dot(const DynVector& vec1, const DynVector& vec2);
+
 private:
 
   static tarch::logging::Log _log;

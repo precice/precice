@@ -65,6 +65,42 @@ double MasterSlave:: l2norm(const DynVector& vec)
 }
 
 
+double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
+{
+  preciceTrace("dot()");
+
+  if(not _masterMode && not _slaveMode){ //old case
+    return tarch::la::dot(vec1, vec2);
+  }
+
+  assertion(_communication.get() != NULL);
+  assertion(_communication->isConnected());
+  assertion2(vec1.size()==vec2.size(), vec1.size(), vec2.size());
+  double localSum = 0.0;
+  double globalSum = 0.0;
+
+  for(int i=0; i<vec1.size(); i++){
+    localSum += vec1[i]*vec2[i];
+  }
+
+  if(_slaveMode){
+    _communication->send(localSum, 0);
+    _communication->receive(globalSum, 0);
+  }
+  if(_masterMode){
+    globalSum += localSum;
+    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+      utils::MasterSlave::_communication->receive(localSum, rankSlave);
+      globalSum += localSum;
+    }
+    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
+      utils::MasterSlave::_communication->send(globalSum, rankSlave);
+    }
+  }
+  return globalSum;
+}
+
+
 
 
 
