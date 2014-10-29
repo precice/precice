@@ -983,9 +983,7 @@ void BaseCouplingScheme:: updateTimeAndIterations(bool convergence){
 void BaseCouplingScheme:: timestepCompleted()
 {
   preciceTrace2("timestepCompleted()", getTimesteps(), getTime());
-  if(not utils::MasterSlave::_slaveMode){
-    preciceInfo("timestepCompleted()", "Timestep completed");
-  }
+  preciceInfo("timestepCompleted()", "Timestep completed");
   setIsCouplingTimestepComplete(true);
   setTimesteps(getTimesteps() + 1 );
   //setTime(getTimesteps() * getTimestepLength() ); // Removes numerical errors

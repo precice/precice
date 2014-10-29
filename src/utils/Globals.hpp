@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <cstdlib>
 #include "boost/foreach.hpp"
+#include "utils/MasterSlave.hpp"
 
 #include "tarch/Assertions.h"
 //#define assertion assertion
@@ -42,7 +43,9 @@
   logDebug(preciceMethodName, PRECICE_PROCESS_RANK_STREAM << stream)
 #define preciceWarning(methodname, stream) \
   logWarning(methodname, PRECICE_PROCESS_RANK_STREAM << stream)
-#define preciceInfo logInfo
+#define preciceInfo(methodname, stream) \
+  if(not utils::MasterSlave::_slaveMode) \
+    logInfo(methodname, stream)
 
 /**
  * @brief Standard logging device used in macro preciceDebug.

@@ -349,10 +349,7 @@ double SolverInterfaceImpl:: initialize()
         }
       }
     }
-
-    if(not utils::MasterSlave::_slaveMode){
-      preciceInfo("initialize()", _couplingScheme->printCouplingState());
-    }
+    preciceInfo("initialize()", _couplingScheme->printCouplingState());
   }
   return _couplingScheme->getNextTimestepMaxLength();
 }
@@ -455,9 +452,10 @@ double SolverInterfaceImpl:: advance
 
     mapReadData();
 
+    preciceInfo("advance()", _couplingScheme->printCouplingState());
+
+    //TODO not yet clear how export works on distributed data
     if(not utils::MasterSlave::_slaveMode){
-      //TODO not yet clear how export works on distributed data
-      preciceInfo("advance()", _couplingScheme->printCouplingState());
       handleExports();
     }
 
@@ -2344,7 +2342,6 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   }
   else {
     assertion(utils::MasterSlave::_slaveMode);
-    preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to master" );
     com->requestConnection( _accessorName + "Master", _accessorName,
                             _accessorProcessRank-rankOffset, _accessorCommunicatorSize-rankOffset );
   }
