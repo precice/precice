@@ -1,11 +1,13 @@
 /* Copyright (C) 2011 Technische Universitaet Muenchen
  * This file is part of the preCICE project. For conditions of distribution and
  * use, please see the license notice at http://www5.in.tum.de/wiki/index.php/precice_c_License */
-#ifndef PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACEFORTRAN_HPP_
-#define PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACEFORTRAN_HPP_
+#ifndef PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACE_FASTEST_HPP_
+#define PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACE_FASTEST_HPP_
 
 /**
- * @file This file contains a Fortran 77 compatible interface written in C/C++.
+ * @file This file contains a specific FASTEST Fortran 77 compatible interface written in C/C++.
+ * The specialty is that we offer here 2 interfaces. We needed this since FASTEST uses an internal subcycling,
+ * coupling to a structure solver at big timesteps and to a pure acoustic solver at small timesteps
  *
  * It has been tested with: gfortran 4.4.3, ifort 12.1.0
  *
@@ -31,7 +33,7 @@ extern"C" {
  * IN:  accessorName, configFileName, solverProcessIndex, solverProcessSize
  * OUT: -
  */
-void precicef_create_(
+void precice_fastest_create_(
   const char* accessorName,
   const char* configFileName,
   const int*  solverProcessIndex,
@@ -43,91 +45,46 @@ void precicef_create_(
  * @brief See precice::SolverInterface::initialize().
  *
  * Fortran syntax:
- * precicef_initialize( DOUBLE PRECISION timstepLengthLimit )
+ * precicef_initialize( DOUBLE PRECISION timstepLengthLimit, INTEGER useF )
  *
- * IN:  -
+ * IN: useF (1: this is the F interface , 0: this is the A interface)
  * OUT: timestepLengthLimit
  */
-void precicef_initialize_( double* timestepLengthLimit );
+void precice_fastest_initialize_( double* timestepLengthLimit, const int*  useF );
 
 /**
  * @brief See precice::SolverInterface::initializeData().
  *
  * Fortran syntax:
- * precicef_intialize_data()
+ * precicef_intialize_data(INTEGER useF)
  *
- * IN: -
+ * IN: useF (1: this is the F interface , 0: this is the A interface)
  * OUT: -
  */
-void precicef_initialize_data_();
+void precice_fastest_initialize_data_(const int*  useF);
 
 /**
  * @brief See precice::SolverInterface::advance().
  *
  * Fortran syntax:
- * precicef_advance( DOUBLE PRECISION timstepLengthLimit )
+ * precicef_advance( DOUBLE PRECISION timstepLengthLimit, INTEGER useF )
  *
  * IN:  timestepLengthLimit
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: timestepLengthLimit
  */
-void precicef_advance_( double* timestepLengthLimit );
+void precice_fastest_advance_( double* timestepLengthLimit, const int*  useF );
 
 
 /**
  * @brief See precice::SolverInterface::finalize().
  *
  * Fortran syntax:
- * precicef_finalize();
+ * precicef_finalize(INTEGER useF);
+ *
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  */
-void precicef_finalize_();
-
-/**
- * @brief See precice::SolverInterface::getDimensions().
- *
- * Fortran syntax:
- * precicef_get_dims( INTEGER dimensions )
- *
- * IN:  -
- * OUT: dimensions
- */
-void precicef_get_dims_( int* dimensions );
-
-/**
- * @brief See precice::SolverInterface::isOngoing().
- *
- * Fortran syntax:
- * precicef_ongoing( INTEGER isOngoing )
- *
- * IN:  -
- * OUT: isOngoing(1:true, 0:false)
- */
-void precicef_ongoing_( int* isOngoing );
-
-/**
- * @brief See precice::SolverInterface::isWriteDataRequired().
- *
- * Fortran syntax:
- * precicef_write_data_required(
- *  DOUBLE PRECISION computedTimestepLength,
- *  INTEGER          isRequired )
- *
- * IN:  computedTimestepLength
- * OUT: isRequired(1:true, 0:false)
- */
-void precicef_write_data_required_(
-  const double* computedTimestepLength,
-  int*          isRequired );
-
-/**
- * @brief See precice::SolverInterface::isReadDataAvailable().
- *
- * Fortran syntax:
- * precicef_read_data_available( INTEGER isAvailable );
- *
- * IN:  -
- * OUT: isAvailable(1:true, 0:false)
- */
-void precicef_read_data_available_( int* isAvailable );
+void precice_fastest_finalize_(const int*  useF);
 
 /**
  * @brief See precice::SolverInterface::isActionRequired().
@@ -135,27 +92,32 @@ void precicef_read_data_available_( int* isAvailable );
  * Fortran syntax:
  * precicef_action_required(
  *   CHARACTER action(*),
- *   INTEGER   isRequired )
+ *   INTEGER   isRequired,
+ *   INTEGER   useF )
  *
  * IN:  action
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: isRequired(1:true, 0:false)
  */
-void precicef_action_required_(
+void precice_fastest_action_required_(
   const char* action,
   int*        isRequired,
+  const int*  useF,
   int         lengthAction );
 
 /**
  * @brief See precice::SolverInterface::fulfilledAction().
  *
  * Fortran syntax:
- * precicef_fulfilled_action( CHARACTER action(*) )
+ * precicef_fulfilled_action( CHARACTER action(*), INTEGER useF )
  *
  * IN:  action
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: -
  */
-void precicef_fulfilled_action_(
+void precice_fastest_fulfilled_action_(
   const char* action,
+  const int*  useF,
   int         lengthAction );
 
 /**
@@ -164,34 +126,19 @@ void precicef_fulfilled_action_(
  * Fortran syntax:
  * precicef_get_mesh_id(
  *   CHARACTER geometryName(*),
- *   INTEGER   meshID )
+ *   INTEGER   meshID,
+ *   INTEGER   useF )
  *
  * IN:  geometryName
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: meshID
  */
-void precicef_get_mesh_id_(
+void precice_fastest_get_mesh_id_(
   const char* geometryName,
   int*        meshID,
+  const int*  useF,
   int         lengthGeometryName );
 
-/**
- * @brief See precice::SolverInterface::hasData().
- *
- * Fortran syntax:
- * precicef_has_data(
- *   CHARACTER dataName(*),
- *   INTEGER   meshID,
- *   INTEGER   hasData)
- *
- * IN:  dataName
- * IN:  meshID
- * OUT: hasData(1:true, 0:false)
- */
-void precicef_has_data_(
-  const char* dataName,
-  const int*  meshID,
-  int*        hasData,
-  int         lengthDataName);
 
 /**
  * @brief See precice::SolverInterface::getDataID().
@@ -205,16 +152,18 @@ void precicef_has_data_(
  *   CHARACTER dataName(*),
  *   INTEGER   meshID,
  *   INTEGER   dataID,
-)
+ *   INTEGER   useF)
  *
  * IN:  dataName
  * IN:  meshID
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: dataID
  */
-void precicef_get_data_id_(
+void precice_fastest_get_data_id_(
   const char* dataName,
   const int*  meshID,
   int*        dataID,
+  const int*  useF,
   int         lengthDataName);
 
 /**
@@ -224,15 +173,18 @@ void precicef_get_data_id_(
  * precicef_set_vertex(
  *   INTEGER          meshID,
  *   DOUBLE PRECISION position(dim),
- *   INTEGER          vertexID )
+ *   INTEGER          vertexID,
+ *   INTEGER          useF )
  *
  * IN:  meshID, position
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: vertexID
  */
-void precicef_set_vertex_(
+void precice_fastest_set_vertex_(
   const int*    meshID,
   const double* position,
-  int*          vertexID );
+  int*          vertexID,
+  const int*    useF);
 
 /**
  * @brief See precice::SolverInterface::setMeshVertices().
@@ -242,74 +194,20 @@ void precicef_set_vertex_(
  *   INTEGER          meshID,
  *   INTEGER          size,
  *   DOUBLE PRECISION positions(dim*size),
- *   INTEGER          positionIDs(size) )
+ *   INTEGER          positionIDs(size),
+ *   INTEGER          useF )
  *
  * IN:  meshID, size, positions
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: positionIDs
  */
-void precicef_set_vertices_(
+void precice_fastest_set_vertices_(
   const int*    meshID,
   const int*    size,
   double*       positions,
-  int*          positionIDs );
+  int*          positionIDs,
+  const int*    useF);
 
-
-/**
- * @brief See precice::SolverInterface::setMeshEdge().
- *
- * Fortran syntax:
- * precicef_set_edge(
- *   INTEGER meshID,
- *   INTEGER firstVertexID,
- *   INTEGER secondVertexID,
- *   INTEGER edgeID )
- *
- * IN:  meshID, firstVertexID, secondVertexID
- * OUT: edgeID
- */
-void precicef_set_edge_(
-  const int* meshID,
-  const int* firstVertexID,
-  const int* secondVertexID,
-  int* edgeID );
-
-/**
- * @brief See precice::SolverInterface::setMeshTriangle().
- *
- * Fortran syntax:
- * precicef_set_triangle(
- *   INTEGER meshID,
- *   INTEGER firstEdgeID,
- *   INTEGER secondEdgeID,
- *   INTEGER thirdEdgeID )
- *
- * IN:  meshID, firstEdgeID, secondEdgeID, thirdEdgeID
- * OUT: -
- */
-void precicef_set_triangle_(
-  const int* meshID,
-  const int* firstEdgeID,
-  const int* secondEdgeID,
-  const int* thirdEdgeID );
-
-/**
- * @brief See precice::SolverInterface::setMeshTriangleWithEdges().
- *
- * Fortran syntax:
- * precicef_set_triangle_we(
- *   INTEGER meshID,
- *   INTEGER firstVertexID,
- *   INTEGER secondVertexID,
- *   INTEGER thirdVertexID )
- *
- * IN:  meshID, firstVertexID, secondVertexID, thirdVertexID
- * OUT: -
- */
-void precicef_set_triangle_we_(
-  const int* meshID,
-  const int* firstVertexID,
-  const int* secondVertexID,
-  const int* thirdVertexID );
 
 /**
  * @brief See precice::SolverInterface::writeBlockVectorData.
@@ -319,16 +217,19 @@ void precicef_set_triangle_we_(
  *   INTEGER dataID,
  *   INTEGER size,
  *   INTEGER valueIndices,
- *   DOUBLE PRECISION values(dim*size) )
+ *   DOUBLE PRECISION values(dim*size),
+ *   INTEGER useF )
  *
  * IN:  dataID, size, valueIndices, values
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: -
  */
-void precicef_write_bvdata_(
+void precice_fastest_write_bvdata_(
   const int* dataID,
   const int* size,
   int*       valueIndices,
-  double*    values );
+  double*    values,
+  const int* useF);
 
 /**
  * @brief precice::SolverInterface::writeVectorData.
@@ -337,15 +238,18 @@ void precicef_write_bvdata_(
  * precicef_write_vdata(
  *   INTEGER dataID,
  *   INTEGER valueIndex,
- *   DOUBLE PRECISION dataValue(dim) )
+ *   DOUBLE PRECISION dataValue(dim),
+ *   INTEGER useF )
  *
  * IN:  dataID, valueIndex, dataValue
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: -
  */
-void precicef_write_vdata_(
+void precice_fastest_write_vdata_(
   const int*    dataID,
   const int*    valueIndex,
-  const double* dataValue );
+  const double* dataValue,
+  const int*    useF);
 
 /**
  * @brief See precice::SolverInterface::writeBlockScalarData.
@@ -355,16 +259,19 @@ void precicef_write_vdata_(
  *   INTEGER dataID,
  *   INTEGER size,
  *   INTEGER valueIndices,
- *   DOUBLE PRECISION values(size) )
+ *   DOUBLE PRECISION values(size),
+ *   INTEGER useF )
  *
  * IN:  dataID, size, valueIndices, values
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: -
  */
-void precicef_write_bsdata_(
+void precice_fastest_write_bsdata_(
   const int* dataID,
   const int* size,
   int*       valueIndices,
-  double*    values );
+  double*    values,
+  const int* useF);
 
 /**
  * @brief precice::SolverInterface::writeScalarData.
@@ -373,15 +280,18 @@ void precicef_write_bsdata_(
  * precicef_write_sdata(
  *   INTEGER dataID,
  *   INTEGER valueIndex,
- *   DOUBLE PRECISION dataValue )
+ *   DOUBLE PRECISION dataValue,
+ *   INTEGER useF )
  *
  * IN:  dataID, valueIndex, dataValue
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: -
  */
-void precicef_write_sdata_(
+void precice_fastest_write_sdata_(
   const int*    dataID,
   const int*    valueIndex,
-  const double* dataValue );
+  const double* dataValue,
+  const int*    useF);
 
 /**
  * @brief See precice::SolverInterface::readBlockVectorData.
@@ -391,16 +301,19 @@ void precicef_write_sdata_(
  *   INTEGER dataID,
  *   INTEGER size,
  *   INTEGER valueIndices,
- *   DOUBLE PRECISION values(dim*size) )
+ *   DOUBLE PRECISION values(dim*size),
+ *   INTEGER useF )
  *
  * IN:  dataID, size, valueIndices
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: values
  */
-void precicef_read_bvdata_(
+void precice_fastest_read_bvdata_(
   const int* dataID,
   const int* size,
   int*       valueIndices,
-  double*    values );
+  double*    values,
+  const int* useF);
 
 /**
  * @brief precice::SolverInterface::readVectorData.
@@ -409,15 +322,18 @@ void precicef_read_bvdata_(
  * precicef_read_vdata(
  *   INTEGER dataID,
  *   INTEGER valueIndex,
- *   DOUBLE PRECISION dataValue(dim) )
+ *   DOUBLE PRECISION dataValue(dim),
+ *   INTEGER useF )
  *
  * IN:  dataID, valueIndex
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: dataValue
  */
-void precicef_read_vdata_(
+void precice_fastest_read_vdata_(
   const int* dataID,
   const int* valueIndex,
-  double*    dataValue );
+  double*    dataValue,
+  const int* useF);
 
 /**
  * @brief See precice::SolverInterface::readBlockScalarData.
@@ -427,16 +343,19 @@ void precicef_read_vdata_(
  *   INTEGER dataID,
  *   INTEGER size,
  *   INTEGER valueIndices,
- *   DOUBLE PRECISION values(size) )
+ *   DOUBLE PRECISION values(size),
+ *   INTEGER useF )
  *
  * IN:  dataID, size, valueIndices
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: values
  */
-void precicef_read_bsdata_(
+void precice_fastest_read_bsdata_(
   const int* dataID,
   const int* size,
   int*       valueIndices,
-  double*    values );
+  double*    values,
+  const int* useF);
 
 /**
  * @brief precice::SolverInterface::readScalarData.
@@ -445,53 +364,22 @@ void precicef_read_bsdata_(
  * precicef_read_sdata(
  *   INTEGER dataID,
  *   INTEGER valueIndex,
- *   DOUBLE PRECISION dataValue )
+ *   DOUBLE PRECISION dataValue,
+ *   INTEGER useF )
  *
  * IN:  dataID, valueIndex
+ * IN:  useF (1: this is the F interface , 0: this is the A interface)
  * OUT: dataValue
  */
-void precicef_read_sdata_(
+void precice_fastest_read_sdata_(
   const int* dataID,
   const int* valueIndex,
-  double*    dataValue );
+  double*    dataValue,
+  const int* useF);
 
-/**
- * @brief See precice::SolverInterface::mapWriteDataFrom().
- *
- * Fortran syntax:
- * precicef_map_write_data_from( INTEGER meshID )
- *
- * IN:  meshID
- * OUT: -
- */
-void precicef_map_write_data_from_( const int* meshID );
-
-/**
- * @brief See precice::SolverInterface::mapReadDataTo().
- *
- * Fortran syntax:
- * precicef_map_read_data_to( INTEGER meshID )
- *
- * IN:  meshID
- * OUT: -
- */
-void precicef_map_read_data_to_( const int* meshID );
-
-/**
- * @brief See precice::SolverInterface::exportMesh().
- *
- * Fortran syntax:
- * precicef_export_mesh( CHARACTER filenameSuffix(*) )
- *
- * IN:  filenameSuffix
- * OUT: -
- */
-void precicef_export_mesh_(
-  const char* filenameSuffix,
-  int         filenameSuffixLength );
 
 #ifdef __cplusplus
 }
 #endif
 
-#endif /* PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACEFORTRAN_HPP_ */
+#endif /* PRECICE_ADAPTERS_FORTRAN_SOLVERINTERFACE_FASTEST_HPP_ */
