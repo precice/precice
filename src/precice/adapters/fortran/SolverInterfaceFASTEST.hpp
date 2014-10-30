@@ -25,7 +25,8 @@ extern"C" {
  *
  * Fortran syntax:
  * precicef_create(
- *   CHARACTER accessorName(*),
+ *   CHARACTER accessorNameA(*),
+ *   CHARACTER accessorNameF(*),
  *   CHARACTER configFileName(*),
  *   INTEGER   solverProcessIndex,
  *   INTEGER   solverProcessSize )
@@ -34,11 +35,13 @@ extern"C" {
  * OUT: -
  */
 void precice_fastest_create_(
-  const char* accessorName,
+  const char* accessorNameA,
+  const char* accessorNameF,
   const char* configFileName,
   const int*  solverProcessIndex,
   const int*  solverProcessSize,
-  int   lengthAccessorName,
+  int   lengthAccessorNameA,
+  int   lengthAccessorNameF,
   int   lengthConfigFileName );
 
 /**
