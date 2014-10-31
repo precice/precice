@@ -9,6 +9,7 @@
 #include "tarch/la/MatrixOperations.h"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "tarch/la/MatrixMatrixOperations.h"
+#include "tarch/la/MatrixScalarOperations.h"
 #include "tarch/la/DynamicVector.h"
 #include <deque>
 

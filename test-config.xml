@@ -6,10 +6,7 @@
 
   <run-tests>
     <log-filter target=""      component=""      switch="off"/>
-    <log-filter target="info"  component="tarch" switch="on"/>
-    
-    <log-filter target="debug" component="precice::cplscheme::tests" switch="on"/>
-    
+    <log-filter target="info"  component="tarch" switch="on"/>    
     
     <log-output column-separator=" | " log-time-stamp="no" 
                 log-time-stamp-human-readable="no" log-machine-name="no" 
