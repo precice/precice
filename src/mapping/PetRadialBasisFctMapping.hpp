@@ -140,7 +140,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatSetType(_matrixC.matrix, MATSBAIJ); CHKERRV(ierr); // create symmetric, block sparse matrix.
   ierr = MatSetSizes(_matrixC.matrix, PETSC_DECIDE, PETSC_DECIDE, n, n); CHKERRV(ierr);
   ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
-  ierr = MatSetUp(_matrixC.matrix); CHKERRV(ierr);
 
   _matrixA.reset();
   ierr = MatSetType(_matrixA.matrix, MATAIJ); CHKERRV(ierr); // create sparse matrix.
@@ -152,6 +151,40 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
   utils::DynVector distance(dimensions);
+
+  // -- BEGIN PREALLOC LOOP FOR MATRIX C --
+  int logPreallocCLoop = 1;
+  PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocCLoop);
+  PetscLogEventBegin(logPreallocCLoop, 0, 0, 0, 0);
+  PetscInt nnz[n];
+  foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
+    nnz[i] = 0;
+    for (int j=iVertex.getID(); j < inputSize; j++) {
+      if (i == j) {
+        nnz[i]++;
+        continue;
+      }
+      distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
+      double coeff = _basisFunction.evaluate(norm2(distance));
+      if ( not equals(coeff, 0.0)) {
+        nnz[i]++;
+      }
+    }
+    nnz[i] += dimensions + 1;
+    i++;
+  }
+  for (int r = inputSize; r < n; r++) {
+    nnz[r] = 1;
+  }
+  PetscLogEventEnd(logPreallocCLoop, 0, 0, 0, 0);
+  i = 0;
+  // -- END PREALLOC LOOP FOR MATRIX C --
+  
+  // for (int r = 0; r < n; r++) {
+  //   cout << "Preallocated row " << r << " with " << nnz[r]  << " elements." << endl;
+  // }
+  ierr = MatSeqSBAIJSetPreallocation(_matrixC.matrix, 1, PETSC_DEFAULT, nnz);
+
   int logCLoop = 1;
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
   PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
@@ -239,7 +272,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyBegin(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   ierr = MatAssemblyEnd(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   ierr = MatAssemblyEnd(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
-
   KSPSetOperators(_solver, _matrixC.matrix, _matrixC.matrix);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetFromOptions(_solver);
