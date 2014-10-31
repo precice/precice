@@ -144,7 +144,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   _matrixA.reset();
   ierr = MatSetType(_matrixA.matrix, MATAIJ); CHKERRV(ierr); // create sparse matrix.
   ierr = MatSetSizes(_matrixA.matrix, PETSC_DECIDE, PETSC_DECIDE, outputSize, n); CHKERRV(ierr);
-  ierr = MatSetUp(_matrixA.matrix); CHKERRV(ierr);
 
   KSPReset(_solver);
 
@@ -185,7 +184,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // }
   ierr = MatSeqSBAIJSetPreallocation(_matrixC.matrix, 1, PETSC_DEFAULT, nnz);
 
-  int logCLoop = 1;
+  int logCLoop = 2;
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
   PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
   PetscInt colIdx[n];
@@ -230,8 +229,31 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   petsc::Vector zeros(_matrixC);
   MatDiagonalSet(_matrixC.matrix, zeros.vector, ADD_VALUES);
   ierr = MatAssemblyBegin(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
-  
-  int logALoop = 1;
+
+  // -- BEGIN PREALLOC LOOP FOR MATRIX A --
+  int logPreallocALoop = 3;
+  PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocALoop);
+  PetscLogEventBegin(logPreallocALoop, 0, 0, 0, 0);
+  PetscInt nnzA[outputSize];
+  i = 0;
+  foreach (const mesh::Vertex& iVertex, outMesh->vertices()) {
+    nnzA[i] = 0;
+    foreach (const mesh::Vertex& jVertex, inMesh->vertices()) {
+      distance = iVertex.getCoords() - jVertex.getCoords();
+      double coeff = _basisFunction.evaluate(norm2(distance));
+      if ( not equals(coeff, 0.0)) {
+        nnzA[i]++;
+      }
+    }
+    nnzA[i] += dimensions + 1;
+    i++;
+  }
+  PetscLogEventEnd(logPreallocALoop, 0, 0, 0, 0);
+  // -- END PREALLOC LOOP FOR MATRIX A --
+
+  ierr = MatSeqAIJSetPreallocation(_matrixA.matrix, PETSC_DEFAULT, nnzA); CHKERRV(ierr);
+ 
+  int logALoop = 4;
   PetscLogEventRegister("Filling Matrix A", 0, &logALoop);
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   i = 0;
