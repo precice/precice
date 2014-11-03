@@ -937,6 +937,8 @@ int SolverInterfaceImpl:: setMeshVertex
   }
   preciceDebug("Position = " << internalPosition);
   int index = -1;
+  preciceCheck(not utils::MasterSlave::_masterMode, "setMeshVertex()", "At the moment the master"
+              << " is not allowed to hold vertices");
   if ( _clientMode ){
     index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
   }
@@ -958,50 +960,11 @@ void SolverInterfaceImpl:: setMeshVertices
   int*    ids )
 {
   preciceTrace2("setMeshVertices()", meshID, size);
+  preciceCheck(not utils::MasterSlave::_masterMode, "setMeshVertices()", "At the moment the master"
+              << " is not allowed to hold vertices");
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
-//  else if(_slaveMode){
-//    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-//    com->send(size, 0);
-//    com->send(positions, size*_dimensions, 0);
-//    com->receive(ids, size, 0);
-//  }
-//  else if(_masterMode){
-//    MeshContext& context = _accessor->meshContext(meshID);
-//    mesh::PtrMesh mesh(context.mesh);
-//    preciceDebug("Set own positions");
-//    utils::DynVector internalPosition(_dimensions);
-//    for (int i=0; i < size; i++){
-//      for (int dim=0; dim < _dimensions; dim++){
-//        internalPosition[dim] = positions[i*_dimensions + dim];
-//      }
-//      ids[i] = mesh->createVertex(internalPosition).getID();
-//    }
-//
-//
-//    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-//    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
-//      int slaveSize = -1;
-//      com->receive(slaveSize, rankSender);
-//      assertionMsg(slaveSize > 0, size);
-//      double* positions = new double[slaveSize*_dimensions];
-//      com->receive(positions, slaveSize*_dimensions, rankSender);
-//      int* slaveIds = new int[slaveSize];
-//      utils::DynVector internalPosition(_dimensions);
-//      preciceDebug("Set positions from slave rank " << rankSender);
-//      for (int i=0; i < slaveSize; i++){
-//        for (int dim=0; dim < _dimensions; dim++){
-//          internalPosition[dim] = positions[i*_dimensions + dim];
-//        }
-//        slaveIds[i] = mesh->createVertex(internalPosition).getID();
-//      }
-//      com->send(slaveIds, slaveSize, rankSender);
-//      delete[] positions;
-//      delete[] slaveIds;
-//    }
-//
-//  }
   else { //couplingMode
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
