@@ -52,7 +52,7 @@ double MasterSlave:: l2norm(const DynVector& vec)
     _communication->receive(globalSum2, 0);
   }
   if(_masterMode){
-    globalSum2 += localSum2;
+    //globalSum2 += localSum2; //TODO
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
       utils::MasterSlave::_communication->receive(localSum2, rankSlave);
       globalSum2 += localSum2;
@@ -88,7 +88,7 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
     _communication->receive(globalSum, 0);
   }
   if(_masterMode){
-    globalSum += localSum;
+    //globalSum += localSum; //TODO
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
       utils::MasterSlave::_communication->receive(localSum, rankSlave);
       globalSum += localSum;
