@@ -670,7 +670,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   // Add actions
   foreach (const action::PtrAction& action, _actionConfig->actions()){
     bool used = _participants.back()->isMeshUsed(action->getMesh()->getID());
-    preciceCheck(used, "xmlTagCallback()", "Data action of participant "
+    preciceCheck(used, "finishParticipantConfiguration()", "Data action of participant "
                  << _participants.back()->getName()
                  << "\" uses mesh which is not used by the participant!");
     _participants.back()->addAction(action);
@@ -679,6 +679,8 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
   // Add export contexts
   foreach (const io::ExportContext& context, _exportConfig->exportContexts()){
+    preciceCheck(not participant->useMaster(), "finishParticipantConfiguration()",
+        "To use exports while using a master is not yet supported");
     _participants.back()->addExportContext(context);
   }
   _exportConfig->resetExports();

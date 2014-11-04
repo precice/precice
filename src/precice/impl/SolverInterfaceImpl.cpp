@@ -152,8 +152,8 @@ void SolverInterfaceImpl:: configure
 
   preciceCheck(not (_accessor->useServer() && _accessor->useMaster()),
                      "configure()", "You cannot use a server and a master.");
-  preciceCheck(not (_serverMode && _accessor->useMaster()),
-                       "configure()", "You cannot use a master in server mode.");
+  preciceCheck(not (_restartMode && _accessor->useMaster()),"configure()",
+                      "To restart while using a master is not yet supported");
 
   _clientMode = (not _serverMode) && _accessor->useServer();
 
@@ -2147,6 +2147,8 @@ void SolverInterfaceImpl:: handleExports()
     if(not utils::MasterSlave::_slaveMode){ //TODO
       // Checkpointing
       int checkpointingInterval = _couplingScheme->getCheckpointTimestepInterval();
+      preciceCheck(not  (utils::MasterSlave::_masterMode && checkpointingInterval!=-1) ,
+                    "handleExports()","Checkpointing for a Master is not yet supported");
       if ((checkpointingInterval != -1) && (timesteps % checkpointingInterval == 0)){
         preciceDebug("Set require checkpoint");
         _couplingScheme->requireAction(constants::actionWriteSimulationCheckpoint());
