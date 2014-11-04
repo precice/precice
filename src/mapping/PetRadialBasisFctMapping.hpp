@@ -147,9 +147,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   KSPReset(_solver);
 
-  // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
   utils::DynVector distance(dimensions);
+
+  // We do preallocating of the matrices C and A. That means we traverse the input data once, just
+  // to know where we have entries in the sparse matrix. This information petsc can use to
+  // preallocate the matrix. In the second phase we actually fill the matrix.
 
   // -- BEGIN PREALLOC LOOP FOR MATRIX C --
   int logPreallocCLoop = 1;
@@ -160,7 +163,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     nnz[i] = 0;
     for (int j=iVertex.getID(); j < inputSize; j++) {
       if (i == j) {
-        nnz[i]++;
+        nnz[i]++; // Since we need to set at least zeros on the main diagonal, we have an entry
+                  // there. No further test necessary.
         continue;
       }
       distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
@@ -179,18 +183,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   i = 0;
   // -- END PREALLOC LOOP FOR MATRIX C --
   
-  // for (int r = 0; r < n; r++) {
-  //   cout << "Preallocated row " << r << " with " << nnz[r]  << " elements." << endl;
-  // }
   ierr = MatSeqSBAIJSetPreallocation(_matrixC.matrix, 1, PETSC_DEFAULT, nnz);
 
+  // -- BEGIN FILL LOOP FOR MATRIX C --
   int logCLoop = 2;
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
   PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
-  PetscInt colIdx[n];
-  PetscScalar colVals[n];
+  // We collect entries for each row and set them blockwise using MatSetValues.
+  PetscInt colIdx[n];     // holds the columns indices of the entries
+  PetscScalar colVals[n]; // holds the values of the entries
   foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
-    PetscInt colNum = 0;
+    PetscInt colNum = 0;  // holds the number of columns
     for (int j=iVertex.getID(); j < inputSize; j++) {
       distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
       double coeff = _basisFunction.evaluate(norm2(distance));
@@ -223,11 +226,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     i++;
   }
   PetscLogEventEnd(logCLoop, 0, 0, 0, 0);
+  // -- END FILL LOOP FOR MATRIX C --
 
   // Petsc requires that all diagonal entries are set, even if set to zero.
   _matrixC.assemble(MAT_FLUSH_ASSEMBLY);
   petsc::Vector zeros(_matrixC);
   MatDiagonalSet(_matrixC.matrix, zeros.vector, ADD_VALUES);
+
+  // Begin assembly here, all assembly is ended at the end of this function.
   ierr = MatAssemblyBegin(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
 
   // -- BEGIN PREALLOC LOOP FOR MATRIX A --
@@ -252,7 +258,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // -- END PREALLOC LOOP FOR MATRIX A --
 
   ierr = MatSeqAIJSetPreallocation(_matrixA.matrix, PETSC_DEFAULT, nnzA); CHKERRV(ierr);
- 
+
+  // -- BEGIN FILL LOOP FOR MATRIX A --
   int logALoop = 4;
   PetscLogEventRegister("Filling Matrix A", 0, &logALoop);
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
@@ -291,6 +298,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     i++;
   }
   PetscLogEventEnd(logALoop, 0, 0, 0, 0);
+  // -- END FILL LOOP FOR MATRIX A --
+  
   ierr = MatAssemblyBegin(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   ierr = MatAssemblyEnd(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   ierr = MatAssemblyEnd(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
