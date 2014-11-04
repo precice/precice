@@ -300,28 +300,23 @@ double SolverInterfaceImpl:: initialize()
     double time = 0.0;
     int timestep = 1;
 
-    if(not utils::MasterSlave::_slaveMode){  //TODO
-      if (_restartMode){
-        preciceInfo("initialize()", "Reading simulation state for restart");
-        io::SimulationStateIO stateIO(_checkpointFileName + "_simstate.txt");
-        stateIO.readState(time, timestep, _numberAdvanceCalls);
-      }
+    if (_restartMode){
+      preciceInfo("initialize()", "Reading simulation state for restart");
+      io::SimulationStateIO stateIO(_checkpointFileName + "_simstate.txt");
+      stateIO.readState(time, timestep, _numberAdvanceCalls);
     }
 
     _couplingScheme->initialize(time, timestep);
 
-    if(not utils::MasterSlave::_slaveMode){  //TODO
-      if (_restartMode){
-        preciceInfo("initialize()", "Reading coupling scheme state for restart");
-        //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
-        _couplingScheme->importState(_checkpointFileName);
-      }
+    if (_restartMode){
+      preciceInfo("initialize()", "Reading coupling scheme state for restart");
+      //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
+      _couplingScheme->importState(_checkpointFileName);
     }
 
     dt = _couplingScheme->getNextTimestepMaxLength();
 
     timings.insert(action::Action::ALWAYS_POST);
-
 
     if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
       syncState();
@@ -332,8 +327,9 @@ double SolverInterfaceImpl:: initialize()
       mapReadData();
     }
 
+    performDataActions(timings, 0.0, 0.0, 0.0, dt);
+
     if(not utils::MasterSlave::_slaveMode){ //TODO
-      performDataActions(timings, 0.0, 0.0, 0.0, dt);
       preciceDebug("Plot output...");
       foreach (const io::ExportContext& context, _accessor->exportContexts()){
         if (context.timestepInterval != -1){
@@ -369,9 +365,7 @@ void SolverInterfaceImpl:: initializeData ()
         timings.insert(action::Action::ON_EXCHANGE_POST);
         mapReadData();
       }
-      if(not utils::MasterSlave::_slaveMode){ //TODO
-        performDataActions(timings, 0.0, 0.0, 0.0, dt);
-      }
+      performDataActions(timings, 0.0, 0.0, 0.0, dt);
       resetWrittenData();
     }
   }
@@ -423,29 +417,24 @@ double SolverInterfaceImpl:: advance
 
     std::set<action::Action::Timing> timings;
 
-    if(not utils::MasterSlave::_slaveMode){
-      //TODO dataActions not yet clear how they should work in a distributed setting
-      timings.insert(action::Action::ALWAYS_PRIOR);
-      if (_couplingScheme->willDataBeExchanged(0.0)){
-        timings.insert(action::Action::ON_EXCHANGE_PRIOR);
-      }
-      performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
+    timings.insert(action::Action::ALWAYS_PRIOR);
+    if (_couplingScheme->willDataBeExchanged(0.0)){
+      timings.insert(action::Action::ON_EXCHANGE_PRIOR);
     }
+    performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
 
     preciceDebug("Advancing coupling scheme");
     _couplingScheme->advance();
 
-    if(not utils::MasterSlave::_slaveMode){ //TODO
-      timings.clear();
-      timings.insert(action::Action::ALWAYS_POST);
-      if (_couplingScheme->hasDataBeenExchanged()){
-        timings.insert(action::Action::ON_EXCHANGE_POST);
-      }
-      if (_couplingScheme->isCouplingTimestepComplete()){
-        timings.insert(action::Action::ON_TIMESTEP_COMPLETE_POST);
-      }
-      performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
+    timings.clear();
+    timings.insert(action::Action::ALWAYS_POST);
+    if (_couplingScheme->hasDataBeenExchanged()){
+      timings.insert(action::Action::ON_EXCHANGE_POST);
     }
+    if (_couplingScheme->isCouplingTimestepComplete()){
+      timings.insert(action::Action::ON_TIMESTEP_COMPLETE_POST);
+    }
+    performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
 
     mapReadData();
 
@@ -1796,7 +1785,7 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
   const std::string& meshName )
 {
   preciceTrace1("getMeshHandle()", meshName);
-  assertion(not _clientMode); // TODO implement
+  assertion(not _clientMode);
   foreach (MeshContext & context, _accessor->usedMeshContexts()){
     if (context.mesh->getName() == meshName){
       return MeshHandle(context.mesh->content());
@@ -2102,9 +2091,11 @@ void SolverInterfaceImpl:: performDataActions
 {
   preciceTrace("performDataActions()");
   assertion(not _clientMode);
-  foreach (action::PtrAction& action, _accessor->actions()){
-    if (timings.find(action->getTiming()) != timings.end()){
-      action->performAction(time, dt, partFullDt, fullDt);
+  if(not utils::MasterSlave::_masterMode){
+    foreach (action::PtrAction& action, _accessor->actions()){
+      if (timings.find(action->getTiming()) != timings.end()){
+        action->performAction(time, dt, partFullDt, fullDt);
+      }
     }
   }
 }
