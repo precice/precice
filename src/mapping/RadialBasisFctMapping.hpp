@@ -10,6 +10,7 @@
 #include "tarch/la/DynamicVector.h"
 #include "tarch/la/LUDecomposition.h"
 #include "tarch/la/TransposedMatrix.h"
+#include "utils/MasterSlave.hpp"
 #include "io/TXTWriter.hpp"
 #include <limits>
 #include <typeinfo>
@@ -404,6 +405,11 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 {
   preciceTrace("computeMapping()");
+
+  preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
+             "computeMapping()", "RBF mapping  "
+             << " is not yet supported for a participant in master mode");
+
   using namespace tarch::la;
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
