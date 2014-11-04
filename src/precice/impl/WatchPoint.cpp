@@ -11,6 +11,8 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Data.hpp"
 #include "utils/Globals.hpp"
+#include "utils/MasterSlave.hpp"
+#include "com/Communication.hpp"
 #include "tarch/la/WrappedVector.h"
 #include <limits>
 
@@ -31,7 +33,8 @@ WatchPoint:: WatchPoint
   _shortestDistance ( std::numeric_limits<double>::max() ),
   _weights (),
   _vertices (),
-  _dataToExport ()
+  _dataToExport (),
+  _isClosest(true)
 {
   assertion ( _mesh.use_count() > 0 );
   assertion2 ( _point.size() == _mesh->getDimensions(), _point.size(),
@@ -45,97 +48,131 @@ const mesh::PtrMesh& WatchPoint:: mesh() const
 
 void WatchPoint:: initialize()
 {
+  preciceTrace ( "initialize()");
   // Find closest vertex
-  query::FindClosestVertex findVertex ( _point );
-  findVertex ( *_mesh );
-  _vertices.push_back ( & findVertex.getClosestVertex() );
-  _shortestDistance = findVertex.getEuclidianDistance ();
-  _weights.push_back ( 1.0 );
-
-  // Find closest edge
-  query::FindClosestEdge findEdge ( _point );
-  if ( findEdge(*_mesh) ) {
-    if ( findEdge.getEuclidianDistance() < _shortestDistance ) {
-      //         _closestEdge = & findEdge.getClosestEdge ();
-      _vertices.clear ();
-      _vertices.push_back ( & findEdge.getClosestEdge().vertex(0) );
-      _vertices.push_back ( & findEdge.getClosestEdge().vertex(1) );
-      _shortestDistance = findEdge.getEuclidianDistance ();
-      _weights.clear ();
-      _weights.push_back ( findEdge.getProjectionPointParameter(0) );
-      _weights.push_back ( findEdge.getProjectionPointParameter(1) );
-    }
+  if(_mesh->vertices().size()>0){
+    query::FindClosestVertex findVertex ( _point );
+    findVertex ( *_mesh );
+    _vertices.push_back ( & findVertex.getClosestVertex() );
+    _shortestDistance = findVertex.getEuclidianDistance ();
+    _weights.push_back ( 1.0 );
   }
-  if ( _mesh->getDimensions() == 3 ) {
-    // Find closest triangle
-    query::FindClosestTriangle findTriangle ( _point );
-    if ( findTriangle(*_mesh) ) {
-      if ( findTriangle.getEuclidianDistance() < _shortestDistance ) {
-        _vertices.clear ();
-        _vertices.push_back ( & findTriangle.getClosestTriangle().vertex(0) );
-        _vertices.push_back ( & findTriangle.getClosestTriangle().vertex(1) );
-        _vertices.push_back ( & findTriangle.getClosestTriangle().vertex(2) );
-        _shortestDistance = findTriangle.getEuclidianDistance ();
-        _weights.clear ();
-        _weights.push_back ( findTriangle.getProjectionPointParameter(0) );
-        _weights.push_back ( findTriangle.getProjectionPointParameter(1) );
-        _weights.push_back ( findTriangle.getProjectionPointParameter(2) );
+
+  if(utils::MasterSlave::_slaveMode){
+    utils::MasterSlave::_communication->send(_shortestDistance, 0);
+    utils::MasterSlave::_communication->receive(_isClosest, 0);
+  }
+
+  if(utils::MasterSlave::_masterMode){
+    _isClosest = false;
+    int closestRank = -1;
+    double closestDistanceGlobal = std::numeric_limits<double>::max();
+    double closestDistanceLocal = std::numeric_limits<double>::max();
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      utils::MasterSlave::_communication->receive(closestDistanceLocal, rankSlave);
+      if(closestDistanceLocal < closestDistanceGlobal){
+        closestDistanceGlobal = closestDistanceLocal;
+        closestRank = rankSlave;
       }
     }
+    assertion(closestRank!=-1);
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      utils::MasterSlave::_communication->send(closestRank==rankSlave, rankSlave);
+    }
   }
 
-  io::TXTTableWriter::DataType vectorType = _mesh->getDimensions() == 2
-      ? io::TXTTableWriter::VECTOR2D
-      : io::TXTTableWriter::VECTOR3D;
-  _txtWriter.addData("Time", io::TXTTableWriter::DOUBLE);
-  _txtWriter.addData("Coordinate", vectorType);
-  for (size_t i=0; i < _mesh->data().size(); i++){
-    _dataToExport.push_back(_mesh->data()[i]);
-    if (_dataToExport[i]->getDimensions() > 1){
-      _txtWriter.addData(_dataToExport[i]->getName(), vectorType);
+  preciceDebug("Rank: " << utils::MasterSlave::_rank << ", isClosest: " << _isClosest);
+
+  if(_isClosest){
+
+    // Find closest edge
+    query::FindClosestEdge findEdge ( _point );
+    if ( findEdge(*_mesh) ) {
+      if ( findEdge.getEuclidianDistance() < _shortestDistance ) {
+        //         _closestEdge = & findEdge.getClosestEdge ();
+        _vertices.clear ();
+        _vertices.push_back ( & findEdge.getClosestEdge().vertex(0) );
+        _vertices.push_back ( & findEdge.getClosestEdge().vertex(1) );
+        _shortestDistance = findEdge.getEuclidianDistance ();
+        _weights.clear ();
+        _weights.push_back ( findEdge.getProjectionPointParameter(0) );
+        _weights.push_back ( findEdge.getProjectionPointParameter(1) );
+      }
     }
-    else {
-      _txtWriter.addData(_dataToExport[i]->getName(), io::TXTTableWriter::DOUBLE);
+    if ( _mesh->getDimensions() == 3 ) {
+      // Find closest triangle
+      query::FindClosestTriangle findTriangle ( _point );
+      if ( findTriangle(*_mesh) ) {
+        if ( findTriangle.getEuclidianDistance() < _shortestDistance ) {
+          _vertices.clear ();
+          _vertices.push_back ( & findTriangle.getClosestTriangle().vertex(0) );
+          _vertices.push_back ( & findTriangle.getClosestTriangle().vertex(1) );
+          _vertices.push_back ( & findTriangle.getClosestTriangle().vertex(2) );
+          _shortestDistance = findTriangle.getEuclidianDistance ();
+          _weights.clear ();
+          _weights.push_back ( findTriangle.getProjectionPointParameter(0) );
+          _weights.push_back ( findTriangle.getProjectionPointParameter(1) );
+          _weights.push_back ( findTriangle.getProjectionPointParameter(2) );
+        }
+      }
     }
-  }
+
+    io::TXTTableWriter::DataType vectorType = _mesh->getDimensions() == 2
+        ? io::TXTTableWriter::VECTOR2D
+        : io::TXTTableWriter::VECTOR3D;
+    _txtWriter.addData("Time", io::TXTTableWriter::DOUBLE);
+    _txtWriter.addData("Coordinate", vectorType);
+    for (size_t i=0; i < _mesh->data().size(); i++){
+      _dataToExport.push_back(_mesh->data()[i]);
+      if (_dataToExport[i]->getDimensions() > 1){
+        _txtWriter.addData(_dataToExport[i]->getName(), vectorType);
+      }
+      else {
+        _txtWriter.addData(_dataToExport[i]->getName(), io::TXTTableWriter::DOUBLE);
+      }
+    }
+
+  } //isClosest
 }
 
 void WatchPoint:: exportPointData
 (
   double time )
 {
-  assertion(_vertices.size() == _weights.size());
-  using utils::Vector2D;
-  using utils::Vector3D;
-  _txtWriter.writeData("Time", time);
-  // Export watch point coordinates
-  utils::DynVector coords(_mesh->getDimensions(), 0.0);
-  for (size_t i=0; i < _vertices.size(); i++){
-    coords += _weights[i] * _vertices[i]->getCoords();
-  }
-  if (coords.size() == 2){
-    _txtWriter.writeData("Coordinate", Vector2D(coords));
-  }
-  else {
-    _txtWriter.writeData("Coordinate", Vector3D(coords));
-  }
-  // Export watch point data
-  for (size_t i=0; i < _dataToExport.size(); i++){
-    if (_dataToExport[i]->getDimensions() > 1){
-      utils::DynVector toExport(_mesh->getDimensions(), 0.0);
-      getValue(toExport, _dataToExport[i]);
-      if (coords.size() == 2){
-        _txtWriter.writeData(_dataToExport[i]->getName(), Vector2D(toExport));
-      }
-      else {
-        _txtWriter.writeData(_dataToExport[i]->getName(), Vector3D(toExport));
-      }
-
+  if(_isClosest){
+    assertion(_vertices.size() == _weights.size());
+    using utils::Vector2D;
+    using utils::Vector3D;
+    _txtWriter.writeData("Time", time);
+    // Export watch point coordinates
+    utils::DynVector coords(_mesh->getDimensions(), 0.0);
+    for (size_t i=0; i < _vertices.size(); i++){
+      coords += _weights[i] * _vertices[i]->getCoords();
+    }
+    if (coords.size() == 2){
+      _txtWriter.writeData("Coordinate", Vector2D(coords));
     }
     else {
-      double valueToExport = 0.0;
-      getValue ( valueToExport, _dataToExport[i] );
-      _txtWriter.writeData ( _dataToExport[i]->getName(), valueToExport );
+      _txtWriter.writeData("Coordinate", Vector3D(coords));
+    }
+    // Export watch point data
+    for (size_t i=0; i < _dataToExport.size(); i++){
+      if (_dataToExport[i]->getDimensions() > 1){
+        utils::DynVector toExport(_mesh->getDimensions(), 0.0);
+        getValue(toExport, _dataToExport[i]);
+        if (coords.size() == 2){
+          _txtWriter.writeData(_dataToExport[i]->getName(), Vector2D(toExport));
+        }
+        else {
+          _txtWriter.writeData(_dataToExport[i]->getName(), Vector3D(toExport));
+        }
+
+      }
+      else {
+        double valueToExport = 0.0;
+        getValue ( valueToExport, _dataToExport[i] );
+        _txtWriter.writeData ( _dataToExport[i]->getName(), valueToExport );
+      }
     }
   }
 }
