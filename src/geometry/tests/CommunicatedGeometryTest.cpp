@@ -218,7 +218,8 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     }
 
   }
-
+  utils::MasterSlave::_slaveMode = false;
+  utils::MasterSlave::_masterMode = false;
   utils::Parallel::synchronizeProcesses();
 }
 
@@ -317,7 +318,8 @@ void CommunicatedGeometryTest:: testGatherMesh ()
     geo.addReceiver("NASTIN", participantCom);
     geo.create(*pSolidzMesh);
   }
-
+  utils::MasterSlave::_slaveMode = false;
+  utils::MasterSlave::_masterMode = false;
   utils::Parallel::synchronizeProcesses();
 }
 
