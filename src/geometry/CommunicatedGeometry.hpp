@@ -5,7 +5,7 @@
 #define PRECICE_GEOMETRY_COMMUNICATEDGEOMETRY_HPP_
 
 #include "Geometry.hpp"
-#include "com/SharedPointer.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -33,7 +33,7 @@ public:
 
   void addReceiver (
     const std::string&     receiver,
-    com::PtrCommunication com );
+    m2n::PtrGlobalCommunication com );
 
   void setBoundingFromMapping(mapping::PtrMapping mapping);
 
@@ -67,7 +67,7 @@ private:
 
   std::string _providerName;
 
-  std::map<std::string,com::PtrCommunication> _receivers;
+  std::map<std::string,m2n::PtrGlobalCommunication> _receivers;
 
   int _dimensions;
 

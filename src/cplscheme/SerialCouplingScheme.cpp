@@ -8,17 +8,17 @@ tarch::logging::Log SerialCouplingScheme::_log("precice::cplscheme::SerialCoupli
 
 SerialCouplingScheme::SerialCouplingScheme
 (
-  double                maxTime,
-  int                   maxTimesteps,
-  double                timestepLength,
-  int                   validDigits,
-  const std::string&    firstParticipant,
-  const std::string&    secondParticipant,
-  const std::string&    localParticipant,
-  com::PtrCommunication communication,
+  double                      maxTime,
+  int                         maxTimesteps,
+  double                      timestepLength,
+  int                         validDigits,
+  const std::string&          firstParticipant,
+  const std::string&          secondParticipant,
+  const std::string&          localParticipant,
+  m2n::PtrGlobalCommunication communication,
   constants::TimesteppingMethod dtMethod,
-  CouplingMode          cplMode,
-  int                   maxIterations)
+  CouplingMode                cplMode,
+  int                         maxIterations)
   :
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits, firstParticipant,
                      secondParticipant, localParticipant, communication, maxIterations, dtMethod)

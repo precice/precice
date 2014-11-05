@@ -13,6 +13,8 @@
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "m2n/GlobalCommunication.hpp"
+#include "m2n/SimpleCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
@@ -87,6 +89,7 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
   meshConfig.addMesh ( mesh );
 
   com::PtrCommunication communication ( new com::MPIDirectCommunication() );
+  m2n::PtrGlobalCommunication globalCom( new m2n::SimpleCommunication(communication) );
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
   double maxTime = 1.0;
@@ -108,10 +111,10 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
   constants::TimesteppingMethod dtMethod = constants::FIXED_DT;
   cplscheme::SerialCouplingScheme cplScheme (
     maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
-    nameParticipant1, localParticipant, communication, dtMethod, BaseCouplingScheme::Explicit );
+    nameParticipant1, localParticipant, globalCom, dtMethod, BaseCouplingScheme::Explicit );
   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh , false );
   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh , false );
-  connect ( nameParticipant0, nameParticipant1, localParticipant, communication );
+  connect ( nameParticipant0, nameParticipant1, localParticipant, globalCom );
   runSimpleExplicitCoupling ( cplScheme, localParticipant, meshConfig );
 }
 
@@ -144,7 +147,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  com::PtrCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
 
   geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
   connect ( "participant0", "participant1", localParticipant, com );
@@ -184,7 +187,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
   //validate(geoConfig.isValid());
   //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
-  com::PtrCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
 
   geoConfig.geometries()[0]->create( *meshConfig->meshes()[0] );
   connect ( "participant0", "participant1", localParticipant, com );
@@ -269,7 +272,7 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  com::PtrCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
 
   geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
   connect("participant0", "participant1", localParticipant, com);
@@ -339,7 +342,7 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  com::PtrCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
 
   geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
   connect("participant0", "participant1", localParticipant, com);
@@ -534,6 +537,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
   meshConfig.addMesh ( mesh );
 
   com::PtrCommunication communication ( new com::MPIDirectCommunication );
+  m2n::PtrGlobalCommunication globalCom (new m2n::SimpleCommunication(communication));
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
   double maxTime = 1.0;
@@ -555,10 +559,10 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
   constants::TimesteppingMethod dtMethod = constants::FIXED_DT;
   cplscheme::SerialCouplingScheme cplScheme (
     maxTime, maxTimesteps, timestepLength, 12, nameParticipant0,
-    nameParticipant1, localParticipant, communication, dtMethod, BaseCouplingScheme::Explicit );
+    nameParticipant1, localParticipant, globalCom, dtMethod, BaseCouplingScheme::Explicit );
   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh , false);
   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh , false);
-  connect ( nameParticipant0, nameParticipant1, localParticipant, communication );
+  connect ( nameParticipant0, nameParticipant1, localParticipant, globalCom );
   runExplicitCouplingWithSubcycling ( cplScheme, localParticipant, meshConfig );
 }
 
@@ -597,7 +601,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling (
   //validate(geoConfig.isValid());
   //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
-  com::PtrCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
 
   geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
   connect ( "participant0", "participant1", localParticipant, com );
@@ -752,7 +756,7 @@ void ExplicitCouplingSchemeTest:: connect
   const std::string&     participant0,
   const std::string&     participant1,
   const std::string&     localParticipant,
-  com::PtrCommunication& communication ) const
+  m2n::PtrGlobalCommunication& communication ) const
 {
   preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );

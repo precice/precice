@@ -3,6 +3,7 @@
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
+#include "m2n/GlobalCommunication.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -16,12 +17,12 @@ MultiCouplingScheme::MultiCouplingScheme
   double                timestepLength,
   int                   validDigits,
   const std::string&    localParticipant,
-  std::vector<com::PtrCommunication> communications,
+  std::vector<m2n::PtrGlobalCommunication> communications,
   constants::TimesteppingMethod dtMethod,
   int                   maxIterations)
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,"neverFirstParticipant",
-      localParticipant,localParticipant,com::PtrCommunication(),maxIterations,dtMethod),
+      localParticipant,localParticipant,m2n::PtrGlobalCommunication(),maxIterations,dtMethod),
   _communications(communications),
   _allData (),
   _receiveDataVector(),
@@ -173,8 +174,8 @@ void MultiCouplingScheme::advance()
       getPostProcessing()->performPostProcessing(_allData);
     }
 
-    foreach(com::PtrCommunication com, _communications){
-      com->send(convergence, 0);
+    foreach(m2n::PtrGlobalCommunication com, _communications){
+      com->sendMaster(convergence, 0);
     }
 
     if (isCouplingOngoing()) {
@@ -270,7 +271,7 @@ void MultiCouplingScheme:: sendData()
     foreach (DataMap::value_type& pair, _sendDataVector[i]){
       int size = pair.second->values->size();
       if (size > 0) {
-        _communications[i]->send(tarch::la::raw(*pair.second->values), size, 0);
+        _communications[i]->sendMaster(tarch::la::raw(*pair.second->values), size, 0);
       }
     }
   }
@@ -287,7 +288,7 @@ void MultiCouplingScheme:: receiveData()
     foreach (DataMap::value_type& pair, _receiveDataVector[i]){
       int size = pair.second->values->size();
       if (size > 0) {
-        _communications[i]->receive(tarch::la::raw(*pair.second->values), size, 0);
+        _communications[i]->receiveMaster(tarch::la::raw(*pair.second->values), size, 0);
       }
     }
   }

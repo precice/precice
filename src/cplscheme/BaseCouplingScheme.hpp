@@ -9,7 +9,7 @@
 #include "Constants.hpp"
 #include "SharedPointer.hpp" 
 #include "mesh/Data.hpp"
-#include "com/SharedPointer.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "com/Constants.hpp"
 #include "utils/PointerVector.hpp"
 #include "tarch/logging/Log.h"
@@ -59,15 +59,15 @@ public:
     int    validDigits );
 
   BaseCouplingScheme (
-    double                maxTime,
-    int                   maxTimesteps,
-    double                timestepLength,
-    int                   validDigits,
-    const std::string&    firstParticipant,
-    const std::string&    secondParticipant,
-    const std::string&    localParticipant,
-    com::PtrCommunication communication,
-    int                   maxIterations,
+    double                        maxTime,
+    int                           maxTimesteps,
+    double                        timestepLength,
+    int                           validDigits,
+    const std::string&            firstParticipant,
+    const std::string&            secondParticipant,
+    const std::string&            localParticipant,
+    m2n::PtrGlobalCommunication   communication,
+    int                           maxIterations,
     constants::TimesteppingMethod dtMethod );
 
   enum CouplingMode {Explicit, Implicit, Undefined};
@@ -289,10 +289,10 @@ protected:
   }
   
   /// @brief Sends data sendDataIDs given in mapCouplingData with communication.
-  std::vector<int> sendData ( com::PtrCommunication communication );
+  std::vector<int> sendData ( m2n::PtrGlobalCommunication communication );
   
   /// @brief Receives data receiveDataIDs given in mapCouplingData with communication.
-  std::vector<int> receiveData ( com::PtrCommunication communication );
+  std::vector<int> receiveData ( m2n::PtrGlobalCommunication communication );
 
   /// @brief Gathers data sendDataIDs given in mapCouplingData at master.
   void gatherData ();
@@ -396,7 +396,7 @@ protected:
   std::string _secondParticipant;
   
   /// @return Communication device to the other coupling participant.
-  com::PtrCommunication getCommunication() {
+  m2n::PtrGlobalCommunication getCommunication() {
     assertion(_communication.use_count() > 0);
     return _communication;
   }
@@ -505,7 +505,7 @@ protected:
 private:
 
   /// @brief Communication device to the other coupling participant.
-  com::PtrCommunication _communication;
+  m2n::PtrGlobalCommunication _communication;
 
   /// @brief Determines, if the timestep length is set by the participant.
   bool _participantSetsDt;

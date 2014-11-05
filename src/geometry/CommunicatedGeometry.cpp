@@ -4,6 +4,7 @@
 #include "CommunicatedGeometry.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
+#include "m2n/GlobalCommunication.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -39,7 +40,7 @@ CommunicatedGeometry:: CommunicatedGeometry
 void CommunicatedGeometry:: addReceiver
 (
   const std::string&     receiver,
-  com::PtrCommunication com )
+  m2n::PtrGlobalCommunication com )
 {
   preciceTrace1 ( "addReceiver()", receiver );
   assertion ( com.get() != NULL );
@@ -69,12 +70,12 @@ void CommunicatedGeometry:: specializedCreate
                      "specializedCreate()", "Participant \"" << _accessorName
                      << "\" provides an invalid (possibly empty) mesh \""
                      << seed.getName() << "\"!" );
-      typedef std::map<std::string,com::PtrCommunication>::value_type Pair;
+      typedef std::map<std::string,m2n::PtrGlobalCommunication>::value_type Pair;
       foreach ( Pair & pair, _receivers ) {
         if ( ! pair.second->isConnected() ) {
           pair.second->acceptConnection ( _providerName, pair.first, 0, 1 );
         }
-        com::CommunicateMesh(pair.second).sendMesh ( seed, 0 );
+        com::CommunicateMesh(pair.second->getMasterCommunication()).sendMesh ( seed, 0 );
       }
     }
   }
@@ -82,11 +83,11 @@ void CommunicatedGeometry:: specializedCreate
     if(not utils::MasterSlave::_slaveMode){
       assertion ( seed.vertices().size() == 0 );
       assertion ( utils::contained(_accessorName, _receivers) );
-      com::PtrCommunication com ( _receivers[_accessorName] );
+      m2n::PtrGlobalCommunication com ( _receivers[_accessorName] );
       if ( ! com->isConnected() ) {
         com->requestConnection ( _providerName, _accessorName, 0, 1 );
       }
-      com::CommunicateMesh(com).receiveMesh ( seed, 0 );
+      com::CommunicateMesh(com->getMasterCommunication()).receiveMesh ( seed, 0 );
     }
     if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
       scatterMesh(seed);

@@ -17,7 +17,7 @@ ParallelCouplingScheme::ParallelCouplingScheme
   const std::string&    firstParticipant,
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
-  com::PtrCommunication communication,
+  m2n::PtrGlobalCommunication communication,
   constants::TimesteppingMethod dtMethod,
   CouplingMode          cplMode,
   int                   maxIterations)

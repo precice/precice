@@ -18,6 +18,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "tarch/la/WrappedVector.h"
 #include "com/SharedPointer.hpp"
+#include "m2n/SharedPointer.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -538,7 +539,7 @@ public:
 private:
 
   struct Communication {
-    com::PtrCommunication communication;
+    m2n::PtrGlobalCommunication communication;
     bool isRequesting;
   };
 

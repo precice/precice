@@ -37,6 +37,7 @@
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
+#include "m2n/GlobalCommunication.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "geometry/Geometry.hpp"
 #include "geometry/ImportGeometry.hpp"
@@ -252,7 +253,7 @@ double SolverInterfaceImpl:: initialize()
         typedef std::map<std::string,Communication>::value_type ComPair;
         preciceInfo("initialize()", "Setting up communication to coupling partner/s " );
         foreach (ComPair& comPair, _communications){
-          com::PtrCommunication& communication = comPair.second.communication;
+          m2n::PtrGlobalCommunication& communication = comPair.second.communication;
           std::string localName = _accessorName;
           if (_serverMode) localName += "Server";
           std::string remoteName(comPair.first);
@@ -1876,7 +1877,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
               context.meshRequirement = receiverContext.meshRequirement;
             }
 
-            com::PtrCommunication com =
+            m2n::PtrGlobalCommunication com =
                 comConfig->getCommunication ( receiver->getName(), provider );
             comGeo->addReceiver ( receiver->getName(), com );
 
@@ -1904,7 +1905,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
       preciceDebug ( "Receiving mesh from " << provider );
       geometry::CommunicatedGeometry * comGeo =
           new geometry::CommunicatedGeometry ( offset, receiver, provider, _dimensions );
-      com::PtrCommunication com = comConfig->getCommunication ( receiver, provider );
+      m2n::PtrGlobalCommunication com = comConfig->getCommunication ( receiver, provider );
       comGeo->addReceiver ( receiver, com );
       preciceCheck ( context.geometry.use_count() == 0, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot receive "

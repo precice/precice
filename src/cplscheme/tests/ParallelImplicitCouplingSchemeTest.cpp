@@ -18,6 +18,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "m2n/SimpleCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
@@ -122,6 +123,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
   com::PtrCommunication communication(new com::MPIDirectCommunication);
+  m2n::PtrGlobalCommunication globalCom(new m2n::SimpleCommunication(communication));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -147,7 +149,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   // Create the coupling scheme object
   cplscheme::ParallelCouplingScheme cplScheme(
      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-     nameLocalParticipant, communication, constants::FIXED_DT, BaseCouplingScheme::Implicit, 100);
+     nameLocalParticipant, globalCom, constants::FIXED_DT, BaseCouplingScheme::Implicit, 100);
   cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
   cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, initData);
 
@@ -163,7 +165,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
         mesh->data()[1]->getID(), false, minIterationConvMeasure1 );
   cplScheme.addConvergenceMeasure (
           mesh->data()[0]->getID(), false, minIterationConvMeasure2 );
-  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, communication);
+  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, globalCom);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
@@ -223,7 +225,7 @@ void ParallelImplicitCouplingSchemeTest:: connect
   const std::string&      participant0,
   const std::string&      participant1,
   const std::string&      localParticipant,
-  com::PtrCommunication& communication ) const
+  m2n::PtrGlobalCommunication& communication ) const
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
