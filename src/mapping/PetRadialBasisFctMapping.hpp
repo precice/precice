@@ -337,6 +337,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
              input()->getDimensions(), output()->getDimensions());
   using namespace tarch::la;
   PetscErrorCode ierr = 0;
+  KSPConvergedReason convReason;
   utils::DynVector& inValues = input()->data(inputDataID)->values();
   utils::DynVector& outValues = output()->data(outputDataID)->values();
 
@@ -362,6 +363,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
       ierr = MatMultTranspose(_matrixA.matrix, in.vector, Au.vector); CHKERRV(ierr);
       ierr = KSPSolve(_solver, Au.vector, out.vector); CHKERRV(ierr);
+      ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
+      if (convReason < 0) {
+        preciceError(__func__, "RBF linear system has not converged.");
+      }
       VecChop(out.vector, 1e-9);
       // Copy mapped data to output data values
       PetscScalar *outArray;
@@ -393,8 +398,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       in.assemble();
       
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);
+      ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
+      if (convReason < 0) {
+        preciceError(__func__, "RBF linear system has not converged.");
+      }
       ierr = MatMult(_matrixA.matrix, p.vector, out.vector); CHKERRV(ierr);
-
       VecChop(out.vector, 1e-9);
       // Copy mapped data to output data values
       ierr = VecGetArray(out.vector, &vecArray);
