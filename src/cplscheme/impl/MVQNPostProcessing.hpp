@@ -107,6 +107,11 @@ private:
 
    // @brief Maximum number of old timesteps (with data values) kept.
    int _timestepsReused;
+   
+   // remove this ofter debugging, not useful
+   // ---------------------------------------
+   int k,t;
+   //----------------------------------------
 
    // @brief Determines sensitivity when two matrix columns are considered equal.
    //

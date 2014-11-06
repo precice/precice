@@ -5,6 +5,7 @@
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
 #include "tarch/la/GramSchmidt.h"
+#include "tarch/la/LUDecomposition.h"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "tarch/la/TransposedMatrix.h"
 #include "mesh/Mesh.hpp"
@@ -13,6 +14,8 @@
 #include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
+
+#include <sstream>
 //#include "utils/NumericalCompare.hpp"
 
 namespace precice {
@@ -56,7 +59,9 @@ MVQNPostProcessing:: MVQNPostProcessing
   _invJacobian(),
   _oldInvJacobian(),
 //  _secondaryMatricesW(),
-  _matrixCols()
+  _matrixCols(),
+  k(0),
+  t(0)
 {
    preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "MVQNPostProcessing()",
@@ -107,6 +112,8 @@ void MVQNPostProcessing:: initialize
   _oldInvJacobian.append(DataMatrix(entries, entries, init));
   _matrixCols.push_front(0);
   _firstIteration = true;
+  k = 0;
+  t = 0;
 
   // Fetch secondary data IDs, to be relaxed with same coefficients from MVQN
 //  foreach (DataMap::value_type& pair, cplData){
@@ -175,13 +182,14 @@ void MVQNPostProcessing:: performPostProcessing
 
   if (_firstIteration && (_matrixCols.size() < 2)){
     preciceDebug("   Performing underrelaxation");
-    _oldInvJacobian = _invJacobian; // store inverse Jacobian
+    //_oldInvJacobian = _invJacobian; // store inverse Jacobian
     _oldXTilde = _scaledValues; // Store x tilde
     _oldResiduals = _residuals; // Store current residual
     // Perform underrelaxation with residual: x_new = x_old + omega * res
     _residuals *= _initialRelaxation;
     _residuals += _scaledOldValues;
     _scaledValues = _residuals;
+    k++;
 
     // Store x_tildes for secondary data
 //    foreach (int id, _secondaryDataIDs){
@@ -250,6 +258,21 @@ void MVQNPostProcessing:: performPostProcessing
 //        secW.column(0) -= _secondaryOldXTildes[id];
 //      }
     }
+    
+    
+    //----------------------------DEBUG------------------------------------
+    k++;
+    /*
+    std::stringstream sk; sk <<k;
+    std::stringstream st; st <<t;
+    std::string Xfile("x"+st.str()+"_"+sk.str()+".m");
+    std::string residualfile("residual"+st.str()+"_"+sk.str()+".m");
+    _scaledValues.printm(Xfile.c_str());
+    _residuals.printm(residualfile.c_str());
+    */
+    //---------------------------------------------------------------------
+    
+    
 
     _oldResiduals = _residuals;   // Store residuals
     _oldXTilde = _scaledValues;   // Store x_tilde
@@ -268,44 +291,166 @@ void MVQNPostProcessing:: performPostProcessing
     DataValues xUpdate(_residuals.size(), 0.0);
 
     preciceDebug("   Compute Newton factors");
+    
+    /**
+     * QR Decomposition
     DataMatrix VTV(_matrixV.cols(), _matrixV.cols(), 0.0);
     DataMatrix Q(_matrixV.cols(), _matrixV.cols(), 0.0);
     DataMatrix R(_matrixV.cols(), _matrixV.cols(), 0.0);
     DataMatrix v;
     multiply(transpose(_matrixV), _matrixV, VTV);  // VTV = V^T*V
     modifiedGramSchmidt(VTV, Q, R);
+    if (VTV.cols() > 1){
+        for (int i=0; i < VTV.cols(); i++){
+          if (R(i,i) < _singularityLimit){
+            preciceDebug("   Linear Dependence in QR Decomposition. VTV close to singular " << i);
+          }
+        }
+      }
     
     preciceDebug("   Apply Newton factors");
     DataMatrix QTVT(_matrixV.cols(), _matrixV.rows(), 0.0);
+    
+    assertion2(Q.rows() == _matrixV.cols(), Q.rows(), _matrixV.cols());
+    //preciceDebug("Q.rows()="<<Q.rows()<<" , V.cols()="<<_matrixV.cols());
     multiply(transpose(Q), transpose(_matrixV), QTVT); // QTVT = Q^T*V^T
-    DataValues tmp(_matrixV.cols(), 0.0);
+    DataValues tmpVec(_matrixV.cols(), 0.0);
     
     // v = (V^T*V)^-1*V^T
     for(int i = 0; i < QTVT.cols(); i++)
     {
-      backSubstitution(R, QTVT.column(i), tmp);
-      v.append(tmp);  
+      backSubstitution(R, QTVT.column(i), tmpVec);
+      v.append(tmpVec);  
     }
-    // JCopy = J_inv_n*V
-    DataMatrix JCopy(_invJacobian);
-    multiply(_oldInvJacobian, _matrixV, JCopy);
-    // JCopy = (W-J_inv_n*V)
-    JCopy *= -1.;
-    JCopy = JCopy + _matrixW;
+    */
+    
+    //----------------------------DEBUG------------------------------------
+    /*
+    std::string Vfile("matrixV"+st.str()+"_"+sk.str()+".m");
+    std::string Wfile("matrixW"+st.str()+"_"+sk.str()+".m");
+    _matrixV.printm(Vfile.c_str());
+    _matrixW.printm(Wfile.c_str());
+    */
+    // --------------------------------------------------------------------
+    
+    DataMatrix VTVLU(_matrixV.cols(), _matrixV.cols(), 0.0);
+    DataMatrix v;
+    multiply(transpose(_matrixV), _matrixV, VTVLU);  // VTV = V^T*V
+    
+    
+    //----------------------------DEBUG------------------------------------
+    /*
+    std::string VTVfile("VTV"+st.str()+"_"+sk.str()+".m");
+    VTVLU.printm(VTVfile.c_str());
+    */
+    // --------------------------------------------------------------------
+    
+    
+    DataValues pivots(_matrixV.cols(), 0.0);
+    lu(VTVLU,pivots);
+    
+    //----------------------------DEBUG------------------------------------
+    /*
+    std::string VTVLUfile("VTVLU"+st.str()+"_"+sk.str()+".m");
+    VTVLU.printm(VTVLUfile.c_str());
+    */
+    // --------------------------------------------------------------------
+    
+    
+    DataValues ytmpVec(_matrixV.cols(), 0.0);
+    DataValues xtmpVec(_matrixV.cols(), 0.0);
+    DataValues _matrixVRow;
+    for(int i = 0; i < _matrixV.rows(); i++)
+    {
+      for(int j=0; j < _matrixV.cols(); j++){
+	_matrixVRow.append(_matrixV(i,j));
+      }
+      
+      //----------------------------DEBUG------------------------------------
+      /*
+      std::stringstream si; si <<i;
+      std::string mrowfile("mrow"+st.str()+"_"+sk.str()+"_"+si.str()+".m");
+      _matrixVRow.printm(mrowfile.c_str());
+      */
+      // --------------------------------------------------------------------
+      
+      
+      // account for pivoting in lu-decomposition
+      assertion2(_matrixVRow.size() == pivots.size(), _matrixVRow.size(), pivots.size());
+      for ( int i=0; i < _matrixVRow.size(); i++ ){
+        double temp = _matrixVRow[i];
+        _matrixVRow[i] = _matrixVRow[pivots[i]];
+        _matrixVRow[pivots[i]] = temp;
+      }
+      forwardSubstitution(VTVLU, _matrixVRow, ytmpVec);
+      
+      //----------------------------DEBUG------------------------------------
+      /*
+      std::string ytmpfile("ytmpVec"+st.str()+"_"+sk.str()+"_"+si.str()+".m");
+      ytmpVec.printm(ytmpfile.c_str());
+      */
+      // --------------------------------------------------------------------
+      
+      backSubstitution(VTVLU, ytmpVec, xtmpVec);
+      
+      //----------------------------DEBUG------------------------------------
+      /*
+      std::string xtmpfile("xtmpVec"+st.str()+"_"+sk.str()+"_"+si.str()+".m");
+      xtmpVec.printm(xtmpfile.c_str());
+      */
+      // --------------------------------------------------------------------
+      
+      v.append(xtmpVec);  
+      _matrixVRow.clear();
+    }
+    
+    
+    //----------------------------DEBUG------------------------------------
+    /*
+    std::string vfile("v"+st.str()+"_"+sk.str()+".m");
+    v.printm(vfile.c_str());
+    */
+    // --------------------------------------------------------------------
+    
+     
+    // tmpMatrix = J_inv_n*V
+    DataMatrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
+    assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
+    multiply(_oldInvJacobian, _matrixV, tmpMatrix);
+    // tmpMatrix = (W-J_inv_n*V)
+    tmpMatrix *= -1.;
+    tmpMatrix = _matrixW + tmpMatrix;
     // invJacobian = (W - J_inv_n*V)*(V^T*V)^-1*V^T
-    multiply(JCopy, v, _invJacobian);
+    assertion2(tmpMatrix.cols() == v.rows(), tmpMatrix.cols(), v.rows());
+    multiply(tmpMatrix, v, _invJacobian);
     _invJacobian = _invJacobian + _oldInvJacobian;
     
-    tmp = _residuals;
-    tmp *= -1.;
+    DataValues negRes(_residuals);
+    negRes *= -1.;
     
     // solve delta_x = - J_inv*residuals
-    multiply(_invJacobian, tmp, xUpdate); 
+    multiply(_invJacobian, negRes, xUpdate); 
   
     //preciceDebug("performPostProcessing()", "   oldValues = " << oldValues);
     _scaledValues = _scaledOldValues;  // = x^k
-    _scaledValues += xUpdate;        // = x^k + Wc
-    _scaledValues += _residuals; // = x^k + Wc + r^k
+    _scaledValues += xUpdate;        // = x^k + delta_x
+    _scaledValues += _residuals; // = x^k + delta_x + r^k
+    
+    
+    
+    
+    //----------------------------DEBUG------------------------------------
+    /*
+    std::string Jfile("invJacobian"+st.str()+"_"+sk.str()+".m");
+    std::string xdeltafile("deltaX"+st.str()+"_"+sk.str()+".m");
+    std::string xnewfile("xNew"+st.str()+"_"+sk.str()+".m");    
+    _invJacobian.printm(Jfile.c_str());
+    xUpdate.printm(xdeltafile.c_str());
+    _scaledValues.printm(xnewfile.c_str());
+    */
+    // ---------------------------------------------------------------------
+    
+    
 
     // Perform QN relaxation for secondary data
 //    foreach (int id, _secondaryDataIDs){
@@ -349,6 +494,9 @@ void MVQNPostProcessing:: iterationsConverged
    DataMap & cplData)
 {
   preciceTrace("iterationsConverged()");
+   k = 0;
+   t++;
+   
 # ifdef Debug
   std::ostringstream stream;
   stream << "Matrix column counters: ";
@@ -393,6 +541,7 @@ void MVQNPostProcessing:: iterationsConverged
   }
   _matrixCols.push_front(0);
   _firstIteration = true;
+  _oldInvJacobian = _invJacobian; // store inverse Jacobian
 }
 
 // ------------ UNTOUCHED --------------------------------------------------------------
