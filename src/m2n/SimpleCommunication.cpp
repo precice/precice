@@ -4,6 +4,8 @@
 
 #include "SimpleCommunication.hpp"
 #include "com/Communication.hpp"
+#include "utils/MasterSlave.hpp"
+#include "mesh/Mesh.hpp"
 
 namespace precice {
 namespace m2n {
@@ -201,11 +203,67 @@ int SimpleCommunication:: receiveMaster
 
 
 void SimpleCommunication:: sendAll (
-  double* itemsToSend,
-  int     size,
-  int     rankReceiver )
+  double*       itemsToSend,
+  int           size,
+  int           rankReceiver,
+  mesh::PtrMesh mesh,
+  int           valueDimension)
 {
-  _com->send(itemsToSend, size, rankReceiver);
+  preciceTrace1("sendAll", size);
+
+  double* globalItemsToSend = NULL;
+  int globalSize = -1;
+
+  //gatherData
+  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
+
+    assertion(utils::MasterSlave::_communication.get() != NULL);
+    assertion(utils::MasterSlave::_communication->isConnected());
+    assertion(utils::MasterSlave::_size>1);
+    assertion(utils::MasterSlave::_rank!=-1);
+
+    if(utils::MasterSlave::_rank>0){ //slave
+      if (size > 0) {
+        utils::MasterSlave::_communication->send(itemsToSend, size, 0);
+      }
+    }
+    else{ //master
+      assertion(utils::MasterSlave::_rank==0);
+      std::map<int,std::vector<int> >& vertexDistribution = mesh->getVertexDistribution();
+      globalSize = mesh->getGlobalNumberOfVertices()*valueDimension;
+      preciceDebug("Global Size = " << globalSize);
+      globalItemsToSend = new double[globalSize]();
+
+      for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+        int slaveSize = vertexDistribution[rankSlave].size()*valueDimension;
+        preciceDebug("Slave Size = " << slaveSize );
+        if (slaveSize > 0) {
+          double* valuesSlave = new double[slaveSize];
+          utils::MasterSlave::_communication->receive(valuesSlave, slaveSize, rankSlave);
+          for(int i=0; i<vertexDistribution[rankSlave].size();i++){
+            for(int j=0;j<valueDimension;j++){
+              globalItemsToSend[vertexDistribution[rankSlave][i]*valueDimension+j] += valuesSlave[i*valueDimension+j];
+            }
+          }
+          delete valuesSlave;
+        }
+      }
+    } //master
+  }
+  else{ //couplingMode
+    globalItemsToSend = itemsToSend;
+    globalSize = size;
+  }
+
+  //send Data to other participant
+  if(not utils::MasterSlave::_slaveMode ){
+    assertion(globalItemsToSend!=NULL);
+    _com->send(globalItemsToSend, globalSize, rankReceiver);
+  }
+
+  if(utils::MasterSlave::_masterMode){
+    delete globalItemsToSend;
+  }
 }
 
 
@@ -214,12 +272,67 @@ void SimpleCommunication:: sendAll (
  *
  * @return Rank of sender, which is useful when ANY_SENDER is used.
  */
-int SimpleCommunication:: receiveAll (
-  double* itemsToReceive,
-  int     size,
-  int     rankSender )
+void SimpleCommunication:: receiveAll (
+  double*       itemsToReceive,
+  int           size,
+  int           rankSender,
+  mesh::PtrMesh mesh,
+  int           valueDimension)
 {
-  return _com->receive(itemsToReceive, size, rankSender);
+  preciceTrace1("receiveAll", size);
+
+  double* globalItemsToReceive = NULL;
+  int globalSize = -1;
+
+  // receive Data from other participant
+  if(not utils::MasterSlave::_slaveMode ){
+    if(utils::MasterSlave::_masterMode){
+      globalSize = mesh->getGlobalNumberOfVertices()*valueDimension;
+      preciceDebug("Global Size = " << globalSize);
+      globalItemsToReceive = new double[globalSize];
+    }
+    else{ //couplingMode
+      globalItemsToReceive = itemsToReceive;
+      globalSize = size;
+    }
+    assertion(globalItemsToReceive!=NULL);
+    _com->receive(globalItemsToReceive, globalSize, rankSender);
+  }
+
+  // scatter Data
+  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
+
+    assertion(utils::MasterSlave::_communication.get() != NULL);
+    assertion(utils::MasterSlave::_communication->isConnected());
+    assertion(utils::MasterSlave::_size>1);
+    assertion(utils::MasterSlave::_rank!=-1);
+
+    if(utils::MasterSlave::_rank>0){ //slave
+      if (size > 0) {
+        utils::MasterSlave::_communication->receive(itemsToReceive, size, 0);
+      }
+    }
+    else{ //master
+      assertion(utils::MasterSlave::_rank==0);
+      std::map<int,std::vector<int> >& vertexDistribution = mesh->getVertexDistribution();
+
+      for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+        int slaveSize = vertexDistribution[rankSlave].size()*valueDimension;
+        preciceDebug("Slave Size = " << slaveSize );
+        if (slaveSize > 0) {
+          double* valuesSlave = new double[slaveSize];
+          for(int i=0; i<vertexDistribution[rankSlave].size();i++){
+            for(int j=0;j<valueDimension;j++){
+              valuesSlave[i*valueDimension+j] = globalItemsToReceive[vertexDistribution[rankSlave][i]*valueDimension+j];
+            }
+          }
+          utils::MasterSlave::_communication->send(valuesSlave, slaveSize, rankSlave);
+          delete valuesSlave;
+        }
+      }
+      delete globalItemsToReceive;
+    } //master
+  }
 }
 
 }} // namespace precice, m2n

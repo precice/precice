@@ -185,19 +185,23 @@ public:
    * @brief Sends an array of double values.
    */
   virtual void sendAll (
-    double* itemsToSend,
-    int     size,
-    int     rankReceiver ) =0;
+    double*       itemsToSend,
+    int           size,
+    int           rankReceiver,
+    mesh::PtrMesh mesh,
+    int           valueDimension ) =0;
 
   /**
    * @brief Receives an array of double values.
    *
    * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receiveAll (
-    double* itemsToReceive,
-    int     size,
-    int     rankSender ) =0;
+  virtual void receiveAll (
+    double*       itemsToReceive,
+    int           size,
+    int           rankSender,
+    mesh::PtrMesh mesh,
+    int           valueDimension ) =0;
 
 };
 

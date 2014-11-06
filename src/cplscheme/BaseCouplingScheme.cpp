@@ -197,7 +197,7 @@ void BaseCouplingScheme:: addDataToSend
   preciceTrace("addDataToSend()");
   int id = data->getID();
   if(! utils::contained(id, _sendData)) {
-    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize));
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize, data->getDimensions()));
     DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _sendData.insert(pair);
   }
@@ -216,7 +216,7 @@ void BaseCouplingScheme:: addDataToReceive
   preciceTrace("addDataToReceive()");
   int id = data->getID();
   if(! utils::contained(id, _receiveData)) {
-    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize));
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize, data->getDimensions()));
     DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _receiveData.insert(pair);
   }
@@ -301,23 +301,18 @@ std::vector<int> BaseCouplingScheme:: sendData
 {
   preciceTrace("sendData()");
 
-  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-    gatherData();
-  }
-
   std::vector<int> sentDataIDs;
-  if(not utils::MasterSlave::_slaveMode){
-    assertion(communication.get() != NULL);
-    assertion(communication->isConnected());
-    foreach (DataMap::value_type& pair, _sendData){
-      int size = pair.second->values->size();
-      if (size > 0) {
-        communication->sendMaster(tarch::la::raw(*pair.second->values), size, 0);
-      }
-      sentDataIDs.push_back(pair.first);
+  assertion(communication.get() != NULL);
+  //assertion(communication->isConnected()); //TODO
+  foreach (DataMap::value_type& pair, _sendData){
+    int size = pair.second->values->size();
+    if (size > 0) {
+      communication->sendAll(tarch::la::raw(*pair.second->values), size, 0,
+                             pair.second->mesh, pair.second->dimension);
     }
-    preciceDebug("Number of sent data sets = " << sentDataIDs.size());
+    sentDataIDs.push_back(pair.first);
   }
+  preciceDebug("Number of sent data sets = " << sentDataIDs.size());
   return sentDataIDs;
 }
 
@@ -327,112 +322,22 @@ std::vector<int> BaseCouplingScheme:: receiveData
 {
   preciceTrace("receiveData()");
   std::vector<int> receivedDataIDs;
-  if(not utils::MasterSlave::_slaveMode){
-    assertion(communication.get() != NULL);
-    assertion(communication->isConnected());
+  assertion(communication.get() != NULL);
+  //assertion(communication->isConnected()); //TODO
 
-    foreach(DataMap::value_type & pair, _receiveData){
-      int size = pair.second->values->size ();
-      if (size > 0){
-        communication->receiveMaster(tarch::la::raw(*pair.second->values), size, 0);
-      }
-      receivedDataIDs.push_back(pair.first);
+  foreach(DataMap::value_type & pair, _receiveData){
+    int size = pair.second->values->size ();
+    if (size > 0){
+      communication->receiveAll(tarch::la::raw(*pair.second->values), size, 0,
+                                 pair.second->mesh, pair.second->dimension);
     }
-    preciceDebug("Number of received data sets = " << receivedDataIDs.size());
+    receivedDataIDs.push_back(pair.first);
   }
-
-  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-    scatterData();
-  }
+  preciceDebug("Number of received data sets = " << receivedDataIDs.size());
 
   return receivedDataIDs;
 }
 
-void BaseCouplingScheme:: gatherData
-()
-{
-  preciceTrace("gatherData()");
-  assertion(utils::MasterSlave::_communication.get() != NULL);
-  assertion(utils::MasterSlave::_communication->isConnected());
-  assertion(utils::MasterSlave::_size>1);
-  assertion(utils::MasterSlave::_rank!=-1);
-
-  if(utils::MasterSlave::_rank>0){ //slave
-    foreach (DataMap::value_type& pair, _sendData){
-      int size = pair.second->values->size();
-      if (size > 0) {
-        utils::MasterSlave::_communication->send(tarch::la::raw(*pair.second->values), size, 0);
-      }
-    }
-  }
-  else{ //master
-    assertion(utils::MasterSlave::_rank==0);
-    foreach (DataMap::value_type& pair, _sendData){
-      utils::DynVector& valuesMaster = *pair.second->values;
-      std::map<int,std::vector<int> >& vertexDistribution = pair.second->mesh->getVertexDistribution();
-      int dim = pair.second->mesh->getDimensions();
-      for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-        std::vector<int>& globalIndices = vertexDistribution[rankSlave];
-        int numberOfVertices = globalIndices.size();
-        preciceDebug("Number of vertices = " << numberOfVertices);
-        preciceDebug("Size ValuesMaster = " << valuesMaster.size() );
-        if (numberOfVertices > 0) {
-          double* valuesSlave = new double[numberOfVertices*dim];
-          utils::MasterSlave::_communication->receive(valuesSlave, numberOfVertices*dim, rankSlave);
-          for(int i=0; i<numberOfVertices;i++){
-            for(int j=0;j<dim;j++){
-              valuesMaster[globalIndices[i]*dim+j] += valuesSlave[i*dim+j];
-            }
-          }
-          delete valuesSlave;
-        }
-      }
-    }
-  }
-}
-
-void BaseCouplingScheme:: scatterData
-()
-{
-  preciceTrace("scatterData()");
-  assertion(utils::MasterSlave::_communication.get() != NULL);
-  assertion(utils::MasterSlave::_communication->isConnected());
-  assertion(utils::MasterSlave::_size>1);
-  assertion(utils::MasterSlave::_rank!=-1);
-
-  if(utils::MasterSlave::_rank>0){ //slave
-    foreach (DataMap::value_type& pair, _receiveData){
-      int size = pair.second->values->size();
-      if (size > 0) {
-        utils::MasterSlave::_communication->receive(tarch::la::raw(*pair.second->values), size, 0);
-      }
-    }
-  }
-  else{ //master
-    assertion(utils::MasterSlave::_rank==0);
-    foreach (DataMap::value_type& pair, _receiveData){
-      utils::DynVector& valuesMaster = *pair.second->values;
-      std::map<int,std::vector<int> >& vertexDistribution = pair.second->mesh->getVertexDistribution();
-      int dim = pair.second->mesh->getDimensions();
-      for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-        std::vector<int>& globalIndices = vertexDistribution[rankSlave];
-        int numberOfVertices = globalIndices.size();
-        preciceDebug("Number of vertices = " << numberOfVertices);
-        preciceDebug("Size ValuesMaster = " << valuesMaster.size() );
-        if (numberOfVertices > 0) {
-          double* valuesSlave = new double[numberOfVertices*dim];
-          for(int i=0; i<numberOfVertices;i++){
-            for(int j=0;j<dim;j++){
-              valuesSlave[i*dim+j] = valuesMaster[globalIndices[i]*dim+j];
-            }
-          }
-          utils::MasterSlave::_communication->send(valuesSlave, numberOfVertices*dim, rankSlave);
-          delete valuesSlave;
-        }
-      }
-    }
-  }
-}
 
 int BaseCouplingScheme:: getVertexOffset(
     std::map<int,int>& vertexDistribution,

@@ -134,6 +134,7 @@ void CommunicatedGeometry:: gatherMesh(
         numberOfVertices++;
       }
     }
+    seed.setGlobalNumberOfVertices(numberOfVertices);
   }
 }
 
@@ -211,6 +212,7 @@ void CommunicatedGeometry:: scatterMesh(
   else{ //master
     assertion(utils::MasterSlave::_rank==0);
     assertion(utils::MasterSlave::_size>1);
+    seed.setGlobalNumberOfVertices(seed.vertices().size());
     for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( seed, rankSlave );
       int numberOfVertices = -1;

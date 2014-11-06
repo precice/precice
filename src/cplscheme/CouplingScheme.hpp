@@ -229,19 +229,6 @@ public:
     com::PtrCommunication communication,
     int                   rankSender ) =0;
 
-  //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
-  virtual void gatherData (){}
-
-  //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
-  virtual void scatterData (){}
-
-  //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
-  virtual void setMasterSlaveCommunication(
-    com::PtrCommunication com){}
-
-  //was necessary for distributed master-slave scheme, will be substituted by the point2point communication
-  virtual void setRankAndSize(int rank, int size){}
-
 };
 
 }} // namespace precice, cplscheme

@@ -273,7 +273,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   dcol1.append(1.0);
   dcol1.append(1.0);
 
-  PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false));
+  PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
   //init forces
   utils::DynVector fvalues;
@@ -286,7 +286,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   fcol1.append(0.2);
   fcol1.append(0.2);
 
-  PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false));
+  PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
   DataMap data;
   data.insert(std::pair<int,PtrCouplingData>(0,dpcd));

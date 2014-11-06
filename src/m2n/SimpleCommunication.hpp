@@ -8,6 +8,7 @@
 #include "com/Communication.hpp"
 #include "tarch/logging/Log.h"
 #include "com/SharedPointer.hpp"
+#include "mesh/SharedPointer.hpp"
 
 
 namespace precice {
@@ -201,9 +202,11 @@ public:
    * @brief Sends an array of double values.
    */
   virtual void sendAll (
-    double* itemsToSend,
-    int     size,
-    int     rankReceiver );
+    double*       itemsToSend,
+    int           size,
+    int           rankReceiver,
+    mesh::PtrMesh mesh,
+    int           valueDimension);
 
 
   /**
@@ -211,10 +214,12 @@ public:
    *
    * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receiveAll (
-    double* itemsToReceive,
-    int     size,
-    int     rankSender );
+  virtual void receiveAll (
+    double*       itemsToReceive,
+    int           size,
+    int           rankSender,
+    mesh::PtrMesh mesh,
+    int           valueDimension);
 
 private:
 

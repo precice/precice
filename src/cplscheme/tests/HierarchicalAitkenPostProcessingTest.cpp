@@ -48,7 +48,7 @@ void HierarchicalAitkenPostProcessingTest:: run ()
     bool initializeValues = false;
     mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
     PtrCouplingData ptrCplData = PtrCouplingData(new CouplingData(
-                  &values,dummyMesh,initializeValues));
+                  &values,dummyMesh,initializeValues, 1));
     temp = values;
     temp *= 2.0;
     ptrCplData->oldValues.appendFront ( temp );

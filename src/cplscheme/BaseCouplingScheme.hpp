@@ -294,12 +294,6 @@ protected:
   /// @brief Receives data receiveDataIDs given in mapCouplingData with communication.
   std::vector<int> receiveData ( m2n::PtrGlobalCommunication communication );
 
-  /// @brief Gathers data sendDataIDs given in mapCouplingData at master.
-  void gatherData ();
-
-  /// @brief Scatters data receiveDataIDs given in mapCouplingData at master.
-  void scatterData ();
-
   /// @brief Returns all data to be sent.
   const DataMap& getSendData() const {
     return _sendData;

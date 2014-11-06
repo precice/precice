@@ -28,6 +28,9 @@ struct CouplingData
   /// @brief True, if the data values are initialized by a participant.
   bool initialize;
 
+  /// @ dimension of one data value (scalar=1, or vectorial=interface-dimension)
+  int dimension;
+
   /**
    * @brief Default constructor, not to be used!
    *
@@ -44,12 +47,14 @@ struct CouplingData
   CouplingData (
     utils::DynVector* values,
     mesh::PtrMesh       mesh,
-    bool              initialize )
+    bool              initialize,
+    int               dimension)
     :
     values ( values ),
     oldValues (),
     mesh(mesh),
-    initialize ( initialize )
+    initialize ( initialize ),
+    dimension(dimension)
     {
       assertion ( values != NULL );
       assertion ( mesh.use_count()>0);

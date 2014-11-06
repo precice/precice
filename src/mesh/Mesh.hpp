@@ -276,6 +276,14 @@ public:
     return _vertexDistribution;
   }
 
+  int getGlobalNumberOfVertices(){
+    return _globalNumberOfVertices;
+  }
+
+  void setGlobalNumberOfVertices(int globalNumberOfVertices){
+    _globalNumberOfVertices = globalNumberOfVertices;
+  }
+
   void addMesh(Mesh& deltaMesh);
 
 
@@ -320,6 +328,8 @@ private:
   std::list<MeshListener*> _listeners;
 
   std::map<int,std::vector<int> > _vertexDistribution;
+
+  int _globalNumberOfVertices;
 
 };
 
