@@ -921,8 +921,6 @@ int SolverInterfaceImpl:: setMeshVertex
   }
   preciceDebug("Position = " << internalPosition);
   int index = -1;
-  preciceCheck(not utils::MasterSlave::_masterMode, "setMeshVertex()", "At the moment the master"
-              << " is not allowed to hold vertices");
   if ( _clientMode ){
     index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
   }
@@ -944,8 +942,6 @@ void SolverInterfaceImpl:: setMeshVertices
   int*    ids )
 {
   preciceTrace2("setMeshVertices()", meshID, size);
-  preciceCheck(not utils::MasterSlave::_masterMode, "setMeshVertices()", "At the moment the master"
-              << " is not allowed to hold vertices");
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
@@ -2092,11 +2088,9 @@ void SolverInterfaceImpl:: performDataActions
 {
   preciceTrace("performDataActions()");
   assertion(not _clientMode);
-  if(not utils::MasterSlave::_masterMode){
-    foreach (action::PtrAction& action, _accessor->actions()){
-      if (timings.find(action->getTiming()) != timings.end()){
-        action->performAction(time, dt, partFullDt, fullDt);
-      }
+  foreach (action::PtrAction& action, _accessor->actions()){
+    if (timings.find(action->getTiming()) != timings.end()){
+      action->performAction(time, dt, partFullDt, fullDt);
     }
   }
 }

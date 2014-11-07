@@ -234,6 +234,14 @@ void SimpleCommunication:: sendAll (
       preciceDebug("Global Size = " << globalSize);
       globalItemsToSend = new double[globalSize]();
 
+      //master data
+      for(int i=0; i<vertexDistribution[0].size();i++){
+        for(int j=0;j<valueDimension;j++){
+          globalItemsToSend[vertexDistribution[0][i]*valueDimension+j] += (*itemsToSend)[i*valueDimension+j];
+        }
+      }
+
+      //slaves data
       for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
         int slaveSize = vertexDistribution[rankSlave].size()*valueDimension;
         preciceDebug("Slave Size = " << slaveSize );
@@ -316,6 +324,14 @@ void SimpleCommunication:: receiveAll (
       assertion(utils::MasterSlave::_rank==0);
       std::map<int,std::vector<int> >& vertexDistribution = mesh->getVertexDistribution();
 
+      //master data
+      for(int i=0; i<vertexDistribution[0].size();i++){
+        for(int j=0;j<valueDimension;j++){
+          (*itemsToReceive)[i*valueDimension+j] = globalItemsToReceive[vertexDistribution[0][i]*valueDimension+j];
+        }
+      }
+
+      //slaves data
       for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
         int slaveSize = vertexDistribution[rankSlave].size()*valueDimension;
         preciceDebug("Slave Size = " << slaveSize );
