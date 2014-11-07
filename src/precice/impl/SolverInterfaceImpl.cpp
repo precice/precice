@@ -1911,7 +1911,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
                      "Participant \"" << _accessorName << "\" cannot receive "
                      << "the geometry of mesh \"" << context.mesh->getName()
                      << " in addition to a defined geometry!" );
-      if(utils::MasterSlave::_slaveMode){
+      if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
         comGeo->setBoundingFromMapping(context.fromMappingContext.mapping);
         comGeo->setBoundingToMapping(context.toMappingContext.mapping);
       }
