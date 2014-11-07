@@ -54,7 +54,6 @@ void AitkenPostProcessing:: initialize
     entries = cplData[_dataIDs.at(0)]->values->size() +
         cplData[_dataIDs.at(1)]->values->size();
   }
-  assertion(entries > 0);
   double initializer = std::numeric_limits<double>::max();
   utils::DynVector toAppend(entries, initializer);
   _residuals.append(toAppend);

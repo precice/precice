@@ -202,7 +202,7 @@ public:
    * @brief Sends an array of double values.
    */
   virtual void sendAll (
-    double*       itemsToSend,
+    utils::DynVector*   itemsToSend,
     int           size,
     int           rankReceiver,
     mesh::PtrMesh mesh,
@@ -215,7 +215,7 @@ public:
    * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
   virtual void receiveAll (
-    double*       itemsToReceive,
+    utils::DynVector*   itemsToReceive,
     int           size,
     int           rankSender,
     mesh::PtrMesh mesh,

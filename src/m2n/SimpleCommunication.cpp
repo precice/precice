@@ -203,7 +203,7 @@ int SimpleCommunication:: receiveMaster
 
 
 void SimpleCommunication:: sendAll (
-  double*       itemsToSend,
+  utils::DynVector*    itemsToSend,
   int           size,
   int           rankReceiver,
   mesh::PtrMesh mesh,
@@ -224,7 +224,7 @@ void SimpleCommunication:: sendAll (
 
     if(utils::MasterSlave::_rank>0){ //slave
       if (size > 0) {
-        utils::MasterSlave::_communication->send(itemsToSend, size, 0);
+        utils::MasterSlave::_communication->send(tarch::la::raw(*itemsToSend), size, 0);
       }
     }
     else{ //master
@@ -251,7 +251,7 @@ void SimpleCommunication:: sendAll (
     } //master
   }
   else{ //couplingMode
-    globalItemsToSend = itemsToSend;
+    globalItemsToSend = tarch::la::raw(*itemsToSend);
     globalSize = size;
   }
 
@@ -273,7 +273,7 @@ void SimpleCommunication:: sendAll (
  * @return Rank of sender, which is useful when ANY_SENDER is used.
  */
 void SimpleCommunication:: receiveAll (
-  double*       itemsToReceive,
+  utils::DynVector*   itemsToReceive,
   int           size,
   int           rankSender,
   mesh::PtrMesh mesh,
@@ -292,7 +292,7 @@ void SimpleCommunication:: receiveAll (
       globalItemsToReceive = new double[globalSize];
     }
     else{ //couplingMode
-      globalItemsToReceive = itemsToReceive;
+      globalItemsToReceive = tarch::la::raw(*itemsToReceive);
       globalSize = size;
     }
     assertion(globalItemsToReceive!=NULL);
@@ -309,7 +309,7 @@ void SimpleCommunication:: receiveAll (
 
     if(utils::MasterSlave::_rank>0){ //slave
       if (size > 0) {
-        utils::MasterSlave::_communication->receive(itemsToReceive, size, 0);
+        utils::MasterSlave::_communication->receive(tarch::la::raw(*itemsToReceive), size, 0);
       }
     }
     else{ //master

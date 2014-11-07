@@ -306,10 +306,8 @@ std::vector<int> BaseCouplingScheme:: sendData
   //assertion(communication->isConnected()); //TODO
   foreach (DataMap::value_type& pair, _sendData){
     int size = pair.second->values->size();
-    if (size > 0) {
-      communication->sendAll(tarch::la::raw(*pair.second->values), size, 0,
-                             pair.second->mesh, pair.second->dimension);
-    }
+    communication->sendAll(pair.second->values, size, 0,
+                           pair.second->mesh, pair.second->dimension);
     sentDataIDs.push_back(pair.first);
   }
   preciceDebug("Number of sent data sets = " << sentDataIDs.size());
@@ -327,10 +325,8 @@ std::vector<int> BaseCouplingScheme:: receiveData
 
   foreach(DataMap::value_type & pair, _receiveData){
     int size = pair.second->values->size ();
-    if (size > 0){
-      communication->receiveAll(tarch::la::raw(*pair.second->values), size, 0,
-                                 pair.second->mesh, pair.second->dimension);
-    }
+    communication->receiveAll(pair.second->values, size, 0,
+                               pair.second->mesh, pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
   preciceDebug("Number of received data sets = " << receivedDataIDs.size());

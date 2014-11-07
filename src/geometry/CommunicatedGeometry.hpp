@@ -48,10 +48,13 @@ protected:
 
 private:
 
-  void gatherMesh(
+  void scatterMesh(
     mesh::Mesh& seed);
 
-  void scatterMesh(
+  void sendMesh(
+    mesh::Mesh& seed);
+
+  void receiveMesh(
     mesh::Mesh& seed);
 
   void computeBoundingMappings();

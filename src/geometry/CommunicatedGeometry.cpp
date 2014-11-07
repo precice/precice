@@ -62,36 +62,10 @@ void CommunicatedGeometry:: specializedCreate
                  "No receivers specified for communicated geometry to create "
                  << "mesh \"" << seed.getName() << "\"!" );
   if ( _accessorName == _providerName ) {
-    if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ){
-      gatherMesh(seed);
-    }
-    if(not utils::MasterSlave::_slaveMode){
-      preciceCheck ( seed.vertices().size() > 0,
-                     "specializedCreate()", "Participant \"" << _accessorName
-                     << "\" provides an invalid (possibly empty) mesh \""
-                     << seed.getName() << "\"!" );
-      typedef std::map<std::string,m2n::PtrGlobalCommunication>::value_type Pair;
-      foreach ( Pair & pair, _receivers ) {
-        if ( ! pair.second->isConnected() ) {
-          pair.second->acceptConnection ( _providerName, pair.first, 0, 1 );
-        }
-        com::CommunicateMesh(pair.second->getMasterCommunication()).sendMesh ( seed, 0 );
-      }
-    }
+    sendMesh(seed);
   }
   else if ( utils::contained(_accessorName, _receivers) ) {
-    if(not utils::MasterSlave::_slaveMode){
-      assertion ( seed.vertices().size() == 0 );
-      assertion ( utils::contained(_accessorName, _receivers) );
-      m2n::PtrGlobalCommunication com ( _receivers[_accessorName] );
-      if ( ! com->isConnected() ) {
-        com->requestConnection ( _providerName, _accessorName, 0, 1 );
-      }
-      com::CommunicateMesh(com->getMasterCommunication()).receiveMesh ( seed, 0 );
-    }
-    if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-      scatterMesh(seed);
-    }
+    receiveMesh(seed);
   }
   else {
     preciceError( "specializedCreate()", "Participant \"" << _accessorName
@@ -101,40 +75,82 @@ void CommunicatedGeometry:: specializedCreate
   }
 }
 
-void CommunicatedGeometry:: gatherMesh(
-    mesh::Mesh& seed)
+
+void CommunicatedGeometry:: sendMesh(
+  mesh::Mesh& seed)
 {
-  preciceTrace1 ( "gatherMesh()", utils::MasterSlave::_rank );
+  preciceTrace1 ( "sendMesh()", utils::MasterSlave::_rank );
+  // temporary globalMesh such that the master also keeps his local mesh (seed)
+  mesh::Mesh globalMesh("GlobalMesh", _dimensions, seed.isFlipNormals());
 
-  if(utils::MasterSlave::_rank>0){ //slave
-    com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( seed, 0 );
+  if( not utils::MasterSlave::_slaveMode ){
+    globalMesh.addMesh(seed); //add local master mesh to global mesh
   }
-  else{ //master
-    assertion(utils::MasterSlave::_rank==0);
-    assertion(utils::MasterSlave::_size>1);
 
-    int numberOfVertices = 0;
-    //vertices of master mesh part do already exist
-    foreach ( const mesh::Vertex& vertex, seed.vertices() ){
-      seed.getVertexDistribution()[0].push_back(numberOfVertices);
-      numberOfVertices++;
+  //gather Mesh
+  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ){
+    if(utils::MasterSlave::_rank>0){ //slave
+      com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( seed, 0 );
     }
+    else{ //master
+      assertion(utils::MasterSlave::_rank==0);
+      assertion(utils::MasterSlave::_size>1);
 
-    mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
-    mesh::Mesh& rSlaveMesh = slaveMesh;
-
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      rSlaveMesh.clear();
-      com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( rSlaveMesh, rankSlave);
-      utils::DynVector coord(_dimensions);
-      seed.addMesh(rSlaveMesh);
-
-      for(int i = 0; i < rSlaveMesh.vertices().size(); i++){
-        seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
+      int numberOfVertices = 0;
+      //vertices of master mesh part do already exist
+      foreach ( const mesh::Vertex& vertex, seed.vertices() ){
+        seed.getVertexDistribution()[0].push_back(numberOfVertices);
         numberOfVertices++;
       }
+
+      mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
+      mesh::Mesh& rSlaveMesh = slaveMesh;
+
+      for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+        rSlaveMesh.clear();
+        com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( rSlaveMesh, rankSlave);
+        utils::DynVector coord(_dimensions);
+        globalMesh.addMesh(rSlaveMesh); //add slave mesh to global mesh
+
+        for(int i = 0; i < rSlaveMesh.vertices().size(); i++){
+          seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
+          numberOfVertices++;
+        }
+      }
+      seed.setGlobalNumberOfVertices(numberOfVertices);
     }
-    seed.setGlobalNumberOfVertices(numberOfVertices);
+  }
+
+  //send (global) Mesh
+  if(not utils::MasterSlave::_slaveMode){
+    preciceCheck ( globalMesh.vertices().size() > 0,
+                   "specializedCreate()", "Participant \"" << _accessorName
+                   << "\" provides an invalid (possibly empty) mesh \""
+                   << globalMesh.getName() << "\"!" );
+    typedef std::map<std::string,m2n::PtrGlobalCommunication>::value_type Pair;
+    foreach ( Pair & pair, _receivers ) {
+      if ( ! pair.second->isConnected() ) {
+        pair.second->acceptConnection ( _providerName, pair.first, 0, 1 );
+      }
+      com::CommunicateMesh(pair.second->getMasterCommunication()).sendMesh ( globalMesh, 0 );
+    }
+  }
+}
+
+void CommunicatedGeometry:: receiveMesh(
+  mesh::Mesh& seed)
+{
+  if(not utils::MasterSlave::_slaveMode){
+    assertion ( seed.vertices().size() == 0 );
+    assertion ( utils::contained(_accessorName, _receivers) );
+    m2n::PtrGlobalCommunication com ( _receivers[_accessorName] );
+    if ( ! com->isConnected() ) {
+      com->requestConnection ( _providerName, _accessorName, 0, 1 );
+    }
+    com::CommunicateMesh(com->getMasterCommunication()).receiveMesh ( seed, 0 );
+  }
+  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
+    scatterMesh(seed);
   }
 }
 
