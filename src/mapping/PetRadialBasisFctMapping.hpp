@@ -158,7 +158,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int logPreallocCLoop = 1;
   PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocCLoop);
   PetscLogEventBegin(logPreallocCLoop, 0, 0, 0, 0);
-  PetscInt nnz[n];
+  PetscInt nnz[n]; // Number of non-zeros per row
+  unsigned int totalNNZ = 0; // Total number of non-zeros in matrix
   foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
     nnz[i] = 0;
     for (int j=iVertex.getID(); j < inputSize; j++) {
@@ -174,6 +175,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
     }
     nnz[i] += dimensions + 1;
+    totalNNZ += nnz[i];
     i++;
   }
   for (int r = inputSize; r < n; r++) {
@@ -184,7 +186,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // -- END PREALLOC LOOP FOR MATRIX C --
   
   ierr = MatSeqSBAIJSetPreallocation(_matrixC.matrix, 1, PETSC_DEFAULT, nnz);
-
+  
   // -- BEGIN FILL LOOP FOR MATRIX C --
   int logCLoop = 2;
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
@@ -307,6 +309,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetFromOptions(_solver);
 
+  if (totalNNZ > 20*n) {
+    preciceDebug("Using Cholesky decomposition as direct solver for dense matrix.");
+    PC prec;
+    KSPSetType(_solver, KSPPREONLY);
+    KSPGetPC(_solver, &prec);
+    PCSetType(prec, PCCHOLESKY);
+    PCFactorSetShiftType(prec, MAT_SHIFT_NONZERO);
+  }      
+  
   _hasComputedMapping = true;
 }
 
