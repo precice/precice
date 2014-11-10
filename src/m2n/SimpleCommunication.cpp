@@ -16,7 +16,8 @@ SimpleCommunication:: SimpleCommunication
 (
   com::PtrCommunication com )
 :
-  _com(com)
+  _com(com),
+  _isConnected(false)
 {}
 
 SimpleCommunication:: ~SimpleCommunication()
@@ -28,7 +29,7 @@ SimpleCommunication:: ~SimpleCommunication()
 
 bool SimpleCommunication:: isConnected()
 {
-  return _com->isConnected();
+  return _isConnected;
 }
 
 void SimpleCommunication:: acceptConnection
@@ -39,7 +40,25 @@ void SimpleCommunication:: acceptConnection
   int                acceptorCommunicatorSize )
 {
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
-  _com->acceptConnection(nameAcceptor, nameRequester, acceptorProcessRank, acceptorCommunicatorSize);
+  if(not utils::MasterSlave::_slaveMode){
+    if(utils::MasterSlave::_masterMode){
+      _com->acceptConnection(nameAcceptor, nameRequester, acceptorProcessRank, 1);
+    }
+    else {
+      _com->acceptConnection(nameAcceptor, nameRequester, acceptorProcessRank, acceptorCommunicatorSize);
+    }
+    _isConnected = _com->isConnected();
+  }
+
+  //broadcast isConnected
+  if(utils::MasterSlave::_slaveMode){
+    utils::MasterSlave::_communication->receive(_isConnected,0);
+  }
+  if(utils::MasterSlave::_masterMode){
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      utils::MasterSlave::_communication->send(_isConnected,rankSlave);
+    }
+  }
 }
 
 void SimpleCommunication:: requestConnection
@@ -50,13 +69,42 @@ void SimpleCommunication:: requestConnection
   int                requesterCommunicatorSize )
 {
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
-  _com->requestConnection(nameAcceptor, nameRequester, requesterProcessRank, requesterCommunicatorSize);
+  if(not utils::MasterSlave::_slaveMode){
+    if(utils::MasterSlave::_masterMode){
+      _com->requestConnection(nameAcceptor, nameRequester, requesterProcessRank, 1);
+    }
+    else {
+      _com->requestConnection(nameAcceptor, nameRequester, requesterProcessRank, requesterCommunicatorSize);
+    }
+    _isConnected = _com->isConnected();
+  }
+
+  //broadcast isConnected
+  if(utils::MasterSlave::_slaveMode){
+    utils::MasterSlave::_communication->receive(_isConnected,0);
+  }
+  if(utils::MasterSlave::_masterMode){
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      utils::MasterSlave::_communication->send(_isConnected,rankSlave);
+    }
+  }
 }
 
 void SimpleCommunication:: closeConnection()
 {
   preciceTrace("closeConnection()");
-  _com->closeConnection();
+  if(not utils::MasterSlave::_slaveMode){
+    _com->closeConnection();
+  }
+  //broadcast isConnected
+  if(utils::MasterSlave::_slaveMode){
+    utils::MasterSlave::_communication->receive(_isConnected,0);
+  }
+  if(utils::MasterSlave::_masterMode){
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      utils::MasterSlave::_communication->send(_isConnected,rankSlave);
+    }
+  }
 }
 
 com::PtrCommunication SimpleCommunication:: getMasterCommunication()
@@ -68,12 +116,16 @@ void SimpleCommunication:: startSendPackage
 (
   int rankReceiver )
 {
-  _com->startSendPackage(rankReceiver);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->startSendPackage(rankReceiver);
+  }
 }
 
 void SimpleCommunication:: finishSendPackage()
 {
-  _com->finishSendPackage();
+  if(not utils::MasterSlave::_slaveMode){
+   _com->finishSendPackage();
+  }
 }
 
 int SimpleCommunication:: startReceivePackage
@@ -81,7 +133,10 @@ int SimpleCommunication:: startReceivePackage
   int rankSender )
 {
   preciceTrace1("startReceivePackage()", rankSender);
-  return _com->startReceivePackage(rankSender);
+  if(not utils::MasterSlave::_slaveMode){
+    return _com->startReceivePackage(rankSender);
+  }
+  return -1;
 }
 
 void SimpleCommunication:: finishReceivePackage()
@@ -95,7 +150,9 @@ void SimpleCommunication:: sendMaster
   int                rankReceiver )
 {
   preciceTrace2("send(string)", itemToSend, rankReceiver);
-  _com->send(itemToSend, rankReceiver);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->send(itemToSend, rankReceiver);
+  }
 }
 
 void SimpleCommunication:: sendMaster
@@ -105,7 +162,9 @@ void SimpleCommunication:: sendMaster
   int  rankReceiver )
 {
   preciceTrace2("send(int*)", size, rankReceiver);
-  _com->send(itemsToSend, size, rankReceiver);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->send(itemsToSend, size, rankReceiver);
+  }
 }
 
 void SimpleCommunication:: sendMaster
@@ -115,7 +174,9 @@ void SimpleCommunication:: sendMaster
   int     rankReceiver )
 {
   preciceTrace2("send(double*)", size, rankReceiver);
-  _com->send(itemsToSend, size, rankReceiver);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->send(itemsToSend, size, rankReceiver);
+  }
 }
 
 void SimpleCommunication:: sendMaster
@@ -124,7 +185,9 @@ void SimpleCommunication:: sendMaster
   int    rankReceiver )
 {
   preciceTrace2("send(double)", itemToSend, rankReceiver);
-  _com->send(itemToSend, rankReceiver);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->send(itemToSend, rankReceiver);
+  }
 }
 
 void SimpleCommunication:: sendMaster
@@ -133,7 +196,9 @@ void SimpleCommunication:: sendMaster
   int rankReceiver )
 {
   preciceTrace2("send(int)", itemToSend, rankReceiver);
-  _com->send(itemToSend, rankReceiver);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->send(itemToSend, rankReceiver);
+  }
 }
 
 void SimpleCommunication:: sendMaster
@@ -142,7 +207,9 @@ void SimpleCommunication:: sendMaster
   int  rankReceiver )
 {
   preciceTrace2("send(bool)", itemToSend, rankReceiver);
-  _com->send(itemToSend, rankReceiver);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->send(itemToSend, rankReceiver);
+  }
 }
 
 int SimpleCommunication:: receiveMaster
@@ -151,7 +218,10 @@ int SimpleCommunication:: receiveMaster
   int          rankSender )
 {
   preciceTrace1("receive(string)", rankSender);
-  return _com->receive(itemToReceive, rankSender);
+  if(not utils::MasterSlave::_slaveMode){
+    return _com->receive(itemToReceive, rankSender);
+  }
+  return -1;
 }
 
 int SimpleCommunication:: receiveMaster
@@ -161,7 +231,10 @@ int SimpleCommunication:: receiveMaster
   int  rankSender )
 {
   preciceTrace2("receive(int*)", size, rankSender);
-  return _com->receive(itemsToReceive, size, rankSender);
+  if(not utils::MasterSlave::_slaveMode){
+    return _com->receive(itemsToReceive, size, rankSender);
+  }
+  return -1;
 }
 
 int SimpleCommunication:: receiveMaster
@@ -171,7 +244,10 @@ int SimpleCommunication:: receiveMaster
   int     rankSender )
 {
   preciceTrace2("receive(double*)", size, rankSender);
-  return _com->receive(itemsToReceive, size, rankSender);
+  if(not utils::MasterSlave::_slaveMode){
+    return _com->receive(itemsToReceive, size, rankSender);
+  }
+  return -1;
 }
 
 int SimpleCommunication:: receiveMaster
@@ -180,7 +256,10 @@ int SimpleCommunication:: receiveMaster
   int     rankSender )
 {
   preciceTrace1("receive(double)", rankSender);
-  return _com->receive(itemToReceive, rankSender);
+  if(not utils::MasterSlave::_slaveMode){
+    return _com->receive(itemToReceive, rankSender);
+  }
+  return -1;
 }
 
 int SimpleCommunication:: receiveMaster
@@ -189,7 +268,10 @@ int SimpleCommunication:: receiveMaster
   int  rankSender )
 {
   preciceTrace1("receive(int)", rankSender);
-  return _com->receive(itemToReceive, rankSender);
+  if(not utils::MasterSlave::_slaveMode){
+    return _com->receive(itemToReceive, rankSender);
+  }
+  return -1;
 }
 
 int SimpleCommunication:: receiveMaster
@@ -198,7 +280,10 @@ int SimpleCommunication:: receiveMaster
   int   rankSender )
 {
   preciceTrace1("receive(bool)", rankSender);
-  return _com->receive(itemToReceive, rankSender);
+  if(not utils::MasterSlave::_slaveMode){
+    return _com->receive(itemToReceive, rankSender);
+  }
+  return -1;
 }
 
 
@@ -348,6 +433,70 @@ void SimpleCommunication:: receiveAll (
       }
       delete globalItemsToReceive;
     } //master
+  }
+}
+
+void SimpleCommunication:: receiveAll (
+  bool&  itemToReceive,
+  int    rankSender )
+{
+  preciceTrace1("receiveAll(bool)", utils::MasterSlave::_rank);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->receive(itemToReceive, rankSender);
+  }
+
+  if(utils::MasterSlave::_slaveMode){
+    assertion(utils::MasterSlave::_communication->isConnected());
+    utils::MasterSlave::_communication->receive(itemToReceive,0);
+  }
+  if(utils::MasterSlave::_masterMode){
+    assertion(utils::MasterSlave::_communication->isConnected());
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      utils::MasterSlave::_communication->send(itemToReceive,rankSlave);
+    }
+  }
+  preciceDebug("ReceiveAll(bool): " << itemToReceive);
+}
+
+void SimpleCommunication:: receiveAll (
+  double&  itemToReceive,
+  int      rankSender )
+{
+  preciceTrace1("receiveAll(double)", utils::MasterSlave::_rank);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->receive(itemToReceive, rankSender);
+  }
+
+  if(utils::MasterSlave::_slaveMode){
+    assertion(utils::MasterSlave::_communication->isConnected());
+    utils::MasterSlave::_communication->receive(itemToReceive,0);
+  }
+  if(utils::MasterSlave::_masterMode){
+    assertion(utils::MasterSlave::_communication->isConnected());
+    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      utils::MasterSlave::_communication->send(itemToReceive,rankSlave);
+    }
+  }
+  preciceDebug("ReceiveAll(bool): " << itemToReceive);
+}
+
+void SimpleCommunication:: sendAll (
+  bool   itemToSend,
+  int    rankReceiver)
+{
+  preciceTrace1("sendAll(bool)", utils::MasterSlave::_rank);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->send(itemToSend, rankReceiver);
+  }
+}
+
+void SimpleCommunication:: sendAll (
+  double   itemToSend,
+  int      rankReceiver)
+{
+  preciceTrace1("sendAll(double)", utils::MasterSlave::_rank);
+  if(not utils::MasterSlave::_slaveMode){
+    _com->send(itemToSend, rankReceiver);
   }
 }
 

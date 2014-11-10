@@ -232,8 +232,6 @@ void SolverInterfaceImpl:: configure
   if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
     initializeMasterSlaveCommunication();
   }
-  preciceDebug("slaveMode: " << utils::MasterSlave::_slaveMode
-                  <<", masterMode: " << utils::MasterSlave::_masterMode);
 }
 
 double SolverInterfaceImpl:: initialize()
@@ -249,38 +247,24 @@ double SolverInterfaceImpl:: initialize()
     // Setup communication
     if (not _geometryMode){
 
-      if(not utils::MasterSlave::_slaveMode){
-        typedef std::map<std::string,Communication>::value_type ComPair;
-        preciceInfo("initialize()", "Setting up communication to coupling partner/s " );
-        foreach (ComPair& comPair, _communications){
-          m2n::PtrGlobalCommunication& communication = comPair.second.communication;
-          std::string localName = _accessorName;
-          if (_serverMode) localName += "Server";
-          std::string remoteName(comPair.first);
-          preciceCheck(communication.get() != NULL, "initialize()",
-                       "Communication from " << localName << " to participant "
-                       << remoteName << " could not be created! Check compile "
-                       "flags used!");
-          if (comPair.second.isRequesting){
-            if(utils::MasterSlave::_masterMode){
-              communication->requestConnection(remoteName, localName,
-                            _accessorProcessRank, 1);
-            }
-            else {
-              communication->requestConnection(remoteName, localName,
-                            _accessorProcessRank, _accessorCommunicatorSize);
-            }
-          }
-          else {
-            if(utils::MasterSlave::_masterMode){
-              communication->acceptConnection(localName, remoteName,
-                            _accessorProcessRank, 1);
-            }
-            else {
-              communication->acceptConnection(localName, remoteName,
-                            _accessorProcessRank, _accessorCommunicatorSize);
-            }
-          }
+      typedef std::map<std::string,Communication>::value_type ComPair;
+      preciceInfo("initialize()", "Setting up communication to coupling partner/s " );
+      foreach (ComPair& comPair, _communications){
+        m2n::PtrGlobalCommunication& communication = comPair.second.communication;
+        std::string localName = _accessorName;
+        if (_serverMode) localName += "Server";
+        std::string remoteName(comPair.first);
+        preciceCheck(communication.get() != NULL, "initialize()",
+                     "Communication from " << localName << " to participant "
+                     << remoteName << " could not be created! Check compile "
+                     "flags used!");
+        if (comPair.second.isRequesting){
+          communication->requestConnection(remoteName, localName,
+                          _accessorProcessRank, _accessorCommunicatorSize);
+        }
+        else {
+          communication->acceptConnection(localName, remoteName,
+                          _accessorProcessRank, _accessorCommunicatorSize);
         }
       }
     }
@@ -319,10 +303,6 @@ double SolverInterfaceImpl:: initialize()
 
     timings.insert(action::Action::ALWAYS_POST);
 
-    if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
-      syncState();
-    }
-
     if (_couplingScheme->hasDataBeenExchanged()){
       timings.insert(action::Action::ON_EXCHANGE_POST);
       mapReadData();
@@ -330,7 +310,7 @@ double SolverInterfaceImpl:: initialize()
 
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
 
-    if(not utils::MasterSlave::_slaveMode){ //TODO
+    if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
       preciceDebug("Plot output...");
       foreach (const io::ExportContext& context, _accessor->exportContexts()){
         if (context.timestepInterval != -1){
@@ -444,10 +424,6 @@ double SolverInterfaceImpl:: advance
     handleExports();
 
     resetWrittenData();
-
-    if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
-      syncState();
-    }
 
   }
   return _couplingScheme->getNextTimestepMaxLength();
@@ -2102,7 +2078,7 @@ void SolverInterfaceImpl:: handleExports()
   //timesteps was already incremented before
   int timesteps = _couplingScheme->getTimesteps()-1;
 
-  if(not utils::MasterSlave::_slaveMode){ //TODO
+  if(not utils::MasterSlave::_slaveMode){ //TODO  not yet supported
     foreach (const io::ExportContext& context, _accessor->exportContexts()){
       if (_couplingScheme->isCouplingTimestepComplete() || context.everyIteration){
         if (context.timestepInterval != -1){
@@ -2130,7 +2106,7 @@ void SolverInterfaceImpl:: handleExports()
       watchPoint->exportPointData(_couplingScheme->getTime());
     }
 
-    if(not utils::MasterSlave::_slaveMode){ //TODO
+    if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
       // Checkpointing
       int checkpointingInterval = _couplingScheme->getCheckpointTimestepInterval();
       preciceCheck(not  (utils::MasterSlave::_masterMode && checkpointingInterval!=-1) ,
@@ -2314,21 +2290,6 @@ void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
     }
   }
 }
-
-void SolverInterfaceImpl:: syncState()
-{
-  assertion(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode);
-  com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
-  if(utils::MasterSlave::_slaveMode){
-    _couplingScheme->receiveState(com, 0);
-  }
-  else if(utils::MasterSlave::_masterMode){
-    for(int rankSlave = 1; rankSlave < _accessorCommunicatorSize; rankSlave++){
-      _couplingScheme->sendState(com, rankSlave);
-    }
-  }
-}
-
 
 
 }} // namespace precice, impl

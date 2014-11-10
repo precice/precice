@@ -192,6 +192,14 @@ public:
     mesh::PtrMesh mesh,
     int           valueDimension ) =0;
 
+  virtual void sendAll (
+    bool   itemToSend,
+    int    rankReceiver) =0;
+
+  virtual void sendAll (
+    double itemToSend,
+    int    rankReceiver) =0;
+
   /**
    * @brief Receives an array of double values.
    *
@@ -204,7 +212,19 @@ public:
     mesh::PtrMesh mesh,
     int           valueDimension ) =0;
 
+  virtual void receiveAll (
+    bool&  itemToReceive,
+    int    rankSender ) =0;
+
+  virtual void receiveAll (
+    double&  itemToReceive,
+    int      rankSender ) =0;
+
+
+
 };
+
+
 
 }} // namespace precice, m2n
 

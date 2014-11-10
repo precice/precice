@@ -730,11 +730,6 @@ private:
    */
   void syncTimestep(double computedTimestepLength);
 
-  /**
-   * @brief master sends state to slaves
-   */
-  void syncState();
-
   // @brief To allow white box tests.
   friend class tests::SolverInterfaceTest;
   friend class tests::SolverInterfaceTestRemote;

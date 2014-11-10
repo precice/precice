@@ -24,24 +24,6 @@ typedef boost::shared_ptr<AbstractDataAction> PtrAbstractDataAction;
 struct MeshContext;
 typedef boost::shared_ptr<MeshContext> PtrMeshContext;
 
-// TODO delete if really not requierd
-//class AbstractRequest;
-//typedef boost::shared_ptr<AbstractRequest> PtrAbstractRequest;
-
-//class MappingRequest;
-//typedef boost::shared_ptr<MappingRequest> PtrMappingRequest;
-
-//class MapDoubleToCouplingMeshRequest;
-//typedef boost::shared_ptr<MapDoubleToCouplingMeshRequest>
-//                                                   PtrMapToCouplingMeshRequest;
-
-//class Client;
-//typedef boost::shared_ptr<Client> PtrClient;
-//
-//class Server;
-//typedef boost::shared_ptr<Server> PtrServer;
-
-
 
 }} // namespace precice, impl
 

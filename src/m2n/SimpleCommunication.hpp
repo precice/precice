@@ -208,6 +208,13 @@ public:
     mesh::PtrMesh mesh,
     int           valueDimension);
 
+  virtual void sendAll (
+    bool   itemToSend,
+    int    rankReceiver);
+
+  virtual void sendAll (
+    double itemToSend,
+    int    rankReceiver);
 
   /**
    * @brief Receives an array of double values.
@@ -221,11 +228,21 @@ public:
     mesh::PtrMesh mesh,
     int           valueDimension);
 
+  virtual void receiveAll (
+    bool&  itemToReceive,
+    int    rankSender );
+
+  virtual void receiveAll (
+    double&  itemToReceive,
+    int      rankSender );
+
 private:
 
   static tarch::logging::Log _log;
 
   com::PtrCommunication _com;
+
+  bool _isConnected;
 };
 
 }} // namespace precice, m2n

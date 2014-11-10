@@ -160,30 +160,18 @@ void BaseCouplingScheme:: receiveAndSetDt()
   preciceTrace("receiveAndSetDt()");
   if (participantReceivesDt()){
     double dt = UNDEFINED_TIMESTEP_LENGTH;
-    if(not utils::MasterSlave::_slaveMode){
-      getCommunication()->receiveMaster(dt, 0);
-      preciceDebug("Received timestep length of " << dt);
-      assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-      setTimestepLength(dt);
-    }
-    if(utils::MasterSlave::_masterMode){
-      for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-        utils::MasterSlave::_communication->send(dt, rankSlave);
-      }
-    }
-    if(utils::MasterSlave::_slaveMode){
-      utils::MasterSlave::_communication->receive(dt, 0);
-      assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
-      setTimestepLength(dt);
-    }
+    getCommunication()->receiveAll(dt, 0);
+    preciceDebug("Received timestep length of " << dt);
+    assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
+    setTimestepLength(dt);
   }
 }
 
 void BaseCouplingScheme:: sendDt(){
   preciceTrace("sendDt()");
-  if (participantSetsDt() && not utils::MasterSlave::_slaveMode){
+  if (participantSetsDt()){
     preciceDebug("sending timestep length of " << getComputedTimestepPart());
-    getCommunication()->sendMaster(getComputedTimestepPart(), 0);
+    getCommunication()->sendAll(getComputedTimestepPart(), 0);
   }
 }
 
@@ -303,7 +291,7 @@ std::vector<int> BaseCouplingScheme:: sendData
 
   std::vector<int> sentDataIDs;
   assertion(communication.get() != NULL);
-  //assertion(communication->isConnected()); //TODO
+  assertion(communication->isConnected());
   foreach (DataMap::value_type& pair, _sendData){
     int size = pair.second->values->size();
     communication->sendAll(pair.second->values, size, 0,
@@ -321,7 +309,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
   preciceTrace("receiveData()");
   std::vector<int> receivedDataIDs;
   assertion(communication.get() != NULL);
-  //assertion(communication->isConnected()); //TODO
+  assertion(communication->isConnected());
 
   foreach(DataMap::value_type & pair, _receiveData){
     int size = pair.second->values->size ();
@@ -621,67 +609,6 @@ std::string BaseCouplingScheme:: printActionsState () const
     os << actionName << " | ";
   }
   return os.str ();
-}
-
-void BaseCouplingScheme:: startReceivePackage()
-{
-  if(not utils::MasterSlave::_slaveMode){
-    getCommunication()->startReceivePackage(0);
-  }
-}
-
-void BaseCouplingScheme:: finishReceivePackage()
-{
-  if(not utils::MasterSlave::_slaveMode){
-    getCommunication()->finishReceivePackage();
-  }
-}
-
-void BaseCouplingScheme:: startSendPackage()
-{
-  if(not utils::MasterSlave::_slaveMode){
-    getCommunication()->startSendPackage(0);
-  }
-}
-
-void BaseCouplingScheme:: finishSendPackage()
-{
-  if(not utils::MasterSlave::_slaveMode){
-    getCommunication()->finishSendPackage();
-  }
-}
-
-void BaseCouplingScheme:: sendConvergence(bool convergence)
-{
-  preciceTrace("sendConvergence()");
-  if(not utils::MasterSlave::_slaveMode){
-    assertion(_communication.get() != NULL);
-    assertion(_communication->isConnected());
-    _communication->sendMaster(convergence, 0);
-  }
-}
-
-bool BaseCouplingScheme:: receiveConvergence()
-{
-  preciceTrace("sendConvergence()");
-  bool convergence = false;
-  if(not utils::MasterSlave::_slaveMode){
-    assertion(_communication.get() != NULL);
-    assertion(_communication->isConnected());
-    _communication->receiveMaster(convergence, 0);
-  }
-  if(utils::MasterSlave::_slaveMode){
-    assertion(utils::MasterSlave::_communication.get() != NULL);
-    assertion(utils::MasterSlave::_communication->isConnected());
-    utils::MasterSlave::_communication->receive(convergence, 0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    assertion(not utils::MasterSlave::_slaveMode);
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(convergence, rankSlave);
-    }
-  }
-  return convergence;
 }
 
 void BaseCouplingScheme:: checkCompletenessRequiredActions ()

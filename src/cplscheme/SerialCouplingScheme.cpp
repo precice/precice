@@ -1,5 +1,6 @@
 #include "SerialCouplingScheme.hpp"
 #include "impl/PostProcessing.hpp"
+#include "m2n/GlobalCommunication.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -88,10 +89,10 @@ void SerialCouplingScheme::initialize
   // second participant is done in initializeData() instead of initialize().
   if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
     preciceDebug("Receiving data");
-    startReceivePackage();
+    getCommunication()->startReceivePackage(0);
     receiveAndSetDt();
     receiveData(getCommunication());
-    finishReceivePackage();
+    getCommunication()->finishReceivePackage();
     setHasDataBeenExchanged(true);
   }
 
@@ -125,10 +126,10 @@ void SerialCouplingScheme::initializeData()
   if (hasToReceiveInitData() && isCouplingOngoing() )  {
     assertion(doesFirstStep());
     preciceDebug("Receiving data");
-    startReceivePackage();
+    getCommunication()->startReceivePackage(0);
     receiveAndSetDt();
     receiveData(getCommunication());
-    finishReceivePackage();
+    getCommunication()->finishReceivePackage();
     setHasDataBeenExchanged(true);
   }
 
@@ -147,10 +148,10 @@ void SerialCouplingScheme::initializeData()
     // The second participant sends the initialized data to the first particpant
     // here, which receives the data on call of initialize().
     sendData(getCommunication());
-    startReceivePackage();
+    getCommunication()->startReceivePackage(0);
     // This receive replaces the receive in initialize().
     receiveData(getCommunication());
-    finishReceivePackage();
+    getCommunication()->finishReceivePackage();
     setHasDataBeenExchanged(true);
   }
 
@@ -179,17 +180,17 @@ void SerialCouplingScheme:: advance()
       setIsCouplingTimestepComplete(true);
       setTimesteps(getTimesteps() + 1);
       preciceDebug("Sending data...");
-      startSendPackage();
+      getCommunication()->startSendPackage(0);
       sendDt();
       sendData(getCommunication());
-      finishSendPackage();
+      getCommunication()->finishSendPackage();
 
       if (isCouplingOngoing() || doesFirstStep()){
         preciceDebug("Receiving data...");
-        startReceivePackage();
+        getCommunication()->startReceivePackage(0);
         receiveAndSetDt();
         receiveData(getCommunication());
-        finishReceivePackage();
+        getCommunication()->finishReceivePackage();
       }
       setHasDataBeenExchanged(true);
       setComputedTimestepPart(0.0);
@@ -201,22 +202,22 @@ void SerialCouplingScheme:: advance()
     if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       preciceDebug("Computed full length of iteration");
       if (doesFirstStep()) {
-        startSendPackage();
+        getCommunication()->startSendPackage(0);
         sendDt();
         sendData(getCommunication());
-        finishSendPackage();
-        startReceivePackage();
-        convergence = receiveConvergence();
+        getCommunication()->finishSendPackage();
+        getCommunication()->startReceivePackage(0);
+        getCommunication()->receiveAll(convergence,0);
         if (convergence) {
           timestepCompleted();
         }
         if (isCouplingOngoing()) {
           receiveData(getCommunication());
         }
-        finishReceivePackage();
+        getCommunication()->finishReceivePackage();
       }
       else {
-        convergence = measureConvergence(); //TODO
+        convergence = measureConvergence();
         // Stop, when maximal iteration count (given in config) is reached
         if (maxIterationsReached()) {
           convergence = true;
@@ -231,8 +232,8 @@ void SerialCouplingScheme:: advance()
         else if (getPostProcessing().get() != NULL) {
           getPostProcessing()->performPostProcessing(getSendData());
         }
-        startSendPackage();
-        sendConvergence(convergence);
+        getCommunication()->startSendPackage(0);
+        getCommunication()->sendAll(convergence,0);
         if (isCouplingOngoing()) {
           if (convergence && (getExtrapolationOrder() > 0)){
             extrapolateData(getSendData()); // Also stores data
@@ -250,14 +251,14 @@ void SerialCouplingScheme:: advance()
             }
           }
           sendData(getCommunication());
-          finishSendPackage();
-          startReceivePackage();
+          getCommunication()->finishSendPackage();
+          getCommunication()->startReceivePackage(0);
           receiveAndSetDt();
           receiveData(getCommunication());
-          finishReceivePackage();
+          getCommunication()->finishReceivePackage();
         }
         else {
-          finishSendPackage();
+          getCommunication()->finishSendPackage();
         }
       }
     
