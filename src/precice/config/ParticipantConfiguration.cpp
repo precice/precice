@@ -232,12 +232,16 @@ ParticipantConfiguration:: ParticipantConfiguration
   XMLTag::Occurrence masterOcc = XMLTag::OCCUR_NOT_OR_ONCE;
   {
     XMLTag tagMaster(*this, "sockets", masterOcc, TAG_MASTER);
-    doc = "TODO";
-    doc += "The communication between participant and server is done by sockets.";
+    doc = "A solver in parallel has to use either a Master or a Server, but not both. ";
+    doc += "If you use a Master, you do not have to start-up a further executable, ";
+    doc += "all communication is handled peer to peer. One solver process becomes the ";
+    doc += " Master handling the synchronization of all slaves. Here, you define then ";
+    doc += " the communication between the Master and all slaves. ";
+    doc += "The communication between Master and slaves is done by sockets.";
     tagMaster.setDocumentation(doc);
 
     XMLAttribute<int> attrPort("port");
-    doc = "Port number to be used by server for socket communiation.";
+    doc = "Port number to be used by master for socket communication.";
     attrPort.setDocumentation(doc);
     attrPort.setDefaultValue(51235);
     tagMaster.addAttribute(attrPort);
@@ -251,8 +255,7 @@ ParticipantConfiguration:: ParticipantConfiguration
 
     XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
     doc = "Directory where connection information is exchanged. By default, the ";
-    doc += "directory of startup is chosen, and both solvers have to be started ";
-    doc += "in the same directory.";
+    doc += "directory of startup is chosen.";
     attrExchangeDirectory.setDocumentation(doc);
     attrExchangeDirectory.setDefaultValue("");
     tagMaster.addAttribute(attrExchangeDirectory);
@@ -261,15 +264,18 @@ ParticipantConfiguration:: ParticipantConfiguration
   }
   {
     XMLTag tagMaster(*this, "mpi", masterOcc, TAG_MASTER);
-    doc = "TODO";
-    doc += "The communication between participant and server is done by mpi ";
+    doc = "A solver in parallel has to use either a Master or a Server, but not both. ";
+    doc += "If you use a Master, you do not have to start-up a further executable, ";
+    doc += "all communication is handled peer to peer. One solver process becomes the ";
+    doc += " Master handling the synchronization of all slaves. Here, you define then ";
+    doc += " the communication between the Master and all slaves. ";
+    doc += "The communication between Master and slaves is done by mpi ";
     doc += "with startup in separated communication spaces.";
     tagMaster.setDocumentation(doc);
 
     XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
     doc = "Directory where connection information is exchanged. By default, the ";
-    doc += "directory of startup is chosen, and both solvers have to be started ";
-    doc += "in the same directory.";
+    doc += "directory of startup is chosen.";
     attrExchangeDirectory.setDocumentation(doc);
     attrExchangeDirectory.setDefaultValue("");
     tagMaster.addAttribute(attrExchangeDirectory);

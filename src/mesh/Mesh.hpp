@@ -327,8 +327,14 @@ private:
   // @brief Mesh listeners interested in mesh changes.
   std::list<MeshListener*> _listeners;
 
+  /**
+   * @brief Vertex distribution for the master, holding for each slave all vertex IDs.
+   */
   std::map<int,std::vector<int> > _vertexDistribution;
 
+  /**
+   * @brief Global number of vertices for the master.
+   */
   int _globalNumberOfVertices;
 
 };

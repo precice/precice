@@ -16,7 +16,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "m2n/SimpleCommunication.hpp"
+#include "m2n/GatherScatterCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
@@ -121,7 +121,7 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   std::string second = "Second";
   std::string accessor = second;
   com::PtrCommunication com(new com::MPIDirectCommunication());
-  m2n::PtrGlobalCommunication globalCom(new m2n::SimpleCommunication(com));
+  m2n::PtrGlobalCommunication globalCom(new m2n::GatherScatterCommunication(com));
   int maxIterations = 1;
 
   // Test first order extrapolation
@@ -217,7 +217,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
 
    // Create all parameters necessary to create an ImplicitCouplingScheme object
    com::PtrCommunication communication ( new com::MPIDirectCommunication() );
-   m2n::PtrGlobalCommunication globalCom(new m2n::SimpleCommunication(communication));
+   m2n::PtrGlobalCommunication globalCom(new m2n::GatherScatterCommunication(communication));
    double maxTime = 1.0;
    int maxTimesteps = 3;
    double timestepLength = 0.1;
@@ -401,7 +401,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
 
    // Create all parameters necessary to create an ImplicitCouplingScheme object
    com::PtrCommunication communication ( new com::MPIDirectCommunication );
-   m2n::PtrGlobalCommunication globalCom ( new m2n::SimpleCommunication(communication) );
+   m2n::PtrGlobalCommunication globalCom ( new m2n::GatherScatterCommunication(communication) );
    double maxTime = 1.0;
    int maxTimesteps = 3;
    double timestepLength = 0.1;
@@ -730,7 +730,7 @@ void SerialImplicitCouplingSchemeTest::
 
    // Create all parameters necessary to create an ImplicitCouplingScheme object
    com::PtrCommunication communication ( new com::MPIDirectCommunication );
-   m2n::PtrGlobalCommunication globalCom ( new m2n::SimpleCommunication(communication) );
+   m2n::PtrGlobalCommunication globalCom ( new m2n::GatherScatterCommunication(communication) );
    double maxTime = 1.0;
    int maxTimesteps = 3;
    double timestepLength = 0.1;
@@ -798,7 +798,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
   com::PtrCommunication communication(new com::MPIDirectCommunication);
-  m2n::PtrGlobalCommunication globalCom ( new m2n::SimpleCommunication(communication) );
+  m2n::PtrGlobalCommunication globalCom ( new m2n::GatherScatterCommunication(communication) );
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;

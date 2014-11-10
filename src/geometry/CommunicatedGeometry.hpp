@@ -17,7 +17,9 @@ namespace precice {
 namespace geometry {
 
 /**
- * @brief Creates the mesh by copying another remote mesh via communication.
+ * @brief Creates the mesh by copying another remote mesh via communication. In case of parallel
+ * solvers using a master-slave approach the meshes are gathered or scattered. In case of scattering,
+ * globals meshes are sent first to each slave and filtered then depending on both mappings defined.
  */
 class CommunicatedGeometry : public Geometry
 {
@@ -48,6 +50,9 @@ protected:
 
 private:
 
+  /**
+   * @brief The received mesh is scattered amongst the slaves.
+   */
   void scatterMesh(
     mesh::Mesh& seed);
 
@@ -57,10 +62,16 @@ private:
   void receiveMesh(
     mesh::Mesh& seed);
 
+  /**
+   * @brief Compute the preliminary mappings between the global mesh and the slave's own mesh.
+   */
   void computeBoundingMappings();
 
   void clearBoundingMappings();
 
+  /**
+   * @brief Returns true if a vertex contributes to one of the 2 mappings. If false, the vertex can be erased.
+   */
   bool doesVertexContribute(int vertexID);
 
   // @brief Logging device.

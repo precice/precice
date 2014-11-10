@@ -14,7 +14,7 @@
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/GlobalCommunication.hpp"
-#include "m2n/SimpleCommunication.hpp"
+#include "m2n/GatherScatterCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
@@ -89,7 +89,7 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
   meshConfig.addMesh ( mesh );
 
   com::PtrCommunication communication ( new com::MPIDirectCommunication() );
-  m2n::PtrGlobalCommunication globalCom( new m2n::SimpleCommunication(communication) );
+  m2n::PtrGlobalCommunication globalCom( new m2n::GatherScatterCommunication(communication) );
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
   double maxTime = 1.0;
@@ -537,7 +537,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
   meshConfig.addMesh ( mesh );
 
   com::PtrCommunication communication ( new com::MPIDirectCommunication );
-  m2n::PtrGlobalCommunication globalCom (new m2n::SimpleCommunication(communication));
+  m2n::PtrGlobalCommunication globalCom (new m2n::GatherScatterCommunication(communication));
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
   double maxTime = 1.0;

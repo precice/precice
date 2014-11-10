@@ -5,7 +5,7 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/FileCommunication.hpp"
-#include "m2n/SimpleCommunication.hpp"
+#include "m2n/GatherScatterCommunication.hpp"
 #ifndef PRECICE_NO_SOCKETS
 #include "com/SocketCommunication.hpp"
 # endif // not PRECICE_NO_SOCKETS
@@ -227,7 +227,7 @@ void CommunicationConfiguration:: xmlTagCallback
     checkDuplicates(from, to);
     com::PtrCommunication com = createCommunication(tag);
     assertion(com.get() != NULL);
-    m2n::PtrGlobalCommunication globalCom = m2n::PtrGlobalCommunication(new m2n::SimpleCommunication(com));
+    m2n::PtrGlobalCommunication globalCom = m2n::PtrGlobalCommunication(new m2n::GatherScatterCommunication(com));
     _communications.push_back(boost::make_tuple(globalCom, from, to));
   }
 }

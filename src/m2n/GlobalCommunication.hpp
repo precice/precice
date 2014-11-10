@@ -12,8 +12,8 @@
 namespace precice {
 namespace m2n {
 
-/**TODO
- * @brief Interface for all interprocess communication classes.
+/**
+ * @brief Interface for all global solver to solver communication classes.
  *
  * By default, communication is done within the local communication space. In
  * order to connect to a different communication space, i.e. coupling participant,
@@ -21,6 +21,17 @@ namespace m2n {
  * two participants which intend to establish a connection. All following
  * communication and process ranking refers to the remote communication space
  * afterwards.
+ *
+ * If both solver are run in serial, this interface falls back to a simple wrapper
+ * of the normal com/Communication.hpp . If one is run in parallel, the parallel
+ * communication is defined here. The basic communication (e.g. Sockets or MPI) is
+ * still handled in com/Communication.hpp .
+ *
+ * The class offers methods to communicate between the 2 master processes, send/receiveMaster
+ * and methods to communicate between the slaves, send/ReceiveAll. This can either
+ * mean that data is communicated point2point, in case of arrays, or that single values
+ * are broadcasted.
+ *
  */
 class GlobalCommunication
 {
@@ -67,6 +78,9 @@ public:
    */
   virtual void closeConnection() =0;
 
+  /**
+   * @brief Get the basic communication between the 2 masters.
+   */
   virtual com::PtrCommunication getMasterCommunication() =0;
 
   virtual void startSendPackage ( int rankReceiver ) =0;
@@ -83,14 +97,14 @@ public:
   virtual void finishReceivePackage() =0;
 
   /**
-   * @brief Sends a std::string to process with given rank.
+   * @brief Sends a std::string from master to master.
    */
   virtual void sendMaster (
     const std::string& itemToSend,
     int                rankReceiver ) =0;
 
   /**
-   * @brief Sends an array of integer values.
+   * @brief Sends an array of integer values from master to master.
    */
   virtual void sendMaster (
     int* itemsToSend,
@@ -98,7 +112,7 @@ public:
     int  rankReceiver ) =0;
 
   /**
-   * @brief Sends an array of double values.
+   * @brief Sends an array of double values from master to master.
    */
   virtual void sendMaster (
     double* itemsToSend,
@@ -106,28 +120,28 @@ public:
     int     rankReceiver ) =0;
 
   /**
-   * @brief Sends a double to process with given rank.
+   * @brief Sends a double from master to master .
    */
   virtual void sendMaster (
     double itemToSend,
     int    rankReceiver ) =0;
 
   /**
-   * @brief Sends an int to process with given rank.
+   * @brief Sends an int from master to master.
    */
   virtual void sendMaster (
     int itemToSend,
     int rankReceiver ) =0;
 
   /**
-   * @brief Sends a bool to process with given rank.
+   * @brief Sends a bool from master to master.
    */
   virtual void sendMaster (
     bool itemToSend,
     int  rankReceiver ) =0;
 
   /**
-   * @brief Receives a std::string from process with given rank.
+   * @brief Receives a std::string from master to master.
    *
    * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
@@ -136,7 +150,7 @@ public:
     int          rankSender ) =0;
 
   /**
-   * @brief Receives an array of integer values.
+   * @brief Receives an array of integer values from master to master.
    *
    * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
@@ -146,7 +160,7 @@ public:
     int  rankSender ) =0;
 
   /**
-   * @brief Receives an array of double values.
+   * @brief Receives an array of double values from master to master.
    *
    * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
@@ -156,7 +170,7 @@ public:
     int     rankSender ) =0;
 
   /**
-   * @brief Receives a double from process with given rank.
+   * @brief Receives a double from process with given rank from master to master.
    *
    * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
@@ -165,7 +179,7 @@ public:
     int     rankSender ) =0;
 
   /**
-   * @brief Receives an int from process with given rank.
+   * @brief Receives an int from process with given rank from master to master.
    *
    * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
@@ -174,7 +188,7 @@ public:
     int  rankSender ) =0;
 
   /**
-   * @brief Receives a bool from process with given rank.
+   * @brief Receives a bool from process with given rank from master to master.
    *
    * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
@@ -183,7 +197,7 @@ public:
     int   rankSender ) =0;
 
   /**
-   * @brief Sends an array of double values.
+   * @brief Sends an array of double values from all slaves (different for each slave).
    */
   virtual void sendAll (
     utils::DynVector*   itemsToSend,
@@ -192,18 +206,24 @@ public:
     mesh::PtrMesh mesh,
     int           valueDimension ) =0;
 
+  /**
+   * @brief The master sends a bool to the other master, for performance reasons, we
+   * neglect the gathering and checking step.
+   */
   virtual void sendAll (
     bool   itemToSend,
     int    rankReceiver) =0;
 
+  /**
+   * @brief The master sends a double to the other master, for performance reasons, we
+   * neglect the gathering and checking step.
+   */
   virtual void sendAll (
     double itemToSend,
     int    rankReceiver) =0;
 
   /**
-   * @brief Receives an array of double values.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
+   * @brief All slaves receive an array of doubles (different for each slave).
    */
   virtual void receiveAll (
     utils::DynVector*   itemsToReceive,
@@ -212,10 +232,16 @@ public:
     mesh::PtrMesh mesh,
     int           valueDimension ) =0;
 
+  /**
+   * @brief All slaves receive a bool (the same for each slave).
+   */
   virtual void receiveAll (
     bool&  itemToReceive,
     int    rankSender ) =0;
 
+  /**
+   * @brief All slaves receive a double (the same for each slave).
+   */
   virtual void receiveAll (
     double&  itemToReceive,
     int      rankSender ) =0;

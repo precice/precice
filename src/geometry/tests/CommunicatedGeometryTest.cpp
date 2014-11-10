@@ -11,7 +11,7 @@
 #include "mapping/NearestProjectionMapping.hpp"
 #include "mapping/NearestNeighborMapping.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "m2n/SimpleCommunication.hpp"
+#include "m2n/GatherScatterCommunication.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -61,7 +61,7 @@ void CommunicatedGeometryTest:: testScatterMesh ()
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
   com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::PtrGlobalCommunication globalCom = m2n::PtrGlobalCommunication(new m2n::SimpleCommunication(participantCom));
+  m2n::PtrGlobalCommunication globalCom = m2n::PtrGlobalCommunication(new m2n::GatherScatterCommunication(participantCom));
   com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
@@ -230,7 +230,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
   preciceTrace ( "testGatherMesh" );
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
   com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::PtrGlobalCommunication globalCom = m2n::PtrGlobalCommunication(new m2n::SimpleCommunication(participantCom));
+  m2n::PtrGlobalCommunication globalCom = m2n::PtrGlobalCommunication(new m2n::GatherScatterCommunication(participantCom));
   com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 

@@ -18,7 +18,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "m2n/SimpleCommunication.hpp"
+#include "m2n/GatherScatterCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
@@ -123,7 +123,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
   com::PtrCommunication communication(new com::MPIDirectCommunication);
-  m2n::PtrGlobalCommunication globalCom(new m2n::SimpleCommunication(communication));
+  m2n::PtrGlobalCommunication globalCom(new m2n::GatherScatterCommunication(communication));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;

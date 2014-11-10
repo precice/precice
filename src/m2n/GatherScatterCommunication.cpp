@@ -2,7 +2,7 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
-#include "SimpleCommunication.hpp"
+#include "GatherScatterCommunication.hpp"
 #include "com/Communication.hpp"
 #include "utils/MasterSlave.hpp"
 #include "mesh/Mesh.hpp"
@@ -10,9 +10,9 @@
 namespace precice {
 namespace m2n {
 
-tarch::logging::Log SimpleCommunication:: _log("precice::m2n::SimpleCommunication");
+tarch::logging::Log GatherScatterCommunication:: _log("precice::m2n::GatherScatterCommunication");
 
-SimpleCommunication:: SimpleCommunication
+GatherScatterCommunication:: GatherScatterCommunication
 (
   com::PtrCommunication com )
 :
@@ -20,19 +20,19 @@ SimpleCommunication:: SimpleCommunication
   _isConnected(false)
 {}
 
-SimpleCommunication:: ~SimpleCommunication()
+GatherScatterCommunication:: ~GatherScatterCommunication()
 {
   if (isConnected()){
     closeConnection();
   }
 }
 
-bool SimpleCommunication:: isConnected()
+bool GatherScatterCommunication:: isConnected()
 {
   return _isConnected;
 }
 
-void SimpleCommunication:: acceptConnection
+void GatherScatterCommunication:: acceptConnection
 (
   const std::string& nameAcceptor,
   const std::string& nameRequester,
@@ -61,7 +61,7 @@ void SimpleCommunication:: acceptConnection
   }
 }
 
-void SimpleCommunication:: requestConnection
+void GatherScatterCommunication:: requestConnection
 (
   const std::string& nameAcceptor,
   const std::string& nameRequester,
@@ -90,7 +90,7 @@ void SimpleCommunication:: requestConnection
   }
 }
 
-void SimpleCommunication:: closeConnection()
+void GatherScatterCommunication:: closeConnection()
 {
   preciceTrace("closeConnection()");
   if(not utils::MasterSlave::_slaveMode){
@@ -107,12 +107,12 @@ void SimpleCommunication:: closeConnection()
   }
 }
 
-com::PtrCommunication SimpleCommunication:: getMasterCommunication()
+com::PtrCommunication GatherScatterCommunication:: getMasterCommunication()
 {
   return _com;
 }
 
-void SimpleCommunication:: startSendPackage
+void GatherScatterCommunication:: startSendPackage
 (
   int rankReceiver )
 {
@@ -121,14 +121,14 @@ void SimpleCommunication:: startSendPackage
   }
 }
 
-void SimpleCommunication:: finishSendPackage()
+void GatherScatterCommunication:: finishSendPackage()
 {
   if(not utils::MasterSlave::_slaveMode){
    _com->finishSendPackage();
   }
 }
 
-int SimpleCommunication:: startReceivePackage
+int GatherScatterCommunication:: startReceivePackage
 (
   int rankSender )
 {
@@ -139,12 +139,12 @@ int SimpleCommunication:: startReceivePackage
   return -1;
 }
 
-void SimpleCommunication:: finishReceivePackage()
+void GatherScatterCommunication:: finishReceivePackage()
 {
   _com->finishReceivePackage();
 }
 
-void SimpleCommunication:: sendMaster
+void GatherScatterCommunication:: sendMaster
 (
   const std::string& itemToSend,
   int                rankReceiver )
@@ -155,7 +155,7 @@ void SimpleCommunication:: sendMaster
   }
 }
 
-void SimpleCommunication:: sendMaster
+void GatherScatterCommunication:: sendMaster
 (
   int* itemsToSend,
   int  size,
@@ -167,7 +167,7 @@ void SimpleCommunication:: sendMaster
   }
 }
 
-void SimpleCommunication:: sendMaster
+void GatherScatterCommunication:: sendMaster
 (
   double* itemsToSend,
   int     size,
@@ -179,7 +179,7 @@ void SimpleCommunication:: sendMaster
   }
 }
 
-void SimpleCommunication:: sendMaster
+void GatherScatterCommunication:: sendMaster
 (
   double itemToSend,
   int    rankReceiver )
@@ -190,7 +190,7 @@ void SimpleCommunication:: sendMaster
   }
 }
 
-void SimpleCommunication:: sendMaster
+void GatherScatterCommunication:: sendMaster
 (
   int itemToSend,
   int rankReceiver )
@@ -201,7 +201,7 @@ void SimpleCommunication:: sendMaster
   }
 }
 
-void SimpleCommunication:: sendMaster
+void GatherScatterCommunication:: sendMaster
 (
   bool itemToSend,
   int  rankReceiver )
@@ -212,7 +212,7 @@ void SimpleCommunication:: sendMaster
   }
 }
 
-int SimpleCommunication:: receiveMaster
+int GatherScatterCommunication:: receiveMaster
 (
   std::string& itemToReceive,
   int          rankSender )
@@ -224,7 +224,7 @@ int SimpleCommunication:: receiveMaster
   return -1;
 }
 
-int SimpleCommunication:: receiveMaster
+int GatherScatterCommunication:: receiveMaster
 (
   int* itemsToReceive,
   int  size,
@@ -237,7 +237,7 @@ int SimpleCommunication:: receiveMaster
   return -1;
 }
 
-int SimpleCommunication:: receiveMaster
+int GatherScatterCommunication:: receiveMaster
 (
   double* itemsToReceive,
   int     size,
@@ -250,7 +250,7 @@ int SimpleCommunication:: receiveMaster
   return -1;
 }
 
-int SimpleCommunication:: receiveMaster
+int GatherScatterCommunication:: receiveMaster
 (
   double& itemToReceive,
   int     rankSender )
@@ -262,7 +262,7 @@ int SimpleCommunication:: receiveMaster
   return -1;
 }
 
-int SimpleCommunication:: receiveMaster
+int GatherScatterCommunication:: receiveMaster
 (
   int& itemToReceive,
   int  rankSender )
@@ -274,7 +274,7 @@ int SimpleCommunication:: receiveMaster
   return -1;
 }
 
-int SimpleCommunication:: receiveMaster
+int GatherScatterCommunication:: receiveMaster
 (
   bool& itemToReceive,
   int   rankSender )
@@ -287,7 +287,7 @@ int SimpleCommunication:: receiveMaster
 }
 
 
-void SimpleCommunication:: sendAll (
+void GatherScatterCommunication:: sendAll (
   utils::DynVector*    itemsToSend,
   int           size,
   int           rankReceiver,
@@ -365,7 +365,7 @@ void SimpleCommunication:: sendAll (
  *
  * @return Rank of sender, which is useful when ANY_SENDER is used.
  */
-void SimpleCommunication:: receiveAll (
+void GatherScatterCommunication:: receiveAll (
   utils::DynVector*   itemsToReceive,
   int           size,
   int           rankSender,
@@ -436,7 +436,7 @@ void SimpleCommunication:: receiveAll (
   }
 }
 
-void SimpleCommunication:: receiveAll (
+void GatherScatterCommunication:: receiveAll (
   bool&  itemToReceive,
   int    rankSender )
 {
@@ -458,7 +458,7 @@ void SimpleCommunication:: receiveAll (
   preciceDebug("ReceiveAll(bool): " << itemToReceive);
 }
 
-void SimpleCommunication:: receiveAll (
+void GatherScatterCommunication:: receiveAll (
   double&  itemToReceive,
   int      rankSender )
 {
@@ -480,7 +480,7 @@ void SimpleCommunication:: receiveAll (
   preciceDebug("ReceiveAll(bool): " << itemToReceive);
 }
 
-void SimpleCommunication:: sendAll (
+void GatherScatterCommunication:: sendAll (
   bool   itemToSend,
   int    rankReceiver)
 {
@@ -490,7 +490,7 @@ void SimpleCommunication:: sendAll (
   }
 }
 
-void SimpleCommunication:: sendAll (
+void GatherScatterCommunication:: sendAll (
   double   itemToSend,
   int      rankReceiver)
 {

@@ -22,15 +22,33 @@ public:
   static int _rank;
   static int _size;
 
+  /**
+   * @brief True if this process is running the master.
+   */
   static bool _masterMode;
+  /**
+   * @brief True if this process is running a slave.
+   */
   static bool _slaveMode;
 
+  /**
+   * @brief Communication between the master and all slaves.
+   */
   static com::PtrCommunication _communication;
 
+  /**
+   * @brief Configure the master-slave communication.
+   */
   static void configure(int rank, int size);
 
+  /**
+   * @brief the l2 norm of a vector is calculated on distributed data.
+   */
   static double l2norm(const DynVector& vec);
 
+  /**
+   * @brief the dot product of 2 vectors is calculated on distributed data.
+   */
   static double dot(const DynVector& vec1, const DynVector& vec2);
 
 private:
