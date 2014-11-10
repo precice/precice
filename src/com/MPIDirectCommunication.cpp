@@ -70,6 +70,7 @@ void MPIDirectCommunication:: acceptConnection
 
 void MPIDirectCommunication:: closeConnection()
 {
+  preciceTrace("closeConnection()");
   assertion ( _isConnection );
   MPI_Comm_free ( & communicator() );
   _isConnection = false;

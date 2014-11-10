@@ -95,6 +95,7 @@ void GatherScatterCommunication:: closeConnection()
   preciceTrace("closeConnection()");
   if(not utils::MasterSlave::_slaveMode){
     _com->closeConnection();
+    _isConnected = _com->isConnected();
   }
   //broadcast isConnected
   if(utils::MasterSlave::_slaveMode){

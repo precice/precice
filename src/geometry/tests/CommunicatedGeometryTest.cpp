@@ -201,10 +201,10 @@ void CommunicatedGeometryTest:: testScatterMesh ()
 
     // check if the sending and filtering worked right
     if(utils::Parallel::getProcessRank() == 1){//Master
-      validate(pSolidzMesh1->vertices().size()==6);
-      validate(pSolidzMesh1->edges().size()==5);
-      validate(pSolidzMesh2->vertices().size()==6);
-      validate(pSolidzMesh2->edges().size()==5);
+      validate(pSolidzMesh1->vertices().size()==2);
+      validate(pSolidzMesh1->edges().size()==1);
+      validate(pSolidzMesh2->vertices().size()==3);
+      validate(pSolidzMesh2->edges().size()==2);
     }
     else if(utils::Parallel::getProcessRank() == 2){//Slave1
       validate(pSolidzMesh1->vertices().size()==0);
