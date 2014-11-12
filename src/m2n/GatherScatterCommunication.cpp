@@ -339,7 +339,7 @@ void GatherScatterCommunication:: sendAll (
               globalItemsToSend[vertexDistribution[rankSlave][i]*valueDimension+j] += valuesSlave[i*valueDimension+j];
             }
           }
-          delete valuesSlave;
+          delete[] valuesSlave;
         }
       }
     } //master
@@ -356,7 +356,7 @@ void GatherScatterCommunication:: sendAll (
   }
 
   if(utils::MasterSlave::_masterMode){
-    delete globalItemsToSend;
+    delete[] globalItemsToSend;
   }
 }
 
@@ -429,10 +429,10 @@ void GatherScatterCommunication:: receiveAll (
             }
           }
           utils::MasterSlave::_communication->send(valuesSlave, slaveSize, rankSlave);
-          delete valuesSlave;
+          delete[] valuesSlave;
         }
       }
-      delete globalItemsToReceive;
+      delete[] globalItemsToReceive;
     } //master
   }
 }

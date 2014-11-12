@@ -437,9 +437,6 @@ void SolverInterfaceImpl:: finalize()
   _couplingScheme->finalize();
   _couplingScheme.reset();
 
-  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-    _accessor->getMasterSlaveCommunication()->closeConnection();
-  }
   if (_clientMode){
     _requestManager->requestFinalize();
     _accessor->getClientServerCommunication()->closeConnection();
@@ -460,6 +457,10 @@ void SolverInterfaceImpl:: finalize()
       iter->second.communication->closeConnection();
     }
   }
+  if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
+    _accessor->getMasterSlaveCommunication()->closeConnection();
+  }
+
   utils::Parallel::finalize();
 }
 
