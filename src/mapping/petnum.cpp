@@ -217,8 +217,8 @@ std::string Matrix::getName()
 void Matrix::assemble(MatAssemblyType type)
 {
   PetscErrorCode ierr = 0;
-  ierr = MatAssemblyBegin(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
-  ierr = MatAssemblyEnd(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
+  ierr = MatAssemblyBegin(matrix, type); CHKERRV(ierr);
+  ierr = MatAssemblyEnd(matrix, type); CHKERRV(ierr);
 }
 
 
