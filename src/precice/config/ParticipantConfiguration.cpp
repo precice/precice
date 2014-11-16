@@ -282,6 +282,19 @@ ParticipantConfiguration:: ParticipantConfiguration
 
     masterTags.push_back(tagMaster);
   }
+  {
+    XMLTag tagMaster(*this, "mpi-single", masterOcc, TAG_MASTER);
+    doc = "A solver in parallel has to use either a Master or a Server, but not both. ";
+    doc += "If you use a Master, you do not have to start-up a further executable, ";
+    doc += "all communication is handled peer to peer. One solver process becomes the ";
+    doc += " Master handling the synchronization of all slaves. Here, you define then ";
+    doc += " the communication between the Master and all slaves. ";
+    doc += "The communication between Master and slaves is done by mpi ";
+    doc += "with startup in one communication spaces.";
+    tagMaster.setDocumentation(doc);
+
+    masterTags.push_back(tagMaster);
+  }
   foreach (XMLTag& tagMaster, masterTags){
     tag.addSubtag(tagMaster);
   }
