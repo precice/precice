@@ -6,6 +6,8 @@
 
 #include "utils/Dimensions.hpp"
 #include "tarch/logging/Log.h"
+#include "com/CommunicateMesh.hpp"
+#include "com/Communication.hpp"
 
 namespace precice {
    namespace mesh {
@@ -66,6 +68,7 @@ public:
     return _offset;
   }
 
+
 protected:
 
   /**
@@ -88,6 +91,7 @@ private:
 
   // @brief Offset of reference point of geometry from zero point
   utils::DynVector _offset;
+
 };
 
 }} // namespace precice, geometry

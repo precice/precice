@@ -9,12 +9,13 @@
 #include "Constants.hpp"
 #include "SharedPointer.hpp" 
 #include "mesh/Data.hpp"
-#include "com/SharedPointer.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "com/Constants.hpp"
 #include "utils/PointerVector.hpp"
 #include "tarch/logging/Log.h"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
+#include <map>
 
 namespace precice {
 namespace cplscheme {
@@ -58,15 +59,15 @@ public:
     int    validDigits );
 
   BaseCouplingScheme (
-    double                maxTime,
-    int                   maxTimesteps,
-    double                timestepLength,
-    int                   validDigits,
-    const std::string&    firstParticipant,
-    const std::string&    secondParticipant,
-    const std::string&    localParticipant,
-    com::PtrCommunication communication,
-    int                   maxIterations,
+    double                        maxTime,
+    int                           maxTimesteps,
+    double                        timestepLength,
+    int                           validDigits,
+    const std::string&            firstParticipant,
+    const std::string&            secondParticipant,
+    const std::string&            localParticipant,
+    m2n::PtrGlobalCommunication   communication,
+    int                           maxIterations,
     constants::TimesteppingMethod dtMethod );
 
   enum CouplingMode {Explicit, Implicit, Undefined};
@@ -86,11 +87,13 @@ public:
   /// @brief Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend (
     mesh::PtrData data,
+    mesh::PtrMesh mesh,
     bool          initialize );
   
   /// @brief Adds data to be received on data exchange.
   void addDataToReceive (
     mesh::PtrData data,
+    mesh::PtrMesh mesh,
     bool          initialize );
   
   /// @brief Sets the checkpointing timestep interval.
@@ -273,6 +276,9 @@ protected:
   /// @brief Receives and set the timestep length, if this participant is the one to receive
   void receiveAndSetDt();
   
+  /// @brief Sends the timestep length, if this participant is the one to send
+  void sendDt();
+
   io::TXTTableWriter& getIterationsWriter() {
     return _iterationsWriter;
   }
@@ -283,10 +289,10 @@ protected:
   }
   
   /// @brief Sends data sendDataIDs given in mapCouplingData with communication.
-  std::vector<int> sendData ( com::PtrCommunication communication );
+  std::vector<int> sendData ( m2n::PtrGlobalCommunication communication );
   
-  /// @brief Receives data sendDataIDs given in mapCouplingData with communication.
-  std::vector<int> receiveData ( com::PtrCommunication communication );
+  /// @brief Receives data receiveDataIDs given in mapCouplingData with communication.
+  std::vector<int> receiveData ( m2n::PtrGlobalCommunication communication );
 
   /// @brief Returns all data to be sent.
   const DataMap& getSendData() const {
@@ -384,7 +390,7 @@ protected:
   std::string _secondParticipant;
   
   /// @return Communication device to the other coupling participant.
-  com::PtrCommunication getCommunication() {
+  m2n::PtrGlobalCommunication getCommunication() {
     assertion(_communication.use_count() > 0);
     return _communication;
   }
@@ -412,7 +418,7 @@ protected:
   bool participantSetsDt() {
     return _participantSetsDt;
   }
-  
+
   /// @brief Holds relevant variables to perform a convergence measurement.
   struct ConvergenceMeasure
   {
@@ -473,7 +479,7 @@ protected:
 private:
 
   /// @brief Communication device to the other coupling participant.
-  com::PtrCommunication _communication;
+  m2n::PtrGlobalCommunication _communication;
 
   /// @brief Determines, if the timestep length is set by the participant.
   bool _participantSetsDt;
@@ -542,6 +548,9 @@ private:
   
   /// @brief Responsible for monitoring iteration count over timesteps.
   io::TXTTableWriter _iterationsWriter;
+
+  int getVertexOffset(std::map<int,int>& vertexDistribution, int rank, int dim);
+
 
 };
 

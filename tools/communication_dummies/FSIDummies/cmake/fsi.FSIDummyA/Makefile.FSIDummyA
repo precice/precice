@@ -1,0 +1,21 @@
+CC=gcc
+CXX=g++
+RM=rm -f
+CPPFLAGS= -Icomponents/java -Isrc -I/usr/lib/jvm/java-6-openjdk/include -I/usr/lib/jvm/java-6-openjdk/include/linux -fPIC
+LDFLAGS=
+LDLIBS=
+
+SRCS= components/java/__PATH_FULL_QUALIFIED_NAME__AbstractImplementation.cpp src/__PATH_FULL_QUALIFIED_NAME__Implementation.cpp components/java/__PATH_FULL_QUALIFIED_NAME__JNIProxy.cpp 
+SRCS += components/java/fsi/FSICommNative2JavaPlainPort.cpp components/java/fsi/FSICommNative2NativePlainPort.cpp components/java/fsi/FSICommNativeDispatcher.cpp
+OBJS=$(subst .cpp,.o,$(SRCS))
+
+all: libFSIDummyA.so
+
+libFSIDummyA.so: $(OBJS)
+	$(CXX) -shared $(OBJS) -o native/libFSIDummyA.so
+
+clean:
+	$(RM) $(OBJS)
+
+dist-clean: clean
+	$(RM) libFSIDummyA.so

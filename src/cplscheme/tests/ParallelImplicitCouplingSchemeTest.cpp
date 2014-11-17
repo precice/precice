@@ -12,11 +12,13 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "mesh/Mesh.hpp"
+#include "mesh/SharedPointer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "m2n/GatherScatterCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
@@ -121,6 +123,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
   com::PtrCommunication communication(new com::MPIDirectCommunication);
+  m2n::PtrGlobalCommunication globalCom(new m2n::GatherScatterCommunication(communication));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -146,9 +149,9 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   // Create the coupling scheme object
   cplscheme::ParallelCouplingScheme cplScheme(
      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-     nameLocalParticipant, communication, constants::FIXED_DT, BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], initData);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], initData);
+     nameLocalParticipant, globalCom, constants::FIXED_DT, BaseCouplingScheme::Implicit, 100);
+  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
+  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, initData);
 
 
 
@@ -162,7 +165,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
         mesh->data()[1]->getID(), false, minIterationConvMeasure1 );
   cplScheme.addConvergenceMeasure (
           mesh->data()[0]->getID(), false, minIterationConvMeasure2 );
-  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, communication);
+  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, globalCom);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
@@ -222,7 +225,7 @@ void ParallelImplicitCouplingSchemeTest:: connect
   const std::string&      participant0,
   const std::string&      participant1,
   const std::string&      localParticipant,
-  com::PtrCommunication& communication ) const
+  m2n::PtrGlobalCommunication& communication ) const
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
@@ -252,6 +255,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0,1.0));
   scalings.insert(std::make_pair(1,1.0));
+  mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
 
   cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation,maxIterationsUsed,
       timestepsReused, singularityLimit, dataIDs, scalings);
@@ -269,7 +273,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   dcol1.append(1.0);
   dcol1.append(1.0);
 
-  PtrCouplingData dpcd(new CouplingData(&dvalues,false));
+  PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
   //init forces
   utils::DynVector fvalues;
@@ -282,7 +286,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   fcol1.append(0.2);
   fcol1.append(0.2);
 
-  PtrCouplingData fpcd(new CouplingData(&fvalues,false));
+  PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
   DataMap data;
   data.insert(std::pair<int,PtrCouplingData>(0,dpcd));

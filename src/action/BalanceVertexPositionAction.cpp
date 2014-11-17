@@ -9,6 +9,7 @@
 #include "mesh/Triangle.hpp"
 #include "utils/GeometryComputations.hpp"
 #include "utils/Dimensions.hpp"
+#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace action {
@@ -44,6 +45,9 @@ void BalanceVertexPositionAction:: performAction
   double fullDt )
 {
   preciceTrace3("performAction()", dt, computedPartFullDt, fullDt);
+  preciceCheck (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode,
+      "BalanceVertexPositionAction()", "BalanceVertexPositionAction is not yet supported "
+          << " for a usage with a Master")
   mesh::PtrMesh mesh = getMesh();
   assertion(mesh.get() != NULL);
   using utils::DynVector;

@@ -128,4 +128,32 @@ void NearestProjectionMapping:: map
   }
 }
 
+bool NearestProjectionMapping::doesVertexContribute(
+  int vertexID)
+{
+  preciceTrace1("doesVertexContribute()", vertexID);
+  if (getConstraint() == CONSISTENT){
+    for (size_t i=0; i < output()->vertices().size(); i++){
+      InterpolationElements& elems = _weights[i];
+      foreach ( query::InterpolationElement& elem, elems ){
+        if(elem.element->getID()==vertexID && elem.weight!=0.0){
+          return true;
+        }
+      }
+    }
+  }
+  else {
+    assertion1(getConstraint() == CONSERVATIVE, getConstraint());
+    for (size_t i=0; i < input()->vertices().size(); i++){
+      InterpolationElements& elems = _weights[i];
+      foreach ( query::InterpolationElement& elem, elems ){
+        if(elem.element->getID()==vertexID){ // && elem.weight!=0.0){
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
 }} // namespace precice, mapping

@@ -38,7 +38,9 @@ Mesh:: Mesh
   _manageEdgeIDs(),
   _manageTriangleIDs(),
   _manageQuadIDs(),
-  _listeners()
+  _listeners(),
+  _vertexDistribution(),
+  _globalNumberOfVertices(-1)
 {
   if (_managerPropertyIDs == NULL){
     _managerPropertyIDs = new utils::ManageUniqueIDs;
@@ -299,6 +301,7 @@ void Mesh:: allocateDataValues()
 void Mesh:: computeState()
 {
   preciceTrace("computeState()");
+  assertion1(_dimensions==2 || _dimensions==3, _dimensions);
   using utils::DynVector;
   using utils::Vector2D;
   using utils::Vector3D;
@@ -532,8 +535,13 @@ void Mesh:: computeState()
   if (computeNormals){
     foreach (Vertex& vertex, _content.vertices()){
       double length = tarch::la::norm2(vertex.getNormal());
-      assertion(tarch::la::greater(length,0.0));
-      vertex.setNormal(vertex.getNormal() / length);
+
+      // i (benjamin) changed this since there can be cases where a node has no edge though
+      // the mesh has edges in general, e.g. after filtering
+      //assertion(tarch::la::greater(length,0.0));
+      if(tarch::la::greater(length,0.0)){
+        vertex.setNormal(vertex.getNormal() / length);
+      }
     }
   }
 }
@@ -563,6 +571,48 @@ void Mesh:: notifyListeners()
   foreach (MeshListener* listener, _listeners){
     assertion(listener != NULL);
     listener->meshChanged(*this);
+  }
+}
+
+void Mesh:: addMesh(
+    Mesh& deltaMesh)
+{
+  preciceTrace("addMesh()");
+  assertion(_dimensions==deltaMesh.getDimensions());
+
+  std::map<int, Vertex*> vertexMap;
+  std::map<int, Edge*> edgeMap;
+
+  utils::DynVector coords(_dimensions);
+  foreach ( const Vertex& vertex, deltaMesh.vertices() ){
+    coords = vertex.getCoords();
+    Vertex& v = createVertex (coords);
+    assertion1 ( vertex.getID() >= 0, vertex.getID() );
+    vertexMap[vertex.getID()] = &v;
+  }
+
+  // you cannot just take the vertices from the edge and add them,
+  // since you need the vertices from the new mesh
+  // (which may differ in IDs)
+  foreach ( Edge& edge, deltaMesh.edges() ){
+    int vertexIndex1 = edge.vertex(0).getID();
+    int vertexIndex2 = edge.vertex(1).getID();
+    assertion ( vertexMap.find(vertexIndex1) != vertexMap.end() );
+    assertion ( vertexMap.find(vertexIndex2) != vertexMap.end() );
+    Edge& e = createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
+    edgeMap[edge.getID()] = &e;
+  }
+
+  if(_dimensions==3){
+    foreach (Triangle& triangle, deltaMesh.triangles() ){
+      int edgeIndex1 = triangle.edge(0).getID();
+      int edgeIndex2 = triangle.edge(1).getID();
+      int edgeIndex3 = triangle.edge(2).getID();
+      assertion ( edgeMap.find(edgeIndex1) != edgeMap.end() );
+      assertion ( edgeMap.find(edgeIndex2) != edgeMap.end() );
+      assertion ( edgeMap.find(edgeIndex3) != edgeMap.end() );
+      createTriangle(*edgeMap[edgeIndex1],*edgeMap[edgeIndex2],*edgeMap[edgeIndex3]);
+    }
   }
 }
 

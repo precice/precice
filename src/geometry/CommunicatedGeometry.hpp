@@ -5,8 +5,10 @@
 #define PRECICE_GEOMETRY_COMMUNICATEDGEOMETRY_HPP_
 
 #include "Geometry.hpp"
-#include "com/SharedPointer.hpp"
+#include "m2n/SharedPointer.hpp"
+#include "mapping/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
+#include "utils/MasterSlave.hpp"
 #include "tarch/logging/Log.h"
 #include <string>
 #include <map>
@@ -15,7 +17,9 @@ namespace precice {
 namespace geometry {
 
 /**
- * @brief Creates the mesh by copying another remote mesh via communication.
+ * @brief Creates the mesh by copying another remote mesh via communication. In case of parallel
+ * solvers using a master-slave approach the meshes are gathered or scattered. In case of scattering,
+ * globals meshes are sent first to each slave and filtered then depending on both mappings defined.
  */
 class CommunicatedGeometry : public Geometry
 {
@@ -24,13 +28,18 @@ public:
   CommunicatedGeometry (
     const utils::DynVector& offset,
     const std::string&      accessor,
-    const std::string&      provider );
+    const std::string&      provider,
+    int                     dimensions);
 
   virtual ~CommunicatedGeometry() {}
 
   void addReceiver (
     const std::string&     receiver,
-    com::PtrCommunication com );
+    m2n::PtrGlobalCommunication com );
+
+  void setBoundingFromMapping(mapping::PtrMapping mapping);
+
+  void setBoundingToMapping(mapping::PtrMapping mapping);
 
 protected:
 
@@ -41,6 +50,30 @@ protected:
 
 private:
 
+  /**
+   * @brief The received mesh is scattered amongst the slaves.
+   */
+  void scatterMesh(
+    mesh::Mesh& seed);
+
+  void sendMesh(
+    mesh::Mesh& seed);
+
+  void receiveMesh(
+    mesh::Mesh& seed);
+
+  /**
+   * @brief Compute the preliminary mappings between the global mesh and the slave's own mesh.
+   */
+  void computeBoundingMappings();
+
+  void clearBoundingMappings();
+
+  /**
+   * @brief Returns true if a vertex contributes to one of the 2 mappings. If false, the vertex can be erased.
+   */
+  bool doesVertexContribute(int vertexID);
+
   // @brief Logging device.
   static tarch::logging::Log _log;
 
@@ -48,9 +81,13 @@ private:
 
   std::string _providerName;
 
-  std::map<std::string,com::PtrCommunication> _receivers;
+  std::map<std::string,m2n::PtrGlobalCommunication> _receivers;
 
-  com::PtrCommunication _communication;
+  int _dimensions;
+
+  mapping::PtrMapping _boundingFromMapping;
+
+  mapping::PtrMapping _boundingToMapping;
 };
 
 }} // namespace precice, geometry

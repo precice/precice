@@ -15,6 +15,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/Communication.hpp"
+#include "m2n/GlobalCommunication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "utils/xml/XMLTag.hpp"
@@ -698,9 +699,9 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  com::PtrCommunication com0 =
+  m2n::PtrGlobalCommunication com0 =
       comConfig->getCommunication(nameParticipant0, nameParticipant1);
-  com::PtrCommunication com1 =
+  m2n::PtrGlobalCommunication com1 =
       comConfig->getCommunication(nameParticipant1, nameParticipant2);
 
   geoConfig->geometries()[0]->create(*meshConfig->meshes()[0]);
@@ -845,7 +846,7 @@ void CompositionalCouplingSchemeTest:: connect
   const std::string&     participant0,
   const std::string&     participant1,
   const std::string&     localParticipant,
-  com::PtrCommunication& communication ) const
+  m2n::PtrGlobalCommunication& communication ) const
 {
   preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );

@@ -271,7 +271,7 @@ void precicef_set_edge_(
   const int* meshID,
   const int* firstVertexID,
   const int* secondVertexID,
-  int* edgeID );
+  int*       edgeID );
 
 /**
  * @brief See precice::SolverInterface::setMeshTriangle().

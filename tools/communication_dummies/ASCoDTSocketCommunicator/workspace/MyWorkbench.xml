@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<diagram>
+    <component xsi:type="socketComponent" host="127.0.0.1" port="50012" name="precice.A" reference="oid2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <inputPort className="precice.Main" classId="0" index="1188634529"/>
+        <inputPort className="precice.Initializer" classId="1" index="529056098"/>
+        <inputPort className="precice.Receiver" classId="2" index="876524540"/>
+        <outputPort xsi:type="usePort" alias="b" createId="2" connectId="3" disconnectId="4" className="b:precice.Initializer" classId="0" index="700086873"/>
+    </component>
+    <component xsi:type="socketComponent" host="127.0.0.1" port="50016" name="precice.B" reference="oid3" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+        <inputPort className="precice.Main" classId="0" index="852373524"/>
+        <inputPort className="precice.Initializer" classId="1" index="376328906"/>
+        <inputPort className="precice.Receiver" classId="2" index="1136713864"/>
+        <outputPort xsi:type="usePort" alias="a" createId="2" connectId="3" disconnectId="4" className="a:precice.Initializer" classId="0" index="1859852027"/>
+    </component>
+</diagram>

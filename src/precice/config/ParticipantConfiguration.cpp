@@ -45,6 +45,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   TAG_USE_MESH("use-mesh"),
   TAG_WATCH_POINT("watch-point"),
   TAG_SERVER("server"),
+  TAG_MASTER("master"),
   ATTR_NAME("name"),
   ATTR_SOURCE_DATA("source-data"),
   ATTR_TARGET_DATA("target-data"),
@@ -225,6 +226,77 @@ ParticipantConfiguration:: ParticipantConfiguration
   }
   foreach (XMLTag& tagServer, serverTags){
     tag.addSubtag(tagServer);
+  }
+
+  std::list<XMLTag> masterTags;
+  XMLTag::Occurrence masterOcc = XMLTag::OCCUR_NOT_OR_ONCE;
+  {
+    XMLTag tagMaster(*this, "sockets", masterOcc, TAG_MASTER);
+    doc = "A solver in parallel has to use either a Master or a Server, but not both. ";
+    doc += "If you use a Master, you do not have to start-up a further executable, ";
+    doc += "all communication is handled peer to peer. One solver process becomes the ";
+    doc += " Master handling the synchronization of all slaves. Here, you define then ";
+    doc += " the communication between the Master and all slaves. ";
+    doc += "The communication between Master and slaves is done by sockets.";
+    tagMaster.setDocumentation(doc);
+
+    XMLAttribute<int> attrPort("port");
+    doc = "Port number to be used by master for socket communication.";
+    attrPort.setDocumentation(doc);
+    attrPort.setDefaultValue(51235);
+    tagMaster.addAttribute(attrPort);
+
+    XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);
+    doc = "Network name to be used for socket communiation. ";
+    doc += "Default is \"lo\", i.e., the local host loopback.";
+    attrNetwork.setDocumentation(doc);
+    attrNetwork.setDefaultValue("lo");
+    tagMaster.addAttribute(attrNetwork);
+
+    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
+    doc = "Directory where connection information is exchanged. By default, the ";
+    doc += "directory of startup is chosen.";
+    attrExchangeDirectory.setDocumentation(doc);
+    attrExchangeDirectory.setDefaultValue("");
+    tagMaster.addAttribute(attrExchangeDirectory);
+
+    masterTags.push_back(tagMaster);
+  }
+  {
+    XMLTag tagMaster(*this, "mpi", masterOcc, TAG_MASTER);
+    doc = "A solver in parallel has to use either a Master or a Server, but not both. ";
+    doc += "If you use a Master, you do not have to start-up a further executable, ";
+    doc += "all communication is handled peer to peer. One solver process becomes the ";
+    doc += " Master handling the synchronization of all slaves. Here, you define then ";
+    doc += " the communication between the Master and all slaves. ";
+    doc += "The communication between Master and slaves is done by mpi ";
+    doc += "with startup in separated communication spaces.";
+    tagMaster.setDocumentation(doc);
+
+    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
+    doc = "Directory where connection information is exchanged. By default, the ";
+    doc += "directory of startup is chosen.";
+    attrExchangeDirectory.setDocumentation(doc);
+    attrExchangeDirectory.setDefaultValue("");
+    tagMaster.addAttribute(attrExchangeDirectory);
+
+    masterTags.push_back(tagMaster);
+  }
+  {
+    XMLTag tagMaster(*this, "mpi-single", masterOcc, TAG_MASTER);
+    doc = "A solver in parallel has to use either a Master or a Server, but not both. ";
+    doc += "If you use a Master, you do not have to start-up a further executable, ";
+    doc += "all communication is handled peer to peer. One solver process becomes the ";
+    doc += " Master handling the synchronization of all slaves. Here, you define then ";
+    doc += " the communication between the Master and all slaves. ";
+    doc += "The communication between Master and slaves is done by mpi ";
+    doc += "with startup in one communication spaces.";
+    tagMaster.setDocumentation(doc);
+
+    masterTags.push_back(tagMaster);
+  }
+  foreach (XMLTag& tagMaster, masterTags){
+    tag.addSubtag(tagMaster);
   }
 
 //  XMLAttribute<std::string> attrCom(ATTR_COMMUNICATION);
@@ -426,6 +498,11 @@ void ParticipantConfiguration:: xmlTagCallback
     com::PtrCommunication com = comConfig.createCommunication(tag);
     _participants.back()->setClientServerCommunication(com);
   }
+  else if (tag.getNamespace() == TAG_MASTER){
+    com::CommunicationConfiguration comConfig;
+    com::PtrCommunication com = comConfig.createCommunication(tag);
+    _participants.back()->setMasterSlaveCommunication(com);
+  }
 }
 
 void ParticipantConfiguration:: xmlEndTagCallback
@@ -506,12 +583,25 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   foreach (const ConfMapping& confMapping, _mappingConfig->mappings()){
     int fromMeshID = confMapping.fromMesh->getID();
     int toMeshID = confMapping.toMesh->getID();
+
     preciceCheck(participant->isMeshUsed(fromMeshID), "finishParticipantConfiguration()",
         "Participant \"" << participant->getName() << "\" has mapping"
         << " from mesh \"" << confMapping.fromMesh->getName() << "\" which he does not use!");
     preciceCheck(participant->isMeshUsed(toMeshID), "finishParticipantConfiguration()",
             "Participant \"" << participant->getName() << "\" has mapping"
             << " to mesh \"" << confMapping.toMesh->getName() << "\" which he does not use!");
+    if(participant->useMaster()){
+      if((confMapping.direction == mapping::MappingConfiguration::WRITE &&
+          confMapping.mapping->getConstraint()==mapping::Mapping::CONSISTENT) ||
+         (confMapping.direction == mapping::MappingConfiguration::READ &&
+          confMapping.mapping->getConstraint()==mapping::Mapping::CONSERVATIVE)){
+        preciceError ( "finishParticipantConfiguration()",
+                       "If a participant uses a master parallelization, only the mapping"
+                    << " combinations read-consistent and write-conservative are allowed");
+      }
+    }
+
+
 
     impl::MeshContext& fromMeshContext = participant->meshContext(fromMeshID);
     impl::MeshContext& toMeshContext = participant->meshContext(toMeshID);
@@ -599,7 +689,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   // Add actions
   foreach (const action::PtrAction& action, _actionConfig->actions()){
     bool used = _participants.back()->isMeshUsed(action->getMesh()->getID());
-    preciceCheck(used, "xmlTagCallback()", "Data action of participant "
+    preciceCheck(used, "finishParticipantConfiguration()", "Data action of participant "
                  << _participants.back()->getName()
                  << "\" uses mesh which is not used by the participant!");
     _participants.back()->addAction(action);
@@ -608,6 +698,8 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
   // Add export contexts
   foreach (const io::ExportContext& context, _exportConfig->exportContexts()){
+    preciceCheck(not participant->useMaster(), "finishParticipantConfiguration()",
+        "To use exports while using a master is not yet supported");
     _participants.back()->addExportContext(context);
   }
   _exportConfig->resetExports();

@@ -4,7 +4,9 @@
 #include "BaseCouplingScheme.hpp"
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
+#include "m2n/GlobalCommunication.hpp"
 #include "utils/Globals.hpp"
+#include "utils/MasterSlave.hpp"
 #include "impl/PostProcessing.hpp"
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
@@ -74,7 +76,7 @@ BaseCouplingScheme::BaseCouplingScheme
   const std::string&    firstParticipant,
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
-  com::PtrCommunication communication,
+  m2n::PtrGlobalCommunication communication,
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
   :
@@ -153,15 +155,23 @@ BaseCouplingScheme::BaseCouplingScheme
 }
 
 
-void BaseCouplingScheme::receiveAndSetDt()
+void BaseCouplingScheme:: receiveAndSetDt()
 {
   preciceTrace("receiveAndSetDt()");
   if (participantReceivesDt()){
     double dt = UNDEFINED_TIMESTEP_LENGTH;
-    getCommunication()->receive(dt, 0);
+    getCommunication()->receiveAll(dt, 0);
     preciceDebug("Received timestep length of " << dt);
     assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
     setTimestepLength(dt);
+  }
+}
+
+void BaseCouplingScheme:: sendDt(){
+  preciceTrace("sendDt()");
+  if (participantSetsDt()){
+    preciceDebug("sending timestep length of " << getComputedTimestepPart());
+    getCommunication()->sendAll(getComputedTimestepPart(), 0);
   }
 }
 
@@ -169,36 +179,38 @@ void BaseCouplingScheme::receiveAndSetDt()
 void BaseCouplingScheme:: addDataToSend
 (
   mesh::PtrData data,
+  mesh::PtrMesh mesh,
   bool          initialize)
 {
+  preciceTrace("addDataToSend()");
   int id = data->getID();
   if(! utils::contained(id, _sendData)) {
-    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize, data->getDimensions()));
     DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _sendData.insert(pair);
   }
   else {
     preciceError("addDataToSend()", "Data \"" << data->getName()
-		 << "\" of mesh \"" << data->mesh()->getName() << "\" cannot be "
-		 << "added twice for sending!");
+		 << "\" cannot be added twice for sending!");
   }
 }
 
 void BaseCouplingScheme:: addDataToReceive
 (
   mesh::PtrData data,
+  mesh::PtrMesh mesh,
   bool          initialize)
 {
+  preciceTrace("addDataToReceive()");
   int id = data->getID();
   if(! utils::contained(id, _receiveData)) {
-    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize, data->getDimensions()));
     DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _receiveData.insert(pair);
   }
   else {
     preciceError("addDataToReceive()", "Data \"" << data->getName()
-		 << "\" of mesh \"" << data->mesh()->getName() << "\" cannot be "
-		 << "added twice for receiving!");
+		 << "\" cannot be added twice for receiving!");
   }
 }
 
@@ -273,18 +285,17 @@ void BaseCouplingScheme:: receiveState
 
 std::vector<int> BaseCouplingScheme:: sendData
 (
-  com::PtrCommunication communication)
+  m2n::PtrGlobalCommunication communication)
 {
   preciceTrace("sendData()");
-  assertion(communication.get() != NULL);
-  assertion(communication->isConnected());
 
   std::vector<int> sentDataIDs;
+  assertion(communication.get() != NULL);
+  assertion(communication->isConnected());
   foreach (DataMap::value_type& pair, _sendData){
     int size = pair.second->values->size();
-    if (size > 0) {
-      communication->send(tarch::la::raw(*pair.second->values), size, 0);
-    }
+    communication->sendAll(pair.second->values, size, 0,
+                           pair.second->mesh, pair.second->dimension);
     sentDataIDs.push_back(pair.first);
   }
   preciceDebug("Number of sent data sets = " << sentDataIDs.size());
@@ -293,23 +304,36 @@ std::vector<int> BaseCouplingScheme:: sendData
 
 std::vector<int> BaseCouplingScheme:: receiveData
 (
-  com::PtrCommunication communication)
+  m2n::PtrGlobalCommunication communication)
 {
   preciceTrace("receiveData()");
+  std::vector<int> receivedDataIDs;
   assertion(communication.get() != NULL);
   assertion(communication->isConnected());
 
-  std::vector<int> receivedDataIDs;
   foreach(DataMap::value_type & pair, _receiveData){
     int size = pair.second->values->size ();
-    if (size > 0){
-      communication->receive(tarch::la::raw(*pair.second->values), size, 0);
-    }
+    communication->receiveAll(pair.second->values, size, 0,
+                               pair.second->mesh, pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
   preciceDebug("Number of received data sets = " << receivedDataIDs.size());
+
   return receivedDataIDs;
 }
+
+
+int BaseCouplingScheme:: getVertexOffset(
+    std::map<int,int>& vertexDistribution,
+    int rank,
+    int dim)
+  {
+    int sum=0;
+    for(int i=0;i<rank;i++){
+      sum += vertexDistribution[i];
+    }
+    return sum*dim;
+  }
 
 CouplingData* BaseCouplingScheme:: getSendData
 (
@@ -718,19 +742,23 @@ bool BaseCouplingScheme:: measureConvergence()
 
 void BaseCouplingScheme::initializeTXTWriters()
 {
-  _iterationsWriter.addData("Timesteps", io::TXTTableWriter::INT );
-  _iterationsWriter.addData("Total Iterations", io::TXTTableWriter::INT );
-  _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
-  _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
+  if(not utils::MasterSlave::_slaveMode){
+    _iterationsWriter.addData("Timesteps", io::TXTTableWriter::INT );
+    _iterationsWriter.addData("Total Iterations", io::TXTTableWriter::INT );
+    _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
+    _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
+  }
 }
 
 void BaseCouplingScheme::advanceTXTWriters()
 {
-  _iterationsWriter.writeData("Timesteps", _timesteps-1);
-  _iterationsWriter.writeData("Total Iterations", _totalIterations);
-  _iterationsWriter.writeData("Iterations", _iterations);
-  int converged = _iterations < _maxIterations ? 1 : 0;
-  _iterationsWriter.writeData("Convergence", converged);
+  if(not utils::MasterSlave::_slaveMode){
+    _iterationsWriter.writeData("Timesteps", _timesteps-1);
+    _iterationsWriter.writeData("Total Iterations", _totalIterations);
+    _iterationsWriter.writeData("Iterations", _iterations);
+    int converged = _iterations < _maxIterations ? 1 : 0;
+    _iterationsWriter.writeData("Convergence", converged);
+  }
 }
 
 
@@ -781,7 +809,7 @@ void BaseCouplingScheme:: updateTimeAndIterations(bool convergence){
   }
 }
 
-void BaseCouplingScheme::timestepCompleted()
+void BaseCouplingScheme:: timestepCompleted()
 {
   preciceTrace2("timestepCompleted()", getTimesteps(), getTime());
   preciceInfo("timestepCompleted()", "Timestep completed");
@@ -794,9 +822,10 @@ void BaseCouplingScheme::timestepCompleted()
   }
 }
 
-bool BaseCouplingScheme::maxIterationsReached(){
+bool BaseCouplingScheme:: maxIterationsReached(){
   return _iterations == _maxIterations;
 }
+
 
 
 

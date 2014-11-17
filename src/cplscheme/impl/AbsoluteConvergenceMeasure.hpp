@@ -9,6 +9,7 @@
 #include "utils/Dimensions.hpp"
 //#include "utils/NumericalCompare.hpp"
 #include "tarch/logging/Log.h"
+#include "utils/MasterSlave.hpp"
 
 namespace precice {
    namespace cplscheme {
@@ -51,7 +52,7 @@ public:
       const utils::DynVector& oldValues,
       const utils::DynVector& newValues )
    {
-      _normDiff = tarch::la::norm2(newValues - oldValues);
+      _normDiff = utils::MasterSlave::l2norm(newValues - oldValues);
       _isConvergence = tarch::la::greaterEquals(_convergenceLimit, _normDiff);
 //      preciceInfo ( "measure()", "Absolute convergence measure: "
 //                     << "two-norm differences = " << normDiff

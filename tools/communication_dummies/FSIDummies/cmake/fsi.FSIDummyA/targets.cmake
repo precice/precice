@@ -1,0 +1,1 @@
+ADD_EXECUTABLE("fsi.FSIDummyA" ${CPP_FILES} )

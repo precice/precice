@@ -10,6 +10,7 @@
 #include "tarch/la/MatrixVectorOperations.h"
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
+#include "utils/MasterSlave.hpp"
 #include <limits>
 
 namespace precice {
@@ -53,7 +54,6 @@ void AitkenPostProcessing:: initialize
     entries = cplData[_dataIDs.at(0)]->values->size() +
         cplData[_dataIDs.at(1)]->values->size();
   }
-  assertion(entries > 0);
   double initializer = std::numeric_limits<double>::max();
   utils::DynVector toAppend(entries, initializer);
   _residuals.append(toAppend);
@@ -103,8 +103,8 @@ void AitkenPostProcessing:: performPostProcessing
   }
   else {
     // compute fraction of aitken factor with residuals and residual deltas
-    double nominator = dot(_residuals, residualDeltas);
-    double denominator = dot(residualDeltas, residualDeltas);
+    double nominator = utils::MasterSlave::dot(_residuals, residualDeltas);
+    double denominator = utils::MasterSlave::dot(residualDeltas, residualDeltas);
     _aitkenFactor = -_aitkenFactor * (nominator / denominator);
   }
 

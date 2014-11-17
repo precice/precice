@@ -16,7 +16,7 @@ public:
     double                timestepLength,
     int                   validDigits,
     const std::string&    localParticipant,
-    std::vector<com::PtrCommunication> communications,
+    std::vector<m2n::PtrGlobalCommunication> communications,
     constants::TimesteppingMethod dtMethod,
     int                   maxIterations = 1)
     ;
@@ -33,12 +33,14 @@ public:
   /// @brief Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend (
     mesh::PtrData data,
+    mesh::PtrMesh mesh,
     bool          initialize,
     int           index);
 
   /// @brief Adds data to be received on data exchange.
   void addDataToReceive (
     mesh::PtrData data,
+    mesh::PtrMesh mesh,
     bool          initialize,
     int           index);
   
@@ -53,7 +55,7 @@ private:
   CouplingData* getData ( int dataID );
 
   /// @brief Communication device to the other coupling participant.
-  std::vector<com::PtrCommunication> _communications;
+  std::vector<m2n::PtrGlobalCommunication> _communications;
 
   /// @brief Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;

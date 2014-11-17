@@ -124,6 +124,8 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
     _meshConfiguration->setMeshSubIDs();
     if (_geometryMode ){
       assertion ( _participantConfiguration->getParticipants().size() == 1 );
+      preciceCheck(not _participantConfiguration->getParticipants()[0]->useMaster(),
+          "xmlEndTagCallback()", "In geometry mode, the usage of a master is not yet supported");
       std::string name = _participantConfiguration->getParticipants()[0]->getName();
       if ( not _couplingSchemeConfiguration->hasCouplingScheme(name)){
         double maxTime = cplscheme::CouplingScheme::UNDEFINED_TIME;
@@ -136,7 +138,6 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
       }
     }
     else{
-
 
       //test if both participants do have the exchange meshes
       typedef std::map<std::string, std::vector<std::string> >::value_type neededMeshPair;

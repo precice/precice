@@ -16,6 +16,7 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "m2n/GatherScatterCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
@@ -120,14 +121,15 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   std::string second = "Second";
   std::string accessor = second;
   com::PtrCommunication com(new com::MPIDirectCommunication());
+  m2n::PtrGlobalCommunication globalCom(new m2n::GatherScatterCommunication(com));
   int maxIterations = 1;
 
   // Test first order extrapolation
   SerialCouplingScheme scheme(maxTime, maxTimesteps, dt, 16, first, second,
-                              accessor, com, constants::FIXED_DT,
+                              accessor, globalCom, constants::FIXED_DT,
                               BaseCouplingScheme::Implicit, maxIterations);
 
-  scheme.addDataToSend(data, true);
+  scheme.addDataToSend(data, mesh, true);
   scheme.setExtrapolationOrder(1);
   scheme.setupDataMatrices(scheme.getSendData());
   CouplingData* cplData = scheme.getSendData(dataID);
@@ -157,10 +159,10 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   assign(*cplData->values) = 0.0;
   assign(cplData->oldValues) = 0.0;
   SerialCouplingScheme scheme2 ( maxTime, maxTimesteps, dt, 16, first, second,
-                                 accessor, com, constants::FIXED_DT,
+                                 accessor, globalCom, constants::FIXED_DT,
                                  BaseCouplingScheme::Implicit, maxIterations);
 
-  scheme2.addDataToSend ( data, false );
+  scheme2.addDataToSend ( data, mesh, false );
   scheme2.setExtrapolationOrder ( 2 );
   scheme2.setupDataMatrices (scheme2.getSendData());
   cplData = scheme2.getSendData ( dataID );
@@ -215,6 +217,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
 
    // Create all parameters necessary to create an ImplicitCouplingScheme object
    com::PtrCommunication communication ( new com::MPIDirectCommunication() );
+   m2n::PtrGlobalCommunication globalCom(new m2n::GatherScatterCommunication(communication));
    double maxTime = 1.0;
    int maxTimesteps = 3;
    double timestepLength = 0.1;
@@ -237,10 +240,10 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    // Create the coupling scheme object
    cplscheme::SerialCouplingScheme cplScheme (
        maxTime, maxTimesteps, timestepLength, 16, nameParticipant0,
-       nameParticipant1, nameLocalParticipant, communication, constants::FIXED_DT,
+       nameParticipant1, nameLocalParticipant, globalCom, constants::FIXED_DT,
        BaseCouplingScheme::Implicit, 100);
-   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
-   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false );
+   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh, false );
+   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh, false );
 
    double convergenceLimit1 = sqrt(3.0); // when diff_vector = (1.0, 1.0, 1.0)
    impl::PtrConvergenceMeasure absoluteConvMeasure1 (
@@ -251,9 +254,9 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    // Expected iterations per implicit timesptep
    std::vector<int> validIterations;
    validIterations += 5, 5, 5;
-   connect ( "participant0", "participant1", nameLocalParticipant, communication );
+   connect ( "participant0", "participant1", nameLocalParticipant, globalCom );
    runCoupling ( cplScheme, nameLocalParticipant, meshConfig, validIterations );
-   communication->closeConnection();
+   globalCom->closeConnection();
 }
 
 //void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureAsync ()
@@ -363,7 +366,7 @@ void SerialImplicitCouplingSchemeTest:: testConfiguredAbsConvergenceMeasureSynch
    //validate(geoConfig.isValid());
    //validate(cplSchemeConfig.isValid());
    meshConfig->setMeshSubIDs();
-   com::PtrCommunication com = comConfig->getCommunication("participant0", "participant1");
+   m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
 
    geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
 
@@ -398,6 +401,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
 
    // Create all parameters necessary to create an ImplicitCouplingScheme object
    com::PtrCommunication communication ( new com::MPIDirectCommunication );
+   m2n::PtrGlobalCommunication globalCom ( new m2n::GatherScatterCommunication(communication) );
    double maxTime = 1.0;
    int maxTimesteps = 3;
    double timestepLength = 0.1;
@@ -420,10 +424,10 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
    // Create the coupling scheme object
    cplscheme::SerialCouplingScheme cplScheme (
      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-     nameLocalParticipant, communication, constants::FIXED_DT,
+     nameLocalParticipant, globalCom, constants::FIXED_DT,
      BaseCouplingScheme::Implicit, 100);
-   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
-   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false );
+   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh, false );
+   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh, false );
 
    // Add convergence measures
    int minIterations = 3;
@@ -435,9 +439,9 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
    // Expected iterations per implicit timesptep
    std::vector<int> validIterations;
    validIterations += 3, 3, 3;
-   connect ( "participant0", "participant1", nameLocalParticipant, communication );
+   connect ( "participant0", "participant1", nameLocalParticipant, globalCom );
    runCoupling ( cplScheme, nameLocalParticipant, meshConfig, validIterations );
-   communication->closeConnection();
+   globalCom->closeConnection();
 }
 
 //void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureAsync ()
@@ -726,6 +730,7 @@ void SerialImplicitCouplingSchemeTest::
 
    // Create all parameters necessary to create an ImplicitCouplingScheme object
    com::PtrCommunication communication ( new com::MPIDirectCommunication );
+   m2n::PtrGlobalCommunication globalCom ( new m2n::GatherScatterCommunication(communication) );
    double maxTime = 1.0;
    int maxTimesteps = 3;
    double timestepLength = 0.1;
@@ -751,10 +756,10 @@ void SerialImplicitCouplingSchemeTest::
    // Create the coupling scheme object
    cplscheme::SerialCouplingScheme cplScheme (
       maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-      nameLocalParticipant, communication, constants::FIXED_DT,
+      nameLocalParticipant, globalCom, constants::FIXED_DT,
       BaseCouplingScheme::Implicit, 100);
-   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], false );
-   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], false );
+   cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh, false );
+   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh, false );
 
    // Add convergence measures
    int minIterations = 3;
@@ -762,10 +767,10 @@ void SerialImplicitCouplingSchemeTest::
          new impl::MinIterationConvergenceMeasure(minIterations) );
    cplScheme.addConvergenceMeasure (
          mesh->data()[1]->getID(), false, minIterationConvMeasure1 );
-   connect ( "participant0", "participant1", nameLocalParticipant, communication );
+   connect ( "participant0", "participant1", nameLocalParticipant, globalCom );
    runCouplingWithSubcycling (
       cplScheme, nameLocalParticipant, meshConfig, validIterations );
-   communication->closeConnection();
+   globalCom->closeConnection();
 }
 
 void SerialImplicitCouplingSchemeTest:: testInitializeData()
@@ -793,6 +798,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
   com::PtrCommunication communication(new com::MPIDirectCommunication);
+  m2n::PtrGlobalCommunication globalCom ( new m2n::GatherScatterCommunication(communication) );
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -817,10 +823,10 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
   // Create the coupling scheme object
   cplscheme::SerialCouplingScheme cplScheme(
      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
-     nameLocalParticipant, communication, constants::FIXED_DT,
+     nameLocalParticipant, globalCom, constants::FIXED_DT,
      BaseCouplingScheme::Implicit, 100);
-  cplScheme.addDataToSend(mesh->data()[sendDataIndex], initData);
-  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], not initData);
+  cplScheme.addDataToSend(mesh->data()[sendDataIndex], mesh, initData);
+  cplScheme.addDataToReceive(mesh->data()[receiveDataIndex], mesh, not initData);
 
   // Add convergence measures
   int minIterations = 3;
@@ -828,7 +834,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
         new impl::MinIterationConvergenceMeasure(minIterations) );
   cplScheme.addConvergenceMeasure (
         mesh->data()[1]->getID(), false, minIterationConvMeasure1 );
-  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, communication);
+  connect(nameParticipant0, nameParticipant1, nameLocalParticipant, globalCom);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
@@ -1081,7 +1087,7 @@ void SerialImplicitCouplingSchemeTest:: connect
   const std::string&      participant0,
   const std::string&      participant1,
   const std::string&      localParticipant,
-  com::PtrCommunication& communication ) const
+  m2n::PtrGlobalCommunication& communication ) const
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );

@@ -13,6 +13,7 @@
 #include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
+#include "utils/MasterSlave.hpp"
 //#include "utils/NumericalCompare.hpp"
 
 namespace precice {
@@ -73,6 +74,11 @@ void IQNILSPostProcessing:: initialize
   DataMap& cplData )
 {
   preciceTrace1("initialize()", cplData.size());
+
+  preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
+               "initialize()", "IQN-ILS "
+               << "post-processing is not yet supported for a participant in master mode");
+
   size_t entries=0;
 
   for(size_t i=0;i<_dataIDs.size();i++){

@@ -1,5 +1,6 @@
 #include "SerialCouplingScheme.hpp"
 #include "impl/PostProcessing.hpp"
+#include "m2n/GlobalCommunication.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -8,17 +9,17 @@ tarch::logging::Log SerialCouplingScheme::_log("precice::cplscheme::SerialCoupli
 
 SerialCouplingScheme::SerialCouplingScheme
 (
-  double                maxTime,
-  int                   maxTimesteps,
-  double                timestepLength,
-  int                   validDigits,
-  const std::string&    firstParticipant,
-  const std::string&    secondParticipant,
-  const std::string&    localParticipant,
-  com::PtrCommunication communication,
+  double                      maxTime,
+  int                         maxTimesteps,
+  double                      timestepLength,
+  int                         validDigits,
+  const std::string&          firstParticipant,
+  const std::string&          secondParticipant,
+  const std::string&          localParticipant,
+  m2n::PtrGlobalCommunication communication,
   constants::TimesteppingMethod dtMethod,
-  CouplingMode          cplMode,
-  int                   maxIterations)
+  CouplingMode                cplMode,
+  int                         maxIterations)
   :
   BaseCouplingScheme(maxTime, maxTimesteps, timestepLength, validDigits, firstParticipant,
                      secondParticipant, localParticipant, communication, maxIterations, dtMethod)
@@ -40,7 +41,6 @@ void SerialCouplingScheme::initialize
   assertion(not isInitialized());
   assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion1(startTimestep >= 0, startTimestep);
-  assertion(getCommunication()->isConnected());
   setTime(startTime);
   setTimesteps(startTimestep);
   
@@ -123,7 +123,7 @@ void SerialCouplingScheme::initializeData()
 
   setHasDataBeenExchanged(false);
 
-  if (hasToReceiveInitData() && isCouplingOngoing()) {
+  if (hasToReceiveInitData() && isCouplingOngoing() )  {
     assertion(doesFirstStep());
     preciceDebug("Receiving data");
     getCommunication()->startReceivePackage(0);
@@ -181,9 +181,7 @@ void SerialCouplingScheme:: advance()
       setTimesteps(getTimesteps() + 1);
       preciceDebug("Sending data...");
       getCommunication()->startSendPackage(0);
-      if (participantSetsDt()){
-        getCommunication()->send(getComputedTimestepPart(), 0);
-      }
+      sendDt();
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
 
@@ -205,14 +203,11 @@ void SerialCouplingScheme:: advance()
       preciceDebug("Computed full length of iteration");
       if (doesFirstStep()) {
         getCommunication()->startSendPackage(0);
-        if (participantSetsDt()) {
-          preciceDebug("sending timestep length of " << getComputedTimestepPart());
-          getCommunication()->send(getComputedTimestepPart(), 0);
-        }
+        sendDt();
         sendData(getCommunication());
         getCommunication()->finishSendPackage();
         getCommunication()->startReceivePackage(0);
-        getCommunication()->receive(convergence, 0);
+        getCommunication()->receiveAll(convergence,0);
         if (convergence) {
           timestepCompleted();
         }
@@ -223,8 +218,6 @@ void SerialCouplingScheme:: advance()
       }
       else {
         convergence = measureConvergence();
-        //assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
-        //           getIterations(), getMaxIterations());
         // Stop, when maximal iteration count (given in config) is reached
         if (maxIterationsReached()) {
           convergence = true;
@@ -240,7 +233,7 @@ void SerialCouplingScheme:: advance()
           getPostProcessing()->performPostProcessing(getSendData());
         }
         getCommunication()->startSendPackage(0);
-        getCommunication()->send(convergence, 0);
+        getCommunication()->sendAll(convergence,0);
         if (isCouplingOngoing()) {
           if (convergence && (getExtrapolationOrder() > 0)){
             extrapolateData(getSendData()); // Also stores data

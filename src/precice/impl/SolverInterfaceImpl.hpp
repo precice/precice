@@ -18,6 +18,7 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "tarch/la/WrappedVector.h"
 #include "com/SharedPointer.hpp"
+#include "m2n/SharedPointer.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -538,7 +539,7 @@ public:
 private:
 
   struct Communication {
-    com::PtrCommunication communication;
+    m2n::PtrGlobalCommunication communication;
     bool isRequesting;
   };
 
@@ -718,6 +719,16 @@ private:
    * @brief Initializes communication between data server and client.
    */
   void initializeClientServerCommunication();
+
+  /**
+   * @brief Initializes communication between master and slaves.
+   */
+  void initializeMasterSlaveCommunication();
+
+  /**
+   * @brief syncs the timestep between slaves and master (all timesteps should be the same!)
+   */
+  void syncTimestep(double computedTimestepLength);
 
   // @brief To allow white box tests.
   friend class tests::SolverInterfaceTest;

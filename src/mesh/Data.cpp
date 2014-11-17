@@ -66,24 +66,6 @@ int Data:: getDimensions() const
    return _dimensions;
 }
 
-//void Data:: setMesh
-//(
-//  Mesh* mesh )
-//{
-//  assertion ( mesh != NULL );
-//  _mesh = mesh;
-//}
-
-Mesh* Data:: mesh()
-{
-  return _mesh;
-}
-
-const Mesh * Data:: mesh() const
-{
-  return _mesh;
-}
-
 size_t Data:: getDataCount()
 {
   return _dataCount;

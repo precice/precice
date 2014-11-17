@@ -166,6 +166,18 @@ public:
   com::PtrCommunication getClientServerCommunication() const;
 
   /**
+   * @brief Returns true, if the participant uses a master process.
+   */
+  bool useMaster();
+
+  /**
+   * @brief Sets the masterall com. for the participant.
+   */
+  void setMasterSlaveCommunication ( com::PtrCommunication communication );
+
+  com::PtrCommunication getMasterSlaveCommunication() const;
+
+  /**
    * @brief Returns true, if the
    */
   //bool isServer();
@@ -210,12 +222,11 @@ private:
 
   //io::ExportContext _exportContext;
 
-  // @brief If true, the participant has no local data and coupling scheme.
-  //bool _useServer;
+
   com::PtrCommunication _clientServerCommunication;
 
-  // @brief If true, the participant is a data server.
-  //bool _isServer;
+  com::PtrCommunication _masterSlaveCommunication;
+
 
   template<typename ELEMENT_T>
   bool isDataValid (
