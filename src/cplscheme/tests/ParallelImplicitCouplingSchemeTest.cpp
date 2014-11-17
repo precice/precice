@@ -9,6 +9,7 @@
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
 #include "cplscheme/impl/IQNILSPostProcessing.hpp"
+#include "cplscheme/impl/MVQNPostProcessing.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "mesh/Mesh.hpp"
@@ -57,6 +58,7 @@ void ParallelImplicitCouplingSchemeTest:: run ()
   PRECICE_MASTER_ONLY {
     testMethod(testParseConfigurationWithRelaxation);
     testMethod(testVIQNPP);
+    testMethod(testMVQNPP);
   }
   typedef utils::Parallel Par;
     if (Par::getCommunicatorSize() > 1){
@@ -324,6 +326,104 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.27975917496077823410e-02), (*data.at(1)->values)(0));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.27975917496077823410e-02), (*data.at(1)->values)(1));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.27975917496077823410e-02), (*data.at(1)->values)(2));
+}
+
+// ##################################### IMPLEMENTATION HAS TO BE DONE 
+// ###################################################################
+// ######################### JUST COPIED #############################
+void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
+{
+  preciceTrace("testMVQNPP()");
+
+  //use two vectors and see if underrelaxation works
+
+  double initialRelaxation = 0.01;
+  int    maxIterationsUsed = 50;
+  int    timestepsReused = 6;
+  double singularityLimit = 1e-10;
+  std::vector<int> dataIDs;
+  dataIDs.push_back(0);
+  dataIDs.push_back(1);
+  std::map<int, double> scalings;
+  scalings.insert(std::make_pair(0,1.0));
+  scalings.insert(std::make_pair(1,1.0));
+
+  cplscheme::impl::MVQNPostProcessing pp(initialRelaxation,maxIterationsUsed,
+      timestepsReused, singularityLimit, dataIDs, scalings);
+
+  //init displacements
+  utils::DynVector dvalues;
+  dvalues.append(1.0);
+  dvalues.append(2.0);
+  dvalues.append(3.0);
+  dvalues.append(4.0);
+
+  utils::DynVector dcol1;
+  dcol1.append(1.0);
+  dcol1.append(1.0);
+  dcol1.append(1.0);
+  dcol1.append(1.0);
+
+  PtrCouplingData dpcd(new CouplingData(&dvalues,false));
+
+  //init forces
+  utils::DynVector fvalues;
+  fvalues.append(0.1);
+  fvalues.append(0.1);
+  fvalues.append(0.1);
+
+  utils::DynVector fcol1;
+  fcol1.append(0.2);
+  fcol1.append(0.2);
+  fcol1.append(0.2);
+
+  PtrCouplingData fpcd(new CouplingData(&fvalues,false));
+
+  DataMap data;
+  data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
+  data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
+
+//  foreach (DataMap::value_type& pair, data){
+//    std::cout << *pair.second->values << "\n";
+//    std::cout << pair.second->oldValues << "\n";
+//  }
+
+  pp.initialize(data);
+
+  dpcd->oldValues.column(0) = dcol1;
+  fpcd->oldValues.column(0) = fcol1;
+
+  pp.performPostProcessing(data);
+
+  
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00000000000000000000), (*data.at(0)->values)(0));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01000000000000000888), (*data.at(0)->values)(1));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.02000000000000001776), (*data.at(0)->values)(2));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.03000000000000002665), (*data.at(0)->values)(3));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199000000000000010214), (*data.at(1)->values)(0));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199000000000000010214), (*data.at(1)->values)(1));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199000000000000010214), (*data.at(1)->values)(2));
+
+  
+  utils::DynVector newdvalues;
+  newdvalues.append(10.0);
+  newdvalues.append(10.0);
+  newdvalues.append(10.0);
+  newdvalues.append(10.0);
+  data.begin()->second->values = &newdvalues;
+
+  pp.performPostProcessing(data);
+
+  
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63855295490201413600e-01), (*data.at(0)->values)(0));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.09906404008707880848e-01), (*data.at(0)->values)(1));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78366810350762250437e+00), (*data.at(0)->values)(2));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.95742980300653179881e+00), (*data.at(0)->values)(3));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.27975917496077962188e-02), (*data.at(1)->values)(0));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.27975917496077962188e-02), (*data.at(1)->values)(1));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.27975917496077962188e-02), (*data.at(1)->values)(2));
+
+  
 }
 
 

@@ -87,6 +87,11 @@ private:
    * @brief Tests the correct postprocessing for VIQN-like vector data
    */
   void testVIQNPP();
+  
+  /**
+   * @brief Tests the correct postprocessing for MVQN-like vector data
+   */
+  void testMVQNPP();
 
   void connect (
       const std::string&     participant0,
