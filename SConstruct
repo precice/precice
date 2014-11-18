@@ -161,7 +161,7 @@ print
 print 'Configuring build variables ...'
 
 env.Append(LIBPATH = [('#' + buildpath)])
-env.Append(CCFLAGS= ['-Wall'])
+env.Append(CCFLAGS= ['-Wall', '-std=c++11'])
 
 
 if env["compiler"] == 'icc':
