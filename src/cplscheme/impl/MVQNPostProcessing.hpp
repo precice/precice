@@ -70,15 +70,13 @@ public:
     * method has to be used to signalize convergence to the post-processing.
     */
    virtual void iterationsConverged(DataMap& cplData);
-
-   
-   virtual void computeAndApplyQNUpdate(DataMap& cplData);
-   
+  
 private:
 
    // remove this ofter debugging, not useful
    // ---------------------------------------
    int k,t;
+   std::fstream f;
    //----------------------------------------
    
    // @brief stores the approximation of the inverse Jacobian of the system at current time step.
@@ -86,6 +84,13 @@ private:
 
    // @brief stores the approximation of the inverse Jacobian from the previous time step.
    DataMatrix _oldInvJacobian;
+
+  // @brief comptes the MVQN update using QR decomposition of V, 
+  //        furthermore it updates the inverse of the system jacobian
+   virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate);
+   
+   void computeNewtonFactorsLUDecomposition(DataMap& cplData, DataValues& update);
+   void computeNewtonFactorsQRDecomposition(DataMap& cplData, DataValues& update);
    
 };
 

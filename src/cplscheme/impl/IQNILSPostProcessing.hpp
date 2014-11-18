@@ -83,8 +83,7 @@ public:
     */
    //virtual void importState(io::TXTReader& reader);
    
-   virtual void computeAndApplyQNUpdate(DataMap& cplData);
-   
+  
 
 private:
 
@@ -97,6 +96,9 @@ private:
    // Stores x-tilde deltas for data not involved in least-squares computation.
    std::map<int,DataMatrix> _secondaryMatricesW;
 
+   
+   // @brief computes the IQN-ILS update using QR decomposition
+   virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate);
    
    // @brief Removes one iteration from V,W matrices and adapts _matrixCols.
    virtual void removeMatrixColumn(int columnIndex);

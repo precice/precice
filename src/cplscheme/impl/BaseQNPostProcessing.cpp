@@ -212,9 +212,15 @@ void BaseQNPostProcessing:: performPostProcessing
     _oldResiduals = _residuals;   // Store residuals
     _oldXTilde = _scaledValues;   // Store x_tilde
 
+    DataValues xUpdate(_residuals.size(), 0.0);
     
-    computeAndApplyQNUpdate(cplData);
+    // compute quasi-Newton update 
+    computeQNUpdate(cplData, xUpdate);
   
+    // apply quasiNewton update
+    _scaledValues = _scaledOldValues;  // = x^k
+    _scaledValues += xUpdate;        // = x^k + delta_x
+    _scaledValues += _residuals; // = x^k + delta_x + r^k
 
   }
 

@@ -81,7 +81,6 @@ public:
     */
    virtual void importState(io::TXTReader& reader);
    
-   virtual void computeAndApplyQNUpdate(DataMap& cplData) = 0;
 
 protected:
 
@@ -159,6 +158,9 @@ protected:
    // a singular matrix in the QR decomposition can be removed and tracked.
    std::deque<int> _matrixCols;
 
+   // @brief computes the quasi-Newton update using the specified pp scheme (MVQN, IQNILS)
+   virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate) = 0;
+   
    // @brief Removes one iteration from V,W matrices and adapts _matrixCols.
    virtual void removeMatrixColumn(int columnIndex);
    

@@ -131,13 +131,12 @@ void IQNILSPostProcessing:: performPostProcessing
   BaseQNPostProcessing::performPostProcessing(cplData);
 }
 
-void IQNILSPostProcessing::computeAndApplyQNUpdate
-(PostProcessing::DataMap& cplData)
+void IQNILSPostProcessing::computeQNUpdate
+(PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
-  preciceTrace("computeAndApplyQNUpdate()");
+  preciceTrace("computeQNUpdate()");
     using namespace tarch::la;
   
-    DataValues Wc(_residuals.size(), 0.0);
 
     // Calculate QR decomposition of matrix V and solve Rc = -Qr
     DataValues c;
@@ -166,15 +165,10 @@ void IQNILSPostProcessing::computeAndApplyQNUpdate
         assertion1(c.size() == 0, c.size());
         c.append(b.size(), 0.0);
         backSubstitution(R, b, c);
-        multiply(_matrixW, c, Wc); // = Wc
+        multiply(_matrixW, c, xUpdate); // = Wc
         preciceDebug("c = " << c);
       }
     }
-    _scaledValues = _scaledOldValues;  // = x^k
-    _scaledValues += Wc;        // = x^k + Wc
-    _scaledValues += _residuals; // = x^k + Wc + r^k
-  
-  
   
     // Perform QN relaxation for secondary data
     foreach (int id, _secondaryDataIDs){
