@@ -7,6 +7,8 @@
 #include <map>
 #include <chrono>
 
+#include "utils/MasterSlave.hpp"
+
 using namespace std;
 
 
@@ -59,17 +61,19 @@ Event::Clock::duration Event::getDuration()
 
 void EventData::put(Event* event)
 {
-  count++;
-  Event::Clock::duration duration = event->getDuration();
-  total += duration;
-  if (min > duration) {
-    min = duration;
-  }
-  if (max < duration) {
-    max = duration;
-  }
-  for (auto p : event->properties) {
-    properties[p.first] += p.second;
+  if (not precice::utils::MasterSlave::_slaveMode) {
+    count++;
+    Event::Clock::duration duration = event->getDuration();
+    total += duration;
+    if (min > duration) {
+      min = duration;
+    }
+    if (max < duration) {
+      max = duration;
+    }
+    for (auto p : event->properties) {
+      properties[p.first] += p.second;
+    }
   }
 }
 
@@ -141,46 +145,47 @@ void EventRegistry::put(Event* event)
 
 void EventRegistry::print()
 {
-  using std::cout; using std::endl;
-  using std::setw; using std::setprecision;
-  using std::left; using std::right;
-  EventData::Properties allProps;
-  Event::Clock::duration globalDuration = globalStop - globalStart;
+  if (not precice::utils::MasterSlave::_slaveMode) {
+    using std::cout; using std::endl;
+    using std::setw; using std::setprecision;
+    using std::left; using std::right;
+    EventData::Properties allProps;
+    Event::Clock::duration globalDuration = globalStop - globalStart;
 
-  cout << "Global runtime = "
-       << std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count() << "ms / "
-       << std::chrono::duration_cast<std::chrono::seconds>(globalDuration).count() << "s"
-       << endl << endl;
+    cout << "Global runtime = "
+         << std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count() << "ms / "
+         << std::chrono::duration_cast<std::chrono::seconds>(globalDuration).count() << "s"
+         << endl << endl;
 
-  cout << "Event                Count    Total[ms]     Max[ms]     Min[ms]     Avg[ms]   T%" << endl;
-  cout << "--------------------------------------------------------------------------------" << endl;
+    cout << "Event                Count    Total[ms]     Max[ms]     Min[ms]     Avg[ms]   T%" << endl;
+    cout << "--------------------------------------------------------------------------------" << endl;
         
-  for (auto e : events) {
-    cout << setw(14) << left << e.first << right 
-         << setw(12) << e.second.getCount()
-         << setw(12) << e.second.getTotal()
-         << setw(12) << e.second.getMax() 
-         << setw(12) << e.second.getMin()
-         << setw(12) << e.second.getAvg()
-         << setw(6) << e.second.getTimePercentage(globalDuration)
-         << endl;
-    for (auto p : e.second.properties) {
-      allProps[p.first] += p.second;
-      
-      cout << "  " << setw(12) << left << p.first
-           << setw(12) << right << p.second
+    for (auto e : events) {
+      cout << setw(14) << left << e.first << right 
+           << setw(12) << e.second.getCount()
+           << setw(12) << e.second.getTotal()
+           << setw(12) << e.second.getMax() 
+           << setw(12) << e.second.getMin()
+           << setw(12) << e.second.getAvg()
+           << setw(6) << e.second.getTimePercentage(globalDuration)
            << endl;
+      for (auto p : e.second.properties) {
+        allProps[p.first] += p.second;
+      
+        cout << "  " << setw(12) << left << p.first
+             << setw(12) << right << p.second
+             << endl;
+      }
+      cout << endl;
     }
-    cout << endl;
-  }
 
-  cout << "All Events, accumulated" << endl;
-  cout << "--------------------------" << endl;
-  for (auto a : allProps) {
-    cout << setw(14) << left << a.first << right
-         << setw(12) << a.second << endl;
+    cout << "All Events, accumulated" << endl;
+    cout << "--------------------------" << endl;
+    for (auto a : allProps) {
+      cout << setw(14) << left << a.first << right
+           << setw(12) << a.second << endl;
+    }
   }
-  
 }
 
 
