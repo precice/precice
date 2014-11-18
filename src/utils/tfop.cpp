@@ -195,5 +195,5 @@ void TFOP_Init()
 void TFOP_Finalize()
 {
   std::cout << "Finalize TLOP" << std::endl;
-  EventRegistry::globalStop = Event::Clock::now();
+  EventRegistry::finalize();
 }
