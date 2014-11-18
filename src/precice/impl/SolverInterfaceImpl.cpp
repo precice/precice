@@ -52,6 +52,7 @@
 #include <set>
 #include <limits>
 #include <cstring>
+#include "utils/tfop.hpp"
 #include "boost/tuple/tuple.hpp"
 
 namespace precice {
@@ -94,6 +95,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
                "SolverInterfaceImpl()",
                "Accessor process index has to be smaller than accessor process "
                << "size (given as " << _accessorProcessRank << ")!");
+  TFOP_Init();
 }
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
@@ -101,6 +103,9 @@ SolverInterfaceImpl:: ~SolverInterfaceImpl()
   if (_requestManager != NULL){
     delete _requestManager;
   }
+  TFOP_Finalize();
+  EventRegistry r;
+  r.print();
 }
 
 void SolverInterfaceImpl:: configure
@@ -237,7 +242,7 @@ void SolverInterfaceImpl:: configure
 double SolverInterfaceImpl:: initialize()
 {
   preciceTrace("initialize()");
-
+  Event e(__func__);
   // Perform initializations
   if (_clientMode){
     preciceDebug("Request perform initializations");
@@ -331,6 +336,7 @@ double SolverInterfaceImpl:: initialize()
 void SolverInterfaceImpl:: initializeData ()
 {
   preciceTrace("initializeData()" );
+  Event e(__func__);
   preciceCheck(_couplingScheme->isInitialized(), "initializeData()",
                "initialize() has to be called before initializeData()");
   if (not _geometryMode){
@@ -357,6 +363,7 @@ double SolverInterfaceImpl:: advance
   double computedTimestepLength )
 {
   preciceTrace1("advance()", computedTimestepLength);
+  Event e(__func__);
   preciceCheck(_couplingScheme->isInitialized(), "advance()",
                "initialize() has to be called before advance()");
   _numberAdvanceCalls++;
