@@ -66,6 +66,7 @@ void precicef_finalize_()
 {
   assertion(impl != NULL);
   impl->finalize();
+  delete impl;
 }
 
 void precicef_get_dims_
