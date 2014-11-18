@@ -95,9 +95,11 @@ void precice_fastest_finalize_(
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->finalize();
+    delete implA;
   }
   else{
     implF->finalize();
+    delete implF;
   }
 }
 

@@ -365,8 +365,6 @@ void BaseCouplingScheme::finalize()
   checkCompletenessRequiredActions();
   preciceCheck(isInitialized(), "finalize()",
 	       "Called finalize() before initialize()!");
-  preciceCheck(not isCouplingOngoing(), "finalize()",
-	       "Called finalize() while isCouplingOngoing() returns true!");
 }
 
 void BaseCouplingScheme:: setExtrapolationOrder
