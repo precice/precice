@@ -64,10 +64,16 @@ class EventRegistry
 {
 public:
   static std::map<std::string, EventData> events;
-  static void put(Event* event);
   static Event::Clock::time_point globalStart;
   static Event::Clock::time_point globalStop;
-  static void print(int signal);
+  static void initialize();
+  static void finalize();
+  static void signal_handler(int signal);
+  static void put(Event* event);
+  static void print();
+
+private:
+  static bool initialized;
 };
 
 

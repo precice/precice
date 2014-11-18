@@ -110,6 +110,27 @@ int EventData::getTimePercentage(Event::Clock::duration globalDuration)
 std::map<std::string, EventData> EventRegistry::events;
 Event::Clock::time_point EventRegistry::globalStart;
 Event::Clock::time_point EventRegistry::globalStop;
+bool EventRegistry::initialized = false;
+
+void EventRegistry::initialize()
+{
+  globalStart = Event::Clock::now();
+  initialized = true;
+}
+
+void EventRegistry::finalize()
+{
+  globalStop = Event::Clock::now();
+  initialized = false;
+}
+
+void EventRegistry::signal_handler(int signal)
+{
+  if (initialized) {
+    finalize();
+    print();
+  }
+}
 
 void EventRegistry::put(Event* event)
 {
@@ -118,7 +139,7 @@ void EventRegistry::put(Event* event)
   events[event->name] = data;
 }
 
-void EventRegistry::print(int signal)
+void EventRegistry::print()
 {
   using std::cout; using std::endl;
   using std::setw; using std::setprecision;
@@ -162,10 +183,13 @@ void EventRegistry::print(int signal)
   
 }
 
+
+
 void TFOP_Init()
 {
   std::cout << "Initialize TFOP" << std::endl;
-  EventRegistry::globalStart = Event::Clock::now();
+  EventRegistry::initialize();
+  
 }
 
 void TFOP_Finalize()

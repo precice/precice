@@ -98,9 +98,9 @@ SolverInterfaceImpl:: SolverInterfaceImpl
                "Accessor process index has to be smaller than accessor process "
                << "size (given as " << _accessorProcessRank << ")!");
   TFOP_Init();
-  signal(SIGSEGV, EventRegistry::print);
-  signal(SIGABRT, EventRegistry::print);
-  signal(SIGTERM, EventRegistry::print);
+  signal(SIGSEGV, EventRegistry::signal_handler);
+  signal(SIGABRT, EventRegistry::signal_handler);
+  signal(SIGTERM, EventRegistry::signal_handler);
 }
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
@@ -110,7 +110,7 @@ SolverInterfaceImpl:: ~SolverInterfaceImpl()
   }
   TFOP_Finalize();
   EventRegistry r;
-  r.print(0);
+  r.print();
 }
 
 void SolverInterfaceImpl:: configure
