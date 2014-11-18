@@ -67,7 +67,7 @@ public:
   static void put(Event* event);
   static Event::Clock::time_point globalStart;
   static Event::Clock::time_point globalStop;
-  void print();
+  static void print(int signal);
 };
 
 

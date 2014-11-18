@@ -55,6 +55,8 @@
 #include "utils/tfop.hpp"
 #include "boost/tuple/tuple.hpp"
 
+#include <signal.h>
+
 namespace precice {
 namespace impl {
 
@@ -96,6 +98,9 @@ SolverInterfaceImpl:: SolverInterfaceImpl
                "Accessor process index has to be smaller than accessor process "
                << "size (given as " << _accessorProcessRank << ")!");
   TFOP_Init();
+  signal(SIGSEGV, EventRegistry::print);
+  signal(SIGABRT, EventRegistry::print);
+  signal(SIGTERM, EventRegistry::print);
 }
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
@@ -105,7 +110,7 @@ SolverInterfaceImpl:: ~SolverInterfaceImpl()
   }
   TFOP_Finalize();
   EventRegistry r;
-  r.print();
+  r.print(0);
 }
 
 void SolverInterfaceImpl:: configure

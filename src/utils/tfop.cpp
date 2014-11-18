@@ -118,7 +118,7 @@ void EventRegistry::put(Event* event)
   events[event->name] = data;
 }
 
-void EventRegistry::print()
+void EventRegistry::print(int signal)
 {
   using std::cout; using std::endl;
   using std::setw; using std::setprecision;
