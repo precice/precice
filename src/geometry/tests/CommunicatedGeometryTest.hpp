@@ -1,6 +1,8 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
+#ifndef PRECICE_NO_MPI
+ 
 #ifndef PRECICE_GEOMETRY_TESTS_COMMNUICATEDGEOMETRYTEST_HPP_
 #define PRECICE_GEOMETRY_TESTS_COMMNUICATEDGEOMETRYTEST_HPP_
 
@@ -41,3 +43,4 @@ private:
 }}} // namespace precice, geometry, tests
 
 #endif /* PRECICE_GEOMETRY_TESTS_COMMNUICATEDGEOMETRYTEST_HPP_ */
+#endif // PRECICE_NO_MPI

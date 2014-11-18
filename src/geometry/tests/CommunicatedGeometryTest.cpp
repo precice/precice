@@ -1,6 +1,8 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
+#ifndef PRECICE_NO_MPI
+
 #include "CommunicatedGeometryTest.hpp"
 #include "geometry/Geometry.hpp"
 #include "geometry/SharedPointer.hpp"
@@ -34,7 +36,6 @@ CommunicatedGeometryTest:: CommunicatedGeometryTest ()
 void CommunicatedGeometryTest:: run ()
 {
   preciceTrace ( "run" );
-# ifndef PRECICE_NO_MPI
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 3){
     std::vector<int> ranksWanted;
@@ -52,7 +53,6 @@ void CommunicatedGeometryTest:: run ()
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
-# endif // not PRECICE_NO_MPI
 }
 
 void CommunicatedGeometryTest:: testScatterMesh ()
@@ -328,3 +328,5 @@ void CommunicatedGeometryTest:: testGatherMesh ()
 
 
 }}} // namespace precice, geometry, tests
+
+#endif // PRECICE_NO_MPI
