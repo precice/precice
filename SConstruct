@@ -192,6 +192,7 @@ if env["petsc"]:
         errorMissingLib("petsc", "Petsc")
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
+    buildpath += "-nopetsc"
 
 
     
