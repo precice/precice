@@ -47,11 +47,6 @@ def checkset_var(varname, default):
         vprint(varname, var, False)
     return var
 
-def compiler_validator(key, value, environment):
-    """ Validator function for the compiler option. Checks if the given compiler is either (g++ or icc or clang++) or an MPI compiler. """
-    if not (value in ["g++", "icc", "clang++"] or value.startswith("mpic")):
-        raise Exception("Invalid value for compiler, must be one of g++, icc, clang++ or start with mpic*")
-        
 
 ########################################################################## MAIN
     
@@ -59,7 +54,7 @@ vars = Variables(None, ARGUMENTS)
 
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
 vars.Add(EnumVariable('build', 'Build type, either release or debug', "debug", allowed_values=('release', 'debug')))
-vars.Add("compiler", "Compiler must be either g++ or icc or clang++ or starting with mpic when using MPI.", "g++", validator=compiler_validator)
+vars.Add("compiler", "Compiler to use.", "g++")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
 vars.Add(BoolVariable("sockets", "Enables Socket-based communication.", True))
 vars.Add(BoolVariable("boost_inst", "Enable if Boost is available compiled and installed.", False))
