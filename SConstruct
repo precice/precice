@@ -173,6 +173,7 @@ elif env["compiler"] == "clang++":
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
 
 env.Replace(CXX = env["compiler"])
+env.Replace(CC = env["compiler"])
 
 
 if env["build"] == 'debug':
