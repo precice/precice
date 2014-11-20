@@ -52,10 +52,12 @@
 #include <set>
 #include <limits>
 #include <cstring>
-#include "utils/tfop.hpp"
+#include "utils/EventTimings.hpp"
 #include "boost/tuple/tuple.hpp"
 
 #include <signal.h>
+
+using precice::utils::Event;
 
 namespace precice {
 namespace impl {
@@ -97,10 +99,14 @@ SolverInterfaceImpl:: SolverInterfaceImpl
                "SolverInterfaceImpl()",
                "Accessor process index has to be smaller than accessor process "
                << "size (given as " << _accessorProcessRank << ")!");
-  TFOP_Init();
-  signal(SIGSEGV, EventRegistry::signal_handler);
-  signal(SIGABRT, EventRegistry::signal_handler);
-  signal(SIGTERM, EventRegistry::signal_handler);
+  precice::utils::Events_Init();
+
+  /* When precice stops abruptly, e.g. an external solver crashes, the 
+     SolverInterfaceImpl destructor is never called. Since we still want
+     to print the timings, we install the signal handler here. */
+  signal(SIGSEGV, precice::utils::EventRegistry::signal_handler);
+  signal(SIGABRT, precice::utils::EventRegistry::signal_handler);
+  signal(SIGTERM, precice::utils::EventRegistry::signal_handler);
 }
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
@@ -108,8 +114,8 @@ SolverInterfaceImpl:: ~SolverInterfaceImpl()
   if (_requestManager != NULL){
     delete _requestManager;
   }
-  TFOP_Finalize();
-  EventRegistry r;
+  precice::utils::Events_Finalize();
+  precice::utils::EventRegistry r;
   r.print();
 }
 

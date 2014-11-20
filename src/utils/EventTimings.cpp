@@ -1,4 +1,4 @@
-#include "tfop.hpp"
+#include "EventTimings.hpp"
 
 #include <iostream>
 #include <iomanip>
@@ -9,8 +9,8 @@
 
 #include "utils/MasterSlave.hpp"
 
-using namespace std;
-
+namespace precice {
+namespace utils {
 
 Event::Event(std::string eventName, bool autostart)
 {
@@ -190,15 +190,17 @@ void EventRegistry::print()
 
 
 
-void TFOP_Init()
+void Events_Init()
 {
   std::cout << "Initialize TFOP" << std::endl;
   EventRegistry::initialize();
   
 }
 
-void TFOP_Finalize()
+void Events_Finalize()
 {
   std::cout << "Finalize TLOP" << std::endl;
   EventRegistry::finalize();
 }
+
+}} // namespace precice::utils

@@ -4,6 +4,8 @@
 #include <map>
 #include <string>
 
+namespace precice {
+namespace utils {
 
 class Event
 {
@@ -77,5 +79,7 @@ private:
 };
 
 
-void TFOP_Init();
-void TFOP_Finalize();
+void Events_Init();
+void Events_Finalize();
+
+}} // namespace precice::utils
