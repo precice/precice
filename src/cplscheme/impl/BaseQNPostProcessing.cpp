@@ -43,6 +43,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _secondaryDataIDs(),
   _scalings(scalings),
   _firstIteration(true),
+  _firstTimeStep(true),
   _oldXTilde(),
   //_secondaryOldXTildes(),
   _residuals(),
@@ -52,6 +53,9 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _oldResiduals(),
   _matrixV(),
   _matrixW(),
+  _matrixVBackup(),
+  _matrixWBackup(),
+  _matrixColsBackup(),
   //_secondaryMatricesW(),
   _matrixCols()
 {
@@ -165,7 +169,8 @@ void BaseQNPostProcessing:: performPostProcessing
   _residuals = _scaledValues;
   _residuals -= _scaledOldValues;
 
-  if (_firstIteration && (_matrixCols.size() < 2)){
+  //if (_firstIteration && (_matrixCols.size() < 2)){
+  if(_firstTimeStep && _firstIteration){
     preciceDebug("   Performing underrelaxation");
     _oldXTilde = _scaledValues; // Store x tilde
     _oldResiduals = _residuals; // Store current residual
@@ -208,6 +213,14 @@ void BaseQNPostProcessing:: performPostProcessing
       _matrixW.column(0) -= _oldXTilde;
       
     }
+    
+    //std::cout<<"v.cols = "<<_matrixV.cols()<<" w.cols = "<<_matrixW.cols()<<std::endl;
+    if(_matrixV.cols() < 1 || _matrixW.cols() < 1 && _timestepsReused == 0)
+    {
+     _matrixV = _matrixVBackup;
+     _matrixW = _matrixWBackup;
+     _matrixCols = _matrixColsBackup;
+    }
 
     _oldResiduals = _residuals;   // Store residuals
     _oldXTilde = _scaledValues;   // Store x_tilde
@@ -221,6 +234,24 @@ void BaseQNPostProcessing:: performPostProcessing
     _scaledValues = _scaledOldValues;  // = x^k
     _scaledValues += xUpdate;        // = x^k + delta_x
     _scaledValues += _residuals; // = x^k + delta_x + r^k
+    
+    
+    // pending deletion: delete old V, W matrices if timestepsReused = 0
+    // those were only deeded for the first iteration (instead of underrelax.)
+    //std::cout<<"first iteration = "<<_firstIteration<<"  first time step = "<<_firstTimeStep<<std::endl;
+    if(_firstIteration && not _firstTimeStep && _timestepsReused == 0)
+    {
+      if(_matrixV.cols() > 0 && _matrixW.cols() > 0)
+      {
+	_matrixColsBackup = _matrixCols;
+        _matrixVBackup = _matrixV;
+        _matrixWBackup = _matrixW;
+      }
+      _matrixV.clear();
+      _matrixW.clear();
+      _matrixCols.clear();
+      //std::cout<<"########## pending deletion done ########" <<"  v.cols = "<<_matrixV.cols()<<" w.cols = "<<_matrixW.cols()<<std::endl;
+    }
 
   }
 
@@ -255,15 +286,31 @@ void BaseQNPostProcessing:: iterationsConverged
   preciceDebug(stream.str());
 # endif // Debug
 
+  _firstTimeStep = false;
   if (_matrixCols.front() == 0){ // Did only one iteration
-    _matrixCols.pop_front();
+    _matrixCols.pop_front(); 
   }
 
   if (_timestepsReused == 0){
     //precicePrint("Removing all columns from V, W");
-    _matrixV.clear();
-    _matrixW.clear();
-    _matrixCols.clear();
+//     _matrixV.clear();
+//     _matrixW.clear();
+//     _matrixCols.clear();
+    
+    // revert deletion
+//     if (_matrixCols.front() == 0){ // Did only one iteration
+//       _matrixV = _matrixVBackup;
+//       _matrixW = _matrixWBackup;
+//       _matrixCols = _matrixColsBackup;
+//       
+//        std::cout<<"########## revert deletion ########" <<std::endl;
+//     }
+    
+    /**
+     * pending deletion (after first iteration of next time step
+     * Using the matrices from the old time step for the first iteration
+     * is better than doing underrelaxation as first iteration of every time step
+     */
   }
   else if ((int)_matrixCols.size() > _timestepsReused){
     int toRemove = _matrixCols.back();

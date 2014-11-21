@@ -71,8 +71,8 @@ void IQNILSPostProcessing:: performPostProcessing
     secResiduals -= data->oldValues.column(0);
   }
 
-  if (_firstIteration && (_matrixCols.size() < 2)){
-    
+  //if (_firstIteration && (_matrixCols.size() < 2)){
+  if(_firstTimeStep && _firstIteration){
     // Store x_tildes for secondary data
     foreach (int id, _secondaryDataIDs){
       assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),

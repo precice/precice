@@ -87,8 +87,8 @@ void MVQNPostProcessing:: performPostProcessing
 //     secResiduals -= data->oldValues.column(0);
 //   }
 
-  if (_firstIteration && (_matrixCols.size() < 2)){
-    
+  //if (_firstIteration && (_matrixCols.size() < 2)){
+  if(_firstTimeStep && _firstIteration){    
     k++;
     // Perform underrelaxation with initial relaxation factor for secondary data
     foreach (int id, _secondaryDataIDs){
@@ -106,7 +106,7 @@ void MVQNPostProcessing:: performPostProcessing
       k++;
     }
   }
-  
+ 
   // perform QN post processing 
   BaseQNPostProcessing::performPostProcessing(cplData);
 }
@@ -118,6 +118,16 @@ void MVQNPostProcessing::computeQNUpdate
   preciceTrace("computeQNUpdate()");
   using namespace tarch::la;
   
+  
+  //----------------------------DEBUG------------------------------------
+  std::stringstream sk; sk <<k;
+  std::stringstream st; st <<t;
+  std::string Xfile("output/x"+st.str()+"_"+sk.str()+".m");
+  std::string residualfile("output/residual"+st.str()+"_"+sk.str()+".m");
+  _scaledValues.printm(Xfile.c_str());
+  _residuals.printm(residualfile.c_str());
+  //---------------------------------------------------------------------
+  
     // ------------- update inverse Jacobian -----------
     // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
     // ----------------------------------------- -------
@@ -127,14 +137,13 @@ void MVQNPostProcessing::computeQNUpdate
     computeNewtonFactorsQRDecomposition(cplData,xUpdate);
     
     //----------------------------DEBUG------------------------------------
-    /*
-    std::string Jfile("invJacobian"+st.str()+"_"+sk.str()+".m");
-    std::string xdeltafile("deltaX"+st.str()+"_"+sk.str()+".m");
-    std::string xnewfile("xNew"+st.str()+"_"+sk.str()+".m");    
+    std::string Jfile("output/invJacobian"+st.str()+"_"+sk.str()+".m");
+    std::string xdeltafile("output/deltaX"+st.str()+"_"+sk.str()+".m");
+    std::string xnewfile("output/xNew"+st.str()+"_"+sk.str()+".m");    
     _invJacobian.printm(Jfile.c_str());
     xUpdate.printm(xdeltafile.c_str());
     _scaledValues.printm(xnewfile.c_str());
-    */
+    
     // ---------------------------------------------------------------------
 
 }
@@ -151,12 +160,13 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   // ----------------------------------------- -------
 
   //----------------------------DEBUG------------------------------------
-  /*
-  std::string Vfile("matrixV"+st.str()+"_"+sk.str()+".m");
-  std::string Wfile("matrixW"+st.str()+"_"+sk.str()+".m");
+  std::stringstream sk; sk <<k;
+  std::stringstream st; st <<t;
+  std::string Vfile("output/matrixV"+st.str()+"_"+sk.str()+".m");
+  std::string Wfile("output/matrixW"+st.str()+"_"+sk.str()+".m");
   _matrixV.printm(Vfile.c_str());
   _matrixW.printm(Wfile.c_str());
-  */
+  
   // --------------------------------------------------------------------
     
   DataMatrix v;
@@ -197,10 +207,10 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   
   
   //----------------------------DEBUG------------------------------------
-  /*
-  std::string vfile("v"+st.str()+"_"+sk.str()+".m");
+  
+  std::string vfile("output/v"+st.str()+"_"+sk.str()+".m");
   v.printm(vfile.c_str());
-  */
+  
   // --------------------------------------------------------------------
   
     
@@ -211,10 +221,30 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   // tmpMatrix = (W-J_inv_n*V)
   tmpMatrix *= -1.;
   tmpMatrix = _matrixW + tmpMatrix;
+  
+  //----------------------------DEBUG------------------------------------
+  
+  std::string tmpMatrixFile("output/W-JV"+st.str()+"_"+sk.str()+".m");
+  tmpMatrix.printm(tmpMatrixFile.c_str());
+  
+  // --------------------------------------------------------------------
+  
   // invJacobian = (W - J_inv_n*V)*(V^T*V)^-1*V^T
   assertion2(tmpMatrix.cols() == v.rows(), tmpMatrix.cols(), v.rows());
   multiply(tmpMatrix, v, _invJacobian);
   _invJacobian = _invJacobian + _oldInvJacobian;
+  
+  // ---- DEBUG --------------------------
+  // compute frobenius norm of difference between Jacobian matrix from current
+  // time step and Jcobian from old time step
+  DataMatrix jacobianDiff(_invJacobian.rows(), _invJacobian.cols(), 0.0);
+  jacobianDiff = _oldInvJacobian;
+  jacobianDiff *= -1.;
+  jacobianDiff = _invJacobian + jacobianDiff;
+  double frob = frobeniusNorm(jacobianDiff); 
+  f<<t<<"  "<<frob<<"\n";
+  if(t >= 100) f.close();
+  // -------------------------------------
   
   DataValues negRes(_residuals);
   negRes *= -1.;
@@ -350,19 +380,19 @@ void MVQNPostProcessing:: iterationsConverged
    DataMap & cplData)
 {
   
-  // ---- DEBUG --------------------------
-  
-  using namespace tarch::la;
-  // compute frobenius norm of difference between Jacobian matrix from current
-  // time step and Jcobian from old time step
-  DataMatrix jacobianDiff(_invJacobian.rows(), _invJacobian.cols(), 0.0);
-  jacobianDiff = _oldInvJacobian;
-  jacobianDiff *= -1.;
-  jacobianDiff = _invJacobian + jacobianDiff;
-  double frob = frobeniusNorm(jacobianDiff); 
-  f<<t<<"  "<<frob<<"\n";
-  if(t >= 100) f.close();
-  // -------------------------------------
+//   // ---- DEBUG --------------------------
+//   
+//   using namespace tarch::la;
+//   // compute frobenius norm of difference between Jacobian matrix from current
+//   // time step and Jcobian from old time step
+//   DataMatrix jacobianDiff(_invJacobian.rows(), _invJacobian.cols(), 0.0);
+//   jacobianDiff = _oldInvJacobian;
+//   jacobianDiff *= -1.;
+//   jacobianDiff = _invJacobian + jacobianDiff;
+//   double frob = frobeniusNorm(jacobianDiff); 
+//   f<<t<<"  "<<frob<<"\n";
+//   if(t >= 100) f.close();
+//   // -------------------------------------
   
   k = 0;
   t++;
@@ -536,7 +566,7 @@ void MVQNPostProcessing:: iterationsConverged
 // // //   int offset = 0;
 // // //   foreach (int id, _dataIDs){
 // // //     double factor = _scalings[id];
-// // //     preciceDebug("Scaling Factor " << factor << " for id: " << id);
+// // //     precice("Scaling Factor " << factor << " for id: " << id);
 // // //     int size = cplData[id]->values->size();
 // // //     DataValues& values = *cplData[id]->values;
 // // //     DataValues& oldValues = cplData[id]->oldValues.column(0);

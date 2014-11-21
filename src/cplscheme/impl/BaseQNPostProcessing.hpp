@@ -122,6 +122,7 @@ protected:
 
    // @brief Indicates the first iteration, where constant relaxation is used.
    bool _firstIteration;
+   bool _firstTimeStep;
 
    // @brief Solver output from last iteration.
    DataValues _oldXTilde;
@@ -149,6 +150,10 @@ protected:
 
    // @brief Stores x tilde deltas, where x tilde are values computed by solvers.
    DataMatrix _matrixW;
+   
+   DataMatrix _matrixVBackup;
+   DataMatrix _matrixWBackup;
+   std::deque<int> _matrixColsBackup;
 
    // @brief Indices (of columns in W, V matrices) of 1st iterations of timesteps.
    //
