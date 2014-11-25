@@ -28,9 +28,6 @@ Event::~Event()
 
 void Event::start()
 {
-  if (isStarted) {
-    std::cerr << "Event " << name << " started which was already started. Restarting." << std::endl;
-  }
   isStarted = true;
   starttime = Clock::now();
 }
@@ -110,7 +107,7 @@ int EventData::getTimePercentage(Event::Clock::duration globalDuration)
 
 // -----------------------------------------------------------------------
 
-
+// Static members need to be initalized like that
 std::map<std::string, EventData> EventRegistry::events;
 Event::Clock::time_point EventRegistry::globalStart;
 Event::Clock::time_point EventRegistry::globalStop;
@@ -192,14 +189,12 @@ void EventRegistry::print()
 
 void Events_Init()
 {
-  std::cout << "Initialize TFOP" << std::endl;
   EventRegistry::initialize();
   
 }
 
 void Events_Finalize()
 {
-  std::cout << "Finalize TLOP" << std::endl;
   EventRegistry::finalize();
 }
 
