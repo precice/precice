@@ -106,8 +106,9 @@ if env["petsc"]:
 if env["boost_inst"]:
     if env["sockets"]:
         boostLibPath = checkset_var('PRECICE_BOOST_LIB_PATH', "/usr/lib/")
-        boostSystemLib = checkset_var('PRECICE_BOOST_SYSTEM_LIB', "boost_system")
-        boostThreadLib = checkset_var('PRECICE_BOOST_THREAD_LIB', "boost_thread")
+        boostSystemLib = checkset_var('PRECICE_BOOST_SYSTEM_LIB', "boost_system-mt")
+        boostThreadLib = checkset_var('PRECICE_BOOST_THREAD_LIB', "boost_thread-mt")
+        boostChronoLib = checkset_var('PRECICE_BOOST_CHRONO_LIB', "boost_chrono-mt")
 else:
     boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
       
@@ -205,6 +206,8 @@ if env["boost_inst"]:
         errorMissingLib(boostSystemLib, 'Boost')
     if not uniqueCheckLib(conf, boostThreadLib):
         errorMissingLib(boostThreadLib, 'Boost')
+    if not uniqueCheckLib(conf, boostChronoLib):
+        errorMissingLib(boostChronoLib, 'Boost')
 else:
     env.AppendUnique(CPPPATH = [boostRootPath])
 if not conf.CheckCXXHeader('boost/array.hpp'):
@@ -213,7 +216,7 @@ if not conf.CheckCXXHeader('boost/array.hpp'):
    
 if not env["spirit2"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_SPIRIT2'])
-    env["buildpath"] += "-nospirit2"
+    buildpath += "-nospirit2"
       
 
 if env["mpi"]:

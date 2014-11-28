@@ -70,6 +70,10 @@ void SocketCommunication:: acceptConnection
   using asio::ip::tcp;
   try {
     std::ostringstream address;
+
+#ifdef _WIN32
+    address << "127.0.0.1";
+#else
     // Query for IP address
     int querySocket = socket(AF_INET, SOCK_STREAM, 0);
     assertion(querySocket >= 0);
@@ -101,6 +105,8 @@ void SocketCommunication:: acceptConnection
     }
     if_freenameindex(nameInterface);
     close(querySocket);
+#endif
+
     preciceCheck(not address.str().empty(), "acceptConnection()",
                  "Network \"" << _network << "\" not found for socket connection!");
 
