@@ -502,4 +502,3 @@ void GatherScatterCommunication:: sendAll (
 }
 
 }} // namespace precice, m2n
-
