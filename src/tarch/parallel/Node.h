@@ -7,6 +7,8 @@
 #ifdef Parallel
 #include <mpi.h>
 
+#include <ctime>
+
 #include "tarch/logging/Log.h"
 
 

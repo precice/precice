@@ -1,118 +1,90 @@
-#include "mpi.h"
+#include <m2n/PointToPointCommunication.hpp>
+#include <com/MPIDirectCommunication.hpp>
+#include <mesh/Mesh.hpp>
+
+#include <mpi.h>
+
 #include <iostream>
-#include <string>
-#include <sstream>
-#include <cstdlib>
-#include "math.h"
-#include "SocketAscodtCommunication.h"
 
+using namespace precice;
 
-int main(int argc, char** argv)
-{
+int
+main(int argc, char** argv) {
   std::cout << "Running communication dummy" << std::endl;
+
   int provided;
 
-  //do we really need this here? might be a problem for solvers that create normal MPI?
-  MPI_Init_thread(&argc,&argv,MPI_THREAD_MULTIPLE ,&provided);
-  std::cout <<  "TM: " << MPI_THREAD_MULTIPLE << std::endl;
+  MPI_Init_thread(&argc, &argv, MPI_THREAD_MULTIPLE, &provided);
 
+  MPI_Comm_size(MPI_COMM_WORLD, &utils::MasterSlave::_size);
+  MPI_Comm_rank(MPI_COMM_WORLD, &utils::MasterSlave::_rank);
 
-  int size;
-  MPI_Comm_size(MPI_COMM_WORLD, &size);
-
-  int rank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-  if (size!=5){
+  if (utils::MasterSlave::_size != 5) {
     std::cout << "Please run with 5 mpi processes" << std::endl;
     return 1;
   }
 
-  SocketAscodtCommunication com;
-
-  if(rank==0){
-    int vertexTable[] = {1,0,1,1,0,2,2,4,4,4};
-    //maybe change to strings, compare comment in MainA.cpp
-    int adressTable[] = {0,1,2,3,4};
-    com.acceptConnection(vertexTable, adressTable);
+  if (utils::MasterSlave::_rank == 0) {
+    utils::MasterSlave::_masterMode = true;
+    utils::MasterSlave::_slaveMode = false;
+  } else {
+    utils::MasterSlave::_masterMode = false;
+    utils::MasterSlave::_slaveMode = true;
   }
 
-  int numberOfVertices;
-  if(rank==0){
-    numberOfVertices=2;
-  }
-  else if(rank==1){
-    numberOfVertices=3;
-  }
-  else if(rank==2){
-    numberOfVertices=2;
-  }
-  else if(rank==3){
-    //rank 3 has no vertices
-    numberOfVertices=0;
-  }
-  else if(rank==4){
-    numberOfVertices=3;
+  if (utils::MasterSlave::_masterMode) {
+    utils::Parallel::initialize(NULL, NULL, "Master");
+  } else {
+    assertion(utils::MasterSlave::_slaveMode);
+    utils::Parallel::initialize(NULL, NULL, "Slave");
   }
 
-  //receive
-  double *pData = NULL;
+  utils::MasterSlave::_communication =
+      com::PtrCommunication(new com::MPIDirectCommunication());
 
-  if(rank==0){
-    double data[] ={0.0,0.0};
-    pData = &data[0];
-    com.receive(data,2);
-  }
-  else if(rank==1){
-    double data[] ={0.0,0.0,0.0};
-    pData = &data[0];
-    com.receive(data,3);
-  }
-  else if(rank==2){
-    double data[] ={0.0,0.0};
-    pData = &data[0];
-    com.receive(data,2);
-  }
-  else if(rank==3){
-    double data[] ={};
-    pData = &data[0];
-    com.receive(data,0);
-  }
-  else if(rank==4){
-    double data[] ={0.0,0.0,0.0};
-    pData = &data[0];
-    com.receive(data,3);
-  }
-  //all receives are blocking, so all we have an implicit barrier here
+  int rankOffset = 1;
 
-
-  //TODO as an intermediate step, you could also add another test here,
-  // if B already received the right data
-
-  //modify data
-  for(int i=0;i<numberOfVertices;i++){
-    pData[i] = pData[i] + rank + 1;
+  if (utils::MasterSlave::_masterMode) {
+    utils::MasterSlave::_communication->acceptConnection(
+        "Master", "Slave", utils::MasterSlave::_rank, 1);
+    utils::MasterSlave::_communication->setRankOffset(rankOffset);
+  } else {
+    assertion(utils::MasterSlave::_slaveMode);
+    utils::MasterSlave::_communication->requestConnection(
+        "Master",
+        "Slave",
+        utils::MasterSlave::_rank - rankOffset,
+        utils::MasterSlave::_size - rankOffset);
   }
 
-  //send data
-  if(rank==0){
-    com.send(pData,2);
+  mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", 1, true));
+
+  if (utils::MasterSlave::_masterMode) {
+    pMesh->setGlobalNumberOfVertices(10);
+
+    pMesh->getVertexDistribution()[0].push_back(1);
+    pMesh->getVertexDistribution()[0].push_back(4);
+
+    pMesh->getVertexDistribution()[1].push_back(0);
+    pMesh->getVertexDistribution()[1].push_back(2);
+    pMesh->getVertexDistribution()[1].push_back(3);
+
+    // pMesh->getVertexDistribution()[3].push_back(3);
+
+    pMesh->getVertexDistribution()[2].push_back(5);
+    pMesh->getVertexDistribution()[2].push_back(6);
+
+    pMesh->getVertexDistribution()[4].push_back(7);
+    pMesh->getVertexDistribution()[4].push_back(8);
+    pMesh->getVertexDistribution()[4].push_back(9);
   }
-  else if(rank==1){
-    com.send(pData,3);
-  }
-  else if(rank==2){
-    com.send(pData,2);
-  }
-  else if(rank==3){
-    com.send(pData,0);
-  }
-  else if(rank==4){
-    com.send(pData,3);
-  }
+
+  m2n::PointToPointCommunication c(pMesh);
+
+  c.acceptConnection("B", "A", 0, 1);
+
+  utils::MasterSlave::_communication.reset();
 
   MPI_Finalize();
-  std::cout << "Stop communication dummy, rank: " << rank << std::endl;
-  return 0;
+  std::cout << "Stop communication dummy" << std::endl;
 }
-
