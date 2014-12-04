@@ -188,6 +188,10 @@ void IQNILSPostProcessing:: iterationsConverged
 (
    DataMap & cplData)
 {
+  if (_matrixCols.front() == 0){ // Did only one iteration
+    _matrixCols.pop_front(); 
+  }
+  
   if (_timestepsReused == 0){
     foreach (int id, _secondaryDataIDs){
       _secondaryMatricesW[id].clear();
@@ -212,6 +216,7 @@ void IQNILSPostProcessing:: removeMatrixColumn
 (
   int columnIndex)
 {
+  assertion(_matrixV.cols() > 1);
   // remove column from secondary Data Matrix W
  foreach (int id, _secondaryDataIDs){
     _secondaryMatricesW[id].remove(columnIndex);

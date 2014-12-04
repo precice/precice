@@ -255,7 +255,12 @@ void BaseQNPostProcessing:: performPostProcessing
       _matrixV.clear();
       _matrixW.clear();
       _matrixCols.clear();
-      //std::cout<<"########## pending deletion done ########" <<"  v.cols = "<<_matrixV.cols()<<" w.cols = "<<_matrixW.cols()<<std::endl;
+          // TOD0: The following is still misssing for reusedTimeSTeps=0 
+    // -----------------------------------------------
+// // //     foreach (int id, _secondaryDataIDs){
+// // //       _secondaryMatricesW[id].clear();
+// // //     }
+    // -----------------------------------------------
     }
 
   }
@@ -302,14 +307,13 @@ void BaseQNPostProcessing:: iterationsConverged
 //     _matrixW.clear();
 //     _matrixCols.clear();
     
-    // revert deletion
-//     if (_matrixCols.front() == 0){ // Did only one iteration
-//       _matrixV = _matrixVBackup;
-//       _matrixW = _matrixWBackup;
-//       _matrixCols = _matrixColsBackup;
-//       
-//        std::cout<<"########## revert deletion ########" <<std::endl;
-//     }
+    // TOD0: The following is still misssing for reusedTimeSTeps=0 
+    // -----------------------------------------------
+// // //     foreach (int id, _secondaryDataIDs){
+// // //       _secondaryMatricesW[id].clear();
+// // //     }
+    // -----------------------------------------------
+
     
     /**
      * pending deletion (after first iteration of next time step
