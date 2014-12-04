@@ -174,6 +174,7 @@ public:
   Scalar& operator() (int index);
 
   void print() const;
+  void printm(const char* filename) const;
 
   // No more methods here? They are all generic free methods now!
 };
