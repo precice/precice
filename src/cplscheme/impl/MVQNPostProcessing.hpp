@@ -61,7 +61,7 @@ public:
     *
     * Has to be called after every implicit coupling iteration.
     */
-   virtual void performPostProcessing(DataMap& cplData);
+   virtual void performPPSecondaryData(DataMap& cplData);
 
    /**
     * @brief Marks a iteration sequence as converged.

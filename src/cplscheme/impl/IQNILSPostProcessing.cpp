@@ -55,7 +55,7 @@ void IQNILSPostProcessing:: initialize
   
 }
 
-void IQNILSPostProcessing:: performPostProcessing
+void IQNILSPostProcessing::performPPSecondaryData
 (
   DataMap& cplData)
 {
@@ -126,9 +126,6 @@ void IQNILSPostProcessing:: performPostProcessing
       _secondaryOldXTildes[id] = *(cplData[id]->values);
     }
   }
-  
-  // perform QN post processing 
-  BaseQNPostProcessing::performPostProcessing(cplData);
 }
 
 void IQNILSPostProcessing::computeQNUpdate

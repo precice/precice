@@ -62,15 +62,15 @@ void MVQNPostProcessing:: initialize
  
   
   // ----------- DEBUG ------------------
-  std::string filename("frobNorm_jacobianDiff");
-  f.open(filename.c_str(), std::ios::out);
-  f<<std::setprecision( std::numeric_limits<double>::digits10+2);
+// //   std::string filename("frobNorm_jacobianDiff");
+// //   f.open(filename.c_str(), std::ios::out);
+// //   f<<std::setprecision( std::numeric_limits<double>::digits10+2);
   // ------------------------------------
 }
 
 
 
-void MVQNPostProcessing:: performPostProcessing
+void MVQNPostProcessing::performPPSecondaryData
 (
   DataMap& cplData)
 {
@@ -106,9 +106,6 @@ void MVQNPostProcessing:: performPostProcessing
       k++;
     }
   }
- 
-  // perform QN post processing 
-  BaseQNPostProcessing::performPostProcessing(cplData);
 }
 
 
@@ -120,12 +117,12 @@ void MVQNPostProcessing::computeQNUpdate
   
   
   //----------------------------DEBUG------------------------------------
-  std::stringstream sk; sk <<k;
-  std::stringstream st; st <<t;
-  std::string Xfile("output/x"+st.str()+"_"+sk.str()+".m");
-  std::string residualfile("output/residual"+st.str()+"_"+sk.str()+".m");
-  _scaledValues.printm(Xfile.c_str());
-  _residuals.printm(residualfile.c_str());
+// //   std::stringstream sk; sk <<k;
+// //   std::stringstream st; st <<t;
+// //   std::string Xfile("output/x"+st.str()+"_"+sk.str()+".m");
+// //   std::string residualfile("output/residual"+st.str()+"_"+sk.str()+".m");
+// //   _scaledValues.printm(Xfile.c_str());
+// //   _residuals.printm(residualfile.c_str());
   //---------------------------------------------------------------------
   
     // ------------- update inverse Jacobian -----------
@@ -137,12 +134,12 @@ void MVQNPostProcessing::computeQNUpdate
     computeNewtonFactorsQRDecomposition(cplData,xUpdate);
     
     //----------------------------DEBUG------------------------------------
-    std::string Jfile("output/invJacobian"+st.str()+"_"+sk.str()+".m");
-    std::string xdeltafile("output/deltaX"+st.str()+"_"+sk.str()+".m");
-    std::string xnewfile("output/xNew"+st.str()+"_"+sk.str()+".m");    
-    _invJacobian.printm(Jfile.c_str());
-    xUpdate.printm(xdeltafile.c_str());
-    _scaledValues.printm(xnewfile.c_str());
+// //     std::string Jfile("output/invJacobian"+st.str()+"_"+sk.str()+".m");
+// //     std::string xdeltafile("output/deltaX"+st.str()+"_"+sk.str()+".m");
+// //     std::string xnewfile("output/xNew"+st.str()+"_"+sk.str()+".m");    
+// //     _invJacobian.printm(Jfile.c_str());
+// //     xUpdate.printm(xdeltafile.c_str());
+// //     _scaledValues.printm(xnewfile.c_str());
     
     // ---------------------------------------------------------------------
 
@@ -160,12 +157,12 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   // ----------------------------------------- -------
 
   //----------------------------DEBUG------------------------------------
-  std::stringstream sk; sk <<k;
-  std::stringstream st; st <<t;
-  std::string Vfile("output/matrixV"+st.str()+"_"+sk.str()+".m");
-  std::string Wfile("output/matrixW"+st.str()+"_"+sk.str()+".m");
-  _matrixV.printm(Vfile.c_str());
-  _matrixW.printm(Wfile.c_str());
+// //   std::stringstream sk; sk <<k;
+// //   std::stringstream st; st <<t;
+// //   std::string Vfile("output/matrixV"+st.str()+"_"+sk.str()+".m");
+// //   std::string Wfile("output/matrixW"+st.str()+"_"+sk.str()+".m");
+// //   _matrixV.printm(Vfile.c_str());
+// //   _matrixW.printm(Wfile.c_str());
   
   // --------------------------------------------------------------------
     
@@ -208,8 +205,8 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   
   //----------------------------DEBUG------------------------------------
   
-  std::string vfile("output/v"+st.str()+"_"+sk.str()+".m");
-  v.printm(vfile.c_str());
+// //   std::string vfile("output/v"+st.str()+"_"+sk.str()+".m");
+// //   v.printm(vfile.c_str());
   
   // --------------------------------------------------------------------
   
@@ -224,8 +221,8 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   
   //----------------------------DEBUG------------------------------------
   
-  std::string tmpMatrixFile("output/W-JV"+st.str()+"_"+sk.str()+".m");
-  tmpMatrix.printm(tmpMatrixFile.c_str());
+// //   std::string tmpMatrixFile("output/W-JV"+st.str()+"_"+sk.str()+".m");
+// //   tmpMatrix.printm(tmpMatrixFile.c_str());
   
   // --------------------------------------------------------------------
   
@@ -235,15 +232,15 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   _invJacobian = _invJacobian + _oldInvJacobian;
   
   // ---- DEBUG --------------------------
-  // compute frobenius norm of difference between Jacobian matrix from current
-  // time step and Jcobian from old time step
-  DataMatrix jacobianDiff(_invJacobian.rows(), _invJacobian.cols(), 0.0);
-  jacobianDiff = _oldInvJacobian;
-  jacobianDiff *= -1.;
-  jacobianDiff = _invJacobian + jacobianDiff;
-  double frob = frobeniusNorm(jacobianDiff); 
-  f<<t<<"  "<<frob<<"\n";
-  if(t >= 100) f.close();
+// //   // compute frobenius norm of difference between Jacobian matrix from current
+// //   // time step and Jcobian from old time step
+// //   DataMatrix jacobianDiff(_invJacobian.rows(), _invJacobian.cols(), 0.0);
+// //   jacobianDiff = _oldInvJacobian;
+// //   jacobianDiff *= -1.;
+// //   jacobianDiff = _invJacobian + jacobianDiff;
+// //   double frob = frobeniusNorm(jacobianDiff); 
+// //   f<<t<<"  "<<frob<<"\n";
+// //   if(t >= 100) f.close();
   // -------------------------------------
   
   DataValues negRes(_residuals);

@@ -150,6 +150,11 @@ void BaseQNPostProcessing:: performPostProcessing
   assertion2(_residuals.size() == _oldXTilde.size(),
              _residuals.size(), _oldXTilde.size());
 
+  
+  // perform post processing for secondary data
+  performPPSecondaryData(cplData);
+  
+  
   int offset = 0;
   foreach (int id, _dataIDs){
     double factor = _scalings[id];
