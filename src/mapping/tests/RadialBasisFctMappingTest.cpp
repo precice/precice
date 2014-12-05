@@ -35,6 +35,7 @@ void RadialBasisFctMappingTest:: run()
   testMethod(testCompactThinPlateSplinesC2);
   testMethod(testCompactPolynomialC0);
   testMethod(testCompactPolynomialC6);
+  testMethod(testDeadAxis2D);
 }
 
 void RadialBasisFctMappingTest:: testThinPlateSplines()
@@ -523,6 +524,50 @@ void RadialBasisFctMappingTest:: perform3DTestConservativeMapping
 //  mapping.map ( inDataID, outDataID );
 //  validateEquals ( mapping.hasComputedMapping(), true );
 //  validateNumericalEquals ( sum(values), 3.0 );
+}
+
+
+void RadialBasisFctMappingTest:: testDeadAxis2D
+()
+{
+  preciceTrace ( "testDeadAxis2D()" );
+  int dimensions = 2;
+  using utils::Vector2D;
+
+  ThinPlateSplines fct;
+  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, fct);
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
+  mesh::PtrData inData = inMesh->createData ( "InData", 1 );
+  int inDataID = inData->getID ();
+  inMesh->createVertex ( Vector2D(0.0, 1.0) );
+  inMesh->createVertex ( Vector2D(1.0, 1.0) );
+  inMesh->createVertex ( Vector2D(2.0, 1.0) );
+  inMesh->createVertex ( Vector2D(3.0, 1.0) );
+  inMesh->allocateDataValues ();
+  tarch::la::Vector<4,double> assignValues;
+  assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
+  utils::DynVector& values = inData->values();
+  values = assignValues;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false) );
+  mesh::PtrData outData = outMesh->createData ( "OutData", 1 );
+  int outDataID = outData->getID();
+  mesh::Vertex& vertex = outMesh->createVertex ( Vector2D(0.0) );
+  outMesh->allocateDataValues();
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes ( inMesh, outMesh );
+  validateEquals ( mapping.hasComputedMapping(), false );
+
+  vertex.setCoords ( Vector2D(0.0, 0.0) );
+  mapping.computeMapping ();
+  mapping.map ( inDataID, outDataID );
+  double value = outData->values()[0];
+  validateEquals ( mapping.hasComputedMapping(), true );
+  //validateNumericalEquals ( value, 1.0 );
 }
 
 }}} // namespace precice, mapping, tests
