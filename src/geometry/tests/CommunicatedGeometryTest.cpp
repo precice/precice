@@ -147,13 +147,13 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     mesh::PtrMesh pSolidzMesh2(new mesh::Mesh("SolidzMesh2", dimensions, flipNormals));
 
     mapping::PtrMapping boundingFromMapping1 = mapping::PtrMapping (
-        new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT) );
+        new mapping::NearestNeighborMapping(mapping::Mapping::CONSISTENT, dimensions) );
     mapping::PtrMapping boundingToMapping1 = mapping::PtrMapping (
-        new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE) );
+        new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
     mapping::PtrMapping boundingFromMapping2 = mapping::PtrMapping (
-        new mapping::NearestProjectionMapping(mapping::Mapping::CONSISTENT) );
+        new mapping::NearestProjectionMapping(mapping::Mapping::CONSISTENT, dimensions) );
     mapping::PtrMapping boundingToMapping2 = mapping::PtrMapping (
-        new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE) );
+        new mapping::NearestNeighborMapping(mapping::Mapping::CONSERVATIVE, dimensions) );
     boundingFromMapping1->setMeshes(pSolidzMesh1,pNastinMesh);
     boundingToMapping1->setMeshes(pNastinMesh,pSolidzMesh1);
     boundingFromMapping2->setMeshes(pSolidzMesh2,pNastinMesh);

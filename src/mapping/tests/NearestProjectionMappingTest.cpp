@@ -54,7 +54,7 @@ void NearestProjectionMappingTest:: testConservativeNonIncremental()
   int inDataID = inData->getID();
 
   // Setup mapping with mapping coordinates and geometry used
-  NearestProjectionMapping mapping(Mapping::CONSERVATIVE);
+  NearestProjectionMapping mapping(Mapping::CONSERVATIVE, dimensions);
   mapping.setMeshes(inMesh, outMesh);
 
   // Map value 1.0 from middle of edge to geometry. Expect half of the
@@ -121,7 +121,7 @@ void NearestProjectionMappingTest:: testConsistentNonIncremental()
   int outDataID = outData->getID();
 
   // Setup mapping with mapping coordinates and geometry used
-  NearestProjectionMapping mapping(Mapping::CONSISTENT);
+  NearestProjectionMapping mapping(Mapping::CONSISTENT, dimensions);
   mapping.setMeshes ( inMesh, outMesh );
   validateEquals ( mapping.hasComputedMapping(), false );
 

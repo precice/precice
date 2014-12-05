@@ -435,7 +435,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   else if (type == VALUE_RBF_INV_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<InverseMultiquadrics>(
-        constraintValue, InverseMultiquadrics(shapeParameter)) );
+        constraintValue, dimensions, InverseMultiquadrics(shapeParameter)) );
   }
   else if (type == VALUE_RBF_VOLUME_SPLINES){
     configuredMapping.mapping = PtrMapping (

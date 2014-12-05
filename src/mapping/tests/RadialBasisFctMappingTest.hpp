@@ -91,6 +91,11 @@ private:
    * @brief
    */
   void testDeadAxis2D ();
+
+  /**
+   * @brief
+   */
+  void testDeadAxis3D ();
 };
 
 }}} // namespace precice, mapping, tests
