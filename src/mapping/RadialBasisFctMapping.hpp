@@ -472,7 +472,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   for(int d=0; d<dimensions; d++){
     if(_deadAxis[d]) deadDimensions +=1;
   }
-  std::cout << "dead dimensions: " << deadDimensions << std::endl;
   int polyparams = 1 + dimensions - deadDimensions;
   assertion1(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees

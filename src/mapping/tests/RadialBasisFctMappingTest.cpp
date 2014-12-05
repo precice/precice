@@ -646,7 +646,6 @@ void RadialBasisFctMappingTest:: testDeadAxis3D
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  std::cout << outData->values() << std::endl;
 
   validateNumericalEquals ( outData->values()[0], 1.0 );
   validateNumericalEquals ( outData->values()[1], 2.0 );
