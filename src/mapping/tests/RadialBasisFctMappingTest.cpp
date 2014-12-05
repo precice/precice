@@ -42,70 +42,85 @@ void RadialBasisFctMappingTest:: run()
 void RadialBasisFctMappingTest:: testThinPlateSplines()
 {
   preciceTrace ( "testThinPlateSplines" );
+  bool xDead = false;
+  bool yDead = false;
+  bool zDead = false;
   ThinPlateSplines fct;
-  RadialBasisFctMapping<ThinPlateSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct);
+  RadialBasisFctMapping<ThinPlateSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
-  RadialBasisFctMapping<ThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct);
+  RadialBasisFctMapping<ThinPlateSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<ThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct);
+  RadialBasisFctMapping<ThinPlateSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
-  RadialBasisFctMapping<ThinPlateSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct);
+  RadialBasisFctMapping<ThinPlateSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
 void RadialBasisFctMappingTest:: testMultiquadrics()
 {
   preciceTrace ( "testMultiquadrics" );
+  bool xDead = false;
+  bool yDead = false;
+  bool zDead = false;
   Multiquadrics fct(1e-3);
-  RadialBasisFctMapping<Multiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct);
+  RadialBasisFctMapping<Multiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
-  RadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct);
+  RadialBasisFctMapping<Multiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct);
+  RadialBasisFctMapping<Multiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
-  RadialBasisFctMapping<Multiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct);
+  RadialBasisFctMapping<Multiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
 void RadialBasisFctMappingTest:: testInverseMultiquadrics()
 {
   preciceTrace ( "testInverseMultiquadrics" );
+  bool xDead = false;
+  bool yDead = false;
+  bool zDead = false;
   InverseMultiquadrics fct(1e-3);
-  RadialBasisFctMapping<InverseMultiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct);
+  RadialBasisFctMapping<InverseMultiquadrics> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
-  RadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct);
+  RadialBasisFctMapping<InverseMultiquadrics> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct);
+  RadialBasisFctMapping<InverseMultiquadrics> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
-  RadialBasisFctMapping<InverseMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct);
+  RadialBasisFctMapping<InverseMultiquadrics> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
 void RadialBasisFctMappingTest:: testVolumeSplines()
 {
   preciceTrace ( "testVolumeSplines" );
+  bool xDead = false;
+  bool yDead = false;
+  bool zDead = false;
   VolumeSplines fct;
-  RadialBasisFctMapping<VolumeSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct);
+  RadialBasisFctMapping<VolumeSplines> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
-  RadialBasisFctMapping<VolumeSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct);
+  RadialBasisFctMapping<VolumeSplines> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<VolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct);
+  RadialBasisFctMapping<VolumeSplines> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
-  RadialBasisFctMapping<VolumeSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct);
+  RadialBasisFctMapping<VolumeSplines> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
 void RadialBasisFctMappingTest:: testGaussian()
 {
   preciceTrace ( "testGaussian" );
+  bool xDead = false;
+  bool yDead = false;
+  bool zDead = false;
   Gaussian fct(1.0);
-  RadialBasisFctMapping<Gaussian> consistentMap2D(Mapping::CONSISTENT, 2, fct);
+  RadialBasisFctMapping<Gaussian> consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
-  RadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, 3, fct);
+  RadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  RadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct);
+  RadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
-  RadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct);
+  RadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -113,15 +128,18 @@ void RadialBasisFctMappingTest:: testCompactThinPlateSplinesC2()
 {
   preciceTrace ( "testCompactThinPlateSplinesC2" );
   double supportRadius = 1.2;
+  bool xDead = false;
+  bool yDead = false;
+  bool zDead = false;
   CompactThinPlateSplinesC2 fct(supportRadius);
   typedef RadialBasisFctMapping<CompactThinPlateSplinesC2> Mapping;
-  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct);
+  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
-  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct);
+  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct);
+  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
-  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct);
+  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -129,15 +147,18 @@ void RadialBasisFctMappingTest:: testCompactPolynomialC0()
 {
   preciceTrace ( "testCompactPolynomialC0" );
   double supportRadius = 1.2;
+  bool xDead = false;
+  bool yDead = false;
+  bool zDead = false;
   CompactPolynomialC0 fct(supportRadius);
   typedef RadialBasisFctMapping<CompactPolynomialC0> Mapping;
-  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct);
+  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
-  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct);
+  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct);
+  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
-  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct);
+  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -145,15 +166,18 @@ void RadialBasisFctMappingTest:: testCompactPolynomialC6()
 {
   preciceTrace ( "testCompactPolynomialC6" );
   double supportRadius = 1.2;
+  bool xDead = false;
+  bool yDead = false;
+  bool zDead = false;
   CompactPolynomialC6 fct(supportRadius);
   typedef RadialBasisFctMapping<CompactPolynomialC6> Mapping;
-  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct);
+  Mapping consistentMap2D(Mapping::CONSISTENT, 2, fct, xDead, yDead, zDead);
   perform2DTestConsistentMapping(consistentMap2D);
-  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct);
+  Mapping consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct);
+  Mapping conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
   perform2DTestConservativeMapping(conservativeMap2D);
-  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct);
+  Mapping conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
@@ -535,9 +559,13 @@ void RadialBasisFctMappingTest:: testDeadAxis2D
   int dimensions = 2;
   using utils::Vector2D;
 
+  bool xDead = false;
+  bool yDead = true;
+  bool zDead = false;
+
   ThinPlateSplines fct;
-  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct);
-  mapping.setDeadAxis(false,true,false);
+  RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
+      xDead, yDead, zDead);
 
   // Create mesh to map from
   mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
@@ -581,9 +609,11 @@ void RadialBasisFctMappingTest:: testDeadAxis3D
 
   double supportRadius = 1.2;
   CompactPolynomialC6 fct(supportRadius);
+  bool xDead = false;
+  bool yDead = true;
+  bool zDead = false;
   typedef RadialBasisFctMapping<CompactPolynomialC6> Mapping;
-  Mapping mapping(Mapping::CONSISTENT, dimensions, fct);
-  mapping.setDeadAxis(false,true,false);
+  Mapping mapping(Mapping::CONSISTENT, dimensions, fct, xDead, yDead, zDead);
 
   // Create mesh to map from
   mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );

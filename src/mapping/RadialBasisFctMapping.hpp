@@ -43,7 +43,10 @@ public:
   RadialBasisFctMapping (
     Constraint              constraint,
     int                     dimensions,
-    RADIAL_BASIS_FUNCTION_T function );
+    RADIAL_BASIS_FUNCTION_T function,
+    bool                    xDead,
+    bool                    yDead,
+    bool                    zDead);
 
   /**
    * @brief Destructor.
@@ -72,21 +75,6 @@ public:
     int inputDataID,
     int outputDataID );
 
-  void setDeadAxis(bool xDead, bool yDead, bool zDead){
-    if(getDimensions()==2){
-      _deadAxis[0] = xDead;
-      _deadAxis[1] = yDead;
-    }
-    else if(getDimensions()==3){
-      _deadAxis[0] = xDead;
-      _deadAxis[1] = yDead;
-      _deadAxis[2] = zDead;
-    }
-    else{
-      assertion(false);
-    }
-  }
-
 private:
 
   // @brief Logging device.
@@ -107,6 +95,24 @@ private:
   bool* _deadAxis;
 
   utils::DynVector reduceVector(const utils::DynVector& fullVector);
+
+  void setDeadAxis(bool xDead, bool yDead, bool zDead){
+    if(getDimensions()==2){
+      _deadAxis[0] = xDead;
+      _deadAxis[1] = yDead;
+      preciceCheck(not zDead, "setDeadAxis()", "You cannot  "
+             << " dead out the z axis if dimension is set to 2");
+    }
+    else if(getDimensions()==3){
+      _deadAxis[0] = xDead;
+      _deadAxis[1] = yDead;
+      _deadAxis[2] = zDead;
+    }
+    else{
+      assertion(false);
+    }
+  }
+
 };
 
 /**
@@ -410,7 +416,10 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
 (
   Constraint              constraint,
   int                     dimensions,
-  RADIAL_BASIS_FUNCTION_T function )
+  RADIAL_BASIS_FUNCTION_T function,
+  bool                    xDead,
+  bool                    yDead,
+  bool                    zDead)
 :
   Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
@@ -422,7 +431,7 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
   _deadAxis = new bool[dimensions];
-  setDeadAxis(false,false,false);
+  setDeadAxis(xDead,yDead,zDead);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>

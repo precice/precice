@@ -121,6 +121,9 @@ private:
   const std::string ATTR_SHAPE_PARAM;
   const std::string ATTR_SUPPORT_RADIUS;
   const std::string ATTR_SOLVER_RTOL;
+  const std::string ATTR_X_DEAD;
+  const std::string ATTR_Y_DEAD;
+  const std::string ATTR_Z_DEAD;
 
   const std::string VALUE_WRITE;
   const std::string VALUE_READ;
@@ -165,7 +168,10 @@ private:
     Timing             timing,
     double             shapeParameter,
     double             supportRadius,
-    double             solverRtol) const;
+    double             solverRtol,
+    bool               xDead,
+    bool               yDead,
+    bool               zDead) const;
 
   void checkDuplicates ( const ConfiguredMapping& mapping );
 
