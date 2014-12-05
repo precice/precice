@@ -47,6 +47,7 @@ public:
    */
   PetRadialBasisFctMapping (
     Constraint              constraint,
+    int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
     double                  solverRtol = 1e-9);
 
@@ -96,10 +97,11 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
 (
   Constraint              constraint,
+  int                     dimensions,
   RADIAL_BASIS_FUNCTION_T function,
   double                  solverRtol)
   :
-  Mapping ( constraint ),
+  Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
   _matrixC(PETSC_COMM_SELF, "C"),

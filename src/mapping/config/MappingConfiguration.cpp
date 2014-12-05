@@ -379,6 +379,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh = toMesh;
   configuredMapping.timing = timing;
+  int dimensions = fromMesh->getDimensions();
 
   if (direction == VALUE_WRITE){
     configuredMapping.direction =  WRITE;
@@ -404,7 +405,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
 
   if (type == VALUE_NEAREST_NEIGHBOR){
     configuredMapping.mapping = PtrMapping (
-        new NearestNeighborMapping(constraintValue) );
+        new NearestNeighborMapping(constraintValue, dimensions) );
   }
   else if (type == VALUE_NEAREST_PROJECTION){
 //    preciceCheck ( direction == VALUE_WRITE, "createMapping()",
@@ -412,7 +413,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
 //                   << "\" for a " << "mapping of type \""
 //                   << VALUE_CONSERVATIVE_NEAREST_PROJECTION << "\"!" );
     configuredMapping.mapping = PtrMapping (
-        new NearestProjectionMapping(constraintValue) );
+        new NearestProjectionMapping(constraintValue, dimensions) );
   }
 //  else if (type == VALUE_CONSISTENT_NEAREST_PROJECTION){
 //    preciceCheck ( direction == VALUE_READ, "createMapping()",
@@ -424,12 +425,12 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
 //  }
   else if (type == VALUE_RBF_TPS){
     configuredMapping.mapping = PtrMapping (
-      new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, ThinPlateSplines()) );
+      new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines()) );
   }
   else if (type == VALUE_RBF_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<Multiquadrics>(
-        constraintValue, Multiquadrics(shapeParameter)) );
+        constraintValue, dimensions, Multiquadrics(shapeParameter)) );
   }
   else if (type == VALUE_RBF_INV_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
@@ -438,66 +439,66 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   }
   else if (type == VALUE_RBF_VOLUME_SPLINES){
     configuredMapping.mapping = PtrMapping (
-      new RadialBasisFctMapping<VolumeSplines>(constraintValue, VolumeSplines()) );
+      new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines()) );
   }
   else if (type == VALUE_RBF_GAUSSIAN){
     configuredMapping.mapping = PtrMapping(
         new RadialBasisFctMapping<Gaussian>(
-          constraintValue, Gaussian(shapeParameter)));
+          constraintValue, dimensions, Gaussian(shapeParameter)));
   }
   else if (type == VALUE_RBF_CTPS_C2){
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<CompactThinPlateSplinesC2>(
-        constraintValue, CompactThinPlateSplinesC2(supportRadius)) );
+        constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius)) );
   }
   else if (type == VALUE_RBF_CPOLYNOMIAL_C0){
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<CompactPolynomialC0>(
-        constraintValue, CompactPolynomialC0(supportRadius)) );
+        constraintValue, dimensions, CompactPolynomialC0(supportRadius)) );
   }
   else if (type == VALUE_RBF_CPOLYNOMIAL_C6){
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<CompactPolynomialC6>(
-        constraintValue, CompactPolynomialC6(supportRadius)) );
+        constraintValue, dimensions, CompactPolynomialC6(supportRadius)) );
   }
 # ifndef PRECICE_NO_PETSC
   else if (type == VALUE_PETRBF_TPS){
     configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, ThinPlateSplines(), solverRtol) );
+      new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), solverRtol) );
   }
   else if (type == VALUE_PETRBF_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<Multiquadrics>(
-        constraintValue, Multiquadrics(shapeParameter), solverRtol) );
+        constraintValue, dimensions, Multiquadrics(shapeParameter), solverRtol) );
   }
   else if (type == VALUE_PETRBF_INV_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<InverseMultiquadrics>(
-        constraintValue, InverseMultiquadrics(shapeParameter), solverRtol) );
+        constraintValue, dimensions, InverseMultiquadrics(shapeParameter), solverRtol) );
   }
   else if (type == VALUE_PETRBF_VOLUME_SPLINES){
     configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, VolumeSplines(), solverRtol) );
+      new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), solverRtol) );
   }
   else if (type == VALUE_PETRBF_GAUSSIAN){
     configuredMapping.mapping = PtrMapping(
         new PetRadialBasisFctMapping<Gaussian>(
-          constraintValue, Gaussian(shapeParameter), solverRtol));
+          constraintValue, dimensions, Gaussian(shapeParameter), solverRtol));
   }
   else if (type == VALUE_PETRBF_CTPS_C2){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(
-        constraintValue, CompactThinPlateSplinesC2(supportRadius), solverRtol) );
+        constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius), solverRtol) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C0){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactPolynomialC0>(
-        constraintValue, CompactPolynomialC0(supportRadius), solverRtol) );
+        constraintValue, dimensions, CompactPolynomialC0(supportRadius), solverRtol) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C6){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactPolynomialC6>(
-        constraintValue, CompactPolynomialC6(supportRadius), solverRtol) );
+        constraintValue, dimensions, CompactPolynomialC6(supportRadius), solverRtol) );
   }
 # endif
   else {

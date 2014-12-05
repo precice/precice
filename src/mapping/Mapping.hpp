@@ -71,7 +71,7 @@ public:
   /**
    * @brief Constructor, takes mapping constraint.
    */
-  Mapping ( Constraint constraint );
+  Mapping ( Constraint constraint, int dimensions );
 
   /**
    * @brief Destructor, empty.
@@ -160,6 +160,8 @@ protected:
    */
   void setOutputRequirement ( MeshRequirement requirement );
 
+  int getDimensions();
+
 private:
 
   // @brief Logging device.
@@ -179,6 +181,8 @@ private:
 
   // @brief Pointer to output mesh.
   mesh::PtrMesh _output;
+
+  int _dimensions;
 };
 
 }} // namespace precice, mapping

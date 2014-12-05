@@ -22,7 +22,7 @@ public:
   /**
    * @brief Constructor, taking mapping constraint.
    */
-  NearestProjectionMapping ( Constraint constraint );
+  NearestProjectionMapping ( Constraint constraint, int dimensions );
 
   /**
    * @brief Destructor, empty.

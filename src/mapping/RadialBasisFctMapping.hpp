@@ -71,6 +71,21 @@ public:
     int inputDataID,
     int outputDataID );
 
+  void setDeadAxis(bool xDead, bool yDead, bool zDead){
+    if(getDimensions()==2){
+      _deadAxis[0] = xDead;
+      _deadAxis[1] = yDead;
+    }
+    else if(getDimensions()==3){
+      _deadAxis[0] = xDead;
+      _deadAxis[1] = yDead;
+      _deadAxis[2] = zDead;
+    }
+    else{
+      assertion(false);
+    }
+  }
+
 private:
 
   // @brief Logging device.
@@ -86,6 +101,9 @@ private:
   tarch::la::DynamicVector<int> _pivotsCLU;
 
   tarch::la::DynamicMatrix<double> _matrixA;
+
+  // @brief true if the mapping along some axis should be ignored
+  bool _deadAxis[_dimensions];
 };
 
 /**
@@ -388,9 +406,10 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
 (
   Constraint              constraint,
+  int                     dimensions,
   RADIAL_BASIS_FUNCTION_T function )
 :
-  Mapping ( constraint ),
+  Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
   _matrixCLU (),
@@ -426,7 +445,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   }
   int inputSize = (int)inMesh->vertices().size();
   int outputSize = (int)outMesh->vertices().size();
-  int polyparams = 1 + dimensions;
+  int deadDimensions = 0;
+  if(_xDead) deadDimensions +=1;
+  if(_yDead) deadDimensions +=1;
+  if(_zDead) deadDimensions +=1;
+  int polyparams = 1 + dimensions - deadDimensions;
   assertion1(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees
   _matrixCLU = DynamicMatrix<double>(n, n, 0.0);
@@ -435,11 +458,22 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   _matrixA = DynamicMatrix<double>(outputSize, n, 0.0);
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
-  utils::DynVector distance(dimensions);
+  utils::DynVector coords(dimensions);
+  utils::DynVector distance(dimensions-deadDimensions);
   foreach (const mesh::Vertex& iVertex, inMesh->vertices()){
     for (int j=iVertex.getID(); j < inputSize; j++){
-      distance = iVertex.getCoords();
-      distance -= inMesh->vertices()[j].getCoords();
+      if(deadDimensions>0){
+        distance = iVertex.getCoords();
+        distance -= inMesh->vertices()[j].getCoords();
+      }
+      else{
+        coords = iVertex.getCoords();
+        int k=0;
+        for(int d=0; d<dimensions; d++){
+
+          distance[k] = coords[d];
+        }
+      }
       _matrixCLU(i,j) = _basisFunction.evaluate(norm2(distance));
 #     ifdef Asserts
       if (_matrixCLU(i,j) == std::numeric_limits<double>::infinity()){

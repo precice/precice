@@ -12,9 +12,10 @@ tarch::logging::Log NearestProjectionMapping::
 
 NearestProjectionMapping:: NearestProjectionMapping
 (
-  Constraint constraint )
+  Constraint constraint,
+  int        dimensions)
 :
-  Mapping(constraint),
+  Mapping(constraint, dimensions),
   _weights(),
   _hasComputedMapping(false)
 {
