@@ -17,13 +17,32 @@ namespace asio = boost::asio;
 tarch::logging::Log SocketCommunication:: _log("precice::com::SocketCommunication");
 
 SocketCommunication:: SocketCommunication
+( const std::string& ipExchangeDirectory )
+:
+  _network(),
+  _portNumber(),
+  _ipExchangeDirectory(ipExchangeDirectory),
+  _processRank(-1),
+  _isConnected(false),
+  _remoteCommunicatorSize(0),
+  _ioService(new IOService()),
+  _sockets(),
+  _queryWork(),
+  _queryThread(),
+  _clientQueries(),
+  _clientQueryBuffers()
+{
+  _rankOffset = 0;
+}
+
+SocketCommunication:: SocketCommunication
 (
   const std::string& network,
-  int                port,
+  unsigned short     portNumber,
   const std::string& ipExchangeDirectory )
 :
   _network(network),
-  _port(port),
+  _portNumber(portNumber),
   _ipExchangeDirectory(ipExchangeDirectory),
   _processRank(-1),
   _isConnected(false),
@@ -69,10 +88,10 @@ void SocketCommunication:: acceptConnection
   std::string ipFilename(_ipExchangeDirectory + "." + nameRequester + "-portname");
   using asio::ip::tcp;
   try {
-    std::ostringstream address;
+    std::ostringstream ipAddress;
 
 #ifdef _WIN32
-    address << "127.0.0.1";
+    ipAddress << "127.0.0.1";
 #else
     // Query for IP address
     int querySocket = socket(AF_INET, SOCK_STREAM, 0);
@@ -93,7 +112,7 @@ void SocketCommunication:: acceptConnection
         preciceDebug(itNameInterface->if_name << ": "
                      << inet_ntoa(((struct sockaddr_in*) &request.ifr_addr)->sin_addr));
         if(strcmp(itNameInterface->if_name, _network.c_str()) == 0){
-          address << inet_ntoa(((struct sockaddr_in*) &request.ifr_addr)->sin_addr);
+          ipAddress << inet_ntoa(((struct sockaddr_in*) &request.ifr_addr)->sin_addr);
         }
       }
       else {
@@ -107,20 +126,20 @@ void SocketCommunication:: acceptConnection
     close(querySocket);
 #endif
 
-    preciceCheck(not address.str().empty(), "acceptConnection()",
+    preciceCheck(not ipAddress.str().empty(), "acceptConnection()",
                  "Network \"" << _network << "\" not found for socket connection!");
 
     // Write server address to file
     preciceDebug("Writing server ip address to file " << ipFilename);
     std::ofstream outFile;
     outFile.open ((ipFilename +  "~").c_str(), std::ios::out);
-    outFile << address.str();
+    outFile << ipAddress.str() << ":" << _portNumber;
     outFile.close();
     // To give the file first a different name prevents early reading errors
     rename( (ipFilename + "~").c_str(), ipFilename.c_str() );
 
-    preciceDebug("Accept connection at " << address.str() << ":" << _port);
-    tcp::acceptor acceptor(*_ioService, tcp::endpoint(tcp::v4(), _port));
+    preciceDebug("Accept connection at " << ipAddress.str() << ":" << _portNumber);
+    tcp::acceptor acceptor(*_ioService, tcp::endpoint(tcp::v4(), _portNumber));
     PtrSocket socket ( new tcp::socket(*_ioService) );
     acceptor.accept(*socket); // Waits until connection
     _isConnected = true;
@@ -153,7 +172,7 @@ void SocketCommunication:: acceptConnection
     acceptor.close();
   }
   catch (std::exception& e){
-    preciceError("acceptConnection()", "Accepting connection at port " << _port
+    preciceError("acceptConnection()", "Accepting connection at port " << _portNumber
                  << " failed: " << e.what());
   }
 
@@ -184,16 +203,22 @@ void SocketCommunication:: requestConnection
     do {
       inFile.open(ipFilename.c_str(), std::ios::in);
     } while (not inFile);
-    std::string serverAddress;
-    inFile >> serverAddress;
+    std::string address;
+    inFile >> address;
     inFile.close();
-    preciceDebug("Read connection info \"" << serverAddress
+
+    std::string ipAddress  = address.substr(0, address.find(":"));
+    std::string portNumber = address.substr(ipAddress.length() + 1,
+                                            address.length() -
+                                            ipAddress.length() - 1);
+
+    _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
+
+    preciceDebug("Read connection info \"" << ipAddress << ":" << portNumber
                  << "\" from file " << ipFilename);
 
     PtrSocket socket(new Socket(*_ioService));
-    std::ostringstream portStream;
-    portStream << _port;
-    tcp::resolver::query query(tcp::v4(), serverAddress.c_str(), portStream.str().c_str());
+    tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
     while (not _isConnected){ // since resolver does not wait until server is up
       tcp::resolver resolver(*_ioService);
       tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));

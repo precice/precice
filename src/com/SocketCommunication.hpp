@@ -47,9 +47,15 @@ public:
    * @brief Constructor.
    */
   SocketCommunication (
+    const std::string& addressExchangeDirectory = "" );
+
+  /**
+   * @brief Constructor.
+   */
+  SocketCommunication (
     const std::string& network,
-    int                port,
-    const std::string& addressExchangeDirectory );
+    unsigned short     portNumber,
+    const std::string& addressExchangeDirectory = "" );
 
   /**
    * @brief Destructor.
@@ -235,7 +241,7 @@ private:
   std::string _network;
 
   // @brief Port used for socket connection.
-  int _port;
+  unsigned short _portNumber;
 
   // @brief Directory where IP address is exchanged by file.
   std::string _ipExchangeDirectory;

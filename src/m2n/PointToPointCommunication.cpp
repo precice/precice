@@ -41,9 +41,11 @@ forMapOfRanges(Map& map,
                AfterRangeFunction afterRangeFunction) {
   for (auto& i : map) {
     beforeRangeFunction(i.first);
+
     for (auto& j : i.second) {
       rangeFunction(i.first, j);
     }
+
     afterRangeFunction(i.first);
   }
 }
@@ -185,7 +187,7 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
 
   if (utils::MasterSlave::_masterMode) {
     _communications[0] =
-        com::PtrCommunication(new com::SocketCommunication("lo", 50000, ""));
+        com::PtrCommunication(new com::SocketCommunication("lo", 50000));
 
     _communications[0]->acceptConnection(nameAcceptor, nameRequester, 0, 1);
     // -------------------------------------------------------------------------
@@ -219,7 +221,7 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
 
   if (utils::MasterSlave::_masterMode) {
     _communications[0] =
-        com::PtrCommunication(new com::SocketCommunication("lo", 50000, ""));
+        com::PtrCommunication(new com::SocketCommunication());
 
     _communications[0]->requestConnection(nameAcceptor, nameRequester, 0, 1);
     // -------------------------------------------------------------------------
