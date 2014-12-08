@@ -12,6 +12,14 @@
 namespace precice {
 namespace m2n {
 
+template <class Map, class Function>
+void
+forMap(Map& map, Function function) {
+  for (auto& i : map) {
+    function(i.first, i.second);
+  }
+}
+
 template <class Range, class Function>
 void
 forRange(Range& range, Function function) {
@@ -52,6 +60,27 @@ forMapOfRanges(Map& map,
 
 void
 send(com::PtrCommunication communication,
+     std::vector<int> const& v,
+     int rankReceiver) {
+  communication->send(static_cast<int>(v.size()), rankReceiver);
+  communication->send(const_cast<int*>(&v[0]), v.size(), rankReceiver);
+}
+
+void
+receive(com::PtrCommunication communication,
+        std::vector<int>& v,
+        int rankSender) {
+  v.clear();
+
+  int size = 0;
+
+  communication->receive(size, rankSender);
+  v.resize(size);
+  communication->receive(&v[0], size, rankSender);
+}
+
+void
+send(com::PtrCommunication communication,
      std::map<int, std::vector<int>> const& m,
      int rankReceiver) {
   communication->send(static_cast<int>(m.size()), rankReceiver);
@@ -61,9 +90,7 @@ send(com::PtrCommunication communication,
     auto& indices = i.second;
 
     communication->send(rank, rankReceiver);
-    communication->send(static_cast<int>(indices.size()), rankReceiver);
-    communication->send(
-        const_cast<int*>(&indices[0]), indices.size(), rankReceiver);
+    send(communication, indices, rankReceiver);
   }
 }
 
@@ -79,14 +106,9 @@ receive(com::PtrCommunication communication,
 
   while (size--) {
     int rank = 0;
-    int size = 0;
 
     communication->receive(rank, rankSender);
-    communication->receive(size, rankSender);
-
-    m[rank].resize(size);
-
-    communication->receive(&m[rank][0], size, rankSender);
+    receive(communication, m[rank], rankSender);
   }
 }
 
@@ -94,7 +116,9 @@ void
 scatter(com::PtrCommunication communication,
         std::map<int, std::vector<int>>& m,
         std::map<int, std::vector<int>> const& thisVertexDistribution,
-        std::map<int, std::vector<int>> const& otherVertexDistribution) {
+        std::map<int, std::vector<int>> const& otherVertexDistribution,
+        std::function<void(int, std::map<int, std::vector<int>> const&)>
+            function = [](int r, std::map<int, std::vector<int>> const& m) {}) {
   std::map<int, std::vector<int>> senderMap;
   int i;
 
@@ -111,6 +135,8 @@ scatter(com::PtrCommunication communication,
                    i++;
                  },
                  [&](int thisRank) mutable {
+                   function(thisRank, senderMap);
+
                    if (thisRank == utils::MasterSlave::_rank)
                      m = std::move(senderMap);
                    else
@@ -199,10 +225,18 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
 
     receive(_communications[0], requesterVertexDistribution, 0);
     // -------------------------------------------------------------------------
-    scatter(utils::MasterSlave::_communication,
-            _senderMap,
-            vertexDistribution,
-            requesterVertexDistribution);
+    std::vector<int> sizes(utils::MasterSlave::_size, 0);
+
+    scatter(
+        utils::MasterSlave::_communication,
+        _senderMap,
+        vertexDistribution,
+        requesterVertexDistribution,
+        [&sizes](int rank, std::map<int, std::vector<int>> const& senderMap) {
+          sizes[rank] = senderMap.size();
+        });
+
+    send(_communications[0], sizes, 0);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
@@ -220,8 +254,7 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
 
   if (utils::MasterSlave::_masterMode) {
-    _communications[0] =
-        com::PtrCommunication(new com::SocketCommunication());
+    _communications[0] = com::PtrCommunication(new com::SocketCommunication());
 
     _communications[0]->requestConnection(nameAcceptor, nameRequester, 0, 1);
     // -------------------------------------------------------------------------
@@ -237,6 +270,10 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
             _senderMap,
             vertexDistribution,
             acceptorVertexDistribution);
+
+    std::vector<int> sizes;
+
+    receive(_communications[0], sizes, 0);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
