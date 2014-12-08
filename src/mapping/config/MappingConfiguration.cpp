@@ -349,13 +349,13 @@ void MappingConfiguration:: xmlTagCallback
       solverRtol = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL);
     }
     if (tag.hasAttribute(ATTR_X_DEAD)){
-      xDead = tag.getDoubleAttributeValue(ATTR_X_DEAD);
+      xDead = tag.getBooleanAttributeValue(ATTR_X_DEAD);
     }
     if (tag.hasAttribute(ATTR_Y_DEAD)){
-      yDead = tag.getDoubleAttributeValue(ATTR_Y_DEAD);
+      yDead = tag.getBooleanAttributeValue(ATTR_Y_DEAD);
     }
     if (tag.hasAttribute(ATTR_Z_DEAD)){
-      zDead = tag.getDoubleAttributeValue(ATTR_Z_DEAD);
+      zDead = tag.getBooleanAttributeValue(ATTR_Z_DEAD);
     }
         
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
