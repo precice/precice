@@ -159,6 +159,40 @@ scatter(com::PtrCommunication communication,
 }
 
 void
+sendNext( // TODO: CommunicationFactory
+    std::vector<int> const& v) {
+  int rank = utils::MasterSlave::_rank;
+  int nextRank = (rank + 1) % utils::MasterSlave::_size;
+
+  auto c = com::PtrCommunication(new com::SocketCommunication());
+
+  c->requestConnection("Receiver" + std::to_string(nextRank),
+                       "Sender" + std::to_string(rank),
+                       0,
+                       1);
+
+  send(c, v, 0);
+}
+
+void
+receivePrevious( // TODO: CommunicationFactory
+    std::vector<int>& v) {
+  int rank = utils::MasterSlave::_rank;
+  int previousRank =
+      (utils::MasterSlave::_size + rank - 1) % utils::MasterSlave::_size;
+
+  auto c = com::PtrCommunication(
+      new com::SocketCommunication("lo", 40000 + utils::MasterSlave::_rank));
+
+  c->acceptConnection("Receiver" + std::to_string(rank),
+                      "Sender" + std::to_string(previousRank),
+                      0,
+                      1);
+
+  receive(c, v, 0);
+}
+
+void
 print(std::map<int, std::vector<int>> const& m) {
   std::ostringstream oss;
 
@@ -212,18 +246,23 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
 
   if (utils::MasterSlave::_masterMode) {
-    _communications[0] =
-        com::PtrCommunication(new com::SocketCommunication("lo", 50000));
+    auto c = com::PtrCommunication(new com::SocketCommunication("lo", 50000));
 
-    _communications[0]->acceptConnection(nameAcceptor, nameRequester, 0, 1);
+    c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
+    // -------------------------------------------------------------------------
+    c->send(utils::MasterSlave::_masterRank, 0);
+    // -------------------------------------------------------------------------
+    int requesterMasterRank;
+
+    c->receive(requesterMasterRank, 0);
     // -------------------------------------------------------------------------
     auto& vertexDistribution = _pMesh->getVertexDistribution();
 
-    send(_communications[0], vertexDistribution, 0);
+    send(c, vertexDistribution, 0);
     // -------------------------------------------------------------------------
     std::map<int, std::vector<int>> requesterVertexDistribution;
 
-    receive(_communications[0], requesterVertexDistribution, 0);
+    receive(c, requesterVertexDistribution, 0);
     // -------------------------------------------------------------------------
     std::vector<int> sizes(utils::MasterSlave::_size, 0);
 
@@ -236,7 +275,7 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
           sizes[rank] = senderMap.size();
         });
 
-    send(_communications[0], sizes, 0);
+    send(c, sizes, 0);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
@@ -244,6 +283,20 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
   }
 
   print(_senderMap);
+
+  if (_senderMap.size() == 0)
+    return;
+
+  _communications[0] = com::PtrCommunication(
+      new com::SocketCommunication("lo", 50001 + utils::MasterSlave::_rank));
+
+  _communications[0]->acceptConnection(
+      nameAcceptor + std::to_string(utils::MasterSlave::_rank),
+      nameRequester,
+      0,
+      1);
+
+  _isConnected = true;
 }
 
 void
@@ -253,27 +306,34 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
                                              int requesterCommunicatorSize) {
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
 
-  if (utils::MasterSlave::_masterMode) {
-    _communications[0] = com::PtrCommunication(new com::SocketCommunication());
+  std::vector<int> acceptorRanks;
+  std::vector<int> acceptorSizes;
 
-    _communications[0]->requestConnection(nameAcceptor, nameRequester, 0, 1);
+  if (utils::MasterSlave::_masterMode) {
+    auto c = com::PtrCommunication(new com::SocketCommunication());
+
+    c->requestConnection(nameAcceptor, nameRequester, 0, 1);
+    // -------------------------------------------------------------------------
+    int acceptorMasterRank;
+
+    c->receive(acceptorMasterRank, 0);
+    // -------------------------------------------------------------------------
+    c->send(utils::MasterSlave::_masterRank, 0);
     // -------------------------------------------------------------------------
     std::map<int, std::vector<int>> acceptorVertexDistribution;
 
-    receive(_communications[0], acceptorVertexDistribution, 0);
+    receive(c, acceptorVertexDistribution, 0);
     // -------------------------------------------------------------------------
     auto& vertexDistribution = _pMesh->getVertexDistribution();
 
-    send(_communications[0], vertexDistribution, 0);
+    send(c, vertexDistribution, 0);
     // -------------------------------------------------------------------------
     scatter(utils::MasterSlave::_communication,
             _senderMap,
             vertexDistribution,
             acceptorVertexDistribution);
 
-    std::vector<int> sizes;
-
-    receive(_communications[0], sizes, 0);
+    receive(c, acceptorSizes, 0);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
@@ -281,6 +341,51 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
   }
 
   print(_senderMap);
+
+  if (utils::MasterSlave::_masterMode) {
+    acceptorRanks.resize(acceptorSizes.size(), -1);
+  } else {
+    assertion(utils::MasterSlave::_slaveMode);
+
+    receivePrevious(acceptorRanks);
+    receivePrevious(acceptorSizes);
+
+    assertion(acceptorRanks.size() == acceptorSizes.size());
+  }
+
+  for (auto const& i : _senderMap) {
+    int acceptorRank = i.first;
+
+    int rank = ++acceptorRanks[acceptorRank]; // Attention!
+    int size = acceptorSizes[acceptorRank];
+
+    _communications[acceptorRank] =
+        com::PtrCommunication(new com::SocketCommunication());
+
+    _communications[acceptorRank]->requestConnection(
+        nameAcceptor + std::to_string(acceptorRank), nameRequester, rank, size);
+  }
+
+  sendNext(acceptorRanks);
+  sendNext(acceptorSizes);
+
+  if (utils::MasterSlave::_masterMode) {
+    receivePrevious(acceptorRanks);
+    receivePrevious(acceptorSizes);
+
+    assertion(acceptorRanks.size() == acceptorSizes.size());
+
+    for (int acceptorRank = 0;
+         acceptorRank < std::min(acceptorRanks.size(), acceptorSizes.size());
+         ++acceptorRank) {
+      preciceCheck(
+          acceptorRanks[acceptorRank] == acceptorSizes[acceptorRank] - 1,
+          "requestConnection()",
+          "Local communication rank/size inconsistency!");
+    }
+  }
+
+  _isConnected = true;
 }
 
 void

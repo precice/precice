@@ -21,6 +21,7 @@ public:
 
   static int _rank;
   static int _size;
+  static int _masterRank;
 
   /**
    * @brief True if this process is running the master.
@@ -50,6 +51,8 @@ public:
    * @brief the dot product of 2 vectors is calculated on distributed data.
    */
   static double dot(const DynVector& vec1, const DynVector& vec2);
+
+  static void scatter(int& value);
 
 private:
 

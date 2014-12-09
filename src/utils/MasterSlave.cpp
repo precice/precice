@@ -12,6 +12,10 @@ namespace utils {
 
 int MasterSlave::_rank = -1;
 int MasterSlave::_size = -1;
+// One day somebody would want to choose master dynamically (e.g. from
+// configuration). As a result, `_masterMode' would no longer correspond to 0th
+// process. For now we just hardcode `_masterRank' assignment to `0'.
+int MasterSlave::_masterRank = 0;
 bool MasterSlave::_masterMode = false;
 bool MasterSlave::_slaveMode = false;
 com::PtrCommunication MasterSlave::_communication;
@@ -54,11 +58,11 @@ double MasterSlave:: l2norm(const DynVector& vec)
   if(_masterMode){
     globalSum2 += localSum2;
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      utils::MasterSlave::_communication->receive(localSum2, rankSlave);
+      _communication->receive(localSum2, rankSlave);
       globalSum2 += localSum2;
     }
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      utils::MasterSlave::_communication->send(globalSum2, rankSlave);
+      _communication->send(globalSum2, rankSlave);
     }
   }
   return sqrt(globalSum2);
@@ -90,14 +94,42 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
   if(_masterMode){
     globalSum += localSum;
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      utils::MasterSlave::_communication->receive(localSum, rankSlave);
+      _communication->receive(localSum, rankSlave);
       globalSum += localSum;
     }
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      utils::MasterSlave::_communication->send(globalSum, rankSlave);
+      _communication->send(globalSum, rankSlave);
     }
   }
   return globalSum;
+}
+
+void MasterSlave:: scatter(int& value)
+{
+  preciceTrace("scatter()");
+
+  if(not _masterMode && not _slaveMode){ //old case
+    return;
+  }
+
+  assertion(_communication.get() != NULL);
+  assertion(_communication->isConnected());
+
+  if(_masterMode){
+    int rank;
+
+    for(rank = 0; rank < _masterRank; ++rank){
+      _communication->send(value, rank);
+    }
+
+    for(rank++; rank < _size; ++rank){
+      _communication->send(value, rank);
+    }
+  } else {
+    assertion(_slaveMode);
+
+    _communication->receive(value, _masterRank);
+  }
 }
 
 
@@ -107,6 +139,4 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
 
 
 
-
 }} // precice, utils
-

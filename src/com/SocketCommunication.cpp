@@ -85,7 +85,12 @@ void SocketCommunication:: acceptConnection
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
   preciceCheck ( acceptorCommunicatorSize == 1, "acceptConnection()",
                  "Acceptor of socket connection can only have one process!" );
-  std::string ipFilename(_ipExchangeDirectory + "." + nameRequester + "-portname");
+  std::string ipFilename(_ipExchangeDirectory +
+                         "."                  +
+                         nameRequester        +
+                         "-"                  +
+                         nameAcceptor         +
+                         ".address");
   using asio::ip::tcp;
   try {
     std::ostringstream ipAddress;
@@ -197,7 +202,12 @@ void SocketCommunication:: requestConnection
   using asio::ip::tcp;
   try {
     // Read server address from file
-    std::string ipFilename(_ipExchangeDirectory + "." + nameRequester + "-portname");
+    std::string ipFilename(_ipExchangeDirectory +
+                           "."                  +
+                           nameRequester        +
+                           "-"                  +
+                           nameAcceptor         +
+                           ".address");
     preciceDebug("Reading server ip address from file " << ipFilename);
     std::ifstream inFile;
     do {
