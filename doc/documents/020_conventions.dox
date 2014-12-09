@@ -10,7 +10,7 @@ This page describes general and coding conventions used in preCICE.
 
 @subsection Indention
 
-Regarding indention, we follow the <a href="https://www.kernel.org/doc/Documentation/CodingStyle">Linux Kernel Coding Style</a>.
+Regarding indention, we follow the BSD-style.
 
 We do not indent namespaces since three or so levels of nested namespaces fill the offset without adding any viable information.
 
