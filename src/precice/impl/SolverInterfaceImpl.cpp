@@ -55,7 +55,12 @@
 #include "utils/EventTimings.hpp"
 #include "boost/tuple/tuple.hpp"
 
-#include <signal.h>
+#include <signal.h> // used for installing crash handler
+
+#ifndef PRECICE_NO_PETSC
+#include "petsc.h"
+#endif
+
 
 using precice::utils::Event;
 
@@ -253,8 +258,17 @@ void SolverInterfaceImpl:: configure
 double SolverInterfaceImpl:: initialize()
 {
   preciceTrace("initialize()");
-  Event e(__func__);
-  // Perform initializations
+  Event e(__func__);
+# ifndef PRECICE_NO_PETSC
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  if (not petscIsInitialized) {
+    // Initialize Petsc if it has not already been initialized in Parallel.cpp using the precice executable.
+    // This makes it possible to pass command line arguments that are consumed by Petsc when using the executable.
+    PetscInitializeNoArguments();
+  }
+# endif
+
   if (_clientMode){
     preciceDebug("Request perform initializations");
     _requestManager->requestInitialize();
