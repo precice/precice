@@ -200,11 +200,9 @@ public:
    * @brief Sends an array of double values from all slaves (different for each slave).
    */
   virtual void sendAll (
-    utils::DynVector*   itemsToSend,
-    int           size,
-    int           rankReceiver,
-    mesh::PtrMesh mesh,
-    int           valueDimension ) =0;
+    double* itemsToSend,
+    int     size,
+    int     rankReceiver ) =0;
 
   /**
    * @brief The master sends a bool to the other master, for performance reasons, we
@@ -226,11 +224,9 @@ public:
    * @brief All slaves receive an array of doubles (different for each slave).
    */
   virtual void receiveAll (
-    utils::DynVector*   itemsToReceive,
-    int           size,
-    int           rankSender,
-    mesh::PtrMesh mesh,
-    int           valueDimension ) =0;
+    double* itemsToReceive,
+    int     size,
+    int     rankSender ) =0;
 
   /**
    * @brief All slaves receive a bool (the same for each slave).

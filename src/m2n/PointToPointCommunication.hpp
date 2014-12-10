@@ -179,11 +179,10 @@ public:
    * @brief Sends an array of double values from all slaves (different for each
    * slave).
    */
-  virtual void sendAll(utils::DynVector* itemsToSend,
-                       int size,
-                       int rankReceiver,
-                       mesh::PtrMesh mesh,
-                       int valueDimension);
+  virtual void sendAll (
+    double* itemsToSend,
+    int     size,
+    int     rankReceiver );
 
   /**
    * @brief The master sends a bool to the other master, for performance
@@ -202,11 +201,10 @@ public:
   /**
    * @brief All slaves receive an array of doubles (different for each slave).
    */
-  virtual void receiveAll(utils::DynVector* itemsToReceive,
-                          int size,
-                          int rankSender,
-                          mesh::PtrMesh mesh,
-                          int valueDimension);
+  virtual void receiveAll (
+    double* itemsToReceive,
+    int     size,
+    int     rankSender );
 
   /**
    * @brief All slaves receive a bool (the same for each slave).
@@ -233,6 +231,7 @@ private:
    * @brief global communication is set up or not
    */
   bool _isConnected;
+  bool _isAcceptor;
 };
 }
 } // namespace precice, m2n

@@ -5,8 +5,63 @@
 #include <mpi.h>
 
 #include <iostream>
+#include <vector>
 
 using namespace precice;
+
+using std::cout;
+using std::endl;
+using std::vector;
+
+vector<double>
+getData() {
+  int rank = utils::MasterSlave::_rank;
+
+  static double data_0[] = {10.0, 20.0, 40.0, 80.0};
+  static double data_1[] = {30.0, 50.0, 60.0, 90.0};
+  static double data_2[] = {70.0, 100.0};
+
+  static double* data[] = {data_0, data_1, data_2};
+  static int size[] = {sizeof(data_0) / sizeof(*data_0),
+                       sizeof(data_1) / sizeof(*data_1),
+                       sizeof(data_2) / sizeof(*data_2)};
+
+  return std::move(vector<double>(data[rank], data[rank] + size[rank]));
+}
+
+vector<double>
+getExpectedData() {
+  int rank = utils::MasterSlave::_rank;
+
+  static double data_0[] = {
+      2 * 10.0 + 2, 2 * 20.0 + 1, 2 * 40.0 + 2, 2 * 80.0 + 5};
+  static double data_1[] = {
+      2 * 30.0 + 2, 2 * 50.0 + 1, 2 * 60.0 + 3, 2 * 90.0 + 5};
+  static double data_2[] = {2 * 70.0 + 3, 2 * 100.0 + 5};
+
+  static double* data[] = {data_0, data_1, data_2};
+  static int size[] = {sizeof(data_0) / sizeof(*data_0),
+                       sizeof(data_1) / sizeof(*data_1),
+                       sizeof(data_2) / sizeof(*data_2)};
+
+  return std::move(vector<double>(data[rank], data[rank] + size[rank]));
+}
+
+bool
+validate(vector<double> const& data) {
+  bool valid = true;
+
+  vector<double> expectedData = getExpectedData();
+
+  if (data.size() != expectedData.size())
+    return false;
+
+  for (int i = 0; i < data.size(); ++i) {
+    valid &= (data[i] == expectedData[i]);
+  }
+
+  return valid;
+}
 
 int
 main(int argc, char** argv) {
@@ -79,6 +134,19 @@ main(int argc, char** argv) {
   m2n::PointToPointCommunication c(pMesh);
 
   c.requestConnection("B", "A", 0, 1);
+
+  std::vector<double> data = getData();
+
+  c.sendAll(data.data(), data.size(), 42);
+
+  c.receiveAll(data.data(), data.size(), 42);
+
+  if (validate(data))
+    cout << utils::MasterSlave::_rank << ": "
+         << "Success!" << endl;
+  else
+    cout << utils::MasterSlave::_rank << ": "
+         << "Failure!" << endl;
 
   utils::MasterSlave::_communication.reset();
 

@@ -168,7 +168,8 @@ if env["compiler"] == 'icc':
     elif env["build"] == 'release':
         env.Append(CCFLAGS = ['-w', '-fast', '-align', '-ansi-alias'])
 elif env["compiler"] == 'g++':
-    pass
+    env.Append(CCFLAGS = ['-fopenmp'])
+    env.Append(LINKFLAGS = ['-fopenmp'])
 elif env["compiler"] == "clang++":
     env['ENV']['TERM'] = os.environ['TERM'] # colored compile messages from clang
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.

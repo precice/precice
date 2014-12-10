@@ -9,6 +9,8 @@
 #include "utils/MasterSlave.hpp"
 #include "mesh/Mesh.hpp"
 
+#include <omp.h>
+
 namespace precice {
 namespace m2n {
 
@@ -224,7 +226,7 @@ tarch::logging::Log PointToPointCommunication::_log(
     "precice::m2n::PointToPointCommunication");
 
 PointToPointCommunication::PointToPointCommunication(mesh::PtrMesh pMesh)
-    : _pMesh(pMesh), _isConnected(false) {
+    : _pMesh(pMesh), _isConnected(false), _isAcceptor(false) {
 }
 
 PointToPointCommunication::~PointToPointCommunication() {
@@ -244,6 +246,8 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
                                             int acceptorProcessRank,
                                             int acceptorCommunicatorSize) {
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+
+  _isAcceptor = true;
 
   if (utils::MasterSlave::_masterMode) {
     auto c = com::PtrCommunication(new com::SocketCommunication("lo", 50000));
@@ -287,14 +291,19 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
   if (_senderMap.size() == 0)
     return;
 
-  _communications[0] = com::PtrCommunication(
+  auto c = com::PtrCommunication(
       new com::SocketCommunication("lo", 50001 + utils::MasterSlave::_rank));
 
-  _communications[0]->acceptConnection(
-      nameAcceptor + std::to_string(utils::MasterSlave::_rank),
-      nameRequester,
-      0,
-      1);
+  c->acceptConnection(nameAcceptor + std::to_string(utils::MasterSlave::_rank),
+                      nameRequester,
+                      0,
+                      1);
+
+  for (auto const& i : _senderMap) {
+    int requesterRank = i.first;
+
+    _communications[requesterRank] = c;
+  }
 
   _isConnected = true;
 }
@@ -305,6 +314,8 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
                                              int requesterProcessRank,
                                              int requesterCommunicatorSize) {
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
+
+  _isAcceptor = false;
 
   std::vector<int> acceptorRanks;
   std::vector<int> acceptorSizes;
@@ -480,19 +491,63 @@ PointToPointCommunication::receiveMaster(bool& itemToReceive, int rankSender) {
 }
 
 void
-PointToPointCommunication::sendAll(utils::DynVector* itemsToSend,
+PointToPointCommunication::sendAll(double* itemsToSend,
                                    int size,
-                                   int rankReceiver,
-                                   mesh::PtrMesh mesh,
-                                   int valueDimension) {
+                                   int rankReceiver // TODO: Whaaat?!
+                                   ) {
+  assertion(_senderMap.size() == _communications.size());
+
+  if (_senderMap.size() == 0) {
+    preciceCheck(size == 0,
+                 "sendAll()",
+                 "Can't send anything from disconnected process!");
+
+    return;
+  }
+
+  omp_set_dynamic(0);
+
+#pragma omp parallel num_threads(_senderMap.size())
+  {
+    // TODO: Might be reasonable to prepare an array of iterators in order to
+    // improve performance.
+    auto indices = std::next(_senderMap.begin(), omp_get_thread_num())->second;
+    auto c = std::next(_communications.begin(), omp_get_thread_num())->second;
+
+    int rank = _isAcceptor ? omp_get_thread_num() : 0;
+
+    for (auto index : indices) {
+      c->send(itemsToSend[index], rank);
+    }
+  }
 }
 
 void
-PointToPointCommunication::receiveAll(utils::DynVector* itemsToReceive,
+PointToPointCommunication::receiveAll(double* itemsToReceive,
                                       int size,
-                                      int rankSender,
-                                      mesh::PtrMesh mesh,
-                                      int valueDimension) {
+                                      int rankSender // TODO: Whaaat?!
+                                      ) {
+  assertion(_senderMap.size() == _communications.size());
+
+  int rank = 0;
+
+  for (auto i : _senderMap) {
+    auto otherRank = i.first;
+    auto indices = i.second;
+
+    auto c = _communications[otherRank];
+
+    for (auto index : indices) {
+      double item;
+
+      c->receive(item, rank);
+
+      itemsToReceive[index] += item;
+    }
+
+    if (_isAcceptor)
+      rank++;
+  }
 }
 
 void
