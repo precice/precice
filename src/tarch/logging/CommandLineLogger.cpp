@@ -243,7 +243,7 @@ void tarch::logging::CommandLineLogger::info(const long int& timestampMS, const 
 
     tarch::multicore::Lock lockCout( _semaphore );
     out() << outputMessage;
-    if (out()!=std::cout) {
+    if (&out()!=&std::cout) {
       std::cout << outputMessage;
     }
   }
@@ -265,7 +265,7 @@ void tarch::logging::CommandLineLogger::warning(const long int& timestampMS, con
     tarch::multicore::Lock lockCout( _semaphore );
     out().flush();
     #ifdef CompilerCLX
-    if(out()!=std::cout) {
+    if(&out()!=&std::cout) {
       std::cout << outputMessage;
       std::cout.flush();
     }
@@ -291,7 +291,7 @@ void tarch::logging::CommandLineLogger::error(const long int& timestampMS, const
     tarch::multicore::Lock lockCout( _semaphore );
     out().flush();
     #ifdef CompilerCLX
-    if(out()!=std::cout) {
+    if(&out()!=&std::cout) {
       std::cout << outputMessage;
       std::cout.flush();
     }
