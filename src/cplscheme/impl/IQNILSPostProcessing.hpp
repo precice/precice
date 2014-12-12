@@ -95,10 +95,15 @@ private:
    //
    // Stores x-tilde deltas for data not involved in least-squares computation.
    std::map<int,DataMatrix> _secondaryMatricesW;
-
    
+   // @brief updates the V, W matrices (as well as the matrices for the secondary data)
+   virtual void updateDifferenceMatrices(DataMap & cplData);
+
    // @brief computes the IQN-ILS update using QR decomposition
    virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate);
+   
+   // @brief computes underrelaxation for the secondary data
+   virtual void computeUnderrelaxationSecondaryData(DataMap& cplData);
    
    // @brief Removes one iteration from V,W matrices and adapts _matrixCols.
    virtual void removeMatrixColumn(int columnIndex);

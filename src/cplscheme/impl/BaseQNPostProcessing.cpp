@@ -107,6 +107,7 @@ void BaseQNPostProcessing:: initialize
   _scaledOldValues.append(DataValues(entries, init));
   _matrixCols.push_front(0);
   _firstIteration = true;
+  _firstTimeStep = true;
 
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
   foreach (DataMap::value_type& pair, cplData){
@@ -131,29 +132,14 @@ void BaseQNPostProcessing:: initialize
 
 
 /* ----------------------------------------------------------------------------
- *     performPostProcessing
+ *     scaling
  * ----------------------------------------------------------------------------
  */
-void BaseQNPostProcessing:: performPostProcessing
+void BaseQNPostProcessing:: scaling
 (
   DataMap& cplData)
 {
-  preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
-  using namespace tarch::la;
-  assertion2(_dataIDs.size() == _scalings.size(), _dataIDs.size(), _scalings.size());
-  assertion2(_oldResiduals.size() == _oldXTilde.size(),
-             _oldResiduals.size(), _oldXTilde.size());
-  assertion2(_scaledValues.size() == _oldXTilde.size(),
-             _scaledValues.size(), _oldXTilde.size());
-  assertion2(_scaledOldValues.size() == _oldXTilde.size(),
-             _scaledOldValues.size(), _oldXTilde.size());
-  assertion2(_residuals.size() == _oldXTilde.size(),
-             _residuals.size(), _oldXTilde.size());
-
-  
-  // perform post processing for secondary data
-  performPPSecondaryData(cplData);
-  
+  preciceTrace("scaling()");
   
   int offset = 0;
   foreach (int id, _dataIDs){
@@ -167,7 +153,45 @@ void BaseQNPostProcessing:: performPostProcessing
       _scaledOldValues[i+offset] = oldValues[i]/factor;
     }
     offset += size;
+  } 
+}
+
+/* ----------------------------------------------------------------------------
+ *     undoScaling
+ * ----------------------------------------------------------------------------
+ */
+void BaseQNPostProcessing:: undoScaling
+(
+  DataMap& cplData)
+{
+  preciceTrace("undoScaling()");
+  
+  int offset = 0;
+  foreach(int id, _dataIDs){
+    double factor = _scalings[id];
+    int size = cplData[id]->values->size();
+    preciceDebug("Copying values back, size: " << size);
+    utils::DynVector& valuesPart = *(cplData[id]->values);
+    utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
+    for(int i=0; i < size; i++){
+      valuesPart[i] = _scaledValues[i+offset]*factor;
+      oldValuesPart[i] = _scaledOldValues[i+offset]*factor;
+    }
+    offset += size;
   }
+}
+
+
+/* ----------------------------------------------------------------------------
+ *     updateDiffernceMatrices
+ * ----------------------------------------------------------------------------
+ */
+void BaseQNPostProcessing:: updateDifferenceMatrices
+(
+  DataMap& cplData)
+{
+  preciceTrace("updateDiffernceMatrices()");
+  using namespace tarch::la;
 
   // Compute current residual: vertex-data - oldData
   //DataValues residuals(scaledValues);
@@ -175,18 +199,25 @@ void BaseQNPostProcessing:: performPostProcessing
   _residuals -= _scaledOldValues;
 
   //if (_firstIteration && (_matrixCols.size() < 2)){
-  if(_firstTimeStep && _firstIteration){
-    preciceDebug("   Performing underrelaxation");
-    _oldXTilde = _scaledValues; // Store x tilde
-    _oldResiduals = _residuals; // Store current residual
-    // Perform underrelaxation with residual: x_new = x_old + omega * res
-    _residuals *= _initialRelaxation;
-    _residuals += _scaledOldValues;
-    _scaledValues = _residuals;
+  /*
+   * ATTETION: changed the condition from _firstIteration && _firstTimeStep
+   * to the following: 
+   * underrelaxation has to be done, if the scheme has converged without even
+   * entering post processing. In this case the V, W matrices would still be empty.
+   * This case happended in the open foam example beamInCrossFlow.
+   */ 
+  if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
+//     preciceDebug("   Performing underrelaxation");
+//     _oldXTilde = _scaledValues; // Store x tilde
+//     _oldResiduals = _residuals; // Store current residual
+//     // Perform underrelaxation with residual: x_new = x_old + omega * res
+//     _residuals *= _initialRelaxation;
+//     _residuals += _scaledOldValues;
+//     _scaledValues = _residuals;
 
   }
   else {
-    preciceDebug("   Performing QN step");
+    //preciceDebug("   Performing QN step");
 
     if (not _firstIteration){ // Update matrices V, W with newest information
       assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
@@ -218,24 +249,145 @@ void BaseQNPostProcessing:: performPostProcessing
       _matrixW.column(0) -= _oldXTilde;
       
     }
-    
-    //std::cout<<"v.cols = "<<_matrixV.cols()<<" w.cols = "<<_matrixW.cols()<<std::endl;
-    if(_matrixV.cols() < 1 || _matrixW.cols() < 1 && _timestepsReused == 0)
+
+    _oldResiduals = _residuals;   // Store residuals
+    _oldXTilde = _scaledValues;   // Store x_tilde
+  }
+  
+}
+
+
+
+/* ----------------------------------------------------------------------------
+ *     performPostProcessing
+ * ----------------------------------------------------------------------------
+ */
+void BaseQNPostProcessing:: performPostProcessing
+(
+  DataMap& cplData)
+{
+  preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
+  using namespace tarch::la;
+  assertion2(_dataIDs.size() == _scalings.size(), _dataIDs.size(), _scalings.size());
+  assertion2(_oldResiduals.size() == _oldXTilde.size(),
+             _oldResiduals.size(), _oldXTilde.size());
+  assertion2(_scaledValues.size() == _oldXTilde.size(),
+             _scaledValues.size(), _oldXTilde.size());
+  assertion2(_scaledOldValues.size() == _oldXTilde.size(),
+             _scaledOldValues.size(), _oldXTilde.size());
+  assertion2(_residuals.size() == _oldXTilde.size(),
+             _residuals.size(), _oldXTilde.size());
+
+  
+  // scale data values (and secondary data values)
+  scaling(cplData);
+  
+  // perform post processing for secondary data
+  //performPPSecondaryData(cplData);
+  
+  /** update the difference matrices V,W  includes: 
+    * scaling of values
+    * computation of residuals
+    * appending the difference matrices 
+    */
+  updateDifferenceMatrices(cplData);
+  
+//   int offset = 0;
+//   foreach (int id, _dataIDs){
+//     double factor = _scalings[id];
+//     preciceDebug("Scaling Factor " << factor << " for id: " << id);
+//     int size = cplData[id]->values->size();
+//     DataValues& values = *cplData[id]->values;
+//     DataValues& oldValues = cplData[id]->oldValues.column(0);
+//     for (int i=0; i < size; i++){
+//       _scaledValues[i+offset] = values[i]/factor;
+//       _scaledOldValues[i+offset] = oldValues[i]/factor;
+//     }
+//     offset += size;
+//   }
+// 
+//   // Compute current residual: vertex-data - oldData
+//   //DataValues residuals(scaledValues);
+//   _residuals = _scaledValues;
+//   _residuals -= _scaledOldValues;
+// 
+//   //if (_firstIteration && (_matrixCols.size() < 2)){
+//   /*
+//    * ATTETION: changed the condition from _firstIteration && _firstTimeStep
+//    * to the following: 
+//    * underrelaxation has to be done, if the scheme has converged without even
+//    * entering post processing. In this case the V, W matrices would still be empty.
+//    * This case happended in the open foam example beamInCrossFlow.
+//    */ 
+   if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
+     preciceDebug("   Performing underrelaxation");
+     _oldXTilde = _scaledValues; // Store x tilde
+     _oldResiduals = _residuals; // Store current residual
+     // Perform underrelaxation with residual: x_new = x_old + omega * res
+     _residuals *= _initialRelaxation;
+     _residuals += _scaledOldValues;
+     _scaledValues = _residuals;
+     
+     // compute underrelaxation for the secondary data
+     computeUnderrelaxationSecondaryData(cplData);
+ 
+   }
+   else {
+     preciceDebug("   Performing QN step");
+// 
+//     if (not _firstIteration){ // Update matrices V, W with newest information
+//       assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+//       assertion2(_matrixV.cols() <= _maxIterationsUsed,
+//                  _matrixV.cols(), _maxIterationsUsed);
+//       bool columnLimitReached = _matrixV.cols() == _maxIterationsUsed;
+//       bool overdetermined = _matrixV.cols() <= _matrixV.rows();
+//       if (not columnLimitReached && overdetermined){
+//         _matrixV.appendFront(_residuals); // Will be modified to delta_r
+//         _matrixW.appendFront(_residuals); // Will be overwritten by delta_x_tilde
+//         
+//         _matrixCols.front()++;
+//       }
+//       else {
+//         _matrixV.shiftSetFirst(_residuals); // Will be modified to delta_r
+//         _matrixW.shiftSetFirst(_residuals); // Will be overwritten by delta_x_tilde
+// 	
+// 	_matrixCols.front()++;
+//         _matrixCols.back()--;
+//         if (_matrixCols.back() == 0){
+//           _matrixCols.pop_back();
+//         }
+//       }
+//       // Compute delta_residual = residual - residual_old
+//       _matrixV.column(0) -= _oldResiduals;
+// 
+//       // Compute delta_x_tilde = x_tilde - x_tilde_old
+//       _matrixW.column(0) = _scaledValues;
+//       _matrixW.column(0) -= _oldXTilde;
+//       
+//     }
+//     
+// 
+//     _oldResiduals = _residuals;   // Store residuals
+//     _oldXTilde = _scaledValues;   // Store x_tilde
+  
+     //std::cout<<"v.cols = "<<_matrixV.cols()<<" w.cols = "<<_matrixW.cols()<<std::endl;
+    if((_matrixV.cols() < 1 || _matrixW.cols()) < 1 && _timestepsReused == 0)
     {
      _matrixV = _matrixVBackup;
      _matrixW = _matrixWBackup;
      _matrixCols = _matrixColsBackup;
     }
 
-    _oldResiduals = _residuals;   // Store residuals
-    _oldXTilde = _scaledValues;   // Store x_tilde
-
     DataValues xUpdate(_residuals.size(), 0.0);
     
-    // compute quasi-Newton update 
+    /**
+     * compute quasi-Newton update 
+     */
     computeQNUpdate(cplData, xUpdate);
   
-    // apply quasiNewton update
+    /** 
+     * apply quasiNewton update
+     */
     _scaledValues = _scaledOldValues;  // = x^k
     _scaledValues += xUpdate;        // = x^k + delta_x
     _scaledValues += _residuals; // = x^k + delta_x + r^k
@@ -244,7 +396,7 @@ void BaseQNPostProcessing:: performPostProcessing
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only deeded for the first iteration (instead of underrelax.)
     //std::cout<<"first iteration = "<<_firstIteration<<"  first time step = "<<_firstTimeStep<<std::endl;
-    if(_firstIteration && not _firstTimeStep && _timestepsReused == 0)
+    if(_firstIteration && _timestepsReused == 0)
     {
       if(_matrixV.cols() > 0 && _matrixW.cols() > 0)
       {
@@ -252,9 +404,12 @@ void BaseQNPostProcessing:: performPostProcessing
         _matrixVBackup = _matrixV;
         _matrixWBackup = _matrixW;
       }
-      _matrixV.clear();
-      _matrixW.clear();
-      _matrixCols.clear();
+      if(not _firstTimeStep)
+      {
+        _matrixV.clear();
+        _matrixW.clear();
+        _matrixCols.clear();
+      }
           // TOD0: The following is still misssing for reusedTimeSTeps=0 
     // -----------------------------------------------
 // // //     foreach (int id, _secondaryDataIDs){
@@ -265,20 +420,9 @@ void BaseQNPostProcessing:: performPostProcessing
 
   }
 
-  // Undo scaling of values and overwrite originals
-  offset = 0;
-  foreach(int id, _dataIDs){
-    double factor = _scalings[id];
-    int size = cplData[id]->values->size();
-    preciceDebug("Copying values back, size: " << size);
-    utils::DynVector& valuesPart = *(cplData[id]->values);
-    utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
-    for(int i=0; i < size; i++){
-      valuesPart[i] = _scaledValues[i+offset]*factor;
-      oldValuesPart[i] = _scaledOldValues[i+offset]*factor;
-    }
-    offset += size;
-  }
+  // Undo scaling of data values and overwrite originals
+  undoScaling(cplData);
+  
   _firstIteration = false;
 }
 
@@ -287,6 +431,15 @@ void BaseQNPostProcessing:: iterationsConverged
    DataMap & cplData)
 {
   preciceTrace("iterationsConverged()");
+  
+  // the most recent differneces for the V, W matrices have not been added so far
+  // this has do be done in iterations converged, as PP won't be called if 
+  // convergence achieved
+  //scaling(cplData);
+  //updateDifferenceMatrices(cplData);
+  //undoScaling(cplData);
+  
+  
 # ifdef Debug
   std::ostringstream stream;
   stream << "Matrix column counters: ";

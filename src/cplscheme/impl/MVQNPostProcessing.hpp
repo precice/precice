@@ -89,6 +89,12 @@ private:
   //        furthermore it updates the inverse of the system jacobian
    virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate);
    
+      // @brief updates the V, W matrices (as well as the matrices for the secondary data)
+   virtual void updateDifferenceMatrices(DataMap & cplData);
+
+   // @brief computes underrelaxation for the secondary data
+   virtual void computeUnderrelaxationSecondaryData(DataMap& cplData);
+   
    void computeNewtonFactorsLUDecomposition(DataMap& cplData, DataValues& update);
    void computeNewtonFactorsQRDecomposition(DataMap& cplData, DataValues& update);
    

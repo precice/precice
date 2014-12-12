@@ -55,12 +55,11 @@ void IQNILSPostProcessing:: initialize
   
 }
 
-void IQNILSPostProcessing::performPPSecondaryData
+
+void IQNILSPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
 {
-
-
   // Compute residuals of secondary data
   foreach (int id, _secondaryDataIDs){
     DataValues& secResiduals = _secondaryResiduals[id];
@@ -71,25 +70,31 @@ void IQNILSPostProcessing::performPPSecondaryData
     secResiduals -= data->oldValues.column(0);
   }
 
-  //if (_firstIteration && (_matrixCols.size() < 2)){
-  if(_firstTimeStep && _firstIteration){
-    // Store x_tildes for secondary data
-    foreach (int id, _secondaryDataIDs){
-      assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
-                 _secondaryOldXTildes[id].size(), cplData[id]->values->size());
-      _secondaryOldXTildes[id] = *(cplData[id]->values);
-    }
-
-    // Perform underrelaxation with initial relaxation factor for secondary data
-    foreach (int id, _secondaryDataIDs){
-      PtrCouplingData data = cplData[id];
-      DataValues& values = *(data->values);
-      values *= _initialRelaxation;                   // new * omg
-      DataValues& secResiduals = _secondaryResiduals[id];
-      secResiduals = data->oldValues.column(0);    // old
-      secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
-      values += secResiduals;                      // (1-omg) * old + new * omg
-    }
+  /*
+   * ATTETION: changed the condition from _firstIteration && _firstTimeStep
+   * to the following: 
+   * underrelaxation has to be done, if the scheme has converged without even
+   * entering post processing. In this case the V, W matrices would still be empty.
+   * This case happended in the open foam example beamInCrossFlow.
+   */ 
+  if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
+//     // Store x_tildes for secondary data
+//     foreach (int id, _secondaryDataIDs){
+//       assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+//                  _secondaryOldXTildes[id].size(), cplData[id]->values->size());
+//       _secondaryOldXTildes[id] = *(cplData[id]->values);
+//     }
+// 
+//     // Perform underrelaxation with initial relaxation factor for secondary data
+//     foreach (int id, _secondaryDataIDs){
+//       PtrCouplingData data = cplData[id];
+//       DataValues& values = *(data->values);
+//       values *= _initialRelaxation;                   // new * omg
+//       DataValues& secResiduals = _secondaryResiduals[id];
+//       secResiduals = data->oldValues.column(0);    // old
+//       secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
+//       values += secResiduals;                      // (1-omg) * old + new * omg
+//     }
   }
   else {
     if (not _firstIteration){
@@ -126,6 +131,114 @@ void IQNILSPostProcessing::performPPSecondaryData
       _secondaryOldXTildes[id] = *(cplData[id]->values);
     }
   }
+  
+  
+  // call the base method for common update of V, W matrices
+  BaseQNPostProcessing::updateDifferenceMatrices(cplData);
+}
+
+
+void IQNILSPostProcessing::computeUnderrelaxationSecondaryData
+(
+  DataMap& cplData)
+{
+    //Store x_tildes for secondary data
+    foreach (int id, _secondaryDataIDs){
+      assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+                 _secondaryOldXTildes[id].size(), cplData[id]->values->size());
+      _secondaryOldXTildes[id] = *(cplData[id]->values);
+    }
+
+    // Perform underrelaxation with initial relaxation factor for secondary data
+    foreach (int id, _secondaryDataIDs){
+      PtrCouplingData data = cplData[id];
+      DataValues& values = *(data->values);
+      values *= _initialRelaxation;                   // new * omg
+      DataValues& secResiduals = _secondaryResiduals[id];
+      secResiduals = data->oldValues.column(0);    // old
+      secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
+      values += secResiduals;                      // (1-omg) * old + new * omg
+    }
+}
+
+
+void IQNILSPostProcessing::performPPSecondaryData
+(
+  DataMap& cplData)
+{
+
+
+//   // Compute residuals of secondary data
+//   foreach (int id, _secondaryDataIDs){
+//     DataValues& secResiduals = _secondaryResiduals[id];
+//     PtrCouplingData data = cplData[id];
+//     assertion2(secResiduals.size() == data->values->size(),
+//                secResiduals.size(), data->values->size());
+//     secResiduals = *(data->values);
+//     secResiduals -= data->oldValues.column(0);
+//   }
+// 
+//   /*
+//    * ATTETION: changed the condition from _firstIteration && _firstTimeStep
+//    * to the following: 
+//    * underrelaxation has to be done, if the scheme has converged without even
+//    * entering post processing. In this case the V, W matrices would still be empty.
+//    * This case happended in the open foam example beamInCrossFlow.
+//    */ 
+//   if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
+//     // Store x_tildes for secondary data
+//     foreach (int id, _secondaryDataIDs){
+//       assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+//                  _secondaryOldXTildes[id].size(), cplData[id]->values->size());
+//       _secondaryOldXTildes[id] = *(cplData[id]->values);
+//     }
+// 
+//     // Perform underrelaxation with initial relaxation factor for secondary data
+//     foreach (int id, _secondaryDataIDs){
+//       PtrCouplingData data = cplData[id];
+//       DataValues& values = *(data->values);
+//       values *= _initialRelaxation;                   // new * omg
+//       DataValues& secResiduals = _secondaryResiduals[id];
+//       secResiduals = data->oldValues.column(0);    // old
+//       secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
+//       values += secResiduals;                      // (1-omg) * old + new * omg
+//     }
+//   }
+//   else {
+//     if (not _firstIteration){
+//       bool columnLimitReached = _matrixV.cols() == _maxIterationsUsed;
+//       bool overdetermined = _matrixV.cols() <= _matrixV.rows();
+//       if (not columnLimitReached && overdetermined){
+//         
+// 	// Append column for secondary W matrices
+//         foreach (int id, _secondaryDataIDs){
+//           _secondaryMatricesW[id].appendFront(_secondaryResiduals[id]);
+//         }
+//       }
+//       else {
+//         // Shift column for secondary W matrices
+//         foreach (int id, _secondaryDataIDs){
+//           _secondaryMatricesW[id].shiftSetFirst(_secondaryResiduals[id]);
+//         }
+//       }
+// 
+//       // Compute delta_x_tilde for secondary data
+//       foreach (int id, _secondaryDataIDs){
+//         DataMatrix& secW = _secondaryMatricesW[id];
+//         assertion2(secW.column(0).size() == cplData[id]->values->size(),
+//                    secW.column(0).size(), cplData[id]->values->size());
+//         secW.column(0) = *(cplData[id]->values);
+//         secW.column(0) -= _secondaryOldXTildes[id];
+//       }
+//     }
+// 
+//     // Store x_tildes for secondary data
+//     foreach (int id, _secondaryDataIDs){ 
+//       assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+//                  _secondaryOldXTildes[id].size(), cplData[id]->values->size());
+//       _secondaryOldXTildes[id] = *(cplData[id]->values);
+//     }
+//   }
 }
 
 void IQNILSPostProcessing::computeQNUpdate
@@ -188,6 +301,16 @@ void IQNILSPostProcessing:: iterationsConverged
 (
    DataMap & cplData)
 {
+  
+  // the most recent differences for the V, W matrices have not been added so far
+  // this has to be done in iterations converged, as PP won't be called if 
+  // convergence achieved
+  scaling(cplData);
+  updateDifferenceMatrices(cplData);
+  undoScaling(cplData);
+  
+  
+  
   if (_matrixCols.front() == 0){ // Did only one iteration
     _matrixCols.pop_front(); 
   }

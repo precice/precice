@@ -11,6 +11,44 @@
 #include "tarch/la/DynamicVector.h"
 #include <deque>
 
+
+
+/* ****************************************************************************
+ * 
+ * A few comments conserning the present design choice.
+ * 
+ * All the functions from the base class BAseQNPostProcessing are specialized in
+ * the sub classes as needed. This is done vi overwriting the base functions in 
+ * the specialized sub classes and calling the respective base function after 
+ * performing the specialized stuff (in order to perform the common, generalized 
+ * computations i.e. handling of V,W matrices etc.)
+ * However, for the performPostProcessing Method we decided (for better readability)
+ * to have this method only in the base class, while introducing a function 
+ * performPPSecondaryData that handles all the specialized stuff conserning post 
+ * processing for the secondary data in the sub classes.
+ *
+ * Another posibility would have been to introduce a bunch of functions like 
+ * initializeSpecialized(), removeMatrixColumnSpecialized(), 
+ * iterationsConvergedSpecialized(), etc 
+ * and call those function from the base class top down to the sub classes.
+ *
+ * The third possibility was to separate the approximation of the Jacobian from
+ * the common stuff like handling V,W matrices in the post processing. 
+ * Here, we have a class QNPostProcessing that handles the V,W stuff an d the basic
+ * scheme of the QN update. Furthermore we have a base class (or rather interface) 
+ * JacobianApproximation with sub classes MVQNAPX and IQNAPX that handle all the 
+ * specialized stuff like Jacobian approximation, handling of secondary data etc. 
+ * However, this approach is not feasible, as we have to call the function 
+ * removeMatrixColumn() down in the specialized sub classes MVQNApx and IQNApx.
+ * This is not possible as the function works on the V, W matrices that are 
+ * completely treated by QNPostProcessing.
+ * 
+ * ****************************************************************************
+ */
+
+
+
+
 // ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
@@ -60,6 +98,7 @@ public:
     * Has to be called after every implicit coupling iteration.
     */
    virtual void performPostProcessing(DataMap& cplData);
+   
    
    virtual void performPPSecondaryData(DataMap& cplData) = 0;
 
@@ -164,6 +203,18 @@ protected:
    // iterations of the last timestep, or one specific iteration that leads to
    // a singular matrix in the QR decomposition can be removed and tracked.
    std::deque<int> _matrixCols;
+   
+   // @brief updates the V, W matrices (as well as the matrices for the secondary data)
+   virtual void updateDifferenceMatrices(DataMap & cplData);
+   
+   // @brief scales the data values with the predefined scaling factor
+   virtual void scaling(DataMap & cplData);
+   
+   // reverts the scaling of the data values and overwrites the old values with the updated ones
+   virtual void undoScaling(DataMap & cplData);
+   
+   // @brief computes underrelaxation for the secondary data
+   virtual void computeUnderrelaxationSecondaryData(DataMap& cplData) = 0;
 
    // @brief computes the quasi-Newton update using the specified pp scheme (MVQN, IQNILS)
    virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate) = 0;
