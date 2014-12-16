@@ -539,7 +539,7 @@ public:
 private:
 
   struct Communication {
-    m2n::PtrGlobalCommunication communication;
+    m2n::PtrM2N communication;
     bool isRequesting;
   };
 

@@ -61,7 +61,7 @@ forMapOfRanges(Map& map,
 }
 
 void
-send(com::PtrCommunication communication,
+sendVector(com::PtrCommunication communication,
      std::vector<int> const& v,
      int rankReceiver) {
   communication->send(static_cast<int>(v.size()), rankReceiver);
@@ -69,7 +69,7 @@ send(com::PtrCommunication communication,
 }
 
 void
-receive(com::PtrCommunication communication,
+receiveVector(com::PtrCommunication communication,
         std::vector<int>& v,
         int rankSender) {
   v.clear();
@@ -82,7 +82,7 @@ receive(com::PtrCommunication communication,
 }
 
 void
-send(com::PtrCommunication communication,
+sendVertexDistribution(com::PtrCommunication communication,
      std::map<int, std::vector<int>> const& m,
      int rankReceiver) {
   communication->send(static_cast<int>(m.size()), rankReceiver);
@@ -92,12 +92,12 @@ send(com::PtrCommunication communication,
     auto& indices = i.second;
 
     communication->send(rank, rankReceiver);
-    send(communication, indices, rankReceiver);
+    sendVector(communication, indices, rankReceiver);
   }
 }
 
 void
-receive(com::PtrCommunication communication,
+receiveVertexDistribution(com::PtrCommunication communication,
         std::map<int, std::vector<int>>& m,
         int rankSender) {
   m.clear();
@@ -110,7 +110,7 @@ receive(com::PtrCommunication communication,
     int rank = 0;
 
     communication->receive(rank, rankSender);
-    receive(communication, m[rank], rankSender);
+    receiveVector(communication, m[rank], rankSender);
   }
 }
 
@@ -142,7 +142,7 @@ scatter(com::PtrCommunication communication,
                    if (thisRank == utils::MasterSlave::_rank)
                      m = std::move(senderMap);
                    else
-                     send(communication, senderMap, thisRank);
+                     sendVertexDistribution(communication, senderMap, thisRank);
 
                    senderMap.clear();
                  });
@@ -156,7 +156,7 @@ scatter(com::PtrCommunication communication,
       continue;
 
     if (thisVertexDistribution.find(rank) == thisVertexDistribution.end())
-      send(communication, senderMap, rank);
+      sendVertexDistribution(communication, senderMap, rank);
   }
 }
 
@@ -173,7 +173,7 @@ sendNext( // TODO: CommunicationFactory
                        0,
                        1);
 
-  send(c, v, 0);
+  sendVector(c, v, 0);
 }
 
 void
@@ -191,7 +191,7 @@ receivePrevious( // TODO: CommunicationFactory
                       0,
                       1);
 
-  receive(c, v, 0);
+  receiveVector(c, v, 0);
 }
 
 void
@@ -225,8 +225,8 @@ print(std::map<int, std::vector<int>> const& m) {
 tarch::logging::Log PointToPointCommunication::_log(
     "precice::m2n::PointToPointCommunication");
 
-PointToPointCommunication::PointToPointCommunication(mesh::PtrMesh pMesh)
-    : _pMesh(pMesh), _isConnected(false), _isAcceptor(false) {
+PointToPointCommunication::PointToPointCommunication(mesh::PtrMesh mesh)
+    : DistributedCommunication(mesh), _isConnected(false), _isAcceptor(false) {
 }
 
 PointToPointCommunication::~PointToPointCommunication() {
@@ -242,9 +242,7 @@ PointToPointCommunication::isConnected() {
 
 void
 PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
-                                            const std::string& nameRequester,
-                                            int acceptorProcessRank,
-                                            int acceptorCommunicatorSize) {
+                                            const std::string& nameRequester) {
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
 
   _isAcceptor = true;
@@ -260,13 +258,13 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
 
     c->receive(requesterMasterRank, 0);
     // -------------------------------------------------------------------------
-    auto& vertexDistribution = _pMesh->getVertexDistribution();
+    auto& vertexDistribution = _mesh->getVertexDistribution();
 
-    send(c, vertexDistribution, 0);
+    sendVertexDistribution(c, vertexDistribution, 0);
     // -------------------------------------------------------------------------
     std::map<int, std::vector<int>> requesterVertexDistribution;
 
-    receive(c, requesterVertexDistribution, 0);
+    receiveVertexDistribution(c, requesterVertexDistribution, 0);
     // -------------------------------------------------------------------------
     std::vector<int> sizes(utils::MasterSlave::_size, 0);
 
@@ -279,11 +277,11 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
           sizes[rank] = senderMap.size();
         });
 
-    send(c, sizes, 0);
+    sendVector(c, sizes, 0);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    receive(utils::MasterSlave::_communication, _senderMap, 0);
+    receiveVertexDistribution(utils::MasterSlave::_communication, _senderMap, 0);
   }
 
   print(_senderMap);
@@ -310,9 +308,7 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
 
 void
 PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
-                                             const std::string& nameRequester,
-                                             int requesterProcessRank,
-                                             int requesterCommunicatorSize) {
+                                             const std::string& nameRequester) {
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
 
   _isAcceptor = false;
@@ -333,22 +329,22 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
     // -------------------------------------------------------------------------
     std::map<int, std::vector<int>> acceptorVertexDistribution;
 
-    receive(c, acceptorVertexDistribution, 0);
+    receiveVertexDistribution(c, acceptorVertexDistribution, 0);
     // -------------------------------------------------------------------------
-    auto& vertexDistribution = _pMesh->getVertexDistribution();
+    auto& vertexDistribution = _mesh->getVertexDistribution();
 
-    send(c, vertexDistribution, 0);
+    sendVertexDistribution(c, vertexDistribution, 0);
     // -------------------------------------------------------------------------
     scatter(utils::MasterSlave::_communication,
             _senderMap,
             vertexDistribution,
             acceptorVertexDistribution);
 
-    receive(c, acceptorSizes, 0);
+    receiveVector(c, acceptorSizes, 0);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    receive(utils::MasterSlave::_communication, _senderMap, 0);
+    receiveVertexDistribution(utils::MasterSlave::_communication, _senderMap, 0);
   }
 
   print(_senderMap);
@@ -403,98 +399,11 @@ void
 PointToPointCommunication::closeConnection() {
 }
 
-com::PtrCommunication
-PointToPointCommunication::getMasterCommunication() {
-  return _communications[0];
-}
-
 void
-PointToPointCommunication::startSendPackage(int rankReceiver) {
-}
-
-void
-PointToPointCommunication::finishSendPackage() {
-}
-
-int
-PointToPointCommunication::startReceivePackage(int rankSender) {
-  return -1;
-}
-
-void
-PointToPointCommunication::finishReceivePackage() {
-}
-
-void
-PointToPointCommunication::sendMaster(const std::string& itemToSend,
-                                      int rankReceiver) {
-}
-
-void
-PointToPointCommunication::sendMaster(int* itemsToSend,
-                                      int size,
-                                      int rankReceiver) {
-}
-
-void
-PointToPointCommunication::sendMaster(double* itemsToSend,
-                                      int size,
-                                      int rankReceiver) {
-}
-
-void
-PointToPointCommunication::sendMaster(double itemToSend, int rankReceiver) {
-}
-
-void
-PointToPointCommunication::sendMaster(int itemToSend, int rankReceiver) {
-}
-
-void
-PointToPointCommunication::sendMaster(bool itemToSend, int rankReceiver) {
-}
-
-int
-PointToPointCommunication::receiveMaster(std::string& itemToReceive,
-                                         int rankSender) {
-  return -1;
-}
-
-int
-PointToPointCommunication::receiveMaster(int* itemsToReceive,
-                                         int size,
-                                         int rankSender) {
-  return -1;
-}
-
-int
-PointToPointCommunication::receiveMaster(double* itemsToReceive,
-                                         int size,
-                                         int rankSender) {
-  return -1;
-}
-
-int
-PointToPointCommunication::receiveMaster(double& itemToReceive,
-                                         int rankSender) {
-  return -1;
-}
-
-int
-PointToPointCommunication::receiveMaster(int& itemToReceive, int rankSender) {
-  return -1;
-}
-
-int
-PointToPointCommunication::receiveMaster(bool& itemToReceive, int rankSender) {
-  return -1;
-}
-
-void
-PointToPointCommunication::sendAll(double* itemsToSend,
-                                   int size,
-                                   int rankReceiver // TODO: Whaaat?!
-                                   ) {
+PointToPointCommunication::send(double* itemsToSend,
+                                int size,
+                                int valueDimension
+                                ) {
   assertion(_senderMap.size() == _communications.size());
 
   if (_senderMap.size() == 0) {
@@ -523,10 +432,10 @@ PointToPointCommunication::sendAll(double* itemsToSend,
 }
 
 void
-PointToPointCommunication::receiveAll(double* itemsToReceive,
-                                      int size,
-                                      int rankSender // TODO: Whaaat?!
-                                      ) {
+PointToPointCommunication::receive(double* itemsToReceive,
+                                   int size,
+                                   int valueDimension
+                                   ) {
   assertion(_senderMap.size() == _communications.size());
 
   int rank = 0;
@@ -550,20 +459,4 @@ PointToPointCommunication::receiveAll(double* itemsToReceive,
   }
 }
 
-void
-PointToPointCommunication::receiveAll(bool& itemToReceive, int rankSender) {
-}
-
-void
-PointToPointCommunication::receiveAll(double& itemToReceive, int rankSender) {
-}
-
-void
-PointToPointCommunication::sendAll(bool itemToSend, int rankReceiver) {
-}
-
-void
-PointToPointCommunication::sendAll(double itemToSend, int rankReceiver) {
-}
-}
-} // namespace precice, m2n
+}} // namespace precice, m2n

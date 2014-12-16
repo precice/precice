@@ -4,7 +4,7 @@
 #include "CommunicatedGeometry.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
-#include "m2n/GlobalCommunication.hpp"
+#include "m2n/M2N.hpp"
 #include "mapping/Mapping.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -40,17 +40,17 @@ CommunicatedGeometry:: CommunicatedGeometry
 void CommunicatedGeometry:: addReceiver
 (
   const std::string&     receiver,
-  m2n::PtrGlobalCommunication com )
+  m2n::PtrM2N m2n)
 {
   preciceTrace1 ( "addReceiver()", receiver );
-  assertion ( com.get() != NULL );
+  assertion ( m2n.get() != NULL );
   preciceCheck ( ! utils::contained(receiver, _receivers),
                  "addReceiver()", "Receiver \"" << receiver
                  << "\" has been added already to communicated geometry!" );
   preciceCheck ( receiver != _providerName, "addReceiver()",
                  "Receiver \"" << receiver << "\" cannot be the same as "
                  << "provider in communicated geometry!" );
-  _receivers[receiver] = com;
+  _receivers[receiver] = m2n;
 }
 
 void CommunicatedGeometry:: specializedCreate
@@ -127,11 +127,12 @@ void CommunicatedGeometry:: sendMesh(
                    "specializedCreate()", "Participant \"" << _accessorName
                    << "\" provides an invalid (possibly empty) mesh \""
                    << globalMesh.getName() << "\"!" );
-    typedef std::map<std::string,m2n::PtrGlobalCommunication>::value_type Pair;
+    typedef std::map<std::string,m2n::PtrM2N>::value_type Pair;
     foreach ( Pair & pair, _receivers ) {
-      if ( ! pair.second->isConnected() ) {
-        pair.second->acceptConnection ( _providerName, pair.first, 0, 1 );
-      }
+      // don't understand why this is done here again
+//      if ( ! pair.second->isConnected() ) {
+//        pair.second->acceptConnection ( _providerName, pair.first);
+//      }
       com::CommunicateMesh(pair.second->getMasterCommunication()).sendMesh ( globalMesh, 0 );
     }
   }
@@ -143,11 +144,11 @@ void CommunicatedGeometry:: receiveMesh(
   if(not utils::MasterSlave::_slaveMode){
     assertion ( seed.vertices().size() == 0 );
     assertion ( utils::contained(_accessorName, _receivers) );
-    m2n::PtrGlobalCommunication com ( _receivers[_accessorName] );
-    if ( ! com->isConnected() ) {
-      com->requestConnection ( _providerName, _accessorName, 0, 1 );
-    }
-    com::CommunicateMesh(com->getMasterCommunication()).receiveMesh ( seed, 0 );
+    m2n::PtrM2N m2n ( _receivers[_accessorName] );
+//    if ( ! com->isConnected() ) {
+//      com->requestConnection ( _providerName, _accessorName, 0, 1 );
+//    }
+    com::CommunicateMesh(m2n->getMasterCommunication()).receiveMesh ( seed, 0 );
   }
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     scatterMesh(seed);

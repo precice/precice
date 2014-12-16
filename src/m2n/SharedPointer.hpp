@@ -9,8 +9,11 @@
 namespace precice {
 namespace m2n {
 
-class GlobalCommunication;
-typedef boost::shared_ptr<GlobalCommunication> PtrGlobalCommunication;
+class DistributedCommunication;
+typedef boost::shared_ptr<DistributedCommunication> PtrDistributedCommunication;
+
+class M2N;
+typedef boost::shared_ptr<M2N> PtrM2N;
 
 //class M2NConfiguration;
 //typedef boost::shared_ptr<M2NConfiguration> PtrCommunicationConfiguration;

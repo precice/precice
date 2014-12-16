@@ -123,7 +123,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
   com::PtrCommunication communication(new com::MPIDirectCommunication);
-  m2n::PtrGlobalCommunication globalCom(new m2n::GatherScatterCommunication(communication));
+  m2n::PtrM2N globalCom(new m2n::M2N(communication));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -225,17 +225,17 @@ void ParallelImplicitCouplingSchemeTest:: connect
   const std::string&      participant0,
   const std::string&      participant1,
   const std::string&      localParticipant,
-  m2n::PtrGlobalCommunication& communication ) const
+  m2n::PtrM2N& communication ) const
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::initialize ( NULL, NULL, localParticipant );
   if ( participant0 == localParticipant ) {
-    communication->requestConnection ( participant1, participant0, 0, 1 );
+    communication->requestMasterConnection ( participant1, participant0);
   }
   else {
     assertion ( participant1 == localParticipant );
-    communication->acceptConnection ( participant1, participant0, 0, 1 );
+    communication->acceptMasterConnection ( participant1, participant0);
   }
 }
 

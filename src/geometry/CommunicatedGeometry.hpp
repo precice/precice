@@ -35,7 +35,7 @@ public:
 
   void addReceiver (
     const std::string&     receiver,
-    m2n::PtrGlobalCommunication com );
+    m2n::PtrM2N m2n );
 
   void setBoundingFromMapping(mapping::PtrMapping mapping);
 
@@ -81,7 +81,7 @@ private:
 
   std::string _providerName;
 
-  std::map<std::string,m2n::PtrGlobalCommunication> _receivers;
+  std::map<std::string,m2n::PtrM2N> _receivers;
 
   int _dimensions;
 

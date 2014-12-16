@@ -5,7 +5,7 @@
 #ifndef PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_
 #define PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_
 
-#include "GlobalCommunication.hpp"
+#include "DistributedCommunication.hpp"
 #include "com/Communication.hpp"
 #include "tarch/logging/Log.h"
 #include "com/SharedPointer.hpp"
@@ -22,12 +22,12 @@ namespace m2n {
  * between slaves is used.
  * For more details see m2n/GlobalCommunication.hpp
  */
-class PointToPointCommunication : public GlobalCommunication {
+class PointToPointCommunication : public DistributedCommunication {
 public:
   /**
    * @brief Constructor.
    */
-  PointToPointCommunication(mesh::PtrMesh pMesh);
+  PointToPointCommunication(mesh::PtrMesh mesh);
 
   /**
    * @brief Destructor.
@@ -52,9 +52,7 @@ public:
    * @param nameRequester [IN] Name of remote participant to connect to.
    */
   virtual void acceptConnection(const std::string& nameAcceptor,
-                                const std::string& nameRequester,
-                                int acceptorProcessRank,
-                                int acceptorCommunicatorSize);
+                                const std::string& nameRequester);
 
   /**
    * @brief Requests connection from participant, which has to call
@@ -68,9 +66,7 @@ public:
    * @param nameReuester [IN] Name of calling participant.
    */
   virtual void requestConnection(const std::string& nameAcceptor,
-                                 const std::string& nameRequester,
-                                 int requesterProcessRank,
-                                 int requesterCommunicatorSize);
+                                 const std::string& nameRequester);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -79,150 +75,25 @@ public:
    */
   virtual void closeConnection();
 
-  virtual com::PtrCommunication getMasterCommunication();
-
-  /**
-   * @brief Is empty.
-   */
-  virtual void startSendPackage(int rankReceiver);
-
-  /**
-   * @brief Is empty.
-   */
-  virtual void finishSendPackage();
-
-  /**
-   * @brief Just returns rank of sender.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
-   */
-  virtual int startReceivePackage(int rankSender);
-
-  /**
-   * @brief Is empty.
-   */
-  virtual void finishReceivePackage();
-
-  /**
-   * @brief The Master sends a std::string to process with given rank.
-   */
-  virtual void sendMaster(const std::string& itemToSend, int rankReceiver);
-
-  /**
-   * @brief The Master sends an array of integer values.
-   */
-  virtual void sendMaster(int* itemsToSend, int size, int rankReceiver);
-
-  /**
-   * @brief The Master sends an array of double values.
-   */
-  virtual void sendMaster(double* itemsToSend, int size, int rankReceiver);
-
-  /**
-   * @brief The Master sends a double to process with given rank.
-   */
-  virtual void sendMaster(double itemToSend, int rankReceiver);
-
-  /**
-   * @brief The Master sends an int to process with given rank.
-   */
-  virtual void sendMaster(int itemToSend, int rankReceiver);
-
-  /**
-   * @brief The Master sends a bool to process with given rank.
-   */
-  virtual void sendMaster(bool itemToSend, int rankReceiver);
-
-  /**
-   * @brief The master receives a std::string from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
-   */
-  virtual int receiveMaster(std::string& itemToReceive, int rankSender);
-
-  /**
-   * @brief The master receives an array of integer values.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
-   */
-  virtual int receiveMaster(int* itemsToReceive, int size, int rankSender);
-
-  /**
-   * @brief The master receives an array of double values.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
-   */
-  virtual int receiveMaster(double* itemsToReceive, int size, int rankSender);
-
-  /**
-   * @brief The master receives a double from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
-   */
-  virtual int receiveMaster(double& itemToReceive, int rankSender);
-
-  /**
-   * @brief The master receives an int from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
-   */
-  virtual int receiveMaster(int& itemToReceive, int rankSender);
-
-  /**
-   * @brief The master receives a bool from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
-   */
-  virtual int receiveMaster(bool& itemToReceive, int rankSender);
-
   /**
    * @brief Sends an array of double values from all slaves (different for each
    * slave).
    */
-  virtual void sendAll (
+  virtual void send(
     double* itemsToSend,
     int     size,
-    int     rankReceiver );
-
-  /**
-   * @brief The master sends a bool to the other master, for performance
-   * reasons, we
-   * neglect the gathering and checking step.
-   */
-  virtual void sendAll(bool itemToSend, int rankReceiver);
-
-  /**
-   * @brief The master sends a double to the other master, for performance
-   * reasons, we
-   * neglect the gathering and checking step.
-   */
-  virtual void sendAll(double itemToSend, int rankReceiver);
+    int     valueDimension );
 
   /**
    * @brief All slaves receive an array of doubles (different for each slave).
    */
-  virtual void receiveAll (
+  virtual void receive (
     double* itemsToReceive,
     int     size,
-    int     rankSender );
-
-  /**
-   * @brief All slaves receive a bool (the same for each slave).
-   */
-  virtual void receiveAll(bool& itemToReceive, int rankSender);
-
-  /**
-   * @brief All slaves receive a double (the same for each slave).
-   */
-  virtual void receiveAll(double& itemToReceive, int rankSender);
+    int     valueDimension );
 
 private:
   static tarch::logging::Log _log;
-
-  /**
-   * @brief master to master basic communication
-   */
-  mesh::PtrMesh _pMesh;
 
   std::map<int, com::PtrCommunication> _communications;
   std::map<int, std::vector<int>> _senderMap;
@@ -233,7 +104,7 @@ private:
   bool _isConnected;
   bool _isAcceptor;
 };
-}
-} // namespace precice, m2n
+
+}} // namespace precice, m2n
 
 #endif /* PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_ */

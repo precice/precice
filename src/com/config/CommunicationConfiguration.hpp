@@ -22,7 +22,7 @@ class CommunicationConfiguration : public utils::XMLTag::Listener
 {
 public:
 
-   typedef boost::tuple<m2n::PtrGlobalCommunication,std::string,std::string> ComTuple;
+   typedef boost::tuple<m2n::PtrM2N,std::string,std::string> ComTuple;
 
    /**
     * @brief Creates a not auto-configurable config, to use createCommunicatio().
@@ -42,7 +42,7 @@ public:
     * Exits with an error message, when no object is configured for the given
     * user names.
     */
-   m2n::PtrGlobalCommunication getCommunication (
+   m2n::PtrM2N getCommunication (
       const std::string& from,
       const std::string& to );
 

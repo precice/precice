@@ -1,7 +1,7 @@
 #include "ParallelCouplingScheme.hpp"
 #include "impl/PostProcessing.hpp"
 #include "com/Communication.hpp"
-#include "m2n/GlobalCommunication.hpp"
+#include "m2n/M2N.hpp"
 #include "com/SharedPointer.hpp"
 
 namespace precice {
@@ -18,13 +18,13 @@ ParallelCouplingScheme::ParallelCouplingScheme
   const std::string&    firstParticipant,
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
-  m2n::PtrGlobalCommunication communication,
+  m2n::PtrM2N           m2n,
   constants::TimesteppingMethod dtMethod,
   CouplingMode          cplMode,
   int                   maxIterations)
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,firstParticipant,
-                     secondParticipant,localParticipant,communication,maxIterations,dtMethod),
+                     secondParticipant,localParticipant,m2n,maxIterations,dtMethod),
   _allData ()
 {
   _couplingMode = cplMode;
@@ -103,23 +103,23 @@ void ParallelCouplingScheme::initializeData()
   // F: send, receive, S: receive, send
   if (doesFirstStep()) {
     if (hasToSendInitData()) {
-      getCommunication()->startSendPackage(0);
-      sendData(getCommunication());
-      getCommunication()->finishSendPackage();
+      getM2N()->startSendPackage(0);
+      sendData(getM2N());
+      getM2N()->finishSendPackage();
     }
     if (hasToReceiveInitData()) {
-      getCommunication()->startReceivePackage(0);
-      receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
+      getM2N()->startReceivePackage(0);
+      receiveData(getM2N());
+      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
     }
   }
 
   else { // second participant
     if (hasToReceiveInitData()) {
-      getCommunication()->startReceivePackage(0);
-      receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
+      getM2N()->startReceivePackage(0);
+      receiveData(getM2N());
+      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
 
       // second participant has to save values for extrapolation
@@ -141,9 +141,9 @@ void ParallelCouplingScheme::initializeData()
           pair.second->oldValues.shiftSetFirst(*pair.second->values);
         }
       }
-      getCommunication()->startSendPackage(0);
-      sendData(getCommunication());
-      getCommunication()->finishSendPackage();
+      getM2N()->startSendPackage(0);
+      sendData(getM2N());
+      getM2N()->finishSendPackage();
     }
   }
 
@@ -177,31 +177,31 @@ void ParallelCouplingScheme::explicitAdvance()
 
     if (doesFirstStep()) {
       preciceDebug("Sending data...");
-      getCommunication()->startSendPackage(0);
+      getM2N()->startSendPackage(0);
       sendDt();
-      sendData(getCommunication());
-      getCommunication()->finishSendPackage();
+      sendData(getM2N());
+      getM2N()->finishSendPackage();
 
       preciceDebug("Receiving data...");
-      getCommunication()->startReceivePackage(0);
+      getM2N()->startReceivePackage(0);
       receiveAndSetDt();
-      receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
+      receiveData(getM2N());
+      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
     }
     else { //second participant
       preciceDebug("Receiving data...");
-      getCommunication()->startReceivePackage(0);
+      getM2N()->startReceivePackage(0);
       receiveAndSetDt();
-      receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
+      receiveData(getM2N());
+      getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
 
       preciceDebug("Sending data...");
-      getCommunication()->startSendPackage(0);
+      getM2N()->startSendPackage(0);
       sendDt();
-      sendData(getCommunication());
-      getCommunication()->finishSendPackage();
+      sendData(getM2N());
+      getM2N()->finishSendPackage();
     }
 
     //both participants
@@ -223,23 +223,23 @@ void ParallelCouplingScheme::implicitAdvance()
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     preciceDebug("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
-      getCommunication()->startSendPackage(0);
-      sendData(getCommunication());
-      getCommunication()->finishSendPackage();
-      getCommunication()->startReceivePackage(0);
-      getCommunication()->receiveAll(convergence,0);
+      getM2N()->startSendPackage(0);
+      sendData(getM2N());
+      getM2N()->finishSendPackage();
+      getM2N()->startReceivePackage(0);
+      getM2N()->receive(convergence);
       if (convergence) {
         timestepCompleted();
       }
       if (isCouplingOngoing()) {
-        receiveData(getCommunication());
+        receiveData(getM2N());
       }
-      getCommunication()->finishReceivePackage();
+      getM2N()->finishReceivePackage();
     }
     else { // second participant
-      getCommunication()->startReceivePackage(0);
-      receiveData(getCommunication());
-      getCommunication()->finishReceivePackage();
+      getM2N()->startReceivePackage(0);
+      receiveData(getM2N());
+      getM2N()->finishReceivePackage();
 
       convergence = measureConvergence();
 
@@ -257,8 +257,8 @@ void ParallelCouplingScheme::implicitAdvance()
       else if (getPostProcessing().get() != NULL) {
         getPostProcessing()->performPostProcessing(getAllData());
       }
-      getCommunication()->startSendPackage(0);
-      getCommunication()->sendAll(convergence,0);
+      getM2N()->startSendPackage(0);
+      getM2N()->send(convergence);
 
       if (isCouplingOngoing()) {
         if (convergence && (getExtrapolationOrder() > 0)){
@@ -276,9 +276,9 @@ void ParallelCouplingScheme::implicitAdvance()
             }
           }
         }
-        sendData(getCommunication());
+        sendData(getM2N());
       }
-      getCommunication()->finishSendPackage();
+      getM2N()->finishSendPackage();
     }
 
     // both participants

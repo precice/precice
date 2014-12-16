@@ -13,7 +13,7 @@
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "m2n/GlobalCommunication.hpp"
+#include "m2n/M2N.hpp"
 #include "m2n/GatherScatterCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
 #include "utils/Parallel.hpp"
@@ -89,7 +89,7 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
   meshConfig.addMesh ( mesh );
 
   com::PtrCommunication communication ( new com::MPIDirectCommunication() );
-  m2n::PtrGlobalCommunication globalCom( new m2n::GatherScatterCommunication(communication) );
+  m2n::PtrM2N globalCom( new m2n::M2N(communication) );
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
   double maxTime = 1.0;
@@ -147,7 +147,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::PtrM2N com = comConfig->getCommunication("participant0", "participant1");
 
   geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
   connect ( "participant0", "participant1", localParticipant, com );
@@ -187,7 +187,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
   //validate(geoConfig.isValid());
   //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::PtrM2N com = comConfig->getCommunication("participant0", "participant1");
 
   geoConfig.geometries()[0]->create( *meshConfig->meshes()[0] );
   connect ( "participant0", "participant1", localParticipant, com );
@@ -272,7 +272,7 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::PtrM2N com = comConfig->getCommunication("participant0", "participant1");
 
   geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
   connect("participant0", "participant1", localParticipant, com);
@@ -342,7 +342,7 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::PtrM2N com = comConfig->getCommunication("participant0", "participant1");
 
   geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
   connect("participant0", "participant1", localParticipant, com);
@@ -537,7 +537,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
   meshConfig.addMesh ( mesh );
 
   com::PtrCommunication communication ( new com::MPIDirectCommunication );
-  m2n::PtrGlobalCommunication globalCom (new m2n::GatherScatterCommunication(communication));
+  m2n::PtrM2N globalCom (new m2n::M2N(communication));
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
   double maxTime = 1.0;
@@ -601,7 +601,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling (
   //validate(geoConfig.isValid());
   //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::PtrM2N com = comConfig->getCommunication("participant0", "participant1");
 
   geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
   connect ( "participant0", "participant1", localParticipant, com );
@@ -756,18 +756,18 @@ void ExplicitCouplingSchemeTest:: connect
   const std::string&     participant0,
   const std::string&     participant1,
   const std::string&     localParticipant,
-  m2n::PtrGlobalCommunication& communication ) const
+  m2n::PtrM2N& communication ) const
 {
   preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::initialize ( NULL, NULL, localParticipant );
   if ( participant0 == localParticipant ) {
-    communication->requestConnection ( participant1, participant0, 0, 1 );
+    communication->requestMasterConnection ( participant1, participant0 );
   }
   else {
     assertion ( participant1 == localParticipant );
-    communication->acceptConnection ( participant1, participant0, 0, 1 );
+    communication->acceptMasterConnection ( participant1, participant0 );
   }
 }
 

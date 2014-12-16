@@ -37,7 +37,7 @@
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
-#include "m2n/GlobalCommunication.hpp"
+#include "m2n/M2N.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "geometry/Geometry.hpp"
 #include "geometry/ImportGeometry.hpp"
@@ -262,11 +262,10 @@ double SolverInterfaceImpl:: initialize()
   else {
     // Setup communication
     if (not _geometryMode){
-
       typedef std::map<std::string,Communication>::value_type ComPair;
-      preciceInfo("initialize()", "Setting up communication to coupling partner/s " );
+      preciceInfo("initialize()", "Setting up master communication to coupling partner/s " );
       foreach (ComPair& comPair, _communications){
-        m2n::PtrGlobalCommunication& communication = comPair.second.communication;
+        m2n::PtrM2N& communication = comPair.second.communication;
         std::string localName = _accessorName;
         if (_serverMode) localName += "Server";
         std::string remoteName(comPair.first);
@@ -275,19 +274,37 @@ double SolverInterfaceImpl:: initialize()
                      << remoteName << " could not be created! Check compile "
                      "flags used!");
         if (comPair.second.isRequesting){
-          communication->requestConnection(remoteName, localName,
-                          _accessorProcessRank, _accessorCommunicatorSize);
+          communication->requestMasterConnection(remoteName, localName);
         }
         else {
-          communication->acceptConnection(localName, remoteName,
-                          _accessorProcessRank, _accessorCommunicatorSize);
+          communication->acceptMasterConnection(localName, remoteName);
         }
       }
     }
 
-    preciceDebug("Perform initializations");
+    preciceDebug("Exchange Meshes");
     foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
       createMeshContext(meshContext);
+    }
+
+    if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
+      typedef std::map<std::string,Communication>::value_type ComPair;
+      preciceInfo("initialize()", "Setting up slaves communication to coupling partner/s " );
+      foreach (ComPair& comPair, _communications){
+        m2n::PtrM2N& communication = comPair.second.communication;
+        std::string localName = _accessorName;
+        std::string remoteName(comPair.first);
+        preciceCheck(communication.get() != NULL, "initialize()",
+                     "Communication from " << localName << " to participant "
+                     << remoteName << " could not be created! Check compile "
+                     "flags used!");
+        if (comPair.second.isRequesting){
+          communication->requestSlavesConnection(remoteName, localName);
+        }
+        else {
+          communication->acceptSlavesConnection(localName, remoteName);
+        }
+      }
     }
 
     std::set<action::Action::Timing> timings;
@@ -1868,9 +1885,10 @@ void SolverInterfaceImpl:: configureSolverGeometries
               context.meshRequirement = receiverContext.meshRequirement;
             }
 
-            m2n::PtrGlobalCommunication com =
+            m2n::PtrM2N m2n =
                 comConfig->getCommunication ( receiver->getName(), provider );
-            comGeo->addReceiver ( receiver->getName(), com );
+            comGeo->addReceiver ( receiver->getName(), m2n );
+            m2n->createDistributedCommunication(context.mesh);
 
             addedReceiver = true;
           }
@@ -1896,8 +1914,9 @@ void SolverInterfaceImpl:: configureSolverGeometries
       preciceDebug ( "Receiving mesh from " << provider );
       geometry::CommunicatedGeometry * comGeo =
           new geometry::CommunicatedGeometry ( offset, receiver, provider, _dimensions );
-      m2n::PtrGlobalCommunication com = comConfig->getCommunication ( receiver, provider );
-      comGeo->addReceiver ( receiver, com );
+      m2n::PtrM2N m2n = comConfig->getCommunication ( receiver, provider );
+      comGeo->addReceiver ( receiver, m2n );
+      m2n->createDistributedCommunication(context.mesh);
       preciceCheck ( context.geometry.use_count() == 0, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot receive "
                      << "the geometry of mesh \"" << context.mesh->getName()

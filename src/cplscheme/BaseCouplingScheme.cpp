@@ -4,7 +4,7 @@
 #include "BaseCouplingScheme.hpp"
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
-#include "m2n/GlobalCommunication.hpp"
+#include "m2n/M2N.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "impl/PostProcessing.hpp"
@@ -76,7 +76,7 @@ BaseCouplingScheme::BaseCouplingScheme
   const std::string&    firstParticipant,
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
-  m2n::PtrGlobalCommunication communication,
+  m2n::PtrM2N           m2n,
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
   :
@@ -84,7 +84,7 @@ BaseCouplingScheme::BaseCouplingScheme
   _secondParticipant(secondParticipant),
   _convergenceMeasures(),
   _eps(std::pow(10.0, -1 * validDigits)),
-  _communication(communication),
+  _m2n(m2n),
   _participantSetsDt(false),
   _participantReceivesDt(false),
   _maxTime(maxTime),
@@ -160,7 +160,7 @@ void BaseCouplingScheme:: receiveAndSetDt()
   preciceTrace("receiveAndSetDt()");
   if (participantReceivesDt()){
     double dt = UNDEFINED_TIMESTEP_LENGTH;
-    getCommunication()->receiveAll(dt, 0);
+    getM2N()->receive(dt);
     preciceDebug("Received timestep length of " << dt);
     assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
     setTimestepLength(dt);
@@ -171,7 +171,7 @@ void BaseCouplingScheme:: sendDt(){
   preciceTrace("sendDt()");
   if (participantSetsDt()){
     preciceDebug("sending timestep length of " << getComputedTimestepPart());
-    getCommunication()->sendAll(getComputedTimestepPart(), 0);
+    getM2N()->send(getComputedTimestepPart());
   }
 }
 
@@ -285,17 +285,17 @@ void BaseCouplingScheme:: receiveState
 
 std::vector<int> BaseCouplingScheme:: sendData
 (
-  m2n::PtrGlobalCommunication communication)
+  m2n::PtrM2N m2n)
 {
   preciceTrace("sendData()");
 
   std::vector<int> sentDataIDs;
-  assertion(communication.get() != NULL);
-  assertion(communication->isConnected());
+  assertion(m2n.get() != NULL);
+  assertion(m2n->isConnected());
   foreach (DataMap::value_type& pair, _sendData){
     int size = pair.second->values->size();
-    communication->sendAll(pair.second->values, size, 0,
-                           pair.second->mesh, pair.second->dimension);
+    m2n->send(tarch::la::raw(*(pair.second->values)), size,
+              pair.second->mesh->getID(), pair.second->dimension);
     sentDataIDs.push_back(pair.first);
   }
   preciceDebug("Number of sent data sets = " << sentDataIDs.size());
@@ -304,17 +304,17 @@ std::vector<int> BaseCouplingScheme:: sendData
 
 std::vector<int> BaseCouplingScheme:: receiveData
 (
-  m2n::PtrGlobalCommunication communication)
+  m2n::PtrM2N m2n)
 {
   preciceTrace("receiveData()");
   std::vector<int> receivedDataIDs;
-  assertion(communication.get() != NULL);
-  assertion(communication->isConnected());
+  assertion(m2n.get() != NULL);
+  assertion(m2n->isConnected());
 
   foreach(DataMap::value_type & pair, _receiveData){
     int size = pair.second->values->size ();
-    communication->receiveAll(pair.second->values, size, 0,
-                               pair.second->mesh, pair.second->dimension);
+    m2n->receive(tarch::la::raw(*(pair.second->values)), size,
+                 pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
   preciceDebug("Number of received data sets = " << receivedDataIDs.size());

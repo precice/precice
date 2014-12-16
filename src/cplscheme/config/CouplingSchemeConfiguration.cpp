@@ -726,7 +726,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
 {
   preciceTrace1("createSerialExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
-  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
+  m2n::PtrM2N com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -745,7 +745,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
 {
   preciceTrace1("createParallelExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
-  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
+  m2n::PtrM2N com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -765,7 +765,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
   preciceTrace1("createSerialImplicitCouplingScheme()", accessor);
   //assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
 
-  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
+  m2n::PtrM2N com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -807,7 +807,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 {
   preciceTrace1("createParallelImplicitCouplingScheme()", accessor);
   assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
-  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
+  m2n::PtrM2N com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -853,7 +853,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
   BaseCouplingScheme* scheme;
 
   if(accessor == _config.controller){
-    std::vector<m2n::PtrGlobalCommunication> communications;
+    std::vector<m2n::PtrM2N> communications;
     foreach(const std::string& participant, _config.participants){
       communications.push_back(_comConfig->getCommunication (
           _config.controller, participant ));
@@ -870,7 +870,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
     addMultiDataToBeExchanged(*castedScheme, accessor);
   }
   else{
-    m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
+    m2n::PtrM2N com = _comConfig->getCommunication (
         accessor, _config.controller );
     scheme = new ParallelCouplingScheme (
         _config.maxTime, _config.maxTimesteps, _config.timestepLength,

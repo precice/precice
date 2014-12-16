@@ -6,6 +6,7 @@
 
 #include "com/SharedPointer.hpp"
 #include "m2n/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
 #include "tarch/tests/TestCase.h"
 #include "tarch/logging/Log.h"
 #include "utils/xml/XMLTag.hpp"
@@ -93,7 +94,7 @@ private:
       const std::string&     participant0,
       const std::string&     participant1,
       const std::string&     localParticipant,
-      m2n::PtrGlobalCommunication& communication ) const;
+      m2n::PtrM2N&           communication ) const;
 
 
 

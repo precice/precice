@@ -66,7 +66,7 @@ public:
     const std::string&            firstParticipant,
     const std::string&            secondParticipant,
     const std::string&            localParticipant,
-    m2n::PtrGlobalCommunication   communication,
+    m2n::PtrM2N                   m2n,
     int                           maxIterations,
     constants::TimesteppingMethod dtMethod );
 
@@ -289,10 +289,10 @@ protected:
   }
   
   /// @brief Sends data sendDataIDs given in mapCouplingData with communication.
-  std::vector<int> sendData ( m2n::PtrGlobalCommunication communication );
+  std::vector<int> sendData ( m2n::PtrM2N m2n );
   
   /// @brief Receives data receiveDataIDs given in mapCouplingData with communication.
-  std::vector<int> receiveData ( m2n::PtrGlobalCommunication communication );
+  std::vector<int> receiveData ( m2n::PtrM2N m2n );
 
   /// @brief Returns all data to be sent.
   const DataMap& getSendData() const {
@@ -390,9 +390,9 @@ protected:
   std::string _secondParticipant;
   
   /// @return Communication device to the other coupling participant.
-  m2n::PtrGlobalCommunication getCommunication() {
-    assertion(_communication.use_count() > 0);
-    return _communication;
+  m2n::PtrM2N getM2N() {
+    assertion(_m2n.use_count() > 0);
+    return _m2n;
   }
 
   void setHasToSendInitData(bool hasToSendInitData) {
@@ -479,7 +479,7 @@ protected:
 private:
 
   /// @brief Communication device to the other coupling participant.
-  m2n::PtrGlobalCommunication _communication;
+  m2n::PtrM2N _m2n;
 
   /// @brief Determines, if the timestep length is set by the participant.
   bool _participantSetsDt;

@@ -15,9 +15,9 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/Communication.hpp"
-#include "m2n/GlobalCommunication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/config/CommunicationConfiguration.hpp"
+#include "m2n/M2N.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "utils/Dimensions.hpp"
 #include <vector>
@@ -699,9 +699,9 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com0 =
+  m2n::PtrM2N com0 =
       comConfig->getCommunication(nameParticipant0, nameParticipant1);
-  m2n::PtrGlobalCommunication com1 =
+  m2n::PtrM2N com1 =
       comConfig->getCommunication(nameParticipant1, nameParticipant2);
 
   geoConfig->geometries()[0]->create(*meshConfig->meshes()[0]);
@@ -846,18 +846,18 @@ void CompositionalCouplingSchemeTest:: connect
   const std::string&     participant0,
   const std::string&     participant1,
   const std::string&     localParticipant,
-  m2n::PtrGlobalCommunication& communication ) const
+  m2n::PtrM2N& communication ) const
 {
   preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::initialize ( NULL, NULL, localParticipant );
   if ( participant0 == localParticipant ) {
-    communication->requestConnection ( participant1, participant0, 0, 1 );
+    communication->requestMasterConnection ( participant1, participant0 );
   }
   else {
     assertion ( participant1 == localParticipant );
-    communication->acceptConnection ( participant1, participant0, 0, 1 );
+    communication->acceptMasterConnection ( participant1, participant0 );
   }
 }
 
