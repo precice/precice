@@ -1,9 +1,10 @@
 #pragma once
 
+#include <type_traits>
+
 #include "Dimensions.hpp"
 #include "Globals.hpp"
 #include "tarch/la/VectorOperations.h"
-#include "tarch/utils/EnableIf.h"
 #include "utils/Helpers.hpp"
 
 namespace precice {
@@ -145,9 +146,8 @@ public:
     * clockwise ordering, otherwise positive.
     */
    template<typename VECTOR>
-   static typename tarch::utils::EnableIf< tarch::la::IsVector<VECTOR>::value,
-     double
-   >::Type triangleArea (
+   static typename std::enable_if<tarch::la::IsVector<VECTOR>::value, double>::type
+   triangleArea (
       const VECTOR& a,
       const VECTOR& b,
       const VECTOR& c );
@@ -324,9 +324,8 @@ bool GeometryComputations:: parallel
 }
 
 template<typename VECTOR>
-typename tarch::utils::EnableIf< tarch::la::IsVector<VECTOR>::value,
-  double
->::Type GeometryComputations:: triangleArea
+typename std::enable_if<tarch::la::IsVector<VECTOR>::value, double>::type
+GeometryComputations:: triangleArea
 (
    const VECTOR& a,
    const VECTOR& b,

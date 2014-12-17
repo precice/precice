@@ -4,13 +4,15 @@
 #ifndef PRECICE_UTILS_XMLATTRIBUTE_HPP_
 #define PRECICE_UTILS_XMLATTRIBUTE_HPP_
 
+#include <type_traits>
+
 #include "Validator.hpp"
 #include "tarch/irr/XML.h"
 #include "tarch/logging/Log.h"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/Globals.hpp"
-#include "tarch/utils/EnableIf.h"
+
 #include <string>
 
 namespace precice {
@@ -119,21 +121,21 @@ private:
    * @brief Sets non utils::DynVector type values.
    */
   template<typename VALUE_T>
-  typename tarch::utils::EnableIf<
+  typename std::enable_if<
     tarch::utils::IsEqual<VALUE_T,ATTRIBUTE_T>::value &&
     not tarch::utils::IsEqual<VALUE_T,utils::DynVector>::value,
     void
-  >::Type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
+  >::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
 
   /**
    * @brief Sets utils::DynVector type values by clearing and append.
    */
   template<typename VALUE_T>
-  typename tarch::utils::EnableIf<
+  typename std::enable_if<
     tarch::utils::IsEqual<VALUE_T,ATTRIBUTE_T>::value &&
     tarch::utils::IsEqual<VALUE_T,utils::DynVector>::value,
     void
-  >::Type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
+  >::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
 };
 
 template<typename ATTRIBUTE_T>
@@ -336,11 +338,11 @@ std::string XMLAttribute<ATTRIBUTE_T>:: printDocumentation() const
 
 template<typename ATTRIBUTE_T>
 template<typename VALUE_T>
-typename tarch::utils::EnableIf<
+typename std::enable_if<
   tarch::utils::IsEqual<VALUE_T,ATTRIBUTE_T>::value &&
   not tarch::utils::IsEqual<VALUE_T,utils::DynVector>::value,
   void
->::Type XMLAttribute<ATTRIBUTE_T>:: set
+>::type XMLAttribute<ATTRIBUTE_T>:: set
 (
   ATTRIBUTE_T&   toSet,
   const VALUE_T& setter )
@@ -350,11 +352,11 @@ typename tarch::utils::EnableIf<
 
 template<typename ATTRIBUTE_T>
 template<typename VALUE_T>
-typename tarch::utils::EnableIf<
+typename std::enable_if<
   tarch::utils::IsEqual<VALUE_T,ATTRIBUTE_T>::value &&
   tarch::utils::IsEqual<VALUE_T,utils::DynVector>::value,
   void
->::Type XMLAttribute<ATTRIBUTE_T>:: set
+>::type XMLAttribute<ATTRIBUTE_T>:: set
 (
   ATTRIBUTE_T&   toSet,
   const VALUE_T& setter )
