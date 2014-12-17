@@ -87,7 +87,7 @@ public:
     *         - TOUCHING
     *         - CONTAINED
     */
-   static int segmentPlaneIntersection (
+   static ResultConstants segmentPlaneIntersection (
       const tarch::la::Vector<3,double> & pointOnPlane,
       const tarch::la::Vector<3,double> & planeNormal,
       const tarch::la::Vector<3,double> & firstPointSegment,

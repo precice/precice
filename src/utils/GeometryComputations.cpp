@@ -114,7 +114,7 @@ bool GeometryComputations:: lineIntersection
    return true;
 }
 
-int GeometryComputations:: segmentPlaneIntersection
+GeometryComputations::ResultConstants GeometryComputations:: segmentPlaneIntersection
 (
    const tarch::la::Vector<3,double> & pointOnPlane,
    const tarch::la::Vector<3,double> & planeNormal,
