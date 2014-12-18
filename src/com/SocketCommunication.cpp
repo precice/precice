@@ -234,7 +234,7 @@ void SocketCommunication:: closeConnection()
     _ioService->stop();
     _queryThread.join();
   }
-  foreach ( PtrSocket& socket, _sockets ){
+  for (PtrSocket& socket : _sockets ) {
     assertion(socket->is_open());
     socket->shutdown(Socket::shutdown_both);
     socket->close();

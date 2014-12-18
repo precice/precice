@@ -4,7 +4,6 @@
 #include "utils/Globals.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Parallel.hpp"
-#include "boost/foreach.hpp"
 #include "tarch/configuration/ConfigurationRegistry.h"
 #include "tarch/configuration/TopLevelConfiguration.h"
 #include "tarch/logging/CommandLineLogger.h"
@@ -99,7 +98,7 @@ int main ( int argc, char** argv )
     }
     printMPITestWarning();
     int errors = 0;
-    foreach ( TopLevelConfiguration* config, configs ){
+    for (TopLevelConfiguration* config : configs ) {
       errors += config->interpreteConfiguration();
     }
     ConfigurationRegistry::getInstance().freeConfigurations(configs);

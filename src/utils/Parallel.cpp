@@ -96,7 +96,7 @@ void Parallel:: initialize
         MPI_Bcast ( &groupCount, 1, MPI_INT, 0, globalComm );
 
         typedef std::map<std::string,int>::value_type Pair;
-        foreach ( AccessorGroup& group, _accessorGroups ){
+        for (AccessorGroup& group : _accessorGroups) {
           for ( int i = 1; i < size; i++ ){
             com.send ( group.name, i );
             com.send ( group.leaderRank, i );
@@ -137,7 +137,7 @@ void Parallel:: initialize
 
 #     ifdef Debug
       preciceDebug ( "Detected " << _accessorGroups.size() << " groups" );
-      foreach ( const AccessorGroup& group, _accessorGroups ) {
+      for (const AccessorGroup& group : _accessorGroups) {
         preciceDebug ( "Group " << group.id << ": name = " << group.name
                        << ", leaderRank = " << group.leaderRank
                        << ", size = " << group.size );
@@ -147,7 +147,8 @@ void Parallel:: initialize
   }
 # endif // not PRECICE_NO_MPI
 # ifndef PRECICE_NO_PETSC
-  PetscInitialize(argc, argv, "", NULL);
+  PetscErrorCode ierr;
+  ierr = PetscInitialize(argc, argv, "", NULL); CHKERRV(ierr);
 # endif
   _isInitialized = true;
 }
