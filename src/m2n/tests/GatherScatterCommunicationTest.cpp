@@ -63,36 +63,45 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     utils::Parallel::initialize ( NULL, NULL, "Part1" );
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
-    m2n->acceptMasterConnection ( "Part1", "Part2Master");
   }
   else if(utils::Parallel::getProcessRank() == 1){//Participant 2 - Master
     utils::Parallel::initialize ( NULL, NULL, "Part2Master" );
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = true;
-    m2n->requestMasterConnection ( "Part1", "Part2Master");
+    masterSlaveCom->acceptConnection ( "Part2Master", "Part2Slaves", 0, 1);
+    masterSlaveCom->setRankOffset(1);
   }
   else if(utils::Parallel::getProcessRank() == 2){//Participant 2 - Slave1
     utils::Parallel::initialize ( NULL, NULL, "Part2Slaves");
     utils::MasterSlave::_slaveMode = true;
     utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection( "Part2Master", "Part2Slaves", 0, 2 );
   }
   else if(utils::Parallel::getProcessRank() == 3){//Participant 2 - Slave2
     utils::Parallel::initialize ( NULL, NULL, "Part2Slaves");
     utils::MasterSlave::_slaveMode = true;
     utils::MasterSlave::_masterMode = false;
-  }
-
-  if(utils::Parallel::getProcessRank() == 1){//Master
-    masterSlaveCom->acceptConnection ( "Part2Master", "Part2Slaves", 0, 1);
-    masterSlaveCom->setRankOffset(1);
-  }
-  else if(utils::Parallel::getProcessRank() == 2){//Slave1
-    masterSlaveCom->requestConnection( "Part2Master", "Part2Slaves", 0, 2 );
-  }
-  else if(utils::Parallel::getProcessRank() == 3){//Slave2
     masterSlaveCom->requestConnection( "Part2Master", "Part2Slaves", 1, 2 );
   }
 
+  preciceDebug("Initialized and MasterSlave connection set up");
+  utils::Parallel::synchronizeProcesses();
+
+  if(utils::Parallel::getProcessRank() == 0){//Part1
+    m2n->acceptMasterConnection ( "Part1", "Part2Master");
+  }
+  else if(utils::Parallel::getProcessRank() == 1){//Part2 Master
+    m2n->requestMasterConnection ( "Part1", "Part2Master");
+  }
+  else if(utils::Parallel::getProcessRank() == 2){//Part2 Slave1
+    m2n->requestMasterConnection ( "Part1", "Part2Master");
+  }
+  else if(utils::Parallel::getProcessRank() == 3){//Part2 Slave2
+    m2n->requestMasterConnection ( "Part1", "Part2Master");
+  }
+
+  preciceDebug("MasterMaster connection set up");
+  utils::Parallel::synchronizeProcesses();
 
   int dimensions = 2;
   int numberOfVertices = 6;

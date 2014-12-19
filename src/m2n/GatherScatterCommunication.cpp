@@ -150,7 +150,9 @@ void GatherScatterCommunication:: receive (
   //scatter data
   if(utils::MasterSlave::_slaveMode){ //slave
     if (size > 0) {
+      preciceDebug("itemsToRec[0] = " << itemsToReceive[0]);
       utils::MasterSlave::_communication->receive(itemsToReceive, size, 0);
+      preciceDebug("itemsToRec[0] = " << itemsToReceive[0]);
     }
   }
   else{ //master
@@ -176,6 +178,7 @@ void GatherScatterCommunication:: receive (
           }
         }
         utils::MasterSlave::_communication->send(valuesSlave, slaveSize, rankSlave);
+        preciceDebug("valuesSlave[0] = " << valuesSlave[0]);
         delete[] valuesSlave;
       }
     }

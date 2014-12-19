@@ -40,6 +40,7 @@ void M2N:: acceptMasterConnection (
 {
   preciceTrace2("acceptMasterConnection()", nameAcceptor, nameRequester);
   if(not utils::MasterSlave::_slaveMode){
+    assertion(_masterCom.use_count()>0);
     _masterCom->acceptConnection(nameAcceptor, nameRequester, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
@@ -61,6 +62,7 @@ void M2N:: requestMasterConnection (
 {
   preciceTrace2("requestMasterConnection()", nameAcceptor, nameRequester);
   if(not utils::MasterSlave::_slaveMode){
+    assertion(_masterCom.use_count()>0);
     _masterCom->requestConnection(nameAcceptor, nameRequester, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
@@ -104,9 +106,9 @@ void M2N:: requestSlavesConnection (
 void M2N:: closeConnection()
 {
   preciceTrace("closeConnection()");
-  if(not utils::MasterSlave::_slaveMode){
+  if(not utils::MasterSlave::_slaveMode && _masterCom->isConnected()){
     _masterCom->closeConnection();
-    _isMasterConnected = _masterCom->isConnected();
+    _isMasterConnected = false;
   }
   //broadcast _isMasterConnected
   if(utils::MasterSlave::_slaveMode){
