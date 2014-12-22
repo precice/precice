@@ -126,6 +126,9 @@ void Parallel:: initialize
         // Create a new communicator that contains only ranks of my group
         MPI_Comm_split(_globalCommunicator, groupID, getProcessRank(), & _localCommunicator);
       }
+      else {
+        _localCommunicator = _globalCommunicator;
+      }
 
 #     ifdef Debug
       preciceDebug ( "Detected " << _accessorGroups.size() << " groups" );
@@ -175,12 +178,8 @@ int Parallel:: getLocalProcessRank()
 {
   int processRank = 0;
 # ifndef PRECICE_NO_MPI
-  if ( _accessorGroups.size() > 1 ){
-    //assertion(_isLocalCommunicatorSet);
-    MPI_Comm_rank ( _localCommunicator, &processRank );
-  }
-  else {
-    processRank = getProcessRank();
+  if (_isInitialized) {
+    MPI_Comm_rank(_localCommunicator, &processRank);
   }
 # endif
   return processRank;
@@ -211,13 +210,8 @@ void Parallel:: synchronizeLocalProcesses()
 {
 # ifndef PRECICE_NO_MPI
   preciceTrace ( "synchronizeLocalProcesses()" );
-  if ( _accessorGroups.size() > 1 ){
-    //assertion(_isLocalCommunicatorSet);
-    MPI_Barrier ( _localCommunicator );
-  }
-  else {
-    synchronizeProcesses();
-  }
+  assertion ( _isInitialized );
+  MPI_Barrier ( _localCommunicator );
 # endif // not PRECICE_NO_MPI
 }
 
@@ -231,8 +225,7 @@ void Parallel:: setGlobalCommunicator
     MPI_Comm_free ( & _globalCommunicator );
   }
   _globalCommunicator = defaultCommunicator;
-  _localCommunicator = MPI_COMM_NULL;
-  //_isLocalCommunicatorSet = false;
+  _localCommunicator = _globalCommunicator;
   _accessorGroups.clear();
 # endif // not PRECICE_NO_MPI
 }
@@ -246,13 +239,6 @@ const Parallel::Communicator& Parallel:: getGlobalCommunicator()
 const Parallel::Communicator& Parallel:: getLocalCommunicator()
 {
   preciceTrace ( "getLocalCommunicator()" );
-  if (_localCommunicator == MPI_COMM_NULL) {
-    preciceDebug("No local communicator set, return globalCommunicator.");
-    if (_globalCommunicator == MPI_COMM_WORLD) {
-      preciceDebug("Global communicator is MPI_COMM_WORLD");
-    }
-    return _globalCommunicator; // global == local, if no local is set
-  }
   return _localCommunicator;
 }
 
