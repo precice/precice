@@ -64,13 +64,13 @@ void ParallelCouplingScheme::initialize
     initializeTXTWriters();
   }
 
-  foreach (DataMap::value_type & pair, getSendData()) {
+  for (DataMap::value_type & pair : getSendData()) {
     if (pair.second->initialize) {
       setHasToSendInitData(true);
       break;
     }
   }
-  foreach (DataMap::value_type & pair, getReceiveData()) {
+  for (DataMap::value_type & pair : getReceiveData()) {
     if (pair.second->initialize) {
       setHasToReceiveInitData(true);
       break;
@@ -124,7 +124,7 @@ void ParallelCouplingScheme::initializeData()
 
       // second participant has to save values for extrapolation
       if (_couplingMode == Implicit and getExtrapolationOrder() > 0){
-        foreach (DataMap::value_type & pair, getReceiveData()){
+        for (DataMap::value_type & pair : getReceiveData()) {
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
@@ -134,7 +134,7 @@ void ParallelCouplingScheme::initializeData()
     }
     if (hasToSendInitData()) {
       if (_couplingMode == Implicit and getExtrapolationOrder() > 0) {
-        foreach (DataMap::value_type & pair, getSendData()) {
+        for (DataMap::value_type & pair : getSendData()) {
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
@@ -265,12 +265,12 @@ void ParallelCouplingScheme::implicitAdvance()
           extrapolateData(getAllData()); // Also stores data
         }
         else { // Store data for conv. measurement, post-processing, or extrapolation
-          foreach (DataMap::value_type& pair, getSendData()) {
+          for (DataMap::value_type& pair : getSendData()) {
             if (pair.second->oldValues.size() > 0){
               pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
-          foreach (DataMap::value_type& pair, getReceiveData()) {
+          for (DataMap::value_type& pair : getReceiveData()) {
             if (pair.second->oldValues.size() > 0) {
               pair.second->oldValues.column(0) = *pair.second->values;
             }
