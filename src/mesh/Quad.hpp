@@ -25,7 +25,7 @@ namespace mesh {
 /**
  * @brief Quadrilateral (or Quadrangle) geometric primitive.
  */
-class Quad : public PropertyContainer, boost::noncopyable
+class Quad : public PropertyContainer, private boost::noncopyable
 {
 public:
 
