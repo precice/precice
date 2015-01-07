@@ -34,7 +34,9 @@ SocketCommunication:: SocketCommunication
   _queryThread(),
   _clientQueries(),
   _clientQueryBuffers()
-{}
+{
+  _rankOffset = 0;
+}
 
 SocketCommunication:: ~SocketCommunication()
 {
@@ -232,7 +234,7 @@ void SocketCommunication:: closeConnection()
     _ioService->stop();
     _queryThread.join();
   }
-  foreach ( PtrSocket& socket, _sockets ){
+  for (PtrSocket& socket : _sockets ) {
     assertion(socket->is_open());
     socket->shutdown(Socket::shutdown_both);
     socket->close();
@@ -271,6 +273,7 @@ void SocketCommunication:: send
   int                rankReceiver )
 {
   preciceTrace2("send(string)", itemToSend, rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
   assertion2 ( (rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
                rankReceiver, _sockets.size() );
   assertion(_isConnected);
@@ -292,6 +295,7 @@ void SocketCommunication:: send
   int  rankReceiver )
 {
   preciceTrace2("send(int*)", size, rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver, _sockets.size());
   assertion(_isConnected);
@@ -312,6 +316,7 @@ void SocketCommunication:: send
   int     rankReceiver )
 {
   preciceTrace2("send(double*)", size, rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
   assertion2 ( (rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
                rankReceiver, _sockets.size() );
   assertion(_isConnected);
@@ -331,6 +336,7 @@ void SocketCommunication:: send
   int    rankReceiver )
 {
   preciceTrace2("send(double)", itemToSend, rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
   assertion2 ( (rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
                rankReceiver, _sockets.size() );
   assertion(_isConnected);
@@ -350,6 +356,7 @@ void SocketCommunication:: send
   int rankReceiver )
 {
   preciceTrace2("send(int)", itemToSend, rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
   assertion2 ( (rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
                rankReceiver, _sockets.size() );
   assertion(_isConnected);
@@ -369,6 +376,7 @@ void SocketCommunication:: send
   int  rankReceiver )
 {
   preciceTrace2("send(bool)", itemToSend, rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
   assertion2 ( (rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
                rankReceiver, _sockets.size() );
   assertion(_isConnected);
@@ -388,6 +396,7 @@ int SocketCommunication:: receive
   int          rankSender )
 {
   preciceTrace1("receive(string)", rankSender);
+  rankSender = rankSender - _rankOffset;
   rankSender = getSenderRank(rankSender);
   assertion2 ( (rankSender >= 0) && (rankSender < (int)_sockets.size()),
                rankSender, _sockets.size() );
@@ -415,6 +424,7 @@ int SocketCommunication:: receive
   int  rankSender )
 {
   preciceTrace2("receive(int*)", size, rankSender);
+  rankSender = rankSender - _rankOffset;
   rankSender = getSenderRank(rankSender);
   assertion2 ( (rankSender >= 0) && (rankSender < (int)_sockets.size()),
                rankSender, _sockets.size() );
@@ -438,6 +448,7 @@ int SocketCommunication:: receive
   int     rankSender )
 {
   preciceTrace2("receive(double*)", size, rankSender);
+  rankSender = rankSender - _rankOffset;
   rankSender = getSenderRank(rankSender);
   assertion2 ( (rankSender >= 0) && (rankSender < (int)_sockets.size()),
                rankSender, _sockets.size() );
@@ -460,6 +471,7 @@ int SocketCommunication:: receive
   int     rankSender )
 {
   preciceTrace1("receive(double)", rankSender);
+  rankSender = rankSender - _rankOffset;
   rankSender = getSenderRank(rankSender);
   assertion2 ( (rankSender >= 0) && (rankSender < (int)_sockets.size()),
                rankSender, _sockets.size() );
@@ -482,6 +494,7 @@ int SocketCommunication:: receive
   int  rankSender )
 {
   preciceTrace1("receive(int)", rankSender);
+  rankSender = rankSender - _rankOffset;
   rankSender = getSenderRank(rankSender);
   assertion2 ( (rankSender >= 0) && (rankSender < (int)_sockets.size()),
                rankSender, _sockets.size() );
@@ -504,6 +517,7 @@ int SocketCommunication:: receive
   int   rankSender )
 {
   preciceTrace1("receive(bool)", rankSender);
+  rankSender = rankSender - _rankOffset;
   rankSender = getSenderRank(rankSender);
   assertion2 ( (rankSender >= 0) && (rankSender < (int)_sockets.size()),
                rankSender, _sockets.size() );

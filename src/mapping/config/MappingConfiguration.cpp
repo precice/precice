@@ -40,6 +40,9 @@ MappingConfiguration:: MappingConfiguration
   ATTR_SHAPE_PARAM("shape-parameter"),
   ATTR_SUPPORT_RADIUS("support-radius"),
   ATTR_SOLVER_RTOL("solver-rtol"),
+  ATTR_X_DEAD("x-dead"),
+  ATTR_Y_DEAD("y-dead"),
+  ATTR_Z_DEAD("z-dead"),
   VALUE_WRITE("write"),
   VALUE_READ("read"),
   VALUE_CONSISTENT("consistent"),
@@ -77,6 +80,20 @@ MappingConfiguration:: MappingConfiguration
   XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
   XMLAttribute<double> attrSupportRadius ( ATTR_SUPPORT_RADIUS );
   XMLAttribute<double> attrSolverRtol ( ATTR_SOLVER_RTOL );
+  XMLAttribute<bool> attrXDead(ATTR_X_DEAD);
+  std::string doc = "If set to true, the x axis will be ignored for the mapping";
+  attrXDead.setDocumentation(doc);
+  attrXDead.setDefaultValue(false);
+  XMLAttribute<bool> attrYDead(ATTR_Y_DEAD);
+  doc = "If set to true, the y axis will be ignored for the mapping";
+  attrYDead.setDocumentation(doc);
+  attrYDead.setDefaultValue(false);
+  XMLAttribute<bool> attrZDead(ATTR_Z_DEAD);
+  doc = "If set to true, the z axis will be ignored for the mapping";
+  attrZDead.setDocumentation(doc);
+  attrZDead.setDefaultValue(false);
+
+
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
@@ -90,25 +107,40 @@ MappingConfiguration:: MappingConfiguration
   }
   {
     XMLTag tag(*this, VALUE_RBF_TPS, occ, TAG);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_MULTIQUADRICS, occ, TAG);
     tag.addAttribute(attrShapeParam);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_INV_MULTIQUADRICS, occ, TAG);
     tag.addAttribute(attrShapeParam);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_VOLUME_SPLINES, occ, TAG);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_GAUSSIAN, occ, TAG);
     tag.addAttribute(attrShapeParam);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
@@ -119,11 +151,17 @@ MappingConfiguration:: MappingConfiguration
   {
     XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C0, occ, TAG);
     tag.addAttribute(attrSupportRadius);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C6, occ, TAG);
     tag.addAttribute(attrSupportRadius);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   // ---- Petsc RBF declarations ----
@@ -298,6 +336,9 @@ void MappingConfiguration:: xmlTagCallback
     double shapeParameter = 0.0;
     double supportRadius = 0.0;
     double solverRtol = 1e-9;
+    bool xDead = false;
+    bool yDead = false;
+    bool zDead = false;
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
     }
@@ -307,9 +348,19 @@ void MappingConfiguration:: xmlTagCallback
     if (tag.hasAttribute(ATTR_SOLVER_RTOL)){
       solverRtol = tag.getDoubleAttributeValue(ATTR_SOLVER_RTOL);
     }
+    if (tag.hasAttribute(ATTR_X_DEAD)){
+      xDead = tag.getBooleanAttributeValue(ATTR_X_DEAD);
+    }
+    if (tag.hasAttribute(ATTR_Y_DEAD)){
+      yDead = tag.getBooleanAttributeValue(ATTR_Y_DEAD);
+    }
+    if (tag.hasAttribute(ATTR_Z_DEAD)){
+      zDead = tag.getBooleanAttributeValue(ATTR_Z_DEAD);
+    }
         
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
-      fromMesh, toMesh, timing, shapeParameter, supportRadius, solverRtol);
+      fromMesh, toMesh, timing, shapeParameter, supportRadius, solverRtol,
+      xDead, yDead, zDead);
     checkDuplicates ( configuredMapping );
     _mappings.push_back ( configuredMapping );
   }
@@ -364,7 +415,10 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   Timing             timing,
   double             shapeParameter,
   double             supportRadius,
-  double             solverRtol) const
+  double             solverRtol,
+  bool               xDead,
+  bool               yDead,
+  bool               zDead) const
 {
   preciceTrace5("createMapping()", direction, type, timing,
                 shapeParameter, supportRadius);
@@ -379,6 +433,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh = toMesh;
   configuredMapping.timing = timing;
+  int dimensions = fromMesh->getDimensions();
 
   if (direction == VALUE_WRITE){
     configuredMapping.direction =  WRITE;
@@ -404,7 +459,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
 
   if (type == VALUE_NEAREST_NEIGHBOR){
     configuredMapping.mapping = PtrMapping (
-        new NearestNeighborMapping(constraintValue) );
+        new NearestNeighborMapping(constraintValue, dimensions) );
   }
   else if (type == VALUE_NEAREST_PROJECTION){
 //    preciceCheck ( direction == VALUE_WRITE, "createMapping()",
@@ -412,7 +467,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
 //                   << "\" for a " << "mapping of type \""
 //                   << VALUE_CONSERVATIVE_NEAREST_PROJECTION << "\"!" );
     configuredMapping.mapping = PtrMapping (
-        new NearestProjectionMapping(constraintValue) );
+        new NearestProjectionMapping(constraintValue, dimensions) );
   }
 //  else if (type == VALUE_CONSISTENT_NEAREST_PROJECTION){
 //    preciceCheck ( direction == VALUE_READ, "createMapping()",
@@ -424,80 +479,88 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
 //  }
   else if (type == VALUE_RBF_TPS){
     configuredMapping.mapping = PtrMapping (
-      new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, ThinPlateSplines()) );
+      new RadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
+            xDead, yDead, zDead));
   }
   else if (type == VALUE_RBF_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<Multiquadrics>(
-        constraintValue, Multiquadrics(shapeParameter)) );
+        constraintValue, dimensions, Multiquadrics(shapeParameter),
+        xDead, yDead, zDead ));
   }
   else if (type == VALUE_RBF_INV_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<InverseMultiquadrics>(
-        constraintValue, InverseMultiquadrics(shapeParameter)) );
+        constraintValue, dimensions, InverseMultiquadrics(shapeParameter),
+        xDead, yDead, zDead ));
   }
   else if (type == VALUE_RBF_VOLUME_SPLINES){
     configuredMapping.mapping = PtrMapping (
-      new RadialBasisFctMapping<VolumeSplines>(constraintValue, VolumeSplines()) );
+      new RadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
+      xDead, yDead, zDead ));
   }
   else if (type == VALUE_RBF_GAUSSIAN){
     configuredMapping.mapping = PtrMapping(
         new RadialBasisFctMapping<Gaussian>(
-          constraintValue, Gaussian(shapeParameter)));
+          constraintValue, dimensions, Gaussian(shapeParameter),
+          xDead, yDead, zDead));
   }
   else if (type == VALUE_RBF_CTPS_C2){
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<CompactThinPlateSplinesC2>(
-        constraintValue, CompactThinPlateSplinesC2(supportRadius)) );
+        constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius),
+        xDead, yDead, zDead ));
   }
   else if (type == VALUE_RBF_CPOLYNOMIAL_C0){
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<CompactPolynomialC0>(
-        constraintValue, CompactPolynomialC0(supportRadius)) );
+        constraintValue, dimensions, CompactPolynomialC0(supportRadius),
+        xDead, yDead, zDead ));
   }
   else if (type == VALUE_RBF_CPOLYNOMIAL_C6){
     configuredMapping.mapping = PtrMapping (
       new RadialBasisFctMapping<CompactPolynomialC6>(
-        constraintValue, CompactPolynomialC6(supportRadius)) );
+        constraintValue, dimensions, CompactPolynomialC6(supportRadius),
+        xDead, yDead, zDead ));
   }
 # ifndef PRECICE_NO_PETSC
   else if (type == VALUE_PETRBF_TPS){
     configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, ThinPlateSplines(), solverRtol) );
+      new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), solverRtol) );
   }
   else if (type == VALUE_PETRBF_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<Multiquadrics>(
-        constraintValue, Multiquadrics(shapeParameter), solverRtol) );
+        constraintValue, dimensions, Multiquadrics(shapeParameter), solverRtol) );
   }
   else if (type == VALUE_PETRBF_INV_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<InverseMultiquadrics>(
-        constraintValue, InverseMultiquadrics(shapeParameter), solverRtol) );
+        constraintValue, dimensions, InverseMultiquadrics(shapeParameter), solverRtol) );
   }
   else if (type == VALUE_PETRBF_VOLUME_SPLINES){
     configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, VolumeSplines(), solverRtol) );
+      new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), solverRtol) );
   }
   else if (type == VALUE_PETRBF_GAUSSIAN){
     configuredMapping.mapping = PtrMapping(
         new PetRadialBasisFctMapping<Gaussian>(
-          constraintValue, Gaussian(shapeParameter), solverRtol));
+          constraintValue, dimensions, Gaussian(shapeParameter), solverRtol));
   }
   else if (type == VALUE_PETRBF_CTPS_C2){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(
-        constraintValue, CompactThinPlateSplinesC2(supportRadius), solverRtol) );
+        constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius), solverRtol) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C0){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactPolynomialC0>(
-        constraintValue, CompactPolynomialC0(supportRadius), solverRtol) );
+        constraintValue, dimensions, CompactPolynomialC0(supportRadius), solverRtol) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C6){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactPolynomialC6>(
-        constraintValue, CompactPolynomialC6(supportRadius), solverRtol) );
+        constraintValue, dimensions, CompactPolynomialC6(supportRadius), solverRtol) );
   }
 # endif
   else {

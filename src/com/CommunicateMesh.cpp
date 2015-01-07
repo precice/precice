@@ -34,18 +34,18 @@ void CommunicateMesh:: sendMesh
   _communication->startSendPackage ( rankReceiver );
   _communication->send ( (int)mesh.vertices().size(), rankReceiver );
   utils::DynVector coord(dim);
-  foreach ( const mesh::Vertex& vertex, mesh.vertices() ){
+  for (const mesh::Vertex& vertex : mesh.vertices()) {
     coord = vertex.getCoords();
     _communication->send (raw(coord), dim, rankReceiver);
   }
   _communication->send ( (int)mesh.edges().size(), rankReceiver );
-  foreach ( const mesh::Edge& edge, mesh.edges() ){
+  for (const mesh::Edge& edge : mesh.edges()) {
     _communication->send ( edge.vertex(0).getID(), rankReceiver);
     _communication->send ( edge.vertex(1).getID(), rankReceiver);
   }
   if ( dim == 3 ) {
     _communication->send ( (int)mesh.triangles().size(), rankReceiver );
-    foreach ( const mesh::Triangle& triangle, mesh.triangles() ){
+    for (const mesh::Triangle& triangle : mesh.triangles()) {
       _communication->send ( triangle.edge(0).getID(), rankReceiver );
       _communication->send ( triangle.edge(1).getID(), rankReceiver );
       _communication->send ( triangle.edge(2).getID(), rankReceiver );

@@ -70,6 +70,7 @@ void MPIDirectCommunication:: acceptConnection
 
 void MPIDirectCommunication:: closeConnection()
 {
+  preciceTrace("closeConnection()");
   assertion ( _isConnection );
   MPI_Comm_free ( & communicator() );
   _isConnection = false;
@@ -111,7 +112,7 @@ int MPIDirectCommunication:: getGroupID
   preciceTrace1 ( "getGroupID()", accessorName );
   typedef utils::Parallel Par;
   const std::vector<Par::AccessorGroup>& _groups = Par::getAccessorGroups();
-  foreach ( const Par::AccessorGroup& group, _groups ){
+  for (const Par::AccessorGroup& group : _groups) {
     if ( group.name == accessorName ){
       preciceDebug ( "return group ID = " << group.id );
       return group.id;
@@ -127,14 +128,13 @@ int MPIDirectCommunication:: getLeaderRank
   preciceTrace1 ( "getLeaderRank()", accessorName );
   typedef utils::Parallel Par;
   const std::vector<Par::AccessorGroup>& _groups = Par::getAccessorGroups();
-  foreach ( const Par::AccessorGroup& group, _groups ){
+  for (const Par::AccessorGroup& group : _groups) {
     if ( group.name == accessorName ) {
       preciceDebug ( "return rank = " << group.leaderRank );
       return group.leaderRank;
     }
   }
-  preciceError ( "getLeaderRank()",
-                 "Unknown accessor name \"" << accessorName << "\"!" );
+  preciceError("getLeaderRank()", "Unknown accessor name \"" << accessorName << "\"!");
 }
 
 }} // close namespaces

@@ -47,11 +47,6 @@ def checkset_var(varname, default):
         vprint(varname, var, False)
     return var
 
-def compiler_validator(key, value, environment):
-    """ Validator function for the compiler option. Checks if the given compiler is either (g++ or icc or clang++) or an MPI compiler. """
-    if not (value in ["g++", "icc", "clang++"] or value.startswith("mpic")):
-        raise Exception("Invalid value for compiler, must be one of g++, icc, clang++ or start with mpic*")
-        
 
 ########################################################################## MAIN
     
@@ -59,7 +54,7 @@ vars = Variables(None, ARGUMENTS)
 
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
 vars.Add(EnumVariable('build', 'Build type, either release or debug', "debug", allowed_values=('release', 'debug')))
-vars.Add("compiler", "Compiler must be either g++ or icc or clang++ or starting with mpic when using MPI.", "g++", validator=compiler_validator)
+vars.Add("compiler", "Compiler to use.", "g++")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
 vars.Add(BoolVariable("sockets", "Enables Socket-based communication.", True))
 vars.Add(BoolVariable("boost_inst", "Enable if Boost is available compiled and installed.", False))
@@ -103,27 +98,18 @@ print
 print 'Environment variables used for this build ...'
 print '(have to be defined by the user to configure build)'
 
-boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
-
 
 if env["petsc"]:
     PETSC_DIR = checkset_var("PETSC_DIR", "")
     PETSC_ARCH = checkset_var("PETSC_ARCH", "")
-    env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
-                          os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
-    env.Append(LIBS = ['petsc'])
-    env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
-else:
-    env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     
-# env.Replace(CXX = "mpic++")
-
 if env["boost_inst"]:
     if env["sockets"]:
         boostLibPath = checkset_var('PRECICE_BOOST_LIB_PATH', "/usr/lib/")
         boostSystemLib = checkset_var('PRECICE_BOOST_SYSTEM_LIB', "boost_system")
         boostThreadLib = checkset_var('PRECICE_BOOST_THREAD_LIB', "boost_thread")
-
+else:
+    boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
       
    #boostIncPath = os.getenv('PRECICE_BOOST_INC_PATH')
    #if ((boostIncPath == None) or (boostIncPath == "")):
@@ -170,8 +156,8 @@ print
 print 'Configuring build variables ...'
 
 env.Append(LIBPATH = [('#' + buildpath)])
+env.Append(CCFLAGS= ['-Wall', '-std=c++11'])
 
-env.Append(CCFLAGS= ['-Wall'])
 
 if env["compiler"] == 'icc':
     env.AppendUnique(LIBPATH = ['/usr/lib/'])
@@ -187,6 +173,7 @@ elif env["compiler"] == "clang++":
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
 
 env.Replace(CXX = env["compiler"])
+env.Replace(CC = env["compiler"])
 
 
 if env["build"] == 'debug':
@@ -197,8 +184,18 @@ elif env["build"] == 'release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"    
 
+if env["petsc"]:
+    env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
+                          os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
+    env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
+    if not uniqueCheckLib(conf, "petsc"):
+        errorMissingLib("petsc", "Petsc")
+else:
+    env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
+    buildpath += "-nopetsc"
 
 
+    
 if env["boost_inst"]:
     #env.AppendUnique(CPPPATH = [boostIncPath])
     # The socket implementation is based on Boost libs
@@ -208,7 +205,8 @@ if env["boost_inst"]:
         errorMissingLib(boostSystemLib, 'Boost')
     if not uniqueCheckLib(conf, boostThreadLib):
         errorMissingLib(boostThreadLib, 'Boost')
-env.AppendUnique(CPPPATH = [boostRootPath])
+else:
+    env.AppendUnique(CPPPATH = [boostRootPath])
 if not conf.CheckCXXHeader('boost/array.hpp'):
     errorMissingHeader('boost/array.hpp', 'Boost')
    
@@ -250,6 +248,7 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_SOCKETS'])
     buildpath += "-nosockets"
 
+    
 if env["python"]:
     env.AppendUnique(LIBPATH = [pythonLibPath])
     if not uniqueCheckLib(conf, pythonLib):
@@ -263,6 +262,8 @@ if env["python"]:
 else:
     buildpath += "-nopython"
     env.Append(CPPDEFINES = ['PRECICE_NO_PYTHON'])
+
+
 
 
 if env["gprof"]:

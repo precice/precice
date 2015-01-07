@@ -8,6 +8,7 @@
 #include "com/SharedPointer.hpp"
 #include <string>
 #include <vector>
+#include <map>
 
 namespace precice {
 namespace cplscheme {
@@ -227,6 +228,7 @@ public:
   virtual void receiveState (
     com::PtrCommunication communication,
     int                   rankSender ) =0;
+
 };
 
 }} // namespace precice, cplscheme

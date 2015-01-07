@@ -13,6 +13,8 @@
 #include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
+#include "utils/MasterSlave.hpp"
+
 //#include "utils/NumericalCompare.hpp"
 
 namespace precice {
@@ -35,7 +37,7 @@ IQNILSPostProcessing:: IQNILSPostProcessing
 		       singularityLimit, dataIDs, scalings),
   _secondaryOldXTildes(),
   _secondaryMatricesW()
-{}
+{}
 
 void IQNILSPostProcessing:: initialize
 (
@@ -43,7 +45,7 @@ void IQNILSPostProcessing:: initialize
 {
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
-  
+
   double init = 0.0;
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
   foreach (DataMap::value_type& pair, cplData){

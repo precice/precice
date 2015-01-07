@@ -34,7 +34,7 @@ void CompositionalCouplingScheme:: initialize
   int    startTimestep )
 {
   preciceTrace2("initialize()", startTime, startTimestep);
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     scheme.scheme->initialize(startTime, startTimestep);
   }
   determineActiveCouplingSchemes();
@@ -44,7 +44,7 @@ bool CompositionalCouplingScheme:: isInitialized() const
 {
   preciceTrace("isInitialized()");
   bool isInitialized = true;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     isInitialized &= scheme.scheme->isInitialized();
   }
   preciceDebug("return " << isInitialized);
@@ -54,7 +54,7 @@ bool CompositionalCouplingScheme:: isInitialized() const
 void CompositionalCouplingScheme:: initializeData()
 {
   preciceTrace("initializeData()");
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (scheme.scheme->isActionRequired(constants::actionWriteInitialData())){
       scheme.scheme->initializeData();
     }
@@ -98,7 +98,7 @@ void CompositionalCouplingScheme:: advance()
 void CompositionalCouplingScheme:: finalize()
 {
   preciceTrace("finalize()");
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     scheme.scheme->finalize();
   }
 }
@@ -130,7 +130,7 @@ std::vector<std::string> CompositionalCouplingScheme:: getCouplingPartners() con
   preciceTrace("getCouplingPartners()");
   std::vector<std::string> partners;
   std::vector<std::string> subpartners;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     subpartners = scheme.scheme->getCouplingPartners();
     partners.insert(partners.end(), subpartners.begin(), subpartners.end());
   }
@@ -170,7 +170,7 @@ double CompositionalCouplingScheme:: getTime() const
 {
   preciceTrace("getTime()");
   double time = std::numeric_limits<double>::max();
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (not scheme.onHold){
       if (scheme.scheme->getTime() < time){
         time = scheme.scheme->getTime();
@@ -185,7 +185,7 @@ int CompositionalCouplingScheme:: getTimesteps() const
 {
   preciceTrace("getTimesteps()");
   int timesteps = std::numeric_limits<int>::max();
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (not scheme.onHold){
       if (scheme.scheme->getTimesteps() < timesteps){
         timesteps = scheme.scheme->getTimesteps();
@@ -200,7 +200,7 @@ double CompositionalCouplingScheme:: getMaxTime() const
 {
   preciceTrace("getMaxTime()");
   double maxTime = 0.0;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (scheme.scheme->getMaxTime() > maxTime){
       maxTime = scheme.scheme->getMaxTime();
     }
@@ -213,7 +213,7 @@ int CompositionalCouplingScheme:: getMaxTimesteps() const
 {
   preciceTrace("getMaxTimesteps()");
   int maxTimesteps = 0;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (scheme.scheme->getMaxTimesteps() > maxTimesteps){
       maxTimesteps = scheme.scheme->getMaxTimesteps();
     }
@@ -236,7 +236,7 @@ bool CompositionalCouplingScheme:: hasTimestepLength() const
 {
   preciceTrace("hasTimestepLength()");
   bool hasIt = false;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     hasIt |= scheme.scheme->hasTimestepLength();
   }
   preciceDebug("return " << hasIt);
@@ -247,7 +247,7 @@ double CompositionalCouplingScheme:: getTimestepLength() const
 {
   preciceTrace("getTimestepLength()");
   double timestepLength = std::numeric_limits<double>::max();
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (scheme.scheme->getTimestepLength() < timestepLength){
       timestepLength = scheme.scheme->getTimestepLength();
     }
@@ -260,7 +260,7 @@ double CompositionalCouplingScheme:: getThisTimestepRemainder() const
 {
   preciceTrace("getThisTimestepRemainder()");
   double maxRemainder = 0.0;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (not scheme.onHold){
       if (scheme.scheme->getThisTimestepRemainder() > maxRemainder){
         maxRemainder = scheme.scheme->getThisTimestepRemainder();
@@ -275,7 +275,7 @@ double CompositionalCouplingScheme:: getComputedTimestepPart() const
 {
   preciceTrace("getComputedTimestepPart()");
   double timestepPart = std::numeric_limits<double>::max();
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (not scheme.onHold){
       if (scheme.scheme->getComputedTimestepPart() < timestepPart){
         timestepPart = scheme.scheme->getComputedTimestepPart();
@@ -290,7 +290,7 @@ double CompositionalCouplingScheme:: getNextTimestepMaxLength() const
 {
   preciceTrace("getNextTimestepMaxLength()");
   double maxLength = std::numeric_limits<double>::max();
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (not scheme.onHold){
       if (scheme.scheme->getNextTimestepMaxLength() < maxLength){
         maxLength = scheme.scheme->getNextTimestepMaxLength();
@@ -305,7 +305,7 @@ bool CompositionalCouplingScheme:: isCouplingOngoing() const
 {
   preciceTrace("isCouplingOngoing()");
   bool isOngoing = false;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     isOngoing |= scheme.scheme->isCouplingOngoing();
   }
   preciceDebug("return " << isOngoing);
@@ -316,7 +316,7 @@ bool CompositionalCouplingScheme:: isCouplingTimestepComplete() const
 {
   preciceTrace("isCouplingTimestepComplete()");
   bool isComplete = true;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     isComplete &= scheme.scheme->isCouplingTimestepComplete();
   }
   preciceDebug("return " << isComplete);
@@ -329,7 +329,7 @@ bool CompositionalCouplingScheme:: isActionRequired
 {
   preciceTrace1("isActionRequired()", actionName);
   bool isRequired = false;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (not scheme.onHold){
       isRequired |= scheme.scheme->isActionRequired(actionName);
     }
@@ -343,7 +343,7 @@ void CompositionalCouplingScheme:: performedAction
   const std::string& actionName)
 {
   preciceTrace1("performedAction()", actionName);
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (not scheme.onHold){
       scheme.scheme->performedAction(actionName);
     }
@@ -354,7 +354,7 @@ int CompositionalCouplingScheme:: getCheckpointTimestepInterval() const
 {
   preciceTrace("getCheckpointTimestepInterval()");
   int interval = std::numeric_limits<int>::max();
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (scheme.scheme->getCheckpointTimestepInterval() < interval){
       interval = scheme.scheme->getCheckpointTimestepInterval();
     }
@@ -368,7 +368,7 @@ void CompositionalCouplingScheme:: requireAction
   const std::string& actionName )
 {
   preciceTrace1("requireAction()", actionName);
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     scheme.scheme->requireAction(actionName);
   }
 }
@@ -377,7 +377,7 @@ std::string CompositionalCouplingScheme:: printCouplingState() const
 {
   std::string state;
   std::vector<std::string> partners;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     if (not state.empty()){
       state += "\n";
     }
@@ -399,7 +399,7 @@ void CompositionalCouplingScheme:: exportState
 {
   preciceTrace("exportState()");
   int enumerator = 0;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     std::ostringstream stream;
     stream << filenamePrefix << "_" << enumerator;
     scheme.scheme->exportState(stream.str());
@@ -413,7 +413,7 @@ void CompositionalCouplingScheme:: importState
 {
   preciceTrace("importState()");
   int enumerator = 0;
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     std::ostringstream stream;
     stream << filenamePrefix << "_" << enumerator;
     scheme.scheme->importState(stream.str());
@@ -427,7 +427,7 @@ void CompositionalCouplingScheme:: sendState
   int                   rankReceiver )
 {
   preciceTrace("sendState()");
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     scheme.scheme->sendState(communication, rankReceiver);
   }
 }
@@ -438,7 +438,7 @@ void CompositionalCouplingScheme:: receiveState
   int                   rankSender )
 {
   preciceTrace("receiveState()");
-  foreach (Scheme scheme, _couplingSchemes){
+  for (Scheme scheme : _couplingSchemes) {
     scheme.scheme->receiveState(communication, rankSender);
   }
 }

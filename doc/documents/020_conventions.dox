@@ -10,7 +10,7 @@ This page describes general and coding conventions used in preCICE.
 
 @subsection Indention
 
-Regarding indention, we follow the <a href="https://www.kernel.org/doc/Documentation/CodingStyle">Linux Kernel Coding Style</a>.
+Regarding indention, we follow the BSD-style.
 
 We do not indent namespaces since three or so levels of nested namespaces fill the offset without adding any viable information.
 
@@ -19,13 +19,11 @@ Using Emacs you get the indention style using this snippet.
 @code{.el}
 (setq c-basic-offset 2)
 (c-add-style "my-cc-style"
-  '("linux"
-    (c-offsets-alist . (
-			(innamespace . 0)
-			(namespace-open . 0)
-			(namespace-close . 0)
-			))))
-
+             '("bsd" (c-offsets-alist . (
+                                         (innamespace . 0)
+                                         (namespace-open . 0)
+                                         (namespace-close . 0)
+                                         ))))
 (setq c-default-style "my-cc-style")
 @endcode
 

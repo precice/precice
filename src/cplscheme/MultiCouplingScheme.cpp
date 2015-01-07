@@ -3,6 +3,7 @@
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
 #include "com/SharedPointer.hpp"
+#include "m2n/GlobalCommunication.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -16,12 +17,12 @@ MultiCouplingScheme::MultiCouplingScheme
   double                timestepLength,
   int                   validDigits,
   const std::string&    localParticipant,
-  std::vector<com::PtrCommunication> communications,
+  std::vector<m2n::PtrGlobalCommunication> communications,
   constants::TimesteppingMethod dtMethod,
   int                   maxIterations)
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,"neverFirstParticipant",
-      localParticipant,localParticipant,com::PtrCommunication(),maxIterations,dtMethod),
+      localParticipant,localParticipant,m2n::PtrGlobalCommunication(),maxIterations,dtMethod),
   _communications(communications),
   _allData (),
   _receiveDataVector(),
@@ -63,16 +64,16 @@ void MultiCouplingScheme::initialize
   initializeTXTWriters();
 
 
-  foreach (DataMap& dataMap, _sendDataVector){
-    foreach (DataMap::value_type & pair, dataMap) {
+  for (DataMap& dataMap : _sendDataVector) {
+    for (DataMap::value_type & pair : dataMap) {
       if (pair.second->initialize) {
         setHasToSendInitData(true);
         break;
       }
     }
   }
-  foreach (DataMap& dataMap, _receiveDataVector){
-    foreach (DataMap::value_type & pair, dataMap) {
+  for (DataMap& dataMap : _receiveDataVector) {
+    for (DataMap::value_type & pair : dataMap) {
       if (pair.second->initialize) {
         setHasToReceiveInitData(true);
         break;
@@ -110,8 +111,8 @@ void MultiCouplingScheme::initializeData()
 
     // second participant has to save values for extrapolation
     if (getExtrapolationOrder() > 0){
-      foreach (DataMap& dataMap, _receiveDataVector){
-        foreach (DataMap::value_type & pair, dataMap){
+      for (DataMap& dataMap : _receiveDataVector) {
+        for (DataMap::value_type & pair : dataMap){
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
@@ -122,8 +123,8 @@ void MultiCouplingScheme::initializeData()
   }
   if (hasToSendInitData()) {
     if (getExtrapolationOrder() > 0) {
-      foreach (DataMap& dataMap, _sendDataVector){
-        foreach (DataMap::value_type & pair, dataMap) {
+      for (DataMap& dataMap : _sendDataVector) {
+        for (DataMap::value_type & pair : dataMap) {
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
@@ -173,8 +174,8 @@ void MultiCouplingScheme::advance()
       getPostProcessing()->performPostProcessing(_allData);
     }
 
-    foreach(com::PtrCommunication com, _communications){
-      com->send(convergence, 0);
+    for (m2n::PtrGlobalCommunication com : _communications) {
+      com->sendMaster(convergence, 0);
     }
 
     if (isCouplingOngoing()) {
@@ -182,7 +183,7 @@ void MultiCouplingScheme::advance()
         extrapolateData(_allData); // Also stores data
       }
       else { // Store data for conv. measurement, post-processing, or extrapolation
-        foreach (DataMap::value_type& pair, _allData) {
+        for (DataMap::value_type& pair : _allData) {
           if (pair.second->oldValues.size() > 0){
             pair.second->oldValues.column(0) = *pair.second->values;
           }
@@ -222,18 +223,19 @@ void MultiCouplingScheme::mergeData()
 void MultiCouplingScheme:: addDataToSend
 (
   mesh::PtrData data,
+  mesh::PtrMesh mesh,
   bool          initialize,
   int           index)
 {
   int id = data->getID();
   if(! utils::contained(id, _sendDataVector[index])) {
-    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize, data->getDimensions()));
     DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _sendDataVector[index].insert(pair);
   }
   else {
     preciceError("addDataToSend()", "Data \"" << data->getName()
-     << "\" of mesh \"" << (data->mesh())->getName() << "\" cannot be "
+     << "\" of mesh \"" << mesh->getName() << "\" cannot be "
      << "added twice for sending!");
   }
 }
@@ -241,18 +243,19 @@ void MultiCouplingScheme:: addDataToSend
 void MultiCouplingScheme:: addDataToReceive
 (
   mesh::PtrData data,
+  mesh::PtrMesh mesh,
   bool          initialize,
   int           index)
 {
   int id = data->getID();
   if(! utils::contained(id, _receiveDataVector[index])) {
-    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize, data->getDimensions()));
     DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _receiveDataVector[index].insert(pair);
   }
   else {
     preciceError("addDataToReceive()", "Data \"" << data->getName()
-     << "\" of mesh \"" << (data->mesh())->getName() << "\" cannot be "
+     << "\" of mesh \"" << mesh->getName() << "\" cannot be "
      << "added twice for receiving!");
   }
 }
@@ -265,10 +268,10 @@ void MultiCouplingScheme:: sendData()
     assertion(_communications[i].get() != NULL);
     assertion(_communications[i]->isConnected());
 
-    foreach (DataMap::value_type& pair, _sendDataVector[i]){
+    for (DataMap::value_type& pair : _sendDataVector[i]) {
       int size = pair.second->values->size();
       if (size > 0) {
-        _communications[i]->send(tarch::la::raw(*pair.second->values), size, 0);
+        _communications[i]->sendMaster(tarch::la::raw(*pair.second->values), size, 0);
       }
     }
   }
@@ -282,10 +285,10 @@ void MultiCouplingScheme:: receiveData()
     assertion(_communications[i].get() != NULL);
     assertion(_communications[i]->isConnected());
 
-    foreach (DataMap::value_type& pair, _receiveDataVector[i]){
+    for (DataMap::value_type& pair : _receiveDataVector[i]) {
       int size = pair.second->values->size();
       if (size > 0) {
-        _communications[i]->receive(tarch::la::raw(*pair.second->values), size, 0);
+        _communications[i]->receiveMaster(tarch::la::raw(*pair.second->values), size, 0);
       }
     }
   }
@@ -299,7 +302,7 @@ void MultiCouplingScheme::setupConvergenceMeasures()
   preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
          "At least one convergence measure has to be defined for "
          << "an implicit coupling scheme!");
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.dataID;
     convMeasure.data = getData(dataID);
     assertion(convMeasure.data != NULL);

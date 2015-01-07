@@ -1,0 +1,23 @@
+SET(CPP_FILES
+     ../../components/c++/precice/BAbstractImplementation.cpp
+     ../../src/precice/BImplementation.cpp
+     ../../components/c++/precice/BC2CxxProxy.cpp 
+     ../../components/c++/tinyxml_ascodt.cpp
+)
+
+set(CPP_FILES
+   	${CPP_FILES}
+   	../../components/c++/precice/InitializerNative2JavaPlainPort.cpp 
+   	../../components/c++/precice/InitializerNative2NativePlainPort.cpp
+	../../components/c++/precice/InitializerCxx2SocketPlainPort.cpp
+	../../components/c++/precice/InitializerC2CxxSocketPlainPort.cpp 
+	../../components/c++/precice/InitializerNativeDispatcher.cpp
+	../../components/c++/precice/InitializerNativeSocketDispatcher.cpp
+	../../components/c++/precice/InitializerCProxyNativeSocketDispatcher.cpp
+)
+set(CPP_FILES
+   	${CPP_FILES}
+   ../../src/precice/gatherAddresses.cpp
+   ../../src/precice/cantorPairing.cpp
+   ../../components/c++/precice/ReceiverCxx2SocketPlainPort.cpp 
+)

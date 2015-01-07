@@ -190,6 +190,20 @@ public:
   virtual int receive (
     bool& itemToReceive,
     int   rankSender ) =0;
+
+  /**
+   * @ Set rank offset
+   */
+  void setRankOffset(int rankOffset){
+    _rankOffset = rankOffset;
+  }
+
+protected:
+  /**
+   * @brief Rank offset for masters-slave communication, since ranks are from 0 to size-2
+   */
+  int _rankOffset;
+
 };
 
 }} // namespace precice, com

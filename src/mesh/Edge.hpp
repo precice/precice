@@ -19,7 +19,7 @@ template<typename Types> class EdgeIterator;
 /**
  * @brief Linear edge of a mesh, defined by two Vertex objects.
  */
-class Edge : public PropertyContainer, boost::noncopyable
+class Edge : public PropertyContainer, private boost::noncopyable
 {
 public:
 

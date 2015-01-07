@@ -37,6 +37,7 @@ FileCommunication:: FileCommunication
   _binary ( binaryMode ),
   _comDirectory(communicationDirectory)
 {
+  _rankOffset = 0;
   _sendFile.setf ( std::ios::showpoint );
   _sendFile.setf ( std::ios::fixed );
   _sendFile << std::setprecision(16);
@@ -115,7 +116,7 @@ void FileCommunication:: startSendPackage
   std::string filename = getSendFilename (true, rankReceiver, sendIndex);
   _sendFile.open ( filename.c_str(), _sendmode );
   preciceCheck ( _sendFile.is_open(), "startSendPackage()", "Could not open file "
-                 << "\"" << _sendFile << "\" to start send package!" );
+                 << "\"" << &_sendFile << "\" to start send package!" );
 }
 
 void FileCommunication:: finishSendPackage()
@@ -154,7 +155,7 @@ int FileCommunication:: startReceivePackage
   std::string filename = getReceiveFilename ( true, rankSender, receiveIndex );
   _receiveFile.open ( filename.c_str(), _receivemode );
   preciceCheck ( _receiveFile.is_open(), "startReceivePackage()", "Could not open file "
-                 << "\"" << _receiveFile << "\" to start receive package!" );
+                 << "\"" << &_receiveFile << "\" to start receive package!" );
   return rankSender;
 }
 

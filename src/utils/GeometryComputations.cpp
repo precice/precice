@@ -1,91 +1,9 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "GeometryComputations.hpp"
 #include "tarch/la/VectorVectorOperations.h"
 
 namespace precice {
 namespace utils {
 
-//bool GeometryComputations:: segmentsIntersect
-//(
-//  const tarch::la::Vector<2,double> & a,
-//  const tarch::la::Vector<2,double> & b,
-//  const tarch::la::Vector<2,double> & c,
-//  const tarch::la::Vector<2,double> & d,
-//  bool countTouchingAsIntersection )
-//{
-////  precicePrint ( "segmentsIntersect: a = " << a << ", b = " << b << ", c = "
-////                 << c << ", d = " << d );
-//  if ( countTouchingAsIntersection ) {
-//    if ( between(a, b, c) ) {
-//      return true;
-//    }
-//    else if ( between(a, b, d) ) {
-//      return true;
-//    }
-//    else if ( between(c, d, a) ) {
-//      return true;
-//    }
-//    else if ( between(c, d, b) ) {
-//      return true;
-//    }
-//  }
-//
-//  double abc = triangleArea(a, b, c);
-//  double abd = triangleArea(a, b, d);
-//  double cda = triangleArea(c, d, a);
-//  double cdb = triangleArea(c, d, b);
-//
-//  using tarch::la::norm2;
-//  double circABC = norm2(a-b) + norm2(b-c) + norm2(c-a);
-//  double circABD = norm2(a-b) + norm2(b-d) + norm2(d-a);
-//  double circCDA = norm2(c-d) + norm2(d-a) + norm2(a-c);
-//  double circCDB = norm2(c-d) + norm2(d-b) + norm2(b-c);
-//
-////  precicePrint ( "triA(abc) = " << abc << ", triA(abd) = " << abd
-////                 << ", triA(cda) = " << cda << ", triA(cdb) = " << cdb );
-////  precicePrint ( "circ(abc) = " << circABC
-////                 << ", circ(abd) = " << circABD
-////                 << ", circ(cda) = " << circCDA
-////                 << ", circ(cdb) = " << circCDB );
-//
-//  abc /= circABC;
-//  abd /= circABD;
-//  cda /= circCDA;
-//  cdb /= circCDB;
-//
-////  precicePrint ( "after scaling: triA(abc) = " << abc << ", triA(abd) = " << abd
-////                 << ", triA(cda) = " << cda << ", triA(cdb) = " << cdb );
-//
-//  // Check, if one point lies on line defined by segment and the other not (-> xor).
-//  // If true, either one point is between, which means the segments are
-//  // touching only, or the segments are neither touching nor intersecting
-//  // (-> false). This case of touching segments is detected in the beginning
-//  // of this function, if countTouchingAsIntersection is true. Otherwise,
-//  // it should not be counted (-> false).
-//  if ( xOR(std::abs(abc) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE,
-//       std::abs(abd) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE) )
-//  {
-////    precicePrint ( "return at 1" );
-//    return false;
-//  }
-//  if ( xOR(std::abs(cda) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE,
-//       std::abs(cdb) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE) )
-//  {
-////    precicePrint ( "return at 2" );
-//    return false;
-//  }
-//
-//  // Check, whether the segments are intersecting in the real sense.
-//  bool isFirstSegmentBetween = xOR (abc > - tarch::la::NUMERICAL_ZERO_DIFFERENCE,
-//                                    abd > - tarch::la::NUMERICAL_ZERO_DIFFERENCE );
-//  bool isSecondSegmentBetween = xOR (cda > - tarch::la::NUMERICAL_ZERO_DIFFERENCE,
-//                                     cdb > - tarch::la::NUMERICAL_ZERO_DIFFERENCE );
-////  precicePrint ( "return at 3 = " << isFirstSegmentBetween << " && "
-////                 << isSecondSegmentBetween );
-//  return isFirstSegmentBetween && isSecondSegmentBetween;
-//}
 
 bool GeometryComputations:: lineIntersection
 (
@@ -114,7 +32,7 @@ bool GeometryComputations:: lineIntersection
    return true;
 }
 
-int GeometryComputations:: segmentPlaneIntersection
+GeometryComputations::ResultConstants GeometryComputations:: segmentPlaneIntersection
 (
    const tarch::la::Vector<3,double> & pointOnPlane,
    const tarch::la::Vector<3,double> & planeNormal,
@@ -167,30 +85,6 @@ int GeometryComputations:: segmentPlaneIntersection
    return INTERSECTION;
 }
 
-//double GeometryComputations:: triangleArea
-//(
-//   const tarch::la::Vector<2,double> & a,
-//   const tarch::la::Vector<2,double> & b,
-//   const tarch::la::Vector<2,double> & c )
-//{
-//   tarch::la::Vector<2,double> A = b - a;
-//   tarch::la::Vector<2,double> B = c - a;
-//   return 0.5 * (A(0)*B(1) - A(1)*B(0));
-//}
-
-
-//double GeometryComputations:: triangleArea
-//(
-//   const tarch::la::Vector<3, double> & a,
-//   const tarch::la::Vector<3, double> & b,
-//   const tarch::la::Vector<3, double> & c )
-//{
-//   tarch::la::Vector<3,double> A = b - a;
-//   tarch::la::Vector<3,double> B = c - a;
-//   tarch::la::Vector<3,double> result;
-//
-//   return 0.5 * tarch::la::norm2 ( tarch::la::cross(A,B,result) );
-//}
 
 double GeometryComputations:: tetraVolume
 (

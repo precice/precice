@@ -111,20 +111,6 @@ public:
    */
   //const std::string& getTypeName () const;
 
-  /**
-   * @brief Sets owning mesh.
-   */
-  //void setMesh ( Mesh* mesh );
-
-  /**
-   * @brief Returns pointer to mesh owning the data set.
-   */
-  Mesh* mesh ();
-
-  /**
-   * @brief Returns const pointer to mesh owning the data set.
-   */
-  const Mesh* mesh () const;
 
 private:
 
@@ -149,8 +135,6 @@ private:
   // @brief Dimensionality of one data value.
   int _dimensions;
 
-  // @brief Owning mesh.
-  Mesh* _mesh;
 };
 
 }} // namespace precice, mesh

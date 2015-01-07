@@ -56,6 +56,12 @@ sourcesCom = [
     Glob('com/tests/*.cpp')
 ]
 
+sourcesM2N = [
+    Glob('m2n/*.cpp'),
+    Glob('m2n/tests/*.cpp'),
+    Glob('m2n/config/*.cpp')
+]
+
 sourcesCplscheme = [
     Glob('cplscheme/*.cpp'),
     Glob('cplscheme/impl/*.cpp'),
@@ -127,6 +133,7 @@ sourcesAllNoMain = [
     sourcesSpacetree,
     sourcesMapping,
     sourcesCom,
+    sourcesM2N,
     sourcesCplscheme,
     sourcesAction,
     sourcesPrecice,

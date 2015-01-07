@@ -10,6 +10,7 @@
 #include "utils/Dimensions.hpp"
 #include "tarch/logging/Log.h"
 #include <limits>
+#include "utils/MasterSlave.hpp"
 
 namespace precice {
    namespace cplscheme {
@@ -62,7 +63,7 @@ public:
       const utils::DynVector & oldValues,
       const utils::DynVector & newValues )
    {
-      _normDiff = tarch::la::norm2(newValues - oldValues);
+      _normDiff = utils::MasterSlave::l2norm(newValues - oldValues);
       if ( _isFirstIteration ) {
          _normFirstResidual = _normDiff;
          _isFirstIteration = false;

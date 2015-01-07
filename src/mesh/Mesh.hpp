@@ -14,6 +14,7 @@
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "boost/utility.hpp"
+#include "boost/noncopyable.hpp"
 #include "tarch/la/DynamicVector.h"
 #include <map>
 #include <vector>
@@ -272,6 +273,21 @@ public:
    */
   void notifyListeners();
 
+  std::map<int,std::vector<int> >& getVertexDistribution(){
+    return _vertexDistribution;
+  }
+
+  int getGlobalNumberOfVertices(){
+    return _globalNumberOfVertices;
+  }
+
+  void setGlobalNumberOfVertices(int globalNumberOfVertices){
+    _globalNumberOfVertices = globalNumberOfVertices;
+  }
+
+  void addMesh(Mesh& deltaMesh);
+
+
 private:
 
   // @brief Logging device.
@@ -311,6 +327,17 @@ private:
 
   // @brief Mesh listeners interested in mesh changes.
   std::list<MeshListener*> _listeners;
+
+  /**
+   * @brief Vertex distribution for the master, holding for each slave all vertex IDs.
+   */
+  std::map<int,std::vector<int> > _vertexDistribution;
+
+  /**
+   * @brief Global number of vertices for the master.
+   */
+  int _globalNumberOfVertices;
+
 };
 
 }} // namespace precice, mesh

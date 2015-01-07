@@ -258,11 +258,13 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     std::string nameParticipantTo = tag.getStringAttributeValue(ATTR_TO);
     bool initialize = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
     mesh::PtrData exchangeData;
+    mesh::PtrMesh exchangeMesh;
     foreach (mesh::PtrMesh mesh, _meshConfig->meshes()){
       if ( mesh->getName() == nameMesh ) {
         foreach ( mesh::PtrData data, mesh->data() ) {
           if ( data->getName() == nameData ) {
             exchangeData = data;
+            exchangeMesh = mesh;
             break;
           }
         }
@@ -276,7 +278,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     }
     _meshConfig->addNeededMesh(nameParticipantFrom, nameMesh);
     _meshConfig->addNeededMesh(nameParticipantTo, nameMesh);
-    _config.exchanges.push_back(boost::make_tuple(exchangeData,
+    _config.exchanges.push_back(boost::make_tuple(exchangeData, exchangeMesh,
                   nameParticipantFrom,nameParticipantTo, initialize));
   }
   else if (tag.getName() == TAG_MAX_ITERATIONS){
@@ -724,7 +726,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
 {
   preciceTrace1("createSerialExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
-  com::PtrCommunication com = _comConfig->getCommunication (
+  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -743,7 +745,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
 {
   preciceTrace1("createParallelExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
-  com::PtrCommunication com = _comConfig->getCommunication (
+  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -763,7 +765,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
   preciceTrace1("createSerialImplicitCouplingScheme()", accessor);
   //assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
 
-  com::PtrCommunication com = _comConfig->getCommunication (
+  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -805,7 +807,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 {
   preciceTrace1("createParallelImplicitCouplingScheme()", accessor);
   assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
-  com::PtrCommunication com = _comConfig->getCommunication (
+  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -851,7 +853,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
   BaseCouplingScheme* scheme;
 
   if(accessor == _config.controller){
-    std::vector<com::PtrCommunication> communications;
+    std::vector<m2n::PtrGlobalCommunication> communications;
     foreach(const std::string& participant, _config.participants){
       communications.push_back(_comConfig->getCommunication (
           _config.controller, participant ));
@@ -868,7 +870,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
     addMultiDataToBeExchanged(*castedScheme, accessor);
   }
   else{
-    com::PtrCommunication com = _comConfig->getCommunication (
+    m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
         accessor, _config.controller );
     scheme = new ParallelCouplingScheme (
         _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -934,8 +936,9 @@ void CouplingSchemeConfiguration:: addDataToBeExchanged
   using boost::get;
   foreach (const Config::Exchange& tuple, _config.exchanges){
     mesh::PtrData data = get<0>(tuple);
-    const std::string& from = get<1>(tuple);
-    const std::string& to = get<2>(tuple);
+    mesh::PtrMesh mesh = get<1>(tuple);
+    const std::string& from = get<2>(tuple);
+    const std::string& to = get<3>(tuple);
 
     preciceCheck(to != from,"addDataToBeExchanged()",
         "You cannot define an exchange from and to the same participant");
@@ -948,12 +951,12 @@ void CouplingSchemeConfiguration:: addDataToBeExchanged
       throw std::string("Participant \"" + to + "\" is not configured for coupling scheme");
     }
 
-    bool initialize = get<3>(tuple);
+    bool initialize = get<4>(tuple);
     if (from == accessor){
-      scheme.addDataToSend(data, initialize);
+      scheme.addDataToSend(data, mesh, initialize);
     }
     else if(to == accessor){
-      scheme.addDataToReceive(data, initialize);
+      scheme.addDataToReceive(data, mesh, initialize);
     }
     else{
       assertion(_config.type == VALUE_MULTI);
@@ -971,8 +974,9 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
   using boost::get;
   foreach (const Config::Exchange& tuple, _config.exchanges){
     mesh::PtrData data = get<0>(tuple);
-    const std::string& from = get<1>(tuple);
-    const std::string& to = get<2>(tuple);
+    mesh::PtrMesh mesh = get<1>(tuple);
+    const std::string& from = get<2>(tuple);
+    const std::string& to  = get<3>(tuple);
 
     if (not(utils::contained(from, _config.participants) || from == _config.controller)){
       throw std::string("Participant \"" + from + "\" is not configured for coupling scheme");
@@ -982,7 +986,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
       throw std::string("Participant \"" + to + "\" is not configured for coupling scheme");
     }
 
-    bool initialize = get<3>(tuple);
+    bool initialize = get<4>(tuple);
     if (from == accessor){
       int index = 0;
       foreach(const std::string& participant, _config.participants){
@@ -993,7 +997,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
         index++;
       }
       assertion2(index < _config.participants.size(), index, _config.participants.size());
-      scheme.addDataToSend(data, initialize, index);
+      scheme.addDataToSend(data, mesh, initialize, index);
     }
     else {
       int index = 0;
@@ -1005,7 +1009,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
         index++;
       }
       assertion2(index < _config.participants.size(), index, _config.participants.size());
-      scheme.addDataToReceive(data, initialize, index);
+      scheme.addDataToReceive(data, mesh, initialize, index);
     }
   }
 }

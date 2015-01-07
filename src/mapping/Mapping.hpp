@@ -71,7 +71,7 @@ public:
   /**
    * @brief Constructor, takes mapping constraint.
    */
-  Mapping ( Constraint constraint );
+  Mapping ( Constraint constraint, int dimensions );
 
   /**
    * @brief Destructor, empty.
@@ -133,6 +133,11 @@ public:
     int inputDataID,
     int outputDataID ) =0;
 
+  /**
+   * @brief Returns true if the vertex actually contributes to the mapping.
+   */
+  virtual bool doesVertexContribute(int vertexID);
+
 protected:
 
   /**
@@ -155,6 +160,8 @@ protected:
    */
   void setOutputRequirement ( MeshRequirement requirement );
 
+  int getDimensions();
+
 private:
 
   // @brief Logging device.
@@ -174,6 +181,8 @@ private:
 
   // @brief Pointer to output mesh.
   mesh::PtrMesh _output;
+
+  int _dimensions;
 };
 
 }} // namespace precice, mapping

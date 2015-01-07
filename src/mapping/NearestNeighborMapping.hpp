@@ -23,7 +23,7 @@ public:
    *
    * @param constraint [IN] Specifies mapping to be consistent or conservative.
    */
-  NearestNeighborMapping ( Constraint constraint );
+  NearestNeighborMapping ( Constraint constraint, int dimensions );
 
   /**
    * @brief Destructor, empty.
@@ -51,6 +51,8 @@ public:
   virtual void map (
     int inputDataID,
     int outputDataID );
+
+  virtual bool doesVertexContribute(int vertexID);
 
 private:
 

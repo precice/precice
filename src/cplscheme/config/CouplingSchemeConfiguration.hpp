@@ -155,7 +155,7 @@ private:
     int validDigits;
     constants::TimesteppingMethod dtMethod;
     // @brief Tuples of exchange data, mesh, and participant name.
-    typedef boost::tuple<mesh::PtrData,std::string, std::string,bool> Exchange;
+    typedef boost::tuple<mesh::PtrData, mesh::PtrMesh,std::string, std::string,bool> Exchange;
     std::vector<Exchange> exchanges;
     // @brief Tuples of data ID, mesh ID, and convergence measure.
     std::vector<boost::tuple<int,bool,std::string,impl::PtrConvergenceMeasure> > convMeasures;

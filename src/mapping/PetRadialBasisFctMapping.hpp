@@ -7,6 +7,7 @@
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
 #include "tarch/la/LUDecomposition.h"
+#include "utils/MasterSlave.hpp"
 #include "io/TXTWriter.hpp"
 #include <limits>
 #include <typeinfo>
@@ -46,6 +47,7 @@ public:
    */
   PetRadialBasisFctMapping (
     Constraint              constraint,
+    int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
     double                  solverRtol = 1e-9);
 
@@ -95,10 +97,11 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
 (
   Constraint              constraint,
+  int                     dimensions,
   RADIAL_BASIS_FUNCTION_T function,
   double                  solverRtol)
   :
-  Mapping ( constraint ),
+  Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
   _matrixC(PETSC_COMM_SELF, "C"),
@@ -115,6 +118,11 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   preciceTrace("computeMapping()");
+
+  preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
+             "computeMapping()", "RBF mapping "
+             << "is not yet supported for a participant in master mode");
+
   using namespace tarch::la;
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
@@ -140,25 +148,62 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatSetType(_matrixC.matrix, MATSBAIJ); CHKERRV(ierr); // create symmetric, block sparse matrix.
   ierr = MatSetSizes(_matrixC.matrix, PETSC_DECIDE, PETSC_DECIDE, n, n); CHKERRV(ierr);
   ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
-  ierr = MatSetUp(_matrixC.matrix); CHKERRV(ierr);
 
   _matrixA.reset();
   ierr = MatSetType(_matrixA.matrix, MATAIJ); CHKERRV(ierr); // create sparse matrix.
   ierr = MatSetSizes(_matrixA.matrix, PETSC_DECIDE, PETSC_DECIDE, outputSize, n); CHKERRV(ierr);
-  ierr = MatSetUp(_matrixA.matrix); CHKERRV(ierr);
 
   KSPReset(_solver);
 
-  // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
   utils::DynVector distance(dimensions);
-  int logCLoop = 1;
+
+  // We do preallocating of the matrices C and A. That means we traverse the input data once, just
+  // to know where we have entries in the sparse matrix. This information petsc can use to
+  // preallocate the matrix. In the second phase we actually fill the matrix.
+
+  // -- BEGIN PREALLOC LOOP FOR MATRIX C --
+  int logPreallocCLoop = 1;
+  PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocCLoop);
+  PetscLogEventBegin(logPreallocCLoop, 0, 0, 0, 0);
+  PetscInt nnz[n]; // Number of non-zeros per row
+  unsigned int totalNNZ = 0; // Total number of non-zeros in matrix
+  foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
+    nnz[i] = 0;
+    for (int j=iVertex.getID(); j < inputSize; j++) {
+      if (i == j) {
+        nnz[i]++; // Since we need to set at least zeros on the main diagonal, we have an entry
+                  // there. No further test necessary.
+        continue;
+      }
+      distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
+      double coeff = _basisFunction.evaluate(norm2(distance));
+      if ( not equals(coeff, 0.0)) {
+        nnz[i]++;
+      }
+    }
+    nnz[i] += dimensions + 1;
+    totalNNZ += nnz[i];
+    i++;
+  }
+  for (int r = inputSize; r < n; r++) {
+    nnz[r] = 1;
+  }
+  PetscLogEventEnd(logPreallocCLoop, 0, 0, 0, 0);
+  i = 0;
+  // -- END PREALLOC LOOP FOR MATRIX C --
+  
+  ierr = MatSeqSBAIJSetPreallocation(_matrixC.matrix, 1, PETSC_DEFAULT, nnz);
+  
+  // -- BEGIN FILL LOOP FOR MATRIX C --
+  int logCLoop = 2;
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
   PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
-  PetscInt colIdx[n];
-  PetscScalar colVals[n];
+  // We collect entries for each row and set them blockwise using MatSetValues.
+  PetscInt colIdx[n];     // holds the columns indices of the entries
+  PetscScalar colVals[n]; // holds the values of the entries
   foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
-    PetscInt colNum = 0;
+    PetscInt colNum = 0;  // holds the number of columns
     for (int j=iVertex.getID(); j < inputSize; j++) {
       distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
       double coeff = _basisFunction.evaluate(norm2(distance));
@@ -191,14 +236,41 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     i++;
   }
   PetscLogEventEnd(logCLoop, 0, 0, 0, 0);
+  // -- END FILL LOOP FOR MATRIX C --
 
   // Petsc requires that all diagonal entries are set, even if set to zero.
   _matrixC.assemble(MAT_FLUSH_ASSEMBLY);
   petsc::Vector zeros(_matrixC);
   MatDiagonalSet(_matrixC.matrix, zeros.vector, ADD_VALUES);
+
+  // Begin assembly here, all assembly is ended at the end of this function.
   ierr = MatAssemblyBegin(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
-  
-  int logALoop = 1;
+
+  // -- BEGIN PREALLOC LOOP FOR MATRIX A --
+  int logPreallocALoop = 3;
+  PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocALoop);
+  PetscLogEventBegin(logPreallocALoop, 0, 0, 0, 0);
+  PetscInt nnzA[outputSize];
+  i = 0;
+  foreach (const mesh::Vertex& iVertex, outMesh->vertices()) {
+    nnzA[i] = 0;
+    foreach (const mesh::Vertex& jVertex, inMesh->vertices()) {
+      distance = iVertex.getCoords() - jVertex.getCoords();
+      double coeff = _basisFunction.evaluate(norm2(distance));
+      if ( not equals(coeff, 0.0)) {
+        nnzA[i]++;
+      }
+    }
+    nnzA[i] += dimensions + 1;
+    i++;
+  }
+  PetscLogEventEnd(logPreallocALoop, 0, 0, 0, 0);
+  // -- END PREALLOC LOOP FOR MATRIX A --
+
+  ierr = MatSeqAIJSetPreallocation(_matrixA.matrix, PETSC_DEFAULT, nnzA); CHKERRV(ierr);
+
+  // -- BEGIN FILL LOOP FOR MATRIX A --
+  int logALoop = 4;
   PetscLogEventRegister("Filling Matrix A", 0, &logALoop);
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   i = 0;
@@ -236,14 +308,24 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     i++;
   }
   PetscLogEventEnd(logALoop, 0, 0, 0, 0);
+  // -- END FILL LOOP FOR MATRIX A --
+  
   ierr = MatAssemblyBegin(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   ierr = MatAssemblyEnd(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   ierr = MatAssemblyEnd(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
-
   KSPSetOperators(_solver, _matrixC.matrix, _matrixC.matrix);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetFromOptions(_solver);
 
+  if (totalNNZ > 20*n) {
+    preciceDebug("Using Cholesky decomposition as direct solver for dense matrix.");
+    PC prec;
+    KSPSetType(_solver, KSPPREONLY);
+    KSPGetPC(_solver, &prec);
+    PCSetType(prec, PCCHOLESKY);
+    PCFactorSetShiftType(prec, MAT_SHIFT_NONZERO);
+  }      
+  
   _hasComputedMapping = true;
 }
 
@@ -274,6 +356,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
              input()->getDimensions(), output()->getDimensions());
   using namespace tarch::la;
   PetscErrorCode ierr = 0;
+  KSPConvergedReason convReason;
   utils::DynVector& inValues = input()->data(inputDataID)->values();
   utils::DynVector& outValues = output()->data(outputDataID)->values();
 
@@ -299,6 +382,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
       ierr = MatMultTranspose(_matrixA.matrix, in.vector, Au.vector); CHKERRV(ierr);
       ierr = KSPSolve(_solver, Au.vector, out.vector); CHKERRV(ierr);
+      ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
+      if (convReason < 0) {
+        preciceError(__func__, "RBF linear system has not converged.");
+      }
       VecChop(out.vector, 1e-9);
       // Copy mapped data to output data values
       PetscScalar *outArray;
@@ -330,8 +417,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       in.assemble();
       
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);
+      ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
+      if (convReason < 0) {
+        preciceError(__func__, "RBF linear system has not converged.");
+      }
       ierr = MatMult(_matrixA.matrix, p.vector, out.vector); CHKERRV(ierr);
-
       VecChop(out.vector, 1e-9);
       // Copy mapped data to output data values
       ierr = VecGetArray(out.vector, &vecArray);

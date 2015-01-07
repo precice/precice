@@ -1,6 +1,7 @@
 #include "ParallelCouplingScheme.hpp"
 #include "impl/PostProcessing.hpp"
 #include "com/Communication.hpp"
+#include "m2n/GlobalCommunication.hpp"
 #include "com/SharedPointer.hpp"
 
 namespace precice {
@@ -17,7 +18,7 @@ ParallelCouplingScheme::ParallelCouplingScheme
   const std::string&    firstParticipant,
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
-  com::PtrCommunication communication,
+  m2n::PtrGlobalCommunication communication,
   constants::TimesteppingMethod dtMethod,
   CouplingMode          cplMode,
   int                   maxIterations)
@@ -43,7 +44,6 @@ void ParallelCouplingScheme::initialize
   assertion(not isInitialized());
   assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion1(startTimestep >= 0, startTimestep);
-  assertion(getCommunication()->isConnected());
   setTime(startTime);
   setTimesteps(startTimestep);
   if (_couplingMode == Implicit) {
@@ -64,13 +64,13 @@ void ParallelCouplingScheme::initialize
     initializeTXTWriters();
   }
 
-  foreach (DataMap::value_type & pair, getSendData()) {
+  for (DataMap::value_type & pair : getSendData()) {
     if (pair.second->initialize) {
       setHasToSendInitData(true);
       break;
     }
   }
-  foreach (DataMap::value_type & pair, getReceiveData()) {
+  for (DataMap::value_type & pair : getReceiveData()) {
     if (pair.second->initialize) {
       setHasToReceiveInitData(true);
       break;
@@ -124,7 +124,7 @@ void ParallelCouplingScheme::initializeData()
 
       // second participant has to save values for extrapolation
       if (_couplingMode == Implicit and getExtrapolationOrder() > 0){
-        foreach (DataMap::value_type & pair, getReceiveData()){
+        for (DataMap::value_type & pair : getReceiveData()) {
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
@@ -134,7 +134,7 @@ void ParallelCouplingScheme::initializeData()
     }
     if (hasToSendInitData()) {
       if (_couplingMode == Implicit and getExtrapolationOrder() > 0) {
-        foreach (DataMap::value_type & pair, getSendData()) {
+        for (DataMap::value_type & pair : getSendData()) {
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
@@ -178,9 +178,7 @@ void ParallelCouplingScheme::explicitAdvance()
     if (doesFirstStep()) {
       preciceDebug("Sending data...");
       getCommunication()->startSendPackage(0);
-      if (participantSetsDt()) {
-        getCommunication()->send(getComputedTimestepPart(), 0);
-      }
+      sendDt();
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
 
@@ -201,9 +199,7 @@ void ParallelCouplingScheme::explicitAdvance()
 
       preciceDebug("Sending data...");
       getCommunication()->startSendPackage(0);
-      if (participantSetsDt()) {
-        getCommunication()->send(getComputedTimestepPart(), 0);
-      }
+      sendDt();
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
     }
@@ -231,7 +227,7 @@ void ParallelCouplingScheme::implicitAdvance()
       sendData(getCommunication());
       getCommunication()->finishSendPackage();
       getCommunication()->startReceivePackage(0);
-      getCommunication()->receive(convergence, 0);
+      getCommunication()->receiveAll(convergence,0);
       if (convergence) {
         timestepCompleted();
       }
@@ -247,8 +243,6 @@ void ParallelCouplingScheme::implicitAdvance()
 
       convergence = measureConvergence();
 
-      //assertion2((getIterations() <= getMaxIterations()) || (getMaxIterations() == -1),
-      //           getIterations(), getMaxIterations());
       // Stop, when maximal iteration count (given in config) is reached
       if (maxIterationsReached()) {
         convergence = true;
@@ -264,19 +258,19 @@ void ParallelCouplingScheme::implicitAdvance()
         getPostProcessing()->performPostProcessing(getAllData());
       }
       getCommunication()->startSendPackage(0);
-      getCommunication()->send(convergence, 0);
+      getCommunication()->sendAll(convergence,0);
 
       if (isCouplingOngoing()) {
         if (convergence && (getExtrapolationOrder() > 0)){
           extrapolateData(getAllData()); // Also stores data
         }
         else { // Store data for conv. measurement, post-processing, or extrapolation
-          foreach (DataMap::value_type& pair, getSendData()) {
+          for (DataMap::value_type& pair : getSendData()) {
             if (pair.second->oldValues.size() > 0){
               pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
-          foreach (DataMap::value_type& pair, getReceiveData()) {
+          for (DataMap::value_type& pair : getReceiveData()) {
             if (pair.second->oldValues.size() > 0) {
               pair.second->oldValues.column(0) = *pair.second->values;
             }

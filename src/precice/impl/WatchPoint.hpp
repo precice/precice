@@ -73,6 +73,9 @@ private:
 
    std::vector<mesh::PtrData> _dataToExport;
 
+   // @bried Holds the information if this processor is the closest
+   bool _isClosest;
+
    void getValue (
      utils::DynVector& value,
      mesh::PtrData&    data );

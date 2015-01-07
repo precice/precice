@@ -4,7 +4,9 @@
 #include "BaseCouplingScheme.hpp"
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
+#include "m2n/GlobalCommunication.hpp"
 #include "utils/Globals.hpp"
+#include "utils/MasterSlave.hpp"
 #include "impl/PostProcessing.hpp"
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
@@ -74,7 +76,7 @@ BaseCouplingScheme::BaseCouplingScheme
   const std::string&    firstParticipant,
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
-  com::PtrCommunication communication,
+  m2n::PtrGlobalCommunication communication,
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
   :
@@ -153,15 +155,23 @@ BaseCouplingScheme::BaseCouplingScheme
 }
 
 
-void BaseCouplingScheme::receiveAndSetDt()
+void BaseCouplingScheme:: receiveAndSetDt()
 {
   preciceTrace("receiveAndSetDt()");
   if (participantReceivesDt()){
     double dt = UNDEFINED_TIMESTEP_LENGTH;
-    getCommunication()->receive(dt, 0);
+    getCommunication()->receiveAll(dt, 0);
     preciceDebug("Received timestep length of " << dt);
     assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
     setTimestepLength(dt);
+  }
+}
+
+void BaseCouplingScheme:: sendDt(){
+  preciceTrace("sendDt()");
+  if (participantSetsDt()){
+    preciceDebug("sending timestep length of " << getComputedTimestepPart());
+    getCommunication()->sendAll(getComputedTimestepPart(), 0);
   }
 }
 
@@ -169,36 +179,38 @@ void BaseCouplingScheme::receiveAndSetDt()
 void BaseCouplingScheme:: addDataToSend
 (
   mesh::PtrData data,
+  mesh::PtrMesh mesh,
   bool          initialize)
 {
+  preciceTrace("addDataToSend()");
   int id = data->getID();
   if(! utils::contained(id, _sendData)) {
-    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize, data->getDimensions()));
     DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _sendData.insert(pair);
   }
   else {
     preciceError("addDataToSend()", "Data \"" << data->getName()
-		 << "\" of mesh \"" << data->mesh()->getName() << "\" cannot be "
-		 << "added twice for sending!");
+		 << "\" cannot be added twice for sending!");
   }
 }
 
 void BaseCouplingScheme:: addDataToReceive
 (
   mesh::PtrData data,
+  mesh::PtrMesh mesh,
   bool          initialize)
 {
+  preciceTrace("addDataToReceive()");
   int id = data->getID();
   if(! utils::contained(id, _receiveData)) {
-    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), initialize));
+    PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize, data->getDimensions()));
     DataMap::value_type pair = std::make_pair (id, ptrCplData);
     _receiveData.insert(pair);
   }
   else {
     preciceError("addDataToReceive()", "Data \"" << data->getName()
-		 << "\" of mesh \"" << data->mesh()->getName() << "\" cannot be "
-		 << "added twice for receiving!");
+		 << "\" cannot be added twice for receiving!");
   }
 }
 
@@ -224,7 +236,7 @@ void BaseCouplingScheme:: sendState
   communication->send(_isCouplingTimestepComplete, rankReceiver);
   communication->send(_hasDataBeenExchanged, rankReceiver);
   communication->send((int)_actions.size(), rankReceiver);
-  foreach(const std::string& action, _actions) {
+  for (const std::string& action : _actions) {
     communication->send(action, rankReceiver);
   }
   communication->send(_maxIterations, rankReceiver );
@@ -273,18 +285,17 @@ void BaseCouplingScheme:: receiveState
 
 std::vector<int> BaseCouplingScheme:: sendData
 (
-  com::PtrCommunication communication)
+  m2n::PtrGlobalCommunication communication)
 {
   preciceTrace("sendData()");
-  assertion(communication.get() != NULL);
-  assertion(communication->isConnected());
 
   std::vector<int> sentDataIDs;
-  foreach (DataMap::value_type& pair, _sendData){
+  assertion(communication.get() != NULL);
+  assertion(communication->isConnected());
+  for (DataMap::value_type& pair : _sendData) {
     int size = pair.second->values->size();
-    if (size > 0) {
-      communication->send(tarch::la::raw(*pair.second->values), size, 0);
-    }
+    communication->sendAll(pair.second->values, size, 0,
+                           pair.second->mesh, pair.second->dimension);
     sentDataIDs.push_back(pair.first);
   }
   preciceDebug("Number of sent data sets = " << sentDataIDs.size());
@@ -293,23 +304,36 @@ std::vector<int> BaseCouplingScheme:: sendData
 
 std::vector<int> BaseCouplingScheme:: receiveData
 (
-  com::PtrCommunication communication)
+  m2n::PtrGlobalCommunication communication)
 {
   preciceTrace("receiveData()");
+  std::vector<int> receivedDataIDs;
   assertion(communication.get() != NULL);
   assertion(communication->isConnected());
 
-  std::vector<int> receivedDataIDs;
-  foreach(DataMap::value_type & pair, _receiveData){
+  for (DataMap::value_type & pair : _receiveData) {
     int size = pair.second->values->size ();
-    if (size > 0){
-      communication->receive(tarch::la::raw(*pair.second->values), size, 0);
-    }
+    communication->receiveAll(pair.second->values, size, 0,
+                               pair.second->mesh, pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
   preciceDebug("Number of received data sets = " << receivedDataIDs.size());
+
   return receivedDataIDs;
 }
+
+
+int BaseCouplingScheme:: getVertexOffset(
+    std::map<int,int>& vertexDistribution,
+    int rank,
+    int dim)
+  {
+    int sum=0;
+    for(int i=0;i<rank;i++){
+      sum += vertexDistribution[i];
+    }
+    return sum*dim;
+  }
 
 CouplingData* BaseCouplingScheme:: getSendData
 (
@@ -341,8 +365,6 @@ void BaseCouplingScheme::finalize()
   checkCompletenessRequiredActions();
   preciceCheck(isInitialized(), "finalize()",
 	       "Called finalize() before initialize()!");
-  preciceCheck(not isCouplingOngoing(), "finalize()",
-	       "Called finalize() while isCouplingOngoing() returns true!");
 }
 
 void BaseCouplingScheme:: setExtrapolationOrder
@@ -361,7 +383,7 @@ void BaseCouplingScheme::extrapolateData(DataMap& data)
   preciceTrace1("extrapolateData()", _timesteps);
   if ((_extrapolationOrder == 1) || getTimesteps() == 2) { //timesteps is increased before extrapolate is called
     preciceInfo("extrapolateData()", "Performing first order extrapolation" );
-    foreach(DataMap::value_type & pair, data ){
+    for (DataMap::value_type & pair : data) {
       preciceDebug("Extrapolate data: " << pair.first);
       assertion(pair.second->oldValues.cols() > 1 );
       utils::DynVector & values = *pair.second->values;
@@ -373,7 +395,7 @@ void BaseCouplingScheme::extrapolateData(DataMap& data)
   }
   else if (_extrapolationOrder == 2 ) {
     preciceInfo("extrapolateData()", "Performing second order extrapolation" );
-    foreach(DataMap::value_type & pair, data ) {
+    for (DataMap::value_type & pair : data ) {
       assertion(pair.second->oldValues.cols() > 2 );
       utils::DynVector & values = *pair.second->values;
       utils::DynVector & valuesOld1 = pair.second->oldValues.column(1);
@@ -581,7 +603,7 @@ std::string BaseCouplingScheme:: printBasicState
 std::string BaseCouplingScheme:: printActionsState () const
 {
   std::ostringstream os;
-  foreach(const std::string & actionName, _actions) {
+  for (const std::string & actionName : _actions) {
     os << actionName << " | ";
   }
   return os.str ();
@@ -592,7 +614,7 @@ void BaseCouplingScheme:: checkCompletenessRequiredActions ()
   preciceTrace("checkCompletenessRequiredActions()");
   if(not _actions.empty()){
     std::ostringstream stream;
-    foreach(const std::string & action, _actions){
+    for (const std::string & action : _actions) {
       if (not stream.str().empty()){
 	stream << ", ";
       }
@@ -613,7 +635,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
   preciceTrace("setupDataMatrices()");
   preciceDebug("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.data != NULL);
     if (convMeasure.data->oldValues.cols() < 1){
       convMeasure.data->oldValues.append(CouplingData::DataMatrix(
@@ -622,7 +644,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
   }
   // Reserve storage for extrapolation of data values
   if (_extrapolationOrder > 0){
-    foreach (DataMap::value_type& pair, data){
+    for (DataMap::value_type& pair : data) {
       int cols = pair.second->oldValues.cols();
       preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
       assertion1(cols <= 1, cols);
@@ -648,7 +670,7 @@ void BaseCouplingScheme::setupConvergenceMeasures()
   preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
 	       "At least one convergence measure has to be defined for "
 	       << "an implicit coupling scheme!");
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.dataID;
     if ((getSendData(dataID) != NULL)){
       convMeasure.data = getSendData(dataID);
@@ -663,7 +685,7 @@ void BaseCouplingScheme::setupConvergenceMeasures()
 void BaseCouplingScheme::newConvergenceMeasurements()
 {
   preciceTrace("newConvergenceMeasurements()");
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures) {
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.measure.get() != NULL);
     convMeasure.measure->newMeasurementSeries();
   }
@@ -691,7 +713,7 @@ bool BaseCouplingScheme:: measureConvergence()
   bool allConverged = true;
   bool oneSuffices = false;
   assertion(_convergenceMeasures.size() > 0);
-  foreach(ConvergenceMeasure& convMeasure, _convergenceMeasures) {
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.data != NULL);
     assertion(convMeasure.measure.get() != NULL);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
@@ -718,19 +740,23 @@ bool BaseCouplingScheme:: measureConvergence()
 
 void BaseCouplingScheme::initializeTXTWriters()
 {
-  _iterationsWriter.addData("Timesteps", io::TXTTableWriter::INT );
-  _iterationsWriter.addData("Total Iterations", io::TXTTableWriter::INT );
-  _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
-  _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
+  if(not utils::MasterSlave::_slaveMode){
+    _iterationsWriter.addData("Timesteps", io::TXTTableWriter::INT );
+    _iterationsWriter.addData("Total Iterations", io::TXTTableWriter::INT );
+    _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
+    _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
+  }
 }
 
 void BaseCouplingScheme::advanceTXTWriters()
 {
-  _iterationsWriter.writeData("Timesteps", _timesteps-1);
-  _iterationsWriter.writeData("Total Iterations", _totalIterations);
-  _iterationsWriter.writeData("Iterations", _iterations);
-  int converged = _iterations < _maxIterations ? 1 : 0;
-  _iterationsWriter.writeData("Convergence", converged);
+  if(not utils::MasterSlave::_slaveMode){
+    _iterationsWriter.writeData("Timesteps", _timesteps-1);
+    _iterationsWriter.writeData("Total Iterations", _totalIterations);
+    _iterationsWriter.writeData("Iterations", _iterations);
+    int converged = _iterations < _maxIterations ? 1 : 0;
+    _iterationsWriter.writeData("Convergence", converged);
+  }
 }
 
 
@@ -738,10 +764,10 @@ void BaseCouplingScheme:: exportState(const std::string& filenamePrefix ) const
 {
   if (not doesFirstStep()) {
     io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
-    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()) {
+    for (const BaseCouplingScheme::DataMap::value_type& dataMap : getSendData()) {
       writer.write(dataMap.second->oldValues);
     }
-    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()) {
+    for (const BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
       writer.write(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != NULL) {
@@ -754,10 +780,10 @@ void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
 {
   if (not doesFirstStep()) {
     io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
-    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()) {
+    for (BaseCouplingScheme::DataMap::value_type& dataMap : getSendData()) {
       reader.read(dataMap.second->oldValues);
     }
-    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()) {
+    for (BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
       reader.read(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != NULL){
@@ -781,7 +807,7 @@ void BaseCouplingScheme:: updateTimeAndIterations(bool convergence){
   }
 }
 
-void BaseCouplingScheme::timestepCompleted()
+void BaseCouplingScheme:: timestepCompleted()
 {
   preciceTrace2("timestepCompleted()", getTimesteps(), getTime());
   preciceInfo("timestepCompleted()", "Timestep completed");
@@ -794,9 +820,10 @@ void BaseCouplingScheme::timestepCompleted()
   }
 }
 
-bool BaseCouplingScheme::maxIterationsReached(){
+bool BaseCouplingScheme:: maxIterationsReached(){
   return _iterations == _maxIterations;
 }
+
 
 
 

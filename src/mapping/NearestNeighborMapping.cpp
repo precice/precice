@@ -12,9 +12,10 @@ tarch::logging::Log NearestNeighborMapping::
 
 NearestNeighborMapping:: NearestNeighborMapping
 (
-  Constraint constraint )
+  Constraint constraint,
+  int        dimensions)
 :
-  Mapping(constraint),
+  Mapping(constraint, dimensions),
   _hasComputedMapping(false),
   _vertexIndices()
 {
@@ -107,6 +108,12 @@ void NearestNeighborMapping:: map
       }
     }
   }
+}
+
+bool NearestNeighborMapping::doesVertexContribute(
+  int vertexID)
+{
+  return utils::contained(vertexID,_vertexIndices);
 }
 
 }} // namespace precice, mapping

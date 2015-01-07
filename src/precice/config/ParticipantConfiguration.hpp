@@ -93,6 +93,7 @@ private:
   const std::string TAG_USE_MESH;
   const std::string TAG_WATCH_POINT;
   const std::string TAG_SERVER;
+  const std::string TAG_MASTER;
 
   const std::string ATTR_NAME;
   const std::string ATTR_SOURCE_DATA;

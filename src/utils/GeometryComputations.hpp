@@ -1,24 +1,17 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_UTILS_GEOMETRYCOMPUTATIONS_HPP_
-#define PRECICE_UTILS_GEOMETRYCOMPUTATIONS_HPP_
+#pragma once
+
+#include <type_traits>
 
 #include "Dimensions.hpp"
 #include "Globals.hpp"
-#include "boost/static_assert.hpp"
 #include "tarch/la/VectorOperations.h"
-#include "tarch/utils/EnableIf.h"
 #include "utils/Helpers.hpp"
-#include <iostream>
 
 namespace precice {
 namespace utils {
 
 
-/**
- * @brief Provides computational geometry operations.
- */
+/// Provides computational geometry operations.
 class GeometryComputations
 {
 public:
@@ -87,7 +80,7 @@ public:
     *         - TOUCHING
     *         - CONTAINED
     */
-   static int segmentPlaneIntersection (
+   static ResultConstants segmentPlaneIntersection (
       const tarch::la::Vector<3,double> & pointOnPlane,
       const tarch::la::Vector<3,double> & planeNormal,
       const tarch::la::Vector<3,double> & firstPointSegment,
@@ -153,30 +146,20 @@ public:
     * clockwise ordering, otherwise positive.
     */
    template<typename VECTOR>
-   static typename tarch::utils::EnableIf< tarch::la::IsVector<VECTOR>::value,
-     double
-   >::Type triangleArea (
+   static typename std::enable_if<tarch::la::IsVector<VECTOR>::value, double>::type
+   triangleArea (
       const VECTOR& a,
       const VECTOR& b,
       const VECTOR& c );
 
-   /**
-    * @brief Computes the (unsigned) area of a triangle in 3D.
-    */
-//   static double triangleArea (
-//     const tarch::la::Vector<3,double> & a,
-//     const tarch::la::Vector<3,double> & b,
-//     const tarch::la::Vector<3,double> & c );
-
+  /// Computes the (unsigned) area of a triangle in 3D.
    static double tetraVolume (
      const tarch::la::Vector<3,double> & a,
      const tarch::la::Vector<3,double> & b,
      const tarch::la::Vector<3,double> & c,
      const tarch::la::Vector<3,double> & d );
 
-   /**
-    * @brief Projects a 3D vector to a 2D one by removing one dimension.
-    */
+   /// Projects a 3D vector to a 2D one by removing one dimension.
    static tarch::la::Vector<2, double> projectVector (
       const tarch::la::Vector<3, double> & vector,
       int indexDimensionToRemove );
@@ -308,13 +291,6 @@ bool GeometryComputations:: between
   }
 }
 
-//template< int dim >
-//bool GeometryComputations:: collinear
-//(
-//   const tarch::la::Vector<dim,double> & a,
-//   const tarch::la::Vector<dim,double> & b,
-//   const tarch::la::Vector<dim,double> & c )
-
 template<typename VECTORA_T, typename VECTORB_T, typename VECTORC_T>
 bool GeometryComputations:: collinear (
   const VECTORA_T& a,
@@ -348,9 +324,8 @@ bool GeometryComputations:: parallel
 }
 
 template<typename VECTOR>
-typename tarch::utils::EnableIf< tarch::la::IsVector<VECTOR>::value,
-  double
->::Type GeometryComputations:: triangleArea
+typename std::enable_if<tarch::la::IsVector<VECTOR>::value, double>::type
+GeometryComputations:: triangleArea
 (
    const VECTOR& a,
    const VECTOR& b,
@@ -373,13 +348,6 @@ typename tarch::utils::EnableIf< tarch::la::IsVector<VECTOR>::value,
     return 0.5 * tarch::la::norm2( tarch::la::cross(A,B,result) );
   }
 }
-
-//template< int dim >
-//int GeometryComputations:: containedInHyperrectangle
-//(
-//  const tarch::la::Vector<dim,double> & sidelengths,
-//  const tarch::la::Vector<dim,double> & center,
-//  const tarch::la::Vector<dim,double> & testPoint )
 
 template<typename VECTORA_T, typename VECTORB_T, typename VECTORC_T>
 int GeometryComputations:: containedInHyperrectangle
@@ -413,5 +381,3 @@ int GeometryComputations:: containedInHyperrectangle
 }
 
 }} // namespace precice, utils
-
-#endif /* PRECICE_UTILS_GEOMETRYCOMPUTATIONS_HPP_ */

@@ -23,7 +23,7 @@ namespace mesh {
 /**
  * @brief Vertex of a mesh.
  */
-class Vertex : public PropertyContainer, boost::noncopyable
+class Vertex : public PropertyContainer, private boost::noncopyable
 {
 public:
 

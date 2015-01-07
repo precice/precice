@@ -2,8 +2,6 @@
 
 #include "BaseCouplingScheme.hpp"
 #include "tarch/logging/Log.h"
-#include "com/Communication.hpp"
-#include "com/SharedPointer.hpp"
 
 namespace precice { namespace cplscheme { namespace tests {
 class SerialImplicitCouplingSchemeTest;
@@ -30,17 +28,17 @@ public:
  * @param monitorIterations [IN] If true, a txt file monitoring iterations is written.
  */
   SerialCouplingScheme (
-    double                maxTime,
-    int                   maxTimesteps,
-    double                timestepLength,
-    int                   validDigits,
-    const std::string&    firstParticipant,
-    const std::string&    secondParticipant,
-    const std::string&    localParticipant,
-    com::PtrCommunication communication,
+    double                      maxTime,
+    int                         maxTimesteps,
+    double                      timestepLength,
+    int                         validDigits,
+    const std::string&          firstParticipant,
+    const std::string&          secondParticipant,
+    const std::string&          localParticipant,
+    m2n::PtrGlobalCommunication communication,
     constants::TimesteppingMethod dtMethod,
-    CouplingMode          cplMode,
-    int                   maxIterations = 1
+    CouplingMode                cplMode,
+    int                         maxIterations = 1
     );
 
   virtual void initialize(double startTime, int startTimestep);

@@ -5,13 +5,13 @@
 #define PRECICE_IO_TXTREADER_HPP_
 
 #include "tarch/logging/Log.h"
-#include "tarch/utils/EnableIf.h"
 #include "tarch/la/traits/IsMatrix.h"
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/MatrixTraits.h"
 #include "tarch/la/traits/VectorTraits.h"
 #include <string>
 #include <fstream>
+#include <type_traits>
 
 namespace tarch {
   namespace la {
@@ -46,8 +46,8 @@ public:
    * @brief Writes (appends) the matrix to the file.
    */
   template<typename MATRIX>
-    typename tarch::utils::EnableIf<tarch::la::IsMatrix<MATRIX>::value
-  >::Type read(MATRIX& matrix)
+    typename std::enable_if<tarch::la::IsMatrix<MATRIX>::value
+  >::type read(MATRIX& matrix)
   {
     typedef tarch::la::MatrixTraits<MATRIX> T;
     for (int i=0; i < T::rows(matrix); i++){
@@ -61,8 +61,8 @@ public:
    * @brief Writes (appends) the vector to the file.
    */
   template<typename VECTOR>
-    typename tarch::utils::EnableIf<tarch::la::IsVector<VECTOR>::value
-  >::Type read(VECTOR& vector)
+    typename std::enable_if<tarch::la::IsVector<VECTOR>::value
+  >::type read(VECTOR& vector)
   {
     typedef tarch::la::VectorTraits<VECTOR> T;
     for (int i=0; i < T::size(vector); i++){
