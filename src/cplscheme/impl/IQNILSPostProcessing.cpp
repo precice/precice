@@ -37,7 +37,8 @@ IQNILSPostProcessing:: IQNILSPostProcessing
 		       singularityLimit, dataIDs, scalings),
   _secondaryOldXTildes(),
   _secondaryMatricesW()
-{}
+{
+}
 
 void IQNILSPostProcessing:: initialize
 (
@@ -299,19 +300,10 @@ void IQNILSPostProcessing::computeQNUpdate
 }
 
 
-void IQNILSPostProcessing:: iterationsConverged
+void IQNILSPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
-  
-  // the most recent differences for the V, W matrices have not been added so far
-  // this has to be done in iterations converged, as PP won't be called if 
-  // convergence achieved
-  scaling(cplData);
-  updateDifferenceMatrices(cplData);
-  undoScaling(cplData);
-  
-  
   
   if (_matrixCols.front() == 0){ // Did only one iteration
     _matrixCols.pop_front(); 
@@ -333,7 +325,6 @@ void IQNILSPostProcessing:: iterationsConverged
     }
   }
   
-  BaseQNPostProcessing::iterationsConverged(cplData);
 }
 
 

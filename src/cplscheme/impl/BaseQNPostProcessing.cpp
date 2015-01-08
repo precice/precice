@@ -432,13 +432,15 @@ void BaseQNPostProcessing:: iterationsConverged
 {
   preciceTrace("iterationsConverged()");
   
-  // the most recent differneces for the V, W matrices have not been added so far
-  // this has do be done in iterations converged, as PP won't be called if 
+  // the most recent differences for the V, W matrices have not been added so far
+  // this has to be done in iterations converged, as PP won't be called if 
   // convergence achieved
-  //scaling(cplData);
-  //updateDifferenceMatrices(cplData);
-  //undoScaling(cplData);
-  
+  if(not _timestepsReused == 0)
+  {
+    scaling(cplData);
+    updateDifferenceMatrices(cplData);
+    undoScaling(cplData);
+  }
   
 # ifdef Debug
   std::ostringstream stream;
@@ -453,20 +455,14 @@ void BaseQNPostProcessing:: iterationsConverged
   if (_matrixCols.front() == 0){ // Did only one iteration
     _matrixCols.pop_front(); 
   }
+  
+  // doing specialized stuff for the corresponding post processing sceme after 
+  // convergence of iteration i.e.:
+  // - analogously to the V,W matrices, remove columns from matrices for secondary data
+  // - save the old jacobian matrix i
+  specializedIterationsConverged(cplData);
 
   if (_timestepsReused == 0){
-    //precicePrint("Removing all columns from V, W");
-//     _matrixV.clear();
-//     _matrixW.clear();
-//     _matrixCols.clear();
-    
-    // TOD0: The following is still misssing for reusedTimeSTeps=0 
-    // -----------------------------------------------
-// // //     foreach (int id, _secondaryDataIDs){
-// // //       _secondaryMatricesW[id].clear();
-// // //     }
-    // -----------------------------------------------
-
     
     /**
      * pending deletion (after first iteration of next time step

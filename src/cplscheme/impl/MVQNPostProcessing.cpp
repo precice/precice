@@ -452,17 +452,10 @@ void MVQNPostProcessing::computeNewtonFactorsLUDecomposition
 
 
 
-void MVQNPostProcessing:: iterationsConverged
+void MVQNPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
-  
-  // the most recent differences for the V, W matrices have not been added so far
-  // this has to be done in iterations converged, as PP won't be called if 
-  // convergence achieved
-  scaling(cplData);
-  updateDifferenceMatrices(cplData);
-  undoScaling(cplData);
   
 //   // ---- DEBUG --------------------------
 //   
@@ -482,8 +475,6 @@ void MVQNPostProcessing:: iterationsConverged
   t++;
   // store inverse Jacobian
   _oldInvJacobian = _invJacobian;
-  
-  BaseQNPostProcessing::iterationsConverged(cplData);
 }
 
 }}} // namespace precice, cplscheme, impl

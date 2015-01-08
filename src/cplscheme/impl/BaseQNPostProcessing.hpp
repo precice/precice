@@ -213,6 +213,14 @@ protected:
    // reverts the scaling of the data values and overwrites the old values with the updated ones
    virtual void undoScaling(DataMap & cplData);
    
+   /**
+    * @brief Marks a iteration sequence as converged.
+    *
+    * called by the iterationsConverged() method in the BaseQNPostProcessing class
+    * handles the postprocessing sepcific action after the convergence of one iteration
+    */
+   virtual void specializedIterationsConverged(DataMap& cplData) = 0;
+   
    // @brief computes underrelaxation for the secondary data
    virtual void computeUnderrelaxationSecondaryData(DataMap& cplData) = 0;
 

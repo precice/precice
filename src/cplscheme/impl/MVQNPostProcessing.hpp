@@ -66,10 +66,10 @@ public:
    /**
     * @brief Marks a iteration sequence as converged.
     *
-    * Since convergence measurements are done outside the post-processing, this
-    * method has to be used to signalize convergence to the post-processing.
+    * called by the iterationsConverged() method in the BaseQNPostProcessing class
+    * handles the postprocessing sepcific action after the convergence of one iteration
     */
-   virtual void iterationsConverged(DataMap& cplData);
+   virtual void specializedIterationsConverged(DataMap& cplData);
   
 private:
 
