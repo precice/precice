@@ -142,7 +142,10 @@ void BaseQNPostProcessing:: scaling
   preciceTrace("scaling()");
   
   int offset = 0;
+  double l2norm = 0.;
+  double oldl2norm = 0.;
   foreach (int id, _dataIDs){
+    l2norm = 0.; // debug
     double factor = _scalings[id];
     preciceDebug("Scaling Factor " << factor << " for id: " << id);
     int size = cplData[id]->values->size();
@@ -151,9 +154,18 @@ void BaseQNPostProcessing:: scaling
     for (int i=0; i < size; i++){
       _scaledValues[i+offset] = values[i]/factor;
       _scaledOldValues[i+offset] = oldValues[i]/factor;
+      
+      // debug:
+      l2norm += _scaledValues[i+offset]*_scaledValues[i+offset];
     }
     offset += size;
+    
+    // debug:
+    if (id == 0) oldl2norm = sqrt(l2norm);
+    preciceDebug(" + l2-Norm = " << sqrt(l2norm) << " of id: " << id);
   } 
+  // debug:
+  preciceDebug(" + l2-Norm ratio = "<< oldl2norm/sqrt(l2norm));
 }
 
 /* ----------------------------------------------------------------------------
