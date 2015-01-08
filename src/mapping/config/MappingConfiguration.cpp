@@ -526,41 +526,49 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
 # ifndef PRECICE_NO_PETSC
   else if (type == VALUE_PETRBF_TPS){
     configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(), solverRtol) );
+      new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
+                                                     xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<Multiquadrics>(
-        constraintValue, dimensions, Multiquadrics(shapeParameter), solverRtol) );
+        constraintValue, dimensions, Multiquadrics(shapeParameter),
+        xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_INV_MULTIQUADRICS){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<InverseMultiquadrics>(
-        constraintValue, dimensions, InverseMultiquadrics(shapeParameter), solverRtol) );
+        constraintValue, dimensions, InverseMultiquadrics(shapeParameter),
+        xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_VOLUME_SPLINES){
     configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(), solverRtol) );
+      new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
+                                                  xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_GAUSSIAN){
     configuredMapping.mapping = PtrMapping(
         new PetRadialBasisFctMapping<Gaussian>(
-          constraintValue, dimensions, Gaussian(shapeParameter), solverRtol));
+          constraintValue, dimensions, Gaussian(shapeParameter),
+          xDead, yDead, zDead, solverRtol));
   }
   else if (type == VALUE_PETRBF_CTPS_C2){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(
-        constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius), solverRtol) );
+        constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius),
+        xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C0){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactPolynomialC0>(
-        constraintValue, dimensions, CompactPolynomialC0(supportRadius), solverRtol) );
+        constraintValue, dimensions, CompactPolynomialC0(supportRadius),
+        xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C6){
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactPolynomialC6>(
-        constraintValue, dimensions, CompactPolynomialC6(supportRadius), solverRtol) );
+        constraintValue, dimensions, CompactPolynomialC6(supportRadius),
+        xDead, yDead, zDead, solverRtol) );
   }
 # endif
   else {

@@ -49,6 +49,9 @@ public:
     Constraint              constraint,
     int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
+    bool                    xDead,
+    bool                    yDead,
+    bool                    zDead,
     double                  solverRtol = 1e-9);
 
   /// @brief Destructor, empty.
@@ -99,6 +102,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   Constraint              constraint,
   int                     dimensions,
   RADIAL_BASIS_FUNCTION_T function,
+  bool                    xDead,
+  bool                    yDead,
+  bool                    zDead,
   double                  solverRtol)
   :
   Mapping ( constraint, dimensions ),
