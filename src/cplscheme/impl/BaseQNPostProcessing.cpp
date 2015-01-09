@@ -13,6 +13,8 @@
 #include "io/TXTReader.hpp"
 //#include "utils/NumericalCompare.hpp"
 
+#include <time.h>
+
 namespace precice {
 namespace cplscheme {
 namespace impl {
@@ -57,6 +59,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _matrixWBackup(),
   _matrixColsBackup(),
   //_secondaryMatricesW(),
+  _timingStream(),
   _matrixCols()
 {
    preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
@@ -73,6 +76,13 @@ BaseQNPostProcessing:: BaseQNPostProcessing
                 "BaseQNPostProcessing()", "Singularity limit for QN "
                 << "post-processing has to be larger than numerical zero ("
                 << tarch::la::NUMERICAL_ZERO_DIFFERENCE << ")!");
+   
+   
+  _timingStream.open ("timing.txt");
+  _timingStream.setf ( std::ios::showpoint );
+  _timingStream.setf ( std::ios::fixed );
+  _timingStream << std::setprecision(16);
+  _timingStream << "        Time Measurements \n -------------------------------------------------------- \n\n";
 }
 
 
@@ -205,6 +215,7 @@ void BaseQNPostProcessing:: updateDifferenceMatrices
   preciceTrace("updateDiffernceMatrices()");
   using namespace tarch::la;
 
+  
   // Compute current residual: vertex-data - oldData
   //DataValues residuals(scaledValues);
   _residuals = _scaledValues;
@@ -290,7 +301,13 @@ void BaseQNPostProcessing:: performPostProcessing
   assertion2(_residuals.size() == _oldXTilde.size(),
              _residuals.size(), _oldXTilde.size());
 
-  
+
+ double time_pPP = clock();
+ double time_QNStep = 0.;
+ double time_scaleUpdateVW = time_pPP;
+ double time_norelaxAux = 0.;
+ double time_scaleUpdateVW_tmp = 0.;
+ 
   // scale data values (and secondary data values)
   scaling(cplData);
   
@@ -303,6 +320,9 @@ void BaseQNPostProcessing:: performPostProcessing
     * appending the difference matrices 
     */
   updateDifferenceMatrices(cplData);
+  
+  time_scaleUpdateVW = clock() - time_scaleUpdateVW;
+  time_scaleUpdateVW /= CLOCKS_PER_SEC; 
   
 //   int offset = 0;
 //   foreach (int id, _dataIDs){
@@ -382,6 +402,8 @@ void BaseQNPostProcessing:: performPostProcessing
 //     _oldResiduals = _residuals;   // Store residuals
 //     _oldXTilde = _scaledValues;   // Store x_tilde
   
+    time_norelaxAux = clock();
+     
      //std::cout<<"v.cols = "<<_matrixV.cols()<<" w.cols = "<<_matrixW.cols()<<std::endl;
     if((_matrixV.cols() < 1 || _matrixW.cols()) < 1 && _timestepsReused == 0)
     {
@@ -392,10 +414,15 @@ void BaseQNPostProcessing:: performPostProcessing
 
     DataValues xUpdate(_residuals.size(), 0.0);
     
+    time_QNStep = clock();
+    
     /**
      * compute quasi-Newton update 
      */
     computeQNUpdate(cplData, xUpdate);
+    
+    time_QNStep = clock() - time_QNStep;
+    time_QNStep /= CLOCKS_PER_SEC;
   
     /** 
      * apply quasiNewton update
@@ -429,11 +456,31 @@ void BaseQNPostProcessing:: performPostProcessing
 // // //     }
     // -----------------------------------------------
     }
+    
+    time_norelaxAux = clock() - time_norelaxAux;
+    time_norelaxAux /= CLOCKS_PER_SEC;
+    time_norelaxAux -= time_QNStep;
 
   }
 
+  time_scaleUpdateVW_tmp = clock();
+  
   // Undo scaling of data values and overwrite originals
   undoScaling(cplData);
+  
+  time_scaleUpdateVW_tmp = clock() - time_scaleUpdateVW_tmp;
+  time_scaleUpdateVW_tmp /= CLOCKS_PER_SEC;
+  time_scaleUpdateVW += time_scaleUpdateVW_tmp;
+  
+  time_pPP = clock() - time_pPP;
+  time_pPP /= CLOCKS_PER_SEC;
+  
+  _timingStream << "\n";
+  _timingStream << " time for scaling and update ov V, W matrices: "<<time_scaleUpdateVW<<"\n";
+  _timingStream << " time for norelax auxiliaries: "<<time_norelaxAux<<"\n";
+  _timingStream << " time for QN update: "<<time_QNStep<<"\n";
+  _timingStream << " time for perform post processing (accumulated): "<<time_pPP<<"\n";
+  _timingStream << "----------------------------\n";
   
   _firstIteration = false;
 }

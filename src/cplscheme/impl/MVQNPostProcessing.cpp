@@ -15,6 +15,7 @@
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
 
+#include <time.h>
 #include <sstream>
 #include <fstream>
 //#include "utils/NumericalCompare.hpp"
@@ -246,15 +247,29 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   
   // --------------------------------------------------------------------
     
+  
+  double time_QRDecomposition = 0.;
+  double time_multiply = 0;
+  double time_backSubstitution_one = 0.;
+  double time_backSubstitution_all = 0.;
+  
+  
   DataMatrix v;
   bool linearDependence = true;
   while (linearDependence){
     linearDependence = false;
     v.clear();
+    
+    time_QRDecomposition = clock();
+    
     DataMatrix Vcopy(_matrixV);
     DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
     DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
     modifiedGramSchmidt(Vcopy, Q, R);
+    
+    time_QRDecomposition = clock() - time_QRDecomposition;
+    time_QRDecomposition /= CLOCKS_PER_SEC;
+    
     if (_matrixV.cols() > 1){
       for (int i=0; i < _matrixV.cols(); i++){
 	if (R(i,i) < _singularityLimit){
@@ -267,18 +282,24 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
     }
     if(not linearDependence)
     {
+      time_backSubstitution_all = clock();
       DataValues ytmpVec(_matrixV.cols(), 0.0);
       DataValues _matrixQRow;
       for(int i = 0; i < Q.rows(); i++)
       {
 	for(int j=0; j < Q.cols(); j++){
 	_matrixQRow.append(Q(i,j));
-      }
-    
+        }
+	time_backSubstitution_one = clock();
 	backSubstitution(R, _matrixQRow, ytmpVec);
+	time_backSubstitution_one = clock() -time_backSubstitution_one;
+	time_backSubstitution_one /= CLOCKS_PER_SEC;
+	
 	v.append(ytmpVec);  
       _matrixQRow.clear();
-      } 
+      }
+      time_backSubstitution_all = clock() - time_backSubstitution_all;
+      time_backSubstitution_all /= CLOCKS_PER_SEC;
     }
   }
   
@@ -290,7 +311,9 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   
   // --------------------------------------------------------------------
   
-    
+  
+  time_multiply = clock();
+  
   // tmpMatrix = J_inv_n*V
   DataMatrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
   assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
@@ -328,6 +351,15 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   
   // solve delta_x = - J_inv*residuals
   multiply(_invJacobian, negRes, xUpdate); 
+  
+  time_multiply = clock() -time_multiply;
+  time_multiply /= CLOCKS_PER_SEC;
+  
+  _timingStream <<"  mvqn::info: V.size=("<<_matrixV.rows()<<","<<_matrixV.cols()<<")   Jacobian.size=("<<_invJacobian.rows()<<","<<_invJacobian.cols()<<")\n";
+  _timingStream <<"  mvqn: time for QR decomposition:  "<<time_QRDecomposition<<"\n";
+  _timingStream <<"  mvqn: time for 2 matrix matrix multiplications + 2 matrix matrix additions + 1 matrix vector multiplication:  "<<time_multiply<<"\n";
+  _timingStream <<"  mvqn: time for one single back substitution: "<<time_backSubstitution_one<<"\n";
+  _timingStream <<"  mvqn: time for V.rows()-times back substitution: "<<time_backSubstitution_all<<"\n";
 
 }
 

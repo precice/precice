@@ -10,6 +10,7 @@
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicVector.h"
 #include <deque>
+#include <fstream>
 
 
 
@@ -77,7 +78,12 @@ public:
    /**
     * @brief Destructor, empty.
     */
-   virtual ~BaseQNPostProcessing() {}
+   virtual ~BaseQNPostProcessing() {
+     
+      if ( _timingStream.is_open() ) {
+        _timingStream.close ();
+      }
+  }
 
    /**
     * @brief Returns all IQN involved data IDs.
@@ -124,6 +130,8 @@ public:
    
 
 protected:
+  
+  std::ofstream _timingStream;
 
    typedef tarch::la::DynamicVector<double> DataValues;
 

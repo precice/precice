@@ -15,6 +15,8 @@
 #include "io/TXTReader.hpp"
 #include "utils/MasterSlave.hpp"
 
+#include <time.h>
+
 //#include "utils/NumericalCompare.hpp"
 
 namespace precice {
@@ -249,6 +251,10 @@ void IQNILSPostProcessing::computeQNUpdate
 {
   preciceTrace("computeQNUpdate()");
     using namespace tarch::la;
+    
+    double time_QRDecomposition = 0.;
+    double time_multiply = 0;
+    double time_backSubstitution = 0.;
   
 
     // Calculate QR decomposition of matrix V and solve Rc = -Qr
@@ -257,10 +263,17 @@ void IQNILSPostProcessing::computeQNUpdate
     while (linearDependence){
       preciceDebug("   Compute Newton factors");
       linearDependence = false;
+      
+      time_QRDecomposition = clock();
+      
       DataMatrix Vcopy(_matrixV);
       DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
       DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
       modifiedGramSchmidt(Vcopy, Q, R);
+      
+      time_QRDecomposition = clock() - time_QRDecomposition;
+      time_QRDecomposition /= CLOCKS_PER_SEC;
+      
       if (_matrixV.cols() > 1){
         for (int i=0; i < _matrixV.cols(); i++){
           if (R(i,i) < _singularityLimit){
@@ -271,18 +284,34 @@ void IQNILSPostProcessing::computeQNUpdate
         }
       }
       if (not linearDependence){
-        preciceDebug("   Apply Newton factors");
+	time_multiply = clock();
+        
+	preciceDebug("   Apply Newton factors");
         DataValues b(Q.cols(), 0.0);
         multiply(transpose(Q), _residuals, b); // = Qr
         b *= -1.0; // = -Qr
         assertion1(c.size() == 0, c.size());
         c.append(b.size(), 0.0);
+	
+	time_backSubstitution = clock();
         backSubstitution(R, b, c);
+	time_backSubstitution = clock() - time_backSubstitution;
+	time_backSubstitution /= CLOCKS_PER_SEC;
+	
         multiply(_matrixW, c, xUpdate); // = Wc
+	
+	time_multiply = clock() - time_multiply;
+	time_multiply /= CLOCKS_PER_SEC;
+	time_multiply -= time_backSubstitution;
+	
         preciceDebug("c = " << c);
       }
     }
-  
+    _timingStream <<"  iqn::info: V.size=("<<_matrixV.rows()<<","<<_matrixV.cols()<<")\n";
+    _timingStream <<"  iqn: time for QR decomposition:  "<<time_QRDecomposition<<"\n";
+    _timingStream <<"  iqn: time for 2 matrix vector multiplications:  "<<time_multiply<<"\n";
+    _timingStream <<"  iqn: time for back substitution: "<<time_backSubstitution<<"\n";
+    
     // Perform QN relaxation for secondary data
     foreach (int id, _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
