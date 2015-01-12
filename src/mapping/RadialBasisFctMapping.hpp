@@ -5,7 +5,6 @@
 #define PRECICE_MAPPING_RADIALBASISFCTMAPPING_HPP_
 
 #include "mapping/Mapping.hpp"
-#include "boost/smart_ptr.hpp"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
 #include "tarch/la/LUDecomposition.h"
@@ -94,6 +93,7 @@ private:
   // @brief true if the mapping along some axis should be ignored
   bool* _deadAxis;
 
+  /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
   utils::DynVector reduceVector(const utils::DynVector& fullVector);
 
   void setDeadAxis(bool xDead, bool yDead, bool zDead){
@@ -486,7 +486,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
   utils::DynVector difference(dimensions);
-  foreach (const mesh::Vertex& iVertex, inMesh->vertices()){
+  for (const mesh::Vertex& iVertex : inMesh->vertices()){
     for (int j=iVertex.getID(); j < inputSize; j++){
       difference = iVertex.getCoords();
       difference -= inMesh->vertices()[j].getCoords();
@@ -518,9 +518,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 
   // Fill _matrixA with values
   i = 0;
-  foreach (const mesh::Vertex& iVertex, outMesh->vertices()){
+  for (const mesh::Vertex& iVertex : outMesh->vertices()){
     int j = 0;
-    foreach (const mesh::Vertex& jVertex, inMesh->vertices()){
+    for (const mesh::Vertex& jVertex : inMesh->vertices()){
       difference = iVertex.getCoords();
       difference -= jVertex.getCoords();
       _matrixA(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));

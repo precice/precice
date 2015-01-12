@@ -168,47 +168,71 @@ MappingConfiguration:: MappingConfiguration
   {
     XMLTag tag(*this, VALUE_PETRBF_TPS, occ, TAG);
     tag.addAttribute(attrSolverRtol);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PETRBF_MULTIQUADRICS, occ, TAG);
     tag.addAttribute(attrShapeParam);
     tag.addAttribute(attrSolverRtol);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PETRBF_INV_MULTIQUADRICS, occ, TAG);
     tag.addAttribute(attrShapeParam);
     tag.addAttribute(attrSolverRtol);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PETRBF_VOLUME_SPLINES, occ, TAG);
     tag.addAttribute(attrSolverRtol);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PETRBF_GAUSSIAN, occ, TAG);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrShapeParam);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PETRBF_CTPS_C2, occ, TAG);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrSupportRadius);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PETRBF_CPOLYNOMIAL_C0, occ, TAG);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrSupportRadius);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PETRBF_CPOLYNOMIAL_C6, occ, TAG);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrSupportRadius);
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
 
