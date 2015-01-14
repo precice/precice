@@ -14,6 +14,13 @@
 #include "tarch/la/WrappedVector.h"
 
 #include "tarch/tests/TestCaseFactory.h"
+
+#include <iostream>
+using std::cout;
+using std::endl;
+
+
+
 registerTest(precice::mesh::tests::MeshTest)
 
 namespace precice {
@@ -34,7 +41,9 @@ void MeshTest:: run()
     testMethod(testSubIDs);
     testMethod(testComputeState);
     testMethod(testDemonstration);
+    testMethod(testBoundingBoxCOG)
   }
+  
 }
 
 void MeshTest:: testBasicSetup()
@@ -237,6 +246,87 @@ void MeshTest:: testComputeState()
     validate(equals(v5.getNormal(), normal1));
   }
 }
+
+void MeshTest::testBoundingBoxCOG()
+{
+  {
+    utils::DynVector coords0(2);
+    utils::DynVector coords1(2);
+    utils::DynVector coords2(2);
+
+    coords0 =  2.0, 0.0;
+    coords1 = -1.0, 4.0;
+    coords2 =  0.0, 1.0;
+    
+    Mesh mesh ("2D Testmesh", 2, false );
+    Vertex& v0 = mesh.createVertex(coords0);
+    Vertex& v1 = mesh.createVertex(coords1);
+    Vertex& v2 = mesh.createVertex(coords2);
+
+    mesh.computeState();
+
+    Mesh::BoundingBox bBox = mesh.getBoundingBox();
+    auto cog = mesh.getCOG();
+    
+    Mesh::BoundingBox referenceBox =  { {-1.0, 2.0},
+                                        { 0.0, 4.0} };
+
+    std::vector<double> referenceCOG =  { 0.5, 2.0 };
+
+    validateEquals(bBox.size(), 2);
+    validateEquals(cog.size(), 2);
+
+    for (size_t d; d < bBox.size(); d++) {
+      validateNumericalEquals(referenceBox[d].first, bBox[d].first);
+      validateNumericalEquals(referenceBox[d].second, bBox[d].second);
+    }
+    for (size_t d; d < cog.size(); d++) {
+      validateNumericalEquals(referenceCOG[d], cog[d]);
+    }
+  }
+  
+  {
+    utils::DynVector coords0(3);
+    utils::DynVector coords1(3);
+    utils::DynVector coords2(3);
+    utils::DynVector coords3(3);
+      
+    coords0 =  2.0, 0.0, -3.0;
+    coords1 = -1.0, 4.0,  8.0;
+    coords2 =  0.0, 1.0, -2.0;
+    coords2 =  3.5, 2.0, -2.0;
+      
+    Mesh mesh ("3D Testmesh", 3, false );
+    Vertex& v0 = mesh.createVertex(coords0);
+    Vertex& v1 = mesh.createVertex(coords1);
+    Vertex& v2 = mesh.createVertex(coords2);
+    Vertex& v3 = mesh.createVertex(coords3);
+      
+    mesh.computeState();
+      
+    Mesh::BoundingBox bBox = mesh.getBoundingBox();
+    auto cog = mesh.getCOG();
+    
+    Mesh::BoundingBox referenceBox =  { {-1.0, 3.5},
+                                        { 0.0, 4.0},
+                                        {-3.0, 8.0} };
+    
+    std::vector<double> referenceCOG =  { 0.5, 2.0 };
+          
+    validateEquals(bBox.size(), 3);
+    validateEquals(cog.size(), 3);
+      
+    for (size_t d; d < bBox.size(); d++) {
+      validateNumericalEquals(referenceBox[d].first, bBox[d].first);
+      validateNumericalEquals(referenceBox[d].second, bBox[d].second);
+    }
+    for (size_t d; d < cog.size(); d++) {
+      validateNumericalEquals(referenceCOG[d], cog[d]);
+    }
+
+  }
+}
+  
 
 void MeshTest:: testDemonstration ()
 {
