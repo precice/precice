@@ -12,6 +12,9 @@ namespace com {
 class Communication;
 typedef boost::shared_ptr<Communication> PtrCommunication;
 
+class CommunicationFactory;
+typedef boost::shared_ptr<CommunicationFactory> PtrCommunicationFactory;
+
 class CommunicationConfiguration;
 typedef boost::shared_ptr<CommunicationConfiguration> PtrCommunicationConfiguration;
 

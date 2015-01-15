@@ -1,5 +1,6 @@
 #include <m2n/PointToPointCommunication.hpp>
 #include <com/MPIDirectCommunication.hpp>
+#include <com/SocketCommunicationFactory.hpp>
 #include <mesh/Mesh.hpp>
 
 #include <mpi.h>
@@ -125,29 +126,32 @@ main(int argc, char** argv) {
         utils::MasterSlave::_size - rankOffset);
   }
 
-  mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", 1, true));
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory(
+      "lo", 30000 + utils::MasterSlave::_rank));
+
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 1, true));
 
   if (utils::MasterSlave::_masterMode) {
-    pMesh->setGlobalNumberOfVertices(10);
+    mesh->setGlobalNumberOfVertices(10);
 
-    pMesh->getVertexDistribution()[0].push_back(1);
-    pMesh->getVertexDistribution()[0].push_back(4);
+    mesh->getVertexDistribution()[0].push_back(1);
+    mesh->getVertexDistribution()[0].push_back(4);
 
-    pMesh->getVertexDistribution()[1].push_back(0);
-    pMesh->getVertexDistribution()[1].push_back(2);
-    pMesh->getVertexDistribution()[1].push_back(3);
+    mesh->getVertexDistribution()[1].push_back(0);
+    mesh->getVertexDistribution()[1].push_back(2);
+    mesh->getVertexDistribution()[1].push_back(3);
 
-    // pMesh->getVertexDistribution()[3].push_back(3);
+    // mesh->getVertexDistribution()[3].push_back(3);
 
-    pMesh->getVertexDistribution()[2].push_back(5);
-    pMesh->getVertexDistribution()[2].push_back(6);
+    mesh->getVertexDistribution()[2].push_back(5);
+    mesh->getVertexDistribution()[2].push_back(6);
 
-    pMesh->getVertexDistribution()[4].push_back(7);
-    pMesh->getVertexDistribution()[4].push_back(8);
-    pMesh->getVertexDistribution()[4].push_back(9);
+    mesh->getVertexDistribution()[4].push_back(7);
+    mesh->getVertexDistribution()[4].push_back(8);
+    mesh->getVertexDistribution()[4].push_back(9);
   }
 
-  m2n::PointToPointCommunication c(pMesh);
+  m2n::PointToPointCommunication c(cf, mesh);
 
   c.acceptConnection("B", "A");
 

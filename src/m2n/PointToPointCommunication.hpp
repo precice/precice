@@ -6,7 +6,9 @@
 #define PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_
 
 #include "DistributedCommunication.hpp"
+
 #include "com/Communication.hpp"
+#include "com/CommunicationFactory.hpp"
 #include "tarch/logging/Log.h"
 #include "com/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -27,7 +29,8 @@ public:
   /**
    * @brief Constructor.
    */
-  PointToPointCommunication(mesh::PtrMesh mesh);
+  PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
+                            mesh::PtrMesh                mesh);
 
   /**
    * @brief Destructor.
@@ -94,6 +97,8 @@ public:
 
 private:
   static tarch::logging::Log _log;
+
+  com::PtrCommunicationFactory _communicationFactory;
 
   std::map<int, com::PtrCommunication> _communications;
   std::map<int, std::vector<int>> _senderMap;

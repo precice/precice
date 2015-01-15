@@ -4,8 +4,7 @@
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 #include "PointToPointCommunication.hpp"
-#include "com/Communication.hpp"
-#include "com/SocketCommunication.hpp"
+
 #include "utils/MasterSlave.hpp"
 #include "mesh/Mesh.hpp"
 
@@ -161,13 +160,17 @@ scatter(com::PtrCommunication communication,
 }
 
 void
-sendNext( // TODO: CommunicationFactory
-    std::vector<int> const& v) {
+sendNext(com::PtrCommunicationFactory communicationFactory,
+         std::vector<int> const& v) {
   int rank = utils::MasterSlave::_rank;
   int nextRank = (rank + 1) % utils::MasterSlave::_size;
 
-  auto c = com::PtrCommunication(new com::SocketCommunication());
+  auto c = communicationFactory->newCommunication();
 
+  // NOTE:
+  // If more than two participants are connected in the same directory, then
+  // this might cause collision. Perhaps utilizing requester name as a prefix
+  // would solve the problem.
   c->requestConnection("Receiver" + std::to_string(nextRank),
                        "Sender" + std::to_string(rank),
                        0,
@@ -177,15 +180,18 @@ sendNext( // TODO: CommunicationFactory
 }
 
 void
-receivePrevious( // TODO: CommunicationFactory
-    std::vector<int>& v) {
+receivePrevious(com::PtrCommunicationFactory communicationFactory,
+                std::vector<int>& v) {
   int rank = utils::MasterSlave::_rank;
   int previousRank =
       (utils::MasterSlave::_size + rank - 1) % utils::MasterSlave::_size;
 
-  auto c = com::PtrCommunication(
-      new com::SocketCommunication("lo", 40000 + utils::MasterSlave::_rank));
+  auto c = communicationFactory->newCommunication();
 
+  // NOTE:
+  // If more than two participants are connected in the same directory, then
+  // this might cause collision. Perhaps utilizing requester name as a prefix
+  // would solve the problem.
   c->acceptConnection("Receiver" + std::to_string(rank),
                       "Sender" + std::to_string(previousRank),
                       0,
@@ -225,8 +231,12 @@ print(std::map<int, std::vector<int>> const& m) {
 tarch::logging::Log PointToPointCommunication::_log(
     "precice::m2n::PointToPointCommunication");
 
-PointToPointCommunication::PointToPointCommunication(mesh::PtrMesh mesh)
-    : DistributedCommunication(mesh), _isConnected(false), _isAcceptor(false) {
+PointToPointCommunication::PointToPointCommunication(
+    com::PtrCommunicationFactory communicationFactory, mesh::PtrMesh mesh)
+    : DistributedCommunication(mesh)
+    , _communicationFactory(communicationFactory)
+    , _isConnected(false)
+    , _isAcceptor(false) {
 }
 
 PointToPointCommunication::~PointToPointCommunication() {
@@ -248,7 +258,7 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
   _isAcceptor = true;
 
   if (utils::MasterSlave::_masterMode) {
-    auto c = com::PtrCommunication(new com::SocketCommunication("lo", 30000));
+    auto c = _communicationFactory->newCommunication();
 
     c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
     // -------------------------------------------------------------------------
@@ -289,8 +299,7 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
   if (_senderMap.size() == 0)
     return;
 
-  auto c = com::PtrCommunication(
-      new com::SocketCommunication("lo", 30001 + utils::MasterSlave::_rank));
+  auto c = _communicationFactory->newCommunication();
 
   c->acceptConnection(nameAcceptor + std::to_string(utils::MasterSlave::_rank),
                       nameRequester,
@@ -317,7 +326,7 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
   std::vector<int> acceptorSizes;
 
   if (utils::MasterSlave::_masterMode) {
-    auto c = com::PtrCommunication(new com::SocketCommunication());
+    auto c = _communicationFactory->newCommunication();
 
     c->requestConnection(nameAcceptor, nameRequester, 0, 1);
     // -------------------------------------------------------------------------
@@ -354,8 +363,8 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    receivePrevious(acceptorRanks);
-    receivePrevious(acceptorSizes);
+    receivePrevious(_communicationFactory, acceptorRanks);
+    receivePrevious(_communicationFactory, acceptorSizes);
 
     assertion(acceptorRanks.size() == acceptorSizes.size());
   }
@@ -366,19 +375,18 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
     int rank = ++acceptorRanks[acceptorRank]; // Attention!
     int size = acceptorSizes[acceptorRank];
 
-    _communications[acceptorRank] =
-        com::PtrCommunication(new com::SocketCommunication());
+    _communications[acceptorRank] = _communicationFactory->newCommunication();
 
     _communications[acceptorRank]->requestConnection(
         nameAcceptor + std::to_string(acceptorRank), nameRequester, rank, size);
   }
 
-  sendNext(acceptorRanks);
-  sendNext(acceptorSizes);
+  sendNext(_communicationFactory, acceptorRanks);
+  sendNext(_communicationFactory, acceptorSizes);
 
   if (utils::MasterSlave::_masterMode) {
-    receivePrevious(acceptorRanks);
-    receivePrevious(acceptorSizes);
+    receivePrevious(_communicationFactory, acceptorRanks);
+    receivePrevious(_communicationFactory, acceptorSizes);
 
     assertion(acceptorRanks.size() == acceptorSizes.size());
 
