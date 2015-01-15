@@ -112,19 +112,19 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     assignList(position) = 0.0, 0.0;
     mesh::Vertex& v1_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v1_2 = pSolidzMesh2->createVertex(position);
-    assignList(position) = 0.0, 1.5;
+    assignList(position) = 0.0, 1.95;
     mesh::Vertex& v2_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v2_2 = pSolidzMesh2->createVertex(position);
-    assignList(position) = 0.0, 2.5;
+    assignList(position) = 0.0, 2.1;
     mesh::Vertex& v3_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v3_2 = pSolidzMesh2->createVertex(position);
     assignList(position) = 0.0, 4.5;
     mesh::Vertex& v4_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v4_2 = pSolidzMesh2->createVertex(position);
-    assignList(position) = 0.0, 5.5;
+    assignList(position) = 0.0, 5.95;
     mesh::Vertex& v5_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v5_2 = pSolidzMesh2->createVertex(position);
-    assignList(position) = 0.0, 7.0;
+    assignList(position) = 0.0, 6.1;
     mesh::Vertex& v6_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v6_2 = pSolidzMesh2->createVertex(position);
     pSolidzMesh1->createEdge(v1_1,v2_1);
@@ -188,6 +188,7 @@ void CommunicatedGeometryTest:: testScatterMesh ()
       pNastinMesh->createVertex(position);
     }
 
+    pNastinMesh->computeState();
     CommunicatedGeometry geo1( offset, "NASTINMaster", "SOLIDZ", dimensions);
     CommunicatedGeometry geo2( offset, "NASTINMaster", "SOLIDZ", dimensions);
     geo1.setBoundingFromMapping(boundingFromMapping1);
@@ -215,8 +216,8 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     else if(utils::Parallel::getProcessRank() == 3){//Slave2
       validate(pSolidzMesh1->vertices().size()==2);
       validate(pSolidzMesh1->edges().size()==1);
-      validate(pSolidzMesh2->vertices().size()==4);
-      validate(pSolidzMesh2->edges().size()==3);
+      validate(pSolidzMesh2->vertices().size()==3);
+      validate(pSolidzMesh2->edges().size()==2);
     }
 
   }

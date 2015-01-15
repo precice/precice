@@ -223,11 +223,6 @@ void CommunicatedGeometry:: scatterMesh(
       if(numberOfVertices!=0){
         utils::MasterSlave::_communication->receive(raw(slaveVertexIDs),numberOfVertices,rankSlave);
       }
-      std::cout << "Rank: " << rankSlave << std::endl;
-      for(int i=0;i<numberOfVertices;i++){
-        std::cout << "slaveId: " <<  slaveVertexIDs[i] << ", globalId: " << boundingVertexDistribution[rankSlave][slaveVertexIDs[i]]
-                                                                                                                  << std::endl;
-      }
 
       //we need to merge the 2 filtering steps, each slave only holds local IDs
       std::vector<int> globalVertexIDs(numberOfVertices,-1);
