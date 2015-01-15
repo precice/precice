@@ -122,4 +122,26 @@ void CommunicateMesh:: receiveMesh
   _communication->finishReceivePackage ();
 }
 
+void CommunicateMesh:: sendBoundingBox (
+  const mesh::Mesh::BoundingBox & bb,
+  int                rankReceiver ){
+  preciceTrace1 ( "sendBoundingBox()", rankReceiver );
+  int dim = bb.size();
+  for(int d=0; d<dim; d++){
+    _communication->send(bb[d].first, rankReceiver);
+    _communication->send(bb[d].second, rankReceiver);
+  }
+}
+
+void CommunicateMesh:: receiveBoundingBox (
+  mesh::Mesh::BoundingBox & bb,
+  int          rankSender ){
+  preciceTrace1 ( "receiveBoundingBox()", rankSender );
+  int dim = bb.size();
+  for(int d=0; d<dim; d++){
+    _communication->receive(bb[d].first, rankSender);
+    _communication->receive(bb[d].second, rankSender);
+  }
+}
+
 }} // namespace precice, com

@@ -40,7 +40,8 @@ Mesh:: Mesh
   _manageQuadIDs(),
   _listeners(),
   _vertexDistribution(),
-  _globalNumberOfVertices(-1)
+  _globalNumberOfVertices(-1),
+  _boundingBox()
 {
   if (_managerPropertyIDs == NULL){
     _managerPropertyIDs = new utils::ManageUniqueIDs;

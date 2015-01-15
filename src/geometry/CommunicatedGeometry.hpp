@@ -69,10 +69,14 @@ private:
 
   void clearBoundingMappings();
 
+  void mergeBoundingBoxes(mesh::Mesh::BoundingBox& bb);
+
+  std::vector<int> filterMesh(mesh::Mesh& seed, bool filterByMapping);
+
   /**
    * @brief Returns true if a vertex contributes to one of the 2 mappings. If false, the vertex can be erased.
    */
-  bool doesVertexContribute(int vertexID);
+  bool doesVertexContribute(const mesh::Vertex& vertex, bool filterByMapping);
 
   // @brief Logging device.
   static tarch::logging::Log _log;
@@ -88,6 +92,10 @@ private:
   mapping::PtrMapping _boundingFromMapping;
 
   mapping::PtrMapping _boundingToMapping;
+
+  mesh::Mesh::BoundingBox _bb;
+
+  double _safetyGap;
 };
 
 }} // namespace precice, geometry

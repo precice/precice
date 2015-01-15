@@ -6,6 +6,7 @@
 
 #include "SharedPointer.hpp"
 #include "tarch/logging/Log.h"
+#include "mesh/Mesh.hpp"
 
 namespace precice {
    namespace mesh {
@@ -44,6 +45,15 @@ public:
   void receiveMesh (
     mesh::Mesh & mesh,
     int          rankSender );
+
+  void sendBoundingBox (
+    const mesh::Mesh::BoundingBox & bb,
+    int                rankReceiver );
+
+  void receiveBoundingBox (
+    mesh::Mesh::BoundingBox & bb,
+    int          rankSender );
+
 
 private:
 

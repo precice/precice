@@ -88,6 +88,10 @@ public:
     const mesh::PtrMesh& input,
     const mesh::PtrMesh& output );
 
+  const mesh::PtrMesh& getInputMesh();
+
+  const mesh::PtrMesh& getOutputMesh();
+
   /**
    * @brief Returns the constraint (consistent/conservative) of the mapping.
    */
