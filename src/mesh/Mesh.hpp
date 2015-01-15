@@ -292,7 +292,7 @@ public:
    * @brief Returns the bounding box of the mesh.
    *
    * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
-   * computeState() have to be called after setting the mesh.
+   * computeState() has to be called after setting the mesh.
    */
   const BoundingBox getBoundingBox() const;
 

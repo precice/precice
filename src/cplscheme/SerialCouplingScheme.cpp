@@ -135,15 +135,13 @@ void SerialCouplingScheme::initializeData()
 
   if (hasToSendInitData() && isCouplingOngoing()) {
     assertion(not doesFirstStep());
-    if (getExtrapolationOrder() > 0) {
-      for (DataMap::value_type & pair : getSendData()) {
-        if (pair.second->oldValues.cols() == 0)
-          break;
-        utils::DynVector& oldValues = pair.second->oldValues.column(0);
-        oldValues = *pair.second->values;
-        // For extrapolation, treat the initial value as old timestep value
-        pair.second->oldValues.shiftSetFirst(*pair.second->values);
-      }
+    for (DataMap::value_type & pair : getSendData()) {
+      if (pair.second->oldValues.cols() == 0)
+        break;
+      utils::DynVector& oldValues = pair.second->oldValues.column(0);
+      oldValues = *pair.second->values;
+      // For extrapolation, treat the initial value as old timestep value
+      pair.second->oldValues.shiftSetFirst(*pair.second->values);
     }
     // The second participant sends the initialized data to the first particpant
     // here, which receives the data on call of initialize().

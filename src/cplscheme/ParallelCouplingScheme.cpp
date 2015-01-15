@@ -123,8 +123,10 @@ void ParallelCouplingScheme::initializeData()
       setHasDataBeenExchanged(true);
 
       // second participant has to save values for extrapolation
-      if (_couplingMode == Implicit and getExtrapolationOrder() > 0){
+      if (_couplingMode == Implicit){
         for (DataMap::value_type & pair : getReceiveData()) {
+          if (pair.second->oldValues.cols() == 0)
+                    break;
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
@@ -133,8 +135,10 @@ void ParallelCouplingScheme::initializeData()
       }
     }
     if (hasToSendInitData()) {
-      if (_couplingMode == Implicit and getExtrapolationOrder() > 0) {
+      if (_couplingMode == Implicit) {
         for (DataMap::value_type & pair : getSendData()) {
+          if (pair.second->oldValues.cols() == 0)
+                    break;
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
