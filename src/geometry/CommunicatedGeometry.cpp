@@ -88,6 +88,7 @@ void CommunicatedGeometry:: sendMesh(
   }
 
   //gather Mesh
+  preciceInfo("sendMesh()", "Gather mesh " << seed.getName() );
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ){
     if(utils::MasterSlave::_rank>0){ //slave
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( seed, 0 );
@@ -122,6 +123,7 @@ void CommunicatedGeometry:: sendMesh(
   }
 
   //send (global) Mesh
+  preciceInfo("sendMesh()", "Send global mesh " << seed.getName() );
   if(not utils::MasterSlave::_slaveMode){
     preciceCheck ( globalMesh.vertices().size() > 0,
                    "specializedCreate()", "Participant \"" << _accessorName
@@ -140,6 +142,7 @@ void CommunicatedGeometry:: sendMesh(
 void CommunicatedGeometry:: receiveMesh(
   mesh::Mesh& seed)
 {
+  preciceInfo("receiveMesh()", "Receive global mesh " << seed.getName() );
   if(not utils::MasterSlave::_slaveMode){
     assertion ( seed.vertices().size() == 0 );
     assertion ( utils::contained(_accessorName, _receivers) );
@@ -160,6 +163,7 @@ void CommunicatedGeometry:: scatterMesh(
   preciceTrace1 ( "scatterMesh()", utils::MasterSlave::_rank );
   using tarch::la::raw;
 
+  preciceInfo("scatterMesh()", "Broadcast global mesh " << seed.getName() );
   if(utils::MasterSlave::_rank>0){ //slave
     com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( seed, 0);
   }
@@ -172,9 +176,11 @@ void CommunicatedGeometry:: scatterMesh(
     }
   }
 
+  preciceInfo("scatterMesh()", "Compute bounding mappings for mesh " << seed.getName() );
   seed.computeState();
   computeBoundingMappings();
 
+  preciceInfo("scatterMesh()", "Filter mesh " << seed.getName() );
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
 
   preciceDebug("Bounding mesh. #vertices: " << seed.vertices().size()
@@ -228,6 +234,7 @@ void CommunicatedGeometry:: scatterMesh(
 
   int numberOfVertices = globalVertexIDs.size();
 
+  preciceInfo("scatterMesh()", "Gather vertex distribution for mesh " << seed.getName() );
   if(utils::MasterSlave::_rank>0){ //slave
     utils::MasterSlave::_communication->send(numberOfVertices,0);
     if(numberOfVertices!=0){

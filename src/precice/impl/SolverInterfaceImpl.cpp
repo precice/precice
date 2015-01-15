@@ -296,6 +296,7 @@ double SolverInterfaceImpl:: initialize()
                           _accessorProcessRank, _accessorCommunicatorSize);
         }
       }
+      preciceInfo("initialize()", "Coupling partner/s are connected " );
     }
 
     preciceDebug("Perform initializations");
@@ -2037,7 +2038,6 @@ void SolverInterfaceImpl:: mapReadData()
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
   	bool hasComputed = context.mapping->hasComputedMapping();
   	bool isNotEmpty = not _accessor->meshContext(context.toMeshID).mesh->vertices().empty();
-  	std::cout << _accessor->meshContext(context.toMeshID).mesh->vertices().size() << std::endl;
   	if (mapNow && not hasComputed && isNotEmpty){
   	  preciceDebug("Compute read mapping from mesh \""
   			  << _accessor->meshContext(context.fromMeshID).mesh->getName()
