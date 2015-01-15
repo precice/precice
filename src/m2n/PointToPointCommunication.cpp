@@ -61,7 +61,7 @@ forMapOfRanges(Map& map,
 }
 
 void
-sendVector(com::PtrCommunication communication,
+send(com::PtrCommunication communication,
      std::vector<int> const& v,
      int rankReceiver) {
   communication->send(static_cast<int>(v.size()), rankReceiver);
@@ -69,7 +69,7 @@ sendVector(com::PtrCommunication communication,
 }
 
 void
-receiveVector(com::PtrCommunication communication,
+receive(com::PtrCommunication communication,
         std::vector<int>& v,
         int rankSender) {
   v.clear();
@@ -82,7 +82,7 @@ receiveVector(com::PtrCommunication communication,
 }
 
 void
-sendVertexDistribution(com::PtrCommunication communication,
+send(com::PtrCommunication communication,
      std::map<int, std::vector<int>> const& m,
      int rankReceiver) {
   communication->send(static_cast<int>(m.size()), rankReceiver);
@@ -92,12 +92,12 @@ sendVertexDistribution(com::PtrCommunication communication,
     auto& indices = i.second;
 
     communication->send(rank, rankReceiver);
-    sendVector(communication, indices, rankReceiver);
+    send(communication, indices, rankReceiver);
   }
 }
 
 void
-receiveVertexDistribution(com::PtrCommunication communication,
+receive(com::PtrCommunication communication,
         std::map<int, std::vector<int>>& m,
         int rankSender) {
   m.clear();
@@ -110,7 +110,7 @@ receiveVertexDistribution(com::PtrCommunication communication,
     int rank = 0;
 
     communication->receive(rank, rankSender);
-    receiveVector(communication, m[rank], rankSender);
+    receive(communication, m[rank], rankSender);
   }
 }
 
@@ -142,7 +142,7 @@ scatter(com::PtrCommunication communication,
                    if (thisRank == utils::MasterSlave::_rank)
                      m = std::move(senderMap);
                    else
-                     sendVertexDistribution(communication, senderMap, thisRank);
+                     send(communication, senderMap, thisRank);
 
                    senderMap.clear();
                  });
@@ -156,7 +156,7 @@ scatter(com::PtrCommunication communication,
       continue;
 
     if (thisVertexDistribution.find(rank) == thisVertexDistribution.end())
-      sendVertexDistribution(communication, senderMap, rank);
+      send(communication, senderMap, rank);
   }
 }
 
@@ -173,7 +173,7 @@ sendNext( // TODO: CommunicationFactory
                        0,
                        1);
 
-  sendVector(c, v, 0);
+  send(c, v, 0);
 }
 
 void
@@ -191,7 +191,7 @@ receivePrevious( // TODO: CommunicationFactory
                       0,
                       1);
 
-  receiveVector(c, v, 0);
+  receive(c, v, 0);
 }
 
 void
@@ -248,7 +248,7 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
   _isAcceptor = true;
 
   if (utils::MasterSlave::_masterMode) {
-    auto c = com::PtrCommunication(new com::SocketCommunication("lo", 50000));
+    auto c = com::PtrCommunication(new com::SocketCommunication("lo", 30000));
 
     c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
     // -------------------------------------------------------------------------
@@ -260,11 +260,11 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
     // -------------------------------------------------------------------------
     auto& vertexDistribution = _mesh->getVertexDistribution();
 
-    sendVertexDistribution(c, vertexDistribution, 0);
+    m2n::send(c, vertexDistribution, 0);
     // -------------------------------------------------------------------------
     std::map<int, std::vector<int>> requesterVertexDistribution;
 
-    receiveVertexDistribution(c, requesterVertexDistribution, 0);
+    m2n::receive(c, requesterVertexDistribution, 0);
     // -------------------------------------------------------------------------
     std::vector<int> sizes(utils::MasterSlave::_size, 0);
 
@@ -277,11 +277,11 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
           sizes[rank] = senderMap.size();
         });
 
-    sendVector(c, sizes, 0);
+    m2n::send(c, sizes, 0);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    receiveVertexDistribution(utils::MasterSlave::_communication, _senderMap, 0);
+    m2n::receive(utils::MasterSlave::_communication, _senderMap, 0);
   }
 
   print(_senderMap);
@@ -290,7 +290,7 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
     return;
 
   auto c = com::PtrCommunication(
-      new com::SocketCommunication("lo", 50001 + utils::MasterSlave::_rank));
+      new com::SocketCommunication("lo", 30001 + utils::MasterSlave::_rank));
 
   c->acceptConnection(nameAcceptor + std::to_string(utils::MasterSlave::_rank),
                       nameRequester,
@@ -329,22 +329,22 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
     // -------------------------------------------------------------------------
     std::map<int, std::vector<int>> acceptorVertexDistribution;
 
-    receiveVertexDistribution(c, acceptorVertexDistribution, 0);
+    m2n::receive(c, acceptorVertexDistribution, 0);
     // -------------------------------------------------------------------------
     auto& vertexDistribution = _mesh->getVertexDistribution();
 
-    sendVertexDistribution(c, vertexDistribution, 0);
+    m2n::send(c, vertexDistribution, 0);
     // -------------------------------------------------------------------------
     scatter(utils::MasterSlave::_communication,
             _senderMap,
             vertexDistribution,
             acceptorVertexDistribution);
 
-    receiveVector(c, acceptorSizes, 0);
+    m2n::receive(c, acceptorSizes, 0);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    receiveVertexDistribution(utils::MasterSlave::_communication, _senderMap, 0);
+    m2n::receive(utils::MasterSlave::_communication, _senderMap, 0);
   }
 
   print(_senderMap);
@@ -402,8 +402,7 @@ PointToPointCommunication::closeConnection() {
 void
 PointToPointCommunication::send(double* itemsToSend,
                                 int size,
-                                int valueDimension
-                                ) {
+                                int valueDimension) {
   assertion(_senderMap.size() == _communications.size());
 
   if (_senderMap.size() == 0) {
@@ -434,8 +433,7 @@ PointToPointCommunication::send(double* itemsToSend,
 void
 PointToPointCommunication::receive(double* itemsToReceive,
                                    int size,
-                                   int valueDimension
-                                   ) {
+                                   int valueDimension) {
   assertion(_senderMap.size() == _communications.size());
 
   int rank = 0;
@@ -458,5 +456,5 @@ PointToPointCommunication::receive(double* itemsToReceive,
       rank++;
   }
 }
-
-}} // namespace precice, m2n
+}
+} // namespace precice, m2n

@@ -149,11 +149,11 @@ main(int argc, char** argv) {
 
   m2n::PointToPointCommunication c(pMesh);
 
-  c.acceptConnection("B", "A", 0, 1);
+  c.acceptConnection("B", "A");
 
   std::vector<double> data = getData();
 
-  c.receiveAll(data.data(), data.size(), 42);
+  c.receive(data.data(), data.size(), 42);
 
   if (validate(data))
     cout << utils::MasterSlave::_rank << ": "
@@ -164,7 +164,7 @@ main(int argc, char** argv) {
 
   process(data);
 
-  c.sendAll(data.data(), data.size(), 42);
+  c.send(data.data(), data.size(), 42);
 
   utils::MasterSlave::_communication.reset();
 
