@@ -39,7 +39,7 @@ public:
   std::map<std::string, double> properties;
 
   /// Adds the value to the propety.
-  void addProp(std::string property, int value);
+  void addProp(std::string property, double value);
 
 private:  
   Clock::time_point starttime;
@@ -106,8 +106,14 @@ public:
   /// Records the event.
   static void put(Event* event);
 
-  /// Pretty prints the result table.
+  /// Pretty prints the result table to an arbitrary stream.
+  static void print(std::ostream &out);
+
+  /// Convenience function: Prints to std::cout
   static void print();
+
+  /// Convenience function: Prints to filename
+  static void print(std::string filename);
 
 private:
   static bool initialized;

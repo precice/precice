@@ -1,8 +1,11 @@
 #include "EventTimings.hpp"
 
+#include <algorithm>
 #include <iostream>
 #include <iomanip>
+#include <fstream>
 #include <string>
+#include <ctime>
 #include <vector>
 #include <map>
 #include <chrono>
@@ -42,7 +45,7 @@ void Event::stop()
   }  
 }
 
-void Event::addProp(std::string property, int value)
+void Event::addProp(std::string property, double value)
 {
   properties[property] += value;
 }
@@ -62,12 +65,9 @@ void EventData::put(Event* event)
     count++;
     Event::Clock::duration duration = event->getDuration();
     total += duration;
-    if (min > duration) {
-      min = duration;
-    }
-    if (max < duration) {
-      max = duration;
-    }
+    min = std::min(duration, min);
+    max = std::max(duration, max);
+
     for (auto p : event->properties) {
       properties[p.first] += p.second;
     }
@@ -140,57 +140,70 @@ void EventRegistry::put(Event* event)
   events[event->name] = data;
 }
 
-void EventRegistry::print()
+void EventRegistry::print(std::ostream &out)
 {
   if (not precice::utils::MasterSlave::_slaveMode) {
-    using std::cout; using std::endl;
+    using std::endl;
     using std::setw; using std::setprecision;
     using std::left; using std::right;
     EventData::Properties allProps;
     Event::Clock::duration globalDuration = globalStop - globalStart;
 
-    cout << "Global runtime = "
-         << std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count() << "ms / "
-         << std::chrono::duration_cast<std::chrono::seconds>(globalDuration).count() << "s"
-         << endl << endl;
+    std::time_t currentTime = std::time(NULL);
+    out << "Run finished at " << std::asctime(std::localtime(&currentTime));
 
-    cout << "Event                Count    Total[ms]     Max[ms]     Min[ms]     Avg[ms]   T%" << endl;
-    cout << "--------------------------------------------------------------------------------" << endl;
+    out << "Global runtime = "
+        << std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count() << "ms / "
+        << std::chrono::duration_cast<std::chrono::seconds>(globalDuration).count() << "s"
+        << endl << endl;
+
+    out << "Event                Count    Total[ms]     Max[ms]     Min[ms]     Avg[ms]   T%" << endl;
+    out << "--------------------------------------------------------------------------------" << endl;
         
     for (auto e : events) {
-      cout << setw(14) << left << e.first << right 
-           << setw(12) << e.second.getCount()
-           << setw(12) << e.second.getTotal()
-           << setw(12) << e.second.getMax() 
-           << setw(12) << e.second.getMin()
-           << setw(12) << e.second.getAvg()
-           << setw(6) << e.second.getTimePercentage(globalDuration)
-           << endl;
+      out << setw(14) << left << e.first << right 
+          << setw(12) << e.second.getCount()
+          << setw(12) << e.second.getTotal()
+          << setw(12) << e.second.getMax() 
+          << setw(12) << e.second.getMin()
+          << setw(12) << e.second.getAvg()
+          << setw(6)  << e.second.getTimePercentage(globalDuration)
+          << endl;
       for (auto p : e.second.properties) {
         allProps[p.first] += p.second;
       
-        cout << "  " << setw(12) << left << p.first
-             << setw(12) << right << p.second
-             << endl;
+        out << "  " << setw(12) << left << p.first
+            << setw(12) << right << std::fixed << std::setprecision(5) << p.second
+            << endl;
       }
-      cout << endl;
+      out << endl;
     }
 
-    cout << "All Events, accumulated" << endl;
-    cout << "--------------------------" << endl;
+    out << "All Events, accumulated" << endl;
+    out << "--------------------------" << endl;
     for (auto a : allProps) {
-      cout << setw(14) << left << a.first << right
-           << setw(12) << a.second << endl;
+      out << setw(14) << left << a.first << right
+          << setw(12) << std::fixed << std::setprecision(5) << a.second << endl;
     }
   }
 }
 
+void EventRegistry::print()
+{
+  EventRegistry::print(std::cout);
+}
 
+void EventRegistry::print(std::string filename)
+{
+  std::ofstream outfile;
+  outfile.open(filename, std::ios::out | std::ios::app);
+  EventRegistry::print(outfile);
+  outfile.close();
+}
 
 void Events_Init()
 {
   EventRegistry::initialize();
-  
 }
 
 void Events_Finalize()
