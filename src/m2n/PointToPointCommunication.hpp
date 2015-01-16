@@ -2,6 +2,9 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
+
+#ifndef PRECICE_NO_OMP
+
 #ifndef PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_
 #define PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_
 
@@ -113,3 +116,5 @@ private:
 }} // namespace precice, m2n
 
 #endif /* PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_ */
+
+#endif // not PRECICE_NO_OMP

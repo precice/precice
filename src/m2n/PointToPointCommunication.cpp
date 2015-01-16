@@ -3,6 +3,8 @@
 // use, please see the license notice at
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
+#ifndef PRECICE_NO_OMP
+
 #include "PointToPointCommunication.hpp"
 
 #include "utils/MasterSlave.hpp"
@@ -466,3 +468,5 @@ PointToPointCommunication::receive(double* itemsToReceive,
 }
 }
 } // namespace precice, m2n
+
+#endif // not PRECICE_NO_OMP
