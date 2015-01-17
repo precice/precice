@@ -296,7 +296,9 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
     m2n::receive(utils::MasterSlave::_communication, _senderMap, 0);
   }
 
-  print(_senderMap);
+  // NOTE:
+  // Uncomment to print `_senderMap'.
+  // print(_senderMap);
 
   if (_senderMap.size() == 0)
     return;
@@ -358,7 +360,9 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
     m2n::receive(utils::MasterSlave::_communication, _senderMap, 0);
   }
 
-  print(_senderMap);
+  // NOTE:
+  // Uncomment to print `_senderMap'.
+  // print(_senderMap);
 
   if (utils::MasterSlave::_masterMode) {
     acceptorRanks.resize(acceptorSizes.size(), -1);

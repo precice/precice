@@ -61,11 +61,15 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
 
   if (utils::Parallel::getProcessRank() == 0){ //Participant 1
     utils::Parallel::initialize ( NULL, NULL, "Part1" );
+    utils::MasterSlave::_rank = 0;
+    utils::MasterSlave::_size = 1;
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
   }
   else if(utils::Parallel::getProcessRank() == 1){//Participant 2 - Master
     utils::Parallel::initialize ( NULL, NULL, "Part2Master" );
+    utils::MasterSlave::_rank = 0;
+    utils::MasterSlave::_size = 3;
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = true;
     masterSlaveCom->acceptConnection ( "Part2Master", "Part2Slaves", 0, 1);
@@ -73,12 +77,16 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
   }
   else if(utils::Parallel::getProcessRank() == 2){//Participant 2 - Slave1
     utils::Parallel::initialize ( NULL, NULL, "Part2Slaves");
+    utils::MasterSlave::_rank = 1;
+    utils::MasterSlave::_size = 3;
     utils::MasterSlave::_slaveMode = true;
     utils::MasterSlave::_masterMode = false;
     masterSlaveCom->requestConnection( "Part2Master", "Part2Slaves", 0, 2 );
   }
   else if(utils::Parallel::getProcessRank() == 3){//Participant 2 - Slave2
     utils::Parallel::initialize ( NULL, NULL, "Part2Slaves");
+    utils::MasterSlave::_rank = 2;
+    utils::MasterSlave::_size = 3;
     utils::MasterSlave::_slaveMode = true;
     utils::MasterSlave::_masterMode = false;
     masterSlaveCom->requestConnection( "Part2Master", "Part2Slaves", 1, 2 );
@@ -130,9 +138,6 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     m2n->requestSlavesConnection ( "Part1", "Part2Master");
 
     if(utils::Parallel::getProcessRank() == 1){//Master
-      utils::MasterSlave::_rank = 0;
-      utils::MasterSlave::_size = 3;
-
       pMesh->setGlobalNumberOfVertices(numberOfVertices);
       pMesh->getVertexDistribution()[0].push_back(0);
       pMesh->getVertexDistribution()[0].push_back(1);
@@ -152,15 +157,11 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
       m2n->send(tarch::la::raw(values),3,pMesh->getID(),valueDimension);
     }
     else if(utils::Parallel::getProcessRank() == 2){//Slave1
-      utils::MasterSlave::_rank = 1;
-      utils::MasterSlave::_size = 3;
       utils::DynVector values(0);
       m2n->receive(tarch::la::raw(values),0,pMesh->getID(),valueDimension);
       m2n->send(tarch::la::raw(values),0,pMesh->getID(),valueDimension);
     }
     else if(utils::Parallel::getProcessRank() == 3){//Slave2
-      utils::MasterSlave::_rank = 2;
-      utils::MasterSlave::_size = 3;
       utils::DynVector values(4);
       assignList(values) = 0.0, 0.0, 0.0, 0.0;
       m2n->receive(tarch::la::raw(values),4,pMesh->getID(),valueDimension);
@@ -171,10 +172,14 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
       values = values * 2;
       m2n->send(tarch::la::raw(values),4,pMesh->getID(),valueDimension);
     }
-
   }
+
+  utils::MasterSlave::_communication.reset();
+  utils::MasterSlave::_rank = utils::Parallel::getProcessRank();
+  utils::MasterSlave::_size = utils::Parallel::getCommunicatorSize();
   utils::MasterSlave::_slaveMode = false;
   utils::MasterSlave::_masterMode = false;
+
   utils::Parallel::synchronizeProcesses();
 }
 
