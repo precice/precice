@@ -82,7 +82,7 @@ PointToPointCommunicationTest::testSocketCommunication() {
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory(
       "lo", 30000 + Parallel::getProcessRank()));
 
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 1, true));
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 
   m2n::PointToPointCommunication c(cf, mesh);
 
