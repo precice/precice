@@ -16,7 +16,7 @@ class Event
 public:
   /// Default high precision clock type. All other chrono types are derived from it.
   using Clock = std::chrono::high_resolution_clock;
-  
+
   /// Name used to identify the timer. Events of the same name are accumulated to
   std::string name;
 
@@ -41,7 +41,7 @@ public:
   /// Adds the value to the propety.
   void addProp(std::string property, double value);
 
-private:  
+private:
   Clock::time_point starttime;
   Clock::time_point stoptime;
   Clock::duration duration = Clock::duration::zero();
@@ -77,7 +77,7 @@ public:
   /// Aggregated properties for this event
   using Properties = std::map<std::string, double>;
   Properties properties;
-  
+
 private:
   int count = 0;
   Event::Clock::duration total = Event::Clock::duration::zero();
@@ -93,7 +93,7 @@ EventRegistry::finalize at the end. Event timings will be usuable without callin
 function at all, but global timings as well as percentages do not work this way.  */
 class EventRegistry
 {
-public:  
+public:
   /// Sets the global start time
   static void initialize();
 
@@ -106,14 +106,15 @@ public:
   /// Records the event.
   static void put(Event* event);
 
-  /// Pretty prints the result table to an arbitrary stream.
-  static void print(std::ostream &out);
+  /// Prints the result table to an arbitrary stream.
+  /** terse enabled a more machine readable format with one event per line, seperated by whitespace. */
+  static void print(std::ostream &out, bool terse = false);
 
   /// Convenience function: Prints to std::cout
-  static void print();
+  static void print(bool terse = false);
 
   /// Convenience function: Prints to filename
-  static void print(std::string filename);
+  static void print(std::string filename, bool terse = false);
 
 private:
   static bool initialized;
