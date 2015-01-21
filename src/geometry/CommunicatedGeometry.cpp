@@ -189,8 +189,7 @@ void CommunicatedGeometry:: scatterMesh(
       preciceDebug("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
           << ", " << _bb[0].second << " and " << _bb[1].first << ", " << _bb[1].second);
       mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
-      slaveMesh.addMesh(seed);
-      boundingVertexDistribution[rankSlave] = filterMesh(slaveMesh, false);
+      boundingVertexDistribution[rankSlave] = filterMesh(seed, slaveMesh, false);
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( slaveMesh, rankSlave );
     }
     //now also filter the remaining master mesh
@@ -201,7 +200,10 @@ void CommunicatedGeometry:: scatterMesh(
       if(_safetyGap < _bb[d].second - _bb[d].first) _safetyGap = _bb[d].second - _bb[d].first;
     }
     _safetyGap *= 0.1;
-    boundingVertexDistribution[0] = filterMesh(seed, false);
+    mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
+    boundingVertexDistribution[0] = filterMesh(seed, filteredMesh, false);
+    seed.clear();
+    seed.addMesh(filteredMesh);
     preciceDebug("Master mesh after filtering, #vertices " << seed.vertices().size());
   }
 
@@ -210,7 +212,10 @@ void CommunicatedGeometry:: scatterMesh(
   computeBoundingMappings();
 
   preciceInfo("scatterMesh()", "Filter mesh " << seed.getName() );
-  auto filteredVertexIDs = filterMesh(seed, true);
+  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
+  auto filteredVertexIDs = filterMesh(seed, filteredMesh, true);
+  seed.clear();
+  seed.addMesh(filteredMesh);
   clearBoundingMappings();
 
   int numberOfVertices = filteredVertexIDs.size();
@@ -318,9 +323,8 @@ bool CommunicatedGeometry:: doesVertexContribute(
   }
 }
 
-std::vector<int> CommunicatedGeometry:: filterMesh(mesh::Mesh& seed, bool filterByMapping){
+std::vector<int> CommunicatedGeometry:: filterMesh(mesh::Mesh& seed, mesh::Mesh& filteredMesh, bool filterByMapping){
   preciceTrace1 ( "filterMesh()", utils::MasterSlave::_rank );
-  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
 
   preciceDebug("Bounding mesh. #vertices: " << seed.vertices().size()
        <<", #edges: " << seed.edges().size()
@@ -363,12 +367,9 @@ std::vector<int> CommunicatedGeometry:: filterMesh(mesh::Mesh& seed, bool filter
     }
   }
 
-  seed.clear();
-  seed.addMesh(filteredMesh);
-
-  preciceDebug("Filtered mesh. #vertices: " << seed.vertices().size()
-         <<", #edges: " << seed.edges().size()
-         <<", #triangles: " << seed.triangles().size() << ", rank: " << utils::MasterSlave::_rank);
+  preciceDebug("Filtered mesh. #vertices: " << filteredMesh.vertices().size()
+         <<", #edges: " << filteredMesh.edges().size()
+         <<", #triangles: " << filteredMesh.triangles().size() << ", rank: " << utils::MasterSlave::_rank);
 
   return vertexIDs;
 }
