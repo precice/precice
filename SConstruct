@@ -176,7 +176,7 @@ env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
 
 if not conf.CheckCXX():
-    Exit(-1)
+    Exit(1)
 
 if env["build"] == 'debug':
     env.Append(CPPDEFINES = ['Debug', 'Asserts'])
