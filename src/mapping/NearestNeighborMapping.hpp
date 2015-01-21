@@ -23,7 +23,7 @@ public:
    *
    * @param constraint [IN] Specifies mapping to be consistent or conservative.
    */
-  NearestNeighborMapping ( Constraint constraint );
+  NearestNeighborMapping ( Constraint constraint, int dimensions );
 
   /**
    * @brief Destructor, empty.

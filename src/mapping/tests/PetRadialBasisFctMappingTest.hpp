@@ -86,6 +86,10 @@ private:
    * @brief
    */
   void perform3DTestConservativeMapping ( Mapping& mapping );
+
+  void testDeadAxis2D();
+
+  void testDeadAxis3D();
 };
 
 }}} // namespace precice, mapping, tests

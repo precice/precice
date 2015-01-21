@@ -25,7 +25,7 @@ namespace mesh {
 /**
  * @brief Triangle of a mesh, defined by three edges (and vertices).
  */
-class Triangle : public PropertyContainer, boost::noncopyable
+class Triangle : public PropertyContainer, private boost::noncopyable
 {
 public:
 

@@ -53,7 +53,7 @@ public:
       const utils::DynVector& newValues )
    {
       _normDiff = utils::MasterSlave::l2norm(newValues - oldValues);
-      _isConvergence = tarch::la::greaterEquals(_convergenceLimit, _normDiff);
+      _isConvergence = _normDiff <= _convergenceLimit;
 //      preciceInfo ( "measure()", "Absolute convergence measure: "
 //                     << "two-norm differences = " << normDiff
 //                     << ", convergence limit = " << _convergenceLimit

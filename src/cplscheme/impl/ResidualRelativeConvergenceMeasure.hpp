@@ -68,8 +68,7 @@ public:
          _normFirstResidual = _normDiff;
          _isFirstIteration = false;
       }
-      _isConvergence = tarch::la::greater (
-         _normFirstResidual * _convergenceLimitPercent, _normDiff );
+      _isConvergence = _normDiff < _normFirstResidual * _convergenceLimitPercent;
 //      preciceInfo ( "measure()", "Residual Relative convergence measure: "
 //                    << "two-norm differences = " << normDiff
 //                    << ", convergence limit = "

@@ -33,11 +33,10 @@ void MPICommunication:: send
   assertion ( rankReceiver != ANY_SENDER );
   int length = itemToSend.size();
   preciceDebug ( "Message length: " << length );
-  MPI_Send ( &length, 1, MPI_INT, rankReceiver, 0, _communicator );
-  char * cstringMessage = new char[length+1];
-  cstringMessage = const_cast<char*>(itemToSend.c_str());
-  preciceDebug ( "Message: " + std::string(cstringMessage) );
-  MPI_Send (cstringMessage, length+1, MPI_CHAR, rankReceiver, 0, _communicator);
+  // const_cast is needed because MPI_Send expects a void* as first argument.
+  char *cstr = const_cast<char*>(itemToSend.c_str()); 
+  preciceDebug ("Message: " + std::string(cstr));
+  MPI_Send(cstr, length+1, MPI_CHAR, rankReceiver, 0, _communicator);
 }
 
 void MPICommunication:: send
@@ -106,17 +105,17 @@ int MPICommunication:: receive
   preciceTrace2 ( "receive(string)", itemToReceive, rankSender );
   rankSender = rankSender - _rankOffset;
   int length;
-  MPI_Status status1;
+  MPI_Status status;
   rankSender = rankSender == ANY_SENDER ? MPI_ANY_SOURCE : rankSender;
-  MPI_Recv (&length, 1, MPI_INT, rankSender, 0, _communicator, &status1);
-  rankSender = status1.MPI_SOURCE;
-  preciceDebug ( "Stringlength = " << length );
-  char * cstringMessage = new char[length+1];
-  MPI_Status status2;
-  MPI_Recv (cstringMessage, length+1, MPI_CHAR, rankSender, 0,
-            _communicator, &status2);
-  itemToReceive = std::string (cstringMessage);
-  preciceDebug ( "Received \"" << itemToReceive << "\" from rank " << rankSender );
+  MPI_Probe(rankSender, 0, _communicator, &status);
+  MPI_Get_count(&status, MPI_CHAR, &length);
+  rankSender = status.MPI_SOURCE;
+  preciceDebug( "Stringlength = " << length );
+  char cstr[length];
+  MPI_Recv(cstr, length, MPI_CHAR, rankSender, 0,
+          _communicator, MPI_STATUS_IGNORE);
+  itemToReceive = std::string(cstr);
+  preciceDebug("Received \"" << itemToReceive << "\" from rank " << rankSender);
   return rankSender;
 }
 

@@ -236,7 +236,7 @@ void BaseCouplingScheme:: sendState
   communication->send(_isCouplingTimestepComplete, rankReceiver);
   communication->send(_hasDataBeenExchanged, rankReceiver);
   communication->send((int)_actions.size(), rankReceiver);
-  foreach(const std::string& action, _actions) {
+  for (const std::string& action : _actions) {
     communication->send(action, rankReceiver);
   }
   communication->send(_maxIterations, rankReceiver );
@@ -292,7 +292,7 @@ std::vector<int> BaseCouplingScheme:: sendData
   std::vector<int> sentDataIDs;
   assertion(m2n.get() != NULL);
   assertion(m2n->isConnected());
-  foreach (DataMap::value_type& pair, _sendData){
+  for (DataMap::value_type& pair : _sendData){
     int size = pair.second->values->size();
     m2n->send(tarch::la::raw(*(pair.second->values)), size,
               pair.second->mesh->getID(), pair.second->dimension);
@@ -311,7 +311,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
   assertion(m2n.get() != NULL);
   assertion(m2n->isConnected());
 
-  foreach(DataMap::value_type & pair, _receiveData){
+  for (DataMap::value_type & pair : _receiveData) {
     int size = pair.second->values->size ();
     m2n->receive(tarch::la::raw(*(pair.second->values)), size,
                  pair.second->mesh->getID(), pair.second->dimension);
@@ -383,7 +383,7 @@ void BaseCouplingScheme::extrapolateData(DataMap& data)
   preciceTrace1("extrapolateData()", _timesteps);
   if ((_extrapolationOrder == 1) || getTimesteps() == 2) { //timesteps is increased before extrapolate is called
     preciceInfo("extrapolateData()", "Performing first order extrapolation" );
-    foreach(DataMap::value_type & pair, data ){
+    for (DataMap::value_type & pair : data) {
       preciceDebug("Extrapolate data: " << pair.first);
       assertion(pair.second->oldValues.cols() > 1 );
       utils::DynVector & values = *pair.second->values;
@@ -395,7 +395,7 @@ void BaseCouplingScheme::extrapolateData(DataMap& data)
   }
   else if (_extrapolationOrder == 2 ) {
     preciceInfo("extrapolateData()", "Performing second order extrapolation" );
-    foreach(DataMap::value_type & pair, data ) {
+    for (DataMap::value_type & pair : data ) {
       assertion(pair.second->oldValues.cols() > 2 );
       utils::DynVector & values = *pair.second->values;
       utils::DynVector & valuesOld1 = pair.second->oldValues.column(1);
@@ -603,7 +603,7 @@ std::string BaseCouplingScheme:: printBasicState
 std::string BaseCouplingScheme:: printActionsState () const
 {
   std::ostringstream os;
-  foreach(const std::string & actionName, _actions) {
+  for (const std::string & actionName : _actions) {
     os << actionName << " | ";
   }
   return os.str ();
@@ -614,7 +614,7 @@ void BaseCouplingScheme:: checkCompletenessRequiredActions ()
   preciceTrace("checkCompletenessRequiredActions()");
   if(not _actions.empty()){
     std::ostringstream stream;
-    foreach(const std::string & action, _actions){
+    for (const std::string & action : _actions) {
       if (not stream.str().empty()){
 	stream << ", ";
       }
@@ -635,7 +635,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
   preciceTrace("setupDataMatrices()");
   preciceDebug("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.data != NULL);
     if (convMeasure.data->oldValues.cols() < 1){
       convMeasure.data->oldValues.append(CouplingData::DataMatrix(
@@ -644,7 +644,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
   }
   // Reserve storage for extrapolation of data values
   if (_extrapolationOrder > 0){
-    foreach (DataMap::value_type& pair, data){
+    for (DataMap::value_type& pair : data) {
       int cols = pair.second->oldValues.cols();
       preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
       assertion1(cols <= 1, cols);
@@ -670,7 +670,7 @@ void BaseCouplingScheme::setupConvergenceMeasures()
   preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
 	       "At least one convergence measure has to be defined for "
 	       << "an implicit coupling scheme!");
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.dataID;
     if ((getSendData(dataID) != NULL)){
       convMeasure.data = getSendData(dataID);
@@ -685,7 +685,7 @@ void BaseCouplingScheme::setupConvergenceMeasures()
 void BaseCouplingScheme::newConvergenceMeasurements()
 {
   preciceTrace("newConvergenceMeasurements()");
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures) {
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.measure.get() != NULL);
     convMeasure.measure->newMeasurementSeries();
   }
@@ -713,7 +713,7 @@ bool BaseCouplingScheme:: measureConvergence()
   bool allConverged = true;
   bool oneSuffices = false;
   assertion(_convergenceMeasures.size() > 0);
-  foreach(ConvergenceMeasure& convMeasure, _convergenceMeasures) {
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.data != NULL);
     assertion(convMeasure.measure.get() != NULL);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
@@ -764,10 +764,10 @@ void BaseCouplingScheme:: exportState(const std::string& filenamePrefix ) const
 {
   if (not doesFirstStep()) {
     io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
-    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()) {
+    for (const BaseCouplingScheme::DataMap::value_type& dataMap : getSendData()) {
       writer.write(dataMap.second->oldValues);
     }
-    foreach (const BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()) {
+    for (const BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
       writer.write(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != NULL) {
@@ -780,10 +780,10 @@ void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
 {
   if (not doesFirstStep()) {
     io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
-    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getSendData()) {
+    for (BaseCouplingScheme::DataMap::value_type& dataMap : getSendData()) {
       reader.read(dataMap.second->oldValues);
     }
-    foreach (BaseCouplingScheme::DataMap::value_type& dataMap, getReceiveData()) {
+    for (BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
       reader.read(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != NULL){

@@ -40,7 +40,8 @@ Mesh:: Mesh
   _manageQuadIDs(),
   _listeners(),
   _vertexDistribution(),
-  _globalNumberOfVertices(-1)
+  _globalNumberOfVertices(-1),
+  _boundingBox()
 {
   if (_managerPropertyIDs == NULL){
     _managerPropertyIDs = new utils::ManageUniqueIDs;
@@ -123,7 +124,7 @@ void Mesh:: addListener
 (
   Mesh::MeshListener& listener )
 {
-  foreach (const MeshListener* addedListener, _listeners){
+  for (const MeshListener* addedListener : _listeners) {
     if (& listener == addedListener){
       return;
     }
@@ -183,7 +184,7 @@ PtrData& Mesh:: createData
   int                dimension )
 {
   preciceTrace2("createData()", name, dimension);
-  foreach (PtrData data, _data){
+  for (const PtrData data : _data) {
     preciceCheck(data->getName() != name, "createData()",
                  "Data \"" << name << "\" cannot be created twice for "
                  << "mesh \"" << _name << "\"!");
@@ -203,8 +204,8 @@ const PtrData& Mesh:: data
 (
   int dataID ) const
 {
-   foreach (const PtrData& data, _data){
-      if (data->getID() == dataID){
+  for (const PtrData& data : _data) {
+      if (data->getID() == dataID) {
          return data;
       }
    }
@@ -219,7 +220,7 @@ PropertyContainer& Mesh:: getPropertyContainer
   preciceTrace1("getPropertyContainer()", subIDName);
   assertion(_nameIDPairs.count(subIDName) == 1);
   int id = _nameIDPairs[subIDName];
-  foreach (PropertyContainer& cont, _propertyContainers){
+  for (PropertyContainer& cont : _propertyContainers) {
     if (cont.getProperty<int>(cont.INDEX_GEOMETRY_ID) == id){
       return cont;
     }
@@ -287,7 +288,7 @@ int Mesh:: getID() const
 void Mesh:: allocateDataValues()
 {
   preciceTrace1("allocateDataValues()", _content.vertices().size());
-  foreach (PtrData data, _data){
+  for (PtrData data : _data) {
     int total = _content.vertices().size() * data->getDimensions();
     int leftToAllocate = total - data->values().size();
     if (leftToAllocate > 0){
@@ -323,7 +324,7 @@ void Mesh:: computeState()
   // Compute edge centers, enclosing radius, and (in 2D) edge normals
   DynVector center(_dimensions);
   DynVector distanceToCenter(_dimensions);
-  foreach (Edge& edge, _content.edges()){
+  for (Edge& edge : _content.edges()) {
     center = edge.vertex(0).getCoords();
     center += edge.vertex(1).getCoords();
     center *= 0.5;
@@ -357,7 +358,7 @@ void Mesh:: computeState()
 
   if (_dimensions == 3){
     // Compute triangle centers, radius, and normals
-    foreach (Triangle& triangle, _content.triangles()){
+    for (Triangle& triangle : _content.triangles()) {
       assertion2(not tarch::la::equals(triangle.vertex(0).getCoords(),
                  triangle.vertex(1).getCoords()), triangle.vertex(0).getCoords(),
                  triangle.getID());
@@ -422,7 +423,7 @@ void Mesh:: computeState()
     }
 
     // Compute quad centers, radius, and normals
-    foreach (Quad& quad, _content.quads()){
+    for (Quad& quad : _content.quads()) {
       assertion2(not tarch::la::equals(quad.vertex(0).getCoords(),
                  quad.vertex(1).getCoords()), quad.vertex(0).getCoords(),
                  quad.getID());
@@ -519,7 +520,7 @@ void Mesh:: computeState()
 
     // Normalize edge normals (only done in 3D)
     if (computeNormals){
-      foreach (Edge& edge, _content.edges()){
+      for (Edge& edge : _content.edges()) {
         double length = tarch::la::norm2(edge.getNormal());
         assertionMsg(tarch::la::greater(length,0.0),
           "Edge vertex coords: (" << edge.vertex(0).getCoords() << "), ("
@@ -531,17 +532,25 @@ void Mesh:: computeState()
     }
   }
 
-  // Normalize vertex normals
-  if (computeNormals){
-    foreach (Vertex& vertex, _content.vertices()){
-      double length = tarch::la::norm2(vertex.getNormal());
+  // Normalize vertex normals & compute bounding box
+  _boundingBox = BoundingBox (_dimensions,
+                              std::make_pair(std::numeric_limits<double>::max(),
+                                             std::numeric_limits<double>::lowest()));
 
+  for (Vertex& vertex : _content.vertices()) {
+    if (computeNormals) {
+      double length = tarch::la::norm2(vertex.getNormal());
       // i (benjamin) changed this since there can be cases where a node has no edge though
       // the mesh has edges in general, e.g. after filtering
       //assertion(tarch::la::greater(length,0.0));
       if(tarch::la::greater(length,0.0)){
         vertex.setNormal(vertex.getNormal() / length);
       }
+    }
+    
+    for (int d = 0; d < _dimensions; d++) {
+      _boundingBox[d].first  = std::min(vertex.getCoords()[d], _boundingBox[d].first);
+      _boundingBox[d].second = std::max(vertex.getCoords()[d], _boundingBox[d].second);
     }
   }
 }
@@ -560,7 +569,7 @@ void Mesh:: clear()
   _manageEdgeIDs.resetIDs();
   _manageVertexIDs.resetIDs();
 
-  foreach (mesh::PtrData data, _data){
+  for (mesh::PtrData data : _data) {
     data->values().clear();
   }
 }
@@ -568,7 +577,7 @@ void Mesh:: clear()
 void Mesh:: notifyListeners()
 {
   preciceTrace("notifyListeners()");
-  foreach (MeshListener* listener, _listeners){
+  for (MeshListener* listener : _listeners) {
     assertion(listener != NULL);
     listener->meshChanged(*this);
   }
@@ -584,7 +593,7 @@ void Mesh:: addMesh(
   std::map<int, Edge*> edgeMap;
 
   utils::DynVector coords(_dimensions);
-  foreach ( const Vertex& vertex, deltaMesh.vertices() ){
+  for ( const Vertex& vertex : deltaMesh.vertices() ){
     coords = vertex.getCoords();
     Vertex& v = createVertex (coords);
     assertion1 ( vertex.getID() >= 0, vertex.getID() );
@@ -594,7 +603,7 @@ void Mesh:: addMesh(
   // you cannot just take the vertices from the edge and add them,
   // since you need the vertices from the new mesh
   // (which may differ in IDs)
-  foreach ( Edge& edge, deltaMesh.edges() ){
+  for (const Edge& edge : deltaMesh.edges()) {
     int vertexIndex1 = edge.vertex(0).getID();
     int vertexIndex2 = edge.vertex(1).getID();
     assertion ( vertexMap.find(vertexIndex1) != vertexMap.end() );
@@ -604,7 +613,7 @@ void Mesh:: addMesh(
   }
 
   if(_dimensions==3){
-    foreach (Triangle& triangle, deltaMesh.triangles() ){
+    for (const Triangle& triangle : deltaMesh.triangles() ) {
       int edgeIndex1 = triangle.edge(0).getID();
       int edgeIndex2 = triangle.edge(1).getID();
       int edgeIndex3 = triangle.edge(2).getID();
@@ -614,6 +623,20 @@ void Mesh:: addMesh(
       createTriangle(*edgeMap[edgeIndex1],*edgeMap[edgeIndex2],*edgeMap[edgeIndex3]);
     }
   }
+}
+
+const Mesh::BoundingBox Mesh::getBoundingBox() const
+{
+  return _boundingBox;
+}
+
+const std::vector<double> Mesh::getCOG() const
+{
+  std::vector<double> cog(_dimensions);
+  for (int d = 0; d < _dimensions; d++) {
+    cog[d] = (_boundingBox[d].second - _boundingBox[d].first) / 2.0 + _boundingBox[d].first;
+  }
+  return cog;
 }
 
 }} // namespace precice, mesh

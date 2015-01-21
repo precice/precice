@@ -10,13 +10,15 @@ tarch::logging::Log Mapping:: _log ( "precice::mapping::Mapping" );
 
 Mapping:: Mapping
 (
-  Constraint      constraint )
+  Constraint      constraint,
+  int             dimensions)
 :
   _constraint(constraint),
   _inputRequirement(UNDEFINED),
   _outputRequirement(UNDEFINED),
   _input(),
-  _output()
+  _output(),
+  _dimensions(dimensions)
 {}
 
 void Mapping:: setMeshes
@@ -26,6 +28,14 @@ void Mapping:: setMeshes
 {
   _input = input;
   _output = output;
+}
+
+const mesh::PtrMesh& Mapping:: getInputMesh(){
+  return _input;
+}
+
+const mesh::PtrMesh& Mapping:: getOutputMesh(){
+  return _output;
 }
 
 Mapping::Constraint Mapping:: getConstraint() const
@@ -67,10 +77,14 @@ void Mapping:: setOutputRequirement
   _outputRequirement = requirement;
 }
 
-bool Mapping::doesVertexContribute(
+bool Mapping:: doesVertexContribute(
   int vertexID)
 {
   return true;
+}
+
+int Mapping:: getDimensions(){
+  return _dimensions;
 }
 
 }} // namespace precice, mapping

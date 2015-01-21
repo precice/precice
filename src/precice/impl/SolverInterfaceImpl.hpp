@@ -45,7 +45,7 @@ namespace impl {
 /**
  * @brief Implementation of solver interface.
  */
-class SolverInterfaceImpl : boost::noncopyable
+class SolverInterfaceImpl : private boost::noncopyable
 {
 public:
 

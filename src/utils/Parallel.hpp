@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_UTILS_HELPERSPARALLEL_HPP_
-#define PRECICE_UTILS_HELPERSPARALLEL_HPP_
+#pragma once
 
 #include "tarch/logging/Log.h"
 #include <vector>
@@ -13,41 +9,27 @@
 #include "mpi.h"
 
 #define PRECICE_MASTER_ONLY \
-   if ( precice::utils::Parallel::getProcessRank() == 0 )
+  if ( precice::utils::Parallel::getProcessRank() == 0 )
 #else
 #define PRECICE_MASTER_ONLY
 #endif // not PRECICE_NO_MPI
 
-
-//#ifndef PRECICE_NO_MPI
-
 namespace precice {
 namespace utils {
 
-/**
- * @brief Utility class for managing MPI operations.
- */
+/// Utility class for managing MPI operations.
 class Parallel
 {
 public:
 
-  #ifndef PRECICE_NO_MPI
+#ifndef PRECICE_NO_MPI
   typedef MPI_Comm Communicator;
-  #else
+#else
   typedef int Communicator;
-  #define MPI_COMM_NULL -1
-  #endif
+#define MPI_COMM_NULL -1
+#endif
 
-  /**
-   * @brief Used to sort and order all coupling participants.
-   */
-//  struct Accessor {
-//    std::string name;
-//    int groupID;
-//    int leaderRank;
-//    int groupSize;
-//  };
-
+  /// Used to sort and order all coupling participants.
   struct AccessorGroup {
     std::string name;
     int id;
@@ -57,19 +39,24 @@ public:
 
   static Communicator getCommunicatorWorld();
 
+  /**
+   * @brief Initializes the MPI environment.
+   *
+   * Splits and creates a local MPI communicator according to groupName
+   *
+   * @param[in] argc Parameter count
+   * @param[in] argc Parameter values, is passed to MPI_Init and PetscInitialize
+   * @param[in] groupName MPI group in which the calling process will be put in
+   */
   static void initialize (
     int*               argc,
     char***            argv,
     const std::string& groupName );
 
-  /**
-   * @brief Finalizes MPI environment.
-   */
+  /// Finalizes MPI environment.
   static void finalize();
 
-  /**
-   * @brief Returns the global process rank.
-   */
+  /// Returns the global process rank.
   static int getProcessRank();
 
   /**
@@ -79,14 +66,10 @@ public:
    */
   static int getLocalProcessRank();
 
-  /**
-   * @brief Returns the number of processes in the communicator.
-   */
+  /// Returns the number of processes in the communicator.
   static int getCommunicatorSize();
-
-  /**
-   * @brief Synchronizes all processes.
-   */
+  
+  /// Synchronizes all processes.
   static void synchronizeProcesses();
 
   /**
@@ -110,9 +93,7 @@ public:
    */
   static void setGlobalCommunicator ( Communicator defaultCommunicator );
 
-  /**
-   * @brief Returns the default communicator.
-   */
+  /// Returns the default communicator.
   static const Communicator& getGlobalCommunicator();
 
   /**
@@ -134,8 +115,6 @@ public:
    */
   static Communicator getRestrictedCommunicator ( const std::vector<int>& ranks );
 
-//  static void exchangeGroupInformation ( const std::string & groupName );
-
   static const std::vector<AccessorGroup>& getAccessorGroups();
 
 private:
@@ -146,9 +125,7 @@ private:
 
   static Communicator _localCommunicator;
 
-  //static bool _isLocalCommunicatorSet;
-
-  // @brief Processes participating in direct communication.
+  /// Processes participating in direct communication.
   static std::vector<AccessorGroup> _accessorGroups;
 
   static bool _isInitialized;
@@ -158,7 +135,3 @@ private:
 
 
 }} // namespace precice, utils
-
-//#endif // not PRECICE_NO_MPI
-
-#endif /* PRECICE_UTILS_HELPERSPARALLEL_HPP_ */

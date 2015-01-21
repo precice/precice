@@ -48,7 +48,10 @@ Participant:: Participant
 
 Participant:: ~Participant()
 {
-  _usedMeshContexts.deleteElements();
+  for(MeshContext* context : _usedMeshContexts){
+    delete context;
+  }
+  _usedMeshContexts.clear();
   _readDataContexts.deleteElements();
   _writeDataContexts.deleteElements();
   _readMappingContexts.deleteElements();
@@ -109,7 +112,9 @@ void Participant:: useMesh
 //  }
 
   _meshContexts[mesh->getID()] = context;
+
   _usedMeshContexts.push_back ( context );
+
   preciceCheck ( fromParticipant.empty() || (! provideMesh), "useMesh()",
                  "Participant " << _name << " cannot receive and provide mesh "
                  << mesh->getName() << " at the same time!" );
@@ -246,12 +251,12 @@ MeshContext& Participant:: meshContext
   return *_meshContexts[meshID];
 }
 
-const utils::ptr_vector<MeshContext>& Participant:: usedMeshContexts() const
+const std::vector<MeshContext*>& Participant:: usedMeshContexts() const
 {
   return _usedMeshContexts;
 }
 
-utils::ptr_vector<MeshContext>& Participant:: usedMeshContexts()
+std::vector<MeshContext*>& Participant:: usedMeshContexts()
 {
   return _usedMeshContexts;
 }

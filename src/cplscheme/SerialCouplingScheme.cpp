@@ -66,7 +66,7 @@ void SerialCouplingScheme::initialize
     requireAction(constants::actionWriteIterationCheckpoint());
   }
     
-  foreach (DataMap::value_type & pair, getSendData()){
+  for (DataMap::value_type & pair : getSendData()) {
     if (pair.second->initialize) {
       preciceCheck(not doesFirstStep(), "initialize()",
                    "Only second participant can initialize data!");
@@ -76,7 +76,7 @@ void SerialCouplingScheme::initialize
     }
   }
 
-  foreach (DataMap::value_type & pair, getReceiveData()){
+  for (DataMap::value_type & pair : getReceiveData()) {
     if (pair.second->initialize) {
       preciceCheck(doesFirstStep(), "initialize()",
                    "Only first participant can receive initial data!");
@@ -135,15 +135,13 @@ void SerialCouplingScheme::initializeData()
 
   if (hasToSendInitData() && isCouplingOngoing()) {
     assertion(not doesFirstStep());
-    if (getExtrapolationOrder() > 0) {
-      foreach (DataMap::value_type & pair, getSendData()) {
-        if (pair.second->oldValues.cols() == 0)
-          break;
-        utils::DynVector& oldValues = pair.second->oldValues.column(0);
-        oldValues = *pair.second->values;
-        // For extrapolation, treat the initial value as old timestep value
-        pair.second->oldValues.shiftSetFirst(*pair.second->values);
-      }
+    for (DataMap::value_type & pair : getSendData()) {
+      if (pair.second->oldValues.cols() == 0)
+        break;
+      utils::DynVector& oldValues = pair.second->oldValues.column(0);
+      oldValues = *pair.second->values;
+      // For extrapolation, treat the initial value as old timestep value
+      pair.second->oldValues.shiftSetFirst(*pair.second->values);
     }
     // The second participant sends the initialized data to the first particpant
     // here, which receives the data on call of initialize().
@@ -163,7 +161,7 @@ void SerialCouplingScheme::initializeData()
 void SerialCouplingScheme:: advance()
 {
   preciceTrace2("advance()", getTimesteps(), getTime());
-  foreach (DataMap::value_type & pair, getReceiveData()) {
+  for (DataMap::value_type & pair : getReceiveData()) {
     utils::DynVector& values = *pair.second->values;
     preciceDebug("Begin advance, New Values: " << values);
   }
@@ -239,12 +237,12 @@ void SerialCouplingScheme:: advance()
             extrapolateData(getSendData()); // Also stores data
           }
           else { // Store data for conv. measurement, post-processing, or extrapolation
-            foreach (DataMap::value_type& pair, getSendData()) {
+            for (DataMap::value_type& pair : getSendData()) {
               if (pair.second->oldValues.size() > 0){
                 pair.second->oldValues.column(0) = *pair.second->values;
               }
             }
-            foreach (DataMap::value_type& pair, getReceiveData()) {
+            for (DataMap::value_type& pair : getReceiveData()) {
               if (pair.second->oldValues.size() > 0){
                 pair.second->oldValues.column(0) = *pair.second->values;
               }

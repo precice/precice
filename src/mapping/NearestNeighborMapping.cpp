@@ -12,9 +12,10 @@ tarch::logging::Log NearestNeighborMapping::
 
 NearestNeighborMapping:: NearestNeighborMapping
 (
-  Constraint constraint )
+  Constraint constraint,
+  int        dimensions)
 :
-  Mapping(constraint),
+  Mapping(constraint, dimensions),
   _hasComputedMapping(false),
   _vertexIndices()
 {

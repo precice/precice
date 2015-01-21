@@ -65,8 +65,7 @@ public:
      //_norm = tarch::la::norm2(newValues);
      _normDiff = utils::MasterSlave::l2norm(newValues - oldValues);
      _norm = utils::MasterSlave::l2norm(newValues);
-     _isConvergence = tarch::la::greaterEquals (
-                      _norm * _convergenceLimitPercent, _normDiff );
+     _isConvergence = _normDiff <= _norm * _convergenceLimitPercent;
 //      preciceInfo ( "measure()", "Relative convergence measure: "
 //                    << "two-norm differences = " << normDiff
 //                    << ", convergence limit = "

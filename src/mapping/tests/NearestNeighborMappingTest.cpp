@@ -64,7 +64,7 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  NearestNeighborMapping mapping(Mapping::CONSISTENT);
+  NearestNeighborMapping mapping(Mapping::CONSISTENT, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   validateEquals(mapping.hasComputedMapping(), false);
 
@@ -147,7 +147,7 @@ void NearestNeighborMappingTest:: testConservativeNonIncremental()
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
-  NearestNeighborMapping mapping(Mapping::CONSERVATIVE);
+  NearestNeighborMapping mapping(Mapping::CONSERVATIVE, dimensions);
   mapping.setMeshes(inMesh, outMesh);
   validateEquals(mapping.hasComputedMapping(), false);
 

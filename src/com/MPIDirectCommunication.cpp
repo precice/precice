@@ -141,3 +141,4 @@ int MPIDirectCommunication:: getLeaderRank
 }} // close namespaces
 
 #endif // not PRECICE_NO_MPI
+

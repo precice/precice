@@ -64,16 +64,16 @@ void MultiCouplingScheme::initialize
   initializeTXTWriters();
 
 
-  foreach (DataMap& dataMap, _sendDataVector){
-    foreach (DataMap::value_type & pair, dataMap) {
+  for (DataMap& dataMap : _sendDataVector) {
+    for (DataMap::value_type & pair : dataMap) {
       if (pair.second->initialize) {
         setHasToSendInitData(true);
         break;
       }
     }
   }
-  foreach (DataMap& dataMap, _receiveDataVector){
-    foreach (DataMap::value_type & pair, dataMap) {
+  for (DataMap& dataMap : _receiveDataVector) {
+    for (DataMap::value_type & pair : dataMap) {
       if (pair.second->initialize) {
         setHasToReceiveInitData(true);
         break;
@@ -111,8 +111,8 @@ void MultiCouplingScheme::initializeData()
 
     // second participant has to save values for extrapolation
     if (getExtrapolationOrder() > 0){
-      foreach (DataMap& dataMap, _receiveDataVector){
-        foreach (DataMap::value_type & pair, dataMap){
+      for (DataMap& dataMap : _receiveDataVector) {
+        for (DataMap::value_type & pair : dataMap){
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
@@ -123,8 +123,8 @@ void MultiCouplingScheme::initializeData()
   }
   if (hasToSendInitData()) {
     if (getExtrapolationOrder() > 0) {
-      foreach (DataMap& dataMap, _sendDataVector){
-        foreach (DataMap::value_type & pair, dataMap) {
+      for (DataMap& dataMap : _sendDataVector) {
+        for (DataMap::value_type & pair : dataMap) {
           utils::DynVector& oldValues = pair.second->oldValues.column(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
@@ -174,7 +174,7 @@ void MultiCouplingScheme::advance()
       getPostProcessing()->performPostProcessing(_allData);
     }
 
-    foreach(m2n::PtrM2N m2n, _communications){
+    for (m2n::PtrM2N m2n : _communications) {
       m2n->send(convergence);
     }
 
@@ -183,7 +183,7 @@ void MultiCouplingScheme::advance()
         extrapolateData(_allData); // Also stores data
       }
       else { // Store data for conv. measurement, post-processing, or extrapolation
-        foreach (DataMap::value_type& pair, _allData) {
+        for (DataMap::value_type& pair : _allData) {
           if (pair.second->oldValues.size() > 0){
             pair.second->oldValues.column(0) = *pair.second->values;
           }
@@ -268,7 +268,7 @@ void MultiCouplingScheme:: sendData()
     assertion(_communications[i].get() != NULL);
     assertion(_communications[i]->isConnected());
 
-    foreach (DataMap::value_type& pair, _sendDataVector[i]){
+    for (DataMap::value_type& pair : _sendDataVector[i]) {
       int size = pair.second->values->size();
       if (size > 0) {
         _communications[i]->send(tarch::la::raw(*(pair.second->values)), size,
@@ -286,7 +286,7 @@ void MultiCouplingScheme:: receiveData()
     assertion(_communications[i].get() != NULL);
     assertion(_communications[i]->isConnected());
 
-    foreach (DataMap::value_type& pair, _receiveDataVector[i]){
+    for (DataMap::value_type& pair : _receiveDataVector[i]) {
       int size = pair.second->values->size();
       if (size > 0) {
         _communications[i]->receive(tarch::la::raw(*(pair.second->values)), size,
@@ -304,7 +304,7 @@ void MultiCouplingScheme::setupConvergenceMeasures()
   preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
          "At least one convergence measure has to be defined for "
          << "an implicit coupling scheme!");
-  foreach (ConvergenceMeasure& convMeasure, _convergenceMeasures){
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.dataID;
     convMeasure.data = getData(dataID);
     assertion(convMeasure.data != NULL);
