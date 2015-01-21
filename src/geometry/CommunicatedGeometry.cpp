@@ -110,6 +110,7 @@ void CommunicatedGeometry:: sendMesh(
         seed.getVertexDistribution()[0].push_back(numberOfVertices);
         numberOfVertices++;
       }
+      omp_set_dynamic(0);
 
 #pragma omp parallel for num_threads(utils::MasterSlave::_size-1)
       for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
