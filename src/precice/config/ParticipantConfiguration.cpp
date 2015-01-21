@@ -707,9 +707,9 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   // Create watch points
   foreach ( const WatchPointConfig & config, _watchPointConfigs ){
     mesh::PtrMesh mesh;
-    foreach ( const impl::MeshContext & context, participant->usedMeshContexts() ){
-      if ( context.mesh->getName() == config.nameMesh ){
-        mesh = context.mesh;
+    for ( const impl::MeshContext* context : participant->usedMeshContexts() ){
+      if ( context->mesh->getName() == config.nameMesh ){
+        mesh = context->mesh;
       }
     }
     preciceCheck ( mesh.use_count() > 0, "xmlEndTagCallback()",

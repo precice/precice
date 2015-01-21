@@ -147,8 +147,8 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
           if(participant->getName()==neededMeshes.first){
             foreach(const std::string& neededMesh ,neededMeshes.second){
               bool meshFound = false;
-              foreach(impl::MeshContext& meshContext , participant->usedMeshContexts()){
-                if(meshContext.mesh->getName()==neededMesh){
+              for (impl::MeshContext* meshContext : participant->usedMeshContexts()){
+                if(meshContext->mesh->getName()==neededMesh){
                   meshFound = true;
                   break;
                 }
