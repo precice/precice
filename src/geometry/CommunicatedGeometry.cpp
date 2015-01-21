@@ -13,6 +13,10 @@
 #include "mesh/SharedPointer.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/EventTimings.hpp"
+#include <omp.h>
+
+using precice::utils::Event;
 
 namespace precice {
 namespace geometry {
@@ -92,6 +96,7 @@ void CommunicatedGeometry:: sendMesh(
   //gather Mesh
   preciceInfo("sendMesh()", "Gather mesh " << seed.getName() );
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ){
+    Event e("gather mesh");
     if(utils::MasterSlave::_rank>0){ //slave
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( seed, 0 );
     }
@@ -126,6 +131,7 @@ void CommunicatedGeometry:: sendMesh(
 
   //send (global) Mesh
   preciceInfo("sendMesh()", "Send global mesh " << seed.getName() );
+  Event e("send global mesh");
   if(not utils::MasterSlave::_slaveMode){
     preciceCheck ( globalMesh.vertices().size() > 0,
                    "specializedCreate()", "Participant \"" << _accessorName
@@ -147,6 +153,7 @@ void CommunicatedGeometry:: receiveMesh(
 {
   preciceInfo("receiveMesh()", "Receive global mesh " << seed.getName() );
   if(not utils::MasterSlave::_slaveMode){
+    Event e("receive global mesh");
     assertion ( seed.vertices().size() == 0 );
     assertion ( utils::contained(_accessorName, _receivers) );
     m2n::PtrM2N m2n ( _receivers[_accessorName] );
@@ -167,7 +174,8 @@ void CommunicatedGeometry:: scatterMesh(
   using tarch::la::raw;
 
   // send bounding boxes from all slaves to master, then send according part of the global mesh back
-  preciceInfo("scatterMesh()", "Broadcast global mesh " << seed.getName() );
+  preciceInfo("scatterMesh()", "Scatter bounding-box-filtered meshes for " << seed.getName() );
+  Event e1("scatter bounding-box-filtered meshes");
   std::map<int,std::vector<int> > boundingVertexDistribution;
   if(utils::MasterSlave::_rank>0){ //slave
     mesh::Mesh::BoundingBox bb = mesh::Mesh::BoundingBox (_dimensions,
@@ -207,8 +215,10 @@ void CommunicatedGeometry:: scatterMesh(
     seed.addMesh(filteredMesh);
     preciceDebug("Master mesh after filtering, #vertices " << seed.vertices().size());
   }
+  e1.stop();
 
   preciceInfo("scatterMesh()", "Compute bounding mappings for mesh " << seed.getName() );
+  Event e2("compute bounding mappings and filter");
   seed.computeState();
   computeBoundingMappings();
 
@@ -218,10 +228,12 @@ void CommunicatedGeometry:: scatterMesh(
   seed.clear();
   seed.addMesh(filteredMesh);
   clearBoundingMappings();
+  e2.stop();
 
   int numberOfVertices = filteredVertexIDs.size();
 
   preciceInfo("scatterMesh()", "Gather vertex distribution for mesh " << seed.getName() );
+  Event e3("gather vertex distribution");
   if(utils::MasterSlave::_rank>0){ //slave
     utils::MasterSlave::_communication->send(numberOfVertices,0);
     if(numberOfVertices!=0){
