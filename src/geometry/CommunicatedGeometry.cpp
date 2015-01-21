@@ -193,6 +193,16 @@ void CommunicatedGeometry:: scatterMesh(
       boundingVertexDistribution[rankSlave] = filterMesh(slaveMesh, false);
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( slaveMesh, rankSlave );
     }
+    //now also filter the remaining master mesh
+    _bb = mesh::Mesh::BoundingBox (_dimensions,
+    std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
+    mergeBoundingBoxes(_bb);
+    for (int d=0; d<_dimensions; d++){
+      if(_safetyGap < _bb[d].second - _bb[d].first) _safetyGap = _bb[d].second - _bb[d].first;
+    }
+    _safetyGap *= 0.1;
+    boundingVertexDistribution[0] = filterMesh(seed, false);
+    preciceDebug("Master mesh after filtering, #vertices " << seed.vertices().size());
   }
 
   preciceInfo("scatterMesh()", "Compute bounding mappings for mesh " << seed.getName() );
