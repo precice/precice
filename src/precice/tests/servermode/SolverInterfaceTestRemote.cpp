@@ -133,8 +133,6 @@ void SolverInterfaceTestRemote:: testGeometryMode()
       while (coordIter != pointScen.queryCoords.end()){
         ClosestMesh closest = interface.inquireClosestMesh(raw(*coordIter), ids);
         for(int i=0; i<dim; i++) distanceVec[i] = closest.distanceVector()[i];
-        std::cout << "should be : " << *distVectorIter << ", is:" << distanceVec << std::endl;
-        std::cout << "should be: " << *distIter << ", is:" << closest.distance() << std::endl;
         //validate(equals(*distVectorIter, distanceVec));
         //validate(equals(*distIter, closest.distance()));
         coordIter++;

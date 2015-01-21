@@ -106,18 +106,18 @@ void CommunicatedGeometry:: sendMesh(
         numberOfVertices++;
       }
 
-      mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
-      mesh::Mesh& rSlaveMesh = slaveMesh;
-
+#pragma omp parallel for num_threads(utils::MasterSlave::_size-1)
       for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-        rSlaveMesh.clear();
+        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
+        mesh::Mesh& rSlaveMesh = slaveMesh;
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( rSlaveMesh, rankSlave);
-        utils::DynVector coord(_dimensions);
-        globalMesh.addMesh(rSlaveMesh); //add slave mesh to global mesh
-
-        for(int i = 0; i < rSlaveMesh.vertices().size(); i++){
-          seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
-          numberOfVertices++;
+#pragma omp critical
+        {
+          globalMesh.addMesh(rSlaveMesh); //add slave mesh to global mesh
+          for(int i = 0; i < rSlaveMesh.vertices().size(); i++){
+            seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
+            numberOfVertices++;
+          }
         }
       }
       seed.setGlobalNumberOfVertices(numberOfVertices);
