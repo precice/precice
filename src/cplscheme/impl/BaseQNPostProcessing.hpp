@@ -8,6 +8,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
 #include "tarch/la/DynamicColumnMatrix.h"
+#include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
 #include <deque>
 #include <fstream>
@@ -80,9 +81,9 @@ public:
     */
    virtual ~BaseQNPostProcessing() {
      
-      if ( _timingStream.is_open() ) {
-        _timingStream.close ();
-      }
+      //if ( _timingStream.is_open() ) {
+      //  _timingStream.close ();
+     // }
   }
 
    /**
@@ -131,11 +132,14 @@ public:
 
 protected:
   
-  std::ofstream _timingStream;
+  std::fstream _timingStream;
+  std::fstream _scalingStream;
 
    typedef tarch::la::DynamicVector<double> DataValues;
 
    typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
+
+   typedef tarch::la::DynamicMatrix<double> Matrix;
 
    // @brief Logging device.
    static tarch::logging::Log _log;

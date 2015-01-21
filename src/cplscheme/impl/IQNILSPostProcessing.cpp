@@ -272,7 +272,7 @@ void IQNILSPostProcessing::computeQNUpdate
       modifiedGramSchmidt(Vcopy, Q, R);
       
       time_QRDecomposition = clock() - time_QRDecomposition;
-      time_QRDecomposition /= CLOCKS_PER_SEC;
+      //time_QRDecomposition /= CLOCKS_PER_SEC;
       
       if (_matrixV.cols() > 1){
         for (int i=0; i < _matrixV.cols(); i++){
@@ -296,21 +296,21 @@ void IQNILSPostProcessing::computeQNUpdate
 	time_backSubstitution = clock();
         backSubstitution(R, b, c);
 	time_backSubstitution = clock() - time_backSubstitution;
-	time_backSubstitution /= CLOCKS_PER_SEC;
+	//time_backSubstitution /= CLOCKS_PER_SEC;
 	
         multiply(_matrixW, c, xUpdate); // = Wc
 	
 	time_multiply = clock() - time_multiply;
-	time_multiply /= CLOCKS_PER_SEC;
+	//time_multiply /= CLOCKS_PER_SEC;
 	time_multiply -= time_backSubstitution;
 	
         preciceDebug("c = " << c);
       }
     }
-    _timingStream <<"  iqn::info: V.size=("<<_matrixV.rows()<<","<<_matrixV.cols()<<")\n";
-    _timingStream <<"  iqn: time for QR decomposition:  "<<time_QRDecomposition<<"\n";
-    _timingStream <<"  iqn: time for 2 matrix vector multiplications:  "<<time_multiply<<"\n";
-    _timingStream <<"  iqn: time for back substitution: "<<time_backSubstitution<<"\n";
+    _timingStream <<"  iqn::info: V.size=("<<_matrixV.rows()<<","<<_matrixV.cols()<<")\n"<<std::flush;
+    _timingStream <<"  iqn: time for QR decomposition:  "<<time_QRDecomposition<<"\n"<<std::flush;
+    _timingStream <<"  iqn: time for 2 matrix vector multiplications:  "<<time_multiply<<"\n"<<std::flush;
+    _timingStream <<"  iqn: time for back substitution: "<<time_backSubstitution<<"\n"<<std::flush;
     
     // Perform QN relaxation for secondary data
     foreach (int id, _secondaryDataIDs){

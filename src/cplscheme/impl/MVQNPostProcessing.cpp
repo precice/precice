@@ -44,6 +44,7 @@ MVQNPostProcessing:: MVQNPostProcessing
   _oldInvJacobian(),
   k(0),
   t(0)
+//  _matrixWriter("jacobain.m")
 {}
 
 
@@ -58,8 +59,10 @@ void MVQNPostProcessing:: initialize
   double init = 0.0;
   size_t entries= _residuals.size();
   
-  _invJacobian.append(DataMatrix(entries, entries, init));
-  _oldInvJacobian.append(DataMatrix(entries, entries, init));
+  _invJacobian = Matrix(entries, entries, init);
+  _oldInvJacobian = Matrix(entries, entries, init);
+  //_invJacobian.append(DataMatrix(entries, entries, init));
+  //_oldInvJacobian.append(DataMatrix(entries, entries, init));
  
   
   // ----------- DEBUG ------------------
@@ -252,7 +255,7 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   double time_multiply = 0;
   double time_backSubstitution_one = 0.;
   double time_backSubstitution_all = 0.;
-  
+  double time_m1 = 0., time_m2 = 0., time_m3 = 0., time_m4 = 0., time_m5 = 0.;
   
   DataMatrix v;
   bool linearDependence = true;
@@ -265,10 +268,13 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
     DataMatrix Vcopy(_matrixV);
     DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
     DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
+   
+    preciceDebug(" ++  before QR Decomposition");
     modifiedGramSchmidt(Vcopy, Q, R);
+    preciceDebug(" ++  after QR Decomposition");
     
     time_QRDecomposition = clock() - time_QRDecomposition;
-    time_QRDecomposition /= CLOCKS_PER_SEC;
+    //time_QRDecomposition /= CLOCKS_PER_SEC;
     
     if (_matrixV.cols() > 1){
       for (int i=0; i < _matrixV.cols(); i++){
@@ -293,13 +299,13 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
 	time_backSubstitution_one = clock();
 	backSubstitution(R, _matrixQRow, ytmpVec);
 	time_backSubstitution_one = clock() -time_backSubstitution_one;
-	time_backSubstitution_one /= CLOCKS_PER_SEC;
+	//time_backSubstitution_one /= CLOCKS_PER_SEC;
 	
 	v.append(ytmpVec);  
       _matrixQRow.clear();
       }
       time_backSubstitution_all = clock() - time_backSubstitution_all;
-      time_backSubstitution_all /= CLOCKS_PER_SEC;
+      //time_backSubstitution_all /= CLOCKS_PER_SEC;
     }
   }
   
@@ -313,15 +319,22 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   
   
   time_multiply = clock();
-  
+  time_m1 = time_multiply;
+
   // tmpMatrix = J_inv_n*V
-  DataMatrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
+  Matrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
   assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
   multiply(_oldInvJacobian, _matrixV, tmpMatrix);
+  
+  time_m1 = clock() - time_m1;
+  time_m2 = clock();
+
   // tmpMatrix = (W-J_inv_n*V)
   tmpMatrix *= -1.;
-  tmpMatrix = _matrixW + tmpMatrix;
+  tmpMatrix = tmpMatrix + _matrixW;
   
+  time_m2 = clock() - time_m2;
+
   //----------------------------DEBUG------------------------------------
   
 // //   std::string tmpMatrixFile("output/W-JV"+st.str()+"_"+sk.str()+".m");
@@ -331,8 +344,13 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   
   // invJacobian = (W - J_inv_n*V)*(V^T*V)^-1*V^T
   assertion2(tmpMatrix.cols() == v.rows(), tmpMatrix.cols(), v.rows());
+  
+  time_m3 = clock();
   multiply(tmpMatrix, v, _invJacobian);
+  time_m3 = clock() - time_m3;
+  time_m4 = clock();
   _invJacobian = _invJacobian + _oldInvJacobian;
+  time_m4 = clock() - time_m4;
   
   // ---- DEBUG --------------------------
 // //   // compute frobenius norm of difference between Jacobian matrix from current
@@ -347,19 +365,29 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   // -------------------------------------
   
   DataValues negRes(_residuals);
+
+  time_m5 = clock();
   negRes *= -1.;
   
   // solve delta_x = - J_inv*residuals
   multiply(_invJacobian, negRes, xUpdate); 
   
+  time_m5 = clock() - time_m5;
+
   time_multiply = clock() -time_multiply;
-  time_multiply /= CLOCKS_PER_SEC;
+  //time_multiply /= CLOCKS_PER_SEC;
   
-  _timingStream <<"  mvqn::info: V.size=("<<_matrixV.rows()<<","<<_matrixV.cols()<<")   Jacobian.size=("<<_invJacobian.rows()<<","<<_invJacobian.cols()<<")\n";
-  _timingStream <<"  mvqn: time for QR decomposition:  "<<time_QRDecomposition<<"\n";
-  _timingStream <<"  mvqn: time for 2 matrix matrix multiplications + 2 matrix matrix additions + 1 matrix vector multiplication:  "<<time_multiply<<"\n";
-  _timingStream <<"  mvqn: time for one single back substitution: "<<time_backSubstitution_one<<"\n";
-  _timingStream <<"  mvqn: time for V.rows()-times back substitution: "<<time_backSubstitution_all<<"\n";
+  _timingStream <<"  mvqn::info: V.size=("<<_matrixV.rows()<<","<<_matrixV.cols()<<")   Jacobian.size=("<<_invJacobian.rows()<<","<<_invJacobian.cols()<<")\n"<<std::flush;
+  _timingStream <<"  mvqn: time for QR decomposition:  "<<time_QRDecomposition<<"\n"<<std::flush;
+  _timingStream <<"  mvqn: time for 2 matrix matrix multiplications + 2 matrix matrix additions + 1 matrix vector multiplication:  "<<time_multiply<<" = "<<time_multiply/CLOCKS_PER_SEC<<" sec\n"<<std::flush;
+  _timingStream <<"        matrix Op: J_inv * V: "<<time_m1<<"					["<<(int)(time_m1/time_multiply*100.)<<"%]\n"<<std::flush;
+  _timingStream <<"        matrix Op: tmp - W: "<<time_m2<<"                                    ["<<(int)(time_m2/time_multiply*100.)<<"%]\n"<<std::flush;
+  _timingStream <<"         info: v.size=("<<v.rows()<<","<<v.cols()<<")\n"<<std::flush;
+  _timingStream <<"        matrix Op: (W - J_inv_n*V) * (V^T*V)^-1*V^T: "<<time_m3<<"           ["<<(int)(time_m3/time_multiply*100.)<<"%]\n"<<std::flush;
+  _timingStream <<"        matrix Op: J_inv_old + J_inv_update: "<<time_m4<<"                   ["<<(int)(time_m4/time_multiply*100.)<<"%]\n"<<std::flush;
+  _timingStream <<"        matrix Op: J_inv*residuals: "<<time_m5<<"                  		["<<(int)(time_m5/time_multiply*100.)<<"%]\n"<<std::flush;
+  _timingStream <<"  mvqn: time for one single back substitution: "<<time_backSubstitution_one<<"\n"<<std::flush;
+  _timingStream <<"  mvqn: time for V.rows()-times back substitution: "<<time_backSubstitution_all<<"\n"<<std::flush;
 
 }
 
@@ -502,10 +530,19 @@ void MVQNPostProcessing:: specializedIterationsConverged
 //   f<<t<<"  "<<frob<<"\n";
 //   if(t >= 100) f.close();
 //   // -------------------------------------
+
+   //----------------------------DEBUG------------------------------------
+//   std::stringstream sk; sk <<k;
+//   std::stringstream st; st <<t;
+//   std::string jfile("j_"+st.str()+".m");
+//   _invJacobian.printm(jfile.c_str());
+  
+  // --------------------------------------------------------------------
   
   k = 0;
   t++;
   // store inverse Jacobian
+//  _matrixWriter.write(_invJacobian);
   _oldInvJacobian = _invJacobian;
 }
 

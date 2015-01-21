@@ -8,7 +8,9 @@
 #include "mesh/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
 #include "tarch/la/DynamicColumnMatrix.h"
+#include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
+#include "io/TXTWriter.hpp"
 #include <deque>
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -77,13 +79,14 @@ private:
    // ---------------------------------------
    int k,t;
    std::fstream f;
+//   io::TXTWriter _matrixWriter;
    //----------------------------------------
    
    // @brief stores the approximation of the inverse Jacobian of the system at current time step.
-   DataMatrix _invJacobian;
+   Matrix _invJacobian;
 
    // @brief stores the approximation of the inverse Jacobian from the previous time step.
-   DataMatrix _oldInvJacobian;
+   Matrix _oldInvJacobian;
 
   // @brief comptes the MVQN update using QR decomposition of V, 
   //        furthermore it updates the inverse of the system jacobian

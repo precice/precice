@@ -60,6 +60,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _matrixColsBackup(),
   //_secondaryMatricesW(),
   _timingStream(),
+  _scalingStream(),
   _matrixCols()
 {
    preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
@@ -78,11 +79,12 @@ BaseQNPostProcessing:: BaseQNPostProcessing
                 << tarch::la::NUMERICAL_ZERO_DIFFERENCE << ")!");
    
    
-  _timingStream.open ("timing.txt");
-  _timingStream.setf ( std::ios::showpoint );
-  _timingStream.setf ( std::ios::fixed );
+  _timingStream.open ("timing.txt", std::ios_base::out);
+  _scalingStream.open("scaling_l2Norms_ratio.txt", std::ios_base::out);
+  _scalingStream << std::setprecision(16);
   _timingStream << std::setprecision(16);
-  _timingStream << "        Time Measurements \n -------------------------------------------------------- \n\n";
+  _timingStream << "        Time Measurements \n -------------------------------------------------------- \n\n"<<std::flush;
+  _scalingStream << "       l2Norms of Data and with Ratio \n ------------------------------------------------\n\n"<<std::flush;
 }
 
 
@@ -171,10 +173,13 @@ void BaseQNPostProcessing:: scaling
     offset += size;
     
     // debug:
-    if (id == 0) oldl2norm = sqrt(l2norm);
+    if (id == _dataIDs[0]) oldl2norm = sqrt(l2norm);
     preciceDebug(" + l2-Norm = " << sqrt(l2norm) << " of id: " << id);
+    _scalingStream<<"\n"<<factor<<"	l2Norm: "<<sqrt(l2norm)<<"    of id: "<<id<<std::flush;
   } 
   // debug:
+  _scalingStream<<"\n  ratio: "<<(double)oldl2norm/sqrt(l2norm)<<"\n"<<std::flush;
+  _scalingStream<<"-------------------\n"<<std::flush;
   preciceDebug(" + l2-Norm ratio = "<< oldl2norm/sqrt(l2norm));
 }
 
@@ -322,7 +327,7 @@ void BaseQNPostProcessing:: performPostProcessing
   updateDifferenceMatrices(cplData);
   
   time_scaleUpdateVW = clock() - time_scaleUpdateVW;
-  time_scaleUpdateVW /= CLOCKS_PER_SEC; 
+  //time_scaleUpdateVW /= CLOCKS_PER_SEC; 
   
 //   int offset = 0;
 //   foreach (int id, _dataIDs){
@@ -422,7 +427,7 @@ void BaseQNPostProcessing:: performPostProcessing
     computeQNUpdate(cplData, xUpdate);
     
     time_QNStep = clock() - time_QNStep;
-    time_QNStep /= CLOCKS_PER_SEC;
+    //time_QNStep /= CLOCKS_PER_SEC;
   
     /** 
      * apply quasiNewton update
@@ -458,7 +463,7 @@ void BaseQNPostProcessing:: performPostProcessing
     }
     
     time_norelaxAux = clock() - time_norelaxAux;
-    time_norelaxAux /= CLOCKS_PER_SEC;
+    //time_norelaxAux /= CLOCKS_PER_SEC;
     time_norelaxAux -= time_QNStep;
 
   }
@@ -469,18 +474,24 @@ void BaseQNPostProcessing:: performPostProcessing
   undoScaling(cplData);
   
   time_scaleUpdateVW_tmp = clock() - time_scaleUpdateVW_tmp;
-  time_scaleUpdateVW_tmp /= CLOCKS_PER_SEC;
+  //time_scaleUpdateVW_tmp /= CLOCKS_PER_SEC;
   time_scaleUpdateVW += time_scaleUpdateVW_tmp;
   
   time_pPP = clock() - time_pPP;
-  time_pPP /= CLOCKS_PER_SEC;
+  //time_pPP /= CLOCKS_PER_SEC;
   
-  _timingStream << "\n";
-  _timingStream << " time for scaling and update ov V, W matrices: "<<time_scaleUpdateVW<<"\n";
-  _timingStream << " time for norelax auxiliaries: "<<time_norelaxAux<<"\n";
-  _timingStream << " time for QN update: "<<time_QNStep<<"\n";
-  _timingStream << " time for perform post processing (accumulated): "<<time_pPP<<"\n";
-  _timingStream << "----------------------------\n";
+
+   preciceDebug("\n time for scaling and update ov V, W matrices: "<<time_scaleUpdateVW);
+   preciceDebug(" time for norelax auxiliaries: "<<time_norelaxAux);
+   preciceDebug(" time for QN update: "<<time_QNStep);
+   preciceDebug(" time for perform post processing (accumulated): "<<time_pPP);
+   preciceDebug("----------------------------\n");
+  _timingStream << "\n"<<std::flush;
+  _timingStream << " time for scaling and update ov V, W matrices: "<<time_scaleUpdateVW<<"\n"<<std::flush;
+  _timingStream << " time for norelax auxiliaries: "<<time_norelaxAux<<"\n"<<std::flush;
+  _timingStream << " time for QN update: "<<time_QNStep<<"\n"<<std::flush;
+  _timingStream << " time for perform post processing (accumulated): "<<time_pPP<<"\n"<<std::flush;
+  _timingStream << "----------------------------\n"<<std::flush;
   
   _firstIteration = false;
 }
