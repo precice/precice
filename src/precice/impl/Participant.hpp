@@ -109,9 +109,9 @@ public:
 
   MeshContext& meshContext ( int meshID );
 
-  const utils::ptr_vector<MeshContext>& usedMeshContexts() const;
+  const std::vector<MeshContext*>& usedMeshContexts() const;
 
-  utils::ptr_vector<MeshContext>& usedMeshContexts();
+  std::vector<MeshContext*>& usedMeshContexts();
 
   void addReadMappingContext(MappingContext* mappingContext);
 
@@ -212,7 +212,7 @@ private:
   utils::ptr_vector<MappingContext> _writeMappingContexts;
 
   // @brief Mesh contexts used by the participant.
-  utils::ptr_vector<MeshContext> _usedMeshContexts;
+  std::vector<MeshContext*> _usedMeshContexts;
 
   std::vector<DataContext*> _dataContexts;
 

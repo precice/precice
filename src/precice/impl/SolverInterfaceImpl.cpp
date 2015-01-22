@@ -52,6 +52,7 @@
 #include <set>
 #include <limits>
 #include <cstring>
+#include <algorithm>
 #include "utils/EventTimings.hpp"
 #include "boost/tuple/tuple.hpp"
 
@@ -226,8 +227,8 @@ void SolverInterfaceImpl:: configure
   }
 
   // Add meshIDs, data IDs, and spacetrees
-  for (MeshContext& meshContext : _accessor->usedMeshContexts()) {
-    const mesh::PtrMesh& mesh = meshContext.mesh;
+  for (MeshContext* meshContext : _accessor->usedMeshContexts()) {
+    const mesh::PtrMesh& mesh = meshContext->mesh;
     for (std::pair<std::string,int> nameID : mesh->getNameIDPairs()) {
       assertion(not utils::contained(nameID.first, _meshIDs));
       _meshIDs[nameID.first] = nameID.second;
@@ -244,7 +245,7 @@ void SolverInterfaceImpl:: configure
     spacetree::PtrSpacetreeConfiguration spacetreeConfig = config.getSpacetreeConfiguration();
     if (meshConfig->doesMeshUseSpacetree(meshName)){
       std::string spacetreeName = meshConfig->getSpacetreeName(meshName);
-      meshContext.spacetree = spacetreeConfig->getSpacetree(spacetreeName);
+      meshContext->spacetree = spacetreeConfig->getSpacetree(spacetreeName);
     }
   }
 
@@ -303,8 +304,23 @@ double SolverInterfaceImpl:: initialize()
     }
 
     preciceDebug("Perform initializations");
-    for (MeshContext& meshContext : _accessor->usedMeshContexts()){
-      createMeshContext(meshContext);
+
+    // sort MeshContexts, provided needs to come first, and all communicated meshes must have the same order
+    // on all participants
+    std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+        []( MeshContext* lhs, const MeshContext* rhs) -> bool
+        {
+          if(lhs->provideMesh && not rhs->provideMesh){
+            return true;
+          }
+          if(not lhs->provideMesh && rhs->provideMesh){
+            return false;
+          }
+          return lhs->mesh->getName() > rhs->mesh->getName();
+        } );
+
+    for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+      createMeshContext(*meshContext);
     }
 
     std::set<action::Action::Timing> timings;
@@ -572,8 +588,8 @@ std::set<int> SolverInterfaceImpl:: getMeshIDs()
 {
   preciceTrace ( "getMeshIDs()" );
   std::set<int> ids;
-  for (const impl::MeshContext& context : _accessor->usedMeshContexts()) {
-    ids.insert ( context.mesh->getID() );
+  for (const impl::MeshContext* context : _accessor->usedMeshContexts()) {
+    ids.insert ( context->mesh->getID() );
   }
   return ids;
 }
@@ -618,20 +634,20 @@ int SolverInterfaceImpl:: inquirePosition
     std::vector<int> markedContexts(_accessor->usedMeshContexts().size());
     selectInquiryMeshIDs(meshIDs, markedContexts);
     for (int i=0; i < (int)markedContexts.size(); i++){
-      MeshContext& meshContext = _accessor->usedMeshContexts()[i];
+      MeshContext* meshContext = _accessor->usedMeshContexts()[i];
       if (markedContexts[i] == markedSkip()){
-        preciceDebug("Skipping mesh " << meshContext.mesh->getName());
+        preciceDebug("Skipping mesh " << meshContext->mesh->getName());
         continue;
       }
       int tempPos = -1;
       if (markedContexts[i] == markedQuerySpacetree()){
-        assertion(meshContext.spacetree.use_count() > 0);
-        tempPos = meshContext.spacetree->searchPosition(searchPoint);
+        assertion(meshContext->spacetree.use_count() > 0);
+        tempPos = meshContext->spacetree->searchPosition(searchPoint);
       }
       else {
         assertion1(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
         query::FindClosest findClosest(searchPoint);
-        findClosest(*(meshContext.mesh));
+        findClosest(*(meshContext->mesh));
         assertion(findClosest.hasFound());
         tempPos = positionOnGeometry();
         if (tarch::la::greater(findClosest.getClosest().distance, 0.0)){
@@ -680,19 +696,19 @@ ClosestMesh SolverInterfaceImpl:: inquireClosestMesh
     closestMesh.setPosition(positionOutsideOfGeometry());
     //foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
     for (int i=0; i < (int)markedContexts.size(); i++){
-      MeshContext& meshContext = _accessor->usedMeshContexts()[i];
+      MeshContext* meshContext = _accessor->usedMeshContexts()[i];
       if (markedContexts[i] == markedSkip()){
-        preciceDebug("Skipping mesh " << meshContext.mesh->getName());
+        preciceDebug("Skipping mesh " << meshContext->mesh->getName());
         continue;
       }
       query::FindClosest findClosest(searchPoint);
       if (markedContexts[i] == markedQuerySpacetree()){
-        assertion(meshContext.spacetree.get() != NULL);
-        meshContext.spacetree->searchDistance(findClosest);
+        assertion(meshContext->spacetree.get() != NULL);
+        meshContext->spacetree->searchDistance(findClosest);
       }
       else {
         assertion1(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
-        findClosest(*(meshContext.mesh));
+        findClosest(*(meshContext->mesh));
       }
       assertion(findClosest.hasFound());
       const query::ClosestElement& element = findClosest.getClosest();
@@ -770,22 +786,22 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
   selectInquiryMeshIDs(meshIDs, markedContexts);
     //foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
   for (int i=0; i < (int)markedContexts.size(); i++){
-    MeshContext& meshContext = _accessor->usedMeshContexts()[i];
+    MeshContext* meshContext = _accessor->usedMeshContexts()[i];
     if (markedContexts[i] == markedSkip()){
-      preciceDebug("Skipping mesh " << meshContext.mesh->getName());
+      preciceDebug("Skipping mesh " << meshContext->mesh->getName());
       continue;
     }
-    preciceDebug("Query mesh \"" << meshContext.mesh->getName() << "\" with "
-                 << meshContext.mesh->vertices().size() << " vertices");
+    preciceDebug("Query mesh \"" << meshContext->mesh->getName() << "\" with "
+                 << meshContext->mesh->vertices().size() << " vertices");
     int oldPos = pos;
     query::FindVoxelContent findVoxel(center, halflengths, boundaryInclude);
     if (markedContexts[i] == markedQuerySpacetree()){
-      assertion(meshContext.spacetree.get() != NULL);
+      assertion(meshContext->spacetree.get() != NULL);
       preciceDebug("Use spacetree for query");
       // Query first including voxel boundaries. This enables to directly
       // use cached information of spacetree cells, that do also include
       // objects on boundaries.
-      pos = meshContext.spacetree->searchContent(findVoxel);
+      pos = meshContext->spacetree->searchContent(findVoxel);
 
       // MERGING DISABLED!!!! CONTENT MIGHT CONTAIN DUPLICATED ELEMENTS
 //      if (not findVoxel.content().empty()){
@@ -812,7 +828,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
       preciceDebug("Query mesh directly");
       assertion1(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
       //query::FindVoxelContent findVoxel(center, halflengths, boundaryInclude);
-      findVoxel(*meshContext.mesh);
+      findVoxel(*meshContext->mesh);
       // If the voxel does have content
       if (not findVoxel.content().empty()){
         pos = positionOnGeometry();
@@ -822,7 +838,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
       else if (oldPos != positionInsideOfGeometry()){
         //preciceDebug("Query found no objects and oldpos isnt't inside");
         query::FindClosest findClosest(center);
-        findClosest(*(meshContext.mesh));
+        findClosest(*(meshContext->mesh));
         assertion(findClosest.hasFound());
         const query::ClosestElement& closest = findClosest.getClosest();
         pos = closest.distance > 0 ? positionOutsideOfGeometry()
@@ -1391,7 +1407,7 @@ void SolverInterfaceImpl:: mapReadDataTo
 (
   int toMeshID )
 {
-  preciceTrace1 ("mapReadDataFrom(int)", toMeshID);
+  preciceTrace1 ("mapReadDataTo(int)", toMeshID);
   if (_clientMode){
     _requestManager->requestMapReadDataTo(toMeshID);
     return;
@@ -1413,7 +1429,7 @@ void SolverInterfaceImpl:: mapReadDataTo
       int outDataID = context.toData->getID();
       assign(context.toData->values()) = 0.0;
       preciceDebug("Map data \"" << context.fromData->getName()
-                   << "\" from mesh \"" << context.mesh->getName() << "\"");
+                   << "\" to mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
@@ -1763,21 +1779,21 @@ void SolverInterfaceImpl:: exportMesh
     bool exportAll = exportType == constants::exportAll();
     bool exportThis = context.exporter->getType() == exportType;
     if ( exportAll || exportThis ){
-      for (MeshContext& meshContext : _accessor->usedMeshContexts()) {
-        std::string name = meshContext.mesh->getName() + "-" + filenameSuffix;
+      for (MeshContext* meshContext : _accessor->usedMeshContexts()) {
+        std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
         std::string filename = context.location + name;
         preciceDebug ( "Exporting mesh to file \"" << filename << "\"" );
-        context.exporter->doExport ( filename, *meshContext.mesh );
+        context.exporter->doExport ( filename, *(meshContext->mesh) );
       }
     }
     // Export spacetrees
     if (context.exportSpacetree){
-      for ( MeshContext& meshContext : _accessor->usedMeshContexts()) {
-        std::string name = meshContext.mesh->getName() + "-" + filenameSuffix;
+      for ( MeshContext* meshContext : _accessor->usedMeshContexts()) {
+        std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
         std::string filename = context.location + name + ".spacetree";
-        if ( meshContext.spacetree.get() != NULL ) {
+        if ( meshContext->spacetree.get() != NULL ) {
           spacetree::ExportSpacetree exportSpacetree(filename);
-          exportSpacetree.doExport ( *meshContext.spacetree );
+          exportSpacetree.doExport ( *(meshContext->spacetree) );
         }
       }
     }
@@ -1795,9 +1811,9 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
 {
   preciceTrace1("getMeshHandle()", meshName);
   assertion(not _clientMode);
-  for (MeshContext & context : _accessor->usedMeshContexts()){
-    if (context.mesh->getName() == meshName){
-      return MeshHandle(context.mesh->content());
+  for (MeshContext* context : _accessor->usedMeshContexts()){
+    if (context->mesh->getName() == meshName){
+      return MeshHandle(context->mesh->content());
     }
   }
   preciceError("getMeshHandle()", "Participant \"" << _accessorName
@@ -1850,22 +1866,22 @@ void SolverInterfaceImpl:: configureSolverGeometries
   const com::PtrCommunicationConfiguration& comConfig )
 {
   preciceTrace ( "configureSolverGeometries()" );
-  for (MeshContext& context : _accessor->usedMeshContexts()) {
-    if ( context.provideMesh ) { // Accessor provides geometry
-      preciceCheck ( context.receiveMeshFrom.empty(), "configureSolverGeometries()",
+  for (MeshContext* context : _accessor->usedMeshContexts()) {
+    if ( context->provideMesh ) { // Accessor provides geometry
+      preciceCheck ( context->receiveMeshFrom.empty(), "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot provide "
-                     << "and receive mesh " << context.mesh->getName() << "!" );
-      preciceCheck ( context.geometry.use_count() == 0, "configureSolverGeometries()",
+                     << "and receive mesh " << context->mesh->getName() << "!" );
+      preciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",
                            "Participant \"" << _accessorName << "\" cannot provide "
-                           << "the geometry of mesh \"" << context.mesh->getName()
+                           << "the geometry of mesh \"" << context->mesh->getName()
                            << " in addition to a defined geometry!" );
 
       bool addedReceiver = false;
       geometry::CommunicatedGeometry* comGeo = NULL;
       for (PtrParticipant receiver : _participants ) {
-        for (MeshContext& receiverContext : receiver->usedMeshContexts()) {
-          bool doesReceive = receiverContext.receiveMeshFrom == _accessorName;
-          doesReceive &= receiverContext.mesh->getName() == context.mesh->getName();
+        for (MeshContext* receiverContext : receiver->usedMeshContexts()) {
+          bool doesReceive = receiverContext->receiveMeshFrom == _accessorName;
+          doesReceive &= receiverContext->mesh->getName() == context->mesh->getName();
           if ( doesReceive ){
             preciceDebug ( "   ... receiver " << receiver );
             utils::DynVector offset ( _dimensions, 0.0 );
@@ -1873,7 +1889,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
 
             if(!addedReceiver){
               comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider,_dimensions);
-              context.geometry = geometry::PtrGeometry ( comGeo );
+              context->geometry = geometry::PtrGeometry ( comGeo );
             }
             else{
               preciceDebug ( "Further receiver added.");
@@ -1881,8 +1897,8 @@ void SolverInterfaceImpl:: configureSolverGeometries
 
             // meshRequirement has to be copied from "from" to provide", since
             // mapping are only defined at "provide"
-            if(receiverContext.meshRequirement > context.meshRequirement){
-              context.meshRequirement = receiverContext.meshRequirement;
+            if(receiverContext->meshRequirement > context->meshRequirement){
+              context->meshRequirement = receiverContext->meshRequirement;
             }
 
             m2n::PtrGlobalCommunication com =
@@ -1896,34 +1912,34 @@ void SolverInterfaceImpl:: configureSolverGeometries
       if(!addedReceiver){
         preciceDebug ( "No receiver found, create SolverGeometry");
         utils::DynVector offset ( _dimensions, 0.0 );
-        context.geometry = geometry::PtrGeometry (
+        context->geometry = geometry::PtrGeometry (
                         new geometry::SolverGeometry ( offset) );
       }
 
-      assertion(context.geometry.use_count() > 0);
+      assertion(context->geometry.use_count() > 0);
 
     }
-    else if ( not context.receiveMeshFrom.empty()) { // Accessor receives geometry
-      preciceCheck ( not context.provideMesh, "configureSolverGeometries()",
+    else if ( not context->receiveMeshFrom.empty()) { // Accessor receives geometry
+      preciceCheck ( not context->provideMesh, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot provide "
-                     << "and receive mesh " << context.mesh->getName() << "!" );
+                     << "and receive mesh " << context->mesh->getName() << "!" );
       utils::DynVector offset ( _dimensions, 0.0 );
       std::string receiver ( _accessorName );
-      std::string provider ( context.receiveMeshFrom );
+      std::string provider ( context->receiveMeshFrom );
       preciceDebug ( "Receiving mesh from " << provider );
       geometry::CommunicatedGeometry * comGeo =
           new geometry::CommunicatedGeometry ( offset, receiver, provider, _dimensions );
       m2n::PtrGlobalCommunication com = comConfig->getCommunication ( receiver, provider );
       comGeo->addReceiver ( receiver, com );
-      preciceCheck ( context.geometry.use_count() == 0, "configureSolverGeometries()",
+      preciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot receive "
-                     << "the geometry of mesh \"" << context.mesh->getName()
+                     << "the geometry of mesh \"" << context->mesh->getName()
                      << " in addition to a defined geometry!" );
       if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-        comGeo->setBoundingFromMapping(context.fromMappingContext.mapping);
-        comGeo->setBoundingToMapping(context.toMappingContext.mapping);
+        comGeo->setBoundingFromMapping(context->fromMappingContext.mapping);
+        comGeo->setBoundingToMapping(context->toMappingContext.mapping);
       }
-      context.geometry = geometry::PtrGeometry ( comGeo );
+      context->geometry = geometry::PtrGeometry ( comGeo );
     }
   }
 }
@@ -2065,7 +2081,7 @@ void SolverInterfaceImpl:: mapReadData()
       int outDataID = context.toData->getID();
       assign(context.toData->values()) = 0.0;
       preciceDebug("Map read data \"" << context.fromData->getName()
-                   << "\" from mesh \"" << context.mesh->getName() << "\"");
+                   << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
       int max = context.toData->values().size();
@@ -2149,11 +2165,11 @@ void SolverInterfaceImpl:: handleExports()
       if ((checkpointingInterval != -1) && (timesteps % checkpointingInterval == 0)){
         preciceDebug("Set require checkpoint");
         _couplingScheme->requireAction(constants::actionWriteSimulationCheckpoint());
-        for (const MeshContext& meshContext : _accessor->usedMeshContexts()) {
+        for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
           io::ExportVRML exportVRML(false);
           std::string filename("precice_checkpoint_" + _accessorName
-                               + "_" + meshContext.mesh->getName());
-          exportVRML.doExportCheckpoint(filename, *meshContext.mesh);
+                               + "_" + meshContext->mesh->getName());
+          exportVRML.doExportCheckpoint(filename, *(meshContext->mesh));
         }
         io::SimulationStateIO exportState(_checkpointFileName + "_simstate.txt");
 
@@ -2217,11 +2233,11 @@ void SolverInterfaceImpl:: selectInquiryMeshIDs
 
   if (meshIDs.empty()){ // All mesh IDs are used in inquiry
     for (int i=0; i < (int)markedMeshContexts.size(); i++){
-      const MeshContext& context = _accessor->usedMeshContexts()[i];
-      if (context.spacetree.get() == NULL){
+      const MeshContext* context = _accessor->usedMeshContexts()[i];
+      if (context->spacetree.get() == NULL){
         markedMeshContexts[i] = markedQueryDirectly();
       }
-      else if (context.mesh->getID() == context.spacetree->meshes().front()->getID()){
+      else if (context->mesh->getID() == context->spacetree->meshes().front()->getID()){
         markedMeshContexts[i] = markedQuerySpacetree();
       }
       else {
@@ -2231,22 +2247,22 @@ void SolverInterfaceImpl:: selectInquiryMeshIDs
   }
   else {
     for (int i=0; i < (int)markedMeshContexts.size(); i++){
-      const MeshContext& context = _accessor->usedMeshContexts()[i];
-      if (utils::contained(context.mesh->getID(), meshIDs)){
-        if (context.spacetree.get() == NULL){
+      const MeshContext* context = _accessor->usedMeshContexts()[i];
+      if (utils::contained(context->mesh->getID(), meshIDs)){
+        if (context->spacetree.get() == NULL){
           markedMeshContexts[i] = markedQueryDirectly();
         }
         else {
           bool allSpacetreeMeshesAreInquired = true;
-          for (const mesh::PtrMesh& mesh : context.spacetree->meshes()) {
+          for (const mesh::PtrMesh& mesh : context->spacetree->meshes()) {
             if (not utils::contained(mesh->getID(), meshIDs)){
               allSpacetreeMeshesAreInquired = false;
               break;
             }
           }
           if (allSpacetreeMeshesAreInquired){
-            bool isFirst = context.mesh->getID()
-                           == context.spacetree->meshes().front()->getID();
+            bool isFirst = context->mesh->getID()
+                           == context->spacetree->meshes().front()->getID();
             if (isFirst){
               markedMeshContexts[i] = markedQuerySpacetree();
             }
