@@ -112,12 +112,12 @@ void CommunicatedGeometry:: sendMesh(
       }
       omp_set_dynamic(0);
 
-#pragma omp parallel for num_threads(utils::MasterSlave::_size-1)
+#pragma omp parallel for num_threads(utils::MasterSlave::_size-1) ordered
       for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
         mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
         mesh::Mesh& rSlaveMesh = slaveMesh;
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( rSlaveMesh, rankSlave);
-#pragma omp critical
+#pragma omp ordered
         {
           globalMesh.addMesh(rSlaveMesh); //add slave mesh to global mesh
           for(int i = 0; i < rSlaveMesh.vertices().size(); i++){
