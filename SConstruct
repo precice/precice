@@ -198,9 +198,12 @@ if env["omp"]:
     elif env["compiler"] == "clang++":
         env.Append(CCFLAGS = ['-fopenmp'])
         env.Append(LINKFLAGS = ['-fopenmp'])
-    elif env["compiler"].startswith('mpic'):
+    elif env["compiler"] == "mpicc":
         env.Append(CCFLAGS = ['-openmp'])
         env.Append(LINKFLAGS = ['-openmp'])
+    elif env["compiler"] == "mpicxx":
+        env.Append(CCFLAGS = ['-fopenmp'])
+        env.Append(LINKFLAGS = ['-fopenmp'])
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_OMP'])
     buildpath += "-noomp"
