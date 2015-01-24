@@ -201,7 +201,7 @@ if env["omp"]:
     elif env["compiler"] == "mpicc":
         env.Append(CCFLAGS = ['-openmp'])
         env.Append(LINKFLAGS = ['-openmp'])
-    elif env["compiler"] == "mpicxx":
+    elif env["compiler"] == "mpic++":
         env.Append(CCFLAGS = ['-fopenmp'])
         env.Append(LINKFLAGS = ['-fopenmp'])
 else:
