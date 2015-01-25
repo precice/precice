@@ -4,6 +4,7 @@
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 #ifndef PRECICE_NO_OMP
+#ifndef PRECICE_NO_MPI
 
 #include "PointToPointCommunicationTest.hpp"
 
@@ -214,4 +215,5 @@ PointToPointCommunicationTest::testSocketCommunication() {
 }
 } // namespace precice, m2n, tests
 
+#endif // not PRECICE_NO_MPI
 #endif // not PRECICE_NO_OMP
