@@ -2,7 +2,7 @@
 
 # Main buildfile for Linux based systems.
 
-import os
+import os, subprocess
 
 ##################################################################### FUNCTIONS
 
@@ -47,6 +47,36 @@ def checkset_var(varname, default):
         vprint(varname, var, False)
     return var
 
+def guess_omp_flag(compiler):
+    """ Guess the right flag to enable OpenMP, depending on the compiler / MPI wrapper. """
+    if compiler.startswith("g++"):
+        return "-fopenmp"
+    elif compiler.startswith("icc"):
+        return "-openmp"
+    elif compiler.startswith("clang"):
+        print "Clang does not support OpenMP."
+        return ""
+    elif compiler.startswith("mpi"):
+        try:
+            output = subprocess.check_output("%s -show" % compiler, shell=True)
+        except OSError as e:
+            print "Error checking for MPI compiler"
+            print e
+        except subprocess.CalledProcessError as e:
+            print "Error testing for OpenMP flag."
+            print "Command was:", e.cmd, "Output was:", e.output
+        else:
+            return guess_omp_flag(output.split()[0])
+
+def CheckOpenMP(context):
+    """ Encapsulate guess_omp_flag into a scons test. """
+    context.Message("Checking for OpenMP flag... ")
+    result = guess_omp_flag(context.env["compiler"])
+    context.Result(result)
+    context.env.Append(CCFLAGS = [result])
+    context.env.Append(LINKFLAGS = [result])
+    
+
 
 ########################################################################## MAIN
 
@@ -67,7 +97,7 @@ vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 
 env = Environment(variables = vars, ENV = os.environ)   # For configuring build variables
 # env = Environment(ENV = os.environ)
-conf = Configure(env) # For checking libraries, headers, ...
+conf = Configure(env, custom_tests= { "CheckOpenMP" : CheckOpenMP}) # For checking libraries, headers, ...
 
 
 Help(vars.GenerateHelpText(env))
@@ -189,18 +219,7 @@ elif env["build"] == 'release':
     buildpath += "release"
 
 if env["omp"]:
-    if env["compiler"] == 'icc':
-        env.Append(CCFLAGS = ['-openmp'])
-        env.Append(LINKFLAGS = ['-openmp'])
-    elif env["compiler"] == 'g++':
-        env.Append(CCFLAGS = ['-fopenmp'])
-        env.Append(LINKFLAGS = ['-fopenmp'])
-    elif env["compiler"] == "clang++":
-        env.Append(CCFLAGS = ['-fopenmp'])
-        env.Append(LINKFLAGS = ['-fopenmp'])
-    elif env["compiler"] == "mpicc":
-        env.Append(CCFLAGS = ['-openmp'])
-        env.Append(LINKFLAGS = ['-openmp'])
+    conf.CheckOpenMP()
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_OMP'])
     buildpath += "-noomp"
