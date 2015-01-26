@@ -112,12 +112,12 @@ void CommunicatedGeometry:: sendMesh(
       }
       omp_set_dynamic(0);
 
-#pragma omp parallel for num_threads(utils::MasterSlave::_size-1) ordered
+#pragma omp parallel for num_threads(utils::MasterSlave::_size-1)
       for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
         mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
         mesh::Mesh& rSlaveMesh = slaveMesh;
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( rSlaveMesh, rankSlave);
-#pragma omp ordered
+#pragma omp critical
         {
           globalMesh.addMesh(rSlaveMesh); //add slave mesh to global mesh
           for(int i = 0; i < rSlaveMesh.vertices().size(); i++){
@@ -225,26 +225,33 @@ void CommunicatedGeometry:: scatterMesh(
 
   preciceInfo("scatterMesh()", "Filter mesh " << seed.getName() );
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
-  auto filteredVertexIDs = filterMesh(seed, filteredMesh, true);
+  auto filteredVertexPositions = filterMesh(seed, filteredMesh, true);
   seed.clear();
   seed.addMesh(filteredMesh);
   clearBoundingMappings();
   e2.stop();
 
-  int numberOfVertices = filteredVertexIDs.size();
+  int numberOfVertices = filteredVertexPositions.size();
 
   preciceInfo("scatterMesh()", "Gather vertex distribution for mesh " << seed.getName() );
   Event e3("gather vertex distribution");
   if(utils::MasterSlave::_rank>0){ //slave
     utils::MasterSlave::_communication->send(numberOfVertices,0);
     if(numberOfVertices!=0){
-      utils::MasterSlave::_communication->send(raw(filteredVertexIDs),numberOfVertices,0);
+      utils::MasterSlave::_communication->send(raw(filteredVertexPositions),numberOfVertices,0);
     }
   }
   else{ //master
     assertion(utils::MasterSlave::_rank==0);
     assertion(utils::MasterSlave::_size>1);
-    seed.getVertexDistribution()[0] = filteredVertexIDs;
+
+    //we need to merge the 2 filtering steps, each slave only holds local IDs
+    std::vector<int> globalVertexIDs(numberOfVertices,-1);
+    for(int i=0;i<numberOfVertices;i++){
+      globalVertexIDs[i] = boundingVertexDistribution[0][filteredVertexPositions[i]];
+    }
+    seed.getVertexDistribution()[0] = globalVertexIDs;
+
     for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
       int numberOfVertices = -1;
       utils::MasterSlave::_communication->receive(numberOfVertices,rankSlave);
@@ -344,16 +351,18 @@ std::vector<int> CommunicatedGeometry:: filterMesh(mesh::Mesh& seed, mesh::Mesh&
        <<", #edges: " << seed.edges().size()
        <<", #triangles: " << seed.triangles().size() << ", rank: " << utils::MasterSlave::_rank);
 
-  std::vector<int> vertexIDs;
+  std::vector<int> vertexPositions;
   std::map<int, mesh::Vertex*> vertexMap;
   std::map<int, mesh::Edge*> edgeMap;
+  int vertexCounter = 0;
 
   foreach ( const mesh::Vertex& vertex, seed.vertices() ){
     if(doesVertexContribute(vertex, filterByMapping)){
       mesh::Vertex& v = filteredMesh.createVertex(vertex.getCoords());
-      vertexIDs.push_back(vertex.getID());
+      vertexPositions.push_back(vertexCounter);
       vertexMap[vertex.getID()] = &v;
     }
+    vertexCounter++;
   }
 
   //add all edges formed by contributing vertices
@@ -385,7 +394,7 @@ std::vector<int> CommunicatedGeometry:: filterMesh(mesh::Mesh& seed, mesh::Mesh&
          <<", #edges: " << filteredMesh.edges().size()
          <<", #triangles: " << filteredMesh.triangles().size() << ", rank: " << utils::MasterSlave::_rank);
 
-  return vertexIDs;
+  return vertexPositions;
 }
 
 }} // namespace precice, geometry
