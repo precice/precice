@@ -135,7 +135,6 @@ if env["petsc"]:
     
 if env["boost_inst"]:
     if env["sockets"]:
-        boostLibPath = checkset_var('PRECICE_BOOST_LIB_PATH', "/usr/lib/")
         boostSystemLib = checkset_var('PRECICE_BOOST_SYSTEM_LIB', "boost_system")
         boostThreadLib = checkset_var('PRECICE_BOOST_THREAD_LIB', "boost_thread")
 else:
