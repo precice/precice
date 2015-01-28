@@ -14,7 +14,9 @@
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/EventTimings.hpp"
+#ifndef PRECICE_NO_OMP
 #include <omp.h>
+#endif
 
 using precice::utils::Event;
 
@@ -110,7 +112,9 @@ void CommunicatedGeometry:: sendMesh(
         seed.getVertexDistribution()[0].push_back(numberOfVertices);
         numberOfVertices++;
       }
+      #ifndef PRECICE_NO_OMP
       omp_set_dynamic(0);
+      #endif
 
 #pragma omp parallel for num_threads(utils::MasterSlave::_size-1)
       for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
