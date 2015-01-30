@@ -180,8 +180,8 @@ void EventRegistry::print(std::ostream &out, bool terse)
         out << endl;
       }
 
-      out << "All Events, accumulated" << endl;
-      out << "--------------------------" << endl;
+      out << "Properties from all Events, accumulated" << endl;
+      out << "---------------------------------------" << endl;
       for (auto a : allProps) {
         out << setw(14) << left << a.first << right
             << setw(12) << std::fixed << std::setprecision(5) << a.second << endl;
