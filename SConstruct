@@ -237,8 +237,6 @@ else:
 if env["boost_inst"]:
     #env.AppendUnique(CPPPATH = [boostIncPath])
     # The socket implementation is based on Boost libs
-    if env["sockets"]:
-        env.AppendUnique(LIBPATH = [boostLibPath])
     if not uniqueCheckLib(conf, boostSystemLib):
         errorMissingLib(boostSystemLib, 'Boost')
     if not uniqueCheckLib(conf, boostThreadLib):
