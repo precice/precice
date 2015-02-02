@@ -257,42 +257,67 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
                                             const std::string& nameRequester) {
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
 
+  // The current participant is the *acceptor* participant and its processes are
+  // *acceptor* processes.
   _isAcceptor = true;
 
   if (utils::MasterSlave::_masterMode) {
+    // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
     c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
     // -------------------------------------------------------------------------
-    c->send(utils::MasterSlave::_masterRank, 0);
-    // -------------------------------------------------------------------------
+    // Exchange ranks of participants' master processes.
     int requesterMasterRank;
 
+    c->send(utils::MasterSlave::_masterRank, 0);
     c->receive(requesterMasterRank, 0);
     // -------------------------------------------------------------------------
+    // Exchange vertex distributions.
     auto& vertexDistribution = _mesh->getVertexDistribution();
-
-    m2n::send(c, vertexDistribution, 0);
-    // -------------------------------------------------------------------------
     std::map<int, std::vector<int>> requesterVertexDistribution;
 
+    m2n::send(c, vertexDistribution, 0);
     m2n::receive(c, requesterVertexDistribution, 0);
     // -------------------------------------------------------------------------
-    std::vector<int> sizes(utils::MasterSlave::_size, 0);
+    // Vector of point-to-point communicator sizes. Provies one-to-one mapping
+    // between acceptor process ranks (in the current participant) and
+    // point-to-point communicator sizes (to be used during point-to-point
+    // connection establishment).
+    std::vector<int> communicatorSizes(utils::MasterSlave::_size, 0);
 
-    scatter(
+    // Iteratively construct different instances of `senderMap' (from the two
+    // vertex distributions), each of which corresponds to a single acceptor
+    // process (in the current participant), and scatter them across their
+    // corresponding acceptor processes (including the master acceptor process).
+    m2n::scatter(
         utils::MasterSlave::_communication,
         _senderMap,
         vertexDistribution,
         requesterVertexDistribution,
-        [&sizes](int rank, std::map<int, std::vector<int>> const& senderMap) {
-          sizes[rank] = senderMap.size();
+        // NOTE:
+        // This lambda callback is invoked for each `senderMap' (after its
+        // construction is finished). The `scatter' routine is implemented with
+        // memory efficiency in mind, and, therefore, as soon as this callback
+        // returns, the memory occupied by (the current) `senderMap' is freed
+        // (to accomodate the next one). Thus, in order to prevent undefined
+        // behavior, keeping any references to (the current) `senderMap' after
+        // this callback returns is strongly discouraged.
+        [&communicatorSizes](int rank,
+                             std::map<int, std::vector<int>> const& senderMap) {
+          // Initialize `communicatorSizes'. Notice how each acceptor process
+          // rank `rank' (in the current participant) corresponds to the size of
+          // `senderMap' for this acceptor process.
+          communicatorSizes[rank] = senderMap.size();
         });
 
-    m2n::send(c, sizes, 0);
+    // Send `communicatorSizes' to the requester participant.
+    m2n::send(c, communicatorSizes, 0);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
+    // Receive the corresponding (to the current acceptor process) `senderMap'
+    // that is being scattered by the master acceptor process.
     m2n::receive(utils::MasterSlave::_communication, _senderMap, 0);
   }
 
@@ -303,6 +328,9 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
   if (_senderMap.size() == 0)
     return;
 
+  // Accept point-to-point connections between the current acceptor process (in
+  // the current participant) with rank `utils::MasterSlave::_rank' and
+  // (multiple) requester proccesses (in the requester participant).
   auto c = _communicationFactory->newCommunication();
 
   c->acceptConnection(nameAcceptor + std::to_string(utils::MasterSlave::_rank),
@@ -310,6 +338,16 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
                       0,
                       1);
 
+  // NOTE:
+  // On the acceptor participant side, the communication object `c' behaves as a
+  // server, i.e. it implicitly accepts multiple connections to requester
+  // processes (in the requester participant) according to point-to-point
+  // communicator size (in `communicatorSizes') used during point-to-point
+  // connection requests made by requester processes (in the requester
+  // participant). As a result, only one communication object `c' is needed to
+  // satisfy `senderMap', and, therefore, for data structure consistency of
+  // `_communications' with the requester participant side, we simply duplicate
+  // references to the same communication object `c'.
   for (auto const& i : _senderMap) {
     int requesterRank = i.first;
 
@@ -324,39 +362,49 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
                                              const std::string& nameRequester) {
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
 
+  // The current participant is the *requester* participant and its processes
+  // are *requester* processes.
   _isAcceptor = false;
 
-  std::vector<int> acceptorRanks;
-  std::vector<int> acceptorSizes;
+  std::vector<int> communicationRanks;
+  std::vector<int> communicatorSizes;
 
   if (utils::MasterSlave::_masterMode) {
+    // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
     c->requestConnection(nameAcceptor, nameRequester, 0, 1);
     // -------------------------------------------------------------------------
+    // Exchange ranks of participants' master processes.
     int acceptorMasterRank;
 
     c->receive(acceptorMasterRank, 0);
-    // -------------------------------------------------------------------------
     c->send(utils::MasterSlave::_masterRank, 0);
     // -------------------------------------------------------------------------
+    // Exchange vertex distributions.
+    auto& vertexDistribution = _mesh->getVertexDistribution();
     std::map<int, std::vector<int>> acceptorVertexDistribution;
 
     m2n::receive(c, acceptorVertexDistribution, 0);
-    // -------------------------------------------------------------------------
-    auto& vertexDistribution = _mesh->getVertexDistribution();
-
     m2n::send(c, vertexDistribution, 0);
     // -------------------------------------------------------------------------
-    scatter(utils::MasterSlave::_communication,
-            _senderMap,
-            vertexDistribution,
-            acceptorVertexDistribution);
+    // Iteratively construct different instances of `senderMap' (from the two
+    // vertex distributions), each of which corresponds to a single requester
+    // process (in the current participant), and scatter them across their
+    // corresponding requester processes (including the master requester
+    // process).
+    m2n::scatter(utils::MasterSlave::_communication,
+                 _senderMap,
+                 vertexDistribution,
+                 acceptorVertexDistribution);
 
-    m2n::receive(c, acceptorSizes, 0);
+    // Receive `communicatorSizes' from the acceptor participant.
+    m2n::receive(c, communicatorSizes, 0);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
+    // Receive the corresponding (to the current requester process) `senderMap'
+    // that is being scattered by the master requester process.
     m2n::receive(utils::MasterSlave::_communication, _senderMap, 0);
   }
 
@@ -364,45 +412,103 @@ PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
   // Uncomment to print `_senderMap'.
   // print(_senderMap);
 
+  //   ┌───┐  Legend
+  //   ↓   │ ┌──────────────────────────────────────────────────────────────┐
+  // ┌─┴─┐ │ │ ↓ — send/receive of `communicationRanks' and                 │
+  // │ 0 │ │ │     `communicatorSizes';                                     │
+  // └─┬─┘ │ │ r — global process rank in the requester participant;        │
+  //   ↓   │ │ s — global communicator size in the requester participant.   │
+  // ┌─┴─┐ │ └──────────────────────────────────────────────────────────────┘
+  // │ 1 │ │
+  // └─┬─┘ │
+  //   ↓   │
+  //   ⁞   │
+  //   ↓   │
+  // ┌─┴─┐ │
+  // │ r │ │
+  // └─┬─┘ │
+  //   ↓   │
+  //   ⁞   │
+  //   ↓   │
+  // ┌─┴─┐ │
+  // │s-1│ │
+  // └─┬─┘ │
+  //   ↓   │
+  //   └───┘
+  // Figure 1. Point-to-point connection request scheme
+
+  // Point-to-point connection request scheme (Figure 1) is strictly sequential
+  // in a sense that only one requester process (in the current participant) at
+  // time requests point-to-point connection to (multiple) acceptor proccesses
+  // (in the acceptor participant). This is due to how corresponding
+  // point-to-point communication ranks (in `communicationRanks') have to be
+  // incremented and sent further (to the next requester process). The execution
+  // path starts and ends in the master requester process (in the current
+  // participant).
+
   if (utils::MasterSlave::_masterMode) {
-    acceptorRanks.resize(acceptorSizes.size(), -1);
+    // As discussed previously, the execution path of the point-to-point
+    // connection request scheme (Figure 1) starts in the master requester
+    // process (here). Thus, initialize `communicationRanks' and proceed.
+    communicationRanks.resize(communicatorSizes.size(), -1);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    receivePrevious(_communicationFactory, acceptorRanks);
-    receivePrevious(_communicationFactory, acceptorSizes);
+    // All other processes should block until they receive (one by one) properly
+    // incremented versions of `communicationRanks'.
+    receivePrevious(_communicationFactory, communicationRanks);
+    receivePrevious(_communicationFactory, communicatorSizes);
 
-    assertion(acceptorRanks.size() == acceptorSizes.size());
+    assertion(communicationRanks.size() == communicatorSizes.size());
   }
 
+  // Request point-to-point connections between the current requester process
+  // (in the current participant) and (multiple) acceptor proccesses (in the
+  // acceptor participant) with ranks `acceptorRank' according to `senderMap'.
   for (auto const& i : _senderMap) {
     int acceptorRank = i.first;
 
-    int rank = ++acceptorRanks[acceptorRank]; // Attention!
-    int size = acceptorSizes[acceptorRank];
+    // Pay attention to how point-to-point communication rank (in
+    // `communicationRanks') corresponding to `acceptorRank' is pre-incremented.
+    int rank = ++communicationRanks[acceptorRank];
+    int size = communicatorSizes[acceptorRank];
 
     _communications[acceptorRank] = _communicationFactory->newCommunication();
 
     _communications[acceptorRank]->requestConnection(
         nameAcceptor + std::to_string(acceptorRank), nameRequester, rank, size);
+
+    // NOTE:
+    // On the requester participant side, the communication objects behave as
+    // clients, i.e. each of them requests only one connection to acceptor
+    // process (in the acceptor participant).
   }
 
-  sendNext(_communicationFactory, acceptorRanks);
-  sendNext(_communicationFactory, acceptorSizes);
+  // Send new incremented version of `communicationRanks' to the next requester
+  // process (Figure 1).
+  sendNext(_communicationFactory, communicationRanks);
+  sendNext(_communicationFactory, communicatorSizes);
 
   if (utils::MasterSlave::_masterMode) {
-    receivePrevious(_communicationFactory, acceptorRanks);
-    receivePrevious(_communicationFactory, acceptorSizes);
+    // As discussed previously, the execution path of the point-to-point
+    // connection request scheme (Figure 1) ends in the master requester process
+    // (here). Thus, receive the last incremented version of
+    // `communicationRanks'.
+    receivePrevious(_communicationFactory, communicationRanks);
+    receivePrevious(_communicationFactory, communicatorSizes);
 
-    assertion(acceptorRanks.size() == acceptorSizes.size());
+    assertion(communicationRanks.size() == communicatorSizes.size());
 
+    // Perform an important sanity check for the last incremented version of
+    // `communicationRanks'.
     for (int acceptorRank = 0;
-         acceptorRank < std::min(acceptorRanks.size(), acceptorSizes.size());
+         acceptorRank <
+             std::min(communicationRanks.size(), communicatorSizes.size());
          ++acceptorRank) {
-      preciceCheck(
-          acceptorRanks[acceptorRank] == acceptorSizes[acceptorRank] - 1,
-          "requestConnection()",
-          "Local communication rank/size inconsistency!");
+      preciceCheck(communicationRanks[acceptorRank] ==
+                       communicatorSizes[acceptorRank] - 1,
+                   "requestConnection()",
+                   "Local communication rank/size inconsistency!");
     }
   }
 
