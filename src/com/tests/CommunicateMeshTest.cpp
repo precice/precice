@@ -77,21 +77,28 @@ void CommunicateMeshTest:: testTwoSolvers ()
         utils::Parallel::initialize ( NULL, NULL, participant0 );
         com->acceptConnection ( participant0, participant1, 0, 1 );
         comMesh.sendMesh ( mesh, 0 );
+        validateEquals ( mesh.vertices().size(), 3 );
+        validateEquals ( mesh.edges().size(), 3 );
+        validate ( equals(mesh.vertices()[0].getCoords(), DynVector(dim,0.0)) );
+        validate ( equals(mesh.vertices()[1].getCoords(), DynVector(dim,1.0)) );
+        validate ( equals(mesh.vertices()[2].getCoords(), DynVector(dim,2.0)) );
       }
       else if ( utils::Parallel::getProcessRank() == 1 ) {
+        mesh.createVertex ( DynVector(dim,9.0) ); // new version receiveMesh can also deal with delta meshes
         utils::Parallel::initialize ( NULL, NULL, participant1 );
         com->requestConnection ( participant0, participant1, 0, 1 );
         comMesh.receiveMesh ( mesh, 0 );
+        validateEquals ( mesh.vertices().size(), 4 );
+        validateEquals ( mesh.edges().size(), 3 );
+        validate ( equals(mesh.vertices()[0].getCoords(), DynVector(dim,9.0)) );
+        validate ( equals(mesh.vertices()[1].getCoords(), DynVector(dim,0.0)) );
+        validate ( equals(mesh.vertices()[2].getCoords(), DynVector(dim,1.0)) );
+        validate ( equals(mesh.vertices()[3].getCoords(), DynVector(dim,2.0)) );
+
       }
       com->closeConnection ();
 
-      validateEquals ( mesh.vertices().size(), 3 );
-      validateEquals ( mesh.edges().size(), 3 );
-
       using tarch::la::equals;
-      validate ( equals(mesh.vertices()[0].getCoords(), DynVector(dim,0.0)) );
-      validate ( equals(mesh.vertices()[1].getCoords(), DynVector(dim,1.0)) );
-      validate ( equals(mesh.vertices()[2].getCoords(), DynVector(dim,2.0)) );
 
       validate ( equals(mesh.edges()[0].vertex(0).getCoords(), DynVector(dim,0.0)) );
       validate ( equals(mesh.edges()[0].vertex(1).getCoords(), DynVector(dim,1.0)) );
