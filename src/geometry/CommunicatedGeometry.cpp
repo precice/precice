@@ -106,24 +106,20 @@ void CommunicatedGeometry:: sendMesh(
 
       int numberOfVertices = 0;
       //vertices of master mesh part do already exist
-      foreach ( const mesh::Vertex& vertex, seed.vertices() ){
+      for (int i = 0; i<seed.vertices().size(); i++){
         seed.getVertexDistribution()[0].push_back(numberOfVertices);
         numberOfVertices++;
       }
-      omp_set_dynamic(0);
 
-#pragma omp parallel for num_threads(utils::MasterSlave::_size-1)
       for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-        mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
-        mesh::Mesh& rSlaveMesh = slaveMesh;
-        com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( rSlaveMesh, rankSlave);
-#pragma omp critical
-        {
-          globalMesh.addMesh(rSlaveMesh); //add slave mesh to global mesh
-          for(int i = 0; i < rSlaveMesh.vertices().size(); i++){
-            seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
-            numberOfVertices++;
-          }
+        int vertexCount1 = globalMesh.vertices().size();
+        com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( globalMesh, rankSlave);
+        int vertexCount2 = globalMesh.vertices().size();
+        int vertexCountDiff = vertexCount2 - vertexCount1;
+        preciceDebug("Received sub-mesh, from slave: " << rankSlave <<", vertexCount: " << vertexCountDiff);
+        for(int i = 0; i < vertexCountDiff; i++){
+          seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
+          numberOfVertices++;
         }
       }
       seed.setGlobalNumberOfVertices(numberOfVertices);
@@ -140,10 +136,6 @@ void CommunicatedGeometry:: sendMesh(
                    << globalMesh.getName() << "\"!" );
     typedef std::map<std::string,m2n::PtrM2N>::value_type Pair;
     foreach ( Pair & pair, _receivers ) {
-      // don't understand why this is done here again
-//      if ( ! pair.second->isConnected() ) {
-//        pair.second->acceptConnection ( _providerName, pair.first);
-//      }
       com::CommunicateMesh(pair.second->getMasterCommunication()).sendMesh ( globalMesh, 0 );
     }
   }
@@ -158,9 +150,6 @@ void CommunicatedGeometry:: receiveMesh(
     assertion ( seed.vertices().size() == 0 );
     assertion ( utils::contained(_accessorName, _receivers) );
     m2n::PtrM2N m2n ( _receivers[_accessorName] );
-//    if ( ! com->isConnected() ) {
-//      com->requestConnection ( _providerName, _accessorName, 0, 1 );
-//    }
     com::CommunicateMesh(m2n->getMasterCommunication()).receiveMesh ( seed, 0 );
   }
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
