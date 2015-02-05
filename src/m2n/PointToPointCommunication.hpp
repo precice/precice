@@ -48,11 +48,10 @@ public:
 
   /**
    * @brief Accepts connection from participant, which has to call
-   *requestConnection().
+   *        requestConnection().
    *
    * If several connections are going in to a server, the server has to call
-   *this
-   * method, while the clients have to call requestConnection().
+   * this method, while the clients have to call requestConnection().
    *
    * @param nameAcceptor [IN] Name of calling participant.
    * @param nameRequester [IN] Name of remote participant to connect to.
@@ -62,11 +61,10 @@ public:
 
   /**
    * @brief Requests connection from participant, which has to call
-   *acceptConnection().
+   *        acceptConnection().
    *
    * If several connections are going in to a server, the clients have to call
-   *this
-   * method, while the server has to call acceptConnection().
+   * this method, while the server has to call acceptConnection().
    *
    * @param nameAcceptor [IN] Name of remote participant to connect to.
    * @param nameReuester [IN] Name of calling participant.
@@ -83,7 +81,7 @@ public:
 
   /**
    * @brief Sends an array of double values from all slaves (different for each
-   * slave).
+   *        slave).
    */
   virtual void send(
     double* itemsToSend,
