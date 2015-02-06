@@ -56,7 +56,6 @@ public:
     const std::string& network,
     unsigned short     portNumber,
     const std::string& addressExchangeDirectory = "" );
-
   /**
    * @brief Destructor.
    */

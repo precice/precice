@@ -121,8 +121,11 @@ SolverInterfaceImpl:: ~SolverInterfaceImpl()
     delete _requestManager;
   }
   precice::utils::Events_Finalize();
-  precice::utils::EventRegistry r;
-  r.print();
+  if (not precice::utils::MasterSlave::_slaveMode) {
+    precice::utils::EventRegistry r;
+    r.print();
+    r.print("EventTimings.log", true);
+  }
 }
 
 void SolverInterfaceImpl:: configure

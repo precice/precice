@@ -229,6 +229,7 @@ void SocketCommunication:: requestConnection
 
     PtrSocket socket(new Socket(*_ioService));
     tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
+
     while (not _isConnected){ // since resolver does not wait until server is up
       tcp::resolver resolver(*_ioService);
       tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
@@ -275,7 +276,7 @@ void SocketCommunication:: closeConnection()
     _ioService->stop();
     _queryThread.join();
   }
-  foreach ( PtrSocket& socket, _sockets ){
+  for (PtrSocket& socket : _sockets ) {
     assertion(socket->is_open());
     socket->shutdown(Socket::shutdown_both);
     socket->close();

@@ -7,7 +7,6 @@
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
 #include <fstream>
-#include <boost/thread.hpp>
 
 namespace precice {
 namespace com {
@@ -102,7 +101,7 @@ void MPIPortsCommunication:: requestConnection
   std::ifstream inFile;
   do {
     inFile.open ( portFilename.c_str(), std::ios::in );
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    usleep(100000);
   } while ( not inFile );
   inFile.getline ( _portname, MPI_MAX_PORT_NAME );
   inFile.close();

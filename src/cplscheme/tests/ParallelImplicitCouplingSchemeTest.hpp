@@ -96,10 +96,7 @@ private:
       const std::string&     localParticipant,
       m2n::PtrM2N&           communication ) const;
 
-
-
 # endif // not PRECICE_NO_MPI
-
 };
 
 }}} // namespace precice, cplscheme, tests

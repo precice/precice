@@ -186,8 +186,4 @@ void GatherScatterCommunication:: receive (
   } //master
 }
 
-
-
-
-
 }} // namespace precice, m2n

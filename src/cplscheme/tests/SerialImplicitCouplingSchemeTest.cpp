@@ -425,7 +425,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
    cplscheme::SerialCouplingScheme cplScheme (
      maxTime, maxTimesteps, timestepLength, 16, nameParticipant0, nameParticipant1,
      nameLocalParticipant, globalCom, constants::FIXED_DT,
-     BaseCouplingScheme::Implicit, 100);
+     BaseCouplingScheme::Implicit, 100);
    cplScheme.addDataToSend ( mesh->data()[sendDataIndex], mesh, false );
    cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh, false );
 

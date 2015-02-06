@@ -136,10 +136,8 @@ if env["petsc"]:
 
 if env["boost_inst"]:
     if env["sockets"]:
-        boostLibPath = checkset_var('PRECICE_BOOST_LIB_PATH', "/usr/lib/")
-        boostSystemLib = checkset_var('PRECICE_BOOST_SYSTEM_LIB', "boost_system-mt")
-        boostThreadLib = checkset_var('PRECICE_BOOST_THREAD_LIB', "boost_thread-mt")
-        boostChronoLib = checkset_var('PRECICE_BOOST_CHRONO_LIB', "boost_chrono-mt")
+        boostSystemLib = checkset_var('PRECICE_BOOST_SYSTEM_LIB', "boost_system")
+        boostThreadLib = checkset_var('PRECICE_BOOST_THREAD_LIB', "boost_thread")
 else:
     boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
       
@@ -208,7 +206,7 @@ env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
 
 if not conf.CheckCXX():
-    Exit(-1)
+    Exit(1)
 
 if env["build"] == 'debug':
     env.Append(CPPDEFINES = ['Debug', 'Asserts'])
@@ -217,6 +215,12 @@ if env["build"] == 'debug':
 elif env["build"] == 'release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
+
+if env["omp"]:
+    conf.CheckOpenMP()
+else:
+    env.Append(CPPDEFINES = ['PRECICE_NO_OMP'])
+    buildpath += "-noomp"
 
 if env["omp"]:
     conf.CheckOpenMP()
@@ -239,14 +243,10 @@ else:
 if env["boost_inst"]:
     #env.AppendUnique(CPPPATH = [boostIncPath])
     # The socket implementation is based on Boost libs
-    if env["sockets"]:
-        env.AppendUnique(LIBPATH = [boostLibPath])
     if not uniqueCheckLib(conf, boostSystemLib):
         errorMissingLib(boostSystemLib, 'Boost')
     if not uniqueCheckLib(conf, boostThreadLib):
         errorMissingLib(boostThreadLib, 'Boost')
-    if not uniqueCheckLib(conf, boostChronoLib):
-        errorMissingLib(boostChronoLib, 'Boost')
 else:
     env.AppendUnique(CPPPATH = [boostRootPath])
 if not conf.CheckCXXHeader('boost/array.hpp'):

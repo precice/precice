@@ -14,9 +14,6 @@
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/EventTimings.hpp"
-#ifndef PRECICE_NO_OMP
-#include <omp.h>
-#endif
 
 using precice::utils::Event;
 
