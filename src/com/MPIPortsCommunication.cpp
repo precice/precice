@@ -54,14 +54,16 @@ void MPIPortsCommunication:: acceptConnection
   preciceTrace2 ( "acceptConnection()", nameAcceptor, nameRequester );
   assertion ( not _isConnection );
 
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initialize(&argc, &argv, nameAcceptor);
-  delete[] arg;
+  // BUG:
+  // It is extremely important that the call to `Parallel::initialize' follows
+  // *after* the call to `MPI_Open_port'. Otherwise, on Windows, even with the
+  // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
+  // doing something weird inside?
 
   MPI_Open_port(MPI_INFO_NULL, _portname);
+
+  utils::Parallel::initialize(NULL, NULL, nameAcceptor);
+
   // Write portname to file
   std::string portFilename ( _publishingDirectory + "." + nameRequester + "-portname" );
   preciceDebug ( "Writing server connection info to file " + portFilename );
@@ -93,12 +95,7 @@ void MPIPortsCommunication:: requestConnection
   preciceTrace2 ( "requestConnection()", nameAcceptor, nameRequester );
   assertion ( not _isConnection );
 
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initialize ( &argc, &argv, nameRequester );
-  delete[] arg;
+  utils::Parallel::initialize(NULL, NULL, nameRequester);
 
   std::string portFilename(_publishingDirectory + "." + nameRequester + "-portname");
   std::ifstream inFile;

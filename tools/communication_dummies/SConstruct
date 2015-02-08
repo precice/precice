@@ -1,9 +1,9 @@
 import os;
 import sys;
 
-mpiLibPath = 'C:/Builds/x64/MinGW-w64/MSMPI/4.1.4174.0/lib'
-mpiLib = 'msmpi'
-mpiIncPath = 'C:/Builds/x64/MinGW-w64/MSMPI/4.1.4174.0/include'
+mpiLibPath = 'C:/Builds/x64/MinGW-w64/IMPI/5.0.2.0/lib'
+mpiLib = 'impi'
+mpiIncPath = 'C:/Builds/x64/MinGW-w64/IMPI/5.0.2.0/include'
 
 preciceLibPath = '../../build/release-nopetsc-nospirit2'
 preciceLib = 'precice'
@@ -27,6 +27,7 @@ def errorMissingHeader(header, usage):
 
 env = Environment (
    # CPPDEFINES = ['Parallel'],
+   CPPDEFINES = ['MPICH_SKIP_MPICXX'],
    CCFLAGS    = ['-O3', '-std=c++11'],
    ENV        = os.environ
    )

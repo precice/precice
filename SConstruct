@@ -263,6 +263,9 @@ if not env["spirit2"]:
 
 
 if env["mpi"]:
+    # Skip (deprecated) MPI C++ bindings.
+    env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
+
     if not env["compiler"].startswith('mpic'):
         env.AppendUnique(LIBPATH = [mpiLibPath])
         if not uniqueCheckLib(conf, mpiLib):
