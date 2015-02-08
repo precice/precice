@@ -65,6 +65,9 @@ void SolverInterfaceTestGeometry:: run()
     testMethod(testConservativeStationaryDataMapping);
     testMethod(testMappingRBF);
     testMethod(testCustomGeometryCreation);
+#   ifndef PRECICE_NO_PYTHON
+    testMethod(testPinelli);
+#   endif // not PRECICE_NO_PYTHON
 #   ifndef PRECICE_NO_SPIRIT2
     testMethod(testBug);
     testMethod(testBug2);
@@ -844,6 +847,79 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
 //             "testConservativeDataMapping" );
 //# endif // Dim2
 //}
+
+void SolverInterfaceTestGeometry:: testPinelli()
+{
+  preciceTrace("testPinelli()");
+  SolverInterface interface("EOF", 0, 1);
+
+  {
+    std::string filename = "computeForce.py";
+    std::ifstream  src((_pathToTests + filename).c_str(), std::ifstream::in);
+    std::ofstream  dst(filename.c_str(), std::ifstream::out);
+    dst << src.rdbuf();
+  }
+  configureSolverInterface(_pathToTests + "testPinelli.xml", interface);
+  validateEquals(interface.getDimensions(), 2);
+  int meshIdEOF = interface.getMeshID("EOFMesh");
+  int dataIsEOFVeloc = interface.getDataID("Velocities",meshIdEOF);
+  int dataIsEOFForces = interface.getDataID("Forces",meshIdEOF);
+
+  using utils::Vector2D;
+  std::vector<int> vertexIdsEOF;
+
+  Vector2D position ( 0.15, 0.15 );
+  int vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  vertexIdsEOF.push_back(vertexId);
+
+  assignList(position) = 0.15, 0.2;
+  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  vertexIdsEOF.push_back(vertexId);
+
+  assignList(position) = 0.15, 0.25;
+  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  vertexIdsEOF.push_back(vertexId);
+
+  assignList(position) = 0.2, 0.15;
+  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  vertexIdsEOF.push_back(vertexId);
+
+  assignList(position) = 0.2, 0.25;
+  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  vertexIdsEOF.push_back(vertexId);
+
+  assignList(position) = 0.25, 0.15;
+  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  vertexIdsEOF.push_back(vertexId);
+
+  assignList(position) = 0.25, 0.2;
+  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  vertexIdsEOF.push_back(vertexId);
+
+  assignList(position) = 0.25, 0.25;
+  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  vertexIdsEOF.push_back(vertexId);
+
+  interface.initialize();
+
+  for (int vertexID : vertexIdsEOF){
+    double data[2] = {2.0,2.0};
+    interface.writeVectorData(dataIsEOFVeloc,vertexID,data);
+  }
+
+  interface.advance(0.1);
+
+  Vector2D totalForce ( 0.0, 0.0 );
+
+  for (int vertexID : vertexIdsEOF){
+    double data[2] = {0.0,0.0};
+    interface.readVectorData(dataIsEOFForces,vertexID,data);
+    totalForce[0] += data[0];
+    totalForce[1] += data[1];
+  }
+
+  validateNumericalEquals(totalForce[0]+totalForce[1], 100.0);
+}
 
 
 void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
