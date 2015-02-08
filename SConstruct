@@ -4,6 +4,7 @@
 
 import os
 import subprocess
+import sys
 
 ##################################################################### FUNCTIONS
 
@@ -157,9 +158,14 @@ if env["mpi"]:
    
 
 if env["sockets"]:
-    socketLibPath = checkset_var('PRECICE_SOCKET_LIB_PATH', "/usr/lib")
-    socketLib = checkset_var('PRECICE_SOCKET_LIB', "pthread")
-    socketIncPath =  checkset_var('PRECICE_SOCKET_INC_PATH', '/usr/include')
+    pthreadLibPath = checkset_var('PRECICE_PTHREAD_LIB_PATH', "/usr/lib")
+    pthreadLib = checkset_var('PRECICE_PTHREAD_LIB', "pthread")
+    pthreadIncPath =  checkset_var('PRECICE_PTHREAD_INC_PATH', '/usr/include')
+
+    if sys.platform.startswith('win') or sys.platform.startswith('msys'):
+        socketLibPath = checkset_var('PRECICE_SOCKET_LIB_PATH', "/mingw64/lib")
+        socketLib = checkset_var('PRECICE_SOCKET_LIB', "ws2_32")
+        socketIncPath =  checkset_var('PRECICE_SOCKET_INC_PATH', '/mingw64/include')
 
 
 #useSAGA = ARGUMENTS.get('saga', 'off')
@@ -264,7 +270,6 @@ if env["mpi"]:
         if (mpiLib == 'mpich'): # MPICH1/2/3 library
             uniqueCheckLib(conf, 'mpl')
             uniqueCheckLib(conf, 'pthread')
-            #conf.CheckLib('pthread')
         elif (mpiLib == 'mpi'): # OpenMPI library
             uniqueCheckLib(conf, 'mpi_cxx')
         env.AppendUnique(CPPPATH = [mpiIncPath])
@@ -277,13 +282,21 @@ uniqueCheckLib(conf, 'rt') # To work with tarch::utils::Watch::clock_gettime
 
 
 if env["sockets"]:
-    env.AppendUnique(LIBPATH = [socketLibPath])
-    uniqueCheckLib(conf, socketLib)
-    env.AppendUnique(CPPPATH = [socketIncPath])
-    if socketLib == 'pthread':
+    env.AppendUnique(LIBPATH = [pthreadLibPath])
+    uniqueCheckLib(conf, pthreadLib)
+    env.AppendUnique(CPPPATH = [pthreadIncPath])
+    if pthreadLib == 'pthread':
         if not conf.CheckHeader('pthread.h'):
-            errorMissingHeader('pthread.h', 'Sockets')
-    #env.Append(LINKFLAGS = ['-pthread']) # Maybe better???
+            errorMissingHeader('pthread.h', 'POSIX Threads')
+
+    if sys.platform.startswith('win') or sys.platform.startswith('msys'):
+        env.AppendUnique(LIBPATH = [socketLibPath])
+        uniqueCheckLib(conf, socketLib)
+        env.AppendUnique(CPPPATH = [socketIncPath])
+
+        if socketLib == 'ws2_32':
+            if not conf.CheckHeader('winsock2.h'):
+                errorMissingHeader('winsock2.h', 'Windows Sockets 2')
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_SOCKETS'])
     buildpath += "-nosockets"
