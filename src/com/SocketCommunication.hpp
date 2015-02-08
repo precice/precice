@@ -7,12 +7,13 @@
 #include "com/Communication.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/PointerVector.hpp"
-#include <set>
 #include <boost/smart_ptr.hpp>
-#include <boost/thread.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
 #include <boost/asio/io_service.hpp>
+
+#include <condition_variable>
+#include <mutex>
+#include <set>
+#include <thread>
 
 namespace boost {
   namespace asio {
@@ -266,7 +267,7 @@ private:
   PtrWork _queryWork;
 
   // @brief Thread for asynchronously receiving send requests of clients.
-  boost::thread _queryThread;
+  std::thread _queryThread;
 
   // @brief Stores socket indices of clients waiting with messages.
   std::set<int> _clientQueries;
@@ -275,10 +276,10 @@ private:
   std::vector<int> _clientQueryBuffers;
 
   // @brief Mutex used to lock access to clientQueries
-  boost::mutex _requestMutex;
+  std::mutex _requestMutex;
 
   // @brief Used to set (server) main thread asleep while waiting for client send
-  boost::condition _requestCondition;
+  std::condition_variable _requestCondition;
 
   /**
    * @brief Returns a suitable sender rank to receive from.

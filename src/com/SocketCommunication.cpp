@@ -4,10 +4,12 @@
 # ifndef PRECICE_NO_SOCKETS
 
 #include "SocketCommunication.hpp"
-#include <sstream>
-#include <fstream>
+
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
+
+#include <fstream>
+#include <sstream>
 
 namespace precice {
 namespace com {
@@ -188,7 +190,7 @@ void SocketCommunication:: acceptConnection
   }
 
   _queryWork = PtrWork(new asio::io_service::work(*_ioService));
-  _queryThread = boost::thread(&SocketCommunication::onThreadRun, this);
+  _queryThread = std::thread(&SocketCommunication::onThreadRun, this);
 }
 
 void SocketCommunication:: requestConnection
@@ -589,7 +591,7 @@ int SocketCommunication:: getSenderRank
   }
   while (chosenRank == -1){
     preciceDebug("Server process looks in client queries");
-    boost::mutex::scoped_lock lock(_requestMutex);
+    std::unique_lock<std::mutex> lock(_requestMutex);
     if (not _clientQueries.empty()){
       if (desiredRank == ANY_SENDER){
         chosenRank = *_clientQueries.begin();
@@ -661,7 +663,7 @@ void SocketCommunication:: onAsyncReceive
              clientIndex, _remoteCommunicatorSize);
   assertion2(_clientQueryBuffers[clientIndex] == clientIndex,
              _clientQueryBuffers[clientIndex], clientIndex);
-  boost::mutex::scoped_lock lock(_requestMutex);
+  std::unique_lock<std::mutex> lock(_requestMutex);
   _clientQueries.insert(clientIndex);
   _requestCondition.notify_one();
 }

@@ -2,7 +2,8 @@
 
 # Main buildfile for Linux based systems.
 
-import os, subprocess
+import os
+import subprocess
 
 ##################################################################### FUNCTIONS
 
@@ -75,7 +76,7 @@ def CheckOpenMP(context):
     context.Result(result)
     context.env.Append(CCFLAGS = [result])
     context.env.Append(LINKFLAGS = [result])
-    
+
 
 
 ########################################################################## MAIN
@@ -137,7 +138,6 @@ if env["petsc"]:
 if env["boost_inst"]:
     if env["sockets"]:
         boostSystemLib = checkset_var('PRECICE_BOOST_SYSTEM_LIB', "boost_system")
-        boostThreadLib = checkset_var('PRECICE_BOOST_THREAD_LIB', "boost_thread")
 else:
     boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
       
@@ -245,8 +245,6 @@ if env["boost_inst"]:
     # The socket implementation is based on Boost libs
     if not uniqueCheckLib(conf, boostSystemLib):
         errorMissingLib(boostSystemLib, 'Boost')
-    if not uniqueCheckLib(conf, boostThreadLib):
-        errorMissingLib(boostThreadLib, 'Boost')
 else:
     env.AppendUnique(CPPPATH = [boostRootPath])
 if not conf.CheckCXXHeader('boost/array.hpp'):
@@ -333,8 +331,6 @@ if env["sockets"] and not env["boost_inst"]:
     if not os.path.exists(buildpath + "/boost/"):
         Execute(Mkdir(buildpath + "/boost/"))
     for file in Glob(boostRootPath + "/libs/system/src/*"):
-        Execute(Copy(buildpath + "/boost/", file))
-    for file in Glob(boostRootPath + "/libs/thread/src/pthread/*"):
         Execute(Copy(buildpath + "/boost/", file))
     sourcesBoost = Glob(buildpath + '/boost/*.cpp')
     print "... done"

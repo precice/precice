@@ -11,8 +11,6 @@ preciceIncPath = '../../src'
 
 boostLibPath   = "/mingw64/lib/"
 boostSystemLib = "boost_system-mt"
-boostThreadLib = "boost_thread-mt"
-boostChronoLib = "boost_chrono-mt"
 
 if sys.platform.startswith('win') or sys.platform.startswith('msys'):
     socketLibPath = '/mingw64/lib'
@@ -56,16 +54,6 @@ if conf.CheckLib(boostSystemLib, autoadd=0):
     conf.env.AppendUnique(LIBS = [boostSystemLib])
 else:
     errorMissingLib(boostSystemLib, 'Boost.System')
-
-if conf.CheckLib(boostThreadLib, autoadd=0):
-    conf.env.AppendUnique(LIBS = [boostThreadLib])
-else:
-    errorMissingLib(boostThreadLib, 'Boost.Thread')
-
-if conf.CheckLib(boostChronoLib, autoadd=0):
-    conf.env.AppendUnique(LIBS = [boostChronoLib])
-else:
-    errorMissingLib(boostChronoLib, 'Boost.Chrono')
 
 conf.env.AppendUnique(LIBPATH = [mpiLibPath])
 
