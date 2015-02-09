@@ -89,6 +89,7 @@ void Participant:: useMesh
   const utils::DynVector&                localOffset,
   bool                                   remote,
   const std::string&                     fromParticipant,
+  double                                 safetyFactor,
   bool                                   provideMesh )
 {
   preciceTrace3 ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
@@ -102,6 +103,7 @@ void Participant:: useMesh
   assertion2 ( mesh->getDimensions() == context->localOffset.size(),
                mesh->getDimensions(), context->localOffset.size() );
   context->receiveMeshFrom = fromParticipant;
+  context->safetyFactor = safetyFactor;
   context->provideMesh = provideMesh;
 
 //  if ( spacetree.use_count() > 0 ) {

@@ -37,7 +37,8 @@ CommunicatedGeometry:: CommunicatedGeometry
   _boundingFromMapping(),
   _boundingToMapping(),
   _bb(),
-  _safetyGap(0)
+  _safetyGap(0),
+  _safetyFactor(-1.0)
 {
   preciceTrace2 ( "CommunicatedGeometry()", accessor, provider );
 }
@@ -183,7 +184,8 @@ void CommunicatedGeometry:: scatterMesh(
       for (int d=0; d<_dimensions; d++){
         if(_safetyGap < _bb[d].second - _bb[d].first) _safetyGap = _bb[d].second - _bb[d].first;
       }
-      _safetyGap *= 0.1;
+      assertion(_safetyFactor>=0.0);
+      _safetyGap *= _safetyFactor;
       preciceDebug("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
           << ", " << _bb[0].second << " and " << _bb[1].first << ", " << _bb[1].second);
       mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
@@ -268,6 +270,12 @@ void CommunicatedGeometry:: setBoundingToMapping(
     mapping::PtrMapping mapping)
 {
   _boundingToMapping = mapping;
+}
+
+void CommunicatedGeometry:: setSafetyFactor(
+    double safetyFactor)
+{
+  _safetyFactor = safetyFactor;
 }
 
 void CommunicatedGeometry:: computeBoundingMappings()

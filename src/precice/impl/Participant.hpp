@@ -135,6 +135,7 @@ public:
     const utils::DynVector&                localOffset,
     bool                                   remote,
     const std::string&                     fromParticipant,
+    double                                 safetyFactor,
     bool                                   provideMesh );
 
   void addAction ( const action::PtrAction& action );

@@ -1946,6 +1946,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
       preciceDebug ( "Receiving mesh from " << provider );
       geometry::CommunicatedGeometry * comGeo =
           new geometry::CommunicatedGeometry ( offset, receiver, provider, _dimensions );
+      comGeo->setSafetyFactor(context->safetyFactor);
       m2n::PtrM2N m2n = comConfig->getCommunication ( receiver, provider );
       comGeo->addReceiver ( receiver, m2n );
       m2n->createDistributedCommunication(context->mesh);

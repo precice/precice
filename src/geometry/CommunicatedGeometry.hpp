@@ -41,6 +41,8 @@ public:
 
   void setBoundingToMapping(mapping::PtrMapping mapping);
 
+  void setSafetyFactor(double safetyFactor);
+
 protected:
 
   /**
@@ -96,6 +98,8 @@ private:
   mesh::Mesh::BoundingBox _bb;
 
   double _safetyGap;
+
+  double _safetyFactor;
 };
 
 }} // namespace precice, geometry

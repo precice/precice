@@ -197,6 +197,8 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     geo2.setBoundingToMapping(boundingToMapping2);
     geo1.addReceiver("NASTINMaster", m2n);
     geo2.addReceiver("NASTINMaster", m2n);
+    geo1.setSafetyFactor(0.1);
+    geo2.setSafetyFactor(0.1);
     geo1.create(*pSolidzMesh1);
     geo2.create(*pSolidzMesh2);
 
@@ -268,12 +270,13 @@ void CommunicatedGeometryTest:: testGatherMesh ()
   bool flipNormals = false;
   utils::DynVector offset ( dimensions, 0.0 );
 
-  if (utils::Parallel::getProcessRank() == 0){ //SOLIDZ
+  if (utils::Parallel::getProcessRank() == 0){ //NASTIN
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
     CommunicatedGeometry geo( offset, "NASTIN", "SOLIDZMaster", dimensions);
     geo.addReceiver("NASTIN",m2n);
+    geo.setSafetyFactor(0.1);
     geo.create(*pSolidzMesh);
     validate(pSolidzMesh->vertices().size()==6);
     validate(pSolidzMesh->edges().size()==4);
