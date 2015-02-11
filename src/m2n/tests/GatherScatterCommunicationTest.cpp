@@ -7,6 +7,8 @@
 #include "utils/Parallel.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/DistributedComFactory.hpp"
+#include "m2n/GatherScatterComFactory.hpp"
 #include "m2n/SharedPointer.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
@@ -53,7 +55,9 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
   com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom));
+  m2n::PtrDistributedComFactory distrFactory = m2n::PtrDistributedComFactory(
+                          new m2n::GatherScatterComFactory(participantCom));
+  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
   com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 

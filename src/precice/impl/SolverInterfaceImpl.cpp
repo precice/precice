@@ -36,7 +36,7 @@
 #include "com/Constants.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "com/config/CommunicationConfiguration.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "geometry/Geometry.hpp"
@@ -90,7 +90,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _meshIDs(),
   _dataIDs(),
   _exportVTKNeighbors(),
-  _communications(),
+  _m2ns(),
   _participants(),
   _checkpointTimestepInterval(-1),
   _checkpointFileName("precice_checkpoint_" + _accessorName),
@@ -188,7 +188,7 @@ void SolverInterfaceImpl:: configure
   }
 
   _participants = config.getParticipantConfiguration()->getParticipants();
-  configureCommunications(config.getCommunicationConfiguration());
+  configureM2Ns(config.getM2NConfiguration());
 
   if (_serverMode){
     preciceInfo("configure()", "[PRECICE] Run in server mode");
@@ -201,13 +201,13 @@ void SolverInterfaceImpl:: configure
     preciceInfo("configure()", "[PRECICE] Run in geometry mode");
     preciceCheck(_participants.size() == 1, "configure()",
                  "Only one participant can be defined in geometry mode!");
-    configureSolverGeometries(config.getCommunicationConfiguration());
+    configureSolverGeometries(config.getM2NConfiguration());
   }
   else if (not _clientMode){
     preciceInfo("configure()", "[PRECICE] Run in coupling mode");
     preciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
-    configureSolverGeometries(config.getCommunicationConfiguration());
+    configureSolverGeometries(config.getM2NConfiguration());
   }
 
   // Set coupling scheme. In geometry mode, an uncoupled scheme is automatically
@@ -279,22 +279,22 @@ double SolverInterfaceImpl:: initialize()
   else {
     // Setup communication
     if (not _geometryMode){
-      typedef std::map<std::string,Communication>::value_type ComPair;
+      typedef std::map<std::string,M2NWrap>::value_type M2NPair;
       preciceInfo("initialize()", "Setting up master communication to coupling partner/s " );
-      for (ComPair& comPair : _communications) {
-        m2n::PtrM2N& communication = comPair.second.communication;
+      for (M2NPair& m2nPair : _m2ns) {
+        m2n::PtrM2N& m2n = m2nPair.second.m2n;
         std::string localName = _accessorName;
         if (_serverMode) localName += "Server";
-        std::string remoteName(comPair.first);
-        preciceCheck(communication.get() != NULL, "initialize()",
-                     "Communication from " << localName << " to participant "
+        std::string remoteName(m2nPair.first);
+        preciceCheck(m2n.get() != NULL, "initialize()",
+                     "M2N communication from " << localName << " to participant "
                      << remoteName << " could not be created! Check compile "
                      "flags used!");
-        if (comPair.second.isRequesting){
-          communication->requestMasterConnection(remoteName, localName);
+        if (m2nPair.second.isRequesting){
+          m2n->requestMasterConnection(remoteName, localName);
         }
         else {
-          communication->acceptMasterConnection(localName, remoteName);
+          m2n->acceptMasterConnection(localName, remoteName);
         }
       }
       preciceInfo("initialize()", "Coupling partner/s are connected " );
@@ -320,21 +320,21 @@ double SolverInterfaceImpl:: initialize()
     }
 
     if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
-      typedef std::map<std::string,Communication>::value_type ComPair;
+      typedef std::map<std::string,M2NWrap>::value_type M2NPair;
       preciceInfo("initialize()", "Setting up slaves communication to coupling partner/s " );
-      foreach (ComPair& comPair, _communications){
-        m2n::PtrM2N& communication = comPair.second.communication;
+      foreach (M2NPair& m2nPair, _m2ns){
+        m2n::PtrM2N& m2n = m2nPair.second.m2n;
         std::string localName = _accessorName;
-        std::string remoteName(comPair.first);
-        preciceCheck(communication.get() != NULL, "initialize()",
+        std::string remoteName(m2nPair.first);
+        preciceCheck(m2n.get() != NULL, "initialize()",
                      "Communication from " << localName << " to participant "
                      << remoteName << " could not be created! Check compile "
                      "flags used!");
-        if (comPair.second.isRequesting){
-          communication->requestSlavesConnection(remoteName, localName);
+        if (m2nPair.second.isRequesting){
+          m2n->requestSlavesConnection(remoteName, localName);
         }
         else {
-          communication->acceptSlavesConnection(localName, remoteName);
+          m2n->acceptSlavesConnection(localName, remoteName);
         }
       }
     }
@@ -519,9 +519,9 @@ void SolverInterfaceImpl:: finalize()
         }
       }
     }
-    typedef std::map<std::string,Communication>::iterator PairIter;
-    foriter ( PairIter, iter, _communications ){
-      iter->second.communication->closeConnection();
+    typedef std::map<std::string,M2NWrap>::iterator PairIter;
+    foriter ( PairIter, iter, _m2ns ){
+      iter->second.m2n->closeConnection();
     }
   }
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
@@ -1843,21 +1843,21 @@ void SolverInterfaceImpl:: runServer()
   _requestManager->handleRequests();
 }
 
-void SolverInterfaceImpl:: configureCommunications
+void SolverInterfaceImpl:: configureM2Ns
 (
-  const com::PtrCommunicationConfiguration& config )
+  const m2n::PtrM2NConfiguration& config )
 {
-  preciceTrace("configureCommunications()");
-  typedef com::CommunicationConfiguration::ComTuple ComTuple;
-  for (ComTuple comTuple : config->communications()) {
+  preciceTrace("configureM2Ns()");
+  typedef m2n::M2NConfiguration::M2NTuple M2NTuple;
+  for (M2NTuple m2nTuple : config->m2ns()) {
     std::string comPartner("");
     bool isRequesting = false;
-    if (boost::get<1>(comTuple) == _accessorName){
-      comPartner = boost::get<2>(comTuple);
+    if (boost::get<1>(m2nTuple) == _accessorName){
+      comPartner = boost::get<2>(m2nTuple);
       isRequesting = true;
     }
-    else if (boost::get<2>(comTuple) == _accessorName){
-      comPartner = boost::get<1>(comTuple);
+    else if (boost::get<2>(m2nTuple) == _accessorName){
+      comPartner = boost::get<1>(m2nTuple);
     }
     if (not comPartner.empty()){
       for (const impl::PtrParticipant& participant : _participants) {
@@ -1865,12 +1865,12 @@ void SolverInterfaceImpl:: configureCommunications
           if (participant->useServer()){
             comPartner += "Server";
           }
-          assertion1(not utils::contained(comPartner, _communications), comPartner);
-          assertion(boost::get<0>(comTuple).use_count() > 0);
-          Communication com;
-          com.communication = boost::get<0>(comTuple);
-          com.isRequesting = isRequesting;
-          _communications[comPartner] = com;
+          assertion1(not utils::contained(comPartner, _m2ns), comPartner);
+          assertion(boost::get<0>(m2nTuple).use_count() > 0);
+          M2NWrap m2nWrap;
+          m2nWrap.m2n = boost::get<0>(m2nTuple);
+          m2nWrap.isRequesting = isRequesting;
+          _m2ns[comPartner] = m2nWrap;
         }
       }
     }
@@ -1879,7 +1879,7 @@ void SolverInterfaceImpl:: configureCommunications
 
 void SolverInterfaceImpl:: configureSolverGeometries
 (
-  const com::PtrCommunicationConfiguration& comConfig )
+  const m2n::PtrM2NConfiguration& m2nConfig )
 {
   preciceTrace ( "configureSolverGeometries()" );
   for (MeshContext* context : _accessor->usedMeshContexts()) {
@@ -1918,7 +1918,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
             }
 
             m2n::PtrM2N m2n =
-                comConfig->getCommunication ( receiver->getName(), provider );
+                m2nConfig->getM2N( receiver->getName(), provider );
             comGeo->addReceiver ( receiver->getName(), m2n );
             m2n->createDistributedCommunication(context->mesh);
 
@@ -1947,7 +1947,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
       geometry::CommunicatedGeometry * comGeo =
           new geometry::CommunicatedGeometry ( offset, receiver, provider, _dimensions );
       comGeo->setSafetyFactor(context->safetyFactor);
-      m2n::PtrM2N m2n = comConfig->getCommunication ( receiver, provider );
+      m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );
       comGeo->addReceiver ( receiver, m2n );
       m2n->createDistributedCommunication(context->mesh);
       preciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",

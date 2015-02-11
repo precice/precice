@@ -19,7 +19,7 @@
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/GatherScatterCommunication.hpp"
-#include "com/config/CommunicationConfiguration.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
@@ -89,9 +89,9 @@ void ParallelImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
-  com::PtrCommunicationConfiguration comConfig(
-      new com::CommunicationConfiguration(root));
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig);
+  m2n::PtrM2NConfiguration m2nConfig(
+      new m2n::M2NConfiguration(root));
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, path);
   validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != NULL);
@@ -123,7 +123,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
   com::PtrCommunication communication(new com::MPIDirectCommunication);
-  m2n::PtrM2N globalCom(new m2n::M2N(communication));
+  m2n::PtrM2N globalCom(new m2n::M2N(communication, m2n::PtrDistributedComFactory()));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;

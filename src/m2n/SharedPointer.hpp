@@ -12,11 +12,14 @@ namespace m2n {
 class DistributedCommunication;
 typedef boost::shared_ptr<DistributedCommunication> PtrDistributedCommunication;
 
+class DistributedComFactory;
+typedef boost::shared_ptr<DistributedComFactory> PtrDistributedComFactory;
+
 class M2N;
 typedef boost::shared_ptr<M2N> PtrM2N;
 
-//class M2NConfiguration;
-//typedef boost::shared_ptr<M2NConfiguration> PtrCommunicationConfiguration;
+class M2NConfiguration;
+typedef boost::shared_ptr<M2NConfiguration> PtrM2NConfiguration;
 
 }} // namespace precice, m2n
 

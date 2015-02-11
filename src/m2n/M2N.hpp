@@ -24,7 +24,7 @@ class M2N
 {
 public:
 
-  M2N( com::PtrCommunication masterCom);
+  M2N( com::PtrCommunication masterCom, PtrDistributedComFactory distrFactory);
 
   /**
    * @brief Destructor, empty.
@@ -157,6 +157,8 @@ private:
   std::map<int, PtrDistributedCommunication> _distComs;
 
   com::PtrCommunication _masterCom;
+
+  PtrDistributedComFactory _distrFactory;
 
   bool _isMasterConnected;
 

@@ -508,8 +508,6 @@ void ParticipantConfiguration:: xmlTagCallback
     _watchPointConfigs.push_back(config);
   }
   else if (tag.getNamespace() == TAG_SERVER){
-    //std::string comType = tag.getStringAttributeValue(ATTR_COMMUNICATION);
-    //std::string comContext = tag.getStringAttributeValue(ATTR_CONTEXT);
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication com = comConfig.createCommunication(tag);
     _participants.back()->setClientServerCommunication(com);

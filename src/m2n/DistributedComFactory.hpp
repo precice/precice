@@ -8,12 +8,12 @@
 
 namespace precice {
 namespace m2n {
-class DistributedCommunicationFactory {
+class DistributedComFactory {
 public:
   /**
    * @brief Destructor.
    */
-  virtual ~DistributedCommunicationFactory() {};
+  virtual ~DistributedComFactory() {};
 
   virtual PtrDistributedCommunication newDistributedCommunication(mesh::PtrMesh mesh) = 0;
 };

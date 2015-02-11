@@ -18,7 +18,7 @@ GatherScatterComFactory::GatherScatterComFactory(
 
 PtrDistributedCommunication
 GatherScatterComFactory::newDistributedCommunication(mesh::PtrMesh mesh) {
-  return PtrDistributedCommunication(new GatherScatterCommunication(mesh));
+  return PtrDistributedCommunication(new GatherScatterCommunication(_masterCom,mesh));
 }
 
 

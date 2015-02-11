@@ -4,11 +4,11 @@
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #pragma once
 
-#include "DistributedCommunicationFactory.hpp"
+#include "DistributedComFactory.hpp"
 
 namespace precice {
 namespace m2n {
-class GatherScatterComFactory : public DistributedCommunicationFactory {
+class GatherScatterComFactory : public DistributedComFactory {
 public:
   /**
    * @brief Constructor.

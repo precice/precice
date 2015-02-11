@@ -10,7 +10,7 @@
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "com/SharedPointer.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "tarch/logging/Log.h"
@@ -53,7 +53,7 @@ public:
   CouplingSchemeConfiguration (
     utils::XMLTag&                            parent,
     const mesh::PtrMeshConfiguration&         meshConfig,
-    const com::PtrCommunicationConfiguration& comConfig);
+    const m2n::PtrM2NConfiguration&           m2nConfig);
 
   /**
    * @brief Destructor, empty.
@@ -185,7 +185,7 @@ private:
 
   mesh::PtrMeshConfiguration _meshConfig;
 
-  com::PtrCommunicationConfiguration _comConfig;
+  m2n::PtrM2NConfiguration _m2nConfig;
 
   PtrPostProcessingConfiguration _postProcConfig;
 

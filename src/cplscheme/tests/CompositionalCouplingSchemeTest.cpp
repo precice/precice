@@ -16,7 +16,7 @@
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "com/config/CommunicationConfiguration.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "utils/Dimensions.hpp"
@@ -692,34 +692,34 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
-  com::PtrCommunicationConfiguration comConfig(new com::CommunicationConfiguration(root));
+  m2n::PtrM2NConfiguration m2nConfig(new m2n::M2NConfiguration(root));
   geometry::PtrGeometryConfiguration geoConfig(new geometry::GeometryConfiguration(root, meshConfig));
   geoConfig->setDimensions(3);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig );
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig );
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrM2N com0 =
-      comConfig->getCommunication(nameParticipant0, nameParticipant1);
-  m2n::PtrM2N com1 =
-      comConfig->getCommunication(nameParticipant1, nameParticipant2);
+  m2n::PtrM2N m2n0 =
+      m2nConfig->getM2N(nameParticipant0, nameParticipant1);
+  m2n::PtrM2N m2n1 =
+      m2nConfig->getM2N(nameParticipant1, nameParticipant2);
 
   geoConfig->geometries()[0]->create(*meshConfig->meshes()[0]);
 
   if (utils::Parallel::getProcessRank() == 0){
     localParticipant = nameParticipant0;
-    connect(nameParticipant0, nameParticipant1, localParticipant, com0);
+    connect(nameParticipant0, nameParticipant1, localParticipant, m2n0);
   }
   else if (utils::Parallel::getProcessRank() == 1){
     localParticipant = nameParticipant1;
-    connect(nameParticipant0, nameParticipant1, localParticipant, com0);
-    connect(nameParticipant1, nameParticipant2, localParticipant, com1);
+    connect(nameParticipant0, nameParticipant1, localParticipant, m2n0);
+    connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
   }
   else {
     assertion1(utils::Parallel::getProcessRank() == 2,
                utils::Parallel::getProcessRank());
     localParticipant = nameParticipant2;
-    connect(nameParticipant1, nameParticipant2, localParticipant, com1);
+    connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
   }
 
   runThreeSolverCoupling(cplSchemeConfig.getCouplingScheme(localParticipant),

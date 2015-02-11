@@ -4,6 +4,7 @@
 
 #include "M2N.hpp"
 #include "DistributedCommunication.hpp"
+#include "DistributedComFactory.hpp"
 #include "GatherScatterCommunication.hpp"
 #include "com/Communication.hpp"
 #include "utils/MasterSlave.hpp"
@@ -14,10 +15,11 @@ namespace m2n {
 
 tarch::logging::Log M2N::_log("precice::m2n::M2N");
 
-M2N:: M2N(  com::PtrCommunication masterCom )
+M2N:: M2N(  com::PtrCommunication masterCom, PtrDistributedComFactory distrFactory )
 :
   _distComs(),
   _masterCom(masterCom),
+  _distrFactory(distrFactory),
   _isMasterConnected(false),
   _areSlavesConnected(false)
 {}
@@ -135,7 +137,7 @@ com::PtrCommunication M2N:: getMasterCommunication()
 }
 
 void M2N:: createDistributedCommunication(mesh::PtrMesh mesh){
-  PtrDistributedCommunication distCom = PtrDistributedCommunication(new GatherScatterCommunication(_masterCom,mesh));
+  PtrDistributedCommunication distCom = _distrFactory->newDistributedCommunication(mesh);
   _distComs[mesh->getID()] = distCom;
 }
 
