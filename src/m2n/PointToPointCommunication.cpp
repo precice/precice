@@ -253,9 +253,11 @@ PointToPointCommunication::isConnected() {
 }
 
 void
-PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
-                                            const std::string& nameRequester) {
+PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
+                                            std::string const& nameRequester) {
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+
+  assertion(not _isConnected);
 
   // The current participant is the *acceptor* participant and its processes are
   // *acceptor* processes.
@@ -358,9 +360,11 @@ PointToPointCommunication::acceptConnection(const std::string& nameAcceptor,
 }
 
 void
-PointToPointCommunication::requestConnection(const std::string& nameAcceptor,
-                                             const std::string& nameRequester) {
+PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
+                                             std::string const& nameRequester) {
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
+
+  assertion(not _isConnected);
 
   // The current participant is the *requester* participant and its processes
   // are *requester* processes.
@@ -526,9 +530,8 @@ PointToPointCommunication::send(double* itemsToSend,
   assertion(_senderMap.size() == _communications.size());
 
   if (_senderMap.size() == 0) {
-    preciceCheck(size == 0,
-                 "sendAll()",
-                 "Can't send anything from disconnected process!");
+    preciceCheck(
+        size == 0, "send()", "Can't send anything from disconnected process!");
 
     return;
   }

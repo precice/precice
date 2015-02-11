@@ -33,7 +33,7 @@ public:
    * @brief Constructor.
    */
   PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
-                            mesh::PtrMesh                mesh);
+                            mesh::PtrMesh mesh);
 
   /**
    * @brief Destructor.
@@ -83,18 +83,12 @@ public:
    * @brief Sends an array of double values from all slaves (different for each
    *        slave).
    */
-  virtual void send(
-    double* itemsToSend,
-    int     size,
-    int     valueDimension );
+  virtual void send(double* itemsToSend, int size, int valueDimension);
 
   /**
    * @brief All slaves receive an array of doubles (different for each slave).
    */
-  virtual void receive (
-    double* itemsToReceive,
-    int     size,
-    int     valueDimension );
+  virtual void receive(double* itemsToReceive, int size, int valueDimension);
 
 private:
   static tarch::logging::Log _log;
@@ -110,8 +104,8 @@ private:
   bool _isConnected;
   bool _isAcceptor;
 };
-
-}} // namespace precice, m2n
+}
+} // namespace precice, m2n
 
 #endif /* PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_ */
 

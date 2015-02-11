@@ -10,6 +10,7 @@
 
 #include "m2n/PointToPointCommunication.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/SocketCommunicationFactory.hpp"
 #include "mesh/Mesh.hpp"
 
@@ -60,12 +61,15 @@ void
 PointToPointCommunicationTest::run() {
   preciceTrace("run");
 
+  Parallel::synchronizeProcesses();
+
   if (Parallel::getCommunicatorSize() > 3) {
+    auto communicator = Parallel::getRestrictedCommunicator({0, 1, 2, 3});
+
     if (Parallel::getProcessRank() < 4) {
-      Parallel::setGlobalCommunicator(
-          Parallel::getRestrictedCommunicator({0, 1, 2, 3}));
+      Parallel::setGlobalCommunicator(communicator);
+      testMethod(testMPIPortsCommunication);
       testMethod(testSocketCommunication);
-      // testMethod(testMPIDirectCommunication);
       Parallel::setGlobalCommunicator(Parallel::getCommunicatorWorld());
     }
   }
@@ -75,13 +79,29 @@ void
 PointToPointCommunicationTest::testSocketCommunication() {
   preciceTrace("testSocketCommunication");
 
-  assertion(Parallel::getCommunicatorSize() == 4);
-
-  MasterSlave::_communication =
-      com::PtrCommunication(new com::MPIDirectCommunication());
-
   com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory(
       "lo", 30000 + Parallel::getProcessRank()));
+
+  test(cf);
+}
+
+void
+PointToPointCommunicationTest::testMPIPortsCommunication() {
+  preciceTrace("testMPIDirectCommunication");
+
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+
+  test(cf);
+}
+
+void
+PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
+  assertion(Parallel::getCommunicatorSize() == 4);
+
+  validateEquals(Parallel::getCommunicatorSize(), 4);
+
+  MasterSlave::_communication =
+      com::PtrCommunication(new com::MPIDirectCommunication);
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 

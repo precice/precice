@@ -1,6 +1,7 @@
 #include <m2n/PointToPointCommunication.hpp>
 #include <com/MPIDirectCommunication.hpp>
 #include <com/SocketCommunicationFactory.hpp>
+#include <com/MPIPortsCommunicationFactory.hpp>
 #include <mesh/Mesh.hpp>
 
 #include <mpi.h>
@@ -109,7 +110,7 @@ main(int argc, char** argv) {
   }
 
   utils::MasterSlave::_communication =
-      com::PtrCommunication(new com::MPIDirectCommunication());
+      com::PtrCommunication(new com::MPIDirectCommunication);
 
   int rankOffset = 1;
 
@@ -126,10 +127,12 @@ main(int argc, char** argv) {
         utils::MasterSlave::_size - rankOffset);
   }
 
-  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory(
-      "lo", 30000 + utils::MasterSlave::_rank));
+  // com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory(
+  //     "lo", 30000 + utils::MasterSlave::_rank));
 
-  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 1, true));
+  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+
+  mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 
   if (utils::MasterSlave::_masterMode) {
     mesh->setGlobalNumberOfVertices(10);
@@ -154,6 +157,9 @@ main(int argc, char** argv) {
   m2n::PointToPointCommunication c(cf, mesh);
 
   c.acceptConnection("B", "A");
+
+  cout << utils::MasterSlave::_rank << ": "
+       << "Connected!" << endl;
 
   std::vector<double> data = getData();
 

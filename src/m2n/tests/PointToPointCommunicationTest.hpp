@@ -9,6 +9,8 @@
 #ifndef PRECICE_M2N_TESTS_POINT_TO_POINT_COMMUNICATION_TEST_HPP_
 #define PRECICE_M2N_TESTS_POINT_TO_POINT_COMMUNICATION_TEST_HPP_
 
+#include "com/CommunicationFactory.hpp"
+
 #include "tarch/tests/TestCase.h"
 #include "tarch/logging/Log.h"
 
@@ -39,7 +41,9 @@ private:
 
   void testSocketCommunication();
 
-  // void testMPIDirectCommunication();
+  void testMPIPortsCommunication();
+
+  void test(com::PtrCommunicationFactory cf);
 };
 }
 }

@@ -52,7 +52,7 @@ MPIPortsCommunicationTest::testSendReceiveTwoProcesses() {
 
   validateEquals(Parallel::getCommunicatorSize(), 2);
 
-  MPIPortsCommunication communication("");
+  MPIPortsCommunication communication;
 
   std::string nameEven("even");
   std::string nameOdd("odd");
