@@ -223,6 +223,10 @@ else:
     buildpath += "-noomp"
 
 if env["petsc"]:
+    if not env["mpi"]:
+        print "Petsc requires MPI to be enabled."
+        Exit(1)
+
     env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
     env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
