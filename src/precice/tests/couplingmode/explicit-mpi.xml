@@ -35,7 +35,7 @@
          <read-data name="Forces"      mesh="Test-Square" />
       </participant>
       
-      <communication:mpi from="SolverOne" to="SolverTwo" />
+      <m2n:mpi distribution-type="gather-scatter" from="SolverOne" to="SolverTwo" />
       
       <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverTwo" /> 

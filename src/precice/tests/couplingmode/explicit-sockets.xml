@@ -35,7 +35,7 @@
          <read-data name="Forces"      mesh="Test-Square" />
       </participant>
       
-      <communication:sockets from="SolverOne" to="SolverTwo" port="51238"/>
+      <m2n:sockets distribution-type="gather-scatter" from="SolverOne" to="SolverTwo" port="51238"/>
       
       <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverTwo" /> 

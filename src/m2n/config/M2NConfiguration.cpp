@@ -5,6 +5,7 @@
 #include "m2n/M2N.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
+#include "m2n/PointToPointComFactory.hpp"
 #include "com/SocketCommunicationFactory.hpp"
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/FileCommunication.hpp"
@@ -227,8 +228,7 @@ void M2NConfiguration:: xmlTagCallback
     }
     else if(distrType == VALUE_POINT_TO_POINT){
       assertion(tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS);
-      //TODO
-//      distrFactory = PtrDistributedCommunicationFactory(new PointToPointComFactory(comFactory));
+      distrFactory = PtrDistributedComFactory(new PointToPointComFactory(comFactory));
     }
     assertion(distrFactory.get() != NULL);
 
