@@ -187,7 +187,7 @@ void M2NConfiguration:: xmlTagCallback
         std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
         int port = tag.getIntAttributeValue(ATTR_PORT);
         std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-        comFactory = com::PtrCommunicationFactory(new com::SocketCommunicationFactory(port, network, dir));
+        comFactory = com::PtrCommunicationFactory(new com::SocketCommunicationFactory(port, false, network, dir));
         com = comFactory->newCommunication();
 #     endif // PRECICE_NO_SOCKETS
     }

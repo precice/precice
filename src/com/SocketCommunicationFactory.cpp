@@ -13,22 +13,24 @@ namespace precice {
 namespace com {
 SocketCommunicationFactory::SocketCommunicationFactory(
     unsigned short portNumber,
+    bool reuseAddress,
     std::string const& networkName,
     std::string const& addressDirectory)
     : _portNumber(portNumber)
+    , _reuseAddress(reuseAddress)
     , _networkName(networkName)
     , _addressDirectory(addressDirectory) {
 }
 
 SocketCommunicationFactory::SocketCommunicationFactory(
     std::string const& addressDirectory)
-    : _addressDirectory(addressDirectory) {
+    : SocketCommunicationFactory(0, false, "lo", addressDirectory) {
 }
 
 PtrCommunication
 SocketCommunicationFactory::newCommunication() {
-  return PtrCommunication(
-      new SocketCommunication(_portNumber, _networkName, _addressDirectory));
+  return PtrCommunication(new SocketCommunication(
+      _portNumber, _reuseAddress, _networkName, _addressDirectory));
 }
 }
 } // namespace precice, com

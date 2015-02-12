@@ -20,6 +20,7 @@ public:
    * @brief Constructor.
    */
   SocketCommunicationFactory(unsigned short portNumber,
+                             bool reuseAddress = false,
                              std::string const& networkName = "lo",
                              std::string const& addressDirectory = ".");
 
@@ -32,6 +33,7 @@ public:
 
 private:
   unsigned short _portNumber;
+  bool _reuseAddress;
   std::string _networkName;
   std::string _addressDirectory;
 };

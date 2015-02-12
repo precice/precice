@@ -20,9 +20,13 @@ namespace asio = boost::asio;
 tarch::logging::Log SocketCommunication::_log(
     "precice::com::SocketCommunication");
 
-SocketCommunication::SocketCommunication(std::string const& addressDirectory)
-    : _portNumber()
-    , _networkName()
+SocketCommunication::SocketCommunication(unsigned short portNumber,
+                                         bool reuseAddress,
+                                         std::string const& networkName,
+                                         std::string const& addressDirectory)
+    : _portNumber(portNumber)
+    , _reuseAddress(reuseAddress)
+    , _networkName(networkName)
     , _addressDirectory(addressDirectory)
     , _processRank(-1)
     , _isConnected(false)
@@ -40,26 +44,8 @@ SocketCommunication::SocketCommunication(std::string const& addressDirectory)
   }
 }
 
-SocketCommunication::SocketCommunication(unsigned short portNumber,
-                                         std::string const& networkName,
-                                         std::string const& addressDirectory)
-    : _portNumber(portNumber)
-    , _networkName(networkName)
-    , _addressDirectory(addressDirectory)
-    , _processRank(-1)
-    , _isConnected(false)
-    , _remoteCommunicatorSize(0)
-    , _ioService(new IOService)
-    , _sockets()
-    , _queryWork()
-    , _queryThread()
-    , _clientQueries()
-    , _clientQueryBuffers() {
-  _rankOffset = 0;
-
-  if (_addressDirectory.empty()) {
-    _addressDirectory = ".";
-  }
+SocketCommunication::SocketCommunication(std::string const& addressDirectory)
+    : SocketCommunication(0, false, "lo", addressDirectory) {
 }
 
 SocketCommunication::~SocketCommunication() {
@@ -154,7 +140,16 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
 
     preciceDebug("Accept connection at " << ipAddress.str() << ":"
                                          << _portNumber);
-    tcp::acceptor acceptor(*_ioService, tcp::endpoint(tcp::v4(), _portNumber));
+
+    tcp::endpoint endpoint(tcp::v4(), _portNumber);
+
+    tcp::acceptor acceptor(*_ioService);
+
+    acceptor.open(endpoint.protocol());
+    acceptor.set_option(tcp::acceptor::reuse_address(_reuseAddress));
+    acceptor.bind(endpoint);
+    acceptor.listen();
+
     PtrSocket socket(new tcp::socket(*_ioService));
     acceptor.accept(*socket); // Waits until connection
     int remoteRank = -1;
