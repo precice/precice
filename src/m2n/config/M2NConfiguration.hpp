@@ -66,6 +66,8 @@ private:
    const std::string ATTR_EXCHANGE_DIRECTORY;
 
    const std::string VALUE_MPI;
+   const std::string VALUE_MPI_SINGLE;
+   const std::string VALUE_FILES;
    const std::string VALUE_SOCKETS;
 
    const std::string VALUE_GATHER_SCATTER;

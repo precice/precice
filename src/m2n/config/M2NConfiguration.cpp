@@ -6,6 +6,9 @@
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "com/SocketCommunicationFactory.hpp"
+#include "com/MPIPortsCommunicationFactory.hpp"
+#include "com/FileCommunication.hpp"
+#include "com/MPIDirectCommunication.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLAttribute.hpp"
 #include "utils/xml/ValidatorEquals.hpp"
@@ -30,6 +33,8 @@ M2NConfiguration:: M2NConfiguration
   ATTR_NETWORK("network"),
   ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
   VALUE_MPI("mpi"),
+  VALUE_MPI_SINGLE("mpi-single"),
+  VALUE_FILES("files"),
   VALUE_SOCKETS("sockets"),
   VALUE_GATHER_SCATTER("gather-scatter"),
   VALUE_POINT_TO_POINT("point-to-point"),
@@ -82,15 +87,43 @@ M2NConfiguration:: M2NConfiguration
 
     tags.push_back(tag);
   }
+  {
+    XMLTag tag(*this, VALUE_MPI_SINGLE, occ, TAG);
+    doc = "Communication via MPI with startup in common communication space.";
+    tag.setDocumentation(doc);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_FILES, occ, TAG);
+    doc = "Communication via files.";
+    tag.setDocumentation(doc);
+
+    XMLAttribute<std::string> attrExchangeDirectory(ATTR_EXCHANGE_DIRECTORY);
+    doc = "Directory where communication files are exchanged. By default, the ";
+    doc += "directory of startup is chosen, and both solvers have to be started ";
+    doc += "in the same directory.";
+    attrExchangeDirectory.setDocumentation(doc);
+    attrExchangeDirectory.setDefaultValue("");
+    tag.addAttribute(attrExchangeDirectory);
+
+    tags.push_back(tag);
+  }
 
 
-  XMLAttribute<std::string> attrDistrType ( ATTR_DISTRIBUTION_TYPE);
+  XMLAttribute<std::string> attrDistrTypeBoth ( ATTR_DISTRIBUTION_TYPE);
   doc = "Distribution manner of the M2N communication .";
-  attrDistrType.setDocumentation(doc);
+  attrDistrTypeBoth.setDocumentation(doc);
   ValidatorEquals<std::string> validDistrGatherScatter ( VALUE_GATHER_SCATTER );
   ValidatorEquals<std::string> validDistrP2P ( VALUE_POINT_TO_POINT);
-  attrDistrType.setValidator ( validDistrGatherScatter || validDistrP2P );
-  attrDistrType.setDefaultValue(VALUE_POINT_TO_POINT);
+  attrDistrTypeBoth.setValidator ( validDistrGatherScatter || validDistrP2P );
+  attrDistrTypeBoth.setDefaultValue(VALUE_POINT_TO_POINT);
+
+  XMLAttribute<std::string> attrDistrTypeOnly ( ATTR_DISTRIBUTION_TYPE);
+  doc = "Distribution manner of the M2N communication .";
+  attrDistrTypeOnly.setDocumentation(doc);
+  attrDistrTypeOnly.setValidator ( validDistrGatherScatter );
+  attrDistrTypeOnly.setDefaultValue(VALUE_GATHER_SCATTER);
+
   XMLAttribute<std::string> attrFrom ( ATTR_FROM );
   doc = "First participant name involved in communication.";
   attrFrom.setDocumentation(doc);
@@ -101,7 +134,12 @@ M2NConfiguration:: M2NConfiguration
   foreach (XMLTag& tag, tags){
     tag.addAttribute(attrFrom);
     tag.addAttribute(attrTo);
-    tag.addAttribute(attrDistrType);
+    if(tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS){
+      tag.addAttribute(attrDistrTypeBoth);
+    }
+    else{
+      tag.addAttribute(attrDistrTypeOnly);
+    }
     parent.addSubtag(tag);
   }
 }
@@ -137,6 +175,7 @@ void M2NConfiguration:: xmlTagCallback
     std::string distrType = tag.getStringAttributeValue(ATTR_DISTRIBUTION_TYPE);
 
     com::PtrCommunicationFactory comFactory;
+    com::PtrCommunication com;
     if (tag.getName() == VALUE_SOCKETS){
 #     ifdef PRECICE_NO_SOCKETS
         std::ostringstream error;
@@ -148,6 +187,7 @@ void M2NConfiguration:: xmlTagCallback
         int port = tag.getIntAttributeValue(ATTR_PORT);
         std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
         comFactory = com::PtrCommunicationFactory(new com::SocketCommunicationFactory(network, port, dir));
+        com = comFactory->newCommunication();
 #     endif // PRECICE_NO_SOCKETS
     }
     else if (tag.getName() == VALUE_MPI){
@@ -158,19 +198,35 @@ void M2NConfiguration:: xmlTagCallback
               << "when preCICE is compiled with argument \"mpi=on\"";
         throw error.str();
 #     else
-        //TODO
-        //comFactory = com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory(dir));
+        comFactory = com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory(dir));
+        com = comFactory->newCommunication();
 #     endif
     }
-    assertion(comFactory.get() != NULL);
+    else if (tag.getName() == VALUE_MPI_SINGLE){
+#     ifdef PRECICE_NO_MPI
+        std::ostringstream error;
+        error << "Communication type \"" << VALUE_MPI_SINGLE << "\" can only be used "
+              << "when preCICE is compiled with argument \"mpi=on\"";
+        throw error.str();
+#     else
+        com = com::PtrCommunication(new com::MPIDirectCommunication());
+#     endif
+    }
+    else if (tag.getName() == VALUE_FILES){
+      std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
+      com = com::PtrCommunication(new com::FileCommunication(false, dir));
+    }
 
-    com::PtrCommunication com = comFactory->newCommunication();
+    assertion(com.get() != NULL);
+
 
     PtrDistributedComFactory distrFactory;
-    if(distrType == VALUE_GATHER_SCATTER){
+    if(tag.getName() == VALUE_MPI_SINGLE || tag.getName() == VALUE_FILES || distrType == VALUE_GATHER_SCATTER){
+      assertion(distrType == VALUE_GATHER_SCATTER);
       distrFactory = PtrDistributedComFactory(new GatherScatterComFactory(com));
     }
     else if(distrType == VALUE_POINT_TO_POINT){
+      assertion(tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS);
       //TODO
 //      distrFactory = PtrDistributedCommunicationFactory(new PointToPointComFactory(comFactory));
     }
