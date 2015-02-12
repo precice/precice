@@ -48,7 +48,7 @@ PtrCommunication CommunicationConfiguration:: createCommunication
     std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
     int port = tag.getIntAttributeValue(ATTR_PORT);
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-    com = com::PtrCommunication(new com::SocketCommunication(network, port, dir));
+    com = com::PtrCommunication(new com::SocketCommunication(port, network, dir));
 #   endif // PRECICE_NO_SOCKETS
   }
   else if (tag.getName() == VALUE_MPI){

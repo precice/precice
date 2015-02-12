@@ -2,6 +2,9 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
+
+#ifndef PRECICE_NO_SOCKETS
+
 #ifndef PRECICE_COM_SOCKET_COMMUNICATION_FACTORY_HPP_
 #define PRECICE_COM_SOCKET_COMMUNICATION_FACTORY_HPP_
 
@@ -16,25 +19,25 @@ public:
   /**
    * @brief Constructor.
    */
-  SocketCommunicationFactory(
-      std::string const& networkName,
-      unsigned short portNumber,
-      std::string const& ipAddressExchangeDirectory = "");
+  SocketCommunicationFactory(unsigned short portNumber,
+                             std::string const& networkName = "lo",
+                             std::string const& addressDirectory = ".");
 
   /**
    * @brief Constructor.
    */
-  SocketCommunicationFactory(
-      std::string const& ipAddressExchangeDirectory = "");
+  SocketCommunicationFactory(std::string const& addressDirectory = ".");
 
   PtrCommunication newCommunication();
 
 private:
-  std::string _networkName;
   unsigned short _portNumber;
-  std::string _ipAddressExchangeDirectory;
+  std::string _networkName;
+  std::string _addressDirectory;
 };
 }
 } // namespace precice, com
 
 #endif /* PRECICE_COM_SOCKET_COMMUNICATION_FACTORY_HPP_ */
+
+#endif // not PRECICE_NO_SOCKETS

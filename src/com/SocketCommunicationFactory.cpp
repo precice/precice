@@ -3,6 +3,8 @@
 // use, please see the license notice at
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
+#ifndef PRECICE_NO_SOCKETS
+
 #include "SocketCommunication.hpp"
 
 #include "SocketCommunicationFactory.hpp"
@@ -10,23 +12,25 @@
 namespace precice {
 namespace com {
 SocketCommunicationFactory::SocketCommunicationFactory(
-    std::string const& networkName,
     unsigned short portNumber,
-    std::string const& ipAddressExchangeDirectory)
-    : _networkName(networkName)
-    , _portNumber(portNumber)
-    , _ipAddressExchangeDirectory(ipAddressExchangeDirectory) {
+    std::string const& networkName,
+    std::string const& addressDirectory)
+    : _portNumber(portNumber)
+    , _networkName(networkName)
+    , _addressDirectory(addressDirectory) {
 }
 
 SocketCommunicationFactory::SocketCommunicationFactory(
-    std::string const& ipAddressExchangeDirectory)
-    : _ipAddressExchangeDirectory(ipAddressExchangeDirectory) {
+    std::string const& addressDirectory)
+    : _addressDirectory(addressDirectory) {
 }
 
 PtrCommunication
 SocketCommunicationFactory::newCommunication() {
-  return PtrCommunication(new SocketCommunication(
-      _networkName, _portNumber, _ipAddressExchangeDirectory));
+  return PtrCommunication(
+      new SocketCommunication(_portNumber, _networkName, _addressDirectory));
 }
 }
 } // namespace precice, com
+
+#endif // not PRECICE_NO_SOCKETS

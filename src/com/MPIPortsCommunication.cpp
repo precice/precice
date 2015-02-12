@@ -1,6 +1,7 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
+// use, please see the license notice at
+// http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NO_MPI
 
 #include "MPIPortsCommunication.hpp"
@@ -69,7 +70,7 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
   // doing something weird inside?
 
-  MPI_Open_port(MPI_INFO_NULL, _port_name);
+  MPI_Open_port(MPI_INFO_NULL, _portName);
 
   utils::Parallel::initialize(NULL, NULL, nameAcceptor);
 
@@ -79,7 +80,7 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   {
     std::ofstream addressFile(addressFileName + "~", std::ios::out);
 
-    addressFile << _port_name;
+    addressFile << _portName;
   }
 
   std::rename((addressFileName + "~").c_str(), addressFileName.c_str());
@@ -90,7 +91,7 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   int requesterProcessRank = -1;
   int requesterCommunicatorSize = 0;
 
-  MPI_Comm_accept(_port_name, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+  MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
   MPI_Recv(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator, &status);
   MPI_Recv(
@@ -105,7 +106,7 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   _communicators[requesterProcessRank] = communicator;
 
   for (int i = 1; i < requesterCommunicatorSize; ++i) {
-    MPI_Comm_accept(_port_name, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+    MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
     MPI_Recv(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator, &status);
     MPI_Recv(
@@ -151,14 +152,14 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
       addressFile.open(addressFileName, std::ios::in);
     } while (not addressFile);
 
-    addressFile.getline(_port_name, MPI_MAX_PORT_NAME);
+    addressFile.getline(_portName, MPI_MAX_PORT_NAME);
   }
 
-  // std::cout << _port_name << std::endl;
+  // std::cout << _portName << std::endl;
 
   MPI_Comm communicator;
 
-  MPI_Comm_connect(_port_name, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+  MPI_Comm_connect(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
   MPI_Send(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator);
   MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
@@ -179,7 +180,7 @@ MPIPortsCommunication::closeConnection() {
   }
 
   if (_isAcceptor) {
-    MPI_Close_port(_port_name);
+    MPI_Close_port(_portName);
   }
 
   _isConnected = false;

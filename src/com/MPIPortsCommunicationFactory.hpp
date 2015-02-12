@@ -2,6 +2,7 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
+
 #ifndef PRECICE_NO_MPI
 
 #ifndef PRECICE_COM_MPI_PORTS_COMMUNICATION_FACTORY_HPP_

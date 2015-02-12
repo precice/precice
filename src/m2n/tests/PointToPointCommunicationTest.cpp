@@ -79,8 +79,8 @@ void
 PointToPointCommunicationTest::testSocketCommunication() {
   preciceTrace("testSocketCommunication");
 
-  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory(
-      "lo", 30000 + Parallel::getProcessRank()));
+  com::PtrCommunicationFactory cf(
+      new com::SocketCommunicationFactory(30000 + Parallel::getProcessRank()));
 
   test(cf);
 }

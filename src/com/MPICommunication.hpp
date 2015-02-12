@@ -1,10 +1,11 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_COM_COMMUNICATIONMPI_HPP_
-#define PRECICE_COM_COMMUNICATIONMPI_HPP_
 
 #ifndef PRECICE_NO_MPI
+
+#ifndef PRECICE_COM_COMMUNICATIONMPI_HPP_
+#define PRECICE_COM_COMMUNICATIONMPI_HPP_
 
 #include "Communication.hpp"
 #include "mpi.h"
@@ -216,5 +217,6 @@ private:
 
 }} // namespace precice, com
 
-#endif // not PRECICE_NO_MPI
 #endif /* PRECICE_COM_COMMUNICATIONMPI_HPP_ */
+
+#endif // not PRECICE_NO_MPI

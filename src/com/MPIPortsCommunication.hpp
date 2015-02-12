@@ -101,7 +101,7 @@ private:
   std::vector<MPI_Comm> _communicators;
 
   // @brief Name of the port used for connection.
-  char _port_name[MPI_MAX_PORT_NAME];
+  char _portName[MPI_MAX_PORT_NAME];
 
   bool _isAcceptor;
 

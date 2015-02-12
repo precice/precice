@@ -1,6 +1,7 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
+
 #ifndef PRECICE_NO_MPI
 
 #include "MPICommunication.hpp"
@@ -11,7 +12,6 @@ namespace com {
 
 tarch::logging::Log MPICommunication::
     _log ("precice::com::MPICommunication");
-
 
 MPICommunication:: MPICommunication
 (
@@ -34,7 +34,7 @@ void MPICommunication:: send
   int length = itemToSend.size();
   preciceDebug ( "Message length: " << length );
   // const_cast is needed because MPI_Send expects a void* as first argument.
-  char *cstr = const_cast<char*>(itemToSend.c_str()); 
+  char *cstr = const_cast<char*>(itemToSend.c_str());
   preciceDebug ("Message: " + std::string(cstr));
   MPI_Send(cstr, length+1, MPI_CHAR, rankReceiver, 0, _communicator);
 }

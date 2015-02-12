@@ -114,8 +114,9 @@ main(int argc, char** argv) {
         utils::MasterSlave::_size - rankOffset);
   }
 
-  // com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory(
-  //     "lo", 40000 + utils::MasterSlave::_rank));
+  // com::PtrCommunicationFactory cf(
+  //     new com::SocketCommunicationFactory(40000 +
+  //     utils::MasterSlave::_rank));
 
   com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
 
@@ -161,5 +162,6 @@ main(int argc, char** argv) {
   utils::MasterSlave::_communication.reset();
 
   MPI_Finalize();
+
   std::cout << "Stop communication dummy" << std::endl;
 }
