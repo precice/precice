@@ -127,6 +127,19 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
                  "Network \"" << _networkName
                               << "\" not found for socket connection!");
 
+    tcp::acceptor acceptor(*_ioService);
+
+    {
+      tcp::endpoint endpoint(tcp::v4(), _portNumber);
+
+      acceptor.open(endpoint.protocol());
+      acceptor.set_option(tcp::acceptor::reuse_address(_reuseAddress));
+      acceptor.bind(endpoint);
+      acceptor.listen();
+
+      _portNumber = acceptor.local_endpoint().port();
+    }
+
     std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
                                 "-" + nameAcceptor + ".address");
 
@@ -136,30 +149,28 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
       addressFile << ipAddress.str() << ":" << _portNumber;
     }
 
+    // std::cout << _portNumber << std::endl;
+
     std::rename((addressFileName + "~").c_str(), addressFileName.c_str());
 
     preciceDebug("Accept connection at " << ipAddress.str() << ":"
                                          << _portNumber);
 
-    tcp::endpoint endpoint(tcp::v4(), _portNumber);
-
-    tcp::acceptor acceptor(*_ioService);
-
-    acceptor.open(endpoint.protocol());
-    acceptor.set_option(tcp::acceptor::reuse_address(_reuseAddress));
-    acceptor.bind(endpoint);
-    acceptor.listen();
-
     PtrSocket socket(new tcp::socket(*_ioService));
-    acceptor.accept(*socket); // Waits until connection
+
+    acceptor.accept(*socket);
+
     int remoteRank = -1;
     int remoteSize = 0;
+
     asio::read(*socket, asio::buffer((void*)&remoteRank, sizeof(int)));
     asio::read(*socket, asio::buffer((void*)&remoteSize, sizeof(int)));
+
     preciceCheck(remoteSize > 0,
                  "acceptConnection()",
                  "Requester communicator "
                      << "size has to be > 0!");
+
     _remoteCommunicatorSize = remoteSize;
     preciceDebug("Received rank=" << remoteRank << ", size=" << remoteSize);
     _sockets.resize(_remoteCommunicatorSize);
@@ -184,6 +195,7 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
       send(acceptorProcessRank, remoteRank);
       send(acceptorCommunicatorSize, remoteRank);
     }
+
     acceptor.close();
 
     std::remove(addressFileName.c_str());
@@ -234,12 +246,14 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
 
     while (not _isConnected) {
       tcp::resolver resolver(*_ioService);
-      tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
-      preciceDebug("Request connection at " << endpoint);
-      boost::system::error_code error = asio::error::host_not_found;
-      socket->connect(endpoint, error);
 
-      _isConnected = not error;
+      {
+        tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
+        boost::system::error_code error = asio::error::host_not_found;
+        socket->connect(endpoint, error);
+
+        _isConnected = not error;
+      }
 
       if (not _isConnected) {
         // Wait a little, since after a couple of ten-thousand trials the system

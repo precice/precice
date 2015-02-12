@@ -47,7 +47,7 @@ public:
   /**
    * @brief Constructor.
    */
-  SocketCommunication(unsigned short portNumber,
+  SocketCommunication(unsigned short portNumber = 0,
                       bool reuseAddress = false,
                       std::string const& networkName = "lo",
                       std::string const& addressDirectory = ".");
@@ -55,7 +55,7 @@ public:
   /**
    * @brief Constructor.
    */
-  SocketCommunication(std::string const& addressDirectory = ".");
+  SocketCommunication(std::string const& addressDirectory);
 
   /**
    * @brief Destructor.
