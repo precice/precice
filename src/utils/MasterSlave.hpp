@@ -54,6 +54,8 @@ public:
 
   static void scatter(int& value);
 
+  static void reset();
+
 private:
 
   static tarch::logging::Log _log;

@@ -178,6 +178,8 @@ void M2N:: send (
 {
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     assertion(_areSlavesConnected);
+    assertion(_distComs.find(meshID) != _distComs.end());
+    assertion(_distComs[meshID].get() != NULL);
     _distComs[meshID]->send(itemsToSend,size,valueDimension);
   }
   else{//coupling mode
@@ -212,6 +214,8 @@ void M2N:: receive (
 {
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     assertion(_areSlavesConnected);
+    assertion(_distComs.find(meshID) != _distComs.end());
+    assertion(_distComs[meshID].get() != NULL);
     _distComs[meshID]->receive(itemsToReceive,size,valueDimension);
   }
   else{//coupling mode

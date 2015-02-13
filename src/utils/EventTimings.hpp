@@ -100,6 +100,9 @@ public:
   /// Sets the global end time
   static void finalize();
 
+  /// clears the registry. needed for tests
+  static void clear();
+
   /// Finalize the timings and call print. Can be used as a crash handler to still get some timing results.
   static void signal_handler(int signal);
 
@@ -126,7 +129,10 @@ private:
 /// Convenience function that calls EventRegistry::initalize
 void Events_Init();
 
-/// Convenience function that calls EventRegistry::initalize
+/// Convenience function that calls EventRegistry::finalize
 void Events_Finalize();
+
+/// Convenience function that calls EventRegistry::clear
+void Events_Clear();
 
 }} // namespace precice::utils

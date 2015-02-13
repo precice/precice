@@ -11,6 +11,8 @@
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "tarch/la/WrappedVector.h"
+#include "utils/MasterSlave.hpp"
+#include "utils/EventTimings.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerIntegrationTest(precice::tests::SolverInterfaceTest)
@@ -84,6 +86,7 @@ void SolverInterfaceTest:: run()
     MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
+      testMethod(testDistributedCommunications)
       testMethod(testMultiCoupling);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
@@ -102,6 +105,8 @@ void SolverInterfaceTest:: configureSolverInterface
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
+  precice::utils::Events_Clear();
+  utils::MasterSlave::reset();
   config::Configuration config;
   utils::configure(config.getXMLTag(), configFilename);
   //validate ( config.isValid() );
@@ -1334,6 +1339,116 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
       interface.finalize();
     }
   }
+}
+
+void SolverInterfaceTest:: testDistributedCommunications()
+{
+  preciceTrace("testDistributedCommunications()");
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  mesh::Mesh::resetGeometryIDsGlobally();
+
+  std::string filename = "gather-scatter-mpi.xml";
+
+  std::string solverName;
+  int rank, size;
+  std::string meshName;
+  int i1,i2; //indices for data and positions
+
+  std::vector<utils::DynVector> positions;
+  utils::DynVector position(3);
+  std::vector<utils::DynVector> data;
+  std::vector<utils::DynVector> expectedData;
+  utils::DynVector datum(3);
+
+  for( int i=0; i<4; i++){
+    position[0] = i*1.0;
+    position[1] = 0.0;
+    position[2] = 0.0;
+    positions.push_back(position);
+    datum[0] = i*1.0;
+    datum[1] = i*1.0;
+    datum[2] = 0.0;
+    data.push_back(datum);
+    datum[0] = i*2.0+1.0;
+    datum[1] = i*2.0+1.0;
+    datum[2] = 1.0;
+    expectedData.push_back(datum);
+  }
+
+
+  if (utils::Parallel::getProcessRank() == 0){
+    solverName = "Fluid";
+    rank = 0;
+    size = 2;
+    meshName = "FluidMesh";
+    i1 = 0;
+    i2 = 2;
+  }
+  else if(utils::Parallel::getProcessRank() == 1){
+    solverName = "Fluid";
+    rank = 1;
+    size = 2;
+    meshName = "FluidMesh";
+    i1 = 2;
+    i2 = 4;
+  }
+  else if(utils::Parallel::getProcessRank() == 2){
+    solverName = "Structure";
+    rank = 0;
+    size = 2;
+    meshName = "StructureMesh";
+    i1 = 0;
+    i2 = 1;
+  }
+  else if(utils::Parallel::getProcessRank() == 3){
+    solverName = "Structure";
+    rank = 1;
+    size = 2;
+    meshName = "StructureMesh";
+    i1 = 1;
+    i2 = 4;
+  }
+
+  SolverInterface precice(solverName, rank, size);
+  configureSolverInterface(_pathToTests + filename, precice);
+  int meshID = precice.getMeshID(meshName);
+  int forcesID = precice.getDataID("Forces", meshID);
+  int velocID = precice.getDataID("Velocities", meshID);
+
+  std::vector<int> vertexIDs;
+  for(int i=i1; i<i2; i++){
+    int vertexID = precice.setMeshVertex(meshID, raw(positions[i]));
+    vertexIDs.push_back(vertexID);
+  }
+
+  precice.initialize();
+
+  if (utils::Parallel::getProcessRank() <= 1){ //Fluid
+    for( size_t i=0; i<vertexIDs.size(); i++){
+      precice.writeVectorData(forcesID, vertexIDs[i], raw(data[i+i1]));
+    }
+  }
+  else if (utils::Parallel::getProcessRank() >= 2){ //Structure
+    for( size_t i=0; i<vertexIDs.size(); i++){
+      precice.readVectorData(forcesID, vertexIDs[i], raw(data[i]));
+      data[i] = data[i]*2 + 1.0;
+      precice.writeVectorData(velocID, vertexIDs[i], raw(data[i]));
+    }
+  }
+
+  precice.advance(1.0);
+
+  if (utils::Parallel::getProcessRank() <= 1){ //Fluid
+    for( size_t i=0; i<vertexIDs.size(); i++){
+      precice.readVectorData(velocID, vertexIDs[i], raw(data[i+i1]));
+      for (size_t d=0; d<3; d++){
+        validateNumericalEquals(expectedData[i+i1][d],data[i+i1][d]);
+      }
+    }
+  }
+
+  precice.finalize();
+
 }
 
 void SolverInterfaceTest:: testBug()

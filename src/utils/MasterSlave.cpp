@@ -132,6 +132,15 @@ void MasterSlave:: scatter(int& value)
   }
 }
 
+void MasterSlave:: reset()
+{
+  preciceTrace("reset()");
+  _masterMode = false;
+  _slaveMode = false;
+  _rank = -1;
+  _size = -1;
+}
+
 
 
 
