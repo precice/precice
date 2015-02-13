@@ -19,19 +19,21 @@ public:
   /**
    * @brief Constructor.
    */
-  SocketCommunicationFactory(unsigned short portNumber,
+  SocketCommunicationFactory(unsigned short portNumber = 0,
+                             bool reuseAddress = false,
                              std::string const& networkName = "lo",
                              std::string const& addressDirectory = ".");
 
   /**
    * @brief Constructor.
    */
-  SocketCommunicationFactory(std::string const& addressDirectory = ".");
+  SocketCommunicationFactory(std::string const& addressDirectory);
 
   PtrCommunication newCommunication();
 
 private:
   unsigned short _portNumber;
+  bool _reuseAddress;
   std::string _networkName;
   std::string _addressDirectory;
 };

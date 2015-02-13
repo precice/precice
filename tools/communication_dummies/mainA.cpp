@@ -114,11 +114,9 @@ main(int argc, char** argv) {
         utils::MasterSlave::_size - rankOffset);
   }
 
-  // com::PtrCommunicationFactory cf(
-  //     new com::SocketCommunicationFactory(40000 +
-  //     utils::MasterSlave::_rank));
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
 
-  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  // com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 

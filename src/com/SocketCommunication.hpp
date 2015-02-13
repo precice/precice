@@ -47,14 +47,16 @@ public:
   /**
    * @brief Constructor.
    */
-  SocketCommunication(std::string const& addressDirectory = ".");
+  SocketCommunication(unsigned short portNumber = 0,
+                      bool reuseAddress = false,
+                      std::string const& networkName = "lo",
+                      std::string const& addressDirectory = ".");
 
   /**
    * @brief Constructor.
    */
-  SocketCommunication(unsigned short portNumber,
-                      std::string const& networkName = "lo",
-                      std::string const& addressDirectory = ".");
+  SocketCommunication(std::string const& addressDirectory);
+
   /**
    * @brief Destructor.
    */
@@ -212,16 +214,18 @@ private:
   // @brief Port used for socket connection.
   unsigned short _portNumber;
 
+  bool _reuseAddress;
+
   // @brief Name of network to communicate over.
   std::string _networkName;
 
   // @brief Directory where IP address is exchanged by file.
   std::string _addressDirectory;
 
+  bool _isConnected;
+
   // @brief Local process rank sent as query.
   int _processRank;
-
-  bool _isConnected;
 
   int _remoteCommunicatorSize;
 
