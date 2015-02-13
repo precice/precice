@@ -160,6 +160,8 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
 
     acceptor.accept(*socket);
 
+    _isConnected = true;
+
     int remoteRank = -1;
     int remoteSize = 0;
 
@@ -172,14 +174,18 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
                      << "size has to be > 0!");
 
     _remoteCommunicatorSize = remoteSize;
+
     preciceDebug("Received rank=" << remoteRank << ", size=" << remoteSize);
+
     _sockets.resize(_remoteCommunicatorSize);
     _clientQueryBuffers.resize(_remoteCommunicatorSize);
+
     _sockets[remoteRank] = socket;
+
     send(acceptorProcessRank, remoteRank);
     send(acceptorCommunicatorSize, remoteRank);
-    for (int i = 1; i < _remoteCommunicatorSize;
-         i++) { // Connect to remaining processes
+
+    for (int i = 1; i < _remoteCommunicatorSize; i++) {
       socket = PtrSocket(new Socket(*_ioService));
       acceptor.accept(*socket); // Waits until connection
       asio::read(*socket, asio::buffer((void*)&remoteRank, sizeof(int)));
@@ -204,8 +210,6 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
                  "Accepting connection at port " << _portNumber
                                                  << " failed: " << e.what());
   }
-
-  _isConnected = true;
 
   _queryWork = PtrWork(new asio::io_service::work(*_ioService));
   _queryThread = std::thread(&SocketCommunication::onThreadRun, this);
