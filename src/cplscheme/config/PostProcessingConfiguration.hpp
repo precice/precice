@@ -86,6 +86,7 @@ private:
    const std::string VALUE_HIERARCHICAL_AITKEN;
    const std::string VALUE_IQNILS;
    const std::string VALUE_MVQN;
+   const std::string VALUE_BROYDEN;
 
    //bool _isValid;
 
