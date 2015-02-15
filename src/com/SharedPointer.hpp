@@ -18,6 +18,9 @@ typedef boost::shared_ptr<CommunicationFactory> PtrCommunicationFactory;
 //class CommunicationConfiguration;
 //typedef boost::shared_ptr<CommunicationConfiguration> PtrCommunicationConfiguration;
 
+class Request;
+typedef boost::shared_ptr<Request> PtrRequest;
+
 }} // namespace precice, com
 
 #endif /* SHAREDPOINTER_HPP_ */

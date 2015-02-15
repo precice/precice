@@ -156,10 +156,14 @@ public:
    */
   virtual void send(double itemToSend, int rankReceiver);
 
+  virtual PtrRequest aSend(double itemToSend, int rankReceiver);
+
   /**
    * @brief Sends an int to process with given rank.
    */
   virtual void send(int itemToSend, int rankReceiver);
+
+  virtual PtrRequest aSend(int itemToSend, int rankReceiver);
 
   /**
    * @brief Sends a bool to process with given rank.

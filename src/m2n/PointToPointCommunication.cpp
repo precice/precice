@@ -3,14 +3,14 @@
 // use, please see the license notice at
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
-#ifndef PRECICE_NO_OMP
-
 #include "PointToPointCommunication.hpp"
 
+#include "com/Request.hpp"
+#include "com/SharedPointer.hpp"
 #include "utils/MasterSlave.hpp"
 #include "mesh/Mesh.hpp"
 
-#include <omp.h>
+#include <vector>
 
 namespace precice {
 namespace m2n {
@@ -536,20 +536,33 @@ PointToPointCommunication::send(double* itemsToSend,
     return;
   }
 
-  omp_set_dynamic(0);
+  std::vector<com::PtrRequest> requests;
 
-#pragma omp parallel num_threads(_senderMap.size())
-  {
-    // TODO: Might be reasonable to prepare an array of iterators in order to
-    // improve performance.
-    auto indices = std::next(_senderMap.begin(), omp_get_thread_num())->second;
-    auto c = std::next(_communications.begin(), omp_get_thread_num())->second;
+  requests.reserve(_senderMap.size());
 
-    int rank = _isAcceptor ? omp_get_thread_num() : 0;
+  int rank = 0;
 
+  for (auto i : _senderMap) {
+    auto receiverRank = i.first;
+    auto indices = i.second;
+
+    auto c = _communications[receiverRank];
+
+    // TODO:
+    // Collapse into a single `aSend' call sending an array (then `reserve'
+    // would be correct).
     for (auto index : indices) {
-      c->send(itemsToSend[index], rank);
+      auto request = c->aSend(itemsToSend[index], rank);
+
+      requests.push_back(request);
     }
+
+    if (_isAcceptor)
+      rank++;
+  }
+
+  for (auto request : requests) {
+    request->wait();
   }
 }
 
@@ -581,5 +594,3 @@ PointToPointCommunication::receive(double* itemsToReceive,
 }
 }
 } // namespace precice, m2n
-
-#endif // not PRECICE_NO_OMP

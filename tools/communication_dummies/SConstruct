@@ -32,9 +32,6 @@ env = Environment (
    ENV        = os.environ
    )
 
-env.Append(CCFLAGS = ['-fopenmp'])
-env.Append(LINKFLAGS = ['-fopenmp'])
-
 conf = Configure(env)
 
 conf.env.AppendUnique(LIBPATH = [preciceLibPath])

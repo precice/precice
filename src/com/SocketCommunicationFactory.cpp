@@ -5,9 +5,9 @@
 
 #ifndef PRECICE_NO_SOCKETS
 
-#include "SocketCommunication.hpp"
-
 #include "SocketCommunicationFactory.hpp"
+
+#include "SocketCommunication.hpp"
 
 namespace precice {
 namespace com {

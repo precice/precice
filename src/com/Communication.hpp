@@ -4,8 +4,11 @@
 #ifndef PRECICE_COM_COMMUNICATION_HPP_
 #define PRECICE_COM_COMMUNICATION_HPP_
 
+#include "SharedPointer.hpp"
+
 #include "utils/Dimensions.hpp"
 #include "mesh/Data.hpp"
+
 #include <string>
 
 namespace precice {
@@ -122,9 +125,23 @@ public:
     int    rankReceiver ) =0;
 
   /**
+   * @brief Sends a double to process with given rank.
+   */
+  virtual PtrRequest aSend (
+    double itemToSend,
+    int    rankReceiver ) =0;
+
+  /**
    * @brief Sends an int to process with given rank.
    */
   virtual void send (
+    int itemToSend,
+    int rankReceiver ) =0;
+
+  /**
+   * @brief Sends an int to process with given rank.
+   */
+  virtual PtrRequest aSend (
     int itemToSend,
     int rankReceiver ) =0;
 

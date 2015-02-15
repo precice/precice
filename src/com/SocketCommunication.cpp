@@ -6,6 +6,8 @@
 
 #include "SocketCommunication.hpp"
 
+#include "SocketRequest.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
@@ -297,6 +299,12 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
     preciceError("requestConnection()",
                  "Requesting connection failed: " << e.what());
   }
+
+  // NOTE:
+  // Keep IO service running so that it fires asynchronous handlers from another
+  // thread.
+  _queryWork = PtrWork(new asio::io_service::work(*_ioService));
+  _queryThread = std::thread([this]() { _ioService->run(); });
 }
 
 void
@@ -406,6 +414,36 @@ SocketCommunication::send(double itemToSend, int rankReceiver) {
   }
 }
 
+PtrRequest
+SocketCommunication::aSend(double itemToSend, int rankReceiver) {
+  preciceTrace2("aSend(double)", itemToSend, rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
+  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+             rankReceiver,
+             _sockets.size());
+  assertion(_isConnected);
+
+  PtrRequest request(new SocketRequest);
+
+  try {
+    sendQuery(rankReceiver);
+    asio::async_write(*_sockets[rankReceiver],
+                      asio::buffer((void*)&itemToSend, sizeof(double)),
+                      [request](boost::system::error_code const&, std::size_t) {
+      static_cast<SocketRequest*>(request.get())->complete();
+    });
+
+    // std::bind(&SocketRequest::,
+    //           shared_from_this(),
+    //           boost::asio::placeholders::error,
+    //           boost::asio::placeholders::bytes_transferred));
+  } catch (std::exception& e) {
+    preciceError("aSend(double)", "Send failed: " << e.what());
+  }
+
+  return request;
+}
+
 void
 SocketCommunication::send(int itemToSend, int rankReceiver) {
   preciceTrace2("send(int)", itemToSend, rankReceiver);
@@ -419,8 +457,33 @@ SocketCommunication::send(int itemToSend, int rankReceiver) {
     asio::write(*_sockets[rankReceiver],
                 asio::buffer((void*)&itemToSend, sizeof(int)));
   } catch (std::exception& e) {
-    preciceError("send(double)", "Send failed: " << e.what());
+    preciceError("send(int)", "Send failed: " << e.what());
   }
+}
+
+PtrRequest
+SocketCommunication::aSend(int itemToSend, int rankReceiver) {
+  preciceTrace2("aSend(int)", itemToSend, rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
+  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+             rankReceiver,
+             _sockets.size());
+  assertion(_isConnected);
+
+  PtrRequest request(new SocketRequest);
+
+  try {
+    sendQuery(rankReceiver);
+    asio::async_write(*_sockets[rankReceiver],
+                      asio::buffer((void*)&itemToSend, sizeof(int)),
+                      [request](boost::system::error_code const&, std::size_t) {
+      static_cast<SocketRequest*>(request.get())->complete();
+    });
+  } catch (std::exception& e) {
+    preciceError("aSend(int)", "Send failed: " << e.what());
+  }
+
+  return request;
 }
 
 void

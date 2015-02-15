@@ -5,9 +5,9 @@
 
 #ifndef PRECICE_NO_MPI
 
-#include "MPIPortsCommunication.hpp"
-
 #include "MPIPortsCommunicationFactory.hpp"
+
+#include "MPIPortsCommunication.hpp"
 
 namespace precice {
 namespace com {

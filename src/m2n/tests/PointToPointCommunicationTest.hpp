@@ -3,7 +3,6 @@
 // use, please see the license notice at
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
-#ifndef PRECICE_NO_OMP
 #ifndef PRECICE_NO_MPI
 
 #ifndef PRECICE_M2N_TESTS_POINT_TO_POINT_COMMUNICATION_TEST_HPP_
@@ -52,4 +51,3 @@ private:
 #endif /* PRECICE_M2N_TESTS_POINT_TO_POINT_COMMUNICATION_TEST_HPP_ */
 
 #endif // not PRECICE_NO_MPI
-#endif // not PRECICE_NO_OMP

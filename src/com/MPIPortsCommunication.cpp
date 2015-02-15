@@ -6,6 +6,8 @@
 
 #include "MPIPortsCommunication.hpp"
 
+#include "MPIRequest.hpp"
+
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
 
@@ -13,7 +15,6 @@
 
 namespace precice {
 namespace com {
-
 tarch::logging::Log MPIPortsCommunication::_log(
     "precice::com::MPIPortsCommunication");
 
@@ -188,7 +189,6 @@ MPIPortsCommunication::closeConnection() {
 
 void
 MPIPortsCommunication::send(std::string const& itemToSend, int rankReceiver) {
-#pragma omp critical
   communicator() = _communicators[rankReceiver - _rankOffset];
 
   // HACK:
@@ -198,39 +198,76 @@ MPIPortsCommunication::send(std::string const& itemToSend, int rankReceiver) {
 
 void
 MPIPortsCommunication::send(int* itemsToSend, int size, int rankReceiver) {
-#pragma omp critical
-  communicator() = _communicators[rankReceiver - _rankOffset];
-
-  MPICommunication::send(itemsToSend, size, _rankOffset);
+  MPI_Send(itemsToSend,
+           size,
+           MPI_INT,
+           0,
+           0,
+           _communicators[rankReceiver - _rankOffset]);
 }
 
 void
 MPIPortsCommunication::send(double* itemsToSend, int size, int rankReceiver) {
-#pragma omp critical
-  communicator() = _communicators[rankReceiver - _rankOffset];
-
-  MPICommunication::send(itemsToSend, size, _rankOffset);
+  MPI_Send(itemsToSend,
+           size,
+           MPI_DOUBLE,
+           0,
+           0,
+           _communicators[rankReceiver - _rankOffset]);
 }
 
 void
 MPIPortsCommunication::send(double itemToSend, int rankReceiver) {
-#pragma omp critical
-  communicator() = _communicators[rankReceiver - _rankOffset];
+  MPI_Send(&itemToSend,
+           1,
+           MPI_DOUBLE,
+           0,
+           0,
+           _communicators[rankReceiver - _rankOffset]);
+}
 
-  MPICommunication::send(itemToSend, _rankOffset);
+PtrRequest
+MPIPortsCommunication::aSend(double itemToSend, int rankReceiver) {
+  MPI_Request request;
+
+  MPI_Isend(&itemToSend,
+            1,
+            MPI_DOUBLE,
+            0,
+            0,
+            _communicators[rankReceiver - _rankOffset],
+            &request);
+
+  return PtrRequest(new MPIRequest(request));
 }
 
 void
 MPIPortsCommunication::send(int itemToSend, int rankReceiver) {
-#pragma omp critical
-  communicator() = _communicators[rankReceiver - _rankOffset];
+  MPI_Send(&itemToSend,
+           1,
+           MPI_INT,
+           0,
+           0,
+           _communicators[rankReceiver - _rankOffset]);
+}
 
-  MPICommunication::send(itemToSend, _rankOffset);
+PtrRequest
+MPIPortsCommunication::aSend(int itemToSend, int rankReceiver) {
+  MPI_Request request;
+
+  MPI_Isend(&itemToSend,
+            1,
+            MPI_INT,
+            0,
+            0,
+            _communicators[rankReceiver - _rankOffset],
+            &request);
+
+  return PtrRequest(new MPIRequest(request));
 }
 
 void
 MPIPortsCommunication::send(bool itemToSend, int rankReceiver) {
-#pragma omp critical
   communicator() = _communicators[rankReceiver - _rankOffset];
 
   MPICommunication::send(itemToSend, _rankOffset);

@@ -3,7 +3,6 @@
 // use, please see the license notice at
 // http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
-#ifndef PRECICE_NO_OMP
 #ifndef PRECICE_NO_MPI
 
 #include "PointToPointCommunicationTest.hpp"
@@ -68,8 +67,8 @@ PointToPointCommunicationTest::run() {
 
     if (Parallel::getProcessRank() < 4) {
       Parallel::setGlobalCommunicator(communicator);
-      testMethod(testMPIPortsCommunication);
       testMethod(testSocketCommunication);
+      testMethod(testMPIPortsCommunication);
       Parallel::setGlobalCommunicator(Parallel::getCommunicatorWorld());
     }
   }
@@ -236,4 +235,3 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
 } // namespace precice, m2n, tests
 
 #endif // not PRECICE_NO_MPI
-#endif // not PRECICE_NO_OMP
