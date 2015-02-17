@@ -523,6 +523,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
 void
 PointToPointCommunication::closeConnection() {
+  _isConnected = false;
 }
 
 void

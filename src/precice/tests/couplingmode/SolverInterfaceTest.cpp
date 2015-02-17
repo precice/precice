@@ -1815,6 +1815,7 @@ void SolverInterfaceTest:: testNASTINMeshRestart()
   }
 
   std::string readSimCheckpoint(constants::actionReadSimulationCheckpoint());
+  std::string writeItCheckpoint(constants::actionWriteIterationCheckpoint());
 
   mesh::Mesh::resetGeometryIDsGlobally();
   int meshSize = 27;
@@ -1958,6 +1959,11 @@ void SolverInterfaceTest:: testNASTINMeshRestart()
   int vertexIDs[meshSize];
   precice.setMeshVertices(meshID, meshSize, positions, vertexIDs);
   precice.initialize();
+
+  if (precice.isActionRequired(writeItCheckpoint)){
+    precice.fulfilledAction(writeItCheckpoint);
+  }
+  precice.finalize();
 }
 
 #endif // defined( not PRECICE_NO_MPI )
