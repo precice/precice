@@ -228,12 +228,6 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_OMP'])
     buildpath += "-noomp"
 
-if env["omp"]:
-    conf.CheckOpenMP()
-else:
-    env.Append(CPPDEFINES = ['PRECICE_NO_OMP'])
-    buildpath += "-noomp"
-
 if env["petsc"]:
     env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])

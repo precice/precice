@@ -554,12 +554,19 @@ PointToPointCommunication::send(double* itemsToSend,
     // TODO:
     // Collapse into a single `aSend' call sending an array (then `reserve'
     // would be correct).
-    for (auto index : indices) {
-      auto request =
-          c->aSend(&itemsToSend[index * valueDimension], valueDimension, rank);
+    std::vector<double> data;
 
-      requests.push_back(request);
+    data.reserve(indices.size() * valueDimension);
+
+    for (auto index : indices) {
+      for (int d = 0; d < valueDimension; ++d) {
+        data.push_back(itemsToSend[index * valueDimension + d]);
+      }
     }
+
+    auto request = c->aSend(data.data(), data.size(), rank);
+
+    requests.push_back(request);
 
     if (_isAcceptor)
       rank++;
@@ -584,13 +591,23 @@ PointToPointCommunication::receive(double* itemsToReceive,
 
     auto c = _communications[otherRank];
 
-    for (auto index : indices) {
-      double items[3];
+    std::vector<double> data;
 
-      c->receive(items, valueDimension, rank);
+    data.resize(indices.size() * valueDimension);
 
-      for (int i = 0; i < valueDimension; ++i)
-        itemsToReceive[index * valueDimension + i] += items[i];
+    c->receive(data.data(), data.size(), rank);
+
+    {
+      int i = 0;
+
+      for (auto index : indices) {
+        for (int d = 0; d < valueDimension; ++d) {
+          itemsToReceive[index * valueDimension + d] +=
+              data[i * valueDimension + d];
+        }
+
+        i++;
+      }
     }
 
     if (_isAcceptor)
