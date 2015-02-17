@@ -73,7 +73,11 @@ public:
 
   virtual void send(int* itemsToSend, int size, int rankReceiver);
 
+  virtual PtrRequest aSend(int* itemsToSend, int size, int rankReceiver);
+
   virtual void send(double* itemsToSend, int size, int rankReceiver);
+
+  virtual PtrRequest aSend(double* itemsToSend, int size, int rankReceiver);
 
   virtual void send(double itemToSend, int rankReceiver);
 

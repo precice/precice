@@ -39,7 +39,7 @@
          <read-data name="Forces"      mesh="StructureMesh" />
       </participant>
 
-      <m2n:mpi distribution-type="gather-scatter" from="Fluid" to="Structure" />
+      <m2n:sockets distribution-type="point-to-point" from="Fluid" to="Structure" />
 
       <coupling-scheme:serial-explicit>
          <participants first="Fluid" second="Structure" />

@@ -114,10 +114,6 @@ main(int argc, char** argv) {
         utils::MasterSlave::_size - rankOffset);
   }
 
-  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
-
-  // com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
-
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 
   if (utils::MasterSlave::_masterMode) {
@@ -137,25 +133,33 @@ main(int argc, char** argv) {
     mesh->getVertexDistribution()[2].push_back(9);
   }
 
-  m2n::PointToPointCommunication c(cf, mesh);
+  std::vector<com::PtrCommunicationFactory> cfs(
+      {com::PtrCommunicationFactory(new com::SocketCommunicationFactory),
+       com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory)});
 
-  c.requestConnection("B", "A");
+  for (auto cf : cfs) {
+    m2n::PointToPointCommunication c(cf, mesh);
 
-  cout << utils::MasterSlave::_rank << ": "
-       << "Connected!" << endl;
+    c.requestConnection("B", "A");
 
-  std::vector<double> data = getData();
-
-  c.send(data.data(), data.size(), 42);
-
-  c.receive(data.data(), data.size(), 42);
-
-  if (validate(data))
     cout << utils::MasterSlave::_rank << ": "
-         << "Success!" << endl;
-  else
-    cout << utils::MasterSlave::_rank << ": "
-         << "Failure!" << endl;
+         << "Connected!" << endl;
+
+    std::vector<double> data = getData();
+
+    c.send(data.data(), data.size());
+
+    c.receive(data.data(), data.size());
+
+    if (validate(data))
+      cout << utils::MasterSlave::_rank << ": "
+           << "Success!" << endl;
+    else
+      cout << utils::MasterSlave::_rank << ": "
+           << "Failure!" << endl;
+
+    cout << "----------" << endl;
+  }
 
   utils::MasterSlave::_communication.reset();
 

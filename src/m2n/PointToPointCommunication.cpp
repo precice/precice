@@ -555,7 +555,8 @@ PointToPointCommunication::send(double* itemsToSend,
     // Collapse into a single `aSend' call sending an array (then `reserve'
     // would be correct).
     for (auto index : indices) {
-      auto request = c->aSend(itemsToSend[index], rank);
+      auto request =
+          c->aSend(&itemsToSend[index * valueDimension], valueDimension, rank);
 
       requests.push_back(request);
     }
@@ -584,11 +585,12 @@ PointToPointCommunication::receive(double* itemsToReceive,
     auto c = _communications[otherRank];
 
     for (auto index : indices) {
-      double item;
+      double items[3];
 
-      c->receive(item, rank);
+      c->receive(items, valueDimension, rank);
 
-      itemsToReceive[index] += item;
+      for (int i = 0; i < valueDimension; ++i)
+        itemsToReceive[index * valueDimension + i] += items[i];
     }
 
     if (_isAcceptor)

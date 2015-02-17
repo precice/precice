@@ -205,21 +205,21 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
   if (Parallel::getProcessRank() < 2) {
     c.requestConnection("B", "A");
 
-    c.send(data.data(), data.size(), 42);
+    c.send(data.data(), data.size());
 
-    c.receive(data.data(), data.size(), 42);
+    c.receive(data.data(), data.size());
 
     validate(equal(data, expectedData));
   } else {
     c.acceptConnection("B", "A");
 
-    c.receive(data.data(), data.size(), 42);
+    c.receive(data.data(), data.size());
 
     validate(equal(data, expectedData));
 
     process(data);
 
-    c.send(data.data(), data.size(), 42);
+    c.send(data.data(), data.size());
   }
 
   MasterSlave::_communication.reset();

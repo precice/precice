@@ -325,6 +325,8 @@ void MeshTest::testBoundingBoxCOG()
     }
 
   }
+
+  std::cout << "Lowest: " << std::numeric_limits<double>::lowest() << std::endl;
 }
   
 
