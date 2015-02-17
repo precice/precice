@@ -253,7 +253,7 @@ if not conf.CheckCXXHeader('boost/array.hpp'):
    
 if not env["spirit2"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_SPIRIT2'])
-    env["buildpath"] += "-nospirit2"
+    buildpath += "-nospirit2"
       
 
 if env["mpi"]:
@@ -350,27 +350,16 @@ bin = env.Program (
               sourcesBoost]
 )
 
-Default(lib, bin)
-givenBuildTargets = map(str, BUILD_TARGETS)
-#print "Build targets before conversion:", buildtargets
-for i in range(len(givenBuildTargets)):
-    if givenBuildTargets[i] == "lib":
-        BUILD_TARGETS[i] = lib[0]
-    elif givenBuildTargets[i] == "bin":
-        BUILD_TARGETS[i] = bin[0]
-      
+# Creates a symlink that always points to the latest build
+symlink = env.Command(
+    target = "Symlink",
+    source = None,
+    action = "ln -fnrs {} {}".format(buildpath, os.path.join(os.path.split(buildpath)[0], "last"))
+)
 
-buildTargets = ""
-for target in map(str, BUILD_TARGETS):
-    if buildTargets != "":
-        buildTargets += ", "
-    buildTargets += target
+Default(lib, bin, symlink)
+AlwaysBuild(symlink)
 
-
-##### Print build summary
-
-print
-print "Targets:   " + buildTargets
+print "Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS])
 print "Buildpath: " + buildpath
-print
-   
+
