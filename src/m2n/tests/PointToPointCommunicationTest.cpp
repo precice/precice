@@ -79,7 +79,7 @@ PointToPointCommunicationTest::testSocketCommunication() {
   preciceTrace("testSocketCommunication");
 
   com::PtrCommunicationFactory cf(
-      new com::SocketCommunicationFactory(30000 + Parallel::getProcessRank()));
+      new com::SocketCommunicationFactory(0));
 
   test(cf);
 }
