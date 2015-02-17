@@ -327,8 +327,10 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   // Uncomment to print `_senderMap'.
   // print(_senderMap);
 
-  if (_senderMap.size() == 0)
+  if (_senderMap.size() == 0){
+    _isConnected = true;
     return;
+  }
 
   // Accept point-to-point connections between the current acceptor process (in
   // the current participant) with rank `utils::MasterSlave::_rank' and
