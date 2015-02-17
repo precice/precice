@@ -53,7 +53,7 @@ M2NConfiguration:: M2NConfiguration
     XMLAttribute<int> attrPort(ATTR_PORT);
     doc = "Port number to be used by for socket communiation. TODO";
     attrPort.setDocumentation(doc);
-    attrPort.setDefaultValue(51235);
+    attrPort.setDefaultValue(0);
     tag.addAttribute(attrPort);
 
     XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);

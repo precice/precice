@@ -109,6 +109,8 @@ public:
     int  size,
     int  rankReceiver ) =0;
 
+  virtual PtrRequest aSend(int* itemsToSend, int size, int rankReceiver) = 0;
+
   /**
    * @brief Sends an array of double values.
    */
@@ -116,6 +118,8 @@ public:
     double* itemsToSend,
     int     size,
     int     rankReceiver ) =0;
+
+  virtual PtrRequest aSend(double* itemsToSend, int size, int rankReceiver) = 0;
 
   /**
    * @brief Sends a double to process with given rank.

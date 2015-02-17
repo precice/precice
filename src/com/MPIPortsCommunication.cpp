@@ -206,6 +206,21 @@ MPIPortsCommunication::send(int* itemsToSend, int size, int rankReceiver) {
            _communicators[rankReceiver - _rankOffset]);
 }
 
+PtrRequest
+MPIPortsCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
+  MPI_Request request;
+
+  MPI_Isend(itemsToSend,
+            size,
+            MPI_INT,
+            0,
+            0,
+            _communicators[rankReceiver - _rankOffset],
+            &request);
+
+  return PtrRequest(new MPIRequest(request));
+}
+
 void
 MPIPortsCommunication::send(double* itemsToSend, int size, int rankReceiver) {
   MPI_Send(itemsToSend,
@@ -214,6 +229,21 @@ MPIPortsCommunication::send(double* itemsToSend, int size, int rankReceiver) {
            0,
            0,
            _communicators[rankReceiver - _rankOffset]);
+}
+
+PtrRequest
+MPIPortsCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
+  MPI_Request request;
+
+  MPI_Isend(itemsToSend,
+            size,
+            MPI_DOUBLE,
+            0,
+            0,
+            _communicators[rankReceiver - _rankOffset],
+            &request);
+
+  return PtrRequest(new MPIRequest(request));
 }
 
 void

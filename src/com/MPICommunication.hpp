@@ -99,6 +99,8 @@ public:
     int  size,
     int  rankReceiver );
 
+  virtual PtrRequest aSend(int* itemsToSend, int size, int rankReceiver) {}
+
   /**
    * @brief Sends an array of double values.
    */
@@ -106,6 +108,8 @@ public:
     double* itemsToSend,
     int     size,
     int     rankReceiver );
+
+  virtual PtrRequest aSend(double* itemsToSend, int size, int rankReceiver) {}
 
   /**
    * @brief Sends a double to process with given rank.
@@ -118,7 +122,7 @@ public:
 
   virtual PtrRequest aSend (
     double itemToSend,
-    int    rankReceiver ) {};
+    int    rankReceiver ) {}
 
   /**
    * @brief Sends an int to process with given rank.
@@ -131,7 +135,7 @@ public:
 
   virtual PtrRequest aSend (
     int    itemToSend,
-    int    rankReceiver ) {};
+    int    rankReceiver ) {}
 
   /**
    * @brief Sends a bool to process with given rank.

@@ -380,6 +380,31 @@ SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
   }
 }
 
+PtrRequest
+SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
+  preciceTrace2("aSend(int*)", size, rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
+  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+             rankReceiver,
+             _sockets.size());
+  assertion(_isConnected);
+
+  PtrRequest request(new SocketRequest);
+
+  try {
+    sendQuery(rankReceiver);
+    asio::async_write(*_sockets[rankReceiver],
+                      asio::buffer((void*)itemsToSend, size * sizeof(int)),
+                      [request](boost::system::error_code const&, std::size_t) {
+      static_cast<SocketRequest*>(request.get())->complete();
+    });
+  } catch (std::exception& e) {
+    preciceError("aSend(int*)", "Send failed: " << e.what());
+  }
+
+  return request;
+}
+
 void
 SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
   preciceTrace2("send(double*)", size, rankReceiver);
@@ -395,6 +420,31 @@ SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
   } catch (std::exception& e) {
     preciceError("send(double*)", "Send failed: " << e.what());
   }
+}
+
+PtrRequest
+SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
+  preciceTrace2("aSend(double*)", size, rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
+  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+             rankReceiver,
+             _sockets.size());
+  assertion(_isConnected);
+
+  PtrRequest request(new SocketRequest);
+
+  try {
+    sendQuery(rankReceiver);
+    asio::async_write(*_sockets[rankReceiver],
+                      asio::buffer((void*)itemsToSend, size * sizeof(double)),
+                      [request](boost::system::error_code const&, std::size_t) {
+      static_cast<SocketRequest*>(request.get())->complete();
+    });
+  } catch (std::exception& e) {
+    preciceError("aSend(double*)", "Send failed: " << e.what());
+  }
+
+  return request;
 }
 
 void
@@ -432,11 +482,6 @@ SocketCommunication::aSend(double itemToSend, int rankReceiver) {
                       [request](boost::system::error_code const&, std::size_t) {
       static_cast<SocketRequest*>(request.get())->complete();
     });
-
-    // std::bind(&SocketRequest::,
-    //           shared_from_this(),
-    //           boost::asio::placeholders::error,
-    //           boost::asio::placeholders::bytes_transferred));
   } catch (std::exception& e) {
     preciceError("aSend(double)", "Send failed: " << e.what());
   }

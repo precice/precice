@@ -5,7 +5,7 @@ mpiLibPath = 'C:/Builds/x64/MinGW-w64/IMPI/5.0.2.0/lib'
 mpiLib = 'impi'
 mpiIncPath = 'C:/Builds/x64/MinGW-w64/IMPI/5.0.2.0/include'
 
-preciceLibPath = '../../build/release-nopetsc'
+preciceLibPath = '../../build/release-noomp-nopetsc'
 preciceLib = 'precice'
 preciceIncPath = '../../src'
 

@@ -146,10 +146,14 @@ public:
    */
   virtual void send(int* itemsToSend, int size, int rankReceiver);
 
+  virtual PtrRequest aSend(int* itemsToSend, int size, int rankReceiver);
+
   /**
    * @brief Sends an array of double values.
    */
   virtual void send(double* itemsToSend, int size, int rankReceiver);
+
+  virtual PtrRequest aSend(double* itemsToSend, int size, int rankReceiver);
 
   /**
    * @brief Sends a double to process with given rank.

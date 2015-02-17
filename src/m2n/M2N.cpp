@@ -90,6 +90,7 @@ void M2N:: acceptSlavesConnection (
     pair.second->acceptConnection(nameAcceptor, nameRequester);
     _areSlavesConnected = _areSlavesConnected && pair.second->isConnected();
   }
+  assertion(_areSlavesConnected);
 }
 
 void M2N:: requestSlavesConnection (

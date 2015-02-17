@@ -81,12 +81,12 @@ public:
    * @brief Sends an array of double values from all slaves (different for each
    *        slave).
    */
-  virtual void send(double* itemsToSend, int size, int valueDimension);
+  virtual void send(double* itemsToSend, int size, int valueDimension = 1);
 
   /**
    * @brief All slaves receive an array of doubles (different for each slave).
    */
-  virtual void receive(double* itemsToReceive, int size, int valueDimension);
+  virtual void receive(double* itemsToReceive, int size, int valueDimension = 1);
 
 private:
   static tarch::logging::Log _log;
