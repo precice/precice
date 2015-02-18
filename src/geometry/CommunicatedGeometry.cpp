@@ -94,7 +94,7 @@ void CommunicatedGeometry:: sendMesh(
   preciceInfo("sendMesh()", "Gather mesh " << seed.getName() );
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ) {
     Event e("gather mesh");
-    if (utils::MasterSlave::_rank > 0) { // Slave
+    if (utils::MasterSlave::_slaveMode) {
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh( seed, 0 );
     }
     else{ // Master
@@ -163,7 +163,7 @@ void CommunicatedGeometry:: scatterMesh(
   preciceInfo("scatterMesh()", "Scatter bounding-box-filtered meshes for " << seed.getName() );
   Event e1("scatter bounding-box-filtered meshes");
   std::map<int,std::vector<int> > boundingVertexDistribution;
-  if (utils::MasterSlave::_rank > 0) { // Slave
+  if (utils::MasterSlave::_slaveMode) {
     mesh::Mesh::BoundingBox bb = mesh::Mesh::BoundingBox (_dimensions,
                                                           std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
     mergeBoundingBoxes(bb);
@@ -189,7 +189,7 @@ void CommunicatedGeometry:: scatterMesh(
       boundingVertexDistribution[rankSlave] = filterMesh(seed, slaveMesh, false);
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( slaveMesh, rankSlave );
     }
-    //now also filter the remaining master mesh
+    // Now also filter the remaining master mesh
     _bb = mesh::Mesh::BoundingBox (_dimensions,
                                    std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
     mergeBoundingBoxes(_bb);
@@ -223,7 +223,7 @@ void CommunicatedGeometry:: scatterMesh(
 
   preciceInfo("scatterMesh()", "Gather vertex distribution for mesh " << seed.getName() );
   Event e3("gather vertex distribution");
-  if (utils::MasterSlave::_rank>0) { //slave
+  if (utils::MasterSlave::_slaveMode) {
     utils::MasterSlave::_communication->send(numberOfVertices,0);
     if (numberOfVertices!=0) {
       utils::MasterSlave::_communication->send(raw(filteredVertexPositions),numberOfVertices,0);
@@ -278,20 +278,20 @@ void CommunicatedGeometry:: setSafetyFactor(
 
 void CommunicatedGeometry:: computeBoundingMappings()
 {
-  if (_boundingFromMapping.use_count()>0) {
+  if (_boundingFromMapping.use_count() > 0) {
     _boundingFromMapping->computeMapping();
   }
-  if (_boundingToMapping.use_count()>0) {
+  if (_boundingToMapping.use_count() > 0) {
     _boundingToMapping->computeMapping();
   }
 }
 
 void CommunicatedGeometry:: clearBoundingMappings()
 {
-  if (_boundingFromMapping.use_count()>0) {
+  if (_boundingFromMapping.use_count() > 0) {
     _boundingFromMapping->clear();
   }
-  if (_boundingToMapping.use_count()>0) {
+  if (_boundingToMapping.use_count() > 0) {
     _boundingToMapping->clear();
   }
 }
@@ -306,7 +306,7 @@ void CommunicatedGeometry:: mergeBoundingBoxes(mesh::Mesh::BoundingBox& bb){
   }
   if (_boundingToMapping.use_count()>0) {
     auto bb2 = _boundingToMapping->getInputMesh()->getBoundingBox();
-    for(int d=0; d<_dimensions; d++) {
+    for (int d=0; d<_dimensions; d++) {
       if (bb[d].first > bb2[d].first) bb[d].first = bb2[d].first;
       if (bb[d].second < bb2[d].second) bb[d].second = bb2[d].second;
     }
@@ -350,7 +350,7 @@ std::vector<int> CommunicatedGeometry:: filterMesh(mesh::Mesh& seed, mesh::Mesh&
   std::map<int, mesh::Edge*> edgeMap;
   int vertexCounter = 0;
 
-  for ( const mesh::Vertex& vertex : seed.vertices() ) {
+  for (const mesh::Vertex& vertex : seed.vertices()) {
     if (doesVertexContribute(vertex, filterByMapping)){
       mesh::Vertex& v = filteredMesh.createVertex(vertex.getCoords());
       vertexPositions.push_back(vertexCounter);
@@ -359,26 +359,26 @@ std::vector<int> CommunicatedGeometry:: filterMesh(mesh::Mesh& seed, mesh::Mesh&
     vertexCounter++;
   }
 
-  //add all edges formed by contributing vertices
-  for ( mesh::Edge& edge : seed.edges() ) {
+  // Add all edges formed by the contributing vertices
+  for (mesh::Edge& edge : seed.edges()) {
     int vertexIndex1 = edge.vertex(0).getID();
     int vertexIndex2 = edge.vertex(1).getID();
-    if(vertexMap.find(vertexIndex1) != vertexMap.end() &&
-       vertexMap.find(vertexIndex2) != vertexMap.end()){
+    if (utils::contained(vertexIndex1, vertexMap) &&
+        utils::contained(vertexIndex2, vertexMap)) {
       mesh::Edge& e = filteredMesh.createEdge(*vertexMap[vertexIndex1], *vertexMap[vertexIndex2]);
       edgeMap[edge.getID()] = &e;
     }
   }
 
-  //add all triangles formed by contributing edges
+  // Add all triangles formed by the contributing edges
   if (_dimensions==3) {
-    foreach (mesh::Triangle& triangle, seed.triangles() ){
+    for (mesh::Triangle& triangle : seed.triangles() ) {
       int edgeIndex1 = triangle.edge(0).getID();
       int edgeIndex2 = triangle.edge(1).getID();
       int edgeIndex3 = triangle.edge(2).getID();
-      if(edgeMap.find(edgeIndex1) != edgeMap.end() &&
-         edgeMap.find(edgeIndex2) != edgeMap.end() &&
-         edgeMap.find(edgeIndex3) != edgeMap.end() ){
+      if (utils::contained(edgeIndex1, edgeMap) &&
+          utils::contained(edgeIndex2, edgeMap) &&
+          utils::contained(edgeIndex3, edgeMap)) {
         filteredMesh.createTriangle(*edgeMap[edgeIndex1],*edgeMap[edgeIndex2],*edgeMap[edgeIndex3]);
       }
     }
