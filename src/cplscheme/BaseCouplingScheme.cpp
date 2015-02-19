@@ -41,6 +41,8 @@ BaseCouplingScheme:: BaseCouplingScheme
   _computedTimestepPart(0.0),
   _extrapolationOrder(0),
   _validDigits(validDigits),
+  _averageConvergenceRate(0.),
+  _lastResiduumNorm(1.),
   _doesFirstStep(false),
   _checkpointTimestepInterval(-1),
   _isCouplingTimestepComplete(false),
@@ -98,6 +100,8 @@ BaseCouplingScheme::BaseCouplingScheme
   _time(0.0),
   _computedTimestepPart(0.0),
   _extrapolationOrder(0),
+  _averageConvergenceRate(0.),
+  _lastResiduumNorm(1.),
   _validDigits(validDigits),
   _doesFirstStep(false),
   _checkpointTimestepInterval(-1),
@@ -715,13 +719,14 @@ bool BaseCouplingScheme:: measureConvergence()
   bool allConverged = true;
   bool oneSuffices = false;
   assertion(_convergenceMeasures.size() > 0);
+  _convergenceWriter.writeData("Timestep", _timesteps);
+  _convergenceWriter.writeData("Iteration", _iterations);
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.data != NULL);
     assertion(convMeasure.measure.get() != NULL);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values);
-    // _convergenceWriter.writeData("Timestep", _timesteps);
-    // _convergenceWriter.writeData("Iteration", 1);
+     _convergenceWriter.writeData("ResNormID["+convMeasure.dataID+"]", convMeasure.measure->getNormResidual());
     if (not convMeasure.measure->isConvergence()) {
       //preciceDebug("Local convergence = false");
       allConverged = false;
@@ -731,6 +736,8 @@ bool BaseCouplingScheme:: measureConvergence()
     }
     preciceInfo("measureConvergence()", convMeasure.measure->printState());
   }
+  _averageConvergenceRate += _convergenceMeasures[0].measure->getNormResidual()/_lastResiduumNorm;
+  _lastResiduumNorm = _convergenceMeasures[0].measure->getNormResidual();
   if (allConverged) {
     preciceInfo("measureConvergence()", "All converged");
   }
@@ -749,9 +756,12 @@ void BaseCouplingScheme::initializeTXTWriters()
     _iterationsWriter.addData("Total Iterations", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
+    _iterationsWriter.addData("ConvRate(avg)", io::TXTTableWriter::DOUBLE);
 
     _convergenceWriter.addData("Timestep", io::TXTTableWriter::INT );
     _convergenceWriter.addData("Iteration", io::TXTTableWriter::INT );
+    for (ConvergenceMeasure& convMeasure : _convergenceMeasures) 
+      _convergenceWriter.addData("ResNormID["+convMeasure.dataID+"]", io::TXTTableWriter::DOUBLE);
   }
 }
 
@@ -763,6 +773,10 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter.writeData("Iterations", _iterations);
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter.writeData("Convergence", converged);
+    _averageConvergenceRate /= (double)_iterations;
+    _iterationsWriter.writeData("ConvRate(avg)", _averageConvergenceRate);
+    _averageConvergenceRate = 0.;
+    _lastResiduumNorm = 1.;
   }
 }
 

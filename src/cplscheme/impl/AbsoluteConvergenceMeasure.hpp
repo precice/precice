@@ -79,6 +79,11 @@ public:
      else os << "false";
      return os.str();
    }
+   
+   virtual double getNormResidual()
+   {
+    return _normDiff; 
+   }
 
 private:
 

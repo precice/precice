@@ -510,6 +510,9 @@ private:
   double _time;
 
   double _computedTimestepPart;
+  
+  double _averageConvergenceRate;
+  double _lastResiduumNorm;
 
   /// @brief Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder;
