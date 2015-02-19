@@ -511,8 +511,7 @@ private:
 
   double _computedTimestepPart;
   
-  double _averageConvergenceRate;
-  double _lastResiduumNorm;
+  std::vector<double> _firstResiduumNorm;
 
   /// @brief Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder;

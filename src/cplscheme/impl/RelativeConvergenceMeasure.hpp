@@ -96,7 +96,7 @@ public:
    
    virtual double getNormResidual()
    {
-    return _normDiff; 
+    return _normDiff/_norm; 
    }
 
 private:
