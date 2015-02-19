@@ -194,7 +194,9 @@ void SolverInterfaceImpl:: configure
     preciceInfo("configure()", "[PRECICE] Run in server mode");
   }
   if (_clientMode){
-    preciceInfo("configure()", "[PRECICE] Run in client mode");
+    if(_accessorProcessRank==0){
+      preciceInfo("configure()", "[PRECICE] Run in client mode");
+    }
   }
 
   if (_geometryMode){
@@ -2295,7 +2297,9 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
                             _accessorProcessRank, _accessorCommunicatorSize );
   }
   else {
-    preciceInfo ( "initializeClientServerCom.()", "Setting up communication to server" );
+    if(_accessorProcessRank==0){
+      preciceInfo ( "initializeClientServerCom.()", "Setting up communication to server" );
+    }
     com->requestConnection( _accessorName + "Server", _accessorName,
                             _accessorProcessRank, _accessorCommunicatorSize );
   }
