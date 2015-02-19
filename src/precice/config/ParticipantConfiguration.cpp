@@ -142,7 +142,8 @@ ParticipantConfiguration:: ParticipantConfiguration
   attrName.setDocumentation("Name of the mesh.");
   tagUseMesh.addAttribute(attrName);
   XMLAttribute<utils::DynVector> attrLocalOffset(ATTR_LOCAL_OFFSET);
-  doc = "The mesh can have an offset only applied for the local participant.";
+  doc = "The mesh can have an offset only applied for the local participant. ";
+  doc += "Vector-valued example: '1.0; 0.0; 0.0'";
   attrLocalOffset.setDocumentation(doc);
   attrLocalOffset.setDefaultValue(utils::DynVector(3, 0.0));
   tagUseMesh.addAttribute(attrLocalOffset);
