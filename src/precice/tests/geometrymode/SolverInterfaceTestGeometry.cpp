@@ -1167,6 +1167,14 @@ void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
 void SolverInterfaceTestGeometry:: testBug()
 {
   preciceTrace("testBug()");
+
+  {
+    std::string filename = "testBug-geometry.wrl";
+    std::ifstream  src((_pathToTests + filename).c_str(), std::ifstream::in);
+    std::ofstream  dst(filename.c_str(), std::ifstream::out);
+    dst << src.rdbuf();
+  }
+
   SolverInterface interface ( "TestAccessor", 0, 1 );
   configureSolverInterface (
       _pathToTests + "testBug.xml", interface );
@@ -1248,6 +1256,14 @@ void SolverInterfaceTestGeometry:: testBug4()
 void SolverInterfaceTestGeometry:: testBug5()
 {
   preciceTrace("testBug5()");
+
+  {
+    std::string filename = "testBug5-geometry.wrl";
+    std::ifstream  src((_pathToTests + filename).c_str(), std::ifstream::in);
+    std::ofstream  dst(filename.c_str(), std::ifstream::out);
+    dst << src.rdbuf();
+  }
+
   SolverInterface interface("Peano", 0, 1);
   configureSolverInterface(_pathToTests + "testBug5.xml", interface);
   validateEquals(interface.getDimensions(), 3);

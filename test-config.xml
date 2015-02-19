@@ -13,7 +13,7 @@
     <log-filter target="info" component="precice::mapping::PetRadialBasisFctMapping" switch="on"/>
     
     <!-- <log-filter target=""      component=""      switch="on"/> -->
-    <!-- <log-filter target="info"  component="tarch" switch="on"/> -->
+    <log-filter target="info"  component="tarch" switch="on"/> 
     
     <log-output column-separator=" | " log-time-stamp="no" 
                 log-time-stamp-human-readable="no" log-machine-name="no" 
