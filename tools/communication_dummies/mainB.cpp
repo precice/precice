@@ -14,16 +14,17 @@ using namespace precice;
 using std::cout;
 using std::endl;
 using std::vector;
+using std::rand;
 
 vector<double>
 getData() {
   int rank = utils::MasterSlave::_rank;
 
-  static double data_0[] = {0.0, 0.0};
-  static double data_1[] = {0.0, 0.0, 0.0};
-  static double data_2[] = {0.0, 0.0};
+  static double data_0[] = {rand(), rand()};
+  static double data_1[] = {rand(), rand(), rand()};
+  static double data_2[] = {rand(), rand()};
   static double* data_3;
-  static double data_4[] = {0.0, 0.0, 0.0};
+  static double data_4[] = {rand(), rand(), rand()};
 
   static double* data[] = {data_0, data_1, data_2, data_3, data_4};
   static int size[] = {sizeof(data_0) / sizeof(*data_0),

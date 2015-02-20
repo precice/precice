@@ -35,11 +35,9 @@ vector<double>
 getExpectedData() {
   int rank = utils::MasterSlave::_rank;
 
-  static double data_0[] = {
-      2 * 10.0 + 2, 2 * 20.0 + 1, 2 * 40.0 + 2, 2 * 80.0 + 5};
-  static double data_1[] = {
-      2 * 30.0 + 2, 2 * 50.0 + 1, 2 * 60.0 + 3, 2 * 90.0 + 5};
-  static double data_2[] = {2 * 70.0 + 3, 2 * 100.0 + 5};
+  static double data_0[] = {10.0 + 2, 20.0 + 1, 40.0 + 2, 80.0 + 5};
+  static double data_1[] = {30.0 + 2, 50.0 + 1, 60.0 + 3, 90.0 + 5};
+  static double data_2[] = {70.0 + 3, 100.0 + 5};
 
   static double* data[] = {data_0, data_1, data_2};
   static int size[] = {sizeof(data_0) / sizeof(*data_0),

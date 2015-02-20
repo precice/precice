@@ -21,6 +21,7 @@ using precice::utils::Parallel;
 using precice::utils::MasterSlave;
 
 using std::vector;
+using std::rand;
 
 registerTest(precice::m2n::tests::PointToPointCommunicationTest);
 
@@ -78,8 +79,7 @@ void
 PointToPointCommunicationTest::testSocketCommunication() {
   preciceTrace("testSocketCommunication");
 
-  com::PtrCommunicationFactory cf(
-      new com::SocketCommunicationFactory(0));
+  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
 
   test(cf);
 }
@@ -136,7 +136,7 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
     mesh->getVertexDistribution()[1].push_back(6);
 
     data = {10, 20, 40, 60, 80};
-    expectedData = {2 * 10 + 2, 5 * 20 + 3, 2 * 40 + 2, 5 * 60 + 3, 2 * 80 + 2};
+    expectedData = {10 + 2, 4 * 20 + 3, 40 + 2, 4 * 60 + 3, 80 + 2};
 
     break;
   }
@@ -151,7 +151,7 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
     MasterSlave::_communication->requestConnection("A.Master", "A.Slave", 0, 1);
 
     data = {20, 30, 50, 60, 70};
-    expectedData = {5 * 20 + 3, 2 * 30 + 1, 2 * 50 + 2, 5 * 60 + 3, 2 * 70 + 1};
+    expectedData = {4 * 20 + 3, 30 + 1, 50 + 2, 4 * 60 + 3, 70 + 1};
 
     break;
   }
@@ -180,7 +180,7 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(7);
 
-    data = {0, 0, 0, 0};
+    data = {rand(), rand(), rand(), rand()};
     expectedData = {2 * 20, 30, 2 * 60, 70};
 
     break;
@@ -195,7 +195,7 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
 
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
 
-    data = {0, 0, 0, 0, 0, 0};
+    data = {rand(), rand(), rand(), rand(), rand(), rand()};
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
 
     break;

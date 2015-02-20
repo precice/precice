@@ -327,8 +327,9 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   // Uncomment to print `_senderMap'.
   // print(_senderMap);
 
-  if (_senderMap.size() == 0){
+  if (_senderMap.size() == 0) {
     _isConnected = true;
+
     return;
   }
 
@@ -523,6 +524,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
 void
 PointToPointCommunication::closeConnection() {
+  // TODO
   _isConnected = false;
 }
 
@@ -551,9 +553,6 @@ PointToPointCommunication::send(double* itemsToSend,
 
     auto c = _communications[receiverRank];
 
-    // TODO:
-    // Collapse into a single `aSend' call sending an array (then `reserve'
-    // would be correct).
     std::vector<double> data;
 
     data.reserve(indices.size() * valueDimension);
@@ -582,6 +581,16 @@ PointToPointCommunication::receive(double* itemsToReceive,
                                    int size,
                                    int valueDimension) {
   assertion(_senderMap.size() == _communications.size());
+
+  if (_senderMap.size() == 0) {
+    preciceCheck(size == 0,
+                 "receive()",
+                 "Can't receive anything to disconnected process!");
+
+    return;
+  }
+
+  std::fill(itemsToReceive, itemsToReceive + size, 0);
 
   int rank = 0;
 
