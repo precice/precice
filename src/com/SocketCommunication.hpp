@@ -146,6 +146,9 @@ public:
    */
   virtual void send(int* itemsToSend, int size, int rankReceiver);
 
+  /**
+   * @brief Asynchronously sends an array of integer values.
+   */
   virtual PtrRequest aSend(int* itemsToSend, int size, int rankReceiver);
 
   /**
@@ -153,6 +156,9 @@ public:
    */
   virtual void send(double* itemsToSend, int size, int rankReceiver);
 
+  /**
+   * @brief Asynchronously sends an array of double values.
+   */
   virtual PtrRequest aSend(double* itemsToSend, int size, int rankReceiver);
 
   /**
@@ -160,6 +166,9 @@ public:
    */
   virtual void send(double itemToSend, int rankReceiver);
 
+  /**
+   * @brief Asynchronously sends a double to process with given rank.
+   */
   virtual PtrRequest aSend(double itemToSend, int rankReceiver);
 
   /**
@@ -167,6 +176,9 @@ public:
    */
   virtual void send(int itemToSend, int rankReceiver);
 
+  /**
+   * @brief Asynchronously sends an int to process with given rank.
+   */
   virtual PtrRequest aSend(int itemToSend, int rankReceiver);
 
   /**

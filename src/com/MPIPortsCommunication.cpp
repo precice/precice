@@ -6,8 +6,6 @@
 
 #include "MPIPortsCommunication.hpp"
 
-#include "MPIRequest.hpp"
-
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
 
@@ -20,8 +18,7 @@ tarch::logging::Log MPIPortsCommunication::_log(
 
 MPIPortsCommunication::MPIPortsCommunication(
     std::string const& addressDirectory)
-    : MPICommunication(MPI_COMM_NULL)
-    , _addressDirectory(addressDirectory)
+    : _addressDirectory(addressDirectory)
     , _isAcceptor(false)
     , _isConnected(false) {
   if (_addressDirectory.empty()) {
@@ -187,164 +184,14 @@ MPIPortsCommunication::closeConnection() {
   _isConnected = false;
 }
 
-void
-MPIPortsCommunication::send(std::string const& itemToSend, int rankReceiver) {
-  communicator() = _communicators[rankReceiver - _rankOffset];
-
-  // HACK:
-  // Need real rank inside to be always 0, therefore pass `_rankOffset'!
-  MPICommunication::send(itemToSend, _rankOffset);
-}
-
-void
-MPIPortsCommunication::send(int* itemsToSend, int size, int rankReceiver) {
-  MPI_Send(itemsToSend,
-           size,
-           MPI_INT,
-           0,
-           0,
-           _communicators[rankReceiver - _rankOffset]);
-}
-
-PtrRequest
-MPIPortsCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
-  MPI_Request request;
-
-  MPI_Isend(itemsToSend,
-            size,
-            MPI_INT,
-            0,
-            0,
-            _communicators[rankReceiver - _rankOffset],
-            &request);
-
-  return PtrRequest(new MPIRequest(request));
-}
-
-void
-MPIPortsCommunication::send(double* itemsToSend, int size, int rankReceiver) {
-  MPI_Send(itemsToSend,
-           size,
-           MPI_DOUBLE,
-           0,
-           0,
-           _communicators[rankReceiver - _rankOffset]);
-}
-
-PtrRequest
-MPIPortsCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
-  MPI_Request request;
-
-  MPI_Isend(itemsToSend,
-            size,
-            MPI_DOUBLE,
-            0,
-            0,
-            _communicators[rankReceiver - _rankOffset],
-            &request);
-
-  return PtrRequest(new MPIRequest(request));
-}
-
-void
-MPIPortsCommunication::send(double itemToSend, int rankReceiver) {
-  MPI_Send(&itemToSend,
-           1,
-           MPI_DOUBLE,
-           0,
-           0,
-           _communicators[rankReceiver - _rankOffset]);
-}
-
-PtrRequest
-MPIPortsCommunication::aSend(double itemToSend, int rankReceiver) {
-  MPI_Request request;
-
-  MPI_Isend(&itemToSend,
-            1,
-            MPI_DOUBLE,
-            0,
-            0,
-            _communicators[rankReceiver - _rankOffset],
-            &request);
-
-  return PtrRequest(new MPIRequest(request));
-}
-
-void
-MPIPortsCommunication::send(int itemToSend, int rankReceiver) {
-  MPI_Send(&itemToSend,
-           1,
-           MPI_INT,
-           0,
-           0,
-           _communicators[rankReceiver - _rankOffset]);
-}
-
-PtrRequest
-MPIPortsCommunication::aSend(int itemToSend, int rankReceiver) {
-  MPI_Request request;
-
-  MPI_Isend(&itemToSend,
-            1,
-            MPI_INT,
-            0,
-            0,
-            _communicators[rankReceiver - _rankOffset],
-            &request);
-
-  return PtrRequest(new MPIRequest(request));
-}
-
-void
-MPIPortsCommunication::send(bool itemToSend, int rankReceiver) {
-  communicator() = _communicators[rankReceiver - _rankOffset];
-
-  MPICommunication::send(itemToSend, _rankOffset);
+MPI_Comm&
+MPIPortsCommunication::communicator(int rank) {
+  return _communicators[rank];
 }
 
 int
-MPIPortsCommunication::receive(std::string& itemToReceive, int rankSender) {
-  communicator() = _communicators[rankSender - _rankOffset];
-
-  return MPICommunication::receive(itemToReceive, _rankOffset);
-}
-
-int
-MPIPortsCommunication::receive(int* itemsToReceive, int size, int rankSender) {
-  communicator() = _communicators[rankSender - _rankOffset];
-
-  return MPICommunication::receive(itemsToReceive, size, _rankOffset);
-}
-
-int
-MPIPortsCommunication::receive(double* itemsToReceive,
-                               int size,
-                               int rankSender) {
-  communicator() = _communicators[rankSender - _rankOffset];
-
-  return MPICommunication::receive(itemsToReceive, size, _rankOffset);
-}
-
-int
-MPIPortsCommunication::receive(double& itemToReceive, int rankSender) {
-  communicator() = _communicators[rankSender - _rankOffset];
-
-  return MPICommunication::receive(itemToReceive, _rankOffset);
-}
-
-int
-MPIPortsCommunication::receive(int& itemToReceive, int rankSender) {
-  communicator() = _communicators[rankSender - _rankOffset];
-
-  return MPICommunication::receive(itemToReceive, _rankOffset);
-}
-
-int
-MPIPortsCommunication::receive(bool& itemToReceive, int rankSender) {
-  communicator() = _communicators[rankSender - _rankOffset];
-
-  return MPICommunication::receive(itemToReceive, _rankOffset);
+MPIPortsCommunication::rank(int rank) {
+  return 0;
 }
 }
 } // namespace precice, com

@@ -16,7 +16,6 @@
 
 namespace precice {
 namespace com {
-
 /**
  * @brief Provides connection methods based on MPI ports (part of MPI 2.0).
  *
@@ -69,39 +68,11 @@ public:
    */
   virtual void closeConnection();
 
-  virtual void send(std::string const& itemToSend, int rankReceiver);
-
-  virtual void send(int* itemsToSend, int size, int rankReceiver);
-
-  virtual PtrRequest aSend(int* itemsToSend, int size, int rankReceiver);
-
-  virtual void send(double* itemsToSend, int size, int rankReceiver);
-
-  virtual PtrRequest aSend(double* itemsToSend, int size, int rankReceiver);
-
-  virtual void send(double itemToSend, int rankReceiver);
-
-  virtual PtrRequest aSend(double itemToSend, int rankReceiver);
-
-  virtual void send(int itemToSend, int rankReceiver);
-
-  virtual PtrRequest aSend(int itemToSend, int rankReceiver);
-
-  virtual void send(bool itemToSend, int rankReceiver);
-
-  virtual int receive(std::string& itemToReceive, int rankSender);
-
-  virtual int receive(int* itemsToReceive, int size, int rankSender);
-
-  virtual int receive(double* itemsToReceive, int size, int rankSender);
-
-  virtual int receive(double& itemToReceive, int rankSender);
-
-  virtual int receive(int& itemToReceive, int rankSender);
-
-  virtual int receive(bool& itemToReceive, int rankSender);
-
 private:
+  virtual MPI_Comm& communicator(int rank);
+
+  virtual int rank(int rank);
+
   // @brief Logging device.
   static tarch::logging::Log _log;
 
