@@ -318,7 +318,7 @@ double SolverInterfaceImpl:: initialize()
           if(not lhs->provideMesh && rhs->provideMesh){
             return false;
           }
-          return lhs->mesh->getName() > rhs->mesh->getName();
+          return lhs->mesh->getName() < rhs->mesh->getName();
         } );
 
     for (MeshContext* meshContext : _accessor->usedMeshContexts()){
