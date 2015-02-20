@@ -179,7 +179,7 @@ public:
   
   /// @brief Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const;
-  
+
   /// @brief Returns true, when the accessor can advance to the next timestep.
   virtual bool isCouplingTimestepComplete() const;
   

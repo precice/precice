@@ -209,9 +209,7 @@ void SerialCouplingScheme:: advance()
         if (convergence) {
           timestepCompleted();
         }
-        if (isCouplingOngoing()) {
-          receiveData(getCommunication());
-        }
+        receiveData(getCommunication());
         getCommunication()->finishReceivePackage();
       }
       else {
@@ -232,31 +230,28 @@ void SerialCouplingScheme:: advance()
         }
         getCommunication()->startSendPackage(0);
         getCommunication()->sendAll(convergence,0);
-        if (isCouplingOngoing()) {
-          if (convergence && (getExtrapolationOrder() > 0)){
-            extrapolateData(getSendData()); // Also stores data
-          }
-          else { // Store data for conv. measurement, post-processing, or extrapolation
-            for (DataMap::value_type& pair : getSendData()) {
-              if (pair.second->oldValues.size() > 0){
-                pair.second->oldValues.column(0) = *pair.second->values;
-              }
-            }
-            for (DataMap::value_type& pair : getReceiveData()) {
-              if (pair.second->oldValues.size() > 0){
-                pair.second->oldValues.column(0) = *pair.second->values;
-              }
+        if (convergence && (getExtrapolationOrder() > 0)){
+          extrapolateData(getSendData()); // Also stores data
+        }
+        else { // Store data for conv. measurement, post-processing, or extrapolation
+          for (DataMap::value_type& pair : getSendData()) {
+            if (pair.second->oldValues.size() > 0){
+              pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
-          sendData(getCommunication());
-          getCommunication()->finishSendPackage();
+          for (DataMap::value_type& pair : getReceiveData()) {
+            if (pair.second->oldValues.size() > 0){
+              pair.second->oldValues.column(0) = *pair.second->values;
+            }
+        }
+          }
+        sendData(getCommunication());
+        getCommunication()->finishSendPackage();
+        if(not convergence || isCouplingOngoing()){
           getCommunication()->startReceivePackage(0);
           receiveAndSetDt();
           receiveData(getCommunication());
           getCommunication()->finishReceivePackage();
-        }
-        else {
-          getCommunication()->finishSendPackage();
         }
       }
     
