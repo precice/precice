@@ -505,8 +505,32 @@ void SolverInterfaceImpl:: finalize()
         }
       }
     }
+    // Apply some final ping-pong to synch solver that run e.g. with a uni-directional coupling only
+    // afterwards close connections
     typedef std::map<std::string,Communication>::iterator PairIter;
+    std::string ping = "ping";
+    std::string pong = "pong";
     foriter ( PairIter, iter, _communications ){
+      if(iter->second.isRequesting){
+        iter->second.communication->startSendPackage(0);
+        iter->second.communication->sendMaster(ping,0);
+        iter->second.communication->finishSendPackage();
+        std::string receive = "init";
+        iter->second.communication->startReceivePackage(0);
+        iter->second.communication->receiveMaster(receive,0);
+        iter->second.communication->finishReceivePackage();
+        assertion(receive==pong);
+      }
+      else{
+        std::string receive = "init";
+        iter->second.communication->startReceivePackage(0);
+        iter->second.communication->receiveMaster(receive,0);
+        iter->second.communication->finishReceivePackage();
+        assertion(receive==ping);
+        iter->second.communication->startSendPackage(0);
+        iter->second.communication->sendMaster(pong,0);
+        iter->second.communication->finishSendPackage();
+      }
       iter->second.communication->closeConnection();
     }
   }
