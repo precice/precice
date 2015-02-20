@@ -178,19 +178,17 @@ void MultiCouplingScheme::advance()
       com->sendMaster(convergence, 0);
     }
 
-    if (isCouplingOngoing()) {
-      if (convergence && (getExtrapolationOrder() > 0)){
-        extrapolateData(_allData); // Also stores data
-      }
-      else { // Store data for conv. measurement, post-processing, or extrapolation
-        for (DataMap::value_type& pair : _allData) {
-          if (pair.second->oldValues.size() > 0){
-            pair.second->oldValues.column(0) = *pair.second->values;
-          }
+    if (convergence && (getExtrapolationOrder() > 0)){
+      extrapolateData(_allData); // Also stores data
+    }
+    else { // Store data for conv. measurement, post-processing, or extrapolation
+      for (DataMap::value_type& pair : _allData) {
+        if (pair.second->oldValues.size() > 0){
+          pair.second->oldValues.column(0) = *pair.second->values;
         }
       }
-      sendData();
     }
+    sendData();
 
     if (not convergence) {
       preciceDebug("No convergence achieved");

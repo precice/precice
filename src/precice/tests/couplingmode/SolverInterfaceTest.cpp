@@ -1626,7 +1626,7 @@ void SolverInterfaceTest:: testMultiCoupling()
     validateNumericalEquals(datas[3][0],4.00000000000000008327e-03);
     validateNumericalEquals(datas[3][1],5.00000000000000010408e-03);
 
-    //precice.finalize();
+    precice.finalize();
 
   }
   else {
@@ -1674,7 +1674,7 @@ void SolverInterfaceTest:: testMultiCoupling()
       precice.fulfilledAction(readIterCheckpoint);
     }
 
-    //precice.finalize();
+    precice.finalize();
 
   }
 
