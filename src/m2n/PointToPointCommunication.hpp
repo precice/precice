@@ -16,14 +16,18 @@
 
 namespace precice {
 namespace m2n {
-
 /**
- * @brief Implements GlobalCommunication by using a gathering/scattering
- * methodology.
- * Arrays of data are always gathered and scattered at the master. No direct
- * communication
- * between slaves is used.
- * For more details see m2n/GlobalCommunication.hpp
+ * @brief Point-to-point communication implementation of
+ *        DistributedCommunication.
+ *
+ * Direct communication of local data subsets is performed between processes of
+ * coupled participants. The two supported implementations of direct
+ * communication are SocketCommunication and MPIPortsCommunication which can be
+ * supplied via their corresponding instantiation factories
+ * SocketCommunicationFactory and MPIPortsCommunicationFactory.
+ *
+ * For the detailed implementation documentation refer to
+ * PointToPointCommunication.cpp.
  */
 class PointToPointCommunication : public DistributedCommunication {
 public:
@@ -40,7 +44,7 @@ public:
 
   /**
    * @brief Returns true, if a connection to a remote participant has been
-   * setup.
+   *        established.
    */
   virtual bool isConnected();
 
@@ -48,27 +52,21 @@ public:
    * @brief Accepts connection from participant, which has to call
    *        requestConnection().
    *
-   * If several connections are going in to a server, the server has to call
-   * this method, while the clients have to call requestConnection().
-   *
    * @param nameAcceptor [IN] Name of calling participant.
    * @param nameRequester [IN] Name of remote participant to connect to.
    */
-  virtual void acceptConnection(const std::string& nameAcceptor,
-                                const std::string& nameRequester);
+  virtual void acceptConnection(std::string const& nameAcceptor,
+                                std::string const& nameRequester);
 
   /**
    * @brief Requests connection from participant, which has to call
    *        acceptConnection().
    *
-   * If several connections are going in to a server, the clients have to call
-   * this method, while the server has to call acceptConnection().
-   *
    * @param nameAcceptor [IN] Name of remote participant to connect to.
    * @param nameReuester [IN] Name of calling participant.
    */
-  virtual void requestConnection(const std::string& nameAcceptor,
-                                 const std::string& nameRequester);
+  virtual void requestConnection(std::string const& nameAcceptor,
+                                 std::string const& nameRequester);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -78,15 +76,18 @@ public:
   virtual void closeConnection();
 
   /**
-   * @brief Sends an array of double values from all slaves (different for each
-   *        slave).
+   * @brief Sends a subset of local double values corresponding to local indices
+   *        deduced from the current and remote vertex distributions.
    */
   virtual void send(double* itemsToSend, int size, int valueDimension = 1);
 
   /**
-   * @brief All slaves receive an array of doubles (different for each slave).
+   * @brief Receives a subset of local double values corresponding to local
+   *        indices deduced from the current and remote vertex distributions.
    */
-  virtual void receive(double* itemsToReceive, int size, int valueDimension = 1);
+  virtual void receive(double* itemsToReceive,
+                       int size,
+                       int valueDimension = 1);
 
 private:
   static tarch::logging::Log _log;
@@ -94,11 +95,29 @@ private:
   com::PtrCommunicationFactory _communicationFactory;
 
   std::map<int, com::PtrCommunication> _communications;
-  std::map<int, std::vector<int>> _senderMap;
 
   /**
-   * @brief global communication is set up or not
+   * @brief Local (for process rank in the current participant) communication
+   *        map that defines a mapping from a process rank in the remote
+   *        participant to an array of local data indices, which define a subset
+   *        of local (for process rank in the current participant) data to be
+   *        communicated between the current process rank and the remote process
+   *        rank.
+   *
+   * Example. Assume that the current process rank is 3. Assume that its
+   * `_communicationMap' is
+   *
+   *   1 -> {1, 3}
+   *   4 -> {0, 2}
+   *
+   * then it means that the current process (with rank 3)
+   * - has to communicate (send/receive) data with local indices 1 and 3 with
+   *   the remote process with rank 1;
+   * - has to communicate (send/receive) data with local indices 0 and 2 with
+   *   the remote process with rank 4.
    */
+  std::map<int, std::vector<int>> _communicationMap;
+
   bool _isConnected;
   bool _isAcceptor;
 };
