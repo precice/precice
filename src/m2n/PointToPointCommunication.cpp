@@ -170,26 +170,22 @@ scatter(com::PtrCommunication communication,
 
 void
 sendNext(com::PtrCommunicationFactory communicationFactory,
+         std::string const& name,
          std::vector<int> const& v) {
   int rank = utils::MasterSlave::_rank;
   int nextRank = (rank + 1) % utils::MasterSlave::_size;
 
   auto c = communicationFactory->newCommunication();
 
-  // NOTE:
-  // If more than two participants are connected in the same directory, then
-  // this might cause collision. Perhaps utilizing requester name as a prefix
-  // would solve the problem.
-  c->requestConnection("Receiver" + std::to_string(nextRank),
-                       "Sender" + std::to_string(rank),
-                       0,
-                       1);
+  c->requestConnection(
+      name + std::to_string(nextRank), name + std::to_string(rank), 0, 1);
 
   send(c, v, 0);
 }
 
 void
 receivePrevious(com::PtrCommunicationFactory communicationFactory,
+                std::string const& name,
                 std::vector<int>& v) {
   int rank = utils::MasterSlave::_rank;
   int previousRank =
@@ -197,14 +193,8 @@ receivePrevious(com::PtrCommunicationFactory communicationFactory,
 
   auto c = communicationFactory->newCommunication();
 
-  // NOTE:
-  // If more than two participants are connected in the same directory, then
-  // this might cause collision. Perhaps utilizing requester name as a prefix
-  // would solve the problem.
-  c->acceptConnection("Receiver" + std::to_string(rank),
-                      "Sender" + std::to_string(previousRank),
-                      0,
-                      1);
+  c->acceptConnection(
+      name + std::to_string(rank), name + std::to_string(previousRank), 0, 1);
 
   receive(c, v, 0);
 }
@@ -477,8 +467,8 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
     // All other processes should block until they receive (one by one) properly
     // incremented versions of `communicationRanks'.
-    receivePrevious(_communicationFactory, communicationRanks);
-    receivePrevious(_communicationFactory, communicatorSizes);
+    receivePrevious(_communicationFactory, nameRequester, communicationRanks);
+    receivePrevious(_communicationFactory, nameRequester, communicatorSizes);
 
     assertion(communicationRanks.size() == communicatorSizes.size());
   }
@@ -508,16 +498,16 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
   // Send new incremented version of `communicationRanks' to the next requester
   // process (Figure 1).
-  sendNext(_communicationFactory, communicationRanks);
-  sendNext(_communicationFactory, communicatorSizes);
+  sendNext(_communicationFactory, nameRequester, communicationRanks);
+  sendNext(_communicationFactory, nameRequester, communicatorSizes);
 
   if (utils::MasterSlave::_masterMode) {
     // As discussed previously, the execution path of the point-to-point
     // connection request scheme (Figure 1) ends in the master requester process
     // (here). Thus, receive the last incremented version of
     // `communicationRanks'.
-    receivePrevious(_communicationFactory, communicationRanks);
-    receivePrevious(_communicationFactory, communicatorSizes);
+    receivePrevious(_communicationFactory, nameRequester, communicationRanks);
+    receivePrevious(_communicationFactory, nameRequester, communicatorSizes);
 
     assertion(communicationRanks.size() == communicatorSizes.size());
 
