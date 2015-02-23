@@ -9,7 +9,6 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include "tarch/logging/Log.h"
-#include "boost/tuple/tuple.hpp"
 #include <vector>
 
 namespace precice {

@@ -733,7 +733,6 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
   mesh::PtrMeshConfiguration meshConfig )
 {
   preciceTrace1("runThreeSolverCoupling()", participantName);
-  using boost::get;
 
   validateEquals(meshConfig->meshes().size(), 1);
   mesh::PtrMesh mesh = meshConfig->meshes()[0];

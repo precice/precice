@@ -397,7 +397,6 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
   const mesh::MeshConfiguration& meshConfig )
 {
   preciceTrace1 ( "runSimpleExplicitCoupling()", participantName );
-  using boost::get;
 
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
