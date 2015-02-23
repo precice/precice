@@ -101,7 +101,7 @@ void CommunicatedGeometry:: sendMesh(
 
       int numberOfVertices = 0;
       //vertices of master mesh part do already exist
-      foreach ( const mesh::Vertex& vertex, seed.vertices() ){
+      for (const mesh::Vertex& vertex : seed.vertices()) {
         seed.getVertexDistribution()[0].push_back(numberOfVertices);
         numberOfVertices++;
       }
@@ -132,7 +132,7 @@ void CommunicatedGeometry:: sendMesh(
                    << "\" provides an invalid (possibly empty) mesh \""
                    << globalMesh.getName() << "\"!" );
     typedef std::map<std::string,m2n::PtrGlobalCommunication>::value_type Pair;
-    foreach ( Pair & pair, _receivers ) {
+    for (Pair & pair : _receivers) {
       if ( ! pair.second->isConnected() ) {
         pair.second->acceptConnection ( _providerName, pair.first, 0, 1 );
       }
@@ -334,8 +334,8 @@ std::vector<int> CommunicatedGeometry:: filterMesh(mesh::Mesh& seed, mesh::Mesh&
   std::map<int, mesh::Vertex*> vertexMap;
   std::map<int, mesh::Edge*> edgeMap;
 
-  foreach ( const mesh::Vertex& vertex, seed.vertices() ){
-    if(doesVertexContribute(vertex, filterByMapping)){
+  for (const mesh::Vertex& vertex : seed.vertices()) {
+    if (doesVertexContribute(vertex, filterByMapping)){
       mesh::Vertex& v = filteredMesh.createVertex(vertex.getCoords());
       vertexIDs.push_back(vertex.getID());
       vertexMap[vertex.getID()] = &v;
@@ -343,7 +343,7 @@ std::vector<int> CommunicatedGeometry:: filterMesh(mesh::Mesh& seed, mesh::Mesh&
   }
 
   //add all edges formed by contributing vertices
-  foreach ( mesh::Edge& edge, seed.edges() ){
+  for (mesh::Edge& edge : seed.edges()) {
     int vertexIndex1 = edge.vertex(0).getID();
     int vertexIndex2 = edge.vertex(1).getID();
     if(vertexMap.find(vertexIndex1) != vertexMap.end() &&
@@ -355,7 +355,7 @@ std::vector<int> CommunicatedGeometry:: filterMesh(mesh::Mesh& seed, mesh::Mesh&
 
   //add all triangles formed by contributing edges
   if(_dimensions==3){
-    foreach (mesh::Triangle& triangle, seed.triangles() ){
+    for (mesh::Triangle& triangle : seed.triangles()) {
       int edgeIndex1 = triangle.edge(0).getID();
       int edgeIndex2 = triangle.edge(1).getID();
       int edgeIndex3 = triangle.edge(2).getID();

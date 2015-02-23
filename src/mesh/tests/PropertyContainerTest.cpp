@@ -19,7 +19,7 @@ tarch::logging::Log PropertyContainerTest::
 
 PropertyContainerTest:: PropertyContainerTest()
 :
-  TestCase ( "conatiner::PropertyContainerTest" )
+  TestCase ( "container::PropertyContainerTest" )
 {}
 
 void PropertyContainerTest:: run ()

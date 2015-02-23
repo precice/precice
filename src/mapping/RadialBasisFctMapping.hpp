@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_MAPPING_RADIALBASISFCTMAPPING_HPP_
-#define PRECICE_MAPPING_RADIALBASISFCTMAPPING_HPP_
+#pragma once
 
 #include "mapping/Mapping.hpp"
 #include "tarch/la/DynamicMatrix.h"
@@ -47,29 +43,19 @@ public:
     bool                    yDead,
     bool                    zDead);
 
-  /**
-   * @brief Destructor.
-   */
+
   virtual ~RadialBasisFctMapping();
 
-  /**
-   * @brief Computes the mapping coefficients from the in- and output mesh.
-   */
+  /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping();
 
-  /**
-   * @brief Returns true, if computeMapping() has been called.
-   */
+  /// Returns true, if computeMapping() has been called.
   virtual bool hasComputedMapping();
 
-  /**
-   * @brief Removes a computed mapping.
-   */
+  /// Removes a computed mapping.
   virtual void clear();
 
-  /**
-   * @brief Maps input data to output data from input mesh to output mesh.
-   */
+  ///Maps input data to output data from input mesh to output mesh.
   virtual void map (
     int inputDataID,
     int outputDataID );
@@ -101,16 +87,16 @@ private:
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
       preciceCheck(not (xDead && yDead), "setDeadAxis()", "You cannot  "
-                  << " choose all axis to be dead for a RBF mapping");
+                   << " choose all axis to be dead for a RBF mapping");
       preciceCheck(not zDead, "setDeadAxis()", "You cannot  "
-             << " dead out the z axis if dimension is set to 2");
+                   << " dead out the z axis if dimension is set to 2");
     }
     else if(getDimensions()==3){
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
       _deadAxis[2] = zDead;
       preciceCheck(not (xDead && yDead && zDead), "setDeadAxis()", "You cannot  "
-            << " choose all axis to be dead for a RBF mapping");
+                   << " choose all axis to be dead for a RBF mapping");
     }
     else{
       assertion(false);
@@ -158,7 +144,7 @@ class Multiquadrics
 public:
 
   Multiquadrics ( double c )
-  : _cPow2(std::pow(c, 2)) {}
+    : _cPow2(std::pow(c, 2)) {}
 
   bool hasCompactSupport() const
   { return false; }
@@ -189,7 +175,7 @@ class InverseMultiquadrics
 public:
 
   InverseMultiquadrics ( double c )
-  : _cPow2(std::pow(c, 2))
+    : _cPow2(std::pow(c, 2))
   {
     preciceCheck(tarch::la::greater(c, 0.0), "InverseMultiquadrics()",
                  "Shape parameter for radial-basis-function inverse multiquadric"
@@ -251,7 +237,7 @@ class Gaussian
 public:
 
   Gaussian ( double shape )
-  : _shape(shape)
+    : _shape(shape)
   {
     preciceCheck(tarch::la::greater(_shape, 0.0), "Gaussian()",
                  "Shape parameter for radial-basis-function gaussian"
@@ -292,7 +278,7 @@ class CompactThinPlateSplinesC2
 public:
 
   CompactThinPlateSplinesC2 ( double supportRadius )
-  : _r(supportRadius)
+    : _r(supportRadius)
   {
     preciceCheck(tarch::la::greater(_r, 0.0), "CompactThinPlateSplinesC2()",
                  "Support radius for radial-basis-function compact thin-plate-splines c2"
@@ -312,7 +298,7 @@ public:
     using std::pow;
     using std::log;
     return 1.0 - 30.0*pow(p,2.0) - 10.0*pow(p,3.0) + 45.0*pow(p,4.0)
-           - 6.0*pow(p,5.0) - 60.0*log(pow(p,pow(p,3.0)));
+      - 6.0*pow(p,5.0) - 60.0*log(pow(p,pow(p,3.0)));
   }
 
 private:
@@ -338,7 +324,7 @@ class CompactPolynomialC0
 public:
 
   CompactPolynomialC0 ( double supportRadius )
-  : _r(supportRadius)
+    : _r(supportRadius)
   {
     preciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC0()",
                  "Support radius for radial-basis-function compact polynomial c0"
@@ -380,7 +366,7 @@ class CompactPolynomialC6
 public:
 
   CompactPolynomialC6 ( double supportRadius )
-  : _r(supportRadius)
+    : _r(supportRadius)
   {
     preciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC6()",
                  "Support radius for radial-basis-function compact polynomial c6"
@@ -413,7 +399,7 @@ private:
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 tarch::logging::Log RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::
-  _log ( "precice::mapping::RadialBasisFctMapping" );
+_log ( "precice::mapping::RadialBasisFctMapping" );
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
@@ -424,7 +410,7 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
   bool                    xDead,
   bool                    yDead,
   bool                    zDead)
-:
+  :
   Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
@@ -439,8 +425,7 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: ~RadialBasisFctMapping
-()
+RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: ~RadialBasisFctMapping()
 {
   delete[] _deadAxis;
 }
@@ -451,8 +436,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   preciceTrace("computeMapping()");
 
   preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
-             "computeMapping()", "RBF mapping  "
-             << " is not yet supported for a participant in master mode");
+               "computeMapping()", "RBF mapping  "
+               << " is not yet supported for a participant in master mode");
 
   using namespace tarch::la;
   assertion2(input()->getDimensions() == output()->getDimensions(),
@@ -606,16 +591,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   preciceTrace2("map()", inputDataID, outputDataID);
   assertion(_hasComputedMapping);
   assertion2(input()->getDimensions() == output()->getDimensions(),
-              input()->getDimensions(), output()->getDimensions());
+             input()->getDimensions(), output()->getDimensions());
   assertion2(getDimensions() == output()->getDimensions(),
-              getDimensions(), output()->getDimensions());
+             getDimensions(), output()->getDimensions());
   using namespace tarch::la;
 
   utils::DynVector& inValues = input()->data(inputDataID)->values();
   utils::DynVector& outValues = output()->data(outputDataID)->values();
   int valueDim = input()->data(inputDataID)->getDimensions();
   assertion2(valueDim == output()->data(outputDataID)->getDimensions(),
-              valueDim, output()->data(outputDataID)->getDimensions());
+             valueDim, output()->data(outputDataID)->getDimensions());
   int deadDimensions = 0;
   for(int d=0; d<getDimensions(); d++){
     if(_deadAxis[d]) deadDimensions +=1;
@@ -720,5 +705,3 @@ utils::DynVector RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: reduceVector
 }
 
 }} // namespace precice, mapping
-
-#endif /* PRECICE_MAPPING_RADIALBASISFCTMAPPING_HPP_ */

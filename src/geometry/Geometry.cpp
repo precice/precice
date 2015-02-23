@@ -7,8 +7,6 @@
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
-//#include "utils/NumericalCompare.hpp"
-#include "boost/foreach.hpp"
 
 namespace precice {
 namespace geometry {
@@ -33,7 +31,7 @@ void Geometry:: create
   utils::DynVector zero ( seed.getDimensions(), 0.0 );
   if ( not tarch::la::equals(getOffset(), zero) ) {
     utils::DynVector temp ( seed.getDimensions() );
-    foreach ( mesh::Vertex& vertex, seed.vertices() ) {
+    for (mesh::Vertex& vertex : seed.vertices()) {
       temp = _offset;
       temp += vertex.getCoords();
       vertex.setCoords ( temp );

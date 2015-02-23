@@ -15,10 +15,6 @@
 
 #include "tarch/tests/TestCaseFactory.h"
 
-#include <iostream>
-using std::cout;
-using std::endl;
-
 
 
 registerTest(precice::mesh::tests::MeshTest)
@@ -259,9 +255,9 @@ void MeshTest::testBoundingBoxCOG()
     coords2 =  0.0, 1.0;
     
     Mesh mesh ("2D Testmesh", 2, false );
-    Vertex& v0 = mesh.createVertex(coords0);
-    Vertex& v1 = mesh.createVertex(coords1);
-    Vertex& v2 = mesh.createVertex(coords2);
+    mesh.createVertex(coords0);
+    mesh.createVertex(coords1);
+    mesh.createVertex(coords2);
 
     mesh.computeState();
 
@@ -276,11 +272,11 @@ void MeshTest::testBoundingBoxCOG()
     validateEquals(bBox.size(), 2);
     validateEquals(cog.size(), 2);
 
-    for (size_t d; d < bBox.size(); d++) {
+    for (size_t d = 0; d < bBox.size(); d++) {
       validateNumericalEquals(referenceBox[d].first, bBox[d].first);
       validateNumericalEquals(referenceBox[d].second, bBox[d].second);
     }
-    for (size_t d; d < cog.size(); d++) {
+    for (size_t d = 0; d < cog.size(); d++) {
       validateNumericalEquals(referenceCOG[d], cog[d]);
     }
   }
@@ -297,10 +293,10 @@ void MeshTest::testBoundingBoxCOG()
     coords2 =  3.5, 2.0, -2.0;
       
     Mesh mesh ("3D Testmesh", 3, false );
-    Vertex& v0 = mesh.createVertex(coords0);
-    Vertex& v1 = mesh.createVertex(coords1);
-    Vertex& v2 = mesh.createVertex(coords2);
-    Vertex& v3 = mesh.createVertex(coords3);
+    mesh.createVertex(coords0);
+    mesh.createVertex(coords1);
+    mesh.createVertex(coords2);
+    mesh.createVertex(coords3);
       
     mesh.computeState();
       
@@ -311,16 +307,16 @@ void MeshTest::testBoundingBoxCOG()
                                         { 0.0, 4.0},
                                         {-3.0, 8.0} };
     
-    std::vector<double> referenceCOG =  { 0.5, 2.0 };
+    std::vector<double> referenceCOG =  { 1.25, 2.0, 2.5 };
           
     validateEquals(bBox.size(), 3);
     validateEquals(cog.size(), 3);
       
-    for (size_t d; d < bBox.size(); d++) {
+    for (size_t d = 0; d < bBox.size(); d++) {
       validateNumericalEquals(referenceBox[d].first, bBox[d].first);
       validateNumericalEquals(referenceBox[d].second, bBox[d].second);
     }
-    for (size_t d; d < cog.size(); d++) {
+    for (size_t d = 0; d < cog.size(); d++) {
       validateNumericalEquals(referenceCOG[d], cog[d]);
     }
 
@@ -365,7 +361,7 @@ void MeshTest:: testDemonstration ()
     // This is the preferred way to iterate over elements in a mesh, it hides
     // the details of the vertex container in class Mesh.
     size_t index = 0;
-    foreach ( Vertex& vertex, mesh.vertices() ) {
+    for (Vertex& vertex : mesh.vertices()) {
       if ( index == 0 ) {
         validateEquals ( vertex.getID(), v0.getID() );
       }
@@ -388,7 +384,7 @@ void MeshTest:: testDemonstration ()
 
     // Validate mesh edges state
     index = 0;
-    foreach ( Edge & edge, mesh.edges() ) {
+    for (Edge & edge : mesh.edges()) {
       if ( index == 0 ) {
         validateEquals ( edge.getID(), e0.getID() );
       }
