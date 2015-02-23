@@ -84,7 +84,7 @@ void CommunicatedGeometry:: sendMesh(
 {
   preciceTrace1 ( "sendMesh()", utils::MasterSlave::_rank );
   // Temporary globalMesh such that the master also keeps his local mesh (seed)
-  mesh::Mesh globalMesh("GlobalMesh", _dimensions, seed.isFlipNormals());
+  mesh::Mesh globalMesh(seed.getName(), _dimensions, seed.isFlipNormals());
 
   if( not utils::MasterSlave::_slaveMode ){
     globalMesh.addMesh(seed); //add local master mesh to global mesh

@@ -40,8 +40,8 @@ int main (int argc, char **argv)
   using namespace precice;
   using namespace precice::constants;
 
-  if (argc == 1 || (argc != 3 && argc != 7)){
-    PRINT("Usage: ./solverproxy configFile proxyName [meshName readDataName writeDataName computationTimeInSeconds]");
+  if (argc == 1 || (argc != 3 && argc != 8)){
+    PRINT("Usage: ./solverproxy configFile proxyName [meshName readDataName writeDataName computationTimeInSeconds N]");
     PRINT("");
     PRINT("Parameters in [] are optional, but are needed together.");
     PRINT("If optional parameters are given, the proxy writes and reads data.");
@@ -53,6 +53,7 @@ int main (int argc, char **argv)
     PRINT("  readDataName:      Data in preCICE config. that is read by this proxy");
     PRINT("  writeDataName:     Data in preCICE config. that is written by this proxy");
     PRINT("  computationTimeInSeconds: Time waited by proxy in every computation cycle");
+    PRINT("  N:                 Number of vertices");
     return 1;
   }
   std::string configFileName(argv[1]);
@@ -62,6 +63,7 @@ int main (int argc, char **argv)
   std::string readDataName;
   std::string writeDataName;
   double computationTime = 0.0;
+  int N = -1;
   if (argc > 3){
     readWriteData = true;
     PRINT("Reading and writing data");
@@ -69,6 +71,7 @@ int main (int argc, char **argv)
     readDataName = argv[4];
     writeDataName = argv[5];
     computationTime = atof(argv[6]);
+    N = atoi(argv[7]);
   }
 
   SolverInterface interface(proxyName, commRank, commSize);
@@ -92,16 +95,13 @@ int main (int argc, char **argv)
     interface.fulfilledAction(actionReadSimulationCheckpoint());
   }
 
-  double dt = interface.initialize();
-
   int dataSize = -1;
   double* data = NULL;
   int* dataIndices = NULL;
   if (readWriteData){
-    dataSize = interface.getMeshVertexSize(meshID);
-    int parallelChunk = dataSize / commSize;
+    int parallelChunk = N / commSize;
     PRINT("parallelChunk = " << parallelChunk);
-    int omittedPart = dataSize - parallelChunk*commSize;
+    int omittedPart = N - parallelChunk*commSize;
     PRINT("omittedPart = " << omittedPart);
 
     int addon = 0;
@@ -110,6 +110,7 @@ int main (int argc, char **argv)
     dataSize = parallelChunk + addon;
     data = new double[dataSize*dimensions];
     dataIndices = new int[dataSize];
+
     int startIndex = 0;
     for (int i=0; i < commRank; i++){
       if (i < omittedPart){
@@ -119,11 +120,17 @@ int main (int argc, char **argv)
         startIndex += parallelChunk;
       }
     }
-    for (int i=0; i < parallelChunk+addon; i++){
-      dataIndices[i] = startIndex+i;
-      //PRINT("Index = " << dataIndices[i]);
+
+    for ( int i=0; i < dataSize; i++){
+      double vertex[3];
+      vertex[0] = (startIndex + i) * 1.0;
+      vertex[1] = 0.0;
+      vertex[2] = 0.0;
+      dataIndices[i] = interface.setMeshVertex(meshID, vertex);
     }
   }
+
+  double dt = interface.initialize();
 
   double mpi_start_time = MPI_Wtime();
   double mpi_compute_time = 0.0;

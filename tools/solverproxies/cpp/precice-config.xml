@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+
+   <log-filter target="debug" component="precice" switch="off" />
+   <log-filter target="info" component="" switch="on" />
+   
+   <log-output column-separator=" | " log-time-stamp="no"  
+               log-time-stamp-human-readable="yes" log-machine-name="no" 
+               log-message-type="no" log-trace="yes"/>
+   
+
+   <solver-interface dimensions="3" restart-mode="off" geometry-mode="off">
+
+      <data:vector name="Data1"  />
+      <data:vector name="Data2"  />
+
+      <mesh name="A_Mesh">
+         <use-data name="Data1" />
+         <use-data name="Data2" />
+      </mesh>
+
+      <mesh name="B_Mesh">
+         <use-data name="Data1" />
+         <use-data name="Data2" />
+      </mesh>
+
+
+      <participant name="A">
+         <master:mpi-single>
+         <use-mesh name="A_Mesh" provide="yes" />
+         <use-mesh name="B_Mesh" from="B" />
+         <write-data name="Data1" mesh="A_Mesh" />
+         <read-data  name="Data2" mesh="A_Mesh" />
+         <mapping:nearest-neighbor direction="write" from="A_Mesh" to="B_Mesh"
+                  constraint="conservative" timing="initial"/>
+         <mapping:nearest-neighbor direction="read" from="B_Mesh" to="A_Mesh"
+                  constraint="consistent" timing="initial" />
+      </participant>
+
+      <participant name="B">
+         <master:mpi-single>
+         <use-mesh name="B_Mesh" provide="yes"/>
+         <write-data name="Data2" mesh="B_Mesh" />
+         <read-data  name="Data1" mesh="B_Mesh" />
+      </participant>
+
+      <m2n:mpi distribution-type="point-to-point" from="A" to="B" />
+
+      <coupling-scheme:serial-explicit>
+         <participants first="A" second="B" />
+         <max-timesteps value="10" />
+         <timestep-length value="1.0" />
+         <exchange data="Data1" mesh="B_Mesh" from="A" to="B" />
+         <exchange data="Data2" mesh="B_Mesh" from="B" to="A"/>
+      </coupling-scheme:serial-explicit>
+
+   </solver-interface>
+
+</precice-configuration>

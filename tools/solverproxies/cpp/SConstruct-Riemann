@@ -11,12 +11,14 @@ import sys;
 #
 cppdefines = []   
 libpath = [ 
-   '../../../build/debug-nopython/'#, # Path to preCICE library
+   '../../../build/debug-noomp-nopetsc/', # Path to preCICE library
+   '/usr/lib/python2.7/config-x86_64-linux-gnu'
    ]      
 libs = [ 
    'precice',  # preCICE library
    'boost_system',
-   'boost_thread' 
+   'boost_thread',
+   'python2.7' 
    ]
 cpppath = [
     ]   
