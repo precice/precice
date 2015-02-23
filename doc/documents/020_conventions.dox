@@ -51,10 +51,16 @@ We use <a href="http://doxygen.org">Doxygen</a> for source code documentation. A
 @endverbatim
 For a one-line documentation you should use
 @verbatim
-/// @brief Eat an apple
+/// Eat an apple
 void eatApple(Apple a);
 @endverbatim
 
+@subsection includeguard Include Guards
+Use
+@verbatim
+#pragma once
+@endverbatim
+as include guard.
 
 @section dimensions-ordering Dimension-Ordering
 

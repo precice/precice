@@ -55,19 +55,18 @@ public:
   /// Removes a computed mapping.
   virtual void clear();
 
-  ///Maps input data to output data from input mesh to output mesh.
+  /// Maps input data to output data from input mesh to output mesh.
   virtual void map (
     int inputDataID,
     int outputDataID );
 
 private:
 
-  // @brief Logging device.
   static tarch::logging::Log _log;
 
   bool _hasComputedMapping;
 
-  // @brief Radial basis function type used in interpolation.
+  /// Radial basis function type used in interpolation.
   RADIAL_BASIS_FUNCTION_T _basisFunction;
 
   tarch::la::DynamicMatrix<double> _matrixCLU;
@@ -76,7 +75,7 @@ private:
 
   tarch::la::DynamicMatrix<double> _matrixA;
 
-  // @brief true if the mapping along some axis should be ignored
+  /// true if the mapping along some axis should be ignored
   bool* _deadAxis;
 
   /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
@@ -257,7 +256,6 @@ public:
 
 private:
 
-  // @brief Logging device.
   static tarch::logging::Log _log;
 
   double _shape;
@@ -303,7 +301,6 @@ public:
 
 private:
 
-  // @brief Logging device.
   static tarch::logging::Log _log;
 
   double _r;
@@ -345,7 +342,6 @@ public:
 
 private:
 
-  // @brief Logging device.
   static tarch::logging::Log _log;
 
   double _r;
@@ -389,7 +385,6 @@ public:
 
 private:
 
-  // @brief Logging device.
   static tarch::logging::Log _log;
 
   double _r;
