@@ -8,7 +8,7 @@
 #include "tarch/logging/Log.h"
 #include "utils/PointerVector.hpp"
 #include <set>
-#include <boost/smart_ptr.hpp>
+#include <memory>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
@@ -248,16 +248,16 @@ private:
   int _remoteCommunicatorSize;
 
   typedef boost::asio::io_service IOService;
-  boost::shared_ptr<IOService> _ioService;
+  std::shared_ptr<IOService> _ioService;
 
   typedef boost::asio::ip::tcp TCP;
   typedef boost::asio::stream_socket_service<TCP> SocketService;
   typedef boost::asio::basic_stream_socket<TCP,SocketService> Socket;
-  typedef boost::shared_ptr<Socket> PtrSocket;
+  typedef std::shared_ptr<Socket> PtrSocket;
   std::vector<PtrSocket> _sockets;
 
   typedef boost::asio::io_service::work Work;
-  typedef boost::shared_ptr<Work> PtrWork;
+  typedef std::shared_ptr<Work> PtrWork;
   PtrWork _queryWork;
 
   // @brief Thread for asynchronously receiving send requests of clients.

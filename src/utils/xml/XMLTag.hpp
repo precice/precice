@@ -12,7 +12,6 @@
 #include <map>
 #include <vector>
 #include <set>
-//#include "boost/smart_ptr.hpp"
 
 namespace precice {
 namespace utils {
@@ -334,7 +333,7 @@ void configure (
 //template< typename CONFIG_T >
 //bool configure
 //(
-//  boost::shared_ptr<CONFIG_T> configuration,
+//  std::shared_ptr<CONFIG_T> configuration,
 //  const std::string&          configurationFilename )
 //{
 //  assertion ( configuration.get() != NULL );
