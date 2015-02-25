@@ -675,9 +675,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       backSubstitution(_matrixCLU, y, out);
       eOut = _lu.solve(eAu);
 
-      out.print();
-      std::cout << eOut << std::endl;
-
       // Copy mapped data to output data values
 #     ifdef PRECICE_STATISTICS
       std::ostringstream stream2;
@@ -694,16 +691,21 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   else { // Map consistent
     preciceDebug("Map consistent");
     DynamicVector<double> p(_matrixCLU.rows(), 0.0);
+    Eigen::VectorXd eP(_eMatrixCLU.rows()); eP.setZero();
     DynamicVector<double> y(_matrixCLU.rows(), 0.0);
     DynamicVector<double> in(_matrixCLU.rows(), 0.0);
+    Eigen::VectorXd eIn(_eMatrixCLU.rows()); eIn.setZero();
     DynamicVector<double> out(_matrixA.rows(), 0.0);
+    Eigen::VectorXd eOut(_eMatrixA.rows());  eOut.setZero();
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++){
       // Fill input from input data values (last polyparams entries remain zero)
       for (int i=0; i < in.size() - polyparams; i++){
         int index = i*valueDim + dim;
         in[i] = inValues[index];
+        eIn[i] = inValues[index];
       }
+
       // Account for pivoting in LU decomposition of C
       assertion2(in.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
       for (int i=0; i < in.size(); i++){
@@ -713,10 +715,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       }
       forwardSubstitution(_matrixCLU, in, y);
       backSubstitution(_matrixCLU, y, p);
+      eP = _lu.solve(eIn);
+
       multiply(_matrixA, p, out );
+      eOut = _eMatrixA * eP;
+
       // Copy mapped data to ouptut data values
       for (int i=0; i < out.size(); i++){
-        outValues[i*valueDim + dim] = out[i];
+        // outValues[i*valueDim + dim] = out[i];
+        outValues[i*valueDim + dim] = eOut[i];
       }
     }
   }
