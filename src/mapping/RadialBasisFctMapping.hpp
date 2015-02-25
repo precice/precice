@@ -10,6 +10,12 @@
 #include <limits>
 #include <typeinfo>
 
+#include "Eigen/Core"
+#include "Eigen/LU"
+
+#include <iostream>
+using namespace std;
+
 namespace precice {
 namespace mapping {
 
@@ -70,17 +76,23 @@ private:
   RADIAL_BASIS_FUNCTION_T _basisFunction;
 
   tarch::la::DynamicMatrix<double> _matrixCLU;
-
+  Eigen::MatrixXd _eMatrixCLU;
+  Eigen::FullPivLU<Eigen::MatrixXd> _lu;
+  
   tarch::la::DynamicVector<int> _pivotsCLU;
+  Eigen::VectorXi _ePivotsCLU;
+
 
   tarch::la::DynamicMatrix<double> _matrixA;
+  Eigen::MatrixXd _eMatrixA;
 
   /// true if the mapping along some axis should be ignored
   bool* _deadAxis;
 
   /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
   utils::DynVector reduceVector(const utils::DynVector& fullVector);
-
+  Eigen::VectorXd  reduceVector(const Eigen::VectorXd& fullVector);
+  
   void setDeadAxis(bool xDead, bool yDead, bool zDead){
     if(getDimensions()==2){
       _deadAxis[0] = xDead;
@@ -410,8 +422,11 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
   _matrixCLU (),
+  _eMatrixCLU(),
   _pivotsCLU (),
-  _matrixA ()
+  _ePivotsCLU(),
+  _matrixA (),
+  _eMatrixA()
 {
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
@@ -460,9 +475,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   assertion1(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees
   _matrixCLU = DynamicMatrix<double>(n, n, 0.0);
+  _eMatrixCLU = Eigen::MatrixXd(n, n);
+  _eMatrixCLU.setZero();
   _pivotsCLU.clear();
   _pivotsCLU.append(n, 0);
+  _ePivotsCLU = Eigen::VectorXi(n);
   _matrixA = DynamicMatrix<double>(outputSize, n, 0.0);
+  _eMatrixA = Eigen::MatrixXd(outputSize, n);
+  _eMatrixA.setZero();
+
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
   utils::DynVector difference(dimensions);
@@ -471,6 +492,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       difference = iVertex.getCoords();
       difference -= inMesh->vertices()[j].getCoords();
       _matrixCLU(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
+      _eMatrixCLU(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
 #     ifdef Asserts
       if (_matrixCLU(i,j) == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "C matrix element has value inf. "
@@ -483,9 +505,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       }
 #     endif
     }
+    _eMatrixCLU(i,inputSize) = 1.0;
     _matrixCLU(i,inputSize) = 1.0;
     for (int dim=0; dim < dimensions-deadDimensions; dim++){
       _matrixCLU(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
+      _eMatrixCLU(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
     }
     i++;
   }
@@ -493,6 +517,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   for (int i=0; i < n; i++){
     for (int j=i+1; j < n; j++){
       _matrixCLU(j,i) = _matrixCLU(i,j);
+      _eMatrixCLU(j,i) = _eMatrixCLU(i,j);
     }
   }
 
@@ -504,6 +529,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       difference = iVertex.getCoords();
       difference -= jVertex.getCoords();
       _matrixA(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
+      _eMatrixA(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
 #     ifdef Asserts
       if (_matrixA(i,j) == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "A matrix element has value inf. "
@@ -518,8 +544,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       j++;
     }
     _matrixA(i,inputSize) = 1.0;
+    _eMatrixA(i,inputSize) = 1.0;
     for (int dim=0; dim < dimensions-deadDimensions; dim++){
       _matrixA(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
+      _eMatrixA(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
     }
     i++;
   }
@@ -546,6 +574,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 # endif // PRECICE_STATISTICS
 
 //  preciceDebug ( "Matrix C = " << _matrixCLU );
+  _lu = _eMatrixCLU.fullPivLu();
   lu(_matrixCLU, _pivotsCLU);  // Compute LU decomposition
 
   int rankDeficiency = 0;
@@ -572,8 +601,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
   preciceTrace("clear()");
   _matrixCLU = tarch::la::DynamicMatrix<double>();
+  _eMatrixCLU = Eigen::MatrixXd();
   _pivotsCLU.clear();
+  _ePivotsCLU.setZero();
   _matrixA = tarch::la::DynamicMatrix<double>();
+  _eMatrixA = Eigen::MatrixXd();
   _hasComputedMapping = false;
 }
 
@@ -606,9 +638,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     preciceDebug("Map conservative");
     static int mappingIndex = 0;
     DynamicVector<double> Au(_matrixCLU.rows(), 0.0);
+    Eigen::VectorXd eAu(_eMatrixCLU.rows());
     DynamicVector<double> y(_matrixCLU.rows(), 0.0);
     DynamicVector<double> in(_matrixA.rows(), 0.0);
+    Eigen::VectorXd eIn(_eMatrixA.rows());
     DynamicVector<double> out(_matrixCLU.rows(), 0.0);
+    Eigen::VectorXd eOut(_eMatrixCLU.rows());
 
     preciceDebug("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
     preciceDebug("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
@@ -618,6 +653,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       for (int i=0; i < in.size(); i++){ // Fill input data values
         int index = i*valueDim + dim;
         in[i] = inValues[index];
+        eIn[i] = inValues[index];
       }
 #     ifdef PRECICE_STATISTICS
       std::ostringstream stream;
@@ -626,6 +662,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 #     endif
 
       multiply(transpose(_matrixA), in, Au); // Multiply by transposed of A
+      eAu = _eMatrixA.transpose() * eIn;
+  
       // Account for pivoting in LU decomposition of C
       assertion2(Au.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
       for ( int i=0; i < Au.size(); i++ ){
@@ -635,6 +673,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       }
       forwardSubstitution(_matrixCLU, Au, y);
       backSubstitution(_matrixCLU, y, out);
+      eOut = _lu.solve(eAu);
+
+      out.print();
+      std::cout << eOut << std::endl;
+
       // Copy mapped data to output data values
 #     ifdef PRECICE_STATISTICS
       std::ostringstream stream2;
@@ -642,7 +685,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       io::TXTWriter::write(out, stream2.str());
 #     endif
       for (int i=0; i < out.size()-polyparams; i++){
-        outValues[i*valueDim + dim] = out[i];
+        // outValues[i*valueDim + dim] = out[i];
+        outValues[i*valueDim + dim] = eOut[i];
       }
     }
     mappingIndex++;
@@ -698,5 +742,27 @@ utils::DynVector RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: reduceVector
   }
   return reducedVector;
 }
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: reduceVector
+(
+  const Eigen::VectorXd& fullVector)
+{
+  int deadDimensions = 0;
+  for(int d=0; d<getDimensions(); d++) {
+    if (_deadAxis[d]) deadDimensions +=1;
+  }
+  assertion2(getDimensions()>deadDimensions, getDimensions(), deadDimensions);
+  Eigen::VectorXd reducedVector(getDimensions()-deadDimensions);
+  int k = 0;
+  for(int d=0; d<getDimensions(); d++){
+    if(not _deadAxis[d]){
+      reducedVector[k] = fullVector[d];
+      k++;
+    }
+  }
+  return reducedVector;
+}
+
 
 }} // namespace precice, mapping
