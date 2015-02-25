@@ -222,6 +222,16 @@ void DynamicVector<Scalar>::print() const
   printf("\n");
 }
 
+template<typename Scalar>
+DynamicVector<Scalar>::operator Eigen::Matrix<Scalar, Eigen::Dynamic, 1>() const
+{
+  Eigen::Matrix<Scalar, Eigen::Dynamic, 1> v(_size);
+  for (int i = 0; i < _size; i++) {
+    v[i] = _values[i];
+  }
+  
+  return v;
+}
 
 }} // namespace tarch, la
 
