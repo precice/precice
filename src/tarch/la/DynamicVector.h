@@ -13,6 +13,7 @@
 #include "tarch/la/VectorScalarOperations.h"
 #include "tarch/la/VectorVectorOperations.h"
 #include "tarch/utils/EnableIf.h"
+#include "Eigen/Core"
 
 namespace tarch {
   namespace la {
@@ -185,6 +186,9 @@ public:
    * Be advised that this conversion breaks references.
    */
   operator std::vector<Scalar>() const;
+
+  /// Converts to an Eigen::Vector
+  operator Eigen::Matrix<Scalar, Eigen::Dynamic, 1>() const;
 
   // No more methods here? They are all generic free methods now!
 };
