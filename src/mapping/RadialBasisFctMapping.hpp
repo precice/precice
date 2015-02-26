@@ -75,16 +75,9 @@ private:
   /// Radial basis function type used in interpolation.
   RADIAL_BASIS_FUNCTION_T _basisFunction;
 
-  tarch::la::DynamicMatrix<double> _matrixCLU;
-  Eigen::MatrixXd _eMatrixCLU;
   Eigen::FullPivLU<Eigen::MatrixXd> _lu;
   
-  tarch::la::DynamicVector<int> _pivotsCLU;
-  Eigen::VectorXi _ePivotsCLU;
-
-
-  tarch::la::DynamicMatrix<double> _matrixA;
-  Eigen::MatrixXd _eMatrixA;
+  Eigen::MatrixXd _matrixA;
 
   /// true if the mapping along some axis should be ignored
   bool* _deadAxis;
@@ -421,12 +414,7 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping
   Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
-  _matrixCLU (),
-  _eMatrixCLU(),
-  _pivotsCLU (),
-  _ePivotsCLU(),
-  _matrixA (),
-  _eMatrixA()
+  _matrixA()
 {
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
@@ -474,15 +462,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   int polyparams = 1 + dimensions - deadDimensions;
   assertion1(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees
-  _matrixCLU = DynamicMatrix<double>(n, n, 0.0);
-  _eMatrixCLU = Eigen::MatrixXd(n, n);
-  _eMatrixCLU.setZero();
-  _pivotsCLU.clear();
-  _pivotsCLU.append(n, 0);
-  _ePivotsCLU = Eigen::VectorXi(n);
-  _matrixA = DynamicMatrix<double>(outputSize, n, 0.0);
-  _eMatrixA = Eigen::MatrixXd(outputSize, n);
-  _eMatrixA.setZero();
+  Eigen::MatrixXd eMatrixCLU(n, n);
+  eMatrixCLU.setZero();
+  _matrixA = Eigen::MatrixXd(outputSize, n);
+  _matrixA.setZero();
 
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
@@ -491,10 +474,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
     for (int j=iVertex.getID(); j < inputSize; j++){
       difference = iVertex.getCoords();
       difference -= inMesh->vertices()[j].getCoords();
-      _matrixCLU(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
-      _eMatrixCLU(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
+      eMatrixCLU(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
 #     ifdef Asserts
-      if (_matrixCLU(i,j) == std::numeric_limits<double>::infinity()){
+      if (eMatrixCLU(i,j) == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "C matrix element has value inf. "
                      << "i = " << i << ", j = " << j
                      << ", coords i = " << iVertex.getCoords() << ", coords j = "
@@ -505,19 +487,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       }
 #     endif
     }
-    _eMatrixCLU(i,inputSize) = 1.0;
-    _matrixCLU(i,inputSize) = 1.0;
+    eMatrixCLU(i,inputSize) = 1.0;
     for (int dim=0; dim < dimensions-deadDimensions; dim++){
-      _matrixCLU(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
-      _eMatrixCLU(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
+      eMatrixCLU(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim]; // bad idea cause it converts twice
     }
     i++;
   }
   // Copy values of upper right part of C to lower left part
   for (int i=0; i < n; i++){
     for (int j=i+1; j < n; j++){
-      _matrixCLU(j,i) = _matrixCLU(i,j);
-      _eMatrixCLU(j,i) = _eMatrixCLU(i,j);
+      eMatrixCLU(j,i) = eMatrixCLU(i,j);
     }
   }
 
@@ -529,7 +508,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       difference = iVertex.getCoords();
       difference -= jVertex.getCoords();
       _matrixA(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
-      _eMatrixA(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
 #     ifdef Asserts
       if (_matrixA(i,j) == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "A matrix element has value inf. "
@@ -544,10 +522,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       j++;
     }
     _matrixA(i,inputSize) = 1.0;
-    _eMatrixA(i,inputSize) = 1.0;
     for (int dim=0; dim < dimensions-deadDimensions; dim++){
       _matrixA(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
-      _eMatrixA(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
     }
     i++;
   }
@@ -561,7 +537,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   else {
     streamC << "consistent-matrixC-" << computeIndex << ".mat";
   }
-  io::TXTWriter::write(_matrixCLU, streamC.str());
+  io::TXTWriter::write(_eMatrixCLU, streamC.str());
   std::ostringstream streamA;
   if (getConstraint() == CONSERVATIVE){
     streamA << "conservative-matrixA-" << computeIndex << ".mat";
@@ -573,20 +549,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   computeIndex++;
 # endif // PRECICE_STATISTICS
 
-//  preciceDebug ( "Matrix C = " << _matrixCLU );
-  _lu = _eMatrixCLU.fullPivLu();
-  lu(_matrixCLU, _pivotsCLU);  // Compute LU decomposition
+  // preciceDebug ( "Matrix C = " << eMatrixCLU );
+  _lu = eMatrixCLU.fullPivLu();
 
-  int rankDeficiency = 0;
-  for (int i=0; i < n; i++){
-    if (equals(_matrixCLU(i,i), 0.0)){
-      rankDeficiency++;
-    }
-  }
+  int rankDeficiency = _lu.rank() - n;
+
   if (rankDeficiency > 0){
-    preciceWarning("computeMapping()", "Interpolation matrix C has rank "
-                   << "deficiency of " << rankDeficiency);
+    preciceWarning("computeMapping()", "Interpolation matrix C has rank deficiency of " << rankDeficiency);
   }
+  
   _hasComputedMapping = true;
 }
 
@@ -600,12 +571,8 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
   preciceTrace("clear()");
-  _matrixCLU = tarch::la::DynamicMatrix<double>();
-  _eMatrixCLU = Eigen::MatrixXd();
-  _pivotsCLU.clear();
-  _ePivotsCLU.setZero();
-  _matrixA = tarch::la::DynamicMatrix<double>();
-  _eMatrixA = Eigen::MatrixXd();
+  _matrixA = Eigen::MatrixXd();
+  _lu = Eigen::FullPivLU<Eigen::MatrixXd>();
   _hasComputedMapping = false;
 }
 
@@ -637,23 +604,17 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   if (getConstraint() == CONSERVATIVE){
     preciceDebug("Map conservative");
     static int mappingIndex = 0;
-    DynamicVector<double> Au(_matrixCLU.rows(), 0.0);
-    Eigen::VectorXd eAu(_eMatrixCLU.rows());
-    DynamicVector<double> y(_matrixCLU.rows(), 0.0);
-    DynamicVector<double> in(_matrixA.rows(), 0.0);
-    Eigen::VectorXd eIn(_eMatrixA.rows());
-    DynamicVector<double> out(_matrixCLU.rows(), 0.0);
-    Eigen::VectorXd eOut(_eMatrixCLU.rows());
+    Eigen::VectorXd Au(_matrixA.cols());  // rows == n
+    Eigen::VectorXd in(_matrixA.rows());  // rows == outputSize
+    Eigen::VectorXd out(_matrixA.cols()); // rows == n
 
-    preciceDebug("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
+    // preciceDebug("C rows=" << _eMatrixCLU.rows() << " cols=" << _eMatrixCLU.cols());
     preciceDebug("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
     preciceDebug("in size=" << in.size() << ", out size=" << out.size());
 
     for (int dim=0; dim < valueDim; dim++){
-      for (int i=0; i < in.size(); i++){ // Fill input data values
-        int index = i*valueDim + dim;
-        in[i] = inValues[index];
-        eIn[i] = inValues[index];
+      for (int i=0; i < in.size(); i++) { // Fill input data values
+        in[i] = inValues[i*valueDim + dim];
       }
 #     ifdef PRECICE_STATISTICS
       std::ostringstream stream;
@@ -661,19 +622,11 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       io::TXTWriter::write(in, stream.str());
 #     endif
 
-      multiply(transpose(_matrixA), in, Au); // Multiply by transposed of A
-      eAu = _eMatrixA.transpose() * eIn;
+      Au = _matrixA.transpose() * in;
   
       // Account for pivoting in LU decomposition of C
-      assertion2(Au.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
-      for ( int i=0; i < Au.size(); i++ ){
-        double temp = Au[i];
-        Au[i] = Au[_pivotsCLU[i]];
-        Au[_pivotsCLU[i]] = temp;
-      }
-      forwardSubstitution(_matrixCLU, Au, y);
-      backSubstitution(_matrixCLU, y, out);
-      eOut = _lu.solve(eAu);
+      // assertion2(Au.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
+      out = _lu.solve(Au);
 
       // Copy mapped data to output data values
 #     ifdef PRECICE_STATISTICS
@@ -682,48 +635,33 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       io::TXTWriter::write(out, stream2.str());
 #     endif
       for (int i=0; i < out.size()-polyparams; i++){
-        // outValues[i*valueDim + dim] = out[i];
-        outValues[i*valueDim + dim] = eOut[i];
+        outValues[i*valueDim + dim] = out[i];
       }
     }
     mappingIndex++;
   }
   else { // Map consistent
     preciceDebug("Map consistent");
-    DynamicVector<double> p(_matrixCLU.rows(), 0.0);
-    Eigen::VectorXd eP(_eMatrixCLU.rows()); eP.setZero();
-    DynamicVector<double> y(_matrixCLU.rows(), 0.0);
-    DynamicVector<double> in(_matrixCLU.rows(), 0.0);
-    Eigen::VectorXd eIn(_eMatrixCLU.rows()); eIn.setZero();
-    DynamicVector<double> out(_matrixA.rows(), 0.0);
-    Eigen::VectorXd eOut(_eMatrixA.rows());  eOut.setZero();
+    Eigen::VectorXd p(_matrixA.cols());    // rows == n
+    Eigen::VectorXd in(_matrixA.cols());   // rows == n
+    Eigen::VectorXd out(_matrixA.rows());  // rows == outputSize
+    in.setZero();
+
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++){
       // Fill input from input data values (last polyparams entries remain zero)
       for (int i=0; i < in.size() - polyparams; i++){
-        int index = i*valueDim + dim;
-        in[i] = inValues[index];
-        eIn[i] = inValues[index];
+        in[i] = inValues[i*valueDim + dim];
       }
 
       // Account for pivoting in LU decomposition of C
-      assertion2(in.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
-      for (int i=0; i < in.size(); i++){
-        double temp = in[i];
-        in[i] = in[_pivotsCLU[i]];
-        in[_pivotsCLU[i]] = temp;
-      }
-      forwardSubstitution(_matrixCLU, in, y);
-      backSubstitution(_matrixCLU, y, p);
-      eP = _lu.solve(eIn);
-
-      multiply(_matrixA, p, out );
-      eOut = _eMatrixA * eP;
+      // assertion2(in.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
+      p = _lu.solve(in);
+      out = _matrixA * p;
 
       // Copy mapped data to ouptut data values
       for (int i=0; i < out.size(); i++){
-        // outValues[i*valueDim + dim] = out[i];
-        outValues[i*valueDim + dim] = eOut[i];
+        outValues[i*valueDim + dim] = out[i];
       }
     }
   }
