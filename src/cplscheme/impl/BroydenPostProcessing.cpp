@@ -25,7 +25,7 @@ namespace cplscheme {
 namespace impl {
 
 // tarch::logging::Log BroydenPostProcessing::
-//       _log("precice::cplscheme::impl::BroydenPostProcessing");
+ //      _log("precice::cplscheme::impl::BroydenPostProcessing");
 
       
 BroydenPostProcessing:: BroydenPostProcessing
@@ -156,19 +156,30 @@ void BroydenPostProcessing::computeQNUpdate
   DataValues v = _matrixV.column(0);
   DataValues w = _matrixW.column(0);
   Matrix JUpdate(_invJacobian.rows(),_invJacobian.cols(), 0.);
-  
+
+  preciceDebug("took latest column of V,W");
+
   double dotproductV = v*v;
   DataValues tmp = _invJacobian * v;    // J_inv*v
   tmp = w - tmp;                        // (w-J_inv*v)
   tmp = tmp/dotproductV;                // (w-J_inv*v)/|v|_l2
+  preciceDebug("did step (W-J_inv*v)/|v|");
+  //preciceDebug("v.size = "<<v.size());
+  //preciceDebug("tmp.size() = "<<tmp.size());
   Matrix tmp_mat(tmp.size(),1);
   Matrix vT_mat(1,v.size());
+  //preciceDebug("tmp_mat.size = "<<tmp_mat.rows()<<", "<<tmp_mat.cols());
+  //preciceDebug("vT_mat.size = "<<vT_mat.rows()<<", "<<vT_mat.cols());
   for(int i = 0; i < v.size(); i++)      // transform vectors in matrices
   {
-    tmp_mat(i,1) = tmp(i);
-    vT_mat(1,i) = v(i);
+    tmp_mat(i,0) = tmp(i);
+    vT_mat(0,i) = v(i);
   }
+  preciceDebug("converted vectors into matrices");
+  assertion2(tmp_mat.cols() == vT_mat.rows(), tmp_mat.cols(), vT_mat.rows());
   multiply(tmp_mat, vT_mat, JUpdate);   // (w-J_inv*v)/|v| * v^T
+  preciceDebug("multiplied (w-J_inv*v)/|v| * v^T");
+  assertion2(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
   _invJacobian = _invJacobian + JUpdate;
   
   DataValues negRes(_residuals);
