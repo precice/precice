@@ -1,10 +1,6 @@
 #pragma once
 
 #include "mapping/Mapping.hpp"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/DynamicVector.h"
-#include "tarch/la/LUDecomposition.h"
-#include "tarch/la/TransposedMatrix.h"
 #include "utils/MasterSlave.hpp"
 #include "io/TXTWriter.hpp"
 #include <limits>
@@ -75,34 +71,32 @@ private:
   /// Radial basis function type used in interpolation.
   RADIAL_BASIS_FUNCTION_T _basisFunction;
 
-  Eigen::FullPivLU<Eigen::MatrixXd> _lu;
-  
   Eigen::MatrixXd _matrixA;
 
+  Eigen::FullPivLU<Eigen::MatrixXd> _lu;
+  
   /// true if the mapping along some axis should be ignored
   bool* _deadAxis;
 
   /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
-  utils::DynVector reduceVector(const utils::DynVector& fullVector);
-  Eigen::VectorXd  reduceVector(const Eigen::VectorXd& fullVector);
+  // utils::DynVector reduceVector(const utils::DynVector& fullVector);
+  Eigen::VectorXd  reduceVector(const utils::DynVector& fullVector);
   
-  void setDeadAxis(bool xDead, bool yDead, bool zDead){
-    if(getDimensions()==2){
+  void setDeadAxis(bool xDead, bool yDead, bool zDead)
+  {
+    if (getDimensions() == 2) {
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
-      preciceCheck(not (xDead && yDead), "setDeadAxis()", "You cannot  "
-                   << " choose all axis to be dead for a RBF mapping");
-      preciceCheck(not zDead, "setDeadAxis()", "You cannot  "
-                   << " dead out the z axis if dimension is set to 2");
+      preciceCheck(not (xDead && yDead), "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
+      preciceCheck(not zDead, "setDeadAxis()", "You cannot dead out the z axis if dimension is set to 2");
     }
-    else if(getDimensions()==3){
+    else if (getDimensions() == 3) {
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
       _deadAxis[2] = zDead;
-      preciceCheck(not (xDead && yDead && zDead), "setDeadAxis()", "You cannot  "
-                   << " choose all axis to be dead for a RBF mapping");
+      preciceCheck(not (xDead && yDead && zDead), "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
     }
-    else{
+    else {
       assertion(false);
     }
   }
@@ -437,7 +431,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
                "computeMapping()", "RBF mapping  "
                << " is not yet supported for a participant in master mode");
 
-  using namespace tarch::la;
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
   assertion2(getDimensions() == output()->getDimensions(),
@@ -456,8 +449,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   int inputSize = (int)inMesh->vertices().size();
   int outputSize = (int)outMesh->vertices().size();
   int deadDimensions = 0;
-  for(int d=0; d<dimensions; d++){
-    if(_deadAxis[d]) deadDimensions +=1;
+  for (int d = 0; d < dimensions; d++) {
+    if (_deadAxis[d]) deadDimensions +=1;
   }
   int polyparams = 1 + dimensions - deadDimensions;
   assertion1(inputSize >= 1 + polyparams, inputSize);
@@ -470,13 +463,13 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
   utils::DynVector difference(dimensions);
-  for (const mesh::Vertex& iVertex : inMesh->vertices()){
-    for (int j=iVertex.getID(); j < inputSize; j++){
+  for (const mesh::Vertex& iVertex : inMesh->vertices()) {
+    for (int j = iVertex.getID(); j < inputSize; j++) {
       difference = iVertex.getCoords();
       difference -= inMesh->vertices()[j].getCoords();
-      eMatrixCLU(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
+      eMatrixCLU(i,j) = _basisFunction.evaluate(reduceVector(difference).norm());
 #     ifdef Asserts
-      if (eMatrixCLU(i,j) == std::numeric_limits<double>::infinity()){
+      if (eMatrixCLU(i,j) == std::numeric_limits<double>::infinity()) {
         preciceError("computeMapping()", "C matrix element has value inf. "
                      << "i = " << i << ", j = " << j
                      << ", coords i = " << iVertex.getCoords() << ", coords j = "
@@ -488,26 +481,26 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 #     endif
     }
     eMatrixCLU(i,inputSize) = 1.0;
-    for (int dim=0; dim < dimensions-deadDimensions; dim++){
-      eMatrixCLU(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim]; // bad idea cause it converts twice
+    for (int dim=0; dim < dimensions-deadDimensions; dim++) {
+      eMatrixCLU(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
     }
     i++;
   }
   // Copy values of upper right part of C to lower left part
-  for (int i=0; i < n; i++){
-    for (int j=i+1; j < n; j++){
+  for (int i = 0; i < n; i++) {
+    for (int j = i+1; j < n; j++) {
       eMatrixCLU(j,i) = eMatrixCLU(i,j);
     }
   }
 
   // Fill _matrixA with values
   i = 0;
-  for (const mesh::Vertex& iVertex : outMesh->vertices()){
+  for (const mesh::Vertex& iVertex : outMesh->vertices()) {
     int j = 0;
-    for (const mesh::Vertex& jVertex : inMesh->vertices()){
+    for (const mesh::Vertex& jVertex : inMesh->vertices()) {
       difference = iVertex.getCoords();
       difference -= jVertex.getCoords();
-      _matrixA(i,j) = _basisFunction.evaluate(norm2(reduceVector(difference)));
+      _matrixA(i,j) = _basisFunction.evaluate(reduceVector(difference).norm());
 #     ifdef Asserts
       if (_matrixA(i,j) == std::numeric_limits<double>::infinity()){
         preciceError("computeMapping()", "A matrix element has value inf. "
@@ -522,7 +515,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       j++;
     }
     _matrixA(i,inputSize) = 1.0;
-    for (int dim=0; dim < dimensions-deadDimensions; dim++){
+    for (int dim=0; dim < dimensions-deadDimensions; dim++) {
       _matrixA(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
     }
     i++;
@@ -531,7 +524,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 # ifdef PRECICE_STATISTICS
   static int computeIndex = 0;
   std::ostringstream streamC;
-  if (getConstraint() == CONSERVATIVE){
+  if (getConstraint() == CONSERVATIVE) {
     streamC << "conservative-matrixC-" << computeIndex << ".mat";
   }
   else {
@@ -539,7 +532,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   }
   io::TXTWriter::write(_eMatrixCLU, streamC.str());
   std::ostringstream streamA;
-  if (getConstraint() == CONSERVATIVE){
+  if (getConstraint() == CONSERVATIVE) {
     streamA << "conservative-matrixA-" << computeIndex << ".mat";
   }
   else {
@@ -588,7 +581,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
              input()->getDimensions(), output()->getDimensions());
   assertion2(getDimensions() == output()->getDimensions(),
              getDimensions(), output()->getDimensions());
-  using namespace tarch::la;
 
   utils::DynVector& inValues = input()->data(inputDataID)->values();
   utils::DynVector& outValues = output()->data(outputDataID)->values();
@@ -596,8 +588,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   assertion2(valueDim == output()->data(outputDataID)->getDimensions(),
              valueDim, output()->data(outputDataID)->getDimensions());
   int deadDimensions = 0;
-  for(int d=0; d<getDimensions(); d++){
-    if(_deadAxis[d]) deadDimensions +=1;
+  for (int d = 0; d < getDimensions(); d++) {
+    if (_deadAxis[d]) deadDimensions +=1;
   }
   int polyparams = 1 + getDimensions() - deadDimensions;
 
@@ -612,8 +604,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     preciceDebug("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
     preciceDebug("in size=" << in.size() << ", out size=" << out.size());
 
-    for (int dim=0; dim < valueDim; dim++){
-      for (int i=0; i < in.size(); i++) { // Fill input data values
+    for (int dim = 0; dim < valueDim; dim++) {
+      for (int i = 0; i < in.size(); i++) { // Fill input data values
         in[i] = inValues[i*valueDim + dim];
       }
 #     ifdef PRECICE_STATISTICS
@@ -623,9 +615,6 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 #     endif
 
       Au = _matrixA.transpose() * in;
-  
-      // Account for pivoting in LU decomposition of C
-      // assertion2(Au.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
       out = _lu.solve(Au);
 
       // Copy mapped data to output data values
@@ -634,7 +623,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       stream2 << "outvec-dim" << dim << "-" << mappingIndex << ".mat";
       io::TXTWriter::write(out, stream2.str());
 #     endif
-      for (int i=0; i < out.size()-polyparams; i++){
+      for (int i = 0; i < out.size()-polyparams; i++) {
         outValues[i*valueDim + dim] = out[i];
       }
     }
@@ -648,60 +637,39 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     in.setZero();
 
     // For every data dimension, perform mapping
-    for (int dim=0; dim < valueDim; dim++){
+    for (int dim = 0; dim < valueDim; dim++) {
       // Fill input from input data values (last polyparams entries remain zero)
-      for (int i=0; i < in.size() - polyparams; i++){
+      for (int i = 0; i < in.size() - polyparams; i++) {
         in[i] = inValues[i*valueDim + dim];
       }
 
-      // Account for pivoting in LU decomposition of C
-      // assertion2(in.size() == _pivotsCLU.size(), in.size(), _pivotsCLU.size());
       p = _lu.solve(in);
       out = _matrixA * p;
 
       // Copy mapped data to ouptut data values
-      for (int i=0; i < out.size(); i++){
+      for (int i = 0; i < out.size(); i++) {
         outValues[i*valueDim + dim] = out[i];
       }
     }
   }
 }
 
-template<typename RADIAL_BASIS_FUNCTION_T>
-utils::DynVector RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: reduceVector
-(
-  const utils::DynVector& fullVector)
-{
-  int deadDimensions = 0;
-  for(int d=0; d<getDimensions(); d++){
-    if(_deadAxis[d]) deadDimensions +=1;
-  }
-  assertion2(getDimensions()>deadDimensions, getDimensions(), deadDimensions);
-  utils::DynVector reducedVector(getDimensions()-deadDimensions);
-  int k = 0;
-  for(int d=0; d<getDimensions(); d++){
-    if(not _deadAxis[d]){
-      reducedVector[k] = fullVector[d];
-      k++;
-    }
-  }
-  return reducedVector;
-}
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: reduceVector
 (
-  const Eigen::VectorXd& fullVector)
+  const utils::DynVector& fullVector)
 {
   int deadDimensions = 0;
-  for(int d=0; d<getDimensions(); d++) {
-    if (_deadAxis[d]) deadDimensions +=1;
+  for (int d = 0; d < getDimensions(); d++) {
+    if (_deadAxis[d])
+      deadDimensions +=1;
   }
   assertion2(getDimensions()>deadDimensions, getDimensions(), deadDimensions);
   Eigen::VectorXd reducedVector(getDimensions()-deadDimensions);
   int k = 0;
-  for(int d=0; d<getDimensions(); d++){
-    if(not _deadAxis[d]){
+  for (int d = 0; d < getDimensions(); d++) {
+    if (not _deadAxis[d]) {
       reducedVector[k] = fullVector[d];
       k++;
     }
