@@ -62,7 +62,8 @@ public:
   /**
    * @brief Returns the l2-norm of the coupling residuum
    */
-  virtual double getNormResidual() = 0;
+  virtual double getNormResidual()
+    {return 0;}
 };
 
 }}} // namespace precice, cplscheme, impl

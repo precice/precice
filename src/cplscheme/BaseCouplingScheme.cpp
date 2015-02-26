@@ -726,7 +726,7 @@ bool BaseCouplingScheme:: measureConvergence()
     assertion(convMeasure.measure.get() != NULL);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values);
-     _convergenceWriter.writeData("ResNormID["+convMeasure.dataID+"]", convMeasure.measure->getNormResidual());
+     _convergenceWriter.writeData("ResNorm", convMeasure.measure->getNormResidual());
     if (not convMeasure.measure->isConvergence()) {
       //preciceDebug("Local convergence = false");
       allConverged = false;
@@ -761,7 +761,7 @@ void BaseCouplingScheme::initializeTXTWriters()
     _convergenceWriter.addData("Timestep", io::TXTTableWriter::INT );
     _convergenceWriter.addData("Iteration", io::TXTTableWriter::INT );
     for (ConvergenceMeasure& convMeasure : _convergenceMeasures) 
-      _convergenceWriter.addData("ResNormID["+convMeasure.dataID+"]", io::TXTTableWriter::DOUBLE);
+      _convergenceWriter.addData("ResNormID", io::TXTTableWriter::DOUBLE);
   }
 }
 
