@@ -51,7 +51,8 @@ BaseCouplingScheme:: BaseCouplingScheme
   _actions(),
   _sendData(),
   _receiveData (),
-  _iterationsWriter("iterations-unknown.txt")
+  _iterationsWriter("iterations-unknown.txt"),
+  _convergenceWriter("convergence-unknown.txt")
 {
   preciceCheck (
     not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -109,7 +110,8 @@ BaseCouplingScheme::BaseCouplingScheme
   _actions(),
   _sendData(),
   _receiveData(),
-  _iterationsWriter("iterations-" + localParticipant + ".txt")
+  _iterationsWriter("iterations-" + localParticipant + ".txt"),
+  _convergenceWriter("convergence-" + localParticipant + ".txt")
 {
   preciceCheck(
     not ((maxTime != UNDEFINED_TIME) && (maxTime < 0.0)),
@@ -718,6 +720,8 @@ bool BaseCouplingScheme:: measureConvergence()
     assertion(convMeasure.measure.get() != NULL);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values);
+    // _convergenceWriter.writeData("Timestep", _timesteps);
+    // _convergenceWriter.writeData("Iteration", 1);
     if (not convMeasure.measure->isConvergence()) {
       //preciceDebug("Local convergence = false");
       allConverged = false;
@@ -745,6 +749,9 @@ void BaseCouplingScheme::initializeTXTWriters()
     _iterationsWriter.addData("Total Iterations", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
+
+    _convergenceWriter.addData("Timestep", io::TXTTableWriter::INT );
+    _convergenceWriter.addData("Iteration", io::TXTTableWriter::INT );
   }
 }
 

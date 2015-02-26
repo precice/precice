@@ -549,6 +549,10 @@ private:
   /// @brief Responsible for monitoring iteration count over timesteps.
   io::TXTTableWriter _iterationsWriter;
 
+  /// Writes out coupling convergence within all timesteps.
+  io::TXTTableWriter _convergenceWriter;
+
+
   int getVertexOffset(std::map<int,int>& vertexDistribution, int rank, int dim);
 
 
