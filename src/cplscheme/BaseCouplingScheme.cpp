@@ -777,7 +777,7 @@ void BaseCouplingScheme::advanceTXTWriters()
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter.writeData("Convergence", converged);
     for (int i = 0; i<_convergenceMeasures.size();i++) {
-      double avgConvRate = _convergenceMeasures[i].measure->getResiduumNorm()/_firstResiduumNorm[i];
+      double avgConvRate = _convergenceMeasures[i].measure->getNormResidual()/_firstResiduumNorm[i];
       _iterationsWriter.writeData("ConvRate(avg)ID", std::pow(avgConvRate, 1./(double)_iterations));
     }
   }
