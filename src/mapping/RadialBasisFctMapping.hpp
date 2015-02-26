@@ -9,9 +9,6 @@
 #include "Eigen/Core"
 #include "Eigen/LU"
 
-#include <iostream>
-using namespace std;
-
 namespace precice {
 namespace mapping {
 
@@ -455,8 +452,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   int polyparams = 1 + dimensions - deadDimensions;
   assertion1(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees
-  Eigen::MatrixXd eMatrixCLU(n, n);
-  eMatrixCLU.setZero();
+  Eigen::MatrixXd matrixCLU(n, n);
+  matrixCLU.setZero();
   _matrixA = Eigen::MatrixXd(outputSize, n);
   _matrixA.setZero();
 
@@ -467,9 +464,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
     for (int j = iVertex.getID(); j < inputSize; j++) {
       difference = iVertex.getCoords();
       difference -= inMesh->vertices()[j].getCoords();
-      eMatrixCLU(i,j) = _basisFunction.evaluate(reduceVector(difference).norm());
+      matrixCLU(i,j) = _basisFunction.evaluate(reduceVector(difference).norm());
 #     ifdef Asserts
-      if (eMatrixCLU(i,j) == std::numeric_limits<double>::infinity()) {
+      if (matrixCLU(i,j) == std::numeric_limits<double>::infinity()) {
         preciceError("computeMapping()", "C matrix element has value inf. "
                      << "i = " << i << ", j = " << j
                      << ", coords i = " << iVertex.getCoords() << ", coords j = "
@@ -480,16 +477,16 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       }
 #     endif
     }
-    eMatrixCLU(i,inputSize) = 1.0;
+    matrixCLU(i,inputSize) = 1.0;
     for (int dim=0; dim < dimensions-deadDimensions; dim++) {
-      eMatrixCLU(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
+      matrixCLU(i,inputSize+1+dim) = reduceVector(iVertex.getCoords())[dim];
     }
     i++;
   }
   // Copy values of upper right part of C to lower left part
   for (int i = 0; i < n; i++) {
     for (int j = i+1; j < n; j++) {
-      eMatrixCLU(j,i) = eMatrixCLU(i,j);
+      matrixCLU(j,i) = matrixCLU(i,j);
     }
   }
 
@@ -530,7 +527,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   else {
     streamC << "consistent-matrixC-" << computeIndex << ".mat";
   }
-  io::TXTWriter::write(_eMatrixCLU, streamC.str());
+  io::TXTWriter::write(_matrixCLU, streamC.str());
   std::ostringstream streamA;
   if (getConstraint() == CONSERVATIVE) {
     streamA << "conservative-matrixA-" << computeIndex << ".mat";
@@ -542,9 +539,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   computeIndex++;
 # endif // PRECICE_STATISTICS
 
-  // preciceDebug ( "Matrix C = " << eMatrixCLU );
-  _lu = eMatrixCLU.fullPivLu();
-
+  // preciceDebug ( "Matrix C = " << matrixCLU );
+  _lu = matrixCLU.fullPivLu();
+  
   int rankDeficiency = _lu.rank() - n;
 
   if (rankDeficiency > 0){
@@ -600,7 +597,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     Eigen::VectorXd in(_matrixA.rows());  // rows == outputSize
     Eigen::VectorXd out(_matrixA.cols()); // rows == n
 
-    // preciceDebug("C rows=" << _eMatrixCLU.rows() << " cols=" << _eMatrixCLU.cols());
+    // preciceDebug("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
     preciceDebug("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
     preciceDebug("in size=" << in.size() << ", out size=" << out.size());
 
