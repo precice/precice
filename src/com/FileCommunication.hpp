@@ -32,8 +32,7 @@ public:
   /**
    * @brief Destructor, empty.
    */
-  virtual ~FileCommunication() {
-  }
+  virtual ~FileCommunication();
 
   /**
    * @brief Returns true, if a connection to a remote participant has been
@@ -59,6 +58,13 @@ public:
                                 int acceptorProcessRank,
                                 int acceptorCommunicatorSize);
 
+  virtual void
+  acceptConnectionAsServer(std::string const& nameAcceptor,
+                           std::string const& nameRequester,
+                           int requesterCommunicatorSize) {
+    preciceError("acceptConnectionAsServer()", "Not implemented!");
+  }
+
   /**
    * @brief Gathers information about files to write and read to/from.
    */
@@ -66,6 +72,12 @@ public:
                                  std::string const& nameRequester,
                                  int requesterProcessRank,
                                  int requesterCommunicatorSize);
+
+  virtual int
+  requestConnectionAsClient(std::string const& nameAcceptor,
+                            std::string const& nameRequester) {
+    preciceError("requestConnectionAsClient()", "Not implemented!");
+  }
 
   /**
    * @brief Doesn't do anything here.
@@ -107,7 +119,7 @@ public:
    */
   virtual PtrRequest
   aSend(int* itemsToSend, int size, int rankReceiver) {
-    preciceCheck(false, "aSend()", "Not implemented!");
+    preciceError("aSend()", "Not implemented!");
   }
 
   /**
@@ -120,7 +132,7 @@ public:
    */
   virtual PtrRequest
   aSend(double* itemsToSend, int size, int rankReceiver) {
-    preciceCheck(false, "aSend()", "Not implemented!");
+    preciceError("aSend()", "Not implemented!");
   }
 
   /**
@@ -132,8 +144,8 @@ public:
    * @brief Asynchronously sends a double to process with given rank.
    */
   virtual PtrRequest
-  aSend(double itemToSend, int rankReceiver) {
-    preciceCheck(false, "aSend()", "Not implemented!");
+  aSend(double* itemToSend, int rankReceiver) {
+    preciceError("aSend()", "Not implemented!");
   }
 
   /**
@@ -145,8 +157,8 @@ public:
    * @brief Asynchronously sends an int to process with given rank.
    */
   virtual PtrRequest
-  aSend(int itemToSend, int rankReceiver) {
-    preciceCheck(false, "aSend()", "Not implemented!");
+  aSend(int* itemToSend, int rankReceiver) {
+    preciceError("aSend()", "Not implemented!");
   }
 
   /**

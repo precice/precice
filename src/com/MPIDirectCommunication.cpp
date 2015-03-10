@@ -22,20 +22,19 @@ MPIDirectCommunication::MPIDirectCommunication()
     : _communicator(utils::Parallel::getGlobalCommunicator())
     , _globalCommunicator(utils::Parallel::getGlobalCommunicator())
     , _localCommunicator(utils::Parallel::getLocalCommunicator())
-    , _isConnection(false) {
+    , _isConnected(false) {
 }
 
 MPIDirectCommunication::~MPIDirectCommunication() {
-  preciceTrace1("~MPIDirectCommunication()", _isConnection);
-  if (_isConnection) {
-    closeConnection();
-  }
+  preciceTrace1("~MPIDirectCommunication()", _isConnected);
+
+  closeConnection();
 }
 
 int
 MPIDirectCommunication::getRemoteCommunicatorSize() {
   preciceTrace("getRemoteCommunicatorSize()");
-  assertion(_isConnection);
+  assertion(isConnected());
   int remoteSize = 0;
   MPI_Comm_remote_size(communicator(), &remoteSize);
   return remoteSize;
@@ -47,7 +46,7 @@ MPIDirectCommunication::acceptConnection(std::string const& nameAcceptor,
                                          int acceptorProcessRank,
                                          int acceptorCommunicatorSize) {
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
-  assertion(not _isConnection);
+  assertion(not isConnected());
 
   int argc = 1;
   char* arg = new char[8];
@@ -69,15 +68,19 @@ MPIDirectCommunication::acceptConnection(std::string const& nameAcceptor,
       getLeaderRank(nameRequester), // Peer communicator, remote leader rank
       0,
       &communicator()); // Tag, intercommunicator to be created
-  _isConnection = true;
+  _isConnected = true;
 }
 
 void
 MPIDirectCommunication::closeConnection() {
   preciceTrace("closeConnection()");
-  assertion(_isConnection);
+
+  if (not isConnected())
+    return;
+
   MPI_Comm_free(&communicator());
-  _isConnection = false;
+
+  _isConnected = false;
 }
 
 void
@@ -86,7 +89,7 @@ MPIDirectCommunication::requestConnection(std::string const& nameAcceptor,
                                           int requesterProcessRank,
                                           int requesterCommunicatorSize) {
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
-  assertion(not _isConnection);
+  assertion(not isConnected());
 
   int argc = 1;
   char* arg = new char[8];
@@ -108,7 +111,7 @@ MPIDirectCommunication::requestConnection(std::string const& nameAcceptor,
       getLeaderRank(nameAcceptor), // Peer communicator, remote leader rank
       0,
       &communicator()); // Tag, intercommunicator to be created
-  _isConnection = true;
+  _isConnected = true;
 }
 
 int

@@ -55,6 +55,10 @@ public:
                                 int acceptorProcessRank,
                                 int acceptorCommunicatorSize);
 
+  virtual void acceptConnectionAsServer(std::string const& nameAcceptor,
+                                        std::string const& nameRequester,
+                                        int requesterCommunicatorSize);
+
   /**
    * @brief See precice::com::Communication::requestConnection().
    */
@@ -62,6 +66,9 @@ public:
                                  std::string const& nameRequester,
                                  int requesterProcessRank,
                                  int requesterCommunicatorSize);
+
+  virtual int requestConnectionAsClient(std::string const& nameAcceptor,
+                                        std::string const& nameRequester);
 
   /**
    * @brief See precice::com::Communication::closeConnection().

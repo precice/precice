@@ -30,8 +30,8 @@ SocketCommunication::SocketCommunication(unsigned short portNumber,
     , _reuseAddress(reuseAddress)
     , _networkName(networkName)
     , _addressDirectory(addressDirectory)
-    , _processRank(-1)
     , _isConnected(false)
+    , _isClient(false)
     , _remoteCommunicatorSize(0)
     , _ioService(new IOService)
     , _sockets()
@@ -39,8 +39,6 @@ SocketCommunication::SocketCommunication(unsigned short portNumber,
     , _queryThread()
     , _clientQueries()
     , _clientQueryBuffers() {
-  _rankOffset = 0;
-
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
   }
@@ -51,9 +49,9 @@ SocketCommunication::SocketCommunication(std::string const& addressDirectory)
 }
 
 SocketCommunication::~SocketCommunication() {
-  if (_isConnected) {
-    closeConnection();
-  }
+  preciceTrace1("~SocketCommunication()", _isConnected);
+
+  closeConnection();
 }
 
 bool
@@ -63,7 +61,10 @@ SocketCommunication::isConnected() {
 
 int
 SocketCommunication::getRemoteCommunicatorSize() {
-  assertion(_isConnected);
+  preciceTrace("getRemoteCommunicatorSize()");
+
+  assertion(isConnected());
+
   return _remoteCommunicatorSize;
 }
 
@@ -76,55 +77,15 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
   preciceCheck(acceptorCommunicatorSize == 1,
                "acceptConnection()",
                "Acceptor of socket connection can only have one process!");
+
+  _rank = acceptorProcessRank;
+
   using asio::ip::tcp;
+
   try {
-    std::ostringstream ipAddress;
+    std::string ipAddress = getIpAddress();
 
-#ifdef _WIN32
-    ipAddress << "127.0.0.1";
-#else
-    // Query for IP address
-    int querySocket = socket(AF_INET, SOCK_STREAM, 0);
-    assertion(querySocket >= 0);
-    preciceDebug("Looking for IP address of network \"" << _networkName
-                                                        << "\"");
-    struct ifreq request;
-    struct if_nameindex* nameInterface = if_nameindex();
-    assertion(nameInterface);
-    struct if_nameindex* itNameInterface = nameInterface;
-    while (itNameInterface && itNameInterface->if_name) {
-      preciceCheck(strlen(itNameInterface->if_name) < IFNAMSIZ,
-                   "acceptConnection()",
-                   "Network interface \" " << itNameInterface->if_name
-                                           << "\" has too long name");
-      strncpy(request.ifr_name,
-              itNameInterface->if_name,
-              IFNAMSIZ); // Copy interface name
-      int ifNameLength = strlen(itNameInterface->if_name);
-      request.ifr_name[ifNameLength] = 0; // Add C-string 0
-      if (ioctl(querySocket, SIOCGIFADDR, &request) >= 0) {
-        preciceDebug(
-            itNameInterface->if_name
-            << ": "
-            << inet_ntoa(((struct sockaddr_in*)&request.ifr_addr)->sin_addr));
-        if (strcmp(itNameInterface->if_name, _networkName.c_str()) == 0) {
-          ipAddress << inet_ntoa(
-              ((struct sockaddr_in*)&request.ifr_addr)->sin_addr);
-        }
-      } else {
-        preciceCheck(
-            strcmp(itNameInterface->if_name, _networkName.c_str()) != 0,
-            "acceptConnection()",
-            "Could not obtain network IP from "
-                << "network \"" << itNameInterface->if_name << "\"");
-      }
-      itNameInterface++;
-    }
-    if_freenameindex(nameInterface);
-    close(querySocket);
-#endif
-
-    preciceCheck(not ipAddress.str().empty(),
+    preciceCheck(not ipAddress.empty(),
                  "acceptConnection()",
                  "Network \"" << _networkName
                               << "\" not found for socket connection!");
@@ -148,15 +109,14 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
     {
       std::ofstream addressFile(addressFileName + "~", std::ios::out);
 
-      addressFile << ipAddress.str() << ":" << _portNumber;
+      addressFile << ipAddress << ":" << _portNumber;
     }
 
     // std::cout << _portNumber << std::endl;
 
     std::rename((addressFileName + "~").c_str(), addressFileName.c_str());
 
-    preciceDebug("Accept connection at " << ipAddress.str() << ":"
-                                         << _portNumber);
+    preciceDebug("Accept connection at " << ipAddress << ":" << _portNumber);
 
     PtrSocket socket(new tcp::socket(*_ioService));
 
@@ -187,7 +147,7 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
     send(acceptorProcessRank, remoteRank);
     send(acceptorCommunicatorSize, remoteRank);
 
-    for (int i = 1; i < _remoteCommunicatorSize; i++) {
+    for (int i = 1; i < _remoteCommunicatorSize; ++i) {
       socket = PtrSocket(new Socket(*_ioService));
       acceptor.accept(*socket); // Waits until connection
       asio::read(*socket, asio::buffer((void*)&remoteRank, sizeof(int)));
@@ -202,6 +162,114 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
       _sockets[remoteRank] = socket;
       send(acceptorProcessRank, remoteRank);
       send(acceptorCommunicatorSize, remoteRank);
+    }
+
+    acceptor.close();
+
+    std::remove(addressFileName.c_str());
+  } catch (std::exception& e) {
+    preciceError("acceptConnection()",
+                 "Accepting connection at port " << _portNumber
+                                                 << " failed: " << e.what());
+  }
+
+  _queryWork = PtrWork(new asio::io_service::work(*_ioService));
+  _queryThread = std::thread(&SocketCommunication::onThreadRun, this);
+}
+
+void
+SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
+                                              std::string const& nameRequester,
+                                              int requesterCommunicatorSize) {
+  preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+
+  _rank = 0;
+
+  using asio::ip::tcp;
+
+  try {
+    std::string ipAddress = getIpAddress();
+
+    preciceCheck(not ipAddress.empty(),
+                 "acceptConnection()",
+                 "Network \"" << _networkName
+                              << "\" not found for socket connection!");
+
+    tcp::acceptor acceptor(*_ioService);
+
+    {
+      tcp::endpoint endpoint(tcp::v4(), _portNumber);
+
+      acceptor.open(endpoint.protocol());
+      acceptor.set_option(tcp::acceptor::reuse_address(_reuseAddress));
+      acceptor.bind(endpoint);
+      acceptor.listen();
+
+      _portNumber = acceptor.local_endpoint().port();
+    }
+
+    std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
+                                "-" + nameAcceptor + ".address");
+
+    {
+      std::ofstream addressFile(addressFileName + "~", std::ios::out);
+
+      addressFile << ipAddress << ":" << _portNumber;
+    }
+
+    // std::cout << _portNumber << std::endl;
+
+    std::rename((addressFileName + "~").c_str(), addressFileName.c_str());
+
+    preciceDebug("Accept connection at " << ipAddress << ":" << _portNumber);
+
+    PtrSocket socket(new tcp::socket(*_ioService));
+
+    acceptor.accept(*socket);
+
+    _isConnected = true;
+
+    int remoteSize = requesterCommunicatorSize;
+
+    preciceCheck(remoteSize > 0,
+                 "acceptConnection()",
+                 "Requester communicator "
+                     << "size has to be > 0!");
+
+    _remoteCommunicatorSize = remoteSize;
+
+    _sockets.resize(_remoteCommunicatorSize);
+    _clientQueryBuffers.resize(_remoteCommunicatorSize);
+
+    int remoteRank = 0;
+
+    _sockets[remoteRank] = socket;
+
+    send(remoteRank, remoteRank);
+
+    send(0, remoteRank);
+    send(1, remoteRank);
+
+    for (int i = 1; i < _remoteCommunicatorSize; ++i) {
+      remoteRank = i;
+
+      socket = PtrSocket(new Socket(*_ioService));
+
+      acceptor.accept(*socket); // Waits until connection
+
+      preciceCheck(remoteSize == _remoteCommunicatorSize,
+                   "acceptConnection()",
+                   "Remote communicator sizes are inconsistent!");
+      preciceCheck(_sockets[remoteRank].use_count() == 0,
+                   "acceptConnection()",
+                   "Duplicate request to connect by same rank (" << remoteRank
+                                                                 << ")!");
+      _sockets[remoteRank] = socket;
+
+      send(remoteRank, remoteRank);
+
+      send(0, remoteRank);
+      send(1, remoteRank);
     }
 
     acceptor.close();
@@ -250,7 +318,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
     PtrSocket socket(new Socket(*_ioService));
     tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
 
-    while (not _isConnected) {
+    while (not isConnected()) {
       tcp::resolver resolver(*_ioService);
 
       {
@@ -261,7 +329,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
         _isConnected = not error;
       }
 
-      if (not _isConnected) {
+      if (not isConnected()) {
         // Wait a little, since after a couple of ten-thousand trials the system
         // seems to get confused and the requester connects wrongly to itself.
         boost::asio::deadline_timer timer(*_ioService,
@@ -275,12 +343,14 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
     send(requesterProcessRank, 0);
     send(requesterCommunicatorSize, 0);
 
+    // Activates sending of queries before actual content. Has to be done after
+    // calls to send and before calls to receive.
+    _isClient = true;
+
+    _rank = requesterProcessRank;
+
     int remoteSize = 0;
     int remoteRank = -1;
-
-    // Activates sending of queries before actual content. Has to be done after
-    // calls to send.
-    _processRank = requesterProcessRank;
 
     receive(remoteRank, 0);
     receive(remoteSize, 0);
@@ -307,21 +377,113 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
   _queryThread = std::thread([this]() { _ioService->run(); });
 }
 
+int
+SocketCommunication::requestConnectionAsClient(
+    std::string const& nameAcceptor, std::string const& nameRequester) {
+  preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
+
+  using asio::ip::tcp;
+
+  try {
+    std::string address;
+    std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
+                                "-" + nameAcceptor + ".address");
+
+    {
+      std::ifstream addressFile;
+
+      do {
+        addressFile.open(addressFileName, std::ios::in);
+      } while (not addressFile);
+
+      addressFile >> address;
+    }
+
+    std::string ipAddress = address.substr(0, address.find(":"));
+    std::string portNumber = address.substr(
+        ipAddress.length() + 1, address.length() - ipAddress.length() - 1);
+
+    _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
+
+    PtrSocket socket(new Socket(*_ioService));
+    tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
+
+    while (not isConnected()) {
+      tcp::resolver resolver(*_ioService);
+
+      {
+        tcp::resolver::endpoint_type endpoint = *(resolver.resolve(query));
+        boost::system::error_code error = asio::error::host_not_found;
+        socket->connect(endpoint, error);
+
+        _isConnected = not error;
+      }
+
+      if (not isConnected()) {
+        // Wait a little, since after a couple of ten-thousand trials the system
+        // seems to get confused and the requester connects wrongly to itself.
+        boost::asio::deadline_timer timer(*_ioService,
+                                          boost::posix_time::milliseconds(100));
+        timer.wait();
+      }
+    }
+
+    _sockets.push_back(socket);
+
+    _isClient = true;
+
+    receive(_rank, 0);
+
+    int remoteSize = 0;
+    int remoteRank = -1;
+
+    receive(remoteRank, 0);
+    receive(remoteSize, 0);
+
+    preciceCheck(remoteRank == 0,
+                 "requestConnection()",
+                 "Acceptor base rank "
+                     << "has to be 0 but is " << remoteRank << "!");
+    preciceCheck(remoteSize == 1,
+                 "requestConnection()",
+                 "Acceptor communicator "
+                     << "size has to be == 1!");
+
+    _remoteCommunicatorSize = remoteSize;
+  } catch (std::exception& e) {
+    preciceError("requestConnection()",
+                 "Requesting connection failed: " << e.what());
+  }
+
+  // NOTE:
+  // Keep IO service running so that it fires asynchronous handlers from another
+  // thread.
+  _queryWork = PtrWork(new asio::io_service::work(*_ioService));
+  _queryThread = std::thread([this]() { _ioService->run(); });
+
+  return _rank;
+}
+
 void
 SocketCommunication::closeConnection() {
   preciceTrace("closeConnection()");
-  assertion(_isConnected);
+
+  if (not isConnected())
+    return;
+
   if (_queryThread.joinable()) {
     preciceDebug("Shutting down query work, io service, and thread");
     _queryWork.reset();
     _ioService->stop();
     _queryThread.join();
   }
+
   for (PtrSocket& socket : _sockets) {
     assertion(socket->is_open());
     socket->shutdown(Socket::shutdown_both);
     socket->close();
   }
+
   _isConnected = false;
 }
 
@@ -350,7 +512,7 @@ SocketCommunication::send(std::string const& itemToSend, int rankReceiver) {
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   size_t size = itemToSend.size() + 1;
   try {
     sendQuery(rankReceiver);
@@ -370,7 +532,7 @@ SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   try {
     sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
@@ -387,7 +549,7 @@ SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
 
   PtrRequest request(new SocketRequest);
 
@@ -412,7 +574,7 @@ SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   try {
     sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
@@ -429,7 +591,7 @@ SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
 
   PtrRequest request(new SocketRequest);
 
@@ -454,7 +616,7 @@ SocketCommunication::send(double itemToSend, int rankReceiver) {
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   try {
     sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
@@ -465,28 +627,8 @@ SocketCommunication::send(double itemToSend, int rankReceiver) {
 }
 
 PtrRequest
-SocketCommunication::aSend(double itemToSend, int rankReceiver) {
-  preciceTrace2("aSend(double)", itemToSend, rankReceiver);
-  rankReceiver = rankReceiver - _rankOffset;
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
-             rankReceiver,
-             _sockets.size());
-  assertion(_isConnected);
-
-  PtrRequest request(new SocketRequest);
-
-  try {
-    sendQuery(rankReceiver);
-    asio::async_write(*_sockets[rankReceiver],
-                      asio::buffer((void*)&itemToSend, sizeof(double)),
-                      [request](boost::system::error_code const&, std::size_t) {
-      static_cast<SocketRequest*>(request.get())->complete();
-    });
-  } catch (std::exception& e) {
-    preciceError("aSend(double)", "Send failed: " << e.what());
-  }
-
-  return request;
+SocketCommunication::aSend(double* itemToSend, int rankReceiver) {
+  return aSend(itemToSend, 1, rankReceiver);
 }
 
 void
@@ -496,7 +638,7 @@ SocketCommunication::send(int itemToSend, int rankReceiver) {
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   try {
     sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
@@ -507,28 +649,8 @@ SocketCommunication::send(int itemToSend, int rankReceiver) {
 }
 
 PtrRequest
-SocketCommunication::aSend(int itemToSend, int rankReceiver) {
-  preciceTrace2("aSend(int)", itemToSend, rankReceiver);
-  rankReceiver = rankReceiver - _rankOffset;
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
-             rankReceiver,
-             _sockets.size());
-  assertion(_isConnected);
-
-  PtrRequest request(new SocketRequest);
-
-  try {
-    sendQuery(rankReceiver);
-    asio::async_write(*_sockets[rankReceiver],
-                      asio::buffer((void*)&itemToSend, sizeof(int)),
-                      [request](boost::system::error_code const&, std::size_t) {
-      static_cast<SocketRequest*>(request.get())->complete();
-    });
-  } catch (std::exception& e) {
-    preciceError("aSend(int)", "Send failed: " << e.what());
-  }
-
-  return request;
+SocketCommunication::aSend(int* itemToSend, int rankReceiver) {
+  return aSend(itemToSend, 1, rankReceiver);
 }
 
 void
@@ -538,7 +660,7 @@ SocketCommunication::send(bool itemToSend, int rankReceiver) {
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   try {
     sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
@@ -556,7 +678,7 @@ SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   size_t size = 0;
   try {
     asio::read(*_sockets[rankSender],
@@ -569,7 +691,7 @@ SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
     preciceError("receive(string)", "Receive failed: " << e.what());
   }
   preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
-  if (_processRank == -1)
+  if (isServer())
     receiveNextQuery(rankSender);
   return rankSender;
 }
@@ -582,7 +704,7 @@ SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)itemsToReceive, size * sizeof(int)));
@@ -590,7 +712,7 @@ SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
     preciceError("receive(int*)", "Receive failed: " << e.what());
   }
   preciceDebug("Received from rank " << rankSender);
-  if (_processRank == -1)
+  if (isServer())
     receiveNextQuery(rankSender);
   return rankSender;
 }
@@ -603,7 +725,7 @@ SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)itemsToReceive, size * sizeof(double)));
@@ -611,7 +733,7 @@ SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
     preciceError("receive(double*)", "Receive failed: " << e.what());
   }
   preciceDebug("Received from rank " << rankSender);
-  if (_processRank == -1)
+  if (isServer())
     receiveNextQuery(rankSender);
   return rankSender;
 }
@@ -624,7 +746,7 @@ SocketCommunication::receive(double& itemToReceive, int rankSender) {
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)&itemToReceive, sizeof(double)));
@@ -632,7 +754,7 @@ SocketCommunication::receive(double& itemToReceive, int rankSender) {
     preciceError("receive(double)", "Receive failed: " << e.what());
   }
   preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
-  if (_processRank == -1)
+  if (isServer())
     receiveNextQuery(rankSender);
   return rankSender;
 }
@@ -645,7 +767,7 @@ SocketCommunication::receive(int& itemToReceive, int rankSender) {
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)&itemToReceive, sizeof(int)));
@@ -653,7 +775,7 @@ SocketCommunication::receive(int& itemToReceive, int rankSender) {
     preciceError("receive(int)", "Receive failed: " << e.what());
   }
   preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
-  if (_processRank == -1)
+  if (isServer())
     receiveNextQuery(rankSender);
   return rankSender;
 }
@@ -666,7 +788,7 @@ SocketCommunication::receive(bool& itemToReceive, int rankSender) {
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
-  assertion(_isConnected);
+  assertion(isConnected());
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)&itemToReceive, sizeof(bool)));
@@ -674,7 +796,7 @@ SocketCommunication::receive(bool& itemToReceive, int rankSender) {
     preciceError("receive(bool)", "Receive failed: " << e.what());
   }
   preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
-  if (_processRank == -1)
+  if (isServer())
     receiveNextQuery(rankSender);
   return rankSender;
 }
@@ -683,7 +805,7 @@ int
 SocketCommunication::getSenderRank(int desiredRank) {
   preciceTrace1("getSenderRank()", desiredRank);
   int chosenRank = -1;
-  if (_processRank != -1) {
+  if (isClient()) {
     preciceDebug("Client process uses server process 0");
     assertion1(desiredRank != ANY_SENDER, desiredRank);
     chosenRank = desiredRank;
@@ -714,10 +836,10 @@ SocketCommunication::getSenderRank(int desiredRank) {
 void
 SocketCommunication::sendQuery(int receiverRank) {
   preciceTrace1("sendQuery()", receiverRank);
-  if (_processRank != -1) {
+  if (isClient()) {
     preciceDebug("Process is a client, send query");
     asio::write(*_sockets[receiverRank],
-                asio::buffer((void*)&_processRank, sizeof(int)));
+                asio::buffer((void*)&_rank, sizeof(int)));
   }
 }
 
@@ -764,6 +886,75 @@ SocketCommunication::onAsyncReceive(const boost::system::error_code& error,
   std::unique_lock<std::mutex> lock(_requestMutex);
   _clientQueries.insert(clientIndex);
   _requestCondition.notify_one();
+}
+
+bool
+SocketCommunication::isClient() {
+  return _isClient;
+}
+
+bool
+SocketCommunication::isServer() {
+  return !_isClient;
+}
+
+std::string
+SocketCommunication::getIpAddress() {
+  std::ostringstream oss;
+
+#ifdef _WIN32
+  oss << "127.0.0.1";
+#else
+  int querySocket = socket(AF_INET, SOCK_STREAM, 0);
+
+  assertion(querySocket >= 0);
+
+  preciceDebug("Looking for IP address of network \"" << _networkName << "\"");
+
+  struct ifreq request;
+  struct if_nameindex* nameInterface = if_nameindex();
+
+  assertion(nameInterface);
+
+  struct if_nameindex* itNameInterface = nameInterface;
+
+  while (itNameInterface && itNameInterface->if_name) {
+    preciceCheck(strlen(itNameInterface->if_name) < IFNAMSIZ,
+                 "acceptConnection()",
+                 "Network interface \" " << itNameInterface->if_name
+                                         << "\" has too long name");
+
+    strncpy(request.ifr_name,
+            itNameInterface->if_name,
+            IFNAMSIZ); // Copy interface name
+
+    int ifNameLength = strlen(itNameInterface->if_name);
+
+    request.ifr_name[ifNameLength] = 0; // Add C-string 0
+
+    if (ioctl(querySocket, SIOCGIFADDR, &request) >= 0) {
+      preciceDebug(itNameInterface->if_name
+                   << ": " << inet_ntoa(((struct sockaddr_in*)&request.ifr_addr)
+                                            ->sin_addr));
+
+      if (strcmp(itNameInterface->if_name, _networkName.c_str()) == 0) {
+        oss << inet_ntoa(((struct sockaddr_in*)&request.ifr_addr)->sin_addr);
+      }
+    } else {
+      preciceCheck(strcmp(itNameInterface->if_name, _networkName.c_str()) != 0,
+                   "acceptConnection()",
+                   "Could not obtain network IP from "
+                       << "network \"" << itNameInterface->if_name << "\"");
+    }
+
+    itNameInterface++;
+  }
+
+  if_freenameindex(nameInterface);
+  close(querySocket);
+#endif
+
+  return oss.str();
 }
 }
 } // namespace precice, com

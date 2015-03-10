@@ -46,7 +46,7 @@ public:
    */
   virtual bool
   isConnected() {
-    return _isConnection;
+    return _isConnected;
   }
 
   /**
@@ -64,6 +64,13 @@ public:
                                 int acceptorProcessRank,
                                 int acceptorCommunicatorSize);
 
+  virtual void
+  acceptConnectionAsServer(std::string const& nameAcceptor,
+                           std::string const& nameRequester,
+                           int requesterCommunicatorSize) {
+    preciceError("acceptConnectionAsServer()", "Not implemented!");
+  }
+
   /**
    * @brief See precice::com::Communication::requestConnection().
    */
@@ -71,6 +78,12 @@ public:
                                  std::string const& nameRequester,
                                  int requesterProcessRank,
                                  int requesterCommunicatorSize);
+
+  virtual int
+  requestConnectionAsClient(std::string const& nameAcceptor,
+                            std::string const& nameRequester) {
+    preciceError("requestConnectionAsClient()", "Not implemented!");
+  }
 
   /**
    * @brief See precice::com::Communication::closeConnection().
@@ -93,7 +106,7 @@ private:
   // @brief Communicator for communicator between process groups.
   MPI_Comm _localCommunicator;
 
-  bool _isConnection;
+  bool _isConnected;
 
   /**
    * @brief Returns ID belonging to a group of processes.

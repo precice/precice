@@ -91,6 +91,10 @@ public:
                                 int acceptorProcessRank,
                                 int acceptorCommunicatorSize);
 
+  virtual void acceptConnectionAsServer(std::string const& nameAcceptor,
+                                        std::string const& nameRequester,
+                                        int requesterCommunicatorSize);
+
   /**
    * @brief Requests connection from participant, which has to call
    *acceptConnection().
@@ -106,6 +110,9 @@ public:
                                  std::string const& nameRequester,
                                  int requesterProcessRank,
                                  int requesterCommunicatorSize);
+
+  virtual int requestConnectionAsClient(std::string const& nameAcceptor,
+                                        std::string const& nameRequester);
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -169,7 +176,7 @@ public:
   /**
    * @brief Asynchronously sends a double to process with given rank.
    */
-  virtual PtrRequest aSend(double itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(double* itemToSend, int rankReceiver);
 
   /**
    * @brief Sends an int to process with given rank.
@@ -179,7 +186,7 @@ public:
   /**
    * @brief Asynchronously sends an int to process with given rank.
    */
-  virtual PtrRequest aSend(int itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(int* itemToSend, int rankReceiver);
 
   /**
    * @brief Sends a bool to process with given rank.
@@ -243,9 +250,7 @@ private:
   std::string _addressDirectory;
 
   bool _isConnected;
-
-  // @brief Local process rank sent as query.
-  int _processRank;
+  bool _isClient;
 
   int _remoteCommunicatorSize;
 
@@ -323,6 +328,11 @@ private:
   void onAsyncReceive(const boost::system::error_code& error,
                       size_t bytesTransferred,
                       int clientIndex);
+
+  bool isClient();
+  bool isServer();
+
+  std::string getIpAddress();
 };
 }
 } // namespace precice, com

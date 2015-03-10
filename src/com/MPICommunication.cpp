@@ -16,7 +16,6 @@ namespace com {
 tarch::logging::Log MPICommunication::_log("precice::com::MPICommunication");
 
 MPICommunication::MPICommunication() {
-  _rankOffset = 0;
 }
 
 void
@@ -115,22 +114,8 @@ MPICommunication::send(double itemToSend, int rankReceiver) {
 }
 
 PtrRequest
-MPICommunication::aSend(double itemToSend, int rankReceiver) {
-  preciceTrace2("aSend(double)", itemToSend, rankReceiver);
-  rankReceiver = rankReceiver - _rankOffset;
-  assertion(rankReceiver != ANY_SENDER);
-
-  MPI_Request request;
-
-  MPI_Isend(&itemToSend,
-            1,
-            MPI_DOUBLE,
-            rank(rankReceiver),
-            0,
-            communicator(rankReceiver),
-            &request);
-
-  return PtrRequest(new MPIRequest(request));
+MPICommunication::aSend(double* itemToSend, int rankReceiver) {
+  return aSend(itemToSend, 1, rankReceiver);
 }
 
 void
@@ -147,22 +132,8 @@ MPICommunication::send(int itemToSend, int rankReceiver) {
 }
 
 PtrRequest
-MPICommunication::aSend(int itemToSend, int rankReceiver) {
-  preciceTrace2("aSend(int)", itemToSend, rankReceiver);
-  rankReceiver = rankReceiver - _rankOffset;
-  assertion(rankReceiver != ANY_SENDER);
-
-  MPI_Request request;
-
-  MPI_Isend(&itemToSend,
-            1,
-            MPI_INT,
-            rank(rankReceiver),
-            0,
-            communicator(rankReceiver),
-            &request);
-
-  return PtrRequest(new MPIRequest(request));
+MPICommunication::aSend(int* itemToSend, int rankReceiver) {
+  return aSend(itemToSend, 1, rankReceiver);
 }
 
 void

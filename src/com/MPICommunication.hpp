@@ -94,7 +94,7 @@ public:
   /**
    * @brief Asynchronously sends a double to process with given rank.
    */
-  virtual PtrRequest aSend(double itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(double* itemToSend, int rankReceiver);
 
   /**
    * @brief Sends an int to process with given rank.
@@ -106,7 +106,7 @@ public:
   /**
    * @brief Asynchronously sends an int to process with given rank.
    */
-  virtual PtrRequest aSend(int itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(int* itemToSend, int rankReceiver);
 
   /**
    * @brief Sends a bool to process with given rank.

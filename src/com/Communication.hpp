@@ -52,6 +52,9 @@ public:
     ANY_SENDER = -1
   };
 
+  Communication() : _rank(-1), _rankOffset(0) {
+  }
+
   /**
    * @brief Destructor, empty.
    */
@@ -83,6 +86,10 @@ public:
                                 int acceptorProcessRank,
                                 int acceptorCommunicatorSize) = 0;
 
+  virtual void acceptConnectionAsServer(std::string const& nameAcceptor,
+                                        std::string const& nameRequester,
+                                        int requesterCommunicatorSize) = 0;
+
   /**
    * @brief Connects to another participant, which has to call
    * acceptConnection().
@@ -94,6 +101,9 @@ public:
                                  std::string const& nameRequester,
                                  int requesterProcessRank,
                                  int requesterCommunicatorSize) = 0;
+
+  virtual int requestConnectionAsClient(std::string const& nameAcceptor,
+                                        std::string const& nameRequester) = 0;
 
   /**
    * @brief Disconnects from communication space, i.e. participant.
@@ -148,7 +158,7 @@ public:
   /**
    * @brief Asynchronously sends a double to process with given rank.
    */
-  virtual PtrRequest aSend(double itemToSend, int rankReceiver) = 0;
+  virtual PtrRequest aSend(double* itemToSend, int rankReceiver) = 0;
 
   /**
    * @brief Sends an int to process with given rank.
@@ -158,7 +168,7 @@ public:
   /**
    * @brief Asynchronously sends an int to process with given rank.
    */
-  virtual PtrRequest aSend(int itemToSend, int rankReceiver) = 0;
+  virtual PtrRequest aSend(int* itemToSend, int rankReceiver) = 0;
 
   /**
    * @brief Sends a bool to process with given rank.
@@ -215,7 +225,14 @@ public:
     _rankOffset = rankOffset;
   }
 
+  int
+  rank() {
+    return _rank;
+  }
+
 protected:
+  int _rank;
+
   /**
    * @brief Rank offset for masters-slave communication, since ranks are from 0
    * to size - 2

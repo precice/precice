@@ -94,32 +94,16 @@ private:
 
   com::PtrCommunicationFactory _communicationFactory;
 
-  std::map<int, com::PtrCommunication> _communications;
+  struct Mapping {
+    int localRemoteRank;
+    int globalRemoteRank;
+    std::vector<int> indices;
+    com::PtrCommunication communication;
+  };
 
-  /**
-   * @brief Local (for process rank in the current participant) communication
-   *        map that defines a mapping from a process rank in the remote
-   *        participant to an array of local data indices, which define a subset
-   *        of local (for process rank in the current participant) data to be
-   *        communicated between the current process rank and the remote process
-   *        rank.
-   *
-   * Example. Assume that the current process rank is 3. Assume that its
-   * `_communicationMap' is
-   *
-   *   1 -> {1, 3}
-   *   4 -> {0, 2}
-   *
-   * then it means that the current process (with rank 3)
-   * - has to communicate (send/receive) data with local indices 1 and 3 with
-   *   the remote process with rank 1;
-   * - has to communicate (send/receive) data with local indices 0 and 2 with
-   *   the remote process with rank 4.
-   */
-  std::map<int, std::vector<int>> _communicationMap;
+  std::vector<Mapping> _mappings;
 
   bool _isConnected;
-  bool _isAcceptor;
 };
 }
 } // namespace precice, m2n

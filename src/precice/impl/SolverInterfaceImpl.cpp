@@ -396,7 +396,7 @@ double SolverInterfaceImpl:: initialize()
 void SolverInterfaceImpl:: initializeData ()
 {
   preciceTrace("initializeData()" );
-  Event e(__func__);
+  Event e(__func__);
   preciceCheck(_couplingScheme->isInitialized(), "initializeData()",
                "initialize() has to be called before initializeData()");
   if (not _geometryMode){
