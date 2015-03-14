@@ -38,7 +38,8 @@ void
 forMapOfRanges(Map& map, Function function) {
   for (auto& i : map) {
     for (auto& j : i.second) {
-      function(i.first, j);
+      if (not function(i.first, j))
+        break;
     }
   }
 }
@@ -90,9 +91,9 @@ send(com::PtrCommunication communication,
      int rankReceiver) {
   communication->send(static_cast<int>(m.size()), rankReceiver);
 
-  for (auto& i : m) {
-    auto& rank = i.first;
-    auto& indices = i.second;
+  for (auto const& i : m) {
+    auto const& rank = i.first;
+    auto const& indices = i.second;
 
     communication->send(rank, rankReceiver);
     send(communication, indices, rankReceiver);
@@ -110,60 +111,35 @@ receive(com::PtrCommunication communication,
   communication->receive(size, rankSender);
 
   while (size--) {
-    int rank = 0;
+    int rank = -1;
 
     communication->receive(rank, rankSender);
     receive(communication, m[rank], rankSender);
   }
 }
 
-// The complexity of `scatter' function is (total number of indices in
-// `thisVertexDistribution') * (total number of indices in
-// `otherVertexDistribution').
 void
-scatter(com::PtrCommunication communication,
-        // `m' is output communication map for the master process.
-        std::map<int, std::vector<int>>& m,
-        // `thisVertexDistribution' is input vertex distribution from this
-        // participant.
-        std::map<int, std::vector<int>> const& thisVertexDistribution,
-        // `otherVertexDistribution' is input vertex distribution from other
-        // participant.
-        std::map<int, std::vector<int>> const& otherVertexDistribution) {
-  std::map<int, std::vector<int>> communicationMap;
-  int i;
+broadcast(
+    std::map<int, std::vector<int>>& vertexDistribution,
+    int masterRank = utils::MasterSlave::_masterRank,
+    int size = utils::MasterSlave::_size,
+    com::PtrCommunication communication = utils::MasterSlave::_communication) {
+  Event e("PointToPointCommunication::broadcast");
 
-  forMapOfRanges(thisVertexDistribution,
-                 [&](int thisRank) mutable { i = 0; },
-                 [&](int thisRank, int thisIndex) mutable {
-                   forMapOfRanges(otherVertexDistribution,
-                                  [=, &communicationMap](
-                                      int otherRank, int otherIndex) mutable {
-                     if (thisIndex == otherIndex)
-                       communicationMap[otherRank].push_back(i);
-                   });
+  if (utils::MasterSlave::_masterMode) {
+    int rank;
 
-                   i++;
-                 },
-                 [&](int thisRank) mutable {
-                   if (thisRank == utils::MasterSlave::_rank)
-                     m = std::move(communicationMap);
-                   else
-                     send(communication, communicationMap, thisRank);
+    for (rank = 0; rank < masterRank; ++rank) {
+      send(communication, vertexDistribution, rank);
+    }
 
-                   communicationMap.clear();
-                 });
+    for (rank++; rank < size; ++rank) {
+      send(communication, vertexDistribution, rank);
+    }
+  } else {
+    assertion(utils::MasterSlave::_slaveMode);
 
-  if (thisVertexDistribution.find(utils::MasterSlave::_rank) ==
-      thisVertexDistribution.end())
-    m.clear();
-
-  for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
-    if (rank == utils::MasterSlave::_rank)
-      continue;
-
-    if (thisVertexDistribution.find(rank) == thisVertexDistribution.end())
-      send(communication, communicationMap, rank);
+    receive(communication, vertexDistribution, masterRank);
   }
 }
 
@@ -176,6 +152,8 @@ print(std::map<int, std::vector<int>> const& m) {
   forMapOfRanges(m, [&oss](int rank, int index) {
     oss << rank << ":"
         << " " << index << "\n";
+
+    return true;
   });
 
   if (utils::MasterSlave::_masterMode) {
@@ -193,6 +171,45 @@ print(std::map<int, std::vector<int>> const& m) {
 
     utils::MasterSlave::_communication->send(oss.str(), 0);
   }
+}
+
+std::map<int, std::vector<int>>
+getCommunicationMap(
+    // `thisVertexDistribution' is input vertex distribution from this
+    // participant.
+    std::map<int, std::vector<int>> const& thisVertexDistribution,
+    // `otherVertexDistribution' is input vertex distribution from other
+    // participant.
+    std::map<int, std::vector<int>> const& otherVertexDistribution,
+    int thisRank = utils::MasterSlave::_rank) {
+  Event e("PointToPointCommunication::getCommunicationMap");
+
+  std::map<int, std::vector<int>> communicationMap;
+
+  auto iterator = thisVertexDistribution.find(thisRank);
+
+  if (iterator == thisVertexDistribution.end())
+    return communicationMap;
+
+  int index = 0;
+
+  forRange(iterator->second, [&](int thisIndex) mutable {
+    forMapOfRanges(
+        otherVertexDistribution,
+        [=, &communicationMap](int otherRank, int otherIndex) mutable {
+          if (thisIndex == otherIndex) {
+            communicationMap[otherRank].push_back(index);
+
+            return false;
+          }
+
+          return true;
+        });
+
+    index++;
+  });
+
+  return communicationMap;
 }
 
 tarch::logging::Log PointToPointCommunication::_log(
@@ -223,6 +240,39 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 
   assertion(not isConnected());
 
+  Event e("PointToPointCommunication::acceptConnection");
+  Event e1("PointToPointCommunication::acceptConnection/prepare");
+
+  std::map<int, std::vector<int>>& vertexDistribution =
+      _mesh->getVertexDistribution();
+  std::map<int, std::vector<int>> requesterVertexDistribution;
+
+  if (utils::MasterSlave::_masterMode) {
+    // Establish connection between participants' master processes.
+    auto c = _communicationFactory->newCommunication();
+
+    {
+      Event e("PointToPointCommunication::acceptConnection/idle #1");
+
+      c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
+    }
+
+    Event e("PointToPointCommunication::acceptConnection/exchange");
+    // -----------------------------------------------------------------------
+    // Exchange ranks of participants' master processes.
+    int requesterMasterRank;
+
+    c->send(utils::MasterSlave::_masterRank, 0);
+    c->receive(requesterMasterRank, 0);
+    // -----------------------------------------------------------------------
+    // Exchange vertex distributions.
+    m2n::send(c, vertexDistribution, 0);
+    m2n::receive(c, requesterVertexDistribution, 0);
+  }
+
+  m2n::broadcast(vertexDistribution);
+  m2n::broadcast(requesterVertexDistribution);
+
   // Local (for process rank in the current participant) communication map that
   // defines a mapping from a process rank in the remote participant to an array
   // of local data indices, which define a subset of local (for process rank in
@@ -240,48 +290,10 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
-  std::map<int, std::vector<int>> communicationMap;
+  std::map<int, std::vector<int>> communicationMap =
+      m2n::getCommunicationMap(vertexDistribution, requesterVertexDistribution);
 
-  {
-    Event e("acceptorPreparation");
-
-    if (utils::MasterSlave::_masterMode) {
-      // Establish connection between participants' master processes.
-      auto c = _communicationFactory->newCommunication();
-
-      c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
-      // -----------------------------------------------------------------------
-      // Exchange ranks of participants' master processes.
-      int requesterMasterRank;
-
-      c->send(utils::MasterSlave::_masterRank, 0);
-      c->receive(requesterMasterRank, 0);
-      // -----------------------------------------------------------------------
-      // Exchange vertex distributions.
-      auto& vertexDistribution = _mesh->getVertexDistribution();
-      std::map<int, std::vector<int>> requesterVertexDistribution;
-
-      m2n::send(c, vertexDistribution, 0);
-      m2n::receive(c, requesterVertexDistribution, 0);
-      // -----------------------------------------------------------------------
-      // Iteratively construct different instances of communication map (from
-      // the two vertex distributions), each of which corresponds to a single
-      // acceptor process (in the current participant), and scatter them across
-      // their corresponding acceptor processes (including the master acceptor
-      // process).
-      m2n::scatter(utils::MasterSlave::_communication,
-                   communicationMap,
-                   vertexDistribution,
-                   requesterVertexDistribution);
-    } else {
-      assertion(utils::MasterSlave::_slaveMode);
-
-      // Receive the corresponding (to the current acceptor process)
-      // communication map that is being scattered by the master acceptor
-      // process.
-      m2n::receive(utils::MasterSlave::_communication, communicationMap, 0);
-    }
-  }
+  e1.stop();
 
 // NOTE:
 // Change 0 to 1 to print `communicationMap'.
@@ -289,59 +301,61 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   print(communicationMap);
 #endif
 
+  Event e2("PointToPointCommunication::acceptConnection/accept");
+
+  if (communicationMap.size() == 0) {
+    _isConnected = true;
+
+    return;
+  }
+
+  // Accept point-to-point connections between the current acceptor process (in
+  // the current participant) with rank `utils::MasterSlave::_rank' and
+  // (multiple) requester proccesses (in the requester participant).
+  auto c = _communicationFactory->newCommunication();
+
   {
-    Event e("acceptConnection");
-
-    if (communicationMap.size() == 0) {
-      _isConnected = true;
-
-      return;
-    }
-
-    // Accept point-to-point connections between the current acceptor process
-    // (in the current participant) with rank `utils::MasterSlave::_rank' and
-    // (multiple) requester proccesses (in the requester participant).
-    auto c = _communicationFactory->newCommunication();
+    Event e("PointToPointCommunication::acceptConnection/idle #2");
 
     c->acceptConnectionAsServer(
         nameAcceptor + std::to_string(utils::MasterSlave::_rank),
         nameRequester,
         communicationMap.size());
-
-    assertion(c->getRemoteCommunicatorSize() == communicationMap.size());
-
-    _mappings.reserve(communicationMap.size());
-
-    for (int localRequesterRank = 0;
-         localRequesterRank < communicationMap.size();
-         ++localRequesterRank) {
-      int globalRequesterRank = -1;
-
-      c->receive(globalRequesterRank, localRequesterRank);
-
-      auto indices = std::move(communicationMap[globalRequesterRank]);
-
-      // NOTE:
-      // Everything is moved (efficiency)!
-      _mappings.push_back(
-          {localRequesterRank,
-           globalRequesterRank,
-           std::move(indices),
-           // NOTE:
-           // On the acceptor participant side, the communication object `c'
-           // behaves as a server, i.e. it implicitly accepts multiple
-           // connections to requester processes (in the requester participant)
-           // according to point-to-point communicator size (in
-           // `communicatorSizes') used during point-to-point connection
-           // requests made by requester processes (in the requester
-           // participant). As a result, only one communication object `c' is
-           // needed to satisfy `communicationMap', and, therefore, for data
-           // structure consistency of `_communications' with the requester
-           // participant side, we simply duplicate references to the same
-           // communication object `c'.
-           c});
-    }
   }
+
+  assertion(c->getRemoteCommunicatorSize() == communicationMap.size());
+
+  _mappings.reserve(communicationMap.size());
+
+  for (int localRequesterRank = 0; localRequesterRank < communicationMap.size();
+       ++localRequesterRank) {
+    int globalRequesterRank = -1;
+
+    c->receive(globalRequesterRank, localRequesterRank);
+
+    auto indices = std::move(communicationMap[globalRequesterRank]);
+
+    // NOTE:
+    // Everything is moved (efficiency)!
+    _mappings.push_back(
+        {localRequesterRank,
+         globalRequesterRank,
+         std::move(indices),
+         // NOTE:
+         // On the acceptor participant side, the communication object `c'
+         // behaves as a server, i.e. it implicitly accepts multiple connections
+         // to requester processes (in the requester participant) according to
+         // point-to-point communicator size (in `communicatorSizes') used
+         // during point-to-point connection requests made by requester
+         // processes (in the requester participant). As a result, only one
+         // communication object `c' is needed to satisfy `communicationMap',
+         // and, therefore, for data structure consistency of `_communications'
+         // with the requester participant side, we simply duplicate references
+         // to the same communication object `c'.
+         c});
+  }
+
+  e2.stop();
 
   _isConnected = true;
 }
@@ -353,6 +367,39 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
   assertion(not isConnected());
 
+  Event e("PointToPointCommunication::requestConnection");
+  Event e1("PointToPointCommunication::requestConnection/prepare");
+
+  std::map<int, std::vector<int>>& vertexDistribution =
+      _mesh->getVertexDistribution();
+  std::map<int, std::vector<int>> acceptorVertexDistribution;
+
+  if (utils::MasterSlave::_masterMode) {
+    // Establish connection between participants' master processes.
+    auto c = _communicationFactory->newCommunication();
+
+    {
+      Event e("PointToPointCommunication::requestConnection/idle #1");
+
+      c->requestConnection(nameAcceptor, nameRequester, 0, 1);
+    }
+
+    Event e("PointToPointCommunication::requestConnection/exchange");
+    // -----------------------------------------------------------------------
+    // Exchange ranks of participants' master processes.
+    int acceptorMasterRank;
+
+    c->receive(acceptorMasterRank, 0);
+    c->send(utils::MasterSlave::_masterRank, 0);
+    // -----------------------------------------------------------------------
+    // Exchange vertex distributions.
+    m2n::receive(c, acceptorVertexDistribution, 0);
+    m2n::send(c, vertexDistribution, 0);
+  }
+
+  m2n::broadcast(vertexDistribution);
+  m2n::broadcast(acceptorVertexDistribution);
+
   // Local (for process rank in the current participant) communication map that
   // defines a mapping from a process rank in the remote participant to an array
   // of local data indices, which define a subset of local (for process rank in
@@ -370,48 +417,10 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
-  std::map<int, std::vector<int>> communicationMap;
+  std::map<int, std::vector<int>> communicationMap =
+      m2n::getCommunicationMap(vertexDistribution, acceptorVertexDistribution);
 
-  {
-    Event e("requesterPreparation");
-
-    if (utils::MasterSlave::_masterMode) {
-      // Establish connection between participants' master processes.
-      auto c = _communicationFactory->newCommunication();
-
-      c->requestConnection(nameAcceptor, nameRequester, 0, 1);
-      // -----------------------------------------------------------------------
-      // Exchange ranks of participants' master processes.
-      int acceptorMasterRank;
-
-      c->receive(acceptorMasterRank, 0);
-      c->send(utils::MasterSlave::_masterRank, 0);
-      // -----------------------------------------------------------------------
-      // Exchange vertex distributions.
-      auto& vertexDistribution = _mesh->getVertexDistribution();
-      std::map<int, std::vector<int>> acceptorVertexDistribution;
-
-      m2n::receive(c, acceptorVertexDistribution, 0);
-      m2n::send(c, vertexDistribution, 0);
-      // -----------------------------------------------------------------------
-      // Iteratively construct different instances of communication map (from
-      // the two vertex distributions), each of which corresponds to a single
-      // requester process (in the current participant), and scatter them across
-      // their corresponding requester processes (including the master requester
-      // process).
-      m2n::scatter(utils::MasterSlave::_communication,
-                   communicationMap,
-                   vertexDistribution,
-                   acceptorVertexDistribution);
-    } else {
-      assertion(utils::MasterSlave::_slaveMode);
-
-      // Receive the corresponding (to the current requester process)
-      // communication map that is being scattered by the master requester
-      // process.
-      m2n::receive(utils::MasterSlave::_communication, communicationMap, 0);
-    }
-  }
+  e1.stop();
 
 // NOTE:
 // Change 0 to 1 to print `communicationMap'.
@@ -419,53 +428,55 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   print(communicationMap);
 #endif
 
-  {
-    Event e("requestConnection");
+  Event e2("PointToPointCommunication::requestConnection/request");
 
-    std::vector<com::PtrRequest> requests;
+  std::vector<com::PtrRequest> requests;
 
-    requests.reserve(communicationMap.size());
+  requests.reserve(communicationMap.size());
 
-    _mappings.reserve(communicationMap.size());
+  _mappings.reserve(communicationMap.size());
 
+  // Request point-to-point connections between the current requester process
+  // (in the current participant) and (multiple) acceptor proccesses (in the
+  // acceptor participant) with ranks `acceptorRank' according to communication
+  // map.
+  for (auto& i : communicationMap) {
+    auto globalAcceptorRank = i.first;
+    auto indices = std::move(i.second);
 
+    auto c = _communicationFactory->newCommunication();
 
-    // Request point-to-point connections between the current requester process
-    // (in the current participant) and (multiple) acceptor proccesses (in the
-    // acceptor participant) with ranks `acceptorRank' according to
-    // communication map.
-    for (auto& i : communicationMap) {
-      auto globalAcceptorRank = i.first;
-      auto indices = std::move(i.second);
-
-      auto c = _communicationFactory->newCommunication();
+    {
+      Event e("PointToPointCommunication::requestConnection/idle #2");
 
       c->requestConnectionAsClient(
           nameAcceptor + std::to_string(globalAcceptorRank), nameRequester);
-
-      assertion(c->getRemoteCommunicatorSize() == 1);
-
-      auto request = c->aSend(&utils::MasterSlave::_rank, 0);
-
-      requests.push_back(request);
-
-      // NOTE:
-      // Everything is moved (efficiency)!
-      _mappings.push_back(
-          {0,
-           globalAcceptorRank,
-           std::move(indices),
-           // NOTE:
-           // On the requester participant side, the communication objects
-           // behave as clients, i.e. each of them requests only one connection
-           // to acceptor process (in the acceptor participant).
-           c});
     }
 
-    for (auto request : requests) {
-      request->wait();
-    }
+    assertion(c->getRemoteCommunicatorSize() == 1);
+
+    auto request = c->aSend(&utils::MasterSlave::_rank, 0);
+
+    requests.push_back(request);
+
+    // NOTE:
+    // Everything is moved (efficiency)!
+    _mappings.push_back(
+        {0,
+         globalAcceptorRank,
+         std::move(indices),
+         // NOTE:
+         // On the requester participant side, the communication objects behave
+         // as clients, i.e. each of them requests only one connection to
+         // acceptor process (in the acceptor participant).
+         c});
   }
+
+  for (auto request : requests) {
+    request->wait();
+  }
+
+  e2.stop();
 
   _isConnected = true;
 }
