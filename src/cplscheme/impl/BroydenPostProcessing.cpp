@@ -41,6 +41,9 @@ BroydenPostProcessing:: BroydenPostProcessing
 		       singularityLimit, dataIDs, scalings),
 //  _secondaryOldXTildes(),
   _invJacobian(),
+  _oldInvJacobian(),
+  _maxColumns(maxIterationsUsed),
+  _currentColumns(0),
   k(0),
   t(0)
 //  _matrixWriter("jacobain.m")
@@ -59,6 +62,7 @@ void BroydenPostProcessing:: initialize
   size_t entries= _residuals.size();
   
   _invJacobian = Matrix(entries, entries, init);
+  _oldInvJacobian = Matrix(entries, entries, init);
 }
 
 
@@ -114,6 +118,8 @@ void BroydenPostProcessing::updateDifferenceMatrices
    */ 
   if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
     k++;
+    _currentColumns++;
+    
     // Perform underrelaxation with initial relaxation factor for secondary data
 //     foreach (int id, _secondaryDataIDs){
 //       PtrCouplingData data = cplData[id];
@@ -128,6 +134,7 @@ void BroydenPostProcessing::updateDifferenceMatrices
   else {
     if (not _firstIteration){
       k++;
+      _currentColumns++;
     }
   }
   
@@ -149,44 +156,119 @@ void BroydenPostProcessing::computeQNUpdate
   preciceTrace("computeQNUpdate()");
   using namespace tarch::la;
   
+  
+  if(_currentColumns >= 1)
+  {
+     computeNewtonFactorsQRDecomposition(cplData, xUpdate);
+  }else
+  {
     // ------------- update inverse Jacobian -----------
+    // ------------- Broyden Update
+    //
     // J_inv = J_inv_n + (w- J_inv_n*v)*v^T/|v|_l2
     // ----------------------------------------- -------
   
-  DataValues v = _matrixV.column(0);
-  DataValues w = _matrixW.column(0);
-  Matrix JUpdate(_invJacobian.rows(),_invJacobian.cols(), 0.);
+    DataValues v = _matrixV.column(0);
+    DataValues w = _matrixW.column(0);
+    Matrix JUpdate(_invJacobian.rows(),_invJacobian.cols(), 0.);
 
-  preciceDebug("took latest column of V,W");
+    preciceDebug("took latest column of V,W");
 
-  double dotproductV = v*v;
-  DataValues tmp = _invJacobian * v;    // J_inv*v
-  tmp = w - tmp;                        // (w-J_inv*v)
-  tmp = tmp/dotproductV;                // (w-J_inv*v)/|v|_l2
-  preciceDebug("did step (W-J_inv*v)/|v|");
-  //preciceDebug("v.size = "<<v.size());
-  //preciceDebug("tmp.size() = "<<tmp.size());
-  Matrix tmp_mat(tmp.size(),1);
-  Matrix vT_mat(1,v.size());
-  //preciceDebug("tmp_mat.size = "<<tmp_mat.rows()<<", "<<tmp_mat.cols());
-  //preciceDebug("vT_mat.size = "<<vT_mat.rows()<<", "<<vT_mat.cols());
-  for(int i = 0; i < v.size(); i++)      // transform vectors in matrices
-  {
-    tmp_mat(i,0) = tmp(i);
-    vT_mat(0,i) = v(i);
+    double dotproductV = v*v;
+    DataValues tmp = _oldInvJacobian * v;    // J_inv*v
+    tmp = w - tmp;                        // (w-J_inv*v)
+    tmp = tmp/dotproductV;                // (w-J_inv*v)/|v|_l2
+    preciceDebug("did step (W-J_inv*v)/|v|");
+    Matrix tmp_mat(tmp.size(),1);
+    Matrix vT_mat(1,v.size());
+    for(int i = 0; i < v.size(); i++)      // transform vectors in matrices
+    {
+      tmp_mat(i,0) = tmp(i);
+      vT_mat(0,i) = v(i);
+    }
+    preciceDebug("converted vectors into matrices");
+    assertion2(tmp_mat.cols() == vT_mat.rows(), tmp_mat.cols(), vT_mat.rows());
+    multiply(tmp_mat, vT_mat, JUpdate);   // (w-J_inv*v)/|v| * v^T
+    preciceDebug("multiplied (w-J_inv*v)/|v| * v^T");
+    assertion2(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
+    _invJacobian = _oldInvJacobian + JUpdate;
+    
+    DataValues negRes(_residuals);
+    negRes *= -1.;
+  
+    // solve delta_x = - J_inv*residuals
+    multiply(_invJacobian, negRes, xUpdate);    
   }
-  preciceDebug("converted vectors into matrices");
-  assertion2(tmp_mat.cols() == vT_mat.rows(), tmp_mat.cols(), vT_mat.rows());
-  multiply(tmp_mat, vT_mat, JUpdate);   // (w-J_inv*v)/|v| * v^T
-  preciceDebug("multiplied (w-J_inv*v)/|v| * v^T");
-  assertion2(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
-  _invJacobian = _invJacobian + JUpdate;
+  
+  if(_currentColumns >= _maxColumns)
+  {
+    _currentColumns = 0; 
+    _oldInvJacobian = _invJacobian;
+  }
+}
+
+
+void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
+(PostProcessing::DataMap& cplData, DataValues& xUpdate)
+{
+  preciceTrace("computeNewtonFactorsQRDecomposition()");
+  using namespace tarch::la;
+ 
+  // ------------- update inverse Jacobian -----------
+  // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
+  // ----------------------------------------- -------
+
+  assertion2(_currentColumns <= _matrixV.cols(), _currentColumns, _matrixV.cols());
+  DataMatrix v;
+  DataMatrix Vcopy(_matrixV.rows(), _currentColumns, 0.0);
+  DataMatrix _matV(_matrixV.rows(), _currentColumns, 0.0);
+  DataMatrix _matW(_matrixW.rows(), _currentColumns, 0.0);
+  DataMatrix Q(Vcopy.rows(), _currentColumns, 0.0);
+  DataMatrix R(_currentColumns, _currentColumns, 0.0);
+  
+  for(int i = 0; i < _currentColumns; i++)
+  {
+    Vcopy.append(_matrixV.column(i));
+    _matV.append(_matrixV.column(i));
+    _matW.append(_matrixW.column(i));
+  }
+
+  preciceDebug(" ++  before QR Decomposition");
+  modifiedGramSchmidt(Vcopy, Q, R);
+  preciceDebug(" ++  after QR Decomposition");
+  
+    DataValues ytmpVec(_currentColumns, 0.0);
+    DataValues _matrixQRow;
+    for(int i = 0; i < Q.rows(); i++)
+    {
+      for(int j=0; j < Q.cols(); j++){
+      _matrixQRow.append(Q(i,j));
+      }
+      backSubstitution(R, _matrixQRow, ytmpVec);	
+      v.append(ytmpVec);  
+    _matrixQRow.clear();
+    }
+ 
+  // tmpMatrix = J_inv_n*V
+  Matrix tmpMatrix(_matrixV.rows(), _currentColumns, 0.0);
+  assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
+  multiply(_oldInvJacobian, _matV, tmpMatrix);
+  
+  // tmpMatrix = (W-J_inv_n*V)
+  tmpMatrix *= -1.;
+  tmpMatrix = tmpMatrix + _matW;
+
+  // invJacobian = (W - J_inv_n*V)*(V^T*V)^-1*V^T
+  assertion2(tmpMatrix.cols() == v.rows(), tmpMatrix.cols(), v.rows());
+  
+  multiply(tmpMatrix, v, _invJacobian);
+  _invJacobian = _invJacobian + _oldInvJacobian;
   
   DataValues negRes(_residuals);
   negRes *= -1.;
- 
+  
   // solve delta_x = - J_inv*residuals
-  multiply(_invJacobian, negRes, xUpdate);   
+  multiply(_invJacobian, negRes, xUpdate); 
 }
 
 
@@ -219,10 +301,11 @@ void BroydenPostProcessing:: specializedIterationsConverged
   // --------------------------------------------------------------------
   
   k = 0;
+  _currentColumns = 0;
   t++;
   // store inverse Jacobian
 //  _matrixWriter.write(_invJacobian);
-  //_oldInvJacobian = _invJacobian;
+  _oldInvJacobian = _invJacobian;
 }
 
 }}} // namespace precice, cplscheme, impl

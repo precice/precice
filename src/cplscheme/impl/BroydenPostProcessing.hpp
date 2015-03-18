@@ -83,6 +83,10 @@ private:
    
    // @brief stores the approximation of the inverse Jacobian of the system at current time step.
    Matrix _invJacobian;
+   Matrix _oldInvJacobian;
+   
+   int _maxColumns;
+   int _currentColumns;
    
   // @brief comptes the MVQN update using QR decomposition of V, 
   //        furthermore it updates the inverse of the system jacobian
@@ -93,7 +97,7 @@ private:
 
    // @brief computes underrelaxation for the secondary data
    virtual void computeUnderrelaxationSecondaryData(DataMap& cplData);
-   
+   void computeNewtonFactorsQRDecomposition(DataMap& cplData, DataValues& update);
 };
 
 }}} // namespace precice, cplscheme, impl
