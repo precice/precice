@@ -144,6 +144,45 @@ MPIDirectCommunication::getLeaderRank(std::string const& accessorName) {
                "Unknown accessor name \"" << accessorName << "\"!");
 }
 
+void
+MPIDirectCommunication::broadcast() {
+  preciceTrace("broadcast()");
+
+  MPI_Bcast(0, 0, MPI_DATATYPE_NULL, MPI_PROC_NULL, _communicator);
+}
+
+void
+MPIDirectCommunication::broadcast(int* itemsToSend, int size) {
+  preciceTrace1("broadcast(int*)", size);
+
+  MPI_Bcast(itemsToSend, size, MPI_INT, MPI_ROOT, _communicator);
+}
+
+void
+MPIDirectCommunication::broadcast(int* itemsToReceive,
+                                  int size,
+                                  int rankBroadcaster) {
+  preciceTrace1("broadcast(int*)", size);
+  assertion(rankBroadcaster != ANY_SENDER);
+
+  MPI_Bcast(itemsToReceive, size, MPI_INT, rankBroadcaster, _communicator);
+}
+
+void
+MPIDirectCommunication::broadcast(int itemToSend) {
+  preciceTrace("broadcast(int)");
+
+  broadcast(&itemToSend, 1);
+}
+
+void
+MPIDirectCommunication::broadcast(int& itemToReceive, int rankBroadcaster) {
+  preciceTrace("broadcast(int&)");
+  assertion(rankBroadcaster != ANY_SENDER);
+
+  broadcast(&itemToReceive, 1, rankBroadcaster);
+}
+
 MPI_Comm&
 MPIDirectCommunication::communicator(int rank) {
   return _communicator;

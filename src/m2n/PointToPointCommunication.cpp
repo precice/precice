@@ -65,30 +65,32 @@ forMapOfRanges(Map& map,
 }
 
 void
-send(com::PtrCommunication communication,
-     std::vector<int> const& v,
-     int rankReceiver) {
+send(std::vector<int> const& v,
+     int rankReceiver,
+     com::PtrCommunication communication) {
   communication->send(static_cast<int>(v.size()), rankReceiver);
   communication->send(const_cast<int*>(&v[0]), v.size(), rankReceiver);
 }
 
 void
-receive(com::PtrCommunication communication,
-        std::vector<int>& v,
-        int rankSender) {
+receive(std::vector<int>& v,
+        int rankSender,
+        com::PtrCommunication communication) {
   v.clear();
 
   int size = 0;
 
   communication->receive(size, rankSender);
+
   v.resize(size);
+
   communication->receive(&v[0], size, rankSender);
 }
 
 void
-send(com::PtrCommunication communication,
-     std::map<int, std::vector<int>> const& m,
-     int rankReceiver) {
+send(std::map<int, std::vector<int>> const& m,
+     int rankReceiver,
+     com::PtrCommunication communication) {
   communication->send(static_cast<int>(m.size()), rankReceiver);
 
   for (auto const& i : m) {
@@ -96,14 +98,14 @@ send(com::PtrCommunication communication,
     auto const& indices = i.second;
 
     communication->send(rank, rankReceiver);
-    send(communication, indices, rankReceiver);
+    send(indices, rankReceiver, communication);
   }
 }
 
 void
-receive(com::PtrCommunication communication,
-        std::map<int, std::vector<int>>& m,
-        int rankSender) {
+receive(std::map<int, std::vector<int>>& m,
+        int rankSender,
+        com::PtrCommunication communication) {
   m.clear();
 
   int size = 0;
@@ -114,32 +116,69 @@ receive(com::PtrCommunication communication,
     int rank = -1;
 
     communication->receive(rank, rankSender);
-    receive(communication, m[rank], rankSender);
+    receive(m[rank], rankSender, communication);
   }
 }
 
 void
 broadcast(
-    std::map<int, std::vector<int>>& vertexDistribution,
-    int masterRank = utils::MasterSlave::_masterRank,
-    int size = utils::MasterSlave::_size,
+    std::vector<int> const& v,
     com::PtrCommunication communication = utils::MasterSlave::_communication) {
-  Event e("PointToPointCommunication::broadcast");
+  communication->broadcast(v.size());
+  communication->broadcast(const_cast<int*>(&v[0]), v.size());
+}
 
-  if (utils::MasterSlave::_masterMode) {
-    int rank;
+void
+broadcast(
+    std::vector<int>& v,
+    int rankBroadcaster,
+    com::PtrCommunication communication = utils::MasterSlave::_communication) {
+  v.clear();
 
-    for (rank = 0; rank < masterRank; ++rank) {
-      send(communication, vertexDistribution, rank);
-    }
+  int size = 0;
 
-    for (rank++; rank < size; ++rank) {
-      send(communication, vertexDistribution, rank);
-    }
-  } else {
-    assertion(utils::MasterSlave::_slaveMode);
+  communication->broadcast(size, rankBroadcaster);
 
-    receive(communication, vertexDistribution, masterRank);
+  v.resize(size);
+
+  communication->broadcast(&v[0], size, rankBroadcaster);
+}
+
+void
+broadcast(
+    std::map<int, std::vector<int>> const& m,
+    com::PtrCommunication communication = utils::MasterSlave::_communication) {
+  Event e("PointToPointCommunication::broadcast/master");
+
+  communication->broadcast(m.size());
+
+  for (auto const& i : m) {
+    auto const& rank = i.first;
+    auto const& indices = i.second;
+
+    communication->broadcast(rank);
+    broadcast(indices, communication);
+  }
+}
+
+void
+broadcast(
+    std::map<int, std::vector<int>>& m,
+    int rankBroadcaster,
+    com::PtrCommunication communication = utils::MasterSlave::_communication) {
+  Event e("PointToPointCommunication::broadcast/slave");
+
+  m.clear();
+
+  int size = 0;
+
+  communication->broadcast(size, rankBroadcaster);
+
+  while (size--) {
+    int rank = -1;
+
+    communication->broadcast(rank, rankBroadcaster);
+    broadcast(m[rank], rankBroadcaster, communication);
   }
 }
 
@@ -257,21 +296,28 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
       c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
     }
 
-    Event e("PointToPointCommunication::acceptConnection/exchange");
-    // -----------------------------------------------------------------------
-    // Exchange ranks of participants' master processes.
-    int requesterMasterRank;
+    {
+      Event e("PointToPointCommunication::acceptConnection/exchange");
 
-    c->send(utils::MasterSlave::_masterRank, 0);
-    c->receive(requesterMasterRank, 0);
-    // -----------------------------------------------------------------------
-    // Exchange vertex distributions.
-    m2n::send(c, vertexDistribution, 0);
-    m2n::receive(c, requesterVertexDistribution, 0);
+      int requesterMasterRank;
+
+      // Exchange ranks of participants' master processes.
+      c->send(utils::MasterSlave::_masterRank, 0);
+      c->receive(requesterMasterRank, 0);
+
+      // Exchange vertex distributions.
+      m2n::send(vertexDistribution, 0, c);
+      m2n::receive(requesterVertexDistribution, 0, c);
+    }
+
+    m2n::broadcast(vertexDistribution);
+    m2n::broadcast(requesterVertexDistribution);
+  } else {
+    assertion(utils::MasterSlave::_slaveMode);
+
+    m2n::broadcast(vertexDistribution, 0);
+    m2n::broadcast(requesterVertexDistribution, 0);
   }
-
-  m2n::broadcast(vertexDistribution);
-  m2n::broadcast(requesterVertexDistribution);
 
   // Local (for process rank in the current participant) communication map that
   // defines a mapping from a process rank in the remote participant to an array
@@ -384,21 +430,28 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
       c->requestConnection(nameAcceptor, nameRequester, 0, 1);
     }
 
-    Event e("PointToPointCommunication::requestConnection/exchange");
-    // -----------------------------------------------------------------------
-    // Exchange ranks of participants' master processes.
-    int acceptorMasterRank;
+    {
+      Event e("PointToPointCommunication::requestConnection/exchange");
 
-    c->receive(acceptorMasterRank, 0);
-    c->send(utils::MasterSlave::_masterRank, 0);
-    // -----------------------------------------------------------------------
-    // Exchange vertex distributions.
-    m2n::receive(c, acceptorVertexDistribution, 0);
-    m2n::send(c, vertexDistribution, 0);
+      int acceptorMasterRank;
+
+      // Exchange ranks of participants' master processes.
+      c->receive(acceptorMasterRank, 0);
+      c->send(utils::MasterSlave::_masterRank, 0);
+
+      // Exchange vertex distributions.
+      m2n::receive(acceptorVertexDistribution, 0, c);
+      m2n::send(vertexDistribution, 0, c);
+    }
+
+    m2n::broadcast(vertexDistribution);
+    m2n::broadcast(acceptorVertexDistribution);
+  } else {
+    assertion(utils::MasterSlave::_slaveMode);
+
+    m2n::broadcast(vertexDistribution, 0);
+    m2n::broadcast(acceptorVertexDistribution, 0);
   }
-
-  m2n::broadcast(vertexDistribution);
-  m2n::broadcast(acceptorVertexDistribution);
 
   // Local (for process rank in the current participant) communication map that
   // defines a mapping from a process rank in the remote participant to an array

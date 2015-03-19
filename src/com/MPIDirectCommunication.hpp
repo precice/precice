@@ -90,6 +90,16 @@ public:
    */
   virtual void closeConnection();
 
+  virtual void broadcast();
+
+  virtual void broadcast(int* itemsToSend, int size);
+
+  virtual void broadcast(int* itemsToReceive, int size, int rankBroadcaster);
+
+  virtual void broadcast(int itemToSend);
+
+  virtual void broadcast(int& itemToReceive, int rankBroadcaster);
+
 private:
   virtual MPI_Comm& communicator(int rank = 0);
 
