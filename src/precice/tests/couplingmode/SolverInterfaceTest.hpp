@@ -154,6 +154,13 @@ private:
     double&            timeComputed );
 
 
+
+  /**
+   * @brief Tests various distributed communication schemes.
+   */
+  void testDistributedCommunications();
+
+
   /**
    * @brief Tests stationary mapping with solver provided meshes.
    */

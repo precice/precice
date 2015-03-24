@@ -53,6 +53,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   ATTR_LOCAL_OFFSET("offset"),
   ATTR_ACTION_TYPE("type"),
   ATTR_FROM("from"),
+  ATTR_SAFETY_FACTOR("safety-factor"),
   ATTR_PROVIDE("provide"),
   ATTR_MESH("mesh"),
   ATTR_COORDINATE("coordinate"),
@@ -157,6 +158,15 @@ ParticipantConfiguration:: ParticipantConfiguration
   attrFrom.setDocumentation(doc);
   attrFrom.setDefaultValue("");
   tagUseMesh.addAttribute(attrFrom);
+  XMLAttribute<double> attrSafetyFactor(ATTR_SAFETY_FACTOR);
+  doc = "If a mesh is receiced from another partipant (see tag <from>), it needs to ";
+  doc += "decomposed on this participant (in master mode only). To speed up this process, ";
+  doc += "the receiving master pre-filters every mesh by bounding box information from the ";
+  doc += "local mesh. This safety factor defines how by which factor this local information ";
+  doc += "increased. An example: 0.1 means that the bounding box is 110% of its original size.";
+  attrSafetyFactor.setDocumentation(doc);
+  attrSafetyFactor.setDefaultValue(0.1);
+  tagUseMesh.addAttribute(attrSafetyFactor);
   XMLAttribute<bool> attrProvide(ATTR_PROVIDE);
   doc = "A mesh might not be constructed by a geometry (see tags<geometry:...>), ";
   doc += "but by a solver directly. If this attribute is set to \"on\", the ";
@@ -422,6 +432,12 @@ void ParticipantConfiguration:: xmlTagCallback
     utils::DynVector offset(_dimensions);
     offset = tag.getDynVectorAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
     std::string from = tag.getStringAttributeValue(ATTR_FROM);
+    double safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
+    if (safetyFactor < 0){
+      std::ostringstream stream;
+      stream << "Safety Factor must be positive or 0";
+      throw stream.str();
+    }
     bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
     if (mesh.get() == 0){
@@ -436,7 +452,7 @@ void ParticipantConfiguration:: xmlTagCallback
       std::string spacetreeName = _meshConfig->getSpacetreeName(name);
       spacetree = _spacetreeConfig->getSpacetree ( spacetreeName );
     }
-    _participants.back()->useMesh ( mesh, geo, spacetree, offset, false, from, provide );
+    _participants.back()->useMesh ( mesh, geo, spacetree, offset, false, from, safetyFactor, provide );
   }
 //  else if ( tag.getName() == mapping::MappingConfiguration::TAG ) {
 //    return _mappingConfig->parseSubtag ( xmlReader );
@@ -493,8 +509,6 @@ void ParticipantConfiguration:: xmlTagCallback
     _watchPointConfigs.push_back(config);
   }
   else if (tag.getNamespace() == TAG_SERVER){
-    //std::string comType = tag.getStringAttributeValue(ATTR_COMMUNICATION);
-    //std::string comContext = tag.getStringAttributeValue(ATTR_CONTEXT);
     com::CommunicationConfiguration comConfig;
     com::PtrCommunication com = comConfig.createCommunication(tag);
     _participants.back()->setClientServerCommunication(com);

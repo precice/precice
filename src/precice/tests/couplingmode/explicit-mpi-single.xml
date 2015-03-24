@@ -41,7 +41,7 @@
          <read-data name="Forces"      mesh="Test-Square" />
       </participant>
       
-      <communication:mpi-single from="SolverOne" to="SolverTwo" />
+      <m2n:mpi-single from="SolverOne" to="SolverTwo" />
       
       <coupling-scheme:serial-explicit> 
          <participants first="SolverOne" second="SolverTwo" /> 

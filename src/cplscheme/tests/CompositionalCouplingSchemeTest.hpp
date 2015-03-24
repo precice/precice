@@ -105,7 +105,7 @@ private:
     const std::string&     participant0,
     const std::string&     participant1,
     const std::string&     localParticipant,
-    m2n::PtrGlobalCommunication& communication ) const;
+    m2n::PtrM2N& communication ) const;
 
 
 # endif // not PRECICE_NO_MPI

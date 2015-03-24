@@ -13,7 +13,7 @@
          <use-data name="Velocities" />
       </mesh>
       
-      <communication:mpi-single from="SolverOne" to="SolverTwo"/>
+      <m2n:mpi-single from="SolverOne" to="SolverTwo"/>
       
       <geometry:builtin-cuboid of-mesh="Test-Square">
          <length value="1.0; 1.0"/> 

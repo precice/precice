@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_MAPPING_NEARESTNEIGHBORMAPPING_HPP_
-#define PRECICE_MAPPING_NEARESTNEIGHBORMAPPING_HPP_
+#pragma once
 
 #include "mapping/Mapping.hpp"
 #include "tarch/logging/Log.h"
@@ -25,29 +21,19 @@ public:
    */
   NearestNeighborMapping ( Constraint constraint, int dimensions );
 
-  /**
-   * @brief Destructor, empty.
-   */
+  /// Destructor, empty.
   virtual ~NearestNeighborMapping() {}
 
-  /**
-   * @brief Computes the mapping coefficients from the in- and output mesh.
-   */
+  /// Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping();
 
-  /**
-   * @brief Returns true, if computeMapping() has been called.
-   */
+  /// Returns true, if computeMapping() has been called.
   virtual bool hasComputedMapping();
 
-  /**
-   * @brief Removes a computed mapping.
-   */
+  /// Removes a computed mapping.
   virtual void clear();
 
-  /**
-   * @brief Maps input data to output data from input mesh to output mesh.
-   */
+  /// Maps input data to output data from input mesh to output mesh.
   virtual void map (
     int inputDataID,
     int outputDataID );
@@ -67,5 +53,3 @@ private:
 };
 
 }} // namespace precice, mapping
-
-#endif /* PRECICE_MAPPING_NEARESTNEIGHBORMAPPING_HPP_ */

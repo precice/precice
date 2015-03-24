@@ -37,7 +37,6 @@ FileCommunication:: FileCommunication
   _binary ( binaryMode ),
   _comDirectory(communicationDirectory)
 {
-  _rankOffset = 0;
   _sendFile.setf ( std::ios::showpoint );
   _sendFile.setf ( std::ios::fixed );
   _sendFile << std::setprecision(16);
@@ -45,6 +44,12 @@ FileCommunication:: FileCommunication
     _sendmode |= std::ios::binary;
     _receivemode |= std::ios::binary;
   }
+}
+
+FileCommunication::~FileCommunication() {
+  preciceTrace1("~FileCommunication()", _isConnected);
+
+  closeConnection();
 }
 
 bool FileCommunication:: isConnected()
@@ -91,6 +96,10 @@ void FileCommunication:: requestConnection
 void FileCommunication:: closeConnection()
 {
   preciceTrace ( "closeConnection()" );
+
+  if (not isConnected())
+    return;
+
   _isConnected = false;
 }
 
@@ -429,4 +438,3 @@ std::string FileCommunication:: getReceiveFilename
 }
 
 }} // namespace precice, com
-

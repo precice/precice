@@ -47,7 +47,7 @@
          <read-data  name="Forces"      mesh="SOLIDZ_Mesh"/>
       </participant>
       
-      <communication:mpi-single from="NASTIN" to="SOLIDZ" />
+      <m2n:mpi-single from="NASTIN" to="SOLIDZ" />
       
       <coupling-scheme:parallel-implicit>
          <participants first="NASTIN" second="SOLIDZ"/>

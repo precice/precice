@@ -125,6 +125,11 @@ void EventRegistry::finalize()
   initialized = false;
 }
 
+void EventRegistry::clear()
+{
+  events.clear();
+}
+
 void EventRegistry::signal_handler(int signal)
 {
   if (initialized) {
@@ -227,6 +232,11 @@ void Events_Init()
 void Events_Finalize()
 {
   EventRegistry::finalize();
+}
+
+void Events_Clear()
+{
+  EventRegistry::clear();
 }
 
 }} // namespace precice::utils

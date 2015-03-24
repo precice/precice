@@ -538,8 +538,8 @@ public:
 
 private:
 
-  struct Communication {
-    m2n::PtrGlobalCommunication communication;
+  struct M2NWrap {
+    m2n::PtrM2N m2n;
     bool isRequesting;
   };
 
@@ -581,7 +581,7 @@ private:
   // @brief For plotting of used mesh neighbor-relations
   query::ExportVTKNeighbors _exportVTKNeighbors;
 
-  std::map<std::string,Communication> _communications;
+  std::map<std::string,M2NWrap> _m2ns;
 
   // @brief Holds information about solvers participating in the coupled simulation.
   std::vector<impl::PtrParticipant> _participants;
@@ -610,7 +610,7 @@ private:
   //        is expected.
   //int _expectRequest;
 
-  void configureCommunications ( const com::PtrCommunicationConfiguration& config );
+  void configureM2Ns ( const m2n::PtrM2NConfiguration& config );
 
   /**
    * @brief Exports geometries with data and watch point data.
@@ -653,7 +653,7 @@ private:
    * @brief Determines participants providing meshes to other participants.
    */
   void configureSolverGeometries (
-    const com::PtrCommunicationConfiguration& comConfig );
+    const m2n::PtrM2NConfiguration& m2nConfig );
 
   /**
    * @brief Creates the mesh and context data structure of a geometry.

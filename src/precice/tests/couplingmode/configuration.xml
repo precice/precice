@@ -27,7 +27,7 @@
       <mesh name="Boundingbox" flip-normals="yes">
       </mesh>
       
-      <communication:mpi-single from="Comsol" to="Peano" />
+      <m2n:mpi-single from="Comsol" to="Peano" />
          
       <geometry:builtin-cuboid of-mesh="Boundingbox">
          <discretization-width value="1.0" />     

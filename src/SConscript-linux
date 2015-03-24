@@ -10,12 +10,12 @@ sourcesMesh = [
     Glob('mesh/*.cpp'),
     Glob('mesh/tests/*.cpp'),
     Glob('mesh/impl/*.cpp'),
-    Glob('mesh/config/*.cpp')   
+    Glob('mesh/config/*.cpp')
 ]
 
 sourcesMeshNew = [
     Glob('meshnew/*.cpp'),
-    Glob('meshnew/tests/*.cpp')  
+    Glob('meshnew/tests/*.cpp')
 ]
 
 sourcesIO = [
@@ -29,7 +29,7 @@ sourcesGeometry = [
     Glob('geometry/*.cpp'),
     Glob('geometry/config/*.cpp'),
     Glob('geometry/tests/*.cpp')
-]   
+]
 
 sourcesQuery = [
     Glob('query/*.cpp'),
@@ -96,16 +96,16 @@ sourcesTarchLA = [
    Glob('tarch/la/traits/*.cpp'),
    Glob('tarch/la/tests/*.cpp')
 ]
-   
+
 sourcesTarchMulticore = [
    Glob('tarch/multicore/*.cpp')
 ]
-   
+
 sourcesTarchLogging = [
    Glob('tarch/logging/*.cpp'),
    Glob('tarch/logging/configurations/*.cpp')
 ]
-   
+
 sourcesTarchTests = [
    Glob('tarch/tests/*.cpp'),
    Glob('tarch/tests/configurations/*.cpp')
@@ -137,11 +137,11 @@ sourcesAllNoMain = [
     sourcesCplscheme,
     sourcesAction,
     sourcesPrecice,
-] 
+]
 
-sourcesAll = [ 
+sourcesAll = [
     sourcesAllNoMain,
-    sourcesDrivers    
+    sourcesDrivers
 ]
 
 Return ('sourcesAllNoMain', 'sourcesAll')

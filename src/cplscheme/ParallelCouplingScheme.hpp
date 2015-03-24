@@ -18,11 +18,10 @@ public:
     const std::string&    firstParticipant,
     const std::string&    secondParticipant,
     const std::string&    localParticipant,
-    m2n::PtrGlobalCommunication communication,
+    m2n::PtrM2N           m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode          cplMode,
-    int                   maxIterations = 1)
-    ;
+    int                   maxIterations = 1);
   
   /// @brief Logging device.
   static tarch::logging::Log _log;

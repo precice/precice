@@ -37,9 +37,8 @@ void MeshTest:: run()
     testMethod(testSubIDs);
     testMethod(testComputeState);
     testMethod(testDemonstration);
-    testMethod(testBoundingBoxCOG)
+    testMethod(testBoundingBoxCOG);
   }
-  
 }
 
 void MeshTest:: testBasicSetup()
@@ -253,7 +252,7 @@ void MeshTest::testBoundingBoxCOG()
     coords0 =  2.0, 0.0;
     coords1 = -1.0, 4.0;
     coords2 =  0.0, 1.0;
-    
+
     Mesh mesh ("2D Testmesh", 2, false );
     mesh.createVertex(coords0);
     mesh.createVertex(coords1);
@@ -263,7 +262,7 @@ void MeshTest::testBoundingBoxCOG()
 
     Mesh::BoundingBox bBox = mesh.getBoundingBox();
     auto cog = mesh.getCOG();
-    
+
     Mesh::BoundingBox referenceBox =  { {-1.0, 2.0},
                                         { 0.0, 4.0} };
 
@@ -280,38 +279,38 @@ void MeshTest::testBoundingBoxCOG()
       validateNumericalEquals(referenceCOG[d], cog[d]);
     }
   }
-  
+
   {
     utils::DynVector coords0(3);
     utils::DynVector coords1(3);
     utils::DynVector coords2(3);
     utils::DynVector coords3(3);
-      
+
     coords0 =  2.0, 0.0, -3.0;
     coords1 = -1.0, 4.0,  8.0;
     coords2 =  0.0, 1.0, -2.0;
     coords2 =  3.5, 2.0, -2.0;
-      
+
     Mesh mesh ("3D Testmesh", 3, false );
     mesh.createVertex(coords0);
     mesh.createVertex(coords1);
     mesh.createVertex(coords2);
     mesh.createVertex(coords3);
-      
+
     mesh.computeState();
-      
+
     Mesh::BoundingBox bBox = mesh.getBoundingBox();
     auto cog = mesh.getCOG();
-    
+
     Mesh::BoundingBox referenceBox =  { {-1.0, 3.5},
                                         { 0.0, 4.0},
                                         {-3.0, 8.0} };
-    
+
     std::vector<double> referenceCOG =  { 1.25, 2.0, 2.5 };
-          
+
     validateEquals(bBox.size(), 3);
     validateEquals(cog.size(), 3);
-      
+
     for (size_t d = 0; d < bBox.size(); d++) {
       validateNumericalEquals(referenceBox[d].first, bBox[d].first);
       validateNumericalEquals(referenceBox[d].second, bBox[d].second);
@@ -319,10 +318,9 @@ void MeshTest::testBoundingBoxCOG()
     for (size_t d = 0; d < cog.size(); d++) {
       validateNumericalEquals(referenceCOG[d], cog[d]);
     }
-
   }
 }
-  
+
 
 void MeshTest:: testDemonstration ()
 {

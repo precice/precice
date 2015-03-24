@@ -102,6 +102,7 @@ private:
   const std::string ATTR_LOCAL_OFFSET;
   const std::string ATTR_ACTION_TYPE;
   const std::string ATTR_FROM;
+  const std::string ATTR_SAFETY_FACTOR;
   const std::string ATTR_PROVIDE;
   const std::string ATTR_MESH;
   const std::string ATTR_COORDINATE;
