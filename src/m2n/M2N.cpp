@@ -134,6 +134,7 @@ void M2N:: closeConnection()
 
 com::PtrCommunication M2N:: getMasterCommunication()
 {
+  assertion(not utils::MasterSlave::_slaveMode);
   return _masterCom; //TODO maybe it would be a nicer design to not offer this
 }
 
