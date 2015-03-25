@@ -380,7 +380,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
 int
 SocketCommunication::requestConnectionAsClient(
     std::string const& nameAcceptor, std::string const& nameRequester) {
-  preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
+  preciceTrace2("requestConnectionAsClient()", nameAcceptor, nameRequester);
 
   using asio::ip::tcp;
 
@@ -900,6 +900,7 @@ SocketCommunication::isServer() {
 
 std::string
 SocketCommunication::getIpAddress() {
+  preciceTrace("getIpAddress()");
   std::ostringstream oss;
 
 #ifdef _WIN32
