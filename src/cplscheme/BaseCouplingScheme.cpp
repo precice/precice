@@ -12,6 +12,7 @@
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
 #include <limits>
+#include <sstream>
 
 namespace precice {
 namespace cplscheme {
@@ -727,7 +728,9 @@ bool BaseCouplingScheme:: measureConvergence()
     assertion(convMeasure.measure.get() != NULL);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values);
-    _convergenceWriter.writeData("ResNorm", convMeasure.measure->getNormResidual());
+    std::stringstream sstm;
+    sstm << "resNorm(" <<i<< ")";
+    _convergenceWriter.writeData(sstm.str(), convMeasure.measure->getNormResidual());
     if(_iterations == 1) {
       _firstResiduumNorm[i] = convMeasure.measure->getNormResidual(); 
     }
@@ -758,13 +761,25 @@ void BaseCouplingScheme::initializeTXTWriters()
     _iterationsWriter.addData("Total Iterations", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
+    int i = 0;
     for (ConvergenceMeasure& convMeasure : _convergenceMeasures) 
-      _iterationsWriter.addData("ConvRate(avg)ID", io::TXTTableWriter::DOUBLE);
+    {
+       std::stringstream sstm; 
+       sstm << "avgConvRate(" <<i<<")";
+       _iterationsWriter.addData(sstm.str(), io::TXTTableWriter::DOUBLE);
+       i++;
+    }
 
     _convergenceWriter.addData("Timestep", io::TXTTableWriter::INT );
     _convergenceWriter.addData("Iteration", io::TXTTableWriter::INT );
+     i = 0;
     for (ConvergenceMeasure& convMeasure : _convergenceMeasures) 
-      _convergenceWriter.addData("ResNormID", io::TXTTableWriter::DOUBLE);
+    {
+       std::stringstream sstm;
+       sstm << "resNorm(" <<i<< ")";
+       _convergenceWriter.addData(sstm.str(), io::TXTTableWriter::DOUBLE);                                                                                                                                                         
+       i++;
+    }
   }
 }
 
@@ -778,7 +793,9 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter.writeData("Convergence", converged);
     for (int i = 0; i<_convergenceMeasures.size();i++) {
       double avgConvRate = _convergenceMeasures[i].measure->getNormResidual()/_firstResiduumNorm[i];
-      _iterationsWriter.writeData("ConvRate(avg)ID", std::pow(avgConvRate, 1./(double)_iterations));
+      std::stringstream sstm;
+      sstm << "avgConvRate(" <<i<< ")";
+      _iterationsWriter.writeData(sstm.str(), std::pow(avgConvRate, 1./(double)_iterations));
     }
   }
 }

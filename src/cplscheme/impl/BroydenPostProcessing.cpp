@@ -118,7 +118,7 @@ void BroydenPostProcessing::updateDifferenceMatrices
    */ 
   if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
     k++;
-    _currentColumns++;
+    //_currentColumns++;
     
     // Perform underrelaxation with initial relaxation factor for secondary data
 //     foreach (int id, _secondaryDataIDs){
@@ -156,12 +156,14 @@ void BroydenPostProcessing::computeQNUpdate
   preciceTrace("computeQNUpdate()");
   using namespace tarch::la;
   
-  
-  if(_currentColumns >= 1)
+  preciceDebug("currentColumns="<<_currentColumns);  
+  if(_currentColumns > 1)
   {
+     preciceDebug("compute update with QR-dec");
      computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   }else
   {
+    preciceDebug("compute update with Broyden");
     // ------------- update inverse Jacobian -----------
     // ------------- Broyden Update
     //
@@ -220,10 +222,8 @@ void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
 
   assertion2(_currentColumns <= _matrixV.cols(), _currentColumns, _matrixV.cols());
   DataMatrix v;
-  DataMatrix Vcopy(_matrixV.rows(), _currentColumns, 0.0);
-  DataMatrix _matV(_matrixV.rows(), _currentColumns, 0.0);
-  DataMatrix _matW(_matrixW.rows(), _currentColumns, 0.0);
-  DataMatrix Q(Vcopy.rows(), _currentColumns, 0.0);
+  DataMatrix Vcopy, _matV, _matW;
+  DataMatrix Q(_matrixV.rows(), _currentColumns, 0.0);
   DataMatrix R(_currentColumns, _currentColumns, 0.0);
   
   for(int i = 0; i < _currentColumns; i++)
@@ -233,7 +233,7 @@ void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
     _matW.append(_matrixW.column(i));
   }
 
-  preciceDebug(" ++  before QR Decomposition");
+  preciceDebug(" ++  before QR Decomposition  Vcopy=("<<Vcopy.rows()<<","<<Vcopy.cols()<<")  Q=("<<Q.rows()<<","<<Q.cols()<<")");
   modifiedGramSchmidt(Vcopy, Q, R);
   preciceDebug(" ++  after QR Decomposition");
   
