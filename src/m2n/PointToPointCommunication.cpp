@@ -212,6 +212,8 @@ print(std::map<int, std::vector<int>> const& m) {
   }
 }
 
+// The approximate complexity of this function is O(total number of indices in
+// `otherVertexDistribution').
 std::map<int, std::vector<int>>
 getCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this
@@ -310,11 +312,13 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
       m2n::receive(requesterVertexDistribution, 0, c);
     }
 
+    // Broadcast (send) vertex distributions.
     m2n::broadcast(vertexDistribution);
     m2n::broadcast(requesterVertexDistribution);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
+    // Broadcast (receive) vertex distributions.
     m2n::broadcast(vertexDistribution, 0);
     m2n::broadcast(requesterVertexDistribution, 0);
   }
@@ -355,9 +359,9 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
     return;
   }
 
-  // Accept point-to-point connections between the current acceptor process (in
-  // the current participant) with rank `utils::MasterSlave::_rank' and
-  // (multiple) requester proccesses (in the requester participant).
+  // Accept point-to-point connections (as server) between the current acceptor
+  // process (in the current participant) with rank `utils::MasterSlave::_rank'
+  // and (multiple) requester proccesses (in the requester participant).
   auto c = _communicationFactory->newCommunication();
 
   {
@@ -390,14 +394,11 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
          // NOTE:
          // On the acceptor participant side, the communication object `c'
          // behaves as a server, i.e. it implicitly accepts multiple connections
-         // to requester processes (in the requester participant) according to
-         // point-to-point communicator size (in `communicatorSizes') used
-         // during point-to-point connection requests made by requester
-         // processes (in the requester participant). As a result, only one
-         // communication object `c' is needed to satisfy `communicationMap',
-         // and, therefore, for data structure consistency of `_communications'
-         // with the requester participant side, we simply duplicate references
-         // to the same communication object `c'.
+         // to requester processes (in the requester participant). As a result,
+         // only one communication object `c' is needed to satisfy
+         // `communicationMap', and, therefore, for data structure consistency
+         // of `_mappings' with the requester participant side, we simply
+         // duplicate references to the same communication object `c'.
          c});
   }
 
@@ -444,11 +445,13 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
       m2n::send(vertexDistribution, 0, c);
     }
 
+    // Broadcast (send) vertex distributions.
     m2n::broadcast(vertexDistribution);
     m2n::broadcast(acceptorVertexDistribution);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
+    // Broadcast (receive) vertex distributions.
     m2n::broadcast(vertexDistribution, 0);
     m2n::broadcast(acceptorVertexDistribution, 0);
   }
@@ -489,10 +492,10 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
   _mappings.reserve(communicationMap.size());
 
-  // Request point-to-point connections between the current requester process
-  // (in the current participant) and (multiple) acceptor proccesses (in the
-  // acceptor participant) with ranks `acceptorRank' according to communication
-  // map.
+  // Request point-to-point connections (as client) between the current
+  // requester process (in the current participant) and (multiple) acceptor
+  // proccesses (in the acceptor participant) with ranks `globalAcceptorRank'
+  // according to communication map.
   for (auto& i : communicationMap) {
     auto globalAcceptorRank = i.first;
     auto indices = std::move(i.second);
