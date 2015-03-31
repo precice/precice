@@ -51,7 +51,10 @@ M2NConfiguration:: M2NConfiguration
     tag.setDocumentation(doc);
 
     XMLAttribute<int> attrPort(ATTR_PORT);
-    doc = "Port number to be used by for socket communiation. TODO";
+    doc = "Port number (16-bit unsigned integer) to be used for socket ";
+    doc += "communiation. The default is \"0\", what means that OS will ";
+    doc += "dynamically search for a free port (if at least one exists) and ";
+    doc += "bind it automatically.";
     attrPort.setDocumentation(doc);
     attrPort.setDefaultValue(0);
     tag.addAttribute(attrPort);
@@ -186,6 +189,12 @@ void M2NConfiguration:: xmlTagCallback
 #     else
         std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
         int port = tag.getIntAttributeValue(ATTR_PORT);
+
+        preciceCheck(not utils::isTruncated<unsigned short>(port),
+                     "xmlTagCallback()",
+                     "The value given for the \"port\" attribute is not a "
+                     "16-bit unsigned integer: " << port);
+
         std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
         comFactory = com::PtrCommunicationFactory(new com::SocketCommunicationFactory(port, false, network, dir));
         com = comFactory->newCommunication();

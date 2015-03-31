@@ -47,6 +47,12 @@ PtrCommunication CommunicationConfiguration:: createCommunication
 #   else
     std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
     int port = tag.getIntAttributeValue(ATTR_PORT);
+
+    preciceCheck(not utils::isTruncated<unsigned short>(port),
+                 "createCommunication()",
+                 "The value given for the \"port\" attribute is not a "
+                 "16-bit unsigned integer: " << port);
+
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
     com = com::PtrCommunication(new com::SocketCommunication(port, false, network, dir));
 #   endif // PRECICE_NO_SOCKETS

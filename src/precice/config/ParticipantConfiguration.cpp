@@ -186,9 +186,12 @@ ParticipantConfiguration:: ParticipantConfiguration
     tagServer.setDocumentation(doc);
 
     XMLAttribute<int> attrPort("port");
-    doc = "Port number to be used by server for socket communiation.";
+    doc = "Port number (16-bit unsigned integer) to be used for socket ";
+    doc += "communiation. The default is \"0\", what means that OS will ";
+    doc += "dynamically search for a free port (if at least one exists) and ";
+    doc += "bind it automatically.";
     attrPort.setDocumentation(doc);
-    attrPort.setDefaultValue(51235);
+    attrPort.setDefaultValue(0);
     tagServer.addAttribute(attrPort);
 
     XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);
@@ -252,9 +255,12 @@ ParticipantConfiguration:: ParticipantConfiguration
     tagMaster.setDocumentation(doc);
 
     XMLAttribute<int> attrPort("port");
-    doc = "Port number to be used by master for socket communication.";
+    doc = "Port number (16-bit unsigned integer) to be used for socket ";
+    doc += "communiation. The default is \"0\", what means that OS will ";
+    doc += "dynamically search for a free port (if at least one exists) and ";
+    doc += "bind it automatically.";
     attrPort.setDocumentation(doc);
-    attrPort.setDefaultValue(51235);
+    attrPort.setDefaultValue(0);
     tagMaster.addAttribute(attrPort);
 
     XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);

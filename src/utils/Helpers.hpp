@@ -4,8 +4,6 @@
 #ifndef PRECICE_UTILS_HELPERS_HPP_
 #define PRECICE_UTILS_HELPERS_HPP_
 
-//#include <sstream>
-//#include <iostream>
 #include <cstdlib>
 #include <algorithm>
 #include <vector>
@@ -17,6 +15,16 @@
 
 namespace precice {
 namespace utils {
+
+/**
+ * @brief Returns true, if numerical truncation happens in case of type
+ *        conversion.
+ */
+template <class OUT, class IN>
+inline bool isTruncated(IN in) {
+  return (                  in > std::numeric_limits<OUT>::max()) ||
+         (IN(-1) < IN(0) && in < std::numeric_limits<OUT>::min());
+}
 
 /**
  * @brief Exclusive "or" logical operation.
@@ -52,12 +60,12 @@ inline bool xOR ( bool lhs, bool rhs )
  * Requirements:
  * - ELEMENT_T must be comparable by ==
  */
-template <typename ELEMENT_T> 
-const bool contained(const ELEMENT_T& element, const std::vector<ELEMENT_T>& vec) 
+template <typename ELEMENT_T>
+const bool contained(const ELEMENT_T& element, const std::vector<ELEMENT_T>& vec)
 {
   return std::find(vec.begin(), vec.end(), element) != vec.end();
 }
-  
+
 template<typename KEY_T, typename ELEMENT_T>
 bool contained (
   const KEY_T&                     key,
