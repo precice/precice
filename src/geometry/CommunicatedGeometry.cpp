@@ -175,10 +175,10 @@ void CommunicatedGeometry:: scatterMesh(
     assertion(utils::MasterSlave::_size>1);
     seed.setGlobalNumberOfVertices(seed.vertices().size());
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-      _bb = mesh::Mesh::BoundingBox (_dimensions, std::make_pair(0,0));
+      _bb = mesh::Mesh::BoundingBox (_dimensions, std::make_pair(0.0,0.0));
       com::CommunicateMesh(utils::MasterSlave::_communication).receiveBoundingBox ( _bb, rankSlave);
       for (int d=0; d<_dimensions; d++) {
-        if (_safetyGap < _bb[d].second - _bb[d].first)
+        if (_bb[d].second > _bb[d].first && _safetyGap < _bb[d].second - _bb[d].first)
           _safetyGap = _bb[d].second - _bb[d].first;
       }
       assertion(_safetyFactor>=0.0);
@@ -194,10 +194,10 @@ void CommunicatedGeometry:: scatterMesh(
                                    std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
     mergeBoundingBoxes(_bb);
     for (int d=0; d < _dimensions; d++) {
-      if (_safetyGap < _bb[d].second - _bb[d].first)
+      if (_bb[d].second > _bb[d].first && _safetyGap < _bb[d].second - _bb[d].first)
         _safetyGap = _bb[d].second - _bb[d].first;
     }
-    _safetyGap *= 0.1;
+    _safetyGap *= _safetyFactor;
     mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
     boundingVertexDistribution[0] = filterMesh(seed, filteredMesh, false);
     seed.clear();
