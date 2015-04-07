@@ -21,16 +21,16 @@ public:
   std::string name;
 
   /// Creates a new event and starts it, unless autostart = false
-  Event(std::string eventName, bool autostart = true);
+  Event(std::string eventName, bool barrier = false, bool autostart = true);
 
   /// Stops the event if it's running and report its times to the EventRegistry
   ~Event();
 
   /// Starts an event. If it's already started it has no effect.
-  void start();
+  void start(bool barrier = false);
 
   /// Stops an event. If it's already stopped it has no effect.
-  void stop();
+  void stop(bool barrier = false);
 
   /// Gets the duration of the event.
   Clock::duration getDuration();
@@ -46,6 +46,7 @@ private:
   Clock::time_point stoptime;
   Clock::duration duration = Clock::duration::zero();
   bool isStarted = false;
+  bool _barrier = false;
 };
 
 

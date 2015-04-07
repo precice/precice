@@ -15,29 +15,35 @@
 namespace precice {
 namespace utils {
 
-Event::Event(std::string eventName, bool autostart)
-{
+Event::Event(std::string eventName, bool barrier, bool autostart)
+    : _barrier(barrier) {
   name = eventName;
+
   if (autostart) {
-    isStarted = true;
-    starttime = Clock::now();
+    start(_barrier);
   }
 }
 
 Event::~Event()
 {
-  stop();
+  stop(_barrier);
 }
 
-void Event::start()
+void Event::start(bool barrier)
 {
+  if (barrier)
+    Parallel::synchronizeProcesses();
+
   isStarted = true;
   starttime = Clock::now();
 }
 
-void Event::stop()
+void Event::stop(bool barrier)
 {
   if (isStarted) {
+    if (barrier)
+      Parallel::synchronizeProcesses();
+
     stoptime = Clock::now();
     isStarted = false;
     duration = Clock::duration(stoptime - starttime);
