@@ -26,6 +26,8 @@ MPICommunicationTest::MPICommunicationTest()
 
 void
 MPICommunicationTest::run() {
+# ifndef PRECICE_NO_MPI
+
   preciceTrace("run");
 
   Parallel::synchronizeProcesses();
@@ -47,6 +49,7 @@ MPICommunicationTest::run() {
     // Not supported anymore!
     // testMethod( testSendAndReceiveFromAnySender);
   }
+# endif
 }
 
 #ifndef PRECICE_NO_MPI
