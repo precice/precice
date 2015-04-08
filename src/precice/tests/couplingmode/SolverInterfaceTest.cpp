@@ -1557,6 +1557,11 @@ void SolverInterfaceTest:: testThreeSolvers()
   expectedCallsOfAdvance.clear();
   expectedCallsOfAdvance += 30, 10, 30;
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
+
+  configFilename = _pathToTests + "three-solver-parallel.xml";
+  expectedCallsOfAdvance.clear();
+  expectedCallsOfAdvance += 30, 30, 10;
+  runThreeSolvers(configFilename, expectedCallsOfAdvance);
 }
 
 void SolverInterfaceTest:: runThreeSolvers
@@ -1572,6 +1577,7 @@ void SolverInterfaceTest:: runThreeSolvers
 
   std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
+  std::string writeInitData(constants::actionWriteInitialData());
 
   std::string solverName;
   if (rank == 0) solverName = std::string("SolverOne");
@@ -1586,6 +1592,12 @@ void SolverInterfaceTest:: runThreeSolvers
     //int dataID = precice.getDataID("Data");
     precice.setMeshVertex(meshID, raw(utils::Vector2D(0.0, 0.0)));
     double dt = precice.initialize();
+
+    if (precice.isActionRequired(writeInitData)){
+      precice.fulfilledAction(writeInitData);
+    }
+    precice.initializeData();
+
     while (precice.isCouplingOngoing()){
       //precice.writeVectorData(dataID, 0, raw(Vector2D(1.0, 2.0)));
       if (precice.isActionRequired(writeIterCheckpoint)){
@@ -1606,6 +1618,12 @@ void SolverInterfaceTest:: runThreeSolvers
     //int dataID = precice.getDataID("Data");
     //precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0))); //no use here
     double dt = precice.initialize();
+
+    if (precice.isActionRequired(writeInitData)){
+      precice.fulfilledAction(writeInitData);
+    }
+    precice.initializeData();
+
     while (precice.isCouplingOngoing()){
       //Vector2D data;
       //precice.readVectorData(dataID, 0, raw(data));
@@ -1628,6 +1646,12 @@ void SolverInterfaceTest:: runThreeSolvers
     //int dataID = precice.getDataID("Data");
     //precice.setReadPosition(meshID, raw(utils::Vector2D(0.0, 0.0))); //no use here
     double dt = precice.initialize();
+
+    if (precice.isActionRequired(writeInitData)){
+      precice.fulfilledAction(writeInitData);
+    }
+    precice.initializeData();
+
     while (precice.isCouplingOngoing()){
       //Vector2D data;
       //precice.readVectorData(dataID, 0, raw(data));

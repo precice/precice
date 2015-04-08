@@ -55,9 +55,7 @@ void CompositionalCouplingScheme:: initializeData()
 {
   preciceTrace("initializeData()");
   for (Scheme scheme : _couplingSchemes) {
-    if (scheme.scheme->isActionRequired(constants::actionWriteInitialData())){
-      scheme.scheme->initializeData();
-    }
+    scheme.scheme->initializeData();
   }
 }
 
