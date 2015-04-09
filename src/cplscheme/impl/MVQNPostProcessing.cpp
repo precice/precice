@@ -14,6 +14,7 @@
 #include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
+#include "Eigen/Dense"
 
 #include <time.h>
 #include <sstream>
@@ -44,7 +45,6 @@ MVQNPostProcessing:: MVQNPostProcessing
   _oldInvJacobian(),
   k(0),
   t(0)
-//  _matrixWriter("jacobain.m")
 {}
 
 
@@ -61,15 +61,6 @@ void MVQNPostProcessing:: initialize
   
   _invJacobian = Matrix(entries, entries, init);
   _oldInvJacobian = Matrix(entries, entries, init);
-  //_invJacobian.append(DataMatrix(entries, entries, init));
-  //_oldInvJacobian.append(DataMatrix(entries, entries, init));
- 
-  
-  // ----------- DEBUG ------------------
-// //   std::string filename("frobNorm_jacobianDiff");
-// //   f.open(filename.c_str(), std::ios::out);
-// //   f<<std::setprecision( std::numeric_limits<double>::digits10+2);
-  // ------------------------------------
 }
 
 
@@ -148,85 +139,119 @@ void MVQNPostProcessing::updateDifferenceMatrices
 
 
 
-void MVQNPostProcessing::performPPSecondaryData
-(
-  DataMap& cplData)
-{
-
-//   using namespace tarch::la;
-// 
-// //   // Compute residuals of secondary data
-// //   foreach (int id, _secondaryDataIDs){
-// //     DataValues& secResiduals = _secondaryResiduals[id];
-// //     PtrCouplingData data = cplData[id];
-// //     assertion2(secResiduals.size() == data->values->size(),
-// //                secResiduals.size(), data->values->size());
-// //     secResiduals = *(data->values);
-// //     secResiduals -= data->oldValues.column(0);
-// //   }
-// 
-//   /*
-//    * ATTETION: changed the condition from _firstIteration && _firstTimeStep
-//    * to the following: 
-//    * underrelaxation has to be done, if the scheme has converged without even
-//    * entering post processing. In this case the V, W matrices would still be empty.
-//    * This case happended in the open foam example beamInCrossFlow.
-//    */ 
-//   if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
-//     k++;
-//     // Perform underrelaxation with initial relaxation factor for secondary data
-//     foreach (int id, _secondaryDataIDs){
-//       PtrCouplingData data = cplData[id];
-//       DataValues& values = *(data->values);
-//       values *= _initialRelaxation;                   // new * omg
-//       DataValues& secResiduals = _secondaryResiduals[id];
-//       secResiduals = data->oldValues.column(0);    // old
-//       secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
-//       values += secResiduals;                      // (1-omg) * old + new * omg
-//     }
-//   }
-//   else {
-//     if (not _firstIteration){
-//       k++;
-//     }
-//   }
-}
-
-
 void MVQNPostProcessing::computeQNUpdate
     (PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
   preciceTrace("computeQNUpdate()");
   using namespace tarch::la;
-  
-  
-  //----------------------------DEBUG------------------------------------
-// //   std::stringstream sk; sk <<k;
-// //   std::stringstream st; st <<t;
-// //   std::string Xfile("output/x"+st.str()+"_"+sk.str()+".m");
-// //   std::string residualfile("output/residual"+st.str()+"_"+sk.str()+".m");
-// //   _scaledValues.printm(Xfile.c_str());
-// //   _residuals.printm(residualfile.c_str());
-  //---------------------------------------------------------------------
-  
+
     // ------------- update inverse Jacobian -----------
     // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
     // ----------------------------------------- -------
 
     preciceDebug("   Compute Newton factors");
     //computeNewtonFactorsLUDecomposition(cplData, xUpdate);
+    
+    DataValues xUpdate2(xUpdate.size(),0.0);
+    
+    // computes xUpdate using updatedQR decompositon (does not modify _invJacobian)
+    computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate2);
+    // computes xUpdate using modifiedGramSchmidt QR-dec
     computeNewtonFactorsQRDecomposition(cplData,xUpdate);
-    
-    //----------------------------DEBUG------------------------------------
-// //     std::string Jfile("output/invJacobian"+st.str()+"_"+sk.str()+".m");
-// //     std::string xdeltafile("output/deltaX"+st.str()+"_"+sk.str()+".m");
-// //     std::string xnewfile("output/xNew"+st.str()+"_"+sk.str()+".m");    
-// //     _invJacobian.printm(Jfile.c_str());
-// //     xUpdate.printm(xdeltafile.c_str());
-// //     _scaledValues.printm(xnewfile.c_str());
-    
-    // ---------------------------------------------------------------------
 
+    // validation
+    for(int i = 0; i<xUpdate.size(); i++)
+    {
+      if(!tarch::la::equals(xUpdate(i), xUpdate2(i), 1e-12))
+      {
+	std::cerr<<"xUpdates were not the same for standart and updatedQR decomposition:\n"<<"standart:\n   "<<xUpdate<<"updated:\n   "<<xUpdate2<<std::endl;
+      }
+    }
+}
+
+
+void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
+(PostProcessing::DataMap& cplData, DataValues& xUpdate)
+{
+  preciceTrace("computeNewtonFactorsQRDecomposition()");
+  using namespace tarch::la;
+ 
+  // ------------- update inverse Jacobian -----------
+  // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
+  // ----------------------------------------- -------
+
+  DataMatrix v;
+  bool linearDependence = true;
+  
+  while (linearDependence)
+  {
+    linearDependence = false;
+    v.clear();
+    
+    Matrix __R(_matrixV.cols(), _matrixV.cols(), 0.0);
+    auto r = _qrV.matrixR();
+    for(int i = 0; i<r.rows(); i++)
+      for(int j = 0; j<r.cols(); j++)
+      {
+	__R(i,j) = r(i,j);
+      }
+
+    if (_matrixV.cols() > 1){
+      for (int i=0; i < _matrixV.cols(); i++){
+	if (__R(i,i) < _singularityLimit){
+	  preciceDebug("   Removing linear dependent column " << i);
+	  std::cout<<"######### REMOVE COLUMN (LINEAR DEPENDENCE) ########\n";
+	  linearDependence = true;
+	  removeMatrixColumn(i);
+	}
+      }
+    }
+    if(not linearDependence)
+    {
+      Matrix __Q(_matrixV.rows(), _matrixV.cols(), 0.0);
+      
+      DataValues __ytmpVec(_matrixV.cols(), 0.0);
+      DataValues __matrixQRow;
+      auto q = _qrV.matrixQ();
+      for(int i = 0; i<q.rows(); i++)
+	for(int j = 0; j<q.cols(); j++)
+	{
+	  __Q(i,j) = q(i,j);
+	}
+	
+      for(int i = 0; i < __Q.rows(); i++)
+      {
+	for(int j=0; j < __Q.cols(); j++){
+	  __matrixQRow.append(__Q(i,j));
+	}
+	
+	backSubstitution(__R, __matrixQRow, __ytmpVec);
+	v.append(__ytmpVec);  
+	__matrixQRow.clear();
+      }
+    }
+  }
+
+  // tmpMatrix = J_inv_n*V
+  Matrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
+  assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
+  multiply(_oldInvJacobian, _matrixV, tmpMatrix);
+
+  // tmpMatrix = (W-J_inv_n*V)
+  tmpMatrix *= -1.;
+  tmpMatrix = tmpMatrix + _matrixW;
+  
+  // invJacobian = (W - J_inv_n*V)*(V^T*V)^-1*V^T
+  assertion2(tmpMatrix.cols() == v.rows(), tmpMatrix.cols(), v.rows());
+
+  Matrix tmp_invJacobian(_invJacobian.rows(), _invJacobian.cols(), 0.0);
+  multiply(tmpMatrix, v, tmp_invJacobian);
+  tmp_invJacobian = tmp_invJacobian + _oldInvJacobian;
+
+  DataValues negRes(_residuals);
+  negRes *= -1.;
+  // solve delta_x = - J_inv*residuals
+  multiply(tmp_invJacobian, negRes, xUpdate);  
 }
 
 
@@ -239,17 +264,6 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   // ------------- update inverse Jacobian -----------
   // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
   // ----------------------------------------- -------
-
-  //----------------------------DEBUG------------------------------------
-// //   std::stringstream sk; sk <<k;
-// //   std::stringstream st; st <<t;
-// //   std::string Vfile("output/matrixV"+st.str()+"_"+sk.str()+".m");
-// //   std::string Wfile("output/matrixW"+st.str()+"_"+sk.str()+".m");
-// //   _matrixV.printm(Vfile.c_str());
-// //   _matrixW.printm(Wfile.c_str());
-  
-  // --------------------------------------------------------------------
-    
   
   double time_QRDecomposition = 0.;
   double time_multiply = 0;
@@ -305,19 +319,10 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
       _matrixQRow.clear();
       }
       time_backSubstitution_all = clock() - time_backSubstitution_all;
-      //time_backSubstitution_all /= CLOCKS_PER_SEC;
+     
     }
   }
-  
-  
-  //----------------------------DEBUG------------------------------------
-  
-// //   std::string vfile("output/v"+st.str()+"_"+sk.str()+".m");
-// //   v.printm(vfile.c_str());
-  
-  // --------------------------------------------------------------------
-  
-  
+
   time_multiply = clock();
   time_m1 = time_multiply;
 
@@ -351,18 +356,6 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   time_m4 = clock();
   _invJacobian = _invJacobian + _oldInvJacobian;
   time_m4 = clock() - time_m4;
-  
-  // ---- DEBUG --------------------------
-// //   // compute frobenius norm of difference between Jacobian matrix from current
-// //   // time step and Jcobian from old time step
-// //   DataMatrix jacobianDiff(_invJacobian.rows(), _invJacobian.cols(), 0.0);
-// //   jacobianDiff = _oldInvJacobian;
-// //   jacobianDiff *= -1.;
-// //   jacobianDiff = _invJacobian + jacobianDiff;
-// //   double frob = frobeniusNorm(jacobianDiff); 
-// //   f<<t<<"  "<<frob<<"\n";
-// //   if(t >= 100) f.close();
-  // -------------------------------------
   
   DataValues negRes(_residuals);
 
