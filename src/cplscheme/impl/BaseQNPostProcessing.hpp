@@ -10,6 +10,7 @@
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
+#include "QRFactorization.hpp"
 #include <deque>
 #include <fstream>
 
@@ -106,8 +107,6 @@ public:
     */
    virtual void performPostProcessing(DataMap& cplData);
    
-   
-   virtual void performPPSecondaryData(DataMap& cplData) = 0;
 
    /**
     * @brief Marks a iteration sequence as converged.
@@ -203,6 +202,10 @@ protected:
 
    // @brief Stores x tilde deltas, where x tilde are values computed by solvers.
    DataMatrix _matrixW;
+   
+   // @brief Stores the current QR decomposition ov _matrixV, can be updated via deletion/insertion of columns
+   QRFactorization _qrV;
+   
    
    DataMatrix _matrixVBackup;
    DataMatrix _matrixWBackup;

@@ -11,6 +11,7 @@
 #include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
+#include "QRFactorization.hpp"
 //#include "utils/NumericalCompare.hpp"
 
 #include <time.h>
@@ -55,6 +56,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _oldResiduals(),
   _matrixV(),
   _matrixW(),
+  _qrV(),
   _matrixVBackup(),
   _matrixWBackup(),
   _matrixColsBackup(),
@@ -247,21 +249,39 @@ void BaseQNPostProcessing:: updateDifferenceMatrices
   else {
     //preciceDebug("   Performing QN step");
 
-    if (not _firstIteration){ // Update matrices V, W with newest information
+    if (not _firstIteration)
+    { // Update matrices V, W with newest information
+      
       assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
       assertion2(_matrixV.cols() <= _maxIterationsUsed,
                  _matrixV.cols(), _maxIterationsUsed);
+      
+      DataValues deltaR = _residuals;
+      deltaR -= _oldResiduals;
+      
+      DataValues deltaXTilde = _scaledValues;
+      deltaXTilde -= _oldXTilde;
+      
       bool columnLimitReached = _matrixV.cols() == _maxIterationsUsed;
       bool overdetermined = _matrixV.cols() <= _matrixV.rows();
       if (not columnLimitReached && overdetermined){
-        _matrixV.appendFront(_residuals); // Will be modified to delta_r
-        _matrixW.appendFront(_residuals); // Will be overwritten by delta_x_tilde
+        _matrixV.appendFront(deltaR); 
+        _matrixW.appendFront(deltaXTilde); 
+	
+	// insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the 
+	// QR decomposition and updae decomposition
+	_qrV.pushFront(deltaR);
         
         _matrixCols.front()++;
       }
       else {
-        _matrixV.shiftSetFirst(_residuals); // Will be modified to delta_r
-        _matrixW.shiftSetFirst(_residuals); // Will be overwritten by delta_x_tilde
+        _matrixV.shiftSetFirst(deltaR); 
+        _matrixW.shiftSetFirst(deltaXTilde);
+	
+	// inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
+	// the QR decomposition of V is updated
+	_qrV.pushFront(deltaR);
+	_qrV.popBack();
 	
 	_matrixCols.front()++;
         _matrixCols.back()--;
@@ -270,11 +290,11 @@ void BaseQNPostProcessing:: updateDifferenceMatrices
         }
       }
       // Compute delta_residual = residual - residual_old
-      _matrixV.column(0) -= _oldResiduals;
+      //_matrixV.column(0) -= _oldResiduals;
 
       // Compute delta_x_tilde = x_tilde - x_tilde_old
-      _matrixW.column(0) = _scaledValues;
-      _matrixW.column(0) -= _oldXTilde;
+      //_matrixW.column(0) = _scaledValues;
+      //_matrixW.column(0) -= _oldXTilde;
       
     }
 
@@ -329,25 +349,7 @@ void BaseQNPostProcessing:: performPostProcessing
   time_scaleUpdateVW = clock() - time_scaleUpdateVW;
   //time_scaleUpdateVW /= CLOCKS_PER_SEC; 
   
-//   int offset = 0;
-//   foreach (int id, _dataIDs){
-//     double factor = _scalings[id];
-//     preciceDebug("Scaling Factor " << factor << " for id: " << id);
-//     int size = cplData[id]->values->size();
-//     DataValues& values = *cplData[id]->values;
-//     DataValues& oldValues = cplData[id]->oldValues.column(0);
-//     for (int i=0; i < size; i++){
-//       _scaledValues[i+offset] = values[i]/factor;
-//       _scaledOldValues[i+offset] = oldValues[i]/factor;
-//     }
-//     offset += size;
-//   }
-// 
-//   // Compute current residual: vertex-data - oldData
-//   //DataValues residuals(scaledValues);
-//   _residuals = _scaledValues;
-//   _residuals -= _scaledOldValues;
-// 
+
 //   //if (_firstIteration && (_matrixCols.size() < 2)){
 //   /*
 //    * ATTETION: changed the condition from _firstIteration && _firstTimeStep
@@ -371,41 +373,6 @@ void BaseQNPostProcessing:: performPostProcessing
    }
    else {
      preciceDebug("   Performing QN step");
-// 
-//     if (not _firstIteration){ // Update matrices V, W with newest information
-//       assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
-//       assertion2(_matrixV.cols() <= _maxIterationsUsed,
-//                  _matrixV.cols(), _maxIterationsUsed);
-//       bool columnLimitReached = _matrixV.cols() == _maxIterationsUsed;
-//       bool overdetermined = _matrixV.cols() <= _matrixV.rows();
-//       if (not columnLimitReached && overdetermined){
-//         _matrixV.appendFront(_residuals); // Will be modified to delta_r
-//         _matrixW.appendFront(_residuals); // Will be overwritten by delta_x_tilde
-//         
-//         _matrixCols.front()++;
-//       }
-//       else {
-//         _matrixV.shiftSetFirst(_residuals); // Will be modified to delta_r
-//         _matrixW.shiftSetFirst(_residuals); // Will be overwritten by delta_x_tilde
-// 	
-// 	_matrixCols.front()++;
-//         _matrixCols.back()--;
-//         if (_matrixCols.back() == 0){
-//           _matrixCols.pop_back();
-//         }
-//       }
-//       // Compute delta_residual = residual - residual_old
-//       _matrixV.column(0) -= _oldResiduals;
-// 
-//       // Compute delta_x_tilde = x_tilde - x_tilde_old
-//       _matrixW.column(0) = _scaledValues;
-//       _matrixW.column(0) -= _oldXTilde;
-//       
-//     }
-//     
-// 
-//     _oldResiduals = _residuals;   // Store residuals
-//     _oldXTilde = _scaledValues;   // Store x_tilde
   
     time_norelaxAux = clock();
      
@@ -415,6 +382,11 @@ void BaseQNPostProcessing:: performPostProcessing
      _matrixV = _matrixVBackup;
      _matrixW = _matrixWBackup;
      _matrixCols = _matrixColsBackup;
+     
+     // recomputation of QR decomposition from _matrixV = _matrixVBackup
+     // this occurs very rarely, to be precice, it occurs only if the coupling terminates 
+     // after the first iteration and the matrix data from time step t-2 has to be used
+     _qrV.reset(_matrixV);
     }
 
     DataValues xUpdate(_residuals.size(), 0.0);
@@ -427,7 +399,6 @@ void BaseQNPostProcessing:: performPostProcessing
     computeQNUpdate(cplData, xUpdate);
     
     time_QNStep = clock() - time_QNStep;
-    //time_QNStep /= CLOCKS_PER_SEC;
   
     /** 
      * apply quasiNewton update
@@ -438,22 +409,28 @@ void BaseQNPostProcessing:: performPostProcessing
     
     
     // pending deletion: delete old V, W matrices if timestepsReused = 0
-    // those were only deeded for the first iteration (instead of underrelax.)
-    //std::cout<<"first iteration = "<<_firstIteration<<"  first time step = "<<_firstTimeStep<<std::endl;
+    // those were only needed for the first iteration (instead of underrelax.)
     if(_firstIteration && _timestepsReused == 0)
     {
+      // save current matrix data in case the coupling for the next time step will terminate 
+      // after the first iteration (no new data, i.e., V = W = 0)
       if(_matrixV.cols() > 0 && _matrixW.cols() > 0)
       {
 	_matrixColsBackup = _matrixCols;
         _matrixVBackup = _matrixV;
         _matrixWBackup = _matrixW;
       }
+      // if no time steps reused, the matrix data needs to be cleared as it was only needed for the 
+      // QN-step in the first iteration (idea: rather perform QN-step with information from last converged 
+      // time step instead of doing a underrelaxation)
       if(not _firstTimeStep)
       {
         _matrixV.clear();
         _matrixW.clear();
         _matrixCols.clear();
+	_qrV.reset();
       }
+      
           // TOD0: The following is still misssing for reusedTimeSTeps=0 
     // -----------------------------------------------
 // // //     foreach (int id, _secondaryDataIDs){
@@ -503,8 +480,8 @@ void BaseQNPostProcessing:: iterationsConverged
   preciceTrace("iterationsConverged()");
   
   // the most recent differences for the V, W matrices have not been added so far
-  // this has to be done in iterations converged, as PP won't be called if 
-  // convergence achieved
+  // this has to be done in iterations converged, as PP won't be called any more if 
+  // convergence was achieved
   if(not _timestepsReused == 0)
   {
     scaling(cplData);
@@ -526,7 +503,7 @@ void BaseQNPostProcessing:: iterationsConverged
     _matrixCols.pop_front(); 
   }
   
-  // doing specialized stuff for the corresponding post processing sceme after 
+  // doing specialized stuff for the corresponding post processing scheme after 
   // convergence of iteration i.e.:
   // - analogously to the V,W matrices, remove columns from matrices for secondary data
   // - save the old jacobian matrix i
@@ -550,6 +527,9 @@ void BaseQNPostProcessing:: iterationsConverged
     for (int i=0; i < toRemove; i++){
       _matrixV.remove(_matrixV.cols() - 1);
       _matrixW.remove(_matrixW.cols() - 1);
+      
+      // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
+      _qrV.popBack();
     }
     _matrixCols.pop_back();
   }
@@ -598,6 +578,10 @@ void BaseQNPostProcessing:: removeMatrixColumn
   assertion(_matrixV.cols() > 1);
   _matrixV.remove(columnIndex);
   _matrixW.remove(columnIndex);
+  
+  // remove corresponding column from dynamic QR-decomposition of _matrixV
+  _qrV.deleteColumn(columnIndex);
+  
   // Reduce column count
   std::deque<int>::iterator iter = _matrixCols.begin();
   int cols = 0;

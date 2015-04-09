@@ -39,6 +39,17 @@ public:
   typedef Eigen::MatrixXd EigenMatrix;
   typedef Eigen::VectorXd EigenVector;
 
+  
+  
+  /**
+   * @brief Constructor.
+   */
+   QRFactorization (
+      double omega=0,
+      double theta=1./0.7,
+      double sigma=std::numeric_limits<double>::min()
+ 		    );
+  
   /**
    * @brief Constructor.
    */
@@ -105,6 +116,15 @@ public:
         double sigma=std::numeric_limits<double>::min());
    
    /**
+    * @brief resets the QR factorization to be the factorization of A = QR
+    */
+   void reset(
+	DataMatrix A,
+	double omega=0,
+        double theta=1./0.7,
+        double sigma=std::numeric_limits<double>::min());
+   
+   /**
     * @brief inserts a new column at arbitrary position and updates the QR factorization
     */
    void insertColumn(int k, EigenVector& v);
@@ -127,6 +147,18 @@ public:
     * and updates the QR factorization
     */
    void pushBack(EigenVector& v);
+   
+   /**
+    * @brief inserts a new column at position 0, i.e., shifts right and inserts at first position
+    * and updates the QR factorization
+    */
+   void pushFront(DataValues& v);
+   
+   /**
+    * @brief inserts a new column at position _cols-1, i.e., appends a column at the end
+    * and updates the QR factorization
+    */
+   void pushBack(DataValues& v);
    
    /**
     * @brief deletes the column at position 0, i.e., deletes and shifts columns to the left

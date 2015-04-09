@@ -109,6 +109,23 @@ QRFactorization::QRFactorization(
   assertion2(_cols == m, _cols, m);
 }
 
+/**
+ * Constructor
+ */
+QRFactorization::QRFactorization(
+  double omega, 
+  double theta, 
+  double sigma)
+  :
+  _Q(),
+  _R(),
+  _rows(0),
+  _cols(0),
+  _omega(omega),
+  _theta(theta),
+  _sigma(sigma)
+{}
+
       
  
     
@@ -123,8 +140,6 @@ void QRFactorization::deleteColumn(int k)
   
   // maintain decomposition and orthogonalization by application of givens rotations
   
-  //std::cout<<"-- R (1) --\n"<<_R<<std::endl;
-  //std::cout<<"-- Q (1) --\n"<<_Q<<std::endl;
   for(int l=k; l<_cols-1; l++)
   {
     QRFactorization::givensRot grot;
@@ -140,8 +155,6 @@ void QRFactorization::deleteColumn(int k)
     _Q.col(l) = Qc1;
     _Q.col(l+1) = Qc2;
   }
-  //std::cout<<"-- R (2) --\n"<<_R<<std::endl;
-  //std::cout<<"-- Q (2) --\n"<<_Q<<std::endl;
   // copy values and resize R and Q
   for(int j=k; j<_cols-1; j++)
   {
@@ -154,8 +167,6 @@ void QRFactorization::deleteColumn(int k)
   //_Q.conservativeResize(Eigen::NoChange_t, _cols-1);
   _Q.conservativeResize(_rows, _cols-1);
   _cols--;
-  //std::cout<<"-- R (3) --\n"<<_R<<std::endl;
-  //std::cout<<"-- Q (3) --\n"<<_Q<<std::endl;
   
   assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
   assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
@@ -177,6 +188,8 @@ void QRFactorization::insertColumn(int k, DataValues& v)
       
 void QRFactorization::insertColumn(int k, EigenVector& v)
 {
+  if(_cols == 0)
+    _rows = v.size();
   
   assertion1(k >= 0, k);
   assertion1(k <= _cols, k);
@@ -492,6 +505,35 @@ void QRFactorization::reset(
   assertion2(_cols == m, _cols, m);
 }
 
+void QRFactorization::reset(
+  DataMatrix A, 
+  double omega, 
+  double theta, 
+  double sigma)
+{
+  _Q.resize(0,0);
+  _R.resize(0,0);
+  _cols = 0;
+  _rows = A.rows();
+  _omega = omega;
+  _theta = theta;
+  _sigma = sigma;
+ 
+  int m = A.cols();
+  for (int k=0; k<m; k++)
+  {
+     EigenVector v(_rows);
+     for(int i=0; i<_rows; i++)
+       v(i) = A(i,k);
+     insertColumn(k,v);
+  }
+  assertion2(_R.rows() == _cols, _R.rows(), _cols);
+  assertion2(_R.cols() == _cols, _R.cols(), _cols);
+  assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
+  assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
+  assertion2(_cols == m, _cols, m);
+}
+
 void QRFactorization::pushFront(EigenVector& v)
 {
   insertColumn(0, v);
@@ -500,6 +542,22 @@ void QRFactorization::pushFront(EigenVector& v)
 void QRFactorization::pushBack(EigenVector& v)
 {
   insertColumn(_cols, v);
+}
+
+void QRFactorization::pushFront(DataValues& v)
+{
+  EigenVector _v(v.size());
+  for(int i = 0; i<v.size(); i++)
+    _v(i) = v(i);
+  insertColumn(0, _v);
+}
+
+void QRFactorization::pushBack(DataValues& v)
+{
+  EigenVector _v(v.size());
+  for(int i = 0; i<v.size(); i++)
+    _v(i) = v(i);
+  insertColumn(_cols, _v);
 }
 
 void QRFactorization::popFront()
