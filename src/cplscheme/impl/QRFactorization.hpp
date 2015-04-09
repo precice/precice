@@ -65,8 +65,8 @@ public:
    QRFactorization (
       EigenMatrix Q,
       EigenMatrix R,
-      size_t rows,
-      size_t cols,
+      int rows,
+      int cols,
       double omega=0,
       double theta=1./0.7,
       double sigma=std::numeric_limits<double>::min()
@@ -89,8 +89,8 @@ public:
    void reset(
 	EigenMatrix Q, 
 	EigenMatrix R, 
-	size_t rows, 
-	size_t cols, 
+	int rows, 
+	int cols, 
 	double omega=0,
         double theta=1./0.7,
         double sigma=std::numeric_limits<double>::min());
@@ -104,25 +104,52 @@ public:
         double theta=1./0.7,
         double sigma=std::numeric_limits<double>::min());
    
-   void insertColumn(size_t k, EigenVector& v);
-   void insertColumn(size_t k, DataValues& v);
+   /**
+    * @brief inserts a new column at arbitrary position and updates the QR factorization
+    */
+   void insertColumn(int k, EigenVector& v);
+   void insertColumn(int k, DataValues& v);
    
    /**
-   * updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted. 
+   * @brief updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted. 
    * Returns the deleted column v(1:n)
    */
-   void deleteColumn(size_t k);
+   void deleteColumn(int k);
+   
+   /**
+    * @brief inserts a new column at position 0, i.e., shifts right and inserts at first position
+    * and updates the QR factorization
+    */
+   void pushFront(EigenVector& v);
+   
+   /**
+    * @brief inserts a new column at position _cols-1, i.e., appends a column at the end
+    * and updates the QR factorization
+    */
+   void pushBack(EigenVector& v);
+   
+   /**
+    * @brief deletes the column at position 0, i.e., deletes and shifts columns to the left
+    * and updates the QR factorization
+    */
+   void popFront();
+   
+   /**
+    * @brief deletes the column at position _cols-1, i.e., deletes the last column
+    * and updates the QR factorization
+    */
+   void popBack();
    
    EigenMatrix& matrixQ();
    EigenMatrix& matrixR();
    
-   size_t cols();
-   size_t rows();
+   int cols();
+   int rows();
 
 private:
   
   struct givensRot{
-    size_t i, j;
+    int i, j;
     double sigma, gamma;
   };
    
@@ -133,7 +160,7 @@ private:
   *   from v to range of Q, r and its corrections are computed in double
   *   precision.
   */
-  int orthogonalize(EigenVector& v, EigenVector& r, double &rho, size_t colNum);
+  int orthogonalize(EigenVector& v, EigenVector& r, double &rho, int colNum);
   
   /**
   * @short computes parameters for givens matrix G for which  (x,y)G = (z,0). replaces (x,y) by (z,0)
@@ -144,7 +171,7 @@ private:
   *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G, 
   *  where G is the Givens matrix grot, determined by sigma and gamma. 
   */
-  void applyReflector(const givensRot &grot, size_t k, size_t l, EigenVector& p, EigenVector& q);
+  void applyReflector(const givensRot &grot, int k, int l, EigenVector& p, EigenVector& q);
   
 
   // @brief Logging device.
@@ -153,8 +180,8 @@ private:
   EigenMatrix _Q;
   EigenMatrix _R;
   
-  size_t _cols;
-  size_t _rows;
+  int _cols;
+  int _rows;
   double _omega;
   double _theta;
   double _sigma;
