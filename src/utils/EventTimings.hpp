@@ -120,6 +120,8 @@ public:
   /// Convenience function: Prints to filename
   static void print(std::string filename, bool terse = false);
 
+  static void printGlobalDuration();
+
 private:
   static bool initialized;
   static Event::Clock::time_point globalStart;

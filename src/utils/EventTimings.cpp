@@ -230,6 +230,15 @@ void EventRegistry::print(std::string filename, bool terse)
   outfile.close();
 }
 
+void EventRegistry::printGlobalDuration()
+{
+  Event::Clock::duration globalDuration = Event::Clock::now() - globalStart;
+
+  std::cout << "Global Duration = "
+            << std::chrono::duration_cast<std::chrono::milliseconds>(
+                   globalDuration).count() << "ms" << std::endl;
+}
+
 void Events_Init()
 {
   EventRegistry::initialize();
