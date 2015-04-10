@@ -303,7 +303,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
     auto c = _communicationFactory->newCommunication();
 
     {
-      Event e("PointToPointCommunication::acceptConnection/idle", true);
+      Event e("PointToPointCommunication::acceptConnection/synchronize", true);
 
       c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
     }
@@ -322,7 +322,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    Event("PointToPointCommunication::acceptConnection/idle", true);
+    Event("PointToPointCommunication::acceptConnection/synchronize", true);
     Event("PointToPointCommunication::acceptConnection/exchange", true);
   }
 
@@ -423,7 +423,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
     auto c = _communicationFactory->newCommunication();
 
     {
-      Event e("PointToPointCommunication::requestConnection/idle", true);
+      Event e("PointToPointCommunication::requestConnection/synchronize", true);
 
       c->requestConnection(nameAcceptor, nameRequester, 0, 1);
     }
@@ -442,7 +442,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    Event("PointToPointCommunication::requestConnection/idle", true);
+    Event("PointToPointCommunication::requestConnection/synchronize", true);
     Event("PointToPointCommunication::requestConnection/exchange", true);
   }
 
