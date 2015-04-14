@@ -9,11 +9,13 @@
 #include "com/SharedPointer.hpp"
 #include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/Publisher.hpp"
 #include "mesh/Mesh.hpp"
 
 #include <vector>
 
 using precice::utils::Event;
+using precice::utils::Publisher;
 
 namespace precice {
 namespace m2n {
@@ -425,6 +427,11 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
     {
       Event e("PointToPointCommunication::requestConnection/synchronize", true);
 
+      Publisher::ScopedPrefix sp(
+          "PointToPointCommunication::requestConnection"
+          "/"
+          "synchronize");
+
       c->requestConnection(nameAcceptor, nameRequester, 0, 1);
     }
 
@@ -476,6 +483,11 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 #endif
 
   Event e2("PointToPointCommunication::requestConnection/request", true);
+
+  Publisher::ScopedPrefix sp(
+      "PointToPointCommunication::requestConnection"
+      "/"
+      "request");
 
   std::vector<com::PtrRequest> requests;
 

@@ -3,12 +3,18 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 #include "M2N.hpp"
+
 #include "DistributedCommunication.hpp"
 #include "DistributedComFactory.hpp"
 #include "GatherScatterCommunication.hpp"
 #include "com/Communication.hpp"
+#include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/Publisher.hpp"
 #include "mesh/Mesh.hpp"
+
+using precice::utils::Event;
+using precice::utils::Publisher;
 
 namespace precice {
 namespace m2n {
@@ -41,6 +47,9 @@ void M2N:: acceptMasterConnection (
   const std::string& nameRequester)
 {
   preciceTrace2("acceptMasterConnection()", nameAcceptor, nameRequester);
+
+  Event e("M2N::acceptMasterConnection");
+
   if(not utils::MasterSlave::_slaveMode){
     assertion(_masterCom.use_count()>0);
     _masterCom->acceptConnection(nameAcceptor, nameRequester, 0, 1);
@@ -63,8 +72,14 @@ void M2N:: requestMasterConnection (
   const std::string& nameRequester)
 {
   preciceTrace2("requestMasterConnection()", nameAcceptor, nameRequester);
+
+  Event e("M2N::requestMasterConnection");
+
   if(not utils::MasterSlave::_slaveMode){
     assertion(_masterCom.use_count()>0);
+
+    Publisher::ScopedPrefix sp("M2N::requestMasterConnection");
+
     _masterCom->requestConnection(nameAcceptor, nameRequester, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
