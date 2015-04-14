@@ -48,7 +48,7 @@ void SocketCommunicationTest:: run()
 void SocketCommunicationTest:: testSendAndReceive()
 {
   preciceTrace ( "testSendAndReceiveString()" );
-  SocketCommunication com(0);
+  SocketCommunication com;
   if ( utils::Parallel::getProcessRank() == 0 ){
     com.acceptConnection("process0", "process1", 0, 1);
     {
@@ -140,7 +140,7 @@ void SocketCommunicationTest:: testSendAndReceive()
 void SocketCommunicationTest:: testParallelClient()
 {
   preciceTrace ( "testParallelClient()" );
-  SocketCommunication com(0);
+  SocketCommunication com;
   int rank = utils::Parallel::getProcessRank();
   if ( rank == 0 ){
     preciceDebug("branch rank 0");
@@ -181,7 +181,7 @@ void SocketCommunicationTest:: testParallelClient()
 void SocketCommunicationTest:: testReceiveFromAnyClient()
 {
   preciceTrace ( "testReceiveFromAnyClient()" );
-  SocketCommunication com(0);
+  SocketCommunication com;
   int rank = utils::Parallel::getProcessRank();
   int rank0 = 0;
   int rank1 = 1;
