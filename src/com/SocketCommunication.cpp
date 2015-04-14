@@ -8,11 +8,14 @@
 
 #include "SocketRequest.hpp"
 
+#include "utils/Publisher.hpp"
+
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
-#include <fstream>
 #include <sstream>
+
+using precice::utils::Publisher;
 
 namespace precice {
 namespace com {
@@ -103,20 +106,15 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
       _portNumber = acceptor.local_endpoint().port();
     }
 
+    std::string address(ipAddress + ":" + std::to_string(_portNumber));
     std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
                                 "-" + nameAcceptor + ".address");
 
-    {
-      std::ofstream addressFile(addressFileName + "~", std::ios::out);
+    Publisher::ScopedPublication sp(addressFileName, address);
 
-      addressFile << ipAddress << ":" << _portNumber;
-    }
+    // std::cout << address << std::endl;
 
-    // std::cout << _portNumber << std::endl;
-
-    std::rename((addressFileName + "~").c_str(), addressFileName.c_str());
-
-    preciceDebug("Accept connection at " << ipAddress << ":" << _portNumber);
+    preciceDebug("Accept connection at " << address);
 
     PtrSocket socket(new tcp::socket(*_ioService));
 
@@ -165,8 +163,6 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
     }
 
     acceptor.close();
-
-    std::remove(addressFileName.c_str());
   } catch (std::exception& e) {
     preciceError("acceptConnection()",
                  "Accepting connection at port " << _portNumber
@@ -208,20 +204,15 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
       _portNumber = acceptor.local_endpoint().port();
     }
 
+    std::string address(ipAddress + ":" + std::to_string(_portNumber));
     std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
                                 "-" + nameAcceptor + ".address");
 
-    {
-      std::ofstream addressFile(addressFileName + "~", std::ios::out);
+    Publisher::ScopedPublication sp(addressFileName, address);
 
-      addressFile << ipAddress << ":" << _portNumber;
-    }
+    // std::cout << address << std::endl;
 
-    // std::cout << _portNumber << std::endl;
-
-    std::rename((addressFileName + "~").c_str(), addressFileName.c_str());
-
-    preciceDebug("Accept connection at " << ipAddress << ":" << _portNumber);
+    preciceDebug("Accept connection at " << address);
 
     PtrSocket socket(new tcp::socket(*_ioService));
 
@@ -273,8 +264,6 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
     }
 
     acceptor.close();
-
-    std::remove(addressFileName.c_str());
   } catch (std::exception& e) {
     preciceError("acceptConnection()",
                  "Accepting connection at port " << _portNumber
@@ -299,15 +288,11 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
     std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
                                 "-" + nameAcceptor + ".address");
 
-    {
-      std::ifstream addressFile;
+    Publisher::read(addressFileName, address);
 
-      do {
-        addressFile.open(addressFileName, std::ios::in);
-      } while (not addressFile);
+    // std::cout << address << std::endl;
 
-      addressFile >> address;
-    }
+    preciceDebug("Request connection to " << address);
 
     std::string ipAddress = address.substr(0, address.find(":"));
     std::string portNumber = address.substr(
@@ -389,15 +374,11 @@ SocketCommunication::requestConnectionAsClient(
     std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
                                 "-" + nameAcceptor + ".address");
 
-    {
-      std::ifstream addressFile;
+    Publisher::read(addressFileName, address);
 
-      do {
-        addressFile.open(addressFileName, std::ios::in);
-      } while (not addressFile);
+    // std::cout << address << std::endl;
 
-      addressFile >> address;
-    }
+    preciceDebug("Request connection to " << address);
 
     std::string ipAddress = address.substr(0, address.find(":"));
     std::string portNumber = address.substr(

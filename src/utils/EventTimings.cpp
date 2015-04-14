@@ -15,6 +15,14 @@
 namespace precice {
 namespace utils {
 
+Event::Event(std::string eventName, Clock::duration eventDuration)
+    : name(eventName)
+    , duration(eventDuration)
+    , isStarted(false)
+    , _barrier(false) {
+  EventRegistry::put(this);
+}
+
 Event::Event(std::string eventName, bool barrier, bool autostart)
     : _barrier(barrier) {
   name = eventName;

@@ -20,6 +20,8 @@ public:
   /// Name used to identify the timer. Events of the same name are accumulated to
   std::string name;
 
+  Event(std::string eventName, Clock::duration eventDuration);
+
   /// Creates a new event and starts it, unless autostart = false
   Event(std::string eventName, bool barrier = false, bool autostart = true);
 

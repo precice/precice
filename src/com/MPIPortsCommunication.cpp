@@ -7,11 +7,14 @@
 #include "MPIPortsCommunication.hpp"
 
 #include "utils/Globals.hpp"
+#include "utils/Publisher.hpp"
 #include "utils/Parallel.hpp"
 
 #include <chrono>
-#include <fstream>
+#include <sstream>
 #include <thread>
+
+using precice::utils::Publisher;
 
 namespace precice {
 namespace com {
@@ -74,16 +77,15 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
 
   utils::Parallel::initialize(NULL, NULL, nameAcceptor);
 
+  std::string address(_portName);
   std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
                               "-" + nameAcceptor + ".address");
 
-  {
-    std::ofstream addressFile(addressFileName + "~", std::ios::out);
+  Publisher::ScopedPublication sp(addressFileName, address);
 
-    addressFile << _portName;
-  }
+  // std::cout << address << std::endl;
 
-  std::rename((addressFileName + "~").c_str(), addressFileName.c_str());
+  preciceDebug("Accept connection at " << address);
 
   MPI_Status status;
   MPI_Comm communicator;
@@ -124,8 +126,6 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
     _communicators[requesterProcessRank] = communicator;
   }
 
-  std::remove(addressFileName.c_str());
-
   _isConnected = true;
 }
 
@@ -152,16 +152,15 @@ MPIPortsCommunication::acceptConnectionAsServer(
 
   utils::Parallel::initialize(NULL, NULL, nameAcceptor);
 
+  std::string address(_portName);
   std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
                               "-" + nameAcceptor + ".address");
 
-  {
-    std::ofstream addressFile(addressFileName + "~", std::ios::out);
+  Publisher::ScopedPublication sp(addressFileName, address);
 
-    addressFile << _portName;
-  }
+  // std::cout << address << std::endl;
 
-  std::rename((addressFileName + "~").c_str(), addressFileName.c_str());
+  preciceDebug("Accept connection at " << address);
 
   MPI_Comm selfCommunicator;
 
@@ -223,8 +222,6 @@ MPIPortsCommunication::acceptConnectionAsServer(
     // send(requesterProcessRank, requesterProcessRank);
   }
 
-  std::remove(addressFileName.c_str());
-
   _isConnected = true;
 }
 
@@ -243,20 +240,21 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 
   utils::Parallel::initialize(NULL, NULL, nameRequester);
 
+  std::string address;
   std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
                               "-" + nameAcceptor + ".address");
 
+  Publisher::read(addressFileName, address);
+
+  // std::cout << address << std::endl;
+
+  preciceDebug("Request connection to " << address);
+
   {
-    std::ifstream addressFile;
+    std::istringstream iss(address);
 
-    do {
-      addressFile.open(addressFileName, std::ios::in);
-    } while (not addressFile);
-
-    addressFile.getline(_portName, MPI_MAX_PORT_NAME);
+    iss >> _portName;
   }
-
-  // std::cout << _portName << std::endl;
 
   MPI_Comm communicator;
 
@@ -283,17 +281,20 @@ MPIPortsCommunication::requestConnectionAsClient(
 
   utils::Parallel::initialize(NULL, NULL, nameRequester);
 
+  std::string address;
   std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
                               "-" + nameAcceptor + ".address");
 
+  Publisher::read(addressFileName, address);
+
+  // std::cout << address << std::endl;
+
+  preciceDebug("Request connection to " << address);
+
   {
-    std::ifstream addressFile;
+    std::istringstream iss(address);
 
-    do {
-      addressFile.open(addressFileName, std::ios::in);
-    } while (not addressFile);
-
-    addressFile.getline(_portName, MPI_MAX_PORT_NAME);
+    iss >> _portName;
   }
 
   MPI_Comm selfCommunicator;
