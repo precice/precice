@@ -228,7 +228,7 @@ print(std::map<int, std::vector<int>> const& m) {
 // The approximate complexity of this function is O(total number of indices in
 // `otherVertexDistribution').
 std::map<int, std::vector<int>>
-getCommunicationMap(
+buildCommunicationMap(
     // `thisVertexDistribution' is input vertex distribution from this
     // participant.
     std::map<int, std::vector<int>> const& thisVertexDistribution,
@@ -236,7 +236,7 @@ getCommunicationMap(
     // participant.
     std::map<int, std::vector<int>> const& otherVertexDistribution,
     int thisRank = utils::MasterSlave::_rank) {
-  Event e("PointToPointCommunication::getCommunicationMap", true);
+  Event e("PointToPointCommunication::buildCommunicationMap", true);
 
   std::map<int, std::vector<int>> communicationMap;
 
@@ -348,8 +348,8 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
-  std::map<int, std::vector<int>> communicationMap =
-      m2n::getCommunicationMap(vertexDistribution, requesterVertexDistribution);
+  std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
+      vertexDistribution, requesterVertexDistribution);
 
 // NOTE:
 // Change 0 to 1 to print `communicationMap'.
@@ -473,8 +473,8 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
-  std::map<int, std::vector<int>> communicationMap =
-      m2n::getCommunicationMap(vertexDistribution, acceptorVertexDistribution);
+  std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
+      vertexDistribution, acceptorVertexDistribution);
 
 // NOTE:
 // Change 0 to 1 to print `communicationMap'.
