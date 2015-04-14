@@ -175,10 +175,10 @@ void EventRegistry::print(std::ostream &out, bool terse)
       out << "Global runtime = "
           << std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count() << "ms / "
           << std::chrono::duration_cast<std::chrono::seconds>(globalDuration).count() << "s"
-          << endl << endl;
+          << "\n" << "\n";
 
-      out << "Event                Count    Total[ms]     Max[ms]     Min[ms]     Avg[ms]   T%" << endl;
-      out << "--------------------------------------------------------------------------------" << endl;
+      out << "Event                Count    Total[ms]     Max[ms]     Min[ms]     Avg[ms]   T%" << "\n";
+      out << "--------------------------------------------------------------------------------" << "\n";
 
       for (auto e : events) {
         out << setw(14) << left << e.first << right
@@ -188,40 +188,42 @@ void EventRegistry::print(std::ostream &out, bool terse)
             << setw(12) << e.second.getMin()
             << setw(12) << e.second.getAvg()
             << setw(6)  << e.second.getTimePercentage(globalDuration)
-            << endl;
+            << "\n";
         for (auto p : e.second.properties) {
           allProps[p.first] += p.second;
 
           out << "  " << setw(12) << left << p.first
               << setw(12) << right << std::fixed << std::setprecision(5) << p.second
-              << endl;
+              << "\n";
         }
-        out << endl;
+        out << "\n";
       }
 
-      out << "Properties from all Events, accumulated" << endl;
-      out << "---------------------------------------" << endl;
+      out << "Properties from all Events, accumulated" << "\n";
+      out << "---------------------------------------" << "\n";
       for (auto a : allProps) {
         out << setw(14) << left << a.first << right
-            << setw(12) << std::fixed << std::setprecision(5) << a.second << endl;
+            << setw(12) << std::fixed << std::setprecision(5) << a.second << "\n";
       }
     }
     else // terse output
     {
       auto global = std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count();
 
-      out << "# Eventname Count Total Max Min Avg T%" << endl;
+      out << "# Eventname Count Total Max Min Avg T%" << "\n";
       out << "\"GLOBAL\" "  << 1 << " "        // Eventname Count
           << global << " "  << global << " "   // Total Max
           <<  global << " "  << global << " "  // Min Avg
-          << 100 << endl;                      // T%
+          << 100 << "\n";                      // T%
       for (auto e : events) {
         out << "\"" << e.first << "\" "
             << e.second.getCount() << " " << e.second.getTotal() << " "
             << e.second.getMax()   << " " << e.second.getMin()   << " "
-            << e.second.getAvg()   << " " << e.second.getTimePercentage(globalDuration) << endl;
+            << e.second.getAvg()   << " " << e.second.getTimePercentage(globalDuration) << "\n";
       }
     }
+
+    out << endl;
   }
 }
 
