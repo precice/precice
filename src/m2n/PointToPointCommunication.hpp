@@ -10,8 +10,8 @@
 
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
-#include "tarch/logging/Log.h"
 #include "mesh/SharedPointer.hpp"
+#include "tarch/logging/Log.h"
 
 namespace precice {
 namespace m2n {
@@ -116,6 +116,14 @@ private:
    *        mappings (one to service each point-to-point connection).
    */
   std::vector<Mapping> _mappings;
+
+  std::vector<com::Request::SharedPointer> _requests;
+
+  std::vector<double> _buffer;
+
+  size_t _localIndexCount;
+
+  size_t _totalIndexCount;
 
   bool _isConnected;
 };

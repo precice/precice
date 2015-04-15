@@ -5,11 +5,10 @@
 
 #include "PointToPointCommunication.hpp"
 
-#include "com/Request.hpp"
+#include "mesh/Mesh.hpp"
 #include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Publisher.hpp"
-#include "mesh/Mesh.hpp"
 
 #include <vector>
 
@@ -224,10 +223,14 @@ print(std::map<int, std::vector<int>> const& m) {
   }
 }
 
-// The approximate complexity of this function is O(total number of indices in
-// `otherVertexDistribution').
+// The approximate complexity of this function is O((number of local data
+// indices for the current rank in `thisVertexDistribution') * (total number of
+// data indices for all ranks in `otherVertexDistribution')).
 std::map<int, std::vector<int>>
 buildCommunicationMap(
+    // `localIndexCount' is the number of unique local indices for the current
+    // rank.
+    size_t& localIndexCount,
     // `thisVertexDistribution' is input vertex distribution from this
     // participant.
     std::map<int, std::vector<int>> const& thisVertexDistribution,
@@ -237,6 +240,8 @@ buildCommunicationMap(
     int thisRank = utils::MasterSlave::_rank) {
   Event e("PointToPointCommunication::buildCommunicationMap", true);
 
+  localIndexCount = 0;
+
   std::map<int, std::vector<int>> communicationMap;
 
   auto iterator = thisVertexDistribution.find(thisRank);
@@ -244,9 +249,13 @@ buildCommunicationMap(
   if (iterator == thisVertexDistribution.end())
     return communicationMap;
 
+  auto const& indices = iterator->second;
+
+  localIndexCount = indices.size();
+
   int index = 0;
 
-  forRange(iterator->second, [&](int thisIndex) mutable {
+  forRange(indices, [&](int thisIndex) mutable {
     forMapOfRanges(
         otherVertexDistribution,
         [=, &communicationMap](int otherRank, int otherIndex) mutable {
@@ -273,6 +282,8 @@ PointToPointCommunication::PointToPointCommunication(
     mesh::PtrMesh mesh)
     : DistributedCommunication(mesh)
     , _communicationFactory(communicationFactory)
+    , _localIndexCount(0)
+    , _totalIndexCount(0)
     , _isConnected(false) {
 }
 
@@ -292,7 +303,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
                                             std::string const& nameRequester) {
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
 
-  assertion(not isConnected());
+  preciceCheck(not isConnected(), "acceptConnection()", "Already connected!");
 
   Event e("PointToPointCommunication::acceptConnection", true);
 
@@ -349,7 +360,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
-      vertexDistribution, requesterVertexDistribution);
+      _localIndexCount, vertexDistribution, requesterVertexDistribution);
 
 // NOTE:
 // Change 0 to 1 to print `communicationMap'.
@@ -387,6 +398,8 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 
     auto indices = std::move(communicationMap[globalRequesterRank]);
 
+    _totalIndexCount += indices.size();
+
     // NOTE:
     // Everything is moved (efficiency)!
     _mappings.push_back(
@@ -404,6 +417,10 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
          c});
   }
 
+  _requests.reserve(_mappings.size());
+
+  _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
+
   _isConnected = true;
 }
 
@@ -412,7 +429,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
                                              std::string const& nameRequester) {
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
 
-  assertion(not isConnected());
+  preciceCheck(not isConnected(), "requestConnection()", "Already connected!");
 
   Event e("PointToPointCommunication::requestConnection", true);
 
@@ -474,7 +491,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
-      vertexDistribution, acceptorVertexDistribution);
+      _localIndexCount, vertexDistribution, acceptorVertexDistribution);
 
 // NOTE:
 // Change 0 to 1 to print `communicationMap'.
@@ -503,6 +520,8 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
     auto globalAcceptorRank = i.first;
     auto indices = std::move(i.second);
 
+    _totalIndexCount += indices.size();
+
     auto c = _communicationFactory->newCommunication();
 
     c->requestConnectionAsClient(
@@ -529,6 +548,10 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
   com::Request::wait(requests);
 
+  _requests.reserve(_mappings.size());
+
+  _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
+
   _isConnected = true;
 }
 
@@ -545,6 +568,14 @@ PointToPointCommunication::closeConnection() {
 
   _mappings.clear();
 
+  _requests.clear();
+
+  _buffer.clear();
+
+  _localIndexCount = 0;
+
+  _totalIndexCount = 0;
+
   _isConnected = false;
 }
 
@@ -555,38 +586,47 @@ PointToPointCommunication::send(double* itemsToSend,
   Event e("PointToPointCommunication::send", true);
 
   if (_mappings.size() == 0) {
-    preciceCheck(
-        size == 0, "send()", "Can't send anything from disconnected process!");
+    preciceCheck(size == 0 && _localIndexCount == 0,
+                 "send()",
+                 "Can't send anything from disconnected process!");
 
     return;
   }
 
-  std::vector<com::Request::SharedPointer> requests;
-
-  requests.reserve(_mappings.size());
-
-  std::vector<double> buffer;
-
-  buffer.reserve(size * valueDimension);
+  preciceCheck(size == _localIndexCount * valueDimension,
+               "send()",
+               "Inconsistency between expected"
+                   << " "
+                   << "(" << _localIndexCount * valueDimension << ")"
+                   << " "
+                   << "and provided"
+                   << " "
+                   << "(" << size << ")"
+                   << " "
+                   << "data sizes!");
 
   for (auto const& mapping : _mappings) {
-    auto offset = buffer.size();
+    auto offset = _buffer.size();
 
     for (auto index : mapping.indices) {
       for (int d = 0; d < valueDimension; ++d) {
-        buffer.push_back(itemsToSend[index * valueDimension + d]);
+        _buffer.push_back(itemsToSend[index * valueDimension + d]);
       }
     }
 
     auto request =
-        mapping.communication->aSend(buffer.data() + offset,
+        mapping.communication->aSend(_buffer.data() + offset,
                                      mapping.indices.size() * valueDimension,
                                      mapping.localRemoteRank);
 
-    requests.push_back(request);
+    _requests.push_back(request);
   }
 
-  com::Request::wait(requests);
+  com::Request::wait(_requests);
+
+  _requests.clear();
+
+  _buffer.clear();
 }
 
 void
@@ -596,25 +636,33 @@ PointToPointCommunication::receive(double* itemsToReceive,
   Event e("PointToPointCommunication::receive", true);
 
   if (_mappings.size() == 0) {
-    preciceCheck(size == 0,
+    preciceCheck(size == 0 && _localIndexCount == 0,
                  "receive()",
                  "Can't receive anything to disconnected process!");
 
     return;
   }
 
+  preciceCheck(size == _localIndexCount * valueDimension,
+               "receive()",
+               "Inconsistency between expected"
+                   << " "
+                   << "(" << _localIndexCount * valueDimension << ")"
+                   << " "
+                   << "and provided"
+                   << " "
+                   << "(" << size << ")"
+                   << " "
+                   << "data sizes!");
+
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 
-  std::vector<double> buffer;
-
-  buffer.reserve(size * valueDimension);
-
   for (auto const& mapping : _mappings) {
-    auto offset = buffer.size();
+    auto offset = _buffer.size();
 
-    buffer.resize(buffer.size() + mapping.indices.size() * valueDimension);
+    _buffer.resize(_buffer.size() + mapping.indices.size() * valueDimension);
 
-    mapping.communication->receive(buffer.data() + offset,
+    mapping.communication->receive(_buffer.data() + offset,
                                    mapping.indices.size() * valueDimension,
                                    mapping.localRemoteRank);
 
@@ -624,13 +672,17 @@ PointToPointCommunication::receive(double* itemsToReceive,
       for (auto index : mapping.indices) {
         for (int d = 0; d < valueDimension; ++d) {
           itemsToReceive[index * valueDimension + d] +=
-              buffer[offset + i * valueDimension + d];
+              _buffer[offset + i * valueDimension + d];
         }
 
         i++;
       }
     }
   }
+
+  _requests.clear();
+
+  _buffer.clear();
 }
 }
 } // namespace precice, m2n

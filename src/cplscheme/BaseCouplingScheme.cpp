@@ -312,7 +312,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
   assertion(m2n->isConnected());
 
   for (DataMap::value_type & pair : _receiveData) {
-    int size = pair.second->values->size ();
+    int size = pair.second->values->size();
     m2n->receive(tarch::la::raw(*(pair.second->values)), size,
                  pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
