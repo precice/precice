@@ -192,6 +192,11 @@ public:
   virtual void send(bool itemToSend, int rankReceiver);
 
   /**
+   * @brief Asynchronously sends a bool to process with given rank.
+   */
+  virtual PtrRequest aSend(bool* itemToSend, int rankReceiver);
+
+  /**
    * @brief Receives a std::string from process with given rank.
    *
    * @return Rank of sender, which is useful when ANY_SENDER is used.

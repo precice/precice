@@ -126,7 +126,7 @@ void
 broadcast(
     std::vector<int> const& v,
     com::PtrCommunication communication = utils::MasterSlave::_communication) {
-  communication->broadcast(v.size());
+  communication->broadcast(static_cast<int>(v.size()));
   communication->broadcast(const_cast<int*>(&v[0]), v.size());
 }
 
@@ -150,7 +150,7 @@ void
 broadcastSend(
     std::map<int, std::vector<int>> const& m,
     com::PtrCommunication communication = utils::MasterSlave::_communication) {
-  communication->broadcast(m.size());
+  communication->broadcast(static_cast<int>(m.size()));
 
   for (auto const& i : m) {
     auto const& rank = i.first;

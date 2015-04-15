@@ -52,9 +52,11 @@ public:
    */
   static double dot(const DynVector& vec1, const DynVector& vec2);
 
-  static void scatter(int& value);
-
   static void reset();
+
+  static void broadcast(bool& value);
+
+  static void broadcast(double& value);
 
 private:
 

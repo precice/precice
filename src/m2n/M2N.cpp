@@ -56,15 +56,7 @@ void M2N:: acceptMasterConnection (
     _isMasterConnected = _masterCom->isConnected();
   }
 
-  //broadcast _isMasterConnected
-  if(utils::MasterSlave::_slaveMode){
-    utils::MasterSlave::_communication->receive(_isMasterConnected,0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(_isMasterConnected,rankSlave);
-    }
-  }
+  utils::MasterSlave::broadcast(_isMasterConnected);
 }
 
 void M2N:: requestMasterConnection (
@@ -84,15 +76,7 @@ void M2N:: requestMasterConnection (
     _isMasterConnected = _masterCom->isConnected();
   }
 
-  //broadcast isConnected
-  if(utils::MasterSlave::_slaveMode){
-    utils::MasterSlave::_communication->receive(_isMasterConnected,0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(_isMasterConnected,rankSlave);
-    }
-  }
+  utils::MasterSlave::broadcast(_isMasterConnected);
 }
 
 void M2N:: acceptSlavesConnection (
@@ -128,15 +112,9 @@ void M2N:: closeConnection()
     _masterCom->closeConnection();
     _isMasterConnected = false;
   }
-  //broadcast _isMasterConnected
-  if(utils::MasterSlave::_slaveMode){
-    utils::MasterSlave::_communication->receive(_isMasterConnected,0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(_isMasterConnected,rankSlave);
-    }
-  }
+
+  utils::MasterSlave::broadcast(_isMasterConnected);
+
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     _areSlavesConnected = false;
     for( const auto& pair : _distComs){
@@ -248,17 +226,10 @@ void M2N:: receive (
   if(not utils::MasterSlave::_slaveMode){
     _masterCom->receive(itemToReceive, 0);
   }
-  if(utils::MasterSlave::_slaveMode){
-    assertion(utils::MasterSlave::_communication->isConnected());
-    utils::MasterSlave::_communication->receive(itemToReceive,0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    assertion(utils::MasterSlave::_communication->isConnected());
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(itemToReceive,rankSlave);
-    }
-  }
-  preciceDebug("Receive(bool): " << itemToReceive);
+
+  utils::MasterSlave::broadcast(itemToReceive);
+
+  preciceDebug("receive(bool): " << itemToReceive);
 }
 
 void M2N:: receive (
@@ -268,17 +239,10 @@ void M2N:: receive (
   if(not utils::MasterSlave::_slaveMode){ //coupling mode
     _masterCom->receive(itemToReceive, 0);
   }
-  if(utils::MasterSlave::_slaveMode){
-    assertion(utils::MasterSlave::_communication->isConnected());
-    utils::MasterSlave::_communication->receive(itemToReceive,0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    assertion(utils::MasterSlave::_communication->isConnected());
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(itemToReceive,rankSlave);
-    }
-  }
-  preciceDebug("Receive(double): " << itemToReceive);
+
+  utils::MasterSlave::broadcast(itemToReceive);
+
+  preciceDebug("receive(double): " << itemToReceive);
 }
 
 

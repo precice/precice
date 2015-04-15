@@ -167,6 +167,14 @@ public:
   virtual void send(bool itemToSend, int rankReceiver);
 
   /**
+   * @brief Asynchronously sends a bool to process with given rank.
+   */
+  virtual PtrRequest
+  aSend(bool* itemToSend, int rankReceiver) {
+    preciceError("aSend()", "Not implemented!");
+  }
+
+  /**
    * @brief Receives a std::string from process with given rank.
    */
   virtual int receive(std::string& itemToReceive, int rankSender);

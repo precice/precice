@@ -11,6 +11,31 @@
 
 #include "utils/Globals.hpp"
 
+template <size_t>
+struct MPI_Select_unsigned_integer_datatype;
+
+template <>
+struct MPI_Select_unsigned_integer_datatype<1> {
+  static MPI_Datatype const datatype = MPI_UNSIGNED_CHAR;
+};
+
+template <>
+struct MPI_Select_unsigned_integer_datatype<2> {
+  static MPI_Datatype const datatype = MPI_UNSIGNED_SHORT;
+};
+
+template <>
+struct MPI_Select_unsigned_integer_datatype<4> {
+  static MPI_Datatype const datatype = MPI_UNSIGNED;
+};
+
+template <>
+struct MPI_Select_unsigned_integer_datatype<8> {
+  static MPI_Datatype const datatype = MPI_UNSIGNED_LONG;
+};
+
+#define MPI_BOOL MPI_Select_unsigned_integer_datatype<sizeof(bool)>::datatype
+
 namespace precice {
 namespace com {
 tarch::logging::Log MPICommunication::_log("precice::com::MPICommunication");
@@ -141,9 +166,31 @@ MPICommunication::send(bool itemToSend, int rankReceiver) {
   preciceTrace2("send(bool)", itemToSend, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
   assertion(rankReceiver != ANY_SENDER);
-  int buffer = itemToSend ? 1 : 0;
-  MPI_Send(
-      &buffer, 1, MPI_INT, rank(rankReceiver), 0, communicator(rankReceiver));
+  MPI_Send(&itemToSend,
+           1,
+           MPI_BOOL,
+           rank(rankReceiver),
+           0,
+           communicator(rankReceiver));
+}
+
+PtrRequest
+MPICommunication::aSend(bool* itemToSend, int rankReceiver) {
+  preciceTrace("aSend(bool*)");
+  rankReceiver = rankReceiver - _rankOffset;
+  assertion(rankReceiver != ANY_SENDER);
+
+  MPI_Request request;
+
+  MPI_Isend(itemToSend,
+            1,
+            MPI_BOOL,
+            rank(rankReceiver),
+            0,
+            communicator(rankReceiver),
+            &request);
+
+  return PtrRequest(new MPIRequest(request));
 }
 
 int
@@ -244,16 +291,13 @@ MPICommunication::receive(bool& itemToReceive, int rankSender) {
   rankSender = rankSender - _rankOffset;
   rankSender = rankSender == ANY_SENDER ? MPI_ANY_SOURCE : rankSender;
   MPI_Status status;
-  int buffer = -1;
-  MPI_Recv(&buffer,
+  MPI_Recv(&itemToReceive,
            1,
-           MPI_INT,
+           MPI_BOOL,
            rank(rankSender),
            0,
            communicator(rankSender),
            &status);
-  assertion(buffer != -1);
-  itemToReceive = (buffer == 1) ? true : false;
   preciceDebug("Received " << itemToReceive << " from rank "
                            << status.MPI_SOURCE);
   return status.MPI_SOURCE;

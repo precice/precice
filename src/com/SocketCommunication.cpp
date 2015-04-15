@@ -651,6 +651,31 @@ SocketCommunication::send(bool itemToSend, int rankReceiver) {
   }
 }
 
+PtrRequest
+SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
+  preciceTrace1("aSend(bool*)", rankReceiver);
+  rankReceiver = rankReceiver - _rankOffset;
+  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+             rankReceiver,
+             _sockets.size());
+  assertion(isConnected());
+
+  PtrRequest request(new SocketRequest);
+
+  try {
+    sendQuery(rankReceiver);
+    asio::async_write(*_sockets[rankReceiver],
+                      asio::buffer((void*)itemToSend, sizeof(bool)),
+                      [request](boost::system::error_code const&, std::size_t) {
+      static_cast<SocketRequest*>(request.get())->complete();
+    });
+  } catch (std::exception& e) {
+    preciceError("aSend(bool*)", "Send failed: " << e.what());
+  }
+
+  return request;
+}
+
 int
 SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
   preciceTrace1("receive(string)", rankSender);

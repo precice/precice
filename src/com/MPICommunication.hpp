@@ -116,6 +116,11 @@ public:
   virtual void send(bool itemToSend, int rankReceiver);
 
   /**
+   * @brief Asynchronously sends a bool to process with given rank.
+   */
+  virtual PtrRequest aSend(bool* itemToSend, int rankReceiver);
+
+  /**
    * @brief Receives a std::string from process with given rank.
    *
    * Default MPI point-to-point communication is used.

@@ -3,9 +3,12 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 //#ifndef PRECICE_NO_MPI
 
-#include "utils/MasterSlave.hpp"
-#include "math.h"
 #include "com/Communication.hpp"
+
+#include "utils/MasterSlave.hpp"
+#include "utils/EventTimings.hpp"
+
+#include <math.h>
 
 namespace precice {
 namespace utils {
@@ -104,34 +107,6 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
   return globalSum;
 }
 
-void MasterSlave:: scatter(int& value)
-{
-  preciceTrace("scatter()");
-
-  if(not _masterMode && not _slaveMode){ //old case
-    return;
-  }
-
-  assertion(_communication.get() != NULL);
-  assertion(_communication->isConnected());
-
-  if(_masterMode){
-    int rank;
-
-    for(rank = 0; rank < _masterRank; ++rank){
-      _communication->send(value, rank);
-    }
-
-    for(rank++; rank < _size; ++rank){
-      _communication->send(value, rank);
-    }
-  } else {
-    assertion(_slaveMode);
-
-    _communication->receive(value, _masterRank);
-  }
-}
-
 void MasterSlave:: reset()
 {
   preciceTrace("reset()");
@@ -141,11 +116,52 @@ void MasterSlave:: reset()
   _size = -1;
 }
 
+void
+MasterSlave::broadcast(bool& value) {
+  preciceTrace("broadcast(bool&)");
 
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
 
+  assertion(_communication.get() != NULL);
+  assertion(_communication->isConnected());
 
+  Event e("MasterSlave::broadcast");
 
+  if (_masterMode) {
+    // Broadcast (send) value.
+    _communication->broadcast(value);
+  }
 
+  if (_slaveMode) {
+    // Broadcast (receive) value.
+    _communication->broadcast(value, 0);
+  }
+}
 
+void
+MasterSlave::broadcast(double& value) {
+  preciceTrace("broadcast(double&)");
+
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
+
+  assertion(_communication.get() != NULL);
+  assertion(_communication->isConnected());
+
+  Event e("MasterSlave::broadcast");
+
+  if (_masterMode) {
+    // Broadcast (send) value.
+    _communication->broadcast(value);
+  }
+
+  if (_slaveMode) {
+    // Broadcast (receive) value.
+    _communication->broadcast(value, 0);
+  }
+}
 
 }} // precice, utils

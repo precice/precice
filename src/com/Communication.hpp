@@ -135,6 +135,18 @@ public:
 
   virtual void broadcast(int& itemToReceive, int rankBroadcaster);
 
+  virtual void broadcast(double* itemsToSend, int size);
+
+  virtual void broadcast(double* itemsToReceive, int size, int rankBroadcaster);
+
+  virtual void broadcast(double itemToSend);
+
+  virtual void broadcast(double& itemToReceive, int rankBroadcaster);
+
+  virtual void broadcast(bool itemToSend);
+
+  virtual void broadcast(bool& itemToReceive, int rankBroadcaster);
+
   /**
    * @brief Sends a std::string to process with given rank.
    */
@@ -184,6 +196,11 @@ public:
    * @brief Sends a bool to process with given rank.
    */
   virtual void send(bool itemToSend, int rankReceiver) = 0;
+
+  /**
+   * @brief Asynchronously sends a bool to process with given rank.
+   */
+  virtual PtrRequest aSend(bool* itemToSend, int rankReceiver) = 0;
 
   /**
    * @brief Receives a std::string from process with given rank.
