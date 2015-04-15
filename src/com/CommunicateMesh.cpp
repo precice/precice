@@ -19,7 +19,7 @@ tarch::logging::Log CommunicateMesh:: _log ( "precice::com::CommunicateMesh" );
 
 CommunicateMesh:: CommunicateMesh
 (
-  com::PtrCommunication communication )
+  com::Communication::SharedPointer communication )
 :
   _communication ( communication )
 {}

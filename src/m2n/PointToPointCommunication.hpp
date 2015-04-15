@@ -11,7 +11,6 @@
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "tarch/logging/Log.h"
-#include "com/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 
 namespace precice {
@@ -34,8 +33,9 @@ public:
   /**
    * @brief Constructor.
    */
-  PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
-                            mesh::PtrMesh mesh);
+  PointToPointCommunication(
+      com::CommunicationFactory::SharedPointer communicationFactory,
+      mesh::PtrMesh mesh);
 
   /**
    * @brief Destructor.
@@ -92,7 +92,7 @@ public:
 private:
   static tarch::logging::Log _log;
 
-  com::PtrCommunicationFactory _communicationFactory;
+  com::CommunicationFactory::SharedPointer _communicationFactory;
 
   /**
    * @brief Defines mapping between:
@@ -108,7 +108,7 @@ private:
     int localRemoteRank;
     int globalRemoteRank;
     std::vector<int> indices;
-    com::PtrCommunication communication;
+    com::Communication::SharedPointer communication;
   };
 
   /**

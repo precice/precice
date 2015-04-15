@@ -74,7 +74,7 @@ MPICommunication::send(int* itemsToSend, int size, int rankReceiver) {
            communicator(rankReceiver));
 }
 
-PtrRequest
+Request::SharedPointer
 MPICommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
   preciceTrace1("aSend(int*)", size);
   rankReceiver = rankReceiver - _rankOffset;
@@ -90,7 +90,7 @@ MPICommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
             communicator(rankReceiver),
             &request);
 
-  return PtrRequest(new MPIRequest(request));
+  return Request::SharedPointer(new MPIRequest(request));
 }
 
 void
@@ -106,7 +106,7 @@ MPICommunication::send(double* itemsToSend, int size, int rankReceiver) {
            communicator(rankReceiver));
 }
 
-PtrRequest
+Request::SharedPointer
 MPICommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
   preciceTrace1("aSend(double*)", size);
   rankReceiver = rankReceiver - _rankOffset;
@@ -122,7 +122,7 @@ MPICommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
             communicator(rankReceiver),
             &request);
 
-  return PtrRequest(new MPIRequest(request));
+  return Request::SharedPointer(new MPIRequest(request));
 }
 
 void
@@ -138,7 +138,7 @@ MPICommunication::send(double itemToSend, int rankReceiver) {
            communicator(rankReceiver));
 }
 
-PtrRequest
+Request::SharedPointer
 MPICommunication::aSend(double* itemToSend, int rankReceiver) {
   return aSend(itemToSend, 1, rankReceiver);
 }
@@ -156,7 +156,7 @@ MPICommunication::send(int itemToSend, int rankReceiver) {
            communicator(rankReceiver));
 }
 
-PtrRequest
+Request::SharedPointer
 MPICommunication::aSend(int* itemToSend, int rankReceiver) {
   return aSend(itemToSend, 1, rankReceiver);
 }
@@ -174,7 +174,7 @@ MPICommunication::send(bool itemToSend, int rankReceiver) {
            communicator(rankReceiver));
 }
 
-PtrRequest
+Request::SharedPointer
 MPICommunication::aSend(bool* itemToSend, int rankReceiver) {
   preciceTrace("aSend(bool*)");
   rankReceiver = rankReceiver - _rankOffset;
@@ -190,7 +190,7 @@ MPICommunication::aSend(bool* itemToSend, int rankReceiver) {
             communicator(rankReceiver),
             &request);
 
-  return PtrRequest(new MPIRequest(request));
+  return Request::SharedPointer(new MPIRequest(request));
 }
 
 int

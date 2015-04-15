@@ -7,6 +7,8 @@
 
 #include "Request.hpp"
 
+#include "utils/Globals.hpp"
+
 namespace precice {
 namespace com {
 void
@@ -18,7 +20,7 @@ void
 Communication::broadcast(int* itemsToSend, int size) {
   preciceTrace1("broadcast(int*)", size);
 
-  std::vector<com::PtrRequest> requests;
+  std::vector<Request::SharedPointer> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
 
@@ -44,7 +46,7 @@ void
 Communication::broadcast(int itemToSend) {
   preciceTrace("broadcast(int)");
 
-  std::vector<com::PtrRequest> requests;
+  std::vector<Request::SharedPointer> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
 
@@ -70,7 +72,7 @@ void
 Communication::broadcast(double* itemsToSend, int size) {
   preciceTrace1("broadcast(double*)", size);
 
-  std::vector<com::PtrRequest> requests;
+  std::vector<Request::SharedPointer> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
 
@@ -98,7 +100,7 @@ void
 Communication::broadcast(double itemToSend) {
   preciceTrace("broadcast(double)");
 
-  std::vector<com::PtrRequest> requests;
+  std::vector<Request::SharedPointer> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
 

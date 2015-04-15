@@ -8,7 +8,7 @@
 #include "geometry/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "spacetree/SharedPointer.hpp"
-#include "com/SharedPointer.hpp"
+#include "com/Communication.hpp"
 #include "mapping/Mapping.hpp"
 #include "SharedPointer.hpp"
 #include "utils/Dimensions.hpp"

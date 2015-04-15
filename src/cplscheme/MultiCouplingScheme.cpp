@@ -2,7 +2,6 @@
 #include "impl/PostProcessing.hpp"
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
-#include "com/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
 
 namespace precice {
@@ -17,12 +16,12 @@ MultiCouplingScheme::MultiCouplingScheme
   double                timestepLength,
   int                   validDigits,
   const std::string&    localParticipant,
-  std::vector<m2n::PtrM2N> communications,
+  std::vector<m2n::M2N::SharedPointer> communications,
   constants::TimesteppingMethod dtMethod,
   int                   maxIterations)
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,"neverFirstParticipant",
-      localParticipant,localParticipant,m2n::PtrM2N(),maxIterations,dtMethod),
+      localParticipant,localParticipant,m2n::M2N::SharedPointer(),maxIterations,dtMethod),
   _communications(communications),
   _allData (),
   _receiveDataVector(),
@@ -174,7 +173,7 @@ void MultiCouplingScheme::advance()
       getPostProcessing()->performPostProcessing(_allData);
     }
 
-    for (m2n::PtrM2N m2n : _communications) {
+    for (m2n::M2N::SharedPointer m2n : _communications) {
       m2n->send(convergence);
     }
 

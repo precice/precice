@@ -1,5 +1,8 @@
 #include "EventTimings.hpp"
 
+#include "MasterSlave.hpp"
+#include "Parallel.hpp"
+
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
@@ -9,8 +12,6 @@
 #include <vector>
 #include <map>
 #include <chrono>
-
-#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace utils {

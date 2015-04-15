@@ -29,7 +29,7 @@ public:
    */
   SocketCommunicationFactory(std::string const& addressDirectory);
 
-  PtrCommunication newCommunication();
+  Communication::SharedPointer newCommunication();
 
 private:
   unsigned short _portNumber;

@@ -13,7 +13,6 @@
 #include "spacetree/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "io/ExportContext.hpp"
-#include "com/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
@@ -162,9 +161,9 @@ public:
   /**
    * @brief Sets the client-server com. for the participant.
    */
-  void setClientServerCommunication ( com::PtrCommunication communication );
+  void setClientServerCommunication ( com::Communication::SharedPointer communication );
 
-  com::PtrCommunication getClientServerCommunication() const;
+  com::Communication::SharedPointer getClientServerCommunication() const;
 
   /**
    * @brief Returns true, if the participant uses a master process.
@@ -174,9 +173,9 @@ public:
   /**
    * @brief Sets the masterall com. for the participant.
    */
-  void setMasterSlaveCommunication ( com::PtrCommunication communication );
+  void setMasterSlaveCommunication ( com::Communication::SharedPointer communication );
 
-  com::PtrCommunication getMasterSlaveCommunication() const;
+  com::Communication::SharedPointer getMasterSlaveCommunication() const;
 
   /**
    * @brief Returns true, if the
@@ -224,9 +223,9 @@ private:
   //io::ExportContext _exportContext;
 
 
-  com::PtrCommunication _clientServerCommunication;
+  com::Communication::SharedPointer _clientServerCommunication;
 
-  com::PtrCommunication _masterSlaveCommunication;
+  com::Communication::SharedPointer _masterSlaveCommunication;
 
 
   template<typename ELEMENT_T>

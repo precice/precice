@@ -17,8 +17,9 @@
 #include "query/ExportVTKNeighbors.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "tarch/la/WrappedVector.h"
-#include "com/SharedPointer.hpp"
-#include "m2n/SharedPointer.hpp"
+#include "com/Communication.hpp"
+#include "m2n/M2N.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
 #include <string>
 #include <vector>
 #include <set>
@@ -539,7 +540,7 @@ public:
 private:
 
   struct M2NWrap {
-    m2n::PtrM2N m2n;
+    m2n::M2N::SharedPointer m2n;
     bool isRequesting;
   };
 
@@ -570,7 +571,7 @@ private:
   bool _clientMode;
 
   // @brief Communication when for client-server mode.
-  //com::PtrCommunication _clientServerCommunication;
+  //com::Communication::SharedPointer _clientServerCommunication;
 
   // @brief Geometry name to mesh ID mapping.
   std::map<std::string,int> _meshIDs;
@@ -610,7 +611,7 @@ private:
   //        is expected.
   //int _expectRequest;
 
-  void configureM2Ns ( const m2n::PtrM2NConfiguration& config );
+  void configureM2Ns ( const m2n::M2NConfiguration::SharedPointer& config );
 
   /**
    * @brief Exports geometries with data and watch point data.
@@ -653,7 +654,7 @@ private:
    * @brief Determines participants providing meshes to other participants.
    */
   void configureSolverGeometries (
-    const m2n::PtrM2NConfiguration& m2nConfig );
+    const m2n::M2NConfiguration::SharedPointer& m2nConfig );
 
   /**
    * @brief Creates the mesh and context data structure of a geometry.

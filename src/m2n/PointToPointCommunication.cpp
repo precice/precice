@@ -6,7 +6,6 @@
 #include "PointToPointCommunication.hpp"
 
 #include "com/Request.hpp"
-#include "com/SharedPointer.hpp"
 #include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Publisher.hpp"
@@ -69,7 +68,7 @@ forMapOfRanges(Map& map,
 void
 send(std::vector<int> const& v,
      int rankReceiver,
-     com::PtrCommunication communication) {
+     com::Communication::SharedPointer communication) {
   communication->send(static_cast<int>(v.size()), rankReceiver);
   communication->send(const_cast<int*>(&v[0]), v.size(), rankReceiver);
 }
@@ -77,7 +76,7 @@ send(std::vector<int> const& v,
 void
 receive(std::vector<int>& v,
         int rankSender,
-        com::PtrCommunication communication) {
+        com::Communication::SharedPointer communication) {
   v.clear();
 
   int size = 0;
@@ -92,7 +91,7 @@ receive(std::vector<int>& v,
 void
 send(std::map<int, std::vector<int>> const& m,
      int rankReceiver,
-     com::PtrCommunication communication) {
+     com::Communication::SharedPointer communication) {
   communication->send(static_cast<int>(m.size()), rankReceiver);
 
   for (auto const& i : m) {
@@ -107,7 +106,7 @@ send(std::map<int, std::vector<int>> const& m,
 void
 receive(std::map<int, std::vector<int>>& m,
         int rankSender,
-        com::PtrCommunication communication) {
+        com::Communication::SharedPointer communication) {
   m.clear();
 
   int size = 0;
@@ -123,18 +122,18 @@ receive(std::map<int, std::vector<int>>& m,
 }
 
 void
-broadcast(
-    std::vector<int> const& v,
-    com::PtrCommunication communication = utils::MasterSlave::_communication) {
+broadcast(std::vector<int> const& v,
+          com::Communication::SharedPointer communication =
+              utils::MasterSlave::_communication) {
   communication->broadcast(static_cast<int>(v.size()));
   communication->broadcast(const_cast<int*>(&v[0]), v.size());
 }
 
 void
-broadcast(
-    std::vector<int>& v,
-    int rankBroadcaster,
-    com::PtrCommunication communication = utils::MasterSlave::_communication) {
+broadcast(std::vector<int>& v,
+          int rankBroadcaster,
+          com::Communication::SharedPointer communication =
+              utils::MasterSlave::_communication) {
   v.clear();
 
   int size = 0;
@@ -147,9 +146,9 @@ broadcast(
 }
 
 void
-broadcastSend(
-    std::map<int, std::vector<int>> const& m,
-    com::PtrCommunication communication = utils::MasterSlave::_communication) {
+broadcastSend(std::map<int, std::vector<int>> const& m,
+              com::Communication::SharedPointer communication =
+                  utils::MasterSlave::_communication) {
   communication->broadcast(static_cast<int>(m.size()));
 
   for (auto const& i : m) {
@@ -162,10 +161,10 @@ broadcastSend(
 }
 
 void
-broadcastReceive(
-    std::map<int, std::vector<int>>& m,
-    int rankBroadcaster,
-    com::PtrCommunication communication = utils::MasterSlave::_communication) {
+broadcastReceive(std::map<int, std::vector<int>>& m,
+                 int rankBroadcaster,
+                 com::Communication::SharedPointer communication =
+                     utils::MasterSlave::_communication) {
   m.clear();
 
   int size = 0;
@@ -270,7 +269,8 @@ tarch::logging::Log PointToPointCommunication::_log(
     "precice::m2n::PointToPointCommunication");
 
 PointToPointCommunication::PointToPointCommunication(
-    com::PtrCommunicationFactory communicationFactory, mesh::PtrMesh mesh)
+    com::CommunicationFactory::SharedPointer communicationFactory,
+    mesh::PtrMesh mesh)
     : DistributedCommunication(mesh)
     , _communicationFactory(communicationFactory)
     , _isConnected(false) {
@@ -489,7 +489,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
       "/"
       "request");
 
-  std::vector<com::PtrRequest> requests;
+  std::vector<com::Request::SharedPointer> requests;
 
   requests.reserve(communicationMap.size());
 
@@ -563,7 +563,7 @@ PointToPointCommunication::send(double* itemsToSend,
     return;
   }
 
-  std::vector<com::PtrRequest> requests;
+  std::vector<com::Request::SharedPointer> requests;
 
   requests.reserve(_mappings.size());
 

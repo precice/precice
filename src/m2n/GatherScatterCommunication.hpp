@@ -7,7 +7,6 @@
 #include "DistributedCommunication.hpp"
 #include "com/Communication.hpp"
 #include "tarch/logging/Log.h"
-#include "com/SharedPointer.hpp"
 
 
 namespace precice {
@@ -27,7 +26,7 @@ public:
    * @brief Constructor.
    */
   GatherScatterCommunication (
-     com::PtrCommunication com,
+     com::Communication::SharedPointer com,
      mesh::PtrMesh mesh);
 
   /**
@@ -96,7 +95,7 @@ private:
   /**
    * @brief master to master basic communication
    */
-  com::PtrCommunication _com;
+  com::Communication::SharedPointer _com;
 
   /**
    * @brief global communication is set up or not

@@ -4,7 +4,6 @@
 #ifndef PRECICE_COM_COMMUNICATEMESH_HPP_
 #define PRECICE_COM_COMMUNICATEMESH_HPP_
 
-#include "SharedPointer.hpp"
 #include "tarch/logging/Log.h"
 #include "mesh/Mesh.hpp"
 
@@ -30,7 +29,7 @@ public:
    * @brief Constructor, takes communication to be used in transfer.
    */
   CommunicateMesh (
-    com::PtrCommunication communication );
+    com::Communication::SharedPointer communication );
 
   /**
    * @brief Sends a constructed CustomGeometry to the receiver with given rank.
@@ -61,7 +60,7 @@ private:
   static tarch::logging::Log _log;
 
   // @brief Communication means used for the transfer of the geometry.
-  com::PtrCommunication _communication;
+  com::Communication::SharedPointer _communication;
 };
 
 }} // namespace precice, com

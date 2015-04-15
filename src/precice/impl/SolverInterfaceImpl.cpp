@@ -107,7 +107,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
                << "size (given as " << _accessorProcessRank << ")!");
   precice::utils::Events_Init();
 
-  /* When precice stops abruptly, e.g. an external solver crashes, the 
+  /* When precice stops abruptly, e.g. an external solver crashes, the
      SolverInterfaceImpl destructor is never called. Since we still want
      to print the timings, we install the signal handler here. */
   signal(SIGSEGV, precice::utils::EventRegistry::signal_handler);
@@ -221,7 +221,7 @@ void SolverInterfaceImpl:: configure
   }
 
   if (_serverMode || _clientMode){
-    com::PtrCommunication com = _accessor->getClientServerCommunication();
+    com::Communication::SharedPointer com = _accessor->getClientServerCommunication();
     assertion(com.get() != NULL);
     _requestManager = new RequestManager(_geometryMode, *this, com, _couplingScheme);
   }
@@ -282,7 +282,7 @@ double SolverInterfaceImpl:: initialize()
       typedef std::map<std::string,M2NWrap>::value_type M2NPair;
       preciceInfo("initialize()", "Setting up master communication to coupling partner/s " );
       for (M2NPair& m2nPair : _m2ns) {
-        m2n::PtrM2N& m2n = m2nPair.second.m2n;
+        m2n::M2N::SharedPointer& m2n = m2nPair.second.m2n;
         std::string localName = _accessorName;
         if (_serverMode) localName += "Server";
         std::string remoteName(m2nPair.first);
@@ -323,7 +323,7 @@ double SolverInterfaceImpl:: initialize()
       typedef std::map<std::string,M2NWrap>::value_type M2NPair;
       preciceInfo("initialize()", "Setting up slaves communication to coupling partner/s " );
       foreach (M2NPair& m2nPair, _m2ns){
-        m2n::PtrM2N& m2n = m2nPair.second.m2n;
+        m2n::M2N::SharedPointer& m2n = m2nPair.second.m2n;
         std::string localName = _accessorName;
         std::string remoteName(m2nPair.first);
         preciceCheck(m2n.get() != NULL, "initialize()",
@@ -967,7 +967,7 @@ void SolverInterfaceImpl:: resetMesh
             || context.toMappingContext.mapping.use_count() > 0;
   bool isStationary =
         context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
-  			context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
+            context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
 
   preciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
             << " must not be reseted");
@@ -1501,7 +1501,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
     _requestManager->requestWriteBlockVectorData(fromDataID, size, valueIndices, values);
   }
 //  else if(_slaveMode){
-//      com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+//      com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
 //      com->send(size, 0);
 //      com->send(valueIndices, size, 0);
 //      com->send(values, size*_dimensions, 0);
@@ -1522,7 +1522,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
 //      }
 //    }
 //
-//    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+//    com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
 //    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
 //      int slaveSize = -1;
 //      com->receive(slaveSize, rankSender);
@@ -1662,7 +1662,7 @@ void SolverInterfaceImpl:: readBlockVectorData
     _requestManager->requestReadBlockVectorData(toDataID, size, valueIndices, values);
   }
 //  else if(_slaveMode){
-//    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+//    com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
 //    com->send(size, 0);
 //    com->send(valueIndices, size, 0);
 //    com->receive(values, size*_dimensions, 0);
@@ -1683,7 +1683,7 @@ void SolverInterfaceImpl:: readBlockVectorData
 //      }
 //    }
 //
-//    com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+//    com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
 //    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
 //      int slaveSize = -1;
 //      com->receive(slaveSize, rankSender);
@@ -1871,7 +1871,7 @@ void SolverInterfaceImpl:: runServer()
 
 void SolverInterfaceImpl:: configureM2Ns
 (
-  const m2n::PtrM2NConfiguration& config )
+  const m2n::M2NConfiguration::SharedPointer& config )
 {
   preciceTrace("configureM2Ns()");
   typedef m2n::M2NConfiguration::M2NTuple M2NTuple;
@@ -1905,7 +1905,7 @@ void SolverInterfaceImpl:: configureM2Ns
 
 void SolverInterfaceImpl:: configureSolverGeometries
 (
-  const m2n::PtrM2NConfiguration& m2nConfig )
+  const m2n::M2NConfiguration::SharedPointer& m2nConfig )
 {
   preciceTrace ( "configureSolverGeometries()" );
   for (MeshContext* context : _accessor->usedMeshContexts()) {
@@ -1943,7 +1943,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
               context->meshRequirement = receiverContext->meshRequirement;
             }
 
-            m2n::PtrM2N m2n =
+            m2n::M2N::SharedPointer m2n =
                 m2nConfig->getM2N( receiver->getName(), provider );
             comGeo->addReceiver ( receiver->getName(), m2n );
             m2n->createDistributedCommunication(context->mesh);
@@ -1973,7 +1973,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
       geometry::CommunicatedGeometry * comGeo =
           new geometry::CommunicatedGeometry ( offset, receiver, provider, _dimensions );
       comGeo->setSafetyFactor(context->safetyFactor);
-      m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );
+      m2n::M2N::SharedPointer m2n = m2nConfig->getM2N ( receiver, provider );
       comGeo->addReceiver ( receiver, m2n );
       m2n->createDistributedCommunication(context->mesh);
       preciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",
@@ -2097,20 +2097,20 @@ void SolverInterfaceImpl:: mapReadData()
   mapping::MappingConfiguration::Timing timing;
   // Compute mappings
   for (impl::MappingContext& context : _accessor->readMappingContexts()) {
-  	timing = context.timing;
-  	bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
+    timing = context.timing;
+    bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
-  	bool hasComputed = context.mapping->hasComputedMapping();
-  	bool isNotEmpty = not _accessor->meshContext(context.toMeshID).mesh->vertices().empty();
-  	if (mapNow && not hasComputed && isNotEmpty){
-  	  preciceDebug("Compute read mapping from mesh \""
-  			  << _accessor->meshContext(context.fromMeshID).mesh->getName()
-  			  << "\" to mesh \""
-  			  << _accessor->meshContext(context.toMeshID).mesh->getName()
-  			  << "\".");
+    bool hasComputed = context.mapping->hasComputedMapping();
+    bool isNotEmpty = not _accessor->meshContext(context.toMeshID).mesh->vertices().empty();
+    if (mapNow && not hasComputed && isNotEmpty){
+      preciceDebug("Compute read mapping from mesh \""
+              << _accessor->meshContext(context.fromMeshID).mesh->getName()
+              << "\" to mesh \""
+              << _accessor->meshContext(context.toMeshID).mesh->getName()
+              << "\".");
 
-  	  context.mapping->computeMapping();
-  	}
+      context.mapping->computeMapping();
+    }
   }
 
   // Map data
@@ -2332,7 +2332,7 @@ void SolverInterfaceImpl:: selectInquiryMeshIDs
 void SolverInterfaceImpl:: initializeClientServerCommunication()
 {
   preciceTrace ( "initializeClientServerCom.()" );
-  com::PtrCommunication com = _accessor->getClientServerCommunication();
+  com::Communication::SharedPointer com = _accessor->getClientServerCommunication();
   assertion(com.get() != NULL);
   if ( _serverMode ){
     preciceInfo ( "initializeClientServerCom.()", "Setting up communication to client" );
@@ -2349,7 +2349,7 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
 void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 {
   preciceTrace ( "initializeMasterSlaveCom.()" );
-  com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+  com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
   assertion(com.get() != NULL);
   utils::MasterSlave::_communication = com;
   //slaves create new communicator with ranks 0 to size-2
@@ -2372,7 +2372,7 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
 {
   assertion(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode);
-  com::PtrCommunication com = _accessor->getMasterSlaveCommunication();
+  com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
   if(utils::MasterSlave::_slaveMode){
     com->send(computedTimestepLength, 0);
   }

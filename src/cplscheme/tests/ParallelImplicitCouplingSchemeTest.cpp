@@ -89,7 +89,7 @@ void ParallelImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
-  m2n::PtrM2NConfiguration m2nConfig(
+  m2n::M2NConfiguration::SharedPointer m2nConfig(
       new m2n::M2NConfiguration(root));
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
@@ -122,8 +122,8 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
-  com::PtrCommunication communication(new com::MPIDirectCommunication);
-  m2n::PtrM2N globalCom(new m2n::M2N(communication, m2n::PtrDistributedComFactory()));
+  com::Communication::SharedPointer communication(new com::MPIDirectCommunication);
+  m2n::M2N::SharedPointer globalCom(new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -225,7 +225,7 @@ void ParallelImplicitCouplingSchemeTest:: connect
   const std::string&      participant0,
   const std::string&      participant1,
   const std::string&      localParticipant,
-  m2n::PtrM2N& communication ) const
+  m2n::M2N::SharedPointer& communication ) const
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Geometry.hpp"
-#include "m2n/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -31,7 +31,7 @@ public:
 
   void addReceiver (
     const std::string& receiver,
-    m2n::PtrM2N m2n );
+    m2n::M2N::SharedPointer m2n );
 
   void setBoundingFromMapping(mapping::PtrMapping mapping);
 
@@ -42,7 +42,7 @@ public:
 protected:
 
   /**
-   * Is called from Geometry and sends the mesh if the accessor is provider, 
+   * Is called from Geometry and sends the mesh if the accessor is provider,
    * receives if the accessor is contained in receivers, fails otherwise.
    */
   void specializedCreate ( mesh::Mesh& seed );
@@ -78,7 +78,7 @@ private:
 
   std::string _providerName;
 
-  std::map<std::string,m2n::PtrM2N> _receivers;
+  std::map<std::string,m2n::M2N::SharedPointer> _receivers;
 
   int _dimensions;
 

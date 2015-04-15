@@ -21,7 +21,7 @@ namespace m2n {
 
 tarch::logging::Log M2N::_log("precice::m2n::M2N");
 
-M2N:: M2N(  com::PtrCommunication masterCom, PtrDistributedComFactory distrFactory )
+M2N:: M2N(  com::Communication::SharedPointer masterCom, DistributedComFactory::SharedPointer distrFactory )
 :
   _distComs(),
   _masterCom(masterCom),
@@ -125,14 +125,15 @@ void M2N:: closeConnection()
   }
 }
 
-com::PtrCommunication M2N:: getMasterCommunication()
+com::Communication::SharedPointer M2N:: getMasterCommunication()
 {
   assertion(not utils::MasterSlave::_slaveMode);
   return _masterCom; //TODO maybe it would be a nicer design to not offer this
 }
 
 void M2N:: createDistributedCommunication(mesh::PtrMesh mesh){
-  PtrDistributedCommunication distCom = _distrFactory->newDistributedCommunication(mesh);
+  DistributedCommunication::SharedPointer distCom =
+      _distrFactory->newDistributedCommunication(mesh);
   _distComs[mesh->getID()] = distCom;
 }
 

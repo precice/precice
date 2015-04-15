@@ -320,13 +320,13 @@ bool Participant:: useServer()
 
 void Participant:: setClientServerCommunication
 (
-  com::PtrCommunication communication )
+  com::Communication::SharedPointer communication )
 {
   assertion ( communication.use_count() > 0 );
   _clientServerCommunication = communication;
 }
 
-com::PtrCommunication Participant:: getClientServerCommunication() const
+com::Communication::SharedPointer Participant:: getClientServerCommunication() const
 {
   return _clientServerCommunication;
 }
@@ -338,17 +338,16 @@ bool Participant:: useMaster()
 
 void Participant:: setMasterSlaveCommunication
 (
-  com::PtrCommunication communication )
+  com::Communication::SharedPointer communication )
 {
   assertion ( communication.use_count() > 0 );
   _masterSlaveCommunication = communication;
 }
 
-com::PtrCommunication Participant:: getMasterSlaveCommunication() const
+com::Communication::SharedPointer Participant:: getMasterSlaveCommunication() const
 {
   return _masterSlaveCommunication;
 }
 
 
 }} // namespace precice, impl
-

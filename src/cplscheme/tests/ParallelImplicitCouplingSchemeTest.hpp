@@ -4,8 +4,7 @@
 #ifndef PRECICE_CPLSCHEME_TESTS_PARALLELIMPLICITCOUPLINGSCHEMETEST_HPP_
 #define PRECICE_CPLSCHEME_TESTS_PARALLELIMPLICITCOUPLINGSCHEMETEST_HPP_
 
-#include "com/SharedPointer.hpp"
-#include "m2n/SharedPointer.hpp"
+#include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
 #include "tarch/tests/TestCase.h"
 #include "tarch/logging/Log.h"
@@ -94,7 +93,7 @@ private:
       const std::string&     participant0,
       const std::string&     participant1,
       const std::string&     localParticipant,
-      m2n::PtrM2N&           communication ) const;
+      m2n::M2N::SharedPointer&           communication ) const;
 
 # endif // not PRECICE_NO_MPI
 };

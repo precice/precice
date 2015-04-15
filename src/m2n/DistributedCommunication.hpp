@@ -4,12 +4,7 @@
 #ifndef PRECICE_M2N_DISTRIBUTED_COMMUNICATION_HPP_
 #define PRECICE_M2N_DISTRIBUTED_COMMUNICATION_HPP_
 
-#include "utils/Dimensions.hpp"
-#include "utils/Helpers.hpp"
-#include "com/Communication.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "com/SharedPointer.hpp"
-#include <string>
 
 namespace precice {
 namespace m2n {
@@ -37,6 +32,9 @@ namespace m2n {
  */
 class DistributedCommunication
 {
+public:
+  using SharedPointer = std::shared_ptr<DistributedCommunication>;
+
 public:
 
   DistributedCommunication(mesh::PtrMesh mesh)

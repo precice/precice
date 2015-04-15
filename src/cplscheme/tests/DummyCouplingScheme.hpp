@@ -175,14 +175,14 @@ public:
    * @brief Empty.
    */
   virtual void sendState (
-    com::PtrCommunication communication,
+    com::Communication::SharedPointer communication,
     int                   rankReceiver ) {}
 
   /**
    * @brief Empty.
    */
   virtual void receiveState (
-    com::PtrCommunication communication,
+    com::Communication::SharedPointer communication,
     int                   rankSender ) {}
 
 private:

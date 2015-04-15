@@ -3,10 +3,10 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 //#ifndef PRECICE_NO_MPI
 
-#include "com/Communication.hpp"
+#include "MasterSlave.hpp"
 
-#include "utils/MasterSlave.hpp"
-#include "utils/EventTimings.hpp"
+#include "EventTimings.hpp"
+#include "Globals.hpp"
 
 #include <math.h>
 
@@ -21,7 +21,7 @@ int MasterSlave::_size = -1;
 int MasterSlave::_masterRank = 0;
 bool MasterSlave::_masterMode = false;
 bool MasterSlave::_slaveMode = false;
-com::PtrCommunication MasterSlave::_communication;
+com::Communication::SharedPointer MasterSlave::_communication;
 
 tarch::logging::Log MasterSlave:: _log ( "precice::utils::MasterSlave" );
 

@@ -43,7 +43,7 @@ CommunicatedGeometry:: CommunicatedGeometry
 void CommunicatedGeometry:: addReceiver
 (
   const std::string&     receiver,
-  m2n::PtrM2N m2n)
+  m2n::M2N::SharedPointer m2n)
 {
   preciceTrace1 ( "addReceiver()", receiver );
   assertion ( m2n.get() != NULL );
@@ -145,7 +145,7 @@ void CommunicatedGeometry:: receiveMesh(
     Event e("receive global mesh");
     assertion ( seed.vertices().size() == 0 );
     assertion ( utils::contained(_accessorName, _receivers) );
-    m2n::PtrM2N m2n ( _receivers[_accessorName] );
+    m2n::M2N::SharedPointer m2n ( _receivers[_accessorName] );
     com::CommunicateMesh(m2n->getMasterCommunication()).receiveMesh ( seed, 0 );
   }
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){

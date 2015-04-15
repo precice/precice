@@ -4,11 +4,12 @@
 #ifndef PRECICE_M2N_M2N_HPP_
 #define PRECICE_M2N_M2N_HPP_
 
-#include "com/SharedPointer.hpp"
-#include "m2n/SharedPointer.hpp"
+#include "DistributedComFactory.hpp"
+
+#include "com/Communication.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
-#include <string>
+
 #include <map>
 
 namespace precice {
@@ -23,8 +24,11 @@ namespace m2n {
 class M2N
 {
 public:
+  using SharedPointer = std::shared_ptr<M2N>;
 
-  M2N( com::PtrCommunication masterCom, PtrDistributedComFactory distrFactory);
+public:
+
+  M2N( com::Communication::SharedPointer masterCom, DistributedComFactory::SharedPointer distrFactory);
 
   /**
    * @brief Destructor, empty.
@@ -87,7 +91,7 @@ public:
   /**
    * @brief Get the basic communication between the 2 masters.
    */
-  com::PtrCommunication getMasterCommunication();
+  com::Communication::SharedPointer getMasterCommunication();
 
 
   void createDistributedCommunication(mesh::PtrMesh mesh);
@@ -154,11 +158,11 @@ private:
 
   static tarch::logging::Log _log;
 
-  std::map<int, PtrDistributedCommunication> _distComs;
+  std::map<int, DistributedCommunication::SharedPointer> _distComs;
 
-  com::PtrCommunication _masterCom;
+  com::Communication::SharedPointer _masterCom;
 
-  PtrDistributedComFactory _distrFactory;
+  DistributedComFactory::SharedPointer _distrFactory;
 
   bool _isMasterConnected;
 

@@ -5,7 +5,9 @@
 #define PRECICE_CPLSCHEME_COUPLINGSCHEME_HPP_
 
 #include "SharedPointer.hpp"
-#include "com/SharedPointer.hpp"
+
+#include "com/Communication.hpp"
+
 #include <string>
 #include <vector>
 #include <map>
@@ -44,7 +46,7 @@ namespace cplscheme {
 class CouplingScheme
 {
 public:
-  
+
   /// @brief Does not define a time limit for the coupled simulation.
   static const double UNDEFINED_TIME;
 
@@ -87,7 +89,7 @@ public:
 
   /**
    * @brief Exchanges data and updates the state of the coupling scheme.
-   
+
    * Preconditions:
    * - initialize() has been called.
    *
@@ -214,7 +216,7 @@ public:
    * scheme via sendState and receiveState.
    */
   virtual void sendState (
-    com::PtrCommunication communication,
+    com::Communication::SharedPointer communication,
     int                   rankReceiver ) =0;
 
   /**
@@ -226,7 +228,7 @@ public:
    * scheme via sendState and receiveState.
    */
   virtual void receiveState (
-    com::PtrCommunication communication,
+    com::Communication::SharedPointer communication,
     int                   rankSender ) =0;
 
 };

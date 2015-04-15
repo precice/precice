@@ -523,7 +523,7 @@ SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
   }
 }
 
-PtrRequest
+Request::SharedPointer
 SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
   preciceTrace2("aSend(int*)", size, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
@@ -532,7 +532,7 @@ SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
              _sockets.size());
   assertion(isConnected());
 
-  PtrRequest request(new SocketRequest);
+  Request::SharedPointer request(new SocketRequest);
 
   try {
     sendQuery(rankReceiver);
@@ -565,7 +565,7 @@ SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
   }
 }
 
-PtrRequest
+Request::SharedPointer
 SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
   preciceTrace2("aSend(double*)", size, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
@@ -574,7 +574,7 @@ SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
              _sockets.size());
   assertion(isConnected());
 
-  PtrRequest request(new SocketRequest);
+  Request::SharedPointer request(new SocketRequest);
 
   try {
     sendQuery(rankReceiver);
@@ -607,7 +607,7 @@ SocketCommunication::send(double itemToSend, int rankReceiver) {
   }
 }
 
-PtrRequest
+Request::SharedPointer
 SocketCommunication::aSend(double* itemToSend, int rankReceiver) {
   return aSend(itemToSend, 1, rankReceiver);
 }
@@ -629,7 +629,7 @@ SocketCommunication::send(int itemToSend, int rankReceiver) {
   }
 }
 
-PtrRequest
+Request::SharedPointer
 SocketCommunication::aSend(int* itemToSend, int rankReceiver) {
   return aSend(itemToSend, 1, rankReceiver);
 }
@@ -651,7 +651,7 @@ SocketCommunication::send(bool itemToSend, int rankReceiver) {
   }
 }
 
-PtrRequest
+Request::SharedPointer
 SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
   preciceTrace1("aSend(bool*)", rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
@@ -660,7 +660,7 @@ SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
              _sockets.size());
   assertion(isConnected());
 
-  PtrRequest request(new SocketRequest);
+  Request::SharedPointer request(new SocketRequest);
 
   try {
     sendQuery(rankReceiver);

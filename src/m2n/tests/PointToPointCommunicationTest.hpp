@@ -42,7 +42,7 @@ private:
 
   void testMPIPortsCommunication();
 
-  void test(com::PtrCommunicationFactory cf);
+  void test(com::CommunicationFactory::SharedPointer cf);
 };
 }
 }

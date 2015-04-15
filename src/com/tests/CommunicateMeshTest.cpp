@@ -2,9 +2,8 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CommunicateMeshTest.hpp"
-#include "../CommunicateMesh.hpp"
-#include "../MPIDirectCommunication.hpp"
-#include "../SharedPointer.hpp"
+#include "com/CommunicateMesh.hpp"
+#include "com/MPIDirectCommunication.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
@@ -70,7 +69,7 @@ void CommunicateMeshTest:: testTwoSolvers ()
     if ( utils::Parallel::getProcessRank() < 2 ) {
       utils::Parallel::setGlobalCommunicator ( comm );
       validateEquals ( utils::Parallel::getCommunicatorSize(), 2 );
-      com::PtrCommunication com ( new com::MPIDirectCommunication() );
+      com::Communication::SharedPointer com ( new com::MPIDirectCommunication() );
       CommunicateMesh comMesh ( com );
 
       if ( utils::Parallel::getProcessRank() == 0 ) {

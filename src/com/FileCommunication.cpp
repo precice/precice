@@ -1,9 +1,12 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
+
 #include "FileCommunication.hpp"
+
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
+
 #include <iomanip>
 #include <stdio.h>
 
@@ -75,6 +78,13 @@ void FileCommunication:: acceptConnection
   _isConnected = true;
 }
 
+void
+FileCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
+                                            std::string const& nameRequester,
+                                            int requesterCommunicatorSize) {
+  preciceError("acceptConnectionAsServer()", "Not implemented!");
+}
+
 void FileCommunication:: requestConnection
 (
   const std::string& nameAcceptor,
@@ -91,6 +101,12 @@ void FileCommunication:: requestConnection
   remove ( getSendFilename(false,0,0).c_str() ); // To cleanup
   remove ( getReceiveFilename(true,0,0).c_str() ); // To cleanup
   _isConnected = true;
+}
+
+int
+FileCommunication::requestConnectionAsClient(std::string const& nameAcceptor,
+                                             std::string const& nameRequester) {
+  preciceError("requestConnectionAsClient()", "Not implemented!");
 }
 
 void FileCommunication:: closeConnection()
@@ -209,6 +225,11 @@ void FileCommunication:: send
   _sendFile.write ( (char*)itemsToSend, sizeof(int)*size );
 }
 
+Request::SharedPointer
+FileCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
+  preciceError("aSend()", "Not implemented!");
+}
+
 void FileCommunication:: send (
   double* itemsToSend,
   int     size,
@@ -222,6 +243,11 @@ void FileCommunication:: send (
   _sendFile.write ( (char*)itemsToSend, sizeof(double)*size );
 }
 
+Request::SharedPointer
+FileCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
+  preciceError("aSend()", "Not implemented!");
+}
+
 void FileCommunication:: send
 (
   double itemToSend,
@@ -231,6 +257,11 @@ void FileCommunication:: send
   assertion ( rankReceiver != ANY_SENDER );
   _sendFile.write ( (char*)&TYPE_DOUBLE, sizeof(int) );
   _sendFile.write ( (char*)&itemToSend, sizeof(double) );
+}
+
+Request::SharedPointer
+FileCommunication::aSend(double* itemToSend, int rankReceiver) {
+  preciceError("aSend()", "Not implemented!");
 }
 
 void FileCommunication:: send
@@ -244,6 +275,11 @@ void FileCommunication:: send
   _sendFile.write ( (char*)&itemToSend, sizeof(int) );
 }
 
+Request::SharedPointer
+FileCommunication::aSend(int* itemToSend, int rankReceiver) {
+  preciceError("aSend()", "Not implemented!");
+}
+
 void FileCommunication:: send
 (
   bool itemToSend,
@@ -253,6 +289,11 @@ void FileCommunication:: send
   assertion ( rankReceiver != ANY_SENDER );
   _sendFile.write ( (char*)&TYPE_BOOL, sizeof(int) );
   _sendFile.write ( (char*)&itemToSend, 1 );
+}
+
+Request::SharedPointer
+FileCommunication::aSend(bool* itemToSend, int rankReceiver) {
+  preciceError("aSend()", "Not implemented!");
 }
 
 int FileCommunication:: receive

@@ -39,7 +39,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
 (
   utils::XMLTag&                            parent,
   const mesh::PtrMeshConfiguration&         meshConfig,
-  const m2n::PtrM2NConfiguration& m2nConfig)
+  const m2n::M2NConfiguration::SharedPointer& m2nConfig)
 :
   TAG("coupling-scheme"),
   TAG_PARTICIPANTS("participants"),
@@ -726,7 +726,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
 {
   preciceTrace1("createSerialExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
-  m2n::PtrM2N m2n = _m2nConfig->getM2N (
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -745,7 +745,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
 {
   preciceTrace1("createParallelExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
-  m2n::PtrM2N m2n = _m2nConfig->getM2N (
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -765,7 +765,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
   preciceTrace1("createSerialImplicitCouplingScheme()", accessor);
   //assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
 
-  m2n::PtrM2N m2n = _m2nConfig->getM2N (
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -807,7 +807,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 {
   preciceTrace1("createParallelImplicitCouplingScheme()", accessor);
   assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
-  m2n::PtrM2N m2n = _m2nConfig->getM2N(
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -853,7 +853,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
   BaseCouplingScheme* scheme;
 
   if(accessor == _config.controller){
-    std::vector<m2n::PtrM2N> m2ns;
+    std::vector<m2n::M2N::SharedPointer> m2ns;
     for(const std::string& participant : _config.participants){
       m2ns.push_back(_m2nConfig->getM2N (
           _config.controller, participant ));
@@ -870,7 +870,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
     addMultiDataToBeExchanged(*castedScheme, accessor);
   }
   else{
-    m2n::PtrM2N m2n = _m2nConfig->getM2N (
+    m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
         accessor, _config.controller );
     scheme = new ParallelCouplingScheme (
         _config.maxTime, _config.maxTimesteps, _config.timestepLength,

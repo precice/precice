@@ -3,9 +3,10 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #pragma once
 
-#include "com/SharedPointer.hpp"
+#include "com/Communication.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/xml/XMLTag.hpp"
+
 #include <string>
 
 namespace precice {
@@ -29,7 +30,7 @@ public:
    /**
     * @brief Returns a communication object of given type.
     */
-   PtrCommunication createCommunication ( const utils::XMLTag& tag ) const;
+   Communication::SharedPointer createCommunication ( const utils::XMLTag& tag ) const;
 
 private:
 

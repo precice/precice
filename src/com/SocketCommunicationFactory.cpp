@@ -27,9 +27,9 @@ SocketCommunicationFactory::SocketCommunicationFactory(
     : SocketCommunicationFactory(0, false, "lo", addressDirectory) {
 }
 
-PtrCommunication
+Communication::SharedPointer
 SocketCommunicationFactory::newCommunication() {
-  return PtrCommunication(new SocketCommunication(
+  return Communication::SharedPointer(new SocketCommunication(
       _portNumber, _reuseAddress, _networkName, _addressDirectory));
 }
 }

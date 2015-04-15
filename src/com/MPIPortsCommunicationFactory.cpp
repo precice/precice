@@ -16,9 +16,10 @@ MPIPortsCommunicationFactory::MPIPortsCommunicationFactory(
     : _addressDirectory(addressDirectory) {
 }
 
-PtrCommunication
+Communication::SharedPointer
 MPIPortsCommunicationFactory::newCommunication() {
-  return PtrCommunication(new MPIPortsCommunication(_addressDirectory));
+  return Communication::SharedPointer(
+      new MPIPortsCommunication(_addressDirectory));
 }
 }
 } // namespace precice, com

@@ -5,11 +5,15 @@
 #ifndef PRECICE_COM_REQUEST_HPP_
 #define PRECICE_COM_REQUEST_HPP_
 
+#include <memory>
+#include <vector>
+
 namespace precice {
 namespace com {
 class Request {
 public:
   virtual ~Request() {};
+  using SharedPointer = std::shared_ptr<Request>;
 
   virtual bool test() = 0;
 

@@ -9,7 +9,6 @@
 #include "m2n/M2N.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
-#include "m2n/SharedPointer.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -54,11 +53,13 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
   preciceTrace ( "testSendReceiveAll" );
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-  com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::PtrDistributedComFactory distrFactory = m2n::PtrDistributedComFactory(
-                          new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  com::Communication::SharedPointer participantCom =
+      com::Communication::SharedPointer(new com::MPIDirectCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
+      new m2n::GatherScatterComFactory(participantCom));
+  m2n::M2N::SharedPointer m2n = m2n::M2N::SharedPointer(new m2n::M2N(participantCom, distrFactory));
+  com::Communication::SharedPointer masterSlaveCom =
+      com::Communication::SharedPointer(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
   utils::Parallel::synchronizeProcesses();

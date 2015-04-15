@@ -5,12 +5,9 @@
 #ifndef PRECICE_COM_COMMUNICATION_HPP_
 #define PRECICE_COM_COMMUNICATION_HPP_
 
-#include "SharedPointer.hpp"
+#include "Request.hpp"
 
-#include "utils/Dimensions.hpp"
-#include "mesh/Data.hpp"
-
-#include <string>
+#include <memory>
 
 namespace precice {
 namespace com {
@@ -45,6 +42,9 @@ namespace com {
  *    sending is happening on the background.
  */
 class Communication {
+public:
+  using SharedPointer = std::shared_ptr<Communication>;
+
 public:
   enum {
     // @brief Can be used instead of specific rankSender number in receive
@@ -160,7 +160,9 @@ public:
   /**
    * @brief Asynchronously sends an array of integer values.
    */
-  virtual PtrRequest aSend(int* itemsToSend, int size, int rankReceiver) = 0;
+  virtual Request::SharedPointer aSend(int* itemsToSend,
+                                       int size,
+                                       int rankReceiver) = 0;
 
   /**
    * @brief Sends an array of double values.
@@ -170,7 +172,9 @@ public:
   /**
    * @brief Asynchronously sends an array of double values.
    */
-  virtual PtrRequest aSend(double* itemsToSend, int size, int rankReceiver) = 0;
+  virtual Request::SharedPointer aSend(double* itemsToSend,
+                                       int size,
+                                       int rankReceiver) = 0;
 
   /**
    * @brief Sends a double to process with given rank.
@@ -180,7 +184,8 @@ public:
   /**
    * @brief Asynchronously sends a double to process with given rank.
    */
-  virtual PtrRequest aSend(double* itemToSend, int rankReceiver) = 0;
+  virtual Request::SharedPointer aSend(double* itemToSend,
+                                       int rankReceiver) = 0;
 
   /**
    * @brief Sends an int to process with given rank.
@@ -190,7 +195,7 @@ public:
   /**
    * @brief Asynchronously sends an int to process with given rank.
    */
-  virtual PtrRequest aSend(int* itemToSend, int rankReceiver) = 0;
+  virtual Request::SharedPointer aSend(int* itemToSend, int rankReceiver) = 0;
 
   /**
    * @brief Sends a bool to process with given rank.
@@ -200,7 +205,7 @@ public:
   /**
    * @brief Asynchronously sends a bool to process with given rank.
    */
-  virtual PtrRequest aSend(bool* itemToSend, int rankReceiver) = 0;
+  virtual Request::SharedPointer aSend(bool* itemToSend, int rankReceiver) = 0;
 
   /**
    * @brief Receives a std::string from process with given rank.
