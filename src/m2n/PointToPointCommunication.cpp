@@ -527,9 +527,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
          c});
   }
 
-  for (auto request : requests) {
-    request->wait();
-  }
+  com::Request::wait(requests);
 
   _isConnected = true;
 }
@@ -588,9 +586,7 @@ PointToPointCommunication::send(double* itemsToSend,
     requests.push_back(request);
   }
 
-  for (auto request : requests) {
-    request->wait();
-  }
+  com::Request::wait(requests);
 }
 
 void

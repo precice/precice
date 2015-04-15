@@ -30,9 +30,7 @@ Communication::broadcast(int* itemsToSend, int size) {
     requests.push_back(request);
   }
 
-  for (auto request : requests) {
-    request->wait();
-  }
+  Request::wait(requests);
 }
 
 void
@@ -56,9 +54,7 @@ Communication::broadcast(int itemToSend) {
     requests.push_back(request);
   }
 
-  for (auto request : requests) {
-    request->wait();
-  }
+  Request::wait(requests);
 }
 
 void
@@ -82,9 +78,7 @@ Communication::broadcast(double* itemsToSend, int size) {
     requests.push_back(request);
   }
 
-  for (auto request : requests) {
-    request->wait();
-  }
+  Request::wait(requests);
 }
 
 void
@@ -110,9 +104,7 @@ Communication::broadcast(double itemToSend) {
     requests.push_back(request);
   }
 
-  for (auto request : requests) {
-    request->wait();
-  }
+  Request::wait(requests);
 }
 
 void

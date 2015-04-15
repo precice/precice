@@ -12,8 +12,12 @@ namespace precice {
 namespace com {
 class Request {
 public:
-  virtual ~Request() {};
   using SharedPointer = std::shared_ptr<Request>;
+
+public:
+  static void wait(std::vector<SharedPointer>& requests);
+
+  virtual ~Request();
 
   virtual bool test() = 0;
 
