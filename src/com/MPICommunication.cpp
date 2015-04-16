@@ -233,6 +233,25 @@ MPICommunication::receive(int* itemsToReceive, int size, int rankSender) {
   return status.MPI_SOURCE;
 }
 
+Request::SharedPointer
+MPICommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
+  preciceTrace1("aReceive(int*)", size);
+  rankSender = rankSender - _rankOffset;
+  rankSender = rankSender == ANY_SENDER ? MPI_ANY_SOURCE : rankSender;
+
+  MPI_Request request;
+
+  MPI_Irecv(itemsToReceive,
+            size,
+            MPI_INT,
+            rank(rankSender),
+            0,
+            communicator(rankSender),
+            &request);
+
+  return Request::SharedPointer(new MPIRequest(request));
+}
+
 int
 MPICommunication::receive(double* itemsToReceive, int size, int rankSender) {
   preciceTrace1("receive(double*)", size);
@@ -247,6 +266,25 @@ MPICommunication::receive(double* itemsToReceive, int size, int rankSender) {
            communicator(rankSender),
            &status);
   return status.MPI_SOURCE;
+}
+
+Request::SharedPointer
+MPICommunication::aReceive(double* itemsToReceive, int size, int rankSender) {
+  preciceTrace1("aReceive(double*)", size);
+  rankSender = rankSender - _rankOffset;
+  rankSender = rankSender == ANY_SENDER ? MPI_ANY_SOURCE : rankSender;
+
+  MPI_Request request;
+
+  MPI_Irecv(itemsToReceive,
+            size,
+            MPI_DOUBLE,
+            rank(rankSender),
+            0,
+            communicator(rankSender),
+            &request);
+
+  return Request::SharedPointer(new MPIRequest(request));
 }
 
 int
@@ -267,6 +305,11 @@ MPICommunication::receive(double& itemToReceive, int rankSender) {
   return status.MPI_SOURCE;
 }
 
+Request::SharedPointer
+MPICommunication::aReceive(double* itemToReceive, int rankSender) {
+  return aReceive(itemToReceive, 1, rankSender);
+}
+
 int
 MPICommunication::receive(int& itemToReceive, int rankSender) {
   preciceTrace1("receive(int)", rankSender);
@@ -285,6 +328,11 @@ MPICommunication::receive(int& itemToReceive, int rankSender) {
   return status.MPI_SOURCE;
 }
 
+Request::SharedPointer
+MPICommunication::aReceive(int* itemToReceive, int rankSender) {
+  return aReceive(itemToReceive, 1, rankSender);
+}
+
 int
 MPICommunication::receive(bool& itemToReceive, int rankSender) {
   preciceTrace1("receive(bool)", rankSender);
@@ -301,6 +349,25 @@ MPICommunication::receive(bool& itemToReceive, int rankSender) {
   preciceDebug("Received " << itemToReceive << " from rank "
                            << status.MPI_SOURCE);
   return status.MPI_SOURCE;
+}
+
+Request::SharedPointer
+MPICommunication::aReceive(bool* itemToReceive, int rankSender) {
+  preciceTrace1("aReceive(bool*)", size);
+  rankSender = rankSender - _rankOffset;
+  rankSender = rankSender == ANY_SENDER ? MPI_ANY_SOURCE : rankSender;
+
+  MPI_Request request;
+
+  MPI_Irecv(itemToReceive,
+            1,
+            MPI_BOOL,
+            rank(rankSender),
+            0,
+            communicator(rankSender),
+            &request);
+
+  return Request::SharedPointer(new MPIRequest(request));
 }
 }
 } // namespace precice, com

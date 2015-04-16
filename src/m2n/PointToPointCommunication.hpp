@@ -109,6 +109,8 @@ private:
     int globalRemoteRank;
     std::vector<int> indices;
     com::Communication::SharedPointer communication;
+    com::Request::SharedPointer request;
+    size_t offset;
   };
 
   /**
@@ -116,8 +118,6 @@ private:
    *        mappings (one to service each point-to-point connection).
    */
   std::vector<Mapping> _mappings;
-
-  std::vector<com::Request::SharedPointer> _requests;
 
   std::vector<double> _buffer;
 

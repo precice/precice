@@ -339,6 +339,11 @@ int FileCommunication:: receive
   return rankSender;
 }
 
+Request::SharedPointer
+FileCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
+  preciceError("aReceive()", "Not implemented!");
+}
+
 int FileCommunication:: receive
 (
   double* itemsToReceive,
@@ -359,6 +364,11 @@ int FileCommunication:: receive
   return rankSender;
 }
 
+Request::SharedPointer
+FileCommunication::aReceive(double* itemsToReceive, int size, int rankSender) {
+  preciceError("aReceive()", "Not implemented!");
+}
+
 int FileCommunication:: receive
 (
    double& itemToReceive,
@@ -373,6 +383,11 @@ int FileCommunication:: receive
                  "Receive type is different than double!" );
   _receiveFile.read ( (char*)&itemToReceive, sizeof(double) );
   return rankSender;
+}
+
+Request::SharedPointer
+FileCommunication::aReceive(double* itemToReceive, int rankSender) {
+  preciceError("aReceive()", "Not implemented!");
 }
 
 int FileCommunication:: receive
@@ -391,6 +406,11 @@ int FileCommunication:: receive
   return rankSender;
 }
 
+Request::SharedPointer
+FileCommunication::aReceive(int* itemToReceive, int rankSender) {
+  preciceError("aReceive()", "Not implemented!");
+}
+
 int FileCommunication:: receive
 (
   bool& itemToReceive,
@@ -405,6 +425,11 @@ int FileCommunication:: receive
                  "Receive type is different than bool!" );
   _receiveFile.read ( (char*)&itemToReceive, sizeof(bool) );
   return rankSender;
+}
+
+Request::SharedPointer
+FileCommunication::aReceive(bool* itemToReceive, int rankSender) {
+  preciceError("aReceive()", "Not implemented!");
 }
 
 void FileCommunication:: makeSendFileAvailable

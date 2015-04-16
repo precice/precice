@@ -417,8 +417,6 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
          c});
   }
 
-  _requests.reserve(_mappings.size());
-
   _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
 
   _isConnected = true;
@@ -548,8 +546,6 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
   com::Request::wait(requests);
 
-  _requests.reserve(_mappings.size());
-
   _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
 
   _isConnected = true;
@@ -567,8 +563,6 @@ PointToPointCommunication::closeConnection() {
   }
 
   _mappings.clear();
-
-  _requests.clear();
 
   _buffer.clear();
 
@@ -605,8 +599,8 @@ PointToPointCommunication::send(double* itemsToSend,
                    << " "
                    << "data sizes!");
 
-  for (auto const& mapping : _mappings) {
-    auto offset = _buffer.size();
+  for (auto& mapping : _mappings) {
+    mapping.offset = _buffer.size();
 
     for (auto index : mapping.indices) {
       for (int d = 0; d < valueDimension; ++d) {
@@ -614,17 +608,15 @@ PointToPointCommunication::send(double* itemsToSend,
       }
     }
 
-    auto request =
-        mapping.communication->aSend(_buffer.data() + offset,
+    mapping.request =
+        mapping.communication->aSend(_buffer.data() + mapping.offset,
                                      mapping.indices.size() * valueDimension,
                                      mapping.localRemoteRank);
-
-    _requests.push_back(request);
   }
 
-  com::Request::wait(_requests);
-
-  _requests.clear();
+  for (auto& mapping : _mappings) {
+    mapping.request->wait();
+  }
 
   _buffer.clear();
 }
@@ -657,30 +649,31 @@ PointToPointCommunication::receive(double* itemsToReceive,
 
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 
-  for (auto const& mapping : _mappings) {
-    auto offset = _buffer.size();
+  for (auto& mapping : _mappings) {
+    mapping.offset = _buffer.size();
 
     _buffer.resize(_buffer.size() + mapping.indices.size() * valueDimension);
 
-    mapping.communication->receive(_buffer.data() + offset,
-                                   mapping.indices.size() * valueDimension,
-                                   mapping.localRemoteRank);
-
-    {
-      int i = 0;
-
-      for (auto index : mapping.indices) {
-        for (int d = 0; d < valueDimension; ++d) {
-          itemsToReceive[index * valueDimension + d] +=
-              _buffer[offset + i * valueDimension + d];
-        }
-
-        i++;
-      }
-    }
+    mapping.request =
+        mapping.communication->aReceive(_buffer.data() + mapping.offset,
+                                        mapping.indices.size() * valueDimension,
+                                        mapping.localRemoteRank);
   }
 
-  _requests.clear();
+  for (auto& mapping : _mappings) {
+    mapping.request->wait();
+
+    int i = 0;
+
+    for (auto index : mapping.indices) {
+      for (int d = 0; d < valueDimension; ++d) {
+        itemsToReceive[index * valueDimension + d] +=
+            _buffer[mapping.offset + i * valueDimension + d];
+      }
+
+      i++;
+    }
+  }
 
   _buffer.clear();
 }

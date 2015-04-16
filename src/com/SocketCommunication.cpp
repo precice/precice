@@ -723,6 +723,34 @@ SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
   return rankSender;
 }
 
+Request::SharedPointer
+SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
+  preciceTrace2("aReceive(int*)", size, rankSender);
+  rankSender = rankSender - _rankOffset;
+  rankSender = getSenderRank(rankSender);
+  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+             rankSender,
+             _sockets.size());
+  assertion(isConnected());
+
+  Request::SharedPointer request(new SocketRequest);
+
+  try {
+    asio::async_read(*_sockets[rankSender],
+                     asio::buffer((void*)itemsToReceive, size * sizeof(int)),
+                     [request](boost::system::error_code const&, std::size_t) {
+      static_cast<SocketRequest*>(request.get())->complete();
+    });
+  } catch (std::exception& e) {
+    preciceError("aReceive(int*)", "Receive failed: " << e.what());
+  }
+
+  if (isServer())
+    receiveNextQuery(rankSender);
+
+  return request;
+}
+
 int
 SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
   preciceTrace2("receive(double*)", size, rankSender);
@@ -742,6 +770,36 @@ SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
   if (isServer())
     receiveNextQuery(rankSender);
   return rankSender;
+}
+
+Request::SharedPointer
+SocketCommunication::aReceive(double* itemsToReceive,
+                              int size,
+                              int rankSender) {
+  preciceTrace2("aReceive(double*)", size, rankSender);
+  rankSender = rankSender - _rankOffset;
+  rankSender = getSenderRank(rankSender);
+  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+             rankSender,
+             _sockets.size());
+  assertion(isConnected());
+
+  Request::SharedPointer request(new SocketRequest);
+
+  try {
+    asio::async_read(*_sockets[rankSender],
+                     asio::buffer((void*)itemsToReceive, size * sizeof(double)),
+                     [request](boost::system::error_code const&, std::size_t) {
+      static_cast<SocketRequest*>(request.get())->complete();
+    });
+  } catch (std::exception& e) {
+    preciceError("aReceive(double*)", "Receive failed: " << e.what());
+  }
+
+  if (isServer())
+    receiveNextQuery(rankSender);
+
+  return request;
 }
 
 int
@@ -765,6 +823,11 @@ SocketCommunication::receive(double& itemToReceive, int rankSender) {
   return rankSender;
 }
 
+Request::SharedPointer
+SocketCommunication::aReceive(double* itemToReceive, int rankSender) {
+  return aReceive(itemToReceive, 1, rankSender);
+}
+
 int
 SocketCommunication::receive(int& itemToReceive, int rankSender) {
   preciceTrace1("receive(int)", rankSender);
@@ -786,6 +849,11 @@ SocketCommunication::receive(int& itemToReceive, int rankSender) {
   return rankSender;
 }
 
+Request::SharedPointer
+SocketCommunication::aReceive(int* itemToReceive, int rankSender) {
+  return aReceive(itemToReceive, 1, rankSender);
+}
+
 int
 SocketCommunication::receive(bool& itemToReceive, int rankSender) {
   preciceTrace1("receive(bool)", rankSender);
@@ -805,6 +873,34 @@ SocketCommunication::receive(bool& itemToReceive, int rankSender) {
   if (isServer())
     receiveNextQuery(rankSender);
   return rankSender;
+}
+
+Request::SharedPointer
+SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
+  preciceTrace1("aReceive(bool*)", rankSender);
+  rankSender = rankSender - _rankOffset;
+  rankSender = getSenderRank(rankSender);
+  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+             rankSender,
+             _sockets.size());
+  assertion(isConnected());
+
+  Request::SharedPointer request(new SocketRequest);
+
+  try {
+    asio::async_read(*_sockets[rankSender],
+                     asio::buffer((void*)itemToReceive, sizeof(bool)),
+                     [request](boost::system::error_code const&, std::size_t) {
+      static_cast<SocketRequest*>(request.get())->complete();
+    });
+  } catch (std::exception& e) {
+    preciceError("aReceive(bool*)", "Receive failed: " << e.what());
+  }
+
+  if (isServer())
+    receiveNextQuery(rankSender);
+
+  return request;
 }
 
 int
