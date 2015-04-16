@@ -38,10 +38,8 @@ SocketCommunication::SocketCommunication(unsigned short portNumber,
     , _remoteCommunicatorSize(0)
     , _ioService(new IOService)
     , _sockets()
-    , _queryWork()
-    , _queryThread()
-    , _clientQueries()
-    , _clientQueryBuffers() {
+    , _work()
+    , _thread() {
   if (_addressDirectory.empty()) {
     _addressDirectory = ".";
   }
@@ -138,7 +136,6 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
     preciceDebug("Received rank=" << remoteRank << ", size=" << remoteSize);
 
     _sockets.resize(_remoteCommunicatorSize);
-    _clientQueryBuffers.resize(_remoteCommunicatorSize);
 
     _sockets[remoteRank] = socket;
 
@@ -169,8 +166,11 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
                                                  << " failed: " << e.what());
   }
 
-  _queryWork = PtrWork(new asio::io_service::work(*_ioService));
-  _queryThread = std::thread(&SocketCommunication::onThreadRun, this);
+  // NOTE:
+  // Keep IO service running so that it fires asynchronous handlers from another
+  // thread.
+  _work = PtrWork(new asio::io_service::work(*_ioService));
+  _thread = std::thread([this]() { _ioService->run(); });
 }
 
 void
@@ -230,7 +230,6 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
     _remoteCommunicatorSize = remoteSize;
 
     _sockets.resize(_remoteCommunicatorSize);
-    _clientQueryBuffers.resize(_remoteCommunicatorSize);
 
     int remoteRank = 0;
 
@@ -270,8 +269,11 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
                                                  << " failed: " << e.what());
   }
 
-  _queryWork = PtrWork(new asio::io_service::work(*_ioService));
-  _queryThread = std::thread(&SocketCommunication::onThreadRun, this);
+  // NOTE:
+  // Keep IO service running so that it fires asynchronous handlers from another
+  // thread.
+  _work = PtrWork(new asio::io_service::work(*_ioService));
+  _thread = std::thread([this]() { _ioService->run(); });
 }
 
 void
@@ -358,8 +360,8 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
   // NOTE:
   // Keep IO service running so that it fires asynchronous handlers from another
   // thread.
-  _queryWork = PtrWork(new asio::io_service::work(*_ioService));
-  _queryThread = std::thread([this]() { _ioService->run(); });
+  _work = PtrWork(new asio::io_service::work(*_ioService));
+  _thread = std::thread([this]() { _ioService->run(); });
 }
 
 int
@@ -439,8 +441,8 @@ SocketCommunication::requestConnectionAsClient(
   // NOTE:
   // Keep IO service running so that it fires asynchronous handlers from another
   // thread.
-  _queryWork = PtrWork(new asio::io_service::work(*_ioService));
-  _queryThread = std::thread([this]() { _ioService->run(); });
+  _work = PtrWork(new asio::io_service::work(*_ioService));
+  _thread = std::thread([this]() { _ioService->run(); });
 
   return _rank;
 }
@@ -452,11 +454,10 @@ SocketCommunication::closeConnection() {
   if (not isConnected())
     return;
 
-  if (_queryThread.joinable()) {
-    preciceDebug("Shutting down query work, io service, and thread");
-    _queryWork.reset();
+  if (_thread.joinable()) {
+    _work.reset();
     _ioService->stop();
-    _queryThread.join();
+    _thread.join();
   }
 
   for (PtrSocket& socket : _sockets) {
@@ -489,14 +490,16 @@ SocketCommunication::finishReceivePackage() {
 void
 SocketCommunication::send(std::string const& itemToSend, int rankReceiver) {
   preciceTrace2("send(string)", itemToSend, rankReceiver);
+
   rankReceiver = rankReceiver - _rankOffset;
+
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
+
   size_t size = itemToSend.size() + 1;
   try {
-    sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
                 asio::buffer((void*)&size, sizeof(size_t)));
     asio::write(*_sockets[rankReceiver],
@@ -509,13 +512,15 @@ SocketCommunication::send(std::string const& itemToSend, int rankReceiver) {
 void
 SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
   preciceTrace2("send(int*)", size, rankReceiver);
+
   rankReceiver = rankReceiver - _rankOffset;
+
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
+
   try {
-    sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
                 asio::buffer((void*)itemsToSend, size * sizeof(int)));
   } catch (std::exception& e) {
@@ -526,7 +531,9 @@ SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
 Request::SharedPointer
 SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
   preciceTrace2("aSend(int*)", size, rankReceiver);
+
   rankReceiver = rankReceiver - _rankOffset;
+
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
@@ -535,7 +542,6 @@ SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
   Request::SharedPointer request(new SocketRequest);
 
   try {
-    sendQuery(rankReceiver);
     asio::async_write(*_sockets[rankReceiver],
                       asio::buffer((void*)itemsToSend, size * sizeof(int)),
                       [request](boost::system::error_code const&, std::size_t) {
@@ -551,13 +557,15 @@ SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
 void
 SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
   preciceTrace2("send(double*)", size, rankReceiver);
+
   rankReceiver = rankReceiver - _rankOffset;
+
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
+
   try {
-    sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
                 asio::buffer((void*)itemsToSend, size * sizeof(double)));
   } catch (std::exception& e) {
@@ -568,7 +576,9 @@ SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
 Request::SharedPointer
 SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
   preciceTrace2("aSend(double*)", size, rankReceiver);
+
   rankReceiver = rankReceiver - _rankOffset;
+
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
@@ -577,7 +587,6 @@ SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
   Request::SharedPointer request(new SocketRequest);
 
   try {
-    sendQuery(rankReceiver);
     asio::async_write(*_sockets[rankReceiver],
                       asio::buffer((void*)itemsToSend, size * sizeof(double)),
                       [request](boost::system::error_code const&, std::size_t) {
@@ -593,13 +602,15 @@ SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
 void
 SocketCommunication::send(double itemToSend, int rankReceiver) {
   preciceTrace2("send(double)", itemToSend, rankReceiver);
+
   rankReceiver = rankReceiver - _rankOffset;
+
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
+
   try {
-    sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
                 asio::buffer((void*)&itemToSend, sizeof(double)));
   } catch (std::exception& e) {
@@ -615,13 +626,15 @@ SocketCommunication::aSend(double* itemToSend, int rankReceiver) {
 void
 SocketCommunication::send(int itemToSend, int rankReceiver) {
   preciceTrace2("send(int)", itemToSend, rankReceiver);
+
   rankReceiver = rankReceiver - _rankOffset;
+
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
+
   try {
-    sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
                 asio::buffer((void*)&itemToSend, sizeof(int)));
   } catch (std::exception& e) {
@@ -637,13 +650,15 @@ SocketCommunication::aSend(int* itemToSend, int rankReceiver) {
 void
 SocketCommunication::send(bool itemToSend, int rankReceiver) {
   preciceTrace2("send(bool)", itemToSend, rankReceiver);
+
   rankReceiver = rankReceiver - _rankOffset;
+
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
+
   try {
-    sendQuery(rankReceiver);
     asio::write(*_sockets[rankReceiver],
                 asio::buffer((void*)&itemToSend, sizeof(bool)));
   } catch (std::exception& e) {
@@ -654,7 +669,9 @@ SocketCommunication::send(bool itemToSend, int rankReceiver) {
 Request::SharedPointer
 SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
   preciceTrace1("aSend(bool*)", rankReceiver);
+
   rankReceiver = rankReceiver - _rankOffset;
+
   assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
@@ -663,7 +680,6 @@ SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
   Request::SharedPointer request(new SocketRequest);
 
   try {
-    sendQuery(rankReceiver);
     asio::async_write(*_sockets[rankReceiver],
                       asio::buffer((void*)itemToSend, sizeof(bool)),
                       [request](boost::system::error_code const&, std::size_t) {
@@ -679,13 +695,16 @@ SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
 int
 SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
   preciceTrace1("receive(string)", rankSender);
+
   rankSender = rankSender - _rankOffset;
-  rankSender = getSenderRank(rankSender);
+
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
+
   size_t size = 0;
+
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)&size, sizeof(size_t)));
@@ -697,20 +716,21 @@ SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
     preciceError("receive(string)", "Receive failed: " << e.what());
   }
   preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
-  if (isServer())
-    receiveNextQuery(rankSender);
+
   return rankSender;
 }
 
 int
 SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
   preciceTrace2("receive(int*)", size, rankSender);
+
   rankSender = rankSender - _rankOffset;
-  rankSender = getSenderRank(rankSender);
+
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
+
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)itemsToReceive, size * sizeof(int)));
@@ -718,16 +738,16 @@ SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
     preciceError("receive(int*)", "Receive failed: " << e.what());
   }
   preciceDebug("Received from rank " << rankSender);
-  if (isServer())
-    receiveNextQuery(rankSender);
+
   return rankSender;
 }
 
 Request::SharedPointer
 SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
   preciceTrace2("aReceive(int*)", size, rankSender);
+
   rankSender = rankSender - _rankOffset;
-  rankSender = getSenderRank(rankSender);
+
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
@@ -745,21 +765,20 @@ SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
     preciceError("aReceive(int*)", "Receive failed: " << e.what());
   }
 
-  if (isServer())
-    receiveNextQuery(rankSender);
-
   return request;
 }
 
 int
 SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
   preciceTrace2("receive(double*)", size, rankSender);
+
   rankSender = rankSender - _rankOffset;
-  rankSender = getSenderRank(rankSender);
+
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
+
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)itemsToReceive, size * sizeof(double)));
@@ -767,8 +786,7 @@ SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
     preciceError("receive(double*)", "Receive failed: " << e.what());
   }
   preciceDebug("Received from rank " << rankSender);
-  if (isServer())
-    receiveNextQuery(rankSender);
+
   return rankSender;
 }
 
@@ -777,8 +795,9 @@ SocketCommunication::aReceive(double* itemsToReceive,
                               int size,
                               int rankSender) {
   preciceTrace2("aReceive(double*)", size, rankSender);
+
   rankSender = rankSender - _rankOffset;
-  rankSender = getSenderRank(rankSender);
+
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
@@ -796,21 +815,20 @@ SocketCommunication::aReceive(double* itemsToReceive,
     preciceError("aReceive(double*)", "Receive failed: " << e.what());
   }
 
-  if (isServer())
-    receiveNextQuery(rankSender);
-
   return request;
 }
 
 int
 SocketCommunication::receive(double& itemToReceive, int rankSender) {
   preciceTrace1("receive(double)", rankSender);
+
   rankSender = rankSender - _rankOffset;
-  rankSender = getSenderRank(rankSender);
+
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
+
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)&itemToReceive, sizeof(double)));
@@ -818,8 +836,7 @@ SocketCommunication::receive(double& itemToReceive, int rankSender) {
     preciceError("receive(double)", "Receive failed: " << e.what());
   }
   preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
-  if (isServer())
-    receiveNextQuery(rankSender);
+
   return rankSender;
 }
 
@@ -831,12 +848,14 @@ SocketCommunication::aReceive(double* itemToReceive, int rankSender) {
 int
 SocketCommunication::receive(int& itemToReceive, int rankSender) {
   preciceTrace1("receive(int)", rankSender);
+
   rankSender = rankSender - _rankOffset;
-  rankSender = getSenderRank(rankSender);
+
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
+
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)&itemToReceive, sizeof(int)));
@@ -844,8 +863,7 @@ SocketCommunication::receive(int& itemToReceive, int rankSender) {
     preciceError("receive(int)", "Receive failed: " << e.what());
   }
   preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
-  if (isServer())
-    receiveNextQuery(rankSender);
+
   return rankSender;
 }
 
@@ -857,12 +875,14 @@ SocketCommunication::aReceive(int* itemToReceive, int rankSender) {
 int
 SocketCommunication::receive(bool& itemToReceive, int rankSender) {
   preciceTrace1("receive(bool)", rankSender);
+
   rankSender = rankSender - _rankOffset;
-  rankSender = getSenderRank(rankSender);
+
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
+
   try {
     asio::read(*_sockets[rankSender],
                asio::buffer((void*)&itemToReceive, sizeof(bool)));
@@ -870,16 +890,16 @@ SocketCommunication::receive(bool& itemToReceive, int rankSender) {
     preciceError("receive(bool)", "Receive failed: " << e.what());
   }
   preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
-  if (isServer())
-    receiveNextQuery(rankSender);
+
   return rankSender;
 }
 
 Request::SharedPointer
 SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
   preciceTrace1("aReceive(bool*)", rankSender);
+
   rankSender = rankSender - _rankOffset;
-  rankSender = getSenderRank(rankSender);
+
   assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
@@ -897,97 +917,7 @@ SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
     preciceError("aReceive(bool*)", "Receive failed: " << e.what());
   }
 
-  if (isServer())
-    receiveNextQuery(rankSender);
-
   return request;
-}
-
-int
-SocketCommunication::getSenderRank(int desiredRank) {
-  preciceTrace1("getSenderRank()", desiredRank);
-  int chosenRank = -1;
-  if (isClient()) {
-    preciceDebug("Client process uses server process 0");
-    assertion1(desiredRank != ANY_SENDER, desiredRank);
-    chosenRank = desiredRank;
-  }
-  while (chosenRank == -1) {
-    preciceDebug("Server process looks in client queries");
-    std::unique_lock<std::mutex> lock(_requestMutex);
-    if (not _clientQueries.empty()) {
-      if (desiredRank == ANY_SENDER) {
-        chosenRank = *_clientQueries.begin();
-        _clientQueries.erase(_clientQueries.begin());
-      } else {
-        std::set<int>::iterator iter = _clientQueries.find(desiredRank);
-        if (iter != _clientQueries.end()) {
-          chosenRank = *iter;
-          _clientQueries.erase(iter);
-        }
-      }
-    }
-    if (chosenRank == -1) {
-      _requestCondition.wait(lock);
-    }
-  }
-  preciceDebug("Chose sender rank to be " << chosenRank);
-  return chosenRank;
-}
-
-void
-SocketCommunication::sendQuery(int receiverRank) {
-  preciceTrace1("sendQuery()", receiverRank);
-  if (isClient()) {
-    preciceDebug("Process is a client, send query");
-    asio::write(*_sockets[receiverRank],
-                asio::buffer((void*)&_rank, sizeof(int)));
-  }
-}
-
-void
-SocketCommunication::receiveNextQuery(int senderRank) {
-  preciceTrace1("receiveNextQuery()", senderRank);
-  assertion2((senderRank >= 0) && (senderRank < _remoteCommunicatorSize),
-             senderRank,
-             _remoteCommunicatorSize);
-  PtrSocket& socket = _sockets[senderRank];
-  int* buffer = &_clientQueryBuffers[senderRank];
-  int bufferSize = sizeof(int);
-  asio::async_read(
-      *socket,
-      asio::buffer((void*)buffer, bufferSize),
-      boost::bind(
-          &SocketCommunication::onAsyncReceive, this, _1, _2, senderRank));
-}
-
-void
-SocketCommunication::onThreadRun() {
-  preciceTrace("onThreadRun()");
-  for (size_t i = 0; i < _sockets.size(); i++) {
-    receiveNextQuery(i);
-  }
-  _ioService->run(); // Enable asynchronous callbacks
-}
-
-void
-SocketCommunication::onAsyncReceive(const boost::system::error_code& error,
-                                    size_t bytesTransferred,
-                                    int clientIndex) {
-  preciceTrace2("onAsyncReceive()", bytesTransferred, clientIndex);
-  if (error) {
-    preciceDebug("Aborting receiving request from client " << clientIndex);
-    return;
-  }
-  assertion2((clientIndex >= 0) && (clientIndex < _remoteCommunicatorSize),
-             clientIndex,
-             _remoteCommunicatorSize);
-  assertion2(_clientQueryBuffers[clientIndex] == clientIndex,
-             _clientQueryBuffers[clientIndex],
-             clientIndex);
-  std::unique_lock<std::mutex> lock(_requestMutex);
-  _clientQueries.insert(clientIndex);
-  _requestCondition.notify_one();
 }
 
 bool
