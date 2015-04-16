@@ -154,9 +154,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   preciceTrace("computeMapping()");
 
-  preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
-               "computeMapping()", "RBF mapping "
-               << "is not yet supported for a participant in master mode");
+//  preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
+//               "computeMapping()", "RBF mapping "
+//               << "is not yet supported for a participant in master mode");
 
   using namespace tarch::la;
   assertion2(input()->getDimensions() == output()->getDimensions(),

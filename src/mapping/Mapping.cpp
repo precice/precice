@@ -83,6 +83,13 @@ bool Mapping:: doesVertexContribute(
   return true;
 }
 
+bool Mapping:: isProjectionMapping()
+{
+  return false;
+}
+
+
+
 int Mapping:: getDimensions(){
   return _dimensions;
 }

@@ -286,6 +286,10 @@ public:
     _globalNumberOfVertices = globalNumberOfVertices;
   }
 
+  void setGlobalIndices(std::vector<int> globalIndices);
+
+  void setOwnerInformation(std::vector<int> ownerVec);
+
   void addMesh(Mesh& deltaMesh);
 
   /**

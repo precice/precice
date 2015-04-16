@@ -256,6 +256,59 @@ void CommunicatedGeometry:: scatterMesh(
       seed.getVertexDistribution()[rankSlave] = globalVertexIDs;
     }
   }
+
+  //send global index back to slave (needed for petsc)
+  if (utils::MasterSlave::_slaveMode) {
+    std::vector<int> globalIndices;
+    if (numberOfVertices!=0) {
+      utils::MasterSlave::_communication->receive(raw(globalIndices),numberOfVertices,0);
+      seed.setGlobalIndices(globalIndices);
+      preciceDebug("My global indices" << globalIndices);
+    }
+  }
+  else { // Master
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      auto globalIndices = seed.getVertexDistribution()[rankSlave];
+      int numberOfVertices = globalIndices.size();
+      if (numberOfVertices!=0) {
+        utils::MasterSlave::_communication->send(raw(globalIndices),numberOfVertices,rankSlave);
+      }
+    }
+  }
+
+  //send owner information to slave (needed for petsc)
+  if (utils::MasterSlave::_slaveMode) {
+    std::vector<int> ownerVec;
+    if (numberOfVertices!=0) {
+      utils::MasterSlave::_communication->receive(raw(ownerVec),numberOfVertices,0);
+      seed.setOwnerInformation(ownerVec);
+      preciceDebug("My owner information" << ownerVec);
+    }
+  }
+  else { // Master
+    std::vector<int> globalOwnerVec(seed.getGlobalNumberOfVertices(),0);
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      auto globalIndices = seed.getVertexDistribution()[rankSlave];
+      int numberOfVertices = globalIndices.size();
+      std::vector<int> ownerVec(numberOfVertices,0);
+      for(int i=0;i<numberOfVertices;i++){
+        if(globalOwnerVec[globalIndices[i]] == 0){
+          ownerVec[i] = 1;
+          globalOwnerVec[globalIndices[i]] = 1;
+        }
+      }
+      if (numberOfVertices!=0) {
+        utils::MasterSlave::_communication->send(raw(ownerVec),numberOfVertices,rankSlave);
+      }
+    }
+#   ifdef Debug
+      for(int i=0;i<seed.getGlobalNumberOfVertices();i++){
+        assertion(globalOwnerVec[i]==1);
+      }
+#   endif
+
+  }
+
 }
 
 void CommunicatedGeometry:: setBoundingFromMapping(
@@ -278,20 +331,20 @@ void CommunicatedGeometry:: setSafetyFactor(
 
 void CommunicatedGeometry:: computeBoundingMappings()
 {
-  if (_boundingFromMapping.use_count() > 0) {
+  if (_boundingFromMapping.use_count() > 0 && _boundingFromMapping->isProjectionMapping()) {
     _boundingFromMapping->computeMapping();
   }
-  if (_boundingToMapping.use_count() > 0) {
+  if (_boundingToMapping.use_count() > 0 && _boundingToMapping->isProjectionMapping()) {
     _boundingToMapping->computeMapping();
   }
 }
 
 void CommunicatedGeometry:: clearBoundingMappings()
 {
-  if (_boundingFromMapping.use_count() > 0) {
+  if (_boundingFromMapping.use_count() > 0 && _boundingFromMapping->isProjectionMapping()) {
     _boundingFromMapping->clear();
   }
-  if (_boundingToMapping.use_count() > 0) {
+  if (_boundingToMapping.use_count() > 0 && _boundingToMapping->isProjectionMapping()) {
     _boundingToMapping->clear();
   }
 }

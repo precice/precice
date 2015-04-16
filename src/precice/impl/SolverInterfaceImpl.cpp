@@ -105,6 +105,18 @@ SolverInterfaceImpl:: SolverInterfaceImpl
                "SolverInterfaceImpl()",
                "Accessor process index has to be smaller than accessor process "
                << "size (given as " << _accessorProcessRank << ")!");
+
+# ifndef PRECICE_NO_PETSC
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  if (not petscIsInitialized) {
+    // Initialize Petsc if it has not already been initialized in Parallel.cpp using the precice executable.
+    // So in the standard library use case.
+    // This makes it possible to pass command line arguments that are consumed by Petsc when using the executable.
+    PetscInitializeNoArguments();
+  }
+# endif
+
   precice::utils::Events_Init();
 
   /* When precice stops abruptly, e.g. an external solver crashes, the
@@ -171,6 +183,7 @@ void SolverInterfaceImpl:: configure
   const config::SolverInterfaceConfiguration& config )
 {
   preciceTrace("configure()");
+
   _dimensions = config.getDimensions();
   _geometryMode = config.isGeometryMode ();
   _restartMode = config.isRestartMode ();
@@ -262,15 +275,6 @@ double SolverInterfaceImpl:: initialize()
 {
   preciceTrace("initialize()");
   Event e(__func__);
-# ifndef PRECICE_NO_PETSC
-  PetscBool petscIsInitialized;
-  PetscInitialized(&petscIsInitialized);
-  if (not petscIsInitialized) {
-    // Initialize Petsc if it has not already been initialized in Parallel.cpp using the precice executable.
-    // This makes it possible to pass command line arguments that are consumed by Petsc when using the executable.
-    PetscInitializeNoArguments();
-  }
-# endif
 
   if (_clientMode){
     preciceDebug("Request perform initializations");
