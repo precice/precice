@@ -11,6 +11,11 @@
 
 namespace precice {
 namespace com {
+tarch::logging::Log Communication::_log(
+    "precice::com::Communication");
+
+
+
 void
 Communication::broadcast() {
   preciceTrace("broadcast()");

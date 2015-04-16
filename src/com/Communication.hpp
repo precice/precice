@@ -8,6 +8,7 @@
 #include "Request.hpp"
 
 #include <memory>
+#include "tarch/logging/Log.h"
 
 namespace precice {
 namespace com {
@@ -302,6 +303,10 @@ protected:
    * to size - 2
    */
   int _rankOffset;
+
+private:
+  // @brief Logging device.
+  static tarch::logging::Log _log;
 };
 }
 } // namespace precice, com

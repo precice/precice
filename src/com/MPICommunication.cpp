@@ -16,22 +16,22 @@ struct MPI_Select_unsigned_integer_datatype;
 
 template <>
 struct MPI_Select_unsigned_integer_datatype<1> {
-  static MPI_Datatype const datatype = MPI_UNSIGNED_CHAR;
+  static constexpr MPI_Datatype const datatype = MPI_UNSIGNED_CHAR;
 };
 
 template <>
 struct MPI_Select_unsigned_integer_datatype<2> {
-  static MPI_Datatype const datatype = MPI_UNSIGNED_SHORT;
+  static constexpr MPI_Datatype const datatype = MPI_UNSIGNED_SHORT;
 };
 
 template <>
 struct MPI_Select_unsigned_integer_datatype<4> {
-  static MPI_Datatype const datatype = MPI_UNSIGNED;
+  static constexpr MPI_Datatype const datatype = MPI_UNSIGNED;
 };
 
 template <>
 struct MPI_Select_unsigned_integer_datatype<8> {
-  static MPI_Datatype const datatype = MPI_UNSIGNED_LONG;
+  static constexpr MPI_Datatype const datatype = MPI_UNSIGNED_LONG;
 };
 
 #define MPI_BOOL MPI_Select_unsigned_integer_datatype<sizeof(bool)>::datatype
