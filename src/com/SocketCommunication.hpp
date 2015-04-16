@@ -273,7 +273,6 @@ private:
   std::string _addressDirectory;
 
   bool _isConnected;
-  bool _isClient;
 
   int _remoteCommunicatorSize;
 

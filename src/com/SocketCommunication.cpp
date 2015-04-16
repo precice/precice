@@ -34,7 +34,6 @@ SocketCommunication::SocketCommunication(unsigned short portNumber,
     , _networkName(networkName)
     , _addressDirectory(addressDirectory)
     , _isConnected(false)
-    , _isClient(false)
     , _remoteCommunicatorSize(0)
     , _ioService(new IOService)
     , _sockets()
@@ -75,13 +74,16 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
                                       int acceptorProcessRank,
                                       int acceptorCommunicatorSize) {
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+
   preciceCheck(acceptorCommunicatorSize == 1,
                "acceptConnection()",
                "Acceptor of socket connection can only have one process!");
 
   _rank = acceptorProcessRank;
 
-  using asio::ip::tcp;
+  std::string address;
+  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
+                              "-" + nameAcceptor + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -90,6 +92,8 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
                  "acceptConnection()",
                  "Network \"" << _networkName
                               << "\" not found for socket connection!");
+
+    using asio::ip::tcp;
 
     tcp::acceptor acceptor(*_ioService);
 
@@ -104,21 +108,15 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
       _portNumber = acceptor.local_endpoint().port();
     }
 
-    std::string address(ipAddress + ":" + std::to_string(_portNumber));
-    std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                                "-" + nameAcceptor + ".address");
+    address = ipAddress + ":" + std::to_string(_portNumber);
 
     Publisher::ScopedPublication sp(addressFileName, address);
 
-    // std::cout << address << std::endl;
-
     preciceDebug("Accept connection at " << address);
 
-    PtrSocket socket(new tcp::socket(*_ioService));
+    PtrSocket socket(new Socket(*_ioService));
 
     acceptor.accept(*socket);
-
-    _isConnected = true;
 
     int remoteRank = -1;
     int remoteSize = 0;
@@ -133,20 +131,23 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
 
     _remoteCommunicatorSize = remoteSize;
 
-    preciceDebug("Received rank=" << remoteRank << ", size=" << remoteSize);
-
     _sockets.resize(_remoteCommunicatorSize);
 
     _sockets[remoteRank] = socket;
+
+    _isConnected = true;
 
     send(acceptorProcessRank, remoteRank);
     send(acceptorCommunicatorSize, remoteRank);
 
     for (int i = 1; i < _remoteCommunicatorSize; ++i) {
       socket = PtrSocket(new Socket(*_ioService));
-      acceptor.accept(*socket); // Waits until connection
+
+      acceptor.accept(*socket);
+
       asio::read(*socket, asio::buffer(&remoteRank, sizeof(int)));
       asio::read(*socket, asio::buffer(&remoteSize, sizeof(int)));
+
       preciceCheck(remoteSize == _remoteCommunicatorSize,
                    "acceptConnection()",
                    "Remote communicator sizes are inconsistent!");
@@ -155,6 +156,9 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
                    "Duplicate request to connect by same rank (" << remoteRank
                                                                  << ")!");
       _sockets[remoteRank] = socket;
+
+      _isConnected = true;
+
       send(acceptorProcessRank, remoteRank);
       send(acceptorCommunicatorSize, remoteRank);
     }
@@ -162,8 +166,8 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
     acceptor.close();
   } catch (std::exception& e) {
     preciceError("acceptConnection()",
-                 "Accepting connection at port " << _portNumber
-                                                 << " failed: " << e.what());
+                 "Accepting connection at " << address
+                                            << " failed: " << e.what());
   }
 
   // NOTE:
@@ -179,9 +183,17 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
                                               int requesterCommunicatorSize) {
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
 
+  preciceCheck(requesterCommunicatorSize > 0,
+               "acceptConnection()",
+               "Requester communicator "
+                   << "size has to be > 0!");
+
+  _remoteCommunicatorSize = requesterCommunicatorSize;
   _rank = 0;
 
-  using asio::ip::tcp;
+  std::string address;
+  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
+                              "-" + nameAcceptor + ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -190,6 +202,8 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
                  "acceptConnection()",
                  "Network \"" << _networkName
                               << "\" not found for socket connection!");
+
+    using asio::ip::tcp;
 
     tcp::acceptor acceptor(*_ioService);
 
@@ -204,57 +218,28 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
       _portNumber = acceptor.local_endpoint().port();
     }
 
-    std::string address(ipAddress + ":" + std::to_string(_portNumber));
-    std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                                "-" + nameAcceptor + ".address");
+    address = ipAddress + ":" + std::to_string(_portNumber);
 
     Publisher::ScopedPublication sp(addressFileName, address);
 
-    // std::cout << address << std::endl;
-
     preciceDebug("Accept connection at " << address);
-
-    PtrSocket socket(new tcp::socket(*_ioService));
-
-    acceptor.accept(*socket);
-
-    _isConnected = true;
-
-    int remoteSize = requesterCommunicatorSize;
-
-    preciceCheck(remoteSize > 0,
-                 "acceptConnection()",
-                 "Requester communicator "
-                     << "size has to be > 0!");
-
-    _remoteCommunicatorSize = remoteSize;
 
     _sockets.resize(_remoteCommunicatorSize);
 
-    int remoteRank = 0;
+    for (int remoteRank = 0; remoteRank < _remoteCommunicatorSize;
+         ++remoteRank) {
+      PtrSocket socket = PtrSocket(new Socket(*_ioService));
 
-    _sockets[remoteRank] = socket;
+      acceptor.accept(*socket);
 
-    send(remoteRank, remoteRank);
-
-    send(0, remoteRank);
-    send(1, remoteRank);
-
-    for (int i = 1; i < _remoteCommunicatorSize; ++i) {
-      remoteRank = i;
-
-      socket = PtrSocket(new Socket(*_ioService));
-
-      acceptor.accept(*socket); // Waits until connection
-
-      preciceCheck(remoteSize == _remoteCommunicatorSize,
-                   "acceptConnection()",
-                   "Remote communicator sizes are inconsistent!");
       preciceCheck(_sockets[remoteRank].use_count() == 0,
                    "acceptConnection()",
                    "Duplicate request to connect by same rank (" << remoteRank
                                                                  << ")!");
+
       _sockets[remoteRank] = socket;
+
+      _isConnected = true;
 
       send(remoteRank, remoteRank);
 
@@ -265,8 +250,8 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
     acceptor.close();
   } catch (std::exception& e) {
     preciceError("acceptConnection()",
-                 "Accepting connection at port " << _portNumber
-                                                 << " failed: " << e.what());
+                 "Accepting connection at " << address
+                                            << " failed: " << e.what());
   }
 
   // NOTE:
@@ -283,16 +268,12 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
                                        int requesterCommunicatorSize) {
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
 
-  using asio::ip::tcp;
+  std::string address;
+  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
+                              "-" + nameAcceptor + ".address");
 
   try {
-    std::string address;
-    std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                                "-" + nameAcceptor + ".address");
-
     Publisher::read(addressFileName, address);
-
-    // std::cout << address << std::endl;
 
     preciceDebug("Request connection to " << address);
 
@@ -303,6 +284,9 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
     _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
 
     PtrSocket socket(new Socket(*_ioService));
+
+    using asio::ip::tcp;
+
     tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
 
     while (not isConnected()) {
@@ -320,21 +304,17 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
         // Wait a little, since after a couple of ten-thousand trials the system
         // seems to get confused and the requester connects wrongly to itself.
         boost::asio::deadline_timer timer(*_ioService,
-                                          boost::posix_time::milliseconds(100));
+                                          boost::posix_time::milliseconds(1));
         timer.wait();
       }
     }
 
     _sockets.push_back(socket);
 
+    _rank = requesterProcessRank;
+
     send(requesterProcessRank, 0);
     send(requesterCommunicatorSize, 0);
-
-    // Activates sending of queries before actual content. Has to be done after
-    // calls to send and before calls to receive.
-    _isClient = true;
-
-    _rank = requesterProcessRank;
 
     int remoteSize = 0;
     int remoteRank = -1;
@@ -349,12 +329,13 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
     preciceCheck(remoteSize == 1,
                  "requestConnection()",
                  "Acceptor communicator "
-                     << "size has to be == 1!");
+                     << "size has to be 1!");
 
     _remoteCommunicatorSize = remoteSize;
   } catch (std::exception& e) {
     preciceError("requestConnection()",
-                 "Requesting connection failed: " << e.what());
+                 "Requesting connection to " << address
+                                             << " failed: " << e.what());
   }
 
   // NOTE:
@@ -369,16 +350,12 @@ SocketCommunication::requestConnectionAsClient(
     std::string const& nameAcceptor, std::string const& nameRequester) {
   preciceTrace2("requestConnectionAsClient()", nameAcceptor, nameRequester);
 
-  using asio::ip::tcp;
+  std::string address;
+  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
+                              "-" + nameAcceptor + ".address");
 
   try {
-    std::string address;
-    std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                                "-" + nameAcceptor + ".address");
-
     Publisher::read(addressFileName, address);
-
-    // std::cout << address << std::endl;
 
     preciceDebug("Request connection to " << address);
 
@@ -389,6 +366,9 @@ SocketCommunication::requestConnectionAsClient(
     _portNumber = static_cast<unsigned short>(std::stoi(portNumber));
 
     PtrSocket socket(new Socket(*_ioService));
+
+    using asio::ip::tcp;
+
     tcp::resolver::query query(tcp::v4(), ipAddress, portNumber);
 
     while (not isConnected()) {
@@ -406,14 +386,12 @@ SocketCommunication::requestConnectionAsClient(
         // Wait a little, since after a couple of ten-thousand trials the system
         // seems to get confused and the requester connects wrongly to itself.
         boost::asio::deadline_timer timer(*_ioService,
-                                          boost::posix_time::milliseconds(100));
+                                          boost::posix_time::milliseconds(1));
         timer.wait();
       }
     }
 
     _sockets.push_back(socket);
-
-    _isClient = true;
 
     receive(_rank, 0);
 
@@ -430,12 +408,13 @@ SocketCommunication::requestConnectionAsClient(
     preciceCheck(remoteSize == 1,
                  "requestConnection()",
                  "Acceptor communicator "
-                     << "size has to be == 1!");
+                     << "size has to be 1!");
 
     _remoteCommunicatorSize = remoteSize;
   } catch (std::exception& e) {
     preciceError("requestConnection()",
-                 "Requesting connection failed: " << e.what());
+                 "Requesting connection to " << address
+                                             << " failed: " << e.what());
   }
 
   // NOTE:
@@ -466,6 +445,7 @@ SocketCommunication::closeConnection() {
     socket->close();
   }
 
+  _remoteCommunicatorSize = 0;
   _isConnected = false;
 }
 
@@ -480,6 +460,7 @@ SocketCommunication::finishSendPackage() {
 int
 SocketCommunication::startReceivePackage(int rankSender) {
   preciceTrace1("startReceivePackage()", rankSender);
+
   return rankSender;
 }
 
@@ -713,7 +694,6 @@ SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(string)", "Receive failed: " << e.what());
   }
-  preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
 
   return rankSender;
 }
@@ -735,7 +715,6 @@ SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(int*)", "Receive failed: " << e.what());
   }
-  preciceDebug("Received from rank " << rankSender);
 
   return rankSender;
 }
@@ -783,7 +762,6 @@ SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(double*)", "Receive failed: " << e.what());
   }
-  preciceDebug("Received from rank " << rankSender);
 
   return rankSender;
 }
@@ -833,7 +811,6 @@ SocketCommunication::receive(double& itemToReceive, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(double)", "Receive failed: " << e.what());
   }
-  preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
 
   return rankSender;
 }
@@ -860,7 +837,6 @@ SocketCommunication::receive(int& itemToReceive, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(int)", "Receive failed: " << e.what());
   }
-  preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
 
   return rankSender;
 }
@@ -887,7 +863,6 @@ SocketCommunication::receive(bool& itemToReceive, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(bool)", "Receive failed: " << e.what());
   }
-  preciceDebug("Received " << itemToReceive << " from rank " << rankSender);
 
   return rankSender;
 }
@@ -916,16 +891,6 @@ SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
   }
 
   return request;
-}
-
-bool
-SocketCommunication::isClient() {
-  return _isClient;
-}
-
-bool
-SocketCommunication::isServer() {
-  return !_isClient;
 }
 
 std::string
