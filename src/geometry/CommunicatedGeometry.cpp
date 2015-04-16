@@ -259,11 +259,11 @@ void CommunicatedGeometry:: scatterMesh(
 
   //send global index back to slave (needed for petsc)
   if (utils::MasterSlave::_slaveMode) {
-    std::vector<int> globalIndices;
     if (numberOfVertices!=0) {
+      std::vector<int> globalIndices(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(raw(globalIndices),numberOfVertices,0);
-      seed.setGlobalIndices(globalIndices);
       preciceDebug("My global indices" << globalIndices);
+      seed.setGlobalIndices(globalIndices);
     }
   }
   else { // Master
@@ -274,20 +274,21 @@ void CommunicatedGeometry:: scatterMesh(
         utils::MasterSlave::_communication->send(raw(globalIndices),numberOfVertices,rankSlave);
       }
     }
+    seed.setGlobalIndices(seed.getVertexDistribution()[0]);
   }
 
   //send owner information to slave (needed for petsc)
   if (utils::MasterSlave::_slaveMode) {
-    std::vector<int> ownerVec;
     if (numberOfVertices!=0) {
+      std::vector<int> ownerVec(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(raw(ownerVec),numberOfVertices,0);
-      seed.setOwnerInformation(ownerVec);
       preciceDebug("My owner information" << ownerVec);
+      seed.setOwnerInformation(ownerVec);
     }
   }
   else { // Master
     std::vector<int> globalOwnerVec(seed.getGlobalNumberOfVertices(),0);
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+    for (int rankSlave = 0; rankSlave < utils::MasterSlave::_size; rankSlave++){
       auto globalIndices = seed.getVertexDistribution()[rankSlave];
       int numberOfVertices = globalIndices.size();
       std::vector<int> ownerVec(numberOfVertices,0);
@@ -298,7 +299,12 @@ void CommunicatedGeometry:: scatterMesh(
         }
       }
       if (numberOfVertices!=0) {
-        utils::MasterSlave::_communication->send(raw(ownerVec),numberOfVertices,rankSlave);
+        if(rankSlave==0){ //master own data
+          seed.setOwnerInformation(ownerVec);
+        }
+        else{
+          utils::MasterSlave::_communication->send(raw(ownerVec),numberOfVertices,rankSlave);
+        }
       }
     }
 #   ifdef Debug
