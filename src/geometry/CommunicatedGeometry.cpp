@@ -309,7 +309,7 @@ void CommunicatedGeometry:: scatterMesh(
     }
 #   ifdef Debug
       for(int i=0;i<seed.getGlobalNumberOfVertices();i++){
-        if(globalOwnerVec[i]==1){
+        if(globalOwnerVec[i]==0){
           preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << seed.getName()
               << " was completely filtered out, since it has no influence on any mapping.")
         }
