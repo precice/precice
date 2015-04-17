@@ -8,6 +8,7 @@
 #include <algorithm>
 #include <vector>
 #include <map>
+#include <stack>
 #include <set>
 #include <list>
 #include "Parallel.hpp"
@@ -20,10 +21,10 @@ namespace utils {
  * @brief Returns true, if numerical truncation happens in case of type
  *        conversion.
  */
-template <class OUT, class IN>
-inline bool isTruncated(IN in) {
-  return (                  in > std::numeric_limits<OUT>::max()) ||
-         (IN(-1) < IN(0) && in < std::numeric_limits<OUT>::min());
+template <class Out, class In>
+inline bool isTruncated(In in) {
+  return (                  in > std::numeric_limits<Out>::max()) ||
+         (In(-1) < In(0) && in < std::numeric_limits<Out>::min());
 }
 
 /**
@@ -151,6 +152,33 @@ inline AppendIterator<CONTAINER_T> appendTo
 {
    return AppendIterator<CONTAINER_T>(left);
 }
+
+template <class T, class Container = std::deque<T> >
+class Stack : public std::stack<T, Container> {
+public:
+  typedef typename Container::iterator iterator;
+  typedef typename Container::const_iterator const_iterator;
+
+  iterator
+  begin() {
+    return this->c.begin();
+  }
+
+  iterator
+  end() {
+    return this->c.end();
+  }
+
+  const_iterator
+  begin() const {
+    return this->c.begin();
+  }
+
+  const_iterator
+  end() const {
+    return this->c.end();
+  }
+};
 
 }} // namespace precice, utils
 

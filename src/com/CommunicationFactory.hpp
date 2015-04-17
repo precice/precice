@@ -8,6 +8,7 @@
 #include "Communication.hpp"
 
 #include <memory>
+#include <stdexcept>
 
 namespace precice {
 namespace com {
@@ -22,6 +23,11 @@ public:
   virtual ~CommunicationFactory(){};
 
   virtual Communication::SharedPointer newCommunication() = 0;
+
+  virtual std::string
+  addressDirectory() {
+    throw std::runtime_error("Not available!");
+  }
 };
 }
 } // namespace precice, com

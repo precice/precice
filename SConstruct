@@ -137,8 +137,8 @@ if env["petsc"]:
     PETSC_ARCH = checkset_var("PETSC_ARCH", "")
 
 if env["boost_inst"]:
-    if env["sockets"]:
-        boostSystemLib = checkset_var('PRECICE_BOOST_SYSTEM_LIB', "boost_system")
+    boostSystemLib     = checkset_var('PRECICE_BOOST_SYSTEM_LIB',     "boost_system")
+    boostFilesystemLib = checkset_var('PRECICE_BOOST_FILESYSTEM_LIB', "boost_filesystem")
 else:
     boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
 
@@ -245,10 +245,10 @@ else:
 
 
 if env["boost_inst"]:
-    #env.AppendUnique(CPPPATH = [boostIncPath])
-    # The socket implementation is based on Boost libs
     if not uniqueCheckLib(conf, boostSystemLib):
-        errorMissingLib(boostSystemLib, 'Boost')
+        errorMissingLib(boostSystemLib, 'Boost.System')
+    if not uniqueCheckLib(conf, boostFilesystemLib):
+        errorMissingLib(boostFilesystemLib, 'Boost.Filesystem')
 else:
     env.AppendUnique(CPPPATH = [boostRootPath])
 if not conf.CheckCXXHeader('boost/array.hpp'):
@@ -339,12 +339,14 @@ env = conf.Finish() # Used to check libraries
 )
 
 sourcesBoost = []
-if env["sockets"] and not env["boost_inst"]:
+if not env["boost_inst"]:
     print
-    print "Copy boost sources for socket communication to build ..."
+    print "Copy Boost sources..."
     if not os.path.exists(buildpath + "/boost/"):
         Execute(Mkdir(buildpath + "/boost/"))
     for file in Glob(boostRootPath + "/libs/system/src/*"):
+        Execute(Copy(buildpath + "/boost/", file))
+    for file in Glob(boostRootPath + "/libs/filesystem/src/*"):
         Execute(Copy(buildpath + "/boost/", file))
     sourcesBoost = Glob(buildpath + '/boost/*.cpp')
     print "... done"

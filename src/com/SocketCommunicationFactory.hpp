@@ -31,6 +31,8 @@ public:
 
   Communication::SharedPointer newCommunication();
 
+  std::string addressDirectory();
+
 private:
   unsigned short _portNumber;
   bool _reuseAddress;
