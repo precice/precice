@@ -198,6 +198,9 @@ void PetRadialBasisFctMappingTest:: perform2DTestConsistentMapping
   inMesh->createVertex ( Vector2D(1.0, 1.0) );
   inMesh->createVertex ( Vector2D(0.0, 1.0) );
   inMesh->allocateDataValues ();
+  for (mesh::Vertex& v : inMesh->vertices())
+    v.setGlobalIndex(v.getID());
+  
   tarch::la::Vector<4,double> assignValues;
   assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
   utils::DynVector& values = inData->values();
@@ -304,6 +307,9 @@ void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping
   outMesh->createVertex ( Vector2D(1.0, 1.0) );
   outMesh->createVertex ( Vector2D(0.0, 1.0) );
   outMesh->allocateDataValues ();
+  for (mesh::Vertex& v : outMesh->vertices())
+    v.setGlobalIndex(v.getID());
+
   utils::DynVector& values = outData->values();
 
   mapping.setMeshes ( inMesh, outMesh );
@@ -366,6 +372,9 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping
   inMesh->createVertex(Vector3D(0.0, 1.0, 1.0));
   inMesh->createVertex(Vector3D(1.0, 1.0, 1.0));
   inMesh->allocateDataValues();
+  for (mesh::Vertex& v : inMesh->vertices())
+    v.setGlobalIndex(v.getID());
+  
   utils::DynVector& values = inData->values();
   assignList(values) = 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
 
@@ -509,6 +518,9 @@ void PetRadialBasisFctMappingTest:: perform3DTestConservativeMapping
   outMesh->createVertex(Vector3D(1.0, 1.0, 1.0));
   outMesh->createVertex(Vector3D(0.0, 1.0, 1.0));
   outMesh->allocateDataValues();
+  for (mesh::Vertex& v : outMesh->vertices())
+    v.setGlobalIndex(v.getID());
+
   utils::DynVector& values = outData->values();
   double expectedSum = sum(inData->values());
 
@@ -575,6 +587,9 @@ void PetRadialBasisFctMappingTest:: testDeadAxis2D
   inMesh->createVertex ( Vector2D(2.0, 1.0) );
   inMesh->createVertex ( Vector2D(3.0, 1.0) );
   inMesh->allocateDataValues ();
+  for (mesh::Vertex& v : inMesh->vertices())
+    v.setGlobalIndex(v.getID());
+  
   tarch::la::Vector<4,double> assignValues;
   assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
   utils::DynVector& values = inData->values();
@@ -622,6 +637,9 @@ void PetRadialBasisFctMappingTest:: testDeadAxis3D()
   inMesh->createVertex ( Vector3D(0.0, 3.0, 1.0) );
   inMesh->createVertex ( Vector3D(1.0, 3.0, 1.0) );
   inMesh->allocateDataValues ();
+  for (mesh::Vertex& v : inMesh->vertices())
+    v.setGlobalIndex(v.getID());
+  
   tarch::la::Vector<4,double> assignValues;
   assignList(assignValues) = 1.0, 2.0, 3.0, 4.0;
   utils::DynVector& values = inData->values();
