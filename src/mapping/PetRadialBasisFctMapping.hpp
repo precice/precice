@@ -228,37 +228,38 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // preallocate the matrix. In the second phase we actually fill the matrix.
 
   // -- BEGIN PREALLOC LOOP FOR MATRIX C --
-  // int logPreallocCLoop = 1;
-  // PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocCLoop);
-  // PetscLogEventBegin(logPreallocCLoop, 0, 0, 0, 0);
-  // PetscInt nnz[n]; // Number of non-zeros per row
-  // unsigned int totalNNZ = 0; // Total number of non-zeros in matrix
-  // for (const mesh::Vertex& iVertex : inMesh->vertices()) {
-  //   nnz[i] = 0;
-  //   for (int j=iVertex.getID(); j < inputSize; j++) {
-  //     if (i == j) {
-  //       nnz[i]++; // Since we need to set at least zeros on the main diagonal, we have an entry
-  //                 // there. No further test necessary.
-  //       continue;
-  //     }
-  //     distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
-  //     double coeff = _basisFunction.evaluate(norm2(distance));
-  //     if ( not equals(coeff, 0.0)) {
-  //       nnz[i]++;
-  //     }
-  //   }
-  //   nnz[i] += dimensions + 1 - deadDimensions; // coefficients of the linear polynom
-  //   totalNNZ += nnz[i];
-  //   i++;
-  // }
-  // for (int r = inputSize; r < n; r++) {
-  //   nnz[r] = 1; // iterate through the lower part, no coefficients there, but 0 on the main diagonal
-  // }
-  // PetscLogEventEnd(logPreallocCLoop, 0, 0, 0, 0);
-  // i = 0;
+  // TODO Testen ob Preallocation perfekt ist.
+  int logPreallocCLoop = 1;
+  PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocCLoop);
+  PetscLogEventBegin(logPreallocCLoop, 0, 0, 0, 0);
+  PetscInt nnz[n]; // Number of non-zeros per row
+  unsigned int totalNNZ = 0; // Total number of non-zeros in matrix
+  for (const mesh::Vertex& iVertex : inMesh->vertices()) {
+    int currentRow = iVertex.getGlobalIndex();
+    nnz[currentRow] = 0;
+    for (int j=iVertex.getID(); j < inputSize; j++) {
+      if (currentRow == iVertex.getGlobalIndex()) {
+        nnz[currentRow]++; // Since we need to set at least zeros on the main diagonal, we have an entry there. No further test necessary.
+        continue;
+      }
+      distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
+      double coeff = _basisFunction.evaluate(norm2(distance));
+      if ( not equals(coeff, 0.0)) {
+        nnz[currentRow]++;
+      }
+    }
+    nnz[currentRow] += dimensions + 1 - deadDimensions; // coefficients of the linear polynom
+    totalNNZ += nnz[currentRow];
+    i++;
+  }
+  for (int r = inputSize; r < n; r++) {
+    nnz[r] = 1; // iterate through the lower part, no coefficients there, but 0 on the main diagonal
+  }
+  PetscLogEventEnd(logPreallocCLoop, 0, 0, 0, 0);
+  i = 0;
   // -- END PREALLOC LOOP FOR MATRIX C --
   
-  // ierr = MatSeqSBAIJSetPreallocation(_matrixC.matrix, 1, PETSC_DEFAULT, nnz);
+  ierr = MatSeqSBAIJSetPreallocation(_matrixC.matrix, 1, PETSC_DEFAULT, nnz);
   
   // -- BEGIN FILL LOOP FOR MATRIX C --
   int logCLoop = 2;
