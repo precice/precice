@@ -262,7 +262,7 @@ void CommunicatedGeometry:: scatterMesh(
     if (numberOfVertices!=0) {
       std::vector<int> globalIndices(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(raw(globalIndices),numberOfVertices,0);
-      preciceDebug("My global indices" << globalIndices);
+      preciceDebug("My global indices: " << globalIndices);
       seed.setGlobalIndices(globalIndices);
     }
   }
@@ -282,7 +282,7 @@ void CommunicatedGeometry:: scatterMesh(
     if (numberOfVertices!=0) {
       std::vector<int> ownerVec(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(raw(ownerVec),numberOfVertices,0);
-      preciceDebug("My owner information" << ownerVec);
+      preciceDebug("My owner information: " << ownerVec);
       seed.setOwnerInformation(ownerVec);
     }
   }
@@ -309,7 +309,10 @@ void CommunicatedGeometry:: scatterMesh(
     }
 #   ifdef Debug
       for(int i=0;i<seed.getGlobalNumberOfVertices();i++){
-        assertion(globalOwnerVec[i]==1);
+        if(globalOwnerVec[i]==1){
+          preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << seed.getName()
+              << " was completely filtered out, since it has no influence on any mapping.")
+        }
       }
 #   endif
 
