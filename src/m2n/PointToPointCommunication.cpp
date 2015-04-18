@@ -368,6 +368,24 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   print(communicationMap);
 #endif
 
+#ifdef SuperMUC_WORK
+  try {
+    auto addressDirectory = _communicationFactory->addressDirectory();
+
+    if (utils::MasterSlave::_masterMode) {
+      Event e("PointToPointCommunication::acceptConnection/createDirectories");
+
+      for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
+        Publisher::createDirectory(addressDirectory + "/" + "." + nameAcceptor +
+                                   "-" + std::to_string(rank) + ".address");
+      }
+    }
+
+    utils::Parallel::synchronizeProcesses();
+  } catch (...) {
+  }
+#endif
+
   Event e2("PointToPointCommunication::acceptConnection/accept", true);
 
   if (communicationMap.size() == 0) {
@@ -381,8 +399,14 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   // and (multiple) requester proccesses (in the requester participant).
   auto c = _communicationFactory->newCommunication();
 
+#ifdef SuperMUC_WORK
+  Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" +
+                                     std::to_string(utils::MasterSlave::_rank) +
+                                     ".address");
+#endif
+
   c->acceptConnectionAsServer(
-      nameAcceptor + std::to_string(utils::MasterSlave::_rank),
+      nameAcceptor + "-" + std::to_string(utils::MasterSlave::_rank),
       nameRequester,
       communicationMap.size());
 
@@ -444,7 +468,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
     {
       Event e("PointToPointCommunication::requestConnection/synchronize", true);
 
-      Publisher::ScopedPrefix sp(
+      Publisher::ScopedSetEventNamePrefix ssenp(
           "PointToPointCommunication::requestConnection"
           "/"
           "synchronize");
@@ -499,9 +523,18 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   print(communicationMap);
 #endif
 
+#ifdef SuperMUC_WORK
+  try {
+    auto addressDirectory = _communicationFactory->addressDirectory();
+
+    utils::Parallel::synchronizeProcesses();
+  } catch (...) {
+  }
+#endif
+
   Event e2("PointToPointCommunication::requestConnection/request", true);
 
-  Publisher::ScopedPrefix sp(
+  Publisher::ScopedSetEventNamePrefix ssenp(
       "PointToPointCommunication::requestConnection"
       "/"
       "request");
@@ -524,8 +557,14 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
     auto c = _communicationFactory->newCommunication();
 
+#ifdef SuperMUC_WORK
+    Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" +
+                                       std::to_string(globalAcceptorRank) +
+                                       ".address");
+#endif
+
     c->requestConnectionAsClient(
-        nameAcceptor + std::to_string(globalAcceptorRank), nameRequester);
+        nameAcceptor + "-" + std::to_string(globalAcceptorRank), nameRequester);
 
     assertion(c->getRemoteCommunicatorSize() == 1);
 

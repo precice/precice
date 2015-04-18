@@ -16,6 +16,7 @@
 #include <sstream>
 
 using precice::utils::Publisher;
+using precice::utils::ScopedPublisher;
 
 namespace precice {
 namespace com {
@@ -107,10 +108,14 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
     }
 
     std::string address(ipAddress + ":" + std::to_string(_portNumber));
-    std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                                "-" + nameAcceptor + ".address");
+    std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                                ".address");
 
-    Publisher::ScopedPublication sp(addressFileName, address);
+    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+    ScopedPublisher p(addressFileName);
+
+    p.write(address);
 
     // std::cout << address << std::endl;
 
@@ -205,10 +210,14 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
     }
 
     std::string address(ipAddress + ":" + std::to_string(_portNumber));
-    std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                                "-" + nameAcceptor + ".address");
+    std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                                ".address");
 
-    Publisher::ScopedPublication sp(addressFileName, address);
+    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+    ScopedPublisher p(addressFileName);
+
+    p.write(address);
 
     // std::cout << address << std::endl;
 
@@ -285,10 +294,14 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
 
   try {
     std::string address;
-    std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                                "-" + nameAcceptor + ".address");
+    std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                                ".address");
 
-    Publisher::read(addressFileName, address);
+    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+    Publisher p(addressFileName);
+
+    p.read(address);
 
     // std::cout << address << std::endl;
 
@@ -371,10 +384,14 @@ SocketCommunication::requestConnectionAsClient(
 
   try {
     std::string address;
-    std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                                "-" + nameAcceptor + ".address");
+    std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                                ".address");
 
-    Publisher::read(addressFileName, address);
+    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+    Publisher p(addressFileName);
+
+    p.read(address);
 
     // std::cout << address << std::endl;
 
