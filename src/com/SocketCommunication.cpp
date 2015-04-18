@@ -16,6 +16,7 @@
 #include <sstream>
 
 using precice::utils::Publisher;
+using precice::utils::ScopedPublisher;
 
 namespace precice {
 namespace com {
@@ -82,8 +83,8 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
   _rank = acceptorProcessRank;
 
   std::string address;
-  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                              "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                              ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -110,7 +111,11 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
 
     address = ipAddress + ":" + std::to_string(_portNumber);
 
-    Publisher::ScopedPublication sp(addressFileName, address);
+    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+    ScopedPublisher p(addressFileName);
+
+    p.write(address);
 
     preciceDebug("Accept connection at " << address);
 
@@ -192,8 +197,8 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
   _rank = 0;
 
   std::string address;
-  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                              "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                              ".address");
 
   try {
     std::string ipAddress = getIpAddress();
@@ -220,7 +225,11 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
 
     address = ipAddress + ":" + std::to_string(_portNumber);
 
-    Publisher::ScopedPublication sp(addressFileName, address);
+    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+    ScopedPublisher p(addressFileName);
+
+    p.write(address);
 
     preciceDebug("Accept connection at " << address);
 
@@ -269,11 +278,15 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
 
   std::string address;
-  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                              "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                              ".address");
 
   try {
-    Publisher::read(addressFileName, address);
+    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+    Publisher p(addressFileName);
+
+    p.read(address);
 
     preciceDebug("Request connection to " << address);
 
@@ -351,11 +364,15 @@ SocketCommunication::requestConnectionAsClient(
   preciceTrace2("requestConnectionAsClient()", nameAcceptor, nameRequester);
 
   std::string address;
-  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                              "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                              ".address");
 
   try {
-    Publisher::read(addressFileName, address);
+    Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+    Publisher p(addressFileName);
+
+    p.read(address);
 
     preciceDebug("Request connection to " << address);
 
