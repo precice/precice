@@ -38,6 +38,7 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
+#include "m2n/PointToPointCommunication.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "geometry/Geometry.hpp"
 #include "geometry/ImportGeometry.hpp"
@@ -66,6 +67,9 @@
 using precice::utils::Event;
 
 namespace precice {
+
+bool testMode = false;
+
 namespace impl {
 
 tarch::logging::Log SolverInterfaceImpl::
@@ -261,7 +265,12 @@ void SolverInterfaceImpl:: configure
 double SolverInterfaceImpl:: initialize()
 {
   preciceTrace("initialize()");
-  Event e(__func__);
+  Event e("initialize", not precice::testMode);
+
+  m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
+      "initialize"
+      "/");
+
 # ifndef PRECICE_NO_PETSC
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
@@ -396,7 +405,12 @@ double SolverInterfaceImpl:: initialize()
 void SolverInterfaceImpl:: initializeData ()
 {
   preciceTrace("initializeData()" );
-  Event e(__func__);
+  Event e("initializeData", not precice::testMode);
+
+  m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
+      "initializeData"
+      "/");
+
   preciceCheck(_couplingScheme->isInitialized(), "initializeData()",
                "initialize() has to be called before initializeData()");
   if (not _geometryMode){
@@ -423,10 +437,16 @@ double SolverInterfaceImpl:: advance
   double computedTimestepLength )
 {
   preciceTrace1("advance()", computedTimestepLength);
-  Event e(__func__);
+  Event e("advance", not precice::testMode);
+
+  m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
+      "advance"
+      "/");
+
   preciceCheck(_couplingScheme->isInitialized(), "advance()",
                "initialize() has to be called before advance()");
   _numberAdvanceCalls++;
+  preciceInfo("advance()", "Iteration #" << _numberAdvanceCalls);
   if (_clientMode){
     _requestManager->requestAdvance(computedTimestepLength);
   }

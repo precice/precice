@@ -155,14 +155,7 @@ Publisher::read(std::string& data) const {
   else
     readDuration = afterReadTimeStamp - beforeReadTimeStamp;
 
-  std::string eventName = _prefix;
-
-  if (not _prefix.empty())
-    eventName += "/";
-
-  eventName += "Publisher::read";
-
-  Event(eventName, readDuration);
+  Event(_prefix + "Publisher::read", readDuration);
 }
 
 void

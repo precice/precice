@@ -30,6 +30,21 @@ namespace m2n {
  */
 class PointToPointCommunication : public DistributedCommunication {
 public:
+  struct ScopedSetEventNamePrefix {
+    ScopedSetEventNamePrefix(std::string const& prefix);
+
+    ~ScopedSetEventNamePrefix();
+
+  private:
+    std::string _prefix;
+  };
+
+public:
+  static void setEventNamePrefix(std::string const& prefix);
+
+  static std::string const& eventNamePrefix();
+
+public:
   /**
    * @brief Constructor.
    */
@@ -92,6 +107,9 @@ public:
 private:
   static tarch::logging::Log _log;
 
+  static std::string _prefix;
+
+private:
   com::CommunicationFactory::SharedPointer _communicationFactory;
 
   /**
