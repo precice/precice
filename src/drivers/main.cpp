@@ -11,6 +11,10 @@
 #include "precice/config/Configuration.hpp"
 #include <iostream>
 
+namespace precice {
+extern bool testMode;
+}
+
 void printUsage()
 {
   std::cout << "Usage:" << std::endl << std::endl;
@@ -69,9 +73,10 @@ int main ( int argc, char** argv )
     if ( action == "test" and argc >= 4 ) {
       wrongParameters = false;
       runTests = true;
+      precice::testMode = true;
     }
   }
-    
+
   if (wrongParameters) {
     printUsage();
     return 1;
@@ -161,6 +166,3 @@ int main ( int argc, char** argv )
 # endif
   return 0;
 }
-
-
-

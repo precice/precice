@@ -7,6 +7,7 @@
 
 #include "mesh/Mesh.hpp"
 #include "utils/EventTimings.hpp"
+#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Publisher.hpp"
 
@@ -624,6 +625,15 @@ PointToPointCommunication::send(double* itemsToSend,
                                 int valueDimension) {
   Event e("PointToPointCommunication::send", true);
 
+  preciceInfo("send(double)",
+              "Size"
+                  << ":"
+                  << " " << size << ";"
+                  << " "
+                  << "Dimension"
+                  << ":"
+                  << " " << valueDimension << ".");
+
   if (_mappings.size() == 0) {
     preciceCheck(size == 0 && _localIndexCount == 0,
                  "send()",
@@ -673,6 +683,15 @@ PointToPointCommunication::receive(double* itemsToReceive,
                                    int size,
                                    int valueDimension) {
   Event e("PointToPointCommunication::receive", true);
+
+  preciceInfo("receive(double)",
+              "Size"
+                  << ":"
+                  << " " << size << ";"
+                  << " "
+                  << "Dimension"
+                  << ":"
+                  << " " << valueDimension << ".");
 
   if (_mappings.size() == 0) {
     preciceCheck(size == 0 && _localIndexCount == 0,

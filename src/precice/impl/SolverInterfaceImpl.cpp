@@ -66,6 +66,9 @@
 using precice::utils::Event;
 
 namespace precice {
+
+bool testMode = false;
+
 namespace impl {
 
 tarch::logging::Log SolverInterfaceImpl::
@@ -261,7 +264,7 @@ void SolverInterfaceImpl:: configure
 double SolverInterfaceImpl:: initialize()
 {
   preciceTrace("initialize()");
-  Event e(__func__);
+  Event e("initialize", not precice::testMode);
 # ifndef PRECICE_NO_PETSC
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
@@ -396,7 +399,7 @@ double SolverInterfaceImpl:: initialize()
 void SolverInterfaceImpl:: initializeData ()
 {
   preciceTrace("initializeData()" );
-  Event e(__func__);
+  Event e("initializeData", not precice::testMode);
   preciceCheck(_couplingScheme->isInitialized(), "initializeData()",
                "initialize() has to be called before initializeData()");
   if (not _geometryMode){
@@ -423,10 +426,11 @@ double SolverInterfaceImpl:: advance
   double computedTimestepLength )
 {
   preciceTrace1("advance()", computedTimestepLength);
-  Event e(__func__);
+  Event e("advance", not precice::testMode);
   preciceCheck(_couplingScheme->isInitialized(), "advance()",
                "initialize() has to be called before advance()");
   _numberAdvanceCalls++;
+  preciceInfo("advance()", "Iteration #" << _numberAdvanceCalls);
   if (_clientMode){
     _requestManager->requestAdvance(computedTimestepLength);
   }
