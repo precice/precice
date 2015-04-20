@@ -186,11 +186,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   std::vector<int> ownedIndizes;
   for (const mesh::Vertex& v : inMesh->vertices()) 
     if (v.isOwner()) {
-      cout << "Pushing globalIndex = " << v.getGlobalIndex() << endl;
       ownedIndizes.push_back(v.getGlobalIndex());
     }
-  int inputSize = (int)ownedIndizes.size();
-  int outputSize = (int)outMesh->vertices().size();
+  auto inputSize = ownedIndizes.size();
+  auto outputSize = outMesh->vertices().size();
 
   for (int i=0; i < polyparams; i++) {
     ownedIndizes.push_back(inputSize+i); // Append indizes for the polynom
@@ -208,17 +207,27 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   _matrixA.reset();
   ierr = MatSetType(_matrixA.matrix, MATAIJ); CHKERRV(ierr); // create sparse matrix.
-  ierr = MatSetSizes(_matrixA.matrix, PETSC_DECIDE, PETSC_DECIDE, outputSize, n); CHKERRV(ierr);
+  ierr = MatSetSizes(_matrixA.matrix, outputSize, n, PETSC_DECIDE, PETSC_DECIDE); CHKERRV(ierr);
+  ierr = MatSetUp(_matrixA.matrix); CHKERRV(ierr);
 
+  PetscInt range_start, range_end;
+  MatGetOwnershipRange(_matrixA.matrix, &range_start, &range_end);
+  
   KSPReset(_solver);
-
-  IS ISlocal, ISglobal;
+  
+  IS ISlocal, ISglobal, ISidentity, ISidentityGlobal;
+  ISLocalToGlobalMapping ISmapping, ISidentityMapping;
   ISCreateGeneral(PETSC_COMM_WORLD, ownedIndizes.size(), ownedIndizes.data(), PETSC_COPY_VALUES, &ISlocal);
   ISAllGather(ISlocal, &ISglobal);
-  ISView(ISlocal, PETSC_VIEWER_STDOUT_WORLD);
-  ISLocalToGlobalMapping ISmapping;
   ISLocalToGlobalMappingCreateIS(ISglobal, &ISmapping);
   MatSetLocalToGlobalMapping(_matrixC.matrix, ISmapping, ISmapping);
+
+  // Create an identy mapping and use that for the column of matrixA.
+  ierr = ISCreateStride(PETSC_COMM_WORLD, _matrixA.ownerRange().second - _matrixA.ownerRange().first, _matrixA.ownerRange().first, 1, &ISidentity); CHKERRV(ierr);
+  ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
+  ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
+  ierr = MatSetLocalToGlobalMapping(_matrixA.matrix, ISidentityMapping, ISmapping); CHKERRV(ierr);
+  ISView(ISidentityGlobal, PETSC_VIEWER_STDOUT_WORLD);
 
   int i = 0;
   utils::DynVector distance(dimensions);
@@ -362,7 +371,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       double coeff = _basisFunction.evaluate(norm2(distance));
       if ( not equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
-        colIdx[colNum] = j;
+        colIdx[colNum] = jVertex.getGlobalIndex();
         colNum++;
       }
 #     ifdef Asserts
@@ -378,7 +387,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 #     endif
       j++;
     }
-    ierr = MatSetValue(_matrixA.matrix, i, inputSize, 1.0, INSERT_VALUES); CHKERRV(ierr);
+    // ierr = MatSetValue(_matrixA.matrix, i, inputSize, 1.0, INSERT_VALUES); CHKERRV(ierr);
+    colVals[colNum] = 1;
+    colIdx[colNum] = inputSize;
+    colNum++;
     int actualDim = 0;
     for (int dim=0; dim < dimensions; dim++) {
       if (not _deadAxis[dim]) {
@@ -388,7 +400,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         actualDim++;
       }
     }
-    ierr = MatSetValues(_matrixA.matrix, 1, &i, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = MatSetValuesLocal(_matrixA.matrix, 1, &i, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
     i++;
   }
   PetscLogEventEnd(logALoop, 0, 0, 0, 0);
