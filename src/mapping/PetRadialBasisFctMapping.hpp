@@ -114,8 +114,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
-  _matrixC(PETSC_COMM_SELF, "C"),
-  _matrixA(PETSC_COMM_SELF, "A"),
+  _matrixC(MPI_COMM_WORLD, "C"),
+  _matrixA(MPI_COMM_WORLD, "A"),
   _solverRtol(solverRtol)
 {
   setInputRequirement(VERTEX);
@@ -141,7 +141,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
     assertion(false);
   }
     
-  KSPCreate(PETSC_COMM_SELF, &_solver);
+  KSPCreate(MPI_COMM_WORLD, &_solver);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -217,13 +217,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   
   IS ISlocal, ISglobal, ISidentity, ISidentityGlobal;
   ISLocalToGlobalMapping ISmapping, ISidentityMapping;
-  ISCreateGeneral(PETSC_COMM_WORLD, ownedIndizes.size(), ownedIndizes.data(), PETSC_COPY_VALUES, &ISlocal);
+  ISCreateGeneral(MPI_COMM_WORLD, ownedIndizes.size(), ownedIndizes.data(), PETSC_COPY_VALUES, &ISlocal);
   ISAllGather(ISlocal, &ISglobal);
   ISLocalToGlobalMappingCreateIS(ISglobal, &ISmapping);
   MatSetLocalToGlobalMapping(_matrixC.matrix, ISmapping, ISmapping);
 
   // Create an identy mapping and use that for the column of matrixA.
-  ierr = ISCreateStride(PETSC_COMM_WORLD, _matrixA.ownerRange().second - _matrixA.ownerRange().first, _matrixA.ownerRange().first, 1, &ISidentity); CHKERRV(ierr);
+  ierr = ISCreateStride(MPI_COMM_WORLD, _matrixA.ownerRange().second - _matrixA.ownerRange().first, _matrixA.ownerRange().first, 1, &ISidentity); CHKERRV(ierr);
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
   ierr = MatSetLocalToGlobalMapping(_matrixA.matrix, ISidentityMapping, ISmapping); CHKERRV(ierr);
@@ -413,14 +413,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetFromOptions(_solver);
 
-  // if (totalNNZ > 20*n) {
-  //   preciceDebug("Using Cholesky decomposition as direct solver for dense matrix.");
-  //   PC prec;
-  //   KSPSetType(_solver, KSPPREONLY);
-  //   KSPGetPC(_solver, &prec);
-  //   PCSetType(prec, PCCHOLESKY);
-  //   PCFactorSetShiftType(prec, MAT_SHIFT_NONZERO);
-  // }      
+  if (totalNNZ > 20*n) {
+    preciceDebug("Using Cholesky decomposition as direct solver for dense matrix.");
+    PC prec;
+    KSPSetType(_solver, KSPPREONLY);
+    KSPGetPC(_solver, &prec);
+    PCSetType(prec, PCCHOLESKY);
+    PCFactorSetShiftType(prec, MAT_SHIFT_NONZERO);
+  }      
   
   _hasComputedMapping = true;
 }
