@@ -451,10 +451,13 @@ double SolverInterfaceImpl:: advance
     _requestManager->requestAdvance(computedTimestepLength);
   }
   else {
-
+#   ifdef Debug
     if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
+      Event e("advance/syncTimestep", not precice::testMode);
+
       syncTimestep(computedTimestepLength);
     }
+#   endif
 
     double timestepLength = 0.0; // Length of (full) current dt
     double timestepPart = 0.0;   // Length of computed part of (full) curr. dt
