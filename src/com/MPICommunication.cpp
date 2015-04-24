@@ -353,7 +353,7 @@ MPICommunication::receive(bool& itemToReceive, int rankSender) {
 
 Request::SharedPointer
 MPICommunication::aReceive(bool* itemToReceive, int rankSender) {
-  preciceTrace1("aReceive(bool*)", size);
+  preciceTrace1("aReceive(bool*)", rankSender);
   rankSender = rankSender - _rankOffset;
   rankSender = rankSender == ANY_SENDER ? MPI_ANY_SOURCE : rankSender;
 
