@@ -183,7 +183,7 @@ PointToPointCommunicationTest::test(
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(7);
 
-    data = {rand(), rand(), rand(), rand()};
+    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {2 * 20, 30, 2 * 60, 70};
 
     break;
@@ -198,7 +198,7 @@ PointToPointCommunicationTest::test(
 
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
 
-    data = {rand(), rand(), rand(), rand(), rand(), rand()};
+    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
 
     break;
