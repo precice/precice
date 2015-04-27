@@ -14,7 +14,7 @@
       <radius value="1.0"/>
       <discretization-width value="0.2"/>
    </geometry:builtin-sphere>
-   <communication:mpi from="participant0" to="participant1"/>
+   <m2n:mpi distribution-type="gather-scatter" from="participant0" to="participant1"/>
    <coupling-scheme:serial-explicit>  
       <participants first="participant0" second="participant1"/>
       <timestep-length value="0.1" method="fixed"/>

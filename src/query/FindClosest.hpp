@@ -82,58 +82,45 @@ public:
   template<typename VECTOR_T>
   FindClosest ( const VECTOR_T& searchpoint );
 
-  /**
-   * @brief Finds closest distance to all mesh elements in the given container.
-   */
+  /// Finds closest distance to all mesh elements in the given container.
   template<typename CONTAINER_T>
   bool operator() ( CONTAINER_T& container );
 
-  /**
-   * @brief Returns true, if a closest element was found.
-   */
+  /// Returns true, if a closest element was found.
   bool hasFound() const;
 
-  /**
-   * @brief Returns ClosestElement found, error when no visitable has been found
-   */
+  /// Returns ClosestElement found, error when no visitable has been found
   const ClosestElement& getClosest();
 
-  /**
-   * @brief Returns the euclidian distance to the closest element.
-   */
+  /// Returns the euclidian distance to the closest element.
   double getEuclidianDistance();
 
-  /**
-   * @brief Returns search point
-   */
+  /// Returns search point
   const utils::DynVector& getSearchPoint() const;
 
-  /**
-   * @brief Resets the found visitables, not done automatically
-   */
+  /// Resets the found visitables, not done automatically
   void reset();
 
 private:
 
-  // @brief Logging device.
   static tarch::logging::Log _log;
 
-  // @brief Finds closest distance to Vertex objects.
+  /// Finds closest distance to Vertex objects.
   FindClosestVertex _findClosestVertex;
 
-  // @brief Finds closest distance to Edge objects.
+  /// Finds closest distance to Edge objects.
   FindClosestEdge _findClosestEdge;
 
-  // @brief Find closest distance to Triangle objects.
+  /// Find closest distance to Triangle objects.
   FindClosestTriangle _findClosestTriangle;
 
-  // @brief Find closest distance to Quad objects.
+  /// Find closest distance to Quad objects.
   FindClosestQuad _findClosestQuad;
 
-  // @brief Closest mesh element.
+  /// Closest mesh element.
   ClosestElement _closest;
 
-  // @brief Search point, from where distances to objects are measured
+  /// Search point, from where distances to objects are measured
   const utils::DynVector _searchpoint;
 
   /**

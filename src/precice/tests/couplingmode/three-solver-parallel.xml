@@ -1,0 +1,57 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <log-filter target="debug" component="" switch="off"/>
+   
+   <solver-interface dimensions="2">   
+      <data:vector name="Data0"/>
+      <data:scalar name="Data1"/>
+      <data:vector name="Data2"/>
+   
+      <mesh name="Mesh">
+         <use-data name="Data0"/>
+         <use-data name="Data1"/>
+         <use-data name="Data2"/>
+      </mesh>
+      
+      <participant name="SolverOne">
+         <use-mesh name="Mesh" provide="yes"/>
+         <write-data name="Data0" mesh="Mesh"/>
+         <read-data  name="Data1" mesh="Mesh"/>
+         <read-data  name="Data2" mesh="Mesh"/>
+      </participant>
+      
+      <participant name="SolverTwo">
+         <use-mesh name="Mesh" from="SolverOne"/>
+         <write-data name="Data1" mesh="Mesh"/>
+         <read-data  name="Data0" mesh="Mesh"/>
+      </participant>
+      
+      <participant name="SolverThree">
+         <use-mesh name="Mesh" from="SolverOne"/>
+         <write-data name="Data2" mesh="Mesh"/>
+         <read-data  name="Data0" mesh="Mesh"/>
+      </participant>
+      
+      <m2n:mpi-single from="SolverOne" to="SolverTwo"/>
+      <m2n:mpi-single from="SolverOne" to="SolverThree"/>
+      
+      <coupling-scheme:parallel-implicit> 
+         <participants first="SolverOne" second="SolverTwo"/> 
+         <max-timesteps value="10"/>
+         <timestep-length value="1.0"/>
+         <max-iterations value="10"/>
+         <min-iteration-convergence-measure min-iterations="3" data="Data1" mesh="Mesh"/>
+         <exchange data="Data0" mesh="Mesh" from="SolverOne" to="SolverTwo"/>
+         <exchange data="Data1" mesh="Mesh" from="SolverTwo" to="SolverOne"/>
+      </coupling-scheme:parallel-implicit>   
+      
+      <coupling-scheme:parallel-explicit> 
+         <participants first="SolverOne" second="SolverThree"/> 
+         <max-timesteps value="10"/>
+         <timestep-length value="1.0"/>
+         <exchange data="Data0" mesh="Mesh" from="SolverOne" to="SolverThree" initialize="1"/>
+         <exchange data="Data2" mesh="Mesh" from="SolverThree" to="SolverOne" initialize="1"/>
+      </coupling-scheme:parallel-explicit>                  
+   </solver-interface>
+</precice-configuration>

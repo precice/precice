@@ -10,7 +10,7 @@
       <use-data name="data1" />
    </mesh>
    
-   <communication:mpi-single from="participant0" to="participant1" />
+   <m2n:mpi-single from="participant0" to="participant1" />
    
    <!--
    <participant name="participant0">

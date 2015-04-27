@@ -84,7 +84,7 @@ std::vector<std::string> UncoupledScheme:: getCouplingPartners() const
 
 void UncoupledScheme:: sendState
 (
-  com::PtrCommunication communication,
+  com::Communication::SharedPointer communication,
   int                   rankReceiver )
 {
   communication->startSendPackage ( rankReceiver );
@@ -94,7 +94,7 @@ void UncoupledScheme:: sendState
 
 void UncoupledScheme:: receiveState
 (
-  com::PtrCommunication communication,
+  com::Communication::SharedPointer communication,
   int                   rankSender )
 {
   communication->startReceivePackage ( rankSender );

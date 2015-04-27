@@ -1,0 +1,54 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+
+   <log-filter target="debug" component="precice" switch="off" />
+
+   <solver-interface dimensions="3" restart-mode="off" geometry-mode="off">
+
+      <data:vector name="Forces"  />
+      <data:vector name="Velocities"  />
+
+      <mesh name="FluidMesh">
+         <use-data name="Forces" />
+         <use-data name="Velocities" />
+      </mesh>
+
+      <mesh name="StructureMesh">
+         <use-data name="Forces" />
+         <use-data name="Velocities" />
+      </mesh>
+
+
+      <participant name="Fluid">
+         <master:mpi-single>
+         <use-mesh name="FluidMesh" provide="yes" />
+         <use-mesh name="StructureMesh" from="Structure" />
+         <write-data name="Forces"     mesh="FluidMesh" />
+         <read-data  name="Velocities" mesh="FluidMesh" />
+         <mapping:nearest-neighbor direction="write" from="FluidMesh" to="StructureMesh"
+                  constraint="conservative" timing="initial"/>
+         <mapping:nearest-neighbor direction="read" from="StructureMesh" to="FluidMesh"
+                  constraint="consistent" timing="initial" />
+      </participant>
+
+      <participant name="Structure">
+         <master:mpi-single>
+         <use-mesh name="StructureMesh" provide="yes"/>
+         <write-data name="Velocities" mesh="StructureMesh" />
+         <read-data name="Forces"      mesh="StructureMesh" />
+      </participant>
+
+      <m2n:mpi distribution-type="point-to-point" from="Fluid" to="Structure" />
+
+      <coupling-scheme:serial-explicit>
+         <participants first="Fluid" second="Structure" />
+         <max-timesteps value="1" />
+         <timestep-length value="1.0" />
+         <exchange data="Forces"     mesh="StructureMesh" from="Fluid" to="Structure" />
+         <exchange data="Velocities" mesh="StructureMesh" from="Structure" to="Fluid"/>
+      </coupling-scheme:serial-explicit>
+
+   </solver-interface>
+
+</precice-configuration>

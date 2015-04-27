@@ -7,7 +7,7 @@
 #include "precice/impl/SharedPointer.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
-#include "com/config/CommunicationConfiguration.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "spacetree/config/SpacetreeConfiguration.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
@@ -40,7 +40,7 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
   //_indexAccessor(-1),
   _dataConfiguration(),
   _meshConfiguration(),
-  _comConfiguration(),
+  _m2nConfiguration(),
   _geometryConfiguration(),
   _spacetreeConfiguration(),
   _participantConfiguration(),
@@ -79,8 +79,8 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
       new mesh::DataConfiguration(tag) );
   _meshConfiguration = mesh::PtrMeshConfiguration (
       new mesh::MeshConfiguration(tag, _dataConfiguration) );
-  _comConfiguration = com::PtrCommunicationConfiguration (
-      new com::CommunicationConfiguration(tag) );
+  _m2nConfiguration = m2n::M2NConfiguration::SharedPointer (
+      new m2n::M2NConfiguration(tag) );
   _geometryConfiguration = geometry::PtrGeometryConfiguration (
       new geometry::GeometryConfiguration(tag, _meshConfiguration) );
   _spacetreeConfiguration = spacetree::PtrSpacetreeConfiguration (
@@ -90,7 +90,7 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
      _geometryConfiguration, _spacetreeConfiguration) );
   _couplingSchemeConfiguration = cplscheme::PtrCouplingSchemeConfiguration (
     new cplscheme::CouplingSchemeConfiguration(tag, _meshConfiguration,
-    _comConfiguration) );
+    _m2nConfiguration) );
 
   parent.addSubtag(tag);
 }
@@ -147,8 +147,8 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
           if(participant->getName()==neededMeshes.first){
             foreach(const std::string& neededMesh ,neededMeshes.second){
               bool meshFound = false;
-              foreach(impl::MeshContext& meshContext , participant->usedMeshContexts()){
-                if(meshContext.mesh->getName()==neededMesh){
+              for (impl::MeshContext* meshContext : participant->usedMeshContexts()){
+                if(meshContext->mesh->getName()==neededMesh){
                   meshFound = true;
                   break;
                 }

@@ -16,21 +16,23 @@ class Event
 public:
   /// Default high precision clock type. All other chrono types are derived from it.
   using Clock = std::chrono::high_resolution_clock;
-  
+
   /// Name used to identify the timer. Events of the same name are accumulated to
   std::string name;
 
+  Event(std::string eventName, Clock::duration eventDuration);
+
   /// Creates a new event and starts it, unless autostart = false
-  Event(std::string eventName, bool autostart = true);
+  Event(std::string eventName, bool barrier = false, bool autostart = true);
 
   /// Stops the event if it's running and report its times to the EventRegistry
   ~Event();
 
   /// Starts an event. If it's already started it has no effect.
-  void start();
+  void start(bool barrier = false);
 
   /// Stops an event. If it's already stopped it has no effect.
-  void stop();
+  void stop(bool barrier = false);
 
   /// Gets the duration of the event.
   Clock::duration getDuration();
@@ -39,13 +41,14 @@ public:
   std::map<std::string, double> properties;
 
   /// Adds the value to the propety.
-  void addProp(std::string property, int value);
+  void addProp(std::string property, double value);
 
-private:  
+private:
   Clock::time_point starttime;
   Clock::time_point stoptime;
   Clock::duration duration = Clock::duration::zero();
   bool isStarted = false;
+  bool _barrier = false;
 };
 
 
@@ -77,7 +80,7 @@ public:
   /// Aggregated properties for this event
   using Properties = std::map<std::string, double>;
   Properties properties;
-  
+
 private:
   int count = 0;
   Event::Clock::duration total = Event::Clock::duration::zero();
@@ -93,12 +96,15 @@ EventRegistry::finalize at the end. Event timings will be usuable without callin
 function at all, but global timings as well as percentages do not work this way.  */
 class EventRegistry
 {
-public:  
+public:
   /// Sets the global start time
   static void initialize();
 
   /// Sets the global end time
   static void finalize();
+
+  /// clears the registry. needed for tests
+  static void clear();
 
   /// Finalize the timings and call print. Can be used as a crash handler to still get some timing results.
   static void signal_handler(int signal);
@@ -106,8 +112,17 @@ public:
   /// Records the event.
   static void put(Event* event);
 
-  /// Pretty prints the result table.
-  static void print();
+  /// Prints the result table to an arbitrary stream.
+  /** terse enabled a more machine readable format with one event per line, seperated by whitespace. */
+  static void print(std::ostream &out, bool terse = false);
+
+  /// Convenience function: Prints to std::cout
+  static void print(bool terse = false);
+
+  /// Convenience function: Prints to filename
+  static void print(std::string filename, bool terse = false);
+
+  static void printGlobalDuration();
 
 private:
   static bool initialized;
@@ -119,7 +134,10 @@ private:
 /// Convenience function that calls EventRegistry::initalize
 void Events_Init();
 
-/// Convenience function that calls EventRegistry::initalize
+/// Convenience function that calls EventRegistry::finalize
 void Events_Finalize();
+
+/// Convenience function that calls EventRegistry::clear
+void Events_Clear();
 
 }} // namespace precice::utils

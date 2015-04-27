@@ -18,12 +18,11 @@ public:
     const std::string&    firstParticipant,
     const std::string&    secondParticipant,
     const std::string&    localParticipant,
-    m2n::PtrGlobalCommunication communication,
+    m2n::M2N::SharedPointer           m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode          cplMode,
-    int                   maxIterations = 1)
-    ;
-  
+    int                   maxIterations = 1);
+
   /// @brief Logging device.
   static tarch::logging::Log _log;
 
@@ -33,7 +32,7 @@ public:
 
   virtual void advance();
 
-  
+
 protected:
   /// @brief merges send and receive data into one map (for parallel post-processing)
   virtual void mergeData();
@@ -45,7 +44,7 @@ protected:
       return _allData;
     }
 
-  
+
 private:
   /// @brief Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;

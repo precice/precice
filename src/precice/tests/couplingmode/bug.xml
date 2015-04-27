@@ -41,7 +41,7 @@
 	      <export:vtk timestep-interval="1" normals="on"/>
       </participant>
     
-      <communication:mpi from="Flite" to="Calculix"/>
+      <m2n:mpi distribution-type="gather-scatter" from="Flite" to="Calculix"/>
       
       <coupling-scheme:serial-explicit> 
          <participants first="Flite" second="Calculix"/> 

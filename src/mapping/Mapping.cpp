@@ -30,6 +30,14 @@ void Mapping:: setMeshes
   _output = output;
 }
 
+const mesh::PtrMesh& Mapping:: getInputMesh(){
+  return _input;
+}
+
+const mesh::PtrMesh& Mapping:: getOutputMesh(){
+  return _output;
+}
+
 Mapping::Constraint Mapping:: getConstraint() const
 {
   return _constraint;

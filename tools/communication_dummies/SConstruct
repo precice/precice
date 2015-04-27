@@ -1,104 +1,94 @@
-# structure/SConstruct
-#
-# SCons buildfile for "Structure0815" solver
-#
-######################################
-
 import os;
 import sys;
-  
-##### Declare build variables and default values
-#
-cppdefines = []   
-libpath = [ 
-   #'/home/gatzhamm/00_Sources/precice/build/release/' # Path to preCICE library
-   ]      
-libs = [
-   #'stdc++',
-   #'m',
-   #'dl'
-   #'precice',  # preCICE library
-   #'pthread' 
-   ]
-cpppath = [
-    #'/home/gatzhamm/00_Sources/precice/src/',
-    #'/home/gatzhamm/00_Sources/peano-src/',
-    #'/home/software/boost/'       
-    ]   
-ccflags = []   
-#cxx = '/home/atanasoa/intel/impi/4.1.3.049/intel64/bin/mpiicpc'
-cxx = '/home/uekerman/Software/openmpi-1.8.1/bin/mpicxx'
-#cxx = 'mpicxx'
 
-# For systems offering mpicxx compiler
+mpiLibPath = 'C:/Builds/x64/MinGW-w64/IMPI/5.0.2.0/lib'
+mpiLib = 'impi'
+mpiIncPath = 'C:/Builds/x64/MinGW-w64/IMPI/5.0.2.0/include'
 
+preciceLibPath = '../../build/release-noomp-nopetsc'
+preciceLib = 'precice'
+preciceIncPath = '../../src'
 
-#ccflags.append('-g3')
-ccflags.append('-O3')
-#ccflags.append('-mt_mpi')
-cppdefines.append('Parallel')
-cpppath.append('FSIDummies/components/c++/')
-cpppath.append('FSIDummies/src/')
-#libpath.append (preciceRoot + '/build/' + buildmode + '-dim2-nompi/')
+boostLibPath   = "/mingw64/lib/"
+boostSystemLib = "boost_system-mt"
 
-####### CCA component sources #########
+if sys.platform.startswith('win') or sys.platform.startswith('msys'):
+    socketLibPath = '/mingw64/lib'
+    socketLib = 'ws2_32'
+    socketIncPath =  '/mingw64/include'
 
-sourcesInterface = [
-    Glob('SocketAscodtCommunication.cpp')
-]
+def errorMissingLib(lib, usage):
+    print "ERROR: Library '" + lib + "' (needed for " + usage + ") not found!"
+    Exit(1)
 
-#TODO change to ASCoDTSocketCommunication
-sourcesCCADummyA = [
-    Glob('FSIDummies/components/c++/fsi/FSIDummyAAbstractImplementation.cpp'),
-    Glob('FSIDummies/components/c++/fsi/FSIDummyAC2CxxProxy.cpp'),
-    Glob('FSIDummies/components/c++/tinyxml_ascodt.cpp'),
-    Glob('FSIDummies/components/c++/fsi/FSICommNative2JavaPlainPort.cpp'),
-    Glob('FSIDummies/components/c++/fsi/FSICommNative2NativePlainPort.cpp'),
-    Glob('FSIDummies/components/c++/fsi/FSICommCxx2SocketPlainPort.cpp'),
-    Glob('FSIDummies/components/c++/fsi/FSICommC2CxxSocketPlainPort.cpp'), 
-    Glob('FSIDummies/components/c++/fsi/FSICommNativeDispatcher.cpp'),
-    Glob('FSIDummies/components/c++/fsi/FSICommNativeSocketDispatcher.cpp'),
-    Glob('FSIDummies/components/c++/fsi/FSICommCProxyNativeSocketDispatcher.cpp'),
-    Glob('FSIDummies/src/fsi/FSIDummyAImplementation.cpp')
-]
+def errorMissingHeader(header, usage):
+    print "ERROR: Header '" + header + "' (needed for " + usage + ") not found or does not compile!"
+    Exit(1)
 
-
-sourcesCCADummyB = [
-    Glob('FSIDummies/components/c++/fsi/FSIDummyBAbstractImplementation.cpp'),
-    Glob('FSIDummies/components/c++/fsi/FSIDummyBC2CxxProxy.cpp'),
-    Glob('FSIDummies/components/c++/fsi/FSIDataCxx2SocketPlainPort.cpp'),
-    Glob('FSIDummies/components/c++/tinyxml_ascodt.cpp'),
-    Glob('FSIDummies/src/fsi/FSIDummyBImplementation.cpp'),
-    Glob('FSIDummies/src/fsi/FSIDummyCommunicator.cpp')
-]
-
-##### Setup build environment and issue builds
-#
-env = Environment ( 
-   CPPDEFINES = cppdefines,  # defines for preprocessor (#define xyz)
-   LIBPATH    = libpath,     # path to libraries used
-   LIBS       = libs,        # libraries used (without prefix "lib" and suffix ".a"/".so"/...)
-   CPPPATH    = cpppath,     # pathes where the preprocessor should look for files
-   CCFLAGS    = ccflags,     # flags for the c/c++ compilers
-   CXX        = cxx,         # the c++ compiler that should be used
-   ENV        = os.environ  # propagates environment variables to scons  
+env = Environment (
+   # CPPDEFINES = ['Parallel'],
+   CPPDEFINES = ['MPICH_SKIP_MPICXX'],
+   CCFLAGS    = ['-O3', '-std=c++11'],
+   ENV        = os.environ
    )
-   
-env.Program (
-    target = 'dummyA',
+
+conf = Configure(env)
+
+conf.env.AppendUnique(LIBPATH = [preciceLibPath])
+
+if conf.CheckLib(preciceLib, autoadd=0):
+    conf.env.AppendUnique(LIBS = [preciceLib])
+else:
+    errorMissingLib(preciceLib, 'preCICE')
+
+conf.env.AppendUnique(CPPPATH = [preciceIncPath])
+
+# if not conf.CheckHeader('com/Communication.hpp'):
+#     errorMissingHeader('com/Communication.hpp', 'preCICE')
+
+env.AppendUnique(LIBPATH = [boostLibPath])
+
+if conf.CheckLib(boostSystemLib, autoadd=0):
+    conf.env.AppendUnique(LIBS = [boostSystemLib])
+else:
+    errorMissingLib(boostSystemLib, 'Boost.System')
+
+conf.env.AppendUnique(LIBPATH = [mpiLibPath])
+
+if conf.CheckLib(mpiLib, autoadd=0):
+    conf.env.AppendUnique(LIBS = [mpiLib])
+else:
+    errorMissingLib(mpiLib, 'MPI')
+
+conf.env.AppendUnique(CPPPATH = [mpiIncPath])
+
+if not conf.CheckHeader('mpi.h'):
+    errorMissingHeader('mpi.h', 'MPI')
+
+if sys.platform.startswith('win') or sys.platform.startswith('msys'):
+    conf.env.AppendUnique(LIBPATH = [socketLibPath])
+
+    if conf.CheckLib(socketLib, autoadd=0):
+        conf.env.AppendUnique(LIBS = [socketLib])
+    else:
+        errorMissingLib(socketLib, 'Windows Sockets 2')
+
+    conf.env.AppendUnique(CPPPATH = [socketIncPath])
+
+    if socketLib == 'ws2_32':
+        if not conf.CheckHeader('winsock2.h'):
+            errorMissingHeader('winsock2.h', 'Windows Sockets 2')
+
+conf.env.Program (
+    target = 'A',
     source = [
-	sourcesCCADummyA,
-	sourcesInterface,
-	Glob('mainA.cpp')
-	
+      Glob('mainA.cpp')
     ]
     )
 
-env.Program (
-    target = 'dummyB',
+conf.env.Program (
+    target = 'B',
     source = [
-	Glob('mainB.cpp'),
-	sourcesInterface,
-	sourcesCCADummyB
+      Glob('mainB.cpp'),
     ]
-    )   
+    )

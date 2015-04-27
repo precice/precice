@@ -1,6 +1,7 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
+
 #ifndef PRECICE_NO_SOCKETS
 
 #include "SocketCommunicationTest.hpp"
@@ -47,7 +48,7 @@ void SocketCommunicationTest:: run()
 void SocketCommunicationTest:: testSendAndReceive()
 {
   preciceTrace ( "testSendAndReceiveString()" );
-  SocketCommunication com("lo", 51234, "");
+  SocketCommunication com;
   if ( utils::Parallel::getProcessRank() == 0 ){
     com.acceptConnection("process0", "process1", 0, 1);
     {
@@ -139,7 +140,7 @@ void SocketCommunicationTest:: testSendAndReceive()
 void SocketCommunicationTest:: testParallelClient()
 {
   preciceTrace ( "testParallelClient()" );
-  SocketCommunication com("lo", 51235, "");
+  SocketCommunication com;
   int rank = utils::Parallel::getProcessRank();
   if ( rank == 0 ){
     preciceDebug("branch rank 0");
@@ -180,7 +181,7 @@ void SocketCommunicationTest:: testParallelClient()
 void SocketCommunicationTest:: testReceiveFromAnyClient()
 {
   preciceTrace ( "testReceiveFromAnyClient()" );
-  SocketCommunication com("lo", 51236, "");
+  SocketCommunication com;
   int rank = utils::Parallel::getProcessRank();
   int rank0 = 0;
   int rank1 = 1;
@@ -225,4 +226,4 @@ void SocketCommunicationTest:: testReceiveFromAnyClient()
 
 }}} // namespace precice, com, tests
 
-# endif // not PRECICE_NO_SOCKETS
+#endif // not PRECICE_NO_SOCKETS

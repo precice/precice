@@ -8,12 +8,12 @@
 #include "mesh/Merge.hpp"
 #include "query/FindClosest.hpp"
 #include "query/FindVoxelContent.hpp"
-#include "boost/smart_ptr.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/Dimensions.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Helpers.hpp"
 #include <list>
+#include <memory>
 
 namespace precice {
 namespace spacetree {
@@ -73,14 +73,14 @@ private:
 
   static tarch::logging::Log _log;
 
-  boost::shared_ptr<SearchPositionResult> searchPositionInternal (
+  std::shared_ptr<SearchPositionResult> searchPositionInternal (
     CELL_T&                 cell,
     const utils::DynVector& searchPoint,
     const utils::DynVector& cellCenter,
     const utils::DynVector& cellHalflengths,
     double                  refinementLimit );
 
-  boost::shared_ptr<SearchContentResult> searchContentInternal (
+  std::shared_ptr<SearchContentResult> searchContentInternal (
     CELL_T&                  cell,
     query::FindVoxelContent& findContent,
     const utils::DynVector&  cellCenter,
@@ -133,7 +133,7 @@ int DynamicTraversal<CELL_T>:: searchPosition
 {
   preciceTrace4("searchPosition()", searchPoint, cellCenter, cellHalflengths,
                 refinementLimit);
-  typedef boost::shared_ptr<SearchPositionResult> PtrResult;
+  typedef std::shared_ptr<SearchPositionResult> PtrResult;
   PtrResult result = searchPositionInternal(cell, searchPoint, cellCenter,
                                             cellHalflengths, refinementLimit);
   assertion(result.use_count() > 0);
@@ -223,7 +223,7 @@ int DynamicTraversal<CELL_T>:: searchContent
 {
   preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
-  boost::shared_ptr<SearchContentResult> result = searchContentInternal (
+  std::shared_ptr<SearchContentResult> result = searchContentInternal (
       cell, findContent, cellCenter, cellHalflengths, refinementLimit );
   assertion ( result.use_count() > 0 );
   if ( result->position == Spacetree::positionUndefined() ){
@@ -277,7 +277,7 @@ int DynamicTraversal<CELL_T>:: searchContent
 }
 
 template<typename CELL_T>
-boost::shared_ptr<typename DynamicTraversal<CELL_T>::SearchPositionResult>
+std::shared_ptr<typename DynamicTraversal<CELL_T>::SearchPositionResult>
 DynamicTraversal<CELL_T>:: searchPositionInternal
 (
   CELL_T&                 cell,
@@ -289,7 +289,7 @@ DynamicTraversal<CELL_T>:: searchPositionInternal
   preciceTrace4("searchPositionInternal()", searchPoint, cellCenter,
                 cellHalflengths, refinementLimit);
   using namespace tarch::la;
-  boost::shared_ptr<SearchPositionResult> data;
+  std::shared_ptr<SearchPositionResult> data;
   double distance = 0.0;
   if (cell.isLeaf()){
     preciceDebug("  Leaf");
@@ -301,7 +301,7 @@ DynamicTraversal<CELL_T>:: searchPositionInternal
     else {
       preciceDebug("    Needs no refinement");
       assertion(data.use_count() == 0);
-      data = boost::shared_ptr<SearchPositionResult> (
+      data = std::shared_ptr<SearchPositionResult> (
              new SearchPositionResult(searchPoint) );
       if (cell.getPosition() == Spacetree::positionOnGeometry()){
         preciceDebug("    Has content");
@@ -374,7 +374,7 @@ DynamicTraversal<CELL_T>:: searchPositionInternal
 }
 
 template<typename CELL_T>
-boost::shared_ptr<typename DynamicTraversal<CELL_T>::SearchContentResult>
+std::shared_ptr<typename DynamicTraversal<CELL_T>::SearchContentResult>
 DynamicTraversal<CELL_T>:: searchContentInternal
 (
   CELL_T&                  cell,
@@ -393,7 +393,7 @@ DynamicTraversal<CELL_T>:: searchContentInternal
     }
     else {
       preciceDebug ( "Don't needs refinement..." );
-      boost::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
+      std::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
       if ( (cell.getPosition() == Spacetree::positionOutsideOfGeometry())
            || (cell.getPosition() == Spacetree::positionInsideOfGeometry()) )
       {
@@ -435,7 +435,7 @@ DynamicTraversal<CELL_T>:: searchContentInternal
   if ( not cell.isLeaf() ){
     preciceDebug ( "Node..." );
     int searchCount = 0;
-    boost::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
+    std::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
     utils::DynVector childCenter(cellCenter.size());
     utils::DynVector childHalflengths(cellCenter.size());
     for ( int i=0; i < cell.getChildCount(); i++ ){
@@ -443,7 +443,7 @@ DynamicTraversal<CELL_T>:: searchContentInternal
       if ( isOverlapped(childCenter, childHalflengths,
            findContent.getVoxelCenter(), findContent.getVoxelHalflengths()) )
       {
-        boost::shared_ptr<SearchContentResult> tempData ( new SearchContentResult() );
+        std::shared_ptr<SearchContentResult> tempData ( new SearchContentResult() );
         searchCount++;
         CELL_T& childCell = cell.child(i);
         tempData = searchContentInternal ( childCell, findContent, childCenter,
@@ -470,7 +470,7 @@ DynamicTraversal<CELL_T>:: searchContentInternal
   preciceError("findContentInternal()", "Reached invalid code location!");
 //  assertion ( false );
 //
-//  boost::shared_ptr<SearchContentResult> neverUsedSharedPtr( new SearchContentResult() );
+//  std::shared_ptr<SearchContentResult> neverUsedSharedPtr( new SearchContentResult() );
 //  return neverUsedSharedPtr;
 }
 

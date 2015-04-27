@@ -2,8 +2,7 @@
 #include "impl/PostProcessing.hpp"
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
-#include "com/SharedPointer.hpp"
-#include "m2n/GlobalCommunication.hpp"
+#include "m2n/M2N.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -17,12 +16,12 @@ MultiCouplingScheme::MultiCouplingScheme
   double                timestepLength,
   int                   validDigits,
   const std::string&    localParticipant,
-  std::vector<m2n::PtrGlobalCommunication> communications,
+  std::vector<m2n::M2N::SharedPointer> communications,
   constants::TimesteppingMethod dtMethod,
   int                   maxIterations)
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,"neverFirstParticipant",
-      localParticipant,localParticipant,m2n::PtrGlobalCommunication(),maxIterations,dtMethod),
+      localParticipant,localParticipant,m2n::M2N::SharedPointer(),maxIterations,dtMethod),
   _communications(communications),
   _allData (),
   _receiveDataVector(),
@@ -174,23 +173,21 @@ void MultiCouplingScheme::advance()
       getPostProcessing()->performPostProcessing(_allData);
     }
 
-    for (m2n::PtrGlobalCommunication com : _communications) {
-      com->sendMaster(convergence, 0);
+    for (m2n::M2N::SharedPointer m2n : _communications) {
+      m2n->send(convergence);
     }
 
-    if (isCouplingOngoing()) {
-      if (convergence && (getExtrapolationOrder() > 0)){
-        extrapolateData(_allData); // Also stores data
-      }
-      else { // Store data for conv. measurement, post-processing, or extrapolation
-        for (DataMap::value_type& pair : _allData) {
-          if (pair.second->oldValues.size() > 0){
-            pair.second->oldValues.column(0) = *pair.second->values;
-          }
+    if (convergence && (getExtrapolationOrder() > 0)){
+      extrapolateData(_allData); // Also stores data
+    }
+    else { // Store data for conv. measurement, post-processing, or extrapolation
+      for (DataMap::value_type& pair : _allData) {
+        if (pair.second->oldValues.size() > 0){
+          pair.second->oldValues.column(0) = *pair.second->values;
         }
       }
-      sendData();
     }
+    sendData();
 
     if (not convergence) {
       preciceDebug("No convergence achieved");
@@ -271,7 +268,8 @@ void MultiCouplingScheme:: sendData()
     for (DataMap::value_type& pair : _sendDataVector[i]) {
       int size = pair.second->values->size();
       if (size > 0) {
-        _communications[i]->sendMaster(tarch::la::raw(*pair.second->values), size, 0);
+        _communications[i]->send(tarch::la::raw(*(pair.second->values)), size,
+                      pair.second->mesh->getID(), pair.second->dimension);
       }
     }
   }
@@ -288,7 +286,8 @@ void MultiCouplingScheme:: receiveData()
     for (DataMap::value_type& pair : _receiveDataVector[i]) {
       int size = pair.second->values->size();
       if (size > 0) {
-        _communications[i]->receiveMaster(tarch::la::raw(*pair.second->values), size, 0);
+        _communications[i]->receive(tarch::la::raw(*(pair.second->values)), size,
+            pair.second->mesh->getID(), pair.second->dimension);
       }
     }
   }

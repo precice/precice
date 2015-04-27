@@ -12,8 +12,7 @@
 #include "io/ExportVTK.hpp"
 #include "utils/Parallel.hpp"
 #include <vector>
-#include "boost/smart_ptr.hpp"
-#include "boost/array.hpp"
+#include <memory>
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::query::tests::FindClosestTest)
@@ -281,9 +280,9 @@ void FindClosestTest:: testFindClosestDistanceToTriangles ()
   queries.push_back ( Vector3D(-0.5, -0.5, -0.5) ); //  9: outside vertex0
   queries.push_back ( Vector3D( 1.5,  1.5, -0.5) ); // 10: outside vertex1
   queries.push_back ( Vector3D( 1.5,  1.5,  1.5) ); // 11: outside vertex2
-  std::vector< boost::shared_ptr<FindClosest> > findVisitors;
+  std::vector< std::shared_ptr<FindClosest> > findVisitors;
   for ( size_t i=0; i < queries.size(); i++ ) {
-    boost::shared_ptr<FindClosest> find ( new FindClosest(queries[i]) );
+    std::shared_ptr<FindClosest> find ( new FindClosest(queries[i]) );
     findVisitors.push_back ( find );
     (*findVisitors[i])( mesh );
   }

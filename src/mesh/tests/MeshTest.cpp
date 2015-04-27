@@ -14,6 +14,9 @@
 #include "tarch/la/WrappedVector.h"
 
 #include "tarch/tests/TestCaseFactory.h"
+
+
+
 registerTest(precice::mesh::tests::MeshTest)
 
 namespace precice {
@@ -34,6 +37,7 @@ void MeshTest:: run()
     testMethod(testSubIDs);
     testMethod(testComputeState);
     testMethod(testDemonstration);
+    testMethod(testBoundingBoxCOG);
   }
 }
 
@@ -238,6 +242,86 @@ void MeshTest:: testComputeState()
   }
 }
 
+void MeshTest::testBoundingBoxCOG()
+{
+  {
+    utils::DynVector coords0(2);
+    utils::DynVector coords1(2);
+    utils::DynVector coords2(2);
+
+    coords0 =  2.0, 0.0;
+    coords1 = -1.0, 4.0;
+    coords2 =  0.0, 1.0;
+
+    Mesh mesh ("2D Testmesh", 2, false );
+    mesh.createVertex(coords0);
+    mesh.createVertex(coords1);
+    mesh.createVertex(coords2);
+
+    mesh.computeState();
+
+    Mesh::BoundingBox bBox = mesh.getBoundingBox();
+    auto cog = mesh.getCOG();
+
+    Mesh::BoundingBox referenceBox =  { {-1.0, 2.0},
+                                        { 0.0, 4.0} };
+
+    std::vector<double> referenceCOG =  { 0.5, 2.0 };
+
+    validateEquals(bBox.size(), 2);
+    validateEquals(cog.size(), 2);
+
+    for (size_t d = 0; d < bBox.size(); d++) {
+      validateNumericalEquals(referenceBox[d].first, bBox[d].first);
+      validateNumericalEquals(referenceBox[d].second, bBox[d].second);
+    }
+    for (size_t d = 0; d < cog.size(); d++) {
+      validateNumericalEquals(referenceCOG[d], cog[d]);
+    }
+  }
+
+  {
+    utils::DynVector coords0(3);
+    utils::DynVector coords1(3);
+    utils::DynVector coords2(3);
+    utils::DynVector coords3(3);
+
+    coords0 =  2.0, 0.0, -3.0;
+    coords1 = -1.0, 4.0,  8.0;
+    coords2 =  0.0, 1.0, -2.0;
+    coords2 =  3.5, 2.0, -2.0;
+
+    Mesh mesh ("3D Testmesh", 3, false );
+    mesh.createVertex(coords0);
+    mesh.createVertex(coords1);
+    mesh.createVertex(coords2);
+    mesh.createVertex(coords3);
+
+    mesh.computeState();
+
+    Mesh::BoundingBox bBox = mesh.getBoundingBox();
+    auto cog = mesh.getCOG();
+
+    Mesh::BoundingBox referenceBox =  { {-1.0, 3.5},
+                                        { 0.0, 4.0},
+                                        {-3.0, 8.0} };
+
+    std::vector<double> referenceCOG =  { 1.25, 2.0, 2.5 };
+
+    validateEquals(bBox.size(), 3);
+    validateEquals(cog.size(), 3);
+
+    for (size_t d = 0; d < bBox.size(); d++) {
+      validateNumericalEquals(referenceBox[d].first, bBox[d].first);
+      validateNumericalEquals(referenceBox[d].second, bBox[d].second);
+    }
+    for (size_t d = 0; d < cog.size(); d++) {
+      validateNumericalEquals(referenceCOG[d], cog[d]);
+    }
+  }
+}
+
+
 void MeshTest:: testDemonstration ()
 {
   preciceTrace ( "testDemonstration()" );
@@ -275,7 +359,7 @@ void MeshTest:: testDemonstration ()
     // This is the preferred way to iterate over elements in a mesh, it hides
     // the details of the vertex container in class Mesh.
     size_t index = 0;
-    foreach ( Vertex& vertex, mesh.vertices() ) {
+    for (Vertex& vertex : mesh.vertices()) {
       if ( index == 0 ) {
         validateEquals ( vertex.getID(), v0.getID() );
       }
@@ -298,7 +382,7 @@ void MeshTest:: testDemonstration ()
 
     // Validate mesh edges state
     index = 0;
-    foreach ( Edge & edge, mesh.edges() ) {
+    for (Edge & edge : mesh.edges()) {
       if ( index == 0 ) {
         validateEquals ( edge.getID(), e0.getID() );
       }

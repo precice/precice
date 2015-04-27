@@ -16,11 +16,11 @@ public:
     double                timestepLength,
     int                   validDigits,
     const std::string&    localParticipant,
-    std::vector<m2n::PtrGlobalCommunication> communications,
+    std::vector<m2n::M2N::SharedPointer> communications,
     constants::TimesteppingMethod dtMethod,
     int                   maxIterations = 1)
     ;
-  
+
   /// @brief Logging device.
   static tarch::logging::Log _log;
 
@@ -43,11 +43,11 @@ public:
     mesh::PtrMesh mesh,
     bool          initialize,
     int           index);
-  
+
 protected:
   /// @brief merges send and receive data into one map (for parallel post-processing)
   virtual void mergeData();
-  
+
 private:
   void sendData();
   void receiveData();
@@ -55,7 +55,7 @@ private:
   CouplingData* getData ( int dataID );
 
   /// @brief Communication device to the other coupling participant.
-  std::vector<m2n::PtrGlobalCommunication> _communications;
+  std::vector<m2n::M2N::SharedPointer> _communications;
 
   /// @brief Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;

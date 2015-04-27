@@ -4,12 +4,11 @@
 #ifndef PRECICE_UTILS_HELPERS_HPP_
 #define PRECICE_UTILS_HELPERS_HPP_
 
-//#include <sstream>
-//#include <iostream>
 #include <cstdlib>
 #include <algorithm>
 #include <vector>
 #include <map>
+#include <stack>
 #include <set>
 #include <list>
 #include "Parallel.hpp"
@@ -17,6 +16,16 @@
 
 namespace precice {
 namespace utils {
+
+/**
+ * @brief Returns true, if numerical truncation happens in case of type
+ *        conversion.
+ */
+template <class Out, class In>
+inline bool isTruncated(In in) {
+  return (                  in > std::numeric_limits<Out>::max()) ||
+         (In(-1) < In(0) && in < std::numeric_limits<Out>::min());
+}
 
 /**
  * @brief Exclusive "or" logical operation.
@@ -52,12 +61,12 @@ inline bool xOR ( bool lhs, bool rhs )
  * Requirements:
  * - ELEMENT_T must be comparable by ==
  */
-template <typename ELEMENT_T> 
-const bool contained(const ELEMENT_T& element, const std::vector<ELEMENT_T>& vec) 
+template <typename ELEMENT_T>
+const bool contained(const ELEMENT_T& element, const std::vector<ELEMENT_T>& vec)
 {
   return std::find(vec.begin(), vec.end(), element) != vec.end();
 }
-  
+
 template<typename KEY_T, typename ELEMENT_T>
 bool contained (
   const KEY_T&                     key,
@@ -143,6 +152,33 @@ inline AppendIterator<CONTAINER_T> appendTo
 {
    return AppendIterator<CONTAINER_T>(left);
 }
+
+template <class T, class Container = std::deque<T> >
+class Stack : public std::stack<T, Container> {
+public:
+  typedef typename Container::iterator iterator;
+  typedef typename Container::const_iterator const_iterator;
+
+  iterator
+  begin() {
+    return this->c.begin();
+  }
+
+  iterator
+  end() {
+    return this->c.end();
+  }
+
+  const_iterator
+  begin() const {
+    return this->c.begin();
+  }
+
+  const_iterator
+  end() const {
+    return this->c.end();
+  }
+};
 
 }} // namespace precice, utils
 

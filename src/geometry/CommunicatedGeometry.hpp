@@ -1,11 +1,7 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_GEOMETRY_COMMUNICATEDGEOMETRY_HPP_
-#define PRECICE_GEOMETRY_COMMUNICATEDGEOMETRY_HPP_
+#pragma once
 
 #include "Geometry.hpp"
-#include "m2n/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -34,25 +30,26 @@ public:
   virtual ~CommunicatedGeometry() {}
 
   void addReceiver (
-    const std::string&     receiver,
-    m2n::PtrGlobalCommunication com );
+    const std::string& receiver,
+    m2n::M2N::SharedPointer m2n );
 
   void setBoundingFromMapping(mapping::PtrMapping mapping);
 
   void setBoundingToMapping(mapping::PtrMapping mapping);
 
+  void setSafetyFactor(double safetyFactor);
+
 protected:
 
   /**
-   * @brief Is called from Geometry  and transmits the mesh.
+   * Is called from Geometry and sends the mesh if the accessor is provider,
+   * receives if the accessor is contained in receivers, fails otherwise.
    */
-  virtual void specializedCreate ( mesh::Mesh& seed );
+  void specializedCreate ( mesh::Mesh& seed );
 
 private:
 
-  /**
-   * @brief The received mesh is scattered amongst the slaves.
-   */
+  /// The received mesh is scattered amongst the slaves.
   void scatterMesh(
     mesh::Mesh& seed);
 
@@ -62,34 +59,38 @@ private:
   void receiveMesh(
     mesh::Mesh& seed);
 
-  /**
-   * @brief Compute the preliminary mappings between the global mesh and the slave's own mesh.
-   */
+  /// Compute the preliminary mappings between the global mesh and the slave's own mesh.
   void computeBoundingMappings();
 
   void clearBoundingMappings();
 
-  /**
-   * @brief Returns true if a vertex contributes to one of the 2 mappings. If false, the vertex can be erased.
-   */
-  bool doesVertexContribute(int vertexID);
+  void mergeBoundingBoxes(mesh::Mesh::BoundingBox& bb);
 
-  // @brief Logging device.
+  std::vector<int> filterMesh(mesh::Mesh& seed, mesh::Mesh& filteredMesh, bool filterByMapping);
+
+  /// Returns true if a vertex contributes to one of the 2 mappings. If false, the vertex can be erased.
+ bool doesVertexContribute(const mesh::Vertex& vertex, bool filterByMapping);
+
+  /// Logging device.
   static tarch::logging::Log _log;
 
   std::string _accessorName;
 
   std::string _providerName;
 
-  std::map<std::string,m2n::PtrGlobalCommunication> _receivers;
+  std::map<std::string,m2n::M2N::SharedPointer> _receivers;
 
   int _dimensions;
 
   mapping::PtrMapping _boundingFromMapping;
 
   mapping::PtrMapping _boundingToMapping;
+
+  mesh::Mesh::BoundingBox _bb;
+
+  double _safetyGap;
+
+  double _safetyFactor;
 };
 
 }} // namespace precice, geometry
-
-#endif /* PRECICE_GEOMETRY_COMMUNICATEDGEOMETRY_HPP_ */

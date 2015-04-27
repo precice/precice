@@ -43,7 +43,7 @@ void GroupTest:: run()
     validateEquals(group.size(), 4);
 
     Vector3D coords(0.0);
-    foreach (Vertex& v, group.vertices()){
+    for (Vertex& v : group.vertices()){
       validate(tarch::la::equals(v.getCoords(), coords));
       coords += Vector3D(1.0);
     }
@@ -60,7 +60,7 @@ void GroupTest:: run()
     validateEquals(group.size(), 8);
 
     coords = Vector3D(0.0);
-    foreach (Edge& e, group.edges()){
+    for (Edge& e : group.edges()){
       validate(tarch::la::equals(e.vertex(0).getCoords(), coords));
       coords += Vector3D(1.0);
     }

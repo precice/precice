@@ -4,10 +4,11 @@
 #ifndef PRECICE_UTILS_MASTER_SLAVE_HPP_
 #define PRECICE_UTILS_MASTER_SLAVE_HPP_
 
+#include "Dimensions.hpp"
+
+#include "com/Communication.hpp"
+
 #include "tarch/logging/Log.h"
-#include "com/SharedPointer.hpp"
-#include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 
 namespace precice {
 namespace utils {
@@ -21,6 +22,7 @@ public:
 
   static int _rank;
   static int _size;
+  static int _masterRank;
 
   /**
    * @brief True if this process is running the master.
@@ -34,7 +36,7 @@ public:
   /**
    * @brief Communication between the master and all slaves.
    */
-  static com::PtrCommunication _communication;
+  static com::Communication::SharedPointer _communication;
 
   /**
    * @brief Configure the master-slave communication.
@@ -50,6 +52,12 @@ public:
    * @brief the dot product of 2 vectors is calculated on distributed data.
    */
   static double dot(const DynVector& vec1, const DynVector& vec2);
+
+  static void reset();
+
+  static void broadcast(bool& value);
+
+  static void broadcast(double& value);
 
 private:
 

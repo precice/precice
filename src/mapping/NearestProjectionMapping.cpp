@@ -43,7 +43,7 @@ void NearestProjectionMapping:: computeMapping()
       assertion(findClosest.hasFound());
       const query::ClosestElement& closest = findClosest.getClosest();
       _weights[i].clear();
-      foreach ( const query::InterpolationElement& elem, closest.interpolationElements ){
+      for (const query::InterpolationElement& elem : closest.interpolationElements) {
         _weights[i].push_back(elem);
       }
     }
@@ -58,7 +58,7 @@ void NearestProjectionMapping:: computeMapping()
       assertion(findClosest.hasFound());
       const query::ClosestElement& closest = findClosest.getClosest();
       _weights[i].clear();
-      foreach ( const query::InterpolationElement& elem, closest.interpolationElements ){
+      for (const query::InterpolationElement& elem : closest.interpolationElements) {
         _weights[i].push_back(elem);
       }
     }
@@ -99,7 +99,7 @@ void NearestProjectionMapping:: map
     for (size_t i=0; i < output()->vertices().size(); i++){
       InterpolationElements& elems = _weights[i];
       size_t outOffset = i * dimensions;
-      foreach ( query::InterpolationElement& elem, elems ){
+      for (query::InterpolationElement& elem : elems) {
         size_t inOffset = (size_t)elem.element->getID() * dimensions;
         for (int dim=0; dim < dimensions; dim++){
           assertion(outOffset + dim < (size_t)outValues.size());
@@ -117,7 +117,7 @@ void NearestProjectionMapping:: map
     for (size_t i=0; i < input()->vertices().size(); i++){
       size_t inOffset = i * dimensions;
       InterpolationElements& elems = _weights[i];
-      foreach ( query::InterpolationElement& elem, elems ){
+      for (query::InterpolationElement& elem : elems) {
         size_t outOffset = (size_t)elem.element->getID() * dimensions;
         for ( int dim=0; dim < dimensions; dim++ ){
           assertion(outOffset + dim < (size_t)outValues.size());
@@ -133,11 +133,11 @@ bool NearestProjectionMapping::doesVertexContribute(
   int vertexID)
 {
   preciceTrace1("doesVertexContribute()", vertexID);
-  if (getConstraint() == CONSISTENT){
-    for (size_t i=0; i < output()->vertices().size(); i++){
+  if (getConstraint() == CONSISTENT) {
+    for (size_t i=0; i < output()->vertices().size(); i++) {
       InterpolationElements& elems = _weights[i];
-      foreach ( query::InterpolationElement& elem, elems ){
-        if(elem.element->getID()==vertexID && elem.weight!=0.0){
+      for (query::InterpolationElement& elem : elems) {
+        if (elem.element->getID()==vertexID && elem.weight!=0.0) {
           return true;
         }
       }
@@ -145,10 +145,10 @@ bool NearestProjectionMapping::doesVertexContribute(
   }
   else {
     assertion1(getConstraint() == CONSERVATIVE, getConstraint());
-    for (size_t i=0; i < input()->vertices().size(); i++){
+    for (size_t i=0; i < input()->vertices().size(); i++) {
       InterpolationElements& elems = _weights[i];
-      foreach ( query::InterpolationElement& elem, elems ){
-        if(elem.element->getID()==vertexID){ // && elem.weight!=0.0){
+      for (query::InterpolationElement& elem : elems) {
+        if (elem.element->getID()==vertexID){ // && elem.weight!=0.0){
           return true;
         }
       }

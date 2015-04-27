@@ -7,7 +7,7 @@
 #include "geometry/Geometry.hpp"
 #include "geometry/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "com/SharedPointer.hpp"
+#include "com/Communication.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "tarch/logging/Log.h"
 #include <vector>

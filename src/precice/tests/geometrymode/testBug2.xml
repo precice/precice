@@ -13,7 +13,7 @@
       
       <geometry:import of-mesh="Pipe">
          <filetype value="vrml"/>
-         <filename value="../src/precice/tests/geometrymode/testBug-geometry.wrl"/>
+         <filename value="testBug-geometry.wrl"/>
          <offset value="0.5; 4.5; 4.0"/>
       </geometry:import>
       

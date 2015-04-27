@@ -72,6 +72,11 @@ private:
 
   void testCustomGeometryCreation();
 
+  /**
+   * @bried Tests the main functionality that is necessary to perform a Pinelli-type Direct Forcing method
+   */
+  void testPinelli();
+
   void testSetExportLocation();
 
   void testSpacetrees();

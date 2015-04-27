@@ -55,9 +55,7 @@ void CompositionalCouplingScheme:: initializeData()
 {
   preciceTrace("initializeData()");
   for (Scheme scheme : _couplingSchemes) {
-    if (scheme.scheme->isActionRequired(constants::actionWriteInitialData())){
-      scheme.scheme->initializeData();
-    }
+    scheme.scheme->initializeData();
   }
 }
 
@@ -423,7 +421,7 @@ void CompositionalCouplingScheme:: importState
 
 void CompositionalCouplingScheme:: sendState
 (
-  com::PtrCommunication communication,
+  com::Communication::SharedPointer communication,
   int                   rankReceiver )
 {
   preciceTrace("sendState()");
@@ -434,7 +432,7 @@ void CompositionalCouplingScheme:: sendState
 
 void CompositionalCouplingScheme:: receiveState
 (
-  com::PtrCommunication communication,
+  com::Communication::SharedPointer communication,
   int                   rankSender )
 {
   preciceTrace("receiveState()");
@@ -952,7 +950,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //
 //void CompositionalCouplingScheme:: sendState
 //(
-//  com::PtrCommunication communication,
+//  com::Communication::SharedPointer communication,
 //  int                   rankReceiver )
 //{
 //  preciceTrace("sendState()");
@@ -963,7 +961,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //
 //void CompositionalCouplingScheme:: receiveState
 //(
-//  com::PtrCommunication communication,
+//  com::Communication::SharedPointer communication,
 //  int                   rankSender )
 //{
 //  preciceTrace("receiveState()");
@@ -1081,4 +1079,3 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //}
 //
 //}} // namespace precice, cplscheme
-
