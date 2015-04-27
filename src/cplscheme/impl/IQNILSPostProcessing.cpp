@@ -193,6 +193,7 @@ void IQNILSPostProcessing::computeQNUpdate
         for (int i=0; i < _matrixV.cols(); i++){
           if (R(i,i) < _singularityLimit){
             preciceDebug("   Removing linear dependent column " << i);
+	    _infostream<<"removing linear dependent column "<<i<<"\n"<<std::flush;
             linearDependence = true;
             removeMatrixColumn(i);
           }
@@ -242,11 +243,10 @@ void IQNILSPostProcessing::computeQNUpdate
 	  if(!tarch::la::equals(xUpdate(i), update(i), 1e-12))
 	  {
 	    std::cerr<<"xUpdates were not the same for standart and updatedQR decomposition:\n"<<"standart:\n   "<<xUpdate<<"updated:\n   "<<update<<std::endl;
+	    _infostream<<"validation failed for xUpdate.\n   - modifiedGramSchmidt:\n"<<xUpdate<<"\n  - updatedQR:\n"<<update<<"\n"<<std::flush;
 	  }
 	}
 	// ------------------------------------------------
-	
-        
 	
         preciceDebug("c = " << c);
       }

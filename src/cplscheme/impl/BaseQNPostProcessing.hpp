@@ -131,8 +131,7 @@ public:
 
 protected:
   
-  std::fstream _timingStream;
-  std::fstream _scalingStream;
+  std::fstream _infostream;
 
    typedef tarch::la::DynamicVector<double> DataValues;
 

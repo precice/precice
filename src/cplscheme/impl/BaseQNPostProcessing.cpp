@@ -61,8 +61,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _matrixWBackup(),
   _matrixColsBackup(),
   //_secondaryMatricesW(),
-  _timingStream(),
-  _scalingStream(),
+  _infostream(),
   _matrixCols()
 {
    preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
@@ -81,12 +80,8 @@ BaseQNPostProcessing:: BaseQNPostProcessing
                 << tarch::la::NUMERICAL_ZERO_DIFFERENCE << ")!");
    
    
-  _timingStream.open ("timing.txt", std::ios_base::out);
-  _scalingStream.open("scaling_l2Norms_ratio.txt", std::ios_base::out);
-  _scalingStream << std::setprecision(16);
-  _timingStream << std::setprecision(16);
-  _timingStream << "        Time Measurements \n -------------------------------------------------------- \n\n"<<std::flush;
-  _scalingStream << "       l2Norms of Data and with Ratio \n ------------------------------------------------\n\n"<<std::flush;
+  _infostream.open ("postProcessingInfo.txt", std::ios_base::out);
+  _infostream << std::setprecision(16);
 }
 
 
@@ -156,10 +151,10 @@ void BaseQNPostProcessing:: scaling
   preciceTrace("scaling()");
   
   int offset = 0;
-  double l2norm = 0.;
-  double oldl2norm = 0.;
+//  double l2norm = 0.;
+//  double oldl2norm = 0.;
   foreach (int id, _dataIDs){
-    l2norm = 0.; // debug
+//    l2norm = 0.; // debug
     double factor = _scalings[id];
     preciceDebug("Scaling Factor " << factor << " for id: " << id);
     int size = cplData[id]->values->size();
@@ -170,19 +165,19 @@ void BaseQNPostProcessing:: scaling
       _scaledOldValues[i+offset] = oldValues[i]/factor;
       
       // debug:
-      l2norm += _scaledValues[i+offset]*_scaledValues[i+offset];
+//      l2norm += _scaledValues[i+offset]*_scaledValues[i+offset];
     }
     offset += size;
     
     // debug:
-    if (id == _dataIDs[0]) oldl2norm = sqrt(l2norm);
-    preciceDebug(" + l2-Norm = " << sqrt(l2norm) << " of id: " << id);
-    _scalingStream<<"\n"<<factor<<"	l2Norm: "<<sqrt(l2norm)<<"    of id: "<<id<<std::flush;
+//    if (id == _dataIDs[0]) oldl2norm = sqrt(l2norm);
+//    preciceDebug(" + l2-Norm = " << sqrt(l2norm) << " of id: " << id);
+//    _scalingStream<<"\n"<<factor<<"	l2Norm: "<<sqrt(l2norm)<<"    of id: "<<id<<std::flush;
   } 
   // debug:
-  _scalingStream<<"\n  ratio: "<<(double)oldl2norm/sqrt(l2norm)<<"\n"<<std::flush;
-  _scalingStream<<"-------------------\n"<<std::flush;
-  preciceDebug(" + l2-Norm ratio = "<< oldl2norm/sqrt(l2norm));
+//  _scalingStream<<"\n  ratio: "<<(double)oldl2norm/sqrt(l2norm)<<"\n"<<std::flush;
+//  _scalingStream<<"-------------------\n"<<std::flush;
+//  preciceDebug(" + l2-Norm ratio = "<< oldl2norm/sqrt(l2norm));
 }
 
 /* ----------------------------------------------------------------------------
@@ -326,12 +321,6 @@ void BaseQNPostProcessing:: performPostProcessing
   assertion2(_residuals.size() == _oldXTilde.size(),
              _residuals.size(), _oldXTilde.size());
 
-
- double time_pPP = clock();
- double time_QNStep = 0.;
- double time_scaleUpdateVW = time_pPP;
- double time_norelaxAux = 0.;
- double time_scaleUpdateVW_tmp = 0.;
  
   // scale data values (and secondary data values)
   scaling(cplData);
@@ -345,9 +334,6 @@ void BaseQNPostProcessing:: performPostProcessing
     * appending the difference matrices 
     */
   updateDifferenceMatrices(cplData);
-  
-  time_scaleUpdateVW = clock() - time_scaleUpdateVW;
-  //time_scaleUpdateVW /= CLOCKS_PER_SEC; 
   
 
 //   //if (_firstIteration && (_matrixCols.size() < 2)){
@@ -373,8 +359,6 @@ void BaseQNPostProcessing:: performPostProcessing
    }
    else {
      preciceDebug("   Performing QN step");
-  
-    time_norelaxAux = clock();
      
      //std::cout<<"v.cols = "<<_matrixV.cols()<<" w.cols = "<<_matrixW.cols()<<std::endl;
     if((_matrixV.cols() < 1 || _matrixW.cols()) < 1 && _timestepsReused == 0)
@@ -391,15 +375,11 @@ void BaseQNPostProcessing:: performPostProcessing
 
     DataValues xUpdate(_residuals.size(), 0.0);
     
-    time_QNStep = clock();
-    
     /**
      * compute quasi-Newton update 
      */
     computeQNUpdate(cplData, xUpdate);
-    
-    time_QNStep = clock() - time_QNStep;
-  
+
     /** 
      * apply quasiNewton update
      */
@@ -438,38 +418,10 @@ void BaseQNPostProcessing:: performPostProcessing
 // // //     }
     // -----------------------------------------------
     }
-    
-    time_norelaxAux = clock() - time_norelaxAux;
-    //time_norelaxAux /= CLOCKS_PER_SEC;
-    time_norelaxAux -= time_QNStep;
-
   }
-
-  time_scaleUpdateVW_tmp = clock();
   
   // Undo scaling of data values and overwrite originals
   undoScaling(cplData);
-  
-  time_scaleUpdateVW_tmp = clock() - time_scaleUpdateVW_tmp;
-  //time_scaleUpdateVW_tmp /= CLOCKS_PER_SEC;
-  time_scaleUpdateVW += time_scaleUpdateVW_tmp;
-  
-  time_pPP = clock() - time_pPP;
-  //time_pPP /= CLOCKS_PER_SEC;
-  
-
-   preciceDebug("\n time for scaling and update ov V, W matrices: "<<time_scaleUpdateVW);
-   preciceDebug(" time for norelax auxiliaries: "<<time_norelaxAux);
-   preciceDebug(" time for QN update: "<<time_QNStep);
-   preciceDebug(" time for perform post processing (accumulated): "<<time_pPP);
-   preciceDebug("----------------------------\n");
-  _timingStream << "\n"<<std::flush;
-  _timingStream << " time for scaling and update ov V, W matrices: "<<time_scaleUpdateVW<<"\n"<<std::flush;
-  _timingStream << " time for norelax auxiliaries: "<<time_norelaxAux<<"\n"<<std::flush;
-  _timingStream << " time for QN update: "<<time_QNStep<<"\n"<<std::flush;
-  _timingStream << " time for perform post processing (accumulated): "<<time_pPP<<"\n"<<std::flush;
-  _timingStream << "----------------------------\n"<<std::flush;
-  
   _firstIteration = false;
 }
 
@@ -478,6 +430,32 @@ void BaseQNPostProcessing:: iterationsConverged
    DataMap & cplData)
 {
   preciceTrace("iterationsConverged()");
+  
+  // writig l2 norm of converged configuration to info stream
+  // -----------
+  if(_firstTimeStep)
+  {
+    _infostream<<"l2-Norm of converged configuration after first time step:"<<std::endl;
+    double l2norm = 0., oldl2norm = 0., curr = 0.;
+    foreach (int id, _dataIDs)
+    {
+      l2norm = 0.; 
+      double factor = _scalings[id];
+    
+      int size = cplData[id]->values->size();
+      DataValues& values = *cplData[id]->values;
+      for (int i=0; i < size; i++){
+	curr = values[i]/factor;
+	l2norm += curr*curr;
+      }
+      if (id == _dataIDs[0]) oldl2norm = sqrt(l2norm);
+      _infostream<<"  * "<<factor<<"  l2-norm: "<<sqrt(l2norm)<<"  of id: "<<id<<"\n"<<std::flush;
+    } 
+    _infostream<<"  * l2-norm ratio: "<<(double)oldl2norm/sqrt(l2norm)<<"\n"<<std::flush;
+  }
+  // -----------
+  
+  
   
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 

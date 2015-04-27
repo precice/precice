@@ -165,6 +165,7 @@ void MVQNPostProcessing::computeQNUpdate
       if(!tarch::la::equals(xUpdate(i), xUpdate2(i), 1e-12))
       {
 	std::cerr<<"xUpdates were not the same for standart and updatedQR decomposition:\n"<<"standart:\n   "<<xUpdate<<"updated:\n   "<<xUpdate2<<std::endl;
+	_infostream<<"validation failed for xUpdate.\n   - modifiedGramSchmidt:\n"<<xUpdate<<"\n  - updatedQR:\n"<<xUpdate2<<"\n"<<std::flush;
       }
     }
 }
@@ -200,7 +201,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
       for (int i=0; i < _matrixV.cols(); i++){
 	if (__R(i,i) < _singularityLimit){
 	  preciceDebug("   Removing linear dependent column " << i);
-	  std::cout<<"######### REMOVE COLUMN (LINEAR DEPENDENCE) ########\n";
+	  _infostream<<"(updatedQR) removing linear dependent column "<<i<<"  time step: "<<t<<" iteration: "<<k<<"\n"<<std::flush;
 	  linearDependence = true;
 	  removeMatrixColumn(i);
 	}
@@ -265,36 +266,23 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
   // ----------------------------------------- -------
   
-  double time_QRDecomposition = 0.;
-  double time_multiply = 0;
-  double time_backSubstitution_one = 0.;
-  double time_backSubstitution_all = 0.;
-  double time_m1 = 0., time_m2 = 0., time_m3 = 0., time_m4 = 0., time_m5 = 0.;
-  
   DataMatrix v;
   bool linearDependence = true;
   while (linearDependence){
     linearDependence = false;
     v.clear();
     
-    time_QRDecomposition = clock();
-    
     DataMatrix Vcopy(_matrixV);
     DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
     DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
-   
-    preciceDebug(" ++  before QR Decomposition");
+ 
     modifiedGramSchmidt(Vcopy, Q, R);
-    preciceDebug(" ++  after QR Decomposition");
-    
-    time_QRDecomposition = clock() - time_QRDecomposition;
-    //time_QRDecomposition /= CLOCKS_PER_SEC;
     
     if (_matrixV.cols() > 1){
       for (int i=0; i < _matrixV.cols(); i++){
 	if (R(i,i) < _singularityLimit){
 	  preciceDebug("   Removing linear dependent column " << i);
-	  std::cout<<"######### REMOVE COLUMN (LINEAR DEPENDENCE) ########\n";
+	  _infostream<<"(modifiedGramSchmidt) removing linear dependent column "<<i<<"  time step: "<<t<<" iteration: "<<k<<"\n"<<std::flush;
 	  linearDependence = true;
 	  removeMatrixColumn(i);
 	}
@@ -302,7 +290,6 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
     }
     if(not linearDependence)
     {
-      time_backSubstitution_all = clock();
       DataValues ytmpVec(_matrixV.cols(), 0.0);
       DataValues _matrixQRow;
       for(int i = 0; i < Q.rows(); i++)
@@ -310,78 +297,32 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
 	for(int j=0; j < Q.cols(); j++){
 	_matrixQRow.append(Q(i,j));
         }
-	time_backSubstitution_one = clock();
 	backSubstitution(R, _matrixQRow, ytmpVec);
-	time_backSubstitution_one = clock() -time_backSubstitution_one;
-	//time_backSubstitution_one /= CLOCKS_PER_SEC;
-	
 	v.append(ytmpVec);  
-      _matrixQRow.clear();
+        _matrixQRow.clear();
       }
-      time_backSubstitution_all = clock() - time_backSubstitution_all;
-     
     }
   }
-
-  time_multiply = clock();
-  time_m1 = time_multiply;
 
   // tmpMatrix = J_inv_n*V
   Matrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
   assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
   multiply(_oldInvJacobian, _matrixV, tmpMatrix);
-  
-  time_m1 = clock() - time_m1;
-  time_m2 = clock();
 
   // tmpMatrix = (W-J_inv_n*V)
   tmpMatrix *= -1.;
   tmpMatrix = tmpMatrix + _matrixW;
   
-  time_m2 = clock() - time_m2;
-
-  //----------------------------DEBUG------------------------------------
-  
-// //   std::string tmpMatrixFile("output/W-JV"+st.str()+"_"+sk.str()+".m");
-// //   tmpMatrix.printm(tmpMatrixFile.c_str());
-  
-  // --------------------------------------------------------------------
-  
   // invJacobian = (W - J_inv_n*V)*(V^T*V)^-1*V^T
   assertion2(tmpMatrix.cols() == v.rows(), tmpMatrix.cols(), v.rows());
-  
-  time_m3 = clock();
   multiply(tmpMatrix, v, _invJacobian);
-  time_m3 = clock() - time_m3;
-  time_m4 = clock();
   _invJacobian = _invJacobian + _oldInvJacobian;
-  time_m4 = clock() - time_m4;
   
   DataValues negRes(_residuals);
-
-  time_m5 = clock();
   negRes *= -1.;
   
   // solve delta_x = - J_inv*residuals
   multiply(_invJacobian, negRes, xUpdate); 
-  
-  time_m5 = clock() - time_m5;
-
-  time_multiply = clock() -time_multiply;
-  //time_multiply /= CLOCKS_PER_SEC;
-  
-  _timingStream <<"  mvqn::info: V.size=("<<_matrixV.rows()<<","<<_matrixV.cols()<<")   Jacobian.size=("<<_invJacobian.rows()<<","<<_invJacobian.cols()<<")\n"<<std::flush;
-  _timingStream <<"  mvqn: time for QR decomposition:  "<<time_QRDecomposition<<"\n"<<std::flush;
-  _timingStream <<"  mvqn: time for 2 matrix matrix multiplications + 2 matrix matrix additions + 1 matrix vector multiplication:  "<<time_multiply<<" = "<<time_multiply/CLOCKS_PER_SEC<<" sec\n"<<std::flush;
-  _timingStream <<"        matrix Op: J_inv * V: "<<time_m1<<"					["<<(int)(time_m1/time_multiply*100.)<<"%]\n"<<std::flush;
-  _timingStream <<"        matrix Op: tmp - W: "<<time_m2<<"                                    ["<<(int)(time_m2/time_multiply*100.)<<"%]\n"<<std::flush;
-  _timingStream <<"         info: v.size=("<<v.rows()<<","<<v.cols()<<")\n"<<std::flush;
-  _timingStream <<"        matrix Op: (W - J_inv_n*V) * (V^T*V)^-1*V^T: "<<time_m3<<"           ["<<(int)(time_m3/time_multiply*100.)<<"%]\n"<<std::flush;
-  _timingStream <<"        matrix Op: J_inv_old + J_inv_update: "<<time_m4<<"                   ["<<(int)(time_m4/time_multiply*100.)<<"%]\n"<<std::flush;
-  _timingStream <<"        matrix Op: J_inv*residuals: "<<time_m5<<"                  		["<<(int)(time_m5/time_multiply*100.)<<"%]\n"<<std::flush;
-  _timingStream <<"  mvqn: time for one single back substitution: "<<time_backSubstitution_one<<"\n"<<std::flush;
-  _timingStream <<"  mvqn: time for V.rows()-times back substitution: "<<time_backSubstitution_all<<"\n"<<std::flush;
-
 }
 
 
