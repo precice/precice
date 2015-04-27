@@ -2,9 +2,8 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CommunicateMeshTest.hpp"
-#include "../CommunicateMesh.hpp"
-#include "../MPIDirectCommunication.hpp"
-#include "../SharedPointer.hpp"
+#include "com/CommunicateMesh.hpp"
+#include "com/MPIDirectCommunication.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
@@ -70,28 +69,35 @@ void CommunicateMeshTest:: testTwoSolvers ()
     if ( utils::Parallel::getProcessRank() < 2 ) {
       utils::Parallel::setGlobalCommunicator ( comm );
       validateEquals ( utils::Parallel::getCommunicatorSize(), 2 );
-      com::PtrCommunication com ( new com::MPIDirectCommunication() );
+      com::Communication::SharedPointer com ( new com::MPIDirectCommunication() );
       CommunicateMesh comMesh ( com );
 
       if ( utils::Parallel::getProcessRank() == 0 ) {
         utils::Parallel::initialize ( NULL, NULL, participant0 );
         com->acceptConnection ( participant0, participant1, 0, 1 );
         comMesh.sendMesh ( mesh, 0 );
+        validateEquals ( mesh.vertices().size(), 3 );
+        validateEquals ( mesh.edges().size(), 3 );
+        validate ( equals(mesh.vertices()[0].getCoords(), DynVector(dim,0.0)) );
+        validate ( equals(mesh.vertices()[1].getCoords(), DynVector(dim,1.0)) );
+        validate ( equals(mesh.vertices()[2].getCoords(), DynVector(dim,2.0)) );
       }
       else if ( utils::Parallel::getProcessRank() == 1 ) {
+        mesh.createVertex ( DynVector(dim,9.0) ); // new version receiveMesh can also deal with delta meshes
         utils::Parallel::initialize ( NULL, NULL, participant1 );
         com->requestConnection ( participant0, participant1, 0, 1 );
         comMesh.receiveMesh ( mesh, 0 );
+        validateEquals ( mesh.vertices().size(), 4 );
+        validateEquals ( mesh.edges().size(), 3 );
+        validate ( equals(mesh.vertices()[0].getCoords(), DynVector(dim,9.0)) );
+        validate ( equals(mesh.vertices()[1].getCoords(), DynVector(dim,0.0)) );
+        validate ( equals(mesh.vertices()[2].getCoords(), DynVector(dim,1.0)) );
+        validate ( equals(mesh.vertices()[3].getCoords(), DynVector(dim,2.0)) );
+
       }
       com->closeConnection ();
 
-      validateEquals ( mesh.vertices().size(), 3 );
-      validateEquals ( mesh.edges().size(), 3 );
-
       using tarch::la::equals;
-      validate ( equals(mesh.vertices()[0].getCoords(), DynVector(dim,0.0)) );
-      validate ( equals(mesh.vertices()[1].getCoords(), DynVector(dim,1.0)) );
-      validate ( equals(mesh.vertices()[2].getCoords(), DynVector(dim,2.0)) );
 
       validate ( equals(mesh.edges()[0].vertex(0).getCoords(), DynVector(dim,0.0)) );
       validate ( equals(mesh.edges()[0].vertex(1).getCoords(), DynVector(dim,1.0)) );

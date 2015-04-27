@@ -1,0 +1,47 @@
+# structure/SConstruct
+#
+# SCons buildfile for "Structure0815" solver
+#
+######################################
+
+import os;
+import sys;
+  
+##### Declare build variables and default values
+#
+cppdefines = []   
+libpath = [ 
+   '../../../build/debug-noomp-nopetsc/', # Path to preCICE library
+   '/usr/lib/python2.7/config-x86_64-linux-gnu'
+   ]      
+libs = [ 
+   'precice',  # preCICE library
+   'boost_system',
+   'boost_thread',
+   'python2.7' 
+   ]
+cpppath = [
+    ]   
+ccflags = []   
+cxx = 'mpicxx'      # For systems offering mpicxx compiler
+
+
+ccflags.append('-g3')
+#ccflags.append('-O3')
+
+#libpath.append (preciceRoot + '/build/' + buildmode + '-dim2-nompi/')
+
+
+##### Setup build environment and issue builds
+#
+env = Environment ( 
+   CPPDEFINES = cppdefines,  # defines for preprocessor (#define xyz)
+   LIBPATH    = libpath,     # path to libraries used
+   LIBS       = libs,        # libraries used (without prefix "lib" and suffix ".a"/".so"/...)
+   CPPPATH    = cpppath,     # pathes where the preprocessor should look for files
+   CCFLAGS    = ccflags,     # flags for the c/c++ compilers
+   CXX        = cxx,         # the c++ compiler that should be used
+   ENV        = os.environ  # propagates environment variables to scons  
+   )
+   
+env.Program ( 'solverproxy-debug', Glob('*.cpp') )

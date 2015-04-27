@@ -9,12 +9,12 @@
 #include "mesh/Merge.hpp"
 #include "query/FindClosest.hpp"
 #include "query/FindVoxelContent.hpp"
-#include "boost/smart_ptr.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/Dimensions.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Helpers.hpp"
 #include <list>
+#include <memory>
 
 namespace precice {
 namespace spacetree {
@@ -106,13 +106,13 @@ private:
     Environment&            environment,
     RefineAllResult&        result );
 
-  boost::shared_ptr<SearchPositionResult> searchPositionInternal (
+  std::shared_ptr<SearchPositionResult> searchPositionInternal (
     CELL_T&                 cell,
     const utils::DynVector& searchPoint,
     const utils::DynVector& cellCenter,
     const utils::DynVector& cellHalflengths );
 
-  boost::shared_ptr<SearchContentResult> searchContentInternal (
+  std::shared_ptr<SearchContentResult> searchContentInternal (
     CELL_T&                  cell,
     query::FindVoxelContent& findContent,
     const utils::DynVector&  cellCenter,
@@ -340,7 +340,7 @@ int StaticTraversal<CELL_T>:: searchPosition
   const utils::DynVector& cellHalflengths )
 {
   preciceTrace3 ( "searchPosition()", searchPoint, cellCenter, cellHalflengths );
-  typedef boost::shared_ptr<SearchPositionResult> PtrResult;
+  typedef std::shared_ptr<SearchPositionResult> PtrResult;
   PtrResult result = searchPositionInternal ( cell, searchPoint, cellCenter,
                                               cellHalflengths );
   assertion ( result.use_count() > 0 );
@@ -401,7 +401,7 @@ int StaticTraversal<CELL_T>:: searchContent
 {
   preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
-  boost::shared_ptr<SearchContentResult> result = searchContentInternal (
+  std::shared_ptr<SearchContentResult> result = searchContentInternal (
       cell, findContent, cellCenter, cellHalflengths );
   assertion ( result.use_count() > 0 );
   assertion ( result->uncachedCells.empty() );
@@ -424,7 +424,7 @@ int StaticTraversal<CELL_T>:: searchContent
 }
 
 template<typename CELL_T>
-boost::shared_ptr<typename StaticTraversal<CELL_T>::SearchPositionResult>
+std::shared_ptr<typename StaticTraversal<CELL_T>::SearchPositionResult>
 StaticTraversal<CELL_T>:: searchPositionInternal
 (
   CELL_T&                 cell,
@@ -435,12 +435,12 @@ StaticTraversal<CELL_T>:: searchPositionInternal
   preciceTrace3 ( "searchPositionInternal()", searchPoint, cellCenter,
                   cellHalflengths );
   using namespace tarch::la;
-  boost::shared_ptr<SearchPositionResult> data;
+  std::shared_ptr<SearchPositionResult> data;
   double distance = 0.0;
   if ( cell.isLeaf() ){
     preciceDebug ( "  Leaf" );
     assertion ( data.use_count() == 0 );
-    data = boost::shared_ptr<SearchPositionResult> (
+    data = std::shared_ptr<SearchPositionResult> (
         new SearchPositionResult(searchPoint) );
     if ( cell.getPosition() == Spacetree::positionOnGeometry() ){
       preciceDebug ( "    Has content" );
@@ -507,7 +507,7 @@ StaticTraversal<CELL_T>:: searchPositionInternal
 }
 
 template<typename CELL_T>
-boost::shared_ptr<typename StaticTraversal<CELL_T>::SearchContentResult>
+std::shared_ptr<typename StaticTraversal<CELL_T>::SearchContentResult>
 StaticTraversal<CELL_T>:: searchContentInternal
 (
   CELL_T&                  cell,
@@ -519,7 +519,7 @@ StaticTraversal<CELL_T>:: searchContentInternal
                   findContent.getVoxelCenter(), findContent.getVoxelHalflengths() );
   if ( cell.isLeaf() ){
     preciceDebug ( "Leaf..." );
-    boost::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
+    std::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
     assertion ( cell.getPosition() != Spacetree::positionUndefined() );
     if ( (cell.getPosition() == Spacetree::positionOutsideOfGeometry())
          || (cell.getPosition() == Spacetree::positionInsideOfGeometry()) )
@@ -557,7 +557,7 @@ StaticTraversal<CELL_T>:: searchContentInternal
   if ( not cell.isLeaf() ) {
     preciceDebug ( "Node..." );
     int searchCount = 0;
-    boost::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
+    std::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
     utils::DynVector childCenter(cellCenter.size());
     utils::DynVector childHalflengths(cellCenter.size());
     for ( int i=0; i < cell.getChildCount(); i++ ){
@@ -565,7 +565,7 @@ StaticTraversal<CELL_T>:: searchContentInternal
       if ( isOverlapped(childCenter, childHalflengths,
            findContent.getVoxelCenter(), findContent.getVoxelHalflengths()) )
       {
-        boost::shared_ptr<SearchContentResult> tempData ( new SearchContentResult() );
+        std::shared_ptr<SearchContentResult> tempData ( new SearchContentResult() );
         searchCount++;
         CELL_T& childCell = cell.child(i);
         tempData = searchContentInternal ( childCell, findContent, childCenter,

@@ -7,9 +7,11 @@
 #include "CouplingScheme.hpp"
 #include "Constants.hpp"
 #include "SharedPointer.hpp"
-#include "com/SharedPointer.hpp"
+
+#include "com/Communication.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
+
 #include <vector>
 #include <list>
 
@@ -291,7 +293,7 @@ public:
    * scheme via sendState and receiveState.
    */
   virtual void sendState (
-   com::PtrCommunication communication,
+   com::Communication::SharedPointer communication,
    int                   rankReceiver );
 
   /**
@@ -303,7 +305,7 @@ public:
    * scheme via sendState and receiveState.
    */
   virtual void receiveState (
-   com::PtrCommunication communication,
+   com::Communication::SharedPointer communication,
    int                   rankSender );
 
 private:

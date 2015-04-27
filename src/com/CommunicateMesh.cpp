@@ -10,6 +10,7 @@
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
 #include <map>
+#include <vector>
 
 namespace precice {
 namespace com {
@@ -18,7 +19,7 @@ tarch::logging::Log CommunicateMesh:: _log ( "precice::com::CommunicateMesh" );
 
 CommunicateMesh:: CommunicateMesh
 (
-  com::PtrCommunication communication )
+  com::Communication::SharedPointer communication )
 :
   _communication ( communication )
 {}
@@ -31,27 +32,59 @@ void CommunicateMesh:: sendMesh
   preciceTrace2 ( "sendGeometry()", mesh.getName(), rankReceiver );
   using tarch::la::raw;
   int dim = mesh.getDimensions();
-  _communication->startSendPackage ( rankReceiver );
-  _communication->send ( (int)mesh.vertices().size(), rankReceiver );
-  utils::DynVector coord(dim);
-  for (const mesh::Vertex& vertex : mesh.vertices()) {
-    coord = vertex.getCoords();
-    _communication->send (raw(coord), dim, rankReceiver);
+
+  int numberOfVertices = mesh.vertices().size();
+  _communication->send ( numberOfVertices, rankReceiver );
+  if(numberOfVertices>0){
+    double itemsToSend[numberOfVertices*dim];
+    for(int i=0;i<numberOfVertices;i++){
+      for(int d=0;d<dim;d++){
+        itemsToSend[i*dim+d] = mesh.vertices()[i].getCoords()[d];
+      }
+    }
+    _communication->send(itemsToSend,numberOfVertices*dim,rankReceiver);
   }
-  _communication->send ( (int)mesh.edges().size(), rankReceiver );
-  for (const mesh::Edge& edge : mesh.edges()) {
-    _communication->send ( edge.vertex(0).getID(), rankReceiver);
-    _communication->send ( edge.vertex(1).getID(), rankReceiver);
+
+  int numberOfEdges = mesh.edges().size();
+  _communication->send ( numberOfEdges, rankReceiver );
+  if(numberOfEdges>0){
+    //we need to send the vertexIDs first such that the right edges can be created later
+    //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+    int vertexIDs[numberOfVertices];
+    for(int i=0;i<numberOfVertices;i++){
+      vertexIDs[i] = mesh.vertices()[i].getID();
+    }
+    _communication->send(vertexIDs,numberOfVertices,rankReceiver);
+
+    int edgeIDs[numberOfEdges*2];
+    for(int i=0;i<numberOfEdges;i++){
+      edgeIDs[i*2] = mesh.edges()[i].vertex(0).getID();
+      edgeIDs[i*2+1] = mesh.edges()[i].vertex(1).getID();
+    }
+    _communication->send(edgeIDs,numberOfEdges*2,rankReceiver);
   }
+
   if ( dim == 3 ) {
-    _communication->send ( (int)mesh.triangles().size(), rankReceiver );
-    for (const mesh::Triangle& triangle : mesh.triangles()) {
-      _communication->send ( triangle.edge(0).getID(), rankReceiver );
-      _communication->send ( triangle.edge(1).getID(), rankReceiver );
-      _communication->send ( triangle.edge(2).getID(), rankReceiver );
+    int numberOfTriangles = mesh.triangles().size();
+    _communication->send ( numberOfTriangles, rankReceiver );
+    if(numberOfTriangles>0){
+      //we need to send the edgeIDs first such that the right edges can be created later
+      //contrary to the normal sendMesh, this variant must also work for adding delta meshes
+      int edgeIDs[numberOfEdges];
+      for(int i=0;i<numberOfEdges;i++){
+        edgeIDs[i] = mesh.edges()[i].getID();
+      }
+      _communication->send(edgeIDs,numberOfEdges,rankReceiver);
+
+      int triangleIDs[numberOfTriangles*3];
+      for(int i=0;i<numberOfTriangles;i++){
+        triangleIDs[i*3] = mesh.triangles()[i].edge(0).getID();
+        triangleIDs[i*3+1] = mesh.triangles()[i].edge(1).getID();
+        triangleIDs[i*3+2] = mesh.triangles()[i].edge(2).getID();
+      }
+      _communication->send(triangleIDs,numberOfTriangles*3,rankReceiver);
     }
   }
-  _communication->finishSendPackage ();
 }
 
 void CommunicateMesh:: receiveMesh
@@ -62,64 +95,95 @@ void CommunicateMesh:: receiveMesh
   preciceTrace2 ( "receiveMesh()", mesh.getName(), rankSender );
   using tarch::la::raw;
   int dim = mesh.getDimensions();
+
+  std::vector<mesh::Vertex*> vertices;
   std::map<int, mesh::Vertex*> vertexMap;
-  int vertexCount;
-  _communication->startReceivePackage ( rankSender );
-  _communication->receive ( vertexCount, rankSender);
-  utils::DynVector coords(dim);
-  for ( int i=0; i < vertexCount; i++ ){
-    _communication->receive ( raw(coords), dim, rankSender );
-    mesh::Vertex& v = mesh.createVertex ( coords );
-    assertion1 ( v.getID() >= 0, v.getID() );
-    vertexMap[v.getID()] = &v;
-  }
-  std::map<int,mesh::Edge*> edgeMap; // only used in 3D
-  int edgeCount;
-  _communication->receive ( edgeCount, rankSender );
-  for ( int i=0; i < edgeCount; i++ ){
-    int vertexIndex1 = -1;
-    int vertexIndex2 = -1;
-    _communication->receive ( vertexIndex1, rankSender );
-    _communication->receive ( vertexIndex2, rankSender );
+  int numberOfVertices = 0;
+  _communication->receive ( numberOfVertices, rankSender);
 
-    assertion ( vertexMap.find(vertexIndex1) != vertexMap.end() );
-    assertion ( vertexMap.find(vertexIndex2) != vertexMap.end() );
-    assertion1 ( vertexIndex1 != vertexIndex2, vertexIndex1 );
-
-    if ( dim == 2 ){
-      mesh.createEdge ( *vertexMap[vertexIndex1], *vertexMap[vertexIndex2] );
-    }
-    else {
-      assertion1 ( dim == 3, dim );
-      mesh::Edge & e = mesh.createEdge (
-          *vertexMap[vertexIndex1], *vertexMap[vertexIndex2] );
-      assertion1 ( e.getID() >= 0, e.getID() );
-      edgeMap[e.getID()] = &e;
+  if(numberOfVertices>0){
+    double vertexCoords[numberOfVertices*dim];
+    _communication->receive(vertexCoords,numberOfVertices*dim,rankSender);
+    for ( int i=0; i < numberOfVertices; i++ ){
+      utils::DynVector coords(dim);
+      for ( int d=0; d < dim; d++){
+        coords[d] = vertexCoords[i*dim+d];
+      }
+      mesh::Vertex& v = mesh.createVertex ( coords );
+      assertion1 ( v.getID() >= 0, v.getID() );
+      vertices.push_back(&v);
     }
   }
+
+  int numberOfEdges = 0;
+  std::vector<mesh::Edge*> edges;
+  _communication->receive ( numberOfEdges, rankSender);
+  if(numberOfEdges>0){
+    int vertexIDs[numberOfVertices];
+    _communication->receive(vertexIDs,numberOfVertices,rankSender);
+    for( int i=0; i < numberOfVertices; i++){
+      vertexMap[vertexIDs[i]] = vertices[i];
+    }
+
+    int edgeIDs[numberOfEdges];
+    _communication->receive(edgeIDs,numberOfEdges*2,rankSender);
+    for( int i=0; i < numberOfEdges; i++){
+      assertion ( vertexMap.find(edgeIDs[i*2]) != vertexMap.end() );
+      assertion ( vertexMap.find(edgeIDs[i*2+1]) != vertexMap.end() );
+      assertion ( edgeIDs[i*2] != edgeIDs[i*2+1] );
+      mesh::Edge& e = mesh.createEdge ( *vertexMap[edgeIDs[i*2]], *vertexMap[edgeIDs[i*2+1]] );
+      edges.push_back(&e);
+    }
+  }
+
   if ( dim == 3 ){
-    int triangleCount = 0;
-    assertion ( (edgeMap.size() > 0) || (triangleCount == 0) );
-    _communication->receive ( triangleCount, rankSender );
-    for ( int i=0; i < triangleCount; i++ ) {
-      int index1 = -1;
-      int index2 = -1;
-      int index3 = -1;
-      _communication->receive ( index1, rankSender );
-      _communication->receive ( index2, rankSender );
-      _communication->receive ( index3, rankSender );
+    int numberOfTriangles = 0;
+    _communication->receive ( numberOfTriangles, rankSender );
+    if (numberOfTriangles > 0){
+      assertion ( (edges.size() > 0) || (numberOfTriangles == 0) );
+      int edgeIDs[numberOfEdges];
+      _communication->receive(edgeIDs,numberOfEdges,rankSender);
+      std::map<int,mesh::Edge*> edgeMap;
+      for( int i=0; i < numberOfEdges; i++){
+        edgeMap[edgeIDs[i]] = edges[i];
+      }
 
-      assertion ( edgeMap.find(index1) != edgeMap.end() );
-      assertion ( edgeMap.find(index2) != edgeMap.end() );
-      assertion ( edgeMap.find(index3) != edgeMap.end() );
-      assertion ( index1 != index2 );
-      assertion ( index2 != index3 );
-      assertion ( index3 != index1 );
+      int triangleIDs[numberOfTriangles];
+      _communication->receive(triangleIDs,numberOfTriangles*3,rankSender);
 
-      mesh.createTriangle ( *edgeMap[index1], *edgeMap[index2], *edgeMap[index3] );
+      for( int i=0; i < numberOfTriangles; i++){
+        assertion ( edgeMap.find(triangleIDs[i*3]) != edgeMap.end() );
+        assertion ( edgeMap.find(triangleIDs[i*3+1]) != edgeMap.end() );
+        assertion ( edgeMap.find(triangleIDs[i*3+2]) != edgeMap.end() );
+        assertion ( triangleIDs[i*3] != triangleIDs[i*3+1] );
+        assertion ( triangleIDs[i*3+1] != triangleIDs[i*3+2] );
+        assertion ( triangleIDs[i*3+2] != triangleIDs[i*3] );
+        mesh.createTriangle ( *edgeMap[triangleIDs[i*3]], *edgeMap[triangleIDs[i*3+1]], *edgeMap[triangleIDs[i*3+2]] );
+      }
     }
   }
-  _communication->finishReceivePackage ();
+}
+
+void CommunicateMesh:: sendBoundingBox (
+  const mesh::Mesh::BoundingBox & bb,
+  int                rankReceiver ){
+  preciceTrace1 ( "sendBoundingBox()", rankReceiver );
+  int dim = bb.size();
+  for(int d=0; d<dim; d++){
+    _communication->send(bb[d].first, rankReceiver);
+    _communication->send(bb[d].second, rankReceiver);
+  }
+}
+
+void CommunicateMesh:: receiveBoundingBox (
+  mesh::Mesh::BoundingBox & bb,
+  int          rankSender ){
+  preciceTrace1 ( "receiveBoundingBox()", rankSender );
+  int dim = bb.size();
+  for(int d=0; d<dim; d++){
+    _communication->receive(bb[d].first, rankSender);
+    _communication->receive(bb[d].second, rankSender);
+  }
 }
 
 }} // namespace precice, com

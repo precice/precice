@@ -10,7 +10,7 @@
       <use-data name="data1" />
    </mesh>
    
-   <communication:mpi-single from="participant0" to="participant1" />
+   <m2n:mpi-single from="participant0" to="participant1" />
 
    <coupling-scheme type="serial-implicit"> 
       <participants first="participant0" second="participant1" />

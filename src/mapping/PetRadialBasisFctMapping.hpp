@@ -3,12 +3,8 @@
 
 #include "mapping/Mapping.hpp"
 #include "RadialBasisFctMapping.hpp"
-#include "boost/smart_ptr.hpp"
-#include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
-#include "tarch/la/LUDecomposition.h"
 #include "utils/MasterSlave.hpp"
-#include "io/TXTWriter.hpp"
 #include <limits>
 #include <typeinfo>
 
@@ -49,13 +45,13 @@ public:
     Constraint              constraint,
     int                     dimensions,
     RADIAL_BASIS_FUNCTION_T function,
+    bool                    xDead,
+    bool                    yDead,
+    bool                    zDead,
     double                  solverRtol = 1e-9);
 
-  /// @brief Destructor, empty.
-  virtual ~PetRadialBasisFctMapping()
-  {
-    KSPDestroy(&_solver);
-  }
+  /// Destroys the Petsc KSP and the _deadAxis array
+  virtual ~PetRadialBasisFctMapping();
 
   /// @brief Computes the mapping coefficients from the in- and output mesh.
   virtual void computeMapping();
@@ -67,7 +63,7 @@ public:
   virtual void clear();
 
   /// @brief Maps input data to output data from input mesh to output mesh.
-  virtual void map ( int inputDataID, int outputDataID );
+  virtual void map(int inputDataID, int outputDataID);
 
 private:
 
@@ -86,12 +82,19 @@ private:
   KSP _solver;
 
   double _solverRtol;
+
+  /// true if the mapping along some axis should be ignored
+  bool* _deadAxis;
+
+  /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
+  // utils::DynVector reduceVector(const utils::DynVector& fullVector);
+
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-tarch::logging::Log PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::_log("precice::mapping::RadialBasisFctMapping");
+tarch::logging::Log PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::_log("precice::mapping::PetRadialBasisFctMapping");
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
@@ -99,6 +102,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   Constraint              constraint,
   int                     dimensions,
   RADIAL_BASIS_FUNCTION_T function,
+  bool                    xDead,
+  bool                    yDead,
+  bool                    zDead,
   double                  solverRtol)
   :
   Mapping ( constraint, dimensions ),
@@ -110,9 +116,38 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
 {
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
+  _deadAxis = new bool[dimensions];
 
+  if (getDimensions()==2) {
+    _deadAxis[0] = xDead;
+    _deadAxis[1] = yDead;
+    preciceCheck(not (xDead && yDead), "setDeadAxis()", "You cannot  "
+                 << " choose all axis to be dead for a RBF mapping");
+    preciceCheck(not zDead, "setDeadAxis()", "You cannot  "
+                 << " dead out the z axis if dimension is set to 2");
+  }
+  else if (getDimensions()==3) {
+    _deadAxis[0] = xDead;
+    _deadAxis[1] = yDead;
+    _deadAxis[2] = zDead;
+    preciceCheck(not (xDead && yDead && zDead), "setDeadAxis()", "You cannot  "
+                 << " choose all axis to be dead for a RBF mapping");
+  }
+  else {
+    assertion(false);
+  }
+    
   KSPCreate(PETSC_COMM_SELF, &_solver);
 }
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
+{
+  delete[] _deadAxis;
+  KSPDestroy(&_solver);
+}
+
+
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
@@ -120,8 +155,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   preciceTrace("computeMapping()");
 
   preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
-             "computeMapping()", "RBF mapping "
-             << "is not yet supported for a participant in master mode");
+               "computeMapping()", "RBF mapping "
+               << "is not yet supported for a participant in master mode");
 
   using namespace tarch::la;
   assertion2(input()->getDimensions() == output()->getDimensions(),
@@ -139,7 +174,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
   int inputSize = (int)inMesh->vertices().size();
   int outputSize = (int)outMesh->vertices().size();
-  int polyparams = 1 + dimensions;
+  int deadDimensions = 0;
+  for (int d=0; d<dimensions; d++) {
+    if (_deadAxis[d]) deadDimensions +=1;
+  }
+
+  int polyparams = 1 + dimensions - deadDimensions;
   PetscErrorCode ierr = 0;
   assertion1(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees
@@ -168,7 +208,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventBegin(logPreallocCLoop, 0, 0, 0, 0);
   PetscInt nnz[n]; // Number of non-zeros per row
   unsigned int totalNNZ = 0; // Total number of non-zeros in matrix
-  foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
+  for (const mesh::Vertex& iVertex : inMesh->vertices()) {
     nnz[i] = 0;
     for (int j=iVertex.getID(); j < inputSize; j++) {
       if (i == j) {
@@ -182,12 +222,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         nnz[i]++;
       }
     }
-    nnz[i] += dimensions + 1;
+    nnz[i] += dimensions + 1 - deadDimensions; // coefficients of the linear polynom
     totalNNZ += nnz[i];
     i++;
   }
   for (int r = inputSize; r < n; r++) {
-    nnz[r] = 1;
+    nnz[r] = 1; // iterate through the lower part, no coefficients there, but 0 on the main diagonal
   }
   PetscLogEventEnd(logPreallocCLoop, 0, 0, 0, 0);
   i = 0;
@@ -202,10 +242,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // We collect entries for each row and set them blockwise using MatSetValues.
   PetscInt colIdx[n];     // holds the columns indices of the entries
   PetscScalar colVals[n]; // holds the values of the entries
-  foreach (const mesh::Vertex& iVertex, inMesh->vertices()) {
+  for (const mesh::Vertex& iVertex : inMesh->vertices()) {
     PetscInt colNum = 0;  // holds the number of columns
     for (int j=iVertex.getID(); j < inputSize; j++) {
       distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
+      for (int d = 0; d < dimensions; d++) {
+        if (_deadAxis[d]) {
+          distance[d] = 0;
+        }
+      }
       double coeff = _basisFunction.evaluate(norm2(distance));
       if ( not equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
@@ -213,7 +258,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         colNum++;
       }
 #     ifdef Asserts
-      if (coeff == std::numeric_limits<double>::infinity()){
+      if (coeff == std::numeric_limits<double>::infinity()) {
         preciceError("computeMapping()", "C matrix element has value inf. "
                      << "i = " << i << ", j = " << j
                      << ", coords i = " << iVertex.getCoords() << ", coords j = "
@@ -227,10 +272,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     colVals[colNum] = 1;
     colIdx[colNum] = inputSize;
     colNum++;
+    int actualDim = 0;
     for (int dim=0; dim < dimensions; dim++) {
-      colVals[colNum] = iVertex.getCoords()[dim];
-      colIdx[colNum] = inputSize+1+dim;
-      colNum++;
+      if (not _deadAxis[dim]) {
+        colVals[colNum] = iVertex.getCoords()[dim];
+        colIdx[colNum] = inputSize+1+actualDim;
+        colNum++;
+        actualDim++;
+      }
     }
     ierr = MatSetValues(_matrixC.matrix, 1, &i, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
     i++;
@@ -252,16 +301,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventBegin(logPreallocALoop, 0, 0, 0, 0);
   PetscInt nnzA[outputSize];
   i = 0;
-  foreach (const mesh::Vertex& iVertex, outMesh->vertices()) {
+  for (const mesh::Vertex& iVertex : outMesh->vertices()) {
     nnzA[i] = 0;
-    foreach (const mesh::Vertex& jVertex, inMesh->vertices()) {
+    for (const mesh::Vertex& jVertex : inMesh->vertices()) {
       distance = iVertex.getCoords() - jVertex.getCoords();
       double coeff = _basisFunction.evaluate(norm2(distance));
       if ( not equals(coeff, 0.0)) {
         nnzA[i]++;
       }
     }
-    nnzA[i] += dimensions + 1;
+    nnzA[i] += dimensions + 1 - deadDimensions;
     i++;
   }
   PetscLogEventEnd(logPreallocALoop, 0, 0, 0, 0);
@@ -274,11 +323,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventRegister("Filling Matrix A", 0, &logALoop);
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   i = 0;
-  foreach (const mesh::Vertex& iVertex, outMesh->vertices()) {
+  for (const mesh::Vertex& iVertex : outMesh->vertices()) {
     PetscInt colNum = 0;
     int j = 0;
-    foreach (const mesh::Vertex& jVertex, inMesh->vertices()) {
+    for (const mesh::Vertex& jVertex : inMesh->vertices()) {
       distance = iVertex.getCoords() - jVertex.getCoords();
+      for (int d = 0; d < dimensions; d++) {
+        if (_deadAxis[d])
+          distance[d] = 0;
+      }
       double coeff = _basisFunction.evaluate(norm2(distance));
       if ( not equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
@@ -298,11 +351,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 #     endif
       j++;
     }
-    ierr = MatSetValue(_matrixA.matrix, i, inputSize, 1.0, INSERT_VALUES); CHKERRV(ierr); 
+    ierr = MatSetValue(_matrixA.matrix, i, inputSize, 1.0, INSERT_VALUES); CHKERRV(ierr);
+    int actualDim = 0;
     for (int dim=0; dim < dimensions; dim++) {
-      colVals[colNum] = iVertex.getCoords()[dim];
-      colIdx[colNum] = inputSize+1+dim;
-      colNum++;
+      if (not _deadAxis[dim]) {
+        colVals[colNum] = iVertex.getCoords()[dim];
+        colIdx[colNum] = inputSize+1+actualDim;
+        colNum++;
+        actualDim++;
+      }
     }
     ierr = MatSetValues(_matrixA.matrix, 1, &i, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
     i++;
@@ -363,9 +420,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int valueDim = input()->data(inputDataID)->getDimensions();
   assertion2(valueDim == output()->data(outputDataID)->getDimensions(),
              valueDim, output()->data(outputDataID)->getDimensions());
-  int polyparams = 1 + input()->getDimensions();
-
-
+  int deadDimensions = 0;
+  for (int d=0; d<getDimensions(); d++) {
+    if (_deadAxis[d]) deadDimensions +=1;
+  }
+  int polyparams = 1 + getDimensions() - deadDimensions;
+  
   if (getConstraint() == CONSERVATIVE) {
     preciceDebug("Map conservative");
     static int mappingIndex = 0;

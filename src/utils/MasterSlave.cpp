@@ -3,18 +3,25 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 //#ifndef PRECICE_NO_MPI
 
-#include "utils/MasterSlave.hpp"
-#include "math.h"
-#include "com/Communication.hpp"
+#include "MasterSlave.hpp"
+
+#include "EventTimings.hpp"
+#include "Globals.hpp"
+
+#include <math.h>
 
 namespace precice {
 namespace utils {
 
 int MasterSlave::_rank = -1;
 int MasterSlave::_size = -1;
+// One day somebody would want to choose master dynamically (e.g. from
+// configuration). As a result, `_masterMode' would no longer correspond to 0th
+// process. For now we just hardcode `_masterRank' assignment to `0'.
+int MasterSlave::_masterRank = 0;
 bool MasterSlave::_masterMode = false;
 bool MasterSlave::_slaveMode = false;
-com::PtrCommunication MasterSlave::_communication;
+com::Communication::SharedPointer MasterSlave::_communication;
 
 tarch::logging::Log MasterSlave:: _log ( "precice::utils::MasterSlave" );
 
@@ -54,11 +61,11 @@ double MasterSlave:: l2norm(const DynVector& vec)
   if(_masterMode){
     globalSum2 += localSum2;
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      utils::MasterSlave::_communication->receive(localSum2, rankSlave);
+      _communication->receive(localSum2, rankSlave);
       globalSum2 += localSum2;
     }
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      utils::MasterSlave::_communication->send(globalSum2, rankSlave);
+      _communication->send(globalSum2, rankSlave);
     }
   }
   return sqrt(globalSum2);
@@ -90,23 +97,71 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
   if(_masterMode){
     globalSum += localSum;
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      utils::MasterSlave::_communication->receive(localSum, rankSlave);
+      _communication->receive(localSum, rankSlave);
       globalSum += localSum;
     }
     for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      utils::MasterSlave::_communication->send(globalSum, rankSlave);
+      _communication->send(globalSum, rankSlave);
     }
   }
   return globalSum;
 }
 
+void MasterSlave:: reset()
+{
+  preciceTrace("reset()");
+  _masterMode = false;
+  _slaveMode = false;
+  _rank = -1;
+  _size = -1;
+}
 
+void
+MasterSlave::broadcast(bool& value) {
+  preciceTrace("broadcast(bool&)");
 
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
 
+  assertion(_communication.get() != NULL);
+  assertion(_communication->isConnected());
 
+  Event e("MasterSlave::broadcast");
 
+  if (_masterMode) {
+    // Broadcast (send) value.
+    _communication->broadcast(value);
+  }
 
+  if (_slaveMode) {
+    // Broadcast (receive) value.
+    _communication->broadcast(value, 0);
+  }
+}
 
+void
+MasterSlave::broadcast(double& value) {
+  preciceTrace("broadcast(double&)");
+
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
+
+  assertion(_communication.get() != NULL);
+  assertion(_communication->isConnected());
+
+  Event e("MasterSlave::broadcast");
+
+  if (_masterMode) {
+    // Broadcast (send) value.
+    _communication->broadcast(value);
+  }
+
+  if (_slaveMode) {
+    // Broadcast (receive) value.
+    _communication->broadcast(value, 0);
+  }
+}
 
 }} // precice, utils
-

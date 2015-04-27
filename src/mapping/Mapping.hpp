@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_MAPPING_MAPPING_HPP_
-#define PRECICE_MAPPING_MAPPING_HPP_
+#pragma once
 
 #include "SharedPointer.hpp"
 #include "mesh/PropertyContainer.hpp"
@@ -13,7 +9,6 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include "tarch/logging/Log.h"
-#include "boost/tuple/tuple.hpp"
 #include <vector>
 
 namespace precice {
@@ -87,6 +82,10 @@ public:
   void setMeshes (
     const mesh::PtrMesh& input,
     const mesh::PtrMesh& output );
+
+  const mesh::PtrMesh& getInputMesh();
+
+  const mesh::PtrMesh& getOutputMesh();
 
   /**
    * @brief Returns the constraint (consistent/conservative) of the mapping.
@@ -186,5 +185,3 @@ private:
 };
 
 }} // namespace precice, mapping
-
-#endif /* PRECICE_MAPPING_MAPPING_HPP_ */

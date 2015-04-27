@@ -20,7 +20,7 @@
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/GatherScatterCommunication.hpp"
-#include "com/config/CommunicationConfiguration.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
@@ -91,9 +91,9 @@ void ParallelImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
-  com::PtrCommunicationConfiguration comConfig(
-    new com::CommunicationConfiguration(root));
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig);
+  m2n::M2NConfiguration::SharedPointer m2nConfig(
+      new m2n::M2NConfiguration(root));
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
   
   utils::configure(root, path);
   validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != NULL);
@@ -123,8 +123,8 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
-  com::PtrCommunication communication(new com::MPIDirectCommunication);
-  m2n::PtrGlobalCommunication globalCom(new m2n::GatherScatterCommunication(communication));
+  com::Communication::SharedPointer communication(new com::MPIDirectCommunication);
+  m2n::M2N::SharedPointer globalCom(new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -221,17 +221,17 @@ void ParallelImplicitCouplingSchemeTest:: connect
   const std::string&      participant0,
   const std::string&      participant1,
   const std::string&      localParticipant,
-  m2n::PtrGlobalCommunication& communication ) const
+  m2n::M2N::SharedPointer& communication ) const
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::initialize ( NULL, NULL, localParticipant );
   if ( participant0 == localParticipant ) {
-    communication->requestConnection ( participant1, participant0, 0, 1 );
+    communication->requestMasterConnection ( participant1, participant0);
   }
   else {
     assertion ( participant1 == localParticipant );
-    communication->acceptConnection ( participant1, participant0, 0, 1 );
+    communication->acceptMasterConnection ( participant1, participant0);
   }
 }
 
@@ -326,7 +326,8 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.27975917496077823410e-02), (*data.at(1)->values)(2));
 }
 
-void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
+
+void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
 {
   preciceTrace("testMVQNPP()");
   
@@ -399,7 +400,8 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199000000000000010214), (*data.at(1)->values)(0));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199000000000000010214), (*data.at(1)->values)(1));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199000000000000010214), (*data.at(1)->values)(2));
-    
+  
+  
   utils::DynVector newdvalues;
   newdvalues.append(10.0);
   newdvalues.append(10.0);
@@ -408,7 +410,8 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   data.begin()->second->values = &newdvalues;
   
   pp.performPostProcessing(data);
-    
+  
+  
   validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63855295490201413600e-01), (*data.at(0)->values)(0));
   validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.09906404008707880848e-01), (*data.at(0)->values)(1));
   validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78366810350762250437e+00), (*data.at(0)->values)(2));
@@ -416,7 +419,8 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.27975917496077962188e-02), (*data.at(1)->values)(0));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.27975917496077962188e-02), (*data.at(1)->values)(1));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.27975917496077962188e-02), (*data.at(1)->values)(2));
-  }
+  
+}
 
 #endif // not PRECICE_NO_MPI
 

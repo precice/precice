@@ -16,7 +16,7 @@ RequestManager:: RequestManager
 (
   bool                  geometryMode,
   SolverInterfaceImpl&  solverInterfaceImpl,
-  com::PtrCommunication clientServerCommunication,
+  com::Communication::SharedPointer clientServerCommunication,
   cplscheme::PtrCouplingScheme couplingScheme)
 :
   _isGeometryMode(geometryMode),

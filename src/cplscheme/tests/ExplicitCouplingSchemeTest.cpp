@@ -13,9 +13,9 @@
 #include "geometry/config/GeometryConfiguration.hpp"
 #include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
-#include "m2n/GlobalCommunication.hpp"
+#include "m2n/M2N.hpp"
 #include "m2n/GatherScatterCommunication.hpp"
-#include "com/config/CommunicationConfiguration.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
@@ -88,8 +88,8 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
   mesh->allocateDataValues ();
   meshConfig.addMesh ( mesh );
 
-  com::PtrCommunication communication ( new com::MPIDirectCommunication() );
-  m2n::PtrGlobalCommunication globalCom( new m2n::GatherScatterCommunication(communication) );
+  com::Communication::SharedPointer communication ( new com::MPIDirectCommunication() );
+  m2n::M2N::SharedPointer globalCom( new m2n::M2N(communication,m2n::DistributedComFactory::SharedPointer()) );
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
   double maxTime = 1.0;
@@ -140,17 +140,17 @@ void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
-  com::PtrCommunicationConfiguration comConfig(new com::CommunicationConfiguration(root));
+  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   geometry::GeometryConfiguration geoConfig(root, meshConfig);
   geoConfig.setDimensions(3);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
 
   geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
-  connect ( "participant0", "participant1", localParticipant, com );
+  connect ( "participant0", "participant1", localParticipant, m2n );
   runSimpleExplicitCoupling ( *cplSchemeConfig.getCouplingScheme(localParticipant),
                               localParticipant, *meshConfig );
 }
@@ -174,10 +174,10 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
-  com::PtrCommunicationConfiguration comConfig(new com::CommunicationConfiguration(root));
+  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   geometry::GeometryConfiguration geoConfig(root, meshConfig);
   geoConfig.setDimensions(3);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, configurationPath);
   //validate(success);
@@ -187,10 +187,10 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
   //validate(geoConfig.isValid());
   //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
 
   geoConfig.geometries()[0]->create( *meshConfig->meshes()[0] );
-  connect ( "participant0", "participant1", localParticipant, com );
+  connect ( "participant0", "participant1", localParticipant, m2n );
   CouplingScheme& cplScheme = *cplSchemeConfig.getCouplingScheme(localParticipant);
 
   double computedTime = 0.0;
@@ -265,17 +265,17 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
   dataConfig->setDimensions(2);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(2);
-  com::PtrCommunicationConfiguration comConfig(new com::CommunicationConfiguration(root));
+  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   geometry::GeometryConfiguration geoConfig(root, meshConfig);
   geoConfig.setDimensions(2);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
 
   geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
-  connect("participant0", "participant1", localParticipant, com);
+  connect("participant0", "participant1", localParticipant, m2n);
   CouplingScheme& cplScheme = *cplSchemeConfig.getCouplingScheme(localParticipant);
 
   validateEquals(meshConfig->meshes().size(), 1);
@@ -335,17 +335,17 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
   dataConfig->setDimensions(2);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(2);
-  com::PtrCommunicationConfiguration comConfig(new com::CommunicationConfiguration(root));
+  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   geometry::GeometryConfiguration geoConfig(root, meshConfig);
   geoConfig.setDimensions(2);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
 
   geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
-  connect("participant0", "participant1", localParticipant, com);
+  connect("participant0", "participant1", localParticipant, m2n);
   CouplingScheme& cplScheme = *cplSchemeConfig.getCouplingScheme(localParticipant);
 
   validateEquals(meshConfig->meshes().size(), 1);
@@ -397,7 +397,6 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
   const mesh::MeshConfiguration& meshConfig )
 {
   preciceTrace1 ( "runSimpleExplicitCoupling()", participantName );
-  using boost::get;
 
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
@@ -536,8 +535,8 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
   mesh->allocateDataValues ();
   meshConfig.addMesh ( mesh );
 
-  com::PtrCommunication communication ( new com::MPIDirectCommunication );
-  m2n::PtrGlobalCommunication globalCom (new m2n::GatherScatterCommunication(communication));
+  com::Communication::SharedPointer communication ( new com::MPIDirectCommunication );
+  m2n::M2N::SharedPointer globalCom (new m2n::M2N(communication,m2n::DistributedComFactory::SharedPointer()));
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
   double maxTime = 1.0;
@@ -588,10 +587,10 @@ void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling (
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
-  com::PtrCommunicationConfiguration comConfig(new com::CommunicationConfiguration(root));
+  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   geometry::GeometryConfiguration geoConfig(root, meshConfig);
   geoConfig.setDimensions(3);
-  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, comConfig);
+  CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, configurationPath);
   //validate(success);
@@ -601,10 +600,10 @@ void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling (
   //validate(geoConfig.isValid());
   //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
-  m2n::PtrGlobalCommunication com = comConfig->getCommunication("participant0", "participant1");
+  m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
 
   geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
-  connect ( "participant0", "participant1", localParticipant, com );
+  connect ( "participant0", "participant1", localParticipant, m2n );
   runExplicitCouplingWithSubcycling (
       *cplSchemeConfig.getCouplingScheme(localParticipant), localParticipant,
       *meshConfig );
@@ -756,18 +755,18 @@ void ExplicitCouplingSchemeTest:: connect
   const std::string&     participant0,
   const std::string&     participant1,
   const std::string&     localParticipant,
-  m2n::PtrGlobalCommunication& communication ) const
+  m2n::M2N::SharedPointer& communication ) const
 {
   preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::initialize ( NULL, NULL, localParticipant );
   if ( participant0 == localParticipant ) {
-    communication->requestConnection ( participant1, participant0, 0, 1 );
+    communication->requestMasterConnection ( participant1, participant0 );
   }
   else {
     assertion ( participant1 == localParticipant );
-    communication->acceptConnection ( participant1, participant0, 0, 1 );
+    communication->acceptMasterConnection ( participant1, participant0 );
   }
 }
 

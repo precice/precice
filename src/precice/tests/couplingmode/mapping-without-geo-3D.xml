@@ -22,7 +22,7 @@
          <use-data name="Displacements"/>
       </mesh>
       
-      <communication:mpi-single from="SolverA" to="SolverB"/>
+      <m2n:mpi-single from="SolverA" to="SolverB"/>
                
       <participant name="SolverA">
          <use-mesh name="MeshForcesA"        provide="yes"/>

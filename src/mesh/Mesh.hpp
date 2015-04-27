@@ -55,12 +55,13 @@ public:
     virtual void meshChanged ( Mesh& mesh ) =0;
   };
 
-  typedef utils::ptr_vector<Vertex>            VertexContainer;
-  typedef utils::ptr_vector<Edge>              EdgeContainer;
-  typedef utils::ptr_vector<Triangle>          TriangleContainer;
-  typedef utils::ptr_vector<Quad>              QuadContainer;
-  typedef std::vector<PtrData>                 DataContainer;
-  typedef utils::ptr_vector<PropertyContainer> PropertyContainerContainer;
+  typedef utils::ptr_vector<Vertex>              VertexContainer;
+  typedef utils::ptr_vector<Edge>                EdgeContainer;
+  typedef utils::ptr_vector<Triangle>            TriangleContainer;
+  typedef utils::ptr_vector<Quad>                QuadContainer;
+  typedef std::vector<PtrData>                   DataContainer;
+  typedef utils::ptr_vector<PropertyContainer>   PropertyContainerContainer;
+  typedef std::vector<std::pair<double, double>> BoundingBox;
 
   /**
    * @brief Resets the internal geometry ID counter to start from anew.
@@ -287,7 +288,22 @@ public:
 
   void addMesh(Mesh& deltaMesh);
 
+  /**
+   * @brief Returns the bounding box of the mesh.
+   *
+   * BoundingBox is a vector of pairs (min, max), one pair for each dimension.
+   * computeState() has to be called after setting the mesh.
+   */
+  const BoundingBox getBoundingBox() const;
 
+  /**
+   * @brief Returns the Center Of Gravity of the mesh
+   * 
+   * Returns a vector of doubles, size d, each dimension computed as
+   * cog =  (max - min) / 2 + min
+   */
+  const std::vector<double> getCOG() const;
+  
 private:
 
   // @brief Logging device.
@@ -338,6 +354,7 @@ private:
    */
   int _globalNumberOfVertices;
 
+  BoundingBox _boundingBox;
 };
 
 }} // namespace precice, mesh

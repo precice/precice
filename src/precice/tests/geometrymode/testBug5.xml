@@ -20,7 +20,7 @@
 		</mesh>
 		<geometry:import of-mesh="WetSurface">
 			<filetype value="vrml"/>
-			<filename value="../src/precice/tests/geometrymode/testBug5-geometry.wrl"/>
+			<filename value="testBug5-geometry.wrl"/>
 			<offset value="0.5;4.5;4.00"/>
 		</geometry:import>
 		

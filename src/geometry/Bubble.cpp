@@ -6,7 +6,6 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include <list>
-#include "boost/tuple/tuple.hpp"
 #include "tarch/la/Scalar.h"
 
 namespace precice {

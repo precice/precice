@@ -48,7 +48,10 @@ Participant:: Participant
 
 Participant:: ~Participant()
 {
-  _usedMeshContexts.deleteElements();
+  for(MeshContext* context : _usedMeshContexts){
+    delete context;
+  }
+  _usedMeshContexts.clear();
   _readDataContexts.deleteElements();
   _writeDataContexts.deleteElements();
   _readMappingContexts.deleteElements();
@@ -86,6 +89,7 @@ void Participant:: useMesh
   const utils::DynVector&                localOffset,
   bool                                   remote,
   const std::string&                     fromParticipant,
+  double                                 safetyFactor,
   bool                                   provideMesh )
 {
   preciceTrace3 ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
@@ -99,6 +103,7 @@ void Participant:: useMesh
   assertion2 ( mesh->getDimensions() == context->localOffset.size(),
                mesh->getDimensions(), context->localOffset.size() );
   context->receiveMeshFrom = fromParticipant;
+  context->safetyFactor = safetyFactor;
   context->provideMesh = provideMesh;
 
 //  if ( spacetree.use_count() > 0 ) {
@@ -109,7 +114,9 @@ void Participant:: useMesh
 //  }
 
   _meshContexts[mesh->getID()] = context;
+
   _usedMeshContexts.push_back ( context );
+
   preciceCheck ( fromParticipant.empty() || (! provideMesh), "useMesh()",
                  "Participant " << _name << " cannot receive and provide mesh "
                  << mesh->getName() << " at the same time!" );
@@ -246,12 +253,12 @@ MeshContext& Participant:: meshContext
   return *_meshContexts[meshID];
 }
 
-const utils::ptr_vector<MeshContext>& Participant:: usedMeshContexts() const
+const std::vector<MeshContext*>& Participant:: usedMeshContexts() const
 {
   return _usedMeshContexts;
 }
 
-utils::ptr_vector<MeshContext>& Participant:: usedMeshContexts()
+std::vector<MeshContext*>& Participant:: usedMeshContexts()
 {
   return _usedMeshContexts;
 }
@@ -313,13 +320,13 @@ bool Participant:: useServer()
 
 void Participant:: setClientServerCommunication
 (
-  com::PtrCommunication communication )
+  com::Communication::SharedPointer communication )
 {
   assertion ( communication.use_count() > 0 );
   _clientServerCommunication = communication;
 }
 
-com::PtrCommunication Participant:: getClientServerCommunication() const
+com::Communication::SharedPointer Participant:: getClientServerCommunication() const
 {
   return _clientServerCommunication;
 }
@@ -331,17 +338,16 @@ bool Participant:: useMaster()
 
 void Participant:: setMasterSlaveCommunication
 (
-  com::PtrCommunication communication )
+  com::Communication::SharedPointer communication )
 {
   assertion ( communication.use_count() > 0 );
   _masterSlaveCommunication = communication;
 }
 
-com::PtrCommunication Participant:: getMasterSlaveCommunication() const
+com::Communication::SharedPointer Participant:: getMasterSlaveCommunication() const
 {
   return _masterSlaveCommunication;
 }
 
 
 }} // namespace precice, impl
-

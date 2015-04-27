@@ -7,6 +7,7 @@
 #include "Constants.hpp"
 #include "MeshHandle.hpp"
 #include <vector>
+#include <memory>
 
 namespace precice {
   namespace impl {
@@ -15,9 +16,6 @@ namespace precice {
   namespace mesh {
     class Group;
   }
-}
-namespace boost {
-  template<typename CONTENT> class shared_ptr;
 }
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -43,7 +41,7 @@ public:
    */
   VoxelPosition (
     int                                    position,
-    const boost::shared_ptr<mesh::Group> & content );
+    const std::shared_ptr<mesh::Group> &   content );
 
   /**
    * @brief Constructor, does not set any content.

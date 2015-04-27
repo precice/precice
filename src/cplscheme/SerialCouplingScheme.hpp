@@ -14,7 +14,7 @@ namespace cplscheme {
 class SerialCouplingScheme : public BaseCouplingScheme
 {
 public:
-  
+
 /**
  * @brief Constructor.
  *
@@ -35,7 +35,7 @@ public:
     const std::string&          firstParticipant,
     const std::string&          secondParticipant,
     const std::string&          localParticipant,
-    m2n::PtrGlobalCommunication communication,
+    m2n::M2N::SharedPointer                 m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                cplMode,
     int                         maxIterations = 1
@@ -46,7 +46,7 @@ public:
   virtual void initializeData();
 
   virtual void advance();
-  
+
   /// @brief Logging device.
   static tarch::logging::Log _log;
 

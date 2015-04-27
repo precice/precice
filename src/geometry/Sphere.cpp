@@ -6,7 +6,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include <list>
-#include "boost/tuple/tuple.hpp"
+#include <tuple>
 #include "tarch/la/Scalar.h"
 
 namespace precice {
@@ -60,7 +60,7 @@ void Sphere:: specializedCreate
     seed.createEdge (*oldLower, last);
   }
   else { // dimensions == 3
-    typedef boost::tuple<Vertex*,Vertex*,Vertex*> TriangleVertices;
+    typedef std::tuple<Vertex*, Vertex*, Vertex*> TriangleVertices;
     std::list<TriangleVertices> triangles;
 
     // Construct initial icosahedron:
@@ -107,41 +107,41 @@ void Sphere:: specializedCreate
     Vertex * zx3 = & seed.createVertex ( utils::Vector3D(l, 0.0, h) );
 
     // Add triangles of edge xy0-2
-    triangles.push_back ( boost::make_tuple(xy0, xy2, zx0) );
-    triangles.push_back ( boost::make_tuple(xy2, xy0, zx1) );
+    triangles.push_back ( std::make_tuple(xy0, xy2, zx0) );
+    triangles.push_back ( std::make_tuple(xy2, xy0, zx1) );
 
     // Add triangles of edge xy1-3
-    triangles.push_back ( boost::make_tuple(xy3, xy1, zx2) );
-    triangles.push_back ( boost::make_tuple(xy1, xy3, zx3) );
+    triangles.push_back ( std::make_tuple(xy3, xy1, zx2) );
+    triangles.push_back ( std::make_tuple(xy1, xy3, zx3) );
 
     // Add triangles of edge yz0-2
-    triangles.push_back ( boost::make_tuple(yz0, yz2, xy0) );
-    triangles.push_back ( boost::make_tuple(yz2, yz0, xy1) );
+    triangles.push_back ( std::make_tuple(yz0, yz2, xy0) );
+    triangles.push_back ( std::make_tuple(yz2, yz0, xy1) );
 
     // Add triangles of edge yz1-3
-    triangles.push_back ( boost::make_tuple(yz3, yz1, xy2) );
-    triangles.push_back ( boost::make_tuple(yz1, yz3, xy3) );
+    triangles.push_back ( std::make_tuple(yz3, yz1, xy2) );
+    triangles.push_back ( std::make_tuple(yz1, yz3, xy3) );
 
     // Add triangles of edge zx0-2
-    triangles.push_back ( boost::make_tuple(zx0, zx2, yz0) );
-    triangles.push_back ( boost::make_tuple(zx2, zx0, yz1) );
+    triangles.push_back ( std::make_tuple(zx0, zx2, yz0) );
+    triangles.push_back ( std::make_tuple(zx2, zx0, yz1) );
 
     // Add triangles of edge zx1-3
-    triangles.push_back ( boost::make_tuple(zx3, zx1, yz2) );
-    triangles.push_back ( boost::make_tuple(zx1, zx3, yz3) );
+    triangles.push_back ( std::make_tuple(zx3, zx1, yz2) );
+    triangles.push_back ( std::make_tuple(zx1, zx3, yz3) );
 
     // Create 3-rectangle triangles
-    triangles.push_back ( boost::make_tuple(xy0, zx0, yz0) );
-    triangles.push_back ( boost::make_tuple(xy0, yz2, zx1) );
+    triangles.push_back ( std::make_tuple(xy0, zx0, yz0) );
+    triangles.push_back ( std::make_tuple(xy0, yz2, zx1) );
 
-    triangles.push_back ( boost::make_tuple(xy2, yz1, zx0) );
-    triangles.push_back ( boost::make_tuple(xy2, zx1, yz3) );
+    triangles.push_back ( std::make_tuple(xy2, yz1, zx0) );
+    triangles.push_back ( std::make_tuple(xy2, zx1, yz3) );
 
-    triangles.push_back ( boost::make_tuple(xy1, yz0, zx2) );
-    triangles.push_back ( boost::make_tuple(xy1, zx3, yz2) );
+    triangles.push_back ( std::make_tuple(xy1, yz0, zx2) );
+    triangles.push_back ( std::make_tuple(xy1, zx3, yz2) );
 
-    triangles.push_back ( boost::make_tuple(xy3, zx2, yz1) );
-    triangles.push_back ( boost::make_tuple(xy3, yz3, zx3) );
+    triangles.push_back ( std::make_tuple(xy3, zx2, yz1) );
+    triangles.push_back ( std::make_tuple(xy3, yz3, zx3) );
 
 
     // Refine initial icosahedron to obey discretization width:
@@ -153,9 +153,9 @@ void Sphere:: specializedCreate
       std::list<TriangleVertices>::iterator iter = triangles.begin();
       sidelength = 0.0;
       while ( iter != triangles.end() ) {
-        Vertex * v0 = boost::get<0> ( *iter );
-        Vertex * v1 = boost::get<1> ( *iter );
-        Vertex * v2 = boost::get<2> ( *iter );
+        Vertex * v0 = std::get<0> ( *iter );
+        Vertex * v1 = std::get<1> ( *iter );
+        Vertex * v2 = std::get<2> ( *iter );
 
         Vertex * v01 = getVertex ( *v0, *v1, dividedEdges, seed );
         Vertex * v12 = getVertex ( *v1, *v2, dividedEdges, seed );
@@ -163,10 +163,10 @@ void Sphere:: specializedCreate
         assertion ( v01 != NULL );
         assertion ( v12 != NULL );
         assertion ( v20 != NULL );
-        triangles.insert ( iter, boost::make_tuple(v0, v01, v20) );
-        triangles.insert ( iter, boost::make_tuple(v01, v1, v12 ) );
-        triangles.insert ( iter, boost::make_tuple(v20, v12, v2 ) );
-        triangles.insert ( iter, boost::make_tuple(v20, v01, v12) );
+        triangles.insert ( iter, std::make_tuple(v0, v01, v20) );
+        triangles.insert ( iter, std::make_tuple(v01, v1, v12 ) );
+        triangles.insert ( iter, std::make_tuple(v20, v12, v2 ) );
+        triangles.insert ( iter, std::make_tuple(v20, v01, v12) );
         iter = triangles.erase ( iter );
 
         /*
@@ -193,10 +193,10 @@ void Sphere:: specializedCreate
           assertion ( v01 != NULL );
           assertion ( v12 != NULL );
           assertion ( v20 != NULL );
-          triangles.insert ( iter, boost::make_tuple(v0, v01, v20) );
-          triangles.insert ( iter, boost::make_tuple(v01, v1, v12 ) );
-          triangles.insert ( iter, boost::make_tuple(v20, v12, v2 ) );
-          triangles.insert ( iter, boost::make_tuple(v20, v01, v12) );
+          triangles.insert ( iter, std::make_tuple(v0, v01, v20) );
+          triangles.insert ( iter, std::make_tuple(v01, v1, v12 ) );
+          triangles.insert ( iter, std::make_tuple(v20, v12, v2 ) );
+          triangles.insert ( iter, std::make_tuple(v20, v01, v12) );
           iter = triangles.erase ( iter );
         }
         */
@@ -214,12 +214,12 @@ void Sphere:: specializedCreate
         assertion ( v01 != NULL );
         assertion ( v12 != NULL );
         assertion ( v20 != NULL );
-        triangles.insert ( iter, boost::make_tuple(v0, v01, v20) );
-        triangles.insert ( iter, boost::make_tuple(v20, v01, vMid) );
-        triangles.insert ( iter, boost::make_tuple(vMid, v01, v12) );
-        triangles.insert ( iter, boost::make_tuple(v01, v1, v12 ) );
-        triangles.insert ( iter, boost::make_tuple(v20, vMid, v12 ) );
-        triangles.insert ( iter, boost::make_tuple(v20, v12, v2 ) );
+        triangles.insert ( iter, std::make_tuple(v0, v01, v20) );
+        triangles.insert ( iter, std::make_tuple(v20, v01, vMid) );
+        triangles.insert ( iter, std::make_tuple(vMid, v01, v12) );
+        triangles.insert ( iter, std::make_tuple(v01, v1, v12 ) );
+        triangles.insert ( iter, std::make_tuple(v20, vMid, v12 ) );
+        triangles.insert ( iter, std::make_tuple(v20, v12, v2 ) );
         iter = triangles.erase ( iter );
         */
 
@@ -236,12 +236,12 @@ void Sphere:: specializedCreate
         assertion ( v01 != NULL );
         assertion ( v12 != NULL );
         assertion ( v20 != NULL );
-        triangles.insert ( iter, boost::make_tuple(v0, vMid, v20) );
-        triangles.insert ( iter, boost::make_tuple(v0, v01, vMid) );
-        triangles.insert ( iter, boost::make_tuple(vMid, v01, v1) );
-        triangles.insert ( iter, boost::make_tuple(vMid, v1, v12 ) );
-        triangles.insert ( iter, boost::make_tuple(v2, vMid, v12 ) );
-        triangles.insert ( iter, boost::make_tuple(v20, vMid, v2 ) );
+        triangles.insert ( iter, std::make_tuple(v0, vMid, v20) );
+        triangles.insert ( iter, std::make_tuple(v0, v01, vMid) );
+        triangles.insert ( iter, std::make_tuple(vMid, v01, v1) );
+        triangles.insert ( iter, std::make_tuple(vMid, v1, v12 ) );
+        triangles.insert ( iter, std::make_tuple(v2, vMid, v12 ) );
+        triangles.insert ( iter, std::make_tuple(v20, vMid, v2 ) );
         iter = triangles.erase ( iter );
         */
 
@@ -258,12 +258,12 @@ void Sphere:: specializedCreate
         assertion ( v01 != NULL );
         assertion ( v12 != NULL );
         assertion ( v20 != NULL );
-        triangles.insert ( iter, boost::make_tuple(v0, vMid, v20) );
-        triangles.insert ( iter, boost::make_tuple(v0, v01, vMid) );
-        triangles.insert ( iter, boost::make_tuple(vMid, v01, v1) );
-        triangles.insert ( iter, boost::make_tuple(vMid, v1, v12 ) );
-        triangles.insert ( iter, boost::make_tuple(v2, vMid, v12 ) );
-        triangles.insert ( iter, boost::make_tuple(v20, vMid, v2 ) );
+        triangles.insert ( iter, std::make_tuple(v0, vMid, v20) );
+        triangles.insert ( iter, std::make_tuple(v0, v01, vMid) );
+        triangles.insert ( iter, std::make_tuple(vMid, v01, v1) );
+        triangles.insert ( iter, std::make_tuple(vMid, v1, v12 ) );
+        triangles.insert ( iter, std::make_tuple(v2, vMid, v12 ) );
+        triangles.insert ( iter, std::make_tuple(v20, vMid, v2 ) );
         iter = triangles.erase ( iter );
         */
 
@@ -274,9 +274,9 @@ void Sphere:: specializedCreate
         coords /= 3.0;
         coords *= _radius / la::norm(coords);
         Vertex * vMid = & seed.createVertex ( coords );
-        triangles.insert ( iter, boost::make_tuple(v0, v1, vMid) );
-        triangles.insert ( iter, boost::make_tuple(v2, vMid, v1) );
-        triangles.insert ( iter, boost::make_tuple(v0, vMid, v2) );
+        triangles.insert ( iter, std::make_tuple(v0, v1, vMid) );
+        triangles.insert ( iter, std::make_tuple(v2, vMid, v1) );
+        triangles.insert ( iter, std::make_tuple(v0, vMid, v2) );
         iter = triangles.erase ( iter );
         */
 
@@ -290,11 +290,10 @@ void Sphere:: specializedCreate
     // ------------------------------------------------
 
     std::map<std::pair<int,int>, Edge*> edges;
-    using boost::get;
-    foreach ( TriangleVertices & vertices, triangles ) {
-      Vertex * v0 = get<0> ( vertices );
-      Vertex * v1 = get<1> ( vertices );
-      Vertex * v2 = get<2> ( vertices );
+    for (TriangleVertices & vertices : triangles) {
+      Vertex * v0 = std::get<0> ( vertices );
+      Vertex * v1 = std::get<1> ( vertices );
+      Vertex * v2 = std::get<2> ( vertices );
       assertion ( v0 != NULL );
       assertion ( v1 != NULL );
       assertion ( v2 != NULL );

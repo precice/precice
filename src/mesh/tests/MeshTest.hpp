@@ -58,6 +58,8 @@ private:
     */
    void testComputeState ();
 
+   void testBoundingBoxCOG();
+
    /**
     * @brief Demonstrates the capabilities of class Mesh.
     */

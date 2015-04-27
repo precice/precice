@@ -91,6 +91,14 @@ public:
    */
   Mesh* mesh();
 
+  int getGlobalIndex();
+
+  void setGlobalIndex(int globalIndex);
+
+  bool isOwner();
+
+  void setOwner(bool owner);
+
 private:
 
   // @brief Unique (among vertices in one mesh) ID of the vertex.
@@ -101,6 +109,12 @@ private:
 
   // @brief Normal of the vertex.
   utils::DynVector _normal;
+
+  // @brief global (unique) index for parallel simulations
+  int _globalIndex;
+
+  // @brief true if this processors is the owner of the vertex (for parallel simulations)
+  bool _owner;
 
   // @brief Pointer to parent mesh, possibly NULL.
   Mesh * _mesh;
@@ -118,6 +132,8 @@ Vertex:: Vertex
   _id ( id ),
   _coords ( coordinates ),
   _normal ( _coords.size(), 0.0 ),
+  _globalIndex(-1),
+  _owner(true),
   _mesh ( NULL )
 {}
 
@@ -131,6 +147,8 @@ Vertex:: Vertex (
   _id ( id ),
   _coords ( coordinates ),
   _normal ( _coords.size(), 0.0 ),
+  _globalIndex(-1),
+  _owner(true),
   _mesh ( & mesh )
 {}
 

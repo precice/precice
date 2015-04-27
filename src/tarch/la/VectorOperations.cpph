@@ -216,8 +216,12 @@ template<typename Vector>
 >::Type raw (
   Vector& vector
 ) {
-  assertion(VectorTraits<Vector>::size(vector) > 0);
-  return & VectorTraits<Vector>::elem(0,vector);
+  if(VectorTraits<Vector>::size(vector) > 0){
+    return & VectorTraits<Vector>::elem(0,vector);
+  }
+  else{
+    return NULL;
+  }
 }
 
 template<typename Vector>
@@ -226,8 +230,12 @@ template<typename Vector>
 >::Type raw (
   const Vector& vector
 ) {
-  assertion(VectorTraits<Vector>::size(vector) > 0);
-  return & VectorTraits<Vector>::celem(0,vector);
+  if(VectorTraits<Vector>::size(vector) > 0){
+    return & VectorTraits<Vector>::celem(0,vector);
+  }
+  else{
+    return NULL;
+  }
 }
 
 template<typename Vector>

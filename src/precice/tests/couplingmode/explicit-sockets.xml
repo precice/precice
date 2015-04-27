@@ -3,22 +3,22 @@
 <precice-configuration>
 
    <log-filter target="debug" component="precice" switch="off" />
-   
+
    <solver-interface dimensions="3" restart-mode="off" geometry-mode="off">
-   
+
       <data:vector name="Forces"  />
       <data:vector name="Velocities"  />
-   
+
       <mesh name="Test-Square">
          <use-data name="Forces" />
          <use-data name="Velocities" />
       </mesh>
-      
+
       <geometry:builtin-cuboid of-mesh="Test-Square">
-         <length value="1.0; 1.0; 1.0"/> 
-         <discretization-width value="0.1"/> 
+         <length value="1.0; 1.0; 1.0"/>
+         <discretization-width value="0.1"/>
       </geometry:builtin-cuboid>
-      
+
       <participant name="SolverOne">
          <use-mesh name="Test-Square" />
          <!--<mapping:nearest-projection direction="write" mesh="Test-Square"
@@ -28,23 +28,23 @@
          <write-data name="Forces"     mesh="Test-Square" />
          <read-data  name="Velocities" mesh="Test-Square" />
       </participant>
-      
+
       <participant name="SolverTwo">
          <use-mesh name="Test-Square" />
          <write-data name="Velocities" mesh="Test-Square" />
          <read-data name="Forces"      mesh="Test-Square" />
       </participant>
-      
-      <communication:sockets from="SolverOne" to="SolverTwo" port="51238"/>
-      
-      <coupling-scheme:serial-explicit> 
-         <participants first="SolverOne" second="SolverTwo" /> 
+
+      <m2n:sockets distribution-type="gather-scatter" from="SolverOne" to="SolverTwo" />
+
+      <coupling-scheme:serial-explicit>
+         <participants first="SolverOne" second="SolverTwo" />
          <max-timesteps value="10" />
          <timestep-length value="1.0" />
          <exchange data="Forces"     mesh="Test-Square" from="SolverOne" to="SolverTwo" />
          <exchange data="Velocities" mesh="Test-Square" from="SolverTwo" to="SolverOne"/>
-      </coupling-scheme:serial-explicit>                           
-                  
+      </coupling-scheme:serial-explicit>
+
    </solver-interface>
 
 </precice-configuration>

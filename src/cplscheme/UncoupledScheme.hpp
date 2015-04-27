@@ -65,11 +65,11 @@ public:
   virtual std::vector<std::string> getCouplingPartners () const;
 
   virtual void sendState (
-    com::PtrCommunication communication,
+    com::Communication::SharedPointer communication,
     int                   rankReceiver );
 
   virtual void receiveState (
-    com::PtrCommunication communication,
+    com::Communication::SharedPointer communication,
     int                   rankSender );
 
   virtual std::string printCouplingState() const;

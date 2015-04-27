@@ -118,4 +118,20 @@ Mesh* Vertex:: mesh ()
   return _mesh;
 }
 
+int Vertex:: getGlobalIndex(){
+  return _globalIndex;
+}
+
+void Vertex:: setGlobalIndex(int globalIndex){
+  _globalIndex = globalIndex;
+}
+
+bool Vertex:: isOwner(){
+  return _owner;
+}
+
+void Vertex:: setOwner(bool owner){
+  _owner = owner;
+}
+
 }} // namespace precice, mesh

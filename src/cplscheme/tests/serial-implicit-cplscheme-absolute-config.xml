@@ -15,7 +15,7 @@
       <discretization-width value="0.2" />      
    </geometry:builtin-sphere>
    
-   <communication:mpi-single from="participant0" to="participant1" />
+   <m2n:mpi-single from="participant0" to="participant1" />
 
    <coupling-scheme:serial-implicit> 
       <participants first="participant0" second="participant1" />

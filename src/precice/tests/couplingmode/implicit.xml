@@ -8,7 +8,7 @@
       <data:vector name="Forces"  />
       <data:vector name="Velocities"  />
       
-      <communication:mpi-single from="SolverOne" to="SolverTwo" />      
+      <m2n:mpi-single from="SolverOne" to="SolverTwo" />      
       
       <mesh name="Square" flip-normals="inside">
          <use-data name="Forces" />

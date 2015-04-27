@@ -16,8 +16,8 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
-#include "com/Communication.hpp"
-#include "com/config/CommunicationConfiguration.hpp"
+#include "m2n/M2N.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/xml/XMLAttribute.hpp"
@@ -39,7 +39,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
 (
   utils::XMLTag&                            parent,
   const mesh::PtrMeshConfiguration&         meshConfig,
-  const com::PtrCommunicationConfiguration& comConfig)
+  const m2n::M2NConfiguration::SharedPointer& m2nConfig)
 :
   TAG("coupling-scheme"),
   TAG_PARTICIPANTS("participants"),
@@ -83,7 +83,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
   VALUE_FIRST_PARTICIPANT("first-participant"),
   _config(),
   _meshConfig(meshConfig),
-  _comConfig(comConfig),
+  _m2nConfig(m2nConfig),
   _isValid(false),
   _couplingSchemes(),
   _couplingSchemeCompositions()
@@ -261,7 +261,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     mesh::PtrMesh exchangeMesh;
     foreach (mesh::PtrMesh mesh, _meshConfig->meshes()){
       if ( mesh->getName() == nameMesh ) {
-        foreach ( mesh::PtrData data, mesh->data() ) {
+        for ( mesh::PtrData data : mesh->data() ) {
           if ( data->getName() == nameData ) {
             exchangeData = data;
             exchangeMesh = mesh;
@@ -708,7 +708,7 @@ mesh::PtrData CouplingSchemeConfiguration:: getData
 {
   foreach ( mesh::PtrMesh mesh, _meshConfig->meshes() ){
     if ( meshName == mesh->getName() ){
-      foreach ( mesh::PtrData data, mesh->data() ){
+      for ( mesh::PtrData data : mesh->data() ){
         if ( dataName == data->getName() ){
           return data;
         }
@@ -726,12 +726,12 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
 {
   preciceTrace1("createSerialExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
-  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, com, _config.dtMethod, BaseCouplingScheme::Explicit );
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit );
   scheme->setCheckPointTimestepInterval ( _config.checkpointTimestepInterval );
 
   addDataToBeExchanged(*scheme, accessor);
@@ -745,12 +745,12 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
 {
   preciceTrace1("createParallelExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
-  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, com, _config.dtMethod, BaseCouplingScheme::Explicit );
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Explicit );
   scheme->setCheckPointTimestepInterval ( _config.checkpointTimestepInterval );
 
   addDataToBeExchanged(*scheme, accessor);
@@ -765,12 +765,12 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
   preciceTrace1("createSerialImplicitCouplingScheme()", accessor);
   //assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
 
-  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, com, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
   scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
   scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 
@@ -793,7 +793,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
     foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
       _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     }
-    foreach(const int dataID, _postProcConfig->getPostProcessing()->getDataIDs() ){
+    for(const int dataID : _postProcConfig->getPostProcessing()->getDataIDs() ){
       checkIfDataIsExchanged(dataID);
     }
     scheme->setIterationPostProcessing(_postProcConfig->getPostProcessing());
@@ -807,12 +807,12 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 {
   preciceTrace1("createParallelImplicitCouplingScheme()", accessor);
   assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
-  m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
       _config.validDigits, _config.participants[0], _config.participants[1],
-      accessor, com, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
+      accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
   scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
   scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 
@@ -835,7 +835,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
     foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
       _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     }
-    foreach(const int dataID, _postProcConfig->getPostProcessing()->getDataIDs() ){
+    for(const int dataID : _postProcConfig->getPostProcessing()->getDataIDs() ){
       checkIfDataIsExchanged(dataID);
     }
     scheme->setIterationPostProcessing(_postProcConfig->getPostProcessing());
@@ -853,15 +853,15 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
   BaseCouplingScheme* scheme;
 
   if(accessor == _config.controller){
-    std::vector<m2n::PtrGlobalCommunication> communications;
-    foreach(const std::string& participant, _config.participants){
-      communications.push_back(_comConfig->getCommunication (
+    std::vector<m2n::M2N::SharedPointer> m2ns;
+    for(const std::string& participant : _config.participants){
+      m2ns.push_back(_m2nConfig->getM2N (
           _config.controller, participant ));
     }
 
     scheme = new MultiCouplingScheme (
         _config.maxTime, _config.maxTimesteps, _config.timestepLength,
-        _config.validDigits, accessor, communications, _config.dtMethod,
+        _config.validDigits, accessor, m2ns, _config.dtMethod,
          _config.maxIterations );
     scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
     scheme->setExtrapolationOrder ( _config.extrapolationOrder );
@@ -870,12 +870,12 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
     addMultiDataToBeExchanged(*castedScheme, accessor);
   }
   else{
-    m2n::PtrGlobalCommunication com = _comConfig->getCommunication (
+    m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
         accessor, _config.controller );
     scheme = new ParallelCouplingScheme (
         _config.maxTime, _config.maxTimesteps, _config.timestepLength,
         _config.validDigits, accessor, _config.controller,
-        accessor, com, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
+        accessor, m2n, _config.dtMethod, BaseCouplingScheme::Implicit, _config.maxIterations );
     scheme->setCheckPointTimestepInterval(_config.checkpointTimestepInterval);
     scheme->setExtrapolationOrder ( _config.extrapolationOrder );
 
@@ -899,7 +899,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
     foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
       _meshConfig->addNeededMesh(_config.controller,neededMesh);
     }
-    foreach(const int dataID, _postProcConfig->getPostProcessing()->getDataIDs() ){
+    for(const int dataID : _postProcConfig->getPostProcessing()->getDataIDs() ){
       checkIfDataIsExchanged(dataID);
     }
 
@@ -934,7 +934,7 @@ void CouplingSchemeConfiguration:: addDataToBeExchanged
 {
   preciceTrace ( "addDataToBeExchanged()");
   using boost::get;
-  foreach (const Config::Exchange& tuple, _config.exchanges){
+  for (const Config::Exchange& tuple : _config.exchanges){
     mesh::PtrData data = get<0>(tuple);
     mesh::PtrMesh mesh = get<1>(tuple);
     const std::string& from = get<2>(tuple);
@@ -972,7 +972,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
 {
   preciceTrace ( "addMultiDataToBeExchanged()");
   using boost::get;
-  foreach (const Config::Exchange& tuple, _config.exchanges){
+  for (const Config::Exchange& tuple : _config.exchanges){
     mesh::PtrData data = get<0>(tuple);
     mesh::PtrMesh mesh = get<1>(tuple);
     const std::string& from = get<2>(tuple);
@@ -989,7 +989,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
     bool initialize = get<4>(tuple);
     if (from == accessor){
       int index = 0;
-      foreach(const std::string& participant, _config.participants){
+      for(const std::string& participant : _config.participants){
         preciceDebug("from: " << from << ", to: " << to << ", participant: " << participant);
         if(to == participant){
           break;
@@ -1001,7 +1001,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
     }
     else {
       int index = 0;
-      foreach(const std::string& participant, _config.participants){
+      for(const std::string& participant : _config.participants){
         preciceDebug("from: " << from << ", to: " << to << ", participant: " << participant);
         if(from == participant){
           break;
@@ -1020,7 +1020,7 @@ void CouplingSchemeConfiguration:: checkIfDataIsExchanged
 {
   bool hasFound = false;
   using boost::get;
-  foreach (const Config::Exchange& tuple, _config.exchanges){
+  for (const Config::Exchange& tuple : _config.exchanges){
     mesh::PtrData data = get<0>(tuple);
     if( data->getID()==dataID){
       hasFound = true;

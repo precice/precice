@@ -1,0 +1,71 @@
+/**
+@page eventtimings Event Timings
+
+@section measuretimings Measuring timings in preCICE
+
+@subsection Usage
+
+preCICE includes functionality to measure timings of certain code blocks.
+\code{.cpp}
+#include "utils/EventTimings.hpp"
+using precice::utils::Event;
+
+void foo()
+{
+  Event foo("foo");  // or use __func__ here to get the name
+  Event e("Some other event");
+  // do the event e
+  e.addProp("MPI Calls", 5) // add arbitrary properties to events that get summed up
+  e.stop()
+  // foo is stopped automatically at destruction
+}
+\endcode
+
+This prints something like the following output
+
+\verbatim
+Run finished at Fri Jan 30 10:16:45 2015
+Global runtime = 31498ms / 31s
+
+Event                Count    Total[ms]     Max[ms]     Min[ms]     Avg[ms]   T%
+--------------------------------------------------------------------------------
+Some other event       397       31016         169           2          78    98
+  MPI Calls       20.00000
+
+foo                    397       30972         169           2          78    98
+
+Properties from all Events, accumulated
+---------------------------------------
+MPI Calls         20.00000
+\endverbatim
+T% prints the relative runtime. Note that this can be more than 100% summed up, since events can be nested, like in the example above. In addition to the output there is an output file called \c EventTimings.log. It uses a more compact, whitespace separated output format and is intended to be easier parsable than the terminal output. Output is appended if there is an already existing file.
+\verbatim
+Run finished at Fri Jan 30 10:54:29 2015
+# Eventname Count Total Max Min Avg T%
+"GLOBAL" 1 31543 31543 31543 31543 100
+"Solve" 1 31374 31374 31374 31374 99
+"advance" 397 31058 244 3 78 98
+"initialize" 1 98 98 98 98 0
+"initializeData" 1 13 13 13 13 0
+Run finished at Fri Jan 30 10:56:32 2015
+# Eventname Count Total Max Min Avg T%
+"GLOBAL" 1 31502 31502 31502 31502 100
+"Solve" 1 31354 31354 31354 31354 99
+"advance" 397 31038 219 2 78 98
+"initialize" 1 83 83 83 83 0
+"initializeData" 1 7 7 7 7 0
+\endverbatim
+Properties are not printed to the file. The event name \c GLOBAL is used to denote the global runtime information.
+
+If you just want to measure precice internal functions that's about it.
+
+@subsection Internals
+
+The EventTimings classes use static variables to save Events and the global start / stop time. To start the measurement call \c precice::utils::Events_Init() and \c precice::utils::Events_Finalize() to stop. This is done by precice and normally should not be needed to call explicitely. Keep in mind that multiple calls of Init or Finalize may mess up global timings due to the static nature of variables.
+
+\c precice::utils::EventRegistry::print(std::string filename, bool terse) and its various overloads print to stdout or a file.
+
+Usually an event is auto started when instantiated. You can use \c Event e("name", false) to override that and use \c e.start() to start it later. Multiple calls to \c start() or \c stop() have no effect.
+
+Precice uses an signal handler for the signals \c SIGSEV, \c SIGABRT, \c SIGTERM as a crash handler that calls \c  precice::utils::EventRegistry::signal_handler(int signal) to still finalize and print when precice exists ungracefully.
+*/

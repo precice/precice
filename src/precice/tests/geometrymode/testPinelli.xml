@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+   <log-filter target="debug" component="" switch="off"/>
+   <solver-interface geometry-mode="on" dimensions="2">      
+
+      <data:vector name = "Velocities"/>
+      <data:vector name = "Forces"/>
+
+      <mesh name="EOFMesh" flip-normals="no">
+        <use-data name = "Velocities"/>
+        <use-data name = "Forces"/>
+      </mesh>
+		
+      <mesh name="Geometry" flip-normals="no">
+        <use-data name = "Velocities"/>
+        <use-data name = "Forces"/>
+      </mesh>
+      
+      <geometry:builtin-sphere of-mesh = "Geometry">
+        <discretization-width value = "0.01"/>
+        <radius value = "0.05"/>
+        <offset value = "0.2; 0.2"/>
+      </geometry:builtin-sphere>
+		
+      <participant name="EOF">
+         <use-mesh name="EOFMesh" provide="true"/>
+         <use-mesh name="Geometry"/>
+         <mapping:nearest-neighbor constraint = "consistent" direction = "write" from = "EOFMesh" to = "Geometry" timing = "initial"/>
+         <mapping:nearest-neighbor constraint = "conservative" direction = "read" from = "Geometry" to = "EOFMesh" timing = "initial"/>
+         <write-data mesh = "EOFMesh" name = "Velocities"/>
+         <read-data mesh = "EOFMesh" name = "Forces"/>
+         <action:python mesh="Geometry" timing="regular-post">
+            <module name="computeForce"/>
+            <source-data name="Velocities"/>
+            <target-data name="Forces"/>
+         </action:python>
+      </participant>
+   </solver-interface>  
+</precice-configuration>

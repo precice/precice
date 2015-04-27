@@ -33,8 +33,8 @@
          <read-data  name="Data0" mesh="Mesh"/>
       </participant>
       
-      <communication:mpi-single from="SolverOne" to="SolverTwo"/>
-      <communication:mpi-single from="SolverOne" to="SolverThree"/>
+      <m2n:mpi-single from="SolverOne" to="SolverTwo"/>
+      <m2n:mpi-single from="SolverOne" to="SolverThree"/>
       
       <coupling-scheme:serial-implicit> 
          <participants first="SolverOne" second="SolverTwo"/> 

@@ -7,9 +7,9 @@
 #include "CouplingScheme.hpp"
 #include "CouplingData.hpp"
 #include "Constants.hpp"
-#include "SharedPointer.hpp" 
+#include "SharedPointer.hpp"
 #include "mesh/Data.hpp"
-#include "m2n/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
 #include "com/Constants.hpp"
 #include "utils/PointerVector.hpp"
 #include "tarch/logging/Log.h"
@@ -51,7 +51,7 @@ namespace cplscheme {
 class BaseCouplingScheme : public CouplingScheme
 {
 public:
-  
+
   BaseCouplingScheme (
     double maxTime,
     int    maxTimesteps,
@@ -66,12 +66,12 @@ public:
     const std::string&            firstParticipant,
     const std::string&            secondParticipant,
     const std::string&            localParticipant,
-    m2n::PtrGlobalCommunication   communication,
+    m2n::M2N::SharedPointer                   m2n,
     int                           maxIterations,
     constants::TimesteppingMethod dtMethod );
 
   enum CouplingMode {Explicit, Implicit, Undefined};
-  
+
   /**
    * @brief Adds another coupling scheme in parallel to this scheme.
    *
@@ -83,32 +83,32 @@ public:
    * @return Pointer to composition of coupling schemes.
    */
   //virtual PtrCouplingScheme addSchemeInParallel (PtrCouplingScheme scheme);
-  
+
   /// @brief Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend (
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          initialize );
-  
+
   /// @brief Adds data to be received on data exchange.
   void addDataToReceive (
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          initialize );
-  
+
   /// @brief Sets the checkpointing timestep interval.
   void setCheckPointTimestepInterval (int timestepInterval) {
     _checkpointTimestepInterval = timestepInterval;
   }
-  
+
   /// @brief Returns true, if initialize has been called.
   virtual bool isInitialized() const {
     return _isInitialized;
   }
-  
+
   /// @brief Adds newly computed time. Has to be called before every advance.
   virtual void addComputedTime(double timeToAdd);
-  
+
   /**
    * @brief Returns true, if data will be exchanged when calling advance().
    *
@@ -119,13 +119,13 @@ public:
    *        computed by the solver calling willDataBeExchanged().
    */
   virtual bool willDataBeExchanged(double lastSolverTimestepLength) const;
-  
+
   /// @brief Returns true, if data has been exchanged in last call of advance().
   virtual bool hasDataBeenExchanged() const;
-  
+
   /// @brief Returns the currently computed time of the coupling scheme.
   virtual double getTime() const;
-  
+
   /// @brief Returns the currently computed timesteps of the coupling scheme.
   virtual int getTimesteps() const;
 
@@ -138,10 +138,10 @@ public:
   virtual int getMaxTimesteps() const {
     return _maxTimesteps;
   }
-  
+
   /// @brief Returns true, if timestep length is prescribed by the cpl scheme.
   virtual bool hasTimestepLength() const;
-  
+
   /**
    * @brief Returns the timestep length, if one is given by the coupling scheme.
    *
@@ -152,7 +152,7 @@ public:
 
   /// @brief returns list of all coupling partners
   virtual std::vector<std::string> getCouplingPartners() const;
-  
+
   /**
    * @brief Returns the remaining timestep length of the current time step.
    *
@@ -165,7 +165,7 @@ public:
   virtual double getComputedTimestepPart() const {
     return _computedTimestepPart;
   }
-  
+
   /**
    * @brief Returns the maximal length of the next timestep to be computed.
    *
@@ -176,25 +176,25 @@ public:
 
   /// @brief Returns the number of valid digits when compare times.
   int getValidDigits() const;
-  
+
   /// @brief Returns true, when the coupled simulation is still ongoing.
   virtual bool isCouplingOngoing() const;
-  
+
   /// @brief Returns true, when the accessor can advance to the next timestep.
   virtual bool isCouplingTimestepComplete() const;
-  
+
   /// @brief Returns true, if the given action has to be performed by the accessor.
   virtual bool isActionRequired (const std::string& actionName) const;
-  
+
   /// @brief Tells the coupling scheme that the accessor has performed the given action.
   virtual void performedAction (const std::string& actionName);
-  
+
   /// @brief Returns the checkpointing timestep interval.
   virtual int getCheckpointTimestepInterval() const;
-  
+
   /// @brief Sets an action required to be performed by the accessor.
   virtual void requireAction (const std::string& actionName);
-  
+
   /**
    * @brief Send the state of the coupling scheme to another remote scheme.
    *
@@ -204,7 +204,7 @@ public:
    * scheme via sendState and receiveState.
    */
   virtual void sendState (
-    com::PtrCommunication communication,
+    com::Communication::SharedPointer communication,
     int                   rankReceiver );
 
   /**
@@ -216,7 +216,7 @@ public:
    * scheme via sendState and receiveState.
    */
   virtual void receiveState (
-    com::PtrCommunication communication,
+    com::Communication::SharedPointer communication,
     int                   rankSender );
 
   /// @brief Finalizes the coupling scheme.
@@ -224,7 +224,7 @@ public:
 
   /// @brief Initializes the coupling scheme.
   virtual void initialize(double startTime, int startTimestep ) = 0;
-    
+
   /**
    * @brief Initializes data with written values.
    *
@@ -247,7 +247,7 @@ public:
    * Currently, an order 1 predictor is implement besides that.
    */
   void setExtrapolationOrder ( int order );
-  
+
   typedef std::map<int,PtrCouplingData> DataMap; // move that back to protected
 
   void extrapolateData(DataMap& data);
@@ -257,14 +257,14 @@ public:
     int                         dataID,
     bool                        suffices,
     impl::PtrConvergenceMeasure measure );
-  
+
   /// @brief Set a coupling iteration post-processing technique.
   void setIterationPostProcessing ( impl::PtrPostProcessing postProcessing );
 
   virtual void exportState(const std::string& filenamePrefix) const;
 
   virtual void importState(const std::string& filenamePrefix);
-  
+
 protected:
 
   /// @brief Sets whether explicit or implicit coupling is being done.
@@ -275,7 +275,7 @@ protected:
 
   /// @brief Receives and set the timestep length, if this participant is the one to receive
   void receiveAndSetDt();
-  
+
   /// @brief Sends the timestep length, if this participant is the one to send
   void sendDt();
 
@@ -287,12 +287,12 @@ protected:
   bool doesFirstStep() const {
     return _doesFirstStep;
   }
-  
+
   /// @brief Sends data sendDataIDs given in mapCouplingData with communication.
-  std::vector<int> sendData ( m2n::PtrGlobalCommunication communication );
-  
+  std::vector<int> sendData ( m2n::M2N::SharedPointer m2n );
+
   /// @brief Receives data receiveDataIDs given in mapCouplingData with communication.
-  std::vector<int> receiveData ( m2n::PtrGlobalCommunication communication );
+  std::vector<int> receiveData ( m2n::M2N::SharedPointer m2n );
 
   /// @brief Returns all data to be sent.
   const DataMap& getSendData() const {
@@ -302,30 +302,30 @@ protected:
   const DataMap& getReceiveData() const {
     return _receiveData;
   }
-  
+
   /// @brief Returns all data to be sent.
   DataMap& getSendData() {
     return _sendData;
   }
-  
+
   DataMap& getReceiveData() {
     return _receiveData;
   }
-  
+
   /// @brief Sets the values
   CouplingData* getSendData ( int dataID );
-  
+
   /// @brief Returns all data to be received with data ID as given.
   CouplingData* getReceiveData ( int dataID );
-  
+
   /// @brief Sets value for computed timestep part.
   void setComputedTimestepPart ( double computedTimestepPart ) {
     _computedTimestepPart = computedTimestepPart;
   }
-  
+
   /// @brief Sets flag to determine whether data has been exchanged in the last coupling iteration.
   void setHasDataBeenExchanged ( bool hasDataBeenExchanged );
-  
+
   /**
    * @brief Sets the computed time of the coupling scheme.
    *
@@ -334,7 +334,7 @@ protected:
   void setTime ( double time ) {
     _time = time;
   }
-  
+
   /**
    * @brief Sets the computed timesteps of the coupling scheme.
    *
@@ -343,29 +343,29 @@ protected:
   void setTimesteps ( int timesteps ) {
     _timesteps = timesteps;
   }
-  
+
   void setTimestepLength ( double timestepLength ) {
     _timestepLength = timestepLength;
   }
-  
+
   void setIsCouplingTimestepComplete ( bool isCouplingTimestepComplete ) {
     _isCouplingTimestepComplete = isCouplingTimestepComplete;
   }
-  
+
   void setIsInitialized ( bool isInitialized ) {
     _isInitialized = isInitialized;
   }
-  
+
   /// @brief If any required actions are open, an error message is issued.
   void checkCompletenessRequiredActions();
 
   /**
    * @brief Returns coupling state information.
-   * 
+   *
    * Includes current iteration, max iterations, time, timestep and action.
    */
   virtual std::string printCouplingState() const;
-  
+
   /// @brief Returns a string representing the basic state w/o actions.
   std::string printBasicState() const;
 
@@ -379,20 +379,20 @@ protected:
   std::string printBasicState(
     int    timesteps,
     double time) const;
-  
+
   /// @brief Returns a string representing the required actions.
   std::string printActionsState() const;
 
   /// @brief First participant name.
   std::string _firstParticipant;
-  
+
   /// @brief Second participant name.
   std::string _secondParticipant;
-  
+
   /// @return Communication device to the other coupling participant.
-  m2n::PtrGlobalCommunication getCommunication() {
-    assertion(_communication.use_count() > 0);
-    return _communication;
+  m2n::M2N::SharedPointer getM2N() {
+    assertion(_m2n.use_count() > 0);
+    return _m2n;
   }
 
   void setHasToSendInitData(bool hasToSendInitData) {
@@ -451,7 +451,7 @@ protected:
    * and the ordering of the meshes to that in _couplingData.
    */
   void setupDataMatrices(DataMap& data);
-  
+
   impl::PtrPostProcessing getPostProcessing() {
     return _postProcessing;
   }
@@ -475,38 +475,38 @@ protected:
 
   /// @brief Smallest number, taking validDigists into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
-  
+
 private:
 
   /// @brief Communication device to the other coupling participant.
-  m2n::PtrGlobalCommunication _communication;
+  m2n::M2N::SharedPointer _m2n;
 
   /// @brief Determines, if the timestep length is set by the participant.
   bool _participantSetsDt;
-  
+
   /// @brief Determines, if the dt length is set received from the other participant
   bool _participantReceivesDt;
 
   /// @brief Logging device.
   static tarch::logging::Log _log;
-  
+
   double _maxTime;
-  
+
   int _maxTimesteps;
 
   /// @brief Number of iterations in current timestep.
   int _iterations;
-  
+
   /// @brief Limit of iterations during one timestep.
   int _maxIterations;
-  
+
   /// @brief Number of total iterations performed.
   int _totalIterations;
 
   int _timesteps;
-  
+
   double _timestepLength;
-  
+
   double _time;
 
   double _computedTimestepPart;
@@ -517,12 +517,12 @@ private:
   int _extrapolationOrder;
 
   int _validDigits;
-  
+
   /// @brief True, if local participant is the one starting the explicit scheme.
-  bool _doesFirstStep; 
-  
+  bool _doesFirstStep;
+
   int _checkpointTimestepInterval;
-  
+
   bool _isCouplingTimestepComplete;
 
   /// @brief Post-processing method to speedup iteration convergence.
@@ -533,21 +533,21 @@ private:
 
   /// @brief to carry initData information from initialize to initData
   bool _hasToReceiveInitData;
-  
+
   /// @brief True, if data has been exchanged between solvers.
   bool _hasDataBeenExchanged;
-  
+
   /// @brief True, if coupling has been initialized.
   bool _isInitialized;
-  
+
   std::set<std::string> _actions;
-  
+
   /// @brief Map from data ID -> all send data with that ID
   DataMap _sendData;
-  
+
   /// @brief Map from data ID -> all receive data with that ID
   DataMap _receiveData;
-  
+
   /// @brief Responsible for monitoring iteration count over timesteps.
   io::TXTTableWriter _iterationsWriter;
 
