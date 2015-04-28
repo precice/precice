@@ -238,14 +238,30 @@ void IQNILSPostProcessing::computeQNUpdate
 	// validation
 	DataValues update(_residuals.size(), 0.0);
 	multiply(_matrixW, __c, update); 
+
+        bool failed = false;
+        double largestDiff = 0.;
+        double diff = 0., val1 = 0., val2 = 0.;
 	for(int i = 0; i<xUpdate.size(); i++)
 	{
 	  if(!tarch::la::equals(xUpdate(i), update(i), 1e-12))
 	  {
-	    std::cerr<<"xUpdates were not the same for standart and updatedQR decomposition:\n"<<"standart:\n   "<<xUpdate<<"updated:\n   "<<update<<std::endl;
-	    _infostream<<"validation failed for xUpdate.\n   - modifiedGramSchmidt:\n"<<xUpdate<<"\n  - updatedQR:\n"<<update<<"\n"<<std::flush;
+            failed = true;
+            diff = xUpdate(i) - update(i);
+            if(largestDiff < diff)
+            {
+               largestDiff =  diff;
+               val1 = xUpdate(i);
+               val2 = update(i);
+            }
 	  }
 	}
+        if(failed)
+        {
+           std::cerr<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<std::endl;
+            _infostream<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<"\n"<<std::flush;
+        }
+
 	// ------------------------------------------------
 	
         preciceDebug("c = " << c);

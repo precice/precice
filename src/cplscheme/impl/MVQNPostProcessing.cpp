@@ -154,20 +154,36 @@ void MVQNPostProcessing::computeQNUpdate
     
     DataValues xUpdate2(xUpdate.size(),0.0);
     
-    // computes xUpdate using updatedQR decompositon (does not modify _invJacobian)
-    computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate2);
     // computes xUpdate using modifiedGramSchmidt QR-dec
     computeNewtonFactorsQRDecomposition(cplData,xUpdate);
 
+    // computes xUpdate using updatedQR decompositon (does not modify _invJacobian)
+//    computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate2);
+/*
     // validation
+    bool failed = false;
+    double largestDiff = 0.;
+    double diff = 0., val1 = 0., val2 = 0.;
     for(int i = 0; i<xUpdate.size(); i++)
     {
       if(!tarch::la::equals(xUpdate(i), xUpdate2(i), 1e-12))
       {
-	std::cerr<<"xUpdates were not the same for standart and updatedQR decomposition:\n"<<"standart:\n   "<<xUpdate<<"updated:\n   "<<xUpdate2<<std::endl;
-	_infostream<<"validation failed for xUpdate.\n   - modifiedGramSchmidt:\n"<<xUpdate<<"\n  - updatedQR:\n"<<xUpdate2<<"\n"<<std::flush;
+        failed = true;
+        diff = xUpdate(i) - xUpdate2(i);
+        if(largestDiff < diff)
+        {
+           largestDiff =  diff;
+           val1 = xUpdate(i);
+           val2 = xUpdate2(i);
+        }
       }
-    }
+     }
+     if(failed)
+     {
+        std::cerr<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<std::endl;                                                           
+        _infostream<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<"\n"<<std::flush;                                                 
+     }
+*/
 }
 
 
@@ -184,9 +200,9 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
   DataMatrix v;
   bool linearDependence = true;
   
-  while (linearDependence)
-  {
-    linearDependence = false;
+//  while (linearDependence)
+//  {
+//    linearDependence = false;
     v.clear();
     
     Matrix __R(_matrixV.cols(), _matrixV.cols(), 0.0);
@@ -197,18 +213,18 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	__R(i,j) = r(i,j);
       }
 
-    if (_matrixV.cols() > 1){
-      for (int i=0; i < _matrixV.cols(); i++){
-	if (__R(i,i) < _singularityLimit){
-	  preciceDebug("   Removing linear dependent column " << i);
-	  _infostream<<"(updatedQR) removing linear dependent column "<<i<<"  time step: "<<t<<" iteration: "<<k<<"\n"<<std::flush;
-	  linearDependence = true;
-	  removeMatrixColumn(i);
-	}
-      }
-    }
-    if(not linearDependence)
-    {
+ //   if (_matrixV.cols() > 1){
+ //     for (int i=0; i < _matrixV.cols(); i++){
+//	if (__R(i,i) < _singularityLimit){
+//	  preciceDebug("   Removing linear dependent column " << i);
+//	  _infostream<<"(updatedQR) removing linear dependent column "<<i<<"  time step: "<<t<<" iteration: "<<k<<"\n"<<std::flush;
+//	  linearDependence = true;
+//	  removeMatrixColumn(i);
+//	}
+//      }
+//    }
+//    if(not linearDependence)
+//    {
       Matrix __Q(_matrixV.rows(), _matrixV.cols(), 0.0);
       
       DataValues __ytmpVec(_matrixV.cols(), 0.0);
@@ -219,7 +235,13 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	{
 	  __Q(i,j) = q(i,j);
 	}
-	
+      
+//      r = _qrV.matrixR();
+//      for(int i = 0; i<r.rows(); i++)
+//        for(int j = 0; j<r.cols(); j++)
+//        {
+//          __R(i,j) = r(i,j);
+//        }
       for(int i = 0; i < __Q.rows(); i++)
       {
 	for(int j=0; j < __Q.cols(); j++){
@@ -230,8 +252,8 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	v.append(__ytmpVec);  
 	__matrixQRow.clear();
       }
-    }
-  }
+//    }
+//  }
 
   // tmpMatrix = J_inv_n*V
   Matrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
