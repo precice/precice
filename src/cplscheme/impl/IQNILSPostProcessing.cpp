@@ -183,15 +183,19 @@ void IQNILSPostProcessing::computeQNUpdate
     while (linearDependence){
       preciceDebug("   Compute Newton factors");
       linearDependence = false;
-      
-      DataMatrix Vcopy(_matrixV);
-      DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
-      DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
-      modifiedGramSchmidt(Vcopy, Q, R);
-      
+    
+      Matrix __R(_matrixV.cols(), _matrixV.cols(), 0.0);
+      auto r = _qrV.matrixR();
+        for(int i = 0; i<r.rows(); i++)
+          for(int j = 0; j<r.cols(); j++)
+          {
+            __R(i,j) = r(i,j);
+          }
+
+  
       if (_matrixV.cols() > 1){
         for (int i=0; i < _matrixV.cols(); i++){
-          if (R(i,i) < _singularityLimit){
+          if (std::fabs(__R(i,i)) < _singularityLimit){
             preciceDebug("   Removing linear dependent column " << i);
 	    _infostream<<"removing linear dependent column "<<i<<"\n"<<std::flush;
             linearDependence = true;
@@ -202,6 +206,13 @@ void IQNILSPostProcessing::computeQNUpdate
       if (not linearDependence){
         
 	preciceDebug("   Apply Newton factors");
+      
+        // --------- QN factors with modifiedGramSchmidt ---
+        DataMatrix Vcopy(_matrixV);
+        DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
+        DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
+        modifiedGramSchmidt(Vcopy, Q, R);
+
         DataValues b(Q.cols(), 0.0);
         multiply(transpose(Q), _residuals, b); // = Qr
         b *= -1.0; // = -Qr
@@ -210,11 +221,11 @@ void IQNILSPostProcessing::computeQNUpdate
 	
         backSubstitution(R, b, c);
 	
-	multiply(_matrixW, c, xUpdate); // = Wc
+        DataValues update(_residuals.size(), 0.0);
+	multiply(_matrixW, c, update); // = Wc
 	
 	// ---------- QN factors with updatedQR -----------
 	Matrix __Qt(_matrixV.cols(), _matrixV.rows(), 0.0);
-        Matrix __R(_matrixV.cols(), _matrixV.cols(), 0.0);
 	
 	auto q = _qrV.matrixQ();
 	for(int i = 0; i<q.rows(); i++)
@@ -234,10 +245,8 @@ void IQNILSPostProcessing::computeQNUpdate
         __b *= -1.0; // = -Qr
         DataValues __c(__b.size(), 0.0);
         backSubstitution(__R, __b, __c);
-	
-	// validation
-	DataValues update(_residuals.size(), 0.0);
-	multiply(_matrixW, __c, update); 
+
+	multiply(_matrixW, __c, xUpdate); 
 
         bool failed = false;
         double largestDiff = 0.;
@@ -251,15 +260,15 @@ void IQNILSPostProcessing::computeQNUpdate
             if(largestDiff < diff)
             {
                largestDiff =  diff;
-               val1 = xUpdate(i);
-               val2 = update(i);
+               val1 = update(i);
+               val2 = xUpdate(i);
             }
 	  }
 	}
         if(failed)
         {
            std::cerr<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<std::endl;
-            _infostream<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<"\n"<<std::flush;
+           _infostream<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<"\n"<<std::flush;
         }
 
 	// ------------------------------------------------
