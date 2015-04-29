@@ -49,7 +49,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
   VALUE_IQNILS ("IQN-ILS"),
-  VALUE_MVQN("MVQN"),
+  VALUE_MVQN("IQN-IMVJ"),
   VALUE_BROYDEN("broyden"),
   //_isValid(false),
   _meshConfig(meshConfig),
