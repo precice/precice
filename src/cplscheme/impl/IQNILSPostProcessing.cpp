@@ -178,7 +178,8 @@ void IQNILSPostProcessing::computeQNUpdate
     using namespace tarch::la;
     
     // Calculate QR decomposition of matrix V and solve Rc = -Qr
-    DataValues c;
+    //DataValues c;
+    DataValues __c;
     bool linearDependence = true;
     while (linearDependence){
       preciceDebug("   Compute Newton factors");
@@ -208,6 +209,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	preciceDebug("   Apply Newton factors");
       
         // --------- QN factors with modifiedGramSchmidt ---
+	/*
         DataMatrix Vcopy(_matrixV);
         DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
         DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
@@ -223,6 +225,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	
         DataValues update(_residuals.size(), 0.0);
 	multiply(_matrixW, c, update); // = Wc
+	*/ 
 	
 	// ---------- QN factors with updatedQR -----------
 	Matrix __Qt(_matrixV.cols(), _matrixV.rows(), 0.0);
@@ -243,11 +246,15 @@ void IQNILSPostProcessing::computeQNUpdate
 	DataValues __b(__Qt.rows(), 0.0);
         multiply(__Qt, _residuals, __b); 
         __b *= -1.0; // = -Qr
-        DataValues __c(__b.size(), 0.0);
+        assertion1(__c.size() == 0, __c.size());
+        __c.append(__b.size(), 0.0);
         backSubstitution(__R, __b, __c);
 
 	multiply(_matrixW, __c, xUpdate); 
 
+	
+	// validation of updated QR-dec with modified GramSchmidt decomposition
+	/*
         bool failed = false;
         double largestDiff = 0.;
         double diff = 0., val1 = 0., val2 = 0.;
@@ -270,10 +277,10 @@ void IQNILSPostProcessing::computeQNUpdate
            std::cerr<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<std::endl;
            _infostream<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<"\n"<<std::flush;
         }
-
 	// ------------------------------------------------
+	*/
 	
-        preciceDebug("c = " << c);
+        preciceDebug("c = " << __c);
       }
     }
     
@@ -281,9 +288,9 @@ void IQNILSPostProcessing::computeQNUpdate
     foreach (int id, _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
       DataValues& values = *(data->values);
-      assertion2(_secondaryMatricesW[id].cols() == c.size(),
-                 _secondaryMatricesW[id].cols(), c.size());
-      multiply(_secondaryMatricesW[id], c, values);
+      assertion2(_secondaryMatricesW[id].cols() == __c.size(),
+                 _secondaryMatricesW[id].cols(), __c.size());
+      multiply(_secondaryMatricesW[id], __c, values);
       assertion2(values.size() == data->oldValues.column(0).size(),
                  values.size(), data->oldValues.column(0).size());
       values += data->oldValues.column(0);

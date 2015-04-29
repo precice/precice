@@ -92,8 +92,15 @@ private:
    // @brief computes underrelaxation for the secondary data
    virtual void computeUnderrelaxationSecondaryData(DataMap& cplData);
    
+   // @brief computes the quasi-Newton update vector based on the matrices V and W using LU decomposition
    void computeNewtonFactorsLUDecomposition(DataMap& cplData, DataValues& update);
+   
+   // @brief computes the quasi-Newton update vector based on the matrices V and W using QR decomposition of V
    void computeNewtonFactorsQRDecomposition(DataMap& cplData, DataValues& update);
+   
+   // @brief computes the quasi-Newton update vector based on the matrices V and W using a QR
+   //        decomposition of V. The decomposition is not re-computed en-block in every iteration
+   //        but updated so that the new added column in V is incorporated in the decomposition.
    void computeNewtonFactorsUpdatedQRDecomposition(DataMap& cplData, DataValues& update);
    
 };

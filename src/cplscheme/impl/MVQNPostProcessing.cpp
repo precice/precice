@@ -152,12 +152,14 @@ void MVQNPostProcessing::computeQNUpdate
     preciceDebug("   Compute Newton factors");
     //computeNewtonFactorsLUDecomposition(cplData, xUpdate);
     
-    DataValues xUpdate2(xUpdate.size(),0.0);
-    
     // computes xUpdate using updatedQR decompositon (does not modify _invJacobian)
     computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate);
 
+    
+    // -------- validation of updated QR-dec with gramSchmidt QR-dec ---- 
+    /*
     // computes xUpdate using modifiedGramSchmidt QR-dec
+    DataValues xUpdate2(xUpdate.size(),0.0);
     computeNewtonFactorsQRDecomposition(cplData,xUpdate2);
 
     // validation
@@ -183,7 +185,7 @@ void MVQNPostProcessing::computeQNUpdate
         std::cerr<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val2<<"\n  - updatedQR: "<<val1<<"\n  - (max-)diff: "<<largestDiff<<std::endl;                                                           
         _infostream<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val2<<"\n  - updatedQR: "<<val1<<"\n  - (max-)diff: "<<largestDiff<<"\n"<<std::flush;                                                 
      }
-
+   */
 }
 
 
@@ -307,7 +309,7 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
 	  preciceDebug("   Removing linear dependent column " << i);
 	  _infostream<<"(modifiedGramSchmidt) removing linear dependent column "<<i<<"  time step: "<<t<<" iteration: "<<k<<"\n"<<std::flush;
 	  linearDependence = true;
-	  //removeMatrixColumn(i);
+	  removeMatrixColumn(i);
 	}
       }
     }
@@ -359,38 +361,13 @@ void MVQNPostProcessing::computeNewtonFactorsLUDecomposition
   // ------------- update inverse Jacobian -----------
   // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
   // ----------------------------------------- -------
-
-  //----------------------------DEBUG------------------------------------
-  /*
-  std::string Vfile("matrixV"+st.str()+"_"+sk.str()+".m");
-  std::string Wfile("matrixW"+st.str()+"_"+sk.str()+".m");
-  _matrixV.printm(Vfile.c_str());
-  _matrixW.printm(Wfile.c_str());
-  */
-  // --------------------------------------------------------------------
   
   DataMatrix VTVLU(_matrixV.cols(), _matrixV.cols(), 0.0);
   DataMatrix v;
-  multiply(transpose(_matrixV), _matrixV, VTVLU);  // VTV = V^T*V
-  
-  
-  //----------------------------DEBUG------------------------------------
-  /*
-  std::string VTVfile("VTV"+st.str()+"_"+sk.str()+".m");
-  VTVLU.printm(VTVfile.c_str());
-  */
-  // --------------------------------------------------------------------
-  
+  multiply(transpose(_matrixV), _matrixV, VTVLU);  // VTV = V^T*
   
   DataValues pivots(_matrixV.cols(), 0.0);
   lu(VTVLU,pivots);
-  
-  //----------------------------DEBUG------------------------------------
-  /*
-  std::string VTVLUfile("VTVLU"+st.str()+"_"+sk.str()+".m");
-  VTVLU.printm(VTVLUfile.c_str());
-  */
-  // --------------------------------------------------------------------
   
   
   DataValues ytmpVec(_matrixV.cols(), 0.0);
@@ -402,15 +379,6 @@ void MVQNPostProcessing::computeNewtonFactorsLUDecomposition
       _matrixVRow.append(_matrixV(i,j));
     }
     
-    //----------------------------DEBUG------------------------------------
-    /*
-    std::stringstream si; si <<i;
-    std::string mrowfile("mrow"+st.str()+"_"+sk.str()+"_"+si.str()+".m");
-    _matrixVRow.printm(mrowfile.c_str());
-    */
-    // --------------------------------------------------------------------
-    
-    
     // account for pivoting in lu-decomposition
     assertion2(_matrixVRow.size() == pivots.size(), _matrixVRow.size(), pivots.size());
     for ( int i=0; i < _matrixVRow.size(); i++ ){
@@ -419,36 +387,13 @@ void MVQNPostProcessing::computeNewtonFactorsLUDecomposition
       _matrixVRow[pivots[i]] = temp;
     }
     forwardSubstitution(VTVLU, _matrixVRow, ytmpVec);
-    
-    //----------------------------DEBUG------------------------------------
-    /*
-    std::string ytmpfile("ytmpVec"+st.str()+"_"+sk.str()+"_"+si.str()+".m");
-    ytmpVec.printm(ytmpfile.c_str());
-    */
-    // --------------------------------------------------------------------
-    
+
     backSubstitution(VTVLU, ytmpVec, xtmpVec);
-    
-    //----------------------------DEBUG------------------------------------
-    /*
-    std::string xtmpfile("xtmpVec"+st.str()+"_"+sk.str()+"_"+si.str()+".m");
-    xtmpVec.printm(xtmpfile.c_str());
-    */
-    // --------------------------------------------------------------------
     
     v.append(xtmpVec);  
     _matrixVRow.clear();
   }
   
-  
-  //----------------------------DEBUG------------------------------------
-  /*
-  std::string vfile("v"+st.str()+"_"+sk.str()+".m");
-  v.printm(vfile.c_str());
-  */
-  // --------------------------------------------------------------------
-  
-    
   // tmpMatrix = J_inv_n*V
   DataMatrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
   assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
@@ -475,27 +420,6 @@ void MVQNPostProcessing:: specializedIterationsConverged
    DataMap & cplData)
 {
   
-//   // ---- DEBUG --------------------------
-//   
-//   using namespace tarch::la;
-//   // compute frobenius norm of difference between Jacobian matrix from current
-//   // time step and Jcobian from old time step
-//   DataMatrix jacobianDiff(_invJacobian.rows(), _invJacobian.cols(), 0.0);
-//   jacobianDiff = _oldInvJacobian;
-//   jacobianDiff *= -1.;
-//   jacobianDiff = _invJacobian + jacobianDiff;
-//   double frob = frobeniusNorm(jacobianDiff); 
-//   f<<t<<"  "<<frob<<"\n";
-//   if(t >= 100) f.close();
-//   // -------------------------------------
-
-   //----------------------------DEBUG------------------------------------
-//   std::stringstream sk; sk <<k;
-//   std::stringstream st; st <<t;
-//   std::string jfile("j_"+st.str()+".m");
-//   _invJacobian.printm(jfile.c_str());
-  
-  // --------------------------------------------------------------------
   
   k = 0;
   t++;
