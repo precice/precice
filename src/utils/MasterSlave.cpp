@@ -233,4 +233,28 @@ MasterSlave::broadcast(double& value) {
   }
 }
 
+void
+MasterSlave::broadcast(double* values, int size) {
+  preciceTrace("broadcast(double*)");
+
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
+
+  assertion(_communication.get() != NULL);
+  assertion(_communication->isConnected());
+
+  Event e("MasterSlave::broadcast");
+
+  if (_masterMode) {
+    // Broadcast (send) value.
+    _communication->broadcast(values, size);
+  }
+
+  if (_slaveMode) {
+    // Broadcast (receive) value.
+    _communication->broadcast(values, size, 0);
+  }
+}
+
 }} // precice, utils

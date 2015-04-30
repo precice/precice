@@ -243,12 +243,39 @@ void IQNILSPostProcessing::computeQNUpdate
 	    __R(i,j) = r(i,j);
 	  }
 	  
-	DataValues __b(__Qt.rows(), 0.0);
-        multiply(__Qt, _residuals, __b); 
-        __b *= -1.0; // = -Qr
-        assertion1(__c.size() == 0, __c.size());
-        __c.append(__b.size(), 0.0);
-        backSubstitution(__R, __b, __c);
+	DataValues _local_b(__Qt.rows(), 0.0);
+	DataValues _global_b(__Qt.rows(), 0.0);
+
+	multiply(__Qt, _residuals, _local_b); 
+	_local_b *= -1.0; // = -Qr
+	
+	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+	  assertion1(__c.size() == 0, __c.size());
+	  __c.append(_local_b.size(), 0.0);
+	  backSubstitution(__R, _local_b, __c);
+	}else{
+	  
+	   assertion(utils::MasterSlave::_communication.get() != NULL);
+	   assertion(utils::MasterSlave::_communication->isConnected());
+	   
+	  if(utils::MasterSlave::_slaveMode){
+	    utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
+	    utils::MasterSlave::_communication->receive(&_global_b(0), _local_b.size(), 0);
+	  }
+	  if(utils::MasterSlave::_masterMode){
+	    _global_b += _local_b;
+	    for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
+	      utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
+	      _global_b += _local_b;
+	    }
+	    
+	    assertion1(__c.size() == 0, __c.size());
+	    __c.append(_global_b.size(), 0.0);
+	    backSubstitution(__R, _global_b, __c);
+	  }
+	  
+	  utils::MasterSlave::broadcast(&__c(0), __c.size());
+	}
 
 	multiply(_matrixW, __c, xUpdate); 
 
@@ -281,6 +308,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	*/
 	
         preciceDebug("c = " << __c);
+	_infostream<<"c = "<<__c<<"\n"<<std::flush;
       }
     }
     

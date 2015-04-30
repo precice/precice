@@ -9,6 +9,7 @@
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
+#include "utils/MasterSlave.hpp"
 #include <Eigen/Dense>
 #include <limits>
 #include <deque>

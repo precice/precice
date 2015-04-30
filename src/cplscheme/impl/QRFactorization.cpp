@@ -273,7 +273,9 @@ int QRFactorization::orthogonalize(
    EigenVector u = EigenVector::Zero(_rows);
    EigenVector s = EigenVector::Zero(colNum);
    r = EigenVector::Zero(_cols);
-   rho = v.norm();
+   
+   rho = utils::MasterSlave::l2norm(v); // distributed l2norm
+   //rho = v.norm();
    rho0 = rho;
    int k = 0;
    while (!termination)
@@ -282,11 +284,18 @@ int QRFactorization::orthogonalize(
      u = EigenVector::Zero(_rows);
      for(int j=0; j<colNum; j++)
      {
-       double ss = 0;
-       for(int i=0; i<_rows; i++)
-       {
-         ss = ss + _Q(i,j) * v(i);
-       }
+       
+       /*
+	* dot-product <_Q(:,j), v >
+	*/
+       EigenVector Qc = _Q.col(j);
+       double ss = utils::MasterSlave::dot(Qc, v);
+       //double ss = 0;
+       //for(int i=0; i<_rows; i++)
+       //{
+       //  ss = ss + _Q(i,j) * v(i);
+       //}
+       
        t = ss;
        s(j) = t;
        for(int i=0; i<_rows; i++)
@@ -305,8 +314,10 @@ int QRFactorization::orthogonalize(
      {
        v(i) = v(i) - u(i);
      }
-     rho1 = v.norm();
-     t = s.norm();
+     rho1 = utils::MasterSlave::l2norm(v); // distributed l2norm
+     t = utils::MasterSlave::l2norm(s); // distributed l2norm
+     // rho1 = v.norm();
+     //t = s.norm();
      k++;
      
      // treat the special case m=n
@@ -333,12 +344,18 @@ int QRFactorization::orthogonalize(
 	 u = EigenVector::Zero(_rows);
 	 for(int j=0; j<colNum; j++)
 	 {
+	   
 	   for(int i=0; i<_rows; i++)
 	   {
 	     u(i) = u(i) + _Q(i,j)*_Q(i,j);
 	   }
 	 }
 	 t = 2;
+	 
+	 /*
+	  *  TODO: here is something to do for parallelization
+	  * (search for smallest u(i)) and memorize k = i
+	  */
 	 for(int i=0; i<_rows; i++)
 	 {
 	   if(u(i) < t)
@@ -356,6 +373,8 @@ int QRFactorization::orthogonalize(
 	 }
 	 // reinitialize v and k
 	 v = EigenVector::Zero(_rows);
+	 
+	 // TODO: insert rho1 at position k with smalles u(i) = Q(i,:) * Q(i,:)
 	 v(k) = rho1;
 	 k = 0;
        }
