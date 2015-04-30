@@ -364,6 +364,34 @@ int QRFactorization::orthogonalize(
 	     t = u(k);
 	   }
 	 }
+	 int global_k=k;
+	 int local_k = 0;
+	 double local_uk = 0.;
+	 double global_uk = 0.;
+	 int rank = 0;
+	 
+	 if(utils::MasterSlave::_slaveMode)
+	 {
+	  utils::MasterSlave::_communication->send(k, 0);
+	  utils::MasterSlave::_communication->send(u(k), 0);
+	//  utils::MasterSlave::_communication->receive(global_k, 0);
+	  }
+	 
+	 if(utils::MasterSlave::_masterMode)
+	 {
+	   global_uk = u(k);
+	   for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+	     utils::MasterSlave::_communication->receive(local_k, rankSlave);
+	     utils::MasterSlave::_communication->receive(local_uk, rankSlave);
+	      if(local_uk < global_uk)
+	      {
+		rank = rankSlave;
+		global_uk = local_uk;
+		global_k = local_k;
+	      }
+	   }
+	 }
+	  
 	 
 	 // take correct action if v is null
 	 if(rho1 == 0)
@@ -375,7 +403,14 @@ int QRFactorization::orthogonalize(
 	 v = EigenVector::Zero(_rows);
 	 
 	 // TODO: insert rho1 at position k with smalles u(i) = Q(i,:) * Q(i,:)
-	 v(k) = rho1;
+	 if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)
+	 {
+	   v(k) = rho1;
+	 }else
+	 {
+	   if(utils::MasterSlave::_rank == rank)
+	     v(global_k) = rho1;
+	 }
 	 k = 0;
        }
        rho0 = rho1;
