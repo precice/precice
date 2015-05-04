@@ -63,8 +63,8 @@
 #include "petsc.h"
 #endif
 
-
 using precice::utils::Event;
+using precice::utils::EventRegistry;
 
 namespace precice {
 
@@ -437,6 +437,9 @@ double SolverInterfaceImpl:: advance
   double computedTimestepLength )
 {
   preciceTrace1("advance()", computedTimestepLength);
+
+  EventRegistry::printGlobalDuration();
+
   Event e("advance", not precice::testMode);
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
