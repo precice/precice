@@ -27,16 +27,16 @@ PetRadialBasisFctMappingTest:: PetRadialBasisFctMappingTest()
 
 void PetRadialBasisFctMappingTest:: run()
 {
-  // testMethod(testPetThinPlateSplines);
-  // testMethod(testPetMultiquadrics);
-  // testMethod(testPetInverseMultiquadrics);
-  // testMethod(testPetVolumeSplines);
+  testMethod(testPetThinPlateSplines);
+  testMethod(testPetMultiquadrics);
+  testMethod(testPetInverseMultiquadrics);
+  testMethod(testPetVolumeSplines);
   testMethod(testPetGaussian);
-  // testMethod(testPetCompactThinPlateSplinesC2);
-  // testMethod(testPetCompactPolynomialC0);
-  // testMethod(testPetCompactPolynomialC6);
-  // testMethod(testDeadAxis2D);
-  // testMethod(testDeadAxis3D);
+  testMethod(testPetCompactThinPlateSplinesC2);
+  testMethod(testPetCompactPolynomialC0);
+  testMethod(testPetCompactPolynomialC6);
+  testMethod(testDeadAxis2D);
+  testMethod(testDeadAxis3D);
 }
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
@@ -118,10 +118,10 @@ void PetRadialBasisFctMappingTest:: testPetGaussian()
   perform2DTestConsistentMapping(consistentMap2D);
   PetRadialBasisFctMapping<Gaussian> consistentMap3D(Mapping::CONSISTENT, 3, fct, xDead, yDead, zDead);
   perform3DTestConsistentMapping(consistentMap3D);
-  // PetRadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
-  // perform2DTestConservativeMapping(conservativeMap2D);
-  // PetRadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
-  // perform3DTestConservativeMapping(conservativeMap3D);
+  PetRadialBasisFctMapping<Gaussian> conservativeMap2D(Mapping::CONSERVATIVE, 2, fct, xDead, yDead, zDead);
+  perform2DTestConservativeMapping(conservativeMap2D);
+  PetRadialBasisFctMapping<Gaussian> conservativeMap3D(Mapping::CONSERVATIVE, 3, fct, xDead, yDead, zDead);
+  perform3DTestConservativeMapping(conservativeMap3D);
 }
 
 void PetRadialBasisFctMappingTest:: testPetCompactThinPlateSplinesC2()
@@ -297,6 +297,7 @@ void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping
   mesh::Vertex& vertex1 = inMesh->createVertex ( Vector2D(0.0) );
   inMesh->allocateDataValues ();
   assignList(inData->values()) = 1.0, 2.0;
+  addGlobalIndex(inMesh);
 
   // Create mesh to map to
   mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false) );
@@ -503,7 +504,8 @@ void PetRadialBasisFctMappingTest:: perform3DTestConservativeMapping
   mesh::Vertex& vertex1 = inMesh->createVertex(Vector3D(0.0));
   inMesh->allocateDataValues();
   assignList(inData->values()) = 1.0, 2.0;
-
+  addGlobalIndex(inMesh);
+  
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false));
   mesh::PtrData outData = outMesh->createData("OutData", 1);

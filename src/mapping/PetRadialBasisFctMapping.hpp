@@ -520,18 +520,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     petsc::Vector Au(_matrixC, "Au");
     petsc::Vector out(_matrixC, "out");
     petsc::Vector in(_matrixA, "in");
+    ierr = VecSetLocalToGlobalMapping(in.vector, _ISmapping); CHKERRV(ierr);
 
     for (int dim=0; dim < valueDim; dim++) {
       int size = in.getSize();
       // for (int i=0; i < size; i++) { // Fill input data values
         // in.setValue(i, inValues[i*valueDim + dim]);
       // }
-      for (int i=polyparams; i < size; i++){
-        int globalIndex = input()->vertices()[i-polyparams].getGlobalIndex();
-        preciceDebug("Add input data value ID:" << (i-polyparams)*valueDim + dim << " = " << inValues[(i-polyparams)*valueDim + dim] << " on global ID " << globalIndex);
-        // vecArray[globalIndex] = inValues[(i-polyparams)*valueDim + dim];
+      for (int i=0; i < size; i++) {
+        int globalIndex = input()->vertices()[i].getGlobalIndex();
         // Dies besser als VecSetValuesLocal machen
-        VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(i-polyparams)*valueDim + dim], INSERT_VALUES);
+        VecSetValueLocal(in.vector, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES);
       }
       in.assemble();
       in.view();
@@ -547,7 +546,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       ierr = VecGetArray(out.vector, &outArray);
       size = out.getSize();
       for (int i=0; i < size-polyparams; i++){
-        outValues[i*valueDim + dim] = outArray[i]; // hier noch das index set beachten?
+        outValues[i*valueDim + dim] = outArray[i+polyparams]; // hier noch das index set beachten?
       }
       VecRestoreArray(out.vector, &outArray);
     }
