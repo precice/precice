@@ -256,8 +256,6 @@ buildCommunicationMap(
 
   auto const& indices = iterator->second;
 
-  localIndexCount = indices.size();
-
   int index = 0;
 
   forRange(indices, [&](int thisIndex) mutable {
@@ -275,6 +273,16 @@ buildCommunicationMap(
 
     index++;
   });
+
+  // CAUTION:
+  // This prevents point-to-point communication from considering those process
+  // ranks, which don't have matching indices in the remote participant
+  // (i.e. are not supposed to have any communication partners at all). For
+  // instance, this happens a lot in case of unstructured grids on the
+  // interface, or because user did a mistake and did not define the interface
+  // boundary properly.
+  if (communicationMap.size() > 0)
+    localIndexCount = indices.size();
 
   return communicationMap;
 }
@@ -424,6 +432,8 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
            true);
 
   if (communicationMap.size() == 0) {
+    assertion(_localIndexCount == 0);
+
     _isConnected = true;
 
     return;
@@ -577,6 +587,14 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   Event e2(_prefix + "PointToPointCommunication::requestConnection/request",
            true);
 
+  if (communicationMap.size() == 0) {
+    assertion(_localIndexCount == 0);
+
+    _isConnected = true;
+
+    return;
+  }
+
   Publisher::ScopedSetEventNamePrefix ssenp(
       _prefix +
       "PointToPointCommunication::requestConnection"
@@ -681,7 +699,15 @@ PointToPointCommunication::send(double* itemsToSend,
   if (_mappings.size() == 0) {
     preciceCheck(size == 0 && _localIndexCount == 0,
                  "send()",
-                 "Can't send anything from disconnected process!");
+                 "Can't send anything from disconnected process!"
+                     << " "
+                     << "Size"
+                     << ":"
+                     << " " << size << ";"
+                     << " "
+                     << "Local Index Count"
+                     << ":"
+                     << " " << _localIndexCount << ".");
 
     return;
   }
@@ -740,7 +766,15 @@ PointToPointCommunication::receive(double* itemsToReceive,
   if (_mappings.size() == 0) {
     preciceCheck(size == 0 && _localIndexCount == 0,
                  "receive()",
-                 "Can't receive anything to disconnected process!");
+                 "Can't receive anything to disconnected process!"
+                     << " "
+                     << "Size"
+                     << ":"
+                     << " " << size << ";"
+                     << " "
+                     << "Local Index Count"
+                     << ":"
+                     << " " << _localIndexCount << ".");
 
     return;
   }
