@@ -600,6 +600,7 @@ void PetRadialBasisFctMappingTest:: testDeadAxis2D
   int outDataID = outData->getID();
   mesh::Vertex& vertex = outMesh->createVertex ( Vector2D(0.0) );
   outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
 
   // Setup mapping with mapping coordinates and geometry used
   mapping.setMeshes ( inMesh, outMesh );

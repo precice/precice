@@ -210,9 +210,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatSetType(_matrixC.matrix, MATSBAIJ); CHKERRV(ierr); // create symmetric, block sparse matrix.
   preciceDebug("Set matrix C to size " << n);
   ierr = MatSetSizes(_matrixC.matrix, n, n, PETSC_DECIDE, PETSC_DECIDE); CHKERRV(ierr);
-  preciceDebug("Done setting matrix C to size " << n);
   // ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
-  preciceDebug("Done MatSetOption C");
   ierr = MatSetUp(_matrixC.matrix); CHKERRV(ierr);
 
   _matrixA.reset();
@@ -231,7 +229,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISAllGather(ISlocal, &ISglobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr);
   ierr = MatSetLocalToGlobalMapping(_matrixC.matrix, _ISmapping, _ISmapping); CHKERRV(ierr);
-  preciceDebug("Comm world is petsc world: " << (bool) PETSC_COMM_WORLD == PETSC_COMM_WORLD);
   // Create an identy mapping and use that for the columns of matrixA.
   ierr = ISCreateStride(PETSC_COMM_WORLD, _matrixA.ownerRange().second - _matrixA.ownerRange().first, _matrixA.ownerRange().first, 1, &ISidentity); CHKERRV(ierr);
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
@@ -318,7 +315,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
       double coeff = _basisFunction.evaluate(norm2(distance));
       if ( not equals(coeff, 0.0)) {
-        preciceDebug("Setting entry, row = " << iVertex.getGlobalIndex() << " col = " << inMesh->vertices()[j].getGlobalIndex() << " to " << coeff);
         colVals[colNum] = coeff;
         colIdx[colNum] = inMesh->vertices()[j].getGlobalIndex() + polyparams; // column of entry is the globaIndex
         colNum++;
@@ -469,8 +465,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // }      
 
   _hasComputedMapping = true;
-  _matrixC.view();
-  _matrixA.view();
+  // _matrixC.view();
+  // _matrixA.view();
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -533,7 +529,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
         VecSetValueLocal(in.vector, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES);
       }
       in.assemble();
-      in.view();
+
       ierr = MatMultTranspose(_matrixA.matrix, in.vector, Au.vector); CHKERRV(ierr);
       ierr = KSPSolve(_solver, Au.vector, out.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
@@ -562,7 +558,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++){
-      preciceDebug("valueDim  = " << valueDim);
       // Fill input from input data values (last polyparams entries remain zero)
       // ierr = VecGetArray(in.vector, &vecArray);
       int size  = in.getSize();
