@@ -226,6 +226,60 @@ print(std::map<int, std::vector<int>> const& m) {
   }
 }
 
+void
+printStats(std::map<int, std::vector<int>> const& m) {
+  int size = 0;
+
+  forMap(m, [&](int rank, std::vector<int> const& indices) mutable {
+    size += indices.size();
+  });
+
+  if (utils::MasterSlave::_masterMode) {
+    size_t count = 0;
+    size_t maximum = std::numeric_limits<size_t>::min();
+    size_t minimum = std::numeric_limits<size_t>::max();
+    double average = size;
+
+    if (size) {
+      maximum = std::max(maximum, static_cast<size_t>(size));
+      minimum = std::min(minimum, static_cast<size_t>(size));
+
+      count++;
+    }
+
+    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+      utils::MasterSlave::_communication->receive(size, rank);
+
+      average += size;
+
+      if (size) {
+        maximum = std::max(maximum, static_cast<size_t>(size));
+        minimum = std::min(minimum, static_cast<size_t>(size));
+
+        count++;
+      }
+    }
+
+    if (minimum > maximum)
+      minimum = maximum;
+
+    average /= count;
+
+    std::cout << std::fixed << std::setprecision(3) //
+              << "Number of LVDIs per Interface Process:"
+              << "\n"
+              << "  Maximum: " << maximum << "\n"
+              << "  Minimum: " << minimum << "\n"
+              << "  Average: " << average << "\n"
+              << "Number of Interface Processes: " << count << "\n"
+              << std::endl;
+  } else {
+    assertion(utils::MasterSlave::_slaveMode);
+
+    utils::MasterSlave::_communication->send(size, 0);
+  }
+}
+
 // The approximate complexity of this function is O((number of local data
 // indices for the current rank in `thisVertexDistribution') * (total number of
 // data indices for all ranks in `otherVertexDistribution')).
@@ -403,10 +457,18 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
       _localIndexCount, vertexDistribution, requesterVertexDistribution);
 
-// NOTE:
-// Change 0 to 1 to print `communicationMap'.
-#if 0
+// Print `communicationMap'.
+#ifdef P2P_LCM_PRINT
+  e.stop(true);
   print(communicationMap);
+  e.start(true);
+#endif
+
+// Print statistics of `communicationMap'.
+#ifdef P2P_LCM_PRINT_STATS
+  e.stop(true);
+  printStats(communicationMap);
+  e.start(true);
 #endif
 
 #ifdef SuperMUC_WORK
@@ -569,10 +631,18 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
       _localIndexCount, vertexDistribution, acceptorVertexDistribution);
 
-// NOTE:
-// Change 0 to 1 to print `communicationMap'.
-#if 0
+// Print `communicationMap'.
+#ifdef P2P_LCM_PRINT
+  e.stop(true);
   print(communicationMap);
+  e.start(true);
+#endif
+
+// Print statistics of `communicationMap'.
+#ifdef P2P_LCM_PRINT_STATS
+  e.stop(true);
+  printStats(communicationMap);
+  e.start(true);
 #endif
 
 #ifdef SuperMUC_WORK
