@@ -207,6 +207,11 @@ elif env["compiler"] == 'g++':
 elif env["compiler"] == "clang++":
     env['ENV']['TERM'] = os.environ['TERM'] # colored compile messages from clang
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
+elif env["compiler"] == "g++-mp-4.9":
+    # Some special treatment that seems to be necessary for Mac OS.
+    # See https://github.com/precice/precice/issues/2
+    env.Append(LIBS = ['libstdc++.6'])
+    env.AppendUnique(LIBPATH = ['/opt/local/lib/'])
 
 env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
