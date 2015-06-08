@@ -510,6 +510,8 @@ private:
   double _time;
 
   double _computedTimestepPart;
+  
+  std::vector<double> _firstResiduumNorm;
 
   /// @brief Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder;
@@ -548,6 +550,10 @@ private:
 
   /// @brief Responsible for monitoring iteration count over timesteps.
   io::TXTTableWriter _iterationsWriter;
+
+  /// Writes out coupling convergence within all timesteps.
+  io::TXTTableWriter _convergenceWriter;
+
 
   int getVertexOffset(std::map<int,int>& vertexDistribution, int rank, int dim);
 
