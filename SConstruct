@@ -233,6 +233,7 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_OMP'])
     buildpath += "-noomp"
 
+# ===== Petsc =====
 if env["petsc"]:
     if not env["mpi"]:
         print "Petsc requires MPI to be enabled."
@@ -247,8 +248,12 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
 
+# ====== Eigen ======
+if not conf.CheckCXXHeader("Eigen/Dense"):
+    errorMissingHeader("Eigen/Dense", "Eigen")
+    Exit(1)
 
-
+# ====== Boost ======
 if env["boost_inst"]:
     if not uniqueCheckLib(conf, boostSystemLib):
         errorMissingLib(boostSystemLib, 'Boost.System')
@@ -264,7 +269,7 @@ if not env["spirit2"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_SPIRIT2'])
     buildpath += "-nospirit2"
 
-
+# ====== MPI ======
 if env["mpi"]:
     # Skip (deprecated) MPI C++ bindings.
     env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
@@ -307,7 +312,7 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_SOCKETS'])
     buildpath += "-nosockets"
 
-
+# ====== Python ======
 if env["python"]:
     env.AppendUnique(LIBPATH = [pythonLibPath])
     if not uniqueCheckLib(conf, pythonLib):
@@ -323,8 +328,7 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PYTHON'])
 
 
-
-
+# ====== GProf ======
 if env["gprof"]:
     env.Append(CCFLAGS = ['-p', '-pg'])
     env.Append(LINKFLAGS = ['-p', '-pg'])
