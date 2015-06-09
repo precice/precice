@@ -721,7 +721,7 @@ bool BaseCouplingScheme:: measureConvergence()
   assertion(_convergenceMeasures.size() > 0);
   _convergenceWriter.writeData("Timestep", _timesteps);
   _convergenceWriter.writeData("Iteration", _iterations);
-  for(int i = 0; i < _convergenceMeasures.size(); i++) {
+  for(size_t i = 0; i < _convergenceMeasures.size(); i++) {
     ConvergenceMeasure& convMeasure = _convergenceMeasures[i];
 //  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.data != NULL);
@@ -791,7 +791,7 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter.writeData("Iterations", _iterations);
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter.writeData("Convergence", converged);
-    for (int i = 0; i<_convergenceMeasures.size();i++) {
+    for (size_t i = 0; i<_convergenceMeasures.size();i++) {
       double avgConvRate = _convergenceMeasures[i].measure->getNormResidual()/_firstResiduumNorm[i];
       std::stringstream sstm;
       sstm << "avgConvRate(" <<i<< ")";

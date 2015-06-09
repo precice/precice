@@ -51,7 +51,6 @@ void FindClosestQuad:: find
 (
   mesh::Quad& quad )
 {
-  typedef utils::GeometryComputations GeoComp;
   using utils::Vector2D; using utils::Vector3D;
   using namespace tarch::la;
 
