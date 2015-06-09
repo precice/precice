@@ -260,7 +260,7 @@ if env["boost_inst"]:
     if not uniqueCheckLib(conf, boostFilesystemLib):
         errorMissingLib(boostFilesystemLib, 'Boost.Filesystem')
 else:
-    env.AppendUnique(CPPPATH = [boostRootPath])
+    env.AppendUnique(CXXFLAGS = ['-isystem', boostRootPath])
 if not conf.CheckCXXHeader('boost/array.hpp'):
     errorMissingHeader('boost/array.hpp', 'Boost')
 
@@ -357,6 +357,9 @@ if not env["boost_inst"]:
         Execute(Copy(buildpath + "/boost/", file))
     for file in Glob(boostRootPath + "/libs/filesystem/src/*"):
         Execute(Copy(buildpath + "/boost/", file))
+    for file in Glob(buildpath + "/boost/*.hpp"):
+        # Insert pragma to disable warnings in boost files.
+        subprocess.call(["sed", "-i", r"1s;^;#pragma GCC system_header\n;", str(file)])
     sourcesBoost = Glob(buildpath + '/boost/*.cpp')
     print "... done"
 
