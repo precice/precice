@@ -137,8 +137,8 @@ if env["petsc"]:
     PETSC_ARCH = checkset_var("PETSC_ARCH", "")
 
 if env["boost_inst"]:
-    if env["sockets"]:
-        boostSystemLib = checkset_var('PRECICE_BOOST_SYSTEM_LIB', "boost_system")
+    boostSystemLib     = checkset_var('PRECICE_BOOST_SYSTEM_LIB',     "boost_system")
+    boostFilesystemLib = checkset_var('PRECICE_BOOST_FILESYSTEM_LIB', "boost_filesystem")
 else:
     boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
 
@@ -207,6 +207,11 @@ elif env["compiler"] == 'g++':
 elif env["compiler"] == "clang++":
     env['ENV']['TERM'] = os.environ['TERM'] # colored compile messages from clang
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
+elif env["compiler"] == "g++-mp-4.9":
+    # Some special treatment that seems to be necessary for Mac OS.
+    # See https://github.com/precice/precice/issues/2
+    env.Append(LIBS = ['libstdc++.6'])
+    env.AppendUnique(LIBPATH = ['/opt/local/lib/'])
 
 env.Replace(CXX = env["compiler"])
 env.Replace(CC = env["compiler"])
@@ -228,6 +233,7 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_OMP'])
     buildpath += "-noomp"
 
+# ===== Petsc =====
 if env["petsc"]:
     if not env["mpi"]:
         print "Petsc requires MPI to be enabled."
@@ -242,15 +248,19 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
 
+# ====== Eigen ======
+if not conf.CheckCXXHeader("Eigen/Dense"):
+    errorMissingHeader("Eigen/Dense", "Eigen")
+    Exit(1)
 
-
+# ====== Boost ======
 if env["boost_inst"]:
-    #env.AppendUnique(CPPPATH = [boostIncPath])
-    # The socket implementation is based on Boost libs
     if not uniqueCheckLib(conf, boostSystemLib):
-        errorMissingLib(boostSystemLib, 'Boost')
+        errorMissingLib(boostSystemLib, 'Boost.System')
+    if not uniqueCheckLib(conf, boostFilesystemLib):
+        errorMissingLib(boostFilesystemLib, 'Boost.Filesystem')
 else:
-    env.AppendUnique(CPPPATH = [boostRootPath])
+    env.AppendUnique(CXXFLAGS = ['-isystem', boostRootPath])
 if not conf.CheckCXXHeader('boost/array.hpp'):
     errorMissingHeader('boost/array.hpp', 'Boost')
 
@@ -259,7 +269,7 @@ if not env["spirit2"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_SPIRIT2'])
     buildpath += "-nospirit2"
 
-
+# ====== MPI ======
 if env["mpi"]:
     # Skip (deprecated) MPI C++ bindings.
     env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
@@ -302,7 +312,7 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_SOCKETS'])
     buildpath += "-nosockets"
 
-
+# ====== Python ======
 if env["python"]:
     env.AppendUnique(LIBPATH = [pythonLibPath])
     if not uniqueCheckLib(conf, pythonLib):
@@ -318,8 +328,7 @@ else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PYTHON'])
 
 
-
-
+# ====== GProf ======
 if env["gprof"]:
     env.Append(CCFLAGS = ['-p', '-pg'])
     env.Append(LINKFLAGS = ['-p', '-pg'])
@@ -339,13 +348,18 @@ env = conf.Finish() # Used to check libraries
 )
 
 sourcesBoost = []
-if env["sockets"] and not env["boost_inst"]:
+if not env["boost_inst"]:
     print
-    print "Copy boost sources for socket communication to build ..."
+    print "Copy Boost sources..."
     if not os.path.exists(buildpath + "/boost/"):
         Execute(Mkdir(buildpath + "/boost/"))
     for file in Glob(boostRootPath + "/libs/system/src/*"):
         Execute(Copy(buildpath + "/boost/", file))
+    for file in Glob(boostRootPath + "/libs/filesystem/src/*"):
+        Execute(Copy(buildpath + "/boost/", file))
+    for file in Glob(buildpath + "/boost/*.hpp"):
+        # Insert pragma to disable warnings in boost files.
+        subprocess.call(["sed", "-i", r"1s;^;#pragma GCC system_header\n;", str(file)])
     sourcesBoost = Glob(buildpath + '/boost/*.cpp')
     print "... done"
 

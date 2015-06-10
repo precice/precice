@@ -2,34 +2,122 @@
 
 #include "EventTimings.hpp"
 
+#include <boost/filesystem.hpp>
+
 #include <fstream>
 #include <sstream>
 
 namespace precice {
 namespace utils {
+
+std::string Publisher::_pdp;
+
+Stack<std::string> Publisher::_dps;
+
 std::string Publisher::_prefix;
 
-Publisher::ScopedPrefix::ScopedPrefix(std::string const& prefix)
-    : _prefix(Publisher::prefix()) {
-  Publisher::setPrefix(prefix);
+Publisher::ScopedSetEventNamePrefix::ScopedSetEventNamePrefix(
+    std::string const& prefix)
+    : _prefix(Publisher::eventNamePrefix()) {
+  Publisher::setEventNamePrefix(prefix);
 }
 
-Publisher::ScopedPrefix::~ScopedPrefix() {
-  Publisher::setPrefix(_prefix);
+Publisher::ScopedSetEventNamePrefix::~ScopedSetEventNamePrefix() {
+  Publisher::setEventNamePrefix(_prefix);
 }
 
-Publisher::ScopedPublication::ScopedPublication(std::string const& filePath,
-                                                std::string const& data)
-    : _filePath(filePath) {
-  Publisher::write(_filePath, data);
+Publisher::ScopedPushDirectory::ScopedPushDirectory(std::string const& dp) {
+  Publisher::pushDirectory(dp);
 }
 
-Publisher::ScopedPublication::~ScopedPublication() {
-  Publisher::remove(_filePath);
+Publisher::ScopedPushDirectory::~ScopedPushDirectory() {
+  Publisher::popDirectory();
+}
+
+Publisher::ScopedChangePrefixDirectory::ScopedChangePrefixDirectory(
+    std::string const& pdp)
+    : _pdp(Publisher::prefixDirectoryPath()) {
+  Publisher::changePrefixDirectory(pdp);
+}
+
+Publisher::ScopedChangePrefixDirectory::~ScopedChangePrefixDirectory() {
+  Publisher::changePrefixDirectory(_pdp);
+}
+
+std::string
+Publisher::parentPath(std::string const& p) {
+  return boost::filesystem::path(p).parent_path().string();
+}
+
+bool
+Publisher::createDirectory(std::string const& dp) {
+  return boost::filesystem::create_directory(dp);
+}
+
+bool
+Publisher::exists(std::string const& p) {
+  return boost::filesystem::exists(p);
+}
+
+bool
+Publisher::remove(std::string const& p) {
+  return boost::filesystem::remove(p);
 }
 
 void
-Publisher::read(std::string const& filePath, std::string& data) {
+Publisher::rename(std::string const& op, std::string const& np) {
+  boost::filesystem::rename(op, np);
+}
+
+bool
+Publisher::pushDirectory(std::string const& dp) {
+  using boost::filesystem::path;
+
+  if (not path(dp).empty()) {
+    _dps.push(dp);
+
+    return true;
+  }
+
+  return false;
+}
+
+bool
+Publisher::popDirectory() {
+  if (not _dps.empty()) {
+    _dps.pop();
+
+    return true;
+  }
+
+  return false;
+}
+
+void
+Publisher::changePrefixDirectory(std::string const& pdp) {
+  _pdp = boost::filesystem::path(pdp).string();
+}
+
+std::string const&
+Publisher::prefixDirectoryPath() {
+  return _pdp;
+}
+
+void
+Publisher::setEventNamePrefix(std::string const& prefix) {
+  _prefix = prefix;
+}
+
+std::string const&
+Publisher::eventNamePrefix() {
+  return _prefix;
+}
+
+Publisher::Publisher(std::string const& fp) : _fp(buildFilePath(fp)) {
+}
+
+void
+Publisher::read(std::string& data) const {
   std::ifstream ifs;
 
   auto beforeReadTimeStamp =
@@ -37,7 +125,7 @@ Publisher::read(std::string const& filePath, std::string& data) {
           Event::Clock::now().time_since_epoch());
 
   do {
-    ifs.open(filePath, std::ifstream::in);
+    ifs.open(filePath(), std::ifstream::in);
   } while (not ifs);
 
   auto afterReadTimeStamp =
@@ -67,20 +155,15 @@ Publisher::read(std::string const& filePath, std::string& data) {
   else
     readDuration = afterReadTimeStamp - beforeReadTimeStamp;
 
-  std::string eventName = _prefix;
-
-  if (not _prefix.empty())
-    eventName += "/";
-
-  eventName += "Publisher::read";
-
-  Event(eventName, readDuration);
+  Event(_prefix + "Publisher::read", readDuration);
 }
 
 void
-Publisher::write(std::string const& filePath, std::string const& data) {
+Publisher::write(std::string const& data) const {
+  createDirectory(parentPath(filePath()));
+
   {
-    std::ofstream ofs(filePath + "~", std::ofstream::out);
+    std::ofstream ofs(filePath() + "~", std::ofstream::out);
 
     auto writeTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
         Event::Clock::now().time_since_epoch());
@@ -88,22 +171,41 @@ Publisher::write(std::string const& filePath, std::string const& data) {
     ofs << writeTimeStamp.count() << "\n" << data;
   }
 
-  std::rename((filePath + "~").c_str(), filePath.c_str());
-}
-
-void
-Publisher::remove(std::string const& filePath) {
-  std::remove(filePath.c_str());
-}
-
-void
-Publisher::setPrefix(std::string const& prefix) {
-  _prefix = prefix;
+  rename(filePath() + "~", filePath());
 }
 
 std::string const&
-Publisher::prefix() {
-  return _prefix;
+Publisher::filePath() const {
+  return _fp;
 }
+
+std::string
+Publisher::buildFilePath(std::string const& fp) {
+  using boost::filesystem::path;
+
+  {
+    path p(fp);
+
+    if (p.is_absolute())
+      return p.string();
+  }
+
+  path p(_pdp);
+
+  if (not _dps.empty())
+    p /= _dps.top();
+
+  p /= fp;
+
+  return p.string();
+}
+
+ScopedPublisher::ScopedPublisher(std::string const& fp) : Publisher(fp) {
+}
+
+ScopedPublisher::~ScopedPublisher() {
+  remove(filePath());
+}
+
 } // namespace utils
 } // namespace precice

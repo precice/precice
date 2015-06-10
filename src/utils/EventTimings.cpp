@@ -243,6 +243,9 @@ void EventRegistry::print(std::string filename, bool terse)
 
 void EventRegistry::printGlobalDuration()
 {
+  if (precice::utils::MasterSlave::_slaveMode)
+    return;
+
   Event::Clock::duration globalDuration = Event::Clock::now() - globalStart;
 
   std::cout << "Global Duration = "

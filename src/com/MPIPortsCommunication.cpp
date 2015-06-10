@@ -15,6 +15,7 @@
 #include <thread>
 
 using precice::utils::Publisher;
+using precice::utils::ScopedPublisher;
 
 namespace precice {
 namespace com {
@@ -78,10 +79,14 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   utils::Parallel::initialize(NULL, NULL, nameAcceptor);
 
   std::string address(_portName);
-  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                              "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                              ".address");
 
-  Publisher::ScopedPublication sp(addressFileName, address);
+  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+  ScopedPublisher p(addressFileName);
+
+  p.write(address);
 
   // std::cout << address << std::endl;
 
@@ -153,10 +158,14 @@ MPIPortsCommunication::acceptConnectionAsServer(
   utils::Parallel::initialize(NULL, NULL, nameAcceptor);
 
   std::string address(_portName);
-  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                              "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                              ".address");
 
-  Publisher::ScopedPublication sp(addressFileName, address);
+  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+  ScopedPublisher p(addressFileName);
+
+  p.write(address);
 
   // std::cout << address << std::endl;
 
@@ -241,10 +250,14 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
   utils::Parallel::initialize(NULL, NULL, nameRequester);
 
   std::string address;
-  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                              "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                              ".address");
 
-  Publisher::read(addressFileName, address);
+  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+  Publisher p(addressFileName);
+
+  p.read(address);
 
   // std::cout << address << std::endl;
 
@@ -282,10 +295,14 @@ MPIPortsCommunication::requestConnectionAsClient(
   utils::Parallel::initialize(NULL, NULL, nameRequester);
 
   std::string address;
-  std::string addressFileName(_addressDirectory + "/" + "." + nameRequester +
-                              "-" + nameAcceptor + ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
+                              ".address");
 
-  Publisher::read(addressFileName, address);
+  Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
+
+  Publisher p(addressFileName);
+
+  p.read(address);
 
   // std::cout << address << std::endl;
 

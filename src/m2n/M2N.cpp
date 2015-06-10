@@ -17,6 +17,9 @@ using precice::utils::Event;
 using precice::utils::Publisher;
 
 namespace precice {
+
+extern bool testMode;
+
 namespace m2n {
 
 tarch::logging::Log M2N::_log("precice::m2n::M2N");
@@ -70,7 +73,9 @@ void M2N:: requestMasterConnection (
   if(not utils::MasterSlave::_slaveMode){
     assertion(_masterCom.use_count()>0);
 
-    Publisher::ScopedPrefix sp("M2N::requestMasterConnection");
+    Publisher::ScopedSetEventNamePrefix ssenp(
+        "M2N::requestMasterConnection"
+        "/");
 
     _masterCom->requestConnection(nameAcceptor, nameRequester, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
@@ -176,6 +181,21 @@ void M2N:: send (
     assertion(_areSlavesConnected);
     assertion(_distComs.find(meshID) != _distComs.end());
     assertion(_distComs[meshID].get() != NULL);
+
+#ifdef M2N_PRE_SYNCHRONIZE
+    if(not precice::testMode){
+      Event e("M2N::send/synchronize", true);
+
+      if(not utils::MasterSlave::_slaveMode){
+        bool ack;
+
+        _masterCom->send(ack, 0);
+        _masterCom->receive(ack, 0);
+        _masterCom->send(ack, 0);
+      }
+    }
+#endif
+
     _distComs[meshID]->send(itemsToSend,size,valueDimension);
   }
   else{//coupling mode
@@ -212,6 +232,21 @@ void M2N:: receive (
     assertion(_areSlavesConnected);
     assertion(_distComs.find(meshID) != _distComs.end());
     assertion(_distComs[meshID].get() != NULL);
+
+#ifdef M2N_PRE_SYNCHRONIZE
+    if(not precice::testMode){
+      Event e("M2N::receive/synchronize", true);
+
+      if(not utils::MasterSlave::_slaveMode){
+        bool ack;
+
+        _masterCom->receive(ack, 0);
+        _masterCom->send(ack, 0);
+        _masterCom->receive(ack, 0);
+      }
+    }
+#endif
+
     _distComs[meshID]->receive(itemsToReceive,size,valueDimension);
   }
   else{//coupling mode

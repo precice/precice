@@ -20,6 +20,9 @@ SocketCommunicationFactory::SocketCommunicationFactory(
     , _reuseAddress(reuseAddress)
     , _networkName(networkName)
     , _addressDirectory(addressDirectory) {
+  if (_addressDirectory.empty()) {
+    _addressDirectory = ".";
+  }
 }
 
 SocketCommunicationFactory::SocketCommunicationFactory(
@@ -31,6 +34,11 @@ Communication::SharedPointer
 SocketCommunicationFactory::newCommunication() {
   return Communication::SharedPointer(new SocketCommunication(
       _portNumber, _reuseAddress, _networkName, _addressDirectory));
+}
+
+std::string
+SocketCommunicationFactory::addressDirectory() {
+  return _addressDirectory;
 }
 }
 } // namespace precice, com

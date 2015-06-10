@@ -43,6 +43,20 @@ template<typename Matrix>
   return result;
 }
 
+template<typename Matrix>
+  typename utils::LazyEnableIf< IsMatrix<Matrix>::value,
+  utils::LazyType<typename MatrixTraits<Matrix>::Scalar>
+>::Type frobeniusNorm (const Matrix& matrix) {
+  typedef tarch::la::MatrixTraits<Matrix> Traits;
+  typename Traits::Scalar result = 0;
+  for (int i=0; i < Traits::rows(matrix); i++) {
+    for (int j=0; j < Traits::cols(matrix); j++) {
+      result += std::abs( Traits::celem(i,j,matrix) )*std::abs( Traits::celem(i,j,matrix) );
+    }
+  }
+  return std::sqrt(result);
+}
+
 
 template<typename Matrix>
   typename utils::EnableIf< IsMatrix<Matrix>::value,

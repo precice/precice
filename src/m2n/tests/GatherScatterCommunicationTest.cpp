@@ -124,6 +124,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
 
   if (utils::Parallel::getProcessRank() == 0){ //Part1
     mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+    m2n->createDistributedCommunication(pMesh);
     m2n->acceptSlavesConnection ( "Part1", "Part2Master");
     utils::DynVector values(numberOfVertices);
     assignList(values) = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;

@@ -103,7 +103,7 @@ void CommunicatedGeometry:: sendMesh(
 
       int numberOfVertices = 0;
       // Vertices of master mesh part do already exist
-      for (int i = 0; i < seed.vertices().size(); i++) {
+      for (size_t i = 0; i < seed.vertices().size(); i++) {
         seed.getVertexDistribution()[0].push_back(numberOfVertices);
         numberOfVertices++;
       }
