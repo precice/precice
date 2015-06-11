@@ -1571,7 +1571,6 @@ void SolverInterfaceTest:: runThreeSolvers
 {
   preciceTrace2("runThreeSolvers", configFilename, expectedCallsOfAdvance);
 
-  typedef utils::Vector2D Vector2D;
   int rank = utils::Parallel::getProcessRank();
   assertion1((rank == 0) || (rank == 1) || (rank == 2), rank);
 
