@@ -92,10 +92,10 @@ public:
      else os << "false";
      return os.str();
    }
-   
+
    virtual double getNormResidual()
    {
-    return _normDiff/_norm; 
+     return _normDiff / ( _norm + std::numeric_limits<double>::epsilon() );
    }
 
 private:

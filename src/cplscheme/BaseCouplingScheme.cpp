@@ -732,7 +732,7 @@ bool BaseCouplingScheme:: measureConvergence()
     sstm << "resNorm(" <<i<< ")";
     _convergenceWriter.writeData(sstm.str(), convMeasure.measure->getNormResidual());
     if(_iterations == 1) {
-      _firstResiduumNorm[i] = convMeasure.measure->getNormResidual(); 
+      _firstResiduumNorm[i] = convMeasure.measure->getNormResidual();
     }
     if (not convMeasure.measure->isConvergence()) {
       //preciceDebug("Local convergence = false");
@@ -762,9 +762,9 @@ void BaseCouplingScheme::initializeTXTWriters()
     _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
     int i = 0;
-    for (ConvergenceMeasure& convMeasure : _convergenceMeasures) 
+    for (ConvergenceMeasure& convMeasure : _convergenceMeasures)
     {
-       std::stringstream sstm; 
+       std::stringstream sstm;
        sstm << "avgConvRate(" <<i<<")";
        _iterationsWriter.addData(sstm.str(), io::TXTTableWriter::DOUBLE);
        i++;
@@ -773,11 +773,11 @@ void BaseCouplingScheme::initializeTXTWriters()
     _convergenceWriter.addData("Timestep", io::TXTTableWriter::INT );
     _convergenceWriter.addData("Iteration", io::TXTTableWriter::INT );
      i = 0;
-    for (ConvergenceMeasure& convMeasure : _convergenceMeasures) 
+    for (ConvergenceMeasure& convMeasure : _convergenceMeasures)
     {
        std::stringstream sstm;
        sstm << "resNorm(" <<i<< ")";
-       _convergenceWriter.addData(sstm.str(), io::TXTTableWriter::DOUBLE);                                                                                                                                                         
+       _convergenceWriter.addData(sstm.str(), io::TXTTableWriter::DOUBLE);
        i++;
     }
   }
@@ -792,7 +792,7 @@ void BaseCouplingScheme::advanceTXTWriters()
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter.writeData("Convergence", converged);
     for (size_t i = 0; i<_convergenceMeasures.size();i++) {
-      double avgConvRate = _convergenceMeasures[i].measure->getNormResidual()/_firstResiduumNorm[i];
+      double avgConvRate = _convergenceMeasures[i].measure->getNormResidual()/( _firstResiduumNorm[i] + std::numeric_limits<double>::epsilon() );
       std::stringstream sstm;
       sstm << "avgConvRate(" <<i<< ")";
       _iterationsWriter.writeData(sstm.str(), std::pow(avgConvRate, 1./(double)_iterations));
