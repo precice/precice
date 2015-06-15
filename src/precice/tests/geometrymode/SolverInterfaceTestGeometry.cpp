@@ -862,8 +862,8 @@ void SolverInterfaceTestGeometry:: testPinelli()
   configureSolverInterface(_pathToTests + "testPinelli.xml", interface);
   validateEquals(interface.getDimensions(), 2);
   int meshIdEOF = interface.getMeshID("EOFMesh");
-  int dataIsEOFVeloc = interface.getDataID("Velocities",meshIdEOF);
-  int dataIsEOFForces = interface.getDataID("Forces",meshIdEOF);
+  int dataIdEOFVeloc = interface.getDataID("Velocities",meshIdEOF);
+  int dataIdEOFForces = interface.getDataID("Forces",meshIdEOF);
 
   using utils::Vector2D;
   std::vector<int> vertexIdsEOF;
@@ -904,7 +904,7 @@ void SolverInterfaceTestGeometry:: testPinelli()
 
   for (int vertexID : vertexIdsEOF){
     double data[2] = {2.0,2.0};
-    interface.writeVectorData(dataIsEOFVeloc,vertexID,data);
+    interface.writeVectorData(dataIdEOFVeloc,vertexID,data);
   }
 
   interface.advance(0.1);
@@ -913,7 +913,7 @@ void SolverInterfaceTestGeometry:: testPinelli()
 
   for (int vertexID : vertexIdsEOF){
     double data[2] = {0.0,0.0};
-    interface.readVectorData(dataIsEOFForces,vertexID,data);
+    interface.readVectorData(dataIdEOFForces,vertexID,data);
     totalForce[0] += data[0];
     totalForce[1] += data[1];
   }

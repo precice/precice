@@ -66,6 +66,7 @@ void SolverInterfaceTest:: run()
       //TODO not working no riemann (benjamin's laptop)
       //testMethod(testBug);
       // testMethod(testNASTINMeshRestart);
+      testMethod(testPinelliCoupled);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -1995,6 +1996,100 @@ void SolverInterfaceTest:: testNASTINMeshRestart()
   }
   precice.finalize();
 }
+
+void SolverInterfaceTest:: testPinelliCoupled()
+{
+  preciceTrace("testPinelliCoupled()");
+
+
+  if (utils::Parallel::getProcessRank() == 0){
+    SolverInterface interface("EOF", 0, 1);
+
+    {
+      std::string filename = "computeForce.py";
+      std::ifstream  src((_pathToTests + filename).c_str(), std::ifstream::in);
+      std::ofstream  dst(filename.c_str(), std::ifstream::out);
+      dst << src.rdbuf();
+    }
+    configureSolverInterface(_pathToTests + "testPinelliCoupled.xml", interface);
+    validateEquals(interface.getDimensions(), 2);
+    int meshIdEOF = interface.getMeshID("EOFMesh");
+    int dataIdEOFVeloc = interface.getDataID("Velocities",meshIdEOF);
+    int dataIdEOFForces = interface.getDataID("Forces",meshIdEOF);
+
+    using utils::Vector2D;
+    std::vector<int> vertexIdsEOF;
+
+    Vector2D position ( 0.15, 0.15 );
+    int vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+    vertexIdsEOF.push_back(vertexId);
+
+    assignList(position) = 0.15, 0.2;
+    vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+    vertexIdsEOF.push_back(vertexId);
+
+    assignList(position) = 0.15, 0.25;
+    vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+    vertexIdsEOF.push_back(vertexId);
+
+    assignList(position) = 0.2, 0.15;
+    vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+    vertexIdsEOF.push_back(vertexId);
+
+    assignList(position) = 0.2, 0.25;
+    vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+    vertexIdsEOF.push_back(vertexId);
+
+    assignList(position) = 0.25, 0.15;
+    vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+    vertexIdsEOF.push_back(vertexId);
+
+    assignList(position) = 0.25, 0.2;
+    vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+    vertexIdsEOF.push_back(vertexId);
+
+    assignList(position) = 0.25, 0.25;
+    vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+    vertexIdsEOF.push_back(vertexId);
+
+    interface.initialize();
+
+    for (int vertexID : vertexIdsEOF){
+      double data[2] = {2.0,2.0};
+      interface.writeVectorData(dataIdEOFVeloc,vertexID,data);
+    }
+
+    interface.advance(0.1);
+
+    Vector2D totalForce ( 0.0, 0.0 );
+
+    for (int vertexID : vertexIdsEOF){
+      double data[2] = {0.0,0.0};
+      interface.readVectorData(dataIdEOFForces,vertexID,data);
+      totalForce[0] += data[0];
+      totalForce[1] += data[1];
+    }
+
+    validateNumericalEquals(totalForce[0]+totalForce[1], 110.0);
+
+    interface.finalize();
+  }
+  else{
+    assertion(utils::Parallel::getProcessRank() == 1);
+    SolverInterface interface("Structure", 0, 1);
+    configureSolverInterface(_pathToTests + "testPinelliCoupled.xml", interface);
+    validateEquals(interface.getDimensions(), 2);
+    int meshID = interface.getMeshID("Geometry");
+    int forcesID = interface.getDataID("Forces",meshID);
+
+    double data[2] = {5.0,5.0};
+    interface.initialize();
+    interface.writeVectorData(forcesID,1,data);  //id 1 is hard coded here, maybe, we should get an interface function for this
+    interface.advance(0.1);
+    interface.finalize();
+  }
+}
+
 
 #endif // defined( not PRECICE_NO_MPI )
 
