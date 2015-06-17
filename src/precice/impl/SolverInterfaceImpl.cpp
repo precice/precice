@@ -698,7 +698,6 @@ int SolverInterfaceImpl:: inquirePosition
     pos = _requestManager->requestInquirePosition(searchPoint, meshIDs);
   }
   else {
-    typedef spacetree::Spacetree Spacetree;
     std::vector<int> markedContexts(_accessor->usedMeshContexts().size());
     selectInquiryMeshIDs(meshIDs, markedContexts);
     for (int i=0; i < (int)markedContexts.size(); i++){
@@ -832,7 +831,6 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
     _requestManager->requestInquireVoxelPosition(center, halflengths, includeBoundaries, meshIDs, pos);
     return pos;
   }
-  typedef spacetree::Spacetree Spacetree;
   query::FindVoxelContent::BoundaryInclusion boundaryInclude;
   boundaryInclude = includeBoundaries
                     ? query::FindVoxelContent::INCLUDE_BOUNDARY
