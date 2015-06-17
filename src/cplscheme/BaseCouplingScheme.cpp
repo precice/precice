@@ -11,6 +11,7 @@
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
+#include "tarch/la/ScalarOperations.h"
 #include <limits>
 #include <sstream>
 
@@ -792,10 +793,15 @@ void BaseCouplingScheme::advanceTXTWriters()
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter.writeData("Convergence", converged);
     for (size_t i = 0; i<_convergenceMeasures.size();i++) {
-      double avgConvRate = _convergenceMeasures[i].measure->getNormResidual()/_firstResiduumNorm[i];
       std::stringstream sstm;
       sstm << "avgConvRate(" <<i<< ")";
-      _iterationsWriter.writeData(sstm.str(), std::pow(avgConvRate, 1./(double)_iterations));
+      if (tarch::la::equals(_firstResiduumNorm[i], 0.))
+      {
+    	  _iterationsWriter.writeData(sstm.str(), std::numeric_limits<double>::infinity());
+      }else{
+		  double avgConvRate = _convergenceMeasures[i].measure->getNormResidual()/_firstResiduumNorm[i];
+		  _iterationsWriter.writeData(sstm.str(), std::pow(avgConvRate, 1./(double)_iterations));
+      }
     }
   }
 }
