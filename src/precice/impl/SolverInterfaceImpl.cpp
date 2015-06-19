@@ -184,6 +184,8 @@ void SolverInterfaceImpl:: configure
                      "configure()", "You cannot use a server and a master.");
   preciceCheck(not (_restartMode && _accessor->useMaster()),"configure()",
                       "To restart while using a master is not yet supported");
+  preciceCheck(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
+                     "configure()", "A parallel participant needs either a master or a server communication configured");
 
   _clientMode = (not _serverMode) && _accessor->useServer();
 
