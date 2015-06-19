@@ -27,6 +27,9 @@ Event::Event(std::string eventName, Clock::duration eventDuration)
 Event::Event(std::string eventName, bool barrier, bool autostart)
     : _barrier(barrier) {
   name = eventName;
+  if (not (precice::utils::MasterSlave::_slaveMode || precice::utils::MasterSlave::_masterMode) ){
+    _barrier = false;
+  }
 
   if (autostart) {
     start(_barrier);
