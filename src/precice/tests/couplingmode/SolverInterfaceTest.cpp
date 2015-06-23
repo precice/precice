@@ -2072,7 +2072,7 @@ void SolverInterfaceTest:: testPinelliCoupled()
       totalForce[1] += data[1];
     }
 
-    validateNumericalEquals(totalForce[0]+totalForce[1], 110.0);
+    validateNumericalEquals(totalForce[0]+totalForce[1], 11.0);
 
     interface.finalize();
   }

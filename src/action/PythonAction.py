@@ -3,11 +3,11 @@ myTargetData = 0
 
 #
 # This function is called first at configured timing. It can be omitted, if not 
-# needed. Its parameters are time, the source data, followed by the target data. 
+# needed. Its parameters are time, (global) timestep size, the source data, followed by the target data. 
 # Source and target data can be omitted (selectively or both) by not mentioning 
 # them in the preCICE XML configuration (see the configuration reference).
 #
-def performAction(time, sourceData, targetData):
+def performAction(time, dt, sourceData, targetData):
     # Usage example 1:
     global mySourceData
     global myTargetData
