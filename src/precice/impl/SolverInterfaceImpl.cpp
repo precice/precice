@@ -988,21 +988,25 @@ void SolverInterfaceImpl:: resetMesh
   int meshID )
 {
   preciceTrace1("resetMesh()", meshID);
-  impl::MeshContext& context = _accessor->meshContext(meshID);
-  bool hasMapping = context.fromMappingContext.mapping.use_count() > 0
-            || context.toMappingContext.mapping.use_count() > 0;
-  bool isStationary =
-        context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
-            context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
+  if (_clientMode){
+    _requestManager->requestResetMesh(meshID);
+  }
+  else {
+    impl::MeshContext& context = _accessor->meshContext(meshID);
+    bool hasMapping = context.fromMappingContext.mapping.use_count() > 0
+              || context.toMappingContext.mapping.use_count() > 0;
+    bool isStationary =
+          context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
+              context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
 
-  preciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
-            << " must not be reseted");
-  preciceCheck(hasMapping, "resetMesh()", "A mesh with no mappings"
+    preciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
               << " must not be reseted");
+    preciceCheck(hasMapping, "resetMesh()", "A mesh with no mappings"
+                << " must not be reseted");
 
-  preciceDebug ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
-  context.mesh->clear ();
-
+    preciceDebug ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
+    context.mesh->clear ();
+  }
 }
 
 int SolverInterfaceImpl:: setMeshVertex
