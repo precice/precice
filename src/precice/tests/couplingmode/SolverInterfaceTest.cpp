@@ -66,7 +66,9 @@ void SolverInterfaceTest:: run()
       //TODO not working no riemann (benjamin's laptop)
       //testMethod(testBug);
       // testMethod(testNASTINMeshRestart);
+#     ifndef PRECICE_NO_PYTHON
       testMethod(testPinelliCoupled);
+#     endif
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }

@@ -1,0 +1,116 @@
+<?xml version="1.0"?>
+
+<precice-configuration>
+
+   <log-filter target="info" component="" switch="on" />
+   <log-filter target="debug" component="" switch="off" />
+<log-filter target="debug" component="precice::impl::SolverInterfaceImpl" switch="off" />
+<log-filter target="debug" component="precice::com::MPIPortsCommunication" switch="on" />
+<log-filter target="debug" component="precice::m2n::GatherScatterCommunication" switch="off" />
+
+    <log-output column-separator=" | " log-time-stamp="no"
+                log-time-stamp-human-readable="no" log-machine-name="no"
+                log-message-type="no" log-trace="yes"/>
+
+   <solver-interface dimensions="3" restart-mode="off" geometry-mode="off">
+
+      <data:scalar name="Density_left"  />
+      <data:scalar name="Momentum_X_left"  />
+      <data:scalar name="Momentum_Y_left"  />
+      <data:scalar name="Momentum_Z_left"  />
+      <data:scalar name="Energy_left"  />
+      <data:scalar name="Density_right"  />
+      <data:scalar name="Momentum_X_right"  />
+      <data:scalar name="Momentum_Y_right"  />
+      <data:scalar name="Momentum_Z_right"  />
+      <data:scalar name="Energy_right"  />
+
+      <mesh name="AcousticSurface_left">
+         <use-data name="Density_left" />
+         <use-data name="Momentum_X_left" />
+         <use-data name="Momentum_Y_left" />
+         <use-data name="Momentum_Z_left" />
+         <use-data name="Energy_left" />
+         <use-data name="Density_right" />
+         <use-data name="Momentum_X_right" />
+         <use-data name="Momentum_Y_right" />
+         <use-data name="Momentum_Z_right" />
+         <use-data name="Energy_right" />
+      </mesh>
+
+      <mesh name="AcousticSurface_right">
+         <use-data name="Density_left" />
+         <use-data name="Momentum_X_left" />
+         <use-data name="Momentum_Y_left" />
+         <use-data name="Momentum_Z_left" />
+         <use-data name="Energy_left" />
+         <use-data name="Density_right" />
+         <use-data name="Momentum_X_right" />
+         <use-data name="Momentum_Y_right" />
+         <use-data name="Momentum_Z_right" />
+         <use-data name="Energy_right" />
+      </mesh>
+
+      <participant name="Ateles_left">
+         <master:mpi-single/>
+         <!--<server:sockets port="512352" network="ib0"/>-->
+         <use-mesh name="AcousticSurface_left" provide="yes"/>
+         <write-data name="Density_left"    mesh="AcousticSurface_left" />
+         <write-data name="Momentum_X_left" mesh="AcousticSurface_left" />
+         <write-data name="Momentum_Y_left" mesh="AcousticSurface_left" />
+         <write-data name="Momentum_Z_left" mesh="AcousticSurface_left" />
+         <write-data name="Energy_left"   mesh="AcousticSurface_left" />
+         <read-data  name="Density_right"    mesh="AcousticSurface_left" />
+         <read-data  name="Momentum_X_right" mesh="AcousticSurface_left" />
+         <read-data  name="Momentum_Y_right" mesh="AcousticSurface_left" />
+         <read-data  name="Momentum_Z_right" mesh="AcousticSurface_left" />
+         <read-data  name="Energy_right"   mesh="AcousticSurface_left" />
+         <!--<export:vtk timestep-interval="1" normals="off" directory="precice_output/"/>-->
+      </participant>
+
+      <participant name="Ateles_right">
+         <master:mpi-single/>
+         <!--<server:sockets port="512351" network="ib0"/>-->
+         <use-mesh name="AcousticSurface_right" provide="yes"/>
+         <use-mesh name="AcousticSurface_left" from="Ateles_left"/>
+         <mapping:nearest-neighbor direction="read" from="AcousticSurface_left"
+                  to="AcousticSurface_right"
+                  constraint="consistent" timing="initial" />
+         <mapping:nearest-neighbor direction="write" from="AcousticSurface_right"
+                  to="AcousticSurface_left"
+                  constraint="conservative" timing="initial" />
+         <read-data  name="Density_left"    mesh="AcousticSurface_right" />
+         <read-data  name="Momentum_X_left" mesh="AcousticSurface_right" />
+         <read-data  name="Momentum_Y_left" mesh="AcousticSurface_right" />
+         <read-data  name="Momentum_Z_left" mesh="AcousticSurface_right" />
+         <read-data  name="Energy_left"   mesh="AcousticSurface_right" />
+         <write-data name="Density_right"    mesh="AcousticSurface_right" />
+         <write-data name="Momentum_X_right" mesh="AcousticSurface_right" />
+         <write-data name="Momentum_Y_right" mesh="AcousticSurface_right" />
+         <write-data name="Momentum_Z_right" mesh="AcousticSurface_right" />
+         <write-data name="Energy_right"   mesh="AcousticSurface_right" />
+         <!--<export:vtk timestep-interval="1" normals="off" directory="precice_output/"/>-->
+      </participant>
+
+      <m2n:mpi distribution-type="gather-scatter" exchange-directory="../" from="Ateles_left" to="Ateles_right"/>
+
+      <coupling-scheme:parallel-explicit>
+         <participants first="Ateles_left" second="Ateles_right" />
+         <max-timesteps value="11" />
+         <timestep-length value="1e-8" />
+         <exchange data="Density_left"     mesh="AcousticSurface_left" from="Ateles_left" to="Ateles_right" initialize="yes"/>
+         <exchange data="Momentum_X_left"  mesh="AcousticSurface_left" from="Ateles_left" to="Ateles_right" initialize="yes"/>
+         <exchange data="Momentum_Y_left"  mesh="AcousticSurface_left" from="Ateles_left" to="Ateles_right" initialize="yes"/>
+         <exchange data="Momentum_Z_left"  mesh="AcousticSurface_left" from="Ateles_left" to="Ateles_right" initialize="yes"/>
+         <exchange data="Energy_left"    mesh="AcousticSurface_left" from="Ateles_left" to="Ateles_right" initialize="yes"/>
+         <exchange data="Density_right"     mesh="AcousticSurface_left" from="Ateles_right" to="Ateles_left"  initialize="yes"/>
+         <exchange data="Momentum_X_right"  mesh="AcousticSurface_left" from="Ateles_right" to="Ateles_left"  initialize="yes" />
+         <exchange data="Momentum_Y_right"  mesh="AcousticSurface_left" from="Ateles_right" to="Ateles_left" initialize="yes" />
+         <exchange data="Momentum_Z_right"  mesh="AcousticSurface_left" from="Ateles_right" to="Ateles_left" initialize="yes" />
+         <exchange data="Energy_right"    mesh="AcousticSurface_left" from="Ateles_right" to="Ateles_left" initialize="yes" />
+      </coupling-scheme:parallel-explicit>
+
+
+   </solver-interface>
+
+</precice-configuration>
