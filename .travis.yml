@@ -1,4 +1,4 @@
-language: c++
+language: cpp
 compiler:
         - g++
 before_install:
@@ -6,7 +6,7 @@ before_install:
         - sudo apt-get install -qq libboost-system-dev libboost-filesystem-dev
 
 script:
-        - scons boost_inst=on petsc=off mpi=off python=off
+        - scons boost_inst=on petsc=off mpi=off python=off compiler=g++-4.8
 
 after_failure:
         - cat config.log
