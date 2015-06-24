@@ -7,7 +7,7 @@ addons:
     sources:
       - ubuntu-toolchain-r-test
     packages:
-      - gcc-4.8
+      - g++-4.8
       - libboost-filesystem-dev
       - libboost-system-dev
 
