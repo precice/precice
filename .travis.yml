@@ -1,0 +1,9 @@
+language: c++
+compiler:
+        - g++
+before_install:
+        - sudo apt-get update -qq
+        - sudo apt-get install -qq libboost-system-dev libboost-filesystem-dev
+
+script:
+        - scons boost_inst=on petsc=off
