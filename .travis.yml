@@ -6,4 +6,4 @@ before_install:
         - sudo apt-get install -qq libboost-system-dev libboost-filesystem-dev
 
 script:
-        - scons boost_inst=on petsc=off
+        - scons boost_inst=on petsc=off mpi=off python=off
