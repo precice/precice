@@ -7,3 +7,6 @@ before_install:
 
 script:
         - scons boost_inst=on petsc=off mpi=off python=off
+
+after_failure:
+        - cat config.log
