@@ -227,18 +227,14 @@ print(std::map<int, std::vector<int>> const& m) {
 }
 
 void
-printStats(std::map<int, std::vector<int>> const& m) {
-  int size = 0;
-
-  forMap(m, [&](int rank, std::vector<int> const& indices) mutable {
-    size += indices.size();
-  });
+printCommunicationPartnerCountStats(std::map<int, std::vector<int>> const& m) {
+  int size = m.size();
 
   if (utils::MasterSlave::_masterMode) {
     size_t count = 0;
     size_t maximum = std::numeric_limits<size_t>::min();
     size_t minimum = std::numeric_limits<size_t>::max();
-    double average = size;
+    size_t total = size;
 
     if (size) {
       maximum = std::max(maximum, static_cast<size_t>(size));
@@ -250,7 +246,7 @@ printStats(std::map<int, std::vector<int>> const& m) {
     for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
       utils::MasterSlave::_communication->receive(size, rank);
 
-      average += size;
+      total += size;
 
       if (size) {
         maximum = std::max(maximum, static_cast<size_t>(size));
@@ -263,11 +259,67 @@ printStats(std::map<int, std::vector<int>> const& m) {
     if (minimum > maximum)
       minimum = maximum;
 
-    average /= count;
+    auto average = static_cast<double>(total) / count;
+
+    std::cout << std::fixed << std::setprecision(3) //
+              << "Number of Communication Partners per Interface Process:"
+              << "\n"
+              << "  Total:   " << total << "\n"
+              << "  Maximum: " << maximum << "\n"
+              << "  Minimum: " << minimum << "\n"
+              << "  Average: " << average << "\n"
+              << "Number of Interface Processes: " << count << "\n"
+              << std::endl;
+  } else {
+    assertion(utils::MasterSlave::_slaveMode);
+
+    utils::MasterSlave::_communication->send(size, 0);
+  }
+}
+
+void
+printLocalIndexCountStats(std::map<int, std::vector<int>> const& m) {
+  int size = 0;
+
+  forMap(m, [&](int rank, std::vector<int> const& indices) mutable {
+    size += indices.size();
+  });
+
+  if (utils::MasterSlave::_masterMode) {
+    size_t count = 0;
+    size_t maximum = std::numeric_limits<size_t>::min();
+    size_t minimum = std::numeric_limits<size_t>::max();
+    size_t total = size;
+
+    if (size) {
+      maximum = std::max(maximum, static_cast<size_t>(size));
+      minimum = std::min(minimum, static_cast<size_t>(size));
+
+      count++;
+    }
+
+    for (int rank = 1; rank < utils::MasterSlave::_size; ++rank) {
+      utils::MasterSlave::_communication->receive(size, rank);
+
+      total += size;
+
+      if (size) {
+        maximum = std::max(maximum, static_cast<size_t>(size));
+        minimum = std::min(minimum, static_cast<size_t>(size));
+
+        count++;
+      }
+    }
+
+    if (minimum > maximum)
+      minimum = maximum;
+
+    auto average = static_cast<double>(total) / count;
 
     std::cout << std::fixed << std::setprecision(3) //
               << "Number of LVDIs per Interface Process:"
               << "\n"
+              << "  Total:   " << total << "\n"
               << "  Maximum: " << maximum << "\n"
               << "  Minimum: " << minimum << "\n"
               << "  Average: " << average << "\n"
@@ -467,7 +519,8 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 // Print statistics of `communicationMap'.
 #ifdef P2P_LCM_PRINT_STATS
   e.stop(true);
-  printStats(communicationMap);
+  printCommunicationPartnerCountStats(communicationMap);
+  printLocalIndexCountStats(communicationMap);
   e.start(true);
 #endif
 
@@ -503,7 +556,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 
   // Accept point-to-point connections (as server) between the current acceptor
   // process (in the current participant) with rank `utils::MasterSlave::_rank'
-  // and (multiple) requester proccesses (in the requester participant).
+  // and (multiple) requester processes (in the requester participant).
   auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
@@ -641,7 +694,8 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 // Print statistics of `communicationMap'.
 #ifdef P2P_LCM_PRINT_STATS
   e.stop(true);
-  printStats(communicationMap);
+  printCommunicationPartnerCountStats(communicationMap);
+  printLocalIndexCountStats(communicationMap);
   e.start(true);
 #endif
 
@@ -680,7 +734,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
   // Request point-to-point connections (as client) between the current
   // requester process (in the current participant) and (multiple) acceptor
-  // proccesses (in the acceptor participant) with ranks `globalAcceptorRank'
+  // processes (in the acceptor participant) with ranks `globalAcceptorRank'
   // according to communication map.
   for (auto& i : communicationMap) {
     auto globalAcceptorRank = i.first;

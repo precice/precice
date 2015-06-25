@@ -197,6 +197,8 @@ void SolverInterfaceImpl:: configure
                      "configure()", "You cannot use a server and a master.");
   preciceCheck(not (_restartMode && _accessor->useMaster()),"configure()",
                       "To restart while using a master is not yet supported");
+  preciceCheck(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
+                     "configure()", "A parallel participant needs either a master or a server communication configured");
 
   _clientMode = (not _serverMode) && _accessor->useServer();
 
@@ -711,7 +713,6 @@ int SolverInterfaceImpl:: inquirePosition
     pos = _requestManager->requestInquirePosition(searchPoint, meshIDs);
   }
   else {
-    typedef spacetree::Spacetree Spacetree;
     std::vector<int> markedContexts(_accessor->usedMeshContexts().size());
     selectInquiryMeshIDs(meshIDs, markedContexts);
     for (int i=0; i < (int)markedContexts.size(); i++){
@@ -845,7 +846,6 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
     _requestManager->requestInquireVoxelPosition(center, halflengths, includeBoundaries, meshIDs, pos);
     return pos;
   }
-  typedef spacetree::Spacetree Spacetree;
   query::FindVoxelContent::BoundaryInclusion boundaryInclude;
   boundaryInclude = includeBoundaries
                     ? query::FindVoxelContent::INCLUDE_BOUNDARY
@@ -1001,21 +1001,25 @@ void SolverInterfaceImpl:: resetMesh
   int meshID )
 {
   preciceTrace1("resetMesh()", meshID);
-  impl::MeshContext& context = _accessor->meshContext(meshID);
-  bool hasMapping = context.fromMappingContext.mapping.use_count() > 0
-            || context.toMappingContext.mapping.use_count() > 0;
-  bool isStationary =
-        context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
-            context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
+  if (_clientMode){
+    _requestManager->requestResetMesh(meshID);
+  }
+  else {
+    impl::MeshContext& context = _accessor->meshContext(meshID);
+    bool hasMapping = context.fromMappingContext.mapping.use_count() > 0
+              || context.toMappingContext.mapping.use_count() > 0;
+    bool isStationary =
+          context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
+              context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
 
-  preciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
-            << " must not be reseted");
-  preciceCheck(hasMapping, "resetMesh()", "A mesh with no mappings"
+    preciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
               << " must not be reseted");
+    preciceCheck(hasMapping, "resetMesh()", "A mesh with no mappings"
+                << " must not be reseted");
 
-  preciceDebug ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
-  context.mesh->clear ();
-
+    preciceDebug ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
+    context.mesh->clear ();
+  }
 }
 
 int SolverInterfaceImpl:: setMeshVertex

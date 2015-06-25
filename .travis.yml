@@ -1,0 +1,36 @@
+language: cpp
+compiler:
+  - gcc
+  - clang
+  
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.8
+      - python-numpy
+      - libopenmpi-dev
+
+env:
+  global:
+    - PRECICE_BOOST_ROOT="$HOME/boost_1_53_0"
+    - CPLUS_INCLUDE_PATH="$HOME/eigen-eigen-bdd17ee3b1b3:$PRECICE_BOOST_ROOT"
+  matrix:
+    - MPI=off
+    - MPI=on
+
+before_install:
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
+  - export OMPI_CXX=$CXX
+  - if [ "$MPI" = "on" ]; then export CXX="mpicxx"; fi
+
+install:
+  - wget http://bitbucket.org/eigen/eigen/get/3.2.5.tar.bz2 -O - | tar xj -C $HOME
+  - wget http://downloads.sourceforge.net/project/boost/boost/1.53.0/boost_1_53_0.tar.bz2 -O - | tar xj -C $HOME
+
+script:
+  - scons -j 2 boost_inst=off petsc=off mpi=$MPI python=on compiler=$CXX
+  
+after_failure:
+  - cat config.log

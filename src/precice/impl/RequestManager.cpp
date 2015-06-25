@@ -112,6 +112,9 @@ void RequestManager:: handleRequests()
     case REQUEST_GET_MESH_VERTEX_SIZE:
       handleRequestGetMeshVertexSize(rankSender);
       break;
+    case REQUEST_RESET_MESH:
+      handleRequestResetMesh(rankSender);
+      break;
     case REQUEST_SET_MESH_VERTICES:
       handleRequestSetMeshVertices(rankSender);
       break;
@@ -362,6 +365,15 @@ int RequestManager:: requestGetMeshVertexSize
   int size = -1;
   _com->receive(size, 0);
   return size;
+}
+
+void RequestManager:: requestResetMesh
+(
+  int meshID )
+{
+  preciceTrace1("requestResetMesh()", meshID);
+  _com->send(REQUEST_RESET_MESH, 0);
+  _com->send(meshID, 0);
 }
 
 void RequestManager:: requestSetMeshVertices
@@ -809,6 +821,16 @@ void RequestManager:: handleRequestGetMeshVertexSize
   _com->receive(meshID, rankSender);
   int size = _interface.getMeshVertexSize(meshID);
   _com->send(size, rankSender);
+}
+
+void RequestManager:: handleRequestResetMesh
+(
+  int rankSender )
+{
+  preciceTrace1("handleRequestResetMesh()", rankSender);
+  int meshID = -1;
+  _com->receive(meshID, rankSender);
+  _interface.resetMesh(meshID);
 }
 
 
