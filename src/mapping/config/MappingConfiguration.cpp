@@ -80,17 +80,16 @@ MappingConfiguration:: MappingConfiguration
   XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
   XMLAttribute<double> attrSupportRadius ( ATTR_SUPPORT_RADIUS );
   XMLAttribute<double> attrSolverRtol ( ATTR_SOLVER_RTOL );
+  attrSolverRtol.setDocumentation("Solver relative tolerance for convergence");
+  attrSolverRtol.setDefaultValue(1e-9);
   XMLAttribute<bool> attrXDead(ATTR_X_DEAD);
-  std::string doc = "If set to true, the x axis will be ignored for the mapping";
-  attrXDead.setDocumentation(doc);
+  attrXDead.setDocumentation("If set to true, the x axis will be ignored for the mapping");
   attrXDead.setDefaultValue(false);
   XMLAttribute<bool> attrYDead(ATTR_Y_DEAD);
-  doc = "If set to true, the y axis will be ignored for the mapping";
-  attrYDead.setDocumentation(doc);
+  attrYDead.setDocumentation("If set to true, the y axis will be ignored for the mapping");
   attrYDead.setDefaultValue(false);
   XMLAttribute<bool> attrZDead(ATTR_Z_DEAD);
-  doc = "If set to true, the z axis will be ignored for the mapping";
-  attrZDead.setDocumentation(doc);
+  attrZDead.setDocumentation("If set to true, the z axis will be ignored for the mapping");
   attrZDead.setDefaultValue(false);
 
 
