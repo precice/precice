@@ -82,6 +82,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
    
   _infostream.open ("postProcessingInfo.txt", std::ios_base::out);
   _infostream << std::setprecision(16);
+  _qrV.setfstream(&_infostream);
 }
 
 
@@ -163,21 +164,9 @@ void BaseQNPostProcessing:: scaling
     for (int i=0; i < size; i++){
       _scaledValues[i+offset] = values[i]/factor;
       _scaledOldValues[i+offset] = oldValues[i]/factor;
-      
-      // debug:
-//      l2norm += _scaledValues[i+offset]*_scaledValues[i+offset];
     }
     offset += size;
-    
-    // debug:
-//    if (id == _dataIDs[0]) oldl2norm = sqrt(l2norm);
-//    preciceDebug(" + l2-Norm = " << sqrt(l2norm) << " of id: " << id);
-//    _scalingStream<<"\n"<<factor<<"	l2Norm: "<<sqrt(l2norm)<<"    of id: "<<id<<std::flush;
   } 
-  // debug:
-//  _scalingStream<<"\n  ratio: "<<(double)oldl2norm/sqrt(l2norm)<<"\n"<<std::flush;
-//  _scalingStream<<"-------------------\n"<<std::flush;
-//  preciceDebug(" + l2-Norm ratio = "<< oldl2norm/sqrt(l2norm));
 }
 
 /* ----------------------------------------------------------------------------
@@ -460,7 +449,7 @@ void BaseQNPostProcessing:: iterationsConverged
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
   // convergence was achieved
-  if(not _timestepsReused == 0)
+  if(not (_timestepsReused == 0))
   {
     scaling(cplData);
     updateDifferenceMatrices(cplData);

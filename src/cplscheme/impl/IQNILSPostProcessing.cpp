@@ -16,6 +16,7 @@
 #include "utils/MasterSlave.hpp"
 #include "QRFactorization.hpp"
 #include "Eigen/Dense"
+#include <sys/unistd.h>
 
 #include "tarch/tests/TestMacros.h"
 
@@ -197,14 +198,25 @@ void IQNILSPostProcessing::computeQNUpdate
       if (_matrixV.cols() > 1){
         for (int i=0; i < _matrixV.cols(); i++){
           if (std::fabs(__R(i,i)) < _singularityLimit){
-            preciceDebug("   Removing linear dependent column " << i);
-	    _infostream<<"removing linear dependent column "<<i<<"\n"<<std::flush;
+        	preciceDebug("   Removing linear dependent column " << i);
+        	_infostream<<"[QR-dec] - removing linear dependent column "<<i<<"\n"<<std::flush;
             linearDependence = true;
             removeMatrixColumn(i);
           }
         }
       }
       if (not linearDependence){
+
+ /*   	  {
+			int i = 0;
+			char hostname[256];
+			gethostname(hostname, sizeof(hostname));
+			printf("PID %d on %s ready for attach\n", getpid(), hostname);
+			fflush(stdout);
+			while (0 == i)
+				sleep(5);
+		  }
+*/
         
 	preciceDebug("   Apply Newton factors");
       
@@ -249,9 +261,12 @@ void IQNILSPostProcessing::computeQNUpdate
 	multiply(__Qt, _residuals, _local_b); 
 	_local_b *= -1.0; // = -Qr
 	
+	assertion1(__c.size() == 0, __c.size());
+    __c.append(_local_b.size(), 0.0);
+
 	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
-	  assertion1(__c.size() == 0, __c.size());
-	  __c.append(_local_b.size(), 0.0);
+	  //assertion1(__c.size() == 0, __c.size());
+	  //__c.append(_local_b.size(), 0.0);
 	  backSubstitution(__R, _local_b, __c);
 	}else{
 	  
@@ -260,17 +275,19 @@ void IQNILSPostProcessing::computeQNUpdate
 	   
 	  if(utils::MasterSlave::_slaveMode){
 	    utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
-	    utils::MasterSlave::_communication->receive(&_global_b(0), _local_b.size(), 0);
+	   // utils::MasterSlave::_communication->receive(&_global_b(0), _local_b.size(), 0);
 	  }
 	  if(utils::MasterSlave::_masterMode){
+
+
 	    _global_b += _local_b;
 	    for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
 	      utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
 	      _global_b += _local_b;
 	    }
 	    
-	    assertion1(__c.size() == 0, __c.size());
-	    __c.append(_global_b.size(), 0.0);
+	    //assertion1(__c.size() == 0, __c.size());
+	    //__c.append(_global_b.size(), 0.0);
 	    backSubstitution(__R, _global_b, __c);
 	  }
 	  
@@ -362,12 +379,13 @@ void IQNILSPostProcessing:: removeMatrixColumn
   int columnIndex)
 {
   assertion(_matrixV.cols() > 1);
+
   // remove column from secondary Data Matrix W
- foreach (int id, _secondaryDataIDs){
-    _secondaryMatricesW[id].remove(columnIndex);
-  }
+  foreach (int id, _secondaryDataIDs){
+     _secondaryMatricesW[id].remove(columnIndex);
+   }
   
-  BaseQNPostProcessing::removeMatrixColumn(columnIndex);
+   BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }
 
 }}} // namespace precice, cplscheme, impl

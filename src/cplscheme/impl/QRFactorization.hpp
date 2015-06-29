@@ -177,11 +177,23 @@ public:
     */
    void popBack();
    
+   /**
+    * @brief returns a matrix representation of the orthogonal matrix Q
+    */
    EigenMatrix& matrixQ();
+
+   /**
+    * @brief returns a matrix representation of the upper triangular matrix R
+    */
    EigenMatrix& matrixR();
    
+   // @brief returns the number of columns in the QR-decomposition
    int cols();
+   // @brief returns the number of rows in the QR-decomposition
    int rows();
+
+   // @brief optional file-stream for logging output
+   void setfstream(std::fstream* stream);
 
 private:
   
@@ -213,6 +225,10 @@ private:
 
   // @brief Logging device.
   static tarch::logging::Log _log;
+
+  // @brief optional infostream that writes information to file
+  std::fstream* _infostream;
+  bool _fstream_set;
 
   EigenMatrix _Q;
   EigenMatrix _R;
