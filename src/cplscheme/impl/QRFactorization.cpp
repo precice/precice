@@ -259,118 +259,123 @@ void QRFactorization::insertColumn(int k, EigenVector& v)
  *   from v to range of Q, r and its corrections are computed in double
  *   precision.
  */
-int QRFactorization::orthogonalize(
-  EigenVector& v, 
-  EigenVector& r, 
-  double& rho,
-  int colNum)
-{
-   bool restart = false;
-   bool null = false;
-   bool termination = false;
-   double rho0 = 0., rho1 = 0.;
-   double t = 0;
-   EigenVector u = EigenVector::Zero(_rows);
-   EigenVector s = EigenVector::Zero(colNum);
-   r = EigenVector::Zero(_cols);
-   rho = v.norm();
-   rho0 = rho;
-   int k = 0;
-   while (!termination)
-   {
-     // take a gram-schmidt iteration, ignoring r on later steps if previous v was null
-     u = EigenVector::Zero(_rows);
-     for(int j=0; j<colNum; j++)
-     {
-       double ss = 0;
-       for(int i=0; i<_rows; i++)
-       {
-         ss = ss + _Q(i,j) * v(i);
-       }
-       t = ss;
-       s(j) = t;
-       for(int i=0; i<_rows; i++)
-       {
-	 u(i) = u(i) + _Q(i,j) * t;
-       }
-     }
-     if(!null)
-     {
-       for(int j=0; j<colNum; j++)
-       {
-	 r(j) = r(j) + s(j);
-       }
-     }
-     for(int i=0; i<_rows; i++)
-     {
-       v(i) = v(i) - u(i);
-     }
-     rho1 = v.norm();
-     t = s.norm();
-     k++;
-     
-     // treat the special case m=n
-     if(_rows == colNum)
-     {
-      v = EigenVector::Zero(_rows);
-      rho = 0.;
-      return 0;
-     }
-     
-     // test for nontermination
-     if(rho0 + _omega * t >= _theta *rho1)
-     {
-       // exit to fail of too many iterations
-       if (k >= 4)
-       {
-         std::cout<<"\ntoo many iterations in orthogonalize, termination failed\n";
-         return -1;
-       }
-       if(!restart && rho1 <= rho*_sigma)
-       {
-	 restart = true;
-	 // find first roee of minimal length of Q
-	 u = EigenVector::Zero(_rows);
-	 for(int j=0; j<colNum; j++)
-	 {
-	   for(int i=0; i<_rows; i++)
-	   {
-	     u(i) = u(i) + _Q(i,j)*_Q(i,j);
-	   }
-	 }
-	 t = 2;
-	 for(int i=0; i<_rows; i++)
-	 {
-	   if(u(i) < t)
-	   {
-	     k = i;
-	     t = u(k);
-	   }
-	 }
-	 
-	 // take correct action if v is null
-	 if(rho1 == 0)
-	 {
-	   null = true;
-	   rho1 = 1;
-	 }
-	 // reinitialize v and k
-	 v = EigenVector::Zero(_rows);
-	 v(k) = rho1;
-	 k = 0;
-       }
-       rho0 = rho1;
-     }else
-     {
-       termination = true;
-     }
-   }
-   
-   // normalize v
-   v /= rho1;
-   rho = null ? 0 : rho1;
-   r(colNum) = rho;
-   return 0;
+int QRFactorization::orthogonalize(EigenVector& v, EigenVector& r, double& rho,
+		int colNum) {
+	bool restart = false;
+	bool null = false;
+	bool termination = false;
+	double rho0 = 0., rho1 = 0.;
+	double t = 0;
+	EigenVector u = EigenVector::Zero(_rows);
+	EigenVector s = EigenVector::Zero(colNum);
+	r = EigenVector::Zero(_cols);
+
+	// rho = norm of new column v that is to be inserted
+	rho = v.norm();
+	rho0 = rho;
+	int k = 0;
+	while (!termination) {
+		// take a gram-schmidt iteration, ignoring r on later steps if previous v was null
+		u = EigenVector::Zero(_rows);
+		for (int j = 0; j < colNum; j++) {
+			double ss = 0;
+			// dot product <_Q(:,j), v> =: r_ij
+			for (int i = 0; i < _rows; i++) {
+				ss = ss + _Q(i, j) * v(i);
+			}
+			t = ss;
+			// save r_ij in s(j) = column of R
+			s(j) = t;
+			// u is the sum of projections r_ij * _Q(i,:) =  _Q(i,:) * <_Q(:,j), v>
+			for (int i = 0; i < _rows; i++) {
+				u(i) = u(i) + _Q(i, j) * t;
+			}
+		}
+		if (!null) {
+			// add over all runs: r_ij = r_ij_prev + r_ij
+			for (int j = 0; j < colNum; j++) {
+				r(j) = r(j) + s(j);
+			}
+		}
+		// subtract projections from v, v is now orthogonal to columns of _Q
+		for (int i = 0; i < _rows; i++) {
+			v(i) = v(i) - u(i);
+		}
+		// rho1 = norm of orthogonalized new column v_tilde (though not normalized)
+		rho1 = v.norm();
+		// t = norm of r_(:,j) with j = colNum-1
+		t = s.norm();
+		k++;
+
+		// treat the special case m=n
+		if (_rows == colNum) {
+			v = EigenVector::Zero(_rows);
+			rho = 0.;
+			return 0;
+		}
+
+		/**   - test for nontermination -
+		 *  rho0 = |v_init|, t = |r_(i,cols-1)|, rho1 = |v_orth|
+		 *  rho1 is small, if the new information incorporated in v is small,
+		 *  i.e., the part of v orthogonal to _Q is small.
+		 *  if rho1 is very small it is possible, that we are adding (more or less)
+		 *  only round-off errors to the decomposition. Later normalization will scale
+		 *  this new information so that it is equally weighted as the columns in Q.
+		 *  To keep a good orthogonality, some effort is done if comparatively little
+		 *  new information is added.
+		 */
+		if (rho0 + _omega * t >= _theta * rho1) {
+			// exit to fail if too many iterations
+			if (k >= 4) {
+				std::cout
+						<< "\ntoo many iterations in orthogonalize, termination failed\n";
+				return -1;
+			}
+			if (!restart && rho1 <= rho * _sigma) {
+				restart = true;
+
+				/**  - find first row of minimal length of Q -
+				 *  the squared l2-norm of each row is computed. Find row of minimal length.
+				 *  Start with a new vector v that is zero except for v(k) = rho1, where
+				 *  k is the index of the row of Q with minimal length.
+				 *  Note: the new information from v is discarded. Q is made orthogonal
+				 *        as good as possible.
+				 */
+				u = EigenVector::Zero(_rows);
+				for (int j = 0; j < colNum; j++) {
+					for (int i = 0; i < _rows; i++) {
+						u(i) = u(i) + _Q(i, j) * _Q(i, j);
+					}
+				}
+				t = 2;
+				for (int i = 0; i < _rows; i++) {
+					if (u(i) < t) {
+						k = i;
+						t = u(k);
+					}
+				}
+
+				// take correct action if v is null
+				if (rho1 == 0) {
+					null = true;
+					rho1 = 1;
+				}
+				// reinitialize v and k
+				v = EigenVector::Zero(_rows);
+				v(k) = rho1;
+				k = 0;
+			}
+			rho0 = rho1;
+		} else {
+			termination = true;
+		}
+	}
+
+	// normalize v
+	v /= rho1;
+	rho = null ? 0 : rho1;
+	r(colNum) = rho;
+	return 0;
 }      
 
    
