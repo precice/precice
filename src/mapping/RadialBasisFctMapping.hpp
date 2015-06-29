@@ -125,7 +125,7 @@ public:
   {
     double result = 0.0;
     if (tarch::la::greater(radius, 0.0)){
-      result = std::log10(radius) * std::pow(radius, 2);
+      result = std::log(radius) * std::pow(radius, 2);
     }
     return result;
   }
