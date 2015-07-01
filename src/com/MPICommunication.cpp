@@ -202,7 +202,6 @@ MPICommunication::receive(std::string& itemToReceive, int rankSender) {
   rankSender = rankSender == ANY_SENDER ? MPI_ANY_SOURCE : rankSender;
   MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
   MPI_Get_count(&status, MPI_CHAR, &length);
-  rankSender = status.MPI_SOURCE;
   preciceDebug("Stringlength = " << length);
   char cstr[length];
   MPI_Recv(cstr,
@@ -230,7 +229,7 @@ MPICommunication::receive(int* itemsToReceive, int size, int rankSender) {
            0,
            communicator(rankSender),
            &status);
-  return status.MPI_SOURCE;
+  return rankSender;
 }
 
 Request::SharedPointer
@@ -265,7 +264,7 @@ MPICommunication::receive(double* itemsToReceive, int size, int rankSender) {
            0,
            communicator(rankSender),
            &status);
-  return status.MPI_SOURCE;
+  return rankSender;
 }
 
 Request::SharedPointer
@@ -301,8 +300,8 @@ MPICommunication::receive(double& itemToReceive, int rankSender) {
            communicator(rankSender),
            &status);
   preciceDebug("Received " << itemToReceive << " from rank "
-                           << status.MPI_SOURCE);
-  return status.MPI_SOURCE;
+                           << rankSender);
+  return rankSender;
 }
 
 Request::SharedPointer
@@ -324,8 +323,8 @@ MPICommunication::receive(int& itemToReceive, int rankSender) {
            communicator(rankSender),
            &status);
   preciceDebug("Received " << itemToReceive << " from rank "
-                           << status.MPI_SOURCE);
-  return status.MPI_SOURCE;
+                           << rankSender);
+  return rankSender;
 }
 
 Request::SharedPointer
@@ -347,8 +346,8 @@ MPICommunication::receive(bool& itemToReceive, int rankSender) {
            communicator(rankSender),
            &status);
   preciceDebug("Received " << itemToReceive << " from rank "
-                           << status.MPI_SOURCE);
-  return status.MPI_SOURCE;
+                           << rankSender);
+  return rankSender;
 }
 
 Request::SharedPointer
