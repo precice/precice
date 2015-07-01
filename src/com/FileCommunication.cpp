@@ -107,6 +107,7 @@ int
 FileCommunication::requestConnectionAsClient(std::string const& nameAcceptor,
                                              std::string const& nameRequester) {
   preciceError("requestConnectionAsClient()", "Not implemented!");
+  return -1;
 }
 
 void FileCommunication:: closeConnection()
@@ -126,7 +127,6 @@ void FileCommunication:: startSendPackage
   preciceTrace ( "startSendPackage()" );
   assertion1 ( _currentPackageRank == -1, _currentPackageRank );
   assertion1 ( rankReceiver >= 0, rankReceiver );
-  assertion ( rankReceiver != ANY_SENDER );
   _currentPackageRank = rankReceiver;
   int sendIndex;
   std::map<int,int>::iterator iter  =_sendIndices.find(rankReceiver);
@@ -164,7 +164,6 @@ int FileCommunication:: startReceivePackage
   preciceTrace ( "startReceivePackage()" );
   assertion1 ( _currentPackageRank == -1, _currentPackageRank );
   assertion1 ( rankSender >= 0, rankSender );
-  assertion ( rankSender != ANY_SENDER );
   _currentPackageRank = rankSender;
   int receiveIndex;
   std::map<int,int>::iterator iter  =_receiveIndices.find(rankSender);
@@ -204,7 +203,6 @@ void FileCommunication:: send
 {
   preciceTrace ( "send(string)" );
   assertion ( _sendFile.is_open() );
-  assertion ( rankReceiver != ANY_SENDER );
   _sendFile.write ( (char*)&TYPE_STRING, sizeof(int) );
   int size = itemToSend.size() + 1;
   _sendFile.write ( (char*)&size, sizeof(int) );
@@ -219,7 +217,6 @@ void FileCommunication:: send
 {
   preciceTrace ( "send(int*)" );
   assertion ( _sendFile.is_open() );
-  assertion ( rankReceiver != ANY_SENDER );
   _sendFile.write ( (char*)&TYPE_INT_VECTOR, sizeof(int) );
   _sendFile.write ( (char*)&size, sizeof(int) );
   _sendFile.write ( (char*)itemsToSend, sizeof(int)*size );
@@ -237,7 +234,6 @@ void FileCommunication:: send (
 {
   preciceTrace ( "send(double*)" );
   assertion ( _sendFile.is_open() );
-  assertion ( rankReceiver != ANY_SENDER );
   _sendFile.write ( (char*)&TYPE_DOUBLE_VECTOR, sizeof(int) );
   _sendFile.write ( (char*)&size, sizeof(int) );
   _sendFile.write ( (char*)itemsToSend, sizeof(double)*size );
@@ -254,7 +250,6 @@ void FileCommunication:: send
   int    rankReceiver )
 {
   assertion ( _sendFile.is_open() );
-  assertion ( rankReceiver != ANY_SENDER );
   _sendFile.write ( (char*)&TYPE_DOUBLE, sizeof(int) );
   _sendFile.write ( (char*)&itemToSend, sizeof(double) );
 }
@@ -270,7 +265,6 @@ void FileCommunication:: send
   int rankReceiver )
 {
   assertion ( _sendFile.is_open() );
-  assertion ( rankReceiver != ANY_SENDER );
   _sendFile.write ( (char*)&TYPE_INT, sizeof(int) );
   _sendFile.write ( (char*)&itemToSend, sizeof(int) );
 }
@@ -286,7 +280,6 @@ void FileCommunication:: send
   int  rankReceiver )
 {
   assertion ( _sendFile.is_open() );
-  assertion ( rankReceiver != ANY_SENDER );
   _sendFile.write ( (char*)&TYPE_BOOL, sizeof(int) );
   _sendFile.write ( (char*)&itemToSend, 1 );
 }
@@ -296,14 +289,13 @@ FileCommunication::aSend(bool* itemToSend, int rankReceiver) {
   preciceError("aSend()", "Not implemented!");
 }
 
-int FileCommunication:: receive
+void FileCommunication:: receive
 (
   std::string& itemToReceive,
   int          rankSender )
 {
   preciceTrace ( "receive(string)" );
   assertion ( _receiveFile.is_open() );
-  assertion ( rankSender != ANY_SENDER );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
   preciceCheck ( type == TYPE_STRING, "receive(string)",
@@ -316,10 +308,9 @@ int FileCommunication:: receive
   _receiveFile.read ( message, size );
   itemToReceive = message;
   delete[] message;
-  return rankSender;
 }
 
-int FileCommunication:: receive
+void FileCommunication:: receive
 (
   int* itemsToReceive,
   int  size,
@@ -327,7 +318,6 @@ int FileCommunication:: receive
 {
   preciceTrace2 ( "receive(int*)", size, rankSender );
   assertion ( _receiveFile.is_open() );
-  assertion ( rankSender != ANY_SENDER );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
   preciceCheck ( type == TYPE_INT_VECTOR, "receive(int*)",
@@ -336,7 +326,6 @@ int FileCommunication:: receive
   _receiveFile.read ( (char*)&writtenSize, sizeof(int) );
   assertion2 ( size == writtenSize, size, writtenSize );
   _receiveFile.read ( (char*)itemsToReceive, sizeof(int)*size );
-  return rankSender;
 }
 
 Request::SharedPointer
@@ -344,7 +333,7 @@ FileCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
   preciceError("aReceive()", "Not implemented!");
 }
 
-int FileCommunication:: receive
+void FileCommunication:: receive
 (
   double* itemsToReceive,
   int     size,
@@ -352,7 +341,6 @@ int FileCommunication:: receive
 {
   preciceTrace2 ( "receive(double*)", size, rankSender );
   assertion ( _receiveFile.is_open() );
-  assertion ( rankSender != ANY_SENDER );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
   preciceCheck ( type == TYPE_DOUBLE_VECTOR, "receive(double*)",
@@ -361,7 +349,6 @@ int FileCommunication:: receive
   _receiveFile.read ( (char*)&writtenSize, sizeof(int) );
   assertion2 ( size == writtenSize, size, writtenSize );
   _receiveFile.read ( (char*)itemsToReceive, sizeof(double)*size );
-  return rankSender;
 }
 
 Request::SharedPointer
@@ -369,20 +356,18 @@ FileCommunication::aReceive(double* itemsToReceive, int size, int rankSender) {
   preciceError("aReceive()", "Not implemented!");
 }
 
-int FileCommunication:: receive
+void FileCommunication:: receive
 (
    double& itemToReceive,
    int     rankSender )
 {
   preciceTrace1 ( "receive(double)", rankSender );
   assertion ( _receiveFile.is_open() );
-  assertion ( rankSender != ANY_SENDER );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
   preciceCheck ( type == TYPE_DOUBLE, "receive(double)",
                  "Receive type is different than double!" );
   _receiveFile.read ( (char*)&itemToReceive, sizeof(double) );
-  return rankSender;
 }
 
 Request::SharedPointer
@@ -390,20 +375,18 @@ FileCommunication::aReceive(double* itemToReceive, int rankSender) {
   preciceError("aReceive()", "Not implemented!");
 }
 
-int FileCommunication:: receive
+void FileCommunication:: receive
 (
   int& itemToReceive,
   int  rankSender )
 {
   preciceTrace1 ( "receive(int)", rankSender );
   assertion ( _receiveFile.is_open() );
-  assertion ( rankSender != ANY_SENDER );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
   preciceCheck ( type == TYPE_INT, "receive(int)",
                  "Receive type is different than int!" );
   _receiveFile.read ( (char*)&itemToReceive, sizeof(int) );
-  return rankSender;
 }
 
 Request::SharedPointer
@@ -411,20 +394,18 @@ FileCommunication::aReceive(int* itemToReceive, int rankSender) {
   preciceError("aReceive()", "Not implemented!");
 }
 
-int FileCommunication:: receive
+void FileCommunication:: receive
 (
   bool& itemToReceive,
   int   rankSender )
 {
   preciceTrace1 ( "receive(bool)", rankSender );
   assertion ( _receiveFile.is_open() );
-  assertion ( rankSender != ANY_SENDER );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
   preciceCheck ( type == TYPE_BOOL, "receive(bool)",
                  "Receive type is different than bool!" );
   _receiveFile.read ( (char*)&itemToReceive, sizeof(bool) );
-  return rankSender;
 }
 
 Request::SharedPointer

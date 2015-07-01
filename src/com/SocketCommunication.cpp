@@ -707,7 +707,7 @@ SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
   return request;
 }
 
-int
+void
 SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
   preciceTrace1("receive(string)", rankSender);
 
@@ -729,11 +729,9 @@ SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(string)", "Receive failed: " << e.what());
   }
-
-  return rankSender;
 }
 
-int
+void
 SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
   preciceTrace2("receive(int*)", size, rankSender);
 
@@ -750,8 +748,6 @@ SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(int*)", "Receive failed: " << e.what());
   }
-
-  return rankSender;
 }
 
 Request::SharedPointer
@@ -780,7 +776,7 @@ SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
   return request;
 }
 
-int
+void
 SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
   preciceTrace2("receive(double*)", size, rankSender);
 
@@ -797,8 +793,6 @@ SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(double*)", "Receive failed: " << e.what());
   }
-
-  return rankSender;
 }
 
 Request::SharedPointer
@@ -829,7 +823,7 @@ SocketCommunication::aReceive(double* itemsToReceive,
   return request;
 }
 
-int
+void
 SocketCommunication::receive(double& itemToReceive, int rankSender) {
   preciceTrace1("receive(double)", rankSender);
 
@@ -846,8 +840,6 @@ SocketCommunication::receive(double& itemToReceive, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(double)", "Receive failed: " << e.what());
   }
-
-  return rankSender;
 }
 
 Request::SharedPointer
@@ -855,7 +847,7 @@ SocketCommunication::aReceive(double* itemToReceive, int rankSender) {
   return aReceive(itemToReceive, 1, rankSender);
 }
 
-int
+void
 SocketCommunication::receive(int& itemToReceive, int rankSender) {
   preciceTrace1("receive(int)", rankSender);
 
@@ -872,8 +864,6 @@ SocketCommunication::receive(int& itemToReceive, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(int)", "Receive failed: " << e.what());
   }
-
-  return rankSender;
 }
 
 Request::SharedPointer
@@ -881,7 +871,7 @@ SocketCommunication::aReceive(int* itemToReceive, int rankSender) {
   return aReceive(itemToReceive, 1, rankSender);
 }
 
-int
+void
 SocketCommunication::receive(bool& itemToReceive, int rankSender) {
   preciceTrace1("receive(bool)", rankSender);
 
@@ -898,8 +888,6 @@ SocketCommunication::receive(bool& itemToReceive, int rankSender) {
   } catch (std::exception& e) {
     preciceError("receive(bool)", "Receive failed: " << e.what());
   }
-
-  return rankSender;
 }
 
 Request::SharedPointer

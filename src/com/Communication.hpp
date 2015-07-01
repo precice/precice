@@ -47,11 +47,6 @@ public:
   using SharedPointer = std::shared_ptr<Communication>;
 
 public:
-  enum {
-    // @brief Can be used instead of specific rankSender number in receive
-    // calls.
-    ANY_SENDER = -1
-  };
 
   Communication() : _rank(-1), _rankOffset(0) {
   }
@@ -210,17 +205,13 @@ public:
 
   /**
    * @brief Receives a std::string from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(std::string& itemToReceive, int rankSender) = 0;
+  virtual void receive(std::string& itemToReceive, int rankSender) = 0;
 
   /**
    * @brief Receives an array of integer values.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(int* itemsToReceive, int size, int rankSender) = 0;
+  virtual void receive(int* itemsToReceive, int size, int rankSender) = 0;
 
   /**
    * @brief Asynchronously receives an array of integer values.
@@ -231,10 +222,8 @@ public:
 
   /**
    * @brief Receives an array of double values.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(double* itemsToReceive, int size, int rankSender) = 0;
+  virtual void receive(double* itemsToReceive, int size, int rankSender) = 0;
 
   /**
    * @brief Asynchronously receives an array of double values.
@@ -245,10 +234,8 @@ public:
 
   /**
    * @brief Receives a double from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(double& itemToReceive, int rankSender) = 0;
+  virtual void receive(double& itemToReceive, int rankSender) = 0;
 
   /**
    * @brief Asynchronously receives a double from process with given rank.
@@ -258,10 +245,8 @@ public:
 
   /**
    * @brief Receives an int from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(int& itemToReceive, int rankSender) = 0;
+  virtual void receive(int& itemToReceive, int rankSender) = 0;
 
   /**
    * @brief Asynchronously receives an int from process with given rank.
@@ -271,10 +256,8 @@ public:
 
   /**
    * @brief Receives a bool from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(bool& itemToReceive, int rankSender) = 0;
+  virtual void receive(bool& itemToReceive, int rankSender) = 0;
 
   /**
    * @brief Asynchronously receives a bool from process with given rank.

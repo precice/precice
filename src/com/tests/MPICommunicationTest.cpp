@@ -43,12 +43,6 @@ MPICommunicationTest::run() {
       Parallel::setGlobalCommunicator(Parallel::getCommunicatorWorld());
     }
   }
-
-  if (utils::Parallel::getCommunicatorSize() > 2) {
-    // TODO:
-    // Not supported anymore!
-    // testMethod( testSendAndReceiveFromAnySender);
-  }
 # endif
 }
 
@@ -120,46 +114,6 @@ MPICommunicationTest::testSendAndReceiveInteger() {
   }
 }
 
-void
-MPICommunicationTest::testSendAndReceiveFromAnySender() {
-  preciceTrace("testSendAndReceiveFromAnySender()");
-  MPIPortsCommunication com;
-  int rank = utils::Parallel::getProcessRank();
-  int rank0 = 0;
-  int rank1 = 1;
-  int rank2 = 2;
-  if (rank == 0) {
-    int msg = 0;
-    com.send(msg, rank2);
-    int sender = com.receive(msg, rank2);
-    validateEquals(sender, rank2);
-    validateEquals(msg, 0);
-    msg = 0;
-    com.send(msg, rank2);
-  } else if (rank == 1) {
-    int msg = -1;
-    int sender = com.receive(msg, rank2);
-    validateEquals(sender, rank2);
-    validateEquals(msg, 1);
-    msg = 1;
-    com.send(msg, rank2);
-  } else if (rank == 2) {
-    int msg = -1;
-    int sender = com.receive(msg, Communication::ANY_SENDER);
-    validateEquals(sender, rank0);
-    validateEquals(msg, 0);
-    msg = 1;
-    com.send(msg, rank1);
-    sender = com.receive(msg, Communication::ANY_SENDER);
-    validateEquals(sender, rank1);
-    validateEquals(msg, 1);
-    msg = 0;
-    com.send(msg, rank0);
-    sender = com.receive(msg, Communication::ANY_SENDER);
-    validateEquals(sender, rank0);
-    validateEquals(msg, 0);
-  }
-}
 
 #endif // not PRECICE_NO_MPI
 }

@@ -163,7 +163,6 @@ MPIDirectCommunication::broadcast(int* itemsToReceive,
                                   int size,
                                   int rankBroadcaster) {
   preciceTrace1("broadcast(int*)", size);
-  assertion(rankBroadcaster != ANY_SENDER);
 
   MPI_Bcast(itemsToReceive, size, MPI_INT, rankBroadcaster, _communicator);
 }
@@ -178,7 +177,6 @@ MPIDirectCommunication::broadcast(int itemToSend) {
 void
 MPIDirectCommunication::broadcast(int& itemToReceive, int rankBroadcaster) {
   preciceTrace("broadcast(int&)");
-  assertion(rankBroadcaster != ANY_SENDER);
 
   broadcast(&itemToReceive, 1, rankBroadcaster);
 }
@@ -195,7 +193,6 @@ MPIDirectCommunication::broadcast(double* itemsToReceive,
                                   int size,
                                   int rankBroadcaster) {
   preciceTrace1("broadcast(double*)", size);
-  assertion(rankBroadcaster != ANY_SENDER);
 
   MPI_Bcast(itemsToReceive, size, MPI_DOUBLE, rankBroadcaster, _communicator);
 }
@@ -210,7 +207,6 @@ MPIDirectCommunication::broadcast(double itemToSend) {
 void
 MPIDirectCommunication::broadcast(double& itemToReceive, int rankBroadcaster) {
   preciceTrace("broadcast(double&)");
-  assertion(rankBroadcaster != ANY_SENDER);
 
   broadcast(&itemToReceive, 1, rankBroadcaster);
 }
@@ -227,7 +223,6 @@ MPIDirectCommunication::broadcast(bool itemToSend) {
 void
 MPIDirectCommunication::broadcast(bool& itemToReceive, int rankBroadcaster) {
   preciceTrace("broadcast(bool&)");
-  assertion(rankBroadcaster != ANY_SENDER);
 
   int item;
 

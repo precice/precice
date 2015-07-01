@@ -162,12 +162,12 @@ public:
   /**
    * @brief Receives a std::string from process with given rank.
    */
-  virtual int receive(std::string& itemToReceive, int rankSender);
+  virtual void receive(std::string& itemToReceive, int rankSender);
 
   /**
    * @brief Receives an array of integer values.
    */
-  virtual int receive(int* itemsToReceive, int size, int rankSender);
+  virtual void receive(int* itemsToReceive, int size, int rankSender);
 
   /**
    * @brief Asynchronously receives an array of integer values.
@@ -179,7 +179,7 @@ public:
   /**
    * @brief Receives an array of double values.
    */
-  virtual int receive(double* itemsToReceive, int size, int rankSender);
+  virtual void receive(double* itemsToReceive, int size, int rankSender);
 
   /**
    * @brief Asynchronously receives an array of double values.
@@ -191,7 +191,7 @@ public:
   /**
    * @brief Receives a double from process with given rank.
    */
-  virtual int receive(double& itemToReceive, int rankSender);
+  virtual void receive(double& itemToReceive, int rankSender);
 
   /**
    * @brief Asynchronously receives a double from process with given rank.
@@ -202,7 +202,7 @@ public:
   /**
    * @brief Receives an int from process with given rank.
    */
-  virtual int receive(int& itemToReceive, int rankSender);
+  virtual void receive(int& itemToReceive, int rankSender);
 
   /**
    * @brief Asynchronously receives an int from process with given rank.
@@ -212,7 +212,7 @@ public:
   /**
    * @brief Receives a bool from process with given rank.
    */
-  virtual int receive(bool& itemToReceive, int rankSender);
+  virtual void receive(bool& itemToReceive, int rankSender);
 
   /**
    * @brief Asynchronously receives a bool from process with given rank.
