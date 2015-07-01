@@ -453,9 +453,10 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param dataID [IN] ID of the data to be written.
-   * @param size [IN] Number of indices, and number of values * dimensions.
-   * @param values [IN] Values of the data to be written.
+   * @param[in] dataID ID of the data to be written.
+   * @param[in] size Number of indices, and number of values * dimensions.
+   * @param[in] valueIndices Indizes of vertices, from SolverInterface::setMeshVertex() e.g.
+   * @param[in] values Values of the data to be written.
    */
   void writeBlockVectorData (
     int     dataID,

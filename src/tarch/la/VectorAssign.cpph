@@ -38,10 +38,8 @@ template<typename RVector>
 >::Type VectorAssign<Vector>::operator= (
   const RVector& toAssign
 ) {
-  typedef VectorTraits<RVector> RTraits;
   assertionEquals( reinterpret_cast<Vector&>(*this).size(), toAssign.size() );
   int size = reinterpret_cast<Vector&>(*this).size(); // Necessary for vectorization
-  typedef typename Traits::Scalar Scalar;
   #ifdef CompilerICC
   #pragma ivdep
   #endif

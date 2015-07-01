@@ -146,6 +146,16 @@ void precicec_getMeshVertices
   impl->getMeshVertices(meshID, size, ids, positions);
 }
 
+void precicec_setMeshVertices
+(
+  int     meshID,
+  int     size,
+  double* positions,
+  int*    ids)
+{
+  assertion(impl != NULL);
+  impl->setMeshVertices(meshID, size, positions, ids );
+}
 
 int precicec_getMeshVertexSize
 (

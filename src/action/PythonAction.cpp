@@ -30,7 +30,7 @@ PythonAction:: PythonAction
   _moduleName(moduleName),
   _targetData(),
   _sourceData(),
-  _numberArguments(1),
+  _numberArguments(2),
   _isInitialized(false),
   _moduleNameObject(NULL),
   _module(NULL),
@@ -78,7 +78,9 @@ void PythonAction:: performAction
   PyObject* dataArgs = PyTuple_New(_numberArguments);
   if (_performAction != NULL){
     PyObject* pythonTime = PyFloat_FromDouble(time);
+    PyObject* pythonDt = PyFloat_FromDouble(fullDt);
     PyTuple_SetItem(dataArgs, 0, pythonTime);
+    PyTuple_SetItem(dataArgs, 1, pythonDt);
     if (_sourceData.use_count() > 0){
       npy_intp sourceDim[] = { _sourceData->values().size() };
       double* sourceValues = tarch::la::raw(_sourceData->values());
@@ -87,7 +89,7 @@ void PythonAction:: performAction
           PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
       preciceCheck(_sourceValues != NULL, "PythonAction()",
                    "Creating python source values failed!");
-      PyTuple_SetItem(dataArgs, 1, _sourceValues);
+      PyTuple_SetItem(dataArgs, 2, _sourceValues);
     }
     if (_targetData.use_count() > 0){
       npy_intp targetDim[] = { _targetData->values().size() };
@@ -97,7 +99,7 @@ void PythonAction:: performAction
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
       preciceCheck(_targetValues != NULL, "PythonAction()",
                    "Creating python target values failed!");
-      int argumentIndex = _sourceData.use_count() > 0 ? 2 : 1;
+      int argumentIndex = _sourceData.use_count() > 0 ? 3 : 2;
       PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
     }
     PyObject_CallObject(_performAction, dataArgs);

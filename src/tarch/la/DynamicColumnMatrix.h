@@ -9,6 +9,7 @@
 #include "tarch/la/MatrixOperations.h"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "tarch/la/MatrixMatrixOperations.h"
+#include "tarch/la/MatrixScalarOperations.h"
 #include "tarch/la/DynamicVector.h"
 #include <deque>
 
@@ -128,6 +129,7 @@ public:
    */
   const Scalar& operator()(int rowIndex, int colIndex) const;
 
+  void printm(const char* filename) const;
 
   // No more methods here? They are all generic free methods now!
 };

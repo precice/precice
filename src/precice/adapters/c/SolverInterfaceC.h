@@ -4,6 +4,8 @@
 #ifndef PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_
 #define PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_
 
+extern "C" {
+
 /**
  * @brief Creates the coupling interface and confiures it.
  *
@@ -96,6 +98,12 @@ void precicec_getMeshVertices (
   int     size,
   int*    ids,
   double* positions );
+
+void precicec_setMeshVertices (
+  int     meshID,
+  int     size,
+  double* positions,
+  int*    ids );
 
 int precicec_getMeshVertexSize ( int meshID );
 
@@ -238,5 +246,7 @@ void precicec_mapReadDataTo ( int toMeshID );
  * @param filenameSuffix [IN] Suffix added to the vtk filename.
  */
 void precicec_exportMesh ( const char* filenameSuffix );
+
+}
 
 #endif /* PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_ */

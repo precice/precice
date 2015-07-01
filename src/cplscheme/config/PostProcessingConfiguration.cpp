@@ -6,6 +6,9 @@
 #include "cplscheme/impl/AitkenPostProcessing.hpp"
 #include "cplscheme/impl/HierarchicalAitkenPostProcessing.hpp"
 #include "cplscheme/impl/IQNILSPostProcessing.hpp"
+#include "cplscheme/impl/MVQNPostProcessing.hpp"
+#include "cplscheme/impl/BroydenPostProcessing.hpp"
+#include <cplscheme/impl/BroydenPostProcessing.hpp>
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -46,6 +49,8 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
   VALUE_IQNILS ("IQN-ILS"),
+  VALUE_MVQN("IQN-IMVJ"),
+  VALUE_BROYDEN("broyden"),
   //_isValid(false),
   _meshConfig(meshConfig),
   _postProcessing(),
@@ -79,6 +84,16 @@ void PostProcessingConfiguration:: connectTags(
     }
     {
       XMLTag tag(*this, VALUE_IQNILS, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
+    {
+      XMLTag tag(*this, VALUE_MVQN, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
+    {
+      XMLTag tag(*this, VALUE_BROYDEN, occ, TAG);
       addTypeSpecificSubtags(tag);
       tags.push_back(tag);
     }
@@ -146,7 +161,7 @@ void PostProcessingConfiguration:: xmlTagCallback
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
     _meshName = callingTag.getStringAttributeValue(ATTR_MESH);
     double scaling = 1.0;
-    if(_config.type == VALUE_IQNILS){
+    if(_config.type == VALUE_IQNILS || _config.type == VALUE_MVQN || _config.type == VALUE_BROYDEN){
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
     }
 
@@ -212,6 +227,20 @@ void PostProcessingConfiguration:: xmlEndTagCallback
     else if (callingTag.getName() == VALUE_IQNILS){
       _postProcessing = impl::PtrPostProcessing (
           new impl::IQNILSPostProcessing(
+          _config.relaxationFactor, _config.maxIterationsUsed,
+          _config.timestepsReused, _config.singularityLimit,
+          _config.dataIDs, _config.scalings) );
+    }
+    else if (callingTag.getName() == VALUE_MVQN){
+      _postProcessing = impl::PtrPostProcessing (
+          new impl::MVQNPostProcessing(
+          _config.relaxationFactor, _config.maxIterationsUsed,
+          _config.timestepsReused, _config.singularityLimit,
+          _config.dataIDs, _config.scalings) );
+    }
+    else if (callingTag.getName() == VALUE_BROYDEN){
+      _postProcessing = impl::PtrPostProcessing (
+          new impl::BroydenPostProcessing(
           _config.relaxationFactor, _config.maxIterationsUsed,
           _config.timestepsReused, _config.singularityLimit,
           _config.dataIDs, _config.scalings) );
@@ -299,6 +328,68 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     attrScaling.setDefaultValue(1.0);
     attrScaling.setDocumentation("If the absolute values of two coupling variables"
          " differ too much, a scaling improves the performance of VIQN");
+    tagData.addAttribute(attrScaling);
+    tagData.addAttribute(attrName);
+    tagData.addAttribute(attrMesh);
+    tag.addSubtag(tagData);
+  }
+  else if (tag.getName() == VALUE_MVQN){
+    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
+    XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
+    tagInitRelax.addAttribute(attrDoubleValue);
+    tag.addSubtag(tagInitRelax);
+
+    XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
+    XMLAttribute<int> attrIntValue(ATTR_VALUE );
+    tagMaxUsedIter.addAttribute(attrIntValue );
+    tag.addSubtag(tagMaxUsedIter );
+
+    XMLTag tagTimestepsReused(*this, TAG_TIMESTEPS_REUSED, XMLTag::OCCUR_ONCE );
+    tagTimestepsReused.addAttribute(attrIntValue );
+    tag.addSubtag(tagTimestepsReused );
+
+    XMLTag tagSingularityLimit(*this, TAG_SINGULARITY_LIMIT, XMLTag::OCCUR_ONCE );
+    tagSingularityLimit.addAttribute(attrDoubleValue );
+    tag.addSubtag(tagSingularityLimit );
+
+    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
+    XMLAttribute<std::string> attrName(ATTR_NAME);
+    XMLAttribute<std::string> attrMesh(ATTR_MESH);
+    XMLAttribute<double> attrScaling(ATTR_SCALING);
+    attrScaling.setDefaultValue(1.0);
+    attrScaling.setDocumentation("If the absolute values of two coupling variables"
+         " differ too much, a scaling improves the performance of MVQN");
+    tagData.addAttribute(attrScaling);
+    tagData.addAttribute(attrName);
+    tagData.addAttribute(attrMesh);
+    tag.addSubtag(tagData);
+  }
+  else if (tag.getName() == VALUE_BROYDEN){
+    XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
+    XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
+    tagInitRelax.addAttribute(attrDoubleValue);
+    tag.addSubtag(tagInitRelax);
+
+    XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
+    XMLAttribute<int> attrIntValue(ATTR_VALUE );
+    tagMaxUsedIter.addAttribute(attrIntValue );
+    tag.addSubtag(tagMaxUsedIter );
+
+    XMLTag tagTimestepsReused(*this, TAG_TIMESTEPS_REUSED, XMLTag::OCCUR_ONCE );
+    tagTimestepsReused.addAttribute(attrIntValue );
+    tag.addSubtag(tagTimestepsReused );
+
+    XMLTag tagSingularityLimit(*this, TAG_SINGULARITY_LIMIT, XMLTag::OCCUR_ONCE );
+    tagSingularityLimit.addAttribute(attrDoubleValue );
+    tag.addSubtag(tagSingularityLimit );
+
+    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
+    XMLAttribute<std::string> attrName(ATTR_NAME);
+    XMLAttribute<std::string> attrMesh(ATTR_MESH);
+    XMLAttribute<double> attrScaling(ATTR_SCALING);
+    attrScaling.setDefaultValue(1.0);
+    attrScaling.setDocumentation("If the absolute values of two coupling variables"
+         " differ too much, a scaling improves the performance of Broyden post-processing.");
     tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);

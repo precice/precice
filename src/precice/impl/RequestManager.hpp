@@ -110,6 +110,11 @@ public:
   int requestGetMeshVertexSize(int meshID);
 
   /**
+   * @brief Requests reset of a preCICE mesh.
+   */
+  void requestResetMesh(int meshID);
+
+  /**
    * @brief Requests set vertex positions from server.
    */
   void requestSetMeshVertices (
@@ -283,6 +288,7 @@ private:
     REQUEST_INQUIRE_VOXEL_POSITION,
     REQUEST_SET_MESH_VERTEX,
     REQUEST_GET_MESH_VERTEX_SIZE,
+    REQUEST_RESET_MESH,
     REQUEST_SET_MESH_VERTICES,
     REQUEST_GET_MESH_VERTICES,
     REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS,
@@ -367,6 +373,11 @@ private:
    * @brief Handles request get mesh vertex size from client.
    */
   void handleRequestGetMeshVertexSize(int rankSender);
+
+  /**
+   * @brief Handles request reset mesh from client.
+   */
+  void handleRequestResetMesh(int rankSender);
 
   /**
    * @brief Handles request set vertex positions from client.
