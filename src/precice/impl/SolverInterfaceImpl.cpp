@@ -582,7 +582,10 @@ void SolverInterfaceImpl:: finalize()
     _accessor->getMasterSlaveCommunication()->closeConnection();
   }
 
-  utils::Parallel::finalize();
+  if(not precice::testMode){
+    utils::Parallel::finalizeMPI();
+  }
+  utils::Parallel::clearGroups();
 }
 
 int SolverInterfaceImpl:: getDimensions() const

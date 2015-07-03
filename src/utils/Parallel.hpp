@@ -40,21 +40,29 @@ public:
   static Communicator getCommunicatorWorld();
 
   /**
-   * @brief Initializes the MPI environment.
+   * @brief Splits and creates a local MPI communicator according to groupName
    *
-   * Splits and creates a local MPI communicator according to groupName
+   * @param[in] groupName MPI group in which the calling process will be put in
+   */
+  static void splitCommunicator (
+    const std::string& groupName );
+
+
+  /**
+   * @brief Initializes the MPI environment.
    *
    * @param[in] argc Parameter count
    * @param[in] argc Parameter values, is passed to MPI_Init and PetscInitialize
-   * @param[in] groupName MPI group in which the calling process will be put in
    */
-  static void initialize (
+  static void initializeMPI (
     int*               argc,
-    char***            argv,
-    const std::string& groupName );
+    char***            argv);
 
   /// Finalizes MPI environment.
-  static void finalize();
+  static void finalizeMPI();
+
+  /// clears groups for communicator splitting
+  static void clearGroups();
 
   /// Returns the global process rank.
   static int getProcessRank();
@@ -130,7 +138,7 @@ private:
 
   static bool _isInitialized;
 
-  static bool _autoInitialized;
+  static bool _isSplit;
 };
 
 

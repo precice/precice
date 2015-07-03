@@ -42,7 +42,7 @@ void ParallelTest:: run ()
         assertion1 ( rank == 2, rank );
         group = "GroupTwo";
       }
-      Par::initialize ( NULL, NULL, group );
+      Par::splitCommunicator( group );
 
       const std::vector<Par::AccessorGroup>& groups = Par::getAccessorGroups();
       validateEquals ( groups.size(), 2 );

@@ -50,10 +50,9 @@ int main ( int argc, char** argv )
 
   using namespace tarch::configuration;
   tarch::logging::Log log("");
-# ifndef PRECICE_NO_MPI
-  MPI_Init(&argc, &argv); // To prevent auto-init/finalization by preCICE
-# endif
-  precice::utils::Parallel::initialize(&argc, &argv, "");
+
+  precice::utils::Parallel::initializeMPI(&argc, &argv);
+
   bool runTests = false;
   bool runServer = false;
   bool runHelp = false;
@@ -160,9 +159,6 @@ int main ( int argc, char** argv )
   else {
     assertion ( false );
   }
-  precice::utils::Parallel::finalize();
-# ifndef PRECICE_NO_MPI
-  MPI_Finalize(); // Reason: see MPI_Init() at beginning of main()
-# endif
+  precice::utils::Parallel::finalizeMPI();
   return 0;
 }

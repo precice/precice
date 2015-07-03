@@ -114,7 +114,7 @@ PointToPointCommunicationTest::test(
 
   switch (Parallel::getProcessRank()) {
   case 0: {
-    Parallel::initialize(NULL, NULL, "A.Master");
+    Parallel::splitCommunicator( "A.Master");
 
     MasterSlave::_rank = 0;
     MasterSlave::_size = 2;
@@ -144,7 +144,7 @@ PointToPointCommunicationTest::test(
     break;
   }
   case 1: {
-    Parallel::initialize(NULL, NULL, "A.Slave");
+    Parallel::splitCommunicator( "A.Slave");
 
     MasterSlave::_rank = 1;
     MasterSlave::_size = 2;
@@ -159,7 +159,7 @@ PointToPointCommunicationTest::test(
     break;
   }
   case 2: {
-    Parallel::initialize(NULL, NULL, "B.Master");
+    Parallel::splitCommunicator( "B.Master");
 
     MasterSlave::_rank = 0;
     MasterSlave::_size = 2;
@@ -189,7 +189,7 @@ PointToPointCommunicationTest::test(
     break;
   }
   case 3: {
-    Parallel::initialize(NULL, NULL, "B.Slave");
+    Parallel::splitCommunicator( "B.Slave");
 
     MasterSlave::_rank = 1;
     MasterSlave::_size = 2;
@@ -232,6 +232,7 @@ PointToPointCommunicationTest::test(
   MasterSlave::_slaveMode = false;
 
   Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
 }
 }
 }

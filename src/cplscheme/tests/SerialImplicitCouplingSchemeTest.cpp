@@ -257,6 +257,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    connect ( "participant0", "participant1", nameLocalParticipant, globalCom );
    runCoupling ( cplScheme, nameLocalParticipant, meshConfig, validIterations );
    globalCom->closeConnection();
+   utils::Parallel::clearGroups();
 }
 
 //void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureAsync ()
@@ -376,6 +377,7 @@ void SerialImplicitCouplingSchemeTest:: testConfiguredAbsConvergenceMeasureSynch
    runCoupling ( *cplSchemeConfig.getCouplingScheme(nameLocalParticipant),
                  nameLocalParticipant, *meshConfig, validIterations );
    m2n->closeConnection();
+   utils::Parallel::clearGroups();
 }
 
 void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronized ()
@@ -442,6 +444,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
    connect ( "participant0", "participant1", nameLocalParticipant, globalCom );
    runCoupling ( cplScheme, nameLocalParticipant, meshConfig, validIterations );
    globalCom->closeConnection();
+   utils::Parallel::clearGroups();
 }
 
 //void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureAsync ()
@@ -771,6 +774,7 @@ void SerialImplicitCouplingSchemeTest::
    runCouplingWithSubcycling (
       cplScheme, nameLocalParticipant, meshConfig, validIterations );
    globalCom->closeConnection();
+   utils::Parallel::clearGroups();
 }
 
 void SerialImplicitCouplingSchemeTest:: testInitializeData()
@@ -880,6 +884,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
     }
   }
   cplScheme.finalize();
+  utils::Parallel::clearGroups();
 }
 
 void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
@@ -1091,7 +1096,7 @@ void SerialImplicitCouplingSchemeTest:: connect
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
-  utils::Parallel::initialize ( NULL, NULL, localParticipant );
+  utils::Parallel::splitCommunicator( localParticipant );
   if ( participant0 == localParticipant ) {
     communication->requestMasterConnection ( participant1, participant0);
   }

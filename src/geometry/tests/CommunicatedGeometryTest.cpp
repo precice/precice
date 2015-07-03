@@ -73,18 +73,18 @@ void CommunicatedGeometryTest:: testScatterMesh ()
   utils::Parallel::synchronizeProcesses();
 
   if (utils::Parallel::getProcessRank() == 0){ //SOLIDZ
-    utils::Parallel::initialize ( NULL, NULL, "SOLIDZ" );
+    utils::Parallel::splitCommunicator( "SOLIDZ" );
     m2n->acceptMasterConnection ( "SOLIDZ", "NASTINMaster");
   }
   else if(utils::Parallel::getProcessRank() == 1){//Master
-    utils::Parallel::initialize ( NULL, NULL, "NASTINMaster" );
+    utils::Parallel::splitCommunicator( "NASTINMaster" );
     m2n->requestMasterConnection ( "SOLIDZ", "NASTINMaster");
   }
   else if(utils::Parallel::getProcessRank() == 2){//Slave1
-    utils::Parallel::initialize ( NULL, NULL, "NASTINSlaves");
+    utils::Parallel::splitCommunicator( "NASTINSlaves");
   }
   else if(utils::Parallel::getProcessRank() == 3){//Slave2
-    utils::Parallel::initialize ( NULL, NULL, "NASTINSlaves");
+    utils::Parallel::splitCommunicator( "NASTINSlaves");
   }
 
   if(utils::Parallel::getProcessRank() == 1){//Master
@@ -230,6 +230,7 @@ void CommunicatedGeometryTest:: testScatterMesh ()
   }
   utils::MasterSlave::_slaveMode = false;
   utils::MasterSlave::_masterMode = false;
+  utils::Parallel::clearGroups();
   utils::Parallel::synchronizeProcesses();
 }
 
@@ -249,18 +250,18 @@ void CommunicatedGeometryTest:: testGatherMesh ()
   utils::Parallel::synchronizeProcesses();
 
   if (utils::Parallel::getProcessRank() == 0){ //NASTIN
-    utils::Parallel::initialize ( NULL, NULL, "NASTIN" );
+    utils::Parallel::splitCommunicator( "NASTIN" );
     m2n->acceptMasterConnection ( "NASTIN", "SOLIDZMaster");
   }
   else if(utils::Parallel::getProcessRank() == 1){//Master
-    utils::Parallel::initialize ( NULL, NULL, "SOLIDZMaster" );
+    utils::Parallel::splitCommunicator( "SOLIDZMaster" );
     m2n->requestMasterConnection ( "NASTIN", "SOLIDZMaster" );
   }
   else if(utils::Parallel::getProcessRank() == 2){//Slave1
-    utils::Parallel::initialize ( NULL, NULL, "SOLIDZSlaves");
+    utils::Parallel::splitCommunicator( "SOLIDZSlaves");
   }
   else if(utils::Parallel::getProcessRank() == 3){//Slave2
-    utils::Parallel::initialize ( NULL, NULL, "SOLIDZSlaves");
+    utils::Parallel::splitCommunicator( "SOLIDZSlaves");
   }
 
   if(utils::Parallel::getProcessRank() == 1){//Master
@@ -337,6 +338,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
   utils::MasterSlave::_slaveMode = false;
   utils::MasterSlave::_masterMode = false;
   utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
 }
 
 
