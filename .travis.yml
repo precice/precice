@@ -31,7 +31,7 @@ before_install:
 install:
   - wget http://bitbucket.org/eigen/eigen/get/3.2.5.tar.bz2 -O - | tar xj -C $HOME
 
-before_sript:
+before_script:
   - mkdir $TRAVIS_BUILD_DIR/tests
 
 script:
