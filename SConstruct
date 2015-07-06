@@ -49,35 +49,6 @@ def checkset_var(varname, default):
         vprint(varname, var, False)
     return var
 
-def guess_omp_flag(compiler):
-    """ Guess the right flag to enable OpenMP, depending on the compiler / MPI wrapper. """
-    if compiler.startswith("g++"):
-        return "-fopenmp"
-    elif compiler.startswith("icc"):
-        return "-openmp"
-    elif compiler.startswith("clang"):
-        print "Clang does not support OpenMP."
-        return ""
-    elif compiler.startswith("mpi"):
-        try:
-            output = subprocess.check_output("%s -show" % compiler, shell=True)
-        except OSError as e:
-            print "Error checking for MPI compiler"
-            print e
-        except subprocess.CalledProcessError as e:
-            print "Error testing for OpenMP flag."
-            print "Command was:", e.cmd, "Output was:", e.output
-        else:
-            return guess_omp_flag(output.split()[0])
-
-def CheckOpenMP(context):
-    """ Encapsulate guess_omp_flag into a scons test. """
-    context.Message("Checking for OpenMP flag... ")
-    result = guess_omp_flag(context.env["compiler"])
-    context.Result(result)
-    context.env.Append(CCFLAGS = [result])
-    context.env.Append(LINKFLAGS = [result])
-
 
 
 ########################################################################## MAIN
@@ -87,7 +58,6 @@ vars = Variables(None, ARGUMENTS)
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
 vars.Add(EnumVariable('build', 'Build type, either release or debug', "debug", allowed_values=('release', 'debug')))
 vars.Add("compiler", "Compiler to use.", "g++")
-vars.Add(BoolVariable("omp", "Enables OpenMP-based parallelization.", False))
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
 vars.Add(BoolVariable("sockets", "Enables Socket-based communication.", True))
 vars.Add(BoolVariable("boost_inst", "Enable if Boost is available compiled and installed.", False))
@@ -99,7 +69,7 @@ vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 
 env = Environment(variables = vars, ENV = os.environ)   # For configuring build variables
 # env = Environment(ENV = os.environ)
-conf = Configure(env, custom_tests= { "CheckOpenMP" : CheckOpenMP}) # For checking libraries, headers, ...
+conf = Configure(env) # For checking libraries, headers, ...
 
 
 Help(vars.GenerateHelpText(env))
@@ -226,12 +196,6 @@ if env["build"] == 'debug':
 elif env["build"] == 'release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
-
-if env["omp"]:
-    conf.CheckOpenMP()
-else:
-    env.Append(CPPDEFINES = ['PRECICE_NO_OMP'])
-    buildpath += "-noomp"
 
 # ===== Petsc =====
 if env["petsc"]:
