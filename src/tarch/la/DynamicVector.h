@@ -179,7 +179,11 @@ public:
   void print() const;
   void printm(const char* filename) const;
 
-  /// Converts to an std::vector
+  /**
+   * @brief Converts to an std::vector
+   *
+   * Be advised that this conversion breaks references.
+   */
   operator std::vector<Scalar>() const;
 
   // No more methods here? They are all generic free methods now!

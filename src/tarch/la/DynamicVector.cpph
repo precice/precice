@@ -65,8 +65,9 @@ DynamicVector<Scalar>::DynamicVector (
 template<typename Scalar>
 DynamicVector<Scalar>::DynamicVector(const std::vector<Scalar> stdvector)
 {
-  std::copy(std::begin(stdvector.data()), std::end(stdvector.data()), std::begin(_values));
   _size = stdvector.size();
+  _values = new Scalar[_size];
+  std::copy(std::begin(stdvector), std::end(stdvector), _values);
 }
 
 template<typename Scalar>
