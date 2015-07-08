@@ -4,6 +4,7 @@
 #include "utils/Globals.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
 #include "tarch/configuration/ConfigurationRegistry.h"
 #include "tarch/configuration/TopLevelConfiguration.h"
 #include "tarch/logging/CommandLineLogger.h"
@@ -52,6 +53,7 @@ int main ( int argc, char** argv )
   tarch::logging::Log log("");
 
   precice::utils::Parallel::initializeMPI(&argc, &argv);
+  precice::utils::Petsc::initialize(&argc, &argv);
 
   bool runTests = false;
   bool runServer = false;
@@ -159,6 +161,8 @@ int main ( int argc, char** argv )
   else {
     assertion ( false );
   }
+  precice::utils::Petsc::finalize();
+  //precice::utils::Parallel::synchronizeProcesses();
   precice::utils::Parallel::finalizeMPI();
   return 0;
 }

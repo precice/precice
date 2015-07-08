@@ -48,6 +48,7 @@
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
 #include "mapping/Mapping.hpp"
 #include <set>
@@ -58,10 +59,6 @@
 #include "boost/tuple/tuple.hpp"
 
 #include <signal.h> // used for installing crash handler
-
-#ifndef PRECICE_NO_PETSC
-#include "petsc.h"
-#endif
 
 using precice::utils::Event;
 using precice::utils::EventRegistry;
@@ -272,16 +269,6 @@ double SolverInterfaceImpl:: initialize()
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "initialize"
       "/");
-
-# ifndef PRECICE_NO_PETSC
-  PetscBool petscIsInitialized;
-  PetscInitialized(&petscIsInitialized);
-  if (not petscIsInitialized) {
-    // Initialize Petsc if it has not already been initialized in Parallel.cpp using the precice executable.
-    // This makes it possible to pass command line arguments that are consumed by Petsc when using the executable.
-    PetscInitializeNoArguments();
-  }
-# endif
 
   if (_clientMode){
     preciceDebug("Request perform initializations");
@@ -583,6 +570,7 @@ void SolverInterfaceImpl:: finalize()
   }
 
   if(not precice::testMode){
+    utils::Petsc::finalize();
     utils::Parallel::finalizeMPI();
   }
   utils::Parallel::clearGroups();

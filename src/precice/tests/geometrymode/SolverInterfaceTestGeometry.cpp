@@ -75,7 +75,6 @@ void SolverInterfaceTestGeometry:: run()
     testMethod(testBug3);
     testMethod(testBug4);
     testMethod(testBug5);
-//    testMethod(testBug6); // no bug actually
     testMethod(testUpdateSpacetree);
     testMethod(testMultipleMeshSpacetree);
     Par::setGlobalCommunicator(Par::getCommunicatorWorld());

@@ -52,7 +52,7 @@ public:
    * @brief Initializes the MPI environment.
    *
    * @param[in] argc Parameter count
-   * @param[in] argc Parameter values, is passed to MPI_Init and PetscInitialize
+   * @param[in] argc Parameter values, is passed to MPI_Init
    */
   static void initializeMPI (
     int*               argc,

@@ -39,7 +39,7 @@
 
 
 #define testNumericalEquals(lhs,rhs) \
-  (std::abs((rhs) -(lhs)) <= 1.0e-10)
+  (std::abs((rhs) -(lhs)) <= 1.0e-9)
 
 
 #define validate(booleanExpr) if (!(booleanExpr)) { \

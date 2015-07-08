@@ -3,9 +3,6 @@
 #include "com/MPIDirectCommunication.hpp"
 #include <map>
 
-#ifndef PRECICE_NO_PETSC
-#include "petsc.h"
-#endif
 
 namespace precice {
 namespace utils {
@@ -47,11 +44,6 @@ void Parallel:: initializeMPI
   _isInitialized = true;
 # endif // not PRECICE_NO_MPI
   
-# ifndef PRECICE_NO_PETSC
-  PetscErrorCode ierr;
-  ierr = PetscInitialize(argc, argv, "", NULL); CHKERRV(ierr);
-# endif
-
 }
 
 void Parallel:: splitCommunicator
@@ -164,9 +156,7 @@ void Parallel:: finalizeMPI()
 # ifndef PRECICE_NO_MPI
   MPI_Finalize();
 # endif // not PRECICE_NO_MPI
-# ifndef PRECICE_NO_PETSC
-  PetscFinalize();
-# endif
+  _isInitialized = false;
 }
 
 void Parallel:: clearGroups()
