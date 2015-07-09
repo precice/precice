@@ -43,7 +43,7 @@ void PreFilterPostFilterDecomposition:: decompose(
 
   preFilter(seed, boundingVertexDistribution);
   _filterByMapping = true;
-  postFilter(seed, boundingVertexDistribution, filteredVertexPositions);
+  postFilter(seed, filteredVertexPositions);
   feedback(seed, boundingVertexDistribution, filteredVertexPositions);
 }
 
@@ -53,7 +53,7 @@ void PreFilterPostFilterDecomposition:: preFilter(
 {
   preciceTrace1 ( "preFilter()", utils::MasterSlave::_rank );
   preciceInfo("preFilter()", "Pre-filter mesh " << seed.getName() );
-  Event e("pre-filter");
+  Event e("pre-filter mesh");
 
   assertion(not _filterByMapping);
 
@@ -106,16 +106,14 @@ void PreFilterPostFilterDecomposition:: preFilter(
 
 void PreFilterPostFilterDecomposition:: postFilter(
   mesh::Mesh& seed,
-  std::map<int,std::vector<int> >& boundingVertexDistribution,
   std::vector<int>& filteredVertexPositions)
 {
   preciceTrace1 ( "postFilter()", utils::MasterSlave::_rank );
   preciceInfo("postFilter()", "Post-filter mesh " << seed.getName() );
-  Event e("post-filter");
+  Event e("post-filter mesh");
 
   seed.computeState();
   computeBoundingMappings();
-  preciceInfo("scatterMesh()", "Filter mesh " << seed.getName() );
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
   filteredVertexPositions = filterMesh(seed, filteredMesh);
   seed.clear();
@@ -164,6 +162,53 @@ bool PreFilterPostFilterDecomposition:: doesVertexContribute(
     }
     return true;
   }
+}
+
+void PreFilterPostFilterDecomposition:: feedback(
+  mesh::Mesh& seed,
+  std::map<int,std::vector<int> >& boundingVertexDistribution,
+  std::vector<int>& filteredVertexPositions)
+{
+  preciceTrace1 ( "feedback()", utils::MasterSlave::_rank );
+  preciceInfo("feedback()", "Feedback mesh " << seed.getName() );
+  Event e("feedback mesh");
+
+  int numberOfVertices = filteredVertexPositions.size();
+
+  if (utils::MasterSlave::_slaveMode) {
+    utils::MasterSlave::_communication->send(numberOfVertices,0);
+    if (numberOfVertices!=0) {
+      utils::MasterSlave::_communication->send(filteredVertexPositions.data(),numberOfVertices,0);
+    }
+  }
+  else { // Master
+    assertion(utils::MasterSlave::_rank==0);
+    assertion(utils::MasterSlave::_size>1);
+
+    //we need to merge the 2 filtering steps, each slave only holds local IDs
+    std::vector<int> globalVertexIDs(numberOfVertices, -1);
+    for (int i=0; i < numberOfVertices; i++) {
+      globalVertexIDs[i] = boundingVertexDistribution[0][filteredVertexPositions[i]];
+    }
+    seed.getVertexDistribution()[0] = globalVertexIDs;
+
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      int numberOfVertices = -1;
+      utils::MasterSlave::_communication->receive(numberOfVertices,rankSlave);
+      std::vector<int> slaveVertexIDs(numberOfVertices,-1);
+      if (numberOfVertices!=0) {
+        utils::MasterSlave::_communication->receive(slaveVertexIDs.data(),numberOfVertices,rankSlave);
+      }
+
+      //we need to merge the 2 filtering steps, each slave only holds local IDs
+      std::vector<int> globalVertexIDs(numberOfVertices,-1);
+      for(int i=0;i<numberOfVertices;i++){
+        globalVertexIDs[i] = boundingVertexDistribution[rankSlave][slaveVertexIDs[i]];
+      }
+      seed.getVertexDistribution()[rankSlave] = globalVertexIDs;
+    }
+  }
+
 }
 
 

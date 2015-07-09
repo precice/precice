@@ -45,6 +45,7 @@
 #include "geometry/CommunicatedGeometry.hpp"
 #include "geometry/impl/Decomposition.hpp"
 #include "geometry/impl/PreFilterPostFilterDecomposition.hpp"
+#include "geometry/impl/BroadcastFilterDecomposition.hpp"
 #include "geometry/SolverGeometry.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
@@ -2003,8 +2004,10 @@ void SolverInterfaceImpl:: configureSolverGeometries
       std::string provider ( context->receiveMeshFrom );
       preciceDebug ( "Receiving mesh from " << provider );
       //TODO get this from config
+//      geometry::impl::PtrDecomposition decomp = geometry::impl::PtrDecomposition(
+//                        new geometry::impl::PreFilterPostFilterDecomposition(_dimensions, context->safetyFactor));
       geometry::impl::PtrDecomposition decomp = geometry::impl::PtrDecomposition(
-                        new geometry::impl::PreFilterPostFilterDecomposition(_dimensions, context->safetyFactor));
+                              new geometry::impl::BroadcastFilterDecomposition(_dimensions));
       geometry::CommunicatedGeometry * comGeo =
           new geometry::CommunicatedGeometry ( offset, receiver, provider, decomp );
       m2n::M2N::SharedPointer m2n = m2nConfig->getM2N ( receiver, provider );

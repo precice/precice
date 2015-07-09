@@ -12,18 +12,17 @@ namespace geometry {
 namespace impl {
 
 /**
- * @brief Decomposes a geometry resp. mesh by applying a pre-filter first (bounding box) on the master
+ * @brief Decomposes a geometry resp. mesh by broadcasting the complete mesh
  * and a post-filter, afterwards, on each slave.
  */
-class PreFilterPostFilterDecomposition : public Decomposition
+class BroadcastFilterDecomposition : public Decomposition
 {
 public:
 
-  PreFilterPostFilterDecomposition (
-    int    dimensions,
-    double safetyFactor);
+  BroadcastFilterDecomposition (
+    int    dimensions);
 
-  virtual ~PreFilterPostFilterDecomposition() {}
+  virtual ~BroadcastFilterDecomposition() {}
 
 private:
 
@@ -33,11 +32,10 @@ private:
   void decompose(
     mesh::Mesh& seed);
 
-  void preFilter(
-    mesh::Mesh& seed,
-    std::map<int,std::vector<int> >& boundingVertexDistribution);
+  void broadcast(
+    mesh::Mesh& seed);
 
-  void postFilter(
+  void filter(
     mesh::Mesh& seed,
     std::vector<int>& filteredVertexPositions);
 
@@ -46,11 +44,7 @@ private:
    */
   void feedback(
     mesh::Mesh& seed,
-    std::map<int,std::vector<int> >& boundingVertexDistribution,
     std::vector<int>& filteredVertexPositions);
-
-
-  void mergeBoundingBoxes(mesh::Mesh::BoundingBox& bb);
 
   /// Returns true if a vertex contributes. If false, the vertex can be erased.
   bool doesVertexContribute(const mesh::Vertex& vertex);
@@ -58,13 +52,6 @@ private:
   /// Logging device.
   static tarch::logging::Log _log;
 
-  mesh::Mesh::BoundingBox _bb;
-
-  double _safetyGap;
-
-  double _safetyFactor;
-
-  bool _filterByMapping;
 };
 
 }}} // namespace precice, geometry, filter

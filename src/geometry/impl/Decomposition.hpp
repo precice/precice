@@ -70,14 +70,6 @@ protected:
 
   std::vector<int> filterMesh(mesh::Mesh& seed, mesh::Mesh& filteredMesh);
 
-  /**
-   * @brief send feedback about decomposition back to master
-   */
-  void feedback(
-      mesh::Mesh& seed,
-      std::map<int,std::vector<int> >& boundingVertexDistribution,
-      std::vector<int>& filteredVertexPositions);
-
   /// Returns true if a vertex contributes. If false, the vertex can be erased.
   virtual bool doesVertexContribute(const mesh::Vertex& vertex)=0;
 

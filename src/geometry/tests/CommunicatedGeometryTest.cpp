@@ -9,6 +9,7 @@
 #include "geometry/CommunicatedGeometry.hpp"
 #include "geometry/impl/Decomposition.hpp"
 #include "geometry/impl/PreFilterPostFilterDecomposition.hpp"
+#include "geometry/impl/BroadcastFilterDecomposition.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Parallel.hpp"
 #include "mapping/SharedPointer.hpp"
@@ -198,7 +199,7 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     pNastinMesh->computeState();
 
     impl::PtrDecomposition decomp1 = impl::PtrDecomposition(
-        new impl::PreFilterPostFilterDecomposition(dimensions, 0.1));
+            new impl::BroadcastFilterDecomposition(dimensions));
     impl::PtrDecomposition decomp2 = impl::PtrDecomposition(
             new impl::PreFilterPostFilterDecomposition(dimensions, 0.1));
 
