@@ -226,19 +226,20 @@ private:
   // @brief Logging device.
   static tarch::logging::Log _log;
 
-  // @brief optional infostream that writes information to file
-  std::fstream* _infostream;
-  bool _fstream_set;
-
   EigenMatrix _Q;
   EigenMatrix _R;
   
-  int _cols;
   int _rows;
+  int _cols;
+
   double _omega;
   double _theta;
   double _sigma;
   
+  // @brief optional infostream that writes information to file
+  std::fstream* _infostream;
+  bool _fstream_set;
+
 };
 
 }}} // namespace precice, cplscheme, impl

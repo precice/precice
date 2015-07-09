@@ -61,8 +61,11 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _matrixWBackup(),
   _matrixColsBackup(),
   //_secondaryMatricesW(),
+  _matrixCols(),
   _infostream(),
-  _matrixCols()
+  its(0),
+  tSteps(0),
+  deletedColumns(0)
 {
    preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "BaseQNPostProcessing()",
@@ -344,6 +347,9 @@ void BaseQNPostProcessing:: performPostProcessing
      
      // compute underrelaxation for the secondary data
      computeUnderrelaxationSecondaryData(cplData);
+
+     // debugging info
+     its++;
  
    }
    else {
@@ -376,6 +382,8 @@ void BaseQNPostProcessing:: performPostProcessing
     _scaledValues += xUpdate;        // = x^k + delta_x
     _scaledValues += _residuals; // = x^k + delta_x + r^k
     
+    // debugging info
+    its++;
     
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
@@ -385,7 +393,7 @@ void BaseQNPostProcessing:: performPostProcessing
       // after the first iteration (no new data, i.e., V = W = 0)
       if(_matrixV.cols() > 0 && _matrixW.cols() > 0)
       {
-	_matrixColsBackup = _matrixCols;
+    	_matrixColsBackup = _matrixCols;
         _matrixVBackup = _matrixV;
         _matrixWBackup = _matrixW;
       }
@@ -420,6 +428,16 @@ void BaseQNPostProcessing:: iterationsConverged
 {
   preciceTrace("iterationsConverged()");
   
+  // debugging info, remove if not needed anymore:
+  // -----------------------
+  _infostream<<"\n ---------------- deletedColumns:"<<deletedColumns
+		     <<"\n\n ### time step:"<<tSteps+1<<" ###"<<std::endl;
+  its = 0;
+  tSteps++;
+  deletedColumns = 0;
+  // -----------------------
+
+
   // writig l2 norm of converged configuration to info stream
   // -----------
   if(_firstTimeStep)
@@ -535,11 +553,19 @@ void BaseQNPostProcessing:: importState(io::TXTReader& reader)
 //  }
 }
 
+int BaseQNPostProcessing::getDeletedColumns()
+{
+	return deletedColumns;
+}
+
 void BaseQNPostProcessing:: removeMatrixColumn
 (
   int columnIndex)
 {
   preciceTrace2("removeMatrixColumn()", columnIndex, _matrixV.cols());
+
+  // debugging information, can be removed
+  deletedColumns++;
 
   // Remove matrix columns
   assertion(_matrixV.cols() > 1);

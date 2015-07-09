@@ -128,10 +128,10 @@ public:
     */
    virtual void importState(io::TXTReader& reader);
    
+   // delete this:
+   virtual int getDeletedColumns();
 
 protected:
-  
-  std::fstream _infostream;
 
    typedef tarch::la::DynamicVector<double> DataValues;
 
@@ -218,6 +218,12 @@ protected:
    // a singular matrix in the QR decomposition can be removed and tracked.
    std::deque<int> _matrixCols;
    
+   std::fstream _infostream;
+
+   // @ brief only debugging info, remove this:
+   int its,tSteps;
+   int deletedColumns;
+
    // @brief updates the V, W matrices (as well as the matrices for the secondary data)
    virtual void updateDifferenceMatrices(DataMap & cplData);
    
