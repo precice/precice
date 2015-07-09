@@ -2003,11 +2003,14 @@ void SolverInterfaceImpl:: configureSolverGeometries
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
       preciceDebug ( "Receiving mesh from " << provider );
-      //TODO get this from config
-//      geometry::impl::PtrDecomposition decomp = geometry::impl::PtrDecomposition(
-//                        new geometry::impl::PreFilterPostFilterDecomposition(_dimensions, context->safetyFactor));
-      geometry::impl::PtrDecomposition decomp = geometry::impl::PtrDecomposition(
-                              new geometry::impl::BroadcastFilterDecomposition(_dimensions));
+      geometry::impl::PtrDecomposition decomp = NULL;
+      if(context->doesPreFiltering){
+        decomp = geometry::impl::PtrDecomposition(
+                          new geometry::impl::PreFilterPostFilterDecomposition(_dimensions, context->safetyFactor));
+      } else {
+        decomp = geometry::impl::PtrDecomposition(
+                                new geometry::impl::BroadcastFilterDecomposition(_dimensions));
+      }
       geometry::CommunicatedGeometry * comGeo =
           new geometry::CommunicatedGeometry ( offset, receiver, provider, decomp );
       m2n::M2N::SharedPointer m2n = m2nConfig->getM2N ( receiver, provider );
