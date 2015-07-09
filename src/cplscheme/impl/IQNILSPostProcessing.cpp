@@ -206,38 +206,8 @@ void IQNILSPostProcessing::computeQNUpdate
         }
       }
       if (not linearDependence){
-
- /*   	  {
-			int i = 0;
-			char hostname[256];
-			gethostname(hostname, sizeof(hostname));
-			printf("PID %d on %s ready for attach\n", getpid(), hostname);
-			fflush(stdout);
-			while (0 == i)
-				sleep(5);
-		  }
-*/
         
 	preciceDebug("   Apply Newton factors");
-      
-        // --------- QN factors with modifiedGramSchmidt ---
-	/*
-        DataMatrix Vcopy(_matrixV);
-        DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
-        DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
-        modifiedGramSchmidt(Vcopy, Q, R);
-
-        DataValues b(Q.cols(), 0.0);
-        multiply(transpose(Q), _residuals, b); // = Qr
-        b *= -1.0; // = -Qr
-        assertion1(c.size() == 0, c.size());
-        c.append(b.size(), 0.0);
-	
-        backSubstitution(R, b, c);
-	
-        DataValues update(_residuals.size(), 0.0);
-	multiply(_matrixW, c, update); // = Wc
-	*/ 
 	
 	// ---------- QN factors with updatedQR -----------
 	Matrix __Qt(_matrixV.cols(), _matrixV.rows(), 0.0);
@@ -265,8 +235,6 @@ void IQNILSPostProcessing::computeQNUpdate
     __c.append(_local_b.size(), 0.0);
 
 	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
-	  //assertion1(__c.size() == 0, __c.size());
-	  //__c.append(_local_b.size(), 0.0);
 	  backSubstitution(__R, _local_b, __c);
 	}else{
 	  
@@ -275,19 +243,13 @@ void IQNILSPostProcessing::computeQNUpdate
 	   
 	  if(utils::MasterSlave::_slaveMode){
 	    utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
-	   // utils::MasterSlave::_communication->receive(&_global_b(0), _local_b.size(), 0);
 	  }
 	  if(utils::MasterSlave::_masterMode){
-
-
 	    _global_b += _local_b;
 	    for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
 	      utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
 	      _global_b += _local_b;
 	    }
-	    
-	    //assertion1(__c.size() == 0, __c.size());
-	    //__c.append(_global_b.size(), 0.0);
 	    backSubstitution(__R, _global_b, __c);
 	  }
 	  
@@ -295,34 +257,6 @@ void IQNILSPostProcessing::computeQNUpdate
 	}
 
 	multiply(_matrixW, __c, xUpdate); 
-
-	
-	// validation of updated QR-dec with modified GramSchmidt decomposition
-	/*
-        bool failed = false;
-        double largestDiff = 0.;
-        double diff = 0., val1 = 0., val2 = 0.;
-	for(int i = 0; i<xUpdate.size(); i++)
-	{
-	  if(!tarch::la::equals(xUpdate(i), update(i), 1e-12))
-	  {
-            failed = true;
-            diff = xUpdate(i) - update(i);
-            if(largestDiff < diff)
-            {
-               largestDiff =  diff;
-               val1 = update(i);
-               val2 = xUpdate(i);
-            }
-	  }
-	}
-        if(failed)
-        {
-           std::cerr<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<std::endl;
-           _infostream<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<"\n"<<std::flush;
-        }
-	// ------------------------------------------------
-	*/
 	
         preciceDebug("c = " << __c);
 	_infostream<<"c = "<<__c<<"\n"<<std::flush;
