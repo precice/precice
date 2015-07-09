@@ -3,7 +3,8 @@
 sources = [
    Glob('*.cpp'),
    Glob('config/*.cpp'),
-   Glob('tests/*.cpp')
+   Glob('tests/*.cpp'),
+   Glob('impl/*.cpp')
    ]   
     
 Return ('sources')

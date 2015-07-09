@@ -43,6 +43,8 @@
 #include "geometry/Geometry.hpp"
 #include "geometry/ImportGeometry.hpp"
 #include "geometry/CommunicatedGeometry.hpp"
+#include "geometry/impl/Decomposition.hpp"
+#include "geometry/impl/PreFilterPostFilterDecomposition.hpp"
 #include "geometry/SolverGeometry.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
@@ -1960,7 +1962,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
             std::string provider ( _accessorName );
 
             if(!addedReceiver){
-              comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider,_dimensions);
+              comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider,NULL);
               context->geometry = geometry::PtrGeometry ( comGeo );
             }
             else{
@@ -2000,9 +2002,11 @@ void SolverInterfaceImpl:: configureSolverGeometries
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
       preciceDebug ( "Receiving mesh from " << provider );
+      //TODO get this from config
+      geometry::impl::PtrDecomposition decomp = geometry::impl::PtrDecomposition(
+                        new geometry::impl::PreFilterPostFilterDecomposition(_dimensions, context->safetyFactor));
       geometry::CommunicatedGeometry * comGeo =
-          new geometry::CommunicatedGeometry ( offset, receiver, provider, _dimensions );
-      comGeo->setSafetyFactor(context->safetyFactor);
+          new geometry::CommunicatedGeometry ( offset, receiver, provider, decomp );
       m2n::M2N::SharedPointer m2n = m2nConfig->getM2N ( receiver, provider );
       comGeo->addReceiver ( receiver, m2n );
       m2n->createDistributedCommunication(context->mesh);
@@ -2011,8 +2015,8 @@ void SolverInterfaceImpl:: configureSolverGeometries
                      << "the geometry of mesh \"" << context->mesh->getName()
                      << " in addition to a defined geometry!" );
       if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-        comGeo->setBoundingFromMapping(context->fromMappingContext.mapping);
-        comGeo->setBoundingToMapping(context->toMappingContext.mapping);
+        decomp->setBoundingFromMapping(context->fromMappingContext.mapping);
+        decomp->setBoundingToMapping(context->toMappingContext.mapping);
       }
       context->geometry = geometry::PtrGeometry ( comGeo );
     }
