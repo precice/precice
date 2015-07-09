@@ -43,9 +43,7 @@ BroydenPostProcessing:: BroydenPostProcessing
   _invJacobian(),
   _oldInvJacobian(),
   _maxColumns(maxIterationsUsed),
-  _currentColumns(0),
-  k(0),
-  t(0)
+  _currentColumns(0)
 //  _matrixWriter("jacobain.m")
 {}
 
@@ -117,7 +115,7 @@ void BroydenPostProcessing::updateDifferenceMatrices
    * This case happended in the open foam example beamInCrossFlow.
    */ 
   if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
-    k++;
+    //k++;
     //_currentColumns++;
     
     // Perform underrelaxation with initial relaxation factor for secondary data
@@ -133,7 +131,7 @@ void BroydenPostProcessing::updateDifferenceMatrices
   }
   else {
     if (not _firstIteration){
-      k++;
+      //k++;
       _currentColumns++;
     }
   }
@@ -300,9 +298,9 @@ void BroydenPostProcessing:: specializedIterationsConverged
   
   // --------------------------------------------------------------------
   
-  k = 0;
+ // k = 0;
   _currentColumns = 0;
-  t++;
+ // t++;
   // store inverse Jacobian
 //  _matrixWriter.write(_invJacobian);
   _oldInvJacobian = _invJacobian;

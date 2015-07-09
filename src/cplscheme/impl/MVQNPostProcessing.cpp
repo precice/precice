@@ -42,9 +42,7 @@ MVQNPostProcessing:: MVQNPostProcessing
 		       singularityLimit, dataIDs, scalings),
 //  _secondaryOldXTildes(),
   _invJacobian(),
-  _oldInvJacobian(),
-  k(0),
-  t(0)
+  _oldInvJacobian()
 {}
 
 
@@ -115,7 +113,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
    * This case happended in the open foam example beamInCrossFlow.
    */ 
   if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
-    k++;
+    //k++;
     // Perform underrelaxation with initial relaxation factor for secondary data
 //     foreach (int id, _secondaryDataIDs){
 //       PtrCouplingData data = cplData[id];
@@ -129,7 +127,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
   }
   else {
     if (not _firstIteration){
-      k++;
+      //k++;
     }
   }
   
@@ -154,38 +152,6 @@ void MVQNPostProcessing::computeQNUpdate
     
     // computes xUpdate using updatedQR decompositon (does not modify _invJacobian)
     computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate);
-
-    
-    // -------- validation of updated QR-dec with gramSchmidt QR-dec ---- 
-    /*
-    // computes xUpdate using modifiedGramSchmidt QR-dec
-    DataValues xUpdate2(xUpdate.size(),0.0);
-    computeNewtonFactorsQRDecomposition(cplData,xUpdate2);
-
-    // validation
-    bool failed = false;
-    double largestDiff = 0.;
-    double diff = 0., val1 = 0., val2 = 0.;
-    for(int i = 0; i<xUpdate.size(); i++)
-    {
-      if(!tarch::la::equals(xUpdate(i), xUpdate2(i), 1e-12))
-      {
-        failed = true;
-        diff = xUpdate(i) - xUpdate2(i);
-        if(largestDiff < diff)
-        {
-           largestDiff =  diff;
-           val1 = xUpdate(i);
-           val2 = xUpdate2(i);
-        }
-      }
-     }
-     if(failed)
-     {
-        std::cerr<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val2<<"\n  - updatedQR: "<<val1<<"\n  - (max-)diff: "<<largestDiff<<std::endl;                                                           
-        _infostream<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val2<<"\n  - updatedQR: "<<val1<<"\n  - (max-)diff: "<<largestDiff<<"\n"<<std::flush;                                                 
-     }
-   */
 }
 
 
@@ -202,60 +168,57 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
   DataMatrix v;
   bool linearDependence = true;
   
-  while (linearDependence)
-  {
-    linearDependence = false;
-    v.clear();
-    
-    Matrix __R(_matrixV.cols(), _matrixV.cols(), 0.0);
-    auto r = _qrV.matrixR();
-    for(int i = 0; i<r.rows(); i++)
-      for(int j = 0; j<r.cols(); j++)
-      {
-	__R(i,j) = r(i,j);
-      }
+  while (linearDependence) {
+		linearDependence = false;
+		v.clear();
 
-    if (_matrixV.cols() > 1){
-      for (int i=0; i < _matrixV.cols(); i++){
-	if (std::fabs(__R(i,i)) < _singularityLimit){
-	  preciceDebug("   Removing linear dependent column " << i);
-	  _infostream<<"(updatedQR) removing linear dependent column "<<i<<"  time step: "<<t<<" iteration: "<<k<<"\n"<<std::flush;
-	  linearDependence = true;
-	  removeMatrixColumn(i);
+		Matrix __R(_matrixV.cols(), _matrixV.cols(), 0.0);
+		auto r = _qrV.matrixR();
+		for (int i = 0; i < r.rows(); i++)
+			for (int j = 0; j < r.cols(); j++) {
+				__R(i, j) = r(i, j);
+			}
+
+		if (_matrixV.cols() > 1) {
+			for (int i = 0; i < _matrixV.cols(); i++) {
+				if (std::fabs(__R(i, i)) < _singularityLimit) {
+					preciceDebug("   Removing linear dependent column " << i);
+					_infostream
+							<< "(updatedQR) removing linear dependent column "
+							<< i << "  time step: " << tSteps << " iteration: " << its
+							<< "\n" << std::flush;
+					linearDependence = true;
+					removeMatrixColumn(i);
+				}
+			}
+		}
+		if (not linearDependence) {
+			Matrix __Q(_matrixV.rows(), _matrixV.cols(), 0.0);
+
+			DataValues __ytmpVec(_matrixV.cols(), 0.0);
+			DataValues __matrixQRow;
+			auto q = _qrV.matrixQ();
+			for (int i = 0; i < q.rows(); i++)
+				for (int j = 0; j < q.cols(); j++) {
+					__Q(i, j) = q(i, j);
+				}
+
+			r = _qrV.matrixR();
+			for (int i = 0; i < r.rows(); i++)
+				for (int j = 0; j < r.cols(); j++) {
+					__R(i, j) = r(i, j);
+				}
+			for (int i = 0; i < __Q.rows(); i++) {
+				for (int j = 0; j < __Q.cols(); j++) {
+					__matrixQRow.append(__Q(i, j));
+				}
+
+				backSubstitution(__R, __matrixQRow, __ytmpVec);
+				v.append(__ytmpVec);
+				__matrixQRow.clear();
+			}
+		}
 	}
-      }
-    }
-    if(not linearDependence)
-    {
-      Matrix __Q(_matrixV.rows(), _matrixV.cols(), 0.0);
-      
-      DataValues __ytmpVec(_matrixV.cols(), 0.0);
-      DataValues __matrixQRow;
-      auto q = _qrV.matrixQ();
-      for(int i = 0; i<q.rows(); i++)
-	for(int j = 0; j<q.cols(); j++)
-	{
-	  __Q(i,j) = q(i,j);
-	}
-      
-      r = _qrV.matrixR();
-      for(int i = 0; i<r.rows(); i++)
-        for(int j = 0; j<r.cols(); j++)
-        {
-          __R(i,j) = r(i,j);
-        }
-      for(int i = 0; i < __Q.rows(); i++)
-      {
-	for(int j=0; j < __Q.cols(); j++){
-	  __matrixQRow.append(__Q(i,j));
-	}
-	
-	backSubstitution(__R, __matrixQRow, __ytmpVec);
-	v.append(__ytmpVec);  
-	__matrixQRow.clear();
-      }
-    }
-  }
 
 
   // tmpMatrix = J_inv_n*V
@@ -293,41 +256,42 @@ void MVQNPostProcessing::computeNewtonFactorsQRDecomposition
   
   DataMatrix v;
   bool linearDependence = true;
-  while (linearDependence){
-    linearDependence = false;
-    v.clear();
-    
-    DataMatrix Vcopy(_matrixV);
-    DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
-    DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
- 
-    modifiedGramSchmidt(Vcopy, Q, R);
-    
-    if (_matrixV.cols() > 1){
-      for (int i=0; i < _matrixV.cols(); i++){
-	if (std::fabs(R(i,i)) < _singularityLimit){
-	  preciceDebug("   Removing linear dependent column " << i);
-	  _infostream<<"(modifiedGramSchmidt) removing linear dependent column "<<i<<"  time step: "<<t<<" iteration: "<<k<<"\n"<<std::flush;
-	  linearDependence = true;
-	  removeMatrixColumn(i);
+	while (linearDependence) {
+		linearDependence = false;
+		v.clear();
+
+		DataMatrix Vcopy(_matrixV);
+		DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
+		DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
+
+		modifiedGramSchmidt(Vcopy, Q, R);
+
+		if (_matrixV.cols() > 1) {
+			for (int i = 0; i < _matrixV.cols(); i++) {
+				if (std::fabs(R(i, i)) < _singularityLimit) {
+					preciceDebug("   Removing linear dependent column " << i);
+					_infostream
+							<< "(modifiedGramSchmidt) removing linear dependent column "
+							<< i << "  time step: " << tSteps << " iteration: " << its
+							<< "\n" << std::flush;
+					linearDependence = true;
+					removeMatrixColumn(i);
+				}
+			}
+		}
+		if (not linearDependence) {
+			DataValues ytmpVec(_matrixV.cols(), 0.0);
+			DataValues _matrixQRow;
+			for (int i = 0; i < Q.rows(); i++) {
+				for (int j = 0; j < Q.cols(); j++) {
+					_matrixQRow.append(Q(i, j));
+				}
+				backSubstitution(R, _matrixQRow, ytmpVec);
+				v.append(ytmpVec);
+				_matrixQRow.clear();
+			}
+		}
 	}
-      }
-    }
-    if(not linearDependence)
-    {
-      DataValues ytmpVec(_matrixV.cols(), 0.0);
-      DataValues _matrixQRow;
-      for(int i = 0; i < Q.rows(); i++)
-      {
-	for(int j=0; j < Q.cols(); j++){
-	_matrixQRow.append(Q(i,j));
-        }
-	backSubstitution(R, _matrixQRow, ytmpVec);
-	v.append(ytmpVec);  
-        _matrixQRow.clear();
-      }
-    }
-  }
 
   // tmpMatrix = J_inv_n*V
   Matrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
@@ -421,8 +385,8 @@ void MVQNPostProcessing:: specializedIterationsConverged
 {
   
   
-  k = 0;
-  t++;
+  //k = 0;
+  //t++;
   // store inverse Jacobian
 //  _matrixWriter.write(_invJacobian);
   _oldInvJacobian = _invJacobian;
