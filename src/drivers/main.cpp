@@ -163,6 +163,8 @@ int main ( int argc, char** argv )
   }
   precice::utils::Petsc::finalize();
   //precice::utils::Parallel::synchronizeProcesses();
+  //std::cout << "close: " << precice::utils::Parallel::getProcessRank() << std::endl;
   precice::utils::Parallel::finalizeMPI();
+  //std::cout << "done" << std::endl;
   return 0;
 }

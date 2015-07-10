@@ -118,6 +118,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
 {
+  preciceTrace("~SolverInterfaceImpl()");
   if (_requestManager != NULL){
     delete _requestManager;
   }
