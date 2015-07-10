@@ -50,16 +50,18 @@ void BroadcastFilterDecomposition:: broadcast(
 
 
   if (utils::MasterSlave::_slaveMode) {
-    com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh (seed, 0);
+    //com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh (seed, 0);
+    com::CommunicateMesh(utils::MasterSlave::_communication).broadcastReceiveMesh (seed);
   }
   else{ // Master
     assertion(utils::MasterSlave::_rank==0);
     assertion(utils::MasterSlave::_size>1);
     seed.setGlobalNumberOfVertices(seed.vertices().size());
 
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-      com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( seed, rankSlave );
-    }
+//    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+//      com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh ( seed, rankSlave );
+//    }
+    com::CommunicateMesh(utils::MasterSlave::_communication).broadcastSendMesh ( seed);
   }
 }
 
