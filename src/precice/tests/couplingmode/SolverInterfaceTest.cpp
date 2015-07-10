@@ -1359,9 +1359,9 @@ void SolverInterfaceTest:: testDistributedCommunications()
     mesh::Mesh::resetGeometryIDsGlobally();
 
     std::string solverName;
-    int rank, size;
+    int rank = -1, size = -1;
     std::string meshName;
-    int i1,i2; //indices for data and positions
+    int i1 = -1 ,i2 = -1; //indices for data and positions
 
     std::vector<utils::DynVector> positions;
     std::vector<utils::DynVector> data;
@@ -1384,7 +1384,6 @@ void SolverInterfaceTest:: testDistributedCommunications()
       datum[2] = 1.0;
       expectedData.push_back(datum);
     }
-
 
     if (utils::Parallel::getProcessRank() == 0){
       solverName = "Fluid";

@@ -22,7 +22,9 @@ template<typename LVector, typename RVector>
   const RVector& rVector
 ) {
   typedef VectorTraits<LVector> LTraits;
-  typedef VectorTraits<RVector> RTraits;
+  #ifdef Debug
+    typedef VectorTraits<RVector> RTraits;
+  #endif
   assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
   int size = LTraits::size(lVector); // Necessary for vectorization
   #ifdef CompilerICC
