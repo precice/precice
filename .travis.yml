@@ -31,8 +31,13 @@ before_install:
 install:
   - wget http://bitbucket.org/eigen/eigen/get/3.2.5.tar.bz2 -O - | tar xj -C $HOME
 
+before_script:
+  - mkdir $TRAVIS_BUILD_DIR/tests
+
 script:
   - scons -j 2 boost_inst=on petsc=off mpi=$MPI python=on compiler=$CXX
+  - cd tests
+  - if [ "$MPI" = "off" ]; then ../build/last/binprecice test ../test-config.xml ../src; fi
   
 after_failure:
   - cat config.log

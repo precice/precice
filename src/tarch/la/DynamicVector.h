@@ -76,6 +76,9 @@ public:
     const VECTOR& toCopy,
     typename utils::EnableIf< IsVector<VECTOR>::value,void*>::Type = NULL );
 
+  /// Converts from a std::vector
+  DynamicVector(const std::vector<Scalar> stdvector);
+
   /**
    * Destructor, frees resources.
    */
@@ -175,6 +178,13 @@ public:
 
   void print() const;
   void printm(const char* filename) const;
+
+  /**
+   * @brief Converts to an std::vector
+   *
+   * Be advised that this conversion breaks references.
+   */
+  operator std::vector<Scalar>() const;
 
   // No more methods here? They are all generic free methods now!
 };

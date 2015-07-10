@@ -90,7 +90,8 @@ void Participant:: useMesh
   bool                                   remote,
   const std::string&                     fromParticipant,
   double                                 safetyFactor,
-  bool                                   provideMesh )
+  bool                                   provideMesh,
+  bool                                   doesPreFiltering)
 {
   preciceTrace3 ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
   checkDuplicatedUse(mesh);
@@ -105,6 +106,7 @@ void Participant:: useMesh
   context->receiveMeshFrom = fromParticipant;
   context->safetyFactor = safetyFactor;
   context->provideMesh = provideMesh;
+  context->doesPreFiltering = doesPreFiltering;
 
 //  if ( spacetree.use_count() > 0 ) {
 //    spacetree->setCenter ( spacetree->getCenter() + localOffset );

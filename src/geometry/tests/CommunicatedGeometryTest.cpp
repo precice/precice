@@ -7,6 +7,9 @@
 #include "geometry/Geometry.hpp"
 #include "geometry/SharedPointer.hpp"
 #include "geometry/CommunicatedGeometry.hpp"
+#include "geometry/impl/Decomposition.hpp"
+#include "geometry/impl/PreFilterPostFilterDecomposition.hpp"
+#include "geometry/impl/BroadcastFilterDecomposition.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Parallel.hpp"
 #include "mapping/SharedPointer.hpp"
@@ -108,8 +111,8 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     utils::MasterSlave::_masterMode = false;
     mesh::PtrMesh pSolidzMesh1(new mesh::Mesh("SolidzMesh1", dimensions, flipNormals));
     mesh::PtrMesh pSolidzMesh2(new mesh::Mesh("SolidzMesh2", dimensions, flipNormals));
-    CommunicatedGeometry geo1( offset, "SOLIDZ", "SOLIDZ", dimensions);
-    CommunicatedGeometry geo2( offset, "SOLIDZ", "SOLIDZ", dimensions);
+    CommunicatedGeometry geo1( offset, "SOLIDZ", "SOLIDZ", NULL);
+    CommunicatedGeometry geo2( offset, "SOLIDZ", "SOLIDZ", NULL);
     geo1.addReceiver("NASTINMaster",m2n);
     geo2.addReceiver("NASTINMaster",m2n);
 
@@ -194,16 +197,20 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     }
 
     pNastinMesh->computeState();
-    CommunicatedGeometry geo1( offset, "NASTINMaster", "SOLIDZ", dimensions);
-    CommunicatedGeometry geo2( offset, "NASTINMaster", "SOLIDZ", dimensions);
-    geo1.setBoundingFromMapping(boundingFromMapping1);
-    geo1.setBoundingToMapping(boundingToMapping1);
-    geo2.setBoundingFromMapping(boundingFromMapping2);
-    geo2.setBoundingToMapping(boundingToMapping2);
+
+    impl::PtrDecomposition decomp1 = impl::PtrDecomposition(
+            new impl::BroadcastFilterDecomposition(dimensions));
+    impl::PtrDecomposition decomp2 = impl::PtrDecomposition(
+            new impl::PreFilterPostFilterDecomposition(dimensions, 0.1));
+
+    CommunicatedGeometry geo1( offset, "NASTINMaster", "SOLIDZ", decomp1);
+    CommunicatedGeometry geo2( offset, "NASTINMaster", "SOLIDZ", decomp2);
+    decomp1->setBoundingFromMapping(boundingFromMapping1);
+    decomp1->setBoundingToMapping(boundingToMapping1);
+    decomp2->setBoundingFromMapping(boundingFromMapping2);
+    decomp2->setBoundingToMapping(boundingToMapping2);
     geo1.addReceiver("NASTINMaster", m2n);
     geo2.addReceiver("NASTINMaster", m2n);
-    geo1.setSafetyFactor(0.1);
-    geo2.setSafetyFactor(0.1);
     geo1.create(*pSolidzMesh1);
     geo2.create(*pSolidzMesh2);
 
@@ -284,9 +291,8 @@ void CommunicatedGeometryTest:: testGatherMesh ()
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
-    CommunicatedGeometry geo( offset, "NASTIN", "SOLIDZMaster", dimensions);
+    CommunicatedGeometry geo( offset, "NASTIN", "SOLIDZMaster", NULL);
     geo.addReceiver("NASTIN",m2n);
-    geo.setSafetyFactor(0.1);
     geo.create(*pSolidzMesh);
     validate(pSolidzMesh->vertices().size()==6);
     validate(pSolidzMesh->edges().size()==4);
@@ -331,7 +337,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
       pSolidzMesh->createEdge(v5,v6);
     }
 
-    CommunicatedGeometry geo( offset, "SOLIDZMaster", "SOLIDZMaster", dimensions);
+    CommunicatedGeometry geo( offset, "SOLIDZMaster", "SOLIDZMaster", NULL);
     geo.addReceiver("NASTIN", m2n);
     geo.create(*pSolidzMesh);
   }

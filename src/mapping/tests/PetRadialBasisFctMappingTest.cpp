@@ -455,14 +455,14 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 1.5);
+  validateNumericalEqualsWithEps(value, 1.5, tolerance );
 
   vertex.setCoords(Vector3D(0.0, 1.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
-  validateNumericalEquals(value, 1.5);
+  validateNumericalEqualsWithEps(value, 1.5, tolerance);
 
   vertex.setCoords(Vector3D(1.0, 1.0, 0.5));
   mapping.computeMapping();

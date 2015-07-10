@@ -16,6 +16,7 @@
 #include "utils/MasterSlave.hpp"
 #include "QRFactorization.hpp"
 #include "Eigen/Dense"
+#include <sys/unistd.h>
 
 #include "tarch/tests/TestMacros.h"
 
@@ -197,8 +198,8 @@ void IQNILSPostProcessing::computeQNUpdate
       if (_matrixV.cols() > 1){
         for (int i=0; i < _matrixV.cols(); i++){
           if (std::fabs(__R(i,i)) < _singularityLimit){
-            preciceDebug("   Removing linear dependent column " << i);
-	    _infostream<<"removing linear dependent column "<<i<<"\n"<<std::flush;
+        	preciceDebug("   Removing linear dependent column " << i);
+        	_infostream<<"[QR-dec] - removing linear dependent column "<<i<<"\n"<<std::flush;
             linearDependence = true;
             removeMatrixColumn(i);
           }
@@ -207,25 +208,6 @@ void IQNILSPostProcessing::computeQNUpdate
       if (not linearDependence){
         
 	preciceDebug("   Apply Newton factors");
-      
-        // --------- QN factors with modifiedGramSchmidt ---
-	/*
-        DataMatrix Vcopy(_matrixV);
-        DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
-        DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
-        modifiedGramSchmidt(Vcopy, Q, R);
-
-        DataValues b(Q.cols(), 0.0);
-        multiply(transpose(Q), _residuals, b); // = Qr
-        b *= -1.0; // = -Qr
-        assertion1(c.size() == 0, c.size());
-        c.append(b.size(), 0.0);
-	
-        backSubstitution(R, b, c);
-	
-        DataValues update(_residuals.size(), 0.0);
-	multiply(_matrixW, c, update); // = Wc
-	*/ 
 	
 	// ---------- QN factors with updatedQR -----------
 	Matrix __Qt(_matrixV.cols(), _matrixV.rows(), 0.0);
@@ -243,44 +225,41 @@ void IQNILSPostProcessing::computeQNUpdate
 	    __R(i,j) = r(i,j);
 	  }
 	  
-	DataValues __b(__Qt.rows(), 0.0);
-        multiply(__Qt, _residuals, __b); 
-        __b *= -1.0; // = -Qr
-        assertion1(__c.size() == 0, __c.size());
-        __c.append(__b.size(), 0.0);
-        backSubstitution(__R, __b, __c);
+	DataValues _local_b(__Qt.rows(), 0.0);
+	DataValues _global_b(__Qt.rows(), 0.0);
+
+	multiply(__Qt, _residuals, _local_b); 
+	_local_b *= -1.0; // = -Qr
+	
+	assertion1(__c.size() == 0, __c.size());
+    __c.append(_local_b.size(), 0.0);
+
+	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+	  backSubstitution(__R, _local_b, __c);
+	}else{
+	  
+	   assertion(utils::MasterSlave::_communication.get() != NULL);
+	   assertion(utils::MasterSlave::_communication->isConnected());
+	   
+	  if(utils::MasterSlave::_slaveMode){
+	    utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
+	  }
+	  if(utils::MasterSlave::_masterMode){
+	    _global_b += _local_b;
+	    for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
+	      utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
+	      _global_b += _local_b;
+	    }
+	    backSubstitution(__R, _global_b, __c);
+	  }
+	  
+	  utils::MasterSlave::broadcast(&__c(0), __c.size());
+	}
 
 	multiply(_matrixW, __c, xUpdate); 
-
-	
-	// validation of updated QR-dec with modified GramSchmidt decomposition
-	/*
-        bool failed = false;
-        double largestDiff = 0.;
-        double diff = 0., val1 = 0., val2 = 0.;
-	for(int i = 0; i<xUpdate.size(); i++)
-	{
-	  if(!tarch::la::equals(xUpdate(i), update(i), 1e-12))
-	  {
-            failed = true;
-            diff = xUpdate(i) - update(i);
-            if(largestDiff < diff)
-            {
-               largestDiff =  diff;
-               val1 = update(i);
-               val2 = xUpdate(i);
-            }
-	  }
-	}
-        if(failed)
-        {
-           std::cerr<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<std::endl;
-           _infostream<<"validation failed for xUpdate.\n  - modifiedGramSchmidt: "<<val1<<"\n  - updatedQR: "<<val2<<"\n  - (max-)diff: "<<largestDiff<<"\n"<<std::flush;
-        }
-	// ------------------------------------------------
-	*/
 	
         preciceDebug("c = " << __c);
+	_infostream<<"c = "<<__c<<"\n"<<std::flush;
       }
     }
     
@@ -334,12 +313,13 @@ void IQNILSPostProcessing:: removeMatrixColumn
   int columnIndex)
 {
   assertion(_matrixV.cols() > 1);
+
   // remove column from secondary Data Matrix W
- foreach (int id, _secondaryDataIDs){
-    _secondaryMatricesW[id].remove(columnIndex);
-  }
+  foreach (int id, _secondaryDataIDs){
+     _secondaryMatricesW[id].remove(columnIndex);
+   }
   
-  BaseQNPostProcessing::removeMatrixColumn(columnIndex);
+   BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }
 
 }}} // namespace precice, cplscheme, impl

@@ -58,6 +58,8 @@ private:
 
   void testVectorConversion();
 
+  void testStdVector();
+
 public:
 
   /**
