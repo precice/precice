@@ -310,7 +310,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	  Matrix diagBlock(_matrixV.rows(),_matrixV.rows(), 0.0);
 	  multiply(tmpMatrix, Z, diagBlock);
 	  // set block at corresponding row-index on proc
-	  int off = offsets[utils::MasterSlave::_rank];
+	  int off = _dimOffsets[utils::MasterSlave::_rank];
 	  assertion2(_invJacobian.cols() == diagBlock.cols(), _invJacobian.cols(), diagBlock.cols());
 	  for(int q = 0; q < diagBlock.rows(); q++)
 		  for(int p = 0; p < _invJacobian.cols(); p++)
@@ -322,11 +322,14 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  // cyclic send-receive operation
 		  int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
 		  int prevProc = (utils::MasterSlave::_rank -1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank -1;
-		  int rows_rcv = (prevProc > 0) ? offsets[prevProc] - offsets[prevProc-1] : offsets[0];
+		  int rows_rcv = (prevProc > 0) ? _dimOffsets[prevProc] - _dimOffsets[prevProc-1] : _dimOffsets[0];
 		  Matrix Wtil_rcv(rows_rcv, tmpMatrix.cols(),0.0);
 
-		  utils::MasterSlave::_communication->send(&tmpMatrix(0,0), tmpMatrix.rows(), tmpMatrix.cols(), nextProc); //TODO: implementation
-		  utils::MasterSlave::_communication->receive(&Wtil_rcv(0,0), rows_rcv, tmpMatrix.cols(), prevProc);
+		  //utils::MasterSlave::_communication->send(&tmpMatrix(0,0), tmpMatrix.rows(), tmpMatrix.cols(), nextProc); //TODO: implementation
+		  //utils::MasterSlave::_communication->receive(&Wtil_rcv(0,0), rows_rcv, tmpMatrix.cols(), prevProc);
+
+		  utils::MasterSlave::_communication->send(&tmpMatrix(0,0), tmpMatrix.size(), nextProc); // dim: n_local x cols
+		  utils::MasterSlave::_communication->receive(&Wtil_rcv(0,0), rows_rcv * tmpMatrix.cols(), prevProc); // dim: rows_rcv x cols
 
 		  // compute block with new local data
 		  Matrix block(rows_rcv, Z.cols(), 0.0);
@@ -335,7 +338,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  // the row-offset of the current block is determined by the proc that sends the part of the W_til matrix
 		  // note: the direction and ordering of the cyclic sending operation is chosen s.t. the computed block is
 		  //       local on the current processor (in J_inv).
-		  off = offsets[prevProc];
+		  off = _dimOffsets[prevProc];
 		  assertion2(_invJacobian.cols() == block.cols(), _invJacobian.cols(), block.cols());
 		  for(int q = 0; q < block.rows(); q++)
 			  for(int p = 0; p < _invJacobian.cols(); p++)
@@ -372,7 +375,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
   	  for(int i = 0; i < xUpdate.size(); i++){
   		  // find row of _oldInvJacobian that corresponds to processor block
-  		  int jrow = offsets[utils::MasterSlave::_rank] + i;
+  		  int jrow = _dimOffsets[utils::MasterSlave::_rank] + i;
 		  // as we want to move to Eigen, copy
 		  DataValues Jrow(_invJacobian.cols(), 0.0);
 		  for (int s = 0; s < _invJacobian.cols(); s++) {
