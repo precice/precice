@@ -19,9 +19,6 @@
 
 #define foreach BOOST_FOREACH
 
-#define foriter(itertype,itervar,container) \
-  for(itertype itervar = container.begin(); itervar != container.end(); itervar++)
-
 #ifndef PRECICE_NO_MPI
 #include "utils/Parallel.hpp"
 #define PRECICE_PROCESS_RANK_STREAM \

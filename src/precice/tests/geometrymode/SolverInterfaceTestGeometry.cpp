@@ -1356,28 +1356,28 @@ void SolverInterfaceTestGeometry:: testUpdateSpacetree()
     double value[dim];
     value[0] = 0.1;
 
-    foriter (VertexIterator, iter, handle.vertices()){
+    for (VertexIterator iter : handle.vertices()) {
       interface.writeVectorData(dataID, iter.vertexID(), value);
       interface.inquirePosition(iter.vertexCoords(), std::set<int>());
     }
     interface.exportMesh(filename.str() + "1");
     interface.advance(1.0);
 
-    foriter (VertexIterator, iter, handle.vertices()){
+    for (VertexIterator iter : handle.vertices()) {
       interface.writeVectorData(dataID, iter.vertexID(), value);
       interface.inquirePosition(iter.vertexCoords(), std::set<int>());
     }
     interface.exportMesh(filename.str() + "2");
     interface.advance(1.0);
 
-    foriter (VertexIterator, iter, handle.vertices()){
+    for (VertexIterator iter : handle.vertices()) {
       interface.writeVectorData(dataID, iter.vertexID(), value);
       interface.inquirePosition(iter.vertexCoords(), std::set<int>());
     }
     interface.exportMesh(filename.str() + "3");
     interface.advance(1.0);
 
-    foriter (VertexIterator, iter, handle.vertices()){
+    for (VertexIterator iter : handle.vertices()) {
       interface.writeVectorData(dataID, iter.vertexID(), value);
       interface.inquirePosition(iter.vertexCoords(), std::set<int>());
     }

@@ -540,33 +540,32 @@ void SolverInterfaceImpl:: finalize()
     }
     // Apply some final ping-pong to synch solver that run e.g. with a uni-directional coupling only
     // afterwards close connections
-    typedef std::map<std::string,M2NWrap>::iterator PairIter;
     std::string ping = "ping";
     std::string pong = "pong";
-    foriter ( PairIter, iter, _m2ns ){
+    for (auto &iter : _m2ns) {
       if( not utils::MasterSlave::_slaveMode){
-        if(iter->second.isRequesting){
-          iter->second.m2n->getMasterCommunication()->startSendPackage(0);
-          iter->second.m2n->getMasterCommunication()->send(ping,0);
-          iter->second.m2n->getMasterCommunication()->finishSendPackage();
+        if(iter.second.isRequesting){
+          iter.second.m2n->getMasterCommunication()->startSendPackage(0);
+          iter.second.m2n->getMasterCommunication()->send(ping,0);
+          iter.second.m2n->getMasterCommunication()->finishSendPackage();
           std::string receive = "init";
-          iter->second.m2n->getMasterCommunication()->startReceivePackage(0);
-          iter->second.m2n->getMasterCommunication()->receive(receive,0);
-          iter->second.m2n->getMasterCommunication()->finishReceivePackage();
+          iter.second.m2n->getMasterCommunication()->startReceivePackage(0);
+          iter.second.m2n->getMasterCommunication()->receive(receive,0);
+          iter.second.m2n->getMasterCommunication()->finishReceivePackage();
           assertion(receive==pong);
         }
         else{
           std::string receive = "init";
-          iter->second.m2n->getMasterCommunication()->startReceivePackage(0);
-          iter->second.m2n->getMasterCommunication()->receive(receive,0);
-          iter->second.m2n->getMasterCommunication()->finishReceivePackage();
+          iter.second.m2n->getMasterCommunication()->startReceivePackage(0);
+          iter.second.m2n->getMasterCommunication()->receive(receive,0);
+          iter.second.m2n->getMasterCommunication()->finishReceivePackage();
           assertion(receive==ping);
-          iter->second.m2n->getMasterCommunication()->startSendPackage(0);
-          iter->second.m2n->getMasterCommunication()->send(pong,0);
-          iter->second.m2n->getMasterCommunication()->finishSendPackage();
+          iter.second.m2n->getMasterCommunication()->startSendPackage(0);
+          iter.second.m2n->getMasterCommunication()->send(pong,0);
+          iter.second.m2n->getMasterCommunication()->finishSendPackage();
         }
       }
-      iter->second.m2n->closeConnection();
+      iter.second.m2n->closeConnection();
     }
   }
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
