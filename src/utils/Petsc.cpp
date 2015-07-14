@@ -30,7 +30,11 @@ void Petsc:: initialize
 void Petsc:: finalize()
 {
 #ifndef PRECICE_NO_PETSC
-  PetscFinalize();
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  if (petscIsInitialized) {
+    PetscFinalize();
+  }
 #endif // not PRECICE_NO_PETSC
 }
 

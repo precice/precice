@@ -256,6 +256,13 @@ void SolverInterfaceImpl:: configure
     }
   }
 
+  int argc = 1;
+  char* arg = new char[8];
+  strcpy(arg, "precice");
+  char** argv = &arg;
+  utils::Parallel::initializeMPI(&argc, &argv);
+  delete[] arg;
+
   // Setup communication to server
   if (_clientMode){
     initializeClientServerCommunication();
@@ -569,7 +576,8 @@ void SolverInterfaceImpl:: finalize()
     }
   }
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-    _accessor->getMasterSlaveCommunication()->closeConnection();
+    utils::MasterSlave::_communication->closeConnection();
+    utils::MasterSlave::_communication = NULL;
   }
 
   if(not precice::testMode){
@@ -1524,50 +1532,6 @@ void SolverInterfaceImpl:: writeBlockVectorData
   if (_clientMode){
     _requestManager->requestWriteBlockVectorData(fromDataID, size, valueIndices, values);
   }
-//  else if(_slaveMode){
-//      com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
-//      com->send(size, 0);
-//      com->send(valueIndices, size, 0);
-//      com->send(values, size*_dimensions, 0);
-//  }
-//  else if (_masterMode){
-//    preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
-//                 "You try to write to data that is not defined for " << _accessor->getName());
-//    DataContext& context = _accessor->dataContext(fromDataID);
-//    assertion(context.toData.get() != NULL);
-//    utils::DynVector& valuesInternal = context.fromData->values();
-//    for (int i=0; i < size; i++){
-//      int offsetInternal = valueIndices[i]*_dimensions;
-//      int offset = i*_dimensions;
-//      for (int dim=0; dim < _dimensions; dim++){
-//        assertion2(offset+dim < valuesInternal.size(),
-//                   offset+dim, valuesInternal.size());
-//        valuesInternal[offsetInternal + dim] = values[offset + dim];
-//      }
-//    }
-//
-//    com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
-//    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
-//      int slaveSize = -1;
-//      com->receive(slaveSize, rankSender);
-//      int* slaveIndices = new int[slaveSize];
-//      com->receive(slaveIndices, slaveSize, rankSender);
-//      double* slaveValues = new double[slaveSize*_dimensions];
-//      com->receive(slaveValues, slaveSize*_dimensions, rankSender);
-//      for (int i=0; i < slaveSize; i++){
-//        int offsetInternal = slaveIndices[i]*_dimensions;
-//        int offset = i*_dimensions;
-//        for (int dim=0; dim < _dimensions; dim++){
-//          assertion2(offset+dim < valuesInternal.size(),
-//                     offset+dim, valuesInternal.size());
-//          valuesInternal[offsetInternal + dim] = slaveValues[offset + dim];
-//        }
-//      }
-//      delete[] slaveIndices;
-//      delete[] slaveValues;
-//    }
-//
-//  }
   else { //couplingMode
     preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
                  "You try to write to data that is not defined for " << _accessor->getName());
@@ -1685,49 +1649,6 @@ void SolverInterfaceImpl:: readBlockVectorData
   if (_clientMode){
     _requestManager->requestReadBlockVectorData(toDataID, size, valueIndices, values);
   }
-//  else if(_slaveMode){
-//    com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
-//    com->send(size, 0);
-//    com->send(valueIndices, size, 0);
-//    com->receive(values, size*_dimensions, 0);
-//  }
-//  else if(_masterMode){
-//    preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
-//                     "You try to read from data that is not defined for " << _accessor->getName());
-//    DataContext& context = _accessor->dataContext(toDataID);
-//    assertion(context.fromData.get() != NULL);
-//    utils::DynVector& valuesInternal = context.toData->values();
-//    for (int i=0; i < size; i++){
-//      int offsetInternal = valueIndices[i] * _dimensions;
-//      int offset = i * _dimensions;
-//      for (int dim=0; dim < _dimensions; dim++){
-//        assertion2(offsetInternal+dim < valuesInternal.size(),
-//                   offsetInternal+dim, valuesInternal.size());
-//        values[offset + dim] = valuesInternal[offsetInternal + dim];
-//      }
-//    }
-//
-//    com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
-//    for(int rankSender = 0; rankSender < _accessorCommunicatorSize-1; rankSender++){
-//      int slaveSize = -1;
-//      com->receive(slaveSize, rankSender);
-//      int* slaveIndices = new int[slaveSize];
-//      com->receive(slaveIndices, slaveSize, rankSender);
-//      double* slaveValues = new double[slaveSize*_dimensions];
-//      for (int i=0; i < slaveSize; i++){
-//        int offsetInternal = slaveIndices[i] * _dimensions;
-//        int offset = i * _dimensions;
-//        for (int dim=0; dim < _dimensions; dim++){
-//          assertion2(offsetInternal+dim < valuesInternal.size(),
-//                     offsetInternal+dim, valuesInternal.size());
-//          slaveValues[offset + dim] = valuesInternal[offsetInternal + dim];
-//        }
-//      }
-//      com->send(slaveValues, slaveSize*_dimensions, rankSender);
-//      delete[] slaveIndices;
-//      delete[] slaveValues;
-//    }
-//  }
   else { //couplingMode
     preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
                  "You try to read from data that is not defined for " << _accessor->getName());
@@ -2380,22 +2301,19 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
 void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 {
   preciceTrace ( "initializeMasterSlaveCom.()" );
-  com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
-  assertion(com.get() != NULL);
-  utils::MasterSlave::_communication = com;
   //slaves create new communicator with ranks 0 to size-2
   //therefore, the master uses a rankOffset and the slaves have to call request
   // with that offset
   int rankOffset = 1;
   if ( utils::MasterSlave::_masterMode ){
     preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to slaves" );
-    com->acceptConnection ( _accessorName + "Master", _accessorName,
+    utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName,
                             _accessorProcessRank, 1);
-    com->setRankOffset(rankOffset);
+    utils::MasterSlave::_communication->setRankOffset(rankOffset);
   }
   else {
     assertion(utils::MasterSlave::_slaveMode);
-    com->requestConnection( _accessorName + "Master", _accessorName,
+    utils::MasterSlave::_communication->requestConnection( _accessorName + "Master", _accessorName,
                             _accessorProcessRank-rankOffset, _accessorCommunicatorSize-rankOffset );
   }
 }
@@ -2403,14 +2321,13 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
 {
   assertion(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode);
-  com::Communication::SharedPointer com = _accessor->getMasterSlaveCommunication();
   if(utils::MasterSlave::_slaveMode){
-    com->send(computedTimestepLength, 0);
+    utils::MasterSlave::_communication->send(computedTimestepLength, 0);
   }
   else if(utils::MasterSlave::_masterMode){
     for(int rankSlave = 1; rankSlave < _accessorCommunicatorSize; rankSlave++){
       double dt;
-      com->receive(dt, rankSlave);
+      utils::MasterSlave::_communication->receive(dt, rankSlave);
       preciceCheck(tarch::la::equals(dt, computedTimestepLength), "advance()",
                  "Ambiguous timestep length when calling request advance from "
                  << "several processes!");

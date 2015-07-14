@@ -139,6 +139,8 @@ private:
   static bool _isInitialized;
 
   static bool _isSplit;
+
+  static bool _mpiInitializedByPrecice;
 };
 
 

@@ -9,13 +9,14 @@ namespace utils {
 
 tarch::logging::Log Parallel:: _log ( "precice::utils::Parallel" );
 
-Parallel::Communicator Parallel:: _globalCommunicator = Parallel::getCommunicatorWorld();
+Parallel::Communicator Parallel:: _globalCommunicator = Parallel:: getCommunicatorWorld();
 
 Parallel::Communicator Parallel:: _localCommunicator = MPI_COMM_NULL;
 
 bool Parallel:: _isInitialized = false;
 
 bool Parallel:: _isSplit = false;
+bool Parallel:: _mpiInitializedByPrecice = false;
 
 std::vector<Parallel::AccessorGroup> Parallel:: _accessorGroups;
 
@@ -39,6 +40,7 @@ void Parallel:: initializeMPI
   MPI_Initialized (&isMPIInitialized);
   if (not isMPIInitialized) {
     preciceDebug ( "Initialize MPI" );
+    _mpiInitializedByPrecice = true;
     MPI_Init(argc, argv);
   }
   _isInitialized = true;
@@ -153,8 +155,12 @@ void Parallel:: splitCommunicator
 
 void Parallel:: finalizeMPI()
 {
+  preciceTrace ("finalizeMPI()");
 # ifndef PRECICE_NO_MPI
-  MPI_Finalize();
+  if(_mpiInitializedByPrecice){
+    preciceDebug ( "preCICE finalizes MPI" );
+    MPI_Finalize();
+  }
 # endif // not PRECICE_NO_MPI
   _isInitialized = false;
 }

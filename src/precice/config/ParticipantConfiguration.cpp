@@ -18,6 +18,7 @@
 #include "utils/xml/ValidatorEquals.hpp"
 #include "utils/xml/ValidatorOr.hpp"
 #include "utils/Dimensions.hpp"
+#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace config {
@@ -542,7 +543,8 @@ void ParticipantConfiguration:: xmlTagCallback
   else if (tag.getNamespace() == TAG_MASTER){
     com::CommunicationConfiguration comConfig;
     com::Communication::SharedPointer com = comConfig.createCommunication(tag);
-    _participants.back()->setMasterSlaveCommunication(com);
+    utils::MasterSlave::_communication = com;
+    _participants.back()->setUseMaster(true);
   }
 }
 

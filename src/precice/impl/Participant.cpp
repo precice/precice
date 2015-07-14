@@ -41,7 +41,7 @@ Participant:: Participant
   _writeDataContexts (),
   _readDataContexts (),
   _clientServerCommunication (),
-  _masterSlaveCommunication ()
+  _useMaster(false)
 {
   _participantsSize ++;
 }
@@ -335,21 +335,14 @@ com::Communication::SharedPointer Participant:: getClientServerCommunication() c
 
 bool Participant:: useMaster()
 {
-  return _masterSlaveCommunication.use_count() > 0;
+  return _useMaster;
 }
 
-void Participant:: setMasterSlaveCommunication
-(
-  com::Communication::SharedPointer communication )
+void Participant:: setUseMaster(bool useMaster)
 {
-  assertion ( communication.use_count() > 0 );
-  _masterSlaveCommunication = communication;
+  _useMaster = useMaster;
 }
 
-com::Communication::SharedPointer Participant:: getMasterSlaveCommunication() const
-{
-  return _masterSlaveCommunication;
-}
 
 
 }} // namespace precice, impl

@@ -48,13 +48,7 @@ MPIDirectCommunication::acceptConnection(std::string const& nameAcceptor,
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
   assertion(not isConnected());
 
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initializeMPI(&argc, &argv);
   utils::Parallel::splitCommunicator(nameAcceptor);
-  delete[] arg;
 
   preciceCheck(utils::Parallel::getCommunicatorSize() > 1,
                "acceptConnection()",
@@ -92,13 +86,7 @@ MPIDirectCommunication::requestConnection(std::string const& nameAcceptor,
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
   assertion(not isConnected());
 
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initializeMPI(&argc, &argv);
   utils::Parallel::splitCommunicator(nameRequester);
-  delete[] arg;
 
   preciceCheck(utils::Parallel::getCommunicatorSize() > 1,
                "requestConnection()",

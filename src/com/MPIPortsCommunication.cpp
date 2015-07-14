@@ -74,12 +74,6 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
   // doing something weird inside?
 
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initializeMPI(&argc, &argv);
-
   MPI_Open_port(MPI_INFO_NULL, _portName);
 
   std::string address(_portName);
@@ -186,12 +180,6 @@ MPIPortsCommunication::acceptConnectionAsServer(
   // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
   // doing something weird inside?
 
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initializeMPI(&argc, &argv);
-
   MPI_Open_port(MPI_INFO_NULL, _portName);
 
   std::string address(_portName);
@@ -249,12 +237,6 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 
   _isAcceptor = false;
 
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initializeMPI(&argc, &argv);
-
   std::string address;
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
                               ".address");
@@ -297,12 +279,6 @@ MPIPortsCommunication::requestConnectionAsClient(
   assertion(not isConnected());
 
   _isAcceptor = false;
-
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initializeMPI(&argc, &argv);
 
   std::string address;
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
