@@ -57,8 +57,8 @@ void MVQNPostProcessing:: initialize
   BaseQNPostProcessing::initialize(cplData);
   
   double init = 0.0;
-  size_t entries = _residuals.size();
-  size_t global_n = 0;
+  int entries = _residuals.size();
+  int global_n = 0;
 
 	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 		global_n = entries;
@@ -67,24 +67,25 @@ void MVQNPostProcessing:: initialize
 		assertion(utils::MasterSlave::_communication.get() != NULL);
 		assertion(utils::MasterSlave::_communication->isConnected());
 
+
 		/**
 		 *  make dimensions public to all procs,
 		 *  last entry _dimOffsets[MasterSlave::_size] holds the global dimension, global,n
 		 */
 		_dimOffsets.resize(utils::MasterSlave::_size + 1);
 		if (utils::MasterSlave::_slaveMode) {
-			utils::MasterSlave::_communication->send(_matrixV.rows(), 0);
+			utils::MasterSlave::_communication->send(entries, 0);
 			utils::MasterSlave::_communication->receive(&_dimOffsets[0], _dimOffsets.size(), 0);
 		}
 		if (utils::MasterSlave::_masterMode) {
 			_dimOffsets[0] = 0;
-			_dimOffsets[1] = _matrixV.rows();
-			for (int rankSlave = 1; rankSlave < _size; rankSlave++) {
+			_dimOffsets[1] = entries;
+			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
 				int localDim = 0;
 				utils::MasterSlave::_communication->receive(localDim, rankSlave);
 				_dimOffsets[rankSlave + 1] = _dimOffsets[rankSlave] + localDim;
 			}
-			for (int rankSlave = 1; rankSlave < _size; rankSlave++) {
+			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
 				utils::MasterSlave::_communication->send(&_dimOffsets[0], _dimOffsets.size(), rankSlave);
 			}
 		}
@@ -254,6 +255,16 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		}
 	}
 
+  {
+      int i = 0;
+      char hostname[256];
+      gethostname(hostname, sizeof(hostname));
+      printf("PID %d on %s ready for attach\n", getpid(), hostname);
+      fflush(stdout);
+      while (0 == i)
+          sleep(5);
+  }
+
 
   /*
    * Multiply J_prev * V =: V_tilde
@@ -271,17 +282,26 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	  assertion(utils::MasterSlave::_communication.get() != NULL);
 	  assertion(utils::MasterSlave::_communication->isConnected());
 
-	  for(int i = 0; i < tmpMatrix.rows(); i++){
-		  // find row of _oldInvJacobian that corresponds to processor block
-		  int jrow = offsets[utils::MasterSlave::_rank] + i;
-		  for(int j = 0; j < tmpMatrix.cols(); j++){
+	  for(int i = 0; i < _oldInvJacobian.rows(); i++){
+		  // find rank of processor that stores the result
+		  int rank = 0;
+		  while(i >= _dimOffsets[rank+1]) rank++;
+		  for(int j = 0; j < _matrixV.cols(); j++){
 			  // as we want to move to Eigen, copy
 			  DataValues Jrow(_oldInvJacobian.cols(), 0.0);
-			  for (int s = 0; s < _oldInvJacobian.cols(); s++) {
-				  Jrow(s) = _oldInvJacobian(jrow,s);
-			  }
+			  for(int s = 0; s < _oldInvJacobian.cols(); s++)
+				  Jrow(s) = _oldInvJacobian(i,s);
+
 			  // TODO: better: implement a reduce-operation (no loop over all slaves)
-			  tmpMatrix(i,j) = utils::MasterSlave::dot(Jrow, _matrixV.column(j));
+			  double res_ij = utils::MasterSlave::dot(Jrow, _matrixV.column(j));
+
+			  // find proc that needs to store the result.
+			  int local_row;
+			  if(utils::MasterSlave::_rank == rank)
+			  {
+				  local_row = i - _dimOffsets[rank];
+				  tmpMatrix(local_row, j) = res_ij;
+			  }
 		  }
 	  }
   }
