@@ -255,16 +255,6 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		}
 	}
 
-  {
-      int i = 0;
-      char hostname[256];
-      gethostname(hostname, sizeof(hostname));
-      printf("PID %d on %s ready for attach\n", getpid(), hostname);
-      fflush(stdout);
-      while (0 == i)
-          sleep(5);
-  }
-
 
   /*
    * Multiply J_prev * V =: V_tilde
@@ -326,6 +316,19 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	  assertion(utils::MasterSlave::_communication.get() != NULL);
 	  assertion(utils::MasterSlave::_communication->isConnected());
 
+
+	  int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
+	  int prevProc = (utils::MasterSlave::_rank -1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank -1;
+	  int rows_rcv = (prevProc > 0) ? _dimOffsets[prevProc+1] - _dimOffsets[prevProc] : _dimOffsets[1];
+	  Matrix Wtil_rcv(rows_rcv, tmpMatrix.cols(),0.0);
+
+	  // initiate asynchronous send operation of tmpMatrix --> nextProc (this data is needed in cycle 1)
+	  com::Request::SharedPointer requestSend = utils::MasterSlave::_communication->aSend(&tmpMatrix(0,0), tmpMatrix.size(), nextProc); // dim: n_local x cols
+
+	  // initiate asynchronous receive operation for W_til from previous processor --> W_til
+	  com::Request::SharedPointer requestRcv = utils::MasterSlave::_communication->aReceive(&Wtil_rcv(0,0), rows_rcv * tmpMatrix.cols(), prevProc); // dim: rows_rcv x cols
+
+	  // compute diagonal blocks where all data is local and no communication is needed
 	  // compute block matrices of J_inv of size (n_til x n_til), n_til = local n
 	  Matrix diagBlock(_matrixV.rows(),_matrixV.rows(), 0.0);
 	  multiply(tmpMatrix, Z, diagBlock);
@@ -338,22 +341,47 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 			  _invJacobian(q+off,p) = diagBlock(q,p);
 		  }
 
+	  /*
+	  {
+	      int i = 0;
+	      char hostname[256];
+	      gethostname(hostname, sizeof(hostname));
+	      printf("PID %d on %s ready for attach\n", getpid(), hostname);
+	      fflush(stdout);
+	      while (0 == i)
+	          sleep(5);
+	  }
+*/
+	  // cyclic send-receive operation
 	  for(int cycle = 1; cycle < utils::MasterSlave::_size; cycle++){
-		  // cyclic send-receive operation
-		  int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
-		  int prevProc = (utils::MasterSlave::_rank -1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank -1;
-		  int rows_rcv = (prevProc > 0) ? _dimOffsets[prevProc] - _dimOffsets[prevProc-1] : _dimOffsets[0];
-		  Matrix Wtil_rcv(rows_rcv, tmpMatrix.cols(),0.0);
 
-		  //utils::MasterSlave::_communication->send(&tmpMatrix(0,0), tmpMatrix.rows(), tmpMatrix.cols(), nextProc); //TODO: implementation
-		  //utils::MasterSlave::_communication->receive(&Wtil_rcv(0,0), rows_rcv, tmpMatrix.cols(), prevProc);
+		  // wait until W_til from previous processor is fully received
+		  requestRcv.wait();
 
-		  utils::MasterSlave::_communication->send(&tmpMatrix(0,0), tmpMatrix.size(), nextProc); // dim: n_local x cols
-		  utils::MasterSlave::_communication->receive(&Wtil_rcv(0,0), rows_rcv * tmpMatrix.cols(), prevProc); // dim: rows_rcv x cols
+		  // Wtil_rcv is available - needed for local multiplication and hand over to next proc
+		  Matrix Wtil_copy(Wtil_rcv);
+
+		  // initiate async send to hand over Wtil to the next proc (this data will be needed in the next cycle)
+		  requestSend.wait();
+		  requestSend = utils::MasterSlave::_communication->aSend(&Wtil_copy(0,0), Wtil_copy.size(), nextProc); // dim: n_local x cols
+
+		  // compute proc that owned Wtil_rcv at the very beginning for each cylce
+		  int sourceProc = 0;
+		  if (utils::MasterSlave::_rank - cycle < 0){
+			  sourceProc = utils::MasterSlave::_size + (utils::MasterSlave::_rank - cycle);
+		  }else{
+			  sourceProc =  utils::MasterSlave::_rank - cycle;
+		  }
+		  rows_rcv = (sourceProc > 0) ? _dimOffsets[sourceProc+1] - _dimOffsets[sourceProc] : _dimOffsets[1];
+		  Wtil_rcv = Matrix(rows_rcv, tmpMatrix.cols(),0.0);
+
+		  // initiate asynchronous receive operation for W_til from previous processor --> W_til (this data is needed in the next cycle)
+		  requestRcv = utils::MasterSlave::_communication->aReceive(&Wtil_rcv(0,0), rows_rcv * tmpMatrix.cols(), prevProc); // dim: rows_rcv x cols
 
 		  // compute block with new local data
 		  Matrix block(rows_rcv, Z.cols(), 0.0);
 		  multiply(Wtil_rcv, Z, block);
+
 		  // set block at corresponding index in J_inv
 		  // the row-offset of the current block is determined by the proc that sends the part of the W_til matrix
 		  // note: the direction and ordering of the cyclic sending operation is chosen s.t. the computed block is
@@ -393,16 +421,25 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
   	  assertion(utils::MasterSlave::_communication.get() != NULL);
   	  assertion(utils::MasterSlave::_communication->isConnected());
 
-  	  for(int i = 0; i < xUpdate.size(); i++){
-  		  // find row of _oldInvJacobian that corresponds to processor block
-  		  int jrow = _dimOffsets[utils::MasterSlave::_rank] + i;
+  	  for(int i = 0; i < _invJacobian.size(); i++){
+  		  // find rank of processor that stores the result
+		  int rank = 0;
+		  while(i >= _dimOffsets[rank+1]) rank++;
 		  // as we want to move to Eigen, copy
 		  DataValues Jrow(_invJacobian.cols(), 0.0);
 		  for (int s = 0; s < _invJacobian.cols(); s++) {
-			  Jrow(s) = _invJacobian(jrow,s);
+			  Jrow(s) = _invJacobian(i,s);
 		  }
 		  // TODO: better: implement a reduce-operation (no loop over all slaves)
-		  xUpdate(i) = utils::MasterSlave::dot(Jrow, negRes);
+		  double up_ij = utils::MasterSlave::dot(Jrow, negRes);
+
+		  // find proc that needs to store the result.
+		  int local_row;
+		  if(utils::MasterSlave::_rank == rank)
+		  {
+			  local_row = i - _dimOffsets[rank];
+			  xUpdate(local_row) = up_ij;
+		  }
   	  }
     }
 }
