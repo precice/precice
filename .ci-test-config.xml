@@ -1,0 +1,15 @@
+<?xml version="1.0"?>
+
+<configuration>
+
+  <run-tests>
+
+    <log-filter target=""      component=""      switch="off"/>
+    <log-filter target="info"  component=""      switch="on"/>
+    
+    <log-output column-separator=" | " log-time-stamp="no"
+                log-time-stamp-human-readable="no" log-machine-name="no"
+                log-message-type="no" log-trace="yes" log-output-file=""/>
+  </run-tests>
+
+</configuration>

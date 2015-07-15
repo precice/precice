@@ -12,13 +12,14 @@ addons:
     packages:
       - g++-4.8
       - python-numpy
+      - openmpi-bin
       - libopenmpi-dev
       - libboost-system1.55-dev
       - libboost-filesystem1.55-dev
 
 env:
   global:
-    - CPLUS_INCLUDE_PATH="$HOME/eigen-eigen-bdd17ee3b1b3:$PRECICE_BOOST_ROOT"
+    - CPLUS_INCLUDE_PATH="$HOME/eigen-eigen-bdd17ee3b1b3"
   matrix:
     - MPI=off
     - MPI=on
@@ -37,7 +38,8 @@ before_script:
 script:
   - scons -j 2 boost_inst=on petsc=off mpi=$MPI python=on compiler=$CXX
   - cd tests
-  - if [ "$MPI" = "off" ]; then ../build/last/binprecice test ../test-config.xml ../src; fi
+  - if [ "$MPI" = "off" ]; then ../build/last/binprecice test ../.ci-test-config.xml ../src; fi
+  - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 ../build/last/binprecice test ../.ci-test-config.xml ../src; fi
   
 after_failure:
   - cat config.log
