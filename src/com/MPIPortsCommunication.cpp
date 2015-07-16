@@ -68,15 +68,13 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   _isAcceptor = true;
   _rank = acceptorProcessRank;
 
-  // BUG:
+  // BUG report from Alex:
   // It is extremely important that the call to `Parallel::initialize' follows
   // *after* the call to `MPI_Open_port'. Otherwise, on Windows, even with the
   // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
   // doing something weird inside?
 
   MPI_Open_port(MPI_INFO_NULL, _portName);
-
-  utils::Parallel::initialize(NULL, NULL, nameAcceptor);
 
   std::string address(_portName);
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
@@ -176,15 +174,13 @@ MPIPortsCommunication::acceptConnectionAsServer(
   _isAcceptor = true;
   _rank = 0;
 
-  // BUG:
+  // BUG report from Alex:
   // It is extremely important that the call to `Parallel::initialize' follows
   // *after* the call to `MPI_Open_port'. Otherwise, on Windows, even with the
   // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
   // doing something weird inside?
 
   MPI_Open_port(MPI_INFO_NULL, _portName);
-
-  utils::Parallel::initialize(NULL, NULL, nameAcceptor);
 
   std::string address(_portName);
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
@@ -241,8 +237,6 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 
   _isAcceptor = false;
 
-  utils::Parallel::initialize(NULL, NULL, nameRequester);
-
   std::string address;
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
                               ".address");
@@ -285,8 +279,6 @@ MPIPortsCommunication::requestConnectionAsClient(
   assertion(not isConnected());
 
   _isAcceptor = false;
-
-  utils::Parallel::initialize(NULL, NULL, nameRequester);
 
   std::string address;
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +

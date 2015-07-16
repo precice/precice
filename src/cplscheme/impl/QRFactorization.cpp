@@ -2,6 +2,7 @@
 #include "QRFactorization.hpp"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "utils/Dimensions.hpp"
+#include "utils/Globals.hpp"
 #include "tarch/la/Scalar.h"
 
 #include <iostream>
@@ -145,7 +146,7 @@ QRFactorization::QRFactorization(
 void QRFactorization::deleteColumn(int k)
 {
 
-  //preciceTrace("deleteColumn()");
+  preciceTrace("deleteColumn()");
 
   assertion1(k >= 0, k);
   assertion2(k < _cols, k, _cols);
@@ -189,8 +190,6 @@ void QRFactorization::deleteColumn(int k)
       
 void QRFactorization::insertColumn(int k, DataValues& v)
 {
-   //preciceTrace("insertColumn()");
-
    EigenVector _v(v.size());
    for(int i=0; i<v.size();i++)
    {
@@ -202,7 +201,7 @@ void QRFactorization::insertColumn(int k, DataValues& v)
       
 void QRFactorization::insertColumn(int k, EigenVector& v)
 {
-  //preciceTrace("insertColumn()");
+  preciceTrace("insertColumn()");
 
   if(_cols == 0)
     _rows = v.size();
@@ -282,7 +281,7 @@ int QRFactorization::orthogonalize(
   double& rho,
   int colNum)
 {
-   //preciceTrace("orthogonalize()");
+   preciceTrace("orthogonalize()");
 
    bool restart = false;
    bool null = false;
@@ -355,6 +354,8 @@ int QRFactorization::orthogonalize(
 			if (k >= 4) {
 				std::cout
 						<< "\ntoo many iterations in orthogonalize, termination failed\n";
+				preciceError("orthogonalize()", "Matrix Q is not sufficiently orthogonal. "
+						     <<"The maximum number of re-orthogonalization steps (4) has been exceeded.");
 				//preciceDebug("[QR-dec] - too many iterations in orthogonalize, termination failed");
 				if (_fstream_set)
 					(*_infostream)

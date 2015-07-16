@@ -73,7 +73,7 @@ void CommunicateMeshTest:: testTwoSolvers ()
       CommunicateMesh comMesh ( com );
 
       if ( utils::Parallel::getProcessRank() == 0 ) {
-        utils::Parallel::initialize ( NULL, NULL, participant0 );
+        utils::Parallel::splitCommunicator(participant0 );
         com->acceptConnection ( participant0, participant1, 0, 1 );
         comMesh.sendMesh ( mesh, 0 );
         validateEquals ( mesh.vertices().size(), 3 );
@@ -84,7 +84,7 @@ void CommunicateMeshTest:: testTwoSolvers ()
       }
       else if ( utils::Parallel::getProcessRank() == 1 ) {
         mesh.createVertex ( DynVector(dim,9.0) ); // new version receiveMesh can also deal with delta meshes
-        utils::Parallel::initialize ( NULL, NULL, participant1 );
+        utils::Parallel::splitCommunicator(participant1 );
         com->requestConnection ( participant0, participant1, 0, 1 );
         comMesh.receiveMesh ( mesh, 0 );
         validateEquals ( mesh.vertices().size(), 4 );
@@ -105,6 +105,7 @@ void CommunicateMeshTest:: testTwoSolvers ()
       validate ( equals(mesh.edges()[1].vertex(1).getCoords(), DynVector(dim,2.0)) );
       validate ( equals(mesh.edges()[2].vertex(0).getCoords(), DynVector(dim,2.0)) );
       validate ( equals(mesh.edges()[2].vertex(1).getCoords(), DynVector(dim,0.0)) );
+      utils::Parallel::clearGroups();
       utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
     }
   }

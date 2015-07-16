@@ -45,6 +45,12 @@ public:
     mesh::Mesh & mesh,
     int          rankSender );
 
+  void broadcastSendMesh(
+    const mesh::Mesh & mesh);
+
+  void broadcastReceiveMesh(
+    mesh::Mesh & mesh);
+
   void sendBoundingBox (
     const mesh::Mesh::BoundingBox & bb,
     int                rankReceiver );

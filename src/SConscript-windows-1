@@ -28,7 +28,8 @@ sourcesIO = [
 sourcesGeometry = [
    Glob('geometry/*.cpp'),
    Glob('geometry/config/*.cpp'),
-   Glob('geometry/tests/*.cpp')
+   Glob('geometry/tests/*.cpp'),
+   Glob('geometry/impl/*.cpp')
    ]   
   
 sourcesQuery = [

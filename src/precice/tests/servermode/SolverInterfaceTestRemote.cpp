@@ -494,7 +494,7 @@ void SolverInterfaceTestRemote:: testCouplingModeParallelWithOneServer()
     while (interface.isCouplingOngoing()){
       time += dt;
       timesteps++;
-      foriter (VertexIterator, vertex, vertices){
+      for (VertexIterator vertex : vertices) {
         interface.writeScalarData(scalarDataID, vertex.vertexID(), 1.0);
       }
       dt = interface.advance(dt);

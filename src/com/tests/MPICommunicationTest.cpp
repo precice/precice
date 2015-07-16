@@ -68,6 +68,7 @@ MPICommunicationTest::testSendAndReceiveString() {
     msg = "testTwo";
     com.send(msg, 0);
   }
+  utils::Parallel::clearGroups();
 }
 
 void
@@ -90,6 +91,7 @@ MPICommunicationTest::testSendAndReceiveVector() {
     msg = utils::Vector3D(2.0);
     com.send(tarch::la::raw(msg), msg.size(), 0);
   }
+  utils::Parallel::clearGroups();
 }
 
 void
@@ -112,6 +114,7 @@ MPICommunicationTest::testSendAndReceiveInteger() {
     msg = 2;
     com.send(msg, 0);
   }
+  utils::Parallel::clearGroups();
 }
 
 

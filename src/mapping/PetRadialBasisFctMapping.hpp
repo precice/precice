@@ -5,6 +5,7 @@
 #include "RadialBasisFctMapping.hpp"
 #include "tarch/la/DynamicVector.h"
 #include "utils/MasterSlave.hpp"
+#include "utils/Petsc.hpp"
 #include <limits>
 #include <typeinfo>
 

@@ -41,7 +41,7 @@ Participant:: Participant
   _writeDataContexts (),
   _readDataContexts (),
   _clientServerCommunication (),
-  _masterSlaveCommunication ()
+  _useMaster(false)
 {
   _participantsSize ++;
 }
@@ -90,7 +90,8 @@ void Participant:: useMesh
   bool                                   remote,
   const std::string&                     fromParticipant,
   double                                 safetyFactor,
-  bool                                   provideMesh )
+  bool                                   provideMesh,
+  bool                                   doesPreFiltering)
 {
   preciceTrace3 ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
   checkDuplicatedUse(mesh);
@@ -105,6 +106,7 @@ void Participant:: useMesh
   context->receiveMeshFrom = fromParticipant;
   context->safetyFactor = safetyFactor;
   context->provideMesh = provideMesh;
+  context->doesPreFiltering = doesPreFiltering;
 
 //  if ( spacetree.use_count() > 0 ) {
 //    spacetree->setCenter ( spacetree->getCenter() + localOffset );
@@ -333,21 +335,14 @@ com::Communication::SharedPointer Participant:: getClientServerCommunication() c
 
 bool Participant:: useMaster()
 {
-  return _masterSlaveCommunication.use_count() > 0;
+  return _useMaster;
 }
 
-void Participant:: setMasterSlaveCommunication
-(
-  com::Communication::SharedPointer communication )
+void Participant:: setUseMaster(bool useMaster)
 {
-  assertion ( communication.use_count() > 0 );
-  _masterSlaveCommunication = communication;
+  _useMaster = useMaster;
 }
 
-com::Communication::SharedPointer Participant:: getMasterSlaveCommunication() const
-{
-  return _masterSlaveCommunication;
-}
 
 
 }} // namespace precice, impl

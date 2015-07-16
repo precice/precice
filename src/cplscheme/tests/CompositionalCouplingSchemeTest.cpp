@@ -724,6 +724,7 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
 
   runThreeSolverCoupling(cplSchemeConfig.getCouplingScheme(localParticipant),
                          localParticipant, meshConfig);
+  utils::Parallel::clearGroups();
 }
 
 void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
@@ -850,7 +851,7 @@ void CompositionalCouplingSchemeTest:: connect
   preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
-  utils::Parallel::initialize ( NULL, NULL, localParticipant );
+  utils::Parallel::splitCommunicator( localParticipant );
   if ( participant0 == localParticipant ) {
     communication->requestMasterConnection ( participant1, participant0 );
   }

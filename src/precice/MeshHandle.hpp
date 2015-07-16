@@ -42,7 +42,13 @@ public:
 
   ~VertexIterator();
 
-  VertexIterator& operator++(int);
+  /// Postfix operator
+  VertexIterator& operator++(int unused);
+
+  /// Prefix operator
+  VertexIterator& operator++();
+
+  VertexIterator& operator*();
 
   int vertexID();
 

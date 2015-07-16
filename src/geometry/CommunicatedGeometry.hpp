@@ -6,6 +6,8 @@
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "tarch/logging/Log.h"
+#include "impl/Decomposition.hpp"
+#include "impl/SharedPointer.hpp"
 #include <string>
 #include <map>
 
@@ -25,19 +27,13 @@ public:
     const utils::DynVector& offset,
     const std::string&      accessor,
     const std::string&      provider,
-    int                     dimensions);
+    impl::PtrDecomposition  decomposition);
 
   virtual ~CommunicatedGeometry() {}
 
   void addReceiver (
     const std::string& receiver,
     m2n::M2N::SharedPointer m2n );
-
-  void setBoundingFromMapping(mapping::PtrMapping mapping);
-
-  void setBoundingToMapping(mapping::PtrMapping mapping);
-
-  void setSafetyFactor(double safetyFactor);
 
 protected:
 
@@ -49,27 +45,11 @@ protected:
 
 private:
 
-  /// The received mesh is scattered amongst the slaves.
-  void scatterMesh(
-    mesh::Mesh& seed);
-
   void sendMesh(
     mesh::Mesh& seed);
 
   void receiveMesh(
     mesh::Mesh& seed);
-
-  /// Compute the preliminary mappings between the global mesh and the slave's own mesh.
-  void computeBoundingMappings();
-
-  void clearBoundingMappings();
-
-  void mergeBoundingBoxes(mesh::Mesh::BoundingBox& bb);
-
-  std::vector<int> filterMesh(mesh::Mesh& seed, mesh::Mesh& filteredMesh, bool filterByMapping);
-
-  /// Returns true if a vertex contributes to one of the 2 mappings. If false, the vertex can be erased.
- bool doesVertexContribute(const mesh::Vertex& vertex, bool filterByMapping);
 
   /// Logging device.
   static tarch::logging::Log _log;
@@ -80,17 +60,7 @@ private:
 
   std::map<std::string,m2n::M2N::SharedPointer> _receivers;
 
-  int _dimensions;
-
-  mapping::PtrMapping _boundingFromMapping;
-
-  mapping::PtrMapping _boundingToMapping;
-
-  mesh::Mesh::BoundingBox _bb;
-
-  double _safetyGap;
-
-  double _safetyFactor;
+  impl::PtrDecomposition _decomposition;
 };
 
 }} // namespace precice, geometry
