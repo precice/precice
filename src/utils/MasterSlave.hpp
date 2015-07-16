@@ -39,6 +39,16 @@ public:
   static com::Communication::SharedPointer _communication;
 
   /**
+	* @brief Communication between neighboring slaves, backwards
+	*/
+  static com::Communication::SharedPointer _cyclicCommLeft;
+
+    /**
+   * @brief Communication between neighboring slaves, forward
+   */
+  static com::Communication::SharedPointer _cyclicCommRight;
+
+  /**
    * @brief Configure the master-slave communication.
    */
   static void configure(int rank, int size);

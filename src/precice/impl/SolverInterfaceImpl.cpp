@@ -2397,6 +2397,19 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
     com->requestConnection( _accessorName + "Master", _accessorName,
                             _accessorProcessRank-rankOffset, _accessorCommunicatorSize-rankOffset );
   }
+
+  // initialize cyclic communication between successive slaves
+  utils::MasterSlave::_cyclicCommLeft = comLeft;
+  utils::MasterSlave::_cyclicCommRight = comRight;
+  int prevProc = (_accessorProcessRank-1 < 0) ? _accessorCommunicatorSize-1 : _accessorProcessRank-1;
+  if((_accessorProcessRank % 2) == 0)
+  {
+	  comRight->requestConnection( _accessorName + "cyclicComm" +  boost::lexical_cast<std::string>(_accessorProcessRank), _accessorName, 0, 1 );
+	  comLeft->acceptConnection( _accessorName + "cyclicComm" + boost::lexical_cast<std::string>(prevProc), _accessorName, 0, 1 );
+  }else{
+	  comLeft->acceptConnection( _accessorName + "cyclicComm" + boost::lexical_cast<std::string>(prevProc), _accessorName, 0, 1 );
+	  comRight->requestConnection( _accessorName + "cyclicComm" +  boost::lexical_cast<std::string>(_accessorProcessRank), _accessorName, 0, 1 );
+  }
 }
 
 void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
