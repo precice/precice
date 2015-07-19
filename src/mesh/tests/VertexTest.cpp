@@ -45,7 +45,7 @@ void VertexTest:: test ()
 
   void* mesh = static_cast<void*> ( vertex.mesh() );
   // Can be replaced by nullptr as soon as we have C++11 available.
-  validateEquals ( mesh, static_cast<void*>(NULL) );
+  validateEquals ( mesh, static_cast<void*>(nullptr) );
 }
 
 }}} // namespace precice, mesh, tests

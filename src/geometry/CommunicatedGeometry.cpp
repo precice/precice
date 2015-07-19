@@ -38,7 +38,7 @@ void CommunicatedGeometry:: addReceiver
   m2n::M2N::SharedPointer m2n)
 {
   preciceTrace1 ( "addReceiver()", receiver );
-  assertion ( m2n.get() != NULL );
+  assertion ( m2n.get() != nullptr );
   preciceCheck ( ! utils::contained(receiver, _receivers),
                  "addReceiver()", "Receiver \"" << receiver
                  << "\" has been added already to communicated geometry!" );

@@ -82,7 +82,7 @@ Communication::SharedPointer CommunicationConfiguration:: createCommunication
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
     com = com::Communication::SharedPointer(new com::FileCommunication(false, dir));
   }
-  assertion(com.get() != NULL);
+  assertion(com.get() != nullptr);
   return com;
 }
 

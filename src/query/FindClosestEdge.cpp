@@ -19,7 +19,7 @@ const utils::DynVector& FindClosestEdge:: getSearchPoint() const
 
 bool FindClosestEdge:: hasFound() const
 {
-  return _closestEdge != NULL;
+  return _closestEdge != nullptr;
 }
 
 double FindClosestEdge:: getEuclidianDistance()
@@ -29,7 +29,7 @@ double FindClosestEdge:: getEuclidianDistance()
 
 mesh::Edge& FindClosestEdge:: getClosestEdge()
 {
-  assertion ( _closestEdge != NULL );
+  assertion ( _closestEdge != nullptr );
   return *_closestEdge;
 }
 

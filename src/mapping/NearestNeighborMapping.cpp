@@ -26,8 +26,8 @@ NearestNeighborMapping:: NearestNeighborMapping
 void NearestNeighborMapping:: computeMapping()
 {
   preciceTrace1("computeMapping()", input()->vertices().size());
-  assertion(input().get() != NULL);
-  assertion(output().get() != NULL);
+  assertion(input().get() != nullptr);
+  assertion(output().get() != nullptr);
   if (getConstraint() == CONSISTENT){
     preciceDebug("Compute consistent mapping");
     size_t verticesSize = output()->vertices().size();

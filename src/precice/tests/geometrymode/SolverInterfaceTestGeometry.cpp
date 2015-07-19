@@ -657,12 +657,12 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   // Validate results
   impl::PtrParticipant p = precice._impl->_accessor;
   preciceDebug ( "Participant found");
-  validate(p != NULL);
+  validate(p != nullptr);
   preciceDebug ( "dataContexts: " << p->_dataContexts << " and dataID: " << dataID);
-  validate(p->_dataContexts[dataID] != NULL);
+  validate(p->_dataContexts[dataID] != nullptr);
   mesh::PtrData data = p->_dataContexts[dataID]->toData;
   preciceDebug ( "ToData found");
-  validate(data.get() != NULL);
+  validate(data.get() != nullptr);
   utils::DynVector& writtenValues = data->values();
 
   validateEquals(writtenValues.size(), 8);

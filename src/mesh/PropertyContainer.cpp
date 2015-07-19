@@ -11,7 +11,7 @@ const int PropertyContainer:: INDEX_GEOMETRY_ID = getFreePropertyID();
 
 tarch::logging::Log PropertyContainer:: _log ( "precice::mesh::PropertyContainer" );
 
-utils::ManageUniqueIDs * PropertyContainer:: _manageUniqueIDs = NULL;
+utils::ManageUniqueIDs * PropertyContainer:: _manageUniqueIDs = nullptr;
 
 PropertyContainer:: PropertyContainer ()
 :
@@ -52,7 +52,7 @@ bool PropertyContainer:: hasProperty ( int propertyID ) const
 
 int PropertyContainer:: getFreePropertyID ()
 {
-   if ( _manageUniqueIDs == NULL ) {
+   if ( _manageUniqueIDs == nullptr ) {
       _manageUniqueIDs = new utils::ManageUniqueIDs ();
    }
    return _manageUniqueIDs->getFreeID();
@@ -60,7 +60,7 @@ int PropertyContainer:: getFreePropertyID ()
 
 void PropertyContainer:: resetPropertyIDCounter ()
 {
-   if ( _manageUniqueIDs != NULL ) {
+   if ( _manageUniqueIDs != nullptr ) {
       _manageUniqueIDs->resetIDs ();
    }
 }

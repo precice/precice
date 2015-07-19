@@ -139,7 +139,7 @@ tarch::configuration::ConfigurationRegistry::readFile(
   tarch::irr::io::IrrXMLReader* xmlReader =
     tarch::irr::io::createIrrXMLReader( filename.c_str() );
   
-  if ( (xmlReader==0) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
+  if ( (xmlReader==nullptr) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
     _log.error( "readFile(std::string,std::string)", "was not able to read input file " + filename );
     return std::list<tarch::configuration::TopLevelConfiguration*>();
   }
@@ -155,7 +155,7 @@ tarch::configuration::ConfigurationRegistry::readString(
   tarch::irr::io::IrrXMLReader* xmlReader =
     tarch::irr::io::createIrrXMLReaderFromString( configString );
   
-  if ( (xmlReader==0) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
+  if ( (xmlReader==nullptr) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
     _log.error( "readString(std::string,std::string)", "was not able to read input string" );
     return std::list<tarch::configuration::TopLevelConfiguration*>();
   }

@@ -270,7 +270,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
         }
       }
     }
-    if (exchangeData.get() == NULL){
+    if (exchangeData.get() == nullptr){
       std::ostringstream stream;
       stream << "Mesh \"" << nameMesh << "\" with data \"" << nameData
              << "\" not defined at definition of coupling scheme";
@@ -372,7 +372,7 @@ void CouplingSchemeConfiguration:: addCouplingScheme
     if (utils::contained(participantName, _couplingSchemeCompositions)) {
       preciceDebug("Coupling scheme composition exists already for participant");
       // Fetch the composition and add the new scheme.
-      assertion(_couplingSchemeCompositions[participantName] != NULL);
+      assertion(_couplingSchemeCompositions[participantName] != nullptr);
       _couplingSchemeCompositions[participantName]->addCouplingScheme(cplScheme);
     }
     else {
@@ -638,7 +638,7 @@ void CouplingSchemeConfiguration:: addTagPostProcessing
   utils::XMLTag& tag )
 {
   preciceTrace1( "addTagPostProcessing()",tag.getFullName());
-  if(_postProcConfig.get()==NULL){
+  if(_postProcConfig.get()==nullptr){
     _postProcConfig = PtrPostProcessingConfiguration(
                           new PostProcessingConfiguration(_meshConfig));
   }
@@ -789,7 +789,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getPostProcessing().get() != NULL){
+  if (_postProcConfig->getPostProcessing().get() != nullptr){
     foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
       _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     }
@@ -831,7 +831,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getPostProcessing().get() != NULL){
+  if (_postProcConfig->getPostProcessing().get() != nullptr){
     foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
       _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     }
@@ -895,7 +895,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getPostProcessing().get() != NULL){
+  if (_postProcConfig->getPostProcessing().get() != nullptr){
     foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
       _meshConfig->addNeededMesh(_config.controller,neededMesh);
     }

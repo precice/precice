@@ -22,7 +22,7 @@ void Petsc:: initialize
   PetscInitialized(&petscIsInitialized);
   if (not petscIsInitialized) {
     PetscErrorCode ierr;
-    ierr = PetscInitialize(argc, argv, "", NULL); CHKERRV(ierr);
+    ierr = PetscInitialize(argc, argv, "", nullptr); CHKERRV(ierr);
   }
 #endif // not PRECICE_NO_PETSC
 }

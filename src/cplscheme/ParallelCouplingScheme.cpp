@@ -51,7 +51,7 @@ void ParallelCouplingScheme::initialize
       setupConvergenceMeasures(); // needs _couplingData configured
       mergeData(); // merge send and receive data for all pp calls
       setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
-      if (getPostProcessing().get() != NULL) {
+      if (getPostProcessing().get() != nullptr) {
         preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
                      "For parallel coupling, the number of coupling data vectors has to be 2, not: "
                      << getPostProcessing()->getDataIDs().size());
@@ -251,13 +251,13 @@ void ParallelCouplingScheme::implicitAdvance()
         convergence = true;
       }
       if (convergence) {
-        if (getPostProcessing().get() != NULL) {
+        if (getPostProcessing().get() != nullptr) {
           getPostProcessing()->iterationsConverged(getAllData());
         }
         newConvergenceMeasurements();
         timestepCompleted();
       }
-      else if (getPostProcessing().get() != NULL) {
+      else if (getPostProcessing().get() != nullptr) {
         getPostProcessing()->performPostProcessing(getAllData());
       }
       getM2N()->startSendPackage(0);

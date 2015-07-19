@@ -238,7 +238,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	  backSubstitution(__R, _local_b, __c);
 	}else{
 	  
-	   assertion(utils::MasterSlave::_communication.get() != NULL);
+	   assertion(utils::MasterSlave::_communication.get() != nullptr);
 	   assertion(utils::MasterSlave::_communication->isConnected());
 	   
 	  if(utils::MasterSlave::_slaveMode){

@@ -176,7 +176,7 @@ void EventRegistry::print(std::ostream &out, bool terse)
     EventData::Properties allProps;
     Event::Clock::duration globalDuration = globalStop - globalStart;
 
-    std::time_t currentTime = std::time(NULL);
+    std::time_t currentTime = std::time(nullptr);
     out << "Run finished at " << std::asctime(std::localtime(&currentTime));
 
     if (not terse) {

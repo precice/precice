@@ -96,7 +96,7 @@ bool tarch::logging::CommandLineLogger::FilterListEntry::operator==(const Filter
 
 
 tarch::logging::CommandLineLogger::CommandLineLogger():
-  _outputStream(0) {
+  _outputStream(nullptr) {
   configureOutputStreams();
   setLogColumnSeparator();
   setLogTimeStamp();
@@ -119,7 +119,7 @@ tarch::logging::CommandLineLogger& tarch::logging::CommandLineLogger::getInstanc
 
 
 std::ostream& tarch::logging::CommandLineLogger::out() {
-  if (_outputStream==0) {
+  if (_outputStream==nullptr) {
     return std::cout;
   }
   else {
@@ -146,9 +146,9 @@ tarch::logging::CommandLineLogger::CommandLineLogger(const CommandLineLogger& pa
 
 
 tarch::logging::CommandLineLogger::~CommandLineLogger() {
-  if (_outputStream!=0) {
+  if (_outputStream!=nullptr) {
     delete _outputStream;
-    _outputStream = 0;
+    _outputStream = nullptr;
   }
 }
 

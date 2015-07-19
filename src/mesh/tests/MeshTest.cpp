@@ -398,7 +398,7 @@ void MeshTest:: testDemonstration ()
       index++;
     }
 
-    Triangle* t = NULL;
+    Triangle* t = nullptr;
     if ( dim == 3 ){
       // Create triangle
       t = & mesh.createTriangle ( e0, e1, e2 );

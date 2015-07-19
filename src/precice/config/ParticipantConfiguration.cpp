@@ -467,7 +467,7 @@ void ParticipantConfiguration:: xmlTagCallback
     }
     bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
-    if (mesh.get() == 0){
+    if (mesh.get() == nullptr){
       std::ostringstream stream;
       stream << "Participant \"" << _participants.back()->getName()
              << "\" uses mesh \"" << name << "\" which is not defined";
@@ -655,7 +655,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     mappingContext->timing = confMapping.timing;
 
     mapping::PtrMapping& map = mappingContext->mapping;
-    assertion(map.get() == NULL);
+    assertion(map.get() == nullptr);
     map = confMapping.mapping;
 
     const mesh::PtrMesh& input = fromMeshContext.mesh;

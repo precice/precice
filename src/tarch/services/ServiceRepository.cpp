@@ -25,7 +25,7 @@ tarch::services::ServiceRepository& tarch::services::ServiceRepository::getInsta
 
 
 void tarch::services::ServiceRepository::addService( Service* const service, const std::string& name ) {
-  assertion( service!=0 );
+  assertion( service!=nullptr );
   _services.push_back( service );
   _serviceNames.push_back( name );
 }

@@ -450,9 +450,9 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh toMesh(_meshConfig->getMesh(toMeshName));
-  preciceCheck(fromMesh.get() != NULL, "createMapping()",
+  preciceCheck(fromMesh.get() != nullptr, "createMapping()",
                "Mesh \"" << fromMeshName << "\" not defined at creation of mapping!");
-  preciceCheck(toMesh.get() != NULL, "createMapping()",
+  preciceCheck(toMesh.get() != nullptr, "createMapping()",
                "Mesh \"" << toMeshName << "\" not defined at creation of mapping!");
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh = toMesh;

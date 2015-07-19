@@ -229,7 +229,7 @@ void M2NConfiguration:: xmlTagCallback
       com = com::Communication::SharedPointer(new com::FileCommunication(false, dir));
     }
 
-    assertion(com.get() != NULL);
+    assertion(com.get() != nullptr);
 
 
     DistributedComFactory::SharedPointer distrFactory;
@@ -241,7 +241,7 @@ void M2NConfiguration:: xmlTagCallback
       assertion(tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS);
       distrFactory = DistributedComFactory::SharedPointer(new PointToPointComFactory(comFactory));
     }
-    assertion(distrFactory.get() != NULL);
+    assertion(distrFactory.get() != nullptr);
 
     m2n::M2N::SharedPointer m2n = m2n::M2N::SharedPointer(new m2n::M2N(com, distrFactory));
     _m2ns.push_back(boost::make_tuple(m2n, from, to));

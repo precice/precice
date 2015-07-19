@@ -228,7 +228,7 @@ void BaseCouplingScheme:: sendState
 {
   preciceTrace1("sendState()", rankReceiver);
   communication->startSendPackage(rankReceiver );
-  assertion(communication.get() != NULL);
+  assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
   communication->send(_maxTime, rankReceiver);
   communication->send(_maxTimesteps, rankReceiver);
@@ -259,7 +259,7 @@ void BaseCouplingScheme:: receiveState
 {
   preciceTrace1("receiveState()", rankSender);
   communication->startReceivePackage(rankSender);
-  assertion(communication.get() != NULL);
+  assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
   communication->receive(_maxTime, rankSender);
   communication->receive(_maxTimesteps, rankSender);
@@ -296,7 +296,7 @@ std::vector<int> BaseCouplingScheme:: sendData
   preciceTrace("sendData()");
 
   std::vector<int> sentDataIDs;
-  assertion(m2n.get() != NULL);
+  assertion(m2n.get() != nullptr);
   assertion(m2n->isConnected());
   for (DataMap::value_type& pair : _sendData){
     int size = pair.second->values->size();
@@ -314,7 +314,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
 {
   preciceTrace("receiveData()");
   std::vector<int> receivedDataIDs;
-  assertion(m2n.get() != NULL);
+  assertion(m2n.get() != nullptr);
   assertion(m2n->isConnected());
 
   for (DataMap::value_type & pair : _receiveData) {
@@ -350,7 +350,7 @@ CouplingData* BaseCouplingScheme:: getSendData
   if (iter != _sendData.end()) {
     return  &(*(iter->second));
   }
-  return NULL;
+  return nullptr;
 }
 
 CouplingData* BaseCouplingScheme:: getReceiveData
@@ -362,7 +362,7 @@ CouplingData* BaseCouplingScheme:: getReceiveData
   if (iter != _receiveData.end()) {
     return  &(*(iter->second));
   }
-  return NULL;
+  return nullptr;
 }
 
 void BaseCouplingScheme::finalize()
@@ -642,7 +642,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
   preciceDebug("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
-    assertion(convMeasure.data != NULL);
+    assertion(convMeasure.data != nullptr);
     if (convMeasure.data->oldValues.cols() < 1){
       convMeasure.data->oldValues.append(CouplingData::DataMatrix(
                        convMeasure.data->values->size(), 1, 0.0));
@@ -664,7 +664,7 @@ void BaseCouplingScheme::setIterationPostProcessing
 (
   impl::PtrPostProcessing postProcessing )
 {
-  assertion(postProcessing.get() != NULL);
+  assertion(postProcessing.get() != nullptr);
   _postProcessing = postProcessing;
 }
 
@@ -678,12 +678,12 @@ void BaseCouplingScheme::setupConvergenceMeasures()
            << "an implicit coupling scheme!");
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.dataID;
-    if ((getSendData(dataID) != NULL)){
+    if ((getSendData(dataID) != nullptr)){
       convMeasure.data = getSendData(dataID);
     }
     else {
       convMeasure.data = getReceiveData(dataID);
-      assertion(convMeasure.data != NULL);
+      assertion(convMeasure.data != nullptr);
     }
   }
 }
@@ -692,7 +692,7 @@ void BaseCouplingScheme::newConvergenceMeasurements()
 {
   preciceTrace("newConvergenceMeasurements()");
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
-    assertion(convMeasure.measure.get() != NULL);
+    assertion(convMeasure.measure.get() != nullptr);
     convMeasure.measure->newMeasurementSeries();
   }
 }
@@ -706,7 +706,7 @@ void BaseCouplingScheme::addConvergenceMeasure
 {
   ConvergenceMeasure convMeasure;
   convMeasure.dataID = dataID;
-  convMeasure.data = NULL;
+  convMeasure.data = nullptr;
   convMeasure.suffices = suffices;
   convMeasure.measure = measure;
   _convergenceMeasures.push_back(convMeasure);
@@ -727,8 +727,8 @@ bool BaseCouplingScheme:: measureConvergence()
   for(size_t i = 0; i < _convergenceMeasures.size(); i++) {
     ConvergenceMeasure& convMeasure = _convergenceMeasures[i];
 //  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
-    assertion(convMeasure.data != NULL);
-    assertion(convMeasure.measure.get() != NULL);
+    assertion(convMeasure.data != nullptr);
+    assertion(convMeasure.measure.get() != nullptr);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values);
     if(not utils::MasterSlave::_slaveMode){
@@ -821,7 +821,7 @@ void BaseCouplingScheme:: exportState(const std::string& filenamePrefix ) const
     for (const BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
       writer.write(dataMap.second->oldValues);
     }
-    if (_postProcessing.get() != NULL) {
+    if (_postProcessing.get() != nullptr) {
       _postProcessing->exportState(writer);
     }
   }
@@ -837,7 +837,7 @@ void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
     for (BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
       reader.read(dataMap.second->oldValues);
     }
-    if (_postProcessing.get() != NULL){
+    if (_postProcessing.get() != nullptr){
       _postProcessing->importState(reader);
     }
   }
