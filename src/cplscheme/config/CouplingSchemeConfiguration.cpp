@@ -778,11 +778,11 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
 
   // Add convergence measures
   using boost::get;
-  for (size_t i=0; i < _config.convMeasures.size(); i++){
-    int dataID = get<0>(_config.convMeasures[i]);
-    bool suffices = get<1>(_config.convMeasures[i]);
-    std::string neededMesh = get<2>(_config.convMeasures[i]);
-    impl::PtrConvergenceMeasure measure = get<3>(_config.convMeasures[i]);
+  for (auto & elem : _config.convMeasures){
+    int dataID = get<0>(elem);
+    bool suffices = get<1>(elem);
+    std::string neededMesh = get<2>(elem);
+    impl::PtrConvergenceMeasure measure = get<3>(elem);
     _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     checkIfDataIsExchanged(dataID);
     scheme->addConvergenceMeasure(dataID, suffices, measure);
@@ -820,11 +820,11 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 
   // Add convergence measures
   using boost::get;
-  for (size_t i=0; i < _config.convMeasures.size(); i++){
-    int dataID = get<0>(_config.convMeasures[i]);
-    bool suffices = get<1>(_config.convMeasures[i]);
-    std::string neededMesh = get<2>(_config.convMeasures[i]);
-    impl::PtrConvergenceMeasure measure = get<3>(_config.convMeasures[i]);
+  for (auto & elem : _config.convMeasures){
+    int dataID = get<0>(elem);
+    bool suffices = get<1>(elem);
+    std::string neededMesh = get<2>(elem);
+    impl::PtrConvergenceMeasure measure = get<3>(elem);
     _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     checkIfDataIsExchanged(dataID);
     scheme->addConvergenceMeasure(dataID, suffices, measure);
@@ -884,11 +884,11 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
 
   // Add convergence measures
   using boost::get;
-  for (size_t i=0; i < _config.convMeasures.size(); i++){
-    int dataID = get<0>(_config.convMeasures[i]);
-    bool suffices = get<1>(_config.convMeasures[i]);
-    std::string neededMesh = get<2>(_config.convMeasures[i]);
-    impl::PtrConvergenceMeasure measure = get<3>(_config.convMeasures[i]);
+  for (auto & elem : _config.convMeasures){
+    int dataID = get<0>(elem);
+    bool suffices = get<1>(elem);
+    std::string neededMesh = get<2>(elem);
+    impl::PtrConvergenceMeasure measure = get<3>(elem);
     _meshConfig->addNeededMesh(_config.controller,neededMesh);
     checkIfDataIsExchanged(dataID);
     scheme->addConvergenceMeasure(dataID, suffices, measure);

@@ -383,8 +383,8 @@ void tarch::logging::CommandLineLogger::addFilterListEntry( const FilterListEntr
 
 
 void tarch::logging::CommandLineLogger::addFilterListEntries( const FilterList&    entries) {
-  for (FilterList::const_iterator p = entries.begin(); p!=entries.end(); p++ ) {
-    addFilterListEntry(*p);
+  for (const auto & entrie : entries) {
+    addFilterListEntry(entrie);
   }
 }
 
@@ -402,8 +402,8 @@ bool tarch::logging::CommandLineLogger::filterOut(
   bool result    = true;
   bool foundRule = false;
   int lengthActive = 0;
-  for (FilterList::const_iterator p = _filterlist.begin(); p!=_filterlist.end(); p++ ) {
-    int length = static_cast<int>(p->_namespaceName.size());
+  for (const auto & elem : _filterlist) {
+    int length = static_cast<int>(elem._namespaceName.size());
     if ( length >= lengthActive ) {
       #ifdef Parallel
       if (
@@ -416,11 +416,11 @@ bool tarch::logging::CommandLineLogger::filterOut(
         foundRule    = true;
       }
       #else
-      if ( (targetName.find(p->_targetName, 0)==0) &&
-           (className.find( p->_namespaceName, 0 ) == 0))
+      if ( (targetName.find(elem._targetName, 0)==0) &&
+           (className.find( elem._namespaceName, 0 ) == 0))
       {
         lengthActive = length;
-        result       = p->_isBlackEntry;
+        result       = elem._isBlackEntry;
         foundRule    = true;
       }
       #endif

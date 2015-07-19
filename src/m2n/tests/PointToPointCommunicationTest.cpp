@@ -31,8 +31,8 @@ namespace tests {
 
 void
 process(vector<double>& data) {
-  for (int i = 0; i < data.size(); ++i) {
-    data[i] += MasterSlave::_rank + 1;
+  for (auto & elem : data) {
+    elem += MasterSlave::_rank + 1;
   }
 }
 

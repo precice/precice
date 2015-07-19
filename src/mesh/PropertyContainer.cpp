@@ -39,8 +39,8 @@ bool PropertyContainer:: deleteProperty ( int properyID )
 bool PropertyContainer:: hasProperty ( int propertyID ) const
 {
    if ( _properties.find(propertyID) == _properties.end() ) {
-      for ( size_t i=0; i < _parents.size(); i++ ) {
-         if ( _parents[i]->hasProperty(propertyID) ) {
+      for (auto & elem : _parents) {
+         if ( elem->hasProperty(propertyID) ) {
             return true;
          }
 

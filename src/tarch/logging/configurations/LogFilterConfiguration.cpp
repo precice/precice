@@ -114,11 +114,11 @@ void tarch::logging::configurations::LogFilterConfiguration::toXML(std::ostream&
       << "  entries of the logger. The tag may not contain any subtags. " << std::endl
       << "  -->" << std::endl;
   if ( isValid() && !_filterList.empty() ) {
-    for (tarch::logging::CommandLineLogger::FilterList::const_iterator p = _filterList.begin(); p!=_filterList.end(); p++ ) {
+    for (const auto & elem : _filterList) {
       out << "<" + getTag();
       out << " target=\"debug\"";
-      out << " component=\"" << p->_namespaceName << "\"";
-      out << " rank=\""      << p->_rank          << "\"";
+      out << " component=\"" << elem._namespaceName << "\"";
+      out << " rank=\""      << elem._rank          << "\"";
       out << " switch=\"off\"";
       out << "/>\n";
     }

@@ -206,14 +206,14 @@ void ImportVRML:: doImport
                   == mesh.propertyContainers().size(), "doImport()",
                   "Number of property containers in VRML file does not equals "
                   << "that of mesh from configuration!" );
-   for ( size_t i=0; i < vrmlParser.propertyContainers.size(); i++ ) {
-      std::string subIDName ( vrmlParser.propertyContainers[i].subIDName );
+   for (auto & elem : vrmlParser.propertyContainers) {
+      std::string subIDName ( elem.subIDName );
       mesh::PropertyContainer& cont = mesh.getPropertyContainer(subIDName);
       if (dimensions == 2){
         mesh::Mesh::EdgeContainer& edges = mesh.edges();
-        size_t size = vrmlParser.propertyContainers[i].faces.size();
+        size_t size = elem.faces.size();
         for (size_t iFace=0; iFace < size; iFace++){
-          int index = vrmlParser.propertyContainers[i].faces[iFace];
+          int index = elem.faces[iFace];
           mesh::Edge& edge = edges[index];
           edge.addParent(cont);
           addParentIfMissing(edge.vertex(0), cont);
@@ -223,9 +223,9 @@ void ImportVRML:: doImport
       else {
         assertionMsg(dimensions == 3, dimensions);
         mesh::Mesh::TriangleContainer& triangles = mesh.triangles();
-        size_t size = vrmlParser.propertyContainers[i].faces.size();
+        size_t size = elem.faces.size();
         for (size_t iFace=0; iFace < size; iFace++){
-          int index = vrmlParser.propertyContainers[i].faces[iFace];
+          int index = elem.faces[iFace];
           mesh::Triangle& triangle = triangles[index];
           triangle.addParent(cont);
           addParentIfMissing(triangle.edge(0), cont);

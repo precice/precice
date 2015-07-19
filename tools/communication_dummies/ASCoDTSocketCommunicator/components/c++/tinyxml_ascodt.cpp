@@ -1744,10 +1744,10 @@ XMLPrinter::XMLPrinter( FILE* file, bool compact ) :
         _entityFlag[i] = false;
         _restrictedEntityFlag[i] = false;
     }
-    for( int i=0; i<NUM_ENTITIES; ++i ) {
+    for(auto & entitie : entities) {
         TIXMLASSERT( entities[i].value < ENTITY_RANGE );
-        if ( entities[i].value < ENTITY_RANGE ) {
-            _entityFlag[ (int)entities[i].value ] = true;
+        if ( entitie.value < ENTITY_RANGE ) {
+            _entityFlag[ (int)entitie.value ] = true;
         }
     }
     _restrictedEntityFlag[(int)'&'] = true;
@@ -1819,9 +1819,9 @@ void XMLPrinter::PrintString( const char* p, bool restricted )
                         Print( "%c", *p );
                         ++p;
                     }
-                    for( int i=0; i<NUM_ENTITIES; ++i ) {
-                        if ( entities[i].value == *q ) {
-                            Print( "&%s;", entities[i].pattern );
+                    for(auto & entitie : entities) {
+                        if ( entitie.value == *q ) {
+                            Print( "&%s;", entitie.pattern );
                             break;
                         }
                     }

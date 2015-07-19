@@ -74,7 +74,7 @@ void ExportVTK::exportGeometry
     }
     outFile << std::endl << "CELL_TYPES " << mesh.edges().size()
             << std::endl << std::endl;
-    for(size_t i=0; i < mesh.edges().size(); i++){
+    for(auto & elem : mesh.edges()){
       outFile << "3" << std::endl;
     }
   }
