@@ -2322,17 +2322,10 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   if((_accessorProcessRank % 2) == 0)
   {
 	  utils::MasterSlave::_cyclicCommLeft->acceptConnection( _accessorName + "-cyclicComm-" + std::to_string(prevProc), _accessorName, 0, 1 );
-	 	  std::cout<<"proc["<<_accessorProcessRank<<"] acceptsConnection: "<< _accessorName + "-cyclicComm-" + std::to_string(prevProc)<<std::endl;
 	  utils::MasterSlave::_cyclicCommRight->requestConnection( _accessorName + "-cyclicComm-" +  std::to_string(_accessorProcessRank), _accessorName, 0, 1 );
-	  std::cout<<"proc["<<_accessorProcessRank<<"] requestConnection: "<<_accessorName + "-cyclicComm-" +  std::to_string(_accessorProcessRank)<<std::endl;
-
   }else{
-
 	  utils::MasterSlave::_cyclicCommRight->requestConnection( _accessorName + "-cyclicComm-" +  std::to_string(_accessorProcessRank), _accessorName, 0, 1 );
-	 	  std::cout<<"proc["<<_accessorProcessRank<<"] requestConnection: "<<_accessorName + "-cyclicComm-" +  std::to_string(_accessorProcessRank)<<std::endl;
-
-		  utils::MasterSlave::_cyclicCommLeft->acceptConnection( _accessorName + "-cyclicComm-" + std::to_string(prevProc), _accessorName, 0, 1 );
-		  	  std::cout<<"proc["<<_accessorProcessRank<<"] acceptsConnection: "<< _accessorName + "-cyclicComm-" + std::to_string(prevProc)<<std::endl;
+	  utils::MasterSlave::_cyclicCommLeft->acceptConnection( _accessorName + "-cyclicComm-" + std::to_string(prevProc), _accessorName, 0, 1 );
 
 
   }
