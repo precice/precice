@@ -138,8 +138,8 @@ void DataConfiguration:: addData
   ConfiguredData data(name, dataDimensions);
 
   // Check, if data with same name has been added already
-  for ( size_t i=0; i < _data.size(); i++ ) {
-    preciceCheck ( _data[i].name != data.name, "addData()",
+  for (auto & elem : _data) {
+    preciceCheck ( elem.name != data.name, "addData()",
                    "Data \"" << data.name << "\" uses non-unique name!" );
   }
   _data.push_back ( data );

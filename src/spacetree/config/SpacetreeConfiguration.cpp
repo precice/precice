@@ -162,7 +162,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
 {
   preciceTrace4("getSpacetree()", type, offset, halflengths, maxMeshwidth);
   assertion(_dimensions != 0);
-  Spacetree* spacetree = NULL;
+  Spacetree* spacetree = nullptr;
   assertion2 ( offset.size() == halflengths.size(), offset.size(), halflengths.size() );
   bool equalHalflengths = true;
   equalHalflengths &= tarch::la::equals(halflengths(0), halflengths(1));
@@ -186,7 +186,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
   else {
     preciceError("getSpacetree()", "Unknown spacetree type \"" << type << "\"!");
   }
-  assertion(spacetree != NULL);
+  assertion(spacetree != nullptr);
   return PtrSpacetree(spacetree);
 }
 

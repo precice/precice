@@ -51,15 +51,15 @@ void SerialCouplingScheme::initialize
         setupConvergenceMeasures(); // needs _couplingData configured
         setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
       }
-      if (getPostProcessing().get() != NULL) {
+      if (getPostProcessing().get() != nullptr) {
         preciceCheck(getPostProcessing()->getDataIDs().size()==1 ,"initialize()",
                      "For serial coupling, the number of coupling data vectors has to be 1");
         getPostProcessing()->initialize(getSendData()); // Reserve memory, initialize
       }
     }
-    else if (getPostProcessing().get() != NULL) {
+    else if (getPostProcessing().get() != nullptr) {
       int dataID = *(getPostProcessing()->getDataIDs().begin());
-      preciceCheck(getSendData(dataID) == NULL, "initialize()",
+      preciceCheck(getSendData(dataID) == nullptr, "initialize()",
                    "In case of serial coupling, post-processing can be defined for "
                    << "data of second participant only!");
     }
@@ -221,13 +221,13 @@ void SerialCouplingScheme:: advance()
           convergence = true;
         }
         if (convergence) {
-          if (getPostProcessing().get() != NULL) {
+          if (getPostProcessing().get() != nullptr) {
             getPostProcessing()->iterationsConverged(getSendData());
           }
           newConvergenceMeasurements();
           timestepCompleted();
         }
-        else if (getPostProcessing().get() != NULL) {
+        else if (getPostProcessing().get() != nullptr) {
           getPostProcessing()->performPostProcessing(getSendData());
         }
         getM2N()->startSendPackage(0);

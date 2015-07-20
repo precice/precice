@@ -26,21 +26,21 @@ std::string tarch::logging::configurations::LogFilterConfiguration::getTag() con
 
 
 void tarch::logging::configurations::LogFilterConfiguration::parseSubtag( tarch::irr::io::IrrXMLReader* xmlReader ) {
-  assertion( xmlReader != 0 );
+  assertion( xmlReader != nullptr );
 
-  if (xmlReader->getAttributeValue("target")==0) {
+  if (xmlReader->getAttributeValue("target")==nullptr) {
     _log.error("parseSubtag(...)", "attribute \"target\" missing within tag <" + getTag() + ">");
     _isValid = false;
     return;
   }
 
-  if (xmlReader->getAttributeValue("switch")==0) {
+  if (xmlReader->getAttributeValue("switch")==nullptr) {
     _log.error("parseSubtag(...)", "attribute \"switch\" missing within tag <" + getTag() + ">");
     _isValid = false;
     return;
   }
 
-  if (xmlReader->getAttributeValue("component")==0) {
+  if (xmlReader->getAttributeValue("component")==nullptr) {
     _log.error("parseSubtag(...)", "attribute \"component\" missing within tag <" + getTag() + ">");
     _isValid = false;
     return;
@@ -70,7 +70,7 @@ void tarch::logging::configurations::LogFilterConfiguration::parseSubtag( tarch:
     return;
   }
 
-  if ( (xmlReader->getAttributeValue("rank")!=0) && strcmp("*",xmlReader->getAttributeValue("rank")) ) {
+  if ( (xmlReader->getAttributeValue("rank")!=nullptr) && strcmp("*",xmlReader->getAttributeValue("rank")) ) {
   	newEntry._rank = xmlReader->getAttributeValueAsInt("rank");
   }
   else {
@@ -114,11 +114,11 @@ void tarch::logging::configurations::LogFilterConfiguration::toXML(std::ostream&
       << "  entries of the logger. The tag may not contain any subtags. " << std::endl
       << "  -->" << std::endl;
   if ( isValid() && !_filterList.empty() ) {
-    for (tarch::logging::CommandLineLogger::FilterList::const_iterator p = _filterList.begin(); p!=_filterList.end(); p++ ) {
+    for (const auto & elem : _filterList) {
       out << "<" + getTag();
       out << " target=\"debug\"";
-      out << " component=\"" << p->_namespaceName << "\"";
-      out << " rank=\""      << p->_rank          << "\"";
+      out << " component=\"" << elem._namespaceName << "\"";
+      out << " rank=\""      << elem._rank          << "\"";
       out << " switch=\"off\"";
       out << "/>\n";
     }

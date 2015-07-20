@@ -57,7 +57,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   _neededMeshes(),
   _config()
 {
-  assertion(meshConfig.get() != NULL);
+  assertion(meshConfig.get() != nullptr);
 }
 
 void PostProcessingConfiguration:: connectTags(

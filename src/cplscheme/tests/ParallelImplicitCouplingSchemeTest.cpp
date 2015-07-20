@@ -96,7 +96,7 @@ void ParallelImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
   
   utils::configure(root, path);
-  validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != NULL);
+  validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != nullptr);
   meshConfig->setMeshSubIDs();
 }
 

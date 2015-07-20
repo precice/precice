@@ -138,7 +138,7 @@ void
 MPIDirectCommunication::broadcast() {
   preciceTrace("broadcast()");
 
-  MPI_Bcast(0, 0, MPI_DATATYPE_NULL, MPI_PROC_NULL, _communicator);
+  MPI_Bcast(nullptr, 0, MPI_DATATYPE_NULL, MPI_PROC_NULL, _communicator);
 }
 
 void

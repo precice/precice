@@ -69,12 +69,12 @@ void GatherScatterCommunication:: send (
 {
   preciceTrace1("sendAll", size);
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
-  assertion(utils::MasterSlave::_communication.get() != NULL);
+  assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
   assertion(utils::MasterSlave::_size>1);
   assertion(utils::MasterSlave::_rank!=-1);
 
-  double* globalItemsToSend = NULL;
+  double* globalItemsToSend = nullptr;
 
   //gatherData
   if(utils::MasterSlave::_slaveMode){ //slave
@@ -113,7 +113,7 @@ void GatherScatterCommunication:: send (
     }
 
     //send data to other master
-    assertion(globalItemsToSend!=NULL);
+    assertion(globalItemsToSend!=nullptr);
     _com->send(globalItemsToSend, globalSize, 0);
     delete[] globalItemsToSend;
   } //master
@@ -132,12 +132,12 @@ void GatherScatterCommunication:: receive (
 {
   preciceTrace1("receiveAll", size);
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
-  assertion(utils::MasterSlave::_communication.get() != NULL);
+  assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
   assertion(utils::MasterSlave::_size>1);
   assertion(utils::MasterSlave::_rank!=-1);
 
-  double* globalItemsToReceive = NULL;
+  double* globalItemsToReceive = nullptr;
 
   //receive data at master
   if(utils::MasterSlave::_masterMode){

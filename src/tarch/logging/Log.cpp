@@ -95,7 +95,7 @@ std::string tarch::logging::Log::getMachineInformation() const {
 
 #ifdef CompilerHasUTSName
   utsname* utsdata = new utsname();
-  assertion( utsdata!=NULL );
+  assertion( utsdata!=nullptr );
   uname(utsdata);
 
   message << "[" << utsdata->nodename << "]";
@@ -122,7 +122,7 @@ std::string tarch::logging::Log::getMachineInformation() const {
 
 long int tarch::logging::Log::getTimeStampMS() const {
   time_t* timeStamp = new time_t();
-  assertion( timeStamp!=NULL );
+  assertion( timeStamp!=nullptr );
   time(timeStamp);
   long int result = *timeStamp;
   delete timeStamp;
@@ -133,14 +133,14 @@ long int tarch::logging::Log::getTimeStampMS() const {
 std::string tarch::logging::Log::getTimeStampHumanReadable() const {
   // calender time: create struct and get time from system
   time_t* timeStamp = new time_t();
-  assertion( timeStamp!=NULL );
+  assertion( timeStamp!=nullptr );
   time(timeStamp);
 
   // Break down time into hour, seconds, ...
   // Note that time is only a substructure of timeStamp. Therefore the pointer
   // to time may not be deleted.
   tm*     time      = localtime(timeStamp);
-  assertion( time!=NULL );
+  assertion( time!=nullptr );
 
   std::ostringstream message;
 

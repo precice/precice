@@ -49,7 +49,7 @@ void BalanceVertexPositionAction:: performAction
       "BalanceVertexPositionAction()", "BalanceVertexPositionAction is not yet supported "
           << " for a usage with a Master")
   mesh::PtrMesh mesh = getMesh();
-  assertion(mesh.get() != NULL);
+  assertion(mesh.get() != nullptr);
   using utils::DynVector;
   using utils::Vector2D;
   using utils::Vector3D;

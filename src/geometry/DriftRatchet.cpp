@@ -101,8 +101,8 @@ void DriftRatchet:: specializedCreate
 {
    using namespace mesh;
    std::string nameSubID ( seed.getName() + "-side-" );
-   PropertyContainer* leftWall = NULL;
-   PropertyContainer* rightWall = NULL;
+   PropertyContainer* leftWall = nullptr;
+   PropertyContainer* rightWall = nullptr;
    if ( seed.getNameIDPairs().count(nameSubID + "0") ) {
       leftWall = & seed.getPropertyContainer ( nameSubID + "0" );
    }
@@ -114,7 +114,7 @@ void DriftRatchet:: specializedCreate
    count = getOffset().size() == 3 ? count : 0; // Only used in 3D
    mesh::Edge ** cutEdges = new mesh::Edge * [count];
    createLeftWall ( seed, leftWall, cutVertices, cutEdges );
-   createBodyWall ( seed, NULL, cutVertices, cutEdges );
+   createBodyWall ( seed, nullptr, cutVertices, cutEdges );
    createRightWall ( seed, rightWall, cutVertices, cutEdges );
    delete[] cutVertices;
    delete[] cutEdges;
@@ -133,7 +133,7 @@ void DriftRatchet:: createLeftWall
     double radius = getRadius ( 0.0 );
     Vector2D center ( 0.0 );
     mesh::Vertex& centerVertex = mesh.createVertex ( center );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
        centerVertex.addParent ( *propertyContainer );
     }
     Vector2D upperPoint ( center(0), center(1) + radius );
@@ -142,7 +142,7 @@ void DriftRatchet:: createLeftWall
     cutVertices[1] = & mesh.createVertex ( lowerPoint );
     mesh::Edge& e0 = mesh.createEdge ( *cutVertices[0], centerVertex);
     mesh::Edge& e1 = mesh.createEdge ( centerVertex, *cutVertices[1] );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
       e0.addParent ( *propertyContainer );
       e1.addParent ( *propertyContainer );
     }
@@ -156,7 +156,7 @@ void DriftRatchet:: createLeftWall
     double radius = getRadius ( 0.0 );
     Vector3D center(0.0);
     mesh::Vertex& centerVertex = mesh.createVertex ( center );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
        centerVertex.addParent ( *propertyContainer );
     }
 
@@ -169,7 +169,7 @@ void DriftRatchet:: createLeftWall
       currentPoint(2) += z;
       currentAngle += angle;
       cutVertices[i] = & mesh.createVertex ( currentPoint );
-      if ( propertyContainer != NULL ) {
+      if ( propertyContainer != nullptr ) {
         cutVertices[i]->addParent ( *propertyContainer );
       }
     }
@@ -178,12 +178,12 @@ void DriftRatchet:: createLeftWall
     mesh::Edge & firstCenterEdge = mesh.createEdge ( centerVertex,
                                                      *cutVertices[0] );
     mesh::Edge * oldCenterEdge = & firstCenterEdge;
-    mesh::Edge * newCenterEdge = NULL;
+    mesh::Edge * newCenterEdge = nullptr;
     for ( int i=0; i < vertexCount - 1; i++ ) {
       newCenterEdge = & mesh.createEdge ( centerVertex, *cutVertices[i+1] );
       cutEdges[i] = & mesh.createEdge ( *cutVertices[i], *cutVertices[i+1] );
       mesh::Triangle & t = mesh.createTriangle ( *oldCenterEdge, *cutEdges[i], *newCenterEdge );
-      if ( propertyContainer != NULL ) {
+      if ( propertyContainer != nullptr ) {
         cutEdges[i]->addParent ( *propertyContainer );
         oldCenterEdge->addParent ( *propertyContainer );
         t.addParent ( *propertyContainer );
@@ -194,7 +194,7 @@ void DriftRatchet:: createLeftWall
                                                   *cutVertices[0] );
     mesh::Triangle & t = mesh.createTriangle (
       *oldCenterEdge, *cutEdges[vertexCount-1], firstCenterEdge );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
       cutEdges[vertexCount-1]->addParent ( *propertyContainer );
       t.addParent ( *propertyContainer );
     }
@@ -246,7 +246,7 @@ void DriftRatchet:: createBodyWallSection
     mesh::Edge& e1 = mesh.createEdge ( *cutVertices[1], lowerVertex );
     cutVertices[0] = & upperVertex;
     cutVertices[1] = & lowerVertex;
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
       e0.addParent ( *propertyContainer );
       e1.addParent ( *propertyContainer );
       cutVertices[0]->addParent ( *propertyContainer );
@@ -269,7 +269,7 @@ void DriftRatchet:: createBodyWallSection
       currentCenter(2) += z;
       currentAngle += angle;
       newCutVertices[i] = & mesh.createVertex ( currentCenter );
-      if ( propertyContainer != NULL ) {
+      if ( propertyContainer != nullptr ) {
         newCutVertices[i]->addParent ( *propertyContainer );
       }
     }
@@ -278,12 +278,12 @@ void DriftRatchet:: createBodyWallSection
     mesh::Edge** newCutEdges = new mesh::Edge * [vertexCount];
     mesh::Edge* initialEdge = & mesh.createEdge ( *cutVertices[0],
                                                   *newCutVertices[0] );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
       initialEdge->addParent ( *propertyContainer );
     }
     mesh::Edge* firstEdge = initialEdge;
-    mesh::Edge* crossingEdge = NULL;
-    mesh::Edge* secondEdge = NULL;
+    mesh::Edge* crossingEdge = nullptr;
+    mesh::Edge* secondEdge = nullptr;
     for ( int i=0; i < vertexCount - 1; i++ ) {
       crossingEdge = & mesh.createEdge ( *cutVertices[i],
                                          *newCutVertices[i+1] );
@@ -293,7 +293,7 @@ void DriftRatchet:: createBodyWallSection
                                        *newCutVertices[i+1] );
       mesh::Triangle& t0 = mesh.createTriangle ( *firstEdge, *newCutEdges[i], *crossingEdge );
       mesh::Triangle& t1 = mesh.createTriangle ( *crossingEdge, *secondEdge, *cutEdges[i] );
-      if ( propertyContainer != NULL ) {
+      if ( propertyContainer != nullptr ) {
         t0.addParent ( *propertyContainer );
         t1.addParent ( *propertyContainer );
         crossingEdge->addParent ( *propertyContainer );
@@ -310,7 +310,7 @@ void DriftRatchet:: createBodyWallSection
       mesh.createTriangle ( *firstEdge, *newCutEdges[vertexCount -1], *crossingEdge );
     mesh::Triangle & t1 =
       mesh.createTriangle ( *crossingEdge, *secondEdge, *cutEdges[vertexCount - 1] );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
       crossingEdge->addParent ( *propertyContainer );
       newCutEdges[vertexCount - 1]->addParent ( *propertyContainer );
       t0.addParent ( *propertyContainer );
@@ -339,12 +339,12 @@ void DriftRatchet:: createRightWall
     utils::Vector2D center ( 0.0 );
     center(0) += _length;
     mesh::Vertex& centerVertex = mesh.createVertex ( center );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
       centerVertex.addParent ( *propertyContainer );
     }
     mesh::Edge& e0 = mesh.createEdge ( centerVertex, *cutVertices[0] );
     mesh::Edge& e1 = mesh.createEdge ( *cutVertices[1], centerVertex );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
       e0.addParent ( *propertyContainer );
       e1.addParent ( *propertyContainer );
     }
@@ -354,23 +354,23 @@ void DriftRatchet:: createRightWall
     utils::Vector3D center ( 0.0 );
     center(0) += _length;
     mesh::Vertex& centerVertex = mesh.createVertex ( center );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
       centerVertex.addParent ( *propertyContainer );
     }
     int vertexCount = getNumberOfVerticesPerCut ( _discretizationWidth );
 
     // Create edges and triangles
     mesh::Edge& firstCenterEdge = mesh.createEdge ( centerVertex, *cutVertices[0] );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
       firstCenterEdge.addParent ( *propertyContainer );
     }
     mesh::Edge* oldCenterEdge = & firstCenterEdge;
-    mesh::Edge* newCenterEdge = NULL;
+    mesh::Edge* newCenterEdge = nullptr;
     for ( int i=0; i < vertexCount - 1; i++ ) {
       newCenterEdge = & mesh.createEdge ( centerVertex, *cutVertices[i+1] );
       mesh::Triangle& t = mesh.createTriangle (
           *cutEdges[i], *oldCenterEdge, *newCenterEdge );
-      if ( propertyContainer != NULL ) {
+      if ( propertyContainer != nullptr ) {
         newCenterEdge->addParent ( *propertyContainer );
         t.addParent ( *propertyContainer );
       }
@@ -378,7 +378,7 @@ void DriftRatchet:: createRightWall
     }
     mesh::Triangle& t = mesh.createTriangle ( *cutEdges[vertexCount-1],
                                               *oldCenterEdge, firstCenterEdge );
-    if ( propertyContainer != NULL ) {
+    if ( propertyContainer != nullptr ) {
       t.addParent ( *propertyContainer );
     }
   }

@@ -180,7 +180,7 @@ void M2N:: send (
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     assertion(_areSlavesConnected);
     assertion(_distComs.find(meshID) != _distComs.end());
-    assertion(_distComs[meshID].get() != NULL);
+    assertion(_distComs[meshID].get() != nullptr);
 
 #ifdef M2N_PRE_SYNCHRONIZE
     if(not precice::testMode){
@@ -231,7 +231,7 @@ void M2N:: receive (
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     assertion(_areSlavesConnected);
     assertion(_distComs.find(meshID) != _distComs.end());
-    assertion(_distComs[meshID].get() != NULL);
+    assertion(_distComs[meshID].get() != nullptr);
 
 #ifdef M2N_PRE_SYNCHRONIZE
     if(not precice::testMode){

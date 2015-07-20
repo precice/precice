@@ -439,13 +439,13 @@ void GeometryConfiguration:: addImportGeometry()
 
   checkMeshName(_readData.mesh);
 
-  ImportGeometry* importGeometry = NULL;
+  ImportGeometry* importGeometry = nullptr;
   if (_readData.filetype == std::string("vrml")){
     bool importCheckpoint = false; // Only mesh topology is imported.
     importGeometry = new ImportGeometry(_readData.offset, _readData.filename,
                                         ImportGeometry::VRML_1_FILE, importCheckpoint, true);
   }
-  assertion(importGeometry != NULL);
+  assertion(importGeometry != nullptr);
   _geometries.push_back(PtrGeometry(importGeometry));
   _meshNames.push_back(_readData.mesh);
 //  _readData = ReadData(_dimensions);

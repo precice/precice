@@ -71,7 +71,7 @@ VertexIterator & VertexIterator:: operator=
 
 VertexIterator:: ~VertexIterator()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   delete _impl;
 }
 
@@ -156,7 +156,7 @@ EdgeIterator:: EdgeIterator
 
 EdgeIterator:: ~EdgeIterator()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   delete _impl;
 }
 
@@ -231,7 +231,7 @@ TriangleIterator:: TriangleIterator
 
 TriangleIterator:: ~TriangleIterator ()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   delete _impl;
 }
 

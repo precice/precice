@@ -111,8 +111,8 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     utils::MasterSlave::_masterMode = false;
     mesh::PtrMesh pSolidzMesh1(new mesh::Mesh("SolidzMesh1", dimensions, flipNormals));
     mesh::PtrMesh pSolidzMesh2(new mesh::Mesh("SolidzMesh2", dimensions, flipNormals));
-    CommunicatedGeometry geo1( offset, "SOLIDZ", "SOLIDZ", NULL);
-    CommunicatedGeometry geo2( offset, "SOLIDZ", "SOLIDZ", NULL);
+    CommunicatedGeometry geo1( offset, "SOLIDZ", "SOLIDZ", nullptr);
+    CommunicatedGeometry geo2( offset, "SOLIDZ", "SOLIDZ", nullptr);
     geo1.addReceiver("NASTINMaster",m2n);
     geo2.addReceiver("NASTINMaster",m2n);
 
@@ -291,7 +291,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
-    CommunicatedGeometry geo( offset, "NASTIN", "SOLIDZMaster", NULL);
+    CommunicatedGeometry geo( offset, "NASTIN", "SOLIDZMaster", nullptr);
     geo.addReceiver("NASTIN",m2n);
     geo.create(*pSolidzMesh);
     validate(pSolidzMesh->vertices().size()==6);
@@ -337,7 +337,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
       pSolidzMesh->createEdge(v5,v6);
     }
 
-    CommunicatedGeometry geo( offset, "SOLIDZMaster", "SOLIDZMaster", NULL);
+    CommunicatedGeometry geo( offset, "SOLIDZMaster", "SOLIDZMaster", nullptr);
     geo.addReceiver("NASTIN", m2n);
     geo.create(*pSolidzMesh);
   }

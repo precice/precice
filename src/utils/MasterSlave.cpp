@@ -45,7 +45,7 @@ double MasterSlave:: l2norm(const DynVector& vec)
     return tarch::la::norm2(vec);
   }
 
-  assertion(_communication.get() != NULL);
+  assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
   double localSum2 = 0.0;
   double globalSum2 = 0.0;
@@ -79,7 +79,7 @@ double MasterSlave:: l2norm(const EigenVector& vec)
     return vec.norm();
   }
 
-  assertion(_communication.get() != NULL);
+  assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
   double localSum2 = 0.0;
   double globalSum2 = 0.0;
@@ -114,7 +114,7 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
     return tarch::la::dot(vec1, vec2);
   }
 
-  assertion(_communication.get() != NULL);
+  assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
   assertion2(vec1.size()==vec2.size(), vec1.size(), vec2.size());
   double localSum = 0.0;
@@ -149,7 +149,7 @@ double MasterSlave:: dot(const EigenVector& vec1, const EigenVector& vec2)
     return vec1.dot(vec2);
   }
 
-  assertion(_communication.get() != NULL);
+  assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
   assertion2(vec1.size()==vec2.size(), vec1.size(), vec2.size());
   double localSum = 0.0;
@@ -193,7 +193,7 @@ MasterSlave::broadcast(bool& value) {
     return;
   }
 
-  assertion(_communication.get() != NULL);
+  assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
   Event e("MasterSlave::broadcast");
@@ -217,7 +217,7 @@ MasterSlave::broadcast(double& value) {
     return;
   }
 
-  assertion(_communication.get() != NULL);
+  assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
   Event e("MasterSlave::broadcast");
@@ -241,7 +241,7 @@ MasterSlave::broadcast(double* values, int size) {
     return;
   }
 
-  assertion(_communication.get() != NULL);
+  assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
   Event e("MasterSlave::broadcast");

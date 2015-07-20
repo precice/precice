@@ -62,11 +62,11 @@ bool tarch::tests::configurations::IntegrationTestConfiguration::isValid() const
 
 
 void tarch::tests::configurations::IntegrationTestConfiguration::parseSubtag( tarch::irr::io::IrrXMLReader* xmlReader ) {
-  assertion( xmlReader != 0 );
+  assertion( xmlReader != nullptr );
 
   _isValid = true;
 
-  if ( xmlReader->getAttributeValue("output-directory")==0 ) {
+  if ( xmlReader->getAttributeValue("output-directory")==nullptr ) {
     _isValid = false;
     _log.error(
       "parseSubtag(...)",

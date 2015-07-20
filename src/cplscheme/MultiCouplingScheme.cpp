@@ -27,7 +27,7 @@ MultiCouplingScheme::MultiCouplingScheme
   _receiveDataVector(),
   _sendDataVector()
 {
-  for(size_t i=0;i<_communications.size();i++){
+  for(auto & elem : _communications){
     DataMap receiveMap;
     DataMap sendMap;
     _receiveDataVector.push_back(receiveMap);
@@ -51,7 +51,7 @@ void MultiCouplingScheme::initialize
   mergeData(); // merge send and receive data for all pp calls
   setupConvergenceMeasures(); // needs _couplingData configured
   setupDataMatrices(_allData); // Reserve memory and initialize data with zero
-  if (getPostProcessing().get() != NULL) {
+  if (getPostProcessing().get() != nullptr) {
     preciceCheck(getPostProcessing()->getDataIDs().size()>=3 ,"initialize()",
                  "For parallel coupling, the number of coupling data vectors has to be at least 3, not: "
                  << getPostProcessing()->getDataIDs().size());
@@ -163,13 +163,13 @@ void MultiCouplingScheme::advance()
       convergence = true;
     }
     if (convergence) {
-      if (getPostProcessing().get() != NULL) {
+      if (getPostProcessing().get() != nullptr) {
         getPostProcessing()->iterationsConverged(_allData);
       }
       newConvergenceMeasurements();
       timestepCompleted();
     }
-    else if (getPostProcessing().get() != NULL) {
+    else if (getPostProcessing().get() != nullptr) {
       getPostProcessing()->performPostProcessing(_allData);
     }
 
@@ -262,7 +262,7 @@ void MultiCouplingScheme:: sendData()
   preciceTrace("sendData()");
 
   for(size_t i=0;i<_communications.size();i++){
-    assertion(_communications[i].get() != NULL);
+    assertion(_communications[i].get() != nullptr);
     assertion(_communications[i]->isConnected());
 
     for (DataMap::value_type& pair : _sendDataVector[i]) {
@@ -280,7 +280,7 @@ void MultiCouplingScheme:: receiveData()
   preciceTrace("receiveData()");
 
   for(size_t i=0;i<_communications.size();i++){
-    assertion(_communications[i].get() != NULL);
+    assertion(_communications[i].get() != nullptr);
     assertion(_communications[i]->isConnected());
 
     for (DataMap::value_type& pair : _receiveDataVector[i]) {
@@ -304,7 +304,7 @@ void MultiCouplingScheme::setupConvergenceMeasures()
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     int dataID = convMeasure.dataID;
     convMeasure.data = getData(dataID);
-    assertion(convMeasure.data != NULL);
+    assertion(convMeasure.data != nullptr);
   }
 }
 
@@ -317,7 +317,7 @@ CouplingData* MultiCouplingScheme:: getData
   if (iter != _allData.end()) {
     return  &(*(iter->second));
   }
-  return NULL;
+  return nullptr;
 }
 
 }}

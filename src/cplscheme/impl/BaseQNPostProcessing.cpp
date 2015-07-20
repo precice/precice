@@ -100,11 +100,11 @@ void BaseQNPostProcessing:: initialize
   preciceTrace1("initialize()", cplData.size());
   size_t entries=0;
 
-  for(size_t i=0;i<_dataIDs.size();i++){
-    preciceCheck(utils::contained(_dataIDs[i], cplData), "initialize()",
-                 "Data with ID " << _dataIDs[i] << " is not contained in data "
+  for(auto & elem : _dataIDs){
+    preciceCheck(utils::contained(elem, cplData), "initialize()",
+                 "Data with ID " << elem << " is not contained in data "
                  "given at initialization!");
-    entries += cplData[_dataIDs[i]]->values->size();
+    entries += cplData[elem]->values->size();
   }
 
 

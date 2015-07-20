@@ -98,7 +98,7 @@ void SerialImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, path);
-  validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != NULL);
+  validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != nullptr);
   meshConfig->setMeshSubIDs();
 }
 
@@ -133,7 +133,7 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   scheme.setExtrapolationOrder(1);
   scheme.setupDataMatrices(scheme.getSendData());
   CouplingData* cplData = scheme.getSendData(dataID);
-  validate(cplData != NULL);
+  validate(cplData != nullptr);
   validateEquals(cplData->values->size(), 1);
   validateEquals(cplData->oldValues.cols(), 2);
   validateEquals(cplData->oldValues.rows(), 1);
@@ -166,7 +166,7 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   scheme2.setExtrapolationOrder ( 2 );
   scheme2.setupDataMatrices (scheme2.getSendData());
   cplData = scheme2.getSendData ( dataID );
-  validate ( cplData != NULL );
+  validate ( cplData != nullptr );
   validateEquals ( cplData->values->size(), 1 );
   validateEquals ( cplData->oldValues.cols(), 3 );
   validateEquals ( cplData->oldValues.rows(), 1 );

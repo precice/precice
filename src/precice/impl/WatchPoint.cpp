@@ -155,22 +155,22 @@ void WatchPoint:: exportPointData
       _txtWriter.writeData("Coordinate", Vector3D(coords));
     }
     // Export watch point data
-    for (size_t i=0; i < _dataToExport.size(); i++){
-      if (_dataToExport[i]->getDimensions() > 1){
+    for (auto & elem : _dataToExport){
+      if (elem->getDimensions() > 1){
         utils::DynVector toExport(_mesh->getDimensions(), 0.0);
-        getValue(toExport, _dataToExport[i]);
+        getValue(toExport, elem);
         if (coords.size() == 2){
-          _txtWriter.writeData(_dataToExport[i]->getName(), Vector2D(toExport));
+          _txtWriter.writeData(elem->getName(), Vector2D(toExport));
         }
         else {
-          _txtWriter.writeData(_dataToExport[i]->getName(), Vector3D(toExport));
+          _txtWriter.writeData(elem->getName(), Vector3D(toExport));
         }
 
       }
       else {
         double valueToExport = 0.0;
-        getValue ( valueToExport, _dataToExport[i] );
-        _txtWriter.writeData ( _dataToExport[i]->getName(), valueToExport );
+        getValue ( valueToExport, elem );
+        _txtWriter.writeData ( elem->getName(), valueToExport );
       }
     }
   }
