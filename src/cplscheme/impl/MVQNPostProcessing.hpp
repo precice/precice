@@ -81,6 +81,9 @@ private:
    // @brief stores the approximation of the inverse Jacobian from the previous time step.
    Matrix _oldInvJacobian;
 
+   // debug
+   Matrix _invJ, _oldInvJ, _V, _W, _Wtil, _Z;
+
    // @brief only needed for the parallel master-slave mode. stores the local dimensions,
    //        i.e., the offsets in _invJacobian for all processors
    std::vector<int> _dimOffsets;

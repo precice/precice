@@ -19,6 +19,8 @@
 #include "utils/xml/ValidatorOr.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
+#include "com/MPIDirectCommunication.hpp"
+#include "com/MPIPortsCommunication.hpp"
 
 namespace precice {
 namespace config {
@@ -544,6 +546,15 @@ void ParticipantConfiguration:: xmlTagCallback
     com::CommunicationConfiguration comConfig;
     com::Communication::SharedPointer com = comConfig.createCommunication(tag);
     utils::MasterSlave::_communication = com;
+
+    // TODO: create cyclicComms with factory, according to config, not only hard coded MPI_SINGLE
+
+    com::Communication::SharedPointer cyclecom1 = com::Communication::SharedPointer(new com::MPIPortsCommunication("../"));
+    com::Communication::SharedPointer cyclecom2 = com::Communication::SharedPointer(new com::MPIPortsCommunication("../"));
+    //com::Communication::SharedPointer cyclecom1 = com::Communication::SharedPointer(new com::MPIDirectCommunication());
+    //com::Communication::SharedPointer cyclecom2 = com::Communication::SharedPointer(new com::MPIDirectCommunication());
+    utils::MasterSlave::_cyclicCommRight = cyclecom1;
+    utils::MasterSlave::_cyclicCommLeft = cyclecom2;
     _participants.back()->setUseMaster(true);
   }
 }

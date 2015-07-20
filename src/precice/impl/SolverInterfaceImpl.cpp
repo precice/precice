@@ -2318,16 +2318,23 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
   }
 
   // initialize cyclic communication between successive slaves
-  utils::MasterSlave::_cyclicCommLeft = comLeft;
-  utils::MasterSlave::_cyclicCommRight = comRight;
   int prevProc = (_accessorProcessRank-1 < 0) ? _accessorCommunicatorSize-1 : _accessorProcessRank-1;
   if((_accessorProcessRank % 2) == 0)
   {
-	  comRight->requestConnection( _accessorName + "cyclicComm" +  boost::lexical_cast<std::string>(_accessorProcessRank), _accessorName, 0, 1 );
-	  comLeft->acceptConnection( _accessorName + "cyclicComm" + boost::lexical_cast<std::string>(prevProc), _accessorName, 0, 1 );
+	  utils::MasterSlave::_cyclicCommLeft->acceptConnection( _accessorName + "-cyclicComm-" + std::to_string(prevProc), _accessorName, 0, 1 );
+	 	  std::cout<<"proc["<<_accessorProcessRank<<"] acceptsConnection: "<< _accessorName + "-cyclicComm-" + std::to_string(prevProc)<<std::endl;
+	  utils::MasterSlave::_cyclicCommRight->requestConnection( _accessorName + "-cyclicComm-" +  std::to_string(_accessorProcessRank), _accessorName, 0, 1 );
+	  std::cout<<"proc["<<_accessorProcessRank<<"] requestConnection: "<<_accessorName + "-cyclicComm-" +  std::to_string(_accessorProcessRank)<<std::endl;
+
   }else{
-	  comLeft->acceptConnection( _accessorName + "cyclicComm" + boost::lexical_cast<std::string>(prevProc), _accessorName, 0, 1 );
-	  comRight->requestConnection( _accessorName + "cyclicComm" +  boost::lexical_cast<std::string>(_accessorProcessRank), _accessorName, 0, 1 );
+
+	  utils::MasterSlave::_cyclicCommRight->requestConnection( _accessorName + "-cyclicComm-" +  std::to_string(_accessorProcessRank), _accessorName, 0, 1 );
+	 	  std::cout<<"proc["<<_accessorProcessRank<<"] requestConnection: "<<_accessorName + "-cyclicComm-" +  std::to_string(_accessorProcessRank)<<std::endl;
+
+		  utils::MasterSlave::_cyclicCommLeft->acceptConnection( _accessorName + "-cyclicComm-" + std::to_string(prevProc), _accessorName, 0, 1 );
+		  	  std::cout<<"proc["<<_accessorProcessRank<<"] acceptsConnection: "<< _accessorName + "-cyclicComm-" + std::to_string(prevProc)<<std::endl;
+
+
   }
 }
 
