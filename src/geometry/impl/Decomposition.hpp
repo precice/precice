@@ -42,7 +42,7 @@ public:
    * @param dimensions: spatial dimension of the geometry
    *
    */
-  Decomposition ( int dimensions);
+  Decomposition ( int dimensions, double safetyFactor );
 
   /**
    * @brief Destructor.
@@ -71,7 +71,9 @@ protected:
   std::vector<int> filterMesh(mesh::Mesh& seed, mesh::Mesh& filteredMesh);
 
   /// Returns true if a vertex contributes. If false, the vertex can be erased.
-  virtual bool doesVertexContribute(const mesh::Vertex& vertex)=0;
+  bool doesVertexContribute(const mesh::Vertex& vertex);
+
+  void mergeBoundingBoxes(mesh::Mesh::BoundingBox& bb);
 
   /**
    *  @brief spatial dimension of the geometry
@@ -81,6 +83,14 @@ protected:
   mapping::PtrMapping _boundingFromMapping;
 
   mapping::PtrMapping _boundingToMapping;
+
+  mesh::Mesh::BoundingBox _bb;
+
+  double _safetyGap;
+
+  double _safetyFactor;
+
+  bool _filterByMapping;
 
 
 private:

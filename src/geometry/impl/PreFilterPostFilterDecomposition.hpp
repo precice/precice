@@ -49,22 +49,8 @@ private:
     std::map<int,std::vector<int> >& boundingVertexDistribution,
     std::vector<int>& filteredVertexPositions);
 
-
-  void mergeBoundingBoxes(mesh::Mesh::BoundingBox& bb);
-
-  /// Returns true if a vertex contributes. If false, the vertex can be erased.
-  bool doesVertexContribute(const mesh::Vertex& vertex);
-
   /// Logging device.
   static tarch::logging::Log _log;
-
-  mesh::Mesh::BoundingBox _bb;
-
-  double _safetyGap;
-
-  double _safetyFactor;
-
-  bool _filterByMapping;
 };
 
 }}} // namespace precice, geometry, filter

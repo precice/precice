@@ -1921,7 +1921,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
                           new geometry::impl::PreFilterPostFilterDecomposition(_dimensions, context->safetyFactor));
       } else {
         decomp = geometry::impl::PtrDecomposition(
-                                new geometry::impl::BroadcastFilterDecomposition(_dimensions));
+                                new geometry::impl::BroadcastFilterDecomposition(_dimensions, context->safetyFactor));
       }
       geometry::CommunicatedGeometry * comGeo =
           new geometry::CommunicatedGeometry ( offset, receiver, provider, decomp );

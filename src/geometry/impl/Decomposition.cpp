@@ -18,11 +18,15 @@ tarch::logging::Log Decomposition:: _log ( "precice::geometry::Decomposition" );
 
 Decomposition:: Decomposition
 (
-  int dimensions )
+  int dimensions, double safetyFactor )
 :
   _dimensions (dimensions),
   _boundingFromMapping(),
-  _boundingToMapping()
+  _boundingToMapping(),
+  _bb(),
+  _safetyGap(0.0),
+  _safetyFactor(safetyFactor),
+  _filterByMapping(false)
 {}
 
 void Decomposition:: setBoundingFromMapping(
@@ -108,6 +112,49 @@ std::vector<int> Decomposition:: filterMesh(mesh::Mesh& seed, mesh::Mesh& filter
                <<", #triangles: " << filteredMesh.triangles().size() << ", rank: " << utils::MasterSlave::_rank);
 
   return vertexPositions;
+}
+
+void Decomposition:: mergeBoundingBoxes(mesh::Mesh::BoundingBox& bb){
+  if (_boundingFromMapping.use_count()>0) {
+    auto bb1 = _boundingFromMapping->getOutputMesh()->getBoundingBox();
+    for (int d=0; d < _dimensions; d++) {
+      if (bb[d].first > bb1[d].first) bb[d].first = bb1[d].first;
+      if (bb[d].second < bb1[d].second) bb[d].second = bb1[d].second;
+    }
+  }
+  if (_boundingToMapping.use_count()>0) {
+    auto bb2 = _boundingToMapping->getInputMesh()->getBoundingBox();
+    for (int d=0; d<_dimensions; d++) {
+      if (bb[d].first > bb2[d].first) bb[d].first = bb2[d].first;
+      if (bb[d].second < bb2[d].second) bb[d].second = bb2[d].second;
+    }
+  }
+}
+
+
+bool Decomposition:: doesVertexContribute(
+  const mesh::Vertex& vertex)
+{
+  if (_filterByMapping) {
+    //works as easy as this since only read-consistent and write-conservative are allowed
+    assertion(_boundingFromMapping.use_count()>0 || _boundingToMapping.use_count()>0);
+    bool exit = false;
+    if (_boundingFromMapping.use_count() > 0) {
+      exit = exit || _boundingFromMapping->doesVertexContribute(vertex.getID());
+    }
+    if (_boundingToMapping.use_count() > 0) {
+      exit = exit || _boundingToMapping->doesVertexContribute(vertex.getID());
+    }
+    return exit;
+  }
+  else { //filter by bounding box
+    for (int d=0; d<_dimensions; d++) {
+      if (vertex.getCoords()[d] < _bb[d].first - _safetyGap || vertex.getCoords()[d] > _bb[d].second + _safetyGap) {
+        return false;
+      }
+    }
+    return true;
+  }
 }
 
 }}} // namespace precice, geometry, impl

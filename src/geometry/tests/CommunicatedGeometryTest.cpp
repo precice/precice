@@ -199,7 +199,7 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     pNastinMesh->computeState();
 
     impl::PtrDecomposition decomp1 = impl::PtrDecomposition(
-            new impl::BroadcastFilterDecomposition(dimensions));
+            new impl::BroadcastFilterDecomposition(dimensions,  0.1));
     impl::PtrDecomposition decomp2 = impl::PtrDecomposition(
             new impl::PreFilterPostFilterDecomposition(dimensions, 0.1));
 

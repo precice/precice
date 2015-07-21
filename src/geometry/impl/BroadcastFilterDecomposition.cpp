@@ -21,9 +21,9 @@ tarch::logging::Log BroadcastFilterDecomposition:: _log ( "precice::geometry::Br
 
 BroadcastFilterDecomposition:: BroadcastFilterDecomposition
 (
-  int    dimensions)
+  int    dimensions, double safetyFactor )
   :
-  Decomposition ( dimensions )
+  Decomposition ( dimensions, safetyFactor  )
 {}
 
 
@@ -73,13 +73,40 @@ void BroadcastFilterDecomposition:: filter(
   preciceInfo("filter()", "Filter mesh " << seed.getName() );
   Event e("filter mesh");
 
+  // first, bounding box filter
+  preciceDebug("First Filter BB, #vertices " << seed.vertices().size());
+  assertion(not _filterByMapping);
+  _bb = mesh::Mesh::BoundingBox (_dimensions,
+                   std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
+  mergeBoundingBoxes(_bb);
+  for (int d=0; d<_dimensions; d++) {
+    if (_bb[d].second > _bb[d].first && _safetyGap < _bb[d].second - _bb[d].first)
+      _safetyGap = _bb[d].second - _bb[d].first;
+  }
+  assertion(_safetyFactor>=0.0);
+  _safetyGap *= _safetyFactor;
+  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
+  std::vector<int> tmpVertexPostitions = filterMesh(seed, filteredMesh);
+
+  // second, mapping filter
+  preciceDebug("Second Filter Mapping, #vertices " << filteredMesh.vertices().size());
+  _filterByMapping = true;
+  seed.clear();
+  seed.addMesh(filteredMesh);
   seed.computeState();
   computeBoundingMappings();
-  mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
+  filteredMesh.clear();
   filteredVertexPositions = filterMesh(seed, filteredMesh);
   seed.clear();
   seed.addMesh(filteredMesh);
   clearBoundingMappings();
+
+  //merge the 2 filters
+  preciceDebug("Merge Filters, #vertices " << filteredMesh.vertices().size());
+  for(size_t i=0;i<filteredVertexPositions.size();i++){
+    filteredVertexPositions[i] = tmpVertexPostitions[filteredVertexPositions[i]];
+  }
+
 }
 
 void BroadcastFilterDecomposition:: feedback(
@@ -118,19 +145,5 @@ void BroadcastFilterDecomposition:: feedback(
 
 }
 
-bool BroadcastFilterDecomposition:: doesVertexContribute(
-  const mesh::Vertex& vertex)
-{
-  //works as easy as this since only read-consistent and write-conservative are allowed
-  assertion(_boundingFromMapping.use_count()>0 || _boundingToMapping.use_count()>0);
-  bool exit = false;
-  if (_boundingFromMapping.use_count() > 0) {
-    exit = exit || _boundingFromMapping->doesVertexContribute(vertex.getID());
-  }
-  if (_boundingToMapping.use_count() > 0) {
-    exit = exit || _boundingToMapping->doesVertexContribute(vertex.getID());
-  }
-  return exit;
-}
 
 }}} // namespace precice, geometry, impl

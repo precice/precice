@@ -20,7 +20,7 @@ class BroadcastFilterDecomposition : public Decomposition
 public:
 
   BroadcastFilterDecomposition (
-    int    dimensions);
+    int    dimensions, double safetyFactor );
 
   virtual ~BroadcastFilterDecomposition() {}
 
@@ -45,9 +45,6 @@ private:
   void feedback(
     mesh::Mesh& seed,
     std::vector<int>& filteredVertexPositions);
-
-  /// Returns true if a vertex contributes. If false, the vertex can be erased.
-  bool doesVertexContribute(const mesh::Vertex& vertex);
 
   /// Logging device.
   static tarch::logging::Log _log;

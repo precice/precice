@@ -24,11 +24,7 @@ PreFilterPostFilterDecomposition:: PreFilterPostFilterDecomposition
   int    dimensions,
   double safetyFactor)
   :
-  Decomposition ( dimensions ),
-  _bb(),
-  _safetyGap(0.0),
-  _safetyFactor(safetyFactor),
-  _filterByMapping(false)
+  Decomposition ( dimensions, safetyFactor )
 {}
 
 
@@ -119,49 +115,6 @@ void PreFilterPostFilterDecomposition:: postFilter(
   seed.clear();
   seed.addMesh(filteredMesh);
   clearBoundingMappings();
-}
-
-
-void PreFilterPostFilterDecomposition:: mergeBoundingBoxes(mesh::Mesh::BoundingBox& bb){
-  if (_boundingFromMapping.use_count()>0) {
-    auto bb1 = _boundingFromMapping->getOutputMesh()->getBoundingBox();
-    for (int d=0; d < _dimensions; d++) {
-      if (bb[d].first > bb1[d].first) bb[d].first = bb1[d].first;
-      if (bb[d].second < bb1[d].second) bb[d].second = bb1[d].second;
-    }
-  }
-  if (_boundingToMapping.use_count()>0) {
-    auto bb2 = _boundingToMapping->getInputMesh()->getBoundingBox();
-    for (int d=0; d<_dimensions; d++) {
-      if (bb[d].first > bb2[d].first) bb[d].first = bb2[d].first;
-      if (bb[d].second < bb2[d].second) bb[d].second = bb2[d].second;
-    }
-  }
-}
-
-bool PreFilterPostFilterDecomposition:: doesVertexContribute(
-  const mesh::Vertex& vertex)
-{
-  if (_filterByMapping) {
-    //works as easy as this since only read-consistent and write-conservative are allowed
-    assertion(_boundingFromMapping.use_count()>0 || _boundingToMapping.use_count()>0);
-    bool exit = false;
-    if (_boundingFromMapping.use_count() > 0) {
-      exit = exit || _boundingFromMapping->doesVertexContribute(vertex.getID());
-    }
-    if (_boundingToMapping.use_count() > 0) {
-      exit = exit || _boundingToMapping->doesVertexContribute(vertex.getID());
-    }
-    return exit;
-  }
-  else { //filter by bounding box
-    for (int d=0; d<_dimensions; d++) {
-      if (vertex.getCoords()[d] < _bb[d].first - _safetyGap || vertex.getCoords()[d] > _bb[d].second + _safetyGap) {
-        return false;
-      }
-    }
-    return true;
-  }
 }
 
 void PreFilterPostFilterDecomposition:: feedback(
