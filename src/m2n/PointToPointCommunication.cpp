@@ -805,15 +805,6 @@ PointToPointCommunication::send(double* itemsToSend,
                                 int valueDimension) {
   Event e(_prefix + "PointToPointCommunication::send", true);
 
-  preciceInfo("send(double)",
-              "Size"
-                  << ":"
-                  << " " << size << ";"
-                  << " "
-                  << "Dimension"
-                  << ":"
-                  << " " << valueDimension << ".");
-
   if (_mappings.size() == 0) {
     preciceCheck(size == 0 && _localIndexCount == 0,
                  "send()",
@@ -869,15 +860,6 @@ PointToPointCommunication::receive(double* itemsToReceive,
                                    int size,
                                    int valueDimension) {
   Event e(_prefix + "PointToPointCommunication::receive", true);
-
-  preciceInfo("receive(double)",
-              "Size"
-                  << ":"
-                  << " " << size << ";"
-                  << " "
-                  << "Dimension"
-                  << ":"
-                  << " " << valueDimension << ".");
 
   if (_mappings.size() == 0) {
     preciceCheck(size == 0 && _localIndexCount == 0,
