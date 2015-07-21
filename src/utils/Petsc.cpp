@@ -10,6 +10,8 @@ namespace utils {
 
 tarch::logging::Log Petsc:: _log ( "precice::utils::Petsc" );
 
+bool Petsc::weInitialized = false;
+
 
 void Petsc:: initialize
 (
@@ -23,6 +25,7 @@ void Petsc:: initialize
   if (not petscIsInitialized) {
     PetscErrorCode ierr;
     ierr = PetscInitialize(argc, argv, "", nullptr); CHKERRV(ierr);
+    weInitialized = true;
   }
 #endif // not PRECICE_NO_PETSC
 }
@@ -32,7 +35,7 @@ void Petsc:: finalize()
 #ifndef PRECICE_NO_PETSC
   PetscBool petscIsInitialized;
   PetscInitialized(&petscIsInitialized);
-  if (petscIsInitialized) {
+  if (petscIsInitialized and weInitialized) {
     PetscFinalize();
   }
 #endif // not PRECICE_NO_PETSC

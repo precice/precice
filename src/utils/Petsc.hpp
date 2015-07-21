@@ -9,9 +9,6 @@ namespace utils {
 class Petsc
 {
 public:
-
-
-
   /**
    * @brief Initializes the Petsc environment.
    *
@@ -25,9 +22,11 @@ public:
   /// Finalizes Petsc environment.
   static void finalize();
 
-
 private:
-
+  
+  /// Whether we have initialized Petsc or if it was initialized by an application calling us.
+  static bool weInitialized;
+  
   static tarch::logging::Log _log;
 };
 
