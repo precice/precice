@@ -328,11 +328,19 @@ if not env["boost_inst"]:
     print "... done"
 
 
-lib = env.StaticLibrary (
+staticlib = env.StaticLibrary (
     target = buildpath + '/libprecice',
     source = [sourcesPreCICE,
               sourcesBoost]
 )
+env.Alias("staticlib", staticlib)
+
+solib = env.SharedLibrary (
+    target = buildpath + '/libprecice',
+    source = [sourcesPreCICE,
+              sourcesBoost]
+)
+env.Alias("solib", solib)
 
 bin = env.Program (
     target = buildpath + '/binprecice',
@@ -347,7 +355,7 @@ symlink = env.Command(
     action = "ln -fns {} {}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(lib, bin, symlink)
+Default(staticlib, bin, symlink)
 AlwaysBuild(symlink)
 
 print "Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS])
