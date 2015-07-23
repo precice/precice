@@ -35,14 +35,14 @@ Vector::Vector(Vector &v, std::string name)
 Vector::Vector(Mat &m, std::string name)
 {
   PetscErrorCode ierr = 0;
-  ierr = MatGetVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of rows
+  ierr = MatCreateVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of rows
   setName(name);
 }
 
 Vector::Vector(Matrix &m, std::string name)
 {
   PetscErrorCode ierr = 0;
-  ierr = MatGetVecs(m.matrix, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
+  ierr = MatCreateVecs(m.matrix, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
   setName(name);
 }
 
