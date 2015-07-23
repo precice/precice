@@ -225,6 +225,8 @@ void IQNILSPostProcessing::computeQNUpdate
 	    __R(i,j) = r(i,j);
 	  }
 	  
+
+
 	DataValues _local_b(__Qt.rows(), 0.0);
 	DataValues _global_b(__Qt.rows(), 0.0);
 
@@ -232,31 +234,62 @@ void IQNILSPostProcessing::computeQNUpdate
 	_local_b *= -1.0; // = -Qr
 	
 	assertion1(__c.size() == 0, __c.size());
-    __c.append(_local_b.size(), 0.0);
 
 	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+	  __c.append(_local_b.size(), 0.0);
 	  backSubstitution(__R, _local_b, __c);
 	}else{
 	  
 	   assertion(utils::MasterSlave::_communication.get() != nullptr);
 	   assertion(utils::MasterSlave::_communication->isConnected());
 	   
+	   // if proc has no nodes on the interface, _local_b.size()=0 but this
+	   // would lead to problems in master-slave comm, i.e., send-receive and
+	   // broadcast, because of different sizes. Thus, reserve memory
+	   if(!utils::MasterSlave::_hasNodesOnInterface)
+	   {
+		   assertion1(_local_b.size() == 0, _local_b.size());
+		   _local_b.append(getCols(), 0.0);
+		   std::cout<<" rank with no interface nodes: "<<utils::MasterSlave::_rank<<", local_b.size(): "<<_local_b.size()<<" getCols(): "<<getCols()<<std::endl;
+	   }
+	   // reserve memory for c
+	   __c.append(_local_b.size(), 0.0);
+
 	  if(utils::MasterSlave::_slaveMode){
-	    utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
+
+		  if(!utils::MasterSlave::_hasNodesOnInterface){
+			  std::cout<<"rank 33, : matrixV.cols: "<<_matrixV.cols()<<" qrV.cols: "<<_qrV.cols()<<" Qt.rows: "<<__Qt.rows()<<" getCols(): "<<getCols()<<" matrixCols:"<<_matrixCols<<std::endl;
+			  std::cout<<"rank 33 (send), c.size():"<<__c.size()<<", _local_b.size(): "<<_local_b.size()<<std::endl;
+		  }
+		  utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
 	  }
 	  if(utils::MasterSlave::_masterMode){
 	    _global_b += _local_b;
+	 /*   {
+	        int i = 0;
+	        char hostname[256];
+	        gethostname(hostname, sizeof(hostname));
+	        printf("PID %d on %s ready for attach\n", getpid(), hostname);
+	        fflush(stdout);
+	        while (0 == i)
+	            sleep(5);
+	    }*/
+	    std::cout<<" matrixCols (master):"<<_matrixCols<<std::endl;
+	    std::cout<<"master (receive):, c.size():"<<__c.size()<<", _local_b.size(): "<<_local_b.size()<<std::endl;
 	    for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
-	      utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
-	      _global_b += _local_b;
+			utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
+			_global_b += _local_b;
 	    }
+	    // backsubstitution only in master
 	    backSubstitution(__R, _global_b, __c);
 	  }
 	  
+	  // broadcast koefficients c to all slaves
 	  utils::MasterSlave::broadcast(&__c(0), __c.size());
 	}
 
-	multiply(_matrixW, __c, xUpdate); 
+	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
+	multiply(_matrixW, __c, xUpdate);
 	
         preciceDebug("c = " << __c);
 	_infostream<<"c = "<<__c<<"\n"<<std::flush;

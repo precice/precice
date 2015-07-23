@@ -218,11 +218,24 @@ protected:
    // a singular matrix in the QR decomposition can be removed and tracked.
    std::deque<int> _matrixCols;
    
+   // @brief only needed for the parallel master-slave mode. stores the local dimensions,
+   //        i.e., the offsets in _invJacobian for all processors
+   std::vector<int> _dimOffsets;
+
    std::fstream _infostream;
 
    // @ brief only debugging info, remove this:
    int its,tSteps;
    int deletedColumns;
+
+   // @brief: computes number of cols in least squares system, i.e, number of cols in
+   // 		  _matrixV, _matrixW, _qrV, etc..
+   //		  This is necessary only for master-slave mode, when some procs do not have
+   //		  any nodes on the coupling interface. In this case, the matrices are not
+   // 		  constructed and we have no information about the number of cols. This info
+   // 		  is needed for master-slave communication.
+   // 		  Number of its =! _cols in general.
+   int getCols();
 
    // @brief updates the V, W matrices (as well as the matrices for the secondary data)
    virtual void updateDifferenceMatrices(DataMap & cplData);

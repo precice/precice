@@ -203,6 +203,8 @@ void QRFactorization::insertColumn(int k, EigenVector& v)
 {
   preciceTrace("insertColumn()");
 
+  if(v.size() <= 0) return;
+
   if(_cols == 0)
     _rows = v.size();
   
