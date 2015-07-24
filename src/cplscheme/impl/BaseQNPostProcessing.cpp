@@ -133,10 +133,10 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 				utils::MasterSlave::_communication->send(&_dimOffsets[0], _dimOffsets.size(), rankSlave);
 			}
 		}
-
-		// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
-		_qrV.setGlobalRows(_dimOffsets.back());
 	}
+
+	// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+	_qrV.setGlobalRows(getLSSystemRows());
 
 	//debug output for master-slave mode
 	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
@@ -153,7 +153,6 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 					<< "] has no unknowns at the interface!" << std::endl;
 	}
 
-	assertion(entries > 0);
 	double init = 0.0;
 	assertion(_oldXTilde.size() == 0);assertion(_oldResiduals.size() == 0);
 	_oldXTilde.append(DataValues(entries, init));
@@ -287,7 +286,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 			deltaXTilde -= _oldXTilde;
 
 			bool columnLimitReached = _matrixV.cols() == _maxIterationsUsed;
-			bool overdetermined = _matrixV.cols() <= _matrixV.rows();
+			bool overdetermined = _matrixV.cols() <= getLSSystemRows();
 			if (not columnLimitReached && overdetermined) {
 				_matrixV.appendFront(deltaR);
 				_matrixW.appendFront(deltaXTilde);
@@ -395,9 +394,8 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 			// this occurs very rarely, to be precise, it occurs only if the coupling terminates
 			// after the first iteration and the matrix data from time step t-2 has to be used
 			_qrV.reset(_matrixV);
-			if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
-				_qrV.setGlobalRows(_dimOffsets.back());
-			}
+			// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+			_qrV.setGlobalRows(getLSSystemRows());
 		}
 
 		/*
@@ -443,9 +441,8 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 				_matrixW.clear();
 				_matrixCols.clear();
 				_qrV.reset();
-				if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
-					_qrV.setGlobalRows(_dimOffsets.back());
-				}
+				// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+				_qrV.setGlobalRows(getLSSystemRows());
 			}
 
 			// TOD0: The following is still misssing for reusedTimeSTeps=0
@@ -598,13 +595,21 @@ int BaseQNPostProcessing::getDeletedColumns()
 	return deletedColumns;
 }
 
-int BaseQNPostProcessing::getCols()
+int BaseQNPostProcessing::getLSSystemCols()
 {
 	int cols = 0;
 	foreach (int col, _matrixCols){
 		cols += col;
 	}
 	return cols;
+}
+
+int BaseQNPostProcessing::getLSSystemRows()
+{
+	if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
+		return _dimOffsets.back();
+	}
+	return _matrixV.rows();
 }
 
 void BaseQNPostProcessing:: removeMatrixColumn

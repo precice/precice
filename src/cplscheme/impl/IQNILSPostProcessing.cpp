@@ -109,7 +109,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
   else {
     if (not _firstIteration){
       bool columnLimitReached = _matrixV.cols() == _maxIterationsUsed;
-      bool overdetermined = _matrixV.cols() <= _matrixV.rows();
+      bool overdetermined = _matrixV.cols() <= getLSSystemRows();
       if (not columnLimitReached && overdetermined){
         
 	// Append column for secondary W matrices
@@ -249,18 +249,18 @@ void IQNILSPostProcessing::computeQNUpdate
 	   if(!utils::MasterSlave::_hasNodesOnInterface)
 	   {
 		   assertion1(_local_b.size() == 0, _local_b.size());
-		   _local_b.append(getCols(), 0.0);
-		   std::cout<<" rank with no interface nodes: "<<utils::MasterSlave::_rank<<", local_b.size(): "<<_local_b.size()<<" getCols(): "<<getCols()<<std::endl;
+		   _local_b.append(getLSSystemCols(), 0.0);
+		   std::cout<<" rank with no interface nodes: "<<utils::MasterSlave::_rank<<", local_b.size(): "<<_local_b.size()<<" getCols(): "<<getLSSystemCols()<<std::endl;
 	   }
 	   // reserve memory for c
 	   __c.append(_local_b.size(), 0.0);
 
 	  if(utils::MasterSlave::_slaveMode){
 
-		  if(!utils::MasterSlave::_hasNodesOnInterface){
-			  std::cout<<"rank 33, : matrixV.cols: "<<_matrixV.cols()<<" qrV.cols: "<<_qrV.cols()<<" Qt.rows: "<<__Qt.rows()<<" getCols(): "<<getCols()<<" matrixCols:"<<_matrixCols<<std::endl;
-			  std::cout<<"rank 33 (send), c.size():"<<__c.size()<<", _local_b.size(): "<<_local_b.size()<<std::endl;
-		  }
+		 // if(!utils::MasterSlave::_hasNodesOnInterface){
+			  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] matrixV.cols: "<<_matrixV.cols()<<" qrV.cols: "<<_qrV.cols()<<" Qt.rows: "<<__Qt.rows()<<" getCols(): "<<getLSSystemCols()<<" matrixCols:"<<_matrixCols<<std::endl;
+			  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] (send), c.size():"<<__c.size()<<", _local_b.size(): "<<_local_b.size()<<"\n"<<std::endl;
+		 // }
 		  utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
 	  }
 	  if(utils::MasterSlave::_masterMode){
@@ -285,7 +285,9 @@ void IQNILSPostProcessing::computeQNUpdate
 	  }
 	  
 	  // broadcast koefficients c to all slaves
+	  std::cout<<"\nproc["<<utils::MasterSlave::_rank<<"] starts broadcast: c.size="<<__c.size()<<std::endl;
 	  utils::MasterSlave::broadcast(&__c(0), __c.size());
+	  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] finishes broadcast: c.size="<<__c.size()<<std::endl;
 	}
 
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W

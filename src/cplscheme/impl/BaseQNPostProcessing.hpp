@@ -235,7 +235,8 @@ protected:
    // 		  constructed and we have no information about the number of cols. This info
    // 		  is needed for master-slave communication.
    // 		  Number of its =! _cols in general.
-   int getCols();
+   int getLSSystemCols();
+   int getLSSystemRows();
 
    // @brief updates the V, W matrices (as well as the matrices for the secondary data)
    virtual void updateDifferenceMatrices(DataMap & cplData);
