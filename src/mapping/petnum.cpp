@@ -21,7 +21,7 @@ Vector::Vector(MPI_Comm comm, std::string name)
 
 Vector::Vector(Vec &v, std::string name)
 {
-  vector = v;
+  VecCopy(v, vector);
   setName(name);
 }
 
@@ -35,7 +35,7 @@ Vector::Vector(Vector &v, std::string name)
 Vector::Vector(Mat &m, std::string name)
 {
   PetscErrorCode ierr = 0;
-  ierr = MatCreateVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of rows
+  ierr = MatCreateVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
   setName(name);
 }
 
@@ -79,7 +79,6 @@ std::string Vector::getName()
   PetscObjectGetName((PetscObject) vector, &cstr); 
   return cstr;    
 }
-
 
 int Vector::getSize()
 {
@@ -172,7 +171,6 @@ Matrix::Matrix(MPI_Comm comm, std::string name)
   setName(name);
 }
   
-
 Matrix::~Matrix()
 {
   PetscErrorCode ierr = 0;
