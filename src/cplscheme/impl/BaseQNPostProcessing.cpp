@@ -133,6 +133,9 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 				utils::MasterSlave::_communication->send(&_dimOffsets[0], _dimOffsets.size(), rankSlave);
 			}
 		}
+
+		// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+		_qrV.setGlobalRows(_dimOffsets.back());
 	}
 
 	//debug output for master-slave mode
@@ -388,10 +391,13 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 			_matrixW = _matrixWBackup;
 			_matrixCols = _matrixColsBackup;
 
-			// recomputation of QR decomposition from _matrixV = _matrixVBackup
-			// this occurs very rarely, to be precice, it occurs only if the coupling terminates
+			// re-computation of QR decomposition from _matrixV = _matrixVBackup
+			// this occurs very rarely, to be precise, it occurs only if the coupling terminates
 			// after the first iteration and the matrix data from time step t-2 has to be used
 			_qrV.reset(_matrixV);
+			if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
+				_qrV.setGlobalRows(_dimOffsets.back());
+			}
 		}
 
 		/*
@@ -437,6 +443,9 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 				_matrixW.clear();
 				_matrixCols.clear();
 				_qrV.reset();
+				if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
+					_qrV.setGlobalRows(_dimOffsets.back());
+				}
 			}
 
 			// TOD0: The following is still misssing for reusedTimeSTeps=0
