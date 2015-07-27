@@ -285,8 +285,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 			DataValues deltaXTilde = _scaledValues;
 			deltaXTilde -= _oldXTilde;
 
-			bool columnLimitReached = _matrixV.cols() == _maxIterationsUsed;
-			bool overdetermined = _matrixV.cols() <= getLSSystemRows();
+			bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
+			bool overdetermined = getLSSystemCols() <= getLSSystemRows();
 			if (not columnLimitReached && overdetermined) {
 				_matrixV.appendFront(deltaR);
 				_matrixW.appendFront(deltaXTilde);

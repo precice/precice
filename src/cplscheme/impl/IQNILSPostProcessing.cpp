@@ -108,8 +108,8 @@ void IQNILSPostProcessing::updateDifferenceMatrices
   }
   else {
     if (not _firstIteration){
-      bool columnLimitReached = _matrixV.cols() == _maxIterationsUsed;
-      bool overdetermined = _matrixV.cols() <= getLSSystemRows();
+      bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
+      bool overdetermined = getLSSystemCols <= getLSSystemRows();
       if (not columnLimitReached && overdetermined){
         
 	// Append column for secondary W matrices
