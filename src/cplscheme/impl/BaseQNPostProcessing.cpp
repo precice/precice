@@ -48,6 +48,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _scalings(scalings),
   _firstIteration(true),
   _firstTimeStep(true),
+  _hasNodesOnInterface(true),
   _oldXTilde(),
   //_secondaryOldXTildes(),
   _residuals(),
@@ -113,7 +114,7 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 		assertion(utils::MasterSlave::_communication.get() != NULL);assertion(utils::MasterSlave::_communication->isConnected());
 
 		if (entries <= 0) {
-			utils::MasterSlave::_hasNodesOnInterface = false;
+			_hasNodesOnInterface = false;
 		}
 
 		_dimOffsets.resize(utils::MasterSlave::_size + 1);
@@ -138,52 +139,52 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
 	_qrV.setGlobalRows(getLSSystemRows());
 
+	// ---------------------------------------------------
 	//debug output for master-slave mode
 	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
-		if (utils::MasterSlave::_masterMode)
-		{
-			std::cout << "number of processors: " << utils::MasterSlave::_size
-					<< std::endl;
-		}
 		std::cout << "proc[" << utils::MasterSlave::_rank
 				<< "] unknowns at interface: " << entries << std::endl;
-
 		if (entries <= 0)
 			std::cout << "process [" << utils::MasterSlave::_rank
 					<< "] has no unknowns at the interface!" << std::endl;
 	}
+	// ---------------------------------------------------
 
-	double init = 0.0;
-	assertion(_oldXTilde.size() == 0);assertion(_oldResiduals.size() == 0);
-	_oldXTilde.append(DataValues(entries, init));
-	_oldResiduals.append(DataValues(entries, init));
-	_residuals.append(DataValues(entries, init));
-	_scaledValues.append(DataValues(entries, init));
-	_scaledOldValues.append(DataValues(entries, init));
 	_matrixCols.push_front(0);
 	_firstIteration = true;
 	_firstTimeStep = true;
 
-	// Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
-	foreach (DataMap::value_type& pair, cplData){
-		if (not utils::contained(pair.first, _dataIDs)) {
-			_secondaryDataIDs.push_back(pair.first);
-			int secondaryEntries = pair.second->values->size();
-	//      _secondaryOldXTildes[pair.first].append(DataValues(secondaryEntries, init));
-			_secondaryResiduals[pair.first].append(DataValues(secondaryEntries, init));
+	if(_hasNodesOnInterface)
+	{
+		double init = 0.0;
+		assertion(_oldXTilde.size() == 0);assertion(_oldResiduals.size() == 0);
+		_oldXTilde.append(DataValues(entries, init));
+		_oldResiduals.append(DataValues(entries, init));
+		_residuals.append(DataValues(entries, init));
+		_scaledValues.append(DataValues(entries, init));
+		_scaledOldValues.append(DataValues(entries, init));
+
+
+		// Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
+		foreach (DataMap::value_type& pair, cplData){
+			if (not utils::contained(pair.first, _dataIDs)) {
+				_secondaryDataIDs.push_back(pair.first);
+				int secondaryEntries = pair.second->values->size();
+		//      _secondaryOldXTildes[pair.first].append(DataValues(secondaryEntries, init));
+				_secondaryResiduals[pair.first].append(DataValues(secondaryEntries, init));
+			}
+		}
+
+		// Append old value columns, if not done outside of post-processing already
+		foreach (DataMap::value_type& pair, cplData){
+			int cols = pair.second->oldValues.cols();
+			if (cols < 1) { // Add only, if not already done
+				assertion1(pair.second->values->size() > 0, pair.first);
+				pair.second->oldValues.append(
+						CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
+			}
 		}
 	}
-
-	// Append old value columns, if not done outside of post-processing already
-	foreach (DataMap::value_type& pair, cplData){
-		int cols = pair.second->oldValues.cols();
-		if (cols < 1) { // Add only, if not already done
-			assertion1(pair.second->values->size() > 0, pair.first);
-			pair.second->oldValues.append(
-					CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
-		}
-	}
-
 }
 
 
@@ -254,30 +255,19 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 	_residuals = _scaledValues;
 	_residuals -= _scaledOldValues;
 
-	//if (_firstIteration && (_matrixCols.size() < 2)){
 	/*
-	 * ATTETION: changed the condition from _firstIteration && _firstTimeStep
-	 * to the following:
-	 * underrelaxation has to be done, if the scheme has converged without even
+	 * Underrelaxation has to be done, if the scheme has converged without even
 	 * entering post processing. In this case the V, W matrices would still be empty.
-	 * This case happended in the open foam example beamInCrossFlow.
+	 * This case occurred in the open foam example beamInCrossFlow.
 	 */
 	if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
-//     preciceDebug("   Performing underrelaxation");
-//     _oldXTilde = _scaledValues; // Store x tilde
-//     _oldResiduals = _residuals; // Store current residual
-//     // Perform underrelaxation with residual: x_new = x_old + omega * res
-//     _residuals *= _initialRelaxation;
-//     _residuals += _scaledOldValues;
-//     _scaledValues = _residuals;
-
-	} else {
-		//preciceDebug("   Performing QN step");
-
+		// do nothing: constant relaxation
+	}else{
+		preciceDebug("   Update Difference Matrices");
 		if (not _firstIteration) { // Update matrices V, W with newest information
 
-			assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols()); assertion2(_matrixV.cols() <= _maxIterationsUsed,
-					_matrixV.cols(), _maxIterationsUsed);
+			assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+			assertion2(getLSSystemCols() <= _maxIterationsUsed,getLSSystemCols(), _maxIterationsUsed);
 
 			DataValues deltaR = _residuals;
 			deltaR -= _oldResiduals;
@@ -311,17 +301,10 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 					_matrixCols.pop_back();
 				}
 			}
-			// Compute delta_residual = residual - residual_old
-			//_matrixV.column(0) -= _oldResiduals;
-
-			// Compute delta_x_tilde = x_tilde - x_tilde_old
-			//_matrixW.column(0) = _scaledValues;
-			//_matrixW.column(0) -= _oldXTilde;
-
 		}
 
 		_oldResiduals = _residuals;   // Store residuals
-		_oldXTilde = _scaledValues;// Store x_tilde
+		_oldXTilde = _scaledValues;   // Store x_tilde
 	}
 
 }
@@ -342,7 +325,8 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 	assertion2(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
 
 	// scale data values (and secondary data values)
-	scaling(cplData);
+	if(_hasNodesOnInterface)
+		scaling(cplData);
 
 	/** update the difference matrices V,W  includes:
 	 * scaling of values
@@ -352,59 +336,52 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 	updateDifferenceMatrices(cplData);
 
     /*
-     * ATTETION: changed the condition from _firstIteration && _firstTimeStep
-     * to the following:
-     * underrelaxation has to be done, if the scheme has converged without even
+     * Underrelaxation has to be done, if the scheme has converged without even
      * entering post processing. In this case the V, W matrices would still be empty.
-     * This case happended in the open foam example beamInCrossFlow.
+     * This case occurred in the open foam example beamInCrossFlow.
      */
 	if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
-		preciceDebug("   Performing underrelaxation");
-		_oldXTilde = _scaledValues; // Store x tilde
-		_oldResiduals = _residuals; // Store current residual
-		// Perform underrelaxation with residual: x_new = x_old + omega * res
-		_residuals *= _initialRelaxation;
-		_residuals += _scaledOldValues;
-		_scaledValues = _residuals;
+		if(_hasNodesOnInterface)
+		{
+			preciceDebug("   Performing underrelaxation");
+			_oldXTilde = _scaledValues; // Store x tilde
+			_oldResiduals = _residuals; // Store current residual
 
-		// compute underrelaxation for the secondary data
-		computeUnderrelaxationSecondaryData(cplData);
+			// Perform constant relaxation
+			// with residual: x_new = x_old + omega * res
+			_residuals *= _initialRelaxation;
+			_residuals += _scaledOldValues;
+			_scaledValues = _residuals;
 
-		// debugging info
-		its++;
+			// compute constant relaxation for the secondary data
 
-	} else {
-		preciceDebug("   Performing QN step");
-
-		/*
-		if (utils::MasterSlave::_rank == 33) {
-						std::cout<< "before backup _matrixV: " << _matrixV.cols()
-								<<" cols: "<<getCols()
-								<<" qrV.cols: "<<_qrV.cols()<<std::endl;
-					}
-*/
-
-		//std::cout<<"v.cols = "<<_matrixV.cols()<<" w.cols = "<<_matrixW.cols()<<std::endl;
-		if ((_matrixV.cols() < 1 || _matrixW.cols()) < 1 && _timestepsReused == 0) {
-			_matrixV = _matrixVBackup;
-			_matrixW = _matrixWBackup;
-			_matrixCols = _matrixColsBackup;
-
-			// re-computation of QR decomposition from _matrixV = _matrixVBackup
-			// this occurs very rarely, to be precise, it occurs only if the coupling terminates
-			// after the first iteration and the matrix data from time step t-2 has to be used
-			_qrV.reset(_matrixV);
-			// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
-			_qrV.setGlobalRows(getLSSystemRows());
+			computeUnderrelaxationSecondaryData(cplData);
 		}
+		// number of iterations (usually equals number of columns in LS-system)
+		its++;
+	}else{
+		preciceDebug("   Performing quasi-Newton Step");
 
-		/*
-		if (utils::MasterSlave::_rank == 33) {
-						std::cout<< "after backup _matrixV: " << _matrixV.cols()
-								<<" cols: "<<getCols()
-								<<" qrV.cols: "<<_qrV.cols()<<std::endl;
-					}
-*/
+
+		//if ((_matrixV.cols() < 1 || _matrixW.cols() < 1) && _timestepsReused == 0) {
+		if (getLSSystemCols() < 1 && _timestepsReused == 0) {
+			preciceDebug("   Last time step converged after one iteration. Need to restore the matrices from backup.");
+
+			_matrixCols = _matrixColsBackup;
+			// if proc has no vertices these matrices are empty either way
+			if(_hasNodesOnInterface)
+			{
+				_matrixV = _matrixVBackup;
+				_matrixW = _matrixWBackup;
+
+				// re-computation of QR decomposition from _matrixV = _matrixVBackup
+				// this occurs very rarely, to be precise, it occurs only if the coupling terminates
+				// after the first iteration and the matrix data from time step t-2 has to be used
+				_qrV.reset(_matrixV);
+				// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+				_qrV.setGlobalRows(getLSSystemRows());
+			}
+		}
 
 		DataValues xUpdate(_residuals.size(), 0.0);
 
@@ -420,7 +397,7 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 		_scaledValues += xUpdate;        // = x^k + delta_x
 		_scaledValues += _residuals; // = x^k + delta_x + r^k
 
-		// debugging info
+		// number of iterations (usually equals number of columns in LS-system)
 		its++;
 
 		// pending deletion: delete old V, W matrices if timestepsReused = 0
@@ -428,7 +405,8 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 		if (_firstIteration && _timestepsReused == 0) {
 			// save current matrix data in case the coupling for the next time step will terminate
 			// after the first iteration (no new data, i.e., V = W = 0)
-			if (_matrixV.cols() > 0 && _matrixW.cols() > 0) {
+			//if (_matrixV.cols() > 0 && _matrixW.cols() > 0) {
+			if(getLSSystemCols() > 0){
 				_matrixColsBackup = _matrixCols;
 				_matrixVBackup = _matrixV;
 				_matrixWBackup = _matrixW;
@@ -445,17 +423,19 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 				_qrV.setGlobalRows(getLSSystemRows());
 			}
 
-			// TOD0: The following is still misssing for reusedTimeSTeps=0
+			// TODO: The following is still misssing for reusedTimeSTeps=0
 			// -----------------------------------------------
-// // //     foreach (int id, _secondaryDataIDs){
-// // //       _secondaryMatricesW[id].clear();
-// // //     }
+//    		  foreach (int id, _secondaryDataIDs){
+//     		   _secondaryMatricesW[id].clear();
+//  		  }
 			// -----------------------------------------------
 		}
 	}
 
 	// Undo scaling of data values and overwrite originals
-	undoScaling(cplData);
+	if(_hasNodesOnInterface)
+		undoScaling(cplData);
+
 	_firstIteration = false;
 }
 
@@ -488,10 +468,11 @@ void BaseQNPostProcessing:: iterationsConverged
     
       int size = cplData[id]->values->size();
       DataValues& values = *cplData[id]->values;
+      DataValues unscaled(size, 0.0);
       for (int i=0; i < size; i++){
-	curr = values[i]/factor;
-	l2norm += curr*curr;
+    	  unscaled(i) = values[i]/factor;
       }
+      l2norm = utils::MasterSlave::l2norm(unscaled);
       if (id == _dataIDs[0]) oldl2norm = sqrt(l2norm);
       _infostream<<"  * "<<factor<<"  l2-norm: "<<sqrt(l2norm)<<"  of id: "<<id<<"\n"<<std::flush;
     } 
@@ -500,15 +481,18 @@ void BaseQNPostProcessing:: iterationsConverged
   // -----------
   
   
-  
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
   // convergence was achieved
   if(not (_timestepsReused == 0))
   {
-    scaling(cplData);
+	if(_hasNodesOnInterface)
+		scaling(cplData);
+
     updateDifferenceMatrices(cplData);
-    undoScaling(cplData);
+
+    if(_hasNodesOnInterface)
+    	undoScaling(cplData);
   }
   
 # ifdef Debug
@@ -528,7 +512,7 @@ void BaseQNPostProcessing:: iterationsConverged
   // doing specialized stuff for the corresponding post processing scheme after 
   // convergence of iteration i.e.:
   // - analogously to the V,W matrices, remove columns from matrices for secondary data
-  // - save the old jacobian matrix i
+  // - save the old jacobian matrix
   specializedIterationsConverged(cplData);
 
   if (_timestepsReused == 0){
@@ -542,19 +526,25 @@ void BaseQNPostProcessing:: iterationsConverged
   else if ((int)_matrixCols.size() > _timestepsReused){
     int toRemove = _matrixCols.back();
     assertion1(toRemove > 0, toRemove);
-    preciceDebug("Removing " << toRemove << " cols from IQN-ILS matrices with "
-                 << _matrixV.cols() << " cols");
+    preciceDebug("Removing " << toRemove << " cols from least-squares system with "
+                 << getLSSystemCols() << " cols");
     assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
-    assertion2(_matrixV.cols() > toRemove, _matrixV.cols(), toRemove);
-    for (int i=0; i < toRemove; i++){
-      _matrixV.remove(_matrixV.cols() - 1);
-      _matrixW.remove(_matrixW.cols() - 1);
-      
-      // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
-      _qrV.popBack();
+    assertion2(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
+
+    // if proc has no vertices, ther is nothing to remove (though, _matrixCols need to be maintained)
+    if(_hasNodesOnInterface)
+    {
+		for (int i=0; i < toRemove; i++){
+		  _matrixV.remove(_matrixV.cols() - 1);
+		  _matrixW.remove(_matrixW.cols() - 1);
+
+		  // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
+		  _qrV.popBack();
+		}
     }
     _matrixCols.pop_back();
   }
+
   _matrixCols.push_front(0);
   _firstIteration = true;
 }
@@ -601,6 +591,11 @@ int BaseQNPostProcessing::getLSSystemCols()
 	foreach (int col, _matrixCols){
 		cols += col;
 	}
+	if(_hasNodesOnInterface){
+		assertion2(cols == _matrixV.cols(), cols, _matrixV.cols());
+		assertion2(cols == _matrixW.cols(), cols, _matrixW.cols());
+	}
+
 	return cols;
 }
 
@@ -618,16 +613,21 @@ void BaseQNPostProcessing:: removeMatrixColumn
 {
   preciceTrace2("removeMatrixColumn()", columnIndex, _matrixV.cols());
 
-  // debugging information, can be removed
-  deletedColumns++;
+  // if proc has no nodes on interface, nothing needs to be deleted
+  // note, that _matrixCols need to be maintained either way.
+  if(_hasNodesOnInterface)
+  {
+	  // debugging information, can be removed
+	  deletedColumns++;
 
-  // Remove matrix columns
-  assertion(_matrixV.cols() > 1);
-  _matrixV.remove(columnIndex);
-  _matrixW.remove(columnIndex);
-  
-  // remove corresponding column from dynamic QR-decomposition of _matrixV
-  _qrV.deleteColumn(columnIndex);
+	  // Remove matrix columns
+	  assertion(_matrixV.cols() > 1);
+	  _matrixV.remove(columnIndex);
+	  _matrixW.remove(columnIndex);
+
+	  // remove corresponding column from dynamic QR-decomposition of _matrixV
+	  _qrV.deleteColumn(columnIndex);
+  }
   
   // Reduce column count
   std::deque<int>::iterator iter = _matrixCols.begin();

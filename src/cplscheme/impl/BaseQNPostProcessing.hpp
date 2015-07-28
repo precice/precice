@@ -173,7 +173,16 @@ protected:
 
    // @brief Indicates the first iteration, where constant relaxation is used.
    bool _firstIteration;
+
+   // @brief Indicates the first time step, where constant relaxation is used
+   //        later, we replace the constant relaxation by a qN-update from last time step.
    bool _firstTimeStep;
+
+   /*
+    * @brief If in master-slave mode: True if this process has nodes at the coupling interface
+    *        If in server mode: Always true.
+    */
+   bool _hasNodesOnInterface;
 
    // @brief Solver output from last iteration.
    DataValues _oldXTilde;
