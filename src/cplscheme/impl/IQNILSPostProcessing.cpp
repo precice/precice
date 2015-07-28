@@ -127,10 +127,12 @@ void IQNILSPostProcessing::updateDifferenceMatrices
       // Compute delta_x_tilde for secondary data
       foreach (int id, _secondaryDataIDs){
         DataMatrix& secW = _secondaryMatricesW[id];
-        assertion2(secW.column(0).size() == cplData[id]->values->size(),
-                   secW.column(0).size(), cplData[id]->values->size());
-        secW.column(0) = *(cplData[id]->values);
-        secW.column(0) -= _secondaryOldXTildes[id];
+        if(secW.size() > 0){
+			assertion2(secW.column(0).size() == cplData[id]->values->size(),
+					   secW.column(0).size(), cplData[id]->values->size());
+			secW.column(0) = *(cplData[id]->values);
+			secW.column(0) -= _secondaryOldXTildes[id];
+        }
       }
     }
 
@@ -194,7 +196,9 @@ void IQNILSPostProcessing::computeQNUpdate
             __R(i,j) = r(i,j);
           }
 
-  
+      // MasterSlave-mode: it is assumed that processors with no vertices have _matrixV.cols()=0
+      // and will never enter removeMatrixColumn(). Note, the method getLSSystemCols() results the
+      // correct number of cols even for the procs with no vertices.
       if (_matrixV.cols() > 1){
         for (int i=0; i < _matrixV.cols(); i++){
           if (std::fabs(__R(i,i)) < _singularityLimit){
