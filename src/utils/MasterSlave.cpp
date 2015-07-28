@@ -21,7 +21,6 @@ int MasterSlave::_size = -1;
 int MasterSlave::_masterRank = 0;
 bool MasterSlave::_masterMode = false;
 bool MasterSlave::_slaveMode = false;
-bool MasterSlave::_hasNodesOnInterface = true;
 com::Communication::SharedPointer MasterSlave::_communication;
 
 tarch::logging::Log MasterSlave:: _log ( "precice::utils::MasterSlave" );

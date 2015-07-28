@@ -34,11 +34,6 @@ public:
   static bool _slaveMode;
 
   /**
-   * @brief True if this process has nodes at the coupling interface
-   */
-  static bool _hasNodesOnInterface;
-
-  /**
    * @brief Communication between the master and all slaves.
    */
   static com::Communication::SharedPointer _communication;
