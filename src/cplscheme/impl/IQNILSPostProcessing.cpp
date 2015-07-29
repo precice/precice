@@ -54,15 +54,18 @@ void IQNILSPostProcessing:: initialize
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
 
-  double init = 0.0;
-  // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
-  foreach (DataMap::value_type& pair, cplData){
-    if (not utils::contained(pair.first, _dataIDs)){
-      int secondaryEntries = pair.second->values->size();
-      _secondaryOldXTildes[pair.first].append(DataValues(secondaryEntries, init));
-    }
+  // secondary data only needs to be initialized if processor has vertices
+  if(_hasNodesOnInterface)
+  {
+	  double init = 0.0;
+	  // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
+	  foreach (DataMap::value_type& pair, cplData){
+		if (not utils::contained(pair.first, _dataIDs)){
+		  int secondaryEntries = pair.second->values->size();
+		  _secondaryOldXTildes[pair.first].append(DataValues(secondaryEntries, init));
+		}
+	  }
   }
-  
 }
 
 
@@ -70,79 +73,56 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
 {
-  // Compute residuals of secondary data
-  foreach (int id, _secondaryDataIDs){
-    DataValues& secResiduals = _secondaryResiduals[id];
-    PtrCouplingData data = cplData[id];
-    assertion2(secResiduals.size() == data->values->size(),
-               secResiduals.size(), data->values->size());
-    secResiduals = *(data->values);
-    secResiduals -= data->oldValues.column(0);
-  }
+	if (_hasNodesOnInterface) {
+		// Compute residuals of secondary data
+		foreach (int id, _secondaryDataIDs){
+		DataValues& secResiduals = _secondaryResiduals[id];
+		PtrCouplingData data = cplData[id];
+		assertion2(secResiduals.size() == data->values->size(),
+				secResiduals.size(), data->values->size());
+		secResiduals = *(data->values);
+		secResiduals -= data->oldValues.column(0);
+		}
 
-  /*
-   * ATTETION: changed the condition from _firstIteration && _firstTimeStep
-   * to the following: 
-   * underrelaxation has to be done, if the scheme has converged without even
-   * entering post processing. In this case the V, W matrices would still be empty.
-   * This case happended in the open foam example beamInCrossFlow.
-   */ 
-  if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
-//     // Store x_tildes for secondary data
-//     foreach (int id, _secondaryDataIDs){
-//       assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
-//                  _secondaryOldXTildes[id].size(), cplData[id]->values->size());
-//       _secondaryOldXTildes[id] = *(cplData[id]->values);
-//     }
-// 
-//     // Perform underrelaxation with initial relaxation factor for secondary data
-//     foreach (int id, _secondaryDataIDs){
-//       PtrCouplingData data = cplData[id];
-//       DataValues& values = *(data->values);
-//       values *= _initialRelaxation;                   // new * omg
-//       DataValues& secResiduals = _secondaryResiduals[id];
-//       secResiduals = data->oldValues.column(0);    // old
-//       secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
-//       values += secResiduals;                      // (1-omg) * old + new * omg
-//     }
-  }
-  else {
-    if (not _firstIteration){
-      bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
-      bool overdetermined = getLSSystemCols() <= getLSSystemRows();
-      if (not columnLimitReached && overdetermined){
-        
-	// Append column for secondary W matrices
-        foreach (int id, _secondaryDataIDs){
-          _secondaryMatricesW[id].appendFront(_secondaryResiduals[id]);
-        }
-      }
-      else {
-        // Shift column for secondary W matrices
-        foreach (int id, _secondaryDataIDs){
-          _secondaryMatricesW[id].shiftSetFirst(_secondaryResiduals[id]);
-        }
-      }
+		//if(_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
+		if (_firstIteration && _firstTimeStep){
+			// constant relaxation: for secondary data called from base class
+		}else{
+			if (not _firstIteration) {
+				bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
+				bool overdetermined = getLSSystemCols() <= getLSSystemRows();
+				if (not columnLimitReached && overdetermined) {
 
-      // Compute delta_x_tilde for secondary data
-      foreach (int id, _secondaryDataIDs){
-        DataMatrix& secW = _secondaryMatricesW[id];
-        if(secW.size() > 0){
-			assertion2(secW.column(0).size() == cplData[id]->values->size(),
-					   secW.column(0).size(), cplData[id]->values->size());
-			secW.column(0) = *(cplData[id]->values);
-			secW.column(0) -= _secondaryOldXTildes[id];
-        }
-      }
-    }
+					// Append column for secondary W matrices
+					foreach (int id, _secondaryDataIDs) {
+						_secondaryMatricesW[id].appendFront(_secondaryResiduals[id]);
+					}
+				}
+				else {
+					// Shift column for secondary W matrices
+					foreach (int id, _secondaryDataIDs) {
+						_secondaryMatricesW[id].shiftSetFirst(_secondaryResiduals[id]);
+					}
+				}
 
-    // Store x_tildes for secondary data
-    foreach (int id, _secondaryDataIDs){ 
-      assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
-                 _secondaryOldXTildes[id].size(), cplData[id]->values->size());
-      _secondaryOldXTildes[id] = *(cplData[id]->values);
-    }
-  }
+				// Compute delta_x_tilde for secondary data
+				foreach (int id, _secondaryDataIDs) {
+					DataMatrix& secW = _secondaryMatricesW[id];
+					assertion2(secW.column(0).size() == cplData[id]->values->size(),
+							secW.column(0).size(), cplData[id]->values->size());
+					secW.column(0) = *(cplData[id]->values);
+					secW.column(0) -= _secondaryOldXTildes[id];
+				}
+			}
+
+			// Store x_tildes for secondary data
+			foreach (int id, _secondaryDataIDs) {
+				assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+						_secondaryOldXTildes[id].size(), cplData[id]->values->size());
+				_secondaryOldXTildes[id] = *(cplData[id]->values);
+			}
+		}
+	}
   
   
   // call the base method for common update of V, W matrices
@@ -181,26 +161,22 @@ void IQNILSPostProcessing::computeQNUpdate
     using namespace tarch::la;
     
     // Calculate QR decomposition of matrix V and solve Rc = -Qr
-    //DataValues c;
     DataValues __c;
     bool linearDependence = true;
     while (linearDependence){
       preciceDebug("   Compute Newton factors");
       linearDependence = false;
     
-      Matrix __R(_matrixV.cols(), _matrixV.cols(), 0.0);
+      Matrix __R(_qrV.cols(), _qrV.cols(), 0.0);
       auto r = _qrV.matrixR();
         for(int i = 0; i<r.rows(); i++)
           for(int j = 0; j<r.cols(); j++)
           {
             __R(i,j) = r(i,j);
           }
-
-      // MasterSlave-mode: it is assumed that processors with no vertices have _matrixV.cols()=0
-      // and will never enter removeMatrixColumn(). Note, the method getLSSystemCols() results the
-      // correct number of cols even for the procs with no vertices.
-      if (_matrixV.cols() > 1){
-        for (int i=0; i < _matrixV.cols(); i++){
+        std::cout<<"filtering: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
+      if (getLSSystemCols() > 1){
+        for (int i=0; i < __R.rows(); i++){
           if (std::fabs(__R(i,i)) < _singularityLimit){
         	preciceDebug("   Removing linear dependent column " << i);
         	_infostream<<"[QR-dec] - removing linear dependent column "<<i<<"\n"<<std::flush;
@@ -213,8 +189,9 @@ void IQNILSPostProcessing::computeQNUpdate
         
 	preciceDebug("   Apply Newton factors");
 	
-	// ---------- QN factors with updatedQR -----------
-	Matrix __Qt(_matrixV.cols(), _matrixV.rows(), 0.0);
+	// for master-slave mode and procs with no vertices,
+	// grV.cols() = getLSSystemCols() and _qrV.rows() = 0
+	Matrix __Qt(_qrV.cols(), _qrV.rows(), 0.0);
 	
 	auto q = _qrV.matrixQ();
 	for(int i = 0; i<q.rows(); i++)
@@ -222,6 +199,13 @@ void IQNILSPostProcessing::computeQNUpdate
 	  {
 	    __Qt(j,i) = q(i,j);
 	  }
+
+	if(!_hasNodesOnInterface){
+		assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
+		assertion1(_qrV.rows() == 0, _qrV.rows());
+		assertion1(__Qt.size() == 0, __Qt.size());
+	}
+
 	auto r = _qrV.matrixR();
 	for(int i = 0; i<r.rows(); i++)
 	  for(int j = 0; j<r.cols(); j++)
@@ -230,7 +214,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	  }
 	  
 	
-		DataValues _local_b(__Qt.rows(), 0.0);
+		DataValues _local_b(_qrV.cols(), 0.0);
 		//DataValues _global_b(__Qt.rows(), 0.0);
 		//DataValues _local_b(getLSSystemCols(), 0.0);
 		DataValues _global_b;
@@ -252,24 +236,26 @@ void IQNILSPostProcessing::computeQNUpdate
 		   // if proc has no nodes on the interface, _local_b.size()=0 but this
 		   // would lead to problems in master-slave comm, i.e., send-receive and
 		   // broadcast, because of different sizes. Thus, reserve memory
-		   if(!utils::MasterSlave::_hasNodesOnInterface){
+
+		   if(!_hasNodesOnInterface){
 			   //assertion1(_local_b.size() == 0, _local_b.size());
 			   //_local_b.append(getLSSystemCols(), 0.0);
-			   std::cout<<" rank with no interface nodes: "<<utils::MasterSlave::_rank<<", local_b.size(): "<<_local_b.size()<<" getCols(): "<<getLSSystemCols()<<std::endl;
 
-			   assertion1(__Qt.rows() == 0, __Qt.rows());
-			   _local_b.append(getLSSystemCols(), 0.0);
+//			   assertion1(__Qt.rows() == 0, __Qt.rows());
+//			   _local_b.append(getLSSystemCols(), 0.0);
+			   std::cout<<" rank with no interface nodes: "<<utils::MasterSlave::_rank<<", local_b.size(): "<<_local_b.size()<<" getCols(): "<<getLSSystemCols()<<std::endl;
 		   }else{
 			   assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
 		   }
+
 		   // reserve memory for c
 		   __c.append(_local_b.size(), 0.0);
 
 		  if(utils::MasterSlave::_slaveMode){
 
 			 // if(!utils::MasterSlave::_hasNodesOnInterface){
-		//		  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] matrixV.cols: "<<_matrixV.cols()<<" qrV.cols: "<<_qrV.cols()<<" Qt.rows: "<<__Qt.rows()<<" getCols(): "<<getLSSystemCols()<<" matrixCols:"<<_matrixCols<<std::endl;
-		//		  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] (send), c.size():"<<__c.size()<<", _local_b.size(): "<<_local_b.size()<<"\n"<<std::endl;
+//				  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] matrixV.cols: "<<_matrixV.cols()<<" qrV.cols: "<<_qrV.cols()<<" Qt.rows: "<<__Qt.rows()<<" getCols(): "<<getLSSystemCols()<<" matrixCols:"<<_matrixCols<<std::endl;
+//				  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] (send), c.size():"<<__c.size()<<", _local_b.size(): "<<_local_b.size()<<"\n"<<std::endl;
 			 // }
 			  assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 			  utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
@@ -313,19 +299,21 @@ void IQNILSPostProcessing::computeQNUpdate
       }
     }
     
-    // Perform QN relaxation for secondary data
-    foreach (int id, _secondaryDataIDs){
-      PtrCouplingData data = cplData[id];
-      DataValues& values = *(data->values);
-      assertion2(_secondaryMatricesW[id].cols() == __c.size(),
-                 _secondaryMatricesW[id].cols(), __c.size());
-      multiply(_secondaryMatricesW[id], __c, values);
-      assertion2(values.size() == data->oldValues.column(0).size(),
-                 values.size(), data->oldValues.column(0).size());
-      values += data->oldValues.column(0);
-      assertion2(values.size() == _secondaryResiduals[id].size(),
-                 values.size(), _secondaryResiduals[id].size());
-      values += _secondaryResiduals[id];
+    if(_hasNodesOnInterface){
+		// Perform QN relaxation for secondary data
+		foreach (int id, _secondaryDataIDs){
+		  PtrCouplingData data = cplData[id];
+		  DataValues& values = *(data->values);
+		  assertion2(_secondaryMatricesW[id].cols() == __c.size(),
+					 _secondaryMatricesW[id].cols(), __c.size());
+		  multiply(_secondaryMatricesW[id], __c, values);
+		  assertion2(values.size() == data->oldValues.column(0).size(),
+					 values.size(), data->oldValues.column(0).size());
+		  values += data->oldValues.column(0);
+		  assertion2(values.size() == _secondaryResiduals[id].size(),
+					 values.size(), _secondaryResiduals[id].size());
+		  values += _secondaryResiduals[id];
+		}
     }
 }
 
@@ -339,22 +327,23 @@ void IQNILSPostProcessing:: specializedIterationsConverged
     _matrixCols.pop_front(); 
   }
   
-  if (_timestepsReused == 0){
-    foreach (int id, _secondaryDataIDs){
-      _secondaryMatricesW[id].clear();
-    }
+  if(_hasNodesOnInterface){
+	  if (_timestepsReused == 0){
+		foreach (int id, _secondaryDataIDs){
+		  _secondaryMatricesW[id].clear();
+		}
+	  }
+	  else if ((int)_matrixCols.size() > _timestepsReused){
+		int toRemove = _matrixCols.back();
+		foreach (int id, _secondaryDataIDs){
+		  DataMatrix& secW = _secondaryMatricesW[id];
+		  assertion3(secW.cols() > toRemove, secW, toRemove, id);
+		  for (int i=0; i < toRemove; i++){
+			secW.remove(secW.cols() - 1);
+		  }
+		}
+	  }
   }
-  else if ((int)_matrixCols.size() > _timestepsReused){
-    int toRemove = _matrixCols.back();
-    foreach (int id, _secondaryDataIDs){
-      DataMatrix& secW = _secondaryMatricesW[id];
-      assertion3(secW.cols() > toRemove, secW, toRemove, id);
-      for (int i=0; i < toRemove; i++){
-        secW.remove(secW.cols() - 1);
-      }
-    }
-  }
-  
 }
 
 
@@ -362,14 +351,18 @@ void IQNILSPostProcessing:: removeMatrixColumn
 (
   int columnIndex)
 {
-  assertion(_matrixV.cols() > 1);
-
-  // remove column from secondary Data Matrix W
-  foreach (int id, _secondaryDataIDs){
-     _secondaryMatricesW[id].remove(columnIndex);
-   }
+	if(_hasNodesOnInterface){
+	  assertion(_matrixV.cols() > 1);
+	  // remove column from secondary Data Matrix W
+	  foreach (int id, _secondaryDataIDs){
+		 _secondaryMatricesW[id].remove(columnIndex);
+	   }
+	}else{
+		std::cout<<"proc["<<utils::MasterSlave::_rank<<"] with no vertices deletes column: "<<columnIndex<<std::endl;
+	}
   
-   BaseQNPostProcessing::removeMatrixColumn(columnIndex);
+
+	BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }
 
 }}} // namespace precice, cplscheme, impl

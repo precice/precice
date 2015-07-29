@@ -260,7 +260,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 	 * entering post processing. In this case the V, W matrices would still be empty.
 	 * This case occurred in the open foam example beamInCrossFlow.
 	 */
-	if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
+	//if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
+	if (_firstIteration && _firstTimeStep){
 		// do nothing: constant relaxation
 	}else{
 		preciceDebug("   Update Difference Matrices");
@@ -274,7 +275,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 
 			DataValues deltaXTilde = _scaledValues;
 			deltaXTilde -= _oldXTilde;
-
+			std::cout<<"inside updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
 			bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
 			bool overdetermined = getLSSystemCols() <= getLSSystemRows();
 			if (not columnLimitReached && overdetermined) {
@@ -286,6 +287,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 				_qrV.pushFront(deltaR);
 
 				_matrixCols.front()++;
+				std::cout<<"append"<<std::endl;
+				std::cout<<"after append: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", _matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
 			}else {
 				_matrixV.shiftSetFirst(deltaR);
 				_matrixW.shiftSetFirst(deltaXTilde);
@@ -333,14 +336,16 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 	 * computation of residuals
 	 * appending the difference matrices
 	 */
+	std::cout<<"before updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
 	updateDifferenceMatrices(cplData);
-
+	std::cout<<"after updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
     /*
      * Underrelaxation has to be done, if the scheme has converged without even
      * entering post processing. In this case the V, W matrices would still be empty.
      * This case occurred in the open foam example beamInCrossFlow.
      */
-	if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
+	//if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
+	if (_firstIteration && _firstTimeStep){
 		if(_hasNodesOnInterface)
 		{
 			preciceDebug("   Performing underrelaxation");
@@ -363,24 +368,20 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 		preciceDebug("   Performing quasi-Newton Step");
 
 
-		//if ((_matrixV.cols() < 1 || _matrixW.cols() < 1) && _timestepsReused == 0) {
+		//if ((_matrixV.cols() < 1 || _matrixW.cols()) < 1 && _timestepsReused == 0) {
 		if (getLSSystemCols() < 1 && _timestepsReused == 0) {
 			preciceDebug("   Last time step converged after one iteration. Need to restore the matrices from backup.");
 
 			_matrixCols = _matrixColsBackup;
-			// if proc has no vertices these matrices are empty either way
-			if(_hasNodesOnInterface)
-			{
-				_matrixV = _matrixVBackup;
-				_matrixW = _matrixWBackup;
+			_matrixV = _matrixVBackup;
+			_matrixW = _matrixWBackup;
 
-				// re-computation of QR decomposition from _matrixV = _matrixVBackup
-				// this occurs very rarely, to be precise, it occurs only if the coupling terminates
-				// after the first iteration and the matrix data from time step t-2 has to be used
-				_qrV.reset(_matrixV);
-				// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
-				_qrV.setGlobalRows(getLSSystemRows());
-			}
+			// re-computation of QR decomposition from _matrixV = _matrixVBackup
+			// this occurs very rarely, to be precise, it occurs only if the coupling terminates
+			// after the first iteration and the matrix data from time step t-2 has to be used
+			_qrV.reset(_matrixV);
+			// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+			_qrV.setGlobalRows(getLSSystemRows());
 		}
 
 		DataValues xUpdate(_residuals.size(), 0.0);
@@ -418,6 +419,7 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 				_matrixV.clear();
 				_matrixW.clear();
 				_matrixCols.clear();
+				_matrixCols.push_front(0);
 				_qrV.reset();
 				// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
 				_qrV.setGlobalRows(getLSSystemRows());
@@ -480,12 +482,25 @@ void BaseQNPostProcessing:: iterationsConverged
   }
   // -----------
   
+  /*
+  if(utils::MasterSlave::_rank == 0){
+	  {
+					int i = 0;
+					char hostname[256];
+					gethostname(hostname, sizeof(hostname));
+					printf("PID %d on %s ready for attach\n", getpid(), hostname);
+					fflush(stdout);
+					while (0 == i)
+						sleep(5);
+				}
+  }
+*/
   
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
   // convergence was achieved
-  if(not (_timestepsReused == 0))
-  {
+  //if(not (_timestepsReused == 0))
+  //{
 	if(_hasNodesOnInterface)
 		scaling(cplData);
 
@@ -493,7 +508,7 @@ void BaseQNPostProcessing:: iterationsConverged
 
     if(_hasNodesOnInterface)
     	undoScaling(cplData);
-  }
+//  }
   
 # ifdef Debug
   std::ostringstream stream;
@@ -531,16 +546,17 @@ void BaseQNPostProcessing:: iterationsConverged
     assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
     assertion2(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
-    // if proc has no vertices, ther is nothing to remove (though, _matrixCols need to be maintained)
-    if(_hasNodesOnInterface)
-    {
-		for (int i=0; i < toRemove; i++){
-		  _matrixV.remove(_matrixV.cols() - 1);
-		  _matrixW.remove(_matrixW.cols() - 1);
-
-		  // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
-		  _qrV.popBack();
+    // remove columns
+	for (int i=0; i < toRemove; i++){
+		// if proc has no vertices, ther is nothing to remove in V, W
+		// Note: we push empty cols in updatedQR factorization, so that R can be calculated. Have to remove them here.
+		if(_hasNodesOnInterface)
+		{
+			_matrixV.remove(_matrixV.cols() - 1);
+			_matrixW.remove(_matrixW.cols() - 1);
 		}
+	  // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
+	  _qrV.popBack();
     }
     _matrixCols.pop_back();
   }
@@ -587,14 +603,17 @@ int BaseQNPostProcessing::getDeletedColumns()
 
 int BaseQNPostProcessing::getLSSystemCols()
 {
+	if(_hasNodesOnInterface){
+		return _matrixV.cols();
+	}
 	int cols = 0;
 	foreach (int col, _matrixCols){
 		cols += col;
 	}
-	if(_hasNodesOnInterface){
-		assertion2(cols == _matrixV.cols(), cols, _matrixV.cols());
-		assertion2(cols == _matrixW.cols(), cols, _matrixW.cols());
-	}
+	//if(_hasNodesOnInterface){
+	//	assertion4(cols == _matrixV.cols(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
+	//	assertion2(cols == _matrixW.cols(), cols, _matrixW.cols());
+	//}
 
 	return cols;
 }
@@ -613,21 +632,24 @@ void BaseQNPostProcessing:: removeMatrixColumn
 {
   preciceTrace2("removeMatrixColumn()", columnIndex, _matrixV.cols());
 
+
+  // debugging information, can be removed
+  deletedColumns++;
+
   // if proc has no nodes on interface, nothing needs to be deleted
   // note, that _matrixCols need to be maintained either way.
   if(_hasNodesOnInterface)
   {
-	  // debugging information, can be removed
-	  deletedColumns++;
-
-	  // Remove matrix columns
-	  assertion(_matrixV.cols() > 1);
-	  _matrixV.remove(columnIndex);
-	  _matrixW.remove(columnIndex);
-
-	  // remove corresponding column from dynamic QR-decomposition of _matrixV
-	  _qrV.deleteColumn(columnIndex);
+    // Remove matrix columns
+    assertion(_matrixV.cols() > 1);
+    _matrixV.remove(columnIndex);
+    _matrixW.remove(columnIndex);
   }
+  // remove corresponding column from dynamic QR-decomposition of _matrixV
+  // Note: here, we need to delete the column, as we push empty columns
+  //       for procs with no vertices in master-slave mode.
+  _qrV.deleteColumn(columnIndex);
+
   
   // Reduce column count
   std::deque<int>::iterator iter = _matrixCols.begin();
