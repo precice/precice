@@ -275,7 +275,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 
 			DataValues deltaXTilde = _scaledValues;
 			deltaXTilde -= _oldXTilde;
-			std::cout<<"inside updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
+//			std::cout<<"inside updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
 			bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
 			bool overdetermined = getLSSystemCols() <= getLSSystemRows();
 			if (not columnLimitReached && overdetermined) {
@@ -287,8 +287,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 				_qrV.pushFront(deltaR);
 
 				_matrixCols.front()++;
-				std::cout<<"append"<<std::endl;
-				std::cout<<"after append: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", _matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
+//				std::cout<<"append"<<std::endl;
+//			    std::cout<<"after append: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", _matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
 			}else {
 				_matrixV.shiftSetFirst(deltaR);
 				_matrixW.shiftSetFirst(deltaXTilde);
@@ -336,14 +336,10 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 	 * computation of residuals
 	 * appending the difference matrices
 	 */
-	std::cout<<"before updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
+//	std::cout<<"before updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
 	updateDifferenceMatrices(cplData);
-	std::cout<<"after updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
-    /*
-     * Underrelaxation has to be done, if the scheme has converged without even
-     * entering post processing. In this case the V, W matrices would still be empty.
-     * This case occurred in the open foam example beamInCrossFlow.
-     */
+//	std::cout<<"after updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
+
 	//if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
 	if (_firstIteration && _firstTimeStep){
 		if(_hasNodesOnInterface)
@@ -362,13 +358,11 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 
 			computeUnderrelaxationSecondaryData(cplData);
 		}
-		// number of iterations (usually equals number of columns in LS-system)
-		its++;
 	}else{
 		preciceDebug("   Performing quasi-Newton Step");
 
-
-		//if ((_matrixV.cols() < 1 || _matrixW.cols()) < 1 && _timestepsReused == 0) {
+		// If the previous time step converged within one single iteration, nothing was added
+		// to the LS system matrices and they need to be restored from the backup at time T-2
 		if (getLSSystemCols() < 1 && _timestepsReused == 0) {
 			preciceDebug("   Last time step converged after one iteration. Need to restore the matrices from backup.");
 
@@ -398,15 +392,11 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 		_scaledValues += xUpdate;        // = x^k + delta_x
 		_scaledValues += _residuals; // = x^k + delta_x + r^k
 
-		// number of iterations (usually equals number of columns in LS-system)
-		its++;
-
 		// pending deletion: delete old V, W matrices if timestepsReused = 0
 		// those were only needed for the first iteration (instead of underrelax.)
 		if (_firstIteration && _timestepsReused == 0) {
 			// save current matrix data in case the coupling for the next time step will terminate
 			// after the first iteration (no new data, i.e., V = W = 0)
-			//if (_matrixV.cols() > 0 && _matrixW.cols() > 0) {
 			if(getLSSystemCols() > 0){
 				_matrixColsBackup = _matrixCols;
 				_matrixVBackup = _matrixV;
@@ -424,19 +414,15 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 				// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
 				_qrV.setGlobalRows(getLSSystemRows());
 			}
-
-			// TODO: The following is still misssing for reusedTimeSTeps=0
-			// -----------------------------------------------
-//    		  foreach (int id, _secondaryDataIDs){
-//     		   _secondaryMatricesW[id].clear();
-//  		  }
-			// -----------------------------------------------
 		}
 	}
 
 	// Undo scaling of data values and overwrite originals
 	if(_hasNodesOnInterface)
 		undoScaling(cplData);
+
+	// number of iterations (usually equals number of columns in LS-system)
+	its++;
 
 	_firstIteration = false;
 }
@@ -482,33 +468,18 @@ void BaseQNPostProcessing:: iterationsConverged
   }
   // -----------
   
-  /*
-  if(utils::MasterSlave::_rank == 0){
-	  {
-					int i = 0;
-					char hostname[256];
-					gethostname(hostname, sizeof(hostname));
-					printf("PID %d on %s ready for attach\n", getpid(), hostname);
-					fflush(stdout);
-					while (0 == i)
-						sleep(5);
-				}
-  }
-*/
   
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
   // convergence was achieved
-  //if(not (_timestepsReused == 0))
-  //{
-	if(_hasNodesOnInterface)
-		scaling(cplData);
+  if(_hasNodesOnInterface)
+	 scaling(cplData);
 
-    updateDifferenceMatrices(cplData);
+  updateDifferenceMatrices(cplData);
 
-    if(_hasNodesOnInterface)
-    	undoScaling(cplData);
-//  }
+  if(_hasNodesOnInterface)
+	undoScaling(cplData);
+
   
 # ifdef Debug
   std::ostringstream stream;
@@ -603,17 +574,17 @@ int BaseQNPostProcessing::getDeletedColumns()
 
 int BaseQNPostProcessing::getLSSystemCols()
 {
-	if(_hasNodesOnInterface){
-		return _matrixV.cols();
-	}
+//	if(_hasNodesOnInterface){
+//		return _matrixV.cols();
+//	}
 	int cols = 0;
 	foreach (int col, _matrixCols){
 		cols += col;
 	}
-	//if(_hasNodesOnInterface){
-	//	assertion4(cols == _matrixV.cols(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
-	//	assertion2(cols == _matrixW.cols(), cols, _matrixW.cols());
-	//}
+	if(_hasNodesOnInterface){
+		assertion4(cols == _matrixV.cols(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
+		assertion2(cols == _matrixW.cols(), cols, _matrixW.cols());
+	}
 
 	return cols;
 }

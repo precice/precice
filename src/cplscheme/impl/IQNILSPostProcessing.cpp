@@ -43,7 +43,8 @@ IQNILSPostProcessing:: IQNILSPostProcessing
   BaseQNPostProcessing(initialRelaxation, maxIterationsUsed, timestepsReused,
 		       singularityLimit, dataIDs, scalings),
   _secondaryOldXTildes(),
-  _secondaryMatricesW()
+  _secondaryMatricesW(),
+  _secondaryMatricesWBackup()
 {
 }
 
@@ -123,7 +124,6 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 			}
 		}
 	}
-  
   
   // call the base method for common update of V, W matrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
@@ -295,11 +295,23 @@ void IQNILSPostProcessing::computeQNUpdate
 		multiply(_matrixW, __c, xUpdate);
 
 		preciceDebug("c = " << __c);
-		_infostream<<"c = "<<__c<<"\n"<<std::flush;
+		//_infostream<<"c = "<<__c<<"\n"<<std::flush;
       }
     }
     
+
+    /**
+     *  perform QN-Update step for the secondary Data
+     */
     if(_hasNodesOnInterface){
+
+    	// If the previous time step converged within one single iteration, nothing was added
+		// to the LS system matrices and they need to be restored from the backup at time T-2
+		if (getLSSystemCols() < 1 && _timestepsReused == 0) {
+			preciceDebug("   Last time step converged after one iteration. Need to restore the secondaryMatricesW from backup.");
+			_secondaryMatricesW = _secondaryMatricesWBackup;
+		}
+
 		// Perform QN relaxation for secondary data
 		foreach (int id, _secondaryDataIDs){
 		  PtrCouplingData data = cplData[id];
@@ -313,6 +325,18 @@ void IQNILSPostProcessing::computeQNUpdate
 		  assertion2(values.size() == _secondaryResiduals[id].size(),
 					 values.size(), _secondaryResiduals[id].size());
 		  values += _secondaryResiduals[id];
+		}
+
+		// pending deletion: delete old secondaryMatricesW
+		if (_firstIteration && _timestepsReused == 0) {
+			// save current secondaryMatrix data in case the coupling for the next time step will terminate
+			// after the first iteration (no new data, i.e., V = W = 0)
+			if(getLSSystemCols() > 0){
+				_secondaryMatricesWBackup = _secondaryMatricesW;
+			}
+    		foreach (int id, _secondaryDataIDs){
+    			_secondaryMatricesW[id].clear();
+    		}
 		}
     }
 }
@@ -329,9 +353,11 @@ void IQNILSPostProcessing:: specializedIterationsConverged
   
   if(_hasNodesOnInterface){
 	  if (_timestepsReused == 0){
-		foreach (int id, _secondaryDataIDs){
-		  _secondaryMatricesW[id].clear();
-		}
+		// pending deletion of secondaryMatricesW
+
+		//foreach (int id, _secondaryDataIDs){
+		//  _secondaryMatricesW[id].clear();
+		//}
 	  }
 	  else if ((int)_matrixCols.size() > _timestepsReused){
 		int toRemove = _matrixCols.back();
@@ -357,11 +383,8 @@ void IQNILSPostProcessing:: removeMatrixColumn
 	  foreach (int id, _secondaryDataIDs){
 		 _secondaryMatricesW[id].remove(columnIndex);
 	   }
-	}else{
-		std::cout<<"proc["<<utils::MasterSlave::_rank<<"] with no vertices deletes column: "<<columnIndex<<std::endl;
 	}
   
-
 	BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }
 
