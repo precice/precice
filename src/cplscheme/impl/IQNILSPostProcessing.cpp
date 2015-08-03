@@ -75,6 +75,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
   DataMap& cplData)
 {
 	if (_hasNodesOnInterface) {
+		if(!_hasNodesOnInterface){ std::cout<<"empty proc["<<utils::MasterSlave::_rank<<"]: updateDiffMatrices, not allowed"<<std::endl;}
 		// Compute residuals of secondary data
 		foreach (int id, _secondaryDataIDs){
 		DataValues& secResiduals = _secondaryResiduals[id];
@@ -303,6 +304,7 @@ void IQNILSPostProcessing::computeQNUpdate
     /**
      *  perform QN-Update step for the secondary Data
      */
+    //TODO: master-slave multiplication, take care of communication deadlocks, check if-statements with _hasNodesOnInterface at append statementss
     if(_hasNodesOnInterface){
 
     	// If the previous time step converged within one single iteration, nothing was added
