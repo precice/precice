@@ -150,8 +150,6 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	}
 	// ---------------------------------------------------
 
-	if(!_hasNodesOnInterface){ std::cout<<"empty proc["<<utils::MasterSlave::_rank<<"]: initialize: hasNodesonInterface:"<<_hasNodesOnInterface<<std::endl;}
-
 	_matrixCols.push_front(0);
 	_firstIteration = true;
 	_firstTimeStep = true;
@@ -164,8 +162,8 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	_scaledValues.append(DataValues(entries, init));
 	_scaledOldValues.append(DataValues(entries, init));
 
-	if(_hasNodesOnInterface)
-	{
+	//if(_hasNodesOnInterface)
+	//{
 		// Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
 		foreach (DataMap::value_type& pair, cplData){
 			if (not utils::contained(pair.first, _dataIDs)) {
@@ -175,7 +173,7 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 				_secondaryResiduals[pair.first].append(DataValues(secondaryEntries, init));
 			}
 		}
-	}
+	//}
 	// Append old value columns, if not done outside of post-processing already
 	foreach (DataMap::value_type& pair, cplData){
 		int cols = pair.second->oldValues.cols();
@@ -202,8 +200,7 @@ void BaseQNPostProcessing:: scaling
   DataMap& cplData)
 {
   preciceTrace("scaling()");
-  if(!_hasNodesOnInterface){ std::cout<<"empty proc["<<utils::MasterSlave::_rank<<"]: scaling"<<std::endl;}
-  
+
   int offset = 0;
 //  double l2norm = 0.;
 //  double oldl2norm = 0.;
@@ -261,8 +258,6 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 	_residuals = _scaledValues;
 	_residuals -= _scaledOldValues;
 
-	if(!_hasNodesOnInterface){ std::cout<<"empty proc["<<utils::MasterSlave::_rank<<"]: updateDiffMatrices"<<std::endl;}
-
 	/*
 	 * Underrelaxation has to be done, if the scheme has converged without even
 	 * entering post processing. In this case the V, W matrices would still be empty.
@@ -296,8 +291,6 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 				_qrV.pushFront(deltaR);
 
 				_matrixCols.front()++;
-				std::cout<<"append"<<std::endl;
-			    std::cout<<"after append: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", _matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
 			}else {
 				//if(_hasNodesOnInterface){
 					_matrixV.shiftSetFirst(deltaR);
@@ -338,8 +331,6 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 	assertion2(_scaledOldValues.size() == _oldXTilde.size(),_scaledOldValues.size(), _oldXTilde.size());
 	assertion2(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
 
-	if(!_hasNodesOnInterface){ std::cout<<"empty proc["<<utils::MasterSlave::_rank<<"]: performPostProcessing"<<std::endl;}
-
 	// scale data values (and secondary data values)
 	//if(_hasNodesOnInterface)
 		scaling(cplData);
@@ -349,9 +340,9 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 	 * computation of residuals
 	 * appending the difference matrices
 	 */
-	std::cout<<"before updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
+	//std::cout<<"before updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
 	updateDifferenceMatrices(cplData);
-	std::cout<<"after updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
+	//std::cout<<"after updateDiffMatr: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
 
 	//if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
 	if (_firstIteration && _firstTimeStep){
@@ -366,10 +357,10 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 			_scaledValues = _residuals;
 
 			// compute constant relaxation for the secondary data
-		if(_hasNodesOnInterface)
-		{
+		//if(_hasNodesOnInterface)
+		//{
 			computeUnderrelaxationSecondaryData(cplData);
-		}
+		//}
 	}else{
 		preciceDebug("   Performing quasi-Newton Step");
 

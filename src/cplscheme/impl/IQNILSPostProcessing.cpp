@@ -56,8 +56,8 @@ void IQNILSPostProcessing:: initialize
   BaseQNPostProcessing::initialize(cplData);
 
   // secondary data only needs to be initialized if processor has vertices
-  if(_hasNodesOnInterface)
-  {
+  //if(_hasNodesOnInterface)
+  //{
 	  double init = 0.0;
 	  // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
 	  foreach (DataMap::value_type& pair, cplData){
@@ -66,7 +66,7 @@ void IQNILSPostProcessing:: initialize
 		  _secondaryOldXTildes[pair.first].append(DataValues(secondaryEntries, init));
 		}
 	  }
-  }
+  //}
 }
 
 
@@ -74,8 +74,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
 {
-	if (_hasNodesOnInterface) {
-		if(!_hasNodesOnInterface){ std::cout<<"empty proc["<<utils::MasterSlave::_rank<<"]: updateDiffMatrices, not allowed"<<std::endl;}
+	//if (_hasNodesOnInterface) {
 		// Compute residuals of secondary data
 		foreach (int id, _secondaryDataIDs){
 		DataValues& secResiduals = _secondaryResiduals[id];
@@ -124,7 +123,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 				_secondaryOldXTildes[id] = *(cplData[id]->values);
 			}
 		}
-	}
+	//}
   
   // call the base method for common update of V, W matrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
@@ -175,7 +174,7 @@ void IQNILSPostProcessing::computeQNUpdate
           {
             __R(i,j) = r(i,j);
           }
-        std::cout<<"filtering: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
+        //std::cout<<"filtering: proc["<<utils::MasterSlave::_rank<<"] empty: "<<(!_hasNodesOnInterface)<<", _matrixCols: "<<_matrixCols<<", getLSSystemCols(): "<<getLSSystemCols()<<"_matrixV.cols(): "<<_matrixV.cols()<<", _qrV.cols(): "<<_qrV.cols()<<std::endl;
       if (getLSSystemCols() > 1){
         for (int i=0; i < __R.rows(); i++){
           if (std::fabs(__R(i,i)) < _singularityLimit){
@@ -305,7 +304,7 @@ void IQNILSPostProcessing::computeQNUpdate
      *  perform QN-Update step for the secondary Data
      */
     //TODO: master-slave multiplication, take care of communication deadlocks, check if-statements with _hasNodesOnInterface at append statementss
-    if(_hasNodesOnInterface){
+   // if(_hasNodesOnInterface){
 
     	// If the previous time step converged within one single iteration, nothing was added
 		// to the LS system matrices and they need to be restored from the backup at time T-2
@@ -340,7 +339,7 @@ void IQNILSPostProcessing::computeQNUpdate
     			_secondaryMatricesW[id].clear();
     		}
 		}
-    }
+   // }
 }
 
 
@@ -353,7 +352,7 @@ void IQNILSPostProcessing:: specializedIterationsConverged
     _matrixCols.pop_front(); 
   }
   
-  if(_hasNodesOnInterface){
+ // if(_hasNodesOnInterface){
 	  if (_timestepsReused == 0){
 		// pending deletion of secondaryMatricesW
 
@@ -371,7 +370,7 @@ void IQNILSPostProcessing:: specializedIterationsConverged
 		  }
 		}
 	  }
-  }
+  //}
 }
 
 
@@ -379,13 +378,13 @@ void IQNILSPostProcessing:: removeMatrixColumn
 (
   int columnIndex)
 {
-	if(_hasNodesOnInterface){
+	//if(_hasNodesOnInterface){
 	  assertion(_matrixV.cols() > 1);
 	  // remove column from secondary Data Matrix W
 	  foreach (int id, _secondaryDataIDs){
 		 _secondaryMatricesW[id].remove(columnIndex);
 	   }
-	}
+	//}
   
 	BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }
