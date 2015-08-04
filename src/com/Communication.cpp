@@ -76,7 +76,6 @@ Communication::broadcast(double* itemsToSend, int size) {
   std::vector<Request::SharedPointer> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
-
   for (int rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemsToSend, size, rank + _rankOffset);
 
@@ -91,7 +90,6 @@ Communication::broadcast(double* itemsToReceive,
                          int size,
                          int rankBroadcaster) {
   preciceTrace1("broadcast(double*)", size);
-
   receive(itemsToReceive, size, rankBroadcaster + _rankOffset);
 }
 
@@ -115,7 +113,6 @@ Communication::broadcast(double itemToSend) {
 void
 Communication::broadcast(double& itemToReceive, int rankBroadcaster) {
   preciceTrace("broadcast(double&)");
-
   receive(itemToReceive, rankBroadcaster + _rankOffset);
 }
 

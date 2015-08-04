@@ -11,6 +11,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Dimensions.hpp"
+#include "utils/MasterSlave.hpp"
 #include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
@@ -42,7 +43,8 @@ MVQNPostProcessing:: MVQNPostProcessing
 		       singularityLimit, dataIDs, scalings),
 //  _secondaryOldXTildes(),
   _invJacobian(),
-  _oldInvJacobian()
+  _oldInvJacobian(),
+  _dimOffsets()
 {}
 
 
@@ -55,10 +57,43 @@ void MVQNPostProcessing:: initialize
   BaseQNPostProcessing::initialize(cplData);
   
   double init = 0.0;
-  size_t entries= _residuals.size();
+  int entries = _residuals.size();
+  int global_n = 0;
+
+	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+		global_n = entries;
+	}else{
+
+		assertion(utils::MasterSlave::_communication.get() != NULL);
+		assertion(utils::MasterSlave::_communication->isConnected());
+
+
+		/**
+		 *  make dimensions public to all procs,
+		 *  last entry _dimOffsets[MasterSlave::_size] holds the global dimension, global,n
+		 */
+		_dimOffsets.resize(utils::MasterSlave::_size + 1);
+		if (utils::MasterSlave::_slaveMode) {
+			utils::MasterSlave::_communication->send(entries, 0);
+			utils::MasterSlave::_communication->receive(&_dimOffsets[0], _dimOffsets.size(), 0);
+		}
+		if (utils::MasterSlave::_masterMode) {
+			_dimOffsets[0] = 0;
+			_dimOffsets[1] = entries;
+			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+				int localDim = 0;
+				utils::MasterSlave::_communication->receive(localDim, rankSlave);
+				_dimOffsets[rankSlave + 1] = _dimOffsets[rankSlave] + localDim;
+			}
+			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+				utils::MasterSlave::_communication->send(&_dimOffsets[0], _dimOffsets.size(), rankSlave);
+			}
+		}
+		global_n = _dimOffsets.back();
+	}
   
-  _invJacobian = Matrix(entries, entries, init);
-  _oldInvJacobian = Matrix(entries, entries, init);
+  _invJacobian = Matrix(global_n, entries, init);
+  _oldInvJacobian = Matrix(global_n, entries, init);
 }
 
 
@@ -89,6 +124,10 @@ void MVQNPostProcessing::computeUnderrelaxationSecondaryData
 
 
 
+
+/**
+ * This is a no-op at the moment, add implementation to handle secondary data
+ */
 void MVQNPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
@@ -113,7 +152,6 @@ void MVQNPostProcessing::updateDifferenceMatrices
    * This case happended in the open foam example beamInCrossFlow.
    */ 
   if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
-    //k++;
     // Perform underrelaxation with initial relaxation factor for secondary data
 //     foreach (int id, _secondaryDataIDs){
 //       PtrCouplingData data = cplData[id];
@@ -127,7 +165,6 @@ void MVQNPostProcessing::updateDifferenceMatrices
   }
   else {
     if (not _firstIteration){
-      //k++;
     }
   }
   
@@ -150,7 +187,7 @@ void MVQNPostProcessing::computeQNUpdate
     preciceDebug("   Compute Newton factors");
     //computeNewtonFactorsLUDecomposition(cplData, xUpdate);
     
-    // computes xUpdate using updatedQR decompositon (does not modify _invJacobian)
+    // computes xUpdate using updatedQR decompositon
     computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate);
 }
 
@@ -165,12 +202,12 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
   // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
   // ----------------------------------------- -------
 
-  DataMatrix v;
+  Matrix Z(_matrixV.cols(), _matrixV.rows(), 0.0);
   bool linearDependence = true;
   
   while (linearDependence) {
 		linearDependence = false;
-		v.clear();
+		//Z.clear();
 
 		Matrix __R(_matrixV.cols(), _matrixV.cols(), 0.0);
 		auto r = _qrV.matrixR();
@@ -214,33 +251,201 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 				}
 
 				backSubstitution(__R, __matrixQRow, __ytmpVec);
-				v.append(__ytmpVec);
+				for(int p = 0; p < __ytmpVec.size(); p++)
+					Z(p,i) = __ytmpVec(p);
 				__matrixQRow.clear();
 			}
 		}
 	}
 
-
-  // tmpMatrix = J_inv_n*V
+  /*
+   * Multiply J_prev * V =: V_tilde
+   */
+  // TODO: transpose V efficiently using blocking in parallel
+  //       such that multiplication is cache efficient
   Matrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
   assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
-  multiply(_oldInvJacobian, _matrixV, tmpMatrix);
+
+  if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+	  multiply(_oldInvJacobian, _matrixV, tmpMatrix);
+
+  }else{
+
+	  assertion(utils::MasterSlave::_communication.get() != NULL);
+	  assertion(utils::MasterSlave::_communication->isConnected());
+
+	  for(int i = 0; i < _oldInvJacobian.rows(); i++){
+		  // find rank of processor that stores the result
+		  int rank = 0;
+		  while(i >= _dimOffsets[rank+1]) rank++;
+		  for(int j = 0; j < _matrixV.cols(); j++){
+			  // as we want to move to Eigen, copy
+			  DataValues Jrow(_oldInvJacobian.cols(), 0.0);
+			  for(int s = 0; s < _oldInvJacobian.cols(); s++)
+				  Jrow(s) = _oldInvJacobian(i,s);
+
+			  // TODO: better: implement a reduce-operation (no loop over all slaves)
+			  double res_ij = utils::MasterSlave::dot(Jrow, _matrixV.column(j));
+
+			  // find proc that needs to store the result.
+			  int local_row;
+			  if(utils::MasterSlave::_rank == rank)
+			  {
+				  local_row = i - _dimOffsets[rank];
+				  tmpMatrix(local_row, j) = res_ij;
+			  }
+		  }
+	  }
+
+  }
 
   // tmpMatrix = (W-J_inv_n*V)
   tmpMatrix *= -1.;
   tmpMatrix = tmpMatrix + _matrixW;
-  
-  // invJacobian = (W - J_inv_n*V)*(V^T*V)^-1*V^T
-  assertion2(tmpMatrix.cols() == v.rows(), tmpMatrix.cols(), v.rows());
 
-  //Matrix tmp_invJacobian(_invJacobian.rows(), _invJacobian.cols(), 0.0);
-  multiply(tmpMatrix, v, _invJacobian);
+  
+  /**
+   *  compute invJacobian = W_til*Z
+   *  where Z = (V^T*V)^-1*V^T vie QR-dec and back-substitution
+   *  and W_til = (W - J_inv_n*V)
+   */
+  assertion2(tmpMatrix.cols() == Z.rows(), tmpMatrix.cols(), Z.rows());
+  if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+	  multiply(tmpMatrix, Z, _invJacobian);
+
+  }else{
+
+	  assertion(utils::MasterSlave::_communication.get() != NULL);
+	  assertion(utils::MasterSlave::_communication->isConnected());
+
+	  assertion(utils::MasterSlave::_cyclicCommLeft.get() != NULL);
+	  assertion(utils::MasterSlave::_cyclicCommLeft->isConnected());
+
+	  assertion(utils::MasterSlave::_cyclicCommRight.get() != NULL);
+	  assertion(utils::MasterSlave::_cyclicCommRight->isConnected());
+
+
+	  int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
+	  int prevProc = (utils::MasterSlave::_rank -1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank -1;
+	  int rows_rcv = (prevProc > 0) ? _dimOffsets[prevProc+1] - _dimOffsets[prevProc] : _dimOffsets[1];
+	  Matrix Wtil_rcv(rows_rcv, tmpMatrix.cols(),0.0);
+
+	  // initiate asynchronous send operation of tmpMatrix --> nextProc (this data is needed in cycle 1)    dim: n_local x cols
+	  com::Request::SharedPointer requestSend = utils::MasterSlave::_cyclicCommRight->aSend(&tmpMatrix(0,0), tmpMatrix.size(), 0);
+
+	  // initiate asynchronous receive operation for W_til from previous processor --> W_til      dim: rows_rcv x cols
+	  com::Request::SharedPointer requestRcv = utils::MasterSlave::_cyclicCommLeft->aReceive(&Wtil_rcv(0,0), rows_rcv * tmpMatrix.cols(), 0);
+
+	  // compute diagonal blocks where all data is local and no communication is needed
+	  // compute block matrices of J_inv of size (n_til x n_til), n_til = local n
+	  Matrix diagBlock(_matrixV.rows(),_matrixV.rows(), 0.0);
+	  multiply(tmpMatrix, Z, diagBlock);
+	  // set block at corresponding row-index on proc
+	  int off = _dimOffsets[utils::MasterSlave::_rank];
+	  assertion2(_invJacobian.cols() == diagBlock.cols(), _invJacobian.cols(), diagBlock.cols());
+	  for(int q = 0; q < diagBlock.rows(); q++)
+		  for(int p = 0; p < _invJacobian.cols(); p++)
+		  {
+			  _invJacobian(q+off,p) = diagBlock(q,p);
+		  }
+
+	  //std::cout<<"computed block ["<<utils::MasterSlave::_rank<<"]["<<utils::MasterSlave::_rank<<"] inserted at off= "<<off<<" frobenius norm: "<<tarch::la::frobeniusNorm(diagBlock)<<std::endl;
+
+
+	  /**
+	   * cyclic send-receive operation
+	   */
+	  for(int cycle = 1; cycle < utils::MasterSlave::_size; cycle++){
+
+		  // wait until W_til from previous processor is fully received
+		  requestSend->wait();
+		  requestRcv->wait();
+
+		  // Wtil_rcv is available - needed for local multiplication and hand over to next proc
+		  Matrix Wtil_copy(Wtil_rcv);
+
+		  // initiate async send to hand over Wtil to the next proc (this data will be needed in the next cycle)    dim: n_local x cols
+		  if(cycle < utils::MasterSlave::_size-1){
+			  requestSend = utils::MasterSlave::_cyclicCommRight->aSend(&Wtil_copy(0,0), Wtil_copy.size(), 0);
+			  //std::cout<<"proc["<<utils::MasterSlave::_rank<<"] sends to ["<<nextProc<<"] double* of size "<<Wtil_copy.size()<<" for the next cycle"<<std::endl;
+		  }
+
+		  // compute proc that owned Wtil_rcv at the very beginning for each cylce
+		  int sourceProc_nextCycle = (utils::MasterSlave::_rank - (cycle+1) < 0) ?
+				  utils::MasterSlave::_size + (utils::MasterSlave::_rank - (cycle+1)) : utils::MasterSlave::_rank - (cycle+1);
+		  int sourceProc = (utils::MasterSlave::_rank - cycle < 0) ?
+		  				  utils::MasterSlave::_size + (utils::MasterSlave::_rank - cycle) : utils::MasterSlave::_rank - cycle;
+		  int rows_rcv_nextCycle = (sourceProc_nextCycle > 0) ? _dimOffsets[sourceProc_nextCycle+1] - _dimOffsets[sourceProc_nextCycle] : _dimOffsets[1];
+		  rows_rcv = (sourceProc > 0) ? _dimOffsets[sourceProc+1] - _dimOffsets[sourceProc] : _dimOffsets[1];
+		  Wtil_rcv = Matrix(rows_rcv_nextCycle, tmpMatrix.cols(),0.0);
+
+
+		  // initiate asynchronous receive operation for W_til from previous processor --> W_til (this data is needed in the next cycle)
+		  if(cycle < utils::MasterSlave::_size-1){
+			  requestRcv = utils::MasterSlave::_cyclicCommLeft->aReceive(&Wtil_rcv(0,0), rows_rcv_nextCycle * tmpMatrix.cols(), 0);
+			//  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] receives from ["<<prevProc<<"] double* of size "
+			//		   <<(rows_rcv_nextCycle*tmpMatrix.cols())<<" from dest ["<<sourceProc_nextCycle<<"]"<<" for the next cycle"<<std::endl;
+		  }
+
+
+		  // compute block with new local data
+		  Matrix block(rows_rcv, Z.cols(), 0.0);
+		  multiply(Wtil_copy, Z, block);
+
+		  // set block at corresponding index in J_inv
+		  // the row-offset of the current block is determined by the proc that sends the part of the W_til matrix
+		  // note: the direction and ordering of the cyclic sending operation is chosen s.t. the computed block is
+		  //       local on the current processor (in J_inv).
+		  off = _dimOffsets[sourceProc];
+		  assertion2(_invJacobian.cols() == block.cols(), _invJacobian.cols(), block.cols());
+		  for(int q = 0; q < block.rows(); q++)
+			  for(int p = 0; p < _invJacobian.cols(); p++)
+			  {
+				  _invJacobian(q+off,p) = block(q,p);
+			  }
+
+		//  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] computed block ["<<sourceProc<<"]["<<utils::MasterSlave::_rank
+		//		   <<"] inserted at off= "<<off<<" frobenius norm: "<<tarch::la::frobeniusNorm(block)<<std::endl;
+	  }
+  }
+
   _invJacobian = _invJacobian + _oldInvJacobian;
 
   DataValues negRes(_residuals);
   negRes *= -1.;
-  // solve delta_x = - J_inv*residuals
-  multiply(_invJacobian, negRes, xUpdate);  
+
+  /*
+   * solve delta_x = - J_inv*residuals
+   */
+  if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+	  multiply(_invJacobian, negRes, xUpdate);
+
+  }else{
+
+  	  assertion(utils::MasterSlave::_communication.get() != NULL);
+  	  assertion(utils::MasterSlave::_communication->isConnected());
+
+  	  for(int i = 0; i < _invJacobian.rows(); i++){
+  		  // find rank of processor that stores the result
+		  int rank = 0;
+		  while(i >= _dimOffsets[rank+1]) rank++;
+		  // as we want to move to Eigen, copy
+		  DataValues Jrow(_invJacobian.cols(), 0.0);
+		  for (int s = 0; s < _invJacobian.cols(); s++) {
+			  Jrow(s) = _invJacobian(i,s);
+		  }
+		  // TODO: better: implement a reduce-operation (no loop over all slaves)
+		  double up_ij = utils::MasterSlave::dot(Jrow, negRes);
+
+		  // find proc that needs to store the result.
+		  int local_row;
+		  if(utils::MasterSlave::_rank == rank)
+		  {
+			  local_row = i - _dimOffsets[rank];
+			  xUpdate(local_row) = up_ij;
+		  }
+  	  }
+    }
 }
 
 
@@ -383,10 +588,6 @@ void MVQNPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
-  
-  
-  //k = 0;
-  //t++;
   // store inverse Jacobian
 //  _matrixWriter.write(_invJacobian);
   _oldInvJacobian = _invJacobian;

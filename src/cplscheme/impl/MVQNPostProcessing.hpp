@@ -81,6 +81,10 @@ private:
    // @brief stores the approximation of the inverse Jacobian from the previous time step.
    Matrix _oldInvJacobian;
 
+   // @brief only needed for the parallel master-slave mode. stores the local dimensions,
+   //        i.e., the offsets in _invJacobian for all processors
+   std::vector<int> _dimOffsets;
+
   // @brief comptes the MVQN update using QR decomposition of V, 
   //        furthermore it updates the inverse of the system jacobian
    virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate);
