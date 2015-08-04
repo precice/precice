@@ -20,7 +20,7 @@ namespace cplscheme {
 namespace tests {
 
 /**
- * @brief Provides tests for class CommunicatedGeometry.
+ * @brief Provides tests for class IQNILSPostProcessing for master-slave mode.
  */
 class PostProcessingMasterSlaveTest : public tarch::tests::TestCase
 {

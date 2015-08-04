@@ -72,14 +72,6 @@ void PostProcessingMasterSlaveTest::testVIQNPP()
 {
 	preciceTrace ( "testVIQNPP" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-	//com::Communication::SharedPointer participantCom =
-	//		com::Communication::SharedPointer(
-	//				new com::MPIDirectCommunication());
-	//m2n::DistributedComFactory::SharedPointer distrFactory =
-	//		m2n::DistributedComFactory::SharedPointer(
-	//				new m2n::GatherScatterComFactory(participantCom));
-	//m2n::M2N::SharedPointer m2n = m2n::M2N::SharedPointer(
-	//		new m2n::M2N(participantCom, distrFactory));
 	com::Communication::SharedPointer masterSlaveCom =
 			com::Communication::SharedPointer(
 					new com::MPIDirectCommunication());
@@ -87,13 +79,8 @@ void PostProcessingMasterSlaveTest::testVIQNPP()
 
 	utils::Parallel::synchronizeProcesses();
 
-	//if (utils::Parallel::getProcessRank() == 0) { //NASTIN
-	//	utils::Parallel::splitCommunicator("NASTIN");
-	//	m2n->acceptMasterConnection("NASTIN", "SOLIDZMaster");
-	//} else
 	if (utils::Parallel::getProcessRank() == 0) { //Master
 		utils::Parallel::splitCommunicator("SOLIDZMaster");
-		//m2n->requestMasterConnection("NASTIN", "SOLIDZMaster");
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 		utils::Parallel::splitCommunicator("SOLIDZSlaves");
 	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
@@ -104,7 +91,7 @@ void PostProcessingMasterSlaveTest::testVIQNPP()
 
 	if (utils::Parallel::getProcessRank() == 0) { //Master
 		masterSlaveCom->acceptConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 1);
-		masterSlaveCom->setRankOffset(0);
+		masterSlaveCom->setRankOffset(1);
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 		masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 3);
 	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
@@ -252,52 +239,58 @@ void PostProcessingMasterSlaveTest::testVIQNPP()
 		fpcd->oldValues.column(0) = fcol1;
 	}
 
-	std::cout<<"perform pp"<<std::endl;
-
-
+	utils::Parallel::synchronizeProcesses();
 	pp.performPostProcessing(data);
-
-	std::cout<<"performed"<<std::endl;
-
-
-
-	std::cout<<"First Iteration:"<<std::endl;
-	/*
-	validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
-	validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
-	validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.02), (*data.at(0)->values)(2));
-	validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.03), (*data.at(0)->values)(3));
-	validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
-	validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
-	validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
-	*/
+	utils::Parallel::synchronizeProcesses();
 
 	utils::DynVector newdvalues;
 	if (utils::Parallel::getProcessRank() == 0) { //Master
 
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.02), (*data.at(0)->values)(2));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.03), (*data.at(0)->values)(3));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
+
+		/*
 		std::cout<<"  Master:"<<std::endl;
-		std::cout<<"(*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
-		std::cout<<"(*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
-		std::cout<<"(*data.at(0)->values)(2): "<<(*data.at(0)->values)(2)<<std::endl;
-		std::cout<<"(*data.at(0)->values)(3): "<<(*data.at(0)->values)(3)<<std::endl;
-		std::cout<<"(*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
-		std::cout<<"(*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
-		std::cout<<"(*data.at(1)->values)(2): "<<(*data.at(1)->values)(2)<<std::endl;
-		std::cout<<"(*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
+		std::cout<<"Master: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
+		std::cout<<"Master: (*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
+		std::cout<<"Master: (*data.at(0)->values)(2): "<<(*data.at(0)->values)(2)<<std::endl;
+		std::cout<<"Master: (*data.at(0)->values)(3): "<<(*data.at(0)->values)(3)<<std::endl;
+		std::cout<<"Master: (*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
+		std::cout<<"Master: (*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
+		std::cout<<"Master: (*data.at(1)->values)(2): "<<(*data.at(1)->values)(2)<<std::endl;
+		std::cout<<"Master: (*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
+		*/
 
 		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
 
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.04), (*data.at(0)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.05), (*data.at(0)->values)(1));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.06), (*data.at(0)->values)(2));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.07), (*data.at(0)->values)(3));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
+
+		/*
 		std::cout<<"  Slave 1:"<<std::endl;
-		std::cout<<"(*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
-		std::cout<<"(*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
-		std::cout<<"(*data.at(0)->values)(2): "<<(*data.at(0)->values)(2)<<std::endl;
-		std::cout<<"(*data.at(0)->values)(3): "<<(*data.at(0)->values)(3)<<std::endl;
-		std::cout<<"(*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
-		std::cout<<"(*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
-		std::cout<<"(*data.at(1)->values)(2): "<<(*data.at(1)->values)(2)<<std::endl;
-		std::cout<<"(*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(0)->values)(2): "<<(*data.at(0)->values)(2)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(0)->values)(3): "<<(*data.at(0)->values)(3)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(1)->values)(2): "<<(*data.at(1)->values)(2)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
+		 */
 
 		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
 
@@ -306,33 +299,95 @@ void PostProcessingMasterSlaveTest::testVIQNPP()
 
 	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
 
-		std::cout<<"  Slave 3:"<<std::endl;
-		std::cout<<"(*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
-		std::cout<<"(*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
-		std::cout<<"(*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
-		std::cout<<"(*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
 
+		/*
+		std::cout<<"  Slave 3:"<<std::endl;
+		std::cout<<"Slave 3: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
+		std::cout<<"Slave 3: (*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
+		std::cout<<"Slave 3: (*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
+		std::cout<<"Slave 3: (*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
+		 */
 		newdvalues.append(10.0); newdvalues.append(10.0);
 	}
 
 	data.begin()->second->values = &newdvalues;
 
+	utils::Parallel::synchronizeProcesses();
 	pp.performPostProcessing(data);
-
-	/*
-	validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63855295490201413600e-01), (*data.at(0)->values)(0));
-	validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.09906404008709657205e-01), (*data.at(0)->values)(1));
-	validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78366810350762072801e+0), (*data.at(0)->values)(2));
-	validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.95742980300653179881e+00), (*data.at(0)->values)(3));
-	validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.27975917496077823410e-02), (*data.at(1)->values)(0));
-	validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.27975917496077823410e-02), (*data.at(1)->values)(1));
-	validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.27975917496077823410e-02), (*data.at(1)->values)(2));
-	*/
+	utils::Parallel::synchronizeProcesses();
 
 
+	if (utils::Parallel::getProcessRank() == 0) { //Master
+
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), -2.35405379763935940218e-01), (*data.at(0)->values)(1));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.04402029270655560822e+00), (*data.at(0)->values)(2));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.32344596517704804484e+00), (*data.at(0)->values)(3));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 7.23368584254212854123e-02), (*data.at(1)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 7.23368584254212854123e-02), (*data.at(1)->values)(1));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 7.23368584254212854123e-02), (*data.at(1)->values)(2));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 7.23368584254212854123e-02), (*data.at(1)->values)(3));
+
+/*
+		std::cout<<"  Master:"<<std::endl;
+		std::cout<<"Master: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
+		std::cout<<"Master: (*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
+		std::cout<<"Master: (*data.at(0)->values)(2): "<<(*data.at(0)->values)(2)<<std::endl;
+		std::cout<<"Master: (*data.at(0)->values)(3): "<<(*data.at(0)->values)(3)<<std::endl;
+		std::cout<<"Master: (*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
+		std::cout<<"Master: (*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
+		std::cout<<"Master: (*data.at(1)->values)(2): "<<(*data.at(1)->values)(2)<<std::endl;
+		std::cout<<"Master: (*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
+*/
+
+	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 3.60287163764754048145e+00), (*data.at(0)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 4.88229731011803202989e+00), (*data.at(0)->values)(1));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 6.16172298258852357833e+00), (*data.at(0)->values)(2));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 7.44114865505901601495e+00), (*data.at(0)->values)(3));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 7.23368584254212854123e-02), (*data.at(1)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 7.23368584254212854123e-02), (*data.at(1)->values)(1));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 7.23368584254212854123e-02), (*data.at(1)->values)(2));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 7.23368584254212854123e-02), (*data.at(1)->values)(3));
+
+		/*
+		std::cout<<"  Slave 1:"<<std::endl;
+		std::cout<<"Slave 1: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(0)->values)(2): "<<(*data.at(0)->values)(2)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(0)->values)(3): "<<(*data.at(0)->values)(3)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(1)->values)(2): "<<(*data.at(1)->values)(2)<<std::endl;
+		std::cout<<"Slave 1: (*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
+		*/
+	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+		// empty proc
+
+	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), -2.35405379763935940218e-01), (*data.at(0)->values)(1));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 7.23368584254212854123e-02), (*data.at(1)->values)(0));
+		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 7.23368584254212854123e-02), (*data.at(1)->values)(1));
+
+		/*
+		std::cout<<"  Slave 3:"<<std::endl;
+		std::cout<<"Slave 3: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
+		std::cout<<"Slave 3: (*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
+		std::cout<<"Slave 3: (*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
+		std::cout<<"Slave 3: (*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
+		*/
+	}
+
+
+	utils::Parallel::synchronizeProcesses();
 	utils::MasterSlave::_slaveMode = false;
 	utils::MasterSlave::_masterMode = false;
-	utils::Parallel::synchronizeProcesses();
 	utils::Parallel::clearGroups();
 }
 
