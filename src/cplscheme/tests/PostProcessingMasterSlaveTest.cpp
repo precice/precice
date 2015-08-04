@@ -50,11 +50,11 @@ void PostProcessingMasterSlaveTest:: run ()
 {
   preciceTrace ( "run" );
   typedef utils::Parallel Par;
-  if (Par::getCommunicatorSize() > 4){
+  if (Par::getCommunicatorSize() > 3){
     std::vector<int> ranksWanted;
-    ranksWanted += 0, 1, 2 , 3, 4;
+    ranksWanted += 0, 1, 2 , 3;
     MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
-    if (Par::getProcessRank() <= 4){
+    if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
       testMethod (testVIQNPP);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
@@ -70,7 +70,7 @@ void PostProcessingMasterSlaveTest:: run ()
 
 void PostProcessingMasterSlaveTest::testVIQNPP()
 {
-	preciceTrace ( "testVIQNPP" ); assertion ( utils::Parallel::getCommunicatorSize() == 5 );
+	preciceTrace ( "testVIQNPP" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
 	//com::Communication::SharedPointer participantCom =
 	//		com::Communication::SharedPointer(
@@ -91,25 +91,25 @@ void PostProcessingMasterSlaveTest::testVIQNPP()
 	//	utils::Parallel::splitCommunicator("NASTIN");
 	//	m2n->acceptMasterConnection("NASTIN", "SOLIDZMaster");
 	//} else
-	if (utils::Parallel::getProcessRank() == 1) { //Master
+	if (utils::Parallel::getProcessRank() == 0) { //Master
 		utils::Parallel::splitCommunicator("SOLIDZMaster");
 		//m2n->requestMasterConnection("NASTIN", "SOLIDZMaster");
-	} else if (utils::Parallel::getProcessRank() == 2) { //Slave1
+	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 		utils::Parallel::splitCommunicator("SOLIDZSlaves");
-	} else if (utils::Parallel::getProcessRank() == 3) { //Slave2
+	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
 		utils::Parallel::splitCommunicator("SOLIDZSlaves");
-	} else if (utils::Parallel::getProcessRank() == 4) { //Slave3
+	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
 		utils::Parallel::splitCommunicator("SOLIDZSlaves");
 	}
 
-	if (utils::Parallel::getProcessRank() == 1) { //Master
+	if (utils::Parallel::getProcessRank() == 0) { //Master
 		masterSlaveCom->acceptConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 1);
 		masterSlaveCom->setRankOffset(0);
-	} else if (utils::Parallel::getProcessRank() == 2) { //Slave1
+	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 		masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 3);
-	} else if (utils::Parallel::getProcessRank() == 3) { //Slave2
+	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
 		masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 1, 3);
-	} else if (utils::Parallel::getProcessRank() == 4) { //Slave3
+	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
 		masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 2, 3);
 	}
 
@@ -129,209 +129,207 @@ void PostProcessingMasterSlaveTest::testVIQNPP()
 	cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation,maxIterationsUsed,
 										   timestepsReused, singularityLimit, dataIDs, scalings);
 
-	if (utils::Parallel::getProcessRank() == 0) { //NASTIN
+	utils::DynVector dvalues;
+	utils::DynVector dcol1;
+	utils::DynVector fvalues;
+	utils::DynVector fcol1;
+
+	DataMap data;
+
+
+	if (utils::Parallel::getProcessRank() == 0) { //Master
+		utils::MasterSlave::_rank = 0;
+		utils::MasterSlave::_size = 4;
 		utils::MasterSlave::_slaveMode = false;
+		utils::MasterSlave::_masterMode = true;
+
+		/**
+		 * processor with 4 vertices
+		 */
+
+		//init displacements
+		dvalues.append(1.0); dvalues.append(2.0); dvalues.append(3.0); dvalues.append(4.0);
+		dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
+
+		PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
+
+		//init forces
+		fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
+		fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
+
+		PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
+
+		data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
+		data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
+
+		pp.initialize(data);
+
+		dpcd->oldValues.column(0) = dcol1;
+		fpcd->oldValues.column(0) = fcol1;
+
+	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+		utils::MasterSlave::_rank = 1;
+		utils::MasterSlave::_size = 4;
+		utils::MasterSlave::_slaveMode = true;
 		utils::MasterSlave::_masterMode = false;
 
+		/**
+		 * processor with 4 vertices
+		 */
 
+		//init displacements
+		dvalues.append(5.0); dvalues.append(6.0); dvalues.append(7.0); dvalues.append(8.0);
+		dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
 
-	} else { //SOLIDZ
+		PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
-		cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation,maxIterationsUsed,
-											    timestepsReused, singularityLimit, dataIDs, scalings);
+		//init forces
+		fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
+		fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
 
-		utils::DynVector dvalues;
-		utils::DynVector dcol1;
-		utils::DynVector fvalues;
-		utils::DynVector fcol1;
+		PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
-		DataMap data;
+		data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
+		data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
 
-		if (utils::Parallel::getProcessRank() == 1) { //Master
-			utils::MasterSlave::_rank = 0;
-			utils::MasterSlave::_size = 4;
-			utils::MasterSlave::_slaveMode = false;
-			utils::MasterSlave::_masterMode = true;
+		pp.initialize(data);
 
-			/**
-			 * processor with 4 vertices
-			 */
+		dpcd->oldValues.column(0) = dcol1;
+		fpcd->oldValues.column(0) = fcol1;
 
-			//init displacements
-			dvalues.append(1.0); dvalues.append(2.0); dvalues.append(3.0); dvalues.append(4.0);
-			dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
+	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+		utils::MasterSlave::_rank = 2;
+		utils::MasterSlave::_size = 4;
+		utils::MasterSlave::_slaveMode = true;
+		utils::MasterSlave::_masterMode = false;
 
-			PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
+		/**
+		 * processor with no vertices
+		 */
 
-			//init forces
-			fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
-			fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
+		//init displacements
+		PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
-			PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
+		//init forces
+		PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
-			data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
-			data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
+		data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
+		data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
 
-			pp.initialize(data);
+		pp.initialize(data);
 
-			dpcd->oldValues.column(0) = dcol1;
-			fpcd->oldValues.column(0) = fcol1;
+		dpcd->oldValues.column(0) = dcol1;
+		fpcd->oldValues.column(0) = fcol1;
 
-		} else if (utils::Parallel::getProcessRank() == 2) { //Slave1
-			utils::MasterSlave::_rank = 1;
-			utils::MasterSlave::_size = 4;
-			utils::MasterSlave::_slaveMode = true;
-			utils::MasterSlave::_masterMode = false;
+	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+		utils::MasterSlave::_rank = 3;
+		utils::MasterSlave::_size = 4;
+		utils::MasterSlave::_slaveMode = true;
+		utils::MasterSlave::_masterMode = false;
 
-			/**
-			 * processor with 4 vertices
-			 */
+		/**
+		 * processor with 2 vertices
+		 */
 
-			//init displacements
-			dvalues.append(5.0); dvalues.append(6.0); dvalues.append(7.0); dvalues.append(8.0);
-			dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
+		//init displacements
+		dvalues.append(1.0); dvalues.append(2.0);
+		dcol1.append(1.0); dcol1.append(1.0);
 
-			PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
+		PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
-			//init forces
-			fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
-			fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
+		//init forces
+		fvalues.append(0.1); fvalues.append(0.1);
+		fcol1.append(0.2); fcol1.append(0.2);
 
-			PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
+		PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
-			data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
-			data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
+		data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
+		data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
 
-			pp.initialize(data);
+		pp.initialize(data);
 
-			dpcd->oldValues.column(0) = dcol1;
-			fpcd->oldValues.column(0) = fcol1;
-
-		} else if (utils::Parallel::getProcessRank() == 3) { //Slave2
-			utils::MasterSlave::_rank = 2;
-			utils::MasterSlave::_size = 4;
-			utils::MasterSlave::_slaveMode = true;
-			utils::MasterSlave::_masterMode = false;
-
-			/**
-			 * processor with no vertices
-			 */
-
-			//init displacements
-			PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
-
-			//init forces
-			PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
-
-			data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
-			data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
-
-			pp.initialize(data);
-
-			dpcd->oldValues.column(0) = dcol1;
-			fpcd->oldValues.column(0) = fcol1;
-
-		} else if (utils::Parallel::getProcessRank() == 4) { //Slave3
-			utils::MasterSlave::_rank = 3;
-			utils::MasterSlave::_size = 4;
-			utils::MasterSlave::_slaveMode = true;
-			utils::MasterSlave::_masterMode = false;
-
-			/**
-			 * processor with 2 vertices
-			 */
-
-			//init displacements
-			dvalues.append(1.0); dvalues.append(2.0);
-			dcol1.append(1.0); dcol1.append(1.0);
-
-			PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
-
-			//init forces
-			fvalues.append(0.1); fvalues.append(0.1);
-			fcol1.append(0.2); fcol1.append(0.2);
-
-			PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
-
-			data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
-			data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
-
-			pp.initialize(data);
-
-			dpcd->oldValues.column(0) = dcol1;
-			fpcd->oldValues.column(0) = fcol1;
-		}
-
-		pp.performPostProcessing(data);
-
-		std::cout<<"First Iteration:"<<std::endl;
-		/*
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.02), (*data.at(0)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.03), (*data.at(0)->values)(3));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
-		*/
-
-		utils::DynVector newdvalues;
-		if (utils::Parallel::getProcessRank() == 1) { //Master
-
-			std::cout<<"  Master:"<<std::endl;
-			std::cout<<"(*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
-			std::cout<<"(*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
-			std::cout<<"(*data.at(0)->values)(2): "<<(*data.at(0)->values)(2)<<std::endl;
-			std::cout<<"(*data.at(0)->values)(3): "<<(*data.at(0)->values)(3)<<std::endl;
-			std::cout<<"(*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
-			std::cout<<"(*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
-			std::cout<<"(*data.at(1)->values)(2): "<<(*data.at(1)->values)(2)<<std::endl;
-			std::cout<<"(*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
-
-			newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
-
-		} else if (utils::Parallel::getProcessRank() == 2) { //Slave1
-
-			std::cout<<"  Slave 1:"<<std::endl;
-			std::cout<<"(*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
-			std::cout<<"(*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
-			std::cout<<"(*data.at(0)->values)(2): "<<(*data.at(0)->values)(2)<<std::endl;
-			std::cout<<"(*data.at(0)->values)(3): "<<(*data.at(0)->values)(3)<<std::endl;
-			std::cout<<"(*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
-			std::cout<<"(*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
-			std::cout<<"(*data.at(1)->values)(2): "<<(*data.at(1)->values)(2)<<std::endl;
-			std::cout<<"(*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
-
-			newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
-
-		} else if (utils::Parallel::getProcessRank() == 3) { //Slave2
-			// empty proc
-
-		} else if (utils::Parallel::getProcessRank() == 4) { //Slave3
-
-			std::cout<<"  Slave 3:"<<std::endl;
-			std::cout<<"(*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
-			std::cout<<"(*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
-			std::cout<<"(*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
-			std::cout<<"(*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
-
-			newdvalues.append(10.0); newdvalues.append(10.0);
-		}
-
-		data.begin()->second->values = &newdvalues;
-
-		pp.performPostProcessing(data);
-
-		/*
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63855295490201413600e-01), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.09906404008709657205e-01), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78366810350762072801e+0), (*data.at(0)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.95742980300653179881e+00), (*data.at(0)->values)(3));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.27975917496077823410e-02), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.27975917496077823410e-02), (*data.at(1)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.27975917496077823410e-02), (*data.at(1)->values)(2));
-		*/
+		dpcd->oldValues.column(0) = dcol1;
+		fpcd->oldValues.column(0) = fcol1;
 	}
+
+	std::cout<<"perform pp"<<std::endl;
+
+
+	pp.performPostProcessing(data);
+
+	std::cout<<"performed"<<std::endl;
+
+
+
+	std::cout<<"First Iteration:"<<std::endl;
+	/*
+	validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
+	validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
+	validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.02), (*data.at(0)->values)(2));
+	validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.03), (*data.at(0)->values)(3));
+	validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
+	validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
+	validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
+	*/
+
+	utils::DynVector newdvalues;
+	if (utils::Parallel::getProcessRank() == 0) { //Master
+
+		std::cout<<"  Master:"<<std::endl;
+		std::cout<<"(*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
+		std::cout<<"(*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
+		std::cout<<"(*data.at(0)->values)(2): "<<(*data.at(0)->values)(2)<<std::endl;
+		std::cout<<"(*data.at(0)->values)(3): "<<(*data.at(0)->values)(3)<<std::endl;
+		std::cout<<"(*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
+		std::cout<<"(*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
+		std::cout<<"(*data.at(1)->values)(2): "<<(*data.at(1)->values)(2)<<std::endl;
+		std::cout<<"(*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
+
+		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
+
+	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+
+		std::cout<<"  Slave 1:"<<std::endl;
+		std::cout<<"(*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
+		std::cout<<"(*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
+		std::cout<<"(*data.at(0)->values)(2): "<<(*data.at(0)->values)(2)<<std::endl;
+		std::cout<<"(*data.at(0)->values)(3): "<<(*data.at(0)->values)(3)<<std::endl;
+		std::cout<<"(*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
+		std::cout<<"(*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
+		std::cout<<"(*data.at(1)->values)(2): "<<(*data.at(1)->values)(2)<<std::endl;
+		std::cout<<"(*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
+
+		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
+
+	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+		// empty proc
+
+	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+
+		std::cout<<"  Slave 3:"<<std::endl;
+		std::cout<<"(*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
+		std::cout<<"(*data.at(0)->values)(1): "<<(*data.at(0)->values)(1)<<std::endl;
+		std::cout<<"(*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
+		std::cout<<"(*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
+
+		newdvalues.append(10.0); newdvalues.append(10.0);
+	}
+
+	data.begin()->second->values = &newdvalues;
+
+	pp.performPostProcessing(data);
+
+	/*
+	validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63855295490201413600e-01), (*data.at(0)->values)(0));
+	validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.09906404008709657205e-01), (*data.at(0)->values)(1));
+	validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78366810350762072801e+0), (*data.at(0)->values)(2));
+	validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.95742980300653179881e+00), (*data.at(0)->values)(3));
+	validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.27975917496077823410e-02), (*data.at(1)->values)(0));
+	validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.27975917496077823410e-02), (*data.at(1)->values)(1));
+	validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.27975917496077823410e-02), (*data.at(1)->values)(2));
+	*/
+
+
 	utils::MasterSlave::_slaveMode = false;
 	utils::MasterSlave::_masterMode = false;
 	utils::Parallel::synchronizeProcesses();
