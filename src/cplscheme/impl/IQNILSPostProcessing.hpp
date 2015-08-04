@@ -88,6 +88,7 @@ private:
    //
    // Stores x-tilde deltas for data not involved in least-squares computation.
    std::map<int,DataMatrix> _secondaryMatricesW;
+   std::map<int,DataMatrix> _secondaryMatricesWBackup;
    
    // @brief updates the V, W matrices (as well as the matrices for the secondary data)
    virtual void updateDifferenceMatrices(DataMap & cplData);

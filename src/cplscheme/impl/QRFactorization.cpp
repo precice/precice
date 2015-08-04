@@ -40,7 +40,8 @@ QRFactorization::QRFactorization(
   _theta(theta),
   _sigma(sigma),
   _infostream(),
-  _fstream_set(false)
+  _fstream_set(false),
+  _globalRows(rows)
 {
   assertion2(_R.rows() == _cols, _R.rows(), _cols);
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
@@ -66,7 +67,8 @@ QRFactorization::QRFactorization(
   _theta(theta),
   _sigma(sigma),
   _infostream(),
-  _fstream_set(false)
+  _fstream_set(false),
+  _globalRows(A.rows())
 {
   int m = A.cols();
   for (int k=0; k<m; k++)
@@ -100,7 +102,8 @@ QRFactorization::QRFactorization(
   _theta(theta),
   _sigma(sigma),
   _infostream(),
-  _fstream_set(false)
+  _fstream_set(false),
+  _globalRows(A.rows())
 {
   int m = A.cols();
   for (int k=0; k<m; k++)
@@ -133,7 +136,8 @@ QRFactorization::QRFactorization(
   _theta(theta),
   _sigma(sigma),
   _infostream(),
-  _fstream_set(false)
+  _fstream_set(false),
+  _globalRows(0)
 {}
 
       
@@ -203,6 +207,8 @@ void QRFactorization::insertColumn(int k, EigenVector& v)
 {
   preciceTrace("insertColumn()");
 
+ // if(v.size() <= 0) return;
+
   if(_cols == 0)
     _rows = v.size();
   
@@ -230,7 +236,7 @@ void QRFactorization::insertColumn(int k, EigenVector& v)
   }
   
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  assertion2(_R.rows() == _cols, _Q.rows(), _cols);
+  assertion2(_R.rows() == _cols, _R.rows(), _cols);
   
   // orthogonalize v to columns of Q
   EigenVector u(_cols);
@@ -283,6 +289,15 @@ int QRFactorization::orthogonalize(
 {
    preciceTrace("orthogonalize()");
 
+   // serial case
+   if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)
+   {
+	   assertion2(_globalRows == _rows, _globalRows, _rows);
+   // master-slave case
+   }else{
+	   assertion3(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
+   }
+
    bool restart = false;
    bool null = false;
    bool termination = false;
@@ -305,6 +320,7 @@ int QRFactorization::orthogonalize(
 			 * dot-product <_Q(:,j), v >
 			 */
 			EigenVector Qc = _Q.col(j);
+
 			// dot product <_Q(:,j), v> =: r_ij
 			double ss = utils::MasterSlave::dot(Qc, v);
 			t = ss;
@@ -333,11 +349,14 @@ int QRFactorization::orthogonalize(
 		k++;
 
 		// treat the special case m=n
-		if (_rows == colNum) {
+		// Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
+		// rows on the processor.
+		if (_globalRows == colNum) {
 			v = EigenVector::Zero(_rows);
 			rho = 0.;
 			return k;
 		}
+
 
 		/**   - test for nontermination -
 		 *  rho0 = |v_init|, t = |r_(i,cols-1)|, rho1 = |v_orth|
@@ -408,13 +427,9 @@ int QRFactorization::orthogonalize(
 
 				if (utils::MasterSlave::_masterMode) {
 					global_uk = u(k);
-					for (int rankSlave = 1;
-							rankSlave < utils::MasterSlave::_size;
-							rankSlave++) {
-						utils::MasterSlave::_communication->receive(local_k,
-								rankSlave);
-						utils::MasterSlave::_communication->receive(local_uk,
-								rankSlave);
+					for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+						utils::MasterSlave::_communication->receive(local_k, rankSlave);
+						utils::MasterSlave::_communication->receive(local_uk, rankSlave);
 						if (local_uk < global_uk) {
 							rank = rankSlave;
 							global_uk = local_uk;
@@ -436,8 +451,7 @@ int QRFactorization::orthogonalize(
 				v = EigenVector::Zero(_rows);
 
 				// insert rho1 at position k with smallest u(i) = Q(i,:) * Q(i,:)
-				if (not utils::MasterSlave::_masterMode
-						&& not utils::MasterSlave::_slaveMode) {
+				if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 					v(k) = rho1;
 				} else {
 					if (utils::MasterSlave::_rank == rank)
@@ -513,6 +527,12 @@ void QRFactorization::applyReflector(
 }
 
 
+void QRFactorization::setGlobalRows( int gr)
+{
+  _globalRows = gr;
+}
+
+
 QRFactorization::EigenMatrix& QRFactorization::matrixQ()
 {
   return _Q;
@@ -539,6 +559,7 @@ void QRFactorization::reset()
   _R.resize(0,0);
   _cols = 0;
   _rows = 0;
+  _globalRows = 0;
 }
 
 void QRFactorization::reset(
@@ -557,6 +578,7 @@ void QRFactorization::reset(
   _omega = omega;
   _theta = theta;
   _sigma = sigma;
+  _globalRows = _rows;
   assertion2(_R.rows() == _cols, _R.rows(), _cols);
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
   assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
@@ -576,6 +598,7 @@ void QRFactorization::reset(
   _omega = omega;
   _theta = theta;
   _sigma = sigma;
+  _globalRows = _rows;
   
   int m = A.cols();
   for (int k=0; k<m; k++)
@@ -605,6 +628,7 @@ void QRFactorization::reset(
   _omega = omega;
   _theta = theta;
   _sigma = sigma;
+  _globalRows = _rows;
  
   int m = A.cols();
   for (int k=0; k<m; k++)

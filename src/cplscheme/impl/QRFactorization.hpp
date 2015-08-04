@@ -195,6 +195,9 @@ public:
    // @brief optional file-stream for logging output
    void setfstream(std::fstream* stream);
 
+   // @brief set number of global rows for the master-slave case
+   void setGlobalRows(int gr);
+
 private:
   
   struct givensRot{
@@ -239,6 +242,8 @@ private:
   // @brief optional infostream that writes information to file
   std::fstream* _infostream;
   bool _fstream_set;
+
+  int _globalRows;
 
 };
 

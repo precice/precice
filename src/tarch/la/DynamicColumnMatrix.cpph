@@ -81,6 +81,7 @@ void DynamicColumnMatrix<Scalar>::appendFront (
   const DynamicVector<Scalar>& columnVector
 ) {
   assertion ((columnVector.size() == _rows) || (_columnVectors.size() == 0));
+ // if(columnVector.size() <= 0) return;
   _columnVectors.push_front (DynamicVector<Scalar>(columnVector));
   _rows = _columnVectors[0].size();
 //  _columnVectors.push_back (new DynamicVector<Scalar>(columnVector));
@@ -98,6 +99,7 @@ void DynamicColumnMatrix<Scalar>::append (
   const DynamicVector<Scalar>& columnVector
 ) {
   assertion ((columnVector.size() == _rows) || (_columnVectors.size() == 0));
+ // if(columnVector.size() <= 0) return;
   _columnVectors.push_back (DynamicVector<Scalar>(columnVector));
   _rows = columnVector.size();
 }
