@@ -266,7 +266,7 @@ void IQNILSPostProcessing::computeQNUpdate
 
 	// If the previous time step converged within one single iteration, nothing was added
 	// to the LS system matrices and they need to be restored from the backup at time T-2
-	if (getLSSystemCols() < 1 && _timestepsReused == 0) {
+    if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0)) {
 		preciceDebug("   Last time step converged after one iteration. Need to restore the secondaryMatricesW from backup.");
 		_secondaryMatricesW = _secondaryMatricesWBackup;
 	}

@@ -295,7 +295,7 @@ int QRFactorization::orthogonalize(
 	   assertion2(_globalRows == _rows, _globalRows, _rows);
    // master-slave case
    }else{
-	   assertion2(_globalRows != _rows, _globalRows, _rows);
+	   assertion3(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
    }
 
    bool restart = false;

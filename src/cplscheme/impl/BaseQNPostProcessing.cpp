@@ -158,6 +158,7 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	//debug output for master-slave mode
 	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
 		_infostream << "proc[" << utils::MasterSlave::_rank<< "] unknowns at interface: " << entries << std::endl;
+		_infostream<<" Offsets: \n"<<_dimOffsets<<std::endl;
 	}
 	// ---------------------------------------------------
 
@@ -176,12 +177,12 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 		int cols = pair.second->oldValues.cols();
 		if (cols < 1) { // Add only, if not already done
 			//assertion1(pair.second->values->size() > 0, pair.first);
-			if(pair.second->values->size() > 0){
+			//if(pair.second->values->size() > 0){
 				pair.second->oldValues.append(
 						CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
-			}else{
-				pair.second->oldValues.append(CouplingData::DataMatrix());
-			}
+			//}else{
+			//	pair.second->oldValues.append(CouplingData::DataMatrix());
+			//}
 		}
 	}
 }
@@ -344,7 +345,7 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 
 		// If the previous time step converged within one single iteration, nothing was added
 		// to the LS system matrices and they need to be restored from the backup at time T-2
-		if (getLSSystemCols() < 1 && _timestepsReused == 0) {
+		if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0)) {
 			preciceDebug("   Last time step converged after one iteration. Need to restore the matrices from backup.");
 
 			_matrixCols = _matrixColsBackup;
