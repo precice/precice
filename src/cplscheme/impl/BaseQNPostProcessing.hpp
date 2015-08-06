@@ -13,6 +13,7 @@
 #include "QRFactorization.hpp"
 #include <deque>
 #include <fstream>
+#include <string.h>
 
 
 
@@ -273,6 +274,8 @@ protected:
    // @brief Removes one iteration from V,W matrices and adapts _matrixCols.
    virtual void removeMatrixColumn(int columnIndex);
    
+   void writeInfo(std::string s, bool allProcs = false);
+
 };
 
 }}} // namespace precice, cplscheme, impl

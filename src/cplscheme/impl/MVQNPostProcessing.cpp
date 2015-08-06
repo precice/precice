@@ -43,8 +43,7 @@ MVQNPostProcessing:: MVQNPostProcessing
 		       singularityLimit, dataIDs, scalings),
 //  _secondaryOldXTildes(),
   _invJacobian(),
-  _oldInvJacobian(),
-  _dimOffsets()
+  _oldInvJacobian()
 {}
 
 
@@ -63,32 +62,6 @@ void MVQNPostProcessing:: initialize
 	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 		global_n = entries;
 	}else{
-
-		assertion(utils::MasterSlave::_communication.get() != NULL);
-		assertion(utils::MasterSlave::_communication->isConnected());
-
-
-		/**
-		 *  make dimensions public to all procs,
-		 *  last entry _dimOffsets[MasterSlave::_size] holds the global dimension, global,n
-		 */
-		_dimOffsets.resize(utils::MasterSlave::_size + 1);
-		if (utils::MasterSlave::_slaveMode) {
-			utils::MasterSlave::_communication->send(entries, 0);
-			utils::MasterSlave::_communication->receive(&_dimOffsets[0], _dimOffsets.size(), 0);
-		}
-		if (utils::MasterSlave::_masterMode) {
-			_dimOffsets[0] = 0;
-			_dimOffsets[1] = entries;
-			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-				int localDim = 0;
-				utils::MasterSlave::_communication->receive(localDim, rankSlave);
-				_dimOffsets[rankSlave + 1] = _dimOffsets[rankSlave] + localDim;
-			}
-			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-				utils::MasterSlave::_communication->send(&_dimOffsets[0], _dimOffsets.size(), rankSlave);
-			}
-		}
 		global_n = _dimOffsets.back();
 	}
   
@@ -134,40 +107,6 @@ void MVQNPostProcessing::updateDifferenceMatrices
 {
   using namespace tarch::la;
 
-//   // Compute residuals of secondary data
-//   foreach (int id, _secondaryDataIDs){
-//     DataValues& secResiduals = _secondaryResiduals[id];
-//     PtrCouplingData data = cplData[id];
-//     assertion2(secResiduals.size() == data->values->size(),
-//                secResiduals.size(), data->values->size());
-//     secResiduals = *(data->values);
-//     secResiduals -= data->oldValues.column(0);
-//   }
-
-  /*
-   * ATTETION: changed the condition from _firstIteration && _firstTimeStep
-   * to the following: 
-   * underrelaxation has to be done, if the scheme has converged without even
-   * entering post processing. In this case the V, W matrices would still be empty.
-   * This case happended in the open foam example beamInCrossFlow.
-   */ 
-  if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
-    // Perform underrelaxation with initial relaxation factor for secondary data
-//     foreach (int id, _secondaryDataIDs){
-//       PtrCouplingData data = cplData[id];
-//       DataValues& values = *(data->values);
-//       values *= _initialRelaxation;                   // new * omg
-//       DataValues& secResiduals = _secondaryResiduals[id];
-//       secResiduals = data->oldValues.column(0);    // old
-//       secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
-//       values += secResiduals;                      // (1-omg) * old + new * omg
-//     }
-  }
-  else {
-    if (not _firstIteration){
-    }
-  }
-  
   // call the base method for common update of V, W matrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
 }
@@ -202,37 +141,48 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
   // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
   // ----------------------------------------- -------
 
-  Matrix Z(_matrixV.cols(), _matrixV.rows(), 0.0);
+  Matrix Z;
   bool linearDependence = true;
   
   while (linearDependence) {
 		linearDependence = false;
 		//Z.clear();
 
-		Matrix __R(_matrixV.cols(), _matrixV.cols(), 0.0);
+		Matrix __R(_qrV.cols(), _qrV.cols(), 0.0);
 		auto r = _qrV.matrixR();
 		for (int i = 0; i < r.rows(); i++)
 			for (int j = 0; j < r.cols(); j++) {
 				__R(i, j) = r(i, j);
 			}
 
-		if (_matrixV.cols() > 1) {
-			for (int i = 0; i < _matrixV.cols(); i++) {
+		if(!_hasNodesOnInterface){
+						std::cout<<"empty proc["<<utils::MasterSlave::_rank<<"] _qrV: rows="<<_qrV.rows()<<", cols="<<_qrV.cols()<<std::endl;
+		}
+		if (getLSSystemCols() > 1) {
+			if(!_hasNodesOnInterface){
+				std::cout<<" proc["<<utils::MasterSlave::_rank<<"] R:\n"<<__R<<std::endl;
+			}
+			for (int i = 0; i < __R.rows(); i++) {
 				if (std::fabs(__R(i, i)) < _singularityLimit) {
-					preciceDebug("   Removing linear dependent column " << i);
-					_infostream
-							<< "(updatedQR) removing linear dependent column "
-							<< i << "  time step: " << tSteps << " iteration: " << its
-							<< "\n" << std::flush;
+					std::cout<<" -remove: proc["<<utils::MasterSlave::_rank<<"] R(i,i):"<<__R(i,i)<<", eps:"<<_singularityLimit<<", i:"<<i<<std::endl;
+					std::stringstream ss;
+					ss << "(updatedQR) removing linear dependent column "
+					   << i << "  time step: " << tSteps << " iteration: " << its
+					   << "\n" << std::endl;
+					preciceDebug(ss.str());
+					writeInfo(ss.str());
+					std::cout<<ss.str()<<std::endl;
+
 					linearDependence = true;
 					removeMatrixColumn(i);
 				}
 			}
 		}
 		if (not linearDependence) {
-			Matrix __Q(_matrixV.rows(), _matrixV.cols(), 0.0);
+			Matrix __Q(_qrV.rows(), _qrV.cols(), 0.0);
+			Z = Matrix(_qrV.cols(), _qrV.rows(), 0.0);
 
-			DataValues __ytmpVec(_matrixV.cols(), 0.0);
+			DataValues __ytmpVec(_qrV.cols(), 0.0);
 			DataValues __matrixQRow;
 			auto q = _qrV.matrixQ();
 			for (int i = 0; i < q.rows(); i++)
@@ -240,21 +190,29 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 					__Q(i, j) = q(i, j);
 				}
 
+			// assertions for the case of processors with no vertices
+			if(!_hasNodesOnInterface){
+					assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols()); assertion1(_qrV.rows() == 0, _qrV.rows()); assertion1(__Q.size() == 0, __Q.size());
+			}
+
 			r = _qrV.matrixR();
 			for (int i = 0; i < r.rows(); i++)
 				for (int j = 0; j < r.cols(); j++) {
 					__R(i, j) = r(i, j);
 				}
+
 			for (int i = 0; i < __Q.rows(); i++) {
 				for (int j = 0; j < __Q.cols(); j++) {
 					__matrixQRow.append(__Q(i, j));
 				}
+
 
 				backSubstitution(__R, __matrixQRow, __ytmpVec);
 				for(int p = 0; p < __ytmpVec.size(); p++)
 					Z(p,i) = __ytmpVec(p);
 				__matrixQRow.clear();
 			}
+			preciceDebug("doing back substitution, __ytmpVec.size="<<__ytmpVec.size());
 		}
 	}
 
@@ -263,9 +221,11 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
    */
   // TODO: transpose V efficiently using blocking in parallel
   //       such that multiplication is cache efficient
-  Matrix tmpMatrix(_matrixV.rows(), _matrixV.cols(), 0.0);
+  Matrix tmpMatrix(_qrV.rows(), _qrV.cols(), 0.0);
+  assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
   assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
 
+  preciceDebug("multiply J_prev * V");
   if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 	  multiply(_oldInvJacobian, _matrixV, tmpMatrix);
 
@@ -278,7 +238,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  // find rank of processor that stores the result
 		  int rank = 0;
 		  while(i >= _dimOffsets[rank+1]) rank++;
-		  for(int j = 0; j < _matrixV.cols(); j++){
+		  for(int j = 0; j < _qrV.cols(); j++){
 			  // as we want to move to Eigen, copy
 			  DataValues Jrow(_oldInvJacobian.cols(), 0.0);
 			  for(int s = 0; s < _oldInvJacobian.cols(); s++)
@@ -309,6 +269,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
    *  where Z = (V^T*V)^-1*V^T vie QR-dec and back-substitution
    *  and W_til = (W - J_inv_n*V)
    */
+  preciceDebug("W_til * Z");
   assertion2(tmpMatrix.cols() == Z.rows(), tmpMatrix.cols(), Z.rows());
   if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 	  multiply(tmpMatrix, Z, _invJacobian);
@@ -330,11 +291,16 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	  int rows_rcv = (prevProc > 0) ? _dimOffsets[prevProc+1] - _dimOffsets[prevProc] : _dimOffsets[1];
 	  Matrix Wtil_rcv(rows_rcv, tmpMatrix.cols(),0.0);
 
+	  com::Request::SharedPointer requestSend;
+	  com::Request::SharedPointer requestRcv;
+
 	  // initiate asynchronous send operation of tmpMatrix --> nextProc (this data is needed in cycle 1)    dim: n_local x cols
-	  com::Request::SharedPointer requestSend = utils::MasterSlave::_cyclicCommRight->aSend(&tmpMatrix(0,0), tmpMatrix.size(), 0);
+	  if(tmpMatrix.size() > 0)
+		  requestSend = utils::MasterSlave::_cyclicCommRight->aSend(&tmpMatrix(0,0), tmpMatrix.size(), 0);
 
 	  // initiate asynchronous receive operation for W_til from previous processor --> W_til      dim: rows_rcv x cols
-	  com::Request::SharedPointer requestRcv = utils::MasterSlave::_cyclicCommLeft->aReceive(&Wtil_rcv(0,0), rows_rcv * tmpMatrix.cols(), 0);
+	  if(Wtil_rcv.size() > 0)
+		  requestRcv = utils::MasterSlave::_cyclicCommLeft->aReceive(&Wtil_rcv(0,0), rows_rcv * tmpMatrix.cols(), 0);
 
 	  // compute diagonal blocks where all data is local and no communication is needed
 	  // compute block matrices of J_inv of size (n_til x n_til), n_til = local n
@@ -349,24 +315,27 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 			  _invJacobian(q+off,p) = diagBlock(q,p);
 		  }
 
-	  //std::cout<<"computed block ["<<utils::MasterSlave::_rank<<"]["<<utils::MasterSlave::_rank<<"] inserted at off= "<<off<<" frobenius norm: "<<tarch::la::frobeniusNorm(diagBlock)<<std::endl;
-
-
 	  /**
 	   * cyclic send-receive operation
 	   */
 	  for(int cycle = 1; cycle < utils::MasterSlave::_size; cycle++){
 
+		  preciceDebug("before send/rcv wait");
 		  // wait until W_til from previous processor is fully received
-		  requestSend->wait();
-		  requestRcv->wait();
+		  if(requestSend != NULL)
+			  requestSend->wait();
+		  if(requestRcv != NULL)
+			  requestRcv->wait();
+
+		  preciceDebug("after send/rcv wait");
 
 		  // Wtil_rcv is available - needed for local multiplication and hand over to next proc
 		  Matrix Wtil_copy(Wtil_rcv);
 
 		  // initiate async send to hand over Wtil to the next proc (this data will be needed in the next cycle)    dim: n_local x cols
 		  if(cycle < utils::MasterSlave::_size-1){
-			  requestSend = utils::MasterSlave::_cyclicCommRight->aSend(&Wtil_copy(0,0), Wtil_copy.size(), 0);
+			  if(Wtil_copy.size() > 0)
+				  requestSend = utils::MasterSlave::_cyclicCommRight->aSend(&Wtil_copy(0,0), Wtil_copy.size(), 0);
 			  //std::cout<<"proc["<<utils::MasterSlave::_rank<<"] sends to ["<<nextProc<<"] double* of size "<<Wtil_copy.size()<<" for the next cycle"<<std::endl;
 		  }
 
@@ -382,7 +351,8 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
 		  // initiate asynchronous receive operation for W_til from previous processor --> W_til (this data is needed in the next cycle)
 		  if(cycle < utils::MasterSlave::_size-1){
-			  requestRcv = utils::MasterSlave::_cyclicCommLeft->aReceive(&Wtil_rcv(0,0), rows_rcv_nextCycle * tmpMatrix.cols(), 0);
+			  if(Wtil_rcv.size() > 0)
+				  requestRcv = utils::MasterSlave::_cyclicCommLeft->aReceive(&Wtil_rcv(0,0), rows_rcv_nextCycle * tmpMatrix.cols(), 0);
 			//  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] receives from ["<<prevProc<<"] double* of size "
 			//		   <<(rows_rcv_nextCycle*tmpMatrix.cols())<<" from dest ["<<sourceProc_nextCycle<<"]"<<" for the next cycle"<<std::endl;
 		  }

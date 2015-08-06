@@ -13,6 +13,7 @@
 #include "io/TXTReader.hpp"
 #include "QRFactorization.hpp"
 #include "utils/MasterSlave.hpp"
+#include <string.h>
 //#include "utils/NumericalCompare.hpp"
 
 #include <time.h>
@@ -124,6 +125,7 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	 *  make dimensions public to all procs,
 	 *  last entry _dimOffsets[MasterSlave::_size] holds the global dimension, global,n
 	 */
+	std::stringstream ss;
 	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
 		assertion(utils::MasterSlave::_communication.get() != NULL);assertion(utils::MasterSlave::_communication->isConnected());
 
@@ -147,6 +149,9 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
 				utils::MasterSlave::_communication->send(&_dimOffsets[0], _dimOffsets.size(), rankSlave);
 			}
+			std::cout<<"Master Processor: "<<utils::MasterSlave::_rank<<std::endl;
+			ss<<" Offsets: \n"<<_dimOffsets<<std::endl;
+			std::cout<<ss.str();
 		}
 	}
 
@@ -156,10 +161,15 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 
 	// ---------------------------------------------------
 	//debug output for master-slave mode
+	writeInfo(ss.str());
+	ss.clear();
 	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
-		_infostream << "proc[" << utils::MasterSlave::_rank<< "] unknowns at interface: " << entries << std::endl;
-		_infostream<<" Offsets: \n"<<_dimOffsets<<std::endl;
+		ss << "processor [" << utils::MasterSlave::_rank<< "]: unknowns at interface: " << entries << std::endl;
+		std::cout<<ss.str();
+	}else{
+		ss<< "unknowns at interface: " << entries << std::endl;
 	}
+	writeInfo(ss.str(), true);
 	// ---------------------------------------------------
 
 	// Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
@@ -604,6 +614,24 @@ void BaseQNPostProcessing:: removeMatrixColumn
     }
     iter++;
   }
+}
+
+void BaseQNPostProcessing::writeInfo
+(std::string s, bool allProcs)
+{
+	if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
+		// serial post processing mode, server mode
+		_infostream<<s;
+
+		// parallel post processing, master-slave mode
+	}else{
+		if(not allProcs){
+			if(utils::MasterSlave::_masterMode) _infostream<<s;
+		}else{
+			_infostream<<s;
+		}
+	}
+	_infostream<<std::flush;
 }
 
 }}} // namespace precice, cplscheme, impl
