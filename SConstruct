@@ -10,7 +10,7 @@ import sys
 
 def uniqueCheckLib(conf, lib):
     """ Checks for a library and appends it to env if not already appended. """
-    if conf.CheckLib(lib, autoadd=0):
+    if conf.CheckLib(lib, autoadd=0, language="C++"):
         conf.env.AppendUnique(LIBS = [lib])
         return True
     else:
@@ -162,7 +162,7 @@ print
 print 'Configuring build variables ...'
 
 env.Append(LIBPATH = [('#' + buildpath)])
-env.Append(CCFLAGS= ['-Wall', '-std=c++11'])
+env.Append(CCFLAGS= ['-Werror', '-std=c++11'])
 
 
 if env["compiler"] == 'icc':
@@ -207,7 +207,7 @@ if env["petsc"]:
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
     env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
     if not uniqueCheckLib(conf, "petsc"):
-        errorMissingLib("petsc", "Petsc")
+        errorMissingLib("petsc", "PETSc")
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
@@ -228,7 +228,7 @@ else:
 if not conf.CheckCXXHeader('boost/array.hpp'):
     errorMissingHeader('boost/array.hpp', 'Boost')
 
-
+# ====== Spirit2 ======
 if not env["spirit2"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_SPIRIT2'])
     buildpath += "-nospirit2"
@@ -261,7 +261,7 @@ if env["sockets"]:
     uniqueCheckLib(conf, pthreadLib)
     env.AppendUnique(CPPPATH = [pthreadIncPath])
     if pthreadLib == 'pthread':
-        if not conf.CheckHeader('pthread.h'):
+        if not conf.CheckCXXHeader('pthread.h'):
             errorMissingHeader('pthread.h', 'POSIX Threads')
 
     if sys.platform.startswith('win') or sys.platform.startswith('msys'):
@@ -278,15 +278,17 @@ else:
 
 # ====== Python ======
 if env["python"]:
+    # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
+    env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
     env.AppendUnique(LIBPATH = [pythonLibPath])
     if not uniqueCheckLib(conf, pythonLib):
         errorMissingLib(pythonLib, 'Python')
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
-    if not conf.CheckHeader('Python.h'):
+    if not conf.CheckCXXHeader('Python.h'):
         errorMissingHeader('Python.h', 'Python')
     # Check for numpy header needs python header first to compile
-    if not conf.CheckHeader(['Python.h', 'arrayobject.h']):
-        errorMissingHeader('arrayobject.h', 'Python NumPy')
+    if not conf.CheckCXXHeader(['Python.h', 'numpy/arrayobject.h']):
+        errorMissingHeader('numpy/arrayobject.h', 'Python NumPy')
 else:
     buildpath += "-nopython"
     env.Append(CPPDEFINES = ['PRECICE_NO_PYTHON'])
