@@ -3,7 +3,7 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NO_PYTHON
 #include <Python.h>
-#include <arrayobject.h>
+#include <numpy/arrayobject.h>
 #endif
 #include "PythonAction.hpp"
 #include "mesh/Mesh.hpp"

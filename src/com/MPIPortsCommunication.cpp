@@ -43,8 +43,7 @@ MPIPortsCommunication::isConnected() {
   return _isConnected;
 }
 
-int
-MPIPortsCommunication::getRemoteCommunicatorSize() {
+size_t MPIPortsCommunication::getRemoteCommunicatorSize() {
   preciceTrace("getRemoteCommunicatorSize()");
 
   assertion(isConnected());

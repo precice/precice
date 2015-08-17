@@ -68,7 +68,7 @@ public:
    *
    * Precondition: a connection to the remote participant has been setup.
    */
-  virtual int getRemoteCommunicatorSize() = 0;
+  virtual size_t getRemoteCommunicatorSize() = 0;
 
   /**
    * @brief Connects to another participant, which has to call
