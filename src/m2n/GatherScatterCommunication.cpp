@@ -64,7 +64,7 @@ void GatherScatterCommunication:: closeConnection()
 
 void GatherScatterCommunication:: send (
   double*    itemsToSend,
-  int        size,
+  size_t        size,
   int        valueDimension)
 {
   preciceTrace1("sendAll", size);
@@ -127,7 +127,7 @@ void GatherScatterCommunication:: send (
  */
 void GatherScatterCommunication:: receive (
   double*   itemsToReceive,
-  int       size,
+  size_t       size,
   int       valueDimension)
 {
   preciceTrace1("receiveAll", size);

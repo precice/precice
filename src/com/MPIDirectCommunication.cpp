@@ -31,8 +31,7 @@ MPIDirectCommunication::~MPIDirectCommunication() {
   closeConnection();
 }
 
-int
-MPIDirectCommunication::getRemoteCommunicatorSize() {
+size_t MPIDirectCommunication::getRemoteCommunicatorSize() {
   preciceTrace("getRemoteCommunicatorSize()");
   assertion(isConnected());
   int remoteSize = 0;

@@ -988,7 +988,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
 
     bool initialize = get<4>(tuple);
     if (from == accessor){
-      int index = 0;
+      size_t index = 0;
       for(const std::string& participant : _config.participants){
         preciceDebug("from: " << from << ", to: " << to << ", participant: " << participant);
         if(to == participant){

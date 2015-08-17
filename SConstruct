@@ -68,9 +68,7 @@ vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 
 
 env = Environment(variables = vars, ENV = os.environ)   # For configuring build variables
-# env = Environment(ENV = os.environ)
 conf = Configure(env) # For checking libraries, headers, ...
-
 
 Help(vars.GenerateHelpText(env))
 env.Append(CPPPATH = ['#src'])
@@ -162,7 +160,7 @@ print
 print 'Configuring build variables ...'
 
 env.Append(LIBPATH = [('#' + buildpath)])
-env.Append(CCFLAGS= ['-Werror', '-std=c++11'])
+env.Append(CCFLAGS= ['-Wall', '-std=c++11'])
 
 
 if env["compiler"] == 'icc':
@@ -175,7 +173,6 @@ if env["compiler"] == 'icc':
 elif env["compiler"] == 'g++':
     pass
 elif env["compiler"] == "clang++":
-    env['ENV']['TERM'] = os.environ['TERM'] # colored compile messages from clang
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
 elif env["compiler"] == "g++-mp-4.9":
     # Some special treatment that seems to be necessary for Mac OS.

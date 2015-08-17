@@ -84,7 +84,7 @@ public:
    */
   virtual void send (
     double* itemsToSend,
-    int     size,
+    size_t     size,
     int     valueDimension) =0;
 
   /**
@@ -92,7 +92,7 @@ public:
    */
   virtual void receive (
     double* itemsToReceive,
-    int     size,
+    size_t     size,
     int     valueDimension) =0;
 
 protected:

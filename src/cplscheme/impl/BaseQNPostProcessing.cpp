@@ -428,7 +428,7 @@ void BaseQNPostProcessing:: iterationsConverged
   if(_firstTimeStep)
   {
     _infostream<<"l2-Norm of converged configuration after first time step:"<<std::endl;
-    double l2norm = 0., oldl2norm = 0., curr = 0.;
+    double l2norm = 0., oldl2norm = 0.;
     foreach (int id, _dataIDs)
     {
       l2norm = 0.; 
