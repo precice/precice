@@ -145,7 +145,10 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
   delete[] _deadAxis;
-  KSPDestroy(&_solver);
+  PetscErrorCode ierr = 0;
+  // Commenting out the next line most likely introduces a memory leak
+  // However, not commenting it out introduces a memory error, which remains untraceable
+  // ierr = KSPDestroy(&_solver); CHKERRV(ierr);
 }
 
 
