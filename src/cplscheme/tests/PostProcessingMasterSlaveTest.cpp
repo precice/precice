@@ -399,9 +399,9 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 {
 	preciceTrace ( "testVIQNIMVJpp" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIPortsCommunication("../"));
-	com::Communication::SharedPointer cyclecom1 = com::Communication::SharedPointer(new com::MPIPortsCommunication("../"));
-	com::Communication::SharedPointer cyclecom2 = com::Communication::SharedPointer(new com::MPIPortsCommunication("../"));
+	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
+	com::Communication::SharedPointer cyclecom1 = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
+	com::Communication::SharedPointer cyclecom2 = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
 
 	utils::MasterSlave::_cyclicCommRight = cyclecom1;
 	utils::MasterSlave::_cyclicCommLeft = cyclecom2;
@@ -586,9 +586,7 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		fpcd->oldValues.column(0) = fcol1;
 	}
 
-	utils::Parallel::synchronizeProcesses();
 	pp.performPostProcessing(data);
-	utils::Parallel::synchronizeProcesses();
 
 	utils::DynVector newdvalues;
 	if (utils::Parallel::getProcessRank() == 0) { //Master
@@ -660,10 +658,7 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 
 	data.begin()->second->values = &newdvalues;
 
-	utils::Parallel::synchronizeProcesses();
 	pp.performPostProcessing(data);
-	utils::Parallel::synchronizeProcesses();
-
 
 	if (utils::Parallel::getProcessRank() == 0) { //Master
 		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
@@ -724,18 +719,25 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		*/
 	}
 
-
 	utils::Parallel::synchronizeProcesses();
-	char hostname[256];
-	    gethostname(hostname, sizeof(hostname));
-	    printf("PID %d on %s ready for attach\n", getpid(), hostname);
-	    fflush(stdout);
-	//utils::MasterSlave::_cyclicCommRight->closeConnection();
-	//utils::MasterSlave::_cyclicCommLeft->closeConnection();
-	//utils::MasterSlave::_communication->closeConnection();
+
+  utils::MasterSlave::_communication->closeConnection();
+
+  if((utils::Parallel::getProcessRank() % 2) == 0){
+    utils::MasterSlave::_cyclicCommRight->closeConnection();
+    utils::MasterSlave::_cyclicCommLeft->closeConnection();
+  }
+  else{
+    utils::MasterSlave::_cyclicCommLeft->closeConnection();
+    utils::MasterSlave::_cyclicCommRight->closeConnection();
+  }
+
 	utils::MasterSlave::_slaveMode = false;
 	utils::MasterSlave::_masterMode = false;
 	utils::Parallel::clearGroups();
+	utils::MasterSlave::_communication = nullptr;
+	utils::MasterSlave::_cyclicCommRight = nullptr;
+	utils::MasterSlave::_cyclicCommLeft = nullptr;
 }
 
 
