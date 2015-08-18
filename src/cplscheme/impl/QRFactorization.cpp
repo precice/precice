@@ -373,16 +373,16 @@ int QRFactorization::orthogonalize(
 			if (k >= 4) {
 				std::cout
 						<< "\ntoo many iterations in orthogonalize, termination failed\n";
-				preciceError("orthogonalize()", "Matrix Q is not sufficiently orthogonal. "
-						     <<"The maximum number of re-orthogonalization steps (4) has been exceeded.");
+				preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal. Failed to re-orthogonalize after 4 iterations. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
 				//preciceDebug("[QR-dec] - too many iterations in orthogonalize, termination failed");
 				if (_fstream_set)
 					(*_infostream)
-							<< "[QR-dec] - too many iterations in orthogonalize, termination failed"
+							<< "[QR-dec] - Matrix Q is not sufficiently orthogonal. Failed to re-orthogonalize after 4 iterations. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge."
 							<< std::endl;
 				return -1;
 			}
 			if (!restart && rho1 <= rho * _sigma) {
+			  preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal, most probably due to bad conditioning of the least squares system. Try to re-orthogonalize the QR system");
 				//preciceDebug("[QR-dec] - reorthogonalization");
 				if (_fstream_set)
 					(*_infostream) << "[QR-dec] - reorthogonalization"

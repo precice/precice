@@ -261,6 +261,9 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
 
 			assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
 			assertion2(getLSSystemCols() <= _maxIterationsUsed,getLSSystemCols(), _maxIterationsUsed);
+			
+			if(2*getLSSystemCols() >= getLSSystemRows())
+			  preciceWarning("updateDifferenceMatrices()", "The number of columns in the least squares system exceeded half the number of unknowns at the interface. The system will probably become bad or ill-conditioned and the quasi-Newton post processing may not converge. Maybe the number of allowed columns (maxIterationsUsed) should be limited.");
 
 			DataValues deltaR = _residuals;
 			deltaR -= _oldResiduals;
