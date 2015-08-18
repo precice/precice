@@ -888,7 +888,8 @@ void RequestManager:: handleRequestSetMeshVertices
   _com->receive(meshID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  assertionMsg(size > 0, size);
+  preciceCheck(size > 0, "handleRequestSetMeshVertices()",
+                     "You cannot call setMeshVertices with size=0.");
   double* positions = new double[size*_interface.getDimensions()];
   _com->receive(positions, size*_interface.getDimensions(), rankSender);
   int* ids = new int[size];

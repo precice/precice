@@ -124,7 +124,7 @@ PointToPointCommunicationTest::test(
     MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", 0, 1);
     MasterSlave::_communication->setRankOffset(1);
 
-    mesh->setGlobalNumberOfVertices(10);
+    mesh->getVertexOffsets().push_back(10);
 
     mesh->getVertexDistribution()[0].push_back(0);
     mesh->getVertexDistribution()[0].push_back(1); // <-
@@ -169,7 +169,7 @@ PointToPointCommunicationTest::test(
     MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", 0, 1);
     MasterSlave::_communication->setRankOffset(1);
 
-    mesh->setGlobalNumberOfVertices(10);
+    mesh->getVertexOffsets().push_back(10);
 
     mesh->getVertexDistribution()[0].push_back(1); // <-
     mesh->getVertexDistribution()[0].push_back(2);

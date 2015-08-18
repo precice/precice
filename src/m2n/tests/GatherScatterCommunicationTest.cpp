@@ -144,7 +144,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     m2n->requestSlavesConnection ( "Part1", "Part2Master");
 
     if(utils::Parallel::getProcessRank() == 1){//Master
-      pMesh->setGlobalNumberOfVertices(numberOfVertices);
+      pMesh->getVertexOffsets().push_back(numberOfVertices);
       pMesh->getVertexDistribution()[0].push_back(0);
       pMesh->getVertexDistribution()[0].push_back(1);
       pMesh->getVertexDistribution()[0].push_back(3);
