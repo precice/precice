@@ -1,6 +1,9 @@
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
+
+#ifndef PRECICE_NO_MPI
+
 #ifndef PRECICE_CPLSCHEME_MVQNPOSTPROCESSING_HPP_
 #define PRECICE_CPLSCHEME_MVQNPOSTPROCESSING_HPP_
 
@@ -10,6 +13,7 @@
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
+#include "com/Communication.hpp"
 #include "io/TXTWriter.hpp"
 #include <deque>
 
@@ -50,7 +54,7 @@ public:
    /**
     * @brief Destructor, empty.
     */
-   virtual ~MVQNPostProcessing() {}
+   virtual ~MVQNPostProcessing();
 
 
    /**
@@ -81,6 +85,16 @@ private:
    // @brief stores the approximation of the inverse Jacobian from the previous time step.
    Matrix _oldInvJacobian;
 
+   /**
+ 	* @brief Communication between neighboring slaves, backwards
+ 	*/
+   com::Communication::SharedPointer _cyclicCommLeft;
+
+     /**
+    * @brief Communication between neighboring slaves, forward
+    */
+   com::Communication::SharedPointer _cyclicCommRight;
+
   // @brief comptes the MVQN update using QR decomposition of V, 
   //        furthermore it updates the inverse of the system jacobian
    virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate);
@@ -107,3 +121,4 @@ private:
 }}} // namespace precice, cplscheme, impl
 
 #endif /* PRECICE_CPLSCHEME_MVQNPOSTPROCESSING_HPP_ */
+#endif /* PRECICE_NO_MPI */

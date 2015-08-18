@@ -1,3 +1,5 @@
+#ifndef PRECICE_NO_MPI
+
 // Copyright (C) 2011 Technische Universitaet Muenchen
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
@@ -15,11 +17,14 @@
 #include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
+#include "com/MPIPortsCommunication.hpp"
+#include "com/Communication.hpp"
 #include "Eigen/Dense"
 
 #include <time.h>
 #include <sstream>
 #include <fstream>
+#include <cstring>
 //#include "utils/NumericalCompare.hpp"
 
 namespace precice {
@@ -43,9 +48,47 @@ MVQNPostProcessing:: MVQNPostProcessing
 		       singularityLimit, dataIDs, scalings),
 //  _secondaryOldXTildes(),
   _invJacobian(),
-  _oldInvJacobian()
-{}
+  _oldInvJacobian(),
+  _cyclicCommLeft(),
+  _cyclicCommRight()
+{
 
+	/*
+	 * TODO: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
+	 * 				Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
+	 * 				The master-slave communication should be modified such that direct communication between
+	 * 				slaves is possible (via MPIDirect)
+	 */
+
+	 _cyclicCommLeft = com::Communication::SharedPointer(new com::MPIPortsCommunication("../"));
+	 _cyclicCommRight = com::Communication::SharedPointer(new com::MPIPortsCommunication("../"));
+
+	 // initialize cyclic communication between successive slaves
+	int prevProc = (utils::MasterSlave::_rank-1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank-1;
+	if((utils::MasterSlave::_rank % 2) == 0)
+	{
+	  _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1 );
+	  _cyclicCommRight->requestConnection("cyclicComm-" +  std::to_string(utils::MasterSlave::_rank), "", 0, 1 );
+	}else{
+	  _cyclicCommRight->requestConnection("cyclicComm-" +  std::to_string(utils::MasterSlave::_rank), "", 0, 1 );
+	  _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1 );
+	}
+
+}
+
+MVQNPostProcessing::~MVQNPostProcessing()
+{
+	if((utils::MasterSlave::_rank % 2) == 0)
+	{
+	  _cyclicCommLeft->closeConnection();
+	  _cyclicCommRight->closeConnection();
+	}else{
+	  _cyclicCommRight->closeConnection();
+	  _cyclicCommLeft->closeConnection();
+	}
+    _cyclicCommRight = nullptr;
+    _cyclicCommLeft = nullptr;
+}
 
 
 void MVQNPostProcessing:: initialize
@@ -146,7 +189,6 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
   
   while (linearDependence) {
 		linearDependence = false;
-		//Z.clear();
 
 		Matrix __R(_qrV.cols(), _qrV.cols(), 0.0);
 		auto r = _qrV.matrixR();
@@ -155,17 +197,18 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 				__R(i, j) = r(i, j);
 			}
 
-		if(!_hasNodesOnInterface){
-						std::cout<<"empty proc["<<utils::MasterSlave::_rank<<"] _qrV: rows="<<_qrV.rows()<<", cols="<<_qrV.cols()<<std::endl;
-		}
+//		if(!_hasNodesOnInterface){
+//						std::cout<<"empty proc["<<utils::MasterSlave::_rank<<"] _qrV: rows="<<_qrV.rows()<<", cols="<<_qrV.cols()<<std::endl;
+//		}
+
 		if (getLSSystemCols() > 1) {
 			if(!_hasNodesOnInterface){
 				std::cout<<" proc["<<utils::MasterSlave::_rank<<"] R:\n"<<__R<<std::endl;
 			}
 			for (int i = 0; i < __R.rows(); i++) {
-				//if (std::fabs(__R(i, i)) < _singularityLimit) {
-				if (std::fabs(__R(i, i)) < 0.0) {
-					std::cout<<" -remove: proc["<<utils::MasterSlave::_rank<<"] R(i,i):"<<__R(i,i)<<", eps:"<<_singularityLimit<<", i:"<<i<<std::endl;
+				if (std::fabs(__R(i, i)) < _singularityLimit) {
+				//if (std::fabs(__R(i, i)) < 0.0) {
+					//std::cout<<" -remove: proc["<<utils::MasterSlave::_rank<<"] R(i,i):"<<__R(i,i)<<", eps:"<<_singularityLimit<<", i:"<<i<<std::endl;
 					std::stringstream ss;
 					ss << "(updatedQR) removing linear dependent column "
 					   << i << "  time step: " << tSteps << " iteration: " << its
@@ -213,8 +256,8 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 					Z(p,i) = __ytmpVec(p);
 				__matrixQRow.clear();
 			}
-			if(!_hasNodesOnInterface) std::cout<<"\nZ: "<<Z<<std::endl;
-			preciceDebug("doing back substitution, __ytmpVec.size="<<__ytmpVec.size());
+	//		if(!_hasNodesOnInterface) std::cout<<"\nZ: "<<Z<<std::endl;
+	//		preciceDebug("doing back substitution, __ytmpVec.size="<<__ytmpVec.size());
 		}
 	}
 
@@ -227,7 +270,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
   assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
 
-  preciceDebug("multiply J_prev * V | _invJacobian rows:"<<_oldInvJacobian.rows()<<", cols: "<<_oldInvJacobian.cols());
+ // preciceDebug("multiply J_prev * V | _invJacobian rows:"<<_oldInvJacobian.rows()<<", cols: "<<_oldInvJacobian.cols());
   if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 	  multiply(_oldInvJacobian, _matrixV, tmpMatrix);
 
@@ -247,7 +290,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 			  // as we want to move to Eigen, copy
 			  DataValues Jrow(_oldInvJacobian.cols(), 0.0);
 			  for(int s = 0; s < _oldInvJacobian.cols(); s++){
-				  if(!_hasNodesOnInterface) std::cout<<"should not be entered: i: "<<i<<", s: "<<s<<std::endl;
+				//  if(!_hasNodesOnInterface) std::cout<<"should not be entered: i: "<<i<<", s: "<<s<<std::endl;
 				  Jrow(s) = _oldInvJacobian(i,s);
 			  }
 
@@ -258,7 +301,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 			  int local_row;
 			  if(utils::MasterSlave::_rank == rank)
 			  {
-				  if(!_hasNodesOnInterface) std::cout<<"should not be entered, wrong rang found, rank: "<<rank<<std::endl;
+				 // if(!_hasNodesOnInterface) std::cout<<"should not be entered, wrong rang found, rank: "<<rank<<std::endl;
 				  local_row = i - _dimOffsets[rank];
 				  tmpMatrix(local_row, j) = res_ij;
 			  }
@@ -287,17 +330,16 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	  assertion(utils::MasterSlave::_communication.get() != NULL);
 	  assertion(utils::MasterSlave::_communication->isConnected());
 
-	  assertion(utils::MasterSlave::_cyclicCommLeft.get() != NULL);
-	  assertion(utils::MasterSlave::_cyclicCommLeft->isConnected());
+	  assertion(_cyclicCommLeft.get() != NULL);
+	  assertion(_cyclicCommLeft->isConnected());
 
-	  assertion(utils::MasterSlave::_cyclicCommRight.get() != NULL);
-	  assertion(utils::MasterSlave::_cyclicCommRight->isConnected());
+	  assertion(_cyclicCommRight.get() != NULL);
+	  assertion(_cyclicCommRight->isConnected());
 
 
 	  int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
 	  int prevProc = (utils::MasterSlave::_rank -1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank -1;
 	  int rows_rcv = (prevProc > 0) ? _dimOffsets[prevProc+1] - _dimOffsets[prevProc] : _dimOffsets[1];
-	  //Matrix Wtil_rcv(rows_rcv, tmpMatrix.cols(),0.0);
 	  Matrix Wtil_rcv(rows_rcv, getLSSystemCols(),0.0);
 
 	  com::Request::SharedPointer requestSend;
@@ -305,19 +347,20 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
 	  // initiate asynchronous send operation of tmpMatrix --> nextProc (this data is needed in cycle 1)    dim: n_local x cols
 	  if(tmpMatrix.size() > 0)
-		  requestSend = utils::MasterSlave::_cyclicCommRight->aSend(&tmpMatrix(0,0), tmpMatrix.size(), 0);
+		  requestSend = _cyclicCommRight->aSend(&tmpMatrix(0,0), tmpMatrix.size(), 0);
 
 	  // initiate asynchronous receive operation for W_til from previous processor --> W_til      dim: rows_rcv x cols
 	  if(Wtil_rcv.size() > 0)
-		  requestRcv = utils::MasterSlave::_cyclicCommLeft->aReceive(&Wtil_rcv(0,0), rows_rcv * tmpMatrix.cols(), 0);
+		  requestRcv = _cyclicCommLeft->aReceive(&Wtil_rcv(0,0), rows_rcv * tmpMatrix.cols(), 0);
 
 	  // compute diagonal blocks where all data is local and no communication is needed
 	  // compute block matrices of J_inv of size (n_til x n_til), n_til = local n
 	  Matrix diagBlock(_matrixV.rows(),_matrixV.rows(), 0.0);
 	  multiply(tmpMatrix, Z, diagBlock);
-	  if(!_hasNodesOnInterface){
-		  std::cout<<"diag block on empty proc in cycle 0. BLOCK: ("<<diagBlock.rows()<<","<<diagBlock.cols()<<") Z: ("<<Z.rows()<<","<<Z.cols()<<") Wtil: ("<<tmpMatrix.rows()<<","<<tmpMatrix.cols()<<")"<<std::endl;
-	  }
+
+//	  if(!_hasNodesOnInterface){
+//		  std::cout<<"diag block on empty proc in cycle 0. BLOCK: ("<<diagBlock.rows()<<","<<diagBlock.cols()<<") Z: ("<<Z.rows()<<","<<Z.cols()<<") Wtil: ("<<tmpMatrix.rows()<<","<<tmpMatrix.cols()<<")"<<std::endl;
+//	  }
 	  // set block at corresponding row-index on proc
 	  int off = _dimOffsets[utils::MasterSlave::_rank];
 	  assertion2(_invJacobian.cols() == diagBlock.cols(), _invJacobian.cols(), diagBlock.cols());
@@ -345,8 +388,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  // initiate async send to hand over Wtil to the next proc (this data will be needed in the next cycle)    dim: n_local x cols
 		  if(cycle < utils::MasterSlave::_size-1){
 			  if(Wtil_copy.size() > 0)
-				  requestSend = utils::MasterSlave::_cyclicCommRight->aSend(&Wtil_copy(0,0), Wtil_copy.size(), 0);
-			  //std::cout<<"proc["<<utils::MasterSlave::_rank<<"] sends to ["<<nextProc<<"] double* of size "<<Wtil_copy.size()<<" for the next cycle"<<std::endl;
+				  requestSend = _cyclicCommRight->aSend(&Wtil_copy(0,0), Wtil_copy.size(), 0);
 		  }
 
 		  // compute proc that owned Wtil_rcv at the very beginning for each cylce
@@ -362,9 +404,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  // initiate asynchronous receive operation for W_til from previous processor --> W_til (this data is needed in the next cycle)
 		  if(cycle < utils::MasterSlave::_size-1){
 			  if(Wtil_rcv.size() > 0)
-				  requestRcv = utils::MasterSlave::_cyclicCommLeft->aReceive(&Wtil_rcv(0,0), Wtil_rcv.size(), 0);
-			//  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] receives from ["<<prevProc<<"] double* of size "
-			//		   <<(rows_rcv_nextCycle*tmpMatrix.cols())<<" from dest ["<<sourceProc_nextCycle<<"]"<<" for the next cycle"<<std::endl;
+				  requestRcv = _cyclicCommLeft->aReceive(&Wtil_rcv(0,0), Wtil_rcv.size(), 0);
 		  }
 
 
@@ -372,9 +412,9 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  Matrix block(rows_rcv, Z.cols(), 0.0);
 		  multiply(Wtil_copy, Z, block);
 
-		  if(!_hasNodesOnInterface){
-		  		  std::cout<<"diag block on empty proc in cycle "<<cycle<<". BLOCK: ("<<block.rows()<<","<<block.cols()<<") Z: ("<<Z.rows()<<","<<Z.cols()<<") Wtil: ("<<Wtil_copy.rows()<<","<<Wtil_copy.cols()<<")"<<std::endl;
-		  	  }
+//		  if(!_hasNodesOnInterface){
+//		  		  std::cout<<"diag block on empty proc in cycle "<<cycle<<". BLOCK: ("<<block.rows()<<","<<block.cols()<<") Z: ("<<Z.rows()<<","<<Z.cols()<<") Wtil: ("<<Wtil_copy.rows()<<","<<Wtil_copy.cols()<<")"<<std::endl;
+//		  	  }
 
 		  // set block at corresponding index in J_inv
 		  // the row-offset of the current block is determined by the proc that sends the part of the W_til matrix
@@ -420,7 +460,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  // as we want to move to Eigen, copy
 		  DataValues Jrow(_invJacobian.cols(), 0.0);
 		  for (int s = 0; s < _invJacobian.cols(); s++) {
-			  if(!_hasNodesOnInterface) std::cout<<"should not be entered: i: "<<i<<", s: "<<s<<std::endl;
+//			  if(!_hasNodesOnInterface) std::cout<<"should not be entered: i: "<<i<<", s: "<<s<<std::endl;
 			  Jrow(s) = _invJacobian(i,s);
 		  }
 
@@ -432,7 +472,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  int local_row;
 		  if(utils::MasterSlave::_rank == rank)
 		  {
-			  if(!_hasNodesOnInterface) std::cout<<"should not be entered, wrong rang found, rank: "<<rank<<std::endl;
+//			  if(!_hasNodesOnInterface) std::cout<<"should not be entered, wrong rang found, rank: "<<rank<<std::endl;
 			  local_row = i - _dimOffsets[rank];
 			  xUpdate(local_row) = up_ij;
 		  }
@@ -586,3 +626,5 @@ void MVQNPostProcessing:: specializedIterationsConverged
 }
 
 }}} // namespace precice, cplscheme, impl
+
+#endif

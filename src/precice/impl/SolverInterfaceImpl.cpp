@@ -578,17 +578,6 @@ void SolverInterfaceImpl:: finalize()
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     utils::MasterSlave::_communication->closeConnection();
     utils::MasterSlave::_communication = nullptr;
-
-    if((_accessorProcessRank % 2) == 0)
-	{
-	  utils::MasterSlave::_cyclicCommLeft->closeConnection();
-	  utils::MasterSlave::_cyclicCommRight->closeConnection();
-	}else{
-	  utils::MasterSlave::_cyclicCommRight->closeConnection();
-	  utils::MasterSlave::_cyclicCommLeft->closeConnection();
-	}
-    utils::MasterSlave::_cyclicCommRight = nullptr;
-    utils::MasterSlave::_cyclicCommLeft = nullptr;
   }
 
   if(not precice::testMode){
@@ -2326,17 +2315,6 @@ void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
     assertion(utils::MasterSlave::_slaveMode);
     utils::MasterSlave::_communication->requestConnection( _accessorName + "Master", _accessorName,
                             _accessorProcessRank-rankOffset, _accessorCommunicatorSize-rankOffset );
-  }
-
-  // initialize cyclic communication between successive slaves
-  int prevProc = (_accessorProcessRank-1 < 0) ? _accessorCommunicatorSize-1 : _accessorProcessRank-1;
-  if((_accessorProcessRank % 2) == 0)
-  {
-	  utils::MasterSlave::_cyclicCommLeft->acceptConnection( _accessorName + "-cyclicComm-" + std::to_string(prevProc), _accessorName, 0, 1 );
-	  utils::MasterSlave::_cyclicCommRight->requestConnection( _accessorName + "-cyclicComm-" +  std::to_string(_accessorProcessRank), _accessorName, 0, 1 );
-  }else{
-	  utils::MasterSlave::_cyclicCommRight->requestConnection( _accessorName + "-cyclicComm-" +  std::to_string(_accessorProcessRank), _accessorName, 0, 1 );
-	  utils::MasterSlave::_cyclicCommLeft->acceptConnection( _accessorName + "-cyclicComm-" + std::to_string(prevProc), _accessorName, 0, 1 );
   }
 }
 
