@@ -96,7 +96,7 @@ void ParallelImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
   
   utils::configure(root, path);
-  validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != NULL);
+  validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != nullptr);
   meshConfig->setMeshSubIDs();
 }
 
@@ -214,6 +214,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
     }
   }
   cplScheme.finalize();
+  utils::Parallel::clearGroups();
 }
 
 void ParallelImplicitCouplingSchemeTest:: connect
@@ -225,7 +226,7 @@ void ParallelImplicitCouplingSchemeTest:: connect
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
-  utils::Parallel::initialize ( NULL, NULL, localParticipant );
+  utils::Parallel::splitCommunicator( localParticipant );
   if ( participant0 == localParticipant ) {
     communication->requestMasterConnection ( participant1, participant0);
   }

@@ -96,8 +96,8 @@ int main (int argc, char **argv)
   }
 
   int dataSize = -1;
-  double* data = NULL;
-  int* dataIndices = NULL;
+  double* data = nullptr;
+  int* dataIndices = nullptr;
   if (readWriteData){
     int parallelChunk = N / commSize;
     PRINT("parallelChunk = " << parallelChunk);

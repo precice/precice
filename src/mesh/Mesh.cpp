@@ -13,11 +13,11 @@ namespace mesh {
 
 tarch::logging::Log Mesh:: _log("precice::mesh::Mesh");
 
-utils::ManageUniqueIDs* Mesh:: _managerPropertyIDs = NULL;
+utils::ManageUniqueIDs* Mesh:: _managerPropertyIDs = nullptr;
 
 void Mesh:: resetGeometryIDsGlobally()
 {
-  if (_managerPropertyIDs != NULL){
+  if (_managerPropertyIDs != nullptr){
     _managerPropertyIDs->resetIDs();
   }
 }
@@ -40,10 +40,10 @@ Mesh:: Mesh
   _manageQuadIDs(),
   _listeners(),
   _vertexDistribution(),
-  _globalNumberOfVertices(-1),
+  _vertexOffsets(),
   _boundingBox()
 {
-  if (_managerPropertyIDs == NULL){
+  if (_managerPropertyIDs == nullptr){
     _managerPropertyIDs = new utils::ManageUniqueIDs;
   }
   assertion1((_dimensions == 2) || (_dimensions == 3), _dimensions);
@@ -578,7 +578,7 @@ void Mesh:: notifyListeners()
 {
   preciceTrace("notifyListeners()");
   for (MeshListener* listener : _listeners) {
-    assertion(listener != NULL);
+    assertion(listener != nullptr);
     listener->meshChanged(*this);
   }
 }

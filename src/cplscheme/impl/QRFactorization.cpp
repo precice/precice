@@ -2,6 +2,7 @@
 #include "QRFactorization.hpp"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "utils/Dimensions.hpp"
+#include "utils/Globals.hpp"
 #include "tarch/la/Scalar.h"
 
 #include <iostream>
@@ -29,6 +30,7 @@ QRFactorization::QRFactorization(
   double omega, 
   double theta, 
   double sigma)
+
   :
   _Q(Q),
   _R(R),
@@ -36,7 +38,10 @@ QRFactorization::QRFactorization(
   _cols(cols),
   _omega(omega),
   _theta(theta),
-  _sigma(sigma)
+  _sigma(sigma),
+  _infostream(),
+  _fstream_set(false),
+  _globalRows(rows)
 {
   assertion2(_R.rows() == _cols, _R.rows(), _cols);
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
@@ -60,7 +65,10 @@ QRFactorization::QRFactorization(
   _cols(0),
   _omega(omega),
   _theta(theta),
-  _sigma(sigma)
+  _sigma(sigma),
+  _infostream(),
+  _fstream_set(false),
+  _globalRows(A.rows())
 {
   int m = A.cols();
   for (int k=0; k<m; k++)
@@ -92,7 +100,10 @@ QRFactorization::QRFactorization(
   _cols(0),
   _omega(omega),
   _theta(theta),
-  _sigma(sigma)
+  _sigma(sigma),
+  _infostream(),
+  _fstream_set(false),
+  _globalRows(A.rows())
 {
   int m = A.cols();
   for (int k=0; k<m; k++)
@@ -123,7 +134,10 @@ QRFactorization::QRFactorization(
   _cols(0),
   _omega(omega),
   _theta(theta),
-  _sigma(sigma)
+  _sigma(sigma),
+  _infostream(),
+  _fstream_set(false),
+  _globalRows(0)
 {}
 
       
@@ -135,6 +149,9 @@ QRFactorization::QRFactorization(
  */
 void QRFactorization::deleteColumn(int k)
 {
+
+  preciceTrace("deleteColumn()");
+
   assertion1(k >= 0, k);
   assertion2(k < _cols, k, _cols);
   
@@ -188,6 +205,10 @@ void QRFactorization::insertColumn(int k, DataValues& v)
       
 void QRFactorization::insertColumn(int k, EigenVector& v)
 {
+  preciceTrace("insertColumn()");
+
+ // if(v.size() <= 0) return;
+
   if(_cols == 0)
     _rows = v.size();
   
@@ -215,12 +236,13 @@ void QRFactorization::insertColumn(int k, EigenVector& v)
   }
   
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  assertion2(_R.rows() == _cols, _Q.rows(), _cols);
+  assertion2(_R.rows() == _cols, _R.rows(), _cols);
   
   // orthogonalize v to columns of Q
   EigenVector u(_cols);
   double rho = 0;
   int err = orthogonalize(v, u, rho, _cols-1);
+  assertion1(err >= 0, err);
   //_Q.conservativeResize(Eigen::NoChange_t, _cols);
   _Q.conservativeResize(_rows, _cols);
   _Q.col(_cols-1) = v;
@@ -265,6 +287,17 @@ int QRFactorization::orthogonalize(
   double& rho,
   int colNum)
 {
+   preciceTrace("orthogonalize()");
+
+   // serial case
+   if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)
+   {
+	   assertion2(_globalRows == _rows, _globalRows, _rows);
+   // master-slave case
+   }else{
+	   assertion3(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
+   }
+
    bool restart = false;
    bool null = false;
    bool termination = false;
@@ -273,104 +306,172 @@ int QRFactorization::orthogonalize(
    EigenVector u = EigenVector::Zero(_rows);
    EigenVector s = EigenVector::Zero(colNum);
    r = EigenVector::Zero(_cols);
-   rho = v.norm();
+   
+   rho = utils::MasterSlave::l2norm(v); // distributed l2norm
+   //rho = v.norm();
    rho0 = rho;
    int k = 0;
-   while (!termination)
-   {
-     // take a gram-schmidt iteration, ignoring r on later steps if previous v was null
-     u = EigenVector::Zero(_rows);
-     for(int j=0; j<colNum; j++)
-     {
-       double ss = 0;
-       for(int i=0; i<_rows; i++)
-       {
-         ss = ss + _Q(i,j) * v(i);
-       }
-       t = ss;
-       s(j) = t;
-       for(int i=0; i<_rows; i++)
-       {
-	 u(i) = u(i) + _Q(i,j) * t;
-       }
-     }
-     if(!null)
-     {
-       for(int j=0; j<colNum; j++)
-       {
-	 r(j) = r(j) + s(j);
-       }
-     }
-     for(int i=0; i<_rows; i++)
-     {
-       v(i) = v(i) - u(i);
-     }
-     rho1 = v.norm();
-     t = s.norm();
-     k++;
-     
-     // treat the special case m=n
-     if(_rows == colNum)
-     {
-      v = EigenVector::Zero(_rows);
-      rho = 0.;
-      return 0;
-     }
-     
-     // test for nontermination
-     if(rho0 + _omega * t >= _theta *rho1)
-     {
-       // exit to fail of too many iterations
-       if (k >= 4)
-       {
-         std::cout<<"\ntoo many iterations in orthogonalize, termination failed\n";
-         return -1;
-       }
-       if(!restart && rho1 <= rho*_sigma)
-       {
-	 restart = true;
-	 // find first roee of minimal length of Q
-	 u = EigenVector::Zero(_rows);
-	 for(int j=0; j<colNum; j++)
-	 {
-	   for(int i=0; i<_rows; i++)
-	   {
-	     u(i) = u(i) + _Q(i,j)*_Q(i,j);
-	   }
-	 }
-	 t = 2;
-	 for(int i=0; i<_rows; i++)
-	 {
-	   if(u(i) < t)
-	   {
-	     k = i;
-	     t = u(k);
-	   }
-	 }
-	 
-	 // take correct action if v is null
-	 if(rho1 == 0)
-	 {
-	   null = true;
-	   rho1 = 1;
-	 }
-	 // reinitialize v and k
-	 v = EigenVector::Zero(_rows);
-	 v(k) = rho1;
-	 k = 0;
-       }
-       rho0 = rho1;
-     }else
-     {
-       termination = true;
-     }
-   }
+	while (!termination) {
+		// take a gram-schmidt iteration, ignoring r on later steps if previous v was null
+		u = EigenVector::Zero(_rows);
+		for (int j = 0; j < colNum; j++) {
+
+			/*
+			 * dot-product <_Q(:,j), v >
+			 */
+			EigenVector Qc = _Q.col(j);
+
+			// dot product <_Q(:,j), v> =: r_ij
+			double ss = utils::MasterSlave::dot(Qc, v);
+			t = ss;
+			// save r_ij in s(j) = column of R
+			s(j) = t;
+			// u is the sum of projections r_ij * _Q(i,:) =  _Q(i,:) * <_Q(:,j), v>
+			for (int i = 0; i < _rows; i++) {
+				u(i) = u(i) + _Q(i, j) * t;
+			}
+		}
+		if (!null) {
+			// add over all runs: r_ij = r_ij_prev + r_ij
+			for (int j = 0; j < colNum; j++) {
+				r(j) = r(j) + s(j);
+			}
+		}
+		// subtract projections from v, v is now orthogonal to columns of _Q
+		for (int i = 0; i < _rows; i++) {
+			v(i) = v(i) - u(i);
+		}
+		// rho1 = norm of orthogonalized new column v_tilde (though not normalized)
+		rho1 = utils::MasterSlave::l2norm(v); // distributed l2norm
+
+		// t = norm of r_(:,j) with j = colNum-1
+		t = utils::MasterSlave::l2norm(s); // distributed l2norm
+		k++;
+
+		// treat the special case m=n
+		// Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
+		// rows on the processor.
+		if (_globalRows == colNum) {
+			v = EigenVector::Zero(_rows);
+			rho = 0.;
+			return k;
+		}
+
+
+		/**   - test for nontermination -
+		 *  rho0 = |v_init|, t = |r_(i,cols-1)|, rho1 = |v_orth|
+		 *  rho1 is small, if the new information incorporated in v is small,
+		 *  i.e., the part of v orthogonal to _Q is small.
+		 *  if rho1 is very small it is possible, that we are adding (more or less)
+		 *  only round-off errors to the decomposition. Later normalization will scale
+		 *  this new information so that it is equally weighted as the columns in Q.
+		 *  To keep a good orthogonality, some effort is done if comparatively little
+		 *  new information is added.
+		 */
+		if (rho0 + _omega * t >= _theta * rho1) {
+			// exit to fail of too many iterations
+			if (k >= 4) {
+				std::cout
+						<< "\ntoo many iterations in orthogonalize, termination failed\n";
+				preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal. Failed to re-orthogonalize after 4 iterations. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
+				//preciceDebug("[QR-dec] - too many iterations in orthogonalize, termination failed");
+				if (_fstream_set)
+					(*_infostream)
+							<< "[QR-dec] - Matrix Q is not sufficiently orthogonal. Failed to re-orthogonalize after 4 iterations. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge."
+							<< std::endl;
+				return -1;
+			}
+			if (!restart && rho1 <= rho * _sigma) {
+			  preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal, most probably due to bad conditioning of the least squares system. Try to re-orthogonalize the QR system");
+				//preciceDebug("[QR-dec] - reorthogonalization");
+				if (_fstream_set)
+					(*_infostream) << "[QR-dec] - reorthogonalization"
+							<< std::endl;
+
+				restart = true;
+
+				/**  - find first row of minimal length of Q -
+				 *  the squared l2-norm of each row is computed. Find row of minimal length.
+				 *  Start with a new vector v that is zero except for v(k) = rho1, where
+				 *  k is the index of the row of Q with minimal length.
+				 *  Note: the new information from v is discarded. Q is made orthogonal
+				 *        as good as possible.
+				 */
+				u = EigenVector::Zero(_rows);
+				for (int j = 0; j < colNum; j++) {
+					for (int i = 0; i < _rows; i++) {
+						u(i) = u(i) + _Q(i, j) * _Q(i, j);
+					}
+				}
+				t = 2;
+
+				// ATTENTION: maybe in the following is something wrong in master-slave mode
+
+				for (int i = 0; i < _rows; i++) {
+					if (u(i) < t) {
+						k = i;
+						t = u(k);
+					}
+				}
+
+				int global_k = k;
+				int local_k = 0;
+				double local_uk = 0.;
+				double global_uk = 0.;
+				int rank = 0;
+
+				if (utils::MasterSlave::_slaveMode) {
+					utils::MasterSlave::_communication->send(k, 0);
+					utils::MasterSlave::_communication->send(u(k), 0);
+				}
+
+				if (utils::MasterSlave::_masterMode) {
+					global_uk = u(k);
+					for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
+						utils::MasterSlave::_communication->receive(local_k, rankSlave);
+						utils::MasterSlave::_communication->receive(local_uk, rankSlave);
+						if (local_uk < global_uk) {
+							rank = rankSlave;
+							global_uk = local_uk;
+							global_k = local_k;
+						}
+					}
+					if (_fstream_set)
+						(*_infostream) << "           global u(k):" << global_uk
+								<< ",  global k: " << global_k << ",  rank: "
+								<< rank << std::endl;
+				}
+
+				// take correct action if v is null
+				if (rho1 == 0) {
+					null = true;
+					rho1 = 1;
+				}
+				// reinitialize v and k
+				v = EigenVector::Zero(_rows);
+
+				// insert rho1 at position k with smallest u(i) = Q(i,:) * Q(i,:)
+				if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+					v(k) = rho1;
+				} else {
+					if (utils::MasterSlave::_rank == rank)
+						v(global_k) = rho1;
+				}
+				k = 0;
+			}
+			rho0 = rho1;
+
+			// termination, i.e., (rho0 + _omega * t < _theta *rho1)
+		} else {
+			termination = true;
+		}
+	}
    
    // normalize v
    v /= rho1;
    rho = null ? 0 : rho1;
    r(colNum) = rho;
-   return 0;
+   return k;
 }      
 
    
@@ -426,6 +527,12 @@ void QRFactorization::applyReflector(
 }
 
 
+void QRFactorization::setGlobalRows( int gr)
+{
+  _globalRows = gr;
+}
+
+
 QRFactorization::EigenMatrix& QRFactorization::matrixQ()
 {
   return _Q;
@@ -452,6 +559,7 @@ void QRFactorization::reset()
   _R.resize(0,0);
   _cols = 0;
   _rows = 0;
+  _globalRows = 0;
 }
 
 void QRFactorization::reset(
@@ -470,6 +578,7 @@ void QRFactorization::reset(
   _omega = omega;
   _theta = theta;
   _sigma = sigma;
+  _globalRows = _rows;
   assertion2(_R.rows() == _cols, _R.rows(), _cols);
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
   assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
@@ -489,6 +598,7 @@ void QRFactorization::reset(
   _omega = omega;
   _theta = theta;
   _sigma = sigma;
+  _globalRows = _rows;
   
   int m = A.cols();
   for (int k=0; k<m; k++)
@@ -518,6 +628,7 @@ void QRFactorization::reset(
   _omega = omega;
   _theta = theta;
   _sigma = sigma;
+  _globalRows = _rows;
  
   int m = A.cols();
   for (int k=0; k<m; k++)
@@ -569,6 +680,13 @@ void QRFactorization::popBack()
 {
   deleteColumn(_cols-1);
 }
+
+void QRFactorization::setfstream(std::fstream* stream)
+{
+  _infostream = stream;
+  _fstream_set = true;
+}
+
 
 
 

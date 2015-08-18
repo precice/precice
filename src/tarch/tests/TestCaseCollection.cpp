@@ -21,8 +21,8 @@ tarch::tests::TestCaseCollection::TestCaseCollection(const std::string& testCase
 
 tarch::tests::TestCaseCollection::~TestCaseCollection() {
   if (_deleteTestCases) {
-    for (std::list<tarch::tests::TestCase*>::iterator p = _testCases.begin(); p!=_testCases.end(); p++ ) {
-      tarch::tests::TestCase* currentTestCase = *p;
+    for (auto currentTestCase : _testCases) {
+      
       delete currentTestCase;
     }
   }
@@ -30,8 +30,8 @@ tarch::tests::TestCaseCollection::~TestCaseCollection() {
 
 
 void tarch::tests::TestCaseCollection::setUp() {
-  for (std::list<tarch::tests::TestCase*>::iterator p = _testCases.begin(); p!=_testCases.end(); p++ ) {
-    (*p)->setUp();
+  for (auto & elem : _testCases) {
+    (elem)->setUp();
   }
 }
 
@@ -39,8 +39,8 @@ void tarch::tests::TestCaseCollection::setUp() {
 void tarch::tests::TestCaseCollection::run() {
   logTraceInWith1Argument( "run()", _testCaseName );
   std::string logInformation = "running test case collection \"" + _testCaseName + "\" ";
-  for (std::list<tarch::tests::TestCase*>::iterator p = _testCases.begin(); p!=_testCases.end(); p++ ) {
-    tarch::tests::TestCase* currentTestCase = *p;
+  for (auto currentTestCase : _testCases) {
+    
     logInformation += ".";
     currentTestCase->run();
     int additionalErrors = currentTestCase->getNumberOfErrors();

@@ -441,7 +441,7 @@ void ActionConfiguration:: createAction()
       }
     }
   }
-  if (mesh.get() == NULL){
+  if (mesh.get() == nullptr){
     std::ostringstream stream;
     stream << "Data action uses mesh \"" << _configuredAction.mesh
            << "\" which is not configured";
@@ -512,7 +512,7 @@ void ActionConfiguration:: createAction()
         new action::PythonAction(timing, _configuredAction.path, _configuredAction.module,
         mesh, targetDataID, sourceDataID) );
   }
-  assertion(action.get() != NULL);
+  assertion(action.get() != nullptr);
   _actions.push_back(action);
 }
 

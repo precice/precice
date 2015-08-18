@@ -128,10 +128,10 @@ public:
     */
    virtual void importState(io::TXTReader& reader);
    
+   // delete this:
+   virtual int getDeletedColumns();
 
 protected:
-  
-  std::fstream _infostream;
 
    typedef tarch::la::DynamicVector<double> DataValues;
 
@@ -173,7 +173,16 @@ protected:
 
    // @brief Indicates the first iteration, where constant relaxation is used.
    bool _firstIteration;
+
+   // @brief Indicates the first time step, where constant relaxation is used
+   //        later, we replace the constant relaxation by a qN-update from last time step.
    bool _firstTimeStep;
+
+   /*
+    * @brief If in master-slave mode: True if this process has nodes at the coupling interface
+    *        If in server mode: Always true.
+    */
+   bool _hasNodesOnInterface;
 
    // @brief Solver output from last iteration.
    DataValues _oldXTilde;
@@ -218,6 +227,26 @@ protected:
    // a singular matrix in the QR decomposition can be removed and tracked.
    std::deque<int> _matrixCols;
    
+   // @brief only needed for the parallel master-slave mode. stores the local dimensions,
+   //        i.e., the offsets in _invJacobian for all processors
+   std::vector<int> _dimOffsets;
+
+   std::fstream _infostream;
+
+   // @ brief only debugging info, remove this:
+   int its,tSteps;
+   int deletedColumns;
+
+   // @brief: computes number of cols in least squares system, i.e, number of cols in
+   // 		  _matrixV, _matrixW, _qrV, etc..
+   //		  This is necessary only for master-slave mode, when some procs do not have
+   //		  any nodes on the coupling interface. In this case, the matrices are not
+   // 		  constructed and we have no information about the number of cols. This info
+   // 		  is needed for master-slave communication.
+   // 		  Number of its =! _cols in general.
+   int getLSSystemCols();
+   int getLSSystemRows();
+
    // @brief updates the V, W matrices (as well as the matrices for the secondary data)
    virtual void updateDifferenceMatrices(DataMap & cplData);
    

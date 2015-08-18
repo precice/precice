@@ -61,7 +61,7 @@ void Cuboid:: specializedCreate
         h(i) = _sidelengths(i);
       }
     }
-    mesh::PropertyContainer* parent = NULL;
+    mesh::PropertyContainer* parent = nullptr;
 
     // Create sides of 2d cuboid and assign sub-ids
 
@@ -194,7 +194,7 @@ void Cuboid:: specializedCreate
 //        h(i) = _sidelengths(i);
 //      }
 //    }
-    mesh::PropertyContainer* parent = NULL;
+    mesh::PropertyContainer* parent = nullptr;
 
     // Create cuboid edges
     boost::array<mesh::Edge*,12> edges;
@@ -223,8 +223,8 @@ void Cuboid:: specializedCreate
       mesh::Edge & crossingEdge = seed.createEdge (
         *cornerVertices[vertexIndices[1]],
         *cornerVertices[vertexIndices[2]] );
-      mesh::Triangle* t0 = NULL;
-      mesh::Triangle* t1 = NULL;
+      mesh::Triangle* t0 = nullptr;
+      mesh::Triangle* t1 = nullptr;
       if ( lowside ){
         t0 = & seed.createTriangle (
           *edges[edgeIndices[0]], *edges[edgeIndices[2]], crossingEdge );

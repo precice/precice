@@ -135,7 +135,8 @@ public:
     bool                                   remote,
     const std::string&                     fromParticipant,
     double                                 safetyFactor,
-    bool                                   provideMesh );
+    bool                                   provideMesh,
+    bool                                   doesPreFiltering );
 
   void addAction ( const action::PtrAction& action );
 
@@ -170,12 +171,7 @@ public:
    */
   bool useMaster();
 
-  /**
-   * @brief Sets the masterall com. for the participant.
-   */
-  void setMasterSlaveCommunication ( com::Communication::SharedPointer communication );
-
-  com::Communication::SharedPointer getMasterSlaveCommunication() const;
+  void setUseMaster(bool useMaster);
 
   /**
    * @brief Returns true, if the
@@ -225,7 +221,7 @@ private:
 
   com::Communication::SharedPointer _clientServerCommunication;
 
-  com::Communication::SharedPointer _masterSlaveCommunication;
+  bool _useMaster;
 
 
   template<typename ELEMENT_T>

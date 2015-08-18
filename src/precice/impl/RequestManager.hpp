@@ -321,9 +321,6 @@ private:
 
   cplscheme::PtrCouplingScheme _couplingScheme;
 
-  // @brief Locks the next receive operation of the server to a specific client.
-  int _lockServerToClient;
-
   /**
    * @brief Handles request initialize from client.
    */

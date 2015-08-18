@@ -153,10 +153,10 @@ void SolverInterfaceTest:: testConfiguration()
   meshContexts = comsol->_meshContexts;
   validateEquals(meshContexts.size(), 3);
   // Can be replaced by nullptr as soon as we have C++11 available.
-  validateEquals(meshContexts[0], static_cast<void*>(NULL));
+  validateEquals(meshContexts[0], static_cast<void*>(nullptr));
   validateEquals(meshContexts[1]->mesh->getName(), std::string("ComsolNodes"));
     // Can be replaced by nullptr as soon as we have C++11 available.
-  validateEquals(meshContexts[2], static_cast<void*>(NULL));
+  validateEquals(meshContexts[2], static_cast<void*>(nullptr));
   validateEquals(comsol->_usedMeshContexts.size(), 1);
 }
 
@@ -790,7 +790,7 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
     while (couplingInterface.isCouplingOngoing()){
       validate(solverOne->_dataContexts.size() > 0);
       impl::DataContext* dataContext = solverOne->_dataContexts[forcesID];
-      validate(dataContext != NULL);
+      validate(dataContext != nullptr);
       mesh::PtrData data = dataContext->fromData;
       validateEquals(forcesID, dataContext->fromData->getID());
       utils::DynVector& values = data->values();
@@ -822,7 +822,7 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
     while (couplingInterface.isCouplingOngoing()){
       validate(solverTwo->_dataContexts.size() > 0);
       impl::DataContext* dataContext = solverTwo->_dataContexts[dataID];
-      validate(dataContext != NULL);
+      validate(dataContext != nullptr);
       mesh::PtrData fromData = dataContext->fromData;
       mesh::PtrData toData = dataContext->toData;
       // no mapping, so fromData and toData should be the same data
@@ -1006,7 +1006,7 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
       }
       validate(solverOne->_dataContexts.size() > 0);
       impl::DataContext* dataContext = solverOne->_dataContexts[forcesID];
-      validate(dataContext != NULL);
+      validate(dataContext != nullptr);
       mesh::PtrData localForces = dataContext->fromData;
       validateEquals(forcesID, localForces->getID());
       utils::DynVector& forceValues = localForces->values();
@@ -1015,7 +1015,7 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
       maxDt = couplingInterface.advance(maxDt);
 
       dataContext = solverOne->_dataContexts[velocitiesID];
-      validate(dataContext != NULL);
+      validate(dataContext != nullptr);
       mesh::PtrData localVelocities = dataContext->toData;
       validateEquals(velocitiesID, localVelocities->getID());
       utils::DynVector& velocityValues = localVelocities->values();
@@ -1057,7 +1057,7 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
       }
       validate(solverTwo->_dataContexts.size() > 0);
       impl::DataContext* dataContext = solverTwo->_dataContexts[velocitiesID];
-      validate(dataContext != NULL);
+      validate(dataContext != nullptr);
       mesh::PtrData velocities = dataContext->fromData;
       validateEquals(velocitiesID, velocities->getID());
       utils::DynVector& values = velocities->values();
@@ -1066,7 +1066,7 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
       maxDt = couplingInterface.advance(maxDt);
 
       dataContext = solverTwo->_dataContexts[forcesID];
-      validate(dataContext != NULL);
+      validate(dataContext != nullptr);
       mesh::PtrData forces = dataContext->toData;
       //validateEquals(velocitiesID, localVelocities->getID());
       utils::DynVector& forceValues = forces->values();
@@ -1099,7 +1099,7 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
     impl::PtrParticipant solverOne = couplingInterface._impl->_participants[0];
     validateEquals(solverOne->getName(), "SolverOne");
     impl::DataContext* dataContext = solverOne->_dataContexts[velocitiesID];
-    validate(dataContext != NULL);
+    validate(dataContext != nullptr);
     mesh::PtrData localVelocities = dataContext->toData;
     validateEquals(velocitiesID, localVelocities->getID());
     utils::DynVector& velocityValues = localVelocities->values();
@@ -1141,7 +1141,7 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
     impl::PtrParticipant solverTwo = couplingInterface._impl->_participants[1];
     validateEquals(solverTwo->getName(), "SolverTwo");
     impl::DataContext* dataContext = solverTwo->_dataContexts[forcesID];
-    validate(dataContext != NULL);
+    validate(dataContext != nullptr);
     mesh::PtrData forces = dataContext->toData;
     validateEquals(forcesID, forces->getID());
     utils::DynVector& forceValues = forces->values();
@@ -1359,9 +1359,9 @@ void SolverInterfaceTest:: testDistributedCommunications()
     mesh::Mesh::resetGeometryIDsGlobally();
 
     std::string solverName;
-    int rank, size;
+    int rank = -1, size = -1;
     std::string meshName;
-    int i1,i2; //indices for data and positions
+    int i1 = -1 ,i2 = -1; //indices for data and positions
 
     std::vector<utils::DynVector> positions;
     std::vector<utils::DynVector> data;
@@ -1384,7 +1384,6 @@ void SolverInterfaceTest:: testDistributedCommunications()
       datum[2] = 1.0;
       expectedData.push_back(datum);
     }
-
 
     if (utils::Parallel::getProcessRank() == 0){
       solverName = "Fluid";

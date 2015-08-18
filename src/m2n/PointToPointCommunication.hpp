@@ -94,14 +94,14 @@ public:
    * @brief Sends a subset of local double values corresponding to local indices
    *        deduced from the current and remote vertex distributions.
    */
-  virtual void send(double* itemsToSend, int size, int valueDimension = 1);
+  virtual void send(double* itemsToSend, size_t size, int valueDimension = 1);
 
   /**
    * @brief Receives a subset of local double values corresponding to local
    *        indices deduced from the current and remote vertex distributions.
    */
   virtual void receive(double* itemsToReceive,
-                       int size,
+                       size_t size,
                        int valueDimension = 1);
 
 private:
@@ -127,6 +127,8 @@ private:
     int globalRemoteRank;
     std::vector<int> indices;
     com::Communication::SharedPointer communication;
+    com::Request::SharedPointer request;
+    size_t offset;
   };
 
   /**
@@ -134,8 +136,6 @@ private:
    *        mappings (one to service each point-to-point connection).
    */
   std::vector<Mapping> _mappings;
-
-  std::vector<com::Request::SharedPointer> _requests;
 
   std::vector<double> _buffer;
 

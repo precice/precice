@@ -53,7 +53,7 @@ void MPIDirectCommunicationTest:: testSendReceiveTwoProcesses ()
     std::string nameOdd  ( "odd" );
 
     if ( Par::getProcessRank() == 0 ) {
-      Par::initialize ( NULL, NULL, nameEven );
+      Par::splitCommunicator( nameEven );
       communication.acceptConnection ( nameEven, nameOdd, 0, 1 );
       int message = 1;
       communication.send ( message, 0 );
@@ -62,7 +62,7 @@ void MPIDirectCommunicationTest:: testSendReceiveTwoProcesses ()
       communication.closeConnection();
     }
     else if ( Par::getProcessRank() == 1 ) {
-      Par::initialize ( NULL, NULL, nameOdd );
+      Par::splitCommunicator( nameOdd );
       communication.requestConnection ( nameEven, nameOdd, 0, 1 );
       int message = -1;
       communication.receive ( message, 0 );

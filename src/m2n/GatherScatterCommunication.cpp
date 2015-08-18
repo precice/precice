@@ -64,17 +64,17 @@ void GatherScatterCommunication:: closeConnection()
 
 void GatherScatterCommunication:: send (
   double*    itemsToSend,
-  int        size,
+  size_t        size,
   int        valueDimension)
 {
   preciceTrace1("sendAll", size);
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
-  assertion(utils::MasterSlave::_communication.get() != NULL);
+  assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
   assertion(utils::MasterSlave::_size>1);
   assertion(utils::MasterSlave::_rank!=-1);
 
-  double* globalItemsToSend = NULL;
+  double* globalItemsToSend = nullptr;
 
   //gatherData
   if(utils::MasterSlave::_slaveMode){ //slave
@@ -85,7 +85,7 @@ void GatherScatterCommunication:: send (
   else{ //master
     assertion(utils::MasterSlave::_rank==0);
     std::map<int,std::vector<int> >& vertexDistribution = _mesh->getVertexDistribution();
-    int globalSize = _mesh->getGlobalNumberOfVertices()*valueDimension;
+    int globalSize = _mesh->getVertexOffsets().back()*valueDimension;
     preciceDebug("Global Size = " << globalSize);
     globalItemsToSend = new double[globalSize]();
 
@@ -113,7 +113,7 @@ void GatherScatterCommunication:: send (
     }
 
     //send data to other master
-    assertion(globalItemsToSend!=NULL);
+    assertion(globalItemsToSend!=nullptr);
     _com->send(globalItemsToSend, globalSize, 0);
     delete[] globalItemsToSend;
   } //master
@@ -127,21 +127,21 @@ void GatherScatterCommunication:: send (
  */
 void GatherScatterCommunication:: receive (
   double*   itemsToReceive,
-  int       size,
+  size_t       size,
   int       valueDimension)
 {
   preciceTrace1("receiveAll", size);
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
-  assertion(utils::MasterSlave::_communication.get() != NULL);
+  assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
   assertion(utils::MasterSlave::_size>1);
   assertion(utils::MasterSlave::_rank!=-1);
 
-  double* globalItemsToReceive = NULL;
+  double* globalItemsToReceive = nullptr;
 
   //receive data at master
   if(utils::MasterSlave::_masterMode){
-    int globalSize = _mesh->getGlobalNumberOfVertices()*valueDimension;
+    int globalSize = _mesh->getVertexOffsets().back()*valueDimension;
     preciceDebug("Global Size = " << globalSize);
     globalItemsToReceive = new double[globalSize];
     _com->receive(globalItemsToReceive, globalSize, 0);

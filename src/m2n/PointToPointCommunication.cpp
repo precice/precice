@@ -574,7 +574,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 
   _mappings.reserve(communicationMap.size());
 
-  for (int localRequesterRank = 0; localRequesterRank < communicationMap.size();
+  for (size_t localRequesterRank = 0; localRequesterRank < communicationMap.size();
        ++localRequesterRank) {
     int globalRequesterRank = -1;
 
@@ -587,10 +587,10 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
     // NOTE:
     // Everything is moved (efficiency)!
     _mappings.push_back(
-        {localRequesterRank,
-         globalRequesterRank,
-         std::move(indices),
-         // NOTE:
+      {static_cast<int>(localRequesterRank),
+          globalRequesterRank,
+          std::move(indices),
+          // NOTE:
          // On the acceptor participant side, the communication object `c'
          // behaves as a server, i.e. it implicitly accepts multiple connections
          // to requester processes (in the requester participant). As a result,
@@ -600,8 +600,6 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
          // duplicate references to the same communication object `c'.
          c});
   }
-
-  _requests.reserve(_mappings.size());
 
   _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
 
@@ -774,8 +772,6 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
   com::Request::wait(requests);
 
-  _requests.reserve(_mappings.size());
-
   _buffer.reserve(_totalIndexCount * _mesh->getDimensions());
 
   _isConnected = true;
@@ -794,8 +790,6 @@ PointToPointCommunication::closeConnection() {
 
   _mappings.clear();
 
-  _requests.clear();
-
   _buffer.clear();
 
   _localIndexCount = 0;
@@ -807,18 +801,9 @@ PointToPointCommunication::closeConnection() {
 
 void
 PointToPointCommunication::send(double* itemsToSend,
-                                int size,
+                                size_t size,
                                 int valueDimension) {
   Event e(_prefix + "PointToPointCommunication::send", true);
-
-  preciceInfo("send(double)",
-              "Size"
-                  << ":"
-                  << " " << size << ";"
-                  << " "
-                  << "Dimension"
-                  << ":"
-                  << " " << valueDimension << ".");
 
   if (_mappings.size() == 0) {
     preciceCheck(size == 0 && _localIndexCount == 0,
@@ -848,8 +833,8 @@ PointToPointCommunication::send(double* itemsToSend,
                    << " "
                    << "data sizes!");
 
-  for (auto const& mapping : _mappings) {
-    auto offset = _buffer.size();
+  for (auto& mapping : _mappings) {
+    mapping.offset = _buffer.size();
 
     for (auto index : mapping.indices) {
       for (int d = 0; d < valueDimension; ++d) {
@@ -857,35 +842,24 @@ PointToPointCommunication::send(double* itemsToSend,
       }
     }
 
-    auto request =
-        mapping.communication->aSend(_buffer.data() + offset,
+    mapping.request =
+        mapping.communication->aSend(_buffer.data() + mapping.offset,
                                      mapping.indices.size() * valueDimension,
                                      mapping.localRemoteRank);
-
-    _requests.push_back(request);
   }
 
-  com::Request::wait(_requests);
-
-  _requests.clear();
+  for (auto& mapping : _mappings) {
+    mapping.request->wait();
+  }
 
   _buffer.clear();
 }
 
 void
 PointToPointCommunication::receive(double* itemsToReceive,
-                                   int size,
+                                   size_t size,
                                    int valueDimension) {
   Event e(_prefix + "PointToPointCommunication::receive", true);
-
-  preciceInfo("receive(double)",
-              "Size"
-                  << ":"
-                  << " " << size << ";"
-                  << " "
-                  << "Dimension"
-                  << ":"
-                  << " " << valueDimension << ".");
 
   if (_mappings.size() == 0) {
     preciceCheck(size == 0 && _localIndexCount == 0,
@@ -917,30 +891,31 @@ PointToPointCommunication::receive(double* itemsToReceive,
 
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 
-  for (auto const& mapping : _mappings) {
-    auto offset = _buffer.size();
+  for (auto& mapping : _mappings) {
+    mapping.offset = _buffer.size();
 
     _buffer.resize(_buffer.size() + mapping.indices.size() * valueDimension);
 
-    mapping.communication->receive(_buffer.data() + offset,
-                                   mapping.indices.size() * valueDimension,
-                                   mapping.localRemoteRank);
-
-    {
-      int i = 0;
-
-      for (auto index : mapping.indices) {
-        for (int d = 0; d < valueDimension; ++d) {
-          itemsToReceive[index * valueDimension + d] +=
-              _buffer[offset + i * valueDimension + d];
-        }
-
-        i++;
-      }
-    }
+    mapping.request =
+        mapping.communication->aReceive(_buffer.data() + mapping.offset,
+                                        mapping.indices.size() * valueDimension,
+                                        mapping.localRemoteRank);
   }
 
-  _requests.clear();
+  for (auto& mapping : _mappings) {
+    mapping.request->wait();
+
+    int i = 0;
+
+    for (auto index : mapping.indices) {
+      for (int d = 0; d < valueDimension; ++d) {
+        itemsToReceive[index * valueDimension + d] +=
+            _buffer[mapping.offset + i * valueDimension + d];
+      }
+
+      i++;
+    }
+  }
 
   _buffer.clear();
 }

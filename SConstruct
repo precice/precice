@@ -10,7 +10,7 @@ import sys
 
 def uniqueCheckLib(conf, lib):
     """ Checks for a library and appends it to env if not already appended. """
-    if conf.CheckLib(lib, autoadd=0):
+    if conf.CheckLib(lib, autoadd=0, language="C++"):
         conf.env.AppendUnique(LIBS = [lib])
         return True
     else:
@@ -49,35 +49,6 @@ def checkset_var(varname, default):
         vprint(varname, var, False)
     return var
 
-def guess_omp_flag(compiler):
-    """ Guess the right flag to enable OpenMP, depending on the compiler / MPI wrapper. """
-    if compiler.startswith("g++"):
-        return "-fopenmp"
-    elif compiler.startswith("icc"):
-        return "-openmp"
-    elif compiler.startswith("clang"):
-        print "Clang does not support OpenMP."
-        return ""
-    elif compiler.startswith("mpi"):
-        try:
-            output = subprocess.check_output("%s -show" % compiler, shell=True)
-        except OSError as e:
-            print "Error checking for MPI compiler"
-            print e
-        except subprocess.CalledProcessError as e:
-            print "Error testing for OpenMP flag."
-            print "Command was:", e.cmd, "Output was:", e.output
-        else:
-            return guess_omp_flag(output.split()[0])
-
-def CheckOpenMP(context):
-    """ Encapsulate guess_omp_flag into a scons test. """
-    context.Message("Checking for OpenMP flag... ")
-    result = guess_omp_flag(context.env["compiler"])
-    context.Result(result)
-    context.env.Append(CCFLAGS = [result])
-    context.env.Append(LINKFLAGS = [result])
-
 
 
 ########################################################################## MAIN
@@ -87,7 +58,6 @@ vars = Variables(None, ARGUMENTS)
 vars.Add(PathVariable("builddir", "Directory holding build files.", "build", PathVariable.PathAccept))
 vars.Add(EnumVariable('build', 'Build type, either release or debug', "debug", allowed_values=('release', 'debug')))
 vars.Add("compiler", "Compiler to use.", "g++")
-vars.Add(BoolVariable("omp", "Enables OpenMP-based parallelization.", False))
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
 vars.Add(BoolVariable("sockets", "Enables Socket-based communication.", True))
 vars.Add(BoolVariable("boost_inst", "Enable if Boost is available compiled and installed.", False))
@@ -98,9 +68,7 @@ vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 
 
 env = Environment(variables = vars, ENV = os.environ)   # For configuring build variables
-# env = Environment(ENV = os.environ)
-conf = Configure(env, custom_tests= { "CheckOpenMP" : CheckOpenMP}) # For checking libraries, headers, ...
-
+conf = Configure(env) # For checking libraries, headers, ...
 
 Help(vars.GenerateHelpText(env))
 env.Append(CPPPATH = ['#src'])
@@ -205,7 +173,6 @@ if env["compiler"] == 'icc':
 elif env["compiler"] == 'g++':
     pass
 elif env["compiler"] == "clang++":
-    env['ENV']['TERM'] = os.environ['TERM'] # colored compile messages from clang
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
 elif env["compiler"] == "g++-mp-4.9":
     # Some special treatment that seems to be necessary for Mac OS.
@@ -227,12 +194,6 @@ elif env["build"] == 'release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
 
-if env["omp"]:
-    conf.CheckOpenMP()
-else:
-    env.Append(CPPDEFINES = ['PRECICE_NO_OMP'])
-    buildpath += "-noomp"
-
 # ===== Petsc =====
 if env["petsc"]:
     if not env["mpi"]:
@@ -243,7 +204,7 @@ if env["petsc"]:
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
     env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
     if not uniqueCheckLib(conf, "petsc"):
-        errorMissingLib("petsc", "Petsc")
+        errorMissingLib("petsc", "PETSc")
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
@@ -264,7 +225,7 @@ else:
 if not conf.CheckCXXHeader('boost/array.hpp'):
     errorMissingHeader('boost/array.hpp', 'Boost')
 
-
+# ====== Spirit2 ======
 if not env["spirit2"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_SPIRIT2'])
     buildpath += "-nospirit2"
@@ -297,7 +258,7 @@ if env["sockets"]:
     uniqueCheckLib(conf, pthreadLib)
     env.AppendUnique(CPPPATH = [pthreadIncPath])
     if pthreadLib == 'pthread':
-        if not conf.CheckHeader('pthread.h'):
+        if not conf.CheckCXXHeader('pthread.h'):
             errorMissingHeader('pthread.h', 'POSIX Threads')
 
     if sys.platform.startswith('win') or sys.platform.startswith('msys'):
@@ -314,15 +275,17 @@ else:
 
 # ====== Python ======
 if env["python"]:
+    # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
+    env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
     env.AppendUnique(LIBPATH = [pythonLibPath])
     if not uniqueCheckLib(conf, pythonLib):
         errorMissingLib(pythonLib, 'Python')
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
-    if not conf.CheckHeader('Python.h'):
+    if not conf.CheckCXXHeader('Python.h'):
         errorMissingHeader('Python.h', 'Python')
     # Check for numpy header needs python header first to compile
-    if not conf.CheckHeader(['Python.h', 'arrayobject.h']):
-        errorMissingHeader('arrayobject.h', 'Python NumPy')
+    if not conf.CheckCXXHeader(['Python.h', 'numpy/arrayobject.h']):
+        errorMissingHeader('numpy/arrayobject.h', 'Python NumPy')
 else:
     buildpath += "-nopython"
     env.Append(CPPDEFINES = ['PRECICE_NO_PYTHON'])
@@ -364,11 +327,19 @@ if not env["boost_inst"]:
     print "... done"
 
 
-lib = env.StaticLibrary (
+staticlib = env.StaticLibrary (
     target = buildpath + '/libprecice',
     source = [sourcesPreCICE,
               sourcesBoost]
 )
+env.Alias("staticlib", staticlib)
+
+solib = env.SharedLibrary (
+    target = buildpath + '/libprecice',
+    source = [sourcesPreCICE,
+              sourcesBoost]
+)
+env.Alias("solib", solib)
 
 bin = env.Program (
     target = buildpath + '/binprecice',
@@ -383,7 +354,7 @@ symlink = env.Command(
     action = "ln -fns {} {}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(lib, bin, symlink)
+Default(staticlib, bin, symlink)
 AlwaysBuild(symlink)
 
 print "Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS])

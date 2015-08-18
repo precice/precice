@@ -40,7 +40,7 @@ void ExportVTKVoxelQueries:: exportQueries
   assertion (_voxelCenters.size() == _voxelHalflengths.size());
   assertion (_voxelCenters.size() == _containedElementCount.size());
 
-  for (size_t i=0; i < _voxelCenters.size(); i++) {
+  // for (auto & elem : _voxelCenters) {
 //    int vertexIndices[utils::Def::TWO_POWER_DIM];
 //    Vector result;
 //    for (int iCorner=0; iCorner < utils::Def::TWO_POWER_DIM; iCorner++) {
@@ -61,7 +61,7 @@ void ExportVTKVoxelQueries:: exportQueries
 //    int containedVisitables = _containedElementCount[i];
 //    assertion ( cellIndex != -1 );
 //    countContainedWriter->plotCell ( cellIndex, containedVisitables );
-  }
+  // }
 //  vtkWriter.writeToFile ( filename + ".vtk" );
 }
 

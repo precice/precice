@@ -160,9 +160,9 @@ void Sphere:: specializedCreate
         Vertex * v01 = getVertex ( *v0, *v1, dividedEdges, seed );
         Vertex * v12 = getVertex ( *v1, *v2, dividedEdges, seed );
         Vertex * v20 = getVertex ( *v2, *v0, dividedEdges, seed );
-        assertion ( v01 != NULL );
-        assertion ( v12 != NULL );
-        assertion ( v20 != NULL );
+        assertion ( v01 != nullptr );
+        assertion ( v12 != nullptr );
+        assertion ( v20 != nullptr );
         triangles.insert ( iter, std::make_tuple(v0, v01, v20) );
         triangles.insert ( iter, std::make_tuple(v01, v1, v12 ) );
         triangles.insert ( iter, std::make_tuple(v20, v12, v2 ) );
@@ -294,13 +294,13 @@ void Sphere:: specializedCreate
       Vertex * v0 = std::get<0> ( vertices );
       Vertex * v1 = std::get<1> ( vertices );
       Vertex * v2 = std::get<2> ( vertices );
-      assertion ( v0 != NULL );
-      assertion ( v1 != NULL );
-      assertion ( v2 != NULL );
+      assertion ( v0 != nullptr );
+      assertion ( v1 != nullptr );
+      assertion ( v2 != nullptr );
       Edge * e0 = getEdge ( *v0, *v1, edges, seed );
       Edge * e1 = getEdge ( *v1, *v2, edges, seed );
       Edge * e2 = getEdge ( *v2, *v0, edges, seed );
-      assertion ( e0 != NULL );
+      assertion ( e0 != nullptr );
       seed.createTriangle ( *e0, *e1, *e2 );
     }
   }
@@ -324,7 +324,7 @@ mesh::Vertex* Sphere:: getVertex
   if ( iter != dividedEdges.end() ) {
     return iter->second;
   }
-  mesh::Vertex* vertex = NULL;
+  mesh::Vertex* vertex = nullptr;
   if ( seed.getDimensions() == 2 ){ // 2D
     utils::Vector2D coords ( v0.getCoords() );
     coords += v1.getCoords();

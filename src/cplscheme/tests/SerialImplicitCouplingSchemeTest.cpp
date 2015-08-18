@@ -98,7 +98,7 @@ void SerialImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig);
 
   utils::configure(root, path);
-  validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != NULL);
+  validate(cplSchemeConfig._postProcConfig->getPostProcessing().get() != nullptr);
   meshConfig->setMeshSubIDs();
 }
 
@@ -133,7 +133,7 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   scheme.setExtrapolationOrder(1);
   scheme.setupDataMatrices(scheme.getSendData());
   CouplingData* cplData = scheme.getSendData(dataID);
-  validate(cplData != NULL);
+  validate(cplData != nullptr);
   validateEquals(cplData->values->size(), 1);
   validateEquals(cplData->oldValues.cols(), 2);
   validateEquals(cplData->oldValues.rows(), 1);
@@ -166,7 +166,7 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   scheme2.setExtrapolationOrder ( 2 );
   scheme2.setupDataMatrices (scheme2.getSendData());
   cplData = scheme2.getSendData ( dataID );
-  validate ( cplData != NULL );
+  validate ( cplData != nullptr );
   validateEquals ( cplData->values->size(), 1 );
   validateEquals ( cplData->oldValues.cols(), 3 );
   validateEquals ( cplData->oldValues.rows(), 1 );
@@ -257,6 +257,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    connect ( "participant0", "participant1", nameLocalParticipant, globalCom );
    runCoupling ( cplScheme, nameLocalParticipant, meshConfig, validIterations );
    globalCom->closeConnection();
+   utils::Parallel::clearGroups();
 }
 
 //void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureAsync ()
@@ -376,6 +377,7 @@ void SerialImplicitCouplingSchemeTest:: testConfiguredAbsConvergenceMeasureSynch
    runCoupling ( *cplSchemeConfig.getCouplingScheme(nameLocalParticipant),
                  nameLocalParticipant, *meshConfig, validIterations );
    m2n->closeConnection();
+   utils::Parallel::clearGroups();
 }
 
 void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronized ()
@@ -442,6 +444,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
    connect ( "participant0", "participant1", nameLocalParticipant, globalCom );
    runCoupling ( cplScheme, nameLocalParticipant, meshConfig, validIterations );
    globalCom->closeConnection();
+   utils::Parallel::clearGroups();
 }
 
 //void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureAsync ()
@@ -771,6 +774,7 @@ void SerialImplicitCouplingSchemeTest::
    runCouplingWithSubcycling (
       cplScheme, nameLocalParticipant, meshConfig, validIterations );
    globalCom->closeConnection();
+   utils::Parallel::clearGroups();
 }
 
 void SerialImplicitCouplingSchemeTest:: testInitializeData()
@@ -880,6 +884,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
     }
   }
   cplScheme.finalize();
+  utils::Parallel::clearGroups();
 }
 
 void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
@@ -1091,7 +1096,7 @@ void SerialImplicitCouplingSchemeTest:: connect
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
-  utils::Parallel::initialize ( NULL, NULL, localParticipant );
+  utils::Parallel::splitCommunicator( localParticipant );
   if ( participant0 == localParticipant ) {
     communication->requestMasterConnection ( participant1, participant0);
   }

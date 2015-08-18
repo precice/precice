@@ -18,6 +18,7 @@
 #include "utils/xml/ValidatorEquals.hpp"
 #include "utils/xml/ValidatorOr.hpp"
 #include "utils/Dimensions.hpp"
+#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace config {
@@ -54,6 +55,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   ATTR_ACTION_TYPE("type"),
   ATTR_FROM("from"),
   ATTR_SAFETY_FACTOR("safety-factor"),
+  ATTR_DECOMPOSITION("decomposition"),
   ATTR_PROVIDE("provide"),
   ATTR_MESH("mesh"),
   ATTR_COORDINATE("coordinate"),
@@ -61,6 +63,8 @@ ParticipantConfiguration:: ParticipantConfiguration
   ATTR_CONTEXT("context"),
   ATTR_NETWORK("network"),
   ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
+  VALUE_PRE_FILTER_POST_FILTER("pre-filter-post-filter"),
+  VALUE_BROADCAST_FILTER("broadcast-filter"),
   _dimensions(0),
   _meshConfig(meshConfiguration),
   _geometryConfig(geometryConfiguration),
@@ -159,14 +163,29 @@ ParticipantConfiguration:: ParticipantConfiguration
   attrFrom.setDefaultValue("");
   tagUseMesh.addAttribute(attrFrom);
   XMLAttribute<double> attrSafetyFactor(ATTR_SAFETY_FACTOR);
-  doc = "If a mesh is receiced from another partipant (see tag <from>), it needs to ";
+  doc = "If a mesh is receiced from another partipant (see tag <from>), it needs to be";
   doc += "decomposed on this participant (in master mode only). To speed up this process, ";
-  doc += "the receiving master pre-filters every mesh by bounding box information from the ";
-  doc += "local mesh. This safety factor defines how by which factor this local information ";
+  doc += "the receiving master can pre-filter every mesh by bounding box information from the ";
+  doc += "local mesh (see tag <decomposition>). This safety factor defines how by which factor this local information ";
   doc += "increased. An example: 0.1 means that the bounding box is 110% of its original size.";
   attrSafetyFactor.setDocumentation(doc);
   attrSafetyFactor.setDefaultValue(0.1);
   tagUseMesh.addAttribute(attrSafetyFactor);
+
+  XMLAttribute<std::string> attrDecomposition(ATTR_DECOMPOSITION);
+  doc = "If a mesh is receiced from another partipant (see tag <from>), it needs to be";
+  doc += "decomposed on this participant (in master mode only). To this end, ";
+  doc += "2 different variants are implemented: a pre-filter/post-filter strategy, ";
+  doc += "which is beneficial for a huge mesh and a low number of processors, and a ";
+  doc += "broadcast/filter strategy, which performs better for a very high number of ";
+  doc += "processors. Both results in the same distribution (if the safety factor is sufficiently large).";
+  attrDecomposition.setDocumentation(doc);
+  ValidatorEquals<std::string> valid1 ( VALUE_PRE_FILTER_POST_FILTER );
+  ValidatorEquals<std::string> valid2 ( VALUE_BROADCAST_FILTER);
+  attrDecomposition.setValidator ( valid1 || valid2 );
+  attrDecomposition.setDefaultValue(VALUE_BROADCAST_FILTER);
+  tagUseMesh.addAttribute(attrDecomposition);
+
   XMLAttribute<bool> attrProvide(ATTR_PROVIDE);
   doc = "A mesh might not be constructed by a geometry (see tags<geometry:...>), ";
   doc += "but by a solver directly. If this attribute is set to \"on\", the ";
@@ -439,6 +458,8 @@ void ParticipantConfiguration:: xmlTagCallback
     offset = tag.getDynVectorAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
     std::string from = tag.getStringAttributeValue(ATTR_FROM);
     double safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
+    std::string decomposition = tag.getStringAttributeValue(ATTR_DECOMPOSITION);
+    bool doesPreFiltering = (decomposition==VALUE_PRE_FILTER_POST_FILTER);
     if (safetyFactor < 0){
       std::ostringstream stream;
       stream << "Safety Factor must be positive or 0";
@@ -446,7 +467,7 @@ void ParticipantConfiguration:: xmlTagCallback
     }
     bool provide = tag.getBooleanAttributeValue(ATTR_PROVIDE);
     mesh::PtrMesh mesh = _meshConfig->getMesh(name);
-    if (mesh.get() == 0){
+    if (mesh.get() == nullptr){
       std::ostringstream stream;
       stream << "Participant \"" << _participants.back()->getName()
              << "\" uses mesh \"" << name << "\" which is not defined";
@@ -458,7 +479,7 @@ void ParticipantConfiguration:: xmlTagCallback
       std::string spacetreeName = _meshConfig->getSpacetreeName(name);
       spacetree = _spacetreeConfig->getSpacetree ( spacetreeName );
     }
-    _participants.back()->useMesh ( mesh, geo, spacetree, offset, false, from, safetyFactor, provide );
+    _participants.back()->useMesh ( mesh, geo, spacetree, offset, false, from, safetyFactor, provide, doesPreFiltering );
   }
 //  else if ( tag.getName() == mapping::MappingConfiguration::TAG ) {
 //    return _mappingConfig->parseSubtag ( xmlReader );
@@ -522,7 +543,8 @@ void ParticipantConfiguration:: xmlTagCallback
   else if (tag.getNamespace() == TAG_MASTER){
     com::CommunicationConfiguration comConfig;
     com::Communication::SharedPointer com = comConfig.createCommunication(tag);
-    _participants.back()->setMasterSlaveCommunication(com);
+    utils::MasterSlave::_communication = com;
+    _participants.back()->setUseMaster(true);
   }
 }
 
@@ -633,7 +655,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     mappingContext->timing = confMapping.timing;
 
     mapping::PtrMapping& map = mappingContext->mapping;
-    assertion(map.get() == NULL);
+    assertion(map.get() == nullptr);
     map = confMapping.mapping;
 
     const mesh::PtrMesh& input = fromMeshContext.mesh;

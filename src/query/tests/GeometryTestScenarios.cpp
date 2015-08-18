@@ -10,24 +10,24 @@ namespace tests {
 
 GeometryTestScenarios:: GeometryTestScenarios()
 :
-  _pointQueryScenario ( NULL ),
-  _positionQueryScenario ( NULL ),
-  _voxelQueryScenario ( NULL )
+  _pointQueryScenario ( nullptr ),
+  _positionQueryScenario ( nullptr ),
+  _voxelQueryScenario ( nullptr )
 {}
 
 GeometryTestScenarios:: ~GeometryTestScenarios()
 {
-  if ( _pointQueryScenario != NULL ){
+  if ( _pointQueryScenario != nullptr ){
     delete _pointQueryScenario;
-    _pointQueryScenario = NULL;
+    _pointQueryScenario = nullptr;
   }
-  if ( _positionQueryScenario != NULL ){
+  if ( _positionQueryScenario != nullptr ){
     delete _positionQueryScenario;
-    _positionQueryScenario = NULL;
+    _positionQueryScenario = nullptr;
   }
-  if ( _voxelQueryScenario != NULL ){
+  if ( _voxelQueryScenario != nullptr ){
     delete _voxelQueryScenario;
-    _voxelQueryScenario = NULL;
+    _voxelQueryScenario = nullptr;
   }
 }
 
@@ -67,7 +67,7 @@ GeometryTestScenarios:: pointQueryScenario
   int dim )
 {
   using utils::DynVector;
-  if ( _pointQueryScenario == NULL ){
+  if ( _pointQueryScenario == nullptr ){
     _pointQueryScenario = new PointQueryScenario(dim);
 
     // Create query mesh (square in 2D, cube in 3D)
@@ -105,7 +105,7 @@ GeometryTestScenarios:: positionQueryScenario
   int dim )
 {
   using utils::DynVector;
-  if ( _positionQueryScenario == NULL ){
+  if ( _positionQueryScenario == nullptr ){
     _positionQueryScenario = new PositionQueryScenario(dim);
 
     // Create query mesh (square in 2D, cube in 3D)
@@ -141,7 +141,7 @@ GeometryTestScenarios:: voxelQueryScenario
   int dim )
 {
   using utils::DynVector;
-  if ( _voxelQueryScenario == NULL ){
+  if ( _voxelQueryScenario == nullptr ){
     _voxelQueryScenario = new VoxelQueryScenario(dim);
 
     // Create query mesh (square in 2D, cube in 3D)
@@ -253,7 +253,7 @@ void GeometryTestScenarios:: addToPointQueryScenario
   double                  validDistance,
   const utils::DynVector& validDistanceVector )
 {
-  assertion ( _pointQueryScenario != NULL );
+  assertion ( _pointQueryScenario != nullptr );
   _pointQueryScenario->queryCoords.push_back ( queryCoord );
   _pointQueryScenario->validDistances.push_back ( validDistance );
   _pointQueryScenario->validDistanceVectors.push_back ( validDistanceVector );

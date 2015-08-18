@@ -71,13 +71,25 @@ VertexIterator & VertexIterator:: operator=
 
 VertexIterator:: ~VertexIterator()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   delete _impl;
 }
 
-VertexIterator& VertexIterator:: operator++(int)
+VertexIterator& VertexIterator:: operator++(int unused)
+{
+  auto &result = *this;
+  _impl->iterator++;
+  return result;
+}
+
+VertexIterator& VertexIterator::operator++()
 {
   _impl->iterator++;
+  return *this;
+}
+
+VertexIterator& VertexIterator::operator*()
+{
   return *this;
 }
 
@@ -144,7 +156,7 @@ EdgeIterator:: EdgeIterator
 
 EdgeIterator:: ~EdgeIterator()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   delete _impl;
 }
 
@@ -219,7 +231,7 @@ TriangleIterator:: TriangleIterator
 
 TriangleIterator:: ~TriangleIterator ()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   delete _impl;
 }
 

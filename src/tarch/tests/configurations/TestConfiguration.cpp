@@ -54,7 +54,7 @@ bool tarch::tests::configurations::TestConfiguration::isValid() const {
 
 
 void tarch::tests::configurations::TestConfiguration::parseSubtag( tarch::irr::io::IrrXMLReader* xmlReader ) {
-  assertion( xmlReader != 0 );
+  assertion( xmlReader != nullptr );
 
   _isValid = true;
 

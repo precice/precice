@@ -9,6 +9,7 @@
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
+#include "utils/MasterSlave.hpp"
 #include <Eigen/Dense>
 #include <limits>
 #include <deque>
@@ -176,11 +177,26 @@ public:
     */
    void popBack();
    
+   /**
+    * @brief returns a matrix representation of the orthogonal matrix Q
+    */
    EigenMatrix& matrixQ();
+
+   /**
+    * @brief returns a matrix representation of the upper triangular matrix R
+    */
    EigenMatrix& matrixR();
    
+   // @brief returns the number of columns in the QR-decomposition
    int cols();
+   // @brief returns the number of rows in the QR-decomposition
    int rows();
+
+   // @brief optional file-stream for logging output
+   void setfstream(std::fstream* stream);
+
+   // @brief set number of global rows for the master-slave case
+   void setGlobalRows(int gr);
 
 private:
   
@@ -216,12 +232,19 @@ private:
   EigenMatrix _Q;
   EigenMatrix _R;
   
-  int _cols;
   int _rows;
+  int _cols;
+
   double _omega;
   double _theta;
   double _sigma;
   
+  // @brief optional infostream that writes information to file
+  std::fstream* _infostream;
+  bool _fstream_set;
+
+  int _globalRows;
+
 };
 
 }}} // namespace precice, cplscheme, impl

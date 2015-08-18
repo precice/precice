@@ -29,7 +29,7 @@ Communication::broadcast(int* itemsToSend, int size) {
 
   requests.reserve(getRemoteCommunicatorSize());
 
-  for (int rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemsToSend, size, rank + _rankOffset);
 
     requests.push_back(request);
@@ -53,7 +53,7 @@ Communication::broadcast(int itemToSend) {
 
   requests.reserve(getRemoteCommunicatorSize());
 
-  for (int rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(&itemToSend, rank + _rankOffset);
 
     requests.push_back(request);
@@ -77,7 +77,7 @@ Communication::broadcast(double* itemsToSend, int size) {
 
   requests.reserve(getRemoteCommunicatorSize());
 
-  for (int rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemsToSend, size, rank + _rankOffset);
 
     requests.push_back(request);
@@ -103,7 +103,7 @@ Communication::broadcast(double itemToSend) {
 
   requests.reserve(getRemoteCommunicatorSize());
 
-  for (int rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(&itemToSend, rank + _rankOffset);
 
     requests.push_back(request);

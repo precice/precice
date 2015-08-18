@@ -73,7 +73,7 @@ public:
 
 	//! construct from filename
 	CFileReadCallBack(const char* filename)
-		: File(0), Size(0), Close(true)
+		: File(nullptr), Size(0), Close(true)
 	{
 		// open file
 		File = fopen(filename, "rb");

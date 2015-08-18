@@ -6,8 +6,8 @@
 
 using namespace std;
 
-static precice::impl::SolverInterfaceImpl* implA = NULL;
-static precice::impl::SolverInterfaceImpl* implF = NULL;
+static precice::impl::SolverInterfaceImpl* implA = nullptr;
+static precice::impl::SolverInterfaceImpl* implF = nullptr;
 
 namespace precice {
   namespace impl {
@@ -50,7 +50,7 @@ void precice_fastest_initialize_
   double* timestepLengthLimit,
   const int*  useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     *timestepLengthLimit = implA->initialize();
@@ -63,7 +63,7 @@ void precice_fastest_initialize_
 void precice_fastest_initialize_data_(
   const int*  useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->initializeData();
@@ -78,7 +78,7 @@ void precice_fastest_advance_
   double* timestepLengthLimit,
   const int*  useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     *timestepLengthLimit = implA->advance(*timestepLengthLimit);
@@ -91,7 +91,7 @@ void precice_fastest_advance_
 void precice_fastest_finalize_(
   const int*  useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->finalize();
@@ -110,7 +110,7 @@ void precice_fastest_action_required_
   const int*  useF,
   int         lengthAction )
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
 
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
@@ -139,7 +139,7 @@ void precice_fastest_fulfilled_action_
   const int*  useF,
   int         lengthAction )
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   int strippedLength = precice::impl::strippedLength(action, lengthAction);
   string stringAction(action, strippedLength);
@@ -158,7 +158,7 @@ void precice_fastest_get_mesh_id_
   const int*  useF,
   int         lengthGeometryName )
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   int strippedLength = precice::impl::strippedLength(geometryName, lengthGeometryName);
   string stringGeometryName(geometryName, strippedLength);
@@ -179,7 +179,7 @@ void precice_fastest_get_data_id_
   int         lengthDataName
 )
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   int strippedLength = precice::impl::strippedLength(dataName, lengthDataName);
   string stringDataName(dataName, strippedLength);
@@ -198,7 +198,7 @@ void precice_fastest_set_vertex_
   int*          vertexID,
   const int*    useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     *vertexID = implA->setMeshVertex(*meshID, position);
@@ -216,7 +216,7 @@ void precice_fastest_set_vertices_
   int*          positionIDs,
   const int*    useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->setMeshVertices(*meshID, *size, positions, positionIDs);
@@ -234,7 +234,7 @@ void precice_fastest_write_bvdata_
   double*    values,
   const int* useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->writeBlockVectorData(*dataID, *size, valueIndices, values);
@@ -251,7 +251,7 @@ void precice_fastest_write_vdata_
   const double* dataValue,
   const int*    useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->writeVectorData(*dataID, *valueIndex, dataValue);
@@ -269,7 +269,7 @@ void precice_fastest_write_bsdata_
   double*    values,
   const int* useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->writeBlockScalarData(*dataID, *size, valueIndices, values);
@@ -286,7 +286,7 @@ void precice_fastest_write_sdata_
   const double* dataValue,
   const int*    useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->writeScalarData(*dataID, *valueIndex, *dataValue);
@@ -304,7 +304,7 @@ void precice_fastest_read_bvdata_
   double*    values,
   const int* useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->readBlockVectorData(*dataID, *size, valueIndices, values);
@@ -321,7 +321,7 @@ void precice_fastest_read_vdata_
   double*    dataValue,
   const int* useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->readVectorData(*dataID, *valueIndex, dataValue);
@@ -339,7 +339,7 @@ void precice_fastest_read_bsdata_
   double*    values,
   const int* useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->readBlockScalarData(*dataID, *size, valueIndices, values);
@@ -356,7 +356,7 @@ void precice_fastest_read_sdata_
   double*    dataValue,
   const int* useF)
 {
-  assertion(implA != NULL && implF != NULL );
+  assertion(implA != nullptr && implF != nullptr );
   assertion(*useF == 0 || *useF == 1);
   if(*useF==0){
     implA->readScalarData(*dataID, *valueIndex, *dataValue);

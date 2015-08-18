@@ -21,7 +21,7 @@ OctreeCell:: OctreeCell()
 
 OctreeCell:: ~OctreeCell()
 {
-  if (_content != NULL){
+  if (_content != nullptr){
     delete _content;
   }
   _childs.deleteElements();
@@ -32,7 +32,7 @@ bool OctreeCell:: needsRefinement
   const utils::DynVector& cellHalflengths,
   double                  refinementLimit )
 {
-  assertion(_content != NULL);
+  assertion(_content != nullptr);
   // All halflengths are assumed to be equal
   if (tarch::la::smaller(cellHalflengths[0], refinementLimit)){
     return false;
@@ -49,7 +49,7 @@ void OctreeCell:: refine
   const utils::DynVector& cellHalflengths )
 {
   preciceTrace2("refine()", cellCenter, cellHalflengths);
-  assertion(_content != NULL);
+  assertion(_content != nullptr);
   assertion1(_childs.size() == 0, _childs.size());
   int dim = cellCenter.size();
   int twoPowerDim = std::pow(2.0,dim);
@@ -89,7 +89,7 @@ void OctreeCell:: refine
     }
   }
   delete _content;
-  _content = NULL; // Important to recognize the cell as node
+  _content = nullptr; // Important to recognize the cell as node
 }
 
 int OctreeCell:: getChildIndex
@@ -147,7 +147,7 @@ void OctreeCell:: accept
 
 void OctreeCell:: clear()
 {
-  if (_content != NULL){
+  if (_content != nullptr){
     _content->clear();
   }
   else {

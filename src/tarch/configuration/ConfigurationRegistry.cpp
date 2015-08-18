@@ -97,8 +97,8 @@ void tarch::configuration::ConfigurationRegistry::addTopLevelConfigurationFactor
 }
 
 void tarch::configuration::ConfigurationRegistry::initTopLevelConfigurationFactories() {
-  for(size_t i = 0; i < _topLevelTagFactories.size(); ++i) {
-    _topLevelTagFactories[i]->init();
+  for(auto & elem : _topLevelTagFactories) {
+    elem->init();
   }
 }
 
@@ -107,8 +107,8 @@ void tarch::configuration::ConfigurationRegistry::writeDummyConfigFile(std::ostr
             << "<!--" << std::endl
             << "  This file enlists all the tags that are available. " << std::endl
             << "  ->" << std::endl;
-  for (TopLevelConfigurationContainer::const_iterator p = _topLevelTags.begin(); p!=_topLevelTags.end(); p++) {
-    p->second->toXML(out);
+  for (const auto & elem : _topLevelTags) {
+    elem.second->toXML(out);
   }
   std::cout << "</your-top-level-tag>" << std::endl;
 }
@@ -117,16 +117,16 @@ void tarch::configuration::ConfigurationRegistry::writeDummyConfigFile(std::ostr
 void tarch::configuration::ConfigurationRegistry::enlistAvailableTopLevelTags() const {
   std::ostringstream msg;
   msg << "available top level tags: ";
-  for (TopLevelConfigurationContainer::const_iterator p = _topLevelTags.begin(); p!=_topLevelTags.end(); p++) {
-    msg << "<" << p->first << "> ";
+  for (const auto & elem : _topLevelTags) {
+    msg << "<" << elem.first << "> ";
   }
   _log.info( "enlistAvailableTopLevelTags()", msg.str() );
 }
 
 
 void tarch::configuration::ConfigurationRegistry::freeConfigurations(std::list<TopLevelConfiguration*>& configurations) {
-  for (std::list<TopLevelConfiguration*>::iterator p = configurations.begin(); p!=configurations.end(); p++) {
-    delete *p;
+  for (auto & configuration : configurations) {
+    delete configuration;
   }
 }
 
@@ -139,7 +139,7 @@ tarch::configuration::ConfigurationRegistry::readFile(
   tarch::irr::io::IrrXMLReader* xmlReader =
     tarch::irr::io::createIrrXMLReader( filename.c_str() );
   
-  if ( (xmlReader==0) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
+  if ( (xmlReader==nullptr) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
     _log.error( "readFile(std::string,std::string)", "was not able to read input file " + filename );
     return std::list<tarch::configuration::TopLevelConfiguration*>();
   }
@@ -155,7 +155,7 @@ tarch::configuration::ConfigurationRegistry::readString(
   tarch::irr::io::IrrXMLReader* xmlReader =
     tarch::irr::io::createIrrXMLReaderFromString( configString );
   
-  if ( (xmlReader==0) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
+  if ( (xmlReader==nullptr) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
     _log.error( "readString(std::string,std::string)", "was not able to read input string" );
     return std::list<tarch::configuration::TopLevelConfiguration*>();
   }

@@ -128,49 +128,69 @@ public:
    * @brief Receives a std::string from process with given rank.
    *
    * Default MPI point-to-point communication is used.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(std::string& itemToReceive, int rankSender);
+  virtual void receive(std::string& itemToReceive, int rankSender);
 
   /**
    * @brief Receives an array of integer values.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(int* itemsToReceive, int size, int rankSender);
+  virtual void receive(int* itemsToReceive, int size, int rankSender);
+
+  /**
+   * @brief Asynchronously receives an array of integer values.
+   */
+  virtual Request::SharedPointer aReceive(int* itemsToReceive,
+                                          int size,
+                                          int rankSender);
 
   /**
    * @brief Receives an array of double values.
    */
-  virtual int receive(double* itemsToReceive, int size, int rankSender);
+  virtual void receive(double* itemsToReceive, int size, int rankSender);
+
+  /**
+   * @brief Asynchronously receives an array of double values.
+   */
+  virtual Request::SharedPointer aReceive(double* itemsToReceive,
+                                          int size,
+                                          int rankSender);
 
   /**
    * @brief Receives a double from process with given rank.
    *
    * Default MPI point-to-point communication is used.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(double& itemToReceive, int rankSender);
+  virtual void receive(double& itemToReceive, int rankSender);
+
+  /**
+   * @brief Asynchronously receives a double from process with given rank.
+   */
+  virtual Request::SharedPointer aReceive(double* itemToReceive,
+                                          int rankSender);
 
   /**
    * @brief Receives an int from process with given rank.
    *
    * Default MPI point-to-point communication is used.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(int& itemToReceive, int rankSender);
+  virtual void receive(int& itemToReceive, int rankSender);
+
+  /**
+   * @brief Asynchronously receives an int from process with given rank.
+   */
+  virtual Request::SharedPointer aReceive(int* itemToReceive, int rankSender);
 
   /**
    * @brief Receives a bool from process with given rank.
    *
    * Default MPI point-to-point communication is used.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(bool& itemToReceive, int rankSender);
+  virtual void receive(bool& itemToReceive, int rankSender);
+
+  /**
+   * @brief Asynchronously receives a bool from process with given rank.
+   */
+  virtual Request::SharedPointer aReceive(bool* itemToReceive, int rankSender);
 
 protected:
   /**

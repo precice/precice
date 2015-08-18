@@ -18,12 +18,12 @@ tarch::tests::TreeTestCaseCollection::TreeTestCaseCollection(const std::string& 
 
 tarch::tests::TreeTestCaseCollection::~TreeTestCaseCollection() {
   if (_deleteTestCases) {
-    for (std::list<tarch::tests::TestCase*>::iterator p = _testCases.begin(); p!=_testCases.end(); p++ ) {
-      tarch::tests::TestCase* currentTestCase = *p;
+    for (auto currentTestCase : _testCases) {
+      
       delete currentTestCase;
     }
-    for (std::map<std::string, TreeTestCaseCollection*>::iterator p = _subTests.begin(); p!=_subTests.end(); p++ ) {
-      TreeTestCaseCollection* currentTestCase = (*p).second;
+    for (auto & elem : _subTests) {
+      TreeTestCaseCollection* currentTestCase = (elem).second;
       delete currentTestCase;
     }
   }
@@ -31,11 +31,11 @@ tarch::tests::TreeTestCaseCollection::~TreeTestCaseCollection() {
 
 
 void tarch::tests::TreeTestCaseCollection::setUp() {
-  for (std::list<tarch::tests::TestCase*>::iterator p = _testCases.begin(); p!=_testCases.end(); p++ ) {
-    (*p)->setUp();
+  for (auto & elem : _testCases) {
+    (elem)->setUp();
   }
-  for (std::map<std::string, TreeTestCaseCollection*>::iterator p = _subTests.begin(); p!=_subTests.end(); p++ ) {
-    (*p).second->setUp();
+  for (auto & elem : _subTests) {
+    (elem).second->setUp();
   }
 }
 
@@ -78,13 +78,13 @@ void tarch::tests::TreeTestCaseCollection::run( const std::string& prefix ) {
   }
 
   std::string fullQualifiedName = _testCaseName.length()>0 ? prefix  +_testCaseName + "." : prefix;
-  for (std::map<std::string, TreeTestCaseCollection*>::iterator p = _subTests.begin(); p!=_subTests.end(); p++ ) {
-    (*p).second->run( fullQualifiedName );
-    _errors += (*p).second->getNumberOfErrors();
+  for (auto & elem : _subTests) {
+    (elem).second->run( fullQualifiedName );
+    _errors += (elem).second->getNumberOfErrors();
   }
   if (_errors == 0) {
-    for (std::list<tarch::tests::TestCase*>::iterator p = _testCases.begin(); p!=_testCases.end(); p++ ) {
-      tarch::tests::TestCase* currentTestCase = *p;
+    for (auto currentTestCase : _testCases) {
+      
       logInformation += ".";
       currentTestCase->run();
       int additionalErrors = currentTestCase->getNumberOfErrors();

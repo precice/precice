@@ -75,7 +75,6 @@ void SolverInterfaceTestGeometry:: run()
     testMethod(testBug3);
     testMethod(testBug4);
     testMethod(testBug5);
-//    testMethod(testBug6); // no bug actually
     testMethod(testUpdateSpacetree);
     testMethod(testMultipleMeshSpacetree);
     Par::setGlobalCommunicator(Par::getCommunicatorWorld());
@@ -658,12 +657,12 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   // Validate results
   impl::PtrParticipant p = precice._impl->_accessor;
   preciceDebug ( "Participant found");
-  validate(p != NULL);
+  validate(p != nullptr);
   preciceDebug ( "dataContexts: " << p->_dataContexts << " and dataID: " << dataID);
-  validate(p->_dataContexts[dataID] != NULL);
+  validate(p->_dataContexts[dataID] != nullptr);
   mesh::PtrData data = p->_dataContexts[dataID]->toData;
   preciceDebug ( "ToData found");
-  validate(data.get() != NULL);
+  validate(data.get() != nullptr);
   utils::DynVector& writtenValues = data->values();
 
   validateEquals(writtenValues.size(), 8);
@@ -1357,28 +1356,28 @@ void SolverInterfaceTestGeometry:: testUpdateSpacetree()
     double value[dim];
     value[0] = 0.1;
 
-    foriter (VertexIterator, iter, handle.vertices()){
+    for (VertexIterator iter : handle.vertices()) {
       interface.writeVectorData(dataID, iter.vertexID(), value);
       interface.inquirePosition(iter.vertexCoords(), std::set<int>());
     }
     interface.exportMesh(filename.str() + "1");
     interface.advance(1.0);
 
-    foriter (VertexIterator, iter, handle.vertices()){
+    for (VertexIterator iter : handle.vertices()) {
       interface.writeVectorData(dataID, iter.vertexID(), value);
       interface.inquirePosition(iter.vertexCoords(), std::set<int>());
     }
     interface.exportMesh(filename.str() + "2");
     interface.advance(1.0);
 
-    foriter (VertexIterator, iter, handle.vertices()){
+    for (VertexIterator iter : handle.vertices()) {
       interface.writeVectorData(dataID, iter.vertexID(), value);
       interface.inquirePosition(iter.vertexCoords(), std::set<int>());
     }
     interface.exportMesh(filename.str() + "3");
     interface.advance(1.0);
 
-    foriter (VertexIterator, iter, handle.vertices()){
+    for (VertexIterator iter : handle.vertices()) {
       interface.writeVectorData(dataID, iter.vertexID(), value);
       interface.inquirePosition(iter.vertexCoords(), std::set<int>());
     }

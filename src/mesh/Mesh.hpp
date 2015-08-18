@@ -278,12 +278,8 @@ public:
     return _vertexDistribution;
   }
 
-  int getGlobalNumberOfVertices(){
-    return _globalNumberOfVertices;
-  }
-
-  void setGlobalNumberOfVertices(int globalNumberOfVertices){
-    _globalNumberOfVertices = globalNumberOfVertices;
+  std::vector<int>& getVertexOffsets(){
+    return _vertexOffsets;
   }
 
   void setGlobalIndices(std::vector<int> globalIndices);
@@ -354,9 +350,9 @@ private:
   std::map<int,std::vector<int> > _vertexDistribution;
 
   /**
-   * @brief Global number of vertices for the master.
+   * @brief offsets between number of vertices of each slave, every proc holds this information,
    */
-  int _globalNumberOfVertices;
+  std::vector<int> _vertexOffsets;
 
   BoundingBox _boundingBox;
 };

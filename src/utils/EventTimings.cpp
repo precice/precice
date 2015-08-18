@@ -14,6 +14,10 @@
 #include <chrono>
 
 namespace precice {
+extern bool testMode;
+}
+
+namespace precice {
 namespace utils {
 
 Event::Event(std::string eventName, Clock::duration eventDuration)
@@ -165,14 +169,14 @@ void EventRegistry::put(Event* event)
 
 void EventRegistry::print(std::ostream &out, bool terse)
 {
-  if (not precice::utils::MasterSlave::_slaveMode) {
+  if (not precice::utils::MasterSlave::_slaveMode and not precice::testMode) {
     using std::endl;
     using std::setw; using std::setprecision;
     using std::left; using std::right;
     EventData::Properties allProps;
     Event::Clock::duration globalDuration = globalStop - globalStart;
 
-    std::time_t currentTime = std::time(NULL);
+    std::time_t currentTime = std::time(nullptr);
     out << "Run finished at " << std::asctime(std::localtime(&currentTime));
 
     if (not terse) {
@@ -246,7 +250,7 @@ void EventRegistry::print(std::string filename, bool terse)
 
 void EventRegistry::printGlobalDuration()
 {
-  if (precice::utils::MasterSlave::_slaveMode)
+  if (precice::utils::MasterSlave::_slaveMode || precice::testMode)
     return;
 
   Event::Clock::duration globalDuration = Event::Clock::now() - globalStart;

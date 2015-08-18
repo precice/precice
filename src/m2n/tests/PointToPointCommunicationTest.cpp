@@ -31,8 +31,8 @@ namespace tests {
 
 void
 process(vector<double>& data) {
-  for (int i = 0; i < data.size(); ++i) {
-    data[i] += MasterSlave::_rank + 1;
+  for (auto & elem : data) {
+    elem += MasterSlave::_rank + 1;
   }
 }
 
@@ -114,7 +114,7 @@ PointToPointCommunicationTest::test(
 
   switch (Parallel::getProcessRank()) {
   case 0: {
-    Parallel::initialize(NULL, NULL, "A.Master");
+    Parallel::splitCommunicator( "A.Master");
 
     MasterSlave::_rank = 0;
     MasterSlave::_size = 2;
@@ -124,7 +124,7 @@ PointToPointCommunicationTest::test(
     MasterSlave::_communication->acceptConnection("A.Master", "A.Slave", 0, 1);
     MasterSlave::_communication->setRankOffset(1);
 
-    mesh->setGlobalNumberOfVertices(10);
+    mesh->getVertexOffsets().push_back(10);
 
     mesh->getVertexDistribution()[0].push_back(0);
     mesh->getVertexDistribution()[0].push_back(1); // <-
@@ -144,7 +144,7 @@ PointToPointCommunicationTest::test(
     break;
   }
   case 1: {
-    Parallel::initialize(NULL, NULL, "A.Slave");
+    Parallel::splitCommunicator( "A.Slave");
 
     MasterSlave::_rank = 1;
     MasterSlave::_size = 2;
@@ -159,7 +159,7 @@ PointToPointCommunicationTest::test(
     break;
   }
   case 2: {
-    Parallel::initialize(NULL, NULL, "B.Master");
+    Parallel::splitCommunicator( "B.Master");
 
     MasterSlave::_rank = 0;
     MasterSlave::_size = 2;
@@ -169,7 +169,7 @@ PointToPointCommunicationTest::test(
     MasterSlave::_communication->acceptConnection("B.Master", "B.Slave", 0, 1);
     MasterSlave::_communication->setRankOffset(1);
 
-    mesh->setGlobalNumberOfVertices(10);
+    mesh->getVertexOffsets().push_back(10);
 
     mesh->getVertexDistribution()[0].push_back(1); // <-
     mesh->getVertexDistribution()[0].push_back(2);
@@ -189,7 +189,7 @@ PointToPointCommunicationTest::test(
     break;
   }
   case 3: {
-    Parallel::initialize(NULL, NULL, "B.Slave");
+    Parallel::splitCommunicator( "B.Slave");
 
     MasterSlave::_rank = 1;
     MasterSlave::_size = 2;
@@ -232,6 +232,7 @@ PointToPointCommunicationTest::test(
   MasterSlave::_slaveMode = false;
 
   Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
 }
 }
 }

@@ -5,6 +5,7 @@
 #include "RadialBasisFctMapping.hpp"
 #include "tarch/la/DynamicVector.h"
 #include "utils/MasterSlave.hpp"
+#include "utils/Petsc.hpp"
 #include <limits>
 #include <typeinfo>
 
@@ -150,7 +151,10 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
   delete[] _deadAxis;
-  KSPDestroy(&_solver);
+  // PetscErrorCode ierr = 0;
+  // Commenting out the next line most likely introduces a memory leak
+  // However, not commenting it out introduces a memory error, which remains untraceable
+  // ierr = KSPDestroy(&_solver); CHKERRV(ierr);
 }
 
 
@@ -455,7 +459,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetFromOptions(_solver);
 
-  // if (totalNNZ > 20*n) {
+  // if (totalNNZ > static_cast<size_t>(20*n)) {
   //   preciceDebug("Using Cholesky decomposition as direct solver for dense matrix.");
   //   PC prec;
   //   KSPSetType(_solver, KSPPREONLY);

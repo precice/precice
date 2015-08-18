@@ -39,6 +39,16 @@ public:
   static com::Communication::SharedPointer _communication;
 
   /**
+	* @brief Communication between neighboring slaves, backwards
+	*/
+  static com::Communication::SharedPointer _cyclicCommLeft;
+
+    /**
+   * @brief Communication between neighboring slaves, forward
+   */
+  static com::Communication::SharedPointer _cyclicCommRight;
+
+  /**
    * @brief Configure the master-slave communication.
    */
   static void configure(int rank, int size);
@@ -47,17 +57,21 @@ public:
    * @brief the l2 norm of a vector is calculated on distributed data.
    */
   static double l2norm(const DynVector& vec);
+  static double l2norm(const EigenVector& vec);
 
   /**
    * @brief the dot product of 2 vectors is calculated on distributed data.
    */
   static double dot(const DynVector& vec1, const DynVector& vec2);
+  static double dot(const EigenVector& vec1, const EigenVector& vec2);
 
   static void reset();
 
   static void broadcast(bool& value);
 
   static void broadcast(double& value);
+  
+  static void broadcast(double* values, int size);
 
 private:
 

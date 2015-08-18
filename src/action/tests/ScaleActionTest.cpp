@@ -192,7 +192,7 @@ void ScaleActionTest:: testConfiguration()
     utils::configure(tag, filename);
     validateEquals(config.actions().size(), 1);
     action::PtrAction action = config.actions().front();
-    validate(action.get() != NULL);
+    validate(action.get() != nullptr);
   }
   {
     preciceDebug("Test 2");
@@ -207,7 +207,7 @@ void ScaleActionTest:: testConfiguration()
     utils::configure(tag, filename);
     validateEquals(config.actions().size(), 1);
     action::PtrAction action = config.actions().front();
-    validate(action.get() != NULL);
+    validate(action.get() != nullptr);
   }
   {
     preciceDebug("Test 3");
@@ -222,7 +222,7 @@ void ScaleActionTest:: testConfiguration()
     utils::configure(tag, filename);
     validateEquals(config.actions().size(), 1);
     action::PtrAction action = config.actions().front();
-    validate(action.get() != NULL);
+    validate(action.get() != nullptr);
   }
   {
     preciceDebug("Test 4");
@@ -237,7 +237,7 @@ void ScaleActionTest:: testConfiguration()
     utils::configure(tag, filename);
     validateEquals(config.actions().size(), 1);
     action::PtrAction action = config.actions().front();
-    validate(action.get() != NULL);
+    validate(action.get() != nullptr);
   }
 }
 

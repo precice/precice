@@ -105,7 +105,7 @@ VoxelPosition & VoxelPosition:: operator=
 
 VoxelPosition:: ~VoxelPosition ()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   delete _impl;
 }
 
