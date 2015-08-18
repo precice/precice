@@ -657,7 +657,6 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	}
 
 	data.begin()->second->values = &newdvalues;
-
 	pp.performPostProcessing(data);
 
 	if (utils::Parallel::getProcessRank() == 0) { //Master
@@ -718,8 +717,6 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		std::cout<<"Slave 3: (*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
 		*/
 	}
-
-	utils::Parallel::synchronizeProcesses();
 
   utils::MasterSlave::_communication->closeConnection();
 

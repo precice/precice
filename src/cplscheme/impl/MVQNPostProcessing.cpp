@@ -49,45 +49,25 @@ MVQNPostProcessing:: MVQNPostProcessing
 //  _secondaryOldXTildes(),
   _invJacobian(),
   _oldInvJacobian(),
-  _cyclicCommLeft(),
-  _cyclicCommRight()
-{
-
-	/*
-	 * TODO: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
-	 * 				Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
-	 * 				The master-slave communication should be modified such that direct communication between
-	 * 				slaves is possible (via MPIDirect)
-	 */
-
-	 _cyclicCommLeft = com::Communication::SharedPointer(new com::MPIPortsCommunication("../"));
-	 _cyclicCommRight = com::Communication::SharedPointer(new com::MPIPortsCommunication("../"));
-
-	 // initialize cyclic communication between successive slaves
-	int prevProc = (utils::MasterSlave::_rank-1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank-1;
-	if((utils::MasterSlave::_rank % 2) == 0)
-	{
-	  _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1 );
-	  _cyclicCommRight->requestConnection("cyclicComm-" +  std::to_string(utils::MasterSlave::_rank), "", 0, 1 );
-	}else{
-	  _cyclicCommRight->requestConnection("cyclicComm-" +  std::to_string(utils::MasterSlave::_rank), "", 0, 1 );
-	  _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1 );
-	}
-
-}
+  _cyclicCommLeft(nullptr),
+  _cyclicCommRight(nullptr)
+{}
 
 MVQNPostProcessing::~MVQNPostProcessing()
 {
-	if((utils::MasterSlave::_rank % 2) == 0)
-	{
-	  _cyclicCommLeft->closeConnection();
-	  _cyclicCommRight->closeConnection();
-	}else{
-	  _cyclicCommRight->closeConnection();
-	  _cyclicCommLeft->closeConnection();
+	//if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){ // not possible because of tests, MasterSlave is deactivated when PP is killed
+	if(_cyclicCommRight != nullptr || _cyclicCommLeft != nullptr){
+		if((utils::MasterSlave::_rank % 2) == 0)
+		{
+		  _cyclicCommLeft->closeConnection();
+		  _cyclicCommRight->closeConnection();
+		}else{
+		  _cyclicCommRight->closeConnection();
+		  _cyclicCommLeft->closeConnection();
+		}
+		_cyclicCommRight = nullptr;
+		_cyclicCommLeft = nullptr;
 	}
-    _cyclicCommRight = nullptr;
-    _cyclicCommLeft = nullptr;
 }
 
 
@@ -98,6 +78,32 @@ void MVQNPostProcessing:: initialize
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
   
+
+  if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){
+		/*
+		 * TODO: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
+		 * 				Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
+		 * 				The master-slave communication should be modified such that direct communication between
+		 * 				slaves is possible (via MPIDirect)
+		 */
+
+
+		 _cyclicCommLeft = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
+		 _cyclicCommRight = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
+
+		 // initialize cyclic communication between successive slaves
+		int prevProc = (utils::MasterSlave::_rank-1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank-1;
+		if((utils::MasterSlave::_rank % 2) == 0)
+		{
+		  _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1 );
+		  _cyclicCommRight->requestConnection("cyclicComm-" +  std::to_string(utils::MasterSlave::_rank), "", 0, 1 );
+		}else{
+		  _cyclicCommRight->requestConnection("cyclicComm-" +  std::to_string(utils::MasterSlave::_rank), "", 0, 1 );
+		  _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1 );
+		}
+  }
+
+
   double init = 0.0;
   int entries = _residuals.size();
   int global_n = 0;
