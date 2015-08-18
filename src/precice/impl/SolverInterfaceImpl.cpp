@@ -2033,7 +2033,7 @@ void SolverInterfaceImpl:: mapWrittenData()
       preciceDebug("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
-      int max = context.fromData->values().size();
+      int max = context.toData->values().size();
       std::ostringstream stream;
       for (int i=0; (i < max) && (i < 10); i++){
         stream << context.toData->values()[i] << " ";

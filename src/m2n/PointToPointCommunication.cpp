@@ -574,7 +574,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 
   _mappings.reserve(communicationMap.size());
 
-  for (int localRequesterRank = 0; localRequesterRank < communicationMap.size();
+  for (size_t localRequesterRank = 0; localRequesterRank < communicationMap.size();
        ++localRequesterRank) {
     int globalRequesterRank = -1;
 
@@ -587,10 +587,10 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
     // NOTE:
     // Everything is moved (efficiency)!
     _mappings.push_back(
-        {localRequesterRank,
-         globalRequesterRank,
-         std::move(indices),
-         // NOTE:
+      {static_cast<int>(localRequesterRank),
+          globalRequesterRank,
+          std::move(indices),
+          // NOTE:
          // On the acceptor participant side, the communication object `c'
          // behaves as a server, i.e. it implicitly accepts multiple connections
          // to requester processes (in the requester participant). As a result,
@@ -801,7 +801,7 @@ PointToPointCommunication::closeConnection() {
 
 void
 PointToPointCommunication::send(double* itemsToSend,
-                                int size,
+                                size_t size,
                                 int valueDimension) {
   Event e(_prefix + "PointToPointCommunication::send", true);
 
@@ -857,7 +857,7 @@ PointToPointCommunication::send(double* itemsToSend,
 
 void
 PointToPointCommunication::receive(double* itemsToReceive,
-                                   int size,
+                                   size_t size,
                                    int valueDimension) {
   Event e(_prefix + "PointToPointCommunication::receive", true);
 

@@ -145,7 +145,10 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
   delete[] _deadAxis;
-  KSPDestroy(&_solver);
+  // PetscErrorCode ierr = 0;
+  // Commenting out the next line most likely introduces a memory leak
+  // However, not commenting it out introduces a memory error, which remains untraceable
+  // ierr = KSPDestroy(&_solver); CHKERRV(ierr);
 }
 
 
@@ -208,7 +211,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocCLoop);
   PetscLogEventBegin(logPreallocCLoop, 0, 0, 0, 0);
   PetscInt nnz[n]; // Number of non-zeros per row
-  unsigned int totalNNZ = 0; // Total number of non-zeros in matrix
+  size_t totalNNZ = 0; // Total number of non-zeros in matrix
   for (const mesh::Vertex& iVertex : inMesh->vertices()) {
     nnz[i] = 0;
     for (int j=iVertex.getID(); j < inputSize; j++) {
@@ -375,7 +378,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetFromOptions(_solver);
 
-  if (totalNNZ > 20*n) {
+  if (totalNNZ > static_cast<size_t>(20*n)) {
     preciceDebug("Using Cholesky decomposition as direct solver for dense matrix.");
     PC prec;
     KSPSetType(_solver, KSPPREONLY);

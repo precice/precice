@@ -10,7 +10,7 @@ import sys
 
 def uniqueCheckLib(conf, lib):
     """ Checks for a library and appends it to env if not already appended. """
-    if conf.CheckLib(lib, autoadd=0):
+    if conf.CheckLib(lib, autoadd=0, language="C++"):
         conf.env.AppendUnique(LIBS = [lib])
         return True
     else:
@@ -68,9 +68,7 @@ vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
 
 
 env = Environment(variables = vars, ENV = os.environ)   # For configuring build variables
-# env = Environment(ENV = os.environ)
 conf = Configure(env) # For checking libraries, headers, ...
-
 
 Help(vars.GenerateHelpText(env))
 env.Append(CPPPATH = ['#src'])
@@ -175,7 +173,6 @@ if env["compiler"] == 'icc':
 elif env["compiler"] == 'g++':
     pass
 elif env["compiler"] == "clang++":
-    env['ENV']['TERM'] = os.environ['TERM'] # colored compile messages from clang
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
 elif env["compiler"] == "g++-mp-4.9":
     # Some special treatment that seems to be necessary for Mac OS.
@@ -207,7 +204,7 @@ if env["petsc"]:
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
     env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
     if not uniqueCheckLib(conf, "petsc"):
-        errorMissingLib("petsc", "Petsc")
+        errorMissingLib("petsc", "PETSc")
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
@@ -228,7 +225,7 @@ else:
 if not conf.CheckCXXHeader('boost/array.hpp'):
     errorMissingHeader('boost/array.hpp', 'Boost')
 
-
+# ====== Spirit2 ======
 if not env["spirit2"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_SPIRIT2'])
     buildpath += "-nospirit2"
@@ -261,7 +258,7 @@ if env["sockets"]:
     uniqueCheckLib(conf, pthreadLib)
     env.AppendUnique(CPPPATH = [pthreadIncPath])
     if pthreadLib == 'pthread':
-        if not conf.CheckHeader('pthread.h'):
+        if not conf.CheckCXXHeader('pthread.h'):
             errorMissingHeader('pthread.h', 'POSIX Threads')
 
     if sys.platform.startswith('win') or sys.platform.startswith('msys'):
@@ -278,15 +275,17 @@ else:
 
 # ====== Python ======
 if env["python"]:
+    # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
+    env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
     env.AppendUnique(LIBPATH = [pythonLibPath])
     if not uniqueCheckLib(conf, pythonLib):
         errorMissingLib(pythonLib, 'Python')
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
-    if not conf.CheckHeader('Python.h'):
+    if not conf.CheckCXXHeader('Python.h'):
         errorMissingHeader('Python.h', 'Python')
     # Check for numpy header needs python header first to compile
-    if not conf.CheckHeader(['Python.h', 'arrayobject.h']):
-        errorMissingHeader('arrayobject.h', 'Python NumPy')
+    if not conf.CheckCXXHeader(['Python.h', 'numpy/arrayobject.h']):
+        errorMissingHeader('numpy/arrayobject.h', 'Python NumPy')
 else:
     buildpath += "-nopython"
     env.Append(CPPDEFINES = ['PRECICE_NO_PYTHON'])

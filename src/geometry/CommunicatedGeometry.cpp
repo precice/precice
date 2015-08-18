@@ -86,8 +86,10 @@ void CommunicatedGeometry:: sendMesh(
   preciceInfo("sendMesh()", "Gather mesh " << seed.getName() );
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ) {
     Event e("gather mesh");
+    seed.getVertexOffsets().resize(utils::MasterSlave::_size);
     if (utils::MasterSlave::_slaveMode) {
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh( seed, 0 );
+      utils::MasterSlave::_communication->broadcast(seed.getVertexOffsets().data(),utils::MasterSlave::_size,0);
     }
     else{ // Master
       assertion(utils::MasterSlave::_rank==0);
@@ -99,6 +101,7 @@ void CommunicatedGeometry:: sendMesh(
         seed.getVertexDistribution()[0].push_back(numberOfVertices);
         numberOfVertices++;
       }
+      seed.getVertexOffsets()[0] = numberOfVertices;
 
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
         int vertexCount1 = globalMesh.vertices().size();
@@ -110,8 +113,9 @@ void CommunicatedGeometry:: sendMesh(
           seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
           numberOfVertices++;
         }
+        seed.getVertexOffsets()[rankSlave] = numberOfVertices;
       }
-      seed.setGlobalNumberOfVertices(numberOfVertices);
+      utils::MasterSlave::_communication->broadcast(seed.getVertexOffsets().data(),utils::MasterSlave::_size);
     }
   }
 
@@ -141,6 +145,7 @@ void CommunicatedGeometry:: receiveMesh(
     com::CommunicateMesh(m2n->getMasterCommunication()).receiveMesh ( seed, 0 );
   }
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
+    seed.getVertexOffsets().resize(utils::MasterSlave::_size);
     _decomposition->decompose(seed);
   }
 }

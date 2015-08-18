@@ -40,7 +40,7 @@ Mesh:: Mesh
   _manageQuadIDs(),
   _listeners(),
   _vertexDistribution(),
-  _globalNumberOfVertices(-1),
+  _vertexOffsets(),
   _boundingBox()
 {
   if (_managerPropertyIDs == nullptr){

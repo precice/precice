@@ -340,6 +340,19 @@ void CommunicatedGeometryTest:: testGatherMesh ()
     CommunicatedGeometry geo( offset, "SOLIDZMaster", "SOLIDZMaster", nullptr);
     geo.addReceiver("NASTIN", m2n);
     geo.create(*pSolidzMesh);
+
+    if(utils::Parallel::getProcessRank() == 2){//Slave1
+      validate(pSolidzMesh->getVertexOffsets()[0]==2);
+      validate(pSolidzMesh->getVertexOffsets()[1]==2);
+      validate(pSolidzMesh->getVertexOffsets()[2]==6);
+    }
+    else if(utils::Parallel::getProcessRank() == 3){//Slave2
+      validate(pSolidzMesh->getVertexOffsets()[0]==2);
+      validate(pSolidzMesh->getVertexOffsets()[1]==2);
+      validate(pSolidzMesh->getVertexOffsets()[2]==6);
+    }
+
+
   }
   utils::MasterSlave::_slaveMode = false;
   utils::MasterSlave::_masterMode = false;

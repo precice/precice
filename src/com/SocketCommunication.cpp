@@ -60,8 +60,7 @@ SocketCommunication::isConnected() {
   return _isConnected;
 }
 
-int
-SocketCommunication::getRemoteCommunicatorSize() {
+size_t SocketCommunication::getRemoteCommunicatorSize() {
   preciceTrace("getRemoteCommunicatorSize()");
 
   assertion(isConnected());

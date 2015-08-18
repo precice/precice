@@ -481,12 +481,13 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
                  "Unknown mapping constraint \"" << constraint << "\"!");
   }
 
-  //for petsc initialization
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-
+  # ifndef PRECICE_NO_PETSC
+    // for petsc initialization
+    int argc = 1;
+    char* arg = new char[8];
+    strcpy(arg, "precice");
+    char** argv = &arg;
+  #endif
   if (type == VALUE_NEAREST_NEIGHBOR){
     configuredMapping.mapping = PtrMapping (
         new NearestNeighborMapping(constraintValue, dimensions) );

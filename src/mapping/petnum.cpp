@@ -174,7 +174,7 @@ Matrix::Matrix(MPI_Comm comm, std::string name)
 Matrix::~Matrix()
 {
   PetscErrorCode ierr = 0;
-  ierr = MatDestroy(&matrix); CHKERRV(ierr);
+  // ierr = MatDestroy(&matrix); CHKERRV(ierr);
 }
 
 void Matrix::reset()

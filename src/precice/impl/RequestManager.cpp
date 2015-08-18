@@ -23,8 +23,7 @@ RequestManager:: RequestManager
   _isGeometryMode(geometryMode),
   _interface(solverInterfaceImpl),
   _com(clientServerCommunication),
-  _couplingScheme(couplingScheme),
-  _lockServerToClient(-1)
+  _couplingScheme(couplingScheme)
 {}
 
 void RequestManager:: handleRequests()
@@ -233,7 +232,7 @@ void RequestManager:: handleRequests()
       singleRequest = false;
     }
     else if(collectiveRequest){
-      assertion(clientRanks.size()==clientCommSize);
+      assertion(clientRanks.size()== static_cast<size_t>(clientCommSize));
       for(int rank : clientRanks){
         requests[rank] = _com->aReceive(&(requestIDs[rank]), rank);
       }
@@ -888,7 +887,8 @@ void RequestManager:: handleRequestSetMeshVertices
   _com->receive(meshID, rankSender);
   int size = -1;
   _com->receive(size, rankSender);
-  assertionMsg(size > 0, size);
+  preciceCheck(size > 0, "handleRequestSetMeshVertices()",
+                     "You cannot call setMeshVertices with size=0.");
   double* positions = new double[size*_interface.getDimensions()];
   _com->receive(positions, size*_interface.getDimensions(), rankSender);
   int* ids = new int[size];
