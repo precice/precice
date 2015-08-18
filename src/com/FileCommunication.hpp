@@ -45,8 +45,7 @@ public:
    *
    * Precondition: a connection to the remote participant has been setup.
    */
-  virtual int
-  getRemoteCommunicatorSize() {
+  virtual size_t getRemoteCommunicatorSize() {
     return 1;
   };
 

@@ -94,14 +94,14 @@ public:
    * @brief Sends a subset of local double values corresponding to local indices
    *        deduced from the current and remote vertex distributions.
    */
-  virtual void send(double* itemsToSend, int size, int valueDimension = 1);
+  virtual void send(double* itemsToSend, size_t size, int valueDimension = 1);
 
   /**
    * @brief Receives a subset of local double values corresponding to local
    *        indices deduced from the current and remote vertex distributions.
    */
   virtual void receive(double* itemsToReceive,
-                       int size,
+                       size_t size,
                        int valueDimension = 1);
 
 private:

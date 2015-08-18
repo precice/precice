@@ -8,6 +8,7 @@
 #include <mpi.h>
 #endif
 #include <cmath>
+#include <cstdlib>
 #include <iostream>
 
 /**
@@ -186,30 +187,30 @@
     std::cerr << "  numerical equality test failed: " << actualValue << " instead of " << validValue << std::endl \
               << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
               << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
-              << "  difference:  " << fabs((actualValue)-(validValue)) << std::endl; \
+              << "  difference:  " << std::abs((actualValue)-(validValue)) << std::endl; \
     return;\
   }
 
 #define validateNumericalEqualsWithEps(actualValue, validValue, eps) \
-  if (  (fabs((actualValue) - (validValue)) > eps ) ) { \
+  if (  (std::abs((actualValue) - (validValue)) > eps ) ) { \
     _errors++; \
     _error = true; \
     std::cerr << "  numerical equality test failed: " << actualValue << " instead of " << validValue << std::endl \
               << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
               << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
-              << "  difference:  " << fabs((actualValue)-(validValue)) << std::endl; \
+              << "  difference:  " << std::abs((actualValue)-(validValue)) << std::endl; \
     return;\
   }
 
 #define validateNumericalEqualsWithEpsWithParams1(actualValue, validValue, eps, param0) \
-  if (  (fabs((actualValue) - (validValue)) > eps ) ) { \
+  if (  (std::abs((actualValue) - (validValue)) > eps ) ) { \
     _errors++; \
     _error = true; \
     std::cerr<< "  numerical equality test failed: " << actualValue << " instead of " << validValue << std::endl \
               << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
               << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
               << "  parameter " << #param0 << "=" << param0 << std::endl \
-              << "  difference:  " << fabs((actualValue)-(validValue)) << std::endl; \
+              << "  difference:  " << std::abs((actualValue)-(validValue)) << std::endl; \
     return;\
   }
 
@@ -220,7 +221,7 @@
               << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
               << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
               << "  parameter " << #param0 << "=" << param0 << std::endl \
-              << "  difference:  " << fabs((actualValue)-(validValue)) << std::endl; \
+              << "  difference:  " << std::abs((actualValue)-(validValue)) << std::endl; \
     return;\
   }
 
@@ -231,7 +232,7 @@
               << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
               << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
               << "  parameter " << #param0 << "=" << param0 << ", parameter " << #param1 << "=" << param1 << std::endl \
-              << "  difference:  " << fabs((actualValue)-(validValue)) << std::endl; \
+              << "  difference:  " << std::abs((actualValue)-(validValue)) << std::endl; \
     return;\
   }
 
@@ -242,7 +243,7 @@
               << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
               << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
               << "  parameter " << #param0 << "=" << param0 << ", parameter " << #param1 << "=" << param1 << ", parameter " << #param2 << "=" << param2 << std::endl \
-              << "  difference:  " << fabs((actualValue)-(validValue)) << std::endl; \
+              << "  difference:  " << std::abs((actualValue)-(validValue)) << std::endl; \
     return;\
   }
 
@@ -253,7 +254,7 @@
               << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
               << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
               << "  parameter " << #param0 << "=" << param0 << ", parameter " << #param1 << "=" << param1 << ", parameter " << #param2 << "=" << param2 << ", parameter " << #param3 << "=" << param3 << std::endl \
-              << "  difference:  " << fabs((actualValue)-(validValue)) << std::endl; \
+              << "  difference:  " << std::abs((actualValue)-(validValue)) << std::endl; \
     return;\
   }
 
@@ -264,7 +265,7 @@
               << "  file: " << __FILE__ << " \t line: " << __LINE__ << std::endl \
               << "  statement: " << #actualValue << "=="  << #validValue << std::endl \
               << "  parameter " << #param0 << "=" << param0 << ", parameter " << #param1 << "=" << param1 << ", parameter " << #param2 << "=" << param2 << ", parameter " << #param3 << "=" << param3<< ", parameter " << #param4 << "=" << param4 << std::endl \
-              << "  difference:  " << fabs((actualValue)-(validValue)) << std::endl; \
+              << "  difference:  " << std::abs((actualValue)-(validValue)) << std::endl; \
     return;\
   }
 
