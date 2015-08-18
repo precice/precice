@@ -580,7 +580,11 @@ void SolverInterfaceImpl:: finalize()
     utils::MasterSlave::_communication = nullptr;
   }
 
-  if(not precice::testMode){
+  if(_serverMode){
+    _accessor->getClientServerCommunication()->closeConnection();
+  }
+
+  if(not precice::testMode && not _serverMode ){
     utils::Petsc::finalize();
     utils::Parallel::finalizeMPI();
   }
