@@ -133,7 +133,7 @@ void CuboidTest:: testSubIDs2D ()
 
   // Test geometry IDs of vertices
   using tarch::la::equals;
-  foreach ( mesh::Vertex& vertex, mesh.vertices() ) {
+  for (mesh::Vertex& vertex : mesh.vertices()) {
     std::vector<int> geometryIDs;
     vertex.getProperties ( vertex.INDEX_GEOMETRY_ID, geometryIDs );
     if ( equals(vertex.getCoords(), Vector2D(0.0, 0.0)) ) {
@@ -163,7 +163,7 @@ void CuboidTest:: testSubIDs2D ()
   }
 
   // Test geometry IDs of edges
-  foreach ( mesh::Edge& edge, mesh.edges() ) {
+  for (mesh::Edge& edge : mesh.edges()) {
     std::vector<int> geometryIDs;
     edge.getProperties ( edge.INDEX_GEOMETRY_ID, geometryIDs );
     if ( equals(edge.getCenter(), Vector2D(0.5, 0.0)) ) {
@@ -216,7 +216,7 @@ void CuboidTest:: testSubIDs3D ()
   validateEquals ( mesh.triangles().size(), 12 );
 
   // Test geometry IDs of vertices
-  foreach ( mesh::Vertex& vertex, mesh.vertices() ) {
+  for (mesh::Vertex& vertex : mesh.vertices()) {
     std::vector<int> geometryIDs;
     vertex.getProperties ( vertex.INDEX_GEOMETRY_ID, geometryIDs );
     if ( equals(vertex.getCoords(), Vector3D(0.0, 0.0, 0.0)) ) {
@@ -269,7 +269,7 @@ void CuboidTest:: testSubIDs3D ()
     }
 
     // Test geometryIDs of edges
-    foreach ( mesh::Edge & edge, mesh.edges() ) {
+    for (mesh::Edge & edge : mesh.edges()) {
       std::vector<int> geometryIDs;
       edge.getProperties ( edge.INDEX_GEOMETRY_ID, geometryIDs );
       if ( equals(edge.getCenter(),Vector3D(0.5, 0.0, 0.0)) ) {
@@ -366,7 +366,7 @@ void CuboidTest:: testSubIDs3D ()
     }
 
     // Test geometryIDs of edges
-    foreach ( mesh::Triangle & triangle, mesh.triangles() ) {
+    for (mesh::Triangle & triangle : mesh.triangles()) {
       std::vector<int> geometryIDs;
       triangle.getProperties ( triangle.INDEX_GEOMETRY_ID, geometryIDs );
       if ( tarch::la::equals(triangle.getCenter()(0), 0.0) ) {

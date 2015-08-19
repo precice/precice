@@ -68,7 +68,7 @@ void BalanceVertexPositionAction:: performAction
     assign(pullVectorScalings) = 0.0;
     // Gather pull vectors
     if ( dimension == 2 ){
-      foreach ( mesh::Edge& edge, mesh->edges() ){
+      for (mesh::Edge& edge : mesh->edges() ) {
         mesh::Vertex& v0 = edge.vertex(0);
         mesh::Vertex& v1 = edge.vertex(1);
         Vector2D ab = v0.getCoords();
@@ -83,7 +83,7 @@ void BalanceVertexPositionAction:: performAction
     }
     else {
       assertion ( dimension == 3 );
-      foreach ( const mesh::Triangle& triangle, mesh->triangles() ){
+      for (const mesh::Triangle& triangle : mesh->triangles()) {
         const mesh::Vertex& v0 = triangle.vertex(0);
         const mesh::Vertex& v1 = triangle.vertex(1);
         const mesh::Vertex& v2 = triangle.vertex(2);
@@ -114,7 +114,7 @@ void BalanceVertexPositionAction:: performAction
       pullVectors[i] /= pullVectorScalings[i];
     }
     // Project pull vector to get vertex displacement
-    foreach ( mesh::Vertex& vertex, mesh->vertices() ){
+    for (mesh::Vertex& vertex : mesh->vertices()) {
       if ( dimension == 2 ){
         Vector2D point = vertex.getCoords();
         assertion1 ( vertex.getID() < pullVectors.size(), vertex.getID() );
