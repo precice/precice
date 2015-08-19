@@ -234,9 +234,9 @@ void ParallelCouplingScheme::implicitAdvance()
       if (convergence) {
         timestepCompleted();
       }
-      if (isCouplingOngoing()) {
+      //if (isCouplingOngoing()) {
         receiveData(getM2N());
-      }
+      //}
       getM2N()->finishReceivePackage();
     }
     else { // second participant
@@ -263,7 +263,7 @@ void ParallelCouplingScheme::implicitAdvance()
       getM2N()->startSendPackage(0);
       getM2N()->send(convergence);
 
-      if (isCouplingOngoing()) {
+      //if (isCouplingOngoing()) {
         if (convergence && (getExtrapolationOrder() > 0)){
           extrapolateData(getAllData()); // Also stores data
         }
@@ -280,7 +280,7 @@ void ParallelCouplingScheme::implicitAdvance()
           }
         }
         sendData(getM2N());
-      }
+      //}
       getM2N()->finishSendPackage();
     }
 

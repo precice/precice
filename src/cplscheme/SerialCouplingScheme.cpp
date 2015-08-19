@@ -209,9 +209,9 @@ void SerialCouplingScheme:: advance()
         if (convergence) {
           timestepCompleted();
         }
-        if (isCouplingOngoing()) {
+        //if (isCouplingOngoing()) {
           receiveData(getM2N());
-        }
+        //}
         getM2N()->finishReceivePackage();
       }
       else {
@@ -232,31 +232,31 @@ void SerialCouplingScheme:: advance()
         }
         getM2N()->startSendPackage(0);
         getM2N()->send(convergence);
-        if (isCouplingOngoing()) {
-          if (convergence && (getExtrapolationOrder() > 0)){
-            extrapolateData(getSendData()); // Also stores data
-          }
-          else { // Store data for conv. measurement, post-processing, or extrapolation
-            for (DataMap::value_type& pair : getSendData()) {
-              if (pair.second->oldValues.size() > 0){
-                pair.second->oldValues.column(0) = *pair.second->values;
-              }
-            }
-            for (DataMap::value_type& pair : getReceiveData()) {
-              if (pair.second->oldValues.size() > 0){
-                pair.second->oldValues.column(0) = *pair.second->values;
-              }
+
+        if (convergence && (getExtrapolationOrder() > 0)){
+          extrapolateData(getSendData()); // Also stores data
+        }
+        else { // Store data for conv. measurement, post-processing, or extrapolation
+          for (DataMap::value_type& pair : getSendData()) {
+            if (pair.second->oldValues.size() > 0){
+              pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
-          sendData(getM2N());
-          getM2N()->finishSendPackage();
+          for (DataMap::value_type& pair : getReceiveData()) {
+            if (pair.second->oldValues.size() > 0){
+              pair.second->oldValues.column(0) = *pair.second->values;
+            }
+          }
+        }
+        sendData(getM2N());
+        getM2N()->finishSendPackage();
+
+        // the second participant does not want new data in the last iteration of the last timestep
+        if (isCouplingOngoing() || not convergence) {
           getM2N()->startReceivePackage(0);
           receiveAndSetDt();
           receiveData(getM2N());
           getM2N()->finishReceivePackage();
-        }
-        else {
-          getM2N()->finishSendPackage();
         }
       }
 
