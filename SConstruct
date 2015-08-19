@@ -1,7 +1,3 @@
-# preCICE/SConstruct
-
-# Main buildfile for Linux based systems.
-
 import os
 import subprocess
 import sys
@@ -14,11 +10,8 @@ def uniqueCheckLib(conf, lib):
         conf.env.AppendUnique(LIBS = [lib])
         return True
     else:
-        return False
-
-def errorMissingLib(lib, usage):
-    print "ERROR: Library '" + lib + "' (needed for " + usage + ") not found!"
-    Exit(1)
+        print "ERROR: Library '" + lib + "' not found!"
+        Exit(1)
 
 def errorMissingHeader(header, usage):
     print "ERROR: Header '" + header + "' (needed for " + usage + ") not found or does not compile!"
@@ -72,7 +65,6 @@ conf = Configure(env) # For checking libraries, headers, ...
 
 Help(vars.GenerateHelpText(env))
 env.Append(CPPPATH = ['#src'])
-# env.Append(CPPDEFINES = ['tarch=tarchp2']) # Was (!) needed for linking to Peano 1
 
 # Produce position independent code for dynamic linking. makes a difference on the m68k, PowerPC and SPARC.
 env.Append(CCFLAGS = ['-fPIC'])
@@ -104,26 +96,14 @@ if env["petsc"]:
     PETSC_DIR = checkset_var("PETSC_DIR", "")
     PETSC_ARCH = checkset_var("PETSC_ARCH", "")
 
-if env["boost_inst"]:
-    boostSystemLib     = checkset_var('PRECICE_BOOST_SYSTEM_LIB',     "boost_system")
-    boostFilesystemLib = checkset_var('PRECICE_BOOST_FILESYSTEM_LIB', "boost_filesystem")
-else:
+if not env["boost_inst"]:
     boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
-
-   #boostIncPath = os.getenv('PRECICE_BOOST_INC_PATH')
-   #if ((boostIncPath == None) or (boostIncPath == "")):
-   #   boostIncPath = '/usr/include/'
-   #   print 'PRECICE_BOOST_INC_PATH = ' + boostIncPath + ' (default)'
-   #else:
-   #   print 'PRECICE_BOOST_INC_PATH =', boostIncPath
 
 if env["mpi"]:
     mpiLibPath = checkset_var('PRECICE_MPI_LIB_PATH', "/usr/lib/")
-
     # Determine MPI library name
     mpiLib = checkset_var('PRECICE_MPI_LIB', "mpich")
     mpiIncPath = checkset_var('PRECICE_MPI_INC_PATH', '/usr/include/mpich2')
-
 
 if env["sockets"]:
     pthreadLibPath = checkset_var('PRECICE_PTHREAD_LIB_PATH', "/usr/lib")
@@ -134,16 +114,6 @@ if env["sockets"]:
         socketLibPath = checkset_var('PRECICE_SOCKET_LIB_PATH', "/mingw64/lib")
         socketLib = checkset_var('PRECICE_SOCKET_LIB', "ws2_32")
         socketIncPath =  checkset_var('PRECICE_SOCKET_INC_PATH', '/mingw64/include')
-
-
-#useSAGA = ARGUMENTS.get('saga', 'off')
-#if useSAGA == 'off':
-#    cppdefines.append('PRECICE_NO_SAGA')
-#elif useSAGA == 'on':
-#    libs.append('saga_package_advert')
-#    libs.append('xyz')
-#    libpath.append('/opt/saga-1.5.4/lib/')
-
 
 if env["python"]:
     pythonLibPath = checkset_var('PRECICE_PYTHON_LIB_PATH', '/usr/lib/')
@@ -162,7 +132,7 @@ print 'Configuring build variables ...'
 env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-std=c++11'])
 
-
+# ====== Compiler Settings ======
 if env["compiler"] == 'icc':
     env.AppendUnique(LIBPATH = ['/usr/lib/'])
     env.Append(LIBS = ['stdc++'])
@@ -186,6 +156,7 @@ env.Replace(CC = env["compiler"])
 if not conf.CheckCXX():
     Exit(1)
 
+# ====== Build Directories ======
 if env["build"] == 'debug':
     env.Append(CPPDEFINES = ['Debug', 'Asserts'])
     env.Append(CCFLAGS = ['-g3', '-O0'])
@@ -194,7 +165,7 @@ elif env["build"] == 'release':
     env.Append(CCFLAGS = ['-O3'])
     buildpath += "release"
 
-# ===== Petsc =====
+# ====== Petsc ======
 if env["petsc"]:
     if not env["mpi"]:
         print "Petsc requires MPI to be enabled."
@@ -203,8 +174,7 @@ if env["petsc"]:
     env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
     env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
-    if not uniqueCheckLib(conf, "petsc"):
-        errorMissingLib("petsc", "PETSc")
+    uniqueCheckLib(conf, "petsc")
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
@@ -216,10 +186,8 @@ if not conf.CheckCXXHeader("Eigen/Dense"):
 
 # ====== Boost ======
 if env["boost_inst"]:
-    if not uniqueCheckLib(conf, boostSystemLib):
-        errorMissingLib(boostSystemLib, 'Boost.System')
-    if not uniqueCheckLib(conf, boostFilesystemLib):
-        errorMissingLib(boostFilesystemLib, 'Boost.Filesystem')
+    uniqueCheckLib(conf, "boost_system")
+    uniqueCheckLib(conf, "boost_filesystem")
 else:
     env.AppendUnique(CXXFLAGS = ['-isystem', boostRootPath])
 if not conf.CheckCXXHeader('boost/array.hpp'):
@@ -237,8 +205,7 @@ if env["mpi"]:
 
     if not env["compiler"].startswith('mpic'):
         env.AppendUnique(LIBPATH = [mpiLibPath])
-        if not uniqueCheckLib(conf, mpiLib):
-            errorMissingLib(mpiLib, 'MPI')
+        uniqueCheckLib(conf, mpiLib)
         if (mpiLib == 'mpich'): # MPICH1/2/3 library
             uniqueCheckLib(conf, 'mpl')
             uniqueCheckLib(conf, 'pthread')
@@ -252,7 +219,7 @@ elif not env["mpi"]:
     buildpath += "-nompi"
 uniqueCheckLib(conf, 'rt') # To work with tarch::utils::Watch::clock_gettime
 
-
+# ====== Sockets ======
 if env["sockets"]:
     env.AppendUnique(LIBPATH = [pthreadLibPath])
     uniqueCheckLib(conf, pthreadLib)
@@ -278,8 +245,7 @@ if env["python"]:
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
     env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
     env.AppendUnique(LIBPATH = [pythonLibPath])
-    if not uniqueCheckLib(conf, pythonLib):
-        errorMissingLib(pythonLib, 'Python')
+    uniqueCheckLib(conf, pythonLib)
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
     if not conf.CheckCXXHeader('Python.h'):
         errorMissingHeader('Python.h', 'Python')
