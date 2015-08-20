@@ -351,7 +351,7 @@ MPIPortsCommunication::requestConnectionAsClient(
 
 void
 MPIPortsCommunication::closeConnection() {
-  preciceTrace("closeConnection()");
+  preciceTrace1("closeConnection()", _communicators.size());
 
   if (not isConnected())
     return;
@@ -360,8 +360,11 @@ MPIPortsCommunication::closeConnection() {
     MPI_Comm_disconnect(&communicator);
   }
 
+  preciceDebug("Disconnected");
+
   if (_isAcceptor) {
     MPI_Close_port(_portName);
+    preciceDebug("Port closed");
   }
 
   _isConnected = false;

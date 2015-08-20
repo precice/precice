@@ -214,6 +214,10 @@ void IQNILSPostProcessing::computeQNUpdate
 
 		assertion1(__c.size() == 0, __c.size());
 
+		/**
+		 * compute rhs Q^T*res in parallel
+		 * TODO: implement all-reduce
+		 */
 		if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 			assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
 			__c.append(_local_b.size(), 0.0);

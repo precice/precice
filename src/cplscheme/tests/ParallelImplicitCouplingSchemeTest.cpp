@@ -59,8 +59,8 @@ void ParallelImplicitCouplingSchemeTest:: run ()
 # ifndef PRECICE_NO_MPI
   PRECICE_MASTER_ONLY {
     testMethod(testParseConfigurationWithRelaxation);
-    testMethod(testVIQNPP);
     testMethod(testMVQNPP);
+    testMethod(testVIQNPP);
   }
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 1){

@@ -58,12 +58,12 @@ private:
    /**
     * @brief Tests the correct postprocessing for VIQN-like vector data
     */
-   void testVIQNPP();
+   void testVIQNILSpp();
 
    /**
     * @brief Tests the correct postprocessing for MVQN-like vector data
     */
-   void testMVQNPP();
+   void testVIQNIMVJpp();
 
 # endif // not PRECICE_NO_MPI
 };

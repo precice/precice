@@ -282,6 +282,10 @@ public:
     return _vertexOffsets;
   }
 
+  void setVertexOffsets(std::vector<int> off){
+	  _vertexOffsets = off;
+  }
+
   void addMesh(Mesh& deltaMesh);
 
   /**

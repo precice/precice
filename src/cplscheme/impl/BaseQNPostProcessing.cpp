@@ -13,6 +13,7 @@
 #include "io/TXTReader.hpp"
 #include "QRFactorization.hpp"
 #include "utils/MasterSlave.hpp"
+#include <string.h>
 //#include "utils/NumericalCompare.hpp"
 
 #include <time.h>
@@ -124,13 +125,46 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	 *  make dimensions public to all procs,
 	 *  last entry _dimOffsets[MasterSlave::_size] holds the global dimension, global,n
 	 */
+	std::stringstream ss;
 	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
-		assertion(utils::MasterSlave::_communication.get() != NULL);assertion(utils::MasterSlave::_communication->isConnected());
+		assertion(utils::MasterSlave::_communication.get() != NULL);
+		assertion(utils::MasterSlave::_communication->isConnected());
 
 		if (entries <= 0) {
 			_hasNodesOnInterface = false;
 		}
 
+		/** provide vertex offset information for all processors
+		 *  mesh->getVertexOffsets() provides an array that stores the number of mesh vertices on each processor
+		 *  This information needs to be gathered for all meshes. To get the number of respective unknowns of a specific processor
+		 *  we need to multiply the number of vertices with the dimensionality of the vector-valued data for each coupling data.
+		 */
+		_dimOffsets.resize(utils::MasterSlave::_size + 1);
+		_dimOffsets[0] = 0;
+		for (auto & elem : _dataIDs) {
+			std::cout<<" Offsets:(vertex) \n"<<cplData[elem]->mesh->getVertexOffsets()<<std::endl;
+		}
+		for (size_t i = 0; i < _dimOffsets.size()-1; i++){
+			int accumulatedNumberOfUnknowns = 0;
+			for (auto & elem : _dataIDs) {
+				auto & offsets = cplData[elem]->mesh->getVertexOffsets();
+				accumulatedNumberOfUnknowns += offsets[i] * cplData[elem]->dimension;
+			}
+			_dimOffsets[i+1] = accumulatedNumberOfUnknowns;
+		}
+
+		// test that the computed number of unknown per proc equals the number of entries actually present on that proc
+		size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
+		assertion2(entries == unknowns, entries, unknowns);
+
+		if(utils::MasterSlave::_masterMode){
+			//ss<<" Offsets: \n"<<_dimOffsets<<std::endl;
+			std::cout<<" Offsets:(unknowns) \n"<<_dimOffsets<<std::endl;
+		}
+		writeInfo(ss.str());
+		ss.clear();
+
+/*
 		_dimOffsets.resize(utils::MasterSlave::_size + 1);
 		if (utils::MasterSlave::_slaveMode) {
 			utils::MasterSlave::_communication->send(((int) entries), 0);
@@ -147,7 +181,10 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
 				utils::MasterSlave::_communication->send(&_dimOffsets[0], _dimOffsets.size(), rankSlave);
 			}
+			ss<<" Offsets (correct): \n"<<_dimOffsets<<std::endl;
+			std::cout<<" Offsets (correct): \n"<<_dimOffsets<<std::endl;
 		}
+*/
 	}
 
 	// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
@@ -157,13 +194,16 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	// ---------------------------------------------------
 	//debug output for master-slave mode
 	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
-		_infostream << "proc[" << utils::MasterSlave::_rank<< "] unknowns at interface: " << entries << std::endl;
-		_infostream<<" Offsets: \n"<<_dimOffsets<<std::endl;
+		ss << "processor [" << utils::MasterSlave::_rank<< "]: unknowns at interface: " << entries << std::endl;
+		std::cout<<ss.str();
+	}else{
+		ss<< "unknowns at interface: " << entries << std::endl;
 	}
+	writeInfo(ss.str(), true);
 	// ---------------------------------------------------
 
 	// Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
-	foreach (DataMap::value_type& pair, cplData){
+	for (DataMap::value_type& pair : cplData){
 		if (not utils::contained(pair.first, _dataIDs)) {
 			_secondaryDataIDs.push_back(pair.first);
 			int secondaryEntries = pair.second->values->size();
@@ -173,16 +213,12 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	}
 
 	// Append old value columns, if not done outside of post-processing already
-	foreach (DataMap::value_type& pair, cplData){
+	for (DataMap::value_type& pair : cplData){
 		int cols = pair.second->oldValues.cols();
 		if (cols < 1) { // Add only, if not already done
 			//assertion1(pair.second->values->size() > 0, pair.first);
-			//if(pair.second->values->size() > 0){
-				pair.second->oldValues.append(
-						CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
-			//}else{
-			//	pair.second->oldValues.append(CouplingData::DataMatrix());
-			//}
+			pair.second->oldValues.append(
+					CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
 		}
 	}
 }
@@ -199,7 +235,7 @@ void BaseQNPostProcessing:: scaling
   preciceTrace("scaling()");
 
   int offset = 0;
-  foreach (int id, _dataIDs){
+  for (int id : _dataIDs){
     double factor = _scalings[id];
     preciceDebug("Scaling Factor " << factor << " for id: " << id);
     int size = cplData[id]->values->size();
@@ -224,7 +260,7 @@ void BaseQNPostProcessing:: undoScaling
   preciceTrace("undoScaling()");
   
   int offset = 0;
-  foreach(int id, _dataIDs){
+  for (int id : _dataIDs){
     double factor = _scalings[id];
     int size = cplData[id]->values->size();
     preciceDebug("Copying values back, size: " << size);
@@ -432,7 +468,7 @@ void BaseQNPostProcessing:: iterationsConverged
   {
     _infostream<<"l2-Norm of converged configuration after first time step:"<<std::endl;
     double l2norm = 0., oldl2norm = 0.;
-    foreach (int id, _dataIDs)
+    for (int id : _dataIDs)
     {
       l2norm = 0.; 
       double factor = _scalings[id];
@@ -552,7 +588,7 @@ int BaseQNPostProcessing::getLSSystemCols()
 //		return _matrixV.cols();
 //	}
 	int cols = 0;
-	foreach (int col, _matrixCols){
+	for (int col : _matrixCols){
 		cols += col;
 	}
 	if(_hasNodesOnInterface){
@@ -607,6 +643,24 @@ void BaseQNPostProcessing:: removeMatrixColumn
     }
     iter++;
   }
+}
+
+void BaseQNPostProcessing::writeInfo
+(std::string s, bool allProcs)
+{
+	if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
+		// serial post processing mode, server mode
+		_infostream<<s;
+
+		// parallel post processing, master-slave mode
+	}else{
+		if(not allProcs){
+			if(utils::MasterSlave::_masterMode) _infostream<<s;
+		}else{
+			_infostream<<s;
+		}
+	}
+	_infostream<<std::flush;
 }
 
 }}} // namespace precice, cplscheme, impl

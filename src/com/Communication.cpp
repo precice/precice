@@ -91,7 +91,6 @@ Communication::broadcast(double* itemsToReceive,
                          int size,
                          int rankBroadcaster) {
   preciceTrace1("broadcast(double*)", size);
-
   receive(itemsToReceive, size, rankBroadcaster + _rankOffset);
 }
 
@@ -115,7 +114,6 @@ Communication::broadcast(double itemToSend) {
 void
 Communication::broadcast(double& itemToReceive, int rankBroadcaster) {
   preciceTrace("broadcast(double&)");
-
   receive(itemToReceive, rankBroadcaster + _rankOffset);
 }
 

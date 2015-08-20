@@ -19,6 +19,8 @@
 #include "utils/xml/ValidatorOr.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
+#include "com/MPIDirectCommunication.hpp"
+#include "com/MPIPortsCommunication.hpp"
 
 namespace precice {
 namespace config {
@@ -544,6 +546,7 @@ void ParticipantConfiguration:: xmlTagCallback
     com::CommunicationConfiguration comConfig;
     com::Communication::SharedPointer com = comConfig.createCommunication(tag);
     utils::MasterSlave::_communication = com;
+
     _participants.back()->setUseMaster(true);
   }
 }
