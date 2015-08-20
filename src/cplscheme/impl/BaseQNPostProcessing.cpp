@@ -127,12 +127,41 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	 */
 	std::stringstream ss;
 	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
-		assertion(utils::MasterSlave::_communication.get() != NULL);assertion(utils::MasterSlave::_communication->isConnected());
+		assertion(utils::MasterSlave::_communication.get() != NULL);
+		assertion(utils::MasterSlave::_communication->isConnected());
 
 		if (entries <= 0) {
 			_hasNodesOnInterface = false;
 		}
 
+		/** provide vertex offset information for all processors
+		 *  mesh->getVertexOffsets() provides an array that stores the number of mesh vertices on each processor
+		 *  This information needs to be gathered for all meshes. To get the number of respective unknowns of a specific processor
+		 *  we need to multiply the number of vertices with the dimensionality of the vector-valued data for each coupling data.
+		 */
+		_dimOffsets.resize(utils::MasterSlave::_size + 1);
+		_dimOffsets[0] = 0;
+		for (size_t i = 0; i < _dimOffsets.size()-1; i++){
+			int accumulatedNumberOfUnknowns = 0;
+			for (auto & elem : _dataIDs) {
+				auto & offsets = cplData[elem]->mesh->getVertexOffsets();
+				accumulatedNumberOfUnknowns += offsets[i] * cplData[elem]->dimension;
+			}
+			_dimOffsets[i+1] = accumulatedNumberOfUnknowns;
+		}
+
+		// test that the computed number of unknown per proc equals the number of entries actually present on that proc
+		int unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
+		assertion2(entries == unknowns, entries, unknowns);
+
+		if(utils::MasterSlave::_masterMode){
+			ss<<" Offsets: \n"<<_dimOffsets<<std::endl;
+			std::cout<<" Offsets (vertices): \n"<<offsets<<std::endl;
+			std::cout<<" Offsets:(unknowns) \n"<<_dimOffsets<<std::endl;
+		}
+		ss.clear();
+
+/*
 		_dimOffsets.resize(utils::MasterSlave::_size + 1);
 		if (utils::MasterSlave::_slaveMode) {
 			utils::MasterSlave::_communication->send(((int) entries), 0);
@@ -149,10 +178,10 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
 				utils::MasterSlave::_communication->send(&_dimOffsets[0], _dimOffsets.size(), rankSlave);
 			}
-			std::cout<<"Master Processor: "<<utils::MasterSlave::_rank<<std::endl;
-			ss<<" Offsets: \n"<<_dimOffsets<<std::endl;
-			std::cout<<ss.str();
+			ss<<" Offsets (correct): \n"<<_dimOffsets<<std::endl;
+			std::cout<<" Offsets (correct): \n"<<_dimOffsets<<std::endl;
 		}
+*/
 	}
 
 	// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!

@@ -56,6 +56,8 @@ MVQNPostProcessing:: MVQNPostProcessing
 MVQNPostProcessing::~MVQNPostProcessing()
 {
 	//if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){ // not possible because of tests, MasterSlave is deactivated when PP is killed
+
+	// close and shut down cyclic communication connections
 	if(_cyclicCommRight != nullptr || _cyclicCommLeft != nullptr){
 		if((utils::MasterSlave::_rank % 2) == 0)
 		{
@@ -132,7 +134,7 @@ void MVQNPostProcessing::computeUnderrelaxationSecondaryData
   //  }
 
     // Perform underrelaxation with initial relaxation factor for secondary data
-    foreach (int id, _secondaryDataIDs){
+    for (int id: _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
       DataValues& values = *(data->values);
       values *= _initialRelaxation;                   // new * omg
@@ -171,11 +173,7 @@ void MVQNPostProcessing::computeQNUpdate
     // ------------- update inverse Jacobian -----------
     // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
     // ----------------------------------------- -------
-
-    preciceDebug("   Compute Newton factors");
-    //computeNewtonFactorsLUDecomposition(cplData, xUpdate);
-    
-    // computes xUpdate using updatedQR decompositon
+    preciceDebug("   Compute Newton factors ");
     computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate);
 }
 
@@ -203,25 +201,13 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 				__R(i, j) = r(i, j);
 			}
 
-//		if(!_hasNodesOnInterface){
-//						std::cout<<"empty proc["<<utils::MasterSlave::_rank<<"] _qrV: rows="<<_qrV.rows()<<", cols="<<_qrV.cols()<<std::endl;
-//		}
-
 		if (getLSSystemCols() > 1) {
-			if(!_hasNodesOnInterface){
-				std::cout<<" proc["<<utils::MasterSlave::_rank<<"] R:\n"<<__R<<std::endl;
-			}
 			for (int i = 0; i < __R.rows(); i++) {
-				if (std::fabs(__R(i, i)) < _singularityLimit) {
-				//if (std::fabs(__R(i, i)) < 0.0) {
-					//std::cout<<" -remove: proc["<<utils::MasterSlave::_rank<<"] R(i,i):"<<__R(i,i)<<", eps:"<<_singularityLimit<<", i:"<<i<<std::endl;
+				//if (std::fabs(__R(i, i)) < _singularityLimit) {
+				if (std::fabs(__R(i, i)) < 0.0) {
 					std::stringstream ss;
-					ss << "(updatedQR) removing linear dependent column "
-					   << i << "  time step: " << tSteps << " iteration: " << its
-					   << "\n" << std::endl;
-					preciceDebug(ss.str());
-					writeInfo(ss.str());
-					std::cout<<ss.str()<<std::endl;
+					ss << "(updatedQR) removing linear dependent column "<< i << "  time step: " << tSteps << " iteration: " << its<< "\n" << std::endl;
+					preciceDebug(ss.str()); writeInfo(ss.str()); std::cout<<ss.str()<<std::endl;
 
 					linearDependence = true;
 					removeMatrixColumn(i);
@@ -262,26 +248,25 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 					Z(p,i) = __ytmpVec(p);
 				__matrixQRow.clear();
 			}
-	//		if(!_hasNodesOnInterface) std::cout<<"\nZ: "<<Z<<std::endl;
-	//		preciceDebug("doing back substitution, __ytmpVec.size="<<__ytmpVec.size());
 		}
 	}
 
   /*
+   * -------------------------------
    * Multiply J_prev * V =: V_tilde
+   * -------------------------------
    */
+
   // TODO: transpose V efficiently using blocking in parallel
   //       such that multiplication is cache efficient
   Matrix tmpMatrix(_qrV.rows(), _qrV.cols(), 0.0);
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
   assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
 
- // preciceDebug("multiply J_prev * V | _invJacobian rows:"<<_oldInvJacobian.rows()<<", cols: "<<_oldInvJacobian.cols());
   if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 	  multiply(_oldInvJacobian, _matrixV, tmpMatrix);
 
   }else{
-
 	  assertion(utils::MasterSlave::_communication.get() != NULL);
 	  assertion(utils::MasterSlave::_communication->isConnected());
 
@@ -289,14 +274,15 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  int rank = 0;
 		  // find rank of processor that stores the result
 		  // the second while is necessary if processors with no vertices are present
+		  // Note: the >'=' here is crucial: In case some procs do not have any vertices,
+		  // this while loop contunues incrementing rank if entries in offsets are equal, i.e.,
+		  // it runs to the next non-empty proc.
 		  while(i >= _dimOffsets[rank+1]) rank++;
-		  //if(rank > 0){ while(_dimOffsets[rank] == _dimOffsets[rank-1]) rank--;}
 
 		  for(int j = 0; j < _qrV.cols(); j++){
 			  // as we want to move to Eigen, copy
 			  DataValues Jrow(_oldInvJacobian.cols(), 0.0);
 			  for(int s = 0; s < _oldInvJacobian.cols(); s++){
-				//  if(!_hasNodesOnInterface) std::cout<<"should not be entered: i: "<<i<<", s: "<<s<<std::endl;
 				  Jrow(s) = _oldInvJacobian(i,s);
 			  }
 
@@ -307,7 +293,6 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 			  int local_row;
 			  if(utils::MasterSlave::_rank == rank)
 			  {
-				 // if(!_hasNodesOnInterface) std::cout<<"should not be entered, wrong rang found, rank: "<<rank<<std::endl;
 				  local_row = i - _dimOffsets[rank];
 				  tmpMatrix(local_row, j) = res_ij;
 			  }
@@ -322,11 +307,12 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
   
   /**
+   *  ---------------------------------------------------------
    *  compute invJacobian = W_til*Z
    *  where Z = (V^T*V)^-1*V^T vie QR-dec and back-substitution
    *  and W_til = (W - J_inv_n*V)
+   *  ---------------------------------------------------------
    */
-  preciceDebug("W_til * Z");
   assertion2(tmpMatrix.cols() == Z.rows(), tmpMatrix.cols(), Z.rows());
   if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 	  multiply(tmpMatrix, Z, _invJacobian);
@@ -343,7 +329,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	  assertion(_cyclicCommRight->isConnected());
 
 
-	  int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
+	  //int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
 	  int prevProc = (utils::MasterSlave::_rank -1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank -1;
 	  int rows_rcv = (prevProc > 0) ? _dimOffsets[prevProc+1] - _dimOffsets[prevProc] : _dimOffsets[1];
 	  Matrix Wtil_rcv(rows_rcv, getLSSystemCols(),0.0);
@@ -364,9 +350,6 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	  Matrix diagBlock(_matrixV.rows(),_matrixV.rows(), 0.0);
 	  multiply(tmpMatrix, Z, diagBlock);
 
-//	  if(!_hasNodesOnInterface){
-//		  std::cout<<"diag block on empty proc in cycle 0. BLOCK: ("<<diagBlock.rows()<<","<<diagBlock.cols()<<") Z: ("<<Z.rows()<<","<<Z.cols()<<") Wtil: ("<<tmpMatrix.rows()<<","<<tmpMatrix.cols()<<")"<<std::endl;
-//	  }
 	  // set block at corresponding row-index on proc
 	  int off = _dimOffsets[utils::MasterSlave::_rank];
 	  assertion2(_invJacobian.cols() == diagBlock.cols(), _invJacobian.cols(), diagBlock.cols());
@@ -382,10 +365,8 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	  for(int cycle = 1; cycle < utils::MasterSlave::_size; cycle++){
 
 		  // wait until W_til from previous processor is fully received
-		  if(requestSend != NULL)
-			  requestSend->wait();
-		  if(requestRcv != NULL)
-			  requestRcv->wait();
+		  if(requestSend != NULL) requestSend->wait();
+		  if(requestRcv != NULL)  requestRcv->wait();
 
 
 		  // Wtil_rcv is available - needed for local multiplication and hand over to next proc
@@ -400,8 +381,10 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  // compute proc that owned Wtil_rcv at the very beginning for each cylce
 		  int sourceProc_nextCycle = (utils::MasterSlave::_rank - (cycle+1) < 0) ?
 				  utils::MasterSlave::_size + (utils::MasterSlave::_rank - (cycle+1)) : utils::MasterSlave::_rank - (cycle+1);
+
 		  int sourceProc = (utils::MasterSlave::_rank - cycle < 0) ?
-		  				  utils::MasterSlave::_size + (utils::MasterSlave::_rank - cycle) : utils::MasterSlave::_rank - cycle;
+				  utils::MasterSlave::_size + (utils::MasterSlave::_rank - cycle) : utils::MasterSlave::_rank - cycle;
+
 		  int rows_rcv_nextCycle = (sourceProc_nextCycle > 0) ? _dimOffsets[sourceProc_nextCycle+1] - _dimOffsets[sourceProc_nextCycle] : _dimOffsets[1];
 		  rows_rcv = (sourceProc > 0) ? _dimOffsets[sourceProc+1] - _dimOffsets[sourceProc] : _dimOffsets[1];
 		  Wtil_rcv = Matrix(rows_rcv_nextCycle, getLSSystemCols(),0.0);
@@ -409,18 +392,13 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
 		  // initiate asynchronous receive operation for W_til from previous processor --> W_til (this data is needed in the next cycle)
 		  if(cycle < utils::MasterSlave::_size-1){
-			  if(Wtil_rcv.size() > 0)
+			  if(Wtil_rcv.size() > 0) // only receive data, if data has been sent
 				  requestRcv = _cyclicCommLeft->aReceive(&Wtil_rcv(0,0), Wtil_rcv.size(), 0);
 		  }
-
 
 		  // compute block with new local data
 		  Matrix block(rows_rcv, Z.cols(), 0.0);
 		  multiply(Wtil_copy, Z, block);
-
-//		  if(!_hasNodesOnInterface){
-//		  		  std::cout<<"diag block on empty proc in cycle "<<cycle<<". BLOCK: ("<<block.rows()<<","<<block.cols()<<") Z: ("<<Z.rows()<<","<<Z.cols()<<") Wtil: ("<<Wtil_copy.rows()<<","<<Wtil_copy.cols()<<")"<<std::endl;
-//		  	  }
 
 		  // set block at corresponding index in J_inv
 		  // the row-offset of the current block is determined by the proc that sends the part of the W_til matrix
@@ -433,20 +411,19 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 			  {
 				  _invJacobian(q+off,p) = block(q,p);
 			  }
-
-		//  std::cout<<"proc["<<utils::MasterSlave::_rank<<"] computed block ["<<sourceProc<<"]["<<utils::MasterSlave::_rank
-		//		   <<"] inserted at off= "<<off<<" frobenius norm: "<<tarch::la::frobeniusNorm(block)<<std::endl;
 	  }
   }
 
+  // update Jacobian
   _invJacobian = _invJacobian + _oldInvJacobian;
+
+  /*    ---------------------------------
+   *    solve delta_x = - J_inv*residuals
+   *    ---------------------------------
+   */
 
   DataValues negRes(_residuals);
   negRes *= -1.;
-
-  /*
-   * solve delta_x = - J_inv*residuals
-   */
   if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 	  multiply(_invJacobian, negRes, xUpdate);
 
@@ -461,15 +438,12 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  // find rank of processor that stores the result
 		  // the second while is necessary if processors with no vertices are present
 		  while(i >= _dimOffsets[rank+1]) rank++;
-		 // if(rank > 0){ while(_dimOffsets[rank] - _dimOffsets[rank-1] == 0) rank--;}
 
 		  // as we want to move to Eigen, copy
 		  DataValues Jrow(_invJacobian.cols(), 0.0);
 		  for (int s = 0; s < _invJacobian.cols(); s++) {
-//			  if(!_hasNodesOnInterface) std::cout<<"should not be entered: i: "<<i<<", s: "<<s<<std::endl;
 			  Jrow(s) = _invJacobian(i,s);
 		  }
-
 
 		  // TODO: better: implement a reduce-operation (no loop over all slaves)
 		  double up_ij = utils::MasterSlave::dot(Jrow, negRes);
@@ -478,7 +452,6 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		  int local_row;
 		  if(utils::MasterSlave::_rank == rank)
 		  {
-//			  if(!_hasNodesOnInterface) std::cout<<"should not be entered, wrong rang found, rank: "<<rank<<std::endl;
 			  local_row = i - _dimOffsets[rank];
 			  xUpdate(local_row) = up_ij;
 		  }
@@ -627,7 +600,6 @@ void MVQNPostProcessing:: specializedIterationsConverged
    DataMap & cplData)
 {
   // store inverse Jacobian
-//  _matrixWriter.write(_invJacobian);
   _oldInvJacobian = _invJacobian;
 }
 
