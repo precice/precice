@@ -49,7 +49,9 @@
 #include "geometry/SolverGeometry.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
+#include "utils/EventTimings.hpp"
 #include "utils/Globals.hpp"
+#include "utils/SignalHandler.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
@@ -58,7 +60,6 @@
 #include <limits>
 #include <cstring>
 #include <algorithm>
-#include "utils/EventTimings.hpp"
 #include "boost/tuple/tuple.hpp"
 
 #include <signal.h> // used for installing crash handler
@@ -114,9 +115,11 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   /* When precice stops abruptly, e.g. an external solver crashes, the
      SolverInterfaceImpl destructor is never called. Since we still want
      to print the timings, we install the signal handler here. */
-  signal(SIGSEGV, precice::utils::EventRegistry::signal_handler);
-  signal(SIGABRT, precice::utils::EventRegistry::signal_handler);
-  signal(SIGTERM, precice::utils::EventRegistry::signal_handler);
+  signal(SIGSEGV, precice::utils::terminationSignalHandler);
+  signal(SIGABRT, precice::utils::terminationSignalHandler);
+  signal(SIGTERM, precice::utils::terminationSignalHandler);
+  // signal(SIGINT,  precice::utils::terminationSignalHandler);
+
 }
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
