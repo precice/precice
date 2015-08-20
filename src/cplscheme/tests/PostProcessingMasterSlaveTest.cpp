@@ -113,7 +113,10 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 	std::map<int, double> scalings;
 	scalings.insert(std::make_pair(0,1.0));
 	scalings.insert(std::make_pair(1,1.0));
+	std::vector<int> vertexOffsets {4, 8, 8 , 10};
+
 	mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
+	dummyMesh->setVertexOffsets(vertexOffsets);
 
 	cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation,maxIterationsUsed,
 										   timestepsReused, singularityLimit, dataIDs, scalings);
@@ -388,7 +391,6 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 
 
 	utils::Parallel::synchronizeProcesses();
-	//utils::MasterSlave::_communication->closeConnection();
 	utils::MasterSlave::_slaveMode = false;
 	utils::MasterSlave::_masterMode = false;
 	utils::Parallel::clearGroups();
@@ -400,11 +402,6 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	preciceTrace ( "testVIQNIMVJpp" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
 	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
-//	com::Communication::SharedPointer cyclecom1 = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
-//	com::Communication::SharedPointer cyclecom2 = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
-
-//	utils::MasterSlave::_cyclicCommRight = cyclecom1;
-//	utils::MasterSlave::_cyclicCommLeft = cyclecom2;
 	utils::MasterSlave::_communication = masterSlaveCom;
 
 	utils::Parallel::synchronizeProcesses();
@@ -419,22 +416,6 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		utils::Parallel::splitCommunicator("SOLIDZSlaves");
 	}
 
-	// initialize cyclic communication between successive slaves
-//	int prevProc = (utils::Parallel::getProcessRank()-1 < 0) ? utils::Parallel::getCommunicatorSize()-1 : utils::Parallel::getProcessRank()-1;
-//	if((utils::Parallel::getProcessRank() % 2) == 0)
-//	{
-//	  utils::MasterSlave::_cyclicCommLeft->acceptConnection
-//	  	  ( "SOLIDZSlaves-cyclicComm-" + std::to_string(prevProc), "SOLIDZSlaves", 0, 1 );
-//
-//	  utils::MasterSlave::_cyclicCommRight->requestConnection
-//	  	  ( "SOLIDZSlaves-cyclicComm-" +  std::to_string(utils::Parallel::getProcessRank()), "SOLIDZSlaves", 0, 1 );
-//	}else{
-//	  utils::MasterSlave::_cyclicCommRight->requestConnection
-//	  	  ( "SOLIDZSlaves-cyclicComm-" +  std::to_string(utils::Parallel::getProcessRank()), "SOLIDZSlaves", 0, 1 );
-//
-//	  utils::MasterSlave::_cyclicCommLeft->acceptConnection
-//	  	  ( "SOLIDZSlaves-cyclicComm-" + std::to_string(prevProc), "SOLIDZSlaves", 0, 1 );
-//	}
 
 	if (utils::Parallel::getProcessRank() == 0) { //Master
 		masterSlaveCom->acceptConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 1);
@@ -458,10 +439,13 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	std::map<int, double> scalings;
 	scalings.insert(std::make_pair(0,1.0));
 	scalings.insert(std::make_pair(1,1.0));
+	std::vector<int> vertexOffsets {4, 8, 8 , 10};
+
 	mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
+	dummyMesh->setVertexOffsets(vertexOffsets);
 
 	cplscheme::impl::MVQNPostProcessing pp(initialRelaxation,maxIterationsUsed,
-										   timestepsReused, singularityLimit, dataIDs, scalings);
+									   timestepsReused, singularityLimit, dataIDs, scalings);
 
 	utils::DynVector dvalues;
 	utils::DynVector dcol1;
@@ -718,23 +702,11 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		*/
 	}
 
-  utils::MasterSlave::_communication->closeConnection();
-
-//  if((utils::Parallel::getProcessRank() % 2) == 0){
-//    utils::MasterSlave::_cyclicCommRight->closeConnection();
-//    utils::MasterSlave::_cyclicCommLeft->closeConnection();
-//  }
-//  else{
-//    utils::MasterSlave::_cyclicCommLeft->closeConnection();
-//    utils::MasterSlave::_cyclicCommRight->closeConnection();
-//  }
-
+	utils::MasterSlave::_communication->closeConnection();
 	utils::MasterSlave::_slaveMode = false;
 	utils::MasterSlave::_masterMode = false;
 	utils::Parallel::clearGroups();
 	utils::MasterSlave::_communication = nullptr;
-	//utils::MasterSlave::_cyclicCommRight = nullptr;
-	//utils::MasterSlave::_cyclicCommLeft = nullptr;
 }
 
 

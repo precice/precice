@@ -141,6 +141,9 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 		 */
 		_dimOffsets.resize(utils::MasterSlave::_size + 1);
 		_dimOffsets[0] = 0;
+		for (auto & elem : _dataIDs) {
+			std::cout<<" Offsets:(vertex) \n"<<cplData[elem]->mesh->getVertexOffsets()<<std::endl;
+		}
 		for (size_t i = 0; i < _dimOffsets.size()-1; i++){
 			int accumulatedNumberOfUnknowns = 0;
 			for (auto & elem : _dataIDs) {
@@ -155,10 +158,10 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 		assertion2(entries == unknowns, entries, unknowns);
 
 		if(utils::MasterSlave::_masterMode){
-			ss<<" Offsets: \n"<<_dimOffsets<<std::endl;
-			std::cout<<" Offsets (vertices): \n"<<offsets<<std::endl;
+			//ss<<" Offsets: \n"<<_dimOffsets<<std::endl;
 			std::cout<<" Offsets:(unknowns) \n"<<_dimOffsets<<std::endl;
 		}
+		writeInfo(ss.str());
 		ss.clear();
 
 /*
@@ -190,8 +193,6 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 
 	// ---------------------------------------------------
 	//debug output for master-slave mode
-	writeInfo(ss.str());
-	ss.clear();
 	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
 		ss << "processor [" << utils::MasterSlave::_rank<< "]: unknowns at interface: " << entries << std::endl;
 		std::cout<<ss.str();
@@ -202,7 +203,7 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	// ---------------------------------------------------
 
 	// Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
-	foreach (DataMap::value_type& pair, cplData){
+	for (DataMap::value_type& pair : cplData){
 		if (not utils::contained(pair.first, _dataIDs)) {
 			_secondaryDataIDs.push_back(pair.first);
 			int secondaryEntries = pair.second->values->size();
@@ -212,16 +213,12 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	}
 
 	// Append old value columns, if not done outside of post-processing already
-	foreach (DataMap::value_type& pair, cplData){
+	for (DataMap::value_type& pair : cplData){
 		int cols = pair.second->oldValues.cols();
 		if (cols < 1) { // Add only, if not already done
 			//assertion1(pair.second->values->size() > 0, pair.first);
-			//if(pair.second->values->size() > 0){
-				pair.second->oldValues.append(
-						CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
-			//}else{
-			//	pair.second->oldValues.append(CouplingData::DataMatrix());
-			//}
+			pair.second->oldValues.append(
+					CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
 		}
 	}
 }
@@ -238,7 +235,7 @@ void BaseQNPostProcessing:: scaling
   preciceTrace("scaling()");
 
   int offset = 0;
-  foreach (int id, _dataIDs){
+  for (int id : _dataIDs){
     double factor = _scalings[id];
     preciceDebug("Scaling Factor " << factor << " for id: " << id);
     int size = cplData[id]->values->size();
@@ -263,7 +260,7 @@ void BaseQNPostProcessing:: undoScaling
   preciceTrace("undoScaling()");
   
   int offset = 0;
-  foreach(int id, _dataIDs){
+  for (int id : _dataIDs){
     double factor = _scalings[id];
     int size = cplData[id]->values->size();
     preciceDebug("Copying values back, size: " << size);
@@ -471,7 +468,7 @@ void BaseQNPostProcessing:: iterationsConverged
   {
     _infostream<<"l2-Norm of converged configuration after first time step:"<<std::endl;
     double l2norm = 0., oldl2norm = 0.;
-    foreach (int id, _dataIDs)
+    for (int id : _dataIDs)
     {
       l2norm = 0.; 
       double factor = _scalings[id];
@@ -591,7 +588,7 @@ int BaseQNPostProcessing::getLSSystemCols()
 //		return _matrixV.cols();
 //	}
 	int cols = 0;
-	foreach (int col, _matrixCols){
+	for (int col : _matrixCols){
 		cols += col;
 	}
 	if(_hasNodesOnInterface){
