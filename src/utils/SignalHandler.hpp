@@ -1,7 +1,5 @@
 #pragma once
 
-#include <iostream>
-using namespace std;
 #include <regex>
 
 #include "utils/EventTimings.hpp"
@@ -13,23 +11,25 @@ using namespace std;
 namespace precice {
 namespace utils {
 
-tarch::logging::Log _log("precice::utils::terminationSignalHandler");
-
-
 void terminationSignalHandler(int signal)
 {
-  cout << "SIGNAL HANDLER CALLED" << endl;
+  // Print the events statistics
   precice::utils::EventRegistry::signal_handler(signal);
 
-  boost::filesystem::path cwd = boost::filesystem::current_path();
-
+  // Delete stale .A-B.adress files
   std::regex addrFile(R"(\..*-.*\.address)");
-  for (boost::filesystem::directory_entry& dirEntry : boost::filesystem::directory_iterator(cwd)) {
-    std::string file = boost::filesystem::path(dirEntry).filename().string();
+
+  namespace fs = boost::filesystem;
+  fs::path cwd = fs::current_path();
+
+  for (fs::directory_iterator dir(cwd); dir != fs::directory_iterator(); ++dir) {
+    std::string file = fs::path(dir->path()).filename().string();
     if (std::regex_match(file, addrFile)) {
-      boost::filesystem::remove(dirEntry);
+      fs::remove(dir->path());
     }
   }
+
+  std::exit(-1);
 }
 }
 }
