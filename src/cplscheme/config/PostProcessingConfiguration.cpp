@@ -239,7 +239,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 			  _config.timestepsReused, _config.singularityLimit,
 			  _config.dataIDs, _config.scalings) );
 		#else
-      	  preciceError("Post processing IQN-IMVJ only works if precice is compiled with MPI");
+      	  preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if precice is compiled with MPI");
       	#endif
     }
     else if (callingTag.getName() == VALUE_BROYDEN){

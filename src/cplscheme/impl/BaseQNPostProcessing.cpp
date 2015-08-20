@@ -154,7 +154,7 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 		}
 
 		// test that the computed number of unknown per proc equals the number of entries actually present on that proc
-		int unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
+		size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
 		assertion2(entries == unknowns, entries, unknowns);
 
 		if(utils::MasterSlave::_masterMode){
