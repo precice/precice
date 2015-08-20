@@ -166,9 +166,9 @@ void PostProcessingConfiguration:: xmlTagCallback
     }
 
 
-    foreach(mesh::PtrMesh mesh, _meshConfig->meshes() ) {
+    for(mesh::PtrMesh mesh : _meshConfig->meshes() ) {
       if(mesh->getName() == _meshName ) {
-        foreach(mesh::PtrData data, mesh->data() ) {
+        for (mesh::PtrData data : mesh->data() ) {
           if (dataName == data->getName()){
             _config.dataIDs.push_back(data->getID());
             _config.scalings.insert(std::make_pair(data->getID(),scaling));
@@ -232,11 +232,15 @@ void PostProcessingConfiguration:: xmlEndTagCallback
           _config.dataIDs, _config.scalings) );
     }
     else if (callingTag.getName() == VALUE_MVQN){
-      _postProcessing = impl::PtrPostProcessing (
-          new impl::MVQNPostProcessing(
-          _config.relaxationFactor, _config.maxIterationsUsed,
-          _config.timestepsReused, _config.singularityLimit,
-          _config.dataIDs, _config.scalings) );
+		#ifndef PRECICE_NO_MPI
+		  _postProcessing = impl::PtrPostProcessing (
+			  new impl::MVQNPostProcessing(
+			  _config.relaxationFactor, _config.maxIterationsUsed,
+			  _config.timestepsReused, _config.singularityLimit,
+			  _config.dataIDs, _config.scalings) );
+		#else
+      	  preciceError("Post processing IQN-IMVJ only works if precice is compiled with MPI");
+      	#endif
     }
     else if (callingTag.getName() == VALUE_BROYDEN){
       _postProcessing = impl::PtrPostProcessing (
