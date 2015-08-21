@@ -44,7 +44,7 @@ void ModifyCoordinatesAction:: performAction
   utils::DynVector data(dim);
   if ( _mode == ADD_TO_COORDINATES_MODE ) {
     preciceDebug ( "Adding data to coordinates" );
-    foreach ( mesh::Vertex & vertex, getMesh()->vertices() ){
+    for (mesh::Vertex & vertex : getMesh()->vertices()) {
       for ( int i=0; i < dim; i++ ){
         data[i] = values[vertex.getID()*dim + i];
       }
@@ -54,7 +54,7 @@ void ModifyCoordinatesAction:: performAction
   }
   else if ( _mode == SUBTRACT_FROM_COORDINATES_MODE ){
     preciceDebug ( "Subtracting data from coordinates" );
-    foreach ( mesh::Vertex & vertex, getMesh()->vertices() ){
+    for (mesh::Vertex &vertex : getMesh()->vertices()) {
       data = vertex.getCoords();
       for ( int i=0; i < dim; i++ ){
         data[i] -= values[vertex.getID()*dim + i];

@@ -125,7 +125,7 @@ GeometryConfiguration:: GeometryConfiguration
   XMLAttribute<utils::DynVector> attrValue(ATTR_VALUE);
   tagOffset.addAttribute(attrValue);
 
-  foreach (XMLTag& tag, tags){
+  for (XMLTag& tag : tags) {
     tag.addAttribute(attrMesh);
     tag.addSubtag(tagOffset);
     parent.addSubtag(tag);
@@ -456,7 +456,7 @@ void GeometryConfiguration:: checkMeshName
    const std::string& meshName )
 {
   bool found = false;
-  foreach ( const mesh::PtrMesh mesh, _meshConfig->meshes() ) {
+  for (const mesh::PtrMesh mesh : _meshConfig->meshes()) {
     if ( mesh->getName() == meshName ) {
       found = true;
       break;

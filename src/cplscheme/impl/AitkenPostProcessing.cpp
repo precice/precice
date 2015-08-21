@@ -59,7 +59,7 @@ void AitkenPostProcessing:: initialize
   _residuals.append(toAppend);
 
   // Append column for old values if not done by coupling scheme yet
-  foreach (DataMap::value_type& pair, cplData){
+  for (DataMap::value_type& pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
       assertion1(pair.second->values->size() > 0, pair.first);
@@ -82,7 +82,7 @@ void AitkenPostProcessing:: performPostProcessing
 
   DataValues values;
   DataValues oldValues;
-  foreach (int id, _dataIDs){
+  for (int id : _dataIDs) {
     values.append(*(cplData[id]->values));
     oldValues.append(cplData[id]->oldValues.column(0));
   }
@@ -113,7 +113,7 @@ void AitkenPostProcessing:: performPostProcessing
   // Perform relaxation with aitken factor
   double omega = _aitkenFactor;
   double oneMinusOmega = 1.0 - omega;
-  foreach ( DataMap::value_type& pair, cplData ) {
+  for (DataMap::value_type& pair : cplData) {
     DataValues& values = *pair.second->values;
     DataValues& oldValues = pair.second->oldValues.column(0);
     values *= omega;

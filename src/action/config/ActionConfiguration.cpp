@@ -224,7 +224,7 @@ ActionConfiguration:: ActionConfiguration
 
   XMLAttribute<std::string> attrMesh(ATTR_MESH);
   attrMesh.setDocumentation("Determines mesh used in action.");
-  foreach (XMLTag& tag, tags){
+  for (XMLTag& tag : tags) {
     tag.addAttribute(attrTiming);
     tag.addAttribute(attrMesh);
     parent.addSubtag(tag);
@@ -327,7 +327,7 @@ void ActionConfiguration:: xmlEndTagCallback
 
 int ActionConfiguration:: getUsedMeshID() const
 {
-  foreach (mesh::PtrMesh mesh, _meshConfig->meshes()){
+  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
     if (mesh->getName() == _configuredAction.mesh){
       return mesh->getID();
     }
@@ -428,10 +428,10 @@ void ActionConfiguration:: createAction()
   int sourceDataID = -1;
   int targetDataID = -1;
   mesh::PtrMesh mesh;
-  foreach (mesh::PtrMesh aMesh, _meshConfig->meshes()){
+  for (mesh::PtrMesh aMesh : _meshConfig->meshes()) {
     if (aMesh->getName() == _configuredAction.mesh){
       mesh = aMesh;
-      foreach (const mesh::PtrData & data, mesh->data()){
+      for (const mesh::PtrData &data : mesh->data()) {
         if (data->getName() == _configuredAction.sourceData){
           sourceDataID = data->getID ();
         }

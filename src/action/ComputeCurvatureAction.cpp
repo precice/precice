@@ -39,7 +39,7 @@ void ComputeCurvatureAction:: performAction
   if ( getMesh()->getDimensions() == 2 ){
     assign(dataValues) = 0.0;
     utils::Vector2D tangent;
-    foreach ( mesh::Edge & edge, getMesh()->edges() ){
+    for (mesh::Edge & edge : getMesh()->edges()) {
       mesh::Vertex& v0 = edge.vertex(0);
       mesh::Vertex& v1 = edge.vertex(1);
       tangent = v1.getCoords();
@@ -60,7 +60,7 @@ void ComputeCurvatureAction:: performAction
     utils::Vector3D edge;
     utils::Vector3D contribution;
 
-    foreach ( mesh::Triangle& tri, getMesh()->triangles() ){
+    for (mesh::Triangle& tri : getMesh()->triangles()) {
       normal = tri.getNormal();
       for (int i=0; i < 3; i++) {
         mesh::Vertex& v0 = tri.vertex(i);

@@ -63,9 +63,8 @@ void SolverInterfaceTest:: run()
       testMethod(testImplicitWithCheckpointingMappingStat);
 #     endif // not PRECICE_NO_SPIRIT2
       testMethod(testStationaryMappingWithSolverMesh);
-      //TODO not working no riemann (benjamin's laptop)
-      //testMethod(testBug);
-      // testMethod(testNASTINMeshRestart);
+      testMethod(testBug);
+      testMethod(testNASTINMeshRestart);
 #     ifndef PRECICE_NO_PYTHON
       testMethod(testPinelliCoupled);
 #     endif

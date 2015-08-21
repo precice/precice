@@ -135,7 +135,7 @@ M2NConfiguration:: M2NConfiguration
   doc = "Second participant name involved in communication.";
   attrTo.setDocumentation(doc);
 
-  foreach (XMLTag& tag, tags){
+  for (XMLTag& tag : tags) {
     tag.addAttribute(attrFrom);
     tag.addAttribute(attrTo);
     if(tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS){
