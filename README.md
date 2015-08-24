@@ -6,4 +6,4 @@ It is being developed at the Technische Universität München and at the Univers
 
 The website of preCICE can be found at [www.precice.org](http://www.precice.org)
 
-![Build status](https://travis-ci.org/precice/precice)(https://travis-ci.org/precice/precice.svg?branch=develop)
+[![Build status](https://travis-ci.org/precice/precice)](https://travis-ci.org/precice/precice.svg?branch=develop)
