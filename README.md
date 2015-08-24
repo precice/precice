@@ -5,3 +5,5 @@ preCICE stands for Precise Code Interaction Coupling Environment. Its main compo
 It is being developed at the Technische Universität München and at the University of Stuttgart.
 
 The website of preCICE can be found at [www.precice.org](http://www.precice.org)
+
+https://travis-ci.org/precice/precice.svg?branch=develop
