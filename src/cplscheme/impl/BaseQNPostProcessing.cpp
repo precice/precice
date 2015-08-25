@@ -51,7 +51,6 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _firstTimeStep(true),
   _hasNodesOnInterface(true),
   _oldXTilde(),
-  //_secondaryOldXTildes(),
   _residuals(),
   _secondaryResiduals(),
   _scaledValues(),
@@ -63,7 +62,6 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _matrixVBackup(),
   _matrixWBackup(),
   _matrixColsBackup(),
-  //_secondaryMatricesW(),
   _matrixCols(),
   _dimOffsets(),
   _infostream(),
@@ -141,9 +139,9 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 		 */
 		_dimOffsets.resize(utils::MasterSlave::_size + 1);
 		_dimOffsets[0] = 0;
-		for (auto & elem : _dataIDs) {
-			std::cout<<" Offsets:(vertex) \n"<<cplData[elem]->mesh->getVertexOffsets()<<std::endl;
-		}
+		//for (auto & elem : _dataIDs) {
+		//	std::cout<<" Offsets:(vertex) \n"<<cplData[elem]->mesh->getVertexOffsets()<<std::endl;
+		//}
 		for (size_t i = 0; i < _dimOffsets.size()-1; i++){
 			int accumulatedNumberOfUnknowns = 0;
 			for (auto & elem : _dataIDs) {
@@ -156,11 +154,6 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 		// test that the computed number of unknown per proc equals the number of entries actually present on that proc
 		size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
 		assertion2(entries == unknowns, entries, unknowns);
-
-		if(utils::MasterSlave::_masterMode){
-			//ss<<" Offsets: \n"<<_dimOffsets<<std::endl;
-			std::cout<<" Offsets:(unknowns) \n"<<_dimOffsets<<std::endl;
-		}
 		writeInfo(ss.str());
 		ss.clear();
 
@@ -191,7 +184,7 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	_qrV.setGlobalRows(getLSSystemRows());
 
 
-	// ---------------------------------------------------
+/*	// ---------------------------------------------------
 	//debug output for master-slave mode
 	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
 		ss << "processor [" << utils::MasterSlave::_rank<< "]: unknowns at interface: " << entries << std::endl;
@@ -201,6 +194,7 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	}
 	writeInfo(ss.str(), true);
 	// ---------------------------------------------------
+*/
 
 	// Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
 	for (DataMap::value_type& pair : cplData){

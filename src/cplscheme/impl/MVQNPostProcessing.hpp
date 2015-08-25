@@ -15,6 +15,7 @@
 #include "tarch/la/DynamicVector.h"
 #include "com/Communication.hpp"
 #include "io/TXTWriter.hpp"
+#include "ParallelMatrixOperations.hpp"
 #include <deque>
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -85,15 +86,14 @@ private:
    // @brief stores the approximation of the inverse Jacobian from the previous time step.
    Matrix _oldInvJacobian;
 
-   /**
- 	* @brief Communication between neighboring slaves, backwards
- 	*/
+   // @brief Communication between neighboring slaves, backwards
    com::Communication::SharedPointer _cyclicCommLeft;
 
-     /**
-    * @brief Communication between neighboring slaves, forward
-    */
+   // @brief Communication between neighboring slaves, forward
    com::Communication::SharedPointer _cyclicCommRight;
+
+   // @brief encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
+   ParallelMatrixOperations _parMatrixOps;
 
   // @brief comptes the MVQN update using QR decomposition of V, 
   //        furthermore it updates the inverse of the system jacobian
@@ -104,12 +104,6 @@ private:
 
    // @brief computes underrelaxation for the secondary data
    virtual void computeUnderrelaxationSecondaryData(DataMap& cplData);
-   
-   // @brief computes the quasi-Newton update vector based on the matrices V and W using LU decomposition
-   void computeNewtonFactorsLUDecomposition(DataMap& cplData, DataValues& update);
-   
-   // @brief computes the quasi-Newton update vector based on the matrices V and W using QR decomposition of V
-   void computeNewtonFactorsQRDecomposition(DataMap& cplData, DataValues& update);
    
    // @brief computes the quasi-Newton update vector based on the matrices V and W using a QR
    //        decomposition of V. The decomposition is not re-computed en-block in every iteration
