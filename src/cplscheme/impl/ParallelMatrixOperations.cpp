@@ -33,17 +33,18 @@ _cyclicCommLeft(nullptr),
 _cyclicCommRight(nullptr)
 {}
 
-ParallelMatrixOperations::initialize(
+void ParallelMatrixOperations::initialize(
 		com::Communication::SharedPointer leftComm,
-	   	com::Communication::SharedPointer rightComm)
+		com::Communication::SharedPointer rightComm)
 {
+	preciceTrace("initialize()");
 	if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){
-
-		assertion(_cyclicCommLeft.get() != NULL); assertion(_cyclicCommLeft->isConnected());
-		assertion(_cyclicCommRight.get() != NULL); assertion(_cyclicCommRight->isConnected());
 
 		_cyclicCommLeft = leftComm;
 		_cyclicCommRight = rightComm;
+
+		assertion(_cyclicCommLeft.get() != NULL); assertion(_cyclicCommLeft->isConnected());
+		assertion(_cyclicCommRight.get() != NULL); assertion(_cyclicCommRight->isConnected());
 	}
 }
 
@@ -55,13 +56,13 @@ void ParallelMatrixOperations::multiply
 	std::vector<int>& offsets,
 	int p, int q, int r)
 {
-	assertion2(result.rows() == leftMatrix.rows(), result.rows(), leftMatrix.rows());
+	preciceTrace("multiply()");
 	assertion2(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
 	assertion2(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
 	// if serial computation on single processor, i.e, no master-slave mode
 	if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
-		multiply(leftMatrix, rightMatrix, result);
+		tarch::la::multiply(leftMatrix, rightMatrix, result);
 
 	// if parallel computation on p processors, i.e., master-slave mode
 	}else{
@@ -87,13 +88,30 @@ void ParallelMatrixOperations::multiply
 
 void ParallelMatrixOperations::multiply
 (
+	TarchMatrix& leftMatrix,
+	TarchColumnMatrix& rightMatrix,
+	TarchMatrix& result,
+	std::vector<int>& offsets,
+	int p, int q, int r)
+{
+	preciceTrace("multiply()");
+	TarchMatrix rM(rightMatrix.rows(), rightMatrix.cols());
+	for(int i = 0; i < rightMatrix.rows(); i++)
+		for(int j = 0; j < rightMatrix.cols(); j++){
+			rM(i,j) = rightMatrix(i,j);
+		}
+	multiply(leftMatrix, rM, result, offsets, p, q, r);
+}
+
+void ParallelMatrixOperations::multiply
+(
 	EigenMatrix& leftMatrix,
 	EigenMatrix& rightMatrix,
 	EigenMatrix& result,
 	std::vector<int>& offsets,
 	int p, int q, int r)
 {
-	assertion2(result.rows() == leftMatrix.rows(), result.rows(), leftMatrix.rows());
+	preciceTrace("multiply()");
 	assertion2(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
 	assertion2(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
@@ -127,8 +145,8 @@ void ParallelMatrixOperations::multiply
 void ParallelMatrixOperations::_multiplyNM(
 		TarchMatrix& leftMatrix, TarchMatrix& rightMatrix, TarchMatrix& result, std::vector<int>& offsets, int p, int q, int r)
 {
-
-  for(int i = 0; i < leftMatrix.rows(); i++){
+	preciceTrace("multiplyNM()");
+	for(int i = 0; i < leftMatrix.rows(); i++){
 	  int rank = 0;
 	  // find rank of processor that stores the result
 	  // the second while is necessary if processors with no vertices are present
@@ -160,28 +178,246 @@ void ParallelMatrixOperations::_multiplyNM(
 			  result(local_row, j) = res_ij;
 		  }
 	  }
-  }
+	}
 }
 
 // @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
 void ParallelMatrixOperations::_multiplyNM(
 		EigenMatrix& leftMatrix, EigenMatrix& rightMatrix, EigenMatrix& result, std::vector<int>& offsets, int p, int q, int r)
 {
+	preciceTrace("multiplyNM()");
+	for(int i = 0; i < leftMatrix.rows(); i++){
+	  int rank = 0;
+	  // find rank of processor that stores the result
+	  // the second while is necessary if processors with no vertices are present
+	  // Note: the >'=' here is crucial: In case some procs do not have any vertices,
+	  // this while loop continues incrementing rank if entries in offsets are equal, i.e.,
+	  // it runs to the next non-empty proc.
+	  while(i >= offsets[rank+1]) rank++;
 
+	  EigenVector lMRow = leftMatrix.row(i);
+
+	  for(int j = 0; j < r; j++){
+
+		  EigenVector rMCol = rightMatrix.col(j);
+		  // TODO: better: implement a reduce-operation (no loop over all slaves)
+		  double res_ij = utils::MasterSlave::dot(lMRow, rMCol);
+
+		  // find proc that needs to store the result.
+		  int local_row;
+		  if(utils::MasterSlave::_rank == rank)
+		  {
+			  local_row = i - offsets[rank];
+			  result(local_row, j) = res_ij;
+		  }
+	  }
+	}
 }
 
 // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
 void ParallelMatrixOperations::_multiplyNN(
 		TarchMatrix& leftMatrix, TarchMatrix& rightMatrix, TarchMatrix& result, std::vector<int>& offsets, int p, int q, int r)
 {
+	preciceTrace("multiplyNN()");
+	/*
+	 * For multiplication W_til * Z = J
+	 * -----------------------------------------------------------------------
+	 * p = r = n_global, q = m
+	 *
+	 * leftMatrix:  local: (n_local x m) 		global: (n_global x m)
+	 * rightMatrix: local: (m x n_local) 		global: (m x n_global)
+	 * result: 		local: (n_global x n_local) global: (n_global x n_global)
+	 * -----------------------------------------------------------------------
+	 */
 
+
+	//int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
+	int prevProc = (utils::MasterSlave::_rank -1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank -1;
+	int rows_rcv = (prevProc > 0) ? offsets[prevProc+1] - offsets[prevProc] : offsets[1];
+	TarchMatrix leftMatrix_rcv(rows_rcv, q, 0.0);
+
+	com::Request::SharedPointer requestSend;
+	com::Request::SharedPointer requestRcv;
+
+	// initiate asynchronous send operation of leftMatrix (W_til) --> nextProc (this data is needed in cycle 1)    dim: n_local x cols
+	if(leftMatrix.size() > 0)
+		requestSend = _cyclicCommRight->aSend(&leftMatrix(0,0), leftMatrix.size(), 0);
+
+	// initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til      dim: rows_rcv x cols
+	if(leftMatrix_rcv.size() > 0)
+		requestRcv = _cyclicCommLeft->aReceive(&leftMatrix_rcv(0,0), rows_rcv * leftMatrix.cols(), 0);
+
+	// compute diagonal blocks where all data is local and no communication is needed
+	// compute block matrices of J_inv of size (n_til x n_til), n_til = local n
+	TarchMatrix diagBlock(leftMatrix.rows(), leftMatrix.rows(), 0.0);
+	tarch::la::multiply(leftMatrix, rightMatrix, diagBlock);
+
+	// set block at corresponding row-index on proc
+	int off = offsets[utils::MasterSlave::_rank];
+	assertion2(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
+	for(int ii = 0; ii < diagBlock.rows(); ii++)
+		for(int jj = 0; jj < result.cols(); jj++)
+		{
+		  result(ii+off, jj) = diagBlock(ii, jj);
+		}
+
+	/**
+	 * cyclic send-receive operation
+	 */
+	for(int cycle = 1; cycle < utils::MasterSlave::_size; cycle++){
+
+		// wait until W_til from previous processor is fully received
+		if(requestSend != NULL) requestSend->wait();
+		if(requestRcv != NULL)  requestRcv->wait();
+	
+		// leftMatrix (leftMatrix_rcv) is available - needed for local multiplication and hand over to next proc
+		TarchMatrix leftMatrix_copy(leftMatrix_rcv);
+	
+		// initiate async send to hand over leftMatrix (W_til) to the next proc (this data will be needed in the next cycle)    dim: n_local x cols
+		if(cycle < utils::MasterSlave::_size-1){
+		  if(leftMatrix_copy.size() > 0)
+			  requestSend = _cyclicCommRight->aSend(&leftMatrix_copy(0,0), leftMatrix_copy.size(), 0);
+		}
+	
+		// compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cylce
+		int sourceProc_nextCycle = (utils::MasterSlave::_rank - (cycle+1) < 0) ?
+			  utils::MasterSlave::_size + (utils::MasterSlave::_rank - (cycle+1)) : utils::MasterSlave::_rank - (cycle+1);
+	
+		int sourceProc = (utils::MasterSlave::_rank - cycle < 0) ?
+			  utils::MasterSlave::_size + (utils::MasterSlave::_rank - cycle) : utils::MasterSlave::_rank - cycle;
+	
+		int rows_rcv_nextCycle = (sourceProc_nextCycle > 0) ? offsets[sourceProc_nextCycle+1] - offsets[sourceProc_nextCycle] : offsets[1];
+		rows_rcv = (sourceProc > 0) ? offsets[sourceProc+1] - offsets[sourceProc] : offsets[1];
+		leftMatrix_rcv = TarchMatrix(rows_rcv_nextCycle, q, 0.0);
+	
+	
+		// initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til (this data is needed in the next cycle)
+		if(cycle < utils::MasterSlave::_size-1){
+		  if(leftMatrix_rcv.size() > 0) // only receive data, if data has been sent
+			  requestRcv = _cyclicCommLeft->aReceive(&leftMatrix_rcv(0,0), leftMatrix_rcv.size(), 0);
+		}
+	
+		// compute block with new local data
+		TarchMatrix block(rows_rcv, rightMatrix.cols(), 0.0);
+		tarch::la::multiply(leftMatrix_copy, rightMatrix, block);
+	
+		// set block at corresponding index in J_inv
+		// the row-offset of the current block is determined by the proc that sends the part of the W_til matrix
+		// note: the direction and ordering of the cyclic sending operation is chosen s.t. the computed block is
+		//       local on the current processor (in J_inv).
+		off = offsets[sourceProc];
+		assertion2(result.cols() == block.cols(), result.cols(), block.cols());
+		for(int ii = 0; ii < block.rows(); ii++)
+		  for(int jj = 0; jj < result.cols(); jj++)
+		  {
+			  result(ii+off, jj) = block(ii, jj);
+		  }
+	}
 }
 
 // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
 void ParallelMatrixOperations::_multiplyNN(
 		EigenMatrix& leftMatrix, EigenMatrix& rightMatrix, EigenMatrix& result, std::vector<int>& offsets, int p, int q, int r)
 {
+	preciceTrace("multiplyNN()");
+	/*
+	 * For multiplication W_til * Z = J
+	 * -----------------------------------------------------------------------
+	 * p = r = n_global, q = m
+	 *
+	 * leftMatrix:  local: (n_local x m) 		global: (n_global x m)
+	 * rightMatrix: local: (m x n_local) 		global: (m x n_global)
+	 * result: 		local: (n_global x n_local) global: (n_global x n_global)
+	 * -----------------------------------------------------------------------
+	 */
 
+	assertion2(leftMatrix.cols() == q, leftMatrix.cols(), q);
+	assertion2(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
+	assertion2(result.rows() == p, result.rows(), p);
+
+	//int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
+	int prevProc = (utils::MasterSlave::_rank -1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank -1;
+	int rows_rcv = (prevProc > 0) ? offsets[prevProc+1] - offsets[prevProc] : offsets[1];
+	//EigenMatrix leftMatrix_rcv = EigenMatrix::Zero(rows_rcv, q);
+	EigenMatrix leftMatrix_rcv(rows_rcv, q);
+
+	com::Request::SharedPointer requestSend;
+	com::Request::SharedPointer requestRcv;
+
+	// initiate asynchronous send operation of leftMatrix (W_til) --> nextProc (this data is needed in cycle 1)    dim: n_local x cols
+	if(leftMatrix.size() > 0)
+		requestSend = _cyclicCommRight->aSend(leftMatrix.data(), leftMatrix.size(), 0);
+
+	// initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til      dim: rows_rcv x cols
+	if(leftMatrix_rcv.size() > 0)
+		requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv.data(), leftMatrix_rcv.size(), 0);
+
+	// compute diagonal blocks where all data is local and no communication is needed
+	// compute block matrices of J_inv of size (n_til x n_til), n_til = local n
+	EigenMatrix diagBlock(leftMatrix.rows(), leftMatrix.rows());
+	diagBlock = leftMatrix * rightMatrix;
+
+	// set block at corresponding row-index on proc
+	int off = offsets[utils::MasterSlave::_rank];
+	assertion2(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
+	for(int ii = 0; ii < diagBlock.rows(); ii++)
+		for(int jj = 0; jj < result.cols(); jj++)
+		{
+		  result(ii+off, jj) = diagBlock(ii, jj);
+		}
+
+	/**
+	 * cyclic send-receive operation
+	 */
+	for(int cycle = 1; cycle < utils::MasterSlave::_size; cycle++){
+
+		// wait until W_til from previous processor is fully received
+		if(requestSend != NULL) requestSend->wait();
+		if(requestRcv != NULL)  requestRcv->wait();
+
+		// leftMatrix (leftMatrix_rcv) is available - needed for local multiplication and hand over to next proc
+		EigenMatrix leftMatrix_copy(leftMatrix_rcv);
+
+		// initiate async send to hand over leftMatrix (W_til) to the next proc (this data will be needed in the next cycle)    dim: n_local x cols
+		if(cycle < utils::MasterSlave::_size-1){
+		  if(leftMatrix_copy.size() > 0)
+			  requestSend = _cyclicCommRight->aSend(leftMatrix_copy.data(), leftMatrix_copy.size(), 0);
+		}
+
+		// compute proc that owned leftMatrix_rcv (Wtil_rcv) at the very beginning for each cylce
+		int sourceProc_nextCycle = (utils::MasterSlave::_rank - (cycle+1) < 0) ?
+			  utils::MasterSlave::_size + (utils::MasterSlave::_rank - (cycle+1)) : utils::MasterSlave::_rank - (cycle+1);
+
+		int sourceProc = (utils::MasterSlave::_rank - cycle < 0) ?
+			  utils::MasterSlave::_size + (utils::MasterSlave::_rank - cycle) : utils::MasterSlave::_rank - cycle;
+
+		int rows_rcv_nextCycle = (sourceProc_nextCycle > 0) ? offsets[sourceProc_nextCycle+1] - offsets[sourceProc_nextCycle] : offsets[1];
+		rows_rcv = (sourceProc > 0) ? offsets[sourceProc+1] - offsets[sourceProc] : offsets[1];
+		leftMatrix_rcv = EigenMatrix::Zero(rows_rcv_nextCycle, q);
+
+
+		// initiate asynchronous receive operation for leftMatrix (W_til) from previous processor --> W_til (this data is needed in the next cycle)
+		if(cycle < utils::MasterSlave::_size-1){
+		  if(leftMatrix_rcv.size() > 0) // only receive data, if data has been sent
+			  requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv.data(), leftMatrix_rcv.size(), 0);
+		}
+
+		// compute block with new local data
+		EigenMatrix block(rows_rcv, rightMatrix.cols());
+		block = leftMatrix_copy * rightMatrix;
+
+		// set block at corresponding index in J_inv
+		// the row-offset of the current block is determined by the proc that sends the part of the W_til matrix
+		// note: the direction and ordering of the cyclic sending operation is chosen s.t. the computed block is
+		//       local on the current processor (in J_inv).
+		off = offsets[sourceProc];
+		assertion2(result.cols() == block.cols(), result.cols(), block.cols());
+		for(int ii = 0; ii < block.rows(); ii++)
+		  for(int jj = 0; jj < result.cols(); jj++)
+		  {
+			  result(ii+off, jj) = block(ii, jj);
+		  }
+	}
 }
 
 
@@ -193,9 +429,45 @@ void ParallelMatrixOperations::multiply
 	std::vector<int>& offsets,
 	int p, int q)
 {
+	preciceTrace("multiply()");
+	assertion2(v.size() == A.cols(), v.size(), A.cols());
 
+	// if serial computation on single processor, i.e, no master-slave mode
+	if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
+		tarch::la::multiply(A, v, result);
+
+	// if parallel computation on p processors, i.e., master-slave mode
+	}else{
+		assertion(utils::MasterSlave::_communication.get() != NULL);
+		assertion(utils::MasterSlave::_communication->isConnected());
+
+
+	  	  for(int i = 0; i < A.rows(); i++){
+			  int rank = 0;
+			  // find rank of processor that stores the result
+			  // the second while is necessary if processors with no vertices are present
+			  while(i >= offsets[rank+1]) rank++;
+
+			  TarchVector Arow(A.cols(), 0.0);
+			  for (int s = 0; s < A.cols(); s++) {
+				  Arow(s) = A(i,s);
+			  }
+
+			  // TODO: better: implement a reduce-operation (no loop over all slaves)
+			  double up_ij = utils::MasterSlave::dot(Arow, v);
+
+			  // find proc that needs to store the result.
+			  int local_row;
+			  if(utils::MasterSlave::_rank == rank)
+			  {
+				  local_row = i - offsets[rank];
+				  result(local_row) = up_ij;
+			  }
+	  	  }
+	}
 }
 
+/*
 void ParallelMatrixOperations::multiply
 (
 	EigenMatrix& A,
@@ -206,6 +478,7 @@ void ParallelMatrixOperations::multiply
 {
 
 }
+*/
 
 
 }}} // namespace precice, cplscheme, impl

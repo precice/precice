@@ -9,7 +9,7 @@
     <log-filter target=""      component=""      switch="off"/>
     <!-- <log-filter target="debug" component="precice::com::MPICommunication" switch="on"/> -->
 
-    <log-filter target="debug" component="precice::utils::Parallel" switch="on"/>
+    <log-filter target="debug" component="precice::utils::Parallel" switch="off"/>
     <log-filter target="debug" component="precice::com::tests" switch="on"/>
     
     <!-- <log-filter target=""      component=""      switch="on"/> -->

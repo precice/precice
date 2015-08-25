@@ -13,9 +13,13 @@
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
+#include "com/MPIPortsCommunication.hpp"
 #include "com/Communication.hpp"
 #include "Eigen/Dense"
 
+namespace precice {
+namespace cplscheme {
+namespace impl {
 
 class ParallelMatrixOperations
 {
@@ -24,6 +28,7 @@ public:
 	// tarch
 	typedef tarch::la::DynamicVector<double> TarchVector;
 	typedef tarch::la::DynamicMatrix<double> TarchMatrix;
+	typedef tarch::la::DynamicColumnMatrix<double> TarchColumnMatrix;
 
 	// Eigen
 	typedef Eigen::MatrixXd EigenMatrix;
@@ -64,6 +69,11 @@ public:
 		   	   	 TarchMatrix& result,
 		   	   	 std::vector<int>& offsets,
 		   	   	 int p, int q, int r);
+   void multiply(TarchMatrix& leftMatrix,
+   		   	   	 TarchColumnMatrix& rightMatrix,
+   		   	   	 TarchMatrix& result,
+   		   	   	 std::vector<int>& offsets,
+   		   	   	 int p, int q, int r);
 
    /**
 	* @brief multiplies Eigen matrices in parallel or serial execution.
@@ -102,13 +112,17 @@ public:
 	* @param [IN] p - first dimension, i.e., overall (global) number of rows
 	* @param [IN] q - second dimension, i.e., overall (global) number cols
 	*/
-   void multiply(EigenMatrix& A,
+/*   void multiply(EigenMatrix& A,
 		   	     EigenVector& v,
 		   	     EigenVector& result,
 		   	     std::vector<int>& offsets,
 		   	     int p, int q);
+*/
 
 private:
+
+   // @brief Logging device.
+   static tarch::logging::Log _log;
 
    // @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
    void _multiplyNM(TarchMatrix& leftMatrix, TarchMatrix& rightMatrix, TarchMatrix& result, std::vector<int>& offsets, int p, int q, int r);
