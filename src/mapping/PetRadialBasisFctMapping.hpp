@@ -223,7 +223,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   _matrixC.reset();
   ierr = MatSetType(_matrixC.matrix, MATSBAIJ); CHKERRV(ierr); // create symmetric, block sparse matrix.
-  preciceDebug("Set matrix C to size " << n);
+  preciceDebug("Set matrix C to local size " << n);
   ierr = MatSetSizes(_matrixC.matrix, n, n, PETSC_DECIDE, PETSC_DECIDE); CHKERRV(ierr);
   // ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
   ierr = MatSetUp(_matrixC.matrix); CHKERRV(ierr);
@@ -241,21 +241,23 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   IS ISlocal, ISglobal, ISidentity, ISidentityGlobal;
   ISLocalToGlobalMapping ISidentityMapping;
   ierr = ISCreateGeneral(PETSC_COMM_WORLD, myIndizes.size(), myIndizes.data(), PETSC_COPY_VALUES, &ISlocal); CHKERRV(ierr);
-  ierr = ISAllGather(ISlocal, &ISglobal); CHKERRV(ierr);
-  ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr);
-  ierr = MatSetLocalToGlobalMapping(_matrixC.matrix, _ISmapping, _ISmapping); CHKERRV(ierr);
-  // Create an identy mapping and use that for the columns of matrixA.
+  ierr = ISAllGather(ISlocal, &ISglobal); CHKERRV(ierr); // Gather the IS from all processors
+  ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr); // Make it a mapping
+  ierr = MatSetLocalToGlobalMapping(_matrixC.matrix, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
+  
+  // Create an identity mapping and use that for the columns of matrixA.
   ierr = ISCreateStride(PETSC_COMM_WORLD, _matrixA.ownerRange().second - _matrixA.ownerRange().first, _matrixA.ownerRange().first, 1, &ISidentity); CHKERRV(ierr);
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
   ierr = MatSetLocalToGlobalMapping(_matrixA.matrix, ISidentityMapping, _ISmapping); CHKERRV(ierr);
 
-  int myRank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+  // int myRank;
+  // MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
   // if (myRank == 0) {
-  // cout << "== ISidentityGlobal ==" << endl;
-  // ISView(ISidentityGlobal, PETSC_VIEWER_STDOUT_SELF);
-  // ISView(ISglobal, PETSC_VIEWER_STDOUT_SELF);
+  //   cout << "== ISidentityGlobal ==" << endl;
+  //   ISView(ISidentityGlobal, PETSC_VIEWER_STDOUT_SELF);
+  //   cout << "== ISglobal ==" << endl;
+  //   ISView(ISglobal, PETSC_VIEWER_STDOUT_SELF);
   // }
 
   int i = 0;
@@ -480,8 +482,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // }
 
   _hasComputedMapping = true;
-  // _matrixC.view();
-  _matrixA.view();
+  // _matrixA.view();
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
