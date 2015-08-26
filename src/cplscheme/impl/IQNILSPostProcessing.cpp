@@ -71,7 +71,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
   DataMap& cplData)
 {
 	// Compute residuals of secondary data
-	foreach (int id, _secondaryDataIDs){
+	for (int id: _secondaryDataIDs){
 		DataValues& secResiduals = _secondaryResiduals[id];
 		PtrCouplingData data = cplData[id];
 		assertion2(secResiduals.size() == data->values->size(),
@@ -90,19 +90,19 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 			if (not columnLimitReached && overdetermined) {
 
 				// Append column for secondary W matrices
-				foreach (int id, _secondaryDataIDs) {
+				for (int id: _secondaryDataIDs) {
 					_secondaryMatricesW[id].appendFront(_secondaryResiduals[id]);
 				}
 			}
 			else {
 				// Shift column for secondary W matrices
-				foreach (int id, _secondaryDataIDs) {
+				for (int id: _secondaryDataIDs) {
 					_secondaryMatricesW[id].shiftSetFirst(_secondaryResiduals[id]);
 				}
 			}
 
 			// Compute delta_x_tilde for secondary data
-			foreach (int id, _secondaryDataIDs) {
+			for (int id: _secondaryDataIDs) {
 				DataMatrix& secW = _secondaryMatricesW[id];
 				assertion2(secW.column(0).size() == cplData[id]->values->size(),
 						secW.column(0).size(), cplData[id]->values->size());
@@ -112,7 +112,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 		}
 
 		// Store x_tildes for secondary data
-		foreach (int id, _secondaryDataIDs) {
+		for (int id: _secondaryDataIDs) {
 			assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
 					_secondaryOldXTildes[id].size(), cplData[id]->values->size());
 			_secondaryOldXTildes[id] = *(cplData[id]->values);
@@ -129,14 +129,14 @@ void IQNILSPostProcessing::computeUnderrelaxationSecondaryData
   DataMap& cplData)
 {
     //Store x_tildes for secondary data
-    foreach (int id, _secondaryDataIDs){
+    for (int id: _secondaryDataIDs){
       assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
                  _secondaryOldXTildes[id].size(), cplData[id]->values->size());
       _secondaryOldXTildes[id] = *(cplData[id]->values);
     }
 
     // Perform underrelaxation with initial relaxation factor for secondary data
-    foreach (int id, _secondaryDataIDs){
+    for (int id: _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
       DataValues& values = *(data->values);
       values *= _initialRelaxation;                   // new * omg
