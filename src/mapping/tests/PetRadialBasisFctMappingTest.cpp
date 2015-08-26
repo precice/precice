@@ -16,27 +16,28 @@ namespace precice {
 namespace mapping {
 namespace tests {
 
-tarch::logging::Log PetRadialBasisFctMappingTest::
-  _log ( "precice::mapping::tests::PetRadialBasisFctMappingTest" );
+tarch::logging::Log PetRadialBasisFctMappingTest::_log ("precice::mapping::tests::PetRadialBasisFctMappingTest");
 
 PetRadialBasisFctMappingTest:: PetRadialBasisFctMappingTest()
-:
+  :
   TestCase ( "precice::mapping::tests::PetRadialBasisFctMappingTest" ),
   tolerance(1e-7)
 {}
 
 void PetRadialBasisFctMappingTest:: run()
 {
-//  testMethod(testPetThinPlateSplines);
-//  testMethod(testPetMultiquadrics);
-//  testMethod(testPetInverseMultiquadrics);
-//  testMethod(testPetVolumeSplines);
-//  testMethod(testPetGaussian);
-//  testMethod(testPetCompactThinPlateSplinesC2);
-//  testMethod(testPetCompactPolynomialC0);
-//  testMethod(testPetCompactPolynomialC6);
-//  testMethod(testDeadAxis2D);
-//  testMethod(testDeadAxis3D);
+    PETSC_COMM_WORLD = PETSC_COMM_SELF;
+    testMethod(testPetThinPlateSplines);
+    testMethod(testPetMultiquadrics);
+    testMethod(testPetInverseMultiquadrics);
+    testMethod(testPetVolumeSplines);
+    testMethod(testPetGaussian);
+    testMethod(testPetCompactThinPlateSplinesC2);
+    testMethod(testPetCompactPolynomialC0);
+    testMethod(testPetCompactPolynomialC6);
+    testMethod(testDeadAxis2D);
+    testMethod(testDeadAxis3D);
+    PETSC_COMM_WORLD = MPI_COMM_WORLD;
 }
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
@@ -576,7 +577,7 @@ void PetRadialBasisFctMappingTest:: testDeadAxis2D
 
   ThinPlateSplines fct;
   PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
-      xDead, yDead, zDead);
+                                                     xDead, yDead, zDead);
 
   // Create mesh to map from
   mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
