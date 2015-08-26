@@ -201,8 +201,8 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 		auto R =  _qrV.matrixR();
 		if (getLSSystemCols() > 1) {
 			for (int i = 0; i < _qrV.cols(); i++) {
-				if (std::fabs(R(i, i)) < _singularityLimit) {
-				//if (std::fabs(R(i, i)) < 0.0) {
+				//if (std::fabs(R(i, i)) < _singularityLimit) {
+				if (std::fabs(R(i, i)) < 0.0) {
 					std::stringstream ss;
 					ss << "(updatedQR) removing linear dependent column "<< i << "  time step: " << tSteps
 					   << " iteration: " << its<< "\n" << std::endl;
@@ -262,7 +262,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
   // multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
   //                                    parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
-  _parMatrixOps.multiply(_oldInvJacobian, V, W_til, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols());
+  _parMatrixOps.multiply(_oldInvJacobian, V, W_til, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
 
 
   // W_til = (W-J_inv_n*V) = (W-V_tilde)

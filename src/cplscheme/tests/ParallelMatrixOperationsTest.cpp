@@ -535,6 +535,7 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp_Eigen()
 	Eigen::MatrixXd WZ_local (n_global, n_local);
 	Eigen::MatrixXd JW_local (n_local, m_global);
 	Eigen::MatrixXd res_local (n_local,1 );
+	Eigen::VectorXd res_local_vec(n_local);
 	Eigen::MatrixXd Jres_local (n_local, 1);
 
 	/*
@@ -561,6 +562,7 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp_Eigen()
 
 	for(int i = 0; i < n_local; i++){
 		res_local(i) = res_global(i+off);
+		res_local_vec(i) = res_global(i+off);
 		Jres_local(i) = Jres_global(i+off);
 	}
 
@@ -586,8 +588,16 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp_Eigen()
 	parMatrixOps.multiply(J_local, res_local, resJres_local, vertexOffsets, n_global, n_global, 1);
 	validate_result_equals_reference(resJres_local, Jres_global, vertexOffsets, true);
 
+	// 4.) multiply JW = J * W (n x m), parallel: (n_local x m) with block-wise multiplication
+	Eigen::MatrixXd resJW_local2 (n_local, m_global);
+	parMatrixOps.multiply(J_local, W_local, resJW_local2, vertexOffsets, n_global, n_global, m_global, false);
+	validate_result_equals_reference(resJW_local2, JW_global, vertexOffsets, true);
 
-	utils::Parallel::synchronizeProcesses();
+	// 5.) multiply Jres = J * res (n x 1), parallel: (n_local x 1) with block-wise multiplication
+	Eigen::VectorXd resJres_local2 (n_local); // use the function with parameter of type Eigen::VectorXd
+	parMatrixOps.multiply(J_local, res_local_vec, resJres_local2, vertexOffsets, n_global, n_global, 1, false);
+	Eigen::MatrixXd matrix_cast = resJres_local2;
+	validate_result_equals_reference(matrix_cast, Jres_global, vertexOffsets, true);
 
 
 	utils::MasterSlave::_communication->closeConnection();

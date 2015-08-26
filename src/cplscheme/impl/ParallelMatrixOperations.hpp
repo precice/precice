@@ -16,6 +16,7 @@
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Communication.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "Eigen/Dense"
 
@@ -69,12 +70,12 @@ public:
    void multiply(TarchMatrix& leftMatrix,
 		   	   	 TarchMatrix& rightMatrix,
 		   	   	 TarchMatrix& result,
-		   	   	 std::vector<int>& offsets,
+		   	   	 const std::vector<int>& offsets,
 		   	   	 int p, int q, int r);
    void multiply(TarchMatrix& leftMatrix,
    		   	   	 TarchColumnMatrix& rightMatrix,
    		   	   	 TarchMatrix& result,
-   		   	   	 std::vector<int>& offsets,
+   		   	   	 const std::vector<int>& offsets,
    		   	   	 int p, int q, int r);
    /**
     * @brief multiplies tarch matrix with tarch vector in parallel or serial execution.
@@ -85,7 +86,7 @@ public:
    void multiply(TarchMatrix& A,
 		   	   	 TarchVector& v,
 		   	   	 TarchVector& result,
-		   	   	 std::vector<int>& offsets,
+		   	   	 const std::vector<int>& offsets,
 		   	   	 int p, int q);
 
    /**
@@ -100,13 +101,21 @@ public:
 	* @param [IN] p - first dimension, i.e., overall (global) number of rows
     * @param [IN] q - inner dimension
     * @param [IN] r - second dimension, i.e., overall (global) number cols of result matrix
+    * @param [IN] dotProductComputation - computes the (n1 x n2) * (n2 x m) multiplication based
+    * 					on a dot-product computation (low storage requirement, large overhead due to
+    * 					communication set-up) iff parameter is true.
+    * 					Otherwise, the computation is based on a block-wise matrix matrix computation
+    * 					of the local matrices that are communicated and broadcasted (large local storage
+    * 					requirement of (n_global x m), but small overhead due to communication set-up)
+    * 					Default is dot-product based computation.
 	*/
    template<typename Derived1, typename Derived2>
    void multiply(Eigen::PlainObjectBase<Derived1>& leftMatrix,
 		   	   	 Eigen::PlainObjectBase<Derived2>& rightMatrix,
 		   	   	 Eigen::PlainObjectBase<Derived2>& result,
-   		   	   	 std::vector<int>& offsets,
-   		   	   	 int p, int q, int r)
+   		   	   	 const std::vector<int>& offsets,
+   		   	   	 int p, int q, int r,
+   		   	   	 bool dotProductComputation = true)
    {
 		preciceTrace("multiply()");
 		assertion2(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
@@ -133,7 +142,10 @@ public:
 			// case p != r, i.e., usually p = number of columns of the least squares system
 			// perform parallel multiplication based on dot-product
 			}else{
-				_multiplyNM(leftMatrix, rightMatrix, result, offsets, p, q, r);
+				if(dotProductComputation)
+					_multiplyNM_dotProduct(leftMatrix, rightMatrix, result, offsets, p, q, r);
+				else
+					_multiplyNM_block(leftMatrix, rightMatrix, result, offsets, p, q, r);
 			}
 		}
    }
@@ -145,10 +157,10 @@ private:
    static tarch::logging::Log _log;
 
    // @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
-   void _multiplyNM(TarchMatrix& leftMatrix, TarchMatrix& rightMatrix, TarchMatrix& result, std::vector<int>& offsets, int p, int q, int r);
+   void _multiplyNM(TarchMatrix& leftMatrix, TarchMatrix& rightMatrix, TarchMatrix& result, const std::vector<int>& offsets, int p, int q, int r);
 
    // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
-   void _multiplyNN(TarchMatrix& leftMatrix, TarchMatrix& rightMatrix, TarchMatrix& result, std::vector<int>& offsets, int p, int q, int r);
+   void _multiplyNN(TarchMatrix& leftMatrix, TarchMatrix& rightMatrix, TarchMatrix& result, const std::vector<int>& offsets, int p, int q, int r);
 
 
 
@@ -157,7 +169,7 @@ private:
    void _multiplyNN(Eigen::PlainObjectBase<Derived1>& leftMatrix,
 		   	   	    Eigen::PlainObjectBase<Derived2>& rightMatrix,
 		   	   	    Eigen::PlainObjectBase<Derived2>& result,
-		   	   	    std::vector<int>& offsets,
+		   	   	    const std::vector<int>& offsets,
 		   	   	    int p, int q, int r)
    {
 		preciceTrace("multiplyNN()");
@@ -201,11 +213,7 @@ private:
 		// set block at corresponding row-index on proc
 		int off = offsets[utils::MasterSlave::_rank];
 		assertion2(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
-		for(int ii = 0; ii < diagBlock.rows(); ii++)
-			for(int jj = 0; jj < result.cols(); jj++)
-			{
-			  result(ii+off, jj) = diagBlock(ii, jj);
-			}
+		result.block(off, 0, diagBlock.rows(), diagBlock.cols()) = diagBlock;
 
 		/**
 		 * cyclic send-receive operation
@@ -253,20 +261,16 @@ private:
 			//       local on the current processor (in J_inv).
 			off = offsets[sourceProc];
 			assertion2(result.cols() == block.cols(), result.cols(), block.cols());
-			for(int ii = 0; ii < block.rows(); ii++)
-			  for(int jj = 0; jj < result.cols(); jj++)
-			  {
-				  result(ii+off, jj) = block(ii, jj);
-			  }
+			result.block(off, 0, block.rows(), block.cols()) = block;
 		}
    }
 
    // @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
    template<typename Derived1, typename Derived2>
-   void _multiplyNM(Eigen::PlainObjectBase<Derived1>& leftMatrix,
+   void _multiplyNM_dotProduct(Eigen::PlainObjectBase<Derived1>& leftMatrix,
 		   	   	    Eigen::PlainObjectBase<Derived2>& rightMatrix,
 		   	   	    Eigen::PlainObjectBase<Derived2>& result,
-		   	   	    std::vector<int>& offsets,
+		   	   	    const std::vector<int>& offsets,
 		   	   	    int p, int q, int r)
    {
 		preciceTrace("multiplyNM()");
@@ -297,6 +301,56 @@ private:
 		  }
 		}
    }
+
+	// @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
+	template<typename Derived1, typename Derived2>
+	void _multiplyNM_block(Eigen::PlainObjectBase<Derived1>& leftMatrix,
+				Eigen::PlainObjectBase<Derived2>& rightMatrix,
+				Eigen::PlainObjectBase<Derived2>& result,
+				const std::vector<int>& offsets,
+				int p, int q, int r)
+	{
+		preciceTrace("multiplyNM()");
+
+		// multiply local block (saxpy-based approach)
+		// dimension: (n_global x n_local) * (n_local x m) = (n_global x m)
+		Eigen::MatrixXd block = Eigen::MatrixXd::Zero(p, r);
+		block.noalias() = leftMatrix * rightMatrix;
+
+		// all blocks have size (n_global x m)
+		// Note: if procs have no vertices, the block size remains (n_global x m), however,
+		// 	     it must be initialized with zeros, so zeros are added for those procs)
+		if(utils::MasterSlave::_slaveMode){
+		  utils::MasterSlave::_communication->send(block.data(), block.size(), 0);
+		  if(result.size() > 0)
+			  utils::MasterSlave::_communication->receive(result.data(), result.size(), 0);
+		}
+		if(utils::MasterSlave::_masterMode){
+			Eigen::MatrixXd summarizedBlocks = Eigen::MatrixXd::Zero(p, r);
+			summarizedBlocks = block;
+
+			for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
+				//Eigen::MatrixXd rcv_block = Eigen::MatrixXd::Zero(p, r);
+				utils::MasterSlave::_communication->receive(block.data(), block.size(), rankSlave);
+				summarizedBlocks += block;
+			}
+
+			// distrubute blocks of summarizedBlocks (result of multiplication) to corresponding slaves
+			result = summarizedBlocks.block(0, 0, offsets[1], r);
+
+			for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
+				int off = offsets[rankSlave];
+				int send_rows = offsets[rankSlave+1] - offsets[rankSlave];
+
+				if(summarizedBlocks.block(off, 0, send_rows, r).size() > 0){
+					// necessary to save the matrix-block that is to be sent in a temporary matrix-object
+					// otherwise, the send routine walks over the bounds of the block (matrix structure is still from the entire matrix)
+					Eigen::MatrixXd sendBlock = summarizedBlocks.block(off, 0, send_rows, r);
+					utils::MasterSlave::_communication->send(sendBlock.data(),sendBlock.size(), rankSlave);
+				}
+			}
+		}
+	}
 
 
 	/**
