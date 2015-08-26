@@ -109,8 +109,6 @@ void MVQNPostProcessing:: initialize
   // initialize parallel matrix-matrix operation module
   _parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight);
 
-
-  double init = 0.0;
   int entries = _residuals.size();
   int global_n = 0;
 
@@ -120,8 +118,8 @@ void MVQNPostProcessing:: initialize
 		global_n = _dimOffsets.back();
 	}
   
-  _invJacobian = Matrix(global_n, entries, init);
-  _oldInvJacobian = Matrix(global_n, entries, init);
+  _invJacobian = Eigen::MatrixXd::Zero(global_n, entries);
+  _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
 }
 
 
@@ -172,12 +170,12 @@ void MVQNPostProcessing::computeQNUpdate
     (PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
   preciceTrace("computeQNUpdate()");
-  using namespace tarch::la;
+  preciceDebug("Compute Newton factors ");
 
-    // ------------- update inverse Jacobian -----------
-    // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
-    // ----------------------------------------- -------
-    preciceDebug("   Compute Newton factors ");
+    /**      --- update inverse Jacobian ---
+     *
+     * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
+     */
     computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate);
 }
 
@@ -188,27 +186,23 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
   preciceTrace("computeNewtonFactorsQRDecomposition()");
   using namespace tarch::la;
  
-  // ------------- update inverse Jacobian -----------
-  // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
-  // ----------------------------------------- -------
-
-  Matrix Z;
+  /**      --- update inverse Jacobian ---
+   *
+   * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
+   */
+  Eigen::MatrixXd Z;
+  Eigen::MatrixXd V;
+  Eigen::MatrixXd W;
   bool linearDependence = true;
   
   while (linearDependence) {
 		linearDependence = false;
 
-		Matrix __R(_qrV.cols(), _qrV.cols(), 0.0);
-		auto r = _qrV.matrixR();
-		for (int i = 0; i < r.rows(); i++)
-			for (int j = 0; j < r.cols(); j++) {
-				__R(i, j) = r(i, j);
-			}
-
+		auto R =  _qrV.matrixR();
 		if (getLSSystemCols() > 1) {
-			for (int i = 0; i < __R.rows(); i++) {
-				//if (std::fabs(__R(i, i)) < _singularityLimit) {
-				if (std::fabs(__R(i, i)) < 0.0) {
+			for (int i = 0; i < _qrV.cols(); i++) {
+				if (std::fabs(R(i, i)) < _singularityLimit) {
+				//if (std::fabs(R(i, i)) < 0.0) {
 					std::stringstream ss;
 					ss << "(updatedQR) removing linear dependent column "<< i << "  time step: " << tSteps
 					   << " iteration: " << its<< "\n" << std::endl;
@@ -220,40 +214,37 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 			}
 		}
 		if (not linearDependence) {
-			Matrix __Q(_qrV.rows(), _qrV.cols(), 0.0);
-			Z = Matrix(_qrV.cols(), _qrV.rows(), 0.0);
+			//Matrix __Q(_qrV.rows(), _qrV.cols(), 0.0);
+			//Z = Matrix(_qrV.cols(), _qrV.rows(), 0.0);
+			Z.resize(_qrV.cols(), _qrV.rows());
+			V.resize(_matrixV.rows(), _matrixV.cols());
+			W.resize(_matrixW.rows(), _matrixW.cols());
 
-			DataValues __ytmpVec(_qrV.cols(), 0.0);
-			DataValues __matrixQRow;
-			auto q = _qrV.matrixQ();
-			for (int i = 0; i < q.rows(); i++)
-				for (int j = 0; j < q.cols(); j++) {
-					__Q(i, j) = q(i, j);
+			for (int i = 0; i < V.rows(); i++)
+				for (int j = 0; j < V.cols(); j++) {
+					V(i, j) = _matrixV(i, j);
 				}
+			for (int i = 0; i < V.rows(); i++)
+				for (int j = 0; j < V.cols(); j++) {
+					W(i, j) = _matrixW(i, j);
+				}
+
+			auto Q = _qrV.matrixQ();
+			R = _qrV.matrixR();
+
+			Eigen::VectorXd yVec(_qrV.cols());
 
 			// assertions for the case of processors with no vertices
 			if(!_hasNodesOnInterface){
 					assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
 					assertion1(_qrV.rows() == 0, _qrV.rows());
-					assertion1(__Q.size() == 0, __Q.size());
+					assertion1(Q.size() == 0, Q.size());
 			}
 
-			r = _qrV.matrixR();
-			for (int i = 0; i < r.rows(); i++)
-				for (int j = 0; j < r.cols(); j++) {
-					__R(i, j) = r(i, j);
-				}
-
-			for (int i = 0; i < __Q.rows(); i++) {
-				for (int j = 0; j < __Q.cols(); j++) {
-					__matrixQRow.append(__Q(i, j));
-				}
-
-
-				backSubstitution(__R, __matrixQRow, __ytmpVec);
-				for(int p = 0; p < __ytmpVec.size(); p++)
-					Z(p,i) = __ytmpVec(p);
-				__matrixQRow.clear();
+			for (int i = 0; i < Q.rows(); i++) {
+				Eigen::VectorXd Qrow = Q.row(i);
+				yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
+				Z.col(i) = yVec;
 			}
 		}
 	}
@@ -267,16 +258,16 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
   // TODO: transpose V efficiently using blocking in parallel
   //       such that multiplication is cache efficient
-  Matrix W_til(_qrV.rows(), _qrV.cols(), 0.0);
+  Eigen::MatrixXd W_til = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
 
   // multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
   //                                    parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
-  _parMatrixOps.multiply(_oldInvJacobian, _matrixV, W_til, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols());
+  _parMatrixOps.multiply(_oldInvJacobian, V, W_til, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols());
 
 
   // W_til = (W-J_inv_n*V) = (W-V_tilde)
   W_til *= -1.;
-  W_til = W_til + _matrixW;
+  W_til = W_til + W;
 
   
   /**
@@ -298,12 +289,19 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
    *  (3) solve delta_x = - J_inv * res
    */
 
-  DataValues res(_residuals);
+  Eigen::VectorXd res(_residuals.size());
+  Eigen::VectorXd xUp(_residuals.size());
+  for(int i = 0; i < res.size(); i++)
+	  res(i) = _residuals(i);
+
   res *= -1.;
 
   // multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
   //                                        parallel:  (n_global x n_local) * (n_local x 1) = (n_local x 1)
-  _parMatrixOps.multiply(_invJacobian, res, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows());
+  _parMatrixOps.multiply(_invJacobian, res, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1);
+
+  for(int i = 0; i < xUp.size(); i++)
+	  xUpdate(i) = xUp(i);
 
 }
 

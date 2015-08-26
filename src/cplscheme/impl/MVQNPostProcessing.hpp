@@ -81,10 +81,10 @@ private:
    //----------------------------------------
    
    // @brief stores the approximation of the inverse Jacobian of the system at current time step.
-   Matrix _invJacobian;
+   Eigen::MatrixXd _invJacobian;
 
    // @brief stores the approximation of the inverse Jacobian from the previous time step.
-   Matrix _oldInvJacobian;
+   Eigen::MatrixXd _oldInvJacobian;
 
    // @brief Communication between neighboring slaves, backwards
    com::Communication::SharedPointer _cyclicCommLeft;
