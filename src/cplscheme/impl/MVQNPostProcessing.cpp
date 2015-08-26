@@ -298,7 +298,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
   // multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
   //                                        parallel:  (n_global x n_local) * (n_local x 1) = (n_local x 1)
-  _parMatrixOps.multiply(_invJacobian, res, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1);
+  _parMatrixOps.multiply(_invJacobian, res, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
 
   for(int i = 0; i < xUp.size(); i++)
 	  xUpdate(i) = xUp(i);

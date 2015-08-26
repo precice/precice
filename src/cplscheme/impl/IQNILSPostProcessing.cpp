@@ -276,7 +276,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	}
 
 	// Perform QN relaxation for secondary data
-	foreach (int id, _secondaryDataIDs){
+	for (int id: _secondaryDataIDs){
 	  PtrCouplingData data = cplData[id];
 	  DataValues& values = *(data->values);
 	  assertion2(_secondaryMatricesW[id].cols() == __c.size(),
@@ -297,7 +297,7 @@ void IQNILSPostProcessing::computeQNUpdate
 		if(getLSSystemCols() > 0){
 			_secondaryMatricesWBackup = _secondaryMatricesW;
 		}
-		foreach (int id, _secondaryDataIDs){
+		for (int id: _secondaryDataIDs){
 			_secondaryMatricesW[id].clear();
 		}
 	}
@@ -318,7 +318,7 @@ void IQNILSPostProcessing:: specializedIterationsConverged
   }
   else if ((int)_matrixCols.size() > _timestepsReused){
 	int toRemove = _matrixCols.back();
-	foreach (int id, _secondaryDataIDs){
+	for (int id: _secondaryDataIDs){
 	  DataMatrix& secW = _secondaryMatricesW[id];
 	  assertion3(secW.cols() > toRemove, secW, toRemove, id);
 	  for (int i=0; i < toRemove; i++){
@@ -335,7 +335,7 @@ void IQNILSPostProcessing:: removeMatrixColumn
 {
   assertion(_matrixV.cols() > 1);
   // remove column from secondary Data Matrix W
-  foreach (int id, _secondaryDataIDs){
+  for (int id: _secondaryDataIDs){
 	 _secondaryMatricesW[id].remove(columnIndex);
    }
 
