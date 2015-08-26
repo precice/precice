@@ -51,6 +51,9 @@ private:
   void receiveMesh(
     mesh::Mesh& seed);
 
+  void broadcastOwnerInformation(
+    mesh::Mesh& seed);
+
   /// Logging device.
   static tarch::logging::Log _log;
 

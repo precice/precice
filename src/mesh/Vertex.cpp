@@ -118,7 +118,7 @@ Mesh* Vertex:: mesh ()
   return _mesh;
 }
 
-int Vertex:: getGlobalIndex(){
+int Vertex:: getGlobalIndex() const {
   return _globalIndex;
 }
 
@@ -126,7 +126,7 @@ void Vertex:: setGlobalIndex(int globalIndex){
   _globalIndex = globalIndex;
 }
 
-bool Vertex:: isOwner(){
+bool Vertex:: isOwner() const {
   return _owner;
 }
 

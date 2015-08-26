@@ -39,6 +39,7 @@ public:
     int outputDataID );
 
   virtual bool doesVertexContribute(int vertexID);
+  virtual bool isProjectionMapping();
 
 private:
 

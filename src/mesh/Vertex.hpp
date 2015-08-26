@@ -91,11 +91,11 @@ public:
    */
   Mesh* mesh();
 
-  int getGlobalIndex();
+  int getGlobalIndex() const;
 
   void setGlobalIndex(int globalIndex);
 
-  bool isOwner();
+  bool isOwner() const;
 
   void setOwner(bool owner);
 

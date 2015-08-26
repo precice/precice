@@ -583,6 +583,26 @@ void Mesh:: notifyListeners()
   }
 }
 
+void Mesh:: setGlobalIndices(std::vector<int> globalIndices){
+  int i = 0;
+  for ( Vertex& vertex : vertices() ){
+    assertion(i<globalIndices.size());
+    vertex.setGlobalIndex(globalIndices[i]);
+    i++;
+  }
+}
+
+void Mesh:: setOwnerInformation(std::vector<int> ownerVec){
+  int i = 0;
+  for ( Vertex& vertex : vertices() ){
+    assertion(i<ownerVec.size());
+    assertion(ownerVec[i]!=-1);
+    vertex.setOwner(ownerVec[i]==1);
+    i++;
+  }
+}
+
+
 void Mesh:: addMesh(
     Mesh& deltaMesh)
 {

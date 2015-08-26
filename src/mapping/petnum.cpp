@@ -15,7 +15,7 @@ namespace petsc {
 Vector::Vector(MPI_Comm comm, std::string name)
 {
   PetscErrorCode ierr = 0;
-  ierr = VecCreate(PETSC_COMM_WORLD, &vector); CHKERRV(ierr);
+  ierr = VecCreate(comm, &vector); CHKERRV(ierr);
   setName(name);
 }
 
@@ -39,10 +39,15 @@ Vector::Vector(Mat &m, std::string name)
   setName(name);
 }
 
-Vector::Vector(Matrix &m, std::string name)
+Vector::Vector(Matrix &m, std::string name, LEFTRIGHT type)
 {
   PetscErrorCode ierr = 0;
-  ierr = MatCreateVecs(m.matrix, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
+  if (type == LEFTRIGHT::LEFT) {
+    ierr = MatGetVecs(m.matrix, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
+  }
+  else {
+    ierr = MatGetVecs(m.matrix, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
+  }
   setName(name);
 }
 
@@ -142,7 +147,21 @@ void Vector::assemble()
   ierr = VecAssemblyBegin(vector); CHKERRV(ierr); 
   ierr = VecAssemblyEnd(vector); CHKERRV(ierr); 
 }
+
+
+std::pair<PetscInt, PetscInt> Vector::ownerRange()
+{
+  PetscInt range_start, range_end;
+  VecGetOwnershipRange(vector, &range_start, &range_end);
+  return std::make_pair(range_start, range_end);
+}
   
+void Vector::view()
+{
+  PetscErrorCode ierr;
+  ierr = VecView(vector, PETSC_VIEWER_STDOUT_WORLD); CHKERRV(ierr);
+}
+
 void Vector::write(std::string filename)
 {
   PetscViewer viewer;
@@ -150,14 +169,8 @@ void Vector::write(std::string filename)
   PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_MATLAB);
   VecView(vector, viewer);
   PetscViewerDestroy(&viewer);
-        
 }
 
-void Vector::view()
-{
-  PetscErrorCode ierr;
-  ierr = VecView(vector, PETSC_VIEWER_STDOUT_WORLD); CHKERRV(ierr);
-}
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -177,24 +190,30 @@ Matrix::~Matrix()
   // ierr = MatDestroy(&matrix); CHKERRV(ierr);
 }
 
+void Matrix::assemble(MatAssemblyType type)
+{
+  PetscErrorCode ierr = 0;
+  ierr = MatAssemblyBegin(matrix, type); CHKERRV(ierr);
+  ierr = MatAssemblyEnd(matrix, type); CHKERRV(ierr);
+}
+
+void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type)
+{
+  PetscErrorCode ierr = 0;
+  if (type != nullptr) {
+    ierr = MatSetType(matrix, type);
+  }
+  ierr = MatSetSizes(matrix, localRows, localCols, globalRows, globalCols); CHKERRV(ierr);
+  ierr = MatSetFromOptions(matrix); CHKERRV(ierr);
+  ierr = MatSetUp(matrix); CHKERRV(ierr); 
+}
+
 void Matrix::reset()
 {
   PetscErrorCode ierr = 0;
   std::string name = getName();
   ierr = MatDestroy(&matrix); CHKERRV(ierr);
   ierr = MatCreate(communicator, &matrix); CHKERRV(ierr);
-  setName(name);
-}
-
-void Matrix::create(size_t rows, size_t cols, std::string name)
-{
-  PetscErrorCode ierr = 0;
-  ierr = MatSetType(matrix, MATDENSE);
-  ierr = MatSetSizes(matrix, PETSC_DECIDE, PETSC_DECIDE, rows, cols); CHKERRV(ierr);
-  ierr = MatSetFromOptions(matrix); CHKERRV(ierr);
-  ierr = MatSetUp(matrix); CHKERRV(ierr); 
-  // ierr = MatAssemblyBegin(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
-  // ierr = MatAssemblyEnd(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
   setName(name);
 }
 
@@ -211,13 +230,13 @@ std::string Matrix::getName()
   return cstr;    
 }
 
-
-void Matrix::assemble(MatAssemblyType type)
+void Matrix::setValue(PetscInt row, PetscInt col, PetscScalar value)
 {
   PetscErrorCode ierr = 0;
-  ierr = MatAssemblyBegin(matrix, type); CHKERRV(ierr);
-  ierr = MatAssemblyEnd(matrix, type); CHKERRV(ierr);
+  ierr = MatSetValue(matrix, row, col, value, INSERT_VALUES); CHKERRV(ierr);
 }
+
+
 
 
 void Matrix::fill_with_randoms()
@@ -253,6 +272,20 @@ void Matrix::set_column(Vector &v, int col)
   ierr = MatAssemblyEnd(matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr); 
 }
 
+std::pair<PetscInt, PetscInt> Matrix::getSize()
+{
+  PetscInt m, n;
+  MatGetSize(matrix, &m, &n);
+  return std::make_pair(m, n);
+}
+
+std::pair<PetscInt, PetscInt> Matrix::ownerRange()
+{
+  PetscInt range_start, range_end;
+  MatGetOwnershipRange(matrix, &range_start, &range_end);
+  return std::make_pair(range_start, range_end);
+}
+
   
 void Matrix::write(std::string filename)
 {
@@ -272,6 +305,16 @@ void Matrix::view()
   ierr = PetscViewerCreate(communicator, &viewer); CHKERRV(ierr);
   ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII); CHKERRV(ierr); 
   ierr = PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_DENSE); CHKERRV(ierr);
+  ierr = MatView(matrix, viewer); CHKERRV(ierr);
+  ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr); 
+}
+
+void Matrix::viewDraw()
+{
+  PetscErrorCode ierr;
+  PetscViewer viewer;
+  ierr = PetscViewerCreate(communicator, &viewer); CHKERRV(ierr);
+  ierr = PetscViewerSetType(viewer, PETSCVIEWERDRAW); CHKERRV(ierr); 
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr); 
 }

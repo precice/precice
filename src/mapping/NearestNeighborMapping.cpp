@@ -116,4 +116,9 @@ bool NearestNeighborMapping::doesVertexContribute(
   return utils::contained(vertexID,_vertexIndices);
 }
 
+bool NearestNeighborMapping:: isProjectionMapping()
+{
+  return true;
+}
+
 }} // namespace precice, mapping

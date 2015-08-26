@@ -110,6 +110,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
                "SolverInterfaceImpl()",
                "Accessor process index has to be smaller than accessor process "
                << "size (given as " << _accessorProcessRank << ")!");
+
   precice::utils::Events_Init();
 
   /* When precice stops abruptly, e.g. an external solver crashes, the
@@ -179,6 +180,7 @@ void SolverInterfaceImpl:: configure
   const config::SolverInterfaceConfiguration& config )
 {
   preciceTrace("configure()");
+
   _dimensions = config.getDimensions();
   _geometryMode = config.isGeometryMode ();
   _restartMode = config.isRestartMode ();
