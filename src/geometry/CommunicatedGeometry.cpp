@@ -53,7 +53,7 @@ void CommunicatedGeometry:: specializedCreate
   mesh::Mesh& seed )
 {
   preciceTrace1 ( "specializedCreate()", seed.getName() );
-  preciceCheck ( _receivers.size() > 0, "specializedCreate()",
+  preciceCheck ( not _receivers.empty(), "specializedCreate()",
                  "No receivers specified for communicated geometry to create "
                  << "mesh \"" << seed.getName() << "\"!" );
   if ( _accessorName == _providerName ) {

@@ -364,7 +364,7 @@ void RequestManager:: requestInquireVoxelPosition
   _com->send(raw(voxelHalflengths), voxelHalflengths.size(), 0);
   _com->send(includeBoundaries, 0);
   _com->send((int)meshIDs.size(), 0);
-  if (meshIDs.size() > 0){
+  if (not meshIDs.empty()){
     tarch::la::DynamicVector<int> idVector(meshIDs.size());
     int i = 0;
     foreach (int id, meshIDs){

@@ -545,7 +545,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   Event e2(_prefix + "PointToPointCommunication::acceptConnection/accept",
            true);
 
-  if (communicationMap.size() == 0) {
+  if (communicationMap.empty()) {
     assertion(_localIndexCount == 0);
 
     _isConnected = true;
@@ -707,7 +707,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   Event e2(_prefix + "PointToPointCommunication::requestConnection/request",
            true);
 
-  if (communicationMap.size() == 0) {
+  if (communicationMap.empty()) {
     assertion(_localIndexCount == 0);
 
     _isConnected = true;
