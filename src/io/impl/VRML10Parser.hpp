@@ -123,7 +123,7 @@ struct VRML10Parser : public qi::grammar<ITERATOR_T, qi::space_type>
    /**
     * @brief Constructor.
     */
-   VRML10Parser ( int dimensions );
+   VRML10Parser ( int dimension );
 
    /**
     * @brief Adds name of a new vertex data set.
@@ -171,10 +171,10 @@ tarch::logging::Log VRML10Parser<ITERATOR_T>:: _log ( "precice::io::impl::VRML10
 template< typename ITERATOR_T >
 VRML10Parser<ITERATOR_T>:: VRML10Parser
 (
-  int dimensions )
+  int dimension )
 :
    VRML10Parser::base_type(start),
-   dimensions ( dimensions )
+   dimensions ( dimension )
 {
    start =
       qi::lit("#VRML V1.0 ascii")
