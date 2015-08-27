@@ -38,8 +38,8 @@ before_script:
 script:
   - scons -j 2 boost_inst=on petsc=off mpi=$MPI python=on compiler=$CXX
   - cd tests
-  - if [ "$MPI" = "off" ]; then ../build/last/binprecice test ../.ci-test-config.xml ../src; fi
-  - if [ "$MPI" = "on"  ]; then mpirun.openmpi -n 4 ../build/last/binprecice test ../.ci-test-config.xml ../src; fi
+  - if [ "$MPI" = "off" ]; then travis_wait ../build/last/binprecice test ../.ci-test-config.xml ../src; fi
+  - if [ "$MPI" = "on"  ]; then travis_wait mpirun.openmpi -n 4 ../build/last/binprecice test ../.ci-test-config.xml ../src; fi
   
 after_failure:
   - cat config.log
