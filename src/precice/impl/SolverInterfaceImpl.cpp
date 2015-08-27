@@ -1981,6 +1981,7 @@ void SolverInterfaceImpl:: createMeshContext
     geometry->create(*mesh);
     preciceDebug("Created geometry \"" << meshName
                  << "\" with # vertices = " << mesh->vertices().size());
+    mesh->computeDistribution();
   }
 
   // Create spacetree for the geometry, if configured so

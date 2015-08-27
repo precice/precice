@@ -63,7 +63,6 @@ void PreFilterPostFilterDecomposition:: preFilter(
   else{ // Master
     assertion(utils::MasterSlave::_rank==0);
     assertion(utils::MasterSlave::_size>1);
-    seed.getVertexOffsets()[utils::MasterSlave::_size-1] = seed.vertices().size();
 
     for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
       _bb = mesh::Mesh::BoundingBox (_dimensions, std::make_pair(0.0,0.0));
@@ -133,7 +132,6 @@ void PreFilterPostFilterDecomposition:: feedback(
     if (numberOfVertices!=0) {
       utils::MasterSlave::_communication->send(filteredVertexPositions.data(),numberOfVertices,0);
     }
-    utils::MasterSlave::_communication->broadcast(seed.getVertexOffsets().data(),utils::MasterSlave::_size,0);
   }
   else { // Master
     assertion(utils::MasterSlave::_rank==0);
@@ -162,7 +160,6 @@ void PreFilterPostFilterDecomposition:: feedback(
       }
       seed.getVertexDistribution()[rankSlave] = globalVertexIDs;
     }
-    utils::MasterSlave::_communication->broadcast(seed.getVertexOffsets().data(),utils::MasterSlave::_size);
   }
 
 }

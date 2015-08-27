@@ -86,10 +86,8 @@ void CommunicatedGeometry:: sendMesh(
   preciceInfo("sendMesh()", "Gather mesh " << seed.getName() );
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ) {
     Event e("gather mesh");
-    seed.getVertexOffsets().resize(utils::MasterSlave::_size);
     if (utils::MasterSlave::_slaveMode) {
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh( seed, 0 );
-      utils::MasterSlave::_communication->broadcast(seed.getVertexOffsets().data(),utils::MasterSlave::_size,0);
     }
     else{ // Master
       assertion(utils::MasterSlave::_rank==0);
@@ -101,7 +99,6 @@ void CommunicatedGeometry:: sendMesh(
         seed.getVertexDistribution()[0].push_back(numberOfVertices);
         numberOfVertices++;
       }
-      seed.getVertexOffsets()[0] = numberOfVertices;
 
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
         int vertexCount1 = globalMesh.vertices().size();
@@ -113,9 +110,7 @@ void CommunicatedGeometry:: sendMesh(
           seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
           numberOfVertices++;
         }
-        seed.getVertexOffsets()[rankSlave] = numberOfVertices;
       }
-      utils::MasterSlave::_communication->broadcast(seed.getVertexOffsets().data(),utils::MasterSlave::_size);
     }
   }
 
@@ -145,77 +140,7 @@ void CommunicatedGeometry:: receiveMesh(
     com::CommunicateMesh(m2n->getMasterCommunication()).receiveMesh ( seed, 0 );
   }
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-    seed.getVertexOffsets().resize(utils::MasterSlave::_size);
     _decomposition->decompose(seed);
-    broadcastOwnerInformation(seed);
-  }
-}
-
-void CommunicatedGeometry:: broadcastOwnerInformation(
-  mesh::Mesh& seed)
-{
-  preciceTrace ( "sendMesh()");
-  //send global index back to slave (needed for petsc)
-  if (utils::MasterSlave::_slaveMode) {
-    int numberOfVertices = seed.vertices().size();
-    if (numberOfVertices!=0) {
-      std::vector<int> globalIndices(numberOfVertices, -1);
-      utils::MasterSlave::_communication->receive(globalIndices.data(),numberOfVertices,0);
-      preciceDebug("My global indices: " << globalIndices);
-      seed.setGlobalIndices(globalIndices);
-    }
-  }
-  else { // Master
-    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      auto globalIndices = seed.getVertexDistribution()[rankSlave];
-      int numberOfVertices = globalIndices.size();
-      if (numberOfVertices!=0) {
-        utils::MasterSlave::_communication->send(globalIndices.data(),numberOfVertices,rankSlave);
-      }
-    }
-    seed.setGlobalIndices(seed.getVertexDistribution()[0]);
-  }
-
-  //send owner information to slave (needed for petsc)
-  if (utils::MasterSlave::_slaveMode) {
-    int numberOfVertices = seed.vertices().size();
-    if (numberOfVertices!=0) {
-      std::vector<int> ownerVec(numberOfVertices, -1);
-      utils::MasterSlave::_communication->receive(ownerVec.data(),numberOfVertices,0);
-      preciceDebug("My owner information: " << ownerVec);
-      seed.setOwnerInformation(ownerVec);
-    }
-  }
-  else { // Master
-    std::vector<int> globalOwnerVec(seed.getVertexOffsets()[utils::MasterSlave::_size-1],0);
-    for (int rankSlave = 0; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      auto globalIndices = seed.getVertexDistribution()[rankSlave];
-      int numberOfVertices = globalIndices.size();
-      std::vector<int> ownerVec(numberOfVertices,0);
-      for(int i=0;i<numberOfVertices;i++){
-        if(globalOwnerVec[globalIndices[i]] == 0){
-          ownerVec[i] = 1;
-          globalOwnerVec[globalIndices[i]] = 1;
-        }
-      }
-      if (numberOfVertices!=0) {
-        if(rankSlave==0){ //master own data
-          seed.setOwnerInformation(ownerVec);
-        }
-        else{
-          utils::MasterSlave::_communication->send(ownerVec.data(),numberOfVertices,rankSlave);
-        }
-      }
-    }
-#   ifdef Debug
-      for(int i=0;i<seed.getVertexOffsets()[utils::MasterSlave::_size-1];i++){
-        if(globalOwnerVec[i]==0){
-          preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << seed.getName()
-              << " was completely filtered out, since it has no influence on any mapping.")
-        }
-      }
-#   endif
-
   }
 }
 

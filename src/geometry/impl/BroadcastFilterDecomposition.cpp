@@ -57,7 +57,6 @@ void BroadcastFilterDecomposition:: broadcast(
     assertion(utils::MasterSlave::_size>1);
     com::CommunicateMesh(utils::MasterSlave::_communication).broadcastSendMesh ( seed);
   }
-  seed.getVertexOffsets()[utils::MasterSlave::_size-1] = seed.vertices().size();
 }
 
 void BroadcastFilterDecomposition:: filter(
