@@ -33,7 +33,6 @@ GatherScatterCommunicationTest:: GatherScatterCommunicationTest ()
 void GatherScatterCommunicationTest:: run ()
 {
   preciceTrace ( "run" );
-# ifndef PRECICE_NO_MPI
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 3){
     std::vector<int> ranksWanted;
@@ -45,7 +44,6 @@ void GatherScatterCommunicationTest:: run ()
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
-# endif // not PRECICE_NO_MPI
 }
 
 void GatherScatterCommunicationTest:: testSendReceiveAll ()

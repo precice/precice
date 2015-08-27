@@ -508,6 +508,7 @@ void MeshTest:: testDemonstration ()
 void MeshTest:: testDistribution()
 {
   preciceTrace ("testDistribution()");
+# ifndef PRECICE_NO_MPI
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
   com::Communication::SharedPointer masterSlaveCom =
@@ -629,6 +630,7 @@ void MeshTest:: testDistribution()
   utils::Parallel::synchronizeProcesses();
   utils::Parallel::clearGroups();
   utils::MasterSlave::_communication = nullptr;
+#endif // PRECICE_NO_MPI
 }
 
 }}} // namespace precice, mesh, tests
