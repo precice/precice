@@ -55,6 +55,10 @@ void SolverGeometry:: specializedCreate
         vertexCounter++;
       }
     }
+    seed.setGlobalNumberOfVertices(vertexCounter);
+  }
+  else{ //coupling mode
+    seed.setGlobalNumberOfVertices(seed.vertices().size());
   }
 }
 
