@@ -479,6 +479,10 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
     m2n::receive(requesterVertexDistribution, 0, c);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
+
+    // Though the following two events have no timing effect, they are need to synchronize the barrier.
+    Event(_prefix + "PointToPointCommunication::acceptConnection/synchronize", true);
+    Event(_prefix + "PointToPointCommunication::acceptConnection/exchange", true);
   }
 
   m2n::broadcast(vertexDistribution);
@@ -647,6 +651,10 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
     m2n::send(vertexDistribution, 0, c);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
+
+    // Though the following two events have no timing effect, they are need to synchronize the barrier.
+    Event(_prefix + "PointToPointCommunication::requestConnection/synchronize", true);
+    Event(_prefix + "PointToPointCommunication::requestConnection/exchange", true);
   }
 
   m2n::broadcast(vertexDistribution);
