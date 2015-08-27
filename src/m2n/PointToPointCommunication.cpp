@@ -480,7 +480,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    // Though the following two events have no timing effect, they are need to synchronize the barrier.
+    // Though the following two events have no timing effect, they are needed to synchronize the barrier.
     Event(_prefix + "PointToPointCommunication::acceptConnection/synchronize", true);
     Event(_prefix + "PointToPointCommunication::acceptConnection/exchange", true);
   }
@@ -652,7 +652,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    // Though the following two events have no timing effect, they are need to synchronize the barrier.
+    // Though the following two events have no timing effect, they are needed to synchronize the barrier.
     Event(_prefix + "PointToPointCommunication::requestConnection/synchronize", true);
     Event(_prefix + "PointToPointCommunication::requestConnection/exchange", true);
   }
