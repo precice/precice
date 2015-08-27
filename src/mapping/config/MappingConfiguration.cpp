@@ -613,7 +613,9 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
     preciceError ( "getMapping()", "Unknown mapping type!" );
   }
   assertion ( configuredMapping.mapping.use_count() > 0 );
-  delete[] arg;
+  #ifndef PRECICE_NO_PETSC
+    delete[] arg;
+  #endif
   return configuredMapping;
 }
 
