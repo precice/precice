@@ -294,6 +294,14 @@ public:
     _vertexOffsets = vertexOffsets;
   }
 
+  int getGlobalNumberOfVertices(){
+    return _globalNumberOfVertices;
+  }
+
+  void setGlobalNumberOfVertices(int num){
+    _globalNumberOfVertices = num;
+  }
+
   void addMesh(Mesh& deltaMesh);
 
   /**
@@ -364,6 +372,13 @@ private:
    * Needed for the matrix-matrix multiplication of the MVJ pp.
    */
   std::vector<int> _vertexOffsets;
+
+
+  /**
+   * @brief Number of unique vertices for complete distributed mesh.
+   * Duplicated vertices are only accounted once.
+   */
+  int _globalNumberOfVertices;
 
   BoundingBox _boundingBox;
 

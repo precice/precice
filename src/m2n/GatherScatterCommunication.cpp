@@ -85,7 +85,7 @@ void GatherScatterCommunication:: send (
   else{ //master
     assertion(utils::MasterSlave::_rank==0);
     std::map<int,std::vector<int> >& vertexDistribution = _mesh->getVertexDistribution();
-    int globalSize = _mesh->getVertexOffsets().back()*valueDimension;
+    int globalSize = _mesh->getGlobalNumberOfVertices()*valueDimension;
     preciceDebug("Global Size = " << globalSize);
     globalItemsToSend = new double[globalSize]();
 
@@ -141,7 +141,7 @@ void GatherScatterCommunication:: receive (
 
   //receive data at master
   if(utils::MasterSlave::_masterMode){
-    int globalSize = _mesh->getVertexOffsets().back()*valueDimension;
+    int globalSize = _mesh->getGlobalNumberOfVertices()*valueDimension;
     preciceDebug("Global Size = " << globalSize);
     globalItemsToReceive = new double[globalSize];
     _com->receive(globalItemsToReceive, globalSize, 0);

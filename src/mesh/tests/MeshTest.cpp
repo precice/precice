@@ -12,7 +12,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/Dimensions.hpp"
 #include "tarch/la/WrappedVector.h"
-
+#include "com/MPIDirectCommunication.hpp"
 #include "tarch/tests/TestCaseFactory.h"
 
 
@@ -39,6 +39,19 @@ void MeshTest:: run()
     testMethod(testDemonstration);
     testMethod(testBoundingBoxCOG);
   }
+# ifndef PRECICE_NO_MPI
+  typedef utils::Parallel Par;
+  if (Par::getCommunicatorSize() > 3){
+    std::vector<int> ranksWanted;
+    ranksWanted += 0, 1, 2 , 3;
+    MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    if (Par::getProcessRank() <= 3){
+      Par::setGlobalCommunicator(comm);
+      testMethod (testDistribution);
+      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+    }
+  }
+# endif // not PRECICE_NO_MPI
 }
 
 void MeshTest:: testBasicSetup()
@@ -490,6 +503,132 @@ void MeshTest:: testDemonstration ()
       value[i] = dataValues[v0.getID() * dim + i];
     }
   }
+}
+
+void MeshTest:: testDistribution()
+{
+  preciceTrace ("testDistribution()");
+  assertion ( utils::Parallel::getCommunicatorSize() == 4 );
+
+  com::Communication::SharedPointer masterSlaveCom =
+      com::Communication::SharedPointer(new com::MPIDirectCommunication());
+  utils::MasterSlave::_communication = masterSlaveCom;
+
+  if (utils::Parallel::getProcessRank() == 0){ //Master
+    utils::Parallel::splitCommunicator( "Master" );
+    utils::MasterSlave::_rank = 0;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = false;
+    utils::MasterSlave::_masterMode = true;
+    masterSlaveCom->acceptConnection("Master", "Slaves", 0, 1);
+    masterSlaveCom->setRankOffset(1);
+  }
+  else if(utils::Parallel::getProcessRank() == 1){
+    utils::Parallel::splitCommunicator( "Slaves" );
+    utils::MasterSlave::_rank = 1;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 0, 3);
+  }
+  else if(utils::Parallel::getProcessRank() == 2){
+    utils::Parallel::splitCommunicator( "Slaves");
+    utils::MasterSlave::_rank = 2;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 1, 3);
+  }
+  else if(utils::Parallel::getProcessRank() == 3){
+    utils::Parallel::splitCommunicator( "Slaves");
+    utils::MasterSlave::_rank = 3;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+    masterSlaveCom->requestConnection("Master", "Slaves", 2, 3);
+  }
+
+  // Create mesh object
+  std::string meshName ( "MyMesh" );
+  int dim = 2;
+  bool flipNormals = false; // The normals of triangles, edges, vertices
+  Mesh mesh ( meshName, dim, flipNormals );
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    utils::DynVector position(dim);
+    assignList(position) = 0.0, 0.0;
+    mesh.createVertex(position);
+    assignList(position) = 1.0, 0.0;
+    mesh.createVertex(position);
+  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+    utils::DynVector position(dim);
+    assignList(position) = 1.0, 0.0;
+    mesh.createVertex(position);
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    utils::DynVector position(dim);
+    assignList(position) = 1.0, 0.0;
+    mesh.createVertex(position);
+    assignList(position) = 2.0, 0.0;
+    mesh.createVertex(position);
+  }
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    mesh.getVertexDistribution()[0].push_back(0);
+    mesh.getVertexDistribution()[0].push_back(1);
+    mesh.getVertexDistribution()[1].push_back(1);
+    mesh.getVertexDistribution()[3].push_back(1);
+    mesh.getVertexDistribution()[3].push_back(2);
+    mesh.setGlobalNumberOfVertices(3);
+  }
+
+  mesh.computeDistribution();
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    validate(mesh.getGlobalNumberOfVertices()==3);
+    validate(mesh.getVertexOffsets().size()==4);
+    validate(mesh.getVertexOffsets()[0]==2);
+    validate(mesh.getVertexOffsets()[1]==3);
+    validate(mesh.getVertexOffsets()[2]==3);
+    validate(mesh.getVertexOffsets()[3]==5);
+    validate(mesh.vertices()[0].getGlobalIndex()==0);
+    validate(mesh.vertices()[1].getGlobalIndex()==1);
+    validate(mesh.vertices()[0].isOwner()==true);
+    validate(mesh.vertices()[1].isOwner()==true);
+  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+    validate(mesh.getGlobalNumberOfVertices()==3);
+    validate(mesh.getVertexOffsets().size()==4);
+    validate(mesh.getVertexOffsets()[0]==2);
+    validate(mesh.getVertexOffsets()[1]==3);
+    validate(mesh.getVertexOffsets()[2]==3);
+    validate(mesh.getVertexOffsets()[3]==5);
+    validate(mesh.vertices()[0].getGlobalIndex()==1);
+    validate(mesh.vertices()[0].isOwner()==false);
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+    validate(mesh.getGlobalNumberOfVertices()==3);
+    validate(mesh.getVertexOffsets().size()==4);
+    validate(mesh.getVertexOffsets()[0]==2);
+    validate(mesh.getVertexOffsets()[1]==3);
+    validate(mesh.getVertexOffsets()[2]==3);
+    validate(mesh.getVertexOffsets()[3]==5);
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    validate(mesh.getGlobalNumberOfVertices()==3);
+    validate(mesh.getVertexOffsets().size()==4);
+    validate(mesh.getVertexOffsets()[0]==2);
+    validate(mesh.getVertexOffsets()[1]==3);
+    validate(mesh.getVertexOffsets()[2]==3);
+    validate(mesh.getVertexOffsets()[3]==5);
+    validate(mesh.vertices()[0].getGlobalIndex()==1);
+    validate(mesh.vertices()[1].getGlobalIndex()==2);
+    validate(mesh.vertices()[0].isOwner()==false);
+    validate(mesh.vertices()[1].isOwner()==true);
+  }
+
+  utils::MasterSlave::_slaveMode = false;
+  utils::MasterSlave::_masterMode = false;
+  utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
+  utils::MasterSlave::_communication = nullptr;
 }
 
 }}} // namespace precice, mesh, tests

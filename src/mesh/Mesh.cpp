@@ -41,6 +41,7 @@ Mesh:: Mesh
   _listeners(),
   _vertexDistribution(),
   _vertexOffsets(),
+  _globalNumberOfVertices(-1),
   _boundingBox()
 {
   if (_managerPropertyIDs == nullptr){
@@ -559,6 +560,17 @@ void Mesh:: computeDistribution()
 {
   preciceTrace2("computeDistribution()", utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
 
+  // (0) broadcast global number of vertices
+  if (utils::MasterSlave::_slaveMode) {
+    int globalNumber = -1;
+    utils::MasterSlave::_communication->broadcast(globalNumber,0);
+    assertion(globalNumber!=-1);
+    _globalNumberOfVertices = globalNumber;
+  }
+  else if (utils::MasterSlave::_masterMode) {
+    utils::MasterSlave::_communication->broadcast(_globalNumberOfVertices);
+  }
+
   // (1) generate vertex offsets
   preciceDebug("Generate vertex offsets");
   if (utils::MasterSlave::_slaveMode) {
@@ -623,7 +635,7 @@ void Mesh:: computeDistribution()
   }
   else if (utils::MasterSlave::_masterMode) {
     //global number of vertices
-    std::vector<int> globalOwnerVec(_vertexOffsets[utils::MasterSlave::_size-1],0);
+    std::vector<int> globalOwnerVec(_globalNumberOfVertices,0);
     for (int rank = 0; rank < utils::MasterSlave::_size; rank++){
       auto globalIndices = _vertexDistribution[rank];
       int localNumberOfVertices = _vertexDistribution[rank].size();
@@ -644,7 +656,7 @@ void Mesh:: computeDistribution()
       }
     }
 #   ifdef Debug
-      for(int i=0;i<_vertexOffsets[utils::MasterSlave::_size-1];i++){
+      for(int i=0;i<_globalNumberOfVertices;i++){
         if(globalOwnerVec[i]==0){
           preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << _name
               << " was completely filtered out, since it has no influence on any mapping.")

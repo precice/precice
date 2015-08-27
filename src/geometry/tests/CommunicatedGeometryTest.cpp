@@ -307,10 +307,10 @@ void CommunicatedGeometryTest:: testGatherMesh ()
       utils::MasterSlave::_slaveMode = false;
       utils::MasterSlave::_masterMode = true;
       utils::DynVector position(dimensions);
+      assignList(position) = 0.0, 0.0;
       mesh::Vertex& v1 = pSolidzMesh->createVertex(position);
       assignList(position) = 0.0, 1.5;
       mesh::Vertex& v2 = pSolidzMesh->createVertex(position);
-      assignList(position) = 0.0, 2.5;
       pSolidzMesh->createEdge(v1,v2);
     }
     else if(utils::Parallel::getProcessRank() == 2){//Slave1
@@ -325,6 +325,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
       utils::MasterSlave::_slaveMode = true;
       utils::MasterSlave::_masterMode = false;
       utils::DynVector position(dimensions);
+      assignList(position) = 0.0, 3.5;
       mesh::Vertex& v3 = pSolidzMesh->createVertex(position);
       assignList(position) = 0.0, 4.5;
       mesh::Vertex& v4 = pSolidzMesh->createVertex(position);

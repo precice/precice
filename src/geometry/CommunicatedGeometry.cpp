@@ -122,6 +122,7 @@ void CommunicatedGeometry:: sendMesh(
                    "specializedCreate()", "Participant \"" << _accessorName
                    << "\" provides an invalid (possibly empty) mesh \""
                    << globalMesh.getName() << "\"!" );
+    seed.setGlobalNumberOfVertices(globalMesh.vertices().size());
     for (auto &pair : _receivers) {
       com::CommunicateMesh(pair.second->getMasterCommunication()).sendMesh ( globalMesh, 0 );
     }
@@ -138,6 +139,7 @@ void CommunicatedGeometry:: receiveMesh(
     assertion ( utils::contained(_accessorName, _receivers) );
     m2n::M2N::SharedPointer m2n ( _receivers[_accessorName] );
     com::CommunicateMesh(m2n->getMasterCommunication()).receiveMesh ( seed, 0 );
+    seed.setGlobalNumberOfVertices(seed.vertices().size());
   }
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     _decomposition->decompose(seed);
