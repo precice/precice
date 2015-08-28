@@ -43,10 +43,10 @@ void Decomposition:: setBoundingToMapping(
 
 void Decomposition:: computeBoundingMappings()
 {
-  if (_boundingFromMapping.use_count() > 0) {
+  if (_boundingFromMapping.use_count() > 0 && _boundingFromMapping->isProjectionMapping()) {
     _boundingFromMapping->computeMapping();
   }
-  if (_boundingToMapping.use_count() > 0) {
+  if (_boundingToMapping.use_count() > 0 && _boundingToMapping->isProjectionMapping()) {
     _boundingToMapping->computeMapping();
   }
 }
@@ -147,12 +147,15 @@ bool Decomposition:: doesVertexContribute(
     }
     return exit;
   }
-  else { //filter by bounding box
+  else if(_boundingToMapping->isProjectionMapping() && _boundingFromMapping->isProjectionMapping()){ //filter by bounding box
     for (int d=0; d<_dimensions; d++) {
       if (vertex.getCoords()[d] < _bb[d].first - _safetyGap || vertex.getCoords()[d] > _bb[d].second + _safetyGap) {
         return false;
       }
     }
+    return true;
+  }
+  else{ //no filtering here for non-projection mappings (i.e. RBF mappings)
     return true;
   }
 }
