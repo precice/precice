@@ -222,6 +222,7 @@ void SerialCouplingScheme:: advance()
         }
         if (convergence) {
           if (getPostProcessing().get() != nullptr) {
+        	_deletedColumnsPPFiltering = getPostProcessing()->getDeletedColumns();
             getPostProcessing()->iterationsConverged(getSendData());
           }
           newConvergenceMeasurements();
