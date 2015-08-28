@@ -33,12 +33,13 @@ BroydenPostProcessing:: BroydenPostProcessing
   double initialRelaxation,
   int    maxIterationsUsed,
   int    timestepsReused,
+  int    filter,
   double singularityLimit,
   std::vector<int> dataIDs,
   std::map<int,double> scalings)
 :
   BaseQNPostProcessing(initialRelaxation, maxIterationsUsed, timestepsReused,
-		       singularityLimit, dataIDs, scalings),
+		       filter, singularityLimit, dataIDs, scalings),
 //  _secondaryOldXTildes(),
   _invJacobian(),
   _oldInvJacobian(),

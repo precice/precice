@@ -74,6 +74,7 @@ public:
       double initialRelaxation,
       int    maxIterationsUsed,
       int    timestepsReused,
+      int    filter,
       double singularityLimit,
       std::vector<int>    dataIDs,
       std::map<int,double>    scalings);
@@ -131,6 +132,11 @@ public:
    
    // delete this:
    virtual int getDeletedColumns();
+
+   static const int NOFILTER;
+   static const int QR1FILTER_ABS;
+   static const int QR1FILTER;
+   static const int QR2FILTER;
 
 protected:
 
@@ -237,6 +243,10 @@ protected:
    // @ brief only debugging info, remove this:
    int its,tSteps;
    int deletedColumns;
+
+   // @brief filter method that is used to maintain good conditioning of the least-squares system
+   // 		Either of two types: QR1FILTER or QR2Filter
+   int _filter;
 
    // @brief: computes number of cols in least squares system, i.e, number of cols in
    // 		  _matrixV, _matrixW, _qrV, etc..

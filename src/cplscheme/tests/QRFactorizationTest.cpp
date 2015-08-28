@@ -6,6 +6,7 @@
 // use, please see the copyright notice at www5.in.tum.de/peano
 #include "QRFactorizationTest.h"
 #include "cplscheme/impl/QRFactorization.hpp"
+#include "cplscheme/impl/BaseQNPostProcessing.hpp"
 #include <Eigen/Dense>
 #include "tarch/la/Matrix.h"
 #include "tarch/la/DynamicMatrix.h"
@@ -36,6 +37,7 @@ void QRFactorizationTest::run ()
 void QRFactorizationTest::testQRFactorization ()
 {
   int m = 6, n = 8;
+  int filter = impl::BaseQNPostProcessing::QR1FILTER;
   Eigen::MatrixXd A(n,m);
   tarch::la::DynamicMatrix<double> dynA (n, m);
   
@@ -49,7 +51,7 @@ void QRFactorizationTest::testQRFactorization ()
   }
 
   // compute QR factorization of A via successive inserting of columns
-  impl::QRFactorization qr_1(A);
+  impl::QRFactorization qr_1(A, filter);
   
   tarch::la::DynamicMatrix<double> dynAcopy (dynA);
   tarch::la::DynamicMatrix<double> dynQ (n, m);

@@ -476,6 +476,8 @@ protected:
   /// @brief Smallest number, taking validDigists into account: eps = std::pow(10.0, -1 * validDigits)
   const double _eps;
 
+  int _deletedColumnsPPFiltering;
+
 private:
 
   /// @brief Communication device to the other coupling participant.

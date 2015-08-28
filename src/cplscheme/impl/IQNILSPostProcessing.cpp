@@ -36,12 +36,13 @@ IQNILSPostProcessing:: IQNILSPostProcessing
   double initialRelaxation,
   int    maxIterationsUsed,
   int    timestepsReused,
+  int 	 filter,
   double singularityLimit,
   std::vector<int> dataIDs,
   std::map<int,double> scalings)
 :
   BaseQNPostProcessing(initialRelaxation, maxIterationsUsed, timestepsReused,
-		       singularityLimit, dataIDs, scalings),
+		       filter, singularityLimit, dataIDs, scalings),
   _secondaryOldXTildes(),
   _secondaryMatricesW(),
   _secondaryMatricesWBackup()
@@ -151,118 +152,104 @@ void IQNILSPostProcessing::computeUnderrelaxationSecondaryData
 void IQNILSPostProcessing::computeQNUpdate
 (PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
-  preciceTrace("computeQNUpdate()");
+	preciceTrace("computeQNUpdate()");
     using namespace tarch::la;
-    
+    preciceDebug("   Compute Newton factors");
+
     // Calculate QR decomposition of matrix V and solve Rc = -Qr
     DataValues __c;
-    bool linearDependence = true;
-    while (linearDependence){
-      preciceDebug("   Compute Newton factors");
-      linearDependence = false;
-    
-      Matrix __R(_qrV.cols(), _qrV.cols(), 0.0);
-      auto r = _qrV.matrixR();
-        for(int i = 0; i<r.rows(); i++)
-          for(int j = 0; j<r.cols(); j++)
-          {
-            __R(i,j) = r(i,j);
-          }
-      if (getLSSystemCols() > 1){
-        for (int i=0; i < __R.rows(); i++){
-          if (std::fabs(__R(i,i)) < _singularityLimit){
-        	preciceDebug("   Removing linear dependent column " << i);
-        	_infostream<<"[QR-dec] - removing linear dependent column "<<i<<"\n"<<std::flush;
-            linearDependence = true;
-            removeMatrixColumn(i);
-          }
-        }
-      }
-      if (not linearDependence){
-        
-	preciceDebug("   Apply Newton factors");
-	
+
+	// do: filtering of least-squares system to maintain good conditioning
+	std::vector<int> delIndices(0);
+	_qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
+	for(int i = 0; i < delIndices.size(); i++){
+		removeMatrixColumn(delIndices[i]);
+		preciceDebug("   Removing linear dependent column " << delIndices[i]);
+		_infostream<<"[QR-dec] - removing linear dependent column "<<delIndices[i]<<"\n"<<std::flush;
+	}
+	assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
+
+
 	// for master-slave mode and procs with no vertices,
-	// grV.cols() = getLSSystemCols() and _qrV.rows() = 0
+	// qrV.cols() = getLSSystemCols() and _qrV.rows() = 0
 	Matrix __Qt(_qrV.cols(), _qrV.rows(), 0.0);
-	
+	Matrix __R(_qrV.cols(), _qrV.cols(), 0.0);
+
 	auto q = _qrV.matrixQ();
 	for(int i = 0; i<q.rows(); i++)
-	  for(int j = 0; j<q.cols(); j++)
-	  {
-	    __Qt(j,i) = q(i,j);
-	  }
+	for(int j = 0; j<q.cols(); j++)
+	{
+		__Qt(j,i) = q(i,j);
+	}
 
 	if(!_hasNodesOnInterface){
-		assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
-		assertion1(_qrV.rows() == 0, _qrV.rows());
-		assertion1(__Qt.size() == 0, __Qt.size());
+	assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
+	assertion1(_qrV.rows() == 0, _qrV.rows());
+	assertion1(__Qt.size() == 0, __Qt.size());
 	}
 
 	auto r = _qrV.matrixR();
 	for(int i = 0; i<r.rows(); i++)
-	  for(int j = 0; j<r.cols(); j++)
-	  {
-	    __R(i,j) = r(i,j);
+	for(int j = 0; j<r.cols(); j++)
+	{
+		__R(i,j) = r(i,j);
+	}
+
+	DataValues _local_b(_qrV.cols(), 0.0);
+	DataValues _global_b;
+
+	multiply(__Qt, _residuals, _local_b);
+	_local_b *= -1.0; // = -Qr
+
+	assertion1(__c.size() == 0, __c.size());
+
+	/**
+	 * compute rhs Q^T*res in parallel
+	 * TODO: implement all-reduce
+	 */
+	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+		assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
+		__c.append(_local_b.size(), 0.0);
+		backSubstitution(__R, _local_b, __c);
+	}else{
+
+	   assertion(utils::MasterSlave::_communication.get() != nullptr);
+	   assertion(utils::MasterSlave::_communication->isConnected());
+
+	   if(_hasNodesOnInterface)  assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
+
+	   // reserve memory for c
+	   __c.append(_local_b.size(), 0.0);
+
+	  if(utils::MasterSlave::_slaveMode){
+		  assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+		  utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
 	  }
-	  
-		DataValues _local_b(_qrV.cols(), 0.0);
-		DataValues _global_b;
+	  if(utils::MasterSlave::_masterMode){
+		assertion1(_global_b.size() == 0, _global_b.size());
+		assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 
-		multiply(__Qt, _residuals, _local_b);
-		_local_b *= -1.0; // = -Qr
+		_global_b.append(_local_b.size(), 0.0);
+		_global_b += _local_b;
 
-		assertion1(__c.size() == 0, __c.size());
-
-		/**
-		 * compute rhs Q^T*res in parallel
-		 * TODO: implement all-reduce
-		 */
-		if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
-			assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
-			__c.append(_local_b.size(), 0.0);
-		  	backSubstitution(__R, _local_b, __c);
-		}else{
-
-		   assertion(utils::MasterSlave::_communication.get() != nullptr);
-		   assertion(utils::MasterSlave::_communication->isConnected());
-
-		   if(_hasNodesOnInterface)  assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
-
-		   // reserve memory for c
-		   __c.append(_local_b.size(), 0.0);
-
-		  if(utils::MasterSlave::_slaveMode){
-			  assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
-			  utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
-		  }
-		  if(utils::MasterSlave::_masterMode){
-			assertion1(_global_b.size() == 0, _global_b.size());
-			assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
-
-			_global_b.append(_local_b.size(), 0.0);
+		for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
+			utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
 			_global_b += _local_b;
-
-			for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
-				utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
-				_global_b += _local_b;
-			}
-			// backsubstitution only in master
-			backSubstitution(__R, _global_b, __c);
-		  }
-
-		  // broadcast coefficients c to all slaves
-		  utils::MasterSlave::broadcast(&__c(0), __c.size());
 		}
-	
-		// compute x updates from W and coefficients c, i.e, xUpdate = c*W
-		multiply(_matrixW, __c, xUpdate);
+		// backsubstitution only in master
+		backSubstitution(__R, _global_b, __c);
+	  }
 
-		preciceDebug("c = " << __c);
-		//_infostream<<"c = "<<__c<<"\n"<<std::flush;
-      }
-    }
-    
+	  // broadcast coefficients c to all slaves
+	  utils::MasterSlave::broadcast(&__c(0), __c.size());
+	}
+
+	preciceDebug("   Apply Newton factors");
+	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
+	multiply(_matrixW, __c, xUpdate);
+
+	preciceDebug("c = " << __c);
+
 
     /**
      *  perform QN-Update step for the secondary Data
@@ -302,6 +289,162 @@ void IQNILSPostProcessing::computeQNUpdate
 		}
 	}
 }
+
+
+//void IQNILSPostProcessing::computeQNUpdate
+//(PostProcessing::DataMap& cplData, DataValues& xUpdate)
+//{
+//  preciceTrace("computeQNUpdate()");
+//    using namespace tarch::la;
+//
+//    // Calculate QR decomposition of matrix V and solve Rc = -Qr
+//    DataValues __c;
+//    bool linearDependence = true;
+//    while (linearDependence){
+//      preciceDebug("   Compute Newton factors");
+//      linearDependence = false;
+//
+//      Matrix __R(_qrV.cols(), _qrV.cols(), 0.0);
+//      auto r = _qrV.matrixR();
+//        for(int i = 0; i<r.rows(); i++)
+//          for(int j = 0; j<r.cols(); j++)
+//          {
+//            __R(i,j) = r(i,j);
+//          }
+//      if (getLSSystemCols() > 1){
+//        for (int i=0; i < __R.rows(); i++){
+//          if (std::fabs(__R(i,i)) < _singularityLimit * r.norm()){
+//        	preciceDebug("   Removing linear dependent column " << i);
+//        	_infostream<<"[QR-dec] - removing linear dependent column "<<i<<"\n"<<std::flush;
+//            linearDependence = true;
+//            removeMatrixColumn(i);
+//          }
+//        }
+//      }
+//      if (not linearDependence){
+//
+//	preciceDebug("   Apply Newton factors");
+//
+//	// for master-slave mode and procs with no vertices,
+//	// grV.cols() = getLSSystemCols() and _qrV.rows() = 0
+//	Matrix __Qt(_qrV.cols(), _qrV.rows(), 0.0);
+//
+//	auto q = _qrV.matrixQ();
+//	for(int i = 0; i<q.rows(); i++)
+//	  for(int j = 0; j<q.cols(); j++)
+//	  {
+//	    __Qt(j,i) = q(i,j);
+//	  }
+//
+//	if(!_hasNodesOnInterface){
+//		assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
+//		assertion1(_qrV.rows() == 0, _qrV.rows());
+//		assertion1(__Qt.size() == 0, __Qt.size());
+//	}
+//
+//	auto r = _qrV.matrixR();
+//	for(int i = 0; i<r.rows(); i++)
+//	  for(int j = 0; j<r.cols(); j++)
+//	  {
+//	    __R(i,j) = r(i,j);
+//	  }
+//
+//		DataValues _local_b(_qrV.cols(), 0.0);
+//		DataValues _global_b;
+//
+//		multiply(__Qt, _residuals, _local_b);
+//		_local_b *= -1.0; // = -Qr
+//
+//		assertion1(__c.size() == 0, __c.size());
+//
+//		/**
+//		 * compute rhs Q^T*res in parallel
+//		 * TODO: implement all-reduce
+//		 */
+//		if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+//			assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
+//			__c.append(_local_b.size(), 0.0);
+//		  	backSubstitution(__R, _local_b, __c);
+//		}else{
+//
+//		   assertion(utils::MasterSlave::_communication.get() != nullptr);
+//		   assertion(utils::MasterSlave::_communication->isConnected());
+//
+//		   if(_hasNodesOnInterface)  assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
+//
+//		   // reserve memory for c
+//		   __c.append(_local_b.size(), 0.0);
+//
+//		  if(utils::MasterSlave::_slaveMode){
+//			  assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+//			  utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
+//		  }
+//		  if(utils::MasterSlave::_masterMode){
+//			assertion1(_global_b.size() == 0, _global_b.size());
+//			assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+//
+//			_global_b.append(_local_b.size(), 0.0);
+//			_global_b += _local_b;
+//
+//			for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
+//				utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
+//				_global_b += _local_b;
+//			}
+//			// backsubstitution only in master
+//			backSubstitution(__R, _global_b, __c);
+//		  }
+//
+//		  // broadcast coefficients c to all slaves
+//		  utils::MasterSlave::broadcast(&__c(0), __c.size());
+//		}
+//
+//		// compute x updates from W and coefficients c, i.e, xUpdate = c*W
+//		multiply(_matrixW, __c, xUpdate);
+//
+//		preciceDebug("c = " << __c);
+//		//_infostream<<"c = "<<__c<<"\n"<<std::flush;
+//      }
+//    }
+//
+//
+//    /**
+//     *  perform QN-Update step for the secondary Data
+//     */
+//
+//	// If the previous time step converged within one single iteration, nothing was added
+//	// to the LS system matrices and they need to be restored from the backup at time T-2
+//    if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0)) {
+//		preciceDebug("   Last time step converged after one iteration. Need to restore the secondaryMatricesW from backup.");
+//		_secondaryMatricesW = _secondaryMatricesWBackup;
+//	}
+//
+//	// Perform QN relaxation for secondary data
+//	for (int id: _secondaryDataIDs){
+//	  PtrCouplingData data = cplData[id];
+//	  DataValues& values = *(data->values);
+//	  assertion2(_secondaryMatricesW[id].cols() == __c.size(),
+//				 _secondaryMatricesW[id].cols(), __c.size());
+//	  multiply(_secondaryMatricesW[id], __c, values);
+//	  assertion2(values.size() == data->oldValues.column(0).size(),
+//				 values.size(), data->oldValues.column(0).size());
+//	  values += data->oldValues.column(0);
+//	  assertion2(values.size() == _secondaryResiduals[id].size(),
+//				 values.size(), _secondaryResiduals[id].size());
+//	  values += _secondaryResiduals[id];
+//	}
+//
+//	// pending deletion: delete old secondaryMatricesW
+//	if (_firstIteration && _timestepsReused == 0) {
+//		// save current secondaryMatrix data in case the coupling for the next time step will terminate
+//		// after the first iteration (no new data, i.e., V = W = 0)
+//		if(getLSSystemCols() > 0){
+//			_secondaryMatricesWBackup = _secondaryMatricesW;
+//		}
+//		for (int id: _secondaryDataIDs){
+//			_secondaryMatricesW[id].clear();
+//		}
+//	}
+//}
 
 
 void IQNILSPostProcessing:: specializedIterationsConverged

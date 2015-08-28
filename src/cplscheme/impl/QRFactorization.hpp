@@ -50,6 +50,7 @@ public:
    * @brief Constructor.
    */
    QRFactorization (
+	  int filter=0,
       double omega=0,
       double theta=1./0.7,
       double sigma=std::numeric_limits<double>::min()
@@ -60,6 +61,7 @@ public:
    */
    QRFactorization (
       DataMatrix A,
+      int filter,
       double omega=0,
       double theta=1./0.7,
       double sigma=std::numeric_limits<double>::min()
@@ -70,6 +72,7 @@ public:
    */
    QRFactorization (
       EigenMatrix A,
+      int filter,
       double omega=0,
       double theta=1./0.7,
       double sigma=std::numeric_limits<double>::min()
@@ -83,6 +86,7 @@ public:
       EigenMatrix R,
       int rows,
       int cols,
+      int filter,
       double omega=0,
       double theta=1./0.7,
       double sigma=std::numeric_limits<double>::min()
@@ -106,10 +110,10 @@ public:
 	EigenMatrix Q, 
 	EigenMatrix R, 
 	int rows, 
-	int cols, 
+	int cols,
 	double omega=0,
-        double theta=1./0.7,
-        double sigma=std::numeric_limits<double>::min());
+    double theta=1./0.7,
+    double sigma=std::numeric_limits<double>::min());
    
    /**
     * @brief resets the QR factorization to be the factorization of A = QR
@@ -117,8 +121,8 @@ public:
    void reset(
 	EigenMatrix A,
 	double omega=0,
-        double theta=1./0.7,
-        double sigma=std::numeric_limits<double>::min());
+    double theta=1./0.7,
+    double sigma=std::numeric_limits<double>::min());
    
    /**
     * @brief resets the QR factorization to be the factorization of A = QR
@@ -126,8 +130,8 @@ public:
    void reset(
 	DataMatrix A,
 	double omega=0,
-        double theta=1./0.7,
-        double sigma=std::numeric_limits<double>::min());
+	double theta=1./0.7,
+	double sigma=std::numeric_limits<double>::min());
    
    /**
     * @brief inserts a new column at arbitrary position and updates the QR factorization
@@ -178,6 +182,14 @@ public:
    void popBack();
    
    /**
+    * @brief filters the least squares system, i.e., the decomposition Q*R = V according
+    * to the defined filter technique. This is done to ensure good conditioning
+    * @param [out] delIndices - a vector of indices of deleted columns from the LS-system
+    */
+   void applyFilter(double singularityLimit, std::vector<int>& delIndices, EigenMatrix& V);
+   void applyFilter(double singularityLimit, std::vector<int>& delIndices, DataMatrix& V);
+
+   /**
     * @brief returns a matrix representation of the orthogonal matrix Q
     */
    EigenMatrix& matrixQ();
@@ -198,6 +210,9 @@ public:
    // @brief set number of global rows for the master-slave case
    void setGlobalRows(int gr);
 
+   // @brief sets the filtering technique to maintain good conditioning of the least squares system
+   void setFilter(int filter);
+
 private:
   
   struct givensRot{
@@ -212,7 +227,7 @@ private:
   *   from v to range of Q, r and its corrections are computed in double
   *   precision.
   */
-  int orthogonalize(EigenVector& v, EigenVector& r, double &rho, int colNum);
+  int orthogonalize(EigenVector& v, EigenVector& r, double &rho, int colNum, bool applyQR2filter = false);
   
   /**
   * @short computes parameters for givens matrix G for which  (x,y)G = (z,0). replaces (x,y) by (z,0)
@@ -235,6 +250,7 @@ private:
   int _rows;
   int _cols;
 
+  int _filter;
   double _omega;
   double _theta;
   double _sigma;

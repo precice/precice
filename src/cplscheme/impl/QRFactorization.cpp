@@ -4,6 +4,7 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include "tarch/la/Scalar.h"
+#include "cplscheme/impl/BaseQNPostProcessing.hpp"
 
 #include <iostream>
 #include <time.h>
@@ -27,6 +28,7 @@ QRFactorization::QRFactorization(
   EigenMatrix R, 
   int rows, 
   int cols, 
+  int filter,
   double omega, 
   double theta, 
   double sigma)
@@ -36,6 +38,7 @@ QRFactorization::QRFactorization(
   _R(R),
   _rows(rows),
   _cols(cols),
+  _filter(filter),
   _omega(omega),
   _theta(theta),
   _sigma(sigma),
@@ -55,6 +58,7 @@ QRFactorization::QRFactorization(
  */
 QRFactorization::QRFactorization(
   DataMatrix A, 
+  int filter,
   double omega, 
   double theta, 
   double sigma)
@@ -63,6 +67,7 @@ QRFactorization::QRFactorization(
   _R(),
   _rows(A.rows()),
   _cols(0),
+  _filter(filter),
   _omega(omega),
   _theta(theta),
   _sigma(sigma),
@@ -90,6 +95,7 @@ QRFactorization::QRFactorization(
  */
 QRFactorization::QRFactorization(
   EigenMatrix A, 
+  int filter,
   double omega, 
   double theta, 
   double sigma)
@@ -98,6 +104,7 @@ QRFactorization::QRFactorization(
   _R(),
   _rows(A.rows()),
   _cols(0),
+  _filter(filter),
   _omega(omega),
   _theta(theta),
   _sigma(sigma),
@@ -124,6 +131,7 @@ QRFactorization::QRFactorization(
  * Constructor
  */
 QRFactorization::QRFactorization(
+  int filter,
   double omega, 
   double theta, 
   double sigma)
@@ -132,6 +140,7 @@ QRFactorization::QRFactorization(
   _R(),
   _rows(0),
   _cols(0),
+  _filter(filter),
   _omega(omega),
   _theta(theta),
   _sigma(sigma),
@@ -140,7 +149,57 @@ QRFactorization::QRFactorization(
   _globalRows(0)
 {}
 
+void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& delIndices, DataMatrix& V)
+{
+	EigenMatrix _V(V.rows(), V.cols());
+	for(int i = 0; i < _V.rows(); i++)
+		for(int j = 0; j < _V.cols(); j++){
+			_V(i,j) = V(i,j);
+		}
+	applyFilter(singularityLimit, delIndices, _V);
+}
       
+void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& delIndices, EigenMatrix& V)
+{
+	preciceTrace("applyFilter()");
+	delIndices.resize(0);
+	if(_filter == BaseQNPostProcessing::QR1FILTER || _filter == BaseQNPostProcessing::QR1FILTER_ABS)
+	{
+		bool linearDependence = true;
+		std::vector<int> delFlag(_cols, 0);
+		int delCols = 0;
+		while (linearDependence) {
+			linearDependence = false;
+			int index = 0; // actual index of checked column, \in [0, _cols] and _cols is decreasing
+			if(_cols > 1){
+				for (int i = 0; i < delFlag.size(); i++) {
+					// index is not incremented, if columns has been deleted in previous rounds
+					if(delFlag[i] > 0) continue;
+
+					// QR1-filter
+					if(index >= cols()) break;
+					assertion2(index < _cols, index, _cols);
+					double factor = (_filter == BaseQNPostProcessing::QR1FILTER_ABS) ? 1.0 : _R.norm();
+					if (std::fabs(_R(index, index)) < singularityLimit * factor) {
+
+						linearDependence = true;
+						deleteColumn(index);
+						delFlag[i]++;
+						delIndices.push_back(i);
+						delCols++;
+						//break;
+						index--;  	// check same column index, as cols are shifted left
+					}
+					assertion2(delCols+_cols == delFlag.size(), (delCols+_cols), delFlag.size());
+					index++;
+				}
+			}
+		}
+	}else if(_filter == BaseQNPostProcessing::QR2FILTER)
+	{
+
+	}
+}
  
     
 /**
@@ -285,7 +344,8 @@ int QRFactorization::orthogonalize(
   EigenVector& v, 
   EigenVector& r, 
   double& rho,
-  int colNum)
+  int colNum,
+  bool applyQR2Filter)
 {
    preciceTrace("orthogonalize()");
 
@@ -685,6 +745,10 @@ void QRFactorization::setfstream(std::fstream* stream)
 {
   _infostream = stream;
   _fstream_set = true;
+}
+
+void QRFactorization::setFilter(int filter){
+	_filter = filter;
 }
 
 

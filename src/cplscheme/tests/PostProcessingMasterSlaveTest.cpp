@@ -19,6 +19,7 @@
 #include "mapping/SharedPointer.hpp"
 #include "cplscheme/impl/IQNILSPostProcessing.hpp"
 #include "cplscheme/impl/MVQNPostProcessing.hpp"
+#include "cplscheme/impl/BaseQNPostProcessing.hpp"
 #include "cplscheme/ParallelCouplingScheme.hpp"
 #include "cplscheme/impl/ConvergenceMeasure.hpp"
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
@@ -106,6 +107,7 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 	double initialRelaxation = 0.01;
 	int    maxIterationsUsed = 50;
 	int    timestepsReused = 6;
+	int filter = impl::BaseQNPostProcessing::QR1FILTER;
 	double singularityLimit = 1e-10;
 	std::vector<int> dataIDs;
 	dataIDs.push_back(0);
@@ -119,7 +121,7 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 	dummyMesh->setVertexOffsets(vertexOffsets);
 
 	cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation,maxIterationsUsed,
-										   timestepsReused, singularityLimit, dataIDs, scalings);
+										   timestepsReused, filter, singularityLimit, dataIDs, scalings);
 
 	utils::DynVector dvalues;
 	utils::DynVector dcol1;
@@ -432,6 +434,7 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	double initialRelaxation = 0.01;
 	int    maxIterationsUsed = 50;
 	int    timestepsReused = 6;
+	int filter = impl::BaseQNPostProcessing::QR1FILTER;
 	double singularityLimit = 1e-10;
 	std::vector<int> dataIDs;
 	dataIDs.push_back(0);
@@ -445,7 +448,7 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	dummyMesh->setVertexOffsets(vertexOffsets);
 
 	cplscheme::impl::MVQNPostProcessing pp(initialRelaxation,maxIterationsUsed,
-									   timestepsReused, singularityLimit, dataIDs, scalings);
+									   timestepsReused, filter, singularityLimit, dataIDs, scalings);
 
 	utils::DynVector dvalues;
 	utils::DynVector dcol1;
