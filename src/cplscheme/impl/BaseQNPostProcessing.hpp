@@ -11,6 +11,7 @@
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
 #include "QRFactorization.hpp"
+#include "Eigen/Dense"
 #include <deque>
 #include <fstream>
 #include <string.h>
@@ -117,6 +118,16 @@ public:
     */
    virtual void iterationsConverged(DataMap& cplData);
 
+
+   /**
+    * @brief sets the design specification we want to meet for the objective function,
+    *     i. e., we want to solve for argmin_x ||R(x) - q||, with R(x) = H(x) - x
+    *     Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
+    *     with q=0.
+    */
+   virtual void setDesignSpecification(Eigen::VectorXd& q);
+
+
    /**
     * @brief Exports the current state of the post-processing to a file.
     */
@@ -158,6 +169,15 @@ protected:
    // than the singularity limit is found, the matrix is considered to be singular
    // and the corresponding (older) iteration is removed.
    double _singularityLimit;
+
+   /**
+    * @brief sets the design specification we want to meet for the objective function,
+    *     i. e., we want to solve for argmin_x ||R(x) - q||, with R(x) = H(x) - x
+    *     Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
+    *     with q=0.
+    */
+   //Eigen::VectorXd _designSpecification;
+   DataValues _designSpecification;
 
    // @brief Data IDs of data to be involved in the IQN algorithm.
    std::vector<int> _dataIDs;

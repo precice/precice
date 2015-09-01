@@ -44,6 +44,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _maxIterationsUsed(maxIterationsUsed),
   _timestepsReused(timestepsReused),
   _singularityLimit(singularityLimit),
+  _designSpecification(),
   _dataIDs(dataIDs),
   _secondaryDataIDs(),
   _scalings(scalings),
@@ -118,7 +119,11 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	_scaledValues.append(DataValues(entries, init));
 	_scaledOldValues.append(DataValues(entries, init));
 
-
+	// if design specifiaction not initialized yet
+	if(not _designSpecification.size() > 0){
+		//_designSpecification = Eigen::VectorXd::Zero(_residuals.size());
+		_designSpecification.append(DataValues(entries, init));
+	}
 	/**
 	 *  make dimensions public to all procs,
 	 *  last entry _dimOffsets[MasterSlave::_size] holds the global dimension, global,n
@@ -268,6 +273,17 @@ void BaseQNPostProcessing:: undoScaling
   }
 }
 
+void BaseQNPostProcessing::setDesignSpecification(Eigen::VectorXd q)
+{
+	preciceTrace("setDesignSpecification()");
+	assertion2(q.size() == _residuals.size(), q.size(), _residuals.size());
+	//_designSpecification = q;
+	if(not _designSpecification.size() > 0)
+		_designSpecification.append(DataValues(_residuals.size(), 0.0));
+	for(int i = 0; i < q.size(); i++)
+		_designSpecification(i) = q(i);
+}
+
 
 /* ----------------------------------------------------------------------------
  *     updateDiffernceMatrices
@@ -366,9 +382,15 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 		_oldXTilde = _scaledValues; // Store x tilde
 		_oldResiduals = _residuals; // Store current residual
 
+		// copying is removed when moving to Eigen
+		DataValues q(_residuals.size(), 0.0);
+		for(int i = 0; i < q.size(); i++)
+			q(i) = _designSpecification(i)*_initialRelaxation;
+
 		// Perform constant relaxation
-		// with residual: x_new = x_old + omega * res
+		// with residual: x_new = x_old + omega * (res-q)
 		_residuals *= _initialRelaxation;
+		_residuals -= q;
 		_residuals += _scaledOldValues;
 		_scaledValues = _residuals;
 
@@ -406,6 +428,7 @@ void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
 		_scaledValues = _scaledOldValues;  // = x^k
 		_scaledValues += xUpdate;        // = x^k + delta_x
 		_scaledValues += _residuals; // = x^k + delta_x + r^k
+		_scaledValues -= _designSpecification; // = x^k + delta_x + r^k - q^k
 
 		// pending deletion: delete old V, W matrices if timestepsReused = 0
 		// those were only needed for the first iteration (instead of underrelax.)

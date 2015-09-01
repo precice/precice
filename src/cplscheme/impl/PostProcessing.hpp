@@ -4,6 +4,7 @@
 #ifndef PRECICE_CPLSCHEME_POSTPROCESSING_HPP_
 #define PRECICE_CPLSCHEME_POSTPROCESSING_HPP_
 
+#include "Eigen/Dense"
 #include <map>
 #include <vector>
 #include "../SharedPointer.hpp"
@@ -45,6 +46,8 @@ public:
   virtual void performPostProcessing(DataMap & cpldata) =0;
 
   virtual void iterationsConverged(DataMap & cpldata) =0;
+
+  virtual void setDesignSpecification(Eigen::VectorXd& q) =0;
 
   virtual void exportState(io::TXTWriter& writer) {}
 
