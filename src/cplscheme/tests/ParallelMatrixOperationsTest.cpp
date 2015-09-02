@@ -109,7 +109,7 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp_tarch()
 	}
 
 	int n_global = 10,  m_global = 5;
-	int n_local;
+	int n_local = 0;
 	std::vector<int> vertexOffsets {0, 3, 7 , 7, 10};
 
 	/**

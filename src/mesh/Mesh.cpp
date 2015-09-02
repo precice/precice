@@ -698,7 +698,7 @@ void Mesh:: notifyListeners()
 }
 
 void Mesh:: setGlobalIndices(std::vector<int> globalIndices){
-  int i = 0;
+  size_t i = 0;
   for ( Vertex& vertex : vertices() ){
     assertion(i<globalIndices.size());
     vertex.setGlobalIndex(globalIndices[i]);
