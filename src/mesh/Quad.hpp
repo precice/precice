@@ -163,7 +163,6 @@ inline Edge& Quad:: edge
 (
   int i )
 {
-  assertion1((i >= 0) || (i < 4), i);
   return *_edges[i];
 };
 
@@ -171,7 +170,6 @@ inline const Edge& Quad:: edge
 (
   int i ) const
 {
-  assertion1((i >= 0) || (i < 4), i);
   return *_edges[i];
 };
 
