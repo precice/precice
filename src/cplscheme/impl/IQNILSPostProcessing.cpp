@@ -158,16 +158,117 @@ void IQNILSPostProcessing::computeQNUpdate
 
     // Calculate QR decomposition of matrix V and solve Rc = -Qr
     DataValues __c;
+    Eigen::MatrixXd _Q, _R;
+	if(_filter == BaseQNPostProcessing::QR2FILTER){
+		bool termination = false;
 
-	// do: filtering of least-squares system to maintain good conditioning
-	std::vector<int> delIndices(0);
-	_qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
-	for(int i = 0; i < delIndices.size(); i++){
-		removeMatrixColumn(delIndices[i]);
-		preciceDebug("   Removing linear dependent column " << delIndices[i]);
-		_infostream<<"[QR-dec] - removing linear dependent column "<<delIndices[i]<<"\n"<<std::flush;
+		while(!termination)
+		{
+			// copy matrix V to Eigen Matrix data type
+			Eigen::MatrixXd _V(_matrixV.rows(), _matrixV.cols());
+			for (int i = 0; i < _V.rows(); i++)
+				for (int j = 0; j < _V.cols(); j++) {
+					_V(i, j) = _matrixV(i, j);
+				}
+			// copy matrix W to Eigen Matrix data type
+			Eigen::MatrixXd _W(_matrixW.rows(), _matrixW.cols());
+			for (int i = 0; i < _W.rows(); i++)
+				for (int j = 0; j < _W.cols(); j++) {
+					_W(i, j) = _matrixW(i, j);
+				}
+
+			termination = true;
+
+			// compute QR-decomposition of V
+			_Q = Eigen::MatrixXd(_matrixV.rows(), _matrixV.cols());
+			_R = Eigen::MatrixXd(_matrixV.cols(), _matrixV.cols());
+
+			Eigen::VectorXd v0 = _V.col(0);
+			_R(0,0) = v0.norm();
+			_Q.col(0) = v0/_R(0,0);
+			for( int j=1; j<_V.cols(); j++)
+			{
+				Eigen::VectorXd v = _V.col(j);
+				double rho0 = v.norm();
+
+				for(int i=0; i < j; i++)
+				{
+					Eigen::VectorXd Qci = _Q.col(i);
+					_R(i,j) = Qci.dot(v);
+					v = v -_R(i,j)*Qci;
+				}
+
+				// QR-filter test (if information that comes with vector v
+				// is little, i.e., |v_orth| small, discard vector v.)
+				double rho1 = v.norm();
+				if(rho1 < _singularityLimit * rho0)
+				{
+					termination = false;
+					removeMatrixColumn(j);
+					_qrV.deleteColumn(j);
+
+					preciceDebug("   (QR2-Filter) t="<<tSteps<<", k="<<its<<" | deleting column " << j );
+					_infostream <<"   (QR2-Filter) t="<<tSteps<<", k="<<its
+								<<" | deleting column " << j << std::flush<<std::endl;
+
+					break;
+				}
+
+				// normalize
+				_R(j,j) = rho1;
+				_Q.col(j) = v/rho1;
+			}
+		}
+		// copy back, Q and R
+		DataMatrix Q(_Q.rows(), _Q.cols(), 0.0);
+		for (int i = 0; i < _Q.rows(); i++)
+			for (int j = 0; j < _Q.cols(); j++) {
+				Q(i, j) = _Q(i, j);
+			}
+		DataMatrix R(_R.rows(), _R.cols(), 0.0);
+		for (int j = 0; j < _R.cols(); j++)
+			for (int i = 0; i <= j; i++) {
+				R(i, j) = _R(i, j);
+			}
+		// compute update
+		DataValues c;
+		DataValues b(Q.cols(), 0.0);
+		tarch::la::multiply(tarch::la::transpose(Q), _residuals, b); // = Qr
+		b *= -1.0; // = -Qr
+		assertion1(c.size() == 0, c.size());
+		c.append(b.size(), 0.0);
+
+		tarch::la::backSubstitution(R, b, c);
+		tarch::la::multiply(_matrixW, c, xUpdate);
+
+		preciceDebug("c = " << c);
+
+		// Perform QN relaxation for secondary data
+		for (int id: _secondaryDataIDs){
+			PtrCouplingData data = cplData[id];
+			DataValues& values = *(data->values);
+			assertion2(_secondaryMatricesW[id].cols() == c.size(),
+					_secondaryMatricesW[id].cols(), c.size());
+			tarch::la::multiply(_secondaryMatricesW[id], c, values);
+			assertion2(values.size() == data->oldValues.column(0).size(),
+					values.size(), data->oldValues.column(0).size());
+			values += data->oldValues.column(0);
+			assertion2(values.size() == _secondaryResiduals[id].size(),
+					values.size(), _secondaryResiduals[id].size());
+			values += _secondaryResiduals[id];
+		}
+		return;
+	}else{
+		// do: filtering of least-squares system to maintain good conditioning
+		std::vector<int> delIndices(0);
+		_qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
+		for(int i = 0; i < delIndices.size(); i++){
+			removeMatrixColumn(delIndices[i]);
+			preciceDebug("   Removing linear dependent column " << delIndices[i]);
+			_infostream<<"[QR-dec] - removing linear dependent column "<<delIndices[i]<<"\n"<<std::flush;
+		}
+		assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
 	}
-	assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
 
 
 	// for master-slave mode and procs with no vertices,
