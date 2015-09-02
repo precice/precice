@@ -189,7 +189,7 @@ if env["boost_inst"]:
     uniqueCheckLib(conf, "boost_system")
     uniqueCheckLib(conf, "boost_filesystem")
 else:
-    env.AppendUnique(CXXFLAGS = ['-isystem', boostRootPath])
+    env.AppendUnique(CXXFLAGS = ['-isystem', boostRootPath]) # -isystem supresses compilation warnings for boost headers
 if not conf.CheckCXXHeader('boost/array.hpp'):
     errorMissingHeader('boost/array.hpp', 'Boost')
 
@@ -217,7 +217,7 @@ if env["mpi"]:
 elif not env["mpi"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_MPI'])
     buildpath += "-nompi"
-uniqueCheckLib(conf, 'rt') # To work with tarch::utils::Watch::clock_gettime
+# uniqueCheckLib(conf, 'rt') # To work with tarch::utils::Watch::clock_gettime
 
 # ====== Sockets ======
 if env["sockets"]:
