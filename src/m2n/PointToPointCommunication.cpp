@@ -18,52 +18,7 @@ using precice::utils::Publisher;
 
 namespace precice {
 namespace m2n {
-template <class Map, class Function>
-void
-forMap(Map& map, Function function) {
-  for (auto& i : map) {
-    function(i.first, i.second);
-  }
-}
 
-template <class Range, class Function>
-void
-forRange(Range& range, Function function) {
-  for (auto& i : range) {
-    function(i);
-  }
-}
-
-template <class Map, class Function>
-void
-forMapOfRanges(Map& map, Function function) {
-  for (auto& i : map) {
-    for (auto& j : i.second) {
-      if (not function(i.first, j))
-        break;
-    }
-  }
-}
-
-template <class Map,
-          class BeforeRangeFunction,
-          class RangeFunction,
-          class AfterRangeFunction>
-void
-forMapOfRanges(Map& map,
-               BeforeRangeFunction beforeRangeFunction,
-               RangeFunction rangeFunction,
-               AfterRangeFunction afterRangeFunction) {
-  for (auto& i : map) {
-    beforeRangeFunction(i.first);
-
-    for (auto& j : i.second) {
-      rangeFunction(i.first, j);
-    }
-
-    afterRangeFunction(i.first);
-  }
-}
 
 void
 send(std::vector<int> const& v,
@@ -198,12 +153,11 @@ print(std::map<int, std::vector<int>> const& m) {
 
   oss << "rank: " << utils::MasterSlave::_rank << "\n";
 
-  forMapOfRanges(m, [&oss](int rank, int index) {
-    oss << rank << ":"
-        << " " << index << "\n";
-
-    return true;
-  });
+  for (auto  &i : m) {
+    for (auto &j : i.second) {
+      oss << i.first << ":" << j << std::endl; // prints rank:index
+    }
+  }
 
   if (utils::MasterSlave::_masterMode) {
     std::string s;
@@ -277,9 +231,10 @@ void
 printLocalIndexCountStats(std::map<int, std::vector<int>> const& m) {
   int size = 0;
 
-  forMap(m, [&](int rank, std::vector<int> const& indices) mutable {
-    size += indices.size();
-  });
+  for (auto& i : m) {
+    size += i.second.size();
+  }
+
 
   if (utils::MasterSlave::_masterMode) {
     size_t count = 0;
@@ -345,34 +300,30 @@ buildCommunicationMap(
     int thisRank = utils::MasterSlave::_rank) {
 
   localIndexCount = 0;
-
+  
   std::map<int, std::vector<int>> communicationMap;
 
   auto iterator = thisVertexDistribution.find(thisRank);
-
+  
   if (iterator == thisVertexDistribution.end())
     return communicationMap;
-
+  
   auto const& indices = iterator->second;
 
   int index = 0;
 
-  forRange(indices, [&](int thisIndex) mutable {
-    forMapOfRanges(
-        otherVertexDistribution,
-        [=, &communicationMap](int otherRank, int otherIndex) mutable {
-          if (thisIndex == otherIndex) {
-            communicationMap[otherRank].push_back(index);
-
-            return false;
-          }
-
-          return true;
-        });
-
-    index++;
-  });
-
+  for (int thisIndex : indices) {
+    for (auto &other : otherVertexDistribution) {
+      for (auto &otherIndex : other.second) {
+        if (thisIndex == otherIndex) {
+          communicationMap[other.first].push_back(index);
+          break;
+        }
+      }
+    }
+    ++index;
+  }
+  
   // CAUTION:
   // This prevents point-to-point communication from considering those process
   // ranks, which don't have matching indices in the remote participant
