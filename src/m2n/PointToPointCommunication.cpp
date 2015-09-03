@@ -181,10 +181,6 @@ broadcastReceive(std::map<int, std::vector<int>>& m,
 
 void
 broadcast(std::map<int, std::vector<int>>& m) {
-  Event e(PointToPointCommunication::eventNamePrefix() +
-              "PointToPointCommunication::broadcast",
-          true);
-
   if (utils::MasterSlave::_masterMode) {
     // Broadcast (send) vertex distributions.
     m2n::broadcastSend(m);
@@ -347,9 +343,6 @@ buildCommunicationMap(
     // participant.
     std::map<int, std::vector<int>> const& otherVertexDistribution,
     int thisRank = utils::MasterSlave::_rank) {
-  Event e(PointToPointCommunication::eventNamePrefix() +
-              "PointToPointCommunication::buildCommunicationMap",
-          true);
 
   localIndexCount = 0;
 
@@ -447,8 +440,6 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 
   preciceCheck(not isConnected(), "acceptConnection()", "Already connected!");
 
-  Event e(_prefix + "PointToPointCommunication::acceptConnection", true);
-
   std::map<int, std::vector<int>>& vertexDistribution =
       _mesh->getVertexDistribution();
   std::map<int, std::vector<int>> requesterVertexDistribution;
@@ -457,17 +448,8 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
     // Establish connection between participants' master processes.
     auto c = _communicationFactory->newCommunication();
 
-    {
-      Event e(
-          _prefix + "PointToPointCommunication::acceptConnection/synchronize",
-          true);
-
-      c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
-    }
-
-    Event e(_prefix + "PointToPointCommunication::acceptConnection/exchange",
-            true);
-
+    c->acceptConnection(nameAcceptor, nameRequester, 0, 1);
+    
     int requesterMasterRank;
 
     // Exchange ranks of participants' master processes.
@@ -479,10 +461,6 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
     m2n::receive(requesterVertexDistribution, 0, c);
   } else {
     assertion(utils::MasterSlave::_slaveMode);
-
-    // Though the following two events have no timing effect, they are needed to synchronize the barrier.
-    Event(_prefix + "PointToPointCommunication::acceptConnection/synchronize", true);
-    Event(_prefix + "PointToPointCommunication::acceptConnection/exchange", true);
   }
 
   m2n::broadcast(vertexDistribution);
@@ -541,9 +519,6 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   } catch (...) {
   }
 #endif
-
-  Event e2(_prefix + "PointToPointCommunication::acceptConnection/accept",
-           true);
 
   if (communicationMap.empty()) {
     assertion(_localIndexCount == 0);
@@ -612,8 +587,6 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
   preciceCheck(not isConnected(), "requestConnection()", "Already connected!");
 
-  Event e(_prefix + "PointToPointCommunication::requestConnection", true);
-
   std::map<int, std::vector<int>>& vertexDistribution =
       _mesh->getVertexDistribution();
   std::map<int, std::vector<int>> acceptorVertexDistribution;
@@ -623,10 +596,6 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
     auto c = _communicationFactory->newCommunication();
 
     {
-      Event e(
-          _prefix + "PointToPointCommunication::requestConnection/synchronize",
-          true);
-
       Publisher::ScopedSetEventNamePrefix ssenp(
           _prefix +
           "PointToPointCommunication::requestConnection"
@@ -636,9 +605,6 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
       c->requestConnection(nameAcceptor, nameRequester, 0, 1);
     }
-
-    Event e(_prefix + "PointToPointCommunication::requestConnection/exchange",
-            true);
 
     int acceptorMasterRank;
 
@@ -652,9 +618,6 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   } else {
     assertion(utils::MasterSlave::_slaveMode);
 
-    // Though the following two events have no timing effect, they are needed to synchronize the barrier.
-    Event(_prefix + "PointToPointCommunication::requestConnection/synchronize", true);
-    Event(_prefix + "PointToPointCommunication::requestConnection/exchange", true);
   }
 
   m2n::broadcast(vertexDistribution);
@@ -703,9 +666,6 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   } catch (...) {
   }
 #endif
-
-  Event e2(_prefix + "PointToPointCommunication::requestConnection/request",
-           true);
 
   if (communicationMap.empty()) {
     assertion(_localIndexCount == 0);
@@ -801,7 +761,6 @@ void
 PointToPointCommunication::send(double* itemsToSend,
                                 size_t size,
                                 int valueDimension) {
-  Event e(_prefix + "PointToPointCommunication::send", true);
 
   if (_mappings.size() == 0) {
     preciceCheck(size == 0 && _localIndexCount == 0,
@@ -857,8 +816,6 @@ void
 PointToPointCommunication::receive(double* itemsToReceive,
                                    size_t size,
                                    int valueDimension) {
-  Event e(_prefix + "PointToPointCommunication::receive", true);
-
   if (_mappings.size() == 0) {
     preciceCheck(size == 0 && _localIndexCount == 0,
                  "receive()",
