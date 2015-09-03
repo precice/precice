@@ -86,10 +86,10 @@ BaseQNPostProcessing:: BaseQNPostProcessing
    preciceCheck(_timestepsReused >= 0, "BaseQNPostProcessing()",
                 "Number of old timesteps to be reused for QN "
                  << "post-processing has to be >= 0!");
-   preciceCheck(tarch::la::greater(_singularityLimit, 0.0),
-                "BaseQNPostProcessing()", "Singularity limit for QN "
-                << "post-processing has to be larger than numerical zero ("
-                << tarch::la::NUMERICAL_ZERO_DIFFERENCE << ")!");
+   //preciceCheck(tarch::la::greater(_singularityLimit, 0.0),
+   //             "BaseQNPostProcessing()", "Singularity limit for QN "
+   //             << "post-processing has to be larger than numerical zero ("
+   //             << tarch::la::NUMERICAL_ZERO_DIFFERENCE << ")!");
    
    
   _infostream.open ("postProcessingInfo.txt", std::ios_base::out);
