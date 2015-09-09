@@ -137,6 +137,7 @@ public:
    static const int QR1FILTER_ABS;
    static const int QR1FILTER;
    static const int QR2FILTER;
+   static const int PODFILTER;
 
 protected:
 

@@ -211,6 +211,8 @@ void PostProcessingConfiguration:: xmlTagCallback
 	  		  _config.filter = impl::BaseQNPostProcessing::QR1FILTER_ABS;
 	  }else if (f == "QR2-filter"){
 		  _config.filter = impl::BaseQNPostProcessing::QR2FILTER;
+	  }else if (f == "POD-filter"){
+	  		  _config.filter = impl::BaseQNPostProcessing::PODFILTER;
 	  }else{
 		  _config.filter = impl::BaseQNPostProcessing::NOFILTER;
 	  }

@@ -29,6 +29,7 @@ const int BaseQNPostProcessing::NOFILTER = 0;
 const int BaseQNPostProcessing::QR1FILTER = 1;
 const int BaseQNPostProcessing::QR1FILTER_ABS = 2;
 const int BaseQNPostProcessing::QR2FILTER = 3;
+const int BaseQNPostProcessing::PODFILTER = 4;
 
       
 /* ----------------------------------------------------------------------------

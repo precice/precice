@@ -258,6 +258,85 @@ void IQNILSPostProcessing::computeQNUpdate
 			values += _secondaryResiduals[id];
 		}
 		return;
+	}else if(_filter == BaseQNPostProcessing::PODFILTER){
+
+		// copy matrix V to Eigen Matrix data type
+		Eigen::MatrixXd _V(_matrixV.rows(), _matrixV.cols());
+		for (int i = 0; i < _V.rows(); i++)
+			for (int j = 0; j < _V.cols(); j++) {
+				_V(i, j) = _matrixV(i, j);
+			}
+		// copy matrix W to Eigen Matrix data type
+		Eigen::MatrixXd _W(_matrixW.rows(), _matrixW.cols());
+		for (int i = 0; i < _W.rows(); i++)
+			for (int j = 0; j < _W.cols(); j++) {
+				_W(i, j) = _matrixW(i, j);
+			}
+
+		Eigen::JacobiSVD<Eigen::MatrixXd> svd(_V, Eigen::ComputeFullV);
+		Eigen::VectorXd sigma = svd.singularValues();
+		Eigen::MatrixXd phi = svd.matrixV();
+
+		//assertion2(sigma.size() == _matrixV.cols(), sigma.size(), _matrixV.cols);
+		assertion2(phi.rows() == _V.cols(), phi.rows(), _V.cols());
+		assertion2(phi.rows() == _W.cols(), phi.rows(), _W.cols());
+
+		int k = _V.cols();
+		double lambda_1 = sigma(0)*sigma(0)/phi.rows();
+		for(int i = 1; i < sigma.size(); i++)
+		{
+			double lambda_i = sigma(i)*sigma(i)/phi.rows();
+			if(lambda_i/lambda_1 <= _singularityLimit)
+			{
+				k = i;
+
+				// print
+				preciceDebug("   (POD-Filter) t="<<tSteps<<", k="<<its
+							<<" | truncating matrices VX, WX after the first " << k
+							<<"columns. Discarded columns: "<< _V.cols()-k);
+				_infostream << "   (POD-Filter) t="<<tSteps<<", k="<<its
+							<<" | truncating matrices VX, WX after the first " << k
+							<<"columns. Discarded columns: "<< _V.cols()-k<< std::flush<<std::endl;
+				// debugging information, can be removed
+				deletedColumns += _V.rows()-k;
+				break;
+			}
+		}
+
+		// compute V_til = V*phi and W_til = W*phi
+		_V = _V*phi;
+		_W = _W*phi;
+
+		// truncate
+		_V.conservativeResize(_V.rows(), k);
+		_W.conservativeResize(_W.rows(), k);
+
+
+		DataMatrix Vcopy(_V.rows(), _V.cols(), 0.0);
+		for (int i = 0; i < _V.rows(); i++)
+				for (int j = 0; j < _V.cols(); j++) {
+					Vcopy(i, j) = _V(i, j);
+				}
+		DataMatrix Wcopy(_W.rows(), _W.cols(), 0.0);
+		for (int i = 0; i < _W.rows(); i++)
+				for (int j = 0; j < _W.cols(); j++) {
+					Wcopy(i, j) = _W(i, j);
+				}
+		DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
+		DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
+		tarch::la::modifiedGramSchmidt(Vcopy, Q, R);
+
+		DataValues c;
+		DataValues b(Q.cols(), 0.0);
+		tarch::la::multiply(tarch::la::transpose(Q), _residuals, b); // = Qr
+		b *= -1.0; // = -Qr
+		assertion1(c.size() == 0, c.size());
+		c.append(b.size(), 0.0);
+
+		tarch::la::backSubstitution(R, b, c);
+		tarch::la::multiply(Wcopy, c, xUpdate);
+
+		return;
 	}else{
 		// do: filtering of least-squares system to maintain good conditioning
 		std::vector<int> delIndices(0);
