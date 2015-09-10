@@ -288,25 +288,31 @@ bool QRFactorization::insertColumn(int k, EigenVector& v, double singularityLimi
   assertion1(k <= _cols, k);
   assertion2(v.size() == _rows, v.size(), _rows);
   
+  _cols++;
+
   // orthogonalize v to columns of Q
-  EigenVector u(_cols+1);
+  EigenVector u(_cols);
   double rho_orth = 0., rho0 = 0.;
   if(applyFilter) rho0 = utils::MasterSlave::l2norm(v);
 
-  int err = orthogonalize(v, u, rho_orth, _cols);
+  int err = orthogonalize(v, u, rho_orth, _cols-1);
   // if err < 0, the column cannot be orthogonalized to the system
   // if rho_orth = 0, either v = 0 or the system is quadratic.
   // Discard column v in all cases.
-  if(err < 0 || rho_orth == 0.0) return false;
+  if(err < 0 || rho_orth == 0.0){
+	  _cols--;
+	  return false;
+  }
 
   // QR2-filter based on the new information added to the orthogonal system.
   // if the new column incorporates less new information to the system than a
   // prescribed threshold, the column is discarded
   // rho_orth: the norm of the orthogonalized (but not normalized) column
   // rho0:     the norm of the initial column that is to be inserted
-  if(applyFilter)
-    if(rho0 * singularityLimit  > rho_orth)
-	  return false;
+  if(applyFilter && (rho0 * singularityLimit  > rho_orth)){
+    _cols--;
+    return false;
+  }
 
 
   // resize R(1:m, 1:m) -> R(1:m+1, 1:m+1)
