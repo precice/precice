@@ -335,7 +335,6 @@ bool QRFactorization::insertColumn(int k, EigenVector& v, double singularityLimi
   _Q.conservativeResize(_rows, _cols);
   _Q.col(_cols-1) = v;
   
-  assertion2(u(_cols-1) == rho, u.tail(1), rho);
   assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
   assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
   

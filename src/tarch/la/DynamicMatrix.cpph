@@ -83,6 +83,18 @@ const Scalar& DynamicMatrix<Scalar>::operator() (
 }
 
 template<typename Scalar>
+DynamicMatrix<Scalar>::operator Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>() const
+{
+  Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> A(_rows, _cols);
+  for (int i = 0; i < _rows; i++) 
+    for (int j = 0; j < _cols; i++) {
+      A(i,j) = _values[i*_cols + j];
+    }
+  
+  return A;
+}
+
+template<typename Scalar>
 void DynamicMatrix<Scalar>::print() const
 {
   printf("==== Dynamic Matrix of size %i x %i ====\n", _rows, _cols);
