@@ -300,6 +300,7 @@ bool QRFactorization::insertColumn(int k, EigenVector& v, double singularityLimi
   // if rho_orth = 0, either v = 0 or the system is quadratic.
   // Discard column v in all cases.
   if(err < 0 || rho_orth == 0.0){
+	  preciceDebug("discarding column because err < 0 or rho_orth == 0.0, i.e., too many iterations in orthogonalize or quadratic system. err: "<<err<<", rho_orth: "<<rho_orth);
 	  _cols--;
 	  return false;
   }
@@ -310,16 +311,16 @@ bool QRFactorization::insertColumn(int k, EigenVector& v, double singularityLimi
   // rho_orth: the norm of the orthogonalized (but not normalized) column
   // rho0:     the norm of the initial column that is to be inserted
   if(applyFilter && (rho0 * singularityLimit  > rho_orth)){
+	preciceDebug("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: "<<rho0*singularityLimit<<" > "<<rho_orth);
     _cols--;
     return false;
   }
 
 
   // resize R(1:m, 1:m) -> R(1:m+1, 1:m+1)
-  _R.conservativeResize(_cols+1,_cols+1);
-  _R.col(_cols) = EigenVector::Zero(_cols+1);
-  _R.row(_cols) = EigenVector::Zero(_cols+1);
-  _cols++;
+  _R.conservativeResize(_cols,_cols);
+  _R.col(_cols-1) = EigenVector::Zero(_cols);
+  _R.row(_cols-1) = EigenVector::Zero(_cols);
   
   for(int j=_cols-2; j >= k; j--)
   {
