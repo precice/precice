@@ -158,8 +158,13 @@ void IQNILSPostProcessing::computeQNUpdate
 
     // Calculate QR decomposition of matrix V and solve Rc = -Qr
     DataValues __c;
-    Eigen::MatrixXd _Q, _R;
-	if(_filter == BaseQNPostProcessing::QR2FILTER){
+
+    if(_filter == BaseQNPostProcessing::NOFILTER){
+    	// do nothing
+
+    /**
+    }else if(_filter == BaseQNPostProcessing::QR2FILTER){
+		 Eigen::MatrixXd _Q, _R;
 		bool termination = false;
 
 		while(!termination)
@@ -258,7 +263,10 @@ void IQNILSPostProcessing::computeQNUpdate
 			values += _secondaryResiduals[id];
 		}
 		return;
-	}else if(_filter == BaseQNPostProcessing::PODFILTER){
+	*/
+		/**
+	}
+	else if(_filter == BaseQNPostProcessing::PODFILTER){
 
 		// copy matrix V to Eigen Matrix data type
 		Eigen::MatrixXd _V(_matrixV.rows(), _matrixV.cols());
@@ -337,6 +345,8 @@ void IQNILSPostProcessing::computeQNUpdate
 		tarch::la::multiply(Wcopy, c, xUpdate);
 
 		return;
+		*/
+
 	}else{
 		// do: filtering of least-squares system to maintain good conditioning
 		std::vector<int> delIndices(0);

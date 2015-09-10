@@ -136,8 +136,8 @@ public:
    /**
     * @brief inserts a new column at arbitrary position and updates the QR factorization
     */
-   void insertColumn(int k, EigenVector& v);
-   void insertColumn(int k, DataValues& v);
+   bool insertColumn(int k, EigenVector& v, double singularityLimit = 0);
+   bool insertColumn(int k, DataValues& v, double singularityLimit = 0);
    
    /**
    * @brief updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted. 
@@ -227,7 +227,7 @@ private:
   *   from v to range of Q, r and its corrections are computed in double
   *   precision.
   */
-  int orthogonalize(EigenVector& v, EigenVector& r, double &rho, int colNum, bool applyQR2filter = false);
+  int orthogonalize(EigenVector& v, EigenVector& r, double &rho, int colNum);
   
   /**
   * @short computes parameters for givens matrix G for which  (x,y)G = (z,0). replaces (x,y) by (z,0)
