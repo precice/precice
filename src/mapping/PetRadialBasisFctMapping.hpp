@@ -17,6 +17,8 @@
 #include <iostream>
 using std::cout;
 using std::endl;
+#include "prettyprint.hpp"
+
 
 namespace precice {
 namespace mapping {
@@ -99,6 +101,7 @@ private:
   // FIXME: Hack to get global index also when MasterSlave mode is not enabled.
   void addGlobalIndex(mesh::PtrMesh &mesh);
 
+  virtual bool doesVertexContribute(int vertexID);
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -200,14 +203,18 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // Indizes for Q^T, holding the polynom
   std::vector<int> myIndizes; // vector::reserve for efficiency?
-  if (utils::MasterSlave::_rank <= 0)
+  if (utils::MasterSlave::_rank <= 0) // Rank 0 or not in MasterSlave mode
     for (size_t i = 0; i < polyparams; i++)
       myIndizes.push_back(i);
 
   // Indizes for the vertices with polyparams offset
   for (const mesh::Vertex& v : inMesh->vertices())
-    if (v.isOwner())
+    if (v.isOwner()) {
+      preciceDebug("Met vertex, I'm owner.");
       myIndizes.push_back(v.getGlobalIndex() + polyparams);
+    } else {
+      preciceDebug("Met vertex, I'm NOT owner.");
+    }
 
   auto inputSize = myIndizes.size();
   auto n = inputSize; // polyparams, if on rank 0, are included here
@@ -217,21 +224,24 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   auto outputSize = outMesh->vertices().size();
 
-  assertion1(inputSize >= 1 + polyparams, inputSize);
+  // This assertion is not valid anymore, since on MasterSlave condition one peer can get all vertices
+  // assertion1(inputSize >= 1 + polyparams, inputSize);
 
   PetscErrorCode ierr = 0;
 
   _matrixC.reset();
   ierr = MatSetType(_matrixC.matrix, MATSBAIJ); CHKERRV(ierr); // create symmetric, block sparse matrix.
-  preciceDebug("Set matrix C to local size " << n);
+  preciceDebug("Set matrix C to local size " << n << " x " << n);
   ierr = MatSetSizes(_matrixC.matrix, n, n, PETSC_DECIDE, PETSC_DECIDE); CHKERRV(ierr);
   // ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
   ierr = MatSetUp(_matrixC.matrix); CHKERRV(ierr);
 
   _matrixA.reset();
   ierr = MatSetType(_matrixA.matrix, MATAIJ); CHKERRV(ierr); // create sparse matrix.
-  ierr = MatSetSizes(_matrixA.matrix, outputSize, n, PETSC_DECIDE, PETSC_DECIDE); CHKERRV(ierr);
+  preciceDebug("Set matrix A to local size " << outputSize << " x " << n);
+  ierr = MatSetSizes(_matrixA.matrix, outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE); CHKERRV(ierr);
   ierr = MatSetUp(_matrixA.matrix); CHKERRV(ierr);
+  preciceDebug("Global size A = " << _matrixA.getSize());
 
   PetscInt range_start, range_end;
   MatGetOwnershipRange(_matrixA.matrix, &range_start, &range_end);
@@ -245,20 +255,20 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr); // Make it a mapping
   ierr = MatSetLocalToGlobalMapping(_matrixC.matrix, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
   
-  // Create an identity mapping and use that for the columns of matrixA.
+  // Create an identity mapping and use that for the rows of matrixA.
   ierr = ISCreateStride(PETSC_COMM_WORLD, _matrixA.ownerRange().second - _matrixA.ownerRange().first, _matrixA.ownerRange().first, 1, &ISidentity); CHKERRV(ierr);
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
   ierr = MatSetLocalToGlobalMapping(_matrixA.matrix, ISidentityMapping, _ISmapping); CHKERRV(ierr);
 
-  // int myRank;
-  // MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-  // if (myRank == 0) {
-  //   cout << "== ISidentityGlobal ==" << endl;
-  //   ISView(ISidentityGlobal, PETSC_VIEWER_STDOUT_SELF);
-  //   cout << "== ISglobal ==" << endl;
-  //   ISView(ISglobal, PETSC_VIEWER_STDOUT_SELF);
-  // }
+  int myRank;
+  MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
+  if (myRank == 0) {
+    cout << "== ISidentityGlobal ==" << endl;
+    ISView(ISidentityGlobal, PETSC_VIEWER_STDOUT_SELF);
+    cout << "== ISglobal ==" << endl;
+    ISView(ISglobal, PETSC_VIEWER_STDOUT_SELF);
+  }
 
   int i = 0;
   utils::DynVector distance(dimensions);
@@ -405,7 +415,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventRegister("Filling Matrix A", 0, &logALoop);
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   i = 0;
-  for (const mesh::Vertex& oVertex : outMesh->vertices()) {
+  for (const mesh::Vertex& oVertex : outMesh->vertices()) { // Row Iteration: Durch Iteration über _matrixA local range ersetzen?
     // _matrixA.assemble();
     // _matrixA.view();
     PetscInt polyRow = oVertex.getGlobalIndex(), polyCol = 0;
@@ -421,8 +431,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     PetscInt colNum = 0;
     int j = 0;
-    for (const mesh::Vertex& jVertex : inMesh->vertices()) {
-      distance = oVertex.getCoords() - jVertex.getCoords();
+    for (const mesh::Vertex& inVertex : inMesh->vertices()) {
+      distance = oVertex.getCoords() - inVertex.getCoords();
       for (int d = 0; d < dimensions; d++) {
         if (_deadAxis[d])
           distance[d] = 0;
@@ -430,7 +440,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       double coeff = _basisFunction.evaluate(norm2(distance));
       if ( not equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
-        colIdx[colNum] = jVertex.getGlobalIndex() + polyparams;
+        colIdx[colNum] = inVertex.getGlobalIndex() + polyparams;
         colNum++;
       }
       #     ifdef Asserts
@@ -438,7 +448,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         preciceError("computeMapping()", "A matrix element has value inf. "
                      << "i = " << i << ", j = " << j
                      << ", coords i = " << oVertex.getCoords() << ", coords j = "
-                     << jVertex.getCoords() << ", dist = "
+                     << inVertex.getCoords() << ", dist = "
                      << distance << ", norm2 = " << norm2(distance) << ", rbf = "
                      << coeff
                      << ", rbf type = " << typeid(_basisFunction).name());
@@ -482,7 +492,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // }
 
   _hasComputedMapping = true;
-  // _matrixA.view();
+  _matrixA.view();
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -615,6 +625,20 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::addGlobalIndex(mesh::Ptr
     // v.setGlobalIndex(v.getID());
     i++;
   }
+}
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int vertexID)
+{
+  // FIXME: Use a sane calculation here
+  preciceTrace(__func__);
+  preciceDebug("Mesh Size = " << output()->vertices().size());
+  // for (auto& v : output()->vertices())
+    // if (not v.isOwner())
+      // preciceDebug("!!! NOT OWNER !!!");
+    // if (v.getID() == vertexID)
+      // preciceDebug("Owner " << v.isOwner());
+  return true;
 }
 
 
