@@ -9,6 +9,8 @@
 #include <iostream>
 #include <time.h>
 #include <math.h> 
+#include <algorithm>    // std::sort
+#include <vector>       // std::vector
 
 namespace precice {
 namespace cplscheme {
@@ -206,12 +208,14 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 		  for (int k=0; k < V.cols(); k++)
 		  {
 		     EigenVector v = V.col(k);
-		     bool inserted = insertColumn(k, v, singularityLimit);
+		     // this is the same as pushBack(v) as _cols grows within the insertion process
+		     bool inserted = insertColumn(_cols, v, singularityLimit);
 		     if (!inserted){
 		    	 delIndices.push_back(k);
 		     }
 		  }
 	}
+	std::sort(delIndices.begin(), delIndices.end());
 }
  
     

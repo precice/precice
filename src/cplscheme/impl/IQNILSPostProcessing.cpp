@@ -351,9 +351,10 @@ void IQNILSPostProcessing::computeQNUpdate
 		// do: filtering of least-squares system to maintain good conditioning
 		std::vector<int> delIndices(0);
 		_qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
-		for(int i = 0; i < delIndices.size(); i++){
-			removeMatrixColumn(delIndices[i]);
+		// start with largest index (as V,W matrices are shrinked and shifted
+		for(int i = delIndices.size()-1; i >= 0; i--){
 			preciceDebug("   Removing linear dependent column " << delIndices[i]);
+			removeMatrixColumn(delIndices[i]);
 			_infostream<<"[QR-dec] - removing linear dependent column "<<delIndices[i]<<"\n"<<std::flush;
 		}
 		assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
