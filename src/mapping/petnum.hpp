@@ -42,6 +42,8 @@ public:
 
   int getSize();
 
+  int getLocalSize();
+  
   void setValue(PetscInt row, PetscScalar value);
 
   void arange(double start, double stop);

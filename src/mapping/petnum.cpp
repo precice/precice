@@ -92,6 +92,13 @@ int Vector::getSize()
   return size;
 }
 
+int Vector::getLocalSize()
+{
+  PetscInt size;
+  VecGetLocalSize(vector, &size);
+  return size;
+}
+
 void Vector::setValue(PetscInt row, PetscScalar value)
 {
   PetscErrorCode ierr = 0;

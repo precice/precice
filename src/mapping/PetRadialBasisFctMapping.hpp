@@ -243,8 +243,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatSetUp(_matrixA.matrix); CHKERRV(ierr);
   preciceDebug("Global size A = " << _matrixA.getSize());
 
-  PetscInt range_start, range_end;
-  MatGetOwnershipRange(_matrixA.matrix, &range_start, &range_end);
+  // PetscInt range_start, range_end;
+  // MatGetOwnershipRange(_matrixA.matrix, &range_start, &range_end);
 
   KSPReset(_solver);
 
@@ -598,11 +598,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       // Fill input from input data values (last polyparams entries remain zero)
       // ierr = VecGetArray(in.vector, &vecArray);
       int size  = in.getSize();
-      for (int i=0; i < size-polyparams; i++){
+      // for (int i=0; i < size-polyparams; i++){
+      for (int i = in.ownerRange().first; i < in.ownerRange().second-2; i++) {
+        preciceDebug("Filling input vector(" << i << ")");
         int globalIndex = input()->vertices()[i].getGlobalIndex();
+        if (utils::MasterSlave::_rank <= 0) // Rank 0 or not in MasterSlave mode
+          VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(i)*valueDim + dim], INSERT_VALUES);
+        else
+          VecSetValueLocal(in.vector, globalIndex, inValues[(i)*valueDim + dim], INSERT_VALUES);
         // vecArray[globalIndex] = inValues[(i-polyparams)*valueDim + dim];
         // Dies besser als VecSetValuesLocal machen
-        VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(i)*valueDim + dim], INSERT_VALUES);
       }
       // VecRestoreArray(in.vector, &vecArray);
       in.assemble();
@@ -617,7 +622,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       VecChop(out.vector, 1e-9);
       // Copy mapped data to output data values
       ierr = VecGetArray(out.vector, &vecArray);
-      size = out.getSize();
+      size = out.getLocalSize();
+      preciceDebug("Local out vector size = " << size);
       for (int i=0; i < size; i++) {
         outValues[i*valueDim + dim] = vecArray[i];
       }
