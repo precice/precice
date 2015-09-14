@@ -25,6 +25,12 @@ namespace impl {
 tarch::logging::Log BaseQNPostProcessing::
       _log("precice::cplscheme::impl::BaseQNPostProcessing");
 
+const int BaseQNPostProcessing::NOFILTER = 0;
+const int BaseQNPostProcessing::QR1FILTER = 1;
+const int BaseQNPostProcessing::QR1FILTER_ABS = 2;
+const int BaseQNPostProcessing::QR2FILTER = 3;
+const int BaseQNPostProcessing::PODFILTER = 4;
+
       
 /* ----------------------------------------------------------------------------
  *     Constructor
@@ -35,6 +41,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   double initialRelaxation,
   int    maxIterationsUsed,
   int    timestepsReused,
+  int 	 filter,
   double singularityLimit,
   std::vector<int> dataIDs,
   std::map<int,double> scalings)
@@ -58,7 +65,7 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _oldResiduals(),
   _matrixV(),
   _matrixW(),
-  _qrV(),
+  _qrV(filter),
   _matrixVBackup(),
   _matrixWBackup(),
   _matrixColsBackup(),
@@ -67,7 +74,8 @@ BaseQNPostProcessing:: BaseQNPostProcessing
   _infostream(),
   its(0),
   tSteps(0),
-  deletedColumns(0)
+  deletedColumns(0),
+  _filter(filter)
 {
    preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                 "BaseQNPostProcessing()",
@@ -79,10 +87,10 @@ BaseQNPostProcessing:: BaseQNPostProcessing
    preciceCheck(_timestepsReused >= 0, "BaseQNPostProcessing()",
                 "Number of old timesteps to be reused for QN "
                  << "post-processing has to be >= 0!");
-   preciceCheck(tarch::la::greater(_singularityLimit, 0.0),
-                "BaseQNPostProcessing()", "Singularity limit for QN "
-                << "post-processing has to be larger than numerical zero ("
-                << tarch::la::NUMERICAL_ZERO_DIFFERENCE << ")!");
+   //preciceCheck(tarch::la::greater(_singularityLimit, 0.0),
+   //             "BaseQNPostProcessing()", "Singularity limit for QN "
+   //             << "post-processing has to be larger than numerical zero ("
+   //             << tarch::la::NUMERICAL_ZERO_DIFFERENCE << ")!");
    
    
   _infostream.open ("postProcessingInfo.txt", std::ios_base::out);
@@ -619,7 +627,7 @@ void BaseQNPostProcessing:: removeMatrixColumn
   // remove corresponding column from dynamic QR-decomposition of _matrixV
   // Note: here, we need to delete the column, as we push empty columns
   //       for procs with no vertices in master-slave mode.
-  _qrV.deleteColumn(columnIndex);
+  //_qrV.deleteColumn(columnIndex);
 
   
   // Reduce column count

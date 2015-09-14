@@ -49,6 +49,8 @@ public:
   virtual void exportState(io::TXTWriter& writer) {}
 
   virtual void importState(io::TXTReader& reader) {}
+
+  virtual int getDeletedColumns() {return 0;}
 };
 
 }}} // namespace precice, cplscheme, impl
