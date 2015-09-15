@@ -91,7 +91,7 @@ public:
   void assemble(MatAssemblyType type = MAT_FINAL_ASSEMBLY);
     
   /// Initializes matrix of given size and type
-  void init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type = NULL);
+  void init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type = nullptr);
 
   // Destroys and recreate the matrix on the same communicator  
   void reset();
