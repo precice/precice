@@ -232,21 +232,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   preciceDebug("outMesh->vertices().size() = " << outMesh->vertices().size());
 
   _matrixC.reset();
-  ierr = MatSetType(_matrixC.matrix, MATSBAIJ); CHKERRV(ierr); // create symmetric, block sparse matrix.
+  _matrixC.init(n, n, PETSC_DETERMINE, PETSC_DETERMINE, MATSBAIJ);
   preciceDebug("Set matrix C to local size " << n << " x " << n);
-  ierr = MatSetSizes(_matrixC.matrix, n, n, PETSC_DECIDE, PETSC_DECIDE); CHKERRV(ierr);
   // ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
-  ierr = MatSetUp(_matrixC.matrix); CHKERRV(ierr);
 
   _matrixA.reset();
-  ierr = MatSetType(_matrixA.matrix, MATAIJ); CHKERRV(ierr); // create sparse matrix.
+  _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   preciceDebug("Set matrix A to local size " << outputSize << " x " << n);
-  ierr = MatSetSizes(_matrixA.matrix, outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE); CHKERRV(ierr);
-  ierr = MatSetUp(_matrixA.matrix); CHKERRV(ierr);
   preciceDebug("Global size A = " << _matrixA.getSize());
-
-  // PetscInt range_start, range_end;
-  // MatGetOwnershipRange(_matrixA.matrix, &range_start, &range_end);
 
   KSPReset(_solver);
 
@@ -255,17 +248,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISCreateGeneral(PETSC_COMM_WORLD, myIndizes.size(), myIndizes.data(), PETSC_COPY_VALUES, &ISlocal); CHKERRV(ierr);
   ierr = ISAllGather(ISlocal, &ISglobal); CHKERRV(ierr); // Gather the IS from all processors
   ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr); // Make it a mapping
-  ierr = MatSetLocalToGlobalMapping(_matrixC.matrix, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
   
   // Create an identity mapping and use that for the rows of matrixA.
   ierr = ISCreateStride(PETSC_COMM_WORLD, _matrixA.ownerRange().second - _matrixA.ownerRange().first, _matrixA.ownerRange().first, 1, &ISidentity); CHKERRV(ierr);
+  ISSetIdentity(ISidentity);
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
+
+  ierr = MatSetLocalToGlobalMapping(_matrixC.matrix, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
   ierr = MatSetLocalToGlobalMapping(_matrixA.matrix, ISidentityMapping, _ISmapping); CHKERRV(ierr);
 
-  int myRank;
-  MPI_Comm_rank(MPI_COMM_WORLD, &myRank);
-  if (myRank == 0) {
+  if (utils::MasterSlave::_rank <= 0) {
     cout << "== ISidentityGlobal ==" << endl;
     ISView(ISidentityGlobal, PETSC_VIEWER_STDOUT_SELF);
     cout << "== ISglobal ==" << endl;
@@ -319,6 +312,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
   // We collect entries for each row and set them blockwise using MatSetValues.
   for (const mesh::Vertex& iVertex : inMesh->vertices()) {
+    if (not iVertex.isOwner())
+      continue;
     // nur über in-Vertices iterieren, wo isOwner == true?
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
     PetscScalar colVals[_matrixC.getSize().second]; // holds the values of the entries
@@ -361,18 +356,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
       # endif
     }
-    // colVals[colNum] = 1;
-    // colIdx[colNum] = inputSize;
-    // colNum++;
-    // int actualDim = 0;
-    // for (int dim=0; dim < dimensions; dim++) {
-    //   if (not _deadAxis[dim]) {
-    //     colVals[colNum] = iVertex.getCoords()[dim];
-    //     colIdx[colNum] = inputSize+1+actualDim;
-    //     colNum++;
-    //     actualDim++;
-    //   }
-    // }
+
     int row = iVertex.getGlobalIndex() + polyparams;
     ierr = MatSetValuesLocal(_matrixC.matrix, 1, &row, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
     i++;
@@ -423,6 +407,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // _matrixA.assemble();
     // _matrixA.view();
     // hier colIdx, colVals über inMesh->vertices.count dimensionieren?
+    PetscInt colNum = 0;
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
     PetscScalar colVals[_matrixC.getSize().second]; // holds the values of the entries
     const mesh::Vertex& oVertex = outMesh->vertices()[it - _matrixA.ownerRange().first];
@@ -438,7 +423,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
     }
 
-    PetscInt colNum = 0;
     int j = 0;
     for (const mesh::Vertex& inVertex : inMesh->vertices()) {
       distance = oVertex.getCoords() - inVertex.getCoords();
@@ -469,19 +453,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       #     endif
       j++;
     }
-    // ierr = MatSetValue(_matrixA.matrix, i, inputSize, 1.0, INSERT_VALUES); CHKERRV(ierr);
-    // colVals[colNum] = 1;
-    // colIdx[colNum] = inputSize;
-    // colNum++;
-    // int actualDim = 0;
-    // for (int dim=0; dim < dimensions; dim++) {
-    //   if (not _deadAxis[dim]) {
-    //     colVals[colNum] = iVertex.getCoords()[dim];
-    //     colIdx[colNum] = inputSize+1+actualDim;
-    //     colNum++;
-    //     actualDim++;
-    //   }
-    // }
     ierr = MatSetValuesLocal(_matrixA.matrix, 1, &it, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
     i++;
   }
