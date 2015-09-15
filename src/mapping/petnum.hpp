@@ -32,6 +32,13 @@ public:
 
   Vector(Matrix &m, std::string name = "", LEFTRIGHT type = LEFT);
 
+  /// Delete copy and assignement constructor
+  /** Copying and assignement of this class would involve copying the pointer to
+   * the PETSc object and finallly cause double destruction of it.
+   */
+  Vector(const Vector&) = delete;
+  Vector& operator=(const Vector&) = delete;
+
   ~Vector();
 
   /// Sets the size and calls VecSetFromOptions
@@ -69,6 +76,13 @@ public:
   Mat matrix;
 
   MPI_Comm communicator;
+
+  /// Delete copy and assignement constructor
+  /** Copying and assignement of this class would involve copying the pointer to
+   * the PETSc object and finallly cause double destruction of it.
+   */
+  Matrix(const Matrix&) = delete;
+  Matrix& operator=(const Matrix&) = delete;
 
   Matrix(MPI_Comm comm = PETSC_COMM_WORLD, std::string name = "");
 
