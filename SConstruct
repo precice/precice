@@ -317,7 +317,7 @@ bin = env.Program (
 symlink = env.Command(
     target = "Symlink",
     source = None,
-    action = "ln -fns {} {}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
+    action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
 )
 
 Default(staticlib, bin, symlink)
