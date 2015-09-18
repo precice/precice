@@ -22,7 +22,8 @@ public:
 
   Event(std::string eventName, Clock::duration eventDuration);
 
-  /// Creates a new event and starts it, unless autostart = false
+  /// Creates a new event and starts it, unless autostart = false, synchronize processes, when barrier == true
+  /** Use barrier == true with caution, as it can lead to deadlocks. */
   Event(std::string eventName, bool barrier = false, bool autostart = true);
 
   /// Stops the event if it's running and report its times to the EventRegistry

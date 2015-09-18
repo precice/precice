@@ -4,10 +4,13 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include "tarch/la/Scalar.h"
+#include "cplscheme/impl/BaseQNPostProcessing.hpp"
 
 #include <iostream>
 #include <time.h>
 #include <math.h> 
+#include <algorithm>    // std::sort
+#include <vector>       // std::vector
 
 namespace precice {
 namespace cplscheme {
@@ -27,6 +30,7 @@ QRFactorization::QRFactorization(
   EigenMatrix R, 
   int rows, 
   int cols, 
+  int filter,
   double omega, 
   double theta, 
   double sigma)
@@ -36,6 +40,7 @@ QRFactorization::QRFactorization(
   _R(R),
   _rows(rows),
   _cols(cols),
+  _filter(filter),
   _omega(omega),
   _theta(theta),
   _sigma(sigma),
@@ -55,6 +60,7 @@ QRFactorization::QRFactorization(
  */
 QRFactorization::QRFactorization(
   DataMatrix A, 
+  int filter,
   double omega, 
   double theta, 
   double sigma)
@@ -63,6 +69,7 @@ QRFactorization::QRFactorization(
   _R(),
   _rows(A.rows()),
   _cols(0),
+  _filter(filter),
   _omega(omega),
   _theta(theta),
   _sigma(sigma),
@@ -90,6 +97,7 @@ QRFactorization::QRFactorization(
  */
 QRFactorization::QRFactorization(
   EigenMatrix A, 
+  int filter,
   double omega, 
   double theta, 
   double sigma)
@@ -98,6 +106,7 @@ QRFactorization::QRFactorization(
   _R(),
   _rows(A.rows()),
   _cols(0),
+  _filter(filter),
   _omega(omega),
   _theta(theta),
   _sigma(sigma),
@@ -124,6 +133,7 @@ QRFactorization::QRFactorization(
  * Constructor
  */
 QRFactorization::QRFactorization(
+  int filter,
   double omega, 
   double theta, 
   double sigma)
@@ -132,6 +142,7 @@ QRFactorization::QRFactorization(
   _R(),
   _rows(0),
   _cols(0),
+  _filter(filter),
   _omega(omega),
   _theta(theta),
   _sigma(sigma),
@@ -140,7 +151,72 @@ QRFactorization::QRFactorization(
   _globalRows(0)
 {}
 
+void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& delIndices, DataMatrix& V)
+{
+	EigenMatrix _V(V.rows(), V.cols());
+	for(int i = 0; i < _V.rows(); i++)
+		for(int j = 0; j < _V.cols(); j++){
+			_V(i,j) = V(i,j);
+		}
+	applyFilter(singularityLimit, delIndices, _V);
+}
       
+void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& delIndices, EigenMatrix& V)
+{
+	preciceTrace("applyFilter()");
+	delIndices.resize(0);
+	if(_filter == BaseQNPostProcessing::QR1FILTER || _filter == BaseQNPostProcessing::QR1FILTER_ABS)
+	{
+		bool linearDependence = true;
+		std::vector<int> delFlag(_cols, 0);
+		int delCols = 0;
+		while (linearDependence) {
+			linearDependence = false;
+			int index = 0; // actual index of checked column, \in [0, _cols] and _cols is decreasing
+			if(_cols > 1){
+				for (int i = 0; i < delFlag.size(); i++) {
+					// index is not incremented, if columns has been deleted in previous rounds
+					if(delFlag[i] > 0) continue;
+
+					// QR1-filter
+					if(index >= cols()) break;
+					assertion2(index < _cols, index, _cols);
+					double factor = (_filter == BaseQNPostProcessing::QR1FILTER_ABS) ? 1.0 : _R.norm();
+					if (std::fabs(_R(index, index)) < singularityLimit * factor) {
+
+						linearDependence = true;
+						deleteColumn(index);
+						delFlag[i]++;
+						delIndices.push_back(i);
+						delCols++;
+						//break;
+						index--;  	// check same column index, as cols are shifted left
+					}
+					assertion2(delCols+_cols == delFlag.size(), (delCols+_cols), delFlag.size());
+					index++;
+				}
+			}
+		}
+	}else if(_filter == BaseQNPostProcessing::QR2FILTER)
+	{
+		  _Q.resize(0,0);
+		  _R.resize(0,0);
+		  _cols = 0;
+		  _rows = V.rows();
+		  // starting with the most recent input/output information, i.e., the latest column
+		  // which is at position 0 in _matrixV (latest information is never filtered out!)
+		  for (int k=0; k < V.cols(); k++)
+		  {
+		     EigenVector v = V.col(k);
+		     // this is the same as pushBack(v) as _cols grows within the insertion process
+		     bool inserted = insertColumn(_cols, v, singularityLimit);
+		     if (!inserted){
+		    	 delIndices.push_back(k);
+		     }
+		  }
+	}
+	std::sort(delIndices.begin(), delIndices.end());
+}
  
     
 /**
@@ -192,35 +268,63 @@ void QRFactorization::deleteColumn(int k)
 }
 
       
-void QRFactorization::insertColumn(int k, DataValues& v)
+bool QRFactorization::insertColumn(int k, DataValues& v, double singularityLimit)
 {
    EigenVector _v(v.size());
    for(int i=0; i<v.size();i++)
    {
      _v(i) = v(i);
    }
-   insertColumn(k, _v);
+   return insertColumn(k, _v, singularityLimit);
 }
       
       
-void QRFactorization::insertColumn(int k, EigenVector& v)
+bool QRFactorization::insertColumn(int k, EigenVector& v, double singularityLimit)
 {
   preciceTrace("insertColumn()");
-
- // if(v.size() <= 0) return;
 
   if(_cols == 0)
     _rows = v.size();
   
+  bool applyFilter = (singularityLimit > 0.0);
+
   assertion1(k >= 0, k);
   assertion1(k <= _cols, k);
   assertion2(v.size() == _rows, v.size(), _rows);
   
-  // resize R(1:m, 1:m) -> R(1:m+1, 1:m+1)
-  _R.conservativeResize(_cols+1,_cols+1);
-  _R.col(_cols) = EigenVector::Zero(_cols+1);
-  _R.row(_cols) = EigenVector::Zero(_cols+1);
   _cols++;
+
+  // orthogonalize v to columns of Q
+  EigenVector u(_cols);
+  double rho_orth = 0., rho0 = 0.;
+  if(applyFilter) rho0 = utils::MasterSlave::l2norm(v);
+
+  int err = orthogonalize(v, u, rho_orth, _cols-1);
+  // if err < 0, the column cannot be orthogonalized to the system
+  // if rho_orth = 0, either v = 0 or the system is quadratic.
+  // Discard column v in all cases.
+  if(err < 0 || rho_orth == 0.0){
+	  preciceDebug("discarding column because err < 0 or rho_orth == 0.0, i.e., too many iterations in orthogonalize or quadratic system. err: "<<err<<", rho_orth: "<<rho_orth);
+	  _cols--;
+	  return false;
+  }
+
+  // QR2-filter based on the new information added to the orthogonal system.
+  // if the new column incorporates less new information to the system than a
+  // prescribed threshold, the column is discarded
+  // rho_orth: the norm of the orthogonalized (but not normalized) column
+  // rho0:     the norm of the initial column that is to be inserted
+  if(applyFilter && (rho0 * singularityLimit  > rho_orth)){
+	preciceDebug("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: "<<rho0*singularityLimit<<" > "<<rho_orth);
+    _cols--;
+    return false;
+  }
+
+
+  // resize R(1:m, 1:m) -> R(1:m+1, 1:m+1)
+  _R.conservativeResize(_cols,_cols);
+  _R.col(_cols-1) = EigenVector::Zero(_cols);
+  _R.row(_cols-1) = EigenVector::Zero(_cols);
   
   for(int j=_cols-2; j >= k; j--)
   {
@@ -238,16 +342,10 @@ void QRFactorization::insertColumn(int k, EigenVector& v)
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
   assertion2(_R.rows() == _cols, _R.rows(), _cols);
   
-  // orthogonalize v to columns of Q
-  EigenVector u(_cols);
-  double rho = 0;
-  int err = orthogonalize(v, u, rho, _cols-1);
-  assertion1(err >= 0, err);
-  //_Q.conservativeResize(Eigen::NoChange_t, _cols);
+  // resize Q(1:n, 1:m) -> Q(1:n, 1:m+1)
   _Q.conservativeResize(_rows, _cols);
   _Q.col(_cols-1) = v;
   
-  assertion2(u(_cols-1) == rho, u.tail(1), rho);
   assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
   assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
   
@@ -271,6 +369,8 @@ void QRFactorization::insertColumn(int k, EigenVector& v)
   {
     _R(i,k) = u(i);
   }
+
+  return true;
 }
 
       
@@ -280,6 +380,10 @@ void QRFactorization::insertColumn(int k, EigenVector& v)
  *   r(1:n) is the array of Fourier coefficients, and rho is the distance
  *   from v to range of Q, r and its corrections are computed in double
  *   precision.
+ *
+ *   @return Returns the number of gram-schmidt iterations needed to orthogobalize the
+ *   new vector to the existing system. If more then 4 iterations were needed, -1 is
+ *   returned and the new column should not be inserted into the system.
  */
 int QRFactorization::orthogonalize(
   EigenVector& v, 
@@ -308,7 +412,6 @@ int QRFactorization::orthogonalize(
    r = EigenVector::Zero(_cols);
    
    rho = utils::MasterSlave::l2norm(v); // distributed l2norm
-   //rho = v.norm();
    rho0 = rho;
    int k = 0;
 	while (!termination) {
@@ -352,11 +455,11 @@ int QRFactorization::orthogonalize(
 		// Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
 		// rows on the processor.
 		if (_globalRows == colNum) {
+			preciceWarning("orthogonalize()", "The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
 			v = EigenVector::Zero(_rows);
 			rho = 0.;
 			return k;
 		}
-
 
 		/**   - test for nontermination -
 		 *  rho0 = |v_init|, t = |r_(i,cols-1)|, rho1 = |v_orth|
@@ -373,12 +476,7 @@ int QRFactorization::orthogonalize(
 			if (k >= 4) {
 				std::cout
 						<< "\ntoo many iterations in orthogonalize, termination failed\n";
-				preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal. Failed to re-orthogonalize after 4 iterations. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
-				//preciceDebug("[QR-dec] - too many iterations in orthogonalize, termination failed");
-				if (_fstream_set)
-					(*_infostream)
-							<< "[QR-dec] - Matrix Q is not sufficiently orthogonal. Failed to re-orthogonalize after 4 iterations. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge."
-							<< std::endl;
+				preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
 				return -1;
 			}
 			if (!restart && rho1 <= rho * _sigma) {
@@ -604,8 +702,6 @@ void QRFactorization::reset(
   for (int k=0; k<m; k++)
   {
      EigenVector v = A.col(k);
-     //for(int i=0; i<_rows; i++)
-     //  v(i) = A(i,k);
      insertColumn(k,v);
   }
   assertion2(_R.rows() == _cols, _R.rows(), _cols);
@@ -685,6 +781,10 @@ void QRFactorization::setfstream(std::fstream* stream)
 {
   _infostream = stream;
   _fstream_set = true;
+}
+
+void QRFactorization::setFilter(int filter){
+	_filter = filter;
 }
 
 

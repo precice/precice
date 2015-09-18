@@ -147,15 +147,17 @@ bool Decomposition:: doesVertexContribute(
     }
     return exit;
   }
-  else if(_boundingToMapping->isProjectionMapping() && _boundingFromMapping->isProjectionMapping()){ //filter by bounding box
+  else if((_boundingToMapping.use_count() > 0 && not _boundingToMapping->isProjectionMapping()) ||
+          (_boundingFromMapping.use_count() > 0 && not _boundingFromMapping->isProjectionMapping())){
+    //if we have at least one non-projection mapping (i.e. RBF mapping), we should not filter here
+    return true;
+  }
+  else{ //filter by bounding box
     for (int d=0; d<_dimensions; d++) {
       if (vertex.getCoords()[d] < _bb[d].first - _safetyGap || vertex.getCoords()[d] > _bb[d].second + _safetyGap) {
         return false;
       }
     }
-    return true;
-  }
-  else{ //no filtering here for non-projection mappings (i.e. RBF mappings)
     return true;
   }
 }

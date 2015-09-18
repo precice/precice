@@ -30,6 +30,7 @@ BaseCouplingScheme:: BaseCouplingScheme
   :
   _couplingMode(Undefined),
   _eps(std::pow(10.0, -1 * validDigits)),
+  _deletedColumnsPPFiltering(0),
   _participantSetsDt(false),
   _participantReceivesDt(false),
   _maxTime(maxTime),
@@ -774,6 +775,7 @@ void BaseCouplingScheme::initializeTXTWriters()
        _iterationsWriter.addData(sstm.str(), io::TXTTableWriter::DOUBLE);
        i++;
     }
+    _iterationsWriter.addData("deletedColumns", io::TXTTableWriter::INT );
 
     _convergenceWriter.addData("Timestep", io::TXTTableWriter::INT );
     _convergenceWriter.addData("Iteration", io::TXTTableWriter::INT );
@@ -807,6 +809,7 @@ void BaseCouplingScheme::advanceTXTWriters()
 		    _iterationsWriter.writeData(sstm.str(), std::pow(avgConvRate, 1./(double)_iterations));
       }
     }
+    _iterationsWriter.writeData("deletedColumns", _deletedColumnsPPFiltering);
   }
 }
 
