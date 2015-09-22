@@ -193,20 +193,23 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	*/
   
 	// do: filtering of least-squares system to maintain good conditioning
-	std::vector<int> delIndices(0);
-	_qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
-	preciceDebug(" delIndices: "<<delIndices);
-	for(int i = 0; i < delIndices.size(); i++){
-		removeMatrixColumn(delIndices[i]);
-
-		std::stringstream ss;
-		ss << "(updatedQR) removing linear dependent column "<< delIndices[i] << "  time step: " << tSteps
-		   << " iteration: " << its<< "\n" << std::endl;
-		preciceDebug(ss.str()); writeInfo(ss.str()); std::cout<<ss.str()<<std::endl;
+	 if(_filter == PostProcessing::NOFILTER){
+	    	// do nothing
+	}else{
+		// do: filtering of least-squares system to maintain good conditioning
+		std::vector<int> delIndices(0);
+		_qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
+		// start with largest index (as V,W matrices are shrinked and shifted
+		for(int i = delIndices.size()-1; i >= 0; i--){
+			preciceDebug("   Removing linear dependent column " << delIndices[i]);
+			removeMatrixColumn(delIndices[i]);
+			std::stringstream ss;
+			ss << "(updatedQR) removing linear dependent column "<< delIndices[i] << "  time step: " << tSteps
+			   << " iteration: " << its<< "\n" << std::endl;
+			preciceDebug(ss.str()); writeInfo(ss.str()); std::cout<<ss.str()<<std::endl;
+		}
+		assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
 	}
-
-	assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
-
 	Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
 	Eigen::MatrixXd V(_matrixV.rows(), _matrixV.cols());
 	Eigen::MatrixXd W(_matrixW.rows(), _matrixW.cols());
@@ -276,19 +279,18 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	_invJacobian = _invJacobian + _oldInvJacobian;
 
 	/**
-	*  (3) solve delta_x = - J_inv * res
-	*/
-
-	Eigen::VectorXd res(_residuals.size());
+ 	 *  (3) solve delta_x = - J_inv * res
+	 */
+	Eigen::VectorXd res_tilde(_residuals.size());
 	Eigen::VectorXd xUp(_residuals.size());
-	for(int i = 0; i < res.size(); i++)
-	  res(i) = _residuals(i);
+	for(int i = 0; i < res_tilde.size(); i++)
+	  res_tilde(i) = _residuals(i) - _designSpecification(i);
 
-	res *= -1.;
+	res_tilde *= -1.;
 
 	// multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
 	//                                        parallel:  (n_global x n_local) * (n_local x 1) = (n_local x 1)
-	_parMatrixOps.multiply(_invJacobian, res, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1);
+	_parMatrixOps.multiply(_invJacobian, res_tilde, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1);
 
 	for(int i = 0; i < xUp.size(); i++)
 	  xUpdate(i) = xUp(i);

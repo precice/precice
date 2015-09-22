@@ -159,11 +159,11 @@ void IQNILSPostProcessing::computeQNUpdate
     // Calculate QR decomposition of matrix V and solve Rc = -Qr
     DataValues __c;
 
-    if(_filter == BaseQNPostProcessing::NOFILTER){
+    if(_filter == PostProcessing::NOFILTER){
     	// do nothing
 
     /**
-    }else if(_filter == BaseQNPostProcessing::QR2FILTER){
+    }else if(_filter == PostProcessing::QR2FILTER){
 		 Eigen::MatrixXd _Q, _R;
 		bool termination = false;
 
@@ -266,7 +266,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	*/
 		/**
 	}
-	else if(_filter == BaseQNPostProcessing::PODFILTER){
+	else if(_filter == PostProcessing::PODFILTER){
 
 		// copy matrix V to Eigen Matrix data type
 		Eigen::MatrixXd _V(_matrixV.rows(), _matrixV.cols());
