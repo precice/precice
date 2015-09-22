@@ -24,13 +24,13 @@ namespace impl {
 
 tarch::logging::Log BaseQNPostProcessing::
       _log("precice::cplscheme::impl::BaseQNPostProcessing");
-
+/**
 const int BaseQNPostProcessing::NOFILTER = 0;
 const int BaseQNPostProcessing::QR1FILTER = 1;
 const int BaseQNPostProcessing::QR1FILTER_ABS = 2;
 const int BaseQNPostProcessing::QR2FILTER = 3;
 const int BaseQNPostProcessing::PODFILTER = 4;
-
+*/
       
 /* ----------------------------------------------------------------------------
  *     Constructor
@@ -128,7 +128,7 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 	_scaledOldValues.append(DataValues(entries, init));
 
 	// if design specifiaction not initialized yet
-	if(not _designSpecification.size() > 0){
+	if(not (_designSpecification.size() > 0)){
 		//_designSpecification = Eigen::VectorXd::Zero(_residuals.size());
 		_designSpecification.append(DataValues(entries, init));
 	}
@@ -170,44 +170,10 @@ void BaseQNPostProcessing::initialize(DataMap& cplData) {
 		writeInfo(ss.str());
 		ss.clear();
 
-/*
-		_dimOffsets.resize(utils::MasterSlave::_size + 1);
-		if (utils::MasterSlave::_slaveMode) {
-			utils::MasterSlave::_communication->send(((int) entries), 0);
-			utils::MasterSlave::_communication->receive(&_dimOffsets[0], _dimOffsets.size(), 0);
-		}
-		if (utils::MasterSlave::_masterMode) {
-			_dimOffsets[0] = 0;
-			_dimOffsets[1] = entries;
-			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-				int localDim = 0;
-				utils::MasterSlave::_communication->receive(localDim, rankSlave);
-				_dimOffsets[rankSlave + 1] = _dimOffsets[rankSlave] + localDim;
-			}
-			for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++) {
-				utils::MasterSlave::_communication->send(&_dimOffsets[0], _dimOffsets.size(), rankSlave);
-			}
-			ss<<" Offsets (correct): \n"<<_dimOffsets<<std::endl;
-			std::cout<<" Offsets (correct): \n"<<_dimOffsets<<std::endl;
-		}
-*/
 	}
 
 	// set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
 	_qrV.setGlobalRows(getLSSystemRows());
-
-
-/*	// ---------------------------------------------------
-	//debug output for master-slave mode
-	if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
-		ss << "processor [" << utils::MasterSlave::_rank<< "]: unknowns at interface: " << entries << std::endl;
-		std::cout<<ss.str();
-	}else{
-		ss<< "unknowns at interface: " << entries << std::endl;
-	}
-	writeInfo(ss.str(), true);
-	// ---------------------------------------------------
-*/
 
 	// Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
 	for (DataMap::value_type& pair : cplData){
@@ -241,6 +207,10 @@ void BaseQNPostProcessing:: scaling
 {
   preciceTrace("scaling()");
 
+  // scale and undo scaling of design specification according to scaling of corresponding data
+  bool isSet_designSpec = ((_designSpecification.size() > 0) && (tarch::la::norm2(designSpecification) > 1.0e-15 ));
+  if(isSet_designSpec) assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
+
   int offset = 0;
   for (int id : _dataIDs){
     double factor = _scalings[id];
@@ -251,6 +221,7 @@ void BaseQNPostProcessing:: scaling
     for (int i=0; i < size; i++){
       _scaledValues[i+offset] = values[i]/factor;
       _scaledOldValues[i+offset] = oldValues[i]/factor;
+      if(isSet_designSpec) _designSpecification[i+offset] = _designSpecification[i+offset]/factor;
     }
     offset += size;
   } 
@@ -266,6 +237,10 @@ void BaseQNPostProcessing:: undoScaling
 {
   preciceTrace("undoScaling()");
   
+  // scale and undo scaling of design specification according to scaling of corresponding data
+  bool isSet_designSpec = ((_designSpecification.size() > 0) && (tarch::la::norm2(designSpecification) > 1.0e-15 ));
+  if(isSet_designSpec) assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
+
   int offset = 0;
   for (int id : _dataIDs){
     double factor = _scalings[id];
@@ -276,28 +251,42 @@ void BaseQNPostProcessing:: undoScaling
     for(int i=0; i < size; i++){
       valuesPart[i] = _scaledValues[i+offset]*factor;
       oldValuesPart[i] = _scaledOldValues[i+offset]*factor;
+      if(isSet_designSpec) _designSpecification[i+offset] = _designSpecification[i+offset]*factor;
     }
     offset += size;
   }
 }
 
-void BaseQNPostProcessing::setDesignSpecification(Eigen::VectorXd q)
+void BaseQNPostProcessing::setDesignSpecification
+(
+   Eigen::VectorXd& q)
 {
 	preciceTrace("setDesignSpecification()");
 	assertion2(q.size() == _residuals.size(), q.size(), _residuals.size());
 	//_designSpecification = q;
-	if(not _designSpecification.size() > 0)
+	if(not (_designSpecification.size() > 0))
 		_designSpecification.append(DataValues(_residuals.size(), 0.0));
 	for(int i = 0; i < q.size(); i++)
 		_designSpecification(i) = q(i);
 }
 
 
+void BaseQNPostProcessing::optimize
+(
+   DataMap& cplData, Eigen::VectorXd& q_k)
+{
+   setDesignSpecification(q_k);
+   performPostProcessing(cplData);
+}
+
 /* ----------------------------------------------------------------------------
  *     updateDiffernceMatrices
  * ----------------------------------------------------------------------------
  */
-void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
+void BaseQNPostProcessing::updateDifferenceMatrices
+(
+   DataMap& cplData)
+{
 	preciceTrace("updateDiffernceMatrices()");
 	using namespace tarch::la;
 
@@ -365,7 +354,10 @@ void BaseQNPostProcessing::updateDifferenceMatrices(DataMap& cplData) {
  *     performPostProcessing
  * ----------------------------------------------------------------------------
  */
-void BaseQNPostProcessing::performPostProcessing(DataMap& cplData) {
+void BaseQNPostProcessing::performPostProcessing
+(
+   DataMap& cplData)
+{
 	preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
 	using namespace tarch::la;
 	assertion2(_dataIDs.size() == _scalings.size(), _dataIDs.size(), _scalings.size());

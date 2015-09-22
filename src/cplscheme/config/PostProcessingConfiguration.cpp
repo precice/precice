@@ -9,6 +9,7 @@
 #include "cplscheme/impl/MVQNPostProcessing.hpp"
 #include "cplscheme/impl/BroydenPostProcessing.hpp"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
+#include "cplscheme/impl/PostProcessing.hpp"
 #include <cplscheme/impl/BroydenPostProcessing.hpp>
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Data.hpp"
@@ -206,15 +207,15 @@ void PostProcessingConfiguration:: xmlTagCallback
   else if (callingTag.getName() == TAG_FILTER){
 	  auto f = callingTag.getStringAttributeValue(ATTR_NAME);
 	  if(f == "QR1-filter"){
-		  _config.filter = impl::BaseQNPostProcessing::QR1FILTER;
+		  _config.filter = impl::PostProcessing::QR1FILTER;
 	  }else if (f == "QR1_absolute-filter"){
-	  		  _config.filter = impl::BaseQNPostProcessing::QR1FILTER_ABS;
+	  		  _config.filter = impl::PostProcessing::QR1FILTER_ABS;
 	  }else if (f == "QR2-filter"){
-		  _config.filter = impl::BaseQNPostProcessing::QR2FILTER;
+		  _config.filter = impl::PostProcessing::QR2FILTER;
 	  }else if (f == "POD-filter"){
-	  		  _config.filter = impl::BaseQNPostProcessing::PODFILTER;
+	  		  _config.filter = impl::PostProcessing::PODFILTER;
 	  }else{
-		  _config.filter = impl::BaseQNPostProcessing::NOFILTER;
+		  _config.filter = impl::PostProcessing::NOFILTER;
 	  }
   }
 }

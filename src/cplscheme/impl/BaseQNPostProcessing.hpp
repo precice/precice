@@ -110,6 +110,13 @@ public:
     */
    virtual void performPostProcessing(DataMap& cplData);
    
+   /**
+    * @brief performs one optimization step of the optimization problem
+    *        x_k = argmin_x||f(x_k) - q_k)
+    *        with the design specification q_k and the model response f(x_k)
+    */
+   virtual void optimize(DataMap & cpldata, Eigen::VectorXd& q);
+
 
    /**
     * @brief Marks a iteration sequence as converged.
@@ -144,11 +151,13 @@ public:
    // delete this:
    virtual int getDeletedColumns();
 
+   /**
    static const int NOFILTER;
    static const int QR1FILTER_ABS;
    static const int QR1FILTER;
    static const int QR2FILTER;
    static const int PODFILTER;
+**/
 
 protected:
 

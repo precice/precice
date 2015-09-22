@@ -72,6 +72,8 @@ public:
 
   enum CouplingMode {Explicit, Implicit, Undefined};
 
+  enum ModelResolution {fineModel, coarseModel};
+
   /**
    * @brief Adds another coupling scheme in parallel to this scheme.
    *
@@ -138,6 +140,7 @@ public:
   virtual int getMaxTimesteps() const {
     return _maxTimesteps;
   }
+
 
   /// @brief Returns true, if timestep length is prescribed by the cpl scheme.
   virtual bool hasTimestepLength() const;
@@ -234,6 +237,12 @@ public:
    */
   virtual void initializeData() = 0;
 
+
+  /// @brief Returns whether the solver has to evaluate the coarse or the fine model representation
+  ModelResolution& nextModelToEvaluate(){
+	  return _nextModelToEvaluate;
+  }
+
   /**
    * @brief Sets order of predictor of interface values for first participant.
    *
@@ -269,6 +278,9 @@ protected:
 
   /// @brief Sets whether explicit or implicit coupling is being done.
   CouplingMode _couplingMode;
+
+  /// @brief Sets whether the solver evaluates the fine or the coarse model representation
+  ModelResolution _nextModelToEvaluate;
 
   /// @brief Updates internal state of coupling scheme for next timestep.
   void timestepCompleted();

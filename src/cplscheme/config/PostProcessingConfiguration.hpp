@@ -5,7 +5,7 @@
 #define PRECICE_CPLSCHEME_POSTPROCESSINGCONFIGURATION_HPP_
 
 #include "cplscheme/impl/SharedPointer.hpp"
-#include "cplscheme/impl/BaseQNPostProcessing.hpp"
+#include "cplscheme/impl/PostProcessing.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "tarch/logging/Log.h"
@@ -119,7 +119,7 @@ private:
          relaxationFactor ( 0.0 ),
          maxIterationsUsed ( 0 ),
          timestepsReused ( 0 ),
-         filter(impl::BaseQNPostProcessing::NOFILTER),
+         filter(impl::PostProcessing::NOFILTER),
          singularityLimit ( 0.0 )
       {}
 

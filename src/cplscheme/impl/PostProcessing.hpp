@@ -12,6 +12,7 @@
 namespace precice {
    namespace cplscheme {
       struct CouplingData;
+      class BaseCouplingScheme;
    }
    namespace io {
      class TXTWriter;
@@ -29,6 +30,12 @@ class PostProcessing
 {
 public:
 
+	static const int NOFILTER = 0;
+	static const int QR1FILTER = 1;
+	static const int QR1FILTER_ABS = 2;
+	static const int QR2FILTER = 3;
+	static const int PODFILTER = 4;
+
   /**
    * @brief Map from data ID to data values.
    */
@@ -45,9 +52,13 @@ public:
 
   virtual void performPostProcessing(DataMap & cpldata) =0;
 
+  virtual void optimize(DataMap & cpldata, Eigen::VectorXd& q) =0;
+
   virtual void iterationsConverged(DataMap & cpldata) =0;
 
   virtual void setDesignSpecification(Eigen::VectorXd& q) =0;
+
+  virtual void setNextModelToEvaluate(BaseCouplingScheme::ModelResolution& nextModel) {};
 
   virtual void exportState(io::TXTWriter& writer) {}
 

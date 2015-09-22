@@ -29,6 +29,7 @@ BaseCouplingScheme:: BaseCouplingScheme
   int    validDigits)
   :
   _couplingMode(Undefined),
+  _nextModelToEvaluate(fineModel),
   _eps(std::pow(10.0, -1 * validDigits)),
   _deletedColumnsPPFiltering(0),
   _participantSetsDt(false),
@@ -85,6 +86,7 @@ BaseCouplingScheme::BaseCouplingScheme
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
   :
+  _nextModelToEvaluate(fineModel),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _convergenceMeasures(),

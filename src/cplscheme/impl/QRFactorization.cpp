@@ -165,7 +165,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 {
 	preciceTrace("applyFilter()");
 	delIndices.resize(0);
-	if(_filter == BaseQNPostProcessing::QR1FILTER || _filter == BaseQNPostProcessing::QR1FILTER_ABS)
+	if(_filter == PostProcessing::QR1FILTER || _filter == PostProcessing::QR1FILTER_ABS)
 	{
 		bool linearDependence = true;
 		std::vector<int> delFlag(_cols, 0);
@@ -181,7 +181,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 					// QR1-filter
 					if(index >= cols()) break;
 					assertion2(index < _cols, index, _cols);
-					double factor = (_filter == BaseQNPostProcessing::QR1FILTER_ABS) ? 1.0 : _R.norm();
+					double factor = (_filter == PostProcessing::QR1FILTER_ABS) ? 1.0 : _R.norm();
 					if (std::fabs(_R(index, index)) < singularityLimit * factor) {
 
 						linearDependence = true;
@@ -197,7 +197,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 				}
 			}
 		}
-	}else if(_filter == BaseQNPostProcessing::QR2FILTER)
+	}else if(_filter == PostProcessing::QR2FILTER)
 	{
 		  _Q.resize(0,0);
 		  _R.resize(0,0);
