@@ -7,6 +7,7 @@
 #include "cplscheme/impl/HierarchicalAitkenPostProcessing.hpp"
 #include "cplscheme/impl/IQNILSPostProcessing.hpp"
 #include "cplscheme/impl/MVQNPostProcessing.hpp"
+#include "cplscheme/impl/MMPostProcessing.hpp"
 #include "cplscheme/impl/BroydenPostProcessing.hpp"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
 #include "cplscheme/impl/PostProcessing.hpp"
@@ -44,15 +45,18 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_SINGULARITY_LIMIT("singularity-limit"),
   TAG_DATA("data"),
   TAG_FILTER("filter"),
+  TAG_COARSEMODELOPTIMIZATION("coarse-model-optimization"),
   ATTR_NAME("name"),
   ATTR_MESH("mesh"),
   ATTR_SCALING("scaling"),
   ATTR_VALUE("value"),
+  ATTR_ESTJACOBIAN("estimate-jacobian"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
   VALUE_IQNILS ("IQN-ILS"),
   VALUE_MVQN("IQN-IMVJ"),
+  VALUE_ManifoldMapping("MM"),
   VALUE_BROYDEN("broyden"),
   //_isValid(false),
   _meshConfig(meshConfig),
@@ -96,12 +100,17 @@ void PostProcessingConfiguration:: connectTags(
       tags.push_back(tag);
     }
     {
+      XMLTag tag(*this, VALUE_ManifoldMapping, occ, TAG);
+      addTypeSpecificSubtags(tag);
+      tags.push_back(tag);
+    }
+    {
       XMLTag tag(*this, VALUE_BROYDEN, occ, TAG);
       addTypeSpecificSubtags(tag);
       tags.push_back(tag);
     }
 
-    foreach (XMLTag& tag, tags){
+    for (XMLTag& tag: tags){
       parent.addSubtag(tag);
     }
 
@@ -155,6 +164,7 @@ void PostProcessingConfiguration:: xmlTagCallback
 
   if (callingTag.getNamespace() == TAG){
       _config.type = callingTag.getName();
+      _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_ESTJACOBIAN);
   }
 
   if (callingTag.getName() == TAG_RELAX){
@@ -164,7 +174,8 @@ void PostProcessingConfiguration:: xmlTagCallback
     std::string dataName = callingTag.getStringAttributeValue(ATTR_NAME);
     _meshName = callingTag.getStringAttributeValue(ATTR_MESH);
     double scaling = 1.0;
-    if(_config.type == VALUE_IQNILS || _config.type == VALUE_MVQN || _config.type == VALUE_BROYDEN){
+    if(_config.type == VALUE_IQNILS || _config.type == VALUE_MVQN ||
+       _config.type == VALUE_ManifoldMapping || _config.type == VALUE_BROYDEN){
       scaling = callingTag.getDoubleAttributeValue(ATTR_SCALING);
     }
 
@@ -186,11 +197,7 @@ void PostProcessingConfiguration:: xmlTagCallback
              << _meshName << "\" not found on configuration of post-processing";
       throw stream.str();
     }
-
-
     _neededMeshes.push_back(_meshName);
-
-
   }
   else if (callingTag.getName() == TAG_INIT_RELAX){
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
@@ -218,6 +225,15 @@ void PostProcessingConfiguration:: xmlTagCallback
 		  _config.filter = impl::PostProcessing::NOFILTER;
 	  }
   }
+  else if (callingTag.getName() == TAG_COARSEMODELOPTIMIZATION) {
+    // new PP config for coarse model optimization method (recursive definition)
+    _coarseModelOptimizationConfig->clear();
+    if (_coarseModelOptimizationConfig.get() == nullptr) {
+      _coarseModelOptimizationConfig = PtrPostProcessingConfiguration(
+          new PostProcessingConfiguration(_meshConfig));
+    }
+    _coarseModelOptimizationConfig->connectTags(callingTag);
+  }
 }
 
 void PostProcessingConfiguration:: xmlEndTagCallback
@@ -244,30 +260,54 @@ void PostProcessingConfiguration:: xmlEndTagCallback
     else if (callingTag.getName() == VALUE_IQNILS){
       _postProcessing = impl::PtrPostProcessing (
           new impl::IQNILSPostProcessing(
-          _config.relaxationFactor, _config.maxIterationsUsed,
-          _config.timestepsReused, _config.filter,
-          _config.singularityLimit,
-          _config.dataIDs, _config.scalings) );
+          _config.relaxationFactor,
+          _config.maxIterationsUsed,
+          _config.timestepsReused,
+          _config.filter, _config.singularityLimit,
+          _config.dataIDs,
+          _config.scalings) );
     }
     else if (callingTag.getName() == VALUE_MVQN){
 		#ifndef PRECICE_NO_MPI
 		  _postProcessing = impl::PtrPostProcessing (
 			  new impl::MVQNPostProcessing(
-			  _config.relaxationFactor, _config.maxIterationsUsed,
-			  _config.timestepsReused, _config.filter,
-			  _config.singularityLimit,
-			  _config.dataIDs, _config.scalings) );
+			  _config.relaxationFactor,
+			  _config.maxIterationsUsed,
+			  _config.timestepsReused,
+			  _config.filter, _config.singularityLimit,
+			  _config.dataIDs,
+			  _config.scalings) );
 		#else
       	  preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if precice is compiled with MPI");
-      	#endif
+    #endif
+    }
+    else if (callingTag.getName() == VALUE_ManifoldMapping){
+
+      // create coarse model optimization method recursive
+      assertion((_coarseModelOptimizationConfig.get() != nullptr));
+      assertion((_coarseModelOptimizationConfig->getPostProcessing().get() != nullptr));
+
+      // create manifold mapping PP
+      _postProcessing = impl::PtrPostProcessing (
+        new impl::MMPostProcessing(
+        _coarseModelOptimizationConfig->getPostProcessing(),                // coarse model optimization method
+        _config.maxIterationsUsed,
+        _config.timestepsReused,
+        _config.filter, _config.singularityLimit,
+        _config.estimateJacobian,
+        _config.dataIDs,                                                    // fine data IDs
+        _coarseModelOptimizationConfig->getPostProcessing()->getDataIDs(),  // coarse data IDs
+        _config.scalings) );
     }
     else if (callingTag.getName() == VALUE_BROYDEN){
       _postProcessing = impl::PtrPostProcessing (
           new impl::BroydenPostProcessing(
-          _config.relaxationFactor, _config.maxIterationsUsed,
-          _config.timestepsReused, _config.filter,
-          _config.singularityLimit,
-          _config.dataIDs, _config.scalings) );
+          _config.relaxationFactor,
+          _config.maxIterationsUsed,
+          _config.timestepsReused,
+          _config.filter, _config.singularityLimit,
+          _config.dataIDs,
+          _config.scalings) );
     }
     else {
       assertion(false );

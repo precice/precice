@@ -59,7 +59,7 @@ public:
   /**
    * @brief Returns all MM involved fine model data IDs.
    */
-  virtual std::vector<int> getFineDataIDs() const
+  virtual std::vector<int> getDataIDs() const
   {
     return _fineDataIDs;
   }
@@ -67,7 +67,7 @@ public:
   /**
    * @brief Returns all MM involved coarse model data IDs.
    */
-  virtual std::vector<int> getCoarseDataIDs() const
+  std::vector<int> getCoarseDataIDs() const
   {
     return _coarseDataIDs;
   }
