@@ -7,6 +7,7 @@
 #include "Eigen/Dense"
 #include <map>
 #include <vector>
+#include "../BaseCouplingScheme.hpp"
 #include "../SharedPointer.hpp"
 
 namespace precice {
@@ -52,13 +53,13 @@ public:
 
   virtual void performPostProcessing(DataMap & cpldata) =0;
 
-  virtual void optimize(DataMap & cpldata, Eigen::VectorXd& q) =0;
+  virtual void optimize(DataMap & cpldata, Eigen::VectorXd& q) {}; // change to abstract function if desigSpecification is implemented in all PPs
 
   virtual void iterationsConverged(DataMap & cpldata) =0;
 
-  virtual void setDesignSpecification(Eigen::VectorXd& q) =0;
+  virtual void setDesignSpecification(Eigen::VectorXd& q) {}; // change to abstract function if desigSpecification is implemented in all PPs
 
-  virtual void setNextModelToEvaluate(BaseCouplingScheme::ModelResolution& nextModel) {};
+  virtual void setNextModelToEvaluate(cplscheme::BaseCouplingScheme::ModelResolution& nextModel) {};
 
   virtual void exportState(io::TXTWriter& writer) {}
 

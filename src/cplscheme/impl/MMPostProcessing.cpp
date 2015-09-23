@@ -100,7 +100,7 @@ MMPostProcessing::MMPostProcessing
 void MMPostProcessing::initialize(
     DataMap& cplData)
 {
-  preciceTrace1("initialize()", cplData.size());
+  preciceTrace1(__func__, cplData.size());
   size_t entries = 0;
   size_t coarseEntries = 0;
 
@@ -129,7 +129,6 @@ void MMPostProcessing::initialize(
   _firstIteration = true;
   _firstTimeStep = true;
 
-  double init = 0.0;
   assertion(_coarseOldResiduals.size() == 0);assertion(_fineOldResiduals.size() == 0);
   _coarseOldResiduals = Eigen::VectorXd::Zero(entries);
   _fineOldResiduals = Eigen::VectorXd::Zero(entries);
@@ -217,6 +216,7 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
 (
     DataMap& cplData)
 {
+  preciceTrace(__func__);
   // extract new solution x_star from coarse model optimization problem from coarse cplData
   int off = 0;
   for (int id : _coarseDataIDs) {
@@ -244,7 +244,7 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
   }
 
   // in the context of mannifold mapping post processing we want _input_Xstar to be scaled according to the scaling factos
-  scale(_input_Xstar);
+  scale(_input_Xstar, cplData);
 }
 
 
@@ -258,9 +258,9 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
 void MMPostProcessing::setDesignSpecification(
     Eigen::VectorXd& q)
 {
-  preciceTrace("setDesignSpecification()");
-  assertion2(q.size() == _residuals.size(), q.size(), _residuals.size());
-  _designSpecification = (q.norm() <= 1.0e-15) ? Eigen::VectorXd::Zero(_residuals.size()) : q;
+  preciceTrace(__func__);
+  assertion2(q.size() == _fineResiduals.size(), q.size(), _fineResiduals.size());
+  _designSpecification = (q.norm() <= 1.0e-15) ? Eigen::VectorXd::Zero(_fineResiduals.size()) : q;
 
   // only in the first step, the coarse model design specification equals the design specification
   // for the overall objective function (initial coarse solution)
@@ -277,14 +277,13 @@ void MMPostProcessing::setDesignSpecification(
 void MMPostProcessing::updateDifferenceMatrices(
     DataMap& cplData)
 {
-
-  preciceTrace("updateDiffernceMatrices()");
+  preciceTrace(__func__);
 
   /**
    * Compute current residual: vertex-data - oldData
    */
-  _fineResiduals = _scaledValues - _input_Xstar;
-  _coarseResiduals -= _coarseScaledValues - _input_Xstar;
+  _fineResiduals = _outputFineModelScaled - _input_Xstar;
+  _coarseResiduals = _outputCoarseModelScaled - _input_Xstar;
 
   /**
    * Update matrices C, F with newest information
@@ -343,14 +342,14 @@ void MMPostProcessing::updateDifferenceMatrices(
 void MMPostProcessing::performPostProcessing(
     DataMap& cplData)
 {
-  preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
+  preciceTrace2(__func__, _dataIDs.size(), cplData.size());
 
   assertion2(_dataIDs.size() == _scalings.size(), _dataIDs.size(), _scalings.size());
-  assertion2(_fineOldResiduals.size() == _fineResiduals.size(),_oldResiduals.size(), _fineResiduals.size());
-  assertion2(_coarseResiduals.size() == _fineResiduals.size(),_scaledValues.size(), _fineResiduals.size());
-  assertion2(_coarseOldResiduals.size() == _fineResiduals.size(),_scaledOldValues.size(), _fineResiduals.size());
-  assertion2(_scaledValues.size() == _fineResiduals.size(),_residuals.size(), _fineResiduals.size());
-  assertion2(_scaledOldValues.size() == _fineResiduals.size(),_residuals.size(), _fineResiduals.size());
+  assertion2(_fineOldResiduals.size() == _fineResiduals.size(),_fineOldResiduals.size(), _fineResiduals.size());
+  assertion2(_coarseResiduals.size() == _fineResiduals.size(),_coarseResiduals.size(), _fineResiduals.size());
+  assertion2(_coarseOldResiduals.size() == _fineResiduals.size(),_coarseOldResiduals.size(), _fineResiduals.size());
+  assertion2(_outputFineModelScaled.size() == _fineResiduals.size(),_outputFineModelScaled.size(), _fineResiduals.size());
+  assertion2(_input_Xstar.size() == _fineResiduals.size(), _input_Xstar.size(), _fineResiduals.size());
 
   if (_nextModelToEvaluate == BaseCouplingScheme::ModelResolution::fineModel) {
 
@@ -361,7 +360,7 @@ void MMPostProcessing::performPostProcessing(
 
     // scale data values (and secondary data values)
     scale(cplData);
-    if(isSet(_designSpecification)) scale(_designSpecification);
+    if(isSet(_designSpecification)) scale(_designSpecification, cplData);
     //scaling(cplData);
 
     // update the difference matrices with the newest residual deltas
@@ -404,7 +403,7 @@ void MMPostProcessing::performPostProcessing(
     {
       // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
       assertion(isSet(_coarseModel_designSpecification));
-      unscale(_coarseModel_designSpecification);
+      unscale(_coarseModel_designSpecification, cplData);
     }
 
 
@@ -436,6 +435,7 @@ void MMPostProcessing::performPostProcessing(
  */
 void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 {
+  preciceTrace(__func__);
 
   /** update design specification
    *  alpha = (f(x) - q),
@@ -461,11 +461,11 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
         break;
 
       // Calculate singular value decomposition with Eigen
-      Eigen::JacobiSVD < matrix > svd(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);
+      Eigen::JacobiSVD < Eigen::MatrixXd > svd(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);
       Eigen::VectorXd singularValues = svd.singularValues();
 
       for (int i = 0; i < singularValues.rows(); i++) {
-        if (std::abs(singularValues(i)) <= singularityLimit) {
+        if (std::abs(singularValues(i)) <= _singularityLimit) {
 
           // Remove the column from _matrixC and _matrixF
           removeMatrixColumn(i - nbRemoveCols);
@@ -481,8 +481,8 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
     if (getLSSystemCols() > 0)
         {
       // Calculate singular value decomposition with Eigen
-      Eigen::JacobiSVD < matrix > svd_C(_matrixC, Eigen::ComputeThinU | Eigen::ComputeThinV);
-      Eigen::JacobiSVD < matrix > svd_F(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);
+      Eigen::JacobiSVD < Eigen::MatrixXd > svd_C(_matrixC, Eigen::ComputeThinU | Eigen::ComputeThinV);
+      Eigen::JacobiSVD < Eigen::MatrixXd > svd_F(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
       Eigen::MatrixXd pseudoSigma_F = svd_F.singularValues().asDiagonal();
 
@@ -552,6 +552,8 @@ void MMPostProcessing::scale
 (
     DataMap& cplData)
 {
+  preciceTrace(__func__);
+
   int offset = 0;
   int k = 0;
   assertion2(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
@@ -586,8 +588,10 @@ void MMPostProcessing::scale
  */
 void MMPostProcessing::scale
 (
-    Eigen::VectorXd& vec)
+    Eigen::VectorXd& vec, DataMap& cplData)
 {
+  preciceTrace(__func__);
+
   int offset = 0;
   for (int id : _fineDataIDs) {
     double factor = _scalings[id];
@@ -606,8 +610,10 @@ void MMPostProcessing::scale
  */
 void MMPostProcessing::unscale
 (
-    Eigen::VectorXd& vec)
+    Eigen::VectorXd& vec, DataMap& cplData)
 {
+  preciceTrace(__func__);
+
   int offset = 0;
   for (int id : _fineDataIDs) {
     double factor = _scalings[id];
@@ -647,7 +653,7 @@ void MMPostProcessing::iterationsConverged
 (
     DataMap & cplData)
 {
-  preciceTrace("iterationsConverged()");
+  preciceTrace(__func__);
 
   its = 0;
   tSteps++;
@@ -657,7 +663,7 @@ void MMPostProcessing::iterationsConverged
   // this has to be done in iterations converged, as PP won't be called any more if
   // convergence was achieved
   scale(cplData);
-  if(isSet(_designSpecification)) scale(_designSpecification);
+  if(isSet(_designSpecification)) scale(_designSpecification, cplData);
   updateDifferenceMatrices(cplData);
   // no undoScaling() needed, as input/output data is not modified
 
@@ -709,7 +715,7 @@ void MMPostProcessing::removeMatrixColumn
 (
     int columnIndex)
 {
-  preciceTrace2("removeMatrixColumn()", columnIndex, _matrixF.cols());
+  preciceTrace2(__func__, columnIndex, _matrixF.cols());
 
   // debugging information, can be removed
   deletedColumns++;
@@ -746,7 +752,7 @@ void MMPostProcessing::importState(
 {
 }
 
-int BaseQNPostProcessing::getDeletedColumns()
+int MMPostProcessing::getDeletedColumns()
 {
   return deletedColumns;
 }

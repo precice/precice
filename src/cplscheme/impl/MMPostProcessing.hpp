@@ -226,8 +226,9 @@ protected:
   /// @brief Stores residual deltas for the coarse model response
   Eigen::MatrixXd _matrixC;
 
-  /// @brief The pseudo inverse of the manifold mapping matrix, only stored and updated
-  ///        if _estimateJacobian is set to true.
+  /** @brief The pseudo inverse of the manifold mapping matrix, only stored and updated
+   *        if _estimateJacobian is set to true.
+   */
   Eigen::MatrixXd _MMMappingMatrix;
   Eigen::MatrixXd _MMMappingMatrix_prev;
 
@@ -294,10 +295,10 @@ protected:
 
   /// @brief scales an vector of length = #unknowns that has the same ordering of unknowns as the cplData
   ///        according to the defined scaling factors. This method is used to scale the desigSpecifications
-  void scale(Eigen::VectorXd& vec);
+  void scale(Eigen::VectorXd& vec, DataMap& cplData);
 
   /// @brief reverts the scaling of the vector
-  void unscale(Eigen::VectorXd& vec);
+  void unscale(Eigen::VectorXd& vec, DataMap& cplData);
 
   /// @brief Indicates whether the design specification has been set and is active or not
   bool isSet(Eigen::VectorXd& designSpec);
@@ -308,16 +309,18 @@ protected:
    * need to move that in a class/header that encapsulates the Eigen data types
    */
 
-  /// @brief shifts all columns in the matrix A on column to the right and inserts vector
-  ///         v as first column at pos 0. The last column is deleted.
+  /** @brief shifts all columns in the matrix A on column to the right and inserts vector
+   *         v as first column at pos 0. The last column is deleted.
+   */
   void shiftSetFirst(Eigen::MatrixXd& A, Eigen::VectorXd& v);
 
   /// @brief appends the vector v as first column at pos 0. The other columns are shifted right.
   void appendFront(Eigen::MatrixXd& A, Eigen::VectorXd& v);
 
-  /// @brief removes an arbitrary column from the matrix A and shifts all columns that lie to the
-  //          right of this column to the left.
-  void MMPostProcessing::removeColumnFromMatrix(
+  /** @brief removes an arbitrary column from the matrix A and shifts all columns that lie to the
+   *          right of this column to the left.
+   */
+  void removeColumnFromMatrix(
       Eigen::MatrixXd& A, int col);
 
 
