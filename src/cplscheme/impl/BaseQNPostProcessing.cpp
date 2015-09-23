@@ -46,37 +46,37 @@ BaseQNPostProcessing::BaseQNPostProcessing
     std::vector<int> dataIDs,
     std::map<int, double> scalings)
 :
-        PostProcessing(),
-        _initialRelaxation(initialRelaxation),
-        _maxIterationsUsed(maxIterationsUsed),
-        _timestepsReused(timestepsReused),
-        _singularityLimit(singularityLimit),
-        _designSpecification(),
-        _dataIDs(dataIDs),
-        _secondaryDataIDs(),
-        _scalings(scalings),
-        _firstIteration(true),
-        _firstTimeStep(true),
-        _hasNodesOnInterface(true),
-        _oldXTilde(),
-        _residuals(),
-        _secondaryResiduals(),
-        _scaledValues(),
-        _scaledOldValues(),
-        _oldResiduals(),
-        _matrixV(),
-        _matrixW(),
-        _qrV(filter),
-        _matrixVBackup(),
-        _matrixWBackup(),
-        _matrixColsBackup(),
-        _matrixCols(),
-        _dimOffsets(),
-        _infostream(),
-        its(0),
-        tSteps(0),
-        deletedColumns(0),
-        _filter(filter)
+  PostProcessing(),
+  _initialRelaxation(initialRelaxation),
+  _maxIterationsUsed(maxIterationsUsed),
+  _timestepsReused(timestepsReused),
+  _singularityLimit(singularityLimit),
+  _designSpecification(),
+  _dataIDs(dataIDs),
+  _secondaryDataIDs(),
+  _scalings(scalings),
+  _firstIteration(true),
+  _firstTimeStep(true),
+  _hasNodesOnInterface(true),
+  _oldXTilde(),
+  _residuals(),
+  _secondaryResiduals(),
+  _scaledValues(),
+  _scaledOldValues(),
+  _oldResiduals(),
+  _matrixV(),
+  _matrixW(),
+  _qrV(filter),
+  _matrixVBackup(),
+  _matrixWBackup(),
+  _matrixColsBackup(),
+  _matrixCols(),
+  _dimOffsets(),
+  _infostream(),
+  its(0),
+  tSteps(0),
+  deletedColumns(0),
+  _filter(filter)
 {
   preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
       "BaseQNPostProcessing()",
@@ -98,9 +98,13 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _qrV.setfstream(&_infostream);
 }
 
-/* ----------------------------------------------------------------------------
- *     initialize
- * ----------------------------------------------------------------------------
+
+
+/** ---------------------------------------------------------------------------------------------
+ *         initialize()
+ *
+ * @brief: Initializes all the needed variables and data
+ *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNPostProcessing::initialize(
     DataMap& cplData)
@@ -195,68 +199,14 @@ void BaseQNPostProcessing::initialize(
   }
 }
 
-/* ----------------------------------------------------------------------------
- *     scaling
- * ----------------------------------------------------------------------------
+
+/** ---------------------------------------------------------------------------------------------
+ *         setDesignSpecification()
+ *
+ * @brief: sets a design specification for the fine model optimization problem
+ *         i.e., x_star = argmin_x || f(x) - q ||
+ *  ---------------------------------------------------------------------------------------------
  */
-void BaseQNPostProcessing::scaling
-(
-    DataMap& cplData)
-{
-  preciceTrace("scaling()");
-
-  // scale and undo scaling of design specification according to scaling of corresponding data
-  bool isSet_designSpec = ((_designSpecification.size() > 0) && (tarch::la::norm2(designSpecification) > 1.0e-15));
-  if (isSet_designSpec)
-    assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
-
-  int offset = 0;
-  for (int id : _dataIDs) {
-    double factor = _scalings[id];
-    preciceDebug("Scaling Factor " << factor << " for id: " << id);
-    int size = cplData[id]->values->size();
-    DataValues& values = *cplData[id]->values;
-    DataValues& oldValues = cplData[id]->oldValues.column(0);
-    for (int i = 0; i < size; i++) {
-      _scaledValues[i + offset] = values[i] / factor;
-      _scaledOldValues[i + offset] = oldValues[i] / factor;
-      if (isSet_designSpec) _designSpecification[i + offset] = _designSpecification[i + offset] / factor;
-    }
-    offset += size;
-  }
-}
-
-/* ----------------------------------------------------------------------------
- *     undoScaling
- * ----------------------------------------------------------------------------
- */
-void BaseQNPostProcessing::undoScaling
-(
-    DataMap& cplData)
-{
-  preciceTrace("undoScaling()");
-
-  // scale and undo scaling of design specification according to scaling of corresponding data
-  bool isSet_designSpec = ((_designSpecification.size() > 0) && (tarch::la::norm2(designSpecification) > 1.0e-15));
-  if (isSet_designSpec)
-    assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
-
-  int offset = 0;
-  for (int id : _dataIDs) {
-    double factor = _scalings[id];
-    int size = cplData[id]->values->size();
-    preciceDebug("Copying values back, size: " << size);
-    utils::DynVector& valuesPart = *(cplData[id]->values);
-    utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
-    for (int i = 0; i < size; i++) {
-      valuesPart[i] = _scaledValues[i + offset] * factor;
-      oldValuesPart[i] = _scaledOldValues[i + offset] * factor;
-      if (isSet_designSpec) _designSpecification[i + offset] = _designSpecification[i + offset] * factor;
-    }
-    offset += size;
-  }
-}
-
 void BaseQNPostProcessing::setDesignSpecification
 (
     Eigen::VectorXd& q)
@@ -270,6 +220,13 @@ void BaseQNPostProcessing::setDesignSpecification
     _designSpecification(i) = q(i);
 }
 
+
+/** ---------------------------------------------------------------------------------------------
+ *         optimize()
+ *
+ * @brief: performs one iteration of the optimization problem x_star = argmin_x || f(x) - q_k ||
+ *  ---------------------------------------------------------------------------------------------
+ */
 void BaseQNPostProcessing::optimize
 (
     DataMap& cplData, Eigen::VectorXd& q_k)
@@ -278,9 +235,14 @@ void BaseQNPostProcessing::optimize
   performPostProcessing(cplData);
 }
 
-/* ----------------------------------------------------------------------------
- *     updateDiffernceMatrices
- * ----------------------------------------------------------------------------
+
+
+/** ---------------------------------------------------------------------------------------------
+ *         updateDifferenceMatrices()
+ *
+ * @brief: computes the current coarse and fine model residual, computes the differences and
+ *         updates the difference matrices F and C. Also stores the residuals
+ *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNPostProcessing::updateDifferenceMatrices
 (
@@ -349,9 +311,12 @@ void BaseQNPostProcessing::updateDifferenceMatrices
 
 }
 
-/* ----------------------------------------------------------------------------
- *     performPostProcessing
- * ----------------------------------------------------------------------------
+/** ---------------------------------------------------------------------------------------------
+ *         performPostProcessing()
+ *
+ * @brief: performs one iteration of the quasi Newton post processing. It steers the execution
+ *         of fine and coarse model evaluations and also calls the coarse model optimization.
+ *  ---------------------------------------------------------------------------------------------
  */
 void BaseQNPostProcessing::performPostProcessing
 (
@@ -462,6 +427,78 @@ void BaseQNPostProcessing::performPostProcessing
   _firstIteration = false;
 }
 
+
+/* ----------------------------------------------------------------------------
+ *     scaling
+ * ----------------------------------------------------------------------------
+ */
+void BaseQNPostProcessing::scaling
+(
+    DataMap& cplData)
+{
+  preciceTrace("scaling()");
+
+  // scale and undo scaling of design specification according to scaling of corresponding data
+  bool isSet_designSpec = ((_designSpecification.size() > 0) && (tarch::la::norm2(_designSpecification) > 1.0e-15));
+  if (isSet_designSpec)
+    assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
+
+  int offset = 0;
+  for (int id : _dataIDs) {
+    double factor = _scalings[id];
+    preciceDebug("Scaling Factor " << factor << " for id: " << id);
+    int size = cplData[id]->values->size();
+    DataValues& values = *cplData[id]->values;
+    DataValues& oldValues = cplData[id]->oldValues.column(0);
+    for (int i = 0; i < size; i++) {
+      _scaledValues[i + offset] = values[i] / factor;
+      _scaledOldValues[i + offset] = oldValues[i] / factor;
+      if (isSet_designSpec) _designSpecification[i + offset] = _designSpecification[i + offset] / factor;
+    }
+    offset += size;
+  }
+}
+
+/* ----------------------------------------------------------------------------
+ *     undoScaling
+ * ----------------------------------------------------------------------------
+ */
+void BaseQNPostProcessing::undoScaling
+(
+    DataMap& cplData)
+{
+  preciceTrace("undoScaling()");
+
+  // scale and undo scaling of design specification according to scaling of corresponding data
+  bool isSet_designSpec = ((_designSpecification.size() > 0) && (tarch::la::norm2(_designSpecification) > 1.0e-15));
+  if (isSet_designSpec)
+    assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
+
+  int offset = 0;
+  for (int id : _dataIDs) {
+    double factor = _scalings[id];
+    int size = cplData[id]->values->size();
+    preciceDebug("Copying values back, size: " << size);
+    utils::DynVector& valuesPart = *(cplData[id]->values);
+    utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
+    for (int i = 0; i < size; i++) {
+      valuesPart[i] = _scaledValues[i + offset] * factor;
+      oldValuesPart[i] = _scaledOldValues[i + offset] * factor;
+      if (isSet_designSpec) _designSpecification[i + offset] = _designSpecification[i + offset] * factor;
+    }
+    offset += size;
+  }
+}
+
+
+/** ---------------------------------------------------------------------------------------------
+ *         iterationsConverged()
+ *
+ * @brief: Is called when the convergence criterion for the coupling is fullfilled and finalizes
+ *         the quasi Newton post processing. Stores new differences in F and C, clears or
+ *         updates F and C according to the number of reused time steps
+ *  ---------------------------------------------------------------------------------------------
+ */
 void BaseQNPostProcessing::iterationsConverged
 (
     DataMap & cplData)
@@ -559,37 +596,50 @@ void BaseQNPostProcessing::iterationsConverged
   _firstIteration = true;
 }
 
+/** ---------------------------------------------------------------------------------------------
+ *         removeMatrixColumn()
+ *
+ * @brief: removes a column from the least squares system, i. e., from the matrices F and C
+ *  ---------------------------------------------------------------------------------------------
+ */
+void BaseQNPostProcessing::removeMatrixColumn
+(
+    int columnIndex)
+{
+  preciceTrace2("removeMatrixColumn()", columnIndex, _matrixV.cols());
+
+  // debugging information, can be removed
+  deletedColumns++;
+
+  assertion(_matrixV.cols() > 1);
+  _matrixV.remove(columnIndex);
+  _matrixW.remove(columnIndex);
+
+  // Reduce column count
+  std::deque<int>::iterator iter = _matrixCols.begin();
+  int cols = 0;
+  while (iter != _matrixCols.end()) {
+    cols += *iter;
+    if (cols > columnIndex) {
+      assertion(*iter > 0);
+      *iter -= 1;
+      if (*iter == 0) {
+        _matrixCols.erase(iter);
+      }
+      break;
+    }
+    iter++;
+  }
+}
+
 void BaseQNPostProcessing::exportState(
     io::TXTWriter& writer)
 {
-//  tarch::la::Vector<1,int> colSize(_matrixCols.size());
-//  writer.write(colSize);
-//  writer.write(_matrixCols);
-//  writer.write(_oldXTilde);
-//  writer.write(_oldResiduals);
-//  writer.write(_matrixV);
-//  writer.write(_matrixW);
 }
 
 void BaseQNPostProcessing::importState(
     io::TXTReader& reader)
 {
-//  tarch::la::Vector<1,int> colSize;
-//  reader.read(colSize);
-//  _matrixCols.resize(colSize[0]);
-//  reader.read(_oldXTilde);
-//  reader.read(_oldResiduals);
-//  for (int i=0; i<colSize[0]; i++ ){
-//    // Using _oldXTilde to have a vector with appropriate size.
-//    // Values are overwritten afterwards in file read.
-//    _matrixV.append(_oldXTilde);
-//    _matrixW.append(_oldXTilde);
-//  }
-//  reader.read(_matrixV);
-//  reader.read(_matrixW);
-//  if (colSize[0] > 1){
-//    _firstIteration = false;
-//  }
 }
 
 int BaseQNPostProcessing::getDeletedColumns()
@@ -599,9 +649,6 @@ int BaseQNPostProcessing::getDeletedColumns()
 
 int BaseQNPostProcessing::getLSSystemCols()
 {
-//	if(_hasNodesOnInterface){
-//		return _matrixV.cols();
-//	}
   int cols = 0;
   for (int col : _matrixCols) {
     cols += col;
@@ -620,43 +667,8 @@ int BaseQNPostProcessing::getLSSystemRows()
     return _dimOffsets.back();
   }
   return _residuals.size();
-  //return _matrixV.rows();
 }
 
-void BaseQNPostProcessing::removeMatrixColumn
-(
-    int columnIndex)
-{
-  preciceTrace2("removeMatrixColumn()", columnIndex, _matrixV.cols());
-
-  // debugging information, can be removed
-  deletedColumns++;
-
-  assertion(_matrixV.cols() > 1);
-  _matrixV.remove(columnIndex);
-  _matrixW.remove(columnIndex);
-
-  // remove corresponding column from dynamic QR-decomposition of _matrixV
-  // Note: here, we need to delete the column, as we push empty columns
-  //       for procs with no vertices in master-slave mode.
-  //_qrV.deleteColumn(columnIndex);
-
-  // Reduce column count
-  std::deque<int>::iterator iter = _matrixCols.begin();
-  int cols = 0;
-  while (iter != _matrixCols.end()) {
-    cols += *iter;
-    if (cols > columnIndex) {
-      assertion(*iter > 0);
-      *iter -= 1;
-      if (*iter == 0) {
-        _matrixCols.erase(iter);
-      }
-      break;
-    }
-    iter++;
-  }
-}
 
 void BaseQNPostProcessing::writeInfo
 (
