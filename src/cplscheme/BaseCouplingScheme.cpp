@@ -734,16 +734,17 @@ bool BaseCouplingScheme:: measureConvergence()
     assertion(convMeasure.measure.get() != nullptr);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values);
+
     if(not utils::MasterSlave::_slaveMode){
       std::stringstream sstm;
       sstm << "resNorm(" <<i<< ")";
       _convergenceWriter.writeData(sstm.str(), convMeasure.measure->getNormResidual());
     }
-    if(_iterations == 1) {
+
+    if(_iterations == 1)
       _firstResiduumNorm[i] = convMeasure.measure->getNormResidual(); 
-    }
+
     if (not convMeasure.measure->isConvergence()) {
-      //preciceDebug("Local convergence = false");
       allConverged = false;
     }
     else if (convMeasure.suffices == true) {
@@ -751,12 +752,10 @@ bool BaseCouplingScheme:: measureConvergence()
     }
     preciceInfo("measureConvergence()", convMeasure.measure->printState());
   }
-  if (allConverged) {
-    preciceInfo("measureConvergence()", "All converged");
-  }
-  else if (oneSuffices) {
-    preciceInfo("measureConvergence()", "Sufficient measure converged");
-  }
+
+  if (allConverged){ preciceInfo("measureConvergence()", "All converged");}
+  else if (oneSuffices){  preciceInfo("measureConvergence()", "Sufficient measure converged");}
+
   return allConverged || oneSuffices;
 }
 

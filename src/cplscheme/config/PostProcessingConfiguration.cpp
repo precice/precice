@@ -72,6 +72,14 @@ void PostProcessingConfiguration:: connectTags(
 
   using namespace utils;
 
+    // add attribute estimateJacobian for manifold mapping
+    XMLAttribute<bool> attrEstimateJacobian(ATTR_ESTJACOBIAN);
+    attrEstimateJacobian.setDefaultValue(false);
+    attrEstimateJacobian.setDocumentation("If manifold mapping is used as post-processing one can switch"
+         " between explicit estimation and updating of the Jacobian (multi-vector method) and a matrix free computation. The default is matrix free.");
+    parent.addAttribute(attrEstimateJacobian);
+
+
     XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
     std::list<XMLTag> tags;
     {
@@ -113,8 +121,6 @@ void PostProcessingConfiguration:: connectTags(
     for (XMLTag& tag: tags){
       parent.addSubtag(tag);
     }
-
-
 }
 
 //bool PostProcessingConfiguration:: parseSubtag
@@ -164,7 +170,8 @@ void PostProcessingConfiguration:: xmlTagCallback
 
   if (callingTag.getNamespace() == TAG){
       _config.type = callingTag.getName();
-      _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_ESTJACOBIAN);
+      if(_config.type == VALUE_ManifoldMapping)
+        _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_ESTJACOBIAN);
   }
 
   if (callingTag.getName() == TAG_RELAX){
@@ -278,7 +285,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 			  _config.dataIDs,
 			  _config.scalings) );
 		#else
-      	  preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if precice is compiled with MPI");
+      	  preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
     #endif
     }
     else if (callingTag.getName() == VALUE_ManifoldMapping){
@@ -397,7 +404,7 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
 
-    XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_ONCE );
+    XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE );
    	tagFilter.addAttribute(attrName);
    	tagFilter.setDocumentation("Type of filtering technique that is used to "
    			"maintain good conditioning in the least-squares system. Possible filters:\n"
@@ -437,7 +444,7 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
 
-    XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_ONCE );
+    XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE );
 	tagFilter.addAttribute(attrName);
 	tagFilter.setDocumentation("Type of filtering technique that is used to "
 	   			"maintain good conditioning in the least-squares system. Possible filters:\n"
@@ -445,6 +452,43 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
 	   			"  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
 	   			"  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
 	tag.addSubtag(tagFilter);
+  }
+  else if (tag.getName() == VALUE_ManifoldMapping){
+
+    XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
+    XMLAttribute<int> attrIntValue(ATTR_VALUE );
+    tagMaxUsedIter.addAttribute(attrIntValue );
+    tag.addSubtag(tagMaxUsedIter );
+
+    XMLTag tagTimestepsReused(*this, TAG_TIMESTEPS_REUSED, XMLTag::OCCUR_ONCE );
+    tagTimestepsReused.addAttribute(attrIntValue );
+    tag.addSubtag(tagTimestepsReused );
+
+    XMLTag tagSingularityLimit(*this, TAG_SINGULARITY_LIMIT, XMLTag::OCCUR_ONCE );
+    XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
+    tagSingularityLimit.addAttribute(attrDoubleValue );
+    tag.addSubtag(tagSingularityLimit );
+
+    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
+    XMLAttribute<std::string> attrName(ATTR_NAME);
+    XMLAttribute<std::string> attrMesh(ATTR_MESH);
+    XMLAttribute<double> attrScaling(ATTR_SCALING);
+    attrScaling.setDefaultValue(1.0);
+    attrScaling.setDocumentation("If the absolute values of two coupling variables"
+         " differ too much, a scaling improves the performance of V-IQN-IMVJ");
+    tagData.addAttribute(attrScaling);
+    tagData.addAttribute(attrName);
+    tagData.addAttribute(attrMesh);
+    tag.addSubtag(tagData);
+
+    XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE );
+    tagFilter.addAttribute(attrName);
+    tagFilter.setDocumentation("Type of filtering technique that is used to "
+          "maintain good conditioning in the least-squares system. Possible filters:\n"
+          "  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
+          "  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
+          "  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
+    tag.addSubtag(tagFilter);
   }
   else if (tag.getName() == VALUE_BROYDEN){
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );

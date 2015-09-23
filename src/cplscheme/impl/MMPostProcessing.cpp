@@ -315,10 +315,8 @@ void MMPostProcessing::updateDifferenceMatrices(
       shiftSetFirst(_matrixC, colC);
 
       _matrixCols.front()++;
-      _matrixCols
-      .back()--;
-      if
-(      _matrixCols.back() == 0) {
+      _matrixCols.back()--;
+      if (_matrixCols.back() == 0) {
         _matrixCols.pop_back();
       }
     }
@@ -361,7 +359,6 @@ void MMPostProcessing::performPostProcessing(
     // scale data values (and secondary data values)
     scale(cplData);
     if(isSet(_designSpecification)) scale(_designSpecification, cplData);
-    //scaling(cplData);
 
     // update the difference matrices with the newest residual deltas
     updateDifferenceMatrices(cplData);
