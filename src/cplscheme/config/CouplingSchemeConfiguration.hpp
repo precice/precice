@@ -232,7 +232,7 @@ private:
     const std::string & dataName,
     const std::string & meshName,
     double              limit,
-    bool                suffices );
+    bool                suffices);
 
   void addRelativeConvergenceMeasure (
     const std::string & dataName,
@@ -297,6 +297,8 @@ private:
 
   void checkIfDataIsExchanged(
     int dataID) const;
+
+  bool checkIfDataIsCoarse(int id) const;
 
 
   friend class tests::SerialImplicitCouplingSchemeTest; // For whitebox tests

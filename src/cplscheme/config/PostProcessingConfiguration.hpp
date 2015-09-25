@@ -43,6 +43,11 @@ public:
    impl::PtrPostProcessing getPostProcessing();
 
    /**
+    * @brief Returns a pointer to the PostProcessingConfig object for the coarse model optimization method
+    */
+   PtrPostProcessingConfiguration getCoarseModelOptimizationConfig();
+
+   /**
     * @brief Callback method required when using utils::XMLTag.
     */
    virtual void xmlTagCallback ( utils::XMLTag& callingTag );

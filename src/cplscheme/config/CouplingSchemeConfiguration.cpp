@@ -417,35 +417,35 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
   else if ( type == VALUE_PARALLEL_IMPLICIT ) {
     addTagParticipants(tag);
     addTagExchange(tag);
+    addTagPostProcessing(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
     addTagMaxIterations(tag);
     addTagExtrapolation(tag);
-    addTagPostProcessing(tag);
   }
   else if ( type == VALUE_MULTI ) {
     addTagParticipant(tag);
     addTagExchange(tag);
+    addTagPostProcessing(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
     addTagMaxIterations(tag);
     addTagExtrapolation(tag);
-    addTagPostProcessing(tag);
   }
   else if ( type == VALUE_SERIAL_IMPLICIT ) {
     addTagParticipants(tag);
     addTagExchange(tag);
+    addTagPostProcessing(tag);
     addTagAbsoluteConvergenceMeasure(tag);
     addTagRelativeConvergenceMeasure(tag);
     addTagResidualRelativeConvergenceMeasure(tag);
     addTagMinIterationConvergenceMeasure(tag);
     addTagMaxIterations(tag);
     addTagExtrapolation(tag);
-    addTagPostProcessing(tag);
   }
   else if (type == VALUE_UNCOUPLED){
   }
@@ -785,7 +785,8 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
     impl::PtrConvergenceMeasure measure = get<3>(elem);
     _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     checkIfDataIsExchanged(dataID);
-    scheme->addConvergenceMeasure(dataID, suffices, measure);
+    bool isCoarse = checkIfDataIsCoarse(dataID);
+    scheme->addConvergenceMeasure(dataID, suffices, isCoarse, measure);
   }
 
   // Set relaxation parameters
@@ -827,7 +828,8 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
     impl::PtrConvergenceMeasure measure = get<3>(elem);
     _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     checkIfDataIsExchanged(dataID);
-    scheme->addConvergenceMeasure(dataID, suffices, measure);
+    bool isCoarse = checkIfDataIsCoarse(dataID);
+    scheme->addConvergenceMeasure(dataID, suffices, isCoarse, measure);
   }
 
   // Set relaxation parameters
@@ -891,7 +893,8 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
     impl::PtrConvergenceMeasure measure = get<3>(elem);
     _meshConfig->addNeededMesh(_config.controller,neededMesh);
     checkIfDataIsExchanged(dataID);
-    scheme->addConvergenceMeasure(dataID, suffices, measure);
+    bool isCoarse = checkIfDataIsCoarse(dataID);
+    scheme->addConvergenceMeasure(dataID, suffices, isCoarse, measure);
   }
 
   // Set relaxation parameters
@@ -1031,7 +1034,35 @@ void CouplingSchemeConfiguration:: checkIfDataIsExchanged
         <<" and/or the iteration post-processing");
 }
 
+bool CouplingSchemeConfiguration:: checkIfDataIsCoarse
+(
+  int id) const
+{
+  bool isCoarse = false;
+  bool err = false;
+  // check if id is contained within fine Data IDs
+  if(_postProcConfig->getPostProcessing().get() == nullptr)
+    preciceError(__func__, "No post processing is defined for implicit coupling scheme, but convergence measures are defined.");
+  const std::vector<int>& fineIDs = _postProcConfig->getPostProcessing()->getDataIDs();
+  isCoarse = not utils::contained(id, fineIDs);
+  // if id is contained within fine data IDs return with isCoarse = false
+  if(not isCoarse) return false;
 
+  if(isCoarse){
+    if(_postProcConfig->getCoarseModelOptimizationConfig().get() != nullptr &&
+       _postProcConfig->getCoarseModelOptimizationConfig()->getPostProcessing().get() != nullptr)
+    {
+      const std::vector<int>& coarseIDs =  _postProcConfig->getCoarseModelOptimizationConfig()->getPostProcessing()->getDataIDs();
+      isCoarse = utils::contained(id, coarseIDs);
+
+      err = not isCoarse;
+    }else{
+      err = true;
+    }
+  }
+  if(err) preciceError(__func__, "Data ID "<<id<<" is not contained in the exchange data for the fine model and no coarse model optimization method is defined.");
+  return true;
+}
 
 
 

@@ -162,6 +162,11 @@ impl::PtrPostProcessing PostProcessingConfiguration:: getPostProcessing()
   return _postProcessing;
 }
 
+PtrPostProcessingConfiguration PostProcessingConfiguration::getCoarseModelOptimizationConfig()
+{
+  return _coarseModelOptimizationConfig;
+}
+
 void PostProcessingConfiguration:: xmlTagCallback
 (
   utils::XMLTag& callingTag )
