@@ -24,7 +24,8 @@ ConstantRelaxationPostProcessing:: ConstantRelaxationPostProcessing
 :
   PostProcessing(),
   _relaxation(relaxation),
-  _dataIDs(dataIDs)
+  _dataIDs(dataIDs),
+  _designSpecification()
 {
   preciceCheck((relaxation > 0.0) && (relaxation <= 1.0),
                "ConstantRelaxationPostProcessing()",
@@ -66,5 +67,42 @@ void ConstantRelaxationPostProcessing:: performPostProcessing
     preciceDebug("pp values" << values);
   }
 }
+
+
+/** ---------------------------------------------------------------------------------------------
+ *         getDesignSpecification()
+ *
+ * @brief: Returns the design specification corresponding to the given coupling data.
+ *         This information is needed for convergence measurements in the coupling scheme.
+ *  ---------------------------------------------------------------------------------------------
+ */        // TODO: change to call by ref when Eigen is used.
+std::map<int, utils::DynVector> ConstantRelaxationPostProcessing::getDesignSpecification
+(
+  DataMap& cplData)
+{
+  preciceError(__func__, "design specification for constant relaxation is not supported yet.");
+
+  std::map<int, utils::DynVector> designSpecifications;
+  int off = 0;
+  for (int id : _dataIDs) {
+      int size = cplData[id]->values->size();
+      utils::DynVector q(size, 0.0);
+      for (int i = 0; i < size; i++) {
+        q(i) = _designSpecification(i+off);
+      }
+      off += size;
+      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      designSpecifications.insert(pair);
+    }
+  return designSpecifications;
+}
+
+void ConstantRelaxationPostProcessing::setDesignSpecification(
+     Eigen::VectorXd& q)
+ {
+   _designSpecification = q;
+   preciceError(__func__, "design specification for constant relaxation is not supported yet.");
+ }
+
 
 }}} // namespace precice, cplscheme, impl

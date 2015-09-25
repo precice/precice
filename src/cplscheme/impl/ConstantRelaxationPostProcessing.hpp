@@ -27,6 +27,14 @@ public:
       return _dataIDs;
    }
 
+    virtual void setDesignSpecification(
+      Eigen::VectorXd& q);
+
+
+    // TODO: change to call by ref when Eigen is used.
+    virtual std::map<int, utils::DynVector> getDesignSpecification(DataMap& cplData);
+
+
    virtual void initialize ( DataMap & cplData );
 
    virtual void performPostProcessing ( DataMap & cplData );
@@ -41,6 +49,8 @@ private:
    double _relaxation;
 
    std::vector<int> _dataIDs;
+
+   Eigen::VectorXd _designSpecification;
 };
 
 }}} // namespace precice, cplscheme, impl
