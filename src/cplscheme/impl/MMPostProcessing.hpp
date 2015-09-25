@@ -105,11 +105,19 @@ public:
       Eigen::VectorXd& q);
 
   /**
+   * @brief Returns the design specification for the optimization problem.
+   *        Information needed to measure the convergence.
+   *        In case of manifold mapping it also returns the design specification
+   *        for the surrogate model which is updated in every iteration.
+   */ // TODO: change to call by ref when Eigen is used.
+  virtual std::map<int, utils::DynVector> getDesignSpecification(DataMap& cplData);
+
+  /**
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
    * steers the coupling scheme and the post processing.
    */
   virtual void setNextModelToEvaluate(
-      BaseCouplingScheme::ModelResolution& nextModel)
+      BaseCouplingScheme::ModelResolution* nextModel)
   {
     _nextModelToEvaluate = nextModel;
   }
@@ -164,7 +172,7 @@ protected:
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
    * steers the coupling scheme and the post processing.
    */
-  BaseCouplingScheme::ModelResolution _nextModelToEvaluate;
+  BaseCouplingScheme::ModelResolution* _nextModelToEvaluate;
 
   /// @brief Data IDs of data to be involved in the MM algorithm.
   std::vector<int> _fineDataIDs;

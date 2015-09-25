@@ -37,6 +37,7 @@ BaseCouplingScheme:: BaseCouplingScheme
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _iterations(-1),
+  _iterationsCoarseOptimization(-1),
   _maxIterations(-1),
   _totalIterations(-1),
   _timesteps(0),
@@ -97,6 +98,7 @@ BaseCouplingScheme::BaseCouplingScheme
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _iterations(1),
+  _iterationsCoarseOptimization(1),
   _maxIterations(maxIterations),
   _totalIterations(1),
   _timesteps(1),
@@ -250,6 +252,7 @@ void BaseCouplingScheme:: sendState
   }
   communication->send(_maxIterations, rankReceiver );
   communication->send(_iterations, rankReceiver );
+  communication->send(_iterationsCoarseOptimization, rankReceiver ); // new, correct?? TODO
   communication->send(_totalIterations, rankReceiver );
   communication->finishSendPackage();
 
@@ -287,6 +290,8 @@ void BaseCouplingScheme:: receiveState
   int subIteration = -1;
   communication->receive(subIteration, rankSender);
   _iterations = subIteration;
+  communication->receive(subIteration, rankSender);       // new, correct?? TODO
+  _iterationsCoarseOptimization = subIteration;           // new, correct? TODO
   communication->receive(_totalIterations, rankSender);
   communication->finishReceivePackage();
 
@@ -386,7 +391,7 @@ void BaseCouplingScheme:: setExtrapolationOrder
   _extrapolationOrder = order;
 }
 
-
+// TODO: extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
 void BaseCouplingScheme::extrapolateData(DataMap& data)
 {
   preciceTrace1("extrapolateData()", _timesteps);
@@ -562,6 +567,7 @@ void BaseCouplingScheme:: requireAction
   _actions.insert(actionName);
 }
 
+// TODO: insert _iterationsCoarseOptimization in print state
 std::string BaseCouplingScheme::printCouplingState() const
 {
   std::ostringstream os;
@@ -705,12 +711,14 @@ void BaseCouplingScheme::addConvergenceMeasure
 (
   int                         dataID,
   bool                        suffices,
+  bool                        isCoarse,
   impl::PtrConvergenceMeasure measure )
 {
   ConvergenceMeasure convMeasure;
   convMeasure.dataID = dataID;
   convMeasure.data = nullptr;
   convMeasure.suffices = suffices;
+  convMeasure.isCoarse = isCoarse;
   convMeasure.measure = measure;
   _convergenceMeasures.push_back(convMeasure);
   _firstResiduumNorm.push_back(0);
@@ -719,7 +727,7 @@ void BaseCouplingScheme::addConvergenceMeasure
 
 bool BaseCouplingScheme:: measureConvergence()
 {
-  preciceTrace("measureConvergence()");
+  preciceTrace(__func__);
   bool allConverged = true;
   bool oneSuffices = false;
   assertion(_convergenceMeasures.size() > 0);
@@ -727,13 +735,18 @@ bool BaseCouplingScheme:: measureConvergence()
     _convergenceWriter.writeData("Timestep", _timesteps);
     _convergenceWriter.writeData("Iteration", _iterations);
   }
+  auto designSpecifiactions = _postProcessing->getDesignSpecification(getSendData());
   for(size_t i = 0; i < _convergenceMeasures.size(); i++) {
     ConvergenceMeasure& convMeasure = _convergenceMeasures[i];
-//  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
+
+    // only apply convergence measures for fine model optimization, i.e., coupling
+    if(convMeasure.isCoarse) continue;
+
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
-    convMeasure.measure->measure(oldValues, *convMeasure.data->values);
+    utils::DynVector& q = designSpecifiactions.at(convMeasure.dataID);
+    convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
 
     if(not utils::MasterSlave::_slaveMode){
       std::stringstream sstm;
@@ -750,17 +763,52 @@ bool BaseCouplingScheme:: measureConvergence()
     else if (convMeasure.suffices == true) {
       oneSuffices = true;
     }
-    preciceInfo("measureConvergence()", convMeasure.measure->printState());
+    preciceInfo(__func__, convMeasure.measure->printState());
   }
 
-  if (allConverged){ preciceInfo("measureConvergence()", "All converged");}
-  else if (oneSuffices){  preciceInfo("measureConvergence()", "Sufficient measure converged");}
+  if (allConverged){ preciceInfo(__func__, "All converged");}
+  else if (oneSuffices){  preciceInfo(__func__, "Sufficient measure converged");}
+
+  return allConverged || oneSuffices;
+}
+
+
+bool BaseCouplingScheme:: measureConvergenceCoarseModelOptimization()
+{
+  preciceTrace(__func__);
+  bool allConverged = true;
+  bool oneSuffices = false;
+  assertion(_convergenceMeasures.size() > 0);
+  auto designSpecifiactions = _postProcessing->getDesignSpecification(getSendData());
+  for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
+
+    // only apply convergence measures for coarse model optimization
+    if(not convMeasure.isCoarse) continue;
+
+    assertion(convMeasure.data != nullptr);
+    assertion(convMeasure.measure.get() != nullptr);
+    utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
+    utils::DynVector& q = designSpecifiactions.at(convMeasure.dataID);
+    convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
+
+    if (not convMeasure.measure->isConvergence()) {
+      allConverged = false;
+    }
+    else if (convMeasure.suffices == true) {
+      oneSuffices = true;
+    }
+    preciceInfo(__func__, convMeasure.measure->printState());
+  }
+
+  if (allConverged){ preciceInfo(__func__, "All converged");}
+  else if (oneSuffices){  preciceInfo(__func__, "Sufficient measure converged");}
 
   return allConverged || oneSuffices;
 }
 
 
 
+// TODO: add _iterationsCoarseOptimization
 void BaseCouplingScheme::initializeTXTWriters()
 {
   if(not utils::MasterSlave::_slaveMode){
@@ -791,6 +839,7 @@ void BaseCouplingScheme::initializeTXTWriters()
   }
 }
 
+// TODO: add _iterationsCoarseOptimization
 void BaseCouplingScheme::advanceTXTWriters()
 {
   if(not utils::MasterSlave::_slaveMode){
@@ -848,16 +897,23 @@ void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
 }
 
 
-void BaseCouplingScheme:: updateTimeAndIterations(bool convergence){
+void BaseCouplingScheme:: updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization){
   _totalIterations++;
   if(not convergence){
-    _iterations++;
-    // The computed timestep part equals the timestep length, since the
-    // timestep remainder is zero. Subtract the timestep length do another
-    // coupling iteration.
-    assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
-    _time = _time - _computedTimestepPart;
+    // in case of multilevel PP: only increment outer iteration count if surrogate model has converged.
+    if(convergenceCoarseOptimization){
+      _iterations++;
+      // The computed timestep part equals the timestep length, since the
+      // timestep remainder is zero. Subtract the timestep length do another
+      // coupling iteration.
+      assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
+      _time = _time - _computedTimestepPart;
+    }
+
+    // in case of multilevel PP: increment the iteration count of the surrogate model
+    _iterationsCoarseOptimization++;
   } else{
+    _iterationsCoarseOptimization = 1;
     _iterations = 1;
   }
 }
@@ -875,6 +931,7 @@ void BaseCouplingScheme:: timestepCompleted()
   }
 }
 
+// TODO: same for coarse model optimization and coarse convergence measures...
 bool BaseCouplingScheme:: maxIterationsReached(){
   return _iterations == _maxIterations;
 }

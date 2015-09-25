@@ -158,7 +158,7 @@ void SerialCouplingScheme::initializeData()
   setHasToReceiveInitData(false);
 }
 
-void SerialCouplingScheme:: advance()
+void SerialCouplingScheme::advance()
 {
   preciceTrace2("advance()", getTimesteps(), getTime());
   for (DataMap::value_type & pair : getReceiveData()) {
@@ -168,7 +168,7 @@ void SerialCouplingScheme:: advance()
   checkCompletenessRequiredActions();
 
   preciceCheck(not hasToReceiveInitData() && not hasToSendInitData(), "advance()",
-               "initializeData() needs to be called before advance if data has to be initialized!");
+      "initializeData() needs to be called before advance if data has to be initialized!");
 
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
@@ -183,7 +183,7 @@ void SerialCouplingScheme:: advance()
       sendData(getM2N());
       getM2N()->finishSendPackage();
 
-      if (isCouplingOngoing() || doesFirstStep()){
+      if (isCouplingOngoing() || doesFirstStep()) {
         preciceDebug("Receiving data...");
         getM2N()->startReceivePackage(0);
         receiveAndSetDt();
@@ -196,6 +196,7 @@ void SerialCouplingScheme:: advance()
   }
   else if (_couplingMode == Implicit) {
     bool convergence = true;
+    bool convergenceCoarseOptimization = true;
 
     if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       preciceDebug("Computed full length of iteration");
@@ -210,41 +211,64 @@ void SerialCouplingScheme:: advance()
           timestepCompleted();
         }
         //if (isCouplingOngoing()) {
-          receiveData(getM2N());
+        receiveData(getM2N());
         //}
         getM2N()->finishReceivePackage();
       }
       else {
-        convergence = measureConvergence();
-        // Stop, when maximal iteration count (given in config) is reached
-        if (maxIterationsReached()) {
-          convergence = true;
+        if(_nextModelToEvaluate == ModelResolution::fineModel){
+          // measure convergence of the coupling iteration,
+          convergence = measureConvergence();
+          // Stop, when maximal iteration count (given in config) is reached
+          if (maxIterationsReached()) {
+            convergence = true;
+          }
+        }else if(_nextModelToEvaluate == ModelResolution::coarseModel){
+          // in case of multilevel post processing only: measure the convergence of the coarse model optimization
+          convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization();
+          // TODO: Stop, when maximal iteration count (given in config) is reached
         }
+
+        // in case of multilevel PP only: if coarse model optimization converged
+        // steering the requests for evaluation of coarse and fine model, respectively
+        if(convergenceCoarseOptimization){
+          _nextModelToEvaluate = ModelResolution::fineModel;
+        }else{
+          _nextModelToEvaluate = ModelResolution::coarseModel;
+        }
+
+        // passed by reference, modified in MM post processing. No-op for all ather post-processings
+        getPostProcessing()->setNextModelToEvaluate(&_nextModelToEvaluate);
+
+        // coupling iteration converged for current time step. Advance in time.
         if (convergence) {
           if (getPostProcessing().get() != nullptr) {
-        	_deletedColumnsPPFiltering = getPostProcessing()->getDeletedColumns();
+            _deletedColumnsPPFiltering = getPostProcessing()->getDeletedColumns();
             getPostProcessing()->iterationsConverged(getSendData());
           }
           newConvergenceMeasurements();
           timestepCompleted();
-        }
-        else if (getPostProcessing().get() != nullptr) {
+
+        // no convergence achieved for the coupling iteration within the current time step
+        }else if (getPostProcessing().get() != nullptr) {
           getPostProcessing()->performPostProcessing(getSendData());
         }
+
         getM2N()->startSendPackage(0);
         getM2N()->send(convergence);
 
-        if (convergence && (getExtrapolationOrder() > 0)){
+        // extrapolate new input data for the solver evaluation in time.
+        if (convergence && (getExtrapolationOrder() > 0)) {
           extrapolateData(getSendData()); // Also stores data
         }
         else { // Store data for conv. measurement, post-processing, or extrapolation
           for (DataMap::value_type& pair : getSendData()) {
-            if (pair.second->oldValues.size() > 0){
+            if (pair.second->oldValues.size() > 0) {
               pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
           for (DataMap::value_type& pair : getReceiveData()) {
-            if (pair.second->oldValues.size() > 0){
+            if (pair.second->oldValues.size() > 0) {
               pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
@@ -269,7 +293,7 @@ void SerialCouplingScheme:: advance()
         preciceDebug("Convergence achieved");
         advanceTXTWriters();
       }
-      updateTimeAndIterations(convergence);
+      updateTimeAndIterations(convergence, convergenceCoarseOptimization);
       setHasDataBeenExchanged(true);
       setComputedTimestepPart(0.0);
     } //subcycling completed

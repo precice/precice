@@ -55,7 +55,7 @@ MMPostProcessing::MMPostProcessing
         _singularityLimit(singularityLimit),
         _designSpecification(),
         _coarseModel_designSpecification(),
-        _nextModelToEvaluate(),
+        _nextModelToEvaluate(nullptr),
         _fineDataIDs(fineDataIDs),
         _coarseDataIDs(coarseDataIDs),
         _dataIDs(),
@@ -243,7 +243,7 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
     off += size;
   }
 
-  // in the context of mannifold mapping post processing we want _input_Xstar to be scaled according to the scaling factos
+  // in the context of mannifold mapping post processing we want _input_Xstar to be scaled according to the scaling factors
   scale(_input_Xstar, cplData);
 }
 
@@ -265,6 +265,44 @@ void MMPostProcessing::setDesignSpecification(
   // only in the first step, the coarse model design specification equals the design specification
   // for the overall objective function (initial coarse solution)
   if (_firstTimeStep) _coarseModel_designSpecification = _designSpecification;
+}
+
+/** ---------------------------------------------------------------------------------------------
+ *         getDesignSpecification()
+ *
+ * @brief: Returns the design specification corresponding to the given coupling data that is updated in every
+ *         manifold mapping cycle. This information is needed for convergence measurements in the
+ *         coupling scheme.
+ *  ---------------------------------------------------------------------------------------------
+ */        // TODO: change to call by ref when Eigen is used.
+std::map<int, utils::DynVector> MMPostProcessing::getDesignSpecification
+(
+  DataMap& cplData)
+{
+  std::map<int, utils::DynVector> designSpecifications;
+  int off = 0;
+  for (int id : _fineDataIDs) {
+      int size = cplData[id]->values->size();
+      utils::DynVector q(size, 0.0);
+      for (int i = 0; i < size; i++) {
+        q(i) = _designSpecification(i+off);
+      }
+      off += size;
+      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      designSpecifications.insert(pair);
+    }
+  off = 0;
+  for (int id : _coarseDataIDs) {
+      int size = cplData[id]->values->size();
+      utils::DynVector q(size, 0.0);
+      for (int i = 0; i < size; i++) {
+        q(i) = _coarseModel_designSpecification(i+off);
+      }
+      off += size;
+      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      designSpecifications.insert(pair);
+    }
+  return designSpecifications;
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -349,12 +387,16 @@ void MMPostProcessing::performPostProcessing(
   assertion2(_outputFineModelScaled.size() == _fineResiduals.size(),_outputFineModelScaled.size(), _fineResiduals.size());
   assertion2(_input_Xstar.size() == _fineResiduals.size(), _input_Xstar.size(), _fineResiduals.size());
 
-  if (_nextModelToEvaluate == BaseCouplingScheme::ModelResolution::fineModel) {
+  if ((*_nextModelToEvaluate) == BaseCouplingScheme::ModelResolution::fineModel) {
 
     /**
      * assume the coarse model and the fine model has been evaluated for the new coarse model
      * solution _input_Xstar, obtained in the coarse model optimization step.
      */
+
+    // assume that we always start with a coarse model optimization step at the very beginning.
+    // every time get here, the coarse model optimization has just converged.
+    _coarseModelOptimization->iterationsConverged(cplData);
 
     // scale data values (and secondary data values)
     scale(cplData);
@@ -377,10 +419,20 @@ void MMPostProcessing::performPostProcessing(
      * model optimization problem are updated (also Jacobian of MM mapping matrix if required).
      * next step: coarse model optimization, set the steering variable accordingly
      */
-    _nextModelToEvaluate = BaseCouplingScheme::ModelResolution::coarseModel;
+    (*_nextModelToEvaluate) = BaseCouplingScheme::ModelResolution::coarseModel;
 
-    // Undo scaling of data values and overwrite originals
-    //undoScaling(cplData);
+
+    // The coarse model design specification is computed with scaled data and needs to be re-scaled to normal.
+    // It is to be scaled again in the coarse model optimization scheme.
+
+    assertion(isSet(_coarseModel_designSpecification)); // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
+    assertion(not (_firstIteration && _firstTimeStep)); // not in very first iteration where we solve for an initial coarse solution with unscaled design specification
+    unscale(_coarseModel_designSpecification, cplData);
+
+
+    /** Undo of cplData scaling is not necessary, as we only read information from the cpl data.
+     * The write back step is done in registerSolutionCoarseModelOptimization
+     */
 
     // one MM iteration completed
     its++;
@@ -394,15 +446,7 @@ void MMPostProcessing::performPostProcessing(
     }
 
     // NO SCALING of input/output data. This is done in the coarse optimization routine, only for the coarse cplData.
-    // Though, the coarse model design specification is computed with scaled data and needs to be re-scaled to normal.
-    // It is to be scaled again in the coarse model optimization scheme.
-    if (not (_firstIteration && _firstTimeStep)) // not in very first iteration where we solve for an initial coarse solution with unscaled design specification
-    {
-      // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
-      assertion(isSet(_coarseModel_designSpecification));
-      unscale(_coarseModel_designSpecification, cplData);
-    }
-
+    // the _coarseModel_designSpecification is scaled back at this point
 
     /** perform the coarse model optimization, determine x_star
      *          x_k+1 = argmin_x || c(x) - q_k ||

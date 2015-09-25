@@ -265,6 +265,7 @@ public:
   void addConvergenceMeasure (
     int                         dataID,
     bool                        suffices,
+    bool                        isCoarse,
     impl::PtrConvergenceMeasure measure );
 
   /// @brief Set a coupling iteration post-processing technique.
@@ -437,6 +438,7 @@ protected:
     int dataID;
     CouplingData* data;
     bool suffices;
+    bool isCoarse;
     impl::PtrConvergenceMeasure measure;
   };
 
@@ -453,6 +455,7 @@ protected:
   void newConvergenceMeasurements();
 
   bool measureConvergence();
+  bool measureConvergenceCoarseModelOptimization();
 
   /**
    * @brief Sets up _dataStorage to store data values of last timestep.
@@ -472,7 +475,7 @@ protected:
 
   void advanceTXTWriters();
 
-  void updateTimeAndIterations(bool convergence);
+  void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
 
 
   int getMaxIterations() const {
@@ -508,10 +511,13 @@ private:
 
   int _maxTimesteps;
 
-  /// @brief Number of iterations in current timestep.
+  /// @brief Number of iterations in current time step.
   int _iterations;
 
-  /// @brief Limit of iterations during one timestep.
+  /// @brief Number of accumulated coarse model optimization iterations in current time step.
+  int _iterationsCoarseOptimization;
+
+  /// @brief Limit of iterations during one time step.
   int _maxIterations;
 
   /// @brief Number of total iterations performed.
