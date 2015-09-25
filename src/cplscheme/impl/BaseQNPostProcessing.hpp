@@ -110,13 +110,6 @@ public:
     */
    virtual void performPostProcessing(DataMap& cplData);
    
-   /**
-    * @brief performs one optimization step of the optimization problem
-    *        x_k = argmin_x||f(x_k) - q_k)
-    *        with the design specification q_k and the model response f(x_k)
-    */
-   virtual void optimize(DataMap & cpldata, Eigen::VectorXd& q);
-
 
    /**
     * @brief Marks a iteration sequence as converged.
@@ -134,6 +127,14 @@ public:
     *     with q=0.
     */
    virtual void setDesignSpecification(Eigen::VectorXd& q);
+
+   /**
+    * @brief Returns the design specification for the optimization problem.
+    *        Information needed to measure the convergence.
+    *        In case of manifold mapping it also returns the design specification
+    *        for the surrogate model which is updated in every iteration.
+    */ // TODO: change to call by ref when Eigen is used.
+   virtual std::map<int, utils::DynVector> getDesignSpecification(DataMap& cplData);
 
 
    /**
@@ -192,8 +193,7 @@ protected:
     *     Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
     *     with q=0.
     */
-   //Eigen::VectorXd _designSpecification;
-   DataValues _designSpecification;
+   Eigen::VectorXd _designSpecification;
 
    // @brief Data IDs of data to be involved in the IQN algorithm.
    std::vector<int> _dataIDs;

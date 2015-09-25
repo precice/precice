@@ -70,15 +70,8 @@ void BroydenPostProcessing::computeUnderrelaxationSecondaryData
 (
   DataMap& cplData)
 {
-    //Store x_tildes for secondary data
-  //  foreach (int id, _secondaryDataIDs){
-  //    assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
-  //               _secondaryOldXTildes[id].size(), cplData[id]->values->size());
-  //    _secondaryOldXTildes[id] = *(cplData[id]->values);
-  //  }
-
     // Perform underrelaxation with initial relaxation factor for secondary data
-    foreach (int id, _secondaryDataIDs){
+    for (int id: _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
       DataValues& values = *(data->values);
       values *= _initialRelaxation;                   // new * omg
@@ -98,16 +91,6 @@ void BroydenPostProcessing::updateDifferenceMatrices
 {
   using namespace tarch::la;
 
-//   // Compute residuals of secondary data
-//   foreach (int id, _secondaryDataIDs){
-//     DataValues& secResiduals = _secondaryResiduals[id];
-//     PtrCouplingData data = cplData[id];
-//     assertion2(secResiduals.size() == data->values->size(),
-//                secResiduals.size(), data->values->size());
-//     secResiduals = *(data->values);
-//     secResiduals -= data->oldValues.column(0);
-//   }
-
   /*
    * ATTETION: changed the condition from _firstIteration && _firstTimeStep
    * to the following: 
@@ -115,7 +98,7 @@ void BroydenPostProcessing::updateDifferenceMatrices
    * entering post processing. In this case the V, W matrices would still be empty.
    * This case happended in the open foam example beamInCrossFlow.
    */ 
-  if(_firstIteration && (_firstTimeStep ||  (_matrixCols.size() < 2))){
+  if (_firstIteration && _firstTimeStep) {
     //k++;
     //_currentColumns++;
     
@@ -194,11 +177,14 @@ void BroydenPostProcessing::computeQNUpdate
     assertion2(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
     _invJacobian = _oldInvJacobian + JUpdate;
     
-    DataValues negRes(_residuals);
-    negRes *= -1.;
+    DataValues res_tilde(_residuals.size());
+    for(int i = 0; i < res_tilde.size(); i++)
+      res_tilde(i) = _residuals(i) - _designSpecification(i);
+
+    res_tilde *= -1.;
   
     // solve delta_x = - J_inv*residuals
-    multiply(_invJacobian, negRes, xUpdate);    
+    multiply(_invJacobian, res_tilde, xUpdate);
   }
   
   if(_currentColumns >= _maxColumns)
@@ -263,11 +249,14 @@ void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
   multiply(tmpMatrix, v, _invJacobian);
   _invJacobian = _invJacobian + _oldInvJacobian;
   
-  DataValues negRes(_residuals);
-  negRes *= -1.;
+  DataValues res_tilde(_residuals.size());
+  for(int i = 0; i < res_tilde.size(); i++)
+   res_tilde(i) = _residuals(i) - _designSpecification(i);
+
+  res_tilde *= -1.;
   
   // solve delta_x = - J_inv*residuals
-  multiply(_invJacobian, negRes, xUpdate); 
+  multiply(_invJacobian, res_tilde, xUpdate);
 }
 
 

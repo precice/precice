@@ -30,7 +30,8 @@ AitkenPostProcessing:: AitkenPostProcessing
   _dataIDs ( dataIDs ),
   _aitkenFactor ( initialRelaxation ),
   _iterationCounter ( 0 ),
-  _residuals ()
+  _residuals (),
+  _designSpecification ()
 {
   preciceCheck ( (_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
                  "AitkenPostProcessing()",
@@ -57,6 +58,7 @@ void AitkenPostProcessing:: initialize
   double initializer = std::numeric_limits<double>::max();
   utils::DynVector toAppend(entries, initializer);
   _residuals.append(toAppend);
+  _designSpecification = Eigen::VectorXd::Zero(entries);
 
   // Append column for old values if not done by coupling scheme yet
   for (DataMap::value_type& pair : cplData) {
@@ -135,5 +137,42 @@ void AitkenPostProcessing:: iterationsConverged
   _iterationCounter = 0;
   assign(_residuals) = std::numeric_limits<double>::max();
 }
+
+/** ---------------------------------------------------------------------------------------------
+ *         getDesignSpecification()
+ *
+ * @brief: Returns the design specification corresponding to the given coupling data.
+ *         This information is needed for convergence measurements in the coupling scheme.
+ *  ---------------------------------------------------------------------------------------------
+ */        // TODO: change to call by ref when Eigen is used.
+std::map<int, utils::DynVector> AitkenPostProcessing::getDesignSpecification
+(
+  DataMap& cplData)
+{
+  preciceError(__func__, "design specification for Aitken relaxation is not supported yet.");
+
+  std::map<int, utils::DynVector> designSpecifications;
+  int off = 0;
+  for (int id : _dataIDs) {
+      int size = cplData[id]->values->size();
+      utils::DynVector q(size, 0.0);
+      for (int i = 0; i < size; i++) {
+        q(i) = _designSpecification(i+off);
+      }
+      off += size;
+      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      designSpecifications.insert(pair);
+    }
+  return designSpecifications;
+}
+
+void AitkenPostProcessing::setDesignSpecification(
+     Eigen::VectorXd& q)
+ {
+   _designSpecification = q;
+   preciceError(__func__, "design specification for Aitken relaxation is not supported yet.");
+ }
+
+
 
 }}} // namespace precice, cplscheme, impl

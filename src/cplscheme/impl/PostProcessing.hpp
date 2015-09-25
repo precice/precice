@@ -53,19 +53,48 @@ public:
 
   virtual void performPostProcessing(DataMap & cpldata) =0;
 
-  virtual void optimize(DataMap & cpldata, Eigen::VectorXd& q) {}; // change to abstract function if desigSpecification is implemented in all PPs
-
   virtual void iterationsConverged(DataMap & cpldata) =0;
 
-  virtual void setDesignSpecification(Eigen::VectorXd& q) {}; // change to abstract function if desigSpecification is implemented in all PPs
+  /**
+   * @brief sets the design specification we want to meet for the objective function,
+   *        i. e., we want to solve for argmin_x ||R(x) - q||, with R(x) = H(x) - x
+   *        Usually we want to solve for a fixed-point of H, thus solving for argmin_x ||R(x)||
+   *        with q=0.
+   */
+  virtual void setDesignSpecification(Eigen::VectorXd& q) =0;
 
-  virtual void setNextModelToEvaluate(cplscheme::BaseCouplingScheme::ModelResolution& nextModel) {};
+  /**
+   * @brief Returns the design specification for the optimization problem.
+   *        Information needed to measure the convergence.
+   *        In case of manifold mapping it also returns the design specification
+   *        for the surrogate model which is updated in every iteration.
+   */
+  virtual std::map<int, utils::DynVector> getDesignSpecification(DataMap& cplData) =0; // TODO: change to call by ref when Eigen is used.
+
+
+  /**
+   * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
+   *        steers the coupling scheme and the post processing. Only needed for multilevel based PPs.
+   */
+  virtual void setNextModelToEvaluate(cplscheme::BaseCouplingScheme::ModelResolution* nextModel) {};
 
   virtual void exportState(io::TXTWriter& writer) {}
 
   virtual void importState(io::TXTReader& reader) {}
 
+  /**
+   * @brief performs one optimization step of the optimization problem
+   *        x_k = argmin_x||f(x_k) - q_k)
+   *        with the design specification q_k and the model response f(x_k)
+   */
+  virtual void optimize(DataMap & cplData, Eigen::VectorXd& q)
+  {
+   setDesignSpecification(q);
+   performPostProcessing(cplData);
+  };
+
   virtual int getDeletedColumns() {return 0;}
+
 };
 
 }}} // namespace precice, cplscheme, impl

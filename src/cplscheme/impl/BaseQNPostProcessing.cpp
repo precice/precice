@@ -132,8 +132,7 @@ void BaseQNPostProcessing::initialize(
 
   // if design specifiaction not initialized yet
   if (not (_designSpecification.size() > 0)) {
-    //_designSpecification = Eigen::VectorXd::Zero(_residuals.size());
-    _designSpecification.append(DataValues(entries, init));
+    _designSpecification = Eigen::VectorXd::Zero(_residuals.size());
   }
   /**
    *  make dimensions public to all procs,
@@ -213,28 +212,34 @@ void BaseQNPostProcessing::setDesignSpecification
 {
   preciceTrace("setDesignSpecification()");
   assertion2(q.size() == _residuals.size(), q.size(), _residuals.size());
-  //_designSpecification = q;
-  if (not (_designSpecification.size() > 0))
-    _designSpecification.append(DataValues(_residuals.size(), 0.0));
-  for (int i = 0; i < q.size(); i++)
-    _designSpecification(i) = q(i);
+  _designSpecification = q;
 }
-
 
 /** ---------------------------------------------------------------------------------------------
- *         optimize()
+ *         getDesignSpecification()
  *
- * @brief: performs one iteration of the optimization problem x_star = argmin_x || f(x) - q_k ||
+ * @brief: Returns the design specification corresponding to the given coupling data.
+ *         This information is needed for convergence measurements in the coupling scheme.
  *  ---------------------------------------------------------------------------------------------
- */
-void BaseQNPostProcessing::optimize
+ */        // TODO: change to call by ref when Eigen is used.
+std::map<int, utils::DynVector> BaseQNPostProcessing::getDesignSpecification
 (
-    DataMap& cplData, Eigen::VectorXd& q_k)
+  DataMap& cplData)
 {
-  setDesignSpecification(q_k);
-  performPostProcessing(cplData);
+  std::map<int, utils::DynVector> designSpecifications;
+  int off = 0;
+  for (int id : _dataIDs) {
+      int size = cplData[id]->values->size();
+      utils::DynVector q(size, 0.0);
+      for (int i = 0; i < size; i++) {
+        q(i) = _designSpecification(i+off);
+      }
+      off += size;
+      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      designSpecifications.insert(pair);
+    }
+  return designSpecifications;
 }
-
 
 
 /** ---------------------------------------------------------------------------------------------
@@ -386,13 +391,19 @@ void BaseQNPostProcessing::performPostProcessing
      */
     computeQNUpdate(cplData, xUpdate);
 
+
+    // copying is removed when moving to Eigen
+    DataValues q(_residuals.size(), 0.0);
+    for (int i = 0; i < q.size(); i++)
+      q(i) = _designSpecification(i);
+
     /**
      * apply quasiNewton update
      */
     _scaledValues = _scaledOldValues;  // = x^k
     _scaledValues += xUpdate;        // = x^k + delta_x
     _scaledValues += _residuals; // = x^k + delta_x + r^k
-    _scaledValues -= _designSpecification; // = x^k + delta_x + r^k - q^k
+    _scaledValues -= q; // = x^k + delta_x + r^k - q^k
 
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
@@ -439,7 +450,7 @@ void BaseQNPostProcessing::scaling
   preciceTrace("scaling()");
 
   // scale and undo scaling of design specification according to scaling of corresponding data
-  bool isSet_designSpec = ((_designSpecification.size() > 0) && (tarch::la::norm2(_designSpecification) > 1.0e-15));
+  bool isSet_designSpec = ((_designSpecification.size() > 0) && (_designSpecification.norm() > 1.0e-15));
   if (isSet_designSpec)
     assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
 
@@ -453,7 +464,7 @@ void BaseQNPostProcessing::scaling
     for (int i = 0; i < size; i++) {
       _scaledValues[i + offset] = values[i] / factor;
       _scaledOldValues[i + offset] = oldValues[i] / factor;
-      if (isSet_designSpec) _designSpecification[i + offset] = _designSpecification[i + offset] / factor;
+      if (isSet_designSpec) _designSpecification(i + offset) = _designSpecification(i + offset) / factor;
     }
     offset += size;
   }
@@ -470,7 +481,7 @@ void BaseQNPostProcessing::undoScaling
   preciceTrace("undoScaling()");
 
   // scale and undo scaling of design specification according to scaling of corresponding data
-  bool isSet_designSpec = ((_designSpecification.size() > 0) && (tarch::la::norm2(_designSpecification) > 1.0e-15));
+  bool isSet_designSpec = ((_designSpecification.size() > 0) && (_designSpecification.norm() > 1.0e-15));
   if (isSet_designSpec)
     assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
 
@@ -484,7 +495,7 @@ void BaseQNPostProcessing::undoScaling
     for (int i = 0; i < size; i++) {
       valuesPart[i] = _scaledValues[i + offset] * factor;
       oldValuesPart[i] = _scaledOldValues[i + offset] * factor;
-      if (isSet_designSpec) _designSpecification[i + offset] = _designSpecification[i + offset] * factor;
+      if (isSet_designSpec) _designSpecification(i + offset) = _designSpecification(i + offset) * factor;
     }
     offset += size;
   }
