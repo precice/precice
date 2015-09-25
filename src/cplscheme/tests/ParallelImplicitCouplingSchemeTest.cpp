@@ -162,9 +162,9 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   impl::PtrConvergenceMeasure minIterationConvMeasure2 (
     new impl::MinIterationConvergenceMeasure(minIterations) );
   cplScheme.addConvergenceMeasure (
-    mesh->data()[1]->getID(), false, minIterationConvMeasure1 );
+    mesh->data()[1]->getID(), false, false, minIterationConvMeasure1 );
   cplScheme.addConvergenceMeasure (
-    mesh->data()[0]->getID(), false, minIterationConvMeasure2 );
+    mesh->data()[0]->getID(), false, false, minIterationConvMeasure2 );
   connect(nameParticipant0, nameParticipant1, nameLocalParticipant, globalCom);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());

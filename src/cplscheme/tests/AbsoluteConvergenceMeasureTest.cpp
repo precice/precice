@@ -40,20 +40,21 @@ void AbsoluteConvergenceMeasureTest:: testMeasureData ()
   utils::DynVector oldValues0 ( 3 );
   utils::DynVector oldValues1 ( 3 );
   utils::DynVector oldValues2 ( 3 );
-  utils::DynVector newValues ( 3 );
+  utils::DynVector newValues  ( 3 );
+  utils::DynVector designSpec ( 3, 0.0 );
 
   assignList(oldValues0) = -2.0, -1.0, 0.0;
   assignList(oldValues1) = 2.0, 3.0, 4.0;
   assignList(oldValues2) = 3.0, 4.0, 5.0;
   assignList(newValues) = 5.0, 6.0, 7.0;
 
-  measure.measure ( oldValues0, newValues );
+  measure.measure ( oldValues0, newValues, designSpec );
   validate ( ! measure.isConvergence() );
 
-  measure.measure ( oldValues1, newValues );
+  measure.measure ( oldValues1, newValues, designSpec );
   validate ( measure.isConvergence() );
 
-  measure.measure ( oldValues2, newValues );
+  measure.measure ( oldValues2, newValues, designSpec );
   validate ( measure.isConvergence() );
 }
 
