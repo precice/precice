@@ -266,6 +266,12 @@ public:
    */
   int getDataID ( const std::string& dataName, int meshID );
 
+
+  /**
+   * @brief Returns whether the solver has to evaluate the coarse or the fine model representation
+   */
+  bool hasToEvaluateSurrogateModel();
+
   /**
    * @brief Find out position of point relative to geometries.
    *

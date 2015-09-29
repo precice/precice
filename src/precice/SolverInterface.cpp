@@ -129,6 +129,11 @@ int SolverInterface:: getDataID
   return _impl->getDataID ( dataName, meshID );
 }
 
+bool SolverInterface::hasToEvaluateSurrogateModel()
+{
+  _impl->hasToEvaluateSurrogateModel();
+}
+
 int SolverInterface:: inquirePosition
 (
   const double*        point,

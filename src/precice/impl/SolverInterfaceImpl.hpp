@@ -167,6 +167,11 @@ public:
   bool isTimestepComplete();
 
   /**
+   * @brief Returns whether the solver has to evaluate the coarse or the fine model representation
+   */
+  bool hasToEvaluateSurrogateModel();
+
+  /**
    * @brief Returns true, if provided name of action is required.
    *
    * Some features of preCICE require a solver to perform specific actions, in

@@ -647,6 +647,15 @@ void SolverInterfaceImpl:: fulfilledAction
   _couplingScheme->performedAction(action);
 }
 
+bool SolverInterfaceImpl::hasToEvaluateSurrogateModel()
+{
+  if(_couplingScheme->nextModelToEvaluate() == cplscheme::BaseCouplingScheme::ModelResolution::coarseModel)
+  {
+    return true;
+  }
+  return false;
+}
+
 bool SolverInterfaceImpl:: hasMesh
 (
   const std::string& meshName ) const
