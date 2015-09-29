@@ -56,6 +56,9 @@ public:
   /// @brief To be used, when the coupling timestep length is determined dynamically during the coupling.
   static const double UNDEFINED_TIMESTEP_LENGTH;
 
+  /// @brief steers the evaluation of fine or surrogate model
+  enum ModelResolution {fineModel, coarseModel};
+
   virtual ~CouplingScheme() {}
 
   /**
@@ -144,6 +147,12 @@ public:
    * hasTimestepLength().
    */
   virtual double getTimestepLength() const =0;
+
+
+  virtual ModelResolution nextModelToEvaluate()
+  {
+    return ModelResolution::fineModel;
+  }
 
   /**
    * @brief Returns the remaining timestep length of the current time step.

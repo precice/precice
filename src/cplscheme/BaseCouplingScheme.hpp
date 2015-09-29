@@ -72,8 +72,6 @@ public:
 
   enum CouplingMode {Explicit, Implicit, Undefined};
 
-  enum ModelResolution {fineModel, coarseModel};
-
   /**
    * @brief Adds another coupling scheme in parallel to this scheme.
    *
@@ -239,7 +237,7 @@ public:
 
 
   /// @brief Returns whether the solver has to evaluate the coarse or the fine model representation
-  ModelResolution& nextModelToEvaluate(){
+  virtual ModelResolution nextModelToEvaluate(){
 	  return _nextModelToEvaluate;
   }
 
@@ -516,6 +514,7 @@ private:
 
   /// @brief Number of accumulated coarse model optimization iterations in current time step.
   int _iterationsCoarseOptimization;
+  int _totalIterationsCoarseOptimization;
 
   /// @brief Limit of iterations during one time step.
   int _maxIterations;
