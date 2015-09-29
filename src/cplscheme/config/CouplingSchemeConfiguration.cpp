@@ -1040,9 +1040,11 @@ bool CouplingSchemeConfiguration:: checkIfDataIsCoarse
 {
   bool isCoarse = false;
   bool err = false;
-  // check if id is contained within fine Data IDs
+  // check if post processing is defined.
   if(_postProcConfig->getPostProcessing().get() == nullptr)
-    preciceError(__func__, "No post processing is defined for implicit coupling scheme, but convergence measures are defined.");
+    return false;
+
+  // check if id is contained within fine Data IDs
   const std::vector<int>& fineIDs = _postProcConfig->getPostProcessing()->getDataIDs();
   isCoarse = not utils::contained(id, fineIDs);
   // if id is contained within fine data IDs return with isCoarse = false
