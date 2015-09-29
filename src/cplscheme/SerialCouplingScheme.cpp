@@ -207,6 +207,8 @@ void SerialCouplingScheme::advance()
         getM2N()->finishSendPackage();
         getM2N()->startReceivePackage(0);
         getM2N()->receive(convergence);
+        getM2N()->startReceivePackage(0);
+        getM2N()->receive(_nextModelToEvaluate);
         if (convergence) {
           timestepCompleted();
         }
@@ -220,9 +222,9 @@ void SerialCouplingScheme::advance()
           // measure convergence of the coupling iteration,
           convergence = measureConvergence();
           // Stop, when maximal iteration count (given in config) is reached
-          if (maxIterationsReached()) {
+          if (maxIterationsReached())
             convergence = true;
-          }
+
         }else if(_nextModelToEvaluate == ModelResolution::coarseModel){
           // in case of multilevel post processing only: measure the convergence of the coarse model optimization
           convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization();
@@ -256,6 +258,9 @@ void SerialCouplingScheme::advance()
 
         getM2N()->startSendPackage(0);
         getM2N()->send(convergence);
+
+        getM2N()->startSendPackage(0);
+        getM2N()->send(_nextModelToEvaluate);
 
         // extrapolate new input data for the solver evaluation in time.
         if (convergence && (getExtrapolationOrder() > 0)) {
