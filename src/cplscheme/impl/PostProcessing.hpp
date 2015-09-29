@@ -76,7 +76,7 @@ public:
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
    *        steers the coupling scheme and the post processing. Only needed for multilevel based PPs.
    */
-  virtual void setNextModelToEvaluate(cplscheme::BaseCouplingScheme::ModelResolution* nextModel) {};
+  virtual void setCoarseModelOptimizationActive(bool* coarseOptimizationActive) {};
 
   virtual void exportState(io::TXTWriter& writer) {}
 

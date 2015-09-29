@@ -208,7 +208,7 @@ void SerialCouplingScheme::advance()
         getM2N()->startReceivePackage(0);
         getM2N()->receive(convergence);
         getM2N()->startReceivePackage(0);
-        getM2N()->receive((int&)_nextModelToEvaluate);
+        getM2N()->receive(_isCoarseModelOptimizationActive);
         if (convergence) {
           timestepCompleted();
         }
@@ -218,14 +218,15 @@ void SerialCouplingScheme::advance()
         getM2N()->finishReceivePackage();
       }
       else {
-        if(_nextModelToEvaluate == ModelResolution::fineModel){
+        if(not _isCoarseModelOptimizationActive){
+        //if(_nextModelToEvaluate == ModelResolution::fineModel){
           // measure convergence of the coupling iteration,
           convergence = measureConvergence();
           // Stop, when maximal iteration count (given in config) is reached
           if (maxIterationsReached())
             convergence = true;
 
-        }else if(_nextModelToEvaluate == ModelResolution::coarseModel){
+        }else{ // if(_nextModelToEvaluate == ModelResolution::coarseModel){
           // in case of multilevel post processing only: measure the convergence of the coarse model optimization
           convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization();
           // TODO: Stop, when maximal iteration count (given in config) is reached
@@ -234,13 +235,15 @@ void SerialCouplingScheme::advance()
         // in case of multilevel PP only: if coarse model optimization converged
         // steering the requests for evaluation of coarse and fine model, respectively
         if(convergenceCoarseOptimization){
-          _nextModelToEvaluate = ModelResolution::fineModel;
+          _isCoarseModelOptimizationActive = false;
+          //_nextModelToEvaluate = ModelResolution::fineModel;
         }else{
-          _nextModelToEvaluate = ModelResolution::coarseModel;
+          _isCoarseModelOptimizationActive = true;
+          //_nextModelToEvaluate = ModelResolution::coarseModel;
         }
 
         // passed by reference, modified in MM post processing. No-op for all ather post-processings
-        getPostProcessing()->setNextModelToEvaluate(&_nextModelToEvaluate);
+        getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
 
         // coupling iteration converged for current time step. Advance in time.
         if (convergence) {
@@ -260,7 +263,7 @@ void SerialCouplingScheme::advance()
         getM2N()->send(convergence);
 
         getM2N()->startSendPackage(0);
-        getM2N()->send((int)_nextModelToEvaluate);
+        getM2N()->send(_isCoarseModelOptimizationActive);
 
         // extrapolate new input data for the solver evaluation in time.
         if (convergence && (getExtrapolationOrder() > 0)) {

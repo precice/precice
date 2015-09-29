@@ -116,10 +116,10 @@ public:
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
    * steers the coupling scheme and the post processing.
    */
-  virtual void setNextModelToEvaluate(
-      BaseCouplingScheme::ModelResolution* nextModel)
+  virtual void setCoarseModelOptimizationActive(
+      bool* coarseOptActive)
   {
-    _nextModelToEvaluate = nextModel;
+    _isCoarseModelOptimizationActive = coarseOptActive;
   }
 
   /**
@@ -172,7 +172,7 @@ protected:
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
    * steers the coupling scheme and the post processing.
    */
-  BaseCouplingScheme::ModelResolution* _nextModelToEvaluate;
+  bool* _isCoarseModelOptimizationActive;
 
   /// @brief Data IDs of data to be involved in the MM algorithm.
   std::vector<int> _fineDataIDs;

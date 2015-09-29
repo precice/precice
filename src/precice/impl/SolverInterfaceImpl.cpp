@@ -649,11 +649,16 @@ void SolverInterfaceImpl:: fulfilledAction
 
 bool SolverInterfaceImpl::hasToEvaluateSurrogateModel()
 {
-  if(_couplingScheme->nextModelToEvaluate() == cplscheme::BaseCouplingScheme::ModelResolution::coarseModel)
+  return true; // TODO: return false if no MM post processing
+}
+
+bool SolverInterfaceImpl::hasToEvaluateFineModel()
+{
+  if(_couplingScheme->_isCoarseModelOptimizationActive())
   {
-    return true;
+    return false;
   }
-  return false;
+  return true;
 }
 
 bool SolverInterfaceImpl:: hasMesh

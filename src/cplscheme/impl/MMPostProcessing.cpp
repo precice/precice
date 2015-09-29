@@ -55,7 +55,7 @@ MMPostProcessing::MMPostProcessing
         _singularityLimit(singularityLimit),
         _designSpecification(),
         _coarseModel_designSpecification(),
-        _nextModelToEvaluate(nullptr),
+        _isCoarseModelOptimizationActive(nullptr),
         _fineDataIDs(fineDataIDs),
         _coarseDataIDs(coarseDataIDs),
         _dataIDs(),
@@ -387,7 +387,8 @@ void MMPostProcessing::performPostProcessing(
   assertion2(_outputFineModelScaled.size() == _fineResiduals.size(),_outputFineModelScaled.size(), _fineResiduals.size());
   assertion2(_input_Xstar.size() == _fineResiduals.size(), _input_Xstar.size(), _fineResiduals.size());
 
-  if ((*_nextModelToEvaluate) == BaseCouplingScheme::ModelResolution::fineModel) {
+  //if ((*_nextModelToEvaluate) == BaseCouplingScheme::ModelResolution::fineModel) {
+  if(not (*_isCoarseModelOptimizationActive)){
 
     /**
      * assume the coarse model and the fine model has been evaluated for the new coarse model
@@ -419,7 +420,8 @@ void MMPostProcessing::performPostProcessing(
      * model optimization problem are updated (also Jacobian of MM mapping matrix if required).
      * next step: coarse model optimization, set the steering variable accordingly
      */
-    (*_nextModelToEvaluate) = BaseCouplingScheme::ModelResolution::coarseModel;
+    (*_isCoarseModelOptimizationActive) = true;
+    //(*_nextModelToEvaluate) = BaseCouplingScheme::ModelResolution::coarseModel;
 
 
     // The coarse model design specification is computed with scaled data and needs to be re-scaled to normal.

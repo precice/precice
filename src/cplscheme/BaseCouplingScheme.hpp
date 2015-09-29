@@ -237,8 +237,8 @@ public:
 
 
   /// @brief Returns whether the solver has to evaluate the coarse or the fine model representation
-  virtual ModelResolution nextModelToEvaluate(){
-	  return _nextModelToEvaluate;
+  virtual bool isCoarseModelOptimizationActive(){
+	  return _isCoarseModelOptimizationActive;
   }
 
   /**
@@ -279,7 +279,7 @@ protected:
   CouplingMode _couplingMode;
 
   /// @brief Sets whether the solver evaluates the fine or the coarse model representation
-  ModelResolution _nextModelToEvaluate;
+  bool _isCoarseModelOptimizationActive;
 
   /// @brief Updates internal state of coupling scheme for next timestep.
   void timestepCompleted();

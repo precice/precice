@@ -167,9 +167,18 @@ public:
   bool isTimestepComplete();
 
   /**
-   * @brief Returns whether the solver has to evaluate the coarse or the fine model representation
+   * @brief Returns whether the solver has to evaluate the surrogate model representation
+   *        It does not automatically imply, that the solver does not have to evaluate the
+   *        fine model representation
    */
   bool hasToEvaluateSurrogateModel();
+
+  /**
+   * @brief Returns whether the solver has to evaluate the fine model representation
+   *        It does not automatically imply, that the solver does not have to evaluate the
+   *        surrogate model representation
+   */
+  bool hasToEvaluateFineModel();
 
   /**
    * @brief Returns true, if provided name of action is required.
