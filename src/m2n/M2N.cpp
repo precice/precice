@@ -214,6 +214,15 @@ void M2N:: send (
 }
 
 void M2N:: send (
+  int   itemToSend)
+{
+  preciceTrace1("send(int)", utils::MasterSlave::_rank);
+  if(not utils::MasterSlave::_slaveMode){
+    _masterCom->send(itemToSend, 0);
+  }
+}
+
+void M2N:: send (
   double itemToSend)
 {
   preciceTrace1("send(double)", utils::MasterSlave::_rank);
@@ -266,6 +275,19 @@ void M2N:: receive (
   utils::MasterSlave::broadcast(itemToReceive);
 
   preciceDebug("receive(bool): " << itemToReceive);
+}
+
+void M2N:: receive (
+  int&  itemToReceive )
+{
+  preciceTrace1("receive(int)", utils::MasterSlave::_rank);
+  if(not utils::MasterSlave::_slaveMode){
+    _masterCom->receive(itemToReceive, 0);
+  }
+
+  utils::MasterSlave::broadcast(itemToReceive);
+
+  preciceDebug("receive(int): " << itemToReceive);
 }
 
 void M2N:: receive (
