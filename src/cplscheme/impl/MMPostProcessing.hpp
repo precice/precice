@@ -139,6 +139,14 @@ public:
   // delete this:
   virtual int getDeletedColumns();
 
+  /**
+   * @brief Indicates whether the given post processing is based on a multi-level approach
+   */
+  virtual bool isMultilevelBasedApproach()
+  {
+    return true;
+  }
+
 protected:
 
   // @brief Logging device.

@@ -95,6 +95,15 @@ public:
 
   virtual int getDeletedColumns() {return 0;}
 
+
+  /**
+   * @brief Indicates whether the given post processing is based on a multi-level approach
+   */
+  virtual bool isMultilevelBasedApproach()
+  {
+    return false;
+  }
+
 };
 
 }}} // namespace precice, cplscheme, impl

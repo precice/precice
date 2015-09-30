@@ -122,6 +122,17 @@ void MMPostProcessing::initialize(
     coarseEntries += cplData[elem]->values->size();
   }
 
+  /**
+   * initialize the coarse model optimization method
+   */
+  // view on coarse coupling data only (otherwise problem with secondary data: mixed up with fine data)
+  DataMap coarseCplData;
+  for (int id : _coarseDataIDs) {
+    DataMap::value_type pair = std::make_pair(id, cplData[id]);
+    coarseCplData.insert(pair);
+  }
+  _coarseModelOptimization->initialize(coarseCplData);
+
   // the coarse model also uses the fine mesh (only evaluation in solver is on coarse model)
   assertion2(entries == coarseEntries, entries, coarseEntries);
 
@@ -380,7 +391,7 @@ void MMPostProcessing::performPostProcessing(
 {
   preciceTrace2(__func__, _dataIDs.size(), cplData.size());
 
-  assertion2(_dataIDs.size() == _scalings.size(), _dataIDs.size(), _scalings.size());
+  assertion2(_fineDataIDs.size() == _scalings.size(), _fineDataIDs.size(), _scalings.size());
   assertion2(_fineOldResiduals.size() == _fineResiduals.size(),_fineOldResiduals.size(), _fineResiduals.size());
   assertion2(_coarseResiduals.size() == _fineResiduals.size(),_coarseResiduals.size(), _fineResiduals.size());
   assertion2(_coarseOldResiduals.size() == _fineResiduals.size(),_coarseOldResiduals.size(), _fineResiduals.size());
