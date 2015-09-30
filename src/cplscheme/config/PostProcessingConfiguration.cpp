@@ -45,12 +45,12 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_SINGULARITY_LIMIT("singularity-limit"),
   TAG_DATA("data"),
   TAG_FILTER("filter"),
+  TAG_ESTIMATEJACOBIAN("estimate-jacobian"),
   TAG_COARSEMODELOPTIMIZATION("coarse-model-optimization"),
   ATTR_NAME("name"),
   ATTR_MESH("mesh"),
   ATTR_SCALING("scaling"),
   ATTR_VALUE("value"),
-  ATTR_ESTJACOBIAN("estimate-jacobian"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
@@ -61,6 +61,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   //_isValid(false),
   _meshConfig(meshConfig),
   _postProcessing(),
+  _coarseModelOptimizationConfig(),
   _neededMeshes(),
   _config()
 {
@@ -72,13 +73,8 @@ void PostProcessingConfiguration:: connectTags(
 
   using namespace utils;
 
-    // add attribute estimateJacobian for manifold mapping
-    XMLAttribute<bool> attrEstimateJacobian(ATTR_ESTJACOBIAN);
-    attrEstimateJacobian.setDefaultValue(false);
-    attrEstimateJacobian.setDocumentation("If manifold mapping is used as post-processing one can switch"
-         " between explicit estimation and updating of the Jacobian (multi-vector method) and a matrix free computation. The default is matrix free.");
-    parent.addAttribute(attrEstimateJacobian);
-
+  static int recursionCounter = 0;
+  recursionCounter++;
 
     XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
     std::list<XMLTag> tags;
@@ -107,10 +103,12 @@ void PostProcessingConfiguration:: connectTags(
       addTypeSpecificSubtags(tag);
       tags.push_back(tag);
     }
-    {
-      XMLTag tag(*this, VALUE_ManifoldMapping, occ, TAG);
-      addTypeSpecificSubtags(tag);
-      tags.push_back(tag);
+    if(recursionCounter <= 1){
+      {
+        XMLTag tag(*this, VALUE_ManifoldMapping, occ, TAG);
+        addTypeSpecificSubtags(tag);
+        tags.push_back(tag);
+      }
     }
     {
       XMLTag tag(*this, VALUE_BROYDEN, occ, TAG);
@@ -175,8 +173,7 @@ void PostProcessingConfiguration:: xmlTagCallback
 
   if (callingTag.getNamespace() == TAG){
       _config.type = callingTag.getName();
-      if(_config.type == VALUE_ManifoldMapping)
-        _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_ESTJACOBIAN);
+      //_coarseModelOptimizationConfig->clear();
   }
 
   if (callingTag.getName() == TAG_RELAX){
@@ -236,8 +233,11 @@ void PostProcessingConfiguration:: xmlTagCallback
 	  }else{
 		  _config.filter = impl::PostProcessing::NOFILTER;
 	  }
+  }else if (callingTag.getName() == TAG_ESTIMATEJACOBIAN) {
+    if(_config.type == VALUE_ManifoldMapping)
+         _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   }
-  else if (callingTag.getName() == TAG_COARSEMODELOPTIMIZATION) {
+/*else if (callingTag.getName() == TAG_COARSEMODELOPTIMIZATION) {
     // new PP config for coarse model optimization method (recursive definition)
     _coarseModelOptimizationConfig->clear();
     if (_coarseModelOptimizationConfig.get() == nullptr) {
@@ -245,7 +245,9 @@ void PostProcessingConfiguration:: xmlTagCallback
           new PostProcessingConfiguration(_meshConfig));
     }
     _coarseModelOptimizationConfig->connectTags(callingTag);
+
   }
+*/
 }
 
 void PostProcessingConfiguration:: xmlEndTagCallback
@@ -459,6 +461,24 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
 	tag.addSubtag(tagFilter);
   }
   else if (tag.getName() == VALUE_ManifoldMapping){
+
+    // add coarse model optimization PostProcessing Tag
+    // new PP config for coarse model optimization method (recursive definition)
+     // _coarseModelOptimizationConfig->clear();
+      if (_coarseModelOptimizationConfig.get() == nullptr) {
+        _coarseModelOptimizationConfig = PtrPostProcessingConfiguration(
+            new PostProcessingConfiguration(_meshConfig));
+      }
+      _coarseModelOptimizationConfig->connectTags(tag);
+
+    XMLTag tagEstimateJacobian(*this, TAG_ESTIMATEJACOBIAN, XMLTag::OCCUR_NOT_OR_ONCE );
+    XMLAttribute<bool> attrBoolValue(ATTR_VALUE);
+    attrBoolValue.setDocumentation("If manifold mapping is used as post-processing one can switch"
+                " between explicit estimation and updating of the Jacobian (multi-vector method)"
+                " and a matrix free computation. The default is matrix free.");
+    tagEstimateJacobian.addAttribute(attrBoolValue);
+    tag.addSubtag(tagEstimateJacobian );
+
 
     XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
     XMLAttribute<int> attrIntValue(ATTR_VALUE );

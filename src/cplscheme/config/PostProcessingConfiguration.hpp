@@ -83,13 +83,13 @@ private:
    const std::string TAG_SINGULARITY_LIMIT;
    const std::string TAG_DATA;
    const std::string TAG_FILTER;
+   const std::string TAG_ESTIMATEJACOBIAN;
    const std::string TAG_COARSEMODELOPTIMIZATION;
 
    const std::string ATTR_NAME;
    const std::string ATTR_MESH;
    const std::string ATTR_SCALING;
    const std::string ATTR_VALUE;
-   const std::string ATTR_ESTJACOBIAN;
 
    const std::string VALUE_CONSTANT;
    const std::string VALUE_AITKEN;

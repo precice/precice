@@ -1047,6 +1047,13 @@ bool CouplingSchemeConfiguration:: checkIfDataIsCoarse
   // check if id is contained within fine Data IDs
   const std::vector<int>& fineIDs = _postProcConfig->getPostProcessing()->getDataIDs();
   isCoarse = not utils::contained(id, fineIDs);
+
+  std::cout<<" fineIDs = [";
+  for(int i = 0; i < fineIDs.size();i++){
+    std::cout<<fineIDs.at(i)<<", ";
+  }
+  std::cout<<"], id: "<<id<<std::endl;
+
   // if id is contained within fine data IDs return with isCoarse = false
   if(not isCoarse) return false;
 
@@ -1057,8 +1064,15 @@ bool CouplingSchemeConfiguration:: checkIfDataIsCoarse
       const std::vector<int>& coarseIDs =  _postProcConfig->getCoarseModelOptimizationConfig()->getPostProcessing()->getDataIDs();
       isCoarse = utils::contained(id, coarseIDs);
 
+      std::cout<<" coarseIDs = [";
+      for(int i = 0; i < coarseIDs.size();i++){
+        std::cout<<coarseIDs.at(i)<<", ";
+      }
+      std::cout<<"], id: "<<id<<std::endl;
+
       err = not isCoarse;
     }else{
+      std::cout<<"There is no coarse model optimization defined."<<std::endl;
       err = true;
     }
   }
