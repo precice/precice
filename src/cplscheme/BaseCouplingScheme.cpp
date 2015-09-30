@@ -677,6 +677,11 @@ void BaseCouplingScheme::setIterationPostProcessing
 {
   assertion(postProcessing.get() != nullptr);
   _postProcessing = postProcessing;
+
+  // if multilevel based approach, i.e., manifold mapping, we have to start
+  // with the evaluation/optimization of the coarse model representation.
+  // otherwise, we start with the fine model representation as it's the only one
+    _isCoarseModelOptimizationActive = _postProcessing->isMultilevelBasedApproach();
 }
 
 
@@ -837,7 +842,7 @@ void BaseCouplingScheme::initializeTXTWriters()
        sstm << "avgConvRate(" <<i<<")";
        sstm2 << "resNorm(" <<i<< ")";
        _iterationsWriter.addData(sstm.str(), io::TXTTableWriter::DOUBLE);
-       _convergenceWriter.addData(sstm.str(), io::TXTTableWriter::DOUBLE);
+       _convergenceWriter.addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
        i++;
     }
     _iterationsWriter.addData("deleted_Columns", io::TXTTableWriter::INT );

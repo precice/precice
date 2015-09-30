@@ -229,6 +229,7 @@ void SerialCouplingScheme::advance()
         }else{ // if(_nextModelToEvaluate == ModelResolution::coarseModel){
           // in case of multilevel post processing only: measure the convergence of the coarse model optimization
           convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization();
+          convergence = false;
           // TODO: Stop, when maximal iteration count (given in config) is reached
         }
 
