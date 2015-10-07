@@ -71,6 +71,11 @@ public:
      return _neededMeshes;
    }
 
+   void setIsAddManifoldMappingTagAllowed(bool b)
+   {
+     _isAddManifoldMappingTagAllowed = b;
+   }
+
 private:
 
    static tarch::logging::Log _log;
@@ -139,6 +144,8 @@ private:
       {}
 
    } _config;
+
+   bool _isAddManifoldMappingTagAllowed;
 
 
    void addTypeSpecificSubtags ( utils::XMLTag& tag );

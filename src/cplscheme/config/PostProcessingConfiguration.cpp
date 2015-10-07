@@ -63,7 +63,8 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   _postProcessing(),
   _coarseModelOptimizationConfig(),
   _neededMeshes(),
-  _config()
+  _config(),
+  _isAddManifoldMappingTagAllowed(true)
 {
   assertion(meshConfig.get() != nullptr);
 }
@@ -73,8 +74,8 @@ void PostProcessingConfiguration:: connectTags(
 
   using namespace utils;
 
-  static int recursionCounter = 0;
-  recursionCounter++;
+ // static int recursionCounter = 0;
+ // recursionCounter++;
 
     XMLTag::Occurrence occ = XMLTag::OCCUR_NOT_OR_ONCE;
     std::list<XMLTag> tags;
@@ -103,12 +104,14 @@ void PostProcessingConfiguration:: connectTags(
       addTypeSpecificSubtags(tag);
       tags.push_back(tag);
     }
-    if(recursionCounter <= 1){
+    //if(recursionCounter <= 1){
+    if(_isAddManifoldMappingTagAllowed){
       {
         XMLTag tag(*this, VALUE_ManifoldMapping, occ, TAG);
         addTypeSpecificSubtags(tag);
         tags.push_back(tag);
       }
+      _isAddManifoldMappingTagAllowed = false;
     }
     {
       XMLTag tag(*this, VALUE_BROYDEN, occ, TAG);
@@ -164,6 +167,7 @@ PtrPostProcessingConfiguration PostProcessingConfiguration::getCoarseModelOptimi
 {
   return _coarseModelOptimizationConfig;
 }
+
 
 void PostProcessingConfiguration:: xmlTagCallback
 (
@@ -469,6 +473,7 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
         _coarseModelOptimizationConfig = PtrPostProcessingConfiguration(
             new PostProcessingConfiguration(_meshConfig));
       }
+      _coarseModelOptimizationConfig->setIsAddManifoldMappingTagAllowed(false);
       _coarseModelOptimizationConfig->connectTags(tag);
 
     XMLTag tagEstimateJacobian(*this, TAG_ESTIMATEJACOBIAN, XMLTag::OCCUR_NOT_OR_ONCE );

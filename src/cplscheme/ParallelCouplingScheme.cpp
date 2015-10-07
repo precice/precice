@@ -223,6 +223,7 @@ void ParallelCouplingScheme::implicitAdvance()
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
   bool convergence = false;
+  bool convergenceCoarseOptimization = true;
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     preciceDebug("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
@@ -231,6 +232,8 @@ void ParallelCouplingScheme::implicitAdvance()
       getM2N()->finishSendPackage();
       getM2N()->startReceivePackage(0);
       getM2N()->receive(convergence);
+      getM2N()->startReceivePackage(0);
+      getM2N()->receive(_isCoarseModelOptimizationActive);
       if (convergence) {
         timestepCompleted();
       }
@@ -244,12 +247,46 @@ void ParallelCouplingScheme::implicitAdvance()
       receiveData(getM2N());
       getM2N()->finishReceivePackage();
 
-      convergence = measureConvergence();
+      // -------- NEW
+      std::cout<<"\n ### coarse model opt active (1): "<<_isCoarseModelOptimizationActive<<std::endl;
 
-      // Stop, when maximal iteration count (given in config) is reached
-      if (maxIterationsReached()) {
-        convergence = true;
+      auto designSpecifications = getPostProcessing()->getDesignSpecification(getAllData());
+      // measure convergence of coupling iteration
+      if(not _isCoarseModelOptimizationActive /* || hasToMeasureConv */){
+        preciceDebug("measure convergence.");
+        // measure convergence of the coupling iteration,
+        convergence = measureConvergence(designSpecifications);
+        // Stop, when maximal iteration count (given in config) is reached
+        if (maxIterationsReached())   convergence = true;
+        if(not convergence) _isCoarseModelOptimizationActive = true;
       }
+      // measure convergence for coarse model optimization
+      else{
+        preciceDebug("measure convergence of coarse model optimization.");
+        // in case of multilevel post processing only: measure the convergence of the coarse model optimization
+        convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
+        // Stop, when maximal iteration count (given in config) is reached
+        if (maxIterationsReached())   convergenceCoarseOptimization = true;
+        convergence = false;
+
+        // in case of multilevel PP only: if coarse model optimization converged
+        // steering the requests for evaluation of coarse and fine model, respectively
+        if(convergenceCoarseOptimization){
+          _isCoarseModelOptimizationActive = false;
+        }else{
+          _isCoarseModelOptimizationActive = true;
+        }
+      }
+
+      std::cout<<" ### coarse model opt active (2): "<<_isCoarseModelOptimizationActive<<std::endl;
+      std::cout<<" ### coarse model converged: "<<convergenceCoarseOptimization<<std::endl;
+      std::cout<<" ### fine model converged: "<<convergence<<"\n"<<std::endl;
+
+      // passed by reference, modified in MM post processing. No-op for all other post-processings
+      getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+
+      // -------- end NEW
+
       if (convergence) {
         if (getPostProcessing().get() != nullptr) {
           _deletedColumnsPPFiltering = getPostProcessing()->getDeletedColumns();
@@ -263,6 +300,9 @@ void ParallelCouplingScheme::implicitAdvance()
       }
       getM2N()->startSendPackage(0);
       getM2N()->send(convergence);
+
+      getM2N()->startSendPackage(0);
+      getM2N()->send(_isCoarseModelOptimizationActive);
 
       //if (isCouplingOngoing()) {
         if (convergence && (getExtrapolationOrder() > 0)){
@@ -294,7 +334,7 @@ void ParallelCouplingScheme::implicitAdvance()
       preciceDebug("Convergence achieved");
       advanceTXTWriters();
     }
-    updateTimeAndIterations(convergence);
+    updateTimeAndIterations(convergence, convergenceCoarseOptimization);
     setHasDataBeenExchanged(true);
     setComputedTimestepPart(0.0);
   } // subcycling complete

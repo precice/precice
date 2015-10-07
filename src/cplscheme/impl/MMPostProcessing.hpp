@@ -262,6 +262,9 @@ protected:
    */
   std::vector<int> _dimOffsets;
 
+  int _iterCoarseModelOpt;
+  int _maxIterCoarseModelOpt;
+
   /// @ brief only debugging info, remove this:
   int its, tSteps;
   int deletedColumns;

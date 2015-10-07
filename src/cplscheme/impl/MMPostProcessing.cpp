@@ -77,16 +77,21 @@ MMPostProcessing::MMPostProcessing
         _MMMappingMatrix_prev(),
         _matrixCols(),
         _dimOffsets(),
+        _iterCoarseModelOpt(0),
+        _maxIterCoarseModelOpt(maxIterationsUsed),
         its(0),
         tSteps(0),
         deletedColumns(0),
         _filter(filter)
 {
-  preciceCheck(_maxIterationsUsed > 0, "BaseQNPostProcessing()",
-      "Maximal iterations used for QN post-processing has to "
+  preciceCheck(_maxIterationsUsed > 0, "MMPostProcessing()",
+      "Maximal iterations used for MM post-processing has to "
       << "be larger than zero!");
-  preciceCheck(_timestepsReused >= 0, "BaseQNPostProcessing()",
-      "Number of old timesteps to be reused for QN "
+  preciceCheck(_maxIterCoarseModelOpt > 0, "MMPostProcessing()",
+       "Maximal iterations used for coarse model optimization for MM post-processing has to "
+       << "be larger than zero!");
+  preciceCheck(_timestepsReused >= 0, "MMPostProcessing()",
+      "Number of old timesteps to be reused for MM "
       << "post-processing has to be >= 0!");
 }
 
@@ -254,6 +259,10 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
     off += size;
   }
 
+ // preciceDebug(" next input x_star ("<<its<<"): \n"<<_input_Xstar.transpose());
+ // preciceDebug(" coarse cpl iter   ("<<its<<"): \n"<<*(cplData[_coarseDataIDs[0]]->values));
+ // preciceDebug(" fine   cpl iter   ("<<its<<"): \n"<<*(cplData[_fineDataIDs[0]]->values));
+
   // in the context of mannifold mapping post processing we want _input_Xstar to be scaled according to the scaling factors
   scale(_input_Xstar, cplData);
 }
@@ -409,6 +418,7 @@ void MMPostProcessing::performPostProcessing(
     // assume that we always start with a coarse model optimization step at the very beginning.
     // every time get here, the coarse model optimization has just converged.
     _coarseModelOptimization->iterationsConverged(cplData);
+    _iterCoarseModelOpt = 0;
 
     // scale data values (and secondary data values)
     scale(cplData);
@@ -431,15 +441,14 @@ void MMPostProcessing::performPostProcessing(
      * model optimization problem are updated (also Jacobian of MM mapping matrix if required).
      * next step: coarse model optimization, set the steering variable accordingly
      */
-    (*_isCoarseModelOptimizationActive) = true;
-    //(*_nextModelToEvaluate) = BaseCouplingScheme::ModelResolution::coarseModel;
+    //(*_isCoarseModelOptimizationActive) = true;
 
 
     // The coarse model design specification is computed with scaled data and needs to be re-scaled to normal.
     // It is to be scaled again in the coarse model optimization scheme.
 
     assertion(isSet(_coarseModel_designSpecification)); // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
-    assertion(not (_firstIteration && _firstTimeStep)); // not in very first iteration where we solve for an initial coarse solution with unscaled design specification
+    //assertion(not (_firstIteration && _firstTimeStep)); // not in very first iteration where we solve for an initial coarse solution with unscaled design specification
     unscale(_coarseModel_designSpecification, cplData);
 
 
@@ -450,6 +459,8 @@ void MMPostProcessing::performPostProcessing(
     // one MM iteration completed
     its++;
     _firstIteration = false;
+
+    // coarse model optimization
   } else {
     // view on coarse coupling data only
     DataMap coarseCplData;
@@ -468,6 +479,7 @@ void MMPostProcessing::performPostProcessing(
      *  design specification of the overall objective function. Here, a initial coarse
      *  model solution is obtained for a initial guess.
      */
+    preciceDebug("design specification ("<<its<<"): \n"<<_coarseModel_designSpecification.transpose());
     _coarseModelOptimization->optimize(coarseCplData, _coarseModel_designSpecification);
 
     /**
@@ -476,7 +488,18 @@ void MMPostProcessing::performPostProcessing(
      * Hence, x_star needs to be copied to the fine model input values.
      */
     registerSolutionCoarseModelOptimization(cplData);
+
+    _iterCoarseModelOpt++;
+    // if coarse model optimization exceeds max iteration count, print warning and break coarse model optimization iteration
+    if(_iterCoarseModelOpt >= _maxIterCoarseModelOpt){
+      (*_isCoarseModelOptimizationActive)  = false;
+      preciceWarning(__func__,"The coarse model optimization in coupling iteration "<< its
+          << " exceeds maximal number of optimization cycles (" << _maxIterCoarseModelOpt <<" without convergence!");
+
+    }
   }
+
+  preciceDebug("  * Manifold Mapping Iterations: "<<its<<"\n  * Coarse Model Optimization Iterations: "<<_iterCoarseModelOpt);
 }
 
 
@@ -689,7 +712,7 @@ bool MMPostProcessing::isSet(Eigen::VectorXd& designSpec)
   // design specification is considered to be set and active if
   // 1. its size is larger then zero (i. e., it must be equal to the number of unknowns)
   // 2. its l2-norm is larger then 1.0e-15
-  bool set ((designSpec.size() > 0) && (designSpec.norm() > 1.0e-15));
+  bool set ((designSpec.size() > 0));// && (designSpec.norm() > 1.0e-15));
   if (set) assertion2(designSpec.size() == _fineResiduals.size(), designSpec.size(), _fineResiduals.size());
   return set;
 }
@@ -716,10 +739,24 @@ void MMPostProcessing::iterationsConverged
   // the most recent differences for the F, C matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
   // convergence was achieved
+
+  /**  not necessary, as there is no evaluation of models betweeen last postprocessing and iterations converged.
   scale(cplData);
   if(isSet(_designSpecification)) scale(_designSpecification, cplData);
   updateDifferenceMatrices(cplData);
+  */
   // no undoScaling() needed, as input/output data is not modified
+
+
+  /**
+   * Difference matrices and Jacobian updated, MM cycle completed, start with coarse model
+   * optimization in next cycle.
+   * next step: coarse model optimization, set the steering variable accordingly
+   */
+  (*_isCoarseModelOptimizationActive) = true;
+
+  // reset the coarse model design specification
+  _coarseModel_designSpecification = _designSpecification;
 
 # ifdef Debug
   std::ostringstream stream;

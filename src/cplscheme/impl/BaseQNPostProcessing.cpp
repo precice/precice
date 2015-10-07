@@ -14,6 +14,7 @@
 #include "QRFactorization.hpp"
 #include "utils/MasterSlave.hpp"
 #include <string.h>
+#include <iostream>
 //#include "utils/NumericalCompare.hpp"
 
 #include <time.h>
@@ -405,6 +406,8 @@ void BaseQNPostProcessing::performPostProcessing
     _scaledValues += _residuals; // = x^k + delta_x + r^k
     _scaledValues -= q; // = x^k + delta_x + r^k - q^k
 
+    std::cout<<"\n  xUpdate("<<its<<"): "<<xUpdate<<std::endl;
+
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
     if (_firstIteration && _timestepsReused == 0) {
@@ -481,7 +484,7 @@ void BaseQNPostProcessing::undoScaling
   preciceTrace("undoScaling()");
 
   // scale and undo scaling of design specification according to scaling of corresponding data
-  bool isSet_designSpec = ((_designSpecification.size() > 0) && (_designSpecification.norm() > 1.0e-15));
+  bool isSet_designSpec = ((_designSpecification.size() > 0));// && (_designSpecification.norm() > 1.0e-15));
   if (isSet_designSpec)
     assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
 
@@ -553,9 +556,15 @@ void BaseQNPostProcessing::iterationsConverged
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
   // convergence was achieved
-  scaling(cplData);
-  updateDifferenceMatrices(cplData);
-  undoScaling(cplData);
+  //scaling(cplData);
+  //updateDifferenceMatrices(cplData);
+  //undoScaling(cplData);
+
+
+  _firstTimeStep = false;
+  if (_matrixCols.front() == 0) { // Did only one iteration
+    _matrixCols.pop_front();
+  }
 
 # ifdef Debug
   std::ostringstream stream;
@@ -566,10 +575,6 @@ void BaseQNPostProcessing::iterationsConverged
   preciceDebug(stream.str());
 # endif // Debug
 
-  _firstTimeStep = false;
-  if (_matrixCols.front() == 0) { // Did only one iteration
-    _matrixCols.pop_front();
-  }
 
   // doing specialized stuff for the corresponding post processing scheme after 
   // convergence of iteration i.e.:

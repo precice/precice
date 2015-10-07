@@ -452,8 +452,11 @@ protected:
 
   void newConvergenceMeasurements();
 
-  bool measureConvergence();
-  bool measureConvergenceCoarseModelOptimization();
+  bool measureConvergence(
+      std::map<int, utils::DynVector>& designSpecification);
+
+  bool measureConvergenceCoarseModelOptimization(
+      std::map<int, utils::DynVector>& designSpecification);
 
   /**
    * @brief Sets up _dataStorage to store data values of last timestep.

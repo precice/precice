@@ -156,7 +156,8 @@ void MultiCouplingScheme::advance()
 
     receiveData();
 
-    convergence = measureConvergence();
+    auto designSpecifications = getPostProcessing()->getDesignSpecification(_allData);
+    convergence = measureConvergence(designSpecifications);
 
     // Stop, when maximal iteration count (given in config) is reached
     if (maxIterationsReached()) {

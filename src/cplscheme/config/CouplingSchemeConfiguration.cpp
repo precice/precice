@@ -642,6 +642,7 @@ void CouplingSchemeConfiguration:: addTagPostProcessing
     _postProcConfig = PtrPostProcessingConfiguration(
                           new PostProcessingConfiguration(_meshConfig));
   }
+  _postProcConfig->setIsAddManifoldMappingTagAllowed(true);
   _postProcConfig->connectTags(tag);
 }
 

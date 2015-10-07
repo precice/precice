@@ -682,7 +682,10 @@ void BaseCouplingScheme::setIterationPostProcessing
   // with the evaluation/optimization of the coarse model representation.
   // otherwise, we start with the fine model representation as it's the only one
     _isCoarseModelOptimizationActive = _postProcessing->isMultilevelBasedApproach();
-}
+    if(_postProcessing->isMultilevelBasedApproach()){
+      _postProcessing->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+    }
+ }
 
 
 void BaseCouplingScheme::setupConvergenceMeasures()
@@ -732,7 +735,9 @@ void BaseCouplingScheme::addConvergenceMeasure
 }
 
 
-bool BaseCouplingScheme:: measureConvergence()
+bool BaseCouplingScheme:: measureConvergence
+(
+    std::map<int, utils::DynVector>& designSpecifications)
 {
   preciceTrace(__func__);
   bool allConverged = true;
@@ -742,17 +747,18 @@ bool BaseCouplingScheme:: measureConvergence()
     _convergenceWriter.writeData("Timestep", _timesteps);
     _convergenceWriter.writeData("Iteration", _iterations);
   }
-  auto designSpecifiactions = _postProcessing->getDesignSpecification(getSendData());
   for(size_t i = 0; i < _convergenceMeasures.size(); i++) {
     ConvergenceMeasure& convMeasure = _convergenceMeasures[i];
 
     // only apply convergence measures for fine model optimization, i.e., coupling
     if(convMeasure.isCoarse) continue;
 
+    std::cout<<"  measure convergence fine measure, id:"<<convMeasure.dataID<<std::endl;
+
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
-    utils::DynVector& q = designSpecifiactions.at(convMeasure.dataID);
+    utils::DynVector& q = designSpecifications.at(convMeasure.dataID);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
 
     if(not utils::MasterSlave::_slaveMode){
@@ -779,23 +785,27 @@ bool BaseCouplingScheme:: measureConvergence()
   return allConverged || oneSuffices;
 }
 
-
-bool BaseCouplingScheme:: measureConvergenceCoarseModelOptimization()
+// TODO: ugly hack with design specifications, however, getting them here is not possible as
+// parallel coupling scheme and multi-coupling scheme  need allData and not only getSendData()
+bool BaseCouplingScheme:: measureConvergenceCoarseModelOptimization
+(
+    std::map<int, utils::DynVector>& designSpecifications)
 {
   preciceTrace(__func__);
   bool allConverged = true;
   bool oneSuffices = false;
   assertion(_convergenceMeasures.size() > 0);
-  auto designSpecifiactions = _postProcessing->getDesignSpecification(getSendData());
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
 
     // only apply convergence measures for coarse model optimization
     if(not convMeasure.isCoarse) continue;
 
+    std::cout<<"  measure convergence coarse measure, id:"<<convMeasure.dataID<<std::endl;
+
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
-    utils::DynVector& q = designSpecifiactions.at(convMeasure.dataID);
+    utils::DynVector& q = designSpecifications.at(convMeasure.dataID);
     convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
 
     if (not convMeasure.measure->isConvergence()) {
@@ -835,15 +845,20 @@ void BaseCouplingScheme::initializeTXTWriters()
     _convergenceWriter.addData("Timestep", io::TXTTableWriter::INT );
     _convergenceWriter.addData("Iteration", io::TXTTableWriter::INT );
 
-    int i = 0;
+    int i = -1;
     for (ConvergenceMeasure& convMeasure : _convergenceMeasures) 
     {
+       i++;
+
        std::stringstream sstm, sstm2;
        sstm << "avgConvRate(" <<i<<")";
        sstm2 << "resNorm(" <<i<< ")";
        _iterationsWriter.addData(sstm.str(), io::TXTTableWriter::DOUBLE);
+
+       // only for fine model optimization, i.e., coupling
+       if(convMeasure.isCoarse) continue;
+
        _convergenceWriter.addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
-       i++;
     }
     _iterationsWriter.addData("deleted_Columns", io::TXTTableWriter::INT );
   }
@@ -956,9 +971,12 @@ void BaseCouplingScheme:: timestepCompleted()
   }
 }
 
-// TODO: same for coarse model optimization and coarse convergence measures...
 bool BaseCouplingScheme:: maxIterationsReached(){
-  return _iterations == _maxIterations;
+  if(not _isCoarseModelOptimizationActive){
+    return _iterations == _maxIterations;
+  }else{
+    return _iterationsCoarseOptimization == _maxIterations;
+  }
 }
 
 

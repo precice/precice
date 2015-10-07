@@ -218,32 +218,43 @@ void SerialCouplingScheme::advance()
         getM2N()->finishReceivePackage();
       }
       else {
-        if(not _isCoarseModelOptimizationActive){
-        //if(_nextModelToEvaluate == ModelResolution::fineModel){
+
+        std::cout<<"\n ### coarse model opt active (1): "<<_isCoarseModelOptimizationActive<<std::endl;
+
+
+        auto designSpecifications = getPostProcessing()->getDesignSpecification(getSendData());
+        // measure convergence of coupling iteration
+        if(not _isCoarseModelOptimizationActive /* || hasToMeasureConv */){
+          preciceDebug("measure convergence.");
           // measure convergence of the coupling iteration,
-          convergence = measureConvergence();
+          convergence = measureConvergence(designSpecifications);
           // Stop, when maximal iteration count (given in config) is reached
-          if (maxIterationsReached())
-            convergence = true;
-
-        }else{ // if(_nextModelToEvaluate == ModelResolution::coarseModel){
+          if (maxIterationsReached())   convergence = true;
+          if(not convergence) _isCoarseModelOptimizationActive = true;
+        }
+        // measure convergence for coarse model optimization
+        else{
+          preciceDebug("measure convergence of coarse model optimization.");
           // in case of multilevel post processing only: measure the convergence of the coarse model optimization
-          convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization();
+          convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
+          // Stop, when maximal iteration count (given in config) is reached
+          if (maxIterationsReached())   convergenceCoarseOptimization = true;
           convergence = false;
-          // TODO: Stop, when maximal iteration count (given in config) is reached
+
+          // in case of multilevel PP only: if coarse model optimization converged
+          // steering the requests for evaluation of coarse and fine model, respectively
+          if(convergenceCoarseOptimization){
+            _isCoarseModelOptimizationActive = false;
+          }else{
+            _isCoarseModelOptimizationActive = true;
+          }
         }
 
-        // in case of multilevel PP only: if coarse model optimization converged
-        // steering the requests for evaluation of coarse and fine model, respectively
-        if(convergenceCoarseOptimization){
-          _isCoarseModelOptimizationActive = false;
-          //_nextModelToEvaluate = ModelResolution::fineModel;
-        }else{
-          _isCoarseModelOptimizationActive = true;
-          //_nextModelToEvaluate = ModelResolution::coarseModel;
-        }
+        std::cout<<" ### coarse model opt active (2): "<<_isCoarseModelOptimizationActive<<std::endl;
+        std::cout<<" ### coarse model converged: "<<convergenceCoarseOptimization<<std::endl;
+        std::cout<<" ### fine model converged: "<<convergence<<"\n"<<std::endl;
 
-        // passed by reference, modified in MM post processing. No-op for all ather post-processings
+        // passed by reference, modified in MM post processing. No-op for all other post-processings
         getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
 
         // coupling iteration converged for current time step. Advance in time.
