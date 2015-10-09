@@ -1715,6 +1715,9 @@ void SolverInterfaceImpl:: readBlockScalarData
   double* values )
 {
   preciceTrace2("readBlockScalarData()", toDataID, size);
+  if (size == 0)
+    return;
+  preciceDebug("size = " << size);
   assertion(valueIndices != nullptr);
   assertion(values != nullptr);
   if (_clientMode){
@@ -2004,7 +2007,7 @@ void SolverInterfaceImpl:: mapWrittenData()
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     bool isNotEmpty = not _accessor->meshContext(context.fromMeshID).mesh->vertices().empty();
-    if (rightTime && not hasComputed && isNotEmpty){
+    if (rightTime && not hasComputed){
       preciceDebug("Compute write mapping from mesh \""
           << _accessor->meshContext(context.fromMeshID).mesh->getName()
           << "\" to mesh \""
@@ -2023,7 +2026,7 @@ void SolverInterfaceImpl:: mapWrittenData()
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasMapped = context.mappingContext.hasMappedData;
     bool isNotEmpty = context.fromData->values().size()>0;
-    if (hasMapping && rightTime && (not hasMapped) && isNotEmpty){
+    if (hasMapping && rightTime && (not hasMapped)){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       preciceDebug("Map data \"" << context.fromData->getName()
@@ -2064,7 +2067,7 @@ void SolverInterfaceImpl:: mapReadData()
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     bool isNotEmpty = not _accessor->meshContext(context.toMeshID).mesh->vertices().empty();
-    if (mapNow && not hasComputed && isNotEmpty){
+    if (mapNow && not hasComputed){
       preciceDebug("Compute read mapping from mesh \""
               << _accessor->meshContext(context.fromMeshID).mesh->getName()
               << "\" to mesh \""
@@ -2083,7 +2086,7 @@ void SolverInterfaceImpl:: mapReadData()
     bool hasMapping = context.mappingContext.mapping.get() != nullptr;
     bool hasMapped = context.mappingContext.hasMappedData;
     bool isNotEmpty = context.toData->values().size()>0;
-    if (mapNow && hasMapping && (not hasMapped) && isNotEmpty){
+    if (mapNow && hasMapping && (not hasMapped)){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
       assign(context.toData->values()) = 0.0;
