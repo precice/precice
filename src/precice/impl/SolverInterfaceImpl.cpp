@@ -521,7 +521,9 @@ double SolverInterfaceImpl:: advance
 
     handleExports();
 
-    resetWrittenData();
+    // deactivated the reset of written data, as it deletes all data that is not communicated
+    // within this cycle in the coupling data. This is not wanted forthe manifold mapping.
+    //resetWrittenData();
 
   }
   return _couplingScheme->getNextTimestepMaxLength();
@@ -649,16 +651,13 @@ void SolverInterfaceImpl:: fulfilledAction
 
 bool SolverInterfaceImpl::hasToEvaluateSurrogateModel()
 {
-  return true; // TODO: return false if no MM post processing
+  std::cout<<"_isCoarseModelOptimizationActive() = "<<_couplingScheme->isCoarseModelOptimizationActive();
+  return _couplingScheme->isCoarseModelOptimizationActive();
 }
 
 bool SolverInterfaceImpl::hasToEvaluateFineModel()
 {
-  if(_couplingScheme->_isCoarseModelOptimizationActive())
-  {
-    return false;
-  }
-  return true;
+  return not _couplingScheme->isCoarseModelOptimizationActive();
 }
 
 bool SolverInterfaceImpl:: hasMesh

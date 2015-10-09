@@ -244,6 +244,9 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
     }
     off += size;
   }
+
+  //std::cout<<"register Sol: input_x_star: "<<_input_Xstar<<std::endl;
+
   // register new solution x_star from coarse model optimization problem as input
   // to fine model evaluation.
   off = 0;
@@ -257,7 +260,10 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
       valuesPart[i] = _input_Xstar[i + off];
     }
     off += size;
+    //std::cout<<"validation, ID = "<<id<<": "<<*(cplData[id]->values)<<std::endl;
   }
+
+
 
  // preciceDebug(" next input x_star ("<<its<<"): \n"<<_input_Xstar.transpose());
  // preciceDebug(" coarse cpl iter   ("<<its<<"): \n"<<*(cplData[_coarseDataIDs[0]]->values));
@@ -407,7 +413,11 @@ void MMPostProcessing::performPostProcessing(
   assertion2(_outputFineModelScaled.size() == _fineResiduals.size(),_outputFineModelScaled.size(), _fineResiduals.size());
   assertion2(_input_Xstar.size() == _fineResiduals.size(), _input_Xstar.size(), _fineResiduals.size());
 
-  //if ((*_nextModelToEvaluate) == BaseCouplingScheme::ModelResolution::fineModel) {
+  /**
+   * Manifold Mapping cycle, computing the new design specification for the coarse model
+   * using input and output datafrom the coarse and the fine model of the previous iterates (time steps)
+   * Also updating mapping matrix (if jacobian_estimation = enabled)
+   */
   if(not (*_isCoarseModelOptimizationActive)){
 
     /**
@@ -441,7 +451,7 @@ void MMPostProcessing::performPostProcessing(
      * model optimization problem are updated (also Jacobian of MM mapping matrix if required).
      * next step: coarse model optimization, set the steering variable accordingly
      */
-    //(*_isCoarseModelOptimizationActive) = true;
+    (*_isCoarseModelOptimizationActive) = true;
 
 
     // The coarse model design specification is computed with scaled data and needs to be re-scaled to normal.
@@ -459,9 +469,13 @@ void MMPostProcessing::performPostProcessing(
     // one MM iteration completed
     its++;
     _firstIteration = false;
+  }
 
-    // coarse model optimization
-  } else {
+
+   /**
+    * coarse model optimization cycle for the problem x_star = argmin_x|| c(x) - q_k ||
+    */
+  if(*_isCoarseModelOptimizationActive){
     // view on coarse coupling data only
     DataMap coarseCplData;
     for (int id : _coarseDataIDs) {
@@ -492,14 +506,15 @@ void MMPostProcessing::performPostProcessing(
     _iterCoarseModelOpt++;
     // if coarse model optimization exceeds max iteration count, print warning and break coarse model optimization iteration
     if(_iterCoarseModelOpt >= _maxIterCoarseModelOpt){
-      (*_isCoarseModelOptimizationActive)  = false;
+    //  (*_isCoarseModelOptimizationActive)  = false;
       preciceWarning(__func__,"The coarse model optimization in coupling iteration "<< its
           << " exceeds maximal number of optimization cycles (" << _maxIterCoarseModelOpt <<" without convergence!");
 
     }
   }
 
-  preciceDebug("  * Manifold Mapping Iterations: "<<its<<"\n  * Coarse Model Optimization Iterations: "<<_iterCoarseModelOpt);
+  preciceDebug("  * Manifold Mapping Iterations: "<<its);
+  preciceDebug("  * Coarse Model Optimization Iterations: "<<_iterCoarseModelOpt);
 }
 
 
@@ -740,11 +755,9 @@ void MMPostProcessing::iterationsConverged
   // this has to be done in iterations converged, as PP won't be called any more if
   // convergence was achieved
 
-  /**  not necessary, as there is no evaluation of models betweeen last postprocessing and iterations converged.
   scale(cplData);
-  if(isSet(_designSpecification)) scale(_designSpecification, cplData);
+ // if(isSet(_designSpecification)) scale(_designSpecification, cplData);
   updateDifferenceMatrices(cplData);
-  */
   // no undoScaling() needed, as input/output data is not modified
 
 

@@ -406,7 +406,7 @@ void BaseQNPostProcessing::performPostProcessing
     _scaledValues += _residuals; // = x^k + delta_x + r^k
     _scaledValues -= q; // = x^k + delta_x + r^k - q^k
 
-    std::cout<<"\n  xUpdate("<<its<<"): "<<xUpdate<<std::endl;
+   // std::cout<<"\n  xUpdate("<<its<<"): "<<xUpdate<<std::endl;
 
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
@@ -556,9 +556,9 @@ void BaseQNPostProcessing::iterationsConverged
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
   // convergence was achieved
-  //scaling(cplData);
-  //updateDifferenceMatrices(cplData);
-  //undoScaling(cplData);
+  scaling(cplData);
+  updateDifferenceMatrices(cplData);
+  undoScaling(cplData);
 
 
   _firstTimeStep = false;

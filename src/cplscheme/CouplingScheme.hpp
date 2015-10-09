@@ -147,7 +147,7 @@ public:
 
 
   // default is false, i.e., no multilevel PP
-  virtual bool _isCoarseModelOptimizationActive()
+  virtual bool isCoarseModelOptimizationActive()
   {
     return false;
   }
