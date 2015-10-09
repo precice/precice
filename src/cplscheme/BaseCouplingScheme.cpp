@@ -942,6 +942,8 @@ void BaseCouplingScheme:: updateTimeAndIterations
     if(convergenceCoarseOptimization){
       _totalIterations++;
       _iterations++;
+
+      _iterationsCoarseOptimization = 1;
       // The computed timestep part equals the timestep length, since the
       // timestep remainder is zero. Subtract the timestep length do another
       // coupling iteration.
@@ -954,6 +956,7 @@ void BaseCouplingScheme:: updateTimeAndIterations
     _totalIterationsCoarseOptimization++;
   } else{
     _iterationsCoarseOptimization = 1;
+    _totalIterationsCoarseOptimization = 1;
     _iterations = 1;
   }
 }

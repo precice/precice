@@ -751,6 +751,15 @@ void MMPostProcessing::iterationsConverged
   tSteps++;
   deletedColumns = 0;
 
+
+  /** in each advance() cycle in the coupling scheme, either MMPostProcessing::performPostProcessing() or
+   *  MMPostProcessing::iterationsConverged() is called. Both, if and only if the coarse model has converged.
+   *  Hence, we need to call iterationsConverged() for the coarse model.
+   */
+  _coarseModelOptimization->iterationsConverged(cplData);
+  _iterCoarseModelOpt = 0;
+
+
   // the most recent differences for the F, C matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
   // convergence was achieved
