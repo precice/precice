@@ -126,12 +126,6 @@ public:
   void send (
     bool   itemToSend);
 
-  /**
-   * @brief The master sends a int to the other master, for performance reasons, we
-   * neglect the gathering and checking step.
-   */
-  void send (
-    int   itemToSend);
 
   /**
    * @brief The master sends a double to the other master, for performance reasons, we
@@ -154,12 +148,6 @@ public:
    */
   void receive (
     bool&  itemToReceive);
-
-  /**
-   * @brief All slaves receive a int (the same for each slave).
-   */
-  void receive (
-    int&  itemToReceive);
 
   /**
    * @brief All slaves receive a double (the same for each slave).

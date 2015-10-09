@@ -60,8 +60,6 @@ public:
 
   static void broadcast(bool& value);
 
-  static void broadcast(int& value);
-
   static void broadcast(double& value);
   
   static void broadcast(double* values, int size);

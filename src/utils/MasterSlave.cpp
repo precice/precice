@@ -210,29 +210,6 @@ MasterSlave::broadcast(bool& value) {
   }
 }
 
-void
-MasterSlave::broadcast(int& value) {
-  preciceTrace("broadcast(int&)");
-
-  if (not _masterMode && not _slaveMode) {
-    return;
-  }
-
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
-
-  Event e("MasterSlave::broadcast");
-
-  if (_masterMode) {
-    // Broadcast (send) value.
-    _communication->broadcast(value);
-  }
-
-  if (_slaveMode) {
-    // Broadcast (receive) value.
-    _communication->broadcast(value, 0);
-  }
-}
 
 void
 MasterSlave::broadcast(double& value) {
