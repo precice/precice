@@ -1536,6 +1536,8 @@ void SolverInterfaceImpl:: writeBlockVectorData
   double* values )
 {
   preciceTrace2("writeBlockVectorData()", fromDataID, size);
+  if (size == 0)
+    return;
   assertion(valueIndices != nullptr);
   assertion(values != nullptr);
   if (_clientMode){
@@ -1603,6 +1605,8 @@ void SolverInterfaceImpl:: writeBlockScalarData
   double* values )
 {
   preciceTrace2("writeBlockScalarData()", fromDataID, size);
+  if (size == 0)
+    return;
   assertion(valueIndices != nullptr);
   assertion(values != nullptr);
   if (_clientMode){
@@ -1653,6 +1657,8 @@ void SolverInterfaceImpl:: readBlockVectorData
   double* values )
 {
   preciceTrace2("readBlockVectorData()", toDataID, size);
+  if (size == 0)
+    return;
   assertion(valueIndices != nullptr);
   assertion(values != nullptr);
   if (_clientMode){
