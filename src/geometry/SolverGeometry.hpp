@@ -5,7 +5,7 @@
 #define PRECICE_GEOMETRY_SOLVERGEOMETRY_HPP_
 
 #include "Geometry.hpp"
-#include "com/SharedPointer.hpp"
+#include "com/Communication.hpp"
 #include "utils/Dimensions.hpp"
 #include "tarch/logging/Log.h"
 #include <string>

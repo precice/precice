@@ -12,7 +12,8 @@
 #include "spacetree/SharedPointer.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
-#include "m2n/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
+#include "m2n/config/M2NConfiguration.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/xml/XMLTag.hpp"
 #include <string>
@@ -89,7 +90,7 @@ public:
     return _meshConfiguration;
   }
 
-  const m2n::PtrM2NConfiguration getM2NConfiguration() const
+  const m2n::M2NConfiguration::SharedPointer getM2NConfiguration() const
   {
     return _m2nConfiguration;
   }
@@ -172,7 +173,7 @@ private:
 
   mesh::PtrMeshConfiguration _meshConfiguration;
 
-  m2n::PtrM2NConfiguration _m2nConfiguration;
+  m2n::M2NConfiguration::SharedPointer _m2nConfiguration;
 
   geometry::PtrGeometryConfiguration _geometryConfiguration;
 

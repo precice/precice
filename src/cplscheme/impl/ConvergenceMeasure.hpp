@@ -58,6 +58,12 @@ public:
    * @brief Adds current convergence information to output stream.
    */
   virtual std::string printState() = 0;
+  
+  /**
+   * @brief Returns the l2-norm of the coupling residuum
+   */
+  virtual double getNormResidual()
+    {return 0;}
 };
 
 }}} // namespace precice, cplscheme, impl

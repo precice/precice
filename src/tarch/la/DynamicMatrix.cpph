@@ -5,6 +5,7 @@
 #define _TARCH_LA_DYNAMICMATRIX_CPPH_
 
 #include "tarch/la/DynamicMatrix.h"
+#include <sys/unistd.h>
 
 namespace tarch {
 namespace la {
@@ -66,8 +67,8 @@ Scalar& DynamicMatrix<Scalar>::operator() (
   int rowIndex,
   int colIndex
 ) {
-  assertion ((rowIndex >= 0) && (rowIndex < _rows));
-  assertion ((colIndex >= 0) && (colIndex < _cols));
+  assertion2 ((rowIndex >= 0) && (rowIndex < _rows), rowIndex, _rows);
+  assertion2 ((colIndex >= 0) && (colIndex < _cols), colIndex, _cols);
   return _values[rowIndex * _cols + colIndex];
 }
 
@@ -76,9 +77,21 @@ const Scalar& DynamicMatrix<Scalar>::operator() (
   int rowIndex,
   int colIndex
 ) const {
-  assertion ((rowIndex >= 0) && (rowIndex < _rows));
-  assertion ((colIndex >= 0) && (colIndex < _cols));
+  assertion2 ((rowIndex >= 0) && (rowIndex < _rows), rowIndex, _rows);
+  assertion2 ((colIndex >= 0) && (colIndex < _cols), colIndex, _cols);
   return _values[rowIndex * _cols + colIndex];
+}
+
+template<typename Scalar>
+DynamicMatrix<Scalar>::operator Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>() const
+{
+  Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> A(_rows, _cols);
+  for (int i = 0; i < _rows; i++) 
+    for (int j = 0; j < _cols; i++) {
+      A(i,j) = _values[i*_cols + j];
+    }
+  
+  return A;
 }
 
 template<typename Scalar>

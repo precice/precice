@@ -10,9 +10,8 @@
 
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
-#include "tarch/logging/Log.h"
-#include "com/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "tarch/logging/Log.h"
 
 namespace precice {
 namespace m2n {
@@ -31,11 +30,27 @@ namespace m2n {
  */
 class PointToPointCommunication : public DistributedCommunication {
 public:
+  struct ScopedSetEventNamePrefix {
+    ScopedSetEventNamePrefix(std::string const& prefix);
+
+    ~ScopedSetEventNamePrefix();
+
+  private:
+    std::string _prefix;
+  };
+
+public:
+  static void setEventNamePrefix(std::string const& prefix);
+
+  static std::string const& eventNamePrefix();
+
+public:
   /**
    * @brief Constructor.
    */
-  PointToPointCommunication(com::PtrCommunicationFactory communicationFactory,
-                            mesh::PtrMesh mesh);
+  PointToPointCommunication(
+      com::CommunicationFactory::SharedPointer communicationFactory,
+      mesh::PtrMesh mesh);
 
   /**
    * @brief Destructor.
@@ -79,29 +94,54 @@ public:
    * @brief Sends a subset of local double values corresponding to local indices
    *        deduced from the current and remote vertex distributions.
    */
-  virtual void send(double* itemsToSend, int size, int valueDimension = 1);
+  virtual void send(double* itemsToSend, size_t size, int valueDimension = 1);
 
   /**
    * @brief Receives a subset of local double values corresponding to local
    *        indices deduced from the current and remote vertex distributions.
    */
   virtual void receive(double* itemsToReceive,
-                       int size,
+                       size_t size,
                        int valueDimension = 1);
 
 private:
   static tarch::logging::Log _log;
 
-  com::PtrCommunicationFactory _communicationFactory;
+  static std::string _prefix;
 
+private:
+  com::CommunicationFactory::SharedPointer _communicationFactory;
+
+  /**
+   * @brief Defines mapping between:
+   *        1. local (to the current process) remote process rank;
+   *        2. global remote process rank;
+   *        3. local data indices, which define a subset of local (for process
+   *           rank in the current participant) data to be communicated between
+   *           the current process rank and the remote process rank;
+   *        4. communication object (provides point-to-point communication
+   *           routines).
+   */
   struct Mapping {
     int localRemoteRank;
     int globalRemoteRank;
     std::vector<int> indices;
-    com::PtrCommunication communication;
+    com::Communication::SharedPointer communication;
+    com::Request::SharedPointer request;
+    size_t offset;
   };
 
+  /**
+   * @brief Local (for process rank in the current participant) vector of
+   *        mappings (one to service each point-to-point connection).
+   */
   std::vector<Mapping> _mappings;
+
+  std::vector<double> _buffer;
+
+  size_t _localIndexCount;
+
+  size_t _totalIndexCount;
 
   bool _isConnected;
 };

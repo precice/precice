@@ -5,8 +5,10 @@
 #define PRECICE_UTILS_POINTERVECTOR_HPP_
 
 #include "Globals.hpp"
-#include <vector>
+
 #include "boost/iterator/indirect_iterator.hpp"
+
+#include <vector>
 
 namespace precice {
 namespace utils {
@@ -148,7 +150,7 @@ public:
 
    void deleteElements ()
    {
-      foreach ( CONTENT_T * elem, _content ) {
+      for ( CONTENT_T * elem : _content ) {
          assertion ( elem != NULL );
          delete ( elem );
       }

@@ -9,7 +9,6 @@
 #include "m2n/M2N.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
-#include "m2n/SharedPointer.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -34,7 +33,6 @@ GatherScatterCommunicationTest:: GatherScatterCommunicationTest ()
 void GatherScatterCommunicationTest:: run ()
 {
   preciceTrace ( "run" );
-# ifndef PRECICE_NO_MPI
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 3){
     std::vector<int> ranksWanted;
@@ -46,7 +44,6 @@ void GatherScatterCommunicationTest:: run ()
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
-# endif // not PRECICE_NO_MPI
 }
 
 void GatherScatterCommunicationTest:: testSendReceiveAll ()
@@ -54,24 +51,26 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
   preciceTrace ( "testSendReceiveAll" );
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-  com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::PtrDistributedComFactory distrFactory = m2n::PtrDistributedComFactory(
-                          new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  com::Communication::SharedPointer participantCom =
+      com::Communication::SharedPointer(new com::MPIDirectCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
+      new m2n::GatherScatterComFactory(participantCom));
+  m2n::M2N::SharedPointer m2n = m2n::M2N::SharedPointer(new m2n::M2N(participantCom, distrFactory));
+  com::Communication::SharedPointer masterSlaveCom =
+      com::Communication::SharedPointer(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
   utils::Parallel::synchronizeProcesses();
 
   if (utils::Parallel::getProcessRank() == 0){ //Participant 1
-    utils::Parallel::initialize ( NULL, NULL, "Part1" );
+    utils::Parallel::splitCommunicator( "Part1" );
     utils::MasterSlave::_rank = 0;
     utils::MasterSlave::_size = 1;
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
   }
   else if(utils::Parallel::getProcessRank() == 1){//Participant 2 - Master
-    utils::Parallel::initialize ( NULL, NULL, "Part2Master" );
+    utils::Parallel::splitCommunicator( "Part2Master" );
     utils::MasterSlave::_rank = 0;
     utils::MasterSlave::_size = 3;
     utils::MasterSlave::_slaveMode = false;
@@ -80,7 +79,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     masterSlaveCom->setRankOffset(1);
   }
   else if(utils::Parallel::getProcessRank() == 2){//Participant 2 - Slave1
-    utils::Parallel::initialize ( NULL, NULL, "Part2Slaves");
+    utils::Parallel::splitCommunicator( "Part2Slaves");
     utils::MasterSlave::_rank = 1;
     utils::MasterSlave::_size = 3;
     utils::MasterSlave::_slaveMode = true;
@@ -88,7 +87,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     masterSlaveCom->requestConnection( "Part2Master", "Part2Slaves", 0, 2 );
   }
   else if(utils::Parallel::getProcessRank() == 3){//Participant 2 - Slave2
-    utils::Parallel::initialize ( NULL, NULL, "Part2Slaves");
+    utils::Parallel::splitCommunicator( "Part2Slaves");
     utils::MasterSlave::_rank = 2;
     utils::MasterSlave::_size = 3;
     utils::MasterSlave::_slaveMode = true;
@@ -123,6 +122,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
 
   if (utils::Parallel::getProcessRank() == 0){ //Part1
     mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
+    m2n->createDistributedCommunication(pMesh);
     m2n->acceptSlavesConnection ( "Part1", "Part2Master");
     utils::DynVector values(numberOfVertices);
     assignList(values) = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
@@ -185,6 +185,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
   utils::MasterSlave::_masterMode = false;
 
   utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
 }
 
 }}} // namespace precice, m2n, tests

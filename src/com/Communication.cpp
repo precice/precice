@@ -7,54 +7,134 @@
 
 #include "Request.hpp"
 
+#include "utils/Globals.hpp"
+
 namespace precice {
 namespace com {
+tarch::logging::Log Communication::_log(
+    "precice::com::Communication");
+
+
+
 void
 Communication::broadcast() {
+  preciceTrace("broadcast()");
 }
 
 void
 Communication::broadcast(int* itemsToSend, int size) {
-  std::vector<com::PtrRequest> requests;
+  preciceTrace1("broadcast(int*)", size);
+
+  std::vector<Request::SharedPointer> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
 
-  for (int rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemsToSend, size, rank + _rankOffset);
 
     requests.push_back(request);
   }
 
-  for (auto request : requests) {
-    request->wait();
-  }
+  Request::wait(requests);
 }
 
 void
 Communication::broadcast(int* itemsToReceive, int size, int rankBroadcaster) {
+  preciceTrace1("broadcast(int*)", size);
+
   receive(itemsToReceive, size, rankBroadcaster + _rankOffset);
 }
 
 void
 Communication::broadcast(int itemToSend) {
-  std::vector<com::PtrRequest> requests;
+  preciceTrace("broadcast(int)");
+
+  std::vector<Request::SharedPointer> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
 
-  for (int rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(&itemToSend, rank + _rankOffset);
 
     requests.push_back(request);
   }
 
-  for (auto request : requests) {
-    request->wait();
-  }
+  Request::wait(requests);
 }
 
 void
 Communication::broadcast(int& itemToReceive, int rankBroadcaster) {
+  preciceTrace("broadcast(int&)");
+
   receive(itemToReceive, rankBroadcaster + _rankOffset);
+}
+
+void
+Communication::broadcast(double* itemsToSend, int size) {
+  preciceTrace1("broadcast(double*)", size);
+
+  std::vector<Request::SharedPointer> requests;
+
+  requests.reserve(getRemoteCommunicatorSize());
+
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+    auto request = aSend(itemsToSend, size, rank + _rankOffset);
+
+    requests.push_back(request);
+  }
+
+  Request::wait(requests);
+}
+
+void
+Communication::broadcast(double* itemsToReceive,
+                         int size,
+                         int rankBroadcaster) {
+  preciceTrace1("broadcast(double*)", size);
+  receive(itemsToReceive, size, rankBroadcaster + _rankOffset);
+}
+
+void
+Communication::broadcast(double itemToSend) {
+  preciceTrace("broadcast(double)");
+
+  std::vector<Request::SharedPointer> requests;
+
+  requests.reserve(getRemoteCommunicatorSize());
+
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+    auto request = aSend(&itemToSend, rank + _rankOffset);
+
+    requests.push_back(request);
+  }
+
+  Request::wait(requests);
+}
+
+void
+Communication::broadcast(double& itemToReceive, int rankBroadcaster) {
+  preciceTrace("broadcast(double&)");
+  receive(itemToReceive, rankBroadcaster + _rankOffset);
+}
+
+void
+Communication::broadcast(bool itemToSend) {
+  preciceTrace("broadcast(bool)");
+
+  int item = itemToSend;
+
+  broadcast(item);
+}
+
+void
+Communication::broadcast(bool& itemToReceive, int rankBroadcaster) {
+  preciceTrace("broadcast(bool&)");
+
+  int item;
+
+  broadcast(item, rankBroadcaster);
+
+  itemToReceive = item;
 }
 }
 } // namespace precice, com

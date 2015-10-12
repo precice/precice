@@ -6,7 +6,7 @@
 
 #include "precice/ClosestMesh.hpp"
 #include "precice/VoxelPosition.hpp"
-#include "com/SharedPointer.hpp"
+#include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Dimensions.hpp"
@@ -34,7 +34,7 @@ public:
   RequestManager (
     bool                  geometryMode,
     SolverInterfaceImpl&  solverInterfaceImpl,
-    com::PtrCommunication clientServerCommunication,
+    com::Communication::SharedPointer clientServerCommunication,
     cplscheme::PtrCouplingScheme couplingScheme);
 
   /**
@@ -108,6 +108,11 @@ public:
    * @brief Requests get size of vertices of preCICE mesh.
    */
   int requestGetMeshVertexSize(int meshID);
+
+  /**
+   * @brief Requests reset of a preCICE mesh.
+   */
+  void requestResetMesh(int meshID);
 
   /**
    * @brief Requests set vertex positions from server.
@@ -283,6 +288,7 @@ private:
     REQUEST_INQUIRE_VOXEL_POSITION,
     REQUEST_SET_MESH_VERTEX,
     REQUEST_GET_MESH_VERTEX_SIZE,
+    REQUEST_RESET_MESH,
     REQUEST_SET_MESH_VERTICES,
     REQUEST_GET_MESH_VERTICES,
     REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS,
@@ -311,12 +317,9 @@ private:
 
   SolverInterfaceImpl& _interface;
 
-  com::PtrCommunication _com;
+  com::Communication::SharedPointer _com;
 
   cplscheme::PtrCouplingScheme _couplingScheme;
-
-  // @brief Locks the next receive operation of the server to a specific client.
-  int _lockServerToClient;
 
   /**
    * @brief Handles request initialize from client.
@@ -367,6 +370,11 @@ private:
    * @brief Handles request get mesh vertex size from client.
    */
   void handleRequestGetMeshVertexSize(int rankSender);
+
+  /**
+   * @brief Handles request reset mesh from client.
+   */
+  void handleRequestResetMesh(int rankSender);
 
   /**
    * @brief Handles request set vertex positions from client.

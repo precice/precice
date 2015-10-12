@@ -25,31 +25,23 @@ tarch::services::ServiceRepository& tarch::services::ServiceRepository::getInsta
 
 
 void tarch::services::ServiceRepository::addService( Service* const service, const std::string& name ) {
-  assertion( service!=0 );
+  assertion( service!=nullptr );
   _services.push_back( service );
   _serviceNames.push_back( name );
 }
 
 
 void tarch::services::ServiceRepository::receiveDanglingMessages() {
-  for (
-      std::vector<Service*>::iterator p = _services.begin();
-      p != _services.end();
-      p++
-  ) {
-    (*p)->receiveDanglingMessages();
+  for (auto & elem : _services) {
+    (elem)->receiveDanglingMessages();
   }
 }
 
 
 std::string tarch::services::ServiceRepository::getListOfRegisteredServices() const {
   std::ostringstream result;
-  for (
-      std::vector<std::string>::const_iterator p = _serviceNames.begin();
-      p != _serviceNames.end();
-      p++
-  ) {
-    result << " " << *p;
+  for (const auto & elem : _serviceNames) {
+    result << " " << elem;
   }
   return result.str();
 }

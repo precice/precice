@@ -8,7 +8,7 @@
 #include "geometry/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "spacetree/SharedPointer.hpp"
-#include "com/SharedPointer.hpp"
+#include "com/Communication.hpp"
 #include "mapping/Mapping.hpp"
 #include "SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
@@ -44,6 +44,9 @@ struct MeshContext
    // @brief True, if accessor does create the geometry of the mesh.
    bool provideMesh;
 
+   // @brief True, if mesh is decomposed based on PreFilter-PostFilter strategy.
+   bool doesPreFiltering;
+
    // @brief Offset only applied to meshes local to the accessor.
    utils::DynVector localOffset;
 
@@ -68,6 +71,7 @@ struct MeshContext
      receiveMeshFrom ( "" ),
      safetyFactor(-1.0),
      provideMesh ( false ),
+     doesPreFiltering ( false ),
      localOffset ( dimensions, 0.0 ),
      geometry (),
      fromMappingContext(),

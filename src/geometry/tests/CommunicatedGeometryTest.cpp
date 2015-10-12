@@ -7,6 +7,9 @@
 #include "geometry/Geometry.hpp"
 #include "geometry/SharedPointer.hpp"
 #include "geometry/CommunicatedGeometry.hpp"
+#include "geometry/impl/Decomposition.hpp"
+#include "geometry/impl/PreFilterPostFilterDecomposition.hpp"
+#include "geometry/impl/BroadcastFilterDecomposition.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Parallel.hpp"
 #include "mapping/SharedPointer.hpp"
@@ -15,7 +18,6 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
-#include "m2n/SharedPointer.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
@@ -62,28 +64,30 @@ void CommunicatedGeometryTest:: testScatterMesh ()
   preciceTrace ( "testScatterMesh" );
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-  com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::PtrDistributedComFactory distrFactory = m2n::PtrDistributedComFactory(
-                        new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  com::Communication::SharedPointer participantCom =
+      com::Communication::SharedPointer(new com::MPIDirectCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
+      new m2n::GatherScatterComFactory(participantCom));
+  m2n::M2N::SharedPointer m2n = m2n::M2N::SharedPointer(new m2n::M2N(participantCom, distrFactory));
+  com::Communication::SharedPointer masterSlaveCom =
+      com::Communication::SharedPointer(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
   utils::Parallel::synchronizeProcesses();
 
   if (utils::Parallel::getProcessRank() == 0){ //SOLIDZ
-    utils::Parallel::initialize ( NULL, NULL, "SOLIDZ" );
+    utils::Parallel::splitCommunicator( "SOLIDZ" );
     m2n->acceptMasterConnection ( "SOLIDZ", "NASTINMaster");
   }
   else if(utils::Parallel::getProcessRank() == 1){//Master
-    utils::Parallel::initialize ( NULL, NULL, "NASTINMaster" );
+    utils::Parallel::splitCommunicator( "NASTINMaster" );
     m2n->requestMasterConnection ( "SOLIDZ", "NASTINMaster");
   }
   else if(utils::Parallel::getProcessRank() == 2){//Slave1
-    utils::Parallel::initialize ( NULL, NULL, "NASTINSlaves");
+    utils::Parallel::splitCommunicator( "NASTINSlaves");
   }
   else if(utils::Parallel::getProcessRank() == 3){//Slave2
-    utils::Parallel::initialize ( NULL, NULL, "NASTINSlaves");
+    utils::Parallel::splitCommunicator( "NASTINSlaves");
   }
 
   if(utils::Parallel::getProcessRank() == 1){//Master
@@ -107,8 +111,8 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     utils::MasterSlave::_masterMode = false;
     mesh::PtrMesh pSolidzMesh1(new mesh::Mesh("SolidzMesh1", dimensions, flipNormals));
     mesh::PtrMesh pSolidzMesh2(new mesh::Mesh("SolidzMesh2", dimensions, flipNormals));
-    CommunicatedGeometry geo1( offset, "SOLIDZ", "SOLIDZ", dimensions);
-    CommunicatedGeometry geo2( offset, "SOLIDZ", "SOLIDZ", dimensions);
+    CommunicatedGeometry geo1( offset, "SOLIDZ", "SOLIDZ", nullptr);
+    CommunicatedGeometry geo2( offset, "SOLIDZ", "SOLIDZ", nullptr);
     geo1.addReceiver("NASTINMaster",m2n);
     geo2.addReceiver("NASTINMaster",m2n);
 
@@ -193,16 +197,20 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     }
 
     pNastinMesh->computeState();
-    CommunicatedGeometry geo1( offset, "NASTINMaster", "SOLIDZ", dimensions);
-    CommunicatedGeometry geo2( offset, "NASTINMaster", "SOLIDZ", dimensions);
-    geo1.setBoundingFromMapping(boundingFromMapping1);
-    geo1.setBoundingToMapping(boundingToMapping1);
-    geo2.setBoundingFromMapping(boundingFromMapping2);
-    geo2.setBoundingToMapping(boundingToMapping2);
+
+    impl::PtrDecomposition decomp1 = impl::PtrDecomposition(
+            new impl::BroadcastFilterDecomposition(dimensions,  0.1));
+    impl::PtrDecomposition decomp2 = impl::PtrDecomposition(
+            new impl::PreFilterPostFilterDecomposition(dimensions, 0.1));
+
+    CommunicatedGeometry geo1( offset, "NASTINMaster", "SOLIDZ", decomp1);
+    CommunicatedGeometry geo2( offset, "NASTINMaster", "SOLIDZ", decomp2);
+    decomp1->setBoundingFromMapping(boundingFromMapping1);
+    decomp1->setBoundingToMapping(boundingToMapping1);
+    decomp2->setBoundingFromMapping(boundingFromMapping2);
+    decomp2->setBoundingToMapping(boundingToMapping2);
     geo1.addReceiver("NASTINMaster", m2n);
     geo2.addReceiver("NASTINMaster", m2n);
-    geo1.setSafetyFactor(0.1);
-    geo2.setSafetyFactor(0.1);
     geo1.create(*pSolidzMesh1);
     geo2.create(*pSolidzMesh2);
 
@@ -229,6 +237,7 @@ void CommunicatedGeometryTest:: testScatterMesh ()
   }
   utils::MasterSlave::_slaveMode = false;
   utils::MasterSlave::_masterMode = false;
+  utils::Parallel::clearGroups();
   utils::Parallel::synchronizeProcesses();
 }
 
@@ -236,28 +245,30 @@ void CommunicatedGeometryTest:: testGatherMesh ()
 {
   preciceTrace ( "testGatherMesh" );
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
-  com::PtrCommunication participantCom = com::PtrCommunication(new com::MPIDirectCommunication());
-  m2n::PtrDistributedComFactory distrFactory = m2n::PtrDistributedComFactory(
-                          new m2n::GatherScatterComFactory(participantCom));
-  m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(participantCom, distrFactory));
-  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  com::Communication::SharedPointer participantCom =
+      com::Communication::SharedPointer(new com::MPIDirectCommunication());
+  m2n::DistributedComFactory::SharedPointer distrFactory = m2n::DistributedComFactory::SharedPointer(
+      new m2n::GatherScatterComFactory(participantCom));
+  m2n::M2N::SharedPointer m2n = m2n::M2N::SharedPointer(new m2n::M2N(participantCom, distrFactory));
+  com::Communication::SharedPointer masterSlaveCom =
+      com::Communication::SharedPointer(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
   utils::Parallel::synchronizeProcesses();
 
   if (utils::Parallel::getProcessRank() == 0){ //NASTIN
-    utils::Parallel::initialize ( NULL, NULL, "NASTIN" );
+    utils::Parallel::splitCommunicator( "NASTIN" );
     m2n->acceptMasterConnection ( "NASTIN", "SOLIDZMaster");
   }
   else if(utils::Parallel::getProcessRank() == 1){//Master
-    utils::Parallel::initialize ( NULL, NULL, "SOLIDZMaster" );
+    utils::Parallel::splitCommunicator( "SOLIDZMaster" );
     m2n->requestMasterConnection ( "NASTIN", "SOLIDZMaster" );
   }
   else if(utils::Parallel::getProcessRank() == 2){//Slave1
-    utils::Parallel::initialize ( NULL, NULL, "SOLIDZSlaves");
+    utils::Parallel::splitCommunicator( "SOLIDZSlaves");
   }
   else if(utils::Parallel::getProcessRank() == 3){//Slave2
-    utils::Parallel::initialize ( NULL, NULL, "SOLIDZSlaves");
+    utils::Parallel::splitCommunicator( "SOLIDZSlaves");
   }
 
   if(utils::Parallel::getProcessRank() == 1){//Master
@@ -280,9 +291,8 @@ void CommunicatedGeometryTest:: testGatherMesh ()
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
-    CommunicatedGeometry geo( offset, "NASTIN", "SOLIDZMaster", dimensions);
+    CommunicatedGeometry geo( offset, "NASTIN", "SOLIDZMaster", nullptr);
     geo.addReceiver("NASTIN",m2n);
-    geo.setSafetyFactor(0.1);
     geo.create(*pSolidzMesh);
     validate(pSolidzMesh->vertices().size()==6);
     validate(pSolidzMesh->edges().size()==4);
@@ -297,10 +307,10 @@ void CommunicatedGeometryTest:: testGatherMesh ()
       utils::MasterSlave::_slaveMode = false;
       utils::MasterSlave::_masterMode = true;
       utils::DynVector position(dimensions);
+      assignList(position) = 0.0, 0.0;
       mesh::Vertex& v1 = pSolidzMesh->createVertex(position);
       assignList(position) = 0.0, 1.5;
       mesh::Vertex& v2 = pSolidzMesh->createVertex(position);
-      assignList(position) = 0.0, 2.5;
       pSolidzMesh->createEdge(v1,v2);
     }
     else if(utils::Parallel::getProcessRank() == 2){//Slave1
@@ -315,6 +325,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
       utils::MasterSlave::_slaveMode = true;
       utils::MasterSlave::_masterMode = false;
       utils::DynVector position(dimensions);
+      assignList(position) = 0.0, 3.5;
       mesh::Vertex& v3 = pSolidzMesh->createVertex(position);
       assignList(position) = 0.0, 4.5;
       mesh::Vertex& v4 = pSolidzMesh->createVertex(position);
@@ -327,13 +338,28 @@ void CommunicatedGeometryTest:: testGatherMesh ()
       pSolidzMesh->createEdge(v5,v6);
     }
 
-    CommunicatedGeometry geo( offset, "SOLIDZMaster", "SOLIDZMaster", dimensions);
+    CommunicatedGeometry geo( offset, "SOLIDZMaster", "SOLIDZMaster", nullptr);
     geo.addReceiver("NASTIN", m2n);
     geo.create(*pSolidzMesh);
+    pSolidzMesh->computeDistribution();
+
+    if(utils::Parallel::getProcessRank() == 2){//Slave1
+      validate(pSolidzMesh->getVertexOffsets()[0]==2);
+      validate(pSolidzMesh->getVertexOffsets()[1]==2);
+      validate(pSolidzMesh->getVertexOffsets()[2]==6);
+    }
+    else if(utils::Parallel::getProcessRank() == 3){//Slave2
+      validate(pSolidzMesh->getVertexOffsets()[0]==2);
+      validate(pSolidzMesh->getVertexOffsets()[1]==2);
+      validate(pSolidzMesh->getVertexOffsets()[2]==6);
+    }
+
+
   }
   utils::MasterSlave::_slaveMode = false;
   utils::MasterSlave::_masterMode = false;
   utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
 }
 
 

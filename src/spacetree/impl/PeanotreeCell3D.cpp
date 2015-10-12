@@ -22,7 +22,7 @@ PeanotreeCell3D:: PeanotreeCell3D()
 
 PeanotreeCell3D:: ~PeanotreeCell3D()
 {
-  if (_content != NULL){
+  if (_content != nullptr){
     delete _content;
   }
   _childs.deleteElements();
@@ -33,7 +33,7 @@ bool PeanotreeCell3D:: needsRefinement
   const utils::DynVector& cellHalflengths,
   double                  refinementLimit )
 {
-  assertion(_content != NULL);
+  assertion(_content != nullptr);
   // All halflengths are assumed to be equal
   if (tarch::la::smaller(cellHalflengths[0], refinementLimit)){
     return false;
@@ -50,7 +50,7 @@ void PeanotreeCell3D:: refine
   const utils::DynVector& cellHalflengths )
 {
   preciceTrace2 ( "refine()", cellCenter, cellHalflengths );
-  assertion ( _content != NULL );
+  assertion ( _content != nullptr );
   assertion1 ( _childs.size() == 0, _childs.size() );
   int dim = cellCenter.size();
   int threePowerD = dim==2 ? 9 : 27;  // only 2D and 3D supported
@@ -72,7 +72,7 @@ void PeanotreeCell3D:: refine
     }
   }
   delete _content;
-  _content = NULL; // Important to recognize the cell as node
+  _content = nullptr; // Important to recognize the cell as node
 }
 
 int PeanotreeCell3D:: getChildIndex
@@ -129,7 +129,7 @@ void PeanotreeCell3D:: accept
 
 void PeanotreeCell3D:: clear()
 {
-  if (_content != NULL){
+  if (_content != nullptr){
     _content->clear();
   }
   else {

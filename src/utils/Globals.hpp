@@ -4,20 +4,20 @@
 #ifndef PRECICE_UTILS_GLOBALS_HPP_
 #define PRECICE_UTILS_GLOBALS_HPP_
 
+#include "MasterSlave.hpp"
+
+#include "tarch/Assertions.h"
+
+#include <boost/foreach.hpp>
+
 #include <string>
 #include <sstream>
 #include <iomanip>
 #include <cstdlib>
-#include "boost/foreach.hpp"
-#include "utils/MasterSlave.hpp"
 
-#include "tarch/Assertions.h"
 //#define assertion assertion
 
 #define foreach BOOST_FOREACH
-
-#define foriter(itertype,itervar,container) \
-  for(itertype itervar = container.begin(); itervar != container.end(); itervar++)
 
 #ifndef PRECICE_NO_MPI
 #include "utils/Parallel.hpp"

@@ -125,7 +125,7 @@ GeometryConfiguration:: GeometryConfiguration
   XMLAttribute<utils::DynVector> attrValue(ATTR_VALUE);
   tagOffset.addAttribute(attrValue);
 
-  foreach (XMLTag& tag, tags){
+  for (XMLTag& tag : tags) {
     tag.addAttribute(attrMesh);
     tag.addSubtag(tagOffset);
     parent.addSubtag(tag);
@@ -439,13 +439,13 @@ void GeometryConfiguration:: addImportGeometry()
 
   checkMeshName(_readData.mesh);
 
-  ImportGeometry* importGeometry = NULL;
+  ImportGeometry* importGeometry = nullptr;
   if (_readData.filetype == std::string("vrml")){
     bool importCheckpoint = false; // Only mesh topology is imported.
     importGeometry = new ImportGeometry(_readData.offset, _readData.filename,
                                         ImportGeometry::VRML_1_FILE, importCheckpoint, true);
   }
-  assertion(importGeometry != NULL);
+  assertion(importGeometry != nullptr);
   _geometries.push_back(PtrGeometry(importGeometry));
   _meshNames.push_back(_readData.mesh);
 //  _readData = ReadData(_dimensions);
@@ -456,7 +456,7 @@ void GeometryConfiguration:: checkMeshName
    const std::string& meshName )
 {
   bool found = false;
-  foreach ( const mesh::PtrMesh mesh, _meshConfig->meshes() ) {
+  for (const mesh::PtrMesh mesh : _meshConfig->meshes()) {
     if ( mesh->getName() == meshName ) {
       found = true;
       break;

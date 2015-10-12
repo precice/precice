@@ -157,4 +157,9 @@ bool NearestProjectionMapping::doesVertexContribute(
   return false;
 }
 
+bool NearestProjectionMapping:: isProjectionMapping()
+{
+  return true;
+}
+
 }} // namespace precice, mapping

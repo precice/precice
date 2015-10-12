@@ -2,7 +2,6 @@
 #include "impl/PostProcessing.hpp"
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
-#include "com/SharedPointer.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -18,7 +17,7 @@ ParallelCouplingScheme::ParallelCouplingScheme
   const std::string&    firstParticipant,
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
-  m2n::PtrM2N           m2n,
+  m2n::M2N::SharedPointer           m2n,
   constants::TimesteppingMethod dtMethod,
   CouplingMode          cplMode,
   int                   maxIterations)
@@ -52,7 +51,7 @@ void ParallelCouplingScheme::initialize
       setupConvergenceMeasures(); // needs _couplingData configured
       mergeData(); // merge send and receive data for all pp calls
       setupDataMatrices(getAllData()); // Reserve memory and initialize data with zero
-      if (getPostProcessing().get() != NULL) {
+      if (getPostProcessing().get() != nullptr) {
         preciceCheck(getPostProcessing()->getDataIDs().size()==2 ,"initialize()",
                      "For parallel coupling, the number of coupling data vectors has to be 2, not: "
                      << getPostProcessing()->getDataIDs().size());
@@ -235,9 +234,9 @@ void ParallelCouplingScheme::implicitAdvance()
       if (convergence) {
         timestepCompleted();
       }
-      if (isCouplingOngoing()) {
+      //if (isCouplingOngoing()) {
         receiveData(getM2N());
-      }
+      //}
       getM2N()->finishReceivePackage();
     }
     else { // second participant
@@ -252,19 +251,20 @@ void ParallelCouplingScheme::implicitAdvance()
         convergence = true;
       }
       if (convergence) {
-        if (getPostProcessing().get() != NULL) {
+        if (getPostProcessing().get() != nullptr) {
+          _deletedColumnsPPFiltering = getPostProcessing()->getDeletedColumns();
           getPostProcessing()->iterationsConverged(getAllData());
         }
         newConvergenceMeasurements();
         timestepCompleted();
       }
-      else if (getPostProcessing().get() != NULL) {
+      else if (getPostProcessing().get() != nullptr) {
         getPostProcessing()->performPostProcessing(getAllData());
       }
       getM2N()->startSendPackage(0);
       getM2N()->send(convergence);
 
-      if (isCouplingOngoing()) {
+      //if (isCouplingOngoing()) {
         if (convergence && (getExtrapolationOrder() > 0)){
           extrapolateData(getAllData()); // Also stores data
         }
@@ -281,7 +281,7 @@ void ParallelCouplingScheme::implicitAdvance()
           }
         }
         sendData(getM2N());
-      }
+      //}
       getM2N()->finishSendPackage();
     }
 

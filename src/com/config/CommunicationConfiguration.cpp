@@ -33,11 +33,11 @@ CommunicationConfiguration:: CommunicationConfiguration()
   VALUE_SOCKETS("sockets")
 {}
 
-PtrCommunication CommunicationConfiguration:: createCommunication
+Communication::SharedPointer CommunicationConfiguration:: createCommunication
 (
   const utils::XMLTag& tag ) const
 {
-  com::PtrCommunication com;
+  com::Communication::SharedPointer com;
   if (tag.getName() == VALUE_SOCKETS){
 #   ifdef PRECICE_NO_SOCKETS
     std::ostringstream error;
@@ -47,8 +47,14 @@ PtrCommunication CommunicationConfiguration:: createCommunication
 #   else
     std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
     int port = tag.getIntAttributeValue(ATTR_PORT);
+
+    preciceCheck(not utils::isTruncated<unsigned short>(port),
+                 "createCommunication()",
+                 "The value given for the \"port\" attribute is not a "
+                 "16-bit unsigned integer: " << port);
+
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-    com = com::PtrCommunication(new com::SocketCommunication(port, false, network, dir));
+    com = com::Communication::SharedPointer(new com::SocketCommunication(port, false, network, dir));
 #   endif // PRECICE_NO_SOCKETS
   }
   else if (tag.getName() == VALUE_MPI){
@@ -59,7 +65,7 @@ PtrCommunication CommunicationConfiguration:: createCommunication
           << "when preCICE is compiled with argument \"mpi=on\"";
     throw error.str();
 #   else
-    com = com::PtrCommunication(new com::MPIPortsCommunication(dir));
+    com = com::Communication::SharedPointer(new com::MPIPortsCommunication(dir));
 #   endif
   }
   else if (tag.getName() == VALUE_MPI_SINGLE){
@@ -69,14 +75,14 @@ PtrCommunication CommunicationConfiguration:: createCommunication
           << "when preCICE is compiled with argument \"mpi=on\"";
     throw error.str();
 #   else
-    com = com::PtrCommunication(new com::MPIDirectCommunication());
+    com = com::Communication::SharedPointer(new com::MPIDirectCommunication());
 #   endif
   }
   else if (tag.getName() == VALUE_FILES){
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-    com = com::PtrCommunication(new com::FileCommunication(false, dir));
+    com = com::Communication::SharedPointer(new com::FileCommunication(false, dir));
   }
-  assertion(com.get() != NULL);
+  assertion(com.get() != nullptr);
   return com;
 }
 

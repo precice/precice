@@ -6,6 +6,8 @@
 
 #include "DistributedComFactory.hpp"
 
+#include "com/CommunicationFactory.hpp"
+
 namespace precice {
 namespace m2n {
 class PointToPointComFactory : public DistributedComFactory {
@@ -13,16 +15,14 @@ public:
   /**
    * @brief Constructor.
    */
-  PointToPointComFactory(com::PtrCommunicationFactory comFactory);
+  PointToPointComFactory(com::CommunicationFactory::SharedPointer comFactory);
 
-
-  PtrDistributedCommunication newDistributedCommunication(mesh::PtrMesh mesh);
+  DistributedCommunication::SharedPointer newDistributedCommunication(
+      mesh::PtrMesh mesh);
 
 private:
-
   // @brief communication factory for 1:M communications
-  com::PtrCommunicationFactory _comFactory;
+  com::CommunicationFactory::SharedPointer _comFactory;
 };
-
-}} // namespace precice, m2n
-
+}
+} // namespace precice, m2n

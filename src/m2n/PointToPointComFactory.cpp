@@ -10,16 +10,14 @@
 namespace precice {
 namespace m2n {
 PointToPointComFactory::PointToPointComFactory(
-    com::PtrCommunicationFactory comFactory)
-:
-    _comFactory(comFactory)
-{}
-
-
-PtrDistributedCommunication
-PointToPointComFactory::newDistributedCommunication(mesh::PtrMesh mesh) {
-  return PtrDistributedCommunication(new PointToPointCommunication(_comFactory,mesh));
+    com::CommunicationFactory::SharedPointer comFactory)
+    : _comFactory(comFactory) {
 }
 
-
-}} // namespace precice, m2n
+DistributedCommunication::SharedPointer
+PointToPointComFactory::newDistributedCommunication(mesh::PtrMesh mesh) {
+  return DistributedCommunication::SharedPointer(
+      new PointToPointCommunication(_comFactory, mesh));
+}
+}
+} // namespace precice, m2n

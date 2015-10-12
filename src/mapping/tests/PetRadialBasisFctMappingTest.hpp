@@ -3,6 +3,8 @@
 
 #include "tarch/tests/TestCase.h"
 #include "tarch/logging/Log.h"
+#include "mesh/Mesh.hpp"
+
 
 namespace precice {
   namespace mapping {
@@ -90,6 +92,9 @@ private:
   void testDeadAxis2D();
 
   void testDeadAxis3D();
+
+  /// Helper function: Add the global index from vertex::getID
+  void addGlobalIndex(mesh::PtrMesh &mesh);
 };
 
 }}} // namespace precice, mapping, tests

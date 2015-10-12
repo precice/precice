@@ -9,8 +9,11 @@
     <log-filter target=""      component=""      switch="off"/>
     <!-- <log-filter target="debug" component="precice::com::MPICommunication" switch="on"/> -->
 
-    <log-filter target="debug" component="precice::cplscheme::test" switch="on"/>
-    <log-filter target="info" component="precice::mapping::PetRadialBasisFctMapping" switch="on"/>
+    <log-filter target="debug" component="precice::cplscheme::impl::IQNILSPostProcessing" switch="on"/>
+    <log-filter target="debug" component="precice::cplscheme::impl::MVQNPostProcessing" switch="on"/>
+    <log-filter target="debug" component="precice::cplscheme::impl::BaseQNPostProcessing" switch="on"/>
+    <log-filter target="debug" component="precice::cplscheme::impl::QRFactorization" switch="on"/>
+    <log-filter target="debug" component="precice::com::tests" switch="on"/>
     
     <!-- <log-filter target=""      component=""      switch="on"/> -->
     <log-filter target="info"  component="tarch" switch="on"/> 

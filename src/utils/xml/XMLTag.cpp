@@ -226,7 +226,7 @@ void XMLTag:: parse
   try {
     resetAttributes();
     if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
-      assertion(xmlReader->getNodeName() != NULL);
+      assertion(xmlReader->getNodeName() != nullptr);
       preciceDebug("reading attributes of tag " << xmlReader->getNodeName());
       readAttributes(xmlReader);
       _listener.xmlTagCallback(*this);
@@ -235,13 +235,13 @@ void XMLTag:: parse
     if (_subtags.size() > 0){
       while (xmlReader->read()){
         if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
-          assertion(xmlReader->getNodeName() != NULL);
+          assertion(xmlReader->getNodeName() != nullptr);
           preciceDebug("reading subtag " << xmlReader->getNodeName()
                        << " of tag " << _fullName);
           parseSubtag(xmlReader);
         }
         else if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT_END){
-          assertion(xmlReader->getNodeName() != NULL);
+          assertion(xmlReader->getNodeName() != nullptr);
           if (std::string(xmlReader->getNodeName()) == _fullName){
             preciceDebug("end of tag " << xmlReader->getNodeName());
             areAllSubtagsConfigured();
@@ -754,7 +754,7 @@ void configure
   //bool success = false;
   tarch::irr::io::IrrXMLReader* xmlReader =
     tarch::irr::io::createIrrXMLReader(configurationFilename.c_str());
-  preciceCheck(xmlReader != NULL, "configure()",
+  preciceCheck(xmlReader != nullptr, "configure()",
                "Could not create XML reader for file \"" << configurationFilename
                << "\"!");
   preciceCheck(xmlReader->read(), "configure()",

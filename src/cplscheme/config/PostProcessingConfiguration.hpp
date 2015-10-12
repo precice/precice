@@ -5,6 +5,7 @@
 #define PRECICE_CPLSCHEME_POSTPROCESSINGCONFIGURATION_HPP_
 
 #include "cplscheme/impl/SharedPointer.hpp"
+#include "cplscheme/impl/BaseQNPostProcessing.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "tarch/logging/Log.h"
@@ -75,6 +76,7 @@ private:
    const std::string TAG_TIMESTEPS_REUSED;
    const std::string TAG_SINGULARITY_LIMIT;
    const std::string TAG_DATA;
+   const std::string TAG_FILTER;
 
    const std::string ATTR_NAME;
    const std::string ATTR_MESH;
@@ -85,6 +87,8 @@ private:
    const std::string VALUE_AITKEN;
    const std::string VALUE_HIERARCHICAL_AITKEN;
    const std::string VALUE_IQNILS;
+   const std::string VALUE_MVQN;
+   const std::string VALUE_BROYDEN;
 
    //bool _isValid;
 
@@ -104,6 +108,7 @@ private:
       double relaxationFactor;
       int maxIterationsUsed;
       int timestepsReused;
+      int filter;
       double singularityLimit;
 
       ConfigurationData ()
@@ -114,6 +119,7 @@ private:
          relaxationFactor ( 0.0 ),
          maxIterationsUsed ( 0 ),
          timestepsReused ( 0 ),
+         filter(impl::BaseQNPostProcessing::NOFILTER),
          singularityLimit ( 0.0 )
       {}
 

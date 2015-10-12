@@ -21,7 +21,7 @@ const utils::DynVector& FindClosestTriangle:: getSearchPoint() const
 
 bool FindClosestTriangle:: hasFound() const
 {
-  return _closestTriangle != NULL;
+  return _closestTriangle != nullptr;
 }
 
 double FindClosestTriangle:: getEuclidianDistance()
@@ -31,7 +31,7 @@ double FindClosestTriangle:: getEuclidianDistance()
 
 mesh::Triangle & FindClosestTriangle:: getClosestTriangle()
 {
-  assertion(_closestTriangle != NULL);
+  assertion(_closestTriangle != nullptr);
   return *_closestTriangle;
 }
 
@@ -51,7 +51,6 @@ void FindClosestTriangle:: find
 (
   mesh::Triangle& triangle )
 {
-  typedef utils::GeometryComputations GeoComp;
   using utils::Vector2D; using utils::Vector3D;
   using namespace tarch::la;
 

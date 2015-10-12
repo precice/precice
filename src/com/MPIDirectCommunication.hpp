@@ -54,7 +54,7 @@ public:
    *
    * Precondition: a connection to the remote participant has been setup.
    */
-  virtual int getRemoteCommunicatorSize();
+  virtual size_t getRemoteCommunicatorSize();
 
   /**
    * @brief See precice::com::Communication::acceptConnection().
@@ -99,6 +99,18 @@ public:
   virtual void broadcast(int itemToSend);
 
   virtual void broadcast(int& itemToReceive, int rankBroadcaster);
+
+  virtual void broadcast(double* itemsToSend, int size);
+
+  virtual void broadcast(double* itemsToReceive, int size, int rankBroadcaster);
+
+  virtual void broadcast(double itemToSend);
+
+  virtual void broadcast(double& itemToReceive, int rankBroadcaster);
+
+  virtual void broadcast(bool itemToSend);
+
+  virtual void broadcast(bool& itemToReceive, int rankBroadcaster);
 
 private:
   virtual MPI_Comm& communicator(int rank = 0);

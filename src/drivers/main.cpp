@@ -4,12 +4,17 @@
 #include "utils/Globals.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
 #include "tarch/configuration/ConfigurationRegistry.h"
 #include "tarch/configuration/TopLevelConfiguration.h"
 #include "tarch/logging/CommandLineLogger.h"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/config/Configuration.hpp"
 #include <iostream>
+
+namespace precice {
+extern bool testMode;
+}
 
 void printUsage()
 {
@@ -46,10 +51,10 @@ int main ( int argc, char** argv )
 
   using namespace tarch::configuration;
   tarch::logging::Log log("");
-# ifndef PRECICE_NO_MPI
-  MPI_Init(&argc, &argv); // To prevent auto-init/finalization by preCICE
-# endif
-  precice::utils::Parallel::initialize(&argc, &argv, "");
+
+  precice::utils::Parallel::initializeMPI(&argc, &argv);
+  precice::utils::Petsc::initialize(&argc, &argv);
+
   bool runTests = false;
   bool runServer = false;
   bool runHelp = false;
@@ -69,9 +74,10 @@ int main ( int argc, char** argv )
     if ( action == "test" and argc >= 4 ) {
       wrongParameters = false;
       runTests = true;
+      precice::testMode = true;
     }
   }
-    
+
   if (wrongParameters) {
     printUsage();
     return 1;
@@ -155,12 +161,10 @@ int main ( int argc, char** argv )
   else {
     assertion ( false );
   }
-  precice::utils::Parallel::finalize();
-# ifndef PRECICE_NO_MPI
-  MPI_Finalize(); // Reason: see MPI_Init() at beginning of main()
-# endif
+  precice::utils::Petsc::finalize();
+  //precice::utils::Parallel::synchronizeProcesses();
+  //std::cout << "close: " << precice::utils::Parallel::getProcessRank() << std::endl;
+  precice::utils::Parallel::finalizeMPI();
+  //std::cout << "done" << std::endl;
   return 0;
 }
-
-
-

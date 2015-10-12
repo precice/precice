@@ -24,12 +24,12 @@ std::string tarch::logging::configurations::LogOutputFormatConfiguration::getTag
 
 
 void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag( tarch::irr::io::IrrXMLReader* _xmlReader ) {
-  assertion( _xmlReader != 0 );
+  assertion( _xmlReader != nullptr );
 
   _isValid   = true;
   _hasParsed = true;
 
-  if (_xmlReader->getAttributeValue("column-separator") != 0) {
+  if (_xmlReader->getAttributeValue("column-separator") != nullptr) {
     _logColumnSeparator = _xmlReader->getAttributeValue("column-separator");
   }
   else {
@@ -37,7 +37,7 @@ void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag( 
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-time-stamp") != 0) {
+  if (_xmlReader->getAttributeValue("log-time-stamp") != nullptr) {
     _logTimeStamp = _xmlReader->getAttributeValueAsBool("log-time-stamp");
   }
   else {
@@ -45,7 +45,7 @@ void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag( 
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-output-file") != 0) {
+  if (_xmlReader->getAttributeValue("log-output-file") != nullptr) {
     _logOutputFile = _xmlReader->getAttributeValue("log-output-file");
   }
   else {
@@ -53,7 +53,7 @@ void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag( 
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-time-stamp-human-readable") != 0) {
+  if (_xmlReader->getAttributeValue("log-time-stamp-human-readable") != nullptr) {
     _logTimeStampHumanReadable = _xmlReader->getAttributeValueAsBool("log-time-stamp-human-readable");
   }
   else {
@@ -61,7 +61,7 @@ void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag( 
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-machine-name") != 0) {
+  if (_xmlReader->getAttributeValue("log-machine-name") != nullptr) {
     _logMachineName = _xmlReader->getAttributeValueAsBool("log-machine-name");
   }
   else {
@@ -69,7 +69,7 @@ void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag( 
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-message-type") != 0) {
+  if (_xmlReader->getAttributeValue("log-message-type") != nullptr) {
     _logMessageType = _xmlReader->getAttributeValueAsBool("log-message-type");
   }
   else {
@@ -77,7 +77,7 @@ void tarch::logging::configurations::LogOutputFormatConfiguration::parseSubtag( 
     _isValid = false;
   }
 
-  if (_xmlReader->getAttributeValue("log-trace") != 0) {
+  if (_xmlReader->getAttributeValue("log-trace") != nullptr) {
     _logTrace = _xmlReader->getAttributeValueAsBool("log-trace");
   }
   else {

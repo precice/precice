@@ -11,6 +11,7 @@
 //#include "utils/NumericalCompare.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/MasterSlave.hpp"
+#include "tarch/la/ScalarOperations.h"
 
 namespace precice {
    namespace cplscheme {
@@ -91,6 +92,14 @@ public:
      if (_isConvergence) os << "true";
      else os << "false";
      return os.str();
+   }
+   
+   virtual double getNormResidual()
+   {
+	   if (tarch::la::equals(_norm, 0.))
+		   return std::numeric_limits<double>::infinity();
+	   else
+		   return _normDiff/_norm;
    }
 
 private:

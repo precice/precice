@@ -61,7 +61,7 @@ ClosestMesh:: ClosestMesh ( const ClosestMesh& toCopy )
 
 ClosestMesh:: ~ClosestMesh()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   delete _impl;
 }
 
@@ -77,13 +77,13 @@ ClosestMesh& ClosestMesh:: operator=
 
 std::vector<int>& ClosestMesh:: meshIDs()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   return _impl->meshIDs;
 }
 
 int ClosestMesh:: position()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   return _impl->position;
 }
 
@@ -91,13 +91,13 @@ void ClosestMesh:: setPosition
 (
   int position )
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   _impl->position = position;
 }
 
 const double* ClosestMesh:: distanceVector()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   return tarch::la::raw(_impl->distanceVector);
 }
 
@@ -105,8 +105,8 @@ void ClosestMesh:: setDistanceVector
 (
   const double* distanceVector )
 {
-  assertion ( _impl != NULL );
-  assertion ( distanceVector != NULL );
+  assertion ( _impl != nullptr );
+  assertion ( distanceVector != nullptr );
   const int dim = _impl->distanceVector.size();
   for ( int i=0; i < dim; i++ ){
     _impl->distanceVector[i] = distanceVector[i];
@@ -115,7 +115,7 @@ void ClosestMesh:: setDistanceVector
 
 double ClosestMesh:: distance ()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   return tarch::la::norm2(_impl->distanceVector);
 }
 

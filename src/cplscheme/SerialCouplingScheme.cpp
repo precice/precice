@@ -16,7 +16,7 @@ SerialCouplingScheme::SerialCouplingScheme
   const std::string&          firstParticipant,
   const std::string&          secondParticipant,
   const std::string&          localParticipant,
-  m2n::PtrM2N                 m2n,
+  m2n::M2N::SharedPointer                 m2n,
   constants::TimesteppingMethod dtMethod,
   CouplingMode                cplMode,
   int                         maxIterations)
@@ -43,7 +43,7 @@ void SerialCouplingScheme::initialize
   assertion1(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
-  
+
   if (_couplingMode == Implicit) {
     preciceCheck(not getSendData().empty(), "initialize()", "No send data configured! Use explicit scheme for one-way coupling.");
     if (not doesFirstStep()) {
@@ -51,21 +51,21 @@ void SerialCouplingScheme::initialize
         setupConvergenceMeasures(); // needs _couplingData configured
         setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
       }
-      if (getPostProcessing().get() != NULL) {
+      if (getPostProcessing().get() != nullptr) {
         preciceCheck(getPostProcessing()->getDataIDs().size()==1 ,"initialize()",
                      "For serial coupling, the number of coupling data vectors has to be 1");
         getPostProcessing()->initialize(getSendData()); // Reserve memory, initialize
       }
     }
-    else if (getPostProcessing().get() != NULL) {
+    else if (getPostProcessing().get() != nullptr) {
       int dataID = *(getPostProcessing()->getDataIDs().begin());
-      preciceCheck(getSendData(dataID) == NULL, "initialize()",
+      preciceCheck(getSendData(dataID) == nullptr, "initialize()",
                    "In case of serial coupling, post-processing can be defined for "
                    << "data of second participant only!");
     }
     requireAction(constants::actionWriteIterationCheckpoint());
   }
-    
+
   for (DataMap::value_type & pair : getSendData()) {
     if (pair.second->initialize) {
       preciceCheck(not doesFirstStep(), "initialize()",
@@ -84,7 +84,7 @@ void SerialCouplingScheme::initialize
       setHasToReceiveInitData(true);
     }
   }
-  
+
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
   if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
@@ -99,7 +99,7 @@ void SerialCouplingScheme::initialize
   if (hasToSendInitData()) {
     requireAction(constants::actionWriteInitialData());
   }
-  
+
   initializeTXTWriters();
   setIsInitialized(true);
 }
@@ -117,7 +117,7 @@ void SerialCouplingScheme::initializeData()
   }
 
   preciceDebug("Initializing Data ...");
-  
+
   preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
                "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
 
@@ -169,7 +169,7 @@ void SerialCouplingScheme:: advance()
 
   preciceCheck(not hasToReceiveInitData() && not hasToSendInitData(), "advance()",
                "initializeData() needs to be called before advance if data has to be initialized!");
-  
+
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
 
@@ -194,9 +194,9 @@ void SerialCouplingScheme:: advance()
       setComputedTimestepPart(0.0);
     }
   }
-  else if (_couplingMode == Implicit) {  
+  else if (_couplingMode == Implicit) {
     bool convergence = true;
-  
+
     if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       preciceDebug("Computed full length of iteration");
       if (doesFirstStep()) {
@@ -209,9 +209,9 @@ void SerialCouplingScheme:: advance()
         if (convergence) {
           timestepCompleted();
         }
-        if (isCouplingOngoing()) {
+        //if (isCouplingOngoing()) {
           receiveData(getM2N());
-        }
+        //}
         getM2N()->finishReceivePackage();
       }
       else {
@@ -221,45 +221,46 @@ void SerialCouplingScheme:: advance()
           convergence = true;
         }
         if (convergence) {
-          if (getPostProcessing().get() != NULL) {
+          if (getPostProcessing().get() != nullptr) {
+        	_deletedColumnsPPFiltering = getPostProcessing()->getDeletedColumns();
             getPostProcessing()->iterationsConverged(getSendData());
           }
           newConvergenceMeasurements();
           timestepCompleted();
         }
-        else if (getPostProcessing().get() != NULL) {
+        else if (getPostProcessing().get() != nullptr) {
           getPostProcessing()->performPostProcessing(getSendData());
         }
         getM2N()->startSendPackage(0);
         getM2N()->send(convergence);
-        if (isCouplingOngoing()) {
-          if (convergence && (getExtrapolationOrder() > 0)){
-            extrapolateData(getSendData()); // Also stores data
-          }
-          else { // Store data for conv. measurement, post-processing, or extrapolation
-            for (DataMap::value_type& pair : getSendData()) {
-              if (pair.second->oldValues.size() > 0){
-                pair.second->oldValues.column(0) = *pair.second->values;
-              }
-            }
-            for (DataMap::value_type& pair : getReceiveData()) {
-              if (pair.second->oldValues.size() > 0){
-                pair.second->oldValues.column(0) = *pair.second->values;
-              }
+
+        if (convergence && (getExtrapolationOrder() > 0)){
+          extrapolateData(getSendData()); // Also stores data
+        }
+        else { // Store data for conv. measurement, post-processing, or extrapolation
+          for (DataMap::value_type& pair : getSendData()) {
+            if (pair.second->oldValues.size() > 0){
+              pair.second->oldValues.column(0) = *pair.second->values;
             }
           }
-          sendData(getM2N());
-          getM2N()->finishSendPackage();
+          for (DataMap::value_type& pair : getReceiveData()) {
+            if (pair.second->oldValues.size() > 0){
+              pair.second->oldValues.column(0) = *pair.second->values;
+            }
+          }
+        }
+        sendData(getM2N());
+        getM2N()->finishSendPackage();
+
+        // the second participant does not want new data in the last iteration of the last timestep
+        if (isCouplingOngoing() || not convergence) {
           getM2N()->startReceivePackage(0);
           receiveAndSetDt();
           receiveData(getM2N());
           getM2N()->finishReceivePackage();
         }
-        else {
-          getM2N()->finishSendPackage();
-        }
       }
-    
+
       if (not convergence) {
         preciceDebug("No convergence achieved");
         requireAction(constants::actionReadIterationCheckpoint());
@@ -272,7 +273,7 @@ void SerialCouplingScheme:: advance()
       setHasDataBeenExchanged(true);
       setComputedTimestepPart(0.0);
     } //subcycling completed
-    
+
   }
 }
 

@@ -33,15 +33,15 @@ Participant:: Participant
   _watchPoints (),
   _exportContexts(),
   _actions (),
-  _meshContexts ( meshConfig->meshes().size(), NULL ),
+  _meshContexts ( meshConfig->meshes().size(), nullptr ),
   _readMappingContexts(),
   _writeMappingContexts(),
   _usedMeshContexts (),
-  _dataContexts ( meshConfig->getDataConfiguration()->data().size()*meshConfig->meshes().size(), NULL ),
+  _dataContexts ( meshConfig->getDataConfiguration()->data().size()*meshConfig->meshes().size(), nullptr ),
   _writeDataContexts (),
   _readDataContexts (),
   _clientServerCommunication (),
-  _masterSlaveCommunication ()
+  _useMaster(false)
 {
   _participantsSize ++;
 }
@@ -90,7 +90,8 @@ void Participant:: useMesh
   bool                                   remote,
   const std::string&                     fromParticipant,
   double                                 safetyFactor,
-  bool                                   provideMesh )
+  bool                                   provideMesh,
+  bool                                   doesPreFiltering)
 {
   preciceTrace3 ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
   checkDuplicatedUse(mesh);
@@ -105,6 +106,7 @@ void Participant:: useMesh
   context->receiveMeshFrom = fromParticipant;
   context->safetyFactor = safetyFactor;
   context->provideMesh = provideMesh;
+  context->doesPreFiltering = doesPreFiltering;
 
 //  if ( spacetree.use_count() > 0 ) {
 //    spacetree->setCenter ( spacetree->getCenter() + localOffset );
@@ -183,7 +185,7 @@ const DataContext& Participant:: dataContext
   int dataID ) const
 {
   assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
-  assertion ( _dataContexts[dataID] != NULL );
+  assertion ( _dataContexts[dataID] != nullptr );
   return *_dataContexts[dataID];
 }
 
@@ -193,7 +195,7 @@ DataContext& Participant:: dataContext
 {
   preciceTrace2 ( "dataContext(id)", dataID, _dataContexts.size() );
   assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
-  assertion ( _dataContexts[dataID] != NULL );
+  assertion ( _dataContexts[dataID] != nullptr );
   return *_dataContexts[dataID];
 }
 
@@ -222,7 +224,7 @@ bool Participant:: isMeshUsed
   int meshID ) const
 {
   assertion ( (meshID >= 0) && (meshID < (int)_meshContexts.size()) );
-  return _meshContexts[meshID] != NULL;
+  return _meshContexts[meshID] != nullptr;
 }
 
 bool Participant:: isDataUsed
@@ -230,7 +232,7 @@ bool Participant:: isDataUsed
   int dataID ) const
 {
   assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
-  return _dataContexts[dataID] != NULL;
+  return _dataContexts[dataID] != nullptr;
 }
 
 const MeshContext& Participant:: meshContext
@@ -238,7 +240,7 @@ const MeshContext& Participant:: meshContext
   int meshID ) const
 {
   assertion((meshID >= 0) && (meshID < (int)_meshContexts.size()));
-  assertion(_meshContexts[meshID] != NULL);
+  assertion(_meshContexts[meshID] != nullptr);
   return *_meshContexts[meshID];
 }
 
@@ -249,7 +251,7 @@ MeshContext& Participant:: meshContext
   preciceTrace2("meshContext()", meshID, _meshContexts.size());
   assertion2((meshID >= 0) && (meshID < (int)_meshContexts.size()),
              meshID, _meshContexts.size());
-  assertion(_meshContexts[meshID] != NULL);
+  assertion(_meshContexts[meshID] != nullptr);
   return *_meshContexts[meshID];
 }
 
@@ -297,7 +299,7 @@ void Participant:: checkDuplicatedUse
   const mesh::PtrMesh& mesh )
 {
   assertion ( (int)_meshContexts.size() > mesh->getID() );
-  preciceCheck ( _meshContexts[mesh->getID()] == NULL, "checkDuplicateUse()",
+  preciceCheck ( _meshContexts[mesh->getID()] == nullptr, "checkDuplicateUse()",
                  "Mesh \"" << mesh->getName() << " cannot be used twice by "
                  << "participant " << _name << "!" );
 }
@@ -308,7 +310,7 @@ void Participant:: checkDuplicatedData
 {
   preciceTrace2 ( "checkDuplicatedData()", data->getID(), _dataContexts.size() );
   assertion2 ( data->getID() < (int)_dataContexts.size(), data->getID(), _dataContexts.size() );
-  preciceCheck ( _dataContexts[data->getID()] == NULL, "checkDuplicatedData()",
+  preciceCheck ( _dataContexts[data->getID()] == nullptr, "checkDuplicatedData()",
                  "Participant \"" << _name << "\" can read/write data \""
                  << data->getName() << "\" only once!" );
 }
@@ -320,35 +322,27 @@ bool Participant:: useServer()
 
 void Participant:: setClientServerCommunication
 (
-  com::PtrCommunication communication )
+  com::Communication::SharedPointer communication )
 {
   assertion ( communication.use_count() > 0 );
   _clientServerCommunication = communication;
 }
 
-com::PtrCommunication Participant:: getClientServerCommunication() const
+com::Communication::SharedPointer Participant:: getClientServerCommunication() const
 {
   return _clientServerCommunication;
 }
 
 bool Participant:: useMaster()
 {
-  return _masterSlaveCommunication.use_count() > 0;
+  return _useMaster;
 }
 
-void Participant:: setMasterSlaveCommunication
-(
-  com::PtrCommunication communication )
+void Participant:: setUseMaster(bool useMaster)
 {
-  assertion ( communication.use_count() > 0 );
-  _masterSlaveCommunication = communication;
+  _useMaster = useMaster;
 }
 
-com::PtrCommunication Participant:: getMasterSlaveCommunication() const
-{
-  return _masterSlaveCommunication;
-}
 
 
 }} // namespace precice, impl
-

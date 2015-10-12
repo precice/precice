@@ -51,7 +51,10 @@ M2NConfiguration:: M2NConfiguration
     tag.setDocumentation(doc);
 
     XMLAttribute<int> attrPort(ATTR_PORT);
-    doc = "Port number to be used by for socket communiation. TODO";
+    doc = "Port number (16-bit unsigned integer) to be used for socket ";
+    doc += "communiation. The default is \"0\", what means that OS will ";
+    doc += "dynamically search for a free port (if at least one exists) and ";
+    doc += "bind it automatically.";
     attrPort.setDocumentation(doc);
     attrPort.setDefaultValue(0);
     tag.addAttribute(attrPort);
@@ -132,7 +135,7 @@ M2NConfiguration:: M2NConfiguration
   doc = "Second participant name involved in communication.";
   attrTo.setDocumentation(doc);
 
-  foreach (XMLTag& tag, tags){
+  for (XMLTag& tag : tags) {
     tag.addAttribute(attrFrom);
     tag.addAttribute(attrTo);
     if(tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS){
@@ -145,7 +148,7 @@ M2NConfiguration:: M2NConfiguration
   }
 }
 
-m2n::PtrM2N M2NConfiguration:: getM2N
+m2n::M2N::SharedPointer M2NConfiguration:: getM2N
 (
   const std::string& from,
   const std::string& to )
@@ -175,8 +178,8 @@ void M2NConfiguration:: xmlTagCallback
     checkDuplicates(from, to);
     std::string distrType = tag.getStringAttributeValue(ATTR_DISTRIBUTION_TYPE);
 
-    com::PtrCommunicationFactory comFactory;
-    com::PtrCommunication com;
+    com::CommunicationFactory::SharedPointer comFactory;
+    com::Communication::SharedPointer com;
     if (tag.getName() == VALUE_SOCKETS){
 #     ifdef PRECICE_NO_SOCKETS
         std::ostringstream error;
@@ -186,8 +189,15 @@ void M2NConfiguration:: xmlTagCallback
 #     else
         std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
         int port = tag.getIntAttributeValue(ATTR_PORT);
+
+        preciceCheck(not utils::isTruncated<unsigned short>(port),
+                     "xmlTagCallback()",
+                     "The value given for the \"port\" attribute is not a "
+                     "16-bit unsigned integer: " << port);
+
         std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-        comFactory = com::PtrCommunicationFactory(new com::SocketCommunicationFactory(port, false, network, dir));
+        comFactory = com::CommunicationFactory::SharedPointer(
+            new com::SocketCommunicationFactory(port, false, network, dir));
         com = comFactory->newCommunication();
 #     endif // PRECICE_NO_SOCKETS
     }
@@ -199,8 +209,9 @@ void M2NConfiguration:: xmlTagCallback
               << "when preCICE is compiled with argument \"mpi=on\"";
         throw error.str();
 #     else
-        comFactory = com::PtrCommunicationFactory(new com::MPIPortsCommunicationFactory(dir));
-        com = comFactory->newCommunication();
+      comFactory = com::CommunicationFactory::SharedPointer(
+          new com::MPIPortsCommunicationFactory(dir));
+      com = comFactory->newCommunication();
 #     endif
     }
     else if (tag.getName() == VALUE_MPI_SINGLE){
@@ -210,29 +221,29 @@ void M2NConfiguration:: xmlTagCallback
               << "when preCICE is compiled with argument \"mpi=on\"";
         throw error.str();
 #     else
-        com = com::PtrCommunication(new com::MPIDirectCommunication());
+        com = com::Communication::SharedPointer(new com::MPIDirectCommunication());
 #     endif
     }
     else if (tag.getName() == VALUE_FILES){
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-      com = com::PtrCommunication(new com::FileCommunication(false, dir));
+      com = com::Communication::SharedPointer(new com::FileCommunication(false, dir));
     }
 
-    assertion(com.get() != NULL);
+    assertion(com.get() != nullptr);
 
 
-    PtrDistributedComFactory distrFactory;
+    DistributedComFactory::SharedPointer distrFactory;
     if(tag.getName() == VALUE_MPI_SINGLE || tag.getName() == VALUE_FILES || distrType == VALUE_GATHER_SCATTER){
       assertion(distrType == VALUE_GATHER_SCATTER);
-      distrFactory = PtrDistributedComFactory(new GatherScatterComFactory(com));
+      distrFactory = DistributedComFactory::SharedPointer(new GatherScatterComFactory(com));
     }
     else if(distrType == VALUE_POINT_TO_POINT){
       assertion(tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS);
-      distrFactory = PtrDistributedComFactory(new PointToPointComFactory(comFactory));
+      distrFactory = DistributedComFactory::SharedPointer(new PointToPointComFactory(comFactory));
     }
-    assertion(distrFactory.get() != NULL);
+    assertion(distrFactory.get() != nullptr);
 
-    m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(com, distrFactory));
+    m2n::M2N::SharedPointer m2n = m2n::M2N::SharedPointer(new m2n::M2N(com, distrFactory));
     _m2ns.push_back(boost::make_tuple(m2n, from, to));
   }
 }

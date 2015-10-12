@@ -80,17 +80,16 @@ MappingConfiguration:: MappingConfiguration
   XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
   XMLAttribute<double> attrSupportRadius ( ATTR_SUPPORT_RADIUS );
   XMLAttribute<double> attrSolverRtol ( ATTR_SOLVER_RTOL );
+  attrSolverRtol.setDocumentation("Solver relative tolerance for convergence");
+  attrSolverRtol.setDefaultValue(1e-9);
   XMLAttribute<bool> attrXDead(ATTR_X_DEAD);
-  std::string doc = "If set to true, the x axis will be ignored for the mapping";
-  attrXDead.setDocumentation(doc);
+  attrXDead.setDocumentation("If set to true, the x axis will be ignored for the mapping");
   attrXDead.setDefaultValue(false);
   XMLAttribute<bool> attrYDead(ATTR_Y_DEAD);
-  doc = "If set to true, the y axis will be ignored for the mapping";
-  attrYDead.setDocumentation(doc);
+  attrYDead.setDocumentation("If set to true, the y axis will be ignored for the mapping");
   attrYDead.setDefaultValue(false);
   XMLAttribute<bool> attrZDead(ATTR_Z_DEAD);
-  doc = "If set to true, the z axis will be ignored for the mapping";
-  attrZDead.setDocumentation(doc);
+  attrZDead.setDocumentation("If set to true, the z axis will be ignored for the mapping");
   attrZDead.setDefaultValue(false);
 
 
@@ -450,9 +449,9 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh toMesh(_meshConfig->getMesh(toMeshName));
-  preciceCheck(fromMesh.get() != NULL, "createMapping()",
+  preciceCheck(fromMesh.get() != nullptr, "createMapping()",
                "Mesh \"" << fromMeshName << "\" not defined at creation of mapping!");
-  preciceCheck(toMesh.get() != NULL, "createMapping()",
+  preciceCheck(toMesh.get() != nullptr, "createMapping()",
                "Mesh \"" << toMeshName << "\" not defined at creation of mapping!");
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh = toMesh;
@@ -481,6 +480,13 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
                  "Unknown mapping constraint \"" << constraint << "\"!");
   }
 
+  # ifndef PRECICE_NO_PETSC
+    // for petsc initialization
+    int argc = 1;
+    char* arg = new char[8];
+    strcpy(arg, "precice");
+    char** argv = &arg;
+  #endif
   if (type == VALUE_NEAREST_NEIGHBOR){
     configuredMapping.mapping = PtrMapping (
         new NearestNeighborMapping(constraintValue, dimensions) );
@@ -549,46 +555,54 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   }
 # ifndef PRECICE_NO_PETSC
   else if (type == VALUE_PETRBF_TPS){
+    utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
                                                      xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_MULTIQUADRICS){
+    utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<Multiquadrics>(
         constraintValue, dimensions, Multiquadrics(shapeParameter),
         xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_INV_MULTIQUADRICS){
+    utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<InverseMultiquadrics>(
         constraintValue, dimensions, InverseMultiquadrics(shapeParameter),
         xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_VOLUME_SPLINES){
+    utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
                                                   xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_GAUSSIAN){
+    utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping(
         new PetRadialBasisFctMapping<Gaussian>(
           constraintValue, dimensions, Gaussian(shapeParameter),
           xDead, yDead, zDead, solverRtol));
   }
   else if (type == VALUE_PETRBF_CTPS_C2){
+    utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(
         constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius),
         xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C0){
+    utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactPolynomialC0>(
         constraintValue, dimensions, CompactPolynomialC0(supportRadius),
         xDead, yDead, zDead, solverRtol) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C6){
+    utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactPolynomialC6>(
         constraintValue, dimensions, CompactPolynomialC6(supportRadius),
@@ -599,6 +613,9 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
     preciceError ( "getMapping()", "Unknown mapping type!" );
   }
   assertion ( configuredMapping.mapping.use_count() > 0 );
+  #ifndef PRECICE_NO_PETSC
+    delete[] arg;
+  #endif
   return configuredMapping;
 }
 

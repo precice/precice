@@ -199,6 +199,12 @@ private:
    */
   void testNASTINMeshRestart();
 
+
+  /**
+   * @brief Pinelli approach is tested (compare master thesis Slava), Python action needs to handle targetData as input
+   */
+  void testPinelliCoupled();
+
   void runThreeSolvers (
       const std::string&      configFilename,
       const std::vector<int>& expectedCallsOfAdvance );

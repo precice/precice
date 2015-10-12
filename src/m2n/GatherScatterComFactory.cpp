@@ -10,16 +10,14 @@
 namespace precice {
 namespace m2n {
 GatherScatterComFactory::GatherScatterComFactory(
-    com::PtrCommunication masterCom)
-:
-    _masterCom(masterCom)
-{}
-
-
-PtrDistributedCommunication
-GatherScatterComFactory::newDistributedCommunication(mesh::PtrMesh mesh) {
-  return PtrDistributedCommunication(new GatherScatterCommunication(_masterCom,mesh));
+    com::Communication::SharedPointer masterCom)
+    : _masterCom(masterCom) {
 }
 
-
-}} // namespace precice, m2n
+DistributedCommunication::SharedPointer
+GatherScatterComFactory::newDistributedCommunication(mesh::PtrMesh mesh) {
+  return DistributedCommunication::SharedPointer(
+      new GatherScatterCommunication(_masterCom, mesh));
+}
+}
+} // namespace precice, m2n

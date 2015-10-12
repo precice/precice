@@ -85,7 +85,7 @@ private:
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
       preciceCheck(not (xDead && yDead), "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
-      preciceCheck(not zDead, "setDeadAxis()", "You cannot dead out the z axis if dimension is set to 2");
+      if (zDead) preciceWarning("setDeadAxis()", "Setting the z-axis to dead on a 2 dimensional problem has not effect and will be ignored.");
     }
     else if (getDimensions() == 3) {
       _deadAxis[0] = xDead;
@@ -121,7 +121,7 @@ public:
   {
     double result = 0.0;
     if (tarch::la::greater(radius, 0.0)){
-      result = std::log10(radius) * std::pow(radius, 2);
+      result = std::log(radius) * std::pow(radius, 2);
     }
     return result;
   }

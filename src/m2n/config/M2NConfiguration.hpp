@@ -3,13 +3,15 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #pragma once
 
-#include "com/SharedPointer.hpp"
-#include "m2n/SharedPointer.hpp"
+#include "m2n/M2N.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/xml/XMLTag.hpp"
+
+#include <boost/tuple/tuple.hpp>
+
+#include <memory>
 #include <string>
 #include <vector>
-#include "boost/tuple/tuple.hpp"
 
 namespace precice {
 namespace m2n {
@@ -20,9 +22,11 @@ namespace m2n {
 class M2NConfiguration : public utils::XMLTag::Listener
 {
 public:
+   using SharedPointer = std::shared_ptr<M2NConfiguration>;
 
-   typedef boost::tuple<m2n::PtrM2N,std::string,std::string> M2NTuple;
+   typedef boost::tuple<m2n::M2N::SharedPointer,std::string,std::string> M2NTuple;
 
+public:
    /**
     * @brief Constructor.
     */
@@ -36,7 +40,7 @@ public:
     * Exits with an error message, when no object is configured for the given
     * user names.
     */
-   m2n::PtrM2N getM2N (
+   m2n::M2N::SharedPointer getM2N (
       const std::string& from,
       const std::string& to );
 
@@ -81,4 +85,3 @@ private:
 };
 
 }} // namespace precice, m2n
-

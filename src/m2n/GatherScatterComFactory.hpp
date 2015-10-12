@@ -13,16 +13,14 @@ public:
   /**
    * @brief Constructor.
    */
-  GatherScatterComFactory(com::PtrCommunication masterCom);
+  GatherScatterComFactory(com::Communication::SharedPointer masterCom);
 
-
-  PtrDistributedCommunication newDistributedCommunication(mesh::PtrMesh mesh);
+  DistributedCommunication::SharedPointer newDistributedCommunication(
+      mesh::PtrMesh mesh);
 
 private:
-
   // @brief communication between the master processes
-  com::PtrCommunication _masterCom;
+  com::Communication::SharedPointer _masterCom;
 };
-
-}} // namespace precice, m2n
-
+}
+} // namespace precice, m2n

@@ -137,6 +137,11 @@ public:
    */
   virtual bool doesVertexContribute(int vertexID);
 
+  /**
+   * @brief Returns true if the mapping is a projection mapping.
+   */
+  virtual bool isProjectionMapping();
+
 protected:
 
   /**

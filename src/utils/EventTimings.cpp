@@ -1,5 +1,8 @@
 #include "EventTimings.hpp"
 
+#include "MasterSlave.hpp"
+#include "Parallel.hpp"
+
 #include <algorithm>
 #include <iostream>
 #include <iomanip>
@@ -10,34 +13,53 @@
 #include <map>
 #include <chrono>
 
-#include "utils/MasterSlave.hpp"
+namespace precice {
+extern bool testMode;
+}
 
 namespace precice {
 namespace utils {
 
-Event::Event(std::string eventName, bool autostart)
-{
+Event::Event(std::string eventName, Clock::duration eventDuration)
+    : name(eventName)
+    , duration(eventDuration)
+    , isStarted(false)
+    , _barrier(false) {
+  EventRegistry::put(this);
+}
+
+Event::Event(std::string eventName, bool barrier, bool autostart)
+    : _barrier(barrier) {
   name = eventName;
+  if (not (precice::utils::MasterSlave::_slaveMode || precice::utils::MasterSlave::_masterMode) ){
+    _barrier = false;
+  }
+
   if (autostart) {
-    isStarted = true;
-    starttime = Clock::now();
+    start(_barrier);
   }
 }
 
 Event::~Event()
 {
-  stop();
+  stop(_barrier);
 }
 
-void Event::start()
+void Event::start(bool barrier)
 {
+  if (barrier)
+    Parallel::synchronizeProcesses();
+
   isStarted = true;
   starttime = Clock::now();
 }
 
-void Event::stop()
+void Event::stop(bool barrier)
 {
   if (isStarted) {
+    if (barrier)
+      Parallel::synchronizeProcesses();
+
     stoptime = Clock::now();
     isStarted = false;
     duration = Clock::duration(stoptime - starttime);
@@ -147,24 +169,24 @@ void EventRegistry::put(Event* event)
 
 void EventRegistry::print(std::ostream &out, bool terse)
 {
-  if (not precice::utils::MasterSlave::_slaveMode) {
+  if (not precice::utils::MasterSlave::_slaveMode and not precice::testMode) {
     using std::endl;
     using std::setw; using std::setprecision;
     using std::left; using std::right;
     EventData::Properties allProps;
     Event::Clock::duration globalDuration = globalStop - globalStart;
 
-    std::time_t currentTime = std::time(NULL);
+    std::time_t currentTime = std::time(nullptr);
     out << "Run finished at " << std::asctime(std::localtime(&currentTime));
 
     if (not terse) {
       out << "Global runtime = "
           << std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count() << "ms / "
           << std::chrono::duration_cast<std::chrono::seconds>(globalDuration).count() << "s"
-          << endl << endl;
+          << "\n" << "\n";
 
-      out << "Event                Count    Total[ms]     Max[ms]     Min[ms]     Avg[ms]   T%" << endl;
-      out << "--------------------------------------------------------------------------------" << endl;
+      out << "Event                Count    Total[ms]     Max[ms]     Min[ms]     Avg[ms]   T%" << "\n";
+      out << "--------------------------------------------------------------------------------" << "\n";
 
       for (auto e : events) {
         out << setw(14) << left << e.first << right
@@ -174,40 +196,42 @@ void EventRegistry::print(std::ostream &out, bool terse)
             << setw(12) << e.second.getMin()
             << setw(12) << e.second.getAvg()
             << setw(6)  << e.second.getTimePercentage(globalDuration)
-            << endl;
+            << "\n";
         for (auto p : e.second.properties) {
           allProps[p.first] += p.second;
 
           out << "  " << setw(12) << left << p.first
               << setw(12) << right << std::fixed << std::setprecision(5) << p.second
-              << endl;
+              << "\n";
         }
-        out << endl;
+        out << "\n";
       }
 
-      out << "Properties from all Events, accumulated" << endl;
-      out << "---------------------------------------" << endl;
+      out << "Properties from all Events, accumulated" << "\n";
+      out << "---------------------------------------" << "\n";
       for (auto a : allProps) {
         out << setw(14) << left << a.first << right
-            << setw(12) << std::fixed << std::setprecision(5) << a.second << endl;
+            << setw(12) << std::fixed << std::setprecision(5) << a.second << "\n";
       }
     }
     else // terse output
     {
       auto global = std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count();
 
-      out << "# Eventname Count Total Max Min Avg T%" << endl;
+      out << "# Eventname Count Total Max Min Avg T%" << "\n";
       out << "\"GLOBAL\" "  << 1 << " "        // Eventname Count
           << global << " "  << global << " "   // Total Max
           <<  global << " "  << global << " "  // Min Avg
-          << 100 << endl;                      // T%
+          << 100 << "\n";                      // T%
       for (auto e : events) {
         out << "\"" << e.first << "\" "
             << e.second.getCount() << " " << e.second.getTotal() << " "
             << e.second.getMax()   << " " << e.second.getMin()   << " "
-            << e.second.getAvg()   << " " << e.second.getTimePercentage(globalDuration) << endl;
+            << e.second.getAvg()   << " " << e.second.getTimePercentage(globalDuration) << "\n";
       }
     }
+
+    out << endl;
   }
 }
 
@@ -222,6 +246,18 @@ void EventRegistry::print(std::string filename, bool terse)
   outfile.open(filename, std::ios::out | std::ios::app);
   EventRegistry::print(outfile, terse);
   outfile.close();
+}
+
+void EventRegistry::printGlobalDuration()
+{
+  if (precice::utils::MasterSlave::_slaveMode || precice::testMode)
+    return;
+
+  Event::Clock::duration globalDuration = Event::Clock::now() - globalStart;
+
+  std::cout << "Global Duration = "
+            << std::chrono::duration_cast<std::chrono::milliseconds>(
+                   globalDuration).count() << "ms" << std::endl;
 }
 
 void Events_Init()

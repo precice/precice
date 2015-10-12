@@ -6,6 +6,9 @@
 
 #include "VectorAssign.h"
 
+#include <algorithm> // for std::copy
+#include <iterator> // for std::begin, std::end
+
 namespace tarch {
 namespace la {
 
@@ -57,6 +60,14 @@ DynamicVector<Scalar>::DynamicVector (
   _size (toCopy.size())
 {
   assign(*this) = toCopy;
+}
+
+template<typename Scalar>
+DynamicVector<Scalar>::DynamicVector(const std::vector<Scalar> stdvector)
+{
+  _size = stdvector.size();
+  _values = new Scalar[_size];
+  std::copy(std::begin(stdvector), std::end(stdvector), _values);
 }
 
 template<typename Scalar>
@@ -220,6 +231,12 @@ void DynamicVector<Scalar>::print() const
     printf("% 6.4f  ", _values[i]);
   }
   printf("\n");
+}
+
+template<typename Scalar>
+DynamicVector<Scalar>::operator std::vector<Scalar>() const
+{
+  return std::vector<Scalar>(_values, _values + _size);
 }
 
 template<typename Scalar>

@@ -13,7 +13,6 @@
 #include "spacetree/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "io/ExportContext.hpp"
-#include "com/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
@@ -136,7 +135,8 @@ public:
     bool                                   remote,
     const std::string&                     fromParticipant,
     double                                 safetyFactor,
-    bool                                   provideMesh );
+    bool                                   provideMesh,
+    bool                                   doesPreFiltering );
 
   void addAction ( const action::PtrAction& action );
 
@@ -162,21 +162,16 @@ public:
   /**
    * @brief Sets the client-server com. for the participant.
    */
-  void setClientServerCommunication ( com::PtrCommunication communication );
+  void setClientServerCommunication ( com::Communication::SharedPointer communication );
 
-  com::PtrCommunication getClientServerCommunication() const;
+  com::Communication::SharedPointer getClientServerCommunication() const;
 
   /**
    * @brief Returns true, if the participant uses a master process.
    */
   bool useMaster();
 
-  /**
-   * @brief Sets the masterall com. for the participant.
-   */
-  void setMasterSlaveCommunication ( com::PtrCommunication communication );
-
-  com::PtrCommunication getMasterSlaveCommunication() const;
+  void setUseMaster(bool useMaster);
 
   /**
    * @brief Returns true, if the
@@ -224,9 +219,9 @@ private:
   //io::ExportContext _exportContext;
 
 
-  com::PtrCommunication _clientServerCommunication;
+  com::Communication::SharedPointer _clientServerCommunication;
 
-  com::PtrCommunication _masterSlaveCommunication;
+  bool _useMaster;
 
 
   template<typename ELEMENT_T>

@@ -41,7 +41,7 @@ void ConstantRelaxationPostProcessing:: initialize
                << " is not contained in data given at initialization!");
 
   // Append column for old values if not done by coupling scheme yet
-  foreach (DataMap::value_type& pair, cplData){
+  for (DataMap::value_type& pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
       assertion1(pair.second->values->size() > 0, pair.first);
@@ -58,7 +58,7 @@ void ConstantRelaxationPostProcessing:: performPostProcessing
   preciceTrace("performPostProcessing()");
   double omega = _relaxation;
   double oneMinusOmega = 1.0 - omega;
-  foreach (DataMap::value_type & pair, cplData){
+  for (DataMap::value_type & pair : cplData) {
     utils::DynVector& values = * pair.second->values;
     utils::DynVector& oldValues = pair.second->oldValues.column(0);
     values *= omega;

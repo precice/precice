@@ -14,185 +14,130 @@
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
 #include "utils/MasterSlave.hpp"
+#include "QRFactorization.hpp"
+#include "Eigen/Dense"
+#include <sys/unistd.h>
+
+#include "tarch/tests/TestMacros.h"
+
+#include <time.h>
+
 //#include "utils/NumericalCompare.hpp"
 
 namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log IQNILSPostProcessing::
-      _log("precice::cplscheme::impl::IQNILSPostProcessing");
+// tarch::logging::Log IQNILSPostProcessing::
+//       _log("precice::cplscheme::impl::IQNILSPostProcessing");
 
 IQNILSPostProcessing:: IQNILSPostProcessing
 (
   double initialRelaxation,
   int    maxIterationsUsed,
   int    timestepsReused,
+  int 	 filter,
   double singularityLimit,
   std::vector<int> dataIDs,
   std::map<int,double> scalings)
 :
-  PostProcessing(),
-  _initialRelaxation(initialRelaxation),
-  _maxIterationsUsed(maxIterationsUsed),
-  _timestepsReused(timestepsReused),
-  _singularityLimit(singularityLimit),
-  _dataIDs(dataIDs),
-  _secondaryDataIDs(),
-  _scalings(scalings),
-  _firstIteration(true),
-  _oldXTilde(),
+  BaseQNPostProcessing(initialRelaxation, maxIterationsUsed, timestepsReused,
+		       filter, singularityLimit, dataIDs, scalings),
   _secondaryOldXTildes(),
-  _residuals(),
-  _secondaryResiduals(),
-  _scaledValues(),
-  _scaledOldValues(),
-  _oldResiduals(),
-  _matrixV(),
-  _matrixW(),
   _secondaryMatricesW(),
-  _matrixCols()
+  _secondaryMatricesWBackup()
 {
-   preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
-                "IQNILSPostProcessing()",
-                "Initial relaxation factor for IQN-ILS post-processing has to "
-                << "be larger than zero and smaller or equal than one!");
-   preciceCheck(_maxIterationsUsed > 0, "IQNILSPostProcessing()",
-                "Maximal iterations used for IQN-ILS post-processing has to "
-                << "be larger than zero!");
-   preciceCheck(_timestepsReused >= 0, "IQNILSPostProcessing()",
-                "Number of old timesteps to be reused for IQN-ILS "
-                 << "post-processing has to be >= 0!");
-   preciceCheck(tarch::la::greater(_singularityLimit, 0.0),
-                "IQNILSPostProcessing()", "Singularity limit for IQN-ILS "
-                << "post-processing has to be larger than numerical zero ("
-                << tarch::la::NUMERICAL_ZERO_DIFFERENCE << ")!");
 }
 
 void IQNILSPostProcessing:: initialize
 (
   DataMap& cplData )
 {
-  preciceTrace1("initialize()", cplData.size());
+  // do common QN post processing initialization
+  BaseQNPostProcessing::initialize(cplData);
 
-  preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
-               "initialize()", "IQN-ILS "
-               << "post-processing is not yet supported for a participant in master mode");
-
-  size_t entries=0;
-
-  for(size_t i=0;i<_dataIDs.size();i++){
-    preciceCheck(utils::contained(_dataIDs[i], cplData), "initialize()",
-                 "Data with ID " << _dataIDs[i] << " is not contained in data "
-                 "given at initialization!");
-    entries += cplData[_dataIDs[i]]->values->size();
-  }
-
-
-
-  assertion(entries > 0);
   double init = 0.0;
-  assertion(_oldXTilde.size() == 0);
-  assertion(_oldResiduals.size() == 0);
-  _oldXTilde.append(DataValues(entries, init));
-  _oldResiduals.append(DataValues(entries, init));
-  _residuals.append(DataValues(entries, init));
-  _scaledValues.append(DataValues(entries, init));
-  _scaledOldValues.append(DataValues(entries, init));
-  _matrixCols.push_front(0);
-  _firstIteration = true;
-
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
   foreach (DataMap::value_type& pair, cplData){
-    if (not utils::contained(pair.first, _dataIDs)){
-      _secondaryDataIDs.push_back(pair.first);
-      int secondaryEntries = pair.second->values->size();
-      _secondaryOldXTildes[pair.first].append(DataValues(secondaryEntries, init));
-      _secondaryResiduals[pair.first].append(DataValues(secondaryEntries, init));
-    }
-  }
-
-  // Append old value columns, if not done outside of post-processing already
-  foreach (DataMap::value_type& pair, cplData){
-    int cols = pair.second->oldValues.cols();
-    if (cols < 1){ // Add only, if not already done
-      assertion1(pair.second->values->size() > 0, pair.first);
-      pair.second->oldValues.append(
-        CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
-    }
+	if (not utils::contained(pair.first, _dataIDs)){
+	  int secondaryEntries = pair.second->values->size();
+	  _secondaryOldXTildes[pair.first].append(DataValues(secondaryEntries, init));
+	}
   }
 }
 
-void IQNILSPostProcessing:: performPostProcessing
+
+void IQNILSPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
 {
-  preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
-  using namespace tarch::la;
-  assertion2(_dataIDs.size() == _scalings.size(), _dataIDs.size(), _scalings.size());
-  assertion2(_oldResiduals.size() == _oldXTilde.size(),
-             _oldResiduals.size(), _oldXTilde.size());
-  assertion2(_scaledValues.size() == _oldXTilde.size(),
-             _scaledValues.size(), _oldXTilde.size());
-  assertion2(_scaledOldValues.size() == _oldXTilde.size(),
-             _scaledOldValues.size(), _oldXTilde.size());
-  assertion2(_residuals.size() == _oldXTilde.size(),
-             _residuals.size(), _oldXTilde.size());
+	// Compute residuals of secondary data
+	for (int id: _secondaryDataIDs){
+		DataValues& secResiduals = _secondaryResiduals[id];
+		PtrCouplingData data = cplData[id];
+		assertion2(secResiduals.size() == data->values->size(),
+				secResiduals.size(), data->values->size());
+		secResiduals = *(data->values);
+		secResiduals -= data->oldValues.column(0);
+	}
 
-  //DataValues scaledValues(_oldXTilde.size());
-  //DataValues scaledOldValues(_oldXTilde.size());
-  int offset = 0;
-  foreach (int id, _dataIDs){
-    double factor = _scalings[id];
-    preciceDebug("Scaling Factor " << factor << " for id: " << id);
-    int size = cplData[id]->values->size();
-    DataValues& values = *cplData[id]->values;
-    DataValues& oldValues = cplData[id]->oldValues.column(0);
-    for (int i=0; i < size; i++){
-      _scaledValues[i+offset] = values[i]/factor;
-      _scaledOldValues[i+offset] = oldValues[i]/factor;
-    }
-//    values.append((*(cplData[id]->values))/factor);
-//    oldValues.append((cplData[id]->oldValues.column(0))/factor);
-    offset += size;
-  }
+	//if(_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
+	if (_firstIteration && _firstTimeStep){
+		// constant relaxation: for secondary data called from base class
+	}else{
+		if (not _firstIteration) {
+			bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
+			bool overdetermined = getLSSystemCols() <= getLSSystemRows();
+			if (not columnLimitReached && overdetermined) {
 
-  //preciceDebug("Untouched values = " << values);
-  //preciceDebug("Old values = " << oldValues);
+				// Append column for secondary W matrices
+				for (int id: _secondaryDataIDs) {
+					_secondaryMatricesW[id].appendFront(_secondaryResiduals[id]);
+				}
+			}
+			else {
+				// Shift column for secondary W matrices
+				for (int id: _secondaryDataIDs) {
+					_secondaryMatricesW[id].shiftSetFirst(_secondaryResiduals[id]);
+				}
+			}
 
-  // Compute current residual: vertex-data - oldData
-  //DataValues residuals(scaledValues);
-  _residuals = _scaledValues;
-  _residuals -= _scaledOldValues;
+			// Compute delta_x_tilde for secondary data
+			for (int id: _secondaryDataIDs) {
+				DataMatrix& secW = _secondaryMatricesW[id];
+				assertion2(secW.column(0).size() == cplData[id]->values->size(),
+						secW.column(0).size(), cplData[id]->values->size());
+				secW.column(0) = *(cplData[id]->values);
+				secW.column(0) -= _secondaryOldXTildes[id];
+			}
+		}
 
-  // Compute residuals of secondary data
-  foreach (int id, _secondaryDataIDs){
-    DataValues& secResiduals = _secondaryResiduals[id];
-    PtrCouplingData data = cplData[id];
-    assertion2(secResiduals.size() == data->values->size(),
-               secResiduals.size(), data->values->size());
-    secResiduals = *(data->values);
-    secResiduals -= data->oldValues.column(0);
-  }
+		// Store x_tildes for secondary data
+		for (int id: _secondaryDataIDs) {
+			assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+					_secondaryOldXTildes[id].size(), cplData[id]->values->size());
+			_secondaryOldXTildes[id] = *(cplData[id]->values);
+		}
+	}
+  
+  // call the base method for common update of V, W matrices
+  BaseQNPostProcessing::updateDifferenceMatrices(cplData);
+}
 
-  if (_firstIteration && (_matrixCols.size() < 2)){
-    preciceDebug("   Performing underrelaxation");
-    _oldXTilde = _scaledValues; // Store x tilde
-    _oldResiduals = _residuals; // Store current residual
-    // Perform underrelaxation with residual: x_new = x_old + omega * res
-    _residuals *= _initialRelaxation;
-    _residuals += _scaledOldValues;
-    _scaledValues = _residuals;
 
-    // Store x_tildes for secondary data
-    foreach (int id, _secondaryDataIDs){
+void IQNILSPostProcessing::computeUnderrelaxationSecondaryData
+(
+  DataMap& cplData)
+{
+    //Store x_tildes for secondary data
+    for (int id: _secondaryDataIDs){
       assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
                  _secondaryOldXTildes[id].size(), cplData[id]->values->size());
       _secondaryOldXTildes[id] = *(cplData[id]->values);
     }
 
-    // Perform underrelaxation with initial relaxation factor for rest of data.
-    foreach (int id, _secondaryDataIDs){
+    // Perform underrelaxation with initial relaxation factor for secondary data
+    for (int id: _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
       DataValues& values = *(data->values);
       values *= _initialRelaxation;                   // new * omg
@@ -201,264 +146,534 @@ void IQNILSPostProcessing:: performPostProcessing
       secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
       values += secResiduals;                      // (1-omg) * old + new * omg
     }
-  }
-  else {
-    preciceDebug("   Performing QN step");
-
-    if (not _firstIteration){ // Update matrices V, W with newest information
-      assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
-      assertion2(_matrixV.cols() <= _maxIterationsUsed,
-                 _matrixV.cols(), _maxIterationsUsed);
-      bool columnLimitReached = _matrixV.cols() == _maxIterationsUsed;
-      bool overdetermined = _matrixV.cols() <= _matrixV.rows();
-      if (not columnLimitReached && overdetermined){
-        _matrixV.appendFront(_residuals); // Will be modified to delta_r
-        _matrixW.appendFront(_residuals); // Will be overwritten by delta_x_tilde
-        // Append column for secondary W matrices
-        foreach (int id, _secondaryDataIDs){
-          _secondaryMatricesW[id].appendFront(_secondaryResiduals[id]);
-        }
-        _matrixCols.front()++;
-      }
-      else {
-        _matrixV.shiftSetFirst(_residuals); // Will be modified to delta_r
-        _matrixW.shiftSetFirst(_residuals); // Will be overwritten by delta_x_tilde
-        // Shift column for secondary W matrices
-        foreach (int id, _secondaryDataIDs){
-          _secondaryMatricesW[id].shiftSetFirst(_secondaryResiduals[id]);
-        }
-        _matrixCols.front()++;
-        _matrixCols.back()--;
-        if (_matrixCols.back() == 0){
-          _matrixCols.pop_back();
-        }
-      }
-      // Compute delta_residual = residual - residual_old
-      _matrixV.column(0) -= _oldResiduals;
-
-      // Compute delta_x_tilde = x_tilde - x_tilde_old
-      _matrixW.column(0) = _scaledValues;
-      _matrixW.column(0) -= _oldXTilde;
-      // Compute delta_x_tilde for secondary data
-      foreach (int id, _secondaryDataIDs){
-        DataMatrix& secW = _secondaryMatricesW[id];
-        assertion2(secW.column(0).size() == cplData[id]->values->size(),
-                   secW.column(0).size(), cplData[id]->values->size());
-        secW.column(0) = *(cplData[id]->values);
-        secW.column(0) -= _secondaryOldXTildes[id];
-      }
-    }
-
-    _oldResiduals = _residuals;   // Store residuals
-    _oldXTilde = _scaledValues;   // Store x_tilde
-    foreach (int id, _secondaryDataIDs){ // Store x_tildes for secondary data
-      assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
-                 _secondaryOldXTildes[id].size(), cplData[id]->values->size());
-      _secondaryOldXTildes[id] = *(cplData[id]->values);
-    }
-
-    DataValues Wc(_residuals.size(), 0.0);
-
-    // Calculate QR decomposition of matrix V and solve Rc = -Qr
-    DataValues c;
-    bool linearDependence = true;
-    while (linearDependence){
-      preciceDebug("   Compute Newton factors");
-      linearDependence = false;
-      DataMatrix Vcopy(_matrixV);
-      DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
-      DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
-      modifiedGramSchmidt(Vcopy, Q, R);
-      if (_matrixV.cols() > 1){
-        for (int i=0; i < _matrixV.cols(); i++){
-          if (R(i,i) < _singularityLimit){
-            preciceDebug("   Removing linear dependent column " << i);
-            linearDependence = true;
-            removeMatrixColumn(i);
-          }
-        }
-      }
-      if (not linearDependence){
-        preciceDebug("   Apply Newton factors");
-        //preciceDebug("performPostProcessing()", "   Q = " << Q);
-        DataValues b(Q.cols(), 0.0);
-        //precicePrint("Q.cols() = " << Q.cols() << ", Q.rows() = " << Q.rows());
-        //precicePrint("Q_T.cols() = " << transpose(Q).cols() << ", Q_T.rows() = " << transpose(Q).rows());
-        multiply(transpose(Q), _residuals, b); // = Qr
-        b *= -1.0; // = -Qr
-        assertion1(c.size() == 0, c.size());
-        c.append(b.size(), 0.0);
-        //preciceDebug("performPostProcessing()", "   R = " << R);
-        //preciceDebug("performPostProcessing()", "   b = " << b);
-        backSubstitution(R, b, c);
-        multiply(_matrixW, c, Wc); // = Wc
-        //preciceDebug("performPostProcessing()", "   _matrixW = " << _matrixW);
-        preciceDebug("c = " << c);
-      }
-    }
-    //preciceDebug("performPostProcessing()", "   oldValues = " << oldValues);
-    _scaledValues = _scaledOldValues;  // = x^k
-    _scaledValues += Wc;        // = x^k + Wc
-    _scaledValues += _residuals; // = x^k + Wc + r^k
-
-    // Perform QN relaxation for secondary data
-    foreach (int id, _secondaryDataIDs){
-      PtrCouplingData data = cplData[id];
-      DataValues& values = *(data->values);
-      assertion2(_secondaryMatricesW[id].cols() == c.size(),
-                 _secondaryMatricesW[id].cols(), c.size());
-      multiply(_secondaryMatricesW[id], c, values);
-      assertion2(values.size() == data->oldValues.column(0).size(),
-                 values.size(), data->oldValues.column(0).size());
-      values += data->oldValues.column(0);
-      assertion2(values.size() == _secondaryResiduals[id].size(),
-                 values.size(), _secondaryResiduals[id].size());
-      values += _secondaryResiduals[id];
-    }
-
-//    foreach (DataMap::value_type & pair, cplData){
-//      if (pair.first != *_dataIDs.begin() && pair.first != *(_dataIDs.end()-1)){
-//        DataValues & residuals = *pair.second->values; // = x_tilde
-//        residuals -= pair.second->oldValues.column(0); // = x_tilde - x^k = r^k
-//        // Perform update with Wc
-//        residuals += Wc;                               // = Wc + r^k
-//        residuals += pair.second->oldValues.column(0); // = x^k + Wc + r^k
-//        *pair.second->values = residuals;
-//      }
-//    }
-    //preciceDebug("performPostprocessing()", "Postprocessed values = " << values);
-  }
-
-  // Undo scaling of values and overwrite originals
-  offset = 0;
-  foreach(int id, _dataIDs){
-    double factor = _scalings[id];
-    int size = cplData[id]->values->size();
-    preciceDebug("Copying values back, size: " << size);
-    utils::DynVector& valuesPart = *(cplData[id]->values);
-    utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
-    for(int i=0; i < size; i++){
-      valuesPart[i] = _scaledValues[i+offset]*factor;
-      oldValuesPart[i] = _scaledOldValues[i+offset]*factor;
-    }
-    offset += size;
-  }
-  //preciceDebug("copied values back, values size: " << cplData[*_dataIDs.begin()]->values->size());
-  //preciceDebug("copied values back, oldValues size: " << cplData[*_dataIDs.begin()]->oldValues.column(0).size());
-  _firstIteration = false;
 }
 
-void IQNILSPostProcessing:: iterationsConverged
+
+void IQNILSPostProcessing::computeQNUpdate
+(PostProcessing::DataMap& cplData, DataValues& xUpdate)
+{
+	preciceTrace("computeQNUpdate()");
+    using namespace tarch::la;
+    preciceDebug("   Compute Newton factors");
+
+    // Calculate QR decomposition of matrix V and solve Rc = -Qr
+    DataValues __c;
+
+    if(_filter == BaseQNPostProcessing::NOFILTER){
+    	// do nothing
+
+    /**
+    }else if(_filter == BaseQNPostProcessing::QR2FILTER){
+		 Eigen::MatrixXd _Q, _R;
+		bool termination = false;
+
+		while(!termination)
+		{
+			// copy matrix V to Eigen Matrix data type
+			Eigen::MatrixXd _V(_matrixV.rows(), _matrixV.cols());
+			for (int i = 0; i < _V.rows(); i++)
+				for (int j = 0; j < _V.cols(); j++) {
+					_V(i, j) = _matrixV(i, j);
+				}
+			// copy matrix W to Eigen Matrix data type
+			Eigen::MatrixXd _W(_matrixW.rows(), _matrixW.cols());
+			for (int i = 0; i < _W.rows(); i++)
+				for (int j = 0; j < _W.cols(); j++) {
+					_W(i, j) = _matrixW(i, j);
+				}
+
+			termination = true;
+
+			// compute QR-decomposition of V
+			_Q = Eigen::MatrixXd(_matrixV.rows(), _matrixV.cols());
+			_R = Eigen::MatrixXd(_matrixV.cols(), _matrixV.cols());
+
+			Eigen::VectorXd v0 = _V.col(0);
+			_R(0,0) = v0.norm();
+			_Q.col(0) = v0/_R(0,0);
+			for( int j=1; j<_V.cols(); j++)
+			{
+				Eigen::VectorXd v = _V.col(j);
+				double rho0 = v.norm();
+
+				for(int i=0; i < j; i++)
+				{
+					Eigen::VectorXd Qci = _Q.col(i);
+					_R(i,j) = Qci.dot(v);
+					v = v -_R(i,j)*Qci;
+				}
+
+				// QR-filter test (if information that comes with vector v
+				// is little, i.e., |v_orth| small, discard vector v.)
+				double rho1 = v.norm();
+				if(rho1 < _singularityLimit * rho0)
+				{
+					termination = false;
+					removeMatrixColumn(j);
+					_qrV.deleteColumn(j);
+
+					preciceDebug("   (QR2-Filter) t="<<tSteps<<", k="<<its<<" | deleting column " << j );
+					_infostream <<"   (QR2-Filter) t="<<tSteps<<", k="<<its
+								<<" | deleting column " << j << std::flush<<std::endl;
+
+					break;
+				}
+
+				// normalize
+				_R(j,j) = rho1;
+				_Q.col(j) = v/rho1;
+			}
+		}
+		// copy back, Q and R
+		DataMatrix Q(_Q.rows(), _Q.cols(), 0.0);
+		for (int i = 0; i < _Q.rows(); i++)
+			for (int j = 0; j < _Q.cols(); j++) {
+				Q(i, j) = _Q(i, j);
+			}
+		DataMatrix R(_R.rows(), _R.cols(), 0.0);
+		for (int j = 0; j < _R.cols(); j++)
+			for (int i = 0; i <= j; i++) {
+				R(i, j) = _R(i, j);
+			}
+		// compute update
+		DataValues c;
+		DataValues b(Q.cols(), 0.0);
+		tarch::la::multiply(tarch::la::transpose(Q), _residuals, b); // = Qr
+		b *= -1.0; // = -Qr
+		assertion1(c.size() == 0, c.size());
+		c.append(b.size(), 0.0);
+
+		tarch::la::backSubstitution(R, b, c);
+		tarch::la::multiply(_matrixW, c, xUpdate);
+
+		preciceDebug("c = " << c);
+
+		// Perform QN relaxation for secondary data
+		for (int id: _secondaryDataIDs){
+			PtrCouplingData data = cplData[id];
+			DataValues& values = *(data->values);
+			assertion2(_secondaryMatricesW[id].cols() == c.size(),
+					_secondaryMatricesW[id].cols(), c.size());
+			tarch::la::multiply(_secondaryMatricesW[id], c, values);
+			assertion2(values.size() == data->oldValues.column(0).size(),
+					values.size(), data->oldValues.column(0).size());
+			values += data->oldValues.column(0);
+			assertion2(values.size() == _secondaryResiduals[id].size(),
+					values.size(), _secondaryResiduals[id].size());
+			values += _secondaryResiduals[id];
+		}
+		return;
+	*/
+		/**
+	}
+	else if(_filter == BaseQNPostProcessing::PODFILTER){
+
+		// copy matrix V to Eigen Matrix data type
+		Eigen::MatrixXd _V(_matrixV.rows(), _matrixV.cols());
+		for (int i = 0; i < _V.rows(); i++)
+			for (int j = 0; j < _V.cols(); j++) {
+				_V(i, j) = _matrixV(i, j);
+			}
+		// copy matrix W to Eigen Matrix data type
+		Eigen::MatrixXd _W(_matrixW.rows(), _matrixW.cols());
+		for (int i = 0; i < _W.rows(); i++)
+			for (int j = 0; j < _W.cols(); j++) {
+				_W(i, j) = _matrixW(i, j);
+			}
+
+		Eigen::JacobiSVD<Eigen::MatrixXd> svd(_V, Eigen::ComputeFullV);
+		Eigen::VectorXd sigma = svd.singularValues();
+		Eigen::MatrixXd phi = svd.matrixV();
+
+		//assertion2(sigma.size() == _matrixV.cols(), sigma.size(), _matrixV.cols);
+		assertion2(phi.rows() == _V.cols(), phi.rows(), _V.cols());
+		assertion2(phi.rows() == _W.cols(), phi.rows(), _W.cols());
+
+		int k = _V.cols();
+		double lambda_1 = sigma(0)*sigma(0)/phi.rows();
+		for(int i = 1; i < sigma.size(); i++)
+		{
+			double lambda_i = sigma(i)*sigma(i)/phi.rows();
+			if(lambda_i/lambda_1 <= _singularityLimit)
+			{
+				k = i;
+
+				// print
+				preciceDebug("   (POD-Filter) t="<<tSteps<<", k="<<its
+							<<" | truncating matrices VX, WX after the first " << k
+							<<"columns. Discarded columns: "<< _V.cols()-k);
+				_infostream << "   (POD-Filter) t="<<tSteps<<", k="<<its
+							<<" | truncating matrices VX, WX after the first " << k
+							<<"columns. Discarded columns: "<< _V.cols()-k<< std::flush<<std::endl;
+				// debugging information, can be removed
+				deletedColumns += _V.rows()-k;
+				break;
+			}
+		}
+
+		// compute V_til = V*phi and W_til = W*phi
+		_V = _V*phi;
+		_W = _W*phi;
+
+		// truncate
+		_V.conservativeResize(_V.rows(), k);
+		_W.conservativeResize(_W.rows(), k);
+
+
+		DataMatrix Vcopy(_V.rows(), _V.cols(), 0.0);
+		for (int i = 0; i < _V.rows(); i++)
+				for (int j = 0; j < _V.cols(); j++) {
+					Vcopy(i, j) = _V(i, j);
+				}
+		DataMatrix Wcopy(_W.rows(), _W.cols(), 0.0);
+		for (int i = 0; i < _W.rows(); i++)
+				for (int j = 0; j < _W.cols(); j++) {
+					Wcopy(i, j) = _W(i, j);
+				}
+		DataMatrix Q(Vcopy.rows(), Vcopy.cols(), 0.0);
+		DataMatrix R(Vcopy.cols(), Vcopy.cols(), 0.0);
+		tarch::la::modifiedGramSchmidt(Vcopy, Q, R);
+
+		DataValues c;
+		DataValues b(Q.cols(), 0.0);
+		tarch::la::multiply(tarch::la::transpose(Q), _residuals, b); // = Qr
+		b *= -1.0; // = -Qr
+		assertion1(c.size() == 0, c.size());
+		c.append(b.size(), 0.0);
+
+		tarch::la::backSubstitution(R, b, c);
+		tarch::la::multiply(Wcopy, c, xUpdate);
+
+		return;
+		*/
+
+	}else{
+		// do: filtering of least-squares system to maintain good conditioning
+		std::vector<int> delIndices(0);
+		_qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
+		// start with largest index (as V,W matrices are shrinked and shifted
+		for(int i = delIndices.size()-1; i >= 0; i--){
+			preciceDebug("   Removing linear dependent column " << delIndices[i]);
+			removeMatrixColumn(delIndices[i]);
+			_infostream<<"[QR-dec] - removing linear dependent column "<<delIndices[i]<<"\n"<<std::flush;
+		}
+		assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
+	}
+
+
+	// for master-slave mode and procs with no vertices,
+	// qrV.cols() = getLSSystemCols() and _qrV.rows() = 0
+	Matrix __Qt(_qrV.cols(), _qrV.rows(), 0.0);
+	Matrix __R(_qrV.cols(), _qrV.cols(), 0.0);
+
+	auto q = _qrV.matrixQ();
+	for(int i = 0; i<q.rows(); i++)
+	for(int j = 0; j<q.cols(); j++)
+	{
+		__Qt(j,i) = q(i,j);
+	}
+
+	if(!_hasNodesOnInterface){
+	assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
+	assertion1(_qrV.rows() == 0, _qrV.rows());
+	assertion1(__Qt.size() == 0, __Qt.size());
+	}
+
+	auto r = _qrV.matrixR();
+	for(int i = 0; i<r.rows(); i++)
+	for(int j = 0; j<r.cols(); j++)
+	{
+		__R(i,j) = r(i,j);
+	}
+
+	DataValues _local_b(_qrV.cols(), 0.0);
+	DataValues _global_b;
+
+	multiply(__Qt, _residuals, _local_b);
+	_local_b *= -1.0; // = -Qr
+
+	assertion1(__c.size() == 0, __c.size());
+
+	/**
+	 * compute rhs Q^T*res in parallel
+	 * TODO: implement all-reduce
+	 */
+	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+		assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
+		__c.append(_local_b.size(), 0.0);
+		backSubstitution(__R, _local_b, __c);
+	}else{
+
+	   assertion(utils::MasterSlave::_communication.get() != nullptr);
+	   assertion(utils::MasterSlave::_communication->isConnected());
+
+	   if(_hasNodesOnInterface)  assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
+
+	   // reserve memory for c
+	   __c.append(_local_b.size(), 0.0);
+
+	  if(utils::MasterSlave::_slaveMode){
+		  assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+		  utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
+	  }
+	  if(utils::MasterSlave::_masterMode){
+		assertion1(_global_b.size() == 0, _global_b.size());
+		assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+
+		_global_b.append(_local_b.size(), 0.0);
+		_global_b += _local_b;
+
+		for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
+			utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
+			_global_b += _local_b;
+		}
+		// backsubstitution only in master
+		backSubstitution(__R, _global_b, __c);
+	  }
+
+	  // broadcast coefficients c to all slaves
+	  utils::MasterSlave::broadcast(&__c(0), __c.size());
+	}
+
+	preciceDebug("   Apply Newton factors");
+	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
+	multiply(_matrixW, __c, xUpdate);
+
+	preciceDebug("c = " << __c);
+
+
+    /**
+     *  perform QN-Update step for the secondary Data
+     */
+
+	// If the previous time step converged within one single iteration, nothing was added
+	// to the LS system matrices and they need to be restored from the backup at time T-2
+    if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0)) {
+		preciceDebug("   Last time step converged after one iteration. Need to restore the secondaryMatricesW from backup.");
+		_secondaryMatricesW = _secondaryMatricesWBackup;
+	}
+
+	// Perform QN relaxation for secondary data
+	for (int id: _secondaryDataIDs){
+	  PtrCouplingData data = cplData[id];
+	  DataValues& values = *(data->values);
+	  assertion2(_secondaryMatricesW[id].cols() == __c.size(),
+				 _secondaryMatricesW[id].cols(), __c.size());
+	  multiply(_secondaryMatricesW[id], __c, values);
+	  assertion2(values.size() == data->oldValues.column(0).size(),
+				 values.size(), data->oldValues.column(0).size());
+	  values += data->oldValues.column(0);
+	  assertion2(values.size() == _secondaryResiduals[id].size(),
+				 values.size(), _secondaryResiduals[id].size());
+	  values += _secondaryResiduals[id];
+	}
+
+	// pending deletion: delete old secondaryMatricesW
+	if (_firstIteration && _timestepsReused == 0) {
+		// save current secondaryMatrix data in case the coupling for the next time step will terminate
+		// after the first iteration (no new data, i.e., V = W = 0)
+		if(getLSSystemCols() > 0){
+			_secondaryMatricesWBackup = _secondaryMatricesW;
+		}
+		for (int id: _secondaryDataIDs){
+			_secondaryMatricesW[id].clear();
+		}
+	}
+}
+
+
+//void IQNILSPostProcessing::computeQNUpdate
+//(PostProcessing::DataMap& cplData, DataValues& xUpdate)
+//{
+//  preciceTrace("computeQNUpdate()");
+//    using namespace tarch::la;
+//
+//    // Calculate QR decomposition of matrix V and solve Rc = -Qr
+//    DataValues __c;
+//    bool linearDependence = true;
+//    while (linearDependence){
+//      preciceDebug("   Compute Newton factors");
+//      linearDependence = false;
+//
+//      Matrix __R(_qrV.cols(), _qrV.cols(), 0.0);
+//      auto r = _qrV.matrixR();
+//        for(int i = 0; i<r.rows(); i++)
+//          for(int j = 0; j<r.cols(); j++)
+//          {
+//            __R(i,j) = r(i,j);
+//          }
+//      if (getLSSystemCols() > 1){
+//        for (int i=0; i < __R.rows(); i++){
+//          if (std::fabs(__R(i,i)) < _singularityLimit * r.norm()){
+//        	preciceDebug("   Removing linear dependent column " << i);
+//        	_infostream<<"[QR-dec] - removing linear dependent column "<<i<<"\n"<<std::flush;
+//            linearDependence = true;
+//            removeMatrixColumn(i);
+//          }
+//        }
+//      }
+//      if (not linearDependence){
+//
+//	preciceDebug("   Apply Newton factors");
+//
+//	// for master-slave mode and procs with no vertices,
+//	// grV.cols() = getLSSystemCols() and _qrV.rows() = 0
+//	Matrix __Qt(_qrV.cols(), _qrV.rows(), 0.0);
+//
+//	auto q = _qrV.matrixQ();
+//	for(int i = 0; i<q.rows(); i++)
+//	  for(int j = 0; j<q.cols(); j++)
+//	  {
+//	    __Qt(j,i) = q(i,j);
+//	  }
+//
+//	if(!_hasNodesOnInterface){
+//		assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
+//		assertion1(_qrV.rows() == 0, _qrV.rows());
+//		assertion1(__Qt.size() == 0, __Qt.size());
+//	}
+//
+//	auto r = _qrV.matrixR();
+//	for(int i = 0; i<r.rows(); i++)
+//	  for(int j = 0; j<r.cols(); j++)
+//	  {
+//	    __R(i,j) = r(i,j);
+//	  }
+//
+//		DataValues _local_b(_qrV.cols(), 0.0);
+//		DataValues _global_b;
+//
+//		multiply(__Qt, _residuals, _local_b);
+//		_local_b *= -1.0; // = -Qr
+//
+//		assertion1(__c.size() == 0, __c.size());
+//
+//		/**
+//		 * compute rhs Q^T*res in parallel
+//		 * TODO: implement all-reduce
+//		 */
+//		if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
+//			assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
+//			__c.append(_local_b.size(), 0.0);
+//		  	backSubstitution(__R, _local_b, __c);
+//		}else{
+//
+//		   assertion(utils::MasterSlave::_communication.get() != nullptr);
+//		   assertion(utils::MasterSlave::_communication->isConnected());
+//
+//		   if(_hasNodesOnInterface)  assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
+//
+//		   // reserve memory for c
+//		   __c.append(_local_b.size(), 0.0);
+//
+//		  if(utils::MasterSlave::_slaveMode){
+//			  assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+//			  utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
+//		  }
+//		  if(utils::MasterSlave::_masterMode){
+//			assertion1(_global_b.size() == 0, _global_b.size());
+//			assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+//
+//			_global_b.append(_local_b.size(), 0.0);
+//			_global_b += _local_b;
+//
+//			for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
+//				utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
+//				_global_b += _local_b;
+//			}
+//			// backsubstitution only in master
+//			backSubstitution(__R, _global_b, __c);
+//		  }
+//
+//		  // broadcast coefficients c to all slaves
+//		  utils::MasterSlave::broadcast(&__c(0), __c.size());
+//		}
+//
+//		// compute x updates from W and coefficients c, i.e, xUpdate = c*W
+//		multiply(_matrixW, __c, xUpdate);
+//
+//		preciceDebug("c = " << __c);
+//		//_infostream<<"c = "<<__c<<"\n"<<std::flush;
+//      }
+//    }
+//
+//
+//    /**
+//     *  perform QN-Update step for the secondary Data
+//     */
+//
+//	// If the previous time step converged within one single iteration, nothing was added
+//	// to the LS system matrices and they need to be restored from the backup at time T-2
+//    if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0)) {
+//		preciceDebug("   Last time step converged after one iteration. Need to restore the secondaryMatricesW from backup.");
+//		_secondaryMatricesW = _secondaryMatricesWBackup;
+//	}
+//
+//	// Perform QN relaxation for secondary data
+//	for (int id: _secondaryDataIDs){
+//	  PtrCouplingData data = cplData[id];
+//	  DataValues& values = *(data->values);
+//	  assertion2(_secondaryMatricesW[id].cols() == __c.size(),
+//				 _secondaryMatricesW[id].cols(), __c.size());
+//	  multiply(_secondaryMatricesW[id], __c, values);
+//	  assertion2(values.size() == data->oldValues.column(0).size(),
+//				 values.size(), data->oldValues.column(0).size());
+//	  values += data->oldValues.column(0);
+//	  assertion2(values.size() == _secondaryResiduals[id].size(),
+//				 values.size(), _secondaryResiduals[id].size());
+//	  values += _secondaryResiduals[id];
+//	}
+//
+//	// pending deletion: delete old secondaryMatricesW
+//	if (_firstIteration && _timestepsReused == 0) {
+//		// save current secondaryMatrix data in case the coupling for the next time step will terminate
+//		// after the first iteration (no new data, i.e., V = W = 0)
+//		if(getLSSystemCols() > 0){
+//			_secondaryMatricesWBackup = _secondaryMatricesW;
+//		}
+//		for (int id: _secondaryDataIDs){
+//			_secondaryMatricesW[id].clear();
+//		}
+//	}
+//}
+
+
+void IQNILSPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
-  preciceTrace("iterationsConverged()");
-# ifdef Debug
-  std::ostringstream stream;
-  stream << "Matrix column counters: ";
-  foreach (int cols, _matrixCols){
-    stream << cols << ", ";
-  }
-  preciceDebug(stream.str());
-# endif // Debug
-
+  
   if (_matrixCols.front() == 0){ // Did only one iteration
-    _matrixCols.pop_front();
+    _matrixCols.pop_front(); 
   }
 
   if (_timestepsReused == 0){
-    //precicePrint("Removing all columns from V, W");
-    _matrixV.clear();
-    _matrixW.clear();
-    foreach (int id, _secondaryDataIDs){
-      _secondaryMatricesW[id].clear();
-    }
-    _matrixCols.clear();
+	// pending deletion of secondaryMatricesW
   }
   else if ((int)_matrixCols.size() > _timestepsReused){
-    int toRemove = _matrixCols.back();
-    assertion1(toRemove > 0, toRemove);
-    preciceDebug("Removing " << toRemove << " cols from IQN-ILS matrices with "
-                 << _matrixV.cols() << " cols");
-    assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
-    assertion2(_matrixV.cols() > toRemove, _matrixV.cols(), toRemove);
-    for (int i=0; i < toRemove; i++){
-      _matrixV.remove(_matrixV.cols() - 1);
-      _matrixW.remove(_matrixW.cols() - 1);
-    }
-    foreach (int id, _secondaryDataIDs){
-      DataMatrix& secW = _secondaryMatricesW[id];
-      assertion3(secW.cols() > toRemove, secW, toRemove, id);
-      for (int i=0; i < toRemove; i++){
-        secW.remove(secW.cols() - 1);
-      }
-    }
-    _matrixCols.pop_back();
+	int toRemove = _matrixCols.back();
+	for (int id: _secondaryDataIDs){
+	  DataMatrix& secW = _secondaryMatricesW[id];
+	  assertion3(secW.cols() > toRemove, secW, toRemove, id);
+	  for (int i=0; i < toRemove; i++){
+		secW.remove(secW.cols() - 1);
+	  }
+	}
   }
-  _matrixCols.push_front(0);
-  _firstIteration = true;
 }
 
-void IQNILSPostProcessing:: exportState(io::TXTWriter& writer)
-{
-//  tarch::la::Vector<1,int> colSize(_matrixCols.size());
-//  writer.write(colSize);
-//  writer.write(_matrixCols);
-//  writer.write(_oldXTilde);
-//  writer.write(_oldResiduals);
-//  writer.write(_matrixV);
-//  writer.write(_matrixW);
-}
-
-void IQNILSPostProcessing:: importState(io::TXTReader& reader)
-{
-//  tarch::la::Vector<1,int> colSize;
-//  reader.read(colSize);
-//  _matrixCols.resize(colSize[0]);
-//  reader.read(_oldXTilde);
-//  reader.read(_oldResiduals);
-//  for (int i=0; i<colSize[0]; i++ ){
-//    // Using _oldXTilde to have a vector with appropriate size.
-//    // Values are overwritten afterwards in file read.
-//    _matrixV.append(_oldXTilde);
-//    _matrixW.append(_oldXTilde);
-//  }
-//  reader.read(_matrixV);
-//  reader.read(_matrixW);
-//  if (colSize[0] > 1){
-//    _firstIteration = false;
-//  }
-}
 
 void IQNILSPostProcessing:: removeMatrixColumn
 (
   int columnIndex)
 {
-  preciceTrace2("removeMatrixColumn()", columnIndex, _matrixV.cols());
-
-  // Remove matrix columns
   assertion(_matrixV.cols() > 1);
-  _matrixV.remove(columnIndex);
-  _matrixW.remove(columnIndex);
-  foreach (int id, _secondaryDataIDs){
-    _secondaryMatricesW[id].remove(columnIndex);
-  }
+  // remove column from secondary Data Matrix W
+  for (int id: _secondaryDataIDs){
+	 _secondaryMatricesW[id].remove(columnIndex);
+   }
 
-  // Reduce column count
-  std::deque<int>::iterator iter = _matrixCols.begin();
-  int cols = 0;
-  while(iter != _matrixCols.end()) {
-    cols += *iter;
-    if(cols > columnIndex) {
-      assertion(*iter > 0);
-      *iter -= 1;
-      if(*iter == 0) {
-        _matrixCols.erase(iter);
-      }
-      break;
-    }
-    iter++;
-  }
+	BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }
 
 }}} // namespace precice, cplscheme, impl

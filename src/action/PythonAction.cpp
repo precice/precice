@@ -3,7 +3,7 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NO_PYTHON
 #include <Python.h>
-#include <arrayobject.h>
+#include <numpy/arrayobject.h>
 #endif
 #include "PythonAction.hpp"
 #include "mesh/Mesh.hpp"
@@ -30,15 +30,15 @@ PythonAction:: PythonAction
   _moduleName(moduleName),
   _targetData(),
   _sourceData(),
-  _numberArguments(1),
+  _numberArguments(2),
   _isInitialized(false),
-  _moduleNameObject(NULL),
-  _module(NULL),
-  _sourceValues(NULL),
-  _targetValues(NULL),
-  _performAction(NULL),
-  _vertexCallback(NULL),
-  _postAction(NULL)
+  _moduleNameObject(nullptr),
+  _module(nullptr),
+  _sourceValues(nullptr),
+  _targetValues(nullptr),
+  _performAction(nullptr),
+  _vertexCallback(nullptr),
+  _postAction(nullptr)
 {
   if (targetDataID != -1){
     _targetData = getMesh()->data(targetDataID);
@@ -53,9 +53,9 @@ PythonAction:: PythonAction
 PythonAction:: ~PythonAction()
 {
 # ifndef PRECICE_NO_PYTHON
-  if (_module != NULL){
-    assertion(_moduleNameObject != NULL);
-    assertion(_module != NULL);
+  if (_module != nullptr){
+    assertion(_moduleNameObject != nullptr);
+    assertion(_module != nullptr);
     Py_DECREF(_moduleNameObject);
     Py_DECREF(_module);
     Py_Finalize();
@@ -76,18 +76,20 @@ void PythonAction:: performAction
   if (not _isInitialized) initialize();
 
   PyObject* dataArgs = PyTuple_New(_numberArguments);
-  if (_performAction != NULL){
+  if (_performAction != nullptr){
     PyObject* pythonTime = PyFloat_FromDouble(time);
+    PyObject* pythonDt = PyFloat_FromDouble(fullDt);
     PyTuple_SetItem(dataArgs, 0, pythonTime);
+    PyTuple_SetItem(dataArgs, 1, pythonDt);
     if (_sourceData.use_count() > 0){
       npy_intp sourceDim[] = { _sourceData->values().size() };
       double* sourceValues = tarch::la::raw(_sourceData->values());
       //assertion(_sourceValues == NULL);
       _sourceValues =
           PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
-      preciceCheck(_sourceValues != NULL, "PythonAction()",
+      preciceCheck(_sourceValues != nullptr, "PythonAction()",
                    "Creating python source values failed!");
-      PyTuple_SetItem(dataArgs, 1, _sourceValues);
+      PyTuple_SetItem(dataArgs, 2, _sourceValues);
     }
     if (_targetData.use_count() > 0){
       npy_intp targetDim[] = { _targetData->values().size() };
@@ -95,9 +97,9 @@ void PythonAction:: performAction
       //assertion(_targetValues == NULL);
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
-      preciceCheck(_targetValues != NULL, "PythonAction()",
+      preciceCheck(_targetValues != nullptr, "PythonAction()",
                    "Creating python target values failed!");
-      int argumentIndex = _sourceData.use_count() > 0 ? 2 : 1;
+      int argumentIndex = _sourceData.use_count() > 0 ? 3 : 2;
       PyTuple_SetItem(dataArgs, argumentIndex, _targetValues);
     }
     PyObject_CallObject(_performAction, dataArgs);
@@ -108,12 +110,12 @@ void PythonAction:: performAction
     }
   }
 
-  if (_vertexCallback != NULL){
+  if (_vertexCallback != nullptr){
     PyObject* vertexArgs = PyTuple_New(3);
     mesh::PtrMesh mesh = getMesh();
     utils::DynVector coords(mesh->getDimensions());
     utils::DynVector normal(mesh->getDimensions());
-    foreach (mesh::Vertex& vertex, mesh->vertices()){
+    for (mesh::Vertex& vertex : mesh->vertices()){
       npy_intp vdim[] = { mesh->getDimensions() };
       int id = vertex.getID();
       coords = vertex.getCoords();
@@ -124,11 +126,11 @@ void PythonAction:: performAction
           PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, raw(coords));
       PyObject* pythonNormal =
           PyArray_SimpleNewFromData(1, vdim, NPY_DOUBLE, raw(normal));
-      preciceCheck(pythonID != NULL, "performAction()",
+      preciceCheck(pythonID != nullptr, "performAction()",
                      "Creating python ID failed!");
-      preciceCheck(pythonCoords != NULL, "performAction()",
+      preciceCheck(pythonCoords != nullptr, "performAction()",
                      "Creating python coords failed!");
-      preciceCheck(pythonNormal != NULL, "performAction()",
+      preciceCheck(pythonNormal != nullptr, "performAction()",
                      "Creating python normal failed!");
       PyTuple_SetItem(vertexArgs, 0, pythonID);
       PyTuple_SetItem(vertexArgs, 1, pythonCoords);
@@ -143,7 +145,7 @@ void PythonAction:: performAction
     Py_DECREF(vertexArgs);
   }
 
-  if (_postAction != NULL){
+  if (_postAction != nullptr){
     PyObject* postActionArgs = PyTuple_New(0);
     PyObject_CallObject(_postAction, postActionArgs);
     if(PyErr_Occurred()){
@@ -290,7 +292,7 @@ void PythonAction:: initialize()
   PyRun_SimpleString(appendPathCommand.c_str());
   _moduleNameObject = PyString_FromString(_moduleName.c_str());
   _module = PyImport_Import(_moduleNameObject);
-  if (_module == NULL){
+  if (_module == nullptr){
     PyErr_Print();
     preciceError("PythonAction()", "Could not load python module \""
                    << _moduleName << "\" at path \"" << _modulePath << "\"!");
@@ -302,7 +304,7 @@ void PythonAction:: initialize()
     PyErr_Clear();
     preciceWarning("PythonAction()", "No function void performAction() in python module \""
                    << _moduleName << "\" found.");
-    _performAction = NULL;
+    _performAction = nullptr;
   }
 //  bool valid = _performAction != NULL;
 //  if (valid) valid = PyCallable_Check(_performAction);
@@ -315,7 +317,7 @@ void PythonAction:: initialize()
     PyErr_Clear();
     preciceWarning("PythonAction()", "No function void vertexCallback() in python module \""
                    << _moduleName << "\" found.");
-    _vertexCallback = NULL;
+    _vertexCallback = nullptr;
   }
 
   // Construct function postAction
@@ -324,7 +326,7 @@ void PythonAction:: initialize()
     PyErr_Clear();
     preciceWarning("PythonAction()", "No function void postAction() in python module \""
                    << _moduleName << "\" found.");
-    _postAction = NULL;
+    _postAction = nullptr;
   }
 # endif // not PRECICE_NO_PYTHON
 }

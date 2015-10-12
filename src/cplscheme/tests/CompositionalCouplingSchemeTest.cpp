@@ -61,9 +61,9 @@ void CompositionalCouplingSchemeTest:: run ()
       validateEquals(Par::getCommunicatorSize(), 3);
       testMethod(testExplicitSchemeComposition1);
       //TODO did produce a deadlock on Benjamin's laptop
-      //testMethod(testImplicitSchemeComposition);
-      //testMethod(testImplicitExplicitSchemeComposition);
-      //testMethod(testExplicitImplicitSchemeComposition);
+      testMethod(testImplicitSchemeComposition);
+      testMethod(testImplicitExplicitSchemeComposition);
+      testMethod(testExplicitImplicitSchemeComposition);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -692,16 +692,16 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
   dataConfig->setDimensions(3);
   PtrMeshConfiguration meshConfig(new MeshConfiguration(root, dataConfig));
   meshConfig->setDimensions(3);
-  m2n::PtrM2NConfiguration m2nConfig(new m2n::M2NConfiguration(root));
+  m2n::M2NConfiguration::SharedPointer m2nConfig(new m2n::M2NConfiguration(root));
   geometry::PtrGeometryConfiguration geoConfig(new geometry::GeometryConfiguration(root, meshConfig));
   geoConfig->setDimensions(3);
   CouplingSchemeConfiguration cplSchemeConfig(root, meshConfig, m2nConfig );
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::PtrM2N m2n0 =
+  m2n::M2N::SharedPointer m2n0 =
       m2nConfig->getM2N(nameParticipant0, nameParticipant1);
-  m2n::PtrM2N m2n1 =
+  m2n::M2N::SharedPointer m2n1 =
       m2nConfig->getM2N(nameParticipant1, nameParticipant2);
 
   geoConfig->geometries()[0]->create(*meshConfig->meshes()[0]);
@@ -724,6 +724,7 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
 
   runThreeSolverCoupling(cplSchemeConfig.getCouplingScheme(localParticipant),
                          localParticipant, meshConfig);
+  utils::Parallel::clearGroups();
 }
 
 void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
@@ -845,12 +846,12 @@ void CompositionalCouplingSchemeTest:: connect
   const std::string&     participant0,
   const std::string&     participant1,
   const std::string&     localParticipant,
-  m2n::PtrM2N& communication ) const
+  m2n::M2N::SharedPointer& communication ) const
 {
   preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
-  utils::Parallel::initialize ( NULL, NULL, localParticipant );
+  utils::Parallel::splitCommunicator( localParticipant );
   if ( participant0 == localParticipant ) {
     communication->requestMasterConnection ( participant1, participant0 );
   }

@@ -22,7 +22,7 @@ SolverInterface:: SolverInterface
 
 SolverInterface:: ~SolverInterface()
 {
-  assertion ( _impl != NULL );
+  assertion ( _impl != nullptr );
   delete _impl;
 }
 

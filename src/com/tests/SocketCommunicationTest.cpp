@@ -38,17 +38,13 @@ void SocketCommunicationTest:: run()
       testMethod ( testParallelClient );
     }
     utils::Parallel::synchronizeProcesses(); // Necessary for sockets
-    if ( utils::Parallel::getProcessRank() < 3 ){
-      testMethod ( testReceiveFromAnyClient );
-    }
-    utils::Parallel::synchronizeProcesses(); // Necessary for sockets
   }
 }
 
 void SocketCommunicationTest:: testSendAndReceive()
 {
   preciceTrace ( "testSendAndReceiveString()" );
-  SocketCommunication com(0);
+  SocketCommunication com;
   if ( utils::Parallel::getProcessRank() == 0 ){
     com.acceptConnection("process0", "process1", 0, 1);
     {
@@ -140,7 +136,7 @@ void SocketCommunicationTest:: testSendAndReceive()
 void SocketCommunicationTest:: testParallelClient()
 {
   preciceTrace ( "testParallelClient()" );
-  SocketCommunication com(0);
+  SocketCommunication com;
   int rank = utils::Parallel::getProcessRank();
   if ( rank == 0 ){
     preciceDebug("branch rank 0");
@@ -175,52 +171,6 @@ void SocketCommunicationTest:: testParallelClient()
       validateEquals ( receiveMsg, 2 );
     }
     com.closeConnection();
-  }
-}
-
-void SocketCommunicationTest:: testReceiveFromAnyClient()
-{
-  preciceTrace ( "testReceiveFromAnyClient()" );
-  SocketCommunication com(0);
-  int rank = utils::Parallel::getProcessRank();
-  int rank0 = 0;
-  int rank1 = 1;
-  int rank2 = 0;
-  if ( rank == 0 ){
-    com.requestConnection("server", "client", 0, 2);
-    int msg = 0;
-    com.send(msg, rank2);
-    int sender = com.receive(msg, rank2);
-    validateEquals(sender, rank2);
-    validateEquals(msg, 1);
-    msg = 10;
-    com.send(msg, rank2);
-  }
-  else if ( rank == 1 ){
-    com.requestConnection("server", "client", 1, 2);
-    int msg = -1;
-    int sender = com.receive(msg, rank2);
-    validateEquals(sender, rank2);
-    validateEquals(msg, 2);
-    msg = 20;
-    com.send(msg, rank0);
-  }
-  else if ( rank == 2 ){
-    com.acceptConnection("server", "client", 0, 1);
-    int msg = -1;
-    int sender = com.receive(msg, Communication::ANY_SENDER);
-    validateEquals(sender, rank0);
-    validateEquals(msg, 0);
-    msg = 2;
-    com.send(msg, rank1);
-    sender = com.receive(msg, Communication::ANY_SENDER);
-    validateEquals(sender, rank1);
-    validateEquals(msg, 20);
-    msg = 1;
-    com.send(msg, rank0);
-    sender = com.receive(msg, Communication::ANY_SENDER);
-    validateEquals(sender, rank0);
-    validateEquals(msg, 10);
   }
 }
 

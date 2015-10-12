@@ -15,7 +15,7 @@ const utils::DynVector& FindClosestVertex:: getSearchPoint() const
 
 bool FindClosestVertex:: hasFound() const
 {
-  return _closestVertex != NULL;
+  return _closestVertex != nullptr;
 }
 
 double FindClosestVertex:: getEuclidianDistance()
@@ -25,7 +25,7 @@ double FindClosestVertex:: getEuclidianDistance()
 
 mesh::Vertex& FindClosestVertex:: getClosestVertex()
 {
-  assertion ( _closestVertex != NULL );
+  assertion ( _closestVertex != nullptr );
   return *_closestVertex;
 }
 

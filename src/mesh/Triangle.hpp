@@ -159,13 +159,11 @@ inline const Vertex& Triangle:: vertex ( int i ) const
 
 inline Edge& Triangle:: edge ( int i )
 {
-   assertion1 ( (i >= 0) || (i < 3), i );
    return *_edges[i];
 };
 
 inline const Edge& Triangle:: edge ( int i ) const
 {
-   assertion1 ( (i >= 0) || (i < 3), 1 );
    return *_edges[i];
 };
 

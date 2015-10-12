@@ -219,8 +219,8 @@ void FindClosestTest:: testFindClosestDistanceToEdges3D ()
 
    // Create query objects
    std::vector<query::FindClosest*> finds;
-   for ( size_t i=0; i < queryPoints.size(); i++ ) {
-      finds.push_back ( new FindClosest(queryPoints[i]) );
+   for (auto & queryPoint : queryPoints) {
+      finds.push_back ( new FindClosest(queryPoint) );
    }
 
    // Perform queries
@@ -244,8 +244,8 @@ void FindClosestTest:: testFindClosestDistanceToEdges3D ()
                              tarch::la::norm2(Vector3D(0.5, -0.5, -0.5)) );
 
    // Clean up
-   for ( size_t i=0; i < finds.size(); i++ ) {
-      delete finds[i];
+   for (auto & find : finds) {
+      delete find;
    }
 }
 

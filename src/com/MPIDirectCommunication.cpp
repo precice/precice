@@ -21,7 +21,7 @@ tarch::logging::Log MPIDirectCommunication::_log(
 MPIDirectCommunication::MPIDirectCommunication()
     : _communicator(utils::Parallel::getGlobalCommunicator())
     , _globalCommunicator(utils::Parallel::getGlobalCommunicator())
-    , _localCommunicator(utils::Parallel::getLocalCommunicator())
+    , _localCommunicator(utils::Parallel::getGlobalCommunicator())
     , _isConnected(false) {
 }
 
@@ -31,8 +31,7 @@ MPIDirectCommunication::~MPIDirectCommunication() {
   closeConnection();
 }
 
-int
-MPIDirectCommunication::getRemoteCommunicatorSize() {
+size_t MPIDirectCommunication::getRemoteCommunicatorSize() {
   preciceTrace("getRemoteCommunicatorSize()");
   assertion(isConnected());
   int remoteSize = 0;
@@ -48,12 +47,7 @@ MPIDirectCommunication::acceptConnection(std::string const& nameAcceptor,
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
   assertion(not isConnected());
 
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initialize(&argc, &argv, nameAcceptor);
-  delete[] arg;
+  utils::Parallel::splitCommunicator(nameAcceptor);
 
   preciceCheck(utils::Parallel::getCommunicatorSize() > 1,
                "acceptConnection()",
@@ -91,12 +85,7 @@ MPIDirectCommunication::requestConnection(std::string const& nameAcceptor,
   preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
   assertion(not isConnected());
 
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initialize(&argc, &argv, nameRequester);
-  delete[] arg;
+  utils::Parallel::splitCommunicator(nameRequester);
 
   preciceCheck(utils::Parallel::getCommunicatorSize() > 1,
                "requestConnection()",
@@ -148,7 +137,7 @@ void
 MPIDirectCommunication::broadcast() {
   preciceTrace("broadcast()");
 
-  MPI_Bcast(0, 0, MPI_DATATYPE_NULL, MPI_PROC_NULL, _communicator);
+  MPI_Bcast(nullptr, 0, MPI_DATATYPE_NULL, MPI_PROC_NULL, _communicator);
 }
 
 void
@@ -163,7 +152,6 @@ MPIDirectCommunication::broadcast(int* itemsToReceive,
                                   int size,
                                   int rankBroadcaster) {
   preciceTrace1("broadcast(int*)", size);
-  assertion(rankBroadcaster != ANY_SENDER);
 
   MPI_Bcast(itemsToReceive, size, MPI_INT, rankBroadcaster, _communicator);
 }
@@ -178,9 +166,58 @@ MPIDirectCommunication::broadcast(int itemToSend) {
 void
 MPIDirectCommunication::broadcast(int& itemToReceive, int rankBroadcaster) {
   preciceTrace("broadcast(int&)");
-  assertion(rankBroadcaster != ANY_SENDER);
 
   broadcast(&itemToReceive, 1, rankBroadcaster);
+}
+
+void
+MPIDirectCommunication::broadcast(double* itemsToSend, int size) {
+  preciceTrace1("broadcast(double*)", size);
+
+  MPI_Bcast(itemsToSend, size, MPI_DOUBLE, MPI_ROOT, _communicator);
+}
+
+void
+MPIDirectCommunication::broadcast(double* itemsToReceive,
+                                  int size,
+                                  int rankBroadcaster) {
+  preciceTrace1("broadcast(double*)", size);
+
+  MPI_Bcast(itemsToReceive, size, MPI_DOUBLE, rankBroadcaster, _communicator);
+}
+
+void
+MPIDirectCommunication::broadcast(double itemToSend) {
+  preciceTrace("broadcast(double)");
+
+  broadcast(&itemToSend, 1);
+}
+
+void
+MPIDirectCommunication::broadcast(double& itemToReceive, int rankBroadcaster) {
+  preciceTrace("broadcast(double&)");
+
+  broadcast(&itemToReceive, 1, rankBroadcaster);
+}
+
+void
+MPIDirectCommunication::broadcast(bool itemToSend) {
+  preciceTrace("broadcast(bool)");
+
+  int item = itemToSend;
+
+  broadcast(item);
+}
+
+void
+MPIDirectCommunication::broadcast(bool& itemToReceive, int rankBroadcaster) {
+  preciceTrace("broadcast(bool&)");
+
+  int item;
+
+  broadcast(item, rankBroadcaster);
+
+  itemToReceive = item;
 }
 
 MPI_Comm&

@@ -31,8 +31,8 @@ namespace tests {
 
 void
 process(vector<double>& data) {
-  for (int i = 0; i < data.size(); ++i) {
-    data[i] += MasterSlave::_rank + 1;
+  for (auto & elem : data) {
+    elem += MasterSlave::_rank + 1;
   }
 }
 
@@ -79,7 +79,8 @@ void
 PointToPointCommunicationTest::testSocketCommunication() {
   preciceTrace("testSocketCommunication");
 
-  com::PtrCommunicationFactory cf(new com::SocketCommunicationFactory);
+  com::CommunicationFactory::SharedPointer cf(
+      new com::SocketCommunicationFactory);
 
   test(cf);
 }
@@ -88,19 +89,21 @@ void
 PointToPointCommunicationTest::testMPIPortsCommunication() {
   preciceTrace("testMPIDirectCommunication");
 
-  com::PtrCommunicationFactory cf(new com::MPIPortsCommunicationFactory);
+  com::CommunicationFactory::SharedPointer cf(
+      new com::MPIPortsCommunicationFactory);
 
   test(cf);
 }
 
 void
-PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
+PointToPointCommunicationTest::test(
+    com::CommunicationFactory::SharedPointer cf) {
   assertion(Parallel::getCommunicatorSize() == 4);
 
   validateEquals(Parallel::getCommunicatorSize(), 4);
 
   MasterSlave::_communication =
-      com::PtrCommunication(new com::MPIDirectCommunication);
+      com::Communication::SharedPointer(new com::MPIDirectCommunication);
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 
@@ -111,7 +114,7 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
 
   switch (Parallel::getProcessRank()) {
   case 0: {
-    Parallel::initialize(NULL, NULL, "A.Master");
+    Parallel::splitCommunicator( "A.Master");
 
     MasterSlave::_rank = 0;
     MasterSlave::_size = 2;
@@ -141,7 +144,7 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
     break;
   }
   case 1: {
-    Parallel::initialize(NULL, NULL, "A.Slave");
+    Parallel::splitCommunicator( "A.Slave");
 
     MasterSlave::_rank = 1;
     MasterSlave::_size = 2;
@@ -156,7 +159,7 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
     break;
   }
   case 2: {
-    Parallel::initialize(NULL, NULL, "B.Master");
+    Parallel::splitCommunicator( "B.Master");
 
     MasterSlave::_rank = 0;
     MasterSlave::_size = 2;
@@ -180,13 +183,13 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
     mesh->getVertexDistribution()[1].push_back(5); // <-
     mesh->getVertexDistribution()[1].push_back(7);
 
-    data = {rand(), rand(), rand(), rand()};
+    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {2 * 20, 30, 2 * 60, 70};
 
     break;
   }
   case 3: {
-    Parallel::initialize(NULL, NULL, "B.Slave");
+    Parallel::splitCommunicator( "B.Slave");
 
     MasterSlave::_rank = 1;
     MasterSlave::_size = 2;
@@ -195,7 +198,7 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
 
     MasterSlave::_communication->requestConnection("B.Master", "B.Slave", 0, 1);
 
-    data = {rand(), rand(), rand(), rand(), rand(), rand()};
+    data = {static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand()), static_cast<double>(rand())};
     expectedData = {10, 2 * 20, 40, 50, 2 * 60, 80};
 
     break;
@@ -229,6 +232,7 @@ PointToPointCommunicationTest::test(com::PtrCommunicationFactory cf) {
   MasterSlave::_slaveMode = false;
 
   Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
 }
 }
 }

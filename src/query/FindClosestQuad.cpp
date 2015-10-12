@@ -21,7 +21,7 @@ const utils::DynVector& FindClosestQuad:: getSearchPoint() const
 
 bool FindClosestQuad:: hasFound() const
 {
-  return _closestQuad != NULL;
+  return _closestQuad != nullptr;
 }
 
 double FindClosestQuad:: getEuclidianDistance()
@@ -31,7 +31,7 @@ double FindClosestQuad:: getEuclidianDistance()
 
 mesh::Quad & FindClosestQuad:: getClosestQuad()
 {
-  assertion(_closestQuad != NULL);
+  assertion(_closestQuad != nullptr);
   return *_closestQuad;
 }
 
@@ -51,7 +51,6 @@ void FindClosestQuad:: find
 (
   mesh::Quad& quad )
 {
-  typedef utils::GeometryComputations GeoComp;
   using utils::Vector2D; using utils::Vector3D;
   using namespace tarch::la;
 

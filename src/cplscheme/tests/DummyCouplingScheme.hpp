@@ -44,7 +44,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool isInitialized() const { assertion(false); }
+  virtual bool isInitialized() const { assertion(false); return false; }
 
   /**
    * @brief Not implemented.
@@ -69,62 +69,62 @@ public:
   /*
    * @brief Not implemented.
    */
-  virtual std::vector<std::string> getCouplingPartners() const { assertion(false); }
+  virtual std::vector<std::string> getCouplingPartners() const { assertion(false); return std::vector<std::string>(); }
 
   /**
    * @brief Not implemented.
    */
-  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const { assertion(false); }
+  virtual bool willDataBeExchanged(double lastSolverTimestepLength) const { assertion(false); return false; }
 
   /**
    * @brief Not implemented.
    */
-  virtual bool hasDataBeenExchanged() const { assertion(false); }
+  virtual bool hasDataBeenExchanged() const { assertion(false); return false; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getTime() const { assertion(false); }
+  virtual double getTime() const { assertion(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual int getTimesteps() const { return _timesteps; }
+  virtual int getTimesteps() const { return _timesteps; return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getMaxTime() const { assertion(false); }
+  virtual double getMaxTime() const { assertion(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual int getMaxTimesteps() const { assertion(false); }
+  virtual int getMaxTimesteps() const { assertion(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual bool hasTimestepLength() const { assertion(false); }
+  virtual bool hasTimestepLength() const { assertion(false); return false; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getTimestepLength() const { assertion(false); }
+  virtual double getTimestepLength() const { assertion(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getThisTimestepRemainder() const { assertion(false); }
+  virtual double getThisTimestepRemainder() const { assertion(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getComputedTimestepPart() const { assertion(false); }
+  virtual double getComputedTimestepPart() const { assertion(false); return 0; }
 
   /**
    * @brief Not implemented.
    */
-  virtual double getNextTimestepMaxLength() const { assertion(false); }
+  virtual double getNextTimestepMaxLength() const { assertion(false); return 0; }
 
   /**
    * @brief Not implemented.
@@ -134,7 +134,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual bool isCouplingTimestepComplete() const { assertion(false); }
+  virtual bool isCouplingTimestepComplete() const { assertion(false); return false; }
 
   /**
    * @brief
@@ -149,7 +149,7 @@ public:
   /**
    * @brief Not implemented.
    */
-  virtual int getCheckpointTimestepInterval() const { assertion(false); }
+  virtual int getCheckpointTimestepInterval() const { assertion(false); return 0; }
 
   /**
    * @brief Not implemented.
@@ -175,14 +175,14 @@ public:
    * @brief Empty.
    */
   virtual void sendState (
-    com::PtrCommunication communication,
+    com::Communication::SharedPointer communication,
     int                   rankReceiver ) {}
 
   /**
    * @brief Empty.
    */
   virtual void receiveState (
-    com::PtrCommunication communication,
+    com::Communication::SharedPointer communication,
     int                   rankSender ) {}
 
 private:

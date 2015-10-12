@@ -3,19 +3,28 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 #include "M2N.hpp"
+
 #include "DistributedCommunication.hpp"
 #include "DistributedComFactory.hpp"
 #include "GatherScatterCommunication.hpp"
 #include "com/Communication.hpp"
+#include "utils/EventTimings.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/Publisher.hpp"
 #include "mesh/Mesh.hpp"
 
+using precice::utils::Event;
+using precice::utils::Publisher;
+
 namespace precice {
+
+extern bool testMode;
+
 namespace m2n {
 
 tarch::logging::Log M2N::_log("precice::m2n::M2N");
 
-M2N:: M2N(  com::PtrCommunication masterCom, PtrDistributedComFactory distrFactory )
+M2N:: M2N(  com::Communication::SharedPointer masterCom, DistributedComFactory::SharedPointer distrFactory )
 :
   _distComs(),
   _masterCom(masterCom),
@@ -41,21 +50,16 @@ void M2N:: acceptMasterConnection (
   const std::string& nameRequester)
 {
   preciceTrace2("acceptMasterConnection()", nameAcceptor, nameRequester);
+
+  Event e("M2N::acceptMasterConnection");
+
   if(not utils::MasterSlave::_slaveMode){
     assertion(_masterCom.use_count()>0);
     _masterCom->acceptConnection(nameAcceptor, nameRequester, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
 
-  //broadcast _isMasterConnected
-  if(utils::MasterSlave::_slaveMode){
-    utils::MasterSlave::_communication->receive(_isMasterConnected,0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(_isMasterConnected,rankSlave);
-    }
-  }
+  utils::MasterSlave::broadcast(_isMasterConnected);
 }
 
 void M2N:: requestMasterConnection (
@@ -63,21 +67,21 @@ void M2N:: requestMasterConnection (
   const std::string& nameRequester)
 {
   preciceTrace2("requestMasterConnection()", nameAcceptor, nameRequester);
+
+  Event e("M2N::requestMasterConnection");
+
   if(not utils::MasterSlave::_slaveMode){
     assertion(_masterCom.use_count()>0);
+
+    Publisher::ScopedSetEventNamePrefix ssenp(
+        "M2N::requestMasterConnection"
+        "/");
+
     _masterCom->requestConnection(nameAcceptor, nameRequester, 0, 1);
     _isMasterConnected = _masterCom->isConnected();
   }
 
-  //broadcast isConnected
-  if(utils::MasterSlave::_slaveMode){
-    utils::MasterSlave::_communication->receive(_isMasterConnected,0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(_isMasterConnected,rankSlave);
-    }
-  }
+  utils::MasterSlave::broadcast(_isMasterConnected);
 }
 
 void M2N:: acceptSlavesConnection (
@@ -113,15 +117,9 @@ void M2N:: closeConnection()
     _masterCom->closeConnection();
     _isMasterConnected = false;
   }
-  //broadcast _isMasterConnected
-  if(utils::MasterSlave::_slaveMode){
-    utils::MasterSlave::_communication->receive(_isMasterConnected,0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(_isMasterConnected,rankSlave);
-    }
-  }
+
+  utils::MasterSlave::broadcast(_isMasterConnected);
+
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     _areSlavesConnected = false;
     for( const auto& pair : _distComs){
@@ -132,14 +130,15 @@ void M2N:: closeConnection()
   }
 }
 
-com::PtrCommunication M2N:: getMasterCommunication()
+com::Communication::SharedPointer M2N:: getMasterCommunication()
 {
   assertion(not utils::MasterSlave::_slaveMode);
   return _masterCom; //TODO maybe it would be a nicer design to not offer this
 }
 
 void M2N:: createDistributedCommunication(mesh::PtrMesh mesh){
-  PtrDistributedCommunication distCom = _distrFactory->newDistributedCommunication(mesh);
+  DistributedCommunication::SharedPointer distCom =
+      _distrFactory->newDistributedCommunication(mesh);
   _distComs[mesh->getID()] = distCom;
 }
 
@@ -181,7 +180,22 @@ void M2N:: send (
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     assertion(_areSlavesConnected);
     assertion(_distComs.find(meshID) != _distComs.end());
-    assertion(_distComs[meshID].get() != NULL);
+    assertion(_distComs[meshID].get() != nullptr);
+
+#ifdef M2N_PRE_SYNCHRONIZE
+    if(not precice::testMode){
+      Event e("M2N::send/synchronize", true);
+
+      if(not utils::MasterSlave::_slaveMode){
+        bool ack;
+
+        _masterCom->send(ack, 0);
+        _masterCom->receive(ack, 0);
+        _masterCom->send(ack, 0);
+      }
+    }
+#endif
+
     _distComs[meshID]->send(itemsToSend,size,valueDimension);
   }
   else{//coupling mode
@@ -217,7 +231,22 @@ void M2N:: receive (
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     assertion(_areSlavesConnected);
     assertion(_distComs.find(meshID) != _distComs.end());
-    assertion(_distComs[meshID].get() != NULL);
+    assertion(_distComs[meshID].get() != nullptr);
+
+#ifdef M2N_PRE_SYNCHRONIZE
+    if(not precice::testMode){
+      Event e("M2N::receive/synchronize", true);
+
+      if(not utils::MasterSlave::_slaveMode){
+        bool ack;
+
+        _masterCom->receive(ack, 0);
+        _masterCom->send(ack, 0);
+        _masterCom->receive(ack, 0);
+      }
+    }
+#endif
+
     _distComs[meshID]->receive(itemsToReceive,size,valueDimension);
   }
   else{//coupling mode
@@ -233,17 +262,10 @@ void M2N:: receive (
   if(not utils::MasterSlave::_slaveMode){
     _masterCom->receive(itemToReceive, 0);
   }
-  if(utils::MasterSlave::_slaveMode){
-    assertion(utils::MasterSlave::_communication->isConnected());
-    utils::MasterSlave::_communication->receive(itemToReceive,0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    assertion(utils::MasterSlave::_communication->isConnected());
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(itemToReceive,rankSlave);
-    }
-  }
-  preciceDebug("Receive(bool): " << itemToReceive);
+
+  utils::MasterSlave::broadcast(itemToReceive);
+
+  preciceDebug("receive(bool): " << itemToReceive);
 }
 
 void M2N:: receive (
@@ -253,17 +275,10 @@ void M2N:: receive (
   if(not utils::MasterSlave::_slaveMode){ //coupling mode
     _masterCom->receive(itemToReceive, 0);
   }
-  if(utils::MasterSlave::_slaveMode){
-    assertion(utils::MasterSlave::_communication->isConnected());
-    utils::MasterSlave::_communication->receive(itemToReceive,0);
-  }
-  if(utils::MasterSlave::_masterMode){
-    assertion(utils::MasterSlave::_communication->isConnected());
-    for(int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-      utils::MasterSlave::_communication->send(itemToReceive,rankSlave);
-    }
-  }
-  preciceDebug("Receive(double): " << itemToReceive);
+
+  utils::MasterSlave::broadcast(itemToReceive);
+
+  preciceDebug("receive(double): " << itemToReceive);
 }
 
 

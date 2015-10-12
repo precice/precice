@@ -13,11 +13,11 @@ namespace mesh {
 
 tarch::logging::Log Mesh:: _log("precice::mesh::Mesh");
 
-utils::ManageUniqueIDs* Mesh:: _managerPropertyIDs = NULL;
+utils::ManageUniqueIDs* Mesh:: _managerPropertyIDs = nullptr;
 
 void Mesh:: resetGeometryIDsGlobally()
 {
-  if (_managerPropertyIDs != NULL){
+  if (_managerPropertyIDs != nullptr){
     _managerPropertyIDs->resetIDs();
   }
 }
@@ -40,10 +40,11 @@ Mesh:: Mesh
   _manageQuadIDs(),
   _listeners(),
   _vertexDistribution(),
+  _vertexOffsets(),
   _globalNumberOfVertices(-1),
   _boundingBox()
 {
-  if (_managerPropertyIDs == NULL){
+  if (_managerPropertyIDs == nullptr){
     _managerPropertyIDs = new utils::ManageUniqueIDs;
   }
   assertion1((_dimensions == 2) || (_dimensions == 3), _dimensions);
@@ -555,6 +556,119 @@ void Mesh:: computeState()
   }
 }
 
+void Mesh:: computeDistribution()
+{
+  preciceTrace2("computeDistribution()", utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
+
+  // (0) broadcast global number of vertices
+  if (utils::MasterSlave::_slaveMode) {
+    int globalNumber = -1;
+    utils::MasterSlave::_communication->broadcast(globalNumber,0);
+    assertion(globalNumber!=-1);
+    _globalNumberOfVertices = globalNumber;
+  }
+  else if (utils::MasterSlave::_masterMode) {
+    utils::MasterSlave::_communication->broadcast(_globalNumberOfVertices);
+  }
+
+  // (1) generate vertex offsets
+  preciceDebug("Generate vertex offsets");
+  if (utils::MasterSlave::_slaveMode) {
+    _vertexOffsets.resize(utils::MasterSlave::_size);
+    utils::MasterSlave::_communication->broadcast(_vertexOffsets.data(),_vertexOffsets.size(),0);
+    preciceDebug("My vertex offsets: " << _vertexOffsets);
+  }
+  else if (utils::MasterSlave::_masterMode) {
+    _vertexOffsets.resize(utils::MasterSlave::_size);
+    _vertexOffsets[0] = _vertexDistribution[0].size();
+    for (int rank = 1; rank < utils::MasterSlave::_size; rank++){
+      _vertexOffsets[rank] = _vertexDistribution[rank].size() + _vertexOffsets[rank-1];
+    }
+    preciceDebug("My vertex offsets: " << _vertexOffsets);
+    utils::MasterSlave::_communication->broadcast(_vertexOffsets.data(),_vertexOffsets.size());
+  }
+  else{ //coupling mode
+    _vertexOffsets.push_back(vertices().size());
+  }
+
+
+  // (2) generate global indices
+  preciceDebug("Generate global indices");
+  if (utils::MasterSlave::_slaveMode) {
+    int numberOfVertices = vertices().size();
+    if (numberOfVertices!=0) {
+      std::vector<int> globalIndices(numberOfVertices, -1);
+      utils::MasterSlave::_communication->receive(globalIndices.data(),numberOfVertices,0);
+      preciceDebug("My global indices: " << globalIndices);
+      setGlobalIndices(globalIndices);
+    }
+  }
+  else if (utils::MasterSlave::_masterMode) {
+    for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+      auto globalIndices = _vertexDistribution[rankSlave];
+      int numberOfVertices = globalIndices.size();
+      if (numberOfVertices!=0) {
+        utils::MasterSlave::_communication->send(globalIndices.data(),numberOfVertices,rankSlave);
+      }
+    }
+    setGlobalIndices(_vertexDistribution[0]);
+  }
+  else{ //coupling mode
+    std::vector<int> globalIndices;
+    for(size_t i=0; i<vertices().size(); i++){
+      globalIndices.push_back(i);
+    }
+    setGlobalIndices(globalIndices);
+  }
+
+
+  // (3) generate owner information
+  preciceDebug("Generate owner information");
+  if (utils::MasterSlave::_slaveMode) {
+    int numberOfVertices = vertices().size();
+    if (numberOfVertices!=0) {
+      std::vector<int> ownerVec(numberOfVertices, -1);
+      utils::MasterSlave::_communication->receive(ownerVec.data(),numberOfVertices,0);
+      preciceDebug("My owner information: " << ownerVec);
+      setOwnerInformation(ownerVec);
+    }
+  }
+  else if (utils::MasterSlave::_masterMode) {
+    //global number of vertices
+    std::vector<int> globalOwnerVec(_globalNumberOfVertices,0);
+    for (int rank = 0; rank < utils::MasterSlave::_size; rank++){
+      auto globalIndices = _vertexDistribution[rank];
+      int localNumberOfVertices = _vertexDistribution[rank].size();
+      std::vector<int> ownerVec(localNumberOfVertices,0);
+      for(int i=0;i<localNumberOfVertices;i++){
+        if(globalOwnerVec[globalIndices[i]] == 0){
+          ownerVec[i] = 1;
+          globalOwnerVec[globalIndices[i]] = 1;
+        }
+      }
+      if (localNumberOfVertices!=0) {
+        if(rank==0){ //master own data
+          setOwnerInformation(ownerVec);
+        }
+        else{
+          utils::MasterSlave::_communication->send(ownerVec.data(),localNumberOfVertices,rank);
+        }
+      }
+    }
+#   ifdef Debug
+      for(int i=0;i<_globalNumberOfVertices;i++){
+        if(globalOwnerVec[i]==0){
+          preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << _name
+              << " was completely filtered out, since it has no influence on any mapping.")
+        }
+      }
+#   endif
+  } else{ //coupling mode
+    std::vector<int> ownerVec(vertices().size(),1);
+    setOwnerInformation(ownerVec);
+  }
+}
+
 void Mesh:: clear()
 {
   _content.triangles().deleteElements();
@@ -578,10 +692,30 @@ void Mesh:: notifyListeners()
 {
   preciceTrace("notifyListeners()");
   for (MeshListener* listener : _listeners) {
-    assertion(listener != NULL);
+    assertion(listener != nullptr);
     listener->meshChanged(*this);
   }
 }
+
+void Mesh:: setGlobalIndices(std::vector<int> globalIndices){
+  size_t i = 0;
+  for ( Vertex& vertex : vertices() ){
+    assertion(i<globalIndices.size());
+    vertex.setGlobalIndex(globalIndices[i]);
+    i++;
+  }
+}
+
+void Mesh:: setOwnerInformation(std::vector<int> ownerVec){
+  int i = 0;
+  for ( Vertex& vertex : vertices() ){
+    assertion(i<ownerVec.size());
+    assertion(ownerVec[i]!=-1);
+    vertex.setOwner(ownerVec[i]==1);
+    i++;
+  }
+}
+
 
 void Mesh:: addMesh(
     Mesh& deltaMesh)

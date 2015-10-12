@@ -79,7 +79,7 @@ SolverInterfaceConfiguration:: SolverInterfaceConfiguration
       new mesh::DataConfiguration(tag) );
   _meshConfiguration = mesh::PtrMeshConfiguration (
       new mesh::MeshConfiguration(tag, _dataConfiguration) );
-  _m2nConfiguration = m2n::PtrM2NConfiguration (
+  _m2nConfiguration = m2n::M2NConfiguration::SharedPointer (
       new m2n::M2NConfiguration(tag) );
   _geometryConfiguration = geometry::PtrGeometryConfiguration (
       new geometry::GeometryConfiguration(tag, _meshConfiguration) );

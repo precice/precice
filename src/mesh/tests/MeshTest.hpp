@@ -64,6 +64,11 @@ private:
     * @brief Demonstrates the capabilities of class Mesh.
     */
    void testDemonstration ();
+
+   /**
+    * @brief Tests method Mesh::computeDistribution
+    */
+   void testDistribution();
 };
 
 }}} // namespace precice, mesh, tests

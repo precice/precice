@@ -21,7 +21,9 @@ public:
    */
   MPIPortsCommunicationFactory(std::string const& addressDirectory = ".");
 
-  PtrCommunication newCommunication();
+  Communication::SharedPointer newCommunication();
+
+  std::string addressDirectory();
 
 private:
   std::string _addressDirectory;

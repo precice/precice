@@ -39,7 +39,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
 (
   utils::XMLTag&                            parent,
   const mesh::PtrMeshConfiguration&         meshConfig,
-  const m2n::PtrM2NConfiguration& m2nConfig)
+  const m2n::M2NConfiguration::SharedPointer& m2nConfig)
 :
   TAG("coupling-scheme"),
   TAG_PARTICIPANTS("participants"),
@@ -145,7 +145,7 @@ CouplingSchemeConfiguration:: CouplingSchemeConfiguration
     tags.push_back(tag);
   }
 
-  foreach (XMLTag& tag, tags){
+  for (XMLTag& tag : tags) {
     parent.addSubtag(tag);
   }
 }
@@ -259,7 +259,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
     bool initialize = tag.getBooleanAttributeValue(ATTR_INITIALIZE);
     mesh::PtrData exchangeData;
     mesh::PtrMesh exchangeMesh;
-    foreach (mesh::PtrMesh mesh, _meshConfig->meshes()){
+    for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
       if ( mesh->getName() == nameMesh ) {
         for ( mesh::PtrData data : mesh->data() ) {
           if ( data->getName() == nameData ) {
@@ -270,7 +270,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
         }
       }
     }
-    if (exchangeData.get() == NULL){
+    if (exchangeData.get() == nullptr){
       std::ostringstream stream;
       stream << "Mesh \"" << nameMesh << "\" with data \"" << nameData
              << "\" not defined at definition of coupling scheme";
@@ -372,7 +372,7 @@ void CouplingSchemeConfiguration:: addCouplingScheme
     if (utils::contained(participantName, _couplingSchemeCompositions)) {
       preciceDebug("Coupling scheme composition exists already for participant");
       // Fetch the composition and add the new scheme.
-      assertion(_couplingSchemeCompositions[participantName] != NULL);
+      assertion(_couplingSchemeCompositions[participantName] != nullptr);
       _couplingSchemeCompositions[participantName]->addCouplingScheme(cplScheme);
     }
     else {
@@ -638,7 +638,7 @@ void CouplingSchemeConfiguration:: addTagPostProcessing
   utils::XMLTag& tag )
 {
   preciceTrace1( "addTagPostProcessing()",tag.getFullName());
-  if(_postProcConfig.get()==NULL){
+  if(_postProcConfig.get()==nullptr){
     _postProcConfig = PtrPostProcessingConfiguration(
                           new PostProcessingConfiguration(_meshConfig));
   }
@@ -706,7 +706,7 @@ mesh::PtrData CouplingSchemeConfiguration:: getData
   const std::string& dataName,
   const std::string& meshName ) const
 {
-  foreach ( mesh::PtrMesh mesh, _meshConfig->meshes() ){
+  for (mesh::PtrMesh mesh : _meshConfig->meshes()) {
     if ( meshName == mesh->getName() ){
       for ( mesh::PtrData data : mesh->data() ){
         if ( dataName == data->getName() ){
@@ -726,7 +726,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
 {
   preciceTrace1("createSerialExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
-  m2n::PtrM2N m2n = _m2nConfig->getM2N (
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -745,7 +745,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
 {
   preciceTrace1("createParallelExplicitCouplingScheme()", accessor);
   //assertion ( not utils::contained(accessor, _couplingSchemes) );
-  m2n::PtrM2N m2n = _m2nConfig->getM2N (
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -765,7 +765,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
   preciceTrace1("createSerialImplicitCouplingScheme()", accessor);
   //assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
 
-  m2n::PtrM2N m2n = _m2nConfig->getM2N (
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -778,19 +778,19 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
 
   // Add convergence measures
   using boost::get;
-  for (size_t i=0; i < _config.convMeasures.size(); i++){
-    int dataID = get<0>(_config.convMeasures[i]);
-    bool suffices = get<1>(_config.convMeasures[i]);
-    std::string neededMesh = get<2>(_config.convMeasures[i]);
-    impl::PtrConvergenceMeasure measure = get<3>(_config.convMeasures[i]);
+  for (auto & elem : _config.convMeasures){
+    int dataID = get<0>(elem);
+    bool suffices = get<1>(elem);
+    std::string neededMesh = get<2>(elem);
+    impl::PtrConvergenceMeasure measure = get<3>(elem);
     _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     checkIfDataIsExchanged(dataID);
     scheme->addConvergenceMeasure(dataID, suffices, measure);
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getPostProcessing().get() != NULL){
-    foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
+  if (_postProcConfig->getPostProcessing().get() != nullptr){
+    for (std::string& neededMesh : _postProcConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     }
     for(const int dataID : _postProcConfig->getPostProcessing()->getDataIDs() ){
@@ -807,7 +807,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 {
   preciceTrace1("createParallelImplicitCouplingScheme()", accessor);
   assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
-  m2n::PtrM2N m2n = _m2nConfig->getM2N(
+  m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
       _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -820,19 +820,19 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 
   // Add convergence measures
   using boost::get;
-  for (size_t i=0; i < _config.convMeasures.size(); i++){
-    int dataID = get<0>(_config.convMeasures[i]);
-    bool suffices = get<1>(_config.convMeasures[i]);
-    std::string neededMesh = get<2>(_config.convMeasures[i]);
-    impl::PtrConvergenceMeasure measure = get<3>(_config.convMeasures[i]);
+  for (auto & elem : _config.convMeasures){
+    int dataID = get<0>(elem);
+    bool suffices = get<1>(elem);
+    std::string neededMesh = get<2>(elem);
+    impl::PtrConvergenceMeasure measure = get<3>(elem);
     _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     checkIfDataIsExchanged(dataID);
     scheme->addConvergenceMeasure(dataID, suffices, measure);
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getPostProcessing().get() != NULL){
-    foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
+  if (_postProcConfig->getPostProcessing().get() != nullptr){
+    for (std::string& neededMesh : _postProcConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(_config.participants[1],neededMesh);
     }
     for(const int dataID : _postProcConfig->getPostProcessing()->getDataIDs() ){
@@ -853,7 +853,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
   BaseCouplingScheme* scheme;
 
   if(accessor == _config.controller){
-    std::vector<m2n::PtrM2N> m2ns;
+    std::vector<m2n::M2N::SharedPointer> m2ns;
     for(const std::string& participant : _config.participants){
       m2ns.push_back(_m2nConfig->getM2N (
           _config.controller, participant ));
@@ -870,7 +870,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
     addMultiDataToBeExchanged(*castedScheme, accessor);
   }
   else{
-    m2n::PtrM2N m2n = _m2nConfig->getM2N (
+    m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
         accessor, _config.controller );
     scheme = new ParallelCouplingScheme (
         _config.maxTime, _config.maxTimesteps, _config.timestepLength,
@@ -884,19 +884,19 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
 
   // Add convergence measures
   using boost::get;
-  for (size_t i=0; i < _config.convMeasures.size(); i++){
-    int dataID = get<0>(_config.convMeasures[i]);
-    bool suffices = get<1>(_config.convMeasures[i]);
-    std::string neededMesh = get<2>(_config.convMeasures[i]);
-    impl::PtrConvergenceMeasure measure = get<3>(_config.convMeasures[i]);
+  for (auto & elem : _config.convMeasures){
+    int dataID = get<0>(elem);
+    bool suffices = get<1>(elem);
+    std::string neededMesh = get<2>(elem);
+    impl::PtrConvergenceMeasure measure = get<3>(elem);
     _meshConfig->addNeededMesh(_config.controller,neededMesh);
     checkIfDataIsExchanged(dataID);
     scheme->addConvergenceMeasure(dataID, suffices, measure);
   }
 
   // Set relaxation parameters
-  if (_postProcConfig->getPostProcessing().get() != NULL){
-    foreach(std::string& neededMesh, _postProcConfig->getNeededMeshes()){
+  if (_postProcConfig->getPostProcessing().get() != nullptr){
+    for (std::string& neededMesh : _postProcConfig->getNeededMeshes()) {
       _meshConfig->addNeededMesh(_config.controller,neededMesh);
     }
     for(const int dataID : _postProcConfig->getPostProcessing()->getDataIDs() ){
@@ -988,7 +988,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
 
     bool initialize = get<4>(tuple);
     if (from == accessor){
-      int index = 0;
+      size_t index = 0;
       for(const std::string& participant : _config.participants){
         preciceDebug("from: " << from << ", to: " << to << ", participant: " << participant);
         if(to == participant){
@@ -1000,7 +1000,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
       scheme.addDataToSend(data, mesh, initialize, index);
     }
     else {
-      int index = 0;
+      size_t index = 0;
       for(const std::string& participant : _config.participants){
         preciceDebug("from: " << from << ", to: " << to << ", participant: " << participant);
         if(from == participant){

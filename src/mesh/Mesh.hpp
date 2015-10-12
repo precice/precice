@@ -13,6 +13,7 @@
 #include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
+#include "utils/MasterSlave.hpp"
 #include "boost/utility.hpp"
 #include "boost/noncopyable.hpp"
 #include "tarch/la/DynamicVector.h"
@@ -259,6 +260,12 @@ public:
   void computeState();
 
   /**
+   * @brief collect/compute global distribution information (for parallel runs) that
+   * are needed at a local level, e.g. global indices
+   */
+  void computeDistribution();
+
+  /**
    * @brief Removes all mesh elements and data values (does not remove data).
    *
    * A mesh element is a
@@ -278,12 +285,21 @@ public:
     return _vertexDistribution;
   }
 
+  std::vector<int>& getVertexOffsets(){
+    return _vertexOffsets;
+  }
+
+  //only used for tests
+  void setVertexOffsets(std::vector<int> vertexOffsets){
+    _vertexOffsets = vertexOffsets;
+  }
+
   int getGlobalNumberOfVertices(){
     return _globalNumberOfVertices;
   }
 
-  void setGlobalNumberOfVertices(int globalNumberOfVertices){
-    _globalNumberOfVertices = globalNumberOfVertices;
+  void setGlobalNumberOfVertices(int num){
+    _globalNumberOfVertices = num;
   }
 
   void addMesh(Mesh& deltaMesh);
@@ -346,15 +362,29 @@ private:
 
   /**
    * @brief Vertex distribution for the master, holding for each slave all vertex IDs.
+   * For slaves, this data structure is empty and should not be used.
    */
   std::map<int,std::vector<int> > _vertexDistribution;
 
   /**
-   * @brief Global number of vertices for the master.
+   * @brief Offsets of every slave from his last vertex to the very first vertex.
+   * The last entry holds ergo the global number of vertices.
+   * Needed for the matrix-matrix multiplication of the MVJ pp.
+   */
+  std::vector<int> _vertexOffsets;
+
+
+  /**
+   * @brief Number of unique vertices for complete distributed mesh.
+   * Duplicated vertices are only accounted once.
    */
   int _globalNumberOfVertices;
 
   BoundingBox _boundingBox;
+
+  void setGlobalIndices(std::vector<int> globalIndices);
+
+  void setOwnerInformation(std::vector<int> ownerVec);
 };
 
 }} // namespace precice, mesh

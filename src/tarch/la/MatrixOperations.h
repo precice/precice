@@ -29,6 +29,15 @@ namespace tarch {
       typename utils::LazyEnableIf< IsMatrix<Matrix>::value,
       utils::LazyType<typename MatrixTraits<Matrix>::Scalar>
     >::Type sum (const Matrix& matrix);
+    
+    /**
+     * Computes the frobenius norm of the matrix
+     */
+    template<typename Matrix>
+      typename utils::LazyEnableIf< IsMatrix<Matrix>::value,
+      utils::LazyType<typename MatrixTraits<Matrix>::Scalar>
+    >::Type frobeniusNorm (const Matrix& matrix);
+
 
 
     /**

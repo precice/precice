@@ -14,7 +14,7 @@ tarch::logging::Log GatherScatterCommunication:: _log("precice::m2n::GatherScatt
 
 GatherScatterCommunication:: GatherScatterCommunication
 (
-  com::PtrCommunication com,
+  com::Communication::SharedPointer com,
   mesh::PtrMesh mesh)
 :
   DistributedCommunication(mesh),
@@ -64,17 +64,17 @@ void GatherScatterCommunication:: closeConnection()
 
 void GatherScatterCommunication:: send (
   double*    itemsToSend,
-  int        size,
+  size_t        size,
   int        valueDimension)
 {
   preciceTrace1("sendAll", size);
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
-  assertion(utils::MasterSlave::_communication.get() != NULL);
+  assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
   assertion(utils::MasterSlave::_size>1);
   assertion(utils::MasterSlave::_rank!=-1);
 
-  double* globalItemsToSend = NULL;
+  double* globalItemsToSend = nullptr;
 
   //gatherData
   if(utils::MasterSlave::_slaveMode){ //slave
@@ -90,7 +90,7 @@ void GatherScatterCommunication:: send (
     globalItemsToSend = new double[globalSize]();
 
     //master data
-    for(int i=0; i<vertexDistribution[0].size();i++){
+    for(size_t i=0; i<vertexDistribution[0].size();i++){
       for(int j=0;j<valueDimension;j++){
         globalItemsToSend[vertexDistribution[0][i]*valueDimension+j] += itemsToSend[i*valueDimension+j];
       }
@@ -103,7 +103,7 @@ void GatherScatterCommunication:: send (
       if (slaveSize > 0) {
         double* valuesSlave = new double[slaveSize];
         utils::MasterSlave::_communication->receive(valuesSlave, slaveSize, rankSlave);
-        for(int i=0; i<vertexDistribution[rankSlave].size();i++){
+        for(size_t i=0; i<vertexDistribution[rankSlave].size();i++){
           for(int j=0;j<valueDimension;j++){
             globalItemsToSend[vertexDistribution[rankSlave][i]*valueDimension+j] += valuesSlave[i*valueDimension+j];
           }
@@ -113,7 +113,7 @@ void GatherScatterCommunication:: send (
     }
 
     //send data to other master
-    assertion(globalItemsToSend!=NULL);
+    assertion(globalItemsToSend!=nullptr);
     _com->send(globalItemsToSend, globalSize, 0);
     delete[] globalItemsToSend;
   } //master
@@ -127,17 +127,17 @@ void GatherScatterCommunication:: send (
  */
 void GatherScatterCommunication:: receive (
   double*   itemsToReceive,
-  int       size,
+  size_t       size,
   int       valueDimension)
 {
   preciceTrace1("receiveAll", size);
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
-  assertion(utils::MasterSlave::_communication.get() != NULL);
+  assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
   assertion(utils::MasterSlave::_size>1);
   assertion(utils::MasterSlave::_rank!=-1);
 
-  double* globalItemsToReceive = NULL;
+  double* globalItemsToReceive = nullptr;
 
   //receive data at master
   if(utils::MasterSlave::_masterMode){
@@ -160,7 +160,7 @@ void GatherScatterCommunication:: receive (
     std::map<int,std::vector<int> >& vertexDistribution = _mesh->getVertexDistribution();
 
     //master data
-    for(int i=0; i<vertexDistribution[0].size();i++){
+    for(size_t i=0; i<vertexDistribution[0].size();i++){
       for(int j=0;j<valueDimension;j++){
         itemsToReceive[i*valueDimension+j] = globalItemsToReceive[vertexDistribution[0][i]*valueDimension+j];
       }
@@ -172,7 +172,7 @@ void GatherScatterCommunication:: receive (
       preciceDebug("Slave Size = " << slaveSize );
       if (slaveSize > 0) {
         double* valuesSlave = new double[slaveSize];
-        for(int i=0; i<vertexDistribution[rankSlave].size();i++){
+        for(size_t i=0; i<vertexDistribution[rankSlave].size();i++){
           for(int j=0;j<valueDimension;j++){
             valuesSlave[i*valueDimension+j] = globalItemsToReceive[vertexDistribution[rankSlave][i]*valueDimension+j];
           }

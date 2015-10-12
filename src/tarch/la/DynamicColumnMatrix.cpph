@@ -3,7 +3,9 @@
 // use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_LA_DYNAMICCOLUMNMATRIX_CPPH_
 #define _TARCH_LA_DYNAMICCOLUMNMATRIX_CPPH_
-
+#include <fstream>
+#include <limits>
+#include <iomanip>
 #include "tarch/la/DynamicColumnMatrix.h"
 
 namespace tarch {
@@ -62,7 +64,7 @@ template<typename Scalar>
 const DynamicVector<Scalar>& DynamicColumnMatrix<Scalar>::column (
   int colIndex
 ) const {
-  assertion ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())));
+  assertion2 ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())), colIndex, _columnVectors.size());
   return _columnVectors[colIndex];
 }
 
@@ -70,7 +72,7 @@ template<typename Scalar>
 DynamicVector<Scalar>& DynamicColumnMatrix<Scalar>::column (
   int colIndex
 ) {
-  assertion ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())));
+  assertion2 ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())), colIndex, _columnVectors.size());
   return _columnVectors[colIndex];
 }
 
@@ -79,6 +81,7 @@ void DynamicColumnMatrix<Scalar>::appendFront (
   const DynamicVector<Scalar>& columnVector
 ) {
   assertion ((columnVector.size() == _rows) || (_columnVectors.size() == 0));
+ // if(columnVector.size() <= 0) return;
   _columnVectors.push_front (DynamicVector<Scalar>(columnVector));
   _rows = _columnVectors[0].size();
 //  _columnVectors.push_back (new DynamicVector<Scalar>(columnVector));
@@ -96,6 +99,7 @@ void DynamicColumnMatrix<Scalar>::append (
   const DynamicVector<Scalar>& columnVector
 ) {
   assertion ((columnVector.size() == _rows) || (_columnVectors.size() == 0));
+ // if(columnVector.size() <= 0) return;
   _columnVectors.push_back (DynamicVector<Scalar>(columnVector));
   _rows = columnVector.size();
 }
@@ -169,6 +173,26 @@ const Scalar& DynamicColumnMatrix<Scalar>::operator() (
   assertion ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())));
   return _columnVectors[colIndex][rowIndex];
 }
+
+
+template<typename Scalar>
+void DynamicColumnMatrix<Scalar>::printm(const char* filename) const
+{
+  std::fstream f;
+  f.open(filename, std::ios::out);
+  f<<std::setprecision( std::numeric_limits<double>::digits10+2);
+  //f.precision(std::numeric_limits<Scalar>::digits10 + 2);
+  for (int rowIndex=0; rowIndex < rows() ; rowIndex++) {
+    for (int colIndex=0; colIndex < cols(); colIndex++) {
+      f<<_columnVectors[colIndex][rowIndex];
+      if(colIndex < cols()-1) f<<", ";
+    }
+    f<<"; \n";
+  }
+  f.close();
+}
+
+
 
 }} // namespace tarch, la
 

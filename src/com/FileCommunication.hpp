@@ -6,7 +6,7 @@
 #ifndef PRECICE_COM_FILE_COMMUNICATION_HPP_
 #define PRECICE_COM_FILE_COMMUNICATION_HPP_
 
-#include "com/Communication.hpp"
+#include "Communication.hpp"
 
 #include "tarch/logging/Log.h"
 
@@ -45,8 +45,7 @@ public:
    *
    * Precondition: a connection to the remote participant has been setup.
    */
-  virtual int
-  getRemoteCommunicatorSize() {
+  virtual size_t getRemoteCommunicatorSize() {
     return 1;
   };
 
@@ -58,12 +57,9 @@ public:
                                 int acceptorProcessRank,
                                 int acceptorCommunicatorSize);
 
-  virtual void
-  acceptConnectionAsServer(std::string const& nameAcceptor,
-                           std::string const& nameRequester,
-                           int requesterCommunicatorSize) {
-    preciceError("acceptConnectionAsServer()", "Not implemented!");
-  }
+  virtual void acceptConnectionAsServer(std::string const& nameAcceptor,
+                                        std::string const& nameRequester,
+                                        int requesterCommunicatorSize);
 
   /**
    * @brief Gathers information about files to write and read to/from.
@@ -75,9 +71,7 @@ public:
 
   virtual int
   requestConnectionAsClient(std::string const& nameAcceptor,
-                            std::string const& nameRequester) {
-    preciceError("requestConnectionAsClient()", "Not implemented!");
-  }
+                            std::string const& nameRequester);
 
   /**
    * @brief Doesn't do anything here.
@@ -117,10 +111,8 @@ public:
   /**
    * @brief Asynchronously sends an array of integer values.
    */
-  virtual PtrRequest
-  aSend(int* itemsToSend, int size, int rankReceiver) {
-    preciceError("aSend()", "Not implemented!");
-  }
+  virtual Request::SharedPointer
+  aSend(int* itemsToSend, int size, int rankReceiver);
 
   /**
    * @brief Sends an array of double values.
@@ -130,10 +122,8 @@ public:
   /**
    * @brief Asynchronously sends an array of double values.
    */
-  virtual PtrRequest
-  aSend(double* itemsToSend, int size, int rankReceiver) {
-    preciceError("aSend()", "Not implemented!");
-  }
+  virtual Request::SharedPointer
+  aSend(double* itemsToSend, int size, int rankReceiver);
 
   /**
    * @brief Sends a double to process with given rank.
@@ -143,10 +133,8 @@ public:
   /**
    * @brief Asynchronously sends a double to process with given rank.
    */
-  virtual PtrRequest
-  aSend(double* itemToSend, int rankReceiver) {
-    preciceError("aSend()", "Not implemented!");
-  }
+  virtual Request::SharedPointer
+  aSend(double* itemToSend, int rankReceiver);
 
   /**
    * @brief Sends an int to process with given rank.
@@ -156,10 +144,8 @@ public:
   /**
    * @brief Asynchronously sends an int to process with given rank.
    */
-  virtual PtrRequest
-  aSend(int* itemToSend, int rankReceiver) {
-    preciceError("aSend()", "Not implemented!");
-  }
+  virtual Request::SharedPointer
+  aSend(int* itemToSend, int rankReceiver);
 
   /**
    * @brief Sends a bool to process with given rank.
@@ -167,34 +153,70 @@ public:
   virtual void send(bool itemToSend, int rankReceiver);
 
   /**
+   * @brief Asynchronously sends a bool to process with given rank.
+   */
+  virtual Request::SharedPointer
+  aSend(bool* itemToSend, int rankReceiver);
+
+  /**
    * @brief Receives a std::string from process with given rank.
    */
-  virtual int receive(std::string& itemToReceive, int rankSender);
+  virtual void receive(std::string& itemToReceive, int rankSender);
 
   /**
    * @brief Receives an array of integer values.
    */
-  virtual int receive(int* itemsToReceive, int size, int rankSender);
+  virtual void receive(int* itemsToReceive, int size, int rankSender);
+
+  /**
+   * @brief Asynchronously receives an array of integer values.
+   */
+  virtual Request::SharedPointer aReceive(int* itemsToReceive,
+                                          int size,
+                                          int rankSender);
 
   /**
    * @brief Receives an array of double values.
    */
-  virtual int receive(double* itemsToReceive, int size, int rankSender);
+  virtual void receive(double* itemsToReceive, int size, int rankSender);
+
+  /**
+   * @brief Asynchronously receives an array of double values.
+   */
+  virtual Request::SharedPointer aReceive(double* itemsToReceive,
+                                          int size,
+                                          int rankSender);
 
   /**
    * @brief Receives a double from process with given rank.
    */
-  virtual int receive(double& itemToReceive, int rankSender);
+  virtual void receive(double& itemToReceive, int rankSender);
+
+  /**
+   * @brief Asynchronously receives a double from process with given rank.
+   */
+  virtual Request::SharedPointer aReceive(double* itemToReceive,
+                                          int rankSender);
 
   /**
    * @brief Receives an int from process with given rank.
    */
-  virtual int receive(int& itemToReceive, int rankSender);
+  virtual void receive(int& itemToReceive, int rankSender);
+
+  /**
+   * @brief Asynchronously receives an int from process with given rank.
+   */
+  virtual Request::SharedPointer aReceive(int* itemToReceive, int rankSender);
 
   /**
    * @brief Receives a bool from process with given rank.
    */
-  virtual int receive(bool& itemToReceive, int rankSender);
+  virtual void receive(bool& itemToReceive, int rankSender);
+
+  /**
+   * @brief Asynchronously receives a bool from process with given rank.
+   */
+  virtual Request::SharedPointer aReceive(bool* itemToReceive, int rankSender);
 
 private:
   // @brief Logging device.

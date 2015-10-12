@@ -17,7 +17,7 @@ void Group:: add
 (
   Vertex* vertex )
 {
-  assertion ( vertex != NULL );
+  assertion ( vertex != nullptr );
   _vertices.push_back ( vertex );
 }
 
@@ -32,7 +32,7 @@ void Group:: add
 (
   Edge* edge )
 {
-  assertion(edge != NULL);
+  assertion(edge != nullptr);
   _edges.push_back(edge);
 }
 
@@ -46,7 +46,7 @@ void Group:: add
 (
   Triangle* triangle )
 {
-  assertion ( triangle != NULL );
+  assertion ( triangle != nullptr );
   _triangles.push_back ( triangle );
 }
 
@@ -60,7 +60,7 @@ void Group:: add
 (
   Quad* quad )
 {
-  assertion ( quad != NULL );
+  assertion ( quad != nullptr );
   _quads.push_back ( quad );
 }
 
