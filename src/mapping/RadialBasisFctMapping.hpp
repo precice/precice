@@ -70,7 +70,7 @@ private:
 
   Eigen::MatrixXd _matrixA;
 
-  Eigen::FullPivLU<Eigen::MatrixXd> _lu;
+  Eigen::PartialPivLU<Eigen::MatrixXd> _lu;
   
   /// true if the mapping along some axis should be ignored
   bool* _deadAxis;
@@ -539,13 +539,12 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   computeIndex++;
 # endif // PRECICE_STATISTICS
 
-  // preciceDebug ( "Matrix C = " << matrixCLU );
-  _lu = matrixCLU.fullPivLu();
+  _lu = matrixCLU.partialPivLu();
   
-  int rankDeficiency = _lu.rank() - n;
+  int determinant = _lu.determinant();
 
-  if (rankDeficiency > 0){
-    preciceWarning("computeMapping()", "Interpolation matrix C has rank deficiency of " << rankDeficiency);
+  if (determinant == 0){
+    preciceWarning("computeMapping()", "Interpolation matrix C has determinant of 0, e.g. is not regular.");
   }
   
   _hasComputedMapping = true;
@@ -562,7 +561,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
   preciceTrace("clear()");
   _matrixA = Eigen::MatrixXd();
-  _lu = Eigen::FullPivLU<Eigen::MatrixXd>();
+  _lu = Eigen::PartialPivLU<Eigen::MatrixXd>();
   _hasComputedMapping = false;
 }
 
