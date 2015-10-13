@@ -263,7 +263,7 @@ public:
   void addConvergenceMeasure (
     int                         dataID,
     bool                        suffices,
-    bool                        isCoarse,
+    int                         level,
     impl::PtrConvergenceMeasure measure );
 
   /// @brief Set a coupling iteration post-processing technique.
@@ -436,7 +436,7 @@ protected:
     int dataID;
     CouplingData* data;
     bool suffices;
-    bool isCoarse;
+    int level;
     impl::PtrConvergenceMeasure measure;
   };
 

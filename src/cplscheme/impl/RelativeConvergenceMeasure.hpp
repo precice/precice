@@ -63,8 +63,8 @@ public:
       const utils::DynVector & newValues,
       const utils::DynVector& designSpecification)
    {
-    // std::cout<<"   old val: \n"<<oldValues<<std::endl;
-    // std::cout<<"   new val: \n"<<newValues<<"\n"<<std::endl;
+     //std::cout<<"   old val: \n"<<oldValues<<std::endl;
+     //std::cout<<"   new val: \n"<<newValues<<"\n"<<std::endl;
 
      _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
      _norm = utils::MasterSlave::l2norm(newValues + designSpecification);

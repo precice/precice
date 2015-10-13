@@ -309,6 +309,7 @@ std::vector<int> BaseCouplingScheme:: sendData
   assertion(m2n.get() != nullptr);
   assertion(m2n->isConnected());
   for (DataMap::value_type& pair : _sendData){
+    //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<std::endl;
     int size = pair.second->values->size();
     m2n->send(tarch::la::raw(*(pair.second->values)), size,
               pair.second->mesh->getID(), pair.second->dimension);
@@ -329,6 +330,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
 
   for (DataMap::value_type & pair : _receiveData) {
     int size = pair.second->values->size();
+    //std::cout<<"\nreceive data id="<<pair.first<<": "<<*(pair.second->values)<<std::endl;
     m2n->receive(tarch::la::raw(*(pair.second->values)), size,
                  pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
@@ -448,6 +450,7 @@ void BaseCouplingScheme:: addComputedTime
   preciceCheck(isCouplingOngoing(), "addComputedTime()",
            "Invalid call of addComputedTime() after simulation end!");
 
+  // add time interval that has been computed in the solver to get the correct time remainder
   _computedTimestepPart += timeToAdd;
   _time += timeToAdd;
 
@@ -721,14 +724,14 @@ void BaseCouplingScheme::addConvergenceMeasure
 (
   int                         dataID,
   bool                        suffices,
-  bool                        isCoarse,
+  int                        level,
   impl::PtrConvergenceMeasure measure )
 {
   ConvergenceMeasure convMeasure;
   convMeasure.dataID = dataID;
   convMeasure.data = nullptr;
   convMeasure.suffices = suffices;
-  convMeasure.isCoarse = isCoarse;
+  convMeasure.level = level;
   convMeasure.measure = measure;
   _convergenceMeasures.push_back(convMeasure);
   _firstResiduumNorm.push_back(0);
@@ -751,14 +754,18 @@ bool BaseCouplingScheme:: measureConvergence
     ConvergenceMeasure& convMeasure = _convergenceMeasures[i];
 
     // only apply convergence measures for fine model optimization, i.e., coupling
-    if(convMeasure.isCoarse) continue;
+    if(convMeasure.level > 0) continue;
 
     std::cout<<"  measure convergence fine measure, id:"<<convMeasure.dataID<<std::endl;
 
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
-    utils::DynVector& q = designSpecifications.at(convMeasure.dataID);
+    utils::DynVector q(convMeasure.data->values->size(), 0.0);
+    if(designSpecifications.find(convMeasure.dataID) != designSpecifications.end())
+    {
+      q = designSpecifications.at(convMeasure.dataID);
+    }
     convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
 
     if(not utils::MasterSlave::_slaveMode){
@@ -798,14 +805,18 @@ bool BaseCouplingScheme:: measureConvergenceCoarseModelOptimization
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
 
     // only apply convergence measures for coarse model optimization
-    if(not convMeasure.isCoarse) continue;
+    if(convMeasure.level == 0) continue;
 
     std::cout<<"  measure convergence coarse measure, id:"<<convMeasure.dataID<<std::endl;
 
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
-    utils::DynVector& q = designSpecifications.at(convMeasure.dataID);
+    utils::DynVector q(convMeasure.data->values->size(), 0.0);
+    if(designSpecifications.find(convMeasure.dataID) != designSpecifications.end())
+    {
+      q = designSpecifications.at(convMeasure.dataID);
+    }
     convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
 
     if (not convMeasure.measure->isConvergence()) {
@@ -831,7 +842,7 @@ void BaseCouplingScheme::initializeTXTWriters()
     // check if coarse model optimization exists
     bool hasCoarseModelOptimization = false;
     for (ConvergenceMeasure& convMeasure : _convergenceMeasures)
-      if(convMeasure.isCoarse) hasCoarseModelOptimization = true;
+      if(convMeasure.level > 0) hasCoarseModelOptimization = true;
 
     _iterationsWriter.addData("Timesteps", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Total_Iterations", io::TXTTableWriter::INT );
@@ -856,7 +867,7 @@ void BaseCouplingScheme::initializeTXTWriters()
        _iterationsWriter.addData(sstm.str(), io::TXTTableWriter::DOUBLE);
 
        // only for fine model optimization, i.e., coupling
-       if(convMeasure.isCoarse) continue;
+       if(convMeasure.level > 0) continue;
 
        _convergenceWriter.addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
     }
@@ -872,7 +883,7 @@ void BaseCouplingScheme::advanceTXTWriters()
     // check if coarse model optimization exists
     bool hasCoarseModelOptimization = false;
     for (ConvergenceMeasure& convMeasure : _convergenceMeasures)
-      if(convMeasure.isCoarse) hasCoarseModelOptimization = true;
+      if(convMeasure.level > 0) hasCoarseModelOptimization = true;
 
     _iterationsWriter.writeData("Timesteps", _timesteps-1);
     _iterationsWriter.writeData("Total_Iterations", _totalIterations);
@@ -938,25 +949,24 @@ void BaseCouplingScheme:: updateTimeAndIterations
   bool convergenceCoarseOptimization)
 {
   if(not convergence){
+
+    // The computed timestep part equals the timestep length, since the
+    // timestep remainder is zero. Subtract the timestep length do another
+    // coupling iteration.
+    assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
+    _time = _time - _computedTimestepPart;
+
     // in case of multilevel PP: only increment outer iteration count if surrogate model has converged.
     if(convergenceCoarseOptimization){
       _totalIterations++;
       _iterations++;
-
-      _iterationsCoarseOptimization = 1;
-      // The computed timestep part equals the timestep length, since the
-      // timestep remainder is zero. Subtract the timestep length do another
-      // coupling iteration.
-      assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
-      _time = _time - _computedTimestepPart;
+    }else{
+      // in case of multilevel PP: increment the iteration count of the surrogate model
+      _iterationsCoarseOptimization++;
+      _totalIterationsCoarseOptimization++;
     }
-
-    // in case of multilevel PP: increment the iteration count of the surrogate model
-    _iterationsCoarseOptimization++;
-    _totalIterationsCoarseOptimization++;
   } else{
     _iterationsCoarseOptimization = 1;
-    _totalIterationsCoarseOptimization = 1;
     _iterations = 1;
   }
 }
