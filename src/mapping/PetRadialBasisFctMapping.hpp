@@ -17,7 +17,7 @@
 #include <iostream>
 using std::cout;
 using std::endl;
-#include "prettyprint.hpp"
+#include "utils/prettyprint.hpp"
 
 
 namespace precice {
@@ -170,11 +170,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   preciceTrace("computeMapping()");
 
-//  preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
-//               "computeMapping()", "RBF mapping "
-//               << "is not yet supported for a participant in master mode");
-
-  using namespace tarch::la;
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
   int dimensions = input()->getDimensions();
@@ -201,50 +196,47 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     addGlobalIndex(outMesh);
   }
 
+  // Indizes that are used to build the Petsc Index set
+  std::vector<int> myIndizes;
+
   // Indizes for Q^T, holding the polynom
-  std::vector<int> myIndizes; // vector::reserve for efficiency?
   if (utils::MasterSlave::_rank <= 0) // Rank 0 or not in MasterSlave mode
     for (size_t i = 0; i < polyparams; i++)
-      myIndizes.push_back(i);
+      myIndizes.push_back(i); // polyparams reside in the first rows (which are always on rank 0)
 
   // Indizes for the vertices with polyparams offset
   for (const mesh::Vertex& v : inMesh->vertices())
-    if (v.isOwner()) {
-      preciceDebug("Met vertex, I'm owner.");
+    if (v.isOwner())
       myIndizes.push_back(v.getGlobalIndex() + polyparams);
-    } else {
-      preciceDebug("Met vertex, I'm NOT owner.");
-    }
 
   auto inputSize = myIndizes.size();
   auto n = inputSize; // polyparams, if on rank 0, are included here
 
   if (utils::MasterSlave::_rank <= 0)
-    inputSize -= polyparams;
+    inputSize -= polyparams; // Subtract polyparams on rank 0, so we only have number of vertices.
 
   auto outputSize = outMesh->vertices().size();
-
-  // This assertion is not valid anymore, since on MasterSlave condition one peer can get all vertices
-  // assertion1(inputSize >= 1 + polyparams, inputSize);
 
   PetscErrorCode ierr = 0;
   preciceDebug("inMesh->vertices().size() = " << inMesh->vertices().size());
   preciceDebug("outMesh->vertices().size() = " << outMesh->vertices().size());
 
+  // Create a symmetric, sparse matrix with n x n local size.
   _matrixC.reset();
   _matrixC.init(n, n, PETSC_DETERMINE, PETSC_DETERMINE, MATSBAIJ);
   preciceDebug("Set matrix C to local size " << n << " x " << n);
   // ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
+  // Create a sparse matrix with outputSize x n local size.
   _matrixA.reset();
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   preciceDebug("Set matrix A to local size " << outputSize << " x " << n);
-  preciceDebug("Global size A = " << _matrixA.getSize());
 
   KSPReset(_solver);
 
   IS ISlocal, ISglobal, ISidentity, ISidentityGlobal;
   ISLocalToGlobalMapping ISidentityMapping;
+  // Create an index set which maps myIndizes to continous chunks of matrix rows.
   ierr = ISCreateGeneral(PETSC_COMM_WORLD, myIndizes.size(), myIndizes.data(), PETSC_COPY_VALUES, &ISlocal); CHKERRV(ierr);
   ierr = ISAllGather(ISlocal, &ISglobal); CHKERRV(ierr); // Gather the IS from all processors
   ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr); // Make it a mapping
@@ -256,14 +248,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
 
   ierr = MatSetLocalToGlobalMapping(_matrixC.matrix, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
-  ierr = MatSetLocalToGlobalMapping(_matrixA.matrix, ISidentityMapping, _ISmapping); CHKERRV(ierr);
+  ierr = MatSetLocalToGlobalMapping(_matrixA.matrix, ISidentityMapping, _ISmapping); CHKERRV(ierr); // Set mapping only for cols, use identity for rows
 
-  if (utils::MasterSlave::_rank <= 0) {
-    cout << "== ISidentityGlobal ==" << endl;
-    ISView(ISidentityGlobal, PETSC_VIEWER_STDOUT_SELF);
-    cout << "== ISglobal ==" << endl;
-    ISView(ISglobal, PETSC_VIEWER_STDOUT_SELF);
-  }
+  // if (utils::MasterSlave::_rank <= 0) {
+  //   cout << "== ISidentityGlobal ==" << endl;
+  //   ISView(ISidentityGlobal, PETSC_VIEWER_STDOUT_SELF);
+  //   cout << "== ISglobal ==" << endl;
+  //   ISView(ISglobal, PETSC_VIEWER_STDOUT_SELF);
+  // }
 
   int i = 0;
   utils::DynVector distance(dimensions);
@@ -314,7 +306,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   for (const mesh::Vertex& iVertex : inMesh->vertices()) {
     if (not iVertex.isOwner())
       continue;
-    // nur über in-Vertices iterieren, wo isOwner == true?
+
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
     PetscScalar colVals[_matrixC.getSize().second]; // holds the values of the entries
     PetscInt polyRow = 0, polyCol = polyparams+iVertex.getGlobalIndex();
@@ -339,9 +331,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         }
       }
       double coeff = _basisFunction.evaluate(norm2(distance));
-      if (not equals(coeff, 0.0)) {
+      if (not tarch::la::equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
-        colIdx[colNum] = inMesh->vertices()[j].getGlobalIndex() + polyparams; // column of entry is the globaIndex
+        colIdx[colNum] = inMesh->vertices()[j].getGlobalIndex() + polyparams; // column of entry is the globalIndex
         colNum++;
       }
       #ifdef Asserts
@@ -370,9 +362,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   MatDiagonalSet(_matrixC.matrix, zeros.vector, ADD_VALUES);
 
   // Begin assembly here, all assembly is ended at the end of this function.
-  // ierr = MatAssemblyBegin(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
-
-  _matrixC.assemble();
+  ierr = MatAssemblyBegin(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
 
   // -- BEGIN PREALLOC LOOP FOR MATRIX A --
   // int logPreallocALoop = 3;
@@ -431,7 +421,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           distance[d] = 0;
       }
       double coeff = _basisFunction.evaluate(norm2(distance));
-      if ( not equals(coeff, 0.0)) {
+      if ( not tarch::la::equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
         colIdx[colNum] = inVertex.getGlobalIndex() + polyparams;
         // preciceDebug("Matrix A(" << it << ", " << inVertex.getGlobalIndex() + polyparams << ") = " << coeff <<
@@ -460,7 +450,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // -- END FILL LOOP FOR MATRIX A --
 
   ierr = MatAssemblyBegin(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
-  // ierr = MatAssemblyEnd(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
+  ierr = MatAssemblyEnd(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   KSPSetOperators(_solver, _matrixC.matrix, _matrixC.matrix);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);

@@ -2012,7 +2012,6 @@ void SolverInterfaceImpl:: mapWrittenData()
     bool rightTime = timing == MappingConfiguration::ON_ADVANCE;
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
-    bool isNotEmpty = not _accessor->meshContext(context.fromMeshID).mesh->vertices().empty();
     if (rightTime && not hasComputed){
       preciceDebug("Compute write mapping from mesh \""
           << _accessor->meshContext(context.fromMeshID).mesh->getName()
@@ -2031,7 +2030,6 @@ void SolverInterfaceImpl:: mapWrittenData()
     bool rightTime = timing == MappingConfiguration::ON_ADVANCE;
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasMapped = context.mappingContext.hasMappedData;
-    bool isNotEmpty = context.fromData->values().size()>0;
     if (hasMapping && rightTime && (not hasMapped)){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
@@ -2072,7 +2070,6 @@ void SolverInterfaceImpl:: mapReadData()
     bool mapNow = timing == mapping::MappingConfiguration::ON_ADVANCE;
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
-    bool isNotEmpty = not _accessor->meshContext(context.toMeshID).mesh->vertices().empty();
     if (mapNow && not hasComputed){
       preciceDebug("Compute read mapping from mesh \""
               << _accessor->meshContext(context.fromMeshID).mesh->getName()
@@ -2091,7 +2088,6 @@ void SolverInterfaceImpl:: mapReadData()
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
     bool hasMapping = context.mappingContext.mapping.get() != nullptr;
     bool hasMapped = context.mappingContext.hasMappedData;
-    bool isNotEmpty = context.toData->values().size()>0;
     if (mapNow && hasMapping && (not hasMapped)){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
