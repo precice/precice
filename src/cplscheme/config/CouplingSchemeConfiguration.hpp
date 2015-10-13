@@ -132,6 +132,7 @@ private:
   const std::string ATTR_TO;
   const std::string ATTR_SUFFICES;
   const std::string ATTR_CONTROL;
+  const std::string ATTR_LEVEL;
 
   const std::string VALUE_SERIAL_EXPLICIT;
   const std::string VALUE_PARALLEL_EXPLICIT;
@@ -159,7 +160,7 @@ private:
     typedef boost::tuple<mesh::PtrData, mesh::PtrMesh,std::string, std::string,bool> Exchange;
     std::vector<Exchange> exchanges;
     // @brief Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<boost::tuple<int,bool,std::string,impl::PtrConvergenceMeasure> > convMeasures;
+    std::vector<boost::tuple<int, bool, std::string, int, impl::PtrConvergenceMeasure> > convMeasures;
     int maxIterations;
     int extrapolationOrder;
 
@@ -232,25 +233,29 @@ private:
     const std::string & dataName,
     const std::string & meshName,
     double              limit,
-    bool                suffices);
+    bool                suffices,
+    int                 level);
 
   void addRelativeConvergenceMeasure (
     const std::string & dataName,
     const std::string & meshName,
     double              limit,
-    bool                suffices );
+    bool                suffices,
+    int                 level);
 
   void addResidualRelativeConvergenceMeasure (
     const std::string & dataName,
     const std::string & meshName,
     double              limit,
-    bool                suffices );
+    bool                suffices,
+    int                 level);
 
   void addMinIterationConvergenceMeasure (
     const std::string & dataName,
     const std::string & meshName,
     int                 minIterations,
-    bool                suffices );
+    bool                suffices,
+    int                 level);
 
   mesh::PtrData getData (
     const std::string & dataName,
