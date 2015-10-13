@@ -651,7 +651,7 @@ void SolverInterfaceImpl:: fulfilledAction
 
 bool SolverInterfaceImpl::hasToEvaluateSurrogateModel()
 {
-  std::cout<<"_isCoarseModelOptimizationActive() = "<<_couplingScheme->isCoarseModelOptimizationActive();
+ // std::cout<<"_isCoarseModelOptimizationActive() = "<<_couplingScheme->isCoarseModelOptimizationActive();
   return _couplingScheme->isCoarseModelOptimizationActive();
 }
 
