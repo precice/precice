@@ -492,7 +492,7 @@ void BaseQNPostProcessing::undoScaling
   for (int id : _dataIDs) {
     double factor = _scalings[id];
     int size = cplData[id]->values->size();
-    preciceDebug("Copying values back, size: " << size);
+    preciceDebug("Copying values back, size: " << size<<", scaling back with factor "<<factor<<" for id: "<<id);
     utils::DynVector& valuesPart = *(cplData[id]->values);
     utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
     for (int i = 0; i < size; i++) {
