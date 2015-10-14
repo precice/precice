@@ -251,8 +251,11 @@ void ParallelCouplingScheme::implicitAdvance()
       getM2N()->finishReceivePackage();
       std::cout<<" +++ Second Participant, finish receiveData() +++"<<std::endl;
 
-      // -------- NEW
-      std::cout<<"\n ### coarse model opt active (1): "<<_isCoarseModelOptimizationActive<<std::endl;
+
+      std::cout << "before sending, after PP" << std::endl;
+       for (auto elem : _allData) {
+         std::cout << "\n data with ID: " << elem.first << "\n" << (*elem.second->values) << std::endl;
+       }
 
       auto designSpecifications = getPostProcessing()->getDesignSpecification(getAllData());
 
@@ -299,10 +302,6 @@ void ParallelCouplingScheme::implicitAdvance()
         // Stop, when maximal iteration count (given in config) is reached
         if (maxIterationsReached())   convergence = true;
       }
-
-      std::cout<<" ### coarse model opt active (2): "<<_isCoarseModelOptimizationActive<<std::endl;
-      std::cout<<" ### coarse model converged: "<<convergenceCoarseOptimization<<std::endl;
-      std::cout<<" ### fine model converged: "<<convergence<<"\n"<<std::endl;
 
       // passed by reference, modified in MM post processing. No-op for all other post-processings
       getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
