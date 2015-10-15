@@ -9,6 +9,7 @@
 #include "tarch/la/MatrixOperations.h"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "tarch/la/MatrixMatrixOperations.h"
+#include "Eigen/Core"
 #include <vector>
 
 namespace tarch {
@@ -85,6 +86,9 @@ public:
   /// @brief Prints the matrix to stdout.
   void print() const;
   
+  /// Converts to an Eigen::MatrixXd
+  operator Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic>() const;
+
   // No more methods here? They are all generic free methods now!
 };
 

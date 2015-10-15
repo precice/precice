@@ -2,7 +2,7 @@
 #ifndef PRECICE_NO_PETSC
 
 #include "mapping/Mapping.hpp"
-#include "RadialBasisFctMapping.hpp"
+#include "impl/BasisFunctions.hpp"
 #include "tarch/la/DynamicVector.h"
 #include "utils/MasterSlave.hpp"
 #include "utils/Petsc.hpp"

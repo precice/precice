@@ -344,7 +344,7 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
     else if (_config.type == VALUE_MULTI){
       preciceCheck ( _config.setController, "xmlTagCallback()",
               "One controller per MultiCoupling need to be defined" );
-      foreach(std::string& accessor, _config.participants){
+      for (std::string& accessor : _config.participants) {
         PtrCouplingScheme scheme = createMultiCouplingScheme(accessor);
         addCouplingScheme(scheme, accessor);
       }

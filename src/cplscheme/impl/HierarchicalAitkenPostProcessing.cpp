@@ -57,7 +57,7 @@ void HierarchicalAitkenPostProcessing:: initialize
 //  precicePrint ( "HierarchicalAitkenPostProcessing: level count = " << _aitkenFactors.size() );
 
   // Append column for old values if not done by coupling scheme yet
-  foreach (DataMap::value_type& pair, cplData){
+  for (DataMap::value_type& pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
       pair.second->oldValues.append(CouplingData::DataMatrix(
@@ -134,7 +134,7 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
   computeAitkenFactor ( 0, nominators[0], denominators[0] );
   double omega = _aitkenFactors[0];
   double oneMinusOmega = 1.0 - omega;
-  foreach ( DataMap::value_type & pair, cplData ) {
+  for (DataMap::value_type &pair : cplData) {
     DataValues & values = *pair.second->values;
     DataValues & oldValues = pair.second->oldValues.column(0);
     values[0] = values[0] * omega + oldValues[0] * oneMinusOmega;

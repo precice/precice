@@ -8,6 +8,7 @@
 #include "cplscheme/impl/IQNILSPostProcessing.hpp"
 #include "cplscheme/impl/MVQNPostProcessing.hpp"
 #include "cplscheme/impl/BroydenPostProcessing.hpp"
+#include "cplscheme/impl/BaseQNPostProcessing.hpp"
 #include <cplscheme/impl/BroydenPostProcessing.hpp>
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Data.hpp"
@@ -41,6 +42,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_TIMESTEPS_REUSED("timesteps-reused"),
   TAG_SINGULARITY_LIMIT("singularity-limit"),
   TAG_DATA("data"),
+  TAG_FILTER("filter"),
   ATTR_NAME("name"),
   ATTR_MESH("mesh"),
   ATTR_SCALING("scaling"),
@@ -98,7 +100,7 @@ void PostProcessingConfiguration:: connectTags(
       tags.push_back(tag);
     }
 
-    foreach (XMLTag& tag, tags){
+    for (XMLTag& tag : tags) {
       parent.addSubtag(tag);
     }
 
@@ -201,6 +203,20 @@ void PostProcessingConfiguration:: xmlTagCallback
   else if (callingTag.getName() == TAG_SINGULARITY_LIMIT){
     _config.singularityLimit = callingTag.getDoubleAttributeValue(ATTR_VALUE);
   }
+  else if (callingTag.getName() == TAG_FILTER){
+	  auto f = callingTag.getStringAttributeValue(ATTR_NAME);
+	  if(f == "QR1-filter"){
+		  _config.filter = impl::BaseQNPostProcessing::QR1FILTER;
+	  }else if (f == "QR1_absolute-filter"){
+	  		  _config.filter = impl::BaseQNPostProcessing::QR1FILTER_ABS;
+	  }else if (f == "QR2-filter"){
+		  _config.filter = impl::BaseQNPostProcessing::QR2FILTER;
+	  }else if (f == "POD-filter"){
+	  		  _config.filter = impl::BaseQNPostProcessing::PODFILTER;
+	  }else{
+		  _config.filter = impl::BaseQNPostProcessing::NOFILTER;
+	  }
+  }
 }
 
 void PostProcessingConfiguration:: xmlEndTagCallback
@@ -228,7 +244,8 @@ void PostProcessingConfiguration:: xmlEndTagCallback
       _postProcessing = impl::PtrPostProcessing (
           new impl::IQNILSPostProcessing(
           _config.relaxationFactor, _config.maxIterationsUsed,
-          _config.timestepsReused, _config.singularityLimit,
+          _config.timestepsReused, _config.filter,
+          _config.singularityLimit,
           _config.dataIDs, _config.scalings) );
     }
     else if (callingTag.getName() == VALUE_MVQN){
@@ -236,7 +253,8 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 		  _postProcessing = impl::PtrPostProcessing (
 			  new impl::MVQNPostProcessing(
 			  _config.relaxationFactor, _config.maxIterationsUsed,
-			  _config.timestepsReused, _config.singularityLimit,
+			  _config.timestepsReused, _config.filter,
+			  _config.singularityLimit,
 			  _config.dataIDs, _config.scalings) );
 		#else
       	  preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if precice is compiled with MPI");
@@ -246,7 +264,8 @@ void PostProcessingConfiguration:: xmlEndTagCallback
       _postProcessing = impl::PtrPostProcessing (
           new impl::BroydenPostProcessing(
           _config.relaxationFactor, _config.maxIterationsUsed,
-          _config.timestepsReused, _config.singularityLimit,
+          _config.timestepsReused, _config.filter,
+          _config.singularityLimit,
           _config.dataIDs, _config.scalings) );
     }
     else {
@@ -331,11 +350,20 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLAttribute<double> attrScaling(ATTR_SCALING);
     attrScaling.setDefaultValue(1.0);
     attrScaling.setDocumentation("If the absolute values of two coupling variables"
-         " differ too much, a scaling improves the performance of VIQN");
+         " differ too much, a scaling improves the performance of V-IQN-ILS");
     tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
+
+    XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_ONCE );
+   	tagFilter.addAttribute(attrName);
+   	tagFilter.setDocumentation("Type of filtering technique that is used to "
+   			"maintain good conditioning in the least-squares system. Possible filters:\n"
+   			"  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
+   			"  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
+   			"  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
+   	tag.addSubtag(tagFilter);
   }
   else if (tag.getName() == VALUE_MVQN){
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
@@ -362,11 +390,20 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLAttribute<double> attrScaling(ATTR_SCALING);
     attrScaling.setDefaultValue(1.0);
     attrScaling.setDocumentation("If the absolute values of two coupling variables"
-         " differ too much, a scaling improves the performance of MVQN");
+         " differ too much, a scaling improves the performance of V-IQN-IMVJ");
     tagData.addAttribute(attrScaling);
     tagData.addAttribute(attrName);
     tagData.addAttribute(attrMesh);
     tag.addSubtag(tagData);
+
+    XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_ONCE );
+	tagFilter.addAttribute(attrName);
+	tagFilter.setDocumentation("Type of filtering technique that is used to "
+	   			"maintain good conditioning in the least-squares system. Possible filters:\n"
+	   			"  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
+	   			"  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
+	   			"  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
+	tag.addSubtag(tagFilter);
   }
   else if (tag.getName() == VALUE_BROYDEN){
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
