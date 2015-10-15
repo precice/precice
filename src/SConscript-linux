@@ -46,6 +46,7 @@ sourcesSpacetree = [
 
 sourcesMapping = [
     Glob('mapping/*.cpp'),
+    Glob('mapping/impl/*.cpp'),
     Glob('mapping/config/*.cpp'),
     Glob('mapping/tests/*.cpp')
 ]

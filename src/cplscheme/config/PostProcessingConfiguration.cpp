@@ -100,7 +100,7 @@ void PostProcessingConfiguration:: connectTags(
       tags.push_back(tag);
     }
 
-    foreach (XMLTag& tag, tags){
+    for (XMLTag& tag : tags) {
       parent.addSubtag(tag);
     }
 

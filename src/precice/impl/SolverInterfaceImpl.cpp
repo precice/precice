@@ -336,7 +336,7 @@ double SolverInterfaceImpl:: initialize()
     if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
       typedef std::map<std::string,M2NWrap>::value_type M2NPair;
       preciceInfo("initialize()", "Setting up slaves communication to coupling partner/s " );
-      foreach (M2NPair& m2nPair, _m2ns){
+      for (M2NPair& m2nPair : _m2ns) {
         m2n::M2N::SharedPointer& m2n = m2nPair.second.m2n;
         std::string localName = _accessorName;
         std::string remoteName(m2nPair.first);

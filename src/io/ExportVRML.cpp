@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ExportVRML.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -94,7 +91,7 @@ void ExportVRML:: writeGeometry
 
   // Export vertices
   int vertexIndex = 0;
-  foreach ( mesh::Vertex& vertex, mesh.vertices() ) {
+  for (mesh::Vertex& vertex : mesh.vertices()) {
     if ( dimensions == 2 ) {
       outFile << "         " << vertex.getCoords()[0]
               << " " << vertex.getCoords()[1]
@@ -119,7 +116,7 @@ void ExportVRML:: writeGeometry
   if ( dimensions == 2 ) {
     outFile << "   IndexedLineSet  {" << std::endl
       << "      coordIndex  [ " << std::endl;
-    foreach ( mesh::Edge& edge, mesh.edges() ) {
+    for (mesh::Edge& edge : mesh.edges()) {
       assertion ( vertexIndices.count(edge.vertex(0).getID()) > 0 );
       assertion ( vertexIndices.count(edge.vertex(1).getID()) > 0 );
       outFile << "         "
@@ -134,7 +131,7 @@ void ExportVRML:: writeGeometry
     assertion ( dimensions == 3 );
     outFile << "   IndexedFaceSet  {" << std::endl
             << "      coordIndex  [ " << std::endl;
-    foreach ( mesh::Triangle& triangle, mesh.triangles() ) {
+    for (mesh::Triangle& triangle : mesh.triangles()) {
       outFile << "         ";
       for ( int i=0; i < 3; i++ ) {
         int vertexIndex = triangle.vertex(i).getID();
@@ -185,7 +182,7 @@ void ExportVRML:: writeVertexData
   std::ofstream& outFile,
    mesh::Mesh&   mesh ) const
 {
-  foreach ( mesh::PtrData data, mesh.data() ) {
+  for (mesh::PtrData data : mesh.data()) {
     outFile << "   Info {"                         << std::endl
             << "      string \"preCICE data\""     << std::endl
             << "      fields [ SFString dataname SFString datatype "
@@ -241,11 +238,10 @@ void ExportVRML:: writePropertyContainer
 {
   using mesh::PropertyContainer;
   int dimensions = mesh.getDimensions();
-  foreach ( PropertyContainer & container, mesh.propertyContainers() ) {
+  for (PropertyContainer & container : mesh.propertyContainers()) {
     int id = container.getProperty<int> ( container.INDEX_GEOMETRY_ID );
     std::string idName ( "" );
-    std::pair<std::string,int> nameID;
-    foreach ( nameID, mesh.getNameIDPairs() ) {
+    for (auto &nameID : mesh.getNameIDPairs()) {
       if ( nameID.second == id ) {
         idName = nameID.first;
         break;
@@ -273,7 +269,7 @@ void ExportVRML:: writePropertyContainer
 
     int index = 0;
     if (dimensions == 2){
-      foreach (mesh::Edge& edge, mesh.edges()){
+      for (mesh::Edge& edge : mesh.edges()) {
         for (int i=0; i < edge.getParentCount(); i++){
           if (&edge.getParent(i) == &container ){
             outFile << "         " << index << "," << std::endl;
@@ -283,7 +279,7 @@ void ExportVRML:: writePropertyContainer
       }
     }
     else {
-      foreach (mesh::Triangle& triangle, mesh.triangles()){
+      for (mesh::Triangle& triangle : mesh.triangles()) {
         for (int i=0; i < triangle.getParentCount(); i++){
           if (&triangle.getParent(i) == &container ){
             outFile << "         " << index << "," << std::endl;

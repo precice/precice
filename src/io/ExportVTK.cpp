@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ExportVTK.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -56,7 +53,7 @@ void ExportVTK::exportGeometry
 
   // Plot vertices
   outFile << "POINTS " << mesh.vertices().size() << " float "<<std::endl << std::endl;
-  foreach(mesh::Vertex& vertex, mesh.vertices()){
+  for (mesh::Vertex& vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outFile);
   }
   outFile << std::endl;
@@ -66,7 +63,7 @@ void ExportVTK::exportGeometry
   if(mesh.getDimensions() == 2) {
     outFile << "CELLS " << mesh.edges().size() << " " << mesh.edges().size() * 3
             << std::endl << std::endl;
-    foreach(mesh::Edge & edge, mesh.edges()){
+    for (mesh::Edge & edge : mesh.edges()) {
       int internalIndices[2];
       internalIndices[0] = edge.vertex(0).getID();
       internalIndices[1] = edge.vertex(1).getID();
@@ -85,14 +82,14 @@ void ExportVTK::exportGeometry
     size_t sizeQuads = mesh.quads().size();
     outFile << "CELLS " << sizeTriangles + sizeQuads << " "
             << sizeTriangles * 4 + sizeQuads * 5 << std::endl << std::endl;
-    foreach(mesh::Triangle& triangle, mesh.triangles()){
+    for (mesh::Triangle& triangle : mesh.triangles()) {
       int internalIndices[3];
       internalIndices[0] = triangle.vertex(0).getID();
       internalIndices[1] = triangle.vertex(1).getID();
       internalIndices[2] = triangle.vertex(2).getID();
       writeTriangle(internalIndices, outFile);
     }
-    foreach(mesh::Quad& quad, mesh.quads()){
+    for (mesh::Quad& quad : mesh.quads()) {
       int internalIndices[4];
       internalIndices[0] = quad.vertex(0).getID();
       internalIndices[1] = quad.vertex(1).getID();
@@ -143,7 +140,7 @@ void ExportVTK:: exportData
   if(_writeNormals) { // Plot vertex normals
     outFile << "VECTORS VertexNormals float" << std::endl;
     outFile << std::endl;
-    foreach(mesh::Vertex& vertex, mesh.vertices()){
+    for (mesh::Vertex& vertex : mesh.vertices()) {
       int i = 0;
       for(; i < mesh.getDimensions(); i++){
         outFile << vertex.getNormal()[i] << " ";
@@ -172,12 +169,12 @@ void ExportVTK:: exportData
 //    }
   }
 
-  foreach(mesh::PtrData data, mesh.data()){ // Plot vertex data
+  for (mesh::PtrData data : mesh.data()) { // Plot vertex data
     utils::DynVector& values = data->values();
     if(data->getDimensions() > 1) {
       utils::DynVector viewTemp(data->getDimensions());
       outFile << "VECTORS " << data->getName() << " float" << std::endl;
-      foreach(mesh::Vertex& vertex, mesh.vertices()) {
+      for (mesh::Vertex& vertex : mesh.vertices()) {
         int offset = vertex.getID() * data->getDimensions();
         for(int i=0; i < data->getDimensions(); i++){
           viewTemp[i] = values[offset + i];
@@ -196,7 +193,7 @@ void ExportVTK:: exportData
     else if(data->getDimensions() == 1) {
       outFile << "SCALARS " << data->getName() << " float" << std::endl;
       outFile << "LOOKUP_TABLE default" << std::endl;
-      foreach(mesh::Vertex& vertex, mesh.vertices()) {
+      for (mesh::Vertex& vertex : mesh.vertices()) {
         outFile << values[vertex.getID()] << std::endl;
       }
       outFile << std::endl;

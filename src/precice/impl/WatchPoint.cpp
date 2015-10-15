@@ -185,7 +185,7 @@ void WatchPoint:: getValue
   utils::DynVector temp(dim);
   size_t index = 0;
   const utils::DynVector& values = data->values();
-  foreach ( mesh::Vertex* vertex, _vertices ) {
+  for (mesh::Vertex* vertex : _vertices ) {
     int offset = vertex->getID()*dim;
     for ( int i=0; i < dim; i++ ){
       temp[i] = values[offset + i];
@@ -204,7 +204,7 @@ void WatchPoint:: getValue
 {
   size_t index = 0;
   const utils::DynVector& values = data->values();
-  foreach ( mesh::Vertex* vertex, _vertices ) {
+  for (mesh::Vertex* vertex : _vertices ) {
     value += _weights[index] * values[vertex->getID()];
     index ++;
   }

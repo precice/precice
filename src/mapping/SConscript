@@ -1,9 +1,0 @@
-# This is file src/mapping/SConscript
-
-sources = [
-   Glob('*.cpp'),
-   Glob('config/*.cpp'),
-   Glob('tests/*.cpp')
-   ]
-   
-Return ('sources')

@@ -309,7 +309,7 @@ int RequestManager:: requestInquirePosition
   _com->send(REQUEST_INQUIRE_POSITION, 0);
   _com->send(tarch::la::raw(point), point.size(), 0);
   _com->send((int)meshIDs.size(), 0);
-  foreach (int id, meshIDs){
+  for (int id : meshIDs) {
     _com->send(id, 0);
   }
   int position = spacetree::Spacetree::positionUndefined();
@@ -328,7 +328,7 @@ void RequestManager:: requestInquireClosestMesh
   _com->send(REQUEST_INQUIRE_CLOSEST_MESH, 0);
   _com->send(tarch::la::raw(point), point.size(), 0);
   _com->send((int)meshIDs.size(), 0 );
-  foreach (int id, meshIDs){
+  for (int id : meshIDs) {
     _com->send(id, 0);
   }
   int sizeMeshIDs = 0;
@@ -367,7 +367,7 @@ void RequestManager:: requestInquireVoxelPosition
   if (not meshIDs.empty()){
     tarch::la::DynamicVector<int> idVector(meshIDs.size());
     int i = 0;
-    foreach (int id, meshIDs){
+    for (int id : meshIDs) {
       idVector[i] = id;
       i ++;
     }
@@ -690,7 +690,7 @@ void RequestManager:: handleRequestInitialze
 {
   preciceTrace("handleRequestInitialze()");
   _interface.initialize();
-  foreach (int rank, clientRanks){
+  for (int rank : clientRanks) {
     _couplingScheme->sendState(_com, rank);
   }
 }
@@ -701,7 +701,7 @@ void RequestManager:: handleRequestInitialzeData
 {
   preciceTrace("handleRequestInitializeData()");
   _interface.initializeData();
-  foreach (int rank, clientRanks){
+  for (int rank : clientRanks) {
     _couplingScheme->sendState(_com, rank);
   }
 }
@@ -724,7 +724,7 @@ void RequestManager:: handleRequestAdvance
     oldDt = dt;
   }
   _interface.advance(oldDt);
-  foreach (int rank, clientRanks){
+  for (int rank : clientRanks) {
     _couplingScheme->sendState(_com, rank);
   }
 }
@@ -795,7 +795,7 @@ void RequestManager:: handleRequestInquireClosestMesh
 
   // Send output
   _com->send((int)closest.meshIDs().size(), rankSender);
-  foreach (int id, closest.meshIDs()){
+  for (int id : closest.meshIDs()) {
     _com->send(id, rankSender);
   }
   _com->send(closest.position(), rankSender);

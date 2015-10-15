@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_UTILS_GLOBALS_HPP_
-#define PRECICE_UTILS_GLOBALS_HPP_
+#pragma once
 
 #include "MasterSlave.hpp"
 
@@ -22,7 +18,7 @@
 #ifndef PRECICE_NO_MPI
 #include "utils/Parallel.hpp"
 #define PRECICE_PROCESS_RANK_STREAM \
-   "(" << utils::Parallel::getProcessRank() << ") "
+  "(" << precice::utils::Parallel::getProcessRank() << ") "
 #else
 #define PRECICE_PROCESS_RANK_STREAM ""
 #endif
@@ -44,7 +40,7 @@
 #define preciceWarning(methodname, stream) \
   logWarning(methodname, PRECICE_PROCESS_RANK_STREAM << stream)
 #define preciceInfo(methodname, stream) \
-  if(not utils::MasterSlave::_slaveMode) \
+  if(not precice::utils::MasterSlave::_slaveMode)       \
     logInfo(methodname, stream)
 
 /**
@@ -58,19 +54,19 @@
 
 #define preciceTrace(methodname) \
   std::string preciceMethodName(methodname); \
-  utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, "");
+  precice::utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, "");
 
 #define preciceTrace1(methodname, var1) \
    std::string preciceMethodName(methodname); \
    std::ostringstream preciceTraceStream; \
    preciceTraceStream << #var1 << "=" << var1; \
-   utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
+   precice::utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
 
 #define preciceTrace2(methodname, var1, var2) \
   std::string preciceMethodName(methodname); \
   std::ostringstream preciceTraceStream; \
   preciceTraceStream << #var1 << "=" << var1 << ", " << #var2 << "=" << var2; \
-  utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
+  precice::utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
 
 #define preciceTrace3(methodname, var1, var2, var3) \
   std::string preciceMethodName(methodname); \
@@ -78,7 +74,7 @@
   preciceTraceStream         << #var1 << "=" << var1  \
                      << ", " << #var2 << "=" << var2  \
                      << ", " << #var3 << "=" << var3; \
-  utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
+  precice::utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
 
 #define preciceTrace4(methodname, var1, var2, var3, var4) \
   std::string preciceMethodName(methodname); \
@@ -87,7 +83,7 @@
                      << ", " << #var2 << "=" << var2  \
                      << ", " << #var3 << "=" << var3  \
                      << ", " << #var4 << "=" << var4; \
-  utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
+  precice::utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
 
 #define preciceTrace5(methodname, var1, var2, var3, var4, var5) \
   std::string preciceMethodName(methodname); \
@@ -97,7 +93,7 @@
                      << ", " << #var3 << "=" << var3  \
                      << ", " << #var4 << "=" << var4  \
                      << ", " << #var5 << "=" << var5; \
-  utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
+  precice::utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
 
 #define preciceTrace6(methodname, var1, var2, var3, var4, var5, var6) \
   std::string preciceMethodName(methodname); \
@@ -108,7 +104,7 @@
                      << ", " << #var4 << "=" << var4  \
                      << ", " << #var5 << "=" << var5  \
                      << ", " << #var6 << "=" << var6; \
-  utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
+  precice::utils::Tracer preciceTracer(PRECICE_LOGGING_DEVICE, methodname, preciceTraceStream.str());
 
 #else // Debug
 
@@ -168,5 +164,3 @@ private:
 };
 
 }} // namespace precice, utils
-
-#endif /* PRECICE_UTILS_GLOBALS_HPP_ */
