@@ -40,6 +40,7 @@ _log("precice::cplscheme::impl::BaseQNPostProcessing");
 BaseQNPostProcessing::BaseQNPostProcessing
 (
     double initialRelaxation,
+    bool forceInitialRelaxation,
     int maxIterationsUsed,
     int timestepsReused,
     int filter,
@@ -59,6 +60,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _firstIteration(true),
   _firstTimeStep(true),
   _hasNodesOnInterface(true),
+  _forceInitialRelaxation(forceInitialRelaxation),
   _oldXTilde(),
   _residuals(),
   _secondaryResiduals(),
@@ -262,7 +264,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
   _residuals -= _scaledOldValues;
 
   //if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
-  if (_firstIteration && _firstTimeStep) {
+  if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
   } else {
     preciceDebug("   Update Difference Matrices");
@@ -346,8 +348,7 @@ void BaseQNPostProcessing::performPostProcessing
    */
   updateDifferenceMatrices(cplData);
 
-  //if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
-  if (_firstIteration && _firstTimeStep) {
+  if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
     preciceDebug("   Performing underrelaxation");
     _oldXTilde = _scaledValues; // Store x tilde
     _oldResiduals = _residuals; // Store current residual
@@ -370,7 +371,7 @@ void BaseQNPostProcessing::performPostProcessing
 
     // If the previous time step converged within one single iteration, nothing was added
     // to the LS system matrices and they need to be restored from the backup at time T-2
-    if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0)) {
+    if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0) && not _forceInitialRelaxation) {
       preciceDebug("   Last time step converged after one iteration. Need to restore the matrices from backup.");
 
       _matrixCols = _matrixColsBackup;
@@ -410,7 +411,7 @@ void BaseQNPostProcessing::performPostProcessing
 
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
-    if (_firstIteration && _timestepsReused == 0) {
+    if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
       // save current matrix data in case the coupling for the next time step will terminate
       // after the first iteration (no new data, i.e., V = W = 0)
       if (getLSSystemCols() > 0) {
@@ -584,11 +585,21 @@ void BaseQNPostProcessing::iterationsConverged
 
   if (_timestepsReused == 0) {
 
-    /**
-     * pending deletion (after first iteration of next time step
-     * Using the matrices from the old time step for the first iteration
-     * is better than doing underrelaxation as first iteration of every time step
-     */
+    if(_forceInitialRelaxation)
+    {
+      _matrixV.clear();
+      _matrixW.clear();
+      _qrV.reset();
+      // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+      _qrV.setGlobalRows(getLSSystemRows());
+      _matrixCols.clear(); // _matrixCols.push_front() at the end of the method.
+    }else{
+      /**
+       * pending deletion (after first iteration of next time step
+       * Using the matrices from the old time step for the first iteration
+       * is better than doing underrelaxation as first iteration of every time step
+       */
+    }
   }
   else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();

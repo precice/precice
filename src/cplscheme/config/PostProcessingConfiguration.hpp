@@ -85,7 +85,6 @@ private:
    const std::string TAG_INIT_RELAX;
    const std::string TAG_MAX_USED_ITERATIONS;
    const std::string TAG_TIMESTEPS_REUSED;
-   const std::string TAG_SINGULARITY_LIMIT;
    const std::string TAG_DATA;
    const std::string TAG_FILTER;
    const std::string TAG_ESTIMATEJACOBIAN;
@@ -95,6 +94,8 @@ private:
    const std::string ATTR_MESH;
    const std::string ATTR_SCALING;
    const std::string ATTR_VALUE;
+   const std::string ATTR_ENFORCE;
+   const std::string ATTR_SINGULARITYLIMIT;
 
    const std::string VALUE_CONSTANT;
    const std::string VALUE_AITKEN;
@@ -124,6 +125,7 @@ private:
       std::map<int,double> scalings;
       std::string type;
       double relaxationFactor;
+      bool forceInitialRelaxation;
       int maxIterationsUsed;
       int timestepsReused;
       int filter;
@@ -136,6 +138,7 @@ private:
          scalings(),
          type ( "" ),
          relaxationFactor ( 0.0 ),
+         forceInitialRelaxation( false ),
          maxIterationsUsed ( 0 ),
          timestepsReused ( 0 ),
          filter ( impl::PostProcessing::NOFILTER ),

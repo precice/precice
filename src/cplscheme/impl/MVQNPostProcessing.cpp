@@ -38,6 +38,7 @@ namespace impl {
 MVQNPostProcessing:: MVQNPostProcessing
 (
   double initialRelaxation,
+  bool forceInitialRelaxation,
   int    maxIterationsUsed,
   int    timestepsReused,
   int 	 filter,
@@ -45,7 +46,7 @@ MVQNPostProcessing:: MVQNPostProcessing
   std::vector<int> dataIDs,
   std::map<int,double> scalings)
 :
-  BaseQNPostProcessing(initialRelaxation, maxIterationsUsed, timestepsReused,
+  BaseQNPostProcessing(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
 		       filter, singularityLimit, dataIDs, scalings),
 //  _secondaryOldXTildes(),
   _invJacobian(),

@@ -73,6 +73,7 @@ public:
    */
    BaseQNPostProcessing (
       double initialRelaxation,
+      bool   forceInitialRelaxation,
       int    maxIterationsUsed,
       int    timestepsReused,
       int    filter,
@@ -180,11 +181,12 @@ protected:
    // @brief Maximum number of old timesteps (with data values) kept.
    int _timestepsReused;
 
-   // @brief Determines sensitivity when two matrix columns are considered equal.
-   //
-   // When during the QR decomposition of the V matrix a pivot element smaller
-   // than the singularity limit is found, the matrix is considered to be singular
-   // and the corresponding (older) iteration is removed.
+   /* @brief Determines sensitivity when two matrix columns are considered equal.
+    *
+    * When during the QR decomposition of the V matrix a pivot element smaller
+    * than the singularity limit is found, the matrix is considered to be singular
+    * and the corresponding (older) iteration is removed.
+    */
    double _singularityLimit;
 
    /**
@@ -195,24 +197,26 @@ protected:
     */
    Eigen::VectorXd _designSpecification;
 
-   // @brief Data IDs of data to be involved in the IQN algorithm.
+   /// @brief Data IDs of data to be involved in the IQN algorithm.
    std::vector<int> _dataIDs;
 
-   // @brief Data IDs of data not involved in IQN coefficient computation.
+   /// @brief Data IDs of data not involved in IQN coefficient computation.
    std::vector<int> _secondaryDataIDs;
 
-   // @brief Scales data by fixed value.
-   //
-   // When more than one data is used to compute the IQN linear combination of
-   // old data columns (_dataIDs.size() > 0), all data should have similar
-   // magnitude, in order to be similarly important in the least-squares solution.
+   /* @brief Scales data by fixed value.
+    *
+    * When more than one data is used to compute the IQN linear combination of
+    * old data columns (_dataIDs.size() > 0), all data should have similar
+    * magnitude, in order to be similarly important in the least-squares solution.
+    */
    std::map<int,double> _scalings;
 
-   // @brief Indicates the first iteration, where constant relaxation is used.
+   /// @brief Indicates the first iteration, where constant relaxation is used.
    bool _firstIteration;
 
-   // @brief Indicates the first time step, where constant relaxation is used
-   //        later, we replace the constant relaxation by a qN-update from last time step.
+   /* @brief Indicates the first time step, where constant relaxation is used
+    *        later, we replace the constant relaxation by a qN-update from last time step.
+    */
    bool _firstTimeStep;
 
    /*
@@ -220,6 +224,12 @@ protected:
     *        If in server mode: Always true.
     */
    bool _hasNodesOnInterface;
+
+   /* @brief If true, the QN-scheme always performs a underrelaxation in the first iteration of
+    *        a new time step. Otherwise, the LS system from the previous time step is used in the
+    *        first iteration.
+    */
+   bool _forceInitialRelaxation;
 
    // @brief Solver output from last iteration.
    DataValues _oldXTilde;

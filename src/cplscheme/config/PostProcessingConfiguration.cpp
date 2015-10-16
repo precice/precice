@@ -42,15 +42,15 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_INIT_RELAX("initial-relaxation"),
   TAG_MAX_USED_ITERATIONS("max-used-iterations"),
   TAG_TIMESTEPS_REUSED("timesteps-reused"),
-  TAG_SINGULARITY_LIMIT("singularity-limit"),
   TAG_DATA("data"),
   TAG_FILTER("filter"),
   TAG_ESTIMATEJACOBIAN("estimate-jacobian"),
-  TAG_COARSEMODELOPTIMIZATION("coarse-model-optimization"),
   ATTR_NAME("name"),
   ATTR_MESH("mesh"),
   ATTR_SCALING("scaling"),
   ATTR_VALUE("value"),
+  ATTR_ENFORCE("enforce"),
+  ATTR_SINGULARITYLIMIT("singularity-limit"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
@@ -214,15 +214,13 @@ void PostProcessingConfiguration:: xmlTagCallback
   }
   else if (callingTag.getName() == TAG_INIT_RELAX){
     _config.relaxationFactor = callingTag.getDoubleAttributeValue(ATTR_VALUE);
+    _config.forceInitialRelaxation = callingTag.getBooleanAttributeValue(ATTR_ENFORCE);
   }
   else if (callingTag.getName() == TAG_MAX_USED_ITERATIONS){
     _config.maxIterationsUsed = callingTag.getIntAttributeValue(ATTR_VALUE);
   }
   else if (callingTag.getName() == TAG_TIMESTEPS_REUSED){
     _config.timestepsReused = callingTag.getIntAttributeValue(ATTR_VALUE);
-  }
-  else if (callingTag.getName() == TAG_SINGULARITY_LIMIT){
-    _config.singularityLimit = callingTag.getDoubleAttributeValue(ATTR_VALUE);
   }
   else if (callingTag.getName() == TAG_FILTER){
 	  auto f = callingTag.getStringAttributeValue(ATTR_NAME);
@@ -237,21 +235,11 @@ void PostProcessingConfiguration:: xmlTagCallback
 	  }else{
 		  _config.filter = impl::PostProcessing::NOFILTER;
 	  }
+	  _config.singularityLimit = callingTag.getDoubleAttributeValue(ATTR_SINGULARITYLIMIT);
   }else if (callingTag.getName() == TAG_ESTIMATEJACOBIAN) {
     if(_config.type == VALUE_ManifoldMapping)
          _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   }
-/*else if (callingTag.getName() == TAG_COARSEMODELOPTIMIZATION) {
-    // new PP config for coarse model optimization method (recursive definition)
-    _coarseModelOptimizationConfig->clear();
-    if (_coarseModelOptimizationConfig.get() == nullptr) {
-      _coarseModelOptimizationConfig = PtrPostProcessingConfiguration(
-          new PostProcessingConfiguration(_meshConfig));
-    }
-    _coarseModelOptimizationConfig->connectTags(callingTag);
-
-  }
-*/
 }
 
 void PostProcessingConfiguration:: xmlEndTagCallback
@@ -279,6 +267,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
       _postProcessing = impl::PtrPostProcessing (
           new impl::IQNILSPostProcessing(
           _config.relaxationFactor,
+          _config.forceInitialRelaxation,
           _config.maxIterationsUsed,
           _config.timestepsReused,
           _config.filter, _config.singularityLimit,
@@ -290,6 +279,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 		  _postProcessing = impl::PtrPostProcessing (
 			  new impl::MVQNPostProcessing(
 			  _config.relaxationFactor,
+			  _config.forceInitialRelaxation,
 			  _config.maxIterationsUsed,
 			  _config.timestepsReused,
 			  _config.filter, _config.singularityLimit,
@@ -321,6 +311,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
       _postProcessing = impl::PtrPostProcessing (
           new impl::BroydenPostProcessing(
           _config.relaxationFactor,
+          _config.forceInitialRelaxation,
           _config.maxIterationsUsed,
           _config.timestepsReused,
           _config.filter, _config.singularityLimit,
@@ -362,7 +353,10 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
     XMLAttribute<double> attrValue(ATTR_VALUE );
     tagInitRelax.addAttribute(attrValue );
-    tag.addSubtag(tagInitRelax );
+    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE);
+    attrEnforce.setDefaultValue(false);
+    tagInitRelax.addAttribute(attrEnforce);
+    tag.addSubtag(tagInitRelax);
 
     XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
     XMLAttribute<std::string> attrName(ATTR_NAME);
@@ -375,7 +369,10 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
     XMLAttribute<double> attrValue(ATTR_VALUE );
     tagInitRelax.addAttribute(attrValue );
-    tag.addSubtag(tagInitRelax );
+    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE);
+    attrEnforce.setDefaultValue(false);
+    tagInitRelax.addAttribute(attrEnforce);
+    tag.addSubtag(tagInitRelax);
 
     XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
     XMLAttribute<std::string> attrName(ATTR_NAME);
@@ -388,6 +385,9 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
     XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
     tagInitRelax.addAttribute(attrDoubleValue);
+    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE);
+    attrEnforce.setDefaultValue(false);
+    tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
     XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
@@ -398,10 +398,6 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLTag tagTimestepsReused(*this, TAG_TIMESTEPS_REUSED, XMLTag::OCCUR_ONCE );
     tagTimestepsReused.addAttribute(attrIntValue );
     tag.addSubtag(tagTimestepsReused );
-
-    XMLTag tagSingularityLimit(*this, TAG_SINGULARITY_LIMIT, XMLTag::OCCUR_ONCE );
-    tagSingularityLimit.addAttribute(attrDoubleValue );
-    tag.addSubtag(tagSingularityLimit );
 
     XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
     XMLAttribute<std::string> attrName(ATTR_NAME);
@@ -417,6 +413,9 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
 
     XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE );
    	tagFilter.addAttribute(attrName);
+   	XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
+    attrSingularityLimit.setDefaultValue(1e-16);
+    tagFilter.addAttribute(attrSingularityLimit);
    	tagFilter.setDocumentation("Type of filtering technique that is used to "
    			"maintain good conditioning in the least-squares system. Possible filters:\n"
    			"  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
@@ -428,6 +427,9 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
     XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
     tagInitRelax.addAttribute(attrDoubleValue);
+    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE);
+    attrEnforce.setDefaultValue(false);
+    tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
     XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
@@ -438,10 +440,6 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLTag tagTimestepsReused(*this, TAG_TIMESTEPS_REUSED, XMLTag::OCCUR_ONCE );
     tagTimestepsReused.addAttribute(attrIntValue );
     tag.addSubtag(tagTimestepsReused );
-
-    XMLTag tagSingularityLimit(*this, TAG_SINGULARITY_LIMIT, XMLTag::OCCUR_ONCE );
-    tagSingularityLimit.addAttribute(attrDoubleValue );
-    tag.addSubtag(tagSingularityLimit );
 
     XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
     XMLAttribute<std::string> attrName(ATTR_NAME);
@@ -456,13 +454,16 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tag.addSubtag(tagData);
 
     XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE );
-	tagFilter.addAttribute(attrName);
-	tagFilter.setDocumentation("Type of filtering technique that is used to "
+    XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
+    attrSingularityLimit.setDefaultValue(1e-16);
+    tagFilter.addAttribute(attrSingularityLimit);
+    tagFilter.addAttribute(attrName);
+    tagFilter.setDocumentation("Type of filtering technique that is used to "
 	   			"maintain good conditioning in the least-squares system. Possible filters:\n"
 	   			"  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
 	   			"  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
 	   			"  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
-	tag.addSubtag(tagFilter);
+    tag.addSubtag(tagFilter);
   }
   else if (tag.getName() == VALUE_ManifoldMapping){
 
@@ -494,11 +495,6 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tagTimestepsReused.addAttribute(attrIntValue );
     tag.addSubtag(tagTimestepsReused );
 
-    XMLTag tagSingularityLimit(*this, TAG_SINGULARITY_LIMIT, XMLTag::OCCUR_ONCE );
-    XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
-    tagSingularityLimit.addAttribute(attrDoubleValue );
-    tag.addSubtag(tagSingularityLimit );
-
     XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
     XMLAttribute<std::string> attrName(ATTR_NAME);
     XMLAttribute<std::string> attrMesh(ATTR_MESH);
@@ -513,6 +509,9 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
 
     XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE );
     tagFilter.addAttribute(attrName);
+    XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
+    attrSingularityLimit.setDefaultValue(1e-16);
+    tagFilter.addAttribute(attrSingularityLimit);
     tagFilter.setDocumentation("Type of filtering technique that is used to "
           "maintain good conditioning in the least-squares system. Possible filters:\n"
           "  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
@@ -524,6 +523,9 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
     XMLAttribute<double> attrDoubleValue(ATTR_VALUE);
     tagInitRelax.addAttribute(attrDoubleValue);
+    XMLAttribute<bool> attrEnforce(ATTR_ENFORCE);
+    attrEnforce.setDefaultValue(false);
+    tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
     XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
@@ -534,10 +536,6 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLTag tagTimestepsReused(*this, TAG_TIMESTEPS_REUSED, XMLTag::OCCUR_ONCE );
     tagTimestepsReused.addAttribute(attrIntValue );
     tag.addSubtag(tagTimestepsReused );
-
-    XMLTag tagSingularityLimit(*this, TAG_SINGULARITY_LIMIT, XMLTag::OCCUR_ONCE );
-    tagSingularityLimit.addAttribute(attrDoubleValue );
-    tag.addSubtag(tagSingularityLimit );
 
     XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
     XMLAttribute<std::string> attrName(ATTR_NAME);

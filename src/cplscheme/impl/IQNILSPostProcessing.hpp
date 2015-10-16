@@ -39,6 +39,7 @@ public:
    */
    IQNILSPostProcessing (
       double initialRelaxation,
+      bool forceInitialRelaxation,
       int    maxIterationsUsed,
       int    timestepsReused,
       int 	 filter,
