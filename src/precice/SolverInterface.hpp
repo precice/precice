@@ -454,7 +454,7 @@ public:
    * the number of vector values. In 2D, the z-components are removed.
    *
    * @param[in] dataID ID of the data to be written.
-   * @param[in] size Number of indices, and number of values * dimensions.
+   * @param[in] size Number n of points to be written, not size of array values.
    * @param[in] valueIndices Indizes of vertices, from SolverInterface::setMeshVertex() e.g.
    * @param[in] values Values of the data to be written.
    */
@@ -513,10 +513,10 @@ public:
    * values = (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), where n is
    * the number of vector values. In 2D, the z-components are removed.
    *
-   * @param dataID [IN] ID of the data to be read.
-   * @param size [IN] Number of indices, and number of values * dimensions.
-   * @param valueIndices [IN] Indices (from setReadPosition()) of data values.
-   * @param values [IN] Values of the data to be read.
+   * @param[in] dataID ID of the data to be read.
+   * @param[in] size Number n of points to be read, not size of array values.
+   * @param[in] valueIndices Indices (from setReadPosition()) of data values.
+   * @param[out] values Values of the data to be read.
    */
   void readBlockVectorData (
     int     dataID,
@@ -541,7 +541,7 @@ public:
    *
    * @param dataID [IN] ID of the data to be written.
    * @param size [IN] Number of valueIndices, and number of values.
-   * @param values [IN] Values of the data to be written.
+   * @param[out] values Values of the data to be read.
    */
   void readBlockScalarData (
     int     dataID,
