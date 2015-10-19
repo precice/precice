@@ -190,12 +190,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   }
   size_t polyparams = 1 + dimensions - deadDimensions;
 
-  // Add global indizes to vertices. Benjamin will fix and implement this in a more generic fashion soon
-  if (not (utils::MasterSlave::_slaveMode or utils::MasterSlave::_masterMode)) {
-    addGlobalIndex(inMesh);
-    addGlobalIndex(outMesh);
-  }
-
   // Indizes that are used to build the Petsc Index set
   std::vector<int> myIndizes;
 
@@ -590,18 +584,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   }
 }
 
-template<typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::addGlobalIndex(mesh::PtrMesh &mesh)
-{
-  preciceTrace(__func__);
-  preciceDebug("Manually adding indizes to vertices.");
-  size_t i = 0;
-  for (mesh::Vertex& v : mesh->vertices()) {
-    v.setGlobalIndex(i);
-    // v.setGlobalIndex(v.getID());
-    i++;
-  }
-}
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int vertexID)
