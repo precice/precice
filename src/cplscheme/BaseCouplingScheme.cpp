@@ -687,6 +687,9 @@ void BaseCouplingScheme::setIterationPostProcessing
     _isCoarseModelOptimizationActive = _postProcessing->isMultilevelBasedApproach();
     if(_postProcessing->isMultilevelBasedApproach()){
       _postProcessing->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+      // also initialize the iteration counters with 0, as scheme starts with coarse model evaluation
+      _iterations = 0;
+      _totalIterations = 0;
     }
  }
 
@@ -808,7 +811,6 @@ bool BaseCouplingScheme:: measureConvergenceCoarseModelOptimization
     if(convMeasure.level == 0) continue;
 
     std::cout<<"  measure convergence coarse measure, id:"<<convMeasure.dataID<<std::endl;
-
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
@@ -948,6 +950,11 @@ void BaseCouplingScheme:: updateTimeAndIterations
   bool convergence,
   bool convergenceCoarseOptimization)
 {
+  bool manifoldmapping = false;
+  if (getPostProcessing().get() != nullptr) {
+    manifoldmapping = _postProcessing->isMultilevelBasedApproach();
+  }
+
   if(not convergence){
 
     // The computed timestep part equals the timestep length, since the
@@ -966,11 +973,12 @@ void BaseCouplingScheme:: updateTimeAndIterations
       _totalIterationsCoarseOptimization++;
     }
   } else{
-    _totalIterations++;
+
     _totalIterationsCoarseOptimization++;
+    if (not manifoldmapping) _totalIterations++;
 
     _iterationsCoarseOptimization = 1;
-    _iterations = 1;
+    _iterations =  manifoldmapping ? 0 : 1;
   }
 }
 

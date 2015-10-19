@@ -220,7 +220,10 @@ void SerialCouplingScheme::advance()
       }
       else {
 
-        auto designSpecifications = getPostProcessing()->getDesignSpecification(getSendData());
+        std::map<int, utils::DynVector> designSpecifications;
+        if (getPostProcessing().get() != nullptr) {
+          designSpecifications = getPostProcessing()->getDesignSpecification(getSendData());
+        }
         // measure convergence of coupling iteration
         // measure convergence for coarse model optimization
         if(_isCoarseModelOptimizationActive){
@@ -266,8 +269,10 @@ void SerialCouplingScheme::advance()
           if (maxIterationsReached())   convergence = true;
         }
 
-        // passed by reference, modified in MM post processing. No-op for all other post-processings
-        getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+        if (getPostProcessing().get() != nullptr) {
+          // passed by reference, modified in MM post processing. No-op for all other post-processings
+          getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+        }
 
         if (not doOnlySolverEvaluation)
         {

@@ -58,6 +58,11 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   VALUE_MVQN("IQN-IMVJ"),
   VALUE_ManifoldMapping("MM"),
   VALUE_BROYDEN("broyden"),
+  VALUE_QR1FILTER("QR1-filter"),
+  VALUE_QR1_ABSFILTER("QR1_absolute-filter"),
+  VALUE_QR2FILTER("QR2-filter"),
+  VALUE_PODFILTER("POD-filter"),
+  VALUE_NOFILTER("no-filter"),
   //_isValid(false),
   _meshConfig(meshConfig),
   _postProcessing(),
@@ -224,16 +229,18 @@ void PostProcessingConfiguration:: xmlTagCallback
   }
   else if (callingTag.getName() == TAG_FILTER){
 	  auto f = callingTag.getStringAttributeValue(ATTR_NAME);
-	  if(f == "QR1-filter"){
+	  if(f == VALUE_QR1FILTER){
 		  _config.filter = impl::PostProcessing::QR1FILTER;
-	  }else if (f == "QR1_absolute-filter"){
+	  }else if (f == VALUE_QR1_ABSFILTER){
 	  		  _config.filter = impl::PostProcessing::QR1FILTER_ABS;
-	  }else if (f == "QR2-filter"){
+	  }else if (f == VALUE_QR2FILTER){
 		  _config.filter = impl::PostProcessing::QR2FILTER;
-	  }else if (f == "POD-filter"){
+	  }else if (f == VALUE_PODFILTER){
 	  		  _config.filter = impl::PostProcessing::PODFILTER;
-	  }else{
+	  }else if (f == VALUE_NOFILTER){
 		  _config.filter = impl::PostProcessing::NOFILTER;
+	  }else {
+	    preciceError("xmlTagCallback", "Filter "<<f<<" is not known and no valid filter name.");
 	  }
 	  _config.singularityLimit = callingTag.getDoubleAttributeValue(ATTR_SINGULARITYLIMIT);
   }else if (callingTag.getName() == TAG_ESTIMATEJACOBIAN) {
@@ -412,7 +419,14 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tag.addSubtag(tagData);
 
     XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE );
-   	tagFilter.addAttribute(attrName);
+    XMLAttribute<std::string> attrFilterName(ATTR_NAME );
+    ValidatorEquals<std::string> validQR1(VALUE_QR1FILTER );
+    ValidatorEquals<std::string> validQR1abs(VALUE_QR1_ABSFILTER );
+    ValidatorEquals<std::string> validQR2(VALUE_QR2FILTER );
+    ValidatorEquals<std::string> validPOD(VALUE_PODFILTER );
+    ValidatorEquals<std::string> validNO(VALUE_NOFILTER );
+    attrFilterName.setValidator (validQR1 || validQR1abs || validQR2|| validPOD || validNO);
+   	tagFilter.addAttribute(attrFilterName);
    	XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
     attrSingularityLimit.setDefaultValue(1e-16);
     tagFilter.addAttribute(attrSingularityLimit);
@@ -457,7 +471,14 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
     attrSingularityLimit.setDefaultValue(1e-16);
     tagFilter.addAttribute(attrSingularityLimit);
-    tagFilter.addAttribute(attrName);
+    XMLAttribute<std::string> attrFilterName(ATTR_NAME );
+    ValidatorEquals<std::string> validQR1(VALUE_QR1FILTER );
+    ValidatorEquals<std::string> validQR1abs(VALUE_QR1_ABSFILTER );
+    ValidatorEquals<std::string> validQR2(VALUE_QR2FILTER );
+    ValidatorEquals<std::string> validPOD(VALUE_PODFILTER );
+    ValidatorEquals<std::string> validNO(VALUE_NOFILTER );
+    attrFilterName.setValidator (validQR1 || validQR1abs || validQR2|| validPOD || validNO);
+    tagFilter.addAttribute(attrFilterName);
     tagFilter.setDocumentation("Type of filtering technique that is used to "
 	   			"maintain good conditioning in the least-squares system. Possible filters:\n"
 	   			"  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
@@ -508,7 +529,14 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tag.addSubtag(tagData);
 
     XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE );
-    tagFilter.addAttribute(attrName);
+    XMLAttribute<std::string> attrFilterName(ATTR_NAME );
+    ValidatorEquals<std::string> validQR1(VALUE_QR1FILTER );
+    ValidatorEquals<std::string> validQR1abs(VALUE_QR1_ABSFILTER );
+    ValidatorEquals<std::string> validQR2(VALUE_QR2FILTER );
+    ValidatorEquals<std::string> validPOD(VALUE_PODFILTER );
+    ValidatorEquals<std::string> validNO(VALUE_NOFILTER );
+    attrFilterName.setValidator (validQR1 || validQR1abs || validQR2|| validPOD || validNO);
+    tagFilter.addAttribute(attrFilterName);
     XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
     attrSingularityLimit.setDefaultValue(1e-16);
     tagFilter.addAttribute(attrSingularityLimit);

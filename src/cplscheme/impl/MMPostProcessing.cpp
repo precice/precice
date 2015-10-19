@@ -349,6 +349,10 @@ void MMPostProcessing::updateDifferenceMatrices(
   _fineResiduals = _outputFineModelScaled - _input_Xstar;
   _coarseResiduals = _outputCoarseModelScaled - _input_Xstar;
 
+ // std::cout<<"output fine model scaled: \n"<<_outputFineModelScaled<<std::endl;
+ // std::cout<<"output coarse model scaled: \n"<<_outputCoarseModelScaled<<std::endl;
+ // std::cout<<"input x star (prev): \n"<<_input_Xstar<<std::endl;
+
   /**
    * Update matrices C, F with newest information
    */
@@ -371,6 +375,9 @@ void MMPostProcessing::updateDifferenceMatrices(
 
       appendFront(_matrixF, colF);
       appendFront(_matrixC, colC);
+
+      std::cout<<"F: \n"<<_matrixF;
+      std::cout<<"C: \n"<<_matrixC;
 
       _matrixCols.front()++;
       }
@@ -425,9 +432,16 @@ void MMPostProcessing::performPostProcessing(
      * solution _input_Xstar, obtained in the coarse model optimization step.
      */
 
+
+    // view on coarse coupling data only
+    DataMap coarseCplData;
+    for (int id : _coarseDataIDs) {
+      DataMap::value_type pair = std::make_pair(id, cplData[id]);
+      coarseCplData.insert(pair);
+    }
     // assume that we always start with a coarse model optimization step at the very beginning.
     // every time get here, the coarse model optimization has just converged.
-    _coarseModelOptimization->iterationsConverged(cplData);
+    _coarseModelOptimization->iterationsConverged(coarseCplData);
     _iterCoarseModelOpt = 0;
 
     // scale data values (and secondary data values)
@@ -493,7 +507,7 @@ void MMPostProcessing::performPostProcessing(
      *  design specification of the overall objective function. Here, a initial coarse
      *  model solution is obtained for a initial guess.
      */
-    preciceDebug("design specification ("<<its<<"): \n"<<_coarseModel_designSpecification.transpose());
+    //preciceDebug("design specification ("<<its<<"): \n"<<_coarseModel_designSpecification);
     _coarseModelOptimization->optimize(coarseCplData, _coarseModel_designSpecification);
 
     /**
@@ -536,10 +550,13 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
   Eigen::VectorXd alpha = _fineResiduals - _designSpecification;
   _coarseModel_designSpecification = _coarseResiduals;
 
+  std::cout<<"fine residuals:\n"<<_fineResiduals<<std::endl;
+  std::cout<<"coarse residuals:\n"<<_coarseResiduals<<std::endl;
+
   // if residual differences are available for fine and coarse model
   // (either from previous iterations or from previous time steps or both)
   if (getLSSystemCols() > 0)
-      {
+  {
     // compute SVDs of _matrixF and _matriC
     Eigen::VectorXd S_F, S_C;
     Eigen::MatrixXd V_F, U_F, V_C, U_C, Sigma_F, pseudoSigma_F;
@@ -622,14 +639,15 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 
   // if no residual differences for the fine and coarse model are given so far
   if ((_firstIteration && _firstTimeStep) || getLSSystemCols() <= 0)
-      {
+  {
     assertion1(getLSSystemCols() <= 0, getLSSystemCols());
-
+    std::cout<<"least-squares system cols are <= 0, not enough information yet."<<std::endl;
     if (_estimateJacobian && (_MMMappingMatrix_prev.rows() == getLSSystemRows()))
-        {
+    {
       _coarseModel_designSpecification -= _MMMappingMatrix_prev * alpha;
     } else {
       _coarseModel_designSpecification -= alpha;
+      std::cout<<"coarse design spec: \n"<<_coarseModel_designSpecification<<std::endl;
     }
   }
 
@@ -638,6 +656,8 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 /** --------------------------------
  *            scale()
  *   @brief scales the coupling Data
+ *   TODO: ATTENTION: this function assumes, that the coarse cpl data and the fine cpl data
+ *        are defined in the same order in the config file. Otherwise it won't work correctly.
  *  --------------------------------
  */
 void MMPostProcessing::scale
@@ -670,6 +690,7 @@ void MMPostProcessing::scale
       _input_Xstar[i + offset] = coarseOldValues[i] / factor;
     }
     offset += size;
+    k++;
   }
 }
 

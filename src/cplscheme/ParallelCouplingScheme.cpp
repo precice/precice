@@ -228,11 +228,11 @@ void ParallelCouplingScheme::implicitAdvance()
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     preciceDebug("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
-      std::cout<<" +++ First Participant, start sendData() (sends pressure values) +++"<<std::endl;
+   //   std::cout<<" +++ First Participant, start sendData() (sends pressure values) +++"<<std::endl;
       getM2N()->startSendPackage(0);
       sendData(getM2N());
       getM2N()->finishSendPackage();
-      std::cout<<" +++ First Participant, finish sendData() +++"<<std::endl;
+    //  std::cout<<" +++ First Participant, finish sendData() +++"<<std::endl;
       getM2N()->startReceivePackage(0);
       getM2N()->receive(convergence);
       getM2N()->startReceivePackage(0);
@@ -242,22 +242,20 @@ void ParallelCouplingScheme::implicitAdvance()
       }
       receiveData(getM2N());
       getM2N()->finishReceivePackage();
-      std::cout<<" +++ First Participant, finish receiveData() (receives displ values) +++"<<std::endl;
+     // std::cout<<" +++ First Participant, finish receiveData() (receives displ values) +++"<<std::endl;
     }
     else { // second participant
-      std::cout<<" +++ Second Participant, start receiveData() (receives pressure values)  +++"<<std::endl;
+    //  std::cout<<" +++ Second Participant, start receiveData() (receives pressure values)  +++"<<std::endl;
       getM2N()->startReceivePackage(0);
       receiveData(getM2N());
       getM2N()->finishReceivePackage();
-      std::cout<<" +++ Second Participant, finish receiveData() +++"<<std::endl;
+    //  std::cout<<" +++ Second Participant, finish receiveData() +++"<<std::endl;
 
 
-      std::cout << "before sending, after PP" << std::endl;
-       for (auto elem : _allData) {
-         std::cout << "\n data with ID: " << elem.first << "\n" << (*elem.second->values) << std::endl;
-       }
-
-      auto designSpecifications = getPostProcessing()->getDesignSpecification(getAllData());
+      std::map<int, utils::DynVector> designSpecifications;
+      if (getPostProcessing().get() != nullptr) {
+        designSpecifications = getPostProcessing()->getDesignSpecification(getSendData());
+      }
 
       // measure convergence for coarse model optimization
       if(_isCoarseModelOptimizationActive){
@@ -280,6 +278,14 @@ void ParallelCouplingScheme::implicitAdvance()
         if(convergenceCoarseOptimization){
           _isCoarseModelOptimizationActive = false;
           doOnlySolverEvaluation = true;
+
+          /*
+          std::cout<<"\n\n\n     ##### coarse converged #### \n \n"<<std::endl;
+          for(auto elem : _allData){
+             std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
+             std::cout<<"\n old data with ID: "<<elem.first<<"\n"<<elem.second->oldValues.column(0)<<std::endl;
+           }
+           */
         }else{
           _isCoarseModelOptimizationActive = true;
         }
@@ -303,10 +309,11 @@ void ParallelCouplingScheme::implicitAdvance()
         if (maxIterationsReached())   convergence = true;
       }
 
-      // passed by reference, modified in MM post processing. No-op for all other post-processings
-      getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+      if (getPostProcessing().get() != nullptr) {
+        // passed by reference, modified in MM post processing. No-op for all other post-processings
+        getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
+      }
 
-      // -------- end NEW
 
       if (not doOnlySolverEvaluation)
       {
@@ -319,7 +326,20 @@ void ParallelCouplingScheme::implicitAdvance()
           timestepCompleted();
         }
         else if (getPostProcessing().get() != nullptr) {
+          /*
+          for(auto elem : _allData){
+             std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
+             std::cout<<"\n old data with ID: "<<elem.first<<"\n"<<elem.second->oldValues.column(0)<<std::endl;
+           }
+           */
           getPostProcessing()->performPostProcessing(getAllData());
+          /*
+          std::cout<<"\n\n\n #### POST PROCESSING #### \n\n\n"<<std::endl;
+          for(auto elem : _allData){
+           std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
+           std::cout<<"\n old data with ID: "<<elem.first<<"\n"<<elem.second->oldValues.column(0)<<std::endl;
+          }
+          */
         }
 
         /**
@@ -355,7 +375,7 @@ void ParallelCouplingScheme::implicitAdvance()
 
       sendData(getM2N());
       getM2N()->finishSendPackage();
-      std::cout<<" +++ Second Participant, finish sendData() (send displ values)  +++"<<std::endl;
+      //std::cout<<" +++ Second Participant, finish sendData() (send displ values)  +++"<<std::endl;
     }
 
     // both participants
