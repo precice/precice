@@ -254,7 +254,7 @@ void ParallelCouplingScheme::implicitAdvance()
 
       std::map<int, utils::DynVector> designSpecifications;
       if (getPostProcessing().get() != nullptr) {
-        designSpecifications = getPostProcessing()->getDesignSpecification(getSendData());
+        designSpecifications = getPostProcessing()->getDesignSpecification(getAllData());
       }
 
       // measure convergence for coarse model optimization
