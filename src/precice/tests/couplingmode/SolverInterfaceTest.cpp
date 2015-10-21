@@ -88,8 +88,8 @@ void SolverInterfaceTest:: run()
     MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
-      testMethod(testDistributedCommunications)
-      testMethod(testMultiCoupling);
+//      testMethod(testDistributedCommunications)
+//      testMethod(testMultiCoupling);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
