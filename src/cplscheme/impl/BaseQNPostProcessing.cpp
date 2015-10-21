@@ -15,6 +15,7 @@
 #include "utils/MasterSlave.hpp"
 #include <string.h>
 #include <iostream>
+#include <sstream>
 //#include "utils/NumericalCompare.hpp"
 
 #include <time.h>
@@ -25,13 +26,7 @@ namespace impl {
 
 tarch::logging::Log BaseQNPostProcessing::
 _log("precice::cplscheme::impl::BaseQNPostProcessing");
-/**
- const int BaseQNPostProcessing::NOFILTER = 0;
- const int BaseQNPostProcessing::QR1FILTER = 1;
- const int BaseQNPostProcessing::QR1FILTER_ABS = 2;
- const int BaseQNPostProcessing::QR2FILTER = 3;
- const int BaseQNPostProcessing::PODFILTER = 4;
- */
+
 
 /* ----------------------------------------------------------------------------
  *     Constructor
@@ -448,6 +443,7 @@ void BaseQNPostProcessing::performPostProcessing
 
 void BaseQNPostProcessing::applyFilter()
 {
+  preciceTrace(__func__);
   if (_filter == PostProcessing::NOFILTER) {
     // do nothing
   } else {
