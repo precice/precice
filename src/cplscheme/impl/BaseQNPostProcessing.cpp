@@ -388,6 +388,9 @@ void BaseQNPostProcessing::performPostProcessing
 
     DataValues xUpdate(_residuals.size(), 0.0);
 
+    // apply the configured filter to the LS system
+    applyFilter();
+
     /**
      * compute quasi-Newton update
      */
@@ -440,6 +443,29 @@ void BaseQNPostProcessing::performPostProcessing
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
+}
+
+
+void BaseQNPostProcessing::applyFilter()
+{
+  if (_filter == PostProcessing::NOFILTER) {
+    // do nothing
+  } else {
+    // do: filtering of least-squares system to maintain good conditioning
+    std::vector<int> delIndices(0);
+    _qrV.applyFilter(_singularityLimit, delIndices, _matrixV);
+    // start with largest index (as V,W matrices are shrinked and shifted
+    for (int i = delIndices.size() - 1; i >= 0; i--) {
+
+      removeMatrixColumn(delIndices[i]);
+
+      std::stringstream ss;
+      ss << "(updatedQR) removing linear dependent column " << delIndices[i] << "  time step: " << tSteps
+          << " iteration: " << its << "\n" << std::endl;
+      preciceDebug(ss.str());  writeInfo(ss.str());
+    }
+    assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
+  }
 }
 
 
@@ -716,6 +742,4 @@ void BaseQNPostProcessing::writeInfo
   _infostream << std::flush;
 }
 
-}
-}
-} // namespace precice, cplscheme, impl
+}}} // namespace precice, cplscheme, impl

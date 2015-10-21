@@ -153,14 +153,6 @@ public:
    // delete this:
    virtual int getDeletedColumns();
 
-   /**
-   static const int NOFILTER;
-   static const int QR1FILTER_ABS;
-   static const int QR1FILTER;
-   static const int QR2FILTER;
-   static const int PODFILTER;
-**/
-
 protected:
 
    typedef tarch::la::DynamicVector<double> DataValues;
@@ -307,6 +299,8 @@ protected:
    // reverts the scaling of the data values and overwrites the old values with the updated ones
    virtual void undoScaling(DataMap & cplData);
    
+   virtual void applyFilter();
+
    /**
     * @brief Marks a iteration sequence as converged.
     *

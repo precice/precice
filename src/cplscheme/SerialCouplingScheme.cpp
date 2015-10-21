@@ -220,6 +220,7 @@ void SerialCouplingScheme::advance()
       }
       else {
 
+        // get the current design specifications from the post processing (for convergence measure)
         std::map<int, utils::DynVector> designSpecifications;
         if (getPostProcessing().get() != nullptr) {
           designSpecifications = getPostProcessing()->getDesignSpecification(getSendData());
@@ -227,18 +228,12 @@ void SerialCouplingScheme::advance()
         // measure convergence of coupling iteration
         // measure convergence for coarse model optimization
         if(_isCoarseModelOptimizationActive){
-
-          /*
-          for(auto elem : _allData){
-            std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
-          }
-          */
-
           preciceDebug("measure convergence of coarse model optimization.");
           // in case of multilevel post processing only: measure the convergence of the coarse model optimization
           convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
           // Stop, when maximal iteration count (given in config) is reached
-          if (maxIterationsReached())   convergenceCoarseOptimization = true;
+          if (maxIterationsReached())
+            convergenceCoarseOptimization = true;
 
           convergence = false;
           // in case of multilevel PP only: if coarse model optimization converged
@@ -250,18 +245,10 @@ void SerialCouplingScheme::advance()
             _isCoarseModelOptimizationActive = true;
           }
         }
-
         // measure convergence of coupling iteration
-        //if(not _isCoarseModelOptimizationActive && convergenceCoarseOptimization){
         else{
           preciceDebug("measure convergence.");
           doOnlySolverEvaluation = false;
-
-          /*
-          for(auto elem : _allData){
-            std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
-          }
-          */
 
           // measure convergence of the coupling iteration,
           convergence = measureConvergence(designSpecifications);
@@ -269,11 +256,13 @@ void SerialCouplingScheme::advance()
           if (maxIterationsReached())   convergence = true;
         }
 
+        // passed by reference, modified in MM post processing. No-op for all other post-processings
         if (getPostProcessing().get() != nullptr) {
-          // passed by reference, modified in MM post processing. No-op for all other post-processings
           getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
         }
 
+        // for multi-level case, i.e., manifold mapping: after convergence of coarse problem
+        // we only want to evaluate the fine model for the new input, no post-processing etc..
         if (not doOnlySolverEvaluation)
         {
           // coupling iteration converged for current time step. Advance in time.
@@ -316,13 +305,6 @@ void SerialCouplingScheme::advance()
           //}
 
         }
-        //for(auto elem : getSendData()){
-        //   std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
-        // }
-        // for(auto elem : getReceiveData()){
-        //   std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
-        // }
-
 
         getM2N()->startSendPackage(0);
         getM2N()->send(convergence);

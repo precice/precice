@@ -228,11 +228,9 @@ void ParallelCouplingScheme::implicitAdvance()
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     preciceDebug("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
-   //   std::cout<<" +++ First Participant, start sendData() (sends pressure values) +++"<<std::endl;
       getM2N()->startSendPackage(0);
       sendData(getM2N());
       getM2N()->finishSendPackage();
-    //  std::cout<<" +++ First Participant, finish sendData() +++"<<std::endl;
       getM2N()->startReceivePackage(0);
       getM2N()->receive(convergence);
       getM2N()->startReceivePackage(0);
@@ -242,16 +240,14 @@ void ParallelCouplingScheme::implicitAdvance()
       }
       receiveData(getM2N());
       getM2N()->finishReceivePackage();
-     // std::cout<<" +++ First Participant, finish receiveData() (receives displ values) +++"<<std::endl;
     }
     else { // second participant
-    //  std::cout<<" +++ Second Participant, start receiveData() (receives pressure values)  +++"<<std::endl;
+
       getM2N()->startReceivePackage(0);
       receiveData(getM2N());
       getM2N()->finishReceivePackage();
-    //  std::cout<<" +++ Second Participant, finish receiveData() +++"<<std::endl;
 
-
+      // get the current design specifications from the post processing (for convergence measure)
       std::map<int, utils::DynVector> designSpecifications;
       if (getPostProcessing().get() != nullptr) {
         designSpecifications = getPostProcessing()->getDesignSpecification(getAllData());
@@ -259,18 +255,12 @@ void ParallelCouplingScheme::implicitAdvance()
 
       // measure convergence for coarse model optimization
       if(_isCoarseModelOptimizationActive){
-
-        /*
-        for(auto elem : _allData){
-          std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
-        }
-        */
-
         preciceDebug("measure convergence of coarse model optimization.");
         // in case of multilevel post processing only: measure the convergence of the coarse model optimization
         convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
         // Stop, when maximal iteration count (given in config) is reached
-        if (maxIterationsReached())   convergenceCoarseOptimization = true;
+        if (maxIterationsReached())
+          convergenceCoarseOptimization = true;
 
         convergence = false;
         // in case of multilevel PP only: if coarse model optimization converged
@@ -278,30 +268,14 @@ void ParallelCouplingScheme::implicitAdvance()
         if(convergenceCoarseOptimization){
           _isCoarseModelOptimizationActive = false;
           doOnlySolverEvaluation = true;
-
-          /*
-          std::cout<<"\n\n\n     ##### coarse converged #### \n \n"<<std::endl;
-          for(auto elem : _allData){
-             std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
-             std::cout<<"\n old data with ID: "<<elem.first<<"\n"<<elem.second->oldValues.column(0)<<std::endl;
-           }
-           */
         }else{
           _isCoarseModelOptimizationActive = true;
         }
       }
-
       // measure convergence of coupling iteration
-      //if(not _isCoarseModelOptimizationActive && convergenceCoarseOptimization){
       else{
         preciceDebug("measure convergence.");
         doOnlySolverEvaluation = false;
-
-        /*
-        for(auto elem : _allData){
-          std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
-        }
-        */
 
         // measure convergence of the coupling iteration,
         convergence = measureConvergence(designSpecifications);
@@ -309,12 +283,14 @@ void ParallelCouplingScheme::implicitAdvance()
         if (maxIterationsReached())   convergence = true;
       }
 
+      // passed by reference, modified in MM post processing. No-op for all other post-processings
       if (getPostProcessing().get() != nullptr) {
-        // passed by reference, modified in MM post processing. No-op for all other post-processings
         getPostProcessing()->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
       }
 
 
+      // for multi-level case, i.e., manifold mapping: after convergence of coarse problem
+      // we only want to evaluate the fine model for the new input, no post-processing etc..
       if (not doOnlySolverEvaluation)
       {
         if (convergence) {
@@ -326,30 +302,10 @@ void ParallelCouplingScheme::implicitAdvance()
           timestepCompleted();
         }
         else if (getPostProcessing().get() != nullptr) {
-          /*
-          for(auto elem : _allData){
-             std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
-             std::cout<<"\n old data with ID: "<<elem.first<<"\n"<<elem.second->oldValues.column(0)<<std::endl;
-           }
-           */
           getPostProcessing()->performPostProcessing(getAllData());
-          /*
-          std::cout<<"\n\n\n #### POST PROCESSING #### \n\n\n"<<std::endl;
-          for(auto elem : _allData){
-           std::cout<<"\n data with ID: "<<elem.first<<"\n"<<(*elem.second->values)<<std::endl;
-           std::cout<<"\n old data with ID: "<<elem.first<<"\n"<<elem.second->oldValues.column(0)<<std::endl;
-          }
-          */
         }
 
-        /**
-        std::cout << "before sending, after PP" << std::endl;
-        for (auto elem : _allData) {
-          std::cout << "\n data with ID: " << elem.first << "\n" << (*elem.second->values) << std::endl;
-        }
-        */
-
-        //if (isCouplingOngoing()) {
+        // extrapolate new input data for the solver evaluation in time.
         if (convergence && (getExtrapolationOrder() > 0)) {
           extrapolateData(getAllData()); // Also stores data
         }
@@ -375,7 +331,6 @@ void ParallelCouplingScheme::implicitAdvance()
 
       sendData(getM2N());
       getM2N()->finishSendPackage();
-      //std::cout<<" +++ Second Participant, finish sendData() (send displ values)  +++"<<std::endl;
     }
 
     // both participants
