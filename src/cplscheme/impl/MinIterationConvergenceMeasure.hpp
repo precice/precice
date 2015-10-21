@@ -24,7 +24,8 @@ public:
 
    virtual void measure (
       const utils::DynVector & oldValues,
-      const utils::DynVector & newValues )
+      const utils::DynVector & newValues,
+      const utils::DynVector& designSpecification)
    {
      preciceTrace("measure()");
      _currentIteration++;

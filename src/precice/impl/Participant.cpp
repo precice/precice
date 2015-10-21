@@ -231,7 +231,7 @@ bool Participant:: isDataUsed
 (
   int dataID ) const
 {
-  assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
+  assertion2 ( (dataID >= 0) && (dataID < (int)_dataContexts.size()), dataID, (int)_dataContexts.size() );
   return _dataContexts[dataID] != nullptr;
 }
 

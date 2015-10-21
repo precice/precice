@@ -5,7 +5,8 @@
 #define PRECICE_CPLSCHEME_POSTPROCESSINGCONFIGURATION_HPP_
 
 #include "cplscheme/impl/SharedPointer.hpp"
-#include "cplscheme/impl/BaseQNPostProcessing.hpp"
+#include "cplscheme/impl/PostProcessing.hpp"
+#include "precice/config/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "tarch/logging/Log.h"
@@ -42,6 +43,11 @@ public:
    impl::PtrPostProcessing getPostProcessing();
 
    /**
+    * @brief Returns a pointer to the PostProcessingConfig object for the coarse model optimization method
+    */
+   PtrPostProcessingConfiguration getCoarseModelOptimizationConfig();
+
+   /**
     * @brief Callback method required when using utils::XMLTag.
     */
    virtual void xmlTagCallback ( utils::XMLTag& callingTag );
@@ -65,6 +71,11 @@ public:
      return _neededMeshes;
    }
 
+   void setIsAddManifoldMappingTagAllowed(bool b)
+   {
+     _isAddManifoldMappingTagAllowed = b;
+   }
+
 private:
 
    static tarch::logging::Log _log;
@@ -74,21 +85,30 @@ private:
    const std::string TAG_INIT_RELAX;
    const std::string TAG_MAX_USED_ITERATIONS;
    const std::string TAG_TIMESTEPS_REUSED;
-   const std::string TAG_SINGULARITY_LIMIT;
    const std::string TAG_DATA;
    const std::string TAG_FILTER;
+   const std::string TAG_ESTIMATEJACOBIAN;
+   const std::string TAG_COARSEMODELOPTIMIZATION;
 
    const std::string ATTR_NAME;
    const std::string ATTR_MESH;
    const std::string ATTR_SCALING;
    const std::string ATTR_VALUE;
+   const std::string ATTR_ENFORCE;
+   const std::string ATTR_SINGULARITYLIMIT;
 
    const std::string VALUE_CONSTANT;
    const std::string VALUE_AITKEN;
    const std::string VALUE_HIERARCHICAL_AITKEN;
    const std::string VALUE_IQNILS;
    const std::string VALUE_MVQN;
+   const std::string VALUE_ManifoldMapping;
    const std::string VALUE_BROYDEN;
+   const std::string VALUE_QR1FILTER;
+   const std::string VALUE_QR1_ABSFILTER;
+   const std::string VALUE_QR2FILTER;
+   const std::string VALUE_PODFILTER;
+   const std::string VALUE_NOFILTER;
 
    //bool _isValid;
 
@@ -96,7 +116,11 @@ private:
 
    std::string _meshName;
 
+   // post processing method
    impl::PtrPostProcessing _postProcessing;
+
+   // recursive definition of post processings for multi level methods (i.e., manifold mapping)
+   PtrPostProcessingConfiguration _coarseModelOptimizationConfig;
 
    std::vector<std::string> _neededMeshes;
 
@@ -106,10 +130,12 @@ private:
       std::map<int,double> scalings;
       std::string type;
       double relaxationFactor;
+      bool forceInitialRelaxation;
       int maxIterationsUsed;
       int timestepsReused;
       int filter;
       double singularityLimit;
+      bool estimateJacobian;
 
       ConfigurationData ()
       :
@@ -117,13 +143,17 @@ private:
          scalings(),
          type ( "" ),
          relaxationFactor ( 0.0 ),
+         forceInitialRelaxation( false ),
          maxIterationsUsed ( 0 ),
          timestepsReused ( 0 ),
-         filter(impl::BaseQNPostProcessing::NOFILTER),
-         singularityLimit ( 0.0 )
+         filter ( impl::PostProcessing::NOFILTER ),
+         singularityLimit ( 0.0 ),
+         estimateJacobian ( false )
       {}
 
    } _config;
+
+   bool _isAddManifoldMappingTagAllowed;
 
 
    void addTypeSpecificSubtags ( utils::XMLTag& tag );

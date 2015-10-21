@@ -210,6 +210,7 @@ MasterSlave::broadcast(bool& value) {
   }
 }
 
+
 void
 MasterSlave::broadcast(double& value) {
   preciceTrace("broadcast(double&)");

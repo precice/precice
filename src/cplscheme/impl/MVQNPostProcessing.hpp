@@ -46,6 +46,7 @@ public:
    */
    MVQNPostProcessing (
       double initialRelaxation,
+      bool forceInitialRelaxation,
       int    maxIterationsUsed,
       int    timestepsReused,
       int 	 filter,

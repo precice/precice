@@ -7,48 +7,65 @@
 #include "PostProcessing.hpp"
 #include "utils/Dimensions.hpp"
 #include "tarch/logging/Log.h"
+#include "utils/Globals.hpp"
+#include "Eigen/Dense"
+
 #include <map>
 
 namespace precice {
 namespace cplscheme {
 namespace impl {
 
-class AitkenPostProcessing : public PostProcessing
+class AitkenPostProcessing: public PostProcessing
 {
 public:
 
-   AitkenPostProcessing (
+  AitkenPostProcessing(
       double initialRelaxationFactor,
-      std::vector<int>    dataIDs );
+      std::vector<int> dataIDs);
 
-   virtual ~AitkenPostProcessing() {}
+  virtual ~AitkenPostProcessing() {}
 
-   virtual std::vector<int> getDataIDs() const
-   {
-      return _dataIDs;
-   }
+  virtual std::vector<int> getDataIDs() const
+  {
+    return _dataIDs;
+  }
 
-   virtual void initialize ( DataMap& cpldata );
+  virtual void setDesignSpecification(
+      Eigen::VectorXd& q);
 
-   virtual void performPostProcessing ( DataMap& cpldata );
 
-   virtual void iterationsConverged ( DataMap& cpldata );
+  // TODO: change to call by ref when Eigen is used.
+  virtual std::map<int, utils::DynVector> getDesignSpecification(DataMap& cplData);
+
+  virtual void initialize(
+      DataMap& cpldata);
+
+  virtual void performPostProcessing(
+      DataMap& cpldata);
+
+  virtual void iterationsConverged(
+      DataMap& cpldata);
 
 private:
 
-   static tarch::logging::Log _log;
+  static tarch::logging::Log _log;
 
-   double _initialRelaxation;
+  double _initialRelaxation;
 
-   std::vector<int> _dataIDs;
+  std::vector<int> _dataIDs;
 
-   double _aitkenFactor;
+  double _aitkenFactor;
 
-   int _iterationCounter;
+  int _iterationCounter;
 
-   utils::DynVector _residuals;
+  utils::DynVector _residuals;
+
+  Eigen::VectorXd _designSpecification;
 };
 
-}}} // namespace precice, cplscheme, impl
+}
+}
+} // namespace precice, cplscheme, impl
 
 #endif /* PRECICE_CPLSCHEME_AIKTENPOSTPROCESSING_HPP_ */

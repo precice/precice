@@ -109,6 +109,7 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 	int    timestepsReused = 6;
 	int filter = impl::BaseQNPostProcessing::QR1FILTER;
 	double singularityLimit = 1e-10;
+	bool enforceInitialRelaxation = false;
 	std::vector<int> dataIDs;
 	dataIDs.push_back(0);
 	dataIDs.push_back(1);
@@ -120,7 +121,7 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 	mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
 	dummyMesh->setVertexOffsets(vertexOffsets);
 
-	cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation,maxIterationsUsed,
+	cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
 										   timestepsReused, filter, singularityLimit, dataIDs, scalings);
 
 	utils::DynVector dvalues;
@@ -436,6 +437,7 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	int    timestepsReused = 6;
 	int filter = impl::BaseQNPostProcessing::QR1FILTER;
 	double singularityLimit = 1e-10;
+	bool enforceInitialRelaxation = false;
 	std::vector<int> dataIDs;
 	dataIDs.push_back(0);
 	dataIDs.push_back(1);
@@ -447,7 +449,7 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
 	dummyMesh->setVertexOffsets(vertexOffsets);
 
-	cplscheme::impl::MVQNPostProcessing pp(initialRelaxation,maxIterationsUsed,
+	cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
 									   timestepsReused, filter, singularityLimit, dataIDs, scalings);
 
 	utils::DynVector dvalues;

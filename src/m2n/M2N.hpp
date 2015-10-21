@@ -126,6 +126,7 @@ public:
   void send (
     bool   itemToSend);
 
+
   /**
    * @brief The master sends a double to the other master, for performance reasons, we
    * neglect the gathering and checking step.

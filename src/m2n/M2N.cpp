@@ -213,6 +213,7 @@ void M2N:: send (
   }
 }
 
+
 void M2N:: send (
   double itemToSend)
 {
@@ -267,6 +268,7 @@ void M2N:: receive (
 
   preciceDebug("receive(bool): " << itemToReceive);
 }
+
 
 void M2N:: receive (
   double&  itemToReceive)

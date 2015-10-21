@@ -7,6 +7,8 @@
 #include "PostProcessing.hpp"
 #include "tarch/logging/Log.h"
 #include "tarch/la/DynamicVector.h"
+#include "utils/Globals.hpp"
+#include "Eigen/Dense"
 #include <vector>
 
 namespace precice {
@@ -28,6 +30,13 @@ public:
     return _dataIDs;
   }
 
+  virtual void setDesignSpecification(
+     Eigen::VectorXd& q);
+
+  // TODO: change to call by ref when Eigen is used.
+  virtual std::map<int, utils::DynVector> getDesignSpecification(DataMap& cplData);
+
+
   virtual void initialize ( DataMap & cplData );
 
   virtual void performPostProcessing ( DataMap & cplData );
@@ -47,6 +56,8 @@ private:
   int _iterationCounter;
 
   tarch::la::DynamicVector<double> _residual;
+
+  Eigen::VectorXd _designSpecification;
 
   void computeAitkenFactor (
     size_t level,

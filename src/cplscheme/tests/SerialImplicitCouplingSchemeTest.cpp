@@ -249,7 +249,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    impl::PtrConvergenceMeasure absoluteConvMeasure1 (
          new impl::AbsoluteConvergenceMeasure(convergenceLimit1) );
    cplScheme.addConvergenceMeasure (
-         mesh->data()[1]->getID(), false, absoluteConvMeasure1 );
+         mesh->data()[1]->getID(), false, false, absoluteConvMeasure1 );
 
    // Expected iterations per implicit timesptep
    std::vector<int> validIterations;
@@ -436,7 +436,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
    impl::PtrConvergenceMeasure minIterationConvMeasure1 (
       new impl::MinIterationConvergenceMeasure(minIterations) );
    cplScheme.addConvergenceMeasure (
-      mesh->data()[1]->getID(), false, minIterationConvMeasure1 );
+      mesh->data()[1]->getID(), false, false, minIterationConvMeasure1 );
 
    // Expected iterations per implicit timesptep
    std::vector<int> validIterations;
@@ -769,7 +769,7 @@ void SerialImplicitCouplingSchemeTest::
    impl::PtrConvergenceMeasure minIterationConvMeasure1 (
          new impl::MinIterationConvergenceMeasure(minIterations) );
    cplScheme.addConvergenceMeasure (
-         mesh->data()[1]->getID(), false, minIterationConvMeasure1 );
+         mesh->data()[1]->getID(), false, false, minIterationConvMeasure1 );
    connect ( "participant0", "participant1", nameLocalParticipant, globalCom );
    runCouplingWithSubcycling (
       cplScheme, nameLocalParticipant, meshConfig, validIterations );
@@ -837,7 +837,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
   impl::PtrConvergenceMeasure minIterationConvMeasure1 (
         new impl::MinIterationConvergenceMeasure(minIterations) );
   cplScheme.addConvergenceMeasure (
-        mesh->data()[1]->getID(), false, minIterationConvMeasure1 );
+        mesh->data()[1]->getID(), false, false, minIterationConvMeasure1 );
   connect(nameParticipant0, nameParticipant1, nameLocalParticipant, globalCom);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
