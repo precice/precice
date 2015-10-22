@@ -41,7 +41,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
     int filter,
     double singularityLimit,
     std::vector<int> dataIDs,
-    std::map<int, double> scalings)
+    PtrPreconditioner preconditioner)
 :
   PostProcessing(),
   _initialRelaxation(initialRelaxation),
@@ -51,7 +51,6 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _designSpecification(),
   _dataIDs(dataIDs),
   _secondaryDataIDs(),
-  _scalings(scalings),
   _firstIteration(true),
   _firstTimeStep(true),
   _hasNodesOnInterface(true),
@@ -74,7 +73,8 @@ BaseQNPostProcessing::BaseQNPostProcessing
   its(0),
   tSteps(0),
   deletedColumns(0),
-  _filter(filter)
+  _filter(filter),
+  _preconditioner(preconditioner)
 {
   preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
       "BaseQNPostProcessing()",
@@ -194,6 +194,8 @@ void BaseQNPostProcessing::initialize(
           CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
     }
   }
+
+  _preconditioner->initialize(entries);
 }
 
 
@@ -288,6 +290,10 @@ void BaseQNPostProcessing::updateDifferenceMatrices
 
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
         // QR decomposition and updae decomposition
+
+        //apply scaling here
+
+        _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
         _matrixCols.front()++;
@@ -298,6 +304,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
 
         // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
         // the QR decomposition of V is updated
+        _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
         _qrV.popBack();
 
@@ -327,7 +334,6 @@ void BaseQNPostProcessing::performPostProcessing
 {
   preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
   using namespace tarch::la;
-  assertion2(_dataIDs.size() == _scalings.size(), _dataIDs.size(), _scalings.size());
   assertion2(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
   assertion2(_scaledValues.size() == _oldXTilde.size(),_scaledValues.size(), _oldXTilde.size());
   assertion2(_scaledOldValues.size() == _oldXTilde.size(),_scaledOldValues.size(), _oldXTilde.size());
@@ -335,6 +341,7 @@ void BaseQNPostProcessing::performPostProcessing
 
   // scale data values (and secondary data values)
   scaling(cplData);
+
 
   /** update the difference matrices V,W  includes:
    * scaling of values
@@ -383,6 +390,19 @@ void BaseQNPostProcessing::performPostProcessing
 
     DataValues xUpdate(_residuals.size(), 0.0);
 
+
+    //update and apply preconditioner
+    //IQN-ILS would also work without W and xUpdate scaling, IQN-IMVJ unfortunately not
+    _preconditioner->update(false, _scaledValues, _residuals);
+    _preconditioner->apply(_residuals);
+    _preconditioner->apply(_matrixV);
+    _preconditioner->apply(_matrixW);
+
+    if(_preconditioner->requireNewQR()){
+      _qrV.reset(_matrixV);
+      _preconditioner->newQRfulfilled();
+    }
+
     // apply the configured filter to the LS system
     applyFilter();
 
@@ -390,6 +410,11 @@ void BaseQNPostProcessing::performPostProcessing
      * compute quasi-Newton update
      */
     computeQNUpdate(cplData, xUpdate);
+
+    _preconditioner->revert(xUpdate); //to compensate the W scaling
+    _preconditioner->revert(_matrixW);
+    _preconditioner->revert(_matrixV);
+    _preconditioner->revert(_residuals);
 
 
     // copying is removed when moving to Eigen
@@ -443,7 +468,7 @@ void BaseQNPostProcessing::performPostProcessing
 
 void BaseQNPostProcessing::applyFilter()
 {
-  preciceTrace(__func__);
+  preciceTrace1(__func__,_filter);
   if (_filter == PostProcessing::NOFILTER) {
     // do nothing
   } else {
@@ -482,7 +507,7 @@ void BaseQNPostProcessing::scaling
 
   int offset = 0;
   for (int id : _dataIDs) {
-    double factor = _scalings[id];
+    double factor = 1.0; //_scalings[id];
     preciceDebug("Scaling Factor " << factor << " for id: " << id);
     int size = cplData[id]->values->size();
     DataValues& values = *cplData[id]->values;
@@ -513,7 +538,7 @@ void BaseQNPostProcessing::undoScaling
 
   int offset = 0;
   for (int id : _dataIDs) {
-    double factor = _scalings[id];
+    double factor = 1.0; //_scalings[id];
     int size = cplData[id]->values->size();
     preciceDebug("Copying values back, size: " << size<<", scaling back with factor "<<factor<<" for id: "<<id);
     utils::DynVector& valuesPart = *(cplData[id]->values);
@@ -560,17 +585,11 @@ void BaseQNPostProcessing::iterationsConverged
     for (int id : _dataIDs)
     {
       l2norm = 0.;
-      double factor = _scalings[id];
 
-      int size = cplData[id]->values->size();
       DataValues& values = *cplData[id]->values;
-      DataValues unscaled(size, 0.0);
-      for (int i = 0; i < size; i++) {
-        unscaled(i) = values[i] / factor;
-      }
-      l2norm = utils::MasterSlave::l2norm(unscaled);
+      l2norm = utils::MasterSlave::l2norm(values);
       if (id == _dataIDs[0]) oldl2norm = sqrt(l2norm);
-      _infostream << "  * " << factor << "  l2-norm: " << sqrt(l2norm) << "  of id: " << id << "\n" << std::flush;
+      _infostream << "  l2-norm: " << sqrt(l2norm) << "  of id: " << id << "\n" << std::flush;
     }
     _infostream << "  * l2-norm ratio: " << (double) oldl2norm / sqrt(l2norm) << "\n" << std::flush;
   }
@@ -583,11 +602,13 @@ void BaseQNPostProcessing::iterationsConverged
   updateDifferenceMatrices(cplData);
   undoScaling(cplData);
 
-
   _firstTimeStep = false;
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
+
+
+  _preconditioner->update(true, _scaledValues, _residuals);
 
 # ifdef Debug
   std::ostringstream stream;

@@ -44,10 +44,10 @@ MVQNPostProcessing:: MVQNPostProcessing
   int 	 filter,
   double singularityLimit,
   std::vector<int> dataIDs,
-  std::map<int,double> scalings)
+  PtrPreconditioner preconditioner)
 :
   BaseQNPostProcessing(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
-		       filter, singularityLimit, dataIDs, scalings),
+		       filter, singularityLimit, dataIDs, preconditioner),
 //  _secondaryOldXTildes(),
   _invJacobian(),
   _oldInvJacobian(),
@@ -228,7 +228,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
 
 	/**
-	*  (1) Multiply J_prev * V =: V_tilde
+	*  (1) Multiply J_prev * V =: W_tilde
 	*/
 	assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
 	assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
@@ -278,7 +278,6 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
 	for(int i = 0; i < xUp.size(); i++)
 	  xUpdate(i) = xUp(i);
-
 }
 
 

@@ -11,7 +11,11 @@
 #include "cplscheme/impl/BroydenPostProcessing.hpp"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
 #include "cplscheme/impl/PostProcessing.hpp"
-#include <cplscheme/impl/BroydenPostProcessing.hpp>
+#include "cplscheme/impl/BroydenPostProcessing.hpp"
+#include "cplscheme/impl/ConstantPreconditioner.hpp"
+#include "cplscheme/impl/ValuePreconditioner.hpp"
+#include "cplscheme/impl/ResidualPreconditioner.hpp"
+#include "cplscheme/impl/ResidualSumPreconditioner.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -45,12 +49,14 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_DATA("data"),
   TAG_FILTER("filter"),
   TAG_ESTIMATEJACOBIAN("estimate-jacobian"),
+  TAG_PRECONDITIONER("preconditioner"),
   ATTR_NAME("name"),
   ATTR_MESH("mesh"),
   ATTR_SCALING("scaling"),
   ATTR_VALUE("value"),
   ATTR_ENFORCE("enforce"),
   ATTR_SINGULARITYLIMIT("singularity-limit"),
+  ATTR_PRECONDITIONER_TYPE("type"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
@@ -63,11 +69,16 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   VALUE_QR2FILTER("QR2-filter"),
   VALUE_PODFILTER("POD-filter"),
   VALUE_NOFILTER("no-filter"),
+  VALUE_CONSTANT_PRECONDITIONER("constant"),
+  VALUE_VALUE_PRECONDITIONER("value"),
+  VALUE_RESIDUAL_PRECONDITIONER("residual"),
+  VALUE_RESIDUAL_SUM_PRECONDITIONER("residual-sum"),
   //_isValid(false),
   _meshConfig(meshConfig),
   _postProcessing(),
   _coarseModelOptimizationConfig(),
   _neededMeshes(),
+  _preconditioner(),
   _config(),
   _isAddManifoldMappingTagAllowed(true)
 {
@@ -241,12 +252,14 @@ void PostProcessingConfiguration:: xmlTagCallback
 	  }else if (f == VALUE_NOFILTER){
 		  _config.filter = impl::PostProcessing::NOFILTER;
 	  }else {
-	    preciceError("xmlTagCallback", "Filter "<<f<<" is not known and no valid filter name.");
+	    assertion(false);
 	  }
 	  _config.singularityLimit = callingTag.getDoubleAttributeValue(ATTR_SINGULARITYLIMIT);
   }else if (callingTag.getName() == TAG_ESTIMATEJACOBIAN) {
     if(_config.type == VALUE_ManifoldMapping)
          _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
+  }else if (callingTag.getName() == TAG_PRECONDITIONER) {
+    _config.preconditionerType = callingTag.getStringAttributeValue(ATTR_PRECONDITIONER_TYPE);
   }
 }
 
@@ -256,6 +269,48 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 {
   preciceTrace1("xmlEndTagCallback()", callingTag.getName());
   if (callingTag.getNamespace() == TAG){
+
+    //create preconditioner
+    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_MVQN){
+      std::vector<int> dims;
+      for (int id : _config.dataIDs){
+        for(mesh::PtrMesh mesh : _meshConfig->meshes() ) {
+          for (mesh::PtrData data : mesh->data() ) {
+            if(data->getID() == id){
+              dims.push_back(data->getDimensions());
+            }
+          }
+        }
+      }
+
+      if(_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER){
+        std::vector<double> factors;
+        for (int id : _config.dataIDs){
+          factors.push_back(_config.scalings[id]);
+        }
+        _preconditioner = impl::PtrPreconditioner(new impl::ConstantPreconditioner(dims, factors));
+      }
+      else if(_config.preconditionerType == VALUE_VALUE_PRECONDITIONER){
+        _preconditioner = impl::PtrPreconditioner (new impl::ValuePreconditioner(dims));
+      }
+      else if(_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER){
+        _preconditioner = impl::PtrPreconditioner (new impl::ResidualPreconditioner(dims));
+      }
+      else if(_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER){
+        _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(dims));
+      }
+      else{
+        // no preconditioner defined
+        std::vector<double> factors;
+        for (int id : _config.dataIDs){
+          factors.push_back(1.0);
+        }
+        _preconditioner = impl::PtrPreconditioner (new impl::ConstantPreconditioner(dims, factors));
+      }
+    }
+
+
+
     if (callingTag.getName() == VALUE_CONSTANT){
       _postProcessing = impl::PtrPostProcessing (
           new impl::ConstantRelaxationPostProcessing (
@@ -280,7 +335,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
           _config.timestepsReused,
           _config.filter, _config.singularityLimit,
           _config.dataIDs,
-          _config.scalings) );
+          _preconditioner) );
     }
     else if (callingTag.getName() == VALUE_MVQN){
 		#ifndef PRECICE_NO_MPI
@@ -292,7 +347,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 			  _config.timestepsReused,
 			  _config.filter, _config.singularityLimit,
 			  _config.dataIDs,
-			  _config.scalings) );
+			  _preconditioner) );
 		#else
       	  preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
     #endif
@@ -324,7 +379,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
           _config.timestepsReused,
           _config.filter, _config.singularityLimit,
           _config.dataIDs,
-          _config.scalings) );
+          _preconditioner) );
     }
     else {
       assertion(false );
@@ -437,6 +492,23 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
    			"  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
    			"  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
    	tag.addSubtag(tagFilter);
+
+   	XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE );
+    XMLAttribute<std::string> attrPreconditionerType(ATTR_PRECONDITIONER_TYPE);
+    ValidatorEquals<std::string> valid1 ( VALUE_CONSTANT_PRECONDITIONER);
+    ValidatorEquals<std::string> valid2 ( VALUE_VALUE_PRECONDITIONER);
+    ValidatorEquals<std::string> valid3 ( VALUE_RESIDUAL_PRECONDITIONER);
+    ValidatorEquals<std::string> valid4 ( VALUE_RESIDUAL_SUM_PRECONDITIONER);
+    attrPreconditionerType.setValidator ( valid1 || valid2 || valid3 || valid4 );
+    attrPreconditionerType.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner"
+        " can be applied. A constant preconditioner scales every post-processing data by a constant value, which you can define as"
+        " an attribute of data. "
+        " A value preconditioner scales every post-processing data by the norm of the data in the previous timestep."
+        " A residual preconditioner scales every post-processing data by the current residual."
+        " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.");
+    tagPreconditioner.addAttribute(attrPreconditionerType);
+    tag.addSubtag(tagPreconditioner);
+
   }
   else if (tag.getName() == VALUE_MVQN){
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
@@ -486,6 +558,22 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
 	   			"  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
 	   			"  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
     tag.addSubtag(tagFilter);
+
+    XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE );
+    XMLAttribute<std::string> attrPreconditionerType(ATTR_PRECONDITIONER_TYPE);
+    ValidatorEquals<std::string> valid1 ( VALUE_CONSTANT_PRECONDITIONER);
+    ValidatorEquals<std::string> valid2 ( VALUE_VALUE_PRECONDITIONER);
+    ValidatorEquals<std::string> valid3 ( VALUE_RESIDUAL_PRECONDITIONER);
+    ValidatorEquals<std::string> valid4 ( VALUE_RESIDUAL_SUM_PRECONDITIONER);
+    attrPreconditionerType.setValidator ( valid1 || valid2 || valid3 || valid4 );
+    attrPreconditionerType.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner"
+        " can be applied. A constant preconditioner scales every post-processing data by a constant value, which you can define as"
+        " an attribute of data. "
+        " A value preconditioner scales every post-processing data by the norm of the data in the previous timestep."
+        " A residual preconditioner scales every post-processing data by the current residual."
+        " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.");
+    tagPreconditioner.addAttribute(attrPreconditionerType);
+    tag.addSubtag(tagPreconditioner);
   }
   else if (tag.getName() == VALUE_ManifoldMapping){
 
@@ -547,6 +635,7 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
           "  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
           "  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
     tag.addSubtag(tagFilter);
+
   }
   else if (tag.getName() == VALUE_BROYDEN){
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );

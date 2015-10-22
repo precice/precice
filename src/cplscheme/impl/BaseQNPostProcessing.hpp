@@ -11,6 +11,7 @@
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
 #include "QRFactorization.hpp"
+#include "Preconditioner.hpp"
 #include "Eigen/Dense"
 #include <deque>
 #include <fstream>
@@ -20,7 +21,7 @@
 
 /* ****************************************************************************
  * 
- * A few comments conserning the present design choice.
+ * A few comments concerning the present design choice.
  * 
  * All the functions from the base class BAseQNPostProcessing are specialized in
  * the sub classes as needed. This is done vi overwriting the base functions in 
@@ -29,10 +30,10 @@
  * computations i.e. handling of V,W matrices etc.)
  * However, for the performPostProcessing Method we decided (for better readability)
  * to have this method only in the base class, while introducing a function 
- * performPPSecondaryData that handles all the specialized stuff conserning post 
+ * performPPSecondaryData that handles all the specialized stuff concerning post
  * processing for the secondary data in the sub classes.
  *
- * Another posibility would have been to introduce a bunch of functions like 
+ * Another possibility would have been to introduce a bunch of functions like
  * initializeSpecialized(), removeMatrixColumnSpecialized(), 
  * iterationsConvergedSpecialized(), etc 
  * and call those function from the base class top down to the sub classes.
@@ -79,7 +80,7 @@ public:
       int    filter,
       double singularityLimit,
       std::vector<int>    dataIDs,
-      std::map<int,double>    scalings);
+      PtrPreconditioner preconditioner);
 
    /**
     * @brief Destructor, empty.
@@ -195,14 +196,6 @@ protected:
    /// @brief Data IDs of data not involved in IQN coefficient computation.
    std::vector<int> _secondaryDataIDs;
 
-   /* @brief Scales data by fixed value.
-    *
-    * When more than one data is used to compute the IQN linear combination of
-    * old data columns (_dataIDs.size() > 0), all data should have similar
-    * magnitude, in order to be similarly important in the least-squares solution.
-    */
-   std::map<int,double> _scalings;
-
    /// @brief Indicates the first iteration, where constant relaxation is used.
    bool _firstIteration;
 
@@ -295,10 +288,10 @@ protected:
    
    // @brief scales the data values with the predefined scaling factor
    virtual void scaling(DataMap & cplData);
-   
+
    // reverts the scaling of the data values and overwrites the old values with the updated ones
    virtual void undoScaling(DataMap & cplData);
-   
+
    virtual void applyFilter();
 
    /**
@@ -319,6 +312,10 @@ protected:
    virtual void removeMatrixColumn(int columnIndex);
    
    void writeInfo(std::string s, bool allProcs = false);
+
+private:
+
+   PtrPreconditioner _preconditioner;
 
 };
 

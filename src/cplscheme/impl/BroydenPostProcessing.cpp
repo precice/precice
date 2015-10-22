@@ -37,10 +37,10 @@ BroydenPostProcessing:: BroydenPostProcessing
   int    filter,
   double singularityLimit,
   std::vector<int> dataIDs,
-  std::map<int,double> scalings)
+  PtrPreconditioner preconditioner)
 :
   BaseQNPostProcessing(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
-		       filter, singularityLimit, dataIDs, scalings),
+		       filter, singularityLimit, dataIDs, preconditioner),
 //  _secondaryOldXTildes(),
   _invJacobian(),
   _oldInvJacobian(),

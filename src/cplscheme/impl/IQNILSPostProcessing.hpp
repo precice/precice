@@ -45,7 +45,7 @@ public:
       int 	 filter,
       double singularityLimit,
       std::vector<int>    dataIDs,
-      std::map<int,double>    scalings);
+      PtrPreconditioner preconditioner);
 
    /**
     * @brief Destructor, empty.

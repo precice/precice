@@ -88,7 +88,7 @@ private:
    const std::string TAG_DATA;
    const std::string TAG_FILTER;
    const std::string TAG_ESTIMATEJACOBIAN;
-   const std::string TAG_COARSEMODELOPTIMIZATION;
+   const std::string TAG_PRECONDITIONER;
 
    const std::string ATTR_NAME;
    const std::string ATTR_MESH;
@@ -96,6 +96,7 @@ private:
    const std::string ATTR_VALUE;
    const std::string ATTR_ENFORCE;
    const std::string ATTR_SINGULARITYLIMIT;
+   const std::string ATTR_PRECONDITIONER_TYPE;
 
    const std::string VALUE_CONSTANT;
    const std::string VALUE_AITKEN;
@@ -109,6 +110,10 @@ private:
    const std::string VALUE_QR2FILTER;
    const std::string VALUE_PODFILTER;
    const std::string VALUE_NOFILTER;
+   const std::string VALUE_CONSTANT_PRECONDITIONER;
+   const std::string VALUE_VALUE_PRECONDITIONER;
+   const std::string VALUE_RESIDUAL_PRECONDITIONER;
+   const std::string VALUE_RESIDUAL_SUM_PRECONDITIONER;
 
    //bool _isValid;
 
@@ -124,6 +129,8 @@ private:
 
    std::vector<std::string> _neededMeshes;
 
+   impl::PtrPreconditioner _preconditioner;
+
    struct ConfigurationData
    {
       std::vector<int> dataIDs;
@@ -136,6 +143,7 @@ private:
       int filter;
       double singularityLimit;
       bool estimateJacobian;
+      std::string preconditionerType;
 
       ConfigurationData ()
       :
@@ -148,7 +156,8 @@ private:
          timestepsReused ( 0 ),
          filter ( impl::PostProcessing::NOFILTER ),
          singularityLimit ( 0.0 ),
-         estimateJacobian ( false )
+         estimateJacobian ( false ),
+         preconditionerType("")
       {}
 
    } _config;
