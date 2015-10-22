@@ -773,6 +773,13 @@ void MMPostProcessing::iterationsConverged
   _coarseModelOptimization->iterationsConverged(cplData);
   _iterCoarseModelOpt = 0;
 
+  // if the multi-vector generalized broyden like update for the manifold matrix estimation process is used
+  // store the estimated matrix from the last time step.
+  if(_estimateJacobian && _MMMappingMatrix.cols() > 0)
+  {
+    _MMMappingMatrix_prev = _MMMappingMatrix;
+  }
+
 
   // the most recent differences for the F, C matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
