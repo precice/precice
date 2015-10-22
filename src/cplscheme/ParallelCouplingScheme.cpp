@@ -321,7 +321,21 @@ void ParallelCouplingScheme::implicitAdvance()
             }
           }
         }
-      }
+      }else {
+
+       // if the coarse model problem converged within the first iteration, i.e., no post-processing at all
+       // we need to register the coarse initialized data again on the fine input data,
+       // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
+       // model nor the post processing did any data registration
+       // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
+       if(_iterationsCoarseOptimization == 1   && getPostProcessing().get() != nullptr){
+         auto fineIDs = getPostProcessing()->getDataIDs();
+         auto& allData = getAllData();
+         for(int i=0; i<fineIDs.size(); i++){
+           *allData.at( fineIDs.at(i) )->values = allData.at( fineIDs.at(i)+fineIDs.size() )->oldValues.column(0);
+         }
+       }
+     }
 
       getM2N()->startSendPackage(0);
       getM2N()->send(convergence);
