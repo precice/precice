@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+
+<!-- Configuration for running all integration tests in src/precice/tests/ -->
+
+<configuration>
+
+  <run-integration-tests output-directory=".">
+    <log-filter target=""     component="" switch="off"/>
+    <log-filter target="info" component="" switch="on"/>
+
+    <log-output column-separator=" | " log-time-stamp="no"
+                log-time-stamp-human-readable="no" log-machine-name="no"
+                log-message-type="no" log-trace="yes" log-output-file=""/>
+  </run-integration-tests>
+
+</configuration>
