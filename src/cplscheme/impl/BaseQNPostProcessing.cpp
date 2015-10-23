@@ -58,8 +58,8 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _oldXTilde(),
   _residuals(),
   _secondaryResiduals(),
-  _scaledValues(),
-  _scaledOldValues(),
+  _values(),
+  _oldValues(),
   _oldResiduals(),
   _matrixV(),
   _matrixW(),
@@ -125,8 +125,8 @@ void BaseQNPostProcessing::initialize(
   _oldXTilde.append(DataValues(entries, init));
   _oldResiduals.append(DataValues(entries, init));
   _residuals.append(DataValues(entries, init));
-  _scaledValues.append(DataValues(entries, init));
-  _scaledOldValues.append(DataValues(entries, init));
+  _values.append(DataValues(entries, init));
+  _oldValues.append(DataValues(entries, init));
 
   // if design specifiaction not initialized yet
   if (not (_designSpecification.size() > 0)) {
@@ -257,8 +257,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices
   using namespace tarch::la;
 
   // Compute current residual: vertex-data - oldData
-  _residuals = _scaledValues;
-  _residuals -= _scaledOldValues;
+  _residuals = _values;
+  _residuals -= _oldValues;
 
   //if (_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
@@ -278,7 +278,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
       DataValues deltaR = _residuals;
       deltaR -= _oldResiduals;
 
-      DataValues deltaXTilde = _scaledValues;
+      DataValues deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
@@ -316,7 +316,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
       }
     }
     _oldResiduals = _residuals;   // Store residuals
-    _oldXTilde = _scaledValues;   // Store x_tilde
+    _oldXTilde = _values;   // Store x_tilde
   }
 
 }
@@ -335,12 +335,12 @@ void BaseQNPostProcessing::performPostProcessing
   preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
   using namespace tarch::la;
   assertion2(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
-  assertion2(_scaledValues.size() == _oldXTilde.size(),_scaledValues.size(), _oldXTilde.size());
-  assertion2(_scaledOldValues.size() == _oldXTilde.size(),_scaledOldValues.size(), _oldXTilde.size());
+  assertion2(_values.size() == _oldXTilde.size(),_values.size(), _oldXTilde.size());
+  assertion2(_oldValues.size() == _oldXTilde.size(),_oldValues.size(), _oldXTilde.size());
   assertion2(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
 
   // scale data values (and secondary data values)
-  scaling(cplData);
+  concatenateCouplingData(cplData);
 
 
   /** update the difference matrices V,W  includes:
@@ -352,7 +352,7 @@ void BaseQNPostProcessing::performPostProcessing
 
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
     preciceDebug("   Performing underrelaxation");
-    _oldXTilde = _scaledValues; // Store x tilde
+    _oldXTilde = _values; // Store x tilde
     _oldResiduals = _residuals; // Store current residual
 
     // copying is removed when moving to Eigen
@@ -364,8 +364,8 @@ void BaseQNPostProcessing::performPostProcessing
     // with residual: x_new = x_old + omega * (res-q)
     _residuals *= _initialRelaxation;
     _residuals -= q;
-    _residuals += _scaledOldValues;
-    _scaledValues = _residuals;
+    _residuals += _oldValues;
+    _values = _residuals;
 
     computeUnderrelaxationSecondaryData(cplData);
   } else {
@@ -391,15 +391,13 @@ void BaseQNPostProcessing::performPostProcessing
 
     //update and apply preconditioner
     //IQN-ILS would also work without W and xUpdate scaling, IQN-IMVJ unfortunately not
-    _preconditioner->update(false, _scaledValues, _residuals);
+    _preconditioner->update(false, _values, _residuals);
     _preconditioner->apply(_residuals);
     _preconditioner->apply(_matrixV);
     _preconditioner->apply(_matrixW);
 
     if(_preconditioner->requireNewQR()){
       _qrV.reset(_matrixV, getLSSystemRows());
-      // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
-      _qrV.setGlobalRows(getLSSystemRows());
       _preconditioner->newQRfulfilled();
     }
 
@@ -425,10 +423,10 @@ void BaseQNPostProcessing::performPostProcessing
     /**
      * apply quasiNewton update
      */
-    _scaledValues = _scaledOldValues;  // = x^k
-    _scaledValues += xUpdate;        // = x^k + delta_x
-    _scaledValues += _residuals; // = x^k + delta_x + r^k
-    _scaledValues -= q; // = x^k + delta_x + r^k - q^k
+    _values = _oldValues;  // = x^k
+    _values += xUpdate;        // = x^k + delta_x
+    _values += _residuals; // = x^k + delta_x + r^k
+    _values -= q; // = x^k + delta_x + r^k - q^k
 
    // std::cout<<"\n  xUpdate("<<its<<"): "<<xUpdate<<std::endl;
 
@@ -457,8 +455,7 @@ void BaseQNPostProcessing::performPostProcessing
     }
   }
 
-  // Undo scaling of data values and overwrite originals
-  undoScaling(cplData);
+  splitCouplingData(cplData);
 
   // number of iterations (usually equals number of columns in LS-system)
   its++;
@@ -494,28 +491,20 @@ void BaseQNPostProcessing::applyFilter()
  *     scaling
  * ----------------------------------------------------------------------------
  */
-void BaseQNPostProcessing::scaling
+void BaseQNPostProcessing::concatenateCouplingData
 (
     DataMap& cplData)
 {
-  preciceTrace("scaling()");
-
-  // scale and undo scaling of design specification according to scaling of corresponding data
-  bool isSet_designSpec = ((_designSpecification.size() > 0) && (_designSpecification.norm() > 1.0e-15));
-  if (isSet_designSpec)
-    assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
+  preciceTrace("concatenateCouplingData()");
 
   int offset = 0;
   for (int id : _dataIDs) {
-    double factor = 1.0; //_scalings[id];
-    preciceDebug("Scaling Factor " << factor << " for id: " << id);
     int size = cplData[id]->values->size();
     DataValues& values = *cplData[id]->values;
     DataValues& oldValues = cplData[id]->oldValues.column(0);
     for (int i = 0; i < size; i++) {
-      _scaledValues[i + offset] = values[i] / factor;
-      _scaledOldValues[i + offset] = oldValues[i] / factor;
-      if (isSet_designSpec) _designSpecification(i + offset) = _designSpecification(i + offset) / factor;
+      _values[i + offset] = values[i];
+      _oldValues[i + offset] = oldValues[i];
     }
     offset += size;
   }
@@ -525,28 +514,20 @@ void BaseQNPostProcessing::scaling
  *     undoScaling
  * ----------------------------------------------------------------------------
  */
-void BaseQNPostProcessing::undoScaling
+void BaseQNPostProcessing::splitCouplingData
 (
     DataMap& cplData)
 {
-  preciceTrace("undoScaling()");
-
-  // scale and undo scaling of design specification according to scaling of corresponding data
-  bool isSet_designSpec = ((_designSpecification.size() > 0));// && (_designSpecification.norm() > 1.0e-15));
-  if (isSet_designSpec)
-    assertion2(_scaledValues.size() == _designSpecification.size(), _scaledValues.size(), _designSpecification.size());
+  preciceTrace("splitCouplingData()");
 
   int offset = 0;
   for (int id : _dataIDs) {
-    double factor = 1.0; //_scalings[id];
     int size = cplData[id]->values->size();
-    preciceDebug("Copying values back, size: " << size<<", scaling back with factor "<<factor<<" for id: "<<id);
     utils::DynVector& valuesPart = *(cplData[id]->values);
     utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
     for (int i = 0; i < size; i++) {
-      valuesPart[i] = _scaledValues[i + offset] * factor;
-      oldValuesPart[i] = _scaledOldValues[i + offset] * factor;
-      if (isSet_designSpec) _designSpecification(i + offset) = _designSpecification(i + offset) * factor;
+      valuesPart[i] = _values[i + offset];
+      oldValuesPart[i] = _oldValues[i + offset];
     }
     offset += size;
   }
@@ -598,9 +579,8 @@ void BaseQNPostProcessing::iterationsConverged
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
   // convergence was achieved
-  scaling(cplData);
+  concatenateCouplingData(cplData);
   updateDifferenceMatrices(cplData);
-  undoScaling(cplData);
 
   _firstTimeStep = false;
   if (_matrixCols.front() == 0) { // Did only one iteration
@@ -608,7 +588,7 @@ void BaseQNPostProcessing::iterationsConverged
   }
 
 
-  _preconditioner->update(true, _scaledValues, _residuals);
+  _preconditioner->update(true, _values, _residuals);
 
 # ifdef Debug
   std::ostringstream stream;

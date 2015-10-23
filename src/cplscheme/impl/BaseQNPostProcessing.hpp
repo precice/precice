@@ -228,11 +228,11 @@ protected:
    // @brief Current iteration residuals of secondary data.
    std::map<int,DataValues> _secondaryResiduals;
 
-   // @brief Temporary used in performPostProcessing().
-   DataValues _scaledValues;
+   // @brief Concatenation of all coupling data involved in the QN system.
+   DataValues _values;
 
-   // @brief Temporary used in performPostProcessing().
-   DataValues _scaledOldValues;
+   // @brief Concatenation of all (old) coupling data involved in the QN system.
+   DataValues _oldValues;
 
    // @brief Difference between solver input and output from last timestep
    DataValues _oldResiduals;
@@ -286,11 +286,11 @@ protected:
    // @brief updates the V, W matrices (as well as the matrices for the secondary data)
    virtual void updateDifferenceMatrices(DataMap & cplData);
    
-   // @brief scales the data values with the predefined scaling factor
-   virtual void scaling(DataMap & cplData);
+   // @brief concatenates all coupling data involved in the QN system in a single vector
+   virtual void concatenateCouplingData(DataMap & cplData);
 
-   // reverts the scaling of the data values and overwrites the old values with the updated ones
-   virtual void undoScaling(DataMap & cplData);
+   // @brief splits up QN system vector back into the coupling data
+   virtual void splitCouplingData(DataMap & cplData);
 
    virtual void applyFilter();
 

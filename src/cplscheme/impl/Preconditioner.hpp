@@ -75,7 +75,7 @@ public:
   void apply(DataMatrix& M){
     preciceTrace("apply()");
 
-    assertion(M.column(0).size()==_weights.size());
+    assertion(M.column(0).size()==(int)_weights.size());
 
     // scale matrix M
     for(int i=0; i<M.cols(); i++){
@@ -91,7 +91,7 @@ public:
   void apply(DataValues& v){
     preciceTrace("apply()");
 
-    assertion(v.size()==_weights.size());
+    assertion(v.size()==(int)_weights.size());
 
     // scale residual
     for(int j=0; j<v.size(); j++){
@@ -105,7 +105,7 @@ public:
   void revert(DataMatrix& M){
     preciceTrace("revert()");
 
-    assertion(M.column(0).size()==_weights.size());
+    assertion(M.column(0).size()==(int)_weights.size());
 
     // scale matrix M
     for(int i=0; i<M.cols(); i++){
@@ -121,7 +121,7 @@ public:
   void revert(DataValues& v){
     preciceTrace("revert()");
 
-    assertion(v.size()==_weights.size());
+    assertion(v.size()==(int)_weights.size());
 
     // scale residual
     for(int j=0; j<v.size(); j++){

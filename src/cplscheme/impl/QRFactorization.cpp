@@ -174,7 +174,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 			linearDependence = false;
 			int index = 0; // actual index of checked column, \in [0, _cols] and _cols is decreasing
 			if(_cols > 1){
-				for (int i = 0; i < delFlag.size(); i++) {
+				for (size_t i = 0; i < delFlag.size(); i++) {
 					// index is not incremented, if columns has been deleted in previous rounds
 					if(delFlag[i] > 0) continue;
 
@@ -192,7 +192,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 						//break;
 						index--;  	// check same column index, as cols are shifted left
 					}
-					assertion2(delCols+_cols == delFlag.size(), (delCols+_cols), delFlag.size());
+					assertion2(delCols+_cols == (int)delFlag.size(), (delCols+_cols), delFlag.size());
 					index++;
 				}
 			}
