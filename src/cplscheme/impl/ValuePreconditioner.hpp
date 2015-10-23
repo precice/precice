@@ -36,6 +36,8 @@ public:
 private:
 
   static tarch::logging::Log _log;
+
+  bool _firstTimestep;
 };
 
 }}} // namespace precice, cplscheme, impl

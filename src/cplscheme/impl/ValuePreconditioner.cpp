@@ -15,14 +15,15 @@ ValuePreconditioner:: ValuePreconditioner
 (
    std::vector<int> dimensions)
 :
-   Preconditioner (dimensions)
+   Preconditioner (dimensions),
+   _firstTimestep(true)
 {}
 
 void ValuePreconditioner::update(bool timestepComplete, DataValues& oldValues, DataValues& res)
 {
   preciceTrace("update()");
 
-  if(timestepComplete){
+  if(timestepComplete || _firstTimestep){
 
     std::vector<double> norms(_dimensions.size(),0.0);
 
@@ -47,6 +48,7 @@ void ValuePreconditioner::update(bool timestepComplete, DataValues& oldValues, D
     }
 
     _requireNewQR = true;
+    _firstTimestep = false;
   }
 }
 
