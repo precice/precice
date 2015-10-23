@@ -96,7 +96,7 @@ private:
    const std::string ATTR_VALUE;
    const std::string ATTR_ENFORCE;
    const std::string ATTR_SINGULARITYLIMIT;
-   const std::string ATTR_PRECONDITIONER_TYPE;
+   const std::string ATTR_TYPE;
 
    const std::string VALUE_CONSTANT;
    const std::string VALUE_AITKEN;
@@ -108,8 +108,6 @@ private:
    const std::string VALUE_QR1FILTER;
    const std::string VALUE_QR1_ABSFILTER;
    const std::string VALUE_QR2FILTER;
-   const std::string VALUE_PODFILTER;
-   const std::string VALUE_NOFILTER;
    const std::string VALUE_CONSTANT_PRECONDITIONER;
    const std::string VALUE_VALUE_PRECONDITIONER;
    const std::string VALUE_RESIDUAL_PRECONDITIONER;

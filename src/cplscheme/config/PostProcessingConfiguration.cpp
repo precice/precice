@@ -55,8 +55,8 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   ATTR_SCALING("scaling"),
   ATTR_VALUE("value"),
   ATTR_ENFORCE("enforce"),
-  ATTR_SINGULARITYLIMIT("singularity-limit"),
-  ATTR_PRECONDITIONER_TYPE("type"),
+  ATTR_SINGULARITYLIMIT("limit"),
+  ATTR_TYPE("type"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
@@ -64,11 +64,9 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   VALUE_MVQN("IQN-IMVJ"),
   VALUE_ManifoldMapping("MM"),
   VALUE_BROYDEN("broyden"),
-  VALUE_QR1FILTER("QR1-filter"),
-  VALUE_QR1_ABSFILTER("QR1_absolute-filter"),
-  VALUE_QR2FILTER("QR2-filter"),
-  VALUE_PODFILTER("POD-filter"),
-  VALUE_NOFILTER("no-filter"),
+  VALUE_QR1FILTER("QR1"),
+  VALUE_QR1_ABSFILTER("QR1-absolute"),
+  VALUE_QR2FILTER("QR2"),
   VALUE_CONSTANT_PRECONDITIONER("constant"),
   VALUE_VALUE_PRECONDITIONER("value"),
   VALUE_RESIDUAL_PRECONDITIONER("residual"),
@@ -240,17 +238,13 @@ void PostProcessingConfiguration:: xmlTagCallback
     _config.timestepsReused = callingTag.getIntAttributeValue(ATTR_VALUE);
   }
   else if (callingTag.getName() == TAG_FILTER){
-	  auto f = callingTag.getStringAttributeValue(ATTR_NAME);
+	  auto f = callingTag.getStringAttributeValue(ATTR_TYPE);
 	  if(f == VALUE_QR1FILTER){
 		  _config.filter = impl::PostProcessing::QR1FILTER;
 	  }else if (f == VALUE_QR1_ABSFILTER){
 	  		  _config.filter = impl::PostProcessing::QR1FILTER_ABS;
 	  }else if (f == VALUE_QR2FILTER){
 		  _config.filter = impl::PostProcessing::QR2FILTER;
-	  }else if (f == VALUE_PODFILTER){
-	  		  _config.filter = impl::PostProcessing::PODFILTER;
-	  }else if (f == VALUE_NOFILTER){
-		  _config.filter = impl::PostProcessing::NOFILTER;
 	  }else {
 	    assertion(false);
 	  }
@@ -259,7 +253,7 @@ void PostProcessingConfiguration:: xmlTagCallback
     if(_config.type == VALUE_ManifoldMapping)
          _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   }else if (callingTag.getName() == TAG_PRECONDITIONER) {
-    _config.preconditionerType = callingTag.getStringAttributeValue(ATTR_PRECONDITIONER_TYPE);
+    _config.preconditionerType = callingTag.getStringAttributeValue(ATTR_TYPE);
   }
 }
 
@@ -475,26 +469,27 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tag.addSubtag(tagData);
 
     XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE );
-    XMLAttribute<std::string> attrFilterName(ATTR_NAME );
+    XMLAttribute<std::string> attrFilterName(ATTR_TYPE );
     ValidatorEquals<std::string> validQR1(VALUE_QR1FILTER );
     ValidatorEquals<std::string> validQR1abs(VALUE_QR1_ABSFILTER );
     ValidatorEquals<std::string> validQR2(VALUE_QR2FILTER );
-    ValidatorEquals<std::string> validPOD(VALUE_PODFILTER );
-    ValidatorEquals<std::string> validNO(VALUE_NOFILTER );
-    attrFilterName.setValidator (validQR1 || validQR1abs || validQR2|| validPOD || validNO);
+    attrFilterName.setValidator (validQR1 || validQR1abs || validQR2);
    	tagFilter.addAttribute(attrFilterName);
    	XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
     attrSingularityLimit.setDefaultValue(1e-16);
     tagFilter.addAttribute(attrSingularityLimit);
-   	tagFilter.setDocumentation("Type of filtering technique that is used to "
-   			"maintain good conditioning in the least-squares system. Possible filters:\n"
-   			"  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
-   			"  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
-   			"  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
-   	tag.addSubtag(tagFilter);
+    tagFilter.setDocumentation("Type of filtering technique that is used to "
+              "maintain good conditioning in the least-squares system. Possible filters:\n"
+              "  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
+              "  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
+              "  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n"
+              "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
+              "modified Gram-Schmidt. This can give different results even when no columns "
+              "are filtered out.");
+    tag.addSubtag(tagFilter);
 
    	XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE );
-    XMLAttribute<std::string> attrPreconditionerType(ATTR_PRECONDITIONER_TYPE);
+    XMLAttribute<std::string> attrPreconditionerType(ATTR_TYPE);
     ValidatorEquals<std::string> valid1 ( VALUE_CONSTANT_PRECONDITIONER);
     ValidatorEquals<std::string> valid2 ( VALUE_VALUE_PRECONDITIONER);
     ValidatorEquals<std::string> valid3 ( VALUE_RESIDUAL_PRECONDITIONER);
@@ -544,23 +539,24 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
     attrSingularityLimit.setDefaultValue(1e-16);
     tagFilter.addAttribute(attrSingularityLimit);
-    XMLAttribute<std::string> attrFilterName(ATTR_NAME );
+    XMLAttribute<std::string> attrFilterName(ATTR_TYPE );
     ValidatorEquals<std::string> validQR1(VALUE_QR1FILTER );
     ValidatorEquals<std::string> validQR1abs(VALUE_QR1_ABSFILTER );
     ValidatorEquals<std::string> validQR2(VALUE_QR2FILTER );
-    ValidatorEquals<std::string> validPOD(VALUE_PODFILTER );
-    ValidatorEquals<std::string> validNO(VALUE_NOFILTER );
-    attrFilterName.setValidator (validQR1 || validQR1abs || validQR2|| validPOD || validNO);
+    attrFilterName.setValidator (validQR1 || validQR1abs || validQR2);
     tagFilter.addAttribute(attrFilterName);
     tagFilter.setDocumentation("Type of filtering technique that is used to "
 	   			"maintain good conditioning in the least-squares system. Possible filters:\n"
 	   			"  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
 	   			"  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
-	   			"  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
+	   			"  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n"
+          "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
+          "modified Gram-Schmidt. This can give different results even when no columns "
+          "are filtered out.");
     tag.addSubtag(tagFilter);
 
     XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE );
-    XMLAttribute<std::string> attrPreconditionerType(ATTR_PRECONDITIONER_TYPE);
+    XMLAttribute<std::string> attrPreconditionerType(ATTR_TYPE);
     ValidatorEquals<std::string> valid1 ( VALUE_CONSTANT_PRECONDITIONER);
     ValidatorEquals<std::string> valid2 ( VALUE_VALUE_PRECONDITIONER);
     ValidatorEquals<std::string> valid3 ( VALUE_RESIDUAL_PRECONDITIONER);
@@ -618,13 +614,11 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tag.addSubtag(tagData);
 
     XMLTag tagFilter(*this, TAG_FILTER, XMLTag::OCCUR_NOT_OR_ONCE );
-    XMLAttribute<std::string> attrFilterName(ATTR_NAME );
+    XMLAttribute<std::string> attrFilterName(ATTR_TYPE );
     ValidatorEquals<std::string> validQR1(VALUE_QR1FILTER );
     ValidatorEquals<std::string> validQR1abs(VALUE_QR1_ABSFILTER );
     ValidatorEquals<std::string> validQR2(VALUE_QR2FILTER );
-    ValidatorEquals<std::string> validPOD(VALUE_PODFILTER );
-    ValidatorEquals<std::string> validNO(VALUE_NOFILTER );
-    attrFilterName.setValidator (validQR1 || validQR1abs || validQR2|| validPOD || validNO);
+    attrFilterName.setValidator (validQR1 || validQR1abs || validQR2);
     tagFilter.addAttribute(attrFilterName);
     XMLAttribute<double> attrSingularityLimit(ATTR_SINGULARITYLIMIT);
     attrSingularityLimit.setDefaultValue(1e-16);
@@ -633,7 +627,10 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
           "maintain good conditioning in the least-squares system. Possible filters:\n"
           "  QR1-filter: updateQR-dec with (relative) test R(i,i) < eps *||R||\n"
           "  QR1_absolute-filter: updateQR-dec with (absolute) test R(i,i) < eps|\n"
-          "  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n");
+          "  QR2-filter: en-block QR-dec with test |v_orth| < eps * |v|\n"
+          "Please note that a QR1 is based on Given's rotations whereas QR2 uses "
+          "modified Gram-Schmidt. This can give different results even when no columns "
+          "are filtered out." );
     tag.addSubtag(tagFilter);
 
   }
