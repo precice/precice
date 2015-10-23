@@ -302,7 +302,7 @@ void MeshTest::testBoundingBoxCOG()
     coords0 =  2.0, 0.0, -3.0;
     coords1 = -1.0, 4.0,  8.0;
     coords2 =  0.0, 1.0, -2.0;
-    coords2 =  3.5, 2.0, -2.0;
+    coords3 =  3.5, 2.0, -2.0;
 
     Mesh mesh ("3D Testmesh", 3, false );
     mesh.createVertex(coords0);
