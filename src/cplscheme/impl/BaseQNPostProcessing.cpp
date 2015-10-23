@@ -383,9 +383,7 @@ void BaseQNPostProcessing::performPostProcessing
       // re-computation of QR decomposition from _matrixV = _matrixVBackup
       // this occurs very rarely, to be precise, it occurs only if the coupling terminates
       // after the first iteration and the matrix data from time step t-2 has to be used
-      _qrV.reset(_matrixV);
-      // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
-      _qrV.setGlobalRows(getLSSystemRows());
+      _qrV.reset(_matrixV, getLSSystemRows());
     }
 
     DataValues xUpdate(_residuals.size(), 0.0);
@@ -399,7 +397,9 @@ void BaseQNPostProcessing::performPostProcessing
     _preconditioner->apply(_matrixW);
 
     if(_preconditioner->requireNewQR()){
-      _qrV.reset(_matrixV);
+      _qrV.reset(_matrixV, getLSSystemRows());
+      // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
+      _qrV.setGlobalRows(getLSSystemRows());
       _preconditioner->newQRfulfilled();
     }
 

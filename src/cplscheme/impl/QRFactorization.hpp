@@ -120,6 +120,7 @@ public:
     */
    void reset(
 	EigenMatrix A,
+	int globalRows,
 	double omega=0,
     double theta=1./0.7,
     double sigma=std::numeric_limits<double>::min());
@@ -129,6 +130,7 @@ public:
     */
    void reset(
 	DataMatrix A,
+	int globalRows,
 	double omega=0,
 	double theta=1./0.7,
 	double sigma=std::numeric_limits<double>::min());

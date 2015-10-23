@@ -2,6 +2,7 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ResidualPreconditioner.hpp"
+#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -25,11 +26,12 @@ void ResidualPreconditioner::update(bool timestepComplete, DataValues& oldValues
 
     int offset = 0;
     for(size_t k=0; k<_dimensions.size(); k++){
+      DataValues part;
       for(int i=0; i<_dimensions[k]*_sizeOfSubVector; i++){
-        norms[k] += res[i+offset]*res[i+offset];
+        part.append(oldValues[i+offset]);
       }
+      norms[k] = utils::MasterSlave::l2norm(part);
       offset += _dimensions[k]*_sizeOfSubVector;
-      norms[k] = std::sqrt(norms[k]);
       assertion(norms[k]>0.0);
     }
 

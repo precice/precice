@@ -685,6 +685,7 @@ void QRFactorization::reset(
 
 void QRFactorization::reset(
   EigenMatrix A, 
+  int globalRows,
   double omega, 
   double theta, 
   double sigma)
@@ -696,7 +697,7 @@ void QRFactorization::reset(
   _omega = omega;
   _theta = theta;
   _sigma = sigma;
-  _globalRows = _rows;
+  _globalRows = globalRows;
   
   int m = A.cols();
   for (int k=0; k<m; k++)
@@ -713,6 +714,7 @@ void QRFactorization::reset(
 
 void QRFactorization::reset(
   DataMatrix A, 
+  int globalRows,
   double omega, 
   double theta, 
   double sigma)
@@ -724,7 +726,7 @@ void QRFactorization::reset(
   _omega = omega;
   _theta = theta;
   _sigma = sigma;
-  _globalRows = _rows;
+  _globalRows = globalRows;
  
   int m = A.cols();
   for (int k=0; k<m; k++)
