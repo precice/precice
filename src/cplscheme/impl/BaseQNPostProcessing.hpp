@@ -313,8 +313,6 @@ protected:
    
    void writeInfo(std::string s, bool allProcs = false);
 
-private:
-
    PtrPreconditioner _preconditioner;
 
 };

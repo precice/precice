@@ -7,6 +7,7 @@
 #include "utils/Helpers.hpp"
 #include "utils/Globals.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
+#include <Eigen/Dense>
 #include "../SharedPointer.hpp"
 #include <vector>
 
@@ -31,6 +32,7 @@ public:
   typedef tarch::la::DynamicVector<double> DataValues;
   typedef std::map<int,PtrCouplingData> DataMap;
   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
+  typedef Eigen::MatrixXd EigenMatrix;
 
   Preconditioner(
       std::vector<int> dimensions)
@@ -81,6 +83,54 @@ public:
     for(int i=0; i<M.cols(); i++){
       for(int j=0; j<M.column(0).size(); j++){
         M(j,i) *= _weights[j];
+      }
+    }
+  }
+
+  /**
+   * @brief Apply preconditioner to squared matrix
+   * @param transpose: false = from left, true = from right
+   */
+  void apply(EigenMatrix& M, bool transpose){
+    preciceTrace("apply()");
+    if(transpose){
+      assertion(M.cols()==(int)_weights.size());
+      for(int i=0; i<M.cols(); i++){
+        for(int j=0; j<M.rows(); j++){
+          M(j,i) *= _weights[i];
+        }
+      }
+    }
+    else{
+      assertion(M.rows()==(int)_weights.size());
+      for(int i=0; i<M.cols(); i++){
+        for(int j=0; j<M.rows(); j++){
+          M(j,i) *= _weights[j];
+        }
+      }
+    }
+  }
+
+  /**
+   * @brief Apply inverse preconditioner to squared matrix
+   * @param transpose: false = from left, true = from right
+   */
+  void revert(EigenMatrix& M, bool transpose){
+    preciceTrace("apply()");
+    if(transpose){
+      assertion(M.cols()==(int)_weights.size());
+      for(int i=0; i<M.cols(); i++){
+        for(int j=0; j<M.rows(); j++){
+          M(j,i) *= _invWeights[i];
+        }
+      }
+    }
+    else{
+      assertion(M.rows()==(int)_weights.size());
+      for(int i=0; i<M.cols(); i++){
+        for(int j=0; j<M.rows(); j++){
+          M(j,i) *= _invWeights[j];
+        }
       }
     }
   }

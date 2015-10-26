@@ -178,7 +178,12 @@ void MVQNPostProcessing::computeQNUpdate
      *
      * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
      */
-    computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate);
+
+  _preconditioner->apply(_oldInvJacobian,false);
+  _preconditioner->revert(_oldInvJacobian,true);
+  computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate);
+  _preconditioner->revert(_oldInvJacobian,false);
+  _preconditioner->apply(_oldInvJacobian,true);
 }
 
 
@@ -287,6 +292,8 @@ void MVQNPostProcessing:: specializedIterationsConverged
 {
   // store inverse Jacobian from last time step
   _oldInvJacobian = _invJacobian;
+  _preconditioner->revert(_oldInvJacobian,false);
+  _preconditioner->apply(_oldInvJacobian,true);
 }
 
 }}} // namespace precice, cplscheme, impl
