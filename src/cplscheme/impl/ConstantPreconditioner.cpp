@@ -41,4 +41,10 @@ void ConstantPreconditioner::update(bool timestepComplete, DataValues& oldValues
   //nothing to do here
 }
 
+void ConstantPreconditioner::update(bool timestepComplete, Eigen::VectorXd& oldValues, Eigen::VectorXd& res)
+{
+  preciceTrace("update()");
+  //nothing to do here
+}
+
 }}} // namespace precice, cplscheme

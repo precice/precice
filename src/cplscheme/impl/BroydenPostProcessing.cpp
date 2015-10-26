@@ -41,12 +41,10 @@ BroydenPostProcessing:: BroydenPostProcessing
 :
   BaseQNPostProcessing(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
 		       filter, singularityLimit, dataIDs, preconditioner),
-//  _secondaryOldXTildes(),
   _invJacobian(),
   _oldInvJacobian(),
   _maxColumns(maxIterationsUsed),
   _currentColumns(0)
-//  _matrixWriter("jacobain.m")
 {}
 
 

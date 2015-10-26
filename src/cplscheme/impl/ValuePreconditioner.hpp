@@ -33,6 +33,13 @@ public:
    */
   virtual void update(bool timestepComplete, DataValues& oldValues, DataValues& res);
 
+  /**
+   * @brief Update the scaling after every FSI iteration.
+   *
+   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
+   */
+  virtual void update(bool timestepComplete, Eigen::VectorXd& oldValues, Eigen::VectorXd& res);
+
 private:
 
   static tarch::logging::Log _log;
