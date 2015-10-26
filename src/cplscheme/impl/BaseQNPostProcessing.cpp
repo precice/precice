@@ -407,6 +407,9 @@ void BaseQNPostProcessing::performPostProcessing
       _preconditioner->newQRfulfilled();
     }
 
+    // TODO: if the preconditioner requires a re-computation of the QR-dec of V, and also QR2 filter is used,
+    //       we would re-compute the decomposition two times wich is not very efficient. combine that somehow!
+
     // apply the configured filter to the LS system
     applyFilter();
 
@@ -494,10 +497,7 @@ void BaseQNPostProcessing::applyFilter()
 }
 
 
-/* ----------------------------------------------------------------------------
- *     scaling
- * ----------------------------------------------------------------------------
- */
+
 void BaseQNPostProcessing::concatenateCouplingData
 (
     DataMap& cplData)
@@ -517,10 +517,7 @@ void BaseQNPostProcessing::concatenateCouplingData
   }
 }
 
-/* ----------------------------------------------------------------------------
- *     undoScaling
- * ----------------------------------------------------------------------------
- */
+
 void BaseQNPostProcessing::splitCouplingData
 (
     DataMap& cplData)
@@ -564,6 +561,8 @@ void BaseQNPostProcessing::iterationsConverged
   deletedColumns = 0;
   // -----------------------
 
+
+  /*
   // writig l2 norm of converged configuration to info stream
   // -----------
   if (_firstTimeStep)
@@ -582,6 +581,8 @@ void BaseQNPostProcessing::iterationsConverged
     _infostream << "  * l2-norm ratio: " << (double) oldl2norm / sqrt(l2norm) << "\n" << std::flush;
   }
   // -----------
+  */
+
 
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
