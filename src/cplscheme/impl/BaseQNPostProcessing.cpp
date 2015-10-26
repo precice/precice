@@ -388,10 +388,16 @@ void BaseQNPostProcessing::performPostProcessing
 
     DataValues xUpdate(_residuals.size(), 0.0);
 
+    // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
+    assertion2(_resiudals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
+    for (int i = 0; i < _designSpecification.size(); i++)
+          _residuals(i) -= _designSpecification(i);
+
 
     //update and apply preconditioner
     //IQN-ILS would also work without W and xUpdate scaling, IQN-IMVJ unfortunately not
     _preconditioner->update(false, _values, _residuals);
+    // TODO: not sure whether the _residuals -= _designSpecifiaction rather should be here.
     _preconditioner->apply(_residuals);
     _preconditioner->apply(_matrixV);
     _preconditioner->apply(_matrixW);
@@ -414,21 +420,22 @@ void BaseQNPostProcessing::performPostProcessing
     _preconditioner->revert(_matrixV);
     _preconditioner->revert(_residuals);
 
-
+/*
     // copying is removed when moving to Eigen
     DataValues q(_residuals.size(), 0.0);
     for (int i = 0; i < q.size(); i++)
       q(i) = _designSpecification(i);
+*/
+
 
     /**
      * apply quasiNewton update
      */
     _values = _oldValues;  // = x^k
     _values += xUpdate;        // = x^k + delta_x
-    _values += _residuals; // = x^k + delta_x + r^k
-    _values -= q; // = x^k + delta_x + r^k - q^k
+    _values += _residuals; // = x^k + delta_x + r^k         note: residuals are _residuals - _designSpecifiaction at this point.
+//    _values -= q; // = x^k + delta_x + r^k - q^k
 
-   // std::cout<<"\n  xUpdate("<<its<<"): "<<xUpdate<<std::endl;
 
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)

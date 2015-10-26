@@ -265,10 +265,15 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	/**
  	 *  (3) solve delta_x = - J_inv * res
 	 */
+	//Eigen::VectorXd res_tilde(_residuals.size());
+	//Eigen::VectorXd xUp(_residuals.size());
+	//for(int i = 0; i < res_tilde.size(); i++)
+	//  res_tilde(i) = _residuals(i) - _designSpecification(i);
+
 	Eigen::VectorXd res_tilde(_residuals.size());
-	Eigen::VectorXd xUp(_residuals.size());
-	for(int i = 0; i < res_tilde.size(); i++)
-	  res_tilde(i) = _residuals(i) - _designSpecification(i);
+  Eigen::VectorXd xUp(_residuals.size());
+  for(int i = 0; i < res_tilde.size(); i++)
+    res_tilde(i) = _residuals(i);
 
 	res_tilde *= -1.;
 
