@@ -28,7 +28,7 @@ void ResidualPreconditioner::update(bool timestepComplete, DataValues& oldValues
     for(size_t k=0; k<_dimensions.size(); k++){
       DataValues part;
       for(int i=0; i<_dimensions[k]*_sizeOfSubVector; i++){
-        part.append(oldValues[i+offset]);
+        part.append(res[i+offset]);
       }
       norms[k] = utils::MasterSlave::l2norm(part);
       offset += _dimensions[k]*_sizeOfSubVector;
