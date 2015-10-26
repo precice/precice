@@ -397,7 +397,7 @@ void BaseQNPostProcessing::performPostProcessing
     _preconditioner->apply(_matrixW);
 
     if(_preconditioner->requireNewQR()){
-      if(not _filter==PostProcessing::QR2FILTER){ //for QR2 filter, there is no need to do this twice
+      if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
