@@ -47,7 +47,7 @@ public:
       bool estimateJacobian,
       std::vector<int> fineDataIDs,
       std::vector<int> coarseDataIDs,
-      std::map<int, double> scalings);
+      PtrPreconditioner preconditioner);
 
   /**
    * @brief Destructor, empty.
@@ -147,12 +147,16 @@ public:
     return true;
   }
 
-protected:
+private:
 
-  // @brief Logging device.
+  /// @brief Logging device.
   static tarch::logging::Log _log;
 
+  /// @brief coarse model optimization method
   impl::PtrPostProcessing _coarseModelOptimization;
+
+  /// @brief preconditioner, i.e., scaling operator for the LS system
+  PtrPreconditioner _preconditioner;
 
   // @brief Maximum number of old data iterations kept.
   int _maxIterationsUsed;
@@ -222,13 +226,13 @@ protected:
   Eigen::VectorXd _coarseOldResiduals;
 
   /// @brief Temporary used in performPostProcessing(). output fine model
-  Eigen::VectorXd _outputFineModelScaled;
+  Eigen::VectorXd _outputFineModel;
 
   /// @brief Temporary used in performPostProcessing().
   //Eigen::VectorXd _scaledOldValues;
 
   /// @brief Temporary used in performPostProcessing(), output coarse model
-  Eigen::VectorXd _outputCoarseModelScaled;
+  Eigen::VectorXd _outputCoarseModel;
 
   /// @brief Temporary used in performPostProcessing(), input for model evaluation
   Eigen::VectorXd _input_Xstar;
@@ -309,15 +313,18 @@ protected:
   /// @brief Removes one iteration from V,W matrices and adapts _matrixCols.
   void removeMatrixColumn(int columnIndex);
 
+  /// @brief concatenates all coupling data involved in the QN system in a single vector
+  void concatenateCouplingData(DataMap & cplData);
+
   /// @brief scales the needed data from the coupling data according to the defined scaling factors
-  void scale(DataMap& cplData);
+  //void scale(DataMap& cplData);
 
   /// @brief scales an vector of length = #unknowns that has the same ordering of unknowns as the cplData
   ///        according to the defined scaling factors. This method is used to scale the desigSpecifications
-  void scale(Eigen::VectorXd& vec, DataMap& cplData);
+  //void scale(Eigen::VectorXd& vec, DataMap& cplData);
 
   /// @brief reverts the scaling of the vector
-  void unscale(Eigen::VectorXd& vec, DataMap& cplData);
+  //void unscale(Eigen::VectorXd& vec, DataMap& cplData);
 
   /// @brief Indicates whether the design specification has been set and is active or not
   bool isSet(Eigen::VectorXd& designSpec);

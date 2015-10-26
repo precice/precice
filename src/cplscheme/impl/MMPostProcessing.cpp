@@ -46,10 +46,12 @@ MMPostProcessing::MMPostProcessing
     bool estimateJacobian,
     std::vector<int> fineDataIDs,
     std::vector<int> coarseDataIDs,
-    std::map<int, double> scalings)
+    //std::map<int, double> scalings,
+    PtrPreconditioner preconditioner)
 :
         PostProcessing(),
         _coarseModelOptimization(coarseModelOptimization),
+        _preconditioner(preconditioner),
         _maxIterationsUsed(maxIterationsUsed),
         _timestepsReused(timestepsReused),
         _singularityLimit(singularityLimit),
@@ -60,7 +62,7 @@ MMPostProcessing::MMPostProcessing
         _coarseDataIDs(coarseDataIDs),
         _dataIDs(),
         _secondaryDataIDs(),
-        _scalings(scalings),
+        //_scalings(scalings),
         _firstIteration(true),
         _firstTimeStep(true),
         _estimateJacobian(estimateJacobian),
@@ -68,8 +70,8 @@ MMPostProcessing::MMPostProcessing
         _coarseResiduals(),
         _fineOldResiduals(),
         _coarseOldResiduals(),
-        _outputFineModelScaled(),
-        _outputCoarseModelScaled(),
+        _outputFineModel(),
+        _outputCoarseModel(),
         _input_Xstar(),
         _matrixF(),
         _matrixC(),
@@ -150,8 +152,8 @@ void MMPostProcessing::initialize(
   _fineOldResiduals = Eigen::VectorXd::Zero(entries);
   _fineResiduals = Eigen::VectorXd::Zero(entries);
   _coarseResiduals = Eigen::VectorXd::Zero(entries);
-  _outputFineModelScaled = Eigen::VectorXd::Zero(entries);
-  _outputCoarseModelScaled = Eigen::VectorXd::Zero(entries);
+  _outputFineModel = Eigen::VectorXd::Zero(entries);
+  _outputCoarseModel = Eigen::VectorXd::Zero(entries);
   _input_Xstar = Eigen::VectorXd::Zero(entries);
 
   // if design specifiaction not initialized yet
@@ -217,6 +219,8 @@ void MMPostProcessing::initialize(
       pair.second->oldValues.append(CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
     }
   }
+
+  _preconditioner->initialize(entries);
 }
 
 
@@ -245,8 +249,6 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
     off += size;
   }
 
-  //std::cout<<"register Sol: input_x_star: "<<_input_Xstar<<std::endl;
-
   // register new solution x_star from coarse model optimization problem as input
   // to fine model evaluation.
   off = 0;
@@ -260,17 +262,9 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
       valuesPart[i] = _input_Xstar[i + off];
     }
     off += size;
-    //std::cout<<"validation, ID = "<<id<<": "<<*(cplData[id]->values)<<std::endl;
   }
-
-
-
- // preciceDebug(" next input x_star ("<<its<<"): \n"<<_input_Xstar.transpose());
- // preciceDebug(" coarse cpl iter   ("<<its<<"): \n"<<*(cplData[_coarseDataIDs[0]]->values));
- // preciceDebug(" fine   cpl iter   ("<<its<<"): \n"<<*(cplData[_fineDataIDs[0]]->values));
-
   // in the context of mannifold mapping post processing we want _input_Xstar to be scaled according to the scaling factors
-  scale(_input_Xstar, cplData);
+//  scale(_input_Xstar, cplData);
 }
 
 
@@ -346,12 +340,9 @@ void MMPostProcessing::updateDifferenceMatrices(
   /**
    * Compute current residual: vertex-data - oldData
    */
-  _fineResiduals = _outputFineModelScaled - _input_Xstar;
-  _coarseResiduals = _outputCoarseModelScaled - _input_Xstar;
+  _fineResiduals = _outputFineModel - _input_Xstar;
+  _coarseResiduals = _outputCoarseModel - _input_Xstar;
 
- // std::cout<<"output fine model scaled: \n"<<_outputFineModelScaled<<std::endl;
- // std::cout<<"output coarse model scaled: \n"<<_outputCoarseModelScaled<<std::endl;
- // std::cout<<"input x star (prev): \n"<<_input_Xstar<<std::endl;
 
   /**
    * Update matrices C, F with newest information
@@ -375,9 +366,6 @@ void MMPostProcessing::updateDifferenceMatrices(
 
       appendFront(_matrixF, colF);
       appendFront(_matrixC, colC);
-
-      std::cout<<"F: \n"<<_matrixF;
-      std::cout<<"C: \n"<<_matrixC;
 
       _matrixCols.front()++;
       }
@@ -413,11 +401,11 @@ void MMPostProcessing::performPostProcessing(
 {
   preciceTrace2(__func__, _dataIDs.size(), cplData.size());
 
-  assertion2(_fineDataIDs.size() == _scalings.size(), _fineDataIDs.size(), _scalings.size());
+  //assertion2(_fineDataIDs.size() == _scalings.size(), _fineDataIDs.size(), _scalings.size());
   assertion2(_fineOldResiduals.size() == _fineResiduals.size(),_fineOldResiduals.size(), _fineResiduals.size());
   assertion2(_coarseResiduals.size() == _fineResiduals.size(),_coarseResiduals.size(), _fineResiduals.size());
   assertion2(_coarseOldResiduals.size() == _fineResiduals.size(),_coarseOldResiduals.size(), _fineResiduals.size());
-  assertion2(_outputFineModelScaled.size() == _fineResiduals.size(),_outputFineModelScaled.size(), _fineResiduals.size());
+  assertion2(_outputFineModel.size() == _fineResiduals.size(),_outputFineModel.size(), _fineResiduals.size());
   assertion2(_input_Xstar.size() == _fineResiduals.size(), _input_Xstar.size(), _fineResiduals.size());
 
   /**
@@ -432,7 +420,6 @@ void MMPostProcessing::performPostProcessing(
      * solution _input_Xstar, obtained in the coarse model optimization step.
      */
 
-
     // view on coarse coupling data only
     DataMap coarseCplData;
     for (int id : _coarseDataIDs) {
@@ -440,7 +427,7 @@ void MMPostProcessing::performPostProcessing(
       coarseCplData.insert(pair);
     }
     // assume that we always start with a coarse model optimization step at the very beginning.
-    // every time get here, the coarse model optimization has just converged.
+    // every time we get here, the coarse model optimization has just converged.
     _coarseModelOptimization->iterationsConverged(coarseCplData);
     _iterCoarseModelOpt = 0;
 
@@ -451,6 +438,14 @@ void MMPostProcessing::performPostProcessing(
     // update the difference matrices with the newest residual deltas
     updateDifferenceMatrices(cplData);
 
+
+    _preconditioner->apply(_matrixF);
+    _preconditioner->apply(_matrixC);
+    _preconditioner->apply(_fineResiduals);
+    _preconditioner->apply(_coarseResiduals);
+    _preconditioner->apply(_designSpecification);
+    // TODO: also preconditioning for MMMappingMatrix ???
+
     /** compute the new design specification for the coarse model optimization
      *  updates: _coarseModel_designSpecification
      *           i.e., qk = c(xk) - Tk * ( f(xk) - q )
@@ -460,21 +455,25 @@ void MMPostProcessing::performPostProcessing(
      */
     computeCoarseModelDesignSpecifiaction();
 
+
+    assertion(isSet(_coarseModel_designSpecification)); // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
+    _preconditioner->revert(_matrixF);
+    _preconditioner->revert(_matrixC);
+    _preconditioner->revert(_fineResiduals);
+    _preconditioner->revert(_coarseResiduals);
+    _preconditioner->revert(_designSpecification);
+    // The coarse model design specification is computed with scaled data and needs to be re-scaled to normal.
+    // It is to be scaled again in the coarse model optimization scheme.
+    _preconditioner->revert(_coarseModel_designSpecification);
+    //unscale(_coarseModel_designSpecification, cplData);
+
+
     /**
      * now, the difference matrices for the MM mapping as well as the design specification for the coarse
      * model optimization problem are updated (also Jacobian of MM mapping matrix if required).
      * next step: coarse model optimization, set the steering variable accordingly
      */
     (*_isCoarseModelOptimizationActive) = true;
-
-
-    // The coarse model design specification is computed with scaled data and needs to be re-scaled to normal.
-    // It is to be scaled again in the coarse model optimization scheme.
-
-    assertion(isSet(_coarseModel_designSpecification)); // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
-    //assertion(not (_firstIteration && _firstTimeStep)); // not in very first iteration where we solve for an initial coarse solution with unscaled design specification
-    unscale(_coarseModel_designSpecification, cplData);
-
 
     /** Undo of cplData scaling is not necessary, as we only read information from the cpl data.
      * The write back step is done in registerSolutionCoarseModelOptimization
@@ -497,7 +496,7 @@ void MMPostProcessing::performPostProcessing(
       coarseCplData.insert(pair);
     }
 
-    // NO SCALING of input/output data. This is done in the coarse optimization routine, only for the coarse cplData.
+    // no preconditioning, i.e. scaling of input/output data. This is done in the coarse optimization routine, only for the coarse cplData.
     // the _coarseModel_designSpecification is scaled back at this point
 
     /** perform the coarse model optimization, determine x_star
@@ -507,7 +506,6 @@ void MMPostProcessing::performPostProcessing(
      *  design specification of the overall objective function. Here, a initial coarse
      *  model solution is obtained for a initial guess.
      */
-    //preciceDebug("design specification ("<<its<<"): \n"<<_coarseModel_designSpecification);
     _coarseModelOptimization->optimize(coarseCplData, _coarseModel_designSpecification);
 
     /**
@@ -550,8 +548,8 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
   Eigen::VectorXd alpha = _fineResiduals - _designSpecification;
   _coarseModel_designSpecification = _coarseResiduals;
 
-  std::cout<<"fine residuals:\n"<<_fineResiduals<<std::endl;
-  std::cout<<"coarse residuals:\n"<<_coarseResiduals<<std::endl;
+  //std::cout<<"fine residuals:\n"<<_fineResiduals<<std::endl;
+  //std::cout<<"coarse residuals:\n"<<_coarseResiduals<<std::endl;
 
   // if residual differences are available for fine and coarse model
   // (either from previous iterations or from previous time steps or both)
@@ -653,6 +651,37 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 
 }
 
+
+
+void MMPostProcessing::concatenateCouplingData
+(
+    DataMap& cplData)
+{
+  preciceTrace("concatenateCouplingData()");
+
+  int offset = 0;
+  int k = 0;
+  assertion2(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
+  for (int id : _fineDataIDs) {
+    int size = cplData[id]->values->size();
+    DataValues& values = *cplData[id]->values;
+    utils::DynVector& coarseValues = *cplData[_coarseDataIDs.at(k)]->values;
+    utils::DynVector& coarseOldValues = cplData[_coarseDataIDs.at(k)]->oldValues.column(0);
+    assertion2(values.size() == coarseValues.size(), values.size(), coarseValues.size());
+    assertion2(values.size() == coarseOldValues.size(), values.size(), coarseOldValues.size());
+    for (int i = 0; i < size; i++) {
+      _outputFineModel[i + offset] = values[i];
+      // ignore input from fine model as it must be exactly the
+      // same as the input for the coarse model, if the fine model is evaluated
+      _outputCoarseModel[i + offset] = coarseValues[i];
+      _input_Xstar[i + offset] = coarseOldValues[i];
+    }
+    offset += size;
+    k++;
+  }
+}
+
+
 /** --------------------------------
  *            scale()
  *   @brief scales the coupling Data
@@ -660,6 +689,7 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
  *        are defined in the same order in the config file. Otherwise it won't work correctly.
  *  --------------------------------
  */
+/*
 void MMPostProcessing::scale
 (
     DataMap& cplData)
@@ -693,12 +723,14 @@ void MMPostProcessing::scale
     k++;
   }
 }
+*/
 
 /** --------------------------------
  *            scale()
  *   @brief scales a vector
  *  --------------------------------
  */
+/*
 void MMPostProcessing::scale
 (
     Eigen::VectorXd& vec, DataMap& cplData)
@@ -715,12 +747,14 @@ void MMPostProcessing::scale
     offset += size;
   }
 }
+*/
 
 /** --------------------------------
  *            unscale()
  *   @brief reverts scaling for a vector
  *  --------------------------------
  */
+/*
 void MMPostProcessing::unscale
 (
     Eigen::VectorXd& vec, DataMap& cplData)
@@ -737,6 +771,7 @@ void MMPostProcessing::unscale
     offset += size;
   }
 }
+*/
 
 /** -----------------------------------------------------------------------------------
  *            isSet()
@@ -785,10 +820,9 @@ void MMPostProcessing::iterationsConverged
   // this has to be done in iterations converged, as PP won't be called any more if
   // convergence was achieved
 
-  scale(cplData);
- // if(isSet(_designSpecification)) scale(_designSpecification, cplData);
+  //scale(cplData);
+  concatenateCouplingData(cplData);
   updateDifferenceMatrices(cplData);
-  // no undoScaling() needed, as input/output data is not modified
 
 
   /**
@@ -801,6 +835,14 @@ void MMPostProcessing::iterationsConverged
   // reset the coarse model design specification
   _coarseModel_designSpecification = _designSpecification;
 
+  // TODO: maybe here, the residual should be residual - designSpecification ... if so change that and also in BaseQNPP
+  _preconditioner->update(true, _outputFineModel, _fineResiduals);
+
+  _firstTimeStep = false;
+  if (_matrixCols.front() == 0) { // Did only one iteration
+    _matrixCols.pop_front();
+  }
+
 # ifdef Debug
   std::ostringstream stream;
   stream << "Matrix column counters: ";
@@ -809,11 +851,6 @@ void MMPostProcessing::iterationsConverged
   }
   preciceDebug(stream.str());
 # endif // Debug
-
-  _firstTimeStep = false;
-  if (_matrixCols.front() == 0) { // Did only one iteration
-    _matrixCols.pop_front();
-  }
 
   if (_timestepsReused == 0) {
     _matrixF.resize(0, 0);
@@ -950,105 +987,6 @@ void MMPostProcessing::removeColumnFromMatrix
 
   A.conservativeResize(A.rows(), A.cols() - 1);
 }
-
-
-
-/* ----------------------------------------------------------------------------
- *     scaling
- * ----------------------------------------------------------------------------
- */
-/*
-void MMPostProcessing::scaling
-(
-    DataMap& cplData)
-{
-  preciceTrace("scaling()");
-
-  // scale design specification according to scaling of corresponding data
-  bool isSet_designSpec = ((_designSpecification.size() > 0) && (_designSpecification.norm() > 1.0e-15));
-  if (isSet_designSpec)
-    assertion2(_outputFineModelScaled.size() == _designSpecification.size(), _outputFineModelScaled.size(), _designSpecification.size());
-
-  int offset = 0;
-  for (int id : _fineDataIDs) {
-    double factor = _scalings[id];
-    preciceDebug("Scaling Factor " << factor << " for id: " << id);
-    int size = cplData[id]->values->size();
-    utils::DynVector& values = *cplData[id]->values;
-    utils::DynVector& oldValues = cplData[id]->oldValues.column(0);
-    for (int i = 0; i < size; i++) {
-      _outputFineModelScaled[i + offset] = values[i] / factor;
-      if (isSet_designSpec) _designSpecification[i + offset] = _designSpecification[i + offset] / factor;
-      // ignore input from fine model as it must be exactly the
-      // same as the input for the coarse model, if the fine model is evaluated
-
-      //_scaledOldValues[i+offset] = oldValues[i]/factor;
-    }
-    offset += size;
-  }
-  offset = 0;
-  for (int id : _coarseDataIDs) {
-    double factor = _scalings[id];
-    preciceDebug("Scaling Factor " << factor << " for id: " << id);
-    int size = cplData[id]->values->size();
-    utils::DynVector& values = *cplData[id]->values;
-    utils::DynVector& oldValues = cplData[id]->oldValues.column(0);
-    for (int i = 0; i < size; i++) {
-      _outputCoarseModelScaled[i + offset] = values[i] / factor;
-      _input_Xstar[i + offset] = oldValues[i] / factor;
-    }
-    offset += size;
-  }
-}
-*/
-
-
-/* ----------------------------------------------------------------------------
- *     undoScaling (not needed in MM)
- * ----------------------------------------------------------------------------
- */
-/*
- void MMPostProcessing:: undoScaling
- (
- DataMap& cplData)
- {
- preciceTrace("undoScaling()");
-
- int offset = 0;
- for (int id : _fineDataIDs){
- double factor = _scalings[id];
- int size = cplData[id]->values->size();
- preciceDebug("Copying values back, size: " << size);
- utils::DynVector& valuesPart = *(cplData[id]->values);
- utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
- for(int i=0; i < size; i++){
- // write new coarse model solution back as input data for the fine model evaluation
- // _input_xStar needs to be updated in each iteration
- valuesPart[i] = _input_Xstar[i+offset]*factor;
- // oldValuesPart[i] = _scaledOldValues[i+offset]*factor; // not needed, as not modified
- }
- offset += size;
- }
- offset = 0;
- for (int id : _coarseDataIDs){
- double factor = _scalings[id];
- int size = cplData[id]->values->size();
- preciceDebug("Copying values back, size: " << size);
- utils::DynVector& valuesPart = *(cplData[id]->values);
- utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
- for(int i=0; i < size; i++){
- // write new coarse model solution back as input data for the fine model evaluation
- // _input_xStar needs to be updated in each iteration
- valuesPart[i] = _input_Xstar[i+offset]*factor;
- // oldValuesPart[i] = _coarseScaledOldValues[i+offset]*factor; // not needed, as not modified
- }
- offset += size;
- }
- }
- */
-
-
-
 
 }}} // namespace precice, cplscheme, impl
 
