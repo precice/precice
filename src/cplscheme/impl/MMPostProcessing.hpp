@@ -16,6 +16,7 @@
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
 #include "QRFactorization.hpp"
+#include "Preconditioner.hpp"
 #include "Eigen/Dense"
 #include <deque>
 #include <fstream>

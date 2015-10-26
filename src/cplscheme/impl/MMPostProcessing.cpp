@@ -432,8 +432,8 @@ void MMPostProcessing::performPostProcessing(
     _iterCoarseModelOpt = 0;
 
     // scale data values (and secondary data values)
-    scale(cplData);
-    if(isSet(_designSpecification)) scale(_designSpecification, cplData);
+    //scale(cplData);
+    //if(isSet(_designSpecification)) scale(_designSpecification, cplData);
 
     // update the difference matrices with the newest residual deltas
     updateDifferenceMatrices(cplData);
@@ -443,7 +443,8 @@ void MMPostProcessing::performPostProcessing(
     _preconditioner->apply(_matrixC);
     _preconditioner->apply(_fineResiduals);
     _preconditioner->apply(_coarseResiduals);
-    _preconditioner->apply(_designSpecification);
+    if(isSet(_designSpecification))
+      _preconditioner->apply(_designSpecification);
     // TODO: also preconditioning for MMMappingMatrix ???
 
     /** compute the new design specification for the coarse model optimization
@@ -664,7 +665,7 @@ void MMPostProcessing::concatenateCouplingData
   assertion2(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
   for (int id : _fineDataIDs) {
     int size = cplData[id]->values->size();
-    DataValues& values = *cplData[id]->values;
+    utils::DynVector& values = *cplData[id]->values;
     utils::DynVector& coarseValues = *cplData[_coarseDataIDs.at(k)]->values;
     utils::DynVector& coarseOldValues = cplData[_coarseDataIDs.at(k)]->oldValues.column(0);
     assertion2(values.size() == coarseValues.size(), values.size(), coarseValues.size());
