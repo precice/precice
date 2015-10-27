@@ -388,10 +388,16 @@ void BaseQNPostProcessing::performPostProcessing
 
     DataValues xUpdate(_residuals.size(), 0.0);
 
+    // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
+    assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
+    for (int i = 0; i < _designSpecification.size(); i++)
+          _residuals(i) -= _designSpecification(i);
+
 
     //update and apply preconditioner
     //IQN-ILS would also work without W and xUpdate scaling, IQN-IMVJ unfortunately not
     _preconditioner->update(false, _values, _residuals);
+    // TODO: not sure whether the _residuals -= _designSpecifiaction rather should be here.
     _preconditioner->apply(_residuals);
     _preconditioner->apply(_matrixV);
     _preconditioner->apply(_matrixW);
@@ -402,6 +408,9 @@ void BaseQNPostProcessing::performPostProcessing
       }
       _preconditioner->newQRfulfilled();
     }
+
+    // TODO: if the preconditioner requires a re-computation of the QR-dec of V, and also QR2 filter is used,
+    //       we would re-compute the decomposition two times wich is not very efficient. combine that somehow!
 
     // apply the configured filter to the LS system
     applyFilter();
@@ -416,21 +425,22 @@ void BaseQNPostProcessing::performPostProcessing
     _preconditioner->revert(_matrixV);
     _preconditioner->revert(_residuals);
 
-
+/*
     // copying is removed when moving to Eigen
     DataValues q(_residuals.size(), 0.0);
     for (int i = 0; i < q.size(); i++)
       q(i) = _designSpecification(i);
+*/
+
 
     /**
      * apply quasiNewton update
      */
     _values = _oldValues;  // = x^k
     _values += xUpdate;        // = x^k + delta_x
-    _values += _residuals; // = x^k + delta_x + r^k
-    _values -= q; // = x^k + delta_x + r^k - q^k
+    _values += _residuals; // = x^k + delta_x + r^k         note: residuals are _residuals - _designSpecifiaction at this point.
+//    _values -= q; // = x^k + delta_x + r^k - q^k
 
-   // std::cout<<"\n  xUpdate("<<its<<"): "<<xUpdate<<std::endl;
 
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
@@ -489,10 +499,7 @@ void BaseQNPostProcessing::applyFilter()
 }
 
 
-/* ----------------------------------------------------------------------------
- *     scaling
- * ----------------------------------------------------------------------------
- */
+
 void BaseQNPostProcessing::concatenateCouplingData
 (
     DataMap& cplData)
@@ -512,10 +519,7 @@ void BaseQNPostProcessing::concatenateCouplingData
   }
 }
 
-/* ----------------------------------------------------------------------------
- *     undoScaling
- * ----------------------------------------------------------------------------
- */
+
 void BaseQNPostProcessing::splitCouplingData
 (
     DataMap& cplData)
@@ -559,6 +563,8 @@ void BaseQNPostProcessing::iterationsConverged
   deletedColumns = 0;
   // -----------------------
 
+
+  /*
   // writig l2 norm of converged configuration to info stream
   // -----------
   if (_firstTimeStep)
@@ -577,6 +583,8 @@ void BaseQNPostProcessing::iterationsConverged
     _infostream << "  * l2-norm ratio: " << (double) oldl2norm / sqrt(l2norm) << "\n" << std::flush;
   }
   // -----------
+  */
+
 
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 

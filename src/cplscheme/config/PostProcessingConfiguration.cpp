@@ -265,7 +265,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
   if (callingTag.getNamespace() == TAG){
 
     //create preconditioner
-    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_MVQN){
+    if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_MVQN ||  callingTag.getName() == VALUE_ManifoldMapping){
       std::vector<int> dims;
       for (int id : _config.dataIDs){
         for(mesh::PtrMesh mesh : _meshConfig->meshes() ) {
@@ -362,7 +362,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
         _config.estimateJacobian,
         _config.dataIDs,                                                    // fine data IDs
         _coarseModelOptimizationConfig->getPostProcessing()->getDataIDs(),  // coarse data IDs
-        _config.scalings) );
+        _preconditioner) );
     }
     else if (callingTag.getName() == VALUE_BROYDEN){
       _postProcessing = impl::PtrPostProcessing (
@@ -632,6 +632,22 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
           "modified Gram-Schmidt. This can give different results even when no columns "
           "are filtered out." );
     tag.addSubtag(tagFilter);
+
+    XMLTag tagPreconditioner(*this, TAG_PRECONDITIONER, XMLTag::OCCUR_NOT_OR_ONCE );
+    XMLAttribute<std::string> attrPreconditionerType(ATTR_TYPE);
+    ValidatorEquals<std::string> valid1 ( VALUE_CONSTANT_PRECONDITIONER);
+    ValidatorEquals<std::string> valid2 ( VALUE_VALUE_PRECONDITIONER);
+    ValidatorEquals<std::string> valid3 ( VALUE_RESIDUAL_PRECONDITIONER);
+    ValidatorEquals<std::string> valid4 ( VALUE_RESIDUAL_SUM_PRECONDITIONER);
+    attrPreconditionerType.setValidator ( valid1 || valid2 || valid3 || valid4 );
+    attrPreconditionerType.setDocumentation("To improve the performance of a parallel or a multi coupling schemes a preconditioner"
+       " can be applied. A constant preconditioner scales every post-processing data by a constant value, which you can define as"
+       " an attribute of data. "
+       " A value preconditioner scales every post-processing data by the norm of the data in the previous timestep."
+       " A residual preconditioner scales every post-processing data by the current residual."
+       " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.");
+    tagPreconditioner.addAttribute(attrPreconditionerType);
+    tag.addSubtag(tagPreconditioner);
 
   }
   else if (tag.getName() == VALUE_BROYDEN){

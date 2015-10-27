@@ -7,6 +7,7 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/Globals.hpp"
+#include "Eigen/Dense"
 #include "../SharedPointer.hpp"
 
 namespace precice {
@@ -32,6 +33,13 @@ public:
    * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
    */
   virtual void update(bool timestepComplete, DataValues& oldValues, DataValues& res);
+
+  /**
+   * @brief Update the scaling after every FSI iteration.
+   *
+   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
+   */
+  virtual void update(bool timestepComplete, Eigen::VectorXd& oldValues, Eigen::VectorXd& res);
 
 private:
 

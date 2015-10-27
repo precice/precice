@@ -283,15 +283,16 @@ protected:
    int getLSSystemCols();
    int getLSSystemRows();
 
-   // @brief updates the V, W matrices (as well as the matrices for the secondary data)
+   /// @brief updates the V, W matrices (as well as the matrices for the secondary data)
    virtual void updateDifferenceMatrices(DataMap & cplData);
    
-   // @brief concatenates all coupling data involved in the QN system in a single vector
+   /// @brief concatenates all coupling data involved in the QN system in a single vector
    virtual void concatenateCouplingData(DataMap & cplData);
 
-   // @brief splits up QN system vector back into the coupling data
+   /// @brief splits up QN system vector back into the coupling data
    virtual void splitCouplingData(DataMap & cplData);
 
+   /// @brief applies the filter method for the least-squares system, defined in the configuration
    virtual void applyFilter();
 
    /**

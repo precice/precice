@@ -188,12 +188,18 @@ void IQNILSPostProcessing::computeQNUpdate
 	DataValues _local_b(_qrV.cols(), 0.0);
 	DataValues _global_b;
 
+	/*
 	// res_tilde = (_residuals - _designSpecification)
 	DataValues res_tilde(_residuals.size());
 	for(int i = 0; i < res_tilde.size();i++)
 		res_tilde(i) = _residuals(i) - _designSpecification(i);
 
 	multiply(__Qt, res_tilde, _local_b);
+	*/
+
+
+
+	multiply(__Qt, _residuals, _local_b);
 	_local_b *= -1.0; // = -Qr
 
 	assertion1(__c.size() == 0, __c.size());

@@ -180,11 +180,78 @@ public:
   }
 
   /**
+     * @brief To transform physical values to balanced values. Matrix version
+     */
+    void apply(Eigen::MatrixXd& M){
+      preciceTrace("apply()");
+
+      assertion(M.rows()==(int)_weights.size());
+
+      // scale matrix M
+      for(int i=0; i<M.cols(); i++){
+        for(int j=0; j<M.rows(); j++){
+          M(j,i) *= _weights[j];
+        }
+      }
+    }
+
+    /**
+     * @brief To transform physical values to balanced values. Vector version
+     */
+    void apply(Eigen::VectorXd& v){
+      preciceTrace("apply()");
+
+      assertion(v.size()==(int)_weights.size());
+
+      // scale residual
+      for(int j=0; j<v.size(); j++){
+        v[j] *= _weights[j];
+      }
+    }
+
+    /**
+     * @brief To transform balanced values back to physical values. Matrix version
+     */
+    void revert(Eigen::MatrixXd& M){
+      preciceTrace("revert()");
+
+      assertion(M.rows()==(int)_weights.size());
+
+      // scale matrix M
+      for(int i=0; i<M.cols(); i++){
+        for(int j=0; j<M.rows(); j++){
+          M(j,i) *= _invWeights[j];
+        }
+      }
+    }
+
+    /**
+     * @brief To transform balanced values back to physical values. Vector version
+     */
+    void revert(Eigen::VectorXd& v){
+      preciceTrace("revert()");
+
+      assertion(v.size()==(int)_weights.size());
+
+      // scale residual
+      for(int j=0; j<v.size(); j++){
+        v[j] *= _invWeights[j];
+      }
+    }
+
+  /**
    * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
    *
    * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
    */
   virtual void update(bool timestepComplete, DataValues& oldValues, DataValues& res) =0;
+
+  /**
+   * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
+   *
+   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
+   */
+  virtual void update(bool timestepComplete, Eigen::VectorXd& oldValues, Eigen::VectorXd& res) =0;
 
   //@brief: returns true if a QR decomposition from scratch is necessary
   bool requireNewQR(){
