@@ -439,8 +439,10 @@ void MMPostProcessing::performPostProcessing(
     updateDifferenceMatrices(cplData);
 
 
-    _preconditioner->apply(_matrixF);
-    _preconditioner->apply(_matrixC);
+    if (getLSSystemCols() > 0){
+      _preconditioner->apply(_matrixF);
+      _preconditioner->apply(_matrixC);
+    }
     _preconditioner->apply(_fineResiduals);
     _preconditioner->apply(_coarseResiduals);
     if(isSet(_designSpecification))
@@ -458,8 +460,10 @@ void MMPostProcessing::performPostProcessing(
 
 
     assertion(isSet(_coarseModel_designSpecification)); // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
-    _preconditioner->revert(_matrixF);
-    _preconditioner->revert(_matrixC);
+    if (getLSSystemCols() > 0){
+      _preconditioner->revert(_matrixF);
+      _preconditioner->revert(_matrixC);
+    }
     _preconditioner->revert(_fineResiduals);
     _preconditioner->revert(_coarseResiduals);
     _preconditioner->revert(_designSpecification);

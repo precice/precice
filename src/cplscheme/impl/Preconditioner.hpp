@@ -102,7 +102,7 @@ public:
       }
     }
     else{
-      assertion(M.rows()==(int)_weights.size());
+      assertion2(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
       for(int i=0; i<M.cols(); i++){
         for(int j=0; j<M.rows(); j++){
           M(j,i) *= _weights[j];
@@ -185,7 +185,7 @@ public:
     void apply(Eigen::MatrixXd& M){
       preciceTrace("apply()");
 
-      assertion(M.rows()==(int)_weights.size());
+      assertion2(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
 
       // scale matrix M
       for(int i=0; i<M.cols(); i++){
