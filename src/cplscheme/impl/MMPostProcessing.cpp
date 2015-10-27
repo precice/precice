@@ -439,6 +439,7 @@ void MMPostProcessing::performPostProcessing(
     updateDifferenceMatrices(cplData);
 
 
+    // preconditioning
     if (getLSSystemCols() > 0){
       _preconditioner->apply(_matrixF);
       _preconditioner->apply(_matrixC);
@@ -447,7 +448,11 @@ void MMPostProcessing::performPostProcessing(
     _preconditioner->apply(_coarseResiduals);
     if(isSet(_designSpecification))
       _preconditioner->apply(_designSpecification);
-    // TODO: also preconditioning for MMMappingMatrix ???
+
+    if(_estimateJacobian && _MMMappingMatrix_prev.rows() > 0){
+      _preconditioner->apply(_MMMappingMatrix_prev,false);
+      _preconditioner->revert(_MMMappingMatrix_prev,true);
+    }
 
     /** compute the new design specification for the coarse model optimization
      *  updates: _coarseModel_designSpecification
@@ -458,8 +463,16 @@ void MMPostProcessing::performPostProcessing(
      */
     computeCoarseModelDesignSpecifiaction();
 
-
     assertion(isSet(_coarseModel_designSpecification)); // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
+
+
+
+    // undo preconditioning
+    if(_estimateJacobian && _MMMappingMatrix_prev.rows() > 0){
+      _preconditioner->revert(_MMMappingMatrix_prev,false);
+      _preconditioner->apply(_MMMappingMatrix_prev,true);
+    }
+
     if (getLSSystemCols() > 0){
       _preconditioner->revert(_matrixF);
       _preconditioner->revert(_matrixC);
@@ -588,7 +601,7 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
     assert(_matrixF.cols() == _matrixC.cols());
 
     if (getLSSystemCols() > 0)
-        {
+    {
       // Calculate singular value decomposition with Eigen
       Eigen::JacobiSVD < Eigen::MatrixXd > svd_C(_matrixC, Eigen::ComputeThinU | Eigen::ComputeThinV);
       Eigen::JacobiSVD < Eigen::MatrixXd > svd_F(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);
@@ -647,7 +660,6 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
       _coarseModel_designSpecification -= _MMMappingMatrix_prev * alpha;
     } else {
       _coarseModel_designSpecification -= alpha;
-    //  std::cout<<"coarse design spec: \n"<<_coarseModel_designSpecification<<std::endl;
     }
   }
 
@@ -817,13 +829,6 @@ void MMPostProcessing::iterationsConverged
   _coarseModelOptimization->iterationsConverged(cplData);
   _iterCoarseModelOpt = 0;
 
-  // if the multi-vector generalized broyden like update for the manifold matrix estimation process is used
-  // store the estimated matrix from the last time step.
-  if(_estimateJacobian && _MMMappingMatrix.cols() > 0)
-  {
-    _MMMappingMatrix_prev = _MMMappingMatrix;
-  }
-
 
   // the most recent differences for the F, C matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
@@ -846,6 +851,16 @@ void MMPostProcessing::iterationsConverged
 
   // TODO: maybe here, the residual should be residual - designSpecification ... if so change that and also in BaseQNPP
   _preconditioner->update(true, _outputFineModel, _fineResiduals);
+
+
+  // if the multi-vector generalized broyden like update for the manifold matrix estimation process is used
+  // store the estimated matrix from the last time step.
+  if(_estimateJacobian && _MMMappingMatrix.cols() > 0){
+    _MMMappingMatrix_prev = _MMMappingMatrix;
+    _preconditioner->revert(_MMMappingMatrix_prev,false);
+    _preconditioner->apply(_MMMappingMatrix_prev,true);
+  }
+
 
   _firstTimeStep = false;
   if (_matrixCols.front() == 0) { // Did only one iteration
