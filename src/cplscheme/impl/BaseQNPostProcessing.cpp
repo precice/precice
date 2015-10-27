@@ -409,9 +409,6 @@ void BaseQNPostProcessing::performPostProcessing
       _preconditioner->newQRfulfilled();
     }
 
-    // TODO: if the preconditioner requires a re-computation of the QR-dec of V, and also QR2 filter is used,
-    //       we would re-compute the decomposition two times wich is not very efficient. combine that somehow!
-
     // apply the configured filter to the LS system
     applyFilter();
 
