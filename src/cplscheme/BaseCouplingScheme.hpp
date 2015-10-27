@@ -494,6 +494,9 @@ protected:
 
   int _deletedColumnsPPFiltering;
 
+  /// @brief Number of  coarse model optimization iterations in current time step.
+  int _iterationsCoarseOptimization;
+
 private:
 
   /// @brief Communication device to the other coupling participant.
@@ -516,7 +519,6 @@ private:
   int _iterations;
 
   /// @brief Number of accumulated coarse model optimization iterations in current time step.
-  int _iterationsCoarseOptimization;
   int _totalIterationsCoarseOptimization;
 
   /// @brief Limit of iterations during one time step.

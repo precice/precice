@@ -553,9 +553,6 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
   Eigen::VectorXd alpha = _fineResiduals - _designSpecification;
   _coarseModel_designSpecification = _coarseResiduals;
 
-  //std::cout<<"fine residuals:\n"<<_fineResiduals<<std::endl;
-  //std::cout<<"coarse residuals:\n"<<_coarseResiduals<<std::endl;
-
   // if residual differences are available for fine and coarse model
   // (either from previous iterations or from previous time steps or both)
   if (getLSSystemCols() > 0)
@@ -644,13 +641,13 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
   if ((_firstIteration && _firstTimeStep) || getLSSystemCols() <= 0)
   {
     assertion1(getLSSystemCols() <= 0, getLSSystemCols());
-    std::cout<<"least-squares system cols are <= 0, not enough information yet."<<std::endl;
+   // std::cout<<"least-squares system cols are <= 0, not enough information yet."<<std::endl;
     if (_estimateJacobian && (_MMMappingMatrix_prev.rows() == getLSSystemRows()))
     {
       _coarseModel_designSpecification -= _MMMappingMatrix_prev * alpha;
     } else {
       _coarseModel_designSpecification -= alpha;
-      std::cout<<"coarse design spec: \n"<<_coarseModel_designSpecification<<std::endl;
+    //  std::cout<<"coarse design spec: \n"<<_coarseModel_designSpecification<<std::endl;
     }
   }
 
@@ -819,6 +816,13 @@ void MMPostProcessing::iterationsConverged
    */
   _coarseModelOptimization->iterationsConverged(cplData);
   _iterCoarseModelOpt = 0;
+
+  // if the multi-vector generalized broyden like update for the manifold matrix estimation process is used
+  // store the estimated matrix from the last time step.
+  if(_estimateJacobian && _MMMappingMatrix.cols() > 0)
+  {
+    _MMMappingMatrix_prev = _MMMappingMatrix;
+  }
 
 
   // the most recent differences for the F, C matrices have not been added so far

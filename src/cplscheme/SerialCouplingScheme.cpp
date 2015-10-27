@@ -143,6 +143,7 @@ void SerialCouplingScheme::initializeData()
       // For extrapolation, treat the initial value as old timestep value
       pair.second->oldValues.shiftSetFirst(*pair.second->values);
     }
+
     // The second participant sends the initialized data to the first particpant
     // here, which receives the data on call of initialize().
     sendData(getM2N());
@@ -295,7 +296,9 @@ void SerialCouplingScheme::advance()
               }
             }
           }
-          // TODO: need to copy coarse old values to fine old values, as first solver always sends zeros to the second solver (as pressure vals)
+
+          /*
+          // TODO: (Edit: Done in the solver now) need to copy coarse old values to fine old values, as first solver always sends zeros to the second solver (as pressure vals)
           //       in the serial scheme, only the sendData is registered in MM PP, we also need to register the pressure values, i.e.
           //       old fine pressure vals = old coarse pressure vals TODO: find better solution,
           //auto fineIDs = getPostProcessing()->getDataIDs();
@@ -303,7 +306,22 @@ void SerialCouplingScheme::advance()
           //  std::cout<<"id: "<<id<<", fineIds.size(): "<<fineIDs.size()<<std::endl;
           //  getReceiveData(id)->oldValues.column(0) = getReceiveData(id+fineIDs.size())->oldValues.column(0);
           //}
+           */
 
+        // only fine model solver evaluation is done, no PP
+        } else {
+
+          // if the coarse model problem converged within the first iteration, i.e., no post-processing at all
+          // we need to register the coarse initialized data again on the fine input data,
+          // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
+          // model nor the post processing did any data registration
+          // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
+          if(_iterationsCoarseOptimization == 1   && getPostProcessing().get() != nullptr){
+            auto fineIDs = getPostProcessing()->getDataIDs();
+            for(int i=0; i<fineIDs.size(); i++){
+              (*getSendData(fineIDs[i])->values) = getSendData(fineIDs[i]+fineIDs.size()+1)->oldValues.column(0);
+            }
+          }
         }
 
         getM2N()->startSendPackage(0);
