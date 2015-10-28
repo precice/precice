@@ -447,7 +447,8 @@ void MMPostProcessing::performPostProcessing(
      * Note: here, the _residuals are H(x)- x - q, i.e., residual of the fixed-point iteration
      *       minus the design specification of the optimization problem (!= null if MM is used)
      */
-    _preconditioner->update(false, _outputFineModel, _fineResiduals-_designSpecification);
+    Eigen::VectorXd objective = _fineResiduals - _designSpecification;
+    _preconditioner->update(false, _outputFineModel, objective);
     // TODO: evaluate whether the pure residual should be used for updating the preconditioner or residual - design specification
     if (getLSSystemCols() > 0){
       _preconditioner->apply(_matrixF);
@@ -868,7 +869,8 @@ void MMPostProcessing::iterationsConverged
   _coarseModel_designSpecification = _designSpecification;
 
   // update the preconditioner
-  _preconditioner->update(false, _outputFineModel, _fineResiduals-_designSpecification);
+  Eigen::VectorXd objective = _fineResiduals - _designSpecification;
+  _preconditioner->update(false, _outputFineModel, objective);
 
 
   // if the multi-vector generalized broyden like update for the manifold matrix estimation process is used
