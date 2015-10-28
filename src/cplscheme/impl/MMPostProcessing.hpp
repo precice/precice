@@ -279,6 +279,8 @@ private:
    */
   int _filter;
 
+  bool _notConvergedWithinMaxIter;
+
   /** @brief: computes number of cols in least squares system, i.e, number of cols in
    * 		  _matrixV, _matrixW, _qrV, etc..
    *		  This is necessary only for master-slave mode, when some procs do not have
@@ -317,21 +319,12 @@ private:
   /// @brief concatenates all coupling data involved in the QN system in a single vector
   void concatenateCouplingData(DataMap & cplData);
 
-  /// @brief scales the needed data from the coupling data according to the defined scaling factors
-  //void scale(DataMap& cplData);
-
-  /// @brief scales an vector of length = #unknowns that has the same ordering of unknowns as the cplData
-  ///        according to the defined scaling factors. This method is used to scale the desigSpecifications
-  //void scale(Eigen::VectorXd& vec, DataMap& cplData);
-
-  /// @brief reverts the scaling of the vector
-  //void unscale(Eigen::VectorXd& vec, DataMap& cplData);
-
   /// @brief Indicates whether the design specification has been set and is active or not
   bool isSet(Eigen::VectorXd& designSpec);
 
 
 
+  // ========================================================================================
   /**
    * need to move that in a class/header that encapsulates the Eigen data types
    */
@@ -349,13 +342,6 @@ private:
    */
   void removeColumnFromMatrix(
       Eigen::MatrixXd& A, int col);
-
-
-  /// reverts the scaling of the data values and overwrites the old values with the updated ones
-  //void undoScaling(DataMap & cplData);
-
-  /// @brief scales the data values with the predefined scaling factor
-  //void scaling(DataMap & cplData);
 
 
 };

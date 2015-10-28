@@ -84,7 +84,8 @@ MMPostProcessing::MMPostProcessing
         its(0),
         tSteps(0),
         deletedColumns(0),
-        _filter(filter)
+        _filter(filter),
+        _notConvergedWithinMaxIter(false)
 {
   preciceCheck(_maxIterationsUsed > 0, "MMPostProcessing()",
       "Maximal iterations used for MM post-processing has to "
@@ -436,6 +437,7 @@ void MMPostProcessing::performPostProcessing(
     //if(isSet(_designSpecification)) scale(_designSpecification, cplData);
 
     // update the difference matrices with the newest residual deltas
+    concatenateCouplingData(cplData);
     updateDifferenceMatrices(cplData);
 
 
@@ -536,10 +538,18 @@ void MMPostProcessing::performPostProcessing(
     _iterCoarseModelOpt++;
     // if coarse model optimization exceeds max iteration count, print warning and break coarse model optimization iteration
     if(_iterCoarseModelOpt >= _maxIterCoarseModelOpt){
-    //  (*_isCoarseModelOptimizationActive)  = false;
+      //(*_isCoarseModelOptimizationActive)  = false;
+      _notConvergedWithinMaxIter = true;
       preciceWarning(__func__,"The coarse model optimization in coupling iteration "<< its
           << " exceeds maximal number of optimization cycles (" << _maxIterCoarseModelOpt <<" without convergence!");
-
+    }
+    if(_notConvergedWithinMaxIter){
+      if(std::isnan(utils::MasterSlave::l2norm(_input_Xstar))){
+        preciceError(__func__, "The coupling iteration in time step "<<tSteps<<
+            " failed to converge and NaN values occured throughout the coupling process. "<<
+            "This is most likely due to the fact that the coarse model failed to converge within "<<
+            "the given maximum number of allowed iterations: "<<_maxIterCoarseModelOpt);
+      }
     }
   }
 
@@ -588,6 +598,7 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 
       for (int i = 0; i < singularValues.rows(); i++) {
         if (std::abs(singularValues(i)) <= _singularityLimit) {
+          std::cout<<"singular value: "<<singularValues(i)<<std::endl;
 
           // Remove the column from _matrixC and _matrixF
           removeMatrixColumn(i - nbRemoveCols);
