@@ -440,8 +440,15 @@ void MMPostProcessing::performPostProcessing(
     concatenateCouplingData(cplData);
     updateDifferenceMatrices(cplData);
 
-
-    // preconditioning
+    /**
+     *  === update and apply preconditioner ===
+     *
+     * IQN-ILS would also work without W and xUpdate scaling, IQN-IMVJ unfortunately not
+     * Note: here, the _residuals are H(x)- x - q, i.e., residual of the fixed-point iteration
+     *       minus the design specification of the optimization problem (!= null if MM is used)
+     */
+    _preconditioner->update(false, _outputFineModel, _fineResiduals-_designSpecification);
+    // TODO: evaluate whether the pure residual should be used for updating the preconditioner or residual - design specification
     if (getLSSystemCols() > 0){
       _preconditioner->apply(_matrixF);
       _preconditioner->apply(_matrixC);
@@ -860,8 +867,8 @@ void MMPostProcessing::iterationsConverged
   // reset the coarse model design specification
   _coarseModel_designSpecification = _designSpecification;
 
-  // TODO: maybe here, the residual should be residual - designSpecification ... if so change that and also in BaseQNPP
-  _preconditioner->update(true, _outputFineModel, _fineResiduals);
+  // update the preconditioner
+  _preconditioner->update(false, _outputFineModel, _fineResiduals-_designSpecification);
 
 
   // if the multi-vector generalized broyden like update for the manifold matrix estimation process is used

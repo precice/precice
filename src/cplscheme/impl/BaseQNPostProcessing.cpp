@@ -386,8 +386,6 @@ void BaseQNPostProcessing::performPostProcessing
       _qrV.reset(_matrixV, getLSSystemRows());
     }
 
-    DataValues xUpdate(_residuals.size(), 0.0);
-
     // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
     assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
     for (int i = 0; i < _designSpecification.size(); i++)
@@ -420,6 +418,7 @@ void BaseQNPostProcessing::performPostProcessing
     /**
      * compute quasi-Newton update
      */
+    DataValues xUpdate(_residuals.size(), 0.0);
     computeQNUpdate(cplData, xUpdate);
 
     _preconditioner->revert(xUpdate); //to compensate the W scaling
