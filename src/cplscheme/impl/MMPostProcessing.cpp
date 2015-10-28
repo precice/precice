@@ -551,13 +551,14 @@ void MMPostProcessing::performPostProcessing(
       preciceWarning(__func__,"The coarse model optimization in coupling iteration "<< its
           << " exceeds maximal number of optimization cycles (" << _maxIterCoarseModelOpt <<" without convergence!");
     }
-    if(_notConvergedWithinMaxIter){
-      if(std::isnan(utils::MasterSlave::l2norm(_input_Xstar))){
-        preciceError(__func__, "The coupling iteration in time step "<<tSteps<<
-            " failed to converge and NaN values occured throughout the coupling process. "<<
-            "This is most likely due to the fact that the coarse model failed to converge within "<<
-            "the given maximum number of allowed iterations: "<<_maxIterCoarseModelOpt);
-      }
+  }
+
+  if(_notConvergedWithinMaxIter){
+    if(std::isnan(utils::MasterSlave::l2norm(_input_Xstar))){
+      preciceError(__func__, "The coupling iteration in time step "<<tSteps<<
+          " failed to converge and NaN values occured throughout the coupling process. "<<
+          "This is most likely due to the fact that the coarse model failed to converge within "<<
+          "the given maximum number of allowed iterations: "<<_maxIterCoarseModelOpt);
     }
   }
 

@@ -426,14 +426,6 @@ void BaseQNPostProcessing::performPostProcessing
     _preconditioner->revert(_matrixV);
     _preconditioner->revert(_residuals);
 
-/*
-    // copying is removed when moving to Eigen
-    DataValues q(_residuals.size(), 0.0);
-    for (int i = 0; i < q.size(); i++)
-      q(i) = _designSpecification(i);
-*/
-
-
     /**
      * apply quasiNewton update
      */
@@ -466,6 +458,11 @@ void BaseQNPostProcessing::performPostProcessing
         // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
         _qrV.setGlobalRows(getLSSystemRows());
       }
+    }
+
+    if(std::isnan(utils::MasterSlave::l2norm(xUpdate))){
+      preciceError(__func__, "The coupling iteration in time step "<<tSteps<<
+          " failed to converge and NaN values occured throughout the coupling process. ");
     }
   }
 
