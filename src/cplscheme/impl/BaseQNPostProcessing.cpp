@@ -394,10 +394,15 @@ void BaseQNPostProcessing::performPostProcessing
           _residuals(i) -= _designSpecification(i);
 
 
-    //update and apply preconditioner
-    //IQN-ILS would also work without W and xUpdate scaling, IQN-IMVJ unfortunately not
+    /**
+     *  === update and apply preconditioner ===
+     *
+     * IQN-ILS would also work without W and xUpdate scaling, IQN-IMVJ unfortunately not
+     * Note: here, the _residuals are H(x)- x - q, i.e., residual of the fixed-point iteration
+     *       minus the design specification of the optimization problem (!= null if MM is used)
+     */
     _preconditioner->update(false, _values, _residuals);
-    // TODO: not sure whether the _residuals -= _designSpecifiaction rather should be here.
+    // TODO: evaluate whether the pure residual should be used for updating the preconditioner or residual - design specification
     _preconditioner->apply(_residuals);
     _preconditioner->apply(_matrixV);
     _preconditioner->apply(_matrixW);
@@ -438,6 +443,7 @@ void BaseQNPostProcessing::performPostProcessing
     _values += _residuals; // = x^k + delta_x + r^k         note: residuals are _residuals - _designSpecifiaction at this point.
 //    _values -= q; // = x^k + delta_x + r^k - q^k
 
+    // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
 
     // pending deletion: delete old V, W matrices if timestepsReused = 0
     // those were only needed for the first iteration (instead of underrelax.)
@@ -589,13 +595,19 @@ void BaseQNPostProcessing::iterationsConverged
   concatenateCouplingData(cplData);
   updateDifferenceMatrices(cplData);
 
+  // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
+  assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
+  for (int i = 0; i < _designSpecification.size(); i++)
+        _residuals(i) -= _designSpecification(i);
+
+  _preconditioner->update(true, _values, _residuals);
+
+  // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
+
   _firstTimeStep = false;
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
-
-
-  _preconditioner->update(true, _values, _residuals);
 
 # ifdef Debug
   std::ostringstream stream;
