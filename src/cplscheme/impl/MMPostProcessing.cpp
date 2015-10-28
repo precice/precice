@@ -432,10 +432,6 @@ void MMPostProcessing::performPostProcessing(
     _coarseModelOptimization->iterationsConverged(coarseCplData);
     _iterCoarseModelOpt = 0;
 
-    // scale data values (and secondary data values)
-    //scale(cplData);
-    //if(isSet(_designSpecification)) scale(_designSpecification, cplData);
-
     // update the difference matrices with the newest residual deltas
     concatenateCouplingData(cplData);
     updateDifferenceMatrices(cplData);
@@ -674,7 +670,6 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
   if ((_firstIteration && _firstTimeStep) || getLSSystemCols() <= 0)
   {
     assertion1(getLSSystemCols() <= 0, getLSSystemCols());
-   // std::cout<<"least-squares system cols are <= 0, not enough information yet."<<std::endl;
     if (_estimateJacobian && (_MMMappingMatrix_prev.rows() == getLSSystemRows()))
     {
       _coarseModel_designSpecification -= _MMMappingMatrix_prev * alpha;
@@ -715,97 +710,6 @@ void MMPostProcessing::concatenateCouplingData
   }
 }
 
-
-/** --------------------------------
- *            scale()
- *   @brief scales the coupling Data
- *   TODO: ATTENTION: this function assumes, that the coarse cpl data and the fine cpl data
- *        are defined in the same order in the config file. Otherwise it won't work correctly.
- *  --------------------------------
- */
-/*
-void MMPostProcessing::scale
-(
-    DataMap& cplData)
-{
-  preciceTrace(__func__);
-
-  int offset = 0;
-  int k = 0;
-  assertion2(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
-  for (int id : _fineDataIDs) {
-    double factor = _scalings[id];
-    preciceDebug("Scaling Factor " << factor << " for id: " << id);
-    int size = cplData[id]->values->size();
-    utils::DynVector& values = *cplData[id]->values;
-    utils::DynVector& coarseValues = *cplData[_coarseDataIDs.at(k)]->values;
-    utils::DynVector& coarseOldValues = cplData[_coarseDataIDs.at(k)]->oldValues.column(0);
-    assertion2(values.size() == coarseValues.size(), values.size(), coarseValues.size());
-    assertion2(values.size() == coarseOldValues.size(), values.size(), coarseOldValues.size());
-    for (int i = 0; i < size; i++) {
-      // scale fine model output cplData
-      _outputFineModelScaled[i + offset] = values[i] / factor;
-      // ignore input from fine model as it must be exactly the
-      // same as the input for the coarse model, if the fine model is evaluated
-
-      // scale coarse model input and output cplData also with scaling factors for fine cplData
-      // (must be the same as coarse and fine cplData is involved in matrices F and C)
-      _outputCoarseModelScaled[i + offset] = coarseValues[i] / factor;
-      _input_Xstar[i + offset] = coarseOldValues[i] / factor;
-    }
-    offset += size;
-    k++;
-  }
-}
-*/
-
-/** --------------------------------
- *            scale()
- *   @brief scales a vector
- *  --------------------------------
- */
-/*
-void MMPostProcessing::scale
-(
-    Eigen::VectorXd& vec, DataMap& cplData)
-{
-  preciceTrace(__func__);
-
-  int offset = 0;
-  for (int id : _fineDataIDs) {
-    double factor = _scalings[id];
-    int size = cplData[id]->values->size();
-    for (int i = 0; i < size; i++) {
-      vec[i + offset] = vec[i + offset] / factor;
-    }
-    offset += size;
-  }
-}
-*/
-
-/** --------------------------------
- *            unscale()
- *   @brief reverts scaling for a vector
- *  --------------------------------
- */
-/*
-void MMPostProcessing::unscale
-(
-    Eigen::VectorXd& vec, DataMap& cplData)
-{
-  preciceTrace(__func__);
-
-  int offset = 0;
-  for (int id : _fineDataIDs) {
-    double factor = _scalings[id];
-    int size = cplData[id]->values->size();
-    for (int i = 0; i < size; i++) {
-      vec[i + offset] = vec[i + offset] * factor;
-    }
-    offset += size;
-  }
-}
-*/
 
 /** -----------------------------------------------------------------------------------
  *            isSet()
@@ -853,11 +757,8 @@ void MMPostProcessing::iterationsConverged
   // the most recent differences for the F, C matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if
   // convergence was achieved
-
-  //scale(cplData);
   concatenateCouplingData(cplData);
   updateDifferenceMatrices(cplData);
-
 
   /**
    * Difference matrices and Jacobian updated, MM cycle completed, start with coarse model
