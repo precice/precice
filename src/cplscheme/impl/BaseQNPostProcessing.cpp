@@ -44,11 +44,10 @@ BaseQNPostProcessing::BaseQNPostProcessing
     PtrPreconditioner preconditioner)
 :
   PostProcessing(),
+  _preconditioner(preconditioner),
   _initialRelaxation(initialRelaxation),
   _maxIterationsUsed(maxIterationsUsed),
   _timestepsReused(timestepsReused),
-  _singularityLimit(singularityLimit),
-  _designSpecification(),
   _dataIDs(dataIDs),
   _secondaryDataIDs(),
   _firstIteration(true),
@@ -58,23 +57,24 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _oldXTilde(),
   _residuals(),
   _secondaryResiduals(),
-  _values(),
-  _oldValues(),
-  _oldResiduals(),
   _matrixV(),
   _matrixW(),
   _qrV(filter),
+  _matrixCols(),
+  _dimOffsets(),
+  _values(),
+  _oldValues(),
+  _oldResiduals(),
+  _filter(filter),
+  _singularityLimit(singularityLimit),
+  _designSpecification(),
   _matrixVBackup(),
   _matrixWBackup(),
   _matrixColsBackup(),
-  _matrixCols(),
-  _dimOffsets(),
-  _infostream(),
   its(0),
   tSteps(0),
   deletedColumns(0),
-  _filter(filter),
-  _preconditioner(preconditioner)
+  _infostream()
 {
   preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
       "BaseQNPostProcessing()",
@@ -86,10 +86,6 @@ BaseQNPostProcessing::BaseQNPostProcessing
   preciceCheck(_timestepsReused >= 0, "BaseQNPostProcessing()",
       "Number of old timesteps to be reused for QN "
       << "post-processing has to be >= 0!");
-  //preciceCheck(tarch::la::greater(_singularityLimit, 0.0),
-  //             "BaseQNPostProcessing()", "Singularity limit for QN "
-  //             << "post-processing has to be larger than numerical zero ("
-  //             << tarch::la::NUMERICAL_ZERO_DIFFERENCE << ")!");
 
   _infostream.open("postProcessingInfo.txt", std::ios_base::out);
   _infostream << std::setprecision(16);
@@ -561,28 +557,6 @@ void BaseQNPostProcessing::iterationsConverged
   tSteps++;
   deletedColumns = 0;
   // -----------------------
-
-
-  /*
-  // writig l2 norm of converged configuration to info stream
-  // -----------
-  if (_firstTimeStep)
-  {
-    _infostream << "l2-Norm of converged configuration after first time step:" << std::endl;
-    double l2norm = 0., oldl2norm = 0.;
-    for (int id : _dataIDs)
-    {
-      l2norm = 0.;
-
-      DataValues& values = *cplData[id]->values;
-      l2norm = utils::MasterSlave::l2norm(values);
-      if (id == _dataIDs[0]) oldl2norm = sqrt(l2norm);
-      _infostream << "  l2-norm: " << sqrt(l2norm) << "  of id: " << id << "\n" << std::flush;
-    }
-    _infostream << "  * l2-norm ratio: " << (double) oldl2norm / sqrt(l2norm) << "\n" << std::flush;
-  }
-  // -----------
-  */
 
 
   // the most recent differences for the V, W matrices have not been added so far
