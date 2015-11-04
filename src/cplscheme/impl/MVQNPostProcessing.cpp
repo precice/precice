@@ -122,6 +122,8 @@ void MVQNPostProcessing:: initialize
   
   _invJacobian = Eigen::MatrixXd::Zero(global_n, entries);
   _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
+
+  _preconditioner->triggerGlobalWeights(global_n);
 }
 
 

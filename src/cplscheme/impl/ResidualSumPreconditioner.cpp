@@ -57,6 +57,9 @@ void ResidualSumPreconditioner::update(bool timestepComplete, DataValues& oldVal
     }
 
     _requireNewQR = true;
+    if(_needsGlobalWeights){
+      communicateGlobalWeights();
+    }
 
   }
   else{

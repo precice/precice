@@ -10,6 +10,7 @@
 #include <Eigen/Dense>
 #include "../SharedPointer.hpp"
 #include <vector>
+#include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -41,7 +42,8 @@ public:
     _invWeights(),
     _dimensions(dimensions),
     _sizeOfSubVector(-1),
-    _requireNewQR(false)
+    _requireNewQR(false),
+    _needsGlobalWeights(false)
   {}
 
 
@@ -93,6 +95,7 @@ public:
    */
   void apply(EigenMatrix& M, bool transpose){
     preciceTrace("apply()");
+    assertion(_needsGlobalWeights);
     if(transpose){
       assertion(M.cols()==(int)_weights.size());
       for(int i=0; i<M.cols(); i++){
@@ -102,10 +105,10 @@ public:
       }
     }
     else{
-      assertion2(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
+      assertion2(M.rows()==(int)_globalWeights.size(), M.rows(), (int)_globalWeights.size());
       for(int i=0; i<M.cols(); i++){
         for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _weights[j];
+          M(j,i) *= _globalWeights[j];
         }
       }
     }
@@ -117,6 +120,7 @@ public:
    */
   void revert(EigenMatrix& M, bool transpose){
     preciceTrace("apply()");
+    assertion(_needsGlobalWeights);
     if(transpose){
       assertion(M.cols()==(int)_weights.size());
       for(int i=0; i<M.cols(); i++){
@@ -126,10 +130,10 @@ public:
       }
     }
     else{
-      assertion(M.rows()==(int)_weights.size());
+      assertion2(M.rows()==(int)_globalInvWeights.size(), M.rows(), (int)_globalInvWeights.size());
       for(int i=0; i<M.cols(); i++){
         for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _invWeights[j];
+          M(j,i) *= _globalInvWeights[j];
         }
       }
     }
@@ -264,6 +268,13 @@ public:
     _requireNewQR = false;
   }
 
+  void triggerGlobalWeights(int globalN){
+    _needsGlobalWeights = true;
+    _globalWeights.resize(globalN, 1.0);
+    _globalInvWeights.resize(globalN, 1.0);
+    communicateGlobalWeights(); //for constant preconditioner necessary already here
+  }
+
 protected:
 
   //@brief weights used to scale the matrix V and the residual
@@ -271,6 +282,12 @@ protected:
 
   //@brief inverse weights (for efficiency reasons)
   std::vector<double> _invWeights;
+
+  //@brief global weights, needed for MVQN
+  std::vector<double> _globalWeights;
+
+  //@brief global inverse weights, needed for MVQN
+  std::vector<double> _globalInvWeights;
 
   //@brief dimension (scalar or vectorial) of each sub-vector
   std::vector<int> _dimensions;
@@ -280,6 +297,71 @@ protected:
 
   // true if a QR decomposition from scratch is necessary
   bool _requireNewQR;
+
+  // true if global weights are needed, i.e. for MVQN
+  bool _needsGlobalWeights;
+
+
+  //@brief communicate all slave weights to master and then broadcast, necessary for MVQN
+  void communicateGlobalWeights(){
+    preciceTrace2("communicateGlobalWeights()", _weights.size(), _globalWeights.size());
+    assertion(_weights.size()==_invWeights.size());
+    assertion(_globalWeights.size()==_globalInvWeights.size());
+    assertion(_needsGlobalWeights);
+
+
+    if (utils::MasterSlave::_slaveMode) {
+      utils::MasterSlave::_communication->send((int)_weights.size(),0);
+      if (_weights.size()!=0) {
+        utils::MasterSlave::_communication->send(_weights.data(),(int)_weights.size(),0);
+        utils::MasterSlave::_communication->send(_invWeights.data(),(int)_weights.size(),0);
+      }
+      utils::MasterSlave::_communication->broadcast(_globalWeights.data(),_globalWeights.size(),0);
+      utils::MasterSlave::_communication->broadcast(_globalInvWeights.data(),_globalWeights.size(),0);
+    }
+    else if (utils::MasterSlave::_masterMode) {
+      assertion(utils::MasterSlave::_rank==0);
+      assertion(utils::MasterSlave::_size>1);
+
+      int offset = 0;
+      //add master weights
+      for (size_t i=0; i<_weights.size(); i++){
+        _globalWeights[i + offset] = _weights[i];
+        _globalInvWeights[i + offset] = _invWeights[i];
+      }
+      offset += _weights.size();
+
+      for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
+        int localSlaveN = -1;
+        utils::MasterSlave::_communication->receive(localSlaveN,rankSlave);
+        std::vector<double> slaveWeights(localSlaveN,-1);
+        std::vector<double> slaveInvWeights(localSlaveN,-1);
+        if (localSlaveN!=0) {
+          utils::MasterSlave::_communication->receive(slaveWeights.data(),localSlaveN,rankSlave);
+          utils::MasterSlave::_communication->receive(slaveInvWeights.data(),localSlaveN,rankSlave);
+        }
+        // add slave weights
+        for (size_t i=0; i<slaveWeights.size(); i++){
+          _globalWeights[i + offset] = slaveWeights[i];
+          _globalInvWeights[i + offset] = slaveInvWeights[i];
+        }
+        offset += slaveWeights.size();
+      }
+      assertion(offset==_globalWeights.size());
+
+      utils::MasterSlave::_communication->broadcast(_globalWeights.data(),_globalWeights.size());
+      utils::MasterSlave::_communication->broadcast(_globalInvWeights.data(),_globalWeights.size());
+    }
+    else{ //couplingmode
+      assertion(_weights.size()==_globalWeights.size());
+      for(size_t i=0; i<_weights.size(); i++){
+        _globalWeights[i] = _weights[i];
+        _globalInvWeights[i] = _invWeights[i];
+      }
+    }
+
+
+  }
 
 private:
 

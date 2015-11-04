@@ -82,6 +82,9 @@ void ValuePreconditioner::update(bool timestepComplete, Eigen::VectorXd& oldValu
 
     _requireNewQR = true;
     _firstTimestep = false;
+    if(_needsGlobalWeights){
+      communicateGlobalWeights();
+    }
   }
 }
 

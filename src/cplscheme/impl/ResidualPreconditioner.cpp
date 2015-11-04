@@ -45,6 +45,9 @@ void ResidualPreconditioner::update(bool timestepComplete, DataValues& oldValues
     }
 
     _requireNewQR = true;
+    if(_needsGlobalWeights){
+      communicateGlobalWeights();
+    }
   }
 }
 
