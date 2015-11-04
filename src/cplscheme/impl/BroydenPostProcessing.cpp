@@ -89,32 +89,10 @@ void BroydenPostProcessing::updateDifferenceMatrices
   DataMap& cplData)
 {
   using namespace tarch::la;
-
-  /*
-   * ATTETION: changed the condition from _firstIteration && _firstTimeStep
-   * to the following: 
-   * underrelaxation has to be done, if the scheme has converged without even
-   * entering post processing. In this case the V, W matrices would still be empty.
-   * This case happended in the open foam example beamInCrossFlow.
-   */ 
   if (_firstIteration && _firstTimeStep) {
-    //k++;
-    //_currentColumns++;
-    
-    // Perform underrelaxation with initial relaxation factor for secondary data
-//     foreach (int id, _secondaryDataIDs){
-//       PtrCouplingData data = cplData[id];
-//       DataValues& values = *(data->values);
-//       values *= _initialRelaxation;                   // new * omg
-//       DataValues& secResiduals = _secondaryResiduals[id];
-//       secResiduals = data->oldValues.column(0);    // old
-//       secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
-//       values += secResiduals;                      // (1-omg) * old + new * omg
-//     }
   }
   else {
     if (not _firstIteration){
-      //k++;
       _currentColumns++;
     }
   }
@@ -122,14 +100,6 @@ void BroydenPostProcessing::updateDifferenceMatrices
   // call the base method for common update of V, W matrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
 }
-
-
-
-void BroydenPostProcessing::performPPSecondaryData
-(
-  DataMap& cplData)
-{}
-
 
 void BroydenPostProcessing::computeQNUpdate
     (PostProcessing::DataMap& cplData, DataValues& xUpdate)
@@ -178,7 +148,7 @@ void BroydenPostProcessing::computeQNUpdate
     
     DataValues res_tilde(_residuals.size());
     for(int i = 0; i < res_tilde.size(); i++)
-      res_tilde(i) = _residuals(i) - _designSpecification(i);
+      res_tilde(i) = _residuals(i);
 
     res_tilde *= -1.;
   
@@ -217,9 +187,7 @@ void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
     _matW.append(_matrixW.column(i));
   }
 
-  preciceDebug(" ++  before QR Decomposition  Vcopy=("<<Vcopy.rows()<<","<<Vcopy.cols()<<")  Q=("<<Q.rows()<<","<<Q.cols()<<")");
-  modifiedGramSchmidt(Vcopy, Q, R);
-  preciceDebug(" ++  after QR Decomposition");
+    modifiedGramSchmidt(Vcopy, Q, R);
   
     DataValues ytmpVec(_currentColumns, 0.0);
     DataValues _matrixQRow;
@@ -250,7 +218,7 @@ void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
   
   DataValues res_tilde(_residuals.size());
   for(int i = 0; i < res_tilde.size(); i++)
-   res_tilde(i) = _residuals(i) - _designSpecification(i);
+   res_tilde(i) = _residuals(i);
 
   res_tilde *= -1.;
   
@@ -264,34 +232,8 @@ void BroydenPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
-  
-//   // ---- DEBUG --------------------------
-//   
-//   using namespace tarch::la;
-//   // compute frobenius norm of difference between Jacobian matrix from current
-//   // time step and Jcobian from old time step
-//   DataMatrix jacobianDiff(_invJacobian.rows(), _invJacobian.cols(), 0.0);
-//   jacobianDiff = _oldInvJacobian;
-//   jacobianDiff *= -1.;
-//   jacobianDiff = _invJacobian + jacobianDiff;
-//   double frob = frobeniusNorm(jacobianDiff); 
-//   f<<t<<"  "<<frob<<"\n";
-//   if(t >= 100) f.close();
-//   // -------------------------------------
-
-   //----------------------------DEBUG------------------------------------
-//   std::stringstream sk; sk <<k;
-//   std::stringstream st; st <<t;
-//   std::string jfile("j_"+st.str()+".m");
-//   _invJacobian.printm(jfile.c_str());
-  
-  // --------------------------------------------------------------------
-  
- // k = 0;
   _currentColumns = 0;
- // t++;
-  // store inverse Jacobian
-//  _matrixWriter.write(_invJacobian);
+  // store old Jacobian
   _oldInvJacobian = _invJacobian;
 }
 

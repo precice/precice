@@ -60,12 +60,6 @@ public:
     */
    virtual void initialize(DataMap& cplData);
 
-   /**
-    * @brief Performs one post-processing step.
-    *
-    * Has to be called after every implicit coupling iteration.
-    */
-   virtual void performPPSecondaryData(DataMap& cplData);
 
    /**
     * @brief Marks a iteration sequence as converged.
