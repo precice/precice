@@ -759,8 +759,6 @@ bool BaseCouplingScheme:: measureConvergence
     // only apply convergence measures for fine model optimization, i.e., coupling
     if(convMeasure.level > 0) continue;
 
-    std::cout<<"  measure convergence fine measure, id:"<<convMeasure.dataID<<std::endl;
-
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
