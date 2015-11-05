@@ -140,6 +140,8 @@
             <data name="Forces1" mesh="SOLIDZ_Mesh1" scaling="1e6">
             <data name="Forces2" mesh="SOLIDZ_Mesh2" scaling="1e6">
             <data name="Forces3" mesh="SOLIDZ_Mesh3" scaling="1e6">
+            <preconditioner type="constant"/>
+            <filter type="QR1-absolute" limit="1e-12"/>
             <initial-relaxation value="0.001"/>
             <max-used-iterations value="100"/>
             <timesteps-reused value="8"/>
