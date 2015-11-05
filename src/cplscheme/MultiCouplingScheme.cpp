@@ -176,6 +176,8 @@ void MultiCouplingScheme::advance()
 
     for (m2n::M2N::SharedPointer m2n : _communications) {
       m2n->send(convergence);
+      assertion(not _isCoarseModelOptimizationActive);
+      m2n->send(_isCoarseModelOptimizationActive); //need to do this to match with ParallelCplScheme
     }
 
     if (convergence && (getExtrapolationOrder() > 0)){
