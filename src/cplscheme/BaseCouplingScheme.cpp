@@ -89,6 +89,7 @@ BaseCouplingScheme::BaseCouplingScheme
   constants::TimesteppingMethod dtMethod )
   :
   _isCoarseModelOptimizationActive(false),
+  _deletedColumnsPPFiltering(0),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _convergenceMeasures(),
