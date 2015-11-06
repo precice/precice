@@ -14,6 +14,7 @@
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/EventTimings.hpp"
 #include "QRFactorization.hpp"
 #include "Eigen/Dense"
 #include <sys/unistd.h>
@@ -23,6 +24,8 @@
 #include <time.h>
 
 //#include "utils/NumericalCompare.hpp"
+
+using precice::utils::Event;
 
 namespace precice {
 namespace cplscheme {
@@ -154,6 +157,8 @@ void IQNILSPostProcessing::computeQNUpdate
 (PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
 	preciceTrace("computeQNUpdate()");
+  Event e(__func__, true, true); // time measurement, barrier
+
   using namespace tarch::la;
   preciceDebug("   Compute Newton factors");
 
@@ -188,17 +193,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	DataValues _local_b(_qrV.cols(), 0.0);
 	DataValues _global_b;
 
-	/*
-	// res_tilde = (_residuals - _designSpecification)
-	DataValues res_tilde(_residuals.size());
-	for(int i = 0; i < res_tilde.size();i++)
-		res_tilde(i) = _residuals(i) - _designSpecification(i);
-
-	multiply(__Qt, res_tilde, _local_b);
-	*/
-
-
-
+	Event e_qrsolve("solve: R alpha = -Q^T r", true, true); // time measurement, barrier
 	multiply(__Qt, _residuals, _local_b);
 	_local_b *= -1.0; // = -Qr
 
@@ -244,6 +239,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	  // broadcast coefficients c to all slaves
 	  utils::MasterSlave::broadcast(&__c(0), __c.size());
 	}
+	e_qrsolve.stop();
 
 	preciceDebug("   Apply Newton factors");
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W

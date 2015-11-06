@@ -13,12 +13,15 @@
 #include "io/TXTReader.hpp"
 #include "QRFactorization.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/EventTimings.hpp"
 #include <string.h>
 #include <iostream>
 #include <sstream>
 //#include "utils/NumericalCompare.hpp"
 
 #include <time.h>
+
+using precice::utils::Event;
 
 namespace precice {
 namespace cplscheme {
@@ -104,6 +107,8 @@ void BaseQNPostProcessing::initialize(
     DataMap& cplData)
 {
   preciceTrace1("initialize()", cplData.size());
+  Event e(__func__, true, true); // time measurement, barrier
+
   size_t entries = 0;
 
   for (auto & elem : _dataIDs) {
@@ -250,6 +255,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
     DataMap& cplData)
 {
   preciceTrace("updateDiffernceMatrices()");
+  Event e(__func__, true, true); // time measurement, barrier
   using namespace tarch::la;
 
   // Compute current residual: vertex-data - oldData
@@ -329,6 +335,8 @@ void BaseQNPostProcessing::performPostProcessing
     DataMap& cplData)
 {
   preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
+  Event e(__func__, true, true); // time measurement, barrier
+
   using namespace tarch::la;
   assertion2(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
   assertion2(_values.size() == _oldXTilde.size(),_values.size(), _oldXTilde.size());
@@ -395,6 +403,7 @@ void BaseQNPostProcessing::performPostProcessing
      * Note: here, the _residuals are H(x)- x - q, i.e., residual of the fixed-point iteration
      *       minus the design specification of the optimization problem (!= null if MM is used)
      */
+    Event e_applyPrecond("applyPreconditioner", true, true); // time measurement, barrier
     _preconditioner->update(false, _values, _residuals);
     // TODO: evaluate whether the pure residual should be used for updating the preconditioner or residual - design specification
     _preconditioner->apply(_residuals);
@@ -407,6 +416,7 @@ void BaseQNPostProcessing::performPostProcessing
       }
       _preconditioner->newQRfulfilled();
     }
+    e_applyPrecond.stop();
 
     // apply the configured filter to the LS system
     applyFilter();
@@ -417,10 +427,12 @@ void BaseQNPostProcessing::performPostProcessing
     DataValues xUpdate(_residuals.size(), 0.0);
     computeQNUpdate(cplData, xUpdate);
 
+    Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
     _preconditioner->revert(xUpdate); //to compensate the W scaling
     _preconditioner->revert(_matrixW);
     _preconditioner->revert(_matrixV);
     _preconditioner->revert(_residuals);
+    e_revertPrecond.stop();
 
     /**
      * apply quasiNewton update
@@ -473,6 +485,7 @@ void BaseQNPostProcessing::performPostProcessing
 void BaseQNPostProcessing::applyFilter()
 {
   preciceTrace1(__func__,_filter);
+  Event e(__func__, true, true); // time measurement, barrier
   if (_filter == PostProcessing::NOFILTER) {
     // do nothing
   } else {
@@ -548,6 +561,7 @@ void BaseQNPostProcessing::iterationsConverged
     DataMap & cplData)
 {
   preciceTrace("iterationsConverged()");
+  Event e(__func__, true, true); // time measurement, barrier
 
   // debugging info, remove if not needed anymore:
   // -----------------------
