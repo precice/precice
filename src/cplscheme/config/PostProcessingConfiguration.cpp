@@ -296,7 +296,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
       else{
         // no preconditioner defined
         std::vector<double> factors;
-        for (int id : _config.dataIDs){
+        for (int id = 0; id < _config.dataIDs.size(); ++id) {
           factors.push_back(1.0);
         }
         _preconditioner = impl::PtrPreconditioner (new impl::ConstantPreconditioner(dims, factors));

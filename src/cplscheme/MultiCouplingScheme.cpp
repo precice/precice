@@ -27,7 +27,7 @@ MultiCouplingScheme::MultiCouplingScheme
   _receiveDataVector(),
   _sendDataVector()
 {
-  for(auto & elem : _communications){
+  for(int i = 0; i < _communications.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;
     _receiveDataVector.push_back(receiveMap);
