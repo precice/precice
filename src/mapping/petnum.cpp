@@ -43,10 +43,10 @@ Vector::Vector(Matrix &m, std::string name, LEFTRIGHT type)
 {
   PetscErrorCode ierr = 0;
   if (type == LEFTRIGHT::LEFT) {
-    ierr = MatGetVecs(m.matrix, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
+    ierr = MatCreateVecs(m.matrix, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
   }
   else {
-    ierr = MatGetVecs(m.matrix, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
+    ierr = MatCreateVecs(m.matrix, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
   }
   setName(name);
 }
@@ -89,6 +89,13 @@ int Vector::getSize()
 {
   PetscInt size;
   VecGetSize(vector, &size);
+  return size;
+}
+
+int Vector::getLocalSize()
+{
+  PetscInt size;
+  VecGetLocalSize(vector, &size);
   return size;
 }
 
@@ -201,7 +208,7 @@ void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, P
 {
   PetscErrorCode ierr = 0;
   if (type != nullptr) {
-    ierr = MatSetType(matrix, type);
+    ierr = MatSetType(matrix, type); CHKERRV(ierr);
   }
   ierr = MatSetSizes(matrix, localRows, localCols, globalRows, globalCols); CHKERRV(ierr);
   ierr = MatSetFromOptions(matrix); CHKERRV(ierr);

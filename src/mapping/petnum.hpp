@@ -32,6 +32,13 @@ public:
 
   Vector(Matrix &m, std::string name = "", LEFTRIGHT type = LEFT);
 
+  /// Delete copy and assignement constructor
+  /** Copying and assignement of this class would involve copying the pointer to
+   * the PETSc object and finallly cause double destruction of it.
+   */
+  Vector(const Vector&) = delete;
+  Vector& operator=(const Vector&) = delete;
+
   ~Vector();
 
   /// Sets the size and calls VecSetFromOptions
@@ -42,6 +49,8 @@ public:
 
   int getSize();
 
+  int getLocalSize();
+  
   void setValue(PetscInt row, PetscScalar value);
 
   void arange(double start, double stop);
@@ -68,6 +77,13 @@ public:
 
   MPI_Comm communicator;
 
+  /// Delete copy and assignement constructor
+  /** Copying and assignement of this class would involve copying the pointer to
+   * the PETSc object and finallly cause double destruction of it.
+   */
+  Matrix(const Matrix&) = delete;
+  Matrix& operator=(const Matrix&) = delete;
+
   Matrix(MPI_Comm comm = PETSC_COMM_WORLD, std::string name = "");
 
   ~Matrix();
@@ -75,7 +91,7 @@ public:
   void assemble(MatAssemblyType type = MAT_FINAL_ASSEMBLY);
     
   /// Initializes matrix of given size and type
-  void init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type = NULL);
+  void init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type = nullptr);
 
   // Destroys and recreate the matrix on the same communicator  
   void reset();
