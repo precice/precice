@@ -20,6 +20,7 @@ public:
   /// Name used to identify the timer. Events of the same name are accumulated to
   std::string name;
 
+  /// Allows to put a non-measured (i.e. with a given duration) Event to the measurements.
   Event(std::string eventName, Clock::duration eventDuration);
 
   /// Creates a new event and starts it, unless autostart = false, synchronize processes, when barrier == true
@@ -104,7 +105,7 @@ public:
   /// Sets the global end time
   static void finalize();
 
-  /// clears the registry. needed for tests
+  /// Clears the registry. needed for tests
   static void clear();
 
   /// Finalize the timings and call print. Can be used as a crash handler to still get some timing results.
