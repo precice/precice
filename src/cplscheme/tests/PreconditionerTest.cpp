@@ -37,6 +37,7 @@ void PreconditionerTest::run ()
 {
   preciceTrace ( "run" );
 
+#ifndef PRECICE_NO_MPI
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 3){
     std::vector<int> ranksWanted;
@@ -48,6 +49,7 @@ void PreconditionerTest::run ()
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
+#endif
 
   PRECICE_MASTER_ONLY {
     testMethod (testResPreconditioner);
@@ -263,6 +265,8 @@ void PreconditionerTest::testConstPreconditioner ()
 
 void PreconditionerTest::testParallelMatrixScaling ()
 {
+#ifndef PRECICE_NO_MPI
+
   preciceTrace("testParallelMatrixScaling()");
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
   utils::Parallel::synchronizeProcesses();
@@ -418,6 +422,7 @@ void PreconditionerTest::testParallelMatrixScaling ()
   utils::Parallel::synchronizeProcesses();
   utils::MasterSlave::_communication = nullptr;
 
+#endif
 }
 
 void PreconditionerTest::validateVector (DataValues& data, DataValues& compare)
