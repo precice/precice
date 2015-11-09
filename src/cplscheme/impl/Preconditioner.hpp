@@ -248,14 +248,14 @@ public:
    *
    * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
    */
-  virtual void update(bool timestepComplete, DataValues& oldValues, DataValues& res) =0;
+  virtual void update(bool timestepComplete, const DataValues& oldValues, const DataValues& res) =0;
 
   /**
    * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
    *
    * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
    */
-  virtual void update(bool timestepComplete, Eigen::VectorXd& oldValues, Eigen::VectorXd& res) =0;
+  virtual void update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res) =0;
 
   //@brief: returns true if a QR decomposition from scratch is necessary
   bool requireNewQR(){
@@ -334,20 +334,20 @@ protected:
       for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
         int localSlaveN = -1;
         utils::MasterSlave::_communication->receive(localSlaveN,rankSlave);
-        std::vector<double> slaveWeights(localSlaveN,-1);
-        std::vector<double> slaveInvWeights(localSlaveN,-1);
         if (localSlaveN!=0) {
+          std::vector<double> slaveWeights(localSlaveN,-1);
+          std::vector<double> slaveInvWeights(localSlaveN,-1);
           utils::MasterSlave::_communication->receive(slaveWeights.data(),localSlaveN,rankSlave);
           utils::MasterSlave::_communication->receive(slaveInvWeights.data(),localSlaveN,rankSlave);
+          // add slave weights
+          for (size_t i=0; i<slaveWeights.size(); i++){
+            _globalWeights[i + offset] = slaveWeights[i];
+            _globalInvWeights[i + offset] = slaveInvWeights[i];
+          }
+          offset += slaveWeights.size();
         }
-        // add slave weights
-        for (size_t i=0; i<slaveWeights.size(); i++){
-          _globalWeights[i + offset] = slaveWeights[i];
-          _globalInvWeights[i + offset] = slaveInvWeights[i];
-        }
-        offset += slaveWeights.size();
       }
-      assertion(offset==_globalWeights.size());
+      assertion2(offset==_globalWeights.size(),offset, _globalWeights.size());
 
       utils::MasterSlave::_communication->broadcast(_globalWeights.data(),_globalWeights.size());
       utils::MasterSlave::_communication->broadcast(_globalInvWeights.data(),_globalWeights.size());

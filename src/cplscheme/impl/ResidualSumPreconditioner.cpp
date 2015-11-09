@@ -20,7 +20,7 @@ ResidualSumPreconditioner:: ResidualSumPreconditioner
   _residualSum.resize(dimensions.size(),0.0);
 }
 
-void ResidualSumPreconditioner::update(bool timestepComplete, DataValues& oldValues, DataValues& res)
+void ResidualSumPreconditioner::update(bool timestepComplete, const DataValues& oldValues, const DataValues& res)
 {
   preciceTrace("update()");
   if(not timestepComplete){
@@ -69,7 +69,7 @@ void ResidualSumPreconditioner::update(bool timestepComplete, DataValues& oldVal
   }
 }
 
-void ResidualSumPreconditioner::update(bool timestepComplete, Eigen::VectorXd& oldValues, Eigen::VectorXd& res)
+void ResidualSumPreconditioner::update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res)
 {
   preciceTrace("update()");
   if(not timestepComplete){
