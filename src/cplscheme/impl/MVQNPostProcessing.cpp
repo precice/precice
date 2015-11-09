@@ -80,6 +80,8 @@ void MVQNPostProcessing:: initialize
 (
   DataMap& cplData )
 {
+  preciceTrace(__func__);
+  Event e(__func__, true, true); // time measurement, barrier
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
   
@@ -173,6 +175,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
 void MVQNPostProcessing::computeQNUpdate
     (PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
+  Event e(__func__, true, true); // time measurement, barrier
   preciceTrace("computeQNUpdate()");
   preciceDebug("Compute Newton factors ");
 
@@ -218,6 +221,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	auto Q = _qrV.matrixQ();
 	auto R = _qrV.matrixR();
 
+	Event e(__func__, true, true); // time measurement, barrier
 	Eigen::VectorXd yVec(_qrV.cols());
 
 	// assertions for the case of processors with no vertices
@@ -227,16 +231,20 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 			assertion1(Q.size() == 0, Q.size());
 	}
 
+	Event e_qr("solve Z = (V^TV)^-1V^T via QR", true, true); // time measurement, barrier
 	for (int i = 0; i < Q.rows(); i++) {
 		Eigen::VectorXd Qrow = Q.row(i);
 		yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
 		Z.col(i) = yVec;
 	}
+	e_qr.stop();
 
 
 	/**
 	*  (1) Multiply J_prev * V =: W_tilde
 	*/
+	Event e_WtilV("compute W_til = (W + J_prev*V)", true, true); // time measurement, barrier
+
 	assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
 	assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
@@ -253,6 +261,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	W_til *= -1.;
 	W_til = W_til + W;
 
+	e_WtilV.stop();
 
 	/**
 	*  (2) compute invJacobian = W_til*Z
@@ -263,8 +272,10 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	*  dimension: (n x n) * (n x m) = (n x m),
 	*  parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
 	*/
+	Event e_WtilZ("compute J = W_til*Z", true, true); // time measurement, barrier
 
 	_parMatrixOps.multiply(W_til, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
+	e_WtilV.stop();
 
 	// update Jacobian
 	_invJacobian = _invJacobian + _oldInvJacobian;
@@ -272,11 +283,6 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	/**
  	 *  (3) solve delta_x = - J_inv * res
 	 */
-	//Eigen::VectorXd res_tilde(_residuals.size());
-	//Eigen::VectorXd xUp(_residuals.size());
-	//for(int i = 0; i < res_tilde.size(); i++)
-	//  res_tilde(i) = _residuals(i) - _designSpecification(i);
-
 	Eigen::VectorXd res_tilde(_residuals.size());
   Eigen::VectorXd xUp(_residuals.size());
   for(int i = 0; i < res_tilde.size(); i++)
@@ -284,9 +290,11 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
 	res_tilde *= -1.;
 
+	Event e_up("compute update = J*(-res)", true, true); // time measurement, barrier
 	// multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
-	//                                        parallel:  (n_global x n_local) * (n_local x 1) = (n_local x 1)
+	//                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
 	_parMatrixOps.multiply(_invJacobian, res_tilde, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1);
+  e_up.stop();
 
 	for(int i = 0; i < xUp.size(); i++)
 	  xUpdate(i) = xUp(i);
