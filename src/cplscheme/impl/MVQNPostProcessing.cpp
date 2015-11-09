@@ -14,6 +14,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/EventTimings.hpp"
 #include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
@@ -26,6 +27,9 @@
 #include <fstream>
 #include <cstring>
 //#include "utils/NumericalCompare.hpp"
+
+using precice::utils::Event;
+
 
 namespace precice {
 namespace cplscheme {
