@@ -318,8 +318,8 @@ void SerialCouplingScheme::advance()
           // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
           if(_iterationsCoarseOptimization == 1   && getPostProcessing().get() != nullptr){
             auto fineIDs = getPostProcessing()->getDataIDs();
-            for(int i=0; i<fineIDs.size(); i++){
-              (*getSendData(fineIDs[i])->values) = getSendData(fineIDs[i]+fineIDs.size()+1)->oldValues.column(0);
+            for (auto& fineID : fineIDs) {
+              (*getSendData(fineID)->values) = getSendData(fineID+fineIDs.size()+1)->oldValues.column(0);
             }
           }
         }

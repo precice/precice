@@ -1082,14 +1082,14 @@ bool CouplingSchemeConfiguration:: checkIfDataIsCoarse
       isCoarse = utils::contained(id, coarseIDs);
 
       std::cout<<" coarseIDs = [";
-      for(int i = 0; i < coarseIDs.size();i++){
-        std::cout<<coarseIDs.at(i)<<", ";
+      for (auto &coarseID : coarseIDs) {
+        std::cout << coarseID <<", ";
       }
       std::cout<<"], id: "<<id<<std::endl;
 
       err = not isCoarse;
     }else{
-      std::cout<<"There is no coarse model optimization defined."<<std::endl;
+      std::cout<<"There is no coarse model optkmaiimization defined."<<std::endl;
       err = true;
     }
   }
