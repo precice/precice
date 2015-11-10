@@ -165,7 +165,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 {
 	preciceTrace("applyFilter()");
 	delIndices.resize(0);
-	if(_filter == BaseQNPostProcessing::QR1FILTER || _filter == BaseQNPostProcessing::QR1FILTER_ABS)
+	if(_filter == PostProcessing::QR1FILTER || _filter == PostProcessing::QR1FILTER_ABS)
 	{
 		bool linearDependence = true;
 		std::vector<int> delFlag(_cols, 0);
@@ -174,14 +174,14 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 			linearDependence = false;
 			int index = 0; // actual index of checked column, \in [0, _cols] and _cols is decreasing
 			if(_cols > 1){
-				for (int i = 0; i < delFlag.size(); i++) {
+				for (size_t i = 0; i < delFlag.size(); i++) {
 					// index is not incremented, if columns has been deleted in previous rounds
 					if(delFlag[i] > 0) continue;
 
 					// QR1-filter
 					if(index >= cols()) break;
 					assertion2(index < _cols, index, _cols);
-					double factor = (_filter == BaseQNPostProcessing::QR1FILTER_ABS) ? 1.0 : _R.norm();
+					double factor = (_filter == PostProcessing::QR1FILTER_ABS) ? 1.0 : _R.norm();
 					if (std::fabs(_R(index, index)) < singularityLimit * factor) {
 
 						linearDependence = true;
@@ -192,12 +192,12 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 						//break;
 						index--;  	// check same column index, as cols are shifted left
 					}
-					assertion2(delCols+_cols == delFlag.size(), (delCols+_cols), delFlag.size());
+					assertion2(delCols+_cols == (int)delFlag.size(), (delCols+_cols), delFlag.size());
 					index++;
 				}
 			}
 		}
-	}else if(_filter == BaseQNPostProcessing::QR2FILTER)
+	}else if(_filter == PostProcessing::QR2FILTER)
 	{
 		  _Q.resize(0,0);
 		  _R.resize(0,0);
@@ -685,6 +685,7 @@ void QRFactorization::reset(
 
 void QRFactorization::reset(
   EigenMatrix A, 
+  int globalRows,
   double omega, 
   double theta, 
   double sigma)
@@ -696,7 +697,7 @@ void QRFactorization::reset(
   _omega = omega;
   _theta = theta;
   _sigma = sigma;
-  _globalRows = _rows;
+  _globalRows = globalRows;
   
   int m = A.cols();
   for (int k=0; k<m; k++)
@@ -713,6 +714,7 @@ void QRFactorization::reset(
 
 void QRFactorization::reset(
   DataMatrix A, 
+  int globalRows,
   double omega, 
   double theta, 
   double sigma)
@@ -724,7 +726,7 @@ void QRFactorization::reset(
   _omega = omega;
   _theta = theta;
   _sigma = sigma;
-  _globalRows = _rows;
+  _globalRows = globalRows;
  
   int m = A.cols();
   for (int k=0; k<m; k++)

@@ -38,7 +38,7 @@ void SolverInterfaceTest:: run()
   preciceTrace("run()");
 # ifndef PRECICE_NO_MPI
   PRECICE_MASTER_ONLY {
-    testConfiguration();
+//    testConfiguration();
   }
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 1){

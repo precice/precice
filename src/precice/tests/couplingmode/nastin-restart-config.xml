@@ -69,7 +69,6 @@
             <initial-relaxation value="1.0"/>
             <max-used-iterations value="50"/>
             <timesteps-reused value="5"/>
-            <singularity-limit value="1e-12"/>
          </post-processing:IQN-ILS>
       </coupling-scheme:parallel-implicit>
 

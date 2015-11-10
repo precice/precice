@@ -60,12 +60,19 @@ public:
 
    virtual void measure (
       const utils::DynVector & oldValues,
-      const utils::DynVector & newValues )
+      const utils::DynVector & newValues,
+      const utils::DynVector& designSpecification)
    {
-     //_normDiff = tarch::la::norm2(newValues - oldValues);
-     //_norm = tarch::la::norm2(newValues);
-     _normDiff = utils::MasterSlave::l2norm(newValues - oldValues);
-     _norm = utils::MasterSlave::l2norm(newValues);
+/*
+     std::cout<<"\n-------"<<std::endl;
+     std::cout<<"   old val: \n"<<oldValues<<std::endl;
+     std::cout<<"   new val: \n"<<newValues<<"\n"<<std::endl;
+     std::cout<<"   design spec: \n"<<designSpecification<<"\n"<<std::endl;
+     std::cout<<"-------\n"<<std::endl;
+*/
+
+     _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
+     _norm = utils::MasterSlave::l2norm(newValues + designSpecification);
      _isConvergence = _normDiff <= _norm * _convergenceLimitPercent;
 //      preciceInfo ( "measure()", "Relative convergence measure: "
 //                    << "two-norm differences = " << normDiff

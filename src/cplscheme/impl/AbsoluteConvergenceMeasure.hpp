@@ -50,9 +50,10 @@ public:
 
    virtual void measure (
       const utils::DynVector& oldValues,
-      const utils::DynVector& newValues )
+      const utils::DynVector& newValues,
+      const utils::DynVector& designSpecification)
    {
-      _normDiff = utils::MasterSlave::l2norm(newValues - oldValues);
+      _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
       _isConvergence = _normDiff <= _convergenceLimit;
 //      preciceInfo ( "measure()", "Absolute convergence measure: "
 //                     << "two-norm differences = " << normDiff

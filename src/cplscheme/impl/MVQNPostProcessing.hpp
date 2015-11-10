@@ -46,12 +46,13 @@ public:
    */
    MVQNPostProcessing (
       double initialRelaxation,
+      bool forceInitialRelaxation,
       int    maxIterationsUsed,
       int    timestepsReused,
       int 	 filter,
       double singularityLimit,
       std::vector<int>    dataIDs,
-      std::map<int,double>    scalings);
+      PtrPreconditioner preconditioner);
 
    /**
     * @brief Destructor, empty.

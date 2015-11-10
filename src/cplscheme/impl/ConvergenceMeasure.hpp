@@ -47,7 +47,8 @@ public:
    */
   virtual void measure (
     const utils::DynVector& oldValues,
-    const utils::DynVector& newValues ) =0;
+    const utils::DynVector& newValues,
+    const utils::DynVector& designSpecification) =0;
 
   /**
    * @brief Returns true, if the last measurement indicates convergence.

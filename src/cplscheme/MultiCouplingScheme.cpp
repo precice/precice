@@ -27,7 +27,7 @@ MultiCouplingScheme::MultiCouplingScheme
   _receiveDataVector(),
   _sendDataVector()
 {
-  for(auto & elem : _communications){
+  for(int i = 0; i < _communications.size(); ++i) {
     DataMap receiveMap;
     DataMap sendMap;
     _receiveDataVector.push_back(receiveMap);
@@ -156,7 +156,8 @@ void MultiCouplingScheme::advance()
 
     receiveData();
 
-    convergence = measureConvergence();
+    auto designSpecifications = getPostProcessing()->getDesignSpecification(_allData);
+    convergence = measureConvergence(designSpecifications);
 
     // Stop, when maximal iteration count (given in config) is reached
     if (maxIterationsReached()) {
@@ -175,6 +176,8 @@ void MultiCouplingScheme::advance()
 
     for (m2n::M2N::SharedPointer m2n : _communications) {
       m2n->send(convergence);
+      assertion(not _isCoarseModelOptimizationActive);
+      m2n->send(_isCoarseModelOptimizationActive); //need to do this to match with ParallelCplScheme
     }
 
     if (convergence && (getExtrapolationOrder() > 0)){

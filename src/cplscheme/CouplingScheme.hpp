@@ -145,6 +145,13 @@ public:
    */
   virtual double getTimestepLength() const =0;
 
+
+  // default is false, i.e., no multilevel PP
+  virtual bool isCoarseModelOptimizationActive()
+  {
+    return false;
+  }
+
   /**
    * @brief Returns the remaining timestep length of the current time step.
    *

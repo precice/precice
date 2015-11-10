@@ -714,32 +714,14 @@ PointToPointCommunication::send(double* itemsToSend,
                                 int valueDimension) {
 
   if (_mappings.size() == 0) {
-    preciceCheck(size == 0 && _localIndexCount == 0,
-                 "send()",
-                 "Can't send anything from disconnected process!"
-                     << " "
-                     << "Size"
-                     << ":"
-                     << " " << size << ";"
-                     << " "
-                     << "Local Index Count"
-                     << ":"
-                     << " " << _localIndexCount << ".");
-
+    preciceCheck(size==0, "send()", "preCICE trys to communicate data to/from a processor that has no surface "
+                                 << "overlay with the connected participant. Please check the definition of your "
+                                 << "coupling surfaces.");
+    assertion(_localIndexCount==0);
     return;
   }
 
-  preciceCheck(size == _localIndexCount * valueDimension,
-               "send()",
-               "Inconsistency between expected"
-                   << " "
-                   << "(" << _localIndexCount * valueDimension << ")"
-                   << " "
-                   << "and provided"
-                   << " "
-                   << "(" << size << ")"
-                   << " "
-                   << "data sizes!");
+  assertion2(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
 
   for (auto& mapping : _mappings) {
     mapping.offset = _buffer.size();
@@ -768,32 +750,14 @@ PointToPointCommunication::receive(double* itemsToReceive,
                                    size_t size,
                                    int valueDimension) {
   if (_mappings.size() == 0) {
-    preciceCheck(size == 0 && _localIndexCount == 0,
-                 "receive()",
-                 "Can't receive anything to disconnected process!"
-                     << " "
-                     << "Size"
-                     << ":"
-                     << " " << size << ";"
-                     << " "
-                     << "Local Index Count"
-                     << ":"
-                     << " " << _localIndexCount << ".");
-
+    preciceCheck(size==0, "send()", "preCICE trys to communicate data to/from a processor that has no surface "
+                                     << "overlay with the connected participant. Please check the definition of your "
+                                     << "coupling surfaces.");
+    assertion(_localIndexCount==0);
     return;
   }
 
-  preciceCheck(size == _localIndexCount * valueDimension,
-               "receive()",
-               "Inconsistency between expected"
-                   << " "
-                   << "(" << _localIndexCount * valueDimension << ")"
-                   << " "
-                   << "and provided"
-                   << " "
-                   << "(" << size << ")"
-                   << " "
-                   << "data sizes!");
+  assertion2(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
 
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 

@@ -171,7 +171,7 @@ void QRFactorizationTest::testQRFactorization ()
   
   // ------------ reset ----------------------------
   qr_1.reset();
-  qr_1.reset(A);
+  qr_1.reset(A,A.rows());
   testQTQequalsIdentity(qr_1.matrixQ());
   // test if QR equals A
   testQRequalsA(qr_1.matrixQ(), qr_1.matrixR(), A);

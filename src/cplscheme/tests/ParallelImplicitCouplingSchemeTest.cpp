@@ -11,7 +11,9 @@
 #include "cplscheme/impl/IQNILSPostProcessing.hpp"
 #include "cplscheme/impl/MVQNPostProcessing.hpp"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
+#include "cplscheme/impl/ConstantPreconditioner.hpp"
 #include "cplscheme/SharedPointer.hpp"
+#include "cplscheme/impl/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -162,9 +164,9 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   impl::PtrConvergenceMeasure minIterationConvMeasure2 (
     new impl::MinIterationConvergenceMeasure(minIterations) );
   cplScheme.addConvergenceMeasure (
-    mesh->data()[1]->getID(), false, minIterationConvMeasure1 );
+    mesh->data()[1]->getID(), false, false, minIterationConvMeasure1 );
   cplScheme.addConvergenceMeasure (
-    mesh->data()[0]->getID(), false, minIterationConvMeasure2 );
+    mesh->data()[0]->getID(), false, false, minIterationConvMeasure2 );
   connect(nameParticipant0, nameParticipant1, nameLocalParticipant, globalCom);
 
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
@@ -248,16 +250,23 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   int    timestepsReused = 6;
   int filter = impl::BaseQNPostProcessing::QR1FILTER;
   double singularityLimit = 1e-10;
+  bool enforceInitialRelaxation = false;
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
+  std::vector<double> factors;
+  factors.resize(2,1.0);
+  std::vector<int> dims;
+  dims.resize(2,1);
+  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(dims,factors));
+
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0,1.0));
   scalings.insert(std::make_pair(1,1.0));
   mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
 
-  cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation,maxIterationsUsed,
-                                           timestepsReused, filter, singularityLimit, dataIDs, scalings);
+  cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+                                           timestepsReused, filter, singularityLimit, dataIDs, prec);
 
   //init displacements
   utils::DynVector dvalues;
@@ -279,8 +288,10 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   fvalues.append(0.1);
   fvalues.append(0.1);
   fvalues.append(0.1);
+  fvalues.append(0.1);
 
   utils::DynVector fcol1;
+  fcol1.append(0.2);
   fcol1.append(0.2);
   fcol1.append(0.2);
   fcol1.append(0.2);
@@ -310,6 +321,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
 
   utils::DynVector newdvalues;
   newdvalues.append(10.0);
@@ -320,13 +332,15 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
 
   pp.performPostProcessing(data);
 
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63855295490201413600e-01), (*data.at(0)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.09906404008709657205e-01), (*data.at(0)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78366810350762072801e+0), (*data.at(0)->values)(2));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.95742980300653179881e+00), (*data.at(0)->values)(3));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.27975917496077823410e-02), (*data.at(1)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.27975917496077823410e-02), (*data.at(1)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.27975917496077823410e-02), (*data.at(1)->values)(2));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63401340929692295845e-01), (*data.at(0)->values)(0));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.10309919173607440257e-01), (*data.at(0)->values)(1));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78402117927690717636e+00), (*data.at(0)->values)(2));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.95773243938020513610e+00), (*data.at(0)->values)(3));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.28025852497733944046e-02), (*data.at(1)->values)(0));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.28025852497733944046e-02), (*data.at(1)->values)(1));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.28025852497733944046e-02), (*data.at(1)->values)(2));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 8.28025852497733944046e-02), (*data.at(1)->values)(3));
+
 }
 
 
@@ -341,17 +355,20 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   int    timestepsReused = 6;
   int filter = impl::BaseQNPostProcessing::QR1FILTER;
   double singularityLimit = 1e-10;
+  bool enforceInitialRelaxation = false;
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
-  std::map<int, double> scalings;
-  scalings.insert(std::make_pair(0,1.0));
-  scalings.insert(std::make_pair(1,1.0));
+  std::vector<double> factors;
+  factors.resize(2,1.0);
+  std::vector<int> dims;
+  dims.resize(2,1);
+  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(dims,factors));
   mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
 
   
-  cplscheme::impl::MVQNPostProcessing pp(initialRelaxation,maxIterationsUsed,
-                                         timestepsReused, filter, singularityLimit, dataIDs, scalings);
+  cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+                                         timestepsReused, filter, singularityLimit, dataIDs, prec);
   
   //init displacements
   utils::DynVector dvalues;
@@ -373,8 +390,10 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   fvalues.append(0.1);
   fvalues.append(0.1);
   fvalues.append(0.1);
+  fvalues.append(0.1);
   
   utils::DynVector fcol1;
+  fcol1.append(0.2);
   fcol1.append(0.2);
   fcol1.append(0.2);
   fcol1.append(0.2);
@@ -404,6 +423,7 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199000000000000010214), (*data.at(1)->values)(0));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199000000000000010214), (*data.at(1)->values)(1));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199000000000000010214), (*data.at(1)->values)(2));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 0.199000000000000010214), (*data.at(1)->values)(3));
   
   
   utils::DynVector newdvalues;
@@ -415,15 +435,15 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   
   pp.performPostProcessing(data);
   
-  
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63855295490201413600e-01), (*data.at(0)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.09906404008707880848e-01), (*data.at(0)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78366810350762250437e+00), (*data.at(0)->values)(2));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.95742980300653179881e+00), (*data.at(0)->values)(3));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.27975917496077962188e-02), (*data.at(1)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.27975917496077962188e-02), (*data.at(1)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.27975917496077962188e-02), (*data.at(1)->values)(2));
-  
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63401340929695848558e-01), (*data.at(0)->values)(0));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.10309919173602111186e-01), (*data.at(0)->values)(1));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78402117927690184729e+00), (*data.at(0)->values)(2));
+  validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.95773243938020247157e+00), (*data.at(0)->values)(3));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.28025852497733250157e-02), (*data.at(1)->values)(0));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.28025852497733250157e-02), (*data.at(1)->values)(1));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.28025852497733250157e-02), (*data.at(1)->values)(2));
+  validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 8.28025852497733250157e-02), (*data.at(1)->values)(3));
+
 }
 
 #endif // not PRECICE_NO_MPI

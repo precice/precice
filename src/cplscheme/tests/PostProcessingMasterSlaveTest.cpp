@@ -25,6 +25,8 @@
 #include "cplscheme/impl/AbsoluteConvergenceMeasure.hpp"
 #include "cplscheme/impl/MinIterationConvergenceMeasure.hpp"
 #include "cplscheme/SharedPointer.hpp"
+#include "cplscheme/impl/SharedPointer.hpp"
+#include "cplscheme/impl/ConstantPreconditioner.hpp"
 #include "cplscheme/Constants.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
@@ -109,19 +111,22 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 	int    timestepsReused = 6;
 	int filter = impl::BaseQNPostProcessing::QR1FILTER;
 	double singularityLimit = 1e-10;
+	bool enforceInitialRelaxation = false;
 	std::vector<int> dataIDs;
 	dataIDs.push_back(0);
 	dataIDs.push_back(1);
-	std::map<int, double> scalings;
-	scalings.insert(std::make_pair(0,1.0));
-	scalings.insert(std::make_pair(1,1.0));
+	std::vector<double> factors;
+  factors.resize(2,1.0);
+  std::vector<int> dims;
+  dims.resize(2,1);
+  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(dims,factors));
 	std::vector<int> vertexOffsets {4, 8, 8 , 10};
 
 	mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
 	dummyMesh->setVertexOffsets(vertexOffsets);
 
-	cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation,maxIterationsUsed,
-										   timestepsReused, filter, singularityLimit, dataIDs, scalings);
+	cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+										   timestepsReused, filter, singularityLimit, dataIDs, prec);
 
 	utils::DynVector dvalues;
 	utils::DynVector dcol1;
@@ -436,19 +441,22 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	int    timestepsReused = 6;
 	int filter = impl::BaseQNPostProcessing::QR1FILTER;
 	double singularityLimit = 1e-10;
+	bool enforceInitialRelaxation = false;
 	std::vector<int> dataIDs;
 	dataIDs.push_back(0);
 	dataIDs.push_back(1);
-	std::map<int, double> scalings;
-	scalings.insert(std::make_pair(0,1.0));
-	scalings.insert(std::make_pair(1,1.0));
+	std::vector<double> factors;
+  factors.resize(2,1.0);
+  std::vector<int> dims;
+  dims.resize(2,1);
+  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(dims,factors));
 	std::vector<int> vertexOffsets {4, 8, 8 , 10};
 
 	mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
 	dummyMesh->setVertexOffsets(vertexOffsets);
 
-	cplscheme::impl::MVQNPostProcessing pp(initialRelaxation,maxIterationsUsed,
-									   timestepsReused, filter, singularityLimit, dataIDs, scalings);
+	cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
+									   timestepsReused, filter, singularityLimit, dataIDs, prec);
 
 	utils::DynVector dvalues;
 	utils::DynVector dcol1;

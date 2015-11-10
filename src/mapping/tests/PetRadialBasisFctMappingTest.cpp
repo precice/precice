@@ -26,6 +26,7 @@ PetRadialBasisFctMappingTest:: PetRadialBasisFctMappingTest()
 
 void PetRadialBasisFctMappingTest:: run()
 {
+  PRECICE_MASTER_ONLY {
     PETSC_COMM_WORLD = PETSC_COMM_SELF;
     testMethod(testPetThinPlateSplines);
     testMethod(testPetMultiquadrics);
@@ -38,6 +39,7 @@ void PetRadialBasisFctMappingTest:: run()
     testMethod(testDeadAxis2D);
     testMethod(testDeadAxis3D);
     PETSC_COMM_WORLD = MPI_COMM_WORLD;
+  }
 }
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()

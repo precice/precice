@@ -41,12 +41,13 @@ public:
    */
    BroydenPostProcessing (
       double initialRelaxation,
+      bool forceInitialRelaxation,
       int    maxIterationsUsed,
       int    timestepsReused,
       int 	 filter,
       double singularityLimit,
       std::vector<int>    dataIDs,
-      std::map<int,double>    scalings);
+      PtrPreconditioner preconditioner);
 
    /**
     * @brief Destructor, empty.
@@ -59,12 +60,6 @@ public:
     */
    virtual void initialize(DataMap& cplData);
 
-   /**
-    * @brief Performs one post-processing step.
-    *
-    * Has to be called after every implicit coupling iteration.
-    */
-   virtual void performPPSecondaryData(DataMap& cplData);
 
    /**
     * @brief Marks a iteration sequence as converged.

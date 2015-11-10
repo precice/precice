@@ -21,16 +21,18 @@ namespace precice {
 namespace utils {
 
 Event::Event(std::string eventName, Clock::duration eventDuration)
-    : name(eventName)
-    , duration(eventDuration)
-    , isStarted(false)
-    , _barrier(false) {
+  : name(eventName),
+    duration(eventDuration),
+    isStarted(false),
+    _barrier(false)
+{
   EventRegistry::put(this);
 }
 
 Event::Event(std::string eventName, bool barrier, bool autostart)
-    : _barrier(barrier) {
-  name = eventName;
+  : name(eventName),
+    _barrier(barrier)
+{
   if (not (precice::utils::MasterSlave::_slaveMode || precice::utils::MasterSlave::_masterMode) ){
     _barrier = false;
   }
@@ -257,7 +259,7 @@ void EventRegistry::printGlobalDuration()
 
   std::cout << "Global Duration = "
             << std::chrono::duration_cast<std::chrono::milliseconds>(
-                   globalDuration).count() << "ms" << std::endl;
+              globalDuration).count() << "ms" << std::endl;
 }
 
 void Events_Init()

@@ -139,6 +139,7 @@ public:
     return _maxTimesteps;
   }
 
+
   /// @brief Returns true, if timestep length is prescribed by the cpl scheme.
   virtual bool hasTimestepLength() const;
 
@@ -234,6 +235,12 @@ public:
    */
   virtual void initializeData() = 0;
 
+
+  /// @brief Returns whether the solver has to evaluate the coarse or the fine model representation
+  virtual bool isCoarseModelOptimizationActive(){
+	  return _isCoarseModelOptimizationActive;
+  }
+
   /**
    * @brief Sets order of predictor of interface values for first participant.
    *
@@ -256,6 +263,7 @@ public:
   void addConvergenceMeasure (
     int                         dataID,
     bool                        suffices,
+    int                         level,
     impl::PtrConvergenceMeasure measure );
 
   /// @brief Set a coupling iteration post-processing technique.
@@ -269,6 +277,9 @@ protected:
 
   /// @brief Sets whether explicit or implicit coupling is being done.
   CouplingMode _couplingMode;
+
+  /// @brief Sets whether the solver evaluates the fine or the coarse model representation
+  bool _isCoarseModelOptimizationActive;
 
   /// @brief Updates internal state of coupling scheme for next timestep.
   void timestepCompleted();
@@ -425,6 +436,7 @@ protected:
     int dataID;
     CouplingData* data;
     bool suffices;
+    int level;
     impl::PtrConvergenceMeasure measure;
   };
 
@@ -440,7 +452,11 @@ protected:
 
   void newConvergenceMeasurements();
 
-  bool measureConvergence();
+  bool measureConvergence(
+      std::map<int, utils::DynVector>& designSpecification);
+
+  bool measureConvergenceCoarseModelOptimization(
+      std::map<int, utils::DynVector>& designSpecification);
 
   /**
    * @brief Sets up _dataStorage to store data values of last timestep.
@@ -460,7 +476,7 @@ protected:
 
   void advanceTXTWriters();
 
-  void updateTimeAndIterations(bool convergence);
+  void updateTimeAndIterations(bool convergence, bool convergenceCoarseOptimization = true);
 
 
   int getMaxIterations() const {
@@ -477,6 +493,9 @@ protected:
   const double _eps;
 
   int _deletedColumnsPPFiltering;
+
+  /// @brief Number of  coarse model optimization iterations in current time step.
+  int _iterationsCoarseOptimization;
 
 private:
 
@@ -496,10 +515,13 @@ private:
 
   int _maxTimesteps;
 
-  /// @brief Number of iterations in current timestep.
+  /// @brief Number of iterations in current time step.
   int _iterations;
 
-  /// @brief Limit of iterations during one timestep.
+  /// @brief Number of accumulated coarse model optimization iterations in current time step.
+  int _totalIterationsCoarseOptimization;
+
+  /// @brief Limit of iterations during one time step.
   int _maxIterations;
 
   /// @brief Number of total iterations performed.

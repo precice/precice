@@ -33,7 +33,7 @@ void MinIterationConvergenceMeasureTest:: run ()
     for ( int iSeries=0; iSeries < 3; iSeries++ ) {
       measure.newMeasurementSeries ();
       for ( int iMeasurement=1; iMeasurement < 10; iMeasurement++ ) {
-        measure.measure ( emptyValues, emptyValues );
+        measure.measure ( emptyValues, emptyValues, emptyValues );
         if ( iMeasurement < 5 ) {
           validate ( ! measure.isConvergence() );
         }
