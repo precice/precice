@@ -93,6 +93,7 @@ void RequestManager:: handleRequests()
       preciceDebug("Request finalize by rank " << rankSender);
       clientCounter++;
       assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestFinalize();
         clientCounter = 0;
