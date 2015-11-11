@@ -61,13 +61,13 @@ void PostProcessingMasterSlaveTest:: run ()
     MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
-      testMethod (testVIQNILSpp);
+      //testMethod (testVIQNILSpp);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
     comm = Par::getRestrictedCommunicator(ranksWanted);
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm); //necessary to be able to re-initialize with different leading ranks
-      testMethod (testVIQNIMVJpp);
+      //testMethod (testVIQNIMVJpp);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }

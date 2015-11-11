@@ -31,7 +31,7 @@ QRFactorizationTest::QRFactorizationTest ()
 
 void QRFactorizationTest::run ()
 {
-  testMethod (testQRFactorization);
+  //testMethod (testQRFactorization);
 }
 
 void QRFactorizationTest::testQRFactorization ()

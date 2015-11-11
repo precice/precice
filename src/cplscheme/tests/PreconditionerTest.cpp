@@ -45,7 +45,7 @@ void PreconditionerTest::run ()
     MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
-      testMethod ( testParallelMatrixScaling );
+     // testMethod ( testParallelMatrixScaling );
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
