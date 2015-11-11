@@ -32,7 +32,6 @@ Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int siz
   }
 
   // receive local results from slaves
-  // TODO: rank = 0 correct?
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aReceive(itemsToSend, size, rank + _rankOffset);
     request->wait();
@@ -44,7 +43,6 @@ Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int siz
   // send reduced result to all slaves
   std::vector<Request::SharedPointer> requests;
   requests.reserve(getRemoteCommunicatorSize());
-  // TODO: rank = 0 correct?
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemsToReceive, size, rank + _rankOffset);
     requests.push_back(request);
@@ -59,7 +57,6 @@ void
 Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster) {
   preciceTrace1("allreduce(double*)", size);
 
-  // send local data to master TODO: check sizes ....
   auto request = aSend(itemsToSend, size, rankMaster);
   request->wait();
   // receive reduced data from master
@@ -73,12 +70,9 @@ void
 Communication::allreduceSum(double& itemsToSend, double& itemsToReceive) {
   preciceTrace("broadcast(double)");
 
-  std::cout<<"         Allreduce loop"<<std::endl;
-
   itemsToReceive = itemsToSend;
 
   // receive local results from slaves
-  // TODO: rank = 0 correct?
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aReceive(&itemsToSend, 1, rank + _rankOffset);
     request->wait();
@@ -88,7 +82,6 @@ Communication::allreduceSum(double& itemsToSend, double& itemsToReceive) {
   // send reduced result to all slaves
   std::vector<Request::SharedPointer> requests;
   requests.reserve(getRemoteCommunicatorSize());
-  // TODO: rank = 0 correct?
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(&itemsToReceive, 1, rank + _rankOffset);
     requests.push_back(request);
@@ -103,7 +96,6 @@ void
 Communication::allreduceSum(double& itemsToSend, double& itemsToReceive, int rankMaster) {
   preciceTrace("allreduce(double)");
 
-  // send local data to master TODO: check sizes ....
   auto request = aSend(&itemsToSend, 1, rankMaster);
   request->wait();
   // receive reduced data from master
