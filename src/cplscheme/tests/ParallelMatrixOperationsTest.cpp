@@ -49,25 +49,240 @@ void ParallelMatrixOperationsTest:: run ()
     MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
-      testMethod (testParallelMatrixMatrixOp_tarch);
+      testMethod (testParVectorOperations);
+      //testMethod (testParallelMatrixMatrixOp_tarch);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
     comm = Par::getRestrictedCommunicator(ranksWanted);
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm); //necessary to be able to re-initialize with different leading ranks
-      testMethod (testParallelMatrixMatrixOp_Eigen);
+      //testMethod (testParallelMatrixMatrixOp_Eigen);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
 }
 
 
+void ParallelMatrixOperationsTest::testParVectorOperations()
+{
+  preciceTrace ( "testParVectorOperations" );assertion ( utils::Parallel::getCommunicatorSize() == 4 );
+
+  com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIDirectCommunication());
+  utils::MasterSlave::_communication = masterSlaveCom;
+
+  utils::Parallel::synchronizeProcesses();
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    utils::Parallel::splitCommunicator("SOLIDZMaster");
+  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+    utils::Parallel::splitCommunicator("SOLIDZSlaves");
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+    utils::Parallel::splitCommunicator("SOLIDZSlaves");
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    utils::Parallel::splitCommunicator("SOLIDZSlaves");
+  }
+
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    masterSlaveCom->acceptConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 1);
+    masterSlaveCom->setRankOffset(1);
+  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+    masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 0, 3);
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+    masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 1, 3);
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 2, 3);
+  }
+
+  int n_global = 10;
+  int n_local;
+  double a;
+  double* aa = new double[2];
+  std::vector<int> vertexOffsets {0, 3, 7 , 7, 10};
+
+  // definition of vectors
+
+  Eigen::VectorXd vec1(n_global);
+  Eigen::VectorXd vec2(n_global);
+
+  // l2norm: 1.502540907218387
+  vec1 <<
+    0.422885689100085,
+    0.094229338887735,
+    0.598523668756741,
+    0.470924256358334,
+    0.695949313301608,
+    0.699887849928292,
+    0.638530758271838,
+    0.033603836066429,
+    0.068806099118051,
+    0.319599735180496;
+
+  // l2norm: 6.076423472407709
+  vec2 <<
+    2.104516338543882,
+    2.345060145175945,
+    1.506380184916943,
+    2.326775951409934,
+    1.518391207198873,
+    1.512172623678050,
+    1.836391544384709,
+    2.439901436460795,
+    1.803781441584700,
+    1.462976489192458;
+
+  // <vec1, vec2> = 7.069617899295469
+
+  // ---------- tarch ----------------------------------
+  tarch::la::DynamicVector<double> vec1Tarch (n_global);
+  tarch::la::DynamicVector<double> vec2Tarch (n_global);
+  std::vector<double> vec1Tarch_vals(10);
+  vec1Tarch_vals = {
+    0.422885689100085,
+    0.094229338887735,
+    0.598523668756741,
+    0.470924256358334,
+    0.695949313301608,
+    0.699887849928292,
+    0.638530758271838,
+    0.033603836066429,
+    0.068806099118051,
+    0.319599735180496};
+
+  std::vector<double> vec2Tarch_vals(10);
+  vec2Tarch_vals = {
+    2.104516338543882,
+    2.345060145175945,
+    1.506380184916943,
+    2.326775951409934,
+    1.518391207198873,
+    1.512172623678050,
+    1.836391544384709,
+    2.439901436460795,
+    1.803781441584700,
+    1.462976489192458};
+
+
+  // copy values
+  for(int i = 0; i < n_global; i++){
+    vec1Tarch(i) = vec1Tarch_vals[i];
+    vec2Tarch(i) = vec2Tarch_vals[i];
+  }
+  // ---------- tarch ----------------------------------
+
+
+  /*
+   * initialize MasterSlave attributes
+   */
+  if (utils::Parallel::getProcessRank() == 0) { //Master
+    utils::MasterSlave::_rank = 0;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = false;
+    utils::MasterSlave::_masterMode = true;
+
+    n_local = 3;
+    a=1;
+
+  } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
+    utils::MasterSlave::_rank = 1;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+
+    n_local = 4;
+    a=2;
+
+  } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
+    utils::MasterSlave::_rank = 2;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+
+    n_local = 0;
+    a=3;
+
+  } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
+    utils::MasterSlave::_rank = 3;
+    utils::MasterSlave::_size = 4;
+    utils::MasterSlave::_slaveMode = true;
+    utils::MasterSlave::_masterMode = false;
+
+    n_local = 3;
+    a=4;
+  }
+
+  // ------ test allreduce: ----------------------------------
+  aa[0] = a; aa[1] = a;
+  double res1 = 0;
+  double* res2 = new double[2]; res2[0] = 0; res2[1] = 0;
+  std::cout<<"send rank["<<utils::MasterSlave::_rank<<"]: "<<a<<std::endl;
+  utils::MasterSlave::allreduceSum(a, res1, 1);
+  std::cout<<"receive rank["<<utils::MasterSlave::_rank<<"]: "<<res1<<std::endl;
+  //utils::MasterSlave::allreduceSum(aa, res2, 2);
+
+  validate (tarch::la::equals(res1, 10.));
+  validate (tarch::la::equals(res2[0], 10.));
+  validate (tarch::la::equals(res2[1], 10.));
+  delete[] aa; delete[] res2;
+  // ---------------------------------------------------------
+
+  Eigen::VectorXd vec1_local(n_local);
+  Eigen::VectorXd vec2_local(n_local);
+
+  // partition and distribute
+  int off = vertexOffsets[utils::MasterSlave::_rank];
+  for (int i = 0; i < n_local; i++) {
+    vec1_local(i) = vec1(i + off);
+    vec2_local(i) = vec2(i + off);
+  }
+
+  // ---------- tarch ----------------------------------
+  tarch::la::DynamicVector<double> vec1Tarch_local (n_local);
+  tarch::la::DynamicVector<double> vec2Tarch_local (n_local);
+  for(int i = 0; i < n_local; i++){
+    vec1Tarch_local(i) = vec1Tarch(i+off);
+    vec2Tarch_local(i) = vec2Tarch(i+off);
+  }
+//  double normVec1_tarch = utils::MasterSlave::l2norm(vec1Tarch_local);
+//  double normVec2_tarch = utils::MasterSlave::l2norm(vec2Tarch_local);
+//  double dotproduct_tarch = utils::MasterSlave::dot(vec1Tarch_local, vec2Tarch_local);
+  // ---------- tarch ----------------------------------
+
+//  double normVec1 = utils::MasterSlave::l2norm(vec1_local);
+//  double normVec2 = utils::MasterSlave::l2norm(vec2_local);
+  double dotproduct = utils::MasterSlave::dot(vec1_local, vec2_local);
+
+
+//  std::cout<<"l2norm vec1: "<<normVec1<<std::endl;
+//  std::cout<<"l2norm vec2: "<<normVec2<<std::endl;
+  std::cout<<"dotproduct: "<<dotproduct<<std::endl;
+
+  // validate
+  /*
+  validate (tarch::la::equals(normVec1,   1.502540907218387));
+  validate (tarch::la::equals(normVec2,   6.076423472407709));
+  validate (tarch::la::equals(dotproduct, 7.069617899295469));
+
+  validate (tarch::la::equals(normVec1_tarch,   1.502540907218387));
+  validate (tarch::la::equals(normVec2_tarch,   6.076423472407709));
+  validate (tarch::la::equals(dotproduct_tarch, 7.069617899295469));
+*/
+  utils::Parallel::synchronizeProcesses();
+
+  // close and shutdown MasterSlave communication
+  utils::MasterSlave::_communication->closeConnection();
+  utils::MasterSlave::_slaveMode = false;
+  utils::MasterSlave::_masterMode = false;
+  utils::Parallel::clearGroups();
+  utils::MasterSlave::_communication = nullptr;
+
+}
+
 
 void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp_tarch()
 {
 	preciceTrace ( "testParallelMatrixMatrixOp_tarch" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
+	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIDirectCommunication());
 	utils::MasterSlave::_communication = masterSlaveCom;
 
 	utils::Parallel::synchronizeProcesses();
@@ -357,7 +572,7 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp_Eigen()
 {
 	preciceTrace ( "testParallelMatrixMatrixOp_tarch" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
+	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIDirectCommunication());
 	utils::MasterSlave::_communication = masterSlaveCom;
 
 	utils::Parallel::synchronizeProcesses();
