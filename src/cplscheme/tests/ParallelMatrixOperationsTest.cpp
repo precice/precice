@@ -96,7 +96,6 @@ void ParallelMatrixOperationsTest::testParVectorOperations()
   int n_global = 10;
   int n_local;
   double a;
-  double* aa = new double[2];
   std::vector<int> vertexOffsets {0, 3, 7 , 7, 10};
 
   // definition of vectors
@@ -210,14 +209,12 @@ void ParallelMatrixOperationsTest::testParVectorOperations()
     a=4;
   }
 
-  // ------ test allreduce: ----------------------------------
-  aa[0] = a; aa[1] = a;
+  // ------ test Allreduce: ----------------------------------
   double res1 = 0;
+  double* aa = new double[2];   aa[0] = a;   aa[1] = a;
   double* res2 = new double[2]; res2[0] = 0; res2[1] = 0;
-  std::cout<<"send rank["<<utils::MasterSlave::_rank<<"]: "<<a<<std::endl;
   utils::MasterSlave::allreduceSum(a, res1, 1);
-  std::cout<<"receive rank["<<utils::MasterSlave::_rank<<"]: "<<res1<<std::endl;
-  //utils::MasterSlave::allreduceSum(aa, res2, 2);
+  utils::MasterSlave::allreduceSum(aa, res2, 2);
 
   validate (tarch::la::equals(res1, 10.));
   validate (tarch::la::equals(res2[0], 10.));
@@ -242,22 +239,21 @@ void ParallelMatrixOperationsTest::testParVectorOperations()
     vec1Tarch_local(i) = vec1Tarch(i+off);
     vec2Tarch_local(i) = vec2Tarch(i+off);
   }
-//  double normVec1_tarch = utils::MasterSlave::l2norm(vec1Tarch_local);
-//  double normVec2_tarch = utils::MasterSlave::l2norm(vec2Tarch_local);
-//  double dotproduct_tarch = utils::MasterSlave::dot(vec1Tarch_local, vec2Tarch_local);
-  // ---------- tarch ----------------------------------
+  double normVec1_tarch = utils::MasterSlave::l2norm(vec1Tarch_local);
+  double normVec2_tarch = utils::MasterSlave::l2norm(vec2Tarch_local);
+  double dotproduct_tarch = utils::MasterSlave::dot(vec1Tarch_local, vec2Tarch_local);
 
-//  double normVec1 = utils::MasterSlave::l2norm(vec1_local);
-//  double normVec2 = utils::MasterSlave::l2norm(vec2_local);
+  // ---------- tarch ----------------------------------
+  double normVec1 = utils::MasterSlave::l2norm(vec1_local);
+  double normVec2 = utils::MasterSlave::l2norm(vec2_local);
   double dotproduct = utils::MasterSlave::dot(vec1_local, vec2_local);
 
 
 //  std::cout<<"l2norm vec1: "<<normVec1<<std::endl;
 //  std::cout<<"l2norm vec2: "<<normVec2<<std::endl;
-  std::cout<<"dotproduct: "<<dotproduct<<std::endl;
+//  std::cout<<"dotproduct: "<<dotproduct<<std::endl;
 
   // validate
-  /*
   validate (tarch::la::equals(normVec1,   1.502540907218387));
   validate (tarch::la::equals(normVec2,   6.076423472407709));
   validate (tarch::la::equals(dotproduct, 7.069617899295469));
@@ -265,7 +261,7 @@ void ParallelMatrixOperationsTest::testParVectorOperations()
   validate (tarch::la::equals(normVec1_tarch,   1.502540907218387));
   validate (tarch::la::equals(normVec2_tarch,   6.076423472407709));
   validate (tarch::la::equals(dotproduct_tarch, 7.069617899295469));
-*/
+
   utils::Parallel::synchronizeProcesses();
 
   // close and shutdown MasterSlave communication
