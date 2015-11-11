@@ -90,6 +90,16 @@ public:
    */
   virtual void closeConnection();
 
+  virtual void allreduceSum();
+
+  virtual void allreduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster);
+
+  virtual void allreduceSum(double* itemsToSend, double* itemsToReceive, int size);
+
+  virtual void allreduceSum(double& itemToSend, double& itemsToReceive, int rankMaster);
+
+  virtual void allreduceSum(double& itemToSend, double& itemsToReceive);
+
   virtual void broadcast();
 
   virtual void broadcast(int* itemsToSend, int size);

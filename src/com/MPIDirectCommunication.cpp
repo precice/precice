@@ -134,6 +134,47 @@ MPIDirectCommunication::getLeaderRank(std::string const& accessorName) {
 }
 
 void
+MPIDirectCommunication::allreduceSum() {
+  preciceTrace("allreduceSum()");
+
+  MPI_Allreduce(nullptr, nullptr, 0, MPI_DATATYPE_NULL, MPI_OP_NULL, _communicator);
+}
+
+void
+MPIDirectCommunication::allreduceSum(double* itemsToSend, double* itemsToReceive, int size) {
+  preciceTrace1("allreduceSum(double*)", size);
+
+  MPI_Allreduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _communicator);
+}
+
+void
+MPIDirectCommunication::allreduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster) {
+  preciceTrace1("allreduceSum(double*)", size);
+
+  MPI_Allreduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, _communicator);
+}
+
+void
+MPIDirectCommunication::allreduceSum(double& itemToSend, double& itemToReceive) {
+  preciceTrace("allreduceSum(double)");
+  //std::cout<<"         MPIAllreduce"<<std::endl;
+  //std::cout<<" item to send: "<<itemToSend<<std::endl;
+  MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _communicator);
+  //std::cout<<" item to receive: "<<itemToReceive<<std::endl;
+  //std::cout<<"------end-----"<<std::endl;
+}
+
+void
+MPIDirectCommunication::allreduceSum(double& itemToSend, double& itemToReceive, int rankMaster) {
+  preciceTrace("allreduceSum(double)");
+
+  //std::cout<<" item to send: "<<itemToSend<<std::endl;
+  MPI_Allreduce(&itemToSend, &itemToReceive, 1, MPI_DOUBLE, MPI_SUM, _communicator);
+  //std::cout<<" item to receive: "<<itemToReceive<<std::endl;
+  //std::cout<<"------end-----"<<std::endl;
+}
+
+void
 MPIDirectCommunication::broadcast() {
   preciceTrace("broadcast()");
 
