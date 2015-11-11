@@ -121,7 +121,11 @@ public:
 
   virtual void finishReceivePackage() = 0;
 
-  virtual void allreduce();
+  virtual void reduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster);
+
+  virtual void reduceSum(double* itemsToSend, double* itemsToReceive, int size);
+
+  virtual void allreduceSum();
 
   virtual void allreduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster);
 

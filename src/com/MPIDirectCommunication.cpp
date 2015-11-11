@@ -141,6 +141,22 @@ MPIDirectCommunication::allreduceSum() {
 }
 
 void
+MPIDirectCommunication::reduceSum(double* itemsToSend, double* itemsToReceive, int size) {
+  preciceTrace1("reduceSum(double*)", size);
+  int rank = -1;
+  MPI_Comm_rank ( _globalCommunicator, &rank );
+  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
+  MPI_Reduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rank, _globalCommunicator);
+}
+
+void
+MPIDirectCommunication::reduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster) {
+  preciceTrace1("reduceSum(double*)", size);
+  // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves
+  MPI_Reduce(itemsToSend, itemsToReceive, size, MPI_DOUBLE, MPI_SUM, rankMaster, _globalCommunicator);
+}
+
+void
 MPIDirectCommunication::allreduceSum(double* itemsToSend, double* itemsToReceive, int size) {
   preciceTrace1("allreduceSum(double*)", size);
   // _comunicator did't work here as we seem to have two communicators, one with the master and one with the slaves

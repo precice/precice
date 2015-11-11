@@ -15,9 +15,40 @@ tarch::logging::Log Communication::_log(
     "precice::com::Communication");
 
 
+
+/**
+ * Attention: this method modifies the input buffer.
+ */
 void
-Communication::allreduce() {
-  preciceTrace("allreduce()");
+Communication::reduceSum(double* itemsToSend, double* itemsToReceive, int size) {
+  preciceTrace1("broadcast(double*)", size);
+
+  for(int i = 0; i < size; i++){
+    itemsToReceive[i] = itemsToSend[i];
+  }
+
+  // receive local results from slaves
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+    auto request = aReceive(itemsToSend, size, rank + _rankOffset);
+    request->wait();
+    for(int i = 0; i < size; i++){
+      itemsToReceive[i] += itemsToSend[i];
+    }
+  }
+}
+
+
+void
+Communication::reduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster) {
+  preciceTrace1("allreduce(double*)", size);
+
+  auto request = aSend(itemsToSend, size, rankMaster);
+  request->wait();
+}
+
+void
+Communication::allreduceSum() {
+  preciceTrace("allreduceSum()");
 }
 
 /**

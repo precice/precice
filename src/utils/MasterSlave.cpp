@@ -206,9 +206,34 @@ void MasterSlave:: reset()
   _size = -1;
 }
 
+
+void
+MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
+  preciceTrace("reduceSum(double*)");
+
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
+
+  assertion(_communication.get() != nullptr);
+  assertion(_communication->isConnected());
+
+  Event e("MasterSlave::allreduce_sum");
+
+  if (_slaveMode) {
+    // send local result to master
+    _communication->reduceSum(sendData, rcvData, size, 0);
+  }
+
+  if (_masterMode) {
+    // receive local results from slaves, apply SUM
+    _communication->reduceSum(sendData, rcvData, size);
+  }
+}
+
 void
 MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
-  preciceTrace("allreduce_sum(double*)");
+  preciceTrace("allreduceSum(double*)");
 
   if (not _masterMode && not _slaveMode) {
     return;
@@ -232,7 +257,7 @@ MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
 
 void
 MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
-  preciceTrace("allreduce_sum(double)");
+  preciceTrace("allreduceSum(double)");
 
   if (not _masterMode && not _slaveMode) {
     return;

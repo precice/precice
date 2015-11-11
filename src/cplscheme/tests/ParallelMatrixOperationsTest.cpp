@@ -209,17 +209,25 @@ void ParallelMatrixOperationsTest::testParVectorOperations()
     a=4;
   }
 
-  // ------ test Allreduce: ----------------------------------
+  // ------ test Allreduce/ Reduce ---------------------------
   double res1 = 0;
   double* aa = new double[2];   aa[0] = a;   aa[1] = a;
   double* res2 = new double[2]; res2[0] = 0; res2[1] = 0;
+  double* res3 = new double[2]; res3[0] = 0; res3[1] = 0;
   utils::MasterSlave::allreduceSum(a, res1, 1);
   utils::MasterSlave::allreduceSum(aa, res2, 2);
+
+  utils::MasterSlave::reduceSum(aa, res3, 2);
 
   validate (tarch::la::equals(res1, 10.));
   validate (tarch::la::equals(res2[0], 10.));
   validate (tarch::la::equals(res2[1], 10.));
-  delete[] aa; delete[] res2;
+
+  if(utils::MasterSlave::_masterMode){
+    validate (tarch::la::equals(res3[0], 10.));
+    validate (tarch::la::equals(res3[1], 10.));
+  }
+  delete[] aa; delete[] res2; delete[] res3;
   // ---------------------------------------------------------
 
   Eigen::VectorXd vec1_local(n_local);
