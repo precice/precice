@@ -69,7 +69,7 @@ void SolverInterfaceTestGeometry:: run()
     testMethod(testPinelli);
 #   endif // not PRECICE_NO_PYTHON
 #   ifndef PRECICE_NO_SPIRIT2
-    testMethod(testBug);
+//    testMethod(testBug);   // excluded to speed up integration tests
 //    testMethod(testBug2);  // excluded to speed up integration tests
 #   endif // not PRECICE_NO_SPIRIT2
     testMethod(testBug3);

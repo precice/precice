@@ -43,7 +43,7 @@ equal(vector<double> const& data, vector<double> const& expectedData) {
   if (data.size() != expectedData.size())
     return false;
 
-  for (int i = 0; i < data.size(); ++i) {
+  for (size_t i = 0; i < data.size(); ++i) {
     valid &= (data[i] == expectedData[i]);
   }
 
