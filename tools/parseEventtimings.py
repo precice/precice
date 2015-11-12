@@ -63,7 +63,7 @@ def parseTimings(tStr):
 
 def parseEventlog(file):
     """ Takes a filename, parses the Eventlog and returns the data. """
-    locale.setlocale(locale.LC_TIME, "C") # Set the locale, so that strptime words as intended.
+    locale.setlocale(locale.LC_TIME, "C") # Set the locale, so that strptime works as intended.
 
     events = []
     
