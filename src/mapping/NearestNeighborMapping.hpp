@@ -17,7 +17,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param constraint [IN] Specifies mapping to be consistent or conservative.
+   * @param[in] constraint Specifies mapping to be consistent or conservative.
    */
   NearestNeighborMapping ( Constraint constraint, int dimensions );
 
@@ -28,7 +28,7 @@ public:
   virtual void computeMapping();
 
   /// Returns true, if computeMapping() has been called.
-  virtual bool hasComputedMapping();
+  virtual bool hasComputedMapping() const;
 
   /// Removes a computed mapping.
   virtual void clear();
@@ -38,8 +38,8 @@ public:
     int inputDataID,
     int outputDataID );
 
-  virtual bool doesVertexContribute(int vertexID);
-  virtual bool isProjectionMapping();
+  virtual bool doesVertexContribute(int vertexID) const;
+  virtual bool isProjectionMapping() const;
 
 private:
 

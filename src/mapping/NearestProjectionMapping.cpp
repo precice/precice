@@ -36,7 +36,7 @@ void NearestProjectionMapping:: computeMapping()
     _weights.resize(output()->vertices().size());
     for ( size_t i=0; i < output()->vertices().size(); i++ ){
       query::FindClosest findClosest(output()->vertices()[i].getCoords());
-      findClosest(*input());
+      findClosest(*input()); // Search inside the input mesh for the output vertex
       assertion(findClosest.hasFound());
       const query::ClosestElement& closest = findClosest.getClosest();
       _weights[i].clear();
@@ -63,7 +63,7 @@ void NearestProjectionMapping:: computeMapping()
   _hasComputedMapping = true;
 }
 
-bool NearestProjectionMapping:: hasComputedMapping()
+bool NearestProjectionMapping:: hasComputedMapping() const
 {
   return _hasComputedMapping;
 }
@@ -127,13 +127,13 @@ void NearestProjectionMapping:: map
 }
 
 bool NearestProjectionMapping::doesVertexContribute(
-  int vertexID)
+  int vertexID) const
 {
   preciceTrace1("doesVertexContribute()", vertexID);
   if (getConstraint() == CONSISTENT) {
     for (size_t i=0; i < output()->vertices().size(); i++) {
-      InterpolationElements& elems = _weights[i];
-      for (query::InterpolationElement& elem : elems) {
+      const InterpolationElements& elems = _weights[i];
+      for (const query::InterpolationElement& elem : elems) {
         if (elem.element->getID()==vertexID && elem.weight!=0.0) {
           return true;
         }
@@ -143,8 +143,8 @@ bool NearestProjectionMapping::doesVertexContribute(
   else {
     assertion1(getConstraint() == CONSERVATIVE, getConstraint());
     for (size_t i=0; i < input()->vertices().size(); i++) {
-      InterpolationElements& elems = _weights[i];
-      for (query::InterpolationElement& elem : elems) {
+      const InterpolationElements& elems = _weights[i];
+      for (const query::InterpolationElement& elem : elems) {
         if (elem.element->getID()==vertexID){ // && elem.weight!=0.0){
           return true;
         }
@@ -154,7 +154,7 @@ bool NearestProjectionMapping::doesVertexContribute(
   return false;
 }
 
-bool NearestProjectionMapping:: isProjectionMapping()
+bool NearestProjectionMapping:: isProjectionMapping() const
 {
   return true;
 }

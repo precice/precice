@@ -50,7 +50,7 @@ public:
   virtual void computeMapping();
 
   /// Returns true, if computeMapping() has been called.
-  virtual bool hasComputedMapping();
+  virtual bool hasComputedMapping() const;
 
   /// Removes a computed mapping.
   virtual void clear();
@@ -266,7 +266,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-bool RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping()
+bool RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping() const
 {
   return _hasComputedMapping;
 }

@@ -64,7 +64,7 @@ public:
   virtual void computeMapping();
 
   /// @brief Returns true, if computeMapping() has been called.
-  virtual bool hasComputedMapping();
+  virtual bool hasComputedMapping() const;
 
   /// @brief Removes a computed mapping.
   virtual void clear();
@@ -101,7 +101,7 @@ private:
   // FIXME: Hack to get global index also when MasterSlave mode is not enabled.
   void addGlobalIndex(mesh::PtrMesh &mesh);
 
-  virtual bool doesVertexContribute(int vertexID);
+  virtual bool doesVertexContribute(int vertexID) const;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -464,7 +464,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping()
+bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping() const
 {
   return _hasComputedMapping;
 }
@@ -586,7 +586,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int vertexID)
+bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int vertexID) const
 {
   // FIXME: Use a sane calculation here
   preciceTrace(__func__);
