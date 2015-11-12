@@ -111,7 +111,6 @@ void ParallelMatrixOperations::_multiplyNM(
 	for(int i = 0; i < leftMatrix.rows(); i++){
 	  int rank = 0;
 	  // find rank of processor that stores the result
-	  // the second while is necessary if processors with no vertices are present
 	  // Note: the >'=' here is crucial: In case some procs do not have any vertices,
 	  // this while loop continues incrementing rank if entries in offsets are equal, i.e.,
 	  // it runs to the next non-empty proc.
@@ -128,8 +127,6 @@ void ParallelMatrixOperations::_multiplyNM(
 		  for(int s = 0; s < rightMatrix.rows(); s++){
 			  rMCol(s) = rightMatrix(s,j);
 		  }
-
-		  // TODO: better: implement a reduce-operation (no loop over all slaves)
 		  double res_ij = utils::MasterSlave::dot(lMRow, rMCol);
 
 		  // find proc that needs to store the result.
@@ -276,8 +273,6 @@ void ParallelMatrixOperations::multiply
 			  for (int s = 0; s < A.cols(); s++) {
 				  Arow(s) = A(i,s);
 			  }
-
-			  // TODO: better: implement a reduce-operation (no loop over all slaves)
 			  double up_ij = utils::MasterSlave::dot(Arow, v);
 
 			  // find proc that needs to store the result.

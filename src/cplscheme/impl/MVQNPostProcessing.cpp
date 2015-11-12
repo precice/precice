@@ -235,6 +235,10 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 			assertion1(Q.size() == 0, Q.size());
 	}
 
+	/**
+	 *  (1) computation of matrix Z = (V^TV)^-1 * V^T as solution to the equation
+	 *      R*z = Q^T(i) for all columns i,  via back substitution.
+	 */
 	Event e_qr("solve Z = (V^TV)^-1V^T via QR", true, true); // time measurement, barrier
 	for (int i = 0; i < Q.rows(); i++) {
 		Eigen::VectorXd Qrow = Q.row(i);
@@ -245,12 +249,10 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
 
 	/**
-	*  (1) Multiply J_prev * V =: W_tilde
+	*  (2) Multiply J_prev * V =: W_tilde
 	*/
 	Event e_WtilV("compute W_til = (W + J_prev*V)", true, true); // time measurement, barrier
-
-	assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());
-	assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
+	assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
 	// TODO: transpose V efficiently using blocking in parallel
 	//       such that multiplication is cache efficient
@@ -268,7 +270,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	e_WtilV.stop();
 
 	/**
-	*  (2) compute invJacobian = W_til*Z
+	*  (3) compute invJacobian = W_til*Z
 	*
 	*  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution
 	*  and W_til = (W - J_inv_n*V)
@@ -285,7 +287,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	_invJacobian = _invJacobian + _oldInvJacobian;
 
 	/**
- 	 *  (3) solve delta_x = - J_inv * res
+ 	 *  (4) solve delta_x = - J_inv * res
 	 */
 	Eigen::VectorXd res_tilde(_residuals.size());
   Eigen::VectorXd xUp(_residuals.size());
