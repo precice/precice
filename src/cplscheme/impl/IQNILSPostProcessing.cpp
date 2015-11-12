@@ -217,6 +217,22 @@ void IQNILSPostProcessing::computeQNUpdate
 	   // reserve memory for c
 	   __c.append(_local_b.size(), 0.0);
 
+	   if(utils::MasterSlave::_slaveMode)  // assertion for safety
+	     assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+
+	   if(utils::MasterSlave::_masterMode){
+	     assertion1(_global_b.size() == 0, _global_b.size()); assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+	   }
+	   _global_b.append(_local_b.size(), 0.0); // init output buffer
+
+	   // do a reduce operation to sum up all the _local_b vectors
+	   utils::MasterSlave::reduceSum(&_local_b(0), &_global_b(0), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
+
+	   // back substitution R*c = b only in master node
+	   if(utils::MasterSlave::_masterMode)
+	     backSubstitution(__R, _global_b, __c);
+
+	   /**
 	  if(utils::MasterSlave::_slaveMode){
 		  assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 		  utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
@@ -235,6 +251,7 @@ void IQNILSPostProcessing::computeQNUpdate
 		// backsubstitution only in master
 		backSubstitution(__R, _global_b, __c);
 	  }
+	  */
 
 	  // broadcast coefficients c to all slaves
 	  utils::MasterSlave::broadcast(&__c(0), __c.size());

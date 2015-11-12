@@ -19,7 +19,7 @@ ValuePreconditioner:: ValuePreconditioner
    _firstTimestep(true)
 {}
 
-void ValuePreconditioner::update(bool timestepComplete, DataValues& oldValues, DataValues& res)
+void ValuePreconditioner::update(bool timestepComplete, const DataValues& oldValues, const DataValues& res)
 {
   preciceTrace("update()");
 
@@ -52,7 +52,7 @@ void ValuePreconditioner::update(bool timestepComplete, DataValues& oldValues, D
   }
 }
 
-void ValuePreconditioner::update(bool timestepComplete, Eigen::VectorXd& oldValues, Eigen::VectorXd& res)
+void ValuePreconditioner::update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res)
 {
   preciceTrace("update()");
 

@@ -55,6 +55,10 @@ double MasterSlave:: l2norm(const DynVector& vec)
     localSum2 += vec[i]*vec[i];
   }
 
+  // localSum is modified, do not use afterwards
+  allreduceSum(localSum2, globalSum2, 1);
+
+  /* old loop over all slaves solution
   if(_slaveMode){
     _communication->send(localSum2, 0);
     _communication->receive(globalSum2, 0);
@@ -69,6 +73,7 @@ double MasterSlave:: l2norm(const DynVector& vec)
       _communication->send(globalSum2, rankSlave);
     }
   }
+  */
   return sqrt(globalSum2);
 }
 
@@ -89,6 +94,9 @@ double MasterSlave:: l2norm(const EigenVector& vec)
     localSum2 += vec(i)*vec(i);
   }
 
+  // localSum is modified, do not use afterwards
+  allreduceSum(localSum2, globalSum2, 1);
+   /* old loop over all slaves solution
   if(_slaveMode){
     _communication->send(localSum2, 0);
     _communication->receive(globalSum2, 0);
@@ -103,6 +111,7 @@ double MasterSlave:: l2norm(const EigenVector& vec)
       _communication->send(globalSum2, rankSlave);
     }
   }
+  */
   return sqrt(globalSum2);
 }
 
@@ -125,6 +134,10 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
     localSum += vec1[i]*vec2[i];
   }
 
+  // localSum is modified, do not use afterwards
+  allreduceSum(localSum, globalSum, 1);
+
+  /* old loop over all slaves solution
   if(_slaveMode){
     _communication->send(localSum, 0);
     _communication->receive(globalSum, 0);
@@ -139,6 +152,7 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
       _communication->send(globalSum, rankSlave);
     }
   }
+  */
   return globalSum;
 }
 
@@ -160,6 +174,11 @@ double MasterSlave:: dot(const EigenVector& vec1, const EigenVector& vec2)
     localSum += vec1(i)*vec2(i);
   }
 
+  // localSum is modified, do not use afterwards
+  allreduceSum(localSum, globalSum, 1);
+
+  // old loop over all slaves solution
+  /*
   if(_slaveMode){
     _communication->send(localSum, 0);
     _communication->receive(globalSum, 0);
@@ -174,6 +193,7 @@ double MasterSlave:: dot(const EigenVector& vec1, const EigenVector& vec2)
       _communication->send(globalSum, rankSlave);
     }
   }
+  */
   return globalSum;
 }
 
@@ -184,6 +204,79 @@ void MasterSlave:: reset()
   _slaveMode = false;
   _rank = -1;
   _size = -1;
+}
+
+
+void
+MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
+  preciceTrace("reduceSum(double*)");
+
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
+
+  assertion(_communication.get() != nullptr);
+  assertion(_communication->isConnected());
+
+  Event e("MasterSlave::allreduce_sum");
+
+  if (_slaveMode) {
+    // send local result to master
+    _communication->reduceSum(sendData, rcvData, size, 0);
+  }
+
+  if (_masterMode) {
+    // receive local results from slaves, apply SUM
+    _communication->reduceSum(sendData, rcvData, size);
+  }
+}
+
+void
+MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
+  preciceTrace("allreduceSum(double*)");
+
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
+
+  assertion(_communication.get() != nullptr);
+  assertion(_communication->isConnected());
+
+  Event e("MasterSlave::allreduce_sum");
+
+  if (_slaveMode) {
+    // send local result to master, receive reduced result from master
+    _communication->allreduceSum(sendData, rcvData, size, 0);
+  }
+
+  if (_masterMode) {
+    // receive local results from slaves, apply SUM, send reduced result to slaves
+    _communication->allreduceSum(sendData, rcvData, size);
+  }
+}
+
+void
+MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
+  preciceTrace("allreduceSum(double)");
+
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
+
+  assertion(_communication.get() != nullptr);
+  assertion(_communication->isConnected());
+
+  Event e("MasterSlave::allreduce_sum");
+
+  if (_slaveMode) {
+    // send local result to master, receive reduced result from master
+    _communication->allreduceSum(sendData, rcvData, 0);
+  }
+
+  if (_masterMode) {
+    // receive local results from slaves, apply SUM, send reduced result to slaves
+    _communication->allreduceSum(sendData, rcvData);
+  }
 }
 
 void

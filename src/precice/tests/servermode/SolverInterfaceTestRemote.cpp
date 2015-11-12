@@ -56,8 +56,8 @@ void SolverInterfaceTestRemote:: run()
     if ( Par::getProcessRank() <= 2 ){
       Par::setGlobalCommunicator(comm);
       testMethod(testCouplingModeWithOneServer);
-      //testMethod(testGeometryModeParallel);
-      //testMethod(testGeometryModeParallelStationaryMapping);
+      testMethod(testGeometryModeParallel);
+      testMethod(testGeometryModeParallelStationaryMapping);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -67,7 +67,7 @@ void SolverInterfaceTestRemote:: run()
     Par::Communicator comm = Par::getRestrictedCommunicator(ranksWanted);
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
-      //testMethod(testCouplingModeParallelWithOneServer);
+      testMethod(testCouplingModeParallelWithOneServer);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }

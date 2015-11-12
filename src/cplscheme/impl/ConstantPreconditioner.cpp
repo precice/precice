@@ -35,13 +35,13 @@ void ConstantPreconditioner::initialize(int N){
   }
 }
 
-void ConstantPreconditioner::update(bool timestepComplete, DataValues& oldValues, DataValues& res)
+void ConstantPreconditioner::update(bool timestepComplete, const DataValues& oldValues, const DataValues& res)
 {
   preciceTrace("update()");
   //nothing to do here
 }
 
-void ConstantPreconditioner::update(bool timestepComplete, Eigen::VectorXd& oldValues, Eigen::VectorXd& res)
+void ConstantPreconditioner::update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res)
 {
   preciceTrace("update()");
   //nothing to do here

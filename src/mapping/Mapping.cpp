@@ -27,11 +27,11 @@ void Mapping:: setMeshes
   _output = output;
 }
 
-const mesh::PtrMesh& Mapping:: getInputMesh(){
+const mesh::PtrMesh& Mapping:: getInputMesh() const {
   return _input;
 }
 
-const mesh::PtrMesh& Mapping:: getOutputMesh(){
+const mesh::PtrMesh& Mapping:: getOutputMesh() const {
   return _output;
 }
 
@@ -50,12 +50,12 @@ Mapping::MeshRequirement Mapping:: getOutputRequirement() const
   return _outputRequirement;
 }
 
-mesh::PtrMesh Mapping:: input()
+mesh::PtrMesh Mapping:: input() const
 {
   return _input;
 }
 
-mesh::PtrMesh Mapping:: output()
+mesh::PtrMesh Mapping:: output() const
 {
   return _output;
 }
@@ -75,12 +75,12 @@ void Mapping:: setOutputRequirement
 }
 
 bool Mapping:: doesVertexContribute(
-  int vertexID)
+  int vertexID) const
 {
   return true;
 }
 
-bool Mapping:: isProjectionMapping()
+bool Mapping:: isProjectionMapping() const
 {
   return false;
 }

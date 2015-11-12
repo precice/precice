@@ -33,7 +33,7 @@ void NearestNeighborMapping:: computeMapping()
     for ( size_t i=0; i < verticesSize; i++ ){
       const utils::DynVector& coords = outputVertices[i].getCoords();
       query::FindClosestVertex find(coords);
-      find(*input());
+      find(*input()); // Search inside the input mesh for the output vertex
       assertion(find.hasFound());
       _vertexIndices[i] = find.getClosestVertex().getID();
     }
@@ -55,7 +55,7 @@ void NearestNeighborMapping:: computeMapping()
   _hasComputedMapping = true;
 }
 
-bool NearestNeighborMapping:: hasComputedMapping()
+bool NearestNeighborMapping:: hasComputedMapping() const
 {
   preciceTrace1("hasComputedMapping()", _hasComputedMapping);
   return _hasComputedMapping;
@@ -108,12 +108,12 @@ void NearestNeighborMapping:: map
 }
 
 bool NearestNeighborMapping::doesVertexContribute(
-  int vertexID)
+  int vertexID) const
 {
   return utils::contained(vertexID,_vertexIndices);
 }
 
-bool NearestNeighborMapping:: isProjectionMapping()
+bool NearestNeighborMapping:: isProjectionMapping() const
 {
   return true;
 }

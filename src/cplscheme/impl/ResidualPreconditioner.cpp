@@ -18,7 +18,7 @@ ResidualPreconditioner:: ResidualPreconditioner
    Preconditioner (dimensions)
 {}
 
-void ResidualPreconditioner::update(bool timestepComplete, DataValues& oldValues, DataValues& res)
+void ResidualPreconditioner::update(bool timestepComplete, const DataValues& oldValues, const DataValues& res)
 {
   preciceTrace("update()");
   if(not timestepComplete){
@@ -51,7 +51,7 @@ void ResidualPreconditioner::update(bool timestepComplete, DataValues& oldValues
   }
 }
 
-void ResidualPreconditioner::update(bool timestepComplete, Eigen::VectorXd& oldValues, Eigen::VectorXd& res)
+void ResidualPreconditioner::update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res)
 {
   preciceTrace("update()");
   if(not timestepComplete){

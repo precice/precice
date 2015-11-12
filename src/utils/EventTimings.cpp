@@ -179,9 +179,10 @@ void EventRegistry::print(std::ostream &out, bool terse)
     Event::Clock::duration globalDuration = globalStop - globalStart;
 
     std::time_t currentTime = std::time(nullptr);
-    out << "Run finished at " << std::asctime(std::localtime(&currentTime));
 
     if (not terse) {
+      out << "Run finished at " << std::asctime(std::localtime(&currentTime));
+
       out << "Global runtime = "
           << std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count() << "ms / "
           << std::chrono::duration_cast<std::chrono::seconds>(globalDuration).count() << "s"
@@ -218,6 +219,8 @@ void EventRegistry::print(std::ostream &out, bool terse)
     }
     else // terse output
     {
+      out << "# Run finished at " << std::asctime(std::localtime(&currentTime));
+      
       auto global = std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count();
 
       out << "# Eventname Count Total Max Min Avg T%" << "\n";

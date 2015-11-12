@@ -58,6 +58,12 @@ public:
 
   static void reset();
 
+  static void reduceSum(double* sendData, double* rcvData, int size);
+
+  static void allreduceSum(double* sendData, double* rcvData, int size);
+
+  static void allreduceSum(double& sendData, double& rcvData, int size);
+
   static void broadcast(bool& value);
 
   static void broadcast(double& value);

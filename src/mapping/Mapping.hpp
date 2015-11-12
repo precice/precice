@@ -83,9 +83,9 @@ public:
     const mesh::PtrMesh& input,
     const mesh::PtrMesh& output );
 
-  const mesh::PtrMesh& getInputMesh();
+  const mesh::PtrMesh& getInputMesh() const;
 
-  const mesh::PtrMesh& getOutputMesh();
+  const mesh::PtrMesh& getOutputMesh() const;
 
   /**
    * @brief Returns the constraint (consistent/conservative) of the mapping.
@@ -112,7 +112,7 @@ public:
    *
    * After a call to clear(), a computed mapping is removed and false returned.
    */
-  virtual bool hasComputedMapping() =0;
+  virtual bool hasComputedMapping() const =0;
 
   /**
    * @brief Removes a computed mapping.
@@ -135,24 +135,24 @@ public:
   /**
    * @brief Returns true if the vertex actually contributes to the mapping.
    */
-  virtual bool doesVertexContribute(int vertexID);
+  virtual bool doesVertexContribute(int vertexID) const;
 
   /**
    * @brief Returns true if the mapping is a projection mapping.
    */
-  virtual bool isProjectionMapping();
+  virtual bool isProjectionMapping() const;
 
 protected:
 
   /**
    * @brief Returns pointer to input mesh.
    */
-  mesh::PtrMesh input();
+  mesh::PtrMesh input() const;
 
   /**
    * @brief Returns pointer to output mesh.
    */
-  mesh::PtrMesh output();
+  mesh::PtrMesh output() const;
 
   /**
    * @brief Sets the mesh requirement for the input mesh.

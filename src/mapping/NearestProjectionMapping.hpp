@@ -30,7 +30,7 @@ public:
    */
   virtual void computeMapping();
 
-  virtual bool hasComputedMapping();
+  virtual bool hasComputedMapping() const;
 
   /**
    * @brief Removes a computed mapping.
@@ -43,15 +43,15 @@ public:
    * Preconditions:
    * - computeMapping() has been called
    *
-   * @param inputDataID [IN] Data ID of input data values to be mapped from.
-   * @param outputDataID [IN] Data ID of output data values to be mapped to.
+   * @param[in] inputDataID Data ID of input data values to be mapped from.
+   * @param[in] outputDataID Data ID of output data values to be mapped to.
    */
   virtual void map (
     int inputDataID,
     int outputDataID );
 
-  virtual bool doesVertexContribute(int vertexID);
-  virtual bool isProjectionMapping();
+  virtual bool doesVertexContribute(int vertexID) const;
+  virtual bool isProjectionMapping() const;
 
 private:
 

@@ -59,6 +59,8 @@ private:
    void testParallelMatrixMatrixOp_tarch();
    void testParallelMatrixMatrixOp_Eigen();
 
+   void testParVectorOperations();
+
    void validate_result_equals_reference(
 			tarch::la::DynamicMatrix<double>& result_local,
 			tarch::la::DynamicMatrix<double>& reference_global,
