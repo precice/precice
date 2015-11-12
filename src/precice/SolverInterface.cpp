@@ -131,12 +131,12 @@ int SolverInterface:: getDataID
 
 bool SolverInterface::hasToEvaluateSurrogateModel()
 {
-  _impl->hasToEvaluateSurrogateModel();
+  return _impl->hasToEvaluateSurrogateModel();
 }
 
 bool SolverInterface::hasToEvaluateFineModel()
 {
-  _impl->hasToEvaluateFineModel();
+  return _impl->hasToEvaluateFineModel();
 }
 
 int SolverInterface:: inquirePosition
