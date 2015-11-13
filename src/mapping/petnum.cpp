@@ -35,7 +35,7 @@ Vector::Vector(Vector &v, std::string name)
 Vector::Vector(Mat &m, std::string name)
 {
   PetscErrorCode ierr = 0;
-  ierr = MatCreateVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
+  ierr = MatGetVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
   setName(name);
 }
 
@@ -43,10 +43,10 @@ Vector::Vector(Matrix &m, std::string name, LEFTRIGHT type)
 {
   PetscErrorCode ierr = 0;
   if (type == LEFTRIGHT::LEFT) {
-    ierr = MatCreateVecs(m.matrix, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
+    ierr = MatGetVecs(m.matrix, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
   }
   else {
-    ierr = MatCreateVecs(m.matrix, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
+    ierr = MatGetVecs(m.matrix, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
   }
   setName(name);
 }
