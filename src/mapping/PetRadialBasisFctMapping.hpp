@@ -18,6 +18,7 @@
 using std::cout;
 using std::endl;
 #include "utils/prettyprint.hpp"
+#include "utils/EventTimings.hpp"
 
 
 namespace precice {
@@ -165,6 +166,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
+  precice::utils::Event e(__func__);
   preciceTrace("computeMapping()");
 
   assertion2(input()->getDimensions() == output()->getDimensions(),
@@ -458,7 +460,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // }
 
   _hasComputedMapping = true;
-  _matrixA.view();
+  // _matrixA.view();
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -483,6 +485,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int inputDataID,
   int outputDataID )
 {
+  precice::utils::Event e(__func__);
   preciceTrace2("map()", inputDataID, outputDataID);
   assertion(_hasComputedMapping);
   assertion2(input()->getDimensions() == output()->getDimensions(),
@@ -519,7 +522,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
         VecSetValueLocal(in.vector, globalIndex, inValues[index*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
       }
       in.assemble();
-      in.view();
+      // in.view();
 
       ierr = MatMultTranspose(_matrixA.matrix, in.vector, Au.vector); CHKERRV(ierr);
       ierr = KSPSolve(_solver, Au.vector, out.vector); CHKERRV(ierr);
@@ -561,7 +564,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
         VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(index-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
       }
       in.assemble();
-      in.view();
+      // in.view();
 
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
