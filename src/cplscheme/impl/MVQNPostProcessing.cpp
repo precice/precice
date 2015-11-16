@@ -85,7 +85,7 @@ void MVQNPostProcessing:: initialize
   DataMap& cplData )
 {
   preciceTrace(__func__);
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("MVQNPostProcessing::initialize()", true, true); // time measurement, barrier
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
   
@@ -251,7 +251,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	/**
 	*  (2) Multiply J_prev * V =: W_tilde
 	*/
-	Event e_WtilV("compute W_til = (W + J_prev*V)", true, true); // time measurement, barrier
+	Event e_WtilV("compute W_til = (W - J_prev*V)", true, true); // time measurement, barrier
 	assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
 	// TODO: transpose V efficiently using blocking in parallel
@@ -299,7 +299,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	Event e_up("compute update = J*(-res)", true, true); // time measurement, barrier
 	// multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
 	//                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-	_parMatrixOps.multiply(_invJacobian, res_tilde, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1);
+	_parMatrixOps.multiply(_invJacobian, res_tilde, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
   e_up.stop();
 
 	for(int i = 0; i < xUp.size(); i++)
