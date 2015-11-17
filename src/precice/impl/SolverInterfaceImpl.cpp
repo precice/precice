@@ -351,6 +351,7 @@ double SolverInterfaceImpl:: initialize()
           m2n->acceptSlavesConnection(localName, remoteName);
         }
       }
+      preciceInfo("initialize()", "Slaves are connected" );
     }
 
     std::set<action::Action::Timing> timings;
@@ -2026,7 +2027,7 @@ void SolverInterfaceImpl:: mapWrittenData()
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     if (rightTime && not hasComputed){
-      preciceDebug("Compute write mapping from mesh \""
+      preciceInfo("mapWrittenData()","Compute write mapping from mesh \""
           << _accessor->meshContext(context.fromMeshID).mesh->getName()
           << "\" to mesh \""
           << _accessor->meshContext(context.toMeshID).mesh->getName()
@@ -2084,7 +2085,7 @@ void SolverInterfaceImpl:: mapReadData()
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     if (mapNow && not hasComputed){
-      preciceDebug("Compute read mapping from mesh \""
+      preciceInfo("mapReadData()","Compute read mapping from mesh \""
               << _accessor->meshContext(context.fromMeshID).mesh->getName()
               << "\" to mesh \""
               << _accessor->meshContext(context.toMeshID).mesh->getName()
