@@ -18,6 +18,7 @@
 using std::cout;
 using std::endl;
 #include "utils/prettyprint.hpp"
+#include "utils/EventTimings.hpp"
 
 
 namespace precice {
@@ -169,6 +170,7 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
   preciceTrace("computeMapping()");
+  precice::utils::Event e(__func__);
 
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
@@ -486,6 +488,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int outputDataID )
 {
   preciceTrace2("map()", inputDataID, outputDataID);
+  precice::utils::Event e(__func__);
   assertion(_hasComputedMapping);
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
