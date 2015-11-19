@@ -524,7 +524,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
         VecSetValueLocal(in.vector, globalIndex, inValues[index*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
       }
       in.assemble();
-      in.view();
+      //in.view();
 
       ierr = MatMultTranspose(_matrixA.matrix, in.vector, Au.vector); CHKERRV(ierr);
       ierr = KSPSolve(_solver, Au.vector, out.vector); CHKERRV(ierr);
@@ -566,7 +566,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
         VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(index-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
       }
       in.assemble();
-      in.view();
+      //in.view();
 
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
