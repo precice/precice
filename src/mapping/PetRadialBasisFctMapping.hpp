@@ -317,8 +317,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
 
     PetscInt colNum = 0;  // holds the number of columns
-    for (size_t j=iVertex.getID(); j < inputSize; j++) {
-      distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
+    for (mesh::Vertex& vj : inMesh->vertices()) {
+      distance = iVertex.getCoords() - vj.getCoords();
       for (int d = 0; d < dimensions; d++) {
         if (_deadAxis[d]) {
           distance[d] = 0;
@@ -327,15 +327,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       double coeff = _basisFunction.evaluate(norm2(distance));
       if (not tarch::la::equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
-        colIdx[colNum] = inMesh->vertices()[j].getGlobalIndex() + polyparams; // column of entry is the globalIndex
+        colIdx[colNum] = vj.getGlobalIndex() + polyparams; // column of entry is the globalIndex
         colNum++;
       }
       #ifdef Asserts
       if (coeff == std::numeric_limits<double>::infinity()) {
         preciceError("computeMapping()", "C matrix element has value inf. "
-                     << "i = " << i << ", j = " << j
+                     << "i = " << i
                      << ", coords i = " << iVertex.getCoords() << ", coords j = "
-                     << inMesh->vertices()[j].getCoords() << ", dist = "
+                     << vj.getCoords() << ", dist = "
                      << distance << ", norm2 = " << norm2(distance) << ", rbf = "
                      << coeff
                      << ", rbf type = " << typeid(_basisFunction).name());
@@ -460,7 +460,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // }
 
   _hasComputedMapping = true;
-  _matrixA.view();
+  //_matrixA.view();
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
