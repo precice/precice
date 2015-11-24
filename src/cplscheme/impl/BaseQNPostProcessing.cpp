@@ -90,8 +90,8 @@ BaseQNPostProcessing::BaseQNPostProcessing
       "Number of old timesteps to be reused for QN "
       << "post-processing has to be >= 0!");
 
-  _infostream.open("postProcessingInfo.txt", std::ios_base::out);
-  _infostream << std::setprecision(16);
+  //_infostream.open("postProcessingInfo.txt", std::ios_base::out);
+  //_infostream << std::setprecision(16);
   _qrV.setfstream(&_infostream);
 }
 
@@ -107,7 +107,7 @@ void BaseQNPostProcessing::initialize(
     DataMap& cplData)
 {
   preciceTrace1("initialize()", cplData.size());
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("BaseQNPostProcessing::initialize", true, true); // time measurement, barrier
 
   size_t entries = 0;
 
@@ -565,29 +565,29 @@ void BaseQNPostProcessing::iterationsConverged
 
   // debugging info, remove if not needed anymore:
   // -----------------------
-  _infostream << "\n ---------------- deletedColumns:" << deletedColumns
-      << "\n\n ### time step:" << tSteps + 1 << " ###" << std::endl;
+//  _infostream << "\n ---------------- deletedColumns:" << deletedColumns
+//      << "\n\n ### time step:" << tSteps + 1 << " ###" << std::endl;
   its = 0;
   tSteps++;
   deletedColumns = 0;
   // -----------------------
-
-
+ 
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
   // convergence was achieved
   concatenateCouplingData(cplData);
   updateDifferenceMatrices(cplData);
 
+  Event e_upPrecond("iterConv: update Precond", true, true);
   // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
   assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
   for (int i = 0; i < _designSpecification.size(); i++)
         _residuals(i) -= _designSpecification(i);
 
   _preconditioner->update(true, _values, _residuals);
+  e_upPrecond.stop();
 
   // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
-
   _firstTimeStep = false;
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
@@ -602,13 +602,14 @@ void BaseQNPostProcessing::iterationsConverged
   preciceDebug(stream.str());
 # endif // Debug
 
-
   // doing specialized stuff for the corresponding post processing scheme after 
   // convergence of iteration i.e.:
   // - analogously to the V,W matrices, remove columns from matrices for secondary data
   // - save the old jacobian matrix
+  Event e_spec("specializedIterConverged", true, true);
   specializedIterationsConverged(cplData);
-
+  e_spec.stop();
+  
   if (_timestepsReused == 0) {
 
     if(_forceInitialRelaxation)
@@ -729,17 +730,17 @@ void BaseQNPostProcessing::writeInfo
 {
   if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
     // serial post processing mode, server mode
-    _infostream << s;
+//    _infostream << s;
 
     // parallel post processing, master-slave mode
   } else {
     if (not allProcs) {
-      if (utils::MasterSlave::_masterMode) _infostream << s;
+//      if (utils::MasterSlave::_masterMode) _infostream << s;
     } else {
-      _infostream << s;
+//      _infostream << s;
     }
   }
-  _infostream << std::flush;
+//  _infostream << std::flush;
 }
 
 }}} // namespace precice, cplscheme, impl

@@ -19,7 +19,9 @@
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
 #include "com/MPIPortsCommunication.hpp"
+#include "com/SocketCommunication.hpp"
 #include "com/Communication.hpp"
+#include "utils/Publisher.hpp"
 #include "Eigen/Dense"
 
 #include <time.h>
@@ -29,7 +31,7 @@
 //#include "utils/NumericalCompare.hpp"
 
 using precice::utils::Event;
-
+using precice::utils::Publisher;
 
 namespace precice {
 namespace cplscheme {
@@ -90,28 +92,55 @@ void MVQNPostProcessing:: initialize
   BaseQNPostProcessing::initialize(cplData);
   
 
-  if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){
-		/*
-		 * TODO: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
-		 * 				Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
-		 * 				The master-slave communication should be modified such that direct communication between
-		 * 				slaves is possible (via MPIDirect)
-		 */
+  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+    /*
+     * TODO: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
+     * 				Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
+     * 				The master-slave communication should be modified such that direct communication between
+     * 				slaves is possible (via MPIDirect)
+     */
 
+#ifdef SuperMUC_WORK
+    try {
+      // auto addressDirectory = std::to_string(".");
+      if(utils::MasterSlave::_masterMode) {
+        Event e("CyclicComm::acceptConnection/createDirectories");
+        for(int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
+          Publisher::createDirectory(std::string(".") + "/" + "." + "cyclicComm-" + std::to_string(rank) + ".address");
+        }
+      }
+      utils::Parallel::synchronizeProcesses();
+    } catch(...) {
+    }
+#endif
 
-		 _cyclicCommLeft = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
-		 _cyclicCommRight = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
+    _cyclicCommLeft = com::Communication::SharedPointer(new com::MPIPortsCommunication());
+    _cyclicCommRight = com::Communication::SharedPointer(new com::MPIPortsCommunication());
+    //_cyclicCommLeft = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
+    //_cyclicCommRight = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
 
-		 // initialize cyclic communication between successive slaves
-		int prevProc = (utils::MasterSlave::_rank-1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank-1;
-		if((utils::MasterSlave::_rank % 2) == 0)
-		{
-		  _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1 );
-		  _cyclicCommRight->requestConnection("cyclicComm-" +  std::to_string(utils::MasterSlave::_rank), "", 0, 1 );
-		}else{
-		  _cyclicCommRight->requestConnection("cyclicComm-" +  std::to_string(utils::MasterSlave::_rank), "", 0, 1 );
-		  _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1 );
-		}
+    // initialize cyclic communication between successive slaves
+    int prevProc = (utils::MasterSlave::_rank - 1 < 0) ? utils::MasterSlave::_size - 1 : utils::MasterSlave::_rank - 1;
+    if ((utils::MasterSlave::_rank % 2) == 0)
+        {
+#ifdef SuperMUC_WORK
+      Publisher::ScopedPushDirectory spd1(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
+#endif
+      _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1);
+#ifdef SuperMUC_WORK
+      Publisher::ScopedPushDirectory spd2(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
+#endif
+      _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
+    } else {
+#ifdef SuperMUC_WORK
+      Publisher::ScopedPushDirectory spd3(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
+#endif
+      _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
+#ifdef SuperMUC_WORK
+      Publisher::ScopedPushDirectory spd4(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
+#endif
+      _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1);
+    }
   }
 
   // initialize parallel matrix-matrix operation module
@@ -215,7 +244,8 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
 	Eigen::MatrixXd V(_matrixV.rows(), _matrixV.cols());
 	Eigen::MatrixXd W(_matrixW.rows(), _matrixW.cols());
-
+	
+	Event e_copy("copy Matrices", true, true);
 	// convert tarch matrices to Eigen matrices
 	for (int i = 0; i < V.rows(); i++)
 		for (int j = 0; j < V.cols(); j++) {
@@ -228,6 +258,7 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
 	auto Q = _qrV.matrixQ();
 	auto R = _qrV.matrixR();
+	e_copy.stop();
 
 	Event e(__func__, true, true); // time measurement, barrier
 	Eigen::VectorXd yVec(_qrV.cols());
@@ -317,6 +348,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
 {
   // store inverse Jacobian from last time step
   _oldInvJacobian = _invJacobian;
+ 
   _preconditioner->revert(_oldInvJacobian,false);
   _preconditioner->apply(_oldInvJacobian,true);
 }
