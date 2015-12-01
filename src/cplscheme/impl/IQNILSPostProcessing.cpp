@@ -232,27 +232,6 @@ void IQNILSPostProcessing::computeQNUpdate
 	   if(utils::MasterSlave::_masterMode)
 	     backSubstitution(__R, _global_b, __c);
 
-	   /**
-	  if(utils::MasterSlave::_slaveMode){
-		  assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
-		  utils::MasterSlave::_communication->send(&_local_b(0), _local_b.size(), 0);
-	  }
-	  if(utils::MasterSlave::_masterMode){
-		assertion1(_global_b.size() == 0, _global_b.size());
-		assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
-
-		_global_b.append(_local_b.size(), 0.0);
-		_global_b += _local_b;
-
-		for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
-			utils::MasterSlave::_communication->receive(&_local_b(0), _local_b.size(), rankSlave);
-			_global_b += _local_b;
-		}
-		// backsubstitution only in master
-		backSubstitution(__R, _global_b, __c);
-	  }
-	  */
-
 	  // broadcast coefficients c to all slaves
 	  utils::MasterSlave::broadcast(&__c(0), __c.size());
 	}

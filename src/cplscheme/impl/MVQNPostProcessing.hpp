@@ -78,40 +78,79 @@ private:
 
    // remove this ofter debugging, not useful
    // ---------------------------------------
-   std::fstream f;
+  // std::fstream f;
 //   io::TXTWriter _matrixWriter;
    //----------------------------------------
    
-   // @brief stores the approximation of the inverse Jacobian of the system at current time step.
+   /// @brief stores the approximation of the inverse Jacobian of the system at current time step.
    Eigen::MatrixXd _invJacobian;
 
-   // @brief stores the approximation of the inverse Jacobian from the previous time step.
+   /// @brief stores the approximation of the inverse Jacobian from the previous time step.
    Eigen::MatrixXd _oldInvJacobian;
 
-   // @brief Communication between neighboring slaves, backwards
+   /// @brief stores the sub result (W-J_prev*V) for the current iteration
+   Eigen::MatrixXd _Wtil;
+
+   /// @brief Communication between neighboring slaves, backwards
    com::Communication::SharedPointer _cyclicCommLeft;
 
-   // @brief Communication between neighboring slaves, forward
+   /// @brief Communication between neighboring slaves, forward
    com::Communication::SharedPointer _cyclicCommRight;
 
-   // @brief encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
+   /// @brief encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
    ParallelMatrixOperations _parMatrixOps;
 
-  // @brief comptes the MVQN update using QR decomposition of V, 
-  //        furthermore it updates the inverse of the system jacobian
+   /** @brief comptes the MVQN update using QR decomposition of V,
+    *        furthermore it updates the inverse of the system jacobian
+    */
    virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate);
    
-      // @brief updates the V, W matrices (as well as the matrices for the secondary data)
+   /// @brief updates the V, W matrices (as well as the matrices for the secondary data)
    virtual void updateDifferenceMatrices(DataMap & cplData);
 
-   // @brief computes underrelaxation for the secondary data
+   /// @brief computes underrelaxation for the secondary data
    virtual void computeUnderrelaxationSecondaryData(DataMap& cplData);
    
-   // @brief computes the quasi-Newton update vector based on the matrices V and W using a QR
-   //        decomposition of V. The decomposition is not re-computed en-block in every iteration
-   //        but updated so that the new added column in V is incorporated in the decomposition.
+   /** @brief computes the quasi-Newton update vector based on the matrices V and W using a QR
+    *       decomposition of V. The decomposition is not re-computed en-block in every iteration
+    *       but updated so that the new added column in V is incorporated in the decomposition.
+    */
    void computeNewtonFactorsUpdatedQRDecomposition(DataMap& cplData, DataValues& update);
    
+   void computeNewtonFactors(DataMap& cplData, DataValues& update);
+
+   /** @brief computes a explicit representation of the Jacobian, i.e., n x n matrix
+    */
+   void buildJacobian();
+
+   /** @brief re-computes the matrix _Wtil = ( W - J_prev * V) instead of updating it according to V
+    */
+   void buildWtil();
+
+   // @brief Removes one iteration from V,W matrices and adapts _matrixCols.
+   virtual void removeMatrixColumn(int columnIndex);
+
+
+
+   // ========================================================================================
+   /**
+    * need to move that in a class/header that encapsulates the Eigen data types
+    */
+
+   /** @brief shifts all columns in the matrix A on column to the right and inserts vector
+    *         v as first column at pos 0. The last column is deleted.
+    */
+   void shiftSetFirst(Eigen::MatrixXd& A, Eigen::VectorXd& v);
+
+   /// @brief appends the vector v as first column at pos 0. The other columns are shifted right.
+   void appendFront(Eigen::MatrixXd& A, Eigen::VectorXd& v);
+
+   /** @brief removes an arbitrary column from the matrix A and shifts all columns that lie to the
+    *          right of this column to the left.
+    */
+   void removeColumnFromMatrix(
+       Eigen::MatrixXd& A, int col);
+
 };
 
 }}} // namespace precice, cplscheme, impl

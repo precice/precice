@@ -56,6 +56,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _firstIteration(true),
   _firstTimeStep(true),
   _hasNodesOnInterface(true),
+  _resetLS(false),
   _forceInitialRelaxation(forceInitialRelaxation),
   _oldXTilde(),
   _residuals(),
@@ -343,6 +344,9 @@ void BaseQNPostProcessing::performPostProcessing
   assertion2(_oldValues.size() == _oldXTilde.size(),_oldValues.size(), _oldXTilde.size());
   assertion2(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
 
+  // assume data structures associated with the LS system can be updated easily.
+  _resetLS = false;
+
   // scale data values (and secondary data values)
   concatenateCouplingData(cplData);
 
@@ -388,6 +392,7 @@ void BaseQNPostProcessing::performPostProcessing
       // this occurs very rarely, to be precise, it occurs only if the coupling terminates
       // after the first iteration and the matrix data from time step t-2 has to be used
       _qrV.reset(_matrixV, getLSSystemRows());
+      _resetLS = true; // need to recompute _Wtil, Q, R
     }
 
     // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
@@ -465,6 +470,7 @@ void BaseQNPostProcessing::performPostProcessing
         _qrV.reset();
         // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
         _qrV.setGlobalRows(getLSSystemRows());
+        _resetLS = true;
       }
     }
 

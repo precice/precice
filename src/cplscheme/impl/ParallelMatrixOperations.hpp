@@ -319,7 +319,7 @@ private:
 		}
    }
 
-	// @brief multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix
+	// @brief multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix of dimension n x m
 	template<typename Derived1, typename Derived2>
 	void _multiplyNM_block(
 	    Eigen::PlainObjectBase<Derived1>& leftMatrix,

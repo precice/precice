@@ -201,6 +201,11 @@ protected:
     */
    bool _forceInitialRelaxation;
 
+   /** @brief If true, the LS system has been modified (reset or recomputed) in such a way, that mere
+    *         updating of matrices _Wtil, Q, R etc.. is not feasible any more and need to be recomputed.
+    */
+   bool _resetLS;
+
    /// @brief Solver output from last iteration.
    DataValues _oldXTilde;
 
