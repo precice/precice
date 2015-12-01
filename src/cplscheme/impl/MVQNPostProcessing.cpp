@@ -26,6 +26,9 @@
 #include <sstream>
 #include <fstream>
 #include <cstring>
+
+#include <thread>
+#include <chrono>
 //#include "utils/NumericalCompare.hpp"
 
 using precice::utils::Event;
@@ -35,8 +38,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-// tarch::logging::Log MVQNPostProcessing::
-//       _log("precice::cplscheme::impl::MVQNPostProcessing");
+ //tarch::logging::Log MVQNPostProcessing::_log("precice::cplscheme::impl::MVQNPostProcessing");
 
       
 MVQNPostProcessing:: MVQNPostProcessing
@@ -128,7 +130,7 @@ void MVQNPostProcessing:: initialize
   
   _invJacobian = Eigen::MatrixXd::Zero(global_n, entries);
   _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
-  _Wtil = Eigen::MatrixXd::Zero(entries, 1);
+  _Wtil = Eigen::MatrixXd::Zero(entries, 0);
 
   _preconditioner->triggerGlobalWeights(global_n);
 }
@@ -165,7 +167,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
 (
     DataMap& cplData)
 {
-  preciceTrace("updateDiffernceMatrices()");
+  preciceTrace(__func__);
 
   // call the base method for common update of V, W matrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
@@ -185,6 +187,8 @@ void MVQNPostProcessing::updateDifferenceMatrices
 
       Eigen::VectorXd wtil = Eigen::VectorXd::Zero(_matrixV.rows());
 
+      std::cout<<"update W_til ... "<<std::endl;
+
       // compute J_prev * V(0) := wtil the new column in _Wtil of dimension: (n x n) * (n x 1) = (n x 1),
       //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
       _parMatrixOps.multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
@@ -193,9 +197,9 @@ void MVQNPostProcessing::updateDifferenceMatrices
 
       if (not columnLimitReached && overdetermined) {
 
-        appendFront(_Wtil, wtil);
+        appendFront(_Wtil, wtil);   std::cout<<"      append front "<<std::endl;
       }else {
-        shiftSetFirst(_Wtil, wtil);
+        shiftSetFirst(_Wtil, wtil); std::cout<<"      shift set first"<<std::endl;
       }
     }
   }
@@ -206,8 +210,8 @@ void MVQNPostProcessing::updateDifferenceMatrices
 void MVQNPostProcessing::computeQNUpdate
     (PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
+  preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
-  preciceTrace("computeQNUpdate()");
   preciceDebug("Compute Newton factors ");
 
     /**      --- update inverse Jacobian ---
@@ -231,6 +235,7 @@ void MVQNPostProcessing::computeQNUpdate
 
 void MVQNPostProcessing::buildWtil()
 {
+  preciceTrace(__func__);
   /**
    * assumes that V, W, J_prev are already preconditioned,
    */
@@ -246,6 +251,8 @@ void MVQNPostProcessing::buildWtil()
     for (int j = 0; j < W.cols(); j++) {
       W(i, j) = _matrixW(i, j);
     }
+
+  std::cout<<"build Wtil  ... "<<std::endl;
 
   Event e_WtilV("compute W_til = (W - J_prev*V)", true, true); // time measurement, barrier
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
@@ -268,6 +275,7 @@ void MVQNPostProcessing::buildWtil()
 
 void MVQNPostProcessing::buildJacobian()
 {
+  preciceTrace(__func__);
   /**      --- compute inverse Jacobian ---
   *
   * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
@@ -300,6 +308,8 @@ void MVQNPostProcessing::buildJacobian()
       assertion1(_qrV.rows() == 0, _qrV.rows());
       assertion1(Q.size() == 0, Q.size());
   }
+
+  std::cout<<"build Jacobian ... "<<std::endl;
 
   /**
    *  (1) computation of matrix Z = (V^TV)^-1 * V^T as solution to the equation
@@ -342,8 +352,7 @@ void MVQNPostProcessing::buildJacobian()
 void MVQNPostProcessing::computeNewtonFactors
 (PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
-  preciceTrace("computeNewtonFactors()");
-
+  preciceTrace(__func__);
   /**      --- update inverse Jacobian ---
   *
   * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
@@ -409,11 +418,28 @@ void MVQNPostProcessing::computeNewtonFactors
   for(int i = 0; i < negRes.size(); i++)
     negRes(i) = - _residuals(i);
 
-  Eigen::VectorXd r_til_loc = Eigen::VectorXd::Zero(_residuals.size());
-  Eigen::VectorXd r_til = Eigen::VectorXd::Zero(_residuals.size());
+  Eigen::VectorXd r_til_loc = Eigen::VectorXd::Zero(getLSSystemCols());
+  Eigen::VectorXd r_til = Eigen::VectorXd::Zero(getLSSystemCols());
+
+  std::cout<<"          compute Z*(-res) "<<std::endl;
 
   r_til_loc.noalias() = Z * negRes;
-  utils::MasterSlave::allreduceSum(r_til_loc.data(), r_til.data(), r_til_loc.size());
+
+  //std::this_thread::sleep_for (std::chrono::seconds(1* (1+utils::MasterSlave::_rank)));
+  //std::cout<<"r_til_loc.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til_loc.size()<<std::endl;
+  //std::cout<<"r_til.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til.size()<<std::endl;
+
+  // if serial computation on single processor, i.e, no master-slave mode
+  if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
+    r_til = r_til_loc;
+  }else{
+    utils::MasterSlave::allreduceSum(r_til_loc.data(), r_til.data(), r_til_loc.size());
+  }
+
+  //std::this_thread::sleep_for (std::chrono::seconds(1*utils::MasterSlave::_rank));
+  //std::cout<<"r_til:loc: proc"<<utils::MasterSlave::_rank<<": "<<r_til_loc<<std::endl;
+  //std::cout<<"r_til: "<<r_til<<std::endl;
+
 
   /**
    * (4) compute _Wtil * r_til
@@ -423,12 +449,14 @@ void MVQNPostProcessing::computeNewtonFactors
    *
    * Note: r_til is not distributed but locally stored on each proc (dimension m x 1)
    */
+  std::cout<<"          compute W_til * tmp "<<std::endl;
   Eigen::VectorXd xUptmp(_residuals.size());
   xUptmp = _Wtil * r_til;                      // local product, result is naturally distributed.
 
   /**
    *  (5) xUp = J_prev * (-res) + Wtil*Z*(-res)
    */
+  std::cout<<"          compute J_prev*(-res) "<<std::endl;
   Eigen::VectorXd xUp(_residuals.size());
   _parMatrixOps.multiply(_oldInvJacobian, negRes, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
 
