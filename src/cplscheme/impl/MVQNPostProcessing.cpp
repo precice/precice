@@ -269,6 +269,7 @@ void MVQNPostProcessing::buildWtil()
   _Wtil *= -1.;
   _Wtil = _Wtil + W;
 
+  _resetLS = false;
   e_WtilV.stop();
 }
 
@@ -403,7 +404,9 @@ void MVQNPostProcessing::computeNewtonFactors
   *  (2) Multiply J_prev * V =: W_tilde
   */
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
-  if(_resetLS)
+
+  // rebuild matrix Wtil if V changes completely.
+  if(_resetLS || _Wtil.size() == 0)
     buildWtil();
 
   /**
@@ -425,9 +428,9 @@ void MVQNPostProcessing::computeNewtonFactors
 
   r_til_loc.noalias() = Z * negRes;
 
-  //std::this_thread::sleep_for (std::chrono::seconds(1* (1+utils::MasterSlave::_rank)));
-  //std::cout<<"r_til_loc.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til_loc.size()<<std::endl;
-  //std::cout<<"r_til.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til.size()<<std::endl;
+  std::this_thread::sleep_for (std::chrono::seconds(1* (1+utils::MasterSlave::_rank)));
+  std::cout<<"r_til_loc.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til_loc.size()<<std::endl;
+  std::cout<<"r_til.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til.size()<<std::endl;
 
   // if serial computation on single processor, i.e, no master-slave mode
   if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
@@ -464,6 +467,12 @@ void MVQNPostProcessing::computeNewtonFactors
 
   for(int i = 0; i < xUp.size(); i++)
     xUpdate(i) = xUp(i);
+
+  // pending deletion: delete Wtil
+  if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
+    //_Wtil.conservativeResize(0,0);
+    _resetLS = true;
+  }
 }
 
 

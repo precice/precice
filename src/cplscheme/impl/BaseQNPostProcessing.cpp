@@ -345,7 +345,6 @@ void BaseQNPostProcessing::performPostProcessing
   assertion2(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
 
   // assume data structures associated with the LS system can be updated easily.
-  _resetLS = false;
 
   // scale data values (and secondary data values)
   concatenateCouplingData(cplData);
