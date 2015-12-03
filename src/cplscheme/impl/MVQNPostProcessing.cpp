@@ -626,7 +626,29 @@ void MVQNPostProcessing:: specializedIterationsConverged
   _preconditioner->apply(_oldInvJacobian,true);
   _preconditioner->revert(_Wtil);
   ePrecond_2.stop();
+
+
+  // delete columns from matrix _Wtil according to reused time steps
+  if (_matrixCols.front() == 0) { // Did only one iteration
+    _matrixCols.pop_front();
+  }
+
+  if (_timestepsReused == 0) {
+    if (_forceInitialRelaxation)
+    {  // reset _Wtil if initial relaxation is enforced
+      _Wtil.conservativeResize(0, 0);
+    }
+    //else: pending deletion
+  }
+  else if ((int) _matrixCols.size() > _timestepsReused) {
+    int toRemove = _matrixCols.back();
+    assertion1(toRemove > 0, toRemove);  assertion2(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
+    for (int i = 0; i < toRemove; i++) {
+      removeColumnFromMatrix(_Wtil, _Wtil.cols() - 1);
+    }
+  }
 }
+
 
 void MVQNPostProcessing:: removeMatrixColumn
 (

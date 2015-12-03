@@ -616,8 +616,7 @@ void BaseQNPostProcessing::iterationsConverged
   _preconditioner->update(true, _values, _residuals);
 
   if (_timestepsReused == 0) {
-
-    if(_forceInitialRelaxation)
+    if (_forceInitialRelaxation)
     {
       _matrixV.clear();
       _matrixW.clear();
@@ -625,7 +624,7 @@ void BaseQNPostProcessing::iterationsConverged
       // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
       _qrV.setGlobalRows(getLSSystemRows());
       _matrixCols.clear(); // _matrixCols.push_front() at the end of the method.
-    }else{
+    } else {
       /**
        * pending deletion (after first iteration of next time step
        * Using the matrices from the old time step for the first iteration
@@ -636,8 +635,7 @@ void BaseQNPostProcessing::iterationsConverged
   else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
     assertion1(toRemove > 0, toRemove);
-    preciceDebug("Removing " << toRemove << " cols from least-squares system with "
-        << getLSSystemCols() << " cols");
+    preciceDebug("Removing " << toRemove << " cols from least-squares system with "<< getLSSystemCols() << " cols");
     assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
     assertion2(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 

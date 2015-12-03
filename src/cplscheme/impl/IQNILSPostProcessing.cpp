@@ -309,14 +309,14 @@ void IQNILSPostProcessing:: specializedIterationsConverged
     }
   }
   else if ((int)_matrixCols.size() > _timestepsReused){
-	int toRemove = _matrixCols.back();
-	for (int id: _secondaryDataIDs){
-	  DataMatrix& secW = _secondaryMatricesW[id];
-	  assertion3(secW.cols() > toRemove, secW, toRemove, id);
-	  for (int i=0; i < toRemove; i++){
-		secW.remove(secW.cols() - 1);
-	  }
-	}
+    int toRemove = _matrixCols.back();
+    for (int id: _secondaryDataIDs){
+      DataMatrix& secW = _secondaryMatricesW[id];
+      assertion3(secW.cols() > toRemove, secW, toRemove, id);
+      for (int i=0; i < toRemove; i++){
+      secW.remove(secW.cols() - 1);
+      }
+    }
   }
 }
 
