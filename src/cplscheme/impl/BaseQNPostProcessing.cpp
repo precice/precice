@@ -64,12 +64,12 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _matrixV(),
   _matrixW(),
   _qrV(filter),
+  _filter(filter),
   _matrixCols(),
   _dimOffsets(),
   _values(),
   _oldValues(),
   _oldResiduals(),
-  _filter(filter),
   _singularityLimit(singularityLimit),
   _designSpecification(),
   _matrixVBackup(),
@@ -565,7 +565,7 @@ void BaseQNPostProcessing::iterationsConverged
 (
     DataMap & cplData)
 {
-  preciceTrace("iterationsConverged()");
+  preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
 
   // debugging info, remove if not needed anymore:
@@ -577,7 +577,6 @@ void BaseQNPostProcessing::iterationsConverged
   deletedColumns = 0;
   // -----------------------
 
-
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
   // convergence was achieved
@@ -588,8 +587,6 @@ void BaseQNPostProcessing::iterationsConverged
   assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
   for (int i = 0; i < _designSpecification.size(); i++)
         _residuals(i) -= _designSpecification(i);
-
-  _preconditioner->update(true, _values, _residuals);
 
   // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
 
@@ -613,6 +610,10 @@ void BaseQNPostProcessing::iterationsConverged
   // - analogously to the V,W matrices, remove columns from matrices for secondary data
   // - save the old jacobian matrix
   specializedIterationsConverged(cplData);
+
+
+  // update preconditioner depending on residuals or values (must be after specialized iterations converged --> IMVJ)
+  _preconditioner->update(true, _values, _residuals);
 
   if (_timestepsReused == 0) {
 

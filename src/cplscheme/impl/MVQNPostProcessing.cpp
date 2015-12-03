@@ -280,6 +280,8 @@ void MVQNPostProcessing::buildJacobian()
   /**      --- compute inverse Jacobian ---
   *
   * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
+  *
+  * assumes that J_prev, V, W are already preconditioned
   */
 
 
@@ -406,7 +408,7 @@ void MVQNPostProcessing::computeNewtonFactors
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
   // rebuild matrix Wtil if V changes completely.
-  if(_resetLS || _Wtil.size() == 0)
+  if(_resetLS)
     buildWtil();
 
   /**
@@ -591,12 +593,39 @@ void MVQNPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
+
+  Event ePrecond_1("precond J (1)", true, true); // time measurement, barrier
+  _preconditioner->apply(_residuals);
+  _preconditioner->apply(_matrixV);
+  _preconditioner->apply(_matrixW);
+
+  _preconditioner->apply(_Wtil);
+  _preconditioner->apply(_oldInvJacobian,false);
+  _preconditioner->revert(_oldInvJacobian,true);
+
+  if(_preconditioner->requireNewQR()){
+    if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
+      _qrV.reset(_matrixV, getLSSystemRows());
+    }
+    _preconditioner->newQRfulfilled();
+  }
+  BaseQNPostProcessing::applyFilter();  // apply the configured filter to the LS system
+  ePrecond_1.stop();
+
   // compute explicit representation of Jacobian
   buildJacobian();
   // store inverse Jacobian from last time step
   _oldInvJacobian = _invJacobian;
+
+  Event ePrecond_2("precond J (2)", true, true); // time measurement, barrier
+  _preconditioner->revert(_matrixW);
+  _preconditioner->revert(_matrixV);
+  _preconditioner->revert(_residuals);
+
   _preconditioner->revert(_oldInvJacobian,false);
   _preconditioner->apply(_oldInvJacobian,true);
+  _preconditioner->revert(_Wtil);
+  ePrecond_2.stop();
 }
 
 void MVQNPostProcessing:: removeMatrixColumn

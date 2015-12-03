@@ -224,6 +224,11 @@ protected:
    /// @brief Stores the current QR decomposition ov _matrixV, can be updated via deletion/insertion of columns
    QRFactorization _qrV;
    
+   /** @brief filter method that is used to maintain good conditioning of the least-squares system
+    *        Either of two types: QR1FILTER or QR2Filter
+    */
+   int _filter;
+
 
    /** @brief Indices (of columns in W, V matrices) of 1st iterations of timesteps.
     *
@@ -292,11 +297,6 @@ private:
 
   /// @brief Difference between solver input and output from last timestep
   DataValues _oldResiduals;
-
-  /** @brief filter method that is used to maintain good conditioning of the least-squares system
-   *        Either of two types: QR1FILTER or QR2Filter
-   */
-  int _filter;
 
   /** @brief Determines sensitivity when two matrix columns are considered equal.
    *
