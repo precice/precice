@@ -197,9 +197,9 @@ void MVQNPostProcessing::updateDifferenceMatrices
 
       if (not columnLimitReached && overdetermined) {
 
-        appendFront(_Wtil, wtil);   std::cout<<"      append front "<<std::endl;
+        appendFront(_Wtil, wtil);   std::cout<<"      append front, cols: "<<_Wtil.cols()<<std::endl;
       }else {
-        shiftSetFirst(_Wtil, wtil); std::cout<<"      shift set first"<<std::endl;
+        shiftSetFirst(_Wtil, wtil); std::cout<<"      shift set first, cols:"<<_Wtil.cols()<<std::endl;
       }
     }
   }
@@ -220,13 +220,15 @@ void MVQNPostProcessing::computeQNUpdate
      */
 
   Event ePrecond_1("precond J (1)", true, true); // time measurement, barrier
-  _preconditioner->apply(_Wtil);
+  if(_Wtil.size() > 0)
+    _preconditioner->apply(_Wtil);
   _preconditioner->apply(_oldInvJacobian,false);
   _preconditioner->revert(_oldInvJacobian,true);
   ePrecond_1.stop();
   computeNewtonFactors(cplData, xUpdate);
   Event ePrecond_2("precond J (2)", true, true); // time measurement, barrier
-  _preconditioner->revert(_Wtil);
+  if(_Wtil.size() > 0)
+    _preconditioner->revert(_Wtil);
   _preconditioner->revert(_oldInvJacobian,false);
   _preconditioner->apply(_oldInvJacobian,true);
   ePrecond_2.stop();
@@ -252,7 +254,7 @@ void MVQNPostProcessing::buildWtil()
       W(i, j) = _matrixW(i, j);
     }
 
-  std::cout<<"build Wtil  ... "<<std::endl;
+  std::cout<<"build Wtil  ... V.cols: "<<_matrixV.cols()<<std::endl;
 
   Event e_WtilV("compute W_til = (W - J_prev*V)", true, true); // time measurement, barrier
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
@@ -331,9 +333,10 @@ void MVQNPostProcessing::buildJacobian()
   *  (2) Multiply J_prev * V =: W_tilde
   */
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
-  if(_resetLS)
+  if(_resetLS){
     buildWtil();
-
+    std::cout<<" ATTENTION, in buildJacobian call for buildWtill() - this should not be the case except the coupling did only one iteration"<<std::endl;
+  }
   /**
   *  (3) compute invJacobian = W_til*Z
   *
@@ -408,6 +411,8 @@ void MVQNPostProcessing::computeNewtonFactors
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
   // rebuild matrix Wtil if V changes completely.
+
+  std::cout<<" V.cols: "<<_matrixV.cols()<<"  Wtil.cols: "<<_Wtil.cols()<<std::endl;
   if(_resetLS)
     buildWtil();
 
@@ -431,8 +436,8 @@ void MVQNPostProcessing::computeNewtonFactors
   r_til_loc.noalias() = Z * negRes;
 
   std::this_thread::sleep_for (std::chrono::seconds(1* (1+utils::MasterSlave::_rank)));
-  std::cout<<"r_til_loc.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til_loc.size()<<std::endl;
-  std::cout<<"r_til.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til.size()<<std::endl;
+ // std::cout<<"r_til_loc.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til_loc.size()<<std::endl;
+//  std::cout<<"r_til.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til.size()<<std::endl;
 
   // if serial computation on single processor, i.e, no master-slave mode
   if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
@@ -613,7 +618,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
   ePrecond_1.stop();
 
   // compute explicit representation of Jacobian
-  buildJacobian();
+  buildJacobian(); // TODO: build irect oldInv_Jacobian and do not store invJacobain (not needed with this approach)
   // store inverse Jacobian from last time step
   _oldInvJacobian = _invJacobian;
 
@@ -627,12 +632,12 @@ void MVQNPostProcessing:: specializedIterationsConverged
   _preconditioner->revert(_Wtil);
   ePrecond_2.stop();
 
-
-  // delete columns from matrix _Wtil according to reused time steps
-  if (_matrixCols.front() == 0) { // Did only one iteration
-    _matrixCols.pop_front();
+  if(_timestepsReused > 0 || (_timestepsReused == 0 && _forceInitialRelaxation)){
+    _Wtil.conservativeResize(0, 0);
+    _resetLS = true;
   }
 
+  /*
   if (_timestepsReused == 0) {
     if (_forceInitialRelaxation)
     {  // reset _Wtil if initial relaxation is enforced
@@ -646,7 +651,10 @@ void MVQNPostProcessing:: specializedIterationsConverged
     for (int i = 0; i < toRemove; i++) {
       removeColumnFromMatrix(_Wtil, _Wtil.cols() - 1);
     }
+    std::cout <<"removed "<<toRemove<<"columns from Wtil, cols: "<<_Wtil.cols()<<std::endl;
   }
+
+  */
 }
 
 

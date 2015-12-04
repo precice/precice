@@ -299,6 +299,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
+        std::cout<<"append front BaseQN::updateMatrices"<<std::endl;
         _matrixCols.front()++;
         }
       else {
@@ -310,6 +311,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
         _qrV.popBack();
+
+        std::cout<<"shift set first BaseQN::updateMatrices"<<std::endl;
 
         _matrixCols.front()++;
         _matrixCols.back()--;
@@ -646,6 +649,7 @@ void BaseQNPostProcessing::iterationsConverged
       // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
       _qrV.popBack();
     }
+    std::cout <<"removed "<<toRemove<<"columns from V, W, cols: "<<_matrixV.cols()<<std::endl;
     _matrixCols.pop_back();
   }
 
