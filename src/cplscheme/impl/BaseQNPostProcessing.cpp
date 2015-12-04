@@ -91,9 +91,9 @@ BaseQNPostProcessing::BaseQNPostProcessing
       "Number of old timesteps to be reused for QN "
       << "post-processing has to be >= 0!");
 
-  _infostream.open("postProcessingInfo.txt", std::ios_base::out);
-  _infostream << std::setprecision(16);
-  _qrV.setfstream(&_infostream);
+  //_infostream.open("postProcessingInfo.txt", std::ios_base::out);
+  //_infostream << std::setprecision(16);
+  //_qrV.setfstream(&_infostream);
 }
 
 
@@ -169,8 +169,8 @@ void BaseQNPostProcessing::initialize(
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
     assertion2(entries == unknowns, entries, unknowns);
-    writeInfo(ss.str());
-    ss.clear();
+    //writeInfo(ss.str());
+    //ss.clear();
 
   }
 
@@ -256,7 +256,6 @@ void BaseQNPostProcessing::updateDifferenceMatrices
     DataMap& cplData)
 {
   preciceTrace("updateDiffernceMatrices()");
-  Event e(__func__, true, true); // time measurement, barrier
   using namespace tarch::la;
 
   // Compute current residual: vertex-data - oldData
@@ -508,7 +507,7 @@ void BaseQNPostProcessing::applyFilter()
       std::stringstream ss;
       ss << "(updatedQR) removing linear dependent column " << delIndices[i] << "  time step: " << tSteps
           << " iteration: " << its << "\n" << std::endl;
-      preciceDebug(ss.str());  writeInfo(ss.str());
+      preciceDebug(ss.str());  //writeInfo(ss.str());
     }
     assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
@@ -573,8 +572,8 @@ void BaseQNPostProcessing::iterationsConverged
 
   // debugging info, remove if not needed anymore:
   // -----------------------
-  _infostream << "\n ---------------- deletedColumns:" << deletedColumns
-      << "\n\n ### time step:" << tSteps + 1 << " ###" << std::endl;
+  //_infostream << "\n ---------------- deletedColumns:" << deletedColumns
+  //    << "\n\n ### time step:" << tSteps + 1 << " ###" << std::endl;
   its = 0;
   tSteps++;
   deletedColumns = 0;

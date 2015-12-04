@@ -75,6 +75,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
 {
+  Event e(__func__, true, true); // time measurement, barrier
 	// Compute residuals of secondary data
 	for (int id: _secondaryDataIDs){
 		DataValues& secResiduals = _secondaryResiduals[id];

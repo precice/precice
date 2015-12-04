@@ -168,8 +168,10 @@ void MVQNPostProcessing::updateDifferenceMatrices
     DataMap& cplData)
 {
   preciceTrace(__func__);
+  Event e(__func__, true, true); // time measurement, barrier
 
   // call the base method for common update of V, W matrices
+  // important that base method is called before updating _Wtil
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
 
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
@@ -181,25 +183,20 @@ void MVQNPostProcessing::updateDifferenceMatrices
       Eigen::VectorXd v = _matrixV.column(0);
       Eigen::VectorXd w = _matrixW.column(0);
 
-
       bool columnLimitReached = _Wtil.cols() == _maxIterationsUsed;
       bool overdetermined = _Wtil.cols() <= getLSSystemRows();
 
       Eigen::VectorXd wtil = Eigen::VectorXd::Zero(_matrixV.rows());
 
-      std::cout<<"update W_til ... "<<std::endl;
-
       // compute J_prev * V(0) := wtil the new column in _Wtil of dimension: (n x n) * (n x 1) = (n x 1),
       //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
       _parMatrixOps.multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
-
       wtil = w - wtil;
 
       if (not columnLimitReached && overdetermined) {
-
-        appendFront(_Wtil, wtil);   std::cout<<"      append front, cols: "<<_Wtil.cols()<<std::endl;
+        appendFront(_Wtil, wtil);
       }else {
-        shiftSetFirst(_Wtil, wtil); std::cout<<"      shift set first, cols:"<<_Wtil.cols()<<std::endl;
+        shiftSetFirst(_Wtil, wtil);
       }
     }
   }
@@ -219,27 +216,28 @@ void MVQNPostProcessing::computeQNUpdate
      * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
      */
 
-  Event ePrecond_1("precond J (1)", true, true); // time measurement, barrier
+  Event ePrecond_1("preconditioning of J", true, true); // ------ time measurement, barrier
   if(_Wtil.size() > 0)
     _preconditioner->apply(_Wtil);
   _preconditioner->apply(_oldInvJacobian,false);
   _preconditioner->revert(_oldInvJacobian,true);
-  ePrecond_1.stop();
+  ePrecond_1.stop();                                    // ------
+
   computeNewtonFactors(cplData, xUpdate);
-  Event ePrecond_2("precond J (2)", true, true); // time measurement, barrier
+
+  Event ePrecond_2("preconditioning of J", true, true); // ------ time measurement, barrier
   if(_Wtil.size() > 0)
     _preconditioner->revert(_Wtil);
   _preconditioner->revert(_oldInvJacobian,false);
   _preconditioner->apply(_oldInvJacobian,true);
-  ePrecond_2.stop();
+  ePrecond_2.stop();                                    // ------
 }
 
 
 void MVQNPostProcessing::buildWtil()
 {
-  preciceTrace(__func__);
   /**
-   * assumes that V, W, J_prev are already preconditioned,
+   * PRECONDITION: Assumes that V, W, J_prev are already preconditioned,
    */
   Eigen::MatrixXd V(_matrixV.rows(), _matrixV.cols());
   Eigen::MatrixXd W(_matrixW.rows(), _matrixW.cols());
@@ -253,8 +251,6 @@ void MVQNPostProcessing::buildWtil()
     for (int j = 0; j < W.cols(); j++) {
       W(i, j) = _matrixW(i, j);
     }
-
-  std::cout<<"build Wtil  ... V.cols: "<<_matrixV.cols()<<std::endl;
 
   Event e_WtilV("compute W_til = (W - J_prev*V)", true, true); // time measurement, barrier
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
@@ -314,8 +310,6 @@ void MVQNPostProcessing::buildJacobian()
       assertion1(Q.size() == 0, Q.size());
   }
 
-  std::cout<<"build Jacobian ... "<<std::endl;
-
   /**
    *  (1) computation of matrix Z = (V^TV)^-1 * V^T as solution to the equation
    *      R*z = Q^T(i) for all columns i,  via back substitution.
@@ -346,10 +340,10 @@ void MVQNPostProcessing::buildJacobian()
   *  dimension: (n x n) * (n x m) = (n x m),
   *  parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
   */
-  Event e_WtilZ("compute J = W_til*Z", true, true); // time measurement, barrier
+  Event e_WtilZ("compute J = W_til*Z", true, true); // -------- time measurement, barrier
 
   _parMatrixOps.multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
-  e_WtilZ.stop();
+  e_WtilZ.stop();                                   // --------
 
   // update Jacobian
   _invJacobian = _invJacobian + _oldInvJacobian;
@@ -359,11 +353,11 @@ void MVQNPostProcessing::computeNewtonFactors
 (PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
   preciceTrace(__func__);
+
   /**      --- update inverse Jacobian ---
   *
   * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
   */
-
 
   Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
   Eigen::MatrixXd V(_matrixV.rows(), _matrixV.cols());
@@ -396,48 +390,43 @@ void MVQNPostProcessing::computeNewtonFactors
    *  (1) computation of matrix Z = (V^TV)^-1 * V^T as solution to the equation
    *      R*z = Q^T(i) for all columns i,  via back substitution.
    */
-  Event e_qr("solve Z = (V^TV)^-1V^T via QR", true, true); // time measurement, barrier
+  Event e_qr("solve Z = (V^TV)^-1V^T via QR", true, true); // -------- time measurement, barrier
   for (int i = 0; i < Q.rows(); i++) {
     Eigen::VectorXd Qrow = Q.row(i);
     yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
     Z.col(i) = yVec;
   }
-  e_qr.stop();
+  e_qr.stop();                                             // --------
 
 
   /**
-  *  (2) Multiply J_prev * V =: W_tilde
+  *  (2) Construction of _Wtil = (W - J_prev * V), should be already present due to updated computation
   */
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
-
   // rebuild matrix Wtil if V changes completely.
-
-  std::cout<<" V.cols: "<<_matrixV.cols()<<"  Wtil.cols: "<<_Wtil.cols()<<std::endl;
   if(_resetLS)
     buildWtil();
 
   /**
-  *  (3) compute r_til = Z*(-residual)
-  *
-  *  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution
-  *
-  *  dimension: (m x n) * (n x 1) = (m x 1),
-  *  parallel:  (m x n_local) * (n x 1) = (m x 1)
-  */
+   *  Avoid computation of Z*Wtil = Jtil \in (n x n). Rather do matrix-vector computations
+   *  [ J_prev*(-res) ] + [Wtil * [Z * (-res)] ]
+   *  '----- 1 -------'           '----- 2 ----'
+   *                      '-------- 3 ---------'
+   *
+   *  (3) compute r_til = Z*(-residual)   where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution
+   *
+   *  dimension: (m x n) * (n x 1) = (m x 1),
+   *  parallel:  (m x n_local) * (n x 1) = (m x 1)
+   */
   Eigen::VectorXd negRes(_residuals.size());
   for(int i = 0; i < negRes.size(); i++)
     negRes(i) = - _residuals(i);
 
+  Event e_Zr("compute r_til = Z*(-res)", true, true); // -------- time measurement, barrier
   Eigen::VectorXd r_til_loc = Eigen::VectorXd::Zero(getLSSystemCols());
   Eigen::VectorXd r_til = Eigen::VectorXd::Zero(getLSSystemCols());
 
-  std::cout<<"          compute Z*(-res) "<<std::endl;
-
   r_til_loc.noalias() = Z * negRes;
-
-  std::this_thread::sleep_for (std::chrono::seconds(1* (1+utils::MasterSlave::_rank)));
- // std::cout<<"r_til_loc.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til_loc.size()<<std::endl;
-//  std::cout<<"r_til.size() on proc "<<utils::MasterSlave::_rank<<": "<<r_til.size()<<std::endl;
 
   // if serial computation on single processor, i.e, no master-slave mode
   if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
@@ -445,11 +434,7 @@ void MVQNPostProcessing::computeNewtonFactors
   }else{
     utils::MasterSlave::allreduceSum(r_til_loc.data(), r_til.data(), r_til_loc.size());
   }
-
-  //std::this_thread::sleep_for (std::chrono::seconds(1*utils::MasterSlave::_rank));
-  //std::cout<<"r_til:loc: proc"<<utils::MasterSlave::_rank<<": "<<r_til_loc<<std::endl;
-  //std::cout<<"r_til: "<<r_til<<std::endl;
-
+  e_Zr.stop();                                         // --------
 
   /**
    * (4) compute _Wtil * r_til
@@ -459,25 +444,25 @@ void MVQNPostProcessing::computeNewtonFactors
    *
    * Note: r_til is not distributed but locally stored on each proc (dimension m x 1)
    */
-  std::cout<<"          compute W_til * tmp "<<std::endl;
   Eigen::VectorXd xUptmp(_residuals.size());
   xUptmp = _Wtil * r_til;                      // local product, result is naturally distributed.
 
   /**
    *  (5) xUp = J_prev * (-res) + Wtil*Z*(-res)
    */
-  std::cout<<"          compute J_prev*(-res) "<<std::endl;
+  Event e_Jpr("compute xUp(1) = J_prev*(-res)", true, true); // -------- time measurement, barrier
   Eigen::VectorXd xUp(_residuals.size());
   _parMatrixOps.multiply(_oldInvJacobian, negRes, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+  e_Jpr.stop();                                              // --------
 
   xUp = xUp + xUptmp;
-
+  // copy (remove when switching to Eigen)
   for(int i = 0; i < xUp.size(); i++)
     xUpdate(i) = xUp(i);
 
   // pending deletion: delete Wtil
   if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
-    //_Wtil.conservativeResize(0,0);
+    _Wtil.conservativeResize(0,0);
     _resetLS = true;
   }
 }
@@ -599,7 +584,9 @@ void MVQNPostProcessing:: specializedIterationsConverged
    DataMap & cplData)
 {
 
-  Event ePrecond_1("precond J (1)", true, true); // time measurement, barrier
+  // need to apply the preconditioner, as all data structures are reverted after
+  // call to computeQNUpdate. Need to call this before the precond is updated.
+  Event ePrecond_1("preconditioning of J", true, true); // -------- time measurement, barrier
   _preconditioner->apply(_residuals);
   _preconditioner->apply(_matrixV);
   _preconditioner->apply(_matrixW);
@@ -614,15 +601,17 @@ void MVQNPostProcessing:: specializedIterationsConverged
     }
     _preconditioner->newQRfulfilled();
   }
-  BaseQNPostProcessing::applyFilter();  // apply the configured filter to the LS system
-  ePrecond_1.stop();
+  ePrecond_1.stop();                                    // --------
+  // apply the configured filter to the LS system
+  BaseQNPostProcessing::applyFilter();
 
   // compute explicit representation of Jacobian
-  buildJacobian(); // TODO: build irect oldInv_Jacobian and do not store invJacobain (not needed with this approach)
+  buildJacobian(); // TODO: build direct oldInv_Jacobian and do not store invJacobain (not needed with this approach)
+
   // store inverse Jacobian from last time step
   _oldInvJacobian = _invJacobian;
 
-  Event ePrecond_2("precond J (2)", true, true); // time measurement, barrier
+  Event ePrecond_2("preconditioning of J", true, true); // -------- time measurement, barrier
   _preconditioner->revert(_matrixW);
   _preconditioner->revert(_matrixV);
   _preconditioner->revert(_residuals);
@@ -630,12 +619,12 @@ void MVQNPostProcessing:: specializedIterationsConverged
   _preconditioner->revert(_oldInvJacobian,false);
   _preconditioner->apply(_oldInvJacobian,true);
   _preconditioner->revert(_Wtil);
-  ePrecond_2.stop();
+  ePrecond_2.stop();                                    // --------
 
-
-  // in case of enforced initial relaxation, the matrices are cleared
-  // in case of timestepsReused > 0, the columns in _Wtil are outdated, as the Jacobian changes, hence clear
-  // in case of timestepsReused == 0 and no initial relaxation, pending deletion in performPostProcessing
+  /** in case of enforced initial relaxation, the matrices are cleared
+   *  in case of timestepsReused > 0, the columns in _Wtil are outdated, as the Jacobian changes, hence clear
+   *  in case of timestepsReused == 0 and no initial relaxation, pending deletion in performPostProcessing
+   */
   if(_timestepsReused > 0 || (_timestepsReused == 0 && _forceInitialRelaxation)){
     _Wtil.conservativeResize(0, 0);
     _resetLS = true;
@@ -655,7 +644,9 @@ void MVQNPostProcessing:: removeMatrixColumn
   BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }
 
-// ================== move this to helper class/module ================================
+// ====================================================================================
+// |                     move this to helper class/module                             |
+// ====================================================================================
 void MVQNPostProcessing::shiftSetFirst
 (
     Eigen::MatrixXd& A, Eigen::VectorXd& v)
