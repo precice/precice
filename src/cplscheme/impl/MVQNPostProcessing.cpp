@@ -632,29 +632,14 @@ void MVQNPostProcessing:: specializedIterationsConverged
   _preconditioner->revert(_Wtil);
   ePrecond_2.stop();
 
+
+  // in case of enforced initial relaxation, the matrices are cleared
+  // in case of timestepsReused > 0, the columns in _Wtil are outdated, as the Jacobian changes, hence clear
+  // in case of timestepsReused == 0 and no initial relaxation, pending deletion in performPostProcessing
   if(_timestepsReused > 0 || (_timestepsReused == 0 && _forceInitialRelaxation)){
     _Wtil.conservativeResize(0, 0);
     _resetLS = true;
   }
-
-  /*
-  if (_timestepsReused == 0) {
-    if (_forceInitialRelaxation)
-    {  // reset _Wtil if initial relaxation is enforced
-      _Wtil.conservativeResize(0, 0);
-    }
-    //else: pending deletion
-  }
-  else if ((int) _matrixCols.size() > _timestepsReused) {
-    int toRemove = _matrixCols.back();
-    assertion1(toRemove > 0, toRemove);  assertion2(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
-    for (int i = 0; i < toRemove; i++) {
-      removeColumnFromMatrix(_Wtil, _Wtil.cols() - 1);
-    }
-    std::cout <<"removed "<<toRemove<<"columns from Wtil, cols: "<<_Wtil.cols()<<std::endl;
-  }
-
-  */
 }
 
 
