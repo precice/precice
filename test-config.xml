@@ -13,10 +13,10 @@
     <log-filter target="debug" component="precice::cplscheme::BaseCouplingScheme" switch="off"/>
 <!--    <log-filter target="debug" component="precice::cplscheme::ParallelyCouplingScheme" switch="on"/>
     <log-filter target="debug" component="precice::cplscheme::SerialCouplingScheme" switch="on"/> -->
-    <log-filter target="debug" component="precice::cplscheme::impl::MVQNPostProcessing" switch="off"/>
-    <log-filter target="debug" component="precice::cplscheme::impl::BaseQNPostProcessing" switch="off"/>
+    <log-filter target="debug" component="precice::cplscheme::impl::MVQNPostProcessing" switch="on"/>
+    <log-filter target="debug" component="precice::cplscheme::impl::BaseQNPostProcessing" switch="on"/>
     <log-filter target="debug" component="precice::cplscheme::impl::MMPostProcessing" switch="off"/>
-    <log-filter target="debug" component="precice::cplscheme::impl::QRFactorization" switch="off"/>
+    <log-filter target="debug" component="precice::cplscheme::impl::QRFactorization" switch="on"/>
     <log-filter target="debug" component="precice::com::tests" switch="on"/>
     
     <!-- <log-filter target=""      component=""      switch="on"/> -->

@@ -76,12 +76,6 @@ public:
   
 private:
 
-   // remove this ofter debugging, not useful
-   // ---------------------------------------
-  // std::fstream f;
-//   io::TXTWriter _matrixWriter;
-   //----------------------------------------
-   
    /// @brief stores the approximation of the inverse Jacobian of the system at current time step.
    Eigen::MatrixXd _invJacobian;
 
@@ -103,7 +97,7 @@ private:
    /** @brief comptes the MVQN update using QR decomposition of V,
     *        furthermore it updates the inverse of the system jacobian
     */
-   virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate);
+   virtual void computeQNUpdate(DataMap& cplData, Eigen::VectorXd& xUpdate);
    
    /// @brief updates the V, W matrices (as well as the matrices for the secondary data)
    virtual void updateDifferenceMatrices(DataMap & cplData);
@@ -115,9 +109,9 @@ private:
     *       decomposition of V. The decomposition is not re-computed en-block in every iteration
     *       but updated so that the new added column in V is incorporated in the decomposition.
     */
-   void computeNewtonFactorsUpdatedQRDecomposition(DataMap& cplData, DataValues& update);
+   void computeNewtonFactorsUpdatedQRDecomposition(DataMap& cplData, Eigen::VectorXd& update);
    
-   void computeNewtonFactors(DataMap& cplData, DataValues& update);
+   void computeNewtonFactors(DataMap& cplData, Eigen::VectorXd& update);
 
    /** @brief computes a explicit representation of the Jacobian, i.e., n x n matrix
     */
@@ -129,27 +123,6 @@ private:
 
    // @brief Removes one iteration from V,W matrices and adapts _matrixCols.
    virtual void removeMatrixColumn(int columnIndex);
-
-
-
-   // ========================================================================================
-   /**
-    * need to move that in a class/header that encapsulates the Eigen data types
-    */
-
-   /** @brief shifts all columns in the matrix A on column to the right and inserts vector
-    *         v as first column at pos 0. The last column is deleted.
-    */
-   void shiftSetFirst(Eigen::MatrixXd& A, Eigen::VectorXd& v);
-
-   /// @brief appends the vector v as first column at pos 0. The other columns are shifted right.
-   void appendFront(Eigen::MatrixXd& A, Eigen::VectorXd& v);
-
-   /** @brief removes an arbitrary column from the matrix A and shifts all columns that lie to the
-    *          right of this column to the left.
-    */
-   void removeColumnFromMatrix(
-       Eigen::MatrixXd& A, int col);
 
 };
 

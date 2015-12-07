@@ -122,13 +122,12 @@ void BaseQNPostProcessing::initialize(
   _firstIteration = true;
   _firstTimeStep = true;
 
-  double init = 0.0;
   assertion(_oldXTilde.size() == 0);assertion(_oldResiduals.size() == 0);
-  _oldXTilde.append(DataValues(entries, init));
-  _oldResiduals.append(DataValues(entries, init));
-  _residuals.append(DataValues(entries, init));
-  _values.append(DataValues(entries, init));
-  _oldValues.append(DataValues(entries, init));
+  _oldXTilde = Eigen::VectorXd::Zero(entries);
+  _oldResiduals = Eigen::VectorXd::Zero(entries);
+  _residuals = Eigen::VectorXd::Zero(entries);
+  _values = Eigen::VectorXd::Zero(entries);
+  _oldValues = Eigen::VectorXd::Zero(entries);
 
   // if design specifiaction not initialized yet
   if (not (_designSpecification.size() > 0)) {
@@ -182,8 +181,7 @@ void BaseQNPostProcessing::initialize(
     if (not utils::contained(pair.first, _dataIDs)) {
       _secondaryDataIDs.push_back(pair.first);
       int secondaryEntries = pair.second->values->size();
-      //      _secondaryOldXTildes[pair.first].append(DataValues(secondaryEntries, init));
-      _secondaryResiduals[pair.first].append(DataValues(secondaryEntries, init));
+      _secondaryResiduals[pair.first] = Eigen::VectorXd::Zero(secondaryEntries);
     }
   }
 
@@ -277,10 +275,10 @@ void BaseQNPostProcessing::updateDifferenceMatrices
         preciceWarning("updateDifferenceMatrices()",
             "The number of columns in the least squares system exceeded half the number of unknowns at the interface. The system will probably become bad or ill-conditioned and the quasi-Newton post processing may not converge. Maybe the number of allowed columns (maxIterationsUsed) should be limited.");
 
-      DataValues deltaR = _residuals;
+      Eigen::VectorXd deltaR = _residuals;
       deltaR -= _oldResiduals;
 
-      DataValues deltaXTilde = _values;
+      Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
@@ -364,15 +362,10 @@ void BaseQNPostProcessing::performPostProcessing
     _oldXTilde = _values; // Store x tilde
     _oldResiduals = _residuals; // Store current residual
 
-    // copying is removed when moving to Eigen
-    DataValues q(_residuals.size(), 0.0);
-    for (int i = 0; i < q.size(); i++)
-      q(i) = _designSpecification(i) * _initialRelaxation;
-
     // Perform constant relaxation
     // with residual: x_new = x_old + omega * (res-q)
     _residuals *= _initialRelaxation;
-    _residuals -= q;
+    _residuals -= (_designSpecification * _initialRelaxation);
     _residuals += _oldValues;
     _values = _residuals;
 
@@ -430,7 +423,7 @@ void BaseQNPostProcessing::performPostProcessing
     /**
      * compute quasi-Newton update
      */
-    DataValues xUpdate(_residuals.size(), 0.0);
+    Eigen::VectorXd xUpdate(_residuals.size(), 0.0);
     computeQNUpdate(cplData, xUpdate);
 
     Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
@@ -524,8 +517,8 @@ void BaseQNPostProcessing::concatenateCouplingData
   int offset = 0;
   for (int id : _dataIDs) {
     int size = cplData[id]->values->size();
-    DataValues& values = *cplData[id]->values;
-    DataValues& oldValues = cplData[id]->oldValues.column(0);
+    Eigen::VectorXd& values = *cplData[id]->values;
+    Eigen::VectorXd& oldValues = cplData[id]->oldValues.column(0);
     for (int i = 0; i < size; i++) {
       _values[i + offset] = values[i];
       _oldValues[i + offset] = oldValues[i];
@@ -748,5 +741,50 @@ void BaseQNPostProcessing::writeInfo
   }
   _infostream << std::flush;
 }
+
+// ====================================================================================
+// |                     move this to helper class/module                             |
+// ====================================================================================
+void BaseQNPostProcessing::shiftSetFirst
+(
+    Eigen::MatrixXd& A, Eigen::VectorXd& v)
+{
+  assertion2(v.size() == A.rows(), v.size(), A.rows());
+  int n = A.rows(), m = A.cols();
+  //A.bottomRightCorner(n, m - 1) = A.topLeftCorner(n, m - 1);
+  for(auto i = A.cols()-1; i > 0; i--)
+        A.col(i) = A.col(i-1);
+  A.col(0) = v;
+}
+
+void BaseQNPostProcessing::appendFront
+(
+    Eigen::MatrixXd& A, Eigen::VectorXd& v)
+{
+  int n = A.rows(), m = A.cols();
+  if (n <= 0 && m <= 0) {
+    A = v;
+  } else {
+    assertion2(v.size() == n, v.size(), A.rows());
+    A.conservativeResize(n, m + 1);
+    //A.topRightCorner(n, m) = A.topLeftCorner(n, m); // bad error, reason unknown!
+    for(auto i = A.cols()-1; i > 0; i--)
+      A.col(i) = A.col(i-1);
+    A.col(0) = v;
+  }
+}
+
+void BaseQNPostProcessing::removeColumnFromMatrix
+(
+    Eigen::MatrixXd& A, int col)
+{
+  assertion2(col < A.cols() && col >= 0, col, A.cols())
+  for (int j = col; j < A.cols() - 1; j++)
+    A.col(j) = A.col(j + 1);
+
+  A.conservativeResize(A.rows(), A.cols() - 1);
+}
+// ================== move this to helper class/module ================================
+
 
 }}} // namespace precice, cplscheme, impl

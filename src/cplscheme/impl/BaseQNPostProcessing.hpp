@@ -85,12 +85,7 @@ public:
    /**
     * @brief Destructor, empty.
     */
-   virtual ~BaseQNPostProcessing() {
-     
-      //if ( _timingStream.is_open() ) {
-      //  _timingStream.close ();
-     // }
-  }
+   virtual ~BaseQNPostProcessing() {}
 
    /**
     * @brief Returns all IQN involved data IDs.
@@ -136,7 +131,7 @@ public:
     *        In case of manifold mapping it also returns the design specification
     *        for the surrogate model which is updated in every iteration.
     */ // TODO: change to call by ref when Eigen is used.
-   virtual std::map<int, utils::DynVector> getDesignSpecification(DataMap& cplData);
+   virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap& cplData);
 
 
    /**
@@ -207,19 +202,19 @@ protected:
    bool _resetLS;
 
    /// @brief Solver output from last iteration.
-   DataValues _oldXTilde;
+   Eigen::VectorXd _oldXTilde;
 
    /// @brief Current iteration residuals of IQN data. Temporary.
-   DataValues _residuals;
+   Eigen::VectorXd _residuals;
 
    /// @brief Current iteration residuals of secondary data.
-   std::map<int,DataValues> _secondaryResiduals;
+   std::map<int,Eigen::VectorXd> _secondaryResiduals;
 
    /// @brief Stores residual deltas.
-   DataMatrix _matrixV;
+   Eigen::MatrixXd _matrixV;
 
    /// @brief Stores x tilde deltas, where x tilde are values computed by solvers.
-   DataMatrix _matrixW;
+   Eigen::MatrixXd _matrixW;
    
    /// @brief Stores the current QR decomposition ov _matrixV, can be updated via deletion/insertion of columns
    QRFactorization _qrV;
@@ -279,7 +274,7 @@ protected:
    virtual void computeUnderrelaxationSecondaryData(DataMap& cplData) = 0;
 
    /// @brief computes the quasi-Newton update using the specified pp scheme (MVQN, IQNILS)
-   virtual void computeQNUpdate(DataMap& cplData, DataValues& xUpdate) = 0;
+   virtual void computeQNUpdate(DataMap& cplData, Eigen::VectorXd& xUpdate) = 0;
    
    /// @brief Removes one iteration from V,W matrices and adapts _matrixCols.
    virtual void removeMatrixColumn(int columnIndex);
@@ -287,16 +282,35 @@ protected:
    /// @brief writes info to the _infostream (also in parallel)
    void writeInfo(std::string s, bool allProcs = false);
 
+
+  // ========================================================================================
+  /**
+   * need to move that in a class/header that encapsulates the Eigen data types
+   */
+
+  /** @brief shifts all columns in the matrix A on column to the right and inserts vector
+   *         v as first column at pos 0. The last column is deleted.
+   */
+  void shiftSetFirst(Eigen::MatrixXd& A, Eigen::VectorXd& v);
+
+  /// @brief appends the vector v as first column at pos 0. The other columns are shifted right.
+  void appendFront(Eigen::MatrixXd& A, Eigen::VectorXd& v);
+
+  /** @brief removes an arbitrary column from the matrix A and shifts all columns that lie to the
+   *          right of this column to the left.
+   */
+  void removeColumnFromMatrix(Eigen::MatrixXd& A, int col);
+
 private:
 
   /// @brief Concatenation of all coupling data involved in the QN system.
-  DataValues _values;
+  Eigen::VectorXd _values;
 
   /// @brief Concatenation of all (old) coupling data involved in the QN system.
-  DataValues _oldValues;
+  Eigen::VectorXd _oldValues;
 
   /// @brief Difference between solver input and output from last timestep
-  DataValues _oldResiduals;
+  Eigen::VectorXd _oldResiduals;
 
   /** @brief Determines sensitivity when two matrix columns are considered equal.
    *
@@ -318,8 +332,8 @@ private:
    *  initial relaxation, if previous time step converged within one iteration i.e., V and W
    *  are empty -- in this case restore V and W with time step t-2.
    */
-  DataMatrix _matrixVBackup;
-  DataMatrix _matrixWBackup;
+  Eigen::MatrixXd _matrixVBackup;
+  Eigen::MatrixXd _matrixWBackup;
   std::deque<int> _matrixColsBackup;
 
   /// @ brief additional debugging info, is not important for computation:
