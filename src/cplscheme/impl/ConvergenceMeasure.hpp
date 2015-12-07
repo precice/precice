@@ -7,6 +7,7 @@
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
+#include "Eigen/Dense"
 
 namespace precice {
 namespace cplscheme {
@@ -46,9 +47,9 @@ public:
    * @param newValues [IN] New iterate values.
    */
   virtual void measure (
-    const utils::DynVector& oldValues,
-    const utils::DynVector& newValues,
-    const utils::DynVector& designSpecification) =0;
+    const Eigen::VectorXd& oldValues,
+    const Eigen::VectorXd& newValues,
+    const Eigen::VectorXd& designSpecification) =0;
 
   /**
    * @brief Returns true, if the last measurement indicates convergence.
