@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_UTILS_MASTER_SLAVE_HPP_
-#define PRECICE_UTILS_MASTER_SLAVE_HPP_
+#pragma once
 
 #include "Dimensions.hpp"
 
@@ -21,7 +17,11 @@ class MasterSlave
 public:
 
   static int _rank;
+
+  /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int _size;
+
+  /// The rank of the master. At this time it is hardcodes to 0.
   static int _masterRank;
 
   /**
@@ -78,5 +78,3 @@ private:
 
 
 }} // namespace precice, utils
-
-#endif /* PRECICE_UTILS_MASTER_SLAVE_HPP_ */

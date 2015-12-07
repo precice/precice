@@ -560,7 +560,7 @@ void Mesh:: computeDistribution()
 {
   preciceTrace2("computeDistribution()", utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
 
-  // (0) broadcast global number of vertices
+  // (0) Broadcast global number of vertices
   if (utils::MasterSlave::_slaveMode) {
     int globalNumber = -1;
     utils::MasterSlave::_communication->broadcast(globalNumber,0);
@@ -571,7 +571,7 @@ void Mesh:: computeDistribution()
     utils::MasterSlave::_communication->broadcast(_globalNumberOfVertices);
   }
 
-  // (1) generate vertex offsets
+  // (1) Generate vertex offsets from the vertexDistribution, broadcast it to all slaves.
   preciceDebug("Generate vertex offsets");
   if (utils::MasterSlave::_slaveMode) {
     _vertexOffsets.resize(utils::MasterSlave::_size);
@@ -592,7 +592,7 @@ void Mesh:: computeDistribution()
   }
 
 
-  // (2) generate global indices
+  // (2) Generate global indices from the vertexDistribution, broadcast it to all slaves.
   preciceDebug("Generate global indices");
   if (utils::MasterSlave::_slaveMode) {
     int numberOfVertices = vertices().size();
@@ -645,50 +645,50 @@ void Mesh:: computeDistribution()
       int localNumberOfVertices = _vertexDistribution[rank].size();
       slaveOwnerVecs[rank].resize(localNumberOfVertices);
       int counter = 0;
-      for(int i=0;i<localNumberOfVertices;i++){
-        if(globalOwnerVec[globalIndices[i]] == 0){
-          slaveOwnerVecs[rank][i] = 1;
+      for (int i=0; i < localNumberOfVertices; i++) {
+        if (globalOwnerVec[globalIndices[i]] == 0) { // Vertex has no owner yet
+          slaveOwnerVecs[rank][i] = 1; // Now it is owned by rank
           globalOwnerVec[globalIndices[i]] = 1;
           ++counter;
           if(counter==localGuess) break;
         }
+        
       }
-    }
-    //second round: distribute all other vertices in a greedy way
-    for (int rank = 0; rank < utils::MasterSlave::_size; rank++){
-     auto globalIndices = _vertexDistribution[rank];
-     int localNumberOfVertices = _vertexDistribution[rank].size();
-     for(int i=0;i<localNumberOfVertices;i++){
-       if(globalOwnerVec[globalIndices[i]] == 0){
-         slaveOwnerVecs[rank][i] = 1;
-         globalOwnerVec[globalIndices[i]] = rank + 1;
-       }
-     }
-
-     if (localNumberOfVertices!=0) {
-       if(rank==0){ //master own data
-         setOwnerInformation(slaveOwnerVecs[rank]);
-       }
-       else{
-         utils::MasterSlave::_communication->send(slaveOwnerVecs[rank].data(),localNumberOfVertices,rank);
+      //second round: distribute all other vertices in a greedy way
+      for (int rank = 0; rank < utils::MasterSlave::_size; rank++){
+        auto globalIndices = _vertexDistribution[rank];
+        int localNumberOfVertices = _vertexDistribution[rank].size();
+        for(int i=0;i<localNumberOfVertices;i++){
+          if(globalOwnerVec[globalIndices[i]] == 0){
+            slaveOwnerVecs[rank][i] = 1;
+            globalOwnerVec[globalIndices[i]] = rank + 1;
+          }
+        }
+        
+        if (localNumberOfVertices!=0) {
+          if(rank==0){ //master own data
+            setOwnerInformation(slaveOwnerVecs[rank]);
+          }
+          else{
+            utils::MasterSlave::_communication->send(slaveOwnerVecs[rank].data(),localNumberOfVertices,rank);
+          }
         }
       }
-    }
-
-
-#   ifdef Debug
+      
+      #     ifdef Debug
       for(int i=0;i<_globalNumberOfVertices;i++){
         if(globalOwnerVec[i]==0){
           preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << _name
-              << " was completely filtered out, since it has no influence on any mapping.")
-        }
+                         << " was completely filtered out, since it has no influence on any mapping.")
+            }
       }
-#   endif
-  } else{ //coupling mode
-    std::vector<int> ownerVec(vertices().size(),1);
-    setOwnerInformation(ownerVec);
+      #     endif
+      
+    } else{ //coupling mode
+      std::vector<int> ownerVec(vertices().size(),1);
+      setOwnerInformation(ownerVec);
+    }
   }
-}
 
 void Mesh:: clear()
 {
@@ -718,7 +718,7 @@ void Mesh:: notifyListeners()
   }
 }
 
-void Mesh:: setGlobalIndices(std::vector<int> globalIndices){
+void Mesh:: setGlobalIndices(const std::vector<int> &globalIndices){
   size_t i = 0;
   for ( Vertex& vertex : vertices() ){
     assertion(i<globalIndices.size());
@@ -727,7 +727,7 @@ void Mesh:: setGlobalIndices(std::vector<int> globalIndices){
   }
 }
 
-void Mesh:: setOwnerInformation(std::vector<int> ownerVec){
+void Mesh:: setOwnerInformation(const std::vector<int> &ownerVec){
   int i = 0;
   for ( Vertex& vertex : vertices() ){
     assertion(i<ownerVec.size());

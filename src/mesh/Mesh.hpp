@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_MESH_MESH_HPP_
-#define PRECICE_MESH_MESH_HPP_
+#pragma once
 
 #include "mesh/Group.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -322,31 +318,31 @@ public:
   
 private:
 
-  // @brief Logging device.
+  /// Logging device.
   static tarch::logging::Log _log;
 
-  // @brief Provides unique IDs for all geometry objects
+  /// Provides unique IDs for all geometry objects
   static utils::ManageUniqueIDs* _managerPropertyIDs;
 
-  // @brief Name of the mesh.
+  /// Name of the mesh.
   std::string _name;
 
-  // @brief Dimension of mesh.
+  /// Dimension of mesh.
   int _dimensions;
 
-  // @brief Flag for flipping normals direction.
+  /// Flag for flipping normals direction.
   bool _flipNormals;
 
-  // @brief Holds all mesh names and the corresponding IDs belonging to the mesh.
+  /// Holds all mesh names and the corresponding IDs belonging to the mesh.
   std::map<std::string,int> _nameIDPairs;
 
-  // @brief Holds vertices, edges, and triangles.
+  /// Holds vertices, edges, and triangles.
   Group _content;
 
-  // @brief All property containers created by the mesh.
+  /// All property containers created by the mesh.
   PropertyContainerContainer _propertyContainers;
 
-  // @brief Data hold by the vertices of the mesh.
+  /// Data hold by the vertices of the mesh.
   DataContainer _data;
 
   utils::ManageUniqueIDs _manageVertexIDs;
@@ -357,19 +353,19 @@ private:
 
   utils::ManageUniqueIDs _manageQuadIDs;
 
-  // @brief Mesh listeners interested in mesh changes.
+  /// Mesh listeners interested in mesh changes.
   std::list<MeshListener*> _listeners;
 
   /**
-   * @brief Vertex distribution for the master, holding for each slave all vertex IDs.
+   * @brief Vertex distribution for the master, holding for each slave all vertex IDs it owns.
    * For slaves, this data structure is empty and should not be used.
    */
   std::map<int,std::vector<int> > _vertexDistribution;
 
+  /// Holds the index of the last vertex for each slave.
   /**
-   * @brief Offsets of every slave from his last vertex to the very first vertex.
-   * The last entry holds ergo the global number of vertices.
-   * Needed for the matrix-matrix multiplication of the MVJ pp.
+   * The last entry holds the total number of vertices.
+   * Needed for the matrix-matrix multiplication of the IMVJ postprocessing.
    */
   std::vector<int> _vertexOffsets;
 
@@ -382,11 +378,11 @@ private:
 
   BoundingBox _boundingBox;
 
-  void setGlobalIndices(std::vector<int> globalIndices);
+  /// Sets the globalIndices on all vertices in the mesh
+  void setGlobalIndices(const std::vector<int> &globalIndices);
 
-  void setOwnerInformation(std::vector<int> ownerVec);
+  /// Sets the isOwner property of a vertex i, if ownerVec[i] == 1
+  void setOwnerInformation(const std::vector<int> &ownerVec);
 };
 
 }} // namespace precice, mesh
-
-#endif /* PRECICE_MESH_MESH_HPP_ */
