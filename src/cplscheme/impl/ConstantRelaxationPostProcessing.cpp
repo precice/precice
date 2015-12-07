@@ -8,6 +8,8 @@
 #include "tarch/la/DynamicVector.h"
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
+#include "Eigen/Dense"
+#include "utils/EigenHelperFunctions.hpp"
 //#include "utils/NumericalCompare.hpp"
 
 namespace precice {
@@ -46,8 +48,7 @@ void ConstantRelaxationPostProcessing:: initialize
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
       assertion1(pair.second->values->size() > 0, pair.first);
-      pair.second->oldValues.append(CouplingData::DataMatrix(
-        pair.second->values->size(), 1, 0.0));
+      utils::append(pair.second->oldValues, Eigen::Vector::Zero(pair.second->values->size()));
     }
   }
 }
@@ -60,8 +61,8 @@ void ConstantRelaxationPostProcessing:: performPostProcessing
   double omega = _relaxation;
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type & pair : cplData) {
-    utils::DynVector& values = * pair.second->values;
-    utils::DynVector& oldValues = pair.second->oldValues.column(0);
+    Eigen::VectorXd& values = * pair.second->values;
+    Eigen::VectorXd& oldValues = pair.second->oldValues.col(0);
     values *= omega;
     values += oldValues * oneMinusOmega;
     preciceDebug("pp values" << values);
@@ -76,22 +77,22 @@ void ConstantRelaxationPostProcessing:: performPostProcessing
  *         This information is needed for convergence measurements in the coupling scheme.
  *  ---------------------------------------------------------------------------------------------
  */        // TODO: change to call by ref when Eigen is used.
-std::map<int, utils::DynVector> ConstantRelaxationPostProcessing::getDesignSpecification
+std::map<int, Eigen::VectorXd> ConstantRelaxationPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
   preciceError(__func__, "design specification for constant relaxation is not supported yet.");
 
-  std::map<int, utils::DynVector> designSpecifications;
+  std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _dataIDs) {
       int size = cplData[id]->values->size();
-      utils::DynVector q(size, 0.0);
+      Eigen::VectorXd q = Eigen::VectorXd::Zero(size);
       for (int i = 0; i < size; i++) {
         q(i) = _designSpecification(i+off);
       }
       off += size;
-      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
       designSpecifications.insert(pair);
     }
   return designSpecifications;
