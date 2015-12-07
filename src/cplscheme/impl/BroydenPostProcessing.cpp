@@ -11,6 +11,9 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Dimensions.hpp"
+#include "utils/eigenHelperFunctions.hpp"
+#include "Eigen/Dense"
+#include "utils/Globals.hpp"
 #include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
@@ -59,8 +62,8 @@ void BroydenPostProcessing:: initialize
   double init = 0.0;
   size_t entries= _residuals.size();
   
-  _invJacobian = Matrix(entries, entries, init);
-  _oldInvJacobian = Matrix(entries, entries, init);
+  _invJacobian = Eigen::MatrixXd::Zero(entries, entries);
+  _oldInvJacobian = Eigen::MatrixXd::Zero(entries, entries);
 }
 
 
@@ -72,10 +75,10 @@ void BroydenPostProcessing::computeUnderrelaxationSecondaryData
     // Perform underrelaxation with initial relaxation factor for secondary data
     for (int id: _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
-      DataValues& values = *(data->values);
+      Eigen::VectorXd& values = *(data->values);
       values *= _initialRelaxation;                   // new * omg
-      DataValues& secResiduals = _secondaryResiduals[id];
-      secResiduals = data->oldValues.column(0);    // old
+      Eigen::VectorXd& secResiduals = _secondaryResiduals[id];
+      secResiduals = data->oldValues.col(0);    // old
       secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
       values += secResiduals;                      // (1-omg) * old + new * omg
     }
@@ -102,16 +105,16 @@ void BroydenPostProcessing::updateDifferenceMatrices
 }
 
 void BroydenPostProcessing::computeQNUpdate
-    (PostProcessing::DataMap& cplData, DataValues& xUpdate)
+    (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
   preciceTrace("computeQNUpdate()");
-  using namespace tarch::la;
   
   preciceDebug("currentColumns="<<_currentColumns);  
   if(_currentColumns > 1)
   {
+     preciceError(__func__, "truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.";)
      preciceDebug("compute update with QR-dec");
-     computeNewtonFactorsQRDecomposition(cplData, xUpdate);
+     //computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   }else
   {
     preciceDebug("compute update with Broyden");
@@ -121,39 +124,27 @@ void BroydenPostProcessing::computeQNUpdate
     // J_inv = J_inv_n + (w- J_inv_n*v)*v^T/|v|_l2
     // ----------------------------------------- -------
   
-    DataValues v = _matrixV.column(0);
-    DataValues w = _matrixW.column(0);
-    Matrix JUpdate(_invJacobian.rows(),_invJacobian.cols(), 0.);
+    Eigen::VectorXd v = _matrixV.col(0);
+    Eigen::VectorXd w = _matrixW.col(0);
+    Eigen::MatrixXd JUpdate = Eigen::MatrixXd::Zero(_invJacobian.rows(),_invJacobian.cols());
 
     preciceDebug("took latest column of V,W");
 
     double dotproductV = v*v;
-    DataValues tmp = _oldInvJacobian * v;    // J_inv*v
+    Eigen::VectorXd tmp = _oldInvJacobian * v;    // J_inv*v
     tmp = w - tmp;                        // (w-J_inv*v)
     tmp = tmp/dotproductV;                // (w-J_inv*v)/|v|_l2
     preciceDebug("did step (W-J_inv*v)/|v|");
-    Matrix tmp_mat(tmp.size(),1);
-    Matrix vT_mat(1,v.size());
-    for(int i = 0; i < v.size(); i++)      // transform vectors in matrices
-    {
-      tmp_mat(i,0) = tmp(i);
-      vT_mat(0,i) = v(i);
-    }
-    preciceDebug("converted vectors into matrices");
-    assertion2(tmp_mat.cols() == vT_mat.rows(), tmp_mat.cols(), vT_mat.rows());
-    multiply(tmp_mat, vT_mat, JUpdate);   // (w-J_inv*v)/|v| * v^T
+
+    assertion2(tmp.size() == v.size(), tmp.size(), v.size());
+    JUpdate = tmp * v.transpose();
     preciceDebug("multiplied (w-J_inv*v)/|v| * v^T");
+
     assertion2(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
     _invJacobian = _oldInvJacobian + JUpdate;
-    
-    DataValues res_tilde(_residuals.size());
-    for(int i = 0; i < res_tilde.size(); i++)
-      res_tilde(i) = _residuals(i);
 
-    res_tilde *= -1.;
-  
     // solve delta_x = - J_inv*residuals
-    multiply(_invJacobian, res_tilde, xUpdate);
+    xUpdate = _invJacobian * (-_residuals);
   }
   
   if(_currentColumns >= _maxColumns)
@@ -163,7 +154,7 @@ void BroydenPostProcessing::computeQNUpdate
   }
 }
 
-
+/*
 void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
 (PostProcessing::DataMap& cplData, DataValues& xUpdate)
 {
@@ -225,6 +216,7 @@ void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
   // solve delta_x = - J_inv*residuals
   multiply(_invJacobian, res_tilde, xUpdate);
 }
+*/
 
 
 
