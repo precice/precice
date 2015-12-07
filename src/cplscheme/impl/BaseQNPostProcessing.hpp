@@ -296,6 +296,9 @@ protected:
   /// @brief appends the vector v as first column at pos 0. The other columns are shifted right.
   void appendFront(Eigen::MatrixXd& A, Eigen::VectorXd& v);
 
+  /// @brief appends the vector v to the given MAtrix.
+  void appendFront(Eigen::MatrixXd& A, Eigen::VectorXd& v);
+
   /** @brief removes an arbitrary column from the matrix A and shifts all columns that lie to the
    *          right of this column to the left.
    */

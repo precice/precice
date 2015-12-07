@@ -62,10 +62,10 @@ void IQNILSPostProcessing:: initialize
 
   double init = 0.0;
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
-  foreach (DataMap::value_type& pair, cplData){
+  for (DataMap::value_type& pair: cplData){
 	if (not utils::contained(pair.first, _dataIDs)){
 	  int secondaryEntries = pair.second->values->size();
-	  _secondaryOldXTildes[pair.first].append(DataValues(secondaryEntries, init));
+	  append(_secondaryOldXTildes[pair.first], Eigen::VectorXd::Zeros(secondaryEntries));
 	}
   }
 }
@@ -78,15 +78,14 @@ void IQNILSPostProcessing::updateDifferenceMatrices
   Event e(__func__, true, true); // time measurement, barrier
 	// Compute residuals of secondary data
 	for (int id: _secondaryDataIDs){
-		DataValues& secResiduals = _secondaryResiduals[id];
+		Eigen::VectorXd& secResiduals = _secondaryResiduals[id];
 		PtrCouplingData data = cplData[id];
 		assertion2(secResiduals.size() == data->values->size(),
 				secResiduals.size(), data->values->size());
 		secResiduals = *(data->values);
-		secResiduals -= data->oldValues.column(0);
+		secResiduals -= data->oldValues.col(0);
 	}
 
-	//if(_firstIteration && (_firstTimeStep || (_matrixCols.size() < 2))) {
 	if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)){
 		// constant relaxation: for secondary data called from base class
 	}else{
@@ -97,23 +96,22 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 
 				// Append column for secondary W matrices
 				for (int id: _secondaryDataIDs) {
-					_secondaryMatricesW[id].appendFront(_secondaryResiduals[id]);
+				  appendFront(_secondaryMatricesW[id], _secondaryResiduals[id]);
 				}
 			}
 			else {
 				// Shift column for secondary W matrices
 				for (int id: _secondaryDataIDs) {
-					_secondaryMatricesW[id].shiftSetFirst(_secondaryResiduals[id]);
+				  shiftSetFirst(_secondaryMatricesW[id], _secondaryResiduals[id]);
 				}
 			}
 
 			// Compute delta_x_tilde for secondary data
 			for (int id: _secondaryDataIDs) {
-				DataMatrix& secW = _secondaryMatricesW[id];
-				assertion2(secW.column(0).size() == cplData[id]->values->size(),
-						secW.column(0).size(), cplData[id]->values->size());
-				secW.column(0) = *(cplData[id]->values);
-				secW.column(0) -= _secondaryOldXTildes[id];
+				Eigen::MatrixXd& secW = _secondaryMatricesW[id];
+				assertion2(secW.rows() == cplData[id]->values->size(), secW.rows(), cplData[id]->values->size());
+				secW.col(0) = *(cplData[id]->values);
+				secW.col(0) -= _secondaryOldXTildes[id];
 			}
 		}
 
@@ -144,10 +142,10 @@ void IQNILSPostProcessing::computeUnderrelaxationSecondaryData
     // Perform underrelaxation with initial relaxation factor for secondary data
     for (int id: _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
-      DataValues& values = *(data->values);
+      Eigen::VectorXd& values = *(data->values);
       values *= _initialRelaxation;                   // new * omg
-      DataValues& secResiduals = _secondaryResiduals[id];
-      secResiduals = data->oldValues.column(0);    // old
+      Eigen::VectorXd& secResiduals = _secondaryResiduals[id];
+      secResiduals = data->oldValues.col(0);    // old
       secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
       values += secResiduals;                      // (1-omg) * old + new * omg
     }
@@ -155,92 +153,68 @@ void IQNILSPostProcessing::computeUnderrelaxationSecondaryData
 
 
 void IQNILSPostProcessing::computeQNUpdate
-(PostProcessing::DataMap& cplData, DataValues& xUpdate)
+(PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
 	preciceTrace("computeQNUpdate()");
   Event e(__func__, true, true); // time measurement, barrier
-
-  using namespace tarch::la;
   preciceDebug("   Compute Newton factors");
 
   // Calculate QR decomposition of matrix V and solve Rc = -Qr
-  DataValues __c;
+  Eigen::VectorXd __c;
 
 	// for master-slave mode and procs with no vertices,
 	// qrV.cols() = getLSSystemCols() and _qrV.rows() = 0
-	Matrix __Qt(_qrV.cols(), _qrV.rows(), 0.0);
-	Matrix __R(_qrV.cols(), _qrV.cols(), 0.0);
-
-	auto q = _qrV.matrixQ();
-	for(int i = 0; i<q.rows(); i++)
-	for(int j = 0; j<q.cols(); j++)
-	{
-		__Qt(j,i) = q(i,j);
-	}
+	auto __Qt = _qrV.matrixQ();
+	auto __R = _qrV.matrixR();
 
 	if(!_hasNodesOnInterface){
-	assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
-	assertion1(_qrV.rows() == 0, _qrV.rows());
-	assertion1(__Qt.size() == 0, __Qt.size());
+	  assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
+	  assertion1(_qrV.rows() == 0, _qrV.rows());
+	  assertion1(__Qt.size() == 0, __Qt.size());
 	}
 
-	auto r = _qrV.matrixR();
-	for(int i = 0; i<r.rows(); i++)
-	for(int j = 0; j<r.cols(); j++)
-	{
-		__R(i,j) = r(i,j);
-	}
-
-	DataValues _local_b(_qrV.cols(), 0.0);
-	DataValues _global_b;
+	Eigen::VectorXd _local_b(_qrV.cols(), 0.0);
+	Eigen::VectorXd _global_b;
 
 	Event e_qrsolve("solve: R alpha = -Q^T r", true, true); // time measurement, barrier
 	multiply(__Qt, _residuals, _local_b);
 	_local_b *= -1.0; // = -Qr
 
 	assertion1(__c.size() == 0, __c.size());
+	// reserve memory for c
+	append(__c, Eigen::VectorXd::Zero(_local_b.size()));
 
-	/**
-	 * compute rhs Q^T*res in parallel
-	 * TODO: implement all-reduce
-	 */
+	// compute rhs Q^T*res in parallel
 	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
 		assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
-		__c.append(_local_b.size(), 0.0);
-		backSubstitution(__R, _local_b, __c);
+		// back substitution
+		__c = __R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
 	}else{
-
 	   assertion(utils::MasterSlave::_communication.get() != nullptr);
 	   assertion(utils::MasterSlave::_communication->isConnected());
-
 	   if(_hasNodesOnInterface)  assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
-
-	   // reserve memory for c
-	   __c.append(_local_b.size(), 0.0);
-
-	   if(utils::MasterSlave::_slaveMode)  // assertion for safety
-	     assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+	   assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 
 	   if(utils::MasterSlave::_masterMode){
-	     assertion1(_global_b.size() == 0, _global_b.size()); assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+	     assertion1(_global_b.size() == 0, _global_b.size());
 	   }
-	   _global_b.append(_local_b.size(), 0.0); // init output buffer
+	   append(_global_b, Eigen::VectorXd::Zero(_local_b.size()));
 
 	   // do a reduce operation to sum up all the _local_b vectors
-	   utils::MasterSlave::reduceSum(&_local_b(0), &_global_b(0), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
+	   utils::MasterSlave::reduceSum(_local_b.data(), _global_b.data(), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
 
 	   // back substitution R*c = b only in master node
 	   if(utils::MasterSlave::_masterMode)
-	     backSubstitution(__R, _global_b, __c);
+	     __c = __R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
 
 	  // broadcast coefficients c to all slaves
-	  utils::MasterSlave::broadcast(&__c(0), __c.size());
+	  utils::MasterSlave::broadcast(__c.data(), __c.size());
 	}
 	e_qrsolve.stop();
 
 	preciceDebug("   Apply Newton factors");
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
-	multiply(_matrixW, __c, xUpdate);
+	xUpdate = _matrixW * __c;
 
 	preciceDebug("c = " << __c);
 
@@ -259,15 +233,12 @@ void IQNILSPostProcessing::computeQNUpdate
 	// Perform QN relaxation for secondary data
 	for (int id: _secondaryDataIDs){
 	  PtrCouplingData data = cplData[id];
-	  DataValues& values = *(data->values);
-	  assertion2(_secondaryMatricesW[id].cols() == __c.size(),
-				 _secondaryMatricesW[id].cols(), __c.size());
-	  multiply(_secondaryMatricesW[id], __c, values);
-	  assertion2(values.size() == data->oldValues.column(0).size(),
-				 values.size(), data->oldValues.column(0).size());
-	  values += data->oldValues.column(0);
-	  assertion2(values.size() == _secondaryResiduals[id].size(),
-				 values.size(), _secondaryResiduals[id].size());
+	  Eigen::VectorXd& values = *(data->values);
+	  assertion2(_secondaryMatricesW[id].cols() == __c.size(), _secondaryMatricesW[id].cols(), __c.size());
+	  values = _secondaryMatricesW[id] * __c;
+	  assertion2(values.size() == data->oldValues.column(0).size(), values.size(), data->oldValues.column(0).size());
+	  values += data->oldValues.col(0);
+	  assertion2(values.size() == _secondaryResiduals[id].size(), values.size(), _secondaryResiduals[id].size());
 	  values += _secondaryResiduals[id];
 	}
 
@@ -279,7 +250,7 @@ void IQNILSPostProcessing::computeQNUpdate
 			_secondaryMatricesWBackup = _secondaryMatricesW;
 		}
 		for (int id: _secondaryDataIDs){
-			_secondaryMatricesW[id].clear();
+			_secondaryMatricesW[id].resize(0,0);
 		}
 	}
 }
@@ -299,7 +270,7 @@ void IQNILSPostProcessing:: specializedIterationsConverged
     if (_forceInitialRelaxation)
     {
       for (int id: _secondaryDataIDs) {
-        _secondaryMatricesW[id].clear();
+        _secondaryMatricesW[id].resize(0,0);
       }
     } else {
       /**
@@ -312,10 +283,10 @@ void IQNILSPostProcessing:: specializedIterationsConverged
   else if ((int)_matrixCols.size() > _timestepsReused){
     int toRemove = _matrixCols.back();
     for (int id: _secondaryDataIDs){
-      DataMatrix& secW = _secondaryMatricesW[id];
+      Eigen::MatrixXd& secW = _secondaryMatricesW[id];
       assertion3(secW.cols() > toRemove, secW, toRemove, id);
       for (int i=0; i < toRemove; i++){
-      secW.remove(secW.cols() - 1);
+        removeColumnFromMatrix(secW, secW.cols() - 1);
       }
     }
   }
@@ -329,7 +300,7 @@ void IQNILSPostProcessing:: removeMatrixColumn
   assertion(_matrixV.cols() > 1);
   // remove column from secondary Data Matrix W
   for (int id: _secondaryDataIDs){
-	 _secondaryMatricesW[id].remove(columnIndex);
+    removeColumnFromMatrix(_secondaryMatricesW[id], columnIndex);
    }
 
 	BaseQNPostProcessing::removeMatrixColumn(columnIndex);
