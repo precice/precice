@@ -813,8 +813,8 @@ void MMPostProcessing::iterationsConverged
 
     // remove columns
     for (int i = 0; i < toRemove; i++) {
-      removeColumnFromMatrix(_matrixF, _matrixF.cols() - 1);
-      removeColumnFromMatrix(_matrixC, _matrixC.cols() - 1);
+      utils::removeColumnFromMatrix(_matrixF, _matrixF.cols() - 1);
+      utils::removeColumnFromMatrix(_matrixC, _matrixC.cols() - 1);
     }
     _matrixCols.pop_back();
   }
