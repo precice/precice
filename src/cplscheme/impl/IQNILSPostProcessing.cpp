@@ -15,6 +15,7 @@
 #include "io/TXTReader.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include "QRFactorization.hpp"
 #include "Eigen/Dense"
 #include <sys/unistd.h>
@@ -65,7 +66,7 @@ void IQNILSPostProcessing:: initialize
   for (DataMap::value_type& pair: cplData){
 	if (not utils::contained(pair.first, _dataIDs)){
 	  int secondaryEntries = pair.second->values->size();
-	  append(_secondaryOldXTildes[pair.first], Eigen::VectorXd::Zeros(secondaryEntries));
+	  utils::append(_secondaryOldXTildes[pair.first], Eigen::VectorXd::Zeros(secondaryEntries));
 	}
   }
 }
@@ -96,13 +97,13 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 
 				// Append column for secondary W matrices
 				for (int id: _secondaryDataIDs) {
-				  appendFront(_secondaryMatricesW[id], _secondaryResiduals[id]);
+				  utils::appendFront(_secondaryMatricesW[id], _secondaryResiduals[id]);
 				}
 			}
 			else {
 				// Shift column for secondary W matrices
 				for (int id: _secondaryDataIDs) {
-				  shiftSetFirst(_secondaryMatricesW[id], _secondaryResiduals[id]);
+				  utils::shiftSetFirst(_secondaryMatricesW[id], _secondaryResiduals[id]);
 				}
 			}
 
@@ -182,7 +183,7 @@ void IQNILSPostProcessing::computeQNUpdate
 
 	assertion1(__c.size() == 0, __c.size());
 	// reserve memory for c
-	append(__c, Eigen::VectorXd::Zero(_local_b.size()));
+	utils::append(__c, Eigen::VectorXd::Zero(_local_b.size()));
 
 	// compute rhs Q^T*res in parallel
 	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
@@ -198,7 +199,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	   if(utils::MasterSlave::_masterMode){
 	     assertion1(_global_b.size() == 0, _global_b.size());
 	   }
-	   append(_global_b, Eigen::VectorXd::Zero(_local_b.size()));
+	   utils::append(_global_b, Eigen::VectorXd::Zero(_local_b.size()));
 
 	   // do a reduce operation to sum up all the _local_b vectors
 	   utils::MasterSlave::reduceSum(_local_b.data(), _global_b.data(), _local_b.size()); // size = getLSSystemCols() = _local_b.size()
@@ -286,7 +287,7 @@ void IQNILSPostProcessing:: specializedIterationsConverged
       Eigen::MatrixXd& secW = _secondaryMatricesW[id];
       assertion3(secW.cols() > toRemove, secW, toRemove, id);
       for (int i=0; i < toRemove; i++){
-        removeColumnFromMatrix(secW, secW.cols() - 1);
+        utils::removeColumnFromMatrix(secW, secW.cols() - 1);
       }
     }
   }
@@ -300,7 +301,7 @@ void IQNILSPostProcessing:: removeMatrixColumn
   assertion(_matrixV.cols() > 1);
   // remove column from secondary Data Matrix W
   for (int id: _secondaryDataIDs){
-    removeColumnFromMatrix(_secondaryMatricesW[id], columnIndex);
+    utils::removeColumnFromMatrix(_secondaryMatricesW[id], columnIndex);
    }
 
 	BaseQNPostProcessing::removeMatrixColumn(columnIndex);

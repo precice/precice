@@ -15,6 +15,7 @@
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
@@ -196,9 +197,9 @@ void MVQNPostProcessing::updateDifferenceMatrices
       wtil = w - wtil;
 
       if (not columnLimitReached && overdetermined) {
-        appendFront(_Wtil, wtil);
+        utils::appendFront(_Wtil, wtil);
       }else {
-        shiftSetFirst(_Wtil, wtil);
+        utils::shiftSetFirst(_Wtil, wtil);
       }
     }
   }
@@ -576,7 +577,7 @@ void MVQNPostProcessing:: removeMatrixColumn
 
   // remove column from matrix _Wtil
   if(not _resetLS)
-    removeColumnFromMatrix(_Wtil, columnIndex);
+    utils::removeColumnFromMatrix(_Wtil, columnIndex);
 
   BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }

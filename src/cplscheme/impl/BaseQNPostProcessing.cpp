@@ -14,6 +14,7 @@
 #include "QRFactorization.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include <string.h>
 #include <iostream>
 #include <sstream>
@@ -190,7 +191,7 @@ void BaseQNPostProcessing::initialize(
     int cols = pair.second->oldValues.cols();
     if (cols < 1) { // Add only, if not already done
       //assertion1(pair.second->values->size() > 0, pair.first);
-      append(pair.second->oldValues, Eigen::VectorXd::Zeros(pair.second->values->size()));
+      utils::append(pair.second->oldValues, Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
 
@@ -220,21 +221,21 @@ void BaseQNPostProcessing::setDesignSpecification
  * @brief: Returns the design specification corresponding to the given coupling data.
  *         This information is needed for convergence measurements in the coupling scheme.
  *  ---------------------------------------------------------------------------------------------
- */        // TODO: change to call by ref when Eigen is used.
-std::map<int, utils::DynVector> BaseQNPostProcessing::getDesignSpecification
+ */
+std::map<int, Eigen::VectorXd> BaseQNPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
-  std::map<int, utils::DynVector> designSpecifications;
+  std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _dataIDs) {
       int size = cplData[id]->values->size();
-      utils::DynVector q(size, 0.0);
+      Eigen::VectorXd q = Eigen::VectorXd::Zero(size);
       for (int i = 0; i < size; i++) {
         q(i) = _designSpecification(i+off);
       }
       off += size;
-      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
       designSpecifications.insert(pair);
     }
   return designSpecifications;
@@ -283,8 +284,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices
       bool overdetermined = getLSSystemCols() <= getLSSystemRows();
       if (not columnLimitReached && overdetermined) {
 
-        appendFront(_matrixV, deltaR);
-        appendFront(_MatrixW, deltaXTilde);
+        utils::appendFront(_matrixV, deltaR);
+        utils::appendFront(_MatrixW, deltaXTilde);
 
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
         // QR decomposition and updae decomposition
@@ -297,8 +298,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices
         _matrixCols.front()++;
         }
       else {
-        shiftSetFirst(_matriV, deltaR);
-        shiftSetFirst(_matrixW, deltaXTilde);
+        utils::shiftSetFirst(_matriV, deltaR);
+        utils::shiftSetFirst(_matrixW, deltaXTilde);
 
         // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
         // the QR decomposition of V is updated
@@ -626,8 +627,8 @@ void BaseQNPostProcessing::iterationsConverged
 
     // remove columns
     for (int i = 0; i < toRemove; i++) {
-      removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
-      removeColumnFromMatrix(_matrixW, _matrixW.cols() - 1);
+      utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
+      utils::removeColumnFromMatrix(_matrixW, _matrixW.cols() - 1);
       // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
       _qrV.popBack();
     }
@@ -655,8 +656,8 @@ void BaseQNPostProcessing::removeMatrixColumn
   deletedColumns++;
 
   assertion(_matrixV.cols() > 1);
-  removeColumnFromMatrix(_matrixV, columnIndex);
-  removeColumnFromMatrix(_matrixW, columnIndex);
+  utils::removeColumnFromMatrix(_matrixV, columnIndex);
+  utils::removeColumnFromMatrix(_matrixW, columnIndex);
 
   // Reduce column count
   std::deque<int>::iterator iter = _matrixCols.begin();
@@ -731,74 +732,5 @@ void BaseQNPostProcessing::writeInfo
   }
   _infostream << std::flush;
 }
-
-// ====================================================================================
-// |                     move this to helper class/module                             |
-// ====================================================================================
-void BaseQNPostProcessing::shiftSetFirst
-(
-    Eigen::MatrixXd& A, Eigen::VectorXd& v)
-{
-  assertion2(v.size() == A.rows(), v.size(), A.rows());
-  int n = A.rows(), m = A.cols();
-  //A.bottomRightCorner(n, m - 1) = A.topLeftCorner(n, m - 1);
-  for(auto i = A.cols()-1; i > 0; i--)
-        A.col(i) = A.col(i-1);
-  A.col(0) = v;
-}
-
-void BaseQNPostProcessing::appendFront
-(
-    Eigen::MatrixXd& A, Eigen::VectorXd& v)
-{
-  int n = A.rows(), m = A.cols();
-  if (n <= 0 && m <= 0) {
-    A = v;
-  } else {
-    assertion2(v.size() == n, v.size(), A.rows());
-    A.conservativeResize(n, m + 1);
-    //A.topRightCorner(n, m) = A.topLeftCorner(n, m); // bad error, reason unknown!
-    for(auto i = A.cols()-1; i > 0; i--)
-      A.col(i) = A.col(i-1);
-    A.col(0) = v;
-  }
-}
-
-void BaseQNPostProcessing::append
-(
-    Eigen::MatrixXd& A, Eigen::VectorXd& v)
-{
-  int n = A.rows(), m = A.cols();
-  if (n <= 0 && m <= 0) {
-    A = v;
-  } else {
-    assertion2(v.size() == n, v.size(), A.rows());
-    A.conservativeResize(n, m + 1);
-    A.col(m+1) = v;
-  }
-}
-
-void BaseQNPostProcessing::append
-(
-    Eigen::VectorXd& v, Eigen::VectorXd& app)
-{
-  int n = v.size();
-  v.conservativeResize(n + app.size());
-  for(int i = 0; i < app.size(); i++)
-    v(n+i) = app(i);
-}
-
-void BaseQNPostProcessing::removeColumnFromMatrix
-(
-    Eigen::MatrixXd& A, int col)
-{
-  assertion2(col < A.cols() && col >= 0, col, A.cols())
-  for (int j = col; j < A.cols() - 1; j++)
-    A.col(j) = A.col(j + 1);
-
-  A.conservativeResize(A.rows(), A.cols() - 1);
-}
-// ================== move this to helper class/module ================================
-
 
 }}} // namespace precice, cplscheme, impl
