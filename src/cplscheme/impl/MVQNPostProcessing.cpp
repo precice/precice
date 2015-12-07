@@ -626,7 +626,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
    *  in case of timestepsReused == 0 and no initial relaxation, pending deletion in performPostProcessing
    */
   if(_timestepsReused > 0 || (_timestepsReused == 0 && _forceInitialRelaxation)){
-    _Wtil.conservativeResize(0, 0);
+    //_Wtil.conservativeResize(0, 0);
     _resetLS = true;
   }
 }
@@ -638,8 +638,10 @@ void MVQNPostProcessing:: removeMatrixColumn
 {
   assertion(_matrixV.cols() > 1); assertion(_Wtil.cols() > 1);
 
+
   // remove column from matrix _Wtil
-  removeColumnFromMatrix(_Wtil, columnIndex);
+  if(not _resetLS)
+    removeColumnFromMatrix(_Wtil, columnIndex);
 
   BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }
