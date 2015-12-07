@@ -438,19 +438,6 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
   
 
 	Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
-	Eigen::MatrixXd V(_matrixV.rows(), _matrixV.cols());
-	Eigen::MatrixXd W(_matrixW.rows(), _matrixW.cols());
-
-	// convert tarch matrices to Eigen matrices
-	for (int i = 0; i < V.rows(); i++)
-		for (int j = 0; j < V.cols(); j++) {
-			V(i, j) = _matrixV(i, j);
-		}
-	for (int i = 0; i < W.rows(); i++)
-		for (int j = 0; j < W.cols(); j++) {
-			W(i, j) = _matrixW(i, j);
-		}
-
 	auto Q = _qrV.matrixQ();
 	auto R = _qrV.matrixR();
 
@@ -489,12 +476,12 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 
 	// multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
 	//                                    parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
-	_parMatrixOps.multiply(_oldInvJacobian, V, W_til, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
+	_parMatrixOps.multiply(_oldInvJacobian, _matrixV, W_til, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
 
 
 	// W_til = (W-J_inv_n*V) = (W-V_tilde)
 	W_til *= -1.;
-	W_til = W_til + W;
+	W_til = W_til + _matrixW;
 
 	e_WtilV.stop();
 
@@ -518,21 +505,12 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	/**
  	 *  (4) solve delta_x = - J_inv * res
 	 */
-	Eigen::VectorXd res_tilde(_residuals.size());
-  Eigen::VectorXd xUp(_residuals.size());
-  for(int i = 0; i < res_tilde.size(); i++)
-    res_tilde(i) = _residuals(i);
-
-	res_tilde *= -1.;
-
-	Event e_up("compute update = J*(-res)", true, true); // time measurement, barrier
+	Event e_up("compute update = J*(-res)", true, true); // -------- time measurement, barrier
+	Eigen::VectorXd negativeResiduals = - _residuals;
 	// multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
 	//                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-	_parMatrixOps.multiply(_invJacobian, res_tilde, xUp, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
-  e_up.stop();
-
-	for(int i = 0; i < xUp.size(); i++)
-	  xUpdate(i) = xUp(i);
+	_parMatrixOps.multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+  e_up.stop();                                         // --------
 }
 
 
