@@ -4,6 +4,7 @@
 #include "HierarchicalAitkenPostProcessing.hpp"
 #include "../CouplingData.hpp"
 #include "utils/Globals.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include <limits>
 
 namespace precice {
@@ -43,8 +44,8 @@ void HierarchicalAitkenPostProcessing:: initialize
   size_t entries = cplData[*_dataIDs.begin()]->values->size(); // Add zero boundaries
   assertion ( (entries - 1) % 2 == 0  ); // entries has to be an odd number
   double initializer = std::numeric_limits<double>::max ();
-  tarch::la::DynamicVector<double> toAppend ( entries, initializer );
-  _residual.append ( toAppend );
+  Eigen::VectorXd toAppend = Eigen::VectorXd::Constant(entries, initializer);
+  utils::append(_residuals, toAppend);
 
   size_t entriesCurrentLevel = 1;
   size_t totalEntries = 2; // Boundary entries
@@ -61,8 +62,7 @@ void HierarchicalAitkenPostProcessing:: initialize
   for (DataMap::value_type& pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
-      pair.second->oldValues.append(CouplingData::DataMatrix(
-        pair.second->values->size(), 1, 0.0));
+      utils::append(pair.second->oldValues, Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
 }
@@ -72,19 +72,19 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
   DataMap & cplData )
 {
   preciceTrace ( "performPostProcessing()" );
-  typedef utils::DynVector DataValues;
+  typedef Eigen::VectorXd DataValues;
 
   // Compute aitken relaxation factor
   assertion ( utils::contained(*_dataIDs.begin(), cplData) );
   DataValues & values = *cplData[*_dataIDs.begin()]->values;
-  DataValues & oldValues = cplData[*_dataIDs.begin()]->oldValues.column(0);
+  DataValues & oldValues = cplData[*_dataIDs.begin()]->oldValues.col(0);
 
   // Compute current residuals
-  DataValues residual ( values );
+  DataValues residual = values;
   residual -= oldValues;
 
   // Compute residual deltas and temporarily store it in _residuals
-  DataValues residualDelta ( _residual );
+  DataValues residualDelta = _residual;
   residualDelta *= -1.0;
   residualDelta += residual;
 
@@ -108,14 +108,14 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
     size_t index = stepsize / 2;
 
     for ( size_t i=0; i < entriesCurrentLevel; i++ ) {
-      _residual[index] -= ( _residual[index - stepsize/2] +
-                            _residual[index + stepsize/2] ) / 2.0;
-      residualDelta[index] -= ( residualDelta[index - stepsize/2] +
-                                residualDelta[index + stepsize/2] ) / 2.0;
-      values[index] -= ( values[index - stepsize/2] +
-                         values[index + stepsize/2] ) / 2.0;
-      oldValues[index] -= ( oldValues[index - stepsize/2] +
-                            oldValues[index + stepsize/2] ) / 2.0;
+      _residual(index) -= ( _residual(index - stepsize/2) +
+                            _residual(index + stepsize/2) ) / 2.0;
+      residualDelta(index) -= ( residualDelta(index - stepsize/2) +
+                                residualDelta(index + stepsize/2) ) / 2.0;
+      values(index) -= ( values(index - stepsize/2) +
+                         values(index + stepsize/2) ) / 2.0;
+      oldValues(index) -= ( oldValues(index - stepsize/2) +
+                            oldValues(index + stepsize/2) ) / 2.0;
       index += stepsize;
     }
     treatedEntries += entriesCurrentLevel;
@@ -128,18 +128,18 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 //  precicePrint ( "hierarchized residualDelta = " << residualDelta );
 
   // Compute and perform relaxation with aitken factor
-  nominators[0] = _residual[0] * residualDelta[0] +
-                  _residual[entries-1] * residualDelta[entries-1];
-  denominators[0] = residualDelta[0] * residualDelta[0] +
-                    residualDelta[entries-1] * residualDelta[entries-1];
+  nominators[0] = _residual(0) * residualDelta(0) +
+                  _residual(entries-1) * residualDelta(entries-1);
+  denominators(0) = residualDelta(0) * residualDelta(0) +
+                    residualDelta(entries-1) * residualDelta(entries-1);
   computeAitkenFactor ( 0, nominators[0], denominators[0] );
   double omega = _aitkenFactors[0];
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type &pair : cplData) {
     DataValues & values = *pair.second->values;
-    DataValues & oldValues = pair.second->oldValues.column(0);
-    values[0] = values[0] * omega + oldValues[0] * oneMinusOmega;
-    values[entries-1] = values[entries-1] * omega + oldValues[entries-1] * oneMinusOmega;
+    DataValues & oldValues = pair.second->oldValues.col(0);
+    values(0) = values(0) * omega + oldValues(0) * oneMinusOmega;
+    values(entries-1) = values(entries-1) * omega + oldValues(entries-1) * oneMinusOmega;
   }
   treatedEntries = 2;
   entriesCurrentLevel = 1;
@@ -147,8 +147,8 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
     size_t stepsize = (entries - 1) / std::pow(2.0, (int)(level-1));
     size_t index = stepsize / 2;
     for ( size_t i=0; i < entriesCurrentLevel; i++ ) {
-      nominators[level] += _residual[index] * residualDelta[index];
-      denominators[level] += residualDelta[index] * residualDelta[index];
+      nominators[level] += _residual(index) * residualDelta(index);
+      denominators[level] += residualDelta(index) * residualDelta(index);
       index += stepsize;
     }
     computeAitkenFactor ( level, nominators[level], denominators[level] );
@@ -159,7 +159,7 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
     //  DataValues & oldValues = pair.second.oldValues.getColumn(0);
       index = stepsize / 2;
       for ( size_t i=0; i < entriesCurrentLevel; i++ ) {
-        values[index] = values[index] * omega + oldValues[index] * oneMinusOmega;
+        values(index) = values(index) * omega + oldValues(index) * oneMinusOmega;
         index += stepsize;
       }
     //}
@@ -198,10 +198,10 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
     size_t stepsize = (entries - 1) / std::pow(2.0, (int)(level-1));
     size_t index = stepsize / 2;
     for ( size_t i=0; i < entriesCurrentLevel; i++ ) {
-      values[index] +=
-          (values[index - stepsize/2] + values[index + stepsize/2]) / 2.0;
-      oldValues[index] +=
-          (oldValues[index - stepsize/2] + oldValues[index + stepsize/2]) / 2.0;
+      values(index) +=
+          (values(index - stepsize/2) + values(index + stepsize/2)) / 2.0;
+      oldValues(index) +=
+          (oldValues(index - stepsize/2) + oldValues(index + stepsize/2)) / 2.0;
       index += stepsize;
     }
     treatedEntries += entriesCurrentLevel;
@@ -359,7 +359,7 @@ void HierarchicalAitkenPostProcessing:: iterationsConverged
   DataMap & cplData )
 {
   _iterationCounter = 0;
-  assign(_residual) = std::numeric_limits<double>::max ();
+  _residual = Eigen::VectorXd::Constant(_residual.size(), std::numeric_limits<double>::max ());
 }
 
 void HierarchicalAitkenPostProcessing:: computeAitkenFactor
@@ -394,23 +394,23 @@ void HierarchicalAitkenPostProcessing:: computeAitkenFactor
  * @brief: Returns the design specification corresponding to the given coupling data.
  *         This information is needed for convergence measurements in the coupling scheme.
  *  ---------------------------------------------------------------------------------------------
- */        // TODO: change to call by ref when Eigen is used.
-std::map<int, utils::DynVector> HierarchicalAitkenPostProcessing::getDesignSpecification
+ */
+std::map<int, Eigen::VectorXd> HierarchicalAitkenPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
   preciceError(__func__, "design specification for Aitken relaxation is not supported yet.");
 
-  std::map<int, utils::DynVector> designSpecifications;
+  std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _dataIDs) {
       int size = cplData[id]->values->size();
-      utils::DynVector q(size, 0.0);
+      Eigen::VectorXd q = Eigen::VectorXd::Zero(size);
       for (int i = 0; i < size; i++) {
         q(i) = _designSpecification(i+off);
       }
       off += size;
-      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
       designSpecifications.insert(pair);
     }
   return designSpecifications;
