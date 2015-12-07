@@ -2,6 +2,7 @@
 #include "impl/PostProcessing.hpp"
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -126,10 +127,10 @@ void ParallelCouplingScheme::initializeData()
         for (DataMap::value_type & pair : getReceiveData()) {
           if (pair.second->oldValues.cols() == 0)
                     break;
-          utils::DynVector& oldValues = pair.second->oldValues.column(0);
+          Eigen::VectorXd& oldValues = pair.second->oldValues.col(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
-          pair.second->oldValues.shiftSetFirst(*pair.second->values);
+          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
         }
       }
     }
@@ -138,10 +139,10 @@ void ParallelCouplingScheme::initializeData()
         for (DataMap::value_type & pair : getSendData()) {
           if (pair.second->oldValues.cols() == 0)
                     break;
-          utils::DynVector& oldValues = pair.second->oldValues.column(0);
+          Eigen::VectorXd& oldValues = pair.second->oldValues.col(0);
           oldValues = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
-          pair.second->oldValues.shiftSetFirst(*pair.second->values);
+          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
         }
       }
       getM2N()->startSendPackage(0);
@@ -247,7 +248,7 @@ void ParallelCouplingScheme::implicitAdvance()
       getM2N()->finishReceivePackage();
 
       // get the current design specifications from the post processing (for convergence measure)
-      std::map<int, utils::DynVector> designSpecifications;
+      std::map<int, Eigen::VectorXd> designSpecifications;
       if (getPostProcessing().get() != nullptr) {
         designSpecifications = getPostProcessing()->getDesignSpecification(getAllData());
       }
@@ -311,12 +312,12 @@ void ParallelCouplingScheme::implicitAdvance()
         else { // Store data for conv. measurement, post-processing, or extrapolation
           for (DataMap::value_type& pair : getSendData()) {
             if (pair.second->oldValues.size() > 0) {
-              pair.second->oldValues.column(0) = *pair.second->values;
+              pair.second->oldValues.col(0) = *pair.second->values;
             }
           }
           for (DataMap::value_type& pair : getReceiveData()) {
             if (pair.second->oldValues.size() > 0) {
-              pair.second->oldValues.column(0) = *pair.second->values;
+              pair.second->oldValues.col(0) = *pair.second->values;
             }
           }
         }
@@ -331,7 +332,7 @@ void ParallelCouplingScheme::implicitAdvance()
          auto fineIDs = getPostProcessing()->getDataIDs();
          auto& allData = getAllData();
          for(auto& fineID : fineIDs) {
-           *allData.at( fineID )->values = allData.at( fineID+fineIDs.size() )->oldValues.column(0);
+           *allData.at( fineID )->values = allData.at( fineID+fineIDs.size() )->oldValues.col(0);
          }
        }
      }
