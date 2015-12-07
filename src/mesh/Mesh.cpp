@@ -652,44 +652,45 @@ void Mesh:: computeDistribution()
           ++counter;
           if(counter==localGuess) break;
         }
-        
       }
-      //second round: distribute all other vertices in a greedy way
-      for (int rank = 0; rank < utils::MasterSlave::_size; rank++){
-        auto globalIndices = _vertexDistribution[rank];
-        int localNumberOfVertices = _vertexDistribution[rank].size();
-        for(int i=0;i<localNumberOfVertices;i++){
-          if(globalOwnerVec[globalIndices[i]] == 0){
-            slaveOwnerVecs[rank][i] = 1;
-            globalOwnerVec[globalIndices[i]] = rank + 1;
-          }
-        }
-        
-        if (localNumberOfVertices!=0) {
-          if(rank==0){ //master own data
-            setOwnerInformation(slaveOwnerVecs[rank]);
-          }
-          else{
-            utils::MasterSlave::_communication->send(slaveOwnerVecs[rank].data(),localNumberOfVertices,rank);
-          }
-        }
-      }
-      
-      #     ifdef Debug
-      for(int i=0;i<_globalNumberOfVertices;i++){
-        if(globalOwnerVec[i]==0){
-          preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << _name
-                         << " was completely filtered out, since it has no influence on any mapping.")
-            }
-      }
-      #     endif
-      
-    } else{ //coupling mode
-      std::vector<int> ownerVec(vertices().size(),1);
-      setOwnerInformation(ownerVec);
     }
+    //second round: distribute all other vertices in a greedy way
+    for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
+      auto globalIndices = _vertexDistribution[rank];
+      int localNumberOfVertices = _vertexDistribution[rank].size();
+      for(int i=0;i<localNumberOfVertices;i++){
+        if(globalOwnerVec[globalIndices[i]] == 0){
+          slaveOwnerVecs[rank][i] = 1;
+          globalOwnerVec[globalIndices[i]] = rank + 1;
+        }
+      }
+        
+      if (localNumberOfVertices!=0) {
+        if (rank==0){ //master own data
+          setOwnerInformation(slaveOwnerVecs[rank]);
+        }
+        else{
+          utils::MasterSlave::_communication->send(slaveOwnerVecs[rank].data(),localNumberOfVertices,rank);
+        }
+      }
+    }
+      
+#     ifdef Debug
+    for(int i=0;i<_globalNumberOfVertices;i++){
+      if(globalOwnerVec[i]==0){
+        preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << _name
+                       << " was completely filtered out, since it has no influence on any mapping.")
+          }
+    }
+#     endif
+      
+  } else{ //coupling mode
+    std::vector<int> ownerVec(vertices().size(),1);
+    setOwnerInformation(ownerVec);
   }
+}
 
+    
 void Mesh:: clear()
 {
   _content.triangles().deleteElements();
