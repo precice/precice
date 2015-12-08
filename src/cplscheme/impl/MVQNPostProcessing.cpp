@@ -188,11 +188,15 @@ void MVQNPostProcessing::computeQNUpdate
      * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
      */
 
+  Event ePrecond_1("precond J (1)", true, true); // time measurement, barrier
   _preconditioner->apply(_oldInvJacobian,false);
   _preconditioner->revert(_oldInvJacobian,true);
+  ePrecond_1.stop();
   computeNewtonFactorsUpdatedQRDecomposition(cplData, xUpdate);
+  Event ePrecond_2("precond J (2)", true, true); // time measurement, barrier
   _preconditioner->revert(_oldInvJacobian,false);
   _preconditioner->apply(_oldInvJacobian,true);
+  ePrecond_2.stop();
 }
 
 

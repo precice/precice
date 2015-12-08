@@ -391,7 +391,7 @@ void SolverInterfaceTestGeometry:: testDataActions()
   using namespace tarch::la;
   SolverInterface geo("Accessor", 0, 1);
   configureSolverInterface(_pathToTests + "testDataActions.xml", geo);
-  impl::SolverInterfaceImpl* impl = geo._impl;
+  impl::SolverInterfaceImpl* impl = geo._impl.get();
   int meshID = geo.getMeshID("Box");
   int dataID = geo.getDataID("VectorData", meshID);
   geo.initialize();
@@ -1394,7 +1394,7 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
   using namespace tarch::la;
   { // Tests A: first mesh no spacetree, second, third spacetree
     SolverInterface interface("Accessor", 0, 1);
-    impl::SolverInterfaceImpl* impl = interface._impl;
+    impl::SolverInterfaceImpl* impl = interface._impl.get();
     std::string configName = _pathToTests + "multiple-mesh-spacetree-a.xml";
     configureSolverInterface(configName, interface);
     validateEquals(interface.getDimensions(), 2);
@@ -1479,7 +1479,7 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
   }
   { // Tests B: first mesh has spacetree, second, third not
     SolverInterface interface("Accessor", 0, 1);
-    impl::SolverInterfaceImpl* impl = interface._impl;
+    impl::SolverInterfaceImpl* impl = interface._impl.get();
     std::string configName = _pathToTests + "multiple-mesh-spacetree-b.xml";
     configureSolverInterface(configName, interface);
     validateEquals(interface.getDimensions(), 2);

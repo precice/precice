@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "tarch/la/WrappedVector.h"
@@ -16,15 +13,10 @@ SolverInterface:: SolverInterface
   int                solverProcessIndex,
   int                solverProcessSize )
 :
-  _impl ( new impl::SolverInterfaceImpl(accessorName, solverProcessIndex,
-                                        solverProcessSize, false) )
+  _impl ( new impl::SolverInterfaceImpl(accessorName, solverProcessIndex, solverProcessSize, false) )
 {}
 
-SolverInterface:: ~SolverInterface()
-{
-  assertion ( _impl != nullptr );
-  delete _impl;
-}
+SolverInterface::~SolverInterface() = default;
 
 void SolverInterface:: configure
 (

@@ -166,8 +166,8 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
-  precice::utils::Event e(__func__);
   preciceTrace("computeMapping()");
+  precice::utils::Event e(__func__);
 
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
@@ -320,9 +320,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
     // -- SETS THE COEFFICIENTS --
     PetscInt colNum = 0;  // holds the number of columns
-    for (size_t j=inVertex.getID(); j < inputSize; j++) {
-      distance = inVertex.getCoords() - inMesh->vertices()[j].getCoords();
-      
+    for (mesh::Vertex& vj : inMesh->vertices()) {
+      distance = iVertex.getCoords() - vj.getCoords();
       for (int d = 0; d < dimensions; d++) {
         if (_deadAxis[d]) {
           distance[d] = 0;
@@ -331,15 +330,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       double coeff = _basisFunction.evaluate(norm2(distance));
       if (not tarch::la::equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
-        colIdx[colNum] = inMesh->vertices()[j].getGlobalIndex() + polyparams; // column of entry is the globalIndex
+        colIdx[colNum] = vj.getGlobalIndex() + polyparams; // column of entry is the globalIndex
         colNum++;
       }
       #ifdef Asserts
       if (coeff == std::numeric_limits<double>::infinity()) {
         preciceError("computeMapping()", "C matrix element has value inf. "
-                     << "i = " << i << ", j = " << j
-                     << ", coords i = " << inVertex.getCoords() << ", coords j = "
-                     << inMesh->vertices()[j].getCoords() << ", dist = "
+                     << "i = " << i
+                     << ", coords i = " << iVertex.getCoords() << ", coords j = "
+                     << vj.getCoords() << ", dist = "
                      << distance << ", norm2 = " << norm2(distance) << ", rbf = "
                      << coeff
                      << ", rbf type = " << typeid(_basisFunction).name());
@@ -487,6 +486,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 {
   precice::utils::Event e(__func__);
   preciceTrace2("map()", inputDataID, outputDataID);
+  precice::utils::Event e(__func__);
   assertion(_hasComputedMapping);
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
@@ -523,7 +523,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       }
       in.assemble();
       // in.view();
-
       ierr = MatMultTranspose(_matrixA.matrix, in.vector, Au.vector); CHKERRV(ierr);
       ierr = KSPSolve(_solver, Au.vector, out.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
@@ -565,7 +564,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       }
       in.assemble();
       // in.view();
-
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
       if (convReason < 0) {
