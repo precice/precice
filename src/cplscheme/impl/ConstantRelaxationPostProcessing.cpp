@@ -48,7 +48,7 @@ void ConstantRelaxationPostProcessing:: initialize
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
       assertion1(pair.second->values->size() > 0, pair.first);
-      utils::append(pair.second->oldValues, Eigen::Vector::Zero(pair.second->values->size()));
+      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
 }
@@ -61,8 +61,8 @@ void ConstantRelaxationPostProcessing:: performPostProcessing
   double omega = _relaxation;
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type & pair : cplData) {
-    Eigen::VectorXd& values = * pair.second->values;
-    Eigen::VectorXd& oldValues = pair.second->oldValues.col(0);
+    auto& values = * pair.second->values;
+    const auto& oldValues = pair.second->oldValues.col(0);
     values *= omega;
     values += oldValues * oneMinusOmega;
     preciceDebug("pp values" << values);

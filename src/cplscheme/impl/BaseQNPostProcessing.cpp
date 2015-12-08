@@ -191,7 +191,7 @@ void BaseQNPostProcessing::initialize(
     int cols = pair.second->oldValues.cols();
     if (cols < 1) { // Add only, if not already done
       //assertion1(pair.second->values->size() > 0, pair.first);
-      utils::append(pair.second->oldValues, Eigen::VectorXd::Zero(pair.second->values->size()));
+      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
 
@@ -285,7 +285,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
       if (not columnLimitReached && overdetermined) {
 
         utils::appendFront(_matrixV, deltaR);
-        utils::appendFront(_MatrixW, deltaXTilde);
+        utils::appendFront(_matrixW, deltaXTilde);
 
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
         // QR decomposition and updae decomposition
@@ -298,7 +298,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
         _matrixCols.front()++;
         }
       else {
-        utils::shiftSetFirst(_matriV, deltaR);
+        utils::shiftSetFirst(_matrixV, deltaR);
         utils::shiftSetFirst(_matrixW, deltaXTilde);
 
         // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
@@ -418,7 +418,7 @@ void BaseQNPostProcessing::performPostProcessing
     /**
      * compute quasi-Newton update
      */
-    Eigen::VectorXd xUpdate(_residuals.size(), 0.0);
+    Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_residuals.size());
     computeQNUpdate(cplData, xUpdate);
 
     Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
@@ -509,8 +509,8 @@ void BaseQNPostProcessing::concatenateCouplingData
   int offset = 0;
   for (int id : _dataIDs) {
     int size = cplData[id]->values->size();
-    Eigen::VectorXd& values = *cplData[id]->values;
-    Eigen::VectorXd& oldValues = cplData[id]->oldValues.col(0);
+    auto& values = *cplData[id]->values;
+    const auto& oldValues = cplData[id]->oldValues.col(0);
     for (int i = 0; i < size; i++) {
       _values(i + offset) = values(i);
       _oldValues(i + offset) = oldValues(i);
@@ -529,11 +529,12 @@ void BaseQNPostProcessing::splitCouplingData
   int offset = 0;
   for (int id : _dataIDs) {
     int size = cplData[id]->values->size();
-    Eigen::VectorXd& valuesPart = *(cplData[id]->values);
-    Eigen::VectorXd& oldValuesPart = cplData[id]->oldValues.col(0);
+    auto& valuesPart = *(cplData[id]->values);
+    //Eigen::VectorXd& oldValuesPart = cplData[id]->oldValues.col(0);
+    cplData[id]->oldValues.col(0) = _oldValues.segment(offset, size); // TODO: check if this is correct
     for (int i = 0; i < size; i++) {
       valuesPart(i) = _values(i + offset);
-      oldValuesPart(i) = _oldValues(i + offset);
+      //oldValuesPart(i) = _oldValues(i + offset);
     }
     offset += size;
   }

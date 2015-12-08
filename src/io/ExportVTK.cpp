@@ -8,6 +8,7 @@
 #include "utils/String.hpp"
 #include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
 #include "tarch/la/WrappedVector.h"
+#include "Eigen/Dense"
 #include <iostream>
 #include <fstream>
 
@@ -170,14 +171,14 @@ void ExportVTK:: exportData
   }
 
   for (mesh::PtrData data : mesh.data()) { // Plot vertex data
-    utils::DynVector& values = data->values();
+    Eigen::VectorXd& values = data->values();
     if(data->getDimensions() > 1) {
       utils::DynVector viewTemp(data->getDimensions());
       outFile << "VECTORS " << data->getName() << " float" << std::endl;
       for (mesh::Vertex& vertex : mesh.vertices()) {
         int offset = vertex.getID() * data->getDimensions();
         for(int i=0; i < data->getDimensions(); i++){
-          viewTemp[i] = values[offset + i];
+          viewTemp[i] = values(offset + i);
         }
         int i = 0;
         for(; i < data->getDimensions(); i++){
@@ -194,7 +195,7 @@ void ExportVTK:: exportData
       outFile << "SCALARS " << data->getName() << " float" << std::endl;
       outFile << "LOOKUP_TABLE default" << std::endl;
       for (mesh::Vertex& vertex : mesh.vertices()) {
-        outFile << values[vertex.getID()] << std::endl;
+        outFile << values(vertex.getID()) << std::endl;
       }
       outFile << std::endl;
     }

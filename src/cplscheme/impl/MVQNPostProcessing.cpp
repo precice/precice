@@ -208,7 +208,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
 
 
 void MVQNPostProcessing::computeQNUpdate
-    (PostProcessing::DataMap& cplData, DataValues& xUpdate)
+    (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
   preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
@@ -327,7 +327,7 @@ void MVQNPostProcessing::buildJacobian()
 }
 
 void MVQNPostProcessing::computeNewtonFactors
-(PostProcessing::DataMap& cplData, DataValues& xUpdate)
+(PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
   preciceTrace(__func__);
 
@@ -428,7 +428,7 @@ void MVQNPostProcessing::computeNewtonFactors
 
 
 void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
-(PostProcessing::DataMap& cplData, DataValues& xUpdate)
+(PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
 	preciceTrace("computeNewtonFactorsQRDecomposition()");
 

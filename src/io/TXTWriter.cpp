@@ -34,6 +34,20 @@ TXTWriter:: ~TXTWriter()
   }
 }
 
+/*
+void TXTWriter::write(
+    const Eigen::VectorXd& vec)
+{
+  _file << vec.format(CSVFormat);
+}
+
+void TXTWriter::write(
+    const Eigen::MatrixXd& matrix)
+{
+  _file << matrix.format(CSVFormat);
+}
+*/
+
 //void TXTWriter:: write
 //(
 //  const tarch::la::DynamicMatrix<double>& matrix )

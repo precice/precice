@@ -10,6 +10,7 @@
 #include "utils/PointerVector.hpp"
 #include "tarch/logging/Log.h"
 #include "tarch/la/DynamicVector.h"
+#include "Eigen/Dense"
 #include <string>
 
 namespace precice {
@@ -79,12 +80,12 @@ public:
   /**
    * @brief Returns a reference to the data values.
    */
-  utils::DynVector& values ();
+  Eigen::VectorXd& values ();
 
   /**
    * @rief Returns a const reference to the data values.
    */
-  const utils::DynVector& values () const;
+  const Eigen::VectorXd& values () const;
 
   /**
    * @brief Returns the name of the data set.
@@ -121,7 +122,7 @@ private:
   static size_t _dataCount;
 
   // @brief
-  utils::DynVector _values;
+  Eigen::VectorXd _values;
 
   // @brief Name of the data set.
   std::string _name;

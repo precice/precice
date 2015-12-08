@@ -80,6 +80,9 @@ public:
   /// Converts from a std::vector
   DynamicVector(const std::vector<Scalar> stdvector);
 
+  /// Converts from a Eigen vector
+  DynamicVector(const Eigen::VectorXd eigenVec);
+
   /**
    * Destructor, frees resources.
    */

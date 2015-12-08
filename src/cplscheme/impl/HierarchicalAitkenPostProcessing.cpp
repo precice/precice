@@ -45,7 +45,7 @@ void HierarchicalAitkenPostProcessing:: initialize
   assertion ( (entries - 1) % 2 == 0  ); // entries has to be an odd number
   double initializer = std::numeric_limits<double>::max ();
   Eigen::VectorXd toAppend = Eigen::VectorXd::Constant(entries, initializer);
-  utils::append(_residuals, toAppend);
+  utils::append(_residual, toAppend);
 
   size_t entriesCurrentLevel = 1;
   size_t totalEntries = 2; // Boundary entries
@@ -62,7 +62,7 @@ void HierarchicalAitkenPostProcessing:: initialize
   for (DataMap::value_type& pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
-      utils::append(pair.second->oldValues, Eigen::VectorXd::Zero(pair.second->values->size()));
+      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
 }
@@ -76,8 +76,10 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 
   // Compute aitken relaxation factor
   assertion ( utils::contained(*_dataIDs.begin(), cplData) );
-  DataValues & values = *cplData[*_dataIDs.begin()]->values;
-  DataValues & oldValues = cplData[*_dataIDs.begin()]->oldValues.col(0);
+  auto& values = *cplData[*_dataIDs.begin()]->values;
+
+  // Attention: no passing by ref any more --> needs to be written back at the end of the function!
+  Eigen::VectorXd oldValues = cplData[*_dataIDs.begin()]->oldValues.col(0);
 
   // Compute current residuals
   DataValues residual = values;
@@ -130,14 +132,14 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
   // Compute and perform relaxation with aitken factor
   nominators[0] = _residual(0) * residualDelta(0) +
                   _residual(entries-1) * residualDelta(entries-1);
-  denominators(0) = residualDelta(0) * residualDelta(0) +
+  denominators[0] = residualDelta(0) * residualDelta(0) +
                     residualDelta(entries-1) * residualDelta(entries-1);
   computeAitkenFactor ( 0, nominators[0], denominators[0] );
   double omega = _aitkenFactors[0];
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type &pair : cplData) {
-    DataValues & values = *pair.second->values;
-    DataValues & oldValues = pair.second->oldValues.col(0);
+    auto& values = *pair.second->values;
+    const auto& oldValues = pair.second->oldValues.col(0);
     values(0) = values(0) * omega + oldValues(0) * oneMinusOmega;
     values(entries-1) = values(entries-1) * omega + oldValues(entries-1) * oneMinusOmega;
   }
@@ -210,6 +212,10 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
   assertion ( treatedEntries == entries );
 //  precicePrint ( "relaxed values = " << values );
 //  precicePrint ( "oldValues = " << oldValues );
+
+
+  // save back oldValues in cplData. Eigen does not allow call by ref for blocks (cols, rows), thus explicitly write back
+  cplData[*_dataIDs.begin()]->oldValues.col(0) = oldValues;
 
   _iterationCounter ++;
 }

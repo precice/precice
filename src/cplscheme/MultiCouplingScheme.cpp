@@ -2,6 +2,7 @@
 #include "impl/PostProcessing.hpp"
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include "m2n/M2N.hpp"
 
 namespace precice {
@@ -112,10 +113,9 @@ void MultiCouplingScheme::initializeData()
     if (getExtrapolationOrder() > 0){
       for (DataMap& dataMap : _receiveDataVector) {
         for (DataMap::value_type & pair : dataMap){
-          utils::DynVector& oldValues = pair.second->oldValues.column(0);
-          oldValues = *pair.second->values;
+          pair.second->oldValues.col(0) = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
-          pair.second->oldValues.shiftSetFirst(*pair.second->values);
+          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
         }
       }
     }
@@ -124,10 +124,9 @@ void MultiCouplingScheme::initializeData()
     if (getExtrapolationOrder() > 0) {
       for (DataMap& dataMap : _sendDataVector) {
         for (DataMap::value_type & pair : dataMap) {
-          utils::DynVector& oldValues = pair.second->oldValues.column(0);
-          oldValues = *pair.second->values;
+          pair.second->oldValues.col(0) = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
-          pair.second->oldValues.shiftSetFirst(*pair.second->values);
+          utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
         }
       }
     }
@@ -186,7 +185,7 @@ void MultiCouplingScheme::advance()
     else { // Store data for conv. measurement, post-processing, or extrapolation
       for (DataMap::value_type& pair : _allData) {
         if (pair.second->oldValues.size() > 0){
-          pair.second->oldValues.column(0) = *pair.second->values;
+          pair.second->oldValues.col(0) = *pair.second->values;
         }
       }
     }
@@ -271,8 +270,7 @@ void MultiCouplingScheme:: sendData()
     for (DataMap::value_type& pair : _sendDataVector[i]) {
       int size = pair.second->values->size();
       if (size > 0) {
-        _communications[i]->send(tarch::la::raw(*(pair.second->values)), size,
-                      pair.second->mesh->getID(), pair.second->dimension);
+        _communications[i]->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
       }
     }
   }
@@ -289,8 +287,7 @@ void MultiCouplingScheme:: receiveData()
     for (DataMap::value_type& pair : _receiveDataVector[i]) {
       int size = pair.second->values->size();
       if (size > 0) {
-        _communications[i]->receive(tarch::la::raw(*(pair.second->values)), size,
-            pair.second->mesh->getID(), pair.second->dimension);
+        _communications[i]->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
       }
     }
   }

@@ -69,28 +69,33 @@ void NearestProjectionMappingTest:: testConservativeNonIncremental()
   inMesh->allocateDataValues();
 
   double value = 1.0;
-  assign(inData->values()) = value;
+  //assign(inData->values()) = value;
+  inData->values() = Eigen::VectorXd::Constant(inData->values().size(), value);
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  utils::DynVector& values = outData->values();
-  validateNumericalEquals(values[0], value * 1.5);
-  validateNumericalEquals(values[1], value * 1.5);
+  Eigen::VectorXd& values = outData->values();
+  validateNumericalEquals(values(0), value * 1.5);
+  validateNumericalEquals(values(1), value * 1.5);
 
   // Change in-vertex coordinates and recompute mapping
   inv1.setCoords (Vector2D(-1.0, -1.0));
   inv2.setCoords (Vector2D(-1.0, -1.0));
   inv3.setCoords (Vector2D(1.0, 1.0));
-  assign(values) = 0.0;
+  //assign(values) = 0.0;
+  values = Eigen::VectorXd::Constant(values.size(), 0.0);
+
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
-  validateNumericalEquals(values[0], value * 2.0);
-  validateNumericalEquals(values[1], value * 1.0);
+  validateNumericalEquals(values(0), value * 2.0);
+  validateNumericalEquals(values(1), value * 1.0);
 
   // reset output value and remap
-  assign(values) = 0.0;
+  //assign(values) = 0.0;
+  values = Eigen::VectorXd::Constant(values.size(), 0.0);
+
   mapping.map(inDataID, outDataID);
-  validateNumericalEquals(values[0], value * 2.0);
-  validateNumericalEquals(values[1], value * 1.0);
+  validateNumericalEquals(values(0), value * 2.0);
+  validateNumericalEquals(values(1), value * 1.0);
 }
 
 void NearestProjectionMappingTest:: testConsistentNonIncremental()
@@ -111,9 +116,9 @@ void NearestProjectionMappingTest:: testConsistentNonIncremental()
   inMesh->allocateDataValues();
   double valueVertex1 = 1.0;
   double valueVertex2 = 2.0;
-  utils::DynVector& values = inData->values();
-  values[0] = valueVertex1;
-  values[1] = valueVertex2;
+  Eigen::VectorXd& values = inData->values();
+  values(0) = valueVertex1;
+  values(1) = valueVertex2;
 
   // Create mesh to map to
   PtrMesh outMesh ( new Mesh("OutMesh", dimensions, false) );
@@ -141,7 +146,9 @@ void NearestProjectionMappingTest:: testConsistentNonIncremental()
   validateNumericalEquals ( outData->values()[2], valueVertex2 );
 
   // Redo mapping, results should be
-  assign(outData->values()) = 0.0;
+  //assign(outData->values()) = 0.0;
+  outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
+
   mapping.map ( inDataID, outDataID );
   validateNumericalEquals ( outData->values()[0], (valueVertex1 + valueVertex2) * 0.5 );
   validateNumericalEquals ( outData->values()[1], valueVertex1 );
@@ -151,7 +158,9 @@ void NearestProjectionMappingTest:: testConsistentNonIncremental()
   outv0.setCoords ( Vector2D(-0.5, -0.5) );
   outv1.setCoords ( Vector2D(1.5, 1.5) );
   outv2.setCoords ( Vector2D(0.5, 0.5) );
-  assign(outData->values()) = 0.0;
+  //assign(outData->values()) = 0.0;
+  outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
+
   mapping.computeMapping();
   mapping.map ( inDataID, outDataID );
   validateNumericalEquals ( outData->values()[0], valueVertex1 );
@@ -159,7 +168,9 @@ void NearestProjectionMappingTest:: testConsistentNonIncremental()
   validateNumericalEquals ( outData->values()[2], (valueVertex1 + valueVertex2) * 0.5 );
 
   // Reset output data to zero and redo the mapping
-  assign(outData->values()) = 0.0;
+  //assign(outData->values()) = 0.0;
+  outData->values() = Eigen::VectorXd::Constant(outData->values().size(), 0.0);
+
   mapping.map ( inDataID, outDataID );
   validateNumericalEquals ( outData->values()[0], valueVertex1 );
   validateNumericalEquals ( outData->values()[1], valueVertex2 );

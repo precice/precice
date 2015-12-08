@@ -79,8 +79,11 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
   int vertex0ID = mesh.vertices()[0].getID();
   int vertexNID = mesh.vertices()[vertexCount-1].getID();
   using tarch::la::slice;
-  slice<2>(data->values(), vertex0ID*2) = dataOne;
-  slice<2>(data->values(), vertexNID*2) = dataN;
+  utils::DynVector vals(data->values().size());
+  for(int i = 0; i < vals.size(); i++)
+    vals[i] = data->values()(i);
+  slice<2>(vals, vertex0ID*2) = dataOne;
+  slice<2>(vals, vertexNID*2) = dataN;
   std::string filename("io-ExportandReimportVRMLTest-testInternallyCreatedGeometry.wrl");
 
   // Export geometry
@@ -107,10 +110,10 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
                              coordsVertexOne));
   validate(tarch::la::equals(
            reimportedMesh.vertices()[vertexCount-1].getCoords(), coordsVertexN));
-  utils::DynVector& values = reimportedData->values();
+  Eigen::VectorXd& values = reimportedData->values();
   int vertexID = reimportedMesh.vertices()[0].getID();
-  validateNumericalEquals(values[vertexID], dataOne[0]);
-  validateNumericalEquals(values[vertexID], dataOne[1]);
+  validateNumericalEquals(values(vertexID), dataOne[0]);
+  validateNumericalEquals(values(vertexID), dataOne[1]);
   utils::Vector2D readDataOne;
   utils::Vector2D readDataN;
   for (size_t i=0; i < 2; i++){

@@ -59,6 +59,11 @@ public:
   DynamicMatrix (int rows, int cols, const Scalar& initialValue);
 
   /**
+   * constructs the Matrix from an Eigen::MatrixXd
+   */
+  DynamicMatrix (const Eigen::MatrixXd& mat);
+
+  /**
    * Returns the number of rows in the matrix.
    */
   int rows() const;

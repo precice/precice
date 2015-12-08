@@ -127,8 +127,7 @@ void ParallelCouplingScheme::initializeData()
         for (DataMap::value_type & pair : getReceiveData()) {
           if (pair.second->oldValues.cols() == 0)
                     break;
-          Eigen::VectorXd& oldValues = pair.second->oldValues.col(0);
-          oldValues = *pair.second->values;
+          pair.second->oldValues.col(0) = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
           utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
         }
@@ -139,8 +138,7 @@ void ParallelCouplingScheme::initializeData()
         for (DataMap::value_type & pair : getSendData()) {
           if (pair.second->oldValues.cols() == 0)
                     break;
-          Eigen::VectorXd& oldValues = pair.second->oldValues.col(0);
-          oldValues = *pair.second->values;
+          pair.second->oldValues.col(0) = *pair.second->values;
           // For extrapolation, treat the initial value as old timestep value
           utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
         }

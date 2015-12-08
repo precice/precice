@@ -32,7 +32,7 @@ public:
 
 
     // TODO: change to call by ref when Eigen is used.
-    virtual std::map<int, utils::DynVector> getDesignSpecification(DataMap& cplData);
+    virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap& cplData);
 
 
    virtual void initialize ( DataMap & cplData );

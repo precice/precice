@@ -43,9 +43,10 @@ void appendFront
   }
 }
 
-void append
-(
-    Eigen::MatrixXd& A, Eigen::MatrixXd& B)
+template<typename Derived1>
+void append(
+    Eigen::MatrixXd& A,
+    const Eigen::PlainObjectBase<Derived1>& B)
 {
   int n = A.rows(), m = A.cols();
   if (n <= 0 && m <= 0) {
@@ -58,6 +59,7 @@ void append
   }
 }
 
+/*
 void append
 (
     Eigen::MatrixXd& A, Eigen::VectorXd& v)
@@ -68,18 +70,25 @@ void append
   } else {
     assertion2(v.size() == n, v.size(), A.rows());
     A.conservativeResize(n, m + 1);
-    A.col(m+1) = v;
+    A.col(m) = v;
   }
 }
+*/
 
-void append
-(
-    Eigen::VectorXd& v, Eigen::VectorXd& app)
+template<typename Derived1>
+void append(
+    Eigen::VectorXd& v,
+    const Eigen::PlainObjectBase<Derived1>& app)
 {
   int n = v.size();
-  v.conservativeResize(n + app.size());
-  for(int i = 0; i < app.size(); i++)
-    v(n+i) = app(i);
+  if(n <= 0){
+    v = app;
+  }else{
+    assertion(app.cols() == 1 && app.rows() == n);
+    v.conservativeResize(n + app.size());
+    for(int i = 0; i < app.size(); i++)
+      v(n+i) = app(i);
+  }
 }
 
 void removeColumnFromMatrix

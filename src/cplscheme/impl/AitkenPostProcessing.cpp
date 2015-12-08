@@ -12,7 +12,7 @@
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "Eigen/Dense"
-#include "utils/eigenHelperFunctions.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include <limits>
 
 namespace precice {
@@ -67,7 +67,8 @@ void AitkenPostProcessing:: initialize
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
       assertion1(pair.second->values->size() > 0, pair.first);
-      utils::append(pair.second->oldValues, Eigen::VectorXd::Zero(pair.second->values->size()));
+      utils::append(pair.second->oldValues,
+          (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
 }
@@ -87,7 +88,7 @@ void AitkenPostProcessing:: performPostProcessing
   Eigen::VectorXd oldValues;
   for (int id : _dataIDs) {
     utils::append(values, *(cplData[id]->values));
-    utils::append(oldValues, cplData[id]->oldValues.col(0));
+    utils::append(oldValues, (Eigen::VectorXd) cplData[id]->oldValues.col(0));
   }
 
   // Compute current residuals
@@ -117,11 +118,11 @@ void AitkenPostProcessing:: performPostProcessing
   double omega = _aitkenFactor;
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type& pair : cplData) {
-    Eigen::VectorXd& values = *pair.second->values;
-    Eigen::VectorXd& oldValues = pair.second->oldValues.col(0);
+    auto& values = *pair.second->values;
+    const auto& oldValues = pair.second->oldValues.col(0);
     values *= omega;
     for ( int i=0; i < values.size(); i++ ) {
-      values[i] += oldValues[i] * oneMinusOmega;
+      values(i) += oldValues(i) * oneMinusOmega;
     }
   }
 
@@ -152,7 +153,7 @@ std::map<int, Eigen::VectorXd> AitkenPostProcessing::getDesignSpecification
 {
   preciceError(__func__, "design specification for Aitken relaxation is not supported yet.");
 
-  std::map<int, utils::DynVector> designSpecifications;
+  std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _dataIDs) {
       int size = cplData[id]->values->size();

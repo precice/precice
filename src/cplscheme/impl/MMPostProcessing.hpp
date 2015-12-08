@@ -111,7 +111,7 @@ public:
    *        In case of manifold mapping it also returns the design specification
    *        for the surrogate model which is updated in every iteration.
    */ // TODO: change to call by ref when Eigen is used.
-  virtual std::map<int, utils::DynVector> getDesignSpecification(DataMap& cplData);
+  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap& cplData);
 
   /**
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation

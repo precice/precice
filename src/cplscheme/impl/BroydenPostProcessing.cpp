@@ -11,7 +11,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Dimensions.hpp"
-#include "utils/eigenHelperFunctions.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include "Eigen/Dense"
 #include "utils/Globals.hpp"
 #include "tarch/la/Scalar.h"
@@ -130,7 +130,7 @@ void BroydenPostProcessing::computeQNUpdate
 
     preciceDebug("took latest column of V,W");
 
-    double dotproductV = v*v;
+    double dotproductV = v.dot(v);
     Eigen::VectorXd tmp = _oldInvJacobian * v;    // J_inv*v
     tmp = w - tmp;                        // (w-J_inv*v)
     tmp = tmp/dotproductV;                // (w-J_inv*v)/|v|_l2

@@ -9,6 +9,7 @@
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/MatrixTraits.h"
 #include "tarch/la/traits/VectorTraits.h"
+#include "Eigen/Core"
 #include <string>
 #include <fstream>
 #include <type_traits>
@@ -71,6 +72,17 @@ public:
     }
     _file << std::endl;
   }
+
+  /**
+   * @brief Writes (appends) the matrix to the file.
+   */
+ //void write(const Eigen::MatrixXd& matrix);
+
+  /**
+   * @brief Writes (appends) the matrix to the file.
+   */
+ //void write(const Eigen::VectorXd& vec);
+
 
 private:
 

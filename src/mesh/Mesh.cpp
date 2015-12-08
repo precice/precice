@@ -7,6 +7,8 @@
 #include "Quad.hpp"
 #include "PropertyContainer.hpp"
 #include "utils/Globals.hpp"
+#include "utils/EigenHelperFunctions.hpp"
+#include "Eigen/Dense"
 
 namespace precice {
 namespace mesh {
@@ -293,7 +295,7 @@ void Mesh:: allocateDataValues()
     int total = _content.vertices().size() * data->getDimensions();
     int leftToAllocate = total - data->values().size();
     if (leftToAllocate > 0){
-      data->values().append(utils::DynVector(leftToAllocate, 0.0));
+      utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
     preciceDebug("Data " << data->getName() << " no has "
                  << data->values().size() << " values");
@@ -705,7 +707,7 @@ void Mesh:: clear()
   _manageVertexIDs.resetIDs();
 
   for (mesh::PtrData data : _data) {
-    data->values().clear();
+    data->values().resize(0); // TODO: mybe incorrect, previous was clear() ... check if resize(0) has some bad side effects
   }
 }
 

@@ -66,7 +66,7 @@ void IQNILSPostProcessing:: initialize
   for (DataMap::value_type& pair: cplData){
 	if (not utils::contained(pair.first, _dataIDs)){
 	  int secondaryEntries = pair.second->values->size();
-	  utils::append(_secondaryOldXTildes[pair.first], Eigen::VectorXd::Zeros(secondaryEntries));
+	  utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
 	}
   }
 }
@@ -174,16 +174,16 @@ void IQNILSPostProcessing::computeQNUpdate
 	  assertion1(__Qt.size() == 0, __Qt.size());
 	}
 
-	Eigen::VectorXd _local_b(_qrV.cols(), 0.0);
+	Eigen::VectorXd _local_b = Eigen::VectorXd::Zero(_qrV.cols());
 	Eigen::VectorXd _global_b;
 
 	Event e_qrsolve("solve: R alpha = -Q^T r", true, true); // time measurement, barrier
-	multiply(__Qt, _residuals, _local_b);
+	_local_b = __Qt * _residuals;
 	_local_b *= -1.0; // = -Qr
 
 	assertion1(__c.size() == 0, __c.size());
 	// reserve memory for c
-	utils::append(__c, Eigen::VectorXd::Zero(_local_b.size()));
+	utils::append(__c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
 	// compute rhs Q^T*res in parallel
 	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
@@ -199,7 +199,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	   if(utils::MasterSlave::_masterMode){
 	     assertion1(_global_b.size() == 0, _global_b.size());
 	   }
-	   utils::append(_global_b, Eigen::VectorXd::Zero(_local_b.size()));
+	   utils::append(_global_b, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
 	   // do a reduce operation to sum up all the _local_b vectors
 	   utils::MasterSlave::reduceSum(_local_b.data(), _global_b.data(), _local_b.size()); // size = getLSSystemCols() = _local_b.size()

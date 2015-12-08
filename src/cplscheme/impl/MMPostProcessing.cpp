@@ -218,7 +218,7 @@ void MMPostProcessing::initialize(
     int cols = pair.second->oldValues.cols();
     if (cols < 1) { // Add only, if not already done
       //assertion1(pair.second->values->size() > 0, pair.first);
-      utils::append(pair.second->oldValues, Eigen::VectorXd::Zeros(pair.second->values->size()));
+      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
 
@@ -243,7 +243,7 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
   int off = 0;
   for (int id : _coarseDataIDs) {
     int size = cplData[id]->values->size();
-    utils::DynVector& valuesPart = *(cplData[id]->values);
+    auto& valuesPart = *(cplData[id]->values);
     for (int i = 0; i < size; i++) {
       // the coarse model optimization reverts its own scaling, hence valuesPart is not scaled, can be copied.
       _input_Xstar[i + off] = valuesPart[i];
@@ -256,7 +256,7 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
   off = 0;
   for (int id : _fineDataIDs) {
     int size = cplData[id]->values->size();
-    utils::DynVector& valuesPart = *(cplData[id]->values);
+    auto& valuesPart = *(cplData[id]->values);
     for (int i = 0; i < size; i++) {
       // write new coarse model solution back as input data for the fine model evaluation
       // _input_xStar needs to be updated in each iteration
@@ -297,31 +297,31 @@ void MMPostProcessing::setDesignSpecification(
  *         coupling scheme.
  *  ---------------------------------------------------------------------------------------------
  */        // TODO: change to call by ref when Eigen is used.
-std::map<int, utils::DynVector> MMPostProcessing::getDesignSpecification
+std::map<int, Eigen::VectorXd> MMPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
-  std::map<int, utils::DynVector> designSpecifications;
+  std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _fineDataIDs) {
       int size = cplData[id]->values->size();
-      utils::DynVector q(size, 0.0);
+      Eigen::VectorXd q = Eigen::VectorXd::Zero(size);
       for (int i = 0; i < size; i++) {
         q(i) = _designSpecification(i+off);
       }
       off += size;
-      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
       designSpecifications.insert(pair);
     }
   off = 0;
   for (int id : _coarseDataIDs) {
       int size = cplData[id]->values->size();
-      utils::DynVector q(size, 0.0);
+      Eigen::VectorXd q = Eigen::VectorXd::Zero(size);
       for (int i = 0; i < size; i++) {
         q(i) = _coarseModel_designSpecification(i+off);
       }
       off += size;
-      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
       designSpecifications.insert(pair);
     }
   return designSpecifications;
@@ -694,9 +694,9 @@ void MMPostProcessing::concatenateCouplingData
   assertion2(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
   for (int id : _fineDataIDs) {
     int size = cplData[id]->values->size();
-    utils::DynVector& values = *cplData[id]->values;
-    utils::DynVector& coarseValues = *cplData[_coarseDataIDs.at(k)]->values;
-    utils::DynVector& coarseOldValues = cplData[_coarseDataIDs.at(k)]->oldValues.column(0);
+    auto& values = *cplData[id]->values;
+    auto& coarseValues = *cplData[_coarseDataIDs.at(k)]->values;
+    const auto& coarseOldValues = cplData[_coarseDataIDs.at(k)]->oldValues.col(0);
     assertion2(values.size() == coarseValues.size(), values.size(), coarseValues.size());
     assertion2(values.size() == coarseOldValues.size(), values.size(), coarseOldValues.size());
     for (int i = 0; i < size; i++) {
@@ -839,8 +839,8 @@ void MMPostProcessing::removeMatrixColumn
   deletedColumns++;
 
   assertion(_matrixF.cols() > 1);
-  removeColumnFromMatrix(_matrixF, columnIndex);
-  removeColumnFromMatrix(_matrixC, columnIndex);
+  utils::removeColumnFromMatrix(_matrixF, columnIndex);
+  utils::removeColumnFromMatrix(_matrixC, columnIndex);
 
   // Reduce column count
   std::deque<int>::iterator iter = _matrixCols.begin();

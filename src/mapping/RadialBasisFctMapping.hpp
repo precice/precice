@@ -293,8 +293,8 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   assertion2(getDimensions() == output()->getDimensions(),
              getDimensions(), output()->getDimensions());
 
-  utils::DynVector& inValues = input()->data(inputDataID)->values();
-  utils::DynVector& outValues = output()->data(outputDataID)->values();
+  Eigen::VectorXd& inValues = input()->data(inputDataID)->values();
+  Eigen::VectorXd& outValues = output()->data(outputDataID)->values();
   int valueDim = input()->data(inputDataID)->getDimensions();
   assertion2(valueDim == output()->data(outputDataID)->getDimensions(),
              valueDim, output()->data(outputDataID)->getDimensions());
@@ -317,7 +317,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
     for (int dim = 0; dim < valueDim; dim++) {
       for (int i = 0; i < in.size(); i++) { // Fill input data values
-        in[i] = inValues[i*valueDim + dim];
+        in[i] = inValues(i*valueDim + dim);
       }
 #     ifdef PRECICE_STATISTICS
       std::ostringstream stream;
@@ -335,7 +335,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       io::TXTWriter::write(out, stream2.str());
 #     endif
       for (int i = 0; i < out.size()-polyparams; i++) {
-        outValues[i*valueDim + dim] = out[i];
+        outValues(i*valueDim + dim) = out[i];
       }
     }
     mappingIndex++;
@@ -351,7 +351,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     for (int dim = 0; dim < valueDim; dim++) {
       // Fill input from input data values (last polyparams entries remain zero)
       for (int i = 0; i < in.size() - polyparams; i++) {
-        in[i] = inValues[i*valueDim + dim];
+        in[i] = inValues(i*valueDim + dim);
       }
 
       p = _lu.solve(in);
@@ -359,7 +359,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
       // Copy mapped data to ouptut data values
       for (int i = 0; i < out.size(); i++) {
-        outValues[i*valueDim + dim] = out[i];
+        outValues(i*valueDim + dim) = out[i];
       }
     }
   }
