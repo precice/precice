@@ -321,7 +321,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     // -- SETS THE COEFFICIENTS --
     PetscInt colNum = 0;  // holds the number of columns
     for (mesh::Vertex& vj : inMesh->vertices()) {
-      distance = iVertex.getCoords() - vj.getCoords();
+      distance = inVertex.getCoords() - vj.getCoords();
       for (int d = 0; d < dimensions; d++) {
         if (_deadAxis[d]) {
           distance[d] = 0;
@@ -337,7 +337,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       if (coeff == std::numeric_limits<double>::infinity()) {
         preciceError("computeMapping()", "C matrix element has value inf. "
                      << "i = " << i
-                     << ", coords i = " << iVertex.getCoords() << ", coords j = "
+                     << ", coords i = " << inVertex.getCoords() << ", coords j = "
                      << vj.getCoords() << ", dist = "
                      << distance << ", norm2 = " << norm2(distance) << ", rbf = "
                      << coeff
@@ -486,7 +486,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 {
   precice::utils::Event e(__func__);
   preciceTrace2("map()", inputDataID, outputDataID);
-  precice::utils::Event e(__func__);
+
   assertion(_hasComputedMapping);
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
