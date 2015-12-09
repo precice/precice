@@ -53,8 +53,9 @@ void ScaleActionTest:: testDivideByArea()
    mesh->createEdge(v1, v2);
    mesh->computeState();
    mesh->allocateDataValues();
-   utils::DynVector& values = data->values();
-   assignList(values) = 2.0, 3.0, 4.0;
+   auto& values = data->values();
+   values << 2.0, 3.0, 4.0;
+   //assignList(values) = 2.0, 3.0, 4.0;
 
    validateNumericalEquals(values[0], 2.0);
    validateNumericalEquals(values[1], 3.0);
@@ -87,10 +88,12 @@ void ScaleActionTest:: testScaleByComputedTimestepLength()
   mesh->createVertex(utils::Vector3D(2.0));
 //  mesh->computeState ();
   mesh->allocateDataValues();
-  utils::DynVector& sourceValues = sourceData->values();
-  utils::DynVector& targetValues = targetData->values();
-  assignList(sourceValues) = 2.0, 3.0, 4.0;
-  assign(targetValues) = 0.0;
+  auto& sourceValues = sourceData->values();
+  auto& targetValues = targetData->values();
+  sourceValues << 2.0, 3.0, 4.0;
+  targetValues = Eigen::VectorXd::Zero(targetValues.size());
+  //assignList(sourceValues) = 2.0, 3.0, 4.0;
+  //assign(targetValues) = 0.0;
 
   action::ScaleByDtAction scale(
       action::ScaleByDtAction::ALWAYS_PRIOR, sourceDataID, targetDataID, mesh,
@@ -142,10 +145,12 @@ void ScaleActionTest:: testScaleByComputedTimestepPartLength()
   mesh->createVertex(utils::Vector3D(1.0));
   mesh->createVertex(utils::Vector3D(2.0));
   mesh->allocateDataValues();
-  utils::DynVector& sourceValues = sourceData->values();
-  utils::DynVector& targetValues = targetData->values();
-  assignList(sourceValues) = 2.0, 3.0, 4.0;
-  assign(targetValues) = 0.0;
+  auto& sourceValues = sourceData->values();
+  auto& targetValues = targetData->values();
+  sourceValues << 2.0, 3.0, 4.0;
+  targetValues = Eigen::VectorXd::Zero(targetValues.size());
+  //assignList(sourceValues) = 2.0, 3.0, 4.0;
+  //assign(targetValues) = 0.0;
 
   action::ScaleByDtAction scale(
       action::ScaleByDtAction::ALWAYS_PRIOR, sourceDataID, targetDataID, mesh,

@@ -20,6 +20,7 @@
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "tarch/la/WrappedVector.h"
+#include "Eigen/Core"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::cplscheme::tests::ExplicitCouplingSchemeTest)
@@ -284,18 +285,18 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
   validateEquals(meshConfig->meshes().size(), 1);
   mesh::PtrMesh mesh = meshConfig->meshes()[0];
   validateEquals(mesh->data().size(), 3);
-  utils::DynVector& dataValues0 = mesh->data()[0]->values();
-  utils::DynVector& dataValues1 = mesh->data()[1]->values();
-  utils::DynVector& dataValues2 = mesh->data()[2]->values();
+  auto& dataValues0 = mesh->data()[0]->values();
+  auto& dataValues1 = mesh->data()[1]->values();
+  auto& dataValues2 = mesh->data()[2]->values();
 
   if (localParticipant == std::string("participant0")){
     cplScheme.initialize(0.0, 1);
     validate(not cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    validateNumericalEquals(dataValues0[0], 0.0);
-    validateNumericalEquals(dataValues1[0], 1.0);
-    dataValues2[0] = 2.0;
+    validateNumericalEquals(dataValues0(0), 0.0);
+    validateNumericalEquals(dataValues1(0), 1.0);
+    dataValues2(0) = 2.0;
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
     cplScheme.advance();
     validate(not cplScheme.isCouplingOngoing());
@@ -305,10 +306,10 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
     cplScheme.initialize(0.0, 1);
     validate(not cplScheme.hasDataBeenExchanged());
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
-    dataValues1[0] = 1.0;
+    dataValues1(0) = 1.0;
     cplScheme.performedAction(constants::actionWriteInitialData());
     cplScheme.initializeData();
-    validateNumericalEquals(dataValues2[0], 2.0);
+    validateNumericalEquals(dataValues2(0), 2.0);
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
     cplScheme.advance();
     validate(not cplScheme.isCouplingOngoing());
@@ -355,23 +356,23 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
   validateEquals(meshConfig->meshes().size(), 1);
   mesh::PtrMesh mesh = meshConfig->meshes()[0];
   validateEquals(mesh->data().size(), 3);
-  utils::DynVector& dataValues0 = mesh->data()[0]->values();
-  utils::DynVector& dataValues1 = mesh->data()[1]->values();
-  utils::DynVector& dataValues2 = mesh->data()[2]->values();
+  auto& dataValues0 = mesh->data()[0]->values();
+  auto& dataValues1 = mesh->data()[1]->values();
+  auto& dataValues2 = mesh->data()[2]->values();
 
   if (localParticipant == std::string("participant0")){
     cplScheme.initialize(0.0, 1);
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
-    dataValues2[0] = 3.0;
+    dataValues2(0) = 3.0;
     cplScheme.performedAction(constants::actionWriteInitialData());
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    validateNumericalEquals(dataValues0[0], 0.0);
-    validateNumericalEquals(dataValues1[0], 1.0);
-    dataValues2[0] = 2.0;
+    validateNumericalEquals(dataValues0(0), 0.0);
+    validateNumericalEquals(dataValues1(0), 1.0);
+    dataValues2(0) = 2.0;
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
     cplScheme.advance();
-    validateNumericalEquals(dataValues0[0], 4.0);
+    validateNumericalEquals(dataValues0(0), 4.0);
     validate(not cplScheme.isCouplingOngoing());
     cplScheme.finalize();
   }
@@ -379,15 +380,15 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
     cplScheme.initialize(0.0, 1);
     validate(not cplScheme.hasDataBeenExchanged());
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
-    dataValues1[0] = 1.0;
+    dataValues1(0) = 1.0;
     cplScheme.performedAction(constants::actionWriteInitialData());
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    validateNumericalEquals(dataValues2[0], 3.0);
-    dataValues0[0] = 4.0;
+    validateNumericalEquals(dataValues2(0), 3.0);
+    dataValues0(0) = 4.0;
     cplScheme.addComputedTime(cplScheme.getNextTimestepMaxLength());
     cplScheme.advance();
-    validateNumericalEquals(dataValues2[0], 2.0);
+    validateNumericalEquals(dataValues2(0), 2.0);
     validate(not cplScheme.isCouplingOngoing());
     cplScheme.finalize();
   }
@@ -406,12 +407,12 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
   validateEquals ( mesh->data().size(), 2 );
-  utils::DynVector& dataValues0 = mesh->data()[0]->values();
-  utils::DynVector& dataValues1 = mesh->data()[1]->values();
+  auto& dataValues0 = mesh->data()[0]->values();
+  auto& dataValues1 = mesh->data()[1]->values();
   validate ( mesh->vertices().size() > 0 );
   mesh::Vertex& vertex = mesh->vertices()[0];
   double valueData0 = 1.0;
-  Vector3D valueData1 ( 1.0 );
+  Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0 );
 
   double computedTime = 0.0;
   int computedTimesteps = 0;
@@ -424,7 +425,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
     validateEquals ( cplScheme.isCouplingTimestepComplete(), false );
     validateEquals ( cplScheme.isCouplingOngoing(), true );
     while ( cplScheme.isCouplingOngoing() ) {
-      dataValues0[vertex.getID()] = valueData0;
+      dataValues0(vertex.getID()) = valueData0;
       computedTime += cplScheme.getNextTimestepMaxLength();
       computedTimesteps ++;
       cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
@@ -440,15 +441,15 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
       if ( cplScheme.isCouplingOngoing() ) {
         // No receive takes place for the participant that has started the
         // coupled simulation, in the last advance call
-        Vector3D value;
-        assign(value) = tarch::la::slice<3>(dataValues1, vertex.getID() * 3);
-        validate ( tarch::la::equals(value, valueData1) );
+        Eigen::VectorXd value = dataValues1.segment(vertex.getID() * 3, 3);
+        // assign(value) = tarch::la::slice<3>(dataValues1, vertex.getID() * 3);
+        validate ( tarch::la::equals(utils::DynVector(value), utils::DynVector(valueData1)) );
       }
       validate ( cplScheme.hasDataBeenExchanged() );
       // Increment data values, to test if send/receive operations are also
       // correct in following timesteps.
       valueData0 += 1.0;
-      valueData1 += Vector3D ( 1.0 );
+      valueData1 += Eigen::VectorXd::Constant(3, 1.0 );
     }
     cplScheme.finalize();
     // Validate results
@@ -467,7 +468,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
   else if ( participantName == std::string("participant1") ) {
     cplScheme.initialize ( 0.0, 1 );
     validate ( cplScheme.hasDataBeenExchanged() );
-    double value = dataValues0[vertex.getID()];
+    double value = dataValues0(vertex.getID());
     validateNumericalEquals ( value, valueData0 );
     valueData0 += 1.0;
     validateEquals (
@@ -479,7 +480,8 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
     validateEquals ( cplScheme.isCouplingTimestepComplete(), false );
     validateEquals ( cplScheme.isCouplingOngoing(), true );
     while ( cplScheme.isCouplingOngoing() ) {
-      tarch::la::slice<3>(dataValues1,vertex.getID()*3) = valueData1;
+      dataValues1.segment(vertex.getID()*3, 3) = valueData1;
+      //tarch::la::slice<3>(dataValues1,vertex.getID()*3) = valueData1;
       computedTime += cplScheme.getNextTimestepMaxLength();
       computedTimesteps ++;
       cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
@@ -501,7 +503,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
         validateNumericalEquals ( value, valueData0 );
       }
       valueData0 += 1.0;
-      valueData1 += Vector3D(1.0);
+      valueData1 += Eigen::VectorXd::Constant(3, 1.0 );
     }
     cplScheme.finalize ();
     // Validate results
@@ -629,9 +631,9 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
   validate ( mesh->vertices().size() > 0 );
   mesh::Vertex& vertex = mesh->vertices()[0];
   double valueData0 = 1.0;
-  Vector3D valueData1(1.0);
-  utils::DynVector& dataValues0 = mesh->data()[0]->values();
-  utils::DynVector& dataValues1 = mesh->data()[1]->values();
+  Eigen::VectorXd valueData1 = Eigen::VectorXd::Constant(3, 1.0);
+  auto& dataValues0 = mesh->data()[0]->values();
+  auto& dataValues1 = mesh->data()[1]->values();
 
   double computedTime = 0.0;
   int computedTimesteps = 0;
@@ -653,7 +655,7 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
     validateEquals ( cplScheme.isCouplingTimestepComplete(), false );
     validateEquals ( cplScheme.isCouplingOngoing(), true );
     while ( cplScheme.isCouplingOngoing() ) {
-      dataValues0[vertex.getID()] = valueData0;
+      dataValues0(vertex.getID()) = valueData0;
       computedTime += dtUsed;
       computedTimesteps ++;
       cplScheme.addComputedTime(dtUsed);
@@ -677,15 +679,15 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
         if ( cplScheme.isCouplingOngoing() ) {
           // No receive takes place for the participant that has started the
           // coupled simulation, in the last advance call.
-          Vector3D value;
-          assign(value) = tarch::la::slice<3>(dataValues1, vertex.getID()*3);
-          validate ( tarch::la::equals(value, valueData1) );
+          Eigen::VectorXd value = dataValues1.segment(vertex.getID()*3, 3);
+          // assign(value) = tarch::la::slice<3>(dataValues1, vertex.getID()*3);
+          validate ( tarch::la::equals(utils::DynVector(value), utils::DynVector(valueData1)));
         }
         validate ( cplScheme.hasDataBeenExchanged() );
         // Increment data values, to test if send/receive operations are also
         // correct in following timesteps.
         valueData0 += 1.0;
-        valueData1 += Vector3D(1.0);
+        valueData1 += Eigen::VectorXd::Constant(3, 1.0);
       }
       else {
         validateEquals ( cplScheme.isCouplingTimestepComplete(), false );
@@ -709,7 +711,7 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
     cplScheme.initialize ( 0.0, 1 );
     // Validate current coupling status
     validate ( cplScheme.hasDataBeenExchanged() );
-    validateNumericalEquals ( dataValues0[vertex.getID()], valueData0 );
+    validateNumericalEquals ( dataValues0(vertex.getID()), valueData0 );
     valueData0 += 1.0;
     validateEquals (
       cplScheme.isActionRequired("constants::actionWriteIterationCheckpoint()"),
@@ -720,7 +722,8 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
     validateEquals ( cplScheme.isCouplingTimestepComplete(), false );
     validateEquals ( cplScheme.isCouplingOngoing(), true );
     while ( cplScheme.isCouplingOngoing() ) {
-      tarch::la::slice<3>(dataValues1,vertex.getID()*3) = valueData1;
+      dataValues1.segment(vertex.getID()*3, 3) = valueData1;
+      //tarch::la::slice<3>(dataValues1,vertex.getID()*3) = valueData1;
       computedTime += cplScheme.getNextTimestepMaxLength ();
       computedTimesteps ++;
       cplScheme.addComputedTime ( cplScheme.getNextTimestepMaxLength() );
@@ -738,11 +741,11 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
         // The participant not starting the coupled simulation does neither
         // receive nor send data in the last call to advance
         validate ( cplScheme.hasDataBeenExchanged() );
-        validateNumericalEquals ( dataValues0[vertex.getID()], valueData0 );
+        validateNumericalEquals ( dataValues0(vertex.getID()), valueData0 );
         validate ( cplScheme.hasDataBeenExchanged() );
       }
       valueData0 += 1.0;
-      valueData1 += Vector3D(1.0);
+      valueData1 += Eigen::VectorXd::Constant(3, 1.0);
     }
     cplScheme.finalize ();
     validateNumericalEquals ( computedTime, 1.0 );

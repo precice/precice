@@ -33,6 +33,7 @@
 #include "tarch/la/Vector.h"
 #include "tarch/la/WrappedVector.h"
 #include <string.h>
+#include "utils/EigenHelperFunctions.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::cplscheme::tests::PostProcessingMasterSlaveTest)
@@ -128,10 +129,10 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 	cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
 										   timestepsReused, filter, singularityLimit, dataIDs, prec);
 
-	utils::DynVector dvalues;
-	utils::DynVector dcol1;
-	utils::DynVector fvalues;
-	utils::DynVector fcol1;
+	Eigen::VectorXd dvalues;
+	Eigen::VectorXd dcol1;
+	Eigen::VectorXd fvalues;
+	Eigen::VectorXd fcol1;
 
 	DataMap data;
 
@@ -147,14 +148,22 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 		 */
 
 		//init displacements
-		dvalues.append(1.0); dvalues.append(2.0); dvalues.append(3.0); dvalues.append(4.0);
-		dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
+		Eigen::VectorXd insert(4); insert << 1.0, 2.0, 3.0, 4.0;
+    utils::append(dvalues, insert);
+    insert << 1.0, 1.0, 1.0, 1.0;
+    utils::append(dcol1, insert);
+		//dvalues.append(1.0); dvalues.append(2.0); dvalues.append(3.0); dvalues.append(4.0);
+		//dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
 
 		PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
 		//init forces
-		fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
-		fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
+    insert << 0.1, 0.1, 0.1, 0.1;
+    utils::append(fvalues, insert);
+    insert << 0.2, 0.2, 0.2, 0.2;
+    utils::append(fcol1, insert);
+		//fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
+		//fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
 
 		PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
@@ -163,8 +172,8 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 
 		pp.initialize(data);
 
-		dpcd->oldValues.column(0) = dcol1;
-		fpcd->oldValues.column(0) = fcol1;
+		dpcd->oldValues.col(0) = dcol1;
+		fpcd->oldValues.col(0) = fcol1;
 
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 		utils::MasterSlave::_rank = 1;
@@ -177,14 +186,24 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 		 */
 
 		//init displacements
-		dvalues.append(5.0); dvalues.append(6.0); dvalues.append(7.0); dvalues.append(8.0);
-		dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
+		Eigen::VectorXd insert(4); insert << 5.0, 6.0, 7.0, 8.0;
+		utils::append(dvalues, insert);
+		insert << 1.0, 1.0, 1.0, 1.0;
+		utils::append(dcol1, insert);
+
+		//dvalues.append(5.0); dvalues.append(6.0); dvalues.append(7.0); dvalues.append(8.0);
+		//dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
 
 		PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
 		//init forces
-		fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
-		fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
+		insert << 0.1, 0.1, 0.1, 0.1;
+    utils::append(fvalues, insert);
+    insert << 0.2, 0.2, 0.2, 0.2;
+    utils::append(fcol1, insert);
+
+    //fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
+		//fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
 
 		PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
@@ -193,8 +212,8 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 
 		pp.initialize(data);
 
-		dpcd->oldValues.column(0) = dcol1;
-		fpcd->oldValues.column(0) = fcol1;
+		dpcd->oldValues.col(0) = dcol1;
+		fpcd->oldValues.col(0) = fcol1;
 
 	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
 		utils::MasterSlave::_rank = 2;
@@ -217,8 +236,8 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 
 		pp.initialize(data);
 
-		dpcd->oldValues.column(0) = dcol1;
-		fpcd->oldValues.column(0) = fcol1;
+		dpcd->oldValues.col(0) = dcol1;
+		fpcd->oldValues.col(0) = fcol1;
 
 	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
 		utils::MasterSlave::_rank = 3;
@@ -231,14 +250,22 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 		 */
 
 		//init displacements
-		dvalues.append(1.0); dvalues.append(2.0);
-		dcol1.append(1.0); dcol1.append(1.0);
+    Eigen::VectorXd insert(2); insert << 1.0, 2.0;
+    utils::append(dvalues, insert);
+    insert << 1.0, 1.0;
+    utils::append(dcol1, insert);
+		//dvalues.append(1.0); dvalues.append(2.0);
+		//dcol1.append(1.0); dcol1.append(1.0);
 
 		PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
 		//init forces
-		fvalues.append(0.1); fvalues.append(0.1);
-		fcol1.append(0.2); fcol1.append(0.2);
+    insert << 0.1, 0.1;
+    utils::append(fvalues, insert);
+    insert << 0.2, 0.2;
+    utils::append(fcol1, insert);
+		//fvalues.append(0.1); fvalues.append(0.1);
+		//fcol1.append(0.2); fcol1.append(0.2);
 
 		PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
@@ -247,15 +274,15 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 
 		pp.initialize(data);
 
-		dpcd->oldValues.column(0) = dcol1;
-		fpcd->oldValues.column(0) = fcol1;
+		dpcd->oldValues.col(0) = dcol1;
+		fpcd->oldValues.col(0) = fcol1;
 	}
 
 	utils::Parallel::synchronizeProcesses();
 	pp.performPostProcessing(data);
 	utils::Parallel::synchronizeProcesses();
 
-	utils::DynVector newdvalues;
+	Eigen::VectorXd newdvalues;
 	if (utils::Parallel::getProcessRank() == 0) { //Master
 
 		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
@@ -279,7 +306,8 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 		std::cout<<"Master: (*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
 		*/
 
-		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
+		utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0);
+//		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
 
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 
@@ -304,7 +332,8 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 		std::cout<<"Slave 1: (*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
 		 */
 
-		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
+		utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0);
+//		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
 
 	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
 		// empty proc
@@ -323,7 +352,9 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 		std::cout<<"Slave 3: (*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
 		std::cout<<"Slave 3: (*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
 		 */
-		newdvalues.append(10.0); newdvalues.append(10.0);
+
+		utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0);
+		//newdvalues.append(10.0); newdvalues.append(10.0);
 	}
 
 	data.begin()->second->values = &newdvalues;
@@ -458,10 +489,10 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
 									   timestepsReused, filter, singularityLimit, dataIDs, prec);
 
-	utils::DynVector dvalues;
-	utils::DynVector dcol1;
-	utils::DynVector fvalues;
-	utils::DynVector fcol1;
+	Eigen::VectorXd dvalues;
+	Eigen::VectorXd dcol1;
+	Eigen::VectorXd fvalues;
+	Eigen::VectorXd fcol1;
 
 	DataMap data;
 
@@ -477,14 +508,22 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		 */
 
 		//init displacements
-		dvalues.append(1.0); dvalues.append(2.0); dvalues.append(3.0); dvalues.append(4.0);
-		dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
+    Eigen::VectorXd insert(4); insert << 1.0, 2.0, 3.0, 4.0;
+    utils::append(dvalues, insert);
+    insert << 1.0, 1.0, 1.0, 1.0;
+    utils::append(dcol1, insert);
+    //dvalues.append(1.0); dvalues.append(2.0); dvalues.append(3.0); dvalues.append(4.0);
+    //dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
 
-		PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
+    PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
-		//init forces
-		fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
-		fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
+    //init forces
+    insert << 0.1, 0.1, 0.1, 0.1;
+    utils::append(fvalues, insert);
+    insert << 0.2, 0.2, 0.2, 0.2;
+    utils::append(fcol1, insert);
+    //fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
+    //fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
 
 		PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
@@ -493,8 +532,8 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 
 		pp.initialize(data);
 
-		dpcd->oldValues.column(0) = dcol1;
-		fpcd->oldValues.column(0) = fcol1;
+		dpcd->oldValues.col(0) = dcol1;
+		fpcd->oldValues.col(0) = fcol1;
 
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 		utils::MasterSlave::_rank = 1;
@@ -507,14 +546,22 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		 */
 
 		//init displacements
-		dvalues.append(5.0); dvalues.append(6.0); dvalues.append(7.0); dvalues.append(8.0);
-		dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
+		Eigen::VectorXd insert(4); insert << 5.0, 6.0, 7.0, 8.0;
+    utils::append(dvalues, insert);
+    insert << 1.0, 1.0, 1.0, 1.0;
+    utils::append(dcol1, insert);
+		//dvalues.append(5.0); dvalues.append(6.0); dvalues.append(7.0); dvalues.append(8.0);
+		//dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0); dcol1.append(1.0);
 
 		PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
 		//init forces
-		fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
-		fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
+		insert << 0.1, 0.1, 0.1, 0.1;
+    utils::append(fvalues, insert);
+    insert << 0.2, 0.2, 0.2, 0.2;
+    utils::append(fcol1, insert);
+		//fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1); fvalues.append(0.1);
+		//fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2); fcol1.append(0.2);
 
 		PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
@@ -523,8 +570,8 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 
 		pp.initialize(data);
 
-		dpcd->oldValues.column(0) = dcol1;
-		fpcd->oldValues.column(0) = fcol1;
+		dpcd->oldValues.col(0) = dcol1;
+		fpcd->oldValues.col(0) = fcol1;
 
 	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
 		utils::MasterSlave::_rank = 2;
@@ -547,8 +594,8 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 
 		pp.initialize(data);
 
-		dpcd->oldValues.column(0) = dcol1;
-		fpcd->oldValues.column(0) = fcol1;
+		dpcd->oldValues.col(0) = dcol1;
+		fpcd->oldValues.col(0) = fcol1;
 
 	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
 		utils::MasterSlave::_rank = 3;
@@ -561,14 +608,22 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		 */
 
 		//init displacements
-		dvalues.append(1.0); dvalues.append(2.0);
-		dcol1.append(1.0); dcol1.append(1.0);
+		Eigen::VectorXd insert(2); insert << 1.0, 2.0;
+    utils::append(dvalues, insert);
+    insert << 1.0, 1.0;
+    utils::append(dcol1, insert);
+		//dvalues.append(1.0); dvalues.append(2.0);
+		//dcol1.append(1.0); dcol1.append(1.0);
 
 		PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
 		//init forces
-		fvalues.append(0.1); fvalues.append(0.1);
-		fcol1.append(0.2); fcol1.append(0.2);
+		insert << 0.1, 0.1;
+    utils::append(fvalues, insert);
+    insert << 0.2, 0.2;
+    utils::append(fcol1, insert);
+		//fvalues.append(0.1); fvalues.append(0.1);
+		//fcol1.append(0.2); fcol1.append(0.2);
 
 		PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
@@ -577,13 +632,13 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 
 		pp.initialize(data);
 
-		dpcd->oldValues.column(0) = dcol1;
-		fpcd->oldValues.column(0) = fcol1;
+		dpcd->oldValues.col(0) = dcol1;
+		fpcd->oldValues.col(0) = fcol1;
 	}
 
 	pp.performPostProcessing(data);
 
-	utils::DynVector newdvalues;
+	Eigen::VectorXd newdvalues;
 	if (utils::Parallel::getProcessRank() == 0) { //Master
 
 		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00000000000000000000e+00), (*data.at(0)->values)(0));
@@ -606,7 +661,8 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		std::cout<<"Master: (*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
 		*/
 
-		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
+		utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0);
+//		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
 
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 
@@ -630,7 +686,8 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		std::cout<<"Slave 1: (*data.at(1)->values)(3): "<<(*data.at(1)->values)(3)<<std::endl;
 		*/
 
-		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
+		utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0);
+//		newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0); newdvalues.append(10.0);
 
 	} else if (utils::Parallel::getProcessRank() == 2) { //Slave2
 		// empty proc
@@ -648,7 +705,9 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 		std::cout<<"Slave 3: (*data.at(1)->values)(0): "<<(*data.at(1)->values)(0)<<std::endl;
 		std::cout<<"Slave 3: (*data.at(1)->values)(1): "<<(*data.at(1)->values)(1)<<std::endl;
 		*/
-		newdvalues.append(10.0); newdvalues.append(10.0);
+
+		utils::append(newdvalues, 10.0); utils::append(newdvalues, 10.0);
+//		newdvalues.append(10.0); newdvalues.append(10.0);
 	}
 
 	data.begin()->second->values = &newdvalues;

@@ -61,6 +61,7 @@
 #include <cstring>
 #include <algorithm>
 #include "boost/tuple/tuple.hpp"
+#include "Eigen/Dense"
 
 #include <signal.h> // used for installing crash handler
 
@@ -1489,7 +1490,8 @@ void SolverInterfaceImpl:: mapWriteDataFrom
     if (context.mesh->getID() == fromMeshID){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
-      assign(context.toData->values()) = 0.0;
+      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      //assign(context.toData->values()) = 0.0;
       preciceDebug("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
@@ -1524,7 +1526,8 @@ void SolverInterfaceImpl:: mapReadDataTo
     if (context.mesh->getID() == toMeshID){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
-      assign(context.toData->values()) = 0.0;
+      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      //assign(context.toData->values()) = 0.0;
       preciceDebug("Map data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
@@ -1563,7 +1566,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
     DataContext& context = _accessor->dataContext(fromDataID);
 
     assertion(context.toData.get() != nullptr);
-    utils::DynVector& valuesInternal = context.fromData->values();
+    auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       int offsetInternal = valueIndices[i]*_dimensions;
       int offset = i*_dimensions;
@@ -1601,7 +1604,7 @@ void SolverInterfaceImpl:: writeVectorData
              "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.get() != nullptr);
-    utils::DynVector& values = context.fromData->values();
+    auto& values = context.fromData->values();
     assertion1(valueIndex >= 0, valueIndex);
     int offset = valueIndex * _dimensions;
     for (int dim=0; dim < _dimensions; dim++){
@@ -1631,7 +1634,7 @@ void SolverInterfaceImpl:: writeBlockScalarData
                  "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.get() != nullptr);
-    utils::DynVector& valuesInternal = context.fromData->values();
+    auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
       assertion2(i < valuesInternal.size(), i, valuesInternal.size());
       valuesInternal[valueIndices[i]] = values[i];
@@ -1656,7 +1659,7 @@ void SolverInterfaceImpl:: writeScalarData
                  "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.use_count() > 0);
-    utils::DynVector& values = context.fromData->values();
+    auto& values = context.fromData->values();
     assertion1(valueIndex >= 0, valueIndex);
     values[valueIndex] = value;
 
@@ -1683,7 +1686,7 @@ void SolverInterfaceImpl:: readBlockVectorData
                  "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.get() != nullptr);
-    utils::DynVector& valuesInternal = context.toData->values();
+    auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
       int offsetInternal = valueIndices[i] * _dimensions;
       int offset = i * _dimensions;
@@ -1713,7 +1716,7 @@ void SolverInterfaceImpl:: readVectorData
                      "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
-    utils::DynVector& values = context.toData->values();
+    auto& values = context.toData->values();
     assertion1 (valueIndex >= 0, valueIndex);
     int offset = valueIndex * _dimensions;
     for (int dim=0; dim < _dimensions; dim++){
@@ -1748,7 +1751,7 @@ void SolverInterfaceImpl:: readBlockScalarData
                      "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.get() != nullptr);
-    utils::DynVector& valuesInternal = context.toData->values();
+    auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
       assertion2(valueIndices[i] < valuesInternal.size(),
                valueIndices[i], valuesInternal.size());
@@ -1774,7 +1777,7 @@ void SolverInterfaceImpl:: readScalarData
                      "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
-    utils::DynVector& values = context.toData->values();
+    auto& values = context.toData->values();
     value = values[valueIndex];
 
   }
@@ -2049,7 +2052,8 @@ void SolverInterfaceImpl:: mapWrittenData()
       int outDataID = context.toData->getID();
       preciceDebug("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
-      assign(context.toData->values()) = 0.0;
+      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      //assign(context.toData->values()) = 0.0;
       preciceDebug("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
@@ -2105,7 +2109,8 @@ void SolverInterfaceImpl:: mapReadData()
     if (mapNow && hasMapping && (not hasMapped)){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
-      assign(context.toData->values()) = 0.0;
+      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      //assign(context.toData->values()) = 0.0;
       preciceDebug("Map read data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
@@ -2211,9 +2216,11 @@ void SolverInterfaceImpl:: resetWrittenData()
 {
   preciceTrace("resetWrittenData()");
   for (DataContext& context : _accessor->writeDataContexts()) {
-    assign(context.fromData->values()) = 0.0;
+    context.fromData->values() = Eigen::VectorXd::Zero(context.fromData->values().size());
+    //assign(context.fromData->values()) = 0.0;
     if (context.toData != context.fromData){
-      assign(context.toData->values()) = 0.0;
+      context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
+      //assign(context.toData->values()) = 0.0;
     }
   }
 //  if ( _accessor->exportContext().plotNeighbors ){

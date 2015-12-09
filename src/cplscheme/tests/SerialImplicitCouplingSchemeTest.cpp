@@ -24,6 +24,7 @@
 #include "utils/Dimensions.hpp"
 #include "tarch/la/Vector.h"
 #include "tarch/la/WrappedVector.h"
+#include "Eigen/Core"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::cplscheme::tests::SerialImplicitCouplingSchemeTest)
@@ -156,8 +157,10 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   validateNumericalEquals(cplData->oldValues(0,1), 4.0);
 
   // Test second order extrapolation
-  assign(*cplData->values) = 0.0;
-  assign(cplData->oldValues) = 0.0;
+  *cplData->values = Eigen::VectorXd::Zero(cplData->values->size());
+  cplData->oldValues = Eigen::MatrixXd::Zero(cplData->oldValues.rows(), cplData->oldValues.cols());
+  //assign(*cplData->values) = 0.0;
+  //assign(cplData->oldValues) = 0.0;
   SerialCouplingScheme scheme2 ( maxTime, maxTimesteps, dt, 16, first, second,
                                  accessor, globalCom, constants::FIXED_DT,
                                  BaseCouplingScheme::Implicit, maxIterations);
@@ -544,12 +547,12 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
   validate ( mesh->vertices().size() > 0 );
   mesh::Vertex& vertex = mesh->vertices()[0];
   int index = vertex.getID();
-  utils::DynVector& dataValues0 = mesh->data()[0]->values();
-  utils::DynVector& dataValues1 = mesh->data()[1]->values();
+  auto& dataValues0 = mesh->data()[0]->values();
+  auto& dataValues1 = mesh->data()[1]->values();
   double initialStepsizeData0 = 5.0;
   double stepsizeData0 = 5.0;
-  Vector3D initialStepsizeData1(5.0);
-  Vector3D stepsizeData1(5.0);
+  Eigen::VectorXd initialStepsizeData1 = Eigen::VectorXd::Zero(3, 5.0);
+  Eigen::VectorXd stepsizeData1 = Eigen::VectorXd::Zero(3, 5.0);
   double computedTime = 0.0;
   int computedTimesteps = 0;
   std::string nameParticipant0 ( "participant0" );
@@ -644,10 +647,12 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
     validate ( not cplScheme.isActionRequired(MY_WRITE_CHECKPOINT) );
 
     while ( cplScheme.isCouplingOngoing() ) {
-      Vector3D currentData;
-      assign(currentData) = tarch::la::slice<3>(dataValues1, index *3);
+      Eigen::VectorXd currentData(3);
+      currentData = dataValues1.segment(index * 3, 3);
+      //assign(currentData) = tarch::la::slice<3>(dataValues1, index *3);
       currentData += stepsizeData1;
-      tarch::la::slice<3>(dataValues1,index*3) = currentData;
+      dataValues1.segment(index * 3, 3) = currentData;
+      //tarch::la::slice<3>(dataValues1,index*3) = currentData;
       preciceDebug ( "Wrote data with stepsize " << stepsizeData1 );
       // The max timestep length is required to be obeyed.
       double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
@@ -698,7 +703,8 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         validate ( not cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
         // The written data value is decreased in a regular manner, in order
         // to achieve a predictable convergence.
-        stepsizeData1 -= 1.0;
+        //stepsizeData1 -= 1.0;
+        stepsizeData1 -= Eigen::Vector3d::Constant(1.0);
       }
       // In every coupling cycle, data is sent
       validate ( cplScheme.hasDataBeenExchanged() );
@@ -848,9 +854,9 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
   if (nameLocalParticipant == nameParticipant0){
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    utils::DynVector& values = mesh->data(1)->values();
-    validateWithParams1(tarch::la::equals(values, Vector3D(1.0, 2.0, 3.0)), values);
-    mesh->data(0)->values() = 4.0;
+    auto& values = mesh->data(1)->values();
+    validateWithParams1(tarch::la::equals(utils::DynVector(values), Vector3D(1.0, 2.0, 3.0)), utils::DynVector(values));
+    mesh->data(0)->values() = Eigen::VectorXd::Constant(mesh->data(0)->values().size(), 4.0);
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
         cplScheme.performedAction(writeIterationCheckpoint);
@@ -866,12 +872,13 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
     assertion(nameLocalParticipant == nameParticipant1);
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.performedAction(constants::actionWriteInitialData());
-    utils::DynVector& values = mesh->data(0)->values();
-    validateWithParams1(tarch::la::equals(values(0), 0.0), values);
-    mesh->data(1)->values() = Vector3D(1.0, 2.0, 3.0);
+    auto& values = mesh->data(0)->values();
+    validateWithParams1(tarch::la::equals(values(0), 0.0), utils::DynVector(values));
+    Eigen::VectorXd v(3); v << 1.0, 2.0, 3.0;
+    mesh->data(1)->values() = v;
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    validateWithParams1(tarch::la::equals(values(0), 4.0), values);
+    validateWithParams1(tarch::la::equals(values(0), 4.0), utils::DynVector(values));
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
         cplScheme.performedAction(writeIterationCheckpoint);

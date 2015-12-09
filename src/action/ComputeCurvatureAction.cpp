@@ -9,6 +9,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Globals.hpp"
+#include "Eigen/Core"
 
 namespace precice {
 namespace action {
@@ -34,10 +35,11 @@ void ComputeCurvatureAction:: performAction
   double fullDt )
 {
   preciceTrace ( "performAction()" );
-  utils::DynVector& dataValues = _data->values();
+  auto& dataValues = _data->values();
 
   if ( getMesh()->getDimensions() == 2 ){
-    assign(dataValues) = 0.0;
+    dataValues = Eigen::VectorXd::Zero(dataValues.size());
+    //assign(dataValues) = 0.0;
     utils::Vector2D tangent;
     for (mesh::Edge & edge : getMesh()->edges()) {
       mesh::Vertex& v0 = edge.vertex(0);

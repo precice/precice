@@ -401,7 +401,8 @@ void SolverInterfaceTestGeometry:: testDataActions()
     coords[i] = mesh->vertices()[i].getCoords();
   }
   mesh::PtrData data = mesh->data ( dataID );
-  assign(data->values()) = 1.0;
+  data->values() = Eigen::VectorXd::Constant(data->values().size(), 1.0);
+  //assign(data->values()) = 1.0;
 
   geo.advance ( 1.0 );
 
@@ -663,7 +664,7 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   mesh::PtrData data = p->_dataContexts[dataID]->toData;
   preciceDebug ( "ToData found");
   validate(data.get() != nullptr);
-  utils::DynVector& writtenValues = data->values();
+  auto& writtenValues = data->values();
 
   validateEquals(writtenValues.size(), 8);
   validateNumericalEquals(writtenValues[0], 1.0);

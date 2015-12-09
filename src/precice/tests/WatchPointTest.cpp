@@ -41,8 +41,8 @@ void WatchPointTest:: run ()
     geometry::Cuboid rectangleGeometry ( offset, discretizationWidth, sidelengths );
     PtrData doubleData = mesh->createData ( "DoubleData", 1 );
     PtrData vectorData = mesh->createData ( "VectorData", dim );
-    utils::DynVector& doubleValues = doubleData->values();
-    utils::DynVector& vectorValues = vectorData->values();
+    auto& doubleValues = doubleData->values();
+    auto& vectorValues = vectorData->values();
     rectangleGeometry.create ( *mesh );
 
     // Create watchpoints

@@ -40,8 +40,8 @@ void ScaleByDtAction:: performAction
   double fullDt )
 {
   preciceTrace3("performAction()", dt, computedPartFullDt, fullDt);
-  utils::DynVector& sourceValues = _sourceData->values();
-  utils::DynVector& targetValues = _targetData->values();
+  auto& sourceValues = _sourceData->values();
+  auto& targetValues = _targetData->values();
   assertion2(sourceValues.size() == targetValues.size(),
              sourceValues.size(), targetValues.size());
   if (_scaling == SCALING_BY_COMPUTED_DT_RATIO){
