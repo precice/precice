@@ -161,39 +161,39 @@ void IQNILSPostProcessing::computeQNUpdate
   preciceDebug("   Compute Newton factors");
 
   // Calculate QR decomposition of matrix V and solve Rc = -Qr
-  Eigen::VectorXd __c;
+  Eigen::VectorXd c;
 
 	// for master-slave mode and procs with no vertices,
 	// qrV.cols() = getLSSystemCols() and _qrV.rows() = 0
-	auto __Qt = _qrV.matrixQ();
-	auto __R = _qrV.matrixR();
+	auto Q = _qrV.matrixQ();
+	auto R = _qrV.matrixR();
 
 	if(!_hasNodesOnInterface){
 	  assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
 	  assertion1(_qrV.rows() == 0, _qrV.rows());
-	  assertion1(__Qt.size() == 0, __Qt.size());
+	  assertion1(Q.size() == 0, Q.size());
 	}
 
 	Eigen::VectorXd _local_b = Eigen::VectorXd::Zero(_qrV.cols());
 	Eigen::VectorXd _global_b;
 
 	Event e_qrsolve("solve: R alpha = -Q^T r", true, true); // time measurement, barrier
-	_local_b = __Qt * _residuals;
+	_local_b = Q.transpose() * _residuals;
 	_local_b *= -1.0; // = -Qr
 
-	assertion1(__c.size() == 0, __c.size());
+	assertion1(c.size() == 0, c.size());
 	// reserve memory for c
-	utils::append(__c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
+	utils::append(c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
 	// compute rhs Q^T*res in parallel
 	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
-		assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
+		assertion2(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
 		// back substitution
-		__c = __R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
+		c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
 	}else{
 	   assertion(utils::MasterSlave::_communication.get() != nullptr);
 	   assertion(utils::MasterSlave::_communication->isConnected());
-	   if(_hasNodesOnInterface)  assertion2(__Qt.rows() == getLSSystemCols(), __Qt.rows(), getLSSystemCols());
+	   if(_hasNodesOnInterface)  assertion2(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
 	   assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 
 	   if(utils::MasterSlave::_masterMode){
@@ -206,18 +206,18 @@ void IQNILSPostProcessing::computeQNUpdate
 
 	   // back substitution R*c = b only in master node
 	   if(utils::MasterSlave::_masterMode)
-	     __c = __R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
+	     c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_global_b);
 
 	  // broadcast coefficients c to all slaves
-	  utils::MasterSlave::broadcast(__c.data(), __c.size());
+	  utils::MasterSlave::broadcast(c.data(), c.size());
 	}
 	e_qrsolve.stop();
 
 	preciceDebug("   Apply Newton factors");
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
-	xUpdate = _matrixW * __c;
+	xUpdate = _matrixW * c;
 
-	preciceDebug("c = " << __c);
+	preciceDebug("c = " << c);
 
 
     /**
@@ -234,10 +234,10 @@ void IQNILSPostProcessing::computeQNUpdate
 	// Perform QN relaxation for secondary data
 	for (int id: _secondaryDataIDs){
 	  PtrCouplingData data = cplData[id];
-	  Eigen::VectorXd& values = *(data->values);
-	  assertion2(_secondaryMatricesW[id].cols() == __c.size(), _secondaryMatricesW[id].cols(), __c.size());
-	  values = _secondaryMatricesW[id] * __c;
-	  assertion2(values.size() == data->oldValues.column(0).size(), values.size(), data->oldValues.column(0).size());
+	  auto& values = *(data->values);
+	  assertion2(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
+	  values = _secondaryMatricesW[id] * c;
+	  assertion2(values.size() == data->oldValues.col(0).size(), values.size(), data->oldValues.col(0).size());
 	  values += data->oldValues.col(0);
 	  assertion2(values.size() == _secondaryResiduals[id].size(), values.size(), _secondaryResiduals[id].size());
 	  values += _secondaryResiduals[id];

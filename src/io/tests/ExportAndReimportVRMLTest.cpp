@@ -74,16 +74,13 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
   size_t edgeCount = mesh.edges().size();
   utils::Vector2D coordsVertexOne(mesh.vertices()[0].getCoords());
   utils::Vector2D coordsVertexN(mesh.vertices()[vertexCount-1].getCoords());
-  utils::Vector2D dataOne ( 2.0 );
-  utils::Vector2D dataN ( 4.0 );
+  Eigen::VectorXd dataOne = Eigen::VectorXd::Constant(2, 2.0);
+  Eigen::VectorXd dataN = Eigen::VectorXd::Constant(2, 4.0);
   int vertex0ID = mesh.vertices()[0].getID();
   int vertexNID = mesh.vertices()[vertexCount-1].getID();
-  using tarch::la::slice;
-  utils::DynVector vals(data->values().size());
-  for(int i = 0; i < vals.size(); i++)
-    vals[i] = data->values()(i);
-  slice<2>(vals, vertex0ID*2) = dataOne;
-  slice<2>(vals, vertexNID*2) = dataN;
+
+  data->values().segment(vertex0ID*2, 2) = dataOne;
+  data->values().segment(vertexNID*2, 2) = dataN;
   std::string filename("io-ExportandReimportVRMLTest-testInternallyCreatedGeometry.wrl");
 
   // Export geometry
@@ -110,7 +107,7 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
                              coordsVertexOne));
   validate(tarch::la::equals(
            reimportedMesh.vertices()[vertexCount-1].getCoords(), coordsVertexN));
-  Eigen::VectorXd& values = reimportedData->values();
+  auto& values = reimportedData->values();
   int vertexID = reimportedMesh.vertices()[0].getID();
   validateNumericalEquals(values(vertexID), dataOne[0]);
   validateNumericalEquals(values(vertexID), dataOne[1]);
@@ -120,8 +117,8 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
     readDataOne[i] = data->values()[vertex0ID * 2 + i];
     readDataN[i] = data->values()[vertexNID * 2 + i];
   }
-  validate(tarch::la::equals(readDataOne, dataOne));
-  validate(tarch::la::equals(readDataN, dataN));
+  validate(tarch::la::equals(readDataOne, utils::DynVector(dataOne)));
+  validate(tarch::la::equals(readDataN, utils::DynVector(dataN)));
 
   validateEquals(reimportedMesh.propertyContainers().size(), 3);
   std::vector<int> properties;

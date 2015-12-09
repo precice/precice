@@ -200,7 +200,7 @@ void RadialBasisFctMappingTest:: perform2DTestConsistentMapping
   inMesh->allocateDataValues ();
   //tarch::la::Vector<4,double> assignValues;
   //assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
-  Eigen::VectorXd assignValues;
+  Eigen::VectorXd assignValues(4);
   assignValues << 1.0, 2.0, 2.0, 1.0;
   Eigen::VectorXd& values = inData->values();
   values = assignValues;
@@ -583,7 +583,7 @@ void RadialBasisFctMappingTest:: testDeadAxis2D
   inMesh->allocateDataValues ();
   //tarch::la::Vector<4,double> assignValues;
   //assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
-  Eigen::VectorXd assignValues;
+  Eigen::VectorXd assignValues(4);
   assignValues << 1.0, 2.0, 2.0, 1.0;
   Eigen::VectorXd& values = inData->values();
   values = assignValues;
@@ -633,7 +633,7 @@ void RadialBasisFctMappingTest:: testDeadAxis3D
   inMesh->allocateDataValues ();
   //tarch::la::Vector<4,double> assignValues;
   //assignList(assignValues) = 1.0, 2.0, 3.0, 4.0;
-  Eigen::VectorXd assignValues;
+  Eigen::VectorXd assignValues(4);
   assignValues << 1.0, 2.0, 3.0, 4.0;
   Eigen::VectorXd& values = inData->values();
   values = assignValues;

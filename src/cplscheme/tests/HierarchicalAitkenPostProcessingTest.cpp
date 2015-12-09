@@ -36,7 +36,7 @@ void HierarchicalAitkenPostProcessingTest:: run ()
     std::vector<int> dataIDs;
     dataIDs.push_back(dataID);
 
-    Eigen::VectorXd highF, midF, lowF, values, temp;
+    Eigen::VectorXd highF(5), midF(5), lowF(5), values(5), temp(5);
     highF <<  0.0, -1.0, 0.0,  1.0,  0.0;
     midF << 1.0,  1.0, 0.0, -1.0, -1.0;
     lowF << 1.0,  1.0, 1.0,  1.0,  1.0;
