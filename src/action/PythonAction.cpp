@@ -83,7 +83,7 @@ void PythonAction:: performAction
     PyTuple_SetItem(dataArgs, 1, pythonDt);
     if (_sourceData.use_count() > 0){
       npy_intp sourceDim[] = { _sourceData->values().size() };
-      double* sourceValues = tarch::la::raw(_sourceData->values());
+      double* sourceValues = _sourceData->values().data();
       //assertion(_sourceValues == NULL);
       _sourceValues =
           PyArray_SimpleNewFromData(1, sourceDim, NPY_DOUBLE, sourceValues);
@@ -93,7 +93,7 @@ void PythonAction:: performAction
     }
     if (_targetData.use_count() > 0){
       npy_intp targetDim[] = { _targetData->values().size() };
-      double* targetValues = tarch::la::raw(_targetData->values());
+      double* targetValues = _targetData->values().data();
       //assertion(_targetValues == NULL);
       _targetValues =
           PyArray_SimpleNewFromData(1, targetDim, NPY_DOUBLE, targetValues);
