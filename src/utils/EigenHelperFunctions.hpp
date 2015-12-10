@@ -48,7 +48,7 @@ void append(
   if(n <= 0){
     v = app;
   }else{
-    assertion(app.cols() == 1 && app.rows() == n);
+    assertion1(app.cols() == 1 , app.cols());
     v.conservativeResize(n + app.size());
     for(int i = 0; i < app.size(); i++)
       v(n+i) = app(i);

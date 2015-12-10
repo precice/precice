@@ -632,6 +632,7 @@ void SolverInterfaceTestGeometry:: testVoxelQueryEpsBox()
 
 void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
 {
+
   preciceTrace("testConservativeStationaryDataMapping()");
   SolverInterface precice("Accessor", 0, 1);
   configureSolverInterface(_pathToTests + "stationary-mapping.xml", precice);
