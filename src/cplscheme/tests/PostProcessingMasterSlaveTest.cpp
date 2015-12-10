@@ -76,6 +76,7 @@ void PostProcessingMasterSlaveTest:: run ()
 
 void PostProcessingMasterSlaveTest::testVIQNILSpp()
 {
+
 	preciceTrace ( "testVIQNPP" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
 	com::Communication::SharedPointer masterSlaveCom =

@@ -169,6 +169,7 @@ BaseCouplingScheme::BaseCouplingScheme
   preciceCheck((maxIterations > 0) || (maxIterations == -1),
            "ImplicitCouplingState()",
            "Maximal iteration limit has to be larger than zero!");
+
 }
 
 
@@ -764,7 +765,7 @@ bool BaseCouplingScheme:: measureConvergence
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     const auto& oldValues = convMeasure.data->oldValues.col(0);
-    Eigen::VectorXd q;
+    Eigen::VectorXd q = Eigen::VectorXd::Zero(convMeasure.data->values->size());
     if(designSpecifications.find(convMeasure.dataID) != designSpecifications.end())
       q = designSpecifications.at(convMeasure.dataID);
 
@@ -813,7 +814,7 @@ bool BaseCouplingScheme:: measureConvergenceCoarseModelOptimization
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
     const auto& oldValues = convMeasure.data->oldValues.col(0);
-    Eigen::VectorXd q;
+    Eigen::VectorXd q = Eigen::VectorXd::Zero(convMeasure.data->values->size());
     if(designSpecifications.find(convMeasure.dataID) != designSpecifications.end())
       q = designSpecifications.at(convMeasure.dataID);
 

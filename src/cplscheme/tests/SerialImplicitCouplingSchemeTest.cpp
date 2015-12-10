@@ -551,8 +551,8 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
   auto& dataValues1 = mesh->data()[1]->values();
   double initialStepsizeData0 = 5.0;
   double stepsizeData0 = 5.0;
-  Eigen::VectorXd initialStepsizeData1 = Eigen::VectorXd::Zero(3, 5.0);
-  Eigen::VectorXd stepsizeData1 = Eigen::VectorXd::Zero(3, 5.0);
+  Eigen::VectorXd initialStepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
+  Eigen::VectorXd stepsizeData1 = Eigen::VectorXd::Constant(3, 5.0);
   double computedTime = 0.0;
   int computedTimesteps = 0;
   std::string nameParticipant0 ( "participant0" );
