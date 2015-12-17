@@ -12,6 +12,7 @@
 #include "precice/config/Configuration.hpp"
 #include <iostream>
 
+#include "logging/Logger.hpp"
 namespace precice {
 extern bool testMode;
 }
@@ -49,6 +50,8 @@ int main ( int argc, char** argv )
   CommandLineLogger::FilterListEntry filter("", true); // All off
   CommandLineLogger::getInstance().addFilterListEntry(filter);
 
+  precice::logging::Logger::setupLogging();
+  
   using namespace tarch::configuration;
   tarch::logging::Log log("");
 
