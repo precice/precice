@@ -64,6 +64,9 @@
 
 #include <signal.h> // used for installing crash handler
 
+#include "logging/Logger.hpp"
+
+
 using precice::utils::Event;
 using precice::utils::EventRegistry;
 
@@ -121,6 +124,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   signal(SIGTERM, precice::utils::terminationSignalHandler);
   // signal(SIGINT,  precice::utils::terminationSignalHandler);
 
+  precice::logging::Logger::setupLogging();
 }
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
