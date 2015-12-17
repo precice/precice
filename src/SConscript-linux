@@ -123,7 +123,9 @@ sourcesTarch = [
    sourcesTarchTests,
 ]
 
-
+sourcesLogging = [
+    Glob('logging/*.cpp'),
+]
 
 sourcesAllNoMain = [
     sourcesTarch,
@@ -139,6 +141,7 @@ sourcesAllNoMain = [
     sourcesCplscheme,
     sourcesAction,
     sourcesPrecice,
+    sourcesLogging,
 ]
 
 sourcesAll = [
