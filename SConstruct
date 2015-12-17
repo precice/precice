@@ -186,6 +186,9 @@ if not conf.CheckCXXHeader("Eigen/Dense"):
 
 # ====== Boost ======
 if env["boost_inst"]:
+    uniqueCheckLib(conf, "boost_log")
+    uniqueCheckLib(conf, "boost_log_setup")
+    uniqueCheckLib(conf, "boost_thread")
     uniqueCheckLib(conf, "boost_system")
     uniqueCheckLib(conf, "boost_filesystem")
 else:
