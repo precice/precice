@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mapping/Mapping.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <vector>
 
 namespace precice {
@@ -44,7 +44,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Flag to indicate whether computeMapping() has been called.
   bool _hasComputedMapping;
