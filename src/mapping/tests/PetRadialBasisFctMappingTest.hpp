@@ -53,6 +53,8 @@ private:
   // @brief Logging device.
   static tarch::logging::Log _log;
 
+  void testMPI();
+
   void testPetThinPlateSplines();
 
   void testPetMultiquadrics();
@@ -94,7 +96,9 @@ private:
   void testDeadAxis3D();
 
   /// Helper function: Add the global index from vertex::getID
-  void addGlobalIndex(mesh::PtrMesh &mesh);
+  void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0);
+
+  mesh::PtrMesh getDistributedMesh(const std::vector<int>& ownedVertices);
 };
 
 }}} // namespace precice, mapping, tests

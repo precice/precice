@@ -40,7 +40,107 @@ void PetRadialBasisFctMappingTest:: run()
     testMethod(testDeadAxis3D);
     PETSC_COMM_WORLD = MPI_COMM_WORLD;
   }
+  
+  // testMethod(testMPI);
+  
+  using Par = utils::Parallel;
+  if (Par::getCommunicatorSize() > 3) {
+    // const std::vector<int> ranksWanted = {0, 1, 2 , 3};
+    // MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    MPI_Comm comm = Par::getRestrictedCommunicator( {0, 1, 2, 3} );
+    if (Par::getProcessRank() <= 3){
+      Par::setGlobalCommunicator(comm); // hier auch noch PETSC_COMM_WORLD neu setzen?
+      testMethod(testMPI);
+      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+    }
+  }
 }
+
+mesh::PtrMesh PetRadialBasisFctMappingTest::getDistributedMesh(const std::vector<int>& ownedVertices)
+{
+  const std::vector<double> Xcoords = {0, 1, 2, 3};
+  const std::vector<double> Ycoords = {0, 1};
+  
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", 2, false) );
+  for (auto& x : Xcoords) {
+    for (auto& y : Ycoords) {
+      inMesh->createVertex(utils::Vector2D(x, y));
+      inMesh->vertices().back().setOwner(false);
+    }
+  }
+  for (auto& owned : ownedVertices) {
+    inMesh->vertices()[owned].setOwner(true);
+  }
+  addGlobalIndex(inMesh);
+  return inMesh;
+}
+
+void PetRadialBasisFctMappingTest::testMPI()
+{
+  preciceTrace("testMPI");
+  using Par = utils::Parallel;
+  // assertion(Par::getCommunicatorSize() == 4);
+  using utils::Vector2D;
+  int dimensions = 2;
+  mesh::PtrMesh inMesh, outMesh;
+  
+  if (Par::getProcessRank() == 0) {
+    inMesh = getDistributedMesh( {0, 1} );
+    outMesh = getDistributedMesh( {0, 1} );
+  }
+  else if (Par::getProcessRank() == 1) {
+    inMesh = getDistributedMesh( {2, 3} );
+    outMesh = getDistributedMesh( {2, 3} );
+  }
+  else if (Par::getProcessRank() == 2) {
+    inMesh = getDistributedMesh( {4, 5} );
+    outMesh = getDistributedMesh( {4, 5} );
+  }
+  else if (Par::getProcessRank() == 3) {
+    inMesh = getDistributedMesh( {6, 7} );
+    outMesh = getDistributedMesh( {6, 7} );
+  }
+  mesh::PtrData inData = inMesh->createData( "InData", 1 );
+  int inDataID = inData->getID();
+  inMesh->allocateDataValues();
+
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  int outDataID = outData->getID();
+  outMesh->allocateDataValues();
+
+  std::vector<int> vi = { 0, 1, 2, 3, 4, 5, 6, 7 };
+  utils::DynVector& values = inData->values();
+  values = vi;
+
+  for (auto& v : inMesh->vertices()) {
+    if (v.isOwner())
+      preciceDebug("owned Vertex = " << v.getCoords());
+  }
+
+  Gaussian fct(2.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  mapping.setMeshes(inMesh, outMesh);
+  validateEquals(mapping.hasComputedMapping(), false);
+
+  mapping.computeMapping();
+  // mapping.map(inDataID, outDataID);
+  // validateEquals(mapping.hasComputedMapping(), true);
+  
+  
+ 
+  // inMesh->computeState();
+  // inMesh->computeDistribution();
+  // computeState && computeDistribution auf mesh aufrufen ODER
+  // addGlobalID mit Offset aufrufen je nach Größe der Basisfunktion vertices zweimal haben, aber nur einmal mit owner(true)
+  // Auch Testcase mit einem Prozessor leer lassen
+
+  // for (mesh::Vertex& v : inMesh->vertices()) {
+    // std::cout << "Vertex globalIndex = " << v.getGlobalIndex() << std::endl;
+  // }
+ 
+
+}
+
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
 {
@@ -672,13 +772,10 @@ void PetRadialBasisFctMappingTest:: testDeadAxis3D()
   validateNumericalEquals ( outData->values()[3], 4.3 );
 }
 
-void PetRadialBasisFctMappingTest::addGlobalIndex(mesh::PtrMesh &mesh)
+void PetRadialBasisFctMappingTest::addGlobalIndex(mesh::PtrMesh &mesh, int offset)
 {
-  // size_t size = mesh->vertices().size(), i = 0;
   for (mesh::Vertex& v : mesh->vertices()) {
-    // v.setGlobalIndex(size - i - 1);
-    v.setGlobalIndex(v.getID());
-    // i++;
+    v.setGlobalIndex(v.getID() + offset);
   }
 }
 
