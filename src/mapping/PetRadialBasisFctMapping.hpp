@@ -43,9 +43,9 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param constraint [IN] Specifies mapping to be consistent or conservative.
-   * @param function [IN] Radial basis function used for mapping.
-   * @param solverRtol [IN] Relative tolerance for the linear solver.
+   * @param[in] constraint Specifies mapping to be consistent or conservative.
+   * @param[in] function Radial basis function used for mapping.
+   * @param[in] solverRto Relative tolerance for the linear solver.
    *
    * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
@@ -132,10 +132,10 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   if (getDimensions()==2) {
     _deadAxis[0] = xDead;
     _deadAxis[1] = yDead;
-    preciceCheck(not (xDead && yDead), "setDeadAxis()", "You cannot  "
-                 << " choose all axis to be dead for a RBF mapping");
-    preciceCheck(not zDead, "setDeadAxis()", "You cannot  "
-                 << " dead out the z axis if dimension is set to 2");
+    preciceCheck(not (xDead && yDead),
+                 "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
+    preciceCheck(not zDead,
+                 "setDeadAxis()", "You cannot dead out the z axis if dimension is set to 2");
   }
   else if (getDimensions()==3) {
     _deadAxis[0] = xDead;
@@ -220,7 +220,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   preciceDebug("Set matrix C to local size " << n << " x " << n);
   ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
-  // Create a sparse matrix with outputSize x n local size.
+  // Create a matrix with outputSize x n local size.
   _matrixA.reset();
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   preciceDebug("Set matrix A to local size " << outputSize << " x " << n);

@@ -42,8 +42,7 @@ void CommunicatedGeometryTest:: run ()
   preciceTrace ( "run" );
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 3){
-    std::vector<int> ranksWanted;
-    ranksWanted += 0, 1, 2 , 3;
+    const std::vector<int> ranksWanted = {0, 1, 2, 3};
     MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
