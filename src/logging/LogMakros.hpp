@@ -34,14 +34,14 @@
 //#endif
 
 #define ppreciceDebug(message) do {                           \
-  LOG_LOCATION                                                     \
+  LOG_LOCATION;                                                     \
   BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::debug) << PRECICE_PROCESS_RANK_STREAM \
   << message; \
 } while (false) 
 
     
 #define ppreciceWarning(methodname, message) do {                           \
-  LOG_LOCATION                                                     \
+  LOG_LOCATION;                                                     \
   BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::warning) << PRECICE_PROCESS_RANK_STREAM \
   << message; \
 } while (false)
@@ -54,7 +54,7 @@
 } while (false)
 */
 #define ppreciceInfo(methodname, message) do {\
-  LOG_LOCATION                                                     \
+  LOG_LOCATION;                                                     \
   BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::info) << message;\
 } while (false)
 
@@ -94,7 +94,7 @@
 #define ppreciceTrace3(methodname, var1, var2, var3) \
   LOG_LOCATION;                                                         \
   BOOST_LOG_FUNCTION();                                                 \
-  Tracer _tracer_(_log, __func__, __FILE__,__LINE__);                          \
+  precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);                          \
   BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)        \
   << "Entering " << __func__\
   << "\n" << #var1 << " = " << var1                                    \
@@ -104,7 +104,7 @@
 #define ppreciceTrace4(methodname, var1, var2, var3, var4) \
   LOG_LOCATION;                                                         \
   BOOST_LOG_FUNCTION();                                                 \
-  Tracer _tracer_(_log, __func__, __FILE__,__LINE__);                          \
+  precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);                          \
   BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)        \
   << "Entering " << __func__\
   << "\n" << #var1 << " = " << var1                                    \
@@ -116,7 +116,7 @@
 #define ppreciceTrace5(methodname, var1, var2, var3, var4, var5) \
   LOG_LOCATION;                                                         \
   BOOST_LOG_FUNCTION();                                                 \
-  Tracer _tracer_(_log, __func__, __FILE__,__LINE__);                          \
+  precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);                          \
   BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)        \
   << "Entering " << __func__\
   << "\n" << #var1 << " = " << var1                                    \
@@ -128,7 +128,7 @@
 #define ppreciceTrace6(methodname, var1, var2, var3, var4, var5, var6) \
   LOG_LOCATION;                                                         \
   BOOST_LOG_FUNCTION();                                                 \
-  Tracer _tracer_(_log, __func__, __FILE__,__LINE__);                          \
+  precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);                          \
   BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)        \
   << "Entering " << __func__\
   << "\n" << #var1 << " = " << var1                                    \
@@ -162,17 +162,17 @@
 
 
    
-#define ppreciceError(methodname, message) do {                          \
+#define ppreciceError(methodname, message)                           \
+  LOG_LOCATION;  \
   BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::error) \
-    << LOG_LOCATION                                               \
     << message << "\n"                                            \
     << "  in " << methodname;                                     \
     std::abort();                                                       \
-  } while (false)
+   
 
 #define ppreciceCheck(check, methodname, errormessage) \
   if ( !(check) ) { \
-    preciceError(methodname, errormessage); \
+    ppreciceError(methodname, errormessage); \
   }
 
   
