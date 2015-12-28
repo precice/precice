@@ -5,7 +5,7 @@
 #define PRECICE_MAPPING_NEARESTNEIGHBORMAPPINGTEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace mapping {
@@ -41,7 +41,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   void testConsistentNonIncremental();
 

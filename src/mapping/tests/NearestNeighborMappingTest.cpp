@@ -8,6 +8,7 @@
 #include "mesh/Data.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Dimensions.hpp"
+#include "logging/LogMakros.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mapping::tests::NearestNeighborMappingTest)
@@ -16,7 +17,7 @@ namespace precice {
 namespace mapping {
 namespace tests {
 
-tarch::logging::Log NearestNeighborMappingTest::
+logging::Logger NearestNeighborMappingTest::
   _log ( "precice::mapping::tests::NearestNeighborMappingTest" );
 
 NearestNeighborMappingTest:: NearestNeighborMappingTest()
@@ -34,7 +35,7 @@ void NearestNeighborMappingTest:: run()
 
 void NearestNeighborMappingTest:: testConsistentNonIncremental()
 {
-  preciceTrace("testConsistentNonIncremental()");
+  ppreciceTrace("testConsistentNonIncremental()");
   using namespace mesh;
   using utils::Vector2D;
   int dimensions = 2;
@@ -121,7 +122,7 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
 
 void NearestNeighborMappingTest:: testConservativeNonIncremental()
 {
-  preciceTrace("testConservativeNonIncremental()");
+  ppreciceTrace("testConservativeNonIncremental()");
   using namespace mesh;
   using namespace tarch::la;
   using utils::Vector2D;
