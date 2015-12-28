@@ -9,6 +9,8 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 
+#include "logging/LogMakros.hpp"
+
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mapping::tests::NearestProjectionMappingTest)
 
@@ -16,7 +18,7 @@ namespace precice {
 namespace mapping {
 namespace tests {
 
-tarch::logging::Log NearestProjectionMappingTest::
+logging::Logger NearestProjectionMappingTest::
   _log ("precice::mapping::tests::NearestProjectionMappingTest");
 
 NearestProjectionMappingTest:: NearestProjectionMappingTest()
@@ -34,7 +36,7 @@ void NearestProjectionMappingTest:: run()
 
 void NearestProjectionMappingTest:: testConservativeNonIncremental()
 {
-  preciceTrace ( "testConservativeNonIncremental()" );
+  ppreciceTrace ( "testConservativeNonIncremental()" );
   using namespace mesh;
   using utils::Vector2D;
   int dimensions = 2;
@@ -95,7 +97,7 @@ void NearestProjectionMappingTest:: testConservativeNonIncremental()
 
 void NearestProjectionMappingTest:: testConsistentNonIncremental()
 {
-  preciceTrace ( "testConsistentNonIncremental()" );
+  ppreciceTrace ( "testConsistentNonIncremental()" );
   using namespace mesh;
   using utils::Vector2D;
   int dimensions = 2;
