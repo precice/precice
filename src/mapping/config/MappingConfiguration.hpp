@@ -2,7 +2,7 @@
 
 #include "mapping/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include <string>
 #include <vector>
@@ -104,7 +104,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   const std::string TAG;
 
