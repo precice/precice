@@ -10,6 +10,8 @@
 #include "utils/Parallel.hpp"
 #include "tarch/la/ScalarOperations.h"
 
+#include "logging/LogMakros.hpp"
+
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mapping::tests::RadialBasisFctMappingTest)
 
@@ -17,7 +19,7 @@ namespace precice {
 namespace mapping {
 namespace tests {
 
-tarch::logging::Log RadialBasisFctMappingTest::
+logging::Logger RadialBasisFctMappingTest::
   _log ( "precice::mapping::tests::RadialBasisFctMappingTest" );
 
 RadialBasisFctMappingTest:: RadialBasisFctMappingTest()
@@ -41,7 +43,7 @@ void RadialBasisFctMappingTest:: run()
 
 void RadialBasisFctMappingTest:: testThinPlateSplines()
 {
-  preciceTrace ( "testThinPlateSplines" );
+  ppreciceTrace ( "testThinPlateSplines" );
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -58,7 +60,7 @@ void RadialBasisFctMappingTest:: testThinPlateSplines()
 
 void RadialBasisFctMappingTest:: testMultiquadrics()
 {
-  preciceTrace ( "testMultiquadrics" );
+  ppreciceTrace ( "testMultiquadrics" );
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -75,7 +77,7 @@ void RadialBasisFctMappingTest:: testMultiquadrics()
 
 void RadialBasisFctMappingTest:: testInverseMultiquadrics()
 {
-  preciceTrace ( "testInverseMultiquadrics" );
+  ppreciceTrace ( "testInverseMultiquadrics" );
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -92,7 +94,7 @@ void RadialBasisFctMappingTest:: testInverseMultiquadrics()
 
 void RadialBasisFctMappingTest:: testVolumeSplines()
 {
-  preciceTrace ( "testVolumeSplines" );
+  ppreciceTrace ( "testVolumeSplines" );
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -109,7 +111,7 @@ void RadialBasisFctMappingTest:: testVolumeSplines()
 
 void RadialBasisFctMappingTest:: testGaussian()
 {
-  preciceTrace ( "testGaussian" );
+  ppreciceTrace ( "testGaussian" );
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -126,7 +128,7 @@ void RadialBasisFctMappingTest:: testGaussian()
 
 void RadialBasisFctMappingTest:: testCompactThinPlateSplinesC2()
 {
-  preciceTrace ( "testCompactThinPlateSplinesC2" );
+  ppreciceTrace ( "testCompactThinPlateSplinesC2" );
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -145,7 +147,7 @@ void RadialBasisFctMappingTest:: testCompactThinPlateSplinesC2()
 
 void RadialBasisFctMappingTest:: testCompactPolynomialC0()
 {
-  preciceTrace ( "testCompactPolynomialC0" );
+  ppreciceTrace ( "testCompactPolynomialC0" );
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -164,7 +166,7 @@ void RadialBasisFctMappingTest:: testCompactPolynomialC0()
 
 void RadialBasisFctMappingTest:: testCompactPolynomialC6()
 {
-  preciceTrace ( "testCompactPolynomialC6" );
+  ppreciceTrace ( "testCompactPolynomialC6" );
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -185,7 +187,7 @@ void RadialBasisFctMappingTest:: perform2DTestConsistentMapping
 (
   Mapping& mapping )
 {
-  preciceTrace ( "perform2DTestConsistentMapping()" );
+  ppreciceTrace ( "perform2DTestConsistentMapping()" );
   int dimensions = 2;
   using utils::Vector2D;
 
@@ -282,7 +284,7 @@ void RadialBasisFctMappingTest:: perform2DTestConservativeMapping
 (
   Mapping& mapping )
 {
-  preciceTrace ( "perform2DTestConservativeMapping()" );
+  ppreciceTrace ( "perform2DTestConservativeMapping()" );
   int dimensions = 2;
   using utils::Vector2D;
 
@@ -349,7 +351,7 @@ void RadialBasisFctMappingTest:: perform3DTestConsistentMapping
 (
   Mapping& mapping )
 {
-  preciceTrace ( "perform3DTestConsistentMapping()" );
+  ppreciceTrace ( "perform3DTestConsistentMapping()" );
   int dimensions = 3;
   using utils::Vector3D;
 
@@ -483,7 +485,7 @@ void RadialBasisFctMappingTest:: perform3DTestConservativeMapping
 (
   Mapping& mapping )
 {
-  preciceTrace ( "perform3DTestConservativeMapping()" );
+  ppreciceTrace ( "perform3DTestConservativeMapping()" );
   int dimensions = 3;
   using utils::Vector3D;
 
@@ -555,7 +557,7 @@ void RadialBasisFctMappingTest:: perform3DTestConservativeMapping
 void RadialBasisFctMappingTest:: testDeadAxis2D
 ()
 {
-  preciceTrace ( "testDeadAxis2D()" );
+  ppreciceTrace ( "testDeadAxis2D()" );
   int dimensions = 2;
   using utils::Vector2D;
 
@@ -603,7 +605,7 @@ void RadialBasisFctMappingTest:: testDeadAxis2D
 void RadialBasisFctMappingTest:: testDeadAxis3D
 ()
 {
-  preciceTrace ( "testDeadAxis3D()" );
+  ppreciceTrace ( "testDeadAxis3D()" );
   int dimensions = 3;
   using utils::Vector3D;
 
