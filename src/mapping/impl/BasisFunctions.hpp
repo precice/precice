@@ -1,6 +1,8 @@
 #pragma once
 
 #include "utils/Globals.hpp"
+#include "logging/LogMakros.hpp"
+
 
 namespace precice {
 namespace mapping {
@@ -77,7 +79,7 @@ public:
   InverseMultiquadrics ( double c )
     : _cPow2(std::pow(c, 2))
   {
-    preciceCheck(tarch::la::greater(c, 0.0), "InverseMultiquadrics()",
+    ppreciceCheck(tarch::la::greater(c, 0.0), "InverseMultiquadrics()",
                  "Shape parameter for radial-basis-function inverse multiquadric"
                  << " has to be larger than zero!");
   }
@@ -96,7 +98,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _cPow2;
 };
@@ -140,7 +142,7 @@ public:
     : _shape(shape),
       _supportRadius(supportRadius)
   {
-    preciceCheck(tarch::la::greater(_shape, 0.0), "Gaussian()",
+    ppreciceCheck(tarch::la::greater(_shape, 0.0), "Gaussian()",
                  "Shape parameter for radial-basis-function gaussian"
                  << " has to be larger than zero!");
 
@@ -159,7 +161,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _shape;
 
@@ -186,7 +188,7 @@ public:
   CompactThinPlateSplinesC2 ( double supportRadius )
     : _r(supportRadius)
   {
-    preciceCheck(tarch::la::greater(_r, 0.0), "CompactThinPlateSplinesC2()",
+    ppreciceCheck(tarch::la::greater(_r, 0.0), "CompactThinPlateSplinesC2()",
                  "Support radius for radial-basis-function compact thin-plate-splines c2"
                  << " has to be larger than zero!");
   }
@@ -209,7 +211,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _r;
 };
@@ -231,7 +233,7 @@ public:
   CompactPolynomialC0 ( double supportRadius )
     : _r(supportRadius)
   {
-    preciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC0()",
+    ppreciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC0()",
                  "Support radius for radial-basis-function compact polynomial c0"
                  << " has to be larger than zero!");
   }
@@ -250,7 +252,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _r;
 };
@@ -272,7 +274,7 @@ public:
   CompactPolynomialC6 ( double supportRadius )
     : _r(supportRadius)
   {
-    preciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC6()",
+    ppreciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC6()",
                  "Support radius for radial-basis-function compact polynomial c6"
                  << " has to be larger than zero!");
   }
@@ -293,7 +295,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _r;
 };
