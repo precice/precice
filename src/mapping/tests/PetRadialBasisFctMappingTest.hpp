@@ -2,7 +2,7 @@
 #pragma once
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "/logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
 
 
@@ -51,7 +51,7 @@ private:
   const double tolerance;
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   void testPetThinPlateSplines();
 
