@@ -9,6 +9,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
+#include "logging/LogMakros.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mapping::tests::MappingConfigurationTest)
@@ -17,7 +18,7 @@ namespace precice {
 namespace mapping {
 namespace tests {
 
-tarch::logging::Log MappingConfigurationTest::
+logging::Logger MappingConfigurationTest::
   _log ( "precice::mapping::tests::MappingConfigurationTest" );
 
 MappingConfigurationTest::MappingConfigurationTest ()
@@ -34,7 +35,7 @@ void MappingConfigurationTest:: setUp()
 void MappingConfigurationTest:: run()
 {
   PRECICE_MASTER_ONLY {
-    preciceTrace("run()");
+    ppreciceTrace("run()");
     std::string file(_pathToTests + "mapping-config.xml");
     using utils::XMLTag;
     XMLTag tag = utils::getRootTag();
