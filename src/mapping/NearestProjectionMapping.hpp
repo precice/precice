@@ -55,7 +55,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   typedef std::list<query::InterpolationElement> InterpolationElements;
   std::vector<InterpolationElements> _weights;

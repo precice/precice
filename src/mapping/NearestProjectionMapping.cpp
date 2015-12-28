@@ -1,10 +1,12 @@
 #include "NearestProjectionMapping.hpp"
 #include "query/FindClosest.hpp"
+#include "logging/LogMakros.hpp"
+
 
 namespace precice {
 namespace mapping {
 
-tarch::logging::Log NearestProjectionMapping::
+logging::Logger NearestProjectionMapping::
   _log ( "precice::mapping::NearestProjectionMapping" );
 
 NearestProjectionMapping:: NearestProjectionMapping
@@ -29,10 +31,10 @@ NearestProjectionMapping:: NearestProjectionMapping
 
 void NearestProjectionMapping:: computeMapping()
 {
-  preciceTrace2("computeMapping()", input()->vertices().size(),
+  ppreciceTrace2("computeMapping()", input()->vertices().size(),
                 output()->vertices().size());
   if (getConstraint() == CONSISTENT){
-    preciceDebug("Compute consistent mapping");
+    ppreciceDebug("Compute consistent mapping");
     _weights.resize(output()->vertices().size());
     for ( size_t i=0; i < output()->vertices().size(); i++ ){
       query::FindClosest findClosest(output()->vertices()[i].getCoords());
@@ -47,7 +49,7 @@ void NearestProjectionMapping:: computeMapping()
   }
   else {
     assertion1(getConstraint() == CONSERVATIVE, getConstraint());
-    preciceDebug("Compute conservative mapping");
+    ppreciceDebug("Compute conservative mapping");
     _weights.resize(input()->vertices().size());
     for ( size_t i=0; i < input()->vertices().size(); i++ ){
       query::FindClosest findClosest(input()->vertices()[i].getCoords());
@@ -70,7 +72,7 @@ bool NearestProjectionMapping:: hasComputedMapping() const
 
 void NearestProjectionMapping:: clear()
 {
-  preciceTrace("clear()");
+  ppreciceTrace("clear()");
   _weights.clear();
   _hasComputedMapping = false;
 }
@@ -80,7 +82,7 @@ void NearestProjectionMapping:: map
   int inputDataID,
   int outputDataID )
 {
-  preciceTrace2("map()", inputDataID, outputDataID);
+  ppreciceTrace2("map()", inputDataID, outputDataID);
   mesh::PtrData inData = input()->data(inputDataID);
   mesh::PtrData outData = output()->data(outputDataID);
   const utils::DynVector& inValues = inData->values();
@@ -90,7 +92,7 @@ void NearestProjectionMapping:: map
   assertion(dimensions == outData->getDimensions());
 
   if (getConstraint() == CONSISTENT){
-    preciceDebug("Map consistent");
+    ppreciceDebug("Map consistent");
     assertion2(_weights.size() == output()->vertices().size(),
                _weights.size(), output()->vertices().size());
     for (size_t i=0; i < output()->vertices().size(); i++){
@@ -108,7 +110,7 @@ void NearestProjectionMapping:: map
   }
   else {
     assertion1(getConstraint() == CONSERVATIVE, getConstraint());
-    preciceDebug("Map conservative");
+    ppreciceDebug("Map conservative");
     assertion2(_weights.size() == input()->vertices().size(),
                _weights.size(), input()->vertices().size());
     for (size_t i=0; i < input()->vertices().size(); i++){
@@ -129,7 +131,7 @@ void NearestProjectionMapping:: map
 bool NearestProjectionMapping::doesVertexContribute(
   int vertexID) const
 {
-  preciceTrace1("doesVertexContribute()", vertexID);
+  ppreciceTrace1("doesVertexContribute()", vertexID);
   if (getConstraint() == CONSISTENT) {
     for (size_t i=0; i < output()->vertices().size(); i++) {
       const InterpolationElements& elems = _weights[i];
