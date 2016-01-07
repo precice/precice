@@ -42,6 +42,19 @@ def checkset_var(varname, default):
         vprint(varname, var, False)
     return var
 
+def get_real_compiler(compiler):
+    """ Gets the compiler behind the MPI compiler wrapper. """
+    if compiler.startswith("mpi"):
+        try:
+            output = subprocess.check_output("%s -show" % compiler, shell=True)
+        except (OSError, subprocess.CalledProcessError) as e:
+            print "Error getting wrapped compiler from MPI compiler"
+            print "Command was:", e.cmd, "Output was:", e.output
+        else:
+            return output.split()[0]
+    else:
+        return compiler
+
 
 
 ########################################################################## MAIN
@@ -133,18 +146,19 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-std=c++11'])
 
 # ====== Compiler Settings ======
-if env["compiler"] == 'icc':
+real_compiler = get_real_compiler(env["compiler"])
+if real_compiler == 'icc':
     env.AppendUnique(LIBPATH = ['/usr/lib/'])
     env.Append(LIBS = ['stdc++'])
     if env["build"] == 'debug':
         env.Append(CCFLAGS = ['-align'])
     elif env["build"] == 'release':
         env.Append(CCFLAGS = ['-w', '-fast', '-align', '-ansi-alias'])
-elif env["compiler"] == 'g++':
+elif real_compiler == 'g++':
     pass
-elif env["compiler"] == "clang++":
+elif real_compiler == "clang++":
     env.Append(CCFLAGS= ['-Wsign-compare']) # sign-compare not enabled in Wall with clang.
-elif env["compiler"] == "g++-mp-4.9":
+elif real_compiler == "g++-mp-4.9":
     # Some special treatment that seems to be necessary for Mac OS.
     # See https://github.com/precice/precice/issues/2
     env.Append(LIBS = ['libstdc++.6'])
