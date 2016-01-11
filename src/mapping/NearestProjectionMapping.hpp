@@ -3,7 +3,7 @@
 #include "Mapping.hpp"
 #include <list>
 #include <vector>
-
+#include "logging/Logger.hpp"
 namespace precice {
 namespace mapping {
 
