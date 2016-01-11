@@ -1,11 +1,9 @@
 #include "Mapping.hpp"
-#include "logging/LogMakros.hpp"
-
 
 namespace precice {
 namespace mapping {
 
-logging::Logger Mapping:: _log ( "precice::mapping::Mapping" );
+tarch::logging::Log Mapping:: _log ( "precice::mapping::Mapping" );
 
 Mapping:: Mapping
 (
