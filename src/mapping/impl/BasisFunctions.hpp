@@ -125,41 +125,48 @@ public:
 };
 
 /**
- * @brief Radial basis function with global support.
+ * @brief Radial basis function with global and compact support.
  *
  * To be used as template parameter for RadialBasisFctMapping.
  * Takes a shape parameter (shape > 0.0) on construction.
  *
- * Evaluates to: exp(-1 * shape * radius^2).
+ * Evaluates to: exp(-1 * (shape * radius)^2).
  */
 class Gaussian
 {
 public:
 
-  Gaussian ( double shape )
-    : _shape(shape)
+  Gaussian (const double shape, const double supportRadius = std::numeric_limits<double>::infinity() )
+    : _shape(shape),
+      _supportRadius(supportRadius)
   {
     preciceCheck(tarch::la::greater(_shape, 0.0), "Gaussian()",
                  "Shape parameter for radial-basis-function gaussian"
                  << " has to be larger than zero!");
+
+    _deltaY = hasCompactSupport() ? evaluate(supportRadius) : 0;
   }
 
+  /// Compact support if supportRadius is not infinity
   bool hasCompactSupport() const
-  { return false; }
+  { return not (_supportRadius == std::numeric_limits<double>::infinity()); }
 
   double getSupportRadius() const
-  { return std::numeric_limits<double>::max(); }
+  { return _supportRadius; }
 
-  double evaluate ( double radius ) const
-  {
-    return std::exp( - std::pow(_shape*radius,2.0) );
-  }
+  double evaluate(const double radius) const
+  { return std::exp( - std::pow(_shape*radius,2.0) ) - _deltaY; }
 
 private:
 
   static tarch::logging::Log _log;
 
   double _shape;
+
+  double _supportRadius;
+
+  double _deltaY = 0;
+  
 };
 
 /**
