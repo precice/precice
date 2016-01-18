@@ -237,7 +237,7 @@ void EventRegistry::print(std::ostream &out, bool terse)
       }
     }
 
-    out << endl;
+    out << endl << std::flush;
   }
 }
 
