@@ -159,6 +159,7 @@ void EventRegistry::signal_handler(int signal)
   if (initialized) {
     finalize();
     print();
+    print("EventTimings.log", true);
   }
 }
 
