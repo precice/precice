@@ -35,7 +35,7 @@ Logger::Logger(std::string module)
   add_attribute("Module", boost::log::attributes::constant<std::string>(module));
 }
 
-void Logger::setupLogging()
+void setupLogging()
 {
   using namespace boost::log;
   add_common_attributes();

@@ -13,6 +13,7 @@ class Logger : public boost::log::sources::severity_logger<boost::log::trivial::
 {
 public:
   explicit Logger(std::string module);
-  static void setupLogging();
-};
+  };
+void setupLogging();
+
 }}// namespace precice, logging
