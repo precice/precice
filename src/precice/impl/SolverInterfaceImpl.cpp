@@ -124,7 +124,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   signal(SIGTERM, precice::utils::terminationSignalHandler);
   // signal(SIGINT,  precice::utils::terminationSignalHandler);
 
-  precice::logging::Logger::setupLogging();
+  precice::logging::setupLogging();
   
 }
 
