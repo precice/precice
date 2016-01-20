@@ -149,8 +149,6 @@ std::map<int, utils::DynVector> AitkenPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
-  preciceError(__func__, "design specification for Aitken relaxation is not supported yet.");
-
   std::map<int, utils::DynVector> designSpecifications;
   int off = 0;
   for (int id : _dataIDs) {

@@ -159,6 +159,7 @@ void EventRegistry::signal_handler(int signal)
   if (initialized) {
     finalize();
     print();
+    print("EventTimings.log", true);
   }
 }
 
@@ -236,7 +237,7 @@ void EventRegistry::print(std::ostream &out, bool terse)
       }
     }
 
-    out << endl;
+    out << endl << std::flush;
   }
 }
 
