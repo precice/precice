@@ -50,7 +50,7 @@ int main ( int argc, char** argv )
   CommandLineLogger::FilterListEntry filter("", true); // All off
   CommandLineLogger::getInstance().addFilterListEntry(filter);
 
-  precice::logging::Logger::setupLogging();
+  precice::logging::setupLogging();
   
   using namespace tarch::configuration;
   tarch::logging::Log log("");
