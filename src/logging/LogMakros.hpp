@@ -163,7 +163,7 @@
   {                                                                       \
     LOG_LOCATION;                                                         \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::error)       \
-    << message                                                            \
+    << message;                                                            \
     std::abort();                                                         \
   } while (false)
 
