@@ -91,7 +91,7 @@ print_options(vars)
 
 buildpath = os.path.join(env["builddir"], "") # Ensures to have a trailing slash
 
-if not env["mpi"] and env["compiler"].startswith('mpic'):
+if not env["mpi"] and env["compiler"].startswith('mpi'):
     print "ERROR: Option 'compiler' must be set to an MPI compiler wrapper only when using MPI!"
     Exit(1)
 
@@ -218,7 +218,7 @@ if env["mpi"]:
     # Skip (deprecated) MPI C++ bindings.
     env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
 
-    if not env["compiler"].startswith('mpic'):
+    if not env["compiler"].startswith('mpi'):
         env.AppendUnique(LIBPATH = [mpiLibPath])
         uniqueCheckLib(conf, mpiLib)
         if (mpiLib == 'mpich'): # MPICH1/2/3 library
