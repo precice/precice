@@ -381,7 +381,9 @@ void BaseQNPostProcessing::performPostProcessing
       // re-computation of QR decomposition from _matrixV = _matrixVBackup
       // this occurs very rarely, to be precise, it occurs only if the coupling terminates
       // after the first iteration and the matrix data from time step t-2 has to be used
+      _preconditioner->apply(_matrixV);
       _qrV.reset(_matrixV, getLSSystemRows());
+      _preconditioner->revert(_matrixV);
       _resetLS = true; // need to recompute _Wtil, Q, R
     }
 

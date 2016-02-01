@@ -246,8 +246,6 @@ void MVQNPostProcessing::buildWtil()
   Event e_WtilV("compute W_til = (W - J_prev*V)", true, true); // time measurement, barrier
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
-  // TODO: transpose V efficiently using blocking in parallel
-  //       such that multiplication is cache efficient
   _Wtil = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
 
   // multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
@@ -306,7 +304,8 @@ void MVQNPostProcessing::buildJacobian()
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
   if(_resetLS){
     buildWtil();
-    std::cout<<" ATTENTION, in buildJacobian call for buildWtill() - this should not be the case except the coupling did only one iteration"<<std::endl;
+    preciceWarning(__func__," ATTENTION, in buildJacobian call for buildWtill() - this should not be the case except the coupling did only one iteration");
+    //std::cout<<" ATTENTION, in buildJacobian call for buildWtill() - this should not be the case except the coupling did only one iteration"<<std::endl;
   }
   /**
   *  (3) compute invJacobian = W_til*Z
@@ -412,7 +411,7 @@ void MVQNPostProcessing::computeNewtonFactors
    *  (5) xUp = J_prev * (-res) + Wtil*Z*(-res)
    */
   Event e_Jpr("compute xUp(1) = J_prev*(-res)", true, true); // -------- time measurement, barrier
-  Eigen::VectorXd xUp(_residuals.size());
+  //Eigen::VectorXd xUp(_residuals.size());
   _parMatrixOps.multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
   e_Jpr.stop();                                              // --------
 
