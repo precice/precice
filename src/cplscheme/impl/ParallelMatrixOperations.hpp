@@ -267,6 +267,7 @@ private:
 				  requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv.data(), leftMatrix_rcv.size(), 0);
 			}
 
+			if(requestSend != NULL) requestSend->wait();
 			// compute block with new local data
 			EigenMatrix block(rows_rcv, rightMatrix.cols());
 			block.noalias() = leftMatrix_copy * rightMatrix;
