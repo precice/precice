@@ -554,14 +554,29 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     for (int dim=0; dim < valueDim; dim++){
       // Fill input from input data values
       preciceDebug("in vector ownerRange = " << in.ownerRange());
-      for (int i = in.ownerRange().first; i < in.ownerRange().second; i++) {
-        if (i < polyparams) // The polyparams remain zero, skipping.
-          continue;
-        int index = i - in.ownerRange().first; // Relative (local) index
-        int globalIndex = input()->vertices()[index-polyparams].getGlobalIndex(); // i - ownerRange.first ?
-        preciceDebug("Filling input vector(" << globalIndex << ") = " <<  inValues[(index-polyparams)*valueDim + dim]);
-        VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(index-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+      preciceDebug("polyparams = " << polyparams << ", valueDim = " << valueDim << ", dim = " << dim);
+      // for (int i = in.ownerRange().first; i < in.ownerRange().second; i++) {
+      auto localPolyparams = utils::MasterSlave::_rank > 0 ? 0 : polyparams; // Set localPolyparams only when root rank
+      for (int i = in.ownerRange().first + localPolyparams; i < in.ownerRange().second; i++) {
+        preciceDebug("Begin Loop, i = " << i);
+
+        // if (i < polyparams) // The polyparams remain zero, skipping.
+          // continue;
+        // int index = i - in.ownerRange().first; // Relative (local) index
+        // preciceDebug("local index = " << index);
+        int globalIndex = input()->vertices()[i-polyparams].getGlobalIndex(); // i - ownerRange.first ?
+        preciceDebug("globalIndex = " << globalIndex);
+        preciceDebug("Filling input vector(" << globalIndex+polyparams << ") = inValues[" << (i-polyparams)*valueDim + dim << "] = " << inValues[(i-polyparams)*valueDim + dim]);
+        VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(i-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+
+        // Begin Benjamin
+        // preciceDebug("Filling input vector(" << i << ") = " <<  inValues[(i-polyparams)*valueDim + dim]);
+        // VecSetValueLocal(in.vector, i, inValues[(i-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+        // End Benjamin
+        preciceDebug("End Loop, i = " << i);
+
       }
+      preciceDebug("Finished in vector construction.")
       in.assemble();
       // in.view();
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);

@@ -41,12 +41,8 @@ void PetRadialBasisFctMappingTest:: run()
     PETSC_COMM_WORLD = MPI_COMM_WORLD;
   }
   
-  // testMethod(testMPI);
-  
   using Par = utils::Parallel;
   if (Par::getCommunicatorSize() > 3) {
-    // const std::vector<int> ranksWanted = {0, 1, 2 , 3};
-    // MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
     MPI_Comm comm = Par::getRestrictedCommunicator( {0, 1, 2, 3} );
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm); // hier auch noch PETSC_COMM_WORLD neu setzen?
@@ -58,6 +54,7 @@ void PetRadialBasisFctMappingTest:: run()
 
 mesh::PtrMesh PetRadialBasisFctMappingTest::getDistributedMesh(const std::vector<int>& ownedVertices)
 {
+  // Returns a mesh of 8 vertices with some owner=True set.
   const std::vector<double> Xcoords = {0, 1, 2, 3};
   const std::vector<double> Ycoords = {0, 1};
   
@@ -82,39 +79,47 @@ void PetRadialBasisFctMappingTest::testMPI()
   // assertion(Par::getCommunicatorSize() == 4);
   using utils::Vector2D;
   int dimensions = 2;
-  mesh::PtrMesh inMesh, outMesh;
+  mesh::PtrMesh inMesh;
+  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", 2, false) );
   
   if (Par::getProcessRank() == 0) {
     inMesh = getDistributedMesh( {0, 1} );
-    outMesh = getDistributedMesh( {0, 1} );
+    outMesh->createVertex ( Vector2D(0.0, 0.0) );
+    outMesh->createVertex ( Vector2D(0.0, 1.0) );
   }
   else if (Par::getProcessRank() == 1) {
     inMesh = getDistributedMesh( {2, 3} );
-    outMesh = getDistributedMesh( {2, 3} );
+    outMesh->createVertex ( Vector2D(1.0, 0.0) );
+    outMesh->createVertex ( Vector2D(1.0, 1.0) );
   }
   else if (Par::getProcessRank() == 2) {
     inMesh = getDistributedMesh( {4, 5} );
-    outMesh = getDistributedMesh( {4, 5} );
+    outMesh->createVertex ( Vector2D(2.0, 0.0) );
+    outMesh->createVertex ( Vector2D(2.0, 1.0) );
   }
   else if (Par::getProcessRank() == 3) {
     inMesh = getDistributedMesh( {6, 7} );
-    outMesh = getDistributedMesh( {6, 7} );
+    outMesh->createVertex ( Vector2D(3.0, 0.0) );
+    outMesh->createVertex ( Vector2D(3.0, 1.0) );
   }
   mesh::PtrData inData = inMesh->createData( "InData", 1 );
   int inDataID = inData->getID();
   inMesh->allocateDataValues();
+  preciceDebug("Created inData");
 
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
   outMesh->allocateDataValues();
-
+  preciceDebug("Created outData");
+  
   std::vector<int> vi = { 0, 1, 2, 3, 4, 5, 6, 7 };
   utils::DynVector& values = inData->values();
   values = vi;
-
+  preciceDebug("Set inData values");
+  
   for (auto& v : inMesh->vertices()) {
     if (v.isOwner())
-      preciceDebug("owned Vertex = " << v.getCoords());
+      preciceDebug("owned Vertex = " << v.getCoords() << " Value = " << inData->values()[v.getID()]);
   }
 
   Gaussian fct(2.0);
@@ -123,10 +128,14 @@ void PetRadialBasisFctMappingTest::testMPI()
   validateEquals(mapping.hasComputedMapping(), false);
 
   mapping.computeMapping();
-  // mapping.map(inDataID, outDataID);
-  // validateEquals(mapping.hasComputedMapping(), true);
-  
-  
+  mapping.map(inDataID, outDataID);
+  validateEquals(mapping.hasComputedMapping(), true);
+
+  // Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+  for (size_t i=0; i < outData->values().size(); i++) {
+    preciceDebug("outData->values()[" << i <<  "] = " << outData->values()[i]);
+    validateNumericalEqualsWithEps ( outData->values()[i], Par::getProcessRank()*2 + i, tolerance );
+  }
  
   // inMesh->computeState();
   // inMesh->computeDistribution();
