@@ -27,6 +27,8 @@ parser.add_argument('-u', help="Run unit tests.", dest='run_unit', action="store
 parser.add_argument('-i', help="Run integration tests.", dest='run_integration', action="store_true")
 parser.add_argument('-j', help="Number of CPUs to compile on", dest='compile_cpus', default=4)
 parser.add_argument('-p', help="Number of MPI procs. Setting to 1 means to not use MPI at all. This does not affect the build process.", type=int, dest='mpi_procs', default=4)
+parser.add_argument('--unitconfig', help="Configuration to use for unit tests", dest="unit_test_config", default=".ci-test-config.xml")
+parser.add_argument('--integrationconfig', help="Configuration to use for integration tests", dest="integration_test_config", default=".ci-integration-test-config.xml")
 args = parser.parse_args()
 
 
@@ -41,10 +43,10 @@ if args.compile:
 mpi_cmd = "mpirun -n %s" % args.mpi_procs if args.mpi_procs > 1 else ""
 
 if args.run_unit:
-    run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src".format(mpi = mpi_cmd, config=".ci-test-config.xml")
+    run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src".format(mpi = mpi_cmd, config=args.unit_test_config)
     run_test(run_cmd)
 
 if args.run_integration:
-    run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src".format(mpi = mpi_cmd, config=".ci-integration-test-config.xml")
+    run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src".format(mpi = mpi_cmd, config=args.integration_test_config)
     run_test(run_cmd)
 
