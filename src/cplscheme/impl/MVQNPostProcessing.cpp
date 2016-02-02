@@ -548,17 +548,14 @@ void MVQNPostProcessing:: specializedIterationsConverged
     }
   }
 
-  // store inverse Jacobian from converged time step. NOT SCALED with preconditioner
+  // Also need to revert the _invJacobian matrix with the preconditioner weights, as it's stored in _oldInvJacobian.
+  // note: only _oldInvJacobian is reverted after computeNewtonUpdate*() or buildJacobian().
+  // The Jacobian is always unscaled outside of computeNewtonUpdate*()
+  _preconditioner->revert(_invJacobian,false);
+  _preconditioner->apply(_invJacobian,true);
 
-  // TODO: (BUG) I guess that the scaling after the storage of the Jacobian is to scale
-  // the Jacobian according to the updatd preconditioner. In the old implementation the
-  // preconditioner->update() method in BaseQNPostProcessing::iterationsConverged() was
-  // called before the spezializedIterationsConvergd(). For the value precond this update
-  // has an impact on the weights (for all others not). So this is a bug if value precond is
-  // used. Ask Benjamin and find a workaround.
+  // store inverse Jacobian from converged time step. NOT SCALED with preconditioner
   _oldInvJacobian = _invJacobian;
-  _preconditioner->revert(_oldInvJacobian,false);
-  _preconditioner->apply(_oldInvJacobian,true);
 }
 
 // ==================================================================================
