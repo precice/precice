@@ -47,13 +47,13 @@ public:
 
 private:
 
-  /// @brief Petsc uses iterative methods to solve the linear system.
+  /// Petsc uses iterative methods to solve the linear system.
   const double tolerance;
 
   // @brief Logging device.
   static tarch::logging::Log _log;
 
-  void testMPI();
+  void testDistributedConsistent2D();
 
   void testPetThinPlateSplines();
 
@@ -71,24 +71,12 @@ private:
 
   void testPetCompactPolynomialC6();
 
-  /**
-   * @brief
-   */
   void perform2DTestConsistentMapping ( Mapping& mapping );
 
-  /**
-   * @brief
-   */
   void perform2DTestConservativeMapping ( Mapping& mapping );
 
-  /**
-   * @brief
-   */
   void perform3DTestConsistentMapping ( Mapping& mapping );
 
-  /**
-   * @brief
-   */
   void perform3DTestConservativeMapping ( Mapping& mapping );
 
   void testDeadAxis2D();
@@ -98,7 +86,11 @@ private:
   /// Helper function: Add the global index from vertex::getID
   void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0);
 
-  mesh::PtrMesh getDistributedMesh(const std::vector<int>& ownedVertices);
+  /// Helper function: create a distributed mesh with values and owner set on some ranks.
+  void getDistributedMesh(const std::vector<std::vector<int>> vertices,
+                          mesh::PtrMesh& mesh,
+                          mesh::PtrData& data);
+
 };
 
 }}} // namespace precice, mapping, tests
