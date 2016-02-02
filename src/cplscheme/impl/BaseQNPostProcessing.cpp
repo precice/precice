@@ -385,7 +385,7 @@ void BaseQNPostProcessing::performPostProcessing
       _preconditioner->apply(_matrixV);
       _qrV.reset(_matrixV, getLSSystemRows());
       _preconditioner->revert(_matrixV);
-      _resetLS = true; // need to recompute _Wtil, Q, R
+      _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
     }
 
     // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
@@ -460,7 +460,7 @@ void BaseQNPostProcessing::performPostProcessing
         _qrV.reset();
         // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
         _qrV.setGlobalRows(getLSSystemRows());
-        _resetLS = true;
+        _resetLS = true;  // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
       }
     }
 

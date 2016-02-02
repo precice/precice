@@ -89,6 +89,7 @@ private:
    const std::string TAG_FILTER;
    const std::string TAG_ESTIMATEJACOBIAN;
    const std::string TAG_PRECONDITIONER;
+   const std::string TAG_ALWAYSBUILDJACOBIAN;
 
    const std::string ATTR_NAME;
    const std::string ATTR_MESH;
@@ -141,6 +142,7 @@ private:
       int filter;
       double singularityLimit;
       bool estimateJacobian;
+      bool alwaysBuildJacobian;
       std::string preconditionerType;
 
       ConfigurationData ()
@@ -155,6 +157,7 @@ private:
          filter ( impl::PostProcessing::NOFILTER ),
          singularityLimit ( 0.0 ),
          estimateJacobian ( false ),
+         alwaysBuildJacobian( false ),
          preconditionerType("")
       {}
 

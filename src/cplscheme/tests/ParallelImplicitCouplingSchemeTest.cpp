@@ -361,6 +361,7 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   int filter = impl::BaseQNPostProcessing::QR1FILTER;
   double singularityLimit = 1e-10;
   bool enforceInitialRelaxation = false;
+  bool alwaysBuildJacobian = false;
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
@@ -373,7 +374,7 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
 
   
   cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                                         timestepsReused, filter, singularityLimit, dataIDs, prec);
+                                         timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian);
   
   Eigen::VectorXd dvalues;
   Eigen::VectorXd dcol1;

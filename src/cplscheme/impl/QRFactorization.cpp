@@ -278,7 +278,7 @@ bool QRFactorization::insertColumn(int k, DataValues& v, double singularityLimit
    return insertColumn(k, _v, singularityLimit);
 }
       
-      
+// ATTENTION: This method works on the memory of vector v, thus changes the vector v.
 bool QRFactorization::insertColumn(int k, EigenVector& v, double singularityLimit)
 {
   preciceTrace("insertColumn()");

@@ -50,6 +50,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_FILTER("filter"),
   TAG_ESTIMATEJACOBIAN("estimate-jacobian"),
   TAG_PRECONDITIONER("preconditioner"),
+  TAG_ALWAYSBUILDJACOBIAN("always-build-jacobian"),
   ATTR_NAME("name"),
   ATTR_MESH("mesh"),
   ATTR_SCALING("scaling"),
@@ -254,6 +255,9 @@ void PostProcessingConfiguration:: xmlTagCallback
          _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   }else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _config.preconditionerType = callingTag.getStringAttributeValue(ATTR_TYPE);
+  }else if (callingTag.getName() == TAG_ALWAYSBUILDJACOBIAN) {
+    if(_config.type == VALUE_MVQN)
+      _config.alwaysBuildJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   }
 }
 
@@ -341,7 +345,8 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 			  _config.timestepsReused,
 			  _config.filter, _config.singularityLimit,
 			  _config.dataIDs,
-			  _preconditioner) );
+			  _preconditioner,
+			  _config.alwaysBuildJacobian) );
 		#else
       	  preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
     #endif
@@ -513,6 +518,14 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     attrEnforce.setDefaultValue(false);
     tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
+
+    XMLTag tagAlwaysBuildJacobian(*this, TAG_ALWAYSBUILDJACOBIAN, XMLTag::OCCUR_NOT_OR_ONCE );
+    XMLAttribute<bool> attrBoolValue(ATTR_VALUE);
+    attrBoolValue.setDocumentation("If set to true, the IMVJ will set up the Jacobian matrix"
+                " in each coupling iteration, which is inefficient. If set to false (or not set)"
+                " the Jacobian is only build in the last iteration and the updates are computed using (relatively) cheap MATVEC products.");
+    tagAlwaysBuildJacobian.addAttribute(attrBoolValue);
+    tag.addSubtag(tagAlwaysBuildJacobian );
 
     XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
     XMLAttribute<int> attrIntValue(ATTR_VALUE );

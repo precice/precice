@@ -52,17 +52,19 @@ MVQNPostProcessing:: MVQNPostProcessing
   int 	 filter,
   double singularityLimit,
   std::vector<int> dataIDs,
-  PtrPreconditioner preconditioner)
+  PtrPreconditioner preconditioner,
+  bool alwaysBuildJacobian)
 :
   BaseQNPostProcessing(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
 		       filter, singularityLimit, dataIDs, preconditioner),
 //  _secondaryOldXTildes(),
   _invJacobian(),
   _oldInvJacobian(),
+  _Wtil(),
   _cyclicCommLeft(nullptr),
   _cyclicCommRight(nullptr),
   _parMatrixOps(),
-  _alwaysBuildJacobian(false)
+  _alwaysBuildJacobian(alwaysBuildJacobian)
 {}
 
 // ==================================================================================
@@ -155,11 +157,11 @@ void MVQNPostProcessing::computeUnderrelaxationSecondaryData
     for (int id: _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
       Eigen::VectorXd& values = *(data->values);
-      values *= _initialRelaxation;                   // new * omg
+      values *= _initialRelaxation;                     // new * omg
       Eigen::VectorXd& secResiduals = _secondaryResiduals[id];
-      secResiduals = data->oldValues.col(0);         // old
-      secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
-      values += secResiduals;                      // (1-omg) * old + new * omg
+      secResiduals = data->oldValues.col(0);            // old
+      secResiduals *= 1.0 - _initialRelaxation;         // (1-omg) * old
+      values += secResiduals;                           // (1-omg) * old + new * omg
     }
 }
 
@@ -169,8 +171,8 @@ void MVQNPostProcessing::updateDifferenceMatrices
     DataMap& cplData)
 {
   /**
-   *  Matrices and vectors used in this method as well as the result Wtil are not
-   *  scaled by the preconditioner.
+   *  Matrices and vectors used in this method as well as the result Wtil are
+   *  NOT SCALED by the preconditioner.
    */
 
   preciceTrace(__func__);
@@ -180,31 +182,35 @@ void MVQNPostProcessing::updateDifferenceMatrices
   // important that base method is called before updating _Wtil
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
 
-  if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
-    // do nothing: constant relaxation
-  } else {
-    if (not _firstIteration) {
-      // Update matrix _Wtil = (W - J_prev*V) with newest information
+  // update _Wtil if the efficient computation of the quasi-Newton update is used
+  if(not _alwaysBuildJacobian)
+  {
+    if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
+      // do nothing: constant relaxation
+    } else {
+      if (not _firstIteration) {
+        // Update matrix _Wtil = (W - J_prev*V) with newest information
 
-      Eigen::VectorXd v = _matrixV.col(0);
-      Eigen::VectorXd w = _matrixW.col(0);
+        Eigen::VectorXd v = _matrixV.col(0);
+        Eigen::VectorXd w = _matrixW.col(0);
 
-      // here, we check for _Wtil.cols() as the matrices V, W need to be updated before hand
-      // and thus getLSSystemCols() does not yield the correct result.
-      bool columnLimitReached = _Wtil.cols() == _maxIterationsUsed;
-      bool overdetermined = _Wtil.cols() <= getLSSystemRows();
+        // here, we check for _Wtil.cols() as the matrices V, W need to be updated before hand
+        // and thus getLSSystemCols() does not yield the correct result.
+        bool columnLimitReached = _Wtil.cols() == _maxIterationsUsed;
+        bool overdetermined = _Wtil.cols() <= getLSSystemRows();
 
-      Eigen::VectorXd wtil = Eigen::VectorXd::Zero(_matrixV.rows());
+        Eigen::VectorXd wtil = Eigen::VectorXd::Zero(_matrixV.rows());
 
-      // compute J_prev * V(0) := wtil the new column in _Wtil of dimension: (n x n) * (n x 1) = (n x 1),
-      //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-      _parMatrixOps.multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
-      wtil = w - wtil;
+        // compute J_prev * V(0) := wtil the new column in _Wtil of dimension: (n x n) * (n x 1) = (n x 1),
+        //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
+        _parMatrixOps.multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+        wtil = w - wtil;
 
-      if (not columnLimitReached && overdetermined) {
-        utils::appendFront(_Wtil, wtil);
-      }else {
-        utils::shiftSetFirst(_Wtil, wtil);
+        if (not columnLimitReached && overdetermined) {
+          utils::appendFront(_Wtil, wtil);
+        }else {
+          utils::shiftSetFirst(_Wtil, wtil);
+        }
       }
     }
   }
@@ -212,8 +218,9 @@ void MVQNPostProcessing::updateDifferenceMatrices
 
 
 // ==================================================================================
-void MVQNPostProcessing::computeQNUpdate
-    (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
+void MVQNPostProcessing::computeQNUpdate(
+     PostProcessing::DataMap& cplData,
+     Eigen::VectorXd& xUpdate)
 {
   /**
    * The inverse Jacobian
@@ -230,17 +237,24 @@ void MVQNPostProcessing::computeQNUpdate
   preciceDebug("compute IMVJ quasi-Newton update");
 
   Event ePrecond_1("preconditioning of J", true, true); // ------ time measurement, barrier
-  if(_Wtil.size() > 0)
+  if((not _alwaysBuildJacobian) && (_Wtil.size() > 0)){
     _preconditioner->apply(_Wtil);
+  }
   _preconditioner->apply(_oldInvJacobian,false);
   _preconditioner->revert(_oldInvJacobian,true);
   ePrecond_1.stop();                                    // ------
 
-  computeNewtonUpdateEfficient(cplData, xUpdate);
+  // either compute efficient, omitting to build the Jacobian in each iteration or inefficient.
+  if(_alwaysBuildJacobian){
+    computeNewtonUpdate(cplData, xUpdate);
+  }else{
+    computeNewtonUpdateEfficient(cplData, xUpdate);
+  }
 
   Event ePrecond_2("preconditioning of J", true, true); // ------ time measurement, barrier
-  if(_Wtil.size() > 0)
+  if((not _alwaysBuildJacobian) && (_Wtil.size() > 0)){
     _preconditioner->revert(_Wtil);
+  }
   _preconditioner->revert(_oldInvJacobian,false);
   _preconditioner->apply(_oldInvJacobian,true);
   ePrecond_2.stop();                                    // ------
@@ -441,47 +455,29 @@ void MVQNPostProcessing::computeNewtonUpdate
 	* J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
 	*/
   
-	/**
-   *  (1) computation of pseudo inverse Z = (V^TV)^-1 * V^T
+	/**  (1) computation of pseudo inverse Z = (V^TV)^-1 * V^T
    */
   Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
   pseudoInverse(Z);
 
-
-	/**
-	*  (2) Multiply J_prev * V =: W_tilde
+	/**  (2) Multiply J_prev * V =: W_tilde
 	*/
-	Event e_WtilV("compute W_til = (W - J_prev*V)", true, true); // time measurement, barrier
-	assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
-	Eigen::MatrixXd W_til = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
+	buildWtil();
 
-	// multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
-	//                                    parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
-	_parMatrixOps.multiply(_oldInvJacobian, _matrixV, W_til, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
-
-
-	// W_til = (W-J_inv_n*V) = (W-V_tilde)
-	W_til *= -1.;
-	W_til = W_til + _matrixW;
-
-	e_WtilV.stop();
-
-	/**
-	*  (3) compute invJacobian = W_til*Z
+	/**  (3) compute invJacobian = W_til*Z
 	*
 	*  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution             dimension: (n x n) * (n x m) = (n x m),
 	*  and W_til = (W - J_inv_n*V)                                           parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
 	*/
-	Event e_WtilZ("compute J = W_til*Z", true, true); // time measurement, barrier
+	Event e_WtilZ("compute J = W_til*Z", true, true); // -------- time measurement, barrier
 
-	_parMatrixOps.multiply(W_til, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
-	e_WtilV.stop();
+	_parMatrixOps.multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
+	e_WtilZ.stop();                                   // --------
 
 	// update Jacobian
 	_invJacobian = _invJacobian + _oldInvJacobian;
 
-	/**
- 	 *  (4) solve delta_x = - J_inv * res
+	/**  (4) solve delta_x = - J_inv * res
 	 */
 	Event e_up("compute update = J*(-res)", true, true); // -------- time measurement, barrier
 	Eigen::VectorXd negativeResiduals = - _residuals;
@@ -499,54 +495,70 @@ void MVQNPostProcessing:: specializedIterationsConverged
 {
   preciceTrace(__func__);
 
-  // need to apply the preconditioner, as all data structures are reverted after
-  // call to computeQNUpdate. Need to call this before the preconditioner is updated.
-  Event ePrecond_1("preconditioning of J", true, true); // -------- time measurement, barrier
+  if(not _alwaysBuildJacobian)
+  {
+    // need to apply the preconditioner, as all data structures are reverted after
+    // call to computeQNUpdate. Need to call this before the preconditioner is updated.
 
-  _preconditioner->apply(_residuals);
-  _preconditioner->apply(_matrixV);
-  _preconditioner->apply(_matrixW);
-
-  _preconditioner->apply(_Wtil);
-  _preconditioner->apply(_oldInvJacobian,false);
-  _preconditioner->revert(_oldInvJacobian,true);
-
-  // should not happen that requireNewQR() is true
-  if(_preconditioner->requireNewQR()){
-    if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
-      _qrV.reset(_matrixV, getLSSystemRows());
+    // preconditioning (all objects are unscaled) -----------
+    _preconditioner->apply(_residuals);
+    _preconditioner->apply(_matrixV);
+    _preconditioner->apply(_matrixW);
+    if((not _alwaysBuildJacobian) && (_Wtil.size() > 0)){
+      _preconditioner->apply(_Wtil);
     }
-    _preconditioner->newQRfulfilled();
+    _preconditioner->apply(_oldInvJacobian,false);
+    _preconditioner->revert(_oldInvJacobian,true);
+
+    // should not happen that requireNewQR() is true
+    if(_preconditioner->requireNewQR()){
+      if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
+        _qrV.reset(_matrixV, getLSSystemRows());
+      }
+      _preconditioner->newQRfulfilled();
+    }
+    //                                           ------------
+
+    // apply the configured filter to the LS system
+    // as it changed in BaseQNPostProcessing::iterationsConverged()
+    BaseQNPostProcessing::applyFilter();
+
+    // compute explicit representation of Jacobian
+    buildJacobian();
+
+    // preconditioning                           ------------
+    _preconditioner->revert(_residuals);
+    _preconditioner->revert(_matrixV);
+    _preconditioner->revert(_matrixW);
+    if((not _alwaysBuildJacobian) && (_Wtil.size() > 0)){
+      _preconditioner->revert(_Wtil);
+    }
+    _preconditioner->revert(_oldInvJacobian,false);
+    _preconditioner->apply(_oldInvJacobian,true);
+    //                                           ------------
+
+
+    /** in case of enforced initial relaxation, the matrices are cleared
+     *  in case of timestepsReused > 0, the columns in _Wtil are outdated, as the Jacobian changes, hence clear
+     *  in case of timestepsReused == 0 and no initial relaxation, pending deletion in performPostProcessing
+     */
+    if(_timestepsReused > 0 || (_timestepsReused == 0 && _forceInitialRelaxation)){
+      //_Wtil.conservativeResize(0, 0);
+      _resetLS = true;
+    }
   }
-  ePrecond_1.stop();                                    // --------
 
-  // apply the configured filter to the LS system
-  BaseQNPostProcessing::applyFilter();
+  // store inverse Jacobian from converged time step. NOT SCALED with preconditioner
 
-  // compute explicit representation of Jacobian
-  buildJacobian();
-
-  // store inverse Jacobian from last time step
+  // TODO: (BUG) I guess that the scaling after the storage of the Jacobian is to scale
+  // the Jacobian according to the updatd preconditioner. In the old implementation the
+  // preconditioner->update() method in BaseQNPostProcessing::iterationsConverged() was
+  // called before the spezializedIterationsConvergd(). For the value precond this update
+  // has an impact on the weights (for all others not). So this is a bug if value precond is
+  // used. Ask Benjamin and find a workaround.
   _oldInvJacobian = _invJacobian;
-
-  Event ePrecond_2("preconditioning of J", true, true); // -------- time measurement, barrier
-  _preconditioner->revert(_matrixW);
-  _preconditioner->revert(_matrixV);
-  _preconditioner->revert(_residuals);
-
   _preconditioner->revert(_oldInvJacobian,false);
   _preconditioner->apply(_oldInvJacobian,true);
-  _preconditioner->revert(_Wtil);
-  ePrecond_2.stop();                                    // --------
-
-  /** in case of enforced initial relaxation, the matrices are cleared
-   *  in case of timestepsReused > 0, the columns in _Wtil are outdated, as the Jacobian changes, hence clear
-   *  in case of timestepsReused == 0 and no initial relaxation, pending deletion in performPostProcessing
-   */
-  if(_timestepsReused > 0 || (_timestepsReused == 0 && _forceInitialRelaxation)){
-    //_Wtil.conservativeResize(0, 0);
-    _resetLS = true;
-  }
 }
 
 // ==================================================================================

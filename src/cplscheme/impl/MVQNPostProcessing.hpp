@@ -52,7 +52,8 @@ public:
       int 	 filter,
       double singularityLimit,
       std::vector<int>    dataIDs,
-      PtrPreconditioner preconditioner);
+      PtrPreconditioner preconditioner,
+      bool   alwaysBuildJacobian);
 
    /**
     * @brief Destructor, empty.
