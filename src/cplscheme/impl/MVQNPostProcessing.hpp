@@ -46,7 +46,7 @@ public:
    */
    MVQNPostProcessing (
       double initialRelaxation,
-      bool forceInitialRelaxation,
+      bool   forceInitialRelaxation,
       int    maxIterationsUsed,
       int    timestepsReused,
       int 	 filter,
@@ -76,52 +76,73 @@ public:
   
 private:
 
-   /// @brief stores the approximation of the inverse Jacobian of the system at current time step.
+   /// @brief: stores the approximation of the inverse Jacobian of the system at current time step.
    Eigen::MatrixXd _invJacobian;
 
-   /// @brief stores the approximation of the inverse Jacobian from the previous time step.
+   /// @brief: stores the approximation of the inverse Jacobian from the previous time step.
    Eigen::MatrixXd _oldInvJacobian;
 
-   /// @brief stores the sub result (W-J_prev*V) for the current iteration
+   /// @brief: stores the sub result (W-J_prev*V) for the current iteration
    Eigen::MatrixXd _Wtil;
 
-   /// @brief Communication between neighboring slaves, backwards
+   /// @brief: Communication between neighboring slaves, backwards
    com::Communication::SharedPointer _cyclicCommLeft;
 
-   /// @brief Communication between neighboring slaves, forward
+   /// @brief: Communication between neighboring slaves, forward
    com::Communication::SharedPointer _cyclicCommRight;
 
-   /// @brief encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
+   /// @brief: encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
    ParallelMatrixOperations _parMatrixOps;
 
-   /** @brief comptes the MVQN update using QR decomposition of V,
+   /** @brief: if true, the less efficient method to compute the quasi-Newton update is used,
+   *   that explicitly builds the Jacobian in each iteration. If set to false this is only done
+   *   in the very last iteration and the update is computed based on MATVEC products.
+   */
+   bool _alwaysBuildJacobian;
+
+   /** @brief: comptes the MVQN update using QR decomposition of V,
     *        furthermore it updates the inverse of the system jacobian
     */
    virtual void computeQNUpdate(DataMap& cplData, Eigen::VectorXd& xUpdate);
    
-   /// @brief updates the V, W matrices (as well as the matrices for the secondary data)
+   /// @brief: updates the V, W matrices (as well as the matrices for the secondary data)
    virtual void updateDifferenceMatrices(DataMap & cplData);
 
-   /// @brief computes underrelaxation for the secondary data
+   /// @brief: computes underrelaxation for the secondary data
    virtual void computeUnderrelaxationSecondaryData(DataMap& cplData);
    
-   /** @brief computes the quasi-Newton update vector based on the matrices V and W using a QR
-    *       decomposition of V. The decomposition is not re-computed en-block in every iteration
-    *       but updated so that the new added column in V is incorporated in the decomposition.
+   /** @brief: computes the quasi-Newton update vector based on the matrices V and W using a QR
+    *  decomposition of V. The decomposition is not re-computed en-block in every iteration
+    *  but updated so that the new added column in V is incorporated in the decomposition.
+    *
+    *  This method rebuilds the Jacobian matrix and the matrix W_til in each iteration
+    *  which is not necessary and thus inefficient.
     */
-   void computeNewtonFactorsUpdatedQRDecomposition(DataMap& cplData, Eigen::VectorXd& update);
+   void computeNewtonUpdate(DataMap& cplData, Eigen::VectorXd& update);
    
-   void computeNewtonFactors(DataMap& cplData, Eigen::VectorXd& update);
+   /** @brief: computes the quasi-Newton update vector based on the same numerics as above.
+    *  However, it exploits the fact that the matrix W_til can be updated according to V and W
+    *  via the formula W_til.col(j) = W.col(j) - J_inv * V.col(j).
+    *  Then, pure matrix-vector products are sufficient to compute the update within one iteration, i.e.,
+    *  (1) x1 := J_prev*(-res) (2) y := Z(-res) (3) xUp := W_til*y + x1
+    *  The Jacobian matrix only needs to be set up in the very last iteration of one time step, i.e.
+    *  in iterationsConverged.
+    */
+   void computeNewtonUpdateEfficient(DataMap& cplData, Eigen::VectorXd& update);
 
-   /** @brief computes a explicit representation of the Jacobian, i.e., n x n matrix
+   /** @brief: computes the pseudo inverse of V multiplied with V^T, i.e., Z = (V^TV)^-1V^T via QR-dec
+    */
+   void pseudoInverse(Eigen::MatrixXd& pseudoInverse);
+
+   /** @brief: computes a explicit representation of the Jacobian, i.e., n x n matrix
     */
    void buildJacobian();
 
-   /** @brief re-computes the matrix _Wtil = ( W - J_prev * V) instead of updating it according to V
+   /** @brief: re-computes the matrix _Wtil = ( W - J_prev * V) instead of updating it according to V
     */
    void buildWtil();
 
-   // @brief Removes one iteration from V,W matrices and adapts _matrixCols.
+   // @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
    virtual void removeMatrixColumn(int columnIndex);
 
 };

@@ -41,7 +41,8 @@ namespace impl {
 
  //tarch::logging::Log MVQNPostProcessing::_log("precice::cplscheme::impl::MVQNPostProcessing");
 
-      
+
+// ==================================================================================
 MVQNPostProcessing:: MVQNPostProcessing
 (
   double initialRelaxation,
@@ -60,9 +61,11 @@ MVQNPostProcessing:: MVQNPostProcessing
   _oldInvJacobian(),
   _cyclicCommLeft(nullptr),
   _cyclicCommRight(nullptr),
-  _parMatrixOps()
+  _parMatrixOps(),
+  _alwaysBuildJacobian(false)
 {}
 
+// ==================================================================================
 MVQNPostProcessing::~MVQNPostProcessing()
 {
 	//if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){ // not possible because of tests, MasterSlave is deactivated when PP is killed
@@ -82,7 +85,7 @@ MVQNPostProcessing::~MVQNPostProcessing()
 	}
 }
 
-
+// ==================================================================================
 void MVQNPostProcessing:: initialize
 (
   DataMap& cplData )
@@ -136,8 +139,7 @@ void MVQNPostProcessing:: initialize
   _preconditioner->triggerGlobalWeights(global_n);
 }
 
-
-
+// ==================================================================================
 void MVQNPostProcessing::computeUnderrelaxationSecondaryData
 (
   DataMap& cplData)
@@ -161,9 +163,7 @@ void MVQNPostProcessing::computeUnderrelaxationSecondaryData
     }
 }
 
-
-
-
+// ==================================================================================
 void MVQNPostProcessing::updateDifferenceMatrices
 (
     DataMap& cplData)
@@ -211,7 +211,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
 }
 
 
-
+// ==================================================================================
 void MVQNPostProcessing::computeQNUpdate
     (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
@@ -236,7 +236,7 @@ void MVQNPostProcessing::computeQNUpdate
   _preconditioner->revert(_oldInvJacobian,true);
   ePrecond_1.stop();                                    // ------
 
-  computeNewtonFactors(cplData, xUpdate);
+  computeNewtonUpdateEfficient(cplData, xUpdate);
 
   Event ePrecond_2("preconditioning of J", true, true); // ------ time measurement, barrier
   if(_Wtil.size() > 0)
@@ -247,6 +247,40 @@ void MVQNPostProcessing::computeQNUpdate
 }
 
 
+// ==================================================================================
+void MVQNPostProcessing::pseudoInverse(
+    Eigen::MatrixXd& pseudoInverse)
+{
+  preciceTrace(__func__);
+  /**
+   *   computation of pseudo inverse matrix Z = (V^TV)^-1 * V^T as solution
+   *   to the equation R*z = Q^T(i) for all columns i,  via back substitution.
+   */
+  auto Q = _qrV.matrixQ();
+  auto R = _qrV.matrixR();
+
+  assertion2(pseudoInverse.rows() == _qrV.cols(), pseudoInverse.rows(), _qrV.cols());
+  assertion2(pseudoInverse.cols() == _qrV.rows(), pseudoInverse.cols(), _qrV.rows());
+
+  Event e(__func__, true, true); // time measurement, barrier
+  Eigen::VectorXd yVec(pseudoInverse.rows());
+
+  // assertions for the case of processors with no vertices
+  if(!_hasNodesOnInterface){
+      assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols()); assertion1(_qrV.rows() == 0, _qrV.rows()); assertion1(Q.size() == 0, Q.size());
+  }
+
+  // backsubstitution
+  Event e_qr("solve Z = (V^TV)^-1V^T via QR", true, true); // ------- time measurement, barrier
+  for (int i = 0; i < Q.rows(); i++) {
+    Eigen::VectorXd Qrow = Q.row(i);
+    yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
+    pseudoInverse.col(i) = yVec;
+  }
+  e_qr.stop();                                            // ----------------
+}
+
+// ==================================================================================
 void MVQNPostProcessing::buildWtil()
 {
   /**
@@ -270,7 +304,7 @@ void MVQNPostProcessing::buildWtil()
   e_WtilV.stop();
 }
 
-
+// ==================================================================================
 void MVQNPostProcessing::buildJacobian()
 {
   preciceTrace(__func__);
@@ -281,31 +315,12 @@ void MVQNPostProcessing::buildJacobian()
   * assumes that J_prev, V, W are already preconditioned
   */
 
-  Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
-  auto Q = _qrV.matrixQ();
-  auto R = _qrV.matrixR();
-
-  Event e(__func__, true, true); // time measurement, barrier
-  Eigen::VectorXd yVec(_qrV.cols());
-
-  // assertions for the case of processors with no vertices
-  if(!_hasNodesOnInterface){
-      assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
-      assertion1(_qrV.rows() == 0, _qrV.rows());
-      assertion1(Q.size() == 0, Q.size());
-  }
 
   /**
-   *  (1) computation of matrix Z = (V^TV)^-1 * V^T as solution to the equation
-   *      R*z = Q^T(i) for all columns i,  via back substitution.
+   *  (1) computation of pseudo inverse Z = (V^TV)^-1 * V^T
    */
-  Event e_qr("solve Z = (V^TV)^-1V^T via QR", true, true); // time measurement, barrier
-  for (int i = 0; i < Q.rows(); i++) {
-    Eigen::VectorXd Qrow = Q.row(i);
-    yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
-    Z.col(i) = yVec;
-  }
-  e_qr.stop();
+  Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
+  pseudoInverse(Z);
 
 
   /**
@@ -315,16 +330,12 @@ void MVQNPostProcessing::buildJacobian()
   if(_resetLS){
     buildWtil();
     preciceWarning(__func__," ATTENTION, in buildJacobian call for buildWtill() - this should not be the case except the coupling did only one iteration");
-    //std::cout<<" ATTENTION, in buildJacobian call for buildWtill() - this should not be the case except the coupling did only one iteration"<<std::endl;
   }
-  /**
-  *  (3) compute invJacobian = W_til*Z
+
+  /** (3) compute invJacobian = W_til*Z
   *
-  *  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution
-  *  and W_til = (W - J_inv_n*V)
-  *
-  *  dimension: (n x n) * (n x m) = (n x m),
-  *  parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
+  *  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution       dimension: (n x n) * (n x m) = (n x m),
+  *  and W_til = (W - J_inv_n*V)                                     parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
   */
   Event e_WtilZ("compute J = W_til*Z", true, true); // -------- time measurement, barrier
 
@@ -335,50 +346,36 @@ void MVQNPostProcessing::buildJacobian()
   _invJacobian = _invJacobian + _oldInvJacobian;
 }
 
-void MVQNPostProcessing::computeNewtonFactors
-(PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
+// ==================================================================================
+void MVQNPostProcessing::computeNewtonUpdateEfficient(
+    PostProcessing::DataMap& cplData,
+    Eigen::VectorXd& xUpdate)
 {
   preciceTrace(__func__);
 
-  /**      --- update inverse Jacobian ---
+  /**      --- update inverse Jacobian efficient, ---
+  *   i.e., do not recompute W_til in every iteration and do not build
+  *   the entire Jacobian matrix. This is only necessary if the coupling
+  *   iteration has converged, namely in the last iteration.
   *
   * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
   */
 
-  Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
-  auto Q = _qrV.matrixQ();
-  auto R = _qrV.matrixR();
-
-  Event e(__func__, true, true); // time measurement, barrier
-  Eigen::VectorXd yVec(_qrV.cols());
-
-  // assertions for the case of processors with no vertices
-  if(!_hasNodesOnInterface){
-      assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
-      assertion1(_qrV.rows() == 0, _qrV.rows());
-      assertion1(Q.size() == 0, Q.size());
-  }
-
   /**
-   *  (1) computation of matrix Z = (V^TV)^-1 * V^T as solution to the equation
-   *      R*z = Q^T(i) for all columns i,  via back substitution.
+   *  (1) computation of pseudo inverse Z = (V^TV)^-1 * V^T
    */
-  Event e_qr("solve Z = (V^TV)^-1V^T via QR", true, true); // -------- time measurement, barrier
-  for (int i = 0; i < Q.rows(); i++) {
-    Eigen::VectorXd Qrow = Q.row(i);
-    yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
-    Z.col(i) = yVec;
-  }
-  e_qr.stop();                                             // --------
-
+  Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
+  pseudoInverse(Z);
 
   /**
   *  (2) Construction of _Wtil = (W - J_prev * V), should be already present due to updated computation
   */
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
-  // rebuild matrix Wtil if V changes completely.
-  if(_resetLS)
+
+  // rebuild matrix Wtil if V changes substantially.
+  if(_resetLS){
     buildWtil();
+  }
 
   /**
    *  Avoid computation of Z*Wtil = Jtil \in (n x n). Rather do matrix-vector computations
@@ -421,11 +418,10 @@ void MVQNPostProcessing::computeNewtonFactors
    *  (5) xUp = J_prev * (-res) + Wtil*Z*(-res)
    */
   Event e_Jpr("compute xUp(1) = J_prev*(-res)", true, true); // -------- time measurement, barrier
-  //Eigen::VectorXd xUp(_residuals.size());
   _parMatrixOps.multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
   e_Jpr.stop();                                              // --------
 
-  xUpdate = xUpdate + xUptmp;
+  xUpdate += xUptmp;
 
   // pending deletion: delete Wtil
   if (_firstIteration && _timestepsReused == 0 && not _forceInitialRelaxation) {
@@ -434,9 +430,8 @@ void MVQNPostProcessing::computeNewtonFactors
   }
 }
 
-
-
-void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
+// ==================================================================================
+void MVQNPostProcessing::computeNewtonUpdate
 (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
 	preciceTrace("computeNewtonFactorsQRDecomposition()");
@@ -446,32 +441,11 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	* J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
 	*/
   
-
-	Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
-	auto Q = _qrV.matrixQ();
-	auto R = _qrV.matrixR();
-
-	Event e(__func__, true, true); // time measurement, barrier
-	Eigen::VectorXd yVec(_qrV.cols());
-
-	// assertions for the case of processors with no vertices
-	if(!_hasNodesOnInterface){
-			assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
-			assertion1(_qrV.rows() == 0, _qrV.rows());
-			assertion1(Q.size() == 0, Q.size());
-	}
-
 	/**
-	 *  (1) computation of matrix Z = (V^TV)^-1 * V^T as solution to the equation
-	 *      R*z = Q^T(i) for all columns i,  via back substitution.
-	 */
-	Event e_qr("solve Z = (V^TV)^-1V^T via QR", true, true); // time measurement, barrier
-	for (int i = 0; i < Q.rows(); i++) {
-		Eigen::VectorXd Qrow = Q.row(i);
-		yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
-		Z.col(i) = yVec;
-	}
-	e_qr.stop();
+   *  (1) computation of pseudo inverse Z = (V^TV)^-1 * V^T
+   */
+  Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
+  pseudoInverse(Z);
 
 
 	/**
@@ -479,9 +453,6 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	*/
 	Event e_WtilV("compute W_til = (W - J_prev*V)", true, true); // time measurement, barrier
 	assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
-
-	// TODO: transpose V efficiently using blocking in parallel
-	//       such that multiplication is cache efficient
 	Eigen::MatrixXd W_til = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
 
 	// multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
@@ -498,11 +469,8 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	/**
 	*  (3) compute invJacobian = W_til*Z
 	*
-	*  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution
-	*  and W_til = (W - J_inv_n*V)
-	*
-	*  dimension: (n x n) * (n x m) = (n x m),
-	*  parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
+	*  where Z = (V^T*V)^-1*V^T via QR-dec and back-substitution             dimension: (n x n) * (n x m) = (n x m),
+	*  and W_til = (W - J_inv_n*V)                                           parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
 	*/
 	Event e_WtilZ("compute J = W_til*Z", true, true); // time measurement, barrier
 
@@ -517,13 +485,14 @@ void MVQNPostProcessing::computeNewtonFactorsUpdatedQRDecomposition
 	 */
 	Event e_up("compute update = J*(-res)", true, true); // -------- time measurement, barrier
 	Eigen::VectorXd negativeResiduals = - _residuals;
+
 	// multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
 	//                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
 	_parMatrixOps.multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
   e_up.stop();                                         // --------
 }
 
-
+// ==================================================================================
 void MVQNPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
@@ -531,7 +500,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
   preciceTrace(__func__);
 
   // need to apply the preconditioner, as all data structures are reverted after
-  // call to computeQNUpdate. Need to call this before the precond is updated.
+  // call to computeQNUpdate. Need to call this before the preconditioner is updated.
   Event ePrecond_1("preconditioning of J", true, true); // -------- time measurement, barrier
 
   _preconditioner->apply(_residuals);
@@ -555,7 +524,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
   BaseQNPostProcessing::applyFilter();
 
   // compute explicit representation of Jacobian
-  buildJacobian(); // TODO: build direct oldInv_Jacobian and do not store invJacobain (not needed with this approach)
+  buildJacobian();
 
   // store inverse Jacobian from last time step
   _oldInvJacobian = _invJacobian;
@@ -580,7 +549,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
   }
 }
 
-
+// ==================================================================================
 void MVQNPostProcessing:: removeMatrixColumn
 (
   int columnIndex)
