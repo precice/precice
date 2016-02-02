@@ -275,18 +275,18 @@ public:
     communicateGlobalWeights(); //for constant preconditioner necessary already here
   }
 
-  std::vector<double> _weights;
-  std::vector<double> _globalWeights;
+
+
 protected:
 
   //@brief weights used to scale the matrix V and the residual
-
+  std::vector<double> _weights;
 
   //@brief inverse weights (for efficiency reasons)
   std::vector<double> _invWeights;
 
   //@brief global weights, needed for MVQN
-
+  std::vector<double> _globalWeights;
 
   //@brief global inverse weights, needed for MVQN
   std::vector<double> _globalInvWeights;
