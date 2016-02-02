@@ -226,6 +226,7 @@ std::map<int, Eigen::VectorXd> BaseQNPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
+  preciceTrace(__func__);
   std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _dataIDs) {
@@ -237,7 +238,7 @@ std::map<int, Eigen::VectorXd> BaseQNPostProcessing::getDesignSpecification
       off += size;
       std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
       designSpecifications.insert(pair);
-    }
+  }
   return designSpecifications;
 }
 
@@ -291,7 +292,6 @@ void BaseQNPostProcessing::updateDifferenceMatrices
         // QR decomposition and updae decomposition
 
         //apply scaling here
-
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
@@ -412,7 +412,7 @@ void BaseQNPostProcessing::performPostProcessing
       }
       _preconditioner->newQRfulfilled();
     }
-    e_applyPrecond.stop();
+    e_applyPrecond.stop();                                  // -------------
 
     // apply the configured filter to the LS system
     applyFilter();
@@ -428,12 +428,13 @@ void BaseQNPostProcessing::performPostProcessing
     _preconditioner->revert(_matrixW);
     _preconditioner->revert(_matrixV);
     _preconditioner->revert(_residuals);
-    e_revertPrecond.stop();
+    e_revertPrecond.stop();                                   // -------------
 
     /**
      * apply quasiNewton update
      */
     _values = _oldValues + xUpdate + _residuals;  // = x^k + delta_x + r^k - q^k
+
 
     // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
 
@@ -491,10 +492,7 @@ void BaseQNPostProcessing::applyFilter()
 
       removeMatrixColumn(delIndices[i]);
 
-      std::stringstream ss;
-      ss << "(updatedQR) removing linear dependent column " << delIndices[i] << "  time step: " << tSteps
-          << " iteration: " << its << "\n" << std::endl;
-      preciceDebug(ss.str());  //writeInfo(ss.str());
+      preciceDebug(" Filter: removing column with index " << delIndices[i] <<" in iteration " << its<< " of time step: " << tSteps);
     }
     assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
@@ -597,7 +595,7 @@ void BaseQNPostProcessing::iterationsConverged
   // doing specialized stuff for the corresponding post processing scheme after 
   // convergence of iteration i.e.:
   // - analogously to the V,W matrices, remove columns from matrices for secondary data
-  // - save the old jacobian matrix
+  // - save the old Jacobian matrix
   specializedIterationsConverged(cplData);
 
 
@@ -635,7 +633,6 @@ void BaseQNPostProcessing::iterationsConverged
       // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
       _qrV.popBack();
     }
-    std::cout <<"removed "<<toRemove<<"columns from V, W, cols: "<<_matrixV.cols()<<std::endl;
     _matrixCols.pop_back();
   }
 

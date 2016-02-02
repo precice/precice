@@ -168,6 +168,11 @@ void MVQNPostProcessing::updateDifferenceMatrices
 (
     DataMap& cplData)
 {
+  /**
+   *  Matrices and vectors used in this method as well as the result Wtil are not
+   *  scaled by the preconditioner.
+   */
+
   preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
 
@@ -210,14 +215,19 @@ void MVQNPostProcessing::updateDifferenceMatrices
 void MVQNPostProcessing::computeQNUpdate
     (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
+  /**
+   * The inverse Jacobian
+   *
+   *        J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
+   *
+   * is computed and the resulting quasi-Newton update is returned.
+   * Used matrices (V, W, Wtil, invJacobian, oldINvJacobian) are
+   * scaled with the used preconditioner.
+   */
+
   preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
-  preciceDebug("Compute Newton factors ");
-
-    /**      --- update inverse Jacobian ---
-     *
-     * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
-     */
+  preciceDebug("compute IMVJ quasi-Newton update");
 
   Event ePrecond_1("preconditioning of J", true, true); // ------ time measurement, barrier
   if(_Wtil.size() > 0)
@@ -242,7 +252,7 @@ void MVQNPostProcessing::buildWtil()
   /**
    * PRECONDITION: Assumes that V, W, J_prev are already preconditioned,
    */
-
+  preciceTrace(__func__);
   Event e_WtilV("compute W_til = (W - J_prev*V)", true, true); // time measurement, barrier
   assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
@@ -518,10 +528,12 @@ void MVQNPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
+  preciceTrace(__func__);
 
   // need to apply the preconditioner, as all data structures are reverted after
   // call to computeQNUpdate. Need to call this before the precond is updated.
   Event ePrecond_1("preconditioning of J", true, true); // -------- time measurement, barrier
+
   _preconditioner->apply(_residuals);
   _preconditioner->apply(_matrixV);
   _preconditioner->apply(_matrixW);
@@ -530,6 +542,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
   _preconditioner->apply(_oldInvJacobian,false);
   _preconditioner->revert(_oldInvJacobian,true);
 
+  // should not happen that requireNewQR() is true
   if(_preconditioner->requireNewQR()){
     if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
       _qrV.reset(_matrixV, getLSSystemRows());
@@ -537,6 +550,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
     _preconditioner->newQRfulfilled();
   }
   ePrecond_1.stop();                                    // --------
+
   // apply the configured filter to the LS system
   BaseQNPostProcessing::applyFilter();
 
