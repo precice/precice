@@ -55,6 +55,8 @@ private:
 
   void testDistributedConsistent2D();
 
+  void testDistributedConservative2D();
+
   void testPetThinPlateSplines();
 
   void testPetMultiquadrics();
