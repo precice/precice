@@ -50,7 +50,6 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_FILTER("filter"),
   TAG_ESTIMATEJACOBIAN("estimate-jacobian"),
   TAG_PRECONDITIONER("preconditioner"),
-  TAG_ALWAYSBUILDJACOBIAN("always-build-jacobian"),
   ATTR_NAME("name"),
   ATTR_MESH("mesh"),
   ATTR_SCALING("scaling"),
@@ -58,6 +57,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   ATTR_ENFORCE("enforce"),
   ATTR_SINGULARITYLIMIT("limit"),
   ATTR_TYPE("type"),
+  ATTR_BUILDJACOBIAN("always-build-jacobian"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
@@ -116,6 +116,14 @@ void PostProcessingConfiguration:: connectTags(
     }
     {
       XMLTag tag(*this, VALUE_MVQN, occ, TAG);
+
+      XMLAttribute<bool> alwaybuildJacobian(ATTR_BUILDJACOBIAN);
+      alwaybuildJacobian.setDocumentation("If set to true, the IMVJ will set up the Jacobian matrix"
+                      " in each coupling iteration, which is inefficient. If set to false (or not set)"
+                      " the Jacobian is only build in the last iteration and the updates are computed using (relatively) cheap MATVEC products.");
+      alwaybuildJacobian.setDefaultValue(false);
+      tag.addAttribute(alwaybuildJacobian);
+
       addTypeSpecificSubtags(tag);
       tags.push_back(tag);
     }
@@ -193,7 +201,9 @@ void PostProcessingConfiguration:: xmlTagCallback
 
   if (callingTag.getNamespace() == TAG){
       _config.type = callingTag.getName();
-      //_coarseModelOptimizationConfig->clear();
+
+      if(_config.type == VALUE_MVQN)
+        _config.alwaysBuildJacobian = callingTag.getBooleanAttributeValue(ATTR_BUILDJACOBIAN);
   }
 
   if (callingTag.getName() == TAG_RELAX){
@@ -255,9 +265,6 @@ void PostProcessingConfiguration:: xmlTagCallback
          _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   }else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _config.preconditionerType = callingTag.getStringAttributeValue(ATTR_TYPE);
-  }else if (callingTag.getName() == TAG_ALWAYSBUILDJACOBIAN) {
-    if(_config.type == VALUE_MVQN)
-      _config.alwaysBuildJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   }
 }
 
@@ -519,13 +526,13 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
-    XMLTag tagAlwaysBuildJacobian(*this, TAG_ALWAYSBUILDJACOBIAN, XMLTag::OCCUR_NOT_OR_ONCE );
-    XMLAttribute<bool> attrBoolValue(ATTR_VALUE);
-    attrBoolValue.setDocumentation("If set to true, the IMVJ will set up the Jacobian matrix"
-                " in each coupling iteration, which is inefficient. If set to false (or not set)"
-                " the Jacobian is only build in the last iteration and the updates are computed using (relatively) cheap MATVEC products.");
-    tagAlwaysBuildJacobian.addAttribute(attrBoolValue);
-    tag.addSubtag(tagAlwaysBuildJacobian );
+    //XMLTag tagAlwaysBuildJacobian(*this, TAG_ALWAYSBUILDJACOBIAN, XMLTag::OCCUR_NOT_OR_ONCE );
+    //XMLAttribute<bool> attrBoolValue(ATTR_VALUE);
+    //attrBoolValue.setDocumentation("If set to true, the IMVJ will set up the Jacobian matrix"
+    //            " in each coupling iteration, which is inefficient. If set to false (or not set)"
+    //            " the Jacobian is only build in the last iteration and the updates are computed using (relatively) cheap MATVEC products.");
+    //tagAlwaysBuildJacobian.addAttribute(attrBoolValue);
+    //tag.addSubtag(tagAlwaysBuildJacobian );
 
     XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
     XMLAttribute<int> attrIntValue(ATTR_VALUE );

@@ -89,7 +89,6 @@ private:
    const std::string TAG_FILTER;
    const std::string TAG_ESTIMATEJACOBIAN;
    const std::string TAG_PRECONDITIONER;
-   const std::string TAG_ALWAYSBUILDJACOBIAN;
 
    const std::string ATTR_NAME;
    const std::string ATTR_MESH;
@@ -98,6 +97,7 @@ private:
    const std::string ATTR_ENFORCE;
    const std::string ATTR_SINGULARITYLIMIT;
    const std::string ATTR_TYPE;
+   const std::string ATTR_BUILDJACOBIAN;
 
    const std::string VALUE_CONSTANT;
    const std::string VALUE_AITKEN;
