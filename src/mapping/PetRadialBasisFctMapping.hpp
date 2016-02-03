@@ -43,9 +43,9 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param constraint [IN] Specifies mapping to be consistent or conservative.
-   * @param function [IN] Radial basis function used for mapping.
-   * @param solverRtol [IN] Relative tolerance for the linear solver.
+   * @param[in] constraint Specifies mapping to be consistent or conservative.
+   * @param[in] function Radial basis function used for mapping.
+   * @param[in] solverRto Relative tolerance for the linear solver.
    *
    * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
@@ -99,9 +99,6 @@ private:
   /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
   // utils::DynVector reduceVector(const utils::DynVector& fullVector);
 
-  // FIXME: Hack to get global index also when MasterSlave mode is not enabled.
-  void addGlobalIndex(mesh::PtrMesh &mesh);
-
   virtual bool doesVertexContribute(int vertexID) const;
 };
 
@@ -135,10 +132,10 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   if (getDimensions()==2) {
     _deadAxis[0] = xDead;
     _deadAxis[1] = yDead;
-    preciceCheck(not (xDead && yDead), "setDeadAxis()", "You cannot  "
-                 << " choose all axis to be dead for a RBF mapping");
-    preciceCheck(not zDead, "setDeadAxis()", "You cannot  "
-                 << " dead out the z axis if dimension is set to 2");
+    preciceCheck(not (xDead && yDead),
+                 "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
+    preciceCheck(not zDead,
+                 "setDeadAxis()", "You cannot dead out the z axis if dimension is set to 2");
   }
   else if (getDimensions()==3) {
     _deadAxis[0] = xDead;
@@ -221,9 +218,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   _matrixC.reset();
   _matrixC.init(n, n, PETSC_DETERMINE, PETSC_DETERMINE, MATSBAIJ);
   preciceDebug("Set matrix C to local size " << n << " x " << n);
-  // ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
+  ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
-  // Create a sparse matrix with outputSize x n local size.
+  // Create a matrix with outputSize x n local size.
   _matrixA.reset();
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   preciceDebug("Set matrix A to local size " << outputSize << " x " << n);
@@ -299,28 +296,32 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
   PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
   // We collect entries for each row and set them blockwise using MatSetValues.
-  for (const mesh::Vertex& iVertex : inMesh->vertices()) {
-    if (not iVertex.isOwner())
+  for (const mesh::Vertex& inVertex : inMesh->vertices()) {
+    if (not inVertex.isOwner())
       continue;
 
+    int row = inVertex.getGlobalIndex() + polyparams;
+
+    // -- SETS THE POLYNOM PART OF THE MATRIX --
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
     PetscScalar colVals[_matrixC.getSize().second]; // holds the values of the entries
-    PetscInt polyRow = 0, polyCol = polyparams+iVertex.getGlobalIndex();
+    PetscInt polyRow = 0, polyCol = row;
     PetscScalar y = 1;
     ierr = MatSetValuesLocal(_matrixC.matrix, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
     int actualDim = 0;
     for (int dim = 0; dim < dimensions; dim++) {
       if (not _deadAxis[dim]) {
-        y = iVertex.getCoords()[dim];
+        y = inVertex.getCoords()[dim];
         polyRow = 1 + actualDim;
         actualDim++;
         ierr = MatSetValuesLocal(_matrixC.matrix, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
       }
     }
 
+    // -- SETS THE COEFFICIENTS --
     PetscInt colNum = 0;  // holds the number of columns
     for (mesh::Vertex& vj : inMesh->vertices()) {
-      distance = iVertex.getCoords() - vj.getCoords();
+      distance = inVertex.getCoords() - vj.getCoords();
       for (int d = 0; d < dimensions; d++) {
         if (_deadAxis[d]) {
           distance[d] = 0;
@@ -336,7 +337,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       if (coeff == std::numeric_limits<double>::infinity()) {
         preciceError("computeMapping()", "C matrix element has value inf. "
                      << "i = " << i
-                     << ", coords i = " << iVertex.getCoords() << ", coords j = "
+                     << ", coords i = " << inVertex.getCoords() << ", coords j = "
                      << vj.getCoords() << ", dist = "
                      << distance << ", norm2 = " << norm2(distance) << ", rbf = "
                      << coeff
@@ -345,7 +346,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       # endif
     }
 
-    int row = iVertex.getGlobalIndex() + polyparams;
     ierr = MatSetValuesLocal(_matrixC.matrix, 1, &row, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
     i++;
   }
@@ -389,15 +389,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   i = 0;
   for (int it = _matrixA.ownerRange().first; it < _matrixA.ownerRange().second; it++) {
-    // for (const mesh::Vertex& oVertex : outMesh->vertices()) { // Row Iteration: Durch Iteration über _matrixA local range ersetzen?
-    // _matrixA.assemble();
-    // _matrixA.view();
     // hier colIdx, colVals über inMesh->vertices.count dimensionieren?
     PetscInt colNum = 0;
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
     PetscScalar colVals[_matrixC.getSize().second]; // holds the values of the entries
     const mesh::Vertex& oVertex = outMesh->vertices()[it - _matrixA.ownerRange().first];
     // preciceDebug("Matrix A, Row = " << it);
+
+    // -- SET THE POLYNOM PART OF THE MATRIX --
     PetscInt polyRow = it, polyCol = 0;
     PetscScalar y = 1;
     ierr = MatSetValuesLocal(_matrixA.matrix, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
@@ -405,10 +404,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       if (not _deadAxis[dim]) {
         y = oVertex.getCoords()[dim];
         polyCol++;
+        precicePrint("Set at Matrix A polyparams, dim = " << dim << " y = " << y << " polyCol = " << polyCol << " polyRow = " << polyRow);
         ierr = MatSetValuesLocal(_matrixA.matrix, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
       }
     }
 
+    // -- SETS THE COEFFICIENTS --
     int j = 0;
     for (const mesh::Vertex& inVertex : inMesh->vertices()) {
       distance = oVertex.getCoords() - inVertex.getCoords();
@@ -420,9 +421,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       if ( not tarch::la::equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
         colIdx[colNum] = inVertex.getGlobalIndex() + polyparams;
-        // preciceDebug("Matrix A(" << it << ", " << inVertex.getGlobalIndex() + polyparams << ") = " << coeff <<
-        //              ".  oVertex = " << oVertex.getCoords() << ", inVertex = " << inVertex.getCoords() <<
-        //              " colNum = " << colNum);
         colNum++;
       }
 
@@ -462,7 +460,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // }
 
   _hasComputedMapping = true;
-  //_matrixA.view();
+  _matrixC.view();
+  _matrixA.view();
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -487,16 +486,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int inputDataID,
   int outputDataID )
 {
-  preciceTrace2("map()", inputDataID, outputDataID);
   precice::utils::Event e(__func__);
+  preciceTrace2("map()", inputDataID, outputDataID);
+
   assertion(_hasComputedMapping);
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
   using namespace tarch::la;
   PetscErrorCode ierr = 0;
   KSPConvergedReason convReason;
-  utils::DynVector& inValues = input()->data(inputDataID)->values();
-  utils::DynVector& outValues = output()->data(outputDataID)->values();
+  auto& inValues = input()->data(inputDataID)->values();
+  auto& outValues = output()->data(outputDataID)->values();
 
   int valueDim = input()->data(inputDataID)->getDimensions();
   assertion2(valueDim == output()->data(outputDataID)->getDimensions(),
@@ -506,7 +506,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     if (_deadAxis[d]) deadDimensions +=1;
   }
   int polyparams = 1 + getDimensions() - deadDimensions;
+  int localPolyparams = utils::MasterSlave::_rank > 0 ? 0 : polyparams; // Set localPolyparams only when root rank
 
+  
   if (getConstraint() == CONSERVATIVE) {
     preciceDebug("Map conservative");
     static int mappingIndex = 0;
@@ -516,16 +518,42 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     ierr = VecSetLocalToGlobalMapping(in.vector, _ISmapping); CHKERRV(ierr);
 
     for (int dim=0; dim < valueDim; dim++) {
+      // Fill input from input data values
       preciceDebug("in vector ownerRange = " << in.ownerRange());
-      for (int i = in.ownerRange().first; i < in.ownerRange().second; i++) {
-        int index = i - in.ownerRange().first; // Relative (local) index
-        int globalIndex = input()->vertices()[index].getGlobalIndex();
-        preciceDebug("Filling input vector(" << globalIndex << ") = " <<  inValues[index*valueDim + dim]);
-        VecSetValueLocal(in.vector, globalIndex, inValues[index*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
-      }
-      in.assemble();
-      //in.view();
+      preciceDebug("polyparams = " << polyparams << ", valueDim = " << valueDim << ", dim = " << dim);
+      // for (int i = in.ownerRange().first; i < in.ownerRange().second; i++) {
 
+      // for (int i = in.ownerRange().first; i < in.ownerRange().second; i++) {
+      for (size_t i = 0; i < input()->vertices().size(); i++ ) {
+        preciceDebug("Begin Loop, i = " << i);
+
+        // if (i < polyparams) // The polyparams remain zero, skipping.
+          // continue;
+        // int index = i - in.ownerRange().first; // Relative (local) index
+        // preciceDebug("local index = " << index);
+        int globalIndex = input()->vertices()[i].getGlobalIndex(); // i - ownerRange.first ?
+        preciceDebug("globalIndex = " << globalIndex);
+        preciceDebug("Filling input vector(" << globalIndex << ") = inValues[" << (i)*valueDim + dim << "] = " << inValues[(i)*valueDim + dim]);
+        VecSetValueLocal(in.vector, globalIndex, inValues[(i)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+
+        // Begin Benjamin
+        // preciceDebug("Filling input vector(" << i << ") = " <<  inValues[(i-polyparams)*valueDim + dim]);
+        // VecSetValueLocal(in.vector, i, inValues[(i-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+        // End Benjamin
+        preciceDebug("End Loop, i = " << i);
+
+      }
+      
+      // preciceDebug("in vector ownerRange = " << in.ownerRange());
+      // for (int i = in.ownerRange().first; i < in.ownerRange().second; i++) {
+      //   int index = i - in.ownerRange().first; // Relative (local) index
+      //   int globalIndex = input()->vertices()[index].getGlobalIndex();
+      //   preciceDebug("Filling input vector(" << globalIndex << ") = " <<  inValues[index*valueDim + dim]);
+      //   VecSetValueLocal(in.vector, globalIndex, inValues[index*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+      // }
+      in.assemble();
+      in.view();
+      // in.view();
       ierr = MatMultTranspose(_matrixA.matrix, in.vector, Au.vector); CHKERRV(ierr);
       ierr = KSPSolve(_solver, Au.vector, out.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
@@ -535,11 +563,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       VecChop(out.vector, 1e-9);
       // Copy mapped data to output data values
       const PetscScalar *outArray;
+      out.view();
       ierr = VecGetArrayRead(out.vector, &outArray);
       int size = out.getLocalSize();
-      preciceDebug("Local out vector size = " << size);
-      for (int i=0; i < size-polyparams; i++){
-        outValues[i*valueDim + dim] = outArray[i+polyparams]; // hier noch das index set beachten?
+      preciceDebug("Local out Petsc vector size = " << size);
+      preciceDebug("Global out Petsc vector size = " << out.getSize());
+      preciceDebug("CONSERVATIVE Local out Tarch vector size = " << outValues.size());
+      preciceDebug("Local polyparams = " << localPolyparams);
+      for (int i=out.ownerRange().first+localPolyparams; i < out.ownerRange().second; i++) {
+        preciceDebug("Setting outValues[" << (i-polyparams)*valueDim + dim << "] = outArray[ " << i-out.ownerRange().first << "]"); // hier1 noch das index set beachten?
+        outValues[(i-polyparams)*valueDim + dim] = outArray[i-out.ownerRange().first]; // hier noch das index set beachten?
       }
       VecRestoreArrayRead(out.vector, &outArray);
     }
@@ -554,20 +587,34 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     const PetscScalar *vecArray;
 
     // For every data dimension, perform mapping
-    for (int dim=0; dim < valueDim; dim++){
+    for (int dim=0; dim < valueDim; dim++) {
       // Fill input from input data values
       preciceDebug("in vector ownerRange = " << in.ownerRange());
-      for (int i = in.ownerRange().first; i < in.ownerRange().second; i++) {
-        if (i < polyparams) // The polyparams remain zero, skipping.
-          continue;
-        int index = i - in.ownerRange().first; // Relative (local) index
-        int globalIndex = input()->vertices()[index-polyparams].getGlobalIndex(); // i - ownerRange.first ?
-        preciceDebug("Filling input vector(" << globalIndex << ") = " <<  inValues[(index-polyparams)*valueDim + dim]);
-        VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(index-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
-      }
-      in.assemble();
-      //in.view();
+      preciceDebug("polyparams = " << polyparams << ", valueDim = " << valueDim << ", dim = " << dim);
+      // for (int i = in.ownerRange().first; i < in.ownerRange().second; i++) {
 
+      for (int i = in.ownerRange().first + localPolyparams; i < in.ownerRange().second; i++) {
+        preciceDebug("Begin Loop, i = " << i);
+
+        // if (i < polyparams) // The polyparams remain zero, skipping.
+          // continue;
+        // int index = i - in.ownerRange().first; // Relative (local) index
+        // preciceDebug("local index = " << index);
+        int globalIndex = input()->vertices()[i-polyparams].getGlobalIndex(); // i - ownerRange.first ?
+        preciceDebug("globalIndex = " << globalIndex);
+        preciceDebug("Filling input vector(" << globalIndex+polyparams << ") = inValues[" << (i-polyparams)*valueDim + dim << "] = " << inValues[(i-polyparams)*valueDim + dim]);
+        VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(i-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+
+        // Begin Benjamin
+        // preciceDebug("Filling input vector(" << i << ") = " <<  inValues[(i-polyparams)*valueDim + dim]);
+        // VecSetValueLocal(in.vector, i, inValues[(i-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+        // End Benjamin
+        preciceDebug("End Loop, i = " << i);
+
+      }
+      preciceDebug("Finished in vector construction.")
+      in.assemble();
+      // in.view();
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
       if (convReason < 0) {
@@ -583,6 +630,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
         outValues[i*valueDim + dim] = vecArray[i];
       }
       VecRestoreArrayRead(out.vector, &vecArray);
+      preciceDebug("CONSISTENT Local out Tarch vector size = " << outValues.size());
     }
   }
 }
@@ -599,7 +647,12 @@ bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int
   // preciceDebug("!!! NOT OWNER !!!");
   // if (v.getID() == vertexID)
   // preciceDebug("Owner " << v.isOwner());
+  if (not _basisFunction.hasCompactSupport())
+    return true;
+
   return true;
+
+  
 }
 
 

@@ -33,8 +33,8 @@ void NearestNeighborMapping:: computeMapping()
     const mesh::Mesh::VertexContainer& outputVertices = output()->vertices();
     for ( size_t i=0; i < verticesSize; i++ ){
       const utils::DynVector& coords = outputVertices[i].getCoords();
-      query::FindClosestVertex find(coords);
-      find(*input()); // Search inside the input mesh for the output vertex
+      query::FindClosestVertex find(coords); // Search for the output vertex ...
+      find(*input()); // ... inside the input mesh
       assertion(find.hasFound());
       _vertexIndices[i] = find.getClosestVertex().getID();
     }
@@ -47,8 +47,8 @@ void NearestNeighborMapping:: computeMapping()
     const mesh::Mesh::VertexContainer& inputVertices = input()->vertices();
     for ( size_t i=0; i < verticesSize; i++ ){
       const utils::DynVector& coords = inputVertices[i].getCoords();
-      query::FindClosestVertex find(coords);
-      find(*output());
+      query::FindClosestVertex find(coords); // Search for the input vertex ...
+      find(*output()); // ... inside the output mesh
       assertion(find.hasFound());
       _vertexIndices[i] = find.getClosestVertex().getID();
     }

@@ -50,13 +50,13 @@ void ParallelMatrixOperationsTest:: run ()
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
       testMethod (testParVectorOperations);
-      //testMethod (testParallelMatrixMatrixOp_tarch);
+      testMethod (testParallelMatrixMatrixOp_tarch);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
     comm = Par::getRestrictedCommunicator(ranksWanted);
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm); //necessary to be able to re-initialize with different leading ranks
-      //testMethod (testParallelMatrixMatrixOp_Eigen);
+      testMethod (testParallelMatrixMatrixOp_Eigen);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }

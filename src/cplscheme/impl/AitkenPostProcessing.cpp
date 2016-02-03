@@ -151,8 +151,6 @@ std::map<int, Eigen::VectorXd> AitkenPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
-  preciceError(__func__, "design specification for Aitken relaxation is not supported yet.");
-
   std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _dataIDs) {
