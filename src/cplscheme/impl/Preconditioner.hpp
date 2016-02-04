@@ -90,10 +90,15 @@ public:
   }
 
   /**
-   * @brief Apply preconditioner to squared matrix
+   * @brief Apply preconditioner to matrix
    * @param transpose: false = from left, true = from right
+   * @param squared: If true - apply precond to squared matrix
+   *        of size (n x n_local) (part of Jacobian)
+   *                 If false - apply precond to flat matrix
+   *        of size (m x n_local) (part of pseudo Inverse Z)
+   *
    */
-  void apply(EigenMatrix& M, bool transpose){
+  void apply(EigenMatrix& M, bool transpose, bool squared = true){
     preciceTrace(__func__);
     assertion(_needsGlobalWeights);
     if(transpose){
@@ -105,39 +110,68 @@ public:
       }
     }
     else{
-      assertion2(M.rows()==(int)_globalWeights.size(), M.rows(), (int)_globalWeights.size());
-      for(int i=0; i<M.cols(); i++){
-        for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _globalWeights[j];
+      if(squared){
+        assertion2(M.rows()==(int)_globalWeights.size(), M.rows(), (int)_globalWeights.size());
+        for(int i=0; i<M.cols(); i++){
+          for(int j=0; j<M.rows(); j++){
+            M(j,i) *= _globalWeights[j];
+          }
+        }
+
+      // flat and long matrix, (m x n_local) no global weights needed
+      }else{
+        assertion2(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
+        for(int i=0; i<M.cols(); i++){
+          for(int j=0; j<M.rows(); j++){
+            M(j,i) *= _weights[j];
+          }
         }
       }
     }
   }
 
   /**
-   * @brief Apply inverse preconditioner to squared matrix
+   * @brief Apply inverse preconditioner to matrix
    * @param transpose: false = from left, true = from right
+   * @param squared: If true - apply precond to squared matrix
+   *        of size (n x n_local) (part of Jacobian)
+   *                 If false - apply precond to flat matrix
+   *        of size (m x n_local) (part of pseudo Inverse Z)
+   *
    */
-  void revert(EigenMatrix& M, bool transpose){
+  void revert(EigenMatrix& M, bool transpose, bool squared = true){
     preciceTrace(__func__);
     assertion(_needsGlobalWeights);
-    if(transpose){
-      assertion(M.cols()==(int)_weights.size());
-      for(int i=0; i<M.cols(); i++){
-        for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _invWeights[i];
+    if (transpose) {
+      assertion(M.cols()==(int)_invWeights.size());
+      for (int i = 0; i < M.cols(); i++) {
+        for (int j = 0; j < M.rows(); j++) {
+          M(j, i) *= _invWeights[i];
         }
       }
     }
-    else{
-      assertion2(M.rows()==(int)_globalInvWeights.size(), M.rows(), (int)_globalInvWeights.size());
-      for(int i=0; i<M.cols(); i++){
-        for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _globalInvWeights[j];
+    else {
+      if (squared) {
+        assertion2(M.rows()==(int)_globalInvWeights.size(), M.rows(), (int)_globalInvWeights.size());
+        for (int i = 0; i < M.cols(); i++) {
+          for (int j = 0; j < M.rows(); j++) {
+            M(j, i) *= _globalInvWeights[j];
+          }
+        }
+
+        // flat and long matrix, (m x n_local) no global weights needed
+      } else {
+        assertion2(M.rows()==(int)_invWeights.size(), M.rows(), (int)_invWeights.size());
+        for (int i = 0; i < M.cols(); i++) {
+          for (int j = 0; j < M.rows(); j++) {
+            M(j, i) *= _invWeights[j];
+          }
         }
       }
     }
   }
+
+
 
   /**
    * @brief To transform physical values to balanced values. Vector version
@@ -304,7 +338,9 @@ protected:
   bool _needsGlobalWeights;
 
 
-  //@brief communicate all slave weights to master and then broadcast, necessary for MVQN
+  // @brief communicate all slave weights to master and then broadcast, necessary for MVQN
+  // note: For the current used preconditioners all weights are the same for each proc as
+  //       the weights are computed per value or residual block.
   void communicateGlobalWeights(){
     preciceTrace2("communicateGlobalWeights()", _weights.size(), _globalWeights.size());
     assertion(_weights.size()==_invWeights.size());

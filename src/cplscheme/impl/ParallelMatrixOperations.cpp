@@ -48,6 +48,11 @@ void ParallelMatrixOperations::initialize(
 	}
 }
 
+
+
+
+// =============================== TARCH METHODS (NOT NEEDED ANY  MORE) =======================
+
 void ParallelMatrixOperations::multiply
 (
 	TarchMatrix& leftMatrix,

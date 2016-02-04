@@ -53,7 +53,9 @@ public:
       double singularityLimit,
       std::vector<int>    dataIDs,
       PtrPreconditioner preconditioner,
-      bool   alwaysBuildJacobian);
+      bool   alwaysBuildJacobian,
+      bool   imvjRestart,
+      int    chunkSize);
 
    /**
     * @brief Destructor, empty.
@@ -86,6 +88,12 @@ private:
    /// @brief: stores the sub result (W-J_prev*V) for the current iteration
    Eigen::MatrixXd _Wtil;
 
+   /// @brief stores all Wtil matrices within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+   std::vector< Eigen::MatrixXd& > _WtilChunk;
+
+   /// @brief stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+   std::vector<Eigen::MatrixXd> _pseudoInverseChunk;
+
    /// @brief: Communication between neighboring slaves, backwards
    com::Communication::SharedPointer _cyclicCommLeft;
 
@@ -95,11 +103,20 @@ private:
    /// @brief: encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
    ParallelMatrixOperations _parMatrixOps;
 
-   /** @brief: if true, the less efficient method to compute the quasi-Newton update is used,
+   /** @brief: If true, the less efficient method to compute the quasi-Newton update is used,
    *   that explicitly builds the Jacobian in each iteration. If set to false this is only done
    *   in the very last iteration and the update is computed based on MATVEC products.
    */
    bool _alwaysBuildJacobian;
+
+   /** @brief: If true, the imvj method is used with the restart chunk based approach that avoids
+    *  to explicitly build and store the Jacobian. If false, the Jacobian is stored and build, however,
+    *  no truncation of information is present.
+    */
+   bool _imvjRestart;
+
+   /// @brief: Number of time steps between restarts for the imvj method in restart mode
+   int _chunkSize;
 
    /** @brief: comptes the MVQN update using QR decomposition of V,
     *        furthermore it updates the inverse of the system jacobian
