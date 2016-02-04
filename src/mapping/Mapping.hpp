@@ -76,8 +76,8 @@ public:
   /**
    * @brief Sets input and output meshes carrying data to be mapped.
    *
-   * @param input [IN] Mesh with known data values to be mapped.
-   * @param output [IN] Mesh with unknwon data values to be computed from input.
+   * @param[in] input Mesh with known data values to be mapped.
+   * @param[in] output Mesh with unknwon data values to be computed from input.
    */
   void setMeshes (
     const mesh::PtrMesh& input,

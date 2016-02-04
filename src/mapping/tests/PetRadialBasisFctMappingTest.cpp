@@ -98,7 +98,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2D()
   assertion(Par::getCommunicatorSize() == 4);
   int dimensions = 2;
 
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", 2, false) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
   mesh::PtrData inData = inMesh->createData( "InData", 1 );
   int inDataID = inData->getID();
 
@@ -115,7 +115,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2D()
       {-1, 3, 7, 3, 1}
     }, inMesh, inData);
 
-  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", 2, false) );
+  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", dimensions, false) );
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
 
@@ -141,7 +141,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2D()
   mapping.map(inDataID, outDataID);
 
   // Tests for {0, 1} on the first rank, {1, 2} on the second, ...
-  for (size_t i=0; i < outData->values().size(); i++) {
+  for (auto i = 0; i < outData->values().size(); i++) {
     preciceDebug("outData->values()[" << i <<  "] = " << outData->values()[i]);
     validateNumericalEqualsWithEps ( outData->values()[i], Par::getProcessRank()*2 + i, tolerance );
   }
@@ -166,7 +166,7 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2D()
   assertion(Par::getCommunicatorSize() == 4);
   int dimensions = 2;
 
-  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", 2, false) );
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
   mesh::PtrData inData = inMesh->createData( "InData", 1 );
   int inDataID = inData->getID();
 
@@ -185,7 +185,7 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2D()
 
   addGlobalIndex(inMesh, Par::getProcessRank()*2);
 
-  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", 2, false) );
+  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", dimensions, false) );
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
 

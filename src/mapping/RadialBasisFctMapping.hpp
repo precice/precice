@@ -47,18 +47,18 @@ public:
   virtual ~RadialBasisFctMapping();
 
   /// Computes the mapping coefficients from the in- and output mesh.
-  virtual void computeMapping();
+  virtual void computeMapping() override;
 
   /// Returns true, if computeMapping() has been called.
-  virtual bool hasComputedMapping() const;
+  virtual bool hasComputedMapping() const override;
 
   /// Removes a computed mapping.
-  virtual void clear();
+  virtual void clear() override;
 
   /// Maps input data to output data from input mesh to output mesh.
   virtual void map (
     int inputDataID,
-    int outputDataID );
+    int outputDataID ) override;
 
 private:
 
@@ -77,8 +77,7 @@ private:
   bool* _deadAxis;
 
   /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
-  // utils::DynVector reduceVector(const utils::DynVector& fullVector);
-  Eigen::VectorXd  reduceVector(const utils::DynVector& fullVector);
+  Eigen::VectorXd reduceVector(const utils::DynVector& fullVector);
   
   void setDeadAxis(bool xDead, bool yDead, bool zDead)
   {
