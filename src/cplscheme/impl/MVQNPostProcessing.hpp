@@ -41,6 +41,11 @@ class MVQNPostProcessing : public BaseQNPostProcessing
 {
 public:
 
+  static const int NO_RESTART = 0;
+  static const int RS_ZERO = 1;
+  static const int RS_LS = 2;
+  static const int RS_SVD = 3;
+
   /**
    * @brief Constructor.
    */
@@ -54,8 +59,10 @@ public:
       std::vector<int>    dataIDs,
       PtrPreconditioner preconditioner,
       bool   alwaysBuildJacobian,
-      bool   imvjRestart,
-      int    chunkSize);
+      int    imvjRestartType,
+      int    chunkSize,
+      int    RSLSreusedTimesteps,
+      double RSSVDtruncationEps);
 
    /**
     * @brief Destructor, empty.
@@ -89,7 +96,7 @@ private:
    Eigen::MatrixXd _Wtil;
 
    /// @brief stores all Wtil matrices within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
-   std::vector< Eigen::MatrixXd& > _WtilChunk;
+   std::vector< Eigen::MatrixXd > _WtilChunk;
 
    /// @brief stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
    std::vector<Eigen::MatrixXd> _pseudoInverseChunk;
@@ -109,6 +116,14 @@ private:
    */
    bool _alwaysBuildJacobian;
 
+   /** @brief: Indicates the type of the imvj restart-mode:
+    *  - NO_RESTART: imvj is run on normal mode which builds the Jacobian explicitly
+    *  - RS-ZERO:    imvj is run in restart-mode. After M time steps all stored matrices are dropped
+    *  - RS-LS:      imvj in restart-mode. After M time steps restart with LS approximation for initial Jacobian
+    *  - RS-SVD:     imvj in restart mode. After M time steps, update of an truncated SVD of the Jacobian.
+    */
+   int _imvjRestartType;
+
    /** @brief: If true, the imvj method is used with the restart chunk based approach that avoids
     *  to explicitly build and store the Jacobian. If false, the Jacobian is stored and build, however,
     *  no truncation of information is present.
@@ -117,6 +132,13 @@ private:
 
    /// @brief: Number of time steps between restarts for the imvj method in restart mode
    int _chunkSize;
+
+   /// @brief: Number of reused time steps at restart if restart-mode = RS-LS
+   int _RSLSreusedTimesteps;
+
+   // @brief: Truncation threshold for the updated SVD of the Jacobian if restart-mode = RS-SVD.
+   double _RSSVDtruncationEps;
+
 
    /** @brief: comptes the MVQN update using QR decomposition of V,
     *        furthermore it updates the inverse of the system jacobian

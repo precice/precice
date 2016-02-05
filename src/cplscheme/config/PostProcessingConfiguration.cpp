@@ -50,6 +50,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_FILTER("filter"),
   TAG_ESTIMATEJACOBIAN("estimate-jacobian"),
   TAG_PRECONDITIONER("preconditioner"),
+  TAG_IMVJRESTART("imvj-restart-mode"),
   ATTR_NAME("name"),
   ATTR_MESH("mesh"),
   ATTR_SCALING("scaling"),
@@ -58,6 +59,9 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   ATTR_SINGULARITYLIMIT("limit"),
   ATTR_TYPE("type"),
   ATTR_BUILDJACOBIAN("always-build-jacobian"),
+  ATTR_IMVJCHUNKSIZE("chunk-size"),
+  ATTR_RSLS_REUSEDTSTEPS("reused-timesteps-at-restart"),
+  ATTR_RSSVD_TRUNCATIONEPS("truncation-threshold"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
@@ -72,6 +76,10 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   VALUE_VALUE_PRECONDITIONER("value"),
   VALUE_RESIDUAL_PRECONDITIONER("residual"),
   VALUE_RESIDUAL_SUM_PRECONDITIONER("residual-sum"),
+  VALUE_LS_RESTART("RS-LS"),
+  VALUE_ZERO_RESTART("RS-0"),
+  VALUE_SVD_RESTART("RS-SVD"),
+  VALUE_NO_RESTART("no-restart"),
   //_isValid(false),
   _meshConfig(meshConfig),
   _postProcessing(),
@@ -265,6 +273,23 @@ void PostProcessingConfiguration:: xmlTagCallback
          _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   }else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _config.preconditionerType = callingTag.getStringAttributeValue(ATTR_TYPE);
+  }else if (callingTag.getName() == TAG_IMVJRESTART){
+    _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
+    auto f = callingTag.getStringAttributeValue(ATTR_TYPE);
+    if(f == VALUE_NO_RESTART){
+      _config.imvjRestartType = impl::MVQNPostProcessing::NO_RESTART;
+    }else if (f == VALUE_ZERO_RESTART){
+      _config.imvjRestartType = impl::MVQNPostProcessing::RS_ZERO;
+    }else if (f == VALUE_LS_RESTART){
+      _config.imvjRSLS_reustedTimesteps = callingTag.getIntAttributeValue(ATTR_RSLS_REUSEDTSTEPS);
+      _config.imvjRestartType = impl::MVQNPostProcessing::RS_LS;
+    }else if (f == VALUE_SVD_RESTART){
+      _config.imvjRSSVD_truncationEps = callingTag.getDoubleAttributeValue(ATTR_RSSVD_TRUNCATIONEPS);
+      _config.imvjRestartType = impl::MVQNPostProcessing::RS_SVD;
+    }else {
+      _config.imvjChunkSize = 0;
+      assertion(false);
+    }
   }
 }
 
@@ -353,7 +378,11 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 			  _config.filter, _config.singularityLimit,
 			  _config.dataIDs,
 			  _preconditioner,
-			  _config.alwaysBuildJacobian) );
+			  _config.alwaysBuildJacobian,
+			  _config.imvjRestartType,
+			  _config.imvjChunkSize,
+			  _config.imvjRSLS_reustedTimesteps,
+			  _config.imvjRSSVD_truncationEps) );
 		#else
       	  preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
     #endif
@@ -526,13 +555,30 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
-    //XMLTag tagAlwaysBuildJacobian(*this, TAG_ALWAYSBUILDJACOBIAN, XMLTag::OCCUR_NOT_OR_ONCE );
-    //XMLAttribute<bool> attrBoolValue(ATTR_VALUE);
-    //attrBoolValue.setDocumentation("If set to true, the IMVJ will set up the Jacobian matrix"
-    //            " in each coupling iteration, which is inefficient. If set to false (or not set)"
-    //            " the Jacobian is only build in the last iteration and the updates are computed using (relatively) cheap MATVEC products.");
-    //tagAlwaysBuildJacobian.addAttribute(attrBoolValue);
-    //tag.addSubtag(tagAlwaysBuildJacobian );
+    XMLTag tagIMVJRESTART(*this, TAG_IMVJRESTART, XMLTag::OCCUR_NOT_OR_ONCE );
+    XMLAttribute<std::string> attrRestartName(ATTR_TYPE);
+    ValidatorEquals<std::string> validNO_RS(VALUE_NO_RESTART );
+    ValidatorEquals<std::string> validRS_ZERO(VALUE_ZERO_RESTART );
+    ValidatorEquals<std::string> validRS_LS(VALUE_LS_RESTART );
+    ValidatorEquals<std::string> validRS_SVD(VALUE_SVD_RESTART );
+    attrRestartName.setValidator (validNO_RS || validRS_ZERO || validRS_LS ||validRS_SVD);
+    tagIMVJRESTART.addAttribute(attrRestartName);
+    tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used\n"
+              "  no-restart: IMVJ runs in normal mode with explicit representation of Jacobian\n"
+              "  RS-ZERO:    IMVJ runs in restart mode. After M time steps all Jacobain information is dropped, restart with no information\n"
+              "  RS-LS:      IMVJ runs in restart mode. After M time steps a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
+              "  RS-SVD:     IMVJ runs in restart mode. After M time steps a truncated SVD of the Jacobian is updated.\n"
+              );
+    XMLAttribute<int> attrChunkSize(ATTR_IMVJCHUNKSIZE);
+    attrChunkSize.setDocumentation("Specifies the number of time steps M after which the IMVJ restarts, if run in restart-mode.");
+    XMLAttribute<int> attrReusedTimeStepsAtRestart(ATTR_RSLS_REUSEDTSTEPS);
+    attrChunkSize.setDocumentation("If IMVJ restart-mode=RS-LS, the number of reused time steps at restart can be specified.");
+    XMLAttribute<double> attrRSSVD_truncationEps(ATTR_RSSVD_TRUNCATIONEPS);
+    attrChunkSize.setDocumentation("If IMVJ restart-mode=RS-SVD, the truncation threshold for the updated SVD can be set.");
+    tagIMVJRESTART.addAttribute(attrChunkSize);
+    tagIMVJRESTART.addAttribute(attrReusedTimeStepsAtRestart);
+    tagIMVJRESTART.addAttribute(attrRSSVD_truncationEps);
+    tag.addSubtag(tagIMVJRESTART);
 
     XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
     XMLAttribute<int> attrIntValue(ATTR_VALUE );

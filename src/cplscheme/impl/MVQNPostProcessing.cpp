@@ -54,8 +54,10 @@ MVQNPostProcessing:: MVQNPostProcessing
   std::vector<int> dataIDs,
   PtrPreconditioner preconditioner,
   bool   alwaysBuildJacobian,
-  bool   imvjRestart,
-  int    chunkSize)
+  int    imvjRestartType,
+  int    chunkSize,
+  int    RSLSreusedTimesteps,
+  double RSSVDtruncationEps)
 :
   BaseQNPostProcessing(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
 		       filter, singularityLimit, dataIDs, preconditioner),
@@ -69,8 +71,11 @@ MVQNPostProcessing:: MVQNPostProcessing
   _cyclicCommRight(nullptr),
   _parMatrixOps(),
   _alwaysBuildJacobian(alwaysBuildJacobian),
-  _imvjRestart(imvjRestart),
-  _chunkSize(chunkSize)
+  _imvjRestartType(imvjRestartType),
+  _imvjRestart(false),
+  _chunkSize(chunkSize),
+  _RSLSreusedTimesteps(RSLSreusedTimesteps),
+  _RSSVDtruncationEps(RSSVDtruncationEps)
 {}
 
 // ==================================================================================
@@ -103,6 +108,9 @@ void MVQNPostProcessing:: initialize
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
   
+  if (_imvjRestartType > 0)
+    _imvjRestart = true;
+
 
   if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){
 		/*

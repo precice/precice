@@ -6,6 +6,7 @@
 
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "cplscheme/impl/PostProcessing.hpp"
+#include "cplscheme/impl/MVQNPostProcessing.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"
@@ -89,6 +90,7 @@ private:
    const std::string TAG_FILTER;
    const std::string TAG_ESTIMATEJACOBIAN;
    const std::string TAG_PRECONDITIONER;
+   const std::string TAG_IMVJRESTART;
 
    const std::string ATTR_NAME;
    const std::string ATTR_MESH;
@@ -98,6 +100,9 @@ private:
    const std::string ATTR_SINGULARITYLIMIT;
    const std::string ATTR_TYPE;
    const std::string ATTR_BUILDJACOBIAN;
+   const std::string ATTR_IMVJCHUNKSIZE;
+   const std::string ATTR_RSLS_REUSEDTSTEPS;
+   const std::string ATTR_RSSVD_TRUNCATIONEPS;
 
    const std::string VALUE_CONSTANT;
    const std::string VALUE_AITKEN;
@@ -113,6 +118,10 @@ private:
    const std::string VALUE_VALUE_PRECONDITIONER;
    const std::string VALUE_RESIDUAL_PRECONDITIONER;
    const std::string VALUE_RESIDUAL_SUM_PRECONDITIONER;
+   const std::string VALUE_LS_RESTART;
+   const std::string VALUE_ZERO_RESTART;
+   const std::string VALUE_SVD_RESTART;
+   const std::string VALUE_NO_RESTART;
 
    //bool _isValid;
 
@@ -140,7 +149,11 @@ private:
       int maxIterationsUsed;
       int timestepsReused;
       int filter;
+      int imvjRestartType;
+      int imvjChunkSize;
+      int imvjRSLS_reustedTimesteps;
       double singularityLimit;
+      double imvjRSSVD_truncationEps;
       bool estimateJacobian;
       bool alwaysBuildJacobian;
       std::string preconditionerType;
@@ -154,8 +167,12 @@ private:
          forceInitialRelaxation( false ),
          maxIterationsUsed ( 0 ),
          timestepsReused ( 0 ),
+         imvjChunkSize ( 0 ),
+         imvjRSLS_reustedTimesteps( 0 ),
          filter ( impl::PostProcessing::NOFILTER ),
+         imvjRestartType( impl::MVQNPostProcessing::NO_RESTART ),
          singularityLimit ( 0.0 ),
+         imvjRSSVD_truncationEps( 0.0 ),
          estimateJacobian ( false ),
          alwaysBuildJacobian( false ),
          preconditionerType("")
