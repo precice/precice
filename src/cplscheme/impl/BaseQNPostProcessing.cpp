@@ -576,9 +576,7 @@ void BaseQNPostProcessing::iterationsConverged
   assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
   _residuals -= _designSpecification;
 
-  // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
 
-  _firstTimeStep = false;
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
@@ -599,6 +597,8 @@ void BaseQNPostProcessing::iterationsConverged
   // - save the old Jacobian matrix
   specializedIterationsConverged(cplData);
 
+
+  _firstTimeStep = false;
 
   // update preconditioner depending on residuals or values (must be after specialized iterations converged --> IMVJ)
   _preconditioner->update(true, _values, _residuals);

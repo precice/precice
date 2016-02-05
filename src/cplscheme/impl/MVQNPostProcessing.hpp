@@ -16,6 +16,7 @@
 #include "com/Communication.hpp"
 #include "io/TXTWriter.hpp"
 #include "ParallelMatrixOperations.hpp"
+#include "SVDFactorization.hpp"
 #include <deque>
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -110,6 +111,9 @@ private:
    /// @brief: encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
    ParallelMatrixOperations _parMatrixOps;
 
+   /// @brief holds and maintains a truncated SVD decomposition of the Jacobian matrix
+   SVDFactorization _svdJ;
+
    /** @brief: If true, the less efficient method to compute the quasi-Newton update is used,
    *   that explicitly builds the Jacobian in each iteration. If set to false this is only done
    *   in the very last iteration and the update is computed based on MATVEC products.
@@ -130,14 +134,12 @@ private:
     */
    bool _imvjRestart;
 
+
    /// @brief: Number of time steps between restarts for the imvj method in restart mode
    int _chunkSize;
 
    /// @brief: Number of reused time steps at restart if restart-mode = RS-LS
    int _RSLSreusedTimesteps;
-
-   // @brief: Truncation threshold for the updated SVD of the Jacobian if restart-mode = RS-SVD.
-   double _RSSVDtruncationEps;
 
 
    /** @brief: comptes the MVQN update using QR decomposition of V,
@@ -181,6 +183,14 @@ private:
    /** @brief: re-computes the matrix _Wtil = ( W - J_prev * V) instead of updating it according to V
     */
    void buildWtil();
+
+   /** @brief: restarts the imvj method, i.e., drops all stored matrices Wtil and Z and computes a
+    *  initial guess of the Jacobian based on the given restart strategy:
+    *  RS-LS:   Perform a IQN-LS least squares initial guess with _RSLSreusedTimesteps
+    *  RS-SVD:  Update a truncated SVD decomposition of the SVD with rank-1 modifications from Wtil*Z
+    *  RS-Zero: Start with zero information, initial guess J = 0.
+    */
+   void restartIMVJ();
 
    // @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
    virtual void removeMatrixColumn(int columnIndex);
