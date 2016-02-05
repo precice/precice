@@ -169,12 +169,13 @@ public:
         Eigen::PlainObjectBase<Derived2>& result,
         int p, int q, int r)
   {
+    preciceTrace("multiply() (m x n) * (n * r), r=1/m");
     assertion2(leftMatrix.rows() == p, leftMatrix.rows(), p);
     assertion2(leftMatrix.cols() == rightMatrix.rows(),leftMatrix.cols(), rightMatrix.rows());
     assertion2(result.rows() == p, result.rows(), p);
     assertion2(result.cols() == r, result.cols(), r);
 
-    auto localResult(result);
+    Eigen::MatrixXd localResult(result.rows(), result.cols());
     localResult.noalias() = leftMatrix * rightMatrix;
 
     // if serial computation on single processor, i.e, no master-slave mode
@@ -219,7 +220,7 @@ private:
 		   const std::vector<int>& offsets,
 		   int p, int q, int r)
    {
-		preciceTrace("multiplyNN()");
+     preciceTrace("multiplyNN() (n x m) * (m x n)");
 		/*
 		 * For multiplication W_til * Z = J
 		 * -----------------------------------------------------------------------
@@ -323,7 +324,7 @@ private:
 		   const std::vector<int>& offsets,
 		   int p, int q, int r)
    {
-		preciceTrace("multiplyNM()");
+     preciceTrace("multiplyNM() (n x n) * (n x m)");
 		for(int i = 0; i < leftMatrix.rows(); i++){
 		  int rank = 0;
 		  // find rank of processor that stores the result
@@ -360,7 +361,7 @@ private:
 			const std::vector<int>& offsets,
 			int p, int q, int r)
 	{
-		preciceTrace("_multiplyNM_block()");
+	  preciceTrace("multiplyNM_block() (n x n) * (n x m)");
 
 		// ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
 		assertion2(leftMatrix.IsRowMajor == rightMatrix.IsRowMajor, leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);

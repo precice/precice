@@ -221,9 +221,11 @@ void MVQNPostProcessing::updateDifferenceMatrices
         // iterate over all stored Wtil and Z matrices in current chunk
         if(_imvjRestart){
           for(int i = 0; i < _WtilChunk.size(); i++){
-            Eigen::VectorXd Zv = Eigen::VectorXd::Zero(getLSSystemCols());
+            int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
+            assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
+            Eigen::VectorXd Zv = Eigen::VectorXd::Zero(colsLSSystemBackThen);
             // multiply: Zv := Z^q * V(:,0) of size (m x 1)
-            _parMatrixOps.multiply(_pseudoInverseChunk[i], v, Zv, getLSSystemCols(), getLSSystemRows(), 1);
+            _parMatrixOps.multiply(_pseudoInverseChunk[i], v, Zv, colsLSSystemBackThen, getLSSystemRows(), 1);
             // multiply: Wtil^q * Zv  dimensions: (n x m) * (m x 1), fully local
             wtil = _WtilChunk[i] * Zv;
           }
@@ -297,7 +299,7 @@ void MVQNPostProcessing::computeQNUpdate(
   ePrecond_1.stop();                                    // ------
 
   // either compute efficient, omitting to build the Jacobian in each iteration or inefficient.
-  if(_alwaysBuildJacobian){
+  if(_alwaysBuildJacobian || _imvjRestart){
     computeNewtonUpdate(cplData, xUpdate);
   }else{
     computeNewtonUpdateEfficient(cplData, xUpdate);
@@ -371,10 +373,12 @@ void MVQNPostProcessing::buildWtil()
   // iterate over all stored Wtil and Z matrices in current chunk
   if(_imvjRestart){
     for(int i = 0; i < _WtilChunk.size(); i++){
-      Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(getLSSystemCols(), getLSSystemCols());
+      int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
+      assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
+      Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, colsLSSystemBackThen);
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
-      _parMatrixOps.multiply(_pseudoInverseChunk[i], _matrixV, ZV, getLSSystemCols(), getLSSystemRows(), getLSSystemCols());
-      // multiply: Wtil^q * ZV  dimensions: (n x m) * (m x m), fully local and ambarassingly parallel
+      _parMatrixOps.multiply(_pseudoInverseChunk[i], _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), colsLSSystemBackThen);
+      // multiply: Wtil^q * ZV  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
       _Wtil = _WtilChunk[i] * ZV;
     }
 
@@ -441,9 +445,16 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
   preciceTrace(__func__);
 
   /**      --- update inverse Jacobian efficient, ---
-  *   i.e., do not recompute W_til in every iteration and do not build
+  *   If normal mode is used:
+  *   Do not recompute W_til in every iteration and do not build
   *   the entire Jacobian matrix. This is only necessary if the coupling
   *   iteration has converged, namely in the last iteration.
+  *
+  *   If restart-mode is used:
+  *   The Jacobian is never build. Store matrices Wtil^q and Z^q for the last M time steps.
+  *   After M time steps, a restart algorithm is performed basedon the restart-mode type, either
+  *   Least-Squares restart (IQN-ILS like) or maintaining of a updated truncated SVD decomposition
+  *   of the SVD.
   *
   * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
   *
@@ -492,13 +503,33 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
    * Note: r_til is not distributed but locally stored on each proc (dimension m x 1)
    */
   Eigen::VectorXd xUptmp(_residuals.size());
+  xUpdate = Eigen::VectorXd::Zero(_residuals.size());
   xUptmp = _Wtil * r_til;                      // local product, result is naturally distributed.
 
   /**
    *  (5) xUp = J_prev * (-res) + Wtil*Z*(-res)
+   *
+   *  restart-mode: sum_q { Wtil^q * [ Z^q * (-res) ] },
+   *  where r_til = Z^q * (-res) is computed first and then xUp := Wtil^q * r_til
    */
   Event e_Jpr("compute xUp(1) = J_prev*(-res)", true, true); // -------- time measurement, barrier
-  _parMatrixOps.multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+
+  if(_imvjRestart){
+    for(int i = 0; i < _WtilChunk.size(); i++){
+      int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
+      assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
+      r_til = Eigen::VectorXd::Zero(colsLSSystemBackThen);
+      // multiply: r_til := Z^q * (-res) of size (m x 1) with m=#cols of LS at that time, result stored on each proc.
+      _parMatrixOps.multiply(_pseudoInverseChunk[i], negativeResiduals, r_til, colsLSSystemBackThen, getLSSystemRows(), 1);
+      // multiply: Wtil^q * r_til  dimensions: (n x m) * (m x 1), fully local and embarrassingly parallel
+      xUpdate += _WtilChunk[i] * r_til;
+    }
+
+  // imvj without restart is used, i.e., compute directly J_prev * (-res)
+  }else{
+    _parMatrixOps.multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+    preciceDebug("Mult J*V DONE");
+  }
   e_Jpr.stop();                                              // --------
 
   xUpdate += xUptmp;
