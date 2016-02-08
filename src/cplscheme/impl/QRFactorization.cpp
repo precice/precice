@@ -118,8 +118,6 @@ QRFactorization::QRFactorization(
   for (int k=0; k<m; k++)
   {
      EigenVector v = A.col(k);
-     //for(int i=0; i<_rows; i++)
-     //  v(i) = A(i,k);
      insertColumn(k,v);
   }
   assertion2(_R.rows() == _cols, _R.rows(), _cols);

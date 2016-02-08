@@ -109,7 +109,7 @@ private:
    com::Communication::SharedPointer _cyclicCommRight;
 
    /// @brief: encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
-   ParallelMatrixOperations _parMatrixOps;
+   PtrParMatrixOps _parMatrixOps;
 
    /// @brief holds and maintains a truncated SVD decomposition of the Jacobian matrix
    SVDFactorization _svdJ;

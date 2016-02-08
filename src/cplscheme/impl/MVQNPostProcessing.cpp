@@ -69,8 +69,8 @@ MVQNPostProcessing:: MVQNPostProcessing
   _pseudoInverseChunk(),
   _cyclicCommLeft(nullptr),
   _cyclicCommRight(nullptr),
-  _parMatrixOps(),
-  _svdJ(RSSVDtruncationEps),
+  _parMatrixOps(nullptr),
+  _svdJ(RSSVDtruncationEps, preconditioner),
   _alwaysBuildJacobian(alwaysBuildJacobian),
   _imvjRestartType(imvjRestartType),
   _imvjRestart(false),
@@ -137,7 +137,9 @@ void MVQNPostProcessing:: initialize
   }
 
   // initialize parallel matrix-matrix operation module
-  _parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight);
+  _parMatrixOps = impl::PtrParMatrixOps(new impl::ParallelMatrixOperations());
+  _parMatrixOps->initialize(_cyclicCommLeft, _cyclicCommRight);
+  _svdJ.initialize(_parMatrixOps, getLSSystemRows());
 
   int entries = _residuals.size();
   int global_n = 0;
@@ -225,7 +227,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
             assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
             Eigen::VectorXd Zv = Eigen::VectorXd::Zero(colsLSSystemBackThen);
             // multiply: Zv := Z^q * V(:,0) of size (m x 1)
-            _parMatrixOps.multiply(_pseudoInverseChunk[i], v, Zv, colsLSSystemBackThen, getLSSystemRows(), 1);
+            _parMatrixOps->multiply(_pseudoInverseChunk[i], v, Zv, colsLSSystemBackThen, getLSSystemRows(), 1);
             // multiply: Wtil^q * Zv  dimensions: (n x m) * (m x 1), fully local
             wtil = _WtilChunk[i] * Zv;
           }
@@ -235,7 +237,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
         }else{
           // compute J_prev * V(0) := wtil the new column in _Wtil of dimension: (n x n) * (n x 1) = (n x 1),
           //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-          _parMatrixOps.multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+          _parMatrixOps->multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
         }
         wtil = w - wtil;
 
@@ -377,7 +379,7 @@ void MVQNPostProcessing::buildWtil()
       assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
       Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, colsLSSystemBackThen);
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
-      _parMatrixOps.multiply(_pseudoInverseChunk[i], _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), colsLSSystemBackThen);
+      _parMatrixOps->multiply(_pseudoInverseChunk[i], _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), colsLSSystemBackThen);
       // multiply: Wtil^q * ZV  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
       _Wtil = _WtilChunk[i] * ZV;
     }
@@ -386,7 +388,7 @@ void MVQNPostProcessing::buildWtil()
   }else{
     // multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
     //                                    parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
-    _parMatrixOps.multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
+    _parMatrixOps->multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
   }
 
   // W_til = (W-J_inv_n*V) = (W-V_tilde)
@@ -430,7 +432,7 @@ void MVQNPostProcessing::buildJacobian()
   */
   Event e_WtilZ("compute J = W_til*Z", true, true); // -------- time measurement, barrier
 
-  _parMatrixOps.multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
+  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
   e_WtilZ.stop();                                   // --------
 
   // update Jacobian
@@ -491,7 +493,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
   Event e_Zr("compute r_til = Z*(-res)", true, true); // -------- time measurement, barrier
   Eigen::VectorXd negativeResiduals = - _residuals;
   Eigen::VectorXd r_til = Eigen::VectorXd::Zero(getLSSystemCols());
-  _parMatrixOps.multiply(Z, negativeResiduals, r_til, getLSSystemCols(), getLSSystemRows(), 1);
+  _parMatrixOps->multiply(Z, negativeResiduals, r_til, getLSSystemCols(), getLSSystemRows(), 1);
   e_Zr.stop();                                        // --------
 
   /**
@@ -520,14 +522,14 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
       assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
       r_til = Eigen::VectorXd::Zero(colsLSSystemBackThen);
       // multiply: r_til := Z^q * (-res) of size (m x 1) with m=#cols of LS at that time, result stored on each proc.
-      _parMatrixOps.multiply(_pseudoInverseChunk[i], negativeResiduals, r_til, colsLSSystemBackThen, getLSSystemRows(), 1);
+      _parMatrixOps->multiply(_pseudoInverseChunk[i], negativeResiduals, r_til, colsLSSystemBackThen, getLSSystemRows(), 1);
       // multiply: Wtil^q * r_til  dimensions: (n x m) * (m x 1), fully local and embarrassingly parallel
       xUpdate += _WtilChunk[i] * r_til;
     }
 
   // imvj without restart is used, i.e., compute directly J_prev * (-res)
   }else{
-    _parMatrixOps.multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+    _parMatrixOps->multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
     preciceDebug("Mult J*V DONE");
   }
   e_Jpr.stop();                                              // --------
@@ -568,7 +570,7 @@ void MVQNPostProcessing::computeNewtonUpdate
 	*/
 	Event e_WtilZ("compute J = W_til*Z", true, true); // -------- time measurement, barrier
 
-	_parMatrixOps.multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
+	_parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
 	e_WtilZ.stop();                                   // --------
 
 	// update Jacobian
@@ -581,7 +583,7 @@ void MVQNPostProcessing::computeNewtonUpdate
 
 	// multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
 	//                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-	_parMatrixOps.multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+	_parMatrixOps->multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
   e_up.stop();                                         // --------
 }
 
@@ -600,21 +602,25 @@ void MVQNPostProcessing::restartIMVJ()
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
     for(; q < _WtilChunk.size(); q++){
 
-      // TODO: gather Wtil and Z from all procs to the Master proc, as SVD update is done in serial
-
       // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
-      _svdJ.update(Wtil_composed, Z_composed.transpose());
+      _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q].transpose());
     }
     // drop all stored Wtil^q, Z^q matrices
     _WtilChunk.clear();
     _pseudoInverseChunk.clear();
 
     auto& psi = _svdJ.matrixPsi();
-    auto& sigma = _svdJ.matrixSigma();
+    auto& sigma = _svdJ.singularValues();
     auto& phi = _svdJ.matrixPhi();
-    auto Z = sigma * phi.transpose();
 
-    // TODO: scatter psi and Z from master to all procs
+    // multiply sigma * phi^T, phi is distributed block-row wise, phi^T is distributed block-column wise
+    // sigma is stored local on each proc, thus, the multiplication is fully local, no communication.
+    // Z = sigma * phi^T
+    Eigen::MatrixXd Z(phi.cols(), phi.rows());
+    for(int i=0; i<Z.rows(); i++)
+       for(int j=0; j<Z.cols(); j++)
+         Z(i,j) = phi(j,i) * sigma[i];
+
 
     // store factorized truncated SVD of J
     _WtilChunk.push_back(psi);
