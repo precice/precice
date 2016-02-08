@@ -46,19 +46,19 @@ void PetRadialBasisFctMappingTest:: run()
     MPI_Comm comm = Par::getRestrictedCommunicator( {0, 1, 2, 3} );
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm); // hier auch noch PETSC_COMM_WORLD neu setzen?
-      testMethod(testDistributedConsistent2D);
+      testMethod(testDistributedConsistent2DV1);
+      testMethod(testDistributedConsistent2DV2);
       testMethod(testDistributedConservative2D);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
 }
 
-void PetRadialBasisFctMappingTest::testDistributedConsistent2D()
+/// Test with a homogenous distribution of mesh amoung ranks
+void PetRadialBasisFctMappingTest::testDistributedConsistent2DV1()
 {
   preciceTrace("testDistributedConsistent2D");
-  using Par = utils::Parallel;
-  using utils::Vector2D;
-  assertion(Par::getCommunicatorSize() == 4);
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(2.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
   
@@ -73,7 +73,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2D()
                     {-1, 3, {3, 0}, {6}},
                     {-1, 3, {3, 1}, {7}}
                   },
-                  { // The outMesh is local
+                  { // The outMesh is local, every rank is used
                     {0, -1, {0, 0}, {0}},
                     {0, -1, {0, 1}, {0}},
                     {1, -1, {1, 0}, {0}},
@@ -96,12 +96,53 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2D()
     );
 }
 
+/// Using a more heterogenous distributon of vertices and owner
+void PetRadialBasisFctMappingTest::testDistributedConsistent2DV2()
+{
+  preciceTrace("testDistributedConsistent2D");
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(2.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  
+  testDistributed(mapping,
+                  { // Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
+                    {-1, 0, {0, 0}, {0}},
+                    {-1, 0, {0, 1}, {1}},
+                    {-1, 1, {1, 0}, {2}},
+                    {-1, 1, {1, 1}, {3}},
+                    {-1, 1, {2, 0}, {4}},
+                    {-1, 3, {2, 1}, {5}},
+                    {-1, 3, {3, 0}, {6}},
+                    {-1, 3, {3, 1}, {7}}
+                  },
+                  { // The outMesh is local, rank 1 is empty
+                    {0, -1, {0, 0}, {0}},
+                    {0, -1, {0, 1}, {0}},
+                    {0, -1, {1, 0}, {0}},
+                    {2, -1, {1, 1}, {0}},
+                    {2, -1, {2, 0}, {0}},
+                    {2, -1, {2, 1}, {0}},
+                    {3, -1, {3, 0}, {0}},
+                    {3, -1, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 1, 2} on the first rank,
+                    // second rank (consistent with the outMesh) is empty, ...
+                    { 0, {0} },
+                    { 0, {1} },
+                    { 0, {2} },
+                    { 2, {3} },
+                    { 2, {4} },
+                    { 2, {5} },
+                    { 3, {6} },
+                    { 3, {7} }
+                  }
+    );
+}
+
 void PetRadialBasisFctMappingTest::testDistributedConservative2D()
 {
   preciceTrace("testDistributedConservative2D");
-  using Par = utils::Parallel;
-  using utils::Vector2D;
-  assertion(Par::getCommunicatorSize() == 4);
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(2.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
   
@@ -133,7 +174,7 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2D()
                     {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {4}}, {2, {5}}, {2, {0}}, {2, {0}},
                     {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {6}}, {3, {7}}
                   },
-                  Par::getProcessRank()*2
+                  utils::Parallel::getProcessRank()*2
     );
 }
 

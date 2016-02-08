@@ -53,9 +53,10 @@ private:
   // @brief Logging device.
   static tarch::logging::Log _log;
 
-  void testDistributedConservative2D();
+  void testDistributedConsistent2DV1();
+  void testDistributedConsistent2DV2();
 
-  void testDistributedConsistent2D();
+  void testDistributedConservative2D();
 
   void testPetThinPlateSplines();
 
