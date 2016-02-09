@@ -9,14 +9,17 @@ import argparse, os, shutil, subprocess, sys
 
 def run_test(cmd):
     print("Running: ", cmd)
-
-    shutil.rmtree("./tests")
+    try:
+        shutil.rmtree("./tests")
+    except FileNotFoundError:
+        pass
+    
     os.makedirs("./tests")
     os.chdir("./tests")
-    proc = subprocess.call(cmd, shell = True)
+    ret_code = subprocess.call(cmd, shell = True)
     os.chdir("..")
     
-    if not proc.returncode == 0:
+    if not ret_code == 0:
         sys.exit(1)
 
 
