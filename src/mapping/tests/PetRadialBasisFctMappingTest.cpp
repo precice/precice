@@ -60,7 +60,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV1()
 {
   preciceTrace("testDistributedConsistent2DV1");
   assertion(utils::Parallel::getCommunicatorSize() == 4);
-  Gaussian fct(2.0);
+  Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
   
   testDistributed(mapping,
@@ -102,7 +102,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV2()
 {
   preciceTrace("testDistributedConsistent2DV2");
   assertion(utils::Parallel::getCommunicatorSize() == 4);
-  Gaussian fct(2.0);
+  Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
   
   testDistributed(mapping,
@@ -144,7 +144,7 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2DV1()
 {
   preciceTrace("testDistributedConservative2DV1");
   assertion(utils::Parallel::getCommunicatorSize() == 4);
-  Gaussian fct(2.0);
+  Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
   
   testDistributed(mapping,
@@ -219,7 +219,6 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2DV2()
                   },
                   globalIndexOffsets[utils::Parallel::getProcessRank()]
     );
-  // Problem liegt wohl bei utils::Parallel::getProcessRank()*2, aber komisch, dass es bei einem Rank auf 0 noch geht
 }
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
