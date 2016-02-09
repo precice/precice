@@ -48,7 +48,8 @@ void PetRadialBasisFctMappingTest:: run()
       Par::setGlobalCommunicator(comm); // hier auch noch PETSC_COMM_WORLD neu setzen?
       testMethod(testDistributedConsistent2DV1);
       testMethod(testDistributedConsistent2DV2);
-      testMethod(testDistributedConservative2D);
+      testMethod(testDistributedConservative2DV1);
+      testMethod(testDistributedConservative2DV2);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -57,7 +58,7 @@ void PetRadialBasisFctMappingTest:: run()
 /// Test with a homogenous distribution of mesh amoung ranks
 void PetRadialBasisFctMappingTest::testDistributedConsistent2DV1()
 {
-  preciceTrace("testDistributedConsistent2D");
+  preciceTrace("testDistributedConsistent2DV1");
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(2.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
@@ -99,7 +100,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV1()
 /// Using a more heterogenous distributon of vertices and owner
 void PetRadialBasisFctMappingTest::testDistributedConsistent2DV2()
 {
-  preciceTrace("testDistributedConsistent2D");
+  preciceTrace("testDistributedConsistent2DV2");
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(2.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
@@ -139,9 +140,9 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV2()
     );
 }
 
-void PetRadialBasisFctMappingTest::testDistributedConservative2D()
+void PetRadialBasisFctMappingTest::testDistributedConservative2DV1()
 {
-  preciceTrace("testDistributedConservative2D");
+  preciceTrace("testDistributedConservative2DV1");
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(2.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
@@ -176,6 +177,49 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2D()
                   },
                   utils::Parallel::getProcessRank()*2
     );
+}
+
+/// Using a more heterogenous distribution of vertices and owner
+void PetRadialBasisFctMappingTest::testDistributedConservative2DV2()
+{
+  preciceTrace("testDistributedConservative2DV2");
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
+  
+  testDistributed(mapping,
+                  { // Conservative mapping: The inMesh is local but rank 0 has no vertices
+                    {1, -1, {0, 0}, {1}},
+                    {1, -1, {0, 1}, {2}},
+                    {1, -1, {1, 0}, {3}},
+                    {1, -1, {1, 1}, {4}},
+                    {2, -1, {2, 0}, {5}},
+                    {2, -1, {2, 1}, {6}},
+                    {3, -1, {3, 0}, {7}},
+                    {3, -1, {3, 1}, {8}}
+                  },
+                  { // The outMesh is distributed, rank 0 owns no vertex
+                    {-1, 1, {0, 0}, {0}},
+                    {-1, 1, {0, 1}, {0}},
+                    {-1, 1, {1, 0}, {0}},
+                    {-1, 1, {1, 1}, {0}},
+                    {-1, 2, {2, 0}, {0}},
+                    {-1, 2, {2, 1}, {0}},
+                    {-1, 3, {3, 0}, {0}},
+                    {-1, 3, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+                    // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
+                    {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+                    {1, {1}}, {1, {2}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+                    {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
+                    {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
+                  },
+                  globalIndexOffsets[utils::Parallel::getProcessRank()]
+    );
+  // Problem liegt wohl bei utils::Parallel::getProcessRank()*2, aber komisch, dass es bei einem Rank auf 0 noch geht
 }
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
