@@ -385,7 +385,7 @@ protected:
           offset += slaveWeights.size();
         }
       }
-      assertion2(offset==_globalWeights.size(),offset, _globalWeights.size());
+      assertion2(offset==(int)_globalWeights.size(),offset, (int)_globalWeights.size());
 
       utils::MasterSlave::_communication->broadcast(_globalWeights.data(),_globalWeights.size());
       utils::MasterSlave::_communication->broadcast(_globalInvWeights.data(),_globalWeights.size());

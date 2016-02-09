@@ -8,7 +8,6 @@
 #include "SVDFactorization.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
-#include "QRFactorization.hpp"
 
 
 namespace precice {
@@ -53,19 +52,35 @@ void SVDFactorization::applyPreconditioner()
 {
   preciceTrace(__func__);
 
+  if(_psi.size() > 0 && _phi.size() > 0){
+    // apply preconditioner: \psi_i * P_i, corresponds to Wtil_i * P_i, local!
+    _preconditioner->apply(_psi);
+    // apply preconditioner: \phi_i * P_i^{-1}, corresponds to Z_i * P_i^{-1}, local!
+    _preconditioner->revert(_phi, true, false);
+  }
+  _preconditionerApplied = false;
 }
 
 void SVDFactorization::revertPreconditioner()
 {
   preciceTrace(__func__);
 
+  if(_psi.size() > 0 && _phi.size() > 0){
+    // revert preconditioner: \psi_i * P_i^{-1}, corresponds to Wtil_i * P_i^{-1}, local!
+    _preconditioner->revert(_psi);
+    // revert preconditioner: \phi_i * P_i, corresponds to Z_i * P_i, local!
+    _preconditioner->apply(_phi, true, false);
+  }
+  _preconditionerApplied = true;
 }
 
-SVDFactorization::reset()
+void SVDFactorization::reset()
 {
   _psi.resize(0,0);
   _phi.resize(0,0);
   _sigma.resize(0);
+  _preconditionerApplied = false;
+  _initialSVD = false;
 }
 
 

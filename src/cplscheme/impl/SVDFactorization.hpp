@@ -11,8 +11,11 @@
 #include "mesh/SharedPointer.hpp"
 #include "SharedPointer.hpp"
 #include "ParallelMatrixOperations.hpp"
+#include "QRFactorization.hpp"
+#include "Preconditioner.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/MasterSlave.hpp"
+#include "utils/EventTimings.hpp"
 #include <Eigen/Dense>
 #include <limits>
 #include <deque>
@@ -57,13 +60,14 @@ public:
     *  truncated according to the threshold _truncationEps
     */
    template<typename Derived1, typename Derived2>
-   void SVDFactorization::update(
+   void update(
        Eigen::PlainObjectBase<Derived1>& A,
        Eigen::PlainObjectBase<Derived2>& B)
    {
      preciceTrace(__func__);
-     Event e("SVD update", true, true);
+     utils::Event e("SVD update", true, true);
      assertion(_initialized);
+     assertion(_preconditionerApplied);
      /** updates the truncated svd factorization of the Jacobian with a rank-1 modification
       *
       * \psi * \sigma * \phi <-- \psi * \sigma * \phi + A * B^T
@@ -89,11 +93,13 @@ public:
 
      // Atil := \psi^T *A
      // local computation of \psi^T * A and allreduce_sum to Atil (global), stored local on each proc
-     _parMatrixOps->multiply(_psi.transpose(), A, Atil, _psi.cols(), _globalRows, A.cols());
+     _psi.transposeInPlace();
+     _parMatrixOps->multiply(_psi, A, Atil, (int)_psi.cols(), _globalRows, (int)A.cols());
+     _psi.transposeInPlace();
 
      // Ptil := (I-\psi\psi^T)A
      // Atil is local on each proc, thus fully local computation, embarrassingly parallel
-     auto Ptil = A -_psi * Atil;
+     Matrix Ptil = A - _psi * Atil;
 
      // compute orthogonal basis P of Ptil, i.e., QR-dec (P, R_A) = QR(Ptil)
      QRFactorization qrA(0);        // TODO: maybe add filter, currently hard coded to NO_FILTER
@@ -105,9 +111,11 @@ public:
       */
      Matrix Btil(_phi.cols(), B.cols());    // Btil is of size (K_bar x m)
      // Btil := \phi^T *B
-     _parMatrixOps->multiply(_phi.transpose(), B, Btil, _phi.cols(), _globalRows, B.cols());
+     _phi.transposeInPlace();
+     _parMatrixOps->multiply(_phi, B, Btil, (int)_phi.cols(), _globalRows, (int)B.cols());
+     _phi.transposeInPlace();
      // Qtil := (I-\phi\phi^T)B
-     auto Qtil = B -_phi * Btil;
+     Matrix Qtil = B - _phi * Btil;
 
      // compute orthogonal basis Q of Qtil, i.e., QR-dec (Q, R_B) = QR(Qtil)
      QRFactorization qrB(0);        // TODO: maybe add filter, currently hard coded to NO_FILTER
@@ -154,8 +162,8 @@ public:
      /** (5) truncation of SVD
       */
      _cols = _sigma.size();
-     for(int i = 0; i < _sigma.size(); i++){
-       if(_sigma(i) < _sigma(1) * _truncationEps){
+     for(int i = 0; i < (int)_sigma.size(); i++){
+       if(_sigma(i) < (int)_sigma(1) * _truncationEps){
          _cols = i;
          break;
        }
@@ -187,7 +195,7 @@ public:
    /**
     * @brief: returns a matrix representation of the orthogonal matrix Sigma, A = Psi * Sigma * Phi^T
     */
-   Matrix& singularValues();
+   Vector& singularValues();
 
    /**
     * @brief: returns a matrix representation of the orthogonal matrix Phi, A = Psi * Sigma * Phi^T

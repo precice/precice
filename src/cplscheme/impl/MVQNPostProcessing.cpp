@@ -222,7 +222,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
         //                                         |--- J_prev ---|
         // iterate over all stored Wtil and Z matrices in current chunk
         if(_imvjRestart){
-          for(int i = 0; i < _WtilChunk.size(); i++){
+          for(int i = 0; i < (int)_WtilChunk.size(); i++){
             int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
             assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
             Eigen::VectorXd Zv = Eigen::VectorXd::Zero(colsLSSystemBackThen);
@@ -285,7 +285,7 @@ void MVQNPostProcessing::computeQNUpdate(
     // see below how J needs to be scaled. If this is applied to the sub-blocks of the
     // Jacobian, the following preconditioning of the local matrices Wtil^q and Z^q falls out.
     // [Wtil^q]' := P * Wtil^q      and     [Z^q]' := Z^q * P^-1
-    for(int i = 0; i < _WtilChunk.size(); i++){
+    for(int i = 0; i < (int)_WtilChunk.size(); i++){
       _preconditioner->apply(_WtilChunk[i]);
       _preconditioner->revert(_pseudoInverseChunk[i], true, false);
     }
@@ -313,7 +313,7 @@ void MVQNPostProcessing::computeQNUpdate(
   }
 
   if(_imvjRestart){
-    for(int i = 0; i < _WtilChunk.size(); i++){
+    for(int i = 0; i < (int)_WtilChunk.size(); i++){
        _preconditioner->revert(_WtilChunk[i]);
        _preconditioner->apply(_pseudoInverseChunk[i], true, false);
      }
@@ -374,7 +374,7 @@ void MVQNPostProcessing::buildWtil()
   //                                                      |--- J_prev ---|
   // iterate over all stored Wtil and Z matrices in current chunk
   if(_imvjRestart){
-    for(int i = 0; i < _WtilChunk.size(); i++){
+    for(int i = 0; i < (int)_WtilChunk.size(); i++){
       int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
       assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
       Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, colsLSSystemBackThen);
@@ -517,7 +517,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
   Event e_Jpr("compute xUp(1) = J_prev*(-res)", true, true); // -------- time measurement, barrier
 
   if(_imvjRestart){
-    for(int i = 0; i < _WtilChunk.size(); i++){
+    for(int i = 0; i < (int)_WtilChunk.size(); i++){
       int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
       assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
       r_til = Eigen::VectorXd::Zero(colsLSSystemBackThen);
@@ -597,13 +597,16 @@ void MVQNPostProcessing::restartIMVJ()
     // truncated SVD, i.e., Wtil^0 = \phi, Z^0 = S\psi^T, this should not be added to the SVD.
     int q = _firstTimeStep ? 0 : 1;
 
-    // TODO: Take care of preconditioning of PSI, PHI matrix in _svdJ ... at least PHI has to be preconditioned: PHI^T*P^-1
+    //apply preconditioner to internal matrices PSI, PHI of truncated SVD representation of J
+    _svdJ.applyPreconditioner();
 
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
-    for(; q < _WtilChunk.size(); q++){
+    for(; q < (int)_WtilChunk.size(); q++){
 
       // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
-      _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q].transpose());
+      _pseudoInverseChunk[q].transposeInPlace(); //TODO: inefficient
+      _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q]);
+      _pseudoInverseChunk[q].transposeInPlace();
     }
     // drop all stored Wtil^q, Z^q matrices
     _WtilChunk.clear();
@@ -617,14 +620,17 @@ void MVQNPostProcessing::restartIMVJ()
     // sigma is stored local on each proc, thus, the multiplication is fully local, no communication.
     // Z = sigma * phi^T
     Eigen::MatrixXd Z(phi.cols(), phi.rows());
-    for(int i=0; i<Z.rows(); i++)
-       for(int j=0; j<Z.cols(); j++)
+    for(int i=0; i < (int)Z.rows(); i++)
+       for(int j=0; j < (int)Z.cols(); j++)
          Z(i,j) = phi(j,i) * sigma[i];
 
 
     // store factorized truncated SVD of J
     _WtilChunk.push_back(psi);
     _pseudoInverseChunk.push_back(Z);
+
+    // revert preconditioner of matrices PHI, PSI of truncated SVD representation of J
+    _svdJ.revertPreconditioner();
 
   }else if(_imvjRestartType == MVQNPostProcessing::RS_LS)
   {
@@ -658,7 +664,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
     // |- PRECONDITIONING (all objects are unscaled) -----------|
     // _preconditioner->apply(_residuals);
     _preconditioner->apply(_matrixV);
-    _preconditioner->apply(_matrixW);  // only needed in buildWtil(), shouldnot be called in buildJacobain() TODO
+    _preconditioner->apply(_matrixW);  // only needed in buildWtil(), should not be called in buildJacobain() TODO
 
     // Wtil needs to be preconditioned if it is not re-built from scratch, i.e., if either
     // the efficient IMVJ update or the IMVJ restart mode is used
@@ -670,7 +676,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
       // see below how J needs to be scaled. If this is applied to the sub-blocks of the
       // Jacobian, the following preconditioning of the local matrices Wtil^q and Z^q falls out.
       // [Wtil^q]' := P * Wtil^q      and     [Z^q]' := Z^q * P^-1
-      for(int i = 0; i < _WtilChunk.size(); i++){
+      for(int i = 0; i < (int)_WtilChunk.size(); i++){
         _preconditioner->apply(_WtilChunk[i]);
         _preconditioner->revert(_pseudoInverseChunk[i], true, false);
       }
@@ -703,12 +709,12 @@ void MVQNPostProcessing:: specializedIterationsConverged
       pseudoInverse(Z);                              // TODO: re-computation could be avoided .. in this case Z needs to be preconditioned.
 
       _WtilChunk.push_back(_Wtil);
-      _pseudoInverseChunk.push_nack(Z);
+      _pseudoInverseChunk.push_back(Z);
 
       /**
        *  Restart the IMVJ according to restart type
        */
-      if (_WtilChunk.size() >= _chunkSize){
+      if ((int)_WtilChunk.size() >= _chunkSize){
         restartIMVJ();
       }
 
@@ -728,7 +734,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
     if(_imvjRestart){
       // note: If restartIMVJ() was called for restart type=RS-SVD, the containers are of size
       // one and hold the truncated SVD of J, which is reverted (compare: revert(_invJacobain))
-      for(int i = 0; i < _WtilChunk.size(); i++){
+      for(int i = 0; i < (int)_WtilChunk.size(); i++){
          _preconditioner->revert(_WtilChunk[i]);
          _preconditioner->apply(_pseudoInverseChunk[i], true, false);
        }
