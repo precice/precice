@@ -59,43 +59,6 @@ QRFactorization::QRFactorization(
  * Constructor
  */
 QRFactorization::QRFactorization(
-  DataMatrix A, 
-  int filter,
-  double omega, 
-  double theta, 
-  double sigma)
-  :
-  _Q(),
-  _R(),
-  _rows(A.rows()),
-  _cols(0),
-  _filter(filter),
-  _omega(omega),
-  _theta(theta),
-  _sigma(sigma),
-  _infostream(),
-  _fstream_set(false),
-  _globalRows(A.rows())
-{
-  int m = A.cols();
-  for (int k=0; k<m; k++)
-  {
-     EigenVector v(_rows);
-     for(int i=0; i<_rows; i++)
-       v(i) = A(i,k);
-     insertColumn(k,v);
-  }
-  assertion2(_R.rows() == _cols, _R.rows(), _cols);
-  assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
-  assertion2(_cols == m, _cols, m);
-}
-
-/**
- * Constructor
- */
-QRFactorization::QRFactorization(
   EigenMatrix A, 
   int filter,
   double omega, 
@@ -149,15 +112,6 @@ QRFactorization::QRFactorization(
   _globalRows(0)
 {}
 
-void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& delIndices, DataMatrix& V)
-{
-	EigenMatrix _V(V.rows(), V.cols());
-	for(int i = 0; i < _V.rows(); i++)
-		for(int j = 0; j < _V.cols(); j++){
-			_V(i,j) = V(i,j);
-		}
-	applyFilter(singularityLimit, delIndices, _V);
-}
       
 void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& delIndices, EigenMatrix& V)
 {
@@ -266,20 +220,10 @@ void QRFactorization::deleteColumn(int k)
 }
 
       
-bool QRFactorization::insertColumn(int k, DataValues& v, double singularityLimit)
-{
-   EigenVector _v(v.size());
-   for(int i=0; i<v.size();i++)
-   {
-     _v(i) = v(i);
-   }
-   return insertColumn(k, _v, singularityLimit);
-}
-      
 // ATTENTION: This method works on the memory of vector v, thus changes the vector v.
 bool QRFactorization::insertColumn(int k, EigenVector& v, double singularityLimit)
 {
-  preciceTrace("insertColumn()");
+  preciceTrace1("insertColumn()", k);
 
   if(_cols == 0)
     _rows = v.size();
@@ -287,7 +231,7 @@ bool QRFactorization::insertColumn(int k, EigenVector& v, double singularityLimi
   bool applyFilter = (singularityLimit > 0.0);
 
   assertion1(k >= 0, k);
-  assertion1(k <= _cols, k);
+  assertion2(k <= _cols, k, _cols);
   assertion2(v.size() == _rows, v.size(), _rows);
   
   _cols++;
@@ -685,6 +629,7 @@ void QRFactorization::reset(
   double theta, 
   double sigma)
 {
+  preciceTrace("reset() QR-dec with new Matrix A");
   _Q.resize(0,0);
   _R.resize(0,0);
   _cols = 0;
@@ -695,10 +640,15 @@ void QRFactorization::reset(
   _globalRows = globalRows;
   
   int m = A.cols();
-  for (int k=0; k<m; k++)
+  int col = 0, k = 0;
+  for (; col<m; k++, col++)
   {
-     EigenVector v = A.col(k);
-     insertColumn(k,v);
+     EigenVector v = A.col(col);
+     bool inserted = insertColumn(k,v);
+     if(not inserted){
+       k--;
+       preciceDebug("column "<<col<<" has not been inserted in the QR-factorization, failed to orthogonalize.");
+     }
   }
   assertion2(_R.rows() == _cols, _R.rows(), _cols);
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
@@ -707,36 +657,6 @@ void QRFactorization::reset(
   assertion2(_cols == m, _cols, m);
 }
 
-void QRFactorization::reset(
-  DataMatrix A, 
-  int globalRows,
-  double omega, 
-  double theta, 
-  double sigma)
-{
-  _Q.resize(0,0);
-  _R.resize(0,0);
-  _cols = 0;
-  _rows = A.rows();
-  _omega = omega;
-  _theta = theta;
-  _sigma = sigma;
-  _globalRows = globalRows;
- 
-  int m = A.cols();
-  for (int k=0; k<m; k++)
-  {
-     EigenVector v(_rows);
-     for(int i=0; i<_rows; i++)
-       v(i) = A(i,k);
-     insertColumn(k,v);
-  }
-  assertion2(_R.rows() == _cols, _R.rows(), _cols);
-  assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
-  assertion2(_cols == m, _cols, m);
-}
 
 void QRFactorization::pushFront(EigenVector& v)
 {
@@ -746,22 +666,6 @@ void QRFactorization::pushFront(EigenVector& v)
 void QRFactorization::pushBack(EigenVector& v)
 {
   insertColumn(_cols, v);
-}
-
-void QRFactorization::pushFront(DataValues& v)
-{
-  EigenVector _v(v.size());
-  for(int i = 0; i<v.size(); i++)
-    _v(i) = v(i);
-  insertColumn(0, _v);
-}
-
-void QRFactorization::pushBack(DataValues& v)
-{
-  EigenVector _v(v.size());
-  for(int i = 0; i<v.size(); i++)
-    _v(i) = v(i);
-  insertColumn(_cols, _v);
 }
 
 void QRFactorization::popFront()

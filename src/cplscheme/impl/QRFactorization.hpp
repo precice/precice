@@ -34,11 +34,6 @@ namespace impl {
 class QRFactorization
 {
 public:
-  
-  // tarch
-  typedef tarch::la::DynamicVector<double> DataValues;
-  typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-  typedef tarch::la::DynamicMatrix<double> Matrix;
    
   // Eigen
   typedef Eigen::MatrixXd EigenMatrix;
@@ -55,18 +50,7 @@ public:
       double theta=1./0.7,
       double sigma=std::numeric_limits<double>::min()
  		    );
-  
-  /**
-   * @brief Constructor.
-   */
-   QRFactorization (
-      DataMatrix A,
-      int filter,
-      double omega=0,
-      double theta=1./0.7,
-      double sigma=std::numeric_limits<double>::min()
- 		    );
-   
+
    /**
    * @brief Constructor.
    */
@@ -122,25 +106,15 @@ public:
 	EigenMatrix A,
 	int globalRows,
 	double omega=0,
-    double theta=1./0.7,
-    double sigma=std::numeric_limits<double>::min());
+  double theta=1./0.7,
+  double sigma=std::numeric_limits<double>::min());
    
-   /**
-    * @brief resets the QR factorization to be the factorization of A = QR
-    */
-   void reset(
-	DataMatrix A,
-	int globalRows,
-	double omega=0,
-	double theta=1./0.7,
-	double sigma=std::numeric_limits<double>::min());
    
    /**
     * @brief inserts a new column at arbitrary position and updates the QR factorization
     * This function works on the memory of v, thus changes the Vector v.
     */
    bool insertColumn(int k, EigenVector& v, double singularityLimit = 0);
-   bool insertColumn(int k, DataValues& v, double singularityLimit = 0);
    
    /**
    * @brief updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted. 
@@ -162,19 +136,6 @@ public:
     */
    void pushBack(EigenVector& v);
    
-   /**
-    * @brief inserts a new column at position 0, i.e., shifts right and inserts at first position
-    * and updates the QR factorization
-    * This function works on the memory of v, thus changes the Vector v.
-    */
-   void pushFront(DataValues& v);
-   
-   /**
-    * @brief inserts a new column at position _cols-1, i.e., appends a column at the end
-    * and updates the QR factorization
-    * This function works on the memory of v, thus changes the Vector v.
-    */
-   void pushBack(DataValues& v);
    
    /**
     * @brief deletes the column at position 0, i.e., deletes and shifts columns to the left
@@ -194,7 +155,6 @@ public:
     * @param [out] delIndices - a vector of indices of deleted columns from the LS-system
     */
    void applyFilter(double singularityLimit, std::vector<int>& delIndices, EigenMatrix& V);
-   void applyFilter(double singularityLimit, std::vector<int>& delIndices, DataMatrix& V);
 
    /**
     * @brief returns a matrix representation of the orthogonal matrix Q
