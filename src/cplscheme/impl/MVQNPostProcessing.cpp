@@ -380,9 +380,9 @@ void MVQNPostProcessing::buildWtil()
     for(int i = 0; i < (int)_WtilChunk.size(); i++){
       int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
       assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
-      Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, colsLSSystemBackThen);
+      Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, _qrV.cols());
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
-      _parMatrixOps->multiply(_pseudoInverseChunk[i], _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), colsLSSystemBackThen);
+      _parMatrixOps->multiply(_pseudoInverseChunk[i], _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
       // multiply: Wtil^q * ZV  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
       _Wtil += _WtilChunk[i] * ZV;
     }
