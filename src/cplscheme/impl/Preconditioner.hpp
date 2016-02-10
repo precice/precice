@@ -102,7 +102,7 @@ public:
     preciceTrace(__func__);
     assertion(_needsGlobalWeights);
     if(transpose){
-      assertion(M.cols()==(int)_weights.size());
+      assertion2(M.cols()==(int)_weights.size(), M.cols(), _weights.size());
       for(int i=0; i<M.cols(); i++){
         for(int j=0; j<M.rows(); j++){
           M(j,i) *= _weights[i];

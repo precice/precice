@@ -162,11 +162,11 @@ public:
     * In each case mat-mat or mat-vec product, the result is of size (m x m) or (m x 1), where
     * m is the number of cols, i.e., small such that the result is stored on each proc.
     */
-   template<typename Derived1, typename Derived2>
+   template<typename Derived1, typename Derived2, typename Derived3>
     void multiply(
-        Eigen::PlainObjectBase<Derived1>& leftMatrix,
-        Eigen::PlainObjectBase<Derived2>& rightMatrix,
-        Eigen::PlainObjectBase<Derived2>& result,
+        const Eigen::MatrixBase<Derived1>& leftMatrix,
+        const Eigen::MatrixBase<Derived2>& rightMatrix,
+        Eigen::PlainObjectBase<Derived3>& result,
         int p, int q, int r)
   {
     preciceTrace("multiply() (m x n) * (n * r), r=1/m");
