@@ -55,10 +55,13 @@ void SVDFactorization::applyPreconditioner()
   if(_psi.size() > 0 && _phi.size() > 0){
     // apply preconditioner: \psi_i * P_i, corresponds to Wtil_i * P_i, local!
     _preconditioner->apply(_psi);
-    // apply preconditioner: \phi_i * P_i^{-1}, corresponds to Z_i * P_i^{-1}, local!
-    _preconditioner->revert(_phi, true, false);
+    // apply preconditioner: \phi_i^T * P_i^{-1}, corresponds to Z_i * P_i^{-1}, local!
+    // here, \phi^T should be preconditioned from right with inv_weights, i.e., the columns
+    // of \phi^T are scaled. This is identical to scaling the rows of \phi, i.e., applying
+    // P^{-1} * \phi
+    _preconditioner->revert(_phi);
   }
-  _preconditionerApplied = false;
+  _preconditionerApplied = true;
 }
 
 void SVDFactorization::revertPreconditioner()
@@ -68,10 +71,13 @@ void SVDFactorization::revertPreconditioner()
   if(_psi.size() > 0 && _phi.size() > 0){
     // revert preconditioner: \psi_i * P_i^{-1}, corresponds to Wtil_i * P_i^{-1}, local!
     _preconditioner->revert(_psi);
-    // revert preconditioner: \phi_i * P_i, corresponds to Z_i * P_i, local!
-    _preconditioner->apply(_phi, true, false);
+    // revert preconditioner: \phi_i^T * P_i, corresponds to Z_i * P_i, local!
+    // here, \phi^T should be preconditioned from right with _weights, i.e., the columns
+    // of \phi^T are scaled. This is identical to scaling the rows of \phi, i.e., applying
+    // P * \phi
+    _preconditioner->apply(_phi);
   }
-  _preconditionerApplied = true;
+  _preconditionerApplied = false;
 }
 
 void SVDFactorization::reset()
@@ -110,6 +116,10 @@ void SVDFactorization::setPrecondApplied(bool b)
 bool SVDFactorization::isPrecondApplied()
 {
   return _preconditionerApplied;
+}
+
+bool SVDFactorization::isSVDinitialized(){
+  return _initialSVD;
 }
 
 void SVDFactorization::setThreshold(double eps)

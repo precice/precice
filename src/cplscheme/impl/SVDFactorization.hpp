@@ -61,8 +61,8 @@ public:
     */
    template<typename Derived1, typename Derived2>
    void update(
-       Eigen::PlainObjectBase<Derived1>& A,
-       Eigen::PlainObjectBase<Derived2>& B)
+       const Eigen::MatrixBase<Derived1>& A,
+       const Eigen::MatrixBase<Derived2>& B)
    {
      preciceTrace(__func__);
      utils::Event e("SVD update", true, true);
@@ -93,9 +93,7 @@ public:
 
      // Atil := \psi^T *A
      // local computation of \psi^T * A and allreduce_sum to Atil (global), stored local on each proc
-     _psi.transposeInPlace();
-     _parMatrixOps->multiply(_psi, A, Atil, (int)_psi.cols(), _globalRows, (int)A.cols());
-     _psi.transposeInPlace();
+     _parMatrixOps->multiply(_psi.transpose(), A, Atil, (int)_psi.cols(), _globalRows, (int)A.cols());
 
      // Ptil := (I-\psi\psi^T)A
      // Atil is local on each proc, thus fully local computation, embarrassingly parallel
@@ -111,9 +109,7 @@ public:
       */
      Matrix Btil(_phi.cols(), B.cols());    // Btil is of size (K_bar x m)
      // Btil := \phi^T *B
-     _phi.transposeInPlace();
-     _parMatrixOps->multiply(_phi, B, Btil, (int)_phi.cols(), _globalRows, (int)B.cols());
-     _phi.transposeInPlace();
+     _parMatrixOps->multiply(_phi.transpose(), B, Btil, (int)_phi.cols(), _globalRows, (int)B.cols());
      // Qtil := (I-\phi\phi^T)B
      Matrix Qtil = B - _phi * Btil;
 
@@ -134,6 +130,23 @@ public:
      assertion2(Atil.cols() == Btil.cols(), Atil.cols(), Btil.cols()); //TODO: check if this must be the case, how do we multiply if not?
      for(int i = 0; i < _sigma.size(); i++)
        K(i,i) = _sigma(i);
+
+     /*
+     preciceDebug("K_A.size: ("<<A.rows()<<","<<A.cols()<<")");
+     preciceDebug("K_B.size: ("<<B.rows()<<","<<B.cols()<<")");
+     preciceDebug("K_A.size: ("<<K_A.rows()<<","<<K_A.cols()<<")");
+     preciceDebug("K_B.size: ("<<K_B.rows()<<","<<K_B.cols()<<")");
+     preciceDebug("Atil.size: ("<<Atil.rows()<<","<<Atil.cols()<<")");
+     preciceDebug("Btil.size: ("<<Btil.rows()<<","<<Btil.cols()<<")");
+     preciceDebug("P.size: ("<<P.rows()<<","<<P.cols()<<")");
+     preciceDebug("Q.size: ("<<Q.rows()<<","<<Q.cols()<<")");
+     preciceDebug("R_A.size: ("<<R_A.rows()<<","<<R_A.cols()<<")");
+     preciceDebug("R_B.size: ("<<R_B.rows()<<","<<R_B.cols()<<")");
+     preciceDebug("PSI.size: ("<<_psi.rows()<<","<<_psi.cols()<<")");
+     preciceDebug("PHIsize: ("<<_phi.rows()<<","<<_phi.cols()<<")");
+     preciceDebug("K.size: ("<<K.rows()<<","<<K.cols()<<")");
+     */
+
      K_A.block(0,0,Atil.rows(),Atil.cols()) = Atil;
      K_A.block(Atil.rows(), 0, R_A.rows(), R_A.cols()) = R_A;
      K_B.block(0,0,Btil.rows(),Btil.cols()) = Btil;
@@ -148,12 +161,18 @@ public:
 
      /** (4) rotate left and right subspaces
       */
-     Matrix rotLeft(_psi.cols() + P.cols(), _rows);
-     Matrix rotRight(_phi.cols() + Q.cols(), _rows);
+     Matrix rotLeft(_rows, _psi.cols() + P.cols());
+     Matrix rotRight(_rows, _phi.cols() + Q.cols());
+
+     /*
+     preciceDebug("rotLeft.size: ("<<rotLeft.rows()<<","<<rotLeft.cols()<<")");
+     preciceDebug("rotRight.size: ("<<rotRight.rows()<<","<<rotRight.cols()<<")");
+     */
+
      rotLeft.block(0,0,_rows, _psi.cols()) = _psi;
-     rotLeft.block(0,_psi.cols(),_rows, _psi.cols()+P.cols()) = P;
+     rotLeft.block(0,_psi.cols(),_rows, P.cols()) = P;
      rotRight.block(0,0,_rows, _phi.cols()) = _phi;
-     rotRight.block(0,_phi.cols(),_rows, _phi.cols()+Q.cols()) = Q;
+     rotRight.block(0,_phi.cols(),_rows, Q.cols()) = Q;
 
      // [\psi,P] is distributed block-row wise, but \psiPrime is local on each proc, hence local mult.
      _psi = rotLeft * psiPrime;
@@ -162,8 +181,9 @@ public:
      /** (5) truncation of SVD
       */
      _cols = _sigma.size();
+
      for(int i = 0; i < (int)_sigma.size(); i++){
-       if(_sigma(i) < (int)_sigma(1) * _truncationEps){
+       if(_sigma(i) < (int)_sigma(0) * _truncationEps){
          _cols = i;
          break;
        }
@@ -171,6 +191,7 @@ public:
      _psi.conservativeResize(_rows, _cols);
      _phi.conservativeResize(_rows, _cols);
      _sigma.conservativeResize(_cols);
+     preciceDebug("SVD factorization of Jacobian is truncated to "<<_cols<<" degrees of freedom.");
 
      _initialSVD = true;
    }
@@ -223,6 +244,8 @@ public:
    void setPrecondApplied(bool b);
 
    bool isPrecondApplied();
+
+   bool isSVDinitialized();
 
    // @brief optional file-stream for logging output
    void setfstream(std::fstream* stream);
