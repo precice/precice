@@ -222,14 +222,16 @@ void MVQNPostProcessing::updateDifferenceMatrices
         //                                         |--- J_prev ---|
         // iterate over all stored Wtil and Z matrices in current chunk
         if(_imvjRestart){
+          preciceDebug("chunk size: "<<_WtilChunk.size());
           for(int i = 0; i < (int)_WtilChunk.size(); i++){
+           // preciceDebug("Wtil: \n"<<_WtilChunk[i].bottomRows(3));
             int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
             assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
             Eigen::VectorXd Zv = Eigen::VectorXd::Zero(colsLSSystemBackThen);
             // multiply: Zv := Z^q * V(:,0) of size (m x 1)
             _parMatrixOps->multiply(_pseudoInverseChunk[i], v, Zv, colsLSSystemBackThen, getLSSystemRows(), 1);
             // multiply: Wtil^q * Zv  dimensions: (n x m) * (m x 1), fully local
-            wtil = _WtilChunk[i] * Zv;
+            wtil += _WtilChunk[i] * Zv;
           }
 
         // imvj without restart is used, but efficient update, i.e. no Jacobian assembly in each iteration
@@ -239,7 +241,8 @@ void MVQNPostProcessing::updateDifferenceMatrices
           //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
           _parMatrixOps->multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
         }
-        wtil = w - wtil;
+        wtil *= -1;
+        wtil += w;
 
         if (not columnLimitReached && overdetermined) {
           utils::appendFront(_Wtil, wtil);
@@ -301,7 +304,7 @@ void MVQNPostProcessing::computeQNUpdate(
   ePrecond_1.stop();                                    // ------
 
   // either compute efficient, omitting to build the Jacobian in each iteration or inefficient.
-  if(_alwaysBuildJacobian || _imvjRestart){
+  if(_alwaysBuildJacobian){
     computeNewtonUpdate(cplData, xUpdate);
   }else{
     computeNewtonUpdateEfficient(cplData, xUpdate);
@@ -381,7 +384,7 @@ void MVQNPostProcessing::buildWtil()
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
       _parMatrixOps->multiply(_pseudoInverseChunk[i], _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), colsLSSystemBackThen);
       // multiply: Wtil^q * ZV  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
-      _Wtil = _WtilChunk[i] * ZV;
+      _Wtil += _WtilChunk[i] * ZV;
     }
 
   // imvj without restart is used, i.e., recompute Wtil: Wtil = W - J_prev * V
@@ -547,7 +550,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
 void MVQNPostProcessing::computeNewtonUpdate
 (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
-	preciceTrace("computeNewtonFactorsQRDecomposition()");
+	preciceTrace(__func__);
 
 	/**      --- update inverse Jacobian ---
 	*
@@ -590,23 +593,22 @@ void MVQNPostProcessing::computeNewtonUpdate
 // ==================================================================================
 void MVQNPostProcessing::restartIMVJ()
 {
+  preciceTrace(__func__);
   if(_imvjRestartType == MVQNPostProcessing::RS_SVD)
   {
     // if it is the first time step, there is no initial SVD, so take all Wtil, Z matrices
     // otherwise, the first element of each container holds the decomposition of the current
     // truncated SVD, i.e., Wtil^0 = \phi, Z^0 = S\psi^T, this should not be added to the SVD.
-    int q = _firstTimeStep ? 0 : 1;
-
+    int q = _svdJ.isSVDinitialized() ? 1 : 0;
     //apply preconditioner to internal matrices PSI, PHI of truncated SVD representation of J
     _svdJ.applyPreconditioner();
 
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
     for(; q < (int)_WtilChunk.size(); q++){
 
+      //preciceDebug("update svd factorization of Jacobian with rank-k update Wtil * Z. Wtil: ("<<_WtilChunk[q].rows()<<","<<_WtilChunk[q].cols()<<") Z: ("<<_pseudoInverseChunk[q].rows()<<","<<_pseudoInverseChunk[q].cols()<<")");
       // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
-      _pseudoInverseChunk[q].transposeInPlace(); //TODO: inefficient
-      _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q]);
-      _pseudoInverseChunk[q].transposeInPlace();
+      _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q].transpose());
     }
     // drop all stored Wtil^q, Z^q matrices
     _WtilChunk.clear();
@@ -638,7 +640,9 @@ void MVQNPostProcessing::restartIMVJ()
 
   }else if(_imvjRestartType == MVQNPostProcessing::RS_ZERO)
   {
-
+    // drop all stored Wtil^q, Z^q matrices
+    _WtilChunk.clear();
+    _pseudoInverseChunk.clear();
 
   }else if (_imvjRestartType == MVQNPostProcessing::NO_RESTART){
     assertion(false); // should not happen, in this case _imvjRestart=false
