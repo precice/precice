@@ -615,6 +615,8 @@ void MVQNPostProcessing::computeNewtonUpdate
 void MVQNPostProcessing::restartIMVJ()
 {
   preciceTrace(__func__);
+
+  //               ------------ RESTART SVD ------------
   if(_imvjRestartType == MVQNPostProcessing::RS_SVD)
   {
     // if it is the first time step, there is no initial SVD, so take all Wtil, Z matrices
@@ -653,6 +655,9 @@ void MVQNPostProcessing::restartIMVJ()
     // revert preconditioner of matrices PHI, PSI of truncated SVD representation of J
     _svdJ.revertPreconditioner();
 
+    preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<sigma.size());
+
+    //        ------------ RESTART LEAST SQUARES ------------
   }else if(_imvjRestartType == MVQNPostProcessing::RS_LS)
   {
     // drop all stored Wtil^q, Z^q matrices
@@ -669,6 +674,7 @@ void MVQNPostProcessing::restartIMVJ()
    _preconditioner->apply(_matrixV_RSLS);
 
    QRFactorization qr(_filter);
+   qr.setGlobalRows(getLSSystemRows());
    // for QR2-filter, the QR-dec is computed in qr-applyFilter()
    if(_filter != PostProcessing::QR2FILTER){
      for(int i = 0; i < (int)_matrixV_RSLS.cols(); i++){
@@ -711,11 +717,17 @@ void MVQNPostProcessing::restartIMVJ()
    _preconditioner->revert(_matrixW_RSLS);
    _preconditioner->revert(_matrixV_RSLS);
 
+   preciceDebug("MVJ-RESTART, mode=LS. Restart with "<<_matrixV_RSLS.cols()<<" columns from "<<_RSLSreusedTimesteps<<" time steps.");
+
+
+   //            ------------ RESTART ZERO ------------
   }else if(_imvjRestartType == MVQNPostProcessing::RS_ZERO)
   {
     // drop all stored Wtil^q, Z^q matrices
     _WtilChunk.clear();
     _pseudoInverseChunk.clear();
+
+    preciceDebug("MVJ-RESTART, mode=Zero");
 
   }else if (_imvjRestartType == MVQNPostProcessing::NO_RESTART){
     assertion(false); // should not happen, in this case _imvjRestart=false
@@ -750,7 +762,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
         utils::removeColumnFromMatrix(_matrixV_RSLS, _matrixV_RSLS.cols() - 1);
         utils::removeColumnFromMatrix(_matrixW_RSLS, _matrixW_RSLS.cols() - 1);
       }
-      _matrixCols.pop_back();
+      _matrixCols_RSLS.pop_back();
     }
     _matrixCols_RSLS.push_front(0);
   }
