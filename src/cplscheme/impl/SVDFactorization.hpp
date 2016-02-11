@@ -132,22 +132,6 @@ public:
      for(int i = 0; i < _sigma.size(); i++)
        K(i,i) = _sigma(i);
 
-     /*
-     preciceDebug("K_A.size: ("<<A.rows()<<","<<A.cols()<<")");
-     preciceDebug("K_B.size: ("<<B.rows()<<","<<B.cols()<<")");
-     preciceDebug("K_A.size: ("<<K_A.rows()<<","<<K_A.cols()<<")");
-     preciceDebug("K_B.size: ("<<K_B.rows()<<","<<K_B.cols()<<")");
-     preciceDebug("Atil.size: ("<<Atil.rows()<<","<<Atil.cols()<<")");
-     preciceDebug("Btil.size: ("<<Btil.rows()<<","<<Btil.cols()<<")");
-     preciceDebug("P.size: ("<<P.rows()<<","<<P.cols()<<")");
-     preciceDebug("Q.size: ("<<Q.rows()<<","<<Q.cols()<<")");
-     preciceDebug("R_A.size: ("<<R_A.rows()<<","<<R_A.cols()<<")");
-     preciceDebug("R_B.size: ("<<R_B.rows()<<","<<R_B.cols()<<")");
-     preciceDebug("PSI.size: ("<<_psi.rows()<<","<<_psi.cols()<<")");
-     preciceDebug("PHIsize: ("<<_phi.rows()<<","<<_phi.cols()<<")");
-     preciceDebug("K.size: ("<<K.rows()<<","<<K.cols()<<")");
-     */
-
      K_A.block(0,0,Atil.rows(),Atil.cols()) = Atil;
      K_A.block(Atil.rows(), 0, R_A.rows(), R_A.cols()) = R_A;
      K_B.block(0,0,Btil.rows(),Btil.cols()) = Btil;
@@ -164,11 +148,6 @@ public:
       */
      Matrix rotLeft(_rows, _psi.cols() + P.cols());
      Matrix rotRight(_rows, _phi.cols() + Q.cols());
-
-     /*
-     preciceDebug("rotLeft.size: ("<<rotLeft.rows()<<","<<rotLeft.cols()<<")");
-     preciceDebug("rotRight.size: ("<<rotRight.rows()<<","<<rotRight.cols()<<")");
-     */
 
      rotLeft.block(0,0,_rows, _psi.cols()) = _psi;
      rotLeft.block(0,_psi.cols(),_rows, P.cols()) = P;
@@ -189,10 +168,12 @@ public:
          break;
        }
      }
+     int waste = _sigma.size()-i;
+
      _psi.conservativeResize(_rows, _cols);
      _phi.conservativeResize(_rows, _cols);
      _sigma.conservativeResize(_cols);
-     preciceDebug("SVD factorization of Jacobian is truncated to "<<_cols<<" degrees of freedom.");
+     preciceDebug("SVD factorization of Jacobian is truncated to "<<_cols<<" DOFs. Cut off "<<waste<<" DOFs");
 
      _initialSVD = true;
    }
