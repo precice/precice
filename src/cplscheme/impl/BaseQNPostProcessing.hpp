@@ -224,6 +224,14 @@ protected:
     */
    int _filter;
 
+   /** @brief Determines sensitivity when two matrix columns are considered equal.
+    *
+    * When during the QR decomposition of the V matrix a pivot element smaller
+    * than the singularity limit is found, the matrix is considered to be singular
+    * and the corresponding (older) iteration is removed.
+    */
+   double _singularityLimit;
+
 
    /** @brief Indices (of columns in W, V matrices) of 1st iterations of timesteps.
     *
@@ -292,14 +300,6 @@ private:
 
   /// @brief Difference between solver input and output from last timestep
   Eigen::VectorXd _oldResiduals;
-
-  /** @brief Determines sensitivity when two matrix columns are considered equal.
-   *
-   * When during the QR decomposition of the V matrix a pivot element smaller
-   * than the singularity limit is found, the matrix is considered to be singular
-   * and the corresponding (older) iteration is removed.
-   */
-  double _singularityLimit;
 
   /**
     * @brief sets the design specification we want to meet for the objective function,

@@ -66,12 +66,12 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _matrixW(),
   _qrV(filter),
   _filter(filter),
+  _singularityLimit(singularityLimit),
   _matrixCols(),
   _dimOffsets(),
   _values(),
   _oldValues(),
   _oldResiduals(),
-  _singularityLimit(singularityLimit),
   _designSpecification(),
   _matrixVBackup(),
   _matrixWBackup(),
@@ -466,7 +466,7 @@ void BaseQNPostProcessing::performPostProcessing
 
     if(std::isnan(utils::MasterSlave::l2norm(xUpdate))){
       preciceError(__func__, "The coupling iteration in time step "<<tSteps<<
-          " failed to converge and NaN values occured throughout the coupling process. ");
+          " failed to converge and NaN values occurred throughout the coupling process. ");
     }
   }
 

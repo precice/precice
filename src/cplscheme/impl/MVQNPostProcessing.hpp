@@ -96,11 +96,20 @@ private:
    /// @brief: stores the sub result (W-J_prev*V) for the current iteration
    Eigen::MatrixXd _Wtil;
 
-   /// @brief stores all Wtil matrices within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+   /// @brief: stores all Wtil matrices within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
    std::vector< Eigen::MatrixXd > _WtilChunk;
 
-   /// @brief stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+   /// @brief_ stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
    std::vector<Eigen::MatrixXd> _pseudoInverseChunk;
+
+   /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
+   Eigen::MatrixXd _matrixV_RSLS;
+
+   /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
+   Eigen::MatrixXd _matrixW_RSLS;
+
+   /// @brief: number of cols per time step
+   std::deque<int> _matrixCols_RSLS;
 
    /// @brief: Communication between neighboring slaves, backwards
    com::Communication::SharedPointer _cyclicCommLeft;
@@ -140,6 +149,9 @@ private:
 
    /// @brief: Number of reused time steps at restart if restart-mode = RS-LS
    int _RSLSreusedTimesteps;
+
+   /// @brief: Number of used columns per time step. Always the first _usedColumnsPerTstep are used.
+   int _usedColumnsPerTstep;
 
 
    /** @brief: comptes the MVQN update using QR decomposition of V,
@@ -192,8 +204,11 @@ private:
     */
    void restartIMVJ();
 
-   // @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
+   /// @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
    virtual void removeMatrixColumn(int columnIndex);
+
+   /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
+   void removeMatrixColumnRSLS(int columnINdex);
 
 };
 

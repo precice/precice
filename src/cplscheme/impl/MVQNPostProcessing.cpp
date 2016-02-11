@@ -67,6 +67,9 @@ MVQNPostProcessing:: MVQNPostProcessing
   _Wtil(),
   _WtilChunk(),
   _pseudoInverseChunk(),
+  _matrixV_RSLS(),
+  _matrixW_RSLS(),
+  _matrixCols_RSLS(),
   _cyclicCommLeft(nullptr),
   _cyclicCommRight(nullptr),
   _parMatrixOps(nullptr),
@@ -75,7 +78,8 @@ MVQNPostProcessing:: MVQNPostProcessing
   _imvjRestartType(imvjRestartType),
   _imvjRestart(false),
   _chunkSize(chunkSize),
-  _RSLSreusedTimesteps(RSLSreusedTimesteps)
+  _RSLSreusedTimesteps(RSLSreusedTimesteps),
+  _usedColumnsPerTstep(5)
 {}
 
 // ==================================================================================
@@ -150,8 +154,17 @@ void MVQNPostProcessing:: initialize
 		global_n = _dimOffsets.back();
 	}
   
-  _invJacobian = Eigen::MatrixXd::Zero(global_n, entries);
-  _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
+	// only need memory for Jacobain of not in restart mode
+	if(not _imvjRestart){
+	  _invJacobian = Eigen::MatrixXd::Zero(global_n, entries);
+	  _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
+	}
+	// initialize V, W matrices for the LS restart
+	if(_imvjRestartType == RS_LS){
+	  _matrixCols_RSLS.push_front(0);
+	  _matrixV_RSLS = Eigen::MatrixXd::Zero(entries, 0);
+	  _matrixW_RSLS = Eigen::MatrixXd::Zero(entries, 0);
+	}
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
 
   _preconditioner->triggerGlobalWeights(global_n);
@@ -222,9 +235,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
         //                                         |--- J_prev ---|
         // iterate over all stored Wtil and Z matrices in current chunk
         if(_imvjRestart){
-          preciceDebug("chunk size: "<<_WtilChunk.size());
           for(int i = 0; i < (int)_WtilChunk.size(); i++){
-           // preciceDebug("Wtil: \n"<<_WtilChunk[i].bottomRows(3));
             int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
             assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
             Eigen::VectorXd Zv = Eigen::VectorXd::Zero(colsLSSystemBackThen);
@@ -232,6 +243,15 @@ void MVQNPostProcessing::updateDifferenceMatrices
             _parMatrixOps->multiply(_pseudoInverseChunk[i], v, Zv, colsLSSystemBackThen, getLSSystemRows(), 1);
             // multiply: Wtil^q * Zv  dimensions: (n x m) * (m x 1), fully local
             wtil += _WtilChunk[i] * Zv;
+          }
+
+          // store columns if restart mode = RS-LS
+          if(_imvjRestartType == RS_LS){
+            if(_matrixCols_RSLS.front() <= _usedColumnsPerTstep){
+              utils::appendFront(_matrixV_RSLS, v);
+              utils::appendFront(_matrixW_RSLS, w);
+              _matrixCols_RSLS.front()++;
+            }
           }
 
         // imvj without restart is used, but efficient update, i.e. no Jacobian assembly in each iteration
@@ -605,8 +625,6 @@ void MVQNPostProcessing::restartIMVJ()
 
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
     for(; q < (int)_WtilChunk.size(); q++){
-
-      //preciceDebug("update svd factorization of Jacobian with rank-k update Wtil * Z. Wtil: ("<<_WtilChunk[q].rows()<<","<<_WtilChunk[q].cols()<<") Z: ("<<_pseudoInverseChunk[q].rows()<<","<<_pseudoInverseChunk[q].cols()<<")");
       // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
       _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q].transpose());
     }
@@ -636,7 +654,61 @@ void MVQNPostProcessing::restartIMVJ()
 
   }else if(_imvjRestartType == MVQNPostProcessing::RS_LS)
   {
+    // drop all stored Wtil^q, Z^q matrices
+   _WtilChunk.clear();
+   _pseudoInverseChunk.clear();
 
+   // avoid that the syste mis getting too squared
+   while(_matrixV_RSLS.cols()*2 >= getLSSystemRows()){
+     removeMatrixColumnRSLS(_matrixV_RSLS.cols()-1);
+   }
+
+   // preconditioning
+   _preconditioner->apply(_matrixW_RSLS);
+   _preconditioner->apply(_matrixV_RSLS);
+
+   QRFactorization qr(_filter);
+   // for QR2-filter, the QR-dec is computed in qr-applyFilter()
+   if(_filter != PostProcessing::QR2FILTER){
+     for(int i = 0; i < (int)_matrixV_RSLS.cols(); i++){
+       Eigen::VectorXd v = _matrixV_RSLS.col(i);
+       qr.pushBack(v);  // same order as matrix V_RSLS
+     }
+   }
+
+   // apply filter
+   if (_filter != PostProcessing::NOFILTER) {
+     std::vector<int> delIndices(0);
+     qr.applyFilter(_singularityLimit, delIndices, _matrixV_RSLS);
+     // start with largest index (as V,W matrices are shrinked and shifted
+     for (int i = delIndices.size() - 1; i >= 0; i--) {
+       removeMatrixColumnRSLS(delIndices[i]);
+     }
+     assertion2(_matrixV_RSLS.cols() == qr.cols(), _matrixV_RSLS.cols(), qr.cols());
+   }
+
+   /**
+    *   computation of pseudo inverse matrix Z = (V^TV)^-1 * V^T as solution
+    *   to the equation R*z = Q^T(i) for all columns i,  via back substitution.
+    */
+    auto Q = qr.matrixQ();
+    auto R = qr.matrixR();
+    Eigen::MatrixXd pseudoInverse(qr.cols(), qr.rows());
+    Eigen::VectorXd yVec(pseudoInverse.rows());
+
+    // backsubstitution
+    for (int i = 0; i < Q.rows(); i++) {
+      Eigen::VectorXd Qrow = Q.row(i);
+      yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
+      pseudoInverse.col(i) = yVec;
+    }
+
+    // store factorization of least-squares initial guess for Jacobian
+   _WtilChunk.push_back(_matrixW_RSLS);
+   _pseudoInverseChunk.push_back(pseudoInverse);
+
+   _preconditioner->revert(_matrixW_RSLS);
+   _preconditioner->revert(_matrixV_RSLS);
 
   }else if(_imvjRestartType == MVQNPostProcessing::RS_ZERO)
   {
@@ -658,6 +730,30 @@ void MVQNPostProcessing:: specializedIterationsConverged
 {
   preciceTrace(__func__);
 
+  // truncate V_RSLS and W_RSLS matrices according to _RSLSreusedTimesteps
+  if(_imvjRestartType == RS_LS){
+    if (_matrixCols_RSLS.front() == 0) { // Did only one iteration
+      _matrixCols_RSLS.pop_front();
+    }
+    if (_RSLSreusedTimesteps == 0) {
+      _matrixV_RSLS.resize(0,0);
+      _matrixW_RSLS.resize(0,0);
+      _matrixCols_RSLS.clear();
+    }else if ((int) _matrixCols_RSLS.size() > _RSLSreusedTimesteps) {
+      int toRemove = _matrixCols_RSLS.back();
+      assertion1(toRemove > 0, toRemove);
+      if(_matrixV_RSLS.size() > 0) assertion2(_matrixV_RSLS.cols() > toRemove, _matrixV_RSLS.cols(), toRemove);
+
+      // remove columns
+      for (int i = 0; i < toRemove; i++) {
+        utils::removeColumnFromMatrix(_matrixV_RSLS, _matrixV_RSLS.cols() - 1);
+        utils::removeColumnFromMatrix(_matrixW_RSLS, _matrixW_RSLS.cols() - 1);
+      }
+      _matrixCols.pop_back();
+    }
+    _matrixCols_RSLS.push_front(0);
+  }
+
 
   // if efficient update of imvj is enabled
   if(not _alwaysBuildJacobian || _imvjRestart)
@@ -665,7 +761,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
     // need to apply the preconditioner, as all data structures are reverted after
     // call to computeQNUpdate. Need to call this before the preconditioner is updated.
 
-    // |- PRECONDITIONING (all objects are unscaled) -----------|
+    // |= PRECONDITIONING (all objects are unscaled) ============|
     // _preconditioner->apply(_residuals);
     _preconditioner->apply(_matrixV);
     _preconditioner->apply(_matrixW);  // only needed in buildWtil(), should not be called in buildJacobain() TODO
@@ -700,12 +796,13 @@ void MVQNPostProcessing:: specializedIterationsConverged
       }
       _preconditioner->newQRfulfilled();
     }
-    // |--------------------                        ------------|
+    // |===================                        ============|
 
     // apply the configured filter to the LS system
     // as it changed in BaseQNPostProcessing::iterationsConverged()
     BaseQNPostProcessing::applyFilter();
 
+    //              ------- RESTART/ JACOBIAN ASSEMBLY -------
     if(_imvjRestart){
 
       // add the matrices Wtil and Z of the converged configuration to the storage containers
@@ -727,8 +824,9 @@ void MVQNPostProcessing:: specializedIterationsConverged
       // compute explicit representation of Jacobian
       buildJacobian();
     }
+    //              ------------------------------------------
 
-    // |- PRECONDITIONING ----                       ------------|
+    // |= PRECONDITIONING ====                       ============|
     //_preconditioner->revert(_residuals); // TODO not needed I think ??
     _preconditioner->revert(_matrixV);
     _preconditioner->revert(_matrixW); // TODO: guess not needed
@@ -746,7 +844,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
       _preconditioner->revert(_oldInvJacobian,false);
       _preconditioner->apply(_oldInvJacobian,true);
     }
-    // |--------------------                        ------------|
+    // |=====================                        ============|
 
 
     /** in case of enforced initial relaxation, the matrices are cleared
@@ -786,6 +884,36 @@ void MVQNPostProcessing:: removeMatrixColumn
 
   BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }
+
+// ==================================================================================
+void MVQNPostProcessing:: removeMatrixColumnRSLS
+(
+  int columnIndex)
+{
+  preciceTrace2(__func__, columnIndex, _matrixV_RSLS.cols());
+  assertion(_matrixV_RSLS.cols() > 1);
+
+  utils::removeColumnFromMatrix(_matrixV_RSLS, columnIndex);
+  utils::removeColumnFromMatrix(_matrixW_RSLS, columnIndex);
+
+  // Reduce column count
+  std::deque<int>::iterator iter = _matrixCols_RSLS.begin();
+  int cols = 0;
+  while (iter != _matrixCols_RSLS.end()) {
+    cols += *iter;
+    if (cols > columnIndex) {
+      assertion(*iter > 0);
+      *iter -= 1;
+      if (*iter == 0) {
+        _matrixCols_RSLS.erase(iter);
+      }
+      break;
+    }
+    iter++;
+  }
+}
+
+
 
 }}} // namespace precice, cplscheme, impl
 
