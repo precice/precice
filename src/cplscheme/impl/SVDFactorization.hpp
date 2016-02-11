@@ -162,13 +162,14 @@ public:
       */
      _cols = _sigma.size();
 
+     int waste = 0;
      for(int i = 0; i < (int)_sigma.size(); i++){
        if(_sigma(i) < (int)_sigma(0) * _truncationEps){
          _cols = i;
+         waste = _sigma.size()-i;
          break;
        }
      }
-     int waste = _sigma.size()-i;
 
      _psi.conservativeResize(_rows, _cols);
      _phi.conservativeResize(_rows, _cols);
