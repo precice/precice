@@ -168,7 +168,7 @@ private:
          maxIterationsUsed ( 0 ),
          timestepsReused ( 0 ),
          filter ( impl::PostProcessing::NOFILTER ),
-         imvjRestartType( impl::MVQNPostProcessing::NO_RESTART ),
+         imvjRestartType( 0 ), // NO-RESTART
          imvjChunkSize ( 0 ),
          imvjRSLS_reustedTimesteps( 0 ),
          singularityLimit ( 0.0 ),

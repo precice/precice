@@ -274,6 +274,8 @@ void PostProcessingConfiguration:: xmlTagCallback
   }else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _config.preconditionerType = callingTag.getStringAttributeValue(ATTR_TYPE);
   }else if (callingTag.getName() == TAG_IMVJRESTART){
+
+    #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
     auto f = callingTag.getStringAttributeValue(ATTR_TYPE);
     if(f == VALUE_NO_RESTART){
@@ -290,6 +292,9 @@ void PostProcessingConfiguration:: xmlTagCallback
       _config.imvjChunkSize = 0;
       assertion(false);
     }
+    #else
+          preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
+    #endif
   }
 }
 
