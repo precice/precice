@@ -2,8 +2,10 @@
  * SVDFactorization.cpp
  *
  *  Created on: Feb 5, 2016
- *      Author: scheufks
+ *      Author: Klaudius Scheufele
  */
+
+#ifndef PRECICE_NO_MPI
 
 #include "SVDFactorization.hpp"
 #include "utils/Dimensions.hpp"
@@ -144,3 +146,5 @@ int SVDFactorization::rank()
 
 
 }}} // namespace precice, cplscheme, impl
+
+#endif // PRECICE_NO_MPI

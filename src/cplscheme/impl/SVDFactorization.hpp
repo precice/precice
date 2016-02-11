@@ -2,8 +2,10 @@
  * SVDFactorization.hpp
  *
  *  Created on: Feb 5, 2016
- *      Author: scheufks
+ *      Author: Klaudius Scheufele
  */
+
+#ifndef PRECICE_NO_MPI
 
 #ifndef SVDFACTORIZATION_HPP_
 #define SVDFACTORIZATION_HPP_
@@ -299,3 +301,4 @@ private:
 
 
 #endif /* SVDFACTORIZATION_HPP_ */
+#endif /* PRECICE_NO_MPI */

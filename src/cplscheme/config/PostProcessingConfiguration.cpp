@@ -567,6 +567,7 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     ValidatorEquals<std::string> validRS_LS(VALUE_LS_RESTART );
     ValidatorEquals<std::string> validRS_SVD(VALUE_SVD_RESTART );
     attrRestartName.setValidator (validNO_RS || validRS_ZERO || validRS_LS ||validRS_SVD);
+    attrRestartName.setDefaultValue(VALUE_SVD_RESTART);
     tagIMVJRESTART.addAttribute(attrRestartName);
     tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used\n"
               "  no-restart: IMVJ runs in normal mode with explicit representation of Jacobian\n"
@@ -575,11 +576,14 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
               "  RS-SVD:     IMVJ runs in restart mode. After M time steps a truncated SVD of the Jacobian is updated.\n"
               );
     XMLAttribute<int> attrChunkSize(ATTR_IMVJCHUNKSIZE);
-    attrChunkSize.setDocumentation("Specifies the number of time steps M after which the IMVJ restarts, if run in restart-mode.");
+    attrChunkSize.setDocumentation("Specifies the number of time steps M after which the IMVJ restarts, if run in restart-mode. Defaul value is M=8.");
+    attrChunkSize.setDefaultValue(8);
     XMLAttribute<int> attrReusedTimeStepsAtRestart(ATTR_RSLS_REUSEDTSTEPS);
-    attrChunkSize.setDocumentation("If IMVJ restart-mode=RS-LS, the number of reused time steps at restart can be specified.");
+    attrReusedTimeStepsAtRestart.setDocumentation("If IMVJ restart-mode=RS-LS, the number of reused time steps at restart can be specified.");
+    attrReusedTimeStepsAtRestart.setDefaultValue(8);
     XMLAttribute<double> attrRSSVD_truncationEps(ATTR_RSSVD_TRUNCATIONEPS);
-    attrChunkSize.setDocumentation("If IMVJ restart-mode=RS-SVD, the truncation threshold for the updated SVD can be set.");
+    attrRSSVD_truncationEps.setDocumentation("If IMVJ restart-mode=RS-SVD, the truncation threshold for the updated SVD can be set.");
+    attrRSSVD_truncationEps.setDefaultValue(1e-4);
     tagIMVJRESTART.addAttribute(attrChunkSize);
     tagIMVJRESTART.addAttribute(attrReusedTimeStepsAtRestart);
     tagIMVJRESTART.addAttribute(attrRSSVD_truncationEps);
