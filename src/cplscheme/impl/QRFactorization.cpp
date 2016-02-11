@@ -221,9 +221,11 @@ void QRFactorization::deleteColumn(int k)
 
       
 // ATTENTION: This method works on the memory of vector v, thus changes the vector v.
-bool QRFactorization::insertColumn(int k, EigenVector& v, double singularityLimit)
+bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singularityLimit)
 {
   preciceTrace1("insertColumn()", k);
+
+  EigenVector v(vec);
 
   if(_cols == 0)
     _rows = v.size();
@@ -658,12 +660,12 @@ void QRFactorization::reset(
 }
 
 
-void QRFactorization::pushFront(EigenVector& v)
+void QRFactorization::pushFront(const EigenVector& v)
 {
   insertColumn(0, v);
 }
 
-void QRFactorization::pushBack(EigenVector& v)
+void QRFactorization::pushBack(const EigenVector& v)
 {
   insertColumn(_cols, v);
 }

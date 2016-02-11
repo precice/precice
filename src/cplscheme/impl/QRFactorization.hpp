@@ -114,7 +114,7 @@ public:
     * @brief inserts a new column at arbitrary position and updates the QR factorization
     * This function works on the memory of v, thus changes the Vector v.
     */
-   bool insertColumn(int k, EigenVector& v, double singularityLimit = 0);
+   bool insertColumn(int k, const EigenVector& v, double singularityLimit = 0);
    
    /**
    * @brief updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted. 
@@ -127,14 +127,14 @@ public:
     * and updates the QR factorization.
     * This function works on the memory of v, thus changes the Vector v.
     */
-   void pushFront(EigenVector& v);
+   void pushFront(const EigenVector& v);
    
    /**
     * @brief inserts a new column at position _cols-1, i.e., appends a column at the end
     * and updates the QR factorization
     * This function works on the memory of v, thus changes the Vector v.
     */
-   void pushBack(EigenVector& v);
+   void pushBack(const EigenVector& v);
    
    
    /**
