@@ -158,6 +158,9 @@ private:
    /// @brief: Number of used columns per time step. Always the first _usedColumnsPerTstep are used.
    int _usedColumnsPerTstep;
 
+   /// @brief tracks the number of restarts of IMVJ
+   int _nbRestarts;
+
 
    /** @brief: comptes the MVQN update using QR decomposition of V,
     *        furthermore it updates the inverse of the system jacobian

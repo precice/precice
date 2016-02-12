@@ -32,6 +32,7 @@ SVDFactorization::SVDFactorization(
   _rows(0),
   _cols(0),
   _globalRows(0),
+  _waste(0),
   _truncationEps(eps),
   _preconditionerApplied(false),
   _initialized(false),
@@ -127,6 +128,18 @@ bool SVDFactorization::isSVDinitialized(){
 void SVDFactorization::setThreshold(double eps)
 {
   _truncationEps = eps;
+}
+
+double SVDFactorization::getThreshold()
+{
+  return _truncationEps;
+}
+
+int SVDFactorization::getWaste()
+{
+  int r = _waste;
+  _waste = 0;
+  return r;
 }
 
 int SVDFactorization::cols()

@@ -248,6 +248,10 @@ protected:
    std::vector<int> _dimOffsets;
 
 
+   /// @brief write some debug/post processing info to file
+   std::fstream _infostream;
+
+
    /** @brief: computes number of cols in least squares system, i.e, number of cols in
     *  _matrixV, _matrixW, _qrV, etc..
     *	 This is necessary only for master-slave mode, when some procs do not have
@@ -320,10 +324,6 @@ private:
   /// @ brief additional debugging info, is not important for computation:
   int its,tSteps;
   int deletedColumns;
-
-  /// @brief write some debug/post processing info to file
-  std::fstream _infostream;
-
 
 };
 

@@ -170,6 +170,7 @@ public:
          break;
        }
      }
+     _waste += waste;
 
      _psi.conservativeResize(_rows, _cols);
      _phi.conservativeResize(_rows, _cols);
@@ -215,8 +216,14 @@ public:
    /// @brief: returns the rank of the truncated SVD factorization
    int rank();
 
+   /// @brief: returns the total number of truncated modes since last call to this method
+   int getWaste();
+
    /// @brief: sets the threshold for the truncation of the SVD factorization
    void setThreshold(double eps);
+
+   /// @brief: returns the truncation threshold for the SVD
+   double getThreshold();
 
    /// @brief: applies the preconditioner to the factorized and truncated representation of the Jacobian matrix
    void applyPreconditioner();
@@ -256,8 +263,11 @@ private:
   /// @brief number of columns, i.e., rank of the truncated svd
   int _cols;
 
-  /// @brief: numer of global rows, i.e., sum of _rows for all procs
+  /// @brief: number of global rows, i.e., sum of _rows for all procs
   int _globalRows;
+
+  // @brief total number of truncated modes after last call to method getWaste()
+  int _waste;
 
   ///@brief: Truncation parameter for the updated SVD decomposition
   double _truncationEps;

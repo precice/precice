@@ -95,8 +95,8 @@ BaseQNPostProcessing::BaseQNPostProcessing
       "Number of old timesteps to be reused for QN "
       << "post-processing has to be >= 0!");
 
-  //_infostream.open("postProcessingInfo.txt", std::ios_base::out);
-  //_infostream << std::setprecision(16);
+  _infostream.open("postProcessingInfo.txt", std::ios_base::out);
+  _infostream << std::setprecision(16);
   //_qrV.setfstream(&_infostream);
 }
 
@@ -168,14 +168,13 @@ void BaseQNPostProcessing::initialize(
       }
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
-    preciceDebug("Number of unknowns at the interface (global): "<<_dimOffsets[_dimOffsets.size()-1]);
+    preciceDebug("Number of unknowns at the interface (global): "<<_dimOffsets.back());
+    if (utils::MasterSlave::_masterMode)
+      _infostream<<"\n--------\n DOFs (global): "<<_dimOffsets.back()<<"\n offsets: "<<_dimOffsets<<std::endl;
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
     assertion2(entries == unknowns, entries, unknowns);
-    //writeInfo(ss.str());
-    //ss.clear();
-
   }
 
   // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
@@ -564,6 +563,9 @@ void BaseQNPostProcessing::iterationsConverged
   // -----------------------
   //_infostream << "\n ---------------- deletedColumns:" << deletedColumns
   //    << "\n\n ### time step:" << tSteps + 1 << " ###" << std::endl;
+  if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+    _infostream<<"# time step "<<tSteps<<" converged #\n iterations: "<<its<<"\n used cols: "<<getLSSystemCols()<<"\n del cols: "<<deletedColumns<<std::endl;
+
   its = 0;
   tSteps++;
   deletedColumns = 0;

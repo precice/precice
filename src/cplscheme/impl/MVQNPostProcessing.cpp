@@ -80,7 +80,8 @@ MVQNPostProcessing:: MVQNPostProcessing
   _imvjRestart(false),
   _chunkSize(chunkSize),
   _RSLSreusedTimesteps(RSLSreusedTimesteps),
-  _usedColumnsPerTstep(5)
+  _usedColumnsPerTstep(5),
+  _nbRestarts(0)
 {}
 
 // ==================================================================================
@@ -167,8 +168,10 @@ void MVQNPostProcessing:: initialize
 	  _matrixW_RSLS = Eigen::MatrixXd::Zero(entries, 0);
 	}
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
-
   _preconditioner->triggerGlobalWeights(global_n);
+
+  if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+    _infostream<<" IMVJ restart mode: "<<_imvjRestart<<"\n chunk size: "<<_chunkSize<<"\n trunc eps: "<<_svdJ.getThreshold()<<"\n R_RS: "<<_RSLSreusedTimesteps<<"\n--------\n"<<std::endl;
 }
 
 // ==================================================================================
@@ -615,10 +618,14 @@ void MVQNPostProcessing::computeNewtonUpdate
 void MVQNPostProcessing::restartIMVJ()
 {
   preciceTrace(__func__);
-
+  _nbRestarts++;
+  int used_storage = 0;
+  int theoreticalJ_storage = 2*getLSSystemRows()*_residuals.size() + 3*_residuals.size()*getLSSystemCols() + _residuals.size()*_residuals.size();
   //               ------------ RESTART SVD ------------
   if(_imvjRestartType == MVQNPostProcessing::RS_SVD)
   {
+    int rankBefore = _svdJ.rank();
+
     // if it is the first time step, there is no initial SVD, so take all Wtil, Z matrices
     // otherwise, the first element of each container holds the decomposition of the current
     // truncated SVD, i.e., Wtil^0 = \phi, Z^0 = S\psi^T, this should not be added to the SVD.
@@ -630,7 +637,11 @@ void MVQNPostProcessing::restartIMVJ()
     for(; q < (int)_WtilChunk.size(); q++){
       // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
       _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q].transpose());
+      used_storage += 2*_WtilChunk.size();
     }
+    int m = _WtilChunk[q].cols(), n = _WtilChunk[q].rows();
+    used_storage += 2*rankBefore*m + 4*m*n + 2*m*m + (rankBefore+m)*(rankBefore+m) + 2*n*(rankBefore+m);
+
     // drop all stored Wtil^q, Z^q matrices
     _WtilChunk.clear();
     _pseudoInverseChunk.clear();
@@ -647,6 +658,8 @@ void MVQNPostProcessing::restartIMVJ()
        for(int j=0; j < (int)Z.cols(); j++)
          Z(i,j) = phi(j,i) * sigma[i];
 
+    int rankAfter = _svdJ.rank();
+    int waste = _svdJ.getWaste();
 
     // store factorized truncated SVD of J
     _WtilChunk.push_back(psi);
@@ -655,7 +668,10 @@ void MVQNPostProcessing::restartIMVJ()
     // revert preconditioner of matrices PHI, PSI of truncated SVD representation of J
     _svdJ.revertPreconditioner();
 
-    preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<sigma.size());
+    preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste);
+    double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
+    if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+      _infostream<<" - MVJ-RESTART " <<_nbRestarts<<", mode= SVD -\n  new modes: "<<rankAfter-rankBefore<<"\n  rank svd: "<<rankAfter<<"\n  truncated modes: "<<waste<<"\n  used storage: "<<percentage<<" %\n"<<std::endl;
 
     //        ------------ RESTART LEAST SQUARES ------------
   }else if(_imvjRestartType == MVQNPostProcessing::RS_LS)
@@ -718,7 +734,8 @@ void MVQNPostProcessing::restartIMVJ()
    _preconditioner->revert(_matrixV_RSLS);
 
    preciceDebug("MVJ-RESTART, mode=LS. Restart with "<<_matrixV_RSLS.cols()<<" columns from "<<_RSLSreusedTimesteps<<" time steps.");
-
+   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+         _infostream<<" - MVJ-RESTART" <<_nbRestarts<<", mode= LS -\n  used cols: "<<_matrixV_RSLS.cols()<<"\n  R_RS: "<<_RSLSreusedTimesteps<<"\n"<<std::endl;
 
    //            ------------ RESTART ZERO ------------
   }else if(_imvjRestartType == MVQNPostProcessing::RS_ZERO)
