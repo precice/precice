@@ -624,7 +624,7 @@ void MVQNPostProcessing::restartIMVJ()
   //               ------------ RESTART SVD ------------
   if(_imvjRestartType == MVQNPostProcessing::RS_SVD)
   {
-    int rankBefore = _svdJ.rank();
+    int rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
 
     // if it is the first time step, there is no initial SVD, so take all Wtil, Z matrices
     // otherwise, the first element of each container holds the decomposition of the current
