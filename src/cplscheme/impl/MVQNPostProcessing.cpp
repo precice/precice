@@ -251,7 +251,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
 
           // store columns if restart mode = RS-LS
           if(_imvjRestartType == RS_LS){
-            if(_matrixCols_RSLS.front() <= _usedColumnsPerTstep){
+            if(_matrixCols_RSLS.front() < _usedColumnsPerTstep){
               utils::appendFront(_matrixV_RSLS, v);
               utils::appendFront(_matrixW_RSLS, w);
               _matrixCols_RSLS.front()++;
@@ -735,7 +735,7 @@ void MVQNPostProcessing::restartIMVJ()
 
    preciceDebug("MVJ-RESTART, mode=LS. Restart with "<<_matrixV_RSLS.cols()<<" columns from "<<_RSLSreusedTimesteps<<" time steps.");
    if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
-         _infostream<<" - MVJ-RESTART" <<_nbRestarts<<", mode= LS -\n  used cols: "<<_matrixV_RSLS.cols()<<"\n  R_RS: "<<_RSLSreusedTimesteps<<"\n"<<std::endl;
+         _infostream<<" - MVJ-RESTART" <<_nbRestarts<<", mode= LS -\n  used cols: "<<qr.cols()<<"\n  R_RS: "<<_RSLSreusedTimesteps<<"\n"<<std::endl;
 
    //            ------------ RESTART ZERO ------------
   }else if(_imvjRestartType == MVQNPostProcessing::RS_ZERO)
