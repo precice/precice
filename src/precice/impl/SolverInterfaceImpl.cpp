@@ -316,8 +316,23 @@ double SolverInterfaceImpl:: initialize()
     }
 
     preciceDebug("Perform initializations");
-    // sort MeshContexts, provided needs to come first, and all communicated meshes must have the same order
-    // on all participants
+
+    //create geometry. we need to do this in two loops, to first communicate the mesh and later decompose it
+    //originally this was done in one loop. this however gave deadlock if two meshes needed to be communicated cross-wise.
+    //both loops need a different sorting
+
+    // sort meshContexts by name, for communication in right order.
+    std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
+        []( MeshContext* lhs, const MeshContext* rhs) -> bool
+        {
+          return lhs->mesh->getName() < rhs->mesh->getName();
+        } );
+
+    for (MeshContext* meshContext : _accessor->usedMeshContexts()){
+      prepareGeometry(*meshContext);
+    }
+
+    // now sort provided meshes up front, to have them ready for the decomposition
     std::sort (_accessor->usedMeshContexts().begin(), _accessor->usedMeshContexts().end(),
         []( MeshContext* lhs, const MeshContext* rhs) -> bool
         {
@@ -331,8 +346,9 @@ double SolverInterfaceImpl:: initialize()
         } );
 
     for (MeshContext* meshContext : _accessor->usedMeshContexts()){
-      createMeshContext(*meshContext);
+      createGeometry(*meshContext);
     }
+
 
     if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
       typedef std::map<std::string,M2NWrap>::value_type M2NPair;
@@ -1976,35 +1992,52 @@ void SolverInterfaceImpl:: configureSolverGeometries
   }
 }
 
-void SolverInterfaceImpl:: createMeshContext
+void SolverInterfaceImpl:: prepareGeometry
 (
   MeshContext& meshContext )
 {
-  preciceTrace1("createMeshContext()", meshContext.mesh->getName());
+  preciceTrace1("prepareGeometry()", meshContext.mesh->getName());
   assertion ( not _clientMode );
   using boost::get;
   mesh::PtrMesh mesh = meshContext.mesh;
-  geometry::PtrGeometry geometry = meshContext.geometry;
   assertion(mesh.use_count() > 0);
   std::string meshName(mesh->getName());
   if (_restartMode){
     std::string fileName("precice_checkpoint_" + _accessorName + "_" + meshName);
+    preciceDebug("Importing geometry = " << mesh->getName());
     geometry::ImportGeometry* importGeo = new geometry::ImportGeometry (
         utils::DynVector(_dimensions, 0.0), fileName,
         geometry::ImportGeometry::VRML_1_FILE, true, not meshContext.provideMesh);
-    geometry = geometry::PtrGeometry ( importGeo );
+    meshContext.geometry.reset(importGeo);
   }
-  else if ( (not _geometryMode) && (geometry.use_count() > 0) ){
-    utils::DynVector offset(geometry->getOffset());
+  else if ( (not _geometryMode) && (meshContext.geometry.use_count() > 0) ){
+    utils::DynVector offset(meshContext.geometry->getOffset());
     offset += meshContext.localOffset;
     preciceDebug("Adding local offset = " << meshContext.localOffset
                  << " to mesh " << mesh->getName());
-    geometry->setOffset(offset);
+    meshContext.geometry->setOffset(offset);
   }
 
-  assertion(not (_geometryMode && (geometry.use_count() == 0)));
-  if (geometry.use_count() > 0){
-    geometry->create(*mesh);
+  assertion(not (_geometryMode && (meshContext.geometry.use_count() == 0)));
+  if (meshContext.geometry.use_count() > 0){
+    meshContext.geometry->prepare(*mesh);
+  }
+}
+
+void SolverInterfaceImpl:: createGeometry
+(
+  MeshContext& meshContext )
+{
+  preciceTrace1("createGeometry()", meshContext.mesh->getName());
+  assertion ( not _clientMode );
+  using boost::get;
+  mesh::PtrMesh mesh = meshContext.mesh;
+  assertion(mesh.use_count() > 0);
+  std::string meshName(mesh->getName());
+
+  assertion(not (_geometryMode && (meshContext.geometry.use_count() == 0)));
+  if (meshContext.geometry.use_count() > 0){
+    meshContext.geometry->create(*mesh);
     preciceDebug("Created geometry \"" << meshName
                  << "\" with # vertices = " << mesh->vertices().size());
     mesh->computeDistribution();

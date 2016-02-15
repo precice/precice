@@ -48,11 +48,11 @@ void CommunicatedGeometry:: addReceiver
   _receivers[receiver] = m2n;
 }
 
-void CommunicatedGeometry:: specializedCreate
+void CommunicatedGeometry:: prepare
 (
   mesh::Mesh& seed )
 {
-  preciceTrace1 ( "specializedCreate()", seed.getName() );
+  preciceTrace1 ( "prepare()", seed.getName() );
   preciceCheck ( not _receivers.empty(), "specializedCreate()",
                  "No receivers specified for communicated geometry to create "
                  << "mesh \"" << seed.getName() << "\"!" );
@@ -67,6 +67,18 @@ void CommunicatedGeometry:: specializedCreate
                   << "\" uses a communicated geometry to create mesh \""
                   << seed.getName()
                   << "\" but is neither provider nor receiver!" );
+  }
+}
+
+void CommunicatedGeometry:: specializedCreate
+(
+  mesh::Mesh& seed )
+{
+  preciceTrace1 ( "specializedCreate()", seed.getName() );
+  if ( utils::contained(_accessorName, _receivers) ) {
+    if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
+      _decomposition->decompose(seed);
+    }
   }
 }
 
@@ -140,9 +152,6 @@ void CommunicatedGeometry:: receiveMesh(
     m2n::M2N::SharedPointer m2n ( _receivers[_accessorName] );
     com::CommunicateMesh(m2n->getMasterCommunication()).receiveMesh ( seed, 0 );
     seed.setGlobalNumberOfVertices(seed.vertices().size());
-  }
-  if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-    _decomposition->decompose(seed);
   }
 }
 
