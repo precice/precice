@@ -680,62 +680,65 @@ void MVQNPostProcessing::restartIMVJ()
    _WtilChunk.clear();
    _pseudoInverseChunk.clear();
 
-   // avoid that the syste mis getting too squared
-   while(_matrixV_RSLS.cols()*2 >= getLSSystemRows()){
-     removeMatrixColumnRSLS(_matrixV_RSLS.cols()-1);
-   }
-
-   // preconditioning
-   _preconditioner->apply(_matrixW_RSLS);
-   _preconditioner->apply(_matrixV_RSLS);
-
-   QRFactorization qr(_filter);
-   qr.setGlobalRows(getLSSystemRows());
-   // for QR2-filter, the QR-dec is computed in qr-applyFilter()
-   if(_filter != PostProcessing::QR2FILTER){
-     for(int i = 0; i < (int)_matrixV_RSLS.cols(); i++){
-       Eigen::VectorXd v = _matrixV_RSLS.col(i);
-       qr.pushBack(v);  // same order as matrix V_RSLS
+   if(_matrixV_RSLS.cols() > 0){
+     // avoid that the syste mis getting too squared
+     while(_matrixV_RSLS.cols()*2 >= getLSSystemRows()){
+       removeMatrixColumnRSLS(_matrixV_RSLS.cols()-1);
      }
-   }
 
-   // apply filter
-   if (_filter != PostProcessing::NOFILTER) {
-     std::vector<int> delIndices(0);
-     qr.applyFilter(_singularityLimit, delIndices, _matrixV_RSLS);
-     // start with largest index (as V,W matrices are shrinked and shifted
-     for (int i = delIndices.size() - 1; i >= 0; i--) {
-       removeMatrixColumnRSLS(delIndices[i]);
+     // preconditioning
+     _preconditioner->apply(_matrixW_RSLS);
+     _preconditioner->apply(_matrixV_RSLS);
+
+     QRFactorization qr(_filter);
+     qr.setGlobalRows(getLSSystemRows());
+     // for QR2-filter, the QR-dec is computed in qr-applyFilter()
+     if(_filter != PostProcessing::QR2FILTER){
+       for(int i = 0; i < (int)_matrixV_RSLS.cols(); i++){
+         Eigen::VectorXd v = _matrixV_RSLS.col(i);
+         qr.pushBack(v);  // same order as matrix V_RSLS
+       }
      }
-     assertion2(_matrixV_RSLS.cols() == qr.cols(), _matrixV_RSLS.cols(), qr.cols());
+
+     // apply filter
+     if (_filter != PostProcessing::NOFILTER) {
+       std::vector<int> delIndices(0);
+       qr.applyFilter(_singularityLimit, delIndices, _matrixV_RSLS);
+       // start with largest index (as V,W matrices are shrinked and shifted
+       for (int i = delIndices.size() - 1; i >= 0; i--) {
+         removeMatrixColumnRSLS(delIndices[i]);
+       }
+       assertion2(_matrixV_RSLS.cols() == qr.cols(), _matrixV_RSLS.cols(), qr.cols());
+     }
+
+     /**
+      *   computation of pseudo inverse matrix Z = (V^TV)^-1 * V^T as solution
+      *   to the equation R*z = Q^T(i) for all columns i,  via back substitution.
+      */
+      auto Q = qr.matrixQ();
+      auto R = qr.matrixR();
+      Eigen::MatrixXd pseudoInverse(qr.cols(), qr.rows());
+      Eigen::VectorXd yVec(pseudoInverse.rows());
+
+      // backsubstitution
+      for (int i = 0; i < Q.rows(); i++) {
+        Eigen::VectorXd Qrow = Q.row(i);
+        yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
+        pseudoInverse.col(i) = yVec;
+      }
+
+      // store factorization of least-squares initial guess for Jacobian
+     _WtilChunk.push_back(_matrixW_RSLS);
+     _pseudoInverseChunk.push_back(pseudoInverse);
+
+     _preconditioner->revert(_matrixW_RSLS);
+     _preconditioner->revert(_matrixV_RSLS);
+
    }
-
-   /**
-    *   computation of pseudo inverse matrix Z = (V^TV)^-1 * V^T as solution
-    *   to the equation R*z = Q^T(i) for all columns i,  via back substitution.
-    */
-    auto Q = qr.matrixQ();
-    auto R = qr.matrixR();
-    Eigen::MatrixXd pseudoInverse(qr.cols(), qr.rows());
-    Eigen::VectorXd yVec(pseudoInverse.rows());
-
-    // backsubstitution
-    for (int i = 0; i < Q.rows(); i++) {
-      Eigen::VectorXd Qrow = Q.row(i);
-      yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
-      pseudoInverse.col(i) = yVec;
-    }
-
-    // store factorization of least-squares initial guess for Jacobian
-   _WtilChunk.push_back(_matrixW_RSLS);
-   _pseudoInverseChunk.push_back(pseudoInverse);
-
-   _preconditioner->revert(_matrixW_RSLS);
-   _preconditioner->revert(_matrixV_RSLS);
 
    preciceDebug("MVJ-RESTART, mode=LS. Restart with "<<_matrixV_RSLS.cols()<<" columns from "<<_RSLSreusedTimesteps<<" time steps.");
    if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
-         _infostream<<" - MVJ-RESTART" <<_nbRestarts<<", mode= LS -\n  used cols: "<<qr.cols()<<"\n  R_RS: "<<_RSLSreusedTimesteps<<"\n"<<std::endl;
+         _infostream<<" - MVJ-RESTART" <<_nbRestarts<<", mode= LS -\n  used cols: "<<_matrixV_RSLS.cols()<<"\n  R_RS: "<<_RSLSreusedTimesteps<<"\n"<<std::endl;
 
    //            ------------ RESTART ZERO ------------
   }else if(_imvjRestartType == MVQNPostProcessing::RS_ZERO)
