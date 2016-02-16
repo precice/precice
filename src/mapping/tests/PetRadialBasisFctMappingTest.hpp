@@ -58,6 +58,8 @@ private:
 
   void testDistributedConservative2DV1();
   void testDistributedConservative2DV2();
+  void testDistributedConservative2DV3();
+  void testDistributedConservative2DV4();
 
   void testPetThinPlateSplines();
 

@@ -21,7 +21,7 @@ tarch::logging::Log PetRadialBasisFctMappingTest::_log ("precice::mapping::tests
 PetRadialBasisFctMappingTest:: PetRadialBasisFctMappingTest()
   :
   TestCase ( "precice::mapping::tests::PetRadialBasisFctMappingTest" ),
-  tolerance(1e-7)
+  tolerance(1e-6)
 {}
 
 void PetRadialBasisFctMappingTest:: run()
@@ -50,6 +50,8 @@ void PetRadialBasisFctMappingTest:: run()
       testMethod(testDistributedConsistent2DV2);
       testMethod(testDistributedConservative2DV1);
       testMethod(testDistributedConservative2DV2);
+      // testMethod(testDistributedConservative2DV3);
+      // testMethod(testDistributedConservative2DV4);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -220,6 +222,91 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2DV2()
                   globalIndexOffsets[utils::Parallel::getProcessRank()]
     );
 }
+
+/// Using meshes of different sizes, inMesh is smaller then outMesh
+void PetRadialBasisFctMappingTest::testDistributedConservative2DV3()
+{
+  preciceTrace("testDistributedConservative2DV3");
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(2.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
+  
+  testDistributed(mapping,
+                  { // Conservative mapping: The inMesh is local but rank 0 has no vertices
+                    {1, -1, {0, 0}, {1}},
+                    {1, -1, {1, 0}, {3}},
+                    {1, -1, {1, 1}, {4}},
+                    {2, -1, {2, 0}, {5}},
+                    {2, -1, {2, 1}, {6}},
+                    {3, -1, {3, 0}, {7}},
+                    {3, -1, {3, 1}, {8}}
+                  },
+                  { // The outMesh is distributed, rank 0 owns no vertex
+                    {-1, 1, {0, 0}, {0}},
+                    {-1, 1, {0, 1}, {0}},
+                    {-1, 1, {1, 0}, {0}},
+                    {-1, 1, {1, 1}, {0}},
+                    {-1, 2, {2, 0}, {0}},
+                    {-1, 2, {2, 1}, {0}},
+                    {-1, 3, {3, 0}, {0}},
+                    {-1, 3, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+                    // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
+                    {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+                    {1, {1}}, {1, {0}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+                    {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {0}}, {2, {0}}, {2, {0}},
+                    {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
+                  },
+                  globalIndexOffsets[utils::Parallel::getProcessRank()]
+    );
+}
+
+/// Using meshes of different sizes, outMesh is smaller then inMesh
+void PetRadialBasisFctMappingTest::testDistributedConservative2DV4()
+{
+  preciceTrace("testDistributedConservative2DV4");
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(4.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
+  
+  testDistributed(mapping,
+                  { // Conservative mapping: The inMesh is local
+                    {0, -1, {0, 0}, {1}},
+                    {0, -1, {0, 1}, {2}},
+                    {1, -1, {1, 0}, {3}},
+                    {1, -1, {1, 1}, {4}},
+                    {2, -1, {2, 0}, {5}},
+                    {2, -1, {2, 1}, {6}},
+                    {3, -1, {3, 0}, {7}},
+                    {3, -1, {3, 1}, {8}}
+                  },
+                  { // The outMesh is distributed, rank has no vertex at all
+                    {-1, 1, {0, 1}, {0}},
+                    {-1, 1, {1, 0}, {0}},
+                    {-1, 1, {1, 1}, {0}},
+                    {-1, 2, {2, 0}, {0}},
+                    {-1, 2, {2, 1}, {0}},
+                    {-1, 3, {3, 0}, {0}},
+                    {-1, 3, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+                    // {2, 3, 4, 3, 0, 0, 0, 0} on the second, ...
+                    {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+                    {1, {2.42855}}, {1, {3.61905}}, {1, {4.14286}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+                    {2, {0}}, {2, {0}}, {2, {0}}, {2, {5.33335942629867876263}}, {2, {5.85714}}, {2, {0}}, {2, {0}},
+                    {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7.04763872499617693990}}, {3, {7.57143}}
+                  },
+                  globalIndexOffsets[utils::Parallel::getProcessRank()]
+    );
+}
+// Python results:
+// 2.42857  3.61905  4.14286  5.33333  5.85714  7.04762  7.57143
+
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
 {
