@@ -15,5 +15,6 @@ public:
   explicit Logger(std::string module);
   };
 void setupLogging();
+void setMPIRank(const int rank);
 
 }}// namespace precice, logging

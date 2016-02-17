@@ -40,9 +40,9 @@ void setupLogging()
   using namespace boost::log;
   add_common_attributes();
   core::get()->add_global_attribute("Scope", attributes::named_scope());
-  core::get()->add_global_attribute("Rank", attributes::constant<int>(5));
+  core::get()->add_global_attribute("Rank", attributes::mutable_constant<int>(0));
   //core::get()->add_global_attribute("Foobar", attributes::mutable_constant<int>(10));
-  core::get()->add_global_attribute("Line", attributes::mutable_constant<int>(5));
+  core::get()->add_global_attribute("Line", attributes::mutable_constant<int>(0));
   core::get()->add_global_attribute("File", attributes::mutable_constant<std::string>(""));
   core::get()->add_global_attribute("Function", attributes::mutable_constant<std::string>(""));
 
@@ -79,5 +79,9 @@ void setupLogging()
 
   if (file.is_open())
     init_from_stream(file);
+}
+
+void setMPIRank(const int rank){
+  boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(boost::log::core::get()->get_global_attributes()["Rank"]).set(rank);
 }
 }}// namespace precice, logging
