@@ -111,7 +111,7 @@ public:
    *        In case of manifold mapping it also returns the design specification
    *        for the surrogate model which is updated in every iteration.
    */ // TODO: change to call by ref when Eigen is used.
-  virtual std::map<int, utils::DynVector> getDesignSpecification(DataMap& cplData);
+  virtual std::map<int, Eigen::VectorXd> getDesignSpecification(DataMap& cplData);
 
   /**
    * @brief Sets whether the solver has to evaluate the coarse or the fine model representation
@@ -321,28 +321,6 @@ private:
 
   /// @brief Indicates whether the design specification has been set and is active or not
   bool isSet(Eigen::VectorXd& designSpec);
-
-
-
-  // ========================================================================================
-  /**
-   * need to move that in a class/header that encapsulates the Eigen data types
-   */
-
-  /** @brief shifts all columns in the matrix A on column to the right and inserts vector
-   *         v as first column at pos 0. The last column is deleted.
-   */
-  void shiftSetFirst(Eigen::MatrixXd& A, Eigen::VectorXd& v);
-
-  /// @brief appends the vector v as first column at pos 0. The other columns are shifted right.
-  void appendFront(Eigen::MatrixXd& A, Eigen::VectorXd& v);
-
-  /** @brief removes an arbitrary column from the matrix A and shifts all columns that lie to the
-   *          right of this column to the left.
-   */
-  void removeColumnFromMatrix(
-      Eigen::MatrixXd& A, int col);
-
 
 };
 

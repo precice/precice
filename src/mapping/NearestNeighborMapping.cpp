@@ -1,5 +1,6 @@
 #include "NearestNeighborMapping.hpp"
 #include "query/FindClosestVertex.hpp"
+#include "Eigen/Dense"
 #include "logging/LogMakros.hpp"
 
 namespace precice {
@@ -75,8 +76,8 @@ void NearestNeighborMapping:: map
   int outputDataID )
 {
   ppreciceTrace2 ( "map()", inputDataID, outputDataID );
-  const utils::DynVector& inputValues = input()->data(inputDataID)->values();
-  utils::DynVector& outputValues = output()->data(outputDataID)->values();
+  const Eigen::VectorXd& inputValues = input()->data(inputDataID)->values();
+  Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();
   //assign(outputValues) = 0.0;
   int valueDimensions = input()->data(inputDataID)->getDimensions();
   assertion2 ( valueDimensions == output()->data(outputDataID)->getDimensions(),
@@ -91,7 +92,7 @@ void NearestNeighborMapping:: map
     for ( size_t i=0; i < outSize; i++ ){
       int inputIndex = _vertexIndices[i] * valueDimensions;
       for ( int dim=0; dim < valueDimensions; dim++ ){
-        outputValues[(i*valueDimensions)+dim] = inputValues[inputIndex+dim];
+        outputValues((i*valueDimensions)+dim) = inputValues(inputIndex+dim);
       }
     }
   }
@@ -102,7 +103,7 @@ void NearestNeighborMapping:: map
     for ( size_t i=0; i < inSize; i++ ){
       int outputIndex = _vertexIndices[i] * valueDimensions;
       for ( int dim=0; dim < valueDimensions; dim++ ){
-        outputValues[outputIndex+dim] += inputValues[(i*valueDimensions)+dim];
+        outputValues(outputIndex+dim) += inputValues((i*valueDimensions)+dim);
       }
     }
   }

@@ -14,6 +14,7 @@
 #include "QRFactorization.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include <string.h>
 #include <iostream>
 #include <sstream>
@@ -56,6 +57,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _firstIteration(true),
   _firstTimeStep(true),
   _hasNodesOnInterface(true),
+  _resetLS(false),
   _forceInitialRelaxation(forceInitialRelaxation),
   _oldXTilde(),
   _residuals(),
@@ -63,12 +65,12 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _matrixV(),
   _matrixW(),
   _qrV(filter),
+  _filter(filter),
   _matrixCols(),
   _dimOffsets(),
   _values(),
   _oldValues(),
   _oldResiduals(),
-  _filter(filter),
   _singularityLimit(singularityLimit),
   _designSpecification(),
   _matrixVBackup(),
@@ -90,9 +92,9 @@ BaseQNPostProcessing::BaseQNPostProcessing
       "Number of old timesteps to be reused for QN "
       << "post-processing has to be >= 0!");
 
-  _infostream.open("postProcessingInfo.txt", std::ios_base::out);
-  _infostream << std::setprecision(16);
-  _qrV.setfstream(&_infostream);
+  //_infostream.open("postProcessingInfo.txt", std::ios_base::out);
+  //_infostream << std::setprecision(16);
+  //_qrV.setfstream(&_infostream);
 }
 
 
@@ -121,13 +123,12 @@ void BaseQNPostProcessing::initialize(
   _firstIteration = true;
   _firstTimeStep = true;
 
-  double init = 0.0;
   assertion(_oldXTilde.size() == 0);assertion(_oldResiduals.size() == 0);
-  _oldXTilde.append(DataValues(entries, init));
-  _oldResiduals.append(DataValues(entries, init));
-  _residuals.append(DataValues(entries, init));
-  _values.append(DataValues(entries, init));
-  _oldValues.append(DataValues(entries, init));
+  _oldXTilde = Eigen::VectorXd::Zero(entries);
+  _oldResiduals = Eigen::VectorXd::Zero(entries);
+  _residuals = Eigen::VectorXd::Zero(entries);
+  _values = Eigen::VectorXd::Zero(entries);
+  _oldValues = Eigen::VectorXd::Zero(entries);
 
   // if design specifiaction not initialized yet
   if (not (_designSpecification.size() > 0)) {
@@ -164,12 +165,13 @@ void BaseQNPostProcessing::initialize(
       }
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
+    preciceDebug("Number of unknowns at the interface (global): "<<_dimOffsets[_dimOffsets.size()-1]);
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
     assertion2(entries == unknowns, entries, unknowns);
-    writeInfo(ss.str());
-    ss.clear();
+    //writeInfo(ss.str());
+    //ss.clear();
 
   }
 
@@ -181,8 +183,7 @@ void BaseQNPostProcessing::initialize(
     if (not utils::contained(pair.first, _dataIDs)) {
       _secondaryDataIDs.push_back(pair.first);
       int secondaryEntries = pair.second->values->size();
-      //      _secondaryOldXTildes[pair.first].append(DataValues(secondaryEntries, init));
-      _secondaryResiduals[pair.first].append(DataValues(secondaryEntries, init));
+      _secondaryResiduals[pair.first] = Eigen::VectorXd::Zero(secondaryEntries);
     }
   }
 
@@ -191,8 +192,7 @@ void BaseQNPostProcessing::initialize(
     int cols = pair.second->oldValues.cols();
     if (cols < 1) { // Add only, if not already done
       //assertion1(pair.second->values->size() > 0, pair.first);
-      pair.second->oldValues.append(
-          CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
+      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
 
@@ -222,23 +222,24 @@ void BaseQNPostProcessing::setDesignSpecification
  * @brief: Returns the design specification corresponding to the given coupling data.
  *         This information is needed for convergence measurements in the coupling scheme.
  *  ---------------------------------------------------------------------------------------------
- */        // TODO: change to call by ref when Eigen is used.
-std::map<int, utils::DynVector> BaseQNPostProcessing::getDesignSpecification
+ */
+std::map<int, Eigen::VectorXd> BaseQNPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
-  std::map<int, utils::DynVector> designSpecifications;
+  preciceTrace(__func__);
+  std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _dataIDs) {
       int size = cplData[id]->values->size();
-      utils::DynVector q(size, 0.0);
+      Eigen::VectorXd q = Eigen::VectorXd::Zero(size);
       for (int i = 0; i < size; i++) {
         q(i) = _designSpecification(i+off);
       }
       off += size;
-      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
       designSpecifications.insert(pair);
-    }
+  }
   return designSpecifications;
 }
 
@@ -255,8 +256,6 @@ void BaseQNPostProcessing::updateDifferenceMatrices
     DataMap& cplData)
 {
   preciceTrace("updateDiffernceMatrices()");
-  Event e(__func__, true, true); // time measurement, barrier
-  using namespace tarch::la;
 
   // Compute current residual: vertex-data - oldData
   _residuals = _values;
@@ -277,32 +276,31 @@ void BaseQNPostProcessing::updateDifferenceMatrices
         preciceWarning("updateDifferenceMatrices()",
             "The number of columns in the least squares system exceeded half the number of unknowns at the interface. The system will probably become bad or ill-conditioned and the quasi-Newton post processing may not converge. Maybe the number of allowed columns (maxIterationsUsed) should be limited.");
 
-      DataValues deltaR = _residuals;
+      Eigen::VectorXd deltaR = _residuals;
       deltaR -= _oldResiduals;
 
-      DataValues deltaXTilde = _values;
+      Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined = getLSSystemCols() <= getLSSystemRows();
       if (not columnLimitReached && overdetermined) {
 
-        _matrixV.appendFront(deltaR);
-        _matrixW.appendFront(deltaXTilde);
+        utils::appendFront(_matrixV, deltaR);
+        utils::appendFront(_matrixW, deltaXTilde);
 
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
         // QR decomposition and updae decomposition
 
         //apply scaling here
-
         _preconditioner->apply(deltaR);
         _qrV.pushFront(deltaR);
 
         _matrixCols.front()++;
         }
       else {
-        _matrixV.shiftSetFirst(deltaR);
-        _matrixW.shiftSetFirst(deltaXTilde);
+        utils::shiftSetFirst(_matrixV, deltaR);
+        utils::shiftSetFirst(_matrixW, deltaXTilde);
 
         // inserts column deltaR at pos. 0 to the QR decomposition and deletes the last column
         // the QR decomposition of V is updated
@@ -343,6 +341,8 @@ void BaseQNPostProcessing::performPostProcessing
   assertion2(_oldValues.size() == _oldXTilde.size(),_oldValues.size(), _oldXTilde.size());
   assertion2(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
 
+  // assume data structures associated with the LS system can be updated easily.
+
   // scale data values (and secondary data values)
   concatenateCouplingData(cplData);
 
@@ -359,15 +359,10 @@ void BaseQNPostProcessing::performPostProcessing
     _oldXTilde = _values; // Store x tilde
     _oldResiduals = _residuals; // Store current residual
 
-    // copying is removed when moving to Eigen
-    DataValues q(_residuals.size(), 0.0);
-    for (int i = 0; i < q.size(); i++)
-      q(i) = _designSpecification(i) * _initialRelaxation;
-
     // Perform constant relaxation
     // with residual: x_new = x_old + omega * (res-q)
     _residuals *= _initialRelaxation;
-    _residuals -= q;
+    _residuals -= (_designSpecification * _initialRelaxation);
     _residuals += _oldValues;
     _values = _residuals;
 
@@ -387,13 +382,15 @@ void BaseQNPostProcessing::performPostProcessing
       // re-computation of QR decomposition from _matrixV = _matrixVBackup
       // this occurs very rarely, to be precise, it occurs only if the coupling terminates
       // after the first iteration and the matrix data from time step t-2 has to be used
+      _preconditioner->apply(_matrixV);
       _qrV.reset(_matrixV, getLSSystemRows());
+      _preconditioner->revert(_matrixV);
+      _resetLS = true; // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
     }
 
     // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
     assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
-    for (int i = 0; i < _designSpecification.size(); i++)
-          _residuals(i) -= _designSpecification(i);
+    _residuals -= _designSpecification;
 
 
     /**
@@ -416,7 +413,7 @@ void BaseQNPostProcessing::performPostProcessing
       }
       _preconditioner->newQRfulfilled();
     }
-    e_applyPrecond.stop();
+    e_applyPrecond.stop();                                  // -------------
 
     // apply the configured filter to the LS system
     applyFilter();
@@ -424,7 +421,7 @@ void BaseQNPostProcessing::performPostProcessing
     /**
      * compute quasi-Newton update
      */
-    DataValues xUpdate(_residuals.size(), 0.0);
+    Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_residuals.size());
     computeQNUpdate(cplData, xUpdate);
 
     Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
@@ -432,15 +429,13 @@ void BaseQNPostProcessing::performPostProcessing
     _preconditioner->revert(_matrixW);
     _preconditioner->revert(_matrixV);
     _preconditioner->revert(_residuals);
-    e_revertPrecond.stop();
+    e_revertPrecond.stop();                                   // -------------
 
     /**
      * apply quasiNewton update
      */
-    _values = _oldValues;  // = x^k
-    _values += xUpdate;        // = x^k + delta_x
-    _values += _residuals; // = x^k + delta_x + r^k         note: residuals are _residuals - _designSpecifiaction at this point.
-//    _values -= q; // = x^k + delta_x + r^k - q^k
+    _values = _oldValues + xUpdate + _residuals;  // = x^k + delta_x + r^k - q^k
+
 
     // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
 
@@ -458,13 +453,14 @@ void BaseQNPostProcessing::performPostProcessing
       // QN-step in the first iteration (idea: rather perform QN-step with information from last converged
       // time step instead of doing a underrelaxation)
       if (not _firstTimeStep) {
-        _matrixV.clear();
-        _matrixW.clear();
+        _matrixV.resize(0,0);
+        _matrixW.resize(0,0);
         _matrixCols.clear();
         _matrixCols.push_front(0); // vital after clear()
         _qrV.reset();
         // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
         _qrV.setGlobalRows(getLSSystemRows());
+        _resetLS = true;  // need to recompute _Wtil, Q, R (only for IMVJ efficient update)
       }
     }
 
@@ -497,10 +493,7 @@ void BaseQNPostProcessing::applyFilter()
 
       removeMatrixColumn(delIndices[i]);
 
-      std::stringstream ss;
-      ss << "(updatedQR) removing linear dependent column " << delIndices[i] << "  time step: " << tSteps
-          << " iteration: " << its << "\n" << std::endl;
-      preciceDebug(ss.str());  writeInfo(ss.str());
+      preciceDebug(" Filter: removing column with index " << delIndices[i] <<" in iteration " << its<< " of time step: " << tSteps);
     }
     assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
@@ -517,11 +510,11 @@ void BaseQNPostProcessing::concatenateCouplingData
   int offset = 0;
   for (int id : _dataIDs) {
     int size = cplData[id]->values->size();
-    DataValues& values = *cplData[id]->values;
-    DataValues& oldValues = cplData[id]->oldValues.column(0);
+    auto& values = *cplData[id]->values;
+    const auto& oldValues = cplData[id]->oldValues.col(0);
     for (int i = 0; i < size; i++) {
-      _values[i + offset] = values[i];
-      _oldValues[i + offset] = oldValues[i];
+      _values(i + offset) = values(i);
+      _oldValues(i + offset) = oldValues(i);
     }
     offset += size;
   }
@@ -537,11 +530,12 @@ void BaseQNPostProcessing::splitCouplingData
   int offset = 0;
   for (int id : _dataIDs) {
     int size = cplData[id]->values->size();
-    utils::DynVector& valuesPart = *(cplData[id]->values);
-    utils::DynVector& oldValuesPart = cplData[id]->oldValues.column(0);
+    auto& valuesPart = *(cplData[id]->values);
+    //Eigen::VectorXd& oldValuesPart = cplData[id]->oldValues.col(0);
+    cplData[id]->oldValues.col(0) = _oldValues.segment(offset, size); // TODO: check if this is correct
     for (int i = 0; i < size; i++) {
-      valuesPart[i] = _values[i + offset];
-      oldValuesPart[i] = _oldValues[i + offset];
+      valuesPart(i) = _values(i + offset);
+      //oldValuesPart(i) = _oldValues(i + offset);
     }
     offset += size;
   }
@@ -560,18 +554,17 @@ void BaseQNPostProcessing::iterationsConverged
 (
     DataMap & cplData)
 {
-  preciceTrace("iterationsConverged()");
+  preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
 
   // debugging info, remove if not needed anymore:
   // -----------------------
-  _infostream << "\n ---------------- deletedColumns:" << deletedColumns
-      << "\n\n ### time step:" << tSteps + 1 << " ###" << std::endl;
+  //_infostream << "\n ---------------- deletedColumns:" << deletedColumns
+  //    << "\n\n ### time step:" << tSteps + 1 << " ###" << std::endl;
   its = 0;
   tSteps++;
   deletedColumns = 0;
   // -----------------------
-
 
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
@@ -581,10 +574,7 @@ void BaseQNPostProcessing::iterationsConverged
 
   // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
   assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
-  for (int i = 0; i < _designSpecification.size(); i++)
-        _residuals(i) -= _designSpecification(i);
-
-  _preconditioner->update(true, _values, _residuals);
+  _residuals -= _designSpecification;
 
   // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
 
@@ -606,20 +596,23 @@ void BaseQNPostProcessing::iterationsConverged
   // doing specialized stuff for the corresponding post processing scheme after 
   // convergence of iteration i.e.:
   // - analogously to the V,W matrices, remove columns from matrices for secondary data
-  // - save the old jacobian matrix
+  // - save the old Jacobian matrix
   specializedIterationsConverged(cplData);
 
-  if (_timestepsReused == 0) {
 
-    if(_forceInitialRelaxation)
+  // update preconditioner depending on residuals or values (must be after specialized iterations converged --> IMVJ)
+  _preconditioner->update(true, _values, _residuals);
+
+  if (_timestepsReused == 0) {
+    if (_forceInitialRelaxation)
     {
-      _matrixV.clear();
-      _matrixW.clear();
+      _matrixV.resize(0,0);
+      _matrixW.resize(0,0);
       _qrV.reset();
       // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
       _qrV.setGlobalRows(getLSSystemRows());
       _matrixCols.clear(); // _matrixCols.push_front() at the end of the method.
-    }else{
+    } else {
       /**
        * pending deletion (after first iteration of next time step
        * Using the matrices from the old time step for the first iteration
@@ -630,15 +623,14 @@ void BaseQNPostProcessing::iterationsConverged
   else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
     assertion1(toRemove > 0, toRemove);
-    preciceDebug("Removing " << toRemove << " cols from least-squares system with "
-        << getLSSystemCols() << " cols");
+    preciceDebug("Removing " << toRemove << " cols from least-squares system with "<< getLSSystemCols() << " cols");
     assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
     assertion2(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
     // remove columns
     for (int i = 0; i < toRemove; i++) {
-      _matrixV.remove(_matrixV.cols() - 1);
-      _matrixW.remove(_matrixW.cols() - 1);
+      utils::removeColumnFromMatrix(_matrixV, _matrixV.cols() - 1);
+      utils::removeColumnFromMatrix(_matrixW, _matrixW.cols() - 1);
       // also remove the corresponding columns from the dynamic QR-descomposition of _matrixV
       _qrV.popBack();
     }
@@ -665,8 +657,8 @@ void BaseQNPostProcessing::removeMatrixColumn
   deletedColumns++;
 
   assertion(_matrixV.cols() > 1);
-  _matrixV.remove(columnIndex);
-  _matrixW.remove(columnIndex);
+  utils::removeColumnFromMatrix(_matrixV, columnIndex);
+  utils::removeColumnFromMatrix(_matrixW, columnIndex);
 
   // Reduce column count
   std::deque<int>::iterator iter = _matrixCols.begin();

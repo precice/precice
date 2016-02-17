@@ -11,6 +11,8 @@
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
+#include "Eigen/Dense"
+#include "utils/EigenHelperFunctions.hpp"
 #include <limits>
 
 namespace precice {
@@ -56,8 +58,8 @@ void AitkenPostProcessing:: initialize
         cplData[_dataIDs.at(1)]->values->size();
   }
   double initializer = std::numeric_limits<double>::max();
-  utils::DynVector toAppend(entries, initializer);
-  _residuals.append(toAppend);
+  Eigen::VectorXd toAppend = Eigen::VectorXd::Constant(entries, initializer);
+  utils::append(_residuals, toAppend);
   _designSpecification = Eigen::VectorXd::Zero(entries);
 
   // Append column for old values if not done by coupling scheme yet
@@ -65,8 +67,8 @@ void AitkenPostProcessing:: initialize
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
       assertion1(pair.second->values->size() > 0, pair.first);
-      pair.second->oldValues.append(CouplingData::DataMatrix(
-        pair.second->values->size(), 1, 0.0));
+      utils::append(pair.second->oldValues,
+          (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
 }
@@ -82,19 +84,19 @@ void AitkenPostProcessing:: performPostProcessing
   // Compute aitken relaxation factor
   assertion(utils::contained(*_dataIDs.begin(), cplData));
 
-  DataValues values;
-  DataValues oldValues;
+  Eigen::VectorXd values;
+  Eigen::VectorXd oldValues;
   for (int id : _dataIDs) {
-    values.append(*(cplData[id]->values));
-    oldValues.append(cplData[id]->oldValues.column(0));
+    utils::append(values, *(cplData[id]->values));
+    utils::append(oldValues, (Eigen::VectorXd) cplData[id]->oldValues.col(0));
   }
 
   // Compute current residuals
-  DataValues residuals(values);
+  Eigen::VectorXd residuals = values;
   residuals -= oldValues;
 
   // Compute residual deltas and temporarily store it in _residuals
-  DataValues residualDeltas(_residuals);
+  Eigen::VectorXd residualDeltas = _residuals;
   residualDeltas *= -1.0;
   residualDeltas += residuals;
 
@@ -116,11 +118,11 @@ void AitkenPostProcessing:: performPostProcessing
   double omega = _aitkenFactor;
   double oneMinusOmega = 1.0 - omega;
   for (DataMap::value_type& pair : cplData) {
-    DataValues& values = *pair.second->values;
-    DataValues& oldValues = pair.second->oldValues.column(0);
+    auto& values = *pair.second->values;
+    const auto& oldValues = pair.second->oldValues.col(0);
     values *= omega;
     for ( int i=0; i < values.size(); i++ ) {
-      values[i] += oldValues[i] * oneMinusOmega;
+      values(i) += oldValues(i) * oneMinusOmega;
     }
   }
 
@@ -135,7 +137,7 @@ void AitkenPostProcessing:: iterationsConverged
   DataMap& cplData )
 {
   _iterationCounter = 0;
-  assign(_residuals) = std::numeric_limits<double>::max();
+  _residuals = Eigen::VectorXd::Constant(_residuals.size(), std::numeric_limits<double>::max());
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -145,20 +147,20 @@ void AitkenPostProcessing:: iterationsConverged
  *         This information is needed for convergence measurements in the coupling scheme.
  *  ---------------------------------------------------------------------------------------------
  */        // TODO: change to call by ref when Eigen is used.
-std::map<int, utils::DynVector> AitkenPostProcessing::getDesignSpecification
+std::map<int, Eigen::VectorXd> AitkenPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
-  std::map<int, utils::DynVector> designSpecifications;
+  std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _dataIDs) {
       int size = cplData[id]->values->size();
-      utils::DynVector q(size, 0.0);
+      Eigen::VectorXd q = Eigen::VectorXd::Zero(size);
       for (int i = 0; i < size; i++) {
         q(i) = _designSpecification(i+off);
       }
       off += size;
-      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
       designSpecifications.insert(pair);
     }
   return designSpecifications;

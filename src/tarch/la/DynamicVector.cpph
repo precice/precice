@@ -71,6 +71,15 @@ DynamicVector<Scalar>::DynamicVector(const std::vector<Scalar> stdvector)
 }
 
 template<typename Scalar>
+DynamicVector<Scalar>::DynamicVector(const Eigen::VectorXd eigenVec)
+{
+  _size = eigenVec.size();
+  _values = new Scalar[_size];
+  for (int i = 0; i < eigenVec.size(); i++)
+    _values[i] = eigenVec[i];
+}
+
+template<typename Scalar>
 DynamicVector<Scalar>::~DynamicVector()
 {
   if (_size > 0) {

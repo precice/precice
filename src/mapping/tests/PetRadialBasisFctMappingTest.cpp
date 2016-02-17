@@ -42,7 +42,213 @@ void PetRadialBasisFctMappingTest:: run()
     testMethod(testDeadAxis3D);
     PETSC_COMM_WORLD = MPI_COMM_WORLD;
   }
+  
+  using Par = utils::Parallel;
+  if (Par::getCommunicatorSize() > 3) {
+    MPI_Comm comm = Par::getRestrictedCommunicator( {0, 1, 2, 3} );
+    if (Par::getProcessRank() <= 3){
+      Par::setGlobalCommunicator(comm); // hier auch noch PETSC_COMM_WORLD neu setzen?
+      testMethod(testDistributedConsistent2D);
+      testMethod(testDistributedConservative2D);
+      Par::setGlobalCommunicator(Par::getCommunicatorWorld());
+    }
+  }
 }
+
+/*
+ * Creates a mesh that lies on different ranks. The list of vertices is formatted like that:
+ * { {rank, owner rank, value, x, y, z}, {...}, ... }
+ * If rank == -1, the vertex lives on all ranks
+ * If the z value is ommited, a 2-dimensional mesh is generated.
+ */
+void PetRadialBasisFctMappingTest::getDistributedMesh(const std::vector<std::vector<int>> vertices,
+                                                    mesh::PtrMesh& mesh,
+                                                    mesh::PtrData& data)
+{
+  preciceTrace("getDistributedMesh");
+  using Par = utils::Parallel;
+  utils::DynVector d;
+  
+  for (auto& vertex : vertices) {
+    if (Par::getProcessRank() == vertex[0] or vertex[0] == -1) {
+      if (vertex.size() == 6)  // 3-dimensional
+        mesh->createVertex(utils::Vector3D(vertex[3], vertex[4], vertex[5]));
+      else if (vertex.size() == 5) // 2-dimensional
+        mesh->createVertex(utils::Vector2D(vertex[3], vertex[4]));
+      
+      if (vertex[1] >= 0 and Par::getProcessRank() == vertex[1])
+        mesh->vertices().back().setOwner(true);
+      else
+        mesh->vertices().back().setOwner(false);
+      
+      d.append(vertex[2]);
+    }
+
+  }
+  addGlobalIndex(mesh);
+  mesh->allocateDataValues();
+  preciceDebug("Data values to be assigned = " << d);
+  data->values() = d;
+}
+
+
+void PetRadialBasisFctMappingTest::testDistributedConsistent2D()
+{
+  preciceTrace("testDistributedConsistent2D");
+  using Par = utils::Parallel;
+  using utils::Vector2D;
+  assertion(Par::getCommunicatorSize() == 4);
+  int dimensions = 2;
+
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
+  mesh::PtrData inData = inMesh->createData( "InData", 1 );
+  int inDataID = inData->getID();
+
+  // Consistent mapping: The inMesh is communicated, the outMesh is local
+  getDistributedMesh(
+    {
+      {-1, 0, 0, 0, 0},
+      {-1, 0, 1, 0, 1},
+      {-1, 1, 2, 1, 0},
+      {-1, 1, 3, 1, 1},
+      {-1, 2, 4, 2, 0},
+      {-1, 2, 5, 2, 1},
+      {-1, 3, 6, 3, 0},
+      {-1, 3, 7, 3, 1}
+    }, inMesh, inData);
+
+  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", dimensions, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  int outDataID = outData->getID();
+
+  getDistributedMesh(
+    {
+      {0, -1, 0, 0, 0},
+      {0, -1, 0, 0, 1},
+      {1, -1, 0, 1, 0},
+      {1, -1, 0, 1, 1},
+      {2, -1, 0, 2, 0},
+      {2, -1, 0, 2, 1},
+      {3, -1, 0, 3, 0},
+      {3, -1, 0, 3, 1}
+    }, outMesh, outData);
+  
+  Gaussian fct(2.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  mapping.setMeshes(inMesh, outMesh);
+  validateEquals(mapping.hasComputedMapping(), false);
+
+  mapping.computeMapping();
+  validateEquals(mapping.hasComputedMapping(), true);
+  mapping.map(inDataID, outDataID);
+
+  // Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+  for (auto i = 0; i < outData->values().size(); i++) {
+    preciceDebug("outData->values()[" << i <<  "] = " << outData->values()[i]);
+    validateNumericalEqualsWithEps ( outData->values()[i], Par::getProcessRank()*2 + i, tolerance );
+  }
+ 
+  // inMesh->computeState();
+  // inMesh->computeDistribution();
+  // computeState && computeDistribution auf mesh aufrufen ODER
+  // addGlobalID mit Offset aufrufen je nach Größe der Basisfunktion vertices zweimal haben, aber nur einmal mit owner(true)
+  // Auch Testcase mit einem Prozessor leer lassen
+
+  // for (mesh::Vertex& v : inMesh->vertices()) {
+    // std::cout << "Vertex globalIndex = " << v.getGlobalIndex() << std::endl;
+  // }
+}
+
+
+void PetRadialBasisFctMappingTest::testDistributedConservative2D()
+{
+  preciceTrace("testDistributedConservative2D");
+  using Par = utils::Parallel;
+  using utils::Vector2D;
+  assertion(Par::getCommunicatorSize() == 4);
+  int dimensions = 2;
+
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
+  mesh::PtrData inData = inMesh->createData( "InData", 1 );
+  int inDataID = inData->getID();
+
+  // Conservative mapping: The inMesh is local, the outMesh is communicated
+  getDistributedMesh(
+    {
+      {0, -1, 0, 0, 0},
+      {0, -1, 1, 0, 1},
+      {1, -1, 2, 1, 0},
+      {1, -1, 3, 1, 1},
+      {2, -1, 4, 2, 0},
+      {2, -1, 5, 2, 1},
+      {3, -1, 6, 3, 0},
+      {3, -1, 7, 3, 1}
+    }, inMesh, inData);
+
+  addGlobalIndex(inMesh, Par::getProcessRank()*2);
+
+  mesh::PtrMesh outMesh ( new mesh::Mesh("outMesh", dimensions, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  int outDataID = outData->getID();
+
+  getDistributedMesh(
+    {
+      {-1, 0, 0, 0, 0},
+      {-1, 0, 0, 0, 1},
+      {-1, 1, 0, 1, 0},
+      {-1, 1, 0, 1, 1},
+      {-1, 2, 0, 2, 0},
+      {-1, 2, 0, 2, 1},
+      {-1, 3, 0, 3, 0},
+      {-1, 3, 0, 3, 1}
+    }, outMesh, outData);
+  
+  // preciceDebug("inData = " << inData->values());
+  // for (auto& v : inMesh->vertices()) {
+  //   if (v.isOwner()) {
+  //     preciceDebug("owned Vertex = " << v.getCoords() << " Value = " << inData->values()[v.getID()]); }
+  //   else {
+  //     preciceDebug("Not owned Vertex = " << v.getCoords() << " Value = " << inData->values()[v.getID()]); }
+  // }
+
+  Gaussian fct(2.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  mapping.setMeshes(inMesh, outMesh);
+  validateEquals(mapping.hasComputedMapping(), false);
+  mapping.computeMapping();
+  validateEquals(mapping.hasComputedMapping(), true);
+  mapping.map(inDataID, outDataID);
+  
+
+  preciceDebug("Final out values = " << outData->values());
+
+  tarch::la::DynamicVector<double> reference(8, 0);
+  reference[Par::getProcessRank()*2]     = Par::getProcessRank()*2;
+  reference[Par::getProcessRank()*2 + 1] = Par::getProcessRank()*2 + 1;
+  preciceDebug("Reference = " << reference);
+  for (int i = 0; i < reference.size(); i++) {
+    validateNumericalEqualsWithEps( outData->values()[i], reference[i], tolerance );
+  }
+  
+  // validateNumericalVectorEquals(outData->values(), reference);
+        
+  // Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+  // for (size_t i=0; i < outData->values().size(); i++) {
+    // preciceDebug("outData->values()[" << i <<  "] = " << outData->values()[i]);
+    // validateNumericalEqualsWithEps ( outData->values()[i], Par::getProcessRank()*2 + i, tolerance );
+  // }
+ 
+  // inMesh->computeState();
+  // inMesh->computeDistribution();
+  // computeState && computeDistribution auf mesh aufrufen ODER
+  // addGlobalID mit Offset aufrufen je nach Größe der Basisfunktion vertices zweimal haben, aber nur einmal mit owner(true)
+  // Auch Testcase mit einem Prozessor leer lassen
+
+  // for (mesh::Vertex& v : inMesh->vertices()) {
+    // std::cout << "Vertex globalIndex = " << v.getGlobalIndex() << std::endl;
+  // }
+}
+
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
 {
@@ -205,10 +411,8 @@ void PetRadialBasisFctMappingTest:: perform2DTestConsistentMapping
   inMesh->allocateDataValues ();
   addGlobalIndex(inMesh);
   
-  tarch::la::Vector<4,double> assignValues;
-  assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
-  utils::DynVector& values = inData->values();
-  values = assignValues;
+  auto& values = inData->values();
+  values << 1.0, 2.0, 2.0, 1.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false) );
@@ -301,7 +505,7 @@ void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping
   mesh::Vertex& vertex0 = inMesh->createVertex ( Vector2D(0.0) );
   mesh::Vertex& vertex1 = inMesh->createVertex ( Vector2D(0.0) );
   inMesh->allocateDataValues ();
-  assignList(inData->values()) = 1.0, 2.0;
+  inData->values() << 1.0, 2.0;
   addGlobalIndex(inMesh);
 
   // Create mesh to map to
@@ -315,7 +519,7 @@ void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping
   outMesh->allocateDataValues ();
   addGlobalIndex(outMesh);
 
-  utils::DynVector& values = outData->values();
+  auto& values = outData->values();
 
   mapping.setMeshes ( inMesh, outMesh );
   validateEquals ( mapping.hasComputedMapping(), false );
@@ -325,35 +529,35 @@ void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(0.5, 0.5, 1.0, 1.0), tolerance) );
+  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.5, 0.5, 1.0, 1.0), tolerance) );
 
   vertex0.setCoords ( Vector2D(0.0, 0.5) );
   vertex1.setCoords ( Vector2D(1.0, 0.5) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(0.5, 1.0, 1.0, 0.5), tolerance) );
+  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.5, 1.0, 1.0, 0.5), tolerance) );
 
   vertex0.setCoords ( Vector2D(0.0, 1.0) );
   vertex1.setCoords ( Vector2D(1.0, 0.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(0.0, 2.0, 0.0, 1.0), tolerance) );
+  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.0, 2.0, 0.0, 1.0), tolerance) );
   
   vertex0.setCoords ( Vector2D(0.0, 0.0) );
   vertex1.setCoords ( Vector2D(1.0, 1.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(1.0, 0.0, 2.0, 0.0), tolerance) );
+  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(1.0, 0.0, 2.0, 0.0), tolerance) );
 
   vertex0.setCoords ( Vector2D(0.4, 0.5) );
   vertex1.setCoords ( Vector2D(0.6, 0.5) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validateNumericalEquals ( sum(values), 3.0 );
+  validateNumericalEquals ( values.sum(), 3.0 );
 }
 
 void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping
@@ -379,8 +583,8 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
   
-  utils::DynVector& values = inData->values();
-  assignList(values) = 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
+  auto& values = inData->values();
+  values << 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false));
@@ -508,7 +712,7 @@ void PetRadialBasisFctMappingTest:: perform3DTestConservativeMapping
   mesh::Vertex& vertex0 = inMesh->createVertex(Vector3D(0.0));
   mesh::Vertex& vertex1 = inMesh->createVertex(Vector3D(0.0));
   inMesh->allocateDataValues();
-  assignList(inData->values()) = 1.0, 2.0;
+  inData->values() << 1.0, 2.0;
   addGlobalIndex(inMesh);
   
   // Create mesh to map to
@@ -526,8 +730,8 @@ void PetRadialBasisFctMappingTest:: perform3DTestConservativeMapping
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
   
-  utils::DynVector& values = outData->values();
-  double expectedSum = sum(inData->values());
+  auto& values = outData->values();
+  double expectedSum = inData->values().sum();
 
   mapping.setMeshes(inMesh, outMesh);
   validateEquals(mapping.hasComputedMapping(), false);
@@ -537,7 +741,7 @@ void PetRadialBasisFctMappingTest:: perform3DTestConservativeMapping
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   validateEquals(mapping.hasComputedMapping(), true);
-  validateWithParams1(tarch::la::equals(sum(values), expectedSum, tolerance), values);
+  validateWithParams1(tarch::la::equals(values.sum(), expectedSum, tolerance), values);
 
 //  vertex0.setCoords ( Vector2D(0.0, 0.5) );
 //  vertex1.setCoords ( Vector2D(1.0, 0.5) );
@@ -594,10 +798,8 @@ void PetRadialBasisFctMappingTest:: testDeadAxis2D
   inMesh->allocateDataValues ();
   addGlobalIndex(inMesh);
   
-  tarch::la::Vector<4,double> assignValues;
-  assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
-  utils::DynVector& values = inData->values();
-  values = assignValues;
+  auto& values = inData->values();
+  values << 1.0, 2.0, 2.0, 1.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false) );
@@ -645,9 +847,8 @@ void PetRadialBasisFctMappingTest:: testDeadAxis3D()
   addGlobalIndex(inMesh);
   
   tarch::la::Vector<4,double> assignValues;
-  assignList(assignValues) = 1.0, 2.0, 3.0, 4.0;
-  utils::DynVector& values = inData->values();
-  values = assignValues;
+  auto& values = inData->values();
+  values << 1.0, 2.0, 3.0, 4.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false) );
@@ -674,13 +875,10 @@ void PetRadialBasisFctMappingTest:: testDeadAxis3D()
   validateNumericalEquals ( outData->values()[3], 4.3 );
 }
 
-void PetRadialBasisFctMappingTest::addGlobalIndex(mesh::PtrMesh &mesh)
+void PetRadialBasisFctMappingTest::addGlobalIndex(mesh::PtrMesh &mesh, int offset)
 {
-  // size_t size = mesh->vertices().size(), i = 0;
   for (mesh::Vertex& v : mesh->vertices()) {
-    // v.setGlobalIndex(size - i - 1);
-    v.setGlobalIndex(v.getID());
-    // i++;
+    v.setGlobalIndex(v.getID() + offset);
   }
 }
 

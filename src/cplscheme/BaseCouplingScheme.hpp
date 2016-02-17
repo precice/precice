@@ -15,6 +15,7 @@
 #include "tarch/logging/Log.h"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
+#include "Eigen/Dense"
 #include <map>
 
 namespace precice {
@@ -453,10 +454,10 @@ protected:
   void newConvergenceMeasurements();
 
   bool measureConvergence(
-      std::map<int, utils::DynVector>& designSpecification);
+      std::map<int, Eigen::VectorXd>& designSpecification);
 
   bool measureConvergenceCoarseModelOptimization(
-      std::map<int, utils::DynVector>& designSpecification);
+      std::map<int, Eigen::VectorXd>& designSpecification);
 
   /**
    * @brief Sets up _dataStorage to store data values of last timestep.

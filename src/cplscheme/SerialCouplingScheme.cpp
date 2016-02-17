@@ -1,5 +1,6 @@
 #include "SerialCouplingScheme.hpp"
 #include "impl/PostProcessing.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include "m2n/M2N.hpp"
 
 namespace precice {
@@ -138,10 +139,9 @@ void SerialCouplingScheme::initializeData()
     for (DataMap::value_type & pair : getSendData()) {
       if (pair.second->oldValues.cols() == 0)
         break;
-      utils::DynVector& oldValues = pair.second->oldValues.column(0);
-      oldValues = *pair.second->values;
+      pair.second->oldValues.col(0) = *pair.second->values;
       // For extrapolation, treat the initial value as old timestep value
-      pair.second->oldValues.shiftSetFirst(*pair.second->values);
+      utils::shiftSetFirst(pair.second->oldValues, *pair.second->values);
     }
 
     // The second participant sends the initialized data to the first particpant
@@ -163,7 +163,7 @@ void SerialCouplingScheme::advance()
 {
   preciceTrace2("advance()", getTimesteps(), getTime());
   for (DataMap::value_type & pair : getReceiveData()) {
-    utils::DynVector& values = *pair.second->values;
+    Eigen::VectorXd& values = *pair.second->values;
     preciceDebug("Begin advance, New Values: " << values);
   }
   checkCompletenessRequiredActions();
@@ -222,7 +222,7 @@ void SerialCouplingScheme::advance()
       else {
 
         // get the current design specifications from the post processing (for convergence measure)
-        std::map<int, utils::DynVector> designSpecifications;
+        std::map<int, Eigen::VectorXd> designSpecifications;
         if (getPostProcessing().get() != nullptr) {
           designSpecifications = getPostProcessing()->getDesignSpecification(getSendData());
         }
@@ -287,12 +287,12 @@ void SerialCouplingScheme::advance()
           else { // Store data for conv. measurement, post-processing, or extrapolation
             for (DataMap::value_type& pair : getSendData()) {
               if (pair.second->oldValues.size() > 0) {
-                pair.second->oldValues.column(0) = *pair.second->values;
+                pair.second->oldValues.col(0) = *pair.second->values;
               }
             }
             for (DataMap::value_type& pair : getReceiveData()) {
               if (pair.second->oldValues.size() > 0) {
-                pair.second->oldValues.column(0) = *pair.second->values;
+                pair.second->oldValues.col(0) = *pair.second->values;
               }
             }
           }
@@ -319,7 +319,7 @@ void SerialCouplingScheme::advance()
           if(_iterationsCoarseOptimization == 1   && getPostProcessing().get() != nullptr){
             auto fineIDs = getPostProcessing()->getDataIDs();
             for (auto& fineID : fineIDs) {
-              (*getSendData(fineID)->values) = getSendData(fineID+fineIDs.size()+1)->oldValues.column(0);
+              (*getSendData(fineID)->values) = getSendData(fineID+fineIDs.size()+1)->oldValues.col(0);
             }
           }
         }

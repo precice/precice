@@ -23,9 +23,9 @@ public:
    virtual void newMeasurementSeries();
 
    virtual void measure (
-      const utils::DynVector & oldValues,
-      const utils::DynVector & newValues,
-      const utils::DynVector& designSpecification)
+      const Eigen::VectorXd& oldValues,
+      const Eigen::VectorXd& newValues,
+      const Eigen::VectorXd& designSpecification)
    {
      preciceTrace("measure()");
      _currentIteration++;

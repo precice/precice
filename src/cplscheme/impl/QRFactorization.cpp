@@ -278,7 +278,7 @@ bool QRFactorization::insertColumn(int k, DataValues& v, double singularityLimit
    return insertColumn(k, _v, singularityLimit);
 }
       
-      
+// ATTENTION: This method works on the memory of vector v, thus changes the vector v.
 bool QRFactorization::insertColumn(int k, EigenVector& v, double singularityLimit)
 {
   preciceTrace("insertColumn()");
@@ -482,9 +482,7 @@ int QRFactorization::orthogonalize(
 			if (!restart && rho1 <= rho * _sigma) {
 			  preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal, most probably due to bad conditioning of the least squares system. Try to re-orthogonalize the QR system");
 				//preciceDebug("[QR-dec] - reorthogonalization");
-				if (_fstream_set)
-					(*_infostream) << "[QR-dec] - reorthogonalization"
-							<< std::endl;
+				if (_fstream_set)   (*_infostream) << "[QR-dec] - reorthogonalization"<< std::endl;
 
 				restart = true;
 
@@ -536,8 +534,7 @@ int QRFactorization::orthogonalize(
 					}
 					if (_fstream_set)
 						(*_infostream) << "           global u(k):" << global_uk
-								<< ",  global k: " << global_k << ",  rank: "
-								<< rank << std::endl;
+								<< ",  global k: " << global_k << ",  rank: "<< rank << std::endl;
 				}
 
 				// take correct action if v is null

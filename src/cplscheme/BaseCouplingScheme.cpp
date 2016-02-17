@@ -7,11 +7,14 @@
 #include "m2n/M2N.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/EigenHelperFunctions.hpp"
+#include "utils/Dimensions.hpp"
 #include "impl/PostProcessing.hpp"
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
 #include "tarch/la/ScalarOperations.h"
+#include "Eigen/Dense"
 #include <limits>
 #include <sstream>
 
@@ -166,6 +169,7 @@ BaseCouplingScheme::BaseCouplingScheme
   preciceCheck((maxIterations > 0) || (maxIterations == -1),
            "ImplicitCouplingState()",
            "Maximal iteration limit has to be larger than zero!");
+
 }
 
 
@@ -312,8 +316,7 @@ std::vector<int> BaseCouplingScheme:: sendData
   for (DataMap::value_type& pair : _sendData){
     //std::cout<<"\nsend data id="<<pair.first<<": "<<*(pair.second->values)<<std::endl;
     int size = pair.second->values->size();
-    m2n->send(tarch::la::raw(*(pair.second->values)), size,
-              pair.second->mesh->getID(), pair.second->dimension);
+    m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     sentDataIDs.push_back(pair.first);
   }
   preciceDebug("Number of sent data sets = " << sentDataIDs.size());
@@ -332,8 +335,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
   for (DataMap::value_type & pair : _receiveData) {
     int size = pair.second->values->size();
     //std::cout<<"\nreceive data id="<<pair.first<<": "<<*(pair.second->values)<<std::endl;
-    m2n->receive(tarch::la::raw(*(pair.second->values)), size,
-                 pair.second->mesh->getID(), pair.second->dimension);
+    m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
   preciceDebug("Number of received data sets = " << receivedDataIDs.size());
@@ -405,26 +407,26 @@ void BaseCouplingScheme::extrapolateData(DataMap& data)
     for (DataMap::value_type & pair : data) {
       preciceDebug("Extrapolate data: " << pair.first);
       assertion(pair.second->oldValues.cols() > 1 );
-      utils::DynVector & values = *pair.second->values;
-      pair.second->oldValues.column(0) = values;     // = x^t
+      Eigen::VectorXd & values = *pair.second->values;
+      pair.second->oldValues.col(0) = values;     // = x^t
       values *= 2.0;                                 // = 2*x^t
-      values -= pair.second->oldValues.column(1);    // = 2*x^t - x^(t-1)
-      pair.second->oldValues.shiftSetFirst(values ); // shift old values to the right
+      values -= pair.second->oldValues.col(1);    // = 2*x^t - x^(t-1)
+      utils::shiftSetFirst(pair.second->oldValues, values);
     }
   }
   else if (_extrapolationOrder == 2 ) {
     preciceInfo("extrapolateData()", "Performing second order extrapolation" );
     for (DataMap::value_type & pair : data ) {
       assertion(pair.second->oldValues.cols() > 2 );
-      utils::DynVector & values = *pair.second->values;
-      utils::DynVector & valuesOld1 = pair.second->oldValues.column(1);
-      utils::DynVector & valuesOld2 = pair.second->oldValues.column(2);
+      Eigen::VectorXd & values = *pair.second->values;
+      auto valuesOld1 = pair.second->oldValues.col(1);
+      auto valuesOld2 = pair.second->oldValues.col(2);
 
-      pair.second->oldValues.column(0) = values;        // = x^t
+      pair.second->oldValues.col(0) = values;        // = x^t
       values *= 2.5;                                    // = 2.5 x^t
       values -= valuesOld1 * 2.0; // = 2.5x^t - 2x^(t-1)
       values += valuesOld2 * 0.5; // = 2.5x^t - 2x^(t-1) + 0.5x^(t-2)
-      pair.second->oldValues.shiftSetFirst(values);
+      utils::shiftSetFirst(pair.second->oldValues, values);
     }
   }
   else {
@@ -659,8 +661,8 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.data != nullptr);
     if (convMeasure.data->oldValues.cols() < 1){
-      convMeasure.data->oldValues.append(CouplingData::DataMatrix(
-                       convMeasure.data->values->size(), 1, 0.0));
+      utils::append(convMeasure.data->oldValues,
+          (Eigen::MatrixXd) Eigen::MatrixXd::Zero(convMeasure.data->values->size(), 1));
     }
   }
   // Reserve storage for extrapolation of data values
@@ -669,8 +671,8 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
       int cols = pair.second->oldValues.cols();
       preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
       assertion1(cols <= 1, cols);
-      pair.second->oldValues.append(CouplingData::DataMatrix(
-                      pair.second->values->size(), _extrapolationOrder + 1 - cols, 0.0));
+      utils::append( pair.second->oldValues,
+            (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values->size(), _extrapolationOrder + 1 - cols));
     }
   }
 }
@@ -744,7 +746,7 @@ void BaseCouplingScheme::addConvergenceMeasure
 
 bool BaseCouplingScheme:: measureConvergence
 (
-    std::map<int, utils::DynVector>& designSpecifications)
+    std::map<int, Eigen::VectorXd>& designSpecifications)
 {
   preciceTrace(__func__);
   bool allConverged = true;
@@ -762,12 +764,11 @@ bool BaseCouplingScheme:: measureConvergence
 
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
-    utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
-    utils::DynVector q(convMeasure.data->values->size(), 0.0);
+    const auto& oldValues = convMeasure.data->oldValues.col(0);
+    Eigen::VectorXd q = Eigen::VectorXd::Zero(convMeasure.data->values->size());
     if(designSpecifications.find(convMeasure.dataID) != designSpecifications.end())
-    {
       q = designSpecifications.at(convMeasure.dataID);
-    }
+
     convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
 
     if(not utils::MasterSlave::_slaveMode){
@@ -798,7 +799,7 @@ bool BaseCouplingScheme:: measureConvergence
 // parallel coupling scheme and multi-coupling scheme  need allData and not only getSendData()
 bool BaseCouplingScheme:: measureConvergenceCoarseModelOptimization
 (
-    std::map<int, utils::DynVector>& designSpecifications)
+    std::map<int, Eigen::VectorXd>& designSpecifications)
 {
   preciceTrace(__func__);
   bool allConverged = true;
@@ -812,12 +813,11 @@ bool BaseCouplingScheme:: measureConvergenceCoarseModelOptimization
     std::cout<<"  measure convergence coarse measure, id:"<<convMeasure.dataID<<std::endl;
     assertion(convMeasure.data != nullptr);
     assertion(convMeasure.measure.get() != nullptr);
-    utils::DynVector& oldValues = convMeasure.data->oldValues.column(0);
-    utils::DynVector q(convMeasure.data->values->size(), 0.0);
+    const auto& oldValues = convMeasure.data->oldValues.col(0);
+    Eigen::VectorXd q = Eigen::VectorXd::Zero(convMeasure.data->values->size());
     if(designSpecifications.find(convMeasure.dataID) != designSpecifications.end())
-    {
       q = designSpecifications.at(convMeasure.dataID);
-    }
+
     convMeasure.measure->measure(oldValues, *convMeasure.data->values, q);
 
     if (not convMeasure.measure->isConvergence()) {
@@ -916,10 +916,14 @@ void BaseCouplingScheme:: exportState(const std::string& filenamePrefix ) const
   if (not doesFirstStep()) {
     io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
     for (const BaseCouplingScheme::DataMap::value_type& dataMap : getSendData()) {
-      writer.write(dataMap.second->oldValues);
+
+      // TODO: Eigen matrix is convertet to tarch matrix here, as Eigen does not provide a read from file
+      // functionality until now. This should be solved soon, bug #622 and bug #209.
+      // If resolved in newer Eigen relase 3.3, modify TXTWriter and TXTReader
+      writer.write(utils::DynMatrix(dataMap.second->oldValues));
     }
     for (const BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
-      writer.write(dataMap.second->oldValues);
+      writer.write(utils::DynMatrix(dataMap.second->oldValues));
     }
     if (_postProcessing.get() != nullptr) {
       _postProcessing->exportState(writer);
@@ -932,10 +936,20 @@ void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
   if (not doesFirstStep()) {
     io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
     for (BaseCouplingScheme::DataMap::value_type& dataMap : getSendData()) {
-      reader.read(dataMap.second->oldValues);
+
+      // TODO: Eigen matrix is convertet to tarch matrix here, as Eigen does not provide a read from file
+      // functionality until now. This should be solved soon, bug #622 and bug #209.
+      // If resolved in newer Eigen relase 3.3, modify TXTWriter and TXTReader
+      utils::DynMatrix tmp_readMat(dataMap.second->oldValues);
+      reader.read(tmp_readMat);
+      dataMap.second->oldValues = tmp_readMat;
     }
     for (BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
-      reader.read(dataMap.second->oldValues);
+
+      utils::DynMatrix tmp_readMat(dataMap.second->oldValues);
+      reader.read(tmp_readMat);
+      reader.read(tmp_readMat);
+      dataMap.second->oldValues = tmp_readMat;
     }
     if (_postProcessing.get() != nullptr){
       _postProcessing->importState(reader);

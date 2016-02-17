@@ -94,7 +94,7 @@ public:
    * @param transpose: false = from left, true = from right
    */
   void apply(EigenMatrix& M, bool transpose){
-    preciceTrace("apply()");
+    preciceTrace(__func__);
     assertion(_needsGlobalWeights);
     if(transpose){
       assertion(M.cols()==(int)_weights.size());
@@ -119,7 +119,7 @@ public:
    * @param transpose: false = from left, true = from right
    */
   void revert(EigenMatrix& M, bool transpose){
-    preciceTrace("apply()");
+    preciceTrace(__func__);
     assertion(_needsGlobalWeights);
     if(transpose){
       assertion(M.cols()==(int)_weights.size());
@@ -274,6 +274,8 @@ public:
     _globalInvWeights.resize(globalN, 1.0);
     communicateGlobalWeights(); //for constant preconditioner necessary already here
   }
+
+
 
 protected:
 

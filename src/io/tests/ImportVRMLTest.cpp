@@ -11,6 +11,7 @@
 #include "mesh/Mesh.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
+#include "Eigen/Dense"
 #include <string>
 #include <map>
 
@@ -84,16 +85,16 @@ void ImportVRMLTest:: testImportSquare()
   validate(equals(mesh.edges()[3].vertex(1).getCoords(), Vector2D(0.0, 0.0)));
 
   // Validate data sets
-  utils::DynVector& forces = mesh.data(dataIDForces)->values();
-  validateNumericalEquals(forces[0], 1.0);
-  validateNumericalEquals(forces[1], 1.0);
-  validateNumericalEquals(forces[6], 4.0);
-  validateNumericalEquals(forces[7], 4.0);
-  utils::DynVector& velocities = mesh.data(dataIDVelocities)->values();
-  validateNumericalEquals(velocities[0], 4.0);
-  validateNumericalEquals(velocities[1], 4.0);
-  validateNumericalEquals(velocities[6], 1.0);
-  validateNumericalEquals(velocities[7], 1.0);
+  Eigen::VectorXd& forces = mesh.data(dataIDForces)->values();
+  validateNumericalEquals(forces(0), 1.0);
+  validateNumericalEquals(forces(1), 1.0);
+  validateNumericalEquals(forces(6), 4.0);
+  validateNumericalEquals(forces(7), 4.0);
+  Eigen::VectorXd& velocities = mesh.data(dataIDVelocities)->values();
+  validateNumericalEquals(velocities(0), 4.0);
+  validateNumericalEquals(velocities(1), 4.0);
+  validateNumericalEquals(velocities(6), 1.0);
+  validateNumericalEquals(velocities(7), 1.0);
 
   // Compute mesh state and export to vtk file
   mesh.computeState();

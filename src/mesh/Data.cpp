@@ -41,12 +41,12 @@ Data:: ~Data()
   _dataCount --;
 }
 
-utils::DynVector& Data:: values()
+Eigen::VectorXd& Data:: values()
 {
   return _values;
 }
 
-const utils::DynVector& Data:: values() const
+const Eigen::VectorXd& Data:: values() const
 {
   return _values;
 }

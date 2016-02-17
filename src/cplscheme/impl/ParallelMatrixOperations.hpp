@@ -267,6 +267,7 @@ private:
 				  requestRcv = _cyclicCommLeft->aReceive(leftMatrix_rcv.data(), leftMatrix_rcv.size(), 0);
 			}
 
+			if(requestSend != NULL) requestSend->wait();
 			// compute block with new local data
 			EigenMatrix block(rows_rcv, rightMatrix.cols());
 			block.noalias() = leftMatrix_copy * rightMatrix;
@@ -319,7 +320,7 @@ private:
 		}
    }
 
-	// @brief multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix
+	// @brief multiplies matrices based on a SAXPY-like block-wise computation with a rectangular result matrix of dimension n x m
 	template<typename Derived1, typename Derived2>
 	void _multiplyNM_block(
 	    Eigen::PlainObjectBase<Derived1>& leftMatrix,

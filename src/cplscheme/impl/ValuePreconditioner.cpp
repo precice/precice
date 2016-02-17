@@ -49,6 +49,9 @@ void ValuePreconditioner::update(bool timestepComplete, const DataValues& oldVal
 
     _requireNewQR = true;
     _firstTimestep = false;
+    if(_needsGlobalWeights){
+        communicateGlobalWeights();
+      }
   }
 }
 

@@ -792,8 +792,9 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
       validate(dataContext != nullptr);
       mesh::PtrData data = dataContext->fromData;
       validateEquals(forcesID, dataContext->fromData->getID());
-      utils::DynVector& values = data->values();
-      assign(values) = 1.0;
+      auto& values = data->values();
+      values = Eigen::VectorXd::Constant(values.size(), 1.0);
+      //assign(values) = 1.0;
       time += dt;
       dt = couplingInterface.advance(dt);
       couplingInterface.mapReadDataTo(meshOneID);
@@ -827,8 +828,9 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
       // no mapping, so fromData and toData should be the same data
       validateEquals(fromData->getID(), toData->getID());
       validateEquals(dataID, fromData->getID());
-      utils::DynVector& values = fromData->values();
-      assign(values) = 2.0;
+      auto& values = fromData->values();
+      values = Eigen::VectorXd::Constant(values.size(), 2.0);
+//      assign(values) = 2.0;
       time += dt;
       dt = couplingInterface.advance(dt);
       timesteps++;
@@ -1008,8 +1010,9 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
       validate(dataContext != nullptr);
       mesh::PtrData localForces = dataContext->fromData;
       validateEquals(forcesID, localForces->getID());
-      utils::DynVector& forceValues = localForces->values();
-      assign(forceValues) = 1.0;
+      auto& forceValues = localForces->values();
+      forceValues = Eigen::VectorXd::Constant(forceValues.size(), 1.0);
+      //assign(forceValues) = 1.0;
       iterationCount++;
       maxDt = couplingInterface.advance(maxDt);
 
@@ -1017,9 +1020,9 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
       validate(dataContext != nullptr);
       mesh::PtrData localVelocities = dataContext->toData;
       validateEquals(velocitiesID, localVelocities->getID());
-      utils::DynVector& velocityValues = localVelocities->values();
+      auto& velocityValues = localVelocities->values();
       utils::Vector2D integral;
-      sumSubvectors(velocityValues, integral);
+      sumSubvectors(utils::DynVector(velocityValues), integral);
       validate(equals(integral, utils::Vector2D(8.0, 8.0)));
 
       if (couplingInterface.isTimestepComplete()){
@@ -1059,8 +1062,9 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
       validate(dataContext != nullptr);
       mesh::PtrData velocities = dataContext->fromData;
       validateEquals(velocitiesID, velocities->getID());
-      utils::DynVector& values = velocities->values();
-      assign(values) = 2.0;
+      auto& values = velocities->values();
+      values = Eigen::VectorXd::Constant(values.size(), 2.0);
+      //assign(values) = 2.0;
 
       maxDt = couplingInterface.advance(maxDt);
 
@@ -1068,9 +1072,9 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
       validate(dataContext != nullptr);
       mesh::PtrData forces = dataContext->toData;
       //validateEquals(velocitiesID, localVelocities->getID());
-      utils::DynVector& forceValues = forces->values();
+      auto& forceValues = forces->values();
       utils::Vector2D integral;
-      sumSubvectors(forceValues, integral);
+      sumSubvectors(utils::DynVector(forceValues), integral);
       validate(equals(integral, utils::Vector2D(4.0, 4.0)));
 
       if (couplingInterface.isTimestepComplete()){
@@ -1101,9 +1105,9 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
     validate(dataContext != nullptr);
     mesh::PtrData localVelocities = dataContext->toData;
     validateEquals(velocitiesID, localVelocities->getID());
-    utils::DynVector& velocityValues = localVelocities->values();
+    auto& velocityValues = localVelocities->values();
     utils::Vector2D integral;
-    sumSubvectors(velocityValues, integral);
+    sumSubvectors(utils::DynVector(velocityValues), integral);
     validate(equals(integral, utils::Vector2D(8.0, 8.0)));
 
     while (couplingInterface.isCouplingOngoing()){
@@ -1143,9 +1147,9 @@ void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
     validate(dataContext != nullptr);
     mesh::PtrData forces = dataContext->toData;
     validateEquals(forcesID, forces->getID());
-    utils::DynVector& forceValues = forces->values();
+    auto& forceValues = forces->values();
     utils::Vector2D integral;
-    sumSubvectors(forceValues, integral);
+    sumSubvectors(utils::DynVector(forceValues), integral);
     validate(equals(integral, utils::Vector2D(4.0, 4.0)));
 
     while (couplingInterface.isCouplingOngoing()){

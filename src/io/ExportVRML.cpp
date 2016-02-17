@@ -7,6 +7,7 @@
 #include "utils/Dimensions.hpp"
 #include "utils/String.hpp"
 #include <iostream>
+#include "Eigen/Dense"
 #include <fstream>
 #include <map>
 
@@ -191,12 +192,12 @@ void ExportVRML:: writeVertexData
             << "      datadimensions " << data->getDimensions() << std::endl
             << "      datavalues ["                << std::endl;
 
-    const utils::DynVector& values = data->values();
+    const Eigen::VectorXd& values = data->values();
     int dims = data->getDimensions();
     for ( int i=0; i < values.size(); i+=dims ) {
       outFile << "         ";
       for ( int dim=0; dim < dims; dim++ ) {
-        outFile << values[i+dim];
+        outFile << values(i+dim);
         if ( dim + 1 < dims ) {
           outFile << " ";
         }

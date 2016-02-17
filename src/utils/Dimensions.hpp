@@ -6,6 +6,7 @@
 
 #include "tarch/la/Vector.h"
 #include "tarch/la/DynamicVector.h"
+#include "tarch/la/DynamicMatrix.h"
 #include <Eigen/Dense>
 
 namespace precice {
@@ -24,6 +25,8 @@ template< int base > struct CompilePower<base, 1> {
 };
 
 typedef tarch::la::DynamicVector<double> DynVector;
+typedef tarch::la::DynamicMatrix<double> DynMatrix;
+typedef Eigen::MatrixXd EigenMatrix;
 typedef Eigen::VectorXd EigenVector;
 typedef tarch::la::Vector<2,double>      Vector2D;
 typedef tarch::la::Vector<3,double>      Vector3D;

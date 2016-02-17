@@ -36,7 +36,7 @@ void ScaleByAreaAction:: performAction
   preciceTrace("performAction()");
   preciceCheck(getMesh()->getDimensions() == 2, "performAction()",
                  "Not implemented for dimension != 2!");
-  utils::DynVector& targetValues = _targetData->values();
+  auto& targetValues = _targetData->values();
   utils::DynVector areas(getMesh()->vertices().size(), 0.0);
   foreach(mesh::Edge & edge, getMesh()->edges()){
     areas[edge.vertex(0).getID()] += edge.getEnclosingRadius();

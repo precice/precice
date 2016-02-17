@@ -41,7 +41,7 @@ public:
    * @brief Map from data ID to data values.
    */
   typedef std::map<int,PtrCouplingData>   DataMap;
-  typedef std::map<int, utils::DynVector> ValuesMap;
+  typedef std::map<int, Eigen::VectorXd> ValuesMap;
 
   /**
    * @brief Destructor, empty.
@@ -70,7 +70,7 @@ public:
    *        In case of manifold mapping it also returns the design specification
    *        for the surrogate model which is updated in every iteration.
    */
-  virtual ValuesMap getDesignSpecification(DataMap& cplData) =0; // TODO: change to call by ref when Eigen is used.
+  virtual ValuesMap getDesignSpecification(DataMap& cplData) =0;
 
 
   /**

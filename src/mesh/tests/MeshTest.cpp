@@ -14,6 +14,7 @@
 #include "tarch/la/WrappedVector.h"
 #include "com/MPIDirectCommunication.hpp"
 #include "tarch/tests/TestCaseFactory.h"
+#include "Eigen/Dense"
 
 
 
@@ -494,13 +495,13 @@ void MeshTest:: testDemonstration ()
     mesh.allocateDataValues();
 
     // Access data values
-    utils::DynVector& dataValues = data->values();
+    Eigen::VectorXd& dataValues = data->values();
     validateEquals ( dataValues.size(), 3 * dim );
     validateEquals ( v0.getID(), 0 );
     using tarch::la::slice;
-    utils::DynVector value(dim);
+    Eigen::VectorXd value = Eigen::VectorXd::Zero(dim);
     for ( int i=0; i < dim; i++ ){
-      value[i] = dataValues[v0.getID() * dim + i];
+      value(i) = dataValues(v0.getID() * dim + i);
     }
   }
 }

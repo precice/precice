@@ -97,6 +97,7 @@ private:
    const std::string ATTR_ENFORCE;
    const std::string ATTR_SINGULARITYLIMIT;
    const std::string ATTR_TYPE;
+   const std::string ATTR_BUILDJACOBIAN;
 
    const std::string VALUE_CONSTANT;
    const std::string VALUE_AITKEN;
@@ -141,6 +142,7 @@ private:
       int filter;
       double singularityLimit;
       bool estimateJacobian;
+      bool alwaysBuildJacobian;
       std::string preconditionerType;
 
       ConfigurationData ()
@@ -155,6 +157,7 @@ private:
          filter ( impl::PostProcessing::NOFILTER ),
          singularityLimit ( 0.0 ),
          estimateJacobian ( false ),
+         alwaysBuildJacobian( false ),
          preconditionerType("")
       {}
 

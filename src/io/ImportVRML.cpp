@@ -189,7 +189,7 @@ void ImportVRML:: doImport
                          << "\" does not match with that in VRML file "
                          << "\"" << vrmlData.dimensions << "\"!" );
       }
-      utils::DynVector& values = meshData->values();
+      Eigen::VectorXd& values = meshData->values();
       preciceCheck(values.size() == (int)vrmlData.values.size(),
                    "doImport()", "Number of data values from VRML file ("
                    << vrmlData.values.size()
@@ -197,7 +197,7 @@ void ImportVRML:: doImport
                    << values.size() << ") for data \""
                    << meshData->getName() << "\"!");
       for ( size_t i=0; i < vrmlData.values.size(); i++ ) {
-         values[i] = vrmlData.values[i];
+         values(i) = vrmlData.values[i];
       }
    }
 

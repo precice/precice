@@ -45,17 +45,20 @@ void PythonActionTest:: testAllMethods()
   std::string path = utils::Globals::getPathToSources() + "/action/tests/";
   PythonAction action(PythonAction::ALWAYS_PRIOR, path, "TestAllAction", mesh,
                       targetID, sourceID);
-  assignList(mesh->data(sourceID)->values()) = 0.1, 0.2, 0.3;
-  assign(mesh->data(targetID)->values()) = 0.0;
+  mesh->data(sourceID)->values() << 0.1, 0.2, 0.3;
+  mesh->data(targetID)->values() = Eigen::VectorXd::Zero(mesh->data(targetID)->values().size());
+  //assignList(mesh->data(sourceID)->values()) = 0.1, 0.2, 0.3;
+  //assign(mesh->data(targetID)->values()) = 0.0;
   action.performAction(0.0, 0.0, 0.0, 0.0);
   tarch::la::Vector<3,double> result(2.1, 3.2, 4.3);
-  validateWithMessage(tarch::la::equals(mesh->data(targetID)->values(), result),
-                      mesh->data(targetID)->values());
-  assign(mesh->data(sourceID)->values()) = 0.0;
+  validateWithMessage(tarch::la::equals(utils::DynVector(mesh->data(targetID)->values()), result),
+                      utils::DynVector(mesh->data(targetID)->values()));
+  mesh->data(sourceID)->values() = Eigen::VectorXd::Zero(mesh->data(sourceID)->values().size());
+  //assign(mesh->data(sourceID)->values()) = 0.0;
   assignList(result) = 1.0, 2.0, 3.0;
   action.performAction(0.0, 0.0, 0.0, 0.0);
-  validateWithMessage(tarch::la::equals(mesh->data(targetID)->values(), result),
-                      mesh->data(targetID)->values());
+  validateWithMessage(tarch::la::equals(utils::DynVector(mesh->data(targetID)->values()), result),
+                      utils::DynVector(mesh->data(targetID)->values()));
 }
 
 void PythonActionTest:: testOmitMethods()

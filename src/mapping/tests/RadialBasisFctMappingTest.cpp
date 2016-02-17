@@ -200,9 +200,11 @@ void RadialBasisFctMappingTest:: perform2DTestConsistentMapping
   inMesh->createVertex ( Vector2D(1.0, 1.0) );
   inMesh->createVertex ( Vector2D(0.0, 1.0) );
   inMesh->allocateDataValues ();
-  tarch::la::Vector<4,double> assignValues;
-  assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
-  utils::DynVector& values = inData->values();
+  //tarch::la::Vector<4,double> assignValues;
+  //assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
+  Eigen::VectorXd assignValues(4);
+  assignValues << 1.0, 2.0, 2.0, 1.0;
+  Eigen::VectorXd& values = inData->values();
   values = assignValues;
 
   // Create mesh to map to
@@ -295,7 +297,8 @@ void RadialBasisFctMappingTest:: perform2DTestConservativeMapping
   mesh::Vertex& vertex0 = inMesh->createVertex ( Vector2D(0.0) );
   mesh::Vertex& vertex1 = inMesh->createVertex ( Vector2D(0.0) );
   inMesh->allocateDataValues ();
-  assignList(inData->values()) = 1.0, 2.0;
+  //assignList(inData->values()) = 1.0, 2.0;
+  inData->values() << 1.0, 2.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false) );
@@ -306,7 +309,7 @@ void RadialBasisFctMappingTest:: perform2DTestConservativeMapping
   outMesh->createVertex ( Vector2D(1.0, 1.0) );
   outMesh->createVertex ( Vector2D(0.0, 1.0) );
   outMesh->allocateDataValues ();
-  utils::DynVector& values = outData->values();
+  Eigen::VectorXd& values = outData->values();
 
   mapping.setMeshes ( inMesh, outMesh );
   validateEquals ( mapping.hasComputedMapping(), false );
@@ -316,35 +319,35 @@ void RadialBasisFctMappingTest:: perform2DTestConservativeMapping
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(0.5, 0.5, 1.0, 1.0)) );
+  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.5, 0.5, 1.0, 1.0)) );
 
   vertex0.setCoords ( Vector2D(0.0, 0.5) );
   vertex1.setCoords ( Vector2D(1.0, 0.5) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(0.5, 1.0, 1.0, 0.5)) );
+  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.5, 1.0, 1.0, 0.5)) );
 
   vertex0.setCoords ( Vector2D(0.0, 1.0) );
   vertex1.setCoords ( Vector2D(1.0, 0.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(0.0, 2.0, 0.0, 1.0)) );
+  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.0, 2.0, 0.0, 1.0)) );
 
   vertex0.setCoords ( Vector2D(0.0, 0.0) );
   vertex1.setCoords ( Vector2D(1.0, 1.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(values, tarch::la::Vector<4,double>(1.0, 0.0, 2.0, 0.0)) );
+  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(1.0, 0.0, 2.0, 0.0)) );
 
   vertex0.setCoords ( Vector2D(0.4, 0.5) );
   vertex1.setCoords ( Vector2D(0.6, 0.5) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validateNumericalEquals ( sum(values), 3.0 );
+  validateNumericalEquals ( sum(utils::DynVector(values)), 3.0 );
 }
 
 void RadialBasisFctMappingTest:: perform3DTestConsistentMapping
@@ -368,8 +371,9 @@ void RadialBasisFctMappingTest:: perform3DTestConsistentMapping
   inMesh->createVertex(Vector3D(0.0, 1.0, 1.0));
   inMesh->createVertex(Vector3D(1.0, 1.0, 1.0));
   inMesh->allocateDataValues();
-  utils::DynVector& values = inData->values();
-  assignList(values) = 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
+  Eigen::VectorXd& values = inData->values();
+  //assignList(values) = 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
+  values << 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false));
@@ -496,7 +500,8 @@ void RadialBasisFctMappingTest:: perform3DTestConservativeMapping
   mesh::Vertex& vertex0 = inMesh->createVertex(Vector3D(0.0));
   mesh::Vertex& vertex1 = inMesh->createVertex(Vector3D(0.0));
   inMesh->allocateDataValues();
-  assignList(inData->values()) = 1.0, 2.0;
+  //assignList(inData->values()) = 1.0, 2.0;
+  inData->values() << 1.0, 2.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false));
@@ -511,8 +516,8 @@ void RadialBasisFctMappingTest:: perform3DTestConservativeMapping
   outMesh->createVertex(Vector3D(1.0, 1.0, 1.0));
   outMesh->createVertex(Vector3D(0.0, 1.0, 1.0));
   outMesh->allocateDataValues();
-  utils::DynVector& values = outData->values();
-  double expectedSum = sum(inData->values());
+  Eigen::VectorXd& values = outData->values();
+  double expectedSum = sum(utils::DynVector(inData->values()));
 
   mapping.setMeshes(inMesh, outMesh);
   validateEquals(mapping.hasComputedMapping(), false);
@@ -522,7 +527,7 @@ void RadialBasisFctMappingTest:: perform3DTestConservativeMapping
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   validateEquals(mapping.hasComputedMapping(), true);
-  validateWithParams1(tarch::la::equals(sum(values), expectedSum), values);
+  validateWithParams1(tarch::la::equals(sum(utils::DynVector(values)), expectedSum), utils::DynVector(values));
 
 //  vertex0.setCoords ( Vector2D(0.0, 0.5) );
 //  vertex1.setCoords ( Vector2D(1.0, 0.5) );
@@ -578,9 +583,11 @@ void RadialBasisFctMappingTest:: testDeadAxis2D
   inMesh->createVertex ( Vector2D(2.0, 1.0) );
   inMesh->createVertex ( Vector2D(3.0, 1.0) );
   inMesh->allocateDataValues ();
-  tarch::la::Vector<4,double> assignValues;
-  assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
-  utils::DynVector& values = inData->values();
+  //tarch::la::Vector<4,double> assignValues;
+  //assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
+  Eigen::VectorXd assignValues(4);
+  assignValues << 1.0, 2.0, 2.0, 1.0;
+  Eigen::VectorXd& values = inData->values();
   values = assignValues;
 
   // Create mesh to map to
@@ -626,9 +633,11 @@ void RadialBasisFctMappingTest:: testDeadAxis3D
   inMesh->createVertex ( Vector3D(0.0, 3.0, 1.0) );
   inMesh->createVertex ( Vector3D(1.0, 3.0, 1.0) );
   inMesh->allocateDataValues ();
-  tarch::la::Vector<4,double> assignValues;
-  assignList(assignValues) = 1.0, 2.0, 3.0, 4.0;
-  utils::DynVector& values = inData->values();
+  //tarch::la::Vector<4,double> assignValues;
+  //assignList(assignValues) = 1.0, 2.0, 3.0, 4.0;
+  Eigen::VectorXd assignValues(4);
+  assignValues << 1.0, 2.0, 3.0, 4.0;
+  Eigen::VectorXd& values = inData->values();
   values = assignValues;
 
   // Create mesh to map to

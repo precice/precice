@@ -49,9 +49,9 @@ public:
    }
 
    virtual void measure (
-      const utils::DynVector& oldValues,
-      const utils::DynVector& newValues,
-      const utils::DynVector& designSpecification)
+      const Eigen::VectorXd& oldValues,
+      const Eigen::VectorXd& newValues,
+      const Eigen::VectorXd& designSpecification)
    {
       _normDiff = utils::MasterSlave::l2norm((newValues - oldValues) - designSpecification);
       _isConvergence = _normDiff <= _convergenceLimit;

@@ -30,6 +30,8 @@
 #include "utils/Dimensions.hpp"
 #include "tarch/la/Vector.h"
 #include "tarch/la/WrappedVector.h"
+#include "Eigen/Core"
+#include "utils/EigenHelperFunctions.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::cplscheme::tests::ParallelImplicitCouplingSchemeTest)
@@ -176,12 +178,12 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
 
   if (nameLocalParticipant == nameParticipant0){
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
-    mesh->data(0)->values() = 4.0;
+    mesh->data(0)->values() = Eigen::VectorXd::Constant(1, 4.0);
     cplScheme.performedAction(constants::actionWriteInitialData());
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    utils::DynVector& values = mesh->data(1)->values();
-    validateWithParams1(tarch::la::equals(values, Vector3D(1.0, 2.0, 3.0)), values);
+    auto& values = mesh->data(1)->values();
+    validateWithParams1(tarch::la::equals(utils::DynVector(values), Vector3D(1.0, 2.0, 3.0)), utils::DynVector(values));
 
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
@@ -196,14 +198,15 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   }
   else {
     assertion(nameLocalParticipant == nameParticipant1);
-    utils::DynVector& values = mesh->data(0)->values();
+    auto& values = mesh->data(0)->values();
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
-    mesh->data(1)->values() = Vector3D(1.0, 2.0, 3.0);
+    Eigen::VectorXd v(3); v << 1.0, 2.0, 3.0;
+    mesh->data(1)->values() = v;
     cplScheme.performedAction(constants::actionWriteInitialData());
-    validateWithParams1(tarch::la::equals(values(0), 0.0), values);
+    validateWithParams1(tarch::la::equals(values(0), 0.0), utils::DynVector(values));
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    validateWithParams1(tarch::la::equals(values(0), 4.0), values);
+    validateWithParams1(tarch::la::equals(values(0), 4.0), utils::DynVector(values));
 
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
@@ -268,33 +271,35 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   cplscheme::impl::IQNILSPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
                                            timestepsReused, filter, singularityLimit, dataIDs, prec);
 
-  //init displacements
-  utils::DynVector dvalues;
-  dvalues.append(1.0);
-  dvalues.append(2.0);
-  dvalues.append(3.0);
-  dvalues.append(4.0);
 
-  utils::DynVector dcol1;
-  dcol1.append(1.0);
-  dcol1.append(1.0);
-  dcol1.append(1.0);
-  dcol1.append(1.0);
+  Eigen::VectorXd dvalues;
+  Eigen::VectorXd dcol1;
+  Eigen::VectorXd fvalues;
+  Eigen::VectorXd fcol1;
+
+  //init displacements
+  utils::append(dvalues, 1.0);
+  utils::append(dvalues, 2.0);
+  utils::append(dvalues, 3.0);
+  utils::append(dvalues, 4.0);
+
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
 
   PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
 
   //init forces
-  utils::DynVector fvalues;
-  fvalues.append(0.1);
-  fvalues.append(0.1);
-  fvalues.append(0.1);
-  fvalues.append(0.1);
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
 
-  utils::DynVector fcol1;
-  fcol1.append(0.2);
-  fcol1.append(0.2);
-  fcol1.append(0.2);
-  fcol1.append(0.2);
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
 
   PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
 
@@ -309,8 +314,8 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
 
   pp.initialize(data);
 
-  dpcd->oldValues.column(0) = dcol1;
-  fpcd->oldValues.column(0) = fcol1;
+  dpcd->oldValues.col(0) = dcol1;
+  fpcd->oldValues.col(0) = fcol1;
 
   pp.performPostProcessing(data);
 
@@ -323,11 +328,11 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
 
-  utils::DynVector newdvalues;
-  newdvalues.append(10.0);
-  newdvalues.append(10.0);
-  newdvalues.append(10.0);
-  newdvalues.append(10.0);
+  Eigen::VectorXd newdvalues;
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
   data.begin()->second->values = &newdvalues;
 
   pp.performPostProcessing(data);
@@ -356,6 +361,7 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   int filter = impl::BaseQNPostProcessing::QR1FILTER;
   double singularityLimit = 1e-10;
   bool enforceInitialRelaxation = false;
+  bool alwaysBuildJacobian = false;
   std::vector<int> dataIDs;
   dataIDs.push_back(0);
   dataIDs.push_back(1);
@@ -368,36 +374,37 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
 
   
   cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                                         timestepsReused, filter, singularityLimit, dataIDs, prec);
+                                         timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian);
   
+  Eigen::VectorXd dvalues;
+  Eigen::VectorXd dcol1;
+  Eigen::VectorXd fvalues;
+  Eigen::VectorXd fcol1;
+
   //init displacements
-  utils::DynVector dvalues;
-  dvalues.append(1.0);
-  dvalues.append(2.0);
-  dvalues.append(3.0);
-  dvalues.append(4.0);
+  utils::append(dvalues, 1.0);
+  utils::append(dvalues, 2.0);
+  utils::append(dvalues, 3.0);
+  utils::append(dvalues, 4.0);
   
-  utils::DynVector dcol1;
-  dcol1.append(1.0);
-  dcol1.append(1.0);
-  dcol1.append(1.0);
-  dcol1.append(1.0);
-  
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+  utils::append(dcol1, 1.0);
+
   PtrCouplingData dpcd(new CouplingData(&dvalues,dummyMesh,false,1));
-  
+
   //init forces
-  utils::DynVector fvalues;
-  fvalues.append(0.1);
-  fvalues.append(0.1);
-  fvalues.append(0.1);
-  fvalues.append(0.1);
-  
-  utils::DynVector fcol1;
-  fcol1.append(0.2);
-  fcol1.append(0.2);
-  fcol1.append(0.2);
-  fcol1.append(0.2);
-  
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+  utils::append(fvalues, 0.1);
+
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+  utils::append(fcol1, 0.2);
+
   PtrCouplingData fpcd(new CouplingData(&fvalues,dummyMesh,false,1));
   
   DataMap data;
@@ -411,8 +418,8 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   
   pp.initialize(data);
   
-  dpcd->oldValues.column(0) = dcol1;
-  fpcd->oldValues.column(0) = fcol1;
+  dpcd->oldValues.col(0) = dcol1;
+  fpcd->oldValues.col(0) = fcol1;
   
   pp.performPostProcessing(data);
   
@@ -426,11 +433,12 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 0.199000000000000010214), (*data.at(1)->values)(3));
   
   
-  utils::DynVector newdvalues;
-  newdvalues.append(10.0);
-  newdvalues.append(10.0);
-  newdvalues.append(10.0);
-  newdvalues.append(10.0);
+  Eigen::VectorXd newdvalues;
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+  utils::append(newdvalues, 10.0);
+
   data.begin()->second->values = &newdvalues;
   
   pp.performPostProcessing(data);

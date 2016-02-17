@@ -8,6 +8,7 @@
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "utils/Helpers.hpp"
 #include "mesh/Data.hpp"
+#include "Eigen/Dense"
 #include <vector>
 
 namespace precice {
@@ -15,10 +16,10 @@ namespace cplscheme {
 
 struct CouplingData
 {
-  typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
+  typedef Eigen::MatrixXd DataMatrix;
 
   /// @brief Data values of current iteration.
-  utils::DynVector* values;
+  Eigen::VectorXd* values;
 
   /// @brief Data values of previous iteration (1st col) and previous timesteps.
   DataMatrix oldValues;
@@ -45,8 +46,8 @@ struct CouplingData
    * @brief Constructor.
    */
   CouplingData (
-    utils::DynVector* values,
-    mesh::PtrMesh       mesh,
+    Eigen::VectorXd*  values,
+    mesh::PtrMesh     mesh,
     bool              initialize,
     int               dimension)
     :

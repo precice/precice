@@ -1,7 +1,7 @@
 #include "NearestProjectionMapping.hpp"
 #include "query/FindClosest.hpp"
+#include "Eigen/Dense"
 #include "logging/LogMakros.hpp"
-
 
 namespace precice {
 namespace mapping {
@@ -85,8 +85,8 @@ void NearestProjectionMapping:: map
   ppreciceTrace2("map()", inputDataID, outputDataID);
   mesh::PtrData inData = input()->data(inputDataID);
   mesh::PtrData outData = output()->data(outputDataID);
-  const utils::DynVector& inValues = inData->values();
-  utils::DynVector& outValues = outData->values();
+  const Eigen::VectorXd& inValues = inData->values();
+  Eigen::VectorXd& outValues = outData->values();
   //assign(outValues) = 0.0;
   int dimensions = inData->getDimensions();
   assertion(dimensions == outData->getDimensions());
@@ -103,7 +103,7 @@ void NearestProjectionMapping:: map
         for (int dim=0; dim < dimensions; dim++){
           assertion(outOffset + dim < (size_t)outValues.size());
           assertion(inOffset + dim < (size_t)inValues.size());
-          outValues[outOffset + dim] += elem.weight * inValues[inOffset + dim];
+          outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
         }
       }
     }
@@ -121,7 +121,7 @@ void NearestProjectionMapping:: map
         for ( int dim=0; dim < dimensions; dim++ ){
           assertion(outOffset + dim < (size_t)outValues.size());
           assertion(inOffset + dim < (size_t)inValues.size());
-          outValues[outOffset + dim] += elem.weight * inValues[inOffset + dim];
+          outValues(outOffset + dim) += elem.weight * inValues(inOffset + dim);
         }
       }
     }

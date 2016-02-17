@@ -106,6 +106,9 @@ void ResidualSumPreconditioner::update(bool timestepComplete, const Eigen::Vecto
     }
 
     _requireNewQR = true;
+    if(_needsGlobalWeights){
+      communicateGlobalWeights();
+    }
 
   }
   else{

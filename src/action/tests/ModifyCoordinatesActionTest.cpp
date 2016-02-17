@@ -108,7 +108,7 @@ void ModifyCoordinatesActionTest:: testAddToCoordinates ()
    Edge & edge = mesh->createEdge ( v0, v1 );
    mesh->computeState();
    mesh->allocateDataValues ();
-   utils::DynVector& values = data->values ();
+   auto& values = data->values ();
 
    // Create ApplyDisplacementsMeshAction
    action::ModifyCoordinatesAction modifyCoordinates (
@@ -123,8 +123,10 @@ void ModifyCoordinatesActionTest:: testAddToCoordinates ()
    validate ( tarch::la::equals(edge.getNormal(), normalizedNormal) );
 
    // Set displacements
-   tarch::la::slice<2>(values,v0.getID()*2) = Vector2D(2.0);
-   tarch::la::slice<2>(values,v1.getID()*2) = Vector2D(-2.0);
+   values.segment(v0.getID()*2, 2) = Eigen::VectorXd::Constant(2, 2.0);
+   values.segment(v1.getID()*2, 2) = Eigen::VectorXd::Constant(2, -2.0);
+   //tarch::la::slice<2>(values,v0.getID()*2) = Vector2D(2.0);
+   //tarch::la::slice<2>(values,v1.getID()*2) = Vector2D(-2.0);
 
    // Apply displacements to  node coordinates
    modifyCoordinates.performAction(0.0, 0.0, 0.0, 0.0);
@@ -153,7 +155,7 @@ void ModifyCoordinatesActionTest:: testSubtractFromCoordinates ()
    Edge& edge = mesh->createEdge ( v0, v1 );
    mesh->computeState();
    mesh->allocateDataValues ();
-   utils::DynVector& values = data->values ();
+   auto& values = data->values ();
 
    // Create ApplyDisplacementsMeshAction
    action::ModifyCoordinatesAction modifyCoordinates (
@@ -169,8 +171,10 @@ void ModifyCoordinatesActionTest:: testSubtractFromCoordinates ()
    validate ( tarch::la::equals(edge.getNormal(), normalizedNormal) );
 
    // Set displacements
-   tarch::la::slice<2>(values,v0.getID()*2) = Vector2D(-2.0);
-   tarch::la::slice<2>(values,v1.getID()*2) = Vector2D(2.0);
+   values.segment(v0.getID()*2, 2) = Eigen::VectorXd::Constant(2, -2.0);
+   values.segment(v1.getID()*2, 2) = Eigen::VectorXd::Constant(2, 2.0);
+   //tarch::la::slice<2>(values,v0.getID()*2) = Vector2D(-2.0);
+   //tarch::la::slice<2>(values,v1.getID()*2) = Vector2D(2.0);
 
    // Apply displacements to  node coordinates
    modifyCoordinates.performAction(0.0, 0.0, 0.0, 0.0);

@@ -45,6 +45,20 @@ DynamicMatrix<Scalar>::DynamicMatrix (
 }
 
 template<typename Scalar>
+DynamicMatrix<Scalar>::DynamicMatrix (
+const Eigen::MatrixXd& mat
+) : 
+   _rows(mat.rows()),
+   _cols(mat.cols()),
+   _values(mat.rows() * mat.cols())
+{
+  for (int i = 0; i < _rows; i++) 
+    for (int j = 0; j < _cols; j++) {
+      _values[i*_cols + j] = mat(i, j);
+    }
+}
+
+template<typename Scalar>
 int DynamicMatrix<Scalar>::rows() const
 {
   return _rows;
@@ -87,7 +101,7 @@ DynamicMatrix<Scalar>::operator Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dyn
 {
   Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> A(_rows, _cols);
   for (int i = 0; i < _rows; i++) 
-    for (int j = 0; j < _cols; i++) {
+    for (int j = 0; j < _cols; j++) {
       A(i,j) = _values[i*_cols + j];
     }
   

@@ -20,6 +20,7 @@
 #include "io/TXTReader.hpp"
 #include "QRFactorization.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/EigenHelperFunctions.hpp"
 #include <string.h>
 //#include "utils/NumericalCompare.hpp"
 
@@ -217,7 +218,7 @@ void MMPostProcessing::initialize(
     int cols = pair.second->oldValues.cols();
     if (cols < 1) { // Add only, if not already done
       //assertion1(pair.second->values->size() > 0, pair.first);
-      pair.second->oldValues.append(CouplingData::DataMatrix(pair.second->values->size(), 1, 0.0));
+      utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
 
@@ -242,7 +243,7 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
   int off = 0;
   for (int id : _coarseDataIDs) {
     int size = cplData[id]->values->size();
-    utils::DynVector& valuesPart = *(cplData[id]->values);
+    auto& valuesPart = *(cplData[id]->values);
     for (int i = 0; i < size; i++) {
       // the coarse model optimization reverts its own scaling, hence valuesPart is not scaled, can be copied.
       _input_Xstar[i + off] = valuesPart[i];
@@ -255,7 +256,7 @@ void MMPostProcessing::registerSolutionCoarseModelOptimization
   off = 0;
   for (int id : _fineDataIDs) {
     int size = cplData[id]->values->size();
-    utils::DynVector& valuesPart = *(cplData[id]->values);
+    auto& valuesPart = *(cplData[id]->values);
     for (int i = 0; i < size; i++) {
       // write new coarse model solution back as input data for the fine model evaluation
       // _input_xStar needs to be updated in each iteration
@@ -296,31 +297,31 @@ void MMPostProcessing::setDesignSpecification(
  *         coupling scheme.
  *  ---------------------------------------------------------------------------------------------
  */        // TODO: change to call by ref when Eigen is used.
-std::map<int, utils::DynVector> MMPostProcessing::getDesignSpecification
+std::map<int, Eigen::VectorXd> MMPostProcessing::getDesignSpecification
 (
   DataMap& cplData)
 {
-  std::map<int, utils::DynVector> designSpecifications;
+  std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
   for (int id : _fineDataIDs) {
       int size = cplData[id]->values->size();
-      utils::DynVector q(size, 0.0);
+      Eigen::VectorXd q = Eigen::VectorXd::Zero(size);
       for (int i = 0; i < size; i++) {
         q(i) = _designSpecification(i+off);
       }
       off += size;
-      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
       designSpecifications.insert(pair);
     }
   off = 0;
   for (int id : _coarseDataIDs) {
       int size = cplData[id]->values->size();
-      utils::DynVector q(size, 0.0);
+      Eigen::VectorXd q = Eigen::VectorXd::Zero(size);
       for (int i = 0; i < size; i++) {
         q(i) = _coarseModel_designSpecification(i+off);
       }
       off += size;
-      std::map<int, utils::DynVector>::value_type pair = std::make_pair(id, q);
+      std::map<int, Eigen::VectorXd>::value_type pair = std::make_pair(id, q);
       designSpecifications.insert(pair);
     }
   return designSpecifications;
@@ -365,14 +366,14 @@ void MMPostProcessing::updateDifferenceMatrices(
     bool overdetermined = getLSSystemCols() <= getLSSystemRows();
     if (not columnLimitReached && overdetermined) {
 
-      appendFront(_matrixF, colF);
-      appendFront(_matrixC, colC);
+      utils::appendFront(_matrixF, colF);
+      utils::appendFront(_matrixC, colC);
 
       _matrixCols.front()++;
       }
     else {
-      shiftSetFirst(_matrixF, colF);
-      shiftSetFirst(_matrixC, colC);
+      utils::shiftSetFirst(_matrixF, colF);
+      utils::shiftSetFirst(_matrixC, colC);
 
       _matrixCols.front()++;
       _matrixCols.back()--;
@@ -693,9 +694,9 @@ void MMPostProcessing::concatenateCouplingData
   assertion2(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
   for (int id : _fineDataIDs) {
     int size = cplData[id]->values->size();
-    utils::DynVector& values = *cplData[id]->values;
-    utils::DynVector& coarseValues = *cplData[_coarseDataIDs.at(k)]->values;
-    utils::DynVector& coarseOldValues = cplData[_coarseDataIDs.at(k)]->oldValues.column(0);
+    auto& values = *cplData[id]->values;
+    auto& coarseValues = *cplData[_coarseDataIDs.at(k)]->values;
+    const auto& coarseOldValues = cplData[_coarseDataIDs.at(k)]->oldValues.col(0);
     assertion2(values.size() == coarseValues.size(), values.size(), coarseValues.size());
     assertion2(values.size() == coarseOldValues.size(), values.size(), coarseOldValues.size());
     for (int i = 0; i < size; i++) {
@@ -812,8 +813,8 @@ void MMPostProcessing::iterationsConverged
 
     // remove columns
     for (int i = 0; i < toRemove; i++) {
-      removeColumnFromMatrix(_matrixF, _matrixF.cols() - 1);
-      removeColumnFromMatrix(_matrixC, _matrixC.cols() - 1);
+      utils::removeColumnFromMatrix(_matrixF, _matrixF.cols() - 1);
+      utils::removeColumnFromMatrix(_matrixC, _matrixC.cols() - 1);
     }
     _matrixCols.pop_back();
   }
@@ -838,8 +839,8 @@ void MMPostProcessing::removeMatrixColumn
   deletedColumns++;
 
   assertion(_matrixF.cols() > 1);
-  removeColumnFromMatrix(_matrixF, columnIndex);
-  removeColumnFromMatrix(_matrixC, columnIndex);
+  utils::removeColumnFromMatrix(_matrixF, columnIndex);
+  utils::removeColumnFromMatrix(_matrixC, columnIndex);
 
   // Reduce column count
   std::deque<int>::iterator iter = _matrixCols.begin();
@@ -895,47 +896,6 @@ int MMPostProcessing::getLSSystemRows()
   }
   return _fineResiduals.size();
   //return _matrixF.rows();
-}
-
-
-void MMPostProcessing::shiftSetFirst
-(
-    Eigen::MatrixXd& A, Eigen::VectorXd& v)
-{
-  assertion2(v.size() == A.rows(), v.size(), A.rows());
-  int n = A.rows(), m = A.cols();
-  //A.bottomRightCorner(n, m - 1) = A.topLeftCorner(n, m - 1);
-  for(auto i = A.cols()-1; i > 0; i--)
-        A.col(i) = A.col(i-1);
-  A.col(0) = v;
-}
-
-void MMPostProcessing::appendFront
-(
-    Eigen::MatrixXd& A, Eigen::VectorXd& v)
-{
-  int n = A.rows(), m = A.cols();
-  if (n <= 0 && m <= 0) {
-    A = v;
-  } else {
-    assertion2(v.size() == n, v.size(), A.rows());
-    A.conservativeResize(n, m + 1);
-    //A.topRightCorner(n, m) = A.topLeftCorner(n, m); // bad error, reason unknown!
-    for(auto i = A.cols()-1; i > 0; i--)
-      A.col(i) = A.col(i-1);
-    A.col(0) = v;
-  }
-}
-
-void MMPostProcessing::removeColumnFromMatrix
-(
-    Eigen::MatrixXd& A, int col)
-{
-  assertion2(col < A.cols() && col >= 0, col, A.cols())
-  for (int j = col; j < A.cols() - 1; j++)
-    A.col(j) = A.col(j + 1);
-
-  A.conservativeResize(A.rows(), A.cols() - 1);
 }
 
 }}} // namespace precice, cplscheme, impl

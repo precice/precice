@@ -39,7 +39,7 @@ void ModifyCoordinatesAction:: performAction
 {
   preciceTrace ( "performAction()" );
   using tarch::la::slice;
-  utils::DynVector& values = _data->values();
+  auto& values = _data->values();
   int dim = getMesh()->getDimensions();
   utils::DynVector data(dim);
   if ( _mode == ADD_TO_COORDINATES_MODE ) {
