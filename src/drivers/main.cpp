@@ -50,12 +50,14 @@ int main ( int argc, char** argv )
   CommandLineLogger::FilterListEntry filter("", true); // All off
   CommandLineLogger::getInstance().addFilterListEntry(filter);
 
-  precice::logging::setupLogging();
   
   using namespace tarch::configuration;
   tarch::logging::Log log("");
+  precice::logging::setupLogging();
 
   precice::utils::Parallel::initializeMPI(&argc, &argv);
+  precice::logging::setMPIRank(precice::utils::Parallel::getProcessRank());
+
   precice::utils::Petsc::initialize(&argc, &argv);
 
   bool runTests = false;
