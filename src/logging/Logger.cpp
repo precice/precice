@@ -66,7 +66,7 @@ void setupLogging()
     << "] in "
     << expressions::attr<std::string>("Function") 
     << ": "
-    << expressions::message << std::endl;
+    << expressions::message; //<< std::endl;
     //<< "LineID: " << expressions::attr<unsigned int>("LineID") << std::endl
     //<< ", ThreadID: " << expressions::attr<attributes::current_thread_id::value_type>("ThreadID") << " "
     //<< ", ProcessID: " << expressions::attr<attributes::current_process_id::value_type>("ProcessID") << std::endl
