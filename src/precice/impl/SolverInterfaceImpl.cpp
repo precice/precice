@@ -272,6 +272,7 @@ void SolverInterfaceImpl:: configure
   strcpy(arg, "precice");
   char** argv = &arg;
   utils::Parallel::initializeMPI(&argc, &argv);
+  precice::logging::setMPIRank(utils::Parallel::getProcessRank());
   delete[] arg;
 
   // Setup communication to server
