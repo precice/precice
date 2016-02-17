@@ -30,7 +30,7 @@ using namespace std;
 namespace precice {
 namespace logging {
 
-Logger::Logger(std::string module)
+Logger<F3>::Logger(std::string module)
 {
   add_attribute("Module", boost::log::attributes::constant<std::string>(module));
 }
@@ -41,7 +41,6 @@ void setupLogging()
   add_common_attributes();
   core::get()->add_global_attribute("Scope", attributes::named_scope());
   core::get()->add_global_attribute("Rank", attributes::mutable_constant<int>(0));
-  //core::get()->add_global_attribute("Foobar", attributes::mutable_constant<int>(10));
   core::get()->add_global_attribute("Line", attributes::mutable_constant<int>(0));
   core::get()->add_global_attribute("File", attributes::mutable_constant<std::string>(""));
   core::get()->add_global_attribute("Function", attributes::mutable_constant<std::string>(""));
@@ -54,17 +53,25 @@ void setupLogging()
 
   auto fmtStream =
     expressions::stream
-    << "LineID: " << expressions::attr<unsigned int>("LineID") << std::endl
+    << "(" 
+    << expressions::attr<int>("Rank")
+    << ") "
+    << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S")
+    << " "
+    << expressions::attr<std::string>("File")
+    << ":"
+    << expressions::attr<int>("Line")
+    << " ["
+    << expressions::attr<std::string>("Module")
+    << "] in "
+    << expressions::attr<std::string>("Function") 
+    << ": "
+    << expressions::message << std::endl;
+    //<< "LineID: " << expressions::attr<unsigned int>("LineID") << std::endl
     //<< ", ThreadID: " << expressions::attr<attributes::current_thread_id::value_type>("ThreadID") << " "
     //<< ", ProcessID: " << expressions::attr<attributes::current_process_id::value_type>("ProcessID") << std::endl
-    << "Line: " << expressions::attr<int>("Line") << ", File: " << expressions::attr<std::string>("File")
-    //<< "Foobar: " << expressions::attr<int>("Foobar") << std::endl
-    << ", Function: " << expressions::attr<std::string>("Function") << std::endl
-    << "Time: " << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S")
-    << ", Rank: " << expressions::attr<int>("Rank") << ", Severity: " << trivial::severity
-    << ", Module: " << expressions::attr<std::string>("Module") << std::endl
-    << "Scope: " << expressions::format_named_scope("Scope", keywords::format = "%n in %f:%l)") << std::endl
-    << "Message: " << expressions::message << std::endl;
+    //<< ", Severity: " << trivial::severity
+    //<< "Scope: " << expressions::format_named_scope("Scope", keywords::format = "%n in %f:%l)") << std::endl
 
   boost::log::add_file_log("sample.log", keywords::format = fmtStream); // state namespace here for
                                                                         // consisitency with
