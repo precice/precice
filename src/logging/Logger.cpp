@@ -30,7 +30,7 @@ using namespace std;
 namespace precice {
 namespace logging {
 
-Logger<F3>::Logger(std::string module)
+Logger::Logger(std::string module)
 {
   add_attribute("Module", boost::log::attributes::constant<std::string>(module));
 }
