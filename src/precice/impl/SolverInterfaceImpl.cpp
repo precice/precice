@@ -281,7 +281,8 @@ void SolverInterfaceImpl:: configure
 double SolverInterfaceImpl:: initialize()
 {
   preciceTrace("initialize()");
-  Event e("initialize", not precice::testMode);
+  //Event e("initialize", not precice::testMode);
+  Event e("initialize");
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "initialize"
@@ -428,7 +429,8 @@ double SolverInterfaceImpl:: initialize()
 void SolverInterfaceImpl:: initializeData ()
 {
   preciceTrace("initializeData()" );
-  Event e("initializeData", not precice::testMode);
+//  Event e("initializeData", not precice::testMode);
+  Event e("initializeData");
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "initializeData"
@@ -463,7 +465,8 @@ double SolverInterfaceImpl:: advance
 
   EventRegistry::printGlobalDuration();
 
-  Event e("advance", not precice::testMode);
+//  Event e("advance", not precice::testMode);
+  Event e("advance");
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "advance"
