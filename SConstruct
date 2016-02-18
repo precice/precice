@@ -79,9 +79,6 @@ conf = Configure(env) # For checking libraries, headers, ...
 Help(vars.GenerateHelpText(env))
 env.Append(CPPPATH = ['#src'])
 
-# Produce position independent code for dynamic linking. makes a difference on the m68k, PowerPC and SPARC.
-env.Append(CCFLAGS = ['-fPIC'])
-
 print
 print_options(vars)
 
