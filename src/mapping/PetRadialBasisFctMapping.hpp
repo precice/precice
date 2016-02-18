@@ -227,11 +227,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   KSPReset(_solver);
 
-  IS ISlocal, ISglobal, ISidentity, ISidentityGlobal;
+  IS ISlocal, ISlocalInv, ISglobal, ISidentity, ISidentityGlobal;
   ISLocalToGlobalMapping ISidentityMapping;
   // Create an index set which maps myIndizes to continous chunks of matrix rows.
   ierr = ISCreateGeneral(PETSC_COMM_WORLD, myIndizes.size(), myIndizes.data(), PETSC_COPY_VALUES, &ISlocal); CHKERRV(ierr);
-  ierr = ISAllGather(ISlocal, &ISglobal); CHKERRV(ierr); // Gather the IS from all processors
+  ierr = ISSetPermutation(ISlocal); CHKERRV(ierr);
+  ierr = ISInvertPermutation(ISlocal, myIndizes.size(), &ISlocalInv); CHKERRV(ierr);
+  ierr = ISAllGather(ISlocalInv, &ISglobal); CHKERRV(ierr); // Gather the IS from all processors
   ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr); // Make it a mapping
   
   // Create an identity mapping and use that for the rows of matrixA.
@@ -511,20 +513,18 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     petsc::Vector Au(_matrixC, "Au");
     petsc::Vector out(_matrixC, "out");
     petsc::Vector in(_matrixA, "in");
-    ierr = VecSetLocalToGlobalMapping(in.vector, _ISmapping); CHKERRV(ierr);
+    // ierr = VecSetLocalToGlobalMapping(in.vector, _ISmapping); CHKERRV(ierr);
 
     for (int dim=0; dim < valueDim; dim++) {
       // Fill input from input data values
-      preciceDebug("in vector ownerRange = " << in.ownerRange());
-      preciceDebug("polyparams = " << polyparams << ", valueDim = " << valueDim << ", dim = " << dim);
+      // preciceDebug("in vector ownerRange = " << in.ownerRange());
+      // preciceDebug("polyparams = " << polyparams << ", valueDim = " << valueDim << ", dim = " << dim);
       // for (int i = in.ownerRange().first; i < in.ownerRange().second; i++) {
-
-      // for (int i = in.ownerRange().first; i < in.ownerRange().second; i++) {
+      preciceDebug("input()->vertices().size() = " << input()->vertices().size());
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
         int globalIndex = input()->vertices()[i].getGlobalIndex(); // i - ownerRange.first ?
-        preciceDebug("globalIndex = " << globalIndex);
-        preciceDebug("Filling input vector(" << globalIndex << ") = inValues[" << (i)*valueDim + dim << "] = " << inValues[(i)*valueDim + dim]);
-        VecSetValueLocal(in.vector, globalIndex, inValues[(i)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+        // preciceDebug("Filling input vector in[" << globalIndex << "] = inValues[" << (i)*valueDim + dim << "] = " << inValues[(i)*valueDim + dim]);
+        VecSetValue(in.vector, globalIndex, inValues[(i)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
 
         // Begin Benjamin
         // preciceDebug("Filling input vector(" << i << ") = " <<  inValues[(i-polyparams)*valueDim + dim]);
