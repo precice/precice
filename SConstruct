@@ -71,7 +71,7 @@ vars.Add(BoolVariable("spirit2", "Used for parsing VRML file geometries and chec
 vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", True))
 vars.Add(BoolVariable("gprof", "Used in detailed performance analysis.", False))
-
+vars.Add(EnumVariable('platform', 'Special configuration for certain platforms', "none", allowed_values=('none', 'supermuc')))
 
 env = Environment(variables = vars, ENV = os.environ)   # For configuring build variables
 conf = Configure(env) # For checking libraries, headers, ...
@@ -277,6 +277,11 @@ if env["gprof"]:
     env.Append(CCFLAGS = ['-p', '-pg'])
     env.Append(LINKFLAGS = ['-p', '-pg'])
     buildpath += "-gprof"
+
+# ====== Special Platforms ======
+if env["platform"] == "supermuc":
+    env.Append(CPPDEFINES = ['SuperMUC_WORK'])
+
 
 print '... done'
 
