@@ -1,13 +1,11 @@
 #ifndef PRECICE_NO_PETSC
 
 #include <string>
-#include <cstdlib>
-#include <cstdio>
-#include <ctime>
 #include <limits>
+#include <random>
 #include "petnum.hpp"
-
-#include "petscviewer.h" 
+#include "petscviewer.h"
+#include "petscdraw.h"
 
 namespace petsc {
 
@@ -50,14 +48,6 @@ Vector::Vector(Matrix &m, std::string name, LEFTRIGHT type)
   }
   setName(name);
 }
-
-// Vector::Vector(const Vector &v, std::string name)
-// {
-//   PetscErrorCode ierr = 0;
-//   ierr = VecDuplicate(v.vector, &vector); CHKERRV(ierr);
-//   if (!name.empty())
-//     ierr = PetscObjectSetName( (PetscObject)vector, name.c_str()); CHKERRV(ierr);    
-// }
 
 Vector::~Vector()
 {
@@ -115,7 +105,6 @@ void Vector::arange(double start, double stop)
   double step_size = (stop-start) / size;
   ierr = VecGetArray(vector, &a); CHKERRV(ierr); 
   for (PetscInt i = range_start; i < range_end; i++) {
-    // a[i - range_start] = i + start;
     a[i - range_start] = (i + start) * step_size;
   }
   VecRestoreArray(vector, &a);
@@ -126,11 +115,12 @@ void Vector::fill_with_randoms()
   PetscErrorCode ierr = 0;
   PetscRandom rctx;
 
-  unsigned long seed = (double) std::rand()/RAND_MAX  * std::numeric_limits<unsigned long>::max();
-    
+  std::random_device rd;
+  std::uniform_real_distribution<double> dist(0, 1);
+
   PetscRandomCreate(PETSC_COMM_WORLD, &rctx);
   PetscRandomSetType(rctx, PETSCRAND48);
-  PetscRandomSetSeed(rctx, seed);
+  PetscRandomSetSeed(rctx, dist(rd));
   PetscRandomSeed(rctx);     
   ierr = VecSetRandom(vector, rctx); CHKERRV(ierr);
   PetscRandomDestroy(&rctx);
@@ -163,22 +153,29 @@ std::pair<PetscInt, PetscInt> Vector::ownerRange()
   return std::make_pair(range_start, range_end);
 }
   
+void Vector::write(std::string filename)
+{
+  PetscErrorCode ierr = 0;
+  PetscViewer fd;
+  PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_WRITE, &fd); CHKERRV(ierr);
+  VecView(vector, fd); CHKERRV(ierr);
+  PetscViewerDestroy(&fd);
+}
+
+void Vector::read(std::string filename)
+{
+   PetscErrorCode ierr = 0;
+   PetscViewer fd;
+   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_READ, &fd); CHKERRV(ierr);
+   VecLoad(vector, fd); CHKERRV(ierr); CHKERRV(ierr);
+   PetscViewerDestroy(&fd);
+}
+
 void Vector::view()
 {
   PetscErrorCode ierr;
   ierr = VecView(vector, PETSC_VIEWER_STDOUT_WORLD); CHKERRV(ierr);
 }
-
-void Vector::write(std::string filename)
-{
-  PetscViewer viewer;
-  PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename.c_str(), &viewer);
-  PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_MATLAB);
-  VecView(vector, viewer);
-  PetscViewerDestroy(&viewer);
-}
-
-
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -194,7 +191,7 @@ Matrix::Matrix(MPI_Comm comm, std::string name)
 Matrix::~Matrix()
 {
   PetscErrorCode ierr = 0;
-  // ierr = MatDestroy(&matrix); CHKERRV(ierr);
+  ierr = MatDestroy(&matrix); CHKERRV(ierr);
 }
 
 void Matrix::assemble(MatAssemblyType type)
@@ -243,16 +240,12 @@ void Matrix::setValue(PetscInt row, PetscInt col, PetscScalar value)
   ierr = MatSetValue(matrix, row, col, value, INSERT_VALUES); CHKERRV(ierr);
 }
 
-
-
-
 void Matrix::fill_with_randoms()
 {
   PetscErrorCode ierr = 0;
   PetscRandom rctx;
 
   unsigned long seed = (double) std::rand()/RAND_MAX * std::numeric_limits<unsigned long>::max();
-    
   PetscRandomCreate(communicator, &rctx);
   PetscRandomSetType(rctx, PETSCRAND48);
   PetscRandomSetSeed(rctx, seed);
@@ -296,18 +289,26 @@ std::pair<PetscInt, PetscInt> Matrix::ownerRange()
   
 void Matrix::write(std::string filename)
 {
-  PetscViewer viewer;
-  std::remove(filename.c_str()); // ugly
-  PetscViewerASCIIOpen(communicator, filename.c_str(), &viewer);
-  PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_MATLAB);
-  MatView(matrix, viewer);
-  PetscViewerDestroy(&viewer);
-        
+  PetscErrorCode ierr = 0;
+  PetscViewer fd;
+  PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_WRITE, &fd); CHKERRV(ierr);
+  MatView(matrix, fd); CHKERRV(ierr);
+  PetscViewerDestroy(&fd);
 }
+
+void Matrix::read(std::string filename)
+{
+   PetscErrorCode ierr = 0;
+   PetscViewer fd;
+   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_READ, &fd); CHKERRV(ierr);
+   MatLoad(matrix, fd); CHKERRV(ierr); CHKERRV(ierr);
+   PetscViewerDestroy(&fd);
+}
+
 
 void Matrix::view()
 {
-  PetscErrorCode ierr;
+  PetscErrorCode ierr = 0;
   PetscViewer viewer;
   ierr = PetscViewerCreate(communicator, &viewer); CHKERRV(ierr);
   ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII); CHKERRV(ierr); 
@@ -318,12 +319,16 @@ void Matrix::view()
 
 void Matrix::viewDraw()
 {
-  PetscErrorCode ierr;
+  PetscErrorCode ierr = 0;
   PetscViewer viewer;
+  PetscDraw draw;
   ierr = PetscViewerCreate(communicator, &viewer); CHKERRV(ierr);
   ierr = PetscViewerSetType(viewer, PETSCVIEWERDRAW); CHKERRV(ierr); 
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
-  ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr); 
+  ierr = PetscViewerDrawGetDraw(viewer, 0, &draw); CHKERRV(ierr);
+  ierr = PetscDrawSetPause(draw, -2); CHKERRV(ierr); // pause on destroy
+  ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr);
+  ierr = PetscDrawDestroy(&draw); CHKERRV(ierr); 
 }
 
 }

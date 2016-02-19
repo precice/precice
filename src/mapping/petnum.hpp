@@ -63,10 +63,14 @@ public:
 
   /// Returns a pair that mark the beginning and end of the vectors ownership range. Use first und second to access.
   std::pair<PetscInt, PetscInt> ownerRange();
-    
-  void view();
 
-  void write(std::string filename);  
+  /// Writes the vector to the PETSc binary format
+  void write(std::string filename);
+
+  /// Reads the vector from the PETSc binary format
+  void read(std::string filename);
+
+  void view();
 };
 
   
@@ -110,8 +114,13 @@ public:
   /// Returns a pair that mark the beginning and end of the matrix' ownership range. Use first und second to access.
   std::pair<PetscInt, PetscInt> ownerRange();
 
+  /// Writes the matrix to PETSc the binary format
   void write(std::string filename);
-  
+
+  /// Reads the matrix from PETSc the binary format
+  void read(std::string filename);
+
+  /// Prints the matrix
   void view();
 
   void viewDraw();
