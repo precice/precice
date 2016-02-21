@@ -165,6 +165,9 @@ if not env["spirit2"]:
 
 # ====== MPI ======
 if env["mpi"]:
+    # Skip (deprecated) MPI C++ bindings.
+    env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
+
     if not env["compiler"].startswith('mpi'):
         mpiLibPath = checkset_var('PRECICE_MPI_LIB_PATH', "/usr/lib/")
         mpiLib = checkset_var('PRECICE_MPI_LIB', "mpich")
