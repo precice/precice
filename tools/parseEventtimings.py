@@ -35,7 +35,7 @@ with one list item for timings of each run.
 """
 
 
-import locale, shlex, time
+import locale, shlex, datetime
 import numpy as np
 
 def readBlock(f):
@@ -58,7 +58,7 @@ def readBlock(f):
 def parseTimings(tStr):
     """ Returns event name and timings as a dict. """
     s = shlex.split(tStr)
-    return [s[0], np.array(s[1:])]
+    return [s[0], np.array(s[1:]).astype(float)]
     
 
 def parseEventlog(file):
@@ -68,7 +68,7 @@ def parseEventlog(file):
     events = []
     
     for i in readBlock("EventTimings.log"):
-        timeStamp = time.strptime(i[0][18:], "%a %b %d %H:%M:%S %Y")
+        timeStamp = datetime.datetime.strptime(i[0][18:], "%a %b %d %H:%M:%S %Y")
         globalTimings = parseTimings(i[2])
 
         thisEvent = { s[0] : s[1] for s in map(parseTimings, i[3:]) }
