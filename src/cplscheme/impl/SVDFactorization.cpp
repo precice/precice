@@ -95,19 +95,16 @@ void SVDFactorization::reset()
 
 SVDFactorization::Matrix& SVDFactorization::matrixPhi()
 {
-  assertion(_preconditionerApplied);
   return _phi;
 }
 
 SVDFactorization::Matrix& SVDFactorization::matrixPsi()
 {
-  assertion(_preconditionerApplied);
   return _psi;
 }
 
 SVDFactorization::Vector& SVDFactorization::singularValues()
 {
-  assertion(_preconditionerApplied);
   return _sigma;
 }
 

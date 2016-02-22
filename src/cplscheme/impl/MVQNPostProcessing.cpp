@@ -626,12 +626,12 @@ void MVQNPostProcessing::restartIMVJ()
   {
     int rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
 
+    // INVARIANT: all objects are unscaled and entry and unscaled at exit
+
     // if it is the first time step, there is no initial SVD, so take all Wtil, Z matrices
     // otherwise, the first element of each container holds the decomposition of the current
     // truncated SVD, i.e., Wtil^0 = \phi, Z^0 = S\psi^T, this should not be added to the SVD.
     int q = _svdJ.isSVDinitialized() ? 1 : 0;
-    //apply preconditioner to internal matrices PSI, PHI of truncated SVD representation of J
-    _svdJ.applyPreconditioner();
 
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
     for(; q < (int)_WtilChunk.size(); q++){
@@ -665,9 +665,6 @@ void MVQNPostProcessing::restartIMVJ()
     _WtilChunk.push_back(psi);
     _pseudoInverseChunk.push_back(Z);
 
-    // revert preconditioner of matrices PHI, PSI of truncated SVD representation of J
-    _svdJ.revertPreconditioner();
-
     preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste);
     double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
@@ -687,7 +684,8 @@ void MVQNPostProcessing::restartIMVJ()
      }
 
      // preconditioning
-     _preconditioner->apply(_matrixW_RSLS);
+     // no need to precondition _matrixW_RSLS, as it is not used for computation in here
+     //_preconditioner->apply(_matrixW_RSLS);
      _preconditioner->apply(_matrixV_RSLS);
 
      QRFactorization qr(_filter);
@@ -731,8 +729,11 @@ void MVQNPostProcessing::restartIMVJ()
      _WtilChunk.push_back(_matrixW_RSLS);
      _pseudoInverseChunk.push_back(pseudoInverse);
 
-     _preconditioner->revert(_matrixW_RSLS);
+     // no need to precondition _matrixW_RSLS, as it is not used for computation in here
      _preconditioner->revert(_matrixV_RSLS);
+     // account for the scaled matrix V'=PV that has been used to compute the pseudo inverse.
+     // unscale the pseudo inverse, i.e., compute Z = Z'*P where Z' = Z*P^-1 (svd update is done unscaled)
+     _preconditioner->apply(_pseudoInverseChunk.front(), true, false);
 
    }
 
@@ -794,34 +795,8 @@ void MVQNPostProcessing:: specializedIterationsConverged
     // need to apply the preconditioner, as all data structures are reverted after
     // call to computeQNUpdate. Need to call this before the preconditioner is updated.
 
-    // |= PRECONDITIONING (all objects are unscaled) ============|
-    // _preconditioner->apply(_residuals);
+    // |= PRECONDITIONING  V         ============|
     _preconditioner->apply(_matrixV);
-    _preconditioner->apply(_matrixW);  // only needed in buildWtil(), should not be called in buildJacobain() TODO
-
-    // Wtil needs to be preconditioned if it is not re-built from scratch, i.e., if either
-    // the efficient IMVJ update or the IMVJ restart mode is used
-    _preconditioner->apply(_Wtil);
-
-    // if imvj is used in restart mode, all stored matrices Wtil^q and Z^q within the
-    // current chunk need to be scaled with the current preconditioner weights
-    if(_imvjRestart){
-      // see below how J needs to be scaled. If this is applied to the sub-blocks of the
-      // Jacobian, the following preconditioning of the local matrices Wtil^q and Z^q falls out.
-      // [Wtil^q]' := P * Wtil^q      and     [Z^q]' := Z^q * P^-1
-      for(int i = 0; i < (int)_WtilChunk.size(); i++){
-        _preconditioner->apply(_WtilChunk[i]);
-        _preconditioner->revert(_pseudoInverseChunk[i], true, false);
-      }
-
-      // if imvj is used in no-restart mode, the full matrix J needs to be preconditioned
-    }else{
-      // J needs to be scaled as follows:       J' := P * J * P^-1
-      // where P = diag(P1,P2,...) and Pi = diag(w1i, w2i, ..).
-      // Thus, P^-1 needs the weights from all procs, i.e., global weights.
-      _preconditioner->apply(_oldInvJacobian,false);
-      _preconditioner->revert(_oldInvJacobian,true);
-    }
 
     if(_preconditioner->requireNewQR()){
       if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
@@ -829,7 +804,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
       }
       _preconditioner->newQRfulfilled();
     }
-    // |===================                        ============|
+    // |===================          ============|
 
     // apply the configured filter to the LS system
     // as it changed in BaseQNPostProcessing::iterationsConverged()
@@ -840,8 +815,14 @@ void MVQNPostProcessing:: specializedIterationsConverged
 
       // add the matrices Wtil and Z of the converged configuration to the storage containers
       Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
-      pseudoInverse(Z);                              // TODO: re-computation could be avoided .. in this case Z needs to be preconditioned.
+      // compute pseudo inverse using QR factorization and back-substitution
+      pseudoInverse(Z);   // TODO: re-computation could be avoided .. in this case Z needs to be preconditioned.
 
+      // account for the scaled matrix V'=PV that has been used to compute the pseudo inverse.
+      // unscale the pseudo inverse, i.e., compute Z = Z'*P where Z' = Z*P^-1 (svd update is done unscaled)
+      _preconditioner->apply(Z, true, false);
+
+      // all objects in Wtil chunk and Z chunk are NOT PRECONDITIONED
       _WtilChunk.push_back(_Wtil);
       _pseudoInverseChunk.push_back(Z);
 
@@ -854,30 +835,40 @@ void MVQNPostProcessing:: specializedIterationsConverged
 
       // only in imvj normal mode with efficient update:
     }else{
+      // |= APPLY PRECONDITIONING  W, Wtil, J    ============|
+      _preconditioner->apply(_matrixW);  // only needed in buildWtil(), should not be called in buildJacobain() TODO
+
+      // Wtil needs to be preconditioned if it is not re-built from scratch, i.e., if either
+      // the efficient IMVJ update or the IMVJ restart mode is used
+      _preconditioner->apply(_Wtil);
+
+      // if imvj is used in no-restart mode, the full matrix J needs to be preconditioned
+      // J needs to be scaled as follows:       J' := P * J * P^-1
+      // where P = diag(P1,P2,...) and Pi = diag(w1i, w2i, ..).
+      // Thus, P^-1 needs the weights from all procs, i.e., global weights.
+      _preconditioner->apply(_oldInvJacobian,false);
+      _preconditioner->revert(_oldInvJacobian,true);
+      // |===================                    ============|
+
       // compute explicit representation of Jacobian
       buildJacobian();
+
+      // |= REVERT PRECONDITIONING  W, Wtil, J   ============|
+      _preconditioner->revert(_matrixW); // TODO: guess not needed
+      _preconditioner->revert(_Wtil);
+      _preconditioner->revert(_oldInvJacobian,false);
+      _preconditioner->apply(_oldInvJacobian,true);
+      // |===================                    ============|
     }
     //              ------------------------------------------
 
     // |= PRECONDITIONING ====                       ============|
     //_preconditioner->revert(_residuals); // TODO not needed I think ??
     _preconditioner->revert(_matrixV);
-    _preconditioner->revert(_matrixW); // TODO: guess not needed
-    _preconditioner->revert(_Wtil);
 
-    // preconditioning of Jacobian
-    if(_imvjRestart){
-      // note: If restartIMVJ() was called for restart type=RS-SVD, the containers are of size
-      // one and hold the truncated SVD of J, which is reverted (compare: revert(_invJacobain))
-      for(int i = 0; i < (int)_WtilChunk.size(); i++){
-         _preconditioner->revert(_WtilChunk[i]);
-         _preconditioner->apply(_pseudoInverseChunk[i], true, false);
-       }
-    }else{
-      _preconditioner->revert(_oldInvJacobian,false);
-      _preconditioner->apply(_oldInvJacobian,true);
-    }
-    // |=====================                        ============|
+    // Note: in imvj-restart mode, type=SVD, the SVD is updated with unscaled matrices
+    // Wtil^q and Z^q, hence nothing to revert in this case. type=RS-LS handles preconditioning
+
 
 
     /** in case of enforced initial relaxation, the matrices are cleared

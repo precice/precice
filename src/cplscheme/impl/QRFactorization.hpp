@@ -98,8 +98,8 @@ public:
     * @brief resets the QR factorization to the given factorization Q, R
     */
    void reset(
-	EigenMatrix Q, 
-	EigenMatrix R, 
+	EigenMatrix const &Q,
+	EigenMatrix const &R,
 	int rows, 
 	int cols,
 	double omega=0,
@@ -110,7 +110,7 @@ public:
     * @brief resets the QR factorization to be the factorization of A = QR
     */
    void reset(
-	EigenMatrix A,
+	EigenMatrix const& A,
 	int globalRows,
 	double omega=0,
   double theta=1./0.7,

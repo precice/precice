@@ -68,13 +68,10 @@ public:
      preciceTrace(__func__);
      utils::Event e("SVD update", true, true);
      assertion(_initialized);
-     assertion(_preconditionerApplied);
      /** updates the truncated svd factorization of the Jacobian with a rank-1 modification
       *
       * \psi * \sigma * \phi <-- \psi * \sigma * \phi + A * B^T
       *
-      * PRECONDITION: The internal representation of the SVD is preconditioned correctly and also the
-      * incoming matrices A and B.
       */
      if(_initialSVD){
        assertion2(A.rows() == _rows, A.rows(), _rows);

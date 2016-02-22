@@ -609,8 +609,8 @@ void QRFactorization::reset()
 }
 
 void QRFactorization::reset(
-  EigenMatrix Q, 
-  EigenMatrix R, 
+  EigenMatrix const& Q,
+  EigenMatrix const& R,
   int rows, 
   int cols, 
   double omega, 
@@ -632,7 +632,7 @@ void QRFactorization::reset(
 }
 
 void QRFactorization::reset(
-  EigenMatrix A, 
+  EigenMatrix const& A,
   int globalRows,
   double omega, 
   double theta, 
