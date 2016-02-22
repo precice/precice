@@ -35,6 +35,11 @@ public:
     const std::string& receiver,
     m2n::M2N::SharedPointer m2n );
 
+  /*
+   * @bried Prepare geometry for creation, i.e. communicate mesh
+   */
+  void prepare ( mesh::Mesh& seed );
+
 protected:
 
   /**

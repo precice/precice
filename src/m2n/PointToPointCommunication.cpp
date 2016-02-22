@@ -461,7 +461,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
               "PointToPointCommunication::acceptConnection/createDirectories");
 
       for (int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
-        Publisher::createDirectory(addressDirectory + "/" + "." + nameAcceptor +
+        Publisher::createDirectory(addressDirectory + "/" + "." + nameAcceptor + "-" + _mesh->getName() +
                                    "-" + std::to_string(rank) + ".address");
       }
     }
@@ -485,7 +485,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
-  Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" +
+  Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" + _mesh->getName() + "-" +
                                      std::to_string(utils::MasterSlave::_rank) +
                                      ".address");
 #endif
@@ -652,7 +652,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
     auto c = _communicationFactory->newCommunication();
 
 #ifdef SuperMUC_WORK
-    Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" +
+    Publisher::ScopedPushDirectory spd("." + nameAcceptor + "-" + _mesh->getName() + "-" +
                                        std::to_string(globalAcceptorRank) +
                                        ".address");
 #endif

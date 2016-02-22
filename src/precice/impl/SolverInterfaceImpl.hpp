@@ -671,9 +671,14 @@ private:
     const m2n::M2NConfiguration::SharedPointer& m2nConfig );
 
   /**
-   * @brief Creates the mesh and context data structure of a geometry.
+   * @brief Creates context data structure of a geometry, communicates mesh structures
    */
-  void createMeshContext ( impl::MeshContext& meshContext );
+  void prepareGeometry ( impl::MeshContext& meshContext );
+
+  /**
+   * @brief Creates the mesh of a geometry.
+   */
+  void createGeometry ( impl::MeshContext& meshContext );
 
   /**
    * @brief Computes, performs, and resets all suitable write mappings.
