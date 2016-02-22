@@ -633,6 +633,9 @@ void MVQNPostProcessing::restartIMVJ()
     // truncated SVD, i.e., Wtil^0 = \phi, Z^0 = S\psi^T, this should not be added to the SVD.
     int q = _svdJ.isSVDinitialized() ? 1 : 0;
 
+    // apply preconditioner to truncated SVD of Jacobian
+    _svdJ.applyPreconditioner();
+
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
     for(; q < (int)_WtilChunk.size(); q++){
       // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
@@ -664,6 +667,9 @@ void MVQNPostProcessing::restartIMVJ()
     // store factorized truncated SVD of J
     _WtilChunk.push_back(psi);
     _pseudoInverseChunk.push_back(Z);
+
+    // revert preconditioner for truncated SVD of Jacobian
+    _svdJ.revertPreconditioner();
 
     preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste);
     double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
@@ -818,10 +824,8 @@ void MVQNPostProcessing:: specializedIterationsConverged
       // compute pseudo inverse using QR factorization and back-substitution
       pseudoInverse(Z);   // TODO: re-computation could be avoided .. in this case Z needs to be preconditioned.
 
-      // account for the scaled matrix V'=PV that has been used to compute the pseudo inverse.
-      // unscale the pseudo inverse, i.e., compute Z = Z'*P where Z' = Z*P^-1 (svd update is done unscaled)
+      // push back unscaled pseudo Inverse, Wtil is also unscaled.
       _preconditioner->apply(Z, true, false);
-
       // all objects in Wtil chunk and Z chunk are NOT PRECONDITIONED
       _WtilChunk.push_back(_Wtil);
       _pseudoInverseChunk.push_back(Z);
@@ -830,17 +834,31 @@ void MVQNPostProcessing:: specializedIterationsConverged
        *  Restart the IMVJ according to restart type
        */
       if ((int)_WtilChunk.size() >= _chunkSize){
+
+        // |= APPLY PRECONDITIONING  J_prev = Wtil^q, Z^q  ===|
+        for(int i = 0; i < (int)_WtilChunk.size(); i++){
+          _preconditioner->apply(_WtilChunk[i]);
+          _preconditioner->revert(_pseudoInverseChunk[i], true, false);
+        }
+        _preconditioner->apply(_Wtil);
+        // |===================                            ===|
+
+        // < RESTART >
         restartIMVJ();
+
+        // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
+        assertion1(_WtilChunk.size() == 0, _WtilChunk.size());
+        _preconditioner->revert(_WtilChunk.front());
+        _preconditioner->apply(_pseudoInverseChunk.front(), true, false);
+        _preconditioner->revert(_Wtil);
+        // |===================                             ==|
       }
+
 
       // only in imvj normal mode with efficient update:
     }else{
       // |= APPLY PRECONDITIONING  W, Wtil, J    ============|
       _preconditioner->apply(_matrixW);  // only needed in buildWtil(), should not be called in buildJacobain() TODO
-
-      // Wtil needs to be preconditioned if it is not re-built from scratch, i.e., if either
-      // the efficient IMVJ update or the IMVJ restart mode is used
-      _preconditioner->apply(_Wtil);
 
       // if imvj is used in no-restart mode, the full matrix J needs to be preconditioned
       // J needs to be scaled as follows:       J' := P * J * P^-1
@@ -855,7 +873,6 @@ void MVQNPostProcessing:: specializedIterationsConverged
 
       // |= REVERT PRECONDITIONING  W, Wtil, J   ============|
       _preconditioner->revert(_matrixW); // TODO: guess not needed
-      _preconditioner->revert(_Wtil);
       _preconditioner->revert(_oldInvJacobian,false);
       _preconditioner->apply(_oldInvJacobian,true);
       // |===================                    ============|
