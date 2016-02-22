@@ -116,57 +116,33 @@ Publisher::eventNamePrefix() {
 Publisher::Publisher(std::string const& fp) : _fp(buildFilePath(fp)) {
 }
 
-void
-Publisher::read(std::string& data) const {
+void Publisher::read(std::string& data) const
+{
   std::ifstream ifs;
-
-  auto beforeReadTimeStamp =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          Event::Clock::now().time_since_epoch());
 
   do {
     ifs.open(filePath(), std::ifstream::in);
   } while (not ifs);
 
-  auto afterReadTimeStamp =
-      std::chrono::duration_cast<std::chrono::milliseconds>(
-          Event::Clock::now().time_since_epoch());
-
   std::chrono::milliseconds::rep writeTimeStampCount;
 
   {
     std::string line;
-
     std::getline(ifs, line);
-
     std::istringstream iss(line);
-
     iss >> writeTimeStampCount;
-
     std::getline(ifs, data);
   }
-
-  std::chrono::milliseconds writeTimeStamp(writeTimeStampCount);
-
-  std::chrono::milliseconds readDuration;
-
-  if (writeTimeStamp > beforeReadTimeStamp)
-    readDuration = afterReadTimeStamp - writeTimeStamp;
-  else
-    readDuration = afterReadTimeStamp - beforeReadTimeStamp;
-
-  Event(_prefix + "Publisher::read", readDuration);
 }
 
-void
-Publisher::write(std::string const& data) const {
+void Publisher::write(std::string const& data) const
+{
   createDirectory(parentPath(filePath()));
 
   {
     std::ofstream ofs(filePath() + "~", std::ofstream::out);
 
-    auto writeTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(
-        Event::Clock::now().time_since_epoch());
+    auto writeTimeStamp = std::chrono::duration_cast<std::chrono::milliseconds>(Event::Clock::now().time_since_epoch());
 
     ofs << writeTimeStamp.count() << "\n" << data;
   }
