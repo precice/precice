@@ -81,7 +81,8 @@ MVQNPostProcessing:: MVQNPostProcessing
   _chunkSize(chunkSize),
   _RSLSreusedTimesteps(RSLSreusedTimesteps),
   _usedColumnsPerTstep(5),
-  _nbRestarts(0)
+  _nbRestarts(0),
+  _info2()
 {}
 
 // ==================================================================================
@@ -114,6 +115,11 @@ void MVQNPostProcessing:: initialize
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
   
+  std::stringstream sss;
+  sss<<"residualWeights_rank--"<<utils::MasterSlave::_rank;
+  _info2.open(sss.str(), std::ios_base::out);
+  _info2 << std::setprecision(16);
+
   if (_imvjRestartType > 0)
     _imvjRestart = true;
 
@@ -297,6 +303,9 @@ void MVQNPostProcessing::computeQNUpdate(
   preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
   preciceDebug("compute IMVJ quasi-Newton update");
+
+
+  _info2<<_preconditioner->getWeights().front()<<", "<<_preconditioner->getWeights().back()<<", ratio: "<<_preconditioner->getWeights().front()/_preconditioner->getWeights().back()<<std::endl;
 
   Event ePrecond_1("preconditioning of J", true, true); // ------ time measurement, barrier
 
@@ -635,7 +644,7 @@ void MVQNPostProcessing::restartIMVJ()
 
     // apply preconditioner to truncated SVD of Jacobian
     //if(not _svdJ.isSVDinitialized())
-    //  _svdJ.applyPreconditioner();
+    _svdJ.applyPreconditioner();
 
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
     for(; q < (int)_WtilChunk.size(); q++){
@@ -670,7 +679,7 @@ void MVQNPostProcessing::restartIMVJ()
     _pseudoInverseChunk.push_back(Z);
 
     // revert preconditioner for truncated SVD of Jacobian
-    //_svdJ.revertPreconditioner();
+    _svdJ.revertPreconditioner();
 
     preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste);
     double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
@@ -692,7 +701,6 @@ void MVQNPostProcessing::restartIMVJ()
 
      // preconditioning
      // no need to precondition _matrixW_RSLS, as it is not used for computation in here
-     //_preconditioner->apply(_matrixW_RSLS);
      _preconditioner->apply(_matrixV_RSLS);
 
      QRFactorization qr(_filter);
@@ -830,6 +838,8 @@ void MVQNPostProcessing:: specializedIterationsConverged
       // all objects in Wtil chunk and Z chunk are NOT PRECONDITIONED
       _WtilChunk.push_back(_Wtil);
       _pseudoInverseChunk.push_back(Z);
+
+      _info2<<std::endl;
 
       /**
        *  Restart the IMVJ according to restart type

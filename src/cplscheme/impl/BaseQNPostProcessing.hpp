@@ -294,6 +294,8 @@ protected:
    /// @brief writes info to the _infostream (also in parallel)
    void writeInfo(std::string s, bool allProcs = false);
 
+
+   int its,tSteps;
 private:
 
   /// @brief Concatenation of all coupling data involved in the QN system.
@@ -322,7 +324,7 @@ private:
   std::deque<int> _matrixColsBackup;
 
   /// @ brief additional debugging info, is not important for computation:
-  int its,tSteps;
+
   int deletedColumns;
 
 };

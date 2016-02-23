@@ -309,6 +309,10 @@ public:
     communicateGlobalWeights(); //for constant preconditioner necessary already here
   }
 
+  std::vector<double>& getWeights()
+  {
+    return _weights;
+  }
 
 
 protected:

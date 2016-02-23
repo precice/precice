@@ -161,6 +161,8 @@ private:
    /// @brief tracks the number of restarts of IMVJ
    int _nbRestarts;
 
+   std::fstream _info2;
+
 
    /** @brief: comptes the MVQN update using QR decomposition of V,
     *        furthermore it updates the inverse of the system jacobian
