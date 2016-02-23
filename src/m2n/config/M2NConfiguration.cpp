@@ -60,7 +60,7 @@ M2NConfiguration:: M2NConfiguration
     tag.addAttribute(attrPort);
 
     XMLAttribute<std::string> attrNetwork(ATTR_NETWORK);
-    doc = "Network name to be used for socket communiation. ";
+    doc = "Interface name to be used for socket communiation. ";
     doc += "Default is \"lo\", i.e., the local host loopback.";
     attrNetwork.setDocumentation(doc);
     attrNetwork.setDefaultValue("lo");
