@@ -634,7 +634,8 @@ void MVQNPostProcessing::restartIMVJ()
     int q = _svdJ.isSVDinitialized() ? 1 : 0;
 
     // apply preconditioner to truncated SVD of Jacobian
-    _svdJ.applyPreconditioner();
+    //if(not _svdJ.isSVDinitialized())
+    //  _svdJ.applyPreconditioner();
 
     // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
     for(; q < (int)_WtilChunk.size(); q++){
@@ -669,7 +670,7 @@ void MVQNPostProcessing::restartIMVJ()
     _pseudoInverseChunk.push_back(Z);
 
     // revert preconditioner for truncated SVD of Jacobian
-    _svdJ.revertPreconditioner();
+    //_svdJ.revertPreconditioner();
 
     preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste);
     double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
