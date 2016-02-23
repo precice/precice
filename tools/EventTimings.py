@@ -24,19 +24,25 @@ This is converted to a data structure:
 
 [
    {
-   "timestamp" : "Time of the run, a python datatime object"
-   "global"    : "Global timings, a numpy array
-   "data"      : { "name of event"         : "timings as numpy array"
-                   "name of another event" : "timings as numpy array" }
+       "timestamp" : "Time of the run, a python datatime object"
+       "global"    : "Global timings, a numpy array
+       "timings"   : ""numpy.array with custom datatype"
    }
 ]
-
-with one list item for timings of each run.
 """
-
 
 import locale, shlex, datetime
 import numpy as np
+
+datatype = [ ("name", object),
+             ("count", int),
+             ("total", int),
+             ("max", float),
+             ("min", float),
+             ("avg", float),
+             ("percent", float)
+]
+
 
 def readBlock(f):
     """ Generator that returns one block at a time, each line as list item. """
@@ -58,7 +64,7 @@ def readBlock(f):
 def parseTimings(tStr):
     """ Returns event name and timings as a dict. """
     s = shlex.split(tStr)
-    return [s[0], np.array(s[1:]).astype(float)]
+    return np.array(tuple(s), dtype=datatype)
     
 
 def parseEventlog(file):
@@ -70,13 +76,12 @@ def parseEventlog(file):
     for i in readBlock("EventTimings.log"):
         timeStamp = datetime.datetime.strptime(i[0][18:], "%a %b %d %H:%M:%S %Y")
         globalTimings = parseTimings(i[2])
-
-        thisEvent = { s[0] : s[1] for s in map(parseTimings, i[3:]) }
+        timings = np.hstack( [parseTimings(t) for t in i[3:]] )
         
         events.append( {
             "timestamp" : timeStamp,
             "global" : globalTimings,
-            "data" : thisEvent
+            "timings" : timings
         } )
 
     return events
