@@ -376,11 +376,10 @@ void Matrix::viewDraw()
   ierr = PetscDrawDestroy(&draw); CHKERRV(ierr); 
 }
 
-} // namespace petsc
+}}} // namespace precice, utils, petsc
 
 #endif // PRECICE_NO_PETSC
 
 
-}} // namespace precice, utils, petsc
 
 
