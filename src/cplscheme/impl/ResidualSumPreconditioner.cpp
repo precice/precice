@@ -13,65 +13,18 @@ tarch::logging::Log ResidualSumPreconditioner::
 
 ResidualSumPreconditioner:: ResidualSumPreconditioner
 (
-    std::vector<int> dimensions)
+    std::vector<int> dimensions,
+    int maxNonConstTimesteps)
  :
-    Preconditioner (dimensions)
+    Preconditioner (dimensions,
+         maxNonConstTimesteps)
 {
   _residualSum.resize(dimensions.size(),0.0);
 }
 
-void ResidualSumPreconditioner::update(bool timestepComplete, const DataValues& oldValues, const DataValues& res)
+
+void ResidualSumPreconditioner::_update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res)
 {
-  preciceTrace("update()");
-  if(not timestepComplete){
-    std::vector<double> norms(_dimensions.size(),0.0);
-
-    double sum = 0.0;
-
-    int offset = 0;
-    for(size_t k=0; k<_dimensions.size(); k++){
-      DataValues part;
-      for(int i=0; i<_dimensions[k]*_sizeOfSubVector; i++){
-        part.append(res[i+offset]);
-      }
-      norms[k] = utils::MasterSlave::dot(part,part);
-      sum += norms[k];
-      offset += _dimensions[k]*_sizeOfSubVector;
-      norms[k] = std::sqrt(norms[k]);
-    }
-    sum = std::sqrt(sum);
-    assertion(sum>0);
-
-    for(size_t k=0; k<_dimensions.size(); k++){
-      _residualSum[k] += norms[k] / sum;
-      assertion(_residualSum[k]>0);
-    }
-
-    offset = 0;
-    for(size_t k=0; k<_dimensions.size(); k++){
-      for(int i=0; i<_dimensions[k]*_sizeOfSubVector; i++){
-        _weights[i+offset] = 1 / _residualSum[k];
-        _invWeights[i+offset] = _residualSum[k];
-      }
-      offset += _dimensions[k]*_sizeOfSubVector;
-    }
-
-    _requireNewQR = true;
-    if(_needsGlobalWeights){
-      communicateGlobalWeights();
-    }
-
-  }
-  else{
-    for(size_t k=0; k<_dimensions.size(); k++){
-      _residualSum[k] = 0.0;
-    }
-  }
-}
-
-void ResidualSumPreconditioner::update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res)
-{
-  preciceTrace("update()");
   if(not timestepComplete){
     std::vector<double> norms(_dimensions.size(),0.0);
 

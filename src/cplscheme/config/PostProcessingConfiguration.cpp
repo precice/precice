@@ -62,6 +62,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   ATTR_IMVJCHUNKSIZE("chunk-size"),
   ATTR_RSLS_REUSEDTSTEPS("reused-timesteps-at-restart"),
   ATTR_RSSVD_TRUNCATIONEPS("truncation-threshold"),
+  ATTR_PRECOND_NONCONST_TIMESTEPS("freeze-after"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
@@ -273,6 +274,7 @@ void PostProcessingConfiguration:: xmlTagCallback
          _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   }else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _config.preconditionerType = callingTag.getStringAttributeValue(ATTR_TYPE);
+    _config.precond_nbNonConstTSteps = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIMESTEPS);
   }else if (callingTag.getName() == TAG_IMVJRESTART){
 
     #ifndef PRECICE_NO_MPI
@@ -318,6 +320,12 @@ void PostProcessingConfiguration:: xmlEndTagCallback
         }
       }
 
+      // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time steps is limited by the chunc size
+      if(callingTag.getName() == VALUE_MVQN && _config.imvjRestartType > 0)
+        if(_config.precond_nbNonConstTSteps > _config.imvjChunkSize)
+          _config.precond_nbNonConstTSteps = _config.imvjChunkSize;
+
+
       if(_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER){
         std::vector<double> factors;
         for (int id : _config.dataIDs){
@@ -326,13 +334,13 @@ void PostProcessingConfiguration:: xmlEndTagCallback
         _preconditioner = impl::PtrPreconditioner(new impl::ConstantPreconditioner(dims, factors));
       }
       else if(_config.preconditionerType == VALUE_VALUE_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ValuePreconditioner(dims));
+        _preconditioner = impl::PtrPreconditioner (new impl::ValuePreconditioner(dims, _config.precond_nbNonConstTSteps));
       }
       else if(_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ResidualPreconditioner(dims));
+        _preconditioner = impl::PtrPreconditioner (new impl::ResidualPreconditioner(dims, _config.precond_nbNonConstTSteps));
       }
       else if(_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(dims));
+        _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(dims, _config.precond_nbNonConstTSteps));
       }
       else{
         // no preconditioner defined
@@ -548,6 +556,10 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
         " A residual preconditioner scales every post-processing data by the current residual."
         " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
+    XMLAttribute<int> nonconstTSteps(ATTR_PRECOND_NONCONST_TIMESTEPS);
+    nonconstTSteps.setDocumentation("After the given number of time steps, the preconditioner weights are freezed and the preconditioner acts like a constant preconditioner.");
+    nonconstTSteps.setDefaultValue(-1);
+    tagPreconditioner.addAttribute(nonconstTSteps);
     tag.addSubtag(tagPreconditioner);
 
   }
@@ -644,6 +656,10 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
         " A residual preconditioner scales every post-processing data by the current residual."
         " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
+    XMLAttribute<int> nonconstTSteps(ATTR_PRECOND_NONCONST_TIMESTEPS);
+    nonconstTSteps.setDocumentation("After the given number of time steps, the preconditioner weights are freezed and the preconditioner acts like a constant preconditioner.");
+    nonconstTSteps.setDefaultValue(-1);
+    tagPreconditioner.addAttribute(nonconstTSteps);
     tag.addSubtag(tagPreconditioner);
   }
   else if (tag.getName() == VALUE_ManifoldMapping){
@@ -722,6 +738,10 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
        " A residual preconditioner scales every post-processing data by the current residual."
        " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
+    XMLAttribute<int> nonconstTSteps(ATTR_PRECOND_NONCONST_TIMESTEPS);
+    nonconstTSteps.setDocumentation("After the given number of time steps, the preconditioner weights are freezed and the preconditioner acts like a constant preconditioner.");
+    nonconstTSteps.setDefaultValue(-1);
+    tagPreconditioner.addAttribute(nonconstTSteps);
     tag.addSubtag(tagPreconditioner);
 
   }

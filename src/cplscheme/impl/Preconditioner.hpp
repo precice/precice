@@ -36,14 +36,18 @@ public:
   typedef Eigen::MatrixXd EigenMatrix;
 
   Preconditioner(
-      std::vector<int> dimensions)
+      std::vector<int> dimensions,
+      int maxNonConstTimesteps)
   :
     _weights(),
     _invWeights(),
     _dimensions(dimensions),
     _sizeOfSubVector(-1),
+    _maxNonConstTimesteps(maxNonConstTimesteps),
+    _nbNonConstTimesteps(0),
     _requireNewQR(false),
-    _needsGlobalWeights(false)
+    _needsGlobalWeights(false),
+    _freezed(false)
   {}
 
 
@@ -282,14 +286,23 @@ public:
    *
    * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
    */
-  virtual void update(bool timestepComplete, const DataValues& oldValues, const DataValues& res) =0;
+  void update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res){
+    preciceTrace2(__func__, _nbNonConstTimesteps, _freezed);
 
-  /**
-   * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
-   *
-   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
-   */
-  virtual void update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res) =0;
+    // if number of allowed non-const time steps is exceeded, do not update weights
+    if(_freezed)
+     return;
+
+    // increment number of time steps that has been scaled with changing preconditioning weights
+    if(timestepComplete){
+     _nbNonConstTimesteps++;
+     if(_nbNonConstTimesteps >= _maxNonConstTimesteps && _maxNonConstTimesteps > 0)
+       _freezed = true;
+    }
+
+    // type specific update functionality
+    _update_(timestepComplete, oldValues, res);
+  }
 
   //@brief: returns true if a QR decomposition from scratch is necessary
   bool requireNewQR(){
@@ -315,6 +328,11 @@ public:
   }
 
 
+  bool isConst()
+  {
+    return _freezed;
+  }
+
 protected:
 
   //@brief weights used to scale the matrix V and the residual
@@ -335,11 +353,30 @@ protected:
   //@brief size of a scalar sub-vector (aka number of vertices)
   int _sizeOfSubVector;
 
+  /** @brief maximum number of non-const time steps, i.e., after this number of time steps,
+   *  the preconditioner is freezed with the current weights and becomes a constant preconditioner
+   */
+  int _maxNonConstTimesteps;
+
+  /// @brief counts the number of completed time steps with a non-const weighting
+  int _nbNonConstTimesteps;
+
   // true if a QR decomposition from scratch is necessary
   bool _requireNewQR;
 
   // true if global weights are needed, i.e. for MVQN
   bool _needsGlobalWeights;
+
+  /// @brief true if _nbNonConstTimesteps >= _maxNonConstTimesteps, i.e., preconditioner is not updated any more.
+  bool _freezed;
+
+
+  /**
+   * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
+   *
+   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
+   */
+  virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res) =0;
 
 
   // @brief communicate all slave weights to master and then broadcast, necessary for MVQN

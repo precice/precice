@@ -15,13 +15,17 @@ ConstantPreconditioner:: ConstantPreconditioner
    std::vector<int> dimensions,
    std::vector<double> factors)
 :
-   Preconditioner(dimensions),
+   Preconditioner(dimensions, -1),
    _factors(factors)
 {}
 
 void ConstantPreconditioner::initialize(int N){
   preciceTrace("initialize()");
   Preconditioner::initialize(N);
+
+  // is always constant by definition
+  _freezed = true;
+  assertion1(_maxNonConstTimesteps == -1, _maxNonConstTimesteps);
 
   assertion(_factors.size()==_dimensions.size());
 
@@ -35,15 +39,9 @@ void ConstantPreconditioner::initialize(int N){
   }
 }
 
-void ConstantPreconditioner::update(bool timestepComplete, const DataValues& oldValues, const DataValues& res)
+void ConstantPreconditioner::_update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res)
 {
-  preciceTrace("update()");
-  //nothing to do here
-}
 
-void ConstantPreconditioner::update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res)
-{
-  preciceTrace("update()");
   //nothing to do here
 }
 

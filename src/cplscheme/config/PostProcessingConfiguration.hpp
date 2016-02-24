@@ -103,6 +103,7 @@ private:
    const std::string ATTR_IMVJCHUNKSIZE;
    const std::string ATTR_RSLS_REUSEDTSTEPS;
    const std::string ATTR_RSSVD_TRUNCATIONEPS;
+   const std::string ATTR_PRECOND_NONCONST_TIMESTEPS;
 
    const std::string VALUE_CONSTANT;
    const std::string VALUE_AITKEN;
@@ -152,6 +153,7 @@ private:
       int imvjRestartType;
       int imvjChunkSize;
       int imvjRSLS_reustedTimesteps;
+      int precond_nbNonConstTSteps;
       double singularityLimit;
       double imvjRSSVD_truncationEps;
       bool estimateJacobian;
@@ -171,6 +173,7 @@ private:
          imvjRestartType( 0 ), // NO-RESTART
          imvjChunkSize ( 0 ),
          imvjRSLS_reustedTimesteps( 0 ),
+         precond_nbNonConstTSteps( -1),
          singularityLimit ( 0.0 ),
          imvjRSSVD_truncationEps( 0.0 ),
          estimateJacobian ( false ),
