@@ -1,15 +1,16 @@
 #pragma once
 #ifndef PRECICE_NO_PETSC
 
+#include <limits>
+#include <typeinfo>
+
 #include "mapping/Mapping.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "tarch/la/DynamicVector.h"
 #include "utils/MasterSlave.hpp"
 #include "utils/Petsc.hpp"
-#include <limits>
-#include <typeinfo>
+namespace petsc = precice::utils::petsc;
 
-#include "petnum.hpp"
 #include "petscmat.h"
 #include "petscksp.h"
 #include "petsclog.h"
@@ -80,7 +81,7 @@ private:
 
   bool _hasComputedMapping;
 
-  /// @brief Radial basis function type used in interpolation.
+  /// Radial basis function type used in interpolation.
   RADIAL_BASIS_FUNCTION_T _basisFunction;
 
   petsc::Matrix _matrixC;
@@ -95,9 +96,6 @@ private:
 
   /// true if the mapping along some axis should be ignored
   bool* _deadAxis;
-
-  /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
-  // utils::DynVector reduceVector(const utils::DynVector& fullVector);
 
   virtual bool doesVertexContribute(int vertexID) const override;
 };
