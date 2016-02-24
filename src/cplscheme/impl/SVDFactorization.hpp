@@ -68,7 +68,6 @@ public:
      preciceTrace(__func__);
      utils::Event e("SVD update", true, true);
      assertion(_initialized);
-     assertion(_preconditionerApplied);
      /** updates the truncated svd factorization of the Jacobian with a rank-1 modification
       *
       * \psi * \sigma * \phi <-- \psi * \sigma * \phi + A * B^T
