@@ -161,7 +161,10 @@ private:
    /// @brief tracks the number of restarts of IMVJ
    int _nbRestarts;
 
+
+   // DEBUG
    //std::fstream _info2;
+   double _avgRank;
 
 
    /** @brief: comptes the MVQN update using QR decomposition of V,

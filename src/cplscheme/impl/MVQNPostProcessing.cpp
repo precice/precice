@@ -81,8 +81,9 @@ MVQNPostProcessing:: MVQNPostProcessing
   _chunkSize(chunkSize),
   _RSLSreusedTimesteps(RSLSreusedTimesteps),
   _usedColumnsPerTstep(5),
-  _nbRestarts(0)//,
-  //_info2()
+  _nbRestarts(0),
+  //_info2(),
+  _avgRank(0)
 {}
 
 // ==================================================================================
@@ -668,15 +669,16 @@ void MVQNPostProcessing::restartIMVJ()
 
     int rankAfter = _svdJ.rank();
     int waste = _svdJ.getWaste();
+    _avgRank += rankAfter;
 
     // store factorized truncated SVD of J
     _WtilChunk.push_back(psi);
     _pseudoInverseChunk.push_back(Z);
 
-    preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste);
+    preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste<<" avg rank: "<<_avgRank/tSteps);
     double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
-      _infostream<<" - MVJ-RESTART " <<_nbRestarts<<", mode= SVD -\n  new modes: "<<rankAfter-rankBefore<<"\n  rank svd: "<<rankAfter<<"\n  truncated modes: "<<waste<<"\n  used storage: "<<percentage<<" %\n"<<std::endl;
+      _infostream<<" - MVJ-RESTART " <<_nbRestarts<<", mode= SVD -\n  new modes: "<<rankAfter-rankBefore<<"\n  rank svd: "<<rankAfter<<"\n  avg rank: "<<_avgRank/tSteps<<"\n  truncated modes: "<<waste<<"\n  used storage: "<<percentage<<" %\n"<<std::endl;
 
     //        ------------ RESTART LEAST SQUARES ------------
   }else if(_imvjRestartType == MVQNPostProcessing::RS_LS)
