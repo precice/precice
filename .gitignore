@@ -11,3 +11,6 @@
 \#*#
 core
 build
+GTAGS
+GRTAGS
+GPATH
