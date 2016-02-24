@@ -142,6 +142,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV2()
     );
 }
 
+/// Test with a homogenous distribution of mesh amoung ranks
 void PetRadialBasisFctMappingTest::testDistributedConservative2DV1()
 {
   preciceTrace("testDistributedConservative2DV1");
