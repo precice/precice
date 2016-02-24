@@ -131,8 +131,6 @@ public:
 
   /**
    * @brief Just returns rank of sender.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
   virtual int startReceivePackage(int rankSender);
 
@@ -202,45 +200,63 @@ public:
 
   /**
    * @brief Receives a std::string from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(std::string& itemToReceive, int rankSender);
+  virtual void receive(std::string& itemToReceive, int rankSender);
 
   /**
    * @brief Receives an array of integer values.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(int* itemsToReceive, int size, int rankSender);
+  virtual void receive(int* itemsToReceive, int size, int rankSender);
+
+  /**
+   * @brief Asynchronously receives an array of integer values.
+   */
+  virtual Request::SharedPointer aReceive(int* itemsToReceive,
+                                          int size,
+                                          int rankSender);
 
   /**
    * @brief Receives an array of double values.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(double* itemsToReceive, int size, int rankSender);
+  virtual void receive(double* itemsToReceive, int size, int rankSender);
+
+  /**
+   * @brief Asynchronously receives an array of double values.
+   */
+  virtual Request::SharedPointer aReceive(double* itemsToReceive,
+                                          int size,
+                                          int rankSender);
 
   /**
    * @brief Receives a double from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(double& itemToReceive, int rankSender);
+  virtual void receive(double& itemToReceive, int rankSender);
+
+  /**
+   * @brief Asynchronously receives a double from process with given rank.
+   */
+  virtual Request::SharedPointer aReceive(double* itemToReceive,
+                                          int rankSender);
 
   /**
    * @brief Receives an int from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(int& itemToReceive, int rankSender);
+  virtual void receive(int& itemToReceive, int rankSender);
+
+  /**
+   * @brief Asynchronously receives an int from process with given rank.
+   */
+  virtual Request::SharedPointer aReceive(int* itemToReceive, int rankSender);
 
   /**
    * @brief Receives a bool from process with given rank.
-   *
-   * @return Rank of sender, which is useful when ANY_SENDER is used.
    */
-  virtual int receive(bool& itemToReceive, int rankSender);
+  virtual void receive(bool& itemToReceive, int rankSender);
+
+  /**
+   * @brief Asynchronously receives a bool from process with given rank.
+   */
+  virtual Request::SharedPointer aReceive(bool* itemToReceive, int rankSender);
 
 private:
   static tarch::logging::Log _log;
@@ -257,7 +273,6 @@ private:
   std::string _addressDirectory;
 
   bool _isConnected;
-  bool _isClient;
 
   int _remoteCommunicatorSize;
 
@@ -272,69 +287,9 @@ private:
 
   typedef boost::asio::io_service::work Work;
   typedef std::shared_ptr<Work> PtrWork;
-  PtrWork _queryWork;
+  PtrWork _work;
 
-  // @brief Thread for asynchronously receiving send requests of clients.
-  std::thread _queryThread;
-
-  // @brief Stores socket indices of clients waiting with messages.
-  std::set<int> _clientQueries;
-
-  // @brief Buffers for receiving entries in _clientQueries.
-  std::vector<int> _clientQueryBuffers;
-
-  // @brief Mutex used to lock access to clientQueries
-  std::mutex _requestMutex;
-
-  // @brief Used to set (server) main thread asleep while waiting for client
-  // send
-  std::condition_variable _requestCondition;
-
-  /**
-   * @brief Returns a suitable sender rank to receive from.
-   *
-   * Uses the _clientQueries to choose a suitable rank from. If no suitable rank
-   * is contained, waits until the query thread has received one.
-   *
-   * If the desiredRank == ANY_RANK, the first rank in _clientQueries is chosen.
-   */
-  int getSenderRank(int desiredRank);
-
-  /**
-   * @brief If the local process is a client process, sends query to
-   *receiverRank.
-   *
-   * The SocketCommuniation class models communication between a client or
-   * several clients and a server process. The roles are defined on setup of
-   * communication, the acceptor of the connection is the server, requesters are
-   * clients. A client needs to send a request to the server, before he sends
-   * the actual data. This method determines whether the process is a client
-   * process and sends the query if necesssary.
-   */
-  void sendQuery(int receiverRank);
-
-  /**
-   * @brief Starts asynchronous receiving of next sender query from senderRank.
-   *
-   * When a query is received in onAsyncReceive() by a specific sender rank, the
-   * next query is not automatically received and has to be triggered by this
-   * method.
-   */
-  void receiveNextQuery(int senderRank);
-
-  /**
-   * @brief Callback on starting to run the query thread.
-   */
-  void onThreadRun();
-
-  /**
-   * @brief Callback on completion of asyncronous receive operation.
-   *
-   * Is used by query thread to store send queries of clients for master thread.
-   */
-  void onAsyncReceive(const boost::system::error_code& error,
-                      size_t bytesTransferred,
-                      int clientIndex);
+  std::thread _thread;
 
   bool isClient();
   bool isServer();

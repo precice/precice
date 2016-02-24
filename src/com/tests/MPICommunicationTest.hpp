@@ -54,8 +54,6 @@ private:
 
    void testSendAndReceiveInteger();
 
-   void testSendAndReceiveFromAnySender();
-
 #  endif // not PRECICE_NO_MPI
 };
 

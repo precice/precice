@@ -116,6 +116,7 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh , false );
   connect ( nameParticipant0, nameParticipant1, localParticipant, globalCom );
   runSimpleExplicitCoupling ( cplScheme, localParticipant, meshConfig );
+  utils::Parallel::clearGroups();
 }
 
 void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
@@ -153,6 +154,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
   connect ( "participant0", "participant1", localParticipant, m2n );
   runSimpleExplicitCoupling ( *cplSchemeConfig.getCouplingScheme(localParticipant),
                               localParticipant, *meshConfig );
+  utils::Parallel::clearGroups();
 }
 
 void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
@@ -241,6 +243,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
     validateEquals ( cplScheme.isCouplingTimestepComplete(), true );
     validateEquals ( cplScheme.isCouplingOngoing(), false );
   }
+  utils::Parallel::clearGroups();
 }
 
 void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
@@ -311,6 +314,7 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
     validate(not cplScheme.isCouplingOngoing());
     cplScheme.finalize();
   }
+  utils::Parallel::clearGroups();
 }
 
 void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
@@ -387,6 +391,7 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
     validate(not cplScheme.isCouplingOngoing());
     cplScheme.finalize();
   }
+  utils::Parallel::clearGroups();
 }
 
 
@@ -563,6 +568,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
   cplScheme.addDataToReceive ( mesh->data()[receiveDataIndex], mesh , false);
   connect ( nameParticipant0, nameParticipant1, localParticipant, globalCom );
   runExplicitCouplingWithSubcycling ( cplScheme, localParticipant, meshConfig );
+  utils::Parallel::clearGroups();
 }
 
 void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling ()
@@ -607,6 +613,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling (
   runExplicitCouplingWithSubcycling (
       *cplSchemeConfig.getCouplingScheme(localParticipant), localParticipant,
       *meshConfig );
+  utils::Parallel::clearGroups();
 }
 
 void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
@@ -760,7 +767,7 @@ void ExplicitCouplingSchemeTest:: connect
   preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
-  utils::Parallel::initialize ( NULL, NULL, localParticipant );
+  utils::Parallel::splitCommunicator( localParticipant );
   if ( participant0 == localParticipant ) {
     communication->requestMasterConnection ( participant1, participant0 );
   }

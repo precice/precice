@@ -135,7 +135,8 @@ public:
     bool                                   remote,
     const std::string&                     fromParticipant,
     double                                 safetyFactor,
-    bool                                   provideMesh );
+    bool                                   provideMesh,
+    bool                                   doesPreFiltering );
 
   void addAction ( const action::PtrAction& action );
 

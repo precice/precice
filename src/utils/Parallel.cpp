@@ -3,9 +3,6 @@
 #include "com/MPIDirectCommunication.hpp"
 #include <map>
 
-#ifndef PRECICE_NO_PETSC
-#include "petsc.h"
-#endif
 
 namespace precice {
 namespace utils {
@@ -18,7 +15,7 @@ Parallel::Communicator Parallel:: _localCommunicator = MPI_COMM_NULL;
 
 bool Parallel:: _isInitialized = false;
 
-bool Parallel:: _autoInitialized = false;
+bool Parallel:: _isSplit = false;
 
 std::vector<Parallel::AccessorGroup> Parallel:: _accessorGroups;
 
@@ -31,26 +28,35 @@ Parallel::Communicator Parallel:: getCommunicatorWorld()
 # endif
 }
 
-void Parallel:: initialize
+void Parallel:: initializeMPI
 (
   int*               argc,
-  char***            argv,
-  const std::string& groupName )
+  char***            argv )
 {
 # ifndef PRECICE_NO_MPI
-  preciceTrace1 ("initialize()", groupName);
+  preciceTrace ("initializeMPI()");
   int isMPIInitialized;
   MPI_Initialized (&isMPIInitialized);
   if (not isMPIInitialized) {
     preciceDebug ( "Initialize MPI" );
-    _autoInitialized = true;
     MPI_Init(argc, argv);
   }
+  _isInitialized = true;
+# endif // not PRECICE_NO_MPI
+  
+}
+
+void Parallel:: splitCommunicator
+(
+  const std::string& groupName )
+{
+# ifndef PRECICE_NO_MPI
+  preciceTrace1 ("splitCommunicator()", groupName);
 
   // Exchange group information
   if (_accessorGroups.empty()) {
     preciceDebug ( "Exchange group information" );
-    _accessorGroups.clear(); // Makes reinitialization possible
+    //_accessorGroups.clear(); // Makes reinitialization possible
     std::map<std::string,int> groupMap; // map from names to group ID
     MPI_Comm globalComm = getGlobalCommunicator();
     int rank = -1;
@@ -141,25 +147,22 @@ void Parallel:: initialize
     }
   }
 # endif // not PRECICE_NO_MPI
-  
-# ifndef PRECICE_NO_PETSC
-  PetscErrorCode ierr;
-  ierr = PetscInitialize(argc, argv, "", NULL); CHKERRV(ierr);
-# endif
-  _isInitialized = true;
+
+  _isSplit = true;
 }
 
-void Parallel:: finalize()
+void Parallel:: finalizeMPI()
+{
+# ifndef PRECICE_NO_MPI
+  MPI_Finalize();
+# endif // not PRECICE_NO_MPI
+  _isInitialized = false;
+}
+
+void Parallel:: clearGroups()
 {
   _accessorGroups.clear();
-# ifndef PRECICE_NO_MPI
-  if (_autoInitialized){
-    MPI_Finalize();
-  }
-# endif // not PRECICE_NO_MPI
-# ifndef PRECICE_NO_PETSC
-  PetscFinalize();
-# endif
+  _isSplit = false;
 }
 
 int Parallel:: getProcessRank()
@@ -210,7 +213,7 @@ void Parallel:: synchronizeLocalProcesses()
 {
 # ifndef PRECICE_NO_MPI
   preciceTrace ( "synchronizeLocalProcesses()" );
-  assertion ( _isInitialized );
+  assertion ( _isInitialized && _isSplit );
   MPI_Barrier ( _localCommunicator );
 # endif // not PRECICE_NO_MPI
 }
@@ -239,6 +242,7 @@ const Parallel::Communicator& Parallel:: getGlobalCommunicator()
 const Parallel::Communicator& Parallel:: getLocalCommunicator()
 {
   preciceTrace ( "getLocalCommunicator()" );
+  assertion(_isSplit);
   return _localCommunicator;
 }
 

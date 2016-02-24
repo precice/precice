@@ -58,25 +58,29 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
                                         int acceptorProcessRank,
                                         int acceptorCommunicatorSize) {
   preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+
   preciceCheck(acceptorCommunicatorSize == 1,
                "acceptConnection()",
                "Acceptor of MPI port connection can only have one process!");
 
   assertion(not isConnected());
 
+  _isAcceptor = true;
   _rank = acceptorProcessRank;
 
-  _isAcceptor = true;
-
-  // BUG:
+  // BUG report from Alex:
   // It is extremely important that the call to `Parallel::initialize' follows
   // *after* the call to `MPI_Open_port'. Otherwise, on Windows, even with the
   // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
   // doing something weird inside?
 
-  MPI_Open_port(MPI_INFO_NULL, _portName);
+  int argc = 1;
+  char* arg = new char[8];
+  strcpy(arg, "precice");
+  char** argv = &arg;
+  utils::Parallel::initializeMPI(&argc, &argv);
 
-  utils::Parallel::initialize(NULL, NULL, nameAcceptor);
+  MPI_Open_port(MPI_INFO_NULL, _portName);
 
   std::string address(_portName);
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
@@ -88,50 +92,75 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
 
   p.write(address);
 
-  // std::cout << address << std::endl;
-
   preciceDebug("Accept connection at " << address);
 
-  MPI_Status status;
   MPI_Comm communicator;
+
+  MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
+
+  preciceDebug("Accepted connection at " << address);
 
   int requesterProcessRank = -1;
   int requesterCommunicatorSize = 0;
 
-  MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
-
-  MPI_Recv(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator, &status);
-  MPI_Recv(
-      &requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, &status);
+  MPI_Recv(&requesterProcessRank,
+           1,
+           MPI_INT,
+           0,
+           42,
+           communicator,
+           MPI_STATUS_IGNORE);
+  MPI_Recv(&requesterCommunicatorSize,
+           1,
+           MPI_INT,
+           0,
+           42,
+           communicator,
+           MPI_STATUS_IGNORE);
 
   preciceCheck(requesterCommunicatorSize > 0,
                "acceptConnection()",
-               "Requester communicator size has to be > 0!");
+               "Requester communicator "
+                   << "size has to be > 0!");
 
   _communicators.resize(requesterCommunicatorSize, MPI_COMM_NULL);
 
   _communicators[requesterProcessRank] = communicator;
 
+  _isConnected = true;
+
   for (int i = 1; i < requesterCommunicatorSize; ++i) {
     MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
-    MPI_Recv(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator, &status);
-    MPI_Recv(
-        &requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator, &status);
+    preciceDebug("Accepted connection at " << address);
+
+    MPI_Recv(&requesterProcessRank,
+             1,
+             MPI_INT,
+             0,
+             42,
+             communicator,
+             MPI_STATUS_IGNORE);
+    MPI_Recv(&requesterCommunicatorSize,
+             1,
+             MPI_INT,
+             0,
+             42,
+             communicator,
+             MPI_STATUS_IGNORE);
 
     preciceCheck(requesterCommunicatorSize == _communicators.size(),
                  "acceptConnection()",
                  "Requester communicator sizes are inconsistent!");
-
     preciceCheck(_communicators[requesterProcessRank] == MPI_COMM_NULL,
                  "acceptConnection()",
                  "Duplicate request to connect by same rank ("
                      << requesterProcessRank << ")!");
 
     _communicators[requesterProcessRank] = communicator;
-  }
 
-  _isConnected = true;
+    _isConnected = true;
+  }
 }
 
 void
@@ -139,23 +168,31 @@ MPIPortsCommunication::acceptConnectionAsServer(
     std::string const& nameAcceptor,
     std::string const& nameRequester,
     int requesterCommunicatorSize) {
-  preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+  preciceTrace2("acceptConnectionAsServer()", nameAcceptor, nameRequester);
+
+  preciceCheck(requesterCommunicatorSize > 0,
+               "acceptConnectionAsServer()",
+               "Requester communicator "
+                   << "size has to be > 0!");
 
   assertion(not isConnected());
 
+  _isAcceptor = true;
   _rank = 0;
 
-  _isAcceptor = true;
-
-  // BUG:
+  // BUG report from Alex:
   // It is extremely important that the call to `Parallel::initialize' follows
   // *after* the call to `MPI_Open_port'. Otherwise, on Windows, even with the
   // latest Intel MPI, the program hangs. Possibly `Parallel::initialize' is
   // doing something weird inside?
 
-  MPI_Open_port(MPI_INFO_NULL, _portName);
+  int argc = 1;
+  char* arg = new char[8];
+  strcpy(arg, "precice");
+  char** argv = &arg;
+  utils::Parallel::initializeMPI(&argc, &argv);
 
-  utils::Parallel::initialize(NULL, NULL, nameAcceptor);
+  MPI_Open_port(MPI_INFO_NULL, _portName);
 
   std::string address(_portName);
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
@@ -167,57 +204,27 @@ MPIPortsCommunication::acceptConnectionAsServer(
 
   p.write(address);
 
-  // std::cout << address << std::endl;
-
   preciceDebug("Accept connection at " << address);
-
-  MPI_Comm selfCommunicator;
-
-  MPI_Comm_dup(MPI_COMM_SELF, &selfCommunicator);
-
-  MPI_Comm communicator;
-
-  MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, selfCommunicator, &communicator);
-
-  preciceCheck(requesterCommunicatorSize > 0,
-               "acceptConnection()",
-               "Requester communicator size has to be > 0!");
 
   _communicators.resize(requesterCommunicatorSize, MPI_COMM_NULL);
 
-  int requesterProcessRank = 0;
+  for (int requesterProcessRank = 0;
+       requesterProcessRank < requesterCommunicatorSize;
+       ++requesterProcessRank) {
+    MPI_Comm communicator;
 
-  _communicators[requesterProcessRank] = communicator;
+    MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
-  // BUG:
-  // On Windows, with Intel MPI, in point-to-point communication integration
-  // test, a deadlock happens because the following `MPI_Send' has no effect.
-  // This happens rarely and the nature of this phenomenon is still unknown. It
-  // looks as if the actual message (to be sent) is lost somehow. To me that one
-  // looks more like an implementation bug. Let's see how it goes in other
-  // environments (OS/MPI combinations).
-  MPI_Send(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator);
-
-  // send(requesterProcessRank, requesterProcessRank);
-
-  for (int i = 1; i < requesterCommunicatorSize; ++i) {
-    requesterProcessRank = i;
-
-    MPI_Comm_dup(MPI_COMM_SELF, &selfCommunicator);
-
-    MPI_Comm_accept(
-        _portName, MPI_INFO_NULL, 0, selfCommunicator, &communicator);
-
-    preciceCheck(requesterCommunicatorSize == _communicators.size(),
-                 "acceptConnection()",
-                 "Requester communicator sizes are inconsistent!");
+    preciceDebug("Accepted connection at " << address);
 
     preciceCheck(_communicators[requesterProcessRank] == MPI_COMM_NULL,
-                 "acceptConnection()",
+                 "acceptConnectionAsServer()",
                  "Duplicate request to connect by same rank ("
                      << requesterProcessRank << ")!");
 
     _communicators[requesterProcessRank] = communicator;
+
+    _isConnected = true;
 
     // BUG:
     // On Windows, with Intel MPI, in point-to-point communication integration
@@ -227,11 +234,8 @@ MPIPortsCommunication::acceptConnectionAsServer(
     // somehow. To me that one looks more like an implementation bug. Let's see
     // how it goes in other environments (OS/MPI combinations).
     MPI_Send(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator);
-
     // send(requesterProcessRank, requesterProcessRank);
   }
-
-  _isConnected = true;
 }
 
 void
@@ -245,9 +249,11 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 
   _isAcceptor = false;
 
-  _rank = requesterProcessRank;
-
-  utils::Parallel::initialize(NULL, NULL, nameRequester);
+  int argc = 1;
+  char* arg = new char[8];
+  strcpy(arg, "precice");
+  char** argv = &arg;
+  utils::Parallel::initializeMPI(&argc, &argv);
 
   std::string address;
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
@@ -258,8 +264,6 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
   Publisher p(addressFileName);
 
   p.read(address);
-
-  // std::cout << address << std::endl;
 
   preciceDebug("Request connection to " << address);
 
@@ -273,26 +277,32 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 
   MPI_Comm_connect(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
-  MPI_Send(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator);
-  MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
+  preciceDebug("Requested connection to " << address);
 
-  _communicators.resize(1, MPI_COMM_NULL);
-
-  _communicators[0] = communicator;
+  _communicators.push_back(communicator);
 
   _isConnected = true;
+
+  _rank = requesterProcessRank;
+
+  MPI_Send(&requesterProcessRank, 1, MPI_INT, 0, 42, communicator);
+  MPI_Send(&requesterCommunicatorSize, 1, MPI_INT, 0, 42, communicator);
 }
 
 int
 MPIPortsCommunication::requestConnectionAsClient(
     std::string const& nameAcceptor, std::string const& nameRequester) {
-  preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
+  preciceTrace2("requestConnectionAsClient()", nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
   _isAcceptor = false;
 
-  utils::Parallel::initialize(NULL, NULL, nameRequester);
+  int argc = 1;
+  char* arg = new char[8];
+  strcpy(arg, "precice");
+  char** argv = &arg;
+  utils::Parallel::initializeMPI(&argc, &argv);
 
   std::string address;
   std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
@@ -304,8 +314,6 @@ MPIPortsCommunication::requestConnectionAsClient(
 
   p.read(address);
 
-  // std::cout << address << std::endl;
-
   preciceDebug("Request connection to " << address);
 
   {
@@ -314,18 +322,15 @@ MPIPortsCommunication::requestConnectionAsClient(
     iss >> _portName;
   }
 
-  MPI_Comm selfCommunicator;
-
-  MPI_Comm_dup(MPI_COMM_SELF, &selfCommunicator);
-
   MPI_Comm communicator;
 
-  MPI_Comm_connect(
-      _portName, MPI_INFO_NULL, 0, selfCommunicator, &communicator);
+  MPI_Comm_connect(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
-  _communicators.resize(1, MPI_COMM_NULL);
+  preciceDebug("Requested connection to " << address);
 
-  _communicators[0] = communicator;
+  _communicators.push_back(communicator);
+
+  _isConnected = true;
 
   // BUG:
   // On Windows, with Intel MPI, in point-to-point communication integration
@@ -335,7 +340,6 @@ MPIPortsCommunication::requestConnectionAsClient(
   // somehow. To me that one looks more like an implementation bug. Let's see
   // how it goes in other environments (OS/MPI combinations).
   // MPI_Recv(&_rank, 1, MPI_INT, 0, 42, communicator, MPI_STATUS_IGNORE);
-
   // receive(_rank, 0);
 
   // NOTE:
@@ -366,8 +370,6 @@ MPIPortsCommunication::requestConnectionAsClient(
       exit(1);
     }
   }
-
-  _isConnected = true;
 
   return _rank;
 }

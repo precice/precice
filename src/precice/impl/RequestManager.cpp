@@ -6,6 +6,7 @@
 #include "cplscheme/CouplingScheme.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "spacetree/Spacetree.hpp"
+#include <algorithm>
 
 namespace precice {
 namespace impl {
@@ -29,27 +30,34 @@ RequestManager:: RequestManager
 void RequestManager:: handleRequests()
 {
   preciceTrace("handleRequests()");
-  bool requestsLeft = true;
   int clientCommSize = _com->getRemoteCommunicatorSize();
   int clientCounter = 0;
   std::list<int> clientRanks;
-  while (requestsLeft){
-    int requestID = -1;
-    int rankSender = -1;
-    if (_lockServerToClient == -1){
-      int anySender = com::Communication::ANY_SENDER;
-      rankSender = _com->receive(requestID, anySender);
-      preciceDebug("Received request ID " << requestID << " from rank "
-                   << rankSender << " (any sender)");
+  preciceDebug("ClientCommSize " << clientCommSize);
+
+  std::vector<com::Request::SharedPointer> requests(clientCommSize);
+  std::vector<int> requestIDs(clientCommSize,-1);
+
+  for(int clientRank = 0; clientRank<clientCommSize; clientRank++){
+     requests[clientRank] = _com->aReceive(&(requestIDs[clientRank]), clientRank);
+  }
+
+  int rankSender = 0;
+  int requestID = -1;
+  bool collectiveRequest = false;
+  bool singleRequest = false;
+  while(true){
+    if((std::find(clientRanks.begin(), clientRanks.end(), rankSender) == clientRanks.end()) &&
+                       requests[rankSender]->test()){
+      requestID = requestIDs[rankSender];
+      preciceCheck(requestID != -1, "handleRequest()", "Receiving of request ID failed");
+      preciceDebug("Received request ID " << requestID << " from rank " << rankSender);
     }
-    else {
-      rankSender = _com->receive(requestID, _lockServerToClient);
-      _lockServerToClient = -1;
-      preciceDebug("Received request ID " << requestID << " from rank "
-                   << rankSender << " (locked)");
+    else{
+      rankSender++;
+      if(rankSender==clientCommSize) rankSender = 0;
+      continue;
     }
-    preciceCheck(requestID != -1, "handleRequest()",
-                 "Receiving of request ID failed");
 
     switch (requestID){
     case REQUEST_INITIALIZE:
@@ -59,8 +67,7 @@ void RequestManager:: handleRequests()
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestInitialze(clientRanks);
-        clientCounter = 0;
-        clientRanks.clear();
+        collectiveRequest = true;
       }
       break;
     case REQUEST_INITIALIZE_DATA:
@@ -70,8 +77,7 @@ void RequestManager:: handleRequests()
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestInitialzeData(clientRanks);
-        clientCounter = 0;
-        clientRanks.clear();
+        collectiveRequest = true;
       }
       break;
     case REQUEST_ADVANCE:
@@ -81,8 +87,7 @@ void RequestManager:: handleRequests()
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestAdvance(clientRanks);
-        clientCounter = 0;
-        clientRanks.clear();
+        collectiveRequest = true;
       }
       break;
     case REQUEST_FINALIZE:
@@ -91,74 +96,101 @@ void RequestManager:: handleRequests()
       assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       if (clientCounter == clientCommSize){
         handleRequestFinalize();
+        clientCounter = 0;
+        clientRanks.clear();
         return;
       }
       break;
     case REQUEST_FULFILLED_ACTION:
       handleRequestFulfilledAction(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_INQUIRE_POSITION:
       handleRequestInquirePosition(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_INQUIRE_CLOSEST_MESH:
       handleRequestInquireClosestMesh(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_INQUIRE_VOXEL_POSITION:
       handleRequestInquireVoxelPosition(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_SET_MESH_VERTEX:
       handleRequestSetMeshVertex(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_GET_MESH_VERTEX_SIZE:
       handleRequestGetMeshVertexSize(rankSender);
+      singleRequest = true;
+      break;
+    case REQUEST_RESET_MESH:
+      handleRequestResetMesh(rankSender);
       break;
     case REQUEST_SET_MESH_VERTICES:
       handleRequestSetMeshVertices(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_GET_MESH_VERTICES:
       handleRequestGetMeshVertices(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS:
       handleRequestGetMeshVertexIDsFromPositions(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_SET_MESH_EDGE:
       handleRequestSetMeshEdge(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_SET_MESH_TRIANGLE:
       handleRequestSetMeshTriangle(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_SET_MESH_TRIANGLE_WITH_EDGES:
       handleRequestSetMeshTriangleWithEdges(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_SET_MESH_QUAD:
       handleRequestSetMeshQuad(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_SET_MESH_QUAD_WITH_EDGES:
       handleRequestSetMeshQuadWithEdges(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_WRITE_BLOCK_SCALAR_DATA:
       handleRequestWriteBlockScalarData(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_WRITE_SCALAR_DATA:
       handleRequestWriteScalarData(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_WRITE_BLOCK_VECTOR_DATA:
       handleRequestWriteBlockVectorData(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_WRITE_VECTOR_DATA:
       handleRequestWriteVectorData(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_READ_BLOCK_SCALAR_DATA:
       handleRequestReadBlockScalarData(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_READ_SCALAR_DATA:
       handleRequestReadScalarData(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_READ_VETOR_DATA:
       handleRequestReadVectorData(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_READ_BLOCK_VECTOR_DATA:
       handleRequestReadBlockVectorData(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_MAP_WRITE_DATA_FROM:
       preciceDebug("Request map written data by rank " << rankSender);
@@ -167,8 +199,7 @@ void RequestManager:: handleRequests()
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestMapWriteDataFrom(clientRanks);
-        clientCounter = 0;
-        clientRanks.clear();
+        collectiveRequest = true;
       }
       break;
     case REQUEST_MAP_READ_DATA_TO:
@@ -178,21 +209,43 @@ void RequestManager:: handleRequests()
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestMapReadDataTo(clientRanks);
-        clientCounter = 0;
-        clientRanks.clear();
+        collectiveRequest = true;
       }
       break;
     case REQUEST_EXPORT_MESH:
       handleRequestExportMesh(rankSender);
+      singleRequest = true;
       break;
     case REQUEST_PING:
       //bool ping = true;
       _com->send(true, rankSender);
+      singleRequest = true;
       break;
     default:
       preciceError("handleRequest()", "Unknown RequestID \"" << requestID << "\"");
       break;
     }
+
+    // open receive again and clean up
+    if(singleRequest){
+      requestIDs[rankSender] = -1;
+      requests[rankSender] = _com->aReceive(&(requestIDs[rankSender]), rankSender);
+      singleRequest = false;
+    }
+    else if(collectiveRequest){
+      assertion(clientRanks.size()==clientCommSize);
+      for(int rank : clientRanks){
+        requests[rank] = _com->aReceive(&(requestIDs[rank]), rank);
+      }
+      clientCounter = 0;
+      clientRanks.clear();
+      collectiveRequest = false;
+    }
+
+    requestID = -1;
+
+    rankSender++;
+    if(rankSender==clientCommSize) rankSender = 0;
   }
 }
 void RequestManager:: requestPing()
@@ -228,8 +281,6 @@ void RequestManager:: requestAdvance
 {
   preciceTrace("requestAdvance()");
   _com->send(REQUEST_ADVANCE, 0);
-  int ping;
-  _com->receive(ping, 0);
   _com->send(dt, 0);
   _couplingScheme->receiveState(_com, 0);
 }
@@ -362,6 +413,15 @@ int RequestManager:: requestGetMeshVertexSize
   int size = -1;
   _com->receive(size, 0);
   return size;
+}
+
+void RequestManager:: requestResetMesh
+(
+  int meshID )
+{
+  preciceTrace1("requestResetMesh()", meshID);
+  _com->send(REQUEST_RESET_MESH, 0);
+  _com->send(meshID, 0);
 }
 
 void RequestManager:: requestSetMeshVertices
@@ -653,13 +713,10 @@ void RequestManager:: handleRequestAdvance
 {
   preciceTrace("handleRequestAdvance()");
   std::list<int>::const_iterator iter = clientRanks.begin();
-  int ping = 0;
-  _com->send(ping, *iter);
   double oldDt;
   _com->receive(oldDt, *iter);
   iter++;
   for (; iter != clientRanks.end(); iter++){
-    _com->send(ping, *iter);
     double dt;
     _com->receive(dt, *iter);
     preciceCheck(tarch::la::equals(dt, oldDt), "handleRequestAdvance()",
@@ -809,6 +866,16 @@ void RequestManager:: handleRequestGetMeshVertexSize
   _com->receive(meshID, rankSender);
   int size = _interface.getMeshVertexSize(meshID);
   _com->send(size, rankSender);
+}
+
+void RequestManager:: handleRequestResetMesh
+(
+  int rankSender )
+{
+  preciceTrace1("handleRequestResetMesh()", rankSender);
+  int meshID = -1;
+  _com->receive(meshID, rankSender);
+  _interface.resetMesh(meshID);
 }
 
 

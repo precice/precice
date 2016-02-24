@@ -41,6 +41,7 @@ void VectorTest::run ()
   testMethod (testVectorCompare);
 
   testMethod (testVectorVectorCompare );
+  testMethod (testStdVector);
 }
 
 
@@ -755,6 +756,25 @@ void VectorTest::testVectorConversion()
   vector = Double(intVector);
   validateEquals(vector(0), 1.0);
   validateEquals(vector(1), 1.0);
+}
+
+void VectorTest::testStdVector()
+{
+  std::vector<int> s = {1, 2, 3, 4, 5};
+
+  // Test conversion from std::vector to DynamicVector
+  DynamicVector<int> d = s;
+  for (int i=0; i < 5; i++) {
+    validateEquals(d[i], s[i]);
+  }
+
+  // Test conversion from DynamicVector to std::vector
+  DynamicVector<int> dd(5);
+  assignList(dd) = 5, 4, 3, 2, 1;
+  std::vector<int> ss  = dd;
+  for (int i=0; i < 5; i++) {
+    validateEquals(dd[i], ss[i]);
+  }
 }
 
 }} // namespace tarch, la

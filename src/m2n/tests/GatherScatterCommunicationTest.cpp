@@ -65,14 +65,14 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
   utils::Parallel::synchronizeProcesses();
 
   if (utils::Parallel::getProcessRank() == 0){ //Participant 1
-    utils::Parallel::initialize ( NULL, NULL, "Part1" );
+    utils::Parallel::splitCommunicator( "Part1" );
     utils::MasterSlave::_rank = 0;
     utils::MasterSlave::_size = 1;
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
   }
   else if(utils::Parallel::getProcessRank() == 1){//Participant 2 - Master
-    utils::Parallel::initialize ( NULL, NULL, "Part2Master" );
+    utils::Parallel::splitCommunicator( "Part2Master" );
     utils::MasterSlave::_rank = 0;
     utils::MasterSlave::_size = 3;
     utils::MasterSlave::_slaveMode = false;
@@ -81,7 +81,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     masterSlaveCom->setRankOffset(1);
   }
   else if(utils::Parallel::getProcessRank() == 2){//Participant 2 - Slave1
-    utils::Parallel::initialize ( NULL, NULL, "Part2Slaves");
+    utils::Parallel::splitCommunicator( "Part2Slaves");
     utils::MasterSlave::_rank = 1;
     utils::MasterSlave::_size = 3;
     utils::MasterSlave::_slaveMode = true;
@@ -89,7 +89,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     masterSlaveCom->requestConnection( "Part2Master", "Part2Slaves", 0, 2 );
   }
   else if(utils::Parallel::getProcessRank() == 3){//Participant 2 - Slave2
-    utils::Parallel::initialize ( NULL, NULL, "Part2Slaves");
+    utils::Parallel::splitCommunicator( "Part2Slaves");
     utils::MasterSlave::_rank = 2;
     utils::MasterSlave::_size = 3;
     utils::MasterSlave::_slaveMode = true;
@@ -187,6 +187,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
   utils::MasterSlave::_masterMode = false;
 
   utils::Parallel::synchronizeProcesses();
+  utils::Parallel::clearGroups();
 }
 
 }}} // namespace precice, m2n, tests

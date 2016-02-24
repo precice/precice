@@ -75,9 +75,21 @@ VertexIterator:: ~VertexIterator()
   delete _impl;
 }
 
-VertexIterator& VertexIterator:: operator++(int)
+VertexIterator& VertexIterator:: operator++(int unused)
+{
+  auto &result = *this;
+  _impl->iterator++;
+  return result;
+}
+
+VertexIterator& VertexIterator::operator++()
 {
   _impl->iterator++;
+  return *this;
+}
+
+VertexIterator& VertexIterator::operator*()
+{
   return *this;
 }
 

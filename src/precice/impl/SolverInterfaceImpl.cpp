@@ -43,11 +43,15 @@
 #include "geometry/Geometry.hpp"
 #include "geometry/ImportGeometry.hpp"
 #include "geometry/CommunicatedGeometry.hpp"
+#include "geometry/impl/Decomposition.hpp"
+#include "geometry/impl/PreFilterPostFilterDecomposition.hpp"
+#include "geometry/impl/BroadcastFilterDecomposition.hpp"
 #include "geometry/SolverGeometry.hpp"
 #include "cplscheme/CouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/Petsc.hpp"
 #include "utils/MasterSlave.hpp"
 #include "mapping/Mapping.hpp"
 #include <set>
@@ -58,10 +62,6 @@
 #include "boost/tuple/tuple.hpp"
 
 #include <signal.h> // used for installing crash handler
-
-#ifndef PRECICE_NO_PETSC
-#include "petsc.h"
-#endif
 
 using precice::utils::Event;
 using precice::utils::EventRegistry;
@@ -121,6 +121,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
 {
+  preciceTrace("~SolverInterfaceImpl()");
   if (_requestManager != NULL){
     delete _requestManager;
   }
@@ -272,16 +273,6 @@ double SolverInterfaceImpl:: initialize()
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "initialize"
       "/");
-
-# ifndef PRECICE_NO_PETSC
-  PetscBool petscIsInitialized;
-  PetscInitialized(&petscIsInitialized);
-  if (not petscIsInitialized) {
-    // Initialize Petsc if it has not already been initialized in Parallel.cpp using the precice executable.
-    // This makes it possible to pass command line arguments that are consumed by Petsc when using the executable.
-    PetscInitializeNoArguments();
-  }
-# endif
 
   if (_clientMode){
     preciceDebug("Request perform initializations");
@@ -549,40 +540,43 @@ void SolverInterfaceImpl:: finalize()
     }
     // Apply some final ping-pong to synch solver that run e.g. with a uni-directional coupling only
     // afterwards close connections
-    typedef std::map<std::string,M2NWrap>::iterator PairIter;
     std::string ping = "ping";
     std::string pong = "pong";
-    foriter ( PairIter, iter, _m2ns ){
+    for (auto &iter : _m2ns) {
       if( not utils::MasterSlave::_slaveMode){
-        if(iter->second.isRequesting){
-          iter->second.m2n->getMasterCommunication()->startSendPackage(0);
-          iter->second.m2n->getMasterCommunication()->send(ping,0);
-          iter->second.m2n->getMasterCommunication()->finishSendPackage();
+        if(iter.second.isRequesting){
+          iter.second.m2n->getMasterCommunication()->startSendPackage(0);
+          iter.second.m2n->getMasterCommunication()->send(ping,0);
+          iter.second.m2n->getMasterCommunication()->finishSendPackage();
           std::string receive = "init";
-          iter->second.m2n->getMasterCommunication()->startReceivePackage(0);
-          iter->second.m2n->getMasterCommunication()->receive(receive,0);
-          iter->second.m2n->getMasterCommunication()->finishReceivePackage();
+          iter.second.m2n->getMasterCommunication()->startReceivePackage(0);
+          iter.second.m2n->getMasterCommunication()->receive(receive,0);
+          iter.second.m2n->getMasterCommunication()->finishReceivePackage();
           assertion(receive==pong);
         }
         else{
           std::string receive = "init";
-          iter->second.m2n->getMasterCommunication()->startReceivePackage(0);
-          iter->second.m2n->getMasterCommunication()->receive(receive,0);
-          iter->second.m2n->getMasterCommunication()->finishReceivePackage();
+          iter.second.m2n->getMasterCommunication()->startReceivePackage(0);
+          iter.second.m2n->getMasterCommunication()->receive(receive,0);
+          iter.second.m2n->getMasterCommunication()->finishReceivePackage();
           assertion(receive==ping);
-          iter->second.m2n->getMasterCommunication()->startSendPackage(0);
-          iter->second.m2n->getMasterCommunication()->send(pong,0);
-          iter->second.m2n->getMasterCommunication()->finishSendPackage();
+          iter.second.m2n->getMasterCommunication()->startSendPackage(0);
+          iter.second.m2n->getMasterCommunication()->send(pong,0);
+          iter.second.m2n->getMasterCommunication()->finishSendPackage();
         }
       }
-      iter->second.m2n->closeConnection();
+      iter.second.m2n->closeConnection();
     }
   }
   if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
     _accessor->getMasterSlaveCommunication()->closeConnection();
   }
 
-  utils::Parallel::finalize();
+  if(not precice::testMode){
+    utils::Petsc::finalize();
+    utils::Parallel::finalizeMPI();
+  }
+  utils::Parallel::clearGroups();
 }
 
 int SolverInterfaceImpl:: getDimensions() const
@@ -988,21 +982,25 @@ void SolverInterfaceImpl:: resetMesh
   int meshID )
 {
   preciceTrace1("resetMesh()", meshID);
-  impl::MeshContext& context = _accessor->meshContext(meshID);
-  bool hasMapping = context.fromMappingContext.mapping.use_count() > 0
-            || context.toMappingContext.mapping.use_count() > 0;
-  bool isStationary =
-        context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
-            context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
+  if (_clientMode){
+    _requestManager->requestResetMesh(meshID);
+  }
+  else {
+    impl::MeshContext& context = _accessor->meshContext(meshID);
+    bool hasMapping = context.fromMappingContext.mapping.use_count() > 0
+              || context.toMappingContext.mapping.use_count() > 0;
+    bool isStationary =
+          context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
+              context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
 
-  preciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
-            << " must not be reseted");
-  preciceCheck(hasMapping, "resetMesh()", "A mesh with no mappings"
+    preciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
               << " must not be reseted");
+    preciceCheck(hasMapping, "resetMesh()", "A mesh with no mappings"
+                << " must not be reseted");
 
-  preciceDebug ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
-  context.mesh->clear ();
-
+    preciceDebug ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
+    context.mesh->clear ();
+  }
 }
 
 int SolverInterfaceImpl:: setMeshVertex
@@ -1956,7 +1954,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
             std::string provider ( _accessorName );
 
             if(!addedReceiver){
-              comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider,_dimensions);
+              comGeo = new geometry::CommunicatedGeometry ( offset, provider, provider,NULL);
               context->geometry = geometry::PtrGeometry ( comGeo );
             }
             else{
@@ -1996,9 +1994,16 @@ void SolverInterfaceImpl:: configureSolverGeometries
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
       preciceDebug ( "Receiving mesh from " << provider );
+      geometry::impl::PtrDecomposition decomp = NULL;
+      if(context->doesPreFiltering){
+        decomp = geometry::impl::PtrDecomposition(
+                          new geometry::impl::PreFilterPostFilterDecomposition(_dimensions, context->safetyFactor));
+      } else {
+        decomp = geometry::impl::PtrDecomposition(
+                                new geometry::impl::BroadcastFilterDecomposition(_dimensions));
+      }
       geometry::CommunicatedGeometry * comGeo =
-          new geometry::CommunicatedGeometry ( offset, receiver, provider, _dimensions );
-      comGeo->setSafetyFactor(context->safetyFactor);
+          new geometry::CommunicatedGeometry ( offset, receiver, provider, decomp );
       m2n::M2N::SharedPointer m2n = m2nConfig->getM2N ( receiver, provider );
       comGeo->addReceiver ( receiver, m2n );
       m2n->createDistributedCommunication(context->mesh);
@@ -2007,8 +2012,8 @@ void SolverInterfaceImpl:: configureSolverGeometries
                      << "the geometry of mesh \"" << context->mesh->getName()
                      << " in addition to a defined geometry!" );
       if(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
-        comGeo->setBoundingFromMapping(context->fromMappingContext.mapping);
-        comGeo->setBoundingToMapping(context->toMappingContext.mapping);
+        decomp->setBoundingFromMapping(context->fromMappingContext.mapping);
+        decomp->setBoundingToMapping(context->toMappingContext.mapping);
       }
       context->geometry = geometry::PtrGeometry ( comGeo );
     }
