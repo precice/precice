@@ -845,8 +845,8 @@ void MVQNPostProcessing:: specializedIterationsConverged
         // |===================                            ===|
 
         // < RESTART >
-        restartIMVJ();
         _nbRestarts++;
+        restartIMVJ();
 
         // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
         assertion1(_WtilChunk.size() == 1, _WtilChunk.size());
