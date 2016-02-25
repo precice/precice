@@ -90,6 +90,10 @@ env.Append(LIBPATH = [('#' + buildpath)])
 env.Append(CCFLAGS= ['-Wall', '-std=c++11'])
 
 # ====== Compiler Settings ======
+
+# Produce position independent code for dynamic linking
+env.Append(CCFLAGS = ['-fPIC'])
+
 real_compiler = get_real_compiler(env["compiler"])
 if real_compiler == 'icc':
     env.AppendUnique(LIBPATH = ['/usr/lib/'])
