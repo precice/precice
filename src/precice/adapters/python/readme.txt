@@ -1,6 +1,10 @@
 Python Interface for preCICE
 ----------------------------
 
+Dependencies:
+
+1. Download and install the version 0.23.4 of Cython (latest as of Feb 2016) from http://cython.org/#download
+
 Steps:
 
 1. Open terminal in this folder.
