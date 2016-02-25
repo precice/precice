@@ -827,10 +827,10 @@ void MVQNPostProcessing:: specializedIterationsConverged
 
       // push back unscaled pseudo Inverse, Wtil is also unscaled.
       _preconditioner->apply(Z, true, false);
+
       // all objects in Wtil chunk and Z chunk are NOT PRECONDITIONED
       _WtilChunk.push_back(_Wtil);
       _pseudoInverseChunk.push_back(Z);
-
 
       /**
        *  Restart the IMVJ according to restart type
@@ -860,6 +860,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
     }else{
       // |= APPLY PRECONDITIONING  W, Wtil, J    ============|
       _preconditioner->apply(_matrixW);  // only needed in buildWtil(), should not be called in buildJacobain() TODO
+      _preconditioner->apply(_Wtil);
 
       // if imvj is used in no-restart mode, the full matrix J needs to be preconditioned
       // J needs to be scaled as follows:       J' := P * J * P^-1
@@ -873,6 +874,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
       buildJacobian();
 
       // |= REVERT PRECONDITIONING  W, Wtil, J   ============|
+      _preconditioner->revert(_Wtil);
       _preconditioner->revert(_matrixW); // TODO: guess not needed
       _preconditioner->revert(_oldInvJacobian,false);
       _preconditioner->apply(_oldInvJacobian,true);
