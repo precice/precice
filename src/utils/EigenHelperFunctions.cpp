@@ -46,7 +46,7 @@ void removeColumnFromMatrix
 (
     Eigen::MatrixXd& A, int col)
 {
-  assertion2(col < A.cols() && col >= 0, col, A.cols())
+  assertion2(col < A.cols() && col >= 0, col, A.cols());
   for (int j = col; j < A.cols() - 1; j++)
     A.col(j) = A.col(j + 1);
 
