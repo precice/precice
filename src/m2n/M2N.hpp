@@ -16,9 +16,9 @@ namespace precice {
 namespace m2n {
 
 /**
- * @brief M2N communication classes for a collection of meshes.
- *
- * TODO
+ * @brief M2N communication class.
+ * This layer is necessary since communication between two participants can be working via several meshes,
+ * each possibly with a different decomposition. In principle, this class is only a map from meshes to DistributedCommunications
  *
  */
 class M2N

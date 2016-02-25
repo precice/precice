@@ -48,6 +48,12 @@ public:
   virtual ~Geometry() {}
 
   /**
+   * @brief Prepares the geometry creation.
+   * This function is only overwritten by CommunicatedGeometry
+   */
+  virtual void prepare ( mesh::Mesh& seed ){}
+
+  /**
    * @brief Creates the geometry into the given seed Mesh.
    */
   void create ( mesh::Mesh& seed );

@@ -12,6 +12,15 @@
 
 namespace precice {
 namespace utils {
+
+/**
+ * @brief Publisher Class. This utility class can be used to publish connection information and
+ * was established to separate technical details from the communication.
+ * Sub-folders can be used to allow for a more efficient reading and writing.
+ * TODO: implementation should be substituted by a proper publishing strategy, not via files.
+ * (to allow for exa-scale one day)
+ *
+ */
 class Publisher {
 public:
   struct ScopedSetEventNamePrefix {

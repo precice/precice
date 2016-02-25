@@ -921,7 +921,7 @@ void MVQNPostProcessing:: removeMatrixColumn
 
 
   // remove column from matrix _Wtil
-  if(not _resetLS)
+  if(not _resetLS && not _alwaysBuildJacobian)
     utils::removeColumnFromMatrix(_Wtil, columnIndex);
 
   BaseQNPostProcessing::removeMatrixColumn(columnIndex);

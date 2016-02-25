@@ -739,7 +739,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
   const std::string& accessor ) const
 {
   preciceTrace1("createSerialExplicitCouplingScheme()", accessor);
-  //assertion ( not utils::contained(accessor, _couplingSchemes) );
   m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
@@ -758,7 +757,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
   const std::string& accessor ) const
 {
   preciceTrace1("createParallelExplicitCouplingScheme()", accessor);
-  //assertion ( not utils::contained(accessor, _couplingSchemes) );
   m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
@@ -777,7 +775,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
   const std::string& accessor ) const
 {
   preciceTrace1("createSerialImplicitCouplingScheme()", accessor);
-  //assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
 
   m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
@@ -822,7 +819,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
   const std::string& accessor ) const
 {
   preciceTrace1("createParallelImplicitCouplingScheme()", accessor);
-  assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
   m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
@@ -866,7 +862,6 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
   const std::string& accessor ) const
 {
   preciceTrace1("createMultiCouplingScheme()", accessor);
-  assertion1 ( not utils::contained(accessor, _couplingSchemes), accessor );
 
   BaseCouplingScheme* scheme;
 
