@@ -153,6 +153,7 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
   delete[] _deadAxis;
+  ISLocalToGlobalMappingDestroy(&_ISmapping);
   // PetscErrorCode ierr = 0;
   // Commenting out the next line most likely introduces a memory leak
   // However, not commenting it out introduces a memory error, which remains untraceable
@@ -242,6 +243,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   ierr = MatSetLocalToGlobalMapping(_matrixC.matrix, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
   ierr = MatSetLocalToGlobalMapping(_matrixA.matrix, ISidentityMapping, _ISmapping); CHKERRV(ierr); // Set mapping only for cols, use identity for rows
+
+  // Destroy all local index sets and mappings
+  ierr = ISDestroy(&ISlocal); CHKERRV(ierr);
+  ierr = ISDestroy(&ISlocalInv); CHKERRV(ierr);
+  ierr = ISDestroy(&ISglobal); CHKERRV(ierr);
+  ierr = ISDestroy(&ISidentity); CHKERRV(ierr);
+  ierr = ISDestroy(&ISidentityGlobal); CHKERRV(ierr);
+  ierr = ISLocalToGlobalMappingDestroy(&ISidentityMapping); CHKERRV(ierr);
 
   int i = 0;
   utils::DynVector distance(dimensions);
