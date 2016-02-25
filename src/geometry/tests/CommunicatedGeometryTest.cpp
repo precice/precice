@@ -145,6 +145,8 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     pSolidzMesh2->createEdge(v4_2,v5_2);
     pSolidzMesh2->createEdge(v5_2,v6_2);
 
+    geo1.prepare(*pSolidzMesh1);
+    geo2.prepare(*pSolidzMesh2);
     geo1.create(*pSolidzMesh1);
     geo2.create(*pSolidzMesh2);
   }
@@ -210,8 +212,11 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     decomp2->setBoundingToMapping(boundingToMapping2);
     geo1.addReceiver("NASTINMaster", m2n);
     geo2.addReceiver("NASTINMaster", m2n);
+    geo1.prepare(*pSolidzMesh1);
+    geo2.prepare(*pSolidzMesh2);
     geo1.create(*pSolidzMesh1);
     geo2.create(*pSolidzMesh2);
+
 
     // check if the sending and filtering worked right
     if(utils::Parallel::getProcessRank() == 1){//Master
@@ -292,6 +297,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
     mesh::PtrMesh pSolidzMesh(new mesh::Mesh("SolidzMesh", dimensions, flipNormals));
     CommunicatedGeometry geo( offset, "NASTIN", "SOLIDZMaster", nullptr);
     geo.addReceiver("NASTIN",m2n);
+    geo.prepare(*pSolidzMesh);
     geo.create(*pSolidzMesh);
     validate(pSolidzMesh->vertices().size()==6);
     validate(pSolidzMesh->edges().size()==4);
@@ -339,6 +345,7 @@ void CommunicatedGeometryTest:: testGatherMesh ()
 
     CommunicatedGeometry geo( offset, "SOLIDZMaster", "SOLIDZMaster", nullptr);
     geo.addReceiver("NASTIN", m2n);
+    geo.prepare(*pSolidzMesh);
     geo.create(*pSolidzMesh);
     pSolidzMesh->computeDistribution();
 

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 Compiles and tests preCICE. Can be used with git bisect run or alike.
 Return 0 on success, 1 on failure and 125 on compilation failure which tells git bisect to skip that commit (neither mark it as good or bad)
@@ -9,14 +9,17 @@ import argparse, os, shutil, subprocess, sys
 
 def run_test(cmd):
     print("Running: ", cmd)
-
-    shutil.rmtree("./tests")
+    try:
+        shutil.rmtree("./tests")
+    except FileNotFoundError:
+        pass
+    
     os.makedirs("./tests")
     os.chdir("./tests")
-    proc = subprocess.run(cmd, shell = True)
+    ret_code = subprocess.call(cmd, shell = True)
     os.chdir("..")
     
-    if not proc.returncode == 0:
+    if not ret_code == 0:
         sys.exit(1)
 
 

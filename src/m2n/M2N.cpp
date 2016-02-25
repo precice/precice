@@ -68,8 +68,6 @@ void M2N:: requestMasterConnection (
 {
   preciceTrace2("requestMasterConnection()", nameAcceptor, nameRequester);
 
-  Event e("M2N::requestMasterConnection");
-
   if(not utils::MasterSlave::_slaveMode){
     assertion(_masterCom.use_count()>0);
 
