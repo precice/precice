@@ -849,7 +849,6 @@ void MVQNPostProcessing:: specializedIterationsConverged
         restartIMVJ();
 
         // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
-        assertion1(_WtilChunk.size() == 1, _WtilChunk.size());
         _preconditioner->revert(_WtilChunk.front());
         _preconditioner->apply(_pseudoInverseChunk.front(), true, false);
         // |===================                             ==|
