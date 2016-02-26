@@ -169,12 +169,15 @@ void BaseQNPostProcessing::initialize(
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
     preciceDebug("Number of unknowns at the interface (global): "<<_dimOffsets.back());
-    if (utils::MasterSlave::_masterMode)
+    if (utils::MasterSlave::_masterMode){
       _infostream<<"\n--------\n DOFs (global): "<<_dimOffsets.back()<<"\n offsets: "<<_dimOffsets<<std::endl;
+    }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
     assertion2(entries == unknowns, entries, unknowns);
+  }else{
+    _infostream<<"\n--------\n DOFs (global): "<<entries<<std::endl;
   }
 
   // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
