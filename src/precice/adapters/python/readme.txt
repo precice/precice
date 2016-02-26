@@ -1,6 +1,10 @@
 Python Interface for preCICE
 ----------------------------
 
+Dependencies:
+
+1. Download and install the version 0.23.4 of Cython (latest as of Feb 2016) from http://cython.org/#download
+
 Steps:
 
 1. Open terminal in this folder.
@@ -22,4 +26,6 @@ Steps:
 
 5. Use the PySolverInterface!
 
-NOTE: for an example of how the PySolverInterface can be used, refer to the 1D tutorial.
+NOTE: 
+- For an example of how the PySolverInterface can be used, refer to the 1D tutorial.
+- In case the compilation fails with `'shared_ptr.pxd' not found` messages, check if `.local` contains the latest version of Cython.
