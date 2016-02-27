@@ -193,6 +193,9 @@ public:
   /// Converts to an Eigen::Vector
   operator Eigen::Matrix<Scalar, Eigen::Dynamic, 1>() const;
 
+  /// Allows to assign a Eigen::Vector to a tarch::la::DynamicVector
+  DynamicVector<Scalar>& operator=(Eigen::Matrix<Scalar, Eigen::Dynamic, 1> eigenVec);
+
   // No more methods here? They are all generic free methods now!
 };
 

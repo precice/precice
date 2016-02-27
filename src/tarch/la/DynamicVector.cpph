@@ -259,6 +259,21 @@ DynamicVector<Scalar>::operator Eigen::Matrix<Scalar, Eigen::Dynamic, 1>() const
   return v;
 }
 
+template<typename Scalar>
+DynamicVector<Scalar>& DynamicVector<Scalar>::operator=(Eigen::Matrix<Scalar, Eigen::Dynamic, 1> eigenVec)
+{
+  if (eigenVec.size() != _size) { // Reallocate only when sizes differ
+    delete[] _values;
+    _size = eigenVec.size();
+    _values = new Scalar[_size];
+  }
+  for (int i = 0; i < eigenVec.size(); i++)
+    _values[i] = eigenVec[i];
+
+  return *this;
+
+}
+
 }} // namespace tarch, la
 
 #endif /* _TARCH_LA_DYNAMICVECTOR_CPPH_ */
