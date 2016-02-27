@@ -38,9 +38,9 @@ namespace tarch {
      * @return A copy of the temporary holding the result.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
+      typename std::enable_if< IsVector<Vector>::value,
       Vector
-    >::Type abs (const Vector& vector);
+    >::type abs (const Vector& vector);
 
     /**
      * Computes the absolute component values of the vector into result.
@@ -52,9 +52,9 @@ namespace tarch {
      * @return the modified vector result.
      */
     template<typename VectorA, typename VectorB>
-      typename utils::EnableIf< IsVector<VectorA>::value && IsVector<VectorB>::value,
+      typename std::enable_if< IsVector<VectorA>::value && IsVector<VectorB>::value,
       VectorB&
-    >::Type abs (const VectorA& vector, VectorB& result);
+    >::type abs (const VectorA& vector, VectorB& result);
 
     /**
      * Sums up the component values of the vector.
@@ -71,9 +71,9 @@ namespace tarch {
      * are a sequence of smaller vectors with length of result.
      */
     template<typename VectorA, typename VectorB>
-      typename utils::EnableIf< IsVector<VectorA>::value && IsVector<VectorB>::value,
+      typename std::enable_if< IsVector<VectorA>::value && IsVector<VectorB>::value,
       VectorB&
-    >::Type sumSubvectors (const VectorA& vector, VectorB& result);
+    >::type sumSubvectors (const VectorA& vector, VectorB& result);
 
     /**
      * Computes the volume of the tetrahedron spanned by the Cartesian unit vectors
@@ -88,17 +88,17 @@ namespace tarch {
      * Returns the index of the element with maximal value (NOT absolute value).
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
+      typename std::enable_if< IsVector<Vector>::value,
       int
-    >::Type indexMax (const Vector& vector);
+    >::type indexMax (const Vector& vector);
 
     /**
      * Returns the index of the element with minimal value (NOT absolute value).
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
+      typename std::enable_if< IsVector<Vector>::value,
       int
-    >::Type indexMin (const Vector& vector);
+    >::type indexMin (const Vector& vector);
 
     /**
      * Returns the element with maximal value (NOT absolute value).
@@ -136,9 +136,9 @@ namespace tarch {
      * Computes the square root of every component of the vector.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
+      typename std::enable_if< IsVector<Vector>::value,
       Vector
-    >::Type sqrt (const Vector& vector);
+    >::type sqrt (const Vector& vector);
 
     /**
      * Pipes the elements of a vector into a std::string and returns the string.
@@ -163,9 +163,9 @@ namespace tarch {
  * Streams the component values into a comma separated representation.
  */
 template<typename Vector>
-  typename tarch::utils::EnableIf< tarch::la::IsVector<Vector>::value,
+  typename std::enable_if< tarch::la::IsVector<Vector>::value,
   std::ostream&
->::Type operator<< (std::ostream & os, const Vector & vector);
+>::type operator<< (std::ostream & os, const Vector & vector);
 
 #include "VectorOperations.cpph"
 

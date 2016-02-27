@@ -21,9 +21,9 @@ namespace tarch {
      * an operation has to compute abs for generic types.
      */
     template<typename Type>
-      typename utils::EnableIf< not IsVector<Type>::value,
+      typename std::enable_if< not IsVector<Type>::value,
       Type
-    >::Type abs (Type value);
+    >::type abs (Type value);
 
     /**
      * Returns the absolute value of the given int.
@@ -39,9 +39,9 @@ namespace tarch {
      * Returns true, if lhs is greater than rhs by more than tolerance.
      */
     template<typename Type>
-      typename utils::EnableIf<(not IsVector<Type>::value),
+      typename std::enable_if<(not IsVector<Type>::value),
       bool
-    >::Type greater (
+    >::type greater (
       Type lhs,
       Type rhs,
       Type tolerance = NUMERICAL_ZERO_DIFFERENCE);
@@ -50,9 +50,9 @@ namespace tarch {
      * Returns true, if lhs is greater or equal within a tolerance.
      */
     template<typename Type>
-      typename utils::EnableIf<not IsVector<Type>::value,
+      typename std::enable_if<not IsVector<Type>::value,
       bool
-    >:: Type greaterEquals (
+    >::type greaterEquals (
       Type lhs,
       Type rhs,
       Type tolerance = NUMERICAL_ZERO_DIFFERENCE);
@@ -61,9 +61,9 @@ namespace tarch {
      * Returns true, if lhs is smaller than rhs by more than tolerance.
      */
     template<typename Type>
-      typename utils::EnableIf<(not IsVector<Type>::value),
+      typename std::enable_if<(not IsVector<Type>::value),
       bool
-    >::Type smaller (
+    >::type smaller (
       Type lhs,
       Type rhs,
       Type tolerance = NUMERICAL_ZERO_DIFFERENCE);
@@ -72,9 +72,9 @@ namespace tarch {
      * Returns true, if lhs is equals or smaller than rhs by more than tolerance.
      */
     template<typename Type>
-      typename utils::EnableIf<(not IsVector<Type>::value),
+      typename std::enable_if<(not IsVector<Type>::value),
       bool
-    >::Type smallerEquals (
+    >::type smallerEquals (
       Type lhs,
       Type rhs,
       Type tolerance = NUMERICAL_ZERO_DIFFERENCE);
@@ -83,9 +83,9 @@ namespace tarch {
      * Returns true, if lhs is equals to rhs within a +/- tolerance range.
      */
     template<typename Type>
-      typename utils::EnableIf<(not IsVector<Type>::value && not IsMatrix<Type>::value),
+      typename std::enable_if<(not IsVector<Type>::value && not IsMatrix<Type>::value),
       bool
-    >::Type equals (
+    >::type equals (
       Type lhs,
       Type rhs,
       Type tolerance = NUMERICAL_ZERO_DIFFERENCE);

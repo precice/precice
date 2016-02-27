@@ -11,10 +11,10 @@ namespace tarch {
 namespace la {
 
 template<typename Matrix, typename Vector, typename Result>
-  typename utils::EnableIf<
+  typename std::enable_if<
   IsMatrix<Matrix>::value && IsVector<Vector>::value && IsVector<Result>::value,
   Result&
->::Type multiply (
+>::type multiply (
   const Matrix& matrix,
   const Vector& vector,
   Result&       result )
@@ -35,10 +35,10 @@ template<typename Matrix, typename Vector, typename Result>
 }
 
 template<typename Matrix, typename Vector>
-  typename utils::EnableIf<
+  typename std::enable_if<
   IsMatrix<Matrix>::value && IsVector<Vector>::value,
   Vector
->::Type operator* (
+>::type operator* (
   const Matrix& matrix,
   const Vector& vector )
 {
@@ -48,10 +48,10 @@ template<typename Matrix, typename Vector>
 }
 
 template<typename Matrix, typename Vector, typename Result>
-  typename utils::EnableIf<
+  typename std::enable_if<
   IsMatrix<Matrix>::value && IsVector<Vector>::value && IsVector<Vector>::value,
   Result&
->::Type solveSystem3x3 (
+>::type solveSystem3x3 (
   const Matrix& matrix,
   const Vector& rhs,
   Result&       result
@@ -97,9 +97,9 @@ template<typename Matrix, typename Vector, typename Result>
 //}
 
 template<typename Matrix, typename Vector>
-  typename utils::EnableIf< IsMatrix<Matrix>::value && IsVector<Vector>::value,
+  typename std::enable_if< IsMatrix<Matrix>::value && IsVector<Vector>::value,
   void
->::Type forwardSubstitution (
+>::type forwardSubstitution (
   const Matrix& matrix,
   const Vector& rhs,
   Vector&       x
@@ -119,9 +119,9 @@ template<typename Matrix, typename Vector>
 }
 
 template<typename Matrix, typename Vector>
-  typename utils::EnableIf< IsMatrix<Matrix>::value && IsVector<Vector>::value,
+  typename std::enable_if< IsMatrix<Matrix>::value && IsVector<Vector>::value,
   void
->::Type backSubstitution (
+>::type backSubstitution (
   const Matrix& matrix,
   const Vector& rhs,
   Vector&       x

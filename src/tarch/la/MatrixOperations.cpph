@@ -59,8 +59,8 @@ template<typename Matrix>
 
 
 template<typename Matrix>
-  typename utils::EnableIf< IsMatrix<Matrix>::value,
-Matrix>::Type sqrt (
+  typename std::enable_if< IsMatrix<Matrix>::value,
+Matrix>::type sqrt (
   const Matrix&                                matrix
   ){
   typedef MatrixTraits<Matrix> Traits;
@@ -78,9 +78,9 @@ Matrix>::Type sqrt (
 }} // namespace tarch, la
 
 template<typename Matrix>
-  typename tarch::utils::EnableIf< tarch::la::IsMatrix<Matrix>::value,
+typename std::enable_if< tarch::la::IsMatrix<Matrix>::value,
   std::ostream&
->::Type operator<< (
+>::type operator<< (
   std::ostream& os,
   const Matrix& matrix
 ) {

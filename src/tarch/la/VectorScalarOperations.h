@@ -19,8 +19,8 @@ namespace tarch {
      * No temporary objects are created during the operation.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector&>::Type operator*= (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector&>::type operator*= (
       Vector&                                      vector,
       const typename VectorTraits<Vector>::Scalar& scalar
     );
@@ -32,8 +32,8 @@ namespace tarch {
      * No temporary objects are created during the operation.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector&>::Type operator/= (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector&>::type operator/= (
       Vector&                                      vector,
       const typename VectorTraits<Vector>::Scalar& scalar
     );
@@ -45,8 +45,8 @@ namespace tarch {
      * No temporary objects are created during the operation.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector&>::Type operator+= (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector&>::type operator+= (
       Vector&                                      vector,
       const typename VectorTraits<Vector>::Scalar& scalar
     );
@@ -58,8 +58,8 @@ namespace tarch {
      * No temporary objects are created during the operation.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector&>::Type operator-= (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector&>::type operator-= (
       Vector &                                      vector,
       const typename VectorTraits<Vector>::Scalar & scalar
     );
@@ -71,8 +71,8 @@ namespace tarch {
      * A temporary vector is created during the operation and copied as result.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector>::Type operator* (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector>::type operator* (
       const Vector&                                vector,
       const typename VectorTraits<Vector>::Scalar& scalar
     );
@@ -84,8 +84,8 @@ namespace tarch {
      * A temporary vector is created during the operation and copied as result.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector>::Type operator/ (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector>::type operator/ (
       const Vector&                                vector,
       const typename VectorTraits<Vector>::Scalar& scalar
     );
@@ -97,8 +97,8 @@ namespace tarch {
      * A temporary vector is created during the operation and copied as result.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector>::Type operator+ (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector>::type operator+ (
       const Vector&                                vector,
       const typename VectorTraits<Vector>::Scalar& scalar
     );
@@ -110,8 +110,8 @@ namespace tarch {
      * A temporary vector is created during the operation and copied as result.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector>::Type operator- (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector>::type operator- (
       const Vector&                                vector,
       const typename VectorTraits<Vector>::Scalar& scalar
     );
@@ -123,8 +123,8 @@ namespace tarch {
      * A temporary vector is created during the operation and copied as result.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector>::Type operator* (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector>::type operator* (
       const typename VectorTraits<Vector>::Scalar& scalar,
       const Vector&                                vector
     );
@@ -136,8 +136,8 @@ namespace tarch {
      * A temporary vector is created during the operation and copied as result.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector>::Type operator+ (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector>::type operator+ (
       const typename VectorTraits<Vector>::Scalar& scalar,
       const Vector&                                vector
     );
@@ -151,8 +151,8 @@ namespace tarch {
      * A temporary vector is created during the operation and copied as result.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector>::Type operator- (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector>::type operator- (
       const typename VectorTraits<Vector>::Scalar& scalar,
       const Vector&                                vector
     );
@@ -160,8 +160,8 @@ namespace tarch {
      * Define operator %
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
-    Vector>::Type operator% (
+      typename std::enable_if< IsVector<Vector>::value,
+    Vector>::type operator% (
         const Vector&                                vector,
         const typename VectorTraits<Vector>::Scalar& scalar
     );

@@ -1,8 +1,4 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
-#ifndef _TARCH_LA_MATRIXMATRIXOPERATIONS_CPPH_
-#define _TARCH_LA_MATRIXMATRIXOPERATIONS_CPPH_
+#pragma once
 
 #include "tarch/la/MatrixMatrixOperations.h"
 #include "tarch/la/ScalarOperations.h"
@@ -11,10 +7,10 @@ namespace tarch {
 namespace la {
 
 template<typename LMatrix, typename RMatrix, typename ResultMatrix>
-  typename utils::EnableIf<
+  typename std::enable_if<
   IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value && IsMatrix<ResultMatrix>::value,
   void
->::Type multiply (
+>::type multiply (
   const LMatrix& lMatrix,
   const RMatrix& rMatrix,
   ResultMatrix&  result
@@ -37,10 +33,10 @@ template<typename LMatrix, typename RMatrix, typename ResultMatrix>
 }
 
 template<typename LMatrix, typename RMatrix>
-  typename utils::EnableIf<
+  typename std::enable_if<
   IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value,
   bool
->::Type operator== (
+>::type operator== (
   const LMatrix& lMatrix,
   const RMatrix& rMatrix
 ) {
@@ -60,10 +56,10 @@ template<typename LMatrix, typename RMatrix>
 }
 
 template<typename LMatrix, typename RMatrix>
-  typename utils::EnableIf<
+  typename std::enable_if<
   IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value /*&& EqualScalars<LMatrix,RMatrix>::value*/,
   bool
->::Type equals (
+>::type equals (
   const LMatrix&                         lMatrix,
   const RMatrix&                         rMatrix,
   typename MatrixTraits<LMatrix>::Scalar tolerance
@@ -84,10 +80,10 @@ template<typename LMatrix, typename RMatrix>
 }
 
 template<typename LMatrix, typename RMatrix>
-  typename utils::EnableIf<
+  typename std::enable_if<
   IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value,
   LMatrix
->::Type operator+ (
+>::type operator+ (
   const LMatrix& lMatrix,
   const RMatrix& rMatrix
 ) {
@@ -105,10 +101,10 @@ template<typename LMatrix, typename RMatrix>
 }
 
 template<typename LMatrix, typename RMatrix>
-  typename utils::EnableIf<
+  typename std::enable_if<
   IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value,
   int
->::Type equalsReturnIndex (
+>::type equalsReturnIndex (
   const LMatrix& lMatrix,
   const RMatrix& rMatrix,
   typename MatrixTraits<LMatrix>::Scalar tolerance
@@ -126,5 +122,3 @@ template<typename LMatrix, typename RMatrix>
 }
 
 }} // namespace tarch, la
-
-#endif /* _TARCH_LA_MATRIXMATRIXOPERATIONS_CPPH_ */

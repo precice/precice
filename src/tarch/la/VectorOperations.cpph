@@ -44,8 +44,8 @@ template<typename Vector>
  * Does not change the original vector.
  */
 //template<typename Vector>
-//  typename utils::EnableIf< IsVector<Vector>::value,
-//Vector&>::Type abs
+//  typename std::enable_if< IsVector<Vector>::value,
+//Vector&>::type abs
 //(
 //  const Vector& vector,
 //  Vector&       result )
@@ -60,9 +60,9 @@ template<typename Vector>
 //}
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
+  typename std::enable_if< IsVector<Vector>::value,
   Vector
->::Type abs (
+>::type abs (
   const Vector& vector
 ) {
   Vector result(vector);
@@ -70,9 +70,9 @@ template<typename Vector>
 }
 
 template<typename VectorA, typename VectorB>
-  typename utils::EnableIf< IsVector<VectorA>::value && IsVector<VectorB>::value,
+  typename std::enable_if< IsVector<VectorA>::value && IsVector<VectorB>::value,
   VectorB&
->::Type abs (
+>::type abs (
   const VectorA& vector, 
   VectorB&       result
 ) {
@@ -101,9 +101,9 @@ template<typename Vector>
 }
 
 template<typename VectorA, typename VectorB>
-  typename utils::EnableIf< IsVector<VectorA>::value && IsVector<VectorB>::value,
+  typename std::enable_if< IsVector<VectorA>::value && IsVector<VectorB>::value,
   VectorB&
->::Type sumSubvectors (
+>::type sumSubvectors (
   const VectorA& vector,
   VectorB& result
 ) {
@@ -144,9 +144,9 @@ template<typename Vector>
 
 template<typename Vector>
   inline
-  typename utils::EnableIf< IsVector<Vector>::value,
+  typename std::enable_if< IsVector<Vector>::value,
   int
->::Type indexMax (
+>::type indexMax (
   const Vector & vector
 ) {
   typedef VectorTraits<Vector> Traits;
@@ -161,9 +161,9 @@ template<typename Vector>
 
 template<typename Vector>
   inline
-  typename utils::EnableIf< IsVector<Vector>::value,
+  typename std::enable_if< IsVector<Vector>::value,
   int
->::Type indexMin (
+>::type indexMin (
   const Vector & vector
 ) {
   typedef VectorTraits<Vector> Traits;
@@ -239,9 +239,9 @@ template<typename Vector>
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
+  typename std::enable_if< IsVector<Vector>::value,
   Vector
->::Type sqrt (
+>::type sqrt (
   const Vector& vector
 ) {
   typedef VectorTraits<Vector> T;
@@ -287,9 +287,9 @@ Double(const tarch::la::Vector<Size, Scalar>& toConvert) {
 }} // namespace tarch, la
 
 template<typename Vector>
-  typename tarch::utils::EnableIf< tarch::la::IsVector<Vector>::value,
+  typename std::enable_if< tarch::la::IsVector<Vector>::value,
   std::ostream&
->::Type operator<< (
+>::type operator<< (
   std::ostream & os,
   const Vector & vector
 ) {

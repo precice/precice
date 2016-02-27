@@ -37,9 +37,9 @@ public:
    * Assignment operator for any vector type.
    */
   template<typename VECTOR>
-    typename utils::EnableIf< IsVector<VECTOR>::value,
+    typename std::enable_if< IsVector<VECTOR>::value,
     Vector<Size,Scalar>&
-  >::Type operator= (const VECTOR& toAssign);
+  >::type operator= (const VECTOR& toAssign);
 
   /**
    * Assignment operator for list of comma separated scalar values, that has to
@@ -56,7 +56,7 @@ public:
    */
   template<typename VECTOR>
   Vector (const VECTOR& toCopy,
-          typename utils::EnableIf< IsVector<VECTOR>::value,void*>::Type = NULL);
+          typename std::enable_if< IsVector<VECTOR>::value,void*>::type = NULL);
 
   /**
    * Construct new vector and initialize all components with initialValue.

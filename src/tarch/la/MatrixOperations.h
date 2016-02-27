@@ -44,16 +44,16 @@ namespace tarch {
      * Computes the square root of every component of the matrix.
      */
     template<typename Matrix>
-      typename utils::EnableIf< IsMatrix<Matrix>::value,
-      Matrix>::Type sqrt (
+      typename std::enable_if< IsMatrix<Matrix>::value,
+      Matrix>::type sqrt (
       const Matrix&                               matrix);
   }
 }
 
 template<typename Matrix>
-  typename tarch::utils::EnableIf< tarch::la::IsMatrix<Matrix>::value,
+  typename std::enable_if< tarch::la::IsMatrix<Matrix>::value,
   std::ostream&
->::Type operator<< (std::ostream& os, const Matrix& matrix);
+>::type operator<< (std::ostream& os, const Matrix& matrix);
 
 #include "tarch/la/MatrixOperations.cpph"
 
