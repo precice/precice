@@ -81,7 +81,6 @@ std::map<int, Eigen::VectorXd> ConstantRelaxationPostProcessing::getDesignSpecif
 (
   DataMap& cplData)
 {
-  preciceError(__func__, "design specification for constant relaxation is not supported yet.");
 
   std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;
