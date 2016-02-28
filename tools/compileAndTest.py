@@ -46,9 +46,8 @@ if args.compile:
         except FileNotFoundError:
             pass
     COMPILE_CMD = 'scons boost_inst=true mpi=on petsc=on compiler="mpicxx" build=debug -j {cpus}'.format(cpus=args.compile_cpus)
-    proc = subprocess.call(COMPILE_CMD, shell = True)
     
-    if not proc.returncode == 0:
+    if subprocess.call(COMPILE_CMD, shell = True) != 0:
         sys.exit(125) # Cannot compile, 125 means to skip that revision
 
 
