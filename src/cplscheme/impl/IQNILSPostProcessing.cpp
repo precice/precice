@@ -180,6 +180,9 @@ void IQNILSPostProcessing::computeQNUpdate
 	Eigen::VectorXd _global_b;
 
 	Event e_qrsolve("solve: R alpha = -Q^T r", true, true); // time measurement, barrier
+
+	// need to scale the residual to compensate for the scaling in c = R^-1 * Q^T * P^-1 * residual'
+	// it is also possible to apply the inverse scaling weights from the right to the vector c
 	_preconditioner->apply(_residuals);
 	_local_b = Q.transpose() * _residuals;
 	_preconditioner->revert(_residuals);

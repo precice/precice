@@ -304,61 +304,21 @@ void MVQNPostProcessing::computeQNUpdate(
   preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
   preciceDebug("compute IMVJ quasi-Newton update");
-
-
   //_info2<<_preconditioner->getWeights().front()<<", "<<_preconditioner->getWeights().back()<<", "<<_preconditioner->getWeights().front()/_preconditioner->getWeights().back()<<";"<<std::endl;
 
-  Event ePrecond_1("preconditioning of J", true, true); // ------ time measurement, barrier
 
-  // Wtil needs to be preconditioned if it is not re-built from scratch, i.e., if either
-  // the efficient IMVJ update or the IMVJ restart mode is used
-//  if((not _alwaysBuildJacobian || _imvjRestart) && (_Wtil.size() > 0)){
-//    _preconditioner->apply(_Wtil);
-//  }
-
-  // if imvj is used in restart mode, all stored matrices Wtil^q and Z^q within the
-  // current chunk need to be scaled with the current preconditioner weights
-//  if(_imvjRestart){
-    // see below how J needs to be scaled. If this is applied to the sub-blocks of the
-    // Jacobian, the following preconditioning of the local matrices Wtil^q and Z^q falls out.
-    // [Wtil^q]' := P * Wtil^q      and     [Z^q]' := Z^q * P^-1
-//    for(int i = 0; i < (int)_WtilChunk.size(); i++){
-//      _preconditioner->apply(_WtilChunk[i]);
-//      _preconditioner->revert(_pseudoInverseChunk[i], true, false);
-//    }
-
-    // if imvj is used in no-restart mode, the full matrix J needs to be preconditioned
-//  }else{
-    // J needs to be scaled as follows:       J' := P * J * P^-1
-    // where P = diag(P1,P2,...) and Pi = diag(w1i, w2i, ..).
-    // Thus, P^-1 needs the weights from all procs, i.e., global weights.
-//    _preconditioner->apply(_oldInvJacobian,false);
-//    _preconditioner->revert(_oldInvJacobian,true);
-//  }
-  ePrecond_1.stop();                                    // ------
-
-  // either compute efficient, omitting to build the Jacobian in each iteration or inefficient.
+  /**
+   *  The MVJ- quasi-Newton update
+   *  Either compute efficient, omitting to build the Jacobian in each iteration or inefficient.
+   *  INVARIANT: All objects, J_inv, J_old_inv, W, V, Wtil, xUpdate, res, etc. are unscaled.
+   *             Only the QR-decomposition of V is scaled and thus needs to be unscaled before
+   *             using it in multiplications with the other matrices.
+   */
   if(_alwaysBuildJacobian){
     computeNewtonUpdate(cplData, xUpdate);
   }else{
     computeNewtonUpdateEfficient(cplData, xUpdate);
   }
-
-  Event ePrecond_2("preconditioning of J", true, true); // ------ time measurement, barrier
-//  if((not _alwaysBuildJacobian || _imvjRestart) && (_Wtil.size() > 0)){
-//    _preconditioner->revert(_Wtil);
-//  }
-
-//  if(_imvjRestart){
-//    for(int i = 0; i < (int)_WtilChunk.size(); i++){
-//       _preconditioner->revert(_WtilChunk[i]);
-//       _preconditioner->apply(_pseudoInverseChunk[i], true, false);
-//     }
-//  }else{
-//    _preconditioner->revert(_oldInvJacobian,false);
-//    _preconditioner->apply(_oldInvJacobian,true);
-//  }
-  ePrecond_2.stop();                                    // ------
 }
 
 
@@ -699,6 +659,9 @@ void MVQNPostProcessing::restartIMVJ()
      }
 
      // preconditioning
+     // V needs to be sclaed to compute the pseudo inverse
+     // W only needs to be scaled, as the design requires to store scaled
+     // matrices Wtil^0 and Z^0 as initial guess after the restart
      _preconditioner->apply(_matrixV_RSLS);
      _preconditioner->apply(_matrixW_RSLS);
 
@@ -747,6 +710,8 @@ void MVQNPostProcessing::restartIMVJ()
      _WtilChunk.push_back(_matrixW_RSLS);
      _pseudoInverseChunk.push_back(pseudoInverse);
 
+
+     // revert both matrices, chunks are reverted in spezializedIterationsConverged
      _preconditioner->revert(_matrixW_RSLS);
      _preconditioner->revert(_matrixV_RSLS);
 
@@ -811,7 +776,8 @@ void MVQNPostProcessing:: specializedIterationsConverged
     // need to apply the preconditioner, as all data structures are reverted after
     // call to computeQNUpdate. Need to call this before the preconditioner is updated.
 
-    // |= PRECONDITIONING  V         ============|
+    // |= REBUILD QR-dec if needed     ============|
+    // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
     _preconditioner->apply(_matrixV);
 
     if(_preconditioner->requireNewQR()){
@@ -820,13 +786,13 @@ void MVQNPostProcessing:: specializedIterationsConverged
       }
       _preconditioner->newQRfulfilled();
     }
-    // |===================          ============|
-
     // apply the configured filter to the LS system
     // as it changed in BaseQNPostProcessing::iterationsConverged()
     BaseQNPostProcessing::applyFilter();
-
     _preconditioner->revert(_matrixV);
+    // |===================          ============|
+
+
 
     //              ------- RESTART/ JACOBIAN ASSEMBLY -------
     if(_imvjRestart){
@@ -834,11 +800,11 @@ void MVQNPostProcessing:: specializedIterationsConverged
       // add the matrices Wtil and Z of the converged configuration to the storage containers
       Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
       // compute pseudo inverse using QR factorization and back-substitution
-      pseudoInverse(Z);   // TODO: re-computation could be avoided .. in this case Z needs to be preconditioned.
+      // also compensates for the scaling of V, i.e.,
+      // reverts Z' = R^-1 * Q^T * P^-1 as Z := Z' * P
+      pseudoInverse(Z);
 
       // push back unscaled pseudo Inverse, Wtil is also unscaled.
-      //_preconditioner->apply(Z, true, false);
-
       // all objects in Wtil chunk and Z chunk are NOT PRECONDITIONED
       _WtilChunk.push_back(_Wtil);
       _pseudoInverseChunk.push_back(Z);
@@ -846,8 +812,9 @@ void MVQNPostProcessing:: specializedIterationsConverged
       /**
        *  Restart the IMVJ according to restart type
        */
-      if ((int)_WtilChunk.size() >= _chunkSize){
+      if ((int)_WtilChunk.size() >= _chunkSize+1){
 
+        // we need to compute the updated SVD of the scaled Jacobian matrix
         // |= APPLY PRECONDITIONING  J_prev = Wtil^q, Z^q  ===|
         for(int i = 0; i < (int)_WtilChunk.size(); i++){
           _preconditioner->apply(_WtilChunk[i]);
@@ -865,40 +832,12 @@ void MVQNPostProcessing:: specializedIterationsConverged
         // |===================                             ==|
       }
 
-
       // only in imvj normal mode with efficient update:
     }else{
-      // |= APPLY PRECONDITIONING  W, Wtil, J    ============|
-//      _preconditioner->apply(_matrixW);  // only needed in buildWtil(), should not be called in buildJacobain() TODO
-//      _preconditioner->apply(_Wtil);
-
-      // if imvj is used in no-restart mode, the full matrix J needs to be preconditioned
-      // J needs to be scaled as follows:       J' := P * J * P^-1
-      // where P = diag(P1,P2,...) and Pi = diag(w1i, w2i, ..).
-      // Thus, P^-1 needs the weights from all procs, i.e., global weights.
-//      _preconditioner->apply(_oldInvJacobian,false);
-//      _preconditioner->revert(_oldInvJacobian,true);
-      // |===================                    ============|
 
       // compute explicit representation of Jacobian
       buildJacobian();
-
-      // |= REVERT PRECONDITIONING  W, Wtil, J   ============|
-//      _preconditioner->revert(_Wtil);
-//      _preconditioner->revert(_matrixW); // TODO: guess not needed
-//      _preconditioner->revert(_oldInvJacobian,false);
-//      _preconditioner->apply(_oldInvJacobian,true);
-      // |===================                    ============|
     }
-    //              ------------------------------------------
-
-    // |= PRECONDITIONING ====                       ============|
-    //_preconditioner->revert(_residuals); // TODO not needed I think ??
-    //_preconditioner->revert(_matrixV);
-
-    // Note: in imvj-restart mode, type=SVD, the SVD is updated with unscaled matrices
-    // Wtil^q and Z^q, hence nothing to revert in this case. type=RS-LS handles preconditioning
-
 
 
     /** in case of enforced initial relaxation, the matrices are cleared
@@ -913,12 +852,6 @@ void MVQNPostProcessing:: specializedIterationsConverged
 
   // only store Jacobian if imvj is in normal mode, i.e., the Jacobian is build
   if(not _imvjRestart){
-    // Also need to revert the _invJacobian matrix with the preconditioner weights, as it's stored in _oldInvJacobian.
-    // note: only _oldInvJacobian is reverted after computeNewtonUpdate*() or buildJacobian().
-    // The Jacobian is always unscaled outside of computeNewtonUpdate*()
-//    _preconditioner->revert(_invJacobian,false);
-//    _preconditioner->apply(_invJacobian,true);
-
     // store inverse Jacobian from converged time step. NOT SCALED with preconditioner
     _oldInvJacobian = _invJacobian;
   }

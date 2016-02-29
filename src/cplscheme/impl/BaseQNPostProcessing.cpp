@@ -401,17 +401,14 @@ void BaseQNPostProcessing::performPostProcessing
     /**
      *  === update and apply preconditioner ===
      *
-     * IQN-ILS would also work without W and xUpdate scaling, IQN-IMVJ unfortunately not
+     * The preconditioner is only applied to the matrix V and the columns that are inserted into the
+     * QR-decomposition of V.
      * Note: here, the _residuals are H(x)- x - q, i.e., residual of the fixed-point iteration
      *       minus the design specification of the optimization problem (!= null if MM is used)
      */
-    Event e_applyPrecond("applyPreconditioner", true, true); // time measurement, barrier
-    _preconditioner->update(false, _values, _residuals);
-    // TODO: evaluate whether the pure residual should be used for updating the preconditioner or residual - design specification
-//    _preconditioner->apply(_residuals);
-//    _preconditioner->apply(_matrixV);
-//    _preconditioner->apply(_matrixW);
 
+    _preconditioner->update(false, _values, _residuals);
+    // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
     _preconditioner->apply(_matrixV);
     if(_preconditioner->requireNewQR()){
       if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
@@ -419,23 +416,22 @@ void BaseQNPostProcessing::performPostProcessing
       }
       _preconditioner->newQRfulfilled();
     }
-    e_applyPrecond.stop();                                  // -------------
 
     // apply the configured filter to the LS system
     applyFilter();
+
+    // revert scaling of V, in computeQNUpdate all data objects are unscaled.
     _preconditioner->revert(_matrixV);
 
     /**
      * compute quasi-Newton update
+     * PRECONDITION: All objects are unscaled, except the matrices within the QR-dec of V.
+     *               Thus, the pseudo inverse needs to be reverted before using it.
      */
     Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_residuals.size());
     computeQNUpdate(cplData, xUpdate);
 
     Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
-//    _preconditioner->revert(xUpdate); //to compensate the W scaling
-//    _preconditioner->revert(_matrixW);
-//    _preconditioner->revert(_matrixV);
-//    _preconditioner->revert(_residuals);
     e_revertPrecond.stop();                                   // -------------
 
     /**
