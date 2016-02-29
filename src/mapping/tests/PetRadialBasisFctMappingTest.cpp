@@ -559,8 +559,8 @@ void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping(Mapping& ma
   mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
   int inDataID = inData->getID ();
-  mesh::Vertex& vertex0 = inMesh->createVertex ( Vector2d(0.0) );
-  mesh::Vertex& vertex1 = inMesh->createVertex ( Vector2d(0.0) );
+  mesh::Vertex& vertex0 = inMesh->createVertex ( Vector2d(0,0) );
+  mesh::Vertex& vertex1 = inMesh->createVertex ( Vector2d(0,0) );
   inMesh->allocateDataValues ();
   inData->values() << 1.0, 2.0;
   addGlobalIndex(inMesh);
@@ -829,7 +829,7 @@ void PetRadialBasisFctMappingTest:: testDeadAxis2D()
   mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false) );
   mesh::PtrData outData = outMesh->createData ( "OutData", 1 );
   int outDataID = outData->getID();
-  mesh::Vertex& vertex = outMesh->createVertex ( Vector2d(0.0) );
+  mesh::Vertex& vertex = outMesh->createVertex ( Vector2d(0,0) );
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
 
