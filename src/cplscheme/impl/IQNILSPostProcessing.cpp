@@ -180,7 +180,9 @@ void IQNILSPostProcessing::computeQNUpdate
 	Eigen::VectorXd _global_b;
 
 	Event e_qrsolve("solve: R alpha = -Q^T r", true, true); // time measurement, barrier
+	_preconditioner->apply(_residuals);
 	_local_b = Q.transpose() * _residuals;
+	_preconditioner->revert(_residuals);
 	_local_b *= -1.0; // = -Qr
 
 	assertion1(c.size() == 0, c.size());

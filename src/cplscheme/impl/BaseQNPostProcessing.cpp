@@ -408,10 +408,11 @@ void BaseQNPostProcessing::performPostProcessing
     Event e_applyPrecond("applyPreconditioner", true, true); // time measurement, barrier
     _preconditioner->update(false, _values, _residuals);
     // TODO: evaluate whether the pure residual should be used for updating the preconditioner or residual - design specification
-    _preconditioner->apply(_residuals);
-    _preconditioner->apply(_matrixV);
-    _preconditioner->apply(_matrixW);
+//    _preconditioner->apply(_residuals);
+//    _preconditioner->apply(_matrixV);
+//    _preconditioner->apply(_matrixW);
 
+    _preconditioner->apply(_matrixV);
     if(_preconditioner->requireNewQR()){
       if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
@@ -422,6 +423,7 @@ void BaseQNPostProcessing::performPostProcessing
 
     // apply the configured filter to the LS system
     applyFilter();
+    _preconditioner->revert(_matrixV);
 
     /**
      * compute quasi-Newton update
@@ -430,10 +432,10 @@ void BaseQNPostProcessing::performPostProcessing
     computeQNUpdate(cplData, xUpdate);
 
     Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
-    _preconditioner->revert(xUpdate); //to compensate the W scaling
-    _preconditioner->revert(_matrixW);
-    _preconditioner->revert(_matrixV);
-    _preconditioner->revert(_residuals);
+//    _preconditioner->revert(xUpdate); //to compensate the W scaling
+//    _preconditioner->revert(_matrixW);
+//    _preconditioner->revert(_matrixV);
+//    _preconditioner->revert(_residuals);
     e_revertPrecond.stop();                                   // -------------
 
     /**
