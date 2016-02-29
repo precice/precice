@@ -7,7 +7,6 @@
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/VectorTraits.h"
 #include "tarch/la/traits/DeduceScalar.h"
-#include "tarch/utils/EnableIf.h"
 
 namespace tarch {
   namespace la {

@@ -7,7 +7,6 @@
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/VectorTraits.h"
 #include "tarch/la/ScalarOperations.h"
-#include "tarch/utils/EnableIf.h"
 #include <sstream>
 #include <cmath>
 
@@ -18,18 +17,16 @@ namespace tarch {
      * Computes the 1-norm of the vector, i.e. it sums up abs. component values.
      */
     template<typename Vector>
-      typename utils::LazyEnableIf< IsVector<Vector>::value,
-      utils::LazyType<typename VectorTraits<Vector>::Scalar>
-    >::Type norm1 (const Vector& vector);
+      typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+     ::type norm1 (const Vector& vector);
 
     /**
      * Computes the 2-norm of the vector, i.e. it takes the square-root of
      * summed up squared component values.
      */
     template<typename Vector>
-      typename utils::LazyEnableIf< IsVector<Vector>::value,
-      utils::LazyType<typename VectorTraits<Vector>::Scalar>
-    >::Type norm2 (const Vector& vector);
+      typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+    ::type norm2 (const Vector& vector);
 
     /**
      * Computes the absolute component values of the vector, creating a
@@ -60,9 +57,8 @@ namespace tarch {
      * Sums up the component values of the vector.
      */
     template<typename Vector>
-      typename utils::LazyEnableIf< IsVector<Vector>::value,
-      utils::LazyType<typename VectorTraits<Vector>::Scalar>
-    >::Type sum (const Vector& vector);
+      typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+    ::Type sum (const Vector& vector);
 
     /**
      * Sums up the components of subvectors in vector into result.
@@ -80,9 +76,8 @@ namespace tarch {
      * scaled by the corresponding components of the given vector.
      */
     template<typename Vector>
-      typename utils::LazyEnableIf< IsVector<Vector>::value,
-      utils::LazyType<typename VectorTraits<Vector>::Scalar>
-    >::Type volume (const Vector& vector);
+      typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+     ::type volume (const Vector& vector);
 
     /**
      * Returns the index of the element with maximal value (NOT absolute value).
@@ -104,33 +99,30 @@ namespace tarch {
      * Returns the element with maximal value (NOT absolute value).
      */
     template<typename Vector>
-      typename utils::LazyEnableIf< IsVector<Vector>::value,
-      utils::LazyType<typename VectorTraits<Vector>::Scalar>
-    >::Type max (const Vector& vector);
+      typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+     ::type max (const Vector& vector);
 
     /**
      * Returns the element with minimal value (NOT absolute value).
      */
     template<typename Vector>
-      typename utils::LazyEnableIf< IsVector<Vector>::value,
-      utils::LazyType<typename VectorTraits<Vector>::Scalar>
-    >::Type min (const Vector& vector);
+      typename std::enable_if< IsVector<Vector>::value,
+      typename VectorTraits<Vector>::Scalar>
+     ::type min (const Vector& vector);
 
     /**
      * Returns a pointer to the first element of the vector.
      */
     template<typename Vector>
-      typename utils::LazyEnableIf< IsVector<Vector>::value,
-      utils::LazyType<typename VectorTraits<Vector>::Scalar*>
-    >::Type raw (Vector& vector);
+      typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar*>
+    ::type raw (Vector& vector);
 
     /**
      * Returns a const pointer to the first element of the vector.
      */
     template<typename Vector>
-      typename utils::LazyEnableIf< IsVector<Vector>::value,
-      utils::LazyType<const typename VectorTraits<Vector>::Scalar*>
-    >::Type raw (const Vector& vector);
+      typename std::enable_if< IsVector<Vector>::value, const typename VectorTraits<Vector>::Scalar*>
+     ::type raw (const Vector& vector);
 
     /**
      * Computes the square root of every component of the vector.

@@ -11,7 +11,6 @@
 #include "tarch/la/MatrixMatrixOperations.h"
 #include "tarch/la/traits/IsMatrix.h"
 #include "tarch/la/traits/MatrixTraits.h"
-#include "tarch/utils/EnableIf.h"
 
 namespace tarch {
   namespace la {
@@ -22,9 +21,9 @@ namespace tarch {
      * This operation has zero performance or memory overhead if properly inlined.
      */
     template<typename Matrix>
-      typename utils::EnableIf<IsMatrix<Matrix>::value,
+      typename std::enable_if<IsMatrix<Matrix>::value,
       TransposedMatrix<Matrix>&
-    >::Type transpose (Matrix& matrix);
+    >::type transpose (Matrix& matrix);
   }
 }
 

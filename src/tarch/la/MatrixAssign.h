@@ -6,7 +6,6 @@
 
 #include "tarch/la/traits/MatrixTraits.h"
 #include "tarch/la/traits/IsMatrix.h"
-#include "tarch/utils/EnableIf.h"
 #include "tarch/Assertions.h"
 
 namespace tarch {
@@ -17,9 +16,9 @@ namespace tarch {
      * Returns a reinterpreted matrix to enable assignment of scalars and matrices.
      */
     template<typename Matrix>
-      typename utils::EnableIf<IsMatrix<Matrix>::value,
+      typename std::enable_if<IsMatrix<Matrix>::value,
       MatrixAssign<Matrix>&
-    >::Type assign (
+    >::type assign (
       Matrix& matrix
     );
   }
@@ -44,9 +43,9 @@ public:
    * Assigns the components of a matrix to the matrix.
    */
   template<typename RMatrix>
-    typename utils::EnableIf< IsMatrix<RMatrix>::value,
+    typename std::enable_if< IsMatrix<RMatrix>::value,
     Matrix&
-  >::Type operator= (const RMatrix& toAssign);
+  >::type operator= (const RMatrix& toAssign);
 };
 
 #include "tarch/la/MatrixAssign.cpph"

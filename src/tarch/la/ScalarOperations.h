@@ -7,7 +7,6 @@
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/IsMatrix.h"
 #include "tarch/la/Scalar.h"
-#include "tarch/utils/EnableIf.h"
 #include <cmath>
 
 namespace tarch {

@@ -12,7 +12,6 @@
 #include "tarch/la/VectorOperations.h"
 #include "tarch/la/VectorScalarOperations.h"
 #include "tarch/la/VectorVectorOperations.h"
-#include "tarch/utils/EnableIf.h"
 #include "Eigen/Core"
 
 namespace tarch {
@@ -75,7 +74,7 @@ public:
   template<typename VECTOR>
   DynamicVector (
     const VECTOR& toCopy,
-    typename utils::EnableIf< IsVector<VECTOR>::value,void*>::Type = NULL );
+    typename std::enable_if< IsVector<VECTOR>::value,void*>::type = NULL );
 
   /// Converts from a std::vector
   DynamicVector(const std::vector<Scalar> stdvector);
@@ -102,9 +101,9 @@ public:
 
 //  template<typename Scalar>
 //  template<typename Vector>
-//    typename utils::EnableIf<IsVector<Vector>::value,
+//    typename std::enable_if<IsVector<Vector>::value,
 //    void
-//  >::Type DynamicVector<Scalar>::append (
+//  >::type DynamicVector<Scalar>::append (
 //    const Vector& toAppend
 //  ) {
 //    assertion1 (toAppend.size() > 0, toAppend.size());
@@ -128,9 +127,9 @@ public:
    * Assignment of vector of different type.
    */
   template<typename VECTOR>
-    typename utils::EnableIf< IsVector<VECTOR>::value,
+    typename std::enable_if< IsVector<VECTOR>::value,
     DynamicVector<Scalar>&
-  >::Type operator= (const VECTOR& toAssign);
+  >::type operator= (const VECTOR& toAssign);
 
   /**
    * Returns the number of components of the vector.
@@ -141,9 +140,9 @@ public:
    * Appends the given vector to this vector.
    */
   template<typename Vector>
-    typename utils::EnableIf<IsVector<Vector>::value/* && EqualScalars<Vector,DynamicVector<Scalar> >::value*/,
+    typename std::enable_if<IsVector<Vector>::value/* && EqualScalars<Vector,DynamicVector<Scalar> >::value*/,
     void
-  >::Type append (const Vector& toAppend);
+  >::type append (const Vector& toAppend);
 
   /**
    * Appends another element to this vector.

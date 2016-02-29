@@ -4,7 +4,6 @@
 #ifndef _TARCH_LA_VECTOR_H_
 #define _TARCH_LA_VECTOR_H_
 
-#include "tarch/utils/EnableIf.h"
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/VectorAssign.h"
 #include "tarch/la/VectorAssignList.h"

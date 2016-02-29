@@ -6,7 +6,6 @@
 
 #include "tarch/la/traits/IsMatrix.h"
 #include "tarch/la/traits/MatrixTraits.h"
-#include "tarch/utils/EnableIf.h"
 #include <sstream>
 #include <cmath>
 
@@ -17,26 +16,23 @@ namespace tarch {
      * Computes the determinant of a 3 by 3 matrix.
      */
     template<typename Matrix>
-      typename utils::LazyEnableIf< IsMatrix<Matrix>::value,
-      utils::LazyType<typename MatrixTraits<Matrix>::Scalar>
-    >::Type det3x3 ( const Matrix& matrix );
+      typename std::enable_if< IsMatrix<Matrix>::value, typename MatrixTraits<Matrix>::Scalar>
+      ::Type det3x3 ( const Matrix& matrix );
 
 
     /**
      * Computes the sum of all entries of the matrix.
      */
     template<typename Matrix>
-      typename utils::LazyEnableIf< IsMatrix<Matrix>::value,
-      utils::LazyType<typename MatrixTraits<Matrix>::Scalar>
-    >::Type sum (const Matrix& matrix);
+      typename std::enable_if< IsMatrix<Matrix>::value, typename MatrixTraits<Matrix>::Scalar>
+      ::Type sum (const Matrix& matrix);
     
     /**
      * Computes the frobenius norm of the matrix
      */
     template<typename Matrix>
-      typename utils::LazyEnableIf< IsMatrix<Matrix>::value,
-      utils::LazyType<typename MatrixTraits<Matrix>::Scalar>
-    >::Type frobeniusNorm (const Matrix& matrix);
+      typename std::enable_if< IsMatrix<Matrix>::value, typename MatrixTraits<Matrix>::Scalar>
+      ::Type frobeniusNorm (const Matrix& matrix);
 
 
 

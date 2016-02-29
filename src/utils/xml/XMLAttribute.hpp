@@ -122,20 +122,16 @@ private:
    */
   template<typename VALUE_T>
   typename std::enable_if<
-    tarch::utils::IsEqual<VALUE_T,ATTRIBUTE_T>::value &&
-    not tarch::utils::IsEqual<VALUE_T,utils::DynVector>::value,
-    void
-  >::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
+    std::is_same<VALUE_T,ATTRIBUTE_T>::value && not std::is_same<VALUE_T,utils::DynVector>::value, void>
+    ::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
 
   /**
    * @brief Sets utils::DynVector type values by clearing and append.
    */
   template<typename VALUE_T>
   typename std::enable_if<
-    tarch::utils::IsEqual<VALUE_T,ATTRIBUTE_T>::value &&
-    tarch::utils::IsEqual<VALUE_T,utils::DynVector>::value,
-    void
-  >::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
+    std::is_same<VALUE_T,ATTRIBUTE_T>::value && std::is_same<VALUE_T,utils::DynVector>::value, void>
+    ::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
 };
 
 template<typename ATTRIBUTE_T>
@@ -339,10 +335,8 @@ std::string XMLAttribute<ATTRIBUTE_T>:: printDocumentation() const
 template<typename ATTRIBUTE_T>
 template<typename VALUE_T>
 typename std::enable_if<
-  tarch::utils::IsEqual<VALUE_T,ATTRIBUTE_T>::value &&
-  not tarch::utils::IsEqual<VALUE_T,utils::DynVector>::value,
-  void
->::type XMLAttribute<ATTRIBUTE_T>:: set
+  std::is_same<VALUE_T,ATTRIBUTE_T>::value && not std::is_same<VALUE_T,utils::DynVector>::value, void>
+         ::type XMLAttribute<ATTRIBUTE_T>:: set
 (
   ATTRIBUTE_T&   toSet,
   const VALUE_T& setter )
@@ -353,11 +347,9 @@ typename std::enable_if<
 template<typename ATTRIBUTE_T>
 template<typename VALUE_T>
 typename std::enable_if<
-  tarch::utils::IsEqual<VALUE_T,ATTRIBUTE_T>::value &&
-  tarch::utils::IsEqual<VALUE_T,utils::DynVector>::value,
-  void
->::type XMLAttribute<ATTRIBUTE_T>:: set
-(
+  std::is_same<VALUE_T,ATTRIBUTE_T>::value && std::is_same<VALUE_T,utils::DynVector>::value, void>
+         ::type XMLAttribute<ATTRIBUTE_T>:: set
+  (
   ATTRIBUTE_T&   toSet,
   const VALUE_T& setter )
 {

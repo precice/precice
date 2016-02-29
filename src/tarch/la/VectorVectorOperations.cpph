@@ -4,7 +4,6 @@
 #ifndef _TARCH_LA_VECTORVECTOROPERATIONS_CPPH_
 #define _TARCH_LA_VECTORVECTOROPERATIONS_CPPH_
 
-
 #include "tarch/la/VectorVectorOperations.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
 #include "tarch/Assertions.h"
@@ -51,38 +50,6 @@ template<typename LVector, typename RVector>
   }
   return lVector;
 }
-
-//template<typename LVector, typename RVector>
-//  typename std::enable_if<IsVector<LVector>::value && IsVector<RVector>::value,
-//  LVector&
-//>::type operator*= (
-//  LVector&       lVector,
-//  const RVector& rVector
-//) {
-//  typedef VectorTraits<LVector> LTraits;
-//  typedef VectorTraits<RVector> RTraits;
-//  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
-//  for ( int i=0; i < LTraits::size(lVector); i++ ) {
-//    LTraits::elem(i,lVector) *= RTraits::celem(i,rVector);
-//  }
-//  return lVector;
-//}
-
-//template<typename LVector, typename RVector>
-//  typename std::enable_if<IsVector<LVector>::value && IsVector<RVector>::value,
-//  LVector&
-//>::type operator/= (
-//  LVector&       lVector,
-//  const RVector& rVector
-//) {
-//  typedef VectorTraits<LVector> LTraits;
-//  typedef VectorTraits<RVector> RTraits;
-//  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
-//  for ( int i=0; i < LTraits::size(lVector); i++ ) {
-//    LTraits::elem(i,lVector) /= RTraits::celem(i,rVector);
-//  }
-//  return lVector;
-//}
 
 template<typename LVector, typename RVector>
   typename std::enable_if<
@@ -143,10 +110,10 @@ template<typename LVector, typename RVector, typename ResultVector>
 }
 
 template<typename LVector, typename RVector>
-  typename utils::LazyEnableIf<
+  typename std::enable_if<
   IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
-  utils::LazyType<typename VectorTraits<LVector>::Scalar>
->::Type operator* (
+  typename VectorTraits<LVector>::Scalar>
+ ::type operator* (
   const LVector& lVector,
   const RVector& rVector
 ) {
@@ -171,48 +138,12 @@ template<typename LVector, typename RVector>
   return result;
 }
 
-//template<typename LVector, typename RVector>
-//  typename std::enable_if<IsVector<LVector>::value && IsVector<RVector>::value
-//  && IsEqual<typename VectorTraits<LVector>::Scalar,
-//             typename VectorTraits<RVector>::Scalar>::value,
-//LVector>::type operator* (
-//  const LVector& lVector,
-//  const RVector& rVector
-//) {
-//  typedef VectorTraits<LVector> LTraits;
-//  typedef VectorTraits<RVector> RTraits;
-//  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
-//  LVector result(lVector);
-//  for ( int i=0; i < LTraits::size(lVector); i++ ) {
-//    LTraits::elem(i,result) =  LTraits::celem(i,lVector) * RTraits::celem(i,rVector);
-//  }
-//  return result;
-//}
-
-//template<typename LVector, typename RVector>
-//  typename std::enable_if<IsVector<LVector>::value && IsVector<RVector>::value
-//  && IsEqual<typename VectorTraits<LVector>::Scalar,
-//             typename VectorTraits<RVector>::Scalar>::value,
-//LVector>::type operator/ (
-//  const LVector& lVector,
-//  const RVector& rVector
-//) {
-//  typedef VectorTraits<LVector> LTraits;
-//  typedef VectorTraits<RVector> RTraits;
-//  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
-//  LVector result(lVector);
-//  for ( int i=0; i < LTraits::size(lVector); i++ ) {
-//    LTraits::elem(i,result) =  LTraits::celem(i,lVector) / RTraits::celem(i,rVector);
-//  }
-//  return result;
-//}
-
 template<typename LVector, typename RVector>
   inline
-  typename utils::LazyEnableIf<
+  typename std::enable_if<
   IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
-  utils::LazyType<typename VectorTraits<LVector>::Scalar>
->::Type dot (
+  typename VectorTraits<LVector>::Scalar>
+ ::type dot (
   const LVector & lVector,
   const RVector & rVector
 ) {
@@ -375,28 +306,6 @@ template<typename LVector, typename RVector>
   }
   return true;
 }
-
-//template<typename LVector, typename RVector>
-//  typename std::enable_if<
-//  IsVector<LVector>::value
-//  && IsVector<RVector>::value
-//  && IsEqual<typename VectorTraits<LVector>::Scalar,
-//             typename VectorTraits<RVector>::Scalar>::value
-//  && IsInteger<typename VectorTraits<LVector>::Scalar>,
-//bool>::type equals (
-//  const LVector& lVector,
-//  const RVector& rVector
-//) {
-//  typedef VectorTraits<LVector> LTraits;
-//  typedef VectorTraits<RVector> RTraits;
-//  assertion ( LTraits::size(lVector) == RTraits::size(rVector) );
-//  for ( int i=0; i < LTraits::size(lVector); i++ ) {
-//    if (LTraits::celem(i,result) !=  LTraits::celem(i,lVector)) {
-//      return false;
-//    }
-//  }
-//  return true;
-//}
 
 template<typename LVector, typename RVector>
   typename std::enable_if<

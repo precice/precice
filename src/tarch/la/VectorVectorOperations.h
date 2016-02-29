@@ -7,9 +7,7 @@
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/VectorTraits.h"
 #include "tarch/la/traits/DeduceScalar.h"
-//#include "tarch/la/traits/EqualScalars.h"
 #include "tarch/la/VectorAssign.h"
-#include "tarch/utils/EnableIf.h"
 
 namespace tarch {
   namespace la {
@@ -86,10 +84,10 @@ namespace tarch {
      * Performs the dot (=inner) product of two vectors.
      */
     template<typename LVector, typename RVector>
-      typename utils::LazyEnableIf<
+      typename std::enable_if<
       IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
-      utils::LazyType<typename VectorTraits<LVector>::Scalar>
-    >::Type operator* (
+      typename VectorTraits<LVector>::Scalar>
+     ::type operator* (
       const LVector& lVector,
       const RVector& rVector
     );
@@ -111,10 +109,10 @@ namespace tarch {
      * Performs the dot (=inner) product of two vectors.
      */
     template<typename LVector, typename RVector>
-      typename utils::LazyEnableIf<
+      typename std::enable_if<
       IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
-      utils::LazyType<typename VectorTraits<LVector>::Scalar>
-    >::Type dot (
+      typename VectorTraits<LVector>::Scalar>
+     ::type dot (
       const LVector & lVector,
       const RVector & rVector
     );

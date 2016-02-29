@@ -6,8 +6,6 @@
 
 #include "tarch/la/traits/IsMatrix.h"
 #include "tarch/la/traits/MatrixTraits.h"
-#include "tarch/utils/EnableIf.h"
-//#include "tarch/la/traits/EqualScalars.h"
 #include "tarch/la/Scalar.h"
 
 namespace tarch {
