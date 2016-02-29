@@ -82,7 +82,7 @@ MVQNPostProcessing:: MVQNPostProcessing
   _RSLSreusedTimesteps(RSLSreusedTimesteps),
   _usedColumnsPerTstep(5),
   _nbRestarts(0),
-  _info2(),
+  //_info2(),
   _avgRank(0)
 {}
 
@@ -116,10 +116,10 @@ void MVQNPostProcessing:: initialize
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
   
-  std::stringstream sss;
-  sss<<"residualWeights_rank-"<<utils::MasterSlave::_rank;
-  _info2.open(sss.str(), std::ios_base::out);
-  _info2 << std::setprecision(16);
+  //std::stringstream sss;
+  //sss<<"residualWeights_rank-"<<utils::MasterSlave::_rank;
+  //_info2.open(sss.str(), std::ios_base::out);
+  //_info2 << std::setprecision(16);
 
   if (_imvjRestartType > 0)
     _imvjRestart = true;
@@ -306,7 +306,7 @@ void MVQNPostProcessing::computeQNUpdate(
   preciceDebug("compute IMVJ quasi-Newton update");
 
 
-  _info2<<_preconditioner->getWeights().front()<<", "<<_preconditioner->getWeights().back()<<", "<<_preconditioner->getWeights().front()/_preconditioner->getWeights().back()<<";"<<std::endl;
+  //_info2<<_preconditioner->getWeights().front()<<", "<<_preconditioner->getWeights().back()<<", "<<_preconditioner->getWeights().front()/_preconditioner->getWeights().back()<<";"<<std::endl;
 
   Event ePrecond_1("preconditioning of J", true, true); // ------ time measurement, barrier
 
@@ -794,7 +794,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
     _matrixCols_RSLS.push_front(0);
   }
 
-  _info2<<std::endl;
+  //_info2<<std::endl;
 
   // if efficient update of imvj is enabled
   if(not _alwaysBuildJacobian || _imvjRestart)

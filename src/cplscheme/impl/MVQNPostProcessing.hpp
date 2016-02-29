@@ -163,7 +163,7 @@ private:
 
 
    // DEBUG
-   std::fstream _info2;
+   //std::fstream _info2;
    double _avgRank;
 
 
