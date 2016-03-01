@@ -189,17 +189,17 @@ void EventRegistry::print(std::ostream &out, bool terse)
           << std::chrono::duration_cast<std::chrono::seconds>(globalDuration).count() << "s"
           << "\n" << "\n";
 
-      out << "Event                Count    Total[ms]     Max[ms]     Min[ms]     Avg[ms]   T%" << "\n";
-      out << "--------------------------------------------------------------------------------" << "\n";
+      out << "Event                                Count   Total[ms]     Max[ms]     Min[ms]     Avg[ms]      T[%]" << endl;
+      out << "----------------------------------------------------------------------------------------------------" << endl;
 
       for (auto e : events) {
-        out << setw(14) << left << e.first << right
+        out << setw(30) << left << e.first << right
             << setw(12) << e.second.getCount()
             << setw(12) << e.second.getTotal()
             << setw(12) << e.second.getMax()
             << setw(12) << e.second.getMin()
             << setw(12) << e.second.getAvg()
-            << setw(6)  << e.second.getTimePercentage(globalDuration)
+            << setw(10)  << e.second.getTimePercentage(globalDuration)
             << "\n";
         for (auto p : e.second.properties) {
           allProps[p.first] += p.second;
