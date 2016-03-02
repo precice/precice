@@ -50,6 +50,7 @@ public:
   
   /**
    * @brief Constructor.
+   * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
    QRFactorization (
 	  int filter=0,
@@ -60,6 +61,7 @@ public:
 
    /**
    * @brief Constructor.
+   * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
    QRFactorization (
       EigenMatrix A,
@@ -69,8 +71,9 @@ public:
       double sigma=std::numeric_limits<double>::min()
  		    );
    
-    /**
+   /**
    * @brief Constructor.
+   * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
    QRFactorization (
       EigenMatrix Q,
@@ -200,7 +203,25 @@ private:
   *   r(1:n) is the array of Fourier coefficients, and rho is the distance
   *   from v to range of Q, r and its corrections are computed in double
   *   precision.
+  *   This method tries to re-orthogonalize the matrix Q for a maximum of 4 iterations
+  *   if ||v_orth|| / ||v|| <= 1/theta is toot small, i.e. the gram schmidt process is iterated.
+  *   If ||v_orth|| / ||v|| <= std::numeric_limit, a unit vector that is orthogonal to Q is inserted
+  *   and rho is set to 0. i.e., R has a zero on the diagonal in the respective column.
   */
+  int orthogonalize_stable(EigenVector& v, EigenVector& r, double &rho, int colNum);
+
+  /**
+   * @short assuming Q(1:n,1:m) has nearly orthonormal columns, this procedure
+  *   orthogonlizes v(1:n) to the columns of Q, and normalizes the result.
+  *   r(1:n) is the array of Fourier coefficients, and rho is the distance
+  *   from v to range of Q, r and its corrections are computed in double
+  *   precision.
+  *   This method tries to re-orthogonalize the matrix Q for a maximum of 4 iterations
+  *   if ||v_orth|| / ||v|| <= 1/theta is toot small, i.e. the gram schmidt process is iterated.
+  *
+  *   Difference to the method orthogonalize_stable():
+  *   if ||v_orth||/||v|| approx 0, no unit vector is inserted.
+   */
   int orthogonalize(EigenVector& v, EigenVector& r, double &rho, int colNum);
   
   /**

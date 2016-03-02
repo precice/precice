@@ -90,7 +90,7 @@ QRFactorization::QRFactorization(
      EigenVector v = A.col(k);
      insertColumn(k,v);
   }
-  assertion2(_R.rows() == _cols, _R.rows(), _cols);
+  //assertion2(_R.rows() == _cols, _R.rows(), _cols);
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
   assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
   assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
@@ -223,7 +223,7 @@ void QRFactorization::deleteColumn(int k)
   assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
   assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  assertion2(_R.rows() == _cols, _Q.rows(), _cols);
+  //assertion2(_R.rows() == _cols, _Q.rows(), _cols);
 }
 
       
@@ -251,13 +251,17 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
   if(applyFilter) rho0 = utils::MasterSlave::l2norm(v);
 
   int err = orthogonalize(v, u, rho_orth, _cols-1);
-  // if err < 0, the column cannot be orthogonalized to the system
-  // if rho_orth = 0, either v = 0 or the system is quadratic.
-  // Discard column v in all cases.
-  if(err < 0 || rho_orth == 0.0){
-	  preciceWarning(__func__,"discarding column because err < 0 or rho_orth == 0.0, i.e., too many iterations in orthogonalize or quadratic system. err: "<<err<<", rho_orth: "<<rho_orth);
-	  _cols--;
-	  return false;
+
+  // on of the following is true
+  // - either ||v_orth|| / ||v|| <= 0.7 was true and the re-orthogonalization process failed 4 times
+  // - or the system is quadratic, thus no further column can be orthogonalized (||v_orth|| = rho_orth = 0)
+  // - or ||v_orth|| = rho_orth extremely small (almost zero), thus the column v is not very orthogonal to Q, discard
+  if(rho_orth <= std::numeric_limits<double>::min()  || err < 0){
+    preciceDebug("The ratio ||v_orth|| / ||v|| is extremely small and either the orthogonalization process of column v failed or the system is quadratic.");
+
+    // necessary for applyFilter with the QR-2 filer. In this case, the new column is not inserted, but discarded.
+    _cols--;
+    return false;
   }
 
   // QR2-filter based on the new information added to the orthogonal system.
@@ -266,7 +270,7 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
   // rho_orth: the norm of the orthogonalized (but not normalized) column
   // rho0:     the norm of the initial column that is to be inserted
   if(applyFilter && (rho0 * singularityLimit  > rho_orth)){
-	preciceWarning(__func__, "discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: "<<rho0*singularityLimit<<" > "<<rho_orth);
+	preciceDebug("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: "<<rho0*singularityLimit<<" > "<<rho_orth);
     _cols--;
     return false;
   }
@@ -291,7 +295,7 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
   }
   
   assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  assertion2(_R.rows() == _cols, _R.rows(), _cols);
+  //assertion2(_R.rows() == _cols, _R.rows(), _cols);
   
   // resize Q(1:n, 1:m) -> Q(1:n, 1:m+1)
   _Q.conservativeResize(_rows, _cols);
@@ -324,7 +328,7 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
   return true;
 }
 
-      
+
 /**
  * @short assuming Q(1:n,1:m) has nearly orthonormal columns, this procedure
  *   orthogonlizes v(1:n) to the columns of Q, and normalizes the result.
@@ -337,12 +341,132 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
  *   returned and the new column should not be inserted into the system.
  */
 int QRFactorization::orthogonalize(
+  EigenVector& v,
+  EigenVector& r,
+  double& rho,
+  int colNum)
+{
+   preciceTrace(__func__);
+
+   if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
+     assertion2(_globalRows == _rows, _globalRows, _rows);
+   }else{
+     assertion3(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
+   }
+
+   bool null = false;
+   bool termination = false;
+   double rho0 = 0., rho1 = 0.;
+   EigenVector u = EigenVector::Zero(_rows);
+   EigenVector s = EigenVector::Zero(colNum);
+   r = EigenVector::Zero(_cols);
+
+   rho = utils::MasterSlave::l2norm(v); // distributed l2norm
+   rho0 = rho;
+   int k = 0;
+  while (!termination) {
+
+    // take a gram-schmidt iteration
+    u = EigenVector::Zero(_rows);
+    for (int j = 0; j < colNum; j++) {
+
+      // dot-product <_Q(:,j), v >
+      EigenVector Qc = _Q.col(j);
+
+      // dot product <_Q(:,j), v> =: r_ij
+      double r_ij = utils::MasterSlave::dot(Qc, v);
+      // save r_ij in s(j) = column of R
+      s(j) = r_ij;
+      // u is the sum of projections r_ij * _Q(i,:) =  _Q(i,:) * <_Q(:,j), v>
+      for (int i = 0; i < _rows; i++) {
+        u(i) = u(i) + _Q(i, j) * r_ij;
+      }
+    }
+    // add the furier coefficients over all orthogonalize iterations
+    for (int j = 0; j < colNum; j++) {
+      r(j) = r(j) + s(j);
+    }
+    // subtract projections from v, v is now orthogonal to columns of _Q
+    for (int i = 0; i < _rows; i++) {
+      v(i) = v(i) - u(i);
+    }
+    // rho1 = norm of orthogonalized new column v_tilde (though not normalized)
+    rho1 = utils::MasterSlave::l2norm(v); // distributed l2norm
+
+    // t = norm of r_(:,j) with j = colNum-1
+    double norm_coefficients = utils::MasterSlave::l2norm(s); // distributed l2norm
+    k++;
+
+    // treat the special case m=n
+    // Attention (Master-Slave): Here, we need to compare the global _rows with colNum and NOT the local
+    // rows on the processor.
+    if (_globalRows == colNum) {
+      preciceWarning("orthogonalize()", "The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
+      v = EigenVector::Zero(_rows);
+      rho = 0.;
+      return k;
+    }
+
+    // take correct action if v_orth is null
+    if (rho1 <= std::numeric_limits<double>::min()) {
+      preciceDebug("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.")
+      null = true;
+      rho1 = 1;
+      termination = true;
+    }
+
+    /**   - test if reorthogonalization is necessary -
+     *  rho0 = |v_init|, t = |r_(i,cols-1)|, rho1 = |v_orth|
+     *  rho1 is small, if the new information incorporated in v is small,
+     *  i.e., the part of v orthogonal to _Q is small.
+     *  if rho1 is very small it is possible, that we are adding (more or less)
+     *  only round-off errors to the decomposition. Later normalization will scale
+     *  this new information so that it is equally weighted as the columns in Q.
+     *  To keep a good orthogonality, some effort is done if comparatively little
+     *  new information is added.
+     *
+     *  re-orthogonalize if: ||v_orth|| / ||v|| <= 1/theta
+     */
+    if(rho1 * _theta <= rho0 + _omega * norm_coefficients){
+      // exit to fail if too many iterations
+      if (k >= 4) {
+        preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
+        return -1;
+      }
+      rho0 = rho1;
+
+      // termination, i.e., (rho0 + _omega * t < _theta *rho1)
+    } else {
+      termination = true;
+    }
+  }
+
+   // normalize v
+   v /= rho1;
+   rho = null ? 0 : rho1;
+   r(colNum) = rho;
+   return k;
+}
+
+      
+/**
+ * @short assuming Q(1:n,1:m) has nearly orthonormal columns, this procedure
+ *   orthogonlizes v(1:n) to the columns of Q, and normalizes the result.
+ *   r(1:n) is the array of Fourier coefficients, and rho is the distance
+ *   from v to range of Q, r and its corrections are computed in double
+ *   precision.
+ *
+ *   @return Returns the number of gram-schmidt iterations needed to orthogobalize the
+ *   new vector to the existing system. If more then 4 iterations were needed, -1 is
+ *   returned and the new column should not be inserted into the system.
+ */
+int QRFactorization::orthogonalize_stable(
   EigenVector& v, 
   EigenVector& r, 
   double& rho,
   int colNum)
 {
-   preciceTrace("orthogonalize()");
+   preciceTrace(__func__);
 
    // serial case
    if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)
@@ -412,7 +536,7 @@ int QRFactorization::orthogonalize(
 			return k;
 		}
 
-		/**   - test for nontermination -
+		/**   - test if reorthogonalization is necessary -
 		 *  rho0 = |v_init|, t = |r_(i,cols-1)|, rho1 = |v_orth|
 		 *  rho1 is small, if the new information incorporated in v is small,
 		 *  i.e., the part of v orthogonal to _Q is small.
@@ -421,17 +545,22 @@ int QRFactorization::orthogonalize(
 		 *  this new information so that it is equally weighted as the columns in Q.
 		 *  To keep a good orthogonality, some effort is done if comparatively little
 		 *  new information is added.
+		 *
+		 *  re-orthogonalize if: ||v_orth|| / ||v|| <= 1/theta
 		 */
-		if (rho0 + _omega * t >= _theta * rho1) {
-			// exit to fail of too many iterations
+		if(rho1 * _theta <= rho0 + _omega * t){
+			// exit to fail if too many iterations
 			if (k >= 4) {
 				std::cout
 						<< "\ntoo many iterations in orthogonalize, termination failed\n";
 				preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded. The least-squares system is very bad conditioned and the quasi-Newton will most probably fail to converge.");
 				return -1;
 			}
+
+			// if ||v_orth|| / ||v|| is extremely small (numeric limit)
+			// discard information from column, use any unit vector orthogonal to Q
 			if (!restart && rho1 <= rho * _sigma) {
-			  preciceWarning("orthogonalize()", "Matrix Q is not sufficiently orthogonal, most probably due to bad conditioning of the least squares system. Try to re-orthogonalize the QR system");
+			  preciceWarning("orthogonalize()", "The new column is in the range of Q, thus not possible to orthogonalize. Try to insert a unit vector that is orthogonal to the columns space of Q.");
 				//preciceDebug("[QR-dec] - reorthogonalization");
 				if (_fstream_set)   (*_infostream) << "[QR-dec] - reorthogonalization"<< std::endl;
 
@@ -483,9 +612,7 @@ int QRFactorization::orthogonalize(
 							global_k = local_k;
 						}
 					}
-					if (_fstream_set)
-						(*_infostream) << "           global u(k):" << global_uk
-								<< ",  global k: " << global_k << ",  rank: "<< rank << std::endl;
+					if (_fstream_set) (*_infostream) << "           global u(k):" << global_uk<< ",  global k: " << global_k << ",  rank: "<< rank << std::endl;
 				}
 
 				// take correct action if v is null
