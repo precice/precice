@@ -277,6 +277,9 @@ void PostProcessingConfiguration:: xmlTagCallback
     _config.precond_nbNonConstTSteps = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIMESTEPS);
   }else if (callingTag.getName() == TAG_IMVJRESTART){
 
+    if(_config.alwaysBuildJacobian)
+      preciceError("xmlEndTagCallback()","IMVJ can not be in restart mode while parameter always-build-jacobian is set true.");
+
     #ifndef PRECICE_NO_MPI
     _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
     auto f = callingTag.getStringAttributeValue(ATTR_TYPE);
