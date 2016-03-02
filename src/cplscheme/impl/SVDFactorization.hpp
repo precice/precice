@@ -85,6 +85,9 @@ public:
        _sigma = Vector::Zero(0);
      }
 
+     // magic parameter for QR-dec:
+     double eps = 1./std::sqrt(2);
+
      /** (1): compute orthogonal basis P of (I-\psi\psi^T)A
       */
      Matrix Atil(_psi.cols(), A.cols());    // Atil is of size (K_bar x m)
@@ -98,10 +101,8 @@ public:
      Matrix Ptil = A - _psi * Atil;
 
      // compute orthogonal basis P of Ptil, i.e., QR-dec (P, R_A) = QR(Ptil)
-     QRFactorization qrA(0);        // TODO: maybe add filter, currently hard coded to NO_FILTER
-     qrA.reset(Ptil, _globalRows);  // builds QR-factorization of matrix Ptil
-     auto& P   = qrA.matrixQ();
-     auto& R_A = qrA.matrixR();
+     Matrix P, R_A;
+     computeQRdecomposition(Ptil, P, R_A, eps);
 
      /**  (2): compute orthogonal basis Q of (I-\phi\phi^T)B
       */
@@ -112,20 +113,21 @@ public:
      Matrix Qtil = B - _phi * Btil;
 
      // compute orthogonal basis Q of Qtil, i.e., QR-dec (Q, R_B) = QR(Qtil)
-     QRFactorization qrB(0);        // TODO: maybe add filter, currently hard coded to NO_FILTER
-     qrB.reset(Qtil, _globalRows);  // builds QR-factorization of matrix Ptil
-     auto& Q   = qrB.matrixQ();
-     auto& R_B = qrB.matrixR();
+     Matrix Q, R_B;
+     computeQRdecomposition(Btil, Q, R_B, eps);
 
-     /** (3) construct matrix K \in (K_bar + m) x (K_bar +m)
+     /** (3) construct matrix K \in (K_bar + m -x) x (K_bar +m -y) if
+      *      x .. deleted columns in P -> (m-x) new modes from A (rows of R_A)
+      *      y .. deleted columns in Q -> (m-y) new modes from B (rows of R_B)
+      *
       *      [ \sigma  0] + [ Atil ] * [ Btil ]^T
       *      [    0    0]   [ R_A  ]   [ R_B  ]
       *  (stored local on each proc).
       */
-     Matrix K = Matrix::Zero(_psi.cols() + Atil.cols(), _psi.cols() + Atil.cols());
-     Matrix K_A(_psi.cols() + Atil.cols(), Atil.cols());
-     Matrix K_B(_phi.cols() + Btil.cols(), Btil.cols());
-     assertion2(Atil.cols() == Btil.cols(), Atil.cols(), Btil.cols()); //TODO: check if this must be the case, how do we multiply if not?
+     Matrix K = Matrix::Zero(_psi.cols() + R_A.rows(), _psi.cols() + R_B.rows());
+     Matrix K_A(_psi.cols() + R_A.rows(), Atil.cols());
+     Matrix K_B(_phi.cols() + R_B.rows(), Btil.cols());
+
      for(int i = 0; i < _sigma.size(); i++)
        K(i,i) = _sigma(i);
 
@@ -223,14 +225,14 @@ public:
    double getThreshold();
 
    /// @brief: applies the preconditioner to the factorized and truncated representation of the Jacobian matrix
-   void applyPreconditioner();
+   //void applyPreconditioner();
 
    /// @brief: appplies the inverse preconditioner to the factorized and truncated representation of the Jacobian matrix
-   void revertPreconditioner();
+   //void revertPreconditioner();
 
    void setPrecondApplied(bool b);
 
-   bool isPrecondApplied();
+   //bool isPrecondApplied();
 
    bool isSVDinitialized();
 
@@ -239,6 +241,19 @@ public:
 
 private:
 
+  /** @brief: computes the QR decomposition of a matrix A of type A = PSI^T*A \in R^(rank x n)
+   *
+   *  This method computes a dedicated QR factorization [Q,R] = PSI^T*A.
+   *  In case of linear dependence, i.e., if the next column cannot be orthogonalized to the
+   *  columns in Q, this columns is deleted from Q, however not from R. To account for the
+   *  missing column in Q, the corresponding line in R is deleted, though, the column in R
+   *  is still filled with the projection weights, such that the dimension (cols) of R_A is
+   *  aligned with the dimension (cols) of PSI^T*A, from which the matrix K is composed of.
+   *
+   *  The threshold parameter eps, indicates whether a column is seen to be in the column space
+   *  of Q via the criterium ||v_orth|| / ||v|| <= eps (cmp. QR2 Filter)
+   */
+  void computeQRdecomposition(Matrix const& A, Matrix & Q, Matrix & R, double eps);
 
   /// @brief: Logging device.
   static tarch::logging::Log _log;
