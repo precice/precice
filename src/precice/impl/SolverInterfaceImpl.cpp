@@ -463,9 +463,6 @@ double SolverInterfaceImpl:: advance
 {
   preciceTrace1("advance()", computedTimestepLength);
 
-  EventRegistry::printGlobalDuration();
-
-//  Event e("advance", not precice::testMode);
   Event e("advance");
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
