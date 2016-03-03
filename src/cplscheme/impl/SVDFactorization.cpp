@@ -227,8 +227,8 @@ void SVDFactorization::computeQRdecomposition(
     // number of cols (cannot delete from A)
     if(not orthogonalized){
 
-      colsQ--;    assertion1(colsQ > 0, colsQ);
-      rowsR--;    assertion1(rowsR > 0, rowsR);
+      colsQ--;    assertion1(colsQ >= 0, colsQ);
+      rowsR--;    assertion1(rowsR >= 0, rowsR);
       // delete column that was just inserted (as it is not orthogonal to Q)
       Q.col(colsQ) = Vector::Zero(A.rows());
       // delete line in R that corresponds to the just inserted but not orthogonal column

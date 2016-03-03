@@ -114,7 +114,7 @@ public:
 
      // compute orthogonal basis Q of Qtil, i.e., QR-dec (Q, R_B) = QR(Qtil)
      Matrix Q, R_B;
-     computeQRdecomposition(Btil, Q, R_B, eps);
+     computeQRdecomposition(Qtil, Q, R_B, eps);
 
      /** (3) construct matrix K \in (K_bar + m -x) x (K_bar +m -y) if
       *      x .. deleted columns in P -> (m-x) new modes from A (rows of R_A)
