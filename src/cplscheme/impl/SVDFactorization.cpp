@@ -36,9 +36,11 @@ SVDFactorization::SVDFactorization(
   _globalRows(0),
   _waste(0),
   _truncationEps(eps),
+  _epsQR2(1e-3),
   _preconditionerApplied(false),
   _initialized(false),
   _initialSVD(false),
+  _applyFilterQR(false),
   _infostream(),
   _fstream_set(false)
 {}
@@ -93,14 +95,15 @@ void SVDFactorization::reset()
   _sigma.resize(0);
   _preconditionerApplied = false;
   _initialSVD = false;
+  _applyFilterQR = false;
+  _epsQR2 = 1e-3;
 }
 
 
 void SVDFactorization::computeQRdecomposition(
     Matrix const& A,
     Matrix & Q,
-    Matrix & R,
-    double eps)
+    Matrix & R)
 {
   preciceTrace(__func__);
 
@@ -113,6 +116,7 @@ void SVDFactorization::computeQRdecomposition(
 
   // magic params:
   double omega = 0.;
+  double theta = std::sqrt(2);
 
   // columns need to be inserted at the back, otherwise we would have to perform
   // givens rotations, to re-establish the upper diagonal form of R
@@ -138,6 +142,7 @@ void SVDFactorization::computeQRdecomposition(
     Vector u = Vector::Zero(A.rows()); // sum of projections
     double rho_orth = 0.;
     double rho0 = utils::MasterSlave::l2norm(col); // distributed l2norm;
+    double rho00 = rho0; // save norm of col for QR2 filter crit.
 
     int its = 0;
     bool termination = false;
@@ -172,7 +177,7 @@ void SVDFactorization::computeQRdecomposition(
       its++;
 
       // if ||v_orth|| is nearly zero, col is not well orthogonalized; discard
-      if (rho_orth <= std::numeric_limits<double>::min()) {
+      if (rho_orth <= std::numeric_limits<double>::min()){
         preciceDebug("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.")
         orthogonalized = false;
         termination = true;
@@ -190,7 +195,7 @@ void SVDFactorization::computeQRdecomposition(
        *
        *  re-orthogonalize if: ||v_orth|| / ||v|| <= 1/theta
        */
-      if (rho_orth <= rho0 * eps + omega * norm_coefficients) {
+      if (rho_orth * theta <= rho0 + omega * norm_coefficients) {
         // exit to fail if too many iterations
         if (its >= 4) {
           preciceWarning("orthogonalize()","Matrix Q is not sufficiently orthogonal. Failed to rorthogonalize new column after 4 iterations. New column will be discarded.");
@@ -204,6 +209,11 @@ void SVDFactorization::computeQRdecomposition(
       } else {
         termination = true;
       }
+    }
+
+    // if the QR2-filter crit. kicks in with threshold eps.
+    if(_applyFilterQR && orthogonalized && rho_orth <= _epsQR2 * rho00){
+      orthogonalized = false;
     }
 
     // normalize col
@@ -265,6 +275,12 @@ SVDFactorization::Vector& SVDFactorization::singularValues()
 void SVDFactorization::setPrecondApplied(bool b)
 {
   _preconditionerApplied = b;
+}
+
+void SVDFactorization::setApplyFilterQR(bool b, double eps)
+{
+  _applyFilterQR = b;
+  _epsQR2 = eps;
 }
 
 /*

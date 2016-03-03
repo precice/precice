@@ -85,9 +85,6 @@ public:
        _sigma = Vector::Zero(0);
      }
 
-     // magic parameter for QR-dec:
-     double eps = 1./std::sqrt(2);
-
      /** (1): compute orthogonal basis P of (I-\psi\psi^T)A
       */
      Matrix Atil(_psi.cols(), A.cols());    // Atil is of size (K_bar x m)
@@ -102,7 +99,7 @@ public:
 
      // compute orthogonal basis P of Ptil, i.e., QR-dec (P, R_A) = QR(Ptil)
      Matrix P, R_A;
-     computeQRdecomposition(Ptil, P, R_A, eps);
+     computeQRdecomposition(Ptil, P, R_A);
 
      /**  (2): compute orthogonal basis Q of (I-\phi\phi^T)B
       */
@@ -114,7 +111,7 @@ public:
 
      // compute orthogonal basis Q of Qtil, i.e., QR-dec (Q, R_B) = QR(Qtil)
      Matrix Q, R_B;
-     computeQRdecomposition(Qtil, Q, R_B, eps);
+     computeQRdecomposition(Qtil, Q, R_B);
 
      /** (3) construct matrix K \in (K_bar + m -x) x (K_bar +m -y) if
       *      x .. deleted columns in P -> (m-x) new modes from A (rows of R_A)
@@ -232,6 +229,9 @@ public:
 
    void setPrecondApplied(bool b);
 
+   /// @brief: enables or disables an additional QR-2 filter for the QR-decomposition
+   void setApplyFilterQR(bool b, double eps = 1e-3);
+
    //bool isPrecondApplied();
 
    bool isSVDinitialized();
@@ -253,7 +253,7 @@ private:
    *  The threshold parameter eps, indicates whether a column is seen to be in the column space
    *  of Q via the criterium ||v_orth|| / ||v|| <= eps (cmp. QR2 Filter)
    */
-  void computeQRdecomposition(Matrix const& A, Matrix & Q, Matrix & R, double eps);
+  void computeQRdecomposition(Matrix const& A, Matrix & Q, Matrix & R);
 
   /// @brief: Logging device.
   static tarch::logging::Log _log;
@@ -284,6 +284,9 @@ private:
   ///@brief: Truncation parameter for the updated SVD decomposition
   double _truncationEps;
 
+  /// @brief threshold for the QR2 filter for the QR decomposition.
+  double _epsQR2;
+
   /// @brief: true if the preconditioner has been applied appropriate to the updated SVD decomposition
   bool   _preconditionerApplied;
 
@@ -292,6 +295,8 @@ private:
 
   /// @brief: true, if at least one update has been made, i.e., the number of rows is known and a initial rank is given.
   bool _initialSVD;
+
+  bool _applyFilterQR;
 
   // @brief optional infostream that writes information to file
   std::fstream* _infostream;
