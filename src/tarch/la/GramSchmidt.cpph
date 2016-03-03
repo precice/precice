@@ -10,9 +10,9 @@ namespace tarch {
 namespace la {
 
 template<typename Matrix>
-  typename utils::EnableIf<IsMatrix<Matrix>::value,
+  typename std::enable_if<IsMatrix<Matrix>::value,
   void
->::Type modifiedGramSchmidt (
+>::type modifiedGramSchmidt (
   Matrix& A,
   Matrix& Q,
   Matrix& R

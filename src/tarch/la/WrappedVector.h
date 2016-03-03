@@ -9,7 +9,6 @@
 #include "tarch/la/VectorOperations.h"
 #include "tarch/la/VectorScalarOperations.h"
 #include "tarch/la/VectorVectorOperations.h"
-#include "tarch/utils/EnableIf.h"
 #include "tarch/la/traits/IsVector.h"
 
 namespace tarch {
@@ -54,9 +53,9 @@ namespace tarch {
        * Assigns the element values of another vector to this vector.
        */
       template<typename Vector>
-        typename utils::EnableIf<IsVector<Vector>::value,
+        typename std::enable_if<IsVector<Vector>::value,
         WrappedVector<Size,Scalar>&
-      >::Type operator= (const Vector& toAssign);
+      >::type operator= (const Vector& toAssign);
     };
 
     /**
@@ -74,14 +73,12 @@ namespace tarch {
      * temporary object, only performs a reinterpret_cast.
      */
     template<int Size, typename Vector>
-      typename utils::LazyEnableIf<IsVector<Vector>::value,
-      utils::LazyType<WrappedVector<Size,typename VectorTraits<Vector>::Scalar>&>
-    >::Type slice (Vector& toSlice, int fromIndex);
+      typename std::enable_if<IsVector<Vector>::value, WrappedVector<Size,typename VectorTraits<Vector>::Scalar>&>
+    ::type slice (Vector& toSlice, int fromIndex);
 
     template<int Size, typename Vector>
-      typename utils::LazyEnableIf<IsVector<Vector>::value,
-      utils::LazyType<const WrappedVector<Size,typename VectorTraits<Vector>::Scalar>&>
-    >::Type slice (const Vector& toSlice, int fromIndex);
+      typename std::enable_if<IsVector<Vector>::value, const WrappedVector<Size,typename VectorTraits<Vector>::Scalar>&>
+    ::type slice (const Vector& toSlice, int fromIndex);
 
   } // namespace la
 } // namespace tarch

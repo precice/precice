@@ -7,9 +7,7 @@
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/VectorTraits.h"
 #include "tarch/la/traits/DeduceScalar.h"
-//#include "tarch/la/traits/EqualScalars.h"
 #include "tarch/la/VectorAssign.h"
-#include "tarch/utils/EnableIf.h"
 
 namespace tarch {
   namespace la {
@@ -20,9 +18,9 @@ namespace tarch {
      * No temporary vector is created.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+      typename std::enable_if<IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
       LVector&
-    >::Type operator+= (
+    >::type operator+= (
       LVector&       lVector,
       const RVector& rVector
     );
@@ -33,9 +31,9 @@ namespace tarch {
      * No temporary vector is created.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
+      typename std::enable_if<IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
       LVector&
-    >::Type operator-= (
+    >::type operator-= (
       LVector&       lVector,
       const RVector& rVector
     );
@@ -46,10 +44,10 @@ namespace tarch {
      * A temporary vector is created and copied to store return back the result.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
       LVector
-    >::Type operator+ (
+    >::type operator+ (
       const LVector& lVector,
       const RVector& rVector
     );
@@ -60,10 +58,10 @@ namespace tarch {
      * A temporary vector is created and copied to store return back the result.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
       LVector
-    >::Type operator- (
+    >::type operator- (
       const LVector& lVector,
       const RVector& rVector
     );
@@ -73,10 +71,10 @@ namespace tarch {
      * results into result.
      */
     template<typename LVector, typename RVector, typename ResultVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<LVector>::value && IsVector<RVector>::value && IsVector<ResultVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
       ResultVector&
-    >::Type multiplyComponents (
+    >::type multiplyComponents (
       const LVector& lVector,
       const RVector& rVector,
       ResultVector&  result
@@ -86,10 +84,10 @@ namespace tarch {
      * Performs the dot (=inner) product of two vectors.
      */
     template<typename LVector, typename RVector>
-      typename utils::LazyEnableIf<
+      typename std::enable_if<
       IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
-      utils::LazyType<typename VectorTraits<LVector>::Scalar>
-    >::Type operator* (
+      typename VectorTraits<LVector>::Scalar>
+     ::type operator* (
       const LVector& lVector,
       const RVector& rVector
     );
@@ -99,10 +97,10 @@ namespace tarch {
      * the resulting vector.
      */
     template<typename LVector, typename RVector>
-    typename utils::EnableIf<
+    typename std::enable_if<
       IsVector<LVector>::value && IsVector<RVector>::value,
       LVector
-    >::Type operator/ (
+    >::type operator/ (
       const LVector& lVector,
       const RVector& rVector
     );
@@ -111,10 +109,10 @@ namespace tarch {
      * Performs the dot (=inner) product of two vectors.
      */
     template<typename LVector, typename RVector>
-      typename utils::LazyEnableIf<
+      typename std::enable_if<
       IsVector<LVector>::value && IsVector<RVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
-      utils::LazyType<typename VectorTraits<LVector>::Scalar>
-    >::Type dot (
+      typename VectorTraits<LVector>::Scalar>
+     ::type dot (
       const LVector & lVector,
       const RVector & rVector
     );
@@ -123,9 +121,9 @@ namespace tarch {
      * Performs the cross product of two 3D vectors into result.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
+      typename std::enable_if< IsVector<Vector>::value,
       Vector&
-    >::Type cross (
+    >::type cross (
       const Vector& lVector,
       const Vector& rVector,
       Vector&       result
@@ -135,10 +133,10 @@ namespace tarch {
      * Compares to vectors on equality by means of a numerical accuracy.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
       bool
-    >::Type equals (
+    >::type equals (
       const LVector&                         lVector,
       const RVector&                         rVector,
       typename VectorTraits<LVector>::Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE
@@ -151,10 +149,10 @@ namespace tarch {
      * Defines an absolute pairwise ordering between (unequal) vectors.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<RVector,LVector>::value*/,
       bool
-    >::Type firstGreater (
+    >::type firstGreater (
       const LVector&                         lVector,
       const RVector&                         rVector,
       typename VectorTraits<LVector>::Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE
@@ -165,10 +163,10 @@ namespace tarch {
      * component in rVector up to numerical accuracy.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<RVector,LVector>::value*/,
       bool
-    >::Type oneGreater (
+    >::type oneGreater (
       const LVector&                         lVector,
       const RVector&                         rVector,
       typename VectorTraits<LVector>::Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE
@@ -179,10 +177,10 @@ namespace tarch {
      * corresponding component in rVector up to numerical accuracy.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<RVector,LVector>::value*/,
       bool
-    >::Type oneGreaterEquals (
+    >::type oneGreaterEquals (
       const LVector&                         lVector,
       const RVector&                         rVector,
       typename VectorTraits<LVector>::Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE
@@ -193,10 +191,10 @@ namespace tarch {
      * components in rVector up to numerical accuracy.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<RVector,LVector>::value*/,
       bool
-    >::Type allGreater (
+    >::type allGreater (
       const LVector&                         lVector,
       const RVector&                         rVector,
       typename VectorTraits<LVector>::Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE
@@ -207,10 +205,10 @@ namespace tarch {
      * components in rVector up to numerical accuracy.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<RVector>::value && IsVector<LVector>::value,
       bool
-    >::Type allGreaterEquals (
+    >::type allGreaterEquals (
       const LVector&                         lVector,
       const RVector&                         rVector,
       typename VectorTraits<LVector>::Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE
@@ -223,10 +221,10 @@ namespace tarch {
      * equals() is the suitable comparison.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
       bool
-    >::Type operator== (
+    >::type operator== (
       const LVector& lVector,
       const RVector& rVector
     );
@@ -238,10 +236,10 @@ namespace tarch {
      * !equals() is the suitable comparison.
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<RVector>::value && IsVector<LVector>::value /*&& EqualScalars<LVector,RVector>::value*/,
       bool
-    >::Type operator!= (
+    >::type operator!= (
       const LVector& lVector,
       const RVector& rVector
     );
@@ -251,10 +249,10 @@ namespace tarch {
      *
      */
     template<typename LVector, typename RVector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsVector<LVector>::value && IsVector<RVector>::value,
       int
-    >::Type equalsReturnIndex (
+    >::type equalsReturnIndex (
       const LVector& lVector,
       const RVector& rVector,
       typename VectorTraits<LVector>::Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE

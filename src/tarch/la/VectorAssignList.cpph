@@ -16,9 +16,9 @@ namespace tarch {
 namespace la {
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
+  typename std::enable_if< IsVector<Vector>::value,
   VectorAssignList<Vector>
->::Type assignList (
+>::type assignList (
   Vector & vector
 ) {
   return VectorAssignList<Vector> ( vector );

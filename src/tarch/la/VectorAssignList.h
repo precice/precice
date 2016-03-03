@@ -6,7 +6,6 @@
 
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/VectorTraits.h"
-#include "tarch/utils/EnableIf.h"
 
 namespace tarch {
   namespace la {
@@ -17,9 +16,9 @@ namespace tarch {
      * lists.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
+      typename std::enable_if< IsVector<Vector>::value,
       VectorAssignList<Vector>
-    >::Type assignList (Vector & vector);
+    >::type assignList (Vector & vector);
   }
 }
 

@@ -4,7 +4,6 @@
 #ifndef _TARCH_LA_VECTOR_H_
 #define _TARCH_LA_VECTOR_H_
 
-#include "tarch/utils/EnableIf.h"
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/VectorAssign.h"
 #include "tarch/la/VectorAssignList.h"
@@ -37,9 +36,9 @@ public:
    * Assignment operator for any vector type.
    */
   template<typename VECTOR>
-    typename utils::EnableIf< IsVector<VECTOR>::value,
+    typename std::enable_if< IsVector<VECTOR>::value,
     Vector<Size,Scalar>&
-  >::Type operator= (const VECTOR& toAssign);
+  >::type operator= (const VECTOR& toAssign);
 
   /**
    * Assignment operator for list of comma separated scalar values, that has to
@@ -56,7 +55,7 @@ public:
    */
   template<typename VECTOR>
   Vector (const VECTOR& toCopy,
-          typename utils::EnableIf< IsVector<VECTOR>::value,void*>::Type = NULL);
+          typename std::enable_if< IsVector<VECTOR>::value,void*>::type = NULL);
 
   /**
    * Construct new vector and initialize all components with initialValue.

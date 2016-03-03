@@ -6,7 +6,6 @@
 
 #include "tarch/la/traits/MatrixTraits.h"
 #include "tarch/la/traits/IsMatrix.h"
-#include "tarch/utils/EnableIf.h"
 #include "tarch/Assertions.h"
 
 namespace tarch {
@@ -17,9 +16,9 @@ namespace tarch {
      * Returns a wrapper around a matrix to enable comma separated list assignment.
      */
     template<typename Matrix>
-      typename utils::EnableIf<IsMatrix<Matrix>::value,
+      typename std::enable_if<IsMatrix<Matrix>::value,
       MatrixAssignList<Matrix>
-    >::Type assignList ( Matrix& matrix );
+    >::type assignList ( Matrix& matrix );
   }
 }
 

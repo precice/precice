@@ -18,9 +18,9 @@ Vector<Size,Scalar>::Vector ():
 
 template<int Size, typename Scalar>
 template<typename VECTOR>
-  typename utils::EnableIf< IsVector<VECTOR>::value,
+  typename std::enable_if< IsVector<VECTOR>::value,
   Vector<Size,Scalar>&
->::Type Vector<Size,Scalar>::operator= (
+>::type Vector<Size,Scalar>::operator= (
   const VECTOR& toAssign
 ) {
   assign(*this) = toAssign;
@@ -40,7 +40,7 @@ template<int Size, typename Scalar>
 template<typename VECTOR>
 Vector<Size,Scalar>::Vector (
   const VECTOR& toCopy,
-  typename utils::EnableIf< IsVector<VECTOR>::value,void*>::Type
+  typename std::enable_if< IsVector<VECTOR>::value,void*>::type
 ) :
   _values()
 {
@@ -107,8 +107,8 @@ Vector<Size,Scalar>::Vector
 
 //template<int Size, typename Scalar>
 //template<typename VECTOR>
-//  typename utils::EnableIf<IsVector<VECTOR>::value,
-//Vector<Size,Scalar>&>::Type Vector<Size,Scalar>::operator= (const VECTOR& assign)
+//  typename std::enable_if<IsVector<VECTOR>::value,
+//Vector<Size,Scalar>&>::type Vector<Size,Scalar>::operator= (const VECTOR& assign)
 //{
 //  typedef VectorTraits<VECTOR> Traits;
 //  assertion ( Traits::size(assign) == Size );

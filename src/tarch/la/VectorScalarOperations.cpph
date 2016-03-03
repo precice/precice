@@ -10,8 +10,8 @@ namespace tarch {
 namespace la {
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector&>::Type operator*= (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector&>::type operator*= (
   Vector&                                      vector,
   const typename VectorTraits<Vector>::Scalar& scalar
 ) {
@@ -23,8 +23,8 @@ Vector&>::Type operator*= (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector&>::Type operator/= (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector&>::type operator/= (
   Vector&                                      vector,
   const typename VectorTraits<Vector>::Scalar& scalar
 ) {
@@ -36,8 +36,8 @@ Vector&>::Type operator/= (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector&>::Type operator+= (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector&>::type operator+= (
   Vector&                                      vector,
   const typename VectorTraits<Vector>::Scalar& scalar
 ) {
@@ -49,8 +49,8 @@ Vector&>::Type operator+= (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector&>::Type operator-= (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector&>::type operator-= (
   Vector &                                      vector,
   const typename VectorTraits<Vector>::Scalar & scalar
 ) {
@@ -62,8 +62,8 @@ Vector&>::Type operator-= (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector>::Type operator* (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector>::type operator* (
   const Vector&                                vector,
   const typename VectorTraits<Vector>::Scalar& scalar
 ) {
@@ -76,8 +76,8 @@ Vector>::Type operator* (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector>::Type operator/ (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector>::type operator/ (
   const Vector&                                vector,
   const typename VectorTraits<Vector>::Scalar& scalar
 ) {
@@ -90,8 +90,8 @@ Vector>::Type operator/ (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector>::Type operator+ (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector>::type operator+ (
   const Vector&                                vector,
   const typename VectorTraits<Vector>::Scalar& scalar
 ) {
@@ -104,8 +104,8 @@ Vector>::Type operator+ (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector>::Type operator- (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector>::type operator- (
   const Vector&                                vector,
   const typename VectorTraits<Vector>::Scalar& scalar
 ) {
@@ -118,8 +118,8 @@ Vector>::Type operator- (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector>::Type operator* (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector>::type operator* (
   const typename VectorTraits<Vector>::Scalar& scalar,
   const Vector&                                vector
 ) {
@@ -132,8 +132,8 @@ Vector>::Type operator* (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector>::Type operator+ (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector>::type operator+ (
   const typename VectorTraits<Vector>::Scalar& scalar,
   const Vector&                                vector
 ) {
@@ -146,8 +146,8 @@ Vector>::Type operator+ (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector>::Type operator- (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector>::type operator- (
   const typename VectorTraits<Vector>::Scalar& scalar,
   const Vector&                                vector
 ) {
@@ -160,8 +160,8 @@ Vector>::Type operator- (
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
-Vector>::Type operator% (
+  typename std::enable_if< IsVector<Vector>::value,
+Vector>::type operator% (
     const Vector&                                vector,
     const typename VectorTraits<Vector>::Scalar& scalar
 ){

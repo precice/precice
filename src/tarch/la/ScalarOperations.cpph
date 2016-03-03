@@ -12,9 +12,9 @@ namespace la {
 
 template<typename Type>
   inline
-  typename utils::EnableIf< not IsVector<Type>::value,
+  typename std::enable_if< not IsVector<Type>::value,
   Type
->::Type abs (Type value)
+>::type abs (Type value)
 {
   return std::abs(value);
 }
@@ -38,9 +38,9 @@ inline int aPowI(int i,int a)
 
 template<typename Type>
   inline
-  typename utils::EnableIf<(not IsVector<Type>::value),
+  typename std::enable_if<(not IsVector<Type>::value),
   bool
->::Type greater (
+>::type greater (
   Type lhs,
   Type rhs,
   Type tolerance
@@ -50,9 +50,9 @@ template<typename Type>
 
 template<typename Type>
   inline
-  typename utils::EnableIf<not IsVector<Type>::value,
+  typename std::enable_if<not IsVector<Type>::value,
   bool
->:: Type greaterEquals (
+>::type greaterEquals (
   Type lhs,
   Type rhs,
   Type tolerance
@@ -62,9 +62,9 @@ template<typename Type>
 
 template<typename Type>
   inline
-  typename utils::EnableIf<(not IsVector<Type>::value),
+  typename std::enable_if<(not IsVector<Type>::value),
   bool
->::Type smaller (
+>::type smaller (
   Type lhs,
   Type rhs,
   Type tolerance
@@ -74,9 +74,9 @@ template<typename Type>
 
 template<typename Type>
   inline
-  typename utils::EnableIf<(not IsVector<Type>::value),
+  typename std::enable_if<(not IsVector<Type>::value),
   bool
->::Type smallerEquals (
+>::type smallerEquals (
   Type lhs,
   Type rhs,
   Type tolerance
@@ -86,9 +86,9 @@ template<typename Type>
 
 template<typename Type>
   inline
-  typename utils::EnableIf<(not IsVector<Type>::value && not IsMatrix<Type>::value),
+  typename std::enable_if<(not IsVector<Type>::value && not IsMatrix<Type>::value),
   bool
->::Type equals (
+>::type equals (
   Type lhs,
   Type rhs,
   Type tolerance

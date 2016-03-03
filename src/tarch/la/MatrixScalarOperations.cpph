@@ -3,8 +3,8 @@ namespace la {
 
 
 template<typename Matrix>
-  typename utils::EnableIf< IsMatrix<Matrix>::value,
-Matrix&>::Type operator*= (
+  typename std::enable_if< IsMatrix<Matrix>::value,
+Matrix&>::type operator*= (
   Matrix&                                      matrix,
   const typename MatrixTraits<Matrix>::Scalar& scalar
 ) {
@@ -18,8 +18,8 @@ Matrix&>::Type operator*= (
 }
 
 template<typename Matrix>
-  typename utils::EnableIf< IsMatrix<Matrix>::value,
-Matrix>::Type operator* (
+  typename std::enable_if< IsMatrix<Matrix>::value,
+Matrix>::type operator* (
   const Matrix&                                matrix,
   const typename MatrixTraits<Matrix>::Scalar& scalar
 ) {

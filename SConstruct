@@ -122,6 +122,7 @@ if not conf.CheckCXX():
 if env["build"] == 'debug':
     env.Append(CPPDEFINES = ['Debug', 'Asserts'])
     env.Append(CCFLAGS = ['-g3', '-O0'])
+    env.Append(LINKFLAGS = ["-rdynamic"]) # Gives more informative backtraces
     buildpath += "debug"
 elif env["build"] == 'release':
     env.Append(CPPDEFINES = ['NDEBUG']) # Standard C++ macro which disables all asserts, also used by Eigen
@@ -149,7 +150,7 @@ else:
 if not conf.CheckCXXHeader("Eigen/Dense"):
     errorMissingHeader("Eigen/Dense", "Eigen")
     Exit(1)
-    if env["build"] == "debug":
+if env["build"] == "debug":
         env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
 
 # ====== Boost ======

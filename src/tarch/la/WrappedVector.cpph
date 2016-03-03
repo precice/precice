@@ -41,9 +41,9 @@ WrappedVector<Size,Scalar>& WrappedVector<Size,Scalar>::operator= (
 
 template<int Size, typename Scalar>
 template<typename Vector>
-  typename utils::EnableIf<IsVector<Vector>::value,
+  typename std::enable_if<IsVector<Vector>::value,
   WrappedVector<Size,Scalar>&
->::Type WrappedVector<Size,Scalar>::operator= (
+>::type WrappedVector<Size,Scalar>::operator= (
   const Vector& toAssign
 ) {
   assign(*this) = toAssign;
@@ -65,9 +65,8 @@ const WrappedVector<Size,Scalar>& wrap (
 }
 
 template<int Size, typename Vector>
-  typename utils::LazyEnableIf<IsVector<Vector>::value,
-  utils::LazyType<WrappedVector<Size,typename VectorTraits<Vector>::Scalar>&>
->::Type slice (
+  typename std::enable_if<IsVector<Vector>::value, WrappedVector<Size,typename VectorTraits<Vector>::Scalar>&>
+::type slice (
   Vector& toSlice,
   int     fromIndex
 ) {
@@ -77,9 +76,8 @@ template<int Size, typename Vector>
 }
 
 template<int Size, typename Vector>
-  typename utils::LazyEnableIf<IsVector<Vector>::value,
-  utils::LazyType<const WrappedVector<Size,typename VectorTraits<Vector>::Scalar>&>
->::Type slice (
+typename std::enable_if<IsVector<Vector>::value, const WrappedVector<Size,typename VectorTraits<Vector>::Scalar>&>
+::type slice (
   const Vector& toSlice,
   int           fromIndex
 ) {

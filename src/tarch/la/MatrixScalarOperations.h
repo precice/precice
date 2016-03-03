@@ -7,7 +7,6 @@
 #include "tarch/la/traits/IsMatrix.h"
 #include "tarch/la/traits/MatrixTraits.h"
 #include "tarch/la/traits/DeduceScalar.h"
-#include "tarch/utils/EnableIf.h"
 
 namespace tarch {
   namespace la {
@@ -18,8 +17,8 @@ namespace tarch {
      * No temporary objects are created during the operation.
      */
      template<typename Matrix>
-       typename utils::EnableIf< IsMatrix<Matrix>::value,
-     Matrix&>::Type operator*= (
+       typename std::enable_if< IsMatrix<Matrix>::value,
+     Matrix&>::type operator*= (
        Matrix&                                      matrix,
        const typename MatrixTraits<Matrix>::Scalar& scalar
     );
@@ -30,8 +29,8 @@ namespace tarch {
       * No temporary objects are created during the operation.
       */
       template<typename Matrix>
-        typename utils::EnableIf< IsMatrix<Matrix>::value,
-      Matrix>::Type operator* (
+        typename std::enable_if< IsMatrix<Matrix>::value,
+      Matrix>::type operator* (
         const Matrix&                                matrix,
         const typename MatrixTraits<Matrix>::Scalar& scalar
      );

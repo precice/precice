@@ -8,7 +8,6 @@
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/MatrixTraits.h"
 #include "tarch/la/traits/VectorTraits.h"
-#include "tarch/utils/EnableIf.h"
 
 namespace tarch {
   namespace la {
@@ -19,10 +18,10 @@ namespace tarch {
      * The result vector has to be created outside and given as a parameter.
      */
     template<typename Matrix, typename Vector, typename Result>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsMatrix<Matrix>::value && IsVector<Vector>::value && IsVector<Result>::value,
       Result&
-    >::Type multiply (
+    >::type multiply (
       const Matrix& matrix,
       const Vector& vector,
       Result&       result );
@@ -34,10 +33,10 @@ namespace tarch {
      * multiplication.
      */
     template<typename Matrix, typename Vector>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsMatrix<Matrix>::value && IsVector<Vector>::value,
       Vector
-    >::Type operator* (
+    >::type operator* (
       const Matrix& matrix,
       const Vector& vector );
 
@@ -45,10 +44,10 @@ namespace tarch {
      * Solvers the 3 by 3 linear system: matrix * result = rhs.
      */
     template<typename Matrix, typename Vector, typename Result>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsMatrix<Matrix>::value && IsVector<Vector>::value && IsVector<Vector>::value,
       Result&
-    >::Type solveSystem3x3 (
+    >::type solveSystem3x3 (
       const Matrix& matrix,
       const Vector& rhs,
       Result&       result );
@@ -62,9 +61,9 @@ namespace tarch {
      * @param x      Unknown vector to be solved for.
      */
     template<typename Matrix, typename Vector>
-      typename utils::EnableIf< IsMatrix<Matrix>::value && IsVector<Vector>::value,
+      typename std::enable_if< IsMatrix<Matrix>::value && IsVector<Vector>::value,
       void
-    >::Type forwardSubstitution (
+    >::type forwardSubstitution (
       const Matrix& matrix,
       const Vector& rhs,
       Vector&       x );
@@ -77,9 +76,9 @@ namespace tarch {
      * @param x      Unknown vector to be solved for.
      */
     template<typename Matrix, typename Vector>
-      typename utils::EnableIf< IsMatrix<Matrix>::value && IsVector<Vector>::value,
+      typename std::enable_if< IsMatrix<Matrix>::value && IsVector<Vector>::value,
       void
-    >::Type backSubstitution (
+    >::type backSubstitution (
       const Matrix& matrix,
       const Vector& rhs,
       Vector&       x );
