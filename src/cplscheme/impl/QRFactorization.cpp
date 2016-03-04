@@ -377,10 +377,8 @@ int QRFactorization::orthogonalize(
       double r_ij = utils::MasterSlave::dot(Qc, v);
       // save r_ij in s(j) = column of R
       s(j) = r_ij;
-      // u is the sum of projections r_ij * _Q(i,:) =  _Q(i,:) * <_Q(:,j), v>
-      for (int i = 0; i < _rows; i++) {
-        u(i) = u(i) + _Q(i, j) * r_ij;
-      }
+      // u is the sum of projections r_ij * _Q(:,j) =  _Q(:,j) * <_Q(:,j), v>
+      u += _Q.col(j) * r_ij;
     }
     // add the furier coefficients over all orthogonalize iterations
     for (int j = 0; j < colNum; j++) {
