@@ -49,7 +49,7 @@ void PreFilterPostFilterDecomposition:: preFilter(
 {
   preciceTrace1 ( "preFilter()", utils::MasterSlave::_rank );
   preciceInfo("preFilter()", "Pre-filter mesh " << seed.getName() );
-  Event e("pre-filter mesh");
+  Event e("geo::pre-filter mesh", true);
 
   assertion(not _filterByMapping);
 
@@ -105,7 +105,7 @@ void PreFilterPostFilterDecomposition:: postFilter(
 {
   preciceTrace1 ( "postFilter()", utils::MasterSlave::_rank );
   preciceInfo("postFilter()", "Post-filter mesh " << seed.getName() );
-  Event e("post-filter mesh");
+  Event e("geo::post-filter mesh", true);
 
   seed.computeState();
   computeBoundingMappings();
@@ -123,7 +123,7 @@ void PreFilterPostFilterDecomposition:: feedback(
 {
   preciceTrace1 ( "feedback()", utils::MasterSlave::_rank );
   preciceInfo("feedback()", "Feedback mesh " << seed.getName() );
-  Event e("feedback mesh");
+  Event e("geo::feedback mesh", true);
 
   int numberOfVertices = filteredVertexPositions.size();
 

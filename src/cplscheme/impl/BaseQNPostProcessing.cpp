@@ -112,7 +112,7 @@ void BaseQNPostProcessing::initialize(
     DataMap& cplData)
 {
   preciceTrace1("initialize()", cplData.size());
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("cpl::initialize", true); // time measurement, barrier
 
   size_t entries = 0;
 
@@ -338,7 +338,7 @@ void BaseQNPostProcessing::performPostProcessing
     DataMap& cplData)
 {
   preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("cpl::performPP", true); // time measurement, barrier
 
   using namespace tarch::la;
   assertion2(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
@@ -431,9 +431,6 @@ void BaseQNPostProcessing::performPostProcessing
     Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_residuals.size());
     computeQNUpdate(cplData, xUpdate);
 
-    Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
-    e_revertPrecond.stop();                                   // -------------
-
     /**
      * apply quasiNewton update
      */
@@ -484,7 +481,7 @@ void BaseQNPostProcessing::performPostProcessing
 void BaseQNPostProcessing::applyFilter()
 {
   preciceTrace1(__func__,_filter);
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("cpl::applyFilter", true); // time measurement, barrier
   if (_filter == PostProcessing::NOFILTER) {
     // do nothing
   } else {
@@ -558,7 +555,7 @@ void BaseQNPostProcessing::iterationsConverged
     DataMap & cplData)
 {
   preciceTrace(__func__);
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("cpl::iterationsConverged", true); // time measurement, barrier
 
   // debugging info, remove if not needed anymore:
   // -----------------------

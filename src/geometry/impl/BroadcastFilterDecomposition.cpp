@@ -46,7 +46,7 @@ void BroadcastFilterDecomposition:: broadcast(
 {
   preciceTrace1 ( "broadcast()", utils::MasterSlave::_rank );
   preciceInfo("broadcast()", "Broadcast mesh " << seed.getName() );
-  Event e("broadcast mesh");
+  Event e("geo::broadcast mesh", true);
 
 
   if (utils::MasterSlave::_slaveMode) {
@@ -65,7 +65,7 @@ void BroadcastFilterDecomposition:: filter(
 {
   preciceTrace1 ( "filter()", utils::MasterSlave::_rank );
   preciceInfo("filter()", "Filter mesh " << seed.getName() );
-  Event e("filter mesh");
+  Event e("geo::filter mesh", true);
 
   // first, bounding box filter
   preciceDebug("First Filter BB, #vertices " << seed.vertices().size());
@@ -109,6 +109,7 @@ void BroadcastFilterDecomposition:: feedback(
 {
   preciceTrace1 ( "feedback()", utils::MasterSlave::_rank );
   preciceInfo("feedback()", "Feedback mesh " << seed.getName() );
+  Event e("geo::feedback mesh", true);
 
   int numberOfVertices = filteredVertexPositions.size();
 

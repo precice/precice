@@ -253,6 +253,7 @@ if env["gprof"]:
 # ====== Special Platforms ======
 if env["platform"] == "supermuc":
     env.Append(CPPDEFINES = ['SuperMUC_WORK'])
+    env.Append(CPPDEFINES = ['M2N_PRE_SYNCHRONIZE'])
 
 print
 env = conf.Finish() # Used to check libraries

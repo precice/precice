@@ -391,9 +391,11 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 
   preciceCheck(not isConnected(), "acceptConnection()", "Already connected!");
 
+  Event e1("p2p::Exchange VD", true);
   std::map<int, std::vector<int>>& vertexDistribution =
       _mesh->getVertexDistribution();
   std::map<int, std::vector<int>> requesterVertexDistribution;
+
 
   if (utils::MasterSlave::_masterMode) {
     // Establish connection between participants' master processes.
@@ -413,9 +415,12 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   } else {
     assertion(utils::MasterSlave::_slaveMode);
   }
+  e1.stop(true);
 
+  Event e2("p2p::Broadcast VD", true);
   m2n::broadcast(vertexDistribution);
   m2n::broadcast(requesterVertexDistribution);
+  e2.stop(true);
 
   // Local (for process rank in the current participant) communication map that
   // defines a mapping from a process rank in the remote participant to an array
@@ -434,8 +439,10 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
+  Event e3("p2p::Build CM", true);
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
       _localIndexCount, vertexDistribution, requesterVertexDistribution);
+  e3.stop(true);
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
@@ -452,6 +459,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   e.start(true);
 #endif
 
+  Event e4("p2p::Create Directories", true);
 #ifdef SuperMUC_WORK
   try {
     auto addressDirectory = _communicationFactory->addressDirectory();
@@ -470,6 +478,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
   } catch (...) {
   }
 #endif
+  e4.stop(true);
 
   if (communicationMap.empty()) {
     assertion(_localIndexCount == 0);
@@ -538,6 +547,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
 
   preciceCheck(not isConnected(), "requestConnection()", "Already connected!");
 
+  Event e1("p2p::Exchange VD", true);
   std::map<int, std::vector<int>>& vertexDistribution =
       _mesh->getVertexDistribution();
   std::map<int, std::vector<int>> acceptorVertexDistribution;
@@ -570,9 +580,12 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
     assertion(utils::MasterSlave::_slaveMode);
 
   }
+  e1.stop();
 
+  Event e2("p2p::Broadcast VD", true);
   m2n::broadcast(vertexDistribution);
   m2n::broadcast(acceptorVertexDistribution);
+  e2.stop();
 
   // Local (for process rank in the current participant) communication map that
   // defines a mapping from a process rank in the remote participant to an array
@@ -591,8 +604,10 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   //   the remote process with rank 1;
   // - has to communicate (send/receive) data with local indices 0 and 2 with
   //   the remote process with rank 4.
+  Event e3("p2p::Build CM", true);
   std::map<int, std::vector<int>> communicationMap = m2n::buildCommunicationMap(
       _localIndexCount, vertexDistribution, acceptorVertexDistribution);
+  e3.stop();
 
 // Print `communicationMap'.
 #ifdef P2P_LCM_PRINT
@@ -609,6 +624,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   e.start(true);
 #endif
 
+  Event e4("p2p::Create Directories", true);
 #ifdef SuperMUC_WORK
   try {
     auto addressDirectory = _communicationFactory->addressDirectory();
@@ -617,6 +633,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   } catch (...) {
   }
 #endif
+  e4.stop(true);
 
   if (communicationMap.empty()) {
     assertion(_localIndexCount == 0);

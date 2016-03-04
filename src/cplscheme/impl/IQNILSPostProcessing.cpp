@@ -78,7 +78,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
 {
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("AA::QR", true); // time measurement, barrier
 	// Compute residuals of secondary data
 	for (int id: _secondaryDataIDs){
 		Eigen::VectorXd& secResiduals = _secondaryResiduals[id];
@@ -159,7 +159,6 @@ void IQNILSPostProcessing::computeQNUpdate
 (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
 	preciceTrace("computeQNUpdate()");
-  Event e(__func__, true, true); // time measurement, barrier
   preciceDebug("   Compute Newton factors");
 
   // Calculate QR decomposition of matrix V and solve Rc = -Qr
@@ -179,7 +178,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	Eigen::VectorXd _local_b = Eigen::VectorXd::Zero(_qrV.cols());
 	Eigen::VectorXd _global_b;
 
-	Event e_qrsolve("solve: R alpha = -Q^T r", true, true); // time measurement, barrier
+	Event e1("AA::BS", true); // time measurement, barrier
 
 	// need to scale the residual to compensate for the scaling in c = R^-1 * Q^T * P^-1 * residual'
 	// it is also possible to apply the inverse scaling weights from the right to the vector c
@@ -218,11 +217,13 @@ void IQNILSPostProcessing::computeQNUpdate
 	  // broadcast coefficients c to all slaves
 	  utils::MasterSlave::broadcast(c.data(), c.size());
 	}
-	e_qrsolve.stop();
+	e1.stop();
 
 	preciceDebug("   Apply Newton factors");
+	Event e2("AA::WA", true);
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
 	xUpdate = _matrixW * c;
+	e2.stop();
 
 	preciceDebug("c = " << c);
 

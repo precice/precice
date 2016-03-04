@@ -12,6 +12,7 @@
 using precice::utils::Event;
 
 namespace precice {
+extern bool testMode;
 namespace geometry {
 
 tarch::logging::Log CommunicatedGeometry:: _log ( "precice::geometry::CommunicatedGeometry" );
@@ -97,7 +98,7 @@ void CommunicatedGeometry:: sendMesh(
   // Gather Mesh
   preciceInfo("sendMesh()", "Gather mesh " << seed.getName() );
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ) {
-    Event e("gather mesh");
+    Event e("geo::gather mesh", true);
     if (utils::MasterSlave::_slaveMode) {
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh( seed, 0 );
     }
@@ -128,7 +129,27 @@ void CommunicatedGeometry:: sendMesh(
 
   // Send (global) Mesh
   preciceInfo("sendMesh()", "Send global mesh " << seed.getName());
-  Event e("send global mesh");
+
+#ifdef M2N_PRE_SYNCHRONIZE
+    if(not precice::testMode){
+      Event e("geo::sendMesh/synchronize", true);
+
+      if(not utils::MasterSlave::_slaveMode){
+        bool ack;
+
+        for (auto &pair : _receivers) {
+          pair.second->getMasterCommunication()->send(ack, 0);
+          //since Sockets are always asynch
+          com::Request::SharedPointer request = pair.second->getMasterCommunication()->aReceive(&ack, 0);
+          request->wait();
+          pair.second->getMasterCommunication()->send(ack, 0);
+        }
+      }
+    }
+#endif
+
+
+  Event e("geo:: send global mesh", true);
   if (not utils::MasterSlave::_slaveMode) {
     preciceCheck ( globalMesh.vertices().size() > 0,
                    "specializedCreate()", "Participant \"" << _accessorName
@@ -145,8 +166,23 @@ void CommunicatedGeometry:: receiveMesh(
   mesh::Mesh& seed)
 {
   preciceInfo("receiveMesh()", "Receive global mesh " << seed.getName() );
+#ifdef M2N_PRE_SYNCHRONIZE
+    if(not precice::testMode){
+      Event e("geo::receiveMesh/synchronize", true);
+
+      if(not utils::MasterSlave::_slaveMode){
+        bool ack;
+        m2n::M2N::SharedPointer m2n ( _receivers[_accessorName] );
+        m2n->getMasterCommunication()->receive(ack, 0);
+        m2n->getMasterCommunication()->send(ack, 0);
+        //since Sockets are always asynch
+        com::Request::SharedPointer request = m2n->getMasterCommunication()->aReceive(&ack, 0);
+        request->wait();
+      }
+    }
+#endif
+  Event e("geo::receive global mesh", true);
   if (not utils::MasterSlave::_slaveMode) {
-    Event e("receive global mesh");
     assertion ( seed.vertices().size() == 0 );
     assertion ( utils::contained(_accessorName, _receivers) );
     m2n::M2N::SharedPointer m2n ( _receivers[_accessorName] );

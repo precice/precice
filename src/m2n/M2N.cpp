@@ -51,8 +51,6 @@ void M2N:: acceptMasterConnection (
 {
   preciceTrace2("acceptMasterConnection()", nameAcceptor, nameRequester);
 
-  Event e("M2N::acceptMasterConnection");
-
   if(not utils::MasterSlave::_slaveMode){
     assertion(_masterCom.use_count()>0);
     _masterCom->acceptConnection(nameAcceptor, nameRequester, 0, 1);
@@ -87,6 +85,24 @@ void M2N:: acceptSlavesConnection (
   const std::string& nameRequester)
 {
   preciceTrace2("acceptSlavesConnection()", nameAcceptor, nameRequester);
+
+#ifdef M2N_PRE_SYNCHRONIZE
+    if(not precice::testMode){
+      Event e("m2n::acceptSlavesConnection/synchronize", true);
+
+      if(not utils::MasterSlave::_slaveMode){
+        bool ack;
+
+        _masterCom->send(ack, 0);
+        //since Sockets are always asynch
+        com::Request::SharedPointer request = _masterCom->aReceive(&ack, 0);
+        request->wait();
+        _masterCom->send(ack, 0);
+      }
+    }
+#endif
+  Event e("m2n::acceptSlavesConnection", true);
+
   _areSlavesConnected = true;
   for( const auto& pair : _distComs){
     pair.second->acceptConnection(nameAcceptor, nameRequester);
@@ -100,6 +116,24 @@ void M2N:: requestSlavesConnection (
   const std::string& nameRequester)
 {
   preciceTrace2("requestSlavesConnection()", nameAcceptor, nameRequester);
+
+#ifdef M2N_PRE_SYNCHRONIZE
+    if(not precice::testMode){
+      Event e("m2n::requestSlavesConnection/synchronize", true);
+
+      if(not utils::MasterSlave::_slaveMode){
+        bool ack;
+
+        _masterCom->receive(ack, 0);
+        _masterCom->send(ack, 0);
+        //since Sockets are always asynch
+        com::Request::SharedPointer request = _masterCom->aReceive(&ack, 0);
+        request->wait();
+      }
+    }
+#endif
+  Event e("m2n::requestSlavesConnection", true);
+
   _areSlavesConnected = true;
   for( const auto& pair : _distComs){
     pair.second->requestConnection(nameAcceptor, nameRequester);
@@ -182,18 +216,20 @@ void M2N:: send (
 
 #ifdef M2N_PRE_SYNCHRONIZE
     if(not precice::testMode){
-      Event e("M2N::send/synchronize", true);
+      Event e("m2n::sendData/synchronize", true);
 
       if(not utils::MasterSlave::_slaveMode){
         bool ack;
 
         _masterCom->send(ack, 0);
-        _masterCom->receive(ack, 0);
+        //since Sockets are always asynch
+        com::Request::SharedPointer request = _masterCom->aReceive(&ack, 0);
+        request->wait();
         _masterCom->send(ack, 0);
       }
     }
 #endif
-
+    Event e("m2n::sendData", true);
     _distComs[meshID]->send(itemsToSend,size,valueDimension);
   }
   else{//coupling mode
@@ -234,18 +270,20 @@ void M2N:: receive (
 
 #ifdef M2N_PRE_SYNCHRONIZE
     if(not precice::testMode){
-      Event e("M2N::receive/synchronize", true);
+      Event e("m2n::receiveData/synchronize", true);
 
       if(not utils::MasterSlave::_slaveMode){
         bool ack;
 
         _masterCom->receive(ack, 0);
         _masterCom->send(ack, 0);
-        _masterCom->receive(ack, 0);
+        //since Sockets are always asynch
+        com::Request::SharedPointer request = _masterCom->aReceive(&ack, 0);
+        request->wait();
       }
     }
 #endif
-
+    Event e("m2n::receiveData", true);
     _distComs[meshID]->receive(itemsToReceive,size,valueDimension);
   }
   else{//coupling mode
