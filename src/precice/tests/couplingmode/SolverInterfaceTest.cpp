@@ -1491,7 +1491,7 @@ void SolverInterfaceTest:: testBug()
     int displacementsID = precice.getDataID(precice::constants::dataDisplacements(), meshID);
     int oldDisplacementsID = precice.getDataID("OldDisplacements", meshID);
     validateEquals(precice.getDimensions(), 3);
-    foreach(Vector3D& coord, coords){
+    for (Vector3D& coord : coords){
       precice.setMeshVertex(meshID, raw(coord));
     }
     double maxDt = precice.initialize();
@@ -1518,7 +1518,7 @@ void SolverInterfaceTest:: testBug()
     SolverInterface precice("Calculix", 0, 1);
     configureSolverInterface(config, precice);
     int meshID = precice.getMeshID("CalculixNodes");
-    foreach (Vector3D& coord, coords){
+    for (Vector3D& coord : coords){
       precice.setMeshVertex(meshID, raw(coord));
     }
     for(int i=0; i < slices-1; i++){
@@ -1843,7 +1843,7 @@ void SolverInterfaceTest:: testNASTINMeshRestart()
   restartFiles.push_back("precice_checkpoint_SOLIDZ_SOLIDZ_Mesh.wrl");
   restartFiles.push_back("precice_checkpoint_SOLIDZ_simstate.txt");
 
-  foreach(std::string& restartFile, restartFiles){
+  for (std::string& restartFile : restartFiles){
     std::ifstream  src((_pathToTests + restartFile).c_str(), std::ifstream::in);
     std::ofstream  dst(restartFile.c_str(), std::ifstream::out);
     dst << src.rdbuf();
@@ -2098,3 +2098,4 @@ void SolverInterfaceTest:: testPinelliCoupled()
 #endif // defined( not PRECICE_NO_MPI )
 
 }} // namespace precice, tests
+

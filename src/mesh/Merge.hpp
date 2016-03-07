@@ -65,7 +65,7 @@ Group& Merge:: operator() ( CONTAINER_T& container )
 {
   _merged.clear();
   std::set<Vertex*> vertices;
-  foreach ( Vertex& vertex, container.vertices() ){
+  for ( Vertex& vertex : container.vertices() ){
     if ( vertices.find(&vertex) == vertices.end() ){
       vertices.insert(&vertex);
       _merged.add(vertex);
@@ -73,7 +73,7 @@ Group& Merge:: operator() ( CONTAINER_T& container )
   }
   vertices.clear();
   std::set<Edge*> edges;
-  foreach ( Edge& edge, container.edges() ){
+  for ( Edge& edge : container.edges() ){
     if ( edges.find(&edge) == edges.end() ){
       edges.insert(&edge);
       _merged.add(edge);
@@ -81,7 +81,7 @@ Group& Merge:: operator() ( CONTAINER_T& container )
   }
   edges.clear();
   std::set<Triangle*> triangles;
-  foreach ( Triangle& triangle, container.triangles() ){
+  for ( Triangle& triangle : container.triangles() ){
     if ( triangles.find(&triangle) == triangles.end() ){
       triangles.insert(&triangle);
       _merged.add(triangle);
@@ -89,7 +89,7 @@ Group& Merge:: operator() ( CONTAINER_T& container )
   }
   triangles.clear();
   std::set<Quad*> quads;
-  foreach ( Quad& quad, container.quads() ){
+  for ( Quad& quad : container.quads() ){
     if ( quads.find(&quad) == quads.end() ){
       quads.insert(&quad);
       _merged.add(quad);
@@ -102,3 +102,4 @@ Group& Merge:: operator() ( CONTAINER_T& container )
 }} // namespace precice, mesh
 
 #endif /* PRECICE_MESH_MERGE_HPP_ */
+

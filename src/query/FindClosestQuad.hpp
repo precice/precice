@@ -123,7 +123,7 @@ FindClosestQuad:: FindClosestQuad
 template<typename CONTAINER_T>
 bool FindClosestQuad:: operator() ( CONTAINER_T& container )
 {
-  foreach ( mesh::Quad& quad, container.quads() ) {
+  for ( mesh::Quad& quad : container.quads() ) {
     find ( quad );
   }
   return _closestQuad != NULL;
@@ -132,3 +132,4 @@ bool FindClosestQuad:: operator() ( CONTAINER_T& container )
 }} // namespace precice, query
 
 #endif /* PRECICE_QUERY_FINDCLOSESTQUAD_HPP_ */
+

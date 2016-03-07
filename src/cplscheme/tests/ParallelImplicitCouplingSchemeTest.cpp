@@ -307,7 +307,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
   data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
 
-//  foreach (DataMap::value_type& pair, data){
+//  for (DataMap::value_type& pair : data){
 //    std::cout << *pair.second->values << "\n";
 //    std::cout << pair.second->oldValues << "\n";
 //  }
@@ -416,7 +416,7 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
   data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
   
-//  foreach (DataMap::value_type& pair, data){
+//  for (DataMap::value_type& pair : data){
 //    std::cout << *pair.second->values << "\n";
 //    std::cout << pair.second->oldValues << "\n";
 //  }
@@ -462,3 +462,4 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
 #endif // not PRECICE_NO_MPI
 
 }}}// namespace precice, cplscheme, tests
+

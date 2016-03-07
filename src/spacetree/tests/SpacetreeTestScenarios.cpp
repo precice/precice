@@ -1350,7 +1350,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   refinementLimits += 2.0, 1.0, 0.5, 0.25;
   std::vector<PtrSpacetree> treesInc;
   std::vector<PtrSpacetree> treesExc;
-  foreach ( double limit, refinementLimits ) {
+  for ( double limit : refinementLimits ) {
     treesInc +=_factory.createSpacetree(treeOffset, treeHalflengths, limit);
     treesInc.back()->addMesh(mesh);
     treesExc += _factory.createSpacetree(treeOffset, treeHalflengths, limit);
@@ -1623,7 +1623,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   refinementLimits += 2.0, 1.0, 0.5, 0.25;
   std::vector<PtrSpacetree> treesInc;
   std::vector<PtrSpacetree> treesExc;
-  foreach ( double limit, refinementLimits ) {
+  for ( double limit : refinementLimits ) {
     treesInc += _factory.createSpacetree(treeoffset, treeHalflengths, limit);
     treesInc.back()->addMesh(mesh);
     treesExc += _factory.createSpacetree(treeoffset, treeHalflengths, limit);
@@ -1873,7 +1873,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   refinementLimits += 5.0, 2.5, 1.25, 0.625;
   std::vector<PtrSpacetree> treesInc;
   std::vector<PtrSpacetree> treesExc;
-  foreach ( double limit, refinementLimits ) {
+  for ( double limit : refinementLimits ) {
     treesInc += _factory.createSpacetree(treeoffset, treeHalflengths, limit);
     treesInc.back()->addMesh(mesh);
     treesExc += _factory.createSpacetree(treeoffset, treeHalflengths, limit);
@@ -2614,3 +2614,4 @@ void SpacetreeTestScenarios:: testSplittingVoxels()
 }
 
 }}} // namespace precice, spacetree, tests
+

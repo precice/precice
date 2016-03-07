@@ -142,13 +142,13 @@ bool FindVoxelContent:: operator()
 (
   CONTAINER_T& container )
 {
-  foreach ( mesh::Vertex& vertex, container.vertices() ){
+  for ( mesh::Vertex& vertex : container.vertices() ){
     checkVertex ( vertex );
   }
-  foreach ( mesh::Edge& edge, container.edges() ){
+  for ( mesh::Edge& edge : container.edges() ){
     checkEdge ( edge );
   }
-  foreach ( mesh::Triangle& triangle, container.triangles() ){
+  for ( mesh::Triangle& triangle : container.triangles() ){
     checkTriangle ( triangle );
   }
   return not _content.empty ();
@@ -157,4 +157,5 @@ bool FindVoxelContent:: operator()
 }} // namespace precice, query
 
 #endif /* PRECICE_QUERY_FINDVOXELCONTAINEDVISITOR_HPP_ */
+
 
