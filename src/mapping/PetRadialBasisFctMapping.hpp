@@ -542,7 +542,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       // Copy mapped data to output data values
       const PetscScalar *outArray;
       ierr = VecGetArrayRead(out.vector, &outArray);
-      int size = out.getLocalSize();
 
       for (int i=out.ownerRange().first+localPolyparams; i < out.ownerRange().second; i++) {
         outValues[(i-polyparams)*valueDim + dim] = outArray[i-out.ownerRange().first]; // hier noch das index set beachten?

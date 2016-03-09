@@ -731,7 +731,7 @@ void Mesh:: setGlobalIndices(const std::vector<int> &globalIndices){
 }
 
 void Mesh:: setOwnerInformation(const std::vector<int> &ownerVec){
-  int i = 0;
+  size_t i = 0;
   for ( Vertex& vertex : vertices() ){
     assertion(i<ownerVec.size());
     assertion(ownerVec[i]!=-1);
