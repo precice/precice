@@ -33,8 +33,7 @@ namespace mapping {
  * basis functions and a (low order) polynomial, and evaluated at the output
  * data points.
  *
- * The radial basis function type has to be given as template parameter, and has
- * to be one of the defined types in this file.
+ * The radial basis function type has to be given as template parameter.
  */
 template<typename RADIAL_BASIS_FUNCTION_T>
 class PetRadialBasisFctMapping : public Mapping
@@ -299,6 +298,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int logCLoop = 2;
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
   PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
+  precice::utils::Event eFillC("Filling Matrix C");
   // We collect entries for each row and set them blockwise using MatSetValues.
   for (const mesh::Vertex& inVertex : inMesh->vertices()) {
     if (not inVertex.isOwner())
@@ -353,6 +353,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     ierr = MatSetValuesLocal(_matrixC.matrix, 1, &row, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
     i++;
   }
+  eFillC.stop();
   PetscLogEventEnd(logCLoop, 0, 0, 0, 0);
   // -- END FILL LOOP FOR MATRIX C --
 
@@ -391,6 +392,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int logALoop = 4;
   PetscLogEventRegister("Filling Matrix A", 0, &logALoop);
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
+  precice::utils::Event eFillA("Filling Matrix A");
+
   i = 0;
   for (int it = _matrixA.ownerRange().first; it < _matrixA.ownerRange().second; it++) {
     // hier colIdx, colVals über inMesh->vertices.count dimensionieren?
@@ -442,6 +445,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     ierr = MatSetValuesLocal(_matrixA.matrix, 1, &it, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
     i++;
   }
+  eFillA.stop();
   PetscLogEventEnd(logALoop, 0, 0, 0, 0);
   // -- END FILL LOOP FOR MATRIX A --
 
@@ -597,7 +601,6 @@ bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int
     return true;
 
   return true;
-
   
 }
 

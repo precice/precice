@@ -26,7 +26,7 @@ This is converted to a data structure:
    {
        "timestamp" : "Time of the run, a python datatime object"
        "global"    : "Global timings, a numpy array
-       "timings"   : ""numpy.array with custom datatype"
+       "timings"   : "numpy.array with custom datatype"
    }
 ]
 """
