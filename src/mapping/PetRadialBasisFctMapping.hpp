@@ -130,16 +130,16 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   if (getDimensions()==2) {
     _deadAxis[0] = xDead;
     _deadAxis[1] = yDead;
-    preciceCheck(not (xDead && yDead),
+    tpreciceCheck(not (xDead && yDead),
                  "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
-    preciceCheck(not zDead,
+    tpreciceCheck(not zDead,
                  "setDeadAxis()", "You cannot dead out the z axis if dimension is set to 2");
   }
   else if (getDimensions()==3) {
     _deadAxis[0] = xDead;
     _deadAxis[1] = yDead;
     _deadAxis[2] = zDead;
-    preciceCheck(not (xDead && yDead && zDead), "setDeadAxis()", "You cannot  "
+    tpreciceCheck(not (xDead && yDead && zDead), "setDeadAxis()", "You cannot  "
                  << " choose all axis to be dead for a RBF mapping");
   }
   else {
@@ -167,7 +167,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
-  preciceTrace("computeMapping()");
+  tpreciceTrace("computeMapping()");
   precice::utils::Event e(__func__);
 
   assertion2(input()->getDimensions() == output()->getDimensions(),
@@ -212,19 +212,19 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   auto outputSize = outMesh->vertices().size();
 
   PetscErrorCode ierr = 0;
-  preciceDebug("inMesh->vertices().size() = " << inMesh->vertices().size());
-  preciceDebug("outMesh->vertices().size() = " << outMesh->vertices().size());
+  tpreciceDebug("inMesh->vertices().size() = " << inMesh->vertices().size());
+  tpreciceDebug("outMesh->vertices().size() = " << outMesh->vertices().size());
 
   // Create a symmetric, sparse matrix with n x n local size.
   _matrixC.reset();
   _matrixC.init(n, n, PETSC_DETERMINE, PETSC_DETERMINE, MATSBAIJ);
-  preciceDebug("Set matrix C to local size " << n << " x " << n);
+  tpreciceDebug("Set matrix C to local size " << n << " x " << n);
   ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
   // Create a matrix with outputSize x n local size.
   _matrixA.reset();
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
-  preciceDebug("Set matrix A to local size " << outputSize << " x " << n);
+  tpreciceDebug("Set matrix A to local size " << outputSize << " x " << n);
 
   KSPReset(_solver);
 
@@ -339,7 +339,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
       #ifdef Asserts
       if (coeff == std::numeric_limits<double>::infinity()) {
-        preciceError("computeMapping()", "C matrix element has value inf. "
+        tpreciceError("computeMapping()", "C matrix element has value inf. "
                      << "i = " << i
                      << ", coords i = " << inVertex.getCoords() << ", coords j = "
                      << vj.getCoords() << ", dist = "
@@ -428,7 +428,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
       #     ifdef Asserts
       if (coeff == std::numeric_limits<double>::infinity()){
-        preciceError("computeMapping()", "A matrix element has value inf. "
+        tpreciceError("computeMapping()", "A matrix element has value inf. "
                      << "i = " << i << ", j = " << j
                      << ", coords i = " << oVertex.getCoords() << ", coords j = "
                      << inVertex.getCoords() << ", dist = "
@@ -453,7 +453,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   KSPSetFromOptions(_solver);
 
   // if (totalNNZ > static_cast<size_t>(20*n)) {
-  //   preciceDebug("Using Cholesky decomposition as direct solver for dense matrix.");
+  //   tpreciceDebug("Using Cholesky decomposition as direct solver for dense matrix.");
   //   PC prec;
   //   KSPSetType(_solver, KSPPREONLY);
   //   KSPGetPC(_solver, &prec);
@@ -473,7 +473,7 @@ bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping() co
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
-  preciceTrace("clear()");
+  tpreciceTrace("clear()");
   _matrixC.reset();
   _matrixA.reset();
   _hasComputedMapping = false;
@@ -487,7 +487,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int outputDataID )
 {
   precice::utils::Event e(__func__);
-  preciceTrace2("map()", inputDataID, outputDataID);
+  tpreciceTrace2("map()", inputDataID, outputDataID);
 
   assertion(_hasComputedMapping);
   assertion2(input()->getDimensions() == output()->getDimensions(),
@@ -509,14 +509,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int localPolyparams = utils::MasterSlave::_rank > 0 ? 0 : polyparams; // Set localPolyparams only when root rank
 
   if (getConstraint() == CONSERVATIVE) {
-    preciceDebug("Map conservative");
+    tpreciceDebug("Map conservative");
     petsc::Vector Au(_matrixC, "Au");
     petsc::Vector out(_matrixC, "out");
     petsc::Vector in(_matrixA, "in");
     
     // Fill input from input data values
     for (int dim=0; dim < valueDim; dim++) {
-      preciceDebug("input()->vertices().size() = " << input()->vertices().size());
+      tpreciceDebug("input()->vertices().size() = " << input()->vertices().size());
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
         int globalIndex = input()->vertices()[i].getGlobalIndex();
         VecSetValue(in.vector, globalIndex, inValues[(i)*valueDim + dim], INSERT_VALUES); // Dies besser als VecSetValuesLocal machen
@@ -527,7 +527,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       ierr = KSPSolve(_solver, Au.vector, out.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
       if (convReason < 0) {
-        preciceError(__func__, "RBF linear system has not converged.");
+        tpreciceError(__func__, "RBF linear system has not converged.");
       }
       
       // petsc::Vector res(_matrixC, "Residual");
@@ -535,7 +535,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       // MatResidual(_matrixC.matrix, Au.vector, out.vector, res.vector);
       // VecNorm(res.vector, NORM_2, &resNorm);
       // res.view();
-      // preciceDebug("Residual norm = " << resNorm);
+      // tpreciceDebug("Residual norm = " << resNorm);
       
       VecChop(out.vector, 1e-9);
 
@@ -550,7 +550,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     }
   }
   else { // Map consistent
-    preciceDebug("Map consistent");
+    tpreciceDebug("Map consistent");
     petsc::Vector p(_matrixC, "p");
     petsc::Vector in(_matrixC, "in");
     petsc::Vector out(_matrixA, "out");
@@ -560,8 +560,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++) {
       // Fill input from input data values
-      preciceDebug("in vector ownerRange = " << in.ownerRange());
-      preciceDebug("polyparams = " << polyparams << ", valueDim = " << valueDim << ", dim = " << dim);
+      tpreciceDebug("in vector ownerRange = " << in.ownerRange());
+      tpreciceDebug("polyparams = " << polyparams << ", valueDim = " << valueDim << ", dim = " << dim);
       for (int i = in.ownerRange().first + localPolyparams; i < in.ownerRange().second; i++) {
         int globalIndex = input()->vertices()[i-polyparams].getGlobalIndex();
         VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(i-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
@@ -570,7 +570,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
       if (convReason < 0) {
-        preciceError(__func__, "RBF linear system has not converged.");
+        tpreciceError(__func__, "RBF linear system has not converged.");
       }
       ierr = MatMult(_matrixA.matrix, p.vector, out.vector); CHKERRV(ierr);
       VecChop(out.vector, 1e-9);
@@ -591,7 +591,7 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int vertexID) const
 {
   // FIXME: Use a sane calculation here
-  // preciceTrace(__func__);
+  // tpreciceTrace(__func__);
 
   if (not _basisFunction.hasCompactSupport())
     return true;
