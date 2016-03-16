@@ -2,7 +2,7 @@
 #pragma once
 
 #include "tarch/tests/TestCase.h"
-#include "/logging/Logger.hpp"
+#include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
 
 
