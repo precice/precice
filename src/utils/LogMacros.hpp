@@ -2,10 +2,6 @@
 
 #include "MasterSlave.hpp"
 
-#include "tarch/Assertions.h"
-
-#include <boost/foreach.hpp>
-
 #include <string>
 #include <sstream>
 #include <iomanip>
@@ -13,7 +9,6 @@
 
 //#define assertion assertion
 
-#define foreach BOOST_FOREACH
 
 #ifndef PRECICE_NO_MPI
 #include "utils/Parallel.hpp"
