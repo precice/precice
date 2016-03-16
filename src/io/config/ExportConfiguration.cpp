@@ -91,7 +91,7 @@ ExportConfiguration:: ExportConfiguration
   attrEveryIteration.setDocumentation(doc);
   attrEveryIteration.setDefaultValue(false);
 
-  foreach (XMLTag& tag, tags){
+  for (XMLTag& tag : tags){
     tag.addAttribute(attrLocation);
     tag.addAttribute(attrTimestepInterval);
     //tag.addAttribute(attrNeighbors);
@@ -188,3 +188,4 @@ void ExportConfiguration:: xmlTagCallback
 }
 
 }} // namespace precice, io
+

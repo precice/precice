@@ -1295,7 +1295,7 @@ void SolverInterfaceTestGeometry:: testBug5()
 //    mesh::Vertex& v1 = found.createVertex(wrap<3>(it.vertexCoords(1)));
 //    found.createEdge(v0, v1);
 //  }
-  //foreach (mesh::Edge& edge, voxelPos.contentHandle().triangles()){
+  //for (mesh::Edge& edge : voxelPos.contentHandle().triangles()){
   //  mesh::Vertex& v0 = found.createVertex(edge.vertex(0).getCoords());
   //  mesh::Vertex& v1 = found.createVertex(edge.vertex(1).getCoords());
   //  found.createEdge(v0, v1);
@@ -1567,4 +1567,5 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
 }
 
 }} // namespace precice, tests
+
 

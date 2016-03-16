@@ -62,7 +62,7 @@ void WatchPointTest:: run ()
     watchpoint1.exportPointData(0.0);
 
     // Change geometry and write output again
-    foreach ( mesh::Vertex& vertex, mesh->vertices() ) {
+    for ( mesh::Vertex& vertex : mesh->vertices() ) {
       validate ( vectorValues.size() > vertex.getID() );
       doubleValues[vertex.getID()] = 1.0;
     }
@@ -72,3 +72,4 @@ void WatchPointTest:: run ()
 }
 
 }} // namespace precice, tests
+

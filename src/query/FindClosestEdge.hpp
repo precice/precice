@@ -100,7 +100,7 @@ bool FindClosestEdge:: operator()
   CONTAINER_T& container )
 {
   size_t index = 0;
-  foreach ( mesh::Edge& edge, container.edges() ) {
+  for ( mesh::Edge& edge : container.edges() ) {
     find ( edge );
     index ++;
   }
@@ -110,3 +110,4 @@ bool FindClosestEdge:: operator()
 }} // namespace precice, query
 
 #endif /* PRECICE_QUERY_FINDCLOSESTEDGE_HPP_ */
+

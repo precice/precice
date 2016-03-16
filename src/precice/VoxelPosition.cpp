@@ -58,17 +58,17 @@ VoxelPosition:: VoxelPosition
     assertion ( content->size() > 0 );
     int geoID = mesh::PropertyContainer::INDEX_GEOMETRY_ID;
     std::vector<int> ids;
-    foreach ( mesh::Vertex & vertex, content->vertices() ) {
+    for ( mesh::Vertex & vertex : content->vertices() ) {
       vertex.getProperties ( geoID, ids );
     }
-    foreach ( mesh::Edge & edge, content->edges() ) {
+    for ( mesh::Edge & edge : content->edges() ) {
       edge.getProperties ( geoID, ids );
     }
-    foreach ( mesh::Triangle & triangle, content->triangles() ) {
+    for ( mesh::Triangle & triangle : content->triangles() ) {
       triangle.getProperties ( geoID, ids );
     }
     _impl->meshIDs.clear ();
-    foreach ( int id, ids ) {
+    for ( int id : ids ) {
       if ( ! utils::contained(id, _impl->meshIDs) ) {
         _impl->meshIDs.push_back ( id );
       }
@@ -132,3 +132,4 @@ MeshHandle VoxelPosition:: contentHandle ()
 }
 
 } // namespace precice
+

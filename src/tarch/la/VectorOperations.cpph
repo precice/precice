@@ -10,9 +10,8 @@ namespace tarch {
 namespace la {
 
 template<typename Vector>
-  typename utils::LazyEnableIf< IsVector<Vector>::value,
-  utils::LazyType<typename VectorTraits<Vector>::Scalar>
->::Type norm1 (
+  typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+ ::type norm1 (
   const Vector & vector
 ) {
   typedef VectorTraits<Vector> Traits;
@@ -25,9 +24,8 @@ template<typename Vector>
 }
 
 template<typename Vector>
-  typename utils::LazyEnableIf< IsVector<Vector>::value,
-  utils::LazyType<typename VectorTraits<Vector>::Scalar>
->::Type norm2 (
+  typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+ ::type norm2 (
   const Vector & vector
 ) {
   typedef VectorTraits<Vector> Traits;
@@ -44,8 +42,8 @@ template<typename Vector>
  * Does not change the original vector.
  */
 //template<typename Vector>
-//  typename utils::EnableIf< IsVector<Vector>::value,
-//Vector&>::Type abs
+//  typename std::enable_if< IsVector<Vector>::value,
+//Vector&>::type abs
 //(
 //  const Vector& vector,
 //  Vector&       result )
@@ -60,9 +58,9 @@ template<typename Vector>
 //}
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
+  typename std::enable_if< IsVector<Vector>::value,
   Vector
->::Type abs (
+>::type abs (
   const Vector& vector
 ) {
   Vector result(vector);
@@ -70,9 +68,9 @@ template<typename Vector>
 }
 
 template<typename VectorA, typename VectorB>
-  typename utils::EnableIf< IsVector<VectorA>::value && IsVector<VectorB>::value,
+  typename std::enable_if< IsVector<VectorA>::value && IsVector<VectorB>::value,
   VectorB&
->::Type abs (
+>::type abs (
   const VectorA& vector, 
   VectorB&       result
 ) {
@@ -86,9 +84,8 @@ template<typename VectorA, typename VectorB>
 }
 
 template<typename Vector>
-  typename utils::LazyEnableIf< IsVector<Vector>::value,
-  utils::LazyType<typename VectorTraits<Vector>::Scalar>
->::Type sum (
+  typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+ ::type sum (
   const Vector & vector
 ) {
   typedef VectorTraits<Vector> Traits;
@@ -101,9 +98,9 @@ template<typename Vector>
 }
 
 template<typename VectorA, typename VectorB>
-  typename utils::EnableIf< IsVector<VectorA>::value && IsVector<VectorB>::value,
+  typename std::enable_if< IsVector<VectorA>::value && IsVector<VectorB>::value,
   VectorB&
->::Type sumSubvectors (
+>::type sumSubvectors (
   const VectorA& vector,
   VectorB& result
 ) {
@@ -128,9 +125,8 @@ template<typename VectorA, typename VectorB>
 }
 
 template<typename Vector>
-  typename utils::LazyEnableIf< IsVector<Vector>::value,
-  utils::LazyType<typename VectorTraits<Vector>::Scalar>
->::Type volume (
+  typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+ ::type volume (
   const Vector & vector
 ) {
   typedef VectorTraits<Vector> Traits;
@@ -144,9 +140,9 @@ template<typename Vector>
 
 template<typename Vector>
   inline
-  typename utils::EnableIf< IsVector<Vector>::value,
+  typename std::enable_if< IsVector<Vector>::value,
   int
->::Type indexMax (
+>::type indexMax (
   const Vector & vector
 ) {
   typedef VectorTraits<Vector> Traits;
@@ -161,9 +157,9 @@ template<typename Vector>
 
 template<typename Vector>
   inline
-  typename utils::EnableIf< IsVector<Vector>::value,
+  typename std::enable_if< IsVector<Vector>::value,
   int
->::Type indexMin (
+>::type indexMin (
   const Vector & vector
 ) {
   typedef VectorTraits<Vector> Traits;
@@ -178,9 +174,8 @@ template<typename Vector>
 
 template<typename Vector>
   inline
-  typename utils::LazyEnableIf< IsVector<Vector>::value,
-  utils::LazyType<typename VectorTraits<Vector>::Scalar>
->::Type max (
+  typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+::type max (
   const Vector& vector
 ) {
   typedef VectorTraits<Vector> T;
@@ -195,9 +190,8 @@ template<typename Vector>
 
 template<typename Vector>
   inline
-  typename utils::LazyEnableIf< IsVector<Vector>::value,
-  utils::LazyType<typename VectorTraits<Vector>::Scalar>
->::Type min (
+  typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar>
+ ::type min (
   const Vector& vector
 ) {
   typedef VectorTraits<Vector> T;
@@ -211,9 +205,8 @@ template<typename Vector>
 }
 
 template<typename Vector>
-  typename utils::LazyEnableIf< IsVector<Vector>::value,
-  utils::LazyType<typename VectorTraits<Vector>::Scalar*>
->::Type raw (
+  typename std::enable_if< IsVector<Vector>::value, typename VectorTraits<Vector>::Scalar*>
+::type raw (
   Vector& vector
 ) {
   if(VectorTraits<Vector>::size(vector) > 0){
@@ -225,9 +218,8 @@ template<typename Vector>
 }
 
 template<typename Vector>
-  typename utils::LazyEnableIf< IsVector<Vector>::value,
-  utils::LazyType<const typename VectorTraits<Vector>::Scalar*>
->::Type raw (
+  typename std::enable_if< IsVector<Vector>::value, const typename VectorTraits<Vector>::Scalar*>
+ ::type raw (
   const Vector& vector
 ) {
   if(VectorTraits<Vector>::size(vector) > 0){
@@ -239,9 +231,9 @@ template<typename Vector>
 }
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
+  typename std::enable_if< IsVector<Vector>::value,
   Vector
->::Type sqrt (
+>::type sqrt (
   const Vector& vector
 ) {
   typedef VectorTraits<Vector> T;
@@ -287,9 +279,9 @@ Double(const tarch::la::Vector<Size, Scalar>& toConvert) {
 }} // namespace tarch, la
 
 template<typename Vector>
-  typename tarch::utils::EnableIf< tarch::la::IsVector<Vector>::value,
+  typename std::enable_if< tarch::la::IsVector<Vector>::value,
   std::ostream&
->::Type operator<< (
+>::type operator<< (
   std::ostream & os,
   const Vector & vector
 ) {

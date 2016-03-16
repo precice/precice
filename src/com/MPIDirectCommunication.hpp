@@ -30,14 +30,8 @@ namespace com {
  */
 class MPIDirectCommunication : public MPICommunication {
 public:
-  /**
-   * @brief Constructor.
-   */
   MPIDirectCommunication();
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~MPIDirectCommunication();
 
   /**

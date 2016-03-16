@@ -8,7 +8,6 @@
 #include "tarch/la/traits/MatrixTraits.h"
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/VectorTraits.h"
-#include "tarch/utils/EnableIf.h"
 #include "tarch/Assertions.h"
 
 namespace tarch {
@@ -18,9 +17,9 @@ namespace tarch {
 //     * Performs an inplace LU-decomposition of the square matrix A.
 //     */
 //    template<typename Matrix>
-//      typename utils::EnableIf<IsMatrix<Matrix>::value,
+//      typename std::enable_if<IsMatrix<Matrix>::value,
 //      Matrix&
-//    >::Type luCompact (
+//    >::type luCompact (
 //      Matrix& A
 //    ) {
 //      DynamicVector<double> pivots;
@@ -32,9 +31,9 @@ namespace tarch {
      * line indices.
      */
     template<typename Matrix, typename Vector>
-      typename utils::EnableIf<IsMatrix<Matrix>::value && IsVector<Vector>::value,
+      typename std::enable_if<IsMatrix<Matrix>::value && IsVector<Vector>::value,
       Matrix&
-    >::Type lu (
+    >::type lu (
       Matrix& A,
       Vector& pivots
     ) {

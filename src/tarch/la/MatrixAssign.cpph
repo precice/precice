@@ -10,9 +10,9 @@ namespace tarch {
 namespace la {
 
 template<typename Matrix>
-  typename utils::EnableIf<IsMatrix<Matrix>::value,
+  typename std::enable_if<IsMatrix<Matrix>::value,
   MatrixAssign<Matrix>&
->::Type assign (
+>::type assign (
   Matrix& matrix
 ) {
   return reinterpret_cast<MatrixAssign<Matrix>&>(matrix);
@@ -33,9 +33,9 @@ Matrix& MatrixAssign<Matrix>::operator= (const typename Traits::Scalar& toAssign
 
 template<typename Matrix>
 template<typename RMatrix>
-  typename utils::EnableIf< IsMatrix<RMatrix>::value,
+  typename std::enable_if< IsMatrix<RMatrix>::value,
   Matrix&
->::Type MatrixAssign<Matrix>::operator= (const RMatrix& toAssign)
+>::type MatrixAssign<Matrix>::operator= (const RMatrix& toAssign)
 {
   typedef MatrixTraits<RMatrix> RTraits;
   assertion (Traits::rows(reinterpret_cast<Matrix&>(*this)) == RTraits::rows(toAssign));

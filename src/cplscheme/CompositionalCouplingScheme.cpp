@@ -107,7 +107,7 @@ void CompositionalCouplingScheme:: finalize()
 //{
 //  preciceTrace1("isDataUsed()", dataID);
 //  bool isUsed = false;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    isUsed |= couplingScheme->isDataUsed(dataID);
 //  }
 //  return isUsed;
@@ -117,7 +117,7 @@ void CompositionalCouplingScheme:: finalize()
 //{
 //  preciceTrace("isDataUsed()");
 //  bool isUsed = false;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    isUsed |= couplingScheme->isDataUsed();
 //  }
 //  return isUsed;
@@ -224,7 +224,7 @@ int CompositionalCouplingScheme:: getMaxTimesteps() const
 //{
 //  preciceTrace("getSubIteration()");
 //  int subiteration = false;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    isSubiterating |= couplingScheme->getSubIteration();
 //  }
 //  return isSubiterating;
@@ -581,7 +581,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //  int    startTimestep )
 //{
 //  preciceTrace2("initialize()", startTime, startTimestep);
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    couplingScheme->initialize(startTime, startTimestep);
 //  }
 //  determineActiveCouplingSchemes();
@@ -591,7 +591,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("isInitialized()");
 //  bool isInitialized = true;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    isInitialized &= couplingScheme->isInitialized();
 //  }
 //  preciceDebug("return " << isInitialized);
@@ -601,7 +601,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //void CompositionalCouplingScheme:: initializeData()
 //{
 //  preciceTrace("initializeData()");
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (couplingScheme->isActionRequired(constants::actionWriteInitialData())){
 //      couplingScheme->initializeData();
 //    }
@@ -643,7 +643,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //void CompositionalCouplingScheme:: finalize()
 //{
 //  preciceTrace("finalize()");
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    couplingScheme->finalize();
 //  }
 //}
@@ -654,7 +654,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 ////{
 ////  preciceTrace1("isDataUsed()", dataID);
 ////  bool isUsed = false;
-////  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+////  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 ////    isUsed |= couplingScheme->isDataUsed(dataID);
 ////  }
 ////  return isUsed;
@@ -664,7 +664,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 ////{
 ////  preciceTrace("isDataUsed()");
 ////  bool isUsed = false;
-////  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+////  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 ////    isUsed |= couplingScheme->isDataUsed();
 ////  }
 ////  return isUsed;
@@ -675,7 +675,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //  preciceTrace("getCouplingPartners()");
 //  std::vector<std::string> partners;
 //  std::vector<std::string> subpartners;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    subpartners = couplingScheme->getCouplingPartners();
 //    partners.insert(partners.end(), subpartners.begin(), subpartners.end());
 //  }
@@ -713,7 +713,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("getTime()");
 //  double time = std::numeric_limits<double>::max();
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (couplingScheme->getTime() < time){
 //      time = couplingScheme->getTime();
 //    }
@@ -726,7 +726,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("getTimesteps()");
 //  int timesteps = std::numeric_limits<int>::max();
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (couplingScheme->getTimesteps() < timesteps){
 //      timesteps = couplingScheme->getTimesteps();
 //    }
@@ -739,7 +739,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("getMaxTime()");
 //  double maxTime = 0.0;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (couplingScheme->getMaxTime() > maxTime){
 //      maxTime = couplingScheme->getMaxTime();
 //    }
@@ -752,7 +752,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("getMaxTimesteps()");
 //  int maxTimesteps = 0;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (couplingScheme->getMaxTimesteps() > maxTimesteps){
 //      maxTimesteps = couplingScheme->getMaxTimesteps();
 //    }
@@ -765,7 +765,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 ////{
 ////  preciceTrace("getSubIteration()");
 ////  int subiteration = false;
-////  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+////  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 ////    isSubiterating |= couplingScheme->getSubIteration();
 ////  }
 ////  return isSubiterating;
@@ -775,7 +775,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("hasTimestepLength()");
 //  bool hasIt = false;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    hasIt |= couplingScheme->hasTimestepLength();
 //  }
 //  preciceDebug("return " << hasIt);
@@ -786,7 +786,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("getTimestepLength()");
 //  double timestepLength = std::numeric_limits<double>::max();
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (couplingScheme->getTimestepLength() < timestepLength){
 //      timestepLength = couplingScheme->getTimestepLength();
 //    }
@@ -799,7 +799,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("getThisTimestepRemainder()");
 //  double maxRemainder = 0.0;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (couplingScheme->getThisTimestepRemainder() > maxRemainder){
 //      maxRemainder = couplingScheme->getThisTimestepRemainder();
 //    }
@@ -812,7 +812,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("getComputedTimestepPart()");
 //  double timestepPart = std::numeric_limits<double>::max();
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (couplingScheme->getComputedTimestepPart() < timestepPart){
 //      timestepPart = couplingScheme->getComputedTimestepPart();
 //    }
@@ -825,7 +825,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("getNextTimestepMaxLength()");
 //  double maxLength = std::numeric_limits<double>::max();
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (couplingScheme->getNextTimestepMaxLength() < maxLength){
 //      maxLength = couplingScheme->getNextTimestepMaxLength();
 //    }
@@ -838,7 +838,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("isCouplingOngoing()");
 //  bool isOngoing = false;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    isOngoing |= couplingScheme->isCouplingOngoing();
 //  }
 //  preciceDebug("return " << isOngoing);
@@ -849,7 +849,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("isCouplingTimestepComplete()");
 //  bool isComplete = true;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    isComplete &= couplingScheme->isCouplingTimestepComplete();
 //  }
 //  preciceDebug("return " << isComplete);
@@ -862,7 +862,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace1("isActionRequired()", actionName);
 //  bool isRequired = false;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    isRequired |= couplingScheme->isActionRequired(actionName);
 //  }
 //  preciceDebug("return " << isRequired);
@@ -874,7 +874,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //  const std::string& actionName)
 //{
 //  preciceTrace1("performedAction()", actionName);
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    couplingScheme->performedAction(actionName);
 //  }
 //}
@@ -883,7 +883,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("getCheckpointTimestepInterval()");
 //  int interval = std::numeric_limits<int>::max();
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (couplingScheme->getCheckpointTimestepInterval() < interval){
 //      interval = couplingScheme->getCheckpointTimestepInterval();
 //    }
@@ -897,7 +897,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //  const std::string& actionName )
 //{
 //  preciceTrace1("requireAction()", actionName);
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    couplingScheme->requireAction(actionName);
 //  }
 //}
@@ -906,7 +906,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  std::string state;
 //  std::vector<std::string> partners;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    if (not state.empty()){
 //      state += "\n";
 //    }
@@ -926,7 +926,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("exportState()");
 //  int enumerator = 0;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    std::ostringstream stream;
 //    stream << filenamePrefix << "_" << enumerator;
 //    couplingScheme->exportState(stream.str());
@@ -940,7 +940,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //{
 //  preciceTrace("importState()");
 //  int enumerator = 0;
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    std::ostringstream stream;
 //    stream << filenamePrefix << "_" << enumerator;
 //    couplingScheme->importState(stream.str());
@@ -954,7 +954,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //  int                   rankReceiver )
 //{
 //  preciceTrace("sendState()");
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    couplingScheme->sendState(communication, rankReceiver);
 //  }
 //}
@@ -965,7 +965,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //  int                   rankSender )
 //{
 //  preciceTrace("receiveState()");
-//  foreach (PtrCouplingScheme couplingScheme, _couplingSchemes){
+//  for (PtrCouplingScheme couplingScheme : _couplingSchemes){
 //    couplingScheme->receiveState(communication, rankSender);
 //  }
 //}
@@ -1079,3 +1079,4 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //}
 //
 //}} // namespace precice, cplscheme
+

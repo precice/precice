@@ -77,7 +77,7 @@ SpacetreeConfiguration:: SpacetreeConfiguration
   utils::XMLAttribute<utils::DynVector> attrHalflength("halflength");
   utils::XMLAttribute<double> attrMaxMeshwidth ("max-meshwidth");
 
-  foreach (XMLTag& tag, tags){
+  for (XMLTag& tag : tags){
     tag.addAttribute(attrName);
     tag.addAttribute(attrOffset);
     tag.addAttribute(attrHalflength);
@@ -144,7 +144,7 @@ const PtrSpacetree& SpacetreeConfiguration:: getSpacetree
   const std::string& name ) const
 {
   //assertion ( _isValid );
-  foreach ( const ConfiguredSpacetree& tree, _spacetrees ) {
+  for ( const ConfiguredSpacetree& tree : _spacetrees ) {
     if ( tree.name == name ) {
       return tree.spacetree;
     }
@@ -204,7 +204,7 @@ void SpacetreeConfiguration:: xmlTagCallback
     offset = tag.getDynVectorAttributeValue("offset", _dimensions);
     halflengths = tag.getDynVectorAttributeValue("halflength", _dimensions);
     double maxMeshwidth = tag.getDoubleAttributeValue("max-meshwidth");
-    foreach (const ConfiguredSpacetree& tree, _spacetrees){
+    for (const ConfiguredSpacetree& tree : _spacetrees){
       if (tree.name == name){
         std::ostringstream stream;
         stream << "Spacetree with " << "name \"" << name << "\" is defined twice";
@@ -219,3 +219,4 @@ void SpacetreeConfiguration:: xmlTagCallback
 }
 
 }} // namespace precice, spacetree
+

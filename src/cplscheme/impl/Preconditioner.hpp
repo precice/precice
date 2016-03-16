@@ -36,14 +36,18 @@ public:
   typedef Eigen::MatrixXd EigenMatrix;
 
   Preconditioner(
-      std::vector<int> dimensions)
+      std::vector<int> dimensions,
+      int maxNonConstTimesteps)
   :
     _weights(),
     _invWeights(),
     _dimensions(dimensions),
     _sizeOfSubVector(-1),
+    _maxNonConstTimesteps(maxNonConstTimesteps),
+    _nbNonConstTimesteps(0),
     _requireNewQR(false),
-    _needsGlobalWeights(false)
+    _needsGlobalWeights(false),
+    _freezed(false)
   {}
 
 
@@ -90,14 +94,19 @@ public:
   }
 
   /**
-   * @brief Apply preconditioner to squared matrix
+   * @brief Apply preconditioner to matrix
    * @param transpose: false = from left, true = from right
+   * @param squared: If true - apply precond to squared matrix
+   *        of size (n x n_local) (part of Jacobian)
+   *                 If false - apply precond to flat matrix
+   *        of size (m x n_local) (part of pseudo Inverse Z)
+   *
    */
-  void apply(EigenMatrix& M, bool transpose){
+  void apply(EigenMatrix& M, bool transpose, bool squared = true){
     preciceTrace(__func__);
     assertion(_needsGlobalWeights);
     if(transpose){
-      assertion(M.cols()==(int)_weights.size());
+      assertion2(M.cols()==(int)_weights.size(), M.cols(), _weights.size());
       for(int i=0; i<M.cols(); i++){
         for(int j=0; j<M.rows(); j++){
           M(j,i) *= _weights[i];
@@ -105,39 +114,68 @@ public:
       }
     }
     else{
-      assertion2(M.rows()==(int)_globalWeights.size(), M.rows(), (int)_globalWeights.size());
-      for(int i=0; i<M.cols(); i++){
-        for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _globalWeights[j];
+      if(squared){
+        assertion2(M.rows()==(int)_globalWeights.size(), M.rows(), (int)_globalWeights.size());
+        for(int i=0; i<M.cols(); i++){
+          for(int j=0; j<M.rows(); j++){
+            M(j,i) *= _globalWeights[j];
+          }
+        }
+
+      // flat and long matrix, (m x n_local) no global weights needed
+      }else{
+        assertion2(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
+        for(int i=0; i<M.cols(); i++){
+          for(int j=0; j<M.rows(); j++){
+            M(j,i) *= _weights[j];
+          }
         }
       }
     }
   }
 
   /**
-   * @brief Apply inverse preconditioner to squared matrix
+   * @brief Apply inverse preconditioner to matrix
    * @param transpose: false = from left, true = from right
+   * @param squared: If true - apply precond to squared matrix
+   *        of size (n x n_local) (part of Jacobian)
+   *                 If false - apply precond to flat matrix
+   *        of size (m x n_local) (part of pseudo Inverse Z)
+   *
    */
-  void revert(EigenMatrix& M, bool transpose){
+  void revert(EigenMatrix& M, bool transpose, bool squared = true){
     preciceTrace(__func__);
     assertion(_needsGlobalWeights);
-    if(transpose){
-      assertion(M.cols()==(int)_weights.size());
-      for(int i=0; i<M.cols(); i++){
-        for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _invWeights[i];
+    if (transpose) {
+      assertion(M.cols()==(int)_invWeights.size());
+      for (int i = 0; i < M.cols(); i++) {
+        for (int j = 0; j < M.rows(); j++) {
+          M(j, i) *= _invWeights[i];
         }
       }
     }
-    else{
-      assertion2(M.rows()==(int)_globalInvWeights.size(), M.rows(), (int)_globalInvWeights.size());
-      for(int i=0; i<M.cols(); i++){
-        for(int j=0; j<M.rows(); j++){
-          M(j,i) *= _globalInvWeights[j];
+    else {
+      if (squared) {
+        assertion2(M.rows()==(int)_globalInvWeights.size(), M.rows(), (int)_globalInvWeights.size());
+        for (int i = 0; i < M.cols(); i++) {
+          for (int j = 0; j < M.rows(); j++) {
+            M(j, i) *= _globalInvWeights[j];
+          }
+        }
+
+        // flat and long matrix, (m x n_local) no global weights needed
+      } else {
+        assertion2(M.rows()==(int)_invWeights.size(), M.rows(), (int)_invWeights.size());
+        for (int i = 0; i < M.cols(); i++) {
+          for (int j = 0; j < M.rows(); j++) {
+            M(j, i) *= _invWeights[j];
+          }
         }
       }
     }
   }
+
+
 
   /**
    * @brief To transform physical values to balanced values. Vector version
@@ -248,14 +286,23 @@ public:
    *
    * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
    */
-  virtual void update(bool timestepComplete, const DataValues& oldValues, const DataValues& res) =0;
+  void update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res){
+    preciceTrace2(__func__, _nbNonConstTimesteps, _freezed);
 
-  /**
-   * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
-   *
-   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
-   */
-  virtual void update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res) =0;
+    // if number of allowed non-const time steps is exceeded, do not update weights
+    if(_freezed)
+     return;
+
+    // increment number of time steps that has been scaled with changing preconditioning weights
+    if(timestepComplete){
+     _nbNonConstTimesteps++;
+     if(_nbNonConstTimesteps >= _maxNonConstTimesteps && _maxNonConstTimesteps > 0)
+       _freezed = true;
+    }
+
+    // type specific update functionality
+    _update_(timestepComplete, oldValues, res);
+  }
 
   //@brief: returns true if a QR decomposition from scratch is necessary
   bool requireNewQR(){
@@ -275,7 +322,16 @@ public:
     communicateGlobalWeights(); //for constant preconditioner necessary already here
   }
 
+  std::vector<double>& getWeights()
+  {
+    return _weights;
+  }
 
+
+  bool isConst()
+  {
+    return _freezed;
+  }
 
 protected:
 
@@ -297,14 +353,35 @@ protected:
   //@brief size of a scalar sub-vector (aka number of vertices)
   int _sizeOfSubVector;
 
+  /** @brief maximum number of non-const time steps, i.e., after this number of time steps,
+   *  the preconditioner is freezed with the current weights and becomes a constant preconditioner
+   */
+  int _maxNonConstTimesteps;
+
+  /// @brief counts the number of completed time steps with a non-const weighting
+  int _nbNonConstTimesteps;
+
   // true if a QR decomposition from scratch is necessary
   bool _requireNewQR;
 
   // true if global weights are needed, i.e. for MVQN
   bool _needsGlobalWeights;
 
+  /// @brief true if _nbNonConstTimesteps >= _maxNonConstTimesteps, i.e., preconditioner is not updated any more.
+  bool _freezed;
 
-  //@brief communicate all slave weights to master and then broadcast, necessary for MVQN
+
+  /**
+   * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
+   *
+   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
+   */
+  virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res) =0;
+
+
+  // @brief communicate all slave weights to master and then broadcast, necessary for MVQN
+  // note: For the current used preconditioners all weights are the same for each proc as
+  //       the weights are computed per value or residual block.
   void communicateGlobalWeights(){
     preciceTrace2("communicateGlobalWeights()", _weights.size(), _globalWeights.size());
     assertion(_weights.size()==_invWeights.size());
@@ -349,7 +426,7 @@ protected:
           offset += slaveWeights.size();
         }
       }
-      assertion2(offset==_globalWeights.size(),offset, _globalWeights.size());
+      assertion2(offset==(int)_globalWeights.size(),offset, (int)_globalWeights.size());
 
       utils::MasterSlave::_communication->broadcast(_globalWeights.data(),_globalWeights.size());
       utils::MasterSlave::_communication->broadcast(_globalInvWeights.data(),_globalWeights.size());

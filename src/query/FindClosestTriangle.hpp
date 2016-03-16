@@ -122,7 +122,7 @@ FindClosestTriangle:: FindClosestTriangle
 template<typename CONTAINER_T>
 bool FindClosestTriangle:: operator() ( CONTAINER_T& container )
 {
-  foreach ( mesh::Triangle& triangle, container.triangles() ) {
+  for ( mesh::Triangle& triangle : container.triangles() ) {
     find ( triangle );
   }
   return _closestTriangle != NULL;
@@ -131,3 +131,4 @@ bool FindClosestTriangle:: operator() ( CONTAINER_T& container )
 }} // namespace precice, query
 
 #endif /* PRECICE_QUERY_FINDCLOSESTTRIANGLE_HPP_ */
+

@@ -20,27 +20,23 @@ class ValuePreconditioner : public Preconditioner
 {
 public:
 
-  ValuePreconditioner(std::vector<int> dimensions);
+  ValuePreconditioner(
+      std::vector<int> dimensions,
+      int maxNonConstTimesteps);
   /**
    * @brief Destructor, empty.
    */
   virtual ~ValuePreconditioner() {}
 
-  /**
-   * @brief Update the scaling after every FSI iteration.
-   *
-   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
-   */
-  virtual void update(bool timestepComplete, const DataValues& oldValues, const DataValues& res);
-
-  /**
-   * @brief Update the scaling after every FSI iteration.
-   *
-   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
-   */
-  virtual void update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res);
 
 private:
+
+  /**
+   * @brief Update the scaling after every FSI iteration.
+   *
+   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
+   */
+  virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res);
 
   static logging::Logger _log;
 

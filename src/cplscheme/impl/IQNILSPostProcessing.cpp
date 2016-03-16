@@ -1,16 +1,18 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
+/*
+ * IQNILSPostProcessing.cpp
+ *
+ *  Created on: Dez 5, 2015
+ *      Author: Klaudius Scheufele
+ */
+// Copyright (C) 2015 Universität Stuttgart
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "IQNILSPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
-#include "tarch/la/GramSchmidt.h"
-#include "tarch/la/MatrixVectorOperations.h"
-#include "tarch/la/TransposedMatrix.h"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/la/Scalar.h"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
 #include "utils/MasterSlave.hpp"
@@ -178,7 +180,12 @@ void IQNILSPostProcessing::computeQNUpdate
 	Eigen::VectorXd _global_b;
 
 	Event e_qrsolve("solve: R alpha = -Q^T r", true, true); // time measurement, barrier
+
+	// need to scale the residual to compensate for the scaling in c = R^-1 * Q^T * P^-1 * residual'
+	// it is also possible to apply the inverse scaling weights from the right to the vector c
+	_preconditioner->apply(_residuals);
 	_local_b = Q.transpose() * _residuals;
+	_preconditioner->revert(_residuals);
 	_local_b *= -1.0; // = -Qr
 
 	assertion1(c.size() == 0, c.size());

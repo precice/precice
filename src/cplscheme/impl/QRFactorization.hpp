@@ -1,4 +1,11 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
+/*
+ * QRFactorization.hpp
+ *
+ *  Created on: June 16, 2016
+ *      Author: Klaudius Scheufele
+ */
+
+// Copyright (C) 2015 Universität Stuttgart
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_QRFACTORIZATION_HPP_
@@ -34,11 +41,6 @@ namespace impl {
 class QRFactorization
 {
 public:
-  
-  // tarch
-  typedef tarch::la::DynamicVector<double> DataValues;
-  typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-  typedef tarch::la::DynamicMatrix<double> Matrix;
    
   // Eigen
   typedef Eigen::MatrixXd EigenMatrix;
@@ -48,6 +50,7 @@ public:
   
   /**
    * @brief Constructor.
+   * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
    QRFactorization (
 	  int filter=0,
@@ -55,20 +58,10 @@ public:
       double theta=1./0.7,
       double sigma=std::numeric_limits<double>::min()
  		    );
-  
-  /**
-   * @brief Constructor.
-   */
-   QRFactorization (
-      DataMatrix A,
-      int filter,
-      double omega=0,
-      double theta=1./0.7,
-      double sigma=std::numeric_limits<double>::min()
- 		    );
-   
+
    /**
    * @brief Constructor.
+   * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
    QRFactorization (
       EigenMatrix A,
@@ -78,8 +71,9 @@ public:
       double sigma=std::numeric_limits<double>::min()
  		    );
    
-    /**
+   /**
    * @brief Constructor.
+   * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
    QRFactorization (
       EigenMatrix Q,
@@ -107,8 +101,8 @@ public:
     * @brief resets the QR factorization to the given factorization Q, R
     */
    void reset(
-	EigenMatrix Q, 
-	EigenMatrix R, 
+	EigenMatrix const &Q,
+	EigenMatrix const &R,
 	int rows, 
 	int cols,
 	double omega=0,
@@ -119,28 +113,18 @@ public:
     * @brief resets the QR factorization to be the factorization of A = QR
     */
    void reset(
-	EigenMatrix A,
+	EigenMatrix const& A,
 	int globalRows,
 	double omega=0,
-    double theta=1./0.7,
-    double sigma=std::numeric_limits<double>::min());
+  double theta=1./0.7,
+  double sigma=std::numeric_limits<double>::min());
    
-   /**
-    * @brief resets the QR factorization to be the factorization of A = QR
-    */
-   void reset(
-	DataMatrix A,
-	int globalRows,
-	double omega=0,
-	double theta=1./0.7,
-	double sigma=std::numeric_limits<double>::min());
    
    /**
     * @brief inserts a new column at arbitrary position and updates the QR factorization
     * This function works on the memory of v, thus changes the Vector v.
     */
-   bool insertColumn(int k, EigenVector& v, double singularityLimit = 0);
-   bool insertColumn(int k, DataValues& v, double singularityLimit = 0);
+   bool insertColumn(int k, const EigenVector& v, double singularityLimit = 0);
    
    /**
    * @brief updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted. 
@@ -153,28 +137,15 @@ public:
     * and updates the QR factorization.
     * This function works on the memory of v, thus changes the Vector v.
     */
-   void pushFront(EigenVector& v);
+   void pushFront(const EigenVector& v);
    
    /**
     * @brief inserts a new column at position _cols-1, i.e., appends a column at the end
     * and updates the QR factorization
     * This function works on the memory of v, thus changes the Vector v.
     */
-   void pushBack(EigenVector& v);
+   void pushBack(const EigenVector& v);
    
-   /**
-    * @brief inserts a new column at position 0, i.e., shifts right and inserts at first position
-    * and updates the QR factorization
-    * This function works on the memory of v, thus changes the Vector v.
-    */
-   void pushFront(DataValues& v);
-   
-   /**
-    * @brief inserts a new column at position _cols-1, i.e., appends a column at the end
-    * and updates the QR factorization
-    * This function works on the memory of v, thus changes the Vector v.
-    */
-   void pushBack(DataValues& v);
    
    /**
     * @brief deletes the column at position 0, i.e., deletes and shifts columns to the left
@@ -194,7 +165,6 @@ public:
     * @param [out] delIndices - a vector of indices of deleted columns from the LS-system
     */
    void applyFilter(double singularityLimit, std::vector<int>& delIndices, EigenMatrix& V);
-   void applyFilter(double singularityLimit, std::vector<int>& delIndices, DataMatrix& V);
 
    /**
     * @brief returns a matrix representation of the orthogonal matrix Q
@@ -233,7 +203,25 @@ private:
   *   r(1:n) is the array of Fourier coefficients, and rho is the distance
   *   from v to range of Q, r and its corrections are computed in double
   *   precision.
+  *   This method tries to re-orthogonalize the matrix Q for a maximum of 4 iterations
+  *   if ||v_orth|| / ||v|| <= 1/theta is toot small, i.e. the gram schmidt process is iterated.
+  *   If ||v_orth|| / ||v|| <= std::numeric_limit, a unit vector that is orthogonal to Q is inserted
+  *   and rho is set to 0. i.e., R has a zero on the diagonal in the respective column.
   */
+  int orthogonalize_stable(EigenVector& v, EigenVector& r, double &rho, int colNum);
+
+  /**
+   * @short assuming Q(1:n,1:m) has nearly orthonormal columns, this procedure
+  *   orthogonlizes v(1:n) to the columns of Q, and normalizes the result.
+  *   r(1:n) is the array of Fourier coefficients, and rho is the distance
+  *   from v to range of Q, r and its corrections are computed in double
+  *   precision.
+  *   This method tries to re-orthogonalize the matrix Q for a maximum of 4 iterations
+  *   if ||v_orth|| / ||v|| <= 1/theta is toot small, i.e. the gram schmidt process is iterated.
+  *
+  *   Difference to the method orthogonalize_stable():
+  *   if ||v_orth||/||v|| approx 0, no unit vector is inserted.
+   */
   int orthogonalize(EigenVector& v, EigenVector& r, double &rho, int colNum);
   
   /**

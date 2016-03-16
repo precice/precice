@@ -149,7 +149,7 @@ void MeshConfiguration:: xmlTagCallback
   else if (tag.getName() == TAG_DATA){
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     bool found = false;
-    foreach (const DataConfiguration::ConfiguredData& data, _dataConfig->data()){
+    for (const DataConfiguration::ConfiguredData& data : _dataConfig->data()){
       if (data.name == name){
         _meshes.back()->createData(data.name, data.dimensions);
         found = true;
@@ -190,9 +190,9 @@ void MeshConfiguration:: addMesh
 (
   const mesh::PtrMesh& mesh  )
 {
-  foreach (PtrData dataNewMesh, mesh->data()){
+  for (PtrData dataNewMesh : mesh->data()){
     bool found = false;
-    foreach (const DataConfiguration::ConfiguredData & data, _dataConfig->data()){
+    for (const DataConfiguration::ConfiguredData & data : _dataConfig->data()){
       if ((dataNewMesh->getName() == data.name)
           && (dataNewMesh->getDimensions() == data.dimensions))
       {
@@ -212,7 +212,7 @@ void MeshConfiguration:: setMeshSubIDs()
   assertion ( _meshes.size() == _meshSubIDs.size() );
   assertion ( not _setMeshSubIDs );
   for ( size_t i=0; i < _meshes.size(); i++ ) {
-    foreach ( const std::string & subIDName, _meshSubIDs[i] ) {
+    for ( const std::string & subIDName : _meshSubIDs[i] ) {
       _meshes[i]->setSubID ( subIDName );
     }
   }
@@ -238,7 +238,7 @@ mesh::PtrMesh MeshConfiguration:: getMesh
 (
   const std::string& meshName ) const
 {
-  foreach ( const mesh::PtrMesh & mesh, _meshes ) {
+  for ( const mesh::PtrMesh & mesh : _meshes ) {
     if ( mesh->getName() == meshName ) {
       return mesh;
     }
@@ -278,3 +278,4 @@ void MeshConfiguration:: addNeededMesh(
 }
 
 }} // namespace precice, mesh
+

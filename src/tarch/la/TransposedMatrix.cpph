@@ -11,9 +11,9 @@ namespace tarch {
 namespace la {
 
 template<typename Matrix>
-  typename utils::EnableIf<IsMatrix<Matrix>::value,
+  typename std::enable_if<IsMatrix<Matrix>::value,
   TransposedMatrix<Matrix>&
->::Type transpose (Matrix& matrix)
+>::type transpose (Matrix& matrix)
 {
   return reinterpret_cast<TransposedMatrix<Matrix>&>(matrix);
 }

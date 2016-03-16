@@ -1,16 +1,19 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
+/*
+ * BaseQNPostProcessing.cpp
+ *
+ *  Created on: Dez 5, 2015
+ *      Author: Klaudius Scheufele
+ */
+
+// Copyright (C) 2015 Universität Stuttgart
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "BaseQNPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
-#include "tarch/la/MatrixVectorOperations.h"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/la/Scalar.h"
-#include "io/TXTWriter.hpp"
-#include "io/TXTReader.hpp"
 #include "QRFactorization.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
@@ -57,8 +60,8 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _firstIteration(true),
   _firstTimeStep(true),
   _hasNodesOnInterface(true),
-  _resetLS(false),
   _forceInitialRelaxation(forceInitialRelaxation),
+  _resetLS(false),
   _oldXTilde(),
   _residuals(),
   _secondaryResiduals(),
@@ -66,12 +69,12 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _matrixW(),
   _qrV(filter),
   _filter(filter),
+  _singularityLimit(singularityLimit),
   _matrixCols(),
   _dimOffsets(),
   _values(),
   _oldValues(),
   _oldResiduals(),
-  _singularityLimit(singularityLimit),
   _designSpecification(),
   _matrixVBackup(),
   _matrixWBackup(),
@@ -92,8 +95,8 @@ BaseQNPostProcessing::BaseQNPostProcessing
       "Number of old timesteps to be reused for QN "
       << "post-processing has to be >= 0!");
 
-  //_infostream.open("postProcessingInfo.txt", std::ios_base::out);
-  //_infostream << std::setprecision(16);
+  _infostream.open("postProcessingInfo.txt", std::ios_base::out);
+  _infostream << std::setprecision(16);
   //_qrV.setfstream(&_infostream);
 }
 
@@ -165,14 +168,16 @@ void BaseQNPostProcessing::initialize(
       }
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
-    preciceDebug("Number of unknowns at the interface (global): "<<_dimOffsets[_dimOffsets.size()-1]);
+    preciceDebug("Number of unknowns at the interface (global): "<<_dimOffsets.back());
+    if (utils::MasterSlave::_masterMode){
+      _infostream<<"\n--------\n DOFs (global): "<<_dimOffsets.back()<<"\n offsets: "<<_dimOffsets<<std::endl;
+    }
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
     assertion2(entries == unknowns, entries, unknowns);
-    //writeInfo(ss.str());
-    //ss.clear();
-
+  }else{
+    _infostream<<"\n--------\n DOFs (global): "<<entries<<std::endl;
   }
 
   // set the number of global rows in the QRFactorization. This is essential for the correctness in master-slave mode!
@@ -396,39 +401,37 @@ void BaseQNPostProcessing::performPostProcessing
     /**
      *  === update and apply preconditioner ===
      *
-     * IQN-ILS would also work without W and xUpdate scaling, IQN-IMVJ unfortunately not
+     * The preconditioner is only applied to the matrix V and the columns that are inserted into the
+     * QR-decomposition of V.
      * Note: here, the _residuals are H(x)- x - q, i.e., residual of the fixed-point iteration
      *       minus the design specification of the optimization problem (!= null if MM is used)
      */
-    Event e_applyPrecond("applyPreconditioner", true, true); // time measurement, barrier
-    _preconditioner->update(false, _values, _residuals);
-    // TODO: evaluate whether the pure residual should be used for updating the preconditioner or residual - design specification
-    _preconditioner->apply(_residuals);
-    _preconditioner->apply(_matrixV);
-    _preconditioner->apply(_matrixW);
 
+    _preconditioner->update(false, _values, _residuals);
+    // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
+    _preconditioner->apply(_matrixV);
     if(_preconditioner->requireNewQR()){
       if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
     }
-    e_applyPrecond.stop();                                  // -------------
 
     // apply the configured filter to the LS system
     applyFilter();
 
+    // revert scaling of V, in computeQNUpdate all data objects are unscaled.
+    _preconditioner->revert(_matrixV);
+
     /**
      * compute quasi-Newton update
+     * PRECONDITION: All objects are unscaled, except the matrices within the QR-dec of V.
+     *               Thus, the pseudo inverse needs to be reverted before using it.
      */
     Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_residuals.size());
     computeQNUpdate(cplData, xUpdate);
 
     Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
-    _preconditioner->revert(xUpdate); //to compensate the W scaling
-    _preconditioner->revert(_matrixW);
-    _preconditioner->revert(_matrixV);
-    _preconditioner->revert(_residuals);
     e_revertPrecond.stop();                                   // -------------
 
     /**
@@ -466,7 +469,7 @@ void BaseQNPostProcessing::performPostProcessing
 
     if(std::isnan(utils::MasterSlave::l2norm(xUpdate))){
       preciceError(__func__, "The coupling iteration in time step "<<tSteps<<
-          " failed to converge and NaN values occured throughout the coupling process. ");
+          " failed to converge and NaN values occurred throughout the coupling process. ");
     }
   }
 
@@ -561,6 +564,9 @@ void BaseQNPostProcessing::iterationsConverged
   // -----------------------
   //_infostream << "\n ---------------- deletedColumns:" << deletedColumns
   //    << "\n\n ### time step:" << tSteps + 1 << " ###" << std::endl;
+  if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+    _infostream<<"# time step "<<tSteps<<" converged #\n iterations: "<<its<<"\n used cols: "<<getLSSystemCols()<<"\n del cols: "<<deletedColumns<<std::endl;
+
   its = 0;
   tSteps++;
   deletedColumns = 0;
@@ -576,9 +582,7 @@ void BaseQNPostProcessing::iterationsConverged
   assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
   _residuals -= _designSpecification;
 
-  // TODO: maybe add design specification. Though, residuals are overwritten in the next iteration this would be a clearer and nicer code
 
-  _firstTimeStep = false;
   if (_matrixCols.front() == 0) { // Did only one iteration
     _matrixCols.pop_front();
   }
@@ -599,6 +603,8 @@ void BaseQNPostProcessing::iterationsConverged
   // - save the old Jacobian matrix
   specializedIterationsConverged(cplData);
 
+
+  _firstTimeStep = false;
 
   // update preconditioner depending on residuals or values (must be after specialized iterations converged --> IMVJ)
   _preconditioner->update(true, _values, _residuals);

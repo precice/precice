@@ -1,4 +1,11 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
+/*
+ * BaseQNPostProcessing.hpp
+ *
+ *  Created on: Dez 5, 2015
+ *      Author: Klaudius Scheufele
+ */
+
+// Copyright (C) 2015 Universität Stuttgart
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_CPLSCHEME_BASEQNPOSTPROCESSING_HPP_
@@ -7,9 +14,6 @@
 #include "PostProcessing.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "tarch/la/DynamicColumnMatrix.h"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/DynamicVector.h"
 #include "QRFactorization.hpp"
 #include "Preconditioner.hpp"
 #include "Eigen/Dense"
@@ -151,10 +155,6 @@ public:
 
 protected:
 
-   typedef tarch::la::DynamicVector<double> DataValues;
-   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-   typedef tarch::la::DynamicMatrix<double> Matrix;
-
    /// @brief Logging device.
    static logging::Logger _log;
 
@@ -224,6 +224,14 @@ protected:
     */
    int _filter;
 
+   /** @brief Determines sensitivity when two matrix columns are considered equal.
+    *
+    * When during the QR decomposition of the V matrix a pivot element smaller
+    * than the singularity limit is found, the matrix is considered to be singular
+    * and the corresponding (older) iteration is removed.
+    */
+   double _singularityLimit;
+
 
    /** @brief Indices (of columns in W, V matrices) of 1st iterations of timesteps.
     *
@@ -238,6 +246,10 @@ protected:
     *  i.e., the offsets in _invJacobian for all processors
     */
    std::vector<int> _dimOffsets;
+
+
+   /// @brief write some debug/post processing info to file
+   std::fstream _infostream;
 
 
    /** @brief: computes number of cols in least squares system, i.e, number of cols in
@@ -282,6 +294,8 @@ protected:
    /// @brief writes info to the _infostream (also in parallel)
    void writeInfo(std::string s, bool allProcs = false);
 
+
+   int its,tSteps;
 private:
 
   /// @brief Concatenation of all coupling data involved in the QN system.
@@ -292,14 +306,6 @@ private:
 
   /// @brief Difference between solver input and output from last timestep
   Eigen::VectorXd _oldResiduals;
-
-  /** @brief Determines sensitivity when two matrix columns are considered equal.
-   *
-   * When during the QR decomposition of the V matrix a pivot element smaller
-   * than the singularity limit is found, the matrix is considered to be singular
-   * and the corresponding (older) iteration is removed.
-   */
-  double _singularityLimit;
 
   /**
     * @brief sets the design specification we want to meet for the objective function,
@@ -318,12 +324,8 @@ private:
   std::deque<int> _matrixColsBackup;
 
   /// @ brief additional debugging info, is not important for computation:
-  int its,tSteps;
+
   int deletedColumns;
-
-  /// @brief write some debug/post processing info to file
-  std::fstream _infostream;
-
 
 };
 

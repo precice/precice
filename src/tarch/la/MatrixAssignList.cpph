@@ -10,9 +10,9 @@ namespace tarch {
 namespace la {
 
 template<typename Matrix>
-  typename utils::EnableIf<IsMatrix<Matrix>::value,
+  typename std::enable_if<IsMatrix<Matrix>::value,
   MatrixAssignList<Matrix>
->::Type assignList (
+>::type assignList (
   Matrix& matrix
 ) {
   return MatrixAssignList<Matrix>(matrix);

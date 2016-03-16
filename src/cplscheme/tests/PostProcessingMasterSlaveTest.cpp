@@ -472,9 +472,14 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	int    maxIterationsUsed = 50;
 	int    timestepsReused = 6;
 	int filter = impl::BaseQNPostProcessing::QR1FILTER;
+	int restartType = impl::MVQNPostProcessing::NO_RESTART;
+	int chunkSize = 0;
+	int reusedTimeStepsAtRestart = 0;
 	double singularityLimit = 1e-10;
+	double svdTruncationEps = 0.0;
 	bool enforceInitialRelaxation = false;
 	bool alwaysBuildJacobian = false;
+
 	std::vector<int> dataIDs;
 	dataIDs.push_back(0);
 	dataIDs.push_back(1);
@@ -489,7 +494,8 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	dummyMesh->setVertexOffsets(vertexOffsets);
 
 	cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-									   timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian);
+									   timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+									   restartType, chunkSize, reusedTimeStepsAtRestart, svdTruncationEps);
 
 	Eigen::VectorXd dvalues;
 	Eigen::VectorXd dcol1;

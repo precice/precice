@@ -17,8 +17,7 @@ void shiftSetFirst
     Eigen::MatrixXd& A, Eigen::VectorXd& v)
 {
   assertion2(v.size() == A.rows(), v.size(), A.rows());
-  int n = A.rows(), m = A.cols();
-  //A.bottomRightCorner(n, m - 1) = A.topLeftCorner(n, m - 1);
+  // A.bottomRightCorner(n, m - 1) = A.topLeftCorner(n, m - 1);
   for(auto i = A.cols()-1; i > 0; i--)
         A.col(i) = A.col(i-1);
   A.col(0) = v;
@@ -46,7 +45,7 @@ void removeColumnFromMatrix
 (
     Eigen::MatrixXd& A, int col)
 {
-  assertion2(col < A.cols() && col >= 0, col, A.cols())
+  assertion2(col < A.cols() && col >= 0, col, A.cols());
   for (int j = col; j < A.cols() - 1; j++)
     A.col(j) = A.col(j + 1);
 

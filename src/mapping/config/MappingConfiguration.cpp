@@ -271,7 +271,7 @@ MappingConfiguration:: MappingConfiguration
   ValidString validOnDemand(VALUE_TIMING_ON_DEMAND);
   attrTiming.setValidator(validInitial || validOnAdvance || validOnDemand);
 
-  foreach (XMLTag& tag, tags){
+  for (XMLTag& tag : tags){
     tag.addAttribute(attrDirection);
     tag.addAttribute(attrFromMesh);
     tag.addAttribute(attrToMesh);
@@ -621,7 +621,7 @@ void MappingConfiguration:: checkDuplicates
 (
   const ConfiguredMapping & mapping )
 {
-  foreach ( const ConfiguredMapping & configuredMapping, _mappings ) {
+  for ( const ConfiguredMapping & configuredMapping : _mappings ) {
     bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameToMesh = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
     preciceCheck ( !sameFromMesh, "checkDuplicates()",
@@ -650,3 +650,4 @@ MappingConfiguration::Timing MappingConfiguration:: getTiming(
 
 
 }} // namespace precice, mapping
+

@@ -50,6 +50,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   TAG_FILTER("filter"),
   TAG_ESTIMATEJACOBIAN("estimate-jacobian"),
   TAG_PRECONDITIONER("preconditioner"),
+  TAG_IMVJRESTART("imvj-restart-mode"),
   ATTR_NAME("name"),
   ATTR_MESH("mesh"),
   ATTR_SCALING("scaling"),
@@ -58,6 +59,10 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   ATTR_SINGULARITYLIMIT("limit"),
   ATTR_TYPE("type"),
   ATTR_BUILDJACOBIAN("always-build-jacobian"),
+  ATTR_IMVJCHUNKSIZE("chunk-size"),
+  ATTR_RSLS_REUSEDTSTEPS("reused-timesteps-at-restart"),
+  ATTR_RSSVD_TRUNCATIONEPS("truncation-threshold"),
+  ATTR_PRECOND_NONCONST_TIMESTEPS("freeze-after"),
   VALUE_CONSTANT("constant"),
   VALUE_AITKEN ("aitken"),
   VALUE_HIERARCHICAL_AITKEN("hierarchical-aitken"),
@@ -72,6 +77,10 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   VALUE_VALUE_PRECONDITIONER("value"),
   VALUE_RESIDUAL_PRECONDITIONER("residual"),
   VALUE_RESIDUAL_SUM_PRECONDITIONER("residual-sum"),
+  VALUE_LS_RESTART("RS-LS"),
+  VALUE_ZERO_RESTART("RS-0"),
+  VALUE_SVD_RESTART("RS-SVD"),
+  VALUE_NO_RESTART("no-restart"),
   //_isValid(false),
   _meshConfig(meshConfig),
   _postProcessing(),
@@ -265,6 +274,32 @@ void PostProcessingConfiguration:: xmlTagCallback
          _config.estimateJacobian = callingTag.getBooleanAttributeValue(ATTR_VALUE);
   }else if (callingTag.getName() == TAG_PRECONDITIONER) {
     _config.preconditionerType = callingTag.getStringAttributeValue(ATTR_TYPE);
+    _config.precond_nbNonConstTSteps = callingTag.getIntAttributeValue(ATTR_PRECOND_NONCONST_TIMESTEPS);
+  }else if (callingTag.getName() == TAG_IMVJRESTART){
+
+    if(_config.alwaysBuildJacobian)
+      preciceError("xmlEndTagCallback()","IMVJ can not be in restart mode while parameter always-build-jacobian is set true.");
+
+    #ifndef PRECICE_NO_MPI
+    _config.imvjChunkSize = callingTag.getIntAttributeValue(ATTR_IMVJCHUNKSIZE);
+    auto f = callingTag.getStringAttributeValue(ATTR_TYPE);
+    if(f == VALUE_NO_RESTART){
+      _config.imvjRestartType = impl::MVQNPostProcessing::NO_RESTART;
+    }else if (f == VALUE_ZERO_RESTART){
+      _config.imvjRestartType = impl::MVQNPostProcessing::RS_ZERO;
+    }else if (f == VALUE_LS_RESTART){
+      _config.imvjRSLS_reustedTimesteps = callingTag.getIntAttributeValue(ATTR_RSLS_REUSEDTSTEPS);
+      _config.imvjRestartType = impl::MVQNPostProcessing::RS_LS;
+    }else if (f == VALUE_SVD_RESTART){
+      _config.imvjRSSVD_truncationEps = callingTag.getDoubleAttributeValue(ATTR_RSSVD_TRUNCATIONEPS);
+      _config.imvjRestartType = impl::MVQNPostProcessing::RS_SVD;
+    }else {
+      _config.imvjChunkSize = 0;
+      assertion(false);
+    }
+    #else
+          preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
+    #endif
   }
 }
 
@@ -288,6 +323,12 @@ void PostProcessingConfiguration:: xmlEndTagCallback
         }
       }
 
+      // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time steps is limited by the chunc size
+      if(callingTag.getName() == VALUE_MVQN && _config.imvjRestartType > 0)
+        if(_config.precond_nbNonConstTSteps > _config.imvjChunkSize)
+          _config.precond_nbNonConstTSteps = _config.imvjChunkSize;
+
+
       if(_config.preconditionerType == VALUE_CONSTANT_PRECONDITIONER){
         std::vector<double> factors;
         for (int id : _config.dataIDs){
@@ -296,18 +337,18 @@ void PostProcessingConfiguration:: xmlEndTagCallback
         _preconditioner = impl::PtrPreconditioner(new impl::ConstantPreconditioner(dims, factors));
       }
       else if(_config.preconditionerType == VALUE_VALUE_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ValuePreconditioner(dims));
+        _preconditioner = impl::PtrPreconditioner (new impl::ValuePreconditioner(dims, _config.precond_nbNonConstTSteps));
       }
       else if(_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ResidualPreconditioner(dims));
+        _preconditioner = impl::PtrPreconditioner (new impl::ResidualPreconditioner(dims, _config.precond_nbNonConstTSteps));
       }
       else if(_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(dims));
+        _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(dims, _config.precond_nbNonConstTSteps));
       }
       else{
         // no preconditioner defined
         std::vector<double> factors;
-        for (int id = 0; id < _config.dataIDs.size(); ++id) {
+        for (int id = 0; id < (int)_config.dataIDs.size(); ++id) {
           factors.push_back(1.0);
         }
         _preconditioner = impl::PtrPreconditioner (new impl::ConstantPreconditioner(dims, factors));
@@ -353,7 +394,11 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 			  _config.filter, _config.singularityLimit,
 			  _config.dataIDs,
 			  _preconditioner,
-			  _config.alwaysBuildJacobian) );
+			  _config.alwaysBuildJacobian,
+			  _config.imvjRestartType,
+			  _config.imvjChunkSize,
+			  _config.imvjRSLS_reustedTimesteps,
+			  _config.imvjRSSVD_truncationEps) );
 		#else
       	  preciceError("xmlEndTagCallback()", "Post processing IQN-IMVJ only works if preCICE is compiled with MPI");
     #endif
@@ -514,6 +559,10 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
         " A residual preconditioner scales every post-processing data by the current residual."
         " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
+    XMLAttribute<int> nonconstTSteps(ATTR_PRECOND_NONCONST_TIMESTEPS);
+    nonconstTSteps.setDocumentation("After the given number of time steps, the preconditioner weights are freezed and the preconditioner acts like a constant preconditioner.");
+    nonconstTSteps.setDefaultValue(-1);
+    tagPreconditioner.addAttribute(nonconstTSteps);
     tag.addSubtag(tagPreconditioner);
 
   }
@@ -526,13 +575,34 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tagInitRelax.addAttribute(attrEnforce);
     tag.addSubtag(tagInitRelax);
 
-    //XMLTag tagAlwaysBuildJacobian(*this, TAG_ALWAYSBUILDJACOBIAN, XMLTag::OCCUR_NOT_OR_ONCE );
-    //XMLAttribute<bool> attrBoolValue(ATTR_VALUE);
-    //attrBoolValue.setDocumentation("If set to true, the IMVJ will set up the Jacobian matrix"
-    //            " in each coupling iteration, which is inefficient. If set to false (or not set)"
-    //            " the Jacobian is only build in the last iteration and the updates are computed using (relatively) cheap MATVEC products.");
-    //tagAlwaysBuildJacobian.addAttribute(attrBoolValue);
-    //tag.addSubtag(tagAlwaysBuildJacobian );
+    XMLTag tagIMVJRESTART(*this, TAG_IMVJRESTART, XMLTag::OCCUR_NOT_OR_ONCE );
+    XMLAttribute<std::string> attrRestartName(ATTR_TYPE);
+    ValidatorEquals<std::string> validNO_RS(VALUE_NO_RESTART );
+    ValidatorEquals<std::string> validRS_ZERO(VALUE_ZERO_RESTART );
+    ValidatorEquals<std::string> validRS_LS(VALUE_LS_RESTART );
+    ValidatorEquals<std::string> validRS_SVD(VALUE_SVD_RESTART );
+    attrRestartName.setValidator (validNO_RS || validRS_ZERO || validRS_LS ||validRS_SVD);
+    attrRestartName.setDefaultValue(VALUE_SVD_RESTART);
+    tagIMVJRESTART.addAttribute(attrRestartName);
+    tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used\n"
+              "  no-restart: IMVJ runs in normal mode with explicit representation of Jacobian\n"
+              "  RS-ZERO:    IMVJ runs in restart mode. After M time steps all Jacobain information is dropped, restart with no information\n"
+              "  RS-LS:      IMVJ runs in restart mode. After M time steps a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
+              "  RS-SVD:     IMVJ runs in restart mode. After M time steps a truncated SVD of the Jacobian is updated.\n"
+              );
+    XMLAttribute<int> attrChunkSize(ATTR_IMVJCHUNKSIZE);
+    attrChunkSize.setDocumentation("Specifies the number of time steps M after which the IMVJ restarts, if run in restart-mode. Defaul value is M=8.");
+    attrChunkSize.setDefaultValue(8);
+    XMLAttribute<int> attrReusedTimeStepsAtRestart(ATTR_RSLS_REUSEDTSTEPS);
+    attrReusedTimeStepsAtRestart.setDocumentation("If IMVJ restart-mode=RS-LS, the number of reused time steps at restart can be specified.");
+    attrReusedTimeStepsAtRestart.setDefaultValue(8);
+    XMLAttribute<double> attrRSSVD_truncationEps(ATTR_RSSVD_TRUNCATIONEPS);
+    attrRSSVD_truncationEps.setDocumentation("If IMVJ restart-mode=RS-SVD, the truncation threshold for the updated SVD can be set.");
+    attrRSSVD_truncationEps.setDefaultValue(1e-4);
+    tagIMVJRESTART.addAttribute(attrChunkSize);
+    tagIMVJRESTART.addAttribute(attrReusedTimeStepsAtRestart);
+    tagIMVJRESTART.addAttribute(attrRSSVD_truncationEps);
+    tag.addSubtag(tagIMVJRESTART);
 
     XMLTag tagMaxUsedIter(*this, TAG_MAX_USED_ITERATIONS, XMLTag::OCCUR_ONCE );
     XMLAttribute<int> attrIntValue(ATTR_VALUE );
@@ -589,6 +659,10 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
         " A residual preconditioner scales every post-processing data by the current residual."
         " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
+    XMLAttribute<int> nonconstTSteps(ATTR_PRECOND_NONCONST_TIMESTEPS);
+    nonconstTSteps.setDocumentation("After the given number of time steps, the preconditioner weights are freezed and the preconditioner acts like a constant preconditioner.");
+    nonconstTSteps.setDefaultValue(-1);
+    tagPreconditioner.addAttribute(nonconstTSteps);
     tag.addSubtag(tagPreconditioner);
   }
   else if (tag.getName() == VALUE_ManifoldMapping){
@@ -667,6 +741,10 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
        " A residual preconditioner scales every post-processing data by the current residual."
        " A residual-sum preconditioner scales every post-processing data by the sum of the residuals from the current timestep.");
     tagPreconditioner.addAttribute(attrPreconditionerType);
+    XMLAttribute<int> nonconstTSteps(ATTR_PRECOND_NONCONST_TIMESTEPS);
+    nonconstTSteps.setDocumentation("After the given number of time steps, the preconditioner weights are freezed and the preconditioner acts like a constant preconditioner.");
+    nonconstTSteps.setDefaultValue(-1);
+    tagPreconditioner.addAttribute(nonconstTSteps);
     tag.addSubtag(tagPreconditioner);
 
   }

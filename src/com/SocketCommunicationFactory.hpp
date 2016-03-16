@@ -16,17 +16,11 @@ namespace precice {
 namespace com {
 class SocketCommunicationFactory : public CommunicationFactory {
 public:
-  /**
-   * @brief Constructor.
-   */
   SocketCommunicationFactory(unsigned short portNumber = 0,
                              bool reuseAddress = false,
                              std::string const& networkName = "lo",
                              std::string const& addressDirectory = ".");
 
-  /**
-   * @brief Constructor.
-   */
   SocketCommunicationFactory(std::string const& addressDirectory);
 
   Communication::SharedPointer newCommunication();

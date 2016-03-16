@@ -307,7 +307,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
   data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
 
-//  foreach (DataMap::value_type& pair, data){
+//  for (DataMap::value_type& pair : data){
 //    std::cout << *pair.second->values << "\n";
 //    std::cout << pair.second->oldValues << "\n";
 //  }
@@ -358,8 +358,12 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   double initialRelaxation = 0.01;
   int    maxIterationsUsed = 50;
   int    timestepsReused = 6;
+  int    reusedTimestepsAtRestart = 0;
+  int    chunkSize = 0;
   int filter = impl::BaseQNPostProcessing::QR1FILTER;
+  int restartType = impl::MVQNPostProcessing::NO_RESTART;
   double singularityLimit = 1e-10;
+  double svdTruncationEps = 0.0;
   bool enforceInitialRelaxation = false;
   bool alwaysBuildJacobian = false;
   std::vector<int> dataIDs;
@@ -374,7 +378,8 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
 
   
   cplscheme::impl::MVQNPostProcessing pp(initialRelaxation, enforceInitialRelaxation, maxIterationsUsed,
-                                         timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian);
+                                         timestepsReused, filter, singularityLimit, dataIDs, prec, alwaysBuildJacobian,
+                                         restartType, chunkSize, reusedTimestepsAtRestart, svdTruncationEps);
   
   Eigen::VectorXd dvalues;
   Eigen::VectorXd dcol1;
@@ -411,7 +416,7 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   data.insert(std::pair<int,PtrCouplingData>(0,dpcd));
   data.insert(std::pair<int,PtrCouplingData>(1,fpcd));
   
-//  foreach (DataMap::value_type& pair, data){
+//  for (DataMap::value_type& pair : data){
 //    std::cout << *pair.second->values << "\n";
 //    std::cout << pair.second->oldValues << "\n";
 //  }
@@ -457,3 +462,4 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
 #endif // not PRECICE_NO_MPI
 
 }}}// namespace precice, cplscheme, tests
+

@@ -1061,7 +1061,7 @@ bool CouplingSchemeConfiguration:: checkIfDataIsCoarse
   isCoarse = not utils::contained(id, fineIDs);
 
   std::cout<<" fineIDs = [";
-  for(int i = 0; i < fineIDs.size();i++){
+  for(int i = 0; i < (int)fineIDs.size();i++){
     std::cout<<fineIDs.at(i)<<", ";
   }
   std::cout<<"], id: "<<id<<std::endl;

@@ -5,7 +5,7 @@
  *      Author: Klaudius Scheufele
  */
 
-// Copyright (C) 2011 Technische Universitaet Muenchen
+// Copyright (C) 2015 Universität Stuttgart
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "MMPostProcessing.hpp"
@@ -15,9 +15,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/la/Scalar.h"
-#include "io/TXTWriter.hpp"
-#include "io/TXTReader.hpp"
 #include "QRFactorization.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -793,7 +790,7 @@ void MMPostProcessing::iterationsConverged
 # ifdef Debug
   std::ostringstream stream;
   stream << "Matrix column counters: ";
-  foreach (int cols, _matrixCols) {
+  for (int cols : _matrixCols) {
     stream << cols << ", ";
   }
   preciceDebug(stream.str());
@@ -899,4 +896,5 @@ int MMPostProcessing::getLSSystemRows()
 }
 
 }}} // namespace precice, cplscheme, impl
+
 

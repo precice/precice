@@ -10,9 +10,9 @@ namespace tarch {
 namespace la {
 
 template<typename Vector>
-  typename utils::EnableIf< IsVector<Vector>::value,
+  typename std::enable_if< IsVector<Vector>::value,
   VectorAssignRange<Vector>
->::Type assignRange (
+>::type assignRange (
   Vector & vector,int start,int stop
 ) {
   return VectorAssignRange<Vector> ( vector,start,stop );

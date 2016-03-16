@@ -6,7 +6,6 @@
 
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/VectorTraits.h"
-#include "tarch/utils/EnableIf.h"
 #include "tarch/Assertions.h"
 
 namespace tarch {
@@ -17,9 +16,9 @@ namespace tarch {
      * Returns the same vector reinterpreted to allow assignment of scalars and vectors.
      */
     template<typename Vector>
-      typename utils::EnableIf< IsVector<Vector>::value,
+      typename std::enable_if< IsVector<Vector>::value,
       VectorAssign<Vector>&
-    >::Type assign (Vector& vector);
+    >::type assign (Vector& vector);
   }
 }
 
@@ -42,9 +41,9 @@ public:
     * Assigns all components of a vector to the vector.
     */
    template<typename RVector>
-     typename utils::EnableIf< IsVector<RVector>::value,
+     typename std::enable_if< IsVector<RVector>::value,
      Vector&
-   >::Type operator= (const RVector& toAssign);
+   >::type operator= (const RVector& toAssign);
 };
 
 #include "tarch/la/VectorAssign.cpph"

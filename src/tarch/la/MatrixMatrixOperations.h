@@ -6,8 +6,6 @@
 
 #include "tarch/la/traits/IsMatrix.h"
 #include "tarch/la/traits/MatrixTraits.h"
-#include "tarch/utils/EnableIf.h"
-//#include "tarch/la/traits/EqualScalars.h"
 #include "tarch/la/Scalar.h"
 
 namespace tarch {
@@ -19,10 +17,10 @@ namespace tarch {
      * The resulting matrix has to be created outside and given as a parameter.
      */
     template<typename LMatrix, typename RMatrix, typename ResultMatrix>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value && IsMatrix<ResultMatrix>::value,
       void
-    >::Type multiply (
+    >::type multiply (
       const LMatrix& lMatrix,
       const RMatrix& rMatrix,
       ResultMatrix&  result);
@@ -31,10 +29,10 @@ namespace tarch {
      * Bitwise comparison of the components of two matrices on equality.
      */
     template<typename LMatrix, typename RMatrix>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value,
       bool
-    >::Type operator== (
+    >::type operator== (
       const LMatrix& lMatrix,
       const RMatrix& rMatrix);
 
@@ -42,10 +40,10 @@ namespace tarch {
      * Compares to matrices on equality by means of a numerical accuracy.
      */
     template<typename LMatrix, typename RMatrix>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value /*&& EqualScalars<LMatrix,RMatrix>::value*/,
       bool
-    >::Type equals (
+    >::type equals (
       const LMatrix&                         lMatrix,
       const RMatrix&                         rMatrix,
       typename MatrixTraits<LMatrix>::Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE
@@ -56,10 +54,10 @@ namespace tarch {
      * A temporary vector is created and copied to store return back the result.
      */
     template<typename LMatrix, typename RMatrix>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value,
       LMatrix
-    >::Type operator+ (
+    >::type operator+ (
       const LMatrix& lMatrix,
       const RMatrix& rMatrix
       );
@@ -68,10 +66,10 @@ namespace tarch {
      *
      */
     template<typename LMatrix, typename RMatrix>
-      typename utils::EnableIf<
+      typename std::enable_if<
       IsMatrix<LMatrix>::value && IsMatrix<RMatrix>::value,
       int
-    >::Type equalsReturnIndex (
+    >::type equalsReturnIndex (
       const LMatrix& lMatrix,
       const RMatrix& rMatrix,
       typename MatrixTraits<LMatrix>::Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE

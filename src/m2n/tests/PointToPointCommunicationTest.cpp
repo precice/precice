@@ -68,13 +68,16 @@ PointToPointCommunicationTest::run() {
 
     if (Parallel::getProcessRank() < 4) {
       Parallel::setGlobalCommunicator(communicator);
+      #ifndef PRECICE_NO_SOCKETS
       testMethod(testSocketCommunication);
+      #endif
       testMethod(testMPIPortsCommunication);
       Parallel::setGlobalCommunicator(Parallel::getCommunicatorWorld());
     }
   }
 }
 
+#ifndef PRECICE_NO_SOCKETS
 void
 PointToPointCommunicationTest::testSocketCommunication() {
   preciceTrace("testSocketCommunication");
@@ -84,6 +87,7 @@ PointToPointCommunicationTest::testSocketCommunication() {
 
   test(cf);
 }
+#endif
 
 void
 PointToPointCommunicationTest::testMPIPortsCommunication() {

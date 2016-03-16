@@ -156,7 +156,7 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
     computeAitkenFactor ( level, nominators[level], denominators[level] );
     omega = _aitkenFactors[level];
     oneMinusOmega = 1.0 - omega;
-    //foreach ( DataMap::value_type & pair, cplData ) {
+    //for ( DataMap::value_type & pair : cplData ) {
     //  DataValues & values = *pair.second.values;
     //  DataValues & oldValues = pair.second.oldValues.getColumn(0);
       index = stepsize / 2;
@@ -181,7 +181,7 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 //  computeAitkenFactor ( 0, nom, denom );
 //  double omega = _aitkenFactors[0];
 //  double oneMinusOmega = 1.0 - omega;
-//  foreach ( DataMap::value_type & pair, cplData ) {
+//  for ( DataMap::value_type & pair : cplData ) {
 //    DataValues & values = *pair.second.values;
 //    DataValues & oldValues = pair.second.oldValues.getColumn(0);
 //    for ( size_t i=0; i < entries; i++ ) {
@@ -316,7 +316,7 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 //  for ( size_t level=0; level < _aitkenFactors.size(); level++ ) {
 //    double omega = _aitkenFactors[level];
 //    double oneMinusOmega = 1.0 - omega;
-//    foreach ( DataMap::value_type & pair, cplData ) {
+//    for ( DataMap::value_type & pair : cplData ) {
 //      DataValues & values = *pair.second.values;
 //      DataValues & oldValues = pair.second.oldValues.getColumn(0);
 //      size_t stepsize = (entries + 1) / std::pow(2.0, level);
@@ -430,3 +430,4 @@ void HierarchicalAitkenPostProcessing::setDesignSpecification(
  }
 
 }}} // namespace precice, cplscheme, impl
+

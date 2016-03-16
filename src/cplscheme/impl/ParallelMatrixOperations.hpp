@@ -2,8 +2,9 @@
  * ParallelMatrixOperations.hpp
  *
  *  Created on: Aug 21, 2015
- *      Author: scheufks
+ *      Author: Klaudius Scheufele
  */
+// Copyright (C) 2015 Universität Stuttgart
 #ifndef PRECICE_NO_MPI
 #ifndef PARALLELMATRIXOPERATIONS_HPP_
 #define PARALLELMATRIXOPERATIONS_HPP_
@@ -155,6 +156,38 @@ public:
 		}
    }
 
+   /** @brief: Method computes the matrix-matrix/matrix-vector product of a (p x q)
+    * matrix that is distributed column-wise (e.g. pseudiInverse Z), with a matrix/vector
+    * of size (q x r) with r=1/cols, that is distributed row-wise (e.g. _matrixW, _matrixV, residual).
+    *
+    * In each case mat-mat or mat-vec product, the result is of size (m x m) or (m x 1), where
+    * m is the number of cols, i.e., small such that the result is stored on each proc.
+    */
+   template<typename Derived1, typename Derived2, typename Derived3>
+    void multiply(
+        const Eigen::MatrixBase<Derived1>& leftMatrix,
+        const Eigen::MatrixBase<Derived2>& rightMatrix,
+        Eigen::PlainObjectBase<Derived3>& result,
+        int p, int q, int r)
+  {
+    preciceTrace("multiply() (m x n) * (n * r), r=1/m");
+    assertion2(leftMatrix.rows() == p, leftMatrix.rows(), p);
+    assertion2(leftMatrix.cols() == rightMatrix.rows(),leftMatrix.cols(), rightMatrix.rows());
+    assertion2(result.rows() == p, result.rows(), p);
+    assertion2(result.cols() == r, result.cols(), r);
+
+    Eigen::MatrixXd localResult(result.rows(), result.cols());
+    localResult.noalias() = leftMatrix * rightMatrix;
+
+    // if serial computation on single processor, i.e, no master-slave mode
+    if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
+      result = localResult;
+    }else{
+      utils::MasterSlave::allreduceSum(localResult.data(), result.data(), localResult.size());
+    }
+  }
+
+
 
 private:
 
@@ -188,7 +221,7 @@ private:
 		   const std::vector<int>& offsets,
 		   int p, int q, int r)
    {
-		preciceTrace("multiplyNN()");
+     preciceTrace("multiplyNN() (n x m) * (m x n)");
 		/*
 		 * For multiplication W_til * Z = J
 		 * -----------------------------------------------------------------------
@@ -292,7 +325,7 @@ private:
 		   const std::vector<int>& offsets,
 		   int p, int q, int r)
    {
-		preciceTrace("multiplyNM()");
+     preciceTrace("multiplyNM() (n x n) * (n x m)");
 		for(int i = 0; i < leftMatrix.rows(); i++){
 		  int rank = 0;
 		  // find rank of processor that stores the result
@@ -329,7 +362,7 @@ private:
 			const std::vector<int>& offsets,
 			int p, int q, int r)
 	{
-		preciceTrace("_multiplyNM_block()");
+	  preciceTrace("multiplyNM_block() (n x n) * (n x m)");
 
 		// ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
 		assertion2(leftMatrix.IsRowMajor == rightMatrix.IsRowMajor, leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
@@ -371,59 +404,6 @@ private:
 			}
 		}
 	}
-
-	/*              ======== old version _multiplyNM_block =======
-	// @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
-	  template<typename Derived1, typename Derived2>
-	  void _multiplyNM_block(
-	      Eigen::PlainObjectBase<Derived1>& leftMatrix,
-	      Eigen::PlainObjectBase<Derived2>& rightMatrix,
-	      Eigen::PlainObjectBase<Derived2>& result,
-	      const std::vector<int>& offsets,
-	      int p, int q, int r)
-	  {
-	    preciceTrace("multiplyNM()");
-
-	    // multiply local block (saxpy-based approach)
-	    // dimension: (n_global x n_local) * (n_local x m) = (n_global x m)
-	    Eigen::MatrixXd block = Eigen::MatrixXd::Zero(p, r);
-	    block.noalias() = leftMatrix * rightMatrix;
-
-	    // all blocks have size (n_global x m)
-	    // Note: if procs have no vertices, the block size remains (n_global x m), however,
-	    //       it must be initialized with zeros, so zeros are added for those procs)
-	    if(utils::MasterSlave::_slaveMode){
-	      utils::MasterSlave::_communication->send(block.data(), block.size(), 0);
-	      if(result.size() > 0)
-	        utils::MasterSlave::_communication->receive(result.data(), result.size(), 0);
-	    }
-	    if(utils::MasterSlave::_masterMode){
-	      Eigen::MatrixXd summarizedBlocks = Eigen::MatrixXd::Zero(p, r);
-	      summarizedBlocks = block;
-
-	      for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
-	        //Eigen::MatrixXd rcv_block = Eigen::MatrixXd::Zero(p, r);
-	        utils::MasterSlave::_communication->receive(block.data(), block.size(), rankSlave);
-	        summarizedBlocks += block;
-	      }
-
-	      // distrubute blocks of summarizedBlocks (result of multiplication) to corresponding slaves
-	      result = summarizedBlocks.block(0, 0, offsets[1], r);
-
-	      for(int rankSlave = 1; rankSlave <  utils::MasterSlave::_size; rankSlave++){
-	        int off = offsets[rankSlave];
-	        int send_rows = offsets[rankSlave+1] - offsets[rankSlave];
-
-	        if(summarizedBlocks.block(off, 0, send_rows, r).size() > 0){
-	          // necessary to save the matrix-block that is to be sent in a temporary matrix-object
-	          // otherwise, the send routine walks over the bounds of the block (matrix structure is still from the entire matrix)
-	          Eigen::MatrixXd sendBlock = summarizedBlocks.block(off, 0, send_rows, r);
-	          utils::MasterSlave::_communication->send(sendBlock.data(),sendBlock.size(), rankSlave);
-	        }
-	      }
-	    }
-	  }
-	  */
 
 
 	/**

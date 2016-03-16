@@ -18,13 +18,13 @@ Merge:: Merge()
 
 Merge:: ~Merge()
 {
-//  foreach ( Vertex& vertex, _merged.vertices() ){
+//  for ( Vertex& vertex : _merged.vertices() ){
 //    vertex.deleteProperty ( PROPERTY_ID );
 //  }
-//  foreach ( Edge& edge, _merged.edges() ){
+//  for ( Edge& edge : _merged.edges() ){
 //    edge.deleteProperty ( PROPERTY_ID );
 //  }
-//  foreach ( Triangle& triangle, _merged.triangles() ){
+//  for ( Triangle& triangle : _merged.triangles() ){
 //    triangle.deleteProperty ( PROPERTY_ID );
 //  }
 }
@@ -51,3 +51,4 @@ Group& Merge:: content()
 //}
 
 }} // namespace precice, mesh
+

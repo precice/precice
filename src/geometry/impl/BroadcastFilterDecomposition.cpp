@@ -109,7 +109,6 @@ void BroadcastFilterDecomposition:: feedback(
 {
   preciceTrace1 ( "feedback()", utils::MasterSlave::_rank );
   preciceInfo("feedback()", "Feedback mesh " << seed.getName() );
-  Event e("feedback mesh");
 
   int numberOfVertices = filteredVertexPositions.size();
 

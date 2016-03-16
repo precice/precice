@@ -121,7 +121,7 @@ void PreconditionerTest::testResPreconditioner ()
   dims.push_back(2);
   dims.push_back(1);
 
-  impl::ResidualPreconditioner precond(dims);
+  impl::ResidualPreconditioner precond(dims, -1);
 
   int numberOfRows = 8;
   precond.initialize(numberOfRows);
@@ -155,7 +155,7 @@ void PreconditionerTest::testResSumPreconditioner ()
   dims.push_back(2);
   dims.push_back(1);
 
-  impl::ResidualSumPreconditioner precond(dims);
+  impl::ResidualSumPreconditioner precond(dims, -1);
 
   int numberOfRows = 8;
   precond.initialize(numberOfRows);
@@ -191,7 +191,7 @@ void PreconditionerTest::testValuePreconditioner ()
   dims.push_back(2);
   dims.push_back(1);
 
-  impl::ValuePreconditioner precond(dims);
+  impl::ValuePreconditioner precond(dims, -1);
 
   int numberOfRows = 8;
   precond.initialize(numberOfRows);
@@ -375,7 +375,7 @@ void PreconditionerTest::testParallelMatrixScaling ()
   dims.push_back(1);
 
 
-  impl::ValuePreconditioner precond(dims);
+  impl::ValuePreconditioner precond(dims, -1);
   precond.initialize(localN);
   precond.triggerGlobalWeights(globalN);
   precond.update(true,x,x);

@@ -53,9 +53,13 @@ private:
   // @brief Logging device.
   static logging::Logger _log;
 
-  void testDistributedConsistent2D();
+  void testDistributedConsistent2DV1();
+  void testDistributedConsistent2DV2();
 
-  void testDistributedConservative2D();
+  void testDistributedConservative2DV1();
+  void testDistributedConservative2DV2();
+  void testDistributedConservative2DV3();
+  void testDistributedConservative2DV4();
 
   void testPetThinPlateSplines();
 
@@ -85,13 +89,36 @@ private:
 
   void testDeadAxis3D();
 
+  struct VertexSpecification
+  {
+    int rank;
+    int owner;
+    std::vector<double> position;
+    std::vector<double> value;
+  };
+
+  using MeshSpecification = std::vector<VertexSpecification>;
+
+  /// Contains which values are expected on which rank: rank -> vector of data.
+  using ReferenceSpecification = std::vector<std::pair<int,std::vector<double>>>;
+
   /// Helper function: Add the global index from vertex::getID
   void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0);
 
   /// Helper function: create a distributed mesh with values and owner set on some ranks.
-  void getDistributedMesh(const std::vector<std::vector<int>> vertices,
+  void getDistributedMesh(MeshSpecification const & vertices,
                           mesh::PtrMesh& mesh,
-                          mesh::PtrData& data);
+                          mesh::PtrData& data,
+                          int globalIndexOffset = 0);
+  
+
+  /// Helper function for testing distributed meshes
+  void testDistributed(Mapping& mapping,
+                       MeshSpecification inMeshSpec,
+                       MeshSpecification outMeshSpec,
+                       ReferenceSpecification referenceSpec,
+                       int inGlobalIndexOffset = 0);
+
 
 };
 

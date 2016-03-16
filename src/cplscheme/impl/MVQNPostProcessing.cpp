@@ -1,24 +1,25 @@
+/*
+ * MVQNPostProcessing.cpp
+ *
+ *  Created on: Dez 5, 2015
+ *      Author: Klaudius Scheufele
+ */
+
+
 #ifndef PRECICE_NO_MPI
 
-// Copyright (C) 2011 Technische Universitaet Muenchen
+// Copyright (C) 2015 Universität Stuttgart
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "MVQNPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
-#include "tarch/la/GramSchmidt.h"
-#include "tarch/la/LUDecomposition.h"
-#include "tarch/la/MatrixVectorOperations.h"
-#include "tarch/la/TransposedMatrix.h"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "tarch/la/Scalar.h"
-#include "io/TXTWriter.hpp"
-#include "io/TXTReader.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Communication.hpp"
 #include "Eigen/Dense"
@@ -53,7 +54,11 @@ MVQNPostProcessing:: MVQNPostProcessing
   double singularityLimit,
   std::vector<int> dataIDs,
   PtrPreconditioner preconditioner,
-  bool alwaysBuildJacobian)
+  bool   alwaysBuildJacobian,
+  int    imvjRestartType,
+  int    chunkSize,
+  int    RSLSreusedTimesteps,
+  double RSSVDtruncationEps)
 :
   BaseQNPostProcessing(initialRelaxation, forceInitialRelaxation, maxIterationsUsed, timestepsReused,
 		       filter, singularityLimit, dataIDs, preconditioner),
@@ -61,10 +66,24 @@ MVQNPostProcessing:: MVQNPostProcessing
   _invJacobian(),
   _oldInvJacobian(),
   _Wtil(),
+  _WtilChunk(),
+  _pseudoInverseChunk(),
+  _matrixV_RSLS(),
+  _matrixW_RSLS(),
+  _matrixCols_RSLS(),
   _cyclicCommLeft(nullptr),
   _cyclicCommRight(nullptr),
-  _parMatrixOps(),
-  _alwaysBuildJacobian(alwaysBuildJacobian)
+  _parMatrixOps(nullptr),
+  _svdJ(RSSVDtruncationEps, preconditioner),
+  _alwaysBuildJacobian(alwaysBuildJacobian),
+  _imvjRestartType(imvjRestartType),
+  _imvjRestart(false),
+  _chunkSize(chunkSize),
+  _RSLSreusedTimesteps(RSLSreusedTimesteps),
+  _usedColumnsPerTstep(5),
+  _nbRestarts(0),
+  //_info2(),
+  _avgRank(0)
 {}
 
 // ==================================================================================
@@ -97,6 +116,14 @@ void MVQNPostProcessing:: initialize
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
   
+  //std::stringstream sss;
+  //sss<<"residualWeights_rank-"<<utils::MasterSlave::_rank;
+  //_info2.open(sss.str(), std::ios_base::out);
+  //_info2 << std::setprecision(16);
+
+  if (_imvjRestartType > 0)
+    _imvjRestart = true;
+
 
   if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){
 		/*
@@ -123,7 +150,9 @@ void MVQNPostProcessing:: initialize
   }
 
   // initialize parallel matrix-matrix operation module
-  _parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight);
+  _parMatrixOps = impl::PtrParMatrixOps(new impl::ParallelMatrixOperations());
+  _parMatrixOps->initialize(_cyclicCommLeft, _cyclicCommRight);
+  _svdJ.initialize(_parMatrixOps, getLSSystemRows());
 
   int entries = _residuals.size();
   int global_n = 0;
@@ -134,11 +163,22 @@ void MVQNPostProcessing:: initialize
 		global_n = _dimOffsets.back();
 	}
   
-  _invJacobian = Eigen::MatrixXd::Zero(global_n, entries);
-  _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
+	// only need memory for Jacobain of not in restart mode
+	if(not _imvjRestart){
+	  _invJacobian = Eigen::MatrixXd::Zero(global_n, entries);
+	  _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
+	}
+	// initialize V, W matrices for the LS restart
+	if(_imvjRestartType == RS_LS){
+	  _matrixCols_RSLS.push_front(0);
+	  _matrixV_RSLS = Eigen::MatrixXd::Zero(entries, 0);
+	  _matrixW_RSLS = Eigen::MatrixXd::Zero(entries, 0);
+	}
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
-
   _preconditioner->triggerGlobalWeights(global_n);
+
+  if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+    _infostream<<" IMVJ restart mode: "<<_imvjRestart<<"\n chunk size: "<<_chunkSize<<"\n trunc eps: "<<_svdJ.getThreshold()<<"\n R_RS: "<<_RSLSreusedTimesteps<<"\n--------\n"<<std::endl;
 }
 
 // ==================================================================================
@@ -147,7 +187,7 @@ void MVQNPostProcessing::computeUnderrelaxationSecondaryData
   DataMap& cplData)
 {
     //Store x_tildes for secondary data
-  //  foreach (int id, _secondaryDataIDs){
+  //  for (int id : _secondaryDataIDs){
   //    assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
   //               _secondaryOldXTildes[id].size(), cplData[id]->values->size());
   //    _secondaryOldXTildes[id] = *(cplData[id]->values);
@@ -183,7 +223,8 @@ void MVQNPostProcessing::updateDifferenceMatrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
 
   // update _Wtil if the efficient computation of the quasi-Newton update is used
-  if(not _alwaysBuildJacobian)
+  // or update current Wtil if the restart mode of imvj is used
+  if(not _alwaysBuildJacobian || _imvjRestart)
   {
     if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
       // do nothing: constant relaxation
@@ -201,10 +242,38 @@ void MVQNPostProcessing::updateDifferenceMatrices
 
         Eigen::VectorXd wtil = Eigen::VectorXd::Zero(_matrixV.rows());
 
-        // compute J_prev * V(0) := wtil the new column in _Wtil of dimension: (n x n) * (n x 1) = (n x 1),
-        //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-        _parMatrixOps.multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
-        wtil = w - wtil;
+        // add column: Wtil(:,0) = W(:,0) - sum_q [ Wtil^q * ( Z^q * V(:,0)) ]
+        //                                         |--- J_prev ---|
+        // iterate over all stored Wtil and Z matrices in current chunk
+        if(_imvjRestart){
+          for(int i = 0; i < (int)_WtilChunk.size(); i++){
+            int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
+            assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
+            Eigen::VectorXd Zv = Eigen::VectorXd::Zero(colsLSSystemBackThen);
+            // multiply: Zv := Z^q * V(:,0) of size (m x 1)
+            _parMatrixOps->multiply(_pseudoInverseChunk[i], v, Zv, colsLSSystemBackThen, getLSSystemRows(), 1);
+            // multiply: Wtil^q * Zv  dimensions: (n x m) * (m x 1), fully local
+            wtil += _WtilChunk[i] * Zv;
+          }
+
+          // store columns if restart mode = RS-LS
+          if(_imvjRestartType == RS_LS){
+            if(_matrixCols_RSLS.front() < _usedColumnsPerTstep){
+              utils::appendFront(_matrixV_RSLS, v);
+              utils::appendFront(_matrixW_RSLS, w);
+              _matrixCols_RSLS.front()++;
+            }
+          }
+
+        // imvj without restart is used, but efficient update, i.e. no Jacobian assembly in each iteration
+        // add column: Wtil(:,0) = W(:,0) - J_prev * V(:,0)
+        }else{
+          // compute J_prev * V(0) := wtil the new column in _Wtil of dimension: (n x n) * (n x 1) = (n x 1),
+          //                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
+          _parMatrixOps->multiply(_oldInvJacobian, v, wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+        }
+        wtil *= -1;
+        wtil += w;
 
         if (not columnLimitReached && overdetermined) {
           utils::appendFront(_Wtil, wtil);
@@ -235,29 +304,21 @@ void MVQNPostProcessing::computeQNUpdate(
   preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
   preciceDebug("compute IMVJ quasi-Newton update");
+  //_info2<<_preconditioner->getWeights().front()<<", "<<_preconditioner->getWeights().back()<<", "<<_preconditioner->getWeights().front()/_preconditioner->getWeights().back()<<";"<<std::endl;
 
-  Event ePrecond_1("preconditioning of J", true, true); // ------ time measurement, barrier
-  if((not _alwaysBuildJacobian) && (_Wtil.size() > 0)){
-    _preconditioner->apply(_Wtil);
-  }
-  _preconditioner->apply(_oldInvJacobian,false);
-  _preconditioner->revert(_oldInvJacobian,true);
-  ePrecond_1.stop();                                    // ------
 
-  // either compute efficient, omitting to build the Jacobian in each iteration or inefficient.
+  /**
+   *  The MVJ- quasi-Newton update
+   *  Either compute efficient, omitting to build the Jacobian in each iteration or inefficient.
+   *  INVARIANT: All objects, J_inv, J_old_inv, W, V, Wtil, xUpdate, res, etc. are unscaled.
+   *             Only the QR-decomposition of V is scaled and thus needs to be unscaled before
+   *             using it in multiplications with the other matrices.
+   */
   if(_alwaysBuildJacobian){
     computeNewtonUpdate(cplData, xUpdate);
   }else{
     computeNewtonUpdateEfficient(cplData, xUpdate);
   }
-
-  Event ePrecond_2("preconditioning of J", true, true); // ------ time measurement, barrier
-  if((not _alwaysBuildJacobian) && (_Wtil.size() > 0)){
-    _preconditioner->revert(_Wtil);
-  }
-  _preconditioner->revert(_oldInvJacobian,false);
-  _preconditioner->apply(_oldInvJacobian,true);
-  ePrecond_2.stop();                                    // ------
 }
 
 
@@ -292,6 +353,11 @@ void MVQNPostProcessing::pseudoInverse(
     pseudoInverse.col(i) = yVec;
   }
   e_qr.stop();                                            // ----------------
+
+  // scale pseudo inverse back Z := Z' * P,
+  // Z' is scaled pseudo inverse i.e, Z' = R^-1 * Q^T * P^-1
+  _preconditioner->apply(pseudoInverse, true, false);
+
 }
 
 // ==================================================================================
@@ -306,9 +372,26 @@ void MVQNPostProcessing::buildWtil()
 
   _Wtil = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
 
-  // multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
-  //                                    parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
-  _parMatrixOps.multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
+  // imvj restart mode: re-compute Wtil: Wtil = W - sum_q [ Wtil^q * (Z^q*V) ]
+  //                                                      |--- J_prev ---|
+  // iterate over all stored Wtil and Z matrices in current chunk
+  if(_imvjRestart){
+    for(int i = 0; i < (int)_WtilChunk.size(); i++){
+      int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
+      assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
+      Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, _qrV.cols());
+      // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
+      _parMatrixOps->multiply(_pseudoInverseChunk[i], _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
+      // multiply: Wtil^q * ZV  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
+      _Wtil += _WtilChunk[i] * ZV;
+    }
+
+  // imvj without restart is used, i.e., recompute Wtil: Wtil = W - J_prev * V
+  }else{
+    // multiply J_prev * V = W_til of dimension: (n x n) * (n x m) = (n x m),
+    //                                    parallel:  (n_global x n_local) * (n_local x m) = (n_local x m)
+    _parMatrixOps->multiply(_oldInvJacobian, _matrixV, _Wtil, _dimOffsets, getLSSystemRows(), getLSSystemRows(), getLSSystemCols(), false);
+  }
 
   // W_til = (W-J_inv_n*V) = (W-V_tilde)
   _Wtil *= -1.;
@@ -329,13 +412,11 @@ void MVQNPostProcessing::buildJacobian()
   * assumes that J_prev, V, W are already preconditioned
   */
 
-
   /**
    *  (1) computation of pseudo inverse Z = (V^TV)^-1 * V^T
    */
   Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
   pseudoInverse(Z);
-
 
   /**
   *  (2) Multiply J_prev * V =: W_tilde
@@ -353,7 +434,7 @@ void MVQNPostProcessing::buildJacobian()
   */
   Event e_WtilZ("compute J = W_til*Z", true, true); // -------- time measurement, barrier
 
-  _parMatrixOps.multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
+  _parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
   e_WtilZ.stop();                                   // --------
 
   // update Jacobian
@@ -368,11 +449,20 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
   preciceTrace(__func__);
 
   /**      --- update inverse Jacobian efficient, ---
-  *   i.e., do not recompute W_til in every iteration and do not build
+  *   If normal mode is used:
+  *   Do not recompute W_til in every iteration and do not build
   *   the entire Jacobian matrix. This is only necessary if the coupling
   *   iteration has converged, namely in the last iteration.
   *
+  *   If restart-mode is used:
+  *   The Jacobian is never build. Store matrices Wtil^q and Z^q for the last M time steps.
+  *   After M time steps, a restart algorithm is performed basedon the restart-mode type, either
+  *   Least-Squares restart (IQN-ILS like) or maintaining of a updated truncated SVD decomposition
+  *   of the SVD.
+  *
   * J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
+  *
+  * ASSUMPTION: All objects are scaled with the active preconditioner
   */
 
   /**
@@ -404,18 +494,9 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
    */
   Event e_Zr("compute r_til = Z*(-res)", true, true); // -------- time measurement, barrier
   Eigen::VectorXd negativeResiduals = - _residuals;
-  Eigen::VectorXd r_til_loc = Eigen::VectorXd::Zero(getLSSystemCols());
   Eigen::VectorXd r_til = Eigen::VectorXd::Zero(getLSSystemCols());
-
-  r_til_loc.noalias() = Z * negativeResiduals;
-
-  // if serial computation on single processor, i.e, no master-slave mode
-  if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
-    r_til = r_til_loc;
-  }else{
-    utils::MasterSlave::allreduceSum(r_til_loc.data(), r_til.data(), r_til_loc.size());
-  }
-  e_Zr.stop();                                         // --------
+  _parMatrixOps->multiply(Z, negativeResiduals, r_til, getLSSystemCols(), getLSSystemRows(), 1);
+  e_Zr.stop();                                        // --------
 
   /**
    * (4) compute _Wtil * r_til
@@ -426,13 +507,33 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
    * Note: r_til is not distributed but locally stored on each proc (dimension m x 1)
    */
   Eigen::VectorXd xUptmp(_residuals.size());
+  xUpdate = Eigen::VectorXd::Zero(_residuals.size());
   xUptmp = _Wtil * r_til;                      // local product, result is naturally distributed.
 
   /**
    *  (5) xUp = J_prev * (-res) + Wtil*Z*(-res)
+   *
+   *  restart-mode: sum_q { Wtil^q * [ Z^q * (-res) ] },
+   *  where r_til = Z^q * (-res) is computed first and then xUp := Wtil^q * r_til
    */
   Event e_Jpr("compute xUp(1) = J_prev*(-res)", true, true); // -------- time measurement, barrier
-  _parMatrixOps.multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+
+  if(_imvjRestart){
+    for(int i = 0; i < (int)_WtilChunk.size(); i++){
+      int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
+      assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
+      r_til = Eigen::VectorXd::Zero(colsLSSystemBackThen);
+      // multiply: r_til := Z^q * (-res) of size (m x 1) with m=#cols of LS at that time, result stored on each proc.
+      _parMatrixOps->multiply(_pseudoInverseChunk[i], negativeResiduals, r_til, colsLSSystemBackThen, getLSSystemRows(), 1);
+      // multiply: Wtil^q * r_til  dimensions: (n x m) * (m x 1), fully local and embarrassingly parallel
+      xUpdate += _WtilChunk[i] * r_til;
+    }
+
+  // imvj without restart is used, i.e., compute directly J_prev * (-res)
+  }else{
+    _parMatrixOps->multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+    preciceDebug("Mult J*V DONE");
+  }
   e_Jpr.stop();                                              // --------
 
   xUpdate += xUptmp;
@@ -448,7 +549,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
 void MVQNPostProcessing::computeNewtonUpdate
 (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
-	preciceTrace("computeNewtonFactorsQRDecomposition()");
+	preciceTrace(__func__);
 
 	/**      --- update inverse Jacobian ---
 	*
@@ -471,7 +572,7 @@ void MVQNPostProcessing::computeNewtonUpdate
 	*/
 	Event e_WtilZ("compute J = W_til*Z", true, true); // -------- time measurement, barrier
 
-	_parMatrixOps.multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
+	_parMatrixOps->multiply(_Wtil, Z, _invJacobian, _dimOffsets, getLSSystemRows(), getLSSystemCols(), getLSSystemRows());
 	e_WtilZ.stop();                                   // --------
 
 	// update Jacobian
@@ -484,8 +585,156 @@ void MVQNPostProcessing::computeNewtonUpdate
 
 	// multiply J_inv * (-res) = x_Update of dimension: (n x n) * (n x 1) = (n x 1),
 	//                                        parallel: (n_global x n_local) * (n_local x 1) = (n_local x 1)
-	_parMatrixOps.multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
+	_parMatrixOps->multiply(_invJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
   e_up.stop();                                         // --------
+}
+
+// ==================================================================================
+void MVQNPostProcessing::restartIMVJ()
+{
+  preciceTrace(__func__);
+  int used_storage = 0;
+  int theoreticalJ_storage = 2*getLSSystemRows()*_residuals.size() + 3*_residuals.size()*getLSSystemCols() + _residuals.size()*_residuals.size();
+  //               ------------ RESTART SVD ------------
+  if(_imvjRestartType == MVQNPostProcessing::RS_SVD)
+  {
+    int rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
+
+    // INVARIANT: all objects are unscaled and entry and unscaled at exit
+
+    // if it is the first time step, there is no initial SVD, so take all Wtil, Z matrices
+    // otherwise, the first element of each container holds the decomposition of the current
+    // truncated SVD, i.e., Wtil^0 = \phi, Z^0 = S\psi^T, this should not be added to the SVD.
+    int q = _svdJ.isSVDinitialized() ? 1 : 0;
+
+    // perform M-1 rank-1 updates of the truncated SVD-dec of the Jacobian
+    for(; q < (int)_WtilChunk.size(); q++){
+      // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
+      _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q].transpose());
+      used_storage += 2*_WtilChunk.size();
+    }
+    int m = _WtilChunk[q].cols(), n = _WtilChunk[q].rows();
+    used_storage += 2*rankBefore*m + 4*m*n + 2*m*m + (rankBefore+m)*(rankBefore+m) + 2*n*(rankBefore+m);
+
+    // drop all stored Wtil^q, Z^q matrices
+    _WtilChunk.clear();
+    _pseudoInverseChunk.clear();
+
+    auto& psi = _svdJ.matrixPsi();
+    auto& sigma = _svdJ.singularValues();
+    auto& phi = _svdJ.matrixPhi();
+
+    // multiply sigma * phi^T, phi is distributed block-row wise, phi^T is distributed block-column wise
+    // sigma is stored local on each proc, thus, the multiplication is fully local, no communication.
+    // Z = sigma * phi^T
+    Eigen::MatrixXd Z(phi.cols(), phi.rows());
+    for(int i=0; i < (int)Z.rows(); i++)
+       for(int j=0; j < (int)Z.cols(); j++)
+         Z(i,j) = phi(j,i) * sigma[i];
+
+    int rankAfter = _svdJ.rank();
+    int waste = _svdJ.getWaste();
+    _avgRank += rankAfter;
+
+    // store factorized truncated SVD of J
+    _WtilChunk.push_back(psi);
+    _pseudoInverseChunk.push_back(Z);
+
+    preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste<<" avg rank: "<<_avgRank/_nbRestarts);
+    double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
+    if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+      _infostream<<" - MVJ-RESTART " <<_nbRestarts<<", mode= SVD -\n  new modes: "<<rankAfter-rankBefore<<"\n  rank svd: "<<rankAfter<<"\n  avg rank: "<<_avgRank/_nbRestarts<<"\n  truncated modes: "<<waste<<"\n  used storage: "<<percentage<<" %\n"<<std::endl;
+
+    //        ------------ RESTART LEAST SQUARES ------------
+  }else if(_imvjRestartType == MVQNPostProcessing::RS_LS)
+  {
+    // drop all stored Wtil^q, Z^q matrices
+   _WtilChunk.clear();
+   _pseudoInverseChunk.clear();
+
+   if(_matrixV_RSLS.cols() > 0){
+     // avoid that the syste mis getting too squared
+     while(_matrixV_RSLS.cols()*2 >= getLSSystemRows()){
+       removeMatrixColumnRSLS(_matrixV_RSLS.cols()-1);
+     }
+
+     // preconditioning
+     // V needs to be sclaed to compute the pseudo inverse
+     // W only needs to be scaled, as the design requires to store scaled
+     // matrices Wtil^0 and Z^0 as initial guess after the restart
+     _preconditioner->apply(_matrixV_RSLS);
+     _preconditioner->apply(_matrixW_RSLS);
+
+     QRFactorization qr(_filter);
+     qr.setGlobalRows(getLSSystemRows());
+     // for QR2-filter, the QR-dec is computed in qr-applyFilter()
+     if(_filter != PostProcessing::QR2FILTER){
+       for(int i = 0; i < (int)_matrixV_RSLS.cols(); i++){
+         Eigen::VectorXd v = _matrixV_RSLS.col(i);
+         qr.pushBack(v);  // same order as matrix V_RSLS
+       }
+     }
+
+     // apply filter
+     if (_filter != PostProcessing::NOFILTER) {
+       std::vector<int> delIndices(0);
+       qr.applyFilter(_singularityLimit, delIndices, _matrixV_RSLS);
+       // start with largest index (as V,W matrices are shrinked and shifted
+       for (int i = delIndices.size() - 1; i >= 0; i--) {
+         removeMatrixColumnRSLS(delIndices[i]);
+       }
+       assertion2(_matrixV_RSLS.cols() == qr.cols(), _matrixV_RSLS.cols(), qr.cols());
+     }
+
+     /**
+      *   computation of pseudo inverse matrix Z = (V^TV)^-1 * V^T as solution
+      *   to the equation R*z = Q^T(i) for all columns i,  via back substitution.
+      */
+      auto Q = qr.matrixQ();
+      auto R = qr.matrixR();
+      Eigen::MatrixXd pseudoInverse(qr.cols(), qr.rows());
+      Eigen::VectorXd yVec(pseudoInverse.rows());
+
+      // backsubstitution
+      for (int i = 0; i < Q.rows(); i++) {
+        Eigen::VectorXd Qrow = Q.row(i);
+        yVec = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(Qrow);
+        pseudoInverse.col(i) = yVec;
+      }
+
+      // scale pseudo inverse back Z := Z' * P,
+      // Z' is scaled pseudo inverse i.e, Z' = R^-1 * Q^T * P^-1
+      //_preconditioner->apply(pseudoInverse, true, false);
+
+      // store factorization of least-squares initial guess for Jacobian
+     _WtilChunk.push_back(_matrixW_RSLS);
+     _pseudoInverseChunk.push_back(pseudoInverse);
+
+
+     // revert both matrices, chunks are reverted in spezializedIterationsConverged
+     _preconditioner->revert(_matrixW_RSLS);
+     _preconditioner->revert(_matrixV_RSLS);
+
+   }
+
+   preciceDebug("MVJ-RESTART, mode=LS. Restart with "<<_matrixV_RSLS.cols()<<" columns from "<<_RSLSreusedTimesteps<<" time steps.");
+   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
+         _infostream<<" - MVJ-RESTART" <<_nbRestarts<<", mode= LS -\n  used cols: "<<_matrixV_RSLS.cols()<<"\n  R_RS: "<<_RSLSreusedTimesteps<<"\n"<<std::endl;
+
+   //            ------------ RESTART ZERO ------------
+  }else if(_imvjRestartType == MVQNPostProcessing::RS_ZERO)
+  {
+    // drop all stored Wtil^q, Z^q matrices
+    _WtilChunk.clear();
+    _pseudoInverseChunk.clear();
+
+    preciceDebug("MVJ-RESTART, mode=Zero");
+
+  }else if (_imvjRestartType == MVQNPostProcessing::NO_RESTART){
+    assertion(false); // should not happen, in this case _imvjRestart=false
+  }else{
+    assertion(false);
+  }
 }
 
 // ==================================================================================
@@ -495,47 +744,100 @@ void MVQNPostProcessing:: specializedIterationsConverged
 {
   preciceTrace(__func__);
 
-  if(not _alwaysBuildJacobian)
+  // truncate V_RSLS and W_RSLS matrices according to _RSLSreusedTimesteps
+  if(_imvjRestartType == RS_LS){
+    if (_matrixCols_RSLS.front() == 0) { // Did only one iteration
+      _matrixCols_RSLS.pop_front();
+    }
+    if (_RSLSreusedTimesteps == 0) {
+      _matrixV_RSLS.resize(0,0);
+      _matrixW_RSLS.resize(0,0);
+      _matrixCols_RSLS.clear();
+    }else if ((int) _matrixCols_RSLS.size() > _RSLSreusedTimesteps) {
+      int toRemove = _matrixCols_RSLS.back();
+      assertion1(toRemove > 0, toRemove);
+      if(_matrixV_RSLS.size() > 0) assertion2(_matrixV_RSLS.cols() > toRemove, _matrixV_RSLS.cols(), toRemove);
+
+      // remove columns
+      for (int i = 0; i < toRemove; i++) {
+        utils::removeColumnFromMatrix(_matrixV_RSLS, _matrixV_RSLS.cols() - 1);
+        utils::removeColumnFromMatrix(_matrixW_RSLS, _matrixW_RSLS.cols() - 1);
+      }
+      _matrixCols_RSLS.pop_back();
+    }
+    _matrixCols_RSLS.push_front(0);
+  }
+
+  //_info2<<std::endl;
+
+  // if efficient update of imvj is enabled
+  if(not _alwaysBuildJacobian || _imvjRestart)
   {
     // need to apply the preconditioner, as all data structures are reverted after
     // call to computeQNUpdate. Need to call this before the preconditioner is updated.
 
-    // preconditioning (all objects are unscaled) -----------
-    _preconditioner->apply(_residuals);
+    // |= REBUILD QR-dec if needed     ============|
+    // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
     _preconditioner->apply(_matrixV);
-    _preconditioner->apply(_matrixW);
-    if((not _alwaysBuildJacobian) && (_Wtil.size() > 0)){
-      _preconditioner->apply(_Wtil);
-    }
-    _preconditioner->apply(_oldInvJacobian,false);
-    _preconditioner->revert(_oldInvJacobian,true);
 
-    // should not happen that requireNewQR() is true
     if(_preconditioner->requireNewQR()){
       if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
       }
       _preconditioner->newQRfulfilled();
     }
-    //                                           ------------
-
     // apply the configured filter to the LS system
     // as it changed in BaseQNPostProcessing::iterationsConverged()
     BaseQNPostProcessing::applyFilter();
-
-    // compute explicit representation of Jacobian
-    buildJacobian();
-
-    // preconditioning                           ------------
-    _preconditioner->revert(_residuals);
     _preconditioner->revert(_matrixV);
-    _preconditioner->revert(_matrixW);
-    if((not _alwaysBuildJacobian) && (_Wtil.size() > 0)){
-      _preconditioner->revert(_Wtil);
+    // |===================          ============|
+
+
+
+    //              ------- RESTART/ JACOBIAN ASSEMBLY -------
+    if(_imvjRestart){
+
+      // add the matrices Wtil and Z of the converged configuration to the storage containers
+      Eigen::MatrixXd Z(_qrV.cols(), _qrV.rows());
+      // compute pseudo inverse using QR factorization and back-substitution
+      // also compensates for the scaling of V, i.e.,
+      // reverts Z' = R^-1 * Q^T * P^-1 as Z := Z' * P
+      pseudoInverse(Z);
+
+      // push back unscaled pseudo Inverse, Wtil is also unscaled.
+      // all objects in Wtil chunk and Z chunk are NOT PRECONDITIONED
+      _WtilChunk.push_back(_Wtil);
+      _pseudoInverseChunk.push_back(Z);
+
+      /**
+       *  Restart the IMVJ according to restart type
+       */
+      if ((int)_WtilChunk.size() >= _chunkSize+1){
+
+        // we need to compute the updated SVD of the scaled Jacobian matrix
+        // |= APPLY PRECONDITIONING  J_prev = Wtil^q, Z^q  ===|
+        for(int i = 0; i < (int)_WtilChunk.size(); i++){
+          _preconditioner->apply(_WtilChunk[i]);
+          _preconditioner->revert(_pseudoInverseChunk[i], true, false);
+        }
+        // |===================                            ===|
+
+        // < RESTART >
+        _nbRestarts++;
+        restartIMVJ();
+
+        // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
+        _preconditioner->revert(_WtilChunk.front());
+        _preconditioner->apply(_pseudoInverseChunk.front(), true, false);
+        // |===================                             ==|
+      }
+
+      // only in imvj normal mode with efficient update:
+    }else{
+
+      // compute explicit representation of Jacobian
+      buildJacobian();
     }
-    _preconditioner->revert(_oldInvJacobian,false);
-    _preconditioner->apply(_oldInvJacobian,true);
-    //                                           ------------
 
 
     /** in case of enforced initial relaxation, the matrices are cleared
@@ -548,14 +850,11 @@ void MVQNPostProcessing:: specializedIterationsConverged
     }
   }
 
-  // Also need to revert the _invJacobian matrix with the preconditioner weights, as it's stored in _oldInvJacobian.
-  // note: only _oldInvJacobian is reverted after computeNewtonUpdate*() or buildJacobian().
-  // The Jacobian is always unscaled outside of computeNewtonUpdate*()
-  _preconditioner->revert(_invJacobian,false);
-  _preconditioner->apply(_invJacobian,true);
-
-  // store inverse Jacobian from converged time step. NOT SCALED with preconditioner
-  _oldInvJacobian = _invJacobian;
+  // only store Jacobian if imvj is in normal mode, i.e., the Jacobian is build
+  if(not _imvjRestart){
+    // store inverse Jacobian from converged time step. NOT SCALED with preconditioner
+    _oldInvJacobian = _invJacobian;
+  }
 }
 
 // ==================================================================================
@@ -567,12 +866,43 @@ void MVQNPostProcessing:: removeMatrixColumn
 
 
   // remove column from matrix _Wtil
-  if(not _resetLS)
+  if(not _resetLS && not _alwaysBuildJacobian)
     utils::removeColumnFromMatrix(_Wtil, columnIndex);
 
   BaseQNPostProcessing::removeMatrixColumn(columnIndex);
 }
 
+// ==================================================================================
+void MVQNPostProcessing:: removeMatrixColumnRSLS
+(
+  int columnIndex)
+{
+  preciceTrace2(__func__, columnIndex, _matrixV_RSLS.cols());
+  assertion(_matrixV_RSLS.cols() > 1);
+
+  utils::removeColumnFromMatrix(_matrixV_RSLS, columnIndex);
+  utils::removeColumnFromMatrix(_matrixW_RSLS, columnIndex);
+
+  // Reduce column count
+  std::deque<int>::iterator iter = _matrixCols_RSLS.begin();
+  int cols = 0;
+  while (iter != _matrixCols_RSLS.end()) {
+    cols += *iter;
+    if (cols > columnIndex) {
+      assertion(*iter > 0);
+      *iter -= 1;
+      if (*iter == 0) {
+        _matrixCols_RSLS.erase(iter);
+      }
+      break;
+    }
+    iter++;
+  }
+}
+
+
+
 }}} // namespace precice, cplscheme, impl
 
 #endif
+

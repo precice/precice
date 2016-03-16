@@ -141,11 +141,11 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
 
       //test if both participants do have the exchange meshes
       typedef std::map<std::string, std::vector<std::string> >::value_type neededMeshPair;
-      foreach (const neededMeshPair& neededMeshes, _meshConfiguration->getNeededMeshes()){
+      for (const neededMeshPair& neededMeshes : _meshConfiguration->getNeededMeshes()){
         bool participantFound = false;
-        foreach(const impl::PtrParticipant& participant, _participantConfiguration->getParticipants()){
+        for (const impl::PtrParticipant& participant : _participantConfiguration->getParticipants()){
           if(participant->getName()==neededMeshes.first){
-            foreach(const std::string& neededMesh ,neededMeshes.second){
+            for (const std::string& neededMesh  : neededMeshes.second){
               bool meshFound = false;
               for (impl::MeshContext* meshContext : participant->usedMeshContexts()){
                 if(meshContext->mesh->getName()==neededMesh){
@@ -187,3 +187,4 @@ SolverInterfaceConfiguration:: getParticipantConfiguration() const
 }
 
 }} // close namespaces
+

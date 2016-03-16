@@ -222,7 +222,7 @@ void PythonAction:: performAction
 //    mesh::PtrMesh mesh = getMesh();
 //    utils::DynVector coords(mesh->getDimensions());
 //    utils::DynVector normal(mesh->getDimensions());
-//    foreach (mesh::Vertex& vertex, mesh->vertices()){
+//    for (mesh::Vertex& vertex : mesh->vertices()){
 //      npy_intp vdim[] = { mesh->getDimensions() };
 //      int id = vertex.getID();
 //      coords = vertex.getCoords();
@@ -343,3 +343,4 @@ int PythonAction:: makeNumPyArraysAvailable()
 }
 
 }} // namespace precice, action
+

@@ -64,7 +64,7 @@ void ExportSpacetree:: doExport
 
   // Write cell corner vertices
   file << "POINTS " << _vertices.size() << " float "<< std::endl << std::endl;
-  foreach (const utils::DynVector& vertexCoords, _vertices){
+  for (const utils::DynVector& vertexCoords : _vertices){
     io::ExportVTK::writeVertex(vertexCoords, file);
   }
   file << std::endl;
@@ -76,7 +76,7 @@ void ExportSpacetree:: doExport
   int cellSize = _cells.size();
   file << "CELLS " << cellSize << " "
        << cellSize * (twoPowerDim + 1) << std::endl << std::endl;
-  foreach (const std::vector<int>& cell, _cells){
+  for (const std::vector<int>& cell : _cells){
     file << twoPowerDim << " ";
     for (int i=0; i < twoPowerDim; i++){
       file << cell[i] << " ";
@@ -106,7 +106,7 @@ void ExportSpacetree:: doExport
   // Write cell positions
   file << "SCALARS Position(0=Undef,1=Inside,2=Outside,3=On) float 1" << std::endl
        << "LOOKUP_TABLE default" << std::endl << std::endl;
-  foreach (int position, _cellPositions){
+  for (int position : _cellPositions){
     file << position << std::endl;
   }
   file << std::endl;
@@ -114,7 +114,7 @@ void ExportSpacetree:: doExport
   // Write cell content size
   file << "SCALARS ContentSize float 1" << std::endl
        << "LOOKUP_TABLE default" << std::endl << std::endl;
-  foreach (int size, _cellContents){
+  for (int size : _cellContents){
     file << size << std::endl;
   }
   file << std::endl;
@@ -172,3 +172,4 @@ void ExportSpacetree:: doExport
 //}
 
 }}
+

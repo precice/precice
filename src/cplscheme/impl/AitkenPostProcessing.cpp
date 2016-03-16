@@ -78,8 +78,6 @@ void AitkenPostProcessing:: performPostProcessing
   DataMap& cplData )
 {
   preciceTrace("performPostProcessing()");
-  typedef utils::DynVector DataValues;
-  using namespace tarch::la;
 
   // Compute aitken relaxation factor
   assertion(utils::contained(*_dataIDs.begin(), cplData));
@@ -102,7 +100,7 @@ void AitkenPostProcessing:: performPostProcessing
 
   // Select/compute aitken factor depending on current iteration count
   if (_iterationCounter == 0){
-    _aitkenFactor = sign(_aitkenFactor) * min(
+    _aitkenFactor = tarch::la::sign(_aitkenFactor) * min(
                     utils::Vector2D(_initialRelaxation, std::abs(_aitkenFactor)));
   }
   else {

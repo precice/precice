@@ -4,7 +4,9 @@
  *  Created on: Sep 18, 2015
  *      Author: Klaudius Scheufele
  */
-
+// Copyright (C) 2015 Universität Stuttgart
+// This file is part of the preCICE project. For conditions of distribution and
+// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef MMPOSTPROCESSING_HPP_
 #define MMPOSTPROCESSING_HPP_
 
@@ -12,9 +14,6 @@
 #include "SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "tarch/la/DynamicColumnMatrix.h"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/DynamicVector.h"
 #include "QRFactorization.hpp"
 #include "Preconditioner.hpp"
 #include "Eigen/Dense"

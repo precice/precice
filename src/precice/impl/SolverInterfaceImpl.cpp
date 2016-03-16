@@ -185,18 +185,18 @@ void SolverInterfaceImpl:: configure
 (
   const config::SolverInterfaceConfiguration& config )
 {
-  tpreciceTrace("configure()");
+  preciceTrace("configure()");
 
   _dimensions = config.getDimensions();
   _geometryMode = config.isGeometryMode ();
   _restartMode = config.isRestartMode ();
   _accessor = determineAccessingParticipant(config);
 
-  tpreciceCheck(not (_accessor->useServer() && _accessor->useMaster()),
+  preciceCheck(not (_accessor->useServer() && _accessor->useMaster()),
                      "configure()", "You cannot use a server and a master.");
-  tpreciceCheck(not (_restartMode && _accessor->useMaster()),"configure()",
+  preciceCheck(not (_restartMode && _accessor->useMaster()),"configure()",
                       "To restart while using a master is not yet supported");
-  tpreciceCheck(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
+  preciceCheck(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
                      "configure()", "A parallel participant needs either a master or a server communication configured");
 
   _clientMode = (not _serverMode) && _accessor->useServer();
@@ -209,21 +209,21 @@ void SolverInterfaceImpl:: configure
   configureM2Ns(config.getM2NConfiguration());
 
   if (_serverMode){
-    tpreciceInfo("configure()", "[PRECICE] Run in server mode");
+    preciceInfo("configure()", "[PRECICE] Run in server mode");
   }
   if (_clientMode){
-    tpreciceInfo("configure()", "[PRECICE] Run in client mode");
+    preciceInfo("configure()", "[PRECICE] Run in client mode");
   }
 
   if (_geometryMode){
-    tpreciceInfo("configure()", "[PRECICE] Run in geometry mode");
-    tpreciceCheck(_participants.size() == 1, "configure()",
+    preciceInfo("configure()", "[PRECICE] Run in geometry mode");
+    preciceCheck(_participants.size() == 1, "configure()",
                  "Only one participant can be defined in geometry mode!");
     configureSolverGeometries(config.getM2NConfiguration());
   }
   else if (not _clientMode){
-    tpreciceInfo("configure()", "[PRECICE] Run in coupling mode");
-    tpreciceCheck(_participants.size() > 1,
+    preciceInfo("configure()", "[PRECICE] Run in coupling mode");
+    preciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
     configureSolverGeometries(config.getM2NConfiguration());
   }
@@ -287,7 +287,8 @@ void SolverInterfaceImpl:: configure
 double SolverInterfaceImpl:: initialize()
 {
   tpreciceTrace("initialize()");
-  Event e("initialize", not precice::testMode);
+  //Event e("initialize", not precice::testMode);
+  Event e("initialize");
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "initialize"
@@ -434,7 +435,8 @@ double SolverInterfaceImpl:: initialize()
 void SolverInterfaceImpl:: initializeData ()
 {
   tpreciceTrace("initializeData()" );
-  Event e("initializeData", not precice::testMode);
+//  Event e("initializeData", not precice::testMode);
+  Event e("initializeData");
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "initializeData"
@@ -467,9 +469,7 @@ double SolverInterfaceImpl:: advance
 {
   tpreciceTrace1("advance()", computedTimestepLength);
 
-  EventRegistry::printGlobalDuration();
-
-  Event e("advance", not precice::testMode);
+  Event e("advance");
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "advance"
@@ -811,7 +811,7 @@ ClosestMesh SolverInterfaceImpl:: inquireClosestMesh
     std::vector<int> markedContexts(_accessor->usedMeshContexts().size());
     selectInquiryMeshIDs(meshIDs, markedContexts);
     closestMesh.setPosition(positionOutsideOfGeometry());
-    //foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
+    //for (MeshContext& meshContext : _accessor->usedMeshContexts()){
     for (int i=0; i < (int)markedContexts.size(); i++){
       MeshContext* meshContext = _accessor->usedMeshContexts()[i];
       if (markedContexts[i] == markedSkip()){
@@ -890,7 +890,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
   int pos = positionOutsideOfGeometry();
   //mesh::Group* content = new mesh::Group();
   std::vector<int> containedMeshIDs;
-//  foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
+//  for (MeshContext& meshContext : _accessor->usedMeshContexts()){
 //    bool skip = not utils::contained(meshContext.mesh->getID(), meshIDs);
 //    skip &= not meshIDs.empty();
 //    if (skip){
@@ -900,7 +900,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
 
   std::vector<int> markedContexts(_accessor->usedMeshContexts().size());
   selectInquiryMeshIDs(meshIDs, markedContexts);
-    //foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
+    //for (MeshContext& meshContext : _accessor->usedMeshContexts()){
   for (int i=0; i < (int)markedContexts.size(); i++){
     MeshContext* meshContext = _accessor->usedMeshContexts()[i];
     if (markedContexts[i] == markedSkip()){
@@ -2270,10 +2270,10 @@ void SolverInterfaceImpl:: resetWrittenData()
 //void SolverInterfaceImpl:: resetDataIndices()
 //{
 //  tpreciceTrace ( "resetDataIndices()" );
-//  foreach ( DataContext & context, _accessor->writeDataContexts() ){
+//  for ( DataContext & context : _accessor->writeDataContexts() ){
 //    context.indexCursor = 0;
 //  }
-//  foreach ( DataContext & context, _accessor->readDataContexts() ){
+//  for ( DataContext & context : _accessor->readDataContexts() ){
 //    context.indexCursor = 0;
 //  }
 //}
@@ -2412,3 +2412,4 @@ void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
 
 
 }} // namespace precice, impl
+

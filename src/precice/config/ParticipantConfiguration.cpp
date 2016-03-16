@@ -259,7 +259,7 @@ ParticipantConfiguration:: ParticipantConfiguration
     tagServer.setDocumentation(doc);
     serverTags.push_back(tagServer);
   }
-  foreach (XMLTag& tagServer, serverTags){
+  for (XMLTag& tagServer : serverTags){
     tag.addSubtag(tagServer);
   }
 
@@ -333,7 +333,7 @@ ParticipantConfiguration:: ParticipantConfiguration
 
     masterTags.push_back(tagMaster);
   }
-  foreach (XMLTag& tagMaster, masterTags){
+  for (XMLTag& tagMaster : masterTags){
     tag.addSubtag(tagMaster);
   }
 
@@ -597,7 +597,7 @@ mesh::PtrMesh ParticipantConfiguration:: copy
   std::string name(mesh->getName());
   bool flipNormals = mesh->isFlipNormals();
   mesh::Mesh* meshCopy = new mesh::Mesh("Local_" + name, dim, flipNormals);
-  foreach (const mesh::PtrData& data, mesh->data()){
+  for (const mesh::PtrData& data : mesh->data()){
     meshCopy->createData(data->getName(), data->getDimensions());
   }
   return mesh::PtrMesh(meshCopy);
@@ -608,7 +608,7 @@ const mesh::PtrData & ParticipantConfiguration:: getData
   const mesh::PtrMesh& mesh,
   const std::string&   nameData ) const
 {
-  foreach ( const mesh::PtrData & data, mesh->data() ){
+  for ( const mesh::PtrData & data : mesh->data() ){
     if ( data->getName() == nameData ) {
       return data;
     }
@@ -626,7 +626,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
   // Set input/output meshes for data mappings and mesh requirements
   typedef mapping::MappingConfiguration::ConfiguredMapping ConfMapping;
-  foreach (const ConfMapping& confMapping, _mappingConfig->mappings()){
+  for (const ConfMapping& confMapping : _mappingConfig->mappings()){
     int fromMeshID = confMapping.fromMesh->getID();
     int toMeshID = confMapping.toMesh->getID();
 
@@ -688,17 +688,17 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   _mappingConfig->resetMappings();
 
   // Set participant data for data contexts
-  foreach (impl::DataContext& dataContext, participant->writeDataContexts()){
+  for (impl::DataContext& dataContext : participant->writeDataContexts()){
     int fromMeshID = dataContext.mesh->getID();
     preciceCheck(participant->isMeshUsed(fromMeshID), "finishParticipant()",
         "Participant \"" << participant->getName() << "\" has to use mesh \""
         << dataContext.mesh->getName() << "\" when writing data to it!");
 
-    foreach (impl::MappingContext& mappingContext, participant->writeMappingContexts()){
+    for (impl::MappingContext& mappingContext : participant->writeMappingContexts()){
       if(mappingContext.fromMeshID==fromMeshID){
         dataContext.mappingContext = mappingContext;
         impl::MeshContext& meshContext = participant->meshContext(mappingContext.toMeshID);
-        foreach (mesh::PtrData data, meshContext.mesh->data()){
+        for (mesh::PtrData data : meshContext.mesh->data()){
           if(data->getName()==dataContext.fromData->getName()){
             dataContext.toData = data;
           }
@@ -710,17 +710,17 @@ void ParticipantConfiguration:: finishParticipantConfiguration
     }
   }
 
-  foreach (impl::DataContext& dataContext, participant->readDataContexts()){
+  for (impl::DataContext& dataContext : participant->readDataContexts()){
     int toMeshID = dataContext.mesh->getID();
     preciceCheck(participant->isMeshUsed(toMeshID), "finishParticipant()",
       "Participant \"" << participant->getName() << "\" has to use mesh \""
       << dataContext.mesh->getName() << "\" when writing data to it!");
 
-    foreach (impl::MappingContext& mappingContext, participant->readMappingContexts()){
+    for (impl::MappingContext& mappingContext : participant->readMappingContexts()){
       if(mappingContext.toMeshID==toMeshID){
         dataContext.mappingContext = mappingContext;
         impl::MeshContext& meshContext = participant->meshContext(mappingContext.fromMeshID);
-        foreach (mesh::PtrData data, meshContext.mesh->data()){
+        for (mesh::PtrData data : meshContext.mesh->data()){
           if(data->getName()==dataContext.toData->getName()){
             dataContext.fromData = data;
           }
@@ -733,7 +733,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   }
 
   // Add actions
-  foreach (const action::PtrAction& action, _actionConfig->actions()){
+  for (const action::PtrAction& action : _actionConfig->actions()){
     bool used = _participants.back()->isMeshUsed(action->getMesh()->getID());
     preciceCheck(used, "finishParticipantConfiguration()", "Data action of participant "
                  << _participants.back()->getName()
@@ -743,7 +743,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   _actionConfig->resetActions();
 
   // Add export contexts
-  foreach (const io::ExportContext& context, _exportConfig->exportContexts()){
+  for (const io::ExportContext& context : _exportConfig->exportContexts()){
     preciceCheck(not participant->useMaster(), "finishParticipantConfiguration()",
         "To use exports while using a master is not yet supported");
     _participants.back()->addExportContext(context);
@@ -751,7 +751,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   _exportConfig->resetExports();
 
   // Create watch points
-  foreach ( const WatchPointConfig & config, _watchPointConfigs ){
+  for ( const WatchPointConfig & config : _watchPointConfigs ){
     mesh::PtrMesh mesh;
     for ( const impl::MeshContext* context : participant->usedMeshContexts() ){
       if ( context->mesh->getName() == config.nameMesh ){
@@ -773,3 +773,4 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
 
 }} // namespace precice, config
+

@@ -12,7 +12,6 @@
 #include "tarch/la/VectorVectorOperations.h"
 #include "tarch/la/VectorScalarOperations.h"
 #include "tarch/la/VectorAssign.h"
-#include "tarch/utils/EnableIf.h"
 #include "tarch/Assertions.h"
 
 namespace tarch {
@@ -40,9 +39,9 @@ namespace tarch {
    * pages 85-87.
    */
   template<typename Matrix>
-    typename utils::EnableIf<IsMatrix<Matrix>::value,
+    typename std::enable_if<IsMatrix<Matrix>::value,
     void
-  >::Type modifiedGramSchmidt (
+  >::type modifiedGramSchmidt (
     Matrix& A,
     Matrix& Q,
     Matrix& R

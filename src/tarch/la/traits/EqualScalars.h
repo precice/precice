@@ -4,7 +4,6 @@
 #ifndef _TARCH_LA_TRAITS_EQUALSSCALARS_H_
 #define _TARCH_LA_TRAITS_EQUALSSCALARS_H_
 
-#include "tarch/utils/EnableIf.h"
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/VectorTraits.h"
 #include "tarch/la/traits/IsMatrix.h"
@@ -24,21 +23,21 @@ struct EqualScalars
 template<typename VectorA, typename VectorB>
 struct EqualScalars<
   VectorA, VectorB,
-  typename utils::EnableIf<IsVector<VectorA>::value && IsVector<VectorB>::value>::Type>
+  typename std::enable_if<IsVector<VectorA>::value && IsVector<VectorB>::value>::type>
 {
   typedef typename VectorTraits<VectorA>::Scalar ScalarA;
   typedef typename VectorTraits<VectorB>::Scalar ScalarB;
-  static const int value = utils::IsEqual<ScalarA,ScalarB>::value;
+  static const int value = std::is_same<ScalarA,ScalarB>::value;
 };
 
 template<typename MatrixA, typename MatrixB>
 struct EqualScalars<
   MatrixA, MatrixB,
-  typename utils::EnableIf<IsMatrix<MatrixA>::value && IsMatrix<MatrixB>::value>::Type>
+  typename std::enable_if<IsMatrix<MatrixA>::value && IsMatrix<MatrixB>::value>::type>
 {
   typedef typename MatrixTraits<MatrixA>::Scalar ScalarA;
   typedef typename MatrixTraits<MatrixB>::Scalar ScalarB;
-  static const int value = utils::IsEqual<ScalarA,ScalarB>::value;
+  static const int value = std::is_same<ScalarA,ScalarB>::value;
 };
 
 }} // namespace tarch, la

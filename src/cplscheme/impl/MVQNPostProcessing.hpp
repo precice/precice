@@ -1,4 +1,12 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
+/*
+ * MVQNPostProcessing.hpp
+ *
+ *  Created on: Dez 5, 2015
+ *      Author: Klaudius Scheufele
+ */
+
+
+// Copyright (C) 2015 Universität Stuttgart
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
@@ -10,12 +18,10 @@
 #include "BaseQNPostProcessing.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "tarch/la/DynamicColumnMatrix.h"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/DynamicVector.h"
 #include "com/Communication.hpp"
 #include "io/TXTWriter.hpp"
 #include "ParallelMatrixOperations.hpp"
+#include "SVDFactorization.hpp"
 #include <deque>
 
 // ----------------------------------------------------------- CLASS DEFINITION
@@ -41,6 +47,11 @@ class MVQNPostProcessing : public BaseQNPostProcessing
 {
 public:
 
+  static const int NO_RESTART = 0;
+  static const int RS_ZERO = 1;
+  static const int RS_LS = 2;
+  static const int RS_SVD = 3;
+
   /**
    * @brief Constructor.
    */
@@ -53,7 +64,11 @@ public:
       double singularityLimit,
       std::vector<int>    dataIDs,
       PtrPreconditioner preconditioner,
-      bool   alwaysBuildJacobian);
+      bool   alwaysBuildJacobian,
+      int    imvjRestartType,
+      int    chunkSize,
+      int    RSLSreusedTimesteps,
+      double RSSVDtruncationEps);
 
    /**
     * @brief Destructor, empty.
@@ -86,6 +101,21 @@ private:
    /// @brief: stores the sub result (W-J_prev*V) for the current iteration
    Eigen::MatrixXd _Wtil;
 
+   /// @brief: stores all Wtil matrices within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+   std::vector< Eigen::MatrixXd > _WtilChunk;
+
+   /// @brief_ stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+   std::vector<Eigen::MatrixXd> _pseudoInverseChunk;
+
+   /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
+   Eigen::MatrixXd _matrixV_RSLS;
+
+   /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
+   Eigen::MatrixXd _matrixW_RSLS;
+
+   /// @brief: number of cols per time step
+   std::deque<int> _matrixCols_RSLS;
+
    /// @brief: Communication between neighboring slaves, backwards
    com::Communication::SharedPointer _cyclicCommLeft;
 
@@ -93,13 +123,49 @@ private:
    com::Communication::SharedPointer _cyclicCommRight;
 
    /// @brief: encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
-   ParallelMatrixOperations _parMatrixOps;
+   PtrParMatrixOps _parMatrixOps;
 
-   /** @brief: if true, the less efficient method to compute the quasi-Newton update is used,
+   /// @brief holds and maintains a truncated SVD decomposition of the Jacobian matrix
+   SVDFactorization _svdJ;
+
+   /** @brief: If true, the less efficient method to compute the quasi-Newton update is used,
    *   that explicitly builds the Jacobian in each iteration. If set to false this is only done
    *   in the very last iteration and the update is computed based on MATVEC products.
    */
    bool _alwaysBuildJacobian;
+
+   /** @brief: Indicates the type of the imvj restart-mode:
+    *  - NO_RESTART: imvj is run on normal mode which builds the Jacobian explicitly
+    *  - RS-ZERO:    imvj is run in restart-mode. After M time steps all stored matrices are dropped
+    *  - RS-LS:      imvj in restart-mode. After M time steps restart with LS approximation for initial Jacobian
+    *  - RS-SVD:     imvj in restart mode. After M time steps, update of an truncated SVD of the Jacobian.
+    */
+   int _imvjRestartType;
+
+   /** @brief: If true, the imvj method is used with the restart chunk based approach that avoids
+    *  to explicitly build and store the Jacobian. If false, the Jacobian is stored and build, however,
+    *  no truncation of information is present.
+    */
+   bool _imvjRestart;
+
+
+   /// @brief: Number of time steps between restarts for the imvj method in restart mode
+   int _chunkSize;
+
+   /// @brief: Number of reused time steps at restart if restart-mode = RS-LS
+   int _RSLSreusedTimesteps;
+
+   /// @brief: Number of used columns per time step. Always the first _usedColumnsPerTstep are used.
+   int _usedColumnsPerTstep;
+
+   /// @brief tracks the number of restarts of IMVJ
+   int _nbRestarts;
+
+
+   // DEBUG
+   //std::fstream _info2;
+   double _avgRank;
+
 
    /** @brief: comptes the MVQN update using QR decomposition of V,
     *        furthermore it updates the inverse of the system jacobian
@@ -143,8 +209,19 @@ private:
     */
    void buildWtil();
 
-   // @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
+   /** @brief: restarts the imvj method, i.e., drops all stored matrices Wtil and Z and computes a
+    *  initial guess of the Jacobian based on the given restart strategy:
+    *  RS-LS:   Perform a IQN-LS least squares initial guess with _RSLSreusedTimesteps
+    *  RS-SVD:  Update a truncated SVD decomposition of the SVD with rank-1 modifications from Wtil*Z
+    *  RS-Zero: Start with zero information, initial guess J = 0.
+    */
+   void restartIMVJ();
+
+   /// @brief: Removes one iteration from V,W matrices and adapts _matrixCols.
    virtual void removeMatrixColumn(int columnIndex);
+
+   /// @brief: Removes one column form the V_RSLS and W_RSLS matrices and adapts _matrixCols_RSLS
+   void removeMatrixColumnRSLS(int columnINdex);
 
 };
 
