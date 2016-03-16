@@ -185,18 +185,18 @@ void SolverInterfaceImpl:: configure
 (
   const config::SolverInterfaceConfiguration& config )
 {
-  preciceTrace("configure()");
+  tpreciceTrace("configure()");
 
   _dimensions = config.getDimensions();
   _geometryMode = config.isGeometryMode ();
   _restartMode = config.isRestartMode ();
   _accessor = determineAccessingParticipant(config);
 
-  preciceCheck(not (_accessor->useServer() && _accessor->useMaster()),
+  tpreciceCheck(not (_accessor->useServer() && _accessor->useMaster()),
                      "configure()", "You cannot use a server and a master.");
-  preciceCheck(not (_restartMode && _accessor->useMaster()),"configure()",
+  tpreciceCheck(not (_restartMode && _accessor->useMaster()),"configure()",
                       "To restart while using a master is not yet supported");
-  preciceCheck(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
+  tpreciceCheck(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
                      "configure()", "A parallel participant needs either a master or a server communication configured");
 
   _clientMode = (not _serverMode) && _accessor->useServer();
@@ -209,21 +209,21 @@ void SolverInterfaceImpl:: configure
   configureM2Ns(config.getM2NConfiguration());
 
   if (_serverMode){
-    preciceInfo("configure()", "[PRECICE] Run in server mode");
+    tpreciceInfo("configure()", "[PRECICE] Run in server mode");
   }
   if (_clientMode){
-    preciceInfo("configure()", "[PRECICE] Run in client mode");
+    tpreciceInfo("configure()", "[PRECICE] Run in client mode");
   }
 
   if (_geometryMode){
-    preciceInfo("configure()", "[PRECICE] Run in geometry mode");
-    preciceCheck(_participants.size() == 1, "configure()",
+    tpreciceInfo("configure()", "[PRECICE] Run in geometry mode");
+    tpreciceCheck(_participants.size() == 1, "configure()",
                  "Only one participant can be defined in geometry mode!");
     configureSolverGeometries(config.getM2NConfiguration());
   }
   else if (not _clientMode){
-    preciceInfo("configure()", "[PRECICE] Run in coupling mode");
-    preciceCheck(_participants.size() > 1,
+    tpreciceInfo("configure()", "[PRECICE] Run in coupling mode");
+    tpreciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
     configureSolverGeometries(config.getM2NConfiguration());
   }

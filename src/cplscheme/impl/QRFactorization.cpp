@@ -407,7 +407,7 @@ int QRFactorization::orthogonalize(
 
     // take correct action if v_orth is null
     if (rho1 <= std::numeric_limits<double>::min()) {
-      preciceDebug("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.")
+      preciceDebug("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.");
       null = true;
       rho1 = 1;
       termination = true;

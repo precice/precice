@@ -15,7 +15,7 @@
 #include "ParallelMatrixOperations.hpp"
 #include "QRFactorization.hpp"
 #include "Preconditioner.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
 #include <Eigen/Dense>
@@ -256,7 +256,7 @@ private:
   void computeQRdecomposition(Matrix const& A, Matrix & Q, Matrix & R);
 
   /// @brief: Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /// @brief: preconditioner for least-squares system if vectorial system is used.
   PtrPreconditioner _preconditioner;
