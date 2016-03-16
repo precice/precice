@@ -8,7 +8,7 @@ namespace precice {
 namespace spacetree {
 namespace impl {
 
-tarch::logging::Log Environment:: _log("precice::spacetree::impl::Environment");
+logging::Logger Environment:: _log("precice::spacetree::impl::Environment");
 
 Environment:: Environment
 (

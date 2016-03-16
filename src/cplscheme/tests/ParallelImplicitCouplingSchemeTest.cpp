@@ -42,7 +42,7 @@ namespace tests {
 
 using utils::Vector3D;
 
-tarch::logging::Log ParallelImplicitCouplingSchemeTest::
+logging::Logger ParallelImplicitCouplingSchemeTest::
 _log ( "precice::cplscheme::tests::ParallelImplicitCouplingSchemeTest" );
 
 

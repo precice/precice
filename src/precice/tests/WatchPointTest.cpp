@@ -16,7 +16,7 @@ registerTest(precice::tests::WatchPointTest)
 namespace precice {
 namespace tests {
 
-tarch::logging::Log WatchPointTest:: _log ( "precice::tests::WatchPointTest" );
+logging::Logger WatchPointTest:: _log ( "precice::tests::WatchPointTest" );
 
 WatchPointTest:: WatchPointTest()
 :

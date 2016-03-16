@@ -13,7 +13,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-tarch::logging::Log TXTTableWriterTest:: _log ("precice::io::tests::TXTTableWriterTest");
+logging::Logger TXTTableWriterTest:: _log ("precice::io::tests::TXTTableWriterTest");
 
 TXTTableWriterTest:: TXTTableWriterTest ():
   TestCase ( "precice::io::tests::TXTTableWriterTest" )

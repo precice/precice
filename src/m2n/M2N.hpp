@@ -8,7 +8,7 @@
 
 #include "com/Communication.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 #include <map>
 
@@ -157,7 +157,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::map<int, DistributedCommunication::SharedPointer> _distComs;
 

@@ -28,7 +28,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log BaseQNPostProcessing::
+logging::Logger BaseQNPostProcessing::
 _log("precice::cplscheme::impl::BaseQNPostProcessing");
 
 

@@ -15,7 +15,7 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-tarch::logging::Log ParallelTest:: _log ( "precice::utils::tests::ParallelTest" );
+logging::Logger ParallelTest:: _log ( "precice::utils::tests::ParallelTest" );
 
 ParallelTest:: ParallelTest ()
 :

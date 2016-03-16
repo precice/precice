@@ -8,7 +8,7 @@
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log MultiCouplingScheme::_log("precice::cplscheme::MultiCouplingScheme" );
+logging::Logger MultiCouplingScheme::_log("precice::cplscheme::MultiCouplingScheme" );
 
 MultiCouplingScheme::MultiCouplingScheme
 (

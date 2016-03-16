@@ -31,7 +31,7 @@ namespace tests {
 
 using utils::Vector3D;
 
-tarch::logging::Log CompositionalCouplingSchemeTest::
+logging::Logger CompositionalCouplingSchemeTest::
    _log ( "precice::cplscheme::tests::CompositionalCouplingSchemeTest" );
 
 CompositionalCouplingSchemeTest:: CompositionalCouplingSchemeTest()

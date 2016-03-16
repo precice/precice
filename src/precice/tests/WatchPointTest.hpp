@@ -5,7 +5,7 @@
 #define PRECICE_TESTS_WATCHPOINTTEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace tests {
@@ -37,7 +37,7 @@ public:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 };
 
 }} // namespace precice, tests

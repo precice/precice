@@ -5,7 +5,7 @@
 #define PRECICE_SPACETREE_STATICOCTREETEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "spacetree/tests/SpacetreeTestScenarios.hpp"
 #include "spacetree/StaticOctree.hpp"
 
@@ -49,7 +49,7 @@ private:
 	};
 
 	// @brief Logging device.
-	static tarch::logging::Log _log;
+	static logging::Logger _log;
 };
 
 }}} // namespace precice, spacetree, tests

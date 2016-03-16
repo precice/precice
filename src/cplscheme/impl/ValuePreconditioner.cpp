@@ -8,7 +8,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log ValuePreconditioner::
+logging::Logger ValuePreconditioner::
    _log ( "precice::cplscheme::ValuePreconditioner" );
 
 ValuePreconditioner:: ValuePreconditioner

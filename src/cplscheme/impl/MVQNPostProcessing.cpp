@@ -39,7 +39,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
- //tarch::logging::Log MVQNPostProcessing::_log("precice::cplscheme::impl::MVQNPostProcessing");
+ //logging::Logger MVQNPostProcessing::_log("precice::cplscheme::impl::MVQNPostProcessing");
 
 
 // ==================================================================================

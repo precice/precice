@@ -22,7 +22,7 @@ namespace precice {
 namespace m2n {
 namespace tests {
 
-tarch::logging::Log GatherScatterCommunicationTest::
+logging::Logger GatherScatterCommunicationTest::
   _log ( "precice::m2n::tests::GatherScatterCommunicationTest" );
 
 GatherScatterCommunicationTest:: GatherScatterCommunicationTest ()

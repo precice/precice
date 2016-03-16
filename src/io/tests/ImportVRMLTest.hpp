@@ -5,7 +5,7 @@
 #define PRECICE_IO_TESTS_ImportVRMLTest_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 
 namespace precice {
@@ -44,7 +44,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Relative path to src directory of preCICE.
   std::string _pathToTests;

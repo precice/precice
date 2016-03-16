@@ -36,7 +36,7 @@ void NearestProjectionMappingTest:: run()
 
 void NearestProjectionMappingTest:: testConservativeNonIncremental()
 {
-  ppreciceTrace ( "testConservativeNonIncremental()" );
+  preciceTrace ( "testConservativeNonIncremental()" );
   using namespace mesh;
   using utils::Vector2D;
   int dimensions = 2;
@@ -102,7 +102,7 @@ void NearestProjectionMappingTest:: testConservativeNonIncremental()
 
 void NearestProjectionMappingTest:: testConsistentNonIncremental()
 {
-  ppreciceTrace ( "testConsistentNonIncremental()" );
+  preciceTrace ( "testConsistentNonIncremental()" );
   using namespace mesh;
   using utils::Vector2D;
   int dimensions = 2;

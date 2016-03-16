@@ -14,7 +14,7 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-tarch::logging::Log MinIterationConvergenceMeasureTest::
+logging::Logger MinIterationConvergenceMeasureTest::
    _log ( "precice::cplscheme::tests::MinIterationConvergenceMeasureTest" );
 
 

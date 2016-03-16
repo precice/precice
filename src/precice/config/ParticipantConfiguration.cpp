@@ -25,7 +25,7 @@
 namespace precice {
 namespace config {
 
-tarch::logging::Log ParticipantConfiguration::
+logging::Logger ParticipantConfiguration::
     _log("precice::config::ParticipantConfiguration");
 
 //const std::string& ParticipantConfiguration:: getTag()

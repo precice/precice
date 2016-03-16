@@ -108,7 +108,7 @@ private:
   };
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::vector<Data> _data;
 

@@ -5,7 +5,7 @@
 #define PRECICE_IO_EXPORTVTK_HPP_
 
 #include "Export.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/Vector.h"
 #include "utils/Dimensions.hpp"
 #include <string>
@@ -73,7 +73,7 @@ public:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    // @brief By default set true: plot vertex normals, false: no normals plotting
    bool _writeNormals;

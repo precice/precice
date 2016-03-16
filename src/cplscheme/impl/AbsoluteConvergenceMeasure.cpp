@@ -7,7 +7,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log AbsoluteConvergenceMeasure::
+logging::Logger AbsoluteConvergenceMeasure::
    _log ( "precice::cplscheme::AbsoluteConvergenceMeasure" );
 
 AbsoluteConvergenceMeasure:: AbsoluteConvergenceMeasure

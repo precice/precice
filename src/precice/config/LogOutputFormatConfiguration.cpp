@@ -6,7 +6,7 @@
 namespace precice {
 namespace config {
 
-tarch::logging::Log LogOutputFormatConfiguration:: _log("precice::config::LogOutputFormatConfiguration");
+logging::Logger LogOutputFormatConfiguration:: _log("precice::config::LogOutputFormatConfiguration");
 
 LogOutputFormatConfiguration:: LogOutputFormatConfiguration
 (

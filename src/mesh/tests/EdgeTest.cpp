@@ -14,7 +14,7 @@ namespace precice {
 namespace mesh {
 namespace tests {
 
-tarch::logging::Log EdgeTest:: _log ( "precice::mesh::EdgeTest" );
+logging::Logger EdgeTest:: _log ( "precice::mesh::EdgeTest" );
 
 EdgeTest:: EdgeTest ()
 :

@@ -5,7 +5,7 @@
 #define PRECICE_CPLSCHEME_HIERARCHICALAITKENPOSTPROCESSING_HPP_
 
 #include "PostProcessing.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/DynamicVector.h"
 #include "utils/Globals.hpp"
 #include "Eigen/Dense"
@@ -44,7 +44,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _initialRelaxation;
 

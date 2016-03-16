@@ -14,7 +14,7 @@ namespace precice {
 namespace mesh {
 namespace tests {
 
-tarch::logging::Log PropertyContainerTest::
+logging::Logger PropertyContainerTest::
   _log ( "precice::mesh::PropertyContainerTest" );
 
 PropertyContainerTest:: PropertyContainerTest()

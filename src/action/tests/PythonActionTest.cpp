@@ -16,7 +16,7 @@ namespace precice {
 namespace action {
 namespace tests {
 
-tarch::logging::Log PythonActionTest::
+logging::Logger PythonActionTest::
   _log("precice::action::tests::PythonActionTest");
 
 PythonActionTest:: PythonActionTest()

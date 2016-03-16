@@ -18,7 +18,7 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-tarch::logging::Log XMLTest:: _log("precice::utils::XMLTest");
+logging::Logger XMLTest:: _log("precice::utils::XMLTest");
 
 XMLTest:: XMLTest()
 :

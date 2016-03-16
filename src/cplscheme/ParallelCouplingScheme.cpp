@@ -7,7 +7,7 @@
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log ParallelCouplingScheme::_log("precice::cplscheme::ParallelCouplingScheme" );
+logging::Logger ParallelCouplingScheme::_log("precice::cplscheme::ParallelCouplingScheme" );
 
 ParallelCouplingScheme::ParallelCouplingScheme
 (

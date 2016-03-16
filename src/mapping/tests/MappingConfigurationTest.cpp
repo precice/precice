@@ -35,7 +35,7 @@ void MappingConfigurationTest:: setUp()
 void MappingConfigurationTest:: run()
 {
   PRECICE_MASTER_ONLY {
-    ppreciceTrace("run()");
+    preciceTrace("run()");
     std::string file(_pathToTests + "mapping-config.xml");
     using utils::XMLTag;
     XMLTag tag = utils::getRootTag();

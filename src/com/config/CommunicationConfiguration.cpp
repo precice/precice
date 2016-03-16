@@ -15,7 +15,7 @@
 namespace precice {
 namespace com {
 
-tarch::logging::Log CommunicationConfiguration::
+logging::Logger CommunicationConfiguration::
    _log("precice::com::CommunicationConfiguration");
 
 CommunicationConfiguration:: CommunicationConfiguration()

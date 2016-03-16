@@ -17,7 +17,7 @@ namespace precice {
 namespace geometry {
 namespace impl {
 
-tarch::logging::Log PreFilterPostFilterDecomposition:: _log ( "precice::geometry::PreFilterPostFilterDecomposition" );
+logging::Logger PreFilterPostFilterDecomposition:: _log ( "precice::geometry::PreFilterPostFilterDecomposition" );
 
 PreFilterPostFilterDecomposition:: PreFilterPostFilterDecomposition
 (

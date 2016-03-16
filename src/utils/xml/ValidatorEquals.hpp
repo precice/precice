@@ -5,7 +5,7 @@
 #define PRECICE_UTILS_VALIDATOREQUALS_HPP_
 
 #include "Validator.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice {
@@ -57,7 +57,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    ValidatorEquals ( const ValidatorEquals<VALUE_T>& rhs );
 
@@ -67,8 +67,8 @@ private:
 };
 
 template<typename VALUE_T>
-tarch::logging::Log precice::utils::ValidatorEquals<VALUE_T>::
-   _log = tarch::logging::Log ("precice::utils::ValidatorEquals");
+logging::Logger precice::utils::ValidatorEquals<VALUE_T>::
+   _log = logging::Logger ("precice::utils::ValidatorEquals");
 
 }} // namespace precice, utils
 

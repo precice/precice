@@ -35,7 +35,7 @@ namespace tests {
 
 using utils::Vector3D;
 
-tarch::logging::Log SerialImplicitCouplingSchemeTest::
+logging::Logger SerialImplicitCouplingSchemeTest::
   _log ( "precice::cplscheme::tests::SerialImplicitCouplingSchemeTest" );
 
 

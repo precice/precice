@@ -15,7 +15,7 @@
 namespace precice {
 namespace com {
 
-tarch::logging::Log CommunicateMesh:: _log ( "precice::com::CommunicateMesh" );
+logging::Logger CommunicateMesh:: _log ( "precice::com::CommunicateMesh" );
 
 CommunicateMesh:: CommunicateMesh
 (

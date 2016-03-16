@@ -14,13 +14,13 @@
 //#define assertion assertion
 
   
-#define pprecicePrint(message) do                                            \
+#define precicePrint(message) do                                            \
   {                                                                          \
-    ppreciceInfo("unknown",message);                                         \
+    preciceInfo("unknown",message);                                         \
   } while (false)
 
 
-#define ppreciceDebug(message) do                                           \
+#define preciceDebug(message) do                                           \
   {                                                                         \
     LOG_LOCATION;                                                           \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::debug)         \
@@ -28,14 +28,14 @@
   } while (false)
 
     
-#define ppreciceWarning(methodname, message) do                             \
+#define preciceWarning(methodname, message) do                             \
   {                                                                         \
     LOG_LOCATION;                                                           \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::warning)       \
     << message;                                                             \
   } while (false)
     
-#define ppreciceInfo(methodname, message) do                                \
+#define preciceInfo(methodname, message) do                                \
   {                                                                         \
     LOG_LOCATION;                                                           \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::info)          \
@@ -51,7 +51,7 @@
 
 #include "Tracer.hpp"
 
-#define ppreciceTrace(methodname) do                                        \
+#define preciceTrace(methodname) do                                        \
   {                                                                         \
     LOG_LOCATION;                                                           \
     BOOST_LOG_FUNCTION();                                                   \
@@ -60,7 +60,7 @@
     << "Entering " << __func__;                                             \
   } while (false)
 
-#define ppreciceTrace1(methodname, var1) do                                 \
+#define preciceTrace1(methodname, var1) do                                 \
   {                                                                         \
     LOG_LOCATION;                                                           \
     BOOST_LOG_FUNCTION();                                                   \
@@ -70,7 +70,7 @@
     << "\n" << #var1 << " = " << var1;                                      \
   } while (false)
 
-#define ppreciceTrace2(methodname, var1, var2) do                           \
+#define preciceTrace2(methodname, var1, var2) do                           \
   {                                                                         \
     LOG_LOCATION;                                                           \
     BOOST_LOG_FUNCTION();                                                   \
@@ -81,7 +81,7 @@
     << "\n" << #var2 << " = " << var2;                                      \
   } while (false)
  
-#define ppreciceTrace3(methodname, var1, var2, var3) do                     \
+#define preciceTrace3(methodname, var1, var2, var3) do                     \
   {                                                                         \
     LOG_LOCATION;                                                           \
     BOOST_LOG_FUNCTION();                                                   \
@@ -93,7 +93,7 @@
     << "\n" << #var3 << " = " << var3;                                      \
   } while (false)
 
-#define ppreciceTrace4(methodname, var1, var2, var3, var4) do               \
+#define preciceTrace4(methodname, var1, var2, var3, var4) do               \
   {                                                                         \
     LOG_LOCATION;                                                           \
     BOOST_LOG_FUNCTION();                                                   \
@@ -106,7 +106,7 @@
     << "\n" << #var4 << " = " << var4;                                      \
   } while (false)
   
-#define ppreciceTrace5(methodname, var1, var2, var3, var4, var5) do         \
+#define preciceTrace5(methodname, var1, var2, var3, var4, var5) do         \
   {                                                                         \
     LOG_LOCATION;                                                           \
     BOOST_LOG_FUNCTION();                                                   \
@@ -120,7 +120,7 @@
     << "\n" << #var5 << " = " << var5;                                      \
   } while (false)
   
-#define ppreciceTrace6(methodname, var1, var2, var3, var4, var5, var6) do   \
+#define preciceTrace6(methodname, var1, var2, var3, var4, var5, var6) do   \
   {                                                                         \
     LOG_LOCATION;                                                           \
     BOOST_LOG_FUNCTION();                                                   \
@@ -138,13 +138,13 @@
 #else // Debug
 
 //#define preciceDebug(methodname, message)
-#define ppreciceTrace(methodname)
-#define ppreciceTrace1(methodname, var1)
-#define ppreciceTrace2(methodname, var1, var2)
-#define ppreciceTrace3(methodname, var1, var2, var3)
-#define ppreciceTrace4(methodname, var1, var2, var3, var4)
-#define ppreciceTrace5(methodname, var1, var2, var3, var4, var5)
-#define ppreciceTrace6(methodname, var1, var2, var3, var4, var5, var6)
+#define preciceTrace(methodname)
+#define preciceTrace1(methodname, var1)
+#define preciceTrace2(methodname, var1, var2)
+#define preciceTrace3(methodname, var1, var2, var3)
+#define preciceTrace4(methodname, var1, var2, var3, var4)
+#define preciceTrace5(methodname, var1, var2, var3, var4, var5)
+#define preciceTrace6(methodname, var1, var2, var3, var4, var5, var6)
 
 #endif // ! Debug
 
@@ -159,7 +159,7 @@
 
 
    
-#define ppreciceError(methodname, message) do                             \
+#define preciceError(methodname, message) do                             \
   {                                                                       \
     LOG_LOCATION;                                                         \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::error)       \
@@ -167,9 +167,9 @@
     std::abort();                                                         \
   } while (false)
 
-#define ppreciceCheck(check, methodname, errormessage)                    \
+#define preciceCheck(check, methodname, errormessage)                    \
   if ( !(check) ) {                                                       \
-    ppreciceError(methodname, errormessage);                              \
+    preciceError(methodname, errormessage);                              \
   }
 
   

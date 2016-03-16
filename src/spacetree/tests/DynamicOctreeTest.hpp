@@ -5,7 +5,7 @@
 #define PRECICE_SPACETREE_DYNAMICOCTREETEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Dimensions.hpp"
 #include "spacetree/DynamicOctree.hpp"
 #include "spacetree/tests/SpacetreeTestScenarios.hpp"
@@ -50,7 +50,7 @@ private:
   };
 
 	// @brief Logging device.
-	static tarch::logging::Log _log;
+	static logging::Logger _log;
 
 //	/**
 //	 * Tests method searchPosition().

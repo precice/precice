@@ -5,7 +5,7 @@
 #define PRECICE_GEOMETRY_CUBOID_HPP_
 
 #include "Geometry.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Dimensions.hpp"
 #include "mesh/SharedPointer.hpp"
 
@@ -42,7 +42,7 @@ protected:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    // @brief Determines minimal length of elements used to build the Cuboid
    double _discretizationWidth;

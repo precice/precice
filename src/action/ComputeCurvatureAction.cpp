@@ -14,7 +14,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log ComputeCurvatureAction::
+logging::Logger ComputeCurvatureAction::
   _log ( "precice::action::ComputeCurvatureAction" );
 
 ComputeCurvatureAction:: ComputeCurvatureAction

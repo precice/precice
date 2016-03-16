@@ -10,7 +10,7 @@
 namespace precice {
 namespace m2n {
 
-tarch::logging::Log GatherScatterCommunication:: _log("precice::m2n::GatherScatterCommunication");
+logging::Logger GatherScatterCommunication:: _log("precice::m2n::GatherScatterCommunication");
 
 GatherScatterCommunication:: GatherScatterCommunication
 (

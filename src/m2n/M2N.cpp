@@ -22,7 +22,7 @@ extern bool testMode;
 
 namespace m2n {
 
-tarch::logging::Log M2N::_log("precice::m2n::M2N");
+logging::Logger M2N::_log("precice::m2n::M2N");
 
 M2N:: M2N(  com::Communication::SharedPointer masterCom, DistributedComFactory::SharedPointer distrFactory )
 :

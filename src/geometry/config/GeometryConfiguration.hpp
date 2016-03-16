@@ -9,7 +9,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <vector>
 #include <set>
 #include "boost/tuple/tuple.hpp"
@@ -90,7 +90,7 @@ public:
 private:
 
    // @brief Log device
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    // @brief XML tag corresponding to class
    const std::string TAG;

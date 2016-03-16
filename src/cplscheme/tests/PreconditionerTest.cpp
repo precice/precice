@@ -19,7 +19,7 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-tarch::logging::Log PreconditionerTest::
+logging::Logger PreconditionerTest::
    _log ( "precice::cplscheme::tests::PreconditionerTest" );
 
 PreconditionerTest::PreconditionerTest ()

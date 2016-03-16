@@ -29,7 +29,7 @@ namespace precice {
 namespace geometry {
 namespace tests {
 
-tarch::logging::Log CommunicatedGeometryTest::
+logging::Logger CommunicatedGeometryTest::
   _log ( "precice::geometry::tests::CommunicatedGeometryTest" );
 
 CommunicatedGeometryTest:: CommunicatedGeometryTest ()

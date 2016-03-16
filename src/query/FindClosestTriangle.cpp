@@ -12,7 +12,7 @@
 namespace precice {
 namespace query {
 
-tarch::logging::Log FindClosestTriangle:: _log ( "precice::query::FindClosestTriangle" );
+logging::Logger FindClosestTriangle:: _log ( "precice::query::FindClosestTriangle" );
 
 const utils::DynVector& FindClosestTriangle:: getSearchPoint() const
 {

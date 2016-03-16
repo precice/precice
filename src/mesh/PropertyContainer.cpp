@@ -9,7 +9,7 @@ namespace mesh {
 
 const int PropertyContainer:: INDEX_GEOMETRY_ID = getFreePropertyID();
 
-tarch::logging::Log PropertyContainer:: _log ( "precice::mesh::PropertyContainer" );
+logging::Logger PropertyContainer:: _log ( "precice::mesh::PropertyContainer" );
 
 utils::ManageUniqueIDs * PropertyContainer:: _manageUniqueIDs = nullptr;
 

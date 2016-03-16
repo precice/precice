@@ -5,7 +5,7 @@
 namespace precice {
 namespace io {
 
-tarch::logging::Log ImportSTL:: _log("precice::io::ImportSTL");
+logging::Logger ImportSTL:: _log("precice::io::ImportSTL");
 
 ImportSTL:: ImportSTL
 (

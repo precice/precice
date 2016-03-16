@@ -24,7 +24,7 @@ bool MasterSlave::_slaveMode = false;
 com::Communication::SharedPointer MasterSlave::_communication;
 
 
-tarch::logging::Log MasterSlave:: _log ( "precice::utils::MasterSlave" );
+logging::Logger MasterSlave:: _log ( "precice::utils::MasterSlave" );
 
 void MasterSlave:: configure(int rank, int size)
 {

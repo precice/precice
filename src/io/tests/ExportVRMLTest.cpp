@@ -27,7 +27,7 @@ namespace tests {
 
 using namespace std;
 
-tarch::logging::Log ExportVRMLTest:: _log ("precice::io::ExportVRMLTest");
+logging::Logger ExportVRMLTest:: _log ("precice::io::ExportVRMLTest");
 
 ExportVRMLTest:: ExportVRMLTest()
 :

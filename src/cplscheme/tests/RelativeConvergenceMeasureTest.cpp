@@ -13,7 +13,7 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-tarch::logging::Log RelativeConvergenceMeasureTest::
+logging::Logger RelativeConvergenceMeasureTest::
    _log ( "precice::cplscheme::tests::RelativeConvergenceMeasureTest" );
 
 RelativeConvergenceMeasureTest:: RelativeConvergenceMeasureTest ()

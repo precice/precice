@@ -9,7 +9,7 @@
 namespace precice {
 namespace io {
 
-tarch::logging::Log TXTWriter:: _log ( "precice::io::TXTWriter" );
+logging::Logger TXTWriter:: _log ( "precice::io::TXTWriter" );
 
 TXTWriter:: TXTWriter
 (

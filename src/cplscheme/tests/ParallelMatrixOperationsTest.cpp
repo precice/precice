@@ -18,7 +18,7 @@
 #include "tarch/la/Vector.h"
 #include "tarch/la/Scalar.h"
 #include "com/Communication.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "Eigen/Dense"
 #include <string.h>
 
@@ -31,7 +31,7 @@ namespace tests {
 
 using utils::Vector3D;
 
-tarch::logging::Log ParallelMatrixOperationsTest::
+logging::Logger ParallelMatrixOperationsTest::
   _log ( "precice::cplscheme::tests::ParallelMatrixOperationsTest" );
 
 ParallelMatrixOperationsTest:: ParallelMatrixOperationsTest ()

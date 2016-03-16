@@ -8,7 +8,7 @@
 #include "utils/Helpers.hpp"
 #include "utils/Dimensions.hpp"
 //#include "utils/NumericalCompare.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice {
@@ -88,7 +88,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    double _convergenceLimit;
 

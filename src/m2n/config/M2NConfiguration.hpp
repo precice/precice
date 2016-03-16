@@ -4,7 +4,7 @@
 #pragma once
 
 #include "m2n/M2N.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
 
 #include <boost/tuple/tuple.hpp>
@@ -58,7 +58,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    const std::string TAG;
    const std::string ATTR_TYPE;

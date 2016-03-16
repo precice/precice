@@ -44,7 +44,7 @@ namespace tests {
 
 using utils::Vector3D;
 
-tarch::logging::Log PostProcessingMasterSlaveTest::
+logging::Logger PostProcessingMasterSlaveTest::
   _log ( "precice::cplscheme::tests::PostProcessingMasterSlaveTest" );
 
 PostProcessingMasterSlaveTest:: PostProcessingMasterSlaveTest ()

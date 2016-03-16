@@ -19,7 +19,7 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-tarch::logging::Log HierarchicalAitkenPostProcessingTest::
+logging::Logger HierarchicalAitkenPostProcessingTest::
   _log ( "precice::cplscheme::tests::HierarchicalAitkenPostProcessingTest" );
 
 HierarchicalAitkenPostProcessingTest:: HierarchicalAitkenPostProcessingTest ()

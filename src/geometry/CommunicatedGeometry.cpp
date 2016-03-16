@@ -14,7 +14,7 @@ using precice::utils::Event;
 namespace precice {
 namespace geometry {
 
-tarch::logging::Log CommunicatedGeometry:: _log ( "precice::geometry::CommunicatedGeometry" );
+logging::Logger CommunicatedGeometry:: _log ( "precice::geometry::CommunicatedGeometry" );
 
 CommunicatedGeometry:: CommunicatedGeometry
 (

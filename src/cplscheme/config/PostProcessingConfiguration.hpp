@@ -9,7 +9,7 @@
 #include "precice/config/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -78,7 +78,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    const std::string TAG;
    const std::string TAG_RELAX;

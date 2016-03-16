@@ -14,7 +14,7 @@ namespace precice {
 namespace geometry {
 namespace impl {
 
-tarch::logging::Log Decomposition:: _log ( "precice::geometry::Decomposition" );
+logging::Logger Decomposition:: _log ( "precice::geometry::Decomposition" );
 
 Decomposition:: Decomposition
 (

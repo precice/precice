@@ -12,7 +12,7 @@ namespace precice {
 namespace spacetree {
 namespace tests {
 
-tarch::logging::Log StaticOctreeTest::
+logging::Logger StaticOctreeTest::
   _log("precice::spacetree::tests::StaticOctreeTest");
 
 void StaticOctreeTest:: run()

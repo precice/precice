@@ -12,6 +12,7 @@
 #include <map>
 #include <vector>
 #include <set>
+#include "tarch/logging/Log.h"
 
 namespace precice {
 namespace utils {

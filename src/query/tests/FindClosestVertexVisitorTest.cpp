@@ -14,7 +14,7 @@ namespace precice {
 namespace query {
 namespace tests {
 
-tarch::logging::Log FindClosestVertexVisitorTest::
+logging::Logger FindClosestVertexVisitorTest::
    _log ("precice::query::FindClosestVertexVisitorTest");
 
 FindClosestVertexVisitorTest:: FindClosestVertexVisitorTest ()

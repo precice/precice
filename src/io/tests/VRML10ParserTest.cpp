@@ -24,7 +24,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-tarch::logging::Log VRML10ParserTest:: _log ( "precice::io::VRML10ParserTest" );
+logging::Logger VRML10ParserTest:: _log ( "precice::io::VRML10ParserTest" );
 
 VRML10ParserTest:: VRML10ParserTest ()
 :

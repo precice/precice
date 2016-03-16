@@ -7,7 +7,7 @@
 #include "Geometry.hpp"
 #include "com/Communication.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 #include <map>
 
@@ -37,7 +37,7 @@ protected:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 };
 
 }} // namespace precice, geometry

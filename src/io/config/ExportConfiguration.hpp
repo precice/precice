@@ -8,7 +8,7 @@
 #include "io/Constants.hpp"
 #include "io/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "precice/Constants.hpp"
 #include <string>
 #include <list>
@@ -72,7 +72,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   const std::string TAG;
 

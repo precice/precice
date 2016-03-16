@@ -14,7 +14,7 @@
 namespace precice {
 namespace impl {
 
-tarch::logging::Log Participant:: _log ( "precice::impl::Participant" );
+logging::Logger Participant:: _log ( "precice::impl::Participant" );
 
 int Participant:: _participantsSize = 0;
 

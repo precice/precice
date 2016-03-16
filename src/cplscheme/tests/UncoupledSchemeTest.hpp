@@ -5,7 +5,7 @@
 #define PRECICE_CPLSCHEME_TESTS_UNCOUPLEDCOUPLINGSCHEMETEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -41,7 +41,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /**
    * @brief Only test case so far...

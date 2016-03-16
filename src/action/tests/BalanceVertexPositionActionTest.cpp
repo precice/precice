@@ -20,7 +20,7 @@ namespace precice {
 namespace action {
 namespace tests {
 
-tarch::logging::Log BalanceVertexPositionActionTest::
+logging::Logger BalanceVertexPositionActionTest::
   _log ( "precice::action::tests::BalanceVertexPositionActionTest" );
 
 BalanceVertexPositionActionTest:: BalanceVertexPositionActionTest ()

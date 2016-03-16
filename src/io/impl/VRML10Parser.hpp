@@ -9,7 +9,7 @@
 #include "mesh/PropertyContainer.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
@@ -51,7 +51,7 @@ struct VRML10Parser : public qi::grammar<ITERATOR_T, qi::space_type>
    };
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    // @brief The entry point for parsing.
    qi::rule<ITERATOR_T, qi::space_type> start;
@@ -166,7 +166,7 @@ struct VRML10Parser : public qi::grammar<ITERATOR_T, qi::space_type>
 
 
 template< typename ITERATOR_T >
-tarch::logging::Log VRML10Parser<ITERATOR_T>:: _log ( "precice::io::impl::VRML10Parser" );
+logging::Logger VRML10Parser<ITERATOR_T>:: _log ( "precice::io::impl::VRML10Parser" );
 
 template< typename ITERATOR_T >
 VRML10Parser<ITERATOR_T>:: VRML10Parser

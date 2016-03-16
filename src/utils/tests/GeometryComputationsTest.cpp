@@ -14,7 +14,7 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-tarch::logging::Log GeometryComputationsTest::
+logging::Logger GeometryComputationsTest::
     _log ("precice::utils::GeometryComputationsTest");
 
 GeometryComputationsTest:: GeometryComputationsTest ()

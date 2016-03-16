@@ -5,7 +5,7 @@
 #define PRECICE_CPLSCHEME_UNCOUPLEDCOUPLINGSCHEME_HPP_
 
 #include "BaseCouplingScheme.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -81,7 +81,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Name of participant starting the explicit coupling scheme.
   std::string _participant;

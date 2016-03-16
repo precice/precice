@@ -144,7 +144,7 @@ public:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    // @brief Manager to ensure unique identification of all properties.
    static utils::ManageUniqueIDs * _manageUniqueIDs;

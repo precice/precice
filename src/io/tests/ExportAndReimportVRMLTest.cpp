@@ -27,7 +27,7 @@ namespace io {
 namespace tests {
 
 
-tarch::logging::Log ExportAndReimportVRMLTest::
+logging::Logger ExportAndReimportVRMLTest::
    _log ( "precice::io::tests::ExportAndReimportVRMLTest" );
 
 ExportAndReimportVRMLTest:: ExportAndReimportVRMLTest()

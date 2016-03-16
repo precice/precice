@@ -6,7 +6,7 @@
 
 #include "PostProcessing.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
@@ -156,7 +156,7 @@ protected:
    typedef tarch::la::DynamicMatrix<double> Matrix;
 
    /// @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    /// @brief preconditioner for least-squares system if vectorial system is used.
    PtrPreconditioner _preconditioner;

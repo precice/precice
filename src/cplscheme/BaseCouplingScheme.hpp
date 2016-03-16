@@ -12,7 +12,7 @@
 #include "m2n/M2N.hpp"
 #include "com/Constants.hpp"
 #include "utils/PointerVector.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "Eigen/Dense"
@@ -510,7 +510,7 @@ private:
   bool _participantReceivesDt;
 
   /// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _maxTime;
 

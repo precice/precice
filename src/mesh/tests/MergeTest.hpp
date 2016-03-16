@@ -5,7 +5,7 @@
 #define PRECICE_MESH_TESTS_MERGETEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace mesh {
@@ -40,7 +40,7 @@ public:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 };
 
 }}} // namespace precice, mesh, tests

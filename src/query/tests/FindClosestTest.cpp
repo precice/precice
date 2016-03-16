@@ -21,7 +21,7 @@ namespace precice {
 namespace query {
 namespace tests {
 
-tarch::logging::Log FindClosestTest:: _log ( "precice::query::tests::FindClosestTest" );
+logging::Logger FindClosestTest:: _log ( "precice::query::tests::FindClosestTest" );
 
 FindClosestTest:: FindClosestTest ()
 :

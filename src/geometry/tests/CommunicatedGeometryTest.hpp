@@ -7,7 +7,7 @@
 #define PRECICE_GEOMETRY_TESTS_COMMNUICATEDGEOMETRYTEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace geometry {
@@ -33,7 +33,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    void testScatterMesh ();
 

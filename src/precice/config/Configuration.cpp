@@ -7,7 +7,7 @@
 namespace precice {
 namespace config {
 
-tarch::logging::Log Configuration:: _log("precice::config::Configuration");
+logging::Logger Configuration:: _log("precice::config::Configuration");
 
 Configuration:: Configuration()
 :

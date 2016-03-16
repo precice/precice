@@ -27,7 +27,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-// tarch::logging::Log BroydenPostProcessing::
+// logging::Logger BroydenPostProcessing::
  //      _log("precice::cplscheme::impl::BroydenPostProcessing");
 
       
@@ -112,7 +112,7 @@ void BroydenPostProcessing::computeQNUpdate
   preciceDebug("currentColumns="<<_currentColumns);  
   if(_currentColumns > 1)
   {
-     preciceError(__func__, "truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.";)
+     preciceError(__func__, "truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.");
      preciceDebug("compute update with QR-dec");
      //computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   }else

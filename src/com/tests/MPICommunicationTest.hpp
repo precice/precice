@@ -5,7 +5,7 @@
 #define PRECICE_COM_TESTS_COMMUNICATIONMPITEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace com {
@@ -44,7 +44,7 @@ public:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
 #  ifndef PRECICE_NO_MPI
 

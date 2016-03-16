@@ -13,7 +13,7 @@
 namespace precice {
 namespace com {
 
-tarch::logging::Log FileCommunication:: _log ( "precice::com::FileCommunication" );
+logging::Logger FileCommunication:: _log ( "precice::com::FileCommunication" );
 
 FileCommunication:: FileCommunication
 (

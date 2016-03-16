@@ -5,7 +5,7 @@
 #define PRECICE_ITESTS_SCALEACTIONTEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace action {
@@ -42,7 +42,7 @@ public:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    /**
     * @brief Test division of data by area of mesh elements (edges or triangles).

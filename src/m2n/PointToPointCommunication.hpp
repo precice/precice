@@ -11,7 +11,7 @@
 #include "com/Communication.hpp"
 #include "com/CommunicationFactory.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace m2n {
@@ -105,7 +105,7 @@ public:
                        int valueDimension = 1);
 
 private:
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   static std::string _prefix;
 

@@ -35,7 +35,7 @@ void NearestNeighborMappingTest:: run()
 
 void NearestNeighborMappingTest:: testConsistentNonIncremental()
 {
-  ppreciceTrace("testConsistentNonIncremental()");
+  preciceTrace("testConsistentNonIncremental()");
   using namespace mesh;
   using utils::Vector2D;
   int dimensions = 2;
@@ -122,7 +122,7 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
 
 void NearestNeighborMappingTest:: testConservativeNonIncremental()
 {
-  ppreciceTrace("testConservativeNonIncremental()");
+  preciceTrace("testConservativeNonIncremental()");
   using namespace mesh;
   using namespace tarch::la;
   using utils::Vector2D;

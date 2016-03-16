@@ -17,7 +17,7 @@ namespace precice {
 namespace mesh {
 namespace tests {
 
-tarch::logging::Log QuadTest:: _log ("precice::mesh::QuadTest");
+logging::Logger QuadTest:: _log ("precice::mesh::QuadTest");
 
 QuadTest:: QuadTest ()
 :

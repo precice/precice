@@ -13,7 +13,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log ScaleByDtAction:: _log ( "precice::action::ScaleByDtAction" );
+logging::Logger ScaleByDtAction:: _log ( "precice::action::ScaleByDtAction" );
 
 ScaleByDtAction:: ScaleByDtAction
 (

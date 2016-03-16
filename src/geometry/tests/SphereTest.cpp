@@ -15,7 +15,7 @@ namespace precice {
 namespace geometry {
 namespace tests {
 
-tarch::logging::Log SphereTest:: _log ( "precice::geometry::tests::SphereTest" );
+logging::Logger SphereTest:: _log ( "precice::geometry::tests::SphereTest" );
 
 SphereTest:: SphereTest ()
 :

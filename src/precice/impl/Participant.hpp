@@ -16,7 +16,7 @@
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
 #include "boost/tuple/tuple.hpp"
@@ -183,7 +183,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   static int _participantsSize;
 

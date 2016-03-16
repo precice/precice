@@ -8,7 +8,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log ResidualPreconditioner::
+logging::Logger ResidualPreconditioner::
    _log ( "precice::cplscheme::ResidualPreconditioner" );
 
 ResidualPreconditioner:: ResidualPreconditioner

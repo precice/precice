@@ -5,7 +5,7 @@
 #define PRECICE_IO_TESTS_TXTTABLEWRITER_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace io {
@@ -37,7 +37,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /**
    * @brief Tests writing table data to a file.

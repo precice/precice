@@ -14,7 +14,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log BalanceVertexPositionAction::
+logging::Logger BalanceVertexPositionAction::
   _log ( "precice::action::BalanceVertexPositionAction" );
 
 BalanceVertexPositionAction:: BalanceVertexPositionAction

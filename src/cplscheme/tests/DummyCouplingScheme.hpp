@@ -5,7 +5,7 @@
 #define PRECICE_CPLSCHEME_TESTS_DUMMYCOUPLINGSCHEME_HPP_
 
 #include "../CouplingScheme.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Globals.hpp"
 
 namespace precice {
@@ -188,7 +188,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Number of iterations performed per timestep. 1 --> explicit.
   int _numberIterations;

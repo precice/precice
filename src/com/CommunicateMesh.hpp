@@ -4,7 +4,7 @@
 #ifndef PRECICE_COM_COMMUNICATEMESH_HPP_
 #define PRECICE_COM_COMMUNICATEMESH_HPP_
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
 
 namespace precice {
@@ -63,7 +63,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Communication means used for the transfer of the geometry.
   com::Communication::SharedPointer _communication;

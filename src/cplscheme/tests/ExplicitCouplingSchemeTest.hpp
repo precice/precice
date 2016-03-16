@@ -8,7 +8,7 @@
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 
 namespace precice {
@@ -56,7 +56,7 @@ public:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    // @brief Path to src directory.
    std::string _pathToTests;

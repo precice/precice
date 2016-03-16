@@ -19,7 +19,7 @@ using precice::utils::ScopedPublisher;
 
 namespace precice {
 namespace com {
-tarch::logging::Log MPIPortsCommunication::_log(
+logging::Logger MPIPortsCommunication::_log(
     "precice::com::MPIPortsCommunication");
 
 MPIPortsCommunication::MPIPortsCommunication(

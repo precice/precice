@@ -19,7 +19,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-tarch::logging::Log ExportVTKTest:: _log ("precice::io::ExportVTKTest");
+logging::Logger ExportVTKTest:: _log ("precice::io::ExportVTKTest");
 
 ExportVTKTest:: ExportVTKTest()
 :

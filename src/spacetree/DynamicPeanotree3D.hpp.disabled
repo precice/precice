@@ -8,7 +8,7 @@
 #include "spacetree/impl/PeanotreeCell2D.hpp"
 #include "spacetree/impl/PeanotreeCell3D.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace spacetree {
@@ -49,7 +49,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   utils::DynVector _center;
 

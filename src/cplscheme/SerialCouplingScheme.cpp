@@ -6,7 +6,7 @@
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log SerialCouplingScheme::_log("precice::cplscheme::SerialCouplingScheme" );
+logging::Logger SerialCouplingScheme::_log("precice::cplscheme::SerialCouplingScheme" );
 
 SerialCouplingScheme::SerialCouplingScheme
 (

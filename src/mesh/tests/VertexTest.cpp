@@ -13,7 +13,7 @@ namespace precice {
 namespace mesh {
 namespace tests {
 
-tarch::logging::Log VertexTest:: _log ( "precice::mesh::VertexTest" );
+logging::Logger VertexTest:: _log ( "precice::mesh::VertexTest" );
 
 VertexTest:: VertexTest ()
 :

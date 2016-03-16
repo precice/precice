@@ -17,7 +17,7 @@ namespace precice {
 namespace geometry {
 namespace tests {
 
-tarch::logging::Log DriftRatchetTest:: _log ( "precice::geometry::tests::DriftRatchetTest" );
+logging::Logger DriftRatchetTest:: _log ( "precice::geometry::tests::DriftRatchetTest" );
 
 DriftRatchetTest:: DriftRatchetTest (void)
 :

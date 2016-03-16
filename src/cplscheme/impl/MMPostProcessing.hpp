@@ -11,7 +11,7 @@
 #include "PostProcessing.hpp"
 #include "SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
@@ -151,7 +151,7 @@ public:
 private:
 
   /// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /// @brief coarse model optimization method
   impl::PtrPostProcessing _coarseModelOptimization;

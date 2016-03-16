@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace utils {
@@ -27,7 +27,7 @@ private:
   /// Whether we have initialized Petsc or if it was initialized by an application calling us.
   static bool weInitialized;
   
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 };
 
 

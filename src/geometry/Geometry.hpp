@@ -5,7 +5,7 @@
 #define PRECICE_GEOMETRY_GEOMETRY_HPP_
 
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 
@@ -93,7 +93,7 @@ protected:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Offset of reference point of geometry from zero point
   utils::DynVector _offset;

@@ -25,7 +25,7 @@ namespace geometry {
 
 using utils::DynVector;
 
-tarch::logging::Log GeometryConfiguration:: _log ("precice::geometry::GeometryConfiguration");
+logging::Logger GeometryConfiguration:: _log ("precice::geometry::GeometryConfiguration");
 
 //const std::string& GeometryConfiguration:: getTag()
 //{

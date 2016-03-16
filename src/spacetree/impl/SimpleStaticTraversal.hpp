@@ -11,7 +11,7 @@
 #include "query/FindVoxelContent.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Helpers.hpp"
 #include <list>
 #include <memory>
@@ -91,7 +91,7 @@ private:
       uncachedCellCenters() {}
   };
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   void setCellPositions (
     CELL_T&                 cell,
@@ -149,7 +149,7 @@ private:
 // ----------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template<typename CELL_T>
-tarch::logging::Log StaticTraversal<CELL_T>::
+logging::Logger StaticTraversal<CELL_T>::
   _log("precice::spacetree::StaticTraversal");
 
 template<typename CELL_T>

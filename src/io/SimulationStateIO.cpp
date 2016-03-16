@@ -30,7 +30,7 @@ const std::string& SimulationStateIO:: standardFileExtension()
   return ext;
 }
 
-tarch::logging::Log SimulationStateIO:: _log("precice::io::SimulationStateIO");
+logging::Logger SimulationStateIO:: _log("precice::io::SimulationStateIO");
 
 SimulationStateIO:: SimulationStateIO
 (

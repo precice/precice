@@ -14,7 +14,7 @@ namespace precice {
 namespace mesh {
 namespace tests {
 
-tarch::logging::Log DataConfigurationTest::
+logging::Logger DataConfigurationTest::
   _log("precice::mesh::tests::DataConfigurationTest");
 
 DataConfigurationTest:: DataConfigurationTest ()

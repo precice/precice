@@ -8,7 +8,7 @@
 namespace precice {
 namespace config {
 
-tarch::logging::Log LogFilterConfiguration::
+logging::Logger LogFilterConfiguration::
   _log("precice::config::LogFilterConfiguration");
 
 LogFilterConfiguration:: LogFilterConfiguration

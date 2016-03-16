@@ -32,7 +32,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-// tarch::logging::Log IQNILSPostProcessing::
+// logging::Logger IQNILSPostProcessing::
 //       _log("precice::cplscheme::impl::IQNILSPostProcessing");
 
 IQNILSPostProcessing:: IQNILSPostProcessing

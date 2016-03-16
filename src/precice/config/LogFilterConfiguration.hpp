@@ -4,7 +4,7 @@
 #ifndef _TARCH_LOGGING_CONFIGURATION_LOGFILTERCONFIGURATION_H_
 #define _TARCH_LOGGING_CONFIGURATION_LOGFILTERCONFIGURATION_H_
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/logging/CommandLineLogger.h"
 #include "utils/xml/XMLTag.hpp"
 #include <string>
@@ -31,7 +31,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   const std::string TAG;
   const std::string ATTR_TARGET;

@@ -3,7 +3,7 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #pragma once
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "utils/MasterSlave.hpp"
 #include <map>
@@ -95,7 +95,7 @@ protected:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
 };
 

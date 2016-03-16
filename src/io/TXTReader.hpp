@@ -4,7 +4,7 @@
 #ifndef PRECICE_IO_TXTREADER_HPP_
 #define PRECICE_IO_TXTREADER_HPP_
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/traits/IsMatrix.h"
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/MatrixTraits.h"
@@ -85,7 +85,7 @@ public:
 private:
 
   /// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /// @brief Filestream.
   std::ifstream _file;

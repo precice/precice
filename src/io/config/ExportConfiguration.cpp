@@ -15,7 +15,7 @@
 namespace precice {
 namespace io {
 
-tarch::logging::Log ExportConfiguration:: _log("precice::io::ExportConfiguration");
+logging::Logger ExportConfiguration:: _log("precice::io::ExportConfiguration");
 
 //const std::string& ExportConfiguration:: getTag()
 //{

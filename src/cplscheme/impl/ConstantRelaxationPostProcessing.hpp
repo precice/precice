@@ -5,7 +5,7 @@
 #define PRECICE_CPLSCHEME_CONSTANTRELAXATIONPOSTPROCESSING_HPP_
 
 #include "PostProcessing.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <map>
 
 namespace precice {
@@ -44,7 +44,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    double _relaxation;
 

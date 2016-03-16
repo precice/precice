@@ -23,7 +23,7 @@ namespace com {
 
 namespace asio = boost::asio;
 
-tarch::logging::Log SocketCommunication::_log(
+logging::Logger SocketCommunication::_log(
     "precice::com::SocketCommunication");
 
 SocketCommunication::SocketCommunication(unsigned short portNumber,

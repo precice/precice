@@ -8,7 +8,7 @@
 #include "Request.hpp"
 
 #include <memory>
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace com {
@@ -303,7 +303,7 @@ protected:
 
 private:
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 };
 }
 } // namespace precice, com

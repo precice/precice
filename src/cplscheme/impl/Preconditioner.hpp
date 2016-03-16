@@ -367,7 +367,7 @@ protected:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
 };
 

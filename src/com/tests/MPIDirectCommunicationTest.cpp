@@ -14,7 +14,7 @@ namespace precice {
 namespace com {
 namespace tests {
 
-tarch::logging::Log MPIDirectCommunicationTest::
+logging::Logger MPIDirectCommunicationTest::
   _log ("precice::com::tests::MPIDirectCommunicationTest");
 
 MPIDirectCommunicationTest:: MPIDirectCommunicationTest ()

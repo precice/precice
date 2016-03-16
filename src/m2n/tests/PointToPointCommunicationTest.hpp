@@ -11,7 +11,7 @@
 #include "com/CommunicationFactory.hpp"
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace m2n {
@@ -36,7 +36,7 @@ public:
   virtual void run();
 
 private:
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   void testSocketCommunication();
 

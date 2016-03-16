@@ -5,7 +5,7 @@
 #define PRECICE_CONFIG_LOGOUTPUTFORMATCONFIGURATION_HPP
 
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 
 namespace precice {
@@ -44,7 +44,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   const std::string TAG;
   const std::string ATTR_COLUMN_SEPARATOR;

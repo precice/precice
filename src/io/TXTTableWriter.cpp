@@ -8,7 +8,7 @@
 namespace precice {
 namespace io {
 
-tarch::logging::Log TXTTableWriter:: _log ( "precice::io::TXTTableWriter" );
+logging::Logger TXTTableWriter:: _log ( "precice::io::TXTTableWriter" );
 
 TXTTableWriter:: TXTTableWriter
 (

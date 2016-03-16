@@ -7,7 +7,7 @@
 #include "spacetree/Spacetree.hpp"
 #include "tarch/Assertions.h"
 #include "tarch/la/DynamicVector.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace spacetree {
@@ -97,7 +97,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   tarch::la::DynamicVector<tarch::la::DynamicVector<int> > _neighborCellIndices;
 

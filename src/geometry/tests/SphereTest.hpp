@@ -5,7 +5,7 @@
 #define PRECICE_GEOMETRY_TESTS_SPHERETEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace geometry {
@@ -15,7 +15,7 @@ class SphereTest : public tarch::tests::TestCase
 {
 public:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    SphereTest ();
 

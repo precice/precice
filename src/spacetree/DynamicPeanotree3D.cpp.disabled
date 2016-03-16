@@ -9,7 +9,7 @@
 namespace precice {
 namespace spacetree {
 
-tarch::logging::Log DynamicPeanotree3D:: _log("precice::spacetree::DynamicPeanotree3D");
+logging::Logger DynamicPeanotree3D:: _log("precice::spacetree::DynamicPeanotree3D");
 
 DynamicPeanotree3D:: DynamicPeanotree3D
 (

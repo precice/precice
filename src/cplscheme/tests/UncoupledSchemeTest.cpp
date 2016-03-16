@@ -12,7 +12,7 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-tarch::logging::Log UncoupledSchemeTest::
+logging::Logger UncoupledSchemeTest::
    _log ( "precice::cplscheme::tests::UncoupledSchemeTest" );
 
 UncoupledSchemeTest:: UncoupledSchemeTest ()

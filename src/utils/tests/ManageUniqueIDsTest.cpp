@@ -14,7 +14,7 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-tarch::logging::Log ManageUniqueIDsTest::
+logging::Logger ManageUniqueIDsTest::
    _log ( "precice::utils::tests::ManageUniqueIDsTest" );
 
 ManageUniqueIDsTest:: ManageUniqueIDsTest ()

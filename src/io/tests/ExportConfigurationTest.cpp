@@ -16,7 +16,7 @@ namespace io {
 namespace tests {
 
 
-tarch::logging::Log ExportConfigurationTest::
+logging::Logger ExportConfigurationTest::
    _log ( "precice::io::tests::ExportConfigurationTest" );
 
 ExportConfigurationTest:: ExportConfigurationTest ()

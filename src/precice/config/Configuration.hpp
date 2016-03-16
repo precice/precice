@@ -8,7 +8,7 @@
 #include "precice/config/LogFilterConfiguration.hpp"
 #include "precice/config/LogOutputFormatConfiguration.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace config {
@@ -70,7 +70,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Root tag of preCICE configuration.
   utils::XMLTag _tag;

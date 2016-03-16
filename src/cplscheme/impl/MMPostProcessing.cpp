@@ -30,7 +30,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log MMPostProcessing::
+logging::Logger MMPostProcessing::
 _log("precice::cplscheme::impl::MMPostProcessing");
 
 /* ----------------------------------------------------------------------------

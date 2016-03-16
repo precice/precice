@@ -360,7 +360,7 @@ PointToPointCommunication::eventNamePrefix() {
   return _prefix;
 }
 
-tarch::logging::Log PointToPointCommunication::_log(
+logging::Logger PointToPointCommunication::_log(
     "precice::m2n::PointToPointCommunication");
 
 PointToPointCommunication::PointToPointCommunication(

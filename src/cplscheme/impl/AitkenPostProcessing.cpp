@@ -19,7 +19,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log AitkenPostProcessing::
+logging::Logger AitkenPostProcessing::
   _log ( "precice::cplscheme::AitkenPostProcessing" );
 
 AitkenPostProcessing:: AitkenPostProcessing

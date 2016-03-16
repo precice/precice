@@ -8,7 +8,7 @@
 #include "../CouplingData.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <limits>
 #include "utils/MasterSlave.hpp"
 
@@ -99,7 +99,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    double _convergenceLimitPercent;
 

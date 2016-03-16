@@ -8,7 +8,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log MinIterationConvergenceMeasure::
+logging::Logger MinIterationConvergenceMeasure::
   _log("precice::cplscheme::MinIterationConvergenceMeasure");
 
 MinIterationConvergenceMeasure:: MinIterationConvergenceMeasure

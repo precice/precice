@@ -9,7 +9,7 @@
 #include "impl/VRML10Parser.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <map>
 
 namespace precice {
@@ -61,7 +61,7 @@ public:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    bool _createMesh;
 

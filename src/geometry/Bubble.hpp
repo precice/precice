@@ -7,7 +7,7 @@
 #include "Geometry.hpp"
 #include "utils/Helpers.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <map>
 
 namespace precice {
@@ -74,7 +74,7 @@ protected:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    // @brief Length of mesh elements the bubble is made of
    double _discretizationWidth;

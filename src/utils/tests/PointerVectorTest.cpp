@@ -13,7 +13,7 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-tarch::logging::Log PointerVectorTest:: _log ( "precice::utils::tests::PointerVectoTest" );
+logging::Logger PointerVectorTest:: _log ( "precice::utils::tests::PointerVectoTest" );
 
 PointerVectorTest:: PointerVectorTest ()
 :

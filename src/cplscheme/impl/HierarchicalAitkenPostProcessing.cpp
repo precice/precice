@@ -11,7 +11,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log HierarchicalAitkenPostProcessing::
+logging::Logger HierarchicalAitkenPostProcessing::
   _log ( "precice::cplscheme::HierarchicalAitkenPostProcessing" );
 
 HierarchicalAitkenPostProcessing:: HierarchicalAitkenPostProcessing

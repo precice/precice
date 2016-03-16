@@ -6,7 +6,7 @@
 
 #include "BaseQNPostProcessing.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicVector.h"
 #include <deque>

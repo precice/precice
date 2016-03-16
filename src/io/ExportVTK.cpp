@@ -15,7 +15,7 @@
 namespace precice {
 namespace io {
 
-tarch::logging::Log ExportVTK:: _log("precice::io::ExportVTK");
+logging::Logger ExportVTK:: _log("precice::io::ExportVTK");
 
 ExportVTK:: ExportVTK
 (

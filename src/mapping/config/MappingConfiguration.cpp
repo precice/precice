@@ -346,7 +346,7 @@ void MappingConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  ppreciceTrace1("xmlTagCallback()", tag.getName());
+  preciceTrace1("xmlTagCallback()", tag.getName());
   if (tag.getNamespace() == TAG){
     std::string dir = tag.getStringAttributeValue(ATTR_DIRECTION);
     std::string fromMesh = tag.getStringAttributeValue(ATTR_FROM);
@@ -413,7 +413,7 @@ void MappingConfiguration:: addMapping
   Direction            direction,
   Timing               timing )
 {
-  ppreciceTrace3("addMapping()", fromMesh, direction, timing);
+  preciceTrace3("addMapping()", fromMesh, direction, timing);
   //assertion ( !((timing == INITIALLY) && isIncremental) );
   ConfiguredMapping configuredMapping;
   configuredMapping.mapping = mapping;
@@ -441,15 +441,15 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   bool               yDead,
   bool               zDead) const
 {
-  ppreciceTrace5("createMapping()", direction, type, timing,
+  preciceTrace5("createMapping()", direction, type, timing,
                 shapeParameter, supportRadius);
   using namespace mapping;
   ConfiguredMapping configuredMapping;
   mesh::PtrMesh fromMesh(_meshConfig->getMesh(fromMeshName));
   mesh::PtrMesh toMesh(_meshConfig->getMesh(toMeshName));
-  ppreciceCheck(fromMesh.get() != nullptr, "createMapping()",
+  preciceCheck(fromMesh.get() != nullptr, "createMapping()",
                "Mesh \"" << fromMeshName << "\" not defined at creation of mapping!");
-  ppreciceCheck(toMesh.get() != nullptr, "createMapping()",
+  preciceCheck(toMesh.get() != nullptr, "createMapping()",
                "Mesh \"" << toMeshName << "\" not defined at creation of mapping!");
   configuredMapping.fromMesh = fromMesh;
   configuredMapping.toMesh = toMesh;
@@ -463,7 +463,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
     configuredMapping.direction = READ;
   }
   else {
-    ppreciceError("createMapping()", "Unknown direction type \"" << direction << "\"!");
+    preciceError("createMapping()", "Unknown direction type \"" << direction << "\"!");
   }
 
   Mapping::Constraint constraintValue;
@@ -474,7 +474,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
     constraintValue = Mapping::CONSISTENT;
   }
   else {
-    ppreciceError("createMapping()",
+    preciceError("createMapping()",
                  "Unknown mapping constraint \"" << constraint << "\"!");
   }
 
@@ -608,7 +608,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   }
 # endif
   else {
-    ppreciceError ( "getMapping()", "Unknown mapping type!" );
+    preciceError ( "getMapping()", "Unknown mapping type!" );
   }
   assertion ( configuredMapping.mapping.use_count() > 0 );
   #ifndef PRECICE_NO_PETSC
@@ -624,10 +624,10 @@ void MappingConfiguration:: checkDuplicates
   foreach ( const ConfiguredMapping & configuredMapping, _mappings ) {
     bool sameFromMesh = mapping.fromMesh->getName() == configuredMapping.fromMesh->getName();
     bool sameToMesh = mapping.toMesh->getName() == configuredMapping.toMesh->getName();
-    ppreciceCheck ( !sameFromMesh, "checkDuplicates()",
+    preciceCheck ( !sameFromMesh, "checkDuplicates()",
                    "There cannot be two mappings from mesh \""
                    << mapping.fromMesh->getName() << "\"" );
-    ppreciceCheck ( !sameToMesh, "checkDuplicates()",
+    preciceCheck ( !sameToMesh, "checkDuplicates()",
                        "There cannot be two mappings to mesh \""
                        << mapping.toMesh->getName() << "\"" );
   }
@@ -645,7 +645,7 @@ MappingConfiguration::Timing MappingConfiguration:: getTiming(
   else if (timing == VALUE_TIMING_ON_DEMAND){
     return ON_DEMAND;
   }
-  ppreciceError("getTiming()", "Unknown timing value \"" << timing << "\"!");
+  preciceError("getTiming()", "Unknown timing value \"" << timing << "\"!");
 }
 
 

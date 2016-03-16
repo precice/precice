@@ -19,7 +19,7 @@ namespace precice {
 namespace mesh {
 namespace tests {
 
-tarch::logging::Log MergeTest:: _log ( "precice::mesh::tests::MergeTest" );
+logging::Logger MergeTest:: _log ( "precice::mesh::tests::MergeTest" );
 
 MergeTest:: MergeTest()
 :

@@ -22,7 +22,7 @@
 namespace precice {
 namespace config {
 
-tarch::logging::Log SolverInterfaceConfiguration:: _log("precice::config::SolverInterfaceConfiguration");
+logging::Logger SolverInterfaceConfiguration:: _log("precice::config::SolverInterfaceConfiguration");
 
 SolverInterfaceConfiguration:: SolverInterfaceConfiguration
 (

@@ -21,7 +21,7 @@ namespace precice {
 namespace action {
 namespace tests {
 
-tarch::logging::Log ScaleActionTest::
+logging::Logger ScaleActionTest::
   _log ("precice::action::tests::ScaleActionTest");
 
 ScaleActionTest:: ScaleActionTest()

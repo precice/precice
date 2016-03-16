@@ -6,7 +6,7 @@
 
 #include "action/Action.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace action {
@@ -43,7 +43,7 @@ public:
 private:
 
   // @brief Logging device
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   mesh::PtrData _data;
 };

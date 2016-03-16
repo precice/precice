@@ -89,7 +89,7 @@ private:
   DataValues _compareDataValue;
   DataValues _compareDataConstant;
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 };
 
 }}} // namespace precice, cplscheme, tests

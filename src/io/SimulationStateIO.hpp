@@ -4,7 +4,7 @@
 #ifndef PRECICE_IO_SIMULATIONSTATEIO_HPP_
 #define PRECICE_IO_SIMULATIONSTATEIO_HPP_
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 
 namespace precice {
@@ -41,7 +41,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::string _file;
 };

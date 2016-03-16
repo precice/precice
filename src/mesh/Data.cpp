@@ -8,7 +8,7 @@
 namespace precice {
 namespace mesh {
 
-tarch::logging::Log Data:: _log ( "precice::mesh::Data" );
+logging::Logger Data:: _log ( "precice::mesh::Data" );
 
 size_t Data:: _dataCount = 0;
 

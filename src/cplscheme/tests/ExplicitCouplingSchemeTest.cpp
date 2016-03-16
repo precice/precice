@@ -31,7 +31,7 @@ namespace tests {
 
 using utils::Vector3D;
 
-tarch::logging::Log ExplicitCouplingSchemeTest::_log ( "precice::cplscheme::tests::ExplicitCouplingSchemeTest" );
+logging::Logger ExplicitCouplingSchemeTest::_log ( "precice::cplscheme::tests::ExplicitCouplingSchemeTest" );
 
 ExplicitCouplingSchemeTest:: ExplicitCouplingSchemeTest ()
 :

@@ -21,7 +21,7 @@
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log BaseCouplingScheme::
+logging::Logger BaseCouplingScheme::
 _log("precice::cplscheme::BaseCouplingScheme");
 
 BaseCouplingScheme:: BaseCouplingScheme

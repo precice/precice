@@ -18,7 +18,7 @@ namespace precice {
 namespace mesh {
 namespace tests {
 
-tarch::logging::Log GroupTest:: _log ( "precice::mesh::tests::GroupTest" );
+logging::Logger GroupTest:: _log ( "precice::mesh::tests::GroupTest" );
 
 GroupTest:: GroupTest ()
 :

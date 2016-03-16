@@ -12,7 +12,7 @@
 namespace precice {
 namespace geometry {
 
-tarch::logging::Log SolverGeometry:: _log ( "precice::geometry::SolverGeometry" );
+logging::Logger SolverGeometry:: _log ( "precice::geometry::SolverGeometry" );
 
 SolverGeometry:: SolverGeometry
 (

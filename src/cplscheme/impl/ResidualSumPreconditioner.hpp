@@ -43,7 +43,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::vector<double> _residualSum;
 

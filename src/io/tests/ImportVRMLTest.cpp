@@ -22,7 +22,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-tarch::logging::Log ImportVRMLTest:: _log ( "precice::io::ImportVRMLTest" );
+logging::Logger ImportVRMLTest:: _log ( "precice::io::ImportVRMLTest" );
 
 ImportVRMLTest::ImportVRMLTest ()
 :

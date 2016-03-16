@@ -8,7 +8,7 @@
 #include "io/TXTTableWriter.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 #include <vector>
 
@@ -57,7 +57,7 @@ public:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    utils::DynVector _point;
 

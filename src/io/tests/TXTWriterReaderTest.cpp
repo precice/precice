@@ -16,7 +16,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-tarch::logging::Log TXTWriterReaderTest:: _log ( "precice::io::tests::TXTWriterReaderTest" );
+logging::Logger TXTWriterReaderTest:: _log ( "precice::io::tests::TXTWriterReaderTest" );
 
 TXTWriterReaderTest:: TXTWriterReaderTest()
 :

@@ -12,7 +12,7 @@
 namespace precice {
 namespace geometry {
 
-tarch::logging::Log Sphere:: _log ( "precice::geometry::Sphere" );
+logging::Logger Sphere:: _log ( "precice::geometry::Sphere" );
 
 Sphere:: Sphere
 (

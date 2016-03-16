@@ -14,7 +14,7 @@
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <vector>
 #include <string>
 #include "boost/tuple/tuple.hpp"
@@ -97,7 +97,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   const std::string TAG;
   const std::string TAG_PARTICIPANTS;

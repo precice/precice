@@ -14,7 +14,7 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-tarch::logging::Log StringTest:: _log("precice::utils::StringTest");
+logging::Logger StringTest:: _log("precice::utils::StringTest");
 
 StringTest:: StringTest()
 :

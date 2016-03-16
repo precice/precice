@@ -22,7 +22,7 @@ namespace spirit = boost::spirit;
 namespace precice {
 namespace io {
 
-tarch::logging::Log ImportVRML:: _log ( "precice::io::ImportVRML" );
+logging::Logger ImportVRML:: _log ( "precice::io::ImportVRML" );
 
 ImportVRML:: ImportVRML
 (

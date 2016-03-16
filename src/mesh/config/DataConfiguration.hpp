@@ -7,7 +7,7 @@
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Data.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <vector>
 #include <string>
 
@@ -71,7 +71,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   const std::string TAG;
   const std::string ATTR_NAME;

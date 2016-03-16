@@ -7,7 +7,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log ConstantPreconditioner::
+logging::Logger ConstantPreconditioner::
    _log ( "precice::cplscheme::ConstantPreconditioner" );
 
 ConstantPreconditioner:: ConstantPreconditioner

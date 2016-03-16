@@ -17,7 +17,7 @@ namespace precice {
 namespace mesh {
 namespace tests {
 
-tarch::logging::Log TriangleTest:: _log ("precice::mesh::TriangleTest");
+logging::Logger TriangleTest:: _log ("precice::mesh::TriangleTest");
 
 TriangleTest:: TriangleTest ()
 :

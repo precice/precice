@@ -20,7 +20,7 @@ namespace precice {
 namespace com {
 namespace tests {
 
-tarch::logging::Log MPIPortsCommunicationTest::_log(
+logging::Logger MPIPortsCommunicationTest::_log(
     "precice::com::tests::MPIPortsCommunicationTest");
 
 MPIPortsCommunicationTest::MPIPortsCommunicationTest()

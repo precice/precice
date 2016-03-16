@@ -7,7 +7,7 @@
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log UncoupledScheme::
+logging::Logger UncoupledScheme::
   _log ( "precice::cplscheme::UncoupledScheme" );
 
 UncoupledScheme:: UncoupledScheme

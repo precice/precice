@@ -6,7 +6,7 @@
 
 #include "PostProcessing.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Globals.hpp"
 #include "Eigen/Dense"
 
@@ -47,7 +47,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _initialRelaxation;
 

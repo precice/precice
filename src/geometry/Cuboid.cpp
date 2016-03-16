@@ -12,7 +12,7 @@
 namespace precice {
 namespace geometry {
 
-tarch::logging::Log Cuboid:: _log ( "precice::geometry::Cuboid" );
+logging::Logger Cuboid:: _log ( "precice::geometry::Cuboid" );
 
 Cuboid:: Cuboid
 (

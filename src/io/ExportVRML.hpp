@@ -5,7 +5,7 @@
 #define PRECICE_IO_EXPORTVRML_HPP_
 
 #include "Export.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 #include <map>
 
@@ -60,7 +60,7 @@ public:
 private:
 
   /// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   void openFile (
     std::ofstream&     outFile,

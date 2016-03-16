@@ -13,7 +13,7 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-tarch::logging::Log DimensionsTest:: _log ( "precice::utils::tests::DimensionsTest" );
+logging::Logger DimensionsTest:: _log ( "precice::utils::tests::DimensionsTest" );
 
 DimensionsTest:: DimensionsTest()
 :

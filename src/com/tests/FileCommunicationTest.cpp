@@ -15,7 +15,7 @@ namespace precice {
 namespace com {
 namespace tests {
 
-tarch::logging::Log FileCommunicationTest::
+logging::Logger FileCommunicationTest::
   _log ( "precice::com::tests::FileCommunicationTest" );
 
 FileCommunicationTest:: FileCommunicationTest()

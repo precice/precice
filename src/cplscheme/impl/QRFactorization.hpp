@@ -5,7 +5,7 @@
 #define PRECICE_QRFACTORIZATION_HPP_
 
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
@@ -249,7 +249,7 @@ private:
   
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   EigenMatrix _Q;
   EigenMatrix _R;

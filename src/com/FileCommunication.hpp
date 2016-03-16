@@ -8,7 +8,7 @@
 
 #include "Communication.hpp"
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 #include <fstream>
 #include <map>
@@ -220,7 +220,7 @@ public:
 
 private:
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   const int TYPE_DOUBLE;
   const int TYPE_INT;

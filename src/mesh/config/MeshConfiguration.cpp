@@ -11,7 +11,7 @@
 namespace precice {
 namespace mesh {
 
-tarch::logging::Log MeshConfiguration:: _log ( "precice::mesh::MeshConfiguration" );
+logging::Logger MeshConfiguration:: _log ( "precice::mesh::MeshConfiguration" );
 
 //const std::string& MeshConfiguration:: getTag ()
 //{

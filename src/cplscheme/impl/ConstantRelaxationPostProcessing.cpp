@@ -16,7 +16,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log ConstantRelaxationPostProcessing::
+logging::Logger ConstantRelaxationPostProcessing::
   _log("precice::cplscheme::ConstantRelaxationPostProcessing");
 
 ConstantRelaxationPostProcessing:: ConstantRelaxationPostProcessing

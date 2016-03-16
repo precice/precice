@@ -17,7 +17,7 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-tarch::logging::Log HelpersTest:: _log ("precice::utils::HelpersTest");
+logging::Logger HelpersTest:: _log ("precice::utils::HelpersTest");
 
 HelpersTest:: HelpersTest()
 :

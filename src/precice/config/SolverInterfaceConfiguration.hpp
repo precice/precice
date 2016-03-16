@@ -14,7 +14,7 @@
 #include "mapping/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include <string>
 #include "boost/smart_ptr.hpp"
@@ -145,7 +145,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // Tag and subtag names used within this configuration.
   const std::string TAG;

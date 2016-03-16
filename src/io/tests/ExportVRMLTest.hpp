@@ -5,7 +5,7 @@
 #define PRECICE_IO_TESTS_EXPORTVRMLTEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 
 namespace precice {
@@ -42,7 +42,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /**
    * @brief Tests exporting the drift ratchet mesh.

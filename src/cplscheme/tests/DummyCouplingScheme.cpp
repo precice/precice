@@ -10,7 +10,7 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-tarch::logging::Log DummyCouplingScheme::
+logging::Logger DummyCouplingScheme::
    _log("precice::cplscheme::tests::DummyCouplingScheme");
 
 DummyCouplingScheme:: DummyCouplingScheme

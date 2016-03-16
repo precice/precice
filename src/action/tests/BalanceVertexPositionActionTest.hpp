@@ -5,7 +5,7 @@
 #define PRECICE_TESTS_BALANCEVERTEXPOSITIONACTIONTEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace action {
@@ -28,7 +28,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   void testSmoothCircle ();
 

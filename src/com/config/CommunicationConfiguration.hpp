@@ -4,7 +4,7 @@
 #pragma once
 
 #include "com/Communication.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
 
 #include <string>
@@ -34,7 +34,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    const std::string TAG;
    const std::string ATTR_TYPE;

@@ -50,7 +50,7 @@ equal(vector<double> const& data, vector<double> const& expectedData) {
   return valid;
 }
 
-tarch::logging::Log PointToPointCommunicationTest::_log(
+logging::Logger PointToPointCommunicationTest::_log(
     "precice::m2n::tests::PointToPointCommunicationTest");
 
 PointToPointCommunicationTest::PointToPointCommunicationTest()

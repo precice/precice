@@ -17,7 +17,7 @@ namespace precice {
 namespace geometry {
 namespace impl {
 
-tarch::logging::Log BroadcastFilterDecomposition:: _log ( "precice::geometry::BroadcastFilterDecomposition" );
+logging::Logger BroadcastFilterDecomposition:: _log ( "precice::geometry::BroadcastFilterDecomposition" );
 
 BroadcastFilterDecomposition:: BroadcastFilterDecomposition
 (

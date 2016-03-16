@@ -10,7 +10,7 @@
 
 #include "MPICommunication.hpp"
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 #include <vector>
 
@@ -81,7 +81,7 @@ private:
   virtual int rank(int rank);
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::string _addressDirectory;
 

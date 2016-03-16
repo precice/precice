@@ -16,7 +16,7 @@
 #include "utils/MasterSlave.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Communication.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "Eigen/Dense"
 
 
@@ -24,7 +24,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log ParallelMatrixOperations::
+logging::Logger ParallelMatrixOperations::
       _log("precice::cplscheme::impl::ParallelMatrixOperations");
 
 

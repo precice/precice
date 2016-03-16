@@ -19,7 +19,7 @@ namespace precice {
 namespace com {
 namespace tests {
 
-tarch::logging::Log CommunicateMeshTest::
+logging::Logger CommunicateMeshTest::
   _log ( "precice::com::tests::CommunicateMeshTest" );
 
 CommunicateMeshTest:: CommunicateMeshTest ()

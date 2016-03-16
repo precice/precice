@@ -14,7 +14,7 @@
 namespace precice {
 namespace io {
 
-tarch::logging::Log ExportVRML:: _log ( "precice::io::ExportVRML" );
+logging::Logger ExportVRML:: _log ( "precice::io::ExportVRML" );
 
 ExportVRML:: ExportVRML
 (

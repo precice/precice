@@ -14,7 +14,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log PythonAction:: _log ( "precice::action::PythonAction" );
+logging::Logger PythonAction:: _log ( "precice::action::PythonAction" );
 
 PythonAction:: PythonAction
 (

@@ -5,7 +5,7 @@
 #define PRECICE_ITESTS_COUPLINGINTERFACETESTREMOTE_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/SolverInterface.hpp"
@@ -40,7 +40,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Path to this directory.
   std::string _pathToTests;

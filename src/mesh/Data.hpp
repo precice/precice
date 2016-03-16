@@ -8,7 +8,7 @@
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/DynamicVector.h"
 #include "Eigen/Dense"
 #include <string>
@@ -116,7 +116,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Counter for existing Data objects.
   static size_t _dataCount;

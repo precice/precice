@@ -5,7 +5,7 @@
 #define PRECICE_CPLSCHEME_TEST_MINITERATIONCONVERGENCEMEASURETEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -28,7 +28,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 };
 
 }}} // namespace precice, cplscheme, tests

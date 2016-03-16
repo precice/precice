@@ -10,7 +10,7 @@
 
 #include "com/Communication.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 #include <vector>
 #include <list>
@@ -339,7 +339,7 @@ private:
   //typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Coupling schemes to be executed in parallel.
   Schemes _couplingSchemes;

@@ -6,7 +6,7 @@
 
 #include "action/Action.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
   namespace tests {
@@ -42,7 +42,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _eps;
 

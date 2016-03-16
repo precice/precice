@@ -12,7 +12,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log ScaleByAreaAction:: _log ( "precice::action::ScaleByAreaAction" );
+logging::Logger ScaleByAreaAction:: _log ( "precice::action::ScaleByAreaAction" );
 
 ScaleByAreaAction:: ScaleByAreaAction
 (

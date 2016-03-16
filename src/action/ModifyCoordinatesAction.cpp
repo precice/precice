@@ -14,7 +14,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log ModifyCoordinatesAction::
+logging::Logger ModifyCoordinatesAction::
   _log ( "precice::action::ModifyCoordinatesAction" );
 
 

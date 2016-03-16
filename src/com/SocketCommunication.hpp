@@ -10,7 +10,7 @@
 
 #include "com/Communication.hpp"
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/PointerVector.hpp"
 #include <boost/asio/io_service.hpp>
 
@@ -259,7 +259,7 @@ public:
   virtual Request::SharedPointer aReceive(bool* itemToReceive, int rankSender);
 
 private:
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Port used for socket connection.
   unsigned short _portNumber;

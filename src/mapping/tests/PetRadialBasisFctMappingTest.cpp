@@ -252,7 +252,7 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2D()
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
 {
-  ppreciceTrace ( "testPetThinPlateSplines" );
+  preciceTrace ( "testPetThinPlateSplines" );
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -269,7 +269,7 @@ void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
 
 void PetRadialBasisFctMappingTest:: testPetMultiquadrics()
 {
-  ppreciceTrace ( "testPetMultiquadrics" );
+  preciceTrace ( "testPetMultiquadrics" );
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -286,7 +286,7 @@ void PetRadialBasisFctMappingTest:: testPetMultiquadrics()
 
 void PetRadialBasisFctMappingTest:: testPetInverseMultiquadrics()
 {
-  ppreciceTrace ( "testInverseMultiquadrics" );
+  preciceTrace ( "testInverseMultiquadrics" );
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -303,7 +303,7 @@ void PetRadialBasisFctMappingTest:: testPetInverseMultiquadrics()
 
 void PetRadialBasisFctMappingTest:: testPetVolumeSplines()
 {
-  ppreciceTrace ( "testVolumeSplines" );
+  preciceTrace ( "testVolumeSplines" );
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -320,7 +320,7 @@ void PetRadialBasisFctMappingTest:: testPetVolumeSplines()
 
 void PetRadialBasisFctMappingTest:: testPetGaussian()
 {
-  ppreciceTrace ( "testGaussian" );
+  preciceTrace ( "testGaussian" );
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -337,7 +337,7 @@ void PetRadialBasisFctMappingTest:: testPetGaussian()
 
 void PetRadialBasisFctMappingTest:: testPetCompactThinPlateSplinesC2()
 {
-  ppreciceTrace ( "testCompactThinPlateSplinesC2" );
+  preciceTrace ( "testCompactThinPlateSplinesC2" );
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -356,7 +356,7 @@ void PetRadialBasisFctMappingTest:: testPetCompactThinPlateSplinesC2()
 
 void PetRadialBasisFctMappingTest:: testPetCompactPolynomialC0()
 {
-  ppreciceTrace ( "testCompactPolynomialC0" );
+  preciceTrace ( "testCompactPolynomialC0" );
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -375,7 +375,7 @@ void PetRadialBasisFctMappingTest:: testPetCompactPolynomialC0()
 
 void PetRadialBasisFctMappingTest:: testPetCompactPolynomialC6()
 {
-  ppreciceTrace ( "testCompactPolynomialC6" );
+  preciceTrace ( "testCompactPolynomialC6" );
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -396,7 +396,7 @@ void PetRadialBasisFctMappingTest:: perform2DTestConsistentMapping
 (
   Mapping& mapping )
 {
-  ppreciceTrace ( "perform2DTestConsistentMapping()" );
+  preciceTrace ( "perform2DTestConsistentMapping()" );
   int dimensions = 2;
   using utils::Vector2D;
 
@@ -494,7 +494,7 @@ void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping
 (
   Mapping& mapping )
 {
-  ppreciceTrace ( "perform2DTestConservativeMapping()" );
+  preciceTrace ( "perform2DTestConservativeMapping()" );
   int dimensions = 2;
   using utils::Vector2D;
 
@@ -564,7 +564,7 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping
 (
   Mapping& mapping )
 {
-  ppreciceTrace ( "perform3DTestConsistentMapping()" );
+  preciceTrace ( "perform3DTestConsistentMapping()" );
   int dimensions = 3;
   using utils::Vector3D;
 
@@ -701,7 +701,7 @@ void PetRadialBasisFctMappingTest:: perform3DTestConservativeMapping
 (
   Mapping& mapping )
 {
-  ppreciceTrace ( "perform3DTestConservativeMapping()" );
+  preciceTrace ( "perform3DTestConservativeMapping()" );
   int dimensions = 3;
   using utils::Vector3D;
 
@@ -775,7 +775,7 @@ void PetRadialBasisFctMappingTest:: perform3DTestConservativeMapping
 void PetRadialBasisFctMappingTest:: testDeadAxis2D
 ()
 {
-  ppreciceTrace ( "testDeadAxis2D()" );
+  preciceTrace ( "testDeadAxis2D()" );
   int dimensions = 2;
   using utils::Vector2D;
 
@@ -823,7 +823,7 @@ void PetRadialBasisFctMappingTest:: testDeadAxis2D
 
 void PetRadialBasisFctMappingTest:: testDeadAxis3D()
 {
-  ppreciceTrace ( "testDeadAxis3D()" );
+  preciceTrace ( "testDeadAxis3D()" );
   int dimensions = 3;
   using utils::Vector3D;
 

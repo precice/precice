@@ -6,7 +6,7 @@
 
 #include "DistributedCommunication.hpp"
 #include "com/Communication.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 
 namespace precice {
@@ -90,7 +90,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /**
    * @brief master to master basic communication

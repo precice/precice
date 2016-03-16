@@ -11,7 +11,7 @@
 #include "Communication.hpp"
 
 #include "mesh/Data.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Dimensions.hpp"
 
 #include <mpi.h>
@@ -202,7 +202,7 @@ protected:
 
 private:
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 };
 }
 } // namespace precice, com

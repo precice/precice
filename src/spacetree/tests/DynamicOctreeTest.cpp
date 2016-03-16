@@ -27,7 +27,7 @@ namespace precice {
 namespace spacetree {
 namespace tests {
 
-tarch::logging::Log DynamicOctreeTest::
+logging::Logger DynamicOctreeTest::
   _log ( "precice::spacetree::tests::DynamicOctreeTest" );
 
 DynamicOctreeTest:: DynamicOctreeTest()

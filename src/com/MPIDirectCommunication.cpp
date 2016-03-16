@@ -15,7 +15,7 @@
 namespace precice {
 namespace com {
 
-tarch::logging::Log MPIDirectCommunication::_log(
+logging::Logger MPIDirectCommunication::_log(
     "precice::com::MPIDirectCommunication");
 
 MPIDirectCommunication::MPIDirectCommunication()

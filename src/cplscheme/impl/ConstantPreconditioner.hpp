@@ -48,7 +48,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // constant user-defined factors to scale the quasi-Newton system
   std::vector<double> _factors;
