@@ -84,14 +84,14 @@ private:
     if (getDimensions() == 2) {
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
-      preciceCheck(not (xDead && yDead), "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
-      if (zDead) preciceWarning("setDeadAxis()", "Setting the z-axis to dead on a 2 dimensional problem has not effect and will be ignored.");
+      tpreciceCheck(not (xDead && yDead), "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
+      if (zDead) tpreciceWarning("setDeadAxis()", "Setting the z-axis to dead on a 2 dimensional problem has not effect and will be ignored.");
     }
     else if (getDimensions() == 3) {
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
       _deadAxis[2] = zDead;
-      preciceCheck(not (xDead && yDead && zDead), "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
+      tpreciceCheck(not (xDead && yDead && zDead), "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
     }
     else {
       assertion(false);
@@ -136,9 +136,9 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: ~RadialBasisFctMapping()
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 {
-  preciceTrace("computeMapping()");
+  tpreciceTrace("computeMapping()");
 
-  preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
+  tpreciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
                "computeMapping()", "RBF mapping  "
                << " is not yet supported for a participant in master mode");
 
@@ -181,7 +181,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       matrixCLU(i,j) = _basisFunction.evaluate(reduceVector(difference).norm());
 #     ifdef Asserts
       if (matrixCLU(i,j) == std::numeric_limits<double>::infinity()) {
-        preciceError("computeMapping()", "C matrix element has value inf. "
+        tpreciceError("computeMapping()", "C matrix element has value inf. "
                      << "i = " << i << ", j = " << j
                      << ", coords i = " << iVertex.getCoords() << ", coords j = "
                      << inMesh->vertices()[j].getCoords() << ", dist = "
@@ -214,7 +214,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
       _matrixA(i,j) = _basisFunction.evaluate(reduceVector(difference).norm());
 #     ifdef Asserts
       if (_matrixA(i,j) == std::numeric_limits<double>::infinity()){
-        preciceError("computeMapping()", "A matrix element has value inf. "
+        tpreciceError("computeMapping()", "A matrix element has value inf. "
                      << "i = " << i << ", j = " << j
                      << ", coords i = " << iVertex.getCoords() << ", coords j = "
                      << jVertex.getCoords() << ", dist = "
@@ -258,7 +258,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   int determinant = _lu.determinant();
 
   if (determinant == 0){
-    preciceWarning("computeMapping()", "Interpolation matrix C has determinant of 0, e.g. is not regular.");
+    tpreciceWarning("computeMapping()", "Interpolation matrix C has determinant of 0, e.g. is not regular.");
   }
   
   _hasComputedMapping = true;
@@ -273,7 +273,7 @@ bool RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping() const
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
-  preciceTrace("clear()");
+  tpreciceTrace("clear()");
   _matrixA = Eigen::MatrixXd();
   _lu = Eigen::PartialPivLU<Eigen::MatrixXd>();
   _hasComputedMapping = false;
@@ -285,7 +285,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int inputDataID,
   int outputDataID )
 {
-  preciceTrace2("map()", inputDataID, outputDataID);
+  tpreciceTrace2("map()", inputDataID, outputDataID);
   assertion(_hasComputedMapping);
   assertion2(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
@@ -304,15 +304,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int polyparams = 1 + getDimensions() - deadDimensions;
 
   if (getConstraint() == CONSERVATIVE){
-    preciceDebug("Map conservative");
+    tpreciceDebug("Map conservative");
     static int mappingIndex = 0;
     Eigen::VectorXd Au(_matrixA.cols());  // rows == n
     Eigen::VectorXd in(_matrixA.rows());  // rows == outputSize
     Eigen::VectorXd out(_matrixA.cols()); // rows == n
 
-    // preciceDebug("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
-    preciceDebug("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
-    preciceDebug("in size=" << in.size() << ", out size=" << out.size());
+    // tpreciceDebug("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
+    tpreciceDebug("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
+    tpreciceDebug("in size=" << in.size() << ", out size=" << out.size());
 
     for (int dim = 0; dim < valueDim; dim++) {
       for (int i = 0; i < in.size(); i++) { // Fill input data values
@@ -340,7 +340,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     mappingIndex++;
   }
   else { // Map consistent
-    preciceDebug("Map consistent");
+    tpreciceDebug("Map consistent");
     Eigen::VectorXd p(_matrixA.cols());    // rows == n
     Eigen::VectorXd in(_matrixA.cols());   // rows == n
     Eigen::VectorXd out(_matrixA.rows());  // rows == outputSize

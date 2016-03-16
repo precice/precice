@@ -18,13 +18,13 @@ Tracer:: Tracer
   _stateString ( stateString )
 {
   std::string preciceMethodName (_methodname);
-  preciceDebug ( "Entering " + stateString );
+  tpreciceDebug ( "Entering " + stateString );
 }
 
 Tracer:: ~Tracer ()
 {
   std::string preciceMethodName (_methodname);
-  preciceDebug ( "Leaving" );
+  tpreciceDebug ( "Leaving" );
 }
 
 }} // namespace precice, utils

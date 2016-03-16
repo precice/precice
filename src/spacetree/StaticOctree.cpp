@@ -30,7 +30,7 @@ void StaticOctree:: addMesh
 (
   const mesh::PtrMesh& mesh )
 {
-  preciceTrace1("addMesh()", mesh->getName());
+  tpreciceTrace1("addMesh()", mesh->getName());
   assertion(_rootCell.content().empty()); // Spacetree is not initialized yet
   _meshes.push_back(mesh);
   mesh->addListener(*this);
@@ -43,7 +43,7 @@ const std::vector<mesh::PtrMesh>& StaticOctree:: meshes() const
 
 void StaticOctree:: initialize()
 {
-  preciceTrace("initialize()");
+  tpreciceTrace("initialize()");
   assertion(_rootCell.content().empty());
   int dim = _center.size();
   query::FindVoxelContent findVoxel ( _center, utils::DynVector(dim,_halflength),
@@ -56,7 +56,7 @@ void StaticOctree:: initialize()
   }
   _rootCell.content().add(findVoxel.content());
   _rootCell.setPosition(positionOnGeometry());
-  preciceCheck(_rootCell.content().size() == size, "initialize()",
+  tpreciceCheck(_rootCell.content().size() == size, "initialize()",
                "Not all meshes are contained in the spacetree!");
   impl::StaticTraversal<impl::OctreeCell> traversal;
   utils::DynVector halflengths(dim, _halflength);
@@ -64,7 +64,7 @@ void StaticOctree:: initialize()
   int sides = (dim == 2) ? 4 : 6;
   impl::Environment env(twoPowerDim, sides);
   if ( dim == 2 ){
-    preciceDebug( "Setting 2D environment cell neighbor indices" );
+    tpreciceDebug( "Setting 2D environment cell neighbor indices" );
     tarch::la::DynamicVector<int> indices(2);
     indices[0] = 1; indices[1] = 2; // Neighbors cell 0
     env.setNeighborCellIndices(0, indices);
@@ -85,7 +85,7 @@ void StaticOctree:: initialize()
     env.setNeighborSideIndices(3, indices);
   }
   else {
-    preciceDebug( "Setting 3D environment cell neighbor indices" );
+    tpreciceDebug( "Setting 3D environment cell neighbor indices" );
     assertion1 ( dim == 3, dim );
     tarch::la::DynamicVector<int> indices(3);
     assignList(indices) = 1, 2, 4; // Cell 0
@@ -128,7 +128,7 @@ void StaticOctree:: initialize()
 
 void StaticOctree:: meshChanged ( mesh::Mesh& mesh )
 {
-  preciceTrace1("meshChanged()", mesh.getName());
+  tpreciceTrace1("meshChanged()", mesh.getName());
   _meshChanged = true;
 }
 
@@ -136,9 +136,9 @@ int StaticOctree:: searchPosition
 (
   const utils::DynVector& point )
 {
-  preciceTrace1 ( "searchPosition()", point );
+  tpreciceTrace1 ( "searchPosition()", point );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    tpreciceDebug("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -151,9 +151,9 @@ void StaticOctree:: searchDistance
 (
   query::FindClosest& findClosest )
 {
-  preciceTrace1 ( "searchDistance()", findClosest.getSearchPoint() );
+  tpreciceTrace1 ( "searchDistance()", findClosest.getSearchPoint() );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    tpreciceDebug("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -166,10 +166,10 @@ int StaticOctree:: searchContent
 (
   query::FindVoxelContent& findContent )
 {
-  preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
+  tpreciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    tpreciceDebug("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -180,9 +180,9 @@ int StaticOctree:: searchContent
 
 void StaticOctree:: accept ( Visitor& visitor )
 {
-  preciceTrace("accept()");
+  tpreciceTrace("accept()");
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    tpreciceDebug("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -192,7 +192,7 @@ void StaticOctree:: accept ( Visitor& visitor )
 
 void StaticOctree:: clear()
 {
-  preciceTrace("clear()");
+  tpreciceTrace("clear()");
   _rootCell.clear();
   assertion(_rootCell.content().empty());
 }

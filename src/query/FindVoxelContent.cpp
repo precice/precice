@@ -96,7 +96,7 @@ void FindVoxelContent:: checkVertex
 //#   ifdef Debug
 //    if (_voxelCenter.size() == 3)
 //    if (norm2(_voxelCenter - utils::Vector3D(4.343209876543000, 4.0666666666666666, 4.106172839509999)) < 1e-10){
-//      precicePrint("Add vertex " << vertex.getCoords());
+//      tprecicePrint("Add vertex " << vertex.getCoords());
 //    }
 //#   endif
   _content.add(vertex);
@@ -106,7 +106,7 @@ void FindVoxelContent:: checkEdge
 (
   mesh::Edge& edge )
 {
-  preciceTrace2("checkEdge()", edge.vertex(0).getCoords(), edge.vertex(1).getCoords());
+  tpreciceTrace2("checkEdge()", edge.vertex(0).getCoords(), edge.vertex(1).getCoords());
   using namespace tarch::la;
   using utils::Vector3D;
   using utils::Vector2D;
@@ -119,14 +119,14 @@ void FindVoxelContent:: checkEdge
   abs(toEdgeCenter, toEdgeCenter);
   // Test, if circumcircle (circumsphere) of edge lies completely outside
   if (oneGreater(toEdgeCenter - edge.getEnclosingRadius(), _voxelHalflengths)){
-    preciceDebug("  edge circumcircle lies outside");
+    tpreciceDebug("  edge circumcircle lies outside");
     return;
   }
   // Test, if edge center lies completely inside
   DynVector absVoxelHalflengths(_dimensions);
   if (allGreater(tarch::la::abs(_voxelHalflengths, absVoxelHalflengths), toEdgeCenter)){
     _content.add(edge);
-    preciceDebug("  edge center lies inside");
+    tpreciceDebug("  edge center lies inside");
     return;
   }
 
@@ -190,7 +190,7 @@ void FindVoxelContent:: checkEdge
          voxelPointA, voxelPointB, a, b, _boundaryInclusion == INCLUDE_BOUNDARY) )
     {
       _content.add (edge);
-      preciceDebug ( "  lower edge of voxel intersects edge" );
+      tpreciceDebug ( "  lower edge of voxel intersects edge" );
       return;
     }
     // right edge
@@ -201,7 +201,7 @@ void FindVoxelContent:: checkEdge
          voxelPointA, voxelPointB, a, b, _boundaryInclusion == INCLUDE_BOUNDARY) )
     {
       _content.add (edge);
-      preciceDebug ( "  right edge of voxel intersects edge" );
+      tpreciceDebug ( "  right edge of voxel intersects edge" );
       return;
     }
     // top edge
@@ -212,7 +212,7 @@ void FindVoxelContent:: checkEdge
          voxelPointA, voxelPointB, a, b, _boundaryInclusion == INCLUDE_BOUNDARY) )
     {
       _content.add (edge);
-      preciceDebug ( "  top edge of voxel intersects edge" );
+      tpreciceDebug ( "  top edge of voxel intersects edge" );
       return;
     }
     // left edge
@@ -223,7 +223,7 @@ void FindVoxelContent:: checkEdge
          voxelPointA, voxelPointB, a, b, _boundaryInclusion == INCLUDE_BOUNDARY) )
     {
       _content.add (edge);
-      preciceDebug ( "  left edge of voxel intersects edge" );
+      tpreciceDebug ( "  left edge of voxel intersects edge" );
       return;
     }
 #   endif // PRECIC_OLD_QUERY
@@ -305,7 +305,7 @@ void FindVoxelContent:: checkEdge
 //#   ifdef Debug
 //    if (_voxelCenter.size() == 3)
 //    if (norm2(_voxelCenter - Vector3D(4.343209876543000, 4.0666666666666666, 4.106172839509999)) < 1e-10){
-//      precicePrint("Add edge from " << edge.vertex(0).getCoords() << " to " << edge.vertex(1).getCoords());
+//      tprecicePrint("Add edge from " << edge.vertex(0).getCoords() << " to " << edge.vertex(1).getCoords());
 //    }
 //#   endif
 
@@ -373,7 +373,7 @@ void FindVoxelContent:: checkEdge
       abs ( toEdge, toEdge );
       if ( allGreater(_voxelHalflengths, toEdge) ) {
         _content.add ( edge );
-        preciceDebug ( "  edge completely intersects voxel" );
+        tpreciceDebug ( "  edge completely intersects voxel" );
         return;
       }
     }
@@ -385,7 +385,7 @@ void FindVoxelContent:: checkTriangle
 (
   mesh::Triangle& triangle )
 {
-  preciceTrace2 ( "checkTriangle()", triangle.getID(), triangle.getCenter() );
+  tpreciceTrace2 ( "checkTriangle()", triangle.getID(), triangle.getCenter() );
   assertion1 ( _dimensions == 3, _dimensions );
   using namespace tarch::la;
   using utils::Vector3D;
@@ -421,13 +421,13 @@ void FindVoxelContent:: checkTriangle
     triangleMin = min(coords);
     voxelMax = _voxelHalflengths[dim];
     if ( greater(triangleMin, voxelMax-eps) ){
-      preciceDebug ( "Found sa in test 1.1" );
+      tpreciceDebug ( "Found sa in test 1.1" );
       return;
     }
     triangleMax = max(coords);
     voxelMin = -1.0 * _voxelHalflengths[dim];
     if ( smaller(triangleMax-eps, voxelMin) ){
-      preciceDebug ( "Found sa in test 1.2" );
+      tpreciceDebug ( "Found sa in test 1.2" );
       return;
     }
   }
@@ -459,7 +459,7 @@ void FindVoxelContent:: checkTriangle
   voxelMax = max(projVoxel);
   voxelMin = min(projVoxel);
   if ( greater(projTri, voxelMax-eps) || smaller(projTri-eps, voxelMin) ){
-    preciceDebug ( "Found sa in test 2" );
+    tpreciceDebug ( "Found sa in test 2" );
     return;
   }
 
@@ -540,7 +540,7 @@ void FindVoxelContent:: checkTriangle
 //#   ifdef Debug
 //    if (_voxelCenter.size() == 3)
 //    if (norm2(_voxelCenter - Vector3D(4.343209876543000, 4.0666666666666666, 4.106172839509999)) < 1e-10){
-//      precicePrint("Add triangle v0=" << triangle.vertex(0).getCoords()
+//      tprecicePrint("Add triangle v0=" << triangle.vertex(0).getCoords()
 //                   << ", v1=" << triangle.vertex(1).getCoords()
 //                   << ", v2=" << triangle.vertex(2).getCoords());
 //    }
@@ -891,7 +891,7 @@ bool FindVoxelContent:: computeIntersection
   const utils::Vector3D&  secondPointSegment,
   bool                    countTouchingAsIntersection ) const
 {
-  preciceTrace6 ( "computeIntersection()", squareCenter, halflengths,
+  tpreciceTrace6 ( "computeIntersection()", squareCenter, halflengths,
                   squareNormalDirection, firstPointSegment, secondPointSegment,
                   countTouchingAsIntersection );
   using namespace tarch::la;
@@ -905,7 +905,7 @@ bool FindVoxelContent:: computeIntersection
   int result = GeoComp::segmentPlaneIntersection (
       squareCenter, normal, firstPointSegment, secondPointSegment, intersection );
   if ( result == GeoComp::NO_INTERSECTION ) {
-//    precicePrint ( "computeIntersection(): no square plane intersection" );
+//    tprecicePrint ( "computeIntersection(): no square plane intersection" );
     return false;
   }
   else if ( result == GeoComp::CONTAINED ) {
@@ -944,12 +944,12 @@ bool FindVoxelContent:: computeIntersection
     bool rInside = allGreater ( halflengths2D, rcenter );
 
     if ( qInside || rInside ) { // One or both segment points lie inside
-//      precicePrint ( "q and/or r lie in square (segment in plane of square)" );
+//      tprecicePrint ( "q and/or r lie in square (segment in plane of square)" );
       return true;
     }
     else if ( (not (qOutside && rOutside)) && countTouchingAsIntersection ) {
       // One or both segment points touch the square
-//      precicePrint ( "q and/or r touch square (segment in plane of square)" );
+//      tprecicePrint ( "q and/or r touch square (segment in plane of square)" );
       return true;
     }
     else { // No point is inside, the segment might interesect still
@@ -1009,7 +1009,7 @@ bool FindVoxelContent:: computeIntersection
   const utils::Vector3D& secondPointEdge,
   bool                   countTouchingAsIntersection )
 {
-  preciceTrace6 ( "computeIntersection()", triangle.vertex(0).getCoords(),
+  tpreciceTrace6 ( "computeIntersection()", triangle.vertex(0).getCoords(),
                   triangle.vertex(1).getCoords(), triangle.vertex(2).getCoords(),
                   firstPointEdge, secondPointEdge, countTouchingAsIntersection );
   typedef utils::GeometryComputations Geocomp;

@@ -36,7 +36,7 @@ const utils::DynVector& FindClosest:: getSearchPoint() const
 
 bool FindClosest:: determineClosest()
 {
-  preciceTrace1 ( "determineClosest()", _searchpoint );
+  tpreciceTrace1 ( "determineClosest()", _searchpoint );
   using tarch::la::greater;
   _closest = ClosestElement(_searchpoint.size());
   _closest.distance = std::numeric_limits<double>::max();

@@ -48,7 +48,7 @@ void OctreeCell:: refine
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  preciceTrace2("refine()", cellCenter, cellHalflengths);
+  tpreciceTrace2("refine()", cellCenter, cellHalflengths);
   assertion(_content != nullptr);
   assertion1(_childs.size() == 0, _childs.size());
   int dim = cellCenter.size();
@@ -57,7 +57,7 @@ void OctreeCell:: refine
   utils::DynVector newCenter(dim);
   utils::DynVector newHalflengths(dim, 0.5*cellHalflengths[0]);
   for (int i=0; i < twoPowerDim; i++){
-    //preciceDebug ( "Creating child " << i );
+    //tpreciceDebug ( "Creating child " << i );
     newCenter = utils::delinearize(i, dim);
     newCenter *= newHalflengths[0];
     newCenter += cellCenter;
@@ -67,10 +67,10 @@ void OctreeCell:: refine
     findVoxel(*_content);
     _childs[i]._content->add(findVoxel.content());
     if (not _childs[i]._content->empty()){
-      preciceDebug("  Refined child cell with center " << newCenter
+      tpreciceDebug("  Refined child cell with center " << newCenter
                    << " is on geometry");
 //      if (_childs[i]._content->size() == 1){
-//        precicePrint("  Cell at x=" << newCenter << ", h=" << newHalflengths
+//        tprecicePrint("  Cell at x=" << newCenter << ", h=" << newHalflengths
 //                     << ", vertices=" << _childs[i]._content->vertices().size()
 //                     << ", edges=" << _childs[i]._content->edges().size()
 //                     << ", triangles=" << _childs[i]._content->triangles().size());
@@ -79,9 +79,9 @@ void OctreeCell:: refine
 //         && _childs[i]._content->edges().size() == 1
 //         && _childs[i]._content->triangles().size() == 1)
 //      {
-//        precicePrint("Edge from " << _childs[i]._content->edges()[0].vertex(0).getCoords()
+//        tprecicePrint("Edge from " << _childs[i]._content->edges()[0].vertex(0).getCoords()
 //                     << " to " << _childs[i]._content->edges()[0].vertex(1).getCoords());
-//        precicePrint("Triangle at " << _childs[i]._content->triangles()[0].vertex(0).getCoords()
+//        tprecicePrint("Triangle at " << _childs[i]._content->triangles()[0].vertex(0).getCoords()
 //                     << ", " << _childs[i]._content->triangles()[0].vertex(1).getCoords()
 //                     << ", " << _childs[i]._content->triangles()[0].vertex(2).getCoords());
 //      }
@@ -117,12 +117,12 @@ void OctreeCell:: getChildData
   utils::DynVector&       childCenter,
   utils::DynVector&       childHalflengths )
 {
-  preciceTrace3("getChildData()", childIndex, cellCenter, cellHalflengths);
+  tpreciceTrace3("getChildData()", childIndex, cellCenter, cellHalflengths);
   assign(childHalflengths) = 0.5 * cellHalflengths[0];
   childCenter = utils::delinearize(childIndex, childCenter.size());
   childCenter *= childHalflengths[0];
   childCenter += cellCenter;
-  preciceDebug("  Computed center = " << childCenter << ", h = " << childHalflengths);
+  tpreciceDebug("  Computed center = " << childCenter << ", h = " << childHalflengths);
 }
 
 void OctreeCell:: accept

@@ -45,13 +45,13 @@ void SolverInterfaceTestGeometry:: setUp ()
 
 void SolverInterfaceTestGeometry:: run()
 {
-  preciceTrace("run ()");
+  tpreciceTrace("run ()");
   std::vector<int> ranks;
   ranks += 0;
   typedef utils::Parallel Par;
   Par::Communicator comm = Par::getRestrictedCommunicator(ranks);
   PRECICE_MASTER_ONLY {
-    preciceTrace("run master ()");
+    tpreciceTrace("run master ()");
     Par::setGlobalCommunicator(comm);
     testMethod(testConfiguration);
     testMethod(testSearchQuery);
@@ -86,7 +86,7 @@ void SolverInterfaceTestGeometry:: configureSolverInterface
   const std::string& configFilename,
   SolverInterface&   interface )
 {
-  preciceTrace1 ( "configureSolverInterface()", configFilename );
+  tpreciceTrace1 ( "configureSolverInterface()", configFilename );
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
@@ -98,9 +98,9 @@ void SolverInterfaceTestGeometry:: configureSolverInterface
 
 void SolverInterfaceTestGeometry:: testConfiguration()
 {
-  preciceTrace ( "testConfiguration()" );
+  tpreciceTrace ( "testConfiguration()" );
   mesh::Mesh::resetGeometryIDsGlobally ();
-  preciceDebug ( "Test 2D configuration");
+  tpreciceDebug ( "Test 2D configuration");
   { // 2D
     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
     configureSolverInterface (
@@ -109,7 +109,7 @@ void SolverInterfaceTestGeometry:: testConfiguration()
     geoInterface.initialize ();
     geoInterface.exportMesh ( "testConfiguration2D" );
   }
-  preciceDebug ( "Test 3D configuration");
+  tpreciceDebug ( "Test 3D configuration");
   { // 3D
     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
     configureSolverInterface (
@@ -122,7 +122,7 @@ void SolverInterfaceTestGeometry:: testConfiguration()
 
 void SolverInterfaceTestGeometry:: testSearchQuery()
 {
-  preciceTrace ( "testSearchQuery()" );
+  tpreciceTrace ( "testSearchQuery()" );
   for ( int dim=2; dim <= 3; dim++ ){
     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
     if (dim == 2){
@@ -181,7 +181,7 @@ void SolverInterfaceTestGeometry:: testSearchQuery()
 
 void SolverInterfaceTestGeometry:: testVoxelQuery()
 {
-   preciceTrace("testVoxelQuery()");
+   tpreciceTrace("testVoxelQuery()");
 
    for ( int dim=2; dim <= 3; dim++ ){
      SolverInterface geoInterface ( "TestAccessor", 0, 1 );
@@ -387,7 +387,7 @@ void SolverInterfaceTestGeometry:: testVoxelQuery()
 
 void SolverInterfaceTestGeometry:: testDataActions()
 {
-  preciceTrace("testDataActions()");
+  tpreciceTrace("testDataActions()");
   using namespace tarch::la;
   SolverInterface geo("Accessor", 0, 1);
   configureSolverInterface(_pathToTests + "testDataActions.xml", geo);
@@ -421,7 +421,7 @@ void SolverInterfaceTestGeometry:: testDataActions()
 
 void SolverInterfaceTestGeometry:: testVoxelQueryMultipleGeometryIDs()
 {
-  preciceTrace ( "testVoxelQueryMultipleGeometryIDsest()" );
+  tpreciceTrace ( "testVoxelQueryMultipleGeometryIDsest()" );
   using utils::Vector2D;
   SolverInterface geoInterface ( "TestAccessor", 0, 1 );
   configureSolverInterface (
@@ -475,7 +475,7 @@ void SolverInterfaceTestGeometry:: testVoxelQueryMultipleGeometryIDs()
 
 void SolverInterfaceTestGeometry:: testVoxelQueryDFGChannel()
 {
-  preciceTrace ( "testVoxelQueryDFGChannel()" );
+  tpreciceTrace ( "testVoxelQueryDFGChannel()" );
   using utils::Vector2D;
   SolverInterface geoInterface ( "TestAccessor", 0, 1 );
   configureSolverInterface (
@@ -507,7 +507,7 @@ void SolverInterfaceTestGeometry:: testVoxelQueryDFGChannel()
 
 void SolverInterfaceTestGeometry:: testVoxelQueryFSIChannel()
 {
-  preciceTrace ( "testVoxelQueryFSIChannel()" );
+  tpreciceTrace ( "testVoxelQueryFSIChannel()" );
   using utils::Vector2D;
   SolverInterface geoInterface ( "TestAccessor", 0, 1 );
   configureSolverInterface (
@@ -525,7 +525,7 @@ void SolverInterfaceTestGeometry:: testVoxelQueryFSIChannel()
 
 void SolverInterfaceTestGeometry:: testVoxelQueryChannelFour ()
 {
-   preciceTrace ( "testVoxelQueryChannelFour()");
+   tpreciceTrace ( "testVoxelQueryChannelFour()");
    SolverInterface geoInterface ( "TestAccessor", 0, 1 );
    configureSolverInterface (
          _pathToTests + "four.xml", geoInterface );
@@ -541,7 +541,7 @@ void SolverInterfaceTestGeometry:: testVoxelQueryChannelFour ()
 
 void SolverInterfaceTestGeometry:: testVoxelQueryEpsBox()
 {
-  preciceTrace ( "testVoxelQueryEpsBox()" );
+  tpreciceTrace ( "testVoxelQueryEpsBox()" );
   using namespace tarch::la;
   SolverInterface geoInterface ( "TestAccessor", 0, 1 );
   configureSolverInterface (
@@ -633,7 +633,7 @@ void SolverInterfaceTestGeometry:: testVoxelQueryEpsBox()
 void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
 {
 
-  preciceTrace("testConservativeStationaryDataMapping()");
+  tpreciceTrace("testConservativeStationaryDataMapping()");
   SolverInterface precice("Accessor", 0, 1);
   configureSolverInterface(_pathToTests + "stationary-mapping.xml", precice);
   validateEquals(precice.getDimensions(), 2);
@@ -654,16 +654,16 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   precice.writeBlockVectorData(dataID, 4, indices, values);
 
   precice.initialize();
-  preciceDebug ( "preCICE initialized");
+  tpreciceDebug ( "preCICE initialized");
   precice.mapWriteDataFrom(meshID);
   // Validate results
   impl::PtrParticipant p = precice._impl->_accessor;
-  preciceDebug ( "Participant found");
+  tpreciceDebug ( "Participant found");
   validate(p != nullptr);
-  preciceDebug ( "dataContexts: " << p->_dataContexts << " and dataID: " << dataID);
+  tpreciceDebug ( "dataContexts: " << p->_dataContexts << " and dataID: " << dataID);
   validate(p->_dataContexts[dataID] != nullptr);
   mesh::PtrData data = p->_dataContexts[dataID]->toData;
-  preciceDebug ( "ToData found");
+  tpreciceDebug ( "ToData found");
   validate(data.get() != nullptr);
   auto& writtenValues = data->values();
 
@@ -681,7 +681,7 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
 
 void SolverInterfaceTestGeometry:: testMappingRBF()
 {
-  preciceTrace("testMappingRBF()");
+  tpreciceTrace("testMappingRBF()");
   SolverInterface interface("TestAccessor", 0, 1);
   configureSolverInterface(_pathToTests + "mapping-rbf.xml", interface);
   validateEquals(interface.getDimensions(), 2);
@@ -787,7 +787,7 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
 //void SolverInterfaceTestGeometry:: testConservativeDataMapping ()
 //{
 //# if defined(Dim2)
-//  preciceTrace ( "testConservativeDataMapping()" );
+//  tpreciceTrace ( "testConservativeDataMapping()" );
 //
 //  SolverInterface geoInterface ( "TestAccessor" );
 //  geoInterface.configure ( _pathToTests + "SolverInterfaceTestGeometry-conservative-data-mapping-config.xml" );
@@ -851,7 +851,7 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
 
 void SolverInterfaceTestGeometry:: testPinelli()
 {
-  preciceTrace("testPinelli()");
+  tpreciceTrace("testPinelli()");
   SolverInterface interface("EOF", 0, 1);
 
   {
@@ -925,7 +925,7 @@ void SolverInterfaceTestGeometry:: testPinelli()
 
 void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
 {
-  preciceTrace ( "testCustomGeometryCreation()" );
+  tpreciceTrace ( "testCustomGeometryCreation()" );
   using tarch::la::wrap;
   using tarch::la::raw;
   { // 2D
@@ -1167,7 +1167,7 @@ void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
 
 void SolverInterfaceTestGeometry:: testBug()
 {
-  preciceTrace("testBug()");
+  tpreciceTrace("testBug()");
 
   {
     std::string filename = "testBug-geometry.wrl";
@@ -1195,7 +1195,7 @@ void SolverInterfaceTestGeometry:: testBug()
 
 void SolverInterfaceTestGeometry:: testBug2()
 {
-  preciceTrace("testBug2()");
+  tpreciceTrace("testBug2()");
   SolverInterface interface("Participant-testBug2", 0, 1);
   configureSolverInterface(_pathToTests + "testBug2.xml", interface);
   validateEquals ( interface.getDimensions(), 3 );
@@ -1217,7 +1217,7 @@ void SolverInterfaceTestGeometry:: testBug2()
 
 void SolverInterfaceTestGeometry:: testBug3()
 {
-  preciceTrace("testBug3()");
+  tpreciceTrace("testBug3()");
   SolverInterface interface("Peano", 0, 1);
   configureSolverInterface(_pathToTests + "testBug3.xml", interface);
   validateEquals(interface.getDimensions(), 3);
@@ -1236,7 +1236,7 @@ void SolverInterfaceTestGeometry:: testBug3()
 
 void SolverInterfaceTestGeometry:: testBug4()
 {
-  preciceTrace("testBug4()");
+  tpreciceTrace("testBug4()");
   SolverInterface interface("Peano", 0, 1);
   configureSolverInterface(_pathToTests + "testBug4.xml", interface);
   validateEquals(interface.getDimensions(), 3);
@@ -1256,7 +1256,7 @@ void SolverInterfaceTestGeometry:: testBug4()
 
 void SolverInterfaceTestGeometry:: testBug5()
 {
-  preciceTrace("testBug5()");
+  tpreciceTrace("testBug5()");
 
   {
     std::string filename = "testBug5-geometry.wrl";
@@ -1282,14 +1282,14 @@ void SolverInterfaceTestGeometry:: testBug5()
 
   assign(h) = 3.950617283950000e-2;
   assignList(point) = 4.343209876543000, 4.0666666666666666, 4.106172839509999;
-//  precicePrint("----------------------------- START");
+//  tprecicePrint("----------------------------- START");
   voxelPos = interface.inquireVoxelPosition(raw(point), raw(h), false, meshIDs);
-//  precicePrint("----------------------------- END, pos = " << voxelPos.position()
+//  tprecicePrint("----------------------------- END, pos = " << voxelPos.position()
 //               << ", ids.size = " << voxelPos.meshIDs().size());
   //mesh::Mesh found("Found", 3, false);
 //  EdgeIterator it = voxelPos.contentHandle().edges().begin();
 //  for (;it != voxelPos.contentHandle().edges().end(); it++){
-//    precicePrint("Edge from " << wrap<3>(it.vertexCoords(0)) << " to " <<
+//    tprecicePrint("Edge from " << wrap<3>(it.vertexCoords(0)) << " to " <<
 //                 wrap<3>(it.vertexCoords(1)));
 //    mesh::Vertex& v0 = found.createVertex(wrap<3>(it.vertexCoords(0)));
 //    mesh::Vertex& v1 = found.createVertex(wrap<3>(it.vertexCoords(1)));
@@ -1313,7 +1313,7 @@ void SolverInterfaceTestGeometry:: testBug5()
 
 //void SolverInterfaceTestGeometry:: testBug6()
 //{
-//  preciceTrace("testBug6()");
+//  tpreciceTrace("testBug6()");
 //  SolverInterface interface("Peano", 0, 1);
 //  configureSolverInterface(_pathToTests + "testBug6.xml", interface);
 //  validateEquals(interface.getDimensions(), 3);
@@ -1335,7 +1335,7 @@ void SolverInterfaceTestGeometry:: testBug5()
 
 void SolverInterfaceTestGeometry:: testUpdateSpacetree()
 {
-  preciceTrace ( "testUpdateSpacetree()" );
+  tpreciceTrace ( "testUpdateSpacetree()" );
   for ( int dim=2; dim <= 3; dim++ ){
     SolverInterface interface("Accessor", 0, 1);
     std::string configName;
@@ -1392,7 +1392,7 @@ void SolverInterfaceTestGeometry:: testUpdateSpacetree()
 
 void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
 {
-  preciceTrace("testMultipleMeshSpacetree()");
+  tpreciceTrace("testMultipleMeshSpacetree()");
   using namespace tarch::la;
   { // Tests A: first mesh no spacetree, second, third spacetree
     SolverInterface interface("Accessor", 0, 1);

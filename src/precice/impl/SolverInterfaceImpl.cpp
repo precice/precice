@@ -106,11 +106,11 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   _numberAdvanceCalls(0),
   _requestManager(nullptr)
 {
-  preciceCheck(_accessorProcessRank >= 0, "SolverInterfaceImpl()",
+  tpreciceCheck(_accessorProcessRank >= 0, "SolverInterfaceImpl()",
                "Accessor process index has to be >= 0!");
-  preciceCheck(_accessorCommunicatorSize >= 0, "SolverInterfaceImpl()",
+  tpreciceCheck(_accessorCommunicatorSize >= 0, "SolverInterfaceImpl()",
                "Accessor process size has to be >= 0!");
-  preciceCheck(_accessorProcessRank < _accessorCommunicatorSize,
+  tpreciceCheck(_accessorProcessRank < _accessorCommunicatorSize,
                "SolverInterfaceImpl()",
                "Accessor process index has to be smaller than accessor process "
                << "size (given as " << _accessorProcessRank << ")!");
@@ -131,7 +131,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
 {
-  preciceTrace("~SolverInterfaceImpl()");
+  tpreciceTrace("~SolverInterfaceImpl()");
   if (_requestManager != nullptr){
     delete _requestManager;
   }
@@ -154,14 +154,14 @@ void SolverInterfaceImpl:: configure
   Logger::FilterListEntry filter("", true); // All off
   Logger::getInstance().addFilterListEntry(filter);
 
-  preciceTrace1("configure()", configurationFileName );
+  tpreciceTrace1("configure()", configurationFileName );
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   Participant::resetParticipantCount();
 
   config::Configuration config;
   utils::configure(config.getXMLTag(), configurationFileName);
-  //preciceCheck ( config.isValid(), "configure()", "Invalid configuration file!" );
+  //tpreciceCheck ( config.isValid(), "configure()", "Invalid configuration file!" );
 
   const config::LogFilterConfiguration& logFilterConfig =
       config.getLogFilterConfiguration();
@@ -185,18 +185,18 @@ void SolverInterfaceImpl:: configure
 (
   const config::SolverInterfaceConfiguration& config )
 {
-  preciceTrace("configure()");
+  tpreciceTrace("configure()");
 
   _dimensions = config.getDimensions();
   _geometryMode = config.isGeometryMode ();
   _restartMode = config.isRestartMode ();
   _accessor = determineAccessingParticipant(config);
 
-  preciceCheck(not (_accessor->useServer() && _accessor->useMaster()),
+  tpreciceCheck(not (_accessor->useServer() && _accessor->useMaster()),
                      "configure()", "You cannot use a server and a master.");
-  preciceCheck(not (_restartMode && _accessor->useMaster()),"configure()",
+  tpreciceCheck(not (_restartMode && _accessor->useMaster()),"configure()",
                       "To restart while using a master is not yet supported");
-  preciceCheck(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
+  tpreciceCheck(_accessorCommunicatorSize==1 || _accessor->useMaster() || _accessor->useServer(),
                      "configure()", "A parallel participant needs either a master or a server communication configured");
 
   _clientMode = (not _serverMode) && _accessor->useServer();
@@ -209,21 +209,21 @@ void SolverInterfaceImpl:: configure
   configureM2Ns(config.getM2NConfiguration());
 
   if (_serverMode){
-    preciceInfo("configure()", "[PRECICE] Run in server mode");
+    tpreciceInfo("configure()", "[PRECICE] Run in server mode");
   }
   if (_clientMode){
-    preciceInfo("configure()", "[PRECICE] Run in client mode");
+    tpreciceInfo("configure()", "[PRECICE] Run in client mode");
   }
 
   if (_geometryMode){
-    preciceInfo("configure()", "[PRECICE] Run in geometry mode");
-    preciceCheck(_participants.size() == 1, "configure()",
+    tpreciceInfo("configure()", "[PRECICE] Run in geometry mode");
+    tpreciceCheck(_participants.size() == 1, "configure()",
                  "Only one participant can be defined in geometry mode!");
     configureSolverGeometries(config.getM2NConfiguration());
   }
   else if (not _clientMode){
-    preciceInfo("configure()", "[PRECICE] Run in coupling mode");
-    preciceCheck(_participants.size() > 1,
+    tpreciceInfo("configure()", "[PRECICE] Run in coupling mode");
+    tpreciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
     configureSolverGeometries(config.getM2NConfiguration());
   }
@@ -286,7 +286,7 @@ void SolverInterfaceImpl:: configure
 
 double SolverInterfaceImpl:: initialize()
 {
-  preciceTrace("initialize()");
+  tpreciceTrace("initialize()");
   Event e("initialize", not precice::testMode);
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
@@ -294,20 +294,20 @@ double SolverInterfaceImpl:: initialize()
       "/");
 
   if (_clientMode){
-    preciceDebug("Request perform initializations");
+    tpreciceDebug("Request perform initializations");
     _requestManager->requestInitialize();
   }
   else {
     // Setup communication
     if (not _geometryMode){
       typedef std::map<std::string,M2NWrap>::value_type M2NPair;
-      preciceInfo("initialize()", "Setting up master communication to coupling partner/s " );
+      tpreciceInfo("initialize()", "Setting up master communication to coupling partner/s " );
       for (M2NPair& m2nPair : _m2ns) {
         m2n::M2N::SharedPointer& m2n = m2nPair.second.m2n;
         std::string localName = _accessorName;
         if (_serverMode) localName += "Server";
         std::string remoteName(m2nPair.first);
-        preciceCheck(m2n.get() != nullptr, "initialize()",
+        tpreciceCheck(m2n.get() != nullptr, "initialize()",
                      "M2N communication from " << localName << " to participant "
                      << remoteName << " could not be created! Check compile "
                      "flags used!");
@@ -318,10 +318,10 @@ double SolverInterfaceImpl:: initialize()
           m2n->acceptMasterConnection(localName, remoteName);
         }
       }
-      preciceInfo("initialize()", "Coupling partner/s are connected " );
+      tpreciceInfo("initialize()", "Coupling partner/s are connected " );
     }
 
-    preciceDebug("Perform initializations");
+    tpreciceDebug("Perform initializations");
 
     //create geometry. we need to do this in two loops, to first communicate the mesh and later decompose it
     //originally this was done in one loop. this however gave deadlock if two meshes needed to be communicated cross-wise.
@@ -358,12 +358,12 @@ double SolverInterfaceImpl:: initialize()
 
     if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
       typedef std::map<std::string,M2NWrap>::value_type M2NPair;
-      preciceInfo("initialize()", "Setting up slaves communication to coupling partner/s " );
+      tpreciceInfo("initialize()", "Setting up slaves communication to coupling partner/s " );
       for (M2NPair& m2nPair : _m2ns) {
         m2n::M2N::SharedPointer& m2n = m2nPair.second.m2n;
         std::string localName = _accessorName;
         std::string remoteName(m2nPair.first);
-        preciceCheck(m2n.get() != nullptr, "initialize()",
+        tpreciceCheck(m2n.get() != nullptr, "initialize()",
                      "Communication from " << localName << " to participant "
                      << remoteName << " could not be created! Check compile "
                      "flags used!");
@@ -374,7 +374,7 @@ double SolverInterfaceImpl:: initialize()
           m2n->acceptSlavesConnection(localName, remoteName);
         }
       }
-      preciceInfo("initialize()", "Slaves are connected" );
+      tpreciceInfo("initialize()", "Slaves are connected" );
     }
 
     std::set<action::Action::Timing> timings;
@@ -389,7 +389,7 @@ double SolverInterfaceImpl:: initialize()
     int timestep = 1;
 
     if (_restartMode){
-      preciceInfo("initialize()", "Reading simulation state for restart");
+      tpreciceInfo("initialize()", "Reading simulation state for restart");
       io::SimulationStateIO stateIO(_checkpointFileName + "_simstate.txt");
       stateIO.readState(time, timestep, _numberAdvanceCalls);
     }
@@ -397,7 +397,7 @@ double SolverInterfaceImpl:: initialize()
     _couplingScheme->initialize(time, timestep);
 
     if (_restartMode){
-      preciceInfo("initialize()", "Reading coupling scheme state for restart");
+      tpreciceInfo("initialize()", "Reading coupling scheme state for restart");
       //io::TXTReader txtReader(_checkpointFileName + "_cplscheme.txt");
       _couplingScheme->importState(_checkpointFileName);
     }
@@ -414,7 +414,7 @@ double SolverInterfaceImpl:: initialize()
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
 
     if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
-      preciceDebug("Plot output...");
+      tpreciceDebug("Plot output...");
       for (const io::ExportContext& context : _accessor->exportContexts()){
         if (context.timestepInterval != -1){
           std::ostringstream suffix;
@@ -426,21 +426,21 @@ double SolverInterfaceImpl:: initialize()
         }
       }
     }
-    preciceInfo("initialize()", _couplingScheme->printCouplingState());
+    tpreciceInfo("initialize()", _couplingScheme->printCouplingState());
   }
   return _couplingScheme->getNextTimestepMaxLength();
 }
 
 void SolverInterfaceImpl:: initializeData ()
 {
-  preciceTrace("initializeData()" );
+  tpreciceTrace("initializeData()" );
   Event e("initializeData", not precice::testMode);
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "initializeData"
       "/");
 
-  preciceCheck(_couplingScheme->isInitialized(), "initializeData()",
+  tpreciceCheck(_couplingScheme->isInitialized(), "initializeData()",
                "initialize() has to be called before initializeData()");
   if (not _geometryMode){
     if (_clientMode){
@@ -465,7 +465,7 @@ double SolverInterfaceImpl:: advance
 (
   double computedTimestepLength )
 {
-  preciceTrace1("advance()", computedTimestepLength);
+  tpreciceTrace1("advance()", computedTimestepLength);
 
   EventRegistry::printGlobalDuration();
 
@@ -475,10 +475,10 @@ double SolverInterfaceImpl:: advance
       "advance"
       "/");
 
-  preciceCheck(_couplingScheme->isInitialized(), "advance()",
+  tpreciceCheck(_couplingScheme->isInitialized(), "advance()",
                "initialize() has to be called before advance()");
   _numberAdvanceCalls++;
-  preciceInfo("advance()", "Iteration #" << _numberAdvanceCalls);
+  tpreciceInfo("advance()", "Iteration #" << _numberAdvanceCalls);
   if (_clientMode){
     _requestManager->requestAdvance(computedTimestepLength);
   }
@@ -526,7 +526,7 @@ double SolverInterfaceImpl:: advance
     }
     performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
 
-    preciceDebug("Advancing coupling scheme");
+    tpreciceDebug("Advancing coupling scheme");
     _couplingScheme->advance();
 
     timings.clear();
@@ -541,7 +541,7 @@ double SolverInterfaceImpl:: advance
 
     mapReadData();
 
-    preciceInfo("advance()", _couplingScheme->printCouplingState());
+    tpreciceInfo("advance()", _couplingScheme->printCouplingState());
 
     handleExports();
 
@@ -555,8 +555,8 @@ double SolverInterfaceImpl:: advance
 
 void SolverInterfaceImpl:: finalize()
 {
-  preciceTrace("finalize()");
-  preciceCheck(_couplingScheme->isInitialized(), "finalize()",
+  tpreciceTrace("finalize()");
+  tpreciceCheck(_couplingScheme->isInitialized(), "finalize()",
                "initialize() has to be called before finalize()");
   _couplingScheme->finalize();
   _couplingScheme.reset();
@@ -624,19 +624,19 @@ void SolverInterfaceImpl:: finalize()
 
 int SolverInterfaceImpl:: getDimensions() const
 {
-  preciceTrace1 ( "getDimensions()", _dimensions );
+  tpreciceTrace1 ( "getDimensions()", _dimensions );
   return _dimensions;
 }
 
 bool SolverInterfaceImpl:: isCouplingOngoing()
 {
-  preciceTrace ( "isCouplingOngoing()" );
+  tpreciceTrace ( "isCouplingOngoing()" );
   return _couplingScheme->isCouplingOngoing();
 }
 
 bool SolverInterfaceImpl:: isReadDataAvailable()
 {
-  preciceTrace ( "isReadDataAvailable()" );
+  tpreciceTrace ( "isReadDataAvailable()" );
   return _couplingScheme->hasDataBeenExchanged();
 }
 
@@ -644,13 +644,13 @@ bool SolverInterfaceImpl:: isWriteDataRequired
 (
   double computedTimestepLength )
 {
-  preciceTrace1 ( "isWriteDataRequired()", computedTimestepLength );
+  tpreciceTrace1 ( "isWriteDataRequired()", computedTimestepLength );
   return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
 bool SolverInterfaceImpl:: isTimestepComplete()
 {
-  preciceTrace ( "isCouplingTimestepComplete()" );
+  tpreciceTrace ( "isCouplingTimestepComplete()" );
   return _couplingScheme->isCouplingTimestepComplete();
 }
 
@@ -658,7 +658,7 @@ bool SolverInterfaceImpl:: isActionRequired
 (
   const std::string& action )
 {
-  preciceTrace2("isActionRequired()", action, _couplingScheme->isActionRequired(action));
+  tpreciceTrace2("isActionRequired()", action, _couplingScheme->isActionRequired(action));
   return _couplingScheme->isActionRequired(action);
 }
 
@@ -666,7 +666,7 @@ void SolverInterfaceImpl:: fulfilledAction
 (
   const std::string& action )
 {
-  preciceTrace1 ( "fulfilledAction()", action );
+  tpreciceTrace1 ( "fulfilledAction()", action );
   if ( _clientMode ) {
     _requestManager->requestFulfilledAction(action);
   }
@@ -688,7 +688,7 @@ bool SolverInterfaceImpl:: hasMesh
 (
   const std::string& meshName ) const
 {
-  preciceTrace1 ( "hasMesh()", meshName );
+  tpreciceTrace1 ( "hasMesh()", meshName );
   return utils::contained ( meshName, _meshIDs );
 }
 
@@ -696,15 +696,15 @@ int SolverInterfaceImpl:: getMeshID
 (
   const std::string& meshName )
 {
-  preciceTrace1 ( "getMeshID()", meshName );
-  preciceCheck( utils::contained(meshName, _meshIDs), "getMeshID()",
+  tpreciceTrace1 ( "getMeshID()", meshName );
+  tpreciceCheck( utils::contained(meshName, _meshIDs), "getMeshID()",
                 "Mesh with name \""<< meshName << "\" is not defined!" );
   return _meshIDs[meshName];
 }
 
 std::set<int> SolverInterfaceImpl:: getMeshIDs()
 {
-  preciceTrace ( "getMeshIDs()" );
+  tpreciceTrace ( "getMeshIDs()" );
   std::set<int> ids;
   for (const impl::MeshContext* context : _accessor->usedMeshContexts()) {
     ids.insert ( context->mesh->getID() );
@@ -716,8 +716,8 @@ bool SolverInterfaceImpl:: hasData
 (
   const std::string& dataName, int meshID )
 {
-  preciceTrace2 ( "hasData()", dataName, meshID );
-  preciceCheck ( _dataIDs.find(meshID)!=_dataIDs.end(), "hasData()",
+  tpreciceTrace2 ( "hasData()", dataName, meshID );
+  tpreciceCheck ( _dataIDs.find(meshID)!=_dataIDs.end(), "hasData()",
                    "No mesh with meshID \"" << meshID << "\" is defined");
   std::map<std::string,int>& sub_dataIDs =  _dataIDs[meshID];
   return sub_dataIDs.find(dataName)!= sub_dataIDs.end();
@@ -727,8 +727,8 @@ int SolverInterfaceImpl:: getDataID
 (
   const std::string& dataName, int meshID )
 {
-  preciceTrace2 ( "getDataID()", dataName, meshID );
-  preciceCheck ( hasData(dataName, meshID), "getDataID()",
+  tpreciceTrace2 ( "getDataID()", dataName, meshID );
+  tpreciceCheck ( hasData(dataName, meshID), "getDataID()",
                  "Data with name \"" << dataName << "\" is not defined on mesh with ID \""
                  << meshID << "\".");
   return _dataIDs[meshID][dataName];
@@ -739,7 +739,7 @@ int SolverInterfaceImpl:: inquirePosition
   const double*        point,
   const std::set<int>& meshIDs )
 {
-  preciceTrace2 ( "inquirePosition()", point, meshIDs.size() );
+  tpreciceTrace2 ( "inquirePosition()", point, meshIDs.size() );
   using namespace precice::constants;
   int pos = positionOutsideOfGeometry();
   utils::DynVector searchPoint(_dimensions);
@@ -753,7 +753,7 @@ int SolverInterfaceImpl:: inquirePosition
     for (int i=0; i < (int)markedContexts.size(); i++){
       MeshContext* meshContext = _accessor->usedMeshContexts()[i];
       if (markedContexts[i] == markedSkip()){
-        preciceDebug("Skipping mesh " << meshContext->mesh->getName());
+        tpreciceDebug("Skipping mesh " << meshContext->mesh->getName());
         continue;
       }
       int tempPos = -1;
@@ -788,7 +788,7 @@ int SolverInterfaceImpl:: inquirePosition
       }
     }
   }
-  preciceDebug("Return position = " << pos);
+  tpreciceDebug("Return position = " << pos);
   return pos;
 }
 
@@ -797,7 +797,7 @@ ClosestMesh SolverInterfaceImpl:: inquireClosestMesh
   const double*        point,
   const std::set<int>& meshIDs )
 {
-  preciceTrace1("inquireClosestMesh()", point);
+  tpreciceTrace1("inquireClosestMesh()", point);
   ClosestMesh closestMesh(_dimensions);
   utils::DynVector searchPoint(_dimensions);
   for (int dim=0; dim < _dimensions; dim++){
@@ -815,7 +815,7 @@ ClosestMesh SolverInterfaceImpl:: inquireClosestMesh
     for (int i=0; i < (int)markedContexts.size(); i++){
       MeshContext* meshContext = _accessor->usedMeshContexts()[i];
       if (markedContexts[i] == markedSkip()){
-        preciceDebug("Skipping mesh " << meshContext->mesh->getName());
+        tpreciceDebug("Skipping mesh " << meshContext->mesh->getName());
         continue;
       }
       query::FindClosest findClosest(searchPoint);
@@ -864,7 +864,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
   bool                 includeBoundaries,
   const std::set<int>& meshIDs )
 {
-  preciceTrace4("inquireVoxelPosition()", voxelCenter, voxelHalflengths,
+  tpreciceTrace4("inquireVoxelPosition()", voxelCenter, voxelHalflengths,
                 includeBoundaries, meshIDs.size());
 
   using namespace precice::constants;
@@ -874,7 +874,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
     center[dim] = voxelCenter[dim];
     halflengths[dim] = voxelHalflengths[dim];
   }
-  preciceDebug("center = " << center << ", h = " << halflengths);
+  tpreciceDebug("center = " << center << ", h = " << halflengths);
 
   if (_clientMode){
     VoxelPosition pos;
@@ -894,7 +894,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
 //    bool skip = not utils::contained(meshContext.mesh->getID(), meshIDs);
 //    skip &= not meshIDs.empty();
 //    if (skip){
-//      preciceDebug("Skipping mesh " << meshContext.mesh->getName());
+//      tpreciceDebug("Skipping mesh " << meshContext.mesh->getName());
 //      continue;
 //    }
 
@@ -904,16 +904,16 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
   for (int i=0; i < (int)markedContexts.size(); i++){
     MeshContext* meshContext = _accessor->usedMeshContexts()[i];
     if (markedContexts[i] == markedSkip()){
-      preciceDebug("Skipping mesh " << meshContext->mesh->getName());
+      tpreciceDebug("Skipping mesh " << meshContext->mesh->getName());
       continue;
     }
-    preciceDebug("Query mesh \"" << meshContext->mesh->getName() << "\" with "
+    tpreciceDebug("Query mesh \"" << meshContext->mesh->getName() << "\" with "
                  << meshContext->mesh->vertices().size() << " vertices");
     int oldPos = pos;
     query::FindVoxelContent findVoxel(center, halflengths, boundaryInclude);
     if (markedContexts[i] == markedQuerySpacetree()){
       assertion(meshContext->spacetree.get() != nullptr);
-      preciceDebug("Use spacetree for query");
+      tpreciceDebug("Use spacetree for query");
       // Query first including voxel boundaries. This enables to directly
       // use cached information of spacetree cells, that do also include
       // objects on boundaries.
@@ -921,11 +921,11 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
 
       // MERGING DISABLED!!!! CONTENT MIGHT CONTAIN DUPLICATED ELEMENTS
 //      if (not findVoxel.content().empty()){
-//        preciceDebug ( "Merging found content of size = " << findVoxel.content().size() );
+//        tpreciceDebug ( "Merging found content of size = " << findVoxel.content().size() );
 //        mesh::Merge mergeContent;
 //        mergeContent ( findVoxel.content() );
 //        //findContent.content() = mergeContent.content();
-//        preciceDebug ( "Merged size = " << mergeContent.content().size() );
+//        tpreciceDebug ( "Merged size = " << mergeContent.content().size() );
 //        content->add ( mergeContent.content() );
 //      }
       //content->add(findVoxel.content());
@@ -941,7 +941,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
     }
     // The mesh does not have a spacetree
     else {
-      preciceDebug("Query mesh directly");
+      tpreciceDebug("Query mesh directly");
       assertion1(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
       //query::FindVoxelContent findVoxel(center, halflengths, boundaryInclude);
       findVoxel(*meshContext->mesh);
@@ -952,7 +952,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
       }
       // If the voxel is empty and not inside for any other checked geometry
       else if (oldPos != positionInsideOfGeometry()){
-        //preciceDebug("Query found no objects and oldpos isnt't inside");
+        //tpreciceDebug("Query found no objects and oldpos isnt't inside");
         query::FindClosest findClosest(center);
         findClosest(*(meshContext->mesh));
         assertion(findClosest.hasFound());
@@ -988,7 +988,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
         }
         tempIDs.clear();
       }
-      preciceDebug("Query found objects, ids.size = " << uniqueIDs.size());
+      tpreciceDebug("Query found objects, ids.size = " << uniqueIDs.size());
       for (int id : uniqueIDs) {
         if (not utils::contained(id, containedMeshIDs)){
           containedMeshIDs.push_back(id);
@@ -997,18 +997,18 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
     }
 
     if (oldPos == positionInsideOfGeometry()){
-      preciceDebug("Since oldpos is inside, reset to inside");
+      tpreciceDebug("Since oldpos is inside, reset to inside");
       pos = positionInsideOfGeometry();
     }
     else if ((oldPos == positionOnGeometry())
              && (pos == positionOutsideOfGeometry()))
     {
-      preciceDebug ( "Since old pos is on and pos is outside, reset to on" );
+      tpreciceDebug ( "Since old pos is on and pos is outside, reset to on" );
       pos = positionOnGeometry();
     }
-    preciceDebug("pos = " << pos);
+    tpreciceDebug("pos = " << pos);
   }
-  preciceDebug("Return voxel position = " << pos << ", ids.size = " << containedMeshIDs.size());
+  tpreciceDebug("Return voxel position = " << pos << ", ids.size = " << containedMeshIDs.size());
   return VoxelPosition(pos, containedMeshIDs);
 }
 
@@ -1017,7 +1017,7 @@ int SolverInterfaceImpl:: getMeshVertexSize
 (
   int meshID )
 {
-  preciceTrace1("getMeshVertexSize()", meshID);
+  tpreciceTrace1("getMeshVertexSize()", meshID);
   int size = 0;
   if (_clientMode){
     size = _requestManager->requestGetMeshVertexSize(meshID);
@@ -1027,7 +1027,7 @@ int SolverInterfaceImpl:: getMeshVertexSize
     assertion(context.mesh.get() != nullptr);
     size = context.mesh->vertices().size();
   }
-  preciceDebug("return " << size);
+  tpreciceDebug("return " << size);
   return size;
 }
 
@@ -1035,7 +1035,7 @@ void SolverInterfaceImpl:: resetMesh
 (
   int meshID )
 {
-  preciceTrace1("resetMesh()", meshID);
+  tpreciceTrace1("resetMesh()", meshID);
   if (_clientMode){
     _requestManager->requestResetMesh(meshID);
   }
@@ -1047,12 +1047,12 @@ void SolverInterfaceImpl:: resetMesh
           context.fromMappingContext.timing == mapping::MappingConfiguration::INITIAL &&
               context.toMappingContext.timing == mapping::MappingConfiguration::INITIAL;
 
-    preciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
+    tpreciceCheck(!isStationary, "resetMesh()", "A mesh with only initial mappings"
               << " must not be reseted");
-    preciceCheck(hasMapping, "resetMesh()", "A mesh with no mappings"
+    tpreciceCheck(hasMapping, "resetMesh()", "A mesh with no mappings"
                 << " must not be reseted");
 
-    preciceDebug ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
+    tpreciceDebug ( "Clear mesh positions for mesh \"" << context.mesh->getName() << "\"" );
     context.mesh->clear ();
   }
 }
@@ -1062,12 +1062,12 @@ int SolverInterfaceImpl:: setMeshVertex
   int           meshID,
   const double* position )
 {
-  preciceTrace1 ( "setMeshVertex()", meshID );
+  tpreciceTrace1 ( "setMeshVertex()", meshID );
   utils::DynVector internalPosition(_dimensions);
   for ( int dim=0; dim < _dimensions; dim++ ){
     internalPosition[dim] = position[dim];
   }
-  preciceDebug("Position = " << internalPosition);
+  tpreciceDebug("Position = " << internalPosition);
   int index = -1;
   if ( _clientMode ){
     index = _requestManager->requestSetMeshVertex ( meshID, internalPosition );
@@ -1075,7 +1075,7 @@ int SolverInterfaceImpl:: setMeshVertex
   else {
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
-    preciceDebug("MeshRequirement: " << context.meshRequirement);
+    tpreciceDebug("MeshRequirement: " << context.meshRequirement);
     index = mesh->createVertex(internalPosition).getID();
     mesh->allocateDataValues();
   }
@@ -1089,7 +1089,7 @@ void SolverInterfaceImpl:: setMeshVertices
   double* positions,
   int*    ids )
 {
-  preciceTrace2("setMeshVertices()", meshID, size);
+  tpreciceTrace2("setMeshVertices()", meshID, size);
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
@@ -1097,7 +1097,7 @@ void SolverInterfaceImpl:: setMeshVertices
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     utils::DynVector internalPosition(_dimensions);
-    preciceDebug("Set positions");
+    tpreciceDebug("Set positions");
     for (int i=0; i < size; i++){
       for (int dim=0; dim < _dimensions; dim++){
         internalPosition[dim] = positions[i*_dimensions + dim];
@@ -1115,7 +1115,7 @@ void SolverInterfaceImpl:: getMeshVertices
   int*    ids,
   double* positions )
 {
-  preciceTrace2("getMeshVertices()", meshID, size);
+  tpreciceTrace2("getMeshVertices()", meshID, size);
   if (_clientMode){
     _requestManager->requestGetMeshVertices(meshID, size, ids, positions);
   }
@@ -1123,7 +1123,7 @@ void SolverInterfaceImpl:: getMeshVertices
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
     utils::DynVector internalPosition(_dimensions);
-    preciceDebug("Get positions");
+    tpreciceDebug("Get positions");
     assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
     for (size_t i=0; i < size; i++){
       size_t id = ids[i];
@@ -1142,14 +1142,14 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
   double* positions,
   int*    ids )
 {
-  preciceTrace2("getMeshVertexIDsFromPositions()", meshID, size);
+  tpreciceTrace2("getMeshVertexIDsFromPositions()", meshID, size);
   if (_clientMode){
     _requestManager->requestGetMeshVertexIDsFromPositions(meshID, size, positions, ids);
   }
   else {
     MeshContext& context = _accessor->meshContext(meshID);
     mesh::PtrMesh mesh(context.mesh);
-    preciceDebug("Get ids");
+    tpreciceDebug("Get ids");
     utils::DynVector internalPosition(_dimensions);
     utils::DynVector position(_dimensions);
     assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
@@ -1165,7 +1165,7 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
           break;
         }
       }
-      preciceCheck(j < mesh->vertices().size(), "getMeshVertexIDsFromPositions()",
+      tpreciceCheck(j < mesh->vertices().size(), "getMeshVertexIDsFromPositions()",
                    "Position " << i << "=" << position << " unknown!");
     }
   }
@@ -1179,9 +1179,9 @@ int SolverInterfaceImpl:: setMeshEdge
   int firstVertexID,
   int secondVertexID )
 {
-  preciceTrace3 ( "setMeshEdge()", meshID, firstVertexID, secondVertexID );
+  tpreciceTrace3 ( "setMeshEdge()", meshID, firstVertexID, secondVertexID );
   if (_restartMode){
-    preciceDebug("Ignoring edge, since restart mode is active");
+    tpreciceDebug("Ignoring edge, since restart mode is active");
     return -1;
   }
   if ( _clientMode ){
@@ -1190,7 +1190,7 @@ int SolverInterfaceImpl:: setMeshEdge
   else {
     MeshContext& context = _accessor->meshContext(meshID);
     if ( context.meshRequirement == mapping::Mapping::FULL ){
-      preciceDebug("Full mesh required.");
+      tpreciceDebug("Full mesh required.");
       mesh::PtrMesh& mesh = context.mesh;
       assertion1(firstVertexID >= 0, firstVertexID);
       assertion1(secondVertexID >= 0, secondVertexID);
@@ -1213,10 +1213,10 @@ void SolverInterfaceImpl:: setMeshTriangle
   int secondEdgeID,
   int thirdEdgeID )
 {
-  preciceTrace4 ( "setMeshTriangle()", meshID, firstEdgeID,
+  tpreciceTrace4 ( "setMeshTriangle()", meshID, firstEdgeID,
                   secondEdgeID, thirdEdgeID );
   if (_restartMode){
-    preciceDebug("Ignoring triangle, since restart mode is active");
+    tpreciceDebug("Ignoring triangle, since restart mode is active");
     return;
   }
   if ( _clientMode ){
@@ -1247,7 +1247,7 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   int secondVertexID,
   int thirdVertexID )
 {
-  preciceTrace4("setMeshTriangleWithEdges()", meshID, firstVertexID,
+  tpreciceTrace4("setMeshTriangleWithEdges()", meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
   if (_clientMode){
     _requestManager->requestSetMeshTriangleWithEdges(meshID,
@@ -1342,10 +1342,10 @@ void SolverInterfaceImpl:: setMeshQuad
   int thirdEdgeID,
   int fourthEdgeID )
 {
-  preciceTrace5("setMeshQuad()", meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
+  tpreciceTrace5("setMeshQuad()", meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
   if (_restartMode){
-    preciceDebug("Ignoring quad, since restart mode is active");
+    tpreciceDebug("Ignoring quad, since restart mode is active");
     return;
   }
   if (_clientMode){
@@ -1381,7 +1381,7 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   int thirdVertexID,
   int fourthVertexID )
 {
-  preciceTrace5("setMeshQuadWithEdges()", meshID, firstVertexID,
+  tpreciceTrace5("setMeshQuadWithEdges()", meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
   if (_clientMode){
     _requestManager->requestSetMeshQuadWithEdges(
@@ -1492,7 +1492,7 @@ void SolverInterfaceImpl:: mapWriteDataFrom
 (
   int fromMeshID )
 {
-  preciceTrace1("mapWriteDataFrom(int)", fromMeshID);
+  tpreciceTrace1("mapWriteDataFrom(int)", fromMeshID);
   if (_clientMode){
     _requestManager->requestMapWriteDataFrom(fromMeshID);
     return;
@@ -1500,12 +1500,12 @@ void SolverInterfaceImpl:: mapWriteDataFrom
   impl::MeshContext& context = _accessor->meshContext(fromMeshID);
   impl::MappingContext& mappingContext = context.fromMappingContext;
   if (mappingContext.mapping.use_count() == 0){
-    preciceError("mapWriteDataFrom()", "From mesh \"" << context.mesh->getName()
+    tpreciceError("mapWriteDataFrom()", "From mesh \"" << context.mesh->getName()
                    << "\", there is no mapping defined");
     return;
   }
   if (not mappingContext.mapping->hasComputedMapping()){
-    preciceDebug("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
+    tpreciceDebug("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
     mappingContext.mapping->computeMapping();
   }
   for (impl::DataContext& context : _accessor->writeDataContexts()) {
@@ -1514,7 +1514,7 @@ void SolverInterfaceImpl:: mapWriteDataFrom
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       //assign(context.toData->values()) = 0.0;
-      preciceDebug("Map data \"" << context.fromData->getName()
+      tpreciceDebug("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
@@ -1528,7 +1528,7 @@ void SolverInterfaceImpl:: mapReadDataTo
 (
   int toMeshID )
 {
-  preciceTrace1 ("mapReadDataTo(int)", toMeshID);
+  tpreciceTrace1 ("mapReadDataTo(int)", toMeshID);
   if (_clientMode){
     _requestManager->requestMapReadDataTo(toMeshID);
     return;
@@ -1536,12 +1536,12 @@ void SolverInterfaceImpl:: mapReadDataTo
   impl::MeshContext& context = _accessor->meshContext(toMeshID);
   impl::MappingContext& mappingContext = context.toMappingContext;
   if (mappingContext.mapping.use_count() == 0){
-    preciceError("mapReadDataFrom()", "From mesh \"" << context.mesh->getName()
+    tpreciceError("mapReadDataFrom()", "From mesh \"" << context.mesh->getName()
                    << "\", there is no mapping defined!");
     return;
   }
   if (not mappingContext.mapping->hasComputedMapping()){
-    preciceDebug("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
+    tpreciceDebug("Compute mapping from mesh \"" << context.mesh->getName() << "\"");
     mappingContext.mapping->computeMapping();
   }
   for (impl::DataContext& context : _accessor->readDataContexts()) {
@@ -1550,7 +1550,7 @@ void SolverInterfaceImpl:: mapReadDataTo
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       //assign(context.toData->values()) = 0.0;
-      preciceDebug("Map data \"" << context.fromData->getName()
+      tpreciceDebug("Map data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       assertion(mappingContext.mapping==context.mappingContext.mapping);
       mappingContext.mapping->map(inDataID, outDataID);
@@ -1560,7 +1560,7 @@ void SolverInterfaceImpl:: mapReadDataTo
       for (int i=0; (i < max) && (i < 10); i++){
         stream << context.toData->values()[i] << " ";
       }
-      preciceDebug("First mapped values = " << stream.str());
+      tpreciceDebug("First mapped values = " << stream.str());
 #     endif
     }
   }
@@ -1574,7 +1574,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("writeBlockVectorData()", fromDataID, size);
+  tpreciceTrace2("writeBlockVectorData()", fromDataID, size);
   if (size == 0)
     return;
   assertion(valueIndices != nullptr);
@@ -1583,7 +1583,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
     _requestManager->requestWriteBlockVectorData(fromDataID, size, valueIndices, values);
   }
   else { //couplingMode
-    preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
+    tpreciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockVectorData()",
                  "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
 
@@ -1607,12 +1607,12 @@ void SolverInterfaceImpl:: writeVectorData
   int           valueIndex,
   const double* value )
 {
-  preciceTrace2 ( "writeVectorData()", fromDataID, valueIndex );
+  tpreciceTrace2 ( "writeVectorData()", fromDataID, valueIndex );
 # ifdef Debug
-  if (_dimensions == 2) preciceDebug("value = " << tarch::la::wrap<2>(value));
-  if (_dimensions == 3) preciceDebug("value = " << tarch::la::wrap<3>(value));
+  if (_dimensions == 2) tpreciceDebug("value = " << tarch::la::wrap<2>(value));
+  if (_dimensions == 3) tpreciceDebug("value = " << tarch::la::wrap<3>(value));
 # endif
-  preciceCheck ( valueIndex >= -1, "writeVectorData()", "Invalid value index ("
+  tpreciceCheck ( valueIndex >= -1, "writeVectorData()", "Invalid value index ("
                  << valueIndex << ") when writing vector data!" );
   if (_clientMode){
     utils::DynVector valueCopy(_dimensions);
@@ -1622,7 +1622,7 @@ void SolverInterfaceImpl:: writeVectorData
     _requestManager->requestWriteVectorData(fromDataID, valueIndex, tarch::la::raw(valueCopy));
   }
   else {
-    preciceCheck(_accessor->isDataUsed(fromDataID), "writeVectorData()",
+    tpreciceCheck(_accessor->isDataUsed(fromDataID), "writeVectorData()",
              "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.get() != nullptr);
@@ -1643,7 +1643,7 @@ void SolverInterfaceImpl:: writeBlockScalarData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("writeBlockScalarData()", fromDataID, size);
+  tpreciceTrace2("writeBlockScalarData()", fromDataID, size);
   if (size == 0)
     return;
   assertion(valueIndices != nullptr);
@@ -1652,7 +1652,7 @@ void SolverInterfaceImpl:: writeBlockScalarData
     _requestManager->requestWriteBlockScalarData(fromDataID, size, valueIndices, values);
   }
   else {
-    preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockScalarData()",
+    tpreciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockScalarData()",
                  "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.get() != nullptr);
@@ -1670,14 +1670,14 @@ void SolverInterfaceImpl:: writeScalarData
   int    valueIndex,
   double value )
 {
-  preciceTrace3("writeScalarData()", fromDataID, valueIndex, value );
-  preciceCheck(valueIndex >= -1, "writeScalarData()", "Invalid value index ("
+  tpreciceTrace3("writeScalarData()", fromDataID, valueIndex, value );
+  tpreciceCheck(valueIndex >= -1, "writeScalarData()", "Invalid value index ("
                << valueIndex << ") when writing scalar data!");
   if (_clientMode){
     _requestManager->requestWriteScalarData(fromDataID, valueIndex, value);
   }
   else {
-    preciceCheck(_accessor->isDataUsed(fromDataID), "writeScalarData()",
+    tpreciceCheck(_accessor->isDataUsed(fromDataID), "writeScalarData()",
                  "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.use_count() > 0);
@@ -1695,7 +1695,7 @@ void SolverInterfaceImpl:: readBlockVectorData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("readBlockVectorData()", toDataID, size);
+  tpreciceTrace2("readBlockVectorData()", toDataID, size);
   if (size == 0)
     return;
   assertion(valueIndices != nullptr);
@@ -1704,7 +1704,7 @@ void SolverInterfaceImpl:: readBlockVectorData
     _requestManager->requestReadBlockVectorData(toDataID, size, valueIndices, values);
   }
   else { //couplingMode
-    preciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
+    tpreciceCheck(_accessor->isDataUsed(toDataID), "readBlockVectorData()",
                  "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.get() != nullptr);
@@ -1727,14 +1727,14 @@ void SolverInterfaceImpl:: readVectorData
   int     valueIndex,
   double* value )
 {
-  preciceTrace2("readVectorData()", toDataID, valueIndex);
-  preciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
+  tpreciceTrace2("readVectorData()", toDataID, valueIndex);
+  tpreciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
                << valueIndex << " )when reading vector data!");
   if (_clientMode){
     _requestManager->requestReadVectorData(toDataID, valueIndex, value);
   }
   else {
-    preciceCheck(_accessor->isDataUsed(toDataID), "readVectorData()",
+    tpreciceCheck(_accessor->isDataUsed(toDataID), "readVectorData()",
                      "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
@@ -1747,8 +1747,8 @@ void SolverInterfaceImpl:: readVectorData
 
   }
 # ifdef Debug
-  if (_dimensions == 2) preciceDebug("read value = " << tarch::la::wrap<2>(value));
-  if (_dimensions == 3) preciceDebug("read value = " << tarch::la::wrap<3>(value));
+  if (_dimensions == 2) tpreciceDebug("read value = " << tarch::la::wrap<2>(value));
+  if (_dimensions == 3) tpreciceDebug("read value = " << tarch::la::wrap<3>(value));
 # endif
 }
 
@@ -1759,17 +1759,17 @@ void SolverInterfaceImpl:: readBlockScalarData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("readBlockScalarData()", toDataID, size);
+  tpreciceTrace2("readBlockScalarData()", toDataID, size);
   if (size == 0)
     return;
-  preciceDebug("size = " << size);
+  tpreciceDebug("size = " << size);
   assertion(valueIndices != nullptr);
   assertion(values != nullptr);
   if (_clientMode){
     _requestManager->requestReadBlockScalarData(toDataID, size, valueIndices, values);
   }
   else {
-    preciceCheck(_accessor->isDataUsed(toDataID), "readBlockScalarData()",
+    tpreciceCheck(_accessor->isDataUsed(toDataID), "readBlockScalarData()",
                      "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.get() != nullptr);
@@ -1788,14 +1788,14 @@ void SolverInterfaceImpl:: readScalarData
   int     valueIndex,
   double& value )
 {
-  preciceTrace3("readScalarData()", toDataID, valueIndex, value);
-  preciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
+  tpreciceTrace3("readScalarData()", toDataID, valueIndex, value);
+  tpreciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
                << valueIndex << " )when reading vector data!");
   if (_clientMode){
     _requestManager->requestReadScalarData(toDataID, valueIndex, value);
   }
   else {
-    preciceCheck(_accessor->isDataUsed(toDataID), "readScalarData()",
+    tpreciceCheck(_accessor->isDataUsed(toDataID), "readScalarData()",
                      "You try to read from data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
@@ -1803,7 +1803,7 @@ void SolverInterfaceImpl:: readScalarData
     value = values[valueIndex];
 
   }
-  preciceDebug("Read value = " << value);
+  tpreciceDebug("Read value = " << value);
 }
 
 void SolverInterfaceImpl:: exportMesh
@@ -1811,7 +1811,7 @@ void SolverInterfaceImpl:: exportMesh
   const std::string& filenameSuffix,
   int                exportType )
 {
-  preciceTrace2 ( "exportMesh()", filenameSuffix, exportType );
+  tpreciceTrace2 ( "exportMesh()", filenameSuffix, exportType );
   if ( _clientMode ){
     _requestManager->requestExportMesh ( filenameSuffix, exportType );
     return;
@@ -1819,14 +1819,14 @@ void SolverInterfaceImpl:: exportMesh
   // Export meshes
   //const ExportContext& context = _accessor->exportContext();
   for (const io::ExportContext& context : _accessor->exportContexts()) {
-    preciceDebug ( "Export type = " << exportType );
+    tpreciceDebug ( "Export type = " << exportType );
     bool exportAll = exportType == constants::exportAll();
     bool exportThis = context.exporter->getType() == exportType;
     if ( exportAll || exportThis ){
       for (MeshContext* meshContext : _accessor->usedMeshContexts()) {
         std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
         std::string filename = context.location + name;
-        preciceDebug ( "Exporting mesh to file \"" << filename << "\"" );
+        tpreciceDebug ( "Exporting mesh to file \"" << filename << "\"" );
         context.exporter->doExport ( filename, *(meshContext->mesh) );
       }
     }
@@ -1853,14 +1853,14 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
 (
   const std::string& meshName )
 {
-  preciceTrace1("getMeshHandle()", meshName);
+  tpreciceTrace1("getMeshHandle()", meshName);
   assertion(not _clientMode);
   for (MeshContext* context : _accessor->usedMeshContexts()){
     if (context->mesh->getName() == meshName){
       return MeshHandle(context->mesh->content());
     }
   }
-  preciceError("getMeshHandle()", "Participant \"" << _accessorName
+  tpreciceError("getMeshHandle()", "Participant \"" << _accessorName
                << "\" does not use mesh \"" << meshName << "\"!");
 }
 
@@ -1875,7 +1875,7 @@ void SolverInterfaceImpl:: configureM2Ns
 (
   const m2n::M2NConfiguration::SharedPointer& config )
 {
-  preciceTrace("configureM2Ns()");
+  tpreciceTrace("configureM2Ns()");
   typedef m2n::M2NConfiguration::M2NTuple M2NTuple;
   for (M2NTuple m2nTuple : config->m2ns()) {
     std::string comPartner("");
@@ -1909,13 +1909,13 @@ void SolverInterfaceImpl:: configureSolverGeometries
 (
   const m2n::M2NConfiguration::SharedPointer& m2nConfig )
 {
-  preciceTrace ( "configureSolverGeometries()" );
+  tpreciceTrace ( "configureSolverGeometries()" );
   for (MeshContext* context : _accessor->usedMeshContexts()) {
     if ( context->provideMesh ) { // Accessor provides geometry
-      preciceCheck ( context->receiveMeshFrom.empty(), "configureSolverGeometries()",
+      tpreciceCheck ( context->receiveMeshFrom.empty(), "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot provide "
                      << "and receive mesh " << context->mesh->getName() << "!" );
-      preciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",
+      tpreciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",
                            "Participant \"" << _accessorName << "\" cannot provide "
                            << "the geometry of mesh \"" << context->mesh->getName()
                            << " in addition to a defined geometry!" );
@@ -1927,7 +1927,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
           bool doesReceive = receiverContext->receiveMeshFrom == _accessorName;
           doesReceive &= receiverContext->mesh->getName() == context->mesh->getName();
           if ( doesReceive ){
-            preciceDebug ( "   ... receiver " << receiver );
+            tpreciceDebug ( "   ... receiver " << receiver );
             utils::DynVector offset ( _dimensions, 0.0 );
             std::string provider ( _accessorName );
 
@@ -1936,7 +1936,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
               context->geometry = geometry::PtrGeometry ( comGeo );
             }
             else{
-              preciceDebug ( "Further receiver added.");
+              tpreciceDebug ( "Further receiver added.");
             }
 
             // meshRequirement has to be copied from "from" to provide", since
@@ -1955,7 +1955,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
         }
       }
       if(!addedReceiver){
-        preciceDebug ( "No receiver found, create SolverGeometry");
+        tpreciceDebug ( "No receiver found, create SolverGeometry");
         utils::DynVector offset ( _dimensions, 0.0 );
         context->geometry = geometry::PtrGeometry (
                         new geometry::SolverGeometry ( offset) );
@@ -1965,13 +1965,13 @@ void SolverInterfaceImpl:: configureSolverGeometries
 
     }
     else if ( not context->receiveMeshFrom.empty()) { // Accessor receives geometry
-      preciceCheck ( not context->provideMesh, "configureSolverGeometries()",
+      tpreciceCheck ( not context->provideMesh, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot provide "
                      << "and receive mesh " << context->mesh->getName() << "!" );
       utils::DynVector offset ( _dimensions, 0.0 );
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
-      preciceDebug ( "Receiving mesh from " << provider );
+      tpreciceDebug ( "Receiving mesh from " << provider );
       geometry::impl::PtrDecomposition decomp = nullptr;
       if(context->doesPreFiltering){
         decomp = geometry::impl::PtrDecomposition(
@@ -1985,7 +1985,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
       m2n::M2N::SharedPointer m2n = m2nConfig->getM2N ( receiver, provider );
       comGeo->addReceiver ( receiver, m2n );
       m2n->createDistributedCommunication(context->mesh);
-      preciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",
+      tpreciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",
                      "Participant \"" << _accessorName << "\" cannot receive "
                      << "the geometry of mesh \"" << context->mesh->getName()
                      << " in addition to a defined geometry!" );
@@ -2002,7 +2002,7 @@ void SolverInterfaceImpl:: prepareGeometry
 (
   MeshContext& meshContext )
 {
-  preciceTrace1("prepareGeometry()", meshContext.mesh->getName());
+  tpreciceTrace1("prepareGeometry()", meshContext.mesh->getName());
   assertion ( not _clientMode );
   using boost::get;
   mesh::PtrMesh mesh = meshContext.mesh;
@@ -2010,7 +2010,7 @@ void SolverInterfaceImpl:: prepareGeometry
   std::string meshName(mesh->getName());
   if (_restartMode){
     std::string fileName("precice_checkpoint_" + _accessorName + "_" + meshName);
-    preciceDebug("Importing geometry = " << mesh->getName());
+    tpreciceDebug("Importing geometry = " << mesh->getName());
     geometry::ImportGeometry* importGeo = new geometry::ImportGeometry (
         utils::DynVector(_dimensions, 0.0), fileName,
         geometry::ImportGeometry::VRML_1_FILE, true, not meshContext.provideMesh);
@@ -2019,7 +2019,7 @@ void SolverInterfaceImpl:: prepareGeometry
   else if ( (not _geometryMode) && (meshContext.geometry.use_count() > 0) ){
     utils::DynVector offset(meshContext.geometry->getOffset());
     offset += meshContext.localOffset;
-    preciceDebug("Adding local offset = " << meshContext.localOffset
+    tpreciceDebug("Adding local offset = " << meshContext.localOffset
                  << " to mesh " << mesh->getName());
     meshContext.geometry->setOffset(offset);
   }
@@ -2034,7 +2034,7 @@ void SolverInterfaceImpl:: createGeometry
 (
   MeshContext& meshContext )
 {
-  preciceTrace1("createGeometry()", meshContext.mesh->getName());
+  tpreciceTrace1("createGeometry()", meshContext.mesh->getName());
   assertion ( not _clientMode );
   using boost::get;
   mesh::PtrMesh mesh = meshContext.mesh;
@@ -2044,14 +2044,14 @@ void SolverInterfaceImpl:: createGeometry
   assertion(not (_geometryMode && (meshContext.geometry.use_count() == 0)));
   if (meshContext.geometry.use_count() > 0){
     meshContext.geometry->create(*mesh);
-    preciceDebug("Created geometry \"" << meshName
+    tpreciceDebug("Created geometry \"" << meshName
                  << "\" with # vertices = " << mesh->vertices().size());
     mesh->computeDistribution();
   }
 
   // Create spacetree for the geometry, if configured so
   if (meshContext.spacetree.use_count() > 0){
-    preciceCheck(_geometryMode, "createMeshContext()",
+    tpreciceCheck(_geometryMode, "createMeshContext()",
                  "Creating spacetree in coupling mode!");
     meshContext.spacetree->addMesh(mesh);
   }
@@ -2059,7 +2059,7 @@ void SolverInterfaceImpl:: createGeometry
 
 void SolverInterfaceImpl:: mapWrittenData()
 {
-  preciceTrace("mapWrittenData()");
+  tpreciceTrace("mapWrittenData()");
   using namespace mapping;
   MappingConfiguration::Timing timing;
   // Compute mappings
@@ -2069,7 +2069,7 @@ void SolverInterfaceImpl:: mapWrittenData()
     rightTime |= timing == MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     if (rightTime && not hasComputed){
-      preciceInfo("mapWrittenData()","Compute write mapping from mesh \""
+      tpreciceInfo("mapWrittenData()","Compute write mapping from mesh \""
           << _accessor->meshContext(context.fromMeshID).mesh->getName()
           << "\" to mesh \""
           << _accessor->meshContext(context.toMeshID).mesh->getName()
@@ -2089,11 +2089,11 @@ void SolverInterfaceImpl:: mapWrittenData()
     if (hasMapping && rightTime && (not hasMapped)){
       int inDataID = context.fromData->getID();
       int outDataID = context.toData->getID();
-      preciceDebug("Map data \"" << context.fromData->getName()
+      tpreciceDebug("Map data \"" << context.fromData->getName()
                    << "\" from mesh \"" << context.mesh->getName() << "\"");
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       //assign(context.toData->values()) = 0.0;
-      preciceDebug("Map from dataID " << inDataID << " to dataID: " << outDataID);
+      tpreciceDebug("Map from dataID " << inDataID << " to dataID: " << outDataID);
       context.mappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
       int max = context.toData->values().size();
@@ -2101,7 +2101,7 @@ void SolverInterfaceImpl:: mapWrittenData()
       for (int i=0; (i < max) && (i < 10); i++){
         stream << context.toData->values()[i] << " ";
       }
-      preciceDebug("First mapped values = " << stream.str() );
+      tpreciceDebug("First mapped values = " << stream.str() );
 #     endif
     }
   }
@@ -2119,7 +2119,7 @@ void SolverInterfaceImpl:: mapWrittenData()
 
 void SolverInterfaceImpl:: mapReadData()
 {
-  preciceTrace("mapReadData()");
+  tpreciceTrace("mapReadData()");
   mapping::MappingConfiguration::Timing timing;
   // Compute mappings
   for (impl::MappingContext& context : _accessor->readMappingContexts()) {
@@ -2128,7 +2128,7 @@ void SolverInterfaceImpl:: mapReadData()
     mapNow |= timing == mapping::MappingConfiguration::INITIAL;
     bool hasComputed = context.mapping->hasComputedMapping();
     if (mapNow && not hasComputed){
-      preciceInfo("mapReadData()","Compute read mapping from mesh \""
+      tpreciceInfo("mapReadData()","Compute read mapping from mesh \""
               << _accessor->meshContext(context.fromMeshID).mesh->getName()
               << "\" to mesh \""
               << _accessor->meshContext(context.toMeshID).mesh->getName()
@@ -2150,7 +2150,7 @@ void SolverInterfaceImpl:: mapReadData()
       int outDataID = context.toData->getID();
       context.toData->values() = Eigen::VectorXd::Zero(context.toData->values().size());
       //assign(context.toData->values()) = 0.0;
-      preciceDebug("Map read data \"" << context.fromData->getName()
+      tpreciceDebug("Map read data \"" << context.fromData->getName()
                    << "\" to mesh \"" << context.mesh->getName() << "\"");
       context.mappingContext.mapping->map(inDataID, outDataID);
 #     ifdef Debug
@@ -2159,7 +2159,7 @@ void SolverInterfaceImpl:: mapReadData()
       for (int i=0; (i < max) && (i < 10); i++){
         stream << context.toData->values()[i] << " ";
       }
-      preciceDebug("First mapped values = " << stream.str());
+      tpreciceDebug("First mapped values = " << stream.str());
 #     endif
     }
   }
@@ -2183,7 +2183,7 @@ void SolverInterfaceImpl:: performDataActions
   double                 partFullDt,
   double                 fullDt )
 {
-  preciceTrace("performDataActions()");
+  tpreciceTrace("performDataActions()");
   assertion(not _clientMode);
   for (action::PtrAction& action : _accessor->actions()) {
     if (timings.find(action->getTiming()) != timings.end()){
@@ -2194,7 +2194,7 @@ void SolverInterfaceImpl:: performDataActions
 
 void SolverInterfaceImpl:: handleExports()
 {
-  preciceTrace("handleExports()");
+  tpreciceTrace("handleExports()");
   assertion(not _clientMode);
   //timesteps was already incremented before
   int timesteps = _couplingScheme->getTimesteps()-1;
@@ -2230,10 +2230,10 @@ void SolverInterfaceImpl:: handleExports()
     if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
       // Checkpointing
       int checkpointingInterval = _couplingScheme->getCheckpointTimestepInterval();
-      preciceCheck(not  (utils::MasterSlave::_masterMode && checkpointingInterval!=-1) ,
+      tpreciceCheck(not  (utils::MasterSlave::_masterMode && checkpointingInterval!=-1) ,
                     "handleExports()","Checkpointing for a Master is not yet supported");
       if ((checkpointingInterval != -1) && (timesteps % checkpointingInterval == 0)){
-        preciceDebug("Set require checkpoint");
+        tpreciceDebug("Set require checkpoint");
         _couplingScheme->requireAction(constants::actionWriteSimulationCheckpoint());
         for (const MeshContext* meshContext : _accessor->usedMeshContexts()) {
           io::ExportVRML exportVRML(false);
@@ -2253,7 +2253,7 @@ void SolverInterfaceImpl:: handleExports()
 
 void SolverInterfaceImpl:: resetWrittenData()
 {
-  preciceTrace("resetWrittenData()");
+  tpreciceTrace("resetWrittenData()");
   for (DataContext& context : _accessor->writeDataContexts()) {
     context.fromData->values() = Eigen::VectorXd::Zero(context.fromData->values().size());
     //assign(context.fromData->values()) = 0.0;
@@ -2269,7 +2269,7 @@ void SolverInterfaceImpl:: resetWrittenData()
 
 //void SolverInterfaceImpl:: resetDataIndices()
 //{
-//  preciceTrace ( "resetDataIndices()" );
+//  tpreciceTrace ( "resetDataIndices()" );
 //  foreach ( DataContext & context, _accessor->writeDataContexts() ){
 //    context.indexCursor = 0;
 //  }
@@ -2289,7 +2289,7 @@ PtrParticipant SolverInterfaceImpl:: determineAccessingParticipant
       return participant;
     }
   }
-  preciceError ( "determineAccessingParticipant()",
+  tpreciceError ( "determineAccessingParticipant()",
                  "Accessing participant \"" << _accessorName << "\" is not defined"
                  << " in configuration!" );
 }
@@ -2299,7 +2299,7 @@ void SolverInterfaceImpl:: selectInquiryMeshIDs
   const std::set<int>& meshIDs,
   std::vector<int>&    markedMeshContexts ) const
 {
-  preciceTrace1("selectInquiryMeshIDs()", meshIDs.size());
+  tpreciceTrace1("selectInquiryMeshIDs()", meshIDs.size());
   assertion2(markedMeshContexts.size() == _accessor->usedMeshContexts().size(),
              markedMeshContexts.size(), _accessor->usedMeshContexts().size());
 
@@ -2358,16 +2358,16 @@ void SolverInterfaceImpl:: selectInquiryMeshIDs
 
 void SolverInterfaceImpl:: initializeClientServerCommunication()
 {
-  preciceTrace ( "initializeClientServerCom.()" );
+  tpreciceTrace ( "initializeClientServerCom.()" );
   com::Communication::SharedPointer com = _accessor->getClientServerCommunication();
   assertion(com.get() != nullptr);
   if ( _serverMode ){
-    preciceInfo ( "initializeClientServerCom.()", "Setting up communication to client" );
+    tpreciceInfo ( "initializeClientServerCom.()", "Setting up communication to client" );
     com->acceptConnection ( _accessorName + "Server", _accessorName,
                             _accessorProcessRank, _accessorCommunicatorSize );
   }
   else {
-    preciceInfo ( "initializeClientServerCom.()", "Setting up communication to server" );
+    tpreciceInfo ( "initializeClientServerCom.()", "Setting up communication to server" );
     com->requestConnection( _accessorName + "Server", _accessorName,
                             _accessorProcessRank, _accessorCommunicatorSize );
   }
@@ -2375,13 +2375,13 @@ void SolverInterfaceImpl:: initializeClientServerCommunication()
 
 void SolverInterfaceImpl:: initializeMasterSlaveCommunication()
 {
-  preciceTrace ( "initializeMasterSlaveCom.()" );
+  tpreciceTrace ( "initializeMasterSlaveCom.()" );
   //slaves create new communicator with ranks 0 to size-2
   //therefore, the master uses a rankOffset and the slaves have to call request
   // with that offset
   int rankOffset = 1;
   if ( utils::MasterSlave::_masterMode ){
-    preciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to slaves" );
+    tpreciceInfo ( "initializeMasterSlaveCom.()", "Setting up communication to slaves" );
     utils::MasterSlave::_communication->acceptConnection ( _accessorName + "Master", _accessorName,
                             _accessorProcessRank, 1);
     utils::MasterSlave::_communication->setRankOffset(rankOffset);
@@ -2403,7 +2403,7 @@ void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
     for(int rankSlave = 1; rankSlave < _accessorCommunicatorSize; rankSlave++){
       double dt;
       utils::MasterSlave::_communication->receive(dt, rankSlave);
-      preciceCheck(tarch::la::equals(dt, computedTimestepLength), "advance()",
+      tpreciceCheck(tarch::la::equals(dt, computedTimestepLength), "advance()",
                  "Ambiguous timestep length when calling request advance from "
                  << "several processes!");
     }

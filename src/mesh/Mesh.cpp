@@ -186,9 +186,9 @@ PtrData& Mesh:: createData
   const std::string& name,
   int                dimension )
 {
-  preciceTrace2("createData()", name, dimension);
+  tpreciceTrace2("createData()", name, dimension);
   for (const PtrData data : _data) {
-    preciceCheck(data->getName() != name, "createData()",
+    tpreciceCheck(data->getName() != name, "createData()",
                  "Data \"" << name << "\" cannot be created twice for "
                  << "mesh \"" << _name << "\"!");
   }
@@ -212,7 +212,7 @@ const PtrData& Mesh:: data
          return data;
       }
    }
-   preciceError("data()", "Data with ID = " << dataID << " not found in mesh \""
+   tpreciceError("data()", "Data with ID = " << dataID << " not found in mesh \""
                 << _name << "\"!" );
 }
 
@@ -220,7 +220,7 @@ PropertyContainer& Mesh:: getPropertyContainer
 (
   const std::string subIDName )
 {
-  preciceTrace1("getPropertyContainer()", subIDName);
+  tpreciceTrace1("getPropertyContainer()", subIDName);
   assertion(_nameIDPairs.count(subIDName) == 1);
   int id = _nameIDPairs[subIDName];
   for (PropertyContainer& cont : _propertyContainers) {
@@ -228,7 +228,7 @@ PropertyContainer& Mesh:: getPropertyContainer
       return cont;
     }
   }
-  preciceError("getPropertyContainer(string)", "Unknown sub ID name \""
+  tpreciceError("getPropertyContainer(string)", "Unknown sub ID name \""
                << subIDName << "\" in mesh \"" << _name << "\"!");
 }
 
@@ -253,12 +253,12 @@ PropertyContainer& Mesh:: setSubID
 (
   const std::string& subIDNamePostfix )
 {
-  preciceTrace1("setSubID()", subIDNamePostfix);
-  preciceCheck(subIDNamePostfix != std::string(""), "setSubID",
+  tpreciceTrace1("setSubID()", subIDNamePostfix);
+  tpreciceCheck(subIDNamePostfix != std::string(""), "setSubID",
       "Sub ID postfix of mesh \"" << _name
       << "\" is not allowed to be an empty string!");
   std::string idName(_name + "-" + subIDNamePostfix);
-  preciceCheck(_nameIDPairs.count(idName) == 0, "setSubID",
+  tpreciceCheck(_nameIDPairs.count(idName) == 0, "setSubID",
       "Sub ID postfix of mesh \"" << _name << "\" is already in use!");
   _nameIDPairs[idName] = _managerPropertyIDs->getFreeID();
   PropertyContainer * newPropertyContainer = new PropertyContainer();
@@ -290,21 +290,21 @@ int Mesh:: getID() const
 
 void Mesh:: allocateDataValues()
 {
-  preciceTrace1("allocateDataValues()", _content.vertices().size());
+  tpreciceTrace1("allocateDataValues()", _content.vertices().size());
   for (PtrData data : _data) {
     int total = _content.vertices().size() * data->getDimensions();
     int leftToAllocate = total - data->values().size();
     if (leftToAllocate > 0){
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
-    preciceDebug("Data " << data->getName() << " no has "
+    tpreciceDebug("Data " << data->getName() << " no has "
                  << data->values().size() << " values");
   }
 }
 
 void Mesh:: computeState()
 {
-  preciceTrace("computeState()");
+  tpreciceTrace("computeState()");
   assertion1(_dimensions==2 || _dimensions==3, _dimensions);
   using utils::DynVector;
   using utils::Vector2D;
@@ -560,7 +560,7 @@ void Mesh:: computeState()
 
 void Mesh:: computeDistribution()
 {
-  preciceTrace2("computeDistribution()", utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
+  tpreciceTrace2("computeDistribution()", utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
 
   // (0) Broadcast global number of vertices
   if (utils::MasterSlave::_slaveMode) {
@@ -574,11 +574,11 @@ void Mesh:: computeDistribution()
   }
 
   // (1) Generate vertex offsets from the vertexDistribution, broadcast it to all slaves.
-  preciceDebug("Generate vertex offsets");
+  tpreciceDebug("Generate vertex offsets");
   if (utils::MasterSlave::_slaveMode) {
     _vertexOffsets.resize(utils::MasterSlave::_size);
     utils::MasterSlave::_communication->broadcast(_vertexOffsets.data(),_vertexOffsets.size(),0);
-    preciceDebug("My vertex offsets: " << _vertexOffsets);
+    tpreciceDebug("My vertex offsets: " << _vertexOffsets);
   }
   else if (utils::MasterSlave::_masterMode) {
     _vertexOffsets.resize(utils::MasterSlave::_size);
@@ -586,7 +586,7 @@ void Mesh:: computeDistribution()
     for (int rank = 1; rank < utils::MasterSlave::_size; rank++){
       _vertexOffsets[rank] = _vertexDistribution[rank].size() + _vertexOffsets[rank-1];
     }
-    preciceDebug("My vertex offsets: " << _vertexOffsets);
+    tpreciceDebug("My vertex offsets: " << _vertexOffsets);
     utils::MasterSlave::_communication->broadcast(_vertexOffsets.data(),_vertexOffsets.size());
   }
   else{ //coupling mode
@@ -595,13 +595,13 @@ void Mesh:: computeDistribution()
 
 
   // (2) Generate global indices from the vertexDistribution, broadcast it to all slaves.
-  preciceDebug("Generate global indices");
+  tpreciceDebug("Generate global indices");
   if (utils::MasterSlave::_slaveMode) {
     int numberOfVertices = vertices().size();
     if (numberOfVertices!=0) {
       std::vector<int> globalIndices(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(globalIndices.data(),numberOfVertices,0);
-      preciceDebug("My global indices: " << globalIndices);
+      tpreciceDebug("My global indices: " << globalIndices);
       setGlobalIndices(globalIndices);
     }
   }
@@ -625,13 +625,13 @@ void Mesh:: computeDistribution()
 
 
   // (3) generate owner information, decide which rank is owner for duplicated vertices
-  preciceDebug("Generate owner information");
+  tpreciceDebug("Generate owner information");
   if (utils::MasterSlave::_slaveMode) {
     int numberOfVertices = vertices().size();
     if (numberOfVertices!=0) {
       std::vector<int> ownerVec(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(ownerVec.data(),numberOfVertices,0);
-      preciceDebug("My owner information: " << ownerVec);
+      tpreciceDebug("My owner information: " << ownerVec);
       setOwnerInformation(ownerVec);
     }
   }
@@ -680,8 +680,8 @@ void Mesh:: computeDistribution()
 #     ifdef Debug
     for(int i=0;i<_globalNumberOfVertices;i++){
       if(globalOwnerVec[i]==0){
-        preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << _name
-                       << " was completely filtered out, since it has no influence on any mapping.")
+        tpreciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << _name
+                       << " was completely filtered out, since it has no influence on any mapping.");
           }
     }
 #     endif
@@ -714,7 +714,7 @@ void Mesh:: clear()
 
 void Mesh:: notifyListeners()
 {
-  preciceTrace("notifyListeners()");
+  tpreciceTrace("notifyListeners()");
   for (MeshListener* listener : _listeners) {
     assertion(listener != nullptr);
     listener->meshChanged(*this);
@@ -744,7 +744,7 @@ void Mesh:: setOwnerInformation(const std::vector<int> &ownerVec){
 void Mesh:: addMesh(
     Mesh& deltaMesh)
 {
-  preciceTrace("addMesh()");
+  tpreciceTrace("addMesh()");
   assertion(_dimensions==deltaMesh.getDimensions());
 
   std::map<int, Vertex*> vertexMap;

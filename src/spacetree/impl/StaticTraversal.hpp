@@ -162,7 +162,7 @@ void StaticTraversal<CELL_T>:: refineAll
   double                  refinementLimit,
   Environment&            env )
 {
-  preciceTrace3("refineAll()", cellCenter, cellHalflengths, refinementLimit);
+  tpreciceTrace3("refineAll()", cellCenter, cellHalflengths, refinementLimit);
   // The environment gives information on the position of the cells surrounding
   // a current cell of consideration. Since a mixture of in- and out-cells is
   // not possible, the 0th component of the environment vector is used to
@@ -194,14 +194,14 @@ void StaticTraversal<CELL_T>:: refineAllInternal
   Environment&            env,
   RefineAllResult&        result )
 {
-  preciceTrace4 ( "refineAllInternal()", cellCenter, cellHalflengths,
+  tpreciceTrace4 ( "refineAllInternal()", cellCenter, cellHalflengths,
                   refinementLimit, env.getNeighborCellPositions() );
   using namespace tarch::la;
   bool environmentIncomplete = false;
   if (cell.isLeaf()){
-    preciceDebug("  Leaf");
+    tpreciceDebug("  Leaf");
     if (cell.needsRefinement(cellHalflengths, refinementLimit)){
-      preciceDebug("    Needs refinement");
+      tpreciceDebug("    Needs refinement");
       assertion(not cell.content().empty());
       assertion(cell.getPosition() == Spacetree::positionOnGeometry());
       cell.refine(cellCenter, cellHalflengths);
@@ -222,14 +222,14 @@ void StaticTraversal<CELL_T>:: refineAllInternal
           env.computePosition();
           assertion(env.getPosition() != Spacetree::positionUndefined());
           if (env.getPosition() != Spacetree::positionOnGeometry()){
-            preciceDebug("    Derive cell position " << env.getPosition()
+            tpreciceDebug("    Derive cell position " << env.getPosition()
                          << " from environment = " << env.getNeighborCellPositions());
             // If some of the surrounding cells are either outside or inside,
             // the new empty cell has to be also outside or inside respectively.
             childCell.setPosition(env.getPosition());
           }
           else {
-            preciceDebug("    Environment incomplete to derive position");
+            tpreciceDebug("    Environment incomplete to derive position");
             environmentIncomplete = true;
           }
           env = oldEnvironment;
@@ -239,14 +239,14 @@ void StaticTraversal<CELL_T>:: refineAllInternal
   }
 
   if ( environmentIncomplete ){
-    preciceDebug ( "  Incomplete environment, storing cell" );
+    tpreciceDebug ( "  Incomplete environment, storing cell" );
     result.cells.push_back(&cell);
     result.cellCenters.push_back(cellCenter);
     result.cellHalflengths.push_back(cellHalflengths);
     result.cellEnvironments.push_back(env);
   }
   else if ( not cell.isLeaf() ){
-    preciceDebug ( "  Node" );
+    tpreciceDebug ( "  Node" );
     assertion ( cell.getPosition() != Spacetree::positionUndefined() );
     utils::DynVector childCenter(cellCenter.size());
     utils::DynVector childHalflengths(cellCenter.size());
@@ -281,7 +281,7 @@ void StaticTraversal<CELL_T>:: refineUndefinedCells
   const utils::DynVector& cellHalflengths,
   double                  refinementLimit )
 {
-  preciceTrace3("refineUndefinedCells()", cellCenter, cellHalflengths, refinementLimit);
+  tpreciceTrace3("refineUndefinedCells()", cellCenter, cellHalflengths, refinementLimit);
   typename std::list<CELL_T*>::iterator cellIter;
   std::list<utils::DynVector>::iterator centerIter;
   std::list<utils::DynVector>::iterator hIter;
@@ -294,34 +294,34 @@ void StaticTraversal<CELL_T>:: refineUndefinedCells
     assertion(centerIter != refineAllResult.cellCenters.end());
     assertion(hIter != refineAllResult.cellHalflengths.end());
     assertion(envIter != refineAllResult.cellEnvironments.end());
-    preciceDebug("  Compute child positions of cell with center = " << *centerIter
+    tpreciceDebug("  Compute child positions of cell with center = " << *centerIter
                  << ", h = " << *hIter);
     bool knowPosition = false;
     int pos = Spacetree::positionUndefined();
     for ( int i=0; i < (*cellIter)->getChildCount(); i++ ){
-      preciceDebug("    Child number " << i);
+      tpreciceDebug("    Child number " << i);
       CELL_T& child = (*cellIter)->child(i);
       if (child.getPosition() == Spacetree::positionUndefined()){
         if (knowPosition){
-          preciceDebug("    Know position already, position = " << pos);
+          tpreciceDebug("    Know position already, position = " << pos);
           child.setPosition(pos);
         }
         else {
-          preciceDebug("    Compute position by findDistance");
+          tpreciceDebug("    Compute position by findDistance");
           query::FindClosest findDistance ( *centerIter );
           searchDistance ( cell, findDistance, cellCenter, cellHalflengths );
           assertion(not tarch::la::equals(findDistance.getEuclidianDistance(), 0.0));
           pos = findDistance.getClosest().distance > 0
                 ? Spacetree::positionOutsideOfGeometry()
                 : Spacetree::positionInsideOfGeometry();
-          preciceDebug("    Set computed position = " << pos);
+          tpreciceDebug("    Set computed position = " << pos);
           child.setPosition(pos);
           knowPosition = true;
         }
       }
     }
     RefineAllResult result;
-    preciceDebug("  Go on computing subcell positions");
+    tpreciceDebug("  Go on computing subcell positions");
     refineAllInternal ( **cellIter, *centerIter, *hIter, refinementLimit, *envIter, result );
     refineUndefinedCells ( result, cell, cellCenter, cellHalflengths, refinementLimit );
     cellIter++;
@@ -339,7 +339,7 @@ int StaticTraversal<CELL_T>:: searchPosition
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  preciceTrace3 ( "searchPosition()", searchPoint, cellCenter, cellHalflengths );
+  tpreciceTrace3 ( "searchPosition()", searchPoint, cellCenter, cellHalflengths );
   typedef std::shared_ptr<SearchPositionResult> PtrResult;
   PtrResult result = searchPositionInternal ( cell, searchPoint, cellCenter,
                                               cellHalflengths );
@@ -357,14 +357,14 @@ bool StaticTraversal<CELL_T>:: searchDistance
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  preciceTrace2 ( "searchDistance()", cellCenter, cellHalflengths );
+  tpreciceTrace2 ( "searchDistance()", cellCenter, cellHalflengths );
   if ( cell.isLeaf() ){
-    preciceDebug ( "  Leaf" );
+    tpreciceDebug ( "  Leaf" );
     findClosest ( cell.content() );
   }
 
   if ( not cell.isLeaf() ){
-    preciceDebug ( "  Node" );
+    tpreciceDebug ( "  Node" );
     int childIndex = cell.getChildIndex (findClosest.getSearchPoint(), cellCenter,
                                          cellHalflengths);
     utils::DynVector newCenter(cellCenter);
@@ -384,10 +384,10 @@ bool StaticTraversal<CELL_T>:: searchDistance
                                          findClosest.getSearchPoint());
     using tarch::la::greater;
     bool isAmbiguous = greater ( findClosest.getEuclidianDistance(), distance );
-    preciceDebug ( "  hasfound, return " << isAmbiguous );
+    tpreciceDebug ( "  hasfound, return " << isAmbiguous );
     return isAmbiguous;
   }
-  preciceDebug ( "  return true" );
+  tpreciceDebug ( "  return true" );
   return true;
 }
 
@@ -399,7 +399,7 @@ int StaticTraversal<CELL_T>:: searchContent
   const utils::DynVector&  cellCenter,
   const utils::DynVector&  cellHalflengths )
 {
-  preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
+  tpreciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   std::shared_ptr<SearchContentResult> result = searchContentInternal (
       cell, findContent, cellCenter, cellHalflengths );
@@ -408,7 +408,7 @@ int StaticTraversal<CELL_T>:: searchContent
   if ( result->position == Spacetree::positionUndefined() ){
     // Some/all searched cells had content, but not in the search voxel
     if ( result->position == Spacetree::positionUndefined() ){
-      preciceDebug ( "Computing position of search voxel" );
+      tpreciceDebug ( "Computing position of search voxel" );
       query::FindClosest findDistance ( findContent.getVoxelCenter() );
       searchDistance ( cell, findDistance, cellCenter, cellHalflengths );
       double distance = findDistance.getClosest().distance;
@@ -419,7 +419,7 @@ int StaticTraversal<CELL_T>:: searchContent
   }
 
   assertion ( result->position != Spacetree::positionUndefined() );
-  preciceDebug ( "return content().size() = " << findContent.content().size() );
+  tpreciceDebug ( "return content().size() = " << findContent.content().size() );
   return result->position;
 }
 
@@ -432,28 +432,28 @@ StaticTraversal<CELL_T>:: searchPositionInternal
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  preciceTrace3 ( "searchPositionInternal()", searchPoint, cellCenter,
+  tpreciceTrace3 ( "searchPositionInternal()", searchPoint, cellCenter,
                   cellHalflengths );
   using namespace tarch::la;
   std::shared_ptr<SearchPositionResult> data;
   double distance = 0.0;
   if ( cell.isLeaf() ){
-    preciceDebug ( "  Leaf" );
+    tpreciceDebug ( "  Leaf" );
     assertion ( data.use_count() == 0 );
     data = std::shared_ptr<SearchPositionResult> (
         new SearchPositionResult(searchPoint) );
     if ( cell.getPosition() == Spacetree::positionOnGeometry() ){
-      preciceDebug ( "    Has content" );
+      tpreciceDebug ( "    Has content" );
       //query::FindClosest findClosest ( searchPoint );
       data->findClosest ( cell.content() );
       if ( data->findClosest.hasFound() ){
-        preciceDebug ( "    Found elements" );
+        tpreciceDebug ( "    Found elements" );
         distance = data->findClosest.getClosest().distance;
         data->position = Spacetree::positionOnGeometry(); // May by altered later
       }
     }
     else {
-      preciceDebug ( "    Is empty" );
+      tpreciceDebug ( "    Is empty" );
       assertion ( cell.content().empty() );
       assertion ( cell.getPosition() != Spacetree::positionUndefined() );
       data->position = cell.getPosition();
@@ -461,7 +461,7 @@ StaticTraversal<CELL_T>:: searchPositionInternal
   }
 
   if ( not cell.isLeaf() ) { // could be a leaf on entrance to searchPositionInternal
-    preciceDebug ( "  Node" );
+    tpreciceDebug ( "  Node" );
     assertion ( cell.getPosition() == Spacetree::positionOnGeometry() );
     int childIndex = cell.getChildIndex(searchPoint, cellCenter, cellHalflengths);
     utils::DynVector newCenter(cellCenter);
@@ -472,10 +472,10 @@ StaticTraversal<CELL_T>:: searchPositionInternal
     assertion ( data.use_count() == 0 );
     data = searchPositionInternal ( subtree, searchPoint, newCenter, newHalflengths );
     if ( (data->position == Spacetree::positionUndefined()) || data->ambiguous ){
-      preciceDebug ( "    Did not find elements or ambiguous, visit others" );
+      tpreciceDebug ( "    Did not find elements or ambiguous, visit others" );
       visitRemainingCells(subtree, cell, data->findClosest);
       if ( data->findClosest.hasFound() ){
-        preciceDebug ( "    Found elements in others" );
+        tpreciceDebug ( "    Found elements in others" );
         distance = data->findClosest.getClosest().distance;
         data->position = Spacetree::positionOnGeometry();
         data->ambiguous = false;
@@ -485,7 +485,7 @@ StaticTraversal<CELL_T>:: searchPositionInternal
 
   // Set inside/outside and check for ambiguities
   if ( not equals(distance, 0.0) ){
-    preciceDebug( "  Checking for ambiguities of found objects");
+    tpreciceDebug( "  Checking for ambiguities of found objects");
     assertion ( data.use_count() > 0 );
     if ( greater(distance, 0.0) ){
       data->position = Spacetree::positionOutsideOfGeometry();
@@ -493,15 +493,15 @@ StaticTraversal<CELL_T>:: searchPositionInternal
     else if ( tarch::la::greater(0.0, distance) ){
       data->position = Spacetree::positionInsideOfGeometry();
     }
-    preciceDebug ( "  found pos = " << data->position );
+    tpreciceDebug ( "  found pos = " << data->position );
     double distanceToBound =  distanceToBoundary(cellCenter, cellHalflengths,
                                                  searchPoint);
     if ( greater(std::abs(distance), distanceToBound) ){
-      preciceDebug ( "  is ambigious" );
+      tpreciceDebug ( "  is ambigious" );
       data->ambiguous = true;
     }
   }
-  preciceDebug ( "  return position = " << data->position << ", ambiguous = "
+  tpreciceDebug ( "  return position = " << data->position << ", ambiguous = "
                  << data->ambiguous );
   return data;
 }
@@ -515,20 +515,20 @@ StaticTraversal<CELL_T>:: searchContentInternal
   const utils::DynVector&  cellCenter,
   const utils::DynVector&  cellHalflengths )
 {
-  preciceTrace4 ( "searchContentInternal()", cellCenter, cellHalflengths,
+  tpreciceTrace4 ( "searchContentInternal()", cellCenter, cellHalflengths,
                   findContent.getVoxelCenter(), findContent.getVoxelHalflengths() );
   if ( cell.isLeaf() ){
-    preciceDebug ( "Leaf..." );
+    tpreciceDebug ( "Leaf..." );
     std::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
     assertion ( cell.getPosition() != Spacetree::positionUndefined() );
     if ( (cell.getPosition() == Spacetree::positionOutsideOfGeometry())
          || (cell.getPosition() == Spacetree::positionInsideOfGeometry()) )
     {
-      preciceDebug ( "empty, position = " << cell.getPosition() );
+      tpreciceDebug ( "empty, position = " << cell.getPosition() );
       data->position = cell.getPosition();
     }
     else {
-      preciceDebug ( "content size = " << cell.content().size() );
+      tpreciceDebug ( "content size = " << cell.content().size() );
       assertion ( cell.getPosition() == Spacetree::positionOnGeometry() );
       assertion ( not cell.content().empty() );
       bool set = isCovered ( cellCenter, cellHalflengths,
@@ -536,26 +536,26 @@ StaticTraversal<CELL_T>:: searchContentInternal
                              findContent.getVoxelHalflengths() );
       set &= findContent.getBoundaryInclusion() == query::FindVoxelContent::INCLUDE_BOUNDARY;
       if ( set ){
-        preciceDebug ( "Is covered by voxel, add cell content to find content" );
+        tpreciceDebug ( "Is covered by voxel, add cell content to find content" );
         findContent.content().add ( cell.content() );
         data->position = Spacetree::positionOnGeometry();
       }
       else {
-        preciceDebug ( "Isn't covered by voxel, apply find content" );
+        tpreciceDebug ( "Isn't covered by voxel, apply find content" );
         findContent ( cell.content() );
         if ( not findContent.content().empty() ){
-          preciceDebug("Some content is contained in voxel");
+          tpreciceDebug("Some content is contained in voxel");
           data->position = Spacetree::positionOnGeometry();
         }
       }
     }
-    preciceDebug ( "return size = " << findContent.content().size()
+    tpreciceDebug ( "return size = " << findContent.content().size()
                    << ", pos = " << data->position );
     return data;
   }
 
   if ( not cell.isLeaf() ) {
-    preciceDebug ( "Node..." );
+    tpreciceDebug ( "Node..." );
     int searchCount = 0;
     std::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
     utils::DynVector childCenter(cellCenter.size());
@@ -589,7 +589,7 @@ StaticTraversal<CELL_T>:: searchContentInternal
     }
     return data;
   }
-  preciceError("findContentInternal()", "Reached invalid code location!");
+  tpreciceError("findContentInternal()", "Reached invalid code location!");
 }
 
 template<typename CELL_T>
@@ -615,13 +615,13 @@ bool StaticTraversal<CELL_T>:: isCovered
   const utils::DynVector& voxelCenter,
   const utils::DynVector& voxelHalflengths ) const
 {
-  preciceTrace4 ( "isCovered()", cellCenter, cellHalflengths, voxelCenter,
+  tpreciceTrace4 ( "isCovered()", cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   utils::DynVector coverage ( cellCenter );
   coverage -= voxelCenter;
   tarch::la::abs ( coverage, coverage );
   coverage += cellHalflengths;
-  preciceDebug ( "return " << not tarch::la::oneGreater(coverage, voxelHalflengths) );
+  tpreciceDebug ( "return " << not tarch::la::oneGreater(coverage, voxelHalflengths) );
   return not tarch::la::oneGreater(coverage, voxelHalflengths);
 }
 
@@ -633,13 +633,13 @@ bool StaticTraversal<CELL_T>:: isOverlapped
   const utils::DynVector& voxelCenter,
   const utils::DynVector& voxelHalflengths ) const
 {
-  preciceTrace4 ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
+  tpreciceTrace4 ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   utils::DynVector overlap = cellCenter;
   overlap -= voxelCenter;
   tarch::la::abs ( overlap, overlap );
   overlap -= cellHalflengths;
-  preciceDebug ( "return = " << tarch::la::allGreater(voxelHalflengths, overlap) );
+  tpreciceDebug ( "return = " << tarch::la::allGreater(voxelHalflengths, overlap) );
   return tarch::la::allGreater(voxelHalflengths, overlap);
 }
 

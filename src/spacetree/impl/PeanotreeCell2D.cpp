@@ -49,14 +49,14 @@ void PeanotreeCell2D:: refine
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  preciceTrace2 ( "refine()", cellCenter, cellHalflengths );
+  tpreciceTrace2 ( "refine()", cellCenter, cellHalflengths );
   assertion ( _content != nullptr );
   assertion1 ( _childs.size() == 0, _childs.size() );
   int dim = cellCenter.size();
   utils::DynVector newCenter(dim);
   utils::DynVector newHalflengths(dim, 1.0 / 3.0 * cellHalflengths[0]);
   for ( int i=0; i < 9; i++ ){
-    preciceDebug ( "Creating children " << i );
+    tpreciceDebug ( "Creating children " << i );
     newCenter = FINEGRID_CELL_CENTER_POSITIONS_2D[i];
     newCenter *= newHalflengths[0];
     newCenter += cellCenter;
@@ -98,7 +98,7 @@ void PeanotreeCell2D:: getChildData
   utils::DynVector&       childCenter,
   utils::DynVector&       childHalflengths )
 {
-  preciceTrace3 ( "getChildData()", childIndex, cellCenter, cellHalflengths );
+  tpreciceTrace3 ( "getChildData()", childIndex, cellCenter, cellHalflengths );
   assign(childHalflengths) = 0.5 * cellHalflengths[0];
   childCenter = utils::delinearize(childIndex, childCenter.size());
   childCenter *= childHalflengths[0];

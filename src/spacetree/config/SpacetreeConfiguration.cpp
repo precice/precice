@@ -90,7 +90,7 @@ void SpacetreeConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace1("setDimensions()", dimensions);
+  tpreciceTrace1("setDimensions()", dimensions);
   assertion1((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -149,7 +149,7 @@ const PtrSpacetree& SpacetreeConfiguration:: getSpacetree
       return tree.spacetree;
     }
   }
-  preciceError ( "getSpacetree()", "A spacetree with name \"" << name
+  tpreciceError ( "getSpacetree()", "A spacetree with name \"" << name
                  << "\" is not defined!" );
 }
 
@@ -160,7 +160,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
   const utils::DynVector& halflengths,
   double                  maxMeshwidth ) const
 {
-  preciceTrace4("getSpacetree()", type, offset, halflengths, maxMeshwidth);
+  tpreciceTrace4("getSpacetree()", type, offset, halflengths, maxMeshwidth);
   assertion(_dimensions != 0);
   Spacetree* spacetree = nullptr;
   assertion2 ( offset.size() == halflengths.size(), offset.size(), halflengths.size() );
@@ -169,7 +169,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
   if ( _dimensions == 3 ){
     equalHalflengths &= tarch::la::equals(halflengths(1), halflengths(2));
   }
-  preciceCheck(equalHalflengths, "getSpacetree()", "All halflengths have to "
+  tpreciceCheck(equalHalflengths, "getSpacetree()", "All halflengths have to "
                << "be equal for a spacetree of type \"quad\"!");
   if (type == VALUE_DYNAMIC_OCTREE){
     spacetree = new DynamicOctree( offset, halflengths(0), maxMeshwidth);
@@ -184,7 +184,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
 //    spacetree = new DynamicPeanotree3D( offset, halflengths(0), maxMeshwidth);
 //  }
   else {
-    preciceError("getSpacetree()", "Unknown spacetree type \"" << type << "\"!");
+    tpreciceError("getSpacetree()", "Unknown spacetree type \"" << type << "\"!");
   }
   assertion(spacetree != nullptr);
   return PtrSpacetree(spacetree);
@@ -194,7 +194,7 @@ void SpacetreeConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1 ( "xmlTagCallback()", tag.getName() );
+  tpreciceTrace1 ( "xmlTagCallback()", tag.getName() );
   if (tag.getNamespace() == TAG){
     assertion(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);

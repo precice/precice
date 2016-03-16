@@ -45,7 +45,7 @@ void FindVoxelContentTest:: run()
 
 void FindVoxelContentTest:: testVertices()
 {
-  preciceTrace("testVertices()");
+  tpreciceTrace("testVertices()");
   for (int dim=2; dim <= 3; dim++){
     for (int testDim=0; testDim < dim; testDim++){
       bool positiveDirection = true;
@@ -69,7 +69,7 @@ void FindVoxelContentTest:: performTestVertices
   bool                    positive,
   const utils::DynVector& offset)
 {
-  preciceTrace3("performTestVertices()", testDim, positive, offset);
+  tpreciceTrace3("performTestVertices()", testDim, positive, offset);
   int dim = offset.size();
   using utils::DynVector;
   assertion(not tarch::la::oneGreater(offset, DynVector(dim,1.0)));
@@ -177,7 +177,7 @@ void FindVoxelContentTest:: performTestVertices
 
 void FindVoxelContentTest:: testEdges()
 {
-  preciceTrace("testEdges()");
+  tpreciceTrace("testEdges()");
   for(int dim=2; dim <= 3; dim++){
     for(int testDim=0; testDim < dim; testDim++){
       bool positiveDirection = true;
@@ -201,7 +201,7 @@ void FindVoxelContentTest:: performTestEdges
   bool                    positive,
   const utils::DynVector& offset)
 {
-  preciceTrace3("performTestEdges()", testDim, positive, offset);
+  tpreciceTrace3("performTestEdges()", testDim, positive, offset);
   int dim = offset.size();
   using utils::DynVector;
   assertion(not tarch::la::oneGreater(offset, DynVector(dim,1.0)));
@@ -322,7 +322,7 @@ void FindVoxelContentTest:: performTestEdges
 
 void FindVoxelContentTest:: testZeroVoxel ()
 {
-  preciceTrace("testZeroVoxel()");
+  tpreciceTrace("testZeroVoxel()");
   int dim = 2;
   using utils::Vector2D;
   mesh::Mesh mesh("Mesh", dim, false);
@@ -349,7 +349,7 @@ void FindVoxelContentTest:: testZeroVoxel ()
 
 void FindVoxelContentTest:: testTriangles ()
 {
-  preciceTrace("testTriangles()");
+  tpreciceTrace("testTriangles()");
   for(int testDim=0; testDim < 3; testDim++) {
     bool positiveDirection = true;
     bool negativeDirection = false;
@@ -369,7 +369,7 @@ void FindVoxelContentTest:: performTestTriangles
   int  secondDimension,
   bool positive)
 {
-  preciceTrace2("performTestTriangles()", testDim, positive);
+  tpreciceTrace2("performTestTriangles()", testDim, positive);
   int dim = 3;
   using utils::Vector3D;
   assertion(testDim != secondDimension);
@@ -697,7 +697,7 @@ void FindVoxelContentTest:: performTestTriangles
   mesh.computeState();
   findIncluded(mesh);
 //  if((sign = -1) && (testDim == 1) && (secondDimension == 2) && (thirdDimension == 0)){
-//    precicePrint("------------------------------ sign = " << sign << ", testDim = " << testDim
+//    tprecicePrint("------------------------------ sign = " << sign << ", testDim = " << testDim
 //                   << ", secondDimension = " << secondDimension << ", thirdDimension = " << thirdDimension);
 //  }
   findExcluded(mesh);
@@ -705,10 +705,10 @@ void FindVoxelContentTest:: performTestTriangles
   validateEquals(size, 15);
   size = findExcluded.content().triangles().size();
   //if((sign = -1) && (testDim == 1) && (secondDimension == 2) && (thirdDimension == 0)){
-//    precicePrint("############################## triangles = " << size);
+//    tprecicePrint("############################## triangles = " << size);
   //}
 //  if(size != 9){
-//    preciceError("sadf", "Aus die Mausss");
+//    tpreciceError("sadf", "Aus die Mausss");
 //  }
   validateEquals(size, 9);
 
@@ -753,7 +753,7 @@ void FindVoxelContentTest:: performTestTriangles
 
 void FindVoxelContentTest:: testCompletelyInsideTriangles ()
 {
-  preciceTrace("testCompletelyInsideTriangles()");
+  tpreciceTrace("testCompletelyInsideTriangles()");
   int dim = 3;
   using utils::Vector3D;
   Vector3D voxelCenter(0.0);
@@ -809,7 +809,7 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
 
 void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
 {
-  preciceTrace("testCompletelyOutsideTriangles()");
+  tpreciceTrace("testCompletelyOutsideTriangles()");
   int dim = 3;
   using utils::Vector3D;
   Vector3D voxelCenter(0.0);
@@ -865,7 +865,7 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
 
 void FindVoxelContentTest:: testIntersectingTriangles ()
 {
-  preciceTrace("testIntersectingTriangles()");
+  tpreciceTrace("testIntersectingTriangles()");
   int dim = 3;
   using utils::Vector3D;
   Vector3D voxelCenter(0.0);
@@ -981,7 +981,7 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
 
 void FindVoxelContentTest:: testTouchingTriangles ()
 {
-  preciceTrace("testTouchingTriangles()");
+  tpreciceTrace("testTouchingTriangles()");
   int dim = 3;
   using utils::Vector3D;
   Vector3D voxelCenter(0.0);
@@ -1145,7 +1145,7 @@ void FindVoxelContentTest:: testTouchingTriangles ()
 
 void FindVoxelContentTest:: testQueryCube ()
 {
-  preciceTrace("testQueryCube()");
+  tpreciceTrace("testQueryCube()");
   using namespace mesh;
   int dim = 3;
   using utils::Vector3D;
