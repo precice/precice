@@ -1,10 +1,12 @@
 #pragma once
 
-#include "LogMacros.hpp"
 #include "tarch/Assertions.h"
 
 #include <boost/foreach.hpp>
 #define foreach BOOST_FOREACH
+
+#include "logging/LogMakros.hpp"
+#include "LogMacros.hpp"
 
 #include <string>
 
