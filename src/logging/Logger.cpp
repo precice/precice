@@ -23,6 +23,8 @@ using namespace std;
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/utility/setup/from_stream.hpp>
+#include <boost/log/utility/setup/settings.hpp>
+#include <boost/log/utility/setup/from_settings.hpp>
 
 #include <boost/log/support/date_time.hpp>
 
@@ -30,14 +32,29 @@ using namespace std;
 namespace precice {
 namespace logging {
 
+class timestamp_formatter_factory :
+    public boost::log::basic_formatter_factory<char, boost::posix_time::ptime>
+{
+    public:
+        formatter_type create_formatter(boost::log::attribute_name const& name, args_map const& args)
+        {
+            args_map::const_iterator it = args.find("format");
+            if (it != args.end())
+                return boost::log::expressions::stream << boost::log::expressions::format_date_time<boost::posix_time::ptime>(boost::log::expressions::attr<boost::posix_time::ptime>(name), it->second);
+            else
+                return boost::log::expressions::stream << boost::log::expressions::attr<boost::posix_time::ptime>(name);
+        }
+};
+
 Logger::Logger(std::string module)
 {
   add_attribute("Module", boost::log::attributes::constant<std::string>(module));
 }
 
-void setupLogging()
+void setupLogging(std::string logConfigFile)
 {
   using namespace boost::log;
+  register_formatter_factory("TimeStamp", boost::make_shared<timestamp_formatter_factory>());
   add_common_attributes();
   core::get()->add_global_attribute("Scope", attributes::named_scope());
   core::get()->add_global_attribute("Rank", attributes::mutable_constant<int>(0));
@@ -48,9 +65,30 @@ void setupLogging()
   register_simple_formatter_factory<trivial::severity_level, char>("Severity");
   register_simple_filter_factory<trivial::severity_level, char>("Severity");
 
-  std::string format = "%LineID%:Code: [%TimeStamp%] [Rank: "
-    "%Rank%][%Scope%:%Line%] [%Severity%]: %Message%";
+  std::string format = "(%Rank%) %TimeStamp(format=\"%Y\")% %File%:%Line%[%Module%] in %Function%: %Message%";
+  
+  settings setts;
 
+  setts["Core.Filter"] = "%Severity% > debug";
+  setts["Core.DisableLogging"] = false;
+
+  // Subsections can be referred to with a single path
+  setts["Sinks.Console.Destination"] = "Console";
+  setts["Sinks.Console.Filter"] = "%Severity% > debug";
+  setts["Sinks.Console.AutoFlush"] = true;
+  setts["Sinks.Console.Format"] = format;
+
+  // ...as well as the individual parameters
+  setts["Sinks.File.Destination"] = "TextFile";
+  setts["Sinks.File.FileName"] = "sample.log";
+  setts["Sinks.File.AutoFlush"] = true;
+  setts["Sinks.File.RotationSize"] = 10 * 1024 * 1024; // 10 MiB
+  setts["Sinks.File.Format"] = format;
+
+  init_from_settings(setts);  
+
+//alternative setting of log format
+  /**
   auto fmtStream =
     expressions::stream
     << "(" 
@@ -67,20 +105,24 @@ void setupLogging()
     << expressions::attr<std::string>("Function") 
     << ": "
     << expressions::message; //<< std::endl;
-    //<< "LineID: " << expressions::attr<unsigned int>("LineID") << std::endl
-    //<< ", ThreadID: " << expressions::attr<attributes::current_thread_id::value_type>("ThreadID") << " "
-    //<< ", ProcessID: " << expressions::attr<attributes::current_process_id::value_type>("ProcessID") << std::endl
-    //<< ", Severity: " << trivial::severity
-    //<< "Scope: " << expressions::format_named_scope("Scope", keywords::format = "%n in %f:%l)") << std::endl
+  **/
+//Additional possibilities for debugging output
+//expressions::attr<unsigned int>("LineID")
+//expressions::attr<attributes::current_thread_id::value_type>("ThreadID")
+//expressions::attr<attributes::current_process_id::value_type>("ProcessID")
+//trivial::severity
+//expressions::format_named_scope("Scope", keywords::format = "%n in %f:%l)")
 
-  boost::log::add_file_log("sample.log", keywords::format = fmtStream); // state namespace here for
+  
+  //boost::log::add_file_log("sample.log", keywords::format = fmtStream); // state namespace here for
                                                                         // consisitency with
                                                                         // console_log
-  boost::log::add_console_log(std::cout, keywords::format = fmtStream); // explicitly state namespace
+  //boost::log::add_console_log(std::cout, keywords::format = fmtStream); // explicitly state namespace
                                                                         // here to resolve some
                                                                         // ambiguity issue
 
-  std::ifstream file("log.conf");
+  //if config file exists only entries in the file overrides our standard config only
+  std::ifstream file(logConfigFile);
   // settings conf = parse_settings(file);
   // cout << conf["Core"]["Filter"] << endl;
 
