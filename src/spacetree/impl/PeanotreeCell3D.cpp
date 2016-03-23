@@ -17,7 +17,7 @@ PeanotreeCell3D:: PeanotreeCell3D()
   _position(Spacetree::positionUndefined()),
   _childs()
 {
-  exit(ASSERTION_EXIT_CODE); // Class implementation not yet finished!!
+  assertion(false, "Class implementation not yet finished!!");
 }
 
 PeanotreeCell3D:: ~PeanotreeCell3D()

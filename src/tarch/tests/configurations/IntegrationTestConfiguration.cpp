@@ -4,7 +4,7 @@
 #include "tarch/tests/configurations/IntegrationTestConfiguration.h"
 #include "tarch/tests/TestCaseRegistry.h"
 #include "tarch/logging/CommandLineLogger.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 
 #include "tarch/configuration/TopLevelConfigurationFactory.h"

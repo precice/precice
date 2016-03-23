@@ -5,7 +5,7 @@
 #include "tarch/logging/CommandLineLogger.h"
 #include "tarch/logging/CCALogger.h"
 #include "tarch/compiler/CompilerSpecificSettings.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 /**
  * For the machine name. If it doesn't work, switch it off in the file

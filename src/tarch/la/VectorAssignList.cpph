@@ -43,9 +43,9 @@ VectorAssignList<Vector>::~VectorAssignList()
 {
   // Assert, that the number of assigned components equals the vectors size
   #ifdef Parallel
-  assertionEquals2( _index, Traits::size(_vector), _vector, tarch::parallel::Node::getInstance().getRank() );
+  assertion2(_index ==Traits::size(_vector), _vector, tarch::parallel::Node::getInstance().getRank() );
   #else
-  assertionEquals1( _index, Traits::size(_vector), _vector );
+  assertion1( _index==Traits::size(_vector), _vector );
   #endif
 }
 

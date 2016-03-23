@@ -6,7 +6,7 @@
 
 #include "tarch/la/traits/MatrixTraits.h"
 #include "tarch/la/traits/IsMatrix.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 namespace tarch {
   namespace la {

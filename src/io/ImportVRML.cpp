@@ -221,7 +221,7 @@ void ImportVRML:: doImport
         }
       }
       else {
-        assertionMsg(dimensions == 3, dimensions);
+        assertion1(dimensions == 3, dimensions);
         mesh::Mesh::TriangleContainer& triangles = mesh.triangles();
         size_t size = elem.faces.size();
         for (size_t iFace=0; iFace < size; iFace++){
