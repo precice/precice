@@ -18,6 +18,11 @@ namespace precice {
 namespace utils {
 
 /**
+ * @brief Returns true if machine is big-endian
+ */
+bool isMachineBigEndian();
+
+/**
  * @brief Returns true, if numerical truncation happens in case of type
  *        conversion.
  */
