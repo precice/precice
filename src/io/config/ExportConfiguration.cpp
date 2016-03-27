@@ -3,7 +3,7 @@
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ExportConfiguration.hpp"
 #include "io/ExportVTK.hpp"
-//#include "io/ExportVTKXML.hpp"
+#include "io/ExportVTKXML.hpp"
 #include "io/ExportVRML.hpp"
 #include "io/Export.hpp"
 #include "utils/Globals.hpp"
@@ -171,7 +171,7 @@ void ExportConfiguration:: xmlTagCallback
     context.triggerSolverPlot =  tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
     context.timestepInterval = tag.getIntAttributeValue(ATTR_TIMESTEP_INTERVAL);
     bool plotNormals = tag.getBooleanAttributeValue(ATTR_NORMALS);
-    bool isWriteParallel = true;
+
     context.exportSpacetree = tag.getBooleanAttributeValue(ATTR_SPACETREE);
     context.everyIteration = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
     std::string type = tag.getName();
@@ -184,9 +184,10 @@ void ExportConfiguration:: xmlTagCallback
     if (type == VALUE_VTK){
       exporter = PtrExport(new ExportVTK(plotNormals));
     }
-	//else if (type == VALUE_VTKXML){
-    //  exporter = PtrExport(new ExportVTKXML(plotNormals, isWriteParallel));
-    //}
+	else if (type == VALUE_VTKXML){
+      bool isWriteParallel = true;
+      exporter = PtrExport(new ExportVTKXML(plotNormals, isWriteParallel));
+    }
     else if (type == VALUE_VRML){
       exporter = PtrExport (new ExportVRML(plotNormals));
     }
