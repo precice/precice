@@ -7,7 +7,7 @@
 #include "tarch/parallel/Node.h"
 #endif
 
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 #include "tarch/multicore/Lock.h"
 
@@ -317,9 +317,7 @@ void tarch::logging::CommandLineLogger::indent( bool indent, const std::string& 
   }
   else {
     #if !defined(SharedMemoryParallelisation)
-    assertionEquals2(
-      _indentTraces.top(),
-      trace,
+    assertion2(_indentTraces.top()==trace,
       message,
       indent
     );

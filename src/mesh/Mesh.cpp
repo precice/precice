@@ -525,7 +525,7 @@ void Mesh:: computeState()
     if (computeNormals){
       for (Edge& edge : _content.edges()) {
         double length = tarch::la::norm2(edge.getNormal());
-        assertionMsg(tarch::la::greater(length,0.0),
+        assertion1(tarch::la::greater(length,0.0),
           "Edge vertex coords: (" << edge.vertex(0).getCoords() << "), ("
           << edge.vertex(1).getCoords()
           << "). Hint: Could be inconsistent triangle/quad orientation or "

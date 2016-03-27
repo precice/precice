@@ -46,7 +46,7 @@ int tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexWriter
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexWriter::close() {
   assertion( _myWriter._numberOfVertices==0 );
-  assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
+  assertion1( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
 
 
   _myWriter._numberOfVertices  = _currentVertexNumber;

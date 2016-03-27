@@ -6,7 +6,7 @@ extern"C" {
 #include "ConstantsFortran.hpp"
 }
 #include "precice/Constants.hpp"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 void precicef_name_config_
 (

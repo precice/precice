@@ -2,7 +2,7 @@
 #include "mpi.h"
 #endif
 #include "tarch/multicore/configurations/CoreConfiguration.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 
 tarch::logging::Log tarch::multicore::configurations::CoreConfiguration::_log( "tarch::multicore::configurations::CoreConfiguration" );

@@ -2,7 +2,7 @@
 #include "mpi.h"
 #endif
 #include "tarch/tests/TreeTestCaseCollection.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 
 tarch::logging::Log tarch::tests::TreeTestCaseCollection::_log("tarch::tests::TreeTestCaseCollection");

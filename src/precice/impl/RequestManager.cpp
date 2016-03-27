@@ -908,7 +908,7 @@ void RequestManager:: handleRequestGetMeshVertices
   int size = -1;
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
-  assertionMsg(size > 0, size);
+  assertion1(size > 0, size);
   int* ids = new int[size];
   double* positions = new double[size*_interface.getDimensions()];
   _com->receive(ids, size, rankSender);
@@ -927,7 +927,7 @@ void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
   int size = -1;
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
-  assertionMsg(size > 0, size);
+  assertion1(size > 0, size);
   int* ids = new int[size];
   double* positions = new double[size*_interface.getDimensions()];
   _com->receive(positions, size*_interface.getDimensions(), rankSender);

@@ -11,7 +11,7 @@
 #include "tarch/argument/ArgumentSet.h"
 #include <iostream>
 #include <sstream>
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 
 tarch::logging::Log tarch::argument::ArgumentSet::_log("ArgumentSet()");

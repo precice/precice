@@ -7,7 +7,7 @@
 
 #include "peano/utils/Globals.h"
 
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 
 

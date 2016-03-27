@@ -2,7 +2,7 @@
 
 #include "MasterSlave.hpp"
 
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 #include <string>
 #include <sstream>
