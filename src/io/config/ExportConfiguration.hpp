@@ -80,6 +80,7 @@ private:
   const std::string ATTR_TYPE;
   const std::string ATTR_AUTO;
   const std::string VALUE_VTK;
+  const std::string VALUE_VTKXML;
   const std::string VALUE_VRML;
 
   const std::string ATTR_TIMESTEP_INTERVAL;

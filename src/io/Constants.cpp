@@ -12,6 +12,11 @@ int exportVTK()
   return 0;
 }
 
+int exportVTKXML()
+{
+  return 3;
+}
+
 int exportVRML()
 {
   return 1;

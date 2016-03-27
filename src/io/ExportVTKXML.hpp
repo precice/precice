@@ -13,6 +13,9 @@
 namespace precice {
    namespace mesh {
       class Mesh;
+      class Quad;
+      class Edge;
+      class Triangle;
    }
 }
 
@@ -45,15 +48,8 @@ public:
   /**
    * @brief Returns the VTK type ID.
    */
-  //virtual int getType() const;
+  virtual int getType() const;
 
-  /**
-   * @brief Writes the master file
-   */
-  void ExportVTKXML::writeMasterFile
-  (
-    const std::string& filename,
-    mesh::Mesh&        mesh);
 
   /**
    * @brief Perform writing to vtk file
@@ -62,27 +58,21 @@ public:
     const std::string& filename,
     mesh::Mesh&        mesh );
 
-  static void initializeWriting (
-    const std::string& filename,
-    std::ofstream&     filestream );
-
-  static void writeHeader ( std::ostream& outFile );
-
   static void writeVertex (
     const utils::DynVector& position,
-    std::ostream&           outFile );
+    std::ofstream&           outFile );
 
   static void writeLine (
-    int           vertexIndices[2],
-    std::ostream& outFile );
+    mesh::Edge&    edge,
+    std::ofstream& outFile );
 
   static void writeTriangle (
-    int           vertexIndices[3],
-    std::ostream& outFile );
+    mesh::Triangle& triangle,
+    std::ofstream&  outFile );
 
   static void writeQuadrangle (
-    int           vertexIndices[4],
-    std::ostream& outFile );
+    mesh::Quad&    quad,
+    std::ofstream& outFile );
 
 private:
 
@@ -92,8 +82,46 @@ private:
    // @brief By default set true: plot vertex normals, false: no normals plotting
    bool _writeNormals;
 
+   // @brief true: preCICE running in parallel, false: serial
+   bool _isProgramParallel;
+
    // @brief true: write as parallel file, false: write as serial file
    bool _parallelWrite;
+
+   // @ brief dimensions of mesh
+   int _meshDimensions;
+
+   // @brief List of names of all scalar data on mesh
+   std::vector<std::string> _scalarDataNames;
+
+   // @brief List of names of all vector data on mesh
+   std::vector<std::string> _vectorDataNames;
+
+   // @brief List of vector data dimensions
+   std::vector<int> _vectorDataDimensions;
+   /**
+    * @brief Stores scalar and vector data names and dimensions in string vectors
+    * Needed for writing master file and sub files
+    */
+   void processDataNamesAndDimensions
+   (
+     mesh::Mesh& mesh);
+
+   /**
+    * @brief Writes the master file (called only by rank 0)
+    */
+   void writeMasterFile
+   (
+     const std::string& filename,
+     mesh::Mesh&        mesh);
+
+   /**
+    * @brief Writes the sub file for each process
+    */
+   void writeSubFile
+   (
+     const std::string& filename,
+ 	mesh::Mesh&        mesh);
 
    void openFile (
     std::ofstream&     outFile,

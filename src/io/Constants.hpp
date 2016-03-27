@@ -9,6 +9,7 @@ namespace io {
 namespace constants {
 
 int exportVTK();
+int exportVTKXML();
 int exportVRML();
 int exportAll();
 

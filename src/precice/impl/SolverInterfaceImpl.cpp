@@ -22,6 +22,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Merge.hpp"
 #include "io/ExportVTK.hpp"
+#include "io/ExportVTKXML.hpp"
 #include "io/ExportVRML.hpp"
 #include "io/ExportContext.hpp"
 #include "io/SimulationStateIO.hpp"
