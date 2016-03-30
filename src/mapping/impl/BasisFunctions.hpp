@@ -137,32 +137,41 @@ class Gaussian
 public:
 
   Gaussian (const double shape, const double supportRadius = std::numeric_limits<double>::infinity() )
-    : _shape(shape),
-      _supportRadius(supportRadius)
+    : _shape(shape)
   {
     preciceCheck(tarch::la::greater(_shape, 0.0), "Gaussian()",
                  "Shape parameter for radial-basis-function gaussian"
                  << " has to be larger than zero!");
 
     _deltaY = hasCompactSupport() ? evaluate(supportRadius) : 0;
+    double threshold = std::sqrt( -std::log(cutoffThreshold) ) / shape;
+    _supportRadius = std::min(supportRadius, threshold);
   }
 
   /// Compact support if supportRadius is not infinity
   bool hasCompactSupport() const
   { return not (_supportRadius == std::numeric_limits<double>::infinity()); }
 
-  double getSupportRadius() const
-  { return _supportRadius; }
+  double getSupportRadius() const { return _supportRadius; }
 
   double evaluate(const double radius) const
-  { return std::exp( - std::pow(_shape*radius,2.0) ) - _deltaY; }
+  {
+    if (radius > _supportRadius)
+      return 0;
+    else
+      return std::exp( - std::pow(_shape*radius,2.0) ) - _deltaY;
+  }
 
 private:
 
   static tarch::logging::Log _log;
 
+  /// Below that value the function is supposed to be zero. Defines the support radius if not explicitely given
+  const double cutoffThreshold = 1e-9;
+
   double _shape;
 
+  /// Either the explicitely set (from cutoffThreshold) or computed supportRadius
   double _supportRadius;
 
   double _deltaY = 0;
