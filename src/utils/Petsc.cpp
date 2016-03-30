@@ -285,6 +285,13 @@ std::string Matrix::getName()
   return cstr;    
 }
 
+MatInfo Matrix::getInfo(MatInfoType flag)
+{
+  MatInfo info;
+  MatGetInfo(matrix, flag, &info);
+  return info;
+}
+
 void Matrix::setValue(PetscInt row, PetscInt col, PetscScalar value)
 {
   PetscErrorCode ierr = 0;

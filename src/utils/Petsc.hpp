@@ -118,7 +118,7 @@ public:
   MPI_Comm communicator;
 
   /// Delete copy and assignement constructor
-  /** Copying and assignement of this class would involve copying the pointer to
+  /* Copying and assignement of this class would involve copying the pointer to
    * the PETSc object and finallly cause double destruction of it.
    */
   Matrix(const Matrix&) = delete;
@@ -133,12 +133,16 @@ public:
   /// Initializes matrix of given size and type
   void init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type = nullptr);
 
-  // Destroys and recreate the matrix on the same communicator  
+  /// Destroys and recreates the matrix on the same communicator
   void reset();
   
   void setName(std::string name);
   std::string getName();
 
+  /// Get the MatInfo struct for the matrix.
+  /* See http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatInfo.html for description of fields.
+   */
+  MatInfo getInfo(MatInfoType flag);
   
   void setValue(PetscInt row, PetscInt col, PetscScalar value);
   
