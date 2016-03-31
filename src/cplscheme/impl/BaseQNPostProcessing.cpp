@@ -83,6 +83,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
   tSteps(0),
   deletedColumns(0),
   _infostream()
+  //_debugOut()
 {
   preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
       "BaseQNPostProcessing()",
@@ -113,6 +114,25 @@ void BaseQNPostProcessing::initialize(
 {
   preciceTrace1("initialize()", cplData.size());
   Event e(__func__, true, true); // time measurement, barrier
+
+  /*
+  std::stringstream sss;
+  sss<<"debugOutput-rank-"<<utils::MasterSlave::_rank;
+  _debugOut.open(sss.str(), std::ios_base::out);
+  _debugOut << std::setprecision(16);
+
+  Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
+
+  _debugOut<<"initialization:"<<std::endl;
+  for (int id : _dataIDs) {
+      const auto& values = *cplData[id]->values;
+      const auto& oldValues = cplData[id]->oldValues.col(0);
+
+      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<"     values: "<<values.format(CommaInitFmt)<<std::endl;
+      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<" old values: "<<oldValues.format(CommaInitFmt)<<std::endl;
+    }
+  _debugOut<<"\n";
+  */
 
   size_t entries = 0;
 
@@ -346,6 +366,19 @@ void BaseQNPostProcessing::performPostProcessing
   assertion2(_oldValues.size() == _oldXTilde.size(),_oldValues.size(), _oldXTilde.size());
   assertion2(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
 
+  /*
+  Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
+  _debugOut<<"iteration: "<<its<<" tStep: "<<tSteps<<"   cplData entry:"<<std::endl;
+  for (int id : _dataIDs) {
+      const auto& values = *cplData[id]->values;
+      const auto& oldValues = cplData[id]->oldValues.col(0);
+
+      _debugOut<<"id: "<<id<<"     values: "<<values.format(CommaInitFmt)<<std::endl;
+      _debugOut<<"id: "<<id<<" old values: "<<oldValues.format(CommaInitFmt)<<std::endl;
+    }
+  _debugOut<<"\n";
+  */
+
   // assume data structures associated with the LS system can be updated easily.
 
   // scale data values (and secondary data values)
@@ -474,6 +507,18 @@ void BaseQNPostProcessing::performPostProcessing
   }
 
   splitCouplingData(cplData);
+
+  /*
+  _debugOut<<"finished update: "<<std::endl;
+  for (int id : _dataIDs) {
+      const auto& values = *cplData[id]->values;
+      const auto& oldValues = cplData[id]->oldValues.col(0);
+
+      _debugOut<<"id: "<<id<<"norm: "<<values.norm()<<"     values: "<<values.format(CommaInitFmt)<<std::endl;
+      _debugOut<<"id: "<<id<<"norm: "<<oldValues.norm()<<" old values: "<<oldValues.format(CommaInitFmt)<<std::endl;
+    }
+  _debugOut<<"\n";
+  */
 
   // number of iterations (usually equals number of columns in LS-system)
   its++;

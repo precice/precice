@@ -1213,7 +1213,7 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
   data.at(4)->oldValues.col(0) = doldValues;
   data.at(5)->oldValues.col(0) = foldValues;
 
-  // QN- Update, 4. iteration
+  // QN- Update, 5. iteration
   pp.performPostProcessing(data);
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
