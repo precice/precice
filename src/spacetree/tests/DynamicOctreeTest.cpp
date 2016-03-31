@@ -1273,7 +1273,7 @@ void DynamicOctreeTest:: run()
 //  refinementLimits += 2.0, 1.0, 0.5, 0.25, 0.125, 0.0625;
 //  utils::ptr_vector<DynamicOctree> treesInc;
 //  utils::ptr_vector<DynamicOctree> treesExc;
-//  foreach ( double limit, refinementLimits ) {
+//  for ( double limit : refinementLimits ) {
 //    treesInc.push_back ( new DynamicOctree(treeoffset, treehalflength, limit) );
 //    treesInc.back().initialize ( mesh );
 //    treesExc.push_back ( new DynamicOctree(treeoffset, treehalflength, limit) );
@@ -1486,7 +1486,7 @@ void DynamicOctreeTest:: run()
 //  refinementLimits += 2.0, 1.0, 0.5, 0.25, 0.125, 0.0625;
 //  utils::ptr_vector<DynamicOctree> treesInc;
 //  utils::ptr_vector<DynamicOctree> treesExc;
-//  foreach ( double limit, refinementLimits ) {
+//  for ( double limit : refinementLimits ) {
 //    treesInc.push_back ( new DynamicOctree(treeoffset, treehalflength, limit) );
 //    treesInc.back().initialize ( mesh );
 //    treesExc.push_back ( new DynamicOctree(treeoffset, treehalflength, limit) );
@@ -1705,7 +1705,7 @@ void DynamicOctreeTest:: run()
 //  refinementLimits += 5.0, 2.5, 1.25, 0.625, 0.3125, 0.15625;
 //  utils::ptr_vector<DynamicOctree> treesInc;
 //  utils::ptr_vector<DynamicOctree> treesExc;
-//  foreach ( double limit, refinementLimits ) {
+//  for ( double limit : refinementLimits ) {
 //    treesInc.push_back ( new DynamicOctree(treeoffset, treehalflength, limit) );
 //    treesInc.back().initialize ( mesh );
 //    treesExc.push_back ( new DynamicOctree(treeoffset, treehalflength, limit) );
@@ -2435,5 +2435,6 @@ void DynamicOctreeTest:: run()
 //}
 
 }}} // namespace precice, spacetree, tests
+
 
 

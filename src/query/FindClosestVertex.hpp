@@ -89,7 +89,7 @@ bool FindClosestVertex:: operator()
   CONTAINER_T& container )
 {
   utils::DynVector vectorDistance(_searchPoint.size(), 0.0);
-  foreach ( mesh::Vertex& vertex, container.vertices() ) {
+  for ( mesh::Vertex& vertex : container.vertices() ) {
     assertion2 ( vertex.getDimensions() == _searchPoint.size(),
                  vertex.getDimensions(), _searchPoint.size() );
     vectorDistance = vertex.getCoords();
@@ -106,3 +106,4 @@ bool FindClosestVertex:: operator()
 }} // namespace precice, query
 
 #endif /* PRECICE_QUERY_FINDCLOSESTVERTEX_HPP_ */
+

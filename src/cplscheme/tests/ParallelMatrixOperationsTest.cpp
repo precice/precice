@@ -95,7 +95,7 @@ void ParallelMatrixOperationsTest::testParVectorOperations()
 
   int n_global = 10;
   int n_local;
-  double a;
+  double a = 0;
   std::vector<int> vertexOffsets {0, 3, 7 , 7, 10};
 
   // definition of vectors

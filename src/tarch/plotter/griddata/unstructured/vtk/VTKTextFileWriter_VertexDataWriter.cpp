@@ -40,8 +40,8 @@ tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataWriter
 
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataWriter::close() {
-  assertionEquals2( _lastWriteCommandVertexNumber, _myWriter._numberOfVertices-1, _dataIdentifier, "perhaps not all vertices were assigned data (holds if _myWriter._numberOfVertices is bigger than local attribute)" );
-  assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer for value " << _dataIdentifier );
+  assertion2( _lastWriteCommandVertexNumber==_myWriter._numberOfVertices-1, _dataIdentifier, "perhaps not all vertices were assigned data (holds if _myWriter._numberOfVertices is bigger than local attribute)" );
+  assertion1( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer for value " << _dataIdentifier );
 
   if (_lastWriteCommandVertexNumber>=-1) {
     _out << std::endl;

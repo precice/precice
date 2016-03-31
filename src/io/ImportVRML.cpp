@@ -221,7 +221,7 @@ void ImportVRML:: doImport
         }
       }
       else {
-        assertionMsg(dimensions == 3, dimensions);
+        assertion1(dimensions == 3, dimensions);
         mesh::Mesh::TriangleContainer& triangles = mesh.triangles();
         size_t size = elem.faces.size();
         for (size_t iFace=0; iFace < size; iFace++){
@@ -249,7 +249,7 @@ mesh::Edge& ImportVRML:: getEdge
 {
   // Edge might be created already
   std::list<mesh::Edge*>& adjEdgesOne = adjacencyList[vertexOne.getID()];
-  foreach (mesh::Edge* edge, adjEdgesOne){
+  for (mesh::Edge* edge : adjEdgesOne){
     assertion(edge != nullptr);
     if (   (edge->vertex(0).getID() == vertexTwo.getID())
         || (edge->vertex(1).getID() == vertexTwo.getID()))
@@ -258,7 +258,7 @@ mesh::Edge& ImportVRML:: getEdge
     }
   }
   std::list<mesh::Edge*>& adjEdgesTwo = adjacencyList[vertexTwo.getID()];
-  foreach (mesh::Edge* edge, adjEdgesTwo){
+  for (mesh::Edge* edge : adjEdgesTwo){
     assertion(edge != nullptr);
     if (   (edge->vertex(0).getID() == vertexOne.getID())
         || (edge->vertex(1).getID() == vertexOne.getID()))
@@ -288,3 +288,4 @@ void ImportVRML:: addParentIfMissing
 
 
 }} // namespace precice, io
+

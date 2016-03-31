@@ -790,7 +790,7 @@ void MMPostProcessing::iterationsConverged
 # ifdef Debug
   std::ostringstream stream;
   stream << "Matrix column counters: ";
-  foreach (int cols, _matrixCols) {
+  for (int cols : _matrixCols) {
     stream << cols << ", ";
   }
   preciceDebug(stream.str());
@@ -896,4 +896,5 @@ int MMPostProcessing::getLSSystemRows()
 }
 
 }}} // namespace precice, cplscheme, impl
+
 

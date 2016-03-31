@@ -12,7 +12,7 @@
 
 #include "tarch/multicore/Lock.h"
 
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 #ifdef Parallel
 #include "tarch/parallel/Node.h"

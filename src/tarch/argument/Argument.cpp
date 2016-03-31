@@ -9,7 +9,7 @@
  */
 
 #include "tarch/argument/Argument.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 #include <sstream>
 
 tarch::logging::Log tarch::argument::Argument::_log("Argument()");

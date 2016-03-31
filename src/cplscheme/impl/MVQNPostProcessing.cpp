@@ -187,7 +187,7 @@ void MVQNPostProcessing::computeUnderrelaxationSecondaryData
   DataMap& cplData)
 {
     //Store x_tildes for secondary data
-  //  foreach (int id, _secondaryDataIDs){
+  //  for (int id : _secondaryDataIDs){
   //    assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
   //               _secondaryOldXTildes[id].size(), cplData[id]->values->size());
   //    _secondaryOldXTildes[id] = *(cplData[id]->values);
@@ -905,3 +905,4 @@ void MVQNPostProcessing:: removeMatrixColumnRSLS
 }}} // namespace precice, cplscheme, impl
 
 #endif
+

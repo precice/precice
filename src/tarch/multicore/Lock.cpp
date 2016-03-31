@@ -1,7 +1,7 @@
 #ifndef PRECICE_NO_MPI
 #include "mpi.h"
 #endif
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 #include "tarch/multicore/Lock.h"
 #include "tarch/multicore/BooleanSemaphore.h"
 

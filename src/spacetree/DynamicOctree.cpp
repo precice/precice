@@ -48,7 +48,7 @@ void DynamicOctree:: initialize()
   query::FindVoxelContent findVoxel ( _center, utils::DynVector(dim,_halflength),
       query::FindVoxelContent::INCLUDE_BOUNDARY );
   int size = 0;
-  foreach (mesh::PtrMesh mesh, _meshes){
+  for (mesh::PtrMesh mesh : _meshes){
     assertion2(mesh->getDimensions() == dim, mesh->getDimensions(), dim);
     size += mesh->content().size();
     findVoxel(*mesh);
@@ -137,3 +137,4 @@ void DynamicOctree:: clear()
 }
 
 }} // namespace precice, spacetree
+

@@ -1,7 +1,0 @@
-# This is file src/drivers/SConscript
-
-sources = [
-   Glob('*.cpp')
-   ]
-   
-Return ('sources')

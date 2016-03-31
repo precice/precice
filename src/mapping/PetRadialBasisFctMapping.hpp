@@ -153,11 +153,13 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 {
   delete[] _deadAxis;
-  ISLocalToGlobalMappingDestroy(&_ISmapping);
-  // PetscErrorCode ierr = 0;
-  // Commenting out the next line most likely introduces a memory leak
-  // However, not commenting it out introduces a memory error, which remains untraceable
-  // ierr = KSPDestroy(&_solver); CHKERRV(ierr);
+  PetscBool petscIsInitialized;
+  PetscErrorCode ierr = 0;
+  PetscInitialized(&petscIsInitialized);
+  if (petscIsInitialized) {
+    ierr = ISLocalToGlobalMappingDestroy(&_ISmapping); CHKERRV(ierr);
+    ierr = KSPDestroy(&_solver); CHKERRV(ierr);
+  }
 }
 
 
@@ -540,7 +542,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       // Copy mapped data to output data values
       const PetscScalar *outArray;
       ierr = VecGetArrayRead(out.vector, &outArray);
-      int size = out.getLocalSize();
 
       for (int i=out.ownerRange().first+localPolyparams; i < out.ownerRange().second; i++) {
         outValues[(i-polyparams)*valueDim + dim] = outArray[i-out.ownerRange().first]; // hier noch das index set beachten?

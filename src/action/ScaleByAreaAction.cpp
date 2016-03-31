@@ -38,7 +38,7 @@ void ScaleByAreaAction:: performAction
                  "Not implemented for dimension != 2!");
   auto& targetValues = _targetData->values();
   utils::DynVector areas(getMesh()->vertices().size(), 0.0);
-  foreach(mesh::Edge & edge, getMesh()->edges()){
+  for (mesh::Edge & edge : getMesh()->edges()){
     areas[edge.vertex(0).getID()] += edge.getEnclosingRadius();
     areas[edge.vertex(1).getID()] += edge.getEnclosingRadius();
   }
@@ -63,3 +63,4 @@ void ScaleByAreaAction:: performAction
 }
 
 }} // namspace precice, action
+

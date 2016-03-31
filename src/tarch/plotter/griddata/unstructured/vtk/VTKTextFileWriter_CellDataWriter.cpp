@@ -36,8 +36,8 @@ tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::
 
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::close() {
-  assertionEquals( _lastWriteCommandCellNumber, _myWriter._numberOfCells-1 );
-  assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
+  assertion( _lastWriteCommandCellNumber==_myWriter._numberOfCells-1 );
+  assertion1( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
 
   if (_lastWriteCommandCellNumber>=-1) {
     _out << std::endl;

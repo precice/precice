@@ -5,7 +5,7 @@
 #define PRECICE_SPACETREE_IMPL_ENVIRONMENT_HPP_
 
 #include "spacetree/Spacetree.hpp"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 #include "tarch/la/DynamicVector.h"
 #include "tarch/logging/Log.h"
 

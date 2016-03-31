@@ -805,7 +805,7 @@ ClosestMesh SolverInterfaceImpl:: inquireClosestMesh
     std::vector<int> markedContexts(_accessor->usedMeshContexts().size());
     selectInquiryMeshIDs(meshIDs, markedContexts);
     closestMesh.setPosition(positionOutsideOfGeometry());
-    //foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
+    //for (MeshContext& meshContext : _accessor->usedMeshContexts()){
     for (int i=0; i < (int)markedContexts.size(); i++){
       MeshContext* meshContext = _accessor->usedMeshContexts()[i];
       if (markedContexts[i] == markedSkip()){
@@ -884,7 +884,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
   int pos = positionOutsideOfGeometry();
   //mesh::Group* content = new mesh::Group();
   std::vector<int> containedMeshIDs;
-//  foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
+//  for (MeshContext& meshContext : _accessor->usedMeshContexts()){
 //    bool skip = not utils::contained(meshContext.mesh->getID(), meshIDs);
 //    skip &= not meshIDs.empty();
 //    if (skip){
@@ -894,7 +894,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
 
   std::vector<int> markedContexts(_accessor->usedMeshContexts().size());
   selectInquiryMeshIDs(meshIDs, markedContexts);
-    //foreach (MeshContext& meshContext, _accessor->usedMeshContexts()){
+    //for (MeshContext& meshContext : _accessor->usedMeshContexts()){
   for (int i=0; i < (int)markedContexts.size(); i++){
     MeshContext* meshContext = _accessor->usedMeshContexts()[i];
     if (markedContexts[i] == markedSkip()){
@@ -2264,10 +2264,10 @@ void SolverInterfaceImpl:: resetWrittenData()
 //void SolverInterfaceImpl:: resetDataIndices()
 //{
 //  preciceTrace ( "resetDataIndices()" );
-//  foreach ( DataContext & context, _accessor->writeDataContexts() ){
+//  for ( DataContext & context : _accessor->writeDataContexts() ){
 //    context.indexCursor = 0;
 //  }
-//  foreach ( DataContext & context, _accessor->readDataContexts() ){
+//  for ( DataContext & context : _accessor->readDataContexts() ){
 //    context.indexCursor = 0;
 //  }
 //}
@@ -2406,3 +2406,4 @@ void SolverInterfaceImpl:: syncTimestep(double computedTimestepLength)
 
 
 }} // namespace precice, impl
+

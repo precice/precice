@@ -112,7 +112,7 @@ void ExportVTK::exportGeometry
     // OLD
 //    outFile << "CELLS " << mesh.triangles().size() << " "
 //            << mesh.triangles().size() * 4  << std::endl << std::endl;
-//    foreach(mesh::Triangle & triangle, mesh.triangles()){
+//    for (mesh::Triangle & triangle : mesh.triangles()){
 //      int internalIndices[3];
 //      internalIndices[0] = triangle.vertex(0).getID();
 //      internalIndices[1] = triangle.vertex(1).getID();
@@ -159,7 +159,7 @@ void ExportVTK:: exportData
 //      PtrVertexWriter normalsOriginWriter (vtkWriterEdgeNormals.createVertexWriter());
 //      PtrVertexDataWriter normalsWriter (
 //          vtkWriterEdgeNormals.createVertexDataWriter("EdgeNormals", utils::Def::DIM));
-//      foreach(mesh::Edge & edge, mesh.edges()) {
+//      for (mesh::Edge & edge : mesh.edges()) {
 //  //      int vertexID = normalsOriginWriter.getNextFreeVertexNumber ();
 //        int vertexID = normalsOriginWriter->plotVertex(edge.getCenter());
 //        normalsWriter->plotVertex(vertexID, edge.getNormal());
@@ -282,3 +282,4 @@ void ExportVTK:: writeLine
 }
 
 }} // namespace precice, io
+

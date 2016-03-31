@@ -14,8 +14,8 @@ like MPI calls in an event. It intended to be set by the user. */
 class Event
 {
 public:
-  /// Default high precision clock type. All other chrono types are derived from it.
-  using Clock = std::chrono::high_resolution_clock;
+  /// Default clock type. All other chrono types are derived from it.
+  using Clock = std::chrono::steady_clock;
 
   /// Name used to identify the timer. Events of the same name are accumulated to
   std::string name;

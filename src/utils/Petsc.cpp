@@ -97,7 +97,10 @@ Vector::Vector(Matrix &m, std::string name, LEFTRIGHT type) :
 Vector::~Vector()
 {
   PetscErrorCode ierr = 0;
-  ierr = VecDestroy(&vector); CHKERRV(ierr);
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  if (petscIsInitialized) // If PetscFinalize is called before ~Vector
+    ierr = VecDestroy(&vector); CHKERRV(ierr);
 }
 
 void Vector::init(PetscInt rows)
@@ -236,7 +239,10 @@ Matrix::Matrix(MPI_Comm comm, std::string name)
 Matrix::~Matrix()
 {
   PetscErrorCode ierr = 0;
-  ierr = MatDestroy(&matrix); CHKERRV(ierr);
+  PetscBool petscIsInitialized;
+  PetscInitialized(&petscIsInitialized);
+  if (petscIsInitialized) // If PetscFinalize is called before ~Matrix
+    ierr = MatDestroy(&matrix); CHKERRV(ierr);
 }
 
 void Matrix::assemble(MatAssemblyType type)

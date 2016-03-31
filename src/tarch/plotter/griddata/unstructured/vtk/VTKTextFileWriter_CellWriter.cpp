@@ -123,7 +123,7 @@ int tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellWriter::
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellWriter::close() {
   assertion( _myWriter._numberOfCells==0 );
   assertion( _myWriter._numberOfCellEntries==0 );
-  assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
+  assertion1( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
 
   _myWriter._numberOfCells       = _currentCellNumber;
   _myWriter._numberOfCellEntries = _cellListEntries;

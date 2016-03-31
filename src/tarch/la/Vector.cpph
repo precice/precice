@@ -5,7 +5,7 @@
 #define _TARCH_LA_VECTOR_CPPH_
 
 #include "Vector.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 #include "tarch/la/traits/VectorTraits.h"
 
 namespace tarch {

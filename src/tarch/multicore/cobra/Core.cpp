@@ -2,7 +2,7 @@
 #include "mpi.h"
 #endif
 #include "tarch/multicore/cobra/Core.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 
 tarch::multicore::cobra::Core::Core():

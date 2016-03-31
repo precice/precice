@@ -205,7 +205,7 @@ void ExportVRML:: writeVertexData
       outFile << "," << std::endl;
     }
 
-//      foreach ( mesh::Vertex & vertex, mesh.vertices() ) {
+//      for ( mesh::Vertex & vertex : mesh.vertices() ) {
 //         assertion ( vertex.hasProperty(data->getID()) );
 //         if ( data->getType() == mesh::Data::TYPE_VECTOR ) {
 //            using utils::Vector;
@@ -258,7 +258,7 @@ void ExportVRML:: writePropertyContainer
 
 //    using mesh::Vertex;
 //    int vertexIndex = 0;
-//    foreach ( Vertex & vertex, mesh.vertices() ) {
+//    for ( Vertex & vertex : mesh.vertices() ) {
 //      for ( int i=0; i < vertex.getParentCount(); i++ ) {
 //        if ( &vertex.getParent(i) == &container  ) {
 //          outFile << "         " << vertexIndex << "," << std::endl;
@@ -296,4 +296,5 @@ void ExportVRML:: writePropertyContainer
 }
 
 }} // namespace precice, io
+
 
