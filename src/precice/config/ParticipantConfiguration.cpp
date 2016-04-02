@@ -744,8 +744,8 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
   // Add export contexts
   for (const io::ExportContext& context : _exportConfig->exportContexts()){
-    preciceCheck(not participant->useMaster(), "finishParticipantConfiguration()",
-        "To use exports while using a master is not yet supported");
+    //preciceCheck(not participant->useMaster(), "finishParticipantConfiguration()",
+    //    "To use exports while using a master is not yet supported");
     _participants.back()->addExportContext(context);
   }
   _exportConfig->resetExports();

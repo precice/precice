@@ -2194,7 +2194,8 @@ void SolverInterfaceImpl:: handleExports()
   //timesteps was already incremented before
   int timesteps = _couplingScheme->getTimesteps()-1;
 
-  if(not utils::MasterSlave::_slaveMode){ //TODO  not yet supported
+  if(1/*not utils::MasterSlave::_slaveMode*/){ //TODO  not yet supported, but now in progress
+	// TODO: remove this if condition, since all processors must do the writing.
     for (const io::ExportContext& context : _accessor->exportContexts()) {
       if (_couplingScheme->isCouplingTimestepComplete() || context.everyIteration){
         if (context.timestepInterval != -1){

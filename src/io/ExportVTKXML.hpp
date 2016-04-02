@@ -88,6 +88,12 @@ private:
    // @brief true: write as parallel file, false: write as serial file
    bool _parallelWrite;
 
+   // @brief true: data names and dimensions have been processed
+   bool _isDataNamesAndDimensionsProcessed;
+
+   // @brief true: mesh contains cells
+   bool _isCellPresent;
+
    // @ brief dimensions of mesh
    int _meshDimensions;
 
@@ -121,7 +127,7 @@ private:
    void writeSubFile
    (
      const std::string& filename,
- 	mesh::Mesh&        mesh);
+ 	 mesh::Mesh&        mesh);
 
    void openFile (
     std::ofstream&     outFile,
