@@ -11,8 +11,10 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/EventTimings.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
+using precice::utils::Event;
 
 namespace precice {
 namespace cplscheme {
@@ -106,6 +108,7 @@ void SVDFactorization::computeQRdecomposition(
     Matrix & R)
 {
   preciceTrace(__func__);
+  Event e("compute_QR-dec_for-SVD-update", true, true); // time measurement, barrier
 
   // if nothing is linear dependent, the dimensions stay like this
   Q = Matrix::Zero(A.rows(), A.cols());
