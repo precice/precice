@@ -81,8 +81,8 @@ Scalar& DynamicMatrix<Scalar>::operator() (
   int rowIndex,
   int colIndex
 ) {
-  assertion2 ((rowIndex >= 0) && (rowIndex < _rows), rowIndex, _rows);
-  assertion2 ((colIndex >= 0) && (colIndex < _cols), colIndex, _cols);
+  assertion ((rowIndex >= 0) && (rowIndex < _rows), rowIndex, _rows);
+  assertion ((colIndex >= 0) && (colIndex < _cols), colIndex, _cols);
   return _values[rowIndex * _cols + colIndex];
 }
 
@@ -91,8 +91,8 @@ const Scalar& DynamicMatrix<Scalar>::operator() (
   int rowIndex,
   int colIndex
 ) const {
-  assertion2 ((rowIndex >= 0) && (rowIndex < _rows), rowIndex, _rows);
-  assertion2 ((colIndex >= 0) && (colIndex < _cols), colIndex, _cols);
+  assertion ((rowIndex >= 0) && (rowIndex < _rows), rowIndex, _rows);
+  assertion ((colIndex >= 0) && (colIndex < _cols), colIndex, _cols);
   return _values[rowIndex * _cols + colIndex];
 }
 

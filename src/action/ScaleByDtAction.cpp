@@ -28,7 +28,7 @@ ScaleByDtAction:: ScaleByDtAction
   _targetData(mesh->data (targetDataID)),
   _scaling(scaling)
 {
-  assertion2(_sourceData->getDimensions() == _targetData->getDimensions(),
+  assertion(_sourceData->getDimensions() == _targetData->getDimensions(),
              _sourceData->getDimensions(), _targetData->getDimensions());
 }
 
@@ -42,7 +42,7 @@ void ScaleByDtAction:: performAction
   preciceTrace3("performAction()", dt, computedPartFullDt, fullDt);
   auto& sourceValues = _sourceData->values();
   auto& targetValues = _targetData->values();
-  assertion2(sourceValues.size() == targetValues.size(),
+  assertion(sourceValues.size() == targetValues.size(),
              sourceValues.size(), targetValues.size());
   if (_scaling == SCALING_BY_COMPUTED_DT_RATIO){
     double scaling = dt / fullDt;
@@ -58,7 +58,7 @@ void ScaleByDtAction:: performAction
     }
   }
   else {
-    assertion1(_scaling == SCALING_BY_COMPUTED_DT_PART_RATIO, _scaling);
+    assertion(_scaling == SCALING_BY_COMPUTED_DT_PART_RATIO, _scaling);
     double scaling = computedPartFullDt / fullDt;
     preciceDebug("Scale by computed dt part ratio " << scaling);
     for (int i=0; i < targetValues.size(); i++){

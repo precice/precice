@@ -26,13 +26,13 @@ Quad:: Quad
   _center( edgeOne.getDimensions() ),
   _enclosingRadius ( 0.0 )
 {
-  assertion2(edgeOne.getDimensions() == edgeTwo.getDimensions(),
+  assertion(edgeOne.getDimensions() == edgeTwo.getDimensions(),
              edgeOne.getDimensions(), edgeTwo.getDimensions() );
-  assertion2(edgeTwo.getDimensions() == edgeThree.getDimensions(),
+  assertion(edgeTwo.getDimensions() == edgeThree.getDimensions(),
              edgeTwo.getDimensions(), edgeThree.getDimensions() );
-  assertion2(edgeThree.getDimensions() == edgeFour.getDimensions(),
+  assertion(edgeThree.getDimensions() == edgeFour.getDimensions(),
              edgeThree.getDimensions(), edgeFour.getDimensions() );
-  assertion1(getDimensions() == 3, getDimensions());
+  assertion(getDimensions() == 3, getDimensions());
 
   // Determine vertex map
   Vertex& v0 = edge(0).vertex(0);
@@ -104,10 +104,10 @@ Quad:: Quad
   assertion(&vertex(1) != &vertex(3));
   assertion(&vertex(2) != &vertex(3));
 
-  assertion1((_vertexMap[0] == 0) || (_vertexMap[0] == 1), _vertexMap[0]);
-  assertion1((_vertexMap[1] == 0) || (_vertexMap[1] == 1), _vertexMap[1]);
-  assertion1((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[2]);
-  assertion1((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[3]);
+  assertion((_vertexMap[0] == 0) || (_vertexMap[0] == 1), _vertexMap[0]);
+  assertion((_vertexMap[1] == 0) || (_vertexMap[1] == 1), _vertexMap[1]);
+  assertion((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[2]);
+  assertion((_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[3]);
 }
 
 int Quad:: getDimensions() const

@@ -213,7 +213,7 @@ void StaticTraversal<CELL_T>:: refineAllInternal
           // Modify environment positions
           const DynamicVector<int>& cellIndices = env.getNeighborCellIndices(i);
           const DynamicVector<int>& sideIndices = env.getNeighborSideIndices(i);
-          assertion2(cellIndices.size() == sideIndices.size(),
+          assertion(cellIndices.size() == sideIndices.size(),
                      cellIndices.size(), sideIndices.size());
           for (int j=0; j < (int)cellIndices.size(); j++){
             env.setNeighborCellPosition(
@@ -258,7 +258,7 @@ void StaticTraversal<CELL_T>:: refineAllInternal
       // Modify environment positions
       const DynamicVector<int>& cellIndices = env.getNeighborCellIndices(i);
       const DynamicVector<int>& sideIndices = env.getNeighborSideIndices(i);
-      assertion2 ( cellIndices.size() == sideIndices.size(),
+      assertion ( cellIndices.size() == sideIndices.size(),
                    cellIndices.size(), sideIndices.size() );
       for (int j=0; j < (int)cellIndices.size(); j++){
         env.setNeighborCellPosition(

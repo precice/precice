@@ -88,7 +88,7 @@ tarch::configuration::ConfigurationRegistry& tarch::configuration::Configuration
 
 
 void tarch::configuration::ConfigurationRegistry::addTopLevelConfiguration( TopLevelConfiguration* configuration ) {
-  assertion1( _topLevelTags.count(configuration->getTag())==0, configuration->getTag() );
+  assertion( _topLevelTags.count(configuration->getTag())==0, configuration->getTag() );
   _topLevelTags[ configuration->getTag() ] = configuration;
 }
 

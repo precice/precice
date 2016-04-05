@@ -90,7 +90,7 @@ FindClosestEdge:: FindClosestEdge
       _parametersProjectionPoint)),
   _closestEdge ( NULL )
 {
-  assertion1 ( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
+  assertion ( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
                _searchPoint.size() );
 }
 

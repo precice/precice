@@ -147,13 +147,13 @@ private:
 
 inline Vertex& Triangle:: vertex ( int i )
 {
-   assertion1 ( (i >= 0) && (i < 3), i );
+   assertion ( (i >= 0) && (i < 3), i );
    return edge(i).vertex(_vertexMap[i]);
 };
 
 inline const Vertex& Triangle:: vertex ( int i ) const
 {
-   assertion1 ( (i >= 0) && (i < 3), i );
+   assertion ( (i >= 0) && (i < 3), i );
    return edge(i).vertex(_vertexMap[i]);
 };
 
@@ -172,7 +172,7 @@ void Triangle:: setNormal
 (
   const VECTOR_T& normal )
 {
-  assertion2 ( normal.size() == getDimensions(), normal.size(), getDimensions() );
+  assertion ( normal.size() == getDimensions(), normal.size(), getDimensions() );
   _normal = normal;
 }
 
@@ -181,7 +181,7 @@ void Triangle:: setCenter
 (
   const VECTOR_T& center )
 {
-  assertion2 ( center.size() == getDimensions(), center.size(), getDimensions() );
+  assertion ( center.size() == getDimensions(), center.size(), getDimensions() );
   _center = center;
 }
 

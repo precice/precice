@@ -48,7 +48,7 @@ bool tarch::tests::TreeTestCaseCollection::isNameWithoutHierarchy(const std::str
 std::string tarch::tests::TreeTestCaseCollection::getFirstIdentifierInHierarchy(const std::string& testCaseName) {
   std::string result = testCaseName.substr(0, testCaseName.find("::"));
 
-  assertion2( isNameWithoutHierarchy( result), result, testCaseName );
+  assertion( isNameWithoutHierarchy( result), result, testCaseName );
 
   return result;
 }

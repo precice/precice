@@ -21,11 +21,11 @@ Environment:: Environment
 {
   //preciceTrace ( "Environment(Environment)" );
   for ( int i=0; i < _neighborCellIndices.size(); i++ ){
-    assertion1 ( toCopy._neighborCellIndices[i].size() > 0, i );
+    assertion ( toCopy._neighborCellIndices[i].size() > 0, i );
     _neighborCellIndices[i].append(toCopy._neighborCellIndices[i]);
   }
   for ( int i=0; i < _neighborSideIndices.size(); i++ ){
-    assertion1 ( toCopy._neighborSideIndices[i].size() > 0, i );
+    assertion ( toCopy._neighborSideIndices[i].size() > 0, i );
     _neighborSideIndices[i].append(toCopy._neighborSideIndices[i]);
   }
 }

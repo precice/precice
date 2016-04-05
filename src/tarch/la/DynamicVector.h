@@ -106,7 +106,7 @@ public:
 //  >::type DynamicVector<Scalar>::append (
 //    const Vector& toAppend
 //  ) {
-//    assertion1 (toAppend.size() > 0, toAppend.size());
+//    assertion (toAppend.size() > 0, toAppend.size());
 //    Scalar* oldValues = _values;
 //    int oldSize = _size;
 //    _size += toAppend.size();

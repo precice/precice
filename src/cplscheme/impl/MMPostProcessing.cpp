@@ -110,8 +110,8 @@ void MMPostProcessing::initialize(
   size_t entries = 0;
   size_t coarseEntries = 0;
 
-  assertion2(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
-  assertion1(_dataIDs.size() == 0, _dataIDs.size());
+  assertion(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
+  assertion(_dataIDs.size() == 0, _dataIDs.size());
 
   _dataIDs.insert(_dataIDs.end(), _fineDataIDs.begin(), _fineDataIDs.end());
   _dataIDs.insert(_dataIDs.end(), _coarseDataIDs.begin(), _coarseDataIDs.end());
@@ -140,7 +140,7 @@ void MMPostProcessing::initialize(
   _coarseModelOptimization->initialize(coarseCplData);
 
   // the coarse model also uses the fine mesh (only evaluation in solver is on coarse model)
-  assertion2(entries == coarseEntries, entries, coarseEntries);
+  assertion(entries == coarseEntries, entries, coarseEntries);
 
   _matrixCols.push_front(0);
   _firstIteration = true;
@@ -187,7 +187,7 @@ void MMPostProcessing::initialize(
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
-    assertion2(entries == unknowns, entries, unknowns);
+    assertion(entries == unknowns, entries, unknowns);
   }
 
   if (_estimateJacobian) {
@@ -214,7 +214,7 @@ void MMPostProcessing::initialize(
   for (DataMap::value_type& pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) { // Add only, if not already done
-      //assertion1(pair.second->values->size() > 0, pair.first);
+      //assertion(pair.second->values->size() > 0, pair.first);
       utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
@@ -278,7 +278,7 @@ void MMPostProcessing::setDesignSpecification(
     Eigen::VectorXd& q)
 {
   preciceTrace(__func__);
-  assertion2(q.size() == _fineResiduals.size(), q.size(), _fineResiduals.size());
+  assertion(q.size() == _fineResiduals.size(), q.size(), _fineResiduals.size());
   _designSpecification = (q.norm() <= 1.0e-15) ? Eigen::VectorXd::Zero(_fineResiduals.size()) : q;
 
   // only in the first step, the coarse model design specification equals the design specification
@@ -349,8 +349,8 @@ void MMPostProcessing::updateDifferenceMatrices(
   if (not _firstIteration)
   {
     preciceDebug("   Update Difference Matrices C and F with coarse and fine model responses");
-    assertion2(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
-    assertion2(getLSSystemCols() <= _maxIterationsUsed,getLSSystemCols(), _maxIterationsUsed);
+    assertion(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
+    assertion(getLSSystemCols() <= _maxIterationsUsed,getLSSystemCols(), _maxIterationsUsed);
 
     if (2 * getLSSystemCols() >= getLSSystemRows())
       preciceWarning("updateDifferenceMatrices()",
@@ -400,12 +400,12 @@ void MMPostProcessing::performPostProcessing(
 {
   preciceTrace2(__func__, _dataIDs.size(), cplData.size());
 
-  //assertion2(_fineDataIDs.size() == _scalings.size(), _fineDataIDs.size(), _scalings.size());
-  assertion2(_fineOldResiduals.size() == _fineResiduals.size(),_fineOldResiduals.size(), _fineResiduals.size());
-  assertion2(_coarseResiduals.size() == _fineResiduals.size(),_coarseResiduals.size(), _fineResiduals.size());
-  assertion2(_coarseOldResiduals.size() == _fineResiduals.size(),_coarseOldResiduals.size(), _fineResiduals.size());
-  assertion2(_outputFineModel.size() == _fineResiduals.size(),_outputFineModel.size(), _fineResiduals.size());
-  assertion2(_input_Xstar.size() == _fineResiduals.size(), _input_Xstar.size(), _fineResiduals.size());
+  //assertion(_fineDataIDs.size() == _scalings.size(), _fineDataIDs.size(), _scalings.size());
+  assertion(_fineOldResiduals.size() == _fineResiduals.size(),_fineOldResiduals.size(), _fineResiduals.size());
+  assertion(_coarseResiduals.size() == _fineResiduals.size(),_coarseResiduals.size(), _fineResiduals.size());
+  assertion(_coarseOldResiduals.size() == _fineResiduals.size(),_coarseOldResiduals.size(), _fineResiduals.size());
+  assertion(_outputFineModel.size() == _fineResiduals.size(),_outputFineModel.size(), _fineResiduals.size());
+  assertion(_input_Xstar.size() == _fineResiduals.size(), _input_Xstar.size(), _fineResiduals.size());
 
   /**
    * Manifold Mapping cycle, computing the new design specification for the coarse model
@@ -667,7 +667,7 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
   // if no residual differences for the fine and coarse model are given so far
   if ((_firstIteration && _firstTimeStep) || getLSSystemCols() <= 0)
   {
-    assertion1(getLSSystemCols() <= 0, getLSSystemCols());
+    assertion(getLSSystemCols() <= 0, getLSSystemCols());
     if (_estimateJacobian && (_MMMappingMatrix_prev.rows() == getLSSystemRows()))
     {
       _coarseModel_designSpecification -= _MMMappingMatrix_prev * alpha;
@@ -688,14 +688,14 @@ void MMPostProcessing::concatenateCouplingData
 
   int offset = 0;
   int k = 0;
-  assertion2(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
+  assertion(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
   for (int id : _fineDataIDs) {
     int size = cplData[id]->values->size();
     auto& values = *cplData[id]->values;
     auto& coarseValues = *cplData[_coarseDataIDs.at(k)]->values;
     const auto& coarseOldValues = cplData[_coarseDataIDs.at(k)]->oldValues.col(0);
-    assertion2(values.size() == coarseValues.size(), values.size(), coarseValues.size());
-    assertion2(values.size() == coarseOldValues.size(), values.size(), coarseOldValues.size());
+    assertion(values.size() == coarseValues.size(), values.size(), coarseValues.size());
+    assertion(values.size() == coarseOldValues.size(), values.size(), coarseOldValues.size());
     for (int i = 0; i < size; i++) {
       _outputFineModel[i + offset] = values[i];
       // ignore input from fine model as it must be exactly the
@@ -720,7 +720,7 @@ bool MMPostProcessing::isSet(Eigen::VectorXd& designSpec)
   // 1. its size is larger then zero (i. e., it must be equal to the number of unknowns)
   // 2. its l2-norm is larger then 1.0e-15
   bool set ((designSpec.size() > 0));// && (designSpec.norm() > 1.0e-15));
-  if (set) assertion2(designSpec.size() == _fineResiduals.size(), designSpec.size(), _fineResiduals.size());
+  if (set) assertion(designSpec.size() == _fineResiduals.size(), designSpec.size(), _fineResiduals.size());
   return set;
 }
 
@@ -803,10 +803,10 @@ void MMPostProcessing::iterationsConverged
   }
   else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
-    assertion1(toRemove > 0, toRemove);
+    assertion(toRemove > 0, toRemove);
     preciceDebug("Removing " << toRemove << " cols from mannifold mapping least-squares system with "<< getLSSystemCols() << " cols");
-    assertion2(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
-    assertion2(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
+    assertion(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
+    assertion(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
     // remove columns
     for (int i = 0; i < toRemove; i++) {
@@ -879,8 +879,8 @@ int MMPostProcessing::getLSSystemCols()
     cols += col;
   }
   //if(_hasNodesOnInterface){
-  //	assertion3(cols == _matrixF.cols(), cols, _matrixF.cols(), _matrixCols);
-  //	assertion2(cols == _matrixC.cols(), cols, _matrixC.cols());
+  //	assertion(cols == _matrixF.cols(), cols, _matrixF.cols(), _matrixCols);
+  //	assertion(cols == _matrixC.cols(), cols, _matrixC.cols());
   //}
 
   return cols;

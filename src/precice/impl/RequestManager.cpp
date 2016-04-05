@@ -62,7 +62,7 @@ void RequestManager:: handleRequests()
     case REQUEST_INITIALIZE:
       preciceDebug("Request initialize by rank " << rankSender);
       clientCounter++;
-      assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestInitialze(clientRanks);
@@ -72,7 +72,7 @@ void RequestManager:: handleRequests()
     case REQUEST_INITIALIZE_DATA:
       preciceDebug("Request initialize data by rank " << rankSender);
       clientCounter++;
-      assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestInitialzeData(clientRanks);
@@ -82,7 +82,7 @@ void RequestManager:: handleRequests()
     case REQUEST_ADVANCE:
       preciceDebug("Request advance by rank " << rankSender);
       clientCounter++;
-      assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestAdvance(clientRanks);
@@ -92,7 +92,7 @@ void RequestManager:: handleRequests()
     case REQUEST_FINALIZE:
       preciceDebug("Request finalize by rank " << rankSender);
       clientCounter++;
-      assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestFinalize();
@@ -195,7 +195,7 @@ void RequestManager:: handleRequests()
     case REQUEST_MAP_WRITE_DATA_FROM:
       preciceDebug("Request map written data by rank " << rankSender);
       clientCounter++;
-      assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestMapWriteDataFrom(clientRanks);
@@ -205,7 +205,7 @@ void RequestManager:: handleRequests()
     case REQUEST_MAP_READ_DATA_TO:
       preciceDebug("Request map read data by rank " << rankSender);
       clientCounter++;
-      assertion2(clientCounter <= clientCommSize, clientCounter, clientCommSize);
+      assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
       if (clientCounter == clientCommSize){
         handleRequestMapReadDataTo(clientRanks);
@@ -315,7 +315,7 @@ int RequestManager:: requestInquirePosition
   }
   int position = spacetree::Spacetree::positionUndefined();
   _com->receive(position, 0);
-  assertion1(position != spacetree::Spacetree::positionUndefined(), position);
+  assertion(position != spacetree::Spacetree::positionUndefined(), position);
   return position;
 }
 
@@ -337,12 +337,12 @@ void RequestManager:: requestInquireClosestMesh
   for (int i=0; i < sizeMeshIDs; i++){
     int id = -1;
     _com->receive(id, 0);
-    assertion1(id != -1, id);
+    assertion(id != -1, id);
     closest.meshIDs().push_back(id);
   }
   int position = -1;
   _com->receive(position, 0);
-  assertion1(position != -1, position);
+  assertion(position != -1, position);
   closest.setPosition(position);
   double distanceVector[_interface.getDimensions()];
   _com->receive(distanceVector, _interface.getDimensions(), 0);
@@ -378,7 +378,7 @@ void RequestManager:: requestInquireVoxelPosition
   // Receive results
   int position = -1;
   _com->receive(position, 0);
-  assertion1(position != -1, position);
+  assertion(position != -1, position);
   voxelPosition.setPosition(position);
   int sizeResultIDs = -1;
   _com->receive(sizeResultIDs, 0);
@@ -757,11 +757,11 @@ void RequestManager:: handleRequestInquirePosition
   std::set<int> meshIDs;
   int sizeMeshIDs = -1;
   _com->receive(sizeMeshIDs, rankSender);
-  assertion1(sizeMeshIDs >= 0, sizeMeshIDs);
+  assertion(sizeMeshIDs >= 0, sizeMeshIDs);
   for (int i=0; i < sizeMeshIDs; i++){
     int id = -1;
     _com->receive(id, rankSender);
-    assertion1(id >= 0, id);
+    assertion(id >= 0, id);
     meshIDs.insert(id);
   }
 
@@ -783,11 +783,11 @@ void RequestManager:: handleRequestInquireClosestMesh
   std::set<int> meshIDs;
   int size = -1;
   _com->receive(size, rankSender);
-  assertion1(size >= 0, size);
+  assertion(size >= 0, size);
   for (int i=0; i < size; i++){
     int id = -1;
     _com->receive(id, rankSender);
-    assertion1(id >= 0, id);
+    assertion(id >= 0, id);
     meshIDs.insert(id);
   }
 
@@ -822,7 +822,7 @@ void RequestManager:: handleRequestInquireVoxelPosition
   int sizeMeshIDs = -1;
   std::set<int> meshIDs;
   _com->receive(sizeMeshIDs, rankSender);
-  assertion1(sizeMeshIDs >= 0, sizeMeshIDs);
+  assertion(sizeMeshIDs >= 0, sizeMeshIDs);
   if (sizeMeshIDs > 0){
     tarch::la::DynamicVector<int> idVector(sizeMeshIDs);
     _com->receive(tarch::la::raw(idVector), sizeMeshIDs, rankSender);
@@ -908,7 +908,7 @@ void RequestManager:: handleRequestGetMeshVertices
   int size = -1;
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
-  assertion1(size > 0, size);
+  assertion(size > 0, size);
   int* ids = new int[size];
   double* positions = new double[size*_interface.getDimensions()];
   _com->receive(ids, size, rankSender);
@@ -927,7 +927,7 @@ void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
   int size = -1;
   _com->receive(meshID, rankSender);
   _com->receive(size, rankSender);
-  assertion1(size > 0, size);
+  assertion(size > 0, size);
   int* ids = new int[size];
   double* positions = new double[size*_interface.getDimensions()];
   _com->receive(positions, size*_interface.getDimensions(), rankSender);

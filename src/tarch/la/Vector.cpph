@@ -164,7 +164,7 @@ template<int Size, typename Scalar>
 Scalar & Vector<Size,Scalar>:: operator() ( int index )
 {
   assertion ( index >= 0 );
-  assertion2 ( index < Size, index, Size );
+  assertion ( index < Size, index, Size );
   return _values[index];
 }
 

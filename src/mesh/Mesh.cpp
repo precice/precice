@@ -49,7 +49,7 @@ Mesh:: Mesh
   if (_managerPropertyIDs == nullptr){
     _managerPropertyIDs = new utils::ManageUniqueIDs;
   }
-  assertion1((_dimensions == 2) || (_dimensions == 3), _dimensions);
+  assertion((_dimensions == 2) || (_dimensions == 3), _dimensions);
   assertion(_name != std::string(""));
   _nameIDPairs[_name] = _managerPropertyIDs->getFreeID ();
   setProperty(INDEX_GEOMETRY_ID, _nameIDPairs[_name]);
@@ -305,7 +305,7 @@ void Mesh:: allocateDataValues()
 void Mesh:: computeState()
 {
   preciceTrace("computeState()");
-  assertion1(_dimensions==2 || _dimensions==3, _dimensions);
+  assertion(_dimensions==2 || _dimensions==3, _dimensions);
   using utils::DynVector;
   using utils::Vector2D;
   using utils::Vector3D;
@@ -320,7 +320,7 @@ void Mesh:: computeState()
     }
   }
   else if (size3DFaces == 0){
-    assertion1(_dimensions == 3, _dimensions);
+    assertion(_dimensions == 3, _dimensions);
     computeNormals = false;
   }
 
@@ -362,13 +362,13 @@ void Mesh:: computeState()
   if (_dimensions == 3){
     // Compute triangle centers, radius, and normals
     for (Triangle& triangle : _content.triangles()) {
-      assertion2(not tarch::la::equals(triangle.vertex(0).getCoords(),
+      assertion(not tarch::la::equals(triangle.vertex(0).getCoords(),
                  triangle.vertex(1).getCoords()), triangle.vertex(0).getCoords(),
                  triangle.getID());
-      assertion2(not tarch::la::equals(triangle.vertex(1).getCoords(),
+      assertion(not tarch::la::equals(triangle.vertex(1).getCoords(),
                  triangle.vertex(2).getCoords()), triangle.vertex(1).getCoords(),
                  triangle.getID());
-      assertion2(not tarch::la::equals(triangle.vertex(2).getCoords(),
+      assertion(not tarch::la::equals(triangle.vertex(2).getCoords(),
                  triangle.vertex(0).getCoords()), triangle.vertex(2).getCoords(),
                  triangle.getID());
 
@@ -427,16 +427,16 @@ void Mesh:: computeState()
 
     // Compute quad centers, radius, and normals
     for (Quad& quad : _content.quads()) {
-      assertion2(not tarch::la::equals(quad.vertex(0).getCoords(),
+      assertion(not tarch::la::equals(quad.vertex(0).getCoords(),
                  quad.vertex(1).getCoords()), quad.vertex(0).getCoords(),
                  quad.getID());
-      assertion2(not tarch::la::equals(quad.vertex(1).getCoords(),
+      assertion(not tarch::la::equals(quad.vertex(1).getCoords(),
                  quad.vertex(2).getCoords()), quad.vertex(1).getCoords(),
                  quad.getID());
-      assertion2(not tarch::la::equals(quad.vertex(2).getCoords(),
+      assertion(not tarch::la::equals(quad.vertex(2).getCoords(),
                  quad.vertex(3).getCoords()), quad.vertex(2).getCoords(),
                  quad.getID());
-      assertion2(not tarch::la::equals(quad.vertex(3).getCoords(),
+      assertion(not tarch::la::equals(quad.vertex(3).getCoords(),
                  quad.vertex(0).getCoords()), quad.vertex(3).getCoords(),
                  quad.getID());
 
@@ -497,7 +497,7 @@ void Mesh:: computeState()
         Vector3D normalSecondPart;
         tarch::la::cross(vectorA, vectorB, normalSecondPart);
 
-        assertion2(tarch::la::equals(
+        assertion(tarch::la::equals(
                    normal/tarch::la::norm2(normal),
                    normalSecondPart/tarch::la::norm2(normalSecondPart)),
                    normal, normalSecondPart);
@@ -525,7 +525,7 @@ void Mesh:: computeState()
     if (computeNormals){
       for (Edge& edge : _content.edges()) {
         double length = tarch::la::norm2(edge.getNormal());
-        assertion1(tarch::la::greater(length,0.0),
+        assertion(tarch::la::greater(length,0.0),
           "Edge vertex coords: (" << edge.vertex(0).getCoords() << "), ("
           << edge.vertex(1).getCoords()
           << "). Hint: Could be inconsistent triangle/quad orientation or "
@@ -754,7 +754,7 @@ void Mesh:: addMesh(
   for ( const Vertex& vertex : deltaMesh.vertices() ){
     coords = vertex.getCoords();
     Vertex& v = createVertex (coords);
-    assertion1 ( vertex.getID() >= 0, vertex.getID() );
+    assertion ( vertex.getID() >= 0, vertex.getID() );
     vertexMap[vertex.getID()] = &v;
   }
 

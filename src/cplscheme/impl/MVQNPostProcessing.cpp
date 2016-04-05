@@ -218,7 +218,7 @@ void MVQNPostProcessing::computeUnderrelaxationSecondaryData
 {
     //Store x_tildes for secondary data
   //  for (int id : _secondaryDataIDs){
-  //    assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+  //    assertion(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
   //               _secondaryOldXTildes[id].size(), cplData[id]->values->size());
   //    _secondaryOldXTildes[id] = *(cplData[id]->values);
   //  }
@@ -278,7 +278,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
         if(_imvjRestart){
           for(int i = 0; i < (int)_WtilChunk.size(); i++){
             int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
-            assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
+            assertion(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
             Eigen::VectorXd Zv = Eigen::VectorXd::Zero(colsLSSystemBackThen);
             // multiply: Zv := Z^q * V(:,0) of size (m x 1)
             _parMatrixOps->multiply(_pseudoInverseChunk[i], v, Zv, colsLSSystemBackThen, getLSSystemRows(), 1);
@@ -364,15 +364,15 @@ void MVQNPostProcessing::pseudoInverse(
   auto Q = _qrV.matrixQ();
   auto R = _qrV.matrixR();
 
-  assertion2(pseudoInverse.rows() == _qrV.cols(), pseudoInverse.rows(), _qrV.cols());
-  assertion2(pseudoInverse.cols() == _qrV.rows(), pseudoInverse.cols(), _qrV.rows());
+  assertion(pseudoInverse.rows() == _qrV.cols(), pseudoInverse.rows(), _qrV.cols());
+  assertion(pseudoInverse.cols() == _qrV.rows(), pseudoInverse.cols(), _qrV.rows());
 
   Event e(__func__, true, true); // time measurement, barrier
   Eigen::VectorXd yVec(pseudoInverse.rows());
 
   // assertions for the case of processors with no vertices
   if(!_hasNodesOnInterface){
-      assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols()); assertion1(_qrV.rows() == 0, _qrV.rows()); assertion1(Q.size() == 0, Q.size());
+      assertion(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols()); assertion(_qrV.rows() == 0, _qrV.rows()); assertion(Q.size() == 0, Q.size());
   }
 
   // backsubstitution
@@ -398,7 +398,7 @@ void MVQNPostProcessing::buildWtil()
    */
   preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
-  assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
+  assertion(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
   _Wtil = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
 
@@ -408,7 +408,7 @@ void MVQNPostProcessing::buildWtil()
   if(_imvjRestart){
     for(int i = 0; i < (int)_WtilChunk.size(); i++){
       int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
-      assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
+      assertion(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
       Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, _qrV.cols());
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
       _parMatrixOps->multiply(_pseudoInverseChunk[i], _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
@@ -451,7 +451,7 @@ void MVQNPostProcessing::buildJacobian()
   /**
   *  (2) Multiply J_prev * V =: W_tilde
   */
-  assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
+  assertion(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
   if(_resetLS){
     buildWtil();
     preciceWarning(__func__," ATTENTION, in buildJacobian call for buildWtill() - this should not be the case except the coupling did only one iteration");
@@ -505,7 +505,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
   /**
   *  (2) Construction of _Wtil = (W - J_prev * V), should be already present due to updated computation
   */
-  assertion2(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion2(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
+  assertion(_matrixV.rows() == _qrV.rows(), _matrixV.rows(), _qrV.rows());  assertion(getLSSystemCols() == _qrV.cols(), getLSSystemCols(), _qrV.cols());
 
   // rebuild matrix Wtil if V changes substantially.
   if(_resetLS){
@@ -552,7 +552,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
   if(_imvjRestart){
     for(int i = 0; i < (int)_WtilChunk.size(); i++){
       int colsLSSystemBackThen = _pseudoInverseChunk[i].rows();
-      assertion2(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
+      assertion(colsLSSystemBackThen == _WtilChunk[i].cols(), colsLSSystemBackThen, _WtilChunk[i].cols());
       r_til = Eigen::VectorXd::Zero(colsLSSystemBackThen);
       // multiply: r_til := Z^q * (-res) of size (m x 1) with m=#cols of LS at that time, result stored on each proc.
       _parMatrixOps->multiply(_pseudoInverseChunk[i], negativeResiduals, r_til, colsLSSystemBackThen, getLSSystemRows(), 1);
@@ -717,7 +717,7 @@ void MVQNPostProcessing::restartIMVJ()
        for (int i = delIndices.size() - 1; i >= 0; i--) {
          removeMatrixColumnRSLS(delIndices[i]);
        }
-       assertion2(_matrixV_RSLS.cols() == qr.cols(), _matrixV_RSLS.cols(), qr.cols());
+       assertion(_matrixV_RSLS.cols() == qr.cols(), _matrixV_RSLS.cols(), qr.cols());
      }
 
      /**
@@ -790,8 +790,8 @@ void MVQNPostProcessing:: specializedIterationsConverged
       _matrixCols_RSLS.clear();
     }else if ((int) _matrixCols_RSLS.size() > _RSLSreusedTimesteps) {
       int toRemove = _matrixCols_RSLS.back();
-      assertion1(toRemove > 0, toRemove);
-      if(_matrixV_RSLS.size() > 0) assertion2(_matrixV_RSLS.cols() > toRemove, _matrixV_RSLS.cols(), toRemove);
+      assertion(toRemove > 0, toRemove);
+      if(_matrixV_RSLS.size() > 0) assertion(_matrixV_RSLS.cols() > toRemove, _matrixV_RSLS.cols(), toRemove);
 
       // remove columns
       for (int i = 0; i < toRemove; i++) {

@@ -157,7 +157,7 @@ void Vertex:: setCoords
 (
   const VECTOR_T& coordinates )
 {
-  assertion2 ( coordinates.size() == _coords.size(), coordinates.size(), _coords.size() );
+  assertion ( coordinates.size() == _coords.size(), coordinates.size(), _coords.size() );
   _coords = coordinates;
 }
 
@@ -166,7 +166,7 @@ void Vertex:: setNormal
 (
   const VECTOR_T& normal )
 {
-  assertion2 ( normal.size() == _normal.size(), normal.size(), _normal.size() );
+  assertion ( normal.size() == _normal.size(), normal.size(), _normal.size() );
   _normal = normal;
 }
 

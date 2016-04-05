@@ -51,7 +51,7 @@ void PeanotreeCell3D:: refine
 {
   preciceTrace2 ( "refine()", cellCenter, cellHalflengths );
   assertion ( _content != nullptr );
-  assertion1 ( _childs.size() == 0, _childs.size() );
+  assertion ( _childs.size() == 0, _childs.size() );
   int dim = cellCenter.size();
   int threePowerD = dim==2 ? 9 : 27;  // only 2D and 3D supported
   //_subtrees = new RegularSpacetree*[twoPowerDim];
@@ -81,9 +81,9 @@ int PeanotreeCell3D:: getChildIndex
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  assertion2 ( cellCenter.size() == cellHalflengths.size(),
+  assertion ( cellCenter.size() == cellHalflengths.size(),
                cellCenter.size(), cellHalflengths.size());
-  assertion2 ( cellCenter.size() == searchPoint.size(),
+  assertion ( cellCenter.size() == searchPoint.size(),
                cellCenter.size(), searchPoint.size());
   utils::DynVector halfspaces(searchPoint.size());
   for ( int i=0; i < searchPoint.size(); i++ ) {
@@ -138,7 +138,7 @@ void PeanotreeCell3D:: clear()
   _childs.deleteElements();
   _childs.clear();
   _position = Spacetree::positionUndefined();
-  assertion1 ( _childs.size() == 0, _childs.size() );
+  assertion ( _childs.size() == 0, _childs.size() );
   assertion ( _content->empty() );
 }
 

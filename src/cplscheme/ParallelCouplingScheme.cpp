@@ -42,8 +42,8 @@ void ParallelCouplingScheme::initialize
 {
   preciceTrace2("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
-  assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
-  assertion1(startTimestep >= 0, startTimestep);
+  assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
+  assertion(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
   if (_couplingMode == Implicit) {
@@ -363,8 +363,8 @@ void ParallelCouplingScheme::implicitAdvance()
 void ParallelCouplingScheme::mergeData()
 {
   preciceTrace("mergeData()");
-  assertion1(!doesFirstStep(), "Only the second participant should do the post processing." );
-  assertion1(_allData.empty(), "This function should only be called once.");
+  assertion(!doesFirstStep(), "Only the second participant should do the post processing." );
+  assertion(_allData.empty(), "This function should only be called once.");
   _allData.insert(getSendData().begin(), getSendData().end());
   _allData.insert(getReceiveData().begin(), getReceiveData().end());
 }
