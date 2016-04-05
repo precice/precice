@@ -155,6 +155,7 @@ if env["build"] == "debug":
 
 # ====== Boost ======
 if env["boost_inst"]:
+    env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3'])
     uniqueCheckLib(conf, "boost_log")
     uniqueCheckLib(conf, "boost_log_setup")
     uniqueCheckLib(conf, "boost_thread")
