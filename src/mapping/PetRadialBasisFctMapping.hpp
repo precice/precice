@@ -214,13 +214,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   preciceDebug("inMesh->vertices().size() = " << inMesh->vertices().size());
   preciceDebug("outMesh->vertices().size() = " << outMesh->vertices().size());
 
-  // Create a symmetric, sparse matrix with n x n local size.
+  // Matrix C: Symmetric, sparse matrix with n x n local size.
   _matrixC.reset();
   _matrixC.init(n, n, PETSC_DETERMINE, PETSC_DETERMINE, MATSBAIJ);
   preciceDebug("Set matrix C to local size " << n << " x " << n);
   ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
-  // Create a matrix with outputSize x n local size.
+  // Matrix A: Sparse matrix with outputSize x n local size.
   _matrixA.reset();
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   preciceDebug("Set matrix A to local size " << outputSize << " x " << n);
@@ -253,7 +253,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISDestroy(&ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingDestroy(&ISidentityMapping); CHKERRV(ierr);
 
-  int i = 0;
   utils::DynVector distance(dimensions);
 
   // We do preallocating of the matrices C and A. That means we traverse the input data once, just
@@ -337,21 +336,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         colIdx[colNum] = vj.getGlobalIndex() + polyparams; // column of entry is the globalIndex
         colNum++;
       }
-      #ifdef Asserts
-      if (coeff == std::numeric_limits<double>::infinity()) {
-        preciceError("computeMapping()", "C matrix element has value inf. "
-                     << "i = " << i
-                     << ", coords i = " << inVertex.getCoords() << ", coords j = "
-                     << vj.getCoords() << ", dist = "
-                     << distance << ", norm2 = " << norm2(distance) << ", rbf = "
-                     << coeff
-                     << ", rbf type = " << typeid(_basisFunction).name());
-      }
-      # endif
     }
 
     ierr = MatSetValuesLocal(_matrixC.matrix, 1, &row, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
-    i++;
   }
   eFillC.stop();
   PetscLogEventEnd(logCLoop, 0, 0, 0, 0);
@@ -364,6 +351,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // Begin assembly here, all assembly is ended at the end of this function.
   ierr = MatAssemblyBegin(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
+
+  int ownerRangeBeginA = _matrixA.ownerRange().first;
+  int ownerRangeEndA = _matrixA.ownerRange().second;
 
   // -- BEGIN PREALLOC LOOP FOR MATRIX A --
   // int logPreallocALoop = 3;
@@ -394,8 +384,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   precice::utils::Event eFillA("Filling Matrix A");
 
-  i = 0;
-  for (int it = _matrixA.ownerRange().first; it < _matrixA.ownerRange().second; it++) {
+  for (int it = ownerRangeBeginA; it < ownerRangeEndA; it++) {
     // hier colIdx, colVals über inMesh->vertices.count dimensionieren?
     PetscInt colNum = 0;
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
@@ -415,7 +404,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     }
 
     // -- SETS THE COEFFICIENTS --
-    int j = 0;
     for (const mesh::Vertex& inVertex : inMesh->vertices()) {
       distance = oVertex.getCoords() - inVertex.getCoords();
       for (int d = 0; d < dimensions; d++) {
@@ -423,27 +411,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           distance[d] = 0;
       }
       double coeff = _basisFunction.evaluate(norm2(distance));
-      if ( not tarch::la::equals(coeff, 0.0)) {
+      if (not tarch::la::equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
         colIdx[colNum] = inVertex.getGlobalIndex() + polyparams;
         colNum++;
       }
-
-      #     ifdef Asserts
-      if (coeff == std::numeric_limits<double>::infinity()){
-        preciceError("computeMapping()", "A matrix element has value inf. "
-                     << "i = " << i << ", j = " << j
-                     << ", coords i = " << oVertex.getCoords() << ", coords j = "
-                     << inVertex.getCoords() << ", dist = "
-                     << distance << ", norm2 = " << norm2(distance) << ", rbf = "
-                     << coeff
-                     << ", rbf type = " << typeid(_basisFunction).name());
-      }
-      #     endif
-      j++;
     }
     ierr = MatSetValuesLocal(_matrixA.matrix, 1, &it, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
-    i++;
   }
   eFillA.stop();
   PetscLogEventEnd(logALoop, 0, 0, 0, 0);
