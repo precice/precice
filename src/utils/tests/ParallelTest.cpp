@@ -39,7 +39,7 @@ void ParallelTest:: run ()
         group = "GroupOne";
       }
       else {
-        assertion1 ( rank == 2, rank );
+        assertion ( rank == 2, rank );
         group = "GroupTwo";
       }
       Par::splitCommunicator( group );

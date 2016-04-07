@@ -88,7 +88,7 @@ void ExportVRML:: writeGeometry
 {
   std::map<int,int> vertexIndices; // first: precice id, second: vrml file id
   int dimensions = mesh.getDimensions();
-  assertion1 ( (dimensions == 2) || (dimensions == 3), dimensions );
+  assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
 
   // Export vertices
   int vertexIndex = 0;

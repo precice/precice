@@ -54,7 +54,7 @@ void ComputeCurvatureAction:: performAction
     }
   }
   else {
-    assertion1 ( getMesh()->getDimensions() == 3, getMesh()->getDimensions() );
+    assertion ( getMesh()->getDimensions() == 3, getMesh()->getDimensions() );
     for (int i=0; i < dataValues.size(); i++) {
       dataValues[i] = 0.0;
     }

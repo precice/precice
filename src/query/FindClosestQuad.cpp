@@ -93,7 +93,7 @@ void FindClosestQuad:: find
 //    indices[1] = 2;
 //  }
 //  else {
-//    assertion1(iMax == 2, iMax);
+//    assertion(iMax == 2, iMax);
 //    indices[0] = 0;
 //    indices[1] = 1;
 //  }

@@ -37,7 +37,7 @@ WatchPoint:: WatchPoint
   _isClosest(true)
 {
   assertion ( _mesh.use_count() > 0 );
-  assertion2 ( _point.size() == _mesh->getDimensions(), _point.size(),
+  assertion ( _point.size() == _mesh->getDimensions(), _point.size(),
                _mesh->getDimensions() );
 }
 

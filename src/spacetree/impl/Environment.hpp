@@ -5,7 +5,7 @@
 #define PRECICE_SPACETREE_IMPL_ENVIRONMENT_HPP_
 
 #include "spacetree/Spacetree.hpp"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 #include "tarch/la/DynamicVector.h"
 #include "logging/Logger.hpp"
 
@@ -29,14 +29,14 @@ public:
 
   const tarch::la::DynamicVector<int>& getNeighborCellIndices ( int cellIndex ) const
   {
-    assertion2((cellIndex >= 0) && (cellIndex < _neighborCellIndices.size()),
+    assertion((cellIndex >= 0) && (cellIndex < _neighborCellIndices.size()),
                cellIndex, _neighborCellIndices.size());
     return _neighborCellIndices[cellIndex];
   }
 
   const tarch::la::DynamicVector<int>& getNeighborSideIndices ( int cellIndex ) const
   {
-    assertion2((cellIndex >= 0) && (cellIndex < _neighborSideIndices.size()),
+    assertion((cellIndex >= 0) && (cellIndex < _neighborSideIndices.size()),
                cellIndex, _neighborSideIndices.size());
     return _neighborSideIndices[cellIndex];
   }
@@ -55,7 +55,7 @@ public:
     int                                  cellIndex,
     const tarch::la::DynamicVector<int>& indices )
   {
-    assertion2((cellIndex >= 0) && (cellIndex < _neighborCellIndices.size()),
+    assertion((cellIndex >= 0) && (cellIndex < _neighborCellIndices.size()),
                cellIndex, _neighborCellIndices.size());
     if (_neighborCellIndices[cellIndex].size() == 0){
       _neighborCellIndices[cellIndex].append(indices);
@@ -69,7 +69,7 @@ public:
     int                                  cellIndex,
     const tarch::la::DynamicVector<int>& indices )
   {
-    assertion2((cellIndex >= 0) && (cellIndex < _neighborSideIndices.size()),
+    assertion((cellIndex >= 0) && (cellIndex < _neighborSideIndices.size()),
                cellIndex, _neighborSideIndices.size());
     if (_neighborSideIndices[cellIndex].size() == 0){
       _neighborSideIndices[cellIndex].append(indices);
@@ -81,7 +81,7 @@ public:
 
   void setNeighborCellPosition ( int sideIndex, int position )
   {
-    assertion2((sideIndex >= 0) && (sideIndex < _neighborCellPositions.size()),
+    assertion((sideIndex >= 0) && (sideIndex < _neighborCellPositions.size()),
                sideIndex, _neighborCellPositions.size());
     _neighborCellPositions[sideIndex] = position;
   }

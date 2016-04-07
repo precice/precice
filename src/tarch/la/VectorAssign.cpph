@@ -6,7 +6,7 @@
 
 #include "tarch/la/VectorAssign.cpph"
 #include "tarch/compiler/CompilerSpecificSettings.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 
 namespace tarch {
@@ -38,7 +38,7 @@ template<typename RVector>
 >::type VectorAssign<Vector>::operator= (
   const RVector& toAssign
 ) {
-  assertionEquals( reinterpret_cast<Vector&>(*this).size(), toAssign.size() );
+  assertion( reinterpret_cast<Vector&>(*this).size()==toAssign.size() );
   int size = reinterpret_cast<Vector&>(*this).size(); // Necessary for vectorization
   #ifdef CompilerICC
   #pragma ivdep

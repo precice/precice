@@ -340,7 +340,7 @@ const std::string& XMLTag:: getStringAttributeValue
 {
   std::map<std::string,XMLAttribute<std::string> >::const_iterator iter;
   iter = _stringAttributes.find(name);
-  assertion1 (iter != _stringAttributes.end(), name);
+  assertion (iter != _stringAttributes.end(), name);
   return iter->second.getValue();
 }
 

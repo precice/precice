@@ -721,7 +721,7 @@ PointToPointCommunication::send(double* itemsToSend,
     return;
   }
 
-  assertion2(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
+  assertion(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
 
   for (auto& mapping : _mappings) {
     mapping.offset = _buffer.size();
@@ -757,7 +757,7 @@ PointToPointCommunication::receive(double* itemsToReceive,
     return;
   }
 
-  assertion2(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
+  assertion(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
 
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 

@@ -17,8 +17,8 @@ template<int Size, typename Scalar>
 Scalar& WrappedVector<Size,Scalar>::operator[](
   int index
 ) {
-  assertion1 (index >= 0, index);
-  assertion1 (index < Size, index);
+  assertion (index >= 0, index);
+  assertion (index < Size, index);
   return reinterpret_cast<Scalar*>(this)[index];
 }
 
@@ -26,8 +26,8 @@ template<int Size, typename Scalar>
 const Scalar& WrappedVector<Size,Scalar>::operator[](
   int index
 ) const {
-  assertion1 (index >= 0, index);
-  assertion1 (index < Size, index);
+  assertion (index >= 0, index);
+  assertion (index < Size, index);
   return reinterpret_cast<const Scalar*>(this)[index];
 }
 

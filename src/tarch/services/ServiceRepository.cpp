@@ -2,7 +2,7 @@
 #include "mpi.h"
 #endif
 #include "tarch/services/ServiceRepository.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 #include <sstream>
 

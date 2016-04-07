@@ -383,7 +383,7 @@ std::string CompositionalCouplingScheme:: printCouplingState() const
     //TODO i don't understand why this assertion should make any sense, it fails when
     // more than 3 participants are used, but without any mature reason, maybe
     // the output is just not nice enough
-    //assertion1(partners.size() == 1, partners.size());
+    //assertion(partners.size() == 1, partners.size());
     state += partners[0];
     state += ": ";
     state += scheme.scheme->printCouplingState();
@@ -911,7 +911,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //      state += "\n";
 //    }
 //    partners = couplingScheme->getCouplingPartners();
-//    assertion1(partners.size() == 1, partners.size());
+//    assertion(partners.size() == 1, partners.size());
 //    state += "Coupling to ";
 //    state += partners[0];
 //    state += ":\n";

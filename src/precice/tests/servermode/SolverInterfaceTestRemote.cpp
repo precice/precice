@@ -191,7 +191,7 @@ void SolverInterfaceTestRemote:: testGeometryMode()
       interface.finalize();
     }
     else {
-      assertion1 ( rank == 1, rank );
+      assertion ( rank == 1, rank );
       bool isServer = true;
       impl::SolverInterfaceImpl server ( "TestAccessor", rank, 2, isServer );
       // Perform manual configuration without overwritting logging config
@@ -315,7 +315,7 @@ void SolverInterfaceTestRemote:: testGeometryModeParallel()
       interface.finalize();
     }
     else {
-      assertion1(rank == 2, rank);
+      assertion(rank == 2, rank);
       bool isServer = true;
       impl::SolverInterfaceImpl server("TestAccessor", 0, 1, isServer);
       // Perform manual configuration without overwritting logging config
@@ -400,7 +400,7 @@ void SolverInterfaceTestRemote:: testGeometryModeParallelStationaryMapping()
       interface.finalize();
     }
     else {
-      assertion1(rank == 2, rank);
+      assertion(rank == 2, rank);
       bool isServer = true;
       impl::SolverInterfaceImpl server("Accessor", 0, 1, isServer);
       // Perform manual configuration without overwritting logging config
@@ -452,7 +452,7 @@ void SolverInterfaceTestRemote:: testCouplingModeWithOneServer()
     validateEquals ( timesteps, 5 );
   }
   else {
-    assertion1 (rank == 2, rank);
+    assertion (rank == 2, rank);
     bool isServer = true;
     impl::SolverInterfaceImpl server("ParticipantB", 0, 1, isServer);
 
@@ -533,7 +533,7 @@ void SolverInterfaceTestRemote:: testCouplingModeParallelWithOneServer()
     validateEquals(timesteps, 5);
   }
   else {
-    assertion1(rank == 3, rank);
+    assertion(rank == 3, rank);
     bool isServer = true;
     impl::SolverInterfaceImpl server("ParticipantB", 0, 1, isServer);
 

@@ -4,7 +4,7 @@
 #include "tarch/configuration/ConfigurationRegistry.h"
 #include "tarch/configuration/TopLevelConfiguration.h"
 #include "tarch/irr/XML.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 
 tarch::logging::Log tarch::configuration::ConfigurationRegistry::_log("tarch::configuration::ConfigurationRegistry");
@@ -88,7 +88,7 @@ tarch::configuration::ConfigurationRegistry& tarch::configuration::Configuration
 
 
 void tarch::configuration::ConfigurationRegistry::addTopLevelConfiguration( TopLevelConfiguration* configuration ) {
-  assertion1( _topLevelTags.count(configuration->getTag())==0, configuration->getTag() );
+  assertion( _topLevelTags.count(configuration->getTag())==0, configuration->getTag() );
   _topLevelTags[ configuration->getTag() ] = configuration;
 }
 

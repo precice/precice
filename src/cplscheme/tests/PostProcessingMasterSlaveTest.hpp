@@ -65,6 +65,8 @@ private:
     */
    void testVIQNIMVJpp();
 
+   void testIMVJ_effUpdate_pp();
+
 # endif // not PRECICE_NO_MPI
 };
 

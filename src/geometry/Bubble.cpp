@@ -34,7 +34,7 @@ void Bubble:: specializedCreate
   preciceTrace ( "specializedCreate()" );
   using namespace mesh;
   int dimensions = seed.getDimensions();
-  assertion1 ( (dimensions == 2) || (dimensions == 3), dimensions );
+  assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
   if ( dimensions == 2 ){
     double currentRadius = _radius * (1.0 - _deformation / 4.0 + _deformation * 0.5
                            * (3.0 * std::pow(std::cos (0.0),2) - 1.0) );

@@ -166,7 +166,7 @@ void SocketCommunicationTest:: testParallelClient()
       validateEquals ( receiveMsg, 1 );
     }
     else {
-      assertion1 ( rank == 2, rank );
+      assertion ( rank == 2, rank );
       com.receive ( receiveMsg, 0 );
       validateEquals ( receiveMsg, 2 );
     }

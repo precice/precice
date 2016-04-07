@@ -9,7 +9,7 @@
  */
 
 #include "tarch/argument/ArgumentSetFabric.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 #include <sstream>
 
 using namespace tarch::argument;
@@ -55,7 +55,7 @@ void ArgumentSetFabric::printAllPossibleConfigurationsAndExit() {
   std::stringstream ss;
   ss << "ERROR! ArgumentSet not found!! Available configurations:\n";
   print(ss);
-  assertionFail(ss.str());
+  assertion(false, ss.str());
   _log.error("getArgumentSet",ss.str());
   exit(ASSERTION_EXIT_CODE);
 }

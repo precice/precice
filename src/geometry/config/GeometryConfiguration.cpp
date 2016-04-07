@@ -137,7 +137,7 @@ void GeometryConfiguration:: setDimensions
   int dimensions )
 {
   preciceTrace1("setDimensions()", dimensions);
-  assertion1((dimensions == 2) || (dimensions == 3), dimensions);
+  assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
@@ -247,7 +247,7 @@ void GeometryConfiguration:: xmlEndTagCallback
   preciceTrace1 ( "xmlEndTagCallback()", tag.getFullName() );
   if (tag.getNamespace() == TAG ) {
     assertion(not _readData.noReadData);
-    assertion2(_readData.type == tag.getName(), _readData.type, tag.getName());
+    assertion(_readData.type == tag.getName(), _readData.type, tag.getName());
     if (tag.getName() == VALUE_BUILTIN_CUBOID){
       addCuboid();
     }

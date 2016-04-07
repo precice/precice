@@ -61,7 +61,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
   // Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
   boost::array<double,2> barycentricCoords;
   int dimensions = edge.getDimensions();
-  assertion1 ( (dimensions == 2) || (dimensions == 3), dimensions );
+  assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
   utils::DynVector projected(dimensions, 0.0);
   bool collinear = false;
   using utils::Vector2D; using utils::Vector3D;
@@ -88,7 +88,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
     }
   }
   else { // 3D
-    assertion1 ( dimensions == 3, dimensions );
+    assertion ( dimensions == 3, dimensions );
     // Get parameters for parametric triangle representation: p(s) = a + s(b-a)
     Vector3D a3D = edge.vertex(0).getCoords();
     Vector3D b3D = edge.vertex(1).getCoords();
@@ -122,7 +122,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
         indices[1] = 2;
       }
       else {
-        assertion1 ( indexToRemove == 2, indexToRemove );
+        assertion ( indexToRemove == 2, indexToRemove );
         indices[0] = 0;
         indices[1] = 1;
       }
@@ -139,7 +139,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
   if ( not collinear ){
     // Compute denominator for solving 2x2 equation system
     double D = a(0)*(d(1)-c(1)) + b(0)*(c(1)-d(1)) + d(0)*ab(1) - c(0)*ab(1);
-    assertion5 ( not tarch::la::equals(D, 0.0), a, b, c, d, ab );   // D == 0 would imply "normal // edge"
+    assertion ( not tarch::la::equals(D, 0.0), a, b, c, d, ab );   // D == 0 would imply "normal // edge"
 
     // Compute triangle segment parameter s, which is in [0, 1], if the
     // intersection point is within the triangle.

@@ -40,7 +40,7 @@ protected:
   /// @brief Returns all data (receive and send)
   DataMap& getAllData()
     {
-      assertion1(!doesFirstStep(), "Only the second participant should do the post processing." );
+      assertion(!doesFirstStep(), "Only the second participant should do the post processing." );
       return _allData;
     }
 

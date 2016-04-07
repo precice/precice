@@ -12,7 +12,7 @@
 #include "tarch/la/VectorVectorOperations.h"
 #include "tarch/la/VectorScalarOperations.h"
 #include "tarch/la/VectorAssign.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 namespace tarch {
   namespace la {

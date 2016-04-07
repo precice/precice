@@ -64,7 +64,7 @@ template<typename Scalar>
 const DynamicVector<Scalar>& DynamicColumnMatrix<Scalar>::column (
   int colIndex
 ) const {
-  assertion2 ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())), colIndex, _columnVectors.size());
+  assertion ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())), colIndex, _columnVectors.size());
   return _columnVectors[colIndex];
 }
 
@@ -72,7 +72,7 @@ template<typename Scalar>
 DynamicVector<Scalar>& DynamicColumnMatrix<Scalar>::column (
   int colIndex
 ) {
-  assertion2 ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())), colIndex, _columnVectors.size());
+  assertion ((colIndex >= 0) && (colIndex < static_cast<int>(_columnVectors.size())), colIndex, _columnVectors.size());
   return _columnVectors[colIndex];
 }
 

@@ -716,7 +716,7 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
     connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
   }
   else {
-    assertion1(utils::Parallel::getProcessRank() == 2,
+    assertion(utils::Parallel::getProcessRank() == 2,
                utils::Parallel::getProcessRank());
     localParticipant = nameParticipant2;
     connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
@@ -809,7 +809,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
     validate(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
   }
   else {
-    assertion1(participantName == std::string("Participant2"), participantName);
+    assertion(participantName == std::string("Participant2"), participantName);
     cplScheme->initialize(0.0, 1);
     validate(cplScheme->hasDataBeenExchanged());
     validateEquals(cplScheme->isCouplingTimestepComplete(), false);

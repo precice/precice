@@ -40,8 +40,8 @@ void SerialCouplingScheme::initialize
 {
   preciceTrace2("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
-  assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
-  assertion1(startTimestep >= 0, startTimestep);
+  assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
+  assertion(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
 

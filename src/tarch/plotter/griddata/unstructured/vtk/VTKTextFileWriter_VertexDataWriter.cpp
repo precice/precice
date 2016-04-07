@@ -40,8 +40,8 @@ tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataWriter
 
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataWriter::close() {
-  assertionEquals2( _lastWriteCommandVertexNumber, _myWriter._numberOfVertices-1, _dataIdentifier, "perhaps not all vertices were assigned data (holds if _myWriter._numberOfVertices is bigger than local attribute)" );
-  assertionMsg( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer for value " << _dataIdentifier );
+  assertion( _lastWriteCommandVertexNumber==_myWriter._numberOfVertices-1, _dataIdentifier, "perhaps not all vertices were assigned data (holds if _myWriter._numberOfVertices is bigger than local attribute)" );
+  assertion( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer for value " << _dataIdentifier );
 
   if (_lastWriteCommandVertexNumber>=-1) {
     _out << std::endl;
@@ -55,8 +55,8 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
   assertion(_lastWriteCommandVertexNumber>=-1);
   assertion(1<=_recordsPerVertex);
 
-  assertion2( value != std::numeric_limits<double>::infinity(), index, value);
-  assertion2( value == value, index, value);  // test for not a number
+  assertion( value != std::numeric_limits<double>::infinity(), index, value);
+  assertion( value == value, index, value);  // test for not a number
 
   while (_lastWriteCommandVertexNumber<index-1) {
     plotVertex(_lastWriteCommandVertexNumber+1,0.0);
@@ -79,11 +79,11 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
   assertion(_lastWriteCommandVertexNumber>=-1);
   assertion(2<=_recordsPerVertex);
 
-  assertion1( value(0) != std::numeric_limits<double>::infinity(), value(0) );
-  assertion1( value(0) == value(0), value(0) );  // test for not a number
+  assertion( value(0) != std::numeric_limits<double>::infinity(), value(0) );
+  assertion( value(0) == value(0), value(0) );  // test for not a number
 
-  assertion1( value(1) != std::numeric_limits<double>::infinity(), value(1) );
-  assertion1( value(1) == value(1), value(1) );  // test for not a number
+  assertion( value(1) != std::numeric_limits<double>::infinity(), value(1) );
+  assertion( value(1) == value(1), value(1) );  // test for not a number
 
   while (_lastWriteCommandVertexNumber<index-1) {
     plotVertex(_lastWriteCommandVertexNumber+1,0.0);
@@ -108,14 +108,14 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexDataW
   assertion(_lastWriteCommandVertexNumber>=-1);
   assertion(3<=_recordsPerVertex);
 
-  assertion1( value(0) != std::numeric_limits<double>::infinity(), value(0) );
-  assertion1( value(0) == value(0), value(0) );  // test for not a number
+  assertion( value(0) != std::numeric_limits<double>::infinity(), value(0) );
+  assertion( value(0) == value(0), value(0) );  // test for not a number
 
-  assertion1( value(1) != std::numeric_limits<double>::infinity(), value(1) );
-  assertion1( value(1) == value(1), value(1) );  // test for not a number
+  assertion( value(1) != std::numeric_limits<double>::infinity(), value(1) );
+  assertion( value(1) == value(1), value(1) );  // test for not a number
 
-  assertion1( value(2) != std::numeric_limits<double>::infinity(), value(2) );
-  assertion1( value(2) == value(2), value(2) );  // test for not a number
+  assertion( value(2) != std::numeric_limits<double>::infinity(), value(2) );
+  assertion( value(2) == value(2), value(2) );  // test for not a number
 
   while (_lastWriteCommandVertexNumber<index-1) {
     plotVertex(_lastWriteCommandVertexNumber+1,0.0);

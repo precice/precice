@@ -49,7 +49,7 @@ void DynamicOctree:: initialize()
       query::FindVoxelContent::INCLUDE_BOUNDARY );
   int size = 0;
   for (mesh::PtrMesh mesh : _meshes){
-    assertion2(mesh->getDimensions() == dim, mesh->getDimensions(), dim);
+    assertion(mesh->getDimensions() == dim, mesh->getDimensions(), dim);
     size += mesh->content().size();
     findVoxel(*mesh);
   }

@@ -126,7 +126,7 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
 
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
-  assertion2(vec1.size()==vec2.size(), vec1.size(), vec2.size());
+  assertion(vec1.size()==vec2.size(), vec1.size(), vec2.size());
   double localSum = 0.0;
   double globalSum = 0.0;
 
@@ -166,7 +166,7 @@ double MasterSlave:: dot(const EigenVector& vec1, const EigenVector& vec2)
 
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
-  assertion2(vec1.size()==vec2.size(), vec1.size(), vec2.size());
+  assertion(vec1.size()==vec2.size(), vec1.size(), vec2.size());
   double localSum = 0.0;
   double globalSum = 0.0;
 

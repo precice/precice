@@ -1,7 +1,8 @@
 #pragma once
 
-#include "tarch/Assertions.h"
+#include "MasterSlave.hpp"
 
+#include "utils/assertion.hpp"
 
 #include "logging/LogMacros.hpp"
 #include "LogMacros.hpp"

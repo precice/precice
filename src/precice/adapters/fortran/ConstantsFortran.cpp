@@ -6,7 +6,7 @@ extern"C" {
 #include "ConstantsFortran.hpp"
 }
 #include "precice/Constants.hpp"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 void precicef_name_config_
 (
@@ -14,7 +14,7 @@ void precicef_name_config_
   int lengthNameConfig )
 {
   const std::string& name = precice::constants::nameConfiguration();
-  assertion2(name.size() < (size_t) lengthNameConfig, name.size(), lengthNameConfig);
+  assertion(name.size() < (size_t) lengthNameConfig, name.size(), lengthNameConfig);
   for (size_t i=0; i < name.size(); i++){
     nameConfig[i] = name[i];
   }
@@ -26,7 +26,7 @@ void precicef_action_write_iter_checkp_
   int lengthNameAction )
 {
   const std::string& name = precice::constants::actionWriteIterationCheckpoint();
-  assertion2(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
   for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
@@ -37,7 +37,7 @@ void precicef_action_write_initial_data_(
   int lengthNameAction )
 {
   const std::string& name = precice::constants::actionWriteInitialData();
-  assertion2(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
   for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
@@ -49,7 +49,7 @@ void precicef_action_read_iter_checkp_
   int lengthNameAction )
 {
   const std::string& name = precice::constants::actionReadIterationCheckpoint();
-  assertion2(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
   for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
@@ -62,7 +62,7 @@ void precicef_action_write_sim_checkp_
   int lengthNameAction )
 {
   const std::string& name = precice::constants::actionWriteSimulationCheckpoint();
-  assertion2(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
   for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }
@@ -74,7 +74,7 @@ void precicef_action_read_sim_checkp_
   int lengthNameAction )
 {
   const std::string& name = precice::constants::actionReadSimulationCheckpoint();
-  assertion2(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
+  assertion(name.size() < (size_t) lengthNameAction, name.size(), lengthNameAction);
   for (size_t i=0; i < name.size(); i++){
     nameAction[i] = name[i];
   }

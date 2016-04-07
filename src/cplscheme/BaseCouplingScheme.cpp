@@ -670,7 +670,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
     for (DataMap::value_type& pair : data) {
       int cols = pair.second->oldValues.cols();
       preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
-      assertion1(cols <= 1, cols);
+      assertion(cols <= 1, cols);
       utils::append( pair.second->oldValues,
             (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values->size(), _extrapolationOrder + 1 - cols));
     }

@@ -69,7 +69,7 @@ public:
 
   OctreeCell& child ( int index )
   {
-    assertion2 ( (index >= 0) && (index < (int)_childs.size()), index, _childs.size() );
+    assertion ( (index >= 0) && (index < (int)_childs.size()), index, _childs.size() );
     return _childs[index];
   }
 

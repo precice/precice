@@ -361,7 +361,7 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
       assertion(false);
     }
     else {
-      assertion1(false,_config.type);
+      assertion(false,_config.type);
     }
   }
 }
@@ -1011,7 +1011,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
         }
         index++;
       }
-      assertion2(index < _config.participants.size(), index, _config.participants.size());
+      assertion(index < _config.participants.size(), index, _config.participants.size());
       scheme.addDataToSend(data, mesh, initialize, index);
     }
     else {
@@ -1023,7 +1023,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
         }
         index++;
       }
-      assertion2(index < _config.participants.size(), index, _config.participants.size());
+      assertion(index < _config.participants.size(), index, _config.participants.size());
       scheme.addDataToReceive(data, mesh, initialize, index);
     }
   }

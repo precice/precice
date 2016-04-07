@@ -32,7 +32,7 @@ void Sphere:: specializedCreate
   preciceTrace ( "specializedCreate()" );
   using namespace mesh;
   int dimensions = seed.getDimensions();
-  assertion1 ( (dimensions == 2) || (dimensions == 3), dimensions );
+  assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
   if ( dimensions == 2 ){
     utils::Vector2D start(0.0);
     start(0) += _radius;

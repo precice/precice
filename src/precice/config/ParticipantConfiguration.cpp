@@ -77,7 +77,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   _participants(),
   _watchPointConfigs()
 {
-  //assertion1 ( (_dimensions == 2) || (_dimensions == 3), _dimensions );
+  //assertion ( (_dimensions == 2) || (_dimensions == 3), _dimensions );
   assertion(_meshConfig.use_count() > 0);
   using namespace utils;
   std::string doc;
@@ -361,7 +361,7 @@ void ParticipantConfiguration:: setDimensions
   int dimensions )
 {
   preciceTrace1("setDimensions()", dimensions);
-  assertion1((dimensions == 2) || (dimensions == 3), dimensions);
+  assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 

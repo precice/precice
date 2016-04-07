@@ -170,7 +170,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   tpreciceTrace("computeMapping()");
   precice::utils::Event e(__func__);
 
-  assertion2(input()->getDimensions() == output()->getDimensions(),
+  assertion(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
   int dimensions = input()->getDimensions();
   mesh::PtrMesh inMesh;
@@ -490,7 +490,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   tpreciceTrace2("map()", inputDataID, outputDataID);
 
   assertion(_hasComputedMapping);
-  assertion2(input()->getDimensions() == output()->getDimensions(),
+  assertion(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
   using namespace tarch::la;
   PetscErrorCode ierr = 0;
@@ -499,7 +499,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   auto& outValues = output()->data(outputDataID)->values();
 
   int valueDim = input()->data(inputDataID)->getDimensions();
-  assertion2(valueDim == output()->data(outputDataID)->getDimensions(),
+  assertion(valueDim == output()->data(outputDataID)->getDimensions(),
              valueDim, output()->data(outputDataID)->getDimensions());
   int deadDimensions = 0;
   for (int d=0; d<getDimensions(); d++) {

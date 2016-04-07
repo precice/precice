@@ -70,7 +70,7 @@ void FileCommunication:: acceptConnection
   preciceTrace2 ( "acceptConnection()", nameAcceptor, nameRequester );
   _nameLocal = nameAcceptor;
   _nameRemote = nameRequester;
-  assertion2 ( (acceptorProcessRank >= 0) && (acceptorProcessRank <= acceptorCommunicatorSize),
+  assertion ( (acceptorProcessRank >= 0) && (acceptorProcessRank <= acceptorCommunicatorSize),
                acceptorProcessRank, acceptorCommunicatorSize );
   _localRank = acceptorProcessRank;
   remove ( getReceiveFilename(true,0,0).c_str() ); // To cleanup
@@ -95,7 +95,7 @@ void FileCommunication:: requestConnection
   preciceTrace2 ( "requestConnection()", nameAcceptor, nameRequester );
   _nameLocal = nameRequester;
   _nameRemote = nameAcceptor;
-  assertion2 ( (requesterProcessRank >= 0) && (requesterProcessRank <= requesterCommunicatorSize),
+  assertion ( (requesterProcessRank >= 0) && (requesterProcessRank <= requesterCommunicatorSize),
                 requesterProcessRank, requesterCommunicatorSize );
   _localRank = requesterProcessRank;
   remove ( getSendFilename(false,0,0).c_str() ); // To cleanup
@@ -125,8 +125,8 @@ void FileCommunication:: startSendPackage
   int rankReceiver )
 {
   preciceTrace ( "startSendPackage()" );
-  assertion1 ( _currentPackageRank == -1, _currentPackageRank );
-  assertion1 ( rankReceiver >= 0, rankReceiver );
+  assertion ( _currentPackageRank == -1, _currentPackageRank );
+  assertion ( rankReceiver >= 0, rankReceiver );
   _currentPackageRank = rankReceiver;
   int sendIndex;
   std::map<int,int>::iterator iter  =_sendIndices.find(rankReceiver);
@@ -150,7 +150,7 @@ void FileCommunication:: finishSendPackage()
   assertion ( _sendFile.is_open() );
   assertion ( _currentPackageRank != -1 );
   _sendFile.close ();
-  assertion1 ( utils::contained(_currentPackageRank, _sendIndices),
+  assertion ( utils::contained(_currentPackageRank, _sendIndices),
                _currentPackageRank );
   int sendIndex = _sendIndices[_currentPackageRank];
   makeSendFileAvailable ( _currentPackageRank, sendIndex );
@@ -162,8 +162,8 @@ int FileCommunication:: startReceivePackage
   int rankSender )
 {
   preciceTrace ( "startReceivePackage()" );
-  assertion1 ( _currentPackageRank == -1, _currentPackageRank );
-  assertion1 ( rankSender >= 0, rankSender );
+  assertion ( _currentPackageRank == -1, _currentPackageRank );
+  assertion ( rankSender >= 0, rankSender );
   _currentPackageRank = rankSender;
   int receiveIndex;
   std::map<int,int>::iterator iter  =_receiveIndices.find(rankSender);
@@ -189,7 +189,7 @@ void FileCommunication:: finishReceivePackage()
   assertion ( _receiveFile.is_open() );
   assertion ( _currentPackageRank != -1 );
   _receiveFile.close ();
-  assertion1 ( utils::contained(_currentPackageRank, _receiveIndices),
+  assertion ( utils::contained(_currentPackageRank, _receiveIndices),
                _currentPackageRank );
   int receiveIndex = _receiveIndices[_currentPackageRank];
   removeReceiveFile ( _currentPackageRank, receiveIndex );
@@ -303,7 +303,7 @@ void FileCommunication:: receive
   int size = 0;
   _receiveFile.read ( (char*)&size, sizeof(int) );
   preciceDebug ( "Size = " << size );
-  assertion1 ( size < 500, size );
+  assertion ( size < 500, size );
   char* message = new char[size];
   _receiveFile.read ( message, size );
   itemToReceive = message;
@@ -324,7 +324,7 @@ void FileCommunication:: receive
                  "Receive type is different than int*!" );
   int writtenSize = 0;
   _receiveFile.read ( (char*)&writtenSize, sizeof(int) );
-  assertion2 ( size == writtenSize, size, writtenSize );
+  assertion ( size == writtenSize, size, writtenSize );
   _receiveFile.read ( (char*)itemsToReceive, sizeof(int)*size );
 }
 
@@ -347,7 +347,7 @@ void FileCommunication:: receive
                  "Receive type is different than double*!" );
   int writtenSize = 0;
   _receiveFile.read ( (char*)&writtenSize, sizeof(int) );
-  assertion2 ( size == writtenSize, size, writtenSize );
+  assertion ( size == writtenSize, size, writtenSize );
   _receiveFile.read ( (char*)itemsToReceive, sizeof(double)*size );
 }
 

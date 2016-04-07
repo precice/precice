@@ -222,7 +222,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
     validateEquals ( cplScheme.isCouplingOngoing(), false );
   }
   else {
-    assertion1 ( localParticipant == std::string("participant1"), localParticipant );
+    assertion ( localParticipant == std::string("participant1"), localParticipant );
     cplScheme.initialize ( 0.0, 1 );
     validateEquals ( cplScheme.isCouplingTimestepComplete(), false );
     validateEquals ( cplScheme.isCouplingOngoing(), true );

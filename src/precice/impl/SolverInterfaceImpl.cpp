@@ -762,7 +762,7 @@ int SolverInterfaceImpl:: inquirePosition
         tempPos = meshContext->spacetree->searchPosition(searchPoint);
       }
       else {
-        assertion1(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
+        assertion(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
         query::FindClosest findClosest(searchPoint);
         findClosest(*(meshContext->mesh));
         assertion(findClosest.hasFound());
@@ -824,7 +824,7 @@ ClosestMesh SolverInterfaceImpl:: inquireClosestMesh
         meshContext->spacetree->searchDistance(findClosest);
       }
       else {
-        assertion1(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
+        assertion(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
         findClosest(*(meshContext->mesh));
       }
       assertion(findClosest.hasFound());
@@ -942,7 +942,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
     // The mesh does not have a spacetree
     else {
       tpreciceDebug("Query mesh directly");
-      assertion1(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
+      assertion(markedContexts[i] == markedQueryDirectly(), markedContexts[i]);
       //query::FindVoxelContent findVoxel(center, halflengths, boundaryInclude);
       findVoxel(*meshContext->mesh);
       // If the voxel does have content
@@ -1124,10 +1124,10 @@ void SolverInterfaceImpl:: getMeshVertices
     mesh::PtrMesh mesh(context.mesh);
     utils::DynVector internalPosition(_dimensions);
     tpreciceDebug("Get positions");
-    assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
+    assertion(mesh->vertices().size() <= size, mesh->vertices().size(), size);
     for (size_t i=0; i < size; i++){
       size_t id = ids[i];
-      assertion2(id < mesh->vertices().size(), mesh->vertices().size(), id);
+      assertion(id < mesh->vertices().size(), mesh->vertices().size(), id);
       internalPosition = mesh->vertices()[id].getCoords();
       for (int dim=0; dim < _dimensions; dim++){
         positions[id*_dimensions + dim] = internalPosition[dim];
@@ -1152,7 +1152,7 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
     tpreciceDebug("Get ids");
     utils::DynVector internalPosition(_dimensions);
     utils::DynVector position(_dimensions);
-    assertion2(mesh->vertices().size() <= size, mesh->vertices().size(), size);
+    assertion(mesh->vertices().size() <= size, mesh->vertices().size(), size);
     for (size_t i=0; i < size; i++){
       for (int dim=0; dim < _dimensions; dim++){
         position[dim] = positions[i*_dimensions+dim];
@@ -1192,11 +1192,11 @@ int SolverInterfaceImpl:: setMeshEdge
     if ( context.meshRequirement == mapping::Mapping::FULL ){
       tpreciceDebug("Full mesh required.");
       mesh::PtrMesh& mesh = context.mesh;
-      assertion1(firstVertexID >= 0, firstVertexID);
-      assertion1(secondVertexID >= 0, secondVertexID);
-      assertion2(firstVertexID < (int)mesh->vertices().size(),
+      assertion(firstVertexID >= 0, firstVertexID);
+      assertion(secondVertexID >= 0, secondVertexID);
+      assertion(firstVertexID < (int)mesh->vertices().size(),
                  firstVertexID, mesh->vertices().size());
-      assertion2(secondVertexID < (int)mesh->vertices().size(),
+      assertion(secondVertexID < (int)mesh->vertices().size(),
                  secondVertexID, mesh->vertices().size());
       mesh::Vertex& v0 = mesh->vertices()[firstVertexID];
       mesh::Vertex& v1 = mesh->vertices()[secondVertexID];
@@ -1259,14 +1259,14 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::FULL){
     mesh::PtrMesh& mesh = context.mesh;
-    assertion1(firstVertexID >= 0, firstVertexID);
-    assertion1(secondVertexID >= 0, secondVertexID);
-    assertion1(thirdVertexID >= 0, thirdVertexID);
-    assertion2((int)mesh->vertices().size() > firstVertexID,
+    assertion(firstVertexID >= 0, firstVertexID);
+    assertion(secondVertexID >= 0, secondVertexID);
+    assertion(thirdVertexID >= 0, thirdVertexID);
+    assertion((int)mesh->vertices().size() > firstVertexID,
                 mesh->vertices().size(), firstVertexID);
-    assertion2((int)mesh->vertices().size() > secondVertexID,
+    assertion((int)mesh->vertices().size() > secondVertexID,
                 mesh->vertices().size(), secondVertexID);
-    assertion2((int)mesh->vertices().size() > thirdVertexID,
+    assertion((int)mesh->vertices().size() > thirdVertexID,
                  mesh->vertices().size(), thirdVertexID);
     mesh::Vertex* vertices[3];
     vertices[0] = &mesh->vertices()[firstVertexID];
@@ -1391,17 +1391,17 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   MeshContext& context = _accessor->meshContext(meshID);
   if (context.meshRequirement == mapping::Mapping::FULL){
     mesh::PtrMesh& mesh = context.mesh;
-    assertion1(firstVertexID >= 0, firstVertexID);
-    assertion1(secondVertexID >= 0, secondVertexID);
-    assertion1(thirdVertexID >= 0, thirdVertexID);
-    assertion1(fourthVertexID >= 0, fourthVertexID);
-    assertion2((int)mesh->vertices().size() > firstVertexID,
+    assertion(firstVertexID >= 0, firstVertexID);
+    assertion(secondVertexID >= 0, secondVertexID);
+    assertion(thirdVertexID >= 0, thirdVertexID);
+    assertion(fourthVertexID >= 0, fourthVertexID);
+    assertion((int)mesh->vertices().size() > firstVertexID,
                  mesh->vertices().size(), firstVertexID);
-    assertion2((int)mesh->vertices().size() > secondVertexID,
+    assertion((int)mesh->vertices().size() > secondVertexID,
                  mesh->vertices().size(), secondVertexID);
-    assertion2((int)mesh->vertices().size() > thirdVertexID,
+    assertion((int)mesh->vertices().size() > thirdVertexID,
                  mesh->vertices().size(), thirdVertexID);
-    assertion2((int)mesh->vertices().size() > fourthVertexID,
+    assertion((int)mesh->vertices().size() > fourthVertexID,
                  mesh->vertices().size(), fourthVertexID);
     mesh::Vertex* vertices[4];
     vertices[0] = &mesh->vertices()[firstVertexID];
@@ -1593,7 +1593,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
       int offsetInternal = valueIndices[i]*_dimensions;
       int offset = i*_dimensions;
       for (int dim=0; dim < _dimensions; dim++){
-        assertion2(offset+dim < valuesInternal.size(),
+        assertion(offset+dim < valuesInternal.size(),
                    offset+dim, valuesInternal.size());
         valuesInternal[offsetInternal + dim] = values[offset + dim];
       }
@@ -1627,7 +1627,7 @@ void SolverInterfaceImpl:: writeVectorData
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.get() != nullptr);
     auto& values = context.fromData->values();
-    assertion1(valueIndex >= 0, valueIndex);
+    assertion(valueIndex >= 0, valueIndex);
     int offset = valueIndex * _dimensions;
     for (int dim=0; dim < _dimensions; dim++){
       values[offset+dim] = value[dim];
@@ -1658,7 +1658,7 @@ void SolverInterfaceImpl:: writeBlockScalarData
     assertion(context.toData.get() != nullptr);
     auto& valuesInternal = context.fromData->values();
     for (int i=0; i < size; i++){
-      assertion2(i < valuesInternal.size(), i, valuesInternal.size());
+      assertion(i < valuesInternal.size(), i, valuesInternal.size());
       valuesInternal[valueIndices[i]] = values[i];
     }
   }
@@ -1682,7 +1682,7 @@ void SolverInterfaceImpl:: writeScalarData
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.use_count() > 0);
     auto& values = context.fromData->values();
-    assertion1(valueIndex >= 0, valueIndex);
+    assertion(valueIndex >= 0, valueIndex);
     values[valueIndex] = value;
 
   }
@@ -1713,7 +1713,7 @@ void SolverInterfaceImpl:: readBlockVectorData
       int offsetInternal = valueIndices[i] * _dimensions;
       int offset = i * _dimensions;
       for (int dim=0; dim < _dimensions; dim++){
-        assertion2(offsetInternal+dim < valuesInternal.size(),
+        assertion(offsetInternal+dim < valuesInternal.size(),
                    offsetInternal+dim, valuesInternal.size());
         values[offset + dim] = valuesInternal[offsetInternal + dim];
       }
@@ -1739,7 +1739,7 @@ void SolverInterfaceImpl:: readVectorData
     DataContext& context = _accessor->dataContext(toDataID);
     assertion(context.fromData.use_count() > 0);
     auto& values = context.toData->values();
-    assertion1 (valueIndex >= 0, valueIndex);
+    assertion (valueIndex >= 0, valueIndex);
     int offset = valueIndex * _dimensions;
     for (int dim=0; dim < _dimensions; dim++){
       value[dim] = values[offset + dim];
@@ -1775,7 +1775,7 @@ void SolverInterfaceImpl:: readBlockScalarData
     assertion(context.fromData.get() != nullptr);
     auto& valuesInternal = context.toData->values();
     for (int i=0; i < size; i++){
-      assertion2(valueIndices[i] < valuesInternal.size(),
+      assertion(valueIndices[i] < valuesInternal.size(),
                valueIndices[i], valuesInternal.size());
       values[i] = valuesInternal[valueIndices[i]];
     }
@@ -1893,7 +1893,7 @@ void SolverInterfaceImpl:: configureM2Ns
           if (participant->useServer()){
             comPartner += "Server";
           }
-          assertion1(not utils::contained(comPartner, _m2ns), comPartner);
+          assertion(not utils::contained(comPartner, _m2ns), comPartner);
           assertion(boost::get<0>(m2nTuple).use_count() > 0);
           M2NWrap m2nWrap;
           m2nWrap.m2n = boost::get<0>(m2nTuple);
@@ -2300,7 +2300,7 @@ void SolverInterfaceImpl:: selectInquiryMeshIDs
   std::vector<int>&    markedMeshContexts ) const
 {
   tpreciceTrace1("selectInquiryMeshIDs()", meshIDs.size());
-  assertion2(markedMeshContexts.size() == _accessor->usedMeshContexts().size(),
+  assertion(markedMeshContexts.size() == _accessor->usedMeshContexts().size(),
              markedMeshContexts.size(), _accessor->usedMeshContexts().size());
 
   if (meshIDs.empty()){ // All mesh IDs are used in inquiry

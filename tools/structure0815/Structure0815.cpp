@@ -60,7 +60,7 @@ Structure0815:: Structure0815
     _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity);
   }
   else {
-    assertion1(_dim == 3, _dim);
+    assertion(_dim == 3, _dim);
     precice::utils::Vector3D centerOfGravity(_centerOfGravity);
     _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity);
   }
@@ -204,7 +204,7 @@ void Structure0815:: timestep(double dt)
     _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity2D);
   }
   else {
-    assertion1(_dim == 3, _dim);
+    assertion(_dim == 3, _dim);
     precice::utils::Vector3D centerOfGravity3D(centerOfGravity);
     _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity3D);
   }
@@ -244,7 +244,7 @@ void Structure0815:: computeCharacteristics
     }
   }
   else {
-    assertion1(_dim == 3, _dim);
+    assertion(_dim == 3, _dim);
     DynVector coords0(zero);
     DynVector coords1(zero);
     DynVector coords2(zero);

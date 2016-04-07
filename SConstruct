@@ -120,6 +120,8 @@ if not conf.CheckCXX():
 
 # ====== Build Directories ======
 if env["build"] == 'debug':
+    # The Assert define does not actually switches asserts on/off, these are controlled by NDEBUG.
+    # It's kept in place for some legacy code.
     env.Append(CPPDEFINES = ['Debug', 'Asserts'])
     env.Append(CCFLAGS = ['-g3', '-O0'])
     env.Append(LINKFLAGS = ["-rdynamic"]) # Gives more informative backtraces

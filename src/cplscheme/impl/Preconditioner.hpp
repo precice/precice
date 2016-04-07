@@ -106,7 +106,7 @@ public:
     preciceTrace(__func__);
     assertion(_needsGlobalWeights);
     if(transpose){
-      assertion2(M.cols()==(int)_weights.size(), M.cols(), _weights.size());
+      assertion(M.cols()==(int)_weights.size(), M.cols(), _weights.size());
       for(int i=0; i<M.cols(); i++){
         for(int j=0; j<M.rows(); j++){
           M(j,i) *= _weights[i];
@@ -115,7 +115,7 @@ public:
     }
     else{
       if(squared){
-        assertion2(M.rows()==(int)_globalWeights.size(), M.rows(), (int)_globalWeights.size());
+        assertion(M.rows()==(int)_globalWeights.size(), M.rows(), (int)_globalWeights.size());
         for(int i=0; i<M.cols(); i++){
           for(int j=0; j<M.rows(); j++){
             M(j,i) *= _globalWeights[j];
@@ -124,7 +124,7 @@ public:
 
       // flat and long matrix, (m x n_local) no global weights needed
       }else{
-        assertion2(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
+        assertion(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
         for(int i=0; i<M.cols(); i++){
           for(int j=0; j<M.rows(); j++){
             M(j,i) *= _weights[j];
@@ -156,7 +156,7 @@ public:
     }
     else {
       if (squared) {
-        assertion2(M.rows()==(int)_globalInvWeights.size(), M.rows(), (int)_globalInvWeights.size());
+        assertion(M.rows()==(int)_globalInvWeights.size(), M.rows(), (int)_globalInvWeights.size());
         for (int i = 0; i < M.cols(); i++) {
           for (int j = 0; j < M.rows(); j++) {
             M(j, i) *= _globalInvWeights[j];
@@ -165,7 +165,7 @@ public:
 
         // flat and long matrix, (m x n_local) no global weights needed
       } else {
-        assertion2(M.rows()==(int)_invWeights.size(), M.rows(), (int)_invWeights.size());
+        assertion(M.rows()==(int)_invWeights.size(), M.rows(), (int)_invWeights.size());
         for (int i = 0; i < M.cols(); i++) {
           for (int j = 0; j < M.rows(); j++) {
             M(j, i) *= _invWeights[j];
@@ -227,7 +227,7 @@ public:
     void apply(Eigen::MatrixXd& M){
       preciceTrace("apply()");
 
-      assertion2(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
+      assertion(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
 
       // scale matrix M
       for(int i=0; i<M.cols(); i++){
@@ -426,7 +426,7 @@ protected:
           offset += slaveWeights.size();
         }
       }
-      assertion2(offset==(int)_globalWeights.size(),offset, (int)_globalWeights.size());
+      assertion(offset==(int)_globalWeights.size(),offset, (int)_globalWeights.size());
 
       utils::MasterSlave::_communication->broadcast(_globalWeights.data(),_globalWeights.size());
       utils::MasterSlave::_communication->broadcast(_globalInvWeights.data(),_globalWeights.size());

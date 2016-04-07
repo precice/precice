@@ -2,7 +2,7 @@
 // This file is part of the preCICE project. For conditions of distribution and
 // use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "String.hpp"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 #include "boost/algorithm/string/split.hpp"
 #include "boost/algorithm/string/classification.hpp"
 

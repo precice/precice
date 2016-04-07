@@ -142,7 +142,7 @@ public:
   template<typename VECTOR_T>
   Vertex& createVertex ( const VECTOR_T& coords )
   {
-    assertion2(coords.size() == _dimensions, coords.size(), _dimensions);
+    assertion(coords.size() == _dimensions, coords.size(), _dimensions);
     Vertex* newVertex = new Vertex(coords, _manageVertexIDs.getFreeID(), *this);
     newVertex->addParent(*this);
     _content.add(newVertex);

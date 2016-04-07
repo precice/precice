@@ -43,16 +43,16 @@ VectorAssignList<Vector>::~VectorAssignList()
 {
   // Assert, that the number of assigned components equals the vectors size
   #ifdef Parallel
-  assertionEquals2( _index, Traits::size(_vector), _vector, tarch::parallel::Node::getInstance().getRank() );
+  assertion(_index ==Traits::size(_vector), _vector, tarch::parallel::Node::getInstance().getRank() );
   #else
-  assertionEquals1( _index, Traits::size(_vector), _vector );
+  assertion( _index==Traits::size(_vector), _vector );
   #endif
 }
 
 template<typename Vector>
 VectorAssignList<Vector> & VectorAssignList<Vector>::operator= (const typename Traits::Scalar & toAssign)
 {
-  assertion1 ( _index < Traits::size(_vector), _vector );
+  assertion ( _index < Traits::size(_vector), _vector );
   Traits::elem(_index, _vector) = toAssign;
   _index ++;
   return *this;
@@ -61,7 +61,7 @@ VectorAssignList<Vector> & VectorAssignList<Vector>::operator= (const typename T
 template<typename Vector>
 VectorAssignList<Vector> & VectorAssignList<Vector>::operator, (const typename Traits::Scalar & toAssign)
 {
-  assertion1 ( _index < Traits::size(_vector), _vector );
+  assertion ( _index < Traits::size(_vector), _vector );
   Traits::elem(_index, _vector) = toAssign;
   _index ++;
   return *this;

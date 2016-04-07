@@ -29,9 +29,9 @@ tarch::logging::Log FindVoxelContent:: _log ( "precice::query::FindVoxelContent"
 //  _dimensions ( voxelCenter.size() ),
 //  _content ()
 //{
-//  assertion2 ( voxelCenter.size() == halflengths.size(),
+//  assertion ( voxelCenter.size() == halflengths.size(),
 //               voxelCenter.size(), halflengths.size() );
-//  assertion1 ( (_dimensions == 2) || (_dimensions == 3), _dimensions );
+//  assertion ( (_dimensions == 2) || (_dimensions == 3), _dimensions );
 //}
 
 //void FindVoxelContent:: setVoxelCenter
@@ -78,7 +78,7 @@ void FindVoxelContent:: checkVertex
   mesh::Vertex& vertex )
 {
   using namespace tarch::la;
-  assertion2(vertex.getDimensions() == _dimensions, vertex.getDimensions(),
+  assertion(vertex.getDimensions() == _dimensions, vertex.getDimensions(),
              _dimensions);
   utils::DynVector toVertex = vertex.getCoords();
   toVertex -= _voxelCenter;
@@ -111,7 +111,7 @@ void FindVoxelContent:: checkEdge
   using utils::Vector3D;
   using utils::Vector2D;
   using utils::DynVector;
-  assertion2(edge.getDimensions() == _dimensions, edge.getDimensions(),
+  assertion(edge.getDimensions() == _dimensions, edge.getDimensions(),
              _dimensions);
 # ifdef PRECICE_OLD_QUERY
   DynVector toEdgeCenter = edge.getCenter();
@@ -229,7 +229,7 @@ void FindVoxelContent:: checkEdge
 #   endif // PRECIC_OLD_QUERY
   }
   else { // 3D
-    assertion1(_dimensions == 3, _dimensions);
+    assertion(_dimensions == 3, _dimensions);
 #   ifndef PRECICE_OLD_QUERY
     // Test if edge intersects with rectangle, using seperating axis theorem
     Vector3D a = edge.vertex(0).getCoords();
@@ -386,7 +386,7 @@ void FindVoxelContent:: checkTriangle
   mesh::Triangle& triangle )
 {
   tpreciceTrace2 ( "checkTriangle()", triangle.getID(), triangle.getCenter() );
-  assertion1 ( _dimensions == 3, _dimensions );
+  assertion ( _dimensions == 3, _dimensions );
   using namespace tarch::la;
   using utils::Vector3D;
   using utils::Vector2D;
@@ -926,7 +926,7 @@ bool FindVoxelContent:: computeIntersection
       indices[1] = 2;
     }
     else {
-      assertion1 ( squareNormalDirection == 2, squareNormalDirection );
+      assertion ( squareNormalDirection == 2, squareNormalDirection );
       indices[0] = 0;
       indices[1] = 1;
     }
@@ -981,7 +981,7 @@ bool FindVoxelContent:: computeIntersection
     indices[1] = 2;
   }
   else {
-    assertion1 ( squareNormalDirection == 3, squareNormalDirection );
+    assertion ( squareNormalDirection == 3, squareNormalDirection );
     indices[0] = 0;
     indices[1] = 1;
   }

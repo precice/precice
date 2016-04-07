@@ -17,7 +17,7 @@ PeanotreeCell2D:: PeanotreeCell2D()
   _position(Spacetree::positionUndefined()),
   _childs()
 {
-  exit(ASSERTION_EXIT_CODE); // Class implementation not yet finished!!
+  assertion(false, "Class implementation not yet finished!!");
 }
 
 PeanotreeCell2D:: ~PeanotreeCell2D()
@@ -51,7 +51,7 @@ void PeanotreeCell2D:: refine
 {
   tpreciceTrace2 ( "refine()", cellCenter, cellHalflengths );
   assertion ( _content != nullptr );
-  assertion1 ( _childs.size() == 0, _childs.size() );
+  assertion ( _childs.size() == 0, _childs.size() );
   int dim = cellCenter.size();
   utils::DynVector newCenter(dim);
   utils::DynVector newHalflengths(dim, 1.0 / 3.0 * cellHalflengths[0]);
@@ -79,9 +79,9 @@ int PeanotreeCell2D:: getChildIndex
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  assertion2 ( cellCenter.size() == cellHalflengths.size(),
+  assertion ( cellCenter.size() == cellHalflengths.size(),
                cellCenter.size(), cellHalflengths.size());
-  assertion2 ( cellCenter.size() == searchPoint.size(),
+  assertion ( cellCenter.size() == searchPoint.size(),
                cellCenter.size(), searchPoint.size());
   utils::DynVector halfspaces(searchPoint.size());
   for ( int i=0; i < searchPoint.size(); i++ ) {
@@ -136,7 +136,7 @@ void PeanotreeCell2D:: clear()
   _childs.deleteElements();
   _childs.clear();
   _position = Spacetree::positionUndefined();
-  assertion1 ( _childs.size() == 0, _childs.size() );
+  assertion ( _childs.size() == 0, _childs.size() );
   assertion ( _content->empty() );
 }
 

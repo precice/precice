@@ -64,7 +64,7 @@ void FileCommunicationTest:: testSimpleSendReceive()
     comTxt.finishSendPackage ();
   }
   else {
-    assertion1 ( rank == 1, rank );
+    assertion ( rank == 1, rank );
     comTxt.acceptConnection ( requester, acceptor, 0, 1 );
     validate ( comTxt.isConnected() );
     comTxt.startReceivePackage ( 0 );
@@ -110,7 +110,7 @@ void FileCommunicationTest:: testSimpleSendReceive()
     comBin.finishSendPackage();
   }
   else {
-    assertion1 ( rank == 1, rank );
+    assertion ( rank == 1, rank );
     comBin.acceptConnection ( requester, acceptor, 0, 1 );
     validate ( comBin.isConnected() );
     comBin.startReceivePackage ( 0 );
@@ -186,7 +186,7 @@ void FileCommunicationTest:: testMultipleExchanges()
     validate ( not com.isConnected() );
   }
   else {
-    assertion1 ( rank == 1, rank );
+    assertion ( rank == 1, rank );
     com.acceptConnection ( acceptor, requester, 0, 1 );
     validate ( com.isConnected() );
 
