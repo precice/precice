@@ -8,7 +8,6 @@
 #include "mesh/Data.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Dimensions.hpp"
-#include "logging/LogMakros.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mapping::tests::NearestNeighborMappingTest)

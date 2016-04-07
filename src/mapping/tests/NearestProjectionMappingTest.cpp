@@ -9,8 +9,6 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 
-#include "logging/LogMakros.hpp"
-
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mapping::tests::NearestProjectionMappingTest)
 

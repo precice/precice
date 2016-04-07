@@ -9,7 +9,6 @@
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "logging/LogMakros.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mapping::tests::MappingConfigurationTest)
