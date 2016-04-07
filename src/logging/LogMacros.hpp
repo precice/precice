@@ -42,11 +42,6 @@
     << message;                                                             \
   } while (false)
 
-/**
- * @brief Standard logging device used in macro preciceDebug.
- */
-#define PRECICE_LOGGING_DEVICE _log
-
 #ifdef Debug
 
 #include "Tracer.hpp"
@@ -148,17 +143,7 @@
 
 #endif // ! Debug
 
-/**
- * @brief Needed for macros exiting program execution, to empty logging cache.
- */
-//#ifdef _UTILS_LOG_H_
-//#define PRECICE_CLOSE_LOGGER precice::logging::Log::criticalAbort();
-//#else
-//#define PRECICE_CLOSE_LOGGER
-//#endif
 
-
-   
 #define preciceError(methodname, message) do                             \
   {                                                                       \
     LOG_LOCATION;                                                         \
