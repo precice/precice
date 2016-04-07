@@ -154,7 +154,10 @@ public:
   
   /// Returns a pair that mark the beginning and end of the matrix' ownership range.
   std::pair<PetscInt, PetscInt> ownerRange();
-
+  
+  /// Returns a pair that mark the beginning and end of the matrix' column ownership range.
+  std::pair<PetscInt, PetscInt> ownerRangeColumn();
+  
   /// Writes the matrix to PETSc the binary format
   void write(std::string filename);
 
