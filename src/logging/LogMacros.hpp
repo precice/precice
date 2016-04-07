@@ -42,7 +42,18 @@
     << message;                                                             \
   } while (false)
 
-#ifdef Debug
+#ifdef NDEBUG 
+
+//#define preciceDebug(methodname, message)
+#define preciceTrace(methodname)
+#define preciceTrace1(methodname, var1)
+#define preciceTrace2(methodname, var1, var2)
+#define preciceTrace3(methodname, var1, var2, var3)
+#define preciceTrace4(methodname, var1, var2, var3, var4)
+#define preciceTrace5(methodname, var1, var2, var3, var4, var5)
+#define preciceTrace6(methodname, var1, var2, var3, var4, var5, var6)
+
+#else // NDEBUG
 
 #include "Tracer.hpp"
 
@@ -130,18 +141,8 @@
     << "\n" << #var6 << " = " << var6;                                      \
   } while (false)
   
-#else // Debug
 
-//#define preciceDebug(methodname, message)
-#define preciceTrace(methodname)
-#define preciceTrace1(methodname, var1)
-#define preciceTrace2(methodname, var1, var2)
-#define preciceTrace3(methodname, var1, var2, var3)
-#define preciceTrace4(methodname, var1, var2, var3, var4)
-#define preciceTrace5(methodname, var1, var2, var3, var4, var5)
-#define preciceTrace6(methodname, var1, var2, var3, var4, var5, var6)
-
-#endif // ! Debug
+#endif // ! NDEBUG
 
 
 #define preciceError(methodname, message) do                             \
