@@ -3,7 +3,7 @@
 #include "tarch/Assertions.h"
 
 
-#include "logging/LogMakros.hpp"
+#include "logging/LogMacros.hpp"
 #include "LogMacros.hpp"
 
 #include <string>
