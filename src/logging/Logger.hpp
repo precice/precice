@@ -13,8 +13,12 @@ class Logger : public boost::log::sources::severity_logger<boost::log::trivial::
 {
 public:
   explicit Logger(std::string module);
-  };
+  
+};
+
 void setupLogging(std::string logConfigFile = "log.conf");
+
+/// Sets the current MPI rank as a logging attribute
 void setMPIRank(const int rank);
 
 }}// namespace precice, logging
