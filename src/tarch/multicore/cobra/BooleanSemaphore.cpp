@@ -2,7 +2,7 @@
 #include "mpi.h"
 #endif
 #include "tarch/multicore/BooleanSemaphore.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 #include "tarch/logging/Log.h"
 
 

@@ -55,10 +55,10 @@ QRFactorization::QRFactorization(
   _fstream_set(false),
   _globalRows(rows)
 {
-  assertion2(_R.rows() == _cols, _R.rows(), _cols);
-  assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
+  assertion(_R.rows() == _cols, _R.rows(), _cols);
+  assertion(_R.cols() == _cols, _R.cols(), _cols);
+  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
+  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
 }
 
 
@@ -90,11 +90,11 @@ QRFactorization::QRFactorization(
      EigenVector v = A.col(k);
      insertColumn(k,v);
   }
-  //assertion2(_R.rows() == _cols, _R.rows(), _cols);
-  assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
-  assertion2(_cols == m, _cols, m);
+  //assertion(_R.rows() == _cols, _R.rows(), _cols);
+  assertion(_R.cols() == _cols, _R.cols(), _cols);
+  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
+  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
+  assertion(_cols == m, _cols, m);
 }
 
 /**
@@ -139,7 +139,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 
 					// QR1-filter
 					if(index >= cols()) break;
-					assertion2(index < _cols, index, _cols);
+					assertion(index < _cols, index, _cols);
 					double factor = (_filter == PostProcessing::QR1FILTER_ABS) ? 1.0 : _R.norm();
 					if (std::fabs(_R(index, index)) < singularityLimit * factor) {
 
@@ -151,7 +151,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 						//break;
 						index--;  	// check same column index, as cols are shifted left
 					}
-					assertion2(delCols+_cols == (int)delFlag.size(), (delCols+_cols), delFlag.size());
+					assertion(delCols+_cols == (int)delFlag.size(), (delCols+_cols), delFlag.size());
 					index++;
 				}
 			}
@@ -187,8 +187,8 @@ void QRFactorization::deleteColumn(int k)
 
   preciceTrace("deleteColumn()");
 
-  assertion1(k >= 0, k);
-  assertion2(k < _cols, k, _cols);
+  assertion(k >= 0, k);
+  assertion(k < _cols, k, _cols);
   
   // maintain decomposition and orthogonalization by application of givens rotations
   
@@ -220,10 +220,10 @@ void QRFactorization::deleteColumn(int k)
   _Q.conservativeResize(_rows, _cols-1);
   _cols--;
   
-  assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
-  assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  //assertion2(_R.rows() == _cols, _Q.rows(), _cols);
+  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
+  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
+  assertion(_R.cols() == _cols, _R.cols(), _cols);
+  //assertion(_R.rows() == _cols, _Q.rows(), _cols);
 }
 
       
@@ -239,9 +239,9 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
   
   bool applyFilter = (singularityLimit > 0.0);
 
-  assertion1(k >= 0, k);
-  assertion2(k <= _cols, k, _cols);
-  assertion2(v.size() == _rows, v.size(), _rows);
+  assertion(k >= 0, k);
+  assertion(k <= _cols, k, _cols);
+  assertion(v.size() == _rows, v.size(), _rows);
   
   _cols++;
 
@@ -294,15 +294,15 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
     _R(j,j) = 0.;
   }
   
-  assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  //assertion2(_R.rows() == _cols, _R.rows(), _cols);
+  assertion(_R.cols() == _cols, _R.cols(), _cols);
+  //assertion(_R.rows() == _cols, _R.rows(), _cols);
   
   // resize Q(1:n, 1:m) -> Q(1:n, 1:m+1)
   _Q.conservativeResize(_rows, _cols);
   _Q.col(_cols-1) = v;
   
-  assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
+  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
+  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
   
   // maintain decomposition and orthogonalization by application of givens rotations
   for(int l=_cols-2; l>=k; l--)
@@ -349,9 +349,9 @@ int QRFactorization::orthogonalize(
    preciceTrace(__func__);
 
    if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
-     assertion2(_globalRows == _rows, _globalRows, _rows);
+     assertion(_globalRows == _rows, _globalRows, _rows);
    }else{
-     assertion3(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
+     assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
    }
 
    bool null = false;
@@ -469,10 +469,10 @@ int QRFactorization::orthogonalize_stable(
    // serial case
    if(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)
    {
-	   assertion2(_globalRows == _rows, _globalRows, _rows);
+	   assertion(_globalRows == _rows, _globalRows, _rows);
    // master-slave case
    }else{
-	   assertion3(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
+	   assertion(_globalRows != _rows, _globalRows, _rows, utils::MasterSlave::_rank);
    }
 
    bool restart = false;
@@ -750,10 +750,10 @@ void QRFactorization::reset(
   _theta = theta;
   _sigma = sigma;
   _globalRows = _rows;
-  assertion2(_R.rows() == _cols, _R.rows(), _cols);
-  assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
+  assertion(_R.rows() == _cols, _R.rows(), _cols);
+  assertion(_R.cols() == _cols, _R.cols(), _cols);
+  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
+  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
 }
 
 void QRFactorization::reset(
@@ -784,11 +784,11 @@ void QRFactorization::reset(
        preciceDebug("column "<<col<<" has not been inserted in the QR-factorization, failed to orthogonalize.");
      }
   }
-  assertion2(_R.rows() == _cols, _R.rows(), _cols);
-  assertion2(_R.cols() == _cols, _R.cols(), _cols);
-  assertion2(_Q.cols() == _cols, _Q.cols(), _cols);
-  assertion2(_Q.rows() == _rows, _Q.rows(), _rows);
-  assertion2(_cols == m, _cols, m);
+  assertion(_R.rows() == _cols, _R.rows(), _cols);
+  assertion(_R.cols() == _cols, _R.cols(), _cols);
+  assertion(_Q.cols() == _cols, _Q.cols(), _cols);
+  assertion(_Q.rows() == _rows, _Q.rows(), _rows);
+  assertion(_cols == m, _cols, m);
 }
 
 

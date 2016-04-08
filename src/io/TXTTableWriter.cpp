@@ -43,7 +43,7 @@ void TXTTableWriter:: addData
   Data data;
   data.name = name;
   data.type = type;
-  assertion2 ( not utils::contained(data, _data), data.name, data.type );
+  assertion ( not utils::contained(data, _data), data.name, data.type );
   _data.push_back ( data );
   assertion ( _outputStream.is_open() );
   if ( (type == INT) || (type == DOUBLE) ) {
@@ -73,8 +73,8 @@ void TXTTableWriter:: writeData
     _writeIterator = _data.begin();
     _outputStream << "\n";
   }
-  assertion2 ( _writeIterator->name == name, _writeIterator->name, name );
-  assertion1 ( _writeIterator->type == INT, _writeIterator->type );
+  assertion ( _writeIterator->name == name, _writeIterator->name, name );
+  assertion ( _writeIterator->type == INT, _writeIterator->type );
   _outputStream << value << "  ";
   _writeIterator ++;
   if ( _writeIterator == _data.end() ) {
@@ -92,8 +92,8 @@ void TXTTableWriter:: writeData
     _writeIterator = _data.begin();
     _outputStream << "\n";
   }
-  assertion2 ( _writeIterator->name == name, _writeIterator->name, name );
-  assertion1 ( _writeIterator->type == DOUBLE, _writeIterator->type );
+  assertion ( _writeIterator->name == name, _writeIterator->name, name );
+  assertion ( _writeIterator->type == DOUBLE, _writeIterator->type );
   _outputStream << value << "  ";
   _writeIterator ++;
   if ( _writeIterator == _data.end() ) {
@@ -111,8 +111,8 @@ void TXTTableWriter:: writeData
     _writeIterator = _data.begin();
     _outputStream << "\n";
   }
-  assertion2 ( _writeIterator->name == name, _writeIterator->name, name );
-  assertion1 ( _writeIterator->type == VECTOR2D, _writeIterator->type );
+  assertion ( _writeIterator->name == name, _writeIterator->name, name );
+  assertion ( _writeIterator->type == VECTOR2D, _writeIterator->type );
   for ( int i=0; i < value.size(); i++ ) {
     _outputStream << value[i] << "  ";
   }
@@ -132,8 +132,8 @@ void TXTTableWriter:: writeData
     _writeIterator = _data.begin();
     _outputStream << "\n";
   }
-  assertion2 ( _writeIterator->name == name, _writeIterator->name, name );
-  assertion1 ( _writeIterator->type == VECTOR3D, _writeIterator->type );
+  assertion ( _writeIterator->name == name, _writeIterator->name, name );
+  assertion ( _writeIterator->type == VECTOR3D, _writeIterator->type );
   for ( int i=0; i < value.size(); i++ ) {
     _outputStream << value[i] << "  ";
   }

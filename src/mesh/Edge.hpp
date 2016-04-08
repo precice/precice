@@ -116,7 +116,7 @@ inline Vertex& Edge:: vertex
 (
   int i )
 {
-  assertion1 ( (i == 0) || (i == 1), i );
+  assertion ( (i == 0) || (i == 1), i );
   return *_vertices[i];
 }
 
@@ -124,7 +124,7 @@ inline const Vertex& Edge:: vertex
 (
   int i ) const
 {
-  assertion1 ( (i==0) || (i==1), i );
+  assertion ( (i==0) || (i==1), i );
   return *_vertices[i];
 }
 
@@ -138,7 +138,7 @@ void Edge:: setNormal
 (
   const VECTOR_T& normal )
 {
-  assertion2 ( normal.size() == _vertices[0]->getDimensions(), normal,
+  assertion ( normal.size() == _vertices[0]->getDimensions(), normal,
                _vertices[0]->getDimensions() );
   _normal = normal;
 }
@@ -148,7 +148,7 @@ void Edge:: setCenter
 (
   const VECTOR_T& center )
 {
-  assertion2 ( center.size() == _vertices[0]->getDimensions(), center,
+  assertion ( center.size() == _vertices[0]->getDimensions(), center,
                _vertices[0]->getDimensions() );
   _center = center;
 }

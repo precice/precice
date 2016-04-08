@@ -5,7 +5,7 @@
 #define _TARCH_LA_VECTOR_CPPH_
 
 #include "Vector.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 #include "tarch/la/traits/VectorTraits.h"
 
 namespace tarch {
@@ -164,7 +164,7 @@ template<int Size, typename Scalar>
 Scalar & Vector<Size,Scalar>:: operator() ( int index )
 {
   assertion ( index >= 0 );
-  assertion2 ( index < Size, index, Size );
+  assertion ( index < Size, index, Size );
   return _values[index];
 }
 

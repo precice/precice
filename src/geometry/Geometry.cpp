@@ -25,7 +25,7 @@ void Geometry:: create
   mesh::Mesh& seed )
 {
   preciceTrace1 ( "create()", seed.getName() );
-  assertion2 ( seed.getDimensions() == _offset.size(), seed.getDimensions(),
+  assertion ( seed.getDimensions() == _offset.size(), seed.getDimensions(),
                _offset.size() );
   specializedCreate ( seed );
   utils::DynVector zero ( seed.getDimensions(), 0.0 );

@@ -63,8 +63,8 @@ void ParallelMatrixOperations::multiply
 	int p, int q, int r)
 {
 	preciceTrace("multiply()");
-	assertion2(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
-	assertion2(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
+	assertion(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
+	assertion(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
 	// if serial computation on single processor, i.e, no master-slave mode
 	if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
@@ -186,7 +186,7 @@ void ParallelMatrixOperations::_multiplyNN(
 
 	// set block at corresponding row-index on proc
 	int off = offsets[utils::MasterSlave::_rank];
-	assertion2(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
+	assertion(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
 	for(int ii = 0; ii < diagBlock.rows(); ii++)
 		for(int jj = 0; jj < result.cols(); jj++)
 		{
@@ -238,7 +238,7 @@ void ParallelMatrixOperations::_multiplyNN(
 		// note: the direction and ordering of the cyclic sending operation is chosen s.t. the computed block is
 		//       local on the current processor (in J_inv).
 		off = offsets[sourceProc];
-		assertion2(result.cols() == block.cols(), result.cols(), block.cols());
+		assertion(result.cols() == block.cols(), result.cols(), block.cols());
 		for(int ii = 0; ii < block.rows(); ii++)
 		  for(int jj = 0; jj < result.cols(); jj++)
 		  {
@@ -257,7 +257,7 @@ void ParallelMatrixOperations::multiply
 	int p, int q)
 {
 	preciceTrace("multiply()");
-	assertion2(v.size() == A.cols(), v.size(), A.cols());
+	assertion(v.size() == A.cols(), v.size(), A.cols());
 
 	// if serial computation on single processor, i.e, no master-slave mode
 	if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){

@@ -23,7 +23,7 @@ void ImportSTL:: doImport
   mesh::Mesh&        mesh )
 {
   preciceTrace1("doImport()", name);
-  assertion1(mesh.getDimensions() == 3, mesh.getDimensions());
+  assertion(mesh.getDimensions() == 3, mesh.getDimensions());
   // TODO
 }
 

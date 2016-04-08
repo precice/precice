@@ -2,7 +2,7 @@
 #include "mpi.h"
 #endif
 #include "tarch/logging/configurations/LogFilterConfiguration.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 #include <cstring>
 #include <sstream>

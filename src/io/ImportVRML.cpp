@@ -65,7 +65,7 @@ void ImportVRML:: doImport
 # ifndef PRECICE_NO_SPIRIT2
   using namespace tarch::la;
   int dimensions = mesh.getDimensions();
-  assertion1((dimensions == 2) || (dimensions == 3), dimensions);
+  assertion((dimensions == 2) || (dimensions == 3), dimensions);
 
   // Create input filestream to VRML file
   std::string filename(getLocation() + name);
@@ -92,7 +92,7 @@ void ImportVRML:: doImport
     std::vector<mesh::Vertex*> vertices;
     if (dimensions == 2){
       for (size_t i=0; i < vrmlParser.coordinates.size(); i+=2){
-        assertion2(i + 1 < vrmlParser.coordinates.size(),
+        assertion(i + 1 < vrmlParser.coordinates.size(),
                    i + 1, vrmlParser.coordinates.size());
         vertices += &mesh.createVertex(wrap<2,double>(&vrmlParser.coordinates[i]));
       }
@@ -115,7 +115,7 @@ void ImportVRML:: doImport
     else { // 3D
       // Create vertices
       for (size_t i=0; i < vrmlParser.coordinates.size(); i+=3){
-        assertion2(i + 2 < vrmlParser.coordinates.size(),
+        assertion(i + 2 < vrmlParser.coordinates.size(),
                    i + 2, vrmlParser.coordinates.size());
         vertices += &mesh.createVertex(wrap<3,double>(&vrmlParser.coordinates[i]));
       }
@@ -221,7 +221,7 @@ void ImportVRML:: doImport
         }
       }
       else {
-        assertionMsg(dimensions == 3, dimensions);
+        assertion(dimensions == 3, dimensions);
         mesh::Mesh::TriangleContainer& triangles = mesh.triangles();
         size_t size = elem.faces.size();
         for (size_t iFace=0; iFace < size; iFace++){

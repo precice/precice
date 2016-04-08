@@ -101,7 +101,7 @@ int main(int argc, char **argv)
     }
   }
   else {
-    assertion1(dimensions == 3, dimensions);
+    assertion(dimensions == 3, dimensions);
     faces.append(handle.triangles().size()*3, 0);
     TriangleHandle triangles = handle.triangles();
     int iTriangle = 0;

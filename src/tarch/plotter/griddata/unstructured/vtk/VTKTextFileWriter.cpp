@@ -27,9 +27,9 @@ tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VTKTextFileWrite
 
 tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::~VTKTextFileWriter() {
   if (!_writtenToFile) {
-    assertionEqualsMsg( _numberOfVertices,    0, "Still vertices in vtk writer pipeline. Maybe you forgot to call writeToFile() on a data vtk writer?" );
-    assertionEqualsMsg( _numberOfCells,       0, "Still cells in vtk writer pipeline. Maybe you forgot to call writeToFile() on a data vtk writer?" );
-    assertionEqualsMsg( _numberOfCellEntries, 0, "Still cell entries in vtk writer pipeline. Maybe you forgot to call writeToFile() on a data vtk writer?" );
+    assertion( _numberOfVertices==0, "Still vertices in vtk writer pipeline. Maybe you forgot to call writeToFile() on a data vtk writer?" );
+    assertion( _numberOfCells==0, "Still cells in vtk writer pipeline. Maybe you forgot to call writeToFile() on a data vtk writer?" );
+    assertion( _numberOfCellEntries==0, "Still cell entries in vtk writer pipeline. Maybe you forgot to call writeToFile() on a data vtk writer?" );
   }
 }
 

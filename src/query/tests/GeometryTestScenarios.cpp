@@ -196,7 +196,7 @@ void GeometryTestScenarios:: createMesh
     mesh.createEdge(v01, v00);
   }
   else {
-    assertion1(mesh.getDimensions() == 3, mesh.getDimensions());
+    assertion(mesh.getDimensions() == 3, mesh.getDimensions());
     using utils::Vector3D;
     Vertex& v000 = mesh.createVertex(Vector3D(-1.0, -1.0, -1.0));
     Vertex& v001 = mesh.createVertex(Vector3D(-1.0, -1.0,  1.0));

@@ -25,7 +25,7 @@ void ConstantPreconditioner::initialize(int N){
 
   // is always constant by definition
   _freezed = true;
-  assertion1(_maxNonConstTimesteps == -1, _maxNonConstTimesteps);
+  assertion(_maxNonConstTimesteps == -1, _maxNonConstTimesteps);
 
   assertion(_factors.size()==_dimensions.size());
 

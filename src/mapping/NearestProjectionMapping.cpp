@@ -22,7 +22,7 @@ NearestProjectionMapping:: NearestProjectionMapping
     setOutputRequirement(VERTEX);
   }
   else {
-    assertion1(constraint == CONSERVATIVE, constraint);
+    assertion(constraint == CONSERVATIVE, constraint);
     setInputRequirement(VERTEX);
     setOutputRequirement(FULL);
   }
@@ -47,7 +47,7 @@ void NearestProjectionMapping:: computeMapping()
     }
   }
   else {
-    assertion1(getConstraint() == CONSERVATIVE, getConstraint());
+    assertion(getConstraint() == CONSERVATIVE, getConstraint());
     preciceDebug("Compute conservative mapping");
     _weights.resize(input()->vertices().size());
     for ( size_t i=0; i < input()->vertices().size(); i++ ){
@@ -92,7 +92,7 @@ void NearestProjectionMapping:: map
 
   if (getConstraint() == CONSISTENT){
     preciceDebug("Map consistent");
-    assertion2(_weights.size() == output()->vertices().size(),
+    assertion(_weights.size() == output()->vertices().size(),
                _weights.size(), output()->vertices().size());
     for (size_t i=0; i < output()->vertices().size(); i++){
       InterpolationElements& elems = _weights[i];
@@ -108,9 +108,9 @@ void NearestProjectionMapping:: map
     }
   }
   else {
-    assertion1(getConstraint() == CONSERVATIVE, getConstraint());
+    assertion(getConstraint() == CONSERVATIVE, getConstraint());
     preciceDebug("Map conservative");
-    assertion2(_weights.size() == input()->vertices().size(),
+    assertion(_weights.size() == input()->vertices().size(),
                _weights.size(), input()->vertices().size());
     for (size_t i=0; i < input()->vertices().size(); i++){
       size_t inOffset = i * dimensions;
@@ -142,7 +142,7 @@ bool NearestProjectionMapping::doesVertexContribute(
     }
   }
   else {
-    assertion1(getConstraint() == CONSERVATIVE, getConstraint());
+    assertion(getConstraint() == CONSERVATIVE, getConstraint());
     for (size_t i=0; i < input()->vertices().size(); i++) {
       const InterpolationElements& elems = _weights[i];
       for (const query::InterpolationElement& elem : elems) {

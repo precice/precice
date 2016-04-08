@@ -19,6 +19,7 @@
 #include "Eigen/Dense"
 #include <deque>
 #include <fstream>
+#include <sstream>
 #include <string.h>
 
 
@@ -89,7 +90,11 @@ public:
    /**
     * @brief Destructor, empty.
     */
-   virtual ~BaseQNPostProcessing() {}
+   virtual ~BaseQNPostProcessing() {
+     _infostream.open("postProcessingInfo.txt", std::ios_base::out);
+     _infostream << std::setprecision(16);
+     _infostream << _infostringstream.str();
+   }
 
    /**
     * @brief Returns all IQN involved data IDs.
@@ -249,6 +254,7 @@ protected:
 
 
    /// @brief write some debug/post processing info to file
+   std::ostringstream _infostringstream;
    std::fstream _infostream;
 
 

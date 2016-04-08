@@ -32,7 +32,7 @@ void DynamicPeanotree2D:: initialize
   preciceCheck ( _rootCell.content().empty(), "initialize()",
                  "Initialize can be called only once (or after clearing)!" );
   int dim = _center.size();
-  assertion2 ( mesh.getDimensions() == dim, mesh.getDimensions(), dim );
+  assertion ( mesh.getDimensions() == dim, mesh.getDimensions(), dim );
   query::FindVoxelContent findVoxel ( _center, utils::DynVector(dim,_halflength),
       query::FindVoxelContent::INCLUDE_BOUNDARY );
   findVoxel ( mesh );

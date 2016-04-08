@@ -2,7 +2,7 @@
 #include "mpi.h"
 #endif
 #include "tarch/logging/configurations/LogOutputFormatConfiguration.h"
-#include "tarch/Assertions.h"
+#include "utils/assertion.hpp"
 
 
 tarch::logging::Log tarch::logging::configurations::LogOutputFormatConfiguration::_log("tarch::logging::configurations::LogOutputFormatConfiguration");

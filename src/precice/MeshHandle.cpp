@@ -61,7 +61,7 @@ VertexIterator & VertexIterator:: operator=
   const VertexIterator& toAssign )
 {
   _impl->iterator = toAssign._impl->iterator;
-//  assertion2 ( _impl->dimensions == toAssign._impl->dimensions,
+//  assertion ( _impl->dimensions == toAssign._impl->dimensions,
 //               _impl->dimensions, toAssign._impl->dimensions );
 //  for ( int dim=0; dim < _impl->dimensions; dim++ ){
 //    _impl->coords[dim] = toAssign._impl->coords[dim];

@@ -32,7 +32,7 @@ Data:: Data
   _id ( id ),
   _dimensions ( dimensions )
 {
-  assertion1 ( dimensions > 0, dimensions );
+  assertion ( dimensions > 0, dimensions );
   _dataCount ++;
 }
 
