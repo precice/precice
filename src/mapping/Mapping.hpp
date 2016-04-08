@@ -8,7 +8,7 @@
 #include "spacetree/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <vector>
 
 namespace precice {
@@ -169,7 +169,7 @@ protected:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Determines wether mapping is consistent or conservative.
   Constraint _constraint;
