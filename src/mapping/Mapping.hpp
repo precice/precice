@@ -8,7 +8,6 @@
 #include "spacetree/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
-#include "tarch/logging/Log.h"
 #include <vector>
 
 namespace precice {
@@ -167,9 +166,6 @@ protected:
   int getDimensions();
 
 private:
-
-  // @brief Logging device.
-  static tarch::logging::Log _log;
 
   // @brief Determines wether mapping is consistent or conservative.
   Constraint _constraint;
