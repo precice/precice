@@ -3,6 +3,7 @@
 #include "MasterSlave.hpp"
 
 #include "utils/assertion.hpp"
+#include "utils/prettyprint.hpp"
 
 #include "logging/LogMacros.hpp"
 #include "LogMacros.hpp"
