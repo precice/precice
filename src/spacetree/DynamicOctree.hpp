@@ -1,13 +1,8 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_NEWSPACETREE_DYNAMICOCTREE_HPP_
-#define PRECICE_NEWSPACETREE_DYNAMICOCTREE_HPP_
+#pragma once
 
 #include "spacetree/Spacetree.hpp"
 #include "spacetree/impl/OctreeCell.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
 #include <vector>
 
 namespace precice {
@@ -53,7 +48,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Contained meshes.
   std::vector<mesh::PtrMesh> _meshes;
@@ -70,5 +65,3 @@ private:
 };
 
 }} // namespace precice, spacetree
-
-#endif /* PRECICE_NEWSPACETREE_DYNAMICOCTREE_HPP_ */
