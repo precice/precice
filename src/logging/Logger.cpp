@@ -1,9 +1,7 @@
 #include "Logger.hpp"
 
-#include <iostream>
 #include <fstream>
 #include <string>
-using namespace std;
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
@@ -22,9 +20,9 @@ using namespace std;
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/console.hpp>
+#include <boost/log/utility/setup/from_settings.hpp>
 #include <boost/log/utility/setup/from_stream.hpp>
 #include <boost/log/utility/setup/settings.hpp>
-#include <boost/log/utility/setup/from_settings.hpp>
 
 #include <boost/log/support/date_time.hpp>
 
@@ -35,15 +33,17 @@ namespace logging {
 class timestamp_formatter_factory :
     public boost::log::basic_formatter_factory<char, boost::posix_time::ptime>
 {
-    public:
-        formatter_type create_formatter(boost::log::attribute_name const& name, args_map const& args)
-        {
-            args_map::const_iterator it = args.find("format");
-            if (it != args.end())
-                return boost::log::expressions::stream << boost::log::expressions::format_date_time<boost::posix_time::ptime>(boost::log::expressions::attr<boost::posix_time::ptime>(name), it->second);
-            else
-                return boost::log::expressions::stream << boost::log::expressions::attr<boost::posix_time::ptime>(name);
-        }
+public:
+  formatter_type create_formatter(boost::log::attribute_name const& name, args_map const& args)
+  {
+    args_map::const_iterator it = args.find("format");
+    if (it != args.end())
+      return boost::log::expressions::stream <<
+        boost::log::expressions::format_date_time<boost::posix_time::ptime>(boost::log::expressions::attr<boost::posix_time::ptime>(name), it->second);
+    else
+      return boost::log::expressions::stream <<
+        boost::log::expressions::attr<boost::posix_time::ptime>(name);
+  }
 };
 
 Logger::Logger(std::string module)
@@ -86,25 +86,25 @@ void setupLogging(std::string logConfigFile)
   setts["Sinks.File.Format"] = format;
 
   init_from_settings(setts);  
-
+  
 //alternative setting of log format
   /**
-  auto fmtStream =
-    expressions::stream
-    << "(" 
-    << expressions::attr<int>("Rank")
-    << ") "
-    << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S")
-    << " "
-    << expressions::attr<std::string>("File")
-    << ":"
-    << expressions::attr<int>("Line")
-    << " ["
-    << expressions::attr<std::string>("Module")
-    << "] in "
-    << expressions::attr<std::string>("Function") 
-    << ": "
-    << expressions::message; //<< std::endl;
+     auto fmtStream =
+     expressions::stream
+     << "(" 
+     << expressions::attr<int>("Rank")
+     << ") "
+     << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S")
+     << " "
+     << expressions::attr<std::string>("File")
+     << ":"
+     << expressions::attr<int>("Line")
+     << " ["
+     << expressions::attr<std::string>("Module")
+     << "] in "
+     << expressions::attr<std::string>("Function") 
+     << ": "
+     << expressions::message; //<< std::endl;
   **/
 //Additional possibilities for debugging output
 //expressions::attr<unsigned int>("LineID")
@@ -115,11 +115,11 @@ void setupLogging(std::string logConfigFile)
 
   
   //boost::log::add_file_log("sample.log", keywords::format = fmtStream); // state namespace here for
-                                                                        // consisitency with
-                                                                        // console_log
+  // consisitency with
+  // console_log
   //boost::log::add_console_log(std::cout, keywords::format = fmtStream); // explicitly state namespace
-                                                                        // here to resolve some
-                                                                        // ambiguity issue
+  // here to resolve some
+  // ambiguity issue
 
   //if config file exists only entries in the file overrides our standard config only
   std::ifstream file(logConfigFile);

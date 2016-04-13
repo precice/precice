@@ -2,7 +2,7 @@ language: cpp
 
 compiler:
   - gcc
-  - clang
+  # - clang
   
 addons:
   apt:
@@ -20,7 +20,6 @@ addons:
 env:
   global:
     - CPLUS_INCLUDE_PATH="$HOME/eigen-eigen-bdd17ee3b1b3"
-    - PRECICE_BOOST_ROOT="$HOME/boost_1_60_0"
   matrix:
     - MPI=off
     - MPI=on
@@ -32,13 +31,12 @@ before_install:
 
 install:
   - wget http://bitbucket.org/eigen/eigen/get/3.2.5.tar.bz2 -O - | tar xj -C $HOME
-  - wget http://downloads.sourceforge.net/boost/boost_1_60_0.tar.bz2 -O - | tar xj -C $HOME
 
 before_script:
   - mkdir $TRAVIS_BUILD_DIR/tests
 
 script:
-  - scons -j 2 boost_inst=off petsc=off mpi=$MPI python=on compiler=$CXX
+  - scons -j 2 boost_inst=on petsc=off mpi=$MPI python=on compiler=$CXX
   - cd tests
   - if [ "$MPI" = "off" ]; then ../build/last/binprecice test ../.ci-test-config.xml ../src; fi
   - if [ "$MPI" = "off" ]; then ../build/last/binprecice test ../.ci-integration-test-config.xml ../src; fi

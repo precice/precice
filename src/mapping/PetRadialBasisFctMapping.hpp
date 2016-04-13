@@ -33,8 +33,7 @@ namespace mapping {
  * basis functions and a (low order) polynomial, and evaluated at the output
  * data points.
  *
- * The radial basis function type has to be given as template parameter, and has
- * to be one of the defined types in this file.
+ * The radial basis function type has to be given as template parameter.
  */
 template<typename RADIAL_BASIS_FUNCTION_T>
 class PetRadialBasisFctMapping : public Mapping
@@ -215,13 +214,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   tpreciceDebug("inMesh->vertices().size() = " << inMesh->vertices().size());
   tpreciceDebug("outMesh->vertices().size() = " << outMesh->vertices().size());
 
-  // Create a symmetric, sparse matrix with n x n local size.
+  // Matrix C: Symmetric, sparse matrix with n x n local size.
   _matrixC.reset();
   _matrixC.init(n, n, PETSC_DETERMINE, PETSC_DETERMINE, MATSBAIJ);
   tpreciceDebug("Set matrix C to local size " << n << " x " << n);
   ierr = MatSetOption(_matrixC.matrix, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
-  // Create a matrix with outputSize x n local size.
+  // Matrix A: Sparse matrix with outputSize x n local size.
   _matrixA.reset();
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
   tpreciceDebug("Set matrix A to local size " << outputSize << " x " << n);
@@ -254,7 +253,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISDestroy(&ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingDestroy(&ISidentityMapping); CHKERRV(ierr);
 
-  int i = 0;
   utils::DynVector distance(dimensions);
 
   // We do preallocating of the matrices C and A. That means we traverse the input data once, just
@@ -263,42 +261,49 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // -- BEGIN PREALLOC LOOP FOR MATRIX C --
   // TODO Testen ob Preallocation perfekt ist.
-  // int logPreallocCLoop = 1;
-  // PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocCLoop);
-  // PetscLogEventBegin(logPreallocCLoop, 0, 0, 0, 0);
-  // PetscInt nnz[n]; // Number of non-zeros per row
-  // unsigned int totalNNZ = 0; // Total number of non-zeros in matrix
-  // for (const mesh::Vertex& iVertex : inMesh->vertices()) {
-  //   int currentRow = iVertex.getGlobalIndex();
-  //   nnz[currentRow] = 0;
-  //   for (int j=iVertex.getID(); j < inputSize; j++) {
-  //     if (currentRow == iVertex.getGlobalIndex()) {
-  //       nnz[currentRow]++; // Since we need to set at least zeros on the main diagonal, we have an entry there. No further test necessary.
+  // MatSetOption(_matrixC.matrix, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+  // MatSetOption(_matrixA.matrix, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+  // {
+  //   preciceDebug("Begin preallocation matrix C");
+  //   int logPreallocCLoop = 1;  //   PetscLogEventRegister("Prealloc Matrix C", 0, &logPreallocCLoop);
+  //   PetscLogEventBegin(logPreallocCLoop, 0, 0, 0, 0);
+  //   PetscInt nnz[n]; // Number of non-zeros per row
+
+  //   if (utils::MasterSlave::_rank <= 0)
+  //     for (int i = 0; i < polyparams; i++)
+  //       nnz[i] = n; // The first rows are dense, except the part in upper right corner
+
+  //   for (const mesh::Vertex& inVertex : inMesh->vertices()) {
+  //     if (not inVertex.isOwner())
   //       continue;
+
+  //     int row = inVertex.getGlobalIndex() + polyparams - _matrixC.ownerRange().first; // getGlobalIndex ist absolut, row[] ist zero based
+  //     // preciceDebug("Row = " << row << " n = " << n);
+  //     nnz[row] = 0;
+  
+  //     for (mesh::Vertex& vj : inMesh->vertices()) {
+  //       distance = inVertex.getCoords() - vj.getCoords();
+  //       for (int d = 0; d < dimensions; d++) {
+  //         if (_deadAxis[d]) {
+  //           distance[d] = 0;
+  //         }
+  //       }
+  //       double coeff = _basisFunction.evaluate(norm2(distance));
+  //       if (not tarch::la::equals(coeff, 0.0))
+  //         nnz[row]++;
   //     }
-  //     distance = iVertex.getCoords() - inMesh->vertices()[j].getCoords();
-  //     double coeff = _basisFunction.evaluate(norm2(distance));
-  //     if ( not equals(coeff, 0.0)) {
-  //       nnz[currentRow]++;
-  //     }
+  //     // preciceDebug("Reserved for row = " << row << ", reserved = " << nnz[row]);
   //   }
-  //   nnz[currentRow] += dimensions + 1 - deadDimensions; // coefficients of the linear polynom
-  //   totalNNZ += nnz[currentRow];
-  //   i++;
-  // }
-  // for (int r = inputSize; r < n; r++) {
-  //   nnz[r] = 1; // iterate through the lower part, no coefficients there, but 0 on the main diagonal
-  // }
-  // PetscLogEventEnd(logPreallocCLoop, 0, 0, 0, 0);
-  // i = 0;
-  // // -- END PREALLOC LOOP FOR MATRIX C --
+  //   PetscLogEventEnd(logPreallocCLoop, 0, 0, 0, 0);
+  //   // -- END PREALLOC LOOP FOR MATRIX C --
 
-  // ierr = MatSeqSBAIJSetPreallocation(_matrixC.matrix, 1, PETSC_DEFAULT, nnz);
-
+  //   ierr = MatMPISBAIJSetPreallocation(_matrixC.matrix, 1, 0, nnz, 0, nnz); CHKERRV(ierr);    
+  // }
   // -- BEGIN FILL LOOP FOR MATRIX C --
   int logCLoop = 2;
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
   PetscLogEventBegin(logCLoop, 0, 0, 0, 0);
+  precice::utils::Event eFillC("Filling Matrix C");
   // We collect entries for each row and set them blockwise using MatSetValues.
   for (const mesh::Vertex& inVertex : inMesh->vertices()) {
     if (not inVertex.isOwner())
@@ -337,22 +342,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         colIdx[colNum] = vj.getGlobalIndex() + polyparams; // column of entry is the globalIndex
         colNum++;
       }
-      #ifdef Asserts
-      if (coeff == std::numeric_limits<double>::infinity()) {
-        tpreciceError("computeMapping()", "C matrix element has value inf. "
-                     << "i = " << i
-                     << ", coords i = " << inVertex.getCoords() << ", coords j = "
-                     << vj.getCoords() << ", dist = "
-                     << distance << ", norm2 = " << norm2(distance) << ", rbf = "
-                     << coeff
-                     << ", rbf type = " << typeid(_basisFunction).name());
-      }
-      # endif
     }
 
     ierr = MatSetValuesLocal(_matrixC.matrix, 1, &row, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
-    i++;
   }
+  tpreciceDebug("Finished filling Matrix C");
+  eFillC.stop();
   PetscLogEventEnd(logCLoop, 0, 0, 0, 0);
   // -- END FILL LOOP FOR MATRIX C --
 
@@ -364,38 +359,56 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // Begin assembly here, all assembly is ended at the end of this function.
   ierr = MatAssemblyBegin(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
 
+  int ownerRangeBeginA = _matrixA.ownerRange().first;
+  int ownerRangeEndA = _matrixA.ownerRange().second;
+
+  tpreciceDebug("owner Range A Begin = " << ownerRangeBeginA << ", End = " << ownerRangeEndA);
+  int localDiagColBegin = _matrixA.ownerRangeColumn().first;
+  int localDiagColEnd = _matrixA.ownerRangeColumn().first;
+  tpreciceDebug("Local Submatrix Rows = " << ownerRangeBeginA << " / " << ownerRangeEndA <<
+               ", Local Submatrix Cols = " << localDiagColBegin << " / " << localDiagColEnd);
+  
   // -- BEGIN PREALLOC LOOP FOR MATRIX A --
-  // int logPreallocALoop = 3;
-  // PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocALoop);
-  // PetscLogEventBegin(logPreallocALoop, 0, 0, 0, 0);
-  // PetscInt nnzA[outputSize];
-  // i = 0;
-  // for (const mesh::Vertex& iVertex : outMesh->vertices()) {
-  //   nnzA[i] = 0;
-  //   for (const mesh::Vertex& jVertex : inMesh->vertices()) {
-  //     distance = iVertex.getCoords() - jVertex.getCoords();
-  //     double coeff = _basisFunction.evaluate(norm2(distance));
-  //     if ( not equals(coeff, 0.0)) {
-  //       nnzA[i]++;
-  //     }
-  //   }
-  //   nnzA[i] += dimensions + 1 - deadDimensions;
-  //   i++;
-  // }
-  // PetscLogEventEnd(logPreallocALoop, 0, 0, 0, 0);
-  // // -- END PREALLOC LOOP FOR MATRIX A --
+  {
+    tpreciceDebug("Begin preallocation matrix A.");
+    int logPreallocALoop = 3;
+    PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocALoop);
+    PetscLogEventBegin(logPreallocALoop, 0, 0, 0, 0);
+    PetscInt nnzA[outputSize]; // Number of non-zero entries, off-diagonal
+    // PetscInt DnnzA[outputSize]; // Number of non-zero entries, diagonal
+    for (int i = 0; i < ownerRangeEndA - ownerRangeBeginA; i++) {
+      nnzA[i] = polyparams;
+      const mesh::Vertex& oVertex = outMesh->vertices()[i];
+      for (const mesh::Vertex& inVertex : inMesh->vertices()) {
+        distance = oVertex.getCoords() - inVertex.getCoords();
+        for (int d = 0; d < dimensions; d++) {
+          if (_deadAxis[d])
+            distance[d] = 0;
+        }
+        double coeff = _basisFunction.evaluate(norm2(distance));
+        if (not tarch::la::equals(coeff, 0.0)) {
+          nnzA[i]++;
+        }
+      }
+    }
+    // -- END PREALLOC LOOP FOR MATRIX A --
 
-  // ierr = MatSeqAIJSetPreallocation(_matrixA.matrix, PETSC_DEFAULT, nnzA); CHKERRV(ierr);
-
+    // Preallocation: Number of diagonal non-zero entries equals outputSize, since diagonal is full
+    // MatSetOption(_matrixA.matrix, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+    ierr = MatMPIAIJSetPreallocation(_matrixA.matrix, 0, nnzA, 0, nnzA); CHKERRV(ierr);
+  }
+  
   // -- BEGIN FILL LOOP FOR MATRIX A --
+  tpreciceDebug("Begin filling matrix A.");
   int logALoop = 4;
   PetscLogEventRegister("Filling Matrix A", 0, &logALoop);
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
-  i = 0;
-  for (int it = _matrixA.ownerRange().first; it < _matrixA.ownerRange().second; it++) {
+  precice::utils::Event eFillA("Filling Matrix A");
+
+  for (int it = ownerRangeBeginA; it < ownerRangeEndA; it++) {
     // hier colIdx, colVals über inMesh->vertices.count dimensionieren?
     PetscInt colNum = 0;
-    PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
+    PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries MatrixC??
     PetscScalar colVals[_matrixC.getSize().second]; // holds the values of the entries
     const mesh::Vertex& oVertex = outMesh->vertices()[it - _matrixA.ownerRange().first];
 
@@ -407,12 +420,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       if (not _deadAxis[dim]) {
         y = oVertex.getCoords()[dim];
         polyCol++;
+        // tpreciceDebug("Filling A with polyparams: polyRow = " << polyRow << ", polyCol = " << polyCol << " Preallocation = " << nnzA[polyRow]);
         ierr = MatSetValuesLocal(_matrixA.matrix, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
       }
     }
 
     // -- SETS THE COEFFICIENTS --
-    int j = 0;
     for (const mesh::Vertex& inVertex : inMesh->vertices()) {
       distance = oVertex.getCoords() - inVertex.getCoords();
       for (int d = 0; d < dimensions; d++) {
@@ -420,28 +433,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           distance[d] = 0;
       }
       double coeff = _basisFunction.evaluate(norm2(distance));
-      if ( not tarch::la::equals(coeff, 0.0)) {
+      if (not tarch::la::equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
         colIdx[colNum] = inVertex.getGlobalIndex() + polyparams;
         colNum++;
       }
-
-      #     ifdef Asserts
-      if (coeff == std::numeric_limits<double>::infinity()){
-        tpreciceError("computeMapping()", "A matrix element has value inf. "
-                     << "i = " << i << ", j = " << j
-                     << ", coords i = " << oVertex.getCoords() << ", coords j = "
-                     << inVertex.getCoords() << ", dist = "
-                     << distance << ", norm2 = " << norm2(distance) << ", rbf = "
-                     << coeff
-                     << ", rbf type = " << typeid(_basisFunction).name());
-      }
-      #     endif
-      j++;
     }
+    // preciceDebug("Filling A: row = " << it << ", col count = " << colNum);
     ierr = MatSetValuesLocal(_matrixA.matrix, 1, &it, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
-    i++;
   }
+  tpreciceDebug("Finished filling Matrix A");
+  eFillA.stop();
   PetscLogEventEnd(logALoop, 0, 0, 0, 0);
   // -- END FILL LOOP FOR MATRIX A --
 
@@ -462,6 +464,11 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   // }
 
   _hasComputedMapping = true;
+
+  tpreciceDebug("Number of mallocs for matrix C = " << _matrixC.getInfo(MAT_LOCAL).mallocs);
+  tpreciceDebug("Non-zeros allocated / used / unused for matrix C = " << _matrixC.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixC.getInfo(MAT_LOCAL).nz_used << " / " << _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
+  tpreciceDebug("Number of mallocs for matrix A = " << _matrixA.getInfo(MAT_LOCAL).mallocs);
+  tpreciceDebug("Non-zeros allocated / used / unused for matrix A = " << _matrixA.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixA.getInfo(MAT_LOCAL).nz_used << " / " << _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -597,7 +604,6 @@ bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int
     return true;
 
   return true;
-
   
 }
 

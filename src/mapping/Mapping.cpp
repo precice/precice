@@ -3,8 +3,6 @@
 namespace precice {
 namespace mapping {
 
-logging::Logger Mapping:: _log ( "precice::mapping::Mapping" );
-
 Mapping:: Mapping
 (
   Constraint      constraint,

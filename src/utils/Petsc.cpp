@@ -285,6 +285,13 @@ std::string Matrix::getName()
   return cstr;    
 }
 
+MatInfo Matrix::getInfo(MatInfoType flag)
+{
+  MatInfo info;
+  MatGetInfo(matrix, flag, &info);
+  return info;
+}
+
 void Matrix::setValue(PetscInt row, PetscInt col, PetscScalar value)
 {
   PetscErrorCode ierr = 0;
@@ -337,7 +344,13 @@ std::pair<PetscInt, PetscInt> Matrix::ownerRange()
   return std::make_pair(range_start, range_end);
 }
 
-  
+std::pair<PetscInt, PetscInt> Matrix::ownerRangeColumn()
+{
+  PetscInt range_start, range_end;
+  MatGetOwnershipRangeColumn(matrix, &range_start, &range_end);
+  return std::make_pair(range_start, range_end);
+}
+
 void Matrix::write(std::string filename)
 {
   PetscErrorCode ierr = 0;
@@ -355,7 +368,6 @@ void Matrix::read(std::string filename)
    MatLoad(matrix, fd); CHKERRV(ierr); CHKERRV(ierr);
    PetscViewerDestroy(&fd);
 }
-
 
 void Matrix::view()
 {

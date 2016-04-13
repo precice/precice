@@ -104,7 +104,7 @@ int main ( int argc, char** argv )
     std::list<TopLevelConfiguration*> configs =
       ConfigurationRegistry::getInstance().readFile(configFile, "configuration");
     if (configs.empty()) {
-      log.error("main()", "config file " + configFile + " not found or invalid!");
+      std::cerr << "Config file " << configFile << " not found or invalid!" << std::endl;
       return 1;
     }
     printMPITestWarning();
@@ -128,7 +128,7 @@ int main ( int argc, char** argv )
     std::cout << "  Configuration = " << configFile << std::endl;
     int size = precice::utils::Parallel::getCommunicatorSize();
     if ( size != 1 ){
-      log.error( "main()", "Server can be run with only one process!" );
+      std::cerr << "Server can be run with only one process!" << std::endl;
     }
     precice::impl::SolverInterfaceImpl server ( participantName, 0, 1, true );
     server.configure(configFile);
