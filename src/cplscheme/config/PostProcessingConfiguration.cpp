@@ -584,7 +584,8 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     ValidatorEquals<std::string> validRS_ZERO(VALUE_ZERO_RESTART );
     ValidatorEquals<std::string> validRS_LS(VALUE_LS_RESTART );
     ValidatorEquals<std::string> validRS_SVD(VALUE_SVD_RESTART );
-    attrRestartName.setValidator (validNO_RS || validRS_ZERO || validRS_LS ||validRS_SVD);
+    ValidatorEquals<std::string> validRS_SLIDE(VALUE_SLIDE_RESTART );
+    attrRestartName.setValidator (validNO_RS || validRS_ZERO || validRS_LS ||validRS_SVD || validRS_SLIDE);
     attrRestartName.setDefaultValue(VALUE_SVD_RESTART);
     tagIMVJRESTART.addAttribute(attrRestartName);
     tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used\n"
