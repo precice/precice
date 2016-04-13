@@ -632,14 +632,22 @@ void MVQNPostProcessing::restartIMVJ()
   preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
 
-  int used_storage = 0;
-  int theoreticalJ_storage = 2*getLSSystemRows()*_residuals.size() + 3*_residuals.size()*getLSSystemCols() + _residuals.size()*_residuals.size();
+  //int used_storage = 0;
+  //int theoreticalJ_storage = 2*getLSSystemRows()*_residuals.size() + 3*_residuals.size()*getLSSystemCols() + _residuals.size()*_residuals.size();
   //               ------------ RESTART SVD ------------
   if(_imvjRestartType == MVQNPostProcessing::RS_SVD)
   {
-    int rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
 
-    // INVARIANT: all objects are unscaled and entry and unscaled at exit
+    // we need to compute the updated SVD of the scaled Jacobian matrix
+    // |= APPLY PRECONDITIONING  J_prev = Wtil^q, Z^q  ===|
+    for(int i = 0; i < (int)_WtilChunk.size(); i++){
+      _preconditioner->apply(_WtilChunk[i]);
+      _preconditioner->revert(_pseudoInverseChunk[i], true, false);
+    }
+    // |===================                            ===|
+
+
+    int rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
 
     // if it is the first time step, there is no initial SVD, so take all Wtil, Z matrices
     // otherwise, the first element of each container holds the decomposition of the current
@@ -650,10 +658,10 @@ void MVQNPostProcessing::restartIMVJ()
     for(; q < (int)_WtilChunk.size(); q++){
       // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
       _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q].transpose());
-      used_storage += 2*_WtilChunk.size();
+    //  used_storage += 2*_WtilChunk.size();
     }
     int m = _WtilChunk[q].cols(), n = _WtilChunk[q].rows();
-    used_storage += 2*rankBefore*m + 4*m*n + 2*m*m + (rankBefore+m)*(rankBefore+m) + 2*n*(rankBefore+m);
+    //used_storage += 2*rankBefore*m + 4*m*n + 2*m*m + (rankBefore+m)*(rankBefore+m) + 2*n*(rankBefore+m);
 
     // drop all stored Wtil^q, Z^q matrices
     _WtilChunk.clear();
@@ -679,10 +687,15 @@ void MVQNPostProcessing::restartIMVJ()
     _WtilChunk.push_back(psi);
     _pseudoInverseChunk.push_back(Z);
 
+    // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
+    _preconditioner->revert(_WtilChunk.front());
+    _preconditioner->apply(_pseudoInverseChunk.front(), true, false);
+    // |===================                             ==|
+
     preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste<<" avg rank: "<<_avgRank/_nbRestarts);
-    double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
+    //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
-      _infostringstream<<" - MVJ-RESTART " <<_nbRestarts<<", mode= SVD -\n  new modes: "<<rankAfter-rankBefore<<"\n  rank svd: "<<rankAfter<<"\n  avg rank: "<<_avgRank/_nbRestarts<<"\n  truncated modes: "<<waste<<"\n  used storage: "<<percentage<<" %\n"<<std::endl;
+      _infostringstream<<" - MVJ-RESTART " <<_nbRestarts<<", mode= SVD -\n  new modes: "<<rankAfter-rankBefore<<"\n  rank svd: "<<rankAfter<<"\n  avg rank: "<<_avgRank/_nbRestarts<<"\n  truncated modes: "<<waste<<"\n"<<std::endl;
 
     //        ------------ RESTART LEAST SQUARES ------------
   }else if(_imvjRestartType == MVQNPostProcessing::RS_LS)
@@ -749,11 +762,12 @@ void MVQNPostProcessing::restartIMVJ()
      _WtilChunk.push_back(_matrixW_RSLS);
      _pseudoInverseChunk.push_back(pseudoInverse);
 
-
-     // revert both matrices, chunks are reverted in spezializedIterationsConverged
+     // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
+     _preconditioner->revert(_WtilChunk.front());
+     _preconditioner->apply(_pseudoInverseChunk.front(), true, false);
      _preconditioner->revert(_matrixW_RSLS);
      _preconditioner->revert(_matrixV_RSLS);
-
+     // |===================                             ==|
    }
 
    preciceDebug("MVJ-RESTART, mode=LS. Restart with "<<_matrixV_RSLS.cols()<<" columns from "<<_RSLSreusedTimesteps<<" time steps.");
@@ -768,6 +782,29 @@ void MVQNPostProcessing::restartIMVJ()
     _pseudoInverseChunk.clear();
 
     preciceDebug("MVJ-RESTART, mode=Zero");
+
+  }else if (_imvjRestartType == MVQNPostProcessing::RS_SLIDE){
+
+    // re-compute Wtil -- compensate for dropping of Wtil_0 ond Z_0:
+    //                    Wtil_q <-- Wtil_q +  Wtil^0 * (Z^0*V_q)
+    for(int i = (int)_WtilChunk.size()-1; i >= 1; i--){
+
+      int colsLSSystemBackThen = _pseudoInverseChunk.front().rows();
+      assertion(colsLSSystemBackThen == _WtilChunk.front().cols(), colsLSSystemBackThen, _WtilChunk.front().cols());
+      Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, _qrV.cols());
+      // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
+      _parMatrixOps->multiply(_pseudoInverseChunk.front(), _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
+      // multiply: Wtil^0 * (Z_0*V)  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
+      Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
+      tmp = _WtilChunk[i] * ZV;
+      _WtilChunk[i] += tmp;
+
+      // drop oldest pair Wtil_0 and Z_0
+      assertion(not _WtilChunk.empty());
+      assertion(not _pseudoInverseChunk.empty())
+      _WtilChunk.erase(_WtilChunk.begin());
+      _pseudoInverseChunk.erase(_pseudoInverseChunk.begin());
+    }
 
   }else if (_imvjRestartType == MVQNPostProcessing::NO_RESTART){
     assertion(false); // should not happen, in this case _imvjRestart=false
@@ -854,22 +891,9 @@ void MVQNPostProcessing:: specializedIterationsConverged
        */
       if ((int)_WtilChunk.size() >= _chunkSize+1){
 
-        // we need to compute the updated SVD of the scaled Jacobian matrix
-        // |= APPLY PRECONDITIONING  J_prev = Wtil^q, Z^q  ===|
-        for(int i = 0; i < (int)_WtilChunk.size(); i++){
-          _preconditioner->apply(_WtilChunk[i]);
-          _preconditioner->revert(_pseudoInverseChunk[i], true, false);
-        }
-        // |===================                            ===|
-
         // < RESTART >
         _nbRestarts++;
         restartIMVJ();
-
-        // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
-        _preconditioner->revert(_WtilChunk.front());
-        _preconditioner->apply(_pseudoInverseChunk.front(), true, false);
-        // |===================                             ==|
       }
 
       // only in imvj normal mode with efficient update:

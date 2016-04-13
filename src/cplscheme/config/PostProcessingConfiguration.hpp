@@ -122,6 +122,7 @@ private:
    const std::string VALUE_LS_RESTART;
    const std::string VALUE_ZERO_RESTART;
    const std::string VALUE_SVD_RESTART;
+   const std::string VALUE_SLIDE_RESTART;
    const std::string VALUE_NO_RESTART;
 
    //bool _isValid;
