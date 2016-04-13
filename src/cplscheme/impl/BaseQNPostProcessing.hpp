@@ -91,9 +91,11 @@ public:
     * @brief Destructor, empty.
     */
    virtual ~BaseQNPostProcessing() {
-     _infostream.open("postProcessingInfo.txt", std::ios_base::out);
-     _infostream << std::setprecision(16);
-     _infostream << _infostringstream.str();
+     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)){
+       _infostream.open("postProcessingInfo.txt", std::ios_base::out);
+       _infostream << std::setprecision(16);
+       _infostream << _infostringstream.str();
+     }
    }
 
    /**
