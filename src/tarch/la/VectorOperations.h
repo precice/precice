@@ -150,6 +150,7 @@ namespace tarch {
 } // namespace tarch
 
 
+namespace std {
 
 /**
  * Streams the component values into a comma separated representation.
@@ -158,6 +159,8 @@ template<typename Vector>
   typename std::enable_if< tarch::la::IsVector<Vector>::value,
   std::ostream&
 >::type operator<< (std::ostream & os, const Vector & vector);
+
+}
 
 #include "VectorOperations.cpph"
 
