@@ -236,9 +236,9 @@ private:
 		 */
 
     assertion(_needCycliclComm);
-		assertion2(leftMatrix.cols() == q, leftMatrix.cols(), q);
-		assertion2(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
-		assertion2(result.rows() == p, result.rows(), p);
+		assertion(leftMatrix.cols() == q, leftMatrix.cols(), q);
+		assertion(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
+		assertion(result.rows() == p, result.rows(), p);
 
 		//int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
 		int prevProc = (utils::MasterSlave::_rank -1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank -1;
