@@ -278,6 +278,8 @@ Double(const tarch::la::Vector<Size, Scalar>& toConvert) {
 
 }} // namespace tarch, la
 
+namespace std {
+
 template<typename Vector>
   typename std::enable_if< tarch::la::IsVector<Vector>::value,
   std::ostream&
@@ -293,6 +295,8 @@ template<typename Vector>
     }
   }
   return os;
+}
+
 }
 
 #endif /* _TARCH_LA_VECTOR_OPERATIONS_CPPH_ */
