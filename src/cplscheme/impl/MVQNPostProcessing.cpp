@@ -796,7 +796,7 @@ void MVQNPostProcessing::restartIMVJ()
       _parMatrixOps->multiply(_pseudoInverseChunk.front(), _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
       // multiply: Wtil^0 * (Z_0*V)  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
       Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
-      tmp = _WtilChunk[i] * ZV;
+      tmp = _WtilChunk.front() * ZV;
       _WtilChunk[i] += tmp;
 
       // drop oldest pair Wtil_0 and Z_0
