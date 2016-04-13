@@ -196,7 +196,7 @@ void BaseQNPostProcessing::initialize(
 
     // test that the computed number of unknown per proc equals the number of entries actually present on that proc
     size_t unknowns = _dimOffsets[utils::MasterSlave::_rank + 1] - _dimOffsets[utils::MasterSlave::_rank];
-    assertion2(entries == unknowns, entries, unknowns);
+    assertion(entries == unknowns, entries, unknowns);
   }else{
     _infostringstream<<"\n--------\n DOFs (global): "<<entries<<std::endl;
   }
@@ -217,7 +217,7 @@ void BaseQNPostProcessing::initialize(
   for (DataMap::value_type& pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1) { // Add only, if not already done
-      //assertion1(pair.second->values->size() > 0, pair.first);
+      //assertion(pair.second->values->size() > 0, pair.first);
       utils::append(pair.second->oldValues, (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }
   }
@@ -238,7 +238,7 @@ void BaseQNPostProcessing::setDesignSpecification
     Eigen::VectorXd& q)
 {
   preciceTrace("setDesignSpecification()");
-  assertion2(q.size() == _residuals.size(), q.size(), _residuals.size());
+  assertion(q.size() == _residuals.size(), q.size(), _residuals.size());
   _designSpecification = q;
 }
 
@@ -295,8 +295,8 @@ void BaseQNPostProcessing::updateDifferenceMatrices
     if (not _firstIteration) {
       // Update matrices V, W with newest information
 
-      assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
-      assertion2(getLSSystemCols() <= _maxIterationsUsed,getLSSystemCols(), _maxIterationsUsed);
+      assertion(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+      assertion(getLSSystemCols() <= _maxIterationsUsed,getLSSystemCols(), _maxIterationsUsed);
 
       if (2 * getLSSystemCols() >= getLSSystemRows())
         preciceWarning("updateDifferenceMatrices()",
@@ -362,10 +362,10 @@ void BaseQNPostProcessing::performPostProcessing
   Event e(__func__, true, true); // time measurement, barrier
 
   using namespace tarch::la;
-  assertion2(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
-  assertion2(_values.size() == _oldXTilde.size(),_values.size(), _oldXTilde.size());
-  assertion2(_oldValues.size() == _oldXTilde.size(),_oldValues.size(), _oldXTilde.size());
-  assertion2(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
+  assertion(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
+  assertion(_values.size() == _oldXTilde.size(),_values.size(), _oldXTilde.size());
+  assertion(_oldValues.size() == _oldXTilde.size(),_oldValues.size(), _oldXTilde.size());
+  assertion(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
 
   /*
   Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
@@ -428,7 +428,7 @@ void BaseQNPostProcessing::performPostProcessing
     }
 
     // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
-    assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
+    assertion(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
     _residuals -= _designSpecification;
 
 
@@ -544,7 +544,7 @@ void BaseQNPostProcessing::applyFilter()
 
       preciceDebug(" Filter: removing column with index " << delIndices[i] <<" in iteration " << its<< " of time step: " << tSteps);
     }
-    assertion2(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
+    assertion(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
 }
 
@@ -625,7 +625,7 @@ void BaseQNPostProcessing::iterationsConverged
   updateDifferenceMatrices(cplData);
 
   // subtract design specification from residuals, i.e., we want to minimize argmin_x|| r(x) - q ||
-  assertion2(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
+  assertion(_residuals.size() == _designSpecification.size(), _residuals.size(), _designSpecification.size());
   _residuals -= _designSpecification;
 
 
@@ -674,10 +674,10 @@ void BaseQNPostProcessing::iterationsConverged
   }
   else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
-    assertion1(toRemove > 0, toRemove);
+    assertion(toRemove > 0, toRemove);
     preciceDebug("Removing " << toRemove << " cols from least-squares system with "<< getLSSystemCols() << " cols");
-    assertion2(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
-    assertion2(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
+    assertion(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
+    assertion(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
     // remove columns
     for (int i = 0; i < toRemove; i++) {
@@ -751,8 +751,8 @@ int BaseQNPostProcessing::getLSSystemCols()
     cols += col;
   }
   if (_hasNodesOnInterface) {
-    assertion4(cols == _matrixV.cols(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
-    assertion2(cols == _matrixW.cols(), cols, _matrixW.cols());
+    assertion(cols == _matrixV.cols(), cols, _matrixV.cols(), _matrixCols, _qrV.cols());
+    assertion(cols == _matrixW.cols(), cols, _matrixW.cols());
   }
 
   return cols;

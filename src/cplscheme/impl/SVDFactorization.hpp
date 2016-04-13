@@ -75,10 +75,10 @@ public:
       *
       */
      if(_initialSVD){
-       assertion2(A.rows() == _rows, A.rows(), _rows);
-       assertion2(B.rows() == _rows, B.rows(), _rows);
+       assertion(A.rows() == _rows, A.rows(), _rows);
+       assertion(B.rows() == _rows, B.rows(), _rows);
      }else{
-       assertion2(A.rows() == B.rows(), A.rows(), B.rows()); assertion2(A.cols() == B.cols(), A.cols(), B.cols());
+       assertion(A.rows() == B.rows(), A.rows(), B.rows()); assertion(A.cols() == B.cols(), A.cols(), B.cols());
        _rows = A.rows();
        _cols = 0;
        _psi = Matrix::Zero(_rows, 0);

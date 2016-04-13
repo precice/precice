@@ -205,10 +205,10 @@ bool GeometryComputations:: segmentsIntersect
   const VECTORD_T& d,
   bool countTouchingAsIntersection )
 {
-  assertion1 ( a.size() == 2, a.size() );
-  assertion1 ( b.size() == 2, b.size() );
-  assertion1 ( c.size() == 2, c.size() );
-  assertion1 ( d.size() == 2, d.size() );
+  assertion ( a.size() == 2, a.size() );
+  assertion ( b.size() == 2, b.size() );
+  assertion ( c.size() == 2, c.size() );
+  assertion ( d.size() == 2, d.size() );
 
   if ( countTouchingAsIntersection ) {
     if ( between(a, b, c) ) {
@@ -297,8 +297,8 @@ bool GeometryComputations:: collinear (
   const VECTORB_T& b,
   const VECTORC_T& c )
 {
-  assertion2 ( a.size() == b.size(), a.size(), b.size() );
-  assertion2 ( a.size() == c.size(), a.size(), c.size() );
+  assertion ( a.size() == b.size(), a.size(), b.size() );
+  assertion ( a.size() == c.size(), a.size(), c.size() );
   using namespace tarch::la;
   double triangleOutline = norm2(b-a) + norm2(c-b) + norm2(a-c);
   if ( equals(triangleArea(a, b, c) / triangleOutline, 0.0) ) {
@@ -331,8 +331,8 @@ GeometryComputations:: triangleArea
    const VECTOR& b,
    const VECTOR& c )
 {
-  assertion2 ( a.size() == b.size(), a.size(), b.size() );
-  assertion2 ( b.size() == c.size(), b.size(), c.size() );
+  assertion ( a.size() == b.size(), a.size(), b.size() );
+  assertion ( b.size() == c.size(), b.size(), c.size() );
   if ( a.size() == 2 ){
     utils::Vector2D A = b;
     A -= a;
@@ -341,7 +341,7 @@ GeometryComputations:: triangleArea
     return 0.5 * (A(0)*B(1) - A(1)*B(0));
   }
   else {
-    assertion1 ( a.size() == 3, a.size() );
+    assertion ( a.size() == 3, a.size() );
     utils::Vector3D A = b; A -= a;
     utils::Vector3D B = c; B -= a;
     utils::Vector3D result;
@@ -357,8 +357,8 @@ int GeometryComputations:: containedInHyperrectangle
   const VECTORC_T& testPoint )
 {
   int dim = sidelengths.size();
-  assertion2 ( dim == center.size(), dim, center.size() );
-  assertion2 ( dim == testPoint.size(), dim, testPoint.size() );
+  assertion ( dim == center.size(), dim, center.size() );
+  assertion ( dim == testPoint.size(), dim, testPoint.size() );
   utils::DynVector toCenter(testPoint);
   toCenter -= center;
   tarch::la::abs ( toCenter, toCenter );

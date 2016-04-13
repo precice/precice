@@ -29,9 +29,3 @@
   }
 
 #endif
-
-#define assertion1 assertion
-#define assertion2 assertion
-#define assertion3 assertion
-#define assertion4 assertion
-#define assertion5 assertion

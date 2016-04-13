@@ -55,7 +55,7 @@ void ArgumentSetFabric::printAllPossibleConfigurationsAndExit() {
   std::stringstream ss;
   ss << "ERROR! ArgumentSet not found!! Available configurations:\n";
   print(ss);
-  assertion1(false, ss.str());
+  assertion(false, ss.str());
   _log.error("getArgumentSet",ss.str());
   exit(ASSERTION_EXIT_CODE);
 }

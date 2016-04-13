@@ -37,7 +37,7 @@ tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWriter::close() {
   assertion( _lastWriteCommandCellNumber==_myWriter._numberOfCells-1 );
-  assertion1( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
+  assertion( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
 
   if (_lastWriteCommandCellNumber>=-1) {
     _out << std::endl;
@@ -51,8 +51,8 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWri
   assertion(_lastWriteCommandCellNumber>=-1);
   assertion(1<=_recordsPerCell);
 
-  assertion1( value != std::numeric_limits<double>::infinity(), value );
-  assertion1( value == value, value );  // test for not a number
+  assertion( value != std::numeric_limits<double>::infinity(), value );
+  assertion( value == value, value );  // test for not a number
 
   while (_lastWriteCommandCellNumber<index-1) {
     plotCell(_lastWriteCommandCellNumber+1,0.0);
@@ -75,11 +75,11 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWri
   assertion(_lastWriteCommandCellNumber>=-1);
   assertion(2<=_recordsPerCell);
 
-  assertion1( value(0) != std::numeric_limits<double>::infinity(), value(0) );
-  assertion1( value(0) == value(0), value(0) );  // test for not a number
+  assertion( value(0) != std::numeric_limits<double>::infinity(), value(0) );
+  assertion( value(0) == value(0), value(0) );  // test for not a number
 
-  assertion1( value(1) != std::numeric_limits<double>::infinity(), value(1) );
-  assertion1( value(1) == value(1), value(1) );  // test for not a number
+  assertion( value(1) != std::numeric_limits<double>::infinity(), value(1) );
+  assertion( value(1) == value(1), value(1) );  // test for not a number
 
   while (_lastWriteCommandCellNumber<index-1) {
     plotCell(_lastWriteCommandCellNumber+1,0.0);
@@ -104,14 +104,14 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::CellDataWri
   assertion(_lastWriteCommandCellNumber>=-1);
   assertion(3<=_recordsPerCell);
 
-  assertion1( value(0) != std::numeric_limits<double>::infinity(), value(0) );
-  assertion1( value(0) == value(0), value(0) );  // test for not a number
+  assertion( value(0) != std::numeric_limits<double>::infinity(), value(0) );
+  assertion( value(0) == value(0), value(0) );  // test for not a number
 
-  assertion1( value(1) != std::numeric_limits<double>::infinity(), value(1) );
-  assertion1( value(1) == value(1), value(1) );  // test for not a number
+  assertion( value(1) != std::numeric_limits<double>::infinity(), value(1) );
+  assertion( value(1) == value(1), value(1) );  // test for not a number
 
-  assertion1( value(2) != std::numeric_limits<double>::infinity(), value(2) );
-  assertion1( value(2) == value(2), value(2) );  // test for not a number
+  assertion( value(2) != std::numeric_limits<double>::infinity(), value(2) );
+  assertion( value(2) == value(2), value(2) );  // test for not a number
 
   while (_lastWriteCommandCellNumber<index-1) {
     plotCell(_lastWriteCommandCellNumber+1,0.0);

@@ -125,8 +125,8 @@ public:
    		 bool dotProductComputation = true)
    {
 		preciceTrace("multiply()");
-		assertion2(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
-		assertion2(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
+		assertion(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
+		assertion(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
 		// if serial computation on single processor, i.e, no master-slave mode
 		if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
@@ -173,10 +173,10 @@ public:
         int p, int q, int r)
   {
     preciceTrace("multiply() (m x n) * (n * r), r=1/m");
-    assertion2(leftMatrix.rows() == p, leftMatrix.rows(), p);
-    assertion2(leftMatrix.cols() == rightMatrix.rows(),leftMatrix.cols(), rightMatrix.rows());
-    assertion2(result.rows() == p, result.rows(), p);
-    assertion2(result.cols() == r, result.cols(), r);
+    assertion(leftMatrix.rows() == p, leftMatrix.rows(), p);
+    assertion(leftMatrix.cols() == rightMatrix.rows(),leftMatrix.cols(), rightMatrix.rows());
+    assertion(result.rows() == p, result.rows(), p);
+    assertion(result.cols() == r, result.cols(), r);
 
     Eigen::MatrixXd localResult(result.rows(), result.cols());
     localResult.noalias() = leftMatrix * rightMatrix;
@@ -264,7 +264,7 @@ private:
 
 		// set block at corresponding row-index on proc
 		int off = offsets[utils::MasterSlave::_rank];
-		assertion2(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
+		assertion(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
 		result.block(off, 0, diagBlock.rows(), diagBlock.cols()) = diagBlock;
 
 		/**
@@ -313,7 +313,7 @@ private:
 			// note: the direction and ordering of the cyclic sending operation is chosen s.t. the computed block is
 			//       local on the current processor (in J_inv).
 			off = offsets[sourceProc];
-			assertion2(result.cols() == block.cols(), result.cols(), block.cols());
+			assertion(result.cols() == block.cols(), result.cols(), block.cols());
 			result.block(off, 0, block.rows(), block.cols()) = block;
 		}
    }
@@ -368,7 +368,7 @@ private:
 	  preciceTrace("multiplyNM_block() (n x n) * (n x m)");
 
 		// ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
-		assertion2(leftMatrix.IsRowMajor == rightMatrix.IsRowMajor, leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
+		assertion(leftMatrix.IsRowMajor == rightMatrix.IsRowMajor, leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
 
 		// multiply local block (saxpy-based approach)
 		// dimension: (n_global x n_local) * (n_local x m) = (n_global x m)

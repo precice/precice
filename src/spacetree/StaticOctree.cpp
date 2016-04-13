@@ -50,7 +50,7 @@ void StaticOctree:: initialize()
       query::FindVoxelContent::INCLUDE_BOUNDARY );
   size_t size = 0;
   for (mesh::PtrMesh mesh : _meshes){
-    assertion2(mesh->getDimensions() == dim, mesh->getDimensions(), dim);
+    assertion(mesh->getDimensions() == dim, mesh->getDimensions(), dim);
     size += mesh->content().size();
     findVoxel(*mesh);
   }
@@ -86,7 +86,7 @@ void StaticOctree:: initialize()
   }
   else {
     preciceDebug( "Setting 3D environment cell neighbor indices" );
-    assertion1 ( dim == 3, dim );
+    assertion ( dim == 3, dim );
     tarch::la::DynamicVector<int> indices(3);
     assignList(indices) = 1, 2, 4; // Cell 0
     env.setNeighborCellIndices(0, indices);

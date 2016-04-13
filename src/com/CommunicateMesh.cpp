@@ -110,7 +110,7 @@ void CommunicateMesh:: receiveMesh
         coords[d] = vertexCoords[i*dim+d];
       }
       mesh::Vertex& v = mesh.createVertex ( coords );
-      assertion1 ( v.getID() >= 0, v.getID() );
+      assertion ( v.getID() >= 0, v.getID() );
       vertices.push_back(&v);
     }
   }
@@ -250,7 +250,7 @@ void CommunicateMesh:: broadcastReceiveMesh
         coords[d] = vertexCoords[i*dim+d];
       }
       mesh::Vertex& v = mesh.createVertex ( coords );
-      assertion1 ( v.getID() >= 0, v.getID() );
+      assertion ( v.getID() >= 0, v.getID() );
       vertices.push_back(&v);
     }
   }

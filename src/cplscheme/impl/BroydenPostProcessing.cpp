@@ -142,11 +142,11 @@ void BroydenPostProcessing::computeQNUpdate
     tmp = tmp/dotproductV;                // (w-J_inv*v)/|v|_l2
     preciceDebug("did step (W-J_inv*v)/|v|");
 
-    assertion2(tmp.size() == v.size(), tmp.size(), v.size());
+    assertion(tmp.size() == v.size(), tmp.size(), v.size());
     JUpdate = tmp * v.transpose();
     preciceDebug("multiplied (w-J_inv*v)/|v| * v^T");
 
-    assertion2(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
+    assertion(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
     _invJacobian = _oldInvJacobian + JUpdate;
 
     // solve delta_x = - J_inv*residuals
@@ -171,7 +171,7 @@ void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
   // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
   // ----------------------------------------- -------
 
-  assertion2(_currentColumns <= _matrixV.cols(), _currentColumns, _matrixV.cols());
+  assertion(_currentColumns <= _matrixV.cols(), _currentColumns, _matrixV.cols());
   DataMatrix v;
   DataMatrix Vcopy, _matV, _matW;
   DataMatrix Q(_matrixV.rows(), _currentColumns, 0.0);
@@ -200,7 +200,7 @@ void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
  
   // tmpMatrix = J_inv_n*V
   Matrix tmpMatrix(_matrixV.rows(), _currentColumns, 0.0);
-  assertion2(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
+  assertion(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
   multiply(_oldInvJacobian, _matV, tmpMatrix);
   
   // tmpMatrix = (W-J_inv_n*V)
@@ -208,7 +208,7 @@ void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
   tmpMatrix = tmpMatrix + _matW;
 
   // invJacobian = (W - J_inv_n*V)*(V^T*V)^-1*V^T
-  assertion2(tmpMatrix.cols() == v.rows(), tmpMatrix.cols(), v.rows());
+  assertion(tmpMatrix.cols() == v.rows(), tmpMatrix.cols(), v.rows());
   
   multiply(tmpMatrix, v, _invJacobian);
   _invJacobian = _invJacobian + _oldInvJacobian;

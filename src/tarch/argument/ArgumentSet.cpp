@@ -39,7 +39,7 @@ void tarch::argument::ArgumentSet::addArgument(std::string name, Argument::TYPE 
 }
 
 void tarch::argument::ArgumentSet::initialize(unsigned int argc, char* argv[]) {
-	assertion2((argc-2)==_nrArgs, argc-2, _nrArgs);
+	assertion((argc-2)==_nrArgs, argc-2, _nrArgs);
 	if((argc-2) != _nrArgs) {
 		_log.error("initialize", "Error! Wrong number of arguments!");
 		printDefaultArguments();

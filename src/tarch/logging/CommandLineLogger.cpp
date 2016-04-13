@@ -36,7 +36,7 @@ tarch::logging::CommandLineLogger::FilterListEntry::FilterListEntry( const std::
   _rank(-1),
   _namespaceName(""),
   _isBlackEntry(isBlackListEntry) {
-  assertion1( targetName==std::string("info") || targetName==std::string("debug") || targetName==std::string(""), targetName );
+  assertion( targetName==std::string("info") || targetName==std::string("debug") || targetName==std::string(""), targetName );
 }
 
 
@@ -45,7 +45,7 @@ tarch::logging::CommandLineLogger::FilterListEntry::FilterListEntry( const std::
   _rank(rank),
   _namespaceName(className),
   _isBlackEntry(isBlackListEntry) {
-  assertion1( targetName==std::string("info") || targetName==std::string("debug") || targetName==std::string(""), targetName );
+  assertion( targetName==std::string("info") || targetName==std::string("debug") || targetName==std::string(""), targetName );
 }
 
 
@@ -317,13 +317,13 @@ void tarch::logging::CommandLineLogger::indent( bool indent, const std::string& 
   }
   else {
     #if !defined(SharedMemoryParallelisation)
-    assertion2(_indentTraces.top()==trace,
+    assertion(_indentTraces.top()==trace,
       message,
       indent
     );
     _indentTraces.pop();
     #endif
-    assertion5(
+    assertion(
       _indent >= NumberOfIndentSpaces,
       _indent, NumberOfIndentSpaces,
       "more logTraceOut calls than logTraceIn calls invoked before",

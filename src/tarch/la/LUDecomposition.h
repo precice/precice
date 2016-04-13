@@ -39,9 +39,9 @@ namespace tarch {
     ) {
       typedef MatrixTraits<Matrix> MT;
       typedef VectorTraits<Vector> VT;
-      assertion2 (MT::rows(A) == MT::cols(A), MT::rows(A), MT::cols(A));
+      assertion (MT::rows(A) == MT::cols(A), MT::rows(A), MT::cols(A));
       int n = MT::rows(A); // quadratic matrix size
-      assertion2 (n == VT::size(pivots), n, VT::size(pivots));
+      assertion (n == VT::size(pivots), n, VT::size(pivots));
 
       // Init pivots
       //for (int i=0; i < n; i++){
@@ -61,7 +61,7 @@ namespace tarch {
             max = current;
           }
         }
-        //assertion1 (greater(max,0.0), max);
+        //assertion (greater(max,0.0), max);
         //std::cout << "Exchange row " << k << " with row " << maxIndex << std::endl;
 
         // Change pivots

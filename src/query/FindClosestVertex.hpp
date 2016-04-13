@@ -90,7 +90,7 @@ bool FindClosestVertex:: operator()
 {
   utils::DynVector vectorDistance(_searchPoint.size(), 0.0);
   for ( mesh::Vertex& vertex : container.vertices() ) {
-    assertion2 ( vertex.getDimensions() == _searchPoint.size(),
+    assertion ( vertex.getDimensions() == _searchPoint.size(),
                  vertex.getDimensions(), _searchPoint.size() );
     vectorDistance = vertex.getCoords();
     vectorDistance -= _searchPoint;

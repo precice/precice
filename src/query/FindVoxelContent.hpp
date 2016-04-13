@@ -132,9 +132,9 @@ FindVoxelContent:: FindVoxelContent
   _dimensions ( voxelCenter.size() ),
   _content ()
 {
-  assertion2 ( voxelCenter.size() == halflengths.size(),
+  assertion ( voxelCenter.size() == halflengths.size(),
                voxelCenter.size(), halflengths.size() );
-  assertion1 ( (_dimensions == 2) || (_dimensions == 3), _dimensions );
+  assertion ( (_dimensions == 2) || (_dimensions == 3), _dimensions );
 }
 
 template< typename CONTAINER_T >

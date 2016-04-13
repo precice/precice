@@ -54,12 +54,12 @@ const utils::DynVector& delinearize
   int dimensions )
 {
   if ( dimensions == 2 ){
-    assertion1 ( (toDelinearize >= 0) && (toDelinearize < 4), toDelinearize );
+    assertion ( (toDelinearize >= 0) && (toDelinearize < 4), toDelinearize );
     return DELINEARIZE_2D[toDelinearize];
   }
   else {
-    assertion1 ( dimensions == 3, dimensions );
-    assertion1 ( (toDelinearize >= 0) && (toDelinearize < 8), toDelinearize );
+    assertion ( dimensions == 3, dimensions );
+    assertion ( (toDelinearize >= 0) && (toDelinearize < 8), toDelinearize );
     return DELINEARIZE_3D[toDelinearize];
   }
 }

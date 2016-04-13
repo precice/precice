@@ -91,7 +91,7 @@ void SpacetreeConfiguration:: setDimensions
   int dimensions )
 {
   preciceTrace1("setDimensions()", dimensions);
-  assertion1((dimensions == 2) || (dimensions == 3), dimensions);
+  assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
@@ -163,7 +163,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
   preciceTrace4("getSpacetree()", type, offset, halflengths, maxMeshwidth);
   assertion(_dimensions != 0);
   Spacetree* spacetree = nullptr;
-  assertion2 ( offset.size() == halflengths.size(), offset.size(), halflengths.size() );
+  assertion ( offset.size() == halflengths.size(), offset.size(), halflengths.size() );
   bool equalHalflengths = true;
   equalHalflengths &= tarch::la::equals(halflengths(0), halflengths(1));
   if ( _dimensions == 3 ){

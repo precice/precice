@@ -73,8 +73,8 @@ void BalanceVertexPositionAction:: performAction
         mesh::Vertex& v1 = edge.vertex(1);
         Vector2D ab = v0.getCoords();
         ab -= v1.getCoords();
-        assertion1 ( v0.getID() < pullVectors.size(), v0.getID() );
-        assertion1 ( v1.getID() < pullVectors.size(), v1.getID() );
+        assertion ( v0.getID() < pullVectors.size(), v0.getID() );
+        assertion ( v1.getID() < pullVectors.size(), v1.getID() );
         pullVectors[v0.getID()] -= ab;
         pullVectors[v1.getID()] += ab;
         pullVectorScalings[v0.getID()] += 1.0;
@@ -87,9 +87,9 @@ void BalanceVertexPositionAction:: performAction
         const mesh::Vertex& v0 = triangle.vertex(0);
         const mesh::Vertex& v1 = triangle.vertex(1);
         const mesh::Vertex& v2 = triangle.vertex(2);
-        assertion1 ( v0.getID() < pullVectors.size(), v0.getID() );
-        assertion1 ( v1.getID() < pullVectors.size(), v1.getID() );
-        assertion1 ( v2.getID() < pullVectors.size(), v2.getID() );
+        assertion ( v0.getID() < pullVectors.size(), v0.getID() );
+        assertion ( v1.getID() < pullVectors.size(), v1.getID() );
+        assertion ( v2.getID() < pullVectors.size(), v2.getID() );
         double area = utils::GeometryComputations::triangleArea (
                       v0.getCoords(), v1.getCoords(), v2.getCoords() );
         Vector3D pullVector = triangle.getCenter();
@@ -117,7 +117,7 @@ void BalanceVertexPositionAction:: performAction
     for (mesh::Vertex& vertex : mesh->vertices()) {
       if ( dimension == 2 ){
         Vector2D point = vertex.getCoords();
-        assertion1 ( vertex.getID() < pullVectors.size(), vertex.getID() );
+        assertion ( vertex.getID() < pullVectors.size(), vertex.getID() );
         point += pullVectors[vertex.getID()];
         Vector2D a = vertex.getCoords();
         // Get parameters for parametric representation of line orthogonal to vertex
@@ -131,7 +131,7 @@ void BalanceVertexPositionAction:: performAction
         d += vertex.getNormal();
         // Compute denominator for solving 2x2 equation system
         double D = a(0)*(d(1)-c(1)) + b(0)*(c(1)-d(1)) + d(0)*ab(1) - c(0)*ab(1);
-        assertion5 ( not equals(D, 0.0), a, b, c, d, ab );   // D == 0 would imply "normal // edge"
+        assertion ( not equals(D, 0.0), a, b, c, d, ab );   // D == 0 would imply "normal // edge"
         // Compute parameter of intersection point on line ab
         double param = (a(0)*(d(1)-c(1)) + c(0)*(a(1)-d(1)) + d(0)*(c(1)-a(1))) / D;
 
@@ -147,9 +147,9 @@ void BalanceVertexPositionAction:: performAction
         vertex.setCoords ( projectedPoint );
       }
       else {
-        assertion1 ( dimension == 3, dimension );
+        assertion ( dimension == 3, dimension );
         Vector3D point = vertex.getCoords();
-        assertion1 ( vertex.getID() < pullVectors.size(), vertex.getID() );
+        assertion ( vertex.getID() < pullVectors.size(), vertex.getID() );
         point += pullVectors[vertex.getID()];
         Vector3D a = vertex.getCoords();
         // Parametric representation for plane orthogonal to vertex normal:

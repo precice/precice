@@ -32,13 +32,13 @@ VectorAssignRange<Vector>::~VectorAssignRange()
 template<typename Vector>
 VectorAssignRange<Vector> & VectorAssignRange<Vector>::operator= (const typename Traits::Scalar & toAssign)
 {
-  assertion1(_start>=0, _start);
-  assertion2(_start<Traits::size(_vector), _start,Traits::size(_vector));
-  assertion1(_stop>=0, _stop);
-  assertion2(_stop<Traits::size(_vector), _stop, Traits::size(_vector));
+  assertion(_start>=0, _start);
+  assertion(_start<Traits::size(_vector), _start,Traits::size(_vector));
+  assertion(_stop>=0, _stop);
+  assertion(_stop<Traits::size(_vector), _stop, Traits::size(_vector));
   int i;
   const int rangeLength=_stop-_start+1;
-  assertion1 ( _stop < Traits::size(_vector), _vector );
+  assertion ( _stop < Traits::size(_vector), _vector );
   for(i=0;i<rangeLength;i ++){
   Traits::elem(_start+i, _vector) = toAssign;
   }
@@ -47,14 +47,14 @@ VectorAssignRange<Vector> & VectorAssignRange<Vector>::operator= (const typename
 template<typename Vector>
 VectorAssignRange<Vector> & VectorAssignRange<Vector>::operator= (const typename Traits::ThisVector & toAssign)
 {
-  assertion1(_start>=0, _start);
-  assertion2(_start<Traits::size(_vector), _start,Traits::size(_vector));
-  assertion1(_stop>=0, _stop);
-  assertion2(_stop<Traits::size(_vector), _stop, Traits::size(_vector));
+  assertion(_start>=0, _start);
+  assertion(_start<Traits::size(_vector), _start,Traits::size(_vector));
+  assertion(_stop>=0, _stop);
+  assertion(_stop<Traits::size(_vector), _stop, Traits::size(_vector));
   int i;
   const int rangeLength=_stop-_start+1;
-  assertion1(rangeLength==Traits::size(toAssign),Traits::size(toAssign));
-  assertion1 ( _stop < Traits::size(_vector), _vector );
+  assertion(rangeLength==Traits::size(toAssign),Traits::size(toAssign));
+  assertion ( _stop < Traits::size(_vector), _vector );
   for(i=0;i<rangeLength;i ++){
   Traits::elem(_start+i, _vector) = Traits::celem(i, toAssign);
   }
@@ -63,7 +63,7 @@ VectorAssignRange<Vector> & VectorAssignRange<Vector>::operator= (const typename
 //template<typename Vector>
 //VectorAssignRange<Vector> & VectorAssignRange<Vector>::operator, (const typename Traits::Scalar & toAssign)
 //{
-//  assertion1 ( _index < Traits::size(_vector), _vector );
+//  assertion ( _index < Traits::size(_vector), _vector );
 //  Traits::elem(_index, _vector) = toAssign;
 //  _index ++;
 //  return *this;
