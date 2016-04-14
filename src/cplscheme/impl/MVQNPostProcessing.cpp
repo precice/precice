@@ -804,17 +804,16 @@ void MVQNPostProcessing::restartIMVJ()
 
       tmp = _WtilChunk.front() * ZV;
       _WtilChunk[i] += tmp;
-
-      // drop oldest pair Wtil_0 and Z_0
-      assertion(not _WtilChunk.empty());
-      assertion(not _pseudoInverseChunk.empty())
-      assertion(not _matrixVChunk.empty())
-      _WtilChunk.erase(_WtilChunk.begin());
-      _pseudoInverseChunk.erase(_pseudoInverseChunk.begin());
-      _matrixVChunk.erase(_matrixVChunk.begin());
-
-      preciceDebug("stored matrices after sliding-window update: "<<_WtilChunk.size());
     }
+    // drop oldest pair Wtil_0 and Z_0
+    assertion(not _WtilChunk.empty());
+    assertion(not _pseudoInverseChunk.empty())
+    assertion(not _matrixVChunk.empty())
+    _WtilChunk.erase(_WtilChunk.begin());
+    _pseudoInverseChunk.erase(_pseudoInverseChunk.begin());
+    _matrixVChunk.erase(_matrixVChunk.begin());
+
+    preciceDebug("stored matrices after sliding-window update: "<<_WtilChunk.size());
 
   }else if (_imvjRestartType == MVQNPostProcessing::NO_RESTART){
     assertion(false); // should not happen, in this case _imvjRestart=false
