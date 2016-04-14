@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_UTILS_DIMENSIONS_HPP_
-#define PRECICE_UTILS_DIMENSIONS_HPP_
+#pragma once
 
 #include "tarch/la/Vector.h"
 #include "tarch/la/DynamicVector.h"
@@ -11,18 +7,6 @@
 
 namespace precice {
 namespace utils {
-
-/**
- * @brief Compile-time computation of base "to the power of" exp
- *
- * Exp and base must be of type int
- */
-template<int base, int exp> struct CompilePower {
-   enum { VALUE = base * CompilePower<base, exp-1>::VALUE };
-};
-template< int base > struct CompilePower<base, 1> {
-   enum { VALUE = base };
-};
 
 typedef tarch::la::DynamicVector<double> DynVector;
 typedef tarch::la::DynamicMatrix<double> DynMatrix;
@@ -72,4 +56,3 @@ template<> struct IndexMaps<3>
 
 }} // namespace precice, utils
 
-#endif /* PRECICE_UTILS_DIMENSIONS_HPP_ */
