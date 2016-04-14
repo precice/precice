@@ -105,8 +105,11 @@ private:
    /// @brief: stores all Wtil matrices within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
    std::vector< Eigen::MatrixXd > _WtilChunk;
 
-   /// @brief_ stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
+   /// @brief: stores all pseudo inverses within the current chunk of the imvj restart mode, disabled if _imvjRestart = false.
    std::vector<Eigen::MatrixXd> _pseudoInverseChunk;
+
+   /// @brief: stores all matrixV objects at the end of each time step for the sliding-window approach
+   std::vector<Eigen::MatrixXd> _matrixVChunk;
 
    /// @brief: stores columns from previous  #_RSLSreusedTimesteps time steps if RS-LS restart-mode is active
    Eigen::MatrixXd _matrixV_RSLS;

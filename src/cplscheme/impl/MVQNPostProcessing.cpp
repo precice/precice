@@ -71,6 +71,7 @@ MVQNPostProcessing:: MVQNPostProcessing
   _Wtil(),
   _WtilChunk(),
   _pseudoInverseChunk(),
+  _matrixVChunk(),
   _matrixV_RSLS(),
   _matrixW_RSLS(),
   _matrixCols_RSLS(),
@@ -785,25 +786,34 @@ void MVQNPostProcessing::restartIMVJ()
 
   }else if (_imvjRestartType == MVQNPostProcessing::RS_SLIDE){
 
+    assertion(_matrixVChunk.size() == _WtilChunk.size(), _matrixVChunk.size(), _WtilChunk.size());
+
     // re-compute Wtil -- compensate for dropping of Wtil_0 ond Z_0:
     //                    Wtil_q <-- Wtil_q +  Wtil^0 * (Z^0*V_q)
     for(int i = (int)_WtilChunk.size()-1; i >= 1; i--){
 
-      int colsLSSystemBackThen = _pseudoInverseChunk.front().rows();
-      assertion(colsLSSystemBackThen == _WtilChunk.front().cols(), colsLSSystemBackThen, _WtilChunk.front().cols());
-      Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, _qrV.cols());
+      int colsObjectsToUpdate = _matrixVChunk[i].cols();
+      int colsObjectsToDelete = _pseudoInverseChunk.front().rows();
+      Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsObjectsToDelete, colsObjectsToUpdate);
+
       // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
-      _parMatrixOps->multiply(_pseudoInverseChunk.front(), _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
+      _parMatrixOps->multiply(_pseudoInverseChunk.front(), _matrixVChunk[i], ZV, colsObjectsToDelete, getLSSystemRows(), colsObjectsToUpdate);
       // multiply: Wtil^0 * (Z_0*V)  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
-      Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
+      Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_qrV.rows(), colsObjectsToUpdate);
+      assertion(_WtilChunk[i].cols() == colsObjectsToUpdate, _WtilChunk[i].cols(), colsObjectsToUpdate);
+
       tmp = _WtilChunk.front() * ZV;
       _WtilChunk[i] += tmp;
 
       // drop oldest pair Wtil_0 and Z_0
       assertion(not _WtilChunk.empty());
       assertion(not _pseudoInverseChunk.empty())
+      assertion(not _matrixVChunk.empty())
       _WtilChunk.erase(_WtilChunk.begin());
       _pseudoInverseChunk.erase(_pseudoInverseChunk.begin());
+      _matrixVChunk.erase(_matrixVChunk.begin());
+
+      preciceDebug("stored matrices after sliding-window update: "<<_WtilChunk.size());
     }
 
   }else if (_imvjRestartType == MVQNPostProcessing::NO_RESTART){
@@ -885,6 +895,10 @@ void MVQNPostProcessing:: specializedIterationsConverged
       // all objects in Wtil chunk and Z chunk are NOT PRECONDITIONED
       _WtilChunk.push_back(_Wtil);
       _pseudoInverseChunk.push_back(Z);
+
+      // store _matrixV from converged time step for sliding-window approach
+      if(_imvjRestartType == MVQNPostProcessing::RS_SLIDE)
+        _matrixVChunk.push_back(_matrixV);
 
       /**
        *  Restart the IMVJ according to restart type
