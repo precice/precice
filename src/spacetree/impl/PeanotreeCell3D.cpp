@@ -7,7 +7,7 @@ namespace precice {
 namespace spacetree {
 namespace impl {
 
-tarch::logging::Log PeanotreeCell3D:: _log("precice::spacetree::impl::PeanotreeCell3D");
+logging::Logger PeanotreeCell3D:: _log("precice::spacetree::impl::PeanotreeCell3D");
 
 const double PeanotreeCell3D::_oneThird(1.0/3.0);
 
@@ -49,7 +49,7 @@ void PeanotreeCell3D:: refine
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  tpreciceTrace2 ( "refine()", cellCenter, cellHalflengths );
+  preciceTrace2 ( "refine()", cellCenter, cellHalflengths );
   assertion ( _content != nullptr );
   assertion ( _childs.size() == 0, _childs.size() );
   int dim = cellCenter.size();
@@ -58,7 +58,7 @@ void PeanotreeCell3D:: refine
   utils::DynVector newCenter(dim);
   utils::DynVector newHalflengths(dim, 1.0 / 3.0 * cellHalflengths[0]);
   for ( int i=0; i < threePowerD; i++ ){
-    tpreciceDebug ( "Creating child " << i );
+    preciceDebug ( "Creating child " << i );
     newCenter = PEANO_FINE_CELL_CENTER_POSITIONS_3D[i];
     newCenter *= newHalflengths[0];
     newCenter += cellCenter;
@@ -100,7 +100,7 @@ void PeanotreeCell3D:: getChildData
   utils::DynVector&       childCenter,
   utils::DynVector&       childHalflengths )
 {
-  tpreciceTrace3 ( "getChildData()", childIndex, cellCenter, cellHalflengths );
+  preciceTrace3 ( "getChildData()", childIndex, cellCenter, cellHalflengths );
   assign(childHalflengths) = 0.5 * cellHalflengths[0];
   childCenter = utils::delinearize(childIndex, childCenter.size());
   childCenter *= childHalflengths[0];

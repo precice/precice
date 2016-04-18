@@ -26,7 +26,7 @@ namespace precice {
 namespace geometry {
 namespace tests {
 
-tarch::logging::Log CuboidTest:: _log ( "precice::geometry::tests::CuboidTest" );
+logging::Logger CuboidTest:: _log ( "precice::geometry::tests::CuboidTest" );
 
 CuboidTest:: CuboidTest ()
 :
@@ -45,7 +45,7 @@ void CuboidTest:: run ()
 
 void CuboidTest:: testCreation ()
 {
-  tpreciceTrace ( "testCreation()" );
+  preciceTrace ( "testCreation()" );
 
   for ( int dim=2; dim <= 3; dim++ ){
     utils::DynVector offset(dim, 0.0);
@@ -67,12 +67,12 @@ void CuboidTest:: testCreation ()
 
 void CuboidTest:: testConfiguration()
 {
-  tpreciceTrace("testConfiguration()");
+  preciceTrace("testConfiguration()");
   using namespace boost;
 
   for (int dim=2; dim <= 3; dim++){
     std::string xmlFilename = utils::Globals::getPathToSources() + "/geometry/tests/";
-    tpreciceDebug("dim = " << dim);
+    preciceDebug("dim = " << dim);
     if (dim == 2){
       xmlFilename += "cuboid2d.xml";
     }
@@ -112,7 +112,7 @@ void CuboidTest:: testConfiguration()
 
 void CuboidTest:: testSubIDs2D ()
 {
-  tpreciceTrace ( "testSubIDs2D" );
+  preciceTrace ( "testSubIDs2D" );
   using utils::Vector2D;
   mesh::Mesh::resetGeometryIDsGlobally ();
   bool flipNormals = false;
@@ -157,7 +157,7 @@ void CuboidTest:: testSubIDs2D ()
       validate ( utils::contained(idSide1, geometryIDs) );
     }
     else {
-      tpreciceDebug ( "Wrong coords = " << vertex.getCoords() );
+      preciceDebug ( "Wrong coords = " << vertex.getCoords() );
       validate ( false );
     }
   }
@@ -183,7 +183,7 @@ void CuboidTest:: testSubIDs2D ()
       validate ( utils::contained(id, geometryIDs) );
     }
     else {
-      tpreciceDebug ( "Wrong center = " << edge.getCenter() );
+      preciceDebug ( "Wrong center = " << edge.getCenter() );
       validate ( false );
     }
   }
@@ -191,7 +191,7 @@ void CuboidTest:: testSubIDs2D ()
 
 void CuboidTest:: testSubIDs3D ()
 {
-  tpreciceTrace ( "testSubIDs3D" );
+  preciceTrace ( "testSubIDs3D" );
   using utils::contained;
   using namespace tarch::la;
   using utils::Vector3D;
@@ -264,7 +264,7 @@ void CuboidTest:: testSubIDs3D ()
       validate ( contained(idSide5, geometryIDs) );
     }
     else {
-      tpreciceDebug ( "Wrong coords = " << vertex.getCoords() );
+      preciceDebug ( "Wrong coords = " << vertex.getCoords() );
       validate ( false );
     }
 
@@ -360,7 +360,7 @@ void CuboidTest:: testSubIDs3D ()
         validate ( contained(idSide1, geometryIDs) );
       }
       else {
-        tpreciceDebug ( "Wrong coords = " << edge.getCenter() );
+        preciceDebug ( "Wrong coords = " << edge.getCenter() );
         validate ( false );
       }
     }
@@ -397,7 +397,7 @@ void CuboidTest:: testSubIDs3D ()
         validate ( contained(idSide5, geometryIDs) );
       }
       else {
-        tpreciceDebug ( "Wrong triangle center = " << triangle.getCenter() );
+        preciceDebug ( "Wrong triangle center = " << triangle.getCenter() );
         validate ( false );
       }
     }

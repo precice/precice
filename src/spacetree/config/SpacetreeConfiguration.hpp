@@ -95,7 +95,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Name of the xml-tag read by this class
   const std::string TAG;

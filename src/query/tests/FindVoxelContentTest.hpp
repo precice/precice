@@ -5,7 +5,7 @@
 #define PRECICE_QUERY_FINDVOXELCONTENTTEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Dimensions.hpp"
 
 namespace precice {
@@ -37,7 +37,7 @@ public:
 private:
 
 	// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /**
    * @brief Calls performTestVertices() with different parameters.

@@ -8,7 +8,7 @@
 #include "precice/VoxelPosition.hpp"
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Dimensions.hpp"
 #include <set>
 #include <list>
@@ -311,7 +311,7 @@ private:
     REQUEST_PING // Used in tests only
   };
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   bool _isGeometryMode;
 

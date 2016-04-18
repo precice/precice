@@ -20,7 +20,7 @@ registerIntegrationTest(precice::tests::SolverInterfaceTest)
 namespace precice {
 namespace tests {
 
-tarch::logging::Log SolverInterfaceTest:: _log("precice::tests::SolverInterfaceTest");
+logging::Logger SolverInterfaceTest:: _log("precice::tests::SolverInterfaceTest");
 
 SolverInterfaceTest:: SolverInterfaceTest()
 :
@@ -35,7 +35,7 @@ void SolverInterfaceTest:: setUp()
 
 void SolverInterfaceTest:: run()
 {
-  tpreciceTrace("run()");
+  preciceTrace("run()");
 # ifndef PRECICE_NO_MPI
   PRECICE_MASTER_ONLY {
     testConfiguration();
@@ -103,7 +103,7 @@ void SolverInterfaceTest:: configureSolverInterface
   const std::string& configFilename,
   SolverInterface&   interface )
 {
-  tpreciceTrace1("configureSolverInterface()", configFilename);
+  preciceTrace1("configureSolverInterface()", configFilename);
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
@@ -117,7 +117,7 @@ void SolverInterfaceTest:: configureSolverInterface
 
 void SolverInterfaceTest:: testConfiguration()
 {
-  tpreciceTrace("testConfiguration");
+  preciceTrace("testConfiguration");
   std::string filename = _pathToTests + "/configuration.xml";
   // Test configuration for accessor "Peano"
   SolverInterface interfacePeano ("Peano", 0, 1);
@@ -161,7 +161,7 @@ void SolverInterfaceTest:: testConfiguration()
 
 void SolverInterfaceTest:: testExplicit()
 {
-  tpreciceTrace ( "testExplicit" );
+  preciceTrace ( "testExplicit" );
   assertion ( utils::Parallel::getCommunicatorSize() > 1 );
 
   int timesteps;
@@ -225,7 +225,7 @@ void SolverInterfaceTest:: testExplicit()
 
 void SolverInterfaceTest:: testExplicitWithSubcycling()
 {
-  tpreciceTrace("testExplicitWithSubcycling()");
+  preciceTrace("testExplicitWithSubcycling()");
   assertion(utils::Parallel::getCommunicatorSize() > 1);
 
   mesh::Mesh::resetGeometryIDsGlobally();
@@ -264,7 +264,7 @@ void SolverInterfaceTest:: testExplicitWithSubcycling()
 
 void SolverInterfaceTest:: testExplicitWithDataExchange()
 {
-  tpreciceTrace("testExplicitWithDataExchange()");
+  preciceTrace("testExplicitWithDataExchange()");
   using namespace tarch::la;
   assertion(utils::Parallel::getCommunicatorSize() > 1);
   mesh::Mesh::resetGeometryIDsGlobally();
@@ -354,7 +354,7 @@ void SolverInterfaceTest:: testExplicitWithDataExchange()
 
 void SolverInterfaceTest:: testExplicitWithDataInitialization()
 {
-  tpreciceTrace("testExplicitWithDataInitialization()");
+  preciceTrace("testExplicitWithDataInitialization()");
   using namespace tarch::la;
   assertion(utils::Parallel::getCommunicatorSize() > 1);
   mesh::Mesh::resetGeometryIDsGlobally();
@@ -410,7 +410,7 @@ void SolverInterfaceTest:: testExplicitWithDataInitialization()
 
 void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
 {
-  tpreciceTrace("testExplicitWithBlockDataExchange()");
+  preciceTrace("testExplicitWithBlockDataExchange()");
   using namespace tarch::la;
   assertion(utils::Parallel::getCommunicatorSize() > 1);
   mesh::Mesh::resetGeometryIDsGlobally();
@@ -546,7 +546,7 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
 
 void SolverInterfaceTest:: testExplicitWithSolverGeometry ()
 {
-  tpreciceTrace ( "testExplicitWithSolverGeometry()" );
+  preciceTrace ( "testExplicitWithSolverGeometry()" );
   assertion ( utils::Parallel::getCommunicatorSize() > 1 );
 
   mesh::Mesh::resetGeometryIDsGlobally ();
@@ -589,7 +589,7 @@ void SolverInterfaceTest:: testExplicitWithSolverGeometry ()
 
 void SolverInterfaceTest:: testExplicitWithDisplacingGeometry()
 {
-   tpreciceTrace ( "testExplicitWithDisplacingGeometry()" );
+   preciceTrace ( "testExplicitWithDisplacingGeometry()" );
    assertion ( utils::Parallel::getCommunicatorSize() > 1 );
 
    using namespace tarch::la;
@@ -700,7 +700,7 @@ void SolverInterfaceTest:: testExplicitWithDisplacingGeometry()
 
 void SolverInterfaceTest:: testExplicitWithDataScaling()
 {
-  tpreciceTrace ( "testExplicitWithDataScaling" );
+  preciceTrace ( "testExplicitWithDataScaling" );
   assertion ( utils::Parallel::getCommunicatorSize() == 2 );
   using namespace tarch::la;
   double dt;
@@ -752,7 +752,7 @@ void SolverInterfaceTest:: testExplicitWithDataScaling()
 
 void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
 {
-  tpreciceTrace("testExplicitWithCheckpointingStatMapping()");
+  preciceTrace("testExplicitWithCheckpointingStatMapping()");
   assertion(utils::Parallel::getCommunicatorSize() > 1);
   mesh::Mesh::resetGeometryIDsGlobally();
   using namespace tarch::la;
@@ -909,7 +909,7 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
 
 void SolverInterfaceTest:: testImplicit()
 {
-  tpreciceTrace("testImplicit");
+  preciceTrace("testImplicit");
   assertion(utils::Parallel::getCommunicatorSize() > 1);
   double state = 0.0;
   double checkpoint = 0.0;
@@ -974,7 +974,7 @@ void SolverInterfaceTest:: testImplicit()
 
 void SolverInterfaceTest:: testImplicitWithCheckpointingMappingStat()
 {
-  tpreciceTrace("testImplicitWithCheckpointingMappingStat()");
+  preciceTrace("testImplicitWithCheckpointingMappingStat()");
   assertion(utils::Parallel::getCommunicatorSize() > 1);
   double state = 0.0;
   double checkpoint = 0.0;
@@ -1182,7 +1182,7 @@ void SolverInterfaceTest:: runSolver
    int&               timestepsComputed,
    double&            timeComputed )
 {
-  tpreciceTrace2("runSolver()", solverName, configurationFileName);
+  preciceTrace2("runSolver()", solverName, configurationFileName);
   timestepsComputed = 0;
   timeComputed = 0.0;
   SolverInterface couplingInterface(solverName, 0, 1);
@@ -1199,7 +1199,7 @@ void SolverInterfaceTest:: runSolver
 
 void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
 {
-  tpreciceTrace("testStationaryMappingWithSolverMesh()");
+  preciceTrace("testStationaryMappingWithSolverMesh()");
   std::string config2D = _pathToTests + "mapping-without-geo-2D.xml";
   std::string config3D = _pathToTests + "mapping-without-geo-3D.xml";
   int rank = utils::Parallel::getProcessRank();
@@ -1215,7 +1215,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
   using tarch::la::equals;
 
   for (int dim=2; dim < 3; dim++){
-    tpreciceDebug("Running " << dim << "D test");
+    preciceDebug("Running " << dim << "D test");
     SolverInterface interface(solverName, 0, 1);
     if (dim == 2){
       configureSolverInterface(config2D, interface);
@@ -1276,7 +1276,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
       validate(interface.isWriteDataRequired(maxDt));
       validate(interface.isReadDataAvailable());
       interface.mapReadDataTo(meshDisplID);
-      //tprecicePrint("1: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
+      //precicePrint("1: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
       force += 1.0;
       for (size_t i=0; i < size; i++){
         interface.readVectorData(dataDisplID, i, raw(displ));
@@ -1288,7 +1288,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
       validate(interface.isWriteDataRequired(maxDt));
       validate(interface.isReadDataAvailable());
       interface.mapReadDataTo(meshDisplID);
-      //tprecicePrint("2: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
+      //precicePrint("2: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
       for (size_t i=0; i < size; i++){
         interface.readVectorData(dataDisplID, i, raw(displ));
         validateNumericalEquals(displ[0], 2.0*(positions[i][0] + 0.1));
@@ -1349,7 +1349,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
 
 void SolverInterfaceTest:: testDistributedCommunications()
 {
-  tpreciceTrace("testDistributedCommunications()");
+  preciceTrace("testDistributedCommunications()");
 
   assertion(utils::Parallel::getCommunicatorSize() == 4);
 
@@ -1465,7 +1465,7 @@ void SolverInterfaceTest:: testDistributedCommunications()
 
 void SolverInterfaceTest:: testBug()
 {
-  tpreciceTrace("testBug()");
+  preciceTrace("testBug()");
   typedef utils::Vector3D Vector3D;
   using namespace tarch::la;
   std::string config = _pathToTests + "bug.xml";
@@ -1542,7 +1542,7 @@ void SolverInterfaceTest:: testBug()
 
 void SolverInterfaceTest:: testThreeSolvers()
 {
-  tpreciceTrace("testThreeSolvers()");
+  preciceTrace("testThreeSolvers()");
   std::string configFilename(_pathToTests + "three-solver-explicit-explicit.xml");
   std::vector<int> expectedCallsOfAdvance;
   expectedCallsOfAdvance += 10, 10, 10;
@@ -1574,7 +1574,7 @@ void SolverInterfaceTest:: runThreeSolvers
   const std::string&      configFilename,
   const std::vector<int>& expectedCallsOfAdvance )
 {
-  tpreciceTrace2("runThreeSolvers", configFilename, expectedCallsOfAdvance);
+  preciceTrace2("runThreeSolvers", configFilename, expectedCallsOfAdvance);
 
   int rank = utils::Parallel::getProcessRank();
   assertion((rank == 0) || (rank == 1) || (rank == 2), rank);
@@ -1675,7 +1675,7 @@ void SolverInterfaceTest:: runThreeSolvers
 
 void SolverInterfaceTest:: testMultiCoupling()
 {
-  tpreciceTrace("testMultiCoupling()");
+  preciceTrace("testMultiCoupling()");
   assertion(utils::Parallel::getCommunicatorSize() == 4);
 
   mesh::Mesh::resetGeometryIDsGlobally();
@@ -1832,7 +1832,7 @@ void SolverInterfaceTest:: testMultiCoupling()
 
 void SolverInterfaceTest:: testNASTINMeshRestart()
 {
-  tpreciceTrace("testNASTINMeshRestart()");
+  preciceTrace("testNASTINMeshRestart()");
   assertion(utils::Parallel::getCommunicatorSize() == 2);
 
   std::vector<std::string> restartFiles;
@@ -2003,7 +2003,7 @@ void SolverInterfaceTest:: testNASTINMeshRestart()
 
 void SolverInterfaceTest:: testPinelliCoupled()
 {
-  tpreciceTrace("testPinelliCoupled()");
+  preciceTrace("testPinelliCoupled()");
 
 
   if (utils::Parallel::getProcessRank() == 0){

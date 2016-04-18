@@ -559,7 +559,7 @@ private:
   };
 
   // @brief Used for writing debug information.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::string _accessorName;
 

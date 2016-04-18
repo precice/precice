@@ -52,7 +52,6 @@ int main ( int argc, char** argv )
 
   
   using namespace tarch::configuration;
-  tarch::logging::Log log("");
   precice::logging::setupLogging();
 
   precice::utils::Parallel::initializeMPI(&argc, &argv);

@@ -6,7 +6,7 @@
 
 #include "precice/SolverInterface.hpp"
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
 
 namespace precice {
@@ -32,7 +32,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::string _pathToTests;
 

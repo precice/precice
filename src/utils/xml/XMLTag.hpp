@@ -12,7 +12,7 @@
 #include <map>
 #include <vector>
 #include <set>
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace utils {
@@ -209,7 +209,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    Listener& _listener;
 
@@ -302,7 +302,7 @@ void configure (
 //  CONFIG_T&          configuration,
 //  const std::string& configurationFilename )
 //{
-//  tarch::logging::Log _log ( "precice::utils" );
+//  logging::Logger _log ( "precice::utils" );
 //  bool success = false;
 //  tarch::irr::io::IrrXMLReader * xmlReader =
 //    tarch::irr::io::createIrrXMLReader ( configurationFilename.c_str() );

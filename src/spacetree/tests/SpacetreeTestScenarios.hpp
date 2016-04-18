@@ -76,7 +76,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::string _testName;
 

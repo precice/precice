@@ -7,7 +7,7 @@
 #include "spacetree/Spacetree.hpp"
 #include "mesh/Group.hpp"
 #include "utils/PointerVector.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Helpers.hpp"
 #include "query/FindVoxelContent.hpp"
 #include "utils/Dimensions.hpp"
@@ -116,7 +116,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   mesh::Group* _content;
 

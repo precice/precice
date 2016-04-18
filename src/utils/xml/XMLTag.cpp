@@ -9,7 +9,7 @@
 namespace precice {
 namespace utils {
 
-tarch::logging::Log precice::utils::XMLTag:: _log ("precice::utils::XMLTag");
+logging::Logger precice::utils::XMLTag:: _log ("precice::utils::XMLTag");
 
 XMLTag:: XMLTag
 (
@@ -62,7 +62,7 @@ void XMLTag:: addSubtag
 (
   const XMLTag& tag )
 {
-  tpreciceTrace1("addSubtag()", tag._fullName);
+  preciceTrace1("addSubtag()", tag._fullName);
   assertion (tag._name != std::string(""));
   if (not tag._namespace.empty()){
     _configuredNamespaces[tag._namespace] = false;
@@ -84,14 +84,14 @@ void XMLTag:: addSubtag
 //      return;
 //    }
 //  }
-//  tpreciceError ( "removeAttribute()", "Subtag \"" << tagName << "\" does not exist!" );
+//  preciceError ( "removeAttribute()", "Subtag \"" << tagName << "\" does not exist!" );
 //}
 
 void XMLTag:: addAttribute
 (
   const XMLAttribute<double>& attribute )
 {
-  tpreciceTrace1 ( "addAttribute<double>()", attribute.getName() );
+  preciceTrace1 ( "addAttribute<double>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _doubleAttributes.insert(std::pair<std::string,XMLAttribute<double> >
@@ -102,7 +102,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<int>& attribute )
 {
-  tpreciceTrace1 ( "addAttribute<int>()", attribute.getName() );
+  preciceTrace1 ( "addAttribute<int>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _intAttributes.insert ( std::pair<std::string,
@@ -113,7 +113,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<std::string>& attribute )
 {
-  tpreciceTrace1 ( "addAttribute<string>()", attribute.getName() );
+  preciceTrace1 ( "addAttribute<string>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _stringAttributes.insert ( std::pair<std::string,XMLAttribute<std::string> >
@@ -124,7 +124,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<bool>& attribute )
 {
-  tpreciceTrace1 ( "addAttribute<bool>()", attribute.getName() );
+  preciceTrace1 ( "addAttribute<bool>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _booleanAttributes.insert ( std::pair<std::string,XMLAttribute<bool> >
@@ -135,7 +135,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<utils::Vector2D>& attribute )
 {
-  tpreciceTrace1 ( "addAttribute<Vector2D>()", attribute.getName() );
+  preciceTrace1 ( "addAttribute<Vector2D>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _vector2DAttributes.insert ( std::pair<std::string,XMLAttribute<utils::Vector2D> >
@@ -146,7 +146,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<utils::Vector3D>& attribute )
 {
-  tpreciceTrace1 ( "addAttribute<Vector3D>()", attribute.getName() );
+  preciceTrace1 ( "addAttribute<Vector3D>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _vector3DAttributes.insert(std::pair<std::string,XMLAttribute<utils::Vector3D> >
@@ -157,7 +157,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<utils::DynVector>& attribute )
 {
-  tpreciceTrace1 ( "addAttribute<DynVector>()", attribute.getName() );
+  preciceTrace1 ( "addAttribute<DynVector>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _dynVectorAttributes.insert (
@@ -201,7 +201,7 @@ bool XMLTag:: hasAttribute
 //  else if (contained(attributeName, _dynVectorAttributes))
 //    _dynVectorAttributes.erase (attributeName);
 //  else {
-//    tpreciceError ( "removeAttribute()",
+//    preciceError ( "removeAttribute()",
 //                   "Attribute \"" << attributeName << "\" does not exist!" );
 //  }
 //}
@@ -214,7 +214,7 @@ bool XMLTag:: hasAttribute
 //    if (_subtags.at(i)->getName() == tagName)
 //      return *_subtags.at(i);
 //  }
-//  tpreciceError ( "getTag(.)", "Tag with name " << tagName
+//  preciceError ( "getTag(.)", "Tag with name " << tagName
 //      << " does not exist for tag " << _name );
 //}
 
@@ -222,12 +222,12 @@ void XMLTag:: parse
 (
   XMLTag::XMLReader* xmlReader )
 {
-  tpreciceTrace1("parse()", _fullName);
+  preciceTrace1("parse()", _fullName);
   try {
     resetAttributes();
     if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
       assertion(xmlReader->getNodeName() != nullptr);
-      tpreciceDebug("reading attributes of tag " << xmlReader->getNodeName());
+      preciceDebug("reading attributes of tag " << xmlReader->getNodeName());
       readAttributes(xmlReader);
       _listener.xmlTagCallback(*this);
     }
@@ -236,14 +236,14 @@ void XMLTag:: parse
       while (xmlReader->read()){
         if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
           assertion(xmlReader->getNodeName() != nullptr);
-          tpreciceDebug("reading subtag " << xmlReader->getNodeName()
+          preciceDebug("reading subtag " << xmlReader->getNodeName()
                        << " of tag " << _fullName);
           parseSubtag(xmlReader);
         }
         else if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT_END){
           assertion(xmlReader->getNodeName() != nullptr);
           if (std::string(xmlReader->getNodeName()) == _fullName){
-            tpreciceDebug("end of tag " << xmlReader->getNodeName());
+            preciceDebug("end of tag " << xmlReader->getNodeName());
             areAllSubtagsConfigured();
             _configured = true;
             _listener.xmlEndTagCallback(*this);
@@ -285,7 +285,7 @@ void XMLTag:: parseSubtag
 (
   XMLTag::XMLReader* xmlReader )
 {
-  tpreciceTrace1("parseSubtag()", _fullName);
+  preciceTrace1("parseSubtag()", _fullName);
   bool success = false;
   for (XMLTag* tag : _subtags){
     if (std::string(xmlReader->getNodeName()) == tag->getFullName()){
@@ -379,11 +379,11 @@ utils::DynVector XMLTag:: getDynVectorAttributeValue
   const std::string& name,
   int                dimensions ) const
 {
-  tpreciceTrace2("getDynVectorAttributeValue()", name, dimensions);
+  preciceTrace2("getDynVectorAttributeValue()", name, dimensions);
   std::map<std::string,XMLAttribute<utils::DynVector> >::const_iterator iter;
   iter = _dynVectorAttributes.find(name);
   assertion (iter  != _dynVectorAttributes.end());
-  tpreciceCheck(iter->second.getValue().size() >= dimensions,
+  preciceCheck(iter->second.getValue().size() >= dimensions,
                "getDynVectorAttributeValue()", "Vector attribute \""
                << name << "\" of tag <" << getFullName()
                << "> has less dimensions than required ("
@@ -396,7 +396,7 @@ utils::DynVector XMLTag:: getDynVectorAttributeValue
   for (int i=0; i < dimensions; i++){
     result[i] = parsed[i];
   }
-  tpreciceDebug("Returning value = " << result);
+  preciceDebug("Returning value = " << result);
   return result;
 }
 
@@ -404,7 +404,7 @@ void XMLTag:: readAttributes
 (
   XMLReader* xmlReader )
 {
-  tpreciceTrace("readAttributes()");
+  preciceTrace("readAttributes()");
 //  using utils::contained;
 //  std::set<std::string> readNames;
   for (int i=0; i < xmlReader->getAttributeCount(); i++){
@@ -586,7 +586,7 @@ std::string XMLTag:: printDocumentation
   int linewidth,
   int indentation ) const
 {
-  tpreciceTrace1("printDocumentation()", indentation);
+  preciceTrace1("printDocumentation()", indentation);
   std::string indent;
   for (int i=0; i < indentation; i++){
     indent += " ";
@@ -749,18 +749,18 @@ void configure
   XMLTag&            tag,
   const std::string& configurationFilename )
 {
-  tarch::logging::Log _log("precice::utils");
-  tpreciceTrace2("configure()", tag.getFullName(), configurationFilename);
+  logging::Logger _log("precice::utils");
+  preciceTrace2("configure()", tag.getFullName(), configurationFilename);
   //bool success = false;
   tarch::irr::io::IrrXMLReader* xmlReader =
     tarch::irr::io::createIrrXMLReader(configurationFilename.c_str());
-  tpreciceCheck(xmlReader != nullptr, "configure()",
+  preciceCheck(xmlReader != nullptr, "configure()",
                "Could not create XML reader for file \"" << configurationFilename
                << "\"!");
-  tpreciceCheck(xmlReader->read(), "configure()",
+  preciceCheck(xmlReader->read(), "configure()",
                "XML reader doesn't recognize a valid XML tag in file \""
                << configurationFilename << "\"!" );
-  tpreciceCheck(xmlReader->getNodeType() != tarch::irr::io::EXN_NONE, "configure()",
+  preciceCheck(xmlReader->getNodeType() != tarch::irr::io::EXN_NONE, "configure()",
                "XML reader found only invalid XML tag in file \""
                << configurationFilename << "\"!" );
   //bool foundTag = false;
@@ -771,7 +771,7 @@ void configure
     root.parse(xmlReader);
   }
   catch (std::string errorMsg){
-    tpreciceError("configure()", "Parsing XML file \""
+    preciceError("configure()", "Parsing XML file \""
                  << configurationFilename << "\"" << std::endl << errorMsg);
   }
 
@@ -784,21 +784,21 @@ void configure
 //          success = true;
 //        }
 //        catch (std::string errorMsg){
-//          tpreciceError("configure()", "Parsing XML file \""
+//          preciceError("configure()", "Parsing XML file \""
 //                       << configurationFilename << "\"" << std::endl << errorMsg);
 //        }
 //      }
 //      else {
-//        tpreciceError("configure()", "Found wrong tag <" << xmlReader->getNodeName()
+//        preciceError("configure()", "Found wrong tag <" << xmlReader->getNodeName()
 //                     << "> in XML file \"" << configurationFilename << "\"!");
 //      }
 //    }
 //    else if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT_END){
-//      tpreciceError("configure()", "Found wrong end tag </" << xmlReader->getNodeName()
+//      preciceError("configure()", "Found wrong end tag </" << xmlReader->getNodeName()
 //                           << "> in XML file \"" << configurationFilename << "\"!");
 //    }
 //  }
-//  tpreciceCheck(foundTag, "configure()", "Did not find root tag <" << root.getFullName()
+//  preciceCheck(foundTag, "configure()", "Did not find root tag <" << root.getFullName()
 //               << "> in XML configuration \"" << configurationFilename << "\"!");
 //  return success;
 }
@@ -817,7 +817,7 @@ std::string XMLTag:: getOccurrenceString ( Occurrence occurrence ) const
   else if (occurrence == OCCUR_ONCE_OR_MORE){
     return std::string("1..*");
   }
-  tpreciceError("getOccurrenceString()", "Unknown occurrence type = " << occurrence);
+  preciceError("getOccurrenceString()", "Unknown occurrence type = " << occurrence);
   return "";
 }
 

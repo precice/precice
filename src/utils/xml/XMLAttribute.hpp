@@ -8,11 +8,10 @@
 
 #include "Validator.hpp"
 #include "tarch/irr/XML.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/Globals.hpp"
-#include "utils/LogMacros.hpp"
 #include <string>
 
 namespace precice {
@@ -99,7 +98,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::string _name;
 
@@ -135,7 +134,7 @@ private:
 };
 
 template<typename ATTRIBUTE_T>
-tarch::logging::Log XMLAttribute<ATTRIBUTE_T>:: _log ("precice::utils::XMLAttribute");
+logging::Logger XMLAttribute<ATTRIBUTE_T>:: _log ("precice::utils::XMLAttribute");
 
 template<typename ATTRIBUTE_T>
 XMLAttribute<ATTRIBUTE_T>:: XMLAttribute()
@@ -208,7 +207,7 @@ void XMLAttribute<ATTRIBUTE_T>:: setValidator
 //(
 //  const utils::DynVector& defaultValue  )
 //{
-//  tpreciceTrace1("setDefaultValue()", defaultValue);
+//  preciceTrace1("setDefaultValue()", defaultValue);
 //  _hasDefaultValue = true;
 //  _defaultValue.clear();
 //  _defaultValue.append(defaultValue);
@@ -219,7 +218,7 @@ void XMLAttribute<ATTRIBUTE_T>:: setDefaultValue
 (
   const ATTRIBUTE_T& defaultValue )
 {
-  tpreciceTrace1("setDefaultValue()", defaultValue);
+  preciceTrace1("setDefaultValue()", defaultValue);
   _hasDefaultValue = true;
   set(_defaultValue, defaultValue);
 }
@@ -229,7 +228,7 @@ void XMLAttribute<ATTRIBUTE_T>:: readValue
 (
   XMLReader* xmlReader )
 {
-  tpreciceTrace1("readValue()", _name);
+  preciceTrace1("readValue()", _name);
   if (_read) throw "Attribute \"" + _name + "\" is defined multiple times";
   if (xmlReader->getAttributeValue(getName().c_str()) == 0) {
     if (not _hasDefaultValue){
@@ -248,7 +247,7 @@ void XMLAttribute<ATTRIBUTE_T>:: readValue
       }
     }
   }
-  tpreciceDebug("Read valid attribute \"" << getName() << "\" value = " << _value);
+  preciceDebug("Read valid attribute \"" << getName() << "\" value = " << _value);
   _read = true;
 }
 
