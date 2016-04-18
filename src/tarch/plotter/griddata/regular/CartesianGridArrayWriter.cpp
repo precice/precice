@@ -4,7 +4,7 @@
 #include "tarch/plotter/griddata/regular/CartesianGridArrayWriter.h"
 
 
-tarch::logging::Log tarch::plotter::griddata::regular::CartesianGridArrayWriter::_log( "tarch::plotter::griddata::regular::CartesianGridArrayWriter" );
+logging::Logger tarch::plotter::griddata::regular::CartesianGridArrayWriter::_log( "tarch::plotter::griddata::regular::CartesianGridArrayWriter" );
 
 
 tarch::plotter::griddata::regular::CartesianGridArrayWriter::DataSet::DataSet(
@@ -66,7 +66,7 @@ tarch::plotter::griddata::regular::CartesianGridArrayWriter::CartesianGridArrayW
 tarch::plotter::griddata::regular::CartesianGridArrayWriter::~CartesianGridArrayWriter() {
 	clear();
 	// if (!_writtenToFile) {
-    //_log.warning( "~CartesianGridArrayWriter()", "closed writer although data has not been written to any file" );
+    //preciceWarning( "~CartesianGridArrayWriter()", "closed writer although data has not been written to any file" );
  // }
 }
 
@@ -125,7 +125,7 @@ tarch::plotter::griddata::regular::CartesianGridArrayWriter::createVertexDataWri
 
 
 tarch::la::Vector<3,double> tarch::plotter::griddata::regular::CartesianGridArrayWriter::getH() const {
-  logTraceInWith2Arguments( "getH()", _numberOfGridPoints, _domainSize );
+  preciceTrace2( "getH()", _numberOfGridPoints, _domainSize );
   tarch::la::Vector<3,double> result;
   for (int d=0; d<3; d++) {
 	assertion(_numberOfGridPoints(d)>0);
@@ -137,7 +137,6 @@ tarch::la::Vector<3,double> tarch::plotter::griddata::regular::CartesianGridArra
       result(d) = 0.0;
 	}
   }
-  logTraceOutWith1Argument( "getH()", result );
   return result;
 }
 
@@ -152,7 +151,7 @@ int tarch::plotter::griddata::regular::CartesianGridArrayWriter::getVertexIndex(
 
 
 int tarch::plotter::griddata::regular::CartesianGridArrayWriter::getVertexIndex( const tarch::la::Vector<3,double>& position ) {
-  logTraceInWith1Argument( "getVertexIndex(Vector)", position );
+  preciceTrace1( "getVertexIndex(Vector)", position );
   int result(0);
   int base = 1;
   tarch::la::Vector<3,double> h;
@@ -173,7 +172,6 @@ int tarch::plotter::griddata::regular::CartesianGridArrayWriter::getVertexIndex(
     result += index * base;
     base   *= _numberOfGridPoints(d);
   }
-  logTraceOutWith1Argument( "getVertexIndex(Vector)", result );
   return result;
 }
 
@@ -188,7 +186,7 @@ int tarch::plotter::griddata::regular::CartesianGridArrayWriter::getCellIndex( c
 
 
 int tarch::plotter::griddata::regular::CartesianGridArrayWriter::getCellIndex( const tarch::la::Vector<3,double>& position ) {
-  logTraceInWith1Argument( "getCellIndex(Vector)", position );
+  preciceTrace1( "getCellIndex(Vector)", position );
   int result(0);
   int base = 1;
   tarch::la::Vector<3,double> h;
@@ -209,7 +207,6 @@ int tarch::plotter::griddata::regular::CartesianGridArrayWriter::getCellIndex( c
     result += index * base;
     base   *= (_numberOfGridPoints(d)-1);
   }
-  logTraceOutWith1Argument( "getCellIndex(Vector)", result);
   return result;
 }
 

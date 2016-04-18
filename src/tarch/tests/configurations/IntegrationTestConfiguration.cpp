@@ -12,7 +12,7 @@ registerTopLevelConfiguration(tarch::tests::configurations::IntegrationTestConfi
 
 
 
-tarch::logging::Log tarch::tests::configurations::IntegrationTestConfiguration::_log("tarch::tests::configurations::IntegrationTestConfiguration");
+precice::logging::Logger tarch::tests::configurations::IntegrationTestConfiguration::_log("tarch::tests::configurations::IntegrationTestConfiguration");
 
 
 tarch::tests::configurations::IntegrationTestConfiguration::IntegrationTestConfiguration():
@@ -68,7 +68,7 @@ void tarch::tests::configurations::IntegrationTestConfiguration::parseSubtag( ta
 
   if ( xmlReader->getAttributeValue("output-directory")==nullptr ) {
     _isValid = false;
-    _log.error(
+    preciceWarning(
       "parseSubtag(...)",
       "missing or invalid attribute \"output-directory\" for tag <" + getTag() +
       ">"
@@ -97,7 +97,7 @@ void tarch::tests::configurations::IntegrationTestConfiguration::parseSubtag( ta
     (xmlReader->getNodeType()!=irr::io::EXN_ELEMENT_END) ||
     (xmlReader->getNodeName()!=getTag())
   ) {
-    _log.error(
+    preciceWarning(
       "parseSubtag(...)",
       "expected closing tag for " + getTag() +
       ", but received tag <" + xmlReader->getNodeName() + ">"
@@ -106,10 +106,10 @@ void tarch::tests::configurations::IntegrationTestConfiguration::parseSubtag( ta
   }
 
   if (!_logConfiguration.isValid()) {
-    _log.error( "parse(...)", "subtag <" + _logConfiguration.getTag() + "> missing or invalid." );
+    preciceWarning( "parse(...)", "subtag <" + _logConfiguration.getTag() + "> missing or invalid." );
   }
   if (!_logFormatConfiguration.isValid()) {
-    _log.error( "parse(...)", "subtag <" + _logFormatConfiguration.getTag() + "> missing or invalid." );
+    preciceWarning( "parse(...)", "subtag <" + _logFormatConfiguration.getTag() + "> missing or invalid." );
   }
 }
 

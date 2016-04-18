@@ -5,7 +5,7 @@
 #define _TARCH_PLOTTER_GRIDDATA_REGULAR_CARTESIAN_GRID_ARRAY_WRITER_H_
 
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/plotter/griddata/regular/CartesianGridWriter.h"
 
 #include <vector>
@@ -40,7 +40,7 @@ class tarch::plotter::griddata::regular::CartesianGridArrayWriter:
     /**
      * Logging device.
      */
-    static tarch::logging::Log _log;
+    static logging::Logger _log;
 
 
     struct DataSet {

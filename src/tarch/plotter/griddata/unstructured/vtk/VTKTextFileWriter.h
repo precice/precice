@@ -5,7 +5,7 @@
 #define _TARCH_PLOTTER_GRIDDATA_UNSTRUCTURED_VTK_VTKTEXTFILEWRITER_H_
 
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/plotter/griddata/unstructured/UnstructuredGridWriter.h"
 
 
@@ -54,7 +54,7 @@ class tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter:
     /**
      * Logging device.
      */
-    static tarch::logging::Log _log;
+    static precice::logging::Logger _log;
 
     static const std::string HEADER;
 

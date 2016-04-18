@@ -2,10 +2,10 @@
 #include "mpi.h"
 #endif
 #include "tarch/tests/TreeTestCaseCollection.h"
-#include "utils/assertion.hpp"
+#include "utils/Globals.hpp"
 
 
-tarch::logging::Log tarch::tests::TreeTestCaseCollection::_log("tarch::tests::TreeTestCaseCollection");
+precice::logging::Logger tarch::tests::TreeTestCaseCollection::_log("tarch::tests::TreeTestCaseCollection");
 
 
 tarch::tests::TreeTestCaseCollection::TreeTestCaseCollection(const std::string& treeTestCaseCollectionName, bool deleteTestCases, bool writeToLog):
@@ -104,7 +104,7 @@ void tarch::tests::TreeTestCaseCollection::run( const std::string& prefix ) {
     logInformation += " failed";
   }
   if (_writeToLog) {
-    _log.info("run()",logInformation );
+    preciceInfo("run()",logInformation );
   }
 }
 

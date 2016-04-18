@@ -8,7 +8,7 @@
 #include <vector>
 #include <stack>
 #include <cstdio>
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace tarch{
   namespace xmlwriter {
@@ -73,7 +73,7 @@ public:
   void addAttribute(std::string sAttrName, int value);
   void addComment(std::string sComment);
 private:
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
   std::string sXmlFile;
   std::vector<std::string> vectAttrData;
   FILE *fp;

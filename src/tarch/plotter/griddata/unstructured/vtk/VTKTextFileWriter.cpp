@@ -7,7 +7,7 @@
 #include <fstream>
 #include <iomanip>
 
-tarch::logging::Log tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::_log( "tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter" );
+logging::Logger tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::_log( "tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter" );
 
 
 const std::string tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::HEADER =
@@ -53,7 +53,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::writeToFile
   std::ofstream out;
   out.open( filename.c_str() );
   if ( (!out.fail()) && out.is_open() ) {
-    _log.debug( "close()", "opened data file " + filename );
+    preciceDebug( "close()", "opened data file " + filename );
     out << std::setprecision(_precision);
 
     out << HEADER << std::endl << std::endl;
@@ -79,10 +79,10 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::writeToFile
       out << _cellDataDescription << std::endl << std::endl;
     }
 
-    _log.debug( "close()", "data written to " + filename );
+    preciceDebug( "close()", "data written to " + filename );
   }
   else {
-  	_log.error( "close()", "unable to write output file " + filename );
+  	preciceWarnung( "close()", "unable to write output file " + filename );
   }
 
   _writtenToFile = true;
@@ -108,13 +108,13 @@ tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::createCellWriter
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::validateDataWriterIdentifier( const std::string& identifier ) const {
   if (identifier.empty()) {
-    logWarning(
+    preciceWarning(
       "validateDataWriterIdentifier(string)",
       "identifier for vtk file is empty. Spaces are not allowed for vtk data field identifiers and some vtk visualisers might crash."
     );
   }
   if (identifier.find(' ')!=std::string::npos) {
-    logWarning(
+    preciceWarning(
       "validateDataWriterIdentifier(string)",
       "identifier \"" << identifier << "\" contains spaces. Spaces are not allowed for vtk data field identifiers and some vtk visualisers might crash."
     );

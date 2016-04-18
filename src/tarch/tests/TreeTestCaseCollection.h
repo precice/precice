@@ -5,7 +5,7 @@
 #define _TARCH_TESTS_TREETESTCASECOLLECTION_H_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 #include <list>
 #include <map>
@@ -40,7 +40,7 @@ class tarch::tests::TreeTestCaseCollection: public tarch::tests::TestCase {
     /**
      * Log interface the class writes to.
      */
-    static tarch::logging::Log _log;
+    static precice::logging::Logger _log;
 
     /**
      * Tells whether the testcases contained should be deleted uppon destruction of this object.

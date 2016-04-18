@@ -5,7 +5,7 @@
 #define _TARCH_MULTICORE_TBB_CONFIGURATION_CORE_CONFIGURATION_H_
 
 #include "tarch/configuration/Configuration.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 
 
@@ -28,7 +28,7 @@ class tarch::multicore::configurations::CoreConfiguration: public tarch::configu
     /**
      * Log device.
      */
-    static tarch::logging::Log _log;
+    static precice::logging::Logger _log;
 
     int _numberOfThreads;
 

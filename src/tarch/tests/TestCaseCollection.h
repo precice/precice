@@ -9,7 +9,7 @@
 #endif
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 #include <list>
 
@@ -44,7 +44,7 @@ class tarch::tests::TestCaseCollection: public tarch::tests::TestCase {
     /**
      * Log interface the class writes to.
      */
-    static tarch::logging::Log _log;
+    static precice::logging::Logger _log;
 
     /**
      * Tells whether the testcases contained should be deleted uppon destruction of this object.

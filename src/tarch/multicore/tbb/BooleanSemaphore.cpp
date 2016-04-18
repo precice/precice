@@ -2,7 +2,7 @@
 #include "mpi.h"
 #endif
 #include "tarch/multicore/BooleanSemaphore.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 
 #include <limits>
@@ -45,7 +45,7 @@ void tarch::multicore::BooleanSemaphore::leaveCriticalSection() {
 
 
 void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string& methodTrace) {
-  static tarch::logging::Log  _log( "tarch::multicore::BooleanSemaphore" );
+  static logging::Logger  _log( "tarch::multicore::BooleanSemaphore" );
   if (_pauseCounter < _pauseBeforeYield) {
     __TBB_Pause(_pauseCounter);
     _pauseCounter*=2;
@@ -53,7 +53,7 @@ void tarch::multicore::BooleanSemaphore::sendCurrentTaskToBack(const std::string
   else {
     if (_pauseCounter>_counterThresholdForWarning && _pauseCounter != std::numeric_limits<int>::max()) {
       _pauseCounter = std::numeric_limits<int>::max();
-      logWarning( "sendCurrentTaskToBack(string)", "probably running into deadlock or inefficient behaviour in " << methodTrace );
+      preciceWarning( "sendCurrentTaskToBack(string)", "probably running into deadlock or inefficient behaviour in " << methodTrace );
     }
     else {
       _pauseCounter++;

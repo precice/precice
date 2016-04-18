@@ -7,7 +7,7 @@
 #ifdef Parallel
 #include <mpi.h>
 #endif
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/configuration/BaseTopLevelConfigurationFactory.h"
 #include <string>
 #include <map>
@@ -49,7 +49,7 @@ class tarch::configuration::ConfigurationRegistry {
     /**
      * Log device for the configuration component.
      */
-    static tarch::logging::Log _log;
+    static precice::logging::Logger _log;
 
     typedef std::map<std::string,TopLevelConfiguration*> TopLevelConfigurationContainer;
 

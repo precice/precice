@@ -16,7 +16,8 @@
 #include "tarch/la/Scalar.h"
 #include "tarch/la/Vector.h"
 #include "tarch/la/DynamicVector.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
+#include "utils/Globals.hpp"
 
 //
 // Added by the Peano project
@@ -115,7 +116,7 @@ namespace tarch {
       {
 
       private:
-        static tarch::logging::Log _log;
+        static precice::logging::Logger _log;
       public:
 
         //! Destructor
@@ -343,7 +344,7 @@ namespace tarch {
               currentEntry.erase(found);
             }
             else if (i != num-1) {
-              logError( "getAttributeValueAsDoubleVector(...)", "expected " << num << " ; within value " << std::string(getAttributeValue(attributeName)) );
+              preciceWarning( "getAttributeValueAsDoubleVector(...)", "expected " << num << " ; within value " << std::string(getAttributeValue(attributeName)) );
               return 0.0;
             }
 
@@ -506,7 +507,7 @@ namespace tarch {
       };
 
       template<class char_type, class super_class>
-      tarch::logging::Log IIrrXMLReader<char_type, super_class>::_log("tarch::logging::Log");
+      precice::logging::Logger IIrrXMLReader<char_type, super_class>::_log("tarch::logging::Log");
 
 
       //! defines the utf-16 type.

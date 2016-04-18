@@ -5,7 +5,7 @@
 #define _TARCH_TESTS_CONFIGURATION_INTEGRATION_TESTCONFIGURATION_H_
 
 #include "tarch/configuration/TopLevelConfiguration.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/logging/configurations/LogFilterConfiguration.h"
 #include "tarch/logging/configurations/LogOutputFormatConfiguration.h"
 #include <string>
@@ -28,7 +28,7 @@ class tarch::tests::configurations::IntegrationTestConfiguration: public tarch::
     /**
      * Log interface the class writes to.
      */
-    static tarch::logging::Log _log;
+    static precice::logging::Logger _log;
 
     bool _isValid;
 

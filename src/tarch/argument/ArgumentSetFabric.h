@@ -10,7 +10,7 @@
 
 #include "tarch/argument/ArgumentSet.h"
 #include <vector>
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 namespace tarch {
   namespace argument {
   class ArgumentSetFabric;
@@ -34,7 +34,7 @@ private:
   static ArgumentSet getSpecificSet(unsigned int argc, char* argv[]);
 
 private:
-  static tarch::logging::Log _log;
+  static precice::logging::Logger _log;
   static std::vector<tarch::argument::ArgumentSet> _argumentSets;
   static bool _isInitialized;
 };

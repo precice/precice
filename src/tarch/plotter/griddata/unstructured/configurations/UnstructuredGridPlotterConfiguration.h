@@ -6,7 +6,7 @@
 
 
 #include "tarch/configuration/Configuration.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 
 
@@ -39,7 +39,7 @@ class tarch::plotter::griddata::unstructured::configuration::UnstructuredGridPlo
     /**
      * Logging device.
      */
-    static tarch::logging::Log _log;
+    static logging::Logger _log;
 
     const static std::string PLOTTER_IDENTIFIER_VTK_TEXTFILE;
     const static std::string ATTRIBUTE_PATH;
