@@ -51,6 +51,7 @@ public:
   static const int RS_ZERO = 1;
   static const int RS_LS = 2;
   static const int RS_SVD = 3;
+  static const int RS_SLIDE = 4;
 
   /**
    * @brief Constructor.
