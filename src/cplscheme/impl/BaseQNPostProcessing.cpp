@@ -82,7 +82,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
   its(0),
   tSteps(0),
   deletedColumns(0),
-  _infostringstream(),
+  _infostringstream(std::ostringstream::ate),
   _infostream()
   //_debugOut()
 {
