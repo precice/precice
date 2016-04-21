@@ -95,18 +95,20 @@ MVQNPostProcessing::~MVQNPostProcessing()
 	//if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){ // not possible because of tests, MasterSlave is deactivated when PP is killed
 
 	// close and shut down cyclic communication connections
-	if(_cyclicCommRight != nullptr || _cyclicCommLeft != nullptr){
-		if((utils::MasterSlave::_rank % 2) == 0)
-		{
-		  _cyclicCommLeft->closeConnection();
-		  _cyclicCommRight->closeConnection();
-		}else{
-		  _cyclicCommRight->closeConnection();
-		  _cyclicCommLeft->closeConnection();
-		}
-		_cyclicCommRight = nullptr;
-		_cyclicCommLeft = nullptr;
-	}
+  if(not _imvjRestart){
+    if(_cyclicCommRight != nullptr || _cyclicCommLeft != nullptr){
+      if((utils::MasterSlave::_rank % 2) == 0)
+      {
+        _cyclicCommLeft->closeConnection();
+        _cyclicCommRight->closeConnection();
+      }else{
+        _cyclicCommRight->closeConnection();
+        _cyclicCommLeft->closeConnection();
+      }
+      _cyclicCommRight = nullptr;
+      _cyclicCommLeft = nullptr;
+    }
+  }
 }
 
 // ==================================================================================
@@ -128,60 +130,63 @@ void MVQNPostProcessing:: initialize
     _imvjRestart = true;
 
 
-  if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
-    /*
-     * TODO: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
-     *        Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
-     *        The master-slave communication should be modified such that direct communication between
-     *        slaves is possible (via MPIDirect)
-     */
+  // only need cyclic communication if no MVJ restart mode is used
+  if(not _imvjRestart){
+    if (utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode) {
+      /*
+       * TODO: FIXME: This is a temporary and hacky realization of the cyclic commmunication between slaves
+       *        Therefore the requesterName and accessorName are not given (cf solverInterfaceImpl).
+       *        The master-slave communication should be modified such that direct communication between
+       *        slaves is possible (via MPIDirect)
+       */
 
-#ifdef SuperMUC_WORK
-    try {
-      // auto addressDirectory = std::to_string(".");
-      if(utils::MasterSlave::_masterMode) {
-        Event e("CyclicComm::acceptConnection/createDirectories");
-        for(int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
-          Publisher::createDirectory(std::string(".") + "/" + "." + "cyclicComm-" + std::to_string(rank) + ".address");
-        }
+      #ifdef SuperMUC_WORK
+          try {
+            // auto addressDirectory = std::to_string(".");
+            if(utils::MasterSlave::_masterMode) {
+              Event e("CyclicComm::acceptConnection/createDirectories");
+              for(int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
+                Publisher::createDirectory(std::string(".") + "/" + "." + "cyclicComm-" + std::to_string(rank) + ".address");
+              }
+            }
+            utils::Parallel::synchronizeProcesses();
+          } catch(...) {
+          }
+      #endif
+
+      _cyclicCommLeft = com::Communication::SharedPointer(new com::MPIPortsCommunication());
+      _cyclicCommRight = com::Communication::SharedPointer(new com::MPIPortsCommunication());
+      //_cyclicCommLeft = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
+      //_cyclicCommRight = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
+
+      // initialize cyclic communication between successive slaves
+      int prevProc = (utils::MasterSlave::_rank - 1 < 0) ? utils::MasterSlave::_size - 1 : utils::MasterSlave::_rank - 1;
+      if ((utils::MasterSlave::_rank % 2) == 0)
+          {
+      #ifdef SuperMUC_WORK
+            Publisher::ScopedPushDirectory spd1(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
+      #endif
+        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1);
+      #ifdef SuperMUC_WORK
+            Publisher::ScopedPushDirectory spd2(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
+      #endif
+        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
+      } else {
+      #ifdef SuperMUC_WORK
+            Publisher::ScopedPushDirectory spd3(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
+      #endif
+        _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
+      #ifdef SuperMUC_WORK
+            Publisher::ScopedPushDirectory spd4(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
+      #endif
+        _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1);
       }
-      utils::Parallel::synchronizeProcesses();
-    } catch(...) {
-    }
-#endif
-
-    _cyclicCommLeft = com::Communication::SharedPointer(new com::MPIPortsCommunication());
-    _cyclicCommRight = com::Communication::SharedPointer(new com::MPIPortsCommunication());
-    //_cyclicCommLeft = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
-    //_cyclicCommRight = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
-
-    // initialize cyclic communication between successive slaves
-    int prevProc = (utils::MasterSlave::_rank - 1 < 0) ? utils::MasterSlave::_size - 1 : utils::MasterSlave::_rank - 1;
-    if ((utils::MasterSlave::_rank % 2) == 0)
-        {
-#ifdef SuperMUC_WORK
-      Publisher::ScopedPushDirectory spd1(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
-#endif
-      _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1);
-#ifdef SuperMUC_WORK
-      Publisher::ScopedPushDirectory spd2(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
-#endif
-      _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
-    } else {
-#ifdef SuperMUC_WORK
-      Publisher::ScopedPushDirectory spd3(std::string(".") + "cyclicComm-" + std::to_string(utils::MasterSlave::_rank) + ".address");
-#endif
-      _cyclicCommRight->requestConnection("cyclicComm-" + std::to_string(utils::MasterSlave::_rank), "", 0, 1);
-#ifdef SuperMUC_WORK
-      Publisher::ScopedPushDirectory spd4(std::string(".") + "cyclicComm-" + std::to_string(prevProc) + ".address");
-#endif
-      _cyclicCommLeft->acceptConnection("cyclicComm-" + std::to_string(prevProc), "", 0, 1);
     }
   }
 
   // initialize parallel matrix-matrix operation module
   _parMatrixOps = impl::PtrParMatrixOps(new impl::ParallelMatrixOperations());
-  _parMatrixOps->initialize(_cyclicCommLeft, _cyclicCommRight);
+  _parMatrixOps->initialize(_cyclicCommLeft, _cyclicCommRight, not _imvjRestart);
   _svdJ.initialize(_parMatrixOps, getLSSystemRows());
 
   int entries = _residuals.size();
@@ -627,14 +632,22 @@ void MVQNPostProcessing::restartIMVJ()
   preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
 
-  int used_storage = 0;
-  int theoreticalJ_storage = 2*getLSSystemRows()*_residuals.size() + 3*_residuals.size()*getLSSystemCols() + _residuals.size()*_residuals.size();
+  //int used_storage = 0;
+  //int theoreticalJ_storage = 2*getLSSystemRows()*_residuals.size() + 3*_residuals.size()*getLSSystemCols() + _residuals.size()*_residuals.size();
   //               ------------ RESTART SVD ------------
   if(_imvjRestartType == MVQNPostProcessing::RS_SVD)
   {
-    int rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
 
-    // INVARIANT: all objects are unscaled and entry and unscaled at exit
+    // we need to compute the updated SVD of the scaled Jacobian matrix
+    // |= APPLY PRECONDITIONING  J_prev = Wtil^q, Z^q  ===|
+    for(int i = 0; i < (int)_WtilChunk.size(); i++){
+      _preconditioner->apply(_WtilChunk[i]);
+      _preconditioner->revert(_pseudoInverseChunk[i], true, false);
+    }
+    // |===================                            ===|
+
+
+    int rankBefore = _svdJ.isSVDinitialized() ? _svdJ.rank() : 0;
 
     // if it is the first time step, there is no initial SVD, so take all Wtil, Z matrices
     // otherwise, the first element of each container holds the decomposition of the current
@@ -645,10 +658,10 @@ void MVQNPostProcessing::restartIMVJ()
     for(; q < (int)_WtilChunk.size(); q++){
       // update SVD, i.e., PSI * SIGMA * PHI^T <-- PSI * SIGMA * PHI^T + Wtil^q * Z^q
       _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q].transpose());
-      used_storage += 2*_WtilChunk.size();
+    //  used_storage += 2*_WtilChunk.size();
     }
     int m = _WtilChunk[q].cols(), n = _WtilChunk[q].rows();
-    used_storage += 2*rankBefore*m + 4*m*n + 2*m*m + (rankBefore+m)*(rankBefore+m) + 2*n*(rankBefore+m);
+    //used_storage += 2*rankBefore*m + 4*m*n + 2*m*m + (rankBefore+m)*(rankBefore+m) + 2*n*(rankBefore+m);
 
     // drop all stored Wtil^q, Z^q matrices
     _WtilChunk.clear();
@@ -674,10 +687,15 @@ void MVQNPostProcessing::restartIMVJ()
     _WtilChunk.push_back(psi);
     _pseudoInverseChunk.push_back(Z);
 
+    // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
+    _preconditioner->revert(_WtilChunk.front());
+    _preconditioner->apply(_pseudoInverseChunk.front(), true, false);
+    // |===================                             ==|
+
     preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste<<" avg rank: "<<_avgRank/_nbRestarts);
-    double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
+    //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
-      _infostringstream<<" - MVJ-RESTART " <<_nbRestarts<<", mode= SVD -\n  new modes: "<<rankAfter-rankBefore<<"\n  rank svd: "<<rankAfter<<"\n  avg rank: "<<_avgRank/_nbRestarts<<"\n  truncated modes: "<<waste<<"\n  used storage: "<<percentage<<" %\n"<<std::endl;
+      _infostringstream<<" - MVJ-RESTART " <<_nbRestarts<<", mode= SVD -\n  new modes: "<<rankAfter-rankBefore<<"\n  rank svd: "<<rankAfter<<"\n  avg rank: "<<_avgRank/_nbRestarts<<"\n  truncated modes: "<<waste<<"\n"<<std::endl;
 
     //        ------------ RESTART LEAST SQUARES ------------
   }else if(_imvjRestartType == MVQNPostProcessing::RS_LS)
@@ -744,11 +762,12 @@ void MVQNPostProcessing::restartIMVJ()
      _WtilChunk.push_back(_matrixW_RSLS);
      _pseudoInverseChunk.push_back(pseudoInverse);
 
-
-     // revert both matrices, chunks are reverted in spezializedIterationsConverged
+     // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
+     _preconditioner->revert(_WtilChunk.front());
+     _preconditioner->apply(_pseudoInverseChunk.front(), true, false);
      _preconditioner->revert(_matrixW_RSLS);
      _preconditioner->revert(_matrixV_RSLS);
-
+     // |===================                             ==|
    }
 
    preciceDebug("MVJ-RESTART, mode=LS. Restart with "<<_matrixV_RSLS.cols()<<" columns from "<<_RSLSreusedTimesteps<<" time steps.");
@@ -763,6 +782,29 @@ void MVQNPostProcessing::restartIMVJ()
     _pseudoInverseChunk.clear();
 
     preciceDebug("MVJ-RESTART, mode=Zero");
+
+  }else if (_imvjRestartType == MVQNPostProcessing::RS_SLIDE){
+
+    // re-compute Wtil -- compensate for dropping of Wtil_0 ond Z_0:
+    //                    Wtil_q <-- Wtil_q +  Wtil^0 * (Z^0*V_q)
+    for(int i = (int)_WtilChunk.size()-1; i >= 1; i--){
+
+      int colsLSSystemBackThen = _pseudoInverseChunk.front().rows();
+      assertion(colsLSSystemBackThen == _WtilChunk.front().cols(), colsLSSystemBackThen, _WtilChunk.front().cols());
+      Eigen::MatrixXd ZV = Eigen::MatrixXd::Zero(colsLSSystemBackThen, _qrV.cols());
+      // multiply: ZV := Z^q * V of size (m x m) with m=#cols, stored on each proc.
+      _parMatrixOps->multiply(_pseudoInverseChunk.front(), _matrixV, ZV, colsLSSystemBackThen, getLSSystemRows(), _qrV.cols());
+      // multiply: Wtil^0 * (Z_0*V)  dimensions: (n x m) * (m x m), fully local and embarrassingly parallel
+      Eigen::MatrixXd tmp = Eigen::MatrixXd::Zero(_qrV.rows(), _qrV.cols());
+      tmp = _WtilChunk.front() * ZV;
+      _WtilChunk[i] += tmp;
+
+      // drop oldest pair Wtil_0 and Z_0
+      assertion(not _WtilChunk.empty());
+      assertion(not _pseudoInverseChunk.empty())
+      _WtilChunk.erase(_WtilChunk.begin());
+      _pseudoInverseChunk.erase(_pseudoInverseChunk.begin());
+    }
 
   }else if (_imvjRestartType == MVQNPostProcessing::NO_RESTART){
     assertion(false); // should not happen, in this case _imvjRestart=false
@@ -849,22 +891,9 @@ void MVQNPostProcessing:: specializedIterationsConverged
        */
       if ((int)_WtilChunk.size() >= _chunkSize+1){
 
-        // we need to compute the updated SVD of the scaled Jacobian matrix
-        // |= APPLY PRECONDITIONING  J_prev = Wtil^q, Z^q  ===|
-        for(int i = 0; i < (int)_WtilChunk.size(); i++){
-          _preconditioner->apply(_WtilChunk[i]);
-          _preconditioner->revert(_pseudoInverseChunk[i], true, false);
-        }
-        // |===================                            ===|
-
         // < RESTART >
         _nbRestarts++;
         restartIMVJ();
-
-        // |= REVERT PRECONDITIONING  J_prev = Wtil^0, Z^0  ==|
-        _preconditioner->revert(_WtilChunk.front());
-        _preconditioner->apply(_pseudoInverseChunk.front(), true, false);
-        // |===================                             ==|
       }
 
       // only in imvj normal mode with efficient update:

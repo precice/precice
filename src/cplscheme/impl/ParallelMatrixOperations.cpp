@@ -31,21 +31,27 @@ tarch::logging::Log ParallelMatrixOperations::
 
 ParallelMatrixOperations::ParallelMatrixOperations() :
 _cyclicCommLeft(nullptr),
-_cyclicCommRight(nullptr)
+_cyclicCommRight(nullptr),
+_needCycliclComm(true)
 {}
 
 void ParallelMatrixOperations::initialize(
 		com::Communication::SharedPointer leftComm,
-		com::Communication::SharedPointer rightComm)
+		com::Communication::SharedPointer rightComm,
+		bool needCyclicComm)
 {
 	preciceTrace("initialize()");
+
+	_needCycliclComm = needCyclicComm;
 	if(utils::MasterSlave::_masterMode ||utils::MasterSlave::_slaveMode){
 
 		_cyclicCommLeft = leftComm;
 		_cyclicCommRight = rightComm;
 
-		assertion(_cyclicCommLeft.get() != NULL); assertion(_cyclicCommLeft->isConnected());
-		assertion(_cyclicCommRight.get() != NULL); assertion(_cyclicCommRight->isConnected());
+		if(_needCycliclComm){
+		  assertion(_cyclicCommLeft.get() != NULL); assertion(_cyclicCommLeft->isConnected());
+		  assertion(_cyclicCommRight.get() != NULL); assertion(_cyclicCommRight->isConnected());
+		}
 	}
 }
 
@@ -79,6 +85,7 @@ void ParallelMatrixOperations::multiply
 		// if p equals r (and p = global_n), we have to perform the
 		// cyclic communication with block-wise matrix-matrix multiplication
 		if(p == r){
+		  assertion(_needCycliclComm);
 			assertion(_cyclicCommLeft.get() != NULL); assertion(_cyclicCommLeft->isConnected());
 			assertion(_cyclicCommRight.get() != NULL); assertion(_cyclicCommRight->isConnected());
 
@@ -146,11 +153,14 @@ void ParallelMatrixOperations::_multiplyNM(
 	}
 }
 
+
 // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
 void ParallelMatrixOperations::_multiplyNN(
 		TarchMatrix& leftMatrix, TarchMatrix& rightMatrix, TarchMatrix& result, const std::vector<int>& offsets, int p, int q, int r)
 {
 	preciceTrace("multiplyNN()");
+
+	assertion(_needCycliclComm);
 	/*
 	 * For multiplication W_til * Z = J
 	 * -----------------------------------------------------------------------

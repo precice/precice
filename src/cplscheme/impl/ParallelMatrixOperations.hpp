@@ -53,7 +53,8 @@ public:
     * @brief Initializes the post-processing.
     */
    void initialize(com::Communication::SharedPointer leftComm,
-		   	   	   com::Communication::SharedPointer rightComm);
+		   	   	   com::Communication::SharedPointer rightComm,
+		   	   	   bool needcyclicComm);
 
    /**
     * @brief multiplies tarch matrices in parallel or serial execution.
@@ -140,6 +141,7 @@ public:
 			// if p equals r (and p = global_n), we have to perform the
 			// cyclic communication with block-wise matrix-matrix multiplication
 			if(p == r){
+			  assertion(_needCycliclComm);
 				assertion(_cyclicCommLeft.get() != NULL); assertion(_cyclicCommLeft->isConnected());
 				assertion(_cyclicCommRight.get() != NULL); assertion(_cyclicCommRight->isConnected());
 
@@ -233,6 +235,7 @@ private:
 		 * -----------------------------------------------------------------------
 		 */
 
+    assertion(_needCycliclComm);
 		assertion(leftMatrix.cols() == q, leftMatrix.cols(), q);
 		assertion(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
 		assertion(result.rows() == p, result.rows(), p);
@@ -415,6 +418,8 @@ private:
 	* @brief Communication between neighboring slaves, forward
 	*/
 	com::Communication::SharedPointer _cyclicCommRight;
+
+	bool _needCycliclComm;
 
 };
 

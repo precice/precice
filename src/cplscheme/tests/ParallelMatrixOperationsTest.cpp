@@ -526,7 +526,7 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp_tarch()
 
 	// initialize ParallelMatrixOperations object
 	impl::ParallelMatrixOperations parMatrixOps;
-	parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight);
+	parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight, true);
 
 	/*
 	 * test parallel multiplications
@@ -787,7 +787,7 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp_Eigen()
 
 	// initialize ParallelMatrixOperations object
 	impl::ParallelMatrixOperations parMatrixOps;
-	parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight);
+	parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight, true);
 
 	/*
 	 * test parallel multiplications
