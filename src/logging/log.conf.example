@@ -1,0 +1,135 @@
+# Reference for Parameters
+# http://www.boost.org/doc/libs/1_60_0/libs/log/doc/html/log/detailed/utilities.html#log.detailed.utilities.setup.settings
+
+# Logging core settings section. May be omitted if no parameters specified within it.
+[Core]
+# Possible parameters:
+
+# defines standard filter for all sinks. Can be overwritten for each sink. Optional. If not specified, no filter is set
+
+# possible placeholders for output format and filtering
+# %severity%
+# type : enum { trace = 0, debug = 1, info = 2, warning = 3, error = 4, fatal = 5 }
+
+# %Module% , %File% , %Function%
+# type : std::string
+
+# %Rank% , %Line%
+# type : int
+# expressions 
+
+Filter = "%Severity% > debug" 
+# Filter = "%Severity% = trace & %Module% = \"precice::mapping::NearestNeighborMapping\""
+
+# DisableLogging = false # Default false
+ 
+# Defining a console sink
+#[Sinks.<Name>] # <Name> names the sink defined in the folowing section
+[Sinks.Console]
+
+# Common attributes for all standard sink types
+# Mandatory parameters:
+# Destination: possible values {Console, TextFile, Syslog}
+Destination=Console 
+
+# Optional paramters:
+# Filter: compare to [Core] Section
+#Filter = "%Severity% = trace & %Module% = \"precice::mapping::NearestNeighborMapping\""
+
+# Asynchronous: (Default: false) decides output frontend. Only on multi-threaded builds 
+#Asynchronous= false
+
+# Console specific parameters:
+# Format: If no formatter is set the default formatter is used. Default formatter can be nothing.
+
+# Default placeholder see Core Format section
+
+# Additional placeholder for format
+
+# timeformat
+# %TimeStamp% -> 2016-04-01 15:15:15
+
+# personal format:
+#	%TimeStamp(format=\"<posix_time_placeholder>\")%
+# more details for <posix_time_spaceholder>
+# -> http://www.boost.org/doc/libs/1_60_0/libs/log/doc/html/log/detailed/expressions.html#log.detailed.expressions.formatters.date_time 
+
+# %scope%
+# at the moment only spaceholder for output not for filtering
+
+Format = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% %File%:%Line%[%Module%] in %Function%: %Message%"
+
+# AutoFlush: (Default: false) Enabling/Disabling auto-flush
+AutoFlush = true
+
+# additional example for a extFile sink:
+# to use a text file output you can uncomment all things you think you need.
+#[Sinks.MyFile] 
+# Common sink attributes: compare to console sink example
+#Destination = TextFile 
+
+# TextFile specific parameters
+# Mandatory parameters
+# FileName : Defines filename for file output
+#FileName = "sample.log"
+
+# optional parameters:
+# Format : compare to console sink example
+#Format = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% %File%:%Line%[%Module%] in %Function%: %Message%"
+
+# AutoFlush : compare to console sink example
+#AutoFlush = true
+
+# RotationSize : Unsigned integer. File size, in bytes, upon which file rotation will be performed. If not specified, no size-based rotation will be made.
+#RotationSize = 10 * 1024 * 1024 # 10 MiB
+
+# RotationInterval : Unsigned integer. Time interval, in seconds, upon which file rotation will be performed.
+#RotationInterval = 600 # 10 minutes 
+
+# RotationTimePoint : Time point format string, compare to Boost.DateTime http://www.boost.org/doc/libs/release/doc/html/date_time/date_time_io.html#date_time.format_flags
+# three small example:
+# "%H:%M:%S" : File rotation will be performed on a daily basis, at the specified time. For example, "12:00:00".
+# "%a %H:%M:%S" or "%A %H:%M:%S". File rotation takes place every week, on the weekday specified in the long or short form, at the specified time. For example, "Saturday 09:00:00".
+# "%d %H:%M:%S". File rotation takes place every month, on the specified day of month, at the specified time. For example, "01 23:30:00". 
+#RotationTimePoint = "01 23:30:00"
+
+# Target : File system path to a directory. Target directory name, in which the rotated files will be stored. If this parameter is specified, rotated file collection is enabled. Otherwise the feature is not enabled, and all corresponding parameters are ignored.
+#Target = "./log"
+
+# MaxSize : Unsigned integer. Total size of files in the target directory, in bytes, upon which the oldest file will be deleted. If not specified, no size-based file cleanup will be performed.
+#MaxSize = 4194304 #4 MB
+
+# MinFreeSpace : Unsigned integer. Minimum free space in the target directory, in bytes, upon which the oldest file will be deleted. If not specified, no space-based file cleanup will be performed.
+#MinFreeSpace = 4194305 #4 MB + 1 byte
+
+# ScanForFiles : "All" or "Matching" Mode of scanning for old files in the target directory, see scan_method http://www.boost.org/doc/libs/1_60_0/libs/log/doc/html/sinks.html#boost.log.sinks.file.scan_method. If not specified, no scanning will be performed.
+#ScanForFiles = "Matching"
+
+# Subsections can be referred to with a single path
+
+# optional if defined in [Core]
+#Filter = "%Severity% > debug";
+
+# optional
+# additional sinks possible
+# e.g. for file output
+
+# Common paramters for each sinktype
+#[Sinks.MyFile]           # defines a sink with name "MyFile" 
+#Destination = TextFile   # Mandatory possible values (Console, TextFile, Syslog)
+
+#FileName = "sample.log"  # Mandatory 
+
+#Asynchronous = false # default false
+#RotationSize = 10 * 1024 * 1024 # 10 MiB
+#Format = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% %File%:%Line%[%Module%] in %Function%: %Message%"
+
+# optional parameters 
+
+# Enables automatic stream flush after each log record.
+#AutoFlush = true # default false
+
+# optional if defined in [Core]
+
+#Filter = "%Severity% > debug";
+
