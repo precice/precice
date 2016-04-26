@@ -567,11 +567,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++) {
       // Fill input from input data values
-      preciceDebug("in vector ownerRange = " << in.ownerRange());
-      preciceDebug("polyparams = " << polyparams << ", valueDim = " << valueDim << ", dim = " << dim);
-      for (int i = in.ownerRange().first + localPolyparams; i < in.ownerRange().second; i++) {
-        int globalIndex = input()->vertices()[i-polyparams].getGlobalIndex();
-        VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(i-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+      int count = 0;
+      for (const auto& vertex : input()->vertices()) {
+        VecSetValueLocal(in.vector, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); // evtl. besser als VecSetValuesLocal
+        count++;
       }
       in.assemble();
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);

@@ -55,6 +55,7 @@ private:
 
   void testDistributedConsistent2DV1();
   void testDistributedConsistent2DV2();
+  void testDistributedConsistent2DV3();
 
   void testDistributedConservative2DV1();
   void testDistributedConservative2DV2();
