@@ -79,16 +79,16 @@ void setupLogging(std::string logConfigFile)
   setts["Sinks.Console.Format"] = format;
 
   // ...as well as the individual parameters
-  setts["Sinks.File.Destination"] = "TextFile";
+/*  setts["Sinks.File.Destination"] = "TextFile";
   setts["Sinks.File.FileName"] = "sample.log";
   setts["Sinks.File.AutoFlush"] = true;
   setts["Sinks.File.RotationSize"] = 10 * 1024 * 1024; // 10 MiB
   setts["Sinks.File.Format"] = format;
-
+*/
   init_from_settings(setts);  
   
 //alternative setting of log format
-  /**
+  /*
      auto fmtStream =
      expressions::stream
      << "(" 
@@ -105,7 +105,7 @@ void setupLogging(std::string logConfigFile)
      << expressions::attr<std::string>("Function") 
      << ": "
      << expressions::message; //<< std::endl;
-  **/
+  */
 //Additional possibilities for debugging output
 //expressions::attr<unsigned int>("LineID")
 //expressions::attr<attributes::current_thread_id::value_type>("ThreadID")
