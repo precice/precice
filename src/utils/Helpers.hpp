@@ -12,7 +12,6 @@
 #include <set>
 #include <list>
 #include "Parallel.hpp"
-#include "Tracer.hpp"
 
 namespace precice {
 namespace utils {

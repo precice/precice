@@ -6,7 +6,6 @@
 #include "utils/prettyprint.hpp"
 
 #include "logging/LogMacros.hpp"
-#include "LogMacros.hpp"
 
 #include <string>
 
