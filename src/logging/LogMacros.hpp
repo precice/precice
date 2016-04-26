@@ -6,12 +6,14 @@
 #include <boost/log/expressions.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
 
+#include <boost/preprocessor/variadic/to_seq.hpp>
+#include <boost/preprocessor/seq/for_each_i.hpp>
+#include <boost/preprocessor/stringize.hpp>
+
 #include <string>
 #include <sstream>
 #include <iomanip>
 #include <cstdlib>
-
-//#define assertion assertion
 
   
 #define precicePrint(message) do                                            \
@@ -45,105 +47,32 @@
 #ifdef NDEBUG 
 
 //#define preciceDebug(methodname, message)
-#define preciceTrace(methodname)
-#define preciceTrace1(methodname, var1)
-#define preciceTrace2(methodname, var1, var2)
-#define preciceTrace3(methodname, var1, var2, var3)
-#define preciceTrace4(methodname, var1, var2, var3, var4)
-#define preciceTrace5(methodname, var1, var2, var3, var4, var5)
-#define preciceTrace6(methodname, var1, var2, var3, var4, var5, var6)
+#define preciceTrace(...)
 
 #else // NDEBUG
 
 #include "Tracer.hpp"
 
-#define preciceTrace(methodname) do                                        \
-  {                                                                         \
-    LOG_LOCATION;                                                           \
-    BOOST_LOG_FUNCTION();                                                   \
-    precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);   \
-    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)         \
-    << "Entering " << __func__;                                             \
-  } while (false)
+/// Helper macro, used by preciceTrace.
+#define LOG_ARGUMENT(r, data, i, elem)                        \
+  << "  Argument " << i << ": " << elem << std::endl
 
-#define preciceTrace1(methodname, var1) do                                 \
-  {                                                                         \
-    LOG_LOCATION;                                                           \
-    BOOST_LOG_FUNCTION();                                                   \
-    precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);   \
-    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)         \
-    << "Entering " << __func__                                              \
-    << "\n" << #var1 << " = " << var1;                                      \
+#define preciceTrace(...) do { \
+    LOG_LOCATION;                                                       \
+    BOOST_LOG_FUNCTION();                                               \
+    precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__); \
+    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace) << "Entering " << __func__ \
+    BOOST_PP_SEQ_FOR_EACH_I(LOG_ARGUMENT,, BOOST_PP_SEQ_TAIL(BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))); \
   } while (false)
-
-#define preciceTrace2(methodname, var1, var2) do                           \
-  {                                                                         \
-    LOG_LOCATION;                                                           \
-    BOOST_LOG_FUNCTION();                                                   \
-    precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);   \
-    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)         \
-    << "Entering " << __func__                                              \
-    << "\n" << #var1 << " = " << var1                                       \
-    << "\n" << #var2 << " = " << var2;                                      \
-  } while (false)
- 
-#define preciceTrace3(methodname, var1, var2, var3) do                     \
-  {                                                                         \
-    LOG_LOCATION;                                                           \
-    BOOST_LOG_FUNCTION();                                                   \
-    precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);   \
-    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)         \
-    << "Entering " << __func__                                              \
-    << "\n" << #var1 << " = " << var1                                       \
-    << "\n" << #var2 << " = " << var2                                       \
-    << "\n" << #var3 << " = " << var3;                                      \
-  } while (false)
-
-#define preciceTrace4(methodname, var1, var2, var3, var4) do               \
-  {                                                                         \
-    LOG_LOCATION;                                                           \
-    BOOST_LOG_FUNCTION();                                                   \
-    precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);   \
-    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)         \
-    << "Entering " << __func__                                              \
-    << "\n" << #var1 << " = " << var1                                       \
-    << "\n" << #var2 << " = " << var2                                       \
-    << "\n" << #var3 << " = " << var3                                       \
-    << "\n" << #var4 << " = " << var4;                                      \
-  } while (false)
-  
-#define preciceTrace5(methodname, var1, var2, var3, var4, var5) do         \
-  {                                                                         \
-    LOG_LOCATION;                                                           \
-    BOOST_LOG_FUNCTION();                                                   \
-    precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);   \
-    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)         \
-    << "Entering " << __func__                                              \
-    << "\n" << #var1 << " = " << var1                                       \
-    << "\n" << #var2 << " = " << var2                                       \
-    << "\n" << #var3 << " = " << var3                                       \
-    << "\n" << #var4 << " = " << var4                                       \
-    << "\n" << #var5 << " = " << var5;                                      \
-  } while (false)
-  
-#define preciceTrace6(methodname, var1, var2, var3, var4, var5, var6) do   \
-  {                                                                         \
-    LOG_LOCATION;                                                           \
-    BOOST_LOG_FUNCTION();                                                   \
-    precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__);   \
-    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace)         \
-    << "Entering " << __func__                                              \
-    << "\n" << #var1 << " = " << var1                                       \
-    << "\n" << #var2 << " = " << var2                                       \
-    << "\n" << #var3 << " = " << var3                                       \
-    << "\n" << #var4 << " = " << var4                                       \
-    << "\n" << #var5 << " = " << var5                                       \
-    << "\n" << #var6 << " = " << var6;                                      \
-  } while (false)
-  
 
 #endif // ! NDEBUG
 
+#define preciceTrace1 preciceTrace
+#define preciceTrace2 preciceTrace
+#define preciceTrace3 preciceTrace
+#define preciceTrace4 preciceTrace
+#define preciceTrace5 preciceTrace
+#define preciceTrace6 preciceTrace
 
 #define preciceError(methodname, message) do                             \
   {                                                                       \
