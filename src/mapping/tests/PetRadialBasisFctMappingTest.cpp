@@ -49,6 +49,7 @@ void PetRadialBasisFctMappingTest:: run()
       Par::setGlobalCommunicator(comm); // hier auch noch PETSC_COMM_WORLD neu setzen?
       testMethod(testDistributedConsistent2DV1);
       testMethod(testDistributedConsistent2DV2);
+      testMethod(testDistributedConsistent2DV3);
       testMethod(testDistributedConservative2DV1);
       testMethod(testDistributedConservative2DV2);
       // testMethod(testDistributedConservative2DV3);
@@ -77,7 +78,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV1()
                     {-1, 3, {3, 0}, {7}},
                     {-1, 3, {3, 1}, {8}}
                   },
-                  { // The outMesh is local, every rank is used
+                  { // The outMesh is local, distributed amoung all ranks
                     {0, -1, {0, 0}, {0}},
                     {0, -1, {0, 1}, {0}},
                     {1, -1, {1, 0}, {0}},
@@ -140,6 +141,56 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV2()
                     { 3, {7} },
                     { 3, {8} }
                   }
+    );
+}
+
+/// Test with a very heterogenous distributed and non-continues ownership
+void PetRadialBasisFctMappingTest::testDistributedConsistent2DV3()
+{
+  preciceTrace("testDistributedConsistent2DV3");
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
+  
+  testDistributed(mapping,
+                  { // Rank 0 has part of the mesh, owns a subpart
+                    {0,  0, {0, 0}, {1}}, {0,  0, {0, 1}, {2}},
+                    {0,  0, {1, 0}, {3}}, {0, -1, {1, 1}, {4}},
+                    {0, -1, {2, 0}, {5}}, {0, -1, {2, 1}, {6}},
+                      // Rank 1 has no vertices
+                      // Rank 2 has the entire mesh, but owns just 3 and 5.
+                    {2, -1, {0, 0}, {1}}, {2, -1, {0, 1}, {2}},
+                    {2, -1, {1, 0}, {3}}, {2,  2, {1, 1}, {4}},
+                    {2, -1, {2, 0}, {5}}, {2,  2, {2, 1}, {6}},
+                    {2, -1, {3, 0}, {7}}, {2, -1, {3, 1}, {8}},
+                      // Rank 3 has the last 4 vertices, owns 4, 6 and 7
+                    {3, 3, {2, 0}, {5}}, {3, -1, {2, 1}, {6}},
+                    {3, 3, {3, 0}, {7}}, {3,  3, {3, 1}, {8}},
+                  },
+                  { // The outMesh is local, rank 1 is empty
+                    {0, -1, {0, 0}, {0}},
+                    {0, -1, {0, 1}, {0}},
+                    {0, -1, {1, 0}, {0}},
+                    {2, -1, {1, 1}, {0}},
+                    {2, -1, {2, 0}, {0}},
+                    {2, -1, {2, 1}, {0}},
+                    {3, -1, {3, 0}, {0}},
+                    {3, -1, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 1, 2} on the first rank,
+                    // second rank (consistent with the outMesh) is empty, ...
+                    { 0, {1} },
+                    { 0, {2} },
+                    { 0, {3} },
+                    { 2, {4} },
+                    { 2, {5} },
+                    { 2, {6} },
+                    { 3, {7} },
+                    { 3, {8} }
+                  },
+                  globalIndexOffsets[utils::Parallel::getProcessRank()]
     );
 }
 
@@ -950,7 +1001,7 @@ void PetRadialBasisFctMappingTest::getDistributedMesh(MeshSpecification const & 
     }
 
   }
-  addGlobalIndex(mesh, globalIndexOffset );
+  addGlobalIndex(mesh, globalIndexOffset);
   mesh->allocateDataValues();
   data->values() = d;
 }

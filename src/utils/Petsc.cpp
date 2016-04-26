@@ -12,8 +12,7 @@ logging::Logger Petsc:: _log ( "precice::utils::Petsc" );
 
 bool Petsc::weInitialized = false;
 
-
-void Petsc:: initialize
+void Petsc::initialize
 (
   int*               argc,
   char***            argv )
@@ -31,7 +30,7 @@ void Petsc:: initialize
 #endif // not PRECICE_NO_PETSC
 }
 
-void Petsc:: finalize()
+void Petsc::finalize()
 {
 #ifndef PRECICE_NO_PETSC
   PetscBool petscIsInitialized;
@@ -55,7 +54,6 @@ void Petsc:: finalize()
 namespace precice {
 namespace utils {
 namespace petsc {
-
 
 Vector::Vector(MPI_Comm comm, std::string name)
 {
@@ -252,7 +250,8 @@ void Matrix::assemble(MatAssemblyType type)
   ierr = MatAssemblyEnd(matrix, type); CHKERRV(ierr);
 }
 
-void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type)
+void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols,
+                  MatType type, bool doSetup)
 {
   PetscErrorCode ierr = 0;
   if (type != nullptr) {
@@ -260,7 +259,8 @@ void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, P
   }
   ierr = MatSetSizes(matrix, localRows, localCols, globalRows, globalCols); CHKERRV(ierr);
   ierr = MatSetFromOptions(matrix); CHKERRV(ierr);
-  ierr = MatSetUp(matrix); CHKERRV(ierr); 
+  if (doSetup)
+    ierr = MatSetUp(matrix); CHKERRV(ierr);
 }
 
 void Matrix::reset()

@@ -97,6 +97,8 @@ private:
   bool* _deadAxis;
 
   virtual bool doesVertexContribute(int vertexID) const override;
+
+  void incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end);
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -174,7 +176,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   int dimensions = input()->getDimensions();
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
-  if (getConstraint() == CONSERVATIVE){
+  if (getConstraint() == CONSERVATIVE) {
     inMesh = output();
     outMesh = input();
   }
@@ -227,6 +229,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   KSPReset(_solver);
 
+  const int ownerRangeABegin = _matrixA.ownerRange().first;
+  const int ownerRangeAEnd = _matrixA.ownerRange().second;
+  
   IS ISlocal, ISlocalInv, ISglobal, ISidentity, ISidentityGlobal;
   ISLocalToGlobalMapping ISidentityMapping;
   // Create an index set which maps myIndizes to continous chunks of matrix rows.
@@ -237,7 +242,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISLocalToGlobalMappingCreateIS(ISglobal, &_ISmapping); CHKERRV(ierr); // Make it a mapping
   
   // Create an identity mapping and use that for the rows of matrixA.
-  ierr = ISCreateStride(PETSC_COMM_WORLD, _matrixA.ownerRange().second - _matrixA.ownerRange().first, _matrixA.ownerRange().first, 1, &ISidentity); CHKERRV(ierr);
+  ierr = ISCreateStride(PETSC_COMM_WORLD, ownerRangeAEnd - ownerRangeABegin, ownerRangeABegin, 1, &ISidentity); CHKERRV(ierr);
   ierr = ISSetIdentity(ISidentity); CHKERRV(ierr);
   ierr = ISAllGather(ISidentity, &ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingCreateIS(ISidentityGlobal, &ISidentityMapping); CHKERRV(ierr);
@@ -358,45 +363,51 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // Begin assembly here, all assembly is ended at the end of this function.
   ierr = MatAssemblyBegin(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
-
-  int ownerRangeBeginA = _matrixA.ownerRange().first;
-  int ownerRangeEndA = _matrixA.ownerRange().second;
-
-  preciceDebug("owner Range A Begin = " << ownerRangeBeginA << ", End = " << ownerRangeEndA);
-  int localDiagColBegin = _matrixA.ownerRangeColumn().first;
-  int localDiagColEnd = _matrixA.ownerRangeColumn().first;
-  preciceDebug("Local Submatrix Rows = " << ownerRangeBeginA << " / " << ownerRangeEndA <<
-               ", Local Submatrix Cols = " << localDiagColBegin << " / " << localDiagColEnd);
   
   // -- BEGIN PREALLOC LOOP FOR MATRIX A --
-  {
-    preciceDebug("Begin preallocation matrix A.");
-    int logPreallocALoop = 3;
-    PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocALoop);
-    PetscLogEventBegin(logPreallocALoop, 0, 0, 0, 0);
-    PetscInt nnzA[outputSize]; // Number of non-zero entries, off-diagonal
-    // PetscInt DnnzA[outputSize]; // Number of non-zero entries, diagonal
-    for (int i = 0; i < ownerRangeEndA - ownerRangeBeginA; i++) {
-      nnzA[i] = polyparams;
-      const mesh::Vertex& oVertex = outMesh->vertices()[i];
-      for (const mesh::Vertex& inVertex : inMesh->vertices()) {
-        distance = oVertex.getCoords() - inVertex.getCoords();
-        for (int d = 0; d < dimensions; d++) {
-          if (_deadAxis[d])
-            distance[d] = 0;
-        }
-        double coeff = _basisFunction.evaluate(norm2(distance));
-        if (not tarch::la::equals(coeff, 0.0)) {
-          nnzA[i]++;
-        }
-      }
-    }
-    // -- END PREALLOC LOOP FOR MATRIX A --
+  // {
+  //   int localDiagColBegin = _matrixA.ownerRangeColumn().first;
+  //   int localDiagColEnd = _matrixA.ownerRangeColumn().second;
+  //   preciceDebug("Local Submatrix Rows = " << ownerRangeABegin << " / " << ownerRangeAEnd <<
+  //                ", Local Submatrix Cols = " << localDiagColBegin << " / " << localDiagColEnd);
 
-    // Preallocation: Number of diagonal non-zero entries equals outputSize, since diagonal is full
-    // MatSetOption(_matrixA.matrix, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
-    ierr = MatMPIAIJSetPreallocation(_matrixA.matrix, 0, nnzA, 0, nnzA); CHKERRV(ierr);
-  }
+  //   preciceDebug("Begin preallocation matrix A.");
+  //   int logPreallocALoop = 3;
+  //   PetscLogEventRegister("Prealloc Matrix A", 0, &logPreallocALoop);
+  //   PetscLogEventBegin(logPreallocALoop, 0, 0, 0, 0);
+  //   PetscInt nnzA[outputSize]; // Number of non-zero entries, off-diagonal
+  //   PetscInt DnnzA[outputSize]; // Number of non-zero entries, diagonal
+  //   for (int i = 0; i < ownerRangeAEnd - ownerRangeABegin; i++) {
+  //     nnzA[i] = 0; DnnzA[i] = 0;
+  //     int polyCol = 1;
+  //     for (int dim = 0; dim < dimensions; dim++) {
+  //       if (not _deadAxis[dim]) {
+  //         incPrealloc(nnzA, DnnzA, polyCol, localDiagColBegin, localDiagColEnd);
+  //         ++polyCol;
+  //       }
+  //     }
+  //     const mesh::Vertex& oVertex = outMesh->vertices()[i];
+  //     for (const mesh::Vertex& inVertex : inMesh->vertices()) {
+  //       distance = oVertex.getCoords() - inVertex.getCoords();
+  //       for (int d = 0; d < dimensions; d++) {
+  //         if (_deadAxis[d])
+  //           distance[d] = 0;
+  //       }
+  //       double coeff = _basisFunction.evaluate(norm2(distance));
+  //       if (not tarch::la::equals(coeff, 0.0)) {
+  //         const int colPosition = inVertex.getGlobalIndex() + polyparams;
+  //         incPrealloc(nnzA, DnnzA, colPosition, localDiagColBegin, localDiagColEnd);
+  //       }
+  //       preciceDebug("Preallocating     diagonal row " << i << " with " << DnnzA[i] << " elements.");
+  //       preciceDebug("Preallocating off-diagonal row " << i << " with " << nnzA[i] << " elements.");
+  //     }
+  //   }
+  //   // -- END PREALLOC LOOP FOR MATRIX A --
+
+  //   // Preallocation: Number of diagonal non-zero entries equals outputSize, since diagonal is full
+  //   MatSetOption(_matrixA.matrix, MAT_NEW_NONZERO_ALLOCATION_ERR, PETSC_FALSE);
+  //   ierr = MatMPIAIJSetPreallocation(_matrixA.matrix, 0, DnnzA, 0, nnzA); CHKERRV(ierr);
+  // }
   
   // -- BEGIN FILL LOOP FOR MATRIX A --
   preciceDebug("Begin filling matrix A.");
@@ -405,7 +416,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   PetscLogEventBegin(logALoop, 0, 0, 0, 0);
   precice::utils::Event eFillA("Filling Matrix A");
 
-  for (int it = ownerRangeBeginA; it < ownerRangeEndA; it++) {
+  for (int it = ownerRangeABegin; it < ownerRangeAEnd; it++) {
     // hier colIdx, colVals über inMesh->vertices.count dimensionieren?
     PetscInt colNum = 0;
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries MatrixC??
@@ -421,7 +432,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         y = oVertex.getCoords()[dim];
         polyCol++;
         // preciceDebug("Filling A with polyparams: polyRow = " << polyRow << ", polyCol = " << polyCol << " Preallocation = " << nnzA[polyRow]);
-        ierr = MatSetValuesLocal(_matrixA.matrix, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+        ierr = MatSetValuesLocal(_matrixA.matrix, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr); // das zusammen mit den MatSetValuesLocal unten machen
       }
     }
 
@@ -567,11 +578,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++) {
       // Fill input from input data values
-      preciceDebug("in vector ownerRange = " << in.ownerRange());
-      preciceDebug("polyparams = " << polyparams << ", valueDim = " << valueDim << ", dim = " << dim);
-      for (int i = in.ownerRange().first + localPolyparams; i < in.ownerRange().second; i++) {
-        int globalIndex = input()->vertices()[i-polyparams].getGlobalIndex();
-        VecSetValueLocal(in.vector, globalIndex+polyparams, inValues[(i-polyparams)*valueDim + dim], INSERT_VALUES);        // Dies besser als VecSetValuesLocal machen
+      int count = 0;
+      for (const auto& vertex : input()->vertices()) {
+        VecSetValueLocal(in.vector, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); // evtl. besser als VecSetValuesLocal
+        count++;
       }
       in.assemble();
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);
@@ -604,7 +614,16 @@ bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int
     return true;
 
   return true;
-  
+}
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end)
+{
+  // Do some optimizatin here: inline, const, ...
+  if ((pos < begin) or (pos > end))
+    (*offDiag)++; // vertex is off-diagonal
+  else
+    (*diag)++; // vertex is diagonal
 }
 
 
