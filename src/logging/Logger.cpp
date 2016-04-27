@@ -65,7 +65,7 @@ void setupLogging(std::string logConfigFile)
   register_simple_formatter_factory<trivial::severity_level, char>("Severity");
   register_simple_filter_factory<trivial::severity_level, char>("Severity");
 
-  std::string format = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% %File%:%Line%[%Module%] in %Function%: %Message%";
+  std::string format = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%LINE% in %Function%: %Message%";
   
   settings setts;
 
