@@ -85,7 +85,6 @@ void setupLogging(std::string logConfigFile)
   setts["Sinks.File.RotationSize"] = 10 * 1024 * 1024; // 10 MiB
   setts["Sinks.File.Format"] = format;
 */
-  init_from_settings(setts);  
   
 //alternative setting of log format
   /*
@@ -126,8 +125,11 @@ void setupLogging(std::string logConfigFile)
   // settings conf = parse_settings(file);
   // cout << conf["Core"]["Filter"] << endl;
 
-  if (file.is_open())
+  if (file.is_open()){
     init_from_stream(file);
+  } else {
+    init_from_settings(setts);
+  }
 }
 
 void setMPIRank(const int rank){
