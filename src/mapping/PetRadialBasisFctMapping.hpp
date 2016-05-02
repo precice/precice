@@ -3,6 +3,7 @@
 
 #include <limits>
 #include <typeinfo>
+#include <map>
 
 #include "mapping/Mapping.hpp"
 #include "impl/BasisFunctions.hpp"
@@ -99,6 +100,9 @@ private:
   virtual bool doesVertexContribute(int vertexID) const override;
 
   void incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end);
+
+  /// Stores the solution from the previous iteration
+  std::map<unsigned int, petsc::Vector> previousSolution;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -461,8 +465,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyBegin(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixC.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixA.matrix, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
-  KSPSetOperators(_solver, _matrixC.matrix, _matrixC.matrix);
+  KSPSetOperators(_solver, _matrixC.matrix, _matrixC.matrix); CHKERRV(ierr);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+  KSPSetInitialGuessNonzero(_solver, PETSC_TRUE); CHKERRV(ierr);
   KSPSetFromOptions(_solver);
 
   // if (totalNNZ > static_cast<size_t>(20*n)) {
@@ -494,6 +499,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
   preciceTrace("clear()");
   _matrixC.reset();
   _matrixA.reset();
+  previousSolution.clear();
   _hasComputedMapping = false;
   // ISmapping destroy??
 }
@@ -529,9 +535,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   if (getConstraint() == CONSERVATIVE) {
     preciceDebug("Map conservative");
     petsc::Vector Au(_matrixC, "Au");
-    petsc::Vector out(_matrixC, "out");
     petsc::Vector in(_matrixA, "in");
-    
+    petsc::Vector out = std::get<0>( // Save and reuse the solution from the previous iteration
+      previousSolution.emplace(std::piecewise_construct,
+                               std::forward_as_tuple(inputDataID + outputDataID * 100),
+                               std::forward_as_tuple(_matrixC, "out"))
+      )->second;
+
     // Fill input from input data values
     for (int dim=0; dim < valueDim; dim++) {
       preciceDebug("input()->vertices().size() = " << input()->vertices().size());
@@ -571,7 +581,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     preciceDebug("Map consistent");
     petsc::Vector p(_matrixC, "p");
     petsc::Vector in(_matrixC, "in");
-    petsc::Vector out(_matrixA, "out");
+    petsc::Vector out = std::get<0>(
+      previousSolution.emplace(std::piecewise_construct,
+                               std::forward_as_tuple(inputDataID + outputDataID * 100),
+                               std::forward_as_tuple(_matrixA, "out"))
+      )->second;
+    
     ierr = VecSetLocalToGlobalMapping(in.vector, _ISmapping); CHKERRV(ierr);
     const PetscScalar *vecArray;
 
@@ -625,7 +640,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::incPrealloc(PetscInt* di
   else
     (*diag)++; // vertex is diagonal
 }
-
 
 }} // namespace precice, mapping
 
