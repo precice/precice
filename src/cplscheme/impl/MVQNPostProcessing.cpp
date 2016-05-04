@@ -197,11 +197,13 @@ void MVQNPostProcessing:: initialize
 	}else{
 		global_n = _dimOffsets.back();
 	}
-  
-	// only need memory for Jacobain of not in restart mode
+
 	if(not _imvjRestart){
+	  // only need memory for Jacobain of not in restart mode
 	  _invJacobian = Eigen::MatrixXd::Zero(global_n, entries);
 	  _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
+	  // only need global weights for preconditioner if not in restart mode
+	  _preconditioner->triggerGlobalWeights(global_n);
 	}
 	// initialize V, W matrices for the LS restart
 	if(_imvjRestartType == RS_LS){
@@ -210,7 +212,7 @@ void MVQNPostProcessing:: initialize
 	  _matrixW_RSLS = Eigen::MatrixXd::Zero(entries, 0);
 	}
   _Wtil = Eigen::MatrixXd::Zero(entries, 0);
-  _preconditioner->triggerGlobalWeights(global_n);
+
 
   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
     _infostringstream<<" IMVJ restart mode: "<<_imvjRestart<<"\n chunk size: "<<_chunkSize<<"\n trunc eps: "<<_svdJ.getThreshold()<<"\n R_RS: "<<_RSLSreusedTimesteps<<"\n--------\n"<<std::endl;
@@ -926,7 +928,8 @@ void MVQNPostProcessing:: removeMatrixColumn
 (
   int columnIndex)
 {
-  assertion(_matrixV.cols() > 1); assertion(_Wtil.cols() > 1);
+  preciceTrace2(__func__, columnIndex, _matrixV.cols());
+  assertion(_matrixV.cols() > 1, _matrixV.cols()); assertion(_Wtil.cols() > 1);
 
 
   // remove column from matrix _Wtil
