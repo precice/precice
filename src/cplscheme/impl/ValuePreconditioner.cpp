@@ -50,9 +50,13 @@ void ValuePreconditioner::_update_(bool timestepComplete, const Eigen::VectorXd&
 
     _requireNewQR = true;
     _firstTimestep = false;
+
+    /*
+    // NOT NEEDED ANYMORE:
+    //Due to the changed preconditioning for the MVJ method, the Jacobian never has to be scaled and thus
     if(_needsGlobalWeights){
       communicateGlobalWeights();
-    }
+    }*/
   }
 }
 

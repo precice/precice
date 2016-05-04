@@ -46,7 +46,7 @@ public:
     _maxNonConstTimesteps(maxNonConstTimesteps),
     _nbNonConstTimesteps(0),
     _requireNewQR(false),
-    _needsGlobalWeights(false),
+    //_needsGlobalWeights(false),
     _freezed(false)
   {}
 
@@ -104,7 +104,7 @@ public:
    */
   void apply(EigenMatrix& M, bool transpose, bool squared = true){
     preciceTrace(__func__);
-    assertion(_needsGlobalWeights);
+    //assertion(_needsGlobalWeights);
     if(transpose){
       assertion(M.cols()==(int)_weights.size(), M.cols(), _weights.size());
       for(int i=0; i<M.cols(); i++){
@@ -145,7 +145,7 @@ public:
    */
   void revert(EigenMatrix& M, bool transpose, bool squared = true){
     preciceTrace(__func__);
-    assertion(_needsGlobalWeights);
+    //assertion(_needsGlobalWeights);
     if (transpose) {
       assertion(M.cols()==(int)_invWeights.size());
       for (int i = 0; i < M.cols(); i++) {
@@ -315,12 +315,16 @@ public:
     _requireNewQR = false;
   }
 
+  // This Method IS NOT NEEDED ANYMORE
+  // Due to the changed preconditioning for the MVJ method, the Jacobian never has to be scaled and thus
+  /**
   void triggerGlobalWeights(int globalN){
     _needsGlobalWeights = true;
     _globalWeights.resize(globalN, 1.0);
     _globalInvWeights.resize(globalN, 1.0);
     communicateGlobalWeights(); //for constant preconditioner necessary already here
   }
+  */
 
   std::vector<double>& getWeights()
   {
@@ -365,7 +369,7 @@ protected:
   bool _requireNewQR;
 
   // true if global weights are needed, i.e. for MVQN
-  bool _needsGlobalWeights;
+  //bool _needsGlobalWeights;
 
   /// @brief true if _nbNonConstTimesteps >= _maxNonConstTimesteps, i.e., preconditioner is not updated any more.
   bool _freezed;
@@ -378,6 +382,11 @@ protected:
    */
   virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res) =0;
 
+
+  // This Method IS NOT NEEDED ANYMORE
+  // Due to the changed preconditioning for the MVJ method, the Jacobian never has to be scaled and thus
+  // there is no need to communicate the global weights.
+  /**
 
   // @brief communicate all slave weights to master and then broadcast, necessary for MVQN
   // note: For the current used preconditioners all weights are the same for each proc as
@@ -441,6 +450,8 @@ protected:
 
 
   }
+  */
+
 
 private:
 
