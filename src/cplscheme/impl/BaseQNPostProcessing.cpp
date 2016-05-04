@@ -114,7 +114,6 @@ void BaseQNPostProcessing::initialize(
     DataMap& cplData)
 {
   preciceTrace1("initialize()", cplData.size());
-  Event e(__func__, true, true); // time measurement, barrier
 
   /*
   std::stringstream sss;
@@ -282,6 +281,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
     DataMap& cplData)
 {
   preciceTrace("updateDiffernceMatrices()");
+  Event e("Base-QN_updateDifferenceMatrices()", true, true); // time measurement, barrier
 
   // Compute current residual: vertex-data - oldData
   _residuals = _values;
@@ -344,7 +344,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
     _oldResiduals = _residuals;   // Store residuals
     _oldXTilde = _values;   // Store x_tilde
   }
-
+  e.stop(true);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -359,7 +359,7 @@ void BaseQNPostProcessing::performPostProcessing
     DataMap& cplData)
 {
   preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("Base-QN_performPostProcessing()", true, true); // time measurement, barrier
 
   using namespace tarch::la;
   assertion(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
@@ -466,9 +466,6 @@ void BaseQNPostProcessing::performPostProcessing
     Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_residuals.size());
     computeQNUpdate(cplData, xUpdate);
 
-    Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
-    e_revertPrecond.stop();                                   // -------------
-
     /**
      * apply quasiNewton update
      */
@@ -525,13 +522,15 @@ void BaseQNPostProcessing::performPostProcessing
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
+  e.stop(true);
 }
 
 
 void BaseQNPostProcessing::applyFilter()
 {
   preciceTrace1(__func__,_filter);
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("Base-QN_applyFilter()", true, true); // time measurement, barrier
+
   if (_filter == PostProcessing::NOFILTER) {
     // do nothing
   } else {
@@ -547,6 +546,7 @@ void BaseQNPostProcessing::applyFilter()
     }
     assertion(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
+  e.stop(true);
 }
 
 
@@ -605,7 +605,7 @@ void BaseQNPostProcessing::iterationsConverged
     DataMap & cplData)
 {
   preciceTrace(__func__);
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("Base-QN_iterationsConvegred()", true, true); // time measurement, barrier
 
   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
     _infostringstream<<"# time step "<<tSteps<<" converged #\n iterations: "<<its
@@ -688,6 +688,7 @@ void BaseQNPostProcessing::iterationsConverged
 
   _matrixCols.push_front(0);
   _firstIteration = true;
+  e.stop(true);
 }
 
 /** ---------------------------------------------------------------------------------------------
