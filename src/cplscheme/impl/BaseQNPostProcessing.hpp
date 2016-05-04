@@ -332,8 +332,7 @@ private:
   std::deque<int> _matrixColsBackup;
 
   /// @ brief additional debugging info, is not important for computation:
-
-  int deletedColumns;
+  int _nbDelCols;
 
 };
 

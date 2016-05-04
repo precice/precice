@@ -81,7 +81,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _matrixColsBackup(),
   its(0),
   tSteps(0),
-  deletedColumns(0),
+  _nbDelCols(0),
   _infostringstream(std::ostringstream::ate),
   _infostream()
   //_debugOut()
@@ -316,7 +316,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
         utils::appendFront(_matrixW, deltaXTilde);
 
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
-        // QR decomposition and updae decomposition
+        // QR decomposition and update decomposition
 
         //apply scaling here
         _preconditioner->apply(deltaR);
@@ -444,6 +444,7 @@ void BaseQNPostProcessing::performPostProcessing
     _preconditioner->update(false, _values, _residuals);
     // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
     _preconditioner->apply(_matrixV);
+
     if(_preconditioner->requireNewQR()){
       if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
@@ -606,17 +607,13 @@ void BaseQNPostProcessing::iterationsConverged
   preciceTrace(__func__);
   Event e(__func__, true, true); // time measurement, barrier
 
-  // debugging info, remove if not needed anymore:
-  // -----------------------
-  //_infostringstream << "\n ---------------- deletedColumns:" << deletedColumns
-  //    << "\n\n ### time step:" << tSteps + 1 << " ###" << std::endl;
   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
-    _infostringstream<<"# time step "<<tSteps<<" converged #\n iterations: "<<its<<"\n used cols: "<<getLSSystemCols()<<"\n del cols: "<<deletedColumns<<std::endl;
+    _infostringstream<<"# time step "<<tSteps<<" converged #\n iterations: "<<its
+                     <<"\n used cols: "<<getLSSystemCols()<<"\n del cols: "<<_nbDelCols<<std::endl;
 
   its = 0;
   tSteps++;
-  deletedColumns = 0;
-  // -----------------------
+  _nbDelCols = 0;
 
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
@@ -706,7 +703,7 @@ void BaseQNPostProcessing::removeMatrixColumn
   preciceTrace2("removeMatrixColumn()", columnIndex, _matrixV.cols());
 
   // debugging information, can be removed
-  deletedColumns++;
+  _nbDelCols++;
 
   assertion(_matrixV.cols() > 1);
   utils::removeColumnFromMatrix(_matrixV, columnIndex);
@@ -741,7 +738,7 @@ void BaseQNPostProcessing::importState(
 
 int BaseQNPostProcessing::getDeletedColumns()
 {
-  return deletedColumns;
+  return _nbDelCols;
 }
 
 int BaseQNPostProcessing::getLSSystemCols()
