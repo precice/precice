@@ -203,7 +203,7 @@ void MVQNPostProcessing:: initialize
 	  _invJacobian = Eigen::MatrixXd::Zero(global_n, entries);
 	  _oldInvJacobian = Eigen::MatrixXd::Zero(global_n, entries);
 	  // only need global weights for preconditioner if not in restart mode
-	  _preconditioner->triggerGlobalWeights(global_n);
+	  // NOT NEEDED ANYMORE: _preconditioner->triggerGlobalWeights(global_n); // never have to scale Jacobian matrix due to changed preconditioning
 	}
 	// initialize V, W matrices for the LS restart
 	if(_imvjRestartType == RS_LS){
