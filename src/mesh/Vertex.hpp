@@ -99,6 +99,16 @@ public:
 
   void setOwner(bool owner);
 
+  /*
+   * @brief: returns whether this vertex could be set as an owner
+   */
+  bool getCouldBeOwner() const;
+
+  /**
+   * @brief: mark this vertex as a possible candidate to be an owner
+   */
+  void setCouldBeOwner(bool couldBeOwner);
+
 private:
 
   // @brief Unique (among vertices in one mesh) ID of the vertex.
@@ -113,8 +123,11 @@ private:
   // @brief global (unique) index for parallel simulations
   int _globalIndex;
 
-  // @brief true if this processors is the owner of the vertex (for parallel simulations)
+  // @brief true if this processor is the owner of the vertex (for parallel simulations)
   bool _owner;
+
+  // @brief true if this processor could be the owner of this vertex (needed for RBF-based filtering)
+  bool _couldBeOwner;
 
   // @brief Pointer to parent mesh, possibly NULL.
   Mesh * _mesh;
@@ -134,6 +147,7 @@ Vertex:: Vertex
   _normal ( _coords.size(), 0.0 ),
   _globalIndex(-1),
   _owner(true),
+  _couldBeOwner(true),
   _mesh ( NULL )
 {}
 
@@ -149,6 +163,7 @@ Vertex:: Vertex (
   _normal ( _coords.size(), 0.0 ),
   _globalIndex(-1),
   _owner(true),
+  _couldBeOwner(true),
   _mesh ( & mesh )
 {}
 

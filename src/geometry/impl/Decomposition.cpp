@@ -26,19 +26,22 @@ Decomposition:: Decomposition
   _bb(),
   _safetyGap(0.0),
   _safetyFactor(safetyFactor),
-  _filterByMapping(false)
+  _filterByMapping(false),
+  _filterByRBF(false)
 {}
 
 void Decomposition:: setBoundingFromMapping(
   mapping::PtrMapping mapping)
 {
   _boundingFromMapping = mapping;
+  if(not _boundingFromMapping->isProjectionMapping()) _filterByRBF = true;
 }
 
 void Decomposition:: setBoundingToMapping(
   mapping::PtrMapping mapping)
 {
   _boundingToMapping = mapping;
+  if(not _boundingToMapping->isProjectionMapping()) _filterByRBF = true;
 }
 
 void Decomposition:: computeBoundingMappings()
@@ -76,6 +79,7 @@ std::vector<int> Decomposition:: filterMesh(mesh::Mesh& seed, mesh::Mesh& filter
   for (const mesh::Vertex& vertex : seed.vertices()) {
     if (doesVertexContribute(vertex)){
       mesh::Vertex& v = filteredMesh.createVertex(vertex.getCoords());
+      v.setOwner(vertex.isOwner());
       vertexPositions.push_back(vertexCounter);
       vertexMap[vertex.getID()] = &v;
     }
@@ -147,8 +151,7 @@ bool Decomposition:: doesVertexContribute(
     }
     return exit;
   }
-  else if((_boundingToMapping.use_count() > 0 && not _boundingToMapping->isProjectionMapping()) ||
-          (_boundingFromMapping.use_count() > 0 && not _boundingFromMapping->isProjectionMapping())){
+  else if(_filterByRBF){
     //if we have at least one non-projection mapping (i.e. RBF mapping), we should not filter here
     return true;
   }
@@ -159,6 +162,22 @@ bool Decomposition:: doesVertexContribute(
       }
     }
     return true;
+  }
+}
+
+
+void Decomposition:: tagMesh(
+    mesh::Mesh& seed)
+{
+  double sr = 0.4; //wie komm ich da am schoensten ran?
+
+  for(mesh::Vertex& v: seed.vertices()){
+    v.setCouldBeOwner(true);
+    for (int d=0; d<_dimensions; d++) {
+      if (v.getCoords()[d] < _bb[d].first - sr || v.getCoords()[d] > _bb[d].second + sr) {
+        v.setCouldBeOwner(false);
+      }
+    }
   }
 }
 

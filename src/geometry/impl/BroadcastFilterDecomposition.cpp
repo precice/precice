@@ -82,12 +82,17 @@ void BroadcastFilterDecomposition:: filter(
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
   std::vector<int> tmpVertexPostitions = filterMesh(seed, filteredMesh);
 
+
   // second, mapping filter
   preciceDebug("Second Filter Mapping, #vertices " << filteredMesh.vertices().size());
   _filterByMapping = true;
   seed.clear();
   seed.addMesh(filteredMesh);
   seed.computeState();
+  if(_filterByRBF){
+    tagMesh(seed);
+    seed.computeOwnerRBF();
+  }
   computeBoundingMappings();
   filteredMesh.clear();
   filteredVertexPositions = filterMesh(seed, filteredMesh);

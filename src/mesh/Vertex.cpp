@@ -134,4 +134,12 @@ void Vertex:: setOwner(bool owner){
   _owner = owner;
 }
 
+bool Vertex:: getCouldBeOwner() const {
+  return _couldBeOwner;
+}
+
+void Vertex:: setCouldBeOwner( bool couldBeOwner){
+  _couldBeOwner = couldBeOwner;
+}
+
 }} // namespace precice, mesh

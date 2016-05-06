@@ -44,7 +44,8 @@ Mesh:: Mesh
   _vertexDistribution(),
   _vertexOffsets(),
   _globalNumberOfVertices(-1),
-  _boundingBox()
+  _boundingBox(),
+  _ownerBoundingBox()
 {
   if (_managerPropertyIDs == nullptr){
     _managerPropertyIDs = new utils::ManageUniqueIDs;
@@ -613,6 +614,7 @@ void Mesh:: computeDistribution()
         utils::MasterSlave::_communication->send(globalIndices.data(),numberOfVertices,rankSlave);
       }
     }
+    preciceDebug("My global indices: " << _vertexDistribution[0]);
     setGlobalIndices(_vertexDistribution[0]);
   }
   else{ //coupling mode
@@ -623,12 +625,29 @@ void Mesh:: computeDistribution()
     setGlobalIndices(globalIndices);
   }
 
+  //TODO for non-RBFs, we need this
+  //computeOwnerInformation();
+}
 
-  // (3) generate owner information, decide which rank is owner for duplicated vertices
-  preciceDebug("Generate owner information");
+void Mesh:: computeOwnerInformation()
+{
+  preciceTrace("computeOwnerInformation()");
+
   if (utils::MasterSlave::_slaveMode) {
     int numberOfVertices = vertices().size();
     if (numberOfVertices!=0) {
+      std::vector<int> tags(numberOfVertices, -1);
+      for(int i=0; i<numberOfVertices; i++){
+        if(vertices()[i].getCouldBeOwner()){
+          tags[i] = 1;
+        }
+        else{
+          tags[i] = 0;
+        }
+      }
+      preciceDebug("My tags: " << tags);
+      utils::MasterSlave::_communication->send(tags.data(),numberOfVertices,0);
+
       std::vector<int> ownerVec(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(ownerVec.data(),numberOfVertices,0);
       preciceDebug("My owner information: " << ownerVec);
@@ -638,17 +657,39 @@ void Mesh:: computeDistribution()
   else if (utils::MasterSlave::_masterMode) {
     std::vector<int> globalOwnerVec(_globalNumberOfVertices,0); //to temporary store which vertices already have an owner
     std::vector<std::vector<int> > slaveOwnerVecs; // same, but per slave
+    std::vector<std::vector<int> > slaveTags; // tag information from everybody
+
     slaveOwnerVecs.resize(utils::MasterSlave::_size);
+    slaveTags.resize(utils::MasterSlave::_size);
     int localGuess = _globalNumberOfVertices / utils::MasterSlave::_size; //guess for a decent load balancing
 
-    //first round: every slave gets localGuess vertices
+    //first round: every rank gets localGuess vertices
     for (int rank = 0; rank < utils::MasterSlave::_size; rank++){
       auto globalIndices = _vertexDistribution[rank];
       int localNumberOfVertices = _vertexDistribution[rank].size();
       slaveOwnerVecs[rank].resize(localNumberOfVertices);
+      slaveTags[rank].resize(localNumberOfVertices);
+
+      if (localNumberOfVertices!=0) {
+        if(rank==0){
+          for(int i=0; i<localNumberOfVertices; i++){
+            if(vertices()[i].getCouldBeOwner()){
+              slaveTags[rank][i] = 1;
+            }
+            else{
+              slaveTags[rank][i] = 0;
+            }
+          }
+        }
+        else{
+          utils::MasterSlave::_communication->receive(slaveTags[rank].data(),localNumberOfVertices,0);
+        }
+        preciceDebug("Rank " << rank << " has this tags " << slaveTags[rank]);
+      }
+
       int counter = 0;
       for (int i=0; i < localNumberOfVertices; i++) {
-        if (globalOwnerVec[globalIndices[i]] == 0) { // Vertex has no owner yet
+        if (globalOwnerVec[globalIndices[i]] == 0 && slaveTags[rank][i] == 1) { // Vertex has no owner yet
           slaveOwnerVecs[rank][i] = 1; // Now it is owned by rank
           globalOwnerVec[globalIndices[i]] = 1;
           ++counter;
@@ -661,7 +702,7 @@ void Mesh:: computeDistribution()
       auto globalIndices = _vertexDistribution[rank];
       int localNumberOfVertices = _vertexDistribution[rank].size();
       for(int i=0;i<localNumberOfVertices;i++){
-        if(globalOwnerVec[globalIndices[i]] == 0){
+        if(globalOwnerVec[globalIndices[i]] == 0 && slaveTags[rank][i] == 1){
           slaveOwnerVecs[rank][i] = 1;
           globalOwnerVec[globalIndices[i]] = rank + 1;
         }
@@ -669,6 +710,7 @@ void Mesh:: computeDistribution()
         
       if (localNumberOfVertices!=0) {
         if (rank==0){ //master own data
+          preciceDebug("My owner information: " << slaveOwnerVecs[rank]);
           setOwnerInformation(slaveOwnerVecs[rank]);
         }
         else{
@@ -680,7 +722,7 @@ void Mesh:: computeDistribution()
 #     ifdef Debug
     for(int i=0;i<_globalNumberOfVertices;i++){
       if(globalOwnerVec[i]==0){
-        preciceWarning("scatterMesh()", "The Vertex with global index " << i << " of mesh: " << _name
+        preciceWarning("computeDistribution()", "The Vertex with global index " << i << " of mesh: " << _name
                        << " was completely filtered out, since it has no influence on any mapping.")
           }
     }
@@ -689,6 +731,115 @@ void Mesh:: computeDistribution()
   } else{ //coupling mode
     std::vector<int> ownerVec(vertices().size(),1);
     setOwnerInformation(ownerVec);
+  }
+
+}
+
+void Mesh:: computeOwnerRBF()
+{
+  preciceTrace("computeOwnerRBF()");
+  //assumption: every rank has the complete mesh
+
+  int numberOfVertices = vertices().size();
+  //preciceDebug("Number of vertices: " << numberOfVertices);
+
+  if (utils::MasterSlave::_slaveMode) {
+    std::vector<int> tags(numberOfVertices, -1);
+    for(int i=0; i<numberOfVertices; i++){
+      if(vertices()[i].getCouldBeOwner()){
+        tags[i] = 1;
+      }
+      else{
+        tags[i] = 0;
+      }
+    }
+    //preciceDebug("My tags: " << tags);
+    utils::MasterSlave::_communication->send(tags.data(),numberOfVertices,0);
+
+    std::vector<int> ownerVec(numberOfVertices, -1);
+    utils::MasterSlave::_communication->receive(ownerVec.data(),numberOfVertices,0);
+    preciceDebug("My owner information: " << ownerVec);
+    setOwnerInformation(ownerVec);
+  }
+  else if (utils::MasterSlave::_masterMode) {
+    std::vector<int> globalOwnerVec(numberOfVertices,0); //to temporary store which vertices already have an owner
+    std::vector<std::vector<int> > slaveOwnerVecs; // same, but per slave
+    std::vector<std::vector<int> > slaveTags; // tag information from everybody
+
+    slaveOwnerVecs.resize(utils::MasterSlave::_size);
+    slaveTags.resize(utils::MasterSlave::_size);
+
+    preciceDebug("receive and create tag information");
+    for (int rank = 0; rank < utils::MasterSlave::_size; rank++){
+      slaveOwnerVecs[rank].resize(numberOfVertices,0);
+      slaveTags[rank].resize(numberOfVertices,-1);
+      if(rank==0){
+        for(int i=0; i<numberOfVertices; i++){
+          if(vertices()[i].getCouldBeOwner()){
+            slaveTags[rank][i] = 1;
+          }
+          else{
+            slaveTags[rank][i] = 0;
+          }
+        }
+        //preciceDebug("My tags: " << slaveTags[rank]);
+      }
+      else{
+        utils::MasterSlave::_communication->receive(slaveTags[rank].data(),numberOfVertices,rank);
+        //preciceDebug("Slave tags, rank: " << rank << ", tags: " << slaveTags[rank]);
+      }
+    }
+
+    preciceDebug("Create owner information");
+    int guess = 5;
+    for(int j=0;j<5;j++){
+      for (int rank = 0; rank < utils::MasterSlave::_size; rank++){
+
+        int counter = 0;
+        for (int i=0; i < numberOfVertices; i++) {
+          if (globalOwnerVec[i] == 0 && slaveTags[rank][i] == 1) { // Vertex has no owner yet
+            slaveOwnerVecs[rank][i] = 1; // Now it is owned by rank
+            globalOwnerVec[i] = 1;
+            ++counter;
+            if(counter==guess && j!=4) break;
+          }
+        }
+      }
+    }
+    for (int rank = 0; rank < utils::MasterSlave::_size; rank++) {
+      if (rank==0){ //master own data
+        preciceDebug("My owner information: " << slaveOwnerVecs[rank]);
+        setOwnerInformation(slaveOwnerVecs[rank]);
+      }
+      else{
+        utils::MasterSlave::_communication->send(slaveOwnerVecs[rank].data(),numberOfVertices,rank);
+      }
+    }
+
+# ifdef Debug
+    for(int i=0;i<numberOfVertices;i++){
+      if(globalOwnerVec[i]==0){
+        preciceWarning("computeOwnerRBF()", "The Vertex with global index " << i << " of mesh: " << _name
+                       << " was completely filtered out, since it has no influence on any mapping.")
+          }
+    }
+# endif
+
+  }
+
+  preciceDebug("Compute owner bounding box");
+
+  _ownerBoundingBox = BoundingBox (_dimensions,
+            std::make_pair(std::numeric_limits<double>::max(),
+                           std::numeric_limits<double>::lowest()));
+  //Compute owner bounding box
+  for(Vertex& vertex: vertices()){
+    for (int d = 0; d < _dimensions; d++) {
+      if(vertex.isOwner()){
+        _ownerBoundingBox[d].first  = std::min(vertex.getCoords()[d], _ownerBoundingBox[d].first);
+        _ownerBoundingBox[d].second = std::max(vertex.getCoords()[d], _ownerBoundingBox[d].second);
+      }
+    }
   }
 }
 
@@ -754,6 +905,7 @@ void Mesh:: addMesh(
   for ( const Vertex& vertex : deltaMesh.vertices() ){
     coords = vertex.getCoords();
     Vertex& v = createVertex (coords);
+    v.setOwner(vertex.isOwner());
     assertion ( vertex.getID() >= 0, vertex.getID() );
     vertexMap[vertex.getID()] = &v;
   }
@@ -786,6 +938,11 @@ void Mesh:: addMesh(
 const Mesh::BoundingBox Mesh::getBoundingBox() const
 {
   return _boundingBox;
+}
+
+const Mesh::BoundingBox Mesh::getOwnerBoundingBox() const
+{
+  return _ownerBoundingBox;
 }
 
 const std::vector<double> Mesh::getCOG() const

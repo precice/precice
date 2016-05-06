@@ -336,6 +336,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PetscInt colNum = 0;  // holds the number of columns
     for (mesh::Vertex& vj : inMesh->vertices()) {
       distance = inVertex.getCoords() - vj.getCoords();
+
       for (int d = 0; d < dimensions; d++) {
         if (_deadAxis[d]) {
           distance[d] = 0;
@@ -480,6 +481,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   preciceDebug("Non-zeros allocated / used / unused for matrix C = " << _matrixC.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixC.getInfo(MAT_LOCAL).nz_used << " / " << _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
   preciceDebug("Number of mallocs for matrix A = " << _matrixA.getInfo(MAT_LOCAL).mallocs);
   preciceDebug("Non-zeros allocated / used / unused for matrix A = " << _matrixA.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixA.getInfo(MAT_LOCAL).nz_used << " / " << _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
+
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -607,11 +609,31 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 template<typename RADIAL_BASIS_FUNCTION_T>
 bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int vertexID) const
 {
-  // FIXME: Use a sane calculation here
-  // preciceTrace(__func__);
+   //preciceTrace(__func__);
 
-  if (not _basisFunction.hasCompactSupport())
+  if (not _basisFunction.hasCompactSupport()){
     return true;
+  }
+  else{
+    double sr = _basisFunction.getSupportRadius();
+    mesh::PtrMesh inMesh;
+    mesh::PtrMesh outMesh;
+    if (getConstraint() == CONSERVATIVE){
+      inMesh = output();
+      outMesh = input();
+    }
+    else {
+      inMesh = input();
+      outMesh = output();
+    }
+
+    for (int d=0; d<inMesh->getDimensions(); d++) {
+      if (inMesh->vertices()[vertexID].getCoords()[d] < inMesh->getOwnerBoundingBox()[d].first - sr ||
+          inMesh->vertices()[vertexID].getCoords()[d] > inMesh->getOwnerBoundingBox()[d].second + sr) {
+        return false;
+      }
+    }
+  }
 
   return true;
 }

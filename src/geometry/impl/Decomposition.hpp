@@ -73,6 +73,12 @@ protected:
   /// Returns true if a vertex contributes. If false, the vertex can be erased.
   bool doesVertexContribute(const mesh::Vertex& vertex);
 
+
+ /**
+  * @brief for RBF mappings, vertices are tagged whether they could be an owner or not
+  */
+  void tagMesh(mesh::Mesh& seed);
+
   void mergeBoundingBoxes(mesh::Mesh::BoundingBox& bb);
 
   /**
@@ -91,6 +97,11 @@ protected:
   double _safetyFactor;
 
   bool _filterByMapping;
+
+  /*
+   * @brief true if at least one mapping is an RBF mapping. then, the filerting works differently
+   */
+  bool _filterByRBF;
 
 
 private:

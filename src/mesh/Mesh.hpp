@@ -262,6 +262,17 @@ public:
   void computeDistribution();
 
   /**
+   * @brief compute owner information, i.e. to which proc duplicated vertices belong to.
+   * This is needed for RBF mappings.
+   */
+  void computeOwnerInformation();
+
+  /**
+   * @brief, hack, only works for non-prefiltered meshes
+   */
+  void computeOwnerRBF();
+
+  /**
    * @brief Removes all mesh elements and data values (does not remove data).
    *
    * A mesh element is a
@@ -307,6 +318,13 @@ public:
    * computeState() has to be called after setting the mesh.
    */
   const BoundingBox getBoundingBox() const;
+
+  /**
+   * @brief Returns the bounding box around all owner vertices of the mesh.
+   *
+   * This bounding box is computed in computeDistribution
+   */
+  const BoundingBox getOwnerBoundingBox() const;
 
   /**
    * @brief Returns the Center Of Gravity of the mesh
@@ -377,6 +395,7 @@ private:
   int _globalNumberOfVertices;
 
   BoundingBox _boundingBox;
+  BoundingBox _ownerBoundingBox;
 
   /// Sets the globalIndices on all vertices in the mesh
   void setGlobalIndices(const std::vector<int> &globalIndices);
