@@ -211,7 +211,7 @@ void MVQNPostProcessing:: initialize
   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
     _infostringstream<<" IMVJ restart mode: "<<_imvjRestart<<"\n chunk size: "<<_chunkSize<<"\n trunc eps: "<<_svdJ.getThreshold()<<"\n R_RS: "<<_RSLSreusedTimesteps<<"\n--------\n"<<std::endl;
 
-  e.stop(true);
+  //e.stop(true);
 }
 
 // ==================================================================================
@@ -309,7 +309,7 @@ void MVQNPostProcessing::updateDifferenceMatrices
       }
     }
   }
-  e.stop(true);
+//  e.stop(true);
 }
 
 
@@ -376,7 +376,7 @@ void MVQNPostProcessing::pseudoInverse(
   // scale pseudo inverse back Z := Z' * P,
   // Z' is scaled pseudo inverse i.e, Z' = R^-1 * Q^T * P^-1
   _preconditioner->apply(pseudoInverse, true);
-  e.stop(true);
+//  e.stop(true);
 }
 
 // ==================================================================================
@@ -418,7 +418,7 @@ void MVQNPostProcessing::buildWtil()
   _Wtil = _Wtil + _matrixW;
 
   _resetLS = false;
-  e.stop(true);
+//  e.stop(true);
 }
 
 // ==================================================================================
@@ -458,7 +458,7 @@ void MVQNPostProcessing::buildJacobian()
 
   // update Jacobian
   _invJacobian = _invJacobian + _oldInvJacobian;
-  e.stop(true);
+  //e.stop(true);
 }
 
 // ==================================================================================
@@ -560,7 +560,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
     _Wtil.conservativeResize(0,0);
     _resetLS = true;
   }
-  e.stop(true);
+//  e.stop(true);
 }
 
 // ==================================================================================
@@ -788,7 +788,7 @@ void MVQNPostProcessing::restartIMVJ()
   }else{
     assertion(false);
   }
-  e.stop(true);
+//  e.stop(true);
 }
 
 // ==================================================================================
@@ -897,7 +897,7 @@ void MVQNPostProcessing:: specializedIterationsConverged
     // store inverse Jacobian from converged time step. NOT SCALED with preconditioner
     _oldInvJacobian = _invJacobian;
   }
-  e.stop(true);
+//  e.stop(true);
 }
 
 // ==================================================================================

@@ -73,7 +73,7 @@ void IQNILSPostProcessing::initialize
       utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
     }
   }
-  e.stop(true);
+//  e.stop(true);
 }
 
 
@@ -131,7 +131,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
   
   // call the base method for common update of V, W matrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
-  e.stop(true);
+//  e.stop(true);
 }
 
 
@@ -223,7 +223,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	  // broadcast coefficients c to all slaves
 	  utils::MasterSlave::broadcast(c.data(), c.size());
 	}
-	e_qrsolve.stop(true);
+	e_qrsolve.stop();
 
 	preciceDebug("   Apply Newton factors");
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
@@ -266,7 +266,7 @@ void IQNILSPostProcessing::computeQNUpdate
 			_secondaryMatricesW[id].resize(0,0);
 		}
 	}
-	e.stop(true);
+//	e.stop(true);
 }
 
 
@@ -305,7 +305,7 @@ void IQNILSPostProcessing:: specializedIterationsConverged
       }
     }
   }
-  e.stop(true);
+  //e.stop(true);
 }
 
 

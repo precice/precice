@@ -344,7 +344,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
     _oldResiduals = _residuals;   // Store residuals
     _oldXTilde = _values;   // Store x_tilde
   }
-  e.stop(true);
+  //e.stop(true);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -522,7 +522,7 @@ void BaseQNPostProcessing::performPostProcessing
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
-  e.stop(true);
+//  e.stop(true);
 }
 
 
@@ -546,7 +546,7 @@ void BaseQNPostProcessing::applyFilter()
     }
     assertion(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
-  e.stop(true);
+//  e.stop(true);
 }
 
 
@@ -688,7 +688,7 @@ void BaseQNPostProcessing::iterationsConverged
 
   _matrixCols.push_front(0);
   _firstIteration = true;
-  e.stop(true);
+//  e.stop(true);
 }
 
 /** ---------------------------------------------------------------------------------------------
