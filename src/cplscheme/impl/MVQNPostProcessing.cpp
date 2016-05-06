@@ -117,7 +117,7 @@ void MVQNPostProcessing:: initialize
   DataMap& cplData )
 {
   preciceTrace(__func__);
-  Event e("initialize()", true, true); // time measurement, barrier
+  Event e("MVQNPostProcessing::initialize", true, true); // time measurement, barrier
 
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
@@ -140,7 +140,7 @@ void MVQNPostProcessing:: initialize
           try {
             // auto addressDirectory = std::to_string(".");
             if(utils::MasterSlave::_masterMode) {
-              Event e("CyclicComm::acceptConnection/createDirectories");
+              //Event e("CyclicComm::acceptConnection/createDirectories");
               for(int rank = 0; rank < utils::MasterSlave::_size; ++rank) {
                 Publisher::createDirectory(std::string(".") + "/" + "." + "cyclicComm-" + std::to_string(rank) + ".address");
               }

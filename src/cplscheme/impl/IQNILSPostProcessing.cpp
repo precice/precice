@@ -81,7 +81,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
 {
-  Event e("MVQNPostProcessing::updateDifferenceMatrices", true, true); // time measurement, barrier
+  Event e("IQNILSPostProcessing::updateDifferenceMatrices", true, true); // time measurement, barrier
 	// Compute residuals of secondary data
 	for (int id: _secondaryDataIDs){
 		Eigen::VectorXd& secResiduals = _secondaryResiduals[id];
