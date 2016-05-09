@@ -37,12 +37,12 @@
     << message;                                                             \
   } while (false)
     
-#define preciceInfo(methodname, message) do                                \
-  {                                                                         \
+#define preciceInfo(methodname, message)                                    \
+  if(not precice::utils::MasterSlave::_slaveMode){                          \
     LOG_LOCATION;                                                           \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::info)          \
     << message;                                                             \
-  } while (false)
+  } 
 
 #ifdef NDEBUG 
 
