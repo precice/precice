@@ -563,9 +563,23 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       const PetscScalar *outArray;
       ierr = VecGetArrayRead(out.vector, &outArray);
 
-      for (int i=out.ownerRange().first+localPolyparams; i < out.ownerRange().second; i++) {
-        outValues[(i-polyparams)*valueDim + dim] = outArray[i-out.ownerRange().first]; // hier noch das index set beachten?
+//      for (int i=out.ownerRange().first+localPolyparams; i < out.ownerRange().second; i++) {
+//        outValues[(i-polyparams)*valueDim + dim] = outArray[i-out.ownerRange().first]; // hier noch das index set beachten?
+//      }
+
+      int count = 0;
+      int ownerCount = 0;
+      for (const mesh::Vertex& vertex : output()->vertices()) {
+        if(vertex.isOwner()){
+          outValues[count*valueDim + dim] = outArray[ownerCount+localPolyparams];
+          ownerCount++;
+        }
+        else{
+          outValues[count*valueDim + dim] = 0.0;
+        }
+        count++;
       }
+
       VecRestoreArrayRead(out.vector, &outArray);
     }
   }
