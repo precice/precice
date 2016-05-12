@@ -221,7 +221,7 @@ void SVDFactorization::computeQRdecomposition(
 
     // normalize col
     double rho = orthogonalized ? rho_orth : 1.0;
-    col /= rho_orth;
+    col /= rho;
     r(rowsR) = rho;
 
     // as we always insert at the rightmost position, no need to shift
