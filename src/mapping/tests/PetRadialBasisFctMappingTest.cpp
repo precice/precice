@@ -54,6 +54,7 @@ void PetRadialBasisFctMappingTest:: run()
       testMethod(testDistributedConservative2DV2);
       // testMethod(testDistributedConservative2DV3);
       // testMethod(testDistributedConservative2DV4);
+      testMethod(testDistributedConservative2DV5);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -359,6 +360,46 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2DV4()
 }
 // Python results:
 // 2.42857  3.61905  4.14286  5.33333  5.85714  7.04762  7.57143
+
+/// Tests a non-contigous owner distributed at the outMesh
+void PetRadialBasisFctMappingTest::testDistributedConservative2DV5()
+{
+  preciceTrace("testDistributedConservative2DV1");
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  
+  testDistributed(mapping,
+                  { // Conservative mapping: The inMesh is local
+                    {0, -1, {0, 0}, {1}},
+                    {0, -1, {0, 1}, {2}},
+                    {1, -1, {1, 0}, {3}},
+                    {1, -1, {1, 1}, {4}},
+                    {2, -1, {2, 0}, {5}},
+                    {2, -1, {2, 1}, {6}},
+                    {3, -1, {3, 0}, {7}},
+                    {3, -1, {3, 1}, {8}}
+                  },
+                  { // The outMesh is distributed and non-contigous
+                    {-1, 0, {0, 0}, {0}},
+                    {-1, 1, {0, 1}, {0}},
+                    {-1, 1, {1, 0}, {0}},
+                    {-1, 0, {1, 1}, {0}},
+                    {-1, 2, {2, 0}, {0}},
+                    {-1, 2, {2, 1}, {0}},
+                    {-1, 3, {3, 0}, {0}},
+                    {-1, 3, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                    // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                    {0, {1}}, {0, {0}}, {0, {0}}, {0, {4}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+                    {1, {0}}, {1, {2}}, {1, {3}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+                    {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
+                    {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
+                  },
+                  utils::Parallel::getProcessRank()*2
+    );
+}
 
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()

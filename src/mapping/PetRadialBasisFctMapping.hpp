@@ -569,15 +569,20 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
       // Copy mapped data to output data values
       const PetscScalar *outArray;
-      ierr = VecGetArrayRead(out.vector, &outArray);
+      VecGetArrayRead(out.vector, &outArray);
 
-      for (int i=out.ownerRange().first+localPolyparams; i < out.ownerRange().second; i++) {
-        outValues[(i-polyparams)*valueDim + dim] = outArray[i-out.ownerRange().first]; // hier noch das index set beachten?
+      int count = 0, ownerCount = 0;
+      for (const mesh::Vertex& vertex : output()->vertices()) {
+        if (vertex.isOwner()) {
+          outValues[count*valueDim + dim] = outArray[ownerCount+localPolyparams];
+          ownerCount++;
+        }
+        count++;
       }
       VecRestoreArrayRead(out.vector, &outArray);
     }
   }
-  else { // Map consistent
+  else { // Map CONSISTENT
     preciceDebug("Map consistent");
     petsc::Vector p(_matrixC, "p");
     petsc::Vector in(_matrixC, "in");
