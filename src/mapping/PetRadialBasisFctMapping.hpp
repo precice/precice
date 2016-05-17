@@ -577,6 +577,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
           outValues[count*valueDim + dim] = outArray[ownerCount+localPolyparams];
           ownerCount++;
         }
+        else {
+          assertion(outValues[count*valueDim + dim] == 0.0);
+        }
         count++;
       }
       VecRestoreArrayRead(out.vector, &outArray);
