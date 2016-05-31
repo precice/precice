@@ -536,12 +536,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     preciceDebug("Map conservative");
     petsc::Vector Au(_matrixC, "Au");
     petsc::Vector in(_matrixA, "in");
-    petsc::Vector out = std::get<0>( // Save and reuse the solution from the previous iteration
-      previousSolution.emplace(std::piecewise_construct,
-                               std::forward_as_tuple(inputDataID + outputDataID * 100),
-                               std::forward_as_tuple(_matrixC, "out"))
-      )->second;
-
+    
     // Fill input from input data values
     for (int dim=0; dim < valueDim; dim++) {
       preciceDebug("input()->vertices().size() = " << input()->vertices().size());
@@ -549,8 +544,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
         int globalIndex = input()->vertices()[i].getGlobalIndex();
         VecSetValue(in.vector, globalIndex, inValues[(i)*valueDim + dim], INSERT_VALUES); // Dies besser als VecSetValuesLocal machen
       }
-      
       in.assemble();
+
+      petsc::Vector out = std::get<0>(
+        previousSolution.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
+                                 std::forward_as_tuple(_matrixC, "out"))
+        )->second;
+      
       ierr = MatMultTranspose(_matrixA.matrix, in.vector, Au.vector); CHKERRV(ierr);
       ierr = KSPSolve(_solver, Au.vector, out.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
@@ -589,12 +590,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     preciceDebug("Map consistent");
     petsc::Vector p(_matrixC, "p");
     petsc::Vector in(_matrixC, "in");
-    petsc::Vector out = std::get<0>(
-      previousSolution.emplace(std::piecewise_construct,
-                               std::forward_as_tuple(inputDataID + outputDataID * 100),
-                               std::forward_as_tuple(_matrixA, "out"))
-      )->second;
-    
+        
     ierr = VecSetLocalToGlobalMapping(in.vector, _ISmapping); CHKERRV(ierr);
     const PetscScalar *vecArray;
 
@@ -607,6 +603,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
         count++;
       }
       in.assemble();
+      
+      petsc::Vector out = std::get<0>(  // Save and reuse the solution from the previous iteration        
+        previousSolution.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
+                                 std::forward_as_tuple(_matrixA, "out"))
+        )->second;
+      
       ierr = KSPSolve(_solver, in.vector, p.vector); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
       if (convReason < 0) {
