@@ -74,14 +74,16 @@ def parseEventlog(file):
     events = []
     
     for i in readBlock(file):
-        timeStamp = datetime.datetime.strptime(i[0][18:], "%a %b %d %H:%M:%S %Y")
-        globalTimings = parseTimings(i[2])
-        timings = np.hstack( [parseTimings(t) for t in i[3:]] )
+        timeStamp = datetime.datetime.strptime(i[0][19:], "%a %b %d %H:%M:%S %Y")
+        procs = int(i[1][24:])
+        globalTimings = parseTimings(i[3])
+        timings = np.hstack( [parseTimings(t) for t in i[4:]] )
         
         events.append( {
             "timestamp" : timeStamp,
-            "global" : globalTimings,
-            "timings" : timings
+            "global"    : globalTimings,
+            "procs"     : procs,
+            "timings"   : timings
         } )
 
     return events
