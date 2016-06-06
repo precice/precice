@@ -581,88 +581,98 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 
   // if residual differences are available for fine and coarse model
   // (either from previous iterations or from previous time steps or both)
+
+//  if (getLSSystemCols() > 0)
+//  {
+//    // compute SVDs of _matrixF and _matriC
+//    Eigen::VectorXd S_F, S_C;
+//    Eigen::MatrixXd V_F, U_F, V_C, U_C, Sigma_F, pseudoSigma_F;
+//
+//    // Remove dependent columns of _matrixC and _matrixF
+//    int nbRemoveCols = 1;
+//    while (nbRemoveCols > 0)
+//    {
+//      nbRemoveCols = 0;
+//      if (getLSSystemCols() == 0)
+//        break;
+//
+//      // Calculate singular value decomposition with Eigen
+//      Eigen::JacobiSVD < Eigen::MatrixXd > svd(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);
+//      Eigen::VectorXd singularValues = svd.singularValues();
+//
+//      for (int i = 0; i < singularValues.rows(); i++) {
+//        if (std::abs(singularValues(i)) <= _singularityLimit) {
+//          std::cout<<"singular value: "<<singularValues(i)<<std::endl;
+//
+//          // Remove the column from _matrixC and _matrixF
+//          removeMatrixColumn(i - nbRemoveCols);
+//          nbRemoveCols++;
+//        }
+//      }
+//      if (nbRemoveCols)
+//        preciceDebug("Manifold mapping: remove " << nbRemoveCols << " columns from the Jacobian matrices");
+//    }
+
+  assert(_matrixF.cols() == _matrixC.cols());
+  // compute SVDs of _matrixF and _matriC
+  Eigen::VectorXd S_F, S_C;
+  Eigen::MatrixXd V_F, U_F, V_C, U_C, Sigma_F;
+
   if (getLSSystemCols() > 0)
   {
-    // compute SVDs of _matrixF and _matriC
-    Eigen::VectorXd S_F, S_C;
-    Eigen::MatrixXd V_F, U_F, V_C, U_C, Sigma_F, pseudoSigma_F;
+    // Calculate singular value decomposition with Eigen
+    Eigen::JacobiSVD < Eigen::MatrixXd > svd_C(_matrixC, Eigen::ComputeThinU | Eigen::ComputeThinV);
+    Eigen::JacobiSVD < Eigen::MatrixXd > svd_F(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);
 
-    // Remove dependent columns of _matrixC and _matrixF
-    int nbRemoveCols = 1;
-    while (nbRemoveCols > 0)
+    Eigen::MatrixXd pseudoSigma_F = svd_F.singularValues().asDiagonal();
+
+    for ( int i = 0; i < pseudoSigma_F.cols(); i++ )
+      if ( pseudoSigma_F( i, i ) > _singularityLimit )
+          pseudoSigma_F( i, i ) = 1.0 / pseudoSigma_F( i, i );
+      else
+          pseudoSigma_F( i, i ) = 0;
+
+
+    Eigen::MatrixXd pseudoMatrixF = svd_F.matrixV() * pseudoSigma_F * svd_F.matrixU().transpose();
+
+    U_F = svd_F.matrixU();
+    U_C = svd_C.matrixU();
+
+    // if Jacobian matrix of MM mapping matrix is not set up explicitly, perform
+    // matrix-vector update
+    if (not _estimateJacobian)
     {
-      nbRemoveCols = 0;
-      if (getLSSystemCols() == 0)
-        break;
+      Eigen::VectorXd beta = U_F * (U_F.transpose() * alpha);
 
-      // Calculate singular value decomposition with Eigen
-      Eigen::JacobiSVD < Eigen::MatrixXd > svd(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);
-      Eigen::VectorXd singularValues = svd.singularValues();
+      _coarseModel_designSpecification -= alpha;
+      _coarseModel_designSpecification -= _matrixC * (pseudoMatrixF * alpha);
 
-      for (int i = 0; i < singularValues.rows(); i++) {
-        if (std::abs(singularValues(i)) <= _singularityLimit) {
-          std::cout<<"singular value: "<<singularValues(i)<<std::endl;
-
-          // Remove the column from _matrixC and _matrixF
-          removeMatrixColumn(i - nbRemoveCols);
-          nbRemoveCols++;
-        }
-      }
-      if (nbRemoveCols)
-        preciceDebug("Manifold mapping: remove " << nbRemoveCols << " columns from the Jacobian matrices");
+      // next line can also be commented out
+      _coarseModel_designSpecification += U_C * (U_C.transpose() * (alpha - beta));
+      _coarseModel_designSpecification += beta;
     }
 
-    assert(_matrixF.cols() == _matrixC.cols());
-
-    if (getLSSystemCols() > 0)
+    // Jacobian matrix of MM mapping matrix is estimated and set up explicitly
+    // multi-vector method for update of Jacobian with implicit incorporation of
+    // information from previous time steps.
+    if (_estimateJacobian)
     {
-      // Calculate singular value decomposition with Eigen
-      Eigen::JacobiSVD < Eigen::MatrixXd > svd_C(_matrixC, Eigen::ComputeThinU | Eigen::ComputeThinV);
-      Eigen::JacobiSVD < Eigen::MatrixXd > svd_F(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);
+      Eigen::MatrixXd I = Eigen::MatrixXd::Identity(_matrixF.rows(), _matrixF.rows());
 
-      Eigen::MatrixXd pseudoSigma_F = svd_F.singularValues().asDiagonal();
+      // if previous Jacobian exists, i.e., no re-scaling and not first estimation
+      if (_MMMappingMatrix_prev.rows() == getLSSystemRows()) {
+        _MMMappingMatrix = _MMMappingMatrix_prev + (_matrixC - _MMMappingMatrix_prev * _matrixF) * pseudoMatrixF;
 
-      for (int i = 0; i < pseudoSigma_F.cols(); i++)
-        pseudoSigma_F(i, i) = 1.0 / pseudoSigma_F(i, i);
-
-      Eigen::MatrixXd pseudoMatrixF = svd_F.matrixV() * pseudoSigma_F * svd_F.matrixU().transpose();
-
-      U_F = svd_F.matrixU();
-      U_C = svd_C.matrixU();
-
-      // if Jacobian matrix of MM mapping matrix is not set up explicitly, perform
-      // matrix-vector update
-      if (not _estimateJacobian)
-      {
-        Eigen::VectorXd beta = U_F * (U_F.transpose() * alpha);
-
-        _coarseModel_designSpecification -= alpha;
-        _coarseModel_designSpecification -= _matrixC * (pseudoMatrixF * alpha);
-        _coarseModel_designSpecification += U_C * (U_C.transpose() * (alpha - beta));
-        _coarseModel_designSpecification += beta;
+        // if no previous Jacobian exists, set up Jacobian with IQN-ILS update rule + stabilization term
+      } else {
+        _MMMappingMatrix = _matrixC * pseudoMatrixF + (I - U_C * U_C.transpose()) * (I - U_F * U_F.transpose());
       }
 
-      // Jacobian matrix of MM mapping matrix is estimated and set up explicitly
-      // multi-vector method for update of Jacobian with implicit incorporation of
-      // information from previous time steps.
-      if (_estimateJacobian)
-      {
-        Eigen::MatrixXd I = Eigen::MatrixXd::Identity(_matrixF.rows(), _matrixF.rows());
-
-        // if previous Jacobian exists, i.e., no re-scaling and not first estimation
-        if (_MMMappingMatrix_prev.rows() == getLSSystemRows()) {
-          _MMMappingMatrix = _MMMappingMatrix_prev + (_matrixC - _MMMappingMatrix_prev * _matrixF) * pseudoMatrixF;
-
-          // if no previous Jacobian exists, set up Jacobian with IQN-ILS update rule + stabilization term
-        } else {
-          _MMMappingMatrix = _matrixC * pseudoMatrixF + (I - U_C * U_C.transpose()) * (I - U_F * U_F.transpose());
-        }
-
-        // compute new design specification for coarse model optimization: qk = c(x) - Tk( f(x) - q )
-        _coarseModel_designSpecification -= _MMMappingMatrix * alpha;
-      }
+      // compute new design specification for coarse model optimization: qk = c(x) - Tk( f(x) - q )
+      _coarseModel_designSpecification -= _MMMappingMatrix * alpha;
     }
   }
+
 
   // if no residual differences for the fine and coarse model are given so far
   if ((_firstIteration && _firstTimeStep) || getLSSystemCols() <= 0)
