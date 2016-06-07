@@ -192,10 +192,9 @@ void MMPostProcessing::initialize(
 
   if (_estimateJacobian) {
     _MMMappingMatrix = Eigen::MatrixXd::Zero(getLSSystemRows(), entries);
+    _preconditioner->triggerGlobalWeights(getLSSystemRows());
     // do not initialize Tkprev (MMMappingMatrix_prev), as we need a different constructing rule
     // in the first step (see computeCoarseModelDesignSpecifiaction).
-
-    //_MMMappingMatrix_prev = Eigen::MatrixXd::Identity(getLSSystemRows(), entries);
   }
 
   /**
@@ -436,8 +435,6 @@ void MMPostProcessing::performPostProcessing(
 
     /**
      *  === update and apply preconditioner ===
-     *
-     * IQN-ILS would also work without W and xUpdate scaling, IQN-IMVJ unfortunately not
      * Note: here, the _residuals are H(x)- x - q, i.e., residual of the fixed-point iteration
      *       minus the design specification of the optimization problem (!= null if MM is used)
      */
@@ -454,8 +451,8 @@ void MMPostProcessing::performPostProcessing(
       _preconditioner->apply(_designSpecification);
 
     if(_estimateJacobian && _MMMappingMatrix_prev.rows() > 0){
-      _preconditioner->apply(_MMMappingMatrix_prev,false);
-      _preconditioner->revert(_MMMappingMatrix_prev,true);
+      _preconditioner->apply(_MMMappingMatrix_prev,false, true);
+      _preconditioner->revert(_MMMappingMatrix_prev,true, true);
     }
 
     /** compute the new design specification for the coarse model optimization
@@ -473,8 +470,8 @@ void MMPostProcessing::performPostProcessing(
 
     // undo preconditioning
     if(_estimateJacobian && _MMMappingMatrix_prev.rows() > 0){
-      _preconditioner->revert(_MMMappingMatrix_prev,false);
-      _preconditioner->apply(_MMMappingMatrix_prev,true);
+      _preconditioner->revert(_MMMappingMatrix_prev,false, true);
+      _preconditioner->apply(_MMMappingMatrix_prev,true, true);
     }
 
     if (getLSSystemCols() > 0){
@@ -525,8 +522,8 @@ void MMPostProcessing::performPostProcessing(
      *          x_k+1 = argmin_x || c(x) - q_k ||
      *        ------------------------------------
      *  In the first time step, the coarse model design specification is equal to the
-     *  design specification of the overall objective function. Here, a initial coarse
-     *  model solution is obtained for a initial guess.
+     *  design specification of the overall objective function. Here, an initial coarse
+     *  model solution is obtained for an initial guess.
      */
     _coarseModelOptimization->optimize(coarseCplData, _coarseModel_designSpecification);
 
@@ -579,39 +576,6 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
   Eigen::VectorXd alpha = _fineResiduals - _designSpecification;
   _coarseModel_designSpecification = _coarseResiduals;
 
-  // if residual differences are available for fine and coarse model
-  // (either from previous iterations or from previous time steps or both)
-
-//  if (getLSSystemCols() > 0)
-//  {
-//    // compute SVDs of _matrixF and _matriC
-//    Eigen::VectorXd S_F, S_C;
-//    Eigen::MatrixXd V_F, U_F, V_C, U_C, Sigma_F, pseudoSigma_F;
-//
-//    // Remove dependent columns of _matrixC and _matrixF
-//    int nbRemoveCols = 1;
-//    while (nbRemoveCols > 0)
-//    {
-//      nbRemoveCols = 0;
-//      if (getLSSystemCols() == 0)
-//        break;
-//
-//      // Calculate singular value decomposition with Eigen
-//      Eigen::JacobiSVD < Eigen::MatrixXd > svd(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);
-//      Eigen::VectorXd singularValues = svd.singularValues();
-//
-//      for (int i = 0; i < singularValues.rows(); i++) {
-//        if (std::abs(singularValues(i)) <= _singularityLimit) {
-//          std::cout<<"singular value: "<<singularValues(i)<<std::endl;
-//
-//          // Remove the column from _matrixC and _matrixF
-//          removeMatrixColumn(i - nbRemoveCols);
-//          nbRemoveCols++;
-//        }
-//      }
-//      if (nbRemoveCols)
-//        preciceDebug("Manifold mapping: remove " << nbRemoveCols << " columns from the Jacobian matrices");
-//    }
 
   assert(_matrixF.cols() == _matrixC.cols());
   // compute SVDs of _matrixF and _matriC
@@ -787,8 +751,8 @@ void MMPostProcessing::iterationsConverged
   // store the estimated matrix from the last time step.
   if(_estimateJacobian && _MMMappingMatrix.cols() > 0){
     _MMMappingMatrix_prev = _MMMappingMatrix;
-    _preconditioner->revert(_MMMappingMatrix_prev,false);
-    _preconditioner->apply(_MMMappingMatrix_prev,true);
+    _preconditioner->revert(_MMMappingMatrix_prev,false, true);
+    _preconditioner->apply(_MMMappingMatrix_prev,true, true);
   }
 
 

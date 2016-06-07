@@ -59,6 +59,9 @@ void ResidualSumPreconditioner::_update_(bool timestepComplete, const Eigen::Vec
     }
 
     _requireNewQR = true;
+    if(_needsGlobalWeights){
+      communicateGlobalWeights();
+    }
   }
   else{
     for(size_t k=0; k<_dimensions.size(); k++){

@@ -50,6 +50,9 @@ void ValuePreconditioner::_update_(bool timestepComplete, const Eigen::VectorXd&
 
     _requireNewQR = true;
     _firstTimestep = false;
+    if(_needsGlobalWeights){
+        communicateGlobalWeights();
+      }
   }
 }
 
