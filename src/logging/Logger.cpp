@@ -30,19 +30,21 @@
 namespace precice {
 namespace logging {
 
+/// A custom formatter that handle the TimeStamp format string
 class timestamp_formatter_factory :
     public boost::log::basic_formatter_factory<char, boost::posix_time::ptime>
 {
 public:
   formatter_type create_formatter(boost::log::attribute_name const& name, args_map const& args)
   {
+    namespace expr = boost::log::expressions;
     args_map::const_iterator it = args.find("format");
     if (it != args.end())
-      return boost::log::expressions::stream <<
-        boost::log::expressions::format_date_time<boost::posix_time::ptime>(boost::log::expressions::attr<boost::posix_time::ptime>(name), it->second);
+      return expr::stream <<
+        expr::format_date_time<boost::posix_time::ptime>(expr::attr<boost::posix_time::ptime>(name), it->second);
     else
-      return boost::log::expressions::stream <<
-        boost::log::expressions::attr<boost::posix_time::ptime>(name);
+      return expr::stream <<
+        expr::attr<boost::posix_time::ptime>(name);
   }
 };
 
