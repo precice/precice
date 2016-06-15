@@ -163,6 +163,7 @@ if env["boost_inst"]:
     uniqueCheckLib(conf, "boost_thread")
     uniqueCheckLib(conf, "boost_system")
     uniqueCheckLib(conf, "boost_filesystem")
+    uniqueCheckLib(conf, "boost_program_options")
 else:
     boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
     env.AppendUnique(CXXFLAGS = ['-isystem', boostRootPath]) # -isystem supresses compilation warnings for boost headers

@@ -3,6 +3,8 @@
 #include <fstream>
 #include <string>
 
+#include <boost/program_options.hpp>
+
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
@@ -48,10 +50,79 @@ public:
   }
 };
 
+/// Holds the configuration for one logging backend and takes care of default values.
+struct BackendConfiguration
+{
+  std::string type;
+  std::string output = "default output";
+  boost::log::filter filter = boost::log::parse_filter("%Severity% > debug");
+  boost::log::basic_formatter<char> format = boost::log::parse_formatter("(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%LINE% in %Function%: %Message%");
+
+  void setOption(std::string key, std::string value)
+  {
+    boost::algorithm::to_lower(key);
+    if (key == "type") 
+      type = value;
+    if (key == "output")
+      output = value;
+    if (key == "filter")
+      filter = boost::log::parse_filter(value);
+    if (key == "format")
+      format = boost::log::parse_formatter(value);
+  }    
+};
+
+
+class StreamBackend :
+    // public boost::log::sinks::basic_formatted_sink_backend<char, boost::log::sinks::synchronized_feeding>
+    public boost::log::sinks::text_ostream_backend
+{
+private:
+  // std::ostream& _ostream;
+  
+public:
+  // StreamBackend(std::ostream& ostream) : _ostream(ostream) {}
+  
+  void consume(boost::log::record_view const& rec, string_type const& formatted_record)
+  {
+    std::cout << "CONSUME: " << formatted_record << std::endl;
+  }
+};
+
+
 Logger::Logger(std::string module)
 {
   add_attribute("Module", boost::log::attributes::constant<std::string>(module));
 }
+
+
+std::map<std::string, BackendConfiguration> readLogConfFile(std::string filename)
+{
+  namespace po = boost::program_options;
+  po::options_description desc;
+  std::ifstream ifs(filename);
+    
+  po::variables_map vm;
+
+  std::map<std::string, BackendConfiguration> configs;
+  try {
+    po::parsed_options parsed = parse_config_file(ifs, desc, true);
+    po::store(parsed, vm);
+    po::notify(vm);
+    std::string currentSection;
+    for (const auto& opt : parsed.options) {
+      std::string section = opt.string_key.substr(0, opt.string_key.find("."));
+      std::string key = opt.string_key.substr(opt.string_key.find(".")+1);
+      configs[section].setOption(key, opt.value[0]);        
+    }
+  }
+  catch (po::error& e) {
+    std::cout << "ERROR reading logging configuration: " << e.what() << "\n\n";
+    std::exit(-1);
+  }
+  return configs;  
+}
+
 
 void setupLogging(std::string logConfigFile)
 {
@@ -89,9 +160,9 @@ void setupLogging(std::string logConfigFile)
 */
   
 //alternative setting of log format
-  /*
-     auto fmtStream =
-     expressions::stream
+  
+  auto fmtStream =
+    expressions::stream
      << "(" 
      << expressions::attr<int>("Rank")
      << ") "
@@ -106,7 +177,7 @@ void setupLogging(std::string logConfigFile)
      << expressions::attr<std::string>("Function") 
      << ": "
      << expressions::message; //<< std::endl;
-  */
+  
 //Additional possibilities for debugging output
 //expressions::attr<unsigned int>("LineID")
 //expressions::attr<attributes::current_thread_id::value_type>("ThreadID")
@@ -118,23 +189,46 @@ void setupLogging(std::string logConfigFile)
   //boost::log::add_file_log("sample.log", keywords::format = fmtStream); // state namespace here for
   // consisitency with
   // console_log
-  //boost::log::add_console_log(std::cout, keywords::format = fmtStream); // explicitly state namespace
+  // boost::log::add_console_log(std::cout, keywords::format = fmtStream); // explicitly state namespace
   // here to resolve some
   // ambiguity issue
 
   //if config file exists only entries in the file overrides our standard config only
-  std::ifstream file(logConfigFile);
-  // settings conf = parse_settings(file);
-  // cout << conf["Core"]["Filter"] << endl;
+  auto configs = readLogConfFile(logConfigFile);
+  std::cout << "LOGGING CONFIG" << std::endl;
+  // if (file.is_open()){
+    // init_from_stream(file);
+  // } else {
+    // init_from_settings(setts);
+  // }
 
-  if (file.is_open()){
-    init_from_stream(file);
-  } else {
-    init_from_settings(setts);
+  if (configs.empty()) {
+    configs["DefaultBackend"].type = "stream";
+    configs["DefaultBackend"].output = "stdout";
   }
+  for (const auto& config : configs) {
+    std::cout << "INIT BACKEND " << config.first << std::endl;
+    boost::shared_ptr<StreamBackend> backend = boost::make_shared<StreamBackend>();
+    if (config.second.type == "file")
+      backend->add_stream(boost::shared_ptr<std::ostream>(new std::ofstream(config.second.output)));
+    if (config.second.type == "stream") {
+      if (config.second.output == "stdout")
+        backend->add_stream(boost::shared_ptr<std::ostream>(&std::cout, boost::null_deleter()));
+      if (config.second.output == "stderr")
+        backend->add_stream(boost::shared_ptr<std::ostream>(&std::cerr, boost::null_deleter()));
+    }
+    backend->auto_flush(true);
+    using sink_t =  boost::log::sinks::synchronous_sink<StreamBackend>;          
+    boost::shared_ptr<sink_t> sink(new sink_t(backend));
+    sink->set_formatter(config.second.format);
+    sink->set_filter(config.second.filter);
+    boost::log::core::get()->add_sink(sink);
+  }
+    
 }
 
-void setMPIRank(const int rank){
+void setMPIRank(const int rank) {
   boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(boost::log::core::get()->get_global_attributes()["Rank"]).set(rank);
 }
-}}// namespace precice, logging
+
+}} // namespace precice, logging
