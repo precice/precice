@@ -125,6 +125,10 @@ public:
 
   virtual void reduceSum(double* itemsToSend, double* itemsToReceive, int size);
 
+  virtual void reduceSum(int& itemsToSend, int& itemsToReceive, int rankMaster);
+
+  virtual void reduceSum(int& itemsToSend, int& itemsToReceive);
+
   virtual void allreduceSum();
 
   virtual void allreduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster);
@@ -134,6 +138,10 @@ public:
   virtual void allreduceSum(double& itemToSend, double& itemToReceive, int rankMaster);
 
   virtual void allreduceSum(double& itemToSend, double& itemToReceive);
+
+  virtual void allreduceSum(int& itemToSend, int& itemToReceive, int rankMaster);
+
+  virtual void allreduceSum(int& itemToSend, int& itemToReceive);
 
   virtual void broadcast();
 

@@ -108,7 +108,7 @@ void SVDFactorization::computeQRdecomposition(
     Matrix & R)
 {
   preciceTrace(__func__);
-  Event e("compute_QR-dec_for-SVD-update", true, true); // time measurement, barrier
+//  Event e("compute_QR-dec_for-SVD-update", true, true); // time measurement, barrier
 
   // if nothing is linear dependent, the dimensions stay like this
   Q = Matrix::Zero(A.rows(), A.cols());
@@ -221,7 +221,7 @@ void SVDFactorization::computeQRdecomposition(
 
     // normalize col
     double rho = orthogonalized ? rho_orth : 1.0;
-    col /= rho_orth;
+    col /= rho;
     r(rowsR) = rho;
 
     // as we always insert at the rightmost position, no need to shift

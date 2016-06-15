@@ -67,7 +67,7 @@ public:
        const Eigen::MatrixBase<Derived2>& B)
    {
      preciceTrace(__func__);
-     utils::Event e("SVD-update", true, true);
+//     utils::Event e("SVD-update", true, true);
      assertion(_initialized);
      /** updates the truncated svd factorization of the Jacobian with a rank-1 modification
       *
@@ -86,7 +86,7 @@ public:
        _sigma = Vector::Zero(0);
      }
 
-     utils::Event e_orthModes("SVD-update::orthogonalModes", true, true);
+//     utils::Event e_orthModes("SVD-update::orthogonalModes", true, true);
      /** (1): compute orthogonal basis P of (I-\psi\psi^T)A
       */
      Matrix Atil(_psi.cols(), A.cols());    // Atil is of size (K_bar x m)
@@ -115,7 +115,7 @@ public:
      Matrix Q, R_B;
      computeQRdecomposition(Qtil, Q, R_B);
 
-     e_orthModes.stop();
+//     e_orthModes.stop(true);
 
      /** (3) construct matrix K \in (K_bar + m -x) x (K_bar +m -y) if
       *      x .. deleted columns in P -> (m-x) new modes from A (rows of R_A)
@@ -125,7 +125,7 @@ public:
       *      [    0    0]   [ R_A  ]   [ R_B  ]
       *  (stored local on each proc).
       */
-     utils::Event e_matK("SVD-update::build-svd-K", true, true);
+//     utils::Event e_matK("SVD-update::build-svd-K", true, true);
      Matrix K = Matrix::Zero(_psi.cols() + R_A.rows(), _psi.cols() + R_B.rows());
      Matrix K_A(_psi.cols() + R_A.rows(), Atil.cols());
      Matrix K_B(_phi.cols() + R_B.rows(), Btil.cols());
@@ -145,11 +145,11 @@ public:
      _sigma = svd.singularValues();
      auto& psiPrime = svd.matrixU();
      auto& phiPrime = svd.matrixV();
-     e_matK.stop();
+//     e_matK.stop(true);
 
      /** (4) rotate left and right subspaces
       */
-     utils::Event e_rot("SVD-update::rot-eigenspaces", true, true);
+//     utils::Event e_rot("SVD-update::rot-eigenspaces", true, true);
      Matrix rotLeft(_rows, _psi.cols() + P.cols());
      Matrix rotRight(_rows, _phi.cols() + Q.cols());
 
@@ -162,7 +162,7 @@ public:
      _psi = rotLeft * psiPrime;
      _phi = rotRight * phiPrime;
 
-     e_rot.stop();
+//     e_rot.stop(true);
 
      /** (5) truncation of SVD
       */

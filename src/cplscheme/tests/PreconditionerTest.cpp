@@ -377,7 +377,6 @@ void PreconditionerTest::testParallelMatrixScaling ()
 
   impl::ValuePreconditioner precond(dims, -1);
   precond.initialize(localN);
-  precond.triggerGlobalWeights(globalN);
   precond.update(true,x,x);
   validate(precond.requireNewQR());
 
@@ -394,24 +393,6 @@ void PreconditionerTest::testParallelMatrixScaling ()
   for(int i=0; i<V.rows(); i++){
     for(int j=0; j<V.cols(); j++){
       validateWithParams2(tarch::la::equals(V(i,j), V_back(i,j)), V(i,j), V_back(i,j));
-    }
-  }
-
-  precond.apply(M, false);
-  precond.revert(M, true);
-
-  for(int i=0; i<M.rows(); i++){
-    for(int j=0; j<M.cols(); j++){
-      validateWithParams2(tarch::la::equals(M(i,j), M_back(i,j)), M(i,j), M_back(i,j));
-    }
-  }
-
-  precond.revert(M, false);
-  precond.apply(M, true);
-
-  for(int i=0; i<M.rows(); i++){
-    for(int j=0; j<M.cols(); j++){
-      validateWithParams2(tarch::la::equals(M(i,j), M_back(i,j)), M(i,j), M_back(i,j));
     }
   }
 

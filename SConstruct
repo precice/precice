@@ -179,21 +179,9 @@ if env["mpi"]:
     # Skip (deprecated) MPI C++ bindings.
     env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
 
-    if not env["compiler"].startswith('mpi'):
-        mpiLibPath = checkset_var('PRECICE_MPI_LIB_PATH', "/usr/lib/")
-        mpiLib = checkset_var('PRECICE_MPI_LIB', "mpich")
-        mpiIncPath = checkset_var('PRECICE_MPI_INC_PATH', '/usr/include/mpich2')
+    if not conf.CheckHeader('mpi.h'):
+        errorMissingHeader('mpi.h', 'MPI')
         
-        env.AppendUnique(LIBPATH = [mpiLibPath])
-        uniqueCheckLib(conf, mpiLib)
-        if (mpiLib == 'mpich'): # MPICH1/2/3 library
-            uniqueCheckLib(conf, 'mpl')
-            uniqueCheckLib(conf, 'pthread')
-        elif (mpiLib == 'mpi'): # OpenMPI library
-            uniqueCheckLib(conf, 'mpi_cxx')
-        env.AppendUnique(CPPPATH = [mpiIncPath])
-        if not conf.CheckHeader('mpi.h'):
-            errorMissingHeader('mpi.h', 'MPI')
 elif not env["mpi"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_MPI'])
     buildpath += "-nompi"

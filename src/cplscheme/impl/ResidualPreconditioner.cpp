@@ -47,9 +47,6 @@ void ResidualPreconditioner::_update_(bool timestepComplete, const Eigen::Vector
     }
 
     _requireNewQR = true;
-    if(_needsGlobalWeights){
-      communicateGlobalWeights();
-    }
   }
 }
 

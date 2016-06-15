@@ -56,21 +56,24 @@ IQNILSPostProcessing:: IQNILSPostProcessing
 {
 }
 
-void IQNILSPostProcessing:: initialize
+void IQNILSPostProcessing::initialize
 (
   DataMap& cplData )
 {
+  Event e("initialize()", true, true); // time measurement, barrier
+
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
 
   double init = 0.0;
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
   for (DataMap::value_type& pair: cplData){
-	if (not utils::contained(pair.first, _dataIDs)){
-	  int secondaryEntries = pair.second->values->size();
-	  utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
-	}
+    if (not utils::contained(pair.first, _dataIDs)){
+      int secondaryEntries = pair.second->values->size();
+      utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
+    }
   }
+//  e.stop(true);
 }
 
 
@@ -78,7 +81,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
 {
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("IQNILSPostProcessing::updateDifferenceMatrices", true, true); // time measurement, barrier
 	// Compute residuals of secondary data
 	for (int id: _secondaryDataIDs){
 		Eigen::VectorXd& secResiduals = _secondaryResiduals[id];
@@ -128,6 +131,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
   
   // call the base method for common update of V, W matrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
+//  e.stop(true);
 }
 
 
@@ -159,7 +163,8 @@ void IQNILSPostProcessing::computeQNUpdate
 (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
 	preciceTrace("computeQNUpdate()");
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("computeNewtonUpdate", true, true); // time measurement, barrier
+
   preciceDebug("   Compute Newton factors");
 
   // Calculate QR decomposition of matrix V and solve Rc = -Qr
@@ -224,7 +229,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
 	xUpdate = _matrixW * c;
 
-	preciceDebug("c = " << c);
+	//preciceDebug("c = " << c);
 
 
     /**
@@ -261,6 +266,7 @@ void IQNILSPostProcessing::computeQNUpdate
 			_secondaryMatricesW[id].resize(0,0);
 		}
 	}
+//	e.stop(true);
 }
 
 
@@ -269,7 +275,8 @@ void IQNILSPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
-  
+  Event e(__func__, true, true); // time measurement, barrier
+
   if (_matrixCols.front() == 0){ // Did only one iteration
     _matrixCols.pop_front(); 
   }
@@ -298,6 +305,7 @@ void IQNILSPostProcessing:: specializedIterationsConverged
       }
     }
   }
+  //e.stop(true);
 }
 
 

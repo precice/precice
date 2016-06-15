@@ -44,6 +44,12 @@ void ConstantRelaxationPostProcessing:: initialize
                << " is not contained in data given at initialization!");
 
   // Append column for old values if not done by coupling scheme yet
+  int entries = 0;
+  for (auto & elem : _dataIDs) {
+    entries += cplData[elem]->values->size();
+  }
+  _designSpecification = Eigen::VectorXd::Zero(entries);
+
   for (DataMap::value_type& pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
