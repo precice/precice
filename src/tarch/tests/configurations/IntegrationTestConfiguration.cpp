@@ -3,7 +3,6 @@
 #endif
 #include "tarch/tests/configurations/IntegrationTestConfiguration.h"
 #include "tarch/tests/TestCaseRegistry.h"
-#include "tarch/logging/CommandLineLogger.h"
 #include "utils/assertion.hpp"
 
 
@@ -120,9 +119,6 @@ tarch::configuration::TopLevelConfiguration* tarch::tests::configurations::Integ
 
 
 int tarch::tests::configurations::IntegrationTestConfiguration::interpreteConfiguration() {
-  tarch::logging::CommandLineLogger::getInstance().clearFilterList();
-  tarch::logging::CommandLineLogger::getInstance().addFilterListEntries( _logConfiguration.getFilterList() );
-  tarch::logging::CommandLineLogger::getInstance().setLogFormat( _logFormatConfiguration );
   TestCase::setOutputDirectory( _outputDirectoryForTempFiles );
   TestCaseRegistry::getInstance().getIntegrationTestCaseCollection().run();
   return TestCaseRegistry::getInstance().getIntegrationTestCaseCollection().getNumberOfErrors();

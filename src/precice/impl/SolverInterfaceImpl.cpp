@@ -5,8 +5,6 @@
 #include "precice/config/Configuration.hpp"
 #include "precice/config/SolverInterfaceConfiguration.hpp"
 #include "precice/config/ParticipantConfiguration.hpp"
-#include "tarch/la/WrappedVector.h"
-#include "tarch/logging/CommandLineLogger.h"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Mesh.hpp"
@@ -121,7 +119,6 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   // signal(SIGINT,  precice::utils::terminationSignalHandler);
 
   precice::logging::setupLogging();
-  
 }
 
 SolverInterfaceImpl:: ~SolverInterfaceImpl()
@@ -136,13 +133,6 @@ void SolverInterfaceImpl:: configure
 (
   const std::string& configurationFileName )
 {
-  typedef tarch::logging::CommandLineLogger Logger;
-  // By default, debugging is turned on with a filter list entry. This removes
-  // entry and turns off all debug messages until configuration.
-  Logger::getInstance().clearFilterList();
-  Logger::FilterListEntry filter("", true); // All off
-  Logger::getInstance().addFilterListEntry(filter);
-
   preciceTrace1("configure()", configurationFileName );
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
