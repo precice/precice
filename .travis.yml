@@ -17,6 +17,8 @@ addons:
       - libboost-system1.55-dev
       - libboost-filesystem1.55-dev
       - libboost-log1.55-dev
+      - libboost-program-options1.55-dev
+
 env:
   global:
     - CPLUS_INCLUDE_PATH="$HOME/eigen-eigen-bdd17ee3b1b3"

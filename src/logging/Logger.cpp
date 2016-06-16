@@ -54,7 +54,6 @@ struct BackendConfiguration
   void setOption(std::string key, std::string value)
   {
     boost::algorithm::to_lower(key);
-    std::cout << "Set option " << key << " to " << value << std::endl;
     if (key == "type") {
       boost::algorithm::to_lower(value);
       type = value;
