@@ -3,21 +3,19 @@
 #include <fstream>
 #include <string>
 
+#include <boost/utility/empty_deleter.hpp>
+
 #include <boost/program_options.hpp>
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
-
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
-
 #include <boost/log/expressions/keyword.hpp>
 #include <boost/log/expressions/formatters/named_scope.hpp>
-
 #include <boost/log/utility/setup/common_attributes.hpp>
 #include <boost/log/utility/setup/console.hpp>
-
 #include <boost/log/support/date_time.hpp>
 
 #include "utils/assertion.hpp"
@@ -167,9 +165,9 @@ void setupLogging(std::string logConfigFile)
       backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(new std::ofstream(config.second.output)));
     if (config.second.type == "stream") {
       if (config.second.output == "stdout")
-        backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cout, boost::null_deleter()));
+        backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cout, boost::empty_deleter()));
       if (config.second.output == "stderr")
-        backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cerr, boost::null_deleter()));
+        backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cerr, boost::empty_deleter()));
     }
     assertion(backend != nullptr, "The logging backend was not initialized properly. Check your " + logConfigFile);
     backend->auto_flush(true);
