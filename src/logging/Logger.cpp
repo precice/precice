@@ -61,8 +61,11 @@ struct BackendConfiguration
   void setOption(std::string key, std::string value)
   {
     boost::algorithm::to_lower(key);
-    if (key == "type") 
+    std::cout << "Set option " << key << " to " << value << std::endl;
+    if (key == "type") {
+      boost::algorithm::to_lower(value);
       type = value;
+    }
     if (key == "output")
       output = value;
     if (key == "filter")
@@ -74,18 +77,21 @@ struct BackendConfiguration
 
 
 class StreamBackend :
-    // public boost::log::sinks::basic_formatted_sink_backend<char, boost::log::sinks::synchronized_feeding>
     public boost::log::sinks::text_ostream_backend
 {
 private:
-  // std::ostream& _ostream;
+  boost::shared_ptr<std::ostream> _ostream;
   
 public:
-  // StreamBackend(std::ostream& ostream) : _ostream(ostream) {}
+  StreamBackend(boost::shared_ptr<std::ostream> ostream) : _ostream(ostream)
+  {
+    std::cout << "Set stream." << std::endl;
+  }
+  StreamBackend() {}
   
   void consume(boost::log::record_view const& rec, string_type const& formatted_record)
   {
-    std::cout << "CONSUME: " << formatted_record << std::endl;
+    *_ostream << "CONSUME: " << formatted_record << std::endl;
   }
 };
 
@@ -207,15 +213,15 @@ void setupLogging(std::string logConfigFile)
     configs["DefaultBackend"].output = "stdout";
   }
   for (const auto& config : configs) {
-    std::cout << "INIT BACKEND " << config.first << std::endl;
-    boost::shared_ptr<StreamBackend> backend = boost::make_shared<StreamBackend>();
+    std::cout << "Initialized Logging Backend: " << config.first << std::endl; // use std::cout here, because logging isn't initialized yet
+    boost::shared_ptr<StreamBackend> backend;
     if (config.second.type == "file")
-      backend->add_stream(boost::shared_ptr<std::ostream>(new std::ofstream(config.second.output)));
+      backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(new std::ofstream(config.second.output)));
     if (config.second.type == "stream") {
       if (config.second.output == "stdout")
-        backend->add_stream(boost::shared_ptr<std::ostream>(&std::cout, boost::null_deleter()));
+        backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cout, boost::null_deleter()));
       if (config.second.output == "stderr")
-        backend->add_stream(boost::shared_ptr<std::ostream>(&std::cerr, boost::null_deleter()));
+        backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cerr, boost::null_deleter()));
     }
     backend->auto_flush(true);
     using sink_t =  boost::log::sinks::synchronous_sink<StreamBackend>;          
