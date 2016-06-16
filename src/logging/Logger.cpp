@@ -9,25 +9,18 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
 
-// #include <boost/log/utility/manipulators/add_value.hpp>
-
 #include <boost/log/attributes/named_scope.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
-
-//#include <boost/log/sources/severity_logger.hpp>
 
 #include <boost/log/expressions/keyword.hpp>
 #include <boost/log/expressions/formatters/named_scope.hpp>
 
 #include <boost/log/utility/setup/common_attributes.hpp>
-#include <boost/log/utility/setup/file.hpp>
 #include <boost/log/utility/setup/console.hpp>
-#include <boost/log/utility/setup/from_settings.hpp>
-#include <boost/log/utility/setup/from_stream.hpp>
-#include <boost/log/utility/setup/settings.hpp>
 
 #include <boost/log/support/date_time.hpp>
 
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace logging {
@@ -54,7 +47,7 @@ public:
 struct BackendConfiguration
 {
   std::string type;
-  std::string output = "default output";
+  std::string output = "stdout";
   boost::log::filter filter = boost::log::parse_filter("%Severity% > debug");
   boost::log::basic_formatter<char> format = boost::log::parse_formatter("(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%LINE% in %Function%: %Message%");
 
@@ -76,6 +69,11 @@ struct BackendConfiguration
 };
 
 
+/// A simple backends that outputs the message to a stream
+/* Rationale: The original test_ostream_backend from boost suffered from the great amount of code that lies 
+ * between the printing of the message and the endline. This leads to high probability that a process switch 
+ * occures and the message is severed from the endline.
+ */
 class StreamBackend :
     public boost::log::sinks::text_ostream_backend
 {
@@ -83,15 +81,11 @@ private:
   boost::shared_ptr<std::ostream> _ostream;
   
 public:
-  StreamBackend(boost::shared_ptr<std::ostream> ostream) : _ostream(ostream)
-  {
-    std::cout << "Set stream." << std::endl;
-  }
-  StreamBackend() {}
+  StreamBackend(boost::shared_ptr<std::ostream> ostream) : _ostream(ostream) {}
   
   void consume(boost::log::record_view const& rec, string_type const& formatted_record)
   {
-    *_ostream << "CONSUME: " << formatted_record << std::endl;
+    *_ostream << formatted_record << std::endl << std::flush;
   }
 };
 
@@ -115,7 +109,6 @@ std::map<std::string, BackendConfiguration> readLogConfFile(std::string filename
     po::parsed_options parsed = parse_config_file(ifs, desc, true);
     po::store(parsed, vm);
     po::notify(vm);
-    std::string currentSection;
     for (const auto& opt : parsed.options) {
       std::string section = opt.string_key.substr(0, opt.string_key.find("."));
       std::string key = opt.string_key.substr(opt.string_key.find(".")+1);
@@ -144,29 +137,7 @@ void setupLogging(std::string logConfigFile)
   register_simple_formatter_factory<trivial::severity_level, char>("Severity");
   register_simple_filter_factory<trivial::severity_level, char>("Severity");
 
-  std::string format = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%LINE% in %Function%: %Message%";
-  
-  settings setts;
-
-  setts["Core.Filter"] = "%Severity% > debug";
-  setts["Core.DisableLogging"] = false;
-
-  // Subsections can be referred to with a single path
-  setts["Sinks.Console.Destination"] = "Console";
-  setts["Sinks.Console.Filter"] = "%Severity% > debug";
-  setts["Sinks.Console.AutoFlush"] = true;
-  setts["Sinks.Console.Format"] = format;
-
-  // ...as well as the individual parameters
-/*  setts["Sinks.File.Destination"] = "TextFile";
-  setts["Sinks.File.FileName"] = "sample.log";
-  setts["Sinks.File.AutoFlush"] = true;
-  setts["Sinks.File.RotationSize"] = 10 * 1024 * 1024; // 10 MiB
-  setts["Sinks.File.Format"] = format;
-*/
-  
-//alternative setting of log format
-  
+  // Possible, longer output format. Currently unused.
   auto fmtStream =
     expressions::stream
      << "(" 
@@ -182,31 +153,9 @@ void setupLogging(std::string logConfigFile)
      << "] in "
      << expressions::attr<std::string>("Function") 
      << ": "
-     << expressions::message; //<< std::endl;
+     << expressions::message;
   
-//Additional possibilities for debugging output
-//expressions::attr<unsigned int>("LineID")
-//expressions::attr<attributes::current_thread_id::value_type>("ThreadID")
-//expressions::attr<attributes::current_process_id::value_type>("ProcessID")
-//trivial::severity
-//expressions::format_named_scope("Scope", keywords::format = "%n in %f:%l)")
-
-  
-  //boost::log::add_file_log("sample.log", keywords::format = fmtStream); // state namespace here for
-  // consisitency with
-  // console_log
-  // boost::log::add_console_log(std::cout, keywords::format = fmtStream); // explicitly state namespace
-  // here to resolve some
-  // ambiguity issue
-
-  //if config file exists only entries in the file overrides our standard config only
   auto configs = readLogConfFile(logConfigFile);
-  std::cout << "LOGGING CONFIG" << std::endl;
-  // if (file.is_open()){
-    // init_from_stream(file);
-  // } else {
-    // init_from_settings(setts);
-  // }
 
   if (configs.empty()) {
     configs["DefaultBackend"].type = "stream";
@@ -223,14 +172,14 @@ void setupLogging(std::string logConfigFile)
       if (config.second.output == "stderr")
         backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cerr, boost::null_deleter()));
     }
+    assertion(backend != nullptr, "The logging backend was not initialized properly. Check your " + logConfigFile);
     backend->auto_flush(true);
     using sink_t =  boost::log::sinks::synchronous_sink<StreamBackend>;          
     boost::shared_ptr<sink_t> sink(new sink_t(backend));
     sink->set_formatter(config.second.format);
     sink->set_filter(config.second.filter);
     boost::log::core::get()->add_sink(sink);
-  }
-    
+  }    
 }
 
 void setMPIRank(const int rank) {
