@@ -1,9 +1,6 @@
 <?xml version="1.0"?>
 
-
 <precice-configuration>
-   
-   <log-filter target="debug" component="precice" switch="off" />
    
    <solver-interface geometry-mode="yes" dimensions="2">   
       <data:vector name="Forces"  />

@@ -2,8 +2,6 @@
 
 <precice-configuration>
     
-   <log-filter target="" component="" switch="off" />
-    
    <solver-interface geometry-mode="yes" dimensions="2">
    
       <data:vector name="Forces"  />

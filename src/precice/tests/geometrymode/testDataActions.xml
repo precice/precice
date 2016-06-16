@@ -1,10 +1,7 @@
 <?xml version="1.0"?>
 
 <precice-configuration>
-    
-   <log-filter target="debug" component="precice" switch="off" />
-    
-   <solver-interface geometry-mode="yes" dimensions="3">
+  <solver-interface geometry-mode="yes" dimensions="3">
       <data:vector name="VectorData"  />
       <mesh name="Box"> 
         <use-data name="VectorData" />

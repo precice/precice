@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 
 <precice-configuration>
-   <log-filter target="debug" component="" switch="off"/>
    <solver-interface geometry-mode="on" dimensions="2">      
 
       <data:vector name = "Velocities"/>

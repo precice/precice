@@ -3,7 +3,7 @@
 
 <precice-configuration>
    
-   <log-filter target="debug" component="precice" switch="off" />
+   
    
    <coupling-interface geometry-mode="yes">   
      

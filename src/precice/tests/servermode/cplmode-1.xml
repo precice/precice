@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 
 <precice-configuration>
-   <log-filter target="debug" component="precice" switch="off"/>
    <solver-interface dimensions="2">
       <data:scalar name="ScalarData" />
       <data:vector name="VectorData" />
