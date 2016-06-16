@@ -4,14 +4,16 @@
 #include <cxxabi.h>	// for __cxa_demangle
 
 #include <string>
+#include <sstream>
 #include <iostream>
 #include <iomanip>
 
 /// Prints a demangled stack backtrace of the caller function
-static inline void printStacktrace()
+static inline std::string getStacktrace()
 {
+  std::ostringstream strm;
   const int max_frames = 100;
-  std::cout << "Stack Trace:" << std::endl;
+  strm << "Stack Trace:" << std::endl;
 
   // Storage array for stack trace address data
   void* addrlist[max_frames+1];
@@ -20,8 +22,8 @@ static inline void printStacktrace()
   int addrlen = backtrace(addrlist, sizeof(addrlist) / sizeof(void*));
 
   if (addrlen == 0) {
-    std::cout << "  <empty, possibly corrupt>" << std::endl;
-    return;
+    strm << "  <empty, possibly corrupt>" << std::endl;
+    return strm.str();
   }
 
   // Resolve addresses into strings containing "filename(function+address)", this array must be free()-ed
@@ -42,17 +44,19 @@ static inline void printStacktrace()
 
     int status;
     char* ret = abi::__cxa_demangle(strSymbol.c_str(), funcname, &funcnamesize, &status);
-    std::cout << "  (" << std::setw(2) << addrlen-i << ")";
+    strm << "  (" << std::setw(2) << addrlen-i << ")";
     if (status == 0) {
       funcname = ret; // Use possibly realloc()-ed string
-      std::cout << "  " << strSymbols.substr(0, op) << " : " << funcname << "+" << strOffset <<  std::endl;
+      strm << "  " << strSymbols.substr(0, op) << " : " << funcname << "+" << strOffset <<  std::endl;
     }
     else {
       // Demangling failed. Output function name as a C function with no arguments.
-      std::cout << "  " << strSymbols.substr(0, op) << " : " << strSymbol << "()+" << strOffset <<  std::endl;
+      strm << "  " << strSymbols.substr(0, op) << " : " << strSymbol << "()+" << strOffset <<  std::endl;
     }
   }
 
   delete[] funcname;
   free(symbollist);
+  
+  return strm.str();
 }
