@@ -7,7 +7,6 @@
 #include "utils/Petsc.hpp"
 #include "tarch/configuration/ConfigurationRegistry.h"
 #include "tarch/configuration/TopLevelConfiguration.h"
-#include "tarch/logging/CommandLineLogger.h"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/config/Configuration.hpp"
 #include <iostream>
@@ -43,14 +42,6 @@ void printMPITestWarning(){
 
 int main ( int argc, char** argv )
 {
-  // By default, debugging is turned on with a filter list entry. This removes
-  // entry and turns off all debug messages until configuration.
-  using namespace tarch::logging;
-  CommandLineLogger::getInstance().clearFilterList();
-  CommandLineLogger::FilterListEntry filter("", true); // All off
-  CommandLineLogger::getInstance().addFilterListEntry(filter);
-
-  
   using namespace tarch::configuration;
   precice::logging::setupLogging();
 
@@ -138,8 +129,6 @@ int main ( int argc, char** argv )
     assertion(not runServer);
     assertion(not runTests);
     int linewidth = atoi(argv[2]);
-    //CommandLineLogger::FilterListEntry filter2("debug", false); // debug on
-    //CommandLineLogger::getInstance().addFilterListEntry(filter2);
     std::cout << "<?xml version=\"1.0\"?>" << std::endl << std::endl
               << "<!-- preCICE XML configuration reference"
               << std::endl << std::endl

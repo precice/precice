@@ -7,8 +7,6 @@
 #include "precice/config/ParticipantConfiguration.hpp"
 #include "tarch/la/WrappedVector.h"
 #include "tarch/logging/CommandLineLogger.h"
-#include "precice/config/LogFilterConfiguration.hpp"
-#include "precice/config/LogOutputFormatConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Mesh.hpp"
@@ -154,21 +152,6 @@ void SolverInterfaceImpl:: configure
   utils::configure(config.getXMLTag(), configurationFileName);
   //preciceCheck ( config.isValid(), "configure()", "Invalid configuration file!" );
 
-  const config::LogFilterConfiguration& logFilterConfig =
-      config.getLogFilterConfiguration();
-  Logger::getInstance().clearFilterList();
-  Logger::getInstance().addFilterListEntries(logFilterConfig.getFilterList());
-
-  const config::LogOutputFormatConfiguration& logFormatConfig =
-      config.getLogFormatConfiguration();
-  Logger::getInstance().setLogFormat(
-      logFormatConfig.getLogColumnSeparator(),
-      logFormatConfig.getLogTimeStamp(),
-      logFormatConfig.getLogTimeStampHumanReadable(),
-      logFormatConfig.getLogMachineName(),
-      logFormatConfig.getLogMessageType(),
-      logFormatConfig.getLogTrace(),
-      "");
   configure(config.getSolverInterfaceConfiguration());
 }
 

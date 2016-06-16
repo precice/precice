@@ -18,6 +18,7 @@
 #include <vector>
 #include <set>
 #include <algorithm>
+#include <fstream>
 #include <boost/range/algorithm.hpp>
 
 #include "tarch/tests/TestCaseFactory.h"

@@ -13,6 +13,7 @@
 #include "tarch/la/WrappedVector.h"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
+#include <fstream>
 
 #include "tarch/tests/TestCaseFactory.h"
 registerIntegrationTest(precice::tests::SolverInterfaceTest)
@@ -1844,8 +1845,8 @@ void SolverInterfaceTest:: testNASTINMeshRestart()
   restartFiles.push_back("precice_checkpoint_SOLIDZ_simstate.txt");
 
   for (std::string& restartFile : restartFiles){
-    std::ifstream  src((_pathToTests + restartFile).c_str(), std::ifstream::in);
-    std::ofstream  dst(restartFile.c_str(), std::ifstream::out);
+    std::ifstream  src(_pathToTests + restartFile, std::ifstream::in);
+    std::ofstream  dst(restartFile, std::ifstream::out);
     dst << src.rdbuf();
   }
 

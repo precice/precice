@@ -5,8 +5,6 @@
 #define CONFIGURATION_HPP_
 
 #include "precice/config/SolverInterfaceConfiguration.hpp"
-#include "precice/config/LogFilterConfiguration.hpp"
-#include "precice/config/LogOutputFormatConfiguration.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
 
@@ -53,16 +51,6 @@ public:
   virtual void xmlEndTagCallback ( utils::XMLTag& tag );
 
   /**
-   * @brief Returns log filter configuration.
-   */
-  const LogFilterConfiguration& getLogFilterConfiguration() const;
-
-  /**
-   * @brief Returns log output format configuration.
-   */
-  const LogOutputFormatConfiguration& getLogFormatConfiguration() const;
-
-  /**
    * @brief Returns solver interface configuration.
    */
   const SolverInterfaceConfiguration& getSolverInterfaceConfiguration() const;
@@ -74,10 +62,6 @@ private:
 
   // @brief Root tag of preCICE configuration.
   utils::XMLTag _tag;
-
-  LogFilterConfiguration _logFilterConfig;
-
-  LogOutputFormatConfiguration _logFormatConfig;
 
   SolverInterfaceConfiguration _solverInterfaceConfig;
 };
