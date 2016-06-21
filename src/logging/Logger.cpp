@@ -101,6 +101,15 @@ public:
 Logger::Logger(std::string module)
 {
   add_attribute("Module", boost::log::attributes::constant<std::string>(module));
+  
+  namespace attrs = boost::log::attributes; 
+  namespace log = boost::log;
+  boost::log::add_common_attributes();
+  log::core::get()->add_global_attribute("Scope", attrs::named_scope());
+  log::core::get()->add_global_attribute("Rank", attrs::mutable_constant<int>(0));
+  log::core::get()->add_global_attribute("Line", attrs::mutable_constant<int>(0));
+  log::core::get()->add_global_attribute("File", attrs::mutable_constant<std::string>(""));
+  log::core::get()->add_global_attribute("Function", attrs::mutable_constant<std::string>(""));
 }
 
 
@@ -135,13 +144,6 @@ void setupLogging(std::string logConfigFile)
 {
   using namespace boost::log;
   register_formatter_factory("TimeStamp", boost::make_shared<timestamp_formatter_factory>());
-  add_common_attributes();
-  core::get()->add_global_attribute("Scope", attributes::named_scope());
-  core::get()->add_global_attribute("Rank", attributes::mutable_constant<int>(0));
-  core::get()->add_global_attribute("Line", attributes::mutable_constant<int>(0));
-  core::get()->add_global_attribute("File", attributes::mutable_constant<std::string>(""));
-  core::get()->add_global_attribute("Function", attributes::mutable_constant<std::string>(""));
-
   register_simple_formatter_factory<trivial::severity_level, char>("Severity");
   register_simple_filter_factory<trivial::severity_level, char>("Severity");
 
