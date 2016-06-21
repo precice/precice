@@ -19,8 +19,8 @@ extern bool testMode;
 void printUsage()
 {
   std::cout << "Usage:" << std::endl << std::endl;
-  std::cout << "Run tests          :  ./binprecice test ConfigurationName PathToSrc" << std::endl;
-  std::cout << "Run server         :  ./binprecice server ParticipantName ConfigurationName" << std::endl;
+  std::cout << "Run tests          :  ./binprecice test ConfigurationName PathToSrc [LogConfFile]" << std::endl;
+  std::cout << "Run server         :  ./binprecice server ParticipantName ConfigurationName [LogConfFile]" << std::endl;
   std::cout << "Print XML reference:  ./binprecice xml Linewidth" << std::endl;
 }
 
@@ -42,19 +42,17 @@ void printMPITestWarning(){
 
 int main ( int argc, char** argv )
 {
+  
   using namespace tarch::configuration;
-  precice::logging::setupLogging();
-
-  precice::utils::Parallel::initializeMPI(&argc, &argv);
-  precice::logging::setMPIRank(precice::utils::Parallel::getProcessRank());
-
-  precice::utils::Petsc::initialize(&argc, &argv);
-
+  
   bool runTests = false;
   bool runServer = false;
   bool runHelp = false;
+  bool hasLogConfFile = false;
 
   bool wrongParameters = true;
+  
+
 
   if (argc >= 3) {
     std::string action(argv[1]);
@@ -65,11 +63,17 @@ int main ( int argc, char** argv )
     if ( action == "server" and argc >= 4 ) {
       wrongParameters = false;
       runServer = true;
+      if (argc >= 5){
+        hasLogConfFile = true;
+      }
     }
     if ( action == "test" and argc >= 4 ) {
       wrongParameters = false;
       runTests = true;
       precice::testMode = true;
+      if (argc >= 5){
+        hasLogConfFile = true;
+      }
     }
   }
 
@@ -77,6 +81,17 @@ int main ( int argc, char** argv )
     printUsage();
     return 1;
   }
+
+  if (hasLogConfFile){
+    precice::logging::setupLogging(argv[4]);
+  } else {
+    precice::logging::setupLogging();
+  }
+
+  precice::utils::Parallel::initializeMPI(&argc, &argv);
+  precice::logging::setMPIRank(precice::utils::Parallel::getProcessRank());
+
+  precice::utils::Petsc::initialize(&argc, &argv);
 
   if (runTests){
     assertion(not runServer);
