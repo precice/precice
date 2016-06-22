@@ -21,15 +21,6 @@
     preciceInfo("unknown",message);                                         \
   } while (false)
 
-
-#define preciceDebug(message) do                                           \
-  {                                                                         \
-    LOG_LOCATION;                                                           \
-    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::debug)         \
-    << message;                                                             \
-  } while (false)
-
-    
 #define preciceWarning(methodname, message) do                             \
   {                                                                         \
     LOG_LOCATION;                                                           \
@@ -47,6 +38,7 @@
 #ifdef NDEBUG 
 
 //#define preciceDebug(methodname, message)
+#define preciceDebug(...)
 #define preciceTrace(...)
 
 #else // NDEBUG
@@ -57,7 +49,14 @@
 #define LOG_ARGUMENT(r, data, i, elem)                        \
   << "  Argument " << i << ": " << elem << std::endl
 
-#define preciceTrace(...) do { \
+#define preciceDebug(message) do                                           \
+  {                                                                         \
+    LOG_LOCATION;                                                           \
+    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::debug)         \
+    << message;                                                             \
+  } while (false)
+
+#define preciceTrace(...) do {                                          \
     LOG_LOCATION;                                                       \
     BOOST_LOG_FUNCTION();                                               \
     precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__); \
