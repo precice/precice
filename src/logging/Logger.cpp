@@ -58,7 +58,7 @@ struct BackendConfiguration
   std::string type;
   std::string output = "stdout";
   boost::log::filter filter = boost::log::parse_filter("%Severity% > debug");
-  boost::log::basic_formatter<char> format = boost::log::parse_formatter("(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%LINE% in %Function%: %Message%");
+  boost::log::basic_formatter<char> format = boost::log::parse_formatter("(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%Line% in %Function%: %Message%");
 
   void setOption(std::string key, std::string value)
   {
