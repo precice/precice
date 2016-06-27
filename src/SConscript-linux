@@ -95,6 +95,7 @@ sourcesDrivers = [
 
 sourcesLogging = [
     Glob('logging/*.cpp'),
+    Glob('logging/config/*.cpp')
 ]
 
 sourcesTarchLA = [

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "precice/config/SolverInterfaceConfiguration.hpp"
+#include "logging/config/LogConfiguration.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "logging/Logger.hpp"
 
@@ -59,7 +60,10 @@ private:
   // @brief Root tag of preCICE configuration.
   utils::XMLTag _tag;
 
+  LogConfiguration _logConfig;
+
   SolverInterfaceConfiguration _solverInterfaceConfig;
+
 };
 
 }} // namespace precice, config

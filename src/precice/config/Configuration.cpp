@@ -9,6 +9,7 @@ logging::Logger Configuration:: _log("precice::config::Configuration");
 Configuration:: Configuration()
 :
   _tag(*this, "precice-configuration", utils::XMLTag::OCCUR_ONCE),
+  _logConfig(_tag),
   _solverInterfaceConfig(_tag)
 {
   _tag.setDocumentation("Main tag containing preCICE configuration.");
