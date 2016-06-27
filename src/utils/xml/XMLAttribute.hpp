@@ -207,7 +207,7 @@ void XMLAttribute<ATTRIBUTE_T>:: setValidator
 //(
 //  const utils::DynVector& defaultValue  )
 //{
-//  preciceTrace1("setDefaultValue()", defaultValue);
+//  preciceTrace("setDefaultValue()", defaultValue);
 //  _hasDefaultValue = true;
 //  _defaultValue.clear();
 //  _defaultValue.append(defaultValue);
@@ -218,7 +218,7 @@ void XMLAttribute<ATTRIBUTE_T>:: setDefaultValue
 (
   const ATTRIBUTE_T& defaultValue )
 {
-  preciceTrace1("setDefaultValue()", defaultValue);
+  preciceTrace("setDefaultValue()", defaultValue);
   _hasDefaultValue = true;
   set(_defaultValue, defaultValue);
 }
@@ -228,7 +228,7 @@ void XMLAttribute<ATTRIBUTE_T>:: readValue
 (
   XMLReader* xmlReader )
 {
-  preciceTrace1("readValue()", _name);
+  preciceTrace("readValue()", _name);
   if (_read) throw "Attribute \"" + _name + "\" is defined multiple times";
   if (xmlReader->getAttributeValue(getName().c_str()) == 0) {
     if (not _hasDefaultValue){

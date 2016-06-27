@@ -27,7 +27,7 @@ void UncoupledScheme:: initialize
   double startTime,
   int    startTimestep )
 {
-  preciceTrace2 ( "initialize()", startTime, startTimestep );
+  preciceTrace ( "initialize()", startTime, startTimestep );
   setTime ( startTime );
   setTimesteps ( startTimestep );
   assertion ( tarch::la::greaterEquals(startTime, 0.0), startTime );
@@ -44,7 +44,7 @@ void UncoupledScheme:: addComputedTime
 (
   double timeToAdd )
 {
-  preciceTrace1("addComputedTime()", timeToAdd);
+  preciceTrace("addComputedTime()", timeToAdd);
   preciceCheck ( isCouplingOngoing(), "addComputedTime()",
                  "Invalid call of addComputedTime() after simulation end!" );
 # ifdef Asserts

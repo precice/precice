@@ -162,7 +162,7 @@ void StaticTraversal<CELL_T>:: refineAll
   double                  refinementLimit,
   Environment&            env )
 {
-  preciceTrace3("refineAll()", cellCenter, cellHalflengths, refinementLimit);
+  preciceTrace("refineAll()", cellCenter, cellHalflengths, refinementLimit);
   // The environment gives information on the position of the cells surrounding
   // a current cell of consideration. Since a mixture of in- and out-cells is
   // not possible, the 0th component of the environment vector is used to
@@ -194,7 +194,7 @@ void StaticTraversal<CELL_T>:: refineAllInternal
   Environment&            env,
   RefineAllResult&        result )
 {
-  preciceTrace4 ( "refineAllInternal()", cellCenter, cellHalflengths,
+  preciceTrace ( "refineAllInternal()", cellCenter, cellHalflengths,
                   refinementLimit, env.getNeighborCellPositions() );
   using namespace tarch::la;
   bool environmentIncomplete = false;
@@ -281,7 +281,7 @@ void StaticTraversal<CELL_T>:: refineUndefinedCells
   const utils::DynVector& cellHalflengths,
   double                  refinementLimit )
 {
-  preciceTrace3("refineUndefinedCells()", cellCenter, cellHalflengths, refinementLimit);
+  preciceTrace("refineUndefinedCells()", cellCenter, cellHalflengths, refinementLimit);
   typename std::list<CELL_T*>::iterator cellIter;
   std::list<utils::DynVector>::iterator centerIter;
   std::list<utils::DynVector>::iterator hIter;
@@ -339,7 +339,7 @@ int StaticTraversal<CELL_T>:: searchPosition
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  preciceTrace3 ( "searchPosition()", searchPoint, cellCenter, cellHalflengths );
+  preciceTrace ( "searchPosition()", searchPoint, cellCenter, cellHalflengths );
   typedef std::shared_ptr<SearchPositionResult> PtrResult;
   PtrResult result = searchPositionInternal ( cell, searchPoint, cellCenter,
                                               cellHalflengths );
@@ -357,7 +357,7 @@ bool StaticTraversal<CELL_T>:: searchDistance
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  preciceTrace2 ( "searchDistance()", cellCenter, cellHalflengths );
+  preciceTrace ( "searchDistance()", cellCenter, cellHalflengths );
   if ( cell.isLeaf() ){
     preciceDebug ( "  Leaf" );
     findClosest ( cell.content() );
@@ -399,7 +399,7 @@ int StaticTraversal<CELL_T>:: searchContent
   const utils::DynVector&  cellCenter,
   const utils::DynVector&  cellHalflengths )
 {
-  preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
+  preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   std::shared_ptr<SearchContentResult> result = searchContentInternal (
       cell, findContent, cellCenter, cellHalflengths );
@@ -432,7 +432,7 @@ StaticTraversal<CELL_T>:: searchPositionInternal
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  preciceTrace3 ( "searchPositionInternal()", searchPoint, cellCenter,
+  preciceTrace ( "searchPositionInternal()", searchPoint, cellCenter,
                   cellHalflengths );
   using namespace tarch::la;
   std::shared_ptr<SearchPositionResult> data;
@@ -515,7 +515,7 @@ StaticTraversal<CELL_T>:: searchContentInternal
   const utils::DynVector&  cellCenter,
   const utils::DynVector&  cellHalflengths )
 {
-  preciceTrace4 ( "searchContentInternal()", cellCenter, cellHalflengths,
+  preciceTrace ( "searchContentInternal()", cellCenter, cellHalflengths,
                   findContent.getVoxelCenter(), findContent.getVoxelHalflengths() );
   if ( cell.isLeaf() ){
     preciceDebug ( "Leaf..." );
@@ -615,7 +615,7 @@ bool StaticTraversal<CELL_T>:: isCovered
   const utils::DynVector& voxelCenter,
   const utils::DynVector& voxelHalflengths ) const
 {
-  preciceTrace4 ( "isCovered()", cellCenter, cellHalflengths, voxelCenter,
+  preciceTrace ( "isCovered()", cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   utils::DynVector coverage ( cellCenter );
   coverage -= voxelCenter;
@@ -633,7 +633,7 @@ bool StaticTraversal<CELL_T>:: isOverlapped
   const utils::DynVector& voxelCenter,
   const utils::DynVector& voxelHalflengths ) const
 {
-  preciceTrace4 ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
+  preciceTrace ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   utils::DynVector overlap = cellCenter;
   overlap -= voxelCenter;

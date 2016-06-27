@@ -71,7 +71,7 @@ void PythonAction:: performAction
   double fullDt)
 {
 # ifndef PRECICE_NO_PYTHON
-  preciceTrace4("performAction()", time, dt, computedPartFullDt, fullDt);
+  preciceTrace("performAction()", time, dt, computedPartFullDt, fullDt);
 
   if (not _isInitialized) initialize();
 

@@ -346,7 +346,7 @@ void MappingConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1("xmlTagCallback()", tag.getName());
+  preciceTrace("xmlTagCallback()", tag.getName());
   if (tag.getNamespace() == TAG){
     std::string dir = tag.getStringAttributeValue(ATTR_DIRECTION);
     std::string fromMesh = tag.getStringAttributeValue(ATTR_FROM);
@@ -413,7 +413,7 @@ void MappingConfiguration:: addMapping
   Direction            direction,
   Timing               timing )
 {
-  preciceTrace3("addMapping()", fromMesh, direction, timing);
+  preciceTrace("addMapping()", fromMesh, direction, timing);
   //assertion ( !((timing == INITIALLY) && isIncremental) );
   ConfiguredMapping configuredMapping;
   configuredMapping.mapping = mapping;
@@ -441,7 +441,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   bool               yDead,
   bool               zDead) const
 {
-  preciceTrace5("createMapping()", direction, type, timing,
+  preciceTrace("createMapping()", direction, type, timing,
                 shapeParameter, supportRadius);
   using namespace mapping;
   ConfiguredMapping configuredMapping;

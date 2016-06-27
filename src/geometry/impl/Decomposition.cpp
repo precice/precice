@@ -62,7 +62,7 @@ void Decomposition:: clearBoundingMappings()
 }
 
 std::vector<int> Decomposition:: filterMesh(mesh::Mesh& seed, mesh::Mesh& filteredMesh){
-  preciceTrace1 ( "filterMesh()", utils::MasterSlave::_rank );
+  preciceTrace ( "filterMesh()", utils::MasterSlave::_rank );
 
   preciceDebug("Bounding mesh. #vertices: " << seed.vertices().size()
                <<", #edges: " << seed.edges().size()

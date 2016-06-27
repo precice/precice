@@ -99,7 +99,7 @@ void SolverInterfaceConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1("xmlTagCallback()", tag.getName());
+  preciceTrace("xmlTagCallback()", tag.getName());
   if (tag.getName() == TAG){
     _dimensions = tag.getIntAttributeValue(ATTR_DIMENSIONS);
     _geometryMode = tag.getBooleanAttributeValue(ATTR_GEOMETRY_MODE);
@@ -119,7 +119,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1("xmlEndTagCallback()", tag.getName());
+  preciceTrace("xmlEndTagCallback()", tag.getName());
   if (tag.getName() == TAG){
     _meshConfiguration->setMeshSubIDs();
     if (_geometryMode ){

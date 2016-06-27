@@ -33,7 +33,7 @@ MPIPortsCommunication::MPIPortsCommunication(
 }
 
 MPIPortsCommunication::~MPIPortsCommunication() {
-  preciceTrace1("~MPIPortsCommunication()", _isConnected);
+  preciceTrace("~MPIPortsCommunication()", _isConnected);
 
   closeConnection();
 }
@@ -56,7 +56,7 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
                                         std::string const& nameRequester,
                                         int acceptorProcessRank,
                                         int acceptorCommunicatorSize) {
-  preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+  preciceTrace("acceptConnection()", nameAcceptor, nameRequester);
 
   preciceCheck(acceptorCommunicatorSize == 1,
                "acceptConnection()",
@@ -161,7 +161,7 @@ MPIPortsCommunication::acceptConnectionAsServer(
     std::string const& nameAcceptor,
     std::string const& nameRequester,
     int requesterCommunicatorSize) {
-  preciceTrace2("acceptConnectionAsServer()", nameAcceptor, nameRequester);
+  preciceTrace("acceptConnectionAsServer()", nameAcceptor, nameRequester);
 
   preciceCheck(requesterCommunicatorSize > 0,
                "acceptConnectionAsServer()",
@@ -230,7 +230,7 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
                                          std::string const& nameRequester,
                                          int requesterProcessRank,
                                          int requesterCommunicatorSize) {
-  preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
+  preciceTrace("requestConnection()", nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
@@ -273,7 +273,7 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 int
 MPIPortsCommunication::requestConnectionAsClient(
     std::string const& nameAcceptor, std::string const& nameRequester) {
-  preciceTrace2("requestConnectionAsClient()", nameAcceptor, nameRequester);
+  preciceTrace("requestConnectionAsClient()", nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
@@ -351,7 +351,7 @@ MPIPortsCommunication::requestConnectionAsClient(
 
 void
 MPIPortsCommunication::closeConnection() {
-  preciceTrace1("closeConnection()", _communicators.size());
+  preciceTrace("closeConnection()", _communicators.size());
 
   if (not isConnected())
     return;

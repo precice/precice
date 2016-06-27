@@ -28,7 +28,7 @@ void DynamicPeanotree3D:: initialize
 (
   mesh::Mesh& mesh )
 {
-  preciceTrace1 ( "initialize()", mesh.getName() );
+  preciceTrace ( "initialize()", mesh.getName() );
   preciceCheck ( _rootCell.content().empty(), "initialize()",
                  "Initialize can be called only once (or after clearing)!" );
   int dim = _center.size();
@@ -55,7 +55,7 @@ void DynamicPeanotree3D:: initialize
 
 void DynamicPeanotree3D:: meshChanged ( mesh::Mesh& mesh )
 {
-  preciceTrace1 ( "meshChanged()", mesh.getName() );
+  preciceTrace ( "meshChanged()", mesh.getName() );
   clear();
   initialize(mesh);
 }
@@ -64,7 +64,7 @@ int DynamicPeanotree3D:: searchPosition
 (
   const utils::DynVector& point )
 {
-  preciceTrace1 ( "searchPosition()", point );
+  preciceTrace ( "searchPosition()", point );
   impl::DynamicTraversal<impl::PeanotreeCell3D> traversal;
   utils::DynVector halflengths(point.size(), _halflength);
   return traversal.searchPosition ( _rootCell, point, _center, halflengths,
@@ -75,7 +75,7 @@ void DynamicPeanotree3D:: searchDistance
 (
   query::FindClosest& findClosest )
 {
-  preciceTrace1 ( "searchDistance()", findClosest.getSearchPoint() );
+  preciceTrace ( "searchDistance()", findClosest.getSearchPoint() );
   impl::DynamicTraversal<impl::PeanotreeCell3D> traversal;
   utils::DynVector halflengths(findClosest.getSearchPoint().size(), _halflength);
   traversal.searchDistance ( _rootCell, findClosest, _center, halflengths,
@@ -86,7 +86,7 @@ int DynamicPeanotree3D:: searchContent
 (
   query::FindVoxelContent& findContent )
 {
-  preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
+  preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   impl::DynamicTraversal<impl::PeanotreeCell3D> traversal;
   utils::DynVector halflengths(findContent.getVoxelCenter().size(), _halflength);

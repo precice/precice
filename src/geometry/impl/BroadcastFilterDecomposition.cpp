@@ -30,7 +30,7 @@ BroadcastFilterDecomposition:: BroadcastFilterDecomposition
 void BroadcastFilterDecomposition:: decompose(
   mesh::Mesh& seed)
 {
-  preciceTrace1 ( "decompose()", utils::MasterSlave::_rank );
+  preciceTrace ( "decompose()", utils::MasterSlave::_rank );
   using tarch::la::raw;
 
   std::map<int,std::vector<int> > boundingVertexDistribution;
@@ -44,7 +44,7 @@ void BroadcastFilterDecomposition:: decompose(
 void BroadcastFilterDecomposition:: broadcast(
   mesh::Mesh& seed)
 {
-  preciceTrace1 ( "broadcast()", utils::MasterSlave::_rank );
+  preciceTrace ( "broadcast()", utils::MasterSlave::_rank );
   preciceInfo("broadcast()", "Broadcast mesh " << seed.getName() );
   Event e("broadcast mesh");
 
@@ -63,7 +63,7 @@ void BroadcastFilterDecomposition:: filter(
   mesh::Mesh& seed,
   std::vector<int>& filteredVertexPositions)
 {
-  preciceTrace1 ( "filter()", utils::MasterSlave::_rank );
+  preciceTrace ( "filter()", utils::MasterSlave::_rank );
   preciceInfo("filter()", "Filter mesh " << seed.getName() );
   Event e("filter mesh");
 
@@ -107,7 +107,7 @@ void BroadcastFilterDecomposition:: feedback(
   mesh::Mesh& seed,
   std::vector<int>& filteredVertexPositions)
 {
-  preciceTrace1 ( "feedback()", utils::MasterSlave::_rank );
+  preciceTrace ( "feedback()", utils::MasterSlave::_rank );
   preciceInfo("feedback()", "Feedback mesh " << seed.getName() );
 
   int numberOfVertices = filteredVertexPositions.size();

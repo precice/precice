@@ -133,7 +133,7 @@ void SolverInterfaceImpl:: configure
 (
   const std::string& configurationFileName )
 {
-  preciceTrace1("configure()", configurationFileName );
+  preciceTrace("configure()", configurationFileName );
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   Participant::resetParticipantCount();
@@ -431,7 +431,7 @@ double SolverInterfaceImpl:: advance
 (
   double computedTimestepLength )
 {
-  preciceTrace1("advance()", computedTimestepLength);
+  preciceTrace("advance()", computedTimestepLength);
 
   Event e("advance");
 
@@ -597,7 +597,7 @@ void SolverInterfaceImpl:: finalize()
 
 int SolverInterfaceImpl:: getDimensions() const
 {
-  preciceTrace1 ( "getDimensions()", _dimensions );
+  preciceTrace ( "getDimensions()", _dimensions );
   return _dimensions;
 }
 
@@ -617,7 +617,7 @@ bool SolverInterfaceImpl:: isWriteDataRequired
 (
   double computedTimestepLength )
 {
-  preciceTrace1 ( "isWriteDataRequired()", computedTimestepLength );
+  preciceTrace ( "isWriteDataRequired()", computedTimestepLength );
   return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
@@ -631,7 +631,7 @@ bool SolverInterfaceImpl:: isActionRequired
 (
   const std::string& action )
 {
-  preciceTrace2("isActionRequired()", action, _couplingScheme->isActionRequired(action));
+  preciceTrace("isActionRequired()", action, _couplingScheme->isActionRequired(action));
   return _couplingScheme->isActionRequired(action);
 }
 
@@ -639,7 +639,7 @@ void SolverInterfaceImpl:: fulfilledAction
 (
   const std::string& action )
 {
-  preciceTrace1 ( "fulfilledAction()", action );
+  preciceTrace ( "fulfilledAction()", action );
   if ( _clientMode ) {
     _requestManager->requestFulfilledAction(action);
   }
@@ -661,7 +661,7 @@ bool SolverInterfaceImpl:: hasMesh
 (
   const std::string& meshName ) const
 {
-  preciceTrace1 ( "hasMesh()", meshName );
+  preciceTrace ( "hasMesh()", meshName );
   return utils::contained ( meshName, _meshIDs );
 }
 
@@ -669,7 +669,7 @@ int SolverInterfaceImpl:: getMeshID
 (
   const std::string& meshName )
 {
-  preciceTrace1 ( "getMeshID()", meshName );
+  preciceTrace ( "getMeshID()", meshName );
   preciceCheck( utils::contained(meshName, _meshIDs), "getMeshID()",
                 "Mesh with name \""<< meshName << "\" is not defined!" );
   return _meshIDs[meshName];
@@ -689,7 +689,7 @@ bool SolverInterfaceImpl:: hasData
 (
   const std::string& dataName, int meshID )
 {
-  preciceTrace2 ( "hasData()", dataName, meshID );
+  preciceTrace ( "hasData()", dataName, meshID );
   preciceCheck ( _dataIDs.find(meshID)!=_dataIDs.end(), "hasData()",
                    "No mesh with meshID \"" << meshID << "\" is defined");
   std::map<std::string,int>& sub_dataIDs =  _dataIDs[meshID];
@@ -700,7 +700,7 @@ int SolverInterfaceImpl:: getDataID
 (
   const std::string& dataName, int meshID )
 {
-  preciceTrace2 ( "getDataID()", dataName, meshID );
+  preciceTrace ( "getDataID()", dataName, meshID );
   preciceCheck ( hasData(dataName, meshID), "getDataID()",
                  "Data with name \"" << dataName << "\" is not defined on mesh with ID \""
                  << meshID << "\".");
@@ -712,7 +712,7 @@ int SolverInterfaceImpl:: inquirePosition
   const double*        point,
   const std::set<int>& meshIDs )
 {
-  preciceTrace2 ( "inquirePosition()", point, meshIDs.size() );
+  preciceTrace ( "inquirePosition()", point, meshIDs.size() );
   using namespace precice::constants;
   int pos = positionOutsideOfGeometry();
   utils::DynVector searchPoint(_dimensions);
@@ -770,7 +770,7 @@ ClosestMesh SolverInterfaceImpl:: inquireClosestMesh
   const double*        point,
   const std::set<int>& meshIDs )
 {
-  preciceTrace1("inquireClosestMesh()", point);
+  preciceTrace("inquireClosestMesh()", point);
   ClosestMesh closestMesh(_dimensions);
   utils::DynVector searchPoint(_dimensions);
   for (int dim=0; dim < _dimensions; dim++){
@@ -837,7 +837,7 @@ VoxelPosition SolverInterfaceImpl:: inquireVoxelPosition
   bool                 includeBoundaries,
   const std::set<int>& meshIDs )
 {
-  preciceTrace4("inquireVoxelPosition()", voxelCenter, voxelHalflengths,
+  preciceTrace("inquireVoxelPosition()", voxelCenter, voxelHalflengths,
                 includeBoundaries, meshIDs.size());
 
   using namespace precice::constants;
@@ -990,7 +990,7 @@ int SolverInterfaceImpl:: getMeshVertexSize
 (
   int meshID )
 {
-  preciceTrace1("getMeshVertexSize()", meshID);
+  preciceTrace("getMeshVertexSize()", meshID);
   int size = 0;
   if (_clientMode){
     size = _requestManager->requestGetMeshVertexSize(meshID);
@@ -1008,7 +1008,7 @@ void SolverInterfaceImpl:: resetMesh
 (
   int meshID )
 {
-  preciceTrace1("resetMesh()", meshID);
+  preciceTrace("resetMesh()", meshID);
   if (_clientMode){
     _requestManager->requestResetMesh(meshID);
   }
@@ -1035,7 +1035,7 @@ int SolverInterfaceImpl:: setMeshVertex
   int           meshID,
   const double* position )
 {
-  preciceTrace1 ( "setMeshVertex()", meshID );
+  preciceTrace ( "setMeshVertex()", meshID );
   utils::DynVector internalPosition(_dimensions);
   for ( int dim=0; dim < _dimensions; dim++ ){
     internalPosition[dim] = position[dim];
@@ -1062,7 +1062,7 @@ void SolverInterfaceImpl:: setMeshVertices
   double* positions,
   int*    ids )
 {
-  preciceTrace2("setMeshVertices()", meshID, size);
+  preciceTrace("setMeshVertices()", meshID, size);
   if (_clientMode){
     _requestManager->requestSetMeshVertices(meshID, size, positions, ids);
   }
@@ -1088,7 +1088,7 @@ void SolverInterfaceImpl:: getMeshVertices
   int*    ids,
   double* positions )
 {
-  preciceTrace2("getMeshVertices()", meshID, size);
+  preciceTrace("getMeshVertices()", meshID, size);
   if (_clientMode){
     _requestManager->requestGetMeshVertices(meshID, size, ids, positions);
   }
@@ -1115,7 +1115,7 @@ void SolverInterfaceImpl:: getMeshVertexIDsFromPositions (
   double* positions,
   int*    ids )
 {
-  preciceTrace2("getMeshVertexIDsFromPositions()", meshID, size);
+  preciceTrace("getMeshVertexIDsFromPositions()", meshID, size);
   if (_clientMode){
     _requestManager->requestGetMeshVertexIDsFromPositions(meshID, size, positions, ids);
   }
@@ -1152,7 +1152,7 @@ int SolverInterfaceImpl:: setMeshEdge
   int firstVertexID,
   int secondVertexID )
 {
-  preciceTrace3 ( "setMeshEdge()", meshID, firstVertexID, secondVertexID );
+  preciceTrace ( "setMeshEdge()", meshID, firstVertexID, secondVertexID );
   if (_restartMode){
     preciceDebug("Ignoring edge, since restart mode is active");
     return -1;
@@ -1186,7 +1186,7 @@ void SolverInterfaceImpl:: setMeshTriangle
   int secondEdgeID,
   int thirdEdgeID )
 {
-  preciceTrace4 ( "setMeshTriangle()", meshID, firstEdgeID,
+  preciceTrace ( "setMeshTriangle()", meshID, firstEdgeID,
                   secondEdgeID, thirdEdgeID );
   if (_restartMode){
     preciceDebug("Ignoring triangle, since restart mode is active");
@@ -1220,7 +1220,7 @@ void SolverInterfaceImpl:: setMeshTriangleWithEdges
   int secondVertexID,
   int thirdVertexID )
 {
-  preciceTrace4("setMeshTriangleWithEdges()", meshID, firstVertexID,
+  preciceTrace("setMeshTriangleWithEdges()", meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
   if (_clientMode){
     _requestManager->requestSetMeshTriangleWithEdges(meshID,
@@ -1315,7 +1315,7 @@ void SolverInterfaceImpl:: setMeshQuad
   int thirdEdgeID,
   int fourthEdgeID )
 {
-  preciceTrace5("setMeshQuad()", meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
+  preciceTrace("setMeshQuad()", meshID, firstEdgeID, secondEdgeID, thirdEdgeID,
                 fourthEdgeID);
   if (_restartMode){
     preciceDebug("Ignoring quad, since restart mode is active");
@@ -1354,7 +1354,7 @@ void SolverInterfaceImpl:: setMeshQuadWithEdges
   int thirdVertexID,
   int fourthVertexID )
 {
-  preciceTrace5("setMeshQuadWithEdges()", meshID, firstVertexID,
+  preciceTrace("setMeshQuadWithEdges()", meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
   if (_clientMode){
     _requestManager->requestSetMeshQuadWithEdges(
@@ -1465,7 +1465,7 @@ void SolverInterfaceImpl:: mapWriteDataFrom
 (
   int fromMeshID )
 {
-  preciceTrace1("mapWriteDataFrom(int)", fromMeshID);
+  preciceTrace("mapWriteDataFrom(int)", fromMeshID);
   if (_clientMode){
     _requestManager->requestMapWriteDataFrom(fromMeshID);
     return;
@@ -1501,7 +1501,7 @@ void SolverInterfaceImpl:: mapReadDataTo
 (
   int toMeshID )
 {
-  preciceTrace1 ("mapReadDataTo(int)", toMeshID);
+  preciceTrace ("mapReadDataTo(int)", toMeshID);
   if (_clientMode){
     _requestManager->requestMapReadDataTo(toMeshID);
     return;
@@ -1547,7 +1547,7 @@ void SolverInterfaceImpl:: writeBlockVectorData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("writeBlockVectorData()", fromDataID, size);
+  preciceTrace("writeBlockVectorData()", fromDataID, size);
   if (size == 0)
     return;
   assertion(valueIndices != nullptr);
@@ -1580,7 +1580,7 @@ void SolverInterfaceImpl:: writeVectorData
   int           valueIndex,
   const double* value )
 {
-  preciceTrace2 ( "writeVectorData()", fromDataID, valueIndex );
+  preciceTrace ( "writeVectorData()", fromDataID, valueIndex );
 # ifdef Debug
   if (_dimensions == 2) preciceDebug("value = " << tarch::la::wrap<2>(value));
   if (_dimensions == 3) preciceDebug("value = " << tarch::la::wrap<3>(value));
@@ -1616,7 +1616,7 @@ void SolverInterfaceImpl:: writeBlockScalarData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("writeBlockScalarData()", fromDataID, size);
+  preciceTrace("writeBlockScalarData()", fromDataID, size);
   if (size == 0)
     return;
   assertion(valueIndices != nullptr);
@@ -1643,7 +1643,7 @@ void SolverInterfaceImpl:: writeScalarData
   int    valueIndex,
   double value )
 {
-  preciceTrace3("writeScalarData()", fromDataID, valueIndex, value );
+  preciceTrace("writeScalarData()", fromDataID, valueIndex, value );
   preciceCheck(valueIndex >= -1, "writeScalarData()", "Invalid value index ("
                << valueIndex << ") when writing scalar data!");
   if (_clientMode){
@@ -1668,7 +1668,7 @@ void SolverInterfaceImpl:: readBlockVectorData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("readBlockVectorData()", toDataID, size);
+  preciceTrace("readBlockVectorData()", toDataID, size);
   if (size == 0)
     return;
   assertion(valueIndices != nullptr);
@@ -1700,7 +1700,7 @@ void SolverInterfaceImpl:: readVectorData
   int     valueIndex,
   double* value )
 {
-  preciceTrace2("readVectorData()", toDataID, valueIndex);
+  preciceTrace("readVectorData()", toDataID, valueIndex);
   preciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
                << valueIndex << " )when reading vector data!");
   if (_clientMode){
@@ -1732,7 +1732,7 @@ void SolverInterfaceImpl:: readBlockScalarData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("readBlockScalarData()", toDataID, size);
+  preciceTrace("readBlockScalarData()", toDataID, size);
   if (size == 0)
     return;
   preciceDebug("size = " << size);
@@ -1761,7 +1761,7 @@ void SolverInterfaceImpl:: readScalarData
   int     valueIndex,
   double& value )
 {
-  preciceTrace3("readScalarData()", toDataID, valueIndex, value);
+  preciceTrace("readScalarData()", toDataID, valueIndex, value);
   preciceCheck(valueIndex >= -1, "readData(vector)", "Invalid value index ( "
                << valueIndex << " )when reading vector data!");
   if (_clientMode){
@@ -1784,7 +1784,7 @@ void SolverInterfaceImpl:: exportMesh
   const std::string& filenameSuffix,
   int                exportType )
 {
-  preciceTrace2 ( "exportMesh()", filenameSuffix, exportType );
+  preciceTrace ( "exportMesh()", filenameSuffix, exportType );
   if ( _clientMode ){
     _requestManager->requestExportMesh ( filenameSuffix, exportType );
     return;
@@ -1826,7 +1826,7 @@ MeshHandle SolverInterfaceImpl:: getMeshHandle
 (
   const std::string& meshName )
 {
-  preciceTrace1("getMeshHandle()", meshName);
+  preciceTrace("getMeshHandle()", meshName);
   assertion(not _clientMode);
   for (MeshContext* context : _accessor->usedMeshContexts()){
     if (context->mesh->getName() == meshName){
@@ -1975,7 +1975,7 @@ void SolverInterfaceImpl:: prepareGeometry
 (
   MeshContext& meshContext )
 {
-  preciceTrace1("prepareGeometry()", meshContext.mesh->getName());
+  preciceTrace("prepareGeometry()", meshContext.mesh->getName());
   assertion ( not _clientMode );
   using boost::get;
   mesh::PtrMesh mesh = meshContext.mesh;
@@ -2007,7 +2007,7 @@ void SolverInterfaceImpl:: createGeometry
 (
   MeshContext& meshContext )
 {
-  preciceTrace1("createGeometry()", meshContext.mesh->getName());
+  preciceTrace("createGeometry()", meshContext.mesh->getName());
   assertion ( not _clientMode );
   using boost::get;
   mesh::PtrMesh mesh = meshContext.mesh;
@@ -2272,7 +2272,7 @@ void SolverInterfaceImpl:: selectInquiryMeshIDs
   const std::set<int>& meshIDs,
   std::vector<int>&    markedMeshContexts ) const
 {
-  preciceTrace1("selectInquiryMeshIDs()", meshIDs.size());
+  preciceTrace("selectInquiryMeshIDs()", meshIDs.size());
   assertion(markedMeshContexts.size() == _accessor->usedMeshContexts().size(),
              markedMeshContexts.size(), _accessor->usedMeshContexts().size());
 

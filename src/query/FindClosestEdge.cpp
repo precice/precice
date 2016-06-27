@@ -54,7 +54,7 @@ double FindClosestEdge:: getProjectionPointParameter
 
 void FindClosestEdge:: find ( mesh::Edge& edge )
 {
-  preciceTrace2 ( "find()", edge.vertex(0).getCoords(), edge.vertex(1).getCoords() );
+  preciceTrace ( "find()", edge.vertex(0).getCoords(), edge.vertex(1).getCoords() );
   // Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
   boost::array<double,2> barycentricCoords;
   int dimensions = edge.getDimensions();

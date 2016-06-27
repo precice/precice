@@ -29,7 +29,7 @@ CommunicatedGeometry:: CommunicatedGeometry
   _receivers (),
   _decomposition(decomposition)
 {
-  preciceTrace2 ( "CommunicatedGeometry()", accessor, provider );
+  preciceTrace ( "CommunicatedGeometry()", accessor, provider );
 }
 
 void CommunicatedGeometry:: addReceiver
@@ -37,7 +37,7 @@ void CommunicatedGeometry:: addReceiver
   const std::string&     receiver,
   m2n::M2N::SharedPointer m2n)
 {
-  preciceTrace1 ( "addReceiver()", receiver );
+  preciceTrace ( "addReceiver()", receiver );
   assertion ( m2n.get() != nullptr );
   preciceCheck ( ! utils::contained(receiver, _receivers),
                  "addReceiver()", "Receiver \"" << receiver
@@ -52,7 +52,7 @@ void CommunicatedGeometry:: prepare
 (
   mesh::Mesh& seed )
 {
-  preciceTrace1 ( "prepare()", seed.getName() );
+  preciceTrace ( "prepare()", seed.getName() );
   preciceCheck ( not _receivers.empty(), "specializedCreate()",
                  "No receivers specified for communicated geometry to create "
                  << "mesh \"" << seed.getName() << "\"!" );
@@ -74,7 +74,7 @@ void CommunicatedGeometry:: specializedCreate
 (
   mesh::Mesh& seed )
 {
-  preciceTrace1 ( "specializedCreate()", seed.getName() );
+  preciceTrace ( "specializedCreate()", seed.getName() );
   if ( utils::contained(_accessorName, _receivers) ) {
     if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
       _decomposition->decompose(seed);
@@ -86,7 +86,7 @@ void CommunicatedGeometry:: specializedCreate
 void CommunicatedGeometry:: sendMesh(
   mesh::Mesh& seed)
 {
-  preciceTrace1 ( "sendMesh()", utils::MasterSlave::_rank );
+  preciceTrace ( "sendMesh()", utils::MasterSlave::_rank );
   // Temporary globalMesh such that the master also keeps his local mesh (seed)
   mesh::Mesh globalMesh(seed.getName(), seed.getDimensions(), seed.isFlipNormals());
 

@@ -104,7 +104,7 @@ void SolverInterfaceTest:: configureSolverInterface
   const std::string& configFilename,
   SolverInterface&   interface )
 {
-  preciceTrace1("configureSolverInterface()", configFilename);
+  preciceTrace("configureSolverInterface()", configFilename);
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
@@ -1183,7 +1183,7 @@ void SolverInterfaceTest:: runSolver
    int&               timestepsComputed,
    double&            timeComputed )
 {
-  preciceTrace2("runSolver()", solverName, configurationFileName);
+  preciceTrace("runSolver()", solverName, configurationFileName);
   timestepsComputed = 0;
   timeComputed = 0.0;
   SolverInterface couplingInterface(solverName, 0, 1);
@@ -1575,7 +1575,7 @@ void SolverInterfaceTest:: runThreeSolvers
   const std::string&      configFilename,
   const std::vector<int>& expectedCallsOfAdvance )
 {
-  preciceTrace2("runThreeSolvers", configFilename, expectedCallsOfAdvance);
+  preciceTrace("runThreeSolvers", configFilename, expectedCallsOfAdvance);
 
   int rank = utils::Parallel::getProcessRank();
   assertion((rank == 0) || (rank == 1) || (rank == 2), rank);

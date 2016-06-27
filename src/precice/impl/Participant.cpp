@@ -93,7 +93,7 @@ void Participant:: useMesh
   bool                                   provideMesh,
   bool                                   doesPreFiltering)
 {
-  preciceTrace3 ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
+  preciceTrace ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
   checkDuplicatedUse(mesh);
   assertion ( mesh->getID() < (int)_meshContexts.size() );
   MeshContext* context = new MeshContext(mesh->getDimensions());
@@ -193,7 +193,7 @@ DataContext& Participant:: dataContext
 (
   int dataID )
 {
-  preciceTrace2 ( "dataContext(id)", dataID, _dataContexts.size() );
+  preciceTrace ( "dataContext(id)", dataID, _dataContexts.size() );
   assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
   assertion ( _dataContexts[dataID] != nullptr );
   return *_dataContexts[dataID];
@@ -248,7 +248,7 @@ MeshContext& Participant:: meshContext
 (
   int meshID )
 {
-  preciceTrace2("meshContext()", meshID, _meshContexts.size());
+  preciceTrace("meshContext()", meshID, _meshContexts.size());
   assertion((meshID >= 0) && (meshID < (int)_meshContexts.size()),
              meshID, _meshContexts.size());
   assertion(_meshContexts[meshID] != nullptr);
@@ -308,7 +308,7 @@ void Participant:: checkDuplicatedData
 (
   const mesh::PtrData& data )
 {
-  preciceTrace2 ( "checkDuplicatedData()", data->getID(), _dataContexts.size() );
+  preciceTrace ( "checkDuplicatedData()", data->getID(), _dataContexts.size() );
   assertion ( data->getID() < (int)_dataContexts.size(), data->getID(), _dataContexts.size() );
   preciceCheck ( _dataContexts[data->getID()] == nullptr, "checkDuplicatedData()",
                  "Participant \"" << _name << "\" can read/write data \""

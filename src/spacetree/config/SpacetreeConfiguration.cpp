@@ -90,7 +90,7 @@ void SpacetreeConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace1("setDimensions()", dimensions);
+  preciceTrace("setDimensions()", dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -160,7 +160,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
   const utils::DynVector& halflengths,
   double                  maxMeshwidth ) const
 {
-  preciceTrace4("getSpacetree()", type, offset, halflengths, maxMeshwidth);
+  preciceTrace("getSpacetree()", type, offset, halflengths, maxMeshwidth);
   assertion(_dimensions != 0);
   Spacetree* spacetree = nullptr;
   assertion ( offset.size() == halflengths.size(), offset.size(), halflengths.size() );
@@ -194,7 +194,7 @@ void SpacetreeConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1 ( "xmlTagCallback()", tag.getName() );
+  preciceTrace ( "xmlTagCallback()", tag.getName() );
   if (tag.getNamespace() == TAG){
     assertion(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);

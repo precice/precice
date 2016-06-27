@@ -29,7 +29,7 @@ void DynamicOctree:: addMesh
 (
   const mesh::PtrMesh& mesh )
 {
-  preciceTrace1("addMesh()", mesh->getName());
+  preciceTrace("addMesh()", mesh->getName());
   assertion(_rootCell.content().empty()); // Spacetree is not initialized yet
   _meshes.push_back(mesh);
   mesh->addListener(*this);
@@ -64,7 +64,7 @@ void DynamicOctree:: meshChanged
 (
   mesh::Mesh& mesh )
 {
-  preciceTrace1 ( "meshChanged()", mesh.getName() );
+  preciceTrace ( "meshChanged()", mesh.getName() );
   _meshChanged = true;
 }
 
@@ -72,7 +72,7 @@ int DynamicOctree:: searchPosition
 (
   const utils::DynVector& point )
 {
-  preciceTrace1("searchPosition()", point);
+  preciceTrace("searchPosition()", point);
   if (_meshChanged){
     preciceDebug("A mesh has changed recently, rebuilding spacetree");
     clear();
@@ -88,7 +88,7 @@ void DynamicOctree:: searchDistance
 (
   query::FindClosest& findClosest )
 {
-  preciceTrace1 ( "searchDistance()", findClosest.getSearchPoint() );
+  preciceTrace ( "searchDistance()", findClosest.getSearchPoint() );
   if (_meshChanged){
     preciceDebug("A mesh has changed recently, rebuilding spacetree");
     clear();
@@ -104,7 +104,7 @@ int DynamicOctree:: searchContent
 (
   query::FindVoxelContent& findContent )
 {
-  preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
+  preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   if (_meshChanged){
     preciceDebug("A mesh has changed recently, rebuilding spacetree");

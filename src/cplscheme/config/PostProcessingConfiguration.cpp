@@ -207,7 +207,7 @@ void PostProcessingConfiguration:: xmlTagCallback
 (
   utils::XMLTag& callingTag )
 {
-  preciceTrace1("xmlTagCallback()", callingTag.getFullName());
+  preciceTrace("xmlTagCallback()", callingTag.getFullName());
 
   if (callingTag.getNamespace() == TAG){
       _config.type = callingTag.getName();
@@ -310,7 +310,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 (
   utils::XMLTag& callingTag )
 {
-  preciceTrace1("xmlEndTagCallback()", callingTag.getName());
+  preciceTrace("xmlEndTagCallback()", callingTag.getName());
   if (callingTag.getNamespace() == TAG){
 
     //create preconditioner

@@ -28,7 +28,7 @@ void SolverGeometry:: specializedCreate
 (
   mesh::Mesh& seed )
 {
-  preciceTrace1 ( "specializedCreate()", seed.getName() );
+  preciceTrace ( "specializedCreate()", seed.getName() );
 
   //generate vertexDistribution also for non-communicated geometries as this information
   //is needed to assign global indices resp. vertexOffsets

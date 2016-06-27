@@ -186,7 +186,7 @@ PtrData& Mesh:: createData
   const std::string& name,
   int                dimension )
 {
-  preciceTrace2("createData()", name, dimension);
+  preciceTrace("createData()", name, dimension);
   for (const PtrData data : _data) {
     preciceCheck(data->getName() != name, "createData()",
                  "Data \"" << name << "\" cannot be created twice for "
@@ -220,7 +220,7 @@ PropertyContainer& Mesh:: getPropertyContainer
 (
   const std::string subIDName )
 {
-  preciceTrace1("getPropertyContainer()", subIDName);
+  preciceTrace("getPropertyContainer()", subIDName);
   assertion(_nameIDPairs.count(subIDName) == 1);
   int id = _nameIDPairs[subIDName];
   for (PropertyContainer& cont : _propertyContainers) {
@@ -253,7 +253,7 @@ PropertyContainer& Mesh:: setSubID
 (
   const std::string& subIDNamePostfix )
 {
-  preciceTrace1("setSubID()", subIDNamePostfix);
+  preciceTrace("setSubID()", subIDNamePostfix);
   preciceCheck(subIDNamePostfix != std::string(""), "setSubID",
       "Sub ID postfix of mesh \"" << _name
       << "\" is not allowed to be an empty string!");
@@ -290,7 +290,7 @@ int Mesh:: getID() const
 
 void Mesh:: allocateDataValues()
 {
-  preciceTrace1("allocateDataValues()", _content.vertices().size());
+  preciceTrace("allocateDataValues()", _content.vertices().size());
   for (PtrData data : _data) {
     int total = _content.vertices().size() * data->getDimensions();
     int leftToAllocate = total - data->values().size();
@@ -560,7 +560,7 @@ void Mesh:: computeState()
 
 void Mesh:: computeDistribution()
 {
-  preciceTrace2("computeDistribution()", utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
+  preciceTrace("computeDistribution()", utils::MasterSlave::_slaveMode, utils::MasterSlave::_masterMode);
 
   // (0) Broadcast global number of vertices
   if (utils::MasterSlave::_slaveMode) {

@@ -306,7 +306,7 @@ int RequestManager:: requestInquirePosition
   utils::DynVector&    point,
   const std::set<int>& meshIDs )
 {
-  preciceTrace2("requestInquirePosition()", point, meshIDs.size());
+  preciceTrace("requestInquirePosition()", point, meshIDs.size());
   _com->send(REQUEST_INQUIRE_POSITION, 0);
   _com->send(tarch::la::raw(point), point.size(), 0);
   _com->send((int)meshIDs.size(), 0);
@@ -325,7 +325,7 @@ void RequestManager:: requestInquireClosestMesh
   const std::set<int>& meshIDs,
   ClosestMesh&         closest )
 {
-  preciceTrace2("requestInquireClosestMesh()", point, meshIDs.size());
+  preciceTrace("requestInquireClosestMesh()", point, meshIDs.size());
   _com->send(REQUEST_INQUIRE_CLOSEST_MESH, 0);
   _com->send(tarch::la::raw(point), point.size(), 0);
   _com->send((int)meshIDs.size(), 0 );
@@ -357,7 +357,7 @@ void RequestManager:: requestInquireVoxelPosition
   const std::set<int>& meshIDs,
   VoxelPosition&       voxelPosition )
 {
-  preciceTrace4("requestInquireVoxelPosition()", voxelCenter, voxelHalflengths,
+  preciceTrace("requestInquireVoxelPosition()", voxelCenter, voxelHalflengths,
                 includeBoundaries, meshIDs.size());
   _com->send(REQUEST_INQUIRE_VOXEL_POSITION, 0);
   using tarch::la::raw;
@@ -407,7 +407,7 @@ int RequestManager:: requestGetMeshVertexSize
 (
   int meshID )
 {
-  preciceTrace1("requestGetMeshVertexSize()", meshID);
+  preciceTrace("requestGetMeshVertexSize()", meshID);
   _com->send(REQUEST_GET_MESH_VERTEX_SIZE, 0);
   _com->send(meshID, 0);
   int size = -1;
@@ -419,7 +419,7 @@ void RequestManager:: requestResetMesh
 (
   int meshID )
 {
-  preciceTrace1("requestResetMesh()", meshID);
+  preciceTrace("requestResetMesh()", meshID);
   _com->send(REQUEST_RESET_MESH, 0);
   _com->send(meshID, 0);
 }
@@ -461,7 +461,7 @@ void RequestManager:: requestGetMeshVertexIDsFromPositions
   double* positions,
   int*    ids )
 {
-  preciceTrace1("requestGetMeshVertexIDsFromPositions()", size);
+  preciceTrace("requestGetMeshVertexIDsFromPositions()", size);
   _com->send(REQUEST_GET_MESH_VERTEX_IDS_FROM_POSITIONS, 0);
   _com->send(meshID, 0);
   _com->send(size, 0);
@@ -476,7 +476,7 @@ int RequestManager:: requestSetMeshEdge
   int firstVertexID,
   int secondVertexID )
 {
-  preciceTrace3("requestSetMeshEdge()", meshID, firstVertexID, secondVertexID);
+  preciceTrace("requestSetMeshEdge()", meshID, firstVertexID, secondVertexID);
   _com->send(REQUEST_SET_MESH_EDGE, 0);
   int data[3] = { meshID, firstVertexID, secondVertexID };
   _com->send(data, 3, 0);
@@ -492,7 +492,7 @@ void RequestManager:: requestSetMeshTriangle
   int secondEdgeID,
   int thirdEdgeID )
 {
-  preciceTrace4("requestSetMeshTriangle()", meshID, firstEdgeID, secondEdgeID,
+  preciceTrace("requestSetMeshTriangle()", meshID, firstEdgeID, secondEdgeID,
                 thirdEdgeID);
   _com->send(REQUEST_SET_MESH_TRIANGLE, 0);
   int data[4] = {meshID, firstEdgeID, secondEdgeID, thirdEdgeID};
@@ -506,7 +506,7 @@ void RequestManager:: requestSetMeshTriangleWithEdges
   int secondVertexID,
   int thirdVertexID )
 {
-  preciceTrace4("requestSetMeshTriangleWithEdges()", meshID, firstVertexID,
+  preciceTrace("requestSetMeshTriangleWithEdges()", meshID, firstVertexID,
                 secondVertexID, thirdVertexID);
   _com->send(REQUEST_SET_MESH_TRIANGLE_WITH_EDGES, 0);
   int data[4] = {meshID, firstVertexID, secondVertexID, thirdVertexID};
@@ -521,7 +521,7 @@ void RequestManager:: requestSetMeshQuad
   int thirdEdgeID,
   int fourthEdgeID )
 {
-  preciceTrace5("requestSetMeshQuad()", meshID, firstEdgeID, secondEdgeID,
+  preciceTrace("requestSetMeshQuad()", meshID, firstEdgeID, secondEdgeID,
                 thirdEdgeID, fourthEdgeID);
   _com->send(REQUEST_SET_MESH_QUAD, 0);
   int data[5] = {meshID, firstEdgeID, secondEdgeID, thirdEdgeID, fourthEdgeID};
@@ -536,7 +536,7 @@ void RequestManager:: requestSetMeshQuadWithEdges
   int thirdVertexID,
   int fourthVertexID )
 {
-  preciceTrace5("requestSetMeshTriangleWithEdges()", meshID, firstVertexID,
+  preciceTrace("requestSetMeshTriangleWithEdges()", meshID, firstVertexID,
                 secondVertexID, thirdVertexID, fourthVertexID);
   _com->send(REQUEST_SET_MESH_QUAD_WITH_EDGES, 0);
   int data[5] = {meshID, firstVertexID, secondVertexID, thirdVertexID, fourthVertexID};
@@ -549,7 +549,7 @@ void RequestManager:: requestWriteBlockScalarData (
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("requestWriteBlockScalarData()", dataID, size);
+  preciceTrace("requestWriteBlockScalarData()", dataID, size);
   _com->send(REQUEST_WRITE_BLOCK_SCALAR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(size, 0);
@@ -576,7 +576,7 @@ void RequestManager:: requestWriteBlockVectorData (
   int*    valueIndices,
   double* values )
 {
-  preciceTrace1("requestWriteBlockVectorData()", dataID);
+  preciceTrace("requestWriteBlockVectorData()", dataID);
   _com->send(REQUEST_WRITE_BLOCK_VECTOR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(size, 0);
@@ -603,7 +603,7 @@ void RequestManager:: requestReadBlockScalarData (
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("requestReadBlockScalarData()", dataID, size);
+  preciceTrace("requestReadBlockScalarData()", dataID, size);
   _com->send(REQUEST_READ_BLOCK_SCALAR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(size, 0);
@@ -631,7 +631,7 @@ void RequestManager:: requestReadBlockVectorData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace2("requestReadBlockVectorData()", dataID, size);
+  preciceTrace("requestReadBlockVectorData()", dataID, size);
   _com->send(REQUEST_READ_BLOCK_VECTOR_DATA, 0);
   _com->send(dataID, 0);
   _com->send(size, 0);
@@ -656,7 +656,7 @@ void RequestManager:: requestMapWriteDataFrom
 (
   int fromMeshID )
 {
-  preciceTrace1("requestMapWriteDataFrom()", fromMeshID);
+  preciceTrace("requestMapWriteDataFrom()", fromMeshID);
   _com->send(REQUEST_MAP_WRITE_DATA_FROM, 0);
   int ping;
   _com->receive(ping, 0);
@@ -667,7 +667,7 @@ void RequestManager:: requestMapReadDataTo
 (
   int toMeshID )
 {
-  preciceTrace1("requestMapReadDataTo()", toMeshID);
+  preciceTrace("requestMapReadDataTo()", toMeshID);
   _com->send(REQUEST_MAP_READ_DATA_TO, 0);
   int ping;
   _com->receive(ping, 0);
@@ -740,7 +740,7 @@ void RequestManager:: handleRequestFulfilledAction
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestFulfilledAction()", rankSender);
+  preciceTrace("handleRequestFulfilledAction()", rankSender);
   std::string action;
   _com->receive(action, rankSender);
   _interface.fulfilledAction(action);
@@ -750,7 +750,7 @@ void RequestManager:: handleRequestInquirePosition
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestInquirePosition()", rankSender);
+  preciceTrace("handleRequestInquirePosition()", rankSender);
   // Receive input
   double point[_interface.getDimensions()];
   _com->receive(point, _interface.getDimensions(), rankSender);
@@ -776,7 +776,7 @@ void RequestManager:: handleRequestInquireClosestMesh
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestInquireClosestMesh()", rankSender);
+  preciceTrace("handleRequestInquireClosestMesh()", rankSender);
   // Receive input
   double point[_interface.getDimensions()];
   _com->receive(point, _interface.getDimensions(), rankSender);
@@ -811,7 +811,7 @@ void RequestManager:: handleRequestInquireVoxelPosition
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestInquireVoxelPosition()", rankSender);
+  preciceTrace("handleRequestInquireVoxelPosition()", rankSender);
   // Receive input
   double voxelCenter[_interface.getDimensions()];
   _com->receive(voxelCenter, _interface.getDimensions(), rankSender);
@@ -848,7 +848,7 @@ void RequestManager:: handleRequestSetMeshVertex
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestSetMeshVertex()", rankSender);
+  preciceTrace("handleRequestSetMeshVertex()", rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
   double position[_interface.getDimensions()];
@@ -861,7 +861,7 @@ void RequestManager:: handleRequestGetMeshVertexSize
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestGetMeshVertexSize()", rankSender);
+  preciceTrace("handleRequestGetMeshVertexSize()", rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
   int size = _interface.getMeshVertexSize(meshID);
@@ -872,7 +872,7 @@ void RequestManager:: handleRequestResetMesh
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestResetMesh()", rankSender);
+  preciceTrace("handleRequestResetMesh()", rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
   _interface.resetMesh(meshID);
@@ -883,7 +883,7 @@ void RequestManager:: handleRequestSetMeshVertices
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestSetMeshVertices()", rankSender);
+  preciceTrace("handleRequestSetMeshVertices()", rankSender);
   int meshID = -1;
   _com->receive(meshID, rankSender);
   int size = -1;
@@ -903,7 +903,7 @@ void RequestManager:: handleRequestGetMeshVertices
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestGetMeshVertices()", rankSender);
+  preciceTrace("handleRequestGetMeshVertices()", rankSender);
   int meshID = -1;
   int size = -1;
   _com->receive(meshID, rankSender);
@@ -922,7 +922,7 @@ void RequestManager:: handleRequestGetMeshVertexIDsFromPositions
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestGetMeshVertexIDsFromPositions()", rankSender);
+  preciceTrace("handleRequestGetMeshVertexIDsFromPositions()", rankSender);
   int meshID = -1;
   int size = -1;
   _com->receive(meshID, rankSender);
@@ -941,7 +941,7 @@ void RequestManager:: handleRequestSetMeshEdge
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestSetMeshEdge()", rankSender);
+  preciceTrace("handleRequestSetMeshEdge()", rankSender);
   int data[3]; // 0: meshID, 1: firstVertexID, 2: secondVertexID
   _com->receive(data, 3, rankSender);
   int createEdgeID = _interface.setMeshEdge(data[0], data[1], data[2]);
@@ -952,7 +952,7 @@ void RequestManager:: handleRequestSetMeshTriangle
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestSetMeshTriangle()", rankSender);
+  preciceTrace("handleRequestSetMeshTriangle()", rankSender);
   int data[4]; // 0: meshID, 1,2,3: edge IDs
   _com->receive(data, 4, rankSender);
   _interface.setMeshTriangle(data[0], data[1], data[2], data[3]);
@@ -962,7 +962,7 @@ void RequestManager:: handleRequestSetMeshTriangleWithEdges
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestSetMeshTriangleWithEdges()", rankSender);
+  preciceTrace("handleRequestSetMeshTriangleWithEdges()", rankSender);
   int data[4]; // 0: meshID, 1,2,3: vertex IDs
   _com->receive(data, 4, rankSender);
   _interface.setMeshTriangleWithEdges(data[0], data[1], data[2], data[3]);
@@ -972,7 +972,7 @@ void RequestManager:: handleRequestSetMeshQuad
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestSetMeshQuad()", rankSender);
+  preciceTrace("handleRequestSetMeshQuad()", rankSender);
   int data[5]; // 0: meshID, 1,2,3,4: edge IDs
   _com->receive(data, 5, rankSender);
   _interface.setMeshQuad(data[0], data[1], data[2], data[3], data[4]);
@@ -982,7 +982,7 @@ void RequestManager:: handleRequestSetMeshQuadWithEdges
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestSetMeshQuadWithEdges()", rankSender);
+  preciceTrace("handleRequestSetMeshQuadWithEdges()", rankSender);
   int data[5]; // 0: meshID, 1,2,3,4: vertex IDs
   _com->receive(data, 5, rankSender);
   _interface.setMeshQuadWithEdges(data[0], data[1], data[2], data[3], data[4]);
@@ -992,7 +992,7 @@ void RequestManager:: handleRequestWriteScalarData
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestWriteScalarData()", rankSender);
+  preciceTrace("handleRequestWriteScalarData()", rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int index = -1;
@@ -1006,7 +1006,7 @@ void RequestManager:: handleRequestWriteBlockScalarData
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestWriteBlockScalarData()", rankSender);
+  preciceTrace("handleRequestWriteBlockScalarData()", rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int size = -1;
@@ -1024,7 +1024,7 @@ void RequestManager:: handleRequestWriteBlockVectorData
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestWriteBlockVectorData()", rankSender);
+  preciceTrace("handleRequestWriteBlockVectorData()", rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int size = -1;
@@ -1042,7 +1042,7 @@ void RequestManager:: handleRequestWriteVectorData
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestWriteVectorData()", rankSender);
+  preciceTrace("handleRequestWriteVectorData()", rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int index = -1;
@@ -1056,7 +1056,7 @@ void RequestManager:: handleRequestReadScalarData
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestReadScalarData()", rankSender);
+  preciceTrace("handleRequestReadScalarData()", rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int index = -1;
@@ -1070,7 +1070,7 @@ void RequestManager:: handleRequestReadBlockScalarData
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestReadBlockScalarData()", rankSender);
+  preciceTrace("handleRequestReadBlockScalarData()", rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int size = -1;
@@ -1088,7 +1088,7 @@ void RequestManager:: handleRequestReadBlockVectorData
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestReadBlockVectorData()", rankSender);
+  preciceTrace("handleRequestReadBlockVectorData()", rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int size = -1;
@@ -1106,7 +1106,7 @@ void RequestManager:: handleRequestReadVectorData
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestReadVectorData()", rankSender);
+  preciceTrace("handleRequestReadVectorData()", rankSender);
   int dataID = -1;
   _com->receive(dataID, rankSender);
   int index = -1;
@@ -1166,7 +1166,7 @@ void RequestManager:: handleRequestExportMesh
 (
   int rankSender )
 {
-  preciceTrace1("handleRequestExportMesh()", rankSender);
+  preciceTrace("handleRequestExportMesh()", rankSender);
   std::string filenameSuffix;
   _com->receive(filenameSuffix, rankSender);
   int exportType;

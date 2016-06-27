@@ -1324,7 +1324,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   bool                    positive,
   const utils::DynVector& offset )
 {
-  preciceTrace3 ( "performTestSearchContentVertices()", testDim, positive, offset );
+  preciceTrace ( "performTestSearchContentVertices()", testDim, positive, offset );
   int min = Spacetree::minElementsToRefineCell;
   Spacetree::minElementsToRefineCell = 1;
   int dim = offset.size();
@@ -1591,7 +1591,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   bool                    positive,
   const utils::DynVector& offset )
 {
-  preciceTrace3 ( "performTestSearchContentEdges()", testDim, positive, offset );
+  preciceTrace ( "performTestSearchContentEdges()", testDim, positive, offset );
   int min = Spacetree::minElementsToRefineCell;
   Spacetree::minElementsToRefineCell = 1;
   int dim = offset.size();
@@ -1840,7 +1840,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   int  secondDimension,
   bool positive )
 {
-  preciceTrace2 ( "performTestSearchContentTriangles()", testDim, positive );
+  preciceTrace ( "performTestSearchContentTriangles()", testDim, positive );
   int min = Spacetree::minElementsToRefineCell;
   Spacetree::minElementsToRefineCell = 1;
   int dim = 3;

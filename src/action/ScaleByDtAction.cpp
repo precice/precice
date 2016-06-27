@@ -39,7 +39,7 @@ void ScaleByDtAction:: performAction
   double computedPartFullDt,
   double fullDt )
 {
-  preciceTrace3("performAction()", dt, computedPartFullDt, fullDt);
+  preciceTrace("performAction()", dt, computedPartFullDt, fullDt);
   auto& sourceValues = _sourceData->values();
   auto& targetValues = _targetData->values();
   assertion(sourceValues.size() == targetValues.size(),

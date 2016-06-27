@@ -41,7 +41,7 @@ void MultiCouplingScheme::initialize
   double startTime,
   int    startTimestep )
 {
-  preciceTrace2("initialize()", startTime, startTimestep);
+  preciceTrace("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
   assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
@@ -141,7 +141,7 @@ void MultiCouplingScheme::initializeData()
 
 void MultiCouplingScheme::advance()
 {
-  preciceTrace2("advance()", getTimesteps(), getTime());
+  preciceTrace("advance()", getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
@@ -312,7 +312,7 @@ CouplingData* MultiCouplingScheme:: getData
 (
   int dataID)
 {
-  preciceTrace1("getData()", dataID);
+  preciceTrace("getData()", dataID);
   DataMap::iterator iter = _allData.find(dataID);
   if (iter != _allData.end()) {
     return  &(*(iter->second));

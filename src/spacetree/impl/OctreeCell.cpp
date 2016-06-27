@@ -48,7 +48,7 @@ void OctreeCell:: refine
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  preciceTrace2("refine()", cellCenter, cellHalflengths);
+  preciceTrace("refine()", cellCenter, cellHalflengths);
   assertion(_content != nullptr);
   assertion(_childs.size() == 0, _childs.size());
   int dim = cellCenter.size();
@@ -117,7 +117,7 @@ void OctreeCell:: getChildData
   utils::DynVector&       childCenter,
   utils::DynVector&       childHalflengths )
 {
-  preciceTrace3("getChildData()", childIndex, cellCenter, cellHalflengths);
+  preciceTrace("getChildData()", childIndex, cellCenter, cellHalflengths);
   assign(childHalflengths) = 0.5 * cellHalflengths[0];
   childCenter = utils::delinearize(childIndex, childCenter.size());
   childCenter *= childHalflengths[0];

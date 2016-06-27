@@ -23,7 +23,7 @@ NearestNeighborMapping:: NearestNeighborMapping
 
 void NearestNeighborMapping:: computeMapping()
 {
-  preciceTrace1("computeMapping()", input()->vertices().size());
+  preciceTrace("computeMapping()", input()->vertices().size());
   assertion(input().get() != nullptr);
   assertion(output().get() != nullptr);
   if (getConstraint() == CONSISTENT){
@@ -58,7 +58,7 @@ void NearestNeighborMapping:: computeMapping()
 
 bool NearestNeighborMapping:: hasComputedMapping() const
 {
-  preciceTrace1("hasComputedMapping()", _hasComputedMapping);
+  preciceTrace("hasComputedMapping()", _hasComputedMapping);
   return _hasComputedMapping;
 }
 
@@ -74,7 +74,7 @@ void NearestNeighborMapping:: map
   int inputDataID,
   int outputDataID )
 {
-  preciceTrace2 ( "map()", inputDataID, outputDataID );
+  preciceTrace ( "map()", inputDataID, outputDataID );
   const Eigen::VectorXd& inputValues = input()->data(inputDataID)->values();
   Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();
   //assign(outputValues) = 0.0;

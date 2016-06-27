@@ -38,7 +38,7 @@ void SerialCouplingScheme::initialize
   double startTime,
   int    startTimestep)
 {
-  preciceTrace2("initialize()", startTime, startTimestep);
+  preciceTrace("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
   assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
@@ -161,7 +161,7 @@ void SerialCouplingScheme::initializeData()
 
 void SerialCouplingScheme::advance()
 {
-  preciceTrace2("advance()", getTimesteps(), getTime());
+  preciceTrace("advance()", getTimesteps(), getTime());
   for (DataMap::value_type & pair : getReceiveData()) {
     Eigen::VectorXd& values = *pair.second->values;
 #     ifdef Debug

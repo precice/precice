@@ -281,7 +281,7 @@ void ActionConfiguration:: xmlTagCallback
 (
   utils::XMLTag& callingTag )
 {
-  preciceTrace1("xmlTagCallback()", callingTag.getName());
+  preciceTrace("xmlTagCallback()", callingTag.getName());
   if (callingTag.getNamespace() == TAG){
     _configuredAction = ConfiguredAction();
     _configuredAction.type = callingTag.getName();
@@ -348,7 +348,7 @@ int ActionConfiguration:: getUsedMeshID() const
 //  utils::XMLTag&     callingTag,
 //  const std::string& type )
 //{
-//  preciceTrace1 ( "addSubtags()", callingTag.getName() );
+//  preciceTrace ( "addSubtags()", callingTag.getName() );
 //  assertion ( type != std::string("") );
 //  using utils::XMLTag;
 //  using utils::XMLAttribute;
@@ -518,7 +518,7 @@ void ActionConfiguration:: createAction()
 
 action::Action::Timing ActionConfiguration:: getTiming () const
 {
-  preciceTrace1 ( "getTiming()", _configuredAction.timing );
+  preciceTrace ( "getTiming()", _configuredAction.timing );
   action::Action::Timing timing;
   if ( _configuredAction.timing == VALUE_REGULAR_PRIOR ){
     timing = action::Action::ALWAYS_PRIOR;

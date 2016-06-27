@@ -65,7 +65,7 @@ void DataConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace1("setDimensions()", dimensions);
+  preciceTrace("setDimensions()", dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }

@@ -905,7 +905,7 @@ void MVQNPostProcessing:: removeMatrixColumn
 (
   int columnIndex)
 {
-  preciceTrace2(__func__, columnIndex, _matrixV.cols());
+  preciceTrace(__func__, columnIndex, _matrixV.cols());
   assertion(_matrixV.cols() > 1, _matrixV.cols()); assertion(_Wtil.cols() > 1);
 
 
@@ -921,7 +921,7 @@ void MVQNPostProcessing:: removeMatrixColumnRSLS
 (
   int columnIndex)
 {
-  preciceTrace2(__func__, columnIndex, _matrixV_RSLS.cols());
+  preciceTrace(__func__, columnIndex, _matrixV_RSLS.cols());
   assertion(_matrixV_RSLS.cols() > 1);
 
   utils::removeColumnFromMatrix(_matrixV_RSLS, columnIndex);

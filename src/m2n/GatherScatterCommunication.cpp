@@ -39,7 +39,7 @@ void GatherScatterCommunication:: acceptConnection
   const std::string& nameAcceptor,
   const std::string& nameRequester)
 {
-  preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+  preciceTrace("acceptConnection()", nameAcceptor, nameRequester);
   assertion(utils::MasterSlave::_slaveMode || _com->isConnected());
   _isConnected = true;
 }
@@ -49,7 +49,7 @@ void GatherScatterCommunication:: requestConnection
   const std::string& nameAcceptor,
   const std::string& nameRequester )
 {
-  preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
+  preciceTrace("requestConnection()", nameAcceptor, nameRequester);
   assertion(utils::MasterSlave::_slaveMode || _com->isConnected());
   _isConnected = true;
 }
@@ -67,7 +67,7 @@ void GatherScatterCommunication:: send (
   size_t        size,
   int        valueDimension)
 {
-  preciceTrace1("sendAll", size);
+  preciceTrace("sendAll", size);
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
   assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());
@@ -130,7 +130,7 @@ void GatherScatterCommunication:: receive (
   size_t       size,
   int       valueDimension)
 {
-  preciceTrace1("receiveAll", size);
+  preciceTrace("receiveAll", size);
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
   assertion(utils::MasterSlave::_communication.get() != nullptr);
   assertion(utils::MasterSlave::_communication->isConnected());

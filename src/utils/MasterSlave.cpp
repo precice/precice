@@ -28,7 +28,7 @@ logging::Logger MasterSlave:: _log ( "precice::utils::MasterSlave" );
 
 void MasterSlave:: configure(int rank, int size)
 {
-  preciceTrace2("initialize()", rank, size);
+  preciceTrace("initialize()", rank, size);
   preciceCheck(size>=2, "initialize()", "You cannot use a master with a serial participant.");
   _rank = rank;
   _size = size;

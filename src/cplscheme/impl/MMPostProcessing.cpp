@@ -106,7 +106,7 @@ MMPostProcessing::MMPostProcessing
 void MMPostProcessing::initialize(
     DataMap& cplData)
 {
-  preciceTrace1(__func__, cplData.size());
+  preciceTrace(__func__, cplData.size());
   size_t entries = 0;
   size_t coarseEntries = 0;
 
@@ -398,7 +398,7 @@ void MMPostProcessing::updateDifferenceMatrices(
 void MMPostProcessing::performPostProcessing(
     DataMap& cplData)
 {
-  preciceTrace2(__func__, _dataIDs.size(), cplData.size());
+  preciceTrace(__func__, _dataIDs.size(), cplData.size());
 
   //assertion(_fineDataIDs.size() == _scalings.size(), _fineDataIDs.size(), _scalings.size());
   assertion(_fineOldResiduals.size() == _fineResiduals.size(),_fineOldResiduals.size(), _fineResiduals.size());
@@ -830,7 +830,7 @@ void MMPostProcessing::removeMatrixColumn
 (
     int columnIndex)
 {
-  preciceTrace2(__func__, columnIndex, _matrixF.cols());
+  preciceTrace(__func__, columnIndex, _matrixF.cols());
 
   // debugging information, can be removed
   deletedColumns++;

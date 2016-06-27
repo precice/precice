@@ -35,7 +35,7 @@ void ExportVTK:: doExport
   const std::string& filename,
   mesh::Mesh&        mesh)
 {
-  preciceTrace2("doExport()", filename, mesh.getName());
+  preciceTrace("doExport()", filename, mesh.getName());
   assertion(filename != std::string(""));
   std::ofstream outFile;
   initializeWriting(filename, outFile);
@@ -50,7 +50,7 @@ void ExportVTK::exportGeometry
   std::ofstream& outFile,
   mesh::Mesh&    mesh)
 {
-  preciceTrace1("exportGeometry()", mesh.getName());
+  preciceTrace("exportGeometry()", mesh.getName());
 
   // Plot vertices
   outFile << "POINTS " << mesh.vertices().size() << " float "<<std::endl << std::endl;

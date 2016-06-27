@@ -131,7 +131,7 @@ int DynamicTraversal<CELL_T>:: searchPosition
   const utils::DynVector& cellHalflengths,
   double                  refinementLimit )
 {
-  preciceTrace4("searchPosition()", searchPoint, cellCenter, cellHalflengths,
+  preciceTrace("searchPosition()", searchPoint, cellCenter, cellHalflengths,
                 refinementLimit);
   typedef std::shared_ptr<SearchPositionResult> PtrResult;
   PtrResult result = searchPositionInternal(cell, searchPoint, cellCenter,
@@ -170,7 +170,7 @@ bool DynamicTraversal<CELL_T>:: searchDistance
   const utils::DynVector& cellHalflengths,
   double                  refinementLimit )
 {
-  preciceTrace3 ( "searchDistance()", cellCenter, cellHalflengths, refinementLimit );
+  preciceTrace ( "searchDistance()", cellCenter, cellHalflengths, refinementLimit );
   if ( cell.isLeaf() ){
     preciceDebug ( "  Leaf" );
     if ( cell.needsRefinement(cellHalflengths, refinementLimit) ){
@@ -221,7 +221,7 @@ int DynamicTraversal<CELL_T>:: searchContent
   const utils::DynVector&  cellHalflengths,
   double                   refinementLimit )
 {
-  preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
+  preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   std::shared_ptr<SearchContentResult> result = searchContentInternal (
       cell, findContent, cellCenter, cellHalflengths, refinementLimit );
@@ -286,7 +286,7 @@ DynamicTraversal<CELL_T>:: searchPositionInternal
   const utils::DynVector& cellHalflengths,
   double                  refinementLimit )
 {
-  preciceTrace4("searchPositionInternal()", searchPoint, cellCenter,
+  preciceTrace("searchPositionInternal()", searchPoint, cellCenter,
                 cellHalflengths, refinementLimit);
   using namespace tarch::la;
   std::shared_ptr<SearchPositionResult> data;
@@ -383,7 +383,7 @@ DynamicTraversal<CELL_T>:: searchContentInternal
   const utils::DynVector&  cellHalflengths,
   double                   refinementLimit )
 {
-  preciceTrace4 ( "searchContentInternal()", cellCenter, cellHalflengths,
+  preciceTrace ( "searchContentInternal()", cellCenter, cellHalflengths,
                   findContent.getVoxelCenter(), findContent.getVoxelHalflengths() );
   if ( cell.isLeaf() ){
     preciceDebug ( "Leaf..." );
@@ -497,7 +497,7 @@ bool DynamicTraversal<CELL_T>:: isCovered
   const utils::DynVector& voxelCenter,
   const utils::DynVector& voxelHalflengths ) const
 {
-  preciceTrace4 ( "isCovered()", cellCenter, cellHalflengths, voxelCenter,
+  preciceTrace ( "isCovered()", cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   utils::DynVector coverage ( cellCenter );
   coverage -= voxelCenter;
@@ -515,7 +515,7 @@ bool DynamicTraversal<CELL_T>:: isOverlapped
   const utils::DynVector& voxelCenter,
   const utils::DynVector& voxelHalflengths ) const
 {
-  preciceTrace4 ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
+  preciceTrace ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   utils::DynVector overlap = cellCenter;
   overlap -= voxelCenter;

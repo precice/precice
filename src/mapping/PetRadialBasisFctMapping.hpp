@@ -505,7 +505,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int outputDataID )
 {
   precice::utils::Event e(__func__);
-  preciceTrace2("map()", inputDataID, outputDataID);
+  preciceTrace("map()", inputDataID, outputDataID);
 
   assertion(_hasComputedMapping);
   assertion(input()->getDimensions() == output()->getDimensions(),

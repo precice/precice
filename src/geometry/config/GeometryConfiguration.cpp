@@ -136,7 +136,7 @@ void GeometryConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace1("setDimensions()", dimensions);
+  preciceTrace("setDimensions()", dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -186,7 +186,7 @@ void GeometryConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1("xmlTagCallback()", tag.getFullName());
+  preciceTrace("xmlTagCallback()", tag.getFullName());
   if (tag.getNamespace() == TAG){
     assertion(_dimensions != 0);
     _readData = ReadData(_dimensions);
@@ -244,7 +244,7 @@ void GeometryConfiguration:: xmlEndTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1 ( "xmlEndTagCallback()", tag.getFullName() );
+  preciceTrace ( "xmlEndTagCallback()", tag.getFullName() );
   if (tag.getNamespace() == TAG ) {
     assertion(not _readData.noReadData);
     assertion(_readData.type == tag.getName(), _readData.type, tag.getName());
@@ -274,7 +274,7 @@ void GeometryConfiguration:: addTypeSpecificAttributes
   const std::string& type,
   utils::XMLTag&     tag )
 {
-  preciceTrace1("addTypeSpecificAttributes()", type);
+  preciceTrace("addTypeSpecificAttributes()", type);
   using utils::XMLTag;
   using utils::XMLAttribute;
   using utils::ValidatorEquals;

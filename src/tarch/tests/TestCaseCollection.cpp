@@ -37,7 +37,7 @@ void tarch::tests::TestCaseCollection::setUp() {
 
 
 void tarch::tests::TestCaseCollection::run() {
-  preciceTrace1( "run()", _testCaseName );
+  preciceTrace( "run()", _testCaseName );
   std::string logInformation = "running test case collection \"" + _testCaseName + "\" ";
   for (auto currentTestCase : _testCases) {
     

@@ -87,7 +87,7 @@ void SolverInterfaceTestGeometry:: configureSolverInterface
   const std::string& configFilename,
   SolverInterface&   interface )
 {
-  preciceTrace1 ( "configureSolverInterface()", configFilename );
+  preciceTrace ( "configureSolverInterface()", configFilename );
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();

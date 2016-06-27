@@ -675,7 +675,7 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
 (
   const std::string& configFilename)
 {
-  preciceTrace1("setupThreeSolverCoupling()", configFilename);
+  preciceTrace("setupThreeSolverCoupling()", configFilename);
   using namespace mesh;
   utils::Parallel::synchronizeProcesses();
   assertion(utils::Parallel::getCommunicatorSize() > 1);
@@ -733,7 +733,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
   const std::string&         participantName,
   mesh::PtrMeshConfiguration meshConfig )
 {
-  preciceTrace1("runThreeSolverCoupling()", participantName);
+  preciceTrace("runThreeSolverCoupling()", participantName);
 
   validateEquals(meshConfig->meshes().size(), 1);
   mesh::PtrMesh mesh = meshConfig->meshes()[0];
@@ -848,7 +848,7 @@ void CompositionalCouplingSchemeTest:: connect
   const std::string&     localParticipant,
   m2n::M2N::SharedPointer& communication ) const
 {
-  preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
+  preciceTrace ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::splitCommunicator( localParticipant );

@@ -93,6 +93,10 @@ sourcesDrivers = [
     Glob('drivers/*.cpp')
 ]
 
+sourcesLogging = [
+    Glob('logging/*.cpp'),
+]
+
 sourcesTarchLA = [
    Glob('tarch/la/*.cpp'),
    Glob('tarch/la/traits/*.cpp'),
@@ -121,10 +125,6 @@ sourcesTarch = [
    sourcesTarchLogging,
    Glob('tarch/services/*.cpp'),
    sourcesTarchTests,
-]
-
-sourcesLogging = [
-    Glob('logging/*.cpp'),
 ]
 
 sourcesAllNoMain = [

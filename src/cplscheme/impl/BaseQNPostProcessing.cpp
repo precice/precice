@@ -113,7 +113,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
 void BaseQNPostProcessing::initialize(
     DataMap& cplData)
 {
-  preciceTrace1("initialize()", cplData.size());
+  preciceTrace("initialize()", cplData.size());
 
   /*
   std::stringstream sss;
@@ -358,7 +358,7 @@ void BaseQNPostProcessing::performPostProcessing
 (
     DataMap& cplData)
 {
-  preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
+  preciceTrace("performPostProcessing()", _dataIDs.size(), cplData.size());
   Event e("Base-QN_performPostProcessing()", true, true); // time measurement, barrier
 
   using namespace tarch::la;
@@ -528,7 +528,7 @@ void BaseQNPostProcessing::performPostProcessing
 
 void BaseQNPostProcessing::applyFilter()
 {
-  preciceTrace1(__func__,_filter);
+  preciceTrace(__func__,_filter);
   Event e("Base-QN_applyFilter()", true, true); // time measurement, barrier
 
   if (_filter == PostProcessing::NOFILTER) {
@@ -701,7 +701,7 @@ void BaseQNPostProcessing::removeMatrixColumn
 (
     int columnIndex)
 {
-  preciceTrace2("removeMatrixColumn()", columnIndex, _matrixV.cols());
+  preciceTrace("removeMatrixColumn()", columnIndex, _matrixV.cols());
 
   // debugging information, can be removed
   _nbDelCols++;

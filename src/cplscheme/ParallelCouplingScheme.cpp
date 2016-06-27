@@ -40,7 +40,7 @@ void ParallelCouplingScheme::initialize
   double startTime,
   int    startTimestep )
 {
-  preciceTrace2("initialize()", startTime, startTimestep);
+  preciceTrace("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
   assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
@@ -213,7 +213,7 @@ void ParallelCouplingScheme::explicitAdvance()
 
 void ParallelCouplingScheme::implicitAdvance()
 {
-  preciceTrace2("advance()", getTimesteps(), getTime());
+  preciceTrace("advance()", getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",

@@ -540,7 +540,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
   const mesh::MeshConfiguration& meshConfig,
   const std::vector<int>&        validIterations )
 {
-  preciceTrace1 ( "runCoupling", nameParticipant );
+  preciceTrace ( "runCoupling", nameParticipant );
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
   validateEquals ( mesh->data().size(), 2 );
@@ -901,7 +901,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
   const mesh::MeshConfiguration& meshConfig,
   const std::vector<int>&        validIterations )
 {
-  preciceTrace1 ( "runCouplingWithSubcycling()", nameParticipant );
+  preciceTrace ( "runCouplingWithSubcycling()", nameParticipant );
 
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];

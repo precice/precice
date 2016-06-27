@@ -402,7 +402,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
   const std::string&             participantName,
   const mesh::MeshConfiguration& meshConfig )
 {
-  preciceTrace1 ( "runSimpleExplicitCoupling()", participantName );
+  preciceTrace ( "runSimpleExplicitCoupling()", participantName );
 
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
@@ -624,7 +624,7 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
   const std::string&             participantName,
   const mesh::MeshConfiguration& meshConfig )
 {
-  preciceTrace1 ( "runExplicitCouplingWithSubcycling", participantName );
+  preciceTrace ( "runExplicitCouplingWithSubcycling", participantName );
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
   validateEquals ( mesh->data().size(), 2 );
@@ -767,7 +767,7 @@ void ExplicitCouplingSchemeTest:: connect
   const std::string&     localParticipant,
   m2n::M2N::SharedPointer& communication ) const
 {
-  preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
+  preciceTrace ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::splitCommunicator( localParticipant );

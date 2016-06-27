@@ -29,7 +29,7 @@ void CommunicateMesh:: sendMesh
   const mesh::Mesh& mesh,
   int               rankReceiver )
 {
-  preciceTrace2 ( "sendGeometry()", mesh.getName(), rankReceiver );
+  preciceTrace ( "sendGeometry()", mesh.getName(), rankReceiver );
   using tarch::la::raw;
   int dim = mesh.getDimensions();
 
@@ -92,7 +92,7 @@ void CommunicateMesh:: receiveMesh
   mesh::Mesh& mesh,
   int         rankSender )
 {
-  preciceTrace2 ( "receiveMesh()", mesh.getName(), rankSender );
+  preciceTrace ( "receiveMesh()", mesh.getName(), rankSender );
   using tarch::la::raw;
   int dim = mesh.getDimensions();
 
@@ -169,7 +169,7 @@ void CommunicateMesh:: broadcastSendMesh
 (
   const mesh::Mesh& mesh )
 {
-  preciceTrace1 ( "broadcastSendMesh()", mesh.getName() );
+  preciceTrace ( "broadcastSendMesh()", mesh.getName() );
   using tarch::la::raw;
   int dim = mesh.getDimensions();
 
@@ -231,7 +231,7 @@ void CommunicateMesh:: broadcastReceiveMesh
 (
   mesh::Mesh& mesh)
 {
-  preciceTrace1 ( "broadcastReceiveMesh()", mesh.getName() );
+  preciceTrace ( "broadcastReceiveMesh()", mesh.getName() );
   using tarch::la::raw;
   int dim = mesh.getDimensions();
   int rankBroadcaster = 0;
@@ -307,7 +307,7 @@ void CommunicateMesh:: broadcastReceiveMesh
 void CommunicateMesh:: sendBoundingBox (
   const mesh::Mesh::BoundingBox & bb,
   int                rankReceiver ){
-  preciceTrace1 ( "sendBoundingBox()", rankReceiver );
+  preciceTrace ( "sendBoundingBox()", rankReceiver );
   int dim = bb.size();
   for(int d=0; d<dim; d++){
     _communication->send(bb[d].first, rankReceiver);
@@ -318,7 +318,7 @@ void CommunicateMesh:: sendBoundingBox (
 void CommunicateMesh:: receiveBoundingBox (
   mesh::Mesh::BoundingBox & bb,
   int          rankSender ){
-  preciceTrace1 ( "receiveBoundingBox()", rankSender );
+  preciceTrace ( "receiveBoundingBox()", rankSender );
   int dim = bb.size();
   for(int d=0; d<dim; d++){
     _communication->receive(bb[d].first, rankSender);

@@ -61,7 +61,7 @@ public:
    * @param size of the pp system (e.g. rows of V)
    */
   virtual void initialize(int N){
-    preciceTrace1("initialize()", N);
+    preciceTrace("initialize()", N);
 
     assertion(_weights.size()==0);
     // cannot do this already in the constructor as the size is unknown at that point
@@ -249,7 +249,7 @@ public:
    * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
    */
   void update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res){
-    preciceTrace2(__func__, _nbNonConstTimesteps, _freezed);
+    preciceTrace(__func__, _nbNonConstTimesteps, _freezed);
 
     // if number of allowed non-const time steps is exceeded, do not update weights
     if(_freezed)
@@ -268,7 +268,7 @@ public:
 
   //@brief: returns true if a QR decomposition from scratch is necessary
   bool requireNewQR(){
-    preciceTrace1("requireNewQR()", _requireNewQR);
+    preciceTrace("requireNewQR()", _requireNewQR);
     return _requireNewQR;
   }
 

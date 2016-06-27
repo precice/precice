@@ -238,7 +238,7 @@ void BaseCouplingScheme:: sendState
   com::Communication::SharedPointer communication,
   int                   rankReceiver)
 {
-  preciceTrace1("sendState()", rankReceiver);
+  preciceTrace("sendState()", rankReceiver);
   communication->startSendPackage(rankReceiver );
   assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
@@ -270,7 +270,7 @@ void BaseCouplingScheme:: receiveState
   com::Communication::SharedPointer communication,
   int                   rankSender)
 {
-  preciceTrace1("receiveState()", rankSender);
+  preciceTrace("receiveState()", rankSender);
   communication->startReceivePackage(rankSender);
   assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
@@ -360,7 +360,7 @@ CouplingData* BaseCouplingScheme:: getSendData
 (
   int dataID)
 {
-  preciceTrace1("getSendData()", dataID);
+  preciceTrace("getSendData()", dataID);
   DataMap::iterator iter = _sendData.find(dataID);
   if (iter != _sendData.end()) {
     return  &(*(iter->second));
@@ -372,7 +372,7 @@ CouplingData* BaseCouplingScheme:: getReceiveData
 (
   int dataID)
 {
-  preciceTrace1("getReceiveData()", dataID);
+  preciceTrace("getReceiveData()", dataID);
   DataMap::iterator iter = _receiveData.find(dataID);
   if (iter != _receiveData.end()) {
     return  &(*(iter->second));
@@ -401,7 +401,7 @@ void BaseCouplingScheme:: setExtrapolationOrder
 // TODO: extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
 void BaseCouplingScheme::extrapolateData(DataMap& data)
 {
-  preciceTrace1("extrapolateData()", _timesteps);
+  preciceTrace("extrapolateData()", _timesteps);
   if ((_extrapolationOrder == 1) || getTimesteps() == 2) { //timesteps is increased before extrapolate is called
     preciceInfo("extrapolateData()", "Performing first order extrapolation" );
     for (DataMap::value_type & pair : data) {
@@ -449,7 +449,7 @@ void BaseCouplingScheme:: addComputedTime
 (
   double timeToAdd )
 {
-  preciceTrace2("addComputedTime()", timeToAdd, _time);
+  preciceTrace("addComputedTime()", timeToAdd, _time);
   preciceCheck(isCouplingOngoing(), "addComputedTime()",
            "Invalid call of addComputedTime() after simulation end!");
 
@@ -469,7 +469,7 @@ bool BaseCouplingScheme:: willDataBeExchanged
 (
   double lastSolverTimestepLength) const
 {
-  preciceTrace1("willDataBeExchanged()", lastSolverTimestepLength);
+  preciceTrace("willDataBeExchanged()", lastSolverTimestepLength);
   double remainder = getThisTimestepRemainder() - lastSolverTimestepLength;
   return not tarch::la::greater(remainder, 0.0, _eps);
 }
@@ -997,7 +997,7 @@ void BaseCouplingScheme:: updateTimeAndIterations
 
 void BaseCouplingScheme:: timestepCompleted()
 {
-  preciceTrace2("timestepCompleted()", getTimesteps(), getTime());
+  preciceTrace("timestepCompleted()", getTimesteps(), getTime());
   preciceInfo("timestepCompleted()", "Timestep completed");
   setIsCouplingTimestepComplete(true);
   setTimesteps(getTimesteps() + 1 );

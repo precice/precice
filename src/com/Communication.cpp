@@ -21,7 +21,7 @@ logging::Logger Communication::_log(
  */
 void
 Communication::reduceSum(double* itemsToSend, double* itemsToReceive, int size) {
-  preciceTrace1("broadcast(double*)", size);
+  preciceTrace("broadcast(double*)", size);
 
   for(int i = 0; i < size; i++){
     itemsToReceive[i] = itemsToSend[i];
@@ -40,7 +40,7 @@ Communication::reduceSum(double* itemsToSend, double* itemsToReceive, int size) 
 
 void
 Communication::reduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster) {
-  preciceTrace1("allreduce(double*)", size);
+  preciceTrace("allreduce(double*)", size);
 
   auto request = aSend(itemsToSend, size, rankMaster);
   request->wait();
@@ -82,7 +82,7 @@ Communication::allreduceSum() {
  */
 void
 Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int size) {
-  preciceTrace1("broadcast(double*)", size);
+  preciceTrace("broadcast(double*)", size);
 
   for(int i = 0; i < size; i++){
     itemsToReceive[i] = itemsToSend[i];
@@ -112,7 +112,7 @@ Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int siz
  */
 void
 Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int size, int rankMaster) {
-  preciceTrace1("allreduce(double*)", size);
+  preciceTrace("allreduce(double*)", size);
 
   auto request = aSend(itemsToSend, size, rankMaster);
   request->wait();
@@ -207,7 +207,7 @@ Communication::broadcast() {
 
 void
 Communication::broadcast(int* itemsToSend, int size) {
-  preciceTrace1("broadcast(int*)", size);
+  preciceTrace("broadcast(int*)", size);
 
   std::vector<Request::SharedPointer> requests;
 
@@ -224,7 +224,7 @@ Communication::broadcast(int* itemsToSend, int size) {
 
 void
 Communication::broadcast(int* itemsToReceive, int size, int rankBroadcaster) {
-  preciceTrace1("broadcast(int*)", size);
+  preciceTrace("broadcast(int*)", size);
 
   receive(itemsToReceive, size, rankBroadcaster + _rankOffset);
 }
@@ -255,7 +255,7 @@ Communication::broadcast(int& itemToReceive, int rankBroadcaster) {
 
 void
 Communication::broadcast(double* itemsToSend, int size) {
-  preciceTrace1("broadcast(double*)", size);
+  preciceTrace("broadcast(double*)", size);
 
   std::vector<Request::SharedPointer> requests;
 
@@ -274,7 +274,7 @@ void
 Communication::broadcast(double* itemsToReceive,
                          int size,
                          int rankBroadcaster) {
-  preciceTrace1("broadcast(double*)", size);
+  preciceTrace("broadcast(double*)", size);
   receive(itemsToReceive, size, rankBroadcaster + _rankOffset);
 }
 

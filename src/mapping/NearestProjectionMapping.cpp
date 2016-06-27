@@ -30,7 +30,7 @@ NearestProjectionMapping:: NearestProjectionMapping
 
 void NearestProjectionMapping:: computeMapping()
 {
-  preciceTrace2("computeMapping()", input()->vertices().size(),
+  preciceTrace("computeMapping()", input()->vertices().size(),
                 output()->vertices().size());
   if (getConstraint() == CONSISTENT){
     preciceDebug("Compute consistent mapping");
@@ -81,7 +81,7 @@ void NearestProjectionMapping:: map
   int inputDataID,
   int outputDataID )
 {
-  preciceTrace2("map()", inputDataID, outputDataID);
+  preciceTrace("map()", inputDataID, outputDataID);
   mesh::PtrData inData = input()->data(inputDataID);
   mesh::PtrData outData = output()->data(outputDataID);
   const Eigen::VectorXd& inValues = inData->values();
@@ -130,7 +130,7 @@ void NearestProjectionMapping:: map
 bool NearestProjectionMapping::doesVertexContribute(
   int vertexID) const
 {
-  preciceTrace1("doesVertexContribute()", vertexID);
+  preciceTrace("doesVertexContribute()", vertexID);
   if (getConstraint() == CONSISTENT) {
     for (size_t i=0; i < output()->vertices().size(); i++) {
       const InterpolationElements& elems = _weights[i];

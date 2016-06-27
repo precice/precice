@@ -360,7 +360,7 @@ void ParticipantConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace1("setDimensions()", dimensions);
+  preciceTrace("setDimensions()", dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -447,7 +447,7 @@ void ParticipantConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1 ( "xmlTagCallback()", tag.getName() );
+  preciceTrace ( "xmlTagCallback()", tag.getName() );
   if (tag.getName() == TAG){
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     impl::PtrParticipant p(new impl::Participant(name, _meshConfig));
@@ -622,7 +622,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 (
   const impl::PtrParticipant& participant )
 {
-  preciceTrace1("finishParticipantConfiguration()", participant->getName());
+  preciceTrace("finishParticipantConfiguration()", participant->getName());
 
   // Set input/output meshes for data mappings and mesh requirements
   typedef mapping::MappingConfiguration::ConfiguredMapping ConfMapping;

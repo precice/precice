@@ -69,7 +69,7 @@ void FindVoxelContentTest:: performTestVertices
   bool                    positive,
   const utils::DynVector& offset)
 {
-  preciceTrace3("performTestVertices()", testDim, positive, offset);
+  preciceTrace("performTestVertices()", testDim, positive, offset);
   int dim = offset.size();
   using utils::DynVector;
   assertion(not tarch::la::oneGreater(offset, DynVector(dim,1.0)));
@@ -201,7 +201,7 @@ void FindVoxelContentTest:: performTestEdges
   bool                    positive,
   const utils::DynVector& offset)
 {
-  preciceTrace3("performTestEdges()", testDim, positive, offset);
+  preciceTrace("performTestEdges()", testDim, positive, offset);
   int dim = offset.size();
   using utils::DynVector;
   assertion(not tarch::la::oneGreater(offset, DynVector(dim,1.0)));
@@ -369,7 +369,7 @@ void FindVoxelContentTest:: performTestTriangles
   int  secondDimension,
   bool positive)
 {
-  preciceTrace2("performTestTriangles()", testDim, positive);
+  preciceTrace("performTestTriangles()", testDim, positive);
   int dim = 3;
   using utils::Vector3D;
   assertion(testDim != secondDimension);

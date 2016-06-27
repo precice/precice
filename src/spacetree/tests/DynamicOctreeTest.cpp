@@ -1249,7 +1249,7 @@ void DynamicOctreeTest:: run()
 //  bool                    positive,
 //  const utils::DynVector& offset )
 //{
-//  preciceTrace3 ( "performTestSearchContentVertices()", testDim, positive, offset );
+//  preciceTrace ( "performTestSearchContentVertices()", testDim, positive, offset );
 //  int dim = offset.size();
 //  assertion ( not tarch::la::oneGreater(offset, utils::DynVector(dim,1.0)) );
 //  assertion ( tarch::la::allGreater(offset, utils::DynVector(dim,-1.0)) );
@@ -1459,7 +1459,7 @@ void DynamicOctreeTest:: run()
 //  bool                   positive,
 //  const utils::DynVector& offset )
 //{
-//  preciceTrace3 ( "performTestSearchContentEdges()", testDim, positive, offset );
+//  preciceTrace ( "performTestSearchContentEdges()", testDim, positive, offset );
 //  int dim = offset.size();
 //  assertion ( not tarch::la::oneGreater(offset, utils::DynVector(dim,1.0)) );
 //  assertion ( tarch::la::allGreater(offset, utils::DynVector(dim,-1.0)) );
@@ -1674,7 +1674,7 @@ void DynamicOctreeTest:: run()
 //  int  secondDimension,
 //  bool positive )
 //{
-//  preciceTrace2 ( "performTestSearchContentTriangles()", testDim, positive );
+//  preciceTrace ( "performTestSearchContentTriangles()", testDim, positive );
 //  int dim = 3;
 //  assertion ( testDim != secondDimension );
 //  bool flipNormals = false;

@@ -374,7 +374,7 @@ PointToPointCommunication::PointToPointCommunication(
 }
 
 PointToPointCommunication::~PointToPointCommunication() {
-  preciceTrace1("~PointToPointCommunication()", _isConnected);
+  preciceTrace("~PointToPointCommunication()", _isConnected);
 
   closeConnection();
 }
@@ -387,7 +387,7 @@ PointToPointCommunication::isConnected() {
 void
 PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
                                             std::string const& nameRequester) {
-  preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+  preciceTrace("acceptConnection()", nameAcceptor, nameRequester);
 
   preciceCheck(not isConnected(), "acceptConnection()", "Already connected!");
 
@@ -534,7 +534,7 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 void
 PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
                                              std::string const& nameRequester) {
-  preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
+  preciceTrace("requestConnection()", nameAcceptor, nameRequester);
 
   preciceCheck(not isConnected(), "requestConnection()", "Already connected!");
 

@@ -262,7 +262,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int inputDataID,
   int outputDataID )
 {
-  preciceTrace2("map()", inputDataID, outputDataID);
+  preciceTrace("map()", inputDataID, outputDataID);
   assertion(_hasComputedMapping);
   assertion(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());

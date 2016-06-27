@@ -53,7 +53,7 @@ void Parallel:: splitCommunicator
   const std::string& groupName )
 {
 # ifndef PRECICE_NO_MPI
-  preciceTrace1 ("splitCommunicator()", groupName);
+  preciceTrace ("splitCommunicator()", groupName);
 
   // Exchange group information
   if (_accessorGroups.empty()) {

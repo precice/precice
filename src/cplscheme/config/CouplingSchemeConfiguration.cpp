@@ -172,7 +172,7 @@ void CouplingSchemeConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1("xmlTagCallback()", tag.getFullName());
+  preciceTrace("xmlTagCallback()", tag.getFullName());
   if (tag.getNamespace() == TAG){
     _config.type = tag.getName();
     _postProcConfig->clear();
@@ -302,7 +302,7 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1("xmlEndTagCallback()", tag.getFullName());
+  preciceTrace("xmlEndTagCallback()", tag.getFullName());
   if (tag.getNamespace() == TAG){
     if (_config.type == VALUE_SERIAL_EXPLICIT){
       std::string accessor(_config.participants[0]);
@@ -371,7 +371,7 @@ void CouplingSchemeConfiguration:: addCouplingScheme
   PtrCouplingScheme  cplScheme,
   const std::string& participantName )
 {
-  preciceTrace1 ( "addCouplingScheme()", participantName );
+  preciceTrace ( "addCouplingScheme()", participantName );
   if (utils::contained(participantName, _couplingSchemes)) {
     preciceDebug("Coupling scheme exists already for participant");
     if (utils::contained(participantName, _couplingSchemeCompositions)) {
@@ -404,7 +404,7 @@ void CouplingSchemeConfiguration:: addTypespecifcSubtags
   //const std::string& name,
   utils::XMLTag&     tag  )
 {
-  preciceTrace1( "addTypespecifcSubtags()", type );
+  preciceTrace( "addTypespecifcSubtags()", type );
   addTransientLimitTags(tag);
   _config.type = type;
   //_config.name = name;
@@ -647,7 +647,7 @@ void CouplingSchemeConfiguration:: addTagPostProcessing
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1( "addTagPostProcessing()",tag.getFullName());
+  preciceTrace( "addTagPostProcessing()",tag.getFullName());
   if(_postProcConfig.get()==nullptr){
     _postProcConfig = PtrPostProcessingConfiguration(
                           new PostProcessingConfiguration(_meshConfig));
@@ -739,7 +739,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialExplicitCouplingSche
 (
   const std::string& accessor ) const
 {
-  preciceTrace1("createSerialExplicitCouplingScheme()", accessor);
+  preciceTrace("createSerialExplicitCouplingScheme()", accessor);
   m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   SerialCouplingScheme* scheme = new SerialCouplingScheme (
@@ -757,7 +757,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelExplicitCouplingSc
 (
   const std::string& accessor ) const
 {
-  preciceTrace1("createParallelExplicitCouplingScheme()", accessor);
+  preciceTrace("createParallelExplicitCouplingScheme()", accessor);
   m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
@@ -775,7 +775,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createSerialImplicitCouplingSche
 (
   const std::string& accessor ) const
 {
-  preciceTrace1("createSerialImplicitCouplingScheme()", accessor);
+  preciceTrace("createSerialImplicitCouplingScheme()", accessor);
 
   m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N (
       _config.participants[0], _config.participants[1] );
@@ -819,7 +819,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createParallelImplicitCouplingSc
 (
   const std::string& accessor ) const
 {
-  preciceTrace1("createParallelImplicitCouplingScheme()", accessor);
+  preciceTrace("createParallelImplicitCouplingScheme()", accessor);
   m2n::M2N::SharedPointer m2n = _m2nConfig->getM2N(
       _config.participants[0], _config.participants[1] );
   ParallelCouplingScheme* scheme = new ParallelCouplingScheme (
@@ -862,7 +862,7 @@ PtrCouplingScheme CouplingSchemeConfiguration:: createMultiCouplingScheme
 (
   const std::string& accessor ) const
 {
-  preciceTrace1("createMultiCouplingScheme()", accessor);
+  preciceTrace("createMultiCouplingScheme()", accessor);
 
   BaseCouplingScheme* scheme;
 
@@ -929,7 +929,7 @@ CouplingSchemeConfiguration:: getTimesteppingMethod
 (
   const std::string& method ) const
 {
-  preciceTrace1 ( "getTimesteppingMethod()", method );
+  preciceTrace ( "getTimesteppingMethod()", method );
   if ( method == VALUE_FIXED ){
     return constants::FIXED_DT;
   }

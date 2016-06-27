@@ -103,7 +103,7 @@ void FindVoxelContent:: checkEdge
 (
   mesh::Edge& edge )
 {
-  preciceTrace2("checkEdge()", edge.vertex(0).getCoords(), edge.vertex(1).getCoords());
+  preciceTrace("checkEdge()", edge.vertex(0).getCoords(), edge.vertex(1).getCoords());
   using namespace tarch::la;
   using utils::Vector3D;
   using utils::Vector2D;
@@ -382,7 +382,7 @@ void FindVoxelContent:: checkTriangle
 (
   mesh::Triangle& triangle )
 {
-  preciceTrace2 ( "checkTriangle()", triangle.getID(), triangle.getCenter() );
+  preciceTrace ( "checkTriangle()", triangle.getID(), triangle.getCenter() );
   assertion ( _dimensions == 3, _dimensions );
   using namespace tarch::la;
   using utils::Vector3D;
@@ -888,7 +888,7 @@ bool FindVoxelContent:: computeIntersection
   const utils::Vector3D&  secondPointSegment,
   bool                    countTouchingAsIntersection ) const
 {
-  preciceTrace6 ( "computeIntersection()", squareCenter, halflengths,
+  preciceTrace ( "computeIntersection()", squareCenter, halflengths,
                   squareNormalDirection, firstPointSegment, secondPointSegment,
                   countTouchingAsIntersection );
   using namespace tarch::la;
@@ -1006,7 +1006,7 @@ bool FindVoxelContent:: computeIntersection
   const utils::Vector3D& secondPointEdge,
   bool                   countTouchingAsIntersection )
 {
-  preciceTrace6 ( "computeIntersection()", triangle.vertex(0).getCoords(),
+  preciceTrace ( "computeIntersection()", triangle.vertex(0).getCoords(),
                   triangle.vertex(1).getCoords(), triangle.vertex(2).getCoords(),
                   firstPointEdge, secondPointEdge, countTouchingAsIntersection );
   typedef utils::GeometryComputations Geocomp;
