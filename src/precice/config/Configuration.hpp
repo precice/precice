@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef CONFIGURATION_HPP_
-#define CONFIGURATION_HPP_
+#pragma once
 
 #include "precice/config/SolverInterfaceConfiguration.hpp"
 #include "utils/xml/XMLTag.hpp"
@@ -67,5 +63,3 @@ private:
 };
 
 }} // namespace precice, config
-
-#endif /* CONFIGURATION_HPP_ */

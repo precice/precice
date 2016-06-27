@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "Participant.hpp"
 #include "DataContext.hpp"
 #include "MeshContext.hpp"
@@ -342,7 +339,6 @@ void Participant:: setUseMaster(bool useMaster)
 {
   _useMaster = useMaster;
 }
-
 
 
 }} // namespace precice, impl
