@@ -2,6 +2,8 @@
 #include "utils/xml/ValidatorEquals.hpp"
 #include "utils/xml/ValidatorOr.hpp"
 
+#include <iostream>
+
 namespace precice {
 namespace config {
 
@@ -15,9 +17,13 @@ LogConfiguration::LogConfiguration
   TAG("log"),
   ATTR_FILE("file")
 {
+  // We do default initialization here, so logging will be initialized
+  // as soon as possible and also if there is no <log> tag.
+  precice::logging::setupLogging();
+  
   using namespace utils;
   std::string doc;
-  XMLTag tag(*this, TAG, XMLTag::OCCUR_ONCE);
+  XMLTag tag(*this, TAG, XMLTag::OCCUR_NOT_OR_ONCE);
   doc = "Configures logging";
   tag.setDocumentation(doc);
 
@@ -38,8 +44,6 @@ void LogConfiguration::xmlTagCallback
   preciceTrace("xmlTagCallback()", tag.getFullName());
   if (tag.getName() == TAG)
     precice::logging::setupLogging(tag.getStringAttributeValue(ATTR_FILE));
-  else
-    precice::logging::setupLogging(); // log tag has not been supplied., use default log config file
 }
 
 void LogConfiguration::xmlEndTagCallback
