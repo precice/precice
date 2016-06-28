@@ -59,6 +59,7 @@
 #include <signal.h> // used for installing crash handler
 
 #include "logging/Logger.hpp"
+#include "logging/LogConfiguration.hpp"
 
 
 using precice::utils::Event;
