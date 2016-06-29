@@ -153,7 +153,7 @@ if not conf.CheckCXXHeader("Eigen/Dense"):
     errorMissingHeader("Eigen/Dense", "Eigen")
     Exit(1)
 if env["build"] == "debug":
-        env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
+    env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
 
 # ====== Boost ======
 if env["boost_inst"]:

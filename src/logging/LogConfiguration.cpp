@@ -9,7 +9,6 @@
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
 #include <boost/log/attributes/mutable_constant.hpp>
-#include <boost/log/expressions/keyword.hpp>
 #include <boost/log/utility/setup/console.hpp>
 #include <boost/log/support/date_time.hpp>
 
@@ -103,6 +102,9 @@ LoggingConfiguration readLogConfFile(std::string filename)
   return retVal;
 }
 
+// Default values for filter and format. They are also used from config/LogConfiguration.cpp
+const std::string BackendConfiguration::default_filter = "%Severity% > debug";
+const std::string BackendConfiguration::default_formatter = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%Line% in %Function%: %Message%";
 
 void BackendConfiguration::setOption(std::string key, std::string value)
 {
@@ -144,9 +146,14 @@ void setupLogging(LoggingConfiguration configs)
      << expressions::attr<std::string>("Function") 
      << ": "
      << expressions::message;
- 
+
+  // Add the default config
   if (configs.empty())
     configs.emplace_back();
+
+  // Reset
+  boost::log::core::get()->remove_all_sinks();
+  boost::log::core::get()->reset_filter();
   
   for (const auto& config : configs) {
     boost::shared_ptr<StreamBackend> backend;

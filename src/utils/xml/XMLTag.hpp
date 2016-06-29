@@ -45,7 +45,7 @@ public:
      * @brief Callback at end of XML tag and at end of subtag.
      *
      * At this callback, the attributes and all subtags of callingTag are parsed.
-     * This callback is first done for the listener, and then for th parent tag
+     * This callback is first done for the listener, and then for the parent tag
      * listener (if existing).
      */
     virtual void xmlEndTagCallback ( XMLTag& callingTag ) =0;

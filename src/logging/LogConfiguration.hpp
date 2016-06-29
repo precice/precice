@@ -8,13 +8,17 @@
 namespace precice {
 namespace logging {
 
+
 /// Holds the configuration for one logging backend (sink) and takes care of default values.
 struct BackendConfiguration
 {
+  static const std::string default_filter;
+  static const std::string default_formatter;
+  
   std::string type = "stream";
   std::string output = "stdout";
-  boost::log::filter filter = boost::log::parse_filter("%Severity% > debug");
-  boost::log::basic_formatter<char> format = boost::log::parse_formatter("(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%Line% in %Function%: %Message%");
+  boost::log::filter filter = boost::log::parse_filter(default_filter);
+  boost::log::basic_formatter<char> format = boost::log::parse_formatter(default_formatter);
 
   /// Sets on option, overwrites default values.
   void setOption(std::string key, std::string value);

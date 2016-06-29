@@ -13,28 +13,37 @@ precice::logging::Logger precice::config::LogConfiguration::_log("logging::confi
 LogConfiguration::LogConfiguration
 (
   utils::XMLTag& parent)
-:
-  TAG("log"),
-  ATTR_FILE("file")
 {
   // We do default initialization here, so logging will be initialized
   // as soon as possible and also if there is no <log> tag.
   precice::logging::setupLogging();
   
   using namespace utils;
-  std::string doc;
-  XMLTag tag(*this, TAG, XMLTag::OCCUR_NOT_OR_ONCE);
-  doc = "Configures logging";
-  tag.setDocumentation(doc);
+  XMLTag tagLog(*this, "log", XMLTag::OCCUR_NOT_OR_ONCE);
+  tagLog.setDocumentation("Configures logging");
 
-  XMLAttribute<std::string> attrFile(ATTR_FILE);
-  doc = "Logging configuration file.";
-  attrFile.setDocumentation(doc);
-  attrFile.setDefaultValue("log.conf");
+  XMLTag tagSink(*this, "sink", XMLTag::OCCUR_ARBITRARY);
+  XMLAttribute<std::string> attrType("type");
+  attrType.setDocumentation("Type of sink");
+  attrType.setValidator ( ValidatorEquals<std::string>("stream") || ValidatorEquals<std::string>("file") );
+  tagSink.addAttribute(attrType);
 
-  tag.addAttribute(attrFile);
+  XMLAttribute<std::string> attrOutput("output");
+  attrOutput.setDocumentation("Output. If type=stream it can be stdout or stderr. Otherwise it is a filename");
+  tagSink.addAttribute(attrOutput);
 
-  parent.addSubtag(tag);
+  XMLAttribute<std::string> attrFormat("format");
+  attrFormat.setDocumentation("Boost Log Format String");
+  attrFormat.setDefaultValue(precice::logging::BackendConfiguration::default_formatter);
+  tagSink.addAttribute(attrFormat);
+
+  XMLAttribute<std::string> attrFilter("filter");
+  attrFilter.setDocumentation("Boost Log Filter String");
+  attrFilter.setDefaultValue(precice::logging::BackendConfiguration::default_filter);
+  tagSink.addAttribute(attrFilter);
+
+  tagLog.addSubtag(tagSink);
+  parent.addSubtag(tagLog);
 }
 
 void LogConfiguration::xmlTagCallback
@@ -42,8 +51,14 @@ void LogConfiguration::xmlTagCallback
   utils::XMLTag& tag )
 {
   preciceTrace("xmlTagCallback()", tag.getFullName());
-  if (tag.getName() == TAG)
-    precice::logging::setupLogging(tag.getStringAttributeValue(ATTR_FILE));
+  if (tag.getName() == "sink") {
+    precice::logging::BackendConfiguration config;
+    config.setOption("type", tag.getStringAttributeValue("type"));
+    config.setOption("output", tag.getStringAttributeValue("output"));
+    config.setOption("filter", tag.getStringAttributeValue("filter"));
+    config.setOption("format", tag.getStringAttributeValue("format"));
+    _logconfig.push_back(config);
+  }
 }
 
 void LogConfiguration::xmlEndTagCallback
@@ -51,6 +66,8 @@ void LogConfiguration::xmlEndTagCallback
   utils::XMLTag& tag )
 {
   preciceTrace("xmlEndTagCallback()", tag.getFullName());
+  if (tag.getName() == "log")
+    precice::logging::setupLogging(_logconfig);
 }
 
 }} // namespace precice, config
