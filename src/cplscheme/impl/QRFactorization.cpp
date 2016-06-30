@@ -1,11 +1,3 @@
-/*
- * QRFactorization.cpp
- *
- *  Created on: June 16, 2016
- *      Author: Klaudius Scheufele
- */
-
-// Copyright (C) 2015 Universität Stuttgart
 #include "QRFactorization.hpp"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "utils/Dimensions.hpp"

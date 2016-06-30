@@ -1,10 +1,3 @@
-/*
- * ParallelMatrixOperations.hpp
- *
- *  Created on: Aug 21, 2015
- *      Author: Klaudius Scheufele
- */
-// Copyright (C) 2015 Universität Stuttgart
 #ifndef PRECICE_NO_MPI
 #ifndef PARALLELMATRIXOPERATIONS_HPP_
 #define PARALLELMATRIXOPERATIONS_HPP_

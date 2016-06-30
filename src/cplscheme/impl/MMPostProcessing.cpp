@@ -1,13 +1,3 @@
-/*
- * MMPostProcessing.cpp
- *
- *  Created on: Sep 18, 2015
- *      Author: Klaudius Scheufele
- */
-
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "MMPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"

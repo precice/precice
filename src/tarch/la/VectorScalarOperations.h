@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_LA_VECTORSCALAROPERATIONS_H_
 #define _TARCH_LA_VECTORSCALAROPERATIONS_H_
 
