@@ -1,16 +1,5 @@
-/*
- * MVQNPostProcessing.cpp
- *
- *  Created on: Dez 5, 2015
- *      Author: Klaudius Scheufele
- */
-
-
 #ifndef PRECICE_NO_MPI
 
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "MVQNPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "mesh/Mesh.hpp"
@@ -42,9 +31,6 @@ using precice::utils::Publisher;
 namespace precice {
 namespace cplscheme {
 namespace impl {
-
- //tarch::logging::Log MVQNPostProcessing::_log("precice::cplscheme::impl::MVQNPostProcessing");
-
 
 // ==================================================================================
 MVQNPostProcessing:: MVQNPostProcessing

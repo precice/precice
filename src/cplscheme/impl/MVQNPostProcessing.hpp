@@ -1,15 +1,3 @@
-/*
- * MVQNPostProcessing.hpp
- *
- *  Created on: Dez 5, 2015
- *      Author: Klaudius Scheufele
- */
-
-
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-
 #ifndef PRECICE_NO_MPI
 
 #ifndef PRECICE_CPLSCHEME_MVQNPOSTPROCESSING_HPP_
