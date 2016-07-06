@@ -1,13 +1,3 @@
-/*
- * BaseQNPostProcessing.cpp
- *
- *  Created on: Dez 5, 2015
- *      Author: Klaudius Scheufele
- */
-
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "BaseQNPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
@@ -81,7 +71,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _matrixColsBackup(),
   its(0),
   tSteps(0),
-  deletedColumns(0),
+  _nbDelCols(0),
   _infostringstream(std::ostringstream::ate),
   _infostream()
   //_debugOut()
@@ -114,7 +104,6 @@ void BaseQNPostProcessing::initialize(
     DataMap& cplData)
 {
   preciceTrace1("initialize()", cplData.size());
-  Event e(__func__, true, true); // time measurement, barrier
 
   /*
   std::stringstream sss;
@@ -282,6 +271,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
     DataMap& cplData)
 {
   preciceTrace("updateDiffernceMatrices()");
+  Event e("Base-QN_updateDifferenceMatrices()", true, true); // time measurement, barrier
 
   // Compute current residual: vertex-data - oldData
   _residuals = _values;
@@ -316,7 +306,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
         utils::appendFront(_matrixW, deltaXTilde);
 
         // insert column deltaR = _residuals - _oldResiduals at pos. 0 (front) into the
-        // QR decomposition and updae decomposition
+        // QR decomposition and update decomposition
 
         //apply scaling here
         _preconditioner->apply(deltaR);
@@ -344,7 +334,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
     _oldResiduals = _residuals;   // Store residuals
     _oldXTilde = _values;   // Store x_tilde
   }
-
+  //e.stop(true);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -359,7 +349,7 @@ void BaseQNPostProcessing::performPostProcessing
     DataMap& cplData)
 {
   preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("Base-QN_performPostProcessing()", true, true); // time measurement, barrier
 
   using namespace tarch::la;
   assertion(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
@@ -444,6 +434,7 @@ void BaseQNPostProcessing::performPostProcessing
     _preconditioner->update(false, _values, _residuals);
     // apply scaling to V, V' := P * V (only needed to reset the QR-dec of V)
     _preconditioner->apply(_matrixV);
+
     if(_preconditioner->requireNewQR()){
       if(not (_filter==PostProcessing::QR2FILTER)){ //for QR2 filter, there is no need to do this twice
         _qrV.reset(_matrixV, getLSSystemRows());
@@ -464,9 +455,6 @@ void BaseQNPostProcessing::performPostProcessing
      */
     Eigen::VectorXd xUpdate = Eigen::VectorXd::Zero(_residuals.size());
     computeQNUpdate(cplData, xUpdate);
-
-    Event e_revertPrecond("revertPreconditioner", true, true); // time measurement, barrier
-    e_revertPrecond.stop();                                   // -------------
 
     /**
      * apply quasiNewton update
@@ -524,13 +512,15 @@ void BaseQNPostProcessing::performPostProcessing
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
+//  e.stop(true);
 }
 
 
 void BaseQNPostProcessing::applyFilter()
 {
   preciceTrace1(__func__,_filter);
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("Base-QN_applyFilter()", true, true); // time measurement, barrier
+
   if (_filter == PostProcessing::NOFILTER) {
     // do nothing
   } else {
@@ -546,6 +536,7 @@ void BaseQNPostProcessing::applyFilter()
     }
     assertion(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
+//  e.stop(true);
 }
 
 
@@ -604,19 +595,15 @@ void BaseQNPostProcessing::iterationsConverged
     DataMap & cplData)
 {
   preciceTrace(__func__);
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("Base-QN_iterationsConvegred()", true, true); // time measurement, barrier
 
-  // debugging info, remove if not needed anymore:
-  // -----------------------
-  //_infostringstream << "\n ---------------- deletedColumns:" << deletedColumns
-  //    << "\n\n ### time step:" << tSteps + 1 << " ###" << std::endl;
   if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
-    _infostringstream<<"# time step "<<tSteps<<" converged #\n iterations: "<<its<<"\n used cols: "<<getLSSystemCols()<<"\n del cols: "<<deletedColumns<<std::endl;
+    _infostringstream<<"# time step "<<tSteps<<" converged #\n iterations: "<<its
+                     <<"\n used cols: "<<getLSSystemCols()<<"\n del cols: "<<_nbDelCols<<std::endl;
 
   its = 0;
   tSteps++;
-  deletedColumns = 0;
-  // -----------------------
+  _nbDelCols = 0;
 
   // the most recent differences for the V, W matrices have not been added so far
   // this has to be done in iterations converged, as PP won't be called any more if 
@@ -691,6 +678,7 @@ void BaseQNPostProcessing::iterationsConverged
 
   _matrixCols.push_front(0);
   _firstIteration = true;
+//  e.stop(true);
 }
 
 /** ---------------------------------------------------------------------------------------------
@@ -706,7 +694,7 @@ void BaseQNPostProcessing::removeMatrixColumn
   preciceTrace2("removeMatrixColumn()", columnIndex, _matrixV.cols());
 
   // debugging information, can be removed
-  deletedColumns++;
+  _nbDelCols++;
 
   assertion(_matrixV.cols() > 1);
   utils::removeColumnFromMatrix(_matrixV, columnIndex);
@@ -741,7 +729,7 @@ void BaseQNPostProcessing::importState(
 
 int BaseQNPostProcessing::getDeletedColumns()
 {
-  return deletedColumns;
+  return _nbDelCols;
 }
 
 int BaseQNPostProcessing::getLSSystemCols()

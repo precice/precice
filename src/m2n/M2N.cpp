@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 #include "M2N.hpp"
 
@@ -51,7 +48,7 @@ void M2N:: acceptMasterConnection (
 {
   preciceTrace2("acceptMasterConnection()", nameAcceptor, nameRequester);
 
-  Event e("M2N::acceptMasterConnection");
+  //Event e("M2N::acceptMasterConnection");
 
   if(not utils::MasterSlave::_slaveMode){
     assertion(_masterCom.use_count()>0);
@@ -182,7 +179,7 @@ void M2N:: send (
 
 #ifdef M2N_PRE_SYNCHRONIZE
     if(not precice::testMode){
-      Event e("M2N::send/synchronize", true);
+//      Event e("M2N::send/synchronize", true);
 
       if(not utils::MasterSlave::_slaveMode){
         bool ack;
@@ -234,7 +231,7 @@ void M2N:: receive (
 
 #ifdef M2N_PRE_SYNCHRONIZE
     if(not precice::testMode){
-      Event e("M2N::receive/synchronize", true);
+//      Event e("M2N::receive/synchronize", true);
 
       if(not utils::MasterSlave::_slaveMode){
         bool ack;

@@ -184,10 +184,10 @@ void EventRegistry::print(std::ostream &out, bool terse)
     if (not terse) {
       out << "Run finished at " << std::asctime(std::localtime(&currentTime));
 
-      out << "Global runtime = "
+      out << "Global runtime       = "
           << std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count() << "ms / "
-          << std::chrono::duration_cast<std::chrono::seconds>(globalDuration).count() << "s"
-          << "\n" << "\n";
+          << std::chrono::duration_cast<std::chrono::seconds>(globalDuration).count() << "s" << std::endl
+          << "Number of processors = " << Parallel::getCommunicatorSize() << std::endl << std::endl;
 
       out << "Event                                Count   Total[ms]     Max[ms]     Min[ms]     Avg[ms]      T[%]" << endl;
       out << "----------------------------------------------------------------------------------------------------" << endl;
@@ -220,7 +220,8 @@ void EventRegistry::print(std::ostream &out, bool terse)
     }
     else // terse output
     {
-      out << "# Run finished at " << std::asctime(std::localtime(&currentTime));
+      out << "# Run finished at: " << std::asctime(std::localtime(&currentTime))
+          << "# Number of processors: " << Parallel::getCommunicatorSize() << std::endl;
       
       auto global = std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count();
 

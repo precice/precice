@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SolverInterfaceImpl.hpp"
 #include "precice/impl/Participant.hpp"
 #include "precice/impl/WatchPoint.hpp"
@@ -129,12 +126,6 @@ SolverInterfaceImpl:: ~SolverInterfaceImpl()
   preciceTrace("~SolverInterfaceImpl()");
   if (_requestManager != nullptr){
     delete _requestManager;
-  }
-  precice::utils::Events_Finalize();
-  if (not precice::utils::MasterSlave::_slaveMode) {
-    precice::utils::EventRegistry r;
-    r.print();
-    r.print("EventTimings.log", true);
   }
 }
 
@@ -609,7 +600,16 @@ void SolverInterfaceImpl:: finalize()
     _accessor->getClientServerCommunication()->closeConnection();
   }
 
-  if(not precice::testMode && not _serverMode ){
+  // Stop and print Event logging
+  precice::utils::Events_Finalize();
+  if (not precice::utils::MasterSlave::_slaveMode) {
+    precice::utils::EventRegistry r;
+    r.print();
+    r.print("EventTimings.log", true);
+  }
+
+  // Tear down MPI and PETSc
+  if (not precice::testMode && not _serverMode ) {
     utils::Petsc::finalize();
     utils::Parallel::finalizeMPI();
   }

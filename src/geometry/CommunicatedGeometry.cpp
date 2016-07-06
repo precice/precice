@@ -97,7 +97,7 @@ void CommunicatedGeometry:: sendMesh(
   // Gather Mesh
   preciceInfo("sendMesh()", "Gather mesh " << seed.getName() );
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ) {
-    Event e("gather mesh");
+//    Event e("gather mesh");
     if (utils::MasterSlave::_slaveMode) {
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh( seed, 0 );
     }
@@ -128,7 +128,7 @@ void CommunicatedGeometry:: sendMesh(
 
   // Send (global) Mesh
   preciceInfo("sendMesh()", "Send global mesh " << seed.getName());
-  Event e("send global mesh");
+//  Event e("send global mesh");
   if (not utils::MasterSlave::_slaveMode) {
     preciceCheck ( globalMesh.vertices().size() > 0,
                    "specializedCreate()", "Participant \"" << _accessorName
@@ -146,7 +146,7 @@ void CommunicatedGeometry:: receiveMesh(
 {
   preciceInfo("receiveMesh()", "Receive global mesh " << seed.getName() );
   if (not utils::MasterSlave::_slaveMode) {
-    Event e("receive global mesh");
+//    Event e("receive global mesh");
     assertion ( seed.vertices().size() == 0 );
     assertion ( utils::contained(_accessorName, _receivers) );
     m2n::M2N::SharedPointer m2n ( _receivers[_accessorName] );

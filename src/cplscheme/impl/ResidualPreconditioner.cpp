@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ResidualPreconditioner.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -47,9 +44,6 @@ void ResidualPreconditioner::_update_(bool timestepComplete, const Eigen::Vector
     }
 
     _requireNewQR = true;
-    if(_needsGlobalWeights){
-      communicateGlobalWeights();
-    }
   }
 }
 

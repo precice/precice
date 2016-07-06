@@ -1,8 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at
-// http://www5.in.tum.de/wiki/index.php/PreCICE_License
-
 #include "Communication.hpp"
 
 #include "Request.hpp"
@@ -43,6 +38,32 @@ Communication::reduceSum(double* itemsToSend, double* itemsToReceive, int size, 
   preciceTrace1("allreduce(double*)", size);
 
   auto request = aSend(itemsToSend, size, rankMaster);
+  request->wait();
+}
+
+/**
+ * Attention: this method modifies the input buffer.
+ */
+void
+Communication::reduceSum(int& itemsToSend, int& itemsToReceive) {
+  preciceTrace("broadcast(int)");
+
+  itemsToReceive = itemsToSend;
+
+  // receive local results from slaves
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+    auto request = aReceive(&itemsToSend, 1, rank + _rankOffset);
+    request->wait();
+    itemsToReceive += itemsToSend;
+  }
+}
+
+
+void
+Communication::reduceSum(int& itemsToSend, int& itemsToReceive, int rankMaster) {
+  preciceTrace("allreduce(int)");
+
+  auto request = aSend(&itemsToSend, 1, rankMaster);
   request->wait();
 }
 
@@ -126,6 +147,45 @@ Communication::allreduceSum(double& itemsToSend, double& itemsToReceive) {
 void
 Communication::allreduceSum(double& itemsToSend, double& itemsToReceive, int rankMaster) {
   preciceTrace("allreduce(double)");
+
+  auto request = aSend(&itemsToSend, 1, rankMaster);
+  request->wait();
+  // receive reduced data from master
+  receive(&itemsToReceive, 1, rankMaster + _rankOffset);
+}
+
+/**
+ * Attention: this method modifies the input buffer.
+ */
+void
+Communication::allreduceSum(int& itemsToSend, int& itemsToReceive) {
+  preciceTrace("broadcast(int)");
+
+  itemsToReceive = itemsToSend;
+
+  // receive local results from slaves
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+    auto request = aReceive(&itemsToSend, 1, rank + _rankOffset);
+    request->wait();
+    itemsToReceive += itemsToSend;
+  }
+
+  // send reduced result to all slaves
+  std::vector<Request::SharedPointer> requests;
+  requests.reserve(getRemoteCommunicatorSize());
+  for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
+    auto request = aSend(&itemsToReceive, 1, rank + _rankOffset);
+    requests.push_back(request);
+  }
+  Request::wait(requests);
+}
+
+/**
+ * Attention: this method modifies the input buffer.
+ */
+void
+Communication::allreduceSum(int& itemsToSend, int& itemsToReceive, int rankMaster) {
+  preciceTrace("allreduce(int)");
 
   auto request = aSend(&itemsToSend, 1, rankMaster);
   request->wait();

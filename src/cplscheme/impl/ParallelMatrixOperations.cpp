@@ -1,10 +1,3 @@
-/*
- * ParallelMatrixOperations.cpp
- *
- *  Created on: Aug 21, 2015
- *      Author: Klaudius Scheufele
- */
-// Copyright (C) 2015 Universität Stuttgart
 #ifndef PRECICE_NO_MPI
 
 #include "ParallelMatrixOperations.hpp"
