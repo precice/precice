@@ -101,6 +101,11 @@ Vector::~Vector()
     ierr = VecDestroy(&vector); CHKERRV(ierr);
 }
 
+Vector::operator Vec&()
+{
+  return vector;
+}
+
 void Vector::init(PetscInt rows)
 {
   PetscErrorCode ierr = 0;
@@ -241,6 +246,11 @@ Matrix::~Matrix()
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized) // If PetscFinalize is called before ~Matrix
     ierr = MatDestroy(&matrix); CHKERRV(ierr);
+}
+
+Matrix::operator Mat&()
+{
+  return matrix;
 }
 
 void Matrix::assemble(MatAssemblyType type)

@@ -77,6 +77,9 @@ public:
 
   ~Vector();
 
+  /// Enables implicit conversion into a reference to a PETSc Vec type
+  operator Vec&();
+
   /// Sets the size and calls VecSetFromOptions
   void init(PetscInt rows);
 
@@ -127,6 +130,9 @@ public:
   Matrix(MPI_Comm comm = PETSC_COMM_WORLD, std::string name = "");
 
   ~Matrix();
+
+  /// Enables implicit conversion into a reference to a PETSc Mat type
+  operator Mat&();
 
   void assemble(MatAssemblyType type = MAT_FINAL_ASSEMBLY);
     
