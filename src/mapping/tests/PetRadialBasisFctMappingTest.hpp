@@ -91,6 +91,8 @@ private:
 
   void testDeadAxis3D();
 
+  void testSolutionCaching();
+
   struct VertexSpecification
   {
     int rank;

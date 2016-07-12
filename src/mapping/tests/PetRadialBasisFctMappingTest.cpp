@@ -39,6 +39,7 @@ void PetRadialBasisFctMappingTest:: run()
     testMethod(testPetCompactPolynomialC6);
     testMethod(testDeadAxis2D);
     testMethod(testDeadAxis3D);
+    testMethod(testSolutionCaching);
     PETSC_COMM_WORLD = MPI_COMM_WORLD;
   }
   
@@ -988,6 +989,57 @@ void PetRadialBasisFctMappingTest:: testDeadAxis3D()
   validateNumericalEquals ( outData->values()[1], 2.0 );
   validateNumericalEquals ( outData->values()[2], 2.9 );
   validateNumericalEquals ( outData->values()[3], 4.3 );
+}
+
+void PetRadialBasisFctMappingTest::testSolutionCaching()
+{
+  preciceTrace("testSolutionCaching()");
+  using Eigen::Vector2d;
+  int dimensions = 2;
+  
+  bool xDead = false, yDead = true, zDead = false;
+
+  ThinPlateSplines fct;
+  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
+                                                     xDead, yDead, zDead);
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
+  mesh::PtrData inData = inMesh->createData ( "InData", 1 );
+  int inDataID = inData->getID ();
+  inMesh->createVertex ( Vector2d(0.0, 1.0) );  inMesh->createVertex ( Vector2d(1.0, 1.0) );
+  inMesh->createVertex ( Vector2d(2.0, 1.0) );  inMesh->createVertex ( Vector2d(3.0, 1.0) );
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+  
+  inData->values() << 1.0, 2.0, 2.0, 1.0;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  int outDataID = outData->getID();
+  mesh::Vertex& vertex = outMesh->createVertex(Vector2d(0,0));
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, outMesh);
+  validateEquals(mapping.hasComputedMapping(), false );
+
+  vertex.setCoords(Vector2d(0.0, 3.0));
+  mapping.computeMapping();
+  validateEquals(mapping.previousSolution.size(), 0);
+  mapping.map(inDataID, outDataID);
+  validateEquals(mapping.hasComputedMapping(), true );
+  validateNumericalEquals ( outData->values()[0], 1.0 );
+
+  PetscInt its;
+  KSPGetIterationNumber(mapping._solver, &its);
+  validateEquals(its, 6);
+  validateEquals(mapping.previousSolution.size(), 1);
+  mapping.map(inDataID, outDataID);
+  KSPGetIterationNumber(mapping._solver, &its);
+  validateEquals(its, 0);
 }
 
 void PetRadialBasisFctMappingTest::addGlobalIndex(mesh::PtrMesh &mesh, int offset)

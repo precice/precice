@@ -7,7 +7,7 @@
 
 #include "mapping/Mapping.hpp"
 #include "impl/BasisFunctions.hpp"
-#include "tarch/la/DynamicVector.h"
+#include "tests/PetRadialBasisFctMappingTest.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
@@ -40,13 +40,12 @@ template<typename RADIAL_BASIS_FUNCTION_T>
 class PetRadialBasisFctMapping : public Mapping
 {
 public:
-
   /**
    * @brief Constructor.
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] function Radial basis function used for mapping.
-   * @param[in] solverRto Relative tolerance for the linear solver.
+   * @param[in] solverRtol Relative tolerance for the linear solver.
    *
    * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */
@@ -59,7 +58,7 @@ public:
     bool                    zDead,
     double                  solverRtol = 1e-9);
 
-  /// The Petsc KSP and the _deadAxis array
+  /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
 
   /// Computes the mapping coefficients from the in- and output mesh.
@@ -73,6 +72,8 @@ public:
 
   /// Maps input data to output data from input mesh to output mesh.
   virtual void map(int inputDataID, int outputDataID) override;
+
+  friend class precice::mapping::tests::PetRadialBasisFctMappingTest;
 
 private:
 
@@ -516,7 +517,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   assertion(_hasComputedMapping);
   assertion(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
-  using namespace tarch::la;
   PetscErrorCode ierr = 0;
   KSPConvergedReason convReason;
   auto& inValues = input()->data(inputDataID)->values();
@@ -548,7 +548,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
       // Gets the petsc::vector for the given combination of outputData, inputData and dimension
       // If none created yet, create one, based on _matrixC
-      petsc::Vector out = std::get<0>(
+      petsc::Vector& out = std::get<0>(
         previousSolution.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
                                  std::forward_as_tuple(_matrixC, "out"))
@@ -591,7 +591,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   }
   else { // Map CONSISTENT
     preciceDebug("Map consistent");
-    petsc::Vector p(_matrixC, "p");
+    petsc::Vector out(_matrixA, "out");
     petsc::Vector in(_matrixC, "in");
         
     ierr = VecSetLocalToGlobalMapping(in, _ISmapping); CHKERRV(ierr);
@@ -607,10 +607,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
       }
       in.assemble();
       
-      petsc::Vector out = std::get<0>(  // Save and reuse the solution from the previous iteration        
+      petsc::Vector& p = std::get<0>(  // Save and reuse the solution from the previous iteration
         previousSolution.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-                                 std::forward_as_tuple(_matrixA, "out"))
+                                 std::forward_as_tuple(_matrixC, "p"))
         )->second;
       
       ierr = KSPSolve(_solver, in, p); CHKERRV(ierr);
