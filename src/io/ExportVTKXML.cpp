@@ -75,25 +75,25 @@ void ExportVTKXML::processDataNamesAndDimensions
   mesh::Mesh& mesh)
 {
   if (not _isDataNamesAndDimensionsProcessed) {
-	_isDataNamesAndDimensionsProcessed = true;
+    _isDataNamesAndDimensionsProcessed = true;
     _meshDimensions = mesh.getDimensions();
     if (_writeNormals) {
-	  _vectorDataNames.push_back("VertexNormals ");
-	  _vectorDataDimensions.push_back(3);
+      _vectorDataNames.push_back("VertexNormals ");
+      _vectorDataDimensions.push_back(3);
     }
     for (mesh::PtrData data : mesh.data()) {
-	  int dataDimensions = data->getDimensions();
-	  std::string dataName = data->getName();
-	  if ( dataDimensions == 1) {
+      int dataDimensions = data->getDimensions();
+      std::string dataName = data->getName();
+      if ( dataDimensions == 1) {
         _scalarDataNames.push_back(dataName);
-	  } else if ( dataDimensions > 1 ) {
-	    _vectorDataNames.push_back(dataName + " ");
-	    _vectorDataDimensions.push_back(dataDimensions);
-	  } else {
-	    // TODO: Change to an assertion later
-	    std::cout << "Error! Dimensions <= 0";
-	    exit(-1);
-	  }
+      } else if ( dataDimensions > 1 ) {
+        _vectorDataNames.push_back(dataName + " ");
+        _vectorDataDimensions.push_back(dataDimensions);
+      } else {
+        // TODO: Change to an assertion later
+        std::cout << "Error! Dimensions <= 0";
+        exit(-1);
+      }
     }
     //if(mesh.edges().size() > 0 || mesh.triangles().size() > 0 || mesh.quads().size() > 0) {
     	//_isCellPresent = true;
@@ -112,7 +112,7 @@ void ExportVTKXML::writeMasterFile
 
   outMasterFile.open(fullMasterFilename.c_str());
   preciceCheck(outMasterFile, "doExport()", "Could not open master file \"" << fullMasterFilename
-      << "\" for VTKXML export!");
+    << "\" for VTKXML export!");
 
   outMasterFile << "<?xml version=\"1.0\"?>" << std::endl;
   outMasterFile << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"";
@@ -173,7 +173,7 @@ void ExportVTKXML::writeSubFile
   if (_meshDimensions == 2) {
     numCells = mesh.edges().size();
   } else {
-	  numCells = mesh.triangles().size() + mesh.quads().size();
+    numCells = mesh.triangles().size() + mesh.quads().size();
   }
 
   std::ofstream outSubFile;
@@ -219,63 +219,62 @@ void ExportVTKXML::exportGeometry
   if (_isCellPresent) {
     if (_meshDimensions == 2) { // write edges as cells
       outFile << "         <Cells>" << std::endl;
-	  outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-	  outFile << "               ";
-	  for (mesh::Edge & edge : mesh.edges()) {
-  	    writeLine(edge, outFile);
-  	  }
-	  outFile << std::endl;
-	  outFile << "            </DataArray> " << std::endl;
-	  outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-	  outFile << "               ";
-	  for (int i = 1; i <= mesh.edges().size(); i++) {
-		  outFile << 2*i << "  ";
-	  }
-	  outFile << std::endl;
-	  outFile << "            </DataArray>" << std::endl;
-	  outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-	  outFile << "               ";
-	  for (int i = 1; i <= mesh.edges().size(); i++) {
-		  outFile << 3 << "  ";
-	  }
-	  outFile << std::endl;
-	  outFile << "            </DataArray>" << std::endl;
-	  outFile << "         </Cells>" << std::endl;
-
+      outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+      outFile << "               ";
+      for (mesh::Edge & edge : mesh.edges()) {
+        writeLine(edge, outFile);
+      }
+      outFile << std::endl;
+      outFile << "            </DataArray> " << std::endl;
+      outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+      outFile << "               ";
+      for (int i = 1; i <= mesh.edges().size(); i++) {
+        outFile << 2*i << "  ";
+      }
+      outFile << std::endl;
+      outFile << "            </DataArray>" << std::endl;
+      outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+      outFile << "               ";
+      for (int i = 1; i <= mesh.edges().size(); i++) {
+        outFile << 3 << "  ";
+      }
+      outFile << std::endl;
+      outFile << "            </DataArray>" << std::endl;
+      outFile << "         </Cells>" << std::endl;
     } else { // write triangles and quads as cells
 
-	  outFile << "         <Cells>" << std::endl;
-	  outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-	  outFile << "               ";
-	  for (mesh::Triangle& triangle : mesh.triangles()) {
-	    writeTriangle(triangle, outFile);
-	  }
-	  for (mesh::Quad& quad : mesh.quads()) {
-	    writeQuadrangle(quad, outFile);
-	  }
-	  outFile << std::endl;
-	  outFile << "            </DataArray> " << std::endl;
-	  outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-	  outFile << "               ";
-	  for (int i = 1; i <= mesh.triangles().size(); i++) {
-      outFile << 3*i << "  ";
-	  }
-	  for (int i = 1; i <= mesh.quads().size(); i++) {
-	    outFile << 4*i << "  ";
-	  }
-	  outFile << std::endl;
-	  outFile << "            </DataArray>" << std::endl;
-	  outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-	  outFile << "               ";
-	  for (int i = 1; i <= mesh.triangles().size(); i++) {
+      outFile << "         <Cells>" << std::endl;
+      outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+      outFile << "               ";
+      for (mesh::Triangle& triangle : mesh.triangles()) {
+        writeTriangle(triangle, outFile);
+      }
+      for (mesh::Quad& quad : mesh.quads()) {
+        writeQuadrangle(quad, outFile);
+      }
+      outFile << std::endl;
+      outFile << "            </DataArray> " << std::endl;
+      outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+      outFile << "               ";
+      for (int i = 1; i <= mesh.triangles().size(); i++) {
+        outFile << 3*i << "  ";
+      }
+      for (int i = 1; i <= mesh.quads().size(); i++) {
+        outFile << 4*i << "  ";
+      }
+      outFile << std::endl;
+      outFile << "            </DataArray>" << std::endl;
+      outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+      outFile << "               ";
+      for (int i = 1; i <= mesh.triangles().size(); i++) {
         outFile << 5 << "  ";
-	  }
-	  for (int i = 1; i <= mesh.quads().size(); i++) {
-	    outFile << 9 << "  ";
-	  }
-	  outFile << std::endl;
-	  outFile << "            </DataArray>" << std::endl;
-	  outFile << "         </Cells>" << std::endl;
+      }
+      for (int i = 1; i <= mesh.quads().size(); i++) {
+        outFile << 9 << "  ";
+      }
+      outFile << std::endl;
+      outFile << "            </DataArray>" << std::endl;
+      outFile << "         </Cells>" << std::endl;
     }
   }
 }
@@ -287,40 +286,39 @@ void ExportVTKXML:: exportData
 {
   outFile << "         <PointData Scalars=\"";
   for (int i = 0; i < _scalarDataNames.size(); i++) {
-	outFile << _scalarDataNames[i] << " ";
+    outFile << _scalarDataNames[i] << " ";
   }
   outFile << "\" Vectors=\"";
   for (int i = 0; i < _vectorDataNames.size(); i++) {
-	outFile << _vectorDataNames[i] << " ";
+    outFile << _vectorDataNames[i] << " ";
   }
   outFile << "\">" << std::endl;
 
   for (mesh::PtrData data : mesh.data()) { // Plot vertex data
-	Eigen::VectorXd& values = data->values();
-	int dataDimensions = data->getDimensions();
-	std::string dataName(data->getName());
-	outFile << "            <DataArray type=\"Float32\" Name=\"" << dataName << "\" NumberOfComponents=\"" << dataDimensions << "\" format=\"ascii\">" << std::endl;
-	outFile << "               ";
-	if(dataDimensions > 1) {
-	  utils::DynVector viewTemp(dataDimensions);
-	  for (mesh::Vertex& vertex : mesh.vertices()) {
-  		int offset = vertex.getID() * dataDimensions;
-		  for(int i=0; i < dataDimensions; i++){
-		    viewTemp[i] = values(offset + i);
-		  }
-		  for(int i = 0; i < dataDimensions; i++){
-	      outFile << viewTemp[i] << " ";
-		  }
-		  outFile << " ";
-	    }
-	  } else if(dataDimensions == 1) {
-	    for (mesh::Vertex& vertex : mesh.vertices()) {
-		    outFile << values(vertex.getID()) << " ";
-	    }
-	  }
-	  outFile << std::endl << "            </DataArray>" << std::endl;
+    Eigen::VectorXd& values = data->values();
+    int dataDimensions = data->getDimensions();
+    std::string dataName(data->getName());
+    outFile << "            <DataArray type=\"Float32\" Name=\"" << dataName << "\" NumberOfComponents=\"" << dataDimensions << "\" format=\"ascii\">" << std::endl;
+    outFile << "               ";
+    if(dataDimensions > 1) {
+      utils::DynVector viewTemp(dataDimensions);
+      for (mesh::Vertex& vertex : mesh.vertices()) {
+        int offset = vertex.getID() * dataDimensions;
+        for(int i=0; i < dataDimensions; i++){
+          viewTemp[i] = values(offset + i);
+        }
+        for(int i = 0; i < dataDimensions; i++){
+          outFile << viewTemp[i] << " ";
+        }
+        outFile << " ";
+      }
+    } else if(dataDimensions == 1) {
+      for (mesh::Vertex& vertex : mesh.vertices()) {
+        outFile << values(vertex.getID()) << " ";
+      }
+    }
+    outFile << std::endl << "            </DataArray>" << std::endl;
   }
-
   outFile << "         </PointData> " << std::endl;
 }
 
