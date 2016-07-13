@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "AitkenPostProcessing.hpp"
 #include "../CouplingData.hpp"
 #include "mesh/Data.hpp"
@@ -66,7 +63,7 @@ void AitkenPostProcessing:: initialize
   for (DataMap::value_type& pair : cplData) {
     int cols = pair.second->oldValues.cols();
     if (cols < 1){
-      assertion1(pair.second->values->size() > 0, pair.first);
+      assertion(pair.second->values->size() > 0, pair.first);
       utils::append(pair.second->oldValues,
           (Eigen::VectorXd) Eigen::VectorXd::Zero(pair.second->values->size()));
     }

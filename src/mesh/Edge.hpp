@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_MESH_EDGE_HPP_
 #define PRECICE_MESH_EDGE_HPP_
 
@@ -116,7 +113,7 @@ inline Vertex& Edge:: vertex
 (
   int i )
 {
-  assertion1 ( (i == 0) || (i == 1), i );
+  assertion ( (i == 0) || (i == 1), i );
   return *_vertices[i];
 }
 
@@ -124,7 +121,7 @@ inline const Vertex& Edge:: vertex
 (
   int i ) const
 {
-  assertion1 ( (i==0) || (i==1), i );
+  assertion ( (i==0) || (i==1), i );
   return *_vertices[i];
 }
 
@@ -138,7 +135,7 @@ void Edge:: setNormal
 (
   const VECTOR_T& normal )
 {
-  assertion2 ( normal.size() == _vertices[0]->getDimensions(), normal,
+  assertion ( normal.size() == _vertices[0]->getDimensions(), normal,
                _vertices[0]->getDimensions() );
   _normal = normal;
 }
@@ -148,7 +145,7 @@ void Edge:: setCenter
 (
   const VECTOR_T& center )
 {
-  assertion2 ( center.size() == _vertices[0]->getDimensions(), center,
+  assertion ( center.size() == _vertices[0]->getDimensions(), center,
                _vertices[0]->getDimensions() );
   _center = center;
 }

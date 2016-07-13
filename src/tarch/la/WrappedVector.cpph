@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_LA_WRAPPEDVECTOR_CPPH_
 #define _TARCH_LA_WRAPPEDVECTOR_CPPH_
 
@@ -17,8 +14,8 @@ template<int Size, typename Scalar>
 Scalar& WrappedVector<Size,Scalar>::operator[](
   int index
 ) {
-  assertion1 (index >= 0, index);
-  assertion1 (index < Size, index);
+  assertion (index >= 0, index);
+  assertion (index < Size, index);
   return reinterpret_cast<Scalar*>(this)[index];
 }
 
@@ -26,8 +23,8 @@ template<int Size, typename Scalar>
 const Scalar& WrappedVector<Size,Scalar>::operator[](
   int index
 ) const {
-  assertion1 (index >= 0, index);
-  assertion1 (index < Size, index);
+  assertion (index >= 0, index);
+  assertion (index < Size, index);
   return reinterpret_cast<const Scalar*>(this)[index];
 }
 

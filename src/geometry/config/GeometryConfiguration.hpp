@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef GEOMETRY_CONFIG_GEOMETRYCONFIGURATION_HPP_
-#define GEOMETRY_CONFIG_GEOMETRYCONFIGURATION_HPP_
+#pragma once
 
 #include "geometry/Geometry.hpp"
 #include "geometry/SharedPointer.hpp"
@@ -208,5 +204,3 @@ private:
 };
 
 }} // namespace precice, geoemtry
-
-#endif /*GEOMETRY_CONFIG_GEOMETRYCONFIGURATION_HPP_*/

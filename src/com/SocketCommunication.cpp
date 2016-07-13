@@ -1,7 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at
-// http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NO_SOCKETS
 
 #include "SocketCommunication.hpp"
@@ -508,7 +504,7 @@ SocketCommunication::send(std::string const& itemToSend, int rankReceiver) {
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+  assertion((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
@@ -529,7 +525,7 @@ SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+  assertion((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
@@ -548,7 +544,7 @@ SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+  assertion((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
@@ -574,7 +570,7 @@ SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+  assertion((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
@@ -593,7 +589,7 @@ SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+  assertion((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
@@ -619,7 +615,7 @@ SocketCommunication::send(double itemToSend, int rankReceiver) {
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+  assertion((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
@@ -643,7 +639,7 @@ SocketCommunication::send(int itemToSend, int rankReceiver) {
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+  assertion((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
@@ -667,7 +663,7 @@ SocketCommunication::send(bool itemToSend, int rankReceiver) {
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+  assertion((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
@@ -686,7 +682,7 @@ SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
 
   rankReceiver = rankReceiver - _rankOffset;
 
-  assertion2((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
+  assertion((rankReceiver >= 0) && (rankReceiver < (int)_sockets.size()),
              rankReceiver,
              _sockets.size());
   assertion(isConnected());
@@ -712,7 +708,7 @@ SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
 
   rankSender = rankSender - _rankOffset;
 
-  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+  assertion((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
@@ -736,7 +732,7 @@ SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
 
   rankSender = rankSender - _rankOffset;
 
-  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+  assertion((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
@@ -755,7 +751,7 @@ SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
 
   rankSender = rankSender - _rankOffset;
 
-  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+  assertion((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
@@ -781,7 +777,7 @@ SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
 
   rankSender = rankSender - _rankOffset;
 
-  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+  assertion((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
@@ -802,7 +798,7 @@ SocketCommunication::aReceive(double* itemsToReceive,
 
   rankSender = rankSender - _rankOffset;
 
-  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+  assertion((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
@@ -828,7 +824,7 @@ SocketCommunication::receive(double& itemToReceive, int rankSender) {
 
   rankSender = rankSender - _rankOffset;
 
-  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+  assertion((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
@@ -852,7 +848,7 @@ SocketCommunication::receive(int& itemToReceive, int rankSender) {
 
   rankSender = rankSender - _rankOffset;
 
-  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+  assertion((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
@@ -876,7 +872,7 @@ SocketCommunication::receive(bool& itemToReceive, int rankSender) {
 
   rankSender = rankSender - _rankOffset;
 
-  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+  assertion((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());
@@ -895,7 +891,7 @@ SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
 
   rankSender = rankSender - _rankOffset;
 
-  assertion2((rankSender >= 0) && (rankSender < (int)_sockets.size()),
+  assertion((rankSender >= 0) && (rankSender < (int)_sockets.size()),
              rankSender,
              _sockets.size());
   assertion(isConnected());

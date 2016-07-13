@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_SPACETREE_PEANOTREECELL3D_HPP_
 #define PRECICE_SPACETREE_PEANOTREECELL3D_HPP_
 
@@ -91,7 +88,7 @@ public:
 
   PeanotreeCell3D& child ( int index )
   {
-    assertion2 ( (index >= 0) && (index < (int)_childs.size()), index, _childs.size() );
+    assertion ( (index >= 0) && (index < (int)_childs.size()), index, _childs.size() );
     return _childs[index];
   }
 

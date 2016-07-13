@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "GeometryConfiguration.hpp"
 #include "geometry/Sphere.hpp"
 #include "geometry/Bubble.hpp"
@@ -137,7 +134,7 @@ void GeometryConfiguration:: setDimensions
   int dimensions )
 {
   preciceTrace1("setDimensions()", dimensions);
-  assertion1((dimensions == 2) || (dimensions == 3), dimensions);
+  assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
@@ -247,7 +244,7 @@ void GeometryConfiguration:: xmlEndTagCallback
   preciceTrace1 ( "xmlEndTagCallback()", tag.getFullName() );
   if (tag.getNamespace() == TAG ) {
     assertion(not _readData.noReadData);
-    assertion2(_readData.type == tag.getName(), _readData.type, tag.getName());
+    assertion(_readData.type == tag.getName(), _readData.type, tag.getName());
     if (tag.getName() == VALUE_BUILTIN_CUBOID){
       addCuboid();
     }

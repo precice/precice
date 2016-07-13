@@ -1,12 +1,3 @@
-/*
- * IQNILSPostProcessing.cpp
- *
- *  Created on: Dez 5, 2015
- *      Author: Klaudius Scheufele
- */
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "IQNILSPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
@@ -56,21 +47,24 @@ IQNILSPostProcessing:: IQNILSPostProcessing
 {
 }
 
-void IQNILSPostProcessing:: initialize
+void IQNILSPostProcessing::initialize
 (
   DataMap& cplData )
 {
+  Event e("initialize()", true, true); // time measurement, barrier
+
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
 
   double init = 0.0;
   // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
   for (DataMap::value_type& pair: cplData){
-	if (not utils::contained(pair.first, _dataIDs)){
-	  int secondaryEntries = pair.second->values->size();
-	  utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
-	}
+    if (not utils::contained(pair.first, _dataIDs)){
+      int secondaryEntries = pair.second->values->size();
+      utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
+    }
   }
+//  e.stop(true);
 }
 
 
@@ -78,12 +72,12 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
 {
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("IQNILSPostProcessing::updateDifferenceMatrices", true, true); // time measurement, barrier
 	// Compute residuals of secondary data
 	for (int id: _secondaryDataIDs){
 		Eigen::VectorXd& secResiduals = _secondaryResiduals[id];
 		PtrCouplingData data = cplData[id];
-		assertion2(secResiduals.size() == data->values->size(),
+		assertion(secResiduals.size() == data->values->size(),
 				secResiduals.size(), data->values->size());
 		secResiduals = *(data->values);
 		secResiduals -= data->oldValues.col(0);
@@ -112,7 +106,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 			// Compute delta_x_tilde for secondary data
 			for (int id: _secondaryDataIDs) {
 				Eigen::MatrixXd& secW = _secondaryMatricesW[id];
-				assertion2(secW.rows() == cplData[id]->values->size(), secW.rows(), cplData[id]->values->size());
+				assertion(secW.rows() == cplData[id]->values->size(), secW.rows(), cplData[id]->values->size());
 				secW.col(0) = *(cplData[id]->values);
 				secW.col(0) -= _secondaryOldXTildes[id];
 			}
@@ -120,7 +114,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
 
 		// Store x_tildes for secondary data
 		for (int id: _secondaryDataIDs) {
-			assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+			assertion(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
 					_secondaryOldXTildes[id].size(), cplData[id]->values->size());
 			_secondaryOldXTildes[id] = *(cplData[id]->values);
 		}
@@ -128,6 +122,7 @@ void IQNILSPostProcessing::updateDifferenceMatrices
   
   // call the base method for common update of V, W matrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
+//  e.stop(true);
 }
 
 
@@ -137,7 +132,7 @@ void IQNILSPostProcessing::computeUnderrelaxationSecondaryData
 {
     //Store x_tildes for secondary data
     for (int id: _secondaryDataIDs){
-      assertion2(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
+      assertion(_secondaryOldXTildes[id].size() == cplData[id]->values->size(),
                  _secondaryOldXTildes[id].size(), cplData[id]->values->size());
       _secondaryOldXTildes[id] = *(cplData[id]->values);
     }
@@ -159,7 +154,8 @@ void IQNILSPostProcessing::computeQNUpdate
 (PostProcessing::DataMap& cplData, Eigen::VectorXd& xUpdate)
 {
 	preciceTrace("computeQNUpdate()");
-  Event e(__func__, true, true); // time measurement, barrier
+  Event e("computeNewtonUpdate", true, true); // time measurement, barrier
+
   preciceDebug("   Compute Newton factors");
 
   // Calculate QR decomposition of matrix V and solve Rc = -Qr
@@ -171,9 +167,9 @@ void IQNILSPostProcessing::computeQNUpdate
 	auto R = _qrV.matrixR();
 
 	if(!_hasNodesOnInterface){
-	  assertion2(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
-	  assertion1(_qrV.rows() == 0, _qrV.rows());
-	  assertion1(Q.size() == 0, Q.size());
+	  assertion(_qrV.cols() == getLSSystemCols(), _qrV.cols(), getLSSystemCols());
+	  assertion(_qrV.rows() == 0, _qrV.rows());
+	  assertion(Q.size() == 0, Q.size());
 	}
 
 	Eigen::VectorXd _local_b = Eigen::VectorXd::Zero(_qrV.cols());
@@ -188,23 +184,23 @@ void IQNILSPostProcessing::computeQNUpdate
 	_preconditioner->revert(_residuals);
 	_local_b *= -1.0; // = -Qr
 
-	assertion1(c.size() == 0, c.size());
+	assertion(c.size() == 0, c.size());
 	// reserve memory for c
 	utils::append(c, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
 	// compute rhs Q^T*res in parallel
 	if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
-		assertion2(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
+		assertion(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
 		// back substitution
 		c = R.triangularView<Eigen::Upper>().solve<Eigen::OnTheLeft>(_local_b);
 	}else{
 	   assertion(utils::MasterSlave::_communication.get() != nullptr);
 	   assertion(utils::MasterSlave::_communication->isConnected());
-	   if(_hasNodesOnInterface)  assertion2(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
-	   assertion2(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
+	   if(_hasNodesOnInterface)  assertion(Q.cols() == getLSSystemCols(), Q.cols(), getLSSystemCols());
+	   assertion(_local_b.size() == getLSSystemCols(), _local_b.size(), getLSSystemCols());
 
 	   if(utils::MasterSlave::_masterMode){
-	     assertion1(_global_b.size() == 0, _global_b.size());
+	     assertion(_global_b.size() == 0, _global_b.size());
 	   }
 	   utils::append(_global_b, (Eigen::VectorXd) Eigen::VectorXd::Zero(_local_b.size()));
 
@@ -224,7 +220,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
 	xUpdate = _matrixW * c;
 
-	preciceDebug("c = " << c);
+	//preciceDebug("c = " << c);
 
 
     /**
@@ -242,11 +238,11 @@ void IQNILSPostProcessing::computeQNUpdate
 	for (int id: _secondaryDataIDs){
 	  PtrCouplingData data = cplData[id];
 	  auto& values = *(data->values);
-	  assertion2(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
+	  assertion(_secondaryMatricesW[id].cols() == c.size(), _secondaryMatricesW[id].cols(), c.size());
 	  values = _secondaryMatricesW[id] * c;
-	  assertion2(values.size() == data->oldValues.col(0).size(), values.size(), data->oldValues.col(0).size());
+	  assertion(values.size() == data->oldValues.col(0).size(), values.size(), data->oldValues.col(0).size());
 	  values += data->oldValues.col(0);
-	  assertion2(values.size() == _secondaryResiduals[id].size(), values.size(), _secondaryResiduals[id].size());
+	  assertion(values.size() == _secondaryResiduals[id].size(), values.size(), _secondaryResiduals[id].size());
 	  values += _secondaryResiduals[id];
 	}
 
@@ -261,6 +257,7 @@ void IQNILSPostProcessing::computeQNUpdate
 			_secondaryMatricesW[id].resize(0,0);
 		}
 	}
+//	e.stop(true);
 }
 
 
@@ -269,7 +266,8 @@ void IQNILSPostProcessing:: specializedIterationsConverged
 (
    DataMap & cplData)
 {
-  
+  Event e(__func__, true, true); // time measurement, barrier
+
   if (_matrixCols.front() == 0){ // Did only one iteration
     _matrixCols.pop_front(); 
   }
@@ -292,12 +290,13 @@ void IQNILSPostProcessing:: specializedIterationsConverged
     int toRemove = _matrixCols.back();
     for (int id: _secondaryDataIDs){
       Eigen::MatrixXd& secW = _secondaryMatricesW[id];
-      assertion3(secW.cols() > toRemove, secW, toRemove, id);
+      assertion(secW.cols() > toRemove, secW, toRemove, id);
       for (int i=0; i < toRemove; i++){
         utils::removeColumnFromMatrix(secW, secW.cols() - 1);
       }
     }
   }
+  //e.stop(true);
 }
 
 

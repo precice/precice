@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NO_MPI
 
 #ifndef PRECICE_POSTPROCESSING_TESTS_MASTERSLAVEPOSTPROCESSING_HPP_
@@ -64,6 +61,8 @@ private:
     * @brief Tests the correct postprocessing for MVQN-like vector data
     */
    void testVIQNIMVJpp();
+
+   void testIMVJ_effUpdate_pp();
 
 # endif // not PRECICE_NO_MPI
 };

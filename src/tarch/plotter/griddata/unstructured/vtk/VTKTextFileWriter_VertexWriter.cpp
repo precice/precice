@@ -23,7 +23,7 @@ tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexWriter::~V
 
 
 int tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexWriter::plotVertex(const tarch::la::Vector<2,double>& position) {
-  assertion1( _currentVertexNumber>=0, _currentVertexNumber );
+  assertion( _currentVertexNumber>=0, _currentVertexNumber );
 
   tarch::la::Vector<3,double> p;
   p(0) = position(0);
@@ -46,7 +46,7 @@ int tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexWriter
 
 void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::VertexWriter::close() {
   assertion( _myWriter._numberOfVertices==0 );
-  assertion1( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
+  assertion( _myWriter.isOpen(), "Maybe you forgot to call close() on a data writer before you destroy your writer?" );
 
 
   _myWriter._numberOfVertices  = _currentVertexNumber;

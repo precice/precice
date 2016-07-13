@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "utils/xml/XMLTag.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
@@ -340,7 +337,7 @@ const std::string& XMLTag:: getStringAttributeValue
 {
   std::map<std::string,XMLAttribute<std::string> >::const_iterator iter;
   iter = _stringAttributes.find(name);
-  assertion1 (iter != _stringAttributes.end(), name);
+  assertion (iter != _stringAttributes.end(), name);
   return iter->second.getValue();
 }
 

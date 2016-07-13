@@ -12,8 +12,7 @@ tarch::logging::Log Petsc:: _log ( "precice::utils::Petsc" );
 
 bool Petsc::weInitialized = false;
 
-
-void Petsc:: initialize
+void Petsc::initialize
 (
   int*               argc,
   char***            argv )
@@ -31,7 +30,7 @@ void Petsc:: initialize
 #endif // not PRECICE_NO_PETSC
 }
 
-void Petsc:: finalize()
+void Petsc::finalize()
 {
 #ifndef PRECICE_NO_PETSC
   PetscBool petscIsInitialized;
@@ -55,7 +54,6 @@ void Petsc:: finalize()
 namespace precice {
 namespace utils {
 namespace petsc {
-
 
 Vector::Vector(MPI_Comm comm, std::string name)
 {
@@ -101,6 +99,11 @@ Vector::~Vector()
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized) // If PetscFinalize is called before ~Vector
     ierr = VecDestroy(&vector); CHKERRV(ierr);
+}
+
+Vector::operator Vec&()
+{
+  return vector;
 }
 
 void Vector::init(PetscInt rows)
@@ -245,6 +248,11 @@ Matrix::~Matrix()
     ierr = MatDestroy(&matrix); CHKERRV(ierr);
 }
 
+Matrix::operator Mat&()
+{
+  return matrix;
+}
+
 void Matrix::assemble(MatAssemblyType type)
 {
   PetscErrorCode ierr = 0;
@@ -252,7 +260,8 @@ void Matrix::assemble(MatAssemblyType type)
   ierr = MatAssemblyEnd(matrix, type); CHKERRV(ierr);
 }
 
-void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type)
+void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols,
+                  MatType type, bool doSetup)
 {
   PetscErrorCode ierr = 0;
   if (type != nullptr) {
@@ -260,7 +269,8 @@ void Matrix::init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, P
   }
   ierr = MatSetSizes(matrix, localRows, localCols, globalRows, globalCols); CHKERRV(ierr);
   ierr = MatSetFromOptions(matrix); CHKERRV(ierr);
-  ierr = MatSetUp(matrix); CHKERRV(ierr); 
+  if (doSetup)
+    ierr = MatSetUp(matrix); CHKERRV(ierr);
 }
 
 void Matrix::reset()
@@ -283,6 +293,13 @@ std::string Matrix::getName()
   const char *cstr;
   PetscObjectGetName((PetscObject) matrix, &cstr); 
   return cstr;    
+}
+
+MatInfo Matrix::getInfo(MatInfoType flag)
+{
+  MatInfo info;
+  MatGetInfo(matrix, flag, &info);
+  return info;
 }
 
 void Matrix::setValue(PetscInt row, PetscInt col, PetscScalar value)
@@ -337,7 +354,13 @@ std::pair<PetscInt, PetscInt> Matrix::ownerRange()
   return std::make_pair(range_start, range_end);
 }
 
-  
+std::pair<PetscInt, PetscInt> Matrix::ownerRangeColumn()
+{
+  PetscInt range_start, range_end;
+  MatGetOwnershipRangeColumn(matrix, &range_start, &range_end);
+  return std::make_pair(range_start, range_end);
+}
+
 void Matrix::write(std::string filename)
 {
   PetscErrorCode ierr = 0;
@@ -355,7 +378,6 @@ void Matrix::read(std::string filename)
    MatLoad(matrix, fd); CHKERRV(ierr); CHKERRV(ierr);
    PetscViewerDestroy(&fd);
 }
-
 
 void Matrix::view()
 {

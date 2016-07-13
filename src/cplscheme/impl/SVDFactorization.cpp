@@ -11,8 +11,10 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
+#include "utils/EventTimings.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 
+using precice::utils::Event;
 
 namespace precice {
 namespace cplscheme {
@@ -106,6 +108,7 @@ void SVDFactorization::computeQRdecomposition(
     Matrix & R)
 {
   preciceTrace(__func__);
+//  Event e("compute_QR-dec_for-SVD-update", true, true); // time measurement, barrier
 
   // if nothing is linear dependent, the dimensions stay like this
   Q = Matrix::Zero(A.rows(), A.cols());
@@ -123,8 +126,8 @@ void SVDFactorization::computeQRdecomposition(
   for (int colIndex = 0; colIndex < A.cols(); colIndex++){
 
     // invariants:
-    assertion2(colsQ == rowsR, colsQ, rowsR);
-    assertion2(colsQ <= colIndex, colsQ, colIndex);
+    assertion(colsQ == rowsR, colsQ, rowsR);
+    assertion(colsQ <= colIndex, colsQ, colIndex);
 
     Vector col = A.col(colIndex);
 
@@ -218,7 +221,7 @@ void SVDFactorization::computeQRdecomposition(
 
     // normalize col
     double rho = orthogonalized ? rho_orth : 1.0;
-    col /= rho_orth;
+    col /= rho;
     r(rowsR) = rho;
 
     // as we always insert at the rightmost position, no need to shift
@@ -227,8 +230,8 @@ void SVDFactorization::computeQRdecomposition(
     Q.col(colsQ) = col;  // insert orthogonalized column to the right in Q
     R.col(colsR) = r;    // insert gram-schmidt coefficients to the right in R
 
-    colsR++;    assertion2(colsR <= R.cols(), colsR, R.cols());
-    rowsR++;    assertion2(rowsR <= R.rows(), rowsR, R.rows());
+    colsR++;    assertion(colsR <= R.cols(), colsR, R.cols());
+    rowsR++;    assertion(rowsR <= R.rows(), rowsR, R.rows());
     colsQ++;
 
     // failed to orthogonalize the column, i.e., it is linear dependent;
@@ -237,15 +240,15 @@ void SVDFactorization::computeQRdecomposition(
     // number of cols (cannot delete from A)
     if(not orthogonalized){
 
-      colsQ--;    assertion1(colsQ >= 0, colsQ);
-      rowsR--;    assertion1(rowsR >= 0, rowsR);
+      colsQ--;    assertion(colsQ >= 0, colsQ);
+      rowsR--;    assertion(rowsR >= 0, rowsR);
       // delete column that was just inserted (as it is not orthogonal to Q)
       Q.col(colsQ) = Vector::Zero(A.rows());
       // delete line in R that corresponds to the just inserted but not orthogonal column
       // as we always insert to the right, no shifting/ application of givens roatations is
       // necessary.
       // Note: The corresponding column from R with index colIndex is not deleted: dimensions must align with A.
-      assertion1(R(rowsR, colsR-1) == 1.0, R(rowsR, colsR-1));
+      assertion(R(rowsR, colsR-1) == 1.0, R(rowsR, colsR-1));
       R.row(rowsR) = Vector::Zero(A.cols());
 
     }

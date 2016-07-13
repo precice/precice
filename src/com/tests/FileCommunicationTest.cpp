@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "FileCommunicationTest.hpp"
 #include "com/FileCommunication.hpp"
 #include "utils/Globals.hpp"
@@ -64,7 +61,7 @@ void FileCommunicationTest:: testSimpleSendReceive()
     comTxt.finishSendPackage ();
   }
   else {
-    assertion1 ( rank == 1, rank );
+    assertion ( rank == 1, rank );
     comTxt.acceptConnection ( requester, acceptor, 0, 1 );
     validate ( comTxt.isConnected() );
     comTxt.startReceivePackage ( 0 );
@@ -110,7 +107,7 @@ void FileCommunicationTest:: testSimpleSendReceive()
     comBin.finishSendPackage();
   }
   else {
-    assertion1 ( rank == 1, rank );
+    assertion ( rank == 1, rank );
     comBin.acceptConnection ( requester, acceptor, 0, 1 );
     validate ( comBin.isConnected() );
     comBin.startReceivePackage ( 0 );
@@ -186,7 +183,7 @@ void FileCommunicationTest:: testMultipleExchanges()
     validate ( not com.isConnected() );
   }
   else {
-    assertion1 ( rank == 1, rank );
+    assertion ( rank == 1, rank );
     com.acceptConnection ( acceptor, requester, 0, 1 );
     validate ( com.isConnected() );
 

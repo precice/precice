@@ -40,8 +40,8 @@ void SerialCouplingScheme::initialize
 {
   preciceTrace2("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
-  assertion1(tarch::la::greaterEquals(startTime, 0.0), startTime);
-  assertion1(startTimestep >= 0, startTimestep);
+  assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
+  assertion(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
 
@@ -164,7 +164,14 @@ void SerialCouplingScheme::advance()
   preciceTrace2("advance()", getTimesteps(), getTime());
   for (DataMap::value_type & pair : getReceiveData()) {
     Eigen::VectorXd& values = *pair.second->values;
-    preciceDebug("Begin advance, New Values: " << values);
+#     ifdef Debug
+      int max = values.size();
+      std::ostringstream stream;
+      for (int i=0; (i < max) && (i < 10); i++){
+        stream << values[i] << " ";
+      }
+      preciceDebug("Begin advance, first New Values: " << stream.str() );
+#     endif
   }
   checkCompletenessRequiredActions();
 

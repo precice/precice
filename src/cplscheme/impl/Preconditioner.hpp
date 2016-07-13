@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #pragma once
 
 #include "utils/Dimensions.hpp"
@@ -46,7 +43,6 @@ public:
     _maxNonConstTimesteps(maxNonConstTimesteps),
     _nbNonConstTimesteps(0),
     _requireNewQR(false),
-    _needsGlobalWeights(false),
     _freezed(false)
   {}
 
@@ -96,17 +92,11 @@ public:
   /**
    * @brief Apply preconditioner to matrix
    * @param transpose: false = from left, true = from right
-   * @param squared: If true - apply precond to squared matrix
-   *        of size (n x n_local) (part of Jacobian)
-   *                 If false - apply precond to flat matrix
-   *        of size (m x n_local) (part of pseudo Inverse Z)
-   *
    */
-  void apply(EigenMatrix& M, bool transpose, bool squared = true){
+  void apply(EigenMatrix& M, bool transpose){
     preciceTrace(__func__);
-    assertion(_needsGlobalWeights);
     if(transpose){
-      assertion2(M.cols()==(int)_weights.size(), M.cols(), _weights.size());
+      assertion(M.cols()==(int)_weights.size(), M.cols(), _weights.size());
       for(int i=0; i<M.cols(); i++){
         for(int j=0; j<M.rows(); j++){
           M(j,i) *= _weights[i];
@@ -114,21 +104,10 @@ public:
       }
     }
     else{
-      if(squared){
-        assertion2(M.rows()==(int)_globalWeights.size(), M.rows(), (int)_globalWeights.size());
-        for(int i=0; i<M.cols(); i++){
-          for(int j=0; j<M.rows(); j++){
-            M(j,i) *= _globalWeights[j];
-          }
-        }
-
-      // flat and long matrix, (m x n_local) no global weights needed
-      }else{
-        assertion2(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
-        for(int i=0; i<M.cols(); i++){
-          for(int j=0; j<M.rows(); j++){
-            M(j,i) *= _weights[j];
-          }
+      assertion(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
+      for(int i=0; i<M.cols(); i++){
+        for(int j=0; j<M.rows(); j++){
+          M(j,i) *= _weights[j];
         }
       }
     }
@@ -137,15 +116,10 @@ public:
   /**
    * @brief Apply inverse preconditioner to matrix
    * @param transpose: false = from left, true = from right
-   * @param squared: If true - apply precond to squared matrix
-   *        of size (n x n_local) (part of Jacobian)
-   *                 If false - apply precond to flat matrix
-   *        of size (m x n_local) (part of pseudo Inverse Z)
-   *
    */
-  void revert(EigenMatrix& M, bool transpose, bool squared = true){
+  void revert(EigenMatrix& M, bool transpose){
     preciceTrace(__func__);
-    assertion(_needsGlobalWeights);
+    //assertion(_needsGlobalWeights);
     if (transpose) {
       assertion(M.cols()==(int)_invWeights.size());
       for (int i = 0; i < M.cols(); i++) {
@@ -155,21 +129,10 @@ public:
       }
     }
     else {
-      if (squared) {
-        assertion2(M.rows()==(int)_globalInvWeights.size(), M.rows(), (int)_globalInvWeights.size());
-        for (int i = 0; i < M.cols(); i++) {
-          for (int j = 0; j < M.rows(); j++) {
-            M(j, i) *= _globalInvWeights[j];
-          }
-        }
-
-        // flat and long matrix, (m x n_local) no global weights needed
-      } else {
-        assertion2(M.rows()==(int)_invWeights.size(), M.rows(), (int)_invWeights.size());
-        for (int i = 0; i < M.cols(); i++) {
-          for (int j = 0; j < M.rows(); j++) {
-            M(j, i) *= _invWeights[j];
-          }
+      assertion(M.rows()==(int)_invWeights.size(), M.rows(), (int)_invWeights.size());
+      for (int i = 0; i < M.cols(); i++) {
+        for (int j = 0; j < M.rows(); j++) {
+          M(j, i) *= _invWeights[j];
         }
       }
     }
@@ -182,7 +145,6 @@ public:
    */
   void apply(DataValues& v){
     preciceTrace("apply()");
-
     assertion(v.size()==(int)_weights.size());
 
     // scale residual
@@ -196,7 +158,6 @@ public:
    */
   void revert(DataMatrix& M){
     preciceTrace("revert()");
-
     assertion(M.column(0).size()==(int)_weights.size());
 
     // scale matrix M
@@ -212,7 +173,6 @@ public:
    */
   void revert(DataValues& v){
     preciceTrace("revert()");
-
     assertion(v.size()==(int)_weights.size());
 
     // scale residual
@@ -226,8 +186,7 @@ public:
      */
     void apply(Eigen::MatrixXd& M){
       preciceTrace("apply()");
-
-      assertion2(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
+      assertion(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
 
       // scale matrix M
       for(int i=0; i<M.cols(); i++){
@@ -315,18 +274,10 @@ public:
     _requireNewQR = false;
   }
 
-  void triggerGlobalWeights(int globalN){
-    _needsGlobalWeights = true;
-    _globalWeights.resize(globalN, 1.0);
-    _globalInvWeights.resize(globalN, 1.0);
-    communicateGlobalWeights(); //for constant preconditioner necessary already here
-  }
-
   std::vector<double>& getWeights()
   {
     return _weights;
   }
-
 
   bool isConst()
   {
@@ -340,12 +291,6 @@ protected:
 
   //@brief inverse weights (for efficiency reasons)
   std::vector<double> _invWeights;
-
-  //@brief global weights, needed for MVQN
-  std::vector<double> _globalWeights;
-
-  //@brief global inverse weights, needed for MVQN
-  std::vector<double> _globalInvWeights;
 
   //@brief dimension (scalar or vectorial) of each sub-vector
   std::vector<int> _dimensions;
@@ -364,8 +309,6 @@ protected:
   // true if a QR decomposition from scratch is necessary
   bool _requireNewQR;
 
-  // true if global weights are needed, i.e. for MVQN
-  bool _needsGlobalWeights;
 
   /// @brief true if _nbNonConstTimesteps >= _maxNonConstTimesteps, i.e., preconditioner is not updated any more.
   bool _freezed;
@@ -378,69 +321,6 @@ protected:
    */
   virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res) =0;
 
-
-  // @brief communicate all slave weights to master and then broadcast, necessary for MVQN
-  // note: For the current used preconditioners all weights are the same for each proc as
-  //       the weights are computed per value or residual block.
-  void communicateGlobalWeights(){
-    preciceTrace2("communicateGlobalWeights()", _weights.size(), _globalWeights.size());
-    assertion(_weights.size()==_invWeights.size());
-    assertion(_globalWeights.size()==_globalInvWeights.size());
-    assertion(_needsGlobalWeights);
-
-
-    if (utils::MasterSlave::_slaveMode) {
-      utils::MasterSlave::_communication->send((int)_weights.size(),0);
-      if (_weights.size()!=0) {
-        utils::MasterSlave::_communication->send(_weights.data(),(int)_weights.size(),0);
-        utils::MasterSlave::_communication->send(_invWeights.data(),(int)_weights.size(),0);
-      }
-      utils::MasterSlave::_communication->broadcast(_globalWeights.data(),_globalWeights.size(),0);
-      utils::MasterSlave::_communication->broadcast(_globalInvWeights.data(),_globalWeights.size(),0);
-    }
-    else if (utils::MasterSlave::_masterMode) {
-      assertion(utils::MasterSlave::_rank==0);
-      assertion(utils::MasterSlave::_size>1);
-
-      int offset = 0;
-      //add master weights
-      for (size_t i=0; i<_weights.size(); i++){
-        _globalWeights[i + offset] = _weights[i];
-        _globalInvWeights[i + offset] = _invWeights[i];
-      }
-      offset += _weights.size();
-
-      for (int rankSlave = 1; rankSlave < utils::MasterSlave::_size; rankSlave++){
-        int localSlaveN = -1;
-        utils::MasterSlave::_communication->receive(localSlaveN,rankSlave);
-        if (localSlaveN!=0) {
-          std::vector<double> slaveWeights(localSlaveN,-1);
-          std::vector<double> slaveInvWeights(localSlaveN,-1);
-          utils::MasterSlave::_communication->receive(slaveWeights.data(),localSlaveN,rankSlave);
-          utils::MasterSlave::_communication->receive(slaveInvWeights.data(),localSlaveN,rankSlave);
-          // add slave weights
-          for (size_t i=0; i<slaveWeights.size(); i++){
-            _globalWeights[i + offset] = slaveWeights[i];
-            _globalInvWeights[i + offset] = slaveInvWeights[i];
-          }
-          offset += slaveWeights.size();
-        }
-      }
-      assertion2(offset==(int)_globalWeights.size(),offset, (int)_globalWeights.size());
-
-      utils::MasterSlave::_communication->broadcast(_globalWeights.data(),_globalWeights.size());
-      utils::MasterSlave::_communication->broadcast(_globalInvWeights.data(),_globalWeights.size());
-    }
-    else{ //couplingmode
-      assertion(_weights.size()==_globalWeights.size());
-      for(size_t i=0; i<_weights.size(); i++){
-        _globalWeights[i] = _weights[i];
-        _globalInvWeights[i] = _invWeights[i];
-      }
-    }
-
-
-  }
 
 private:
 

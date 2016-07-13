@@ -77,6 +77,9 @@ public:
 
   ~Vector();
 
+  /// Enables implicit conversion into a reference to a PETSc Vec type
+  operator Vec&();
+
   /// Sets the size and calls VecSetFromOptions
   void init(PetscInt rows);
 
@@ -118,7 +121,7 @@ public:
   MPI_Comm communicator;
 
   /// Delete copy and assignement constructor
-  /** Copying and assignement of this class would involve copying the pointer to
+  /* Copying and assignement of this class would involve copying the pointer to
    * the PETSc object and finallly cause double destruction of it.
    */
   Matrix(const Matrix&) = delete;
@@ -128,17 +131,30 @@ public:
 
   ~Matrix();
 
+  /// Enables implicit conversion into a reference to a PETSc Mat type
+  operator Mat&();
+
   void assemble(MatAssemblyType type = MAT_FINAL_ASSEMBLY);
     
   /// Initializes matrix of given size and type
-  void init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols, MatType type = nullptr);
+  /** @param[in] localRows,localCols The number of rows/cols that are local to the processor
+      @param[in] globalRows,globalCols The number of global rows/cols.
+      @param[in] type PETSc type of the matrix
+      @param[in] doSetup Call MatSetup(). Not calling MatSetup can have performance gains when using preallocation
+  */
+  void init(PetscInt localRows, PetscInt localCols, PetscInt globalRows, PetscInt globalCols,
+            MatType type = nullptr, bool doSetup = true);
 
-  // Destroys and recreate the matrix on the same communicator  
+  /// Destroys and recreates the matrix on the same communicator
   void reset();
   
   void setName(std::string name);
   std::string getName();
 
+  /// Get the MatInfo struct for the matrix.
+  /* See http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatInfo.html for description of fields.
+   */
+  MatInfo getInfo(MatInfoType flag);
   
   void setValue(PetscInt row, PetscInt col, PetscScalar value);
   
@@ -150,7 +166,10 @@ public:
   
   /// Returns a pair that mark the beginning and end of the matrix' ownership range.
   std::pair<PetscInt, PetscInt> ownerRange();
-
+  
+  /// Returns a pair that mark the beginning and end of the matrix' column ownership range.
+  std::pair<PetscInt, PetscInt> ownerRangeColumn();
+  
   /// Writes the matrix to PETSc the binary format
   void write(std::string filename);
 

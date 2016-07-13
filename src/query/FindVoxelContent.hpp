@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_QUERY_FINDVOXELCONTAINEDVISITOR_HPP_
 #define PRECICE_QUERY_FINDVOXELCONTAINEDVISITOR_HPP_
 
@@ -132,9 +129,9 @@ FindVoxelContent:: FindVoxelContent
   _dimensions ( voxelCenter.size() ),
   _content ()
 {
-  assertion2 ( voxelCenter.size() == halflengths.size(),
+  assertion ( voxelCenter.size() == halflengths.size(),
                voxelCenter.size(), halflengths.size() );
-  assertion1 ( (_dimensions == 2) || (_dimensions == 3), _dimensions );
+  assertion ( (_dimensions == 2) || (_dimensions == 3), _dimensions );
 }
 
 template< typename CONTAINER_T >

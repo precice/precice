@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CompositionalCouplingScheme.hpp"
 #include "Constants.hpp"
 #include "utils/Globals.hpp"
@@ -383,7 +380,7 @@ std::string CompositionalCouplingScheme:: printCouplingState() const
     //TODO i don't understand why this assertion should make any sense, it fails when
     // more than 3 participants are used, but without any mature reason, maybe
     // the output is just not nice enough
-    //assertion1(partners.size() == 1, partners.size());
+    //assertion(partners.size() == 1, partners.size());
     state += partners[0];
     state += ": ";
     state += scheme.scheme->printCouplingState();
@@ -544,9 +541,6 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 
 }} // namespace precice, cplscheme
 
-//// Copyright (C) 2011 Technische Universitaet Muenchen
-//// This file is part of the preCICE project. For conditions of distribution and
-//// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 //#include "CompositionalCouplingScheme.hpp"
 //#include "Constants.hpp"
 //#include "utils/Globals.hpp"
@@ -911,7 +905,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //      state += "\n";
 //    }
 //    partners = couplingScheme->getCouplingPartners();
-//    assertion1(partners.size() == 1, partners.size());
+//    assertion(partners.size() == 1, partners.size());
 //    state += "Coupling to ";
 //    state += partners[0];
 //    state += ":\n";

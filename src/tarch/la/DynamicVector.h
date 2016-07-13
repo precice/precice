@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_LA_DYNAMICVECTOR_H_
 #define _TARCH_LA_DYNAMICVECTOR_H_
 
@@ -106,7 +103,7 @@ public:
 //  >::type DynamicVector<Scalar>::append (
 //    const Vector& toAppend
 //  ) {
-//    assertion1 (toAppend.size() > 0, toAppend.size());
+//    assertion (toAppend.size() > 0, toAppend.size());
 //    Scalar* oldValues = _values;
 //    int oldSize = _size;
 //    _size += toAppend.size();

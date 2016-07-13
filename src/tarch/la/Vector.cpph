@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_LA_VECTOR_CPPH_
 #define _TARCH_LA_VECTOR_CPPH_
 
@@ -164,7 +161,7 @@ template<int Size, typename Scalar>
 Scalar & Vector<Size,Scalar>:: operator() ( int index )
 {
   assertion ( index >= 0 );
-  assertion2 ( index < Size, index, Size );
+  assertion ( index < Size, index, Size );
   return _values[index];
 }
 

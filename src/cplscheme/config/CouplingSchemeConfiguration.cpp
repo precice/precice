@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CouplingSchemeConfiguration.hpp"
 #include "cplscheme/config/PostProcessingConfiguration.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
@@ -361,7 +358,7 @@ void CouplingSchemeConfiguration:: xmlEndTagCallback
       assertion(false);
     }
     else {
-      assertion1(false,_config.type);
+      assertion(false,_config.type);
     }
   }
 }
@@ -639,6 +636,7 @@ void CouplingSchemeConfiguration:: addTagExtrapolation
   XMLTag tagExtrapolation(*this, TAG_EXTRAPOLATION, XMLTag::OCCUR_NOT_OR_ONCE);
   XMLAttribute<int> attrValue(ATTR_VALUE);
   tagExtrapolation.addAttribute(attrValue);
+  tagExtrapolation.setDocumentation("Sets order of predictor of interface values for first participant.");
   tag.addSubtag(tagExtrapolation);
 }
 
@@ -1011,7 +1009,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
         }
         index++;
       }
-      assertion2(index < _config.participants.size(), index, _config.participants.size());
+      assertion(index < _config.participants.size(), index, _config.participants.size());
       scheme.addDataToSend(data, mesh, initialize, index);
     }
     else {
@@ -1023,7 +1021,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
         }
         index++;
       }
-      assertion2(index < _config.participants.size(), index, _config.participants.size());
+      assertion(index < _config.participants.size(), index, _config.participants.size());
       scheme.addDataToReceive(data, mesh, initialize, index);
     }
   }

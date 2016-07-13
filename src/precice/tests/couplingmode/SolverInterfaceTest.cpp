@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SolverInterfaceTest.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/impl/Participant.hpp"
@@ -1203,7 +1200,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
   std::string config2D = _pathToTests + "mapping-without-geo-2D.xml";
   std::string config3D = _pathToTests + "mapping-without-geo-3D.xml";
   int rank = utils::Parallel::getProcessRank();
-  assertion1((rank == 0) || (rank == 1), rank);
+  assertion((rank == 0) || (rank == 1), rank);
   std::string solverName = rank == 0 ? "SolverA" : "SolverB";
   std::string meshForcesA = "MeshForcesA";
   std::string meshDisplA = "MeshDisplacementsA";
@@ -1296,7 +1293,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
       interface.finalize();
     }
     else {
-      assertion1(rank == 1, rank);
+      assertion(rank == 1, rank);
       int meshForcesID = interface.getMeshID(meshForcesB);
       int meshDisplID = interface.getMeshID(meshDisplB);
       int dataForcesID = interface.getDataID(dataForces, meshForcesID);
@@ -1481,7 +1478,7 @@ void SolverInterfaceTest:: testBug()
   }
 
   int rank = utils::Parallel::getProcessRank();
-  assertion1((rank == 0) || (rank == 1), rank);
+  assertion((rank == 0) || (rank == 1), rank);
   std::string solverName = rank == 0 ? "Flite" : "Calculix";
   if (solverName == std::string("Flite")){
     SolverInterface precice("Flite", 0, 1);
@@ -1514,7 +1511,7 @@ void SolverInterfaceTest:: testBug()
     precice.finalize();
   }
   else {
-    assertion1(solverName == std::string("Calculix"), solverName);
+    assertion(solverName == std::string("Calculix"), solverName);
     SolverInterface precice("Calculix", 0, 1);
     configureSolverInterface(config, precice);
     int meshID = precice.getMeshID("CalculixNodes");
@@ -1577,7 +1574,7 @@ void SolverInterfaceTest:: runThreeSolvers
   preciceTrace2("runThreeSolvers", configFilename, expectedCallsOfAdvance);
 
   int rank = utils::Parallel::getProcessRank();
-  assertion1((rank == 0) || (rank == 1) || (rank == 2), rank);
+  assertion((rank == 0) || (rank == 1) || (rank == 2), rank);
 
   std::string writeIterCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterCheckpoint(constants::actionReadIterationCheckpoint());
@@ -1644,7 +1641,7 @@ void SolverInterfaceTest:: runThreeSolvers
     validateEquals(callsOfAdvance, expectedCallsOfAdvance[1]);
   }
   else {
-    assertion1(solverName == std::string("SolverThree"), solverName);
+    assertion(solverName == std::string("SolverThree"), solverName);
     SolverInterface precice(solverName, 0, 1);
     configureSolverInterface(configFilename, precice);
     //int dataID = precice.getDataID("Data");

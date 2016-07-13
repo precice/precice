@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_LA_MATRIXVECTOROPERATIONS_CPPH_
 #define _TARCH_LA_MATRIXVECTOROPERATIONS_CPPH_
 
@@ -23,8 +20,8 @@ template<typename Matrix, typename Vector, typename Result>
   typedef MatrixTraits<Matrix> MTraits;
   typedef VectorTraits<Vector> VTraits;
   typedef VectorTraits<Result> RTraits;
-  assertion2 (RTraits::size(result) == MTraits::rows(matrix), RTraits::size(result), MTraits::rows(matrix) );
-  assertion2 (VTraits::size(vector) == MTraits::cols(matrix), VTraits::size(vector), MTraits::cols(matrix));
+  assertion (RTraits::size(result) == MTraits::rows(matrix), RTraits::size(result), MTraits::rows(matrix) );
+  assertion (VTraits::size(vector) == MTraits::cols(matrix), VTraits::size(vector), MTraits::cols(matrix));
   assign(result) = 0;
   for (int i=0; i < MTraits::rows(matrix); i++) {
     for (int j=0; j < MTraits::cols(matrix); j++) {

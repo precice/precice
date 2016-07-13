@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "Triangle.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
@@ -25,11 +22,11 @@ Triangle:: Triangle
   _center ( edgeOne.getDimensions() ),
   _enclosingRadius ( 0.0 )
 {
-  assertion2 ( edgeOne.getDimensions() == edgeTwo.getDimensions(),
+  assertion ( edgeOne.getDimensions() == edgeTwo.getDimensions(),
                edgeOne.getDimensions(), edgeTwo.getDimensions() );
-  assertion2 ( edgeTwo.getDimensions() == edgeThree.getDimensions(),
+  assertion ( edgeTwo.getDimensions() == edgeThree.getDimensions(),
                edgeTwo.getDimensions(), edgeThree.getDimensions() );
-  assertion1 ( getDimensions() == 3, getDimensions() );
+  assertion ( getDimensions() == 3, getDimensions() );
 
   // Determine vertex map
   Vertex& v0 = edge(0).vertex(0);
@@ -74,9 +71,9 @@ Triangle:: Triangle
   assertion ( &edge(0).vertex(_vertexMap[0]) != &edge(1).vertex(_vertexMap[1]) );
   assertion ( &edge(0).vertex(_vertexMap[0]) != &edge(2).vertex(_vertexMap[2]) );
   assertion ( &edge(1).vertex(_vertexMap[1]) != &edge(2).vertex(_vertexMap[2]) );
-  assertion1 ( (_vertexMap[0] == 0) || (_vertexMap[0] == 1), _vertexMap[0] );
-  assertion1 ( (_vertexMap[1] == 0) || (_vertexMap[1] == 1), _vertexMap[0] );
-  assertion1 ( (_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[0] );
+  assertion ( (_vertexMap[0] == 0) || (_vertexMap[0] == 1), _vertexMap[0] );
+  assertion ( (_vertexMap[1] == 0) || (_vertexMap[1] == 1), _vertexMap[0] );
+  assertion ( (_vertexMap[2] == 0) || (_vertexMap[2] == 1), _vertexMap[0] );
 }
 
 int Triangle:: getDimensions() const
@@ -88,7 +85,7 @@ int Triangle:: getDimensions() const
 //(
 //  const utils::DynVector& normal )
 //{
-//  assertion2 ( normal.size() == getDimensions(), normal.size(), getDimensions() );
+//  assertion ( normal.size() == getDimensions(), normal.size(), getDimensions() );
 //  _normal = normal;
 //}
 //
@@ -96,7 +93,7 @@ int Triangle:: getDimensions() const
 //(
 //  const utils::DynVector& center )
 //{
-//  assertion2 ( center.size() == getDimensions(), center.size(), getDimensions() );
+//  assertion ( center.size() == getDimensions(), center.size(), getDimensions() );
 //  _center = center;
 //}
 

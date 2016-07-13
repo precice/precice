@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ParallelTest.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
@@ -39,7 +36,7 @@ void ParallelTest:: run ()
         group = "GroupOne";
       }
       else {
-        assertion1 ( rank == 2, rank );
+        assertion ( rank == 2, rank );
         group = "GroupTwo";
       }
       Par::splitCommunicator( group );

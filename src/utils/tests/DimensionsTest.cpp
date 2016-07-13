@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "DimensionsTest.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Dimensions.hpp"
@@ -107,54 +104,5 @@ void DimensionsTest:: testLinearizeDelinearize()
     validateEquals (delin7(2), 1.0);
   }
 }
-
-//void DimensionsTest:: testGetHyperfaceCornerIndices ()
-//{
-//  { // 2D
-//    int cornerIndices[CompilePower<2,1>::VALUE];
-//    getHyperfaceCornerIndices (0, cornerIndices);
-//    validateEquals (cornerIndices[0], 0);
-//    validateEquals (cornerIndices[1], 2);
-//
-//    getHyperfaceCornerIndices (1, cornerIndices);
-//    validateEquals (cornerIndices[0], 1);
-//    validateEquals (cornerIndices[1], 3);
-//
-//    getHyperfaceCornerIndices (2, cornerIndices);
-//    validateEquals (cornerIndices[0], 0);
-//    validateEquals (cornerIndices[1], 1);
-//
-//    getHyperfaceCornerIndices (3, cornerIndices);
-//    validateEquals (cornerIndices[0], 2);
-//    validateEquals (cornerIndices[1], 3);
-//  }
-//
-//  { // 3D
-//    int cornerIndices[CompilePower<2,2>::VALUE];
-//    getHyperfaceCornerIndices (0, cornerIndices);
-//    validateEquals (cornerIndices[0], 0);
-//    validateEquals (cornerIndices[1], 2);
-//    validateEquals (cornerIndices[2], 4);
-//    validateEquals (cornerIndices[3], 6);
-//
-//    getHyperfaceCornerIndices (1, cornerIndices);
-//    validateEquals (cornerIndices[0], 1);
-//    validateEquals (cornerIndices[1], 3);
-//    validateEquals (cornerIndices[2], 5);
-//    validateEquals (cornerIndices[3], 7);
-//
-//    getHyperfaceCornerIndices (3, cornerIndices);
-//    validateEquals (cornerIndices[0], 2);
-//    validateEquals (cornerIndices[1], 3);
-//    validateEquals (cornerIndices[2], 6);
-//    validateEquals (cornerIndices[3], 7);
-//
-//    getHyperfaceCornerIndices (5, cornerIndices);
-//    validateEquals (cornerIndices[0], 4);
-//    validateEquals (cornerIndices[1], 5);
-//    validateEquals (cornerIndices[2], 6);
-//    validateEquals (cornerIndices[3], 7);
-//  }
-//}
 
 }}} // namespace precice, utils, tests

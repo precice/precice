@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _LA_TARCH_TESTS_GRAMSCHMIDTTEST_H_
 #define _LA_TARCH_TESTS_GRAMSCHMIDTTEST_H_
 

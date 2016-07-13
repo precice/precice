@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_LA_DYNAMICMATRIX_CPPH_
 #define _TARCH_LA_DYNAMICMATRIX_CPPH_
 
@@ -81,8 +78,8 @@ Scalar& DynamicMatrix<Scalar>::operator() (
   int rowIndex,
   int colIndex
 ) {
-  assertion2 ((rowIndex >= 0) && (rowIndex < _rows), rowIndex, _rows);
-  assertion2 ((colIndex >= 0) && (colIndex < _cols), colIndex, _cols);
+  assertion ((rowIndex >= 0) && (rowIndex < _rows), rowIndex, _rows);
+  assertion ((colIndex >= 0) && (colIndex < _cols), colIndex, _cols);
   return _values[rowIndex * _cols + colIndex];
 }
 
@@ -91,8 +88,8 @@ const Scalar& DynamicMatrix<Scalar>::operator() (
   int rowIndex,
   int colIndex
 ) const {
-  assertion2 ((rowIndex >= 0) && (rowIndex < _rows), rowIndex, _rows);
-  assertion2 ((colIndex >= 0) && (colIndex < _cols), colIndex, _cols);
+  assertion ((rowIndex >= 0) && (rowIndex < _rows), rowIndex, _rows);
+  assertion ((colIndex >= 0) && (colIndex < _cols), colIndex, _cols);
   return _values[rowIndex * _cols + colIndex];
 }
 

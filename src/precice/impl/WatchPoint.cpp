@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "WatchPoint.hpp"
 #include "query/FindClosestVertex.hpp"
 #include "query/FindClosestEdge.hpp"
@@ -37,7 +34,7 @@ WatchPoint:: WatchPoint
   _isClosest(true)
 {
   assertion ( _mesh.use_count() > 0 );
-  assertion2 ( _point.size() == _mesh->getDimensions(), _point.size(),
+  assertion ( _point.size() == _mesh->getDimensions(), _point.size(),
                _mesh->getDimensions() );
 }
 

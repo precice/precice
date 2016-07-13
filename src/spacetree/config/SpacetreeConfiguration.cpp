@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SpacetreeConfiguration.hpp"
 #include "spacetree/DynamicOctree.hpp"
 #include "spacetree/StaticOctree.hpp"
@@ -91,7 +88,7 @@ void SpacetreeConfiguration:: setDimensions
   int dimensions )
 {
   preciceTrace1("setDimensions()", dimensions);
-  assertion1((dimensions == 2) || (dimensions == 3), dimensions);
+  assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
 
@@ -163,7 +160,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
   preciceTrace4("getSpacetree()", type, offset, halflengths, maxMeshwidth);
   assertion(_dimensions != 0);
   Spacetree* spacetree = nullptr;
-  assertion2 ( offset.size() == halflengths.size(), offset.size(), halflengths.size() );
+  assertion ( offset.size() == halflengths.size(), offset.size(), halflengths.size() );
   bool equalHalflengths = true;
   equalHalflengths &= tarch::la::equals(halflengths(0), halflengths(1));
   if ( _dimensions == 3 ){

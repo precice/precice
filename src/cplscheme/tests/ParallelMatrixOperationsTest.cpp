@@ -214,18 +214,27 @@ void ParallelMatrixOperationsTest::testParVectorOperations()
   double* aa = new double[2];   aa[0] = a;   aa[1] = a;
   double* res2 = new double[2]; res2[0] = 0; res2[1] = 0;
   double* res3 = new double[2]; res3[0] = 0; res3[1] = 0;
+
+  int iaa = (int)a;
+  int ires1 = 0, ires2 = 0;
+
+
   utils::MasterSlave::allreduceSum(a, res1, 1);
+  utils::MasterSlave::allreduceSum(iaa, ires2, 1);
   utils::MasterSlave::allreduceSum(aa, res2, 2);
 
   utils::MasterSlave::reduceSum(aa, res3, 2);
+  utils::MasterSlave::reduceSum(iaa, ires1, 1);
 
   validate (tarch::la::equals(res1, 10.));
+  validate (tarch::la::equals(ires2, 10));
   validate (tarch::la::equals(res2[0], 10.));
   validate (tarch::la::equals(res2[1], 10.));
 
   if(utils::MasterSlave::_masterMode){
     validate (tarch::la::equals(res3[0], 10.));
     validate (tarch::la::equals(res3[1], 10.));
+    validate (tarch::la::equals(ires1, 10));
   }
   delete[] aa; delete[] res2; delete[] res3;
   // ---------------------------------------------------------
@@ -526,7 +535,7 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp_tarch()
 
 	// initialize ParallelMatrixOperations object
 	impl::ParallelMatrixOperations parMatrixOps;
-	parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight);
+	parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight, true);
 
 	/*
 	 * test parallel multiplications
@@ -787,7 +796,7 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp_Eigen()
 
 	// initialize ParallelMatrixOperations object
 	impl::ParallelMatrixOperations parMatrixOps;
-	parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight);
+	parMatrixOps.initialize(_cyclicCommLeft, _cyclicCommRight, true);
 
 	/*
 	 * test parallel multiplications

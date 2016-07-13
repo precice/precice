@@ -60,9 +60,13 @@ public:
 
   static void reduceSum(double* sendData, double* rcvData, int size);
 
+  static void reduceSum(int& sendData, int& rcvData, int size);
+
   static void allreduceSum(double* sendData, double* rcvData, int size);
 
   static void allreduceSum(double& sendData, double& rcvData, int size);
+
+  static void allreduceSum(int& sendData, int& rcvData, int size);
 
   static void broadcast(bool& value);
 

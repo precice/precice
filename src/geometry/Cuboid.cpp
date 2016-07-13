@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "geometry/Cuboid.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -32,8 +29,8 @@ void Cuboid:: specializedCreate
   preciceTrace ( "specializedCreate()" );
   std::string nameSubID ( seed.getName() + "-side-" );
   int dimensions = seed.getDimensions();
-  assertion1 ( (dimensions == 2) || (dimensions == 3), dimensions );
-  assertion2 ( dimensions == _sidelengths.size(), dimensions, _sidelengths.size() );
+  assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
+  assertion ( dimensions == _sidelengths.size(), dimensions, _sidelengths.size() );
   if ( dimensions == 2 ){
     using utils::Vector2D;
     // Create corners
@@ -167,7 +164,7 @@ void Cuboid:: specializedCreate
   }
 
   else { // Create 3D Hexahedron
-    assertion1 ( dimensions == 3, dimensions );
+    assertion ( dimensions == 3, dimensions );
     using utils::Vector3D;
     // Create corners
     boost::array<Vector3D,8> cornerCoords;

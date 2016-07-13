@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "DriftRatchet.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -148,7 +145,7 @@ void DriftRatchet:: createLeftWall
     }
   }
   else {
-    assertion1 ( dimensions == 3, dimensions );
+    assertion ( dimensions == 3, dimensions );
     using utils::Vector3D;
     double currentAngle = 0.0;
     int vertexCount = getNumberOfVerticesPerCut ( _discretizationWidth );
@@ -254,7 +251,7 @@ void DriftRatchet:: createBodyWallSection
     }
   }
   else {
-    assertion1 ( dimensions == 3, dimensions );
+    assertion ( dimensions == 3, dimensions );
     double currentAngle = 0.0;
     int vertexCount = getNumberOfVerticesPerCut ( _discretizationWidth );
     double angle = 2.0 * tarch::la::PI / static_cast<double>(vertexCount);
@@ -350,7 +347,7 @@ void DriftRatchet:: createRightWall
     }
   }
   else {
-    assertion1 ( dimensions == 3, dimensions );
+    assertion ( dimensions == 3, dimensions );
     utils::Vector3D center ( 0.0 );
     center(0) += _length;
     mesh::Vertex& centerVertex = mesh.createVertex ( center );

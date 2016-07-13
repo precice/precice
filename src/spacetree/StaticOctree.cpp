@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "StaticOctree.hpp"
 #include "spacetree/impl/StaticTraversal.hpp"
 #include "spacetree/impl/Environment.hpp"
@@ -50,7 +47,7 @@ void StaticOctree:: initialize()
       query::FindVoxelContent::INCLUDE_BOUNDARY );
   size_t size = 0;
   for (mesh::PtrMesh mesh : _meshes){
-    assertion2(mesh->getDimensions() == dim, mesh->getDimensions(), dim);
+    assertion(mesh->getDimensions() == dim, mesh->getDimensions(), dim);
     size += mesh->content().size();
     findVoxel(*mesh);
   }
@@ -86,7 +83,7 @@ void StaticOctree:: initialize()
   }
   else {
     preciceDebug( "Setting 3D environment cell neighbor indices" );
-    assertion1 ( dim == 3, dim );
+    assertion ( dim == 3, dim );
     tarch::la::DynamicVector<int> indices(3);
     assignList(indices) = 1, 2, 4; // Cell 0
     env.setNeighborCellIndices(0, indices);

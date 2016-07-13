@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CommunicateMesh.hpp"
 #include "Communication.hpp"
 #include "mesh/Mesh.hpp"
@@ -110,7 +107,7 @@ void CommunicateMesh:: receiveMesh
         coords[d] = vertexCoords[i*dim+d];
       }
       mesh::Vertex& v = mesh.createVertex ( coords );
-      assertion1 ( v.getID() >= 0, v.getID() );
+      assertion ( v.getID() >= 0, v.getID() );
       vertices.push_back(&v);
     }
   }
@@ -250,7 +247,7 @@ void CommunicateMesh:: broadcastReceiveMesh
         coords[d] = vertexCoords[i*dim+d];
       }
       mesh::Vertex& v = mesh.createVertex ( coords );
-      assertion1 ( v.getID() >= 0, v.getID() );
+      assertion ( v.getID() >= 0, v.getID() );
       vertices.push_back(&v);
     }
   }

@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CompositionalCouplingSchemeTest.hpp"
 #include "DummyCouplingScheme.hpp"
 #include "../SharedPointer.hpp"
@@ -716,7 +713,7 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
     connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
   }
   else {
-    assertion1(utils::Parallel::getProcessRank() == 2,
+    assertion(utils::Parallel::getProcessRank() == 2,
                utils::Parallel::getProcessRank());
     localParticipant = nameParticipant2;
     connect(nameParticipant1, nameParticipant2, localParticipant, m2n1);
@@ -809,7 +806,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
     validate(cplScheme->getNextTimestepMaxLength() > 0.0); // ??
   }
   else {
-    assertion1(participantName == std::string("Participant2"), participantName);
+    assertion(participantName == std::string("Participant2"), participantName);
     cplScheme->initialize(0.0, 1);
     validate(cplScheme->hasDataBeenExchanged());
     validateEquals(cplScheme->isCouplingTimestepComplete(), false);

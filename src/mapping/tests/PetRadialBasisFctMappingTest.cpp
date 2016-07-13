@@ -39,6 +39,7 @@ void PetRadialBasisFctMappingTest:: run()
     testMethod(testPetCompactPolynomialC6);
     testMethod(testDeadAxis2D);
     testMethod(testDeadAxis3D);
+    testMethod(testSolutionCaching);
     PETSC_COMM_WORLD = MPI_COMM_WORLD;
   }
   
@@ -49,10 +50,12 @@ void PetRadialBasisFctMappingTest:: run()
       Par::setGlobalCommunicator(comm); // hier auch noch PETSC_COMM_WORLD neu setzen?
       testMethod(testDistributedConsistent2DV1);
       testMethod(testDistributedConsistent2DV2);
+      testMethod(testDistributedConsistent2DV3);
       testMethod(testDistributedConservative2DV1);
       testMethod(testDistributedConservative2DV2);
       // testMethod(testDistributedConservative2DV3);
       // testMethod(testDistributedConservative2DV4);
+      testMethod(testDistributedConservative2DV5);
       Par::setGlobalCommunicator(Par::getCommunicatorWorld());
     }
   }
@@ -77,7 +80,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV1()
                     {-1, 3, {3, 0}, {7}},
                     {-1, 3, {3, 1}, {8}}
                   },
-                  { // The outMesh is local, every rank is used
+                  { // The outMesh is local, distributed amoung all ranks
                     {0, -1, {0, 0}, {0}},
                     {0, -1, {0, 1}, {0}},
                     {1, -1, {1, 0}, {0}},
@@ -140,6 +143,56 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV2()
                     { 3, {7} },
                     { 3, {8} }
                   }
+    );
+}
+
+/// Test with a very heterogenous distributed and non-continues ownership
+void PetRadialBasisFctMappingTest::testDistributedConsistent2DV3()
+{
+  preciceTrace("testDistributedConsistent2DV3");
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
+  
+  testDistributed(mapping,
+                  { // Rank 0 has part of the mesh, owns a subpart
+                    {0,  0, {0, 0}, {1}}, {0,  0, {0, 1}, {2}},
+                    {0,  0, {1, 0}, {3}}, {0, -1, {1, 1}, {4}},
+                    {0, -1, {2, 0}, {5}}, {0, -1, {2, 1}, {6}},
+                      // Rank 1 has no vertices
+                      // Rank 2 has the entire mesh, but owns just 3 and 5.
+                    {2, -1, {0, 0}, {1}}, {2, -1, {0, 1}, {2}},
+                    {2, -1, {1, 0}, {3}}, {2,  2, {1, 1}, {4}},
+                    {2, -1, {2, 0}, {5}}, {2,  2, {2, 1}, {6}},
+                    {2, -1, {3, 0}, {7}}, {2, -1, {3, 1}, {8}},
+                      // Rank 3 has the last 4 vertices, owns 4, 6 and 7
+                    {3, 3, {2, 0}, {5}}, {3, -1, {2, 1}, {6}},
+                    {3, 3, {3, 0}, {7}}, {3,  3, {3, 1}, {8}},
+                  },
+                  { // The outMesh is local, rank 1 is empty
+                    {0, -1, {0, 0}, {0}},
+                    {0, -1, {0, 1}, {0}},
+                    {0, -1, {1, 0}, {0}},
+                    {2, -1, {1, 1}, {0}},
+                    {2, -1, {2, 0}, {0}},
+                    {2, -1, {2, 1}, {0}},
+                    {3, -1, {3, 0}, {0}},
+                    {3, -1, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 1, 2} on the first rank,
+                    // second rank (consistent with the outMesh) is empty, ...
+                    { 0, {1} },
+                    { 0, {2} },
+                    { 0, {3} },
+                    { 2, {4} },
+                    { 2, {5} },
+                    { 2, {6} },
+                    { 3, {7} },
+                    { 3, {8} }
+                  },
+                  globalIndexOffsets[utils::Parallel::getProcessRank()]
     );
 }
 
@@ -308,6 +361,46 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2DV4()
 }
 // Python results:
 // 2.42857  3.61905  4.14286  5.33333  5.85714  7.04762  7.57143
+
+/// Tests a non-contigous owner distributed at the outMesh
+void PetRadialBasisFctMappingTest::testDistributedConservative2DV5()
+{
+  preciceTrace("testDistributedConservative2DV1");
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  
+  testDistributed(mapping,
+                  { // Conservative mapping: The inMesh is local
+                    {0, -1, {0, 0}, {1}},
+                    {0, -1, {0, 1}, {2}},
+                    {1, -1, {1, 0}, {3}},
+                    {1, -1, {1, 1}, {4}},
+                    {2, -1, {2, 0}, {5}},
+                    {2, -1, {2, 1}, {6}},
+                    {3, -1, {3, 0}, {7}},
+                    {3, -1, {3, 1}, {8}}
+                  },
+                  { // The outMesh is distributed and non-contigous
+                    {-1, 0, {0, 0}, {0}},
+                    {-1, 1, {0, 1}, {0}},
+                    {-1, 1, {1, 0}, {0}},
+                    {-1, 0, {1, 1}, {0}},
+                    {-1, 2, {2, 0}, {0}},
+                    {-1, 2, {2, 1}, {0}},
+                    {-1, 3, {3, 0}, {0}},
+                    {-1, 3, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                    // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                    {0, {1}}, {0, {0}}, {0, {0}}, {0, {4}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+                    {1, {0}}, {1, {2}}, {1, {3}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+                    {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
+                    {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
+                  },
+                  utils::Parallel::getProcessRank()*2
+    );
+}
 
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
@@ -898,6 +991,57 @@ void PetRadialBasisFctMappingTest:: testDeadAxis3D()
   validateNumericalEquals ( outData->values()[3], 4.3 );
 }
 
+void PetRadialBasisFctMappingTest::testSolutionCaching()
+{
+  preciceTrace("testSolutionCaching()");
+  using Eigen::Vector2d;
+  int dimensions = 2;
+  
+  bool xDead = false, yDead = true, zDead = false;
+
+  ThinPlateSplines fct;
+  PetRadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
+                                                     xDead, yDead, zDead);
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
+  mesh::PtrData inData = inMesh->createData ( "InData", 1 );
+  int inDataID = inData->getID ();
+  inMesh->createVertex ( Vector2d(0.0, 1.0) );  inMesh->createVertex ( Vector2d(1.0, 1.0) );
+  inMesh->createVertex ( Vector2d(2.0, 1.0) );  inMesh->createVertex ( Vector2d(3.0, 1.0) );
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+  
+  inData->values() << 1.0, 2.0, 2.0, 1.0;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  int outDataID = outData->getID();
+  mesh::Vertex& vertex = outMesh->createVertex(Vector2d(0,0));
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  // Setup mapping with mapping coordinates and geometry used
+  mapping.setMeshes(inMesh, outMesh);
+  validateEquals(mapping.hasComputedMapping(), false );
+
+  vertex.setCoords(Vector2d(0.0, 3.0));
+  mapping.computeMapping();
+  validateEquals(mapping.previousSolution.size(), 0);
+  mapping.map(inDataID, outDataID);
+  validateEquals(mapping.hasComputedMapping(), true );
+  validateNumericalEquals ( outData->values()[0], 1.0 );
+
+  PetscInt its;
+  KSPGetIterationNumber(mapping._solver, &its);
+  validateEquals(its, 6);
+  validateEquals(mapping.previousSolution.size(), 1);
+  mapping.map(inDataID, outDataID);
+  KSPGetIterationNumber(mapping._solver, &its);
+  validateEquals(its, 0);
+}
+
 void PetRadialBasisFctMappingTest::addGlobalIndex(mesh::PtrMesh &mesh, int offset)
 {
   for (mesh::Vertex& v : mesh->vertices()) {
@@ -950,7 +1094,7 @@ void PetRadialBasisFctMappingTest::getDistributedMesh(MeshSpecification const & 
     }
 
   }
-  addGlobalIndex(mesh, globalIndexOffset );
+  addGlobalIndex(mesh, globalIndexOffset);
   mesh->allocateDataValues();
   data->values() = d;
 }

@@ -1,8 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at
-// http://www5.in.tum.de/wiki/index.php/PreCICE_License
-
 #include "PointToPointCommunication.hpp"
 
 #include "mesh/Mesh.hpp"
@@ -721,7 +716,7 @@ PointToPointCommunication::send(double* itemsToSend,
     return;
   }
 
-  assertion2(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
+  assertion(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
 
   for (auto& mapping : _mappings) {
     mapping.offset = _buffer.size();
@@ -757,7 +752,7 @@ PointToPointCommunication::receive(double* itemsToReceive,
     return;
   }
 
-  assertion2(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
+  assertion(size == _localIndexCount * valueDimension, size,_localIndexCount * valueDimension);
 
   std::fill(itemsToReceive, itemsToReceive + size, 0);
 

@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NEWSPACETREE_STATICTRAVERSAL_HPP_
 #define PRECICE_NEWSPACETREE_STATICTRAVERSAL_HPP_
 
@@ -213,7 +210,7 @@ void StaticTraversal<CELL_T>:: refineAllInternal
           // Modify environment positions
           const DynamicVector<int>& cellIndices = env.getNeighborCellIndices(i);
           const DynamicVector<int>& sideIndices = env.getNeighborSideIndices(i);
-          assertion2(cellIndices.size() == sideIndices.size(),
+          assertion(cellIndices.size() == sideIndices.size(),
                      cellIndices.size(), sideIndices.size());
           for (int j=0; j < (int)cellIndices.size(); j++){
             env.setNeighborCellPosition(
@@ -258,7 +255,7 @@ void StaticTraversal<CELL_T>:: refineAllInternal
       // Modify environment positions
       const DynamicVector<int>& cellIndices = env.getNeighborCellIndices(i);
       const DynamicVector<int>& sideIndices = env.getNeighborSideIndices(i);
-      assertion2 ( cellIndices.size() == sideIndices.size(),
+      assertion ( cellIndices.size() == sideIndices.size(),
                    cellIndices.size(), sideIndices.size() );
       for (int j=0; j < (int)cellIndices.size(); j++){
         env.setNeighborCellPosition(

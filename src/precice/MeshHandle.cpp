@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "precice/MeshHandle.hpp"
 #include "utils/Dimensions.hpp"
 #include "mesh/Vertex.hpp"
@@ -61,7 +58,7 @@ VertexIterator & VertexIterator:: operator=
   const VertexIterator& toAssign )
 {
   _impl->iterator = toAssign._impl->iterator;
-//  assertion2 ( _impl->dimensions == toAssign._impl->dimensions,
+//  assertion ( _impl->dimensions == toAssign._impl->dimensions,
 //               _impl->dimensions, toAssign._impl->dimensions );
 //  for ( int dim=0; dim < _impl->dimensions; dim++ ){
 //    _impl->coords[dim] = toAssign._impl->coords[dim];

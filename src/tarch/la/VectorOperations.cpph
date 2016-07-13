@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_LA_VECTOR_OPERATIONS_CPPH_
 #define _TARCH_LA_VECTOR_OPERATIONS_CPPH_
 
@@ -110,7 +107,7 @@ template<typename VectorA, typename VectorB>
   int subvectorSize = BTraits::size(result);
   assertion(vectorSize > 0);
   assertion(subvectorSize > 0);
-  assertion2(vectorSize % subvectorSize == 0, vectorSize, subvectorSize);
+  assertion(vectorSize % subvectorSize == 0, vectorSize, subvectorSize);
   // Assign first subvector to have inital value for sum
   for (int j=0; j < subvectorSize; j++){
     BTraits::elem(j,result) = ATraits::celem(j,vector);

@@ -1,10 +1,3 @@
-/*
- * ParallelMatrixOperations.hpp
- *
- *  Created on: Aug 21, 2015
- *      Author: Klaudius Scheufele
- */
-// Copyright (C) 2015 Universität Stuttgart
 #ifndef PRECICE_NO_MPI
 #ifndef PARALLELMATRIXOPERATIONS_HPP_
 #define PARALLELMATRIXOPERATIONS_HPP_
@@ -53,7 +46,8 @@ public:
     * @brief Initializes the post-processing.
     */
    void initialize(com::Communication::SharedPointer leftComm,
-		   	   	   com::Communication::SharedPointer rightComm);
+		   	   	   com::Communication::SharedPointer rightComm,
+		   	   	   bool needcyclicComm);
 
    /**
     * @brief multiplies tarch matrices in parallel or serial execution.
@@ -124,8 +118,8 @@ public:
    		 bool dotProductComputation = true)
    {
 		preciceTrace("multiply()");
-		assertion2(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
-		assertion2(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
+		assertion(result.cols() == rightMatrix.cols(), result.cols(), rightMatrix.cols());
+		assertion(leftMatrix.cols() == rightMatrix.rows(), leftMatrix.cols(), rightMatrix.rows());
 
 		// if serial computation on single processor, i.e, no master-slave mode
 		if( not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode){
@@ -140,6 +134,7 @@ public:
 			// if p equals r (and p = global_n), we have to perform the
 			// cyclic communication with block-wise matrix-matrix multiplication
 			if(p == r){
+			  assertion(_needCycliclComm);
 				assertion(_cyclicCommLeft.get() != NULL); assertion(_cyclicCommLeft->isConnected());
 				assertion(_cyclicCommRight.get() != NULL); assertion(_cyclicCommRight->isConnected());
 
@@ -171,10 +166,10 @@ public:
         int p, int q, int r)
   {
     preciceTrace("multiply() (m x n) * (n * r), r=1/m");
-    assertion2(leftMatrix.rows() == p, leftMatrix.rows(), p);
-    assertion2(leftMatrix.cols() == rightMatrix.rows(),leftMatrix.cols(), rightMatrix.rows());
-    assertion2(result.rows() == p, result.rows(), p);
-    assertion2(result.cols() == r, result.cols(), r);
+    assertion(leftMatrix.rows() == p, leftMatrix.rows(), p);
+    assertion(leftMatrix.cols() == rightMatrix.rows(),leftMatrix.cols(), rightMatrix.rows());
+    assertion(result.rows() == p, result.rows(), p);
+    assertion(result.cols() == r, result.cols(), r);
 
     Eigen::MatrixXd localResult(result.rows(), result.cols());
     localResult.noalias() = leftMatrix * rightMatrix;
@@ -233,9 +228,10 @@ private:
 		 * -----------------------------------------------------------------------
 		 */
 
-		assertion2(leftMatrix.cols() == q, leftMatrix.cols(), q);
-		assertion2(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
-		assertion2(result.rows() == p, result.rows(), p);
+    assertion(_needCycliclComm);
+		assertion(leftMatrix.cols() == q, leftMatrix.cols(), q);
+		assertion(leftMatrix.rows() == rightMatrix.cols(), leftMatrix.rows(), rightMatrix.cols());
+		assertion(result.rows() == p, result.rows(), p);
 
 		//int nextProc = (utils::MasterSlave::_rank + 1) % utils::MasterSlave::_size;
 		int prevProc = (utils::MasterSlave::_rank -1 < 0) ? utils::MasterSlave::_size-1 : utils::MasterSlave::_rank -1;
@@ -261,7 +257,7 @@ private:
 
 		// set block at corresponding row-index on proc
 		int off = offsets[utils::MasterSlave::_rank];
-		assertion2(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
+		assertion(result.cols() == diagBlock.cols(), result.cols(), diagBlock.cols());
 		result.block(off, 0, diagBlock.rows(), diagBlock.cols()) = diagBlock;
 
 		/**
@@ -310,7 +306,7 @@ private:
 			// note: the direction and ordering of the cyclic sending operation is chosen s.t. the computed block is
 			//       local on the current processor (in J_inv).
 			off = offsets[sourceProc];
-			assertion2(result.cols() == block.cols(), result.cols(), block.cols());
+			assertion(result.cols() == block.cols(), result.cols(), block.cols());
 			result.block(off, 0, block.rows(), block.cols()) = block;
 		}
    }
@@ -365,7 +361,7 @@ private:
 	  preciceTrace("multiplyNM_block() (n x n) * (n x m)");
 
 		// ensure that both matrices are stored in the same order. Important for reduce function, that adds serialized data.
-		assertion2(leftMatrix.IsRowMajor == rightMatrix.IsRowMajor, leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
+		assertion(leftMatrix.IsRowMajor == rightMatrix.IsRowMajor, leftMatrix.IsRowMajor, rightMatrix.IsRowMajor);
 
 		// multiply local block (saxpy-based approach)
 		// dimension: (n_global x n_local) * (n_local x m) = (n_global x m)
@@ -415,6 +411,8 @@ private:
 	* @brief Communication between neighboring slaves, forward
 	*/
 	com::Communication::SharedPointer _cyclicCommRight;
+
+	bool _needCycliclComm;
 
 };
 

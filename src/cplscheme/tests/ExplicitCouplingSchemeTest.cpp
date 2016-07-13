@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ExplicitCouplingSchemeTest.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
@@ -222,7 +219,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
     validateEquals ( cplScheme.isCouplingOngoing(), false );
   }
   else {
-    assertion1 ( localParticipant == std::string("participant1"), localParticipant );
+    assertion ( localParticipant == std::string("participant1"), localParticipant );
     cplScheme.initialize ( 0.0, 1 );
     validateEquals ( cplScheme.isCouplingTimestepComplete(), false );
     validateEquals ( cplScheme.isCouplingOngoing(), true );

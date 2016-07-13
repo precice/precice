@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "GeometryTestScenarios.hpp"
 #include "precice/Constants.hpp"
 
@@ -196,7 +193,7 @@ void GeometryTestScenarios:: createMesh
     mesh.createEdge(v01, v00);
   }
   else {
-    assertion1(mesh.getDimensions() == 3, mesh.getDimensions());
+    assertion(mesh.getDimensions() == 3, mesh.getDimensions());
     using utils::Vector3D;
     Vertex& v000 = mesh.createVertex(Vector3D(-1.0, -1.0, -1.0));
     Vertex& v001 = mesh.createVertex(Vector3D(-1.0, -1.0,  1.0));

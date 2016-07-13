@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 //#ifndef PRECICE_NO_MPI
 
 #include "MasterSlave.hpp"
@@ -126,7 +123,7 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
 
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
-  assertion2(vec1.size()==vec2.size(), vec1.size(), vec2.size());
+  assertion(vec1.size()==vec2.size(), vec1.size(), vec2.size());
   double localSum = 0.0;
   double globalSum = 0.0;
 
@@ -166,7 +163,7 @@ double MasterSlave:: dot(const EigenVector& vec1, const EigenVector& vec2)
 
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
-  assertion2(vec1.size()==vec2.size(), vec1.size(), vec2.size());
+  assertion(vec1.size()==vec2.size(), vec1.size(), vec2.size());
   double localSum = 0.0;
   double globalSum = 0.0;
 
@@ -218,7 +215,7 @@ MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
-  Event e("MasterSlave::allreduce_sum");
+  //Event e("MasterSlave::allreduce_sum");
 
   if (_slaveMode) {
     // send local result to master
@@ -228,6 +225,30 @@ MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
   if (_masterMode) {
     // receive local results from slaves, apply SUM
     _communication->reduceSum(sendData, rcvData, size);
+  }
+}
+
+void
+MasterSlave::reduceSum(int& sendData, int& rcvData, int size) {
+  preciceTrace("reduceSum(int)");
+
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
+
+  assertion(_communication.get() != nullptr);
+  assertion(_communication->isConnected());
+
+  //Event e("MasterSlave::allreduce_sum");
+
+  if (_slaveMode) {
+    // send local result to master
+    _communication->reduceSum(sendData, rcvData, 0);
+  }
+
+  if (_masterMode) {
+    // receive local results from slaves, apply SUM
+    _communication->reduceSum(sendData, rcvData);
   }
 }
 
@@ -242,7 +263,7 @@ MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
-  Event e("MasterSlave::allreduce_sum");
+  //Event e("MasterSlave::allreduce_sum");
 
   if (_slaveMode) {
     // send local result to master, receive reduced result from master
@@ -266,7 +287,31 @@ MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
-  Event e("MasterSlave::allreduce_sum");
+  //Event e("MasterSlave::allreduce_sum");
+
+  if (_slaveMode) {
+    // send local result to master, receive reduced result from master
+    _communication->allreduceSum(sendData, rcvData, 0);
+  }
+
+  if (_masterMode) {
+    // receive local results from slaves, apply SUM, send reduced result to slaves
+    _communication->allreduceSum(sendData, rcvData);
+  }
+}
+
+void
+MasterSlave::allreduceSum(int& sendData, int& rcvData, int size) {
+  preciceTrace("allreduceSum(double)");
+
+  if (not _masterMode && not _slaveMode) {
+    return;
+  }
+
+  assertion(_communication.get() != nullptr);
+  assertion(_communication->isConnected());
+
+  //Event e("MasterSlave::allreduce_sum");
 
   if (_slaveMode) {
     // send local result to master, receive reduced result from master
@@ -290,7 +335,7 @@ MasterSlave::broadcast(bool& value) {
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
-  Event e("MasterSlave::broadcast");
+  //Event e("MasterSlave::broadcast");
 
   if (_masterMode) {
     // Broadcast (send) value.
@@ -315,7 +360,7 @@ MasterSlave::broadcast(double& value) {
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
-  Event e("MasterSlave::broadcast");
+  //Event e("MasterSlave::broadcast");
 
   if (_masterMode) {
     // Broadcast (send) value.
@@ -339,7 +384,7 @@ MasterSlave::broadcast(double* values, int size) {
   assertion(_communication.get() != nullptr);
   assertion(_communication->isConnected());
 
-  Event e("MasterSlave::broadcast");
+  //Event e("MasterSlave::broadcast");
 
   if (_masterMode) {
     // Broadcast (send) value.

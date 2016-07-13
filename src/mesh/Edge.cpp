@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "Edge.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include "boost/assign.hpp"
@@ -21,7 +18,7 @@ Edge:: Edge
   _center ( vertexOne.getDimensions(), 0.0 ),
   _enclosingRadius ( 0.0 )
 {
-  assertion2 ( vertexOne.getDimensions() == vertexTwo.getDimensions(),
+  assertion ( vertexOne.getDimensions() == vertexTwo.getDimensions(),
                vertexOne.getDimensions(), vertexTwo.getDimensions() );
 }
 
@@ -34,7 +31,7 @@ Edge:: Edge
 //(
 //  int i )
 //{
-//  assertion1 ( (i == 0) || (i == 1), i );
+//  assertion ( (i == 0) || (i == 1), i );
 //  return *_vertices[i];
 //}
 //
@@ -42,7 +39,7 @@ Edge:: Edge
 //(
 //  int i ) const
 //{
-//  assertion1 ( (i==0) || (i==1), i );
+//  assertion ( (i==0) || (i==1), i );
 //  return *_vertices[i];
 //}
 
@@ -50,7 +47,7 @@ Edge:: Edge
 //(
 //  const utils::DynVector& normal )
 //{
-//  assertion2 ( normal.size() == _vertices[0]->getDimensions(), normal,
+//  assertion ( normal.size() == _vertices[0]->getDimensions(), normal,
 //               _vertices[0]->getDimensions() );
 //  _normal = normal;
 //}
@@ -59,7 +56,7 @@ Edge:: Edge
 //(
 //  const utils::DynVector& center )
 //{
-//  assertion2 ( center.size() == _vertices[0]->getDimensions(), center,
+//  assertion ( center.size() == _vertices[0]->getDimensions(), center,
 //               _vertices[0]->getDimensions() );
 //  _center = center;
 //}

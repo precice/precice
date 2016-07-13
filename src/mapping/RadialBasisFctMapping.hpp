@@ -142,9 +142,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
                "computeMapping()", "RBF mapping  "
                << " is not yet supported for a participant in master mode");
 
-  assertion2(input()->getDimensions() == output()->getDimensions(),
+  assertion(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
-  assertion2(getDimensions() == output()->getDimensions(),
+  assertion(getDimensions() == output()->getDimensions(),
              getDimensions(), output()->getDimensions());
   int dimensions = getDimensions();
   mesh::PtrMesh inMesh;
@@ -164,7 +164,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
     if (_deadAxis[d]) deadDimensions +=1;
   }
   int polyparams = 1 + dimensions - deadDimensions;
-  assertion1(inputSize >= 1 + polyparams, inputSize);
+  assertion(inputSize >= 1 + polyparams, inputSize);
   int n = inputSize + polyparams; // Add linear polynom degrees
   Eigen::MatrixXd matrixCLU(n, n);
   matrixCLU.setZero();
@@ -287,15 +287,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 {
   preciceTrace2("map()", inputDataID, outputDataID);
   assertion(_hasComputedMapping);
-  assertion2(input()->getDimensions() == output()->getDimensions(),
+  assertion(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
-  assertion2(getDimensions() == output()->getDimensions(),
+  assertion(getDimensions() == output()->getDimensions(),
              getDimensions(), output()->getDimensions());
 
   Eigen::VectorXd& inValues = input()->data(inputDataID)->values();
   Eigen::VectorXd& outValues = output()->data(outputDataID)->values();
   int valueDim = input()->data(inputDataID)->getDimensions();
-  assertion2(valueDim == output()->data(outputDataID)->getDimensions(),
+  assertion(valueDim == output()->data(outputDataID)->getDimensions(),
              valueDim, output()->data(outputDataID)->getDimensions());
   int deadDimensions = 0;
   for (int d = 0; d < getDimensions(); d++) {
@@ -375,7 +375,7 @@ Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: reduceVector
     if (_deadAxis[d])
       deadDimensions +=1;
   }
-  assertion2(getDimensions()>deadDimensions, getDimensions(), deadDimensions);
+  assertion(getDimensions()>deadDimensions, getDimensions(), deadDimensions);
   Eigen::VectorXd reducedVector(getDimensions()-deadDimensions);
   int k = 0;
   for (int d = 0; d < getDimensions(); d++) {

@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ComputeCurvatureAction.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
@@ -54,7 +51,7 @@ void ComputeCurvatureAction:: performAction
     }
   }
   else {
-    assertion1 ( getMesh()->getDimensions() == 3, getMesh()->getDimensions() );
+    assertion ( getMesh()->getDimensions() == 3, getMesh()->getDimensions() );
     for (int i=0; i < dataValues.size(); i++) {
       dataValues[i] = 0.0;
     }

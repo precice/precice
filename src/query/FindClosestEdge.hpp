@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_QUERY_FINDCLOSESTEDGE_HPP_
 #define PRECICE_QUERY_FINDCLOSESTEDGE_HPP_
 
@@ -90,7 +87,7 @@ FindClosestEdge:: FindClosestEdge
       _parametersProjectionPoint)),
   _closestEdge ( NULL )
 {
-  assertion1 ( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
+  assertion ( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
                _searchPoint.size() );
 }
 

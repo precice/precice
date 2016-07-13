@@ -23,6 +23,7 @@
 #include <fstream>
 
 
+using precice::utils::Event;
 
 // ------- CLASS DEFINITION
 
@@ -66,7 +67,7 @@ public:
        const Eigen::MatrixBase<Derived2>& B)
    {
      preciceTrace(__func__);
-     utils::Event e("SVD update", true, true);
+//     utils::Event e("SVD-update", true, true);
      assertion(_initialized);
      /** updates the truncated svd factorization of the Jacobian with a rank-1 modification
       *
@@ -74,10 +75,10 @@ public:
       *
       */
      if(_initialSVD){
-       assertion2(A.rows() == _rows, A.rows(), _rows);
-       assertion2(B.rows() == _rows, B.rows(), _rows);
+       assertion(A.rows() == _rows, A.rows(), _rows);
+       assertion(B.rows() == _rows, B.rows(), _rows);
      }else{
-       assertion2(A.rows() == B.rows(), A.rows(), B.rows()); assertion2(A.cols() == B.cols(), A.cols(), B.cols());
+       assertion(A.rows() == B.rows(), A.rows(), B.rows()); assertion(A.cols() == B.cols(), A.cols(), B.cols());
        _rows = A.rows();
        _cols = 0;
        _psi = Matrix::Zero(_rows, 0);
@@ -85,6 +86,7 @@ public:
        _sigma = Vector::Zero(0);
      }
 
+//     utils::Event e_orthModes("SVD-update::orthogonalModes", true, true);
      /** (1): compute orthogonal basis P of (I-\psi\psi^T)A
       */
      Matrix Atil(_psi.cols(), A.cols());    // Atil is of size (K_bar x m)
@@ -113,6 +115,8 @@ public:
      Matrix Q, R_B;
      computeQRdecomposition(Qtil, Q, R_B);
 
+//     e_orthModes.stop(true);
+
      /** (3) construct matrix K \in (K_bar + m -x) x (K_bar +m -y) if
       *      x .. deleted columns in P -> (m-x) new modes from A (rows of R_A)
       *      y .. deleted columns in Q -> (m-y) new modes from B (rows of R_B)
@@ -121,6 +125,7 @@ public:
       *      [    0    0]   [ R_A  ]   [ R_B  ]
       *  (stored local on each proc).
       */
+//     utils::Event e_matK("SVD-update::build-svd-K", true, true);
      Matrix K = Matrix::Zero(_psi.cols() + R_A.rows(), _psi.cols() + R_B.rows());
      Matrix K_A(_psi.cols() + R_A.rows(), Atil.cols());
      Matrix K_B(_phi.cols() + R_B.rows(), Btil.cols());
@@ -134,14 +139,17 @@ public:
      K_B.block(Btil.rows(), 0, R_B.rows(), R_B.cols()) = R_B;
      K += K_A * K_B.transpose();
 
+
      // compute svd of K
      Eigen::JacobiSVD<Matrix> svd(K, Eigen::ComputeThinU | Eigen::ComputeThinV);
      _sigma = svd.singularValues();
      auto& psiPrime = svd.matrixU();
      auto& phiPrime = svd.matrixV();
+//     e_matK.stop(true);
 
      /** (4) rotate left and right subspaces
       */
+//     utils::Event e_rot("SVD-update::rot-eigenspaces", true, true);
      Matrix rotLeft(_rows, _psi.cols() + P.cols());
      Matrix rotRight(_rows, _phi.cols() + Q.cols());
 
@@ -153,6 +161,8 @@ public:
      // [\psi,P] is distributed block-row wise, but \psiPrime is local on each proc, hence local mult.
      _psi = rotLeft * psiPrime;
      _phi = rotRight * phiPrime;
+
+//     e_rot.stop(true);
 
      /** (5) truncation of SVD
       */

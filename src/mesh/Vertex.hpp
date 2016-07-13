@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_MESH_VERTEX_HPP_
 #define PRECICE_MESH_VERTEX_HPP_
 
@@ -157,7 +154,7 @@ void Vertex:: setCoords
 (
   const VECTOR_T& coordinates )
 {
-  assertion2 ( coordinates.size() == _coords.size(), coordinates.size(), _coords.size() );
+  assertion ( coordinates.size() == _coords.size(), coordinates.size(), _coords.size() );
   _coords = coordinates;
 }
 
@@ -166,7 +163,7 @@ void Vertex:: setNormal
 (
   const VECTOR_T& normal )
 {
-  assertion2 ( normal.size() == _normal.size(), normal.size(), _normal.size() );
+  assertion ( normal.size() == _normal.size(), normal.size(), _normal.size() );
   _normal = normal;
 }
 

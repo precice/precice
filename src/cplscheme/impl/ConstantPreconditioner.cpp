@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ConstantPreconditioner.hpp"
 
 namespace precice {
@@ -25,7 +22,7 @@ void ConstantPreconditioner::initialize(int N){
 
   // is always constant by definition
   _freezed = true;
-  assertion1(_maxNonConstTimesteps == -1, _maxNonConstTimesteps);
+  assertion(_maxNonConstTimesteps == -1, _maxNonConstTimesteps);
 
   assertion(_factors.size()==_dimensions.size());
 

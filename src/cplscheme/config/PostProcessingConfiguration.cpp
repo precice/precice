@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "PostProcessingConfiguration.hpp"
 #include "cplscheme/impl/ConstantRelaxationPostProcessing.hpp"
 #include "cplscheme/impl/AitkenPostProcessing.hpp"
@@ -80,6 +77,7 @@ PostProcessingConfiguration:: PostProcessingConfiguration
   VALUE_LS_RESTART("RS-LS"),
   VALUE_ZERO_RESTART("RS-0"),
   VALUE_SVD_RESTART("RS-SVD"),
+  VALUE_SLIDE_RESTART("RS-SLIDE"),
   VALUE_NO_RESTART("no-restart"),
   //_isValid(false),
   _meshConfig(meshConfig),
@@ -293,6 +291,8 @@ void PostProcessingConfiguration:: xmlTagCallback
     }else if (f == VALUE_SVD_RESTART){
       _config.imvjRSSVD_truncationEps = callingTag.getDoubleAttributeValue(ATTR_RSSVD_TRUNCATIONEPS);
       _config.imvjRestartType = impl::MVQNPostProcessing::RS_SVD;
+    }else if (f == VALUE_SLIDE_RESTART){
+      _config.imvjRestartType = impl::MVQNPostProcessing::RS_SLIDE;
     }else {
       _config.imvjChunkSize = 0;
       assertion(false);
@@ -323,7 +323,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
         }
       }
 
-      // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time steps is limited by the chunc size
+      // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time steps is limited by the chunksize
       if(callingTag.getName() == VALUE_MVQN && _config.imvjRestartType > 0)
         if(_config.precond_nbNonConstTSteps > _config.imvjChunkSize)
           _config.precond_nbNonConstTSteps = _config.imvjChunkSize;
@@ -581,7 +581,8 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     ValidatorEquals<std::string> validRS_ZERO(VALUE_ZERO_RESTART );
     ValidatorEquals<std::string> validRS_LS(VALUE_LS_RESTART );
     ValidatorEquals<std::string> validRS_SVD(VALUE_SVD_RESTART );
-    attrRestartName.setValidator (validNO_RS || validRS_ZERO || validRS_LS ||validRS_SVD);
+    ValidatorEquals<std::string> validRS_SLIDE(VALUE_SLIDE_RESTART );
+    attrRestartName.setValidator (validNO_RS || validRS_ZERO || validRS_LS ||validRS_SVD || validRS_SLIDE);
     attrRestartName.setDefaultValue(VALUE_SVD_RESTART);
     tagIMVJRESTART.addAttribute(attrRestartName);
     tagIMVJRESTART.setDocumentation("Type of IMVJ restart mode that is used\n"
@@ -589,6 +590,7 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
               "  RS-ZERO:    IMVJ runs in restart mode. After M time steps all Jacobain information is dropped, restart with no information\n"
               "  RS-LS:      IMVJ runs in restart mode. After M time steps a IQN-LS like approximation for the initial guess of the Jacobian is computed.\n"
               "  RS-SVD:     IMVJ runs in restart mode. After M time steps a truncated SVD of the Jacobian is updated.\n"
+              "  RS-SLIDE:   IMVJ runs in sliding window restart mode.\n"
               );
     XMLAttribute<int> attrChunkSize(ATTR_IMVJCHUNKSIZE);
     attrChunkSize.setDocumentation("Specifies the number of time steps M after which the IMVJ restarts, if run in restart-mode. Defaul value is M=8.");

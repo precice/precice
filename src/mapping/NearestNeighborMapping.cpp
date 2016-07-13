@@ -40,7 +40,7 @@ void NearestNeighborMapping:: computeMapping()
     }
   }
   else {
-    assertion1(getConstraint() == CONSERVATIVE, getConstraint());
+    assertion(getConstraint() == CONSERVATIVE, getConstraint());
     preciceDebug("Compute conservative mapping");
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
@@ -79,11 +79,11 @@ void NearestNeighborMapping:: map
   Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();
   //assign(outputValues) = 0.0;
   int valueDimensions = input()->data(inputDataID)->getDimensions();
-  assertion2 ( valueDimensions == output()->data(outputDataID)->getDimensions(),
+  assertion ( valueDimensions == output()->data(outputDataID)->getDimensions(),
               valueDimensions, output()->data(outputDataID)->getDimensions() );
-  assertion3 ( inputValues.size() / valueDimensions == (int)input()->vertices().size(),
+  assertion ( inputValues.size() / valueDimensions == (int)input()->vertices().size(),
                inputValues.size(), valueDimensions, input()->vertices().size() );
-  assertion3 ( outputValues.size() / valueDimensions == (int)output()->vertices().size(),
+  assertion ( outputValues.size() / valueDimensions == (int)output()->vertices().size(),
                outputValues.size(), valueDimensions, output()->vertices().size() );
   if (getConstraint() == CONSISTENT){
     preciceDebug("Map consistent");
@@ -96,7 +96,7 @@ void NearestNeighborMapping:: map
     }
   }
   else {
-    assertion1(getConstraint() == CONSERVATIVE, getConstraint());
+    assertion(getConstraint() == CONSERVATIVE, getConstraint());
     preciceDebug("Map conservative");
     size_t inSize = input()->vertices().size();
     for ( size_t i=0; i < inSize; i++ ){

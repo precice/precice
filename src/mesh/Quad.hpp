@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_MESH_QUAD_HPP_
 #define PRECICE_MESH_QUAD_HPP_
 
@@ -147,7 +144,7 @@ inline Vertex& Quad:: vertex
 (
   int i )
 {
-  assertion1((i >= 0) && (i < 4), i);
+  assertion((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
 };
 
@@ -155,7 +152,7 @@ inline const Vertex& Quad:: vertex
 (
   int i ) const
 {
-  assertion1((i >= 0) && (i < 4), i);
+  assertion((i >= 0) && (i < 4), i);
   return edge(i).vertex(_vertexMap[i]);
 };
 
@@ -178,7 +175,7 @@ void Quad:: setNormal
 (
   const VECTOR_T& normal )
 {
-  assertion2(normal.size() == getDimensions(), normal.size(), getDimensions());
+  assertion(normal.size() == getDimensions(), normal.size(), getDimensions());
   _normal = normal;
 }
 
@@ -187,7 +184,7 @@ void Quad:: setCenter
 (
   const VECTOR_T& center )
 {
-  assertion2(center.size() == getDimensions(), center.size(), getDimensions());
+  assertion(center.size() == getDimensions(), center.size(), getDimensions());
   _center = center;
 }
 

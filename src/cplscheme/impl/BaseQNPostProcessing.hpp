@@ -1,13 +1,3 @@
-/*
- * BaseQNPostProcessing.hpp
- *
- *  Created on: Dez 5, 2015
- *      Author: Klaudius Scheufele
- */
-
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_CPLSCHEME_BASEQNPOSTPROCESSING_HPP_
 #define PRECICE_CPLSCHEME_BASEQNPOSTPROCESSING_HPP_
 
@@ -19,6 +9,7 @@
 #include "Eigen/Dense"
 #include <deque>
 #include <fstream>
+#include <sstream>
 #include <string.h>
 
 
@@ -89,7 +80,13 @@ public:
    /**
     * @brief Destructor, empty.
     */
-   virtual ~BaseQNPostProcessing() {}
+   virtual ~BaseQNPostProcessing() {
+     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)){
+       _infostream.open("postProcessingInfo.txt", std::ios_base::out);
+       _infostream << std::setprecision(16);
+       _infostream << _infostringstream.str();
+     }
+   }
 
    /**
     * @brief Returns all IQN involved data IDs.
@@ -249,6 +246,7 @@ protected:
 
 
    /// @brief write some debug/post processing info to file
+   std::ostringstream _infostringstream;
    std::fstream _infostream;
 
 
@@ -324,8 +322,7 @@ private:
   std::deque<int> _matrixColsBackup;
 
   /// @ brief additional debugging info, is not important for computation:
-
-  int deletedColumns;
+  int _nbDelCols;
 
 };
 

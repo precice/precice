@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "Participant.hpp"
 #include "DataContext.hpp"
 #include "MeshContext.hpp"
@@ -101,7 +98,7 @@ void Participant:: useMesh
   context->geometry = geometry;
   context->spacetree = spacetree;
   context->localOffset = localOffset;
-  assertion2 ( mesh->getDimensions() == context->localOffset.size(),
+  assertion ( mesh->getDimensions() == context->localOffset.size(),
                mesh->getDimensions(), context->localOffset.size() );
   context->receiveMeshFrom = fromParticipant;
   context->safetyFactor = safetyFactor;
@@ -231,7 +228,7 @@ bool Participant:: isDataUsed
 (
   int dataID ) const
 {
-  assertion2 ( (dataID >= 0) && (dataID < (int)_dataContexts.size()), dataID, (int)_dataContexts.size() );
+  assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()), dataID, (int)_dataContexts.size() );
   return _dataContexts[dataID] != nullptr;
 }
 
@@ -249,7 +246,7 @@ MeshContext& Participant:: meshContext
   int meshID )
 {
   preciceTrace2("meshContext()", meshID, _meshContexts.size());
-  assertion2((meshID >= 0) && (meshID < (int)_meshContexts.size()),
+  assertion((meshID >= 0) && (meshID < (int)_meshContexts.size()),
              meshID, _meshContexts.size());
   assertion(_meshContexts[meshID] != nullptr);
   return *_meshContexts[meshID];
@@ -309,7 +306,7 @@ void Participant:: checkDuplicatedData
   const mesh::PtrData& data )
 {
   preciceTrace2 ( "checkDuplicatedData()", data->getID(), _dataContexts.size() );
-  assertion2 ( data->getID() < (int)_dataContexts.size(), data->getID(), _dataContexts.size() );
+  assertion ( data->getID() < (int)_dataContexts.size(), data->getID(), _dataContexts.size() );
   preciceCheck ( _dataContexts[data->getID()] == nullptr, "checkDuplicatedData()",
                  "Participant \"" << _name << "\" can read/write data \""
                  << data->getName() << "\" only once!" );
@@ -342,7 +339,6 @@ void Participant:: setUseMaster(bool useMaster)
 {
   _useMaster = useMaster;
 }
-
 
 
 }} // namespace precice, impl

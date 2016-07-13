@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "PeanotreeCell2D.hpp"
 
 namespace precice {
@@ -51,7 +48,7 @@ void PeanotreeCell2D:: refine
 {
   preciceTrace2 ( "refine()", cellCenter, cellHalflengths );
   assertion ( _content != nullptr );
-  assertion1 ( _childs.size() == 0, _childs.size() );
+  assertion ( _childs.size() == 0, _childs.size() );
   int dim = cellCenter.size();
   utils::DynVector newCenter(dim);
   utils::DynVector newHalflengths(dim, 1.0 / 3.0 * cellHalflengths[0]);
@@ -79,9 +76,9 @@ int PeanotreeCell2D:: getChildIndex
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  assertion2 ( cellCenter.size() == cellHalflengths.size(),
+  assertion ( cellCenter.size() == cellHalflengths.size(),
                cellCenter.size(), cellHalflengths.size());
-  assertion2 ( cellCenter.size() == searchPoint.size(),
+  assertion ( cellCenter.size() == searchPoint.size(),
                cellCenter.size(), searchPoint.size());
   utils::DynVector halfspaces(searchPoint.size());
   for ( int i=0; i < searchPoint.size(); i++ ) {
@@ -136,7 +133,7 @@ void PeanotreeCell2D:: clear()
   _childs.deleteElements();
   _childs.clear();
   _position = Spacetree::positionUndefined();
-  assertion1 ( _childs.size() == 0, _childs.size() );
+  assertion ( _childs.size() == 0, _childs.size() );
   assertion ( _content->empty() );
 }
 

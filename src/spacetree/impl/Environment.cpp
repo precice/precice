@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "spacetree/impl/Environment.hpp"
 #include "utils/Helpers.hpp"
 
@@ -21,11 +18,11 @@ Environment:: Environment
 {
   //preciceTrace ( "Environment(Environment)" );
   for ( int i=0; i < _neighborCellIndices.size(); i++ ){
-    assertion1 ( toCopy._neighborCellIndices[i].size() > 0, i );
+    assertion ( toCopy._neighborCellIndices[i].size() > 0, i );
     _neighborCellIndices[i].append(toCopy._neighborCellIndices[i]);
   }
   for ( int i=0; i < _neighborSideIndices.size(); i++ ){
-    assertion1 ( toCopy._neighborSideIndices[i].size() > 0, i );
+    assertion ( toCopy._neighborSideIndices[i].size() > 0, i );
     _neighborSideIndices[i].append(toCopy._neighborSideIndices[i]);
   }
 }
