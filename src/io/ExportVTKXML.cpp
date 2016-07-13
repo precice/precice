@@ -173,7 +173,7 @@ void ExportVTKXML::writeSubFile
   if (_meshDimensions == 2) {
     numCells = mesh.edges().size();
   } else {
-	numCells = mesh.triangles().size() + mesh.quads().size();
+	  numCells = mesh.triangles().size() + mesh.quads().size();
   }
 
   std::ofstream outSubFile;
@@ -182,7 +182,7 @@ void ExportVTKXML::writeSubFile
 
   outSubFile.open(fullSubFilename.c_str());
   preciceCheck(outSubFile, "doExport()", "Could not open master file \"" << fullSubFilename
-       << "\" for VTKXML export!");
+    << "\" for VTKXML export!");
 
   outSubFile << "<?xml version=\"1.0\"?>" << std::endl;
   outSubFile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"";
@@ -304,21 +304,21 @@ void ExportVTKXML:: exportData
 	if(dataDimensions > 1) {
 	  utils::DynVector viewTemp(dataDimensions);
 	  for (mesh::Vertex& vertex : mesh.vertices()) {
-		int offset = vertex.getID() * dataDimensions;
-		for(int i=0; i < dataDimensions; i++){
-		  viewTemp[i] = values(offset + i);
-		}
-		for(int i = 0; i < dataDimensions; i++){
+  		int offset = vertex.getID() * dataDimensions;
+		  for(int i=0; i < dataDimensions; i++){
+		    viewTemp[i] = values(offset + i);
+		  }
+		  for(int i = 0; i < dataDimensions; i++){
 	      outFile << viewTemp[i] << " ";
-		}
-		outFile << " ";
+		  }
+		  outFile << " ";
+	    }
+	  } else if(dataDimensions == 1) {
+	    for (mesh::Vertex& vertex : mesh.vertices()) {
+		    outFile << values(vertex.getID()) << " ";
+	    }
 	  }
-	} else if(dataDimensions == 1) {
-	  for (mesh::Vertex& vertex : mesh.vertices()) {
-		outFile << values(vertex.getID()) << " ";
-	  }
-	}
-	outFile << std::endl << "            </DataArray>" << std::endl;
+	  outFile << std::endl << "            </DataArray>" << std::endl;
   }
 
   outFile << "         </PointData> " << std::endl;
@@ -331,11 +331,11 @@ void ExportVTKXML::writeVertex
 {
   outFile << "               ";
   for (int i = 0; i < position.size(); i++){
-	outFile << position(i) << "  ";
+    outFile << position(i) << "  ";
   }
   if (position.size() < 3)
   {
-	outFile << 0.0 << "  ";
+    outFile << 0.0 << "  ";
   }
   outFile << std::endl;
 }
