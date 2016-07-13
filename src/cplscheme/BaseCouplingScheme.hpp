@@ -469,7 +469,7 @@ protected:
    */
   void setupDataMatrices(DataMap& data);
 
-  impl::PtrPostProcessing getPostProcessing() {
+  impl::PtrPostProcessing getPostProcessing() const {
     return _postProcessing;
   }
 

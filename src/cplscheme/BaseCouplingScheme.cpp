@@ -578,11 +578,23 @@ void BaseCouplingScheme:: requireAction
 // TODO: insert _iterationsCoarseOptimization in print state
 std::string BaseCouplingScheme::printCouplingState() const
 {
-  std::ostringstream os;
-  os << "it " << _iterations; //_iterations;
-  if (getMaxIterations() != -1 ) {
-    os << " of " << getMaxIterations();
+  bool manifoldmapping = false;
+  if (getPostProcessing().get() != nullptr) {
+    manifoldmapping = _postProcessing->isMultilevelBasedApproach();
   }
+
+  std::ostringstream os;
+  if(manifoldmapping){
+    os << "fine it " << _iterations;
+    if (getMaxIterations() != -1 )
+       os << " of " << getMaxIterations();
+    os << " | coarse it " << _iterationsCoarseOptimization;
+  }else{
+    os << "it " << _iterations;
+    if (getMaxIterations() != -1 )
+       os << " of " << getMaxIterations();
+  }
+
   os << " | " << printBasicState(_timesteps, _time) << " | " << printActionsState();
   return os.str();
 }
@@ -691,8 +703,8 @@ void BaseCouplingScheme::setIterationPostProcessing
     if(_postProcessing->isMultilevelBasedApproach()){
       _postProcessing->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
       // also initialize the iteration counters with 0, as scheme starts with coarse model evaluation
-      _iterations = 0;
-      _totalIterations = 0;
+   //   _iterations = 0;  // CHANGED
+   //   _totalIterations = 0;
     }
  }
 
@@ -968,6 +980,8 @@ void BaseCouplingScheme:: updateTimeAndIterations
     manifoldmapping = _postProcessing->isMultilevelBasedApproach();
   }
 
+  //std::cout<<"fine conv: "<<convergence<<" | coarse conv: "<<convergenceCoarseOptimization<<" | fine its: "<<_iterations<<" | coarse its: "<<_iterationsCoarseOptimization<<std::endl;
+
   if(not convergence){
 
     // The computed timestep part equals the timestep length, since the
@@ -978,8 +992,10 @@ void BaseCouplingScheme:: updateTimeAndIterations
 
     // in case of multilevel PP: only increment outer iteration count if surrogate model has converged.
     if(convergenceCoarseOptimization){
-      _totalIterations++;
-      _iterations++;
+      if(not _isCoarseModelOptimizationActive){
+        _totalIterations++;
+        _iterations++;
+      }
     }else{
       // in case of multilevel PP: increment the iteration count of the surrogate model
       _iterationsCoarseOptimization++;
@@ -991,8 +1007,10 @@ void BaseCouplingScheme:: updateTimeAndIterations
     if (not manifoldmapping) _totalIterations++;
 
     _iterationsCoarseOptimization = 1;
-    _iterations =  manifoldmapping ? 0 : 1;
+    _iterations =  1;
+    //_iterations =  manifoldmapping ? 0 : 1; CHANGED
   }
+  std::cout<<"fine conv: "<<convergence<<" | coarse conv: "<<convergenceCoarseOptimization<<" | coarse model active: "<<_isCoarseModelOptimizationActive<<" | fine its: "<<_iterations<<" | coarse its: "<<_iterationsCoarseOptimization<<std::endl;
 }
 
 void BaseCouplingScheme:: timestepCompleted()

@@ -232,6 +232,9 @@ void ParallelCouplingScheme::implicitAdvance()
       getM2N()->finishSendPackage();
       getM2N()->startReceivePackage(0);
       getM2N()->receive(convergence);
+      getM2N()->startReceivePackage(0);
+      getM2N()->receive(convergenceCoarseOptimization);
+      getM2N()->startReceivePackage(0);
       getM2N()->receive(_isCoarseModelOptimizationActive);
       if (convergence) {
         timestepCompleted();
@@ -335,8 +338,13 @@ void ParallelCouplingScheme::implicitAdvance()
        }
      }
 
+      // send convergence
       getM2N()->startSendPackage(0);
       getM2N()->send(convergence);
+      getM2N()->startSendPackage(0);
+      getM2N()->send(convergenceCoarseOptimization);
+      // send flag that indicates which model is evaluated
+      getM2N()->startSendPackage(0);
       getM2N()->send(_isCoarseModelOptimizationActive);
 
       sendData(getM2N());
