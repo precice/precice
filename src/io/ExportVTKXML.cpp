@@ -256,8 +256,9 @@ void ExportVTKXML::exportGeometry
 	  outFile << std::endl;
 	  outFile << "            </DataArray> " << std::endl;
 	  outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+	  outFile << "               ";
 	  for (int i = 1; i <= mesh.triangles().size(); i++) {
-  	  outFile << 3*i << "  ";
+      outFile << 3*i << "  ";
 	  }
 	  for (int i = 1; i <= mesh.quads().size(); i++) {
 	    outFile << 4*i << "  ";
