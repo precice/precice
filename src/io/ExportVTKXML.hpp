@@ -82,9 +82,6 @@ private:
    // @brief By default set true: plot vertex normals, false: no normals plotting
    bool _writeNormals;
 
-   // @brief true: preCICE running in parallel, false: serial
-   bool _isProgramParallel;
-
    // @brief true: write as parallel file, false: write as serial file
    bool _parallelWrite;
 

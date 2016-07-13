@@ -28,15 +28,9 @@ ExportVTKXML:: ExportVTKXML
   _writeNormals(writeNormals),
   _parallelWrite(parallelWrite),
   _isDataNamesAndDimensionsProcessed(false),
-  _isCellPresent(),
+  _isCellPresent(true),
   _meshDimensions(3)
 {
-	// TODO: Not working: find a way to find if precice is in parallel mode.
-#ifndef PRECICE_NO_MPI
-  _isProgramParallel = false;
-#else
-  _isProgramParallel = true;
-#endif
 }
 
 int ExportVTKXML:: getType() const
@@ -54,7 +48,7 @@ void ExportVTKXML:: doExport
   //preciceDebug("_isProgramParallel: " + std::to_string(_isProgramParallel));
 
   if (_parallelWrite) { // if parallel write enabled
-    if (1) { // if precice in parallel mode
+    if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) { // if precice in parallel mode
       // code for parallel write for parallel precice
       //preciceDebug("Writing Parallel File..");
       processDataNamesAndDimensions(mesh);
@@ -67,7 +61,7 @@ void ExportVTKXML:: doExport
       // code for parallel write of serial precice
     }
   } else {
-    if (_isProgramParallel) { // if precice in parallel mode
+    if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) { // if precice in parallel mode
       // code for serial write for parallel precice
       // maybe throw error saying inefficient?
     } else {
@@ -81,7 +75,7 @@ void ExportVTKXML::processDataNamesAndDimensions
   mesh::Mesh& mesh)
 {
   if (not _isDataNamesAndDimensionsProcessed) {
-	  _isDataNamesAndDimensionsProcessed = true;
+	_isDataNamesAndDimensionsProcessed = true;
     _meshDimensions = mesh.getDimensions();
     if (_writeNormals) {
 	  _vectorDataNames.push_back("VertexNormals ");
@@ -101,9 +95,9 @@ void ExportVTKXML::processDataNamesAndDimensions
 	    exit(-1);
 	  }
     }
-    if(mesh.edges().size() > 0 || mesh.triangles().size() > 0 || mesh.quads().size() > 0) {
-    	_isCellPresent = true;
-    }
+    //if(mesh.edges().size() > 0 || mesh.triangles().size() > 0 || mesh.quads().size() > 0) {
+    	//_isCellPresent = true;
+    //}
   }
 }
 
@@ -126,7 +120,7 @@ void ExportVTKXML::writeMasterFile
   outMasterFile << "   <PUnstructuredGrid GhostLevel=\"0\">" << std::endl;
 
   outMasterFile << "      <PPoints>" << std::endl;
-  outMasterFile << "         <PDataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"" << _meshDimensions << "\"/>" << std::endl;
+  outMasterFile << "         <PDataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\"/>" << std::endl;
   outMasterFile << "      </PPoints>" << std::endl;
 
   if (_isCellPresent) {
@@ -179,7 +173,7 @@ void ExportVTKXML::writeSubFile
   if (_meshDimensions == 2) {
     numCells = mesh.edges().size();
   } else {
-	numCells = mesh.triangles().size();
+	numCells = mesh.triangles().size() + mesh.quads().size();
   }
 
   std::ofstream outSubFile;
@@ -197,7 +191,7 @@ void ExportVTKXML::writeSubFile
   outSubFile << "   <UnstructuredGrid>" << std::endl;
   outSubFile << "      <Piece NumberOfPoints=\"" << numPoints << "\" NumberOfCells=\"" << numCells << "\"> " << std::endl;
   outSubFile << "         <Points> " << std::endl;
-  outSubFile << "            <DataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"" << _meshDimensions << "\" format=\"ascii\"> " << std::endl;
+  outSubFile << "            <DataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\" format=\"ascii\"> " << std::endl;
   for (mesh::Vertex& vertex : mesh.vertices()) {
     writeVertex(vertex.getCoords(), outSubFile);
   }
@@ -226,18 +220,21 @@ void ExportVTKXML::exportGeometry
     if (_meshDimensions == 2) { // write edges as cells
       outFile << "         <Cells>" << std::endl;
 	  outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+	  outFile << "               ";
 	  for (mesh::Edge & edge : mesh.edges()) {
   	    writeLine(edge, outFile);
   	  }
 	  outFile << std::endl;
 	  outFile << "            </DataArray> " << std::endl;
 	  outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+	  outFile << "               ";
 	  for (int i = 1; i <= mesh.edges().size(); i++) {
 		  outFile << 2*i << "  ";
 	  }
 	  outFile << std::endl;
 	  outFile << "            </DataArray>" << std::endl;
 	  outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+	  outFile << "               ";
 	  for (int i = 1; i <= mesh.edges().size(); i++) {
 		  outFile << 3 << "  ";
 	  }
@@ -249,6 +246,7 @@ void ExportVTKXML::exportGeometry
 
 	  outFile << "         <Cells>" << std::endl;
 	  outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+	  outFile << "               ";
 	  for (mesh::Triangle& triangle : mesh.triangles()) {
 	    writeTriangle(triangle, outFile);
 	  }
@@ -267,6 +265,7 @@ void ExportVTKXML::exportGeometry
 	  outFile << std::endl;
 	  outFile << "            </DataArray>" << std::endl;
 	  outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+	  outFile << "               ";
 	  for (int i = 1; i <= mesh.triangles().size(); i++) {
         outFile << 5 << "  ";
 	  }
@@ -332,6 +331,10 @@ void ExportVTKXML::writeVertex
   outFile << "               ";
   for (int i = 0; i < position.size(); i++){
 	outFile << position(i) << "  ";
+  }
+  if (position.size() < 3)
+  {
+	outFile << 0.0 << "  ";
   }
   outFile << std::endl;
 }

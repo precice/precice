@@ -1184,7 +1184,7 @@ int SolverInterfaceImpl:: setMeshEdge
   }
   else {
     MeshContext& context = _accessor->meshContext(meshID);
-    if ( context.meshRequirement == mapping::Mapping::FULL ){
+    //if ( context.meshRequirement == mapping::Mapping::FULL ){
       preciceDebug("Full mesh required.");
       mesh::PtrMesh& mesh = context.mesh;
       assertion1(firstVertexID >= 0, firstVertexID);
@@ -1196,7 +1196,7 @@ int SolverInterfaceImpl:: setMeshEdge
       mesh::Vertex& v0 = mesh->vertices()[firstVertexID];
       mesh::Vertex& v1 = mesh->vertices()[secondVertexID];
       return mesh->createEdge(v0, v1).getID ();
-    }
+    //}
   }
   return -1;
 }
