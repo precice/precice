@@ -62,6 +62,10 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _singularityLimit(singularityLimit),
   _matrixCols(),
   _dimOffsets(),
+  _infostringstream(std::ostringstream::ate),
+  _infostream(),
+  its(0),
+  tSteps(0),
   _values(),
   _oldValues(),
   _oldResiduals(),
@@ -69,11 +73,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _matrixVBackup(),
   _matrixWBackup(),
   _matrixColsBackup(),
-  its(0),
-  tSteps(0),
-  _nbDelCols(0),
-  _infostringstream(std::ostringstream::ate),
-  _infostream()
+  _nbDelCols(0)
   //_debugOut()
 {
   preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),

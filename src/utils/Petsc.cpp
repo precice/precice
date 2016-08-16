@@ -80,10 +80,10 @@ Vector::Vector(Mat &m, std::string name, LEFTRIGHT type)
   // MatGetVecs is deprecated, we keep it due to the old PETSc version at the SuperMUC.
   PetscErrorCode ierr = 0;
   if (type == LEFTRIGHT::LEFT) {
-    ierr = MatGetVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
+    ierr = MatCreateVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
   }
   else {
-    ierr = MatGetVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
+    ierr = MatCreateVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
   }
   setName(name);
 }
@@ -385,8 +385,9 @@ void Matrix::view()
   PetscViewer viewer;
   ierr = PetscViewerCreate(communicator, &viewer); CHKERRV(ierr);
   ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII); CHKERRV(ierr); 
-  ierr = PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_DENSE); CHKERRV(ierr);
+  ierr = PetscViewerPushFormat(viewer, PETSC_VIEWER_ASCII_DENSE); CHKERRV(ierr);
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
+  ierr = PetscViewerPopFormat(viewer); CHKERRV(ierr);
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr); 
 }
 
