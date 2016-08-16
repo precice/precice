@@ -97,7 +97,8 @@ LoggingConfiguration readLogConfFile(std::string filename)
   LoggingConfiguration retVal;
     
   for (const auto& c : configs)
-    retVal.push_back(c.second);
+    if (c.second.enabled)
+      retVal.push_back(c.second);
 
   return retVal;
 }
@@ -108,6 +109,7 @@ const std::string BackendConfiguration::default_formatter = "(%Rank%) %TimeStamp
 
 void BackendConfiguration::setOption(std::string key, std::string value)
 {
+  const std::vector<std::string> trueValues = {"true", "1", "on", "yes"};
   boost::algorithm::to_lower(key);
   if (key == "type") {
     boost::algorithm::to_lower(value);
@@ -116,9 +118,16 @@ void BackendConfiguration::setOption(std::string key, std::string value)
   if (key == "output")
     output = value;
   if (key == "filter")
-    filter = boost::log::parse_filter(value);
+    filter = value;
   if (key == "format")
-    format = boost::log::parse_formatter(value);
+    format = value;
+  if (key == "enabled") {
+    boost::algorithm::to_lower(value);
+    if (std::find(std::begin(trueValues), std::end(trueValues), value) == std::end(trueValues))
+      enabled = false;
+    else
+      enabled = true;
+  }
 }
 
 
@@ -132,19 +141,12 @@ void setupLogging(LoggingConfiguration configs)
   // Possible, longer output format. Currently unused.
   auto fmtStream =
     expressions::stream
-     << "(" 
-     << expressions::attr<int>("Rank")
-     << ") "
-     << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S")
-     << " "
-     << expressions::attr<std::string>("File")
-     << ":"
+     << "(" << expressions::attr<int>("Rank") << ") "
+     << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S") << " "
+     << expressions::attr<std::string>("File") << ":"
      << expressions::attr<int>("Line")
-     << " ["
-     << expressions::attr<std::string>("Module")
-     << "] in "
-     << expressions::attr<std::string>("Function") 
-     << ": "
+     << " [" << expressions::attr<std::string>("Module") << "] in "
+     << expressions::attr<std::string>("Function") << ": "
      << expressions::message;
 
   // Add the default config
@@ -169,8 +171,8 @@ void setupLogging(LoggingConfiguration configs)
     backend->auto_flush(true);
     using sink_t =  boost::log::sinks::synchronous_sink<StreamBackend>;          
     boost::shared_ptr<sink_t> sink(new sink_t(backend));
-    sink->set_formatter(config.format);
-    sink->set_filter(config.filter);
+    sink->set_formatter(boost::log::parse_formatter(config.format));
+    sink->set_filter(boost::log::parse_filter(config.filter));
     boost::log::core::get()->add_sink(sink);
   }    
 }

@@ -17,8 +17,9 @@ struct BackendConfiguration
   
   std::string type = "stream";
   std::string output = "stdout";
-  boost::log::filter filter = boost::log::parse_filter(default_filter);
-  boost::log::basic_formatter<char> format = boost::log::parse_formatter(default_formatter);
+  bool enabled = true;
+  std::string filter = default_filter;
+  std::string format = default_formatter;
 
   /// Sets on option, overwrites default values.
   void setOption(std::string key, std::string value);

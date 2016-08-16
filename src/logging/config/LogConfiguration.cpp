@@ -41,7 +41,12 @@ LogConfiguration::LogConfiguration
   attrFilter.setDocumentation("Boost Log Filter String");
   attrFilter.setDefaultValue(precice::logging::BackendConfiguration::default_filter);
   tagSink.addAttribute(attrFilter);
-
+  
+  XMLAttribute<bool> attrEnabled("enabled");
+  attrEnabled.setDocumentation("Enables the filter");
+  attrEnabled.setDefaultValue(true);
+  tagSink.addAttribute(attrEnabled);
+  
   tagLog.addSubtag(tagSink);
   parent.addSubtag(tagLog);
 }
