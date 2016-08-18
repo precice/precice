@@ -80,10 +80,10 @@ Vector::Vector(Mat &m, std::string name, LEFTRIGHT type)
   // MatGetVecs is deprecated, we keep it due to the old PETSc version at the SuperMUC.
   PetscErrorCode ierr = 0;
   if (type == LEFTRIGHT::LEFT) {
-    ierr = MatGetVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
+    ierr = MatCreateVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
   }
   else {
-    ierr = MatGetVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
+    ierr = MatCreateVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
   }
   setName(name);
 }
@@ -99,6 +99,11 @@ Vector::~Vector()
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized) // If PetscFinalize is called before ~Vector
     ierr = VecDestroy(&vector); CHKERRV(ierr);
+}
+
+Vector::operator Vec&()
+{
+  return vector;
 }
 
 void Vector::init(PetscInt rows)
@@ -243,6 +248,11 @@ Matrix::~Matrix()
     ierr = MatDestroy(&matrix); CHKERRV(ierr);
 }
 
+Matrix::operator Mat&()
+{
+  return matrix;
+}
+
 void Matrix::assemble(MatAssemblyType type)
 {
   PetscErrorCode ierr = 0;
@@ -375,8 +385,9 @@ void Matrix::view()
   PetscViewer viewer;
   ierr = PetscViewerCreate(communicator, &viewer); CHKERRV(ierr);
   ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII); CHKERRV(ierr); 
-  ierr = PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_DENSE); CHKERRV(ierr);
+  ierr = PetscViewerPushFormat(viewer, PETSC_VIEWER_ASCII_DENSE); CHKERRV(ierr);
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
+  ierr = PetscViewerPopFormat(viewer); CHKERRV(ierr);
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr); 
 }
 

@@ -45,12 +45,12 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param solverName [IN] Name of the solver using the interface. Has to
+   * @param[in] solverName Name of the solver using the interface. Has to
    *        match the name given for a participant in the xml configuration file.
-   * @param solverProcessIndex [IN] If the solver code runs with several processes,
+   * @param[in] solverProcessIndex If the solver code runs with several processes,
    *        each process using preCICE has specify its index, which has to start
    *        from 0 and end with solverProcessSize - 1.
-   * @param solverProcessSize [IN] The number of solver processes using preCICE.
+   * @param[in] solverProcessSize The number of solver processes using preCICE.
    */
   SolverInterface (
     const std::string& solverName,
@@ -298,9 +298,9 @@ public:
    * The distance is positive, if the inquired point lies out of the
    * geometry, and negative, if it lies within the geometry.
    *
-   * @param inquiredPoint       [IN] Coordinates of the point inquired
-   * @param distanceToGeometry [OUT] Distance to the next geometry
-   * @param geometryID         [OUT] ID of the next geometry
+   * @param[in] inquiredPoint       Coordinates of the point inquired
+   * @param[out] distanceToGeometry Distance to the next geometry
+   * @param[out] geometryID         ID of the next geometry
    *
    * @return AdjacentGeometry object containing geometry id and distance
    */
@@ -313,10 +313,10 @@ public:
    *
    * Objects touching the voxel surface are not considered to be in the voxel.
    *
-   * @param inquiryCenter   [IN] Center point of voxel.
-   * @param halfLengthVoxel [IN] Half lengths of voxel sides.
-   * @param includeBoundaries [IN] If true, touching objects are included.
-   * @param storeContent [IN] If true, included objects are stored in VoxelPosition.
+   * @param[in] inquiryCenter Center point of voxel.
+   * @param[in] halfLengthVoxel Half lengths of voxel sides.
+   * @param[in] includeBoundaries If true, touching objects are included.
+   * @param[in] storeContent If true, included objects are stored in VoxelPosition.
    *
    * @return Result of inquiry.
    */
@@ -358,7 +358,11 @@ public:
    * - If no write mapping is configured, the ids are not changed.
    * - If a (not incremental) write mapping is configured, the ids are filled.
    *
-   * @param ids [OUT] IDs for data to be written from given positions.
+   * @param[in] meshID ID of mesh on which the vertices live
+   * @param[in] size Number of vertices
+   * @param[in] positions Positions of vertics, Format is (d0x, d0y, d0z, d1x, d1y, d1z, ...., dnx, dny, dnz), 
+   *                      where n * the number of vector values. In 2D, the z-components are removed.
+   * @param[out] ids IDs for data to be written from given positions.
    */
   void setMeshVertices (
     int     meshID,
@@ -369,8 +373,8 @@ public:
   /**
    * @brief Gets spatial vertex positions for given IDs.
    *
-   * @param ids [IN] IDs obtained when setting write positions.
-   * @param positions [OUT] Positions corresponding to IDs.
+   * @param[in] ids IDs obtained when setting write positions.
+   * @param[in] positions Positions corresponding to IDs.
    */
   void getMeshVertices (
     int     meshID,

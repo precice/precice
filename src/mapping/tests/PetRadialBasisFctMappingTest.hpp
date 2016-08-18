@@ -61,6 +61,7 @@ private:
   void testDistributedConservative2DV2();
   void testDistributedConservative2DV3();
   void testDistributedConservative2DV4();
+  void testDistributedConservative2DV5();
 
   void testPetThinPlateSplines();
 
@@ -89,6 +90,8 @@ private:
   void testDeadAxis2D();
 
   void testDeadAxis3D();
+
+  void testSolutionCaching();
 
   struct VertexSpecification
   {
