@@ -66,7 +66,6 @@ vars.Add(EnumVariable('build', 'Build type, either release or debug', "debug", a
 vars.Add("compiler", "Compiler to use.", "g++")
 vars.Add(BoolVariable("mpi", "Enables MPI-based communication and running coupling tests.", True))
 vars.Add(BoolVariable("sockets", "Enables Socket-based communication.", True))
-vars.Add(BoolVariable("boost_inst", "Enable if Boost is available compiled and installed.", False))
 vars.Add(BoolVariable("spirit2", "Used for parsing VRML file geometries and checkpointing.", True))
 vars.Add(BoolVariable("petsc", "Enable use of the Petsc linear algebra library.", True))
 vars.Add(BoolVariable("python", "Used for Python scripted solver actions.", True))
@@ -156,18 +155,15 @@ if env["build"] == "debug":
     env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
 
 # ====== Boost ======
-if env["boost_inst"]:
-    env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3'])
-    uniqueCheckLib(conf, "boost_log")
-    uniqueCheckLib(conf, "boost_log_setup")
-    uniqueCheckLib(conf, "boost_thread")
-    uniqueCheckLib(conf, "boost_system")
-    uniqueCheckLib(conf, "boost_filesystem")
-    uniqueCheckLib(conf, "boost_program_options")
-    env.Append(CPPDEFINES=["BOOST_LOG_DYN_LINK"])
-else:
-    boostRootPath = checkset_var('PRECICE_BOOST_ROOT', "./src")
-    env.AppendUnique(CXXFLAGS = ['-isystem', boostRootPath]) # -isystem supresses compilation warnings for boost headers
+env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3'])
+uniqueCheckLib(conf, "boost_log")
+uniqueCheckLib(conf, "boost_log_setup")
+uniqueCheckLib(conf, "boost_thread")
+uniqueCheckLib(conf, "boost_system")
+uniqueCheckLib(conf, "boost_filesystem")
+uniqueCheckLib(conf, "boost_program_options")
+env.Append(CPPDEFINES=["BOOST_LOG_DYN_LINK"])
+
 if not conf.CheckCXXHeader('boost/array.hpp'):
     errorMissingHeader('boost/array.hpp', 'Boost')
 
@@ -263,41 +259,21 @@ env = conf.Finish() # Used to check libraries
     duplicate = 0
 )
 
-sourcesBoost = []
-if not env["boost_inst"]:
-    print
-    print "Copy Boost sources..."
-    if not os.path.exists(buildpath + "/boost/"):
-        Execute(Mkdir(buildpath + "/boost/"))
-    for file in Glob(boostRootPath + "/libs/system/src/*"):
-        Execute(Copy(buildpath + "/boost/", file))
-    for file in Glob(boostRootPath + "/libs/filesystem/src/*"):
-        Execute(Copy(buildpath + "/boost/", file))
-    for file in Glob(buildpath + "/boost/*.hpp"):
-        # Insert pragma to disable warnings in boost files.
-        subprocess.call(["sed", "-i", r"1s;^;#pragma GCC system_header\n;", str(file)])
-    sourcesBoost = Glob(buildpath + '/boost/*.cpp')
-    print "... done"
-
-
 staticlib = env.StaticLibrary (
     target = buildpath + '/libprecice',
-    source = [sourcesPreCICE,
-              sourcesBoost]
+    source = [sourcesPreCICE]
 )
 env.Alias("staticlib", staticlib)
 
 solib = env.SharedLibrary (
     target = buildpath + '/libprecice',
-    source = [sourcesPreCICE,
-              sourcesBoost]
+    source = [sourcesPreCICE]
 )
 env.Alias("solib", solib)
 
 bin = env.Program (
     target = buildpath + '/binprecice',
-    source = [sourcesPreCICEMain,
-              sourcesBoost]
+    source = [sourcesPreCICEMain]
 )
 
 # Creates a symlink that always points to the latest build
