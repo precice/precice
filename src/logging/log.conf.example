@@ -20,7 +20,7 @@ Output = stdout
 Enabled = False
 
 # Warnings and higher to standard error
-[FullDebugOutputToFile]
+[OnlyWarningsAndAbove]
 Filter = %Severity% > warning
 Type = stream
 Output = stderr
