@@ -283,7 +283,7 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(staticlib, bin, symlink)
+Default(staticlib, solib, bin, symlink)
 AlwaysBuild(symlink)
 
 print "Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS])
