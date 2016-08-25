@@ -146,8 +146,7 @@ int main ( int argc, char** argv )
               << std::endl << std::endl
               << "     Configuration outline:"     << std::endl << std::endl
               << "     <precice-configuration>"    << std::endl
-              << "        <log-filter .../>"       << std::endl
-              << "        <log-output .../>"       << std::endl
+              << "        <log .../>"              << std::endl
               << "        <solver-interface>"      << std::endl
               << "           <data .../>"          << std::endl
               << "           <spacetree .../>"     << std::endl
