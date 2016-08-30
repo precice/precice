@@ -128,7 +128,6 @@ void SerialCouplingScheme::initializeData()
     assertion(doesFirstStep());
     preciceDebug("Receiving data");
     getM2N()->startReceivePackage(0);
-    receiveAndSetDt();
     receiveData(getM2N());
     getM2N()->finishReceivePackage();
     setHasDataBeenExchanged(true);
@@ -148,6 +147,7 @@ void SerialCouplingScheme::initializeData()
     // here, which receives the data on call of initialize().
     sendData(getM2N());
     getM2N()->startReceivePackage(0);
+    receiveAndSetDt();
     // This receive replaces the receive in initialize().
     receiveData(getM2N());
     getM2N()->finishReceivePackage();
