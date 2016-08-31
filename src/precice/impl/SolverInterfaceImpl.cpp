@@ -2201,11 +2201,9 @@ void SolverInterfaceImpl:: handleExports()
       watchPoint->exportPointData(_couplingScheme->getTime());
     }
 
-    if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
+    //if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
       // Checkpointing
       int checkpointingInterval = _couplingScheme->getCheckpointTimestepInterval();
-      preciceCheck(not  (utils::MasterSlave::_masterMode && checkpointingInterval!=-1) ,
-                    "handleExports()","Checkpointing for a Master is not yet supported");
       if ((checkpointingInterval != -1) && (timesteps % checkpointingInterval == 0)){
         preciceDebug("Set require checkpoint");
         _couplingScheme->requireAction(constants::actionWriteSimulationCheckpoint());
@@ -2221,7 +2219,7 @@ void SolverInterfaceImpl:: handleExports()
         //io::TXTWriter exportCouplingSchemeState(_checkpointFileName + "_cplscheme.txt");
         _couplingScheme->exportState(_checkpointFileName);
       }
-    }
+    //}
   }
 }
 

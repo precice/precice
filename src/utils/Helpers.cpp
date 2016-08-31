@@ -24,6 +24,16 @@ std::string getTypeName(const int& var)
   return std::string("integer");
 }
 
+bool isMachineBigEndian()
+{
+   union {
+      uint32_t i;
+      char c[4];
+   } bint = {0x01020304};
+
+   return bint.c[0] == 1;
+}
+
 //template<>
 //double getZero ( double ) { return 0.0; }
 //

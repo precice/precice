@@ -1,5 +1,6 @@
 #include "ExportConfiguration.hpp"
 #include "io/ExportVTK.hpp"
+#include "io/ExportVTKXML.hpp"
 #include "io/ExportVRML.hpp"
 #include "io/Export.hpp"
 #include "utils/Globals.hpp"
@@ -29,6 +30,7 @@ ExportConfiguration:: ExportConfiguration
   ATTR_TYPE ( "type" ),
   ATTR_AUTO ( "auto" ),
   VALUE_VTK ( "vtk" ),
+  VALUE_VTKXML ( "vtkxml" ),
   VALUE_VRML ( "vrml" ),
   ATTR_TIMESTEP_INTERVAL ( "timestep-interval" ),
   ATTR_NEIGHBORS ( "neighbors" ),
@@ -46,6 +48,11 @@ ExportConfiguration:: ExportConfiguration
   {
     XMLTag tag(*this, VALUE_VTK, occ, TAG);
     tag.setDocumentation("Exports meshes to VTK text files.");
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_VTKXML, occ, TAG);
+    tag.setDocumentation("Exports meshes to VTK xml files.");
     tags.push_back(tag);
   }
   {
@@ -172,6 +179,10 @@ void ExportConfiguration:: xmlTagCallback
     PtrExport exporter;
     if (type == VALUE_VTK){
       exporter = PtrExport(new ExportVTK(plotNormals));
+    }
+    else if (type == VALUE_VTKXML){
+      bool isWriteParallel = true;
+      exporter = PtrExport(new ExportVTKXML(plotNormals, isWriteParallel));
     }
     else if (type == VALUE_VRML){
       exporter = PtrExport (new ExportVRML(plotNormals));

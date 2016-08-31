@@ -19,5 +19,10 @@ int exportAll()
   return 2;
 }
 
+int exportVTKXML()
+{
+  return 3;
+}
+
 }}} // namespace precice, io, constants
 
