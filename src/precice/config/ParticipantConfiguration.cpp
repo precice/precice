@@ -18,6 +18,11 @@
 #include "utils/MasterSlave.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
+#include "io/ExportVTK.hpp"
+#include "io/ExportVTKXML.hpp"
+#include "io/ExportVRML.hpp"
+#include "io/ExportContext.hpp"
+#include "io/SharedPointer.hpp"
 
 namespace precice {
 namespace config {
@@ -64,6 +69,8 @@ ParticipantConfiguration:: ParticipantConfiguration
   ATTR_EXCHANGE_DIRECTORY("exchange-directory"),
   VALUE_PRE_FILTER_POST_FILTER("pre-filter-post-filter"),
   VALUE_BROADCAST_FILTER("broadcast-filter"),
+  VALUE_VTK ( "vtk" ),
+  VALUE_VRML ( "vrml" ),
   _dimensions(0),
   _meshConfig(meshConfiguration),
   _geometryConfig(geometryConfiguration),
@@ -515,16 +522,6 @@ void ParticipantConfiguration:: xmlTagCallback
 //    }
 //    return success;
 //  }
-//  else if ( tag.getName() == io::ExportConfiguration::TAG ){
-//    io::ExportConfiguration config;
-//    if ( config.parseSubtag(xmlReader) ){
-//      //preciceDebug ( "Setting export context with "
-//      //               << config.exports().size() << " exports" );
-//      _participants.back()->addExportContext ( config.getExportContext() );
-//      return true;
-//    }
-//    return false;
-//  }
   else if ( tag.getName() == TAG_WATCH_POINT ){
     assertion(_dimensions != 0); // setDimensions() has been called
     WatchPointConfig config;
@@ -740,9 +737,26 @@ void ParticipantConfiguration:: finishParticipantConfiguration
   _actionConfig->resetActions();
 
   // Add export contexts
-  for (const io::ExportContext& context : _exportConfig->exportContexts()){
-//    preciceCheck(not participant->useMaster(), "finishParticipantConfiguration()",
-//        "To use exports while using a master is not yet supported");
+  for (io::ExportContext& context : _exportConfig->exportContexts()){
+    io::PtrExport exporter;
+    if (context.type == VALUE_VTK){
+      if(_participants.back()->useMaster()){
+        exporter = io::PtrExport(new io::ExportVTKXML(context.plotNormals));
+      }
+      else{
+        exporter = io::PtrExport(new io::ExportVTK(context.plotNormals));
+      }
+    }
+    else if (context.type == VALUE_VRML){
+      preciceCheck(not participant->useMaster(), "finishParticipantConfiguration()",
+              "VRML exports while using a master is not yet supported");
+      exporter = io::PtrExport (new io::ExportVRML(context.plotNormals));
+    }
+    else {
+      preciceError("finishParticipantConfiguration()", "Unknown export type!");
+    }
+    context.exporter = exporter;
+
     _participants.back()->addExportContext(context);
   }
   _exportConfig->resetExports();

@@ -46,7 +46,7 @@ public:
   /**
    * @brief Returns the configured export context, valid if isValid() is true.
    */
-  const std::list<ExportContext>& exportContexts() const { return _contexts; }
+  std::list<ExportContext>& exportContexts() { return _contexts; }
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -77,7 +77,6 @@ private:
   const std::string ATTR_TYPE;
   const std::string ATTR_AUTO;
   const std::string VALUE_VTK;
-  const std::string VALUE_VTKXML;
   const std::string VALUE_VRML;
 
   const std::string ATTR_TIMESTEP_INTERVAL;

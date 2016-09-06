@@ -40,7 +40,7 @@ void ExportConfigurationTest:: testConfiguration ()
     //validate ( config.isValid() );
     validateEquals(config.exportContexts().size(), 1);
     const ExportContext& context = config.exportContexts().front();
-    validateEquals ( context.exporter->getType(), constants::exportVTK() );
+    validateEquals ( context.type, "vtk" );
     validateEquals ( context.timestepInterval, 10 );
     //validate ( context.plotNormals );
     //validate ( context.plotNeighbors );
@@ -55,7 +55,7 @@ void ExportConfigurationTest:: testConfiguration ()
     //validate ( config.isValid() );
     validateEquals(config.exportContexts().size(), 1);
     const ExportContext& context = config.exportContexts().front();
-    validateEquals ( context.exporter->getType(), constants::exportVTK() );
+    validateEquals ( context.type, "vtk" );
     validateEquals ( context.timestepInterval, -1 );
     validateEquals ( context.location, std::string("somepath") );
     //validate ( not context.plotNormals );
@@ -71,7 +71,7 @@ void ExportConfigurationTest:: testConfiguration ()
     //validate ( config.isValid() );
     validateEquals(config.exportContexts().size(), 1);
     const ExportContext& context = config.exportContexts().front();
-    validateEquals ( context.exporter->getType(), constants::exportVRML() );
+    validateEquals ( context.type, "vrml" );
     validateEquals ( context.timestepInterval, -1 );
     validateEquals ( context.location, std::string("") );
     //validate ( context.plotNormals );

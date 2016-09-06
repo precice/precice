@@ -32,6 +32,12 @@ struct ExportContext
   // @brief If true, export is done in every iteration (also implicit).
   bool everyIteration;
 
+  // @brief type of the exporter (e.g. vtk).
+  std::string type;
+
+  // @brief If true, normals are plotted.
+  bool plotNormals;
+
   /**
    * @brief Constructor.
    */
@@ -43,7 +49,9 @@ struct ExportContext
     //plotNeighbors ( false ),
     //plotNormals(true),
     exportSpacetree(false),
-    everyIteration(false)
+    everyIteration(false),
+    type(),
+    plotNormals(false)
   {}
 };
 

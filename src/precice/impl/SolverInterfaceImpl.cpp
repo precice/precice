@@ -379,19 +379,17 @@ double SolverInterfaceImpl:: initialize()
 
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
 
-    //if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
-      preciceDebug("Plot output...");
-      for (const io::ExportContext& context : _accessor->exportContexts()){
-        if (context.timestepInterval != -1){
-          std::ostringstream suffix;
-          suffix << _accessorName << ".init";
-          exportMesh(suffix.str());
-          if (context.triggerSolverPlot){
-            _couplingScheme->requireAction(constants::actionPlotOutput());
-          }
+    preciceDebug("Plot output...");
+    for (const io::ExportContext& context : _accessor->exportContexts()){
+      if (context.timestepInterval != -1){
+        std::ostringstream suffix;
+        suffix << _accessorName << ".init";
+        exportMesh(suffix.str());
+        if (context.triggerSolverPlot){
+          _couplingScheme->requireAction(constants::actionPlotOutput());
         }
       }
-    //}
+    }
     preciceInfo("initialize()", _couplingScheme->printCouplingState());
   }
   return _couplingScheme->getNextTimestepMaxLength();
@@ -2172,27 +2170,25 @@ void SolverInterfaceImpl:: handleExports()
   //timesteps was already incremented before
   int timesteps = _couplingScheme->getTimesteps()-1;
 
-  //if(not utils::MasterSlave::_slaveMode){ //TODO  not yet supported
-    for (const io::ExportContext& context : _accessor->exportContexts()) {
-      if (_couplingScheme->isCouplingTimestepComplete() || context.everyIteration){
-        if (context.timestepInterval != -1){
-          if (timesteps % context.timestepInterval == 0){
-            if (context.everyIteration){
-              std::ostringstream everySuffix;
-              everySuffix << _accessorName << ".it" << _numberAdvanceCalls;
-              exportMesh(everySuffix.str());
-            }
-            std::ostringstream suffix;
-            suffix << _accessorName << ".dt" << _couplingScheme->getTimesteps()-1;
-            exportMesh(suffix.str());
-            if (context.triggerSolverPlot){
-              _couplingScheme->requireAction(constants::actionPlotOutput());
-            }
+  for (const io::ExportContext& context : _accessor->exportContexts()) {
+    if (_couplingScheme->isCouplingTimestepComplete() || context.everyIteration){
+      if (context.timestepInterval != -1){
+        if (timesteps % context.timestepInterval == 0){
+          if (context.everyIteration){
+            std::ostringstream everySuffix;
+            everySuffix << _accessorName << ".it" << _numberAdvanceCalls;
+            exportMesh(everySuffix.str());
+          }
+          std::ostringstream suffix;
+          suffix << _accessorName << ".dt" << _couplingScheme->getTimesteps()-1;
+          exportMesh(suffix.str());
+          if (context.triggerSolverPlot){
+            _couplingScheme->requireAction(constants::actionPlotOutput());
           }
         }
       }
     }
-  //}
+  }
 
   if (_couplingScheme->isCouplingTimestepComplete()){
     // Export watch point data
@@ -2200,7 +2196,7 @@ void SolverInterfaceImpl:: handleExports()
       watchPoint->exportPointData(_couplingScheme->getTime());
     }
 
-    //if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
+    if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
       // Checkpointing
       int checkpointingInterval = _couplingScheme->getCheckpointTimestepInterval();
       if ((checkpointingInterval != -1) && (timesteps % checkpointingInterval == 0)){
@@ -2218,7 +2214,7 @@ void SolverInterfaceImpl:: handleExports()
         //io::TXTWriter exportCouplingSchemeState(_checkpointFileName + "_cplscheme.txt");
         _couplingScheme->exportState(_checkpointFileName);
       }
-    //}
+    }
   }
 }
 

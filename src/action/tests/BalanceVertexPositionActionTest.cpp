@@ -92,7 +92,7 @@ void BalanceVertexPositionActionTest:: testSmoothSphere ()
   double dummy = 0.0;
   balance.performAction(dummy, dummy, dummy, dummy);
   std::string name = "BalanceVertexPositionActionTest-testSmoothSphere-smooth.vtk";
-  exportVTK.doExport(location, name, *mesh);
+  exportVTK.doExport(name, location, *mesh);
 }
 
 void BalanceVertexPositionActionTest:: testSmoothHexahedron()
@@ -161,7 +161,7 @@ void BalanceVertexPositionActionTest:: testSmoothHexahedron()
   double dummy = 0.0;
   balance.performAction(dummy, dummy, dummy, dummy);
   std::string name = "BalanceVertexPositionActionTest-testSmoothHexahedron-smooth.vtk";
-  exportVTK.doExport(location, name, *mesh);
+  exportVTK.doExport(name, location, *mesh);
 }
 
 void BalanceVertexPositionActionTest:: testConfiguration()

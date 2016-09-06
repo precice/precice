@@ -19,19 +19,13 @@ namespace precice {
    }
 }
 
-namespace precice {
-   namespace utils {
-      class Parallel;
-   }
-}
-
 // ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
 namespace io {
 
 /**
- * @brief Writes polygonal, triangle, or quadrangle meshes to xml-vtk files. Works in serial and parallel.
+ * @brief Writes meshes to xml-vtk files. Only for parallel usage. Serial usage (coupling mode) should still use ExportVTK
  */
 class ExportVTKXML : public Export
 {
@@ -41,9 +35,8 @@ public:
    * @brief Standard constructor
    *
    * @param exportNormals  [IN] boolean: write normals to file?
-   * @param parallelWrite  [IN] boolean: write as parallel?
    */
-  ExportVTKXML ( bool writeNormals, bool parallelWrite );
+  ExportVTKXML ( bool writeNormals);
 
   /**
    * @brief Returns the VTK type ID.
@@ -83,15 +76,6 @@ private:
    // @brief By default set true: plot vertex normals, false: no normals plotting
    bool _writeNormals;
 
-   // @brief true: write as parallel file, false: write as serial file
-   bool _parallelWrite;
-
-   // @brief true: data names and dimensions have been processed
-   bool _isDataNamesAndDimensionsProcessed;
-
-   // @brief true: mesh contains cells
-   bool _isCellPresent;
-
    // @ brief dimensions of mesh
    int _meshDimensions;
 
@@ -101,10 +85,8 @@ private:
    // @brief List of names of all vector data on mesh
    std::vector<std::string> _vectorDataNames;
 
-   // @brief List of vector data dimensions
-   std::vector<int> _vectorDataDimensions;
    /**
-    * @brief Stores scalar and vector data names and dimensions in string vectors
+    * @brief Stores scalar and vector data names in string vectors
     * Needed for writing master file and sub files
     */
    void processDataNamesAndDimensions
@@ -112,7 +94,7 @@ private:
      mesh::Mesh& mesh);
 
    /**
-    * @brief Writes the master file (called only by rank 0)
+    * @brief Writes the master file (called only by the master rank)
     */
    void writeMasterFile
    (
@@ -121,17 +103,13 @@ private:
      mesh::Mesh&        mesh);
 
    /**
-    * @brief Writes the sub file for each process
+    * @brief Writes the sub file for each rank
     */
    void writeSubFile
    (
      const std::string& name,
      const std::string& location,
      mesh::Mesh&        mesh);
-
-   void openFile (
-    std::ofstream&     outFile,
-    const std::string& filename ) const;
 
    void exportGeometry (
      std::ofstream& outFile,

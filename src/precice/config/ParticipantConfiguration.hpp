@@ -112,6 +112,9 @@ private:
   const std::string VALUE_PRE_FILTER_POST_FILTER;
   const std::string VALUE_BROADCAST_FILTER;
 
+  const std::string VALUE_VTK;
+  const std::string VALUE_VRML;
+
   int _dimensions;
 
   mesh::PtrMeshConfiguration _meshConfig;

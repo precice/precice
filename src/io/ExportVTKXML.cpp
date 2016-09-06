@@ -5,10 +5,6 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
 #include "utils/Globals.hpp"
-#include "utils/String.hpp"
-#include "utils/Parallel.hpp"
-#include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
-#include "tarch/la/WrappedVector.h"
 #include "Eigen/Dense"
 #include <iostream>
 #include <string>
@@ -21,15 +17,11 @@ logging::Logger ExportVTKXML:: _log("precice::io::ExportVTKXML");
 
 ExportVTKXML:: ExportVTKXML
 (
-  bool writeNormals,
-  bool parallelWrite  )
+  bool writeNormals )
 :
   Export(),
   _writeNormals(writeNormals),
-  _parallelWrite(parallelWrite),
-  _isDataNamesAndDimensionsProcessed(false),
-  _isCellPresent(true),
-  _meshDimensions(3)
+  _meshDimensions(-1)
 {
 }
 
@@ -44,61 +36,36 @@ void ExportVTKXML:: doExport
   const std::string& location,
   mesh::Mesh&        mesh)
 {
+  preciceTrace("doExport()", name, location, mesh.getName());
   std::ofstream outFile;
-  //preciceDebug("_parallelWrite: " + std::to_string(_parallelWrite));
-  //preciceDebug("_isProgramParallel: " + std::to_string(_isProgramParallel));
-
-  if (_parallelWrite) { // if parallel write enabled
-    if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) { // if precice in parallel mode
-      // code for parallel write for parallel precice
-      //preciceDebug("Writing Parallel File..");
-      processDataNamesAndDimensions(mesh);
-      int rank = utils::Parallel::getProcessRank();
-      if (rank == 0) {
-        writeMasterFile(name, location, mesh);
-      }
-      writeSubFile(name, location, mesh);
-    } else {
-      // code for parallel write of serial precice
-    }
-  } else {
-    if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode) { // if precice in parallel mode
-      // code for serial write for parallel precice
-      // maybe throw error saying inefficient?
-    } else {
-      // code for serial write of serial precice
-    }
+  assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
+  processDataNamesAndDimensions(mesh);
+  if (utils::MasterSlave::_masterMode) {
+    writeMasterFile(name, location, mesh);
   }
+  writeSubFile(name, location, mesh);
 }
 
 void ExportVTKXML::processDataNamesAndDimensions
 (
   mesh::Mesh& mesh)
 {
-  //if (not _isDataNamesAndDimensionsProcessed) {
-    _meshDimensions = mesh.getDimensions();
-    _vectorDataNames.clear();
-    _scalarDataNames.clear();
-    if (_writeNormals) {
-      _vectorDataNames.push_back("VertexNormals ");
+  _meshDimensions = mesh.getDimensions();
+  _vectorDataNames.clear();
+  _scalarDataNames.clear();
+  if (_writeNormals) {
+    _vectorDataNames.push_back("VertexNormals ");
+  }
+  for (mesh::PtrData data : mesh.data()) {
+    int dataDimensions = data->getDimensions();
+    assertion(dataDimensions>=1);
+    std::string dataName = data->getName();
+    if ( dataDimensions == 1) {
+      _scalarDataNames.push_back(dataName);
+    } else {
+      _vectorDataNames.push_back(dataName);
     }
-    for (mesh::PtrData data : mesh.data()) {
-      int dataDimensions = data->getDimensions();
-      std::string dataName = data->getName();
-      if ( dataDimensions == 1) {
-        _scalarDataNames.push_back(dataName);
-      } else if ( dataDimensions > 1 ) {
-        _vectorDataNames.push_back(dataName);
-      } else {
-        // TODO: Change to an assertion later
-        std::cout << "Error! Dimensions <= 0";
-        exit(-1);
-      }
-    }
-    //if(mesh.edges().size() > 0 || mesh.triangles().size() > 0 || mesh.quads().size() > 0) {
-      //_isCellPresent = true;
-    //}
-  //}
+  }
 }
 
 void ExportVTKXML::writeMasterFile
@@ -109,7 +76,6 @@ void ExportVTKXML::writeMasterFile
 {
   std::ofstream outMasterFile;
   std::string fullMasterFilename(location + name + "_master.pvtu");
-  //utils::checkAppendExtension(fullMasterFilename, ".pvtu");
 
   outMasterFile.open(fullMasterFilename.c_str());
   preciceCheck(outMasterFile, "doExport()", "Could not open master file \"" << fullMasterFilename
@@ -124,13 +90,11 @@ void ExportVTKXML::writeMasterFile
   outMasterFile << "         <PDataArray type=\"Float32\" Name=\"Position\" NumberOfComponents=\"" << 3 << "\"/>" << std::endl;
   outMasterFile << "      </PPoints>" << std::endl;
 
-  if (_isCellPresent) {
-    outMasterFile << "      <PCells>" << std::endl;
-    outMasterFile << "         <PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>" << std::endl;
-    outMasterFile << "         <PDataArray type=\"Int32\" Name=\"offsets\"      NumberOfComponents=\"1\"/>" << std::endl;
-    outMasterFile << "         <PDataArray type=\"UInt8\" Name=\"types\"        NumberOfComponents=\"1\"/>" << std::endl;
-    outMasterFile << "      </PCells>" << std::endl;
-  }
+  outMasterFile << "      <PCells>" << std::endl;
+  outMasterFile << "         <PDataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\"/>" << std::endl;
+  outMasterFile << "         <PDataArray type=\"Int32\" Name=\"offsets\"      NumberOfComponents=\"1\"/>" << std::endl;
+  outMasterFile << "         <PDataArray type=\"UInt8\" Name=\"types\"        NumberOfComponents=\"1\"/>" << std::endl;
+  outMasterFile << "      </PCells>" << std::endl;
 
   // write scalar data names
   outMasterFile << "      <PPointData Scalars=\"";
@@ -153,7 +117,7 @@ void ExportVTKXML::writeMasterFile
   }
   outMasterFile << "      </PPointData>" << std::endl;
 
-  for (size_t i = 0; i < utils::Parallel::getCommunicatorSize(); i++) {
+  for (int i = 0; i < utils::MasterSlave::_size; i++) {
     outMasterFile << "      <Piece Source=\"" << name << "_r" << i << ".vtu\"/>" << std::endl;
   }
 
@@ -169,7 +133,6 @@ void ExportVTKXML::writeSubFile
   const std::string& location,
   mesh::Mesh&        mesh)
 {
-  int rank = utils::Parallel::getProcessRank(); // process rank
   int numPoints = mesh.vertices().size(); // number of vertices
   int numCells; // number of cells
   if (_meshDimensions == 2) {
@@ -179,8 +142,7 @@ void ExportVTKXML::writeSubFile
   }
 
   std::ofstream outSubFile;
-  std::string fullSubFilename(location + name + "_r" + std::to_string(rank) + ".vtu");
-  //utils::checkAppendExtension(fullMasterFilename, ".pvtu");
+  std::string fullSubFilename(location + name + "_r" + std::to_string(utils::MasterSlave::_rank) + ".vtu");
 
   outSubFile.open(fullSubFilename.c_str());
   preciceCheck(outSubFile, "doExport()", "Could not open master file \"" << fullSubFilename
@@ -218,66 +180,64 @@ void ExportVTKXML::exportGeometry
   std::ofstream& outFile,
   mesh::Mesh&    mesh)
 {
-  if (_isCellPresent) {
-    if (_meshDimensions == 2) { // write edges as cells
-      outFile << "         <Cells>" << std::endl;
-      outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-      outFile << "               ";
-      for (mesh::Edge & edge : mesh.edges()) {
-        writeLine(edge, outFile);
-      }
-      outFile << std::endl;
-      outFile << "            </DataArray> " << std::endl;
-      outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-      outFile << "               ";
-      for (size_t i = 1; i <= mesh.edges().size(); i++) {
-        outFile << 2*i << "  ";
-      }
-      outFile << std::endl;
-      outFile << "            </DataArray>" << std::endl;
-      outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-      outFile << "               ";
-      for (size_t i = 1; i <= mesh.edges().size(); i++) {
-        outFile << 3 << "  ";
-      }
-      outFile << std::endl;
-      outFile << "            </DataArray>" << std::endl;
-      outFile << "         </Cells>" << std::endl;
-    } else { // write triangles and quads as cells
-
-      outFile << "         <Cells>" << std::endl;
-      outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-      outFile << "               ";
-      for (mesh::Triangle& triangle : mesh.triangles()) {
-        writeTriangle(triangle, outFile);
-      }
-      for (mesh::Quad& quad : mesh.quads()) {
-        writeQuadrangle(quad, outFile);
-      }
-      outFile << std::endl;
-      outFile << "            </DataArray> " << std::endl;
-      outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-      outFile << "               ";
-      for (size_t i = 1; i <= mesh.triangles().size(); i++) {
-        outFile << 3*i << "  ";
-      }
-      for (size_t i = 1; i <= mesh.quads().size(); i++) {
-        outFile << 4*i << "  ";
-      }
-      outFile << std::endl;
-      outFile << "            </DataArray>" << std::endl;
-      outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
-      outFile << "               ";
-      for (size_t i = 1; i <= mesh.triangles().size(); i++) {
-        outFile << 5 << "  ";
-      }
-      for (size_t i = 1; i <= mesh.quads().size(); i++) {
-        outFile << 9 << "  ";
-      }
-      outFile << std::endl;
-      outFile << "            </DataArray>" << std::endl;
-      outFile << "         </Cells>" << std::endl;
+  if (_meshDimensions == 2) { // write edges as cells
+    outFile << "         <Cells>" << std::endl;
+    outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+    outFile << "               ";
+    for (mesh::Edge & edge : mesh.edges()) {
+      writeLine(edge, outFile);
     }
+    outFile << std::endl;
+    outFile << "            </DataArray> " << std::endl;
+    outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+    outFile << "               ";
+    for (size_t i = 1; i <= mesh.edges().size(); i++) {
+      outFile << 2*i << "  ";
+    }
+    outFile << std::endl;
+    outFile << "            </DataArray>" << std::endl;
+    outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+    outFile << "               ";
+    for (size_t i = 1; i <= mesh.edges().size(); i++) {
+      outFile << 3 << "  ";
+    }
+    outFile << std::endl;
+    outFile << "            </DataArray>" << std::endl;
+    outFile << "         </Cells>" << std::endl;
+  } else { // write triangles and quads as cells
+
+    outFile << "         <Cells>" << std::endl;
+    outFile << "            <DataArray type=\"Int32\" Name=\"connectivity\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+    outFile << "               ";
+    for (mesh::Triangle& triangle : mesh.triangles()) {
+      writeTriangle(triangle, outFile);
+    }
+    for (mesh::Quad& quad : mesh.quads()) {
+      writeQuadrangle(quad, outFile);
+    }
+    outFile << std::endl;
+    outFile << "            </DataArray> " << std::endl;
+    outFile << "            <DataArray type=\"Int32\" Name=\"offsets\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+    outFile << "               ";
+    for (size_t i = 1; i <= mesh.triangles().size(); i++) {
+      outFile << 3*i << "  ";
+    }
+    for (size_t i = 1; i <= mesh.quads().size(); i++) {
+      outFile << 4*i << "  ";
+    }
+    outFile << std::endl;
+    outFile << "            </DataArray>" << std::endl;
+    outFile << "            <DataArray type=\"UInt8\"  Name=\"types\" NumberOfComponents=\"1\" format=\"ascii\">" << std::endl;
+    outFile << "               ";
+    for (size_t i = 1; i <= mesh.triangles().size(); i++) {
+      outFile << 5 << "  ";
+    }
+    for (size_t i = 1; i <= mesh.quads().size(); i++) {
+      outFile << 9 << "  ";
+    }
+    outFile << std::endl;
+    outFile << "            </DataArray>" << std::endl;
+    outFile << "         </Cells>" << std::endl;
   }
 }
 
@@ -339,7 +299,7 @@ void ExportVTKXML::writeVertex
   std::ofstream&           outFile)
 {
   outFile << "               ";
-  for (size_t i = 0; i < position.size(); i++){
+  for (int i = 0; i < position.size(); i++){
     outFile << position(i) << "  ";
   }
   if (position.size() ==2)
