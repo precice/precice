@@ -55,7 +55,8 @@ public:
    * @brief Perform writing to vtk file
    */
   virtual void doExport (
-    const std::string& filename,
+    const std::string& name,
+    const std::string& location,
     mesh::Mesh&        mesh );
 
   static void writeVertex (
@@ -115,7 +116,8 @@ private:
     */
    void writeMasterFile
    (
-     const std::string& filename,
+     const std::string& name,
+     const std::string& location,
      mesh::Mesh&        mesh);
 
    /**
@@ -123,8 +125,9 @@ private:
     */
    void writeSubFile
    (
-     const std::string& filename,
-   mesh::Mesh&        mesh);
+     const std::string& name,
+     const std::string& location,
+     mesh::Mesh&        mesh);
 
    void openFile (
     std::ofstream&     outFile,

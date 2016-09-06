@@ -58,7 +58,8 @@ void CuboidTest:: testCreation ()
     io::ExportVTK exportVTK(true);
     std::ostringstream name;
     name << "geometry-CuboidTest-dim" << dim;
-    exportVTK.doExport(name.str(), mesh);
+    std::string location = "";
+    exportVTK.doExport(name.str(), location, mesh);
   }
 }
 

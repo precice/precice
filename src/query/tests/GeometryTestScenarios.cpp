@@ -256,4 +256,4 @@ void GeometryTestScenarios:: addToPointQueryScenario
   _pointQueryScenario->validDistanceVectors.push_back ( validDistanceVector );
 }
 
-}}} // namespace precice, query, tests
+}}}// namespace precice, query, tests

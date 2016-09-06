@@ -45,10 +45,12 @@ public:
    * @brief Does export. Has to be implemented in subclass.
    *
    * @param name [IN] Filename (without path).
+   * @param name [IN] Location (path without filename).
    * @param mesh [IN] Mesh to be exported.
    */
   virtual void doExport (
     const std::string& name,
+    const std::string& location,
     mesh::Mesh&        mesh ) =0;
 };
 

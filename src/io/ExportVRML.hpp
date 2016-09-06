@@ -42,7 +42,8 @@ public:
    * @brief Perform writing to VRML file
    */
   virtual void doExport (
-    const std::string& filname,
+    const std::string& name,
+    const std::string& location,
     mesh::Mesh&        mesh );
 
   /**

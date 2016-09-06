@@ -202,8 +202,9 @@ void FindClosestTest:: testFindClosestDistanceToEdges3D ()
    edge.setNormal ( normal );
 
    io::ExportVTK exportMesh(true);
+   std::string location = "";
    exportMesh.doExport ( "query-FindClosestTest-testFindClosestDistanceToEdges3D",
-                         mesh );
+                         location, mesh );
 
    // Create query points
    std::vector<Vector3D> queryPoints;
@@ -443,7 +444,8 @@ void FindClosestTest:: testMultipleGeometryIDs ()
 
   // Visualize queries
   io::ExportVTK exportVTK(true);
-  exportVTK.doExport ("query-FindClosestTest-testMultipleGeometryIDs.vtk", mesh);
+  std::string location = "";
+  exportVTK.doExport ("query-FindClosestTest-testMultipleGeometryIDs.vtk", location, mesh);
   exportNeighbors.exportNeighbors (
       "query-FindClosestTest-testMultipleGeometryIDs_neighb.vtk");
 

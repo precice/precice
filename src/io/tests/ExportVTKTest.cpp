@@ -55,7 +55,8 @@ void ExportVTKTest:: testExportPolygonalMesh()
   ExportVTK exportVTK(exportNormals);
   std::ostringstream filename;
   filename << "io-ExportVTKTest-testExportPolygonalMesh";
-  exportVTK.doExport ( filename.str(), mesh );
+  std::string location = "";
+  exportVTK.doExport ( filename.str(), location, mesh );
 }
 
 void ExportVTKTest:: testExportTriangulatedMesh()
@@ -81,7 +82,8 @@ void ExportVTKTest:: testExportTriangulatedMesh()
   ExportVTK exportVTK(exportNormals);
   std::ostringstream filename;
   filename << "io-ExportVTKTest-testExportTriangulatedMesh";
-  exportVTK.doExport ( filename.str(), mesh );
+  std::string location = "";
+  exportVTK.doExport ( filename.str(), location, mesh );
 }
 
 void ExportVTKTest:: testExportQuadMesh()
@@ -134,7 +136,8 @@ void ExportVTKTest:: testExportQuadMesh()
   ExportVTK exportVTK(exportNormals);
   std::ostringstream filename;
   filename << "io-ExportVTKTest-testExportQuadMesh";
-  exportVTK.doExport(filename.str(), mesh);
+  std::string location = "";
+  exportVTK.doExport(filename.str(), location, mesh);
 }
 
 }}} // namespace precice, io, tests

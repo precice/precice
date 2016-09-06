@@ -399,7 +399,8 @@ void SpacetreeTestScenarios:: testSearchPosition()
     ExportSpacetree exportSpacetree ( _testName + "-testSearchPosition-tree-2d" );
     exportSpacetree.doExport(*spacetree);
     io::ExportVTK exportMesh(true);
-    exportMesh.doExport ( _testName + "-testSearchPosition-mesh-2d", *mesh );
+    std::string location = "";
+    exportMesh.doExport ( _testName + "-testSearchPosition-mesh-2d", location, *mesh );
   }
 
   dim = 3;
@@ -955,7 +956,8 @@ void SpacetreeTestScenarios:: testSearchPosition()
     ExportSpacetree exportSpacetree ( _testName + "-testSearchPosition-tree-3d" );
     exportSpacetree.doExport(*spacetree);
     io::ExportVTK exportMesh(true);
-    exportMesh.doExport ( _testName + "-testSearchPosition-mesh-3d", *mesh );
+    std::string location = "";
+    exportMesh.doExport ( _testName + "-testSearchPosition-mesh-3d", location, *mesh );
   }
   Tree::minElementsToRefineCell = min;
 }
@@ -1071,7 +1073,8 @@ void SpacetreeTestScenarios:: testSearchDistance()
     ExportSpacetree exportSpacetree ( _testName + "-testSearchDistance-tree-2D" );
     exportSpacetree.doExport(*spacetree);
     io::ExportVTK exportMesh(true);
-    exportMesh.doExport ( _testName + "-testSearchDistance-mesh-2D", *mesh );
+    std::string location = "";
+    exportMesh.doExport ( _testName + "-testSearchDistance-mesh-2D", location, *mesh );
 //    exportNeighbors.exportNeighbors ( "SpacetreeTestScenarios-testSearchDistance-neighbors-2D.vtk");
   }
 
@@ -1193,7 +1196,8 @@ void SpacetreeTestScenarios:: testSearchDistance()
     ExportSpacetree exportSpacetree ( _testName + "-testSearchDistance-tree-3D" );
     exportSpacetree.doExport ( *spacetree );
     io::ExportVTK exportMesh(true);
-    exportMesh.doExport ( _testName + "-testSearchDistance-mesh-3D", *mesh );
+    std::string location = "";
+    exportMesh.doExport ( _testName + "-testSearchDistance-mesh-3D", location, *mesh );
 //    exportNeighbors.exportNeighbors ( "SpacetreeTestScenarios-testSearchDistance-neighbors-3D.vtk");
   }
   Spacetree::minElementsToRefineCell = min;
@@ -1210,7 +1214,8 @@ void SpacetreeTestScenarios:: testNeighborSearch()
   geometry::Sphere(utils::DynVector(dim,0.0), 0.01, sphereRadius).create(*mesh);
 
   io::ExportVTK exportVTK(true);
-  exportVTK.doExport ( _testName + "-testNeighborSearch-sphere.vtk", *mesh );
+  std::string location = "";
+  exportVTK.doExport ( _testName + "-testNeighborSearch-sphere.vtk", location, *mesh );
 
   utils::DynVector center(dim, 0.0);
   utils::DynVector h(dim, 10.0);
@@ -2392,7 +2397,8 @@ void SpacetreeTestScenarios:: testVoxelPosition()
   geometry::Cuboid(offset, 0.01, cuboidSidelength).create(*mesh);
 
   io::ExportVTK exportVTK(true);
-  exportVTK.doExport ( _testName + "-testVoxelPosition-cuboid", *mesh );
+  std::string location = "";
+  exportVTK.doExport ( _testName + "-testVoxelPosition-cuboid", location, *mesh );
 
   //RegularSpacetree spacetree ( Vector(0.0, 0.0), 6.0, 0.05 );
   utils::DynVector treeOffset(dim, 0.0);
@@ -2543,7 +2549,8 @@ void SpacetreeTestScenarios:: testSplittingVoxels()
   geometry::Cuboid(cuboidOffset, 0.01, cuboidSidelength).create(*mesh);
 
   io::ExportVTK exportVTK(true);
-  exportVTK.doExport ( _testName + "testSplittingVoxels-cuboid.vtk", *mesh );
+  std::string location = "";
+  exportVTK.doExport ( _testName + "testSplittingVoxels-cuboid.vtk", location, *mesh );
 
   utils::DynVector treeOffset(dim, 0.0);
   utils::DynVector treeH(dim, 6.0);

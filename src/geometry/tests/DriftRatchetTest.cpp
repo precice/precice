@@ -43,7 +43,8 @@ void DriftRatchetTest:: run ()
       io::ExportVTK exportVTK(true);
       std::ostringstream filename;
       filename << "geometry-DriftRatchetTest-" << dim;
-      exportVTK.doExport ( filename.str(), mesh );
+      std::string location = "";
+      exportVTK.doExport ( filename.str(), location, mesh );
     }
   }
 }

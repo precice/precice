@@ -61,7 +61,8 @@ void ExportVRMLTest:: testExportDriftRatchet()
     ratchet.create ( mesh );
     std::ostringstream stream;
     stream << "io-ExportVRMLTest-testExportDriftRatchet-" << dim << "d.wrl";
-    ex.doExport( stream.str(), mesh );
+    std::string location = "";
+    ex.doExport( stream.str(), location, mesh );
   }
 }
 
@@ -95,7 +96,8 @@ void ExportVRMLTest:: testExportCuboid()
     std::ostringstream stream;
     stream << "io-ExportVRMLTest-testExportCuboid-" << dim << "d.wrl";
     ExportVRML ex(false);
-    ex.doExport ( stream.str(), mesh );
+    std::string location = "";
+    ex.doExport ( stream.str(), location, mesh );
   }
 }
 

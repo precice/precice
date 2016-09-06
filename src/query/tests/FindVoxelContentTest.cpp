@@ -1200,7 +1200,8 @@ void FindVoxelContentTest:: testQueryCube ()
   mesh.computeState();
 
   io::ExportVTK exportMesh(true);
-  exportMesh.doExport("FindVoxelContentTest-testQueryCube", mesh);
+  std::string location = "";
+  exportMesh.doExport("FindVoxelContentTest-testQueryCube", location, mesh);
 
   // Query mesh
   Vector3D center(0.0);

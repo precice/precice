@@ -166,7 +166,8 @@ void ExportAndReimportVRMLTest:: testReimportDriftRatchet()
   importMesh.doImport("io-ExportVRMLTest-testExportCuboid-3d.wrl", mesh);
   mesh.computeState();
   ExportVTK exportVTK(true);
-  exportVTK.doExport("io-ExportAndReimportVRMLTest-testReimportDriftRatchet.vtk", mesh);
+  std::string location = "";
+  exportVTK.doExport("io-ExportAndReimportVRMLTest-testReimportDriftRatchet.vtk", location, mesh);
 }
 
 

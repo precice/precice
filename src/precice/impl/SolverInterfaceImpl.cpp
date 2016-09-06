@@ -379,7 +379,7 @@ double SolverInterfaceImpl:: initialize()
 
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
 
-    if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
+    //if(not utils::MasterSlave::_slaveMode){ //TODO not yet supported
       preciceDebug("Plot output...");
       for (const io::ExportContext& context : _accessor->exportContexts()){
         if (context.timestepInterval != -1){
@@ -391,7 +391,7 @@ double SolverInterfaceImpl:: initialize()
           }
         }
       }
-    }
+    //}
     preciceInfo("initialize()", _couplingScheme->printCouplingState());
   }
   return _couplingScheme->getNextTimestepMaxLength();
@@ -1799,9 +1799,8 @@ void SolverInterfaceImpl:: exportMesh
     if ( exportAll || exportThis ){
       for (MeshContext* meshContext : _accessor->usedMeshContexts()) {
         std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
-        std::string filename = context.location + name;
-        preciceDebug ( "Exporting mesh to file \"" << filename << "\"" );
-        context.exporter->doExport ( filename, *(meshContext->mesh) );
+        preciceDebug ( "Exporting mesh to file \"" << name << "\" at location \"" << context.location << "\"" );
+        context.exporter->doExport ( name, context.location, *(meshContext->mesh) );
       }
     }
     // Export spacetrees
@@ -2173,7 +2172,7 @@ void SolverInterfaceImpl:: handleExports()
   //timesteps was already incremented before
   int timesteps = _couplingScheme->getTimesteps()-1;
 
-  if(not utils::MasterSlave::_slaveMode){ //TODO  not yet supported
+  //if(not utils::MasterSlave::_slaveMode){ //TODO  not yet supported
     for (const io::ExportContext& context : _accessor->exportContexts()) {
       if (_couplingScheme->isCouplingTimestepComplete() || context.everyIteration){
         if (context.timestepInterval != -1){
@@ -2193,7 +2192,7 @@ void SolverInterfaceImpl:: handleExports()
         }
       }
     }
-  }
+  //}
 
   if (_couplingScheme->isCouplingTimestepComplete()){
     // Export watch point data

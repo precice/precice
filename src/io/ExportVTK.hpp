@@ -42,7 +42,8 @@ public:
    * @brief Perform writing to vtk file
    */
   virtual void doExport (
-    const std::string& filename,
+    const std::string& name,
+    const std::string& location,
     mesh::Mesh&        mesh );
 
   static void initializeWriting (

@@ -34,7 +34,8 @@ void SphereTest:: run ()
       io::ExportVTK exportVTK(true);
       std::ostringstream filename;
       filename << "geometry-SphereTest-" << dim;
-      exportVTK.doExport ( filename.str(), mesh );
+      std::string location = "";
+      exportVTK.doExport ( filename.str(), location, mesh );
     }
   }
 }

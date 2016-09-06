@@ -30,11 +30,12 @@ int ExportVRML:: getType() const
 
 void ExportVRML:: doExport
 (
-  const std::string& filename,
+  const std::string& name,
+  const std::string& location,
   mesh::Mesh&        mesh )
 {
   std::ofstream outFile;
-  std::string fullFilename(filename);
+  std::string fullFilename(location + name);
   openFile(outFile, utils::checkAppendExtension(fullFilename, std::string(".wrl")));
   writeHeader(outFile);
   writeGeometry(outFile, mesh);

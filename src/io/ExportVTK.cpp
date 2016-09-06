@@ -32,12 +32,14 @@ int ExportVTK:: getType() const
 
 void ExportVTK:: doExport
 (
-  const std::string& filename,
+  const std::string& name,
+  const std::string& location,
   mesh::Mesh&        mesh)
 {
-  preciceTrace("doExport()", filename, mesh.getName());
-  assertion(filename != std::string(""));
+  preciceTrace("doExport()", name, location, mesh.getName());
+  assertion(name != std::string(""));
   std::ofstream outFile;
+  std::string filename = location + name;
   initializeWriting(filename, outFile);
   writeHeader(outFile);
   exportGeometry(outFile, mesh);
