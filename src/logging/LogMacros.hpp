@@ -41,7 +41,7 @@
 
 /// Helper macro, used by preciceTrace.
 #define LOG_ARGUMENT(r, data, i, elem)                  \
-  << "  Argument " << i << ": " << elem << std::endl
+  << std::endl << "  Argument " << i << ": " << elem
 
 #define preciceDebug(message) do {                                      \
     LOG_LOCATION;                                                       \
