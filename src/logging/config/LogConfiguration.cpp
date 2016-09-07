@@ -26,10 +26,12 @@ LogConfiguration::LogConfiguration
   XMLAttribute<std::string> attrType("type");
   attrType.setDocumentation("Type of sink");
   attrType.setValidator ( ValidatorEquals<std::string>("stream") || ValidatorEquals<std::string>("file") );
+  attrType.setDefaultValue(precice::logging::BackendConfiguration::default_type);
   tagSink.addAttribute(attrType);
 
   XMLAttribute<std::string> attrOutput("output");
   attrOutput.setDocumentation("Output. If type=stream it can be stdout or stderr. Otherwise it is a filename");
+  attrOutput.setDefaultValue(precice::logging::BackendConfiguration::default_output);
   tagSink.addAttribute(attrOutput);
 
   XMLAttribute<std::string> attrFormat("format");
