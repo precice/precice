@@ -93,7 +93,7 @@ void FindVoxelContent:: checkVertex
 //#   ifdef Debug
 //    if (_voxelCenter.size() == 3)
 //    if (norm2(_voxelCenter - utils::Vector3D(4.343209876543000, 4.0666666666666666, 4.106172839509999)) < 1e-10){
-//      precicePrint("Add vertex " << vertex.getCoords());
+//      INFO("Add vertex " << vertex.getCoords());
 //    }
 //#   endif
   _content.add(vertex);
@@ -302,7 +302,7 @@ void FindVoxelContent:: checkEdge
 //#   ifdef Debug
 //    if (_voxelCenter.size() == 3)
 //    if (norm2(_voxelCenter - Vector3D(4.343209876543000, 4.0666666666666666, 4.106172839509999)) < 1e-10){
-//      precicePrint("Add edge from " << edge.vertex(0).getCoords() << " to " << edge.vertex(1).getCoords());
+//      INFO("Add edge from " << edge.vertex(0).getCoords() << " to " << edge.vertex(1).getCoords());
 //    }
 //#   endif
 
@@ -537,7 +537,7 @@ void FindVoxelContent:: checkTriangle
 //#   ifdef Debug
 //    if (_voxelCenter.size() == 3)
 //    if (norm2(_voxelCenter - Vector3D(4.343209876543000, 4.0666666666666666, 4.106172839509999)) < 1e-10){
-//      precicePrint("Add triangle v0=" << triangle.vertex(0).getCoords()
+//      INFO("Add triangle v0=" << triangle.vertex(0).getCoords()
 //                   << ", v1=" << triangle.vertex(1).getCoords()
 //                   << ", v2=" << triangle.vertex(2).getCoords());
 //    }
@@ -902,7 +902,7 @@ bool FindVoxelContent:: computeIntersection
   int result = GeoComp::segmentPlaneIntersection (
       squareCenter, normal, firstPointSegment, secondPointSegment, intersection );
   if ( result == GeoComp::NO_INTERSECTION ) {
-//    precicePrint ( "computeIntersection(): no square plane intersection" );
+//    INFO ( "computeIntersection(): no square plane intersection" );
     return false;
   }
   else if ( result == GeoComp::CONTAINED ) {
@@ -941,12 +941,12 @@ bool FindVoxelContent:: computeIntersection
     bool rInside = allGreater ( halflengths2D, rcenter );
 
     if ( qInside || rInside ) { // One or both segment points lie inside
-//      precicePrint ( "q and/or r lie in square (segment in plane of square)" );
+//      INFO ( "q and/or r lie in square (segment in plane of square)" );
       return true;
     }
     else if ( (not (qOutside && rOutside)) && countTouchingAsIntersection ) {
       // One or both segment points touch the square
-//      precicePrint ( "q and/or r touch square (segment in plane of square)" );
+//      INFO ( "q and/or r touch square (segment in plane of square)" );
       return true;
     }
     else { // No point is inside, the segment might interesect still

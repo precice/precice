@@ -1577,9 +1577,9 @@ void SpacetreeTestScenarios:: testSearchContentEdges()
   query::FindVoxelContent find(center, halflengths, includeBounds);
 
   //ExportSpacetree exporter("testSearchContentEdges-ReproduceBug");
-  //precicePrint("-----------------------------------------------------------");
+  //INFO("-----------------------------------------------------------");
   //exporter.doExport(*tree);
-  //precicePrint("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
+  //INFO("+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++");
   //assertion(false);
 
   tree->searchContent(find);

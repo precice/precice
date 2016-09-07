@@ -1274,7 +1274,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
       validate(interface.isWriteDataRequired(maxDt));
       validate(interface.isReadDataAvailable());
       interface.mapReadDataTo(meshDisplID);
-      //precicePrint("1: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
+      //INFO("1: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
       force += 1.0;
       for (size_t i=0; i < size; i++){
         interface.readVectorData(dataDisplID, i, raw(displ));
@@ -1286,7 +1286,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
       validate(interface.isWriteDataRequired(maxDt));
       validate(interface.isReadDataAvailable());
       interface.mapReadDataTo(meshDisplID);
-      //precicePrint("2: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
+      //INFO("2: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
       for (size_t i=0; i < size; i++){
         interface.readVectorData(dataDisplID, i, raw(displ));
         validateNumericalEquals(displ[0], 2.0*(positions[i][0] + 0.1));

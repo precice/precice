@@ -67,7 +67,7 @@ void OctreeCell:: refine
       preciceDebug("  Refined child cell with center " << newCenter
                    << " is on geometry");
 //      if (_childs[i]._content->size() == 1){
-//        precicePrint("  Cell at x=" << newCenter << ", h=" << newHalflengths
+//        INFO("  Cell at x=" << newCenter << ", h=" << newHalflengths
 //                     << ", vertices=" << _childs[i]._content->vertices().size()
 //                     << ", edges=" << _childs[i]._content->edges().size()
 //                     << ", triangles=" << _childs[i]._content->triangles().size());
@@ -76,9 +76,9 @@ void OctreeCell:: refine
 //         && _childs[i]._content->edges().size() == 1
 //         && _childs[i]._content->triangles().size() == 1)
 //      {
-//        precicePrint("Edge from " << _childs[i]._content->edges()[0].vertex(0).getCoords()
+//        INFO("Edge from " << _childs[i]._content->edges()[0].vertex(0).getCoords()
 //                     << " to " << _childs[i]._content->edges()[0].vertex(1).getCoords());
-//        precicePrint("Triangle at " << _childs[i]._content->triangles()[0].vertex(0).getCoords()
+//        INFO("Triangle at " << _childs[i]._content->triangles()[0].vertex(0).getCoords()
 //                     << ", " << _childs[i]._content->triangles()[0].vertex(1).getCoords()
 //                     << ", " << _childs[i]._content->triangles()[0].vertex(2).getCoords());
 //      }

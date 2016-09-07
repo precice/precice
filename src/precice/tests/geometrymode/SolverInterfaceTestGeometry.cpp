@@ -1280,14 +1280,14 @@ void SolverInterfaceTestGeometry:: testBug5()
 
   assign(h) = 3.950617283950000e-2;
   assignList(point) = 4.343209876543000, 4.0666666666666666, 4.106172839509999;
-//  precicePrint("----------------------------- START");
+//  INFO("----------------------------- START");
   voxelPos = interface.inquireVoxelPosition(raw(point), raw(h), false, meshIDs);
-//  precicePrint("----------------------------- END, pos = " << voxelPos.position()
+//  INFO("----------------------------- END, pos = " << voxelPos.position()
 //               << ", ids.size = " << voxelPos.meshIDs().size());
   //mesh::Mesh found("Found", 3, false);
 //  EdgeIterator it = voxelPos.contentHandle().edges().begin();
 //  for (;it != voxelPos.contentHandle().edges().end(); it++){
-//    precicePrint("Edge from " << wrap<3>(it.vertexCoords(0)) << " to " <<
+//    INFO("Edge from " << wrap<3>(it.vertexCoords(0)) << " to " <<
 //                 wrap<3>(it.vertexCoords(1)));
 //    mesh::Vertex& v0 = found.createVertex(wrap<3>(it.vertexCoords(0)));
 //    mesh::Vertex& v1 = found.createVertex(wrap<3>(it.vertexCoords(1)));

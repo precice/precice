@@ -985,7 +985,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
           stepsizeData0 -= 1.0;
           subcyclingStep = 0; // Subcycling steps
           iterationCount++; // Implicit coupling iterations
-          //precicePrint ( "increased iterations to " << iterationCount );
+          //INFO ( "increased iterations to " << iterationCount );
         }
         else { // If subcycling
           validate ( iterationCount <= *iterValidIterations );
@@ -1031,7 +1031,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
       // globally converged and if subcycling steps have filled one global
       // timestep.
       if ( cplScheme.isCouplingTimestepComplete() ){
-        //            precicePrint ( "timestep complete" );
+        //            INFO ( "timestep complete" );
         // Advance participant time and timestep
         computedTime += maxTimestepLength;
         computedTimesteps ++;
@@ -1074,7 +1074,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
           stepsizeData1 -= 1.0;
           subcyclingStep = 0; // Subcycling steps
           iterationCount++; // Implicit coupling iterations
-          //precicePrint ( "increased iterations to " << iterationCount );
+          //INFO ( "increased iterations to " << iterationCount );
         }
         else { // If subcycling
           validate ( iterationCount <= *iterValidIterations );

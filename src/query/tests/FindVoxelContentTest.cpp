@@ -694,7 +694,7 @@ void FindVoxelContentTest:: performTestTriangles
   mesh.computeState();
   findIncluded(mesh);
 //  if((sign = -1) && (testDim == 1) && (secondDimension == 2) && (thirdDimension == 0)){
-//    precicePrint("------------------------------ sign = " << sign << ", testDim = " << testDim
+//    INFO("------------------------------ sign = " << sign << ", testDim = " << testDim
 //                   << ", secondDimension = " << secondDimension << ", thirdDimension = " << thirdDimension);
 //  }
   findExcluded(mesh);
@@ -702,7 +702,7 @@ void FindVoxelContentTest:: performTestTriangles
   validateEquals(size, 15);
   size = findExcluded.content().triangles().size();
   //if((sign = -1) && (testDim == 1) && (secondDimension == 2) && (thirdDimension == 0)){
-//    precicePrint("############################## triangles = " << size);
+//    INFO("############################## triangles = " << size);
   //}
 //  if(size != 9){
 //    preciceError("sadf", "Aus die Mausss");

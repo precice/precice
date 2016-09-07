@@ -83,7 +83,7 @@ template<typename Matrix>
 //      RTraits::elem(k,k,R) = norm ( Acolk );
 //
 //      // Normalize k-th column of matrix Q
-////      precicePrint ( "Assigning matrix columns!" );
+////      INFO ( "Assigning matrix columns!" );
 ////      assign ( Qcolk, Acolk );
 //      assign ( Qcolk, Acolk );
 //      Qcolk /= RTraits::celem(k,k,R);

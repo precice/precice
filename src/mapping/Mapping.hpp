@@ -35,7 +35,7 @@ public:
    * @brief Specifies additional constraints for a mapping.
    *
    * A consistent mapping retains mean values. When mapping displacements, e.g.
-   * rigid body motions are retained. A coservative mapping retains the sum of
+   * rigid body motions are retained. A conservative mapping retains the sum of
    * the values. Values integrated over some area should be mapped conservative,
    * while area independent values such as pressure or stresses should be mapped
    * consistent.

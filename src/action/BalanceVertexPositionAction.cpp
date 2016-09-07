@@ -172,7 +172,7 @@ void BalanceVertexPositionAction:: performAction
       }
     }
     mesh->computeState();
-    //precicePrint ( "Error measure = " << errorMeasure );
+    //INFO ( "Error measure = " << errorMeasure );
     errorMeasure = std::sqrt(errorMeasure);
     iterations ++;
   }

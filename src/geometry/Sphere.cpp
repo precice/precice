@@ -67,7 +67,7 @@ void Sphere:: specializedCreate
     // equilateral triangles (see http://en.wikipedia.org/wiki/Icosahedron).
     // The icosahedron is constructed from the corner vertices of 3 rectangles.
     double l = 4.0 * _radius / std::sqrt(10.0 + 2.0 * std::sqrt(5));
-    //precicePrint ( "l = " << l );
+    //INFO ( "l = " << l );
     double goldenRatio = ( 1.0 + std::sqrt(5) ) / 2.0;
     double h = l * goldenRatio;
 
