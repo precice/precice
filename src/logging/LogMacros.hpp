@@ -9,10 +9,6 @@
 
 #include <string>
   
-#define INFO(message) do {              \
-    preciceInfo("unknown", message);            \
-  } while (false)
-
 #define WARN(message) do {                                  \
     LOG_LOCATION;                                                       \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::warning)   \
@@ -33,7 +29,7 @@
     std::abort();                                                       \
   } while (false)
 
-#define CHECK(check, methodname, message)          \
+#define CHECK(check, message)          \
   if ( !(check) ) {                                \
     ERROR(message);                                \
   }
@@ -41,7 +37,7 @@
 #define preciceInfo(methodname, message) INFO(message)
 #define preciceWarning(methodname, message) WARN(message)
 #define preciceError(methodname, message) ERROR(message)
-#define preciceCheck CHECK
+#define preciceCheck(check, methodname, message) CHECK(check, message)
 #define preciceDebug DEBUG
 #define preciceTrace TRACE
 
