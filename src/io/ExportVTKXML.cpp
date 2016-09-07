@@ -43,7 +43,9 @@ void ExportVTKXML:: doExport
   if (utils::MasterSlave::_masterMode) {
     writeMasterFile(name, location, mesh);
   }
-  writeSubFile(name, location, mesh);
+  if(mesh.vertices().size()>0){ //only procs at the coupling interface should write output (for performance reasons)
+    writeSubFile(name, location, mesh);
+  }
 }
 
 void ExportVTKXML::processDataNamesAndDimensions
@@ -118,7 +120,9 @@ void ExportVTKXML::writeMasterFile
   outMasterFile << "      </PPointData>" << std::endl;
 
   for (int i = 0; i < utils::MasterSlave::_size; i++) {
-    outMasterFile << "      <Piece Source=\"" << name << "_r" << i << ".vtu\"/>" << std::endl;
+    if(mesh.getVertexDistribution()[i].size()>0){ //only non-empty subfiles
+      outMasterFile << "      <Piece Source=\"" << name << "_r" << i << ".vtu\"/>" << std::endl;
+    }
   }
 
   outMasterFile << "   </PUnstructuredGrid>" << std::endl;
