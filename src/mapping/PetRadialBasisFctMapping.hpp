@@ -506,17 +506,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
-(
-  int inputDataID,
-  int outputDataID )
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int outputDataID)
 {
   precice::utils::Event e(__func__);
   preciceTrace("map()", inputDataID, outputDataID);
 
   assertion(_hasComputedMapping);
   assertion(input()->getDimensions() == output()->getDimensions(),
-             input()->getDimensions(), output()->getDimensions());
+            input()->getDimensions(), output()->getDimensions());
+
+  const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
+  preciceInfo(__func__, "Mapping " << input()->data(inputDataID)->getName()
+              << " " << constraintName
+              << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+              << " to " << output()->getName() << " (ID " << output()->getID() << ")");
+
   PetscErrorCode ierr = 0;
   KSPConvergedReason convReason;
   auto& inValues = input()->data(inputDataID)->values();
@@ -524,7 +528,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
   int valueDim = input()->data(inputDataID)->getDimensions();
   assertion(valueDim == output()->data(outputDataID)->getDimensions(),
-             valueDim, output()->data(outputDataID)->getDimensions());
+            valueDim, output()->data(outputDataID)->getDimensions());
   int deadDimensions = 0;
   for (int d=0; d<getDimensions(); d++) {
     if (_deadAxis[d]) deadDimensions +=1;
@@ -533,7 +537,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int localPolyparams = utils::MasterSlave::_rank > 0 ? 0 : polyparams; // Set localPolyparams only when root rank
 
   if (getConstraint() == CONSERVATIVE) {
-    preciceDebug("Map conservative");
     petsc::Vector Au(_matrixC, "Au");
     petsc::Vector in(_matrixA, "in");
     
@@ -590,7 +593,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     }
   }
   else { // Map CONSISTENT
-    preciceDebug("Map consistent");
     petsc::Vector out(_matrixA, "out");
     petsc::Vector in(_matrixC, "in");
         

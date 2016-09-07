@@ -84,9 +84,7 @@ public:
    */
   const Eigen::VectorXd& values () const;
 
-  /**
-   * @brief Returns the name of the data set.
-   */
+  /// Returns the name of the data set, as set in the config file.
   const std::string& getName () const;
 
   /**
@@ -118,7 +116,6 @@ private:
   // @brief Counter for existing Data objects.
   static size_t _dataCount;
 
-  // @brief
   Eigen::VectorXd _values;
 
   // @brief Name of the data set.

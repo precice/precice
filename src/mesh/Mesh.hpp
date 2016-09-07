@@ -208,6 +208,7 @@ public:
 
   PropertyContainer& getPropertyContainer ( const std::string subIDName );
 
+  /// Returns the name of the mesh, as set in the config file.
   const std::string& getName() const;
 
   bool isFlipNormals() const;
