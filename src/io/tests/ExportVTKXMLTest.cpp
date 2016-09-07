@@ -1,3 +1,5 @@
+#ifndef PRECICE_NO_MPI
+
 #include "ExportVTKXMLTest.hpp"
 #include "io/ExportVTKXML.hpp"
 #include "mesh/Triangle.hpp"
@@ -284,3 +286,5 @@ void ExportVTKXMLTest:: tearDownMasterSlave()
 }
 
 }}} // namespace precice, io, tests
+
+#endif // PRECICE_NO_MPI

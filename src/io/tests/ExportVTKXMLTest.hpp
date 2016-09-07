@@ -1,3 +1,5 @@
+#ifndef PRECICE_NO_MPI
+
 #ifndef PRECICE_IO_TESTS_EXPORTVTKXMLTEST_HPP_
 #define PRECICE_IO_TESTS_EXPORTVTKXMLTEST_HPP_
 
@@ -62,3 +64,4 @@ private:
 }}} // namespace precice, io, tests
 
 #endif // PRECICE_IO_TESTS_EXPORTVTKXMLTEST_HPP_
+#endif // PRECICE_NO_MPI
