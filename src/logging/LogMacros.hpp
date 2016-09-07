@@ -8,34 +8,55 @@
 #include <boost/preprocessor/stringize.hpp>
 
 #include <string>
-#include <sstream>
-#include <iomanip>
-#include <cstdlib>
   
-#define precicePrint(message) do {              \
+#define INFO(message) do {              \
     preciceInfo("unknown", message);            \
   } while (false)
 
-#define preciceWarning(methodname, message) do {                        \
+#define WARN(message) do {                                  \
     LOG_LOCATION;                                                       \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::warning)   \
       << message;                                                       \
   } while (false)
-    
-#define preciceInfo(methodname, message)                                \
-  if (not precice::utils::MasterSlave::_slaveMode) {                      \
+
+#define INFO(message)                                                   \
+  if (not precice::utils::MasterSlave::_slaveMode) {                    \
     LOG_LOCATION;                                                       \
     BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::info)      \
       << message;                                                       \
-  } 
+  }
+
+#define ERROR(message) do {                                             \
+    LOG_LOCATION;                                                       \
+    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::error)     \
+      << message;                                                       \
+    std::abort();                                                       \
+  } while (false)
+
+#define CHECK(check, methodname, message)          \
+  if ( !(check) ) {                                \
+    ERROR(message);                                \
+  }
+
+#define preciceInfo(methodname, message) INFO(message)
+#define preciceWarning(methodname, message) WARN(message)
+#define preciceError(methodname, message) ERROR(message)
+#define preciceCheck CHECK
+#define preciceDebug DEBUG
+#define preciceTrace TRACE
 
 #ifdef NDEBUG 
 
-//#define preciceDebug(methodname, message)
-#define preciceDebug(...)
-#define preciceTrace(...)
+#define DEBUG(...)
+#define TRACE(...)
 
 #else // NDEBUG
+
+#define DEBUG(message) do {                                             \
+    LOG_LOCATION;                                                       \
+    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::debug)     \
+      << message;                                                       \
+  } while (false)
 
 #include "Tracer.hpp"
 
@@ -43,14 +64,8 @@
 #define LOG_ARGUMENT(r, data, i, elem)                  \
   << std::endl << "  Argument " << i << ": " << elem
 
-#define preciceDebug(message) do {                                      \
-    LOG_LOCATION;                                                       \
-    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::debug)     \
-      << message;                                                       \
-  } while (false)
-
 // Do not put do {...} while (false) here, it will destroy the _tracer_ right after creation
-#define preciceTrace(...)                                               \
+#define TRACE(...)                                                      \
   LOG_LOCATION;                                                         \
   BOOST_LOG_FUNCTION();                                                 \
   precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__); \
@@ -59,19 +74,7 @@
   
 #endif // ! NDEBUG
 
-#define preciceError(methodname, message) do {                          \
-    LOG_LOCATION;                                                       \
-    BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::error)     \
-      << message;                                                       \
-    std::abort();                                                       \
-  } while (false)
 
-#define preciceCheck(check, methodname, errormessage)   \
-  if ( !(check) ) {                                     \
-    preciceError(methodname, errormessage);             \
-  }
-
-  
 #define LOG_LOCATION do {                                               \
     boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>( \
       boost::log::core::get()->get_global_attributes()["Line"]).set(__LINE__); \
