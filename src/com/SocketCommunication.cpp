@@ -114,13 +114,13 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
 
     p.write(address);
 
-    preciceDebug("Accept connection at " << address);
+    DEBUG("Accept connection at " << address);
 
     PtrSocket socket(new Socket(*_ioService));
 
     acceptor.accept(*socket);
 
-    preciceDebug("Accepted connection at " << address);
+    DEBUG("Accepted connection at " << address);
 
     int remoteRank = -1;
     int remoteSize = 0;
@@ -149,7 +149,7 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
 
       acceptor.accept(*socket);
 
-      preciceDebug("Accepted connection at " << address);
+      DEBUG("Accepted connection at " << address);
 
       asio::read(*socket, asio::buffer(&remoteRank, sizeof(int)));
       asio::read(*socket, asio::buffer(&remoteSize, sizeof(int)));
@@ -234,7 +234,7 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
 
     p.write(address);
 
-    preciceDebug("Accept connection at " << address);
+    DEBUG("Accept connection at " << address);
 
     _sockets.resize(_remoteCommunicatorSize);
 
@@ -244,7 +244,7 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
 
       acceptor.accept(*socket);
 
-      preciceDebug("Accepted connection at " << address);
+      DEBUG("Accepted connection at " << address);
 
       preciceCheck(_sockets[remoteRank].use_count() == 0,
                    "acceptConnectionAsServer()",
@@ -295,7 +295,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
 
     p.read(address);
 
-    preciceDebug("Request connection to " << address);
+    DEBUG("Request connection to " << address);
 
     std::string ipAddress = address.substr(0, address.find(":"));
     std::string portNumber = address.substr(
@@ -329,7 +329,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
       }
     }
 
-    preciceDebug("Requested connection to " << address);
+    DEBUG("Requested connection to " << address);
 
     _sockets.push_back(socket);
 
@@ -385,7 +385,7 @@ SocketCommunication::requestConnectionAsClient(
 
     p.read(address);
 
-    preciceDebug("Request connection to " << address);
+    DEBUG("Request connection to " << address);
 
     std::string ipAddress = address.substr(0, address.find(":"));
     std::string portNumber = address.substr(
@@ -419,7 +419,7 @@ SocketCommunication::requestConnectionAsClient(
       }
     }
 
-    preciceDebug("Requested connection to " << address);
+    DEBUG("Requested connection to " << address);
 
     _sockets.push_back(socket);
 
@@ -923,7 +923,7 @@ SocketCommunication::getIpAddress() {
 
   assertion(querySocket >= 0);
 
-  preciceDebug("Looking for IP address of network \"" << _networkName << "\"");
+  DEBUG("Looking for IP address of network \"" << _networkName << "\"");
 
   struct ifreq request;
   struct if_nameindex* nameInterface = if_nameindex();
@@ -947,7 +947,7 @@ SocketCommunication::getIpAddress() {
     request.ifr_name[ifNameLength] = 0; // Add C-string 0
 
     if (ioctl(querySocket, SIOCGIFADDR, &request) >= 0) {
-      preciceDebug(itNameInterface->if_name
+      DEBUG(itNameInterface->if_name
                    << ": " << inet_ntoa(((struct sockaddr_in*)&request.ifr_addr)
                                             ->sin_addr));
 

@@ -38,13 +38,12 @@
 #define preciceWarning(methodname, message) WARN(message)
 #define preciceError(methodname, message) ERROR(message)
 #define preciceCheck(check, methodname, message) CHECK(check, message)
-#define preciceDebug DEBUG
-#define preciceTrace TRACE
 
 #ifdef NDEBUG 
 
 #define DEBUG(...)
 #define TRACE(...)
+#define preciceTrace(...)
 
 #else // NDEBUG
 
@@ -58,7 +57,8 @@
 
 /// Helper macro, used by preciceTrace.
 #define LOG_ARGUMENT(r, data, i, elem)                  \
-  << std::endl << "  Argument " << i << ": " << elem
+  << std::endl << "  Argument " << i << ": " << BOOST_PP_STRINGIZE(elem) << " == " << elem
+
 
 // Do not put do {...} while (false) here, it will destroy the _tracer_ right after creation
 #define TRACE(...)                                                      \
@@ -66,8 +66,18 @@
   BOOST_LOG_FUNCTION();                                                 \
   precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__); \
   BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace) << "Entering " << __func__ \
+  BOOST_PP_SEQ_FOR_EACH_I(LOG_ARGUMENT,, BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__));
+
+/// Legacy macro, removes the first element of __VA_ARGS__
+#define preciceTrace(...)                                                      \
+  LOG_LOCATION;                                                         \
+  BOOST_LOG_FUNCTION();                                                 \
+  precice::logging::Tracer _tracer_(_log, __func__, __FILE__,__LINE__); \
+  BOOST_LOG_SEV(_log, boost::log::trivial::severity_level::trace) << "Entering " << __func__ \
   BOOST_PP_SEQ_FOR_EACH_I(LOG_ARGUMENT,, BOOST_PP_SEQ_TAIL(BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__)));
   
+
+
 #endif // ! NDEBUG
 
 

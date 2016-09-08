@@ -92,7 +92,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     masterSlaveCom->requestConnection( "Part2Master", "Part2Slaves", 1, 2 );
   }
 
-  preciceDebug("Initialized and MasterSlave connection set up");
+  DEBUG("Initialized and MasterSlave connection set up");
   utils::Parallel::synchronizeProcesses();
 
   if(utils::Parallel::getProcessRank() == 0){//Part1
@@ -108,7 +108,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     m2n->requestMasterConnection ( "Part1", "Part2Master");
   }
 
-  preciceDebug("MasterMaster connection set up");
+  DEBUG("MasterMaster connection set up");
   utils::Parallel::synchronizeProcesses();
 
   int dimensions = 2;

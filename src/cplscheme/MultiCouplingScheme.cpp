@@ -151,7 +151,7 @@ void MultiCouplingScheme::advance()
   setIsCouplingTimestepComplete(false);
   bool convergence = false;
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-    preciceDebug("Computed full length of iteration");
+    DEBUG("Computed full length of iteration");
 
     receiveData();
 
@@ -192,11 +192,11 @@ void MultiCouplingScheme::advance()
     sendData();
 
     if (not convergence) {
-      preciceDebug("No convergence achieved");
+      DEBUG("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
     }
     else {
-      preciceDebug("Convergence achieved");
+      DEBUG("Convergence achieved");
       advanceTXTWriters();
     }
     updateTimeAndIterations(convergence);

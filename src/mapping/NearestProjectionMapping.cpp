@@ -33,7 +33,7 @@ void NearestProjectionMapping:: computeMapping()
   preciceTrace("computeMapping()", input()->vertices().size(),
                 output()->vertices().size());
   if (getConstraint() == CONSISTENT){
-    preciceDebug("Compute consistent mapping");
+    DEBUG("Compute consistent mapping");
     _weights.resize(output()->vertices().size());
     for ( size_t i=0; i < output()->vertices().size(); i++ ){
       query::FindClosest findClosest(output()->vertices()[i].getCoords());
@@ -48,7 +48,7 @@ void NearestProjectionMapping:: computeMapping()
   }
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
-    preciceDebug("Compute conservative mapping");
+    DEBUG("Compute conservative mapping");
     _weights.resize(input()->vertices().size());
     for ( size_t i=0; i < input()->vertices().size(); i++ ){
       query::FindClosest findClosest(input()->vertices()[i].getCoords());
@@ -91,7 +91,7 @@ void NearestProjectionMapping:: map
   assertion(dimensions == outData->getDimensions());
 
   if (getConstraint() == CONSISTENT){
-    preciceDebug("Map consistent");
+    DEBUG("Map consistent");
     assertion(_weights.size() == output()->vertices().size(),
                _weights.size(), output()->vertices().size());
     for (size_t i=0; i < output()->vertices().size(); i++){
@@ -109,7 +109,7 @@ void NearestProjectionMapping:: map
   }
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
-    preciceDebug("Map conservative");
+    DEBUG("Map conservative");
     assertion(_weights.size() == input()->vertices().size(),
                _weights.size(), input()->vertices().size());
     for (size_t i=0; i < input()->vertices().size(); i++){

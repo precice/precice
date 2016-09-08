@@ -53,7 +53,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::writeToFile
   std::ofstream out;
   out.open( filename.c_str() );
   if ( (!out.fail()) && out.is_open() ) {
-    preciceDebug( "close()", "opened data file " + filename );
+    DEBUG( "close()", "opened data file " + filename );
     out << std::setprecision(_precision);
 
     out << HEADER << std::endl << std::endl;
@@ -79,7 +79,7 @@ void tarch::plotter::griddata::unstructured::vtk::VTKTextFileWriter::writeToFile
       out << _cellDataDescription << std::endl << std::endl;
     }
 
-    preciceDebug( "close()", "data written to " + filename );
+    DEBUG( "close()", "data written to " + filename );
   }
   else {
   	preciceWarnung( "close()", "unable to write output file " + filename );

@@ -281,15 +281,15 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int polyparams = 1 + getDimensions() - deadDimensions;
 
   if (getConstraint() == CONSERVATIVE){
-    preciceDebug("Map conservative");
+    DEBUG("Map conservative");
     static int mappingIndex = 0;
     Eigen::VectorXd Au(_matrixA.cols());  // rows == n
     Eigen::VectorXd in(_matrixA.rows());  // rows == outputSize
     Eigen::VectorXd out(_matrixA.cols()); // rows == n
 
-    // preciceDebug("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
-    preciceDebug("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
-    preciceDebug("in size=" << in.size() << ", out size=" << out.size());
+    // DEBUG("C rows=" << _matrixCLU.rows() << " cols=" << _matrixCLU.cols());
+    DEBUG("A rows=" << _matrixA.rows() << " cols=" << _matrixA.cols());
+    DEBUG("in size=" << in.size() << ", out size=" << out.size());
 
     for (int dim = 0; dim < valueDim; dim++) {
       for (int i = 0; i < in.size(); i++) { // Fill input data values
@@ -317,7 +317,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
     mappingIndex++;
   }
   else { // Map consistent
-    preciceDebug("Map consistent");
+    DEBUG("Map consistent");
     Eigen::VectorXd p(_matrixA.cols());    // rows == n
     Eigen::VectorXd in(_matrixA.cols());   // rows == n
     Eigen::VectorXd out(_matrixA.rows());  // rows == outputSize

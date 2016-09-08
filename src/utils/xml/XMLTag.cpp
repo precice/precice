@@ -224,7 +224,7 @@ void XMLTag:: parse
     resetAttributes();
     if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
       assertion(xmlReader->getNodeName() != nullptr);
-      preciceDebug("reading attributes of tag " << xmlReader->getNodeName());
+      DEBUG("reading attributes of tag " << xmlReader->getNodeName());
       readAttributes(xmlReader);
       _listener.xmlTagCallback(*this);
     }
@@ -233,14 +233,14 @@ void XMLTag:: parse
       while (xmlReader->read()){
         if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
           assertion(xmlReader->getNodeName() != nullptr);
-          preciceDebug("reading subtag " << xmlReader->getNodeName()
+          DEBUG("reading subtag " << xmlReader->getNodeName()
                        << " of tag " << _fullName);
           parseSubtag(xmlReader);
         }
         else if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT_END){
           assertion(xmlReader->getNodeName() != nullptr);
           if (std::string(xmlReader->getNodeName()) == _fullName){
-            preciceDebug("end of tag " << xmlReader->getNodeName());
+            DEBUG("end of tag " << xmlReader->getNodeName());
             areAllSubtagsConfigured();
             _configured = true;
             _listener.xmlEndTagCallback(*this);
@@ -393,7 +393,7 @@ utils::DynVector XMLTag:: getDynVectorAttributeValue
   for (int i=0; i < dimensions; i++){
     result[i] = parsed[i];
   }
-  preciceDebug("Returning value = " << result);
+  DEBUG("Returning value = " << result);
   return result;
 }
 

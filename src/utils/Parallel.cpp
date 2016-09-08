@@ -39,7 +39,7 @@ void Parallel:: initializeMPI
   int isMPIInitialized;
   MPI_Initialized (&isMPIInitialized);
   if (not isMPIInitialized) {
-    preciceDebug ( "Initialize MPI" );
+    DEBUG ( "Initialize MPI" );
     _mpiInitializedByPrecice = true;
     MPI_Init(argc, argv);
   }
@@ -57,7 +57,7 @@ void Parallel:: splitCommunicator
 
   // Exchange group information
   if (_accessorGroups.empty()) {
-    preciceDebug ( "Exchange group information" );
+    DEBUG ( "Exchange group information" );
     //_accessorGroups.clear(); // Makes reinitialization possible
     std::map<std::string,int> groupMap; // map from names to group ID
     MPI_Comm globalComm = getGlobalCommunicator();
@@ -123,7 +123,7 @@ void Parallel:: splitCommunicator
       }
 
       if (severalGroups) {
-        preciceDebug("Split groups");
+        DEBUG("Split groups");
         int groupID = -1;
         for (auto group : _accessorGroups) {
           if (group.name == groupName) {
@@ -139,9 +139,9 @@ void Parallel:: splitCommunicator
       }
 
 #     ifdef Debug
-      preciceDebug ( "Detected " << _accessorGroups.size() << " groups" );
+      DEBUG ( "Detected " << _accessorGroups.size() << " groups" );
       for (const AccessorGroup& group : _accessorGroups) {
-        preciceDebug ( "Group " << group.id << ": name = " << group.name
+        DEBUG ( "Group " << group.id << ": name = " << group.name
                        << ", leaderRank = " << group.leaderRank
                        << ", size = " << group.size );
       }
@@ -158,7 +158,7 @@ void Parallel:: finalizeMPI()
   preciceTrace ("finalizeMPI()");
 # ifndef PRECICE_NO_MPI
   if(_mpiInitializedByPrecice){
-    preciceDebug ( "preCICE finalizes MPI" );
+    DEBUG ( "preCICE finalizes MPI" );
     MPI_Finalize();
   }
 # endif // not PRECICE_NO_MPI
@@ -173,7 +173,7 @@ void Parallel:: clearGroups()
 
 int Parallel:: getProcessRank()
 {
-  // Do not use preciceTrace or preciceDebug here!
+  // Do not use preciceTrace or DEBUG here!
   int processRank = 0;
 # ifndef PRECICE_NO_MPI
   if (_isInitialized) {
@@ -268,17 +268,17 @@ Parallel::Communicator Parallel:: getRestrictedCommunicator
 # ifdef Debug
   int communicatorSize = 0;
   MPI_Comm_size (_globalCommunicator, &communicatorSize);
-  preciceDebug ( "Comm size:" << communicatorSize );
-  preciceDebug ( "ranks size:" << (int)ranks.size() );
+  DEBUG ( "Comm size:" << communicatorSize );
+  DEBUG ( "ranks size:" << (int)ranks.size() );
   //   assertion ( (int)ranks.size() < communicatorSize );
 # endif // Debug
   for ( size_t i=0; i < ranks.size(); i++ ) {
-    preciceDebug ( "Adding rank " << ranks[i] );
+    DEBUG ( "Adding rank " << ranks[i] );
     assertion ( ranks[i] >= 0 );
     ranksArray[i] = ranks[i];
   }
   // Create subgroup, containing processes contained in ranks
-  preciceDebug ( "Restrict Group" );
+  DEBUG ( "Restrict Group" );
   MPI_Group restrictedGroup;
   MPI_Group_incl ( currentGroup, ranks.size(), ranksArray, &restrictedGroup );
 # ifdef Asserts
@@ -287,14 +287,14 @@ Parallel::Communicator Parallel:: getRestrictedCommunicator
   assertion ( restrictedGroupSize > 0 );
 # endif
   // Create communicator, containing process of restrictedGroup
-  preciceDebug ( "Create Comm" );
+  DEBUG ( "Create Comm" );
 //  MPI_Comm restrictedCommunicator;
   MPI_Comm_create ( _globalCommunicator, restrictedGroup, &restrictedCommunicator );
-  preciceDebug ( "Barrier" );
+  DEBUG ( "Barrier" );
   MPI_Barrier ( _globalCommunicator );
-  preciceDebug ( "Free current group" );
+  DEBUG ( "Free current group" );
   MPI_Group_free ( &currentGroup );
-  preciceDebug ( "Free restricted group" );
+  DEBUG ( "Free restricted group" );
   MPI_Group_free ( &restrictedGroup );
   delete[] ranksArray;
 # endif // not PRECICE_NO_MPI

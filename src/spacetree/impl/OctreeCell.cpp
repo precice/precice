@@ -54,7 +54,7 @@ void OctreeCell:: refine
   utils::DynVector newCenter(dim);
   utils::DynVector newHalflengths(dim, 0.5*cellHalflengths[0]);
   for (int i=0; i < twoPowerDim; i++){
-    //preciceDebug ( "Creating child " << i );
+    //DEBUG ( "Creating child " << i );
     newCenter = utils::delinearize(i, dim);
     newCenter *= newHalflengths[0];
     newCenter += cellCenter;
@@ -64,7 +64,7 @@ void OctreeCell:: refine
     findVoxel(*_content);
     _childs[i]._content->add(findVoxel.content());
     if (not _childs[i]._content->empty()){
-      preciceDebug("  Refined child cell with center " << newCenter
+      DEBUG("  Refined child cell with center " << newCenter
                    << " is on geometry");
 //      if (_childs[i]._content->size() == 1){
 //        INFO("  Cell at x=" << newCenter << ", h=" << newHalflengths
@@ -119,7 +119,7 @@ void OctreeCell:: getChildData
   childCenter = utils::delinearize(childIndex, childCenter.size());
   childCenter *= childHalflengths[0];
   childCenter += cellCenter;
-  preciceDebug("  Computed center = " << childCenter << ", h = " << childHalflengths);
+  DEBUG("  Computed center = " << childCenter << ", h = " << childHalflengths);
 }
 
 void OctreeCell:: accept

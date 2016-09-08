@@ -71,7 +71,7 @@ int DynamicOctree:: searchPosition
 {
   preciceTrace("searchPosition()", point);
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -87,7 +87,7 @@ void DynamicOctree:: searchDistance
 {
   preciceTrace ( "searchDistance()", findClosest.getSearchPoint() );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -104,7 +104,7 @@ int DynamicOctree:: searchContent
   preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -118,7 +118,7 @@ void DynamicOctree:: accept ( Visitor& visitor )
 {
   preciceTrace("accept()");
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }

@@ -337,7 +337,7 @@ void MeshTest:: testDemonstration ()
 {
   preciceTrace ( "testDemonstration()" );
   for ( int dim=2; dim <= 3; dim++ ){
-    preciceDebug ( "dim = " << dim );
+    DEBUG ( "dim = " << dim );
     // Create mesh object
     std::string meshName ( "MyMesh" );
     bool flipNormals = false; // The normals of triangles, edges, vertices

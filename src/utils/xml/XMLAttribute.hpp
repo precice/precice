@@ -244,7 +244,7 @@ void XMLAttribute<ATTRIBUTE_T>:: readValue
       }
     }
   }
-  preciceDebug("Read valid attribute \"" << getName() << "\" value = " << _value);
+  DEBUG("Read valid attribute \"" << getName() << "\" value = " << _value);
   _read = true;
 }
 

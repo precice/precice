@@ -107,7 +107,7 @@ void AitkenPostProcessing:: performPostProcessing
     _aitkenFactor = -_aitkenFactor * (nominator / denominator);
   }
 
-  preciceDebug("AitkenFactor: " << _aitkenFactor);
+  DEBUG("AitkenFactor: " << _aitkenFactor);
 
   // Perform relaxation with aitken factor
   double omega = _aitkenFactor;

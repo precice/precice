@@ -390,7 +390,7 @@ template< typename ITERATOR_T >
 void VRML10Parser<ITERATOR_T>:: debug ( const std::string & message )
 {
   std::string preciceMethodName ("debug()");
-  preciceDebug ( message );
+  DEBUG ( message );
 }
 
 template< typename ITERATOR_T >

@@ -48,11 +48,11 @@ void tarch::argument::ArgumentSet::initialize(unsigned int argc, char* argv[]) {
 #ifdef Debug
 		std::stringstream ss;
 		ss << "\nArgument Nr. " <<i <<" : " <<argv[i+2];
-		preciceDebug("initialize",ss.str());
+		DEBUG("initialize",ss.str());
 #endif
 		_arguments[i].setArgument( std::string(argv[i+2]) );
 	}
-	preciceDebug("initizalize()", "Argumentset initialization successful.");
+	DEBUG("initizalize()", "Argumentset initialization successful.");
 }
 
 double tarch::argument::ArgumentSet::getArgumentAsDouble( const std::string& argumentId ) const {
@@ -122,7 +122,7 @@ void tarch::argument::ArgumentSet::printDefaultArguments(std::stringstream& ss) 
 
 bool tarch::argument::ArgumentSet::isValid() const {
 	if(_nrArgs != _arguments.size()){
-		preciceDebug("isValid","_nrArgs invalid");
+		DEBUG("isValid","_nrArgs invalid");
 		return false;
 	}
 

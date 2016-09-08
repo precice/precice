@@ -299,7 +299,7 @@ void FileCommunication:: receive
                  "Receive type is different than string!" );
   int size = 0;
   _receiveFile.read ( (char*)&size, sizeof(int) );
-  preciceDebug ( "Size = " << size );
+  DEBUG ( "Size = " << size );
   assertion ( size < 500, size );
   char* message = new char[size];
   _receiveFile.read ( message, size );
@@ -433,7 +433,7 @@ void FileCommunication:: makeReceiveFileUnavailable
   preciceTrace ( "makeReceiveFileUnavailable()", rank, index );
   std::string filenameHidden = getReceiveFilename (true, rank, index);
   std::string filename = getReceiveFilename (false, rank, index);
-  preciceDebug ( "Rename file \"" << filename << "\" to \"" << filenameHidden
+  DEBUG ( "Rename file \"" << filename << "\" to \"" << filenameHidden
                  << "\"" );
   while ( rename(filename.c_str(), filenameHidden.c_str()) != 0 ){
   }

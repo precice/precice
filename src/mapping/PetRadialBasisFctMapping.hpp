@@ -170,7 +170,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
-  TRACE();
+  preciceTrace(__func__);
   precice::utils::Event e(__func__);
 
   assertion(input()->getDimensions() == output()->getDimensions(),
@@ -494,7 +494,7 @@ bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping() co
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
-  TRACE();
+  preciceTrace(__func__);
   _matrixC.reset();
   _matrixA.reset();
   previousSolution.clear();
@@ -505,7 +505,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int outputDataID)
 {
-  TRACE(inputDataID, outputDataID);
+  preciceTrace(__func__, inputDataID, outputDataID);
   precice::utils::Event e(__func__);
   
   assertion(_hasComputedMapping);

@@ -77,7 +77,7 @@ void WatchPoint:: initialize()
     }
   }
 
-  preciceDebug("Rank: " << utils::MasterSlave::_rank << ", isClosest: " << _isClosest);
+  DEBUG("Rank: " << utils::MasterSlave::_rank << ", isClosest: " << _isClosest);
 
   if(_isClosest){
 

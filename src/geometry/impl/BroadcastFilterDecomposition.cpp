@@ -68,7 +68,7 @@ void BroadcastFilterDecomposition:: filter(
   Event e("filter mesh");
 
   // first, bounding box filter
-  preciceDebug("First Filter BB, #vertices " << seed.vertices().size());
+  DEBUG("First Filter BB, #vertices " << seed.vertices().size());
   assertion(not _filterByMapping);
   _bb = mesh::Mesh::BoundingBox (_dimensions,
                    std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
@@ -83,7 +83,7 @@ void BroadcastFilterDecomposition:: filter(
   std::vector<int> tmpVertexPostitions = filterMesh(seed, filteredMesh);
 
   // second, mapping filter
-  preciceDebug("Second Filter Mapping, #vertices " << filteredMesh.vertices().size());
+  DEBUG("Second Filter Mapping, #vertices " << filteredMesh.vertices().size());
   _filterByMapping = true;
   seed.clear();
   seed.addMesh(filteredMesh);
@@ -96,7 +96,7 @@ void BroadcastFilterDecomposition:: filter(
   clearBoundingMappings();
 
   //merge the 2 filters
-  preciceDebug("Merge Filters, #vertices " << filteredMesh.vertices().size());
+  DEBUG("Merge Filters, #vertices " << filteredMesh.vertices().size());
   for(size_t i=0;i<filteredVertexPositions.size();i++){
     filteredVertexPositions[i] = tmpVertexPostitions[filteredVertexPositions[i]];
   }

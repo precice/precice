@@ -92,7 +92,7 @@ void ExportVRMLTest:: testExportCuboid()
     mesh.createData ( "Data", dim );
     cuboid.create ( mesh );
 
-    preciceDebug ( "Mesh vertices = " << mesh.vertices().size() );
+    DEBUG ( "Mesh vertices = " << mesh.vertices().size() );
     std::ostringstream stream;
     stream << "io-ExportVRMLTest-testExportCuboid-" << dim << "d.wrl";
     ExportVRML ex(false);

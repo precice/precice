@@ -156,7 +156,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	preciceTrace("computeQNUpdate()");
   Event e("computeNewtonUpdate", true, true); // time measurement, barrier
 
-  preciceDebug("   Compute Newton factors");
+  DEBUG("   Compute Newton factors");
 
   // Calculate QR decomposition of matrix V and solve Rc = -Qr
   Eigen::VectorXd c;
@@ -216,11 +216,11 @@ void IQNILSPostProcessing::computeQNUpdate
 	}
 	e_qrsolve.stop();
 
-	preciceDebug("   Apply Newton factors");
+	DEBUG("   Apply Newton factors");
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
 	xUpdate = _matrixW * c;
 
-	//preciceDebug("c = " << c);
+	//DEBUG("c = " << c);
 
 
     /**
@@ -230,7 +230,7 @@ void IQNILSPostProcessing::computeQNUpdate
 	// If the previous time step converged within one single iteration, nothing was added
 	// to the LS system matrices and they need to be restored from the backup at time T-2
     if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0) && not _forceInitialRelaxation) {
-		preciceDebug("   Last time step converged after one iteration. Need to restore the secondaryMatricesW from backup.");
+		DEBUG("   Last time step converged after one iteration. Need to restore the secondaryMatricesW from backup.");
 		_secondaryMatricesW = _secondaryMatricesWBackup;
 	}
 

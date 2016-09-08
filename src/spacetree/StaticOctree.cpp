@@ -61,7 +61,7 @@ void StaticOctree:: initialize()
   int sides = (dim == 2) ? 4 : 6;
   impl::Environment env(twoPowerDim, sides);
   if ( dim == 2 ){
-    preciceDebug( "Setting 2D environment cell neighbor indices" );
+    DEBUG( "Setting 2D environment cell neighbor indices" );
     tarch::la::DynamicVector<int> indices(2);
     indices[0] = 1; indices[1] = 2; // Neighbors cell 0
     env.setNeighborCellIndices(0, indices);
@@ -82,7 +82,7 @@ void StaticOctree:: initialize()
     env.setNeighborSideIndices(3, indices);
   }
   else {
-    preciceDebug( "Setting 3D environment cell neighbor indices" );
+    DEBUG( "Setting 3D environment cell neighbor indices" );
     assertion ( dim == 3, dim );
     tarch::la::DynamicVector<int> indices(3);
     assignList(indices) = 1, 2, 4; // Cell 0
@@ -135,7 +135,7 @@ int StaticOctree:: searchPosition
 {
   preciceTrace ( "searchPosition()", point );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -150,7 +150,7 @@ void StaticOctree:: searchDistance
 {
   preciceTrace ( "searchDistance()", findClosest.getSearchPoint() );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -166,7 +166,7 @@ int StaticOctree:: searchContent
   preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -179,7 +179,7 @@ void StaticOctree:: accept ( Visitor& visitor )
 {
   preciceTrace("accept()");
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }

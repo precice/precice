@@ -536,7 +536,7 @@ void MVQNPostProcessing::computeNewtonUpdateEfficient(
   // imvj without restart is used, i.e., compute directly J_prev * (-res)
   }else{
     _parMatrixOps->multiply(_oldInvJacobian, negativeResiduals, xUpdate, _dimOffsets, getLSSystemRows(), getLSSystemRows(), 1, false);
-    preciceDebug("Mult J*V DONE");
+    DEBUG("Mult J*V DONE");
   }
 
   xUpdate += xUptmp;
@@ -655,7 +655,7 @@ void MVQNPostProcessing::restartIMVJ()
     _preconditioner->apply(_pseudoInverseChunk.front(), true);
     // |===================                             ==|
 
-    preciceDebug("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste<<" avg rank: "<<_avgRank/_nbRestarts);
+    DEBUG("MVJ-RESTART, mode=SVD. Rank of truncated SVD of Jacobian "<<rankAfter<<", new modes: "<<rankAfter-rankBefore<<", truncated modes: "<<waste<<" avg rank: "<<_avgRank/_nbRestarts);
     //double percentage = 100.0*used_storage/(double)theoreticalJ_storage;
     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
       _infostringstream<<" - MVJ-RESTART " <<_nbRestarts<<", mode= SVD -\n  new modes: "<<rankAfter-rankBefore<<"\n  rank svd: "<<rankAfter<<"\n  avg rank: "<<_avgRank/_nbRestarts<<"\n  truncated modes: "<<waste<<"\n"<<std::endl;
@@ -733,7 +733,7 @@ void MVQNPostProcessing::restartIMVJ()
      // |===================                             ==|
    }
 
-   preciceDebug("MVJ-RESTART, mode=LS. Restart with "<<_matrixV_RSLS.cols()<<" columns from "<<_RSLSreusedTimesteps<<" time steps.");
+   DEBUG("MVJ-RESTART, mode=LS. Restart with "<<_matrixV_RSLS.cols()<<" columns from "<<_RSLSreusedTimesteps<<" time steps.");
    if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode))
      _infostringstream<<" - MVJ-RESTART" <<_nbRestarts<<", mode= LS -\n  used cols: "<<_matrixV_RSLS.cols()<<"\n  R_RS: "<<_RSLSreusedTimesteps<<"\n"<<std::endl;
 
@@ -744,7 +744,7 @@ void MVQNPostProcessing::restartIMVJ()
     _WtilChunk.clear();
     _pseudoInverseChunk.clear();
 
-    preciceDebug("MVJ-RESTART, mode=Zero");
+    DEBUG("MVJ-RESTART, mode=Zero");
 
   }else if (_imvjRestartType == MVQNPostProcessing::RS_SLIDE){
 

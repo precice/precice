@@ -38,7 +38,7 @@ void DriftRatchetTest:: run ()
           geometry::DriftRatchet::getDefaultShapeParameter(),
           length, pores, 0, 1, 2 );
       driftRatchet.create ( mesh );
-      preciceDebug ( "Created Container with " << mesh.triangles().size()
+      DEBUG ( "Created Container with " << mesh.triangles().size()
                      << " triangles and " << mesh.vertices().size() << " vertices" );
       io::ExportVTK exportVTK(true);
       std::ostringstream filename;

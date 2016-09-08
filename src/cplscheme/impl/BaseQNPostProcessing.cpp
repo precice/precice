@@ -178,7 +178,7 @@ void BaseQNPostProcessing::initialize(
       }
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
-    preciceDebug("Number of unknowns at the interface (global): "<<_dimOffsets.back());
+    DEBUG("Number of unknowns at the interface (global): "<<_dimOffsets.back());
     if (utils::MasterSlave::_masterMode){
       _infostringstream<<"\n--------\n DOFs (global): "<<_dimOffsets.back()<<"\n offsets: "<<_dimOffsets<<std::endl;
     }
@@ -281,7 +281,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
   } else {
-    preciceDebug("   Update Difference Matrices");
+    DEBUG("   Update Difference Matrices");
     if (not _firstIteration) {
       // Update matrices V, W with newest information
 
@@ -384,7 +384,7 @@ void BaseQNPostProcessing::performPostProcessing
   updateDifferenceMatrices(cplData);
 
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
-    preciceDebug("   Performing underrelaxation");
+    DEBUG("   Performing underrelaxation");
     _oldXTilde = _values; // Store x tilde
     _oldResiduals = _residuals; // Store current residual
 
@@ -397,12 +397,12 @@ void BaseQNPostProcessing::performPostProcessing
 
     computeUnderrelaxationSecondaryData(cplData);
   } else {
-    preciceDebug("   Performing quasi-Newton Step");
+    DEBUG("   Performing quasi-Newton Step");
 
     // If the previous time step converged within one single iteration, nothing was added
     // to the LS system matrices and they need to be restored from the backup at time T-2
     if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0) && not _forceInitialRelaxation) {
-      preciceDebug("   Last time step converged after one iteration. Need to restore the matrices from backup.");
+      DEBUG("   Last time step converged after one iteration. Need to restore the matrices from backup.");
 
       _matrixCols = _matrixColsBackup;
       _matrixV = _matrixVBackup;
@@ -532,7 +532,7 @@ void BaseQNPostProcessing::applyFilter()
 
       removeMatrixColumn(delIndices[i]);
 
-      preciceDebug(" Filter: removing column with index " << delIndices[i] <<" in iteration " << its<< " of time step: " << tSteps);
+      DEBUG(" Filter: removing column with index " << delIndices[i] <<" in iteration " << its<< " of time step: " << tSteps);
     }
     assertion(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
@@ -626,7 +626,7 @@ void BaseQNPostProcessing::iterationsConverged
   for (int cols: _matrixCols) {
     stream << cols << ", ";
   }
-  preciceDebug(stream.str());
+  DEBUG(stream.str());
 # endif // Debug
 
 
@@ -662,7 +662,7 @@ void BaseQNPostProcessing::iterationsConverged
   else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
     assertion(toRemove > 0, toRemove);
-    preciceDebug("Removing " << toRemove << " cols from least-squares system with "<< getLSSystemCols() << " cols");
+    DEBUG("Removing " << toRemove << " cols from least-squares system with "<< getLSSystemCols() << " cols");
     assertion(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
     assertion(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 

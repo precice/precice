@@ -98,7 +98,7 @@ void SolverInterfaceTestGeometry:: testConfiguration()
 {
   preciceTrace ( "testConfiguration()" );
   mesh::Mesh::resetGeometryIDsGlobally ();
-  preciceDebug ( "Test 2D configuration");
+  DEBUG ( "Test 2D configuration");
   { // 2D
     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
     configureSolverInterface (
@@ -107,7 +107,7 @@ void SolverInterfaceTestGeometry:: testConfiguration()
     geoInterface.initialize ();
     geoInterface.exportMesh ( "testConfiguration2D" );
   }
-  preciceDebug ( "Test 3D configuration");
+  DEBUG ( "Test 3D configuration");
   { // 3D
     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
     configureSolverInterface (
@@ -652,16 +652,16 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   precice.writeBlockVectorData(dataID, 4, indices, values);
 
   precice.initialize();
-  preciceDebug ( "preCICE initialized");
+  DEBUG ( "preCICE initialized");
   precice.mapWriteDataFrom(meshID);
   // Validate results
   impl::PtrParticipant p = precice._impl->_accessor;
-  preciceDebug ( "Participant found");
+  DEBUG ( "Participant found");
   validate(p != nullptr);
-  preciceDebug ( "dataContexts: " << p->_dataContexts << " and dataID: " << dataID);
+  DEBUG ( "dataContexts: " << p->_dataContexts << " and dataID: " << dataID);
   validate(p->_dataContexts[dataID] != nullptr);
   mesh::PtrData data = p->_dataContexts[dataID]->toData;
-  preciceDebug ( "ToData found");
+  DEBUG ( "ToData found");
   validate(data.get() != nullptr);
   auto& writtenValues = data->values();
 

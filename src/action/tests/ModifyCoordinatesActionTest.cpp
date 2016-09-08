@@ -33,7 +33,7 @@ void ModifyCoordinatesActionTest:: run ()
 
 //void ModifyCoordinatesActionTest:: testSetAsDisplacement ()
 //{
-//   preciceDebug ( "testSetAsDisplacement()", "Entering" );
+//   DEBUG ( "testSetAsDisplacement()", "Entering" );
 //
 //   // Create geometryContext by faking a geometry but not using it to create
 //   // the mesh. The mesh is created by hand, such that references to the vertices
@@ -86,7 +86,7 @@ void ModifyCoordinatesActionTest:: run ()
 //   validate ( tarch::la::equals(edge.getNormal(), normalizedNormal),
 //              "testSetAsDisplacement" );
 //
-//   preciceDebug ( "testSetAsDisplacement()", "Leaving" );
+//   DEBUG ( "testSetAsDisplacement()", "Leaving" );
 //}
 
 void ModifyCoordinatesActionTest:: testAddToCoordinates ()

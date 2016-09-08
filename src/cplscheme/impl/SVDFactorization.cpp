@@ -181,7 +181,7 @@ void SVDFactorization::computeQRdecomposition(
 
       // if ||v_orth|| is nearly zero, col is not well orthogonalized; discard
       if (rho_orth <= std::numeric_limits<double>::min()){
-        preciceDebug("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.");
+        DEBUG("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.");
         orthogonalized = false;
         termination = true;
       }

@@ -136,7 +136,7 @@ void SocketCommunicationTest:: testParallelClient()
   SocketCommunication com;
   int rank = utils::Parallel::getProcessRank();
   if ( rank == 0 ){
-    preciceDebug("branch rank 0");
+    DEBUG("branch rank 0");
     com.acceptConnection("server", "client", 0, 1);
     validateEquals ( com.getRemoteCommunicatorSize(), 2 );
     std::string msg;
@@ -151,7 +151,7 @@ void SocketCommunicationTest:: testParallelClient()
     com.closeConnection();
   }
   else if ( (rank == 1) || (rank == 2) ){
-    preciceDebug("branch rank 1, 2");
+    DEBUG("branch rank 1, 2");
     com.requestConnection("server", "client", rank-1, 2);
     validateEquals ( com.getRemoteCommunicatorSize(), 1 );
     std::ostringstream rankMsg;

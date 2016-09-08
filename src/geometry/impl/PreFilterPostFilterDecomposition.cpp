@@ -75,7 +75,7 @@ void PreFilterPostFilterDecomposition:: preFilter(
       assertion(_safetyFactor>=0.0);
       _safetyGap *= _safetyFactor;
 
-      preciceDebug("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
+      DEBUG("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
                    << ", " << _bb[0].second << " and " << _bb[1].first << ", " << _bb[1].second);
       mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
       boundingVertexDistribution[rankSlave] = filterMesh(seed, slaveMesh);
@@ -95,7 +95,7 @@ void PreFilterPostFilterDecomposition:: preFilter(
     boundingVertexDistribution[0] = filterMesh(seed, filteredMesh);
     seed.clear(); //clear global mesh on master
     seed.addMesh(filteredMesh);
-    preciceDebug("Master mesh after filtering, #vertices " << seed.vertices().size());
+    DEBUG("Master mesh after filtering, #vertices " << seed.vertices().size());
   }
 }
 

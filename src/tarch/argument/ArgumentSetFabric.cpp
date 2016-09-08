@@ -72,7 +72,7 @@ ArgumentSet ArgumentSetFabric::getSpecificSet(unsigned int argc, char* argv[]) {
       ss << "\nArgumentSet ";
       (*it).printDefaultArguments(ss);
       ss <<"was selected.";
-      preciceDebug("getArgumentSet", ss.str());
+      DEBUG("getArgumentSet", ss.str());
 #endif
       (*it).initialize(argc, argv);
       return *it;
@@ -109,14 +109,14 @@ ArgumentSet ArgumentSetFabric::getArgumentSet(unsigned int argc, char* argv[]) {
   std::stringstream ss;
   ss << "The configured argument sets are: " <<std::endl;
   printDefaultArguments(ss);
-  preciceDebug("getArgumentSet", ss.str());
+  DEBUG("getArgumentSet", ss.str());
 #endif
 
   /*
    * Find user specified argument set
    */
   ArgumentSet argumentSet = getSpecificSet(argc, argv);
-  preciceDebug("getArgumentSet()","Argument set successfully returned.");
+  DEBUG("getArgumentSet()","Argument set successfully returned.");
   return argumentSet;
 }
 

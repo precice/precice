@@ -55,7 +55,7 @@ void PeanotreeCell3D:: refine
   utils::DynVector newCenter(dim);
   utils::DynVector newHalflengths(dim, 1.0 / 3.0 * cellHalflengths[0]);
   for ( int i=0; i < threePowerD; i++ ){
-    preciceDebug ( "Creating child " << i );
+    DEBUG ( "Creating child " << i );
     newCenter = PEANO_FINE_CELL_CENTER_POSITIONS_3D[i];
     newCenter *= newHalflengths[0];
     newCenter += cellCenter;

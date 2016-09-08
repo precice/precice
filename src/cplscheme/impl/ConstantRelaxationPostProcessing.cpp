@@ -68,7 +68,7 @@ void ConstantRelaxationPostProcessing:: performPostProcessing
     const auto& oldValues = pair.second->oldValues.col(0);
     values *= omega;
     values += oldValues * oneMinusOmega;
-    preciceDebug("pp values" << values);
+    DEBUG("pp values" << values);
   }
 }
 

@@ -338,7 +338,7 @@ void MMPostProcessing::updateDifferenceMatrices(
    */
   if (not _firstIteration)
   {
-    preciceDebug("   Update Difference Matrices C and F with coarse and fine model responses");
+    DEBUG("   Update Difference Matrices C and F with coarse and fine model responses");
     assertion(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
     assertion(getLSSystemCols() <= _maxIterationsUsed,getLSSystemCols(), _maxIterationsUsed);
 
@@ -546,8 +546,8 @@ void MMPostProcessing::performPostProcessing(
     }
   }
 
-  preciceDebug("  * Manifold Mapping Iterations: "<<its);
-  preciceDebug("  * Coarse Model Optimization Iterations: "<<_iterCoarseModelOpt);
+  DEBUG("  * Manifold Mapping Iterations: "<<its);
+  DEBUG("  * Coarse Model Optimization Iterations: "<<_iterCoarseModelOpt);
 }
 
 
@@ -599,7 +599,7 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
         }
       }
       if (nbRemoveCols)
-        preciceDebug("Manifold mapping: remove " << nbRemoveCols << " columns from the Jacobian matrices");
+        DEBUG("Manifold mapping: remove " << nbRemoveCols << " columns from the Jacobian matrices");
     }
 
     assert(_matrixF.cols() == _matrixC.cols());
@@ -783,7 +783,7 @@ void MMPostProcessing::iterationsConverged
   for (int cols : _matrixCols) {
     stream << cols << ", ";
   }
-  preciceDebug(stream.str());
+  DEBUG(stream.str());
 # endif // Debug
 
   if (_timestepsReused == 0) {
@@ -794,7 +794,7 @@ void MMPostProcessing::iterationsConverged
   else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
     assertion(toRemove > 0, toRemove);
-    preciceDebug("Removing " << toRemove << " cols from mannifold mapping least-squares system with "<< getLSSystemCols() << " cols");
+    DEBUG("Removing " << toRemove << " cols from mannifold mapping least-squares system with "<< getLSSystemCols() << " cols");
     assertion(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
     assertion(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 

@@ -81,13 +81,13 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
 
   p.write(address);
 
-  preciceDebug("Accept connection at " << address);
+  DEBUG("Accept connection at " << address);
 
   MPI_Comm communicator;
 
   MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
-  preciceDebug("Accepted connection at " << address);
+  DEBUG("Accepted connection at " << address);
 
   int requesterProcessRank = -1;
   int requesterCommunicatorSize = 0;
@@ -121,7 +121,7 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   for (int i = 1; i < requesterCommunicatorSize; ++i) {
     MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
-    preciceDebug("Accepted connection at " << address);
+    DEBUG("Accepted connection at " << address);
 
     MPI_Recv(&requesterProcessRank,
              1,
@@ -187,7 +187,7 @@ MPIPortsCommunication::acceptConnectionAsServer(
 
   p.write(address);
 
-  preciceDebug("Accept connection at " << address);
+  DEBUG("Accept connection at " << address);
 
   _communicators.resize(requesterCommunicatorSize, MPI_COMM_NULL);
 
@@ -198,7 +198,7 @@ MPIPortsCommunication::acceptConnectionAsServer(
 
     MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
-    preciceDebug("Accepted connection at " << address);
+    DEBUG("Accepted connection at " << address);
 
     preciceCheck(_communicators[requesterProcessRank] == MPI_COMM_NULL,
                  "acceptConnectionAsServer()",
@@ -242,7 +242,7 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 
   p.read(address);
 
-  preciceDebug("Request connection to " << address);
+  DEBUG("Request connection to " << address);
 
   {
     std::istringstream iss(address);
@@ -254,7 +254,7 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 
   MPI_Comm_connect(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
-  preciceDebug("Requested connection to " << address);
+  DEBUG("Requested connection to " << address);
 
   _communicators.push_back(communicator);
 
@@ -285,7 +285,7 @@ MPIPortsCommunication::requestConnectionAsClient(
 
   p.read(address);
 
-  preciceDebug("Request connection to " << address);
+  DEBUG("Request connection to " << address);
 
   {
     std::istringstream iss(address);
@@ -297,7 +297,7 @@ MPIPortsCommunication::requestConnectionAsClient(
 
   MPI_Comm_connect(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
-  preciceDebug("Requested connection to " << address);
+  DEBUG("Requested connection to " << address);
 
   _communicators.push_back(communicator);
 
@@ -356,11 +356,11 @@ MPIPortsCommunication::closeConnection() {
     MPI_Comm_disconnect(&communicator);
   }
 
-  preciceDebug("Disconnected");
+  DEBUG("Disconnected");
 
   if (_isAcceptor) {
     MPI_Close_port(_portName);
-    preciceDebug("Port closed");
+    DEBUG("Port closed");
   }
 
   _isConnected = false;

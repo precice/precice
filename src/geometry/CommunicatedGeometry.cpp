@@ -117,7 +117,7 @@ void CommunicatedGeometry:: sendMesh(
         com::CommunicateMesh(utils::MasterSlave::_communication).receiveMesh ( globalMesh, rankSlave);
         int vertexCount2 = globalMesh.vertices().size();
         int vertexCountDiff = vertexCount2 - vertexCount1;
-        preciceDebug("Received sub-mesh, from slave: " << rankSlave <<", vertexCount: " << vertexCountDiff);
+        DEBUG("Received sub-mesh, from slave: " << rankSlave <<", vertexCount: " << vertexCountDiff);
         for (int i = 0; i < vertexCountDiff; i++) {
           seed.getVertexDistribution()[rankSlave].push_back(numberOfVertices);
           numberOfVertices++;

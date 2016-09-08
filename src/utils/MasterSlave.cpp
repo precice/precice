@@ -32,7 +32,7 @@ void MasterSlave:: configure(int rank, int size)
   assertion(_rank != -1 && _size != -1);
   _masterMode = (rank==0);
   _slaveMode = (rank!=0);
-  preciceDebug("slaveMode: " << _slaveMode <<", masterMode: " << _masterMode);
+  DEBUG("slaveMode: " << _slaveMode <<", masterMode: " << _masterMode);
 }
 
 double MasterSlave:: l2norm(const DynVector& vec)

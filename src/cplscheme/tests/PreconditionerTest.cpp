@@ -127,7 +127,7 @@ void PreconditionerTest::testResPreconditioner ()
   precond.initialize(numberOfRows);
   DataValues backup = _data;
 
-  preciceDebug("New iteration");
+  DEBUG("New iteration");
   //should change
   precond.update(false, _data, _res);
   validate(precond.requireNewQR());
@@ -137,7 +137,7 @@ void PreconditionerTest::testResPreconditioner ()
   precond.revert(_data);
   validateVector(_data, backup);
 
-  preciceDebug("New timestep");
+  DEBUG("New timestep");
   //should not change weights
   precond.update(true, _data, _res*10);
   validate(not precond.requireNewQR());
@@ -161,7 +161,7 @@ void PreconditionerTest::testResSumPreconditioner ()
   precond.initialize(numberOfRows);
   DataValues backup = _data;
 
-  preciceDebug("New iteration");
+  DEBUG("New iteration");
   //should change, update twice to really test the summation
   precond.update(false, _data, _res);
   precond.update(false, _data, _res*2);
@@ -173,7 +173,7 @@ void PreconditionerTest::testResSumPreconditioner ()
   precond.revert(_data);
   validateVector(_data, backup);
 
-  preciceDebug("New timestep");
+  DEBUG("New timestep");
   //should not change weights
   precond.update(true, _data, _res*10);
   validate(not precond.requireNewQR());
@@ -197,7 +197,7 @@ void PreconditionerTest::testValuePreconditioner ()
   precond.initialize(numberOfRows);
   DataValues backup = _data;
 
-  preciceDebug("New iteration");
+  DEBUG("New iteration");
   //should change, since first timestep
   precond.update(false, _data, _res);
   validate(precond.requireNewQR());
@@ -208,7 +208,7 @@ void PreconditionerTest::testValuePreconditioner ()
   validateVector(_data, backup);
 
   //now no change
-  preciceDebug("Another new iteration");
+  DEBUG("Another new iteration");
   precond.update(false, _data, _res);
   validate(not precond.requireNewQR());
   precond.apply(_data);
@@ -216,7 +216,7 @@ void PreconditionerTest::testValuePreconditioner ()
   precond.revert(_data);
   validateVector(_data, backup);
 
-  preciceDebug("New timestep");
+  DEBUG("New timestep");
   //should change weights
   precond.update(true, _data*2, _res);
   validate(precond.requireNewQR());
@@ -242,7 +242,7 @@ void PreconditionerTest::testConstPreconditioner ()
   precond.initialize(numberOfRows); //new weights already computed here
   DataValues backup = _data;
 
-  preciceDebug("New iteration");
+  DEBUG("New iteration");
   // should have no effect
   precond.update(false, _data, _res);
   validate(not precond.requireNewQR());
@@ -251,7 +251,7 @@ void PreconditionerTest::testConstPreconditioner ()
   precond.revert(_data);
   validateVector(_data, backup);
 
-  preciceDebug("New timestep");
+  DEBUG("New timestep");
   //should not change weights
   precond.update(true, _data, _res);
   validate(not precond.requireNewQR());

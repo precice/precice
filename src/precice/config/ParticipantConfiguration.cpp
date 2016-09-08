@@ -657,7 +657,7 @@ void ParticipantConfiguration:: finishParticipantConfiguration
 
     const mesh::PtrMesh& input = fromMeshContext.mesh;
     const mesh::PtrMesh& output = toMeshContext.mesh;
-    preciceDebug("Configure mapping for input=" << input->getName()
+    DEBUG("Configure mapping for input=" << input->getName()
            << ", output=" << output->getName());
     map->setMeshes(input, output);
 

@@ -261,7 +261,7 @@ void M2N:: receive (
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  preciceDebug("receive(bool): " << itemToReceive);
+  DEBUG("receive(bool): " << itemToReceive);
 }
 
 
@@ -275,7 +275,7 @@ void M2N:: receive (
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  preciceDebug("receive(double): " << itemToReceive);
+  DEBUG("receive(double): " << itemToReceive);
 }
 
 

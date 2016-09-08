@@ -29,7 +29,7 @@ void RequestManager:: handleRequests()
   int clientCommSize = _com->getRemoteCommunicatorSize();
   int clientCounter = 0;
   std::list<int> clientRanks;
-  preciceDebug("ClientCommSize " << clientCommSize);
+  DEBUG("ClientCommSize " << clientCommSize);
 
   std::vector<com::Request::SharedPointer> requests(clientCommSize);
   std::vector<int> requestIDs(clientCommSize,-1);
@@ -47,7 +47,7 @@ void RequestManager:: handleRequests()
                        requests[rankSender]->test()){
       requestID = requestIDs[rankSender];
       preciceCheck(requestID != -1, "handleRequest()", "Receiving of request ID failed");
-      preciceDebug("Received request ID " << requestID << " from rank " << rankSender);
+      DEBUG("Received request ID " << requestID << " from rank " << rankSender);
     }
     else{
       rankSender++;
@@ -57,7 +57,7 @@ void RequestManager:: handleRequests()
 
     switch (requestID){
     case REQUEST_INITIALIZE:
-      preciceDebug("Request initialize by rank " << rankSender);
+      DEBUG("Request initialize by rank " << rankSender);
       clientCounter++;
       assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
@@ -67,7 +67,7 @@ void RequestManager:: handleRequests()
       }
       break;
     case REQUEST_INITIALIZE_DATA:
-      preciceDebug("Request initialize data by rank " << rankSender);
+      DEBUG("Request initialize data by rank " << rankSender);
       clientCounter++;
       assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
@@ -77,7 +77,7 @@ void RequestManager:: handleRequests()
       }
       break;
     case REQUEST_ADVANCE:
-      preciceDebug("Request advance by rank " << rankSender);
+      DEBUG("Request advance by rank " << rankSender);
       clientCounter++;
       assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
@@ -87,7 +87,7 @@ void RequestManager:: handleRequests()
       }
       break;
     case REQUEST_FINALIZE:
-      preciceDebug("Request finalize by rank " << rankSender);
+      DEBUG("Request finalize by rank " << rankSender);
       clientCounter++;
       assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
@@ -190,7 +190,7 @@ void RequestManager:: handleRequests()
       singleRequest = true;
       break;
     case REQUEST_MAP_WRITE_DATA_FROM:
-      preciceDebug("Request map written data by rank " << rankSender);
+      DEBUG("Request map written data by rank " << rankSender);
       clientCounter++;
       assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);
@@ -200,7 +200,7 @@ void RequestManager:: handleRequests()
       }
       break;
     case REQUEST_MAP_READ_DATA_TO:
-      preciceDebug("Request map read data by rank " << rankSender);
+      DEBUG("Request map read data by rank " << rankSender);
       clientCounter++;
       assertion(clientCounter <= clientCommSize, clientCounter, clientCommSize);
       clientRanks.push_front(rankSender);

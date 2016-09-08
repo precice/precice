@@ -47,10 +47,10 @@ MPICommunication::send(std::string const& itemToSend, int rankReceiver) {
   preciceTrace("send()", itemToSend, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
   int length = itemToSend.size();
-  preciceDebug("Message length: " << length);
+  DEBUG("Message length: " << length);
   // const_cast is needed because MPI_Send expects a void* as first argument.
   char* cstr = const_cast<char*>(itemToSend.c_str());
-  preciceDebug("Message: " + std::string(cstr));
+  DEBUG("Message: " + std::string(cstr));
   MPI_Send(cstr,
            length + 1,
            MPI_CHAR,
@@ -191,7 +191,7 @@ MPICommunication::receive(std::string& itemToReceive, int rankSender) {
   MPI_Status status;
   MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
   MPI_Get_count(&status, MPI_CHAR, &length);
-  preciceDebug("Stringlength = " << length);
+  DEBUG("Stringlength = " << length);
   char cstr[length];
   MPI_Recv(cstr,
            length,
@@ -201,7 +201,7 @@ MPICommunication::receive(std::string& itemToReceive, int rankSender) {
            communicator(rankSender),
            MPI_STATUS_IGNORE);
   itemToReceive = std::string(cstr);
-  preciceDebug("Received \"" << itemToReceive << "\" from rank " << rankSender);
+  DEBUG("Received \"" << itemToReceive << "\" from rank " << rankSender);
 }
 
 void
@@ -280,7 +280,7 @@ MPICommunication::receive(double& itemToReceive, int rankSender) {
            0,
            communicator(rankSender),
            &status);
-  preciceDebug("Received " << itemToReceive << " from rank "
+  DEBUG("Received " << itemToReceive << " from rank "
                            << rankSender);
 }
 
@@ -301,7 +301,7 @@ MPICommunication::receive(int& itemToReceive, int rankSender) {
            0,
            communicator(rankSender),
            &status);
-  preciceDebug("Received " << itemToReceive << " from rank "
+  DEBUG("Received " << itemToReceive << " from rank "
                            << rankSender);
 }
 
@@ -322,7 +322,7 @@ MPICommunication::receive(bool& itemToReceive, int rankSender) {
            0,
            communicator(rankSender),
            &status);
-  preciceDebug("Received " << itemToReceive << " from rank "
+  DEBUG("Received " << itemToReceive << " from rank "
                            << rankSender);
 }
 

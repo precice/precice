@@ -72,73 +72,73 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Perform tests
     // Outside positions
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.5, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.5, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( -0.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( -0.5, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( -0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( -0.5, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( -0.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
@@ -147,73 +147,73 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Outside eps positions
     double eps = tarch::la::NUMERICAL_ZERO_DIFFERENCE;
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 + 10.0 * eps, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 + 10.0 * eps, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 + 10.0 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 + 10.0 * eps, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 + 10.0 * eps, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( -10.0 * eps, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( -10.0 * eps, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( -10.0 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( -10.0 * eps, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( -10.0 * eps, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, 1.0 + 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, -0.5 - 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
@@ -221,43 +221,43 @@ void SpacetreeTestScenarios:: testSearchPosition()
 
     // Touching
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.0, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.0, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
@@ -265,49 +265,49 @@ void SpacetreeTestScenarios:: testSearchPosition()
 
     // Touching eps
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.0 + 0.1 * eps, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, 0.0 - 0.1 * eps);
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 + 0.1 * eps, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 - 0.1 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 + 0.1 * eps, 1.0 + 0.1 * eps);
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, 1.0 - 0.1 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.0 - 0.1 * eps, 1.0 + 0.1 * eps);
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.0 - 0.1 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
@@ -315,49 +315,49 @@ void SpacetreeTestScenarios:: testSearchPosition()
 
     // Inside eps
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.0 + 10.0 * eps, 0.0 + 10.0 * eps);
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, 0.0 + 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 - 10.0 * eps, 0.0 + 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 - 10.0 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 1.0 - 10.0 * eps, 1.0 - 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, 1.0 - 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.0 + 10.0 * eps, 1.0 - 10.0 * eps);
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.0 + 10.0 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
@@ -365,31 +365,31 @@ void SpacetreeTestScenarios:: testSearchPosition()
 
     // Inside
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.1, 0.1 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.9, 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.1, 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  2d test "  << testNumber++);
+      DEBUG("  2d test "  << testNumber++);
       Vector2D point ( 0.9, 0.1 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
@@ -473,85 +473,85 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Perform tests
     // Outside
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.5, 1.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.5, 1.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.5, -0.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.5, -0.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -0.5, 1.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -0.5, 1.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -0.5, -0.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -0.5, -0.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.5, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -0.5, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 1.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, -0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
@@ -560,85 +560,85 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Outside eps
     double eps = tarch::la::NUMERICAL_ZERO_DIFFERENCE;
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 + 10.0*eps, 1.0 + 10.0*eps, 1.0 + 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 + 10.0*eps, 1.0 + 10.0*eps, -10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 + 10.0*eps, -10.0*eps, 1.0 + 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 + 10.0*eps, -10.0*eps, -10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -10.0*eps, 1.0 + 10.0*eps, 1.0 + 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -10.0*eps, 1.0 + 10.0*eps, -10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -10.0*eps, -10.0*eps, 1.0 + 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -10.0*eps, -10.0*eps, -10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 + 10.0*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -10.0*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 1.0 + 10.0*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, -10.0*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.5, 1.0 + 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.5, -10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
@@ -646,85 +646,85 @@ void SpacetreeTestScenarios:: testSearchPosition()
 
     // Touching eps
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 + 0.1*eps, 1.0 + 0.1*eps, 1.0 + 0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 + 0.1*eps, 1.0 + 0.1*eps, -0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 + 0.1*eps, -0.1*eps, 1.0 + 0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 + 0.1*eps, -0.1*eps, -0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -0.1*eps, 1.0 + 0.1*eps, 1.0 + 0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -0.1*eps, 1.0 + 0.1*eps, -0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -0.1*eps, -0.1*eps, 1.0 + 0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -0.1*eps, -0.1*eps, -0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 + 0.1*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( -0.1*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 1.0 + 0.1*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, -0.1*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.5, 1.0 + 0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.5, -0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
@@ -732,85 +732,85 @@ void SpacetreeTestScenarios:: testSearchPosition()
 
     // Touching
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0, 1.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0, 1.0, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0, 0.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0, 0.0, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.0, 1.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.0, 1.0, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.0, 0.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.0, 0.0, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.0, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 1.0, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.0, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.5, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.5, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
@@ -818,85 +818,85 @@ void SpacetreeTestScenarios:: testSearchPosition()
 
     // Inside eps
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 - 10.0*eps, 1.0 - 10.0*eps, 1.0 - 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 - 10.0*eps, 1.0 - 10.0*eps, 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 - 10.0*eps, 10.0*eps, 1.0 - 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 - 10.0*eps, 10.0*eps, 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 10.0*eps, 1.0 - 10.0*eps, 1.0 - 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 10.0*eps, 1.0 - 10.0*eps, 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 10.0*eps, 10.0*eps, 1.0 - 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 10.0*eps, 10.0*eps, 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 1.0 - 10.0*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 10.0*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 1.0 - 10.0*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 10.0*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.5, 1.0 - 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5, 0.5, 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
@@ -904,49 +904,49 @@ void SpacetreeTestScenarios:: testSearchPosition()
 
     // Inside
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.1 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.1, 0.9, 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.1, 0.1, 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.9, 0.1, 0.1 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.9, 0.9, 0.1 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
-      preciceDebug("  3d test "  << testNumber++);
+      DEBUG("  3d test "  << testNumber++);
       Vector3D point ( 0.9, 0.1, 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
@@ -1371,7 +1371,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   vertex.setCoords ( coords );
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent(findIncluded);
     merge.content().clear();
     findIncluded.content() = merge(findIncluded.content());
@@ -1389,7 +1389,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1408,7 +1408,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1427,7 +1427,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1447,7 +1447,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1467,7 +1467,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1487,7 +1487,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1508,7 +1508,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1546,7 +1546,7 @@ void SpacetreeTestScenarios:: testSearchContentEdges()
   }
 
   // Special test
-  preciceDebug("Reproduce bug test");
+  DEBUG("Reproduce bug test");
   Spacetree::minElementsToRefineCell = 1;
   int dim = 3;
   bool flipNormals = false;
@@ -1649,10 +1649,10 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug("  outside i= " << i);
-    preciceDebug("  including boundaries");
+    DEBUG("  outside i= " << i);
+    DEBUG("  including boundaries");
     treesInc[i]->searchContent(findIncluded);
-    preciceDebug("  excluding boundaries");
+    DEBUG("  excluding boundaries");
     treesExc[i]->searchContent(findExcluded);
     merge.content().clear();
     findIncluded.content() = merge(findIncluded.content());
@@ -1675,7 +1675,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1699,7 +1699,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1724,7 +1724,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1749,7 +1749,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1775,7 +1775,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1801,7 +1801,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "outside i= " << i );
+    DEBUG ( "outside i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1908,7 +1908,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1933,7 +1933,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1958,7 +1958,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -1983,7 +1983,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2009,7 +2009,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2035,7 +2035,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2061,7 +2061,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2087,7 +2087,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2114,7 +2114,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2141,7 +2141,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2168,7 +2168,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2195,7 +2195,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2222,7 +2222,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2249,7 +2249,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2276,7 +2276,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2306,7 +2306,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2336,7 +2336,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();
@@ -2366,7 +2366,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh->computeState();
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ) {
-    preciceDebug ( "i= " << i );
+    DEBUG ( "i= " << i );
     treesInc[i]->searchContent ( findIncluded );
     treesExc[i]->searchContent ( findExcluded );
     merge.content().clear();

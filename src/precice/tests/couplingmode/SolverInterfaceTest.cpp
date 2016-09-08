@@ -1213,7 +1213,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
   using tarch::la::equals;
 
   for (int dim=2; dim < 3; dim++){
-    preciceDebug("Running " << dim << "D test");
+    DEBUG("Running " << dim << "D test");
     SolverInterface interface(solverName, 0, 1);
     if (dim == 2){
       configureSolverInterface(config2D, interface);

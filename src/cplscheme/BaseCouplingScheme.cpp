@@ -176,7 +176,7 @@ void BaseCouplingScheme:: receiveAndSetDt()
   if (participantReceivesDt()){
     double dt = UNDEFINED_TIMESTEP_LENGTH;
     getM2N()->receive(dt);
-    preciceDebug("Received timestep length of " << dt);
+    DEBUG("Received timestep length of " << dt);
     assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
     setTimestepLength(dt);
   }
@@ -185,7 +185,7 @@ void BaseCouplingScheme:: receiveAndSetDt()
 void BaseCouplingScheme:: sendDt(){
   preciceTrace("sendDt()");
   if (participantSetsDt()){
-    preciceDebug("sending timestep length of " << getComputedTimestepPart());
+    DEBUG("sending timestep length of " << getComputedTimestepPart());
     getM2N()->send(getComputedTimestepPart());
   }
 }
@@ -316,7 +316,7 @@ std::vector<int> BaseCouplingScheme:: sendData
     m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     sentDataIDs.push_back(pair.first);
   }
-  preciceDebug("Number of sent data sets = " << sentDataIDs.size());
+  DEBUG("Number of sent data sets = " << sentDataIDs.size());
   return sentDataIDs;
 }
 
@@ -335,7 +335,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
     m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
-  preciceDebug("Number of received data sets = " << receivedDataIDs.size());
+  DEBUG("Number of received data sets = " << receivedDataIDs.size());
 
   return receivedDataIDs;
 }
@@ -402,7 +402,7 @@ void BaseCouplingScheme::extrapolateData(DataMap& data)
   if ((_extrapolationOrder == 1) || getTimesteps() == 2) { //timesteps is increased before extrapolate is called
     preciceInfo("extrapolateData()", "Performing first order extrapolation" );
     for (DataMap::value_type & pair : data) {
-      preciceDebug("Extrapolate data: " << pair.first);
+      DEBUG("Extrapolate data: " << pair.first);
       assertion(pair.second->oldValues.cols() > 1 );
       Eigen::VectorXd & values = *pair.second->values;
       pair.second->oldValues.col(0) = values;     // = x^t
@@ -515,7 +515,7 @@ double BaseCouplingScheme:: getThisTimestepRemainder() const
   if (not tarch::la::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)){
     remainder = _timestepLength - _computedTimestepPart;
   }
-  preciceDebug("return " << remainder);
+  DEBUG("return " << remainder);
   return remainder;
 }
 
@@ -653,7 +653,7 @@ int BaseCouplingScheme:: getValidDigits () const
 void BaseCouplingScheme::setupDataMatrices(DataMap& data)
 {
   preciceTrace("setupDataMatrices()");
-  preciceDebug("Data size: " << data.size());
+  DEBUG("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.data != nullptr);
@@ -666,7 +666,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
   if (_extrapolationOrder > 0){
     for (DataMap::value_type& pair : data) {
       int cols = pair.second->oldValues.cols();
-      preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
+      DEBUG("Add cols: " << pair.first << ", cols: " << cols);
       assertion(cols <= 1, cols);
       utils::append( pair.second->oldValues,
             (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values->size(), _extrapolationOrder + 1 - cols));
@@ -1000,7 +1000,7 @@ void BaseCouplingScheme:: timestepCompleted()
   setTimesteps(getTimesteps() + 1 );
   //setTime(getTimesteps() * getTimestepLength() ); // Removes numerical errors
   if (isCouplingOngoing()) {
-    preciceDebug("Setting require create checkpoint");
+    DEBUG("Setting require create checkpoint");
     requireAction(constants::actionWriteIterationCheckpoint());
   }
 }

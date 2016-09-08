@@ -53,7 +53,7 @@ void PeanotreeCell2D:: refine
   utils::DynVector newCenter(dim);
   utils::DynVector newHalflengths(dim, 1.0 / 3.0 * cellHalflengths[0]);
   for ( int i=0; i < 9; i++ ){
-    preciceDebug ( "Creating children " << i );
+    DEBUG ( "Creating children " << i );
     newCenter = FINEGRID_CELL_CENTER_POSITIONS_2D[i];
     newCenter *= newHalflengths[0];
     newCenter += cellCenter;

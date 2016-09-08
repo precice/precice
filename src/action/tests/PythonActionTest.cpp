@@ -63,14 +63,14 @@ void PythonActionTest:: testOmitMethods()
   preciceTrace("testOmitMethods()");
   std::string path = utils::Globals::getPathToSources() + "/action/tests/";
   {
-    preciceDebug("Test 1");
+    DEBUG("Test 1");
     mesh::PtrMesh mesh;
     PythonAction action(PythonAction::ALWAYS_PRIOR, path, "TestOmitAction1",
                         mesh, -1, -1);
     action.performAction(0.0, 0.0, 0.0, 0.0);
   }
   {
-    preciceDebug("Test 2");
+    DEBUG("Test 2");
     mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
     mesh->createVertex(utils::Vector3D(0.0));
     mesh::PtrData data = mesh->createData("TargetData", 1);
@@ -80,7 +80,7 @@ void PythonActionTest:: testOmitMethods()
     action.performAction(0.0, 0.0, 0.0, 0.0);
   }
   {
-    preciceDebug("Test 3");
+    DEBUG("Test 3");
     mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
     mesh->createVertex(utils::Vector3D(0.0));
     mesh::PtrData data = mesh->createData("SourceData", 1);

@@ -29,7 +29,7 @@ public:
      _isConvergence = _minimumIterationCount <= _currentIteration
                       ? true
                       : false;
-     preciceDebug("Iteration number = " << _currentIteration
+     DEBUG("Iteration number = " << _currentIteration
                   << ", convergence = " << _isConvergence);
    }
 

@@ -35,7 +35,7 @@ void tarch::multicore::configurations::CoreConfiguration::parseSubtag( tarch::ir
     preciceWarning("parseSubtag(...)", "Cobra does not support a default number of threads. Please specify valid number of threads");
     _numberOfThreads = -1;
     #else
-    preciceDebug("parseSubtag(...)", "use default number of threads");
+    DEBUG("parseSubtag(...)", "use default number of threads");
     _numberOfThreads = 0;
     #endif
   }

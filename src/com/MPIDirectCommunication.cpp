@@ -105,7 +105,7 @@ MPIDirectCommunication::getGroupID(std::string const& accessorName) {
   const std::vector<Par::AccessorGroup>& _groups = Par::getAccessorGroups();
   for (const Par::AccessorGroup& group : _groups) {
     if (group.name == accessorName) {
-      preciceDebug("return group ID = " << group.id);
+      DEBUG("return group ID = " << group.id);
       return group.id;
     }
   }
@@ -120,7 +120,7 @@ MPIDirectCommunication::getLeaderRank(std::string const& accessorName) {
   const std::vector<Par::AccessorGroup>& _groups = Par::getAccessorGroups();
   for (const Par::AccessorGroup& group : _groups) {
     if (group.name == accessorName) {
-      preciceDebug("return rank = " << group.leaderRank);
+      DEBUG("return rank = " << group.leaderRank);
       return group.leaderRank;
     }
   }

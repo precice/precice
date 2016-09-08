@@ -30,7 +30,7 @@ tarch::argument::Argument::Argument(	std::string name, TYPE type):
 	std::stringstream ss;
 	ss << "Argument: " << name
 	   << "Type    : " <<type;
-	preciceDebug("Argument",ss.str());
+	DEBUG("Argument",ss.str());
 #endif
 }
 
@@ -112,25 +112,25 @@ void tarch::argument::Argument::setArgument(std::string argument) {
 #ifdef Debug
 	std::stringstream ss;
 	ss <<"Setting argument " << argument <<" successful\n";
-	preciceDebug("setArgument()", ss.str() );
+	DEBUG("setArgument()", ss.str() );
 #endif
 }
 
 bool tarch::argument::Argument::isValid() const {
 	if(_name.empty()) {
-		preciceDebug("isValid", "_name invalid");
+		DEBUG("isValid", "_name invalid");
 		return false;
 	}
 	if(_argument == NULL) {
 		std::stringstream ss;
 		ss << "In Argument " <<_name <<": _argument invalid";
-		preciceDebug("isValid", ss.str());
+		DEBUG("isValid", ss.str());
 		return false;
 	}
 	if(_type != TYPE_INT && _type != TYPE_DOUBLE && _type != TYPE_STRING) {
 		std::stringstream ss;
 		ss << "In Argument " <<_name <<": _type invalid";
-		preciceDebug("isValid", ss.str());
+		DEBUG("isValid", ss.str());
 		return false;
 	}
 	return true;

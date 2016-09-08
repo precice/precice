@@ -44,7 +44,7 @@ void FindClosestTest:: testFindClosestDistanceToVertices ()
 {
    preciceTrace ( "testFindClosestDistanceToVertices()" );
    for ( int dim=2; dim <= 3; dim++ ){
-     preciceDebug ( "Dimension = " << dim );
+     DEBUG ( "Dimension = " << dim );
      mesh::Mesh mesh ( "RootMesh", dim, false );
      mesh.createVertex ( utils::DynVector(dim, 0.0) );
      utils::DynVector queryCoords0 ( dim, 0.0 );
@@ -69,7 +69,7 @@ void FindClosestTest:: testSignOfShortestDistance ()
 {
   preciceTrace ( "testSignOfShortestDistance()" );
   for ( int dim=2; dim <= 3; dim++ ){
-    preciceDebug ( "Dimension = " << dim );
+    DEBUG ( "Dimension = " << dim );
     mesh::Mesh mesh ( "Mesh", dim, false );
     mesh::Vertex & vertex = mesh.createVertex ( utils::DynVector(dim, 0.0) );
     utils::DynVector normal ( dim, 0.0 );
@@ -98,7 +98,7 @@ void FindClosestTest:: testIndependenceOfSignOfShortestDistance ()
   preciceTrace ( "testIndependenceOfSignOfShortestDistance()" );
   using utils::DynVector;
   for ( int dim=2; dim <= 3; dim++ ){
-    preciceDebug ( "Dimension = " << dim );
+    DEBUG ( "Dimension = " << dim );
     mesh::Mesh mesh ( "Mesh", dim, false );
     mesh::Vertex& vertex = mesh.createVertex ( DynVector(dim, 1.0) );
     vertex.setNormal ( DynVector(dim, 1.0) );
@@ -133,7 +133,7 @@ void FindClosestTest:: testFindClosestDistanceToEdges ()
   preciceTrace ( "testFindClosestDistanceToEdges()" );
   using utils::DynVector;
   for ( int dim=2; dim <= 3; dim++ ){
-    preciceDebug ( "Dimensions = " << dim );
+    DEBUG ( "Dimensions = " << dim );
     // Create geometry consisting of two vertices and an edge
     mesh::Mesh mesh ( "Mesh", dim, false );
     mesh::Vertex& v1 = mesh.createVertex ( DynVector(dim, -1.0) );

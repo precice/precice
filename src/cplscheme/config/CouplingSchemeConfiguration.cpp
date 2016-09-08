@@ -370,15 +370,15 @@ void CouplingSchemeConfiguration:: addCouplingScheme
 {
   preciceTrace ( "addCouplingScheme()", participantName );
   if (utils::contained(participantName, _couplingSchemes)) {
-    preciceDebug("Coupling scheme exists already for participant");
+    DEBUG("Coupling scheme exists already for participant");
     if (utils::contained(participantName, _couplingSchemeCompositions)) {
-      preciceDebug("Coupling scheme composition exists already for participant");
+      DEBUG("Coupling scheme composition exists already for participant");
       // Fetch the composition and add the new scheme.
       assertion(_couplingSchemeCompositions[participantName] != nullptr);
       _couplingSchemeCompositions[participantName]->addCouplingScheme(cplScheme);
     }
     else {
-      preciceDebug("No composition exists for the participant");
+      DEBUG("No composition exists for the participant");
       // No composition exists, thus, the existing scheme is no composition.
       // Create a new composition, add the already existing and new scheme, and
       // overwrite the existing scheme with the composition.
@@ -389,7 +389,7 @@ void CouplingSchemeConfiguration:: addCouplingScheme
     }
   }
   else {
-    preciceDebug("No coupling scheme exists for the participant");
+    DEBUG("No coupling scheme exists for the participant");
     // Store the new coupling scheme.
     _couplingSchemes[participantName] = cplScheme;
   }
@@ -1003,7 +1003,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
     if (from == accessor){
       size_t index = 0;
       for(const std::string& participant : _config.participants){
-        preciceDebug("from: " << from << ", to: " << to << ", participant: " << participant);
+        DEBUG("from: " << from << ", to: " << to << ", participant: " << participant);
         if(to == participant){
           break;
         }
@@ -1015,7 +1015,7 @@ void CouplingSchemeConfiguration:: addMultiDataToBeExchanged
     else {
       size_t index = 0;
       for(const std::string& participant : _config.participants){
-        preciceDebug("from: " << from << ", to: " << to << ", participant: " << participant);
+        DEBUG("from: " << from << ", to: " << to << ", participant: " << participant);
         if(from == participant){
           break;
         }

@@ -43,13 +43,13 @@ void ScaleByDtAction:: performAction
              sourceValues.size(), targetValues.size());
   if (_scaling == SCALING_BY_COMPUTED_DT_RATIO){
     double scaling = dt / fullDt;
-    preciceDebug("Scale by computed dt ratio " << scaling);
+    DEBUG("Scale by computed dt ratio " << scaling);
     for (int i=0; i < targetValues.size(); i++){
       targetValues[i] = sourceValues[i] * scaling;
     }
   }
   else if (_scaling == SCALING_BY_DT){
-    preciceDebug("Scale by dt " << fullDt);
+    DEBUG("Scale by dt " << fullDt);
     for ( int i=0; i < targetValues.size(); i++ ){
       targetValues[i] = sourceValues[i] * fullDt;
     }
@@ -57,7 +57,7 @@ void ScaleByDtAction:: performAction
   else {
     assertion(_scaling == SCALING_BY_COMPUTED_DT_PART_RATIO, _scaling);
     double scaling = computedPartFullDt / fullDt;
-    preciceDebug("Scale by computed dt part ratio " << scaling);
+    DEBUG("Scale by computed dt part ratio " << scaling);
     for (int i=0; i < targetValues.size(); i++){
       targetValues[i] = sourceValues[i] * scaling;
     }

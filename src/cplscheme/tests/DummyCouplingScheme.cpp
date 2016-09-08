@@ -72,18 +72,18 @@ bool DummyCouplingScheme:: isActionRequired
   if (_numberIterations > 1){
     if (actionName == constants::actionWriteIterationCheckpoint()){
       if (_iterations == 1) {
-        preciceDebug("return true");
+        DEBUG("return true");
         return true;
       }
     }
     else if (actionName == constants::actionReadIterationCheckpoint()){
       if (_iterations != 1) {
-        preciceDebug("return true");
+        DEBUG("return true");
         return true;
       }
     }
   }
-  preciceDebug("return false");
+  DEBUG("return false");
   return false;
 }
 

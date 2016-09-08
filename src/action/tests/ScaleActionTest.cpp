@@ -182,7 +182,7 @@ void ScaleActionTest:: testConfiguration()
 {
   preciceTrace("testConfiguration()");
   {
-    preciceDebug("Test 1");
+    DEBUG("Test 1");
     std::string filename = utils::Globals::getPathToSources() +
                            "/action/tests/ScaleActionTest-testConfiguration-1.xml";
     utils::XMLTag tag = utils::getRootTag();
@@ -197,7 +197,7 @@ void ScaleActionTest:: testConfiguration()
     validate(action.get() != nullptr);
   }
   {
-    preciceDebug("Test 2");
+    DEBUG("Test 2");
     std::string filename = utils::Globals::getPathToSources() +
                            "/action/tests/ScaleActionTest-testConfiguration-2.xml";
     utils::XMLTag tag = utils::getRootTag();
@@ -212,7 +212,7 @@ void ScaleActionTest:: testConfiguration()
     validate(action.get() != nullptr);
   }
   {
-    preciceDebug("Test 3");
+    DEBUG("Test 3");
     std::string filename = utils::Globals::getPathToSources() +
                            "/action/tests/ScaleActionTest-testConfiguration-3.xml";
     utils::XMLTag tag = utils::getRootTag();
@@ -227,7 +227,7 @@ void ScaleActionTest:: testConfiguration()
     validate(action.get() != nullptr);
   }
   {
-    preciceDebug("Test 4");
+    DEBUG("Test 4");
     std::string filename = utils::Globals::getPathToSources() +
                            "/action/tests/ScaleActionTest-testConfiguration-4.xml";
     utils::XMLTag tag = utils::getRootTag();

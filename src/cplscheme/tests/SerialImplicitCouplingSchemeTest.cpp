@@ -58,7 +58,7 @@ void SerialImplicitCouplingSchemeTest:: run ()
     testMethod(testExtrapolateData);
   }
   typedef utils::Parallel Par;
-  preciceDebug("CommunicatorSize: " << Par::getCommunicatorSize());
+  DEBUG("CommunicatorSize: " << Par::getCommunicatorSize());
   if (Par::getCommunicatorSize() > 1){
     // Do only use process 0 and 1 for the following tests
     std::vector<int> ranks;
@@ -450,7 +450,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
 //void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureAsync ()
 //{
 //   utils::Parallel::synchronizeProcesses ();
-//   preciceDebug ( "testMinIterConvergenceMeasure()", "Entering" );
+//   DEBUG ( "testMinIterConvergenceMeasure()", "Entering" );
 //
 //   // Create a data configuration, to simplify configuration of data
 //   mesh::PtrDataConfiguration dataConfig ( new mesh::DataConfiguration() );
@@ -527,7 +527,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
 ////      runCoupling ( cplScheme, nameParticipant1, dataConfig, validIterations );
 ////   }
 //
-//   preciceDebug ( "testMinIterConvergenceMeasure()", "Leaving" );
+//   DEBUG ( "testMinIterConvergenceMeasure()", "Leaving" );
 //}
 
 void SerialImplicitCouplingSchemeTest:: runCoupling
@@ -573,19 +573,19 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
 
     while ( cplScheme.isCouplingOngoing() ) {
       dataValues0[index] += stepsizeData0;
-      preciceDebug ( "Wrote data with stepsize " << stepsizeData0 );
+      DEBUG ( "Wrote data with stepsize " << stepsizeData0 );
       // The max timestep length is required to be obeyed.
       double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
       cplScheme.addComputedTime ( maxLengthTimestep );
       cplScheme.advance();
       iterationCount++;
-      preciceDebug ( "increased iterations to " << iterationCount
+      DEBUG ( "increased iterations to " << iterationCount
                      << ", limit < " << *iterValidIterations );
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
       if ( cplScheme.isCouplingTimestepComplete() ) {
-        preciceDebug ( "timestep complete" );
+        DEBUG ( "timestep complete" );
         // Advance participant time and timestep
         computedTime += maxLengthTimestep;
         computedTimesteps ++;
@@ -613,7 +613,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         stepsizeData0 = initialStepsizeData0;
       }
       else { // coupling timestep is not yet complete
-        preciceDebug ( "timestep not complete" );
+        DEBUG ( "timestep not complete" );
         validate ( cplScheme.isCouplingOngoing() );
         validate ( iterationCount < *iterValidIterations );
         validate ( cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -650,19 +650,19 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
       currentData += stepsizeData1;
       dataValues1.segment(index * 3, 3) = currentData;
       //tarch::la::slice<3>(dataValues1,index*3) = currentData;
-      preciceDebug ( "Wrote data with stepsize " << stepsizeData1 );
+      DEBUG ( "Wrote data with stepsize " << stepsizeData1 );
       // The max timestep length is required to be obeyed.
       double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
       cplScheme.addComputedTime ( maxLengthTimestep );
       cplScheme.advance();
       iterationCount++;
-      preciceDebug ( "increased iterations to " << iterationCount
+      DEBUG ( "increased iterations to " << iterationCount
         << ", limit < " << *iterValidIterations );
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
       if ( cplScheme.isCouplingTimestepComplete() ) {
-        preciceDebug ( "timestep complete" );
+        DEBUG ( "timestep complete" );
         // Advance participant time and timestep
         computedTime += maxLengthTimestep;
         computedTimesteps ++;
@@ -690,7 +690,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         stepsizeData1 = initialStepsizeData1;
       }
       else { // coupling timestep is not yet complete
-        preciceDebug ( "timestep not complete" );
+        DEBUG ( "timestep not complete" );
         validate ( cplScheme.isCouplingOngoing() );
         validate ( iterationCount < *iterValidIterations );
         validate ( cplScheme.isActionRequired(MY_READ_CHECKPOINT) );

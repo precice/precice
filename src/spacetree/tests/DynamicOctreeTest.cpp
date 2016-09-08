@@ -56,42 +56,42 @@ void DynamicOctreeTest:: run()
     SpacetreeTestScenarios testScenarios(testName, factory);
 
     if (evenTasks){
-      preciceDebug ( "test search position" );
+      DEBUG ( "test search position" );
       testScenarios.testSearchPosition();
     }
 
     if (oddTasks){
-      preciceDebug ( "test search distance" );
+      DEBUG ( "test search distance" );
       testScenarios.testSearchDistance();
     }
 
     if (evenTasks){
-      preciceDebug ( "test neighbor search" );
+      DEBUG ( "test neighbor search" );
       testScenarios.testNeighborSearch();
     }
 
     if (oddTasks){
-      preciceDebug ( "test search content vertices" );
+      DEBUG ( "test search content vertices" );
       testScenarios.testSearchContentVertices();
     }
 
     if (evenTasks){
-      preciceDebug ( "test search content edges" );
+      DEBUG ( "test search content edges" );
       testScenarios.testSearchContentEdges();
     }
 
     if (oddTasks){
-      preciceDebug ( "test search content triangles" );
+      DEBUG ( "test search content triangles" );
       testScenarios.testSearchContentTriangles();
     }
 
     if (evenTasks){
-      preciceDebug ( "test search voxel position" );
+      DEBUG ( "test search voxel position" );
       testScenarios.testVoxelPosition();
     }
 
     if (oddTasks){
-      preciceDebug ( "test splitting voxels" );
+      DEBUG ( "test splitting voxels" );
       testScenarios.testSplittingVoxels();
     }
     validate(testScenarios.getNumberOfErrors() == 0);
@@ -1287,7 +1287,7 @@ void DynamicOctreeTest:: run()
 //  coords[testDim] = sign * 2.0;
 //  vertex.setCoords ( coords );
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1304,7 +1304,7 @@ void DynamicOctreeTest:: run()
 //  coords[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
 //  vertex.setCoords ( coords );
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1321,7 +1321,7 @@ void DynamicOctreeTest:: run()
 //  coords[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
 //  vertex.setCoords ( coords );
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1338,7 +1338,7 @@ void DynamicOctreeTest:: run()
 //  coords[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
 //  vertex.setCoords ( coords );
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1356,7 +1356,7 @@ void DynamicOctreeTest:: run()
 //  coords[testDim] = sign * 1.0;
 //  vertex.setCoords ( coords );
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1374,7 +1374,7 @@ void DynamicOctreeTest:: run()
 //  coords[testDim] = sign * (1.0 - tarch::la::NUMERICAL_ZERO_DIFFERENCE);
 //  vertex.setCoords ( coords );
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1392,7 +1392,7 @@ void DynamicOctreeTest:: run()
 //  coords[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
 //  vertex.setCoords ( coords );
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1411,7 +1411,7 @@ void DynamicOctreeTest:: run()
 //  coords[testDim] = sign * 0.9;
 //  vertex.setCoords ( coords );
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1503,7 +1503,7 @@ void DynamicOctreeTest:: run()
 //  v1.setCoords ( coords1 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1523,7 +1523,7 @@ void DynamicOctreeTest:: run()
 //  v1.setCoords ( coords1 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1543,7 +1543,7 @@ void DynamicOctreeTest:: run()
 //  v1.setCoords ( coords1 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1564,7 +1564,7 @@ void DynamicOctreeTest:: run()
 //  v1.setCoords ( coords1 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1585,7 +1585,7 @@ void DynamicOctreeTest:: run()
 //  v1.setCoords ( coords1 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1607,7 +1607,7 @@ void DynamicOctreeTest:: run()
 //  v1.setCoords ( coords1 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1629,7 +1629,7 @@ void DynamicOctreeTest:: run()
 //  v1.setCoords ( coords1 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "outside i= " << i );
+//    DEBUG ( "outside i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1733,7 +1733,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1756,7 +1756,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1779,7 +1779,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1802,7 +1802,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1826,7 +1826,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1850,7 +1850,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1874,7 +1874,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1898,7 +1898,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1923,7 +1923,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1948,7 +1948,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1973,7 +1973,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -1998,7 +1998,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -2023,7 +2023,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -2048,7 +2048,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -2073,7 +2073,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -2101,7 +2101,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -2129,7 +2129,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();
@@ -2157,7 +2157,7 @@ void DynamicOctreeTest:: run()
 //  v2.setCoords ( coords2 );
 //  mesh.computeState ();
 //  for ( size_t i=0; i < treesInc.size(); i++ ) {
-//    preciceDebug ( "i= " << i );
+//    DEBUG ( "i= " << i );
 //    treesInc[i].clear ();
 //    treesInc[i].initialize ( mesh );
 //    treesExc[i].clear ();

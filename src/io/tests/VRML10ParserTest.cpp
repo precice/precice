@@ -42,7 +42,7 @@ void VRML10ParserTest:: testParseCube ()
 
   for ( int dim=2; dim <= 3; dim++ ){
     std::string file = utils::Globals::getPathToSources() + "/io/tests/ImportVRMLTest";
-    preciceDebug ( "dim = " << dim );
+    DEBUG ( "dim = " << dim );
     if ( dim == 2 ) {
       file += "2D.wrl";
     }
@@ -64,7 +64,7 @@ void VRML10ParserTest:: testParseCube ()
     bool success = spirit::qi::phrase_parse ( first, last, vrmlParser, spirit::qi::space );
 
     if ( first != last ) {
-      preciceDebug ( "Parsing failed at " << std::string(first, last) );
+      DEBUG ( "Parsing failed at " << std::string(first, last) );
     }
     validate ( first == last );
     validate ( success );

@@ -294,7 +294,7 @@ void Mesh:: allocateDataValues()
     if (leftToAllocate > 0){
       utils::append(data->values(), (Eigen::VectorXd) Eigen::VectorXd::Zero(leftToAllocate));
     }
-    preciceDebug("Data " << data->getName() << " no has "
+    DEBUG("Data " << data->getName() << " no has "
                  << data->values().size() << " values");
   }
 }
@@ -571,11 +571,11 @@ void Mesh:: computeDistribution()
   }
 
   // (1) Generate vertex offsets from the vertexDistribution, broadcast it to all slaves.
-  preciceDebug("Generate vertex offsets");
+  DEBUG("Generate vertex offsets");
   if (utils::MasterSlave::_slaveMode) {
     _vertexOffsets.resize(utils::MasterSlave::_size);
     utils::MasterSlave::_communication->broadcast(_vertexOffsets.data(),_vertexOffsets.size(),0);
-    preciceDebug("My vertex offsets: " << _vertexOffsets);
+    DEBUG("My vertex offsets: " << _vertexOffsets);
   }
   else if (utils::MasterSlave::_masterMode) {
     _vertexOffsets.resize(utils::MasterSlave::_size);
@@ -583,7 +583,7 @@ void Mesh:: computeDistribution()
     for (int rank = 1; rank < utils::MasterSlave::_size; rank++){
       _vertexOffsets[rank] = _vertexDistribution[rank].size() + _vertexOffsets[rank-1];
     }
-    preciceDebug("My vertex offsets: " << _vertexOffsets);
+    DEBUG("My vertex offsets: " << _vertexOffsets);
     utils::MasterSlave::_communication->broadcast(_vertexOffsets.data(),_vertexOffsets.size());
   }
   else{ //coupling mode
@@ -592,13 +592,13 @@ void Mesh:: computeDistribution()
 
 
   // (2) Generate global indices from the vertexDistribution, broadcast it to all slaves.
-  preciceDebug("Generate global indices");
+  DEBUG("Generate global indices");
   if (utils::MasterSlave::_slaveMode) {
     int numberOfVertices = vertices().size();
     if (numberOfVertices!=0) {
       std::vector<int> globalIndices(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(globalIndices.data(),numberOfVertices,0);
-      preciceDebug("My global indices: " << globalIndices);
+      DEBUG("My global indices: " << globalIndices);
       setGlobalIndices(globalIndices);
     }
   }
@@ -622,13 +622,13 @@ void Mesh:: computeDistribution()
 
 
   // (3) generate owner information, decide which rank is owner for duplicated vertices
-  preciceDebug("Generate owner information");
+  DEBUG("Generate owner information");
   if (utils::MasterSlave::_slaveMode) {
     int numberOfVertices = vertices().size();
     if (numberOfVertices!=0) {
       std::vector<int> ownerVec(numberOfVertices, -1);
       utils::MasterSlave::_communication->receive(ownerVec.data(),numberOfVertices,0);
-      preciceDebug("My owner information: " << ownerVec);
+      DEBUG("My owner information: " << ownerVec);
       setOwnerInformation(ownerVec);
     }
   }

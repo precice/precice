@@ -116,14 +116,14 @@ void FindVoxelContent:: checkEdge
   abs(toEdgeCenter, toEdgeCenter);
   // Test, if circumcircle (circumsphere) of edge lies completely outside
   if (oneGreater(toEdgeCenter - edge.getEnclosingRadius(), _voxelHalflengths)){
-    preciceDebug("  edge circumcircle lies outside");
+    DEBUG("  edge circumcircle lies outside");
     return;
   }
   // Test, if edge center lies completely inside
   DynVector absVoxelHalflengths(_dimensions);
   if (allGreater(tarch::la::abs(_voxelHalflengths, absVoxelHalflengths), toEdgeCenter)){
     _content.add(edge);
-    preciceDebug("  edge center lies inside");
+    DEBUG("  edge center lies inside");
     return;
   }
 
@@ -187,7 +187,7 @@ void FindVoxelContent:: checkEdge
          voxelPointA, voxelPointB, a, b, _boundaryInclusion == INCLUDE_BOUNDARY) )
     {
       _content.add (edge);
-      preciceDebug ( "  lower edge of voxel intersects edge" );
+      DEBUG ( "  lower edge of voxel intersects edge" );
       return;
     }
     // right edge
@@ -198,7 +198,7 @@ void FindVoxelContent:: checkEdge
          voxelPointA, voxelPointB, a, b, _boundaryInclusion == INCLUDE_BOUNDARY) )
     {
       _content.add (edge);
-      preciceDebug ( "  right edge of voxel intersects edge" );
+      DEBUG ( "  right edge of voxel intersects edge" );
       return;
     }
     // top edge
@@ -209,7 +209,7 @@ void FindVoxelContent:: checkEdge
          voxelPointA, voxelPointB, a, b, _boundaryInclusion == INCLUDE_BOUNDARY) )
     {
       _content.add (edge);
-      preciceDebug ( "  top edge of voxel intersects edge" );
+      DEBUG ( "  top edge of voxel intersects edge" );
       return;
     }
     // left edge
@@ -220,7 +220,7 @@ void FindVoxelContent:: checkEdge
          voxelPointA, voxelPointB, a, b, _boundaryInclusion == INCLUDE_BOUNDARY) )
     {
       _content.add (edge);
-      preciceDebug ( "  left edge of voxel intersects edge" );
+      DEBUG ( "  left edge of voxel intersects edge" );
       return;
     }
 #   endif // PRECIC_OLD_QUERY
@@ -370,7 +370,7 @@ void FindVoxelContent:: checkEdge
       abs ( toEdge, toEdge );
       if ( allGreater(_voxelHalflengths, toEdge) ) {
         _content.add ( edge );
-        preciceDebug ( "  edge completely intersects voxel" );
+        DEBUG ( "  edge completely intersects voxel" );
         return;
       }
     }
@@ -418,13 +418,13 @@ void FindVoxelContent:: checkTriangle
     triangleMin = min(coords);
     voxelMax = _voxelHalflengths[dim];
     if ( greater(triangleMin, voxelMax-eps) ){
-      preciceDebug ( "Found sa in test 1.1" );
+      DEBUG ( "Found sa in test 1.1" );
       return;
     }
     triangleMax = max(coords);
     voxelMin = -1.0 * _voxelHalflengths[dim];
     if ( smaller(triangleMax-eps, voxelMin) ){
-      preciceDebug ( "Found sa in test 1.2" );
+      DEBUG ( "Found sa in test 1.2" );
       return;
     }
   }
@@ -456,7 +456,7 @@ void FindVoxelContent:: checkTriangle
   voxelMax = max(projVoxel);
   voxelMin = min(projVoxel);
   if ( greater(projTri, voxelMax-eps) || smaller(projTri-eps, voxelMin) ){
-    preciceDebug ( "Found sa in test 2" );
+    DEBUG ( "Found sa in test 2" );
     return;
   }
 

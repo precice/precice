@@ -178,13 +178,13 @@ void ParallelCouplingScheme::explicitAdvance()
     setTimesteps(getTimesteps() + 1);
 
     if (doesFirstStep()) {
-      preciceDebug("Sending data...");
+      DEBUG("Sending data...");
       getM2N()->startSendPackage(0);
       sendDt();
       sendData(getM2N());
       getM2N()->finishSendPackage();
 
-      preciceDebug("Receiving data...");
+      DEBUG("Receiving data...");
       getM2N()->startReceivePackage(0);
       receiveAndSetDt();
       receiveData(getM2N());
@@ -192,14 +192,14 @@ void ParallelCouplingScheme::explicitAdvance()
       setHasDataBeenExchanged(true);
     }
     else { //second participant
-      preciceDebug("Receiving data...");
+      DEBUG("Receiving data...");
       getM2N()->startReceivePackage(0);
       receiveAndSetDt();
       receiveData(getM2N());
       getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
 
-      preciceDebug("Sending data...");
+      DEBUG("Sending data...");
       getM2N()->startSendPackage(0);
       sendDt();
       sendData(getM2N());
@@ -225,7 +225,7 @@ void ParallelCouplingScheme::implicitAdvance()
   bool convergenceCoarseOptimization = true;
   bool doOnlySolverEvaluation = false;
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-    preciceDebug("Computed full length of iteration");
+    DEBUG("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
       getM2N()->startSendPackage(0);
       sendData(getM2N());
@@ -253,7 +253,7 @@ void ParallelCouplingScheme::implicitAdvance()
 
       // measure convergence for coarse model optimization
       if(_isCoarseModelOptimizationActive){
-        preciceDebug("measure convergence of coarse model optimization.");
+        DEBUG("measure convergence of coarse model optimization.");
         // in case of multilevel post processing only: measure the convergence of the coarse model optimization
         convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
         // Stop, when maximal iteration count (given in config) is reached
@@ -272,7 +272,7 @@ void ParallelCouplingScheme::implicitAdvance()
       }
       // measure convergence of coupling iteration
       else{
-        preciceDebug("measure convergence.");
+        DEBUG("measure convergence.");
         doOnlySolverEvaluation = false;
 
         // measure convergence of the coupling iteration,
@@ -345,11 +345,11 @@ void ParallelCouplingScheme::implicitAdvance()
 
     // both participants
     if (not convergence) {
-      preciceDebug("No convergence achieved");
+      DEBUG("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
     }
     else {
-      preciceDebug("Convergence achieved");
+      DEBUG("Convergence achieved");
       advanceTXTWriters();
     }
     updateTimeAndIterations(convergence, convergenceCoarseOptimization);
