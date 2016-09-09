@@ -33,7 +33,7 @@ install:
   - mkdir -p $LOCAL_INSTALL/include $LOCAL_INSTALL/lib
   - wget http://bitbucket.org/eigen/eigen/get/3.2.5.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/include --strip-components=1 eigen-eigen-bdd17ee3b1b3/Eigen
   - wget 'http://downloads.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.tar.bz2' -O - | tar xj
-  - cd boost_1_59_0
+  - cd boost_1_60_0
   - export BOOST_SRC=`pwd`
   - ./bootstrap.sh
   - ./b2 --with-program_options --with-test --with-filesystem --with-log
