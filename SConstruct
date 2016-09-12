@@ -150,7 +150,6 @@ else:
 # ====== Eigen ======
 if not conf.CheckCXXHeader("Eigen/Dense"):
     errorMissingHeader("Eigen/Dense", "Eigen")
-    Exit(1)
 if env["build"] == "debug":
     env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
 
@@ -165,6 +164,9 @@ uniqueCheckLib(conf, "boost_program_options")
 env.Append(CPPDEFINES=["BOOST_LOG_DYN_LINK"])
 
 if not conf.CheckCXXHeader('boost/array.hpp'):
+    errorMissingHeader('boost/array.hpp', 'Boost')
+
+if not conf.CheckCXXHeader('boost/vmd/is_empty.hpp'):
     errorMissingHeader('boost/array.hpp', 'Boost')
 
 # ====== Spirit2 ======
