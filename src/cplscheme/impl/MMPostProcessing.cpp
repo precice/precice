@@ -190,13 +190,6 @@ void MMPostProcessing::initialize(
     assertion(entries == unknowns, entries, unknowns);
   }
 
-  if (_estimateJacobian) {
-    _MMMappingMatrix = Eigen::MatrixXd::Zero(getLSSystemRows(), entries);
-    _preconditioner->triggerGlobalWeights(getLSSystemRows());
-    // do not initialize Tkprev (MMMappingMatrix_prev), as we need a different constructing rule
-    // in the first step (see computeCoarseModelDesignSpecifiaction).
-  }
-
   /**
    // Fetch secondary data IDs, to be relaxed with same coefficients from IQN-ILS
    for (DataMap::value_type& pair : cplData){
@@ -219,6 +212,13 @@ void MMPostProcessing::initialize(
   }
 
   _preconditioner->initialize(entries);
+
+  if (_estimateJacobian) {
+    _MMMappingMatrix = Eigen::MatrixXd::Zero(getLSSystemRows(), entries);
+    _preconditioner->triggerGlobalWeights(getLSSystemRows());
+    // do not initialize Tkprev (MMMappingMatrix_prev), as we need a different constructing rule
+    // in the first step (see computeCoarseModelDesignSpecifiaction).
+  }
 }
 
 
@@ -464,6 +464,8 @@ void MMPostProcessing::performPostProcessing(
      */
     computeCoarseModelDesignSpecifiaction();
 
+    preciceDebug("coarse model design sepc (scaled): "<<_coarseModel_designSpecification.norm());
+
     assertion(isSet(_coarseModel_designSpecification)); // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
 
 
@@ -486,6 +488,7 @@ void MMPostProcessing::performPostProcessing(
     _preconditioner->revert(_coarseModel_designSpecification);
     //unscale(_coarseModel_designSpecification, cplData);
 
+    preciceDebug("coarse model design sepc : "<<_coarseModel_designSpecification.norm());
 
     /**
      * now, the difference matrices for the MM mapping as well as the design specification for the coarse
@@ -514,6 +517,10 @@ void MMPostProcessing::performPostProcessing(
       DataMap::value_type pair = std::make_pair(id, cplData[id]);
       coarseCplData.insert(pair);
     }
+
+    Eigen::VectorXd s1 = _coarseModel_designSpecification.head((int)_coarseModel_designSpecification.size()/2);
+    Eigen::VectorXd s2 = _coarseModel_designSpecification.tail((int)_coarseModel_designSpecification.size()/2);
+    preciceDebug("coarse model design sepc: "<<_coarseModel_designSpecification.norm()<<" displ: "<<s1.norm()<<" pressure: "<<s2.norm());
 
     // no preconditioning, i.e. scaling of input/output data. This is done in the coarse optimization routine, only for the coarse cplData.
     // the _coarseModel_designSpecification is scaled back at this point

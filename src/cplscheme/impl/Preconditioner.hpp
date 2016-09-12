@@ -476,7 +476,7 @@ protected:
       utils::MasterSlave::_communication->broadcast(_globalInvWeights.data(),_globalWeights.size());
     }
     else{ //couplingmode
-      assertion(_weights.size()==_globalWeights.size());
+      assertion(_weights.size()==_globalWeights.size(), _weights.size(), _globalWeights.size());
       for(size_t i=0; i<_weights.size(); i++){
         _globalWeights[i] = _weights[i];
         _globalInvWeights[i] = _invWeights[i];
