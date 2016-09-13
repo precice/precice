@@ -197,8 +197,8 @@ void SerialCouplingScheme::advance()
         receiveAndSetDt();
         receiveData(getM2N());
         getM2N()->finishReceivePackage();
+        setHasDataBeenExchanged(true);
       }
-      setHasDataBeenExchanged(true);
       setComputedTimestepPart(0.0);
     }
   }
@@ -225,6 +225,7 @@ void SerialCouplingScheme::advance()
         receiveData(getM2N());
         //}
         getM2N()->finishReceivePackage();
+        setHasDataBeenExchanged(true);
       }
       else {
 
@@ -346,6 +347,7 @@ void SerialCouplingScheme::advance()
           receiveAndSetDt();
           receiveData(getM2N());
           getM2N()->finishReceivePackage();
+          setHasDataBeenExchanged(true);
         }
       }
 
@@ -358,7 +360,6 @@ void SerialCouplingScheme::advance()
         advanceTXTWriters();
       }
       updateTimeAndIterations(convergence, convergenceCoarseOptimization);
-      setHasDataBeenExchanged(true);
       setComputedTimestepPart(0.0);
     } //subcycling completed
 

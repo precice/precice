@@ -828,7 +828,8 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
       }
       validateNumericalEquals(computedTime, cplScheme->getTime());
       validateEquals(computedTimesteps, cplScheme->getTimesteps()-1);
-      validate(cplScheme->hasDataBeenExchanged());
+      if(cplScheme->isCouplingOngoing())
+        validate(cplScheme->hasDataBeenExchanged());
     }
     cplScheme->finalize();
     validateEquals(computedTimesteps, 10);

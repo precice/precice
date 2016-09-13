@@ -623,8 +623,9 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         // to achieve a predictable convergence.
         stepsizeData0 -= 1.0;
       }
-      // In every coupling cycle, data is sent
-      validate ( cplScheme.hasDataBeenExchanged() );
+      // the first participant always receives new data
+      //if(cplScheme.isCouplingOngoing())
+        validate ( cplScheme.hasDataBeenExchanged() );
     }
     cplScheme.finalize (); // Ends the coupling scheme
     validateNumericalEquals ( computedTime, 0.3 );
@@ -703,8 +704,9 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         //stepsizeData1 -= 1.0;
         stepsizeData1 -= Eigen::Vector3d::Constant(1.0);
       }
-      // In every coupling cycle, data is sent
-      validate ( cplScheme.hasDataBeenExchanged() );
+      // only check if data is received
+      if(cplScheme.isCouplingOngoing())
+        validate ( cplScheme.hasDataBeenExchanged() );
     }
     cplScheme.finalize (); // Ends the coupling scheme
     validateNumericalEquals ( computedTime, 0.3 );
