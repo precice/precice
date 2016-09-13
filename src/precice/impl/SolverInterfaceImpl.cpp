@@ -441,7 +441,6 @@ double SolverInterfaceImpl:: advance
   preciceCheck(_couplingScheme->isInitialized(), "advance()",
                "initialize() has to be called before advance()");
   _numberAdvanceCalls++;
-  preciceInfo("advance()", "Iteration #" << _numberAdvanceCalls);
   if (_clientMode){
     _requestManager->requestAdvance(computedTimestepLength);
   }
