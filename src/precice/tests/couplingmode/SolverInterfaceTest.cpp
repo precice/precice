@@ -1336,7 +1336,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
       maxDt = interface.advance(maxDt);
 
       validate(interface.isWriteDataRequired(maxDt));
-      validate(interface.isReadDataAvailable());
+      validate(not interface.isReadDataAvailable()); //second participant has no new data after last advance
       for (size_t i=0; i < size; i++){
         interface.readVectorData(dataDisplID, i, raw(force));
       }

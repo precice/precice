@@ -112,6 +112,7 @@ public:
   virtual bool willDataBeExchanged(double lastSolverTimestepLength) const =0;
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
+  /// actually, this only means that data has been received, data is always sent
   virtual bool hasDataBeenExchanged() const =0;
 
   /// @brief Returns the currently computed time of the coupling scheme.
