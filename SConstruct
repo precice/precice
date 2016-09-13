@@ -167,7 +167,7 @@ if not conf.CheckCXXHeader('boost/array.hpp'):
     errorMissingHeader('boost/array.hpp', 'Boost')
 
 if not conf.CheckCXXHeader('boost/vmd/is_empty.hpp'):
-    errorMissingHeader('boost/array.hpp', 'Boost')
+    errorMissingHeader('boost/vmd/is_empty.hpp', 'Boost Variadic Macro Data Library')
 
 # ====== Spirit2 ======
 if not env["spirit2"]:
