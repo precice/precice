@@ -386,6 +386,10 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 
   preciceCheck(not isConnected(), "acceptConnection()", "Already connected!");
 
+  preciceCheck(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode, "acceptConnection()",
+      "You can only use a point-to-point communication between two participants which both use a master. Please use " <<
+      "distribution-type gather-scatter instead.");
+
   std::map<int, std::vector<int>>& vertexDistribution =
       _mesh->getVertexDistribution();
   std::map<int, std::vector<int>> requesterVertexDistribution;
@@ -532,6 +536,10 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
   preciceTrace("requestConnection()", nameAcceptor, nameRequester);
 
   preciceCheck(not isConnected(), "requestConnection()", "Already connected!");
+
+  preciceCheck(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode, "acceptConnection()",
+      "You can only use a point-to-point communication between two participants which both use a master. Please use " <<
+      "distribution-type gather-scatter instead.");
 
   std::map<int, std::vector<int>>& vertexDistribution =
       _mesh->getVertexDistribution();

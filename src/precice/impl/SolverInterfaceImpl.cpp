@@ -322,26 +322,24 @@ double SolverInterfaceImpl:: initialize()
     }
 
 
-    if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
-      typedef std::map<std::string,M2NWrap>::value_type M2NPair;
-      preciceInfo("initialize()", "Setting up slaves communication to coupling partner/s " );
-      for (M2NPair& m2nPair : _m2ns) {
-        m2n::M2N::SharedPointer& m2n = m2nPair.second.m2n;
-        std::string localName = _accessorName;
-        std::string remoteName(m2nPair.first);
-        preciceCheck(m2n.get() != nullptr, "initialize()",
-                     "Communication from " << localName << " to participant "
-                     << remoteName << " could not be created! Check compile "
-                     "flags used!");
-        if (m2nPair.second.isRequesting){
-          m2n->requestSlavesConnection(remoteName, localName);
-        }
-        else {
-          m2n->acceptSlavesConnection(localName, remoteName);
-        }
+    typedef std::map<std::string,M2NWrap>::value_type M2NPair;
+    preciceInfo("initialize()", "Setting up slaves communication to coupling partner/s " );
+    for (M2NPair& m2nPair : _m2ns) {
+      m2n::M2N::SharedPointer& m2n = m2nPair.second.m2n;
+      std::string localName = _accessorName;
+      std::string remoteName(m2nPair.first);
+      preciceCheck(m2n.get() != nullptr, "initialize()",
+                   "Communication from " << localName << " to participant "
+                   << remoteName << " could not be created! Check compile "
+                   "flags used!");
+      if (m2nPair.second.isRequesting){
+        m2n->requestSlavesConnection(remoteName, localName);
       }
-      preciceInfo("initialize()", "Slaves are connected" );
+      else {
+        m2n->acceptSlavesConnection(localName, remoteName);
+      }
     }
+    preciceInfo("initialize()", "Slaves are connected" );
 
     std::set<action::Action::Timing> timings;
     double dt = 0.0;
