@@ -47,7 +47,6 @@ public:
     mesh::Mesh&        mesh );
 
   static void initializeWriting (
-    const std::string& filename,
     std::ofstream&     filestream );
 
   static void writeHeader ( std::ostream& outFile );

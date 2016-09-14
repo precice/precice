@@ -6,10 +6,12 @@
 #include "mesh/PropertyContainer.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/String.hpp"
+#include "utils/Globals.hpp"
 #include <iostream>
 #include "Eigen/Dense"
 #include <fstream>
 #include <map>
+#include <boost/filesystem.hpp>
 
 namespace precice {
 namespace io {
@@ -34,13 +36,17 @@ void ExportVRML:: doExport
   const std::string& location,
   mesh::Mesh&        mesh )
 {
-  std::ofstream outFile;
-  std::string fullFilename(location + name);
-  openFile(outFile, utils::checkAppendExtension(fullFilename, std::string(".wrl")));
-  writeHeader(outFile);
-  writeGeometry(outFile, mesh);
-  outFile << "}" << std::endl;
-  outFile.close();
+  namespace fs = boost::filesystem;
+  fs::path outfile(location);
+  outfile = outfile / fs::path(name);
+  std::ofstream outstream(outfile.string(), std::ios::trunc);
+  preciceCheck(outstream, "doExport()", "Could not open file \"" << outfile.c_str()
+                 << "\" for VTK export!");
+
+  writeHeader(outstream);
+  writeGeometry(outstream, mesh);
+  outstream << "}" << std::endl;
+  outstream.close();
 }
 
 void ExportVRML:: doExportCheckpoint
@@ -48,6 +54,7 @@ void ExportVRML:: doExportCheckpoint
   const std::string& filename,
   mesh::Mesh&        mesh )
 {
+  //currently checkpoints do not have a dedicated location, but write straight to the main directory
   std::ofstream outFile;
   std::string fullFilename(filename);
   openFile(outFile, utils::checkAppendExtension(fullFilename, std::string(".wrl")));

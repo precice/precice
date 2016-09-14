@@ -396,10 +396,10 @@ void SpacetreeTestScenarios:: testSearchPosition()
     }
 
     // Export geometric results to vtk files
-    ExportSpacetree exportSpacetree ( _testName + "-testSearchPosition-tree-2d" );
+    std::string location = "";
+    ExportSpacetree exportSpacetree ( location, _testName + "-testSearchPosition-tree-2d" );
     exportSpacetree.doExport(*spacetree);
     io::ExportVTK exportMesh(true);
-    std::string location = "";
     exportMesh.doExport ( _testName + "-testSearchPosition-mesh-2d", location, *mesh );
   }
 
@@ -953,10 +953,10 @@ void SpacetreeTestScenarios:: testSearchPosition()
     }
 
     // Export geometric results to vtk files
-    ExportSpacetree exportSpacetree ( _testName + "-testSearchPosition-tree-3d" );
+    std::string location = "";
+    ExportSpacetree exportSpacetree ( location, _testName + "-testSearchPosition-tree-3d" );
     exportSpacetree.doExport(*spacetree);
     io::ExportVTK exportMesh(true);
-    std::string location = "";
     exportMesh.doExport ( _testName + "-testSearchPosition-mesh-3d", location, *mesh );
   }
   Tree::minElementsToRefineCell = min;
@@ -1070,10 +1070,10 @@ void SpacetreeTestScenarios:: testSearchDistance()
     }
 
     // Export geometric results to vtk files
-    ExportSpacetree exportSpacetree ( _testName + "-testSearchDistance-tree-2D" );
+    std::string location = "";
+    ExportSpacetree exportSpacetree ( location, _testName + "-testSearchDistance-tree-2D" );
     exportSpacetree.doExport(*spacetree);
     io::ExportVTK exportMesh(true);
-    std::string location = "";
     exportMesh.doExport ( _testName + "-testSearchDistance-mesh-2D", location, *mesh );
 //    exportNeighbors.exportNeighbors ( "SpacetreeTestScenarios-testSearchDistance-neighbors-2D.vtk");
   }
@@ -1193,10 +1193,10 @@ void SpacetreeTestScenarios:: testSearchDistance()
     }
 
     // Export geometric results to vtk files
-    ExportSpacetree exportSpacetree ( _testName + "-testSearchDistance-tree-3D" );
+    std::string location = "";
+    ExportSpacetree exportSpacetree ( location, _testName + "-testSearchDistance-tree-3D" );
     exportSpacetree.doExport ( *spacetree );
     io::ExportVTK exportMesh(true);
-    std::string location = "";
     exportMesh.doExport ( _testName + "-testSearchDistance-mesh-3D", location, *mesh );
 //    exportNeighbors.exportNeighbors ( "SpacetreeTestScenarios-testSearchDistance-neighbors-3D.vtk");
   }
@@ -1292,7 +1292,7 @@ void SpacetreeTestScenarios:: testNeighborSearch()
   spacetree->searchDistance ( findNeighbors4 );
   //exportNeighborsspacetree->addNeighbors ( point5, findNeighbors4.getClosest() );
 
-  ExportSpacetree exportSpacetree (_testName + "-testNeighborSearch-spacetree.vtk");
+  ExportSpacetree exportSpacetree ( location, _testName + "-testNeighborSearch-spacetree.vtk");
   exportSpacetree.doExport ( *spacetree );
 //  exportNeighbors.exportNeighbors (
 //      "SpacetreeTestScenarios_testNeighborSearch_neighbors.vtk");
@@ -2463,7 +2463,7 @@ void SpacetreeTestScenarios:: testVoxelPosition()
     voxelCenter9, voxelHalflengths9, query::FindVoxelContent::INCLUDE_BOUNDARY );
   int result9 = spacetree->searchContent ( voxel9 );
 
-  ExportSpacetree export1 ( _testName + "testVoxelPosition-spacetree" );
+  ExportSpacetree export1 ( location, _testName + "testVoxelPosition-spacetree" );
   export1.doExport ( *spacetree );
 
 //  query::ExportVTKVoxelQueries exportVoxels;
@@ -2531,7 +2531,7 @@ void SpacetreeTestScenarios:: testVoxelPosition()
 //  exportNeighborsspacetree->addNeighbors ( point8, find8.getClosest() );
 //  exportNeighborsspacetree->addNeighbors ( point9, find9.getClosest() );
 
-  ExportSpacetree export2 (_testName + "-testVoxelPosition-spacetree2");
+  ExportSpacetree export2 (location, _testName + "-testVoxelPosition-spacetree2");
   export2.doExport ( *spacetree );
   //exportNeighborsspacetree->exportNeighbors (
   //    "SpacetreeTest_testVoxelPosition-testVoxelPosition-withspacetree" );

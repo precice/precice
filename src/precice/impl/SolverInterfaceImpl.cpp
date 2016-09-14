@@ -1801,10 +1801,9 @@ void SolverInterfaceImpl:: exportMesh
     // Export spacetrees
     if (context.exportSpacetree){
       for ( MeshContext* meshContext : _accessor->usedMeshContexts()) {
-        std::string name = meshContext->mesh->getName() + "-" + filenameSuffix;
-        std::string filename = context.location + name + ".spacetree";
+        std::string name = meshContext->mesh->getName() + "-" + filenameSuffix + ".spacetree";
         if ( meshContext->spacetree.get() != nullptr ) {
-          spacetree::ExportSpacetree exportSpacetree(filename);
+          spacetree::ExportSpacetree exportSpacetree(context.location, name);
           exportSpacetree.doExport ( *(meshContext->spacetree) );
         }
       }

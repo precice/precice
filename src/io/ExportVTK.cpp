@@ -11,6 +11,7 @@
 #include "Eigen/Dense"
 #include <iostream>
 #include <fstream>
+#include <boost/filesystem.hpp>
 
 namespace precice {
 namespace io {
@@ -38,13 +39,19 @@ void ExportVTK:: doExport
 {
   preciceTrace("doExport()", name, location, mesh.getName());
   assertion(name != std::string(""));
-  std::ofstream outFile;
-  std::string filename = location + name;
-  initializeWriting(filename, outFile);
-  writeHeader(outFile);
-  exportGeometry(outFile, mesh);
-  exportData(outFile, mesh);
-  outFile.close();
+
+  namespace fs = boost::filesystem;
+  fs::path outfile(location);
+  outfile = outfile / fs::path(name);
+  std::ofstream outstream(outfile.string(), std::ios::trunc);
+  preciceCheck(outstream, "doExport()", "Could not open file \"" << outfile.c_str()
+                 << "\" for VTK export!");
+
+  initializeWriting(outstream);
+  writeHeader(outstream);
+  exportGeometry(outstream, mesh);
+  exportData(outstream, mesh);
+  outstream.close();
 }
 
 void ExportVTK::exportGeometry
@@ -206,18 +213,12 @@ void ExportVTK:: exportData
 
 void ExportVTK:: initializeWriting
 (
-  const std::string& filename,
   std::ofstream&     filestream)
 {
-  std::string fullFilename(filename);
   //size_t pos = fullFilename.rfind(".vtk");
   //if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
   //  fullFilename += ".vtk";
   //}
-  utils::checkAppendExtension(fullFilename, ".vtk");
-  filestream.open(fullFilename.c_str());
-  preciceCheck(filestream, "doExport()", "Could not open file \"" << fullFilename
-                 << "\" for VTK export!");
   filestream.setf(std::ios::showpoint);
   filestream.setf(std::ios::scientific);
   filestream << std::setprecision(16);

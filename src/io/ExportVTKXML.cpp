@@ -9,6 +9,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
+#include <boost/filesystem.hpp>
 
 namespace precice {
 namespace io {
@@ -76,11 +77,12 @@ void ExportVTKXML::writeMasterFile
   const std::string& location,
   mesh::Mesh&        mesh)
 {
-  std::ofstream outMasterFile;
-  std::string fullMasterFilename(location + name + "_master.pvtu");
+  namespace fs = boost::filesystem;
+  fs::path outfile(location);
+  outfile = outfile / fs::path(name + "_master.pvtu");
+  std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
 
-  outMasterFile.open(fullMasterFilename.c_str());
-  preciceCheck(outMasterFile, "doExport()", "Could not open master file \"" << fullMasterFilename
+  preciceCheck(outMasterFile, "doExport()", "Could not open master file \"" << outfile.c_str()
     << "\" for VTKXML export!");
 
   outMasterFile << "<?xml version=\"1.0\"?>" << std::endl;
@@ -145,12 +147,14 @@ void ExportVTKXML::writeSubFile
     numCells = mesh.triangles().size() + mesh.quads().size();
   }
 
-  std::ofstream outSubFile;
-  std::string fullSubFilename(location + name + "_r" + std::to_string(utils::MasterSlave::_rank) + ".vtu");
+  namespace fs = boost::filesystem;
+  fs::path outfile(location);
+  outfile = outfile / fs::path(name + "_r" + std::to_string(utils::MasterSlave::_rank) + ".vtu");
+  std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  outSubFile.open(fullSubFilename.c_str());
-  preciceCheck(outSubFile, "doExport()", "Could not open master file \"" << fullSubFilename
+  preciceCheck(outSubFile, "doExport()", "Could not open slave file \"" << outfile.c_str()
     << "\" for VTKXML export!");
+
 
   outSubFile << "<?xml version=\"1.0\"?>" << std::endl;
   outSubFile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"";

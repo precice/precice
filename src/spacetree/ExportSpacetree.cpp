@@ -1,14 +1,17 @@
 #include "ExportSpacetree.hpp"
 #include "io/ExportVTK.hpp"
 #include <fstream>
+#include <boost/filesystem.hpp>
 
 namespace precice {
 namespace spacetree {
 
 ExportSpacetree:: ExportSpacetree
 (
+  const std::string& location,
   const std::string& filename )
 :
+  _location(location),
   _filename(filename),
   _vertexCounter(0),
   _vertices(),
@@ -55,35 +58,39 @@ void ExportSpacetree:: doExport
 {
   toExport.accept(*this); // Gather spacetree information
 
-  std::ofstream file;
-  io::ExportVTK::initializeWriting(_filename, file);
-  io::ExportVTK::writeHeader(file);
+  namespace fs = boost::filesystem;
+  fs::path outfile(_location);
+  outfile = outfile / fs::path(_filename);
+  std::ofstream outstream(outfile.string(), std::ios::trunc);
+
+  io::ExportVTK::initializeWriting(outstream);
+  io::ExportVTK::writeHeader(outstream);
 
   // Write cell corner vertices
-  file << "POINTS " << _vertices.size() << " float "<< std::endl << std::endl;
+  outstream << "POINTS " << _vertices.size() << " float "<< std::endl << std::endl;
   for (const utils::DynVector& vertexCoords : _vertices){
-    io::ExportVTK::writeVertex(vertexCoords, file);
+    io::ExportVTK::writeVertex(vertexCoords, outstream);
   }
-  file << std::endl;
+  outstream << std::endl;
 
   // Write cells
   assertion(_vertexCounter > 0);
   int dim = _vertices.front().size();
   int twoPowerDim = std::pow(2.0, dim);
   int cellSize = _cells.size();
-  file << "CELLS " << cellSize << " "
+  outstream << "CELLS " << cellSize << " "
        << cellSize * (twoPowerDim + 1) << std::endl << std::endl;
   for (const std::vector<int>& cell : _cells){
-    file << twoPowerDim << " ";
+    outstream << twoPowerDim << " ";
     for (int i=0; i < twoPowerDim; i++){
-      file << cell[i] << " ";
+      outstream << cell[i] << " ";
     }
-    file << std::endl;
+    outstream << std::endl;
   }
-  file << std::endl;
+  outstream << std::endl;
 
   // Write cell types
-  file << std::endl << "CELL_TYPES " << cellSize << std::endl << std::endl;
+  outstream << std::endl << "CELL_TYPES " << cellSize << std::endl << std::endl;
   int cellType;
   if (dim == 2){
     cellType = 8;
@@ -93,30 +100,30 @@ void ExportSpacetree:: doExport
     cellType = 11;
   }
   for (int i=0; i < cellSize; i++){
-    file << cellType << std::endl;
+    outstream << cellType << std::endl;
   }
-  file << std::endl;
+  outstream << std::endl;
 
   // Write cell data
-  file << "CELL_DATA " << cellSize << std::endl << std::endl;
+  outstream << "CELL_DATA " << cellSize << std::endl << std::endl;
 
   // Write cell positions
-  file << "SCALARS Position(0=Undef,1=Inside,2=Outside,3=On) float 1" << std::endl
+  outstream << "SCALARS Position(0=Undef,1=Inside,2=Outside,3=On) float 1" << std::endl
        << "LOOKUP_TABLE default" << std::endl << std::endl;
   for (int position : _cellPositions){
-    file << position << std::endl;
+    outstream << position << std::endl;
   }
-  file << std::endl;
+  outstream << std::endl;
 
   // Write cell content size
-  file << "SCALARS ContentSize float 1" << std::endl
+  outstream << "SCALARS ContentSize float 1" << std::endl
        << "LOOKUP_TABLE default" << std::endl << std::endl;
   for (int size : _cellContents){
-    file << size << std::endl;
+    outstream << size << std::endl;
   }
-  file << std::endl;
+  outstream << std::endl;
 
-  file.close();
+  outstream.close();
 }
 
 //void ExportSpacetree:: exportCell

@@ -21,7 +21,7 @@ public:
    /**
     * @brief Constructor, defining vtk filename.
     */
-   ExportSpacetree ( const std::string& filename );
+   ExportSpacetree ( const std::string& location, const std::string& filename );
 
    virtual ~ExportSpacetree() {}
 
@@ -44,6 +44,8 @@ public:
 //   void doExport ( const Spacetree& spacetree );
 
 private:
+
+   std::string _location;
 
    std::string _filename;
 
