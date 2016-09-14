@@ -377,17 +377,6 @@ double SolverInterfaceImpl:: initialize()
 
     performDataActions(timings, 0.0, 0.0, 0.0, dt);
 
-    DEBUG("Plot output...");
-    for (const io::ExportContext& context : _accessor->exportContexts()){
-      if (context.timestepInterval != -1){
-        std::ostringstream suffix;
-        suffix << _accessorName << ".init";
-        exportMesh(suffix.str());
-        if (context.triggerSolverPlot){
-          _couplingScheme->requireAction(constants::actionPlotOutput());
-        }
-      }
-    }
     preciceInfo("initialize()", _couplingScheme->printCouplingState());
   }
   return _couplingScheme->getNextTimestepMaxLength();
@@ -420,6 +409,17 @@ void SolverInterfaceImpl:: initializeData ()
       }
       performDataActions(timings, 0.0, 0.0, 0.0, dt);
       resetWrittenData();
+      DEBUG("Plot output...");
+      for (const io::ExportContext& context : _accessor->exportContexts()){
+        if (context.timestepInterval != -1){
+          std::ostringstream suffix;
+          suffix << _accessorName << ".init";
+          exportMesh(suffix.str());
+          if (context.triggerSolverPlot){
+            _couplingScheme->requireAction(constants::actionPlotOutput());
+          }
+        }
+      }
     }
   }
 }
