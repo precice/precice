@@ -5,7 +5,7 @@
 #include "PropertyContainer.hpp"
 #include "utils/Globals.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "math/differences.hpp"
+#include "math/math.hpp"
 #include "Eigen/Dense"
 
 namespace precice {

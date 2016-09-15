@@ -10,7 +10,6 @@
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
-#include "tarch/la/ScalarOperations.h"
 #include "Eigen/Dense"
 #include <limits>
 #include <sstream>

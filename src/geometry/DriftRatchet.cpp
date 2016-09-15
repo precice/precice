@@ -4,7 +4,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/PropertyContainer.hpp"
-#include "tarch/la/Scalar.h"
+#include "math/math.hpp"
 
 namespace precice {
 namespace geometry {
@@ -79,7 +79,7 @@ int DriftRatchet:: getNumberOfVerticesPerCut ( double h ) const
     return 2;
   }
   else {
-    double maxCircumference = 2.0 * tarch::la::PI * _maxRadius;
+    double maxCircumference = 2.0 * math::PI * _maxRadius;
     return int(std::ceil( maxCircumference / h ));
   }
 }
@@ -149,7 +149,7 @@ void DriftRatchet:: createLeftWall
     using utils::Vector3D;
     double currentAngle = 0.0;
     int vertexCount = getNumberOfVerticesPerCut ( _discretizationWidth );
-    double angle = 2.0 * tarch::la::PI / static_cast<double>(vertexCount);
+    double angle = 2.0 * math::PI / static_cast<double>(vertexCount);
     double radius = getRadius ( 0.0 );
     Vector3D center(0.0);
     mesh::Vertex& centerVertex = mesh.createVertex ( center );
@@ -254,7 +254,7 @@ void DriftRatchet:: createBodyWallSection
     assertion ( dimensions == 3, dimensions );
     double currentAngle = 0.0;
     int vertexCount = getNumberOfVerticesPerCut ( _discretizationWidth );
-    double angle = 2.0 * tarch::la::PI / static_cast<double>(vertexCount);
+    double angle = 2.0 * math::PI / static_cast<double>(vertexCount);
 
     // Create vertices
     mesh::Vertex ** newCutVertices = new mesh::Vertex * [vertexCount];
@@ -388,13 +388,13 @@ double DriftRatchet:: getG
 {
   double result = 0.0;
   if (remainingIterations==0) {
-    result = std::sin( 2.0 * PI * normalisedX );
+    result = std::sin( 2.0 * math::PI * normalisedX );
   }
   else {
     double recursion = getG(normalisedX, remainingIterations-1 );
     assertion( recursion <=  1.0 );
     assertion( recursion >= -1.0 );
-    result = std::sin( 2.0 * PI * normalisedX - _shapeParameter * recursion );
+    result = std::sin( 2.0 * math::PI * normalisedX - _shapeParameter * recursion );
   }
   return result;
 }
@@ -423,7 +423,7 @@ double DriftRatchet:: getExtremeCoordinateInAxisDirection
 {
    assertion ( n >= 0 );
    double signum = (n & 1)!=0 ? -1.0 : 1.0;
-   return ( signum*_shapeParameter/2.0/PI + 0.25 + n/2.0 ) *
+   return ( signum*_shapeParameter /2.0 / math::PI + 0.25 + n/2.0 ) *
           getCharacteristicLength(_maxRadius);
 }
 

@@ -7,7 +7,7 @@
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
 #include "io/ExportVTK.hpp"
-#include "tarch/la/Scalar.h"
+#include "math/math.hpp"
 #include "geometry/Sphere.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
@@ -41,7 +41,7 @@ void BalanceVertexPositionActionTest:: testSmoothCircle ()
   using namespace tarch::la;
   using utils::Vector2D;
   int nodes = 10;
-  double circumference = 2.0 * PI; // radius = 1
+  double circumference = 2.0 * math::PI; // radius = 1
   double h = circumference / (2.0 * nodes); // angle resolution
   mesh->createVertex ( Vector2D(1.0, 0.0) );
   for ( int i=1; i < nodes; i++ ){
@@ -54,7 +54,7 @@ void BalanceVertexPositionActionTest:: testSmoothCircle ()
   nodes = 20;
   h = circumference / (2.0 * nodes);
   for ( int i=0; i < nodes; i++ ){
-    Vector2D coord ( std::cos(PI + (double)i * h), std::sin(PI + (double)i * h) );
+    Vector2D coord ( std::cos(math::PI + (double)i * h), std::sin(math::PI + (double)i * h) );
     mesh::Vertex & v0 = mesh->vertices()[size-1 + i];
     mesh::Vertex & v1 = mesh->createVertex ( coord );
     mesh->createEdge ( v0, v1 );

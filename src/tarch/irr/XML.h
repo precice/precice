@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <string>
 #include <sstream>
-#include "tarch/la/Scalar.h"
+#include "math/math.hpp"
 #include "tarch/la/Vector.h"
 #include "tarch/la/DynamicVector.h"
 #include "logging/Logger.hpp"
@@ -266,7 +266,7 @@ namespace tarch {
               double rightValue;
               if (right!="") rightValue = convertValueStringToDouble( right );
               else           rightValue = 1.0;
-              result = leftValue * tarch::la::PI * rightValue;
+              result = leftValue * precice::math::PI * rightValue;
             }
           }
           else {                                           // "/" in

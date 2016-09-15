@@ -8,7 +8,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
-#include "math/differences.hpp"
+#include "math/math.hpp"
 
 
 #include "tarch/tests/TestCaseFactory.h"
@@ -95,8 +95,6 @@ void CommunicateMeshTest:: testTwoSolvers ()
 
       }
       com->closeConnection ();
-
-      using math::equals;
 
       validate ( equals(mesh.edges()[0].vertex(0).getCoords(), DynVector(dim,0.0)) );
       validate ( equals(mesh.edges()[0].vertex(1).getCoords(), DynVector(dim,1.0)) );

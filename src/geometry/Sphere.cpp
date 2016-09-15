@@ -4,7 +4,7 @@
 #include "mesh/Edge.hpp"
 #include <list>
 #include <tuple>
-#include "tarch/la/Scalar.h"
+#include "math/math.hpp"
 
 namespace precice {
 namespace geometry {
@@ -37,7 +37,7 @@ void Sphere:: specializedCreate
     Vertex * oldLower = oldUpper;
 
     int numLatitudinal = getNumberLatitudinalElements (_discretizationWidth)+1;
-    double angleInc = tarch::la::PI / (double) (numLatitudinal-1.0);
+    double angleInc = math::PI / (double) (numLatitudinal-1.0);
 
     double latitude, currentRadius;
     for (int i=1; i < numLatitudinal-1; i++) {
@@ -369,14 +369,14 @@ int Sphere:: getNumberLongitudinalElements
 {
   return getOffset().size() == 2 // dimensions == 2
          ? 2
-         : (2.0 * _radius * tarch::la::PI / discretizationWidth) + 0.5;
+         : (2.0 * _radius * math::PI / discretizationWidth) + 0.5;
 }
 
 int Sphere:: getNumberLatitudinalElements
 (
   const double discretizationWidth ) const
 {
-  return static_cast<int>((1.6 * _radius * tarch::la::PI / discretizationWidth) + 0.5);
+  return static_cast<int>((1.6 * _radius * math::PI / discretizationWidth) + 0.5);
 }
 
 }} // namespace precice, geometry
