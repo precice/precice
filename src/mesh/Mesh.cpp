@@ -5,6 +5,7 @@
 #include "PropertyContainer.hpp"
 #include "utils/Globals.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "math/differences.hpp"
 #include "Eigen/Dense"
 
 namespace precice {
@@ -359,13 +360,13 @@ void Mesh:: computeState()
   if (_dimensions == 3){
     // Compute triangle centers, radius, and normals
     for (Triangle& triangle : _content.triangles()) {
-      assertion(not tarch::la::equals(triangle.vertex(0).getCoords(),
+      assertion(not math::equals(triangle.vertex(0).getCoords(),
                  triangle.vertex(1).getCoords()), triangle.vertex(0).getCoords(),
                  triangle.getID());
-      assertion(not tarch::la::equals(triangle.vertex(1).getCoords(),
+      assertion(not math::equals(triangle.vertex(1).getCoords(),
                  triangle.vertex(2).getCoords()), triangle.vertex(1).getCoords(),
                  triangle.getID());
-      assertion(not tarch::la::equals(triangle.vertex(2).getCoords(),
+      assertion(not math::equals(triangle.vertex(2).getCoords(),
                  triangle.vertex(0).getCoords()), triangle.vertex(2).getCoords(),
                  triangle.getID());
 
@@ -424,16 +425,16 @@ void Mesh:: computeState()
 
     // Compute quad centers, radius, and normals
     for (Quad& quad : _content.quads()) {
-      assertion(not tarch::la::equals(quad.vertex(0).getCoords(),
+      assertion(not math::equals(quad.vertex(0).getCoords(),
                  quad.vertex(1).getCoords()), quad.vertex(0).getCoords(),
                  quad.getID());
-      assertion(not tarch::la::equals(quad.vertex(1).getCoords(),
+      assertion(not math::equals(quad.vertex(1).getCoords(),
                  quad.vertex(2).getCoords()), quad.vertex(1).getCoords(),
                  quad.getID());
-      assertion(not tarch::la::equals(quad.vertex(2).getCoords(),
+      assertion(not math::equals(quad.vertex(2).getCoords(),
                  quad.vertex(3).getCoords()), quad.vertex(2).getCoords(),
                  quad.getID());
-      assertion(not tarch::la::equals(quad.vertex(3).getCoords(),
+      assertion(not math::equals(quad.vertex(3).getCoords(),
                  quad.vertex(0).getCoords()), quad.vertex(3).getCoords(),
                  quad.getID());
 
@@ -494,7 +495,7 @@ void Mesh:: computeState()
         Vector3D normalSecondPart;
         tarch::la::cross(vectorA, vectorB, normalSecondPart);
 
-        assertion(tarch::la::equals(
+        assertion(math::equals(
                    normal/tarch::la::norm2(normal),
                    normalSecondPart/tarch::la::norm2(normalSecondPart)),
                    normal, normalSecondPart);
