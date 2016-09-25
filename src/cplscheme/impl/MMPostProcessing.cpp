@@ -341,7 +341,6 @@ void MMPostProcessing::updateDifferenceMatrices(
   _fineResiduals = _outputFineModel - _input_Xstar;
   _coarseResiduals = _outputCoarseModel - _input_Xstar;
 
-
   /**
    * Update matrices C, F with newest information
    */
@@ -357,6 +356,9 @@ void MMPostProcessing::updateDifferenceMatrices(
 
     Eigen::VectorXd colF = _fineResiduals - _fineOldResiduals;
     Eigen::VectorXd colC = _coarseResiduals - _coarseOldResiduals;
+
+    std::cout<<"_fineResiduals : \n"<<_fineResiduals<<std::endl;
+    std::cout<<"_fineOldResiduals : \n"<<_fineOldResiduals<<std::endl;
 
     bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
     bool overdetermined = getLSSystemCols() <= getLSSystemRows();
@@ -488,7 +490,8 @@ void MMPostProcessing::performPostProcessing(
     _preconditioner->revert(_coarseModel_designSpecification);
     //unscale(_coarseModel_designSpecification, cplData);
 
-    preciceDebug("coarse model design sepc : "<<_coarseModel_designSpecification.norm());
+    Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
+    std::cout<<"coarse model design sepc : "<<_coarseModel_designSpecification.format(CommaInitFmt)<<std::endl;
 
     /**
      * now, the difference matrices for the MM mapping as well as the design specification for the coarse
@@ -539,7 +542,28 @@ void MMPostProcessing::performPostProcessing(
      * the fine and the coarse model has to be evaluated for the new solution x_star.
      * Hence, x_star needs to be copied to the fine model input values.
      */
+
+    for(int id : _fineDataIDs){
+      auto& v_f = *(cplData[id]->values);
+      std::cout<<"coarse_data_id_before["<<id<<"]"<<v_f.norm()<<std::endl;
+    }
+
+    for (int id : _coarseDataIDs) {
+      auto& v_c = *(cplData[id]->values);
+      std::cout<<"coarse_data_id_before["<<id<<"]"<<v_c.norm()<<std::endl;
+    }
+
     registerSolutionCoarseModelOptimization(cplData);
+
+    for(int id : _fineDataIDs){
+      auto& v_f = *(cplData[id]->values);
+      std::cout<<"coarse_data_id_after["<<id<<"]"<<v_f.norm()<<std::endl;
+    }
+
+    for (int id : _coarseDataIDs) {
+      auto& v_c = *(cplData[id]->values);
+      std::cout<<"coarse_data_id_after["<<id<<"]"<<v_c.norm()<<std::endl;
+    }
 
     _iterCoarseModelOpt++;
     // if coarse model optimization exceeds max iteration count, print warning and break coarse model optimization iteration
@@ -558,6 +582,12 @@ void MMPostProcessing::performPostProcessing(
           "This is most likely due to the fact that the coarse model failed to converge within "<<
           "the given maximum number of allowed iterations: "<<_maxIterCoarseModelOpt);
     }
+  }
+
+
+  for(int id : _fineDataIDs){
+    auto& v_f = *(cplData[id]->values);
+    std::cout<<"coarse_data_id_endofMEthod["<<id<<"]"<<v_f.norm()<<std::endl;
   }
 
   preciceDebug("  * Manifold Mapping Iterations: "<<its);
@@ -591,6 +621,10 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 
   if (getLSSystemCols() > 0)
   {
+
+    //std::cout<<"matrix C: \n"<<_matrixC<<std::endl;
+    //std::cout<<"matrix F: \n"<<_matrixF<<std::endl;
+
     // Calculate singular value decomposition with Eigen
     Eigen::JacobiSVD < Eigen::MatrixXd > svd_C(_matrixC, Eigen::ComputeThinU | Eigen::ComputeThinV);
     Eigen::JacobiSVD < Eigen::MatrixXd > svd_F(_matrixF, Eigen::ComputeThinU | Eigen::ComputeThinV);

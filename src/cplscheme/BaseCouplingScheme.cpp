@@ -728,12 +728,13 @@ void BaseCouplingScheme::setupConvergenceMeasures()
   }
 }
 
-void BaseCouplingScheme::newConvergenceMeasurements()
+void BaseCouplingScheme::newConvergenceMeasurements(int level)
 {
   preciceTrace("newConvergenceMeasurements()");
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.measure.get() != nullptr);
-    convMeasure.measure->newMeasurementSeries();
+    if(convMeasure.level == level)
+      convMeasure.measure->newMeasurementSeries();
   }
 }
 

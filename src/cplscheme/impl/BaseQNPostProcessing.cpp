@@ -309,6 +309,12 @@ void BaseQNPostProcessing::updateDifferenceMatrices
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
+      // ### extremely dirty HACK, REMOVE ###
+      std::cout<<"norm deltaR [id1]: "<<deltaR.segment(0,deltaR.size()/2.).norm()<<std::endl;
+      std::cout<<"norm deltaR [id2]: "<<deltaR.segment(deltaR.size()/2.,deltaR.size()/2.).norm()<<std::endl;
+      //if(deltaR.segment(0,cplData[0]->values->size()).norm() <= 1e-13 || deltaR.segment(cplData[0]->values->size(),cplData[1]->values->size()).norm() <= 1e-13)
+      //    return;
+
       Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
       _debugOut<<"col V  : "<<deltaR.format(CommaInitFmt)<<std::endl;
       _debugOut<<"col W  : "<<deltaXTilde.format(CommaInitFmt)<<std::endl;
@@ -496,7 +502,7 @@ void BaseQNPostProcessing::performPostProcessing
     /**
      * apply quasiNewton update
      */
-    _values = _oldValues + xUpdate + 0.5*_residuals;  // = x^k + delta_x + r^k - q^k
+    _values = _oldValues + xUpdate + 1.*_residuals;  // = x^k + delta_x + r^k - q^k
     //_values = _oldValues + xUpdate + _residuals;  // = x^k + delta_x + r^k - q^k
 
 

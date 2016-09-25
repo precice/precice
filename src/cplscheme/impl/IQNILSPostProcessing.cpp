@@ -225,13 +225,17 @@ void IQNILSPostProcessing::computeQNUpdate
 	}
 	e_qrsolve.stop();
 
+
+	// REOMVE!!
+	c = _matrixV.householderQr().solve(-_residuals);
+
 	preciceDebug("   Apply Newton factors");
 
 	Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
 	_debugOut<<"factors c: "<<c.format(CommaInitFmt)<<std::endl;
 
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
-	xUpdate = ((_matrixW-_matrixV) + 0.5*_matrixV) * c;
+	xUpdate = ((_matrixW-_matrixV) + 1.*_matrixV) * c;
 	//xUpdate = _matrixW * c;
 
 

@@ -451,7 +451,7 @@ protected:
 
   void setupConvergenceMeasures();
 
-  void newConvergenceMeasurements();
+  void newConvergenceMeasurements(int level = 0);
 
   bool measureConvergence(
       std::map<int, Eigen::VectorXd>& designSpecification);

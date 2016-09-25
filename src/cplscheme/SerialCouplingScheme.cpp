@@ -251,6 +251,9 @@ void SerialCouplingScheme::advance()
           if(convergenceCoarseOptimization){
             _isCoarseModelOptimizationActive = false;
             doOnlySolverEvaluation = true;
+
+            // reset the convergence measures for the coarse model optimization
+            newConvergenceMeasurements(1);
           }else{
             _isCoarseModelOptimizationActive = true;
           }
