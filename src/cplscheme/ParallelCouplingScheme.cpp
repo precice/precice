@@ -243,11 +243,9 @@ void ParallelCouplingScheme::implicitAdvance()
 
       // REMOVE
                {
-                 auto fineIDs = getPostProcessing()->getDataIDs();
-                 auto& allData = getAllData();
-                 for(auto& fineID : fineIDs) {
-                  std::cout<<"data_before:receive["<<fineID<<"]: "<<(*allData.at( fineID )->values).norm()<<std::endl;
-                }}
+                 std::cout<<"data_before:receive["<<4<<"]: "<<(*getReceiveData( 4 )->values).norm()<<std::endl;
+                 std::cout<<"data_before:receive["<<5<<"]: "<<(*getSendData( 5 )->values).norm()<<std::endl;
+               }
 
 
       receiveData(getM2N());
@@ -256,11 +254,9 @@ void ParallelCouplingScheme::implicitAdvance()
 
       // REMOVE
                {
-        auto fineIDs = getPostProcessing()->getDataIDs();
-                         auto& allData = getAllData();
-                         for(auto& fineID : fineIDs) {
-                          std::cout<<"data_after:receive["<<fineID<<"]: "<<(*allData.at( fineID )->values).norm()<<std::endl;
-                }}
+                std::cout<<"data_after:receive["<<4<<"]: "<<(*getReceiveData( 4 )->values).norm()<<std::endl;
+                std::cout<<"data_after:receive["<<5<<"]: "<<(*getSendData( 5 )->values).norm()<<std::endl;
+               }
 
     }
     else { // second participant
