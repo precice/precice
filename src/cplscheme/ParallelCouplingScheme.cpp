@@ -249,26 +249,9 @@ void ParallelCouplingScheme::implicitAdvance()
       auto& allData = getAllData();
       Eigen::VectorXd storeOldInput = (*allData.at( fine_IDs[1] )->values);
 
-    // REMOVE
-          {
-            auto fineIDs = getPostProcessing()->getDataIDs();
-            auto& allData = getAllData();
-            for(auto& fineID : fineIDs) {
-             std::cout<<"data_before:receive["<<fineID<<"]: "<<(*allData.at( fineID )->values).norm()<<std::endl;
-           }}
-
       getM2N()->startReceivePackage(0);
       receiveData(getM2N());
       getM2N()->finishReceivePackage();
-
-      // REMOVE
-      {
-                auto fineIDs = getPostProcessing()->getDataIDs();
-
-                 auto& allData = getAllData();
-                 for(auto& fineID : fineIDs) {
-                  std::cout<<"data_after:receive["<<fineID<<"]: "<<(*allData.at( fineID )->values).norm()<<std::endl;
-                }}
 
       // get the current design specifications from the post processing (for convergence measure)
       std::map<int, Eigen::VectorXd> designSpecifications;
@@ -293,6 +276,9 @@ void ParallelCouplingScheme::implicitAdvance()
           doOnlySolverEvaluation = true;
 
           // write back the correct input for the fine model as registered in the MM, as this was overwritten by receive
+          // the fine model evaluation needs the same input as the coarse model, just before convegrence
+          // precice's send and receive of data automatically overrides the data, as there is different data for the respective
+          // id present at the first participants side.
           (*allData.at( fine_IDs[1] )->values) = storeOldInput;
 
           // reset the convergence measures for the coarse model optimization
@@ -333,15 +319,6 @@ void ParallelCouplingScheme::implicitAdvance()
           getPostProcessing()->performPostProcessing(getAllData());
         }
 
-        // REMOVE
-        {
-             auto fineIDs = getPostProcessing()->getDataIDs();
-              auto& allData = getAllData();
-              for(auto& fineID : fineIDs) {
-               std::cout<<"coarse_data_id_CS_afterPP["<<fineID<<"]: "<<(*allData.at( fineID )->values).norm()<<std::endl;
-             }
-        }
-
         // extrapolate new input data for the solver evaluation in time.
         if (convergence && (getExtrapolationOrder() > 0)) {
           extrapolateData(getAllData()); // Also stores data
@@ -358,14 +335,6 @@ void ParallelCouplingScheme::implicitAdvance()
             }
           }
         }
-        // REMOVE
-        {
-              auto fineIDs = getPostProcessing()->getDataIDs();
-               auto& allData = getAllData();
-               for(auto& fineID : fineIDs) {
-                std::cout<<"coarse_data_id_CS_IF1["<<fineID<<"]: "<<(*allData.at( fineID )->values).norm()<<std::endl;
-              }
-        }
       }else {
 
        // if the coarse model problem converged within the first iteration, i.e., no post-processing at all
@@ -380,16 +349,6 @@ void ParallelCouplingScheme::implicitAdvance()
            *allData.at( fineID )->values = allData.at( fineID+fineIDs.size() )->oldValues.col(0);
          }
        }
-
-       // REMOVE
-       {
-             auto fineIDs = getPostProcessing()->getDataIDs();
-              auto& allData = getAllData();
-              for(auto& fineID : fineIDs) {
-               std::cout<<"coarse_data_id_CS_IF2["<<fineID<<"]: "<<(*allData.at( fineID )->values).norm()<<std::endl;
-             }
-       }
-
      }
 
       // send convergence

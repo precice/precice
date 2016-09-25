@@ -543,27 +543,7 @@ void MMPostProcessing::performPostProcessing(
      * Hence, x_star needs to be copied to the fine model input values.
      */
 
-    for(int id : _fineDataIDs){
-      auto& v_f = *(cplData[id]->values);
-      std::cout<<"coarse_data_id_before["<<id<<"]"<<v_f.norm()<<std::endl;
-    }
-
-    for (int id : _coarseDataIDs) {
-      auto& v_c = *(cplData[id]->values);
-      std::cout<<"coarse_data_id_before["<<id<<"]"<<v_c.norm()<<std::endl;
-    }
-
     registerSolutionCoarseModelOptimization(cplData);
-
-    for(int id : _fineDataIDs){
-      auto& v_f = *(cplData[id]->values);
-      std::cout<<"coarse_data_id_after["<<id<<"]"<<v_f.norm()<<std::endl;
-    }
-
-    for (int id : _coarseDataIDs) {
-      auto& v_c = *(cplData[id]->values);
-      std::cout<<"coarse_data_id_after["<<id<<"]"<<v_c.norm()<<std::endl;
-    }
 
     _iterCoarseModelOpt++;
     // if coarse model optimization exceeds max iteration count, print warning and break coarse model optimization iteration
