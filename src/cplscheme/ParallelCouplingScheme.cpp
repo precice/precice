@@ -239,29 +239,12 @@ void ParallelCouplingScheme::implicitAdvance()
       if (convergence) {
         timestepCompleted();
       }
-
-
-      // REMOVE
-               {
-                 std::cout<<"data_before:receive["<<4<<"]: "<<(*getReceiveData( 4 )->values).norm()<<std::endl;
-                 std::cout<<"data_before:receive["<<5<<"]: "<<(*getSendData( 5 )->values).norm()<<std::endl;
-               }
-
-
       receiveData(getM2N());
       getM2N()->finishReceivePackage();
-
-
-      // REMOVE
-               {
-                std::cout<<"data_after:receive["<<4<<"]: "<<(*getReceiveData( 4 )->values).norm()<<std::endl;
-                std::cout<<"data_after:receive["<<5<<"]: "<<(*getSendData( 5 )->values).norm()<<std::endl;
-               }
-
     }
     else { // second participant
 
-
+      // DIRTY HACK for manifold mapping
       auto fine_IDs = getPostProcessing()->getDataIDs();
       auto& allData = getAllData();
       Eigen::VectorXd storeOldInput = (*allData.at( fine_IDs[1] )->values);
