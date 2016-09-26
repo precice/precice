@@ -499,7 +499,9 @@ double SolverInterfaceImpl:: advance
     }
     performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
 
-    mapReadData();
+    if (_couplingScheme->hasDataBeenExchanged()){
+      mapReadData();
+    }
 
     preciceInfo("advance()", _couplingScheme->printCouplingState());
 
