@@ -227,7 +227,7 @@ void IQNILSPostProcessing::computeQNUpdate
 
 
 	// REOMVE!!
-	//c = _matrixV.householderQr().solve(-_residuals);
+	c = _matrixV.householderQr().solve(-_residuals);
 
 	preciceDebug("   Apply Newton factors");
 
