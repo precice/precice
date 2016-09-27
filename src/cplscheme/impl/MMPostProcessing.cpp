@@ -700,10 +700,10 @@ void MMPostProcessing::concatenateCouplingData
     }
     offset += size;
     k++;
-  }
-  // REMOVE
-  if(not(*_isCoarseModelOptimizationActive)){
-    std::cout<<"outputCoarseModel: "<<_outputCoarseModel.norm()<<std::endl;
+    // REMOVE
+    if(not(*_isCoarseModelOptimizationActive)){
+      std::cout<<"outputCoarseModel id["<<_coarseDataIDs.at(k)<<"]: "<<coarseValues.norm()<<std::endl;
+    }
   }
 }
 
