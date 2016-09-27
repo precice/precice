@@ -701,6 +701,10 @@ void MMPostProcessing::concatenateCouplingData
     offset += size;
     k++;
   }
+  // REMOVE
+  if(not(*_isCoarseModelOptimizationActive)){
+    std::cout<<"outputCoarseModel: "<<_outputCoarseModel.norm()<<std::endl;
+  }
 }
 
 
@@ -752,6 +756,23 @@ void MMPostProcessing::iterationsConverged
   // convergence was achieved
   concatenateCouplingData(cplData);
   updateDifferenceMatrices(cplData);
+
+
+  /**
+   *  register the fine model output (design specification = 0) as new coarse model input for the next
+   *  evaluation of the coarse model solvers, and also that extrapolation works just as it should
+   */
+  for (int i; i < _fineDataIDs.size(); i++) {
+    int fineID = _fineDataIDs[i];
+    int coarseID = _coarseDataIDs[i];
+    int size = cplData[fineID]->values->size();
+    assertion(size == cplData[coarseID]->values->size(), size, cplData[coarseID]->values->size());
+
+    // register fine model output to coarse model output and fine model output to coarse model input
+    *(cplData[coarseID]->values)           = *(cplData[fineID]->values);
+    *(cplData[coarseID]->oldValues.col(0)) = *(cplData[fineID]->values);
+  }
+
 
   /**
    * Difference matrices and Jacobian updated, MM cycle completed, start with coarse model
