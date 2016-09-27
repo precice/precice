@@ -79,10 +79,13 @@ private:
 
   void validateVector(DataValues& data, DataValues& compare);
 
+  void testMultilpleMeshes ();
+
   DataValues _data;
   DataValues _res;
   DataValues _compareDataRes;
   DataValues _compareDataResSum;
+  DataValues _compareDataResSum2;
   DataValues _compareDataValue;
   DataValues _compareDataConstant;
 

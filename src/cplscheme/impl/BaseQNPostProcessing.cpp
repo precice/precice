@@ -125,11 +125,13 @@ void BaseQNPostProcessing::initialize(
   */
 
   size_t entries = 0;
+  std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   for (auto & elem : _dataIDs) {
     preciceCheck(utils::contained(elem, cplData), "initialize()",
         "Data with ID " << elem << " is not contained in data " "given at initialization!");
     entries += cplData[elem]->values->size();
+    subVectorSizes.push_back(cplData[elem]->values->size());
   }
 
   _matrixCols.push_front(0);
@@ -211,7 +213,7 @@ void BaseQNPostProcessing::initialize(
     }
   }
 
-  _preconditioner->initialize(entries);
+  _preconditioner->initialize(subVectorSizes);
 }
 
 

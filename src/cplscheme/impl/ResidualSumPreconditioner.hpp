@@ -19,12 +19,13 @@ class ResidualSumPreconditioner : public Preconditioner
 public:
 
   ResidualSumPreconditioner(
-      std::vector<int> dimensions,
       int maxNonConstTimesteps);
   /**
    * @brief Destructor, empty.
    */
   virtual ~ResidualSumPreconditioner() {}
+
+  virtual void initialize(std::vector<size_t>& svs);
 
 private:
 

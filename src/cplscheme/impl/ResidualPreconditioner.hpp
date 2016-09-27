@@ -19,7 +19,6 @@ class ResidualPreconditioner : public Preconditioner
 public:
 
   ResidualPreconditioner(
-      std::vector<int> dimensions,
       int maxNonConstTimesteps);
 
   /**

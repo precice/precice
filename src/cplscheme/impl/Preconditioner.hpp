@@ -33,13 +33,11 @@ public:
   typedef Eigen::MatrixXd EigenMatrix;
 
   Preconditioner(
-      std::vector<int> dimensions,
       int maxNonConstTimesteps)
   :
     _weights(),
     _invWeights(),
-    _dimensions(dimensions),
-    _sizeOfSubVector(-1),
+    _subVectorSizes(),
     _maxNonConstTimesteps(maxNonConstTimesteps),
     _nbNonConstTimesteps(0),
     _requireNewQR(false),
@@ -57,20 +55,19 @@ public:
    * @brief initialize the preconditioner
    * @param size of the pp system (e.g. rows of V)
    */
-  virtual void initialize(int N){
-    preciceTrace("initialize()", N);
+  virtual void initialize(std::vector<size_t>& svs){
+    TRACE();
 
     assertion(_weights.size()==0);
+    _subVectorSizes = svs;
+
+    size_t N = 0;
+    for(auto elem : _subVectorSizes){
+      N += elem;
+    }
     // cannot do this already in the constructor as the size is unknown at that point
     _weights.resize(N, 1.0);
     _invWeights.resize(N, 1.0);
-
-    int numberOfParts = 0;
-    for (int dim : _dimensions){
-      numberOfParts += dim;
-    }
-    _sizeOfSubVector = N / numberOfParts;
-    assertion(numberOfParts * _sizeOfSubVector == N);
   }
 
   /**
@@ -292,11 +289,8 @@ protected:
   //@brief inverse weights (for efficiency reasons)
   std::vector<double> _invWeights;
 
-  //@brief dimension (scalar or vectorial) of each sub-vector
-  std::vector<int> _dimensions;
-
-  //@brief size of a scalar sub-vector (aka number of vertices)
-  int _sizeOfSubVector;
+  //@brief sizes of each sub-vector, i.e. each coupling data
+  std::vector<size_t> _subVectorSizes;
 
   /** @brief maximum number of non-const time steps, i.e., after this number of time steps,
    *  the preconditioner is freezed with the current weights and becomes a constant preconditioner

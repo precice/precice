@@ -312,16 +312,6 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 
     //create preconditioner
     if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_MVQN ||  callingTag.getName() == VALUE_ManifoldMapping){
-      std::vector<int> dims;
-      for (int id : _config.dataIDs){
-        for(mesh::PtrMesh mesh : _meshConfig->meshes() ) {
-          for (mesh::PtrData data : mesh->data() ) {
-            if(data->getID() == id){
-              dims.push_back(data->getDimensions());
-            }
-          }
-        }
-      }
 
       // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time steps is limited by the chunksize
       if(callingTag.getName() == VALUE_MVQN && _config.imvjRestartType > 0)
@@ -334,16 +324,16 @@ void PostProcessingConfiguration:: xmlEndTagCallback
         for (int id : _config.dataIDs){
           factors.push_back(_config.scalings[id]);
         }
-        _preconditioner = impl::PtrPreconditioner(new impl::ConstantPreconditioner(dims, factors));
+        _preconditioner = impl::PtrPreconditioner(new impl::ConstantPreconditioner(factors));
       }
       else if(_config.preconditionerType == VALUE_VALUE_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ValuePreconditioner(dims, _config.precond_nbNonConstTSteps));
+        _preconditioner = impl::PtrPreconditioner (new impl::ValuePreconditioner(_config.precond_nbNonConstTSteps));
       }
       else if(_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ResidualPreconditioner(dims, _config.precond_nbNonConstTSteps));
+        _preconditioner = impl::PtrPreconditioner (new impl::ResidualPreconditioner(_config.precond_nbNonConstTSteps));
       }
       else if(_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(dims, _config.precond_nbNonConstTSteps));
+        _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(_config.precond_nbNonConstTSteps));
       }
       else{
         // no preconditioner defined
@@ -351,7 +341,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
         for (int id = 0; id < (int)_config.dataIDs.size(); ++id) {
           factors.push_back(1.0);
         }
-        _preconditioner = impl::PtrPreconditioner (new impl::ConstantPreconditioner(dims, factors));
+        _preconditioner = impl::PtrPreconditioner (new impl::ConstantPreconditioner(factors));
       }
     }
 

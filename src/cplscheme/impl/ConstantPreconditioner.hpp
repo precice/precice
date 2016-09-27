@@ -18,7 +18,6 @@ class ConstantPreconditioner : public Preconditioner
 public:
 
   ConstantPreconditioner(
-      std::vector<int> dimensions,
       std::vector<double> factors
   );
   /**
@@ -26,7 +25,7 @@ public:
    */
   virtual ~ConstantPreconditioner() {}
 
-  virtual void initialize(int N);
+  virtual void initialize(std::vector<size_t>& svs);
 
 private:
 
