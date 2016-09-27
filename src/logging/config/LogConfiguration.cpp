@@ -64,6 +64,7 @@ void LogConfiguration::xmlTagCallback
     config.setOption("output", tag.getStringAttributeValue("output"));
     config.setOption("filter", tag.getStringAttributeValue("filter"));
     config.setOption("format", tag.getStringAttributeValue("format"));
+    config.setOption("enabled", tag.getStringAttributeValue("enabled"));
     _logconfig.push_back(config);
   }
 }
