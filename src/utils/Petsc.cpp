@@ -59,10 +59,10 @@ void openViewer(PetscViewer & viewer, std::string filename, VIEWERFORMAT format)
 {
   PetscErrorCode ierr = 0;
   if (format == ASCII) {
-    PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename.c_str(), &viewer); CHKERRV(ierr);
+    ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename.c_str(), &viewer); CHKERRV(ierr);
   }
   else if (format == BINARY) {
-    PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_WRITE, &viewer); CHKERRV(ierr);
+    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_WRITE, &viewer); CHKERRV(ierr);
   }
 }
 
@@ -379,7 +379,7 @@ void Matrix::write(std::string filename, VIEWERFORMAT format)
   PetscErrorCode ierr = 0;
   PetscViewer viewer;
   openViewer(viewer, filename, format);
-  MatView(matrix, viewer); CHKERRV(ierr);
+  ierr = MatView(matrix, viewer); CHKERRV(ierr);
   PetscViewerDestroy(&viewer);
 }
 
@@ -388,7 +388,7 @@ void Matrix::read(std::string filename, VIEWERFORMAT format)
    PetscErrorCode ierr = 0;
    PetscViewer viewer;
    openViewer(viewer, filename, format);
-   MatLoad(matrix, viewer); CHKERRV(ierr); CHKERRV(ierr);
+   ierr = MatLoad(matrix, viewer); CHKERRV(ierr);
    PetscViewerDestroy(&viewer);
 }
 
