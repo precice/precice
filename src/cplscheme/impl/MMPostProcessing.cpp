@@ -357,9 +357,6 @@ void MMPostProcessing::updateDifferenceMatrices(
     Eigen::VectorXd colF = _fineResiduals - _fineOldResiduals;
     Eigen::VectorXd colC = _coarseResiduals - _coarseOldResiduals;
 
-    std::cout<<"_fineResiduals : \n"<<_fineResiduals<<std::endl;
-    std::cout<<"_fineOldResiduals : \n"<<_fineOldResiduals<<std::endl;
-
     bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
     bool overdetermined = getLSSystemCols() <= getLSSystemRows();
     if (not columnLimitReached && overdetermined) {
@@ -488,10 +485,6 @@ void MMPostProcessing::performPostProcessing(
     // The coarse model design specification is computed with scaled data and needs to be re-scaled to normal.
     // It is to be scaled again in the coarse model optimization scheme.
     _preconditioner->revert(_coarseModel_designSpecification);
-    //unscale(_coarseModel_designSpecification, cplData);
-
-    Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-    std::cout<<"coarse model design sepc : "<<_coarseModel_designSpecification.format(CommaInitFmt)<<std::endl;
 
     /**
      * now, the difference matrices for the MM mapping as well as the design specification for the coarse
@@ -542,8 +535,8 @@ void MMPostProcessing::performPostProcessing(
      * the fine and the coarse model has to be evaluated for the new solution x_star.
      * Hence, x_star needs to be copied to the fine model input values.
      */
-
-    registerSolutionCoarseModelOptimization(cplData);
+    if(_iterCoarseModelOpt > 0)
+      registerSolutionCoarseModelOptimization(cplData);
 
     _iterCoarseModelOpt++;
     // if coarse model optimization exceeds max iteration count, print warning and break coarse model optimization iteration
@@ -564,11 +557,6 @@ void MMPostProcessing::performPostProcessing(
     }
   }
 
-
-  for(int id : _fineDataIDs){
-    auto& v_f = *(cplData[id]->values);
-    std::cout<<"coarse_data_id_endofMEthod["<<id<<"]"<<v_f.norm()<<std::endl;
-  }
 
   preciceDebug("  * Manifold Mapping Iterations: "<<its);
   preciceDebug("  * Coarse Model Optimization Iterations: "<<_iterCoarseModelOpt);
@@ -601,9 +589,6 @@ void MMPostProcessing::computeCoarseModelDesignSpecifiaction()
 
   if (getLSSystemCols() > 0)
   {
-
-    //std::cout<<"matrix C: \n"<<_matrixC<<std::endl;
-    //std::cout<<"matrix F: \n"<<_matrixF<<std::endl;
 
     // Calculate singular value decomposition with Eigen
     Eigen::JacobiSVD < Eigen::MatrixXd > svd_C(_matrixC, Eigen::ComputeThinU | Eigen::ComputeThinV);
@@ -700,10 +685,6 @@ void MMPostProcessing::concatenateCouplingData
     }
     offset += size;
     k++;
-    // REMOVE
-    if(not(*_isCoarseModelOptimizationActive)){
-      std::cout<<"outputCoarseModel id["<<_coarseDataIDs.at(k)<<"]: "<<coarseValues.norm()<<std::endl;
-    }
   }
 }
 
@@ -762,17 +743,15 @@ void MMPostProcessing::iterationsConverged
    *  register the fine model output (design specification = 0) as new coarse model input for the next
    *  evaluation of the coarse model solvers, and also that extrapolation works just as it should
    */
-  for (int i; i < _fineDataIDs.size(); i++) {
+  for (int i = 0; i < _fineDataIDs.size(); i++) {
     int fineID = _fineDataIDs[i];
     int coarseID = _coarseDataIDs[i];
-    int size = cplData[fineID]->values->size();
-    assertion(size == cplData[coarseID]->values->size(), size, cplData[coarseID]->values->size());
+    assertion(cplData[fineID]->values->size() == cplData[coarseID]->values->size(), cplData[fineID]->values->size(), cplData[coarseID]->values->size());
 
     // register fine model output to coarse model output and fine model output to coarse model input
-    *(cplData[coarseID]->values)           = *(cplData[fineID]->values);
-    *(cplData[coarseID]->oldValues.col(0)) = *(cplData[fineID]->values);
+    *(cplData[coarseID]->values)          = *(cplData[fineID]->values);
+    (cplData[coarseID]->oldValues.col(0)) = *(cplData[fineID]->values);
   }
-
 
   /**
    * Difference matrices and Jacobian updated, MM cycle completed, start with coarse model
