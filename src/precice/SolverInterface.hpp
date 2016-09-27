@@ -98,14 +98,15 @@ public:
   double initialize();
 
   /**
-   * @brief Initializes coupling data of an implicit coupling scheme.
+   * @brief Initializes coupling data.
    *
    * When in a coupled simulation an implicit coupling scheme is used, the
    * starting values for the coupling data are assumed to be zero by default. If
    * this is not the desired behavior, this method can be used to specify values
    * different from zero using the write data methods. Only the first participant
    * of the coupled simulation has to call this method, the second participant
-   * receives the values on calling initialize().
+   * receives the values on calling initialize(). For parallel coupling, values in
+   * both directions are exchanged. Both participants need to call initializeData then.
    *
    * Preconditions:
    * - initialize() has been called successfully.
