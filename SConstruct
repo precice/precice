@@ -277,6 +277,7 @@ bin = env.Program (
     target = buildpath + '/binprecice',
     source = [sourcesPreCICEMain]
 )
+env.Alias("bin", bin)
 
 # Creates a symlink that always points to the latest build
 symlink = env.Command(
