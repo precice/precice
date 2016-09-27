@@ -244,15 +244,6 @@ void ParallelCouplingScheme::implicitAdvance()
     }
     else { // second participant
 
-      //REMOVE PRINT OUT
-      {
-        auto fineIDs = getPostProcessing()->getDataIDs();
-        auto& allData = getAllData();
-        for(auto& fineID : fineIDs) {
-          std::cout<<"before receive: cplData id["<<fineID+fineIDs.size()<<"]: "<<(*allData.at( fineID+fineIDs.size() )->values).norm()<<std::endl;
-        }
-      }
-
       // DIRTY HACK for manifold mapping
       auto fine_IDs = getPostProcessing()->getDataIDs();
       auto& allData = getAllData();
@@ -261,15 +252,6 @@ void ParallelCouplingScheme::implicitAdvance()
       getM2N()->startReceivePackage(0);
       receiveData(getM2N());
       getM2N()->finishReceivePackage();
-
-      //REMOVE PRINT OUT
-      {
-        auto fineIDs = getPostProcessing()->getDataIDs();
-        auto& allData = getAllData();
-        for(auto& fineID : fineIDs) {
-          std::cout<<"after receive: cplData id["<<fineID+fineIDs.size()<<"]: "<<(*allData.at( fineID+fineIDs.size() )->values).norm()<<std::endl;
-        }
-      }
 
       // get the current design specifications from the post processing (for convergence measure)
       std::map<int, Eigen::VectorXd> designSpecifications;
@@ -292,8 +274,6 @@ void ParallelCouplingScheme::implicitAdvance()
         if(convergenceCoarseOptimization){
           _isCoarseModelOptimizationActive = false;
           doOnlySolverEvaluation = true;
-
-          std::cout<<"COARSE MODEL CONVERGED, DO ONLY SOLVER EVALUATION:"<<std::endl;
 
           // write back the correct input for the fine model as registered in the MM, as this was overwritten by receive
           // the fine model evaluation needs the same input as the coarse model, just before convegrence

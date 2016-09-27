@@ -83,8 +83,8 @@ BaseQNPostProcessing::BaseQNPostProcessing
   tSteps(0),
   _nbDelCols(0),
   _infostringstream(std::ostringstream::ate),
-  _infostream(),
-  _debugOut()
+  _infostream()
+  //_debugOut()
 {
   preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
       "BaseQNPostProcessing()",
@@ -116,24 +116,7 @@ void BaseQNPostProcessing::initialize(
   preciceTrace1("initialize()", cplData.size());
 
 
-  std::stringstream sss;
-  sss<<"debugOutput-rank-"<<utils::MasterSlave::_rank;
-  _debugOut.open(sss.str(), std::ios_base::out);
-  _debugOut << std::setprecision(16);
-
-  /*
-  Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-
-  _debugOut<<"initialization:"<<std::endl;
-  for (int id : _dataIDs) {
-      const auto& values = *cplData[id]->values;
-      const auto& oldValues = cplData[id]->oldValues.col(0);
-
-      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<"     values: "<<values.format(CommaInitFmt)<<std::endl;
-      _debugOut<<"id: "<<id<<" dim: "<<cplData[id]->dimension<<" old values: "<<oldValues.format(CommaInitFmt)<<std::endl;
-    }
-  _debugOut<<"\n";
- */
+  //std::stringstream sss; sss<<"debugOutput-rank-"<<utils::MasterSlave::_rank; _debugOut.open(sss.str(), std::ios_base::out); _debugOut << std::setprecision(16);
 
   size_t entries = 0;
 
@@ -309,16 +292,6 @@ void BaseQNPostProcessing::updateDifferenceMatrices
       Eigen::VectorXd deltaXTilde = _values;
       deltaXTilde -= _oldXTilde;
 
-      // ### extremely dirty HACK, REMOVE ###
-      std::cout<<"norm deltaR [id1]: "<<deltaR.segment(0,deltaR.size()/2.).norm()<<std::endl;
-      std::cout<<"norm deltaR [id2]: "<<deltaR.segment(deltaR.size()/2.,deltaR.size()/2.).norm()<<std::endl;
-      //if(deltaR.segment(0,cplData[0]->values->size()).norm() <= 1e-13 || deltaR.segment(cplData[0]->values->size(),cplData[1]->values->size()).norm() <= 1e-13)
-      //    return;
-
-      Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-      _debugOut<<"col V  : "<<deltaR.format(CommaInitFmt)<<std::endl;
-      _debugOut<<"col W  : "<<deltaXTilde.format(CommaInitFmt)<<std::endl;
-
       bool columnLimitReached = getLSSystemCols() == _maxIterationsUsed;
       bool overdetermined = getLSSystemCols() <= getLSSystemRows();
       if (not columnLimitReached && overdetermined) {
@@ -351,7 +324,6 @@ void BaseQNPostProcessing::updateDifferenceMatrices
           _matrixCols.pop_back();
         }
       }
-      _debugOut<<" \n ### cols V: "<<_matrixV.cols()<<" ###\n"<<std::endl;
     }
     _oldResiduals = _residuals;   // Store residuals
     _oldXTilde = _values;   // Store x_tilde
@@ -373,49 +345,13 @@ void BaseQNPostProcessing::performPostProcessing
   preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
   Event e("Base-QN_performPostProcessing()", true, true); // time measurement, barrier
 
-  using namespace tarch::la;
-  assertion(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size());
-  assertion(_values.size() == _oldXTilde.size(),_values.size(), _oldXTilde.size());
-  assertion(_oldValues.size() == _oldXTilde.size(),_oldValues.size(), _oldXTilde.size());
-  assertion(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
-
-/*
-  Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-  _debugOut<<"iteration: "<<its<<" tStep: "<<tSteps<<"   cplData entry:"<<std::endl;
-  for (int id : _dataIDs) {
-      const auto& values = *cplData[id]->values;
-      const auto& oldValues = cplData[id]->oldValues.col(0);
-
-      _debugOut<<"id: "<<id<<"     values: "<<values.format(CommaInitFmt)<<std::endl;
-      //_debugOut<<"id: "<<id<<"     values: ["<<values(0)<<", "<<values(values.size()/2-1)<<" ][ "<< values(values.size()/2)<<", "<<values(values.size()-1)<<"]" <<std::endl;
-      Eigen::VectorXd s1 = values.head(values.size()/2);
-      Eigen::VectorXd s2 = values.tail(values.size()/2);
-      //_debugOut<<"   displ: "<<s1.norm()<<" press: "<<s2.norm()<<std::endl;
-      _debugOut<<"id: "<<id<<" old values: "<<oldValues.format(CommaInitFmt)<<std::endl;
-      //_debugOut<<"id: "<<id<<"     values: ["<<oldValues(0)<<", "<<oldValues(oldValues.size()/2-1)<<" ][ "<< oldValues(oldValues.size()/2)<<", "<<oldValues(oldValues.size()-1)<<"]" <<std::endl;
-    }
-  _debugOut<<"\n";
-*/
+  assertion(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size()); assertion(_values.size() == _oldXTilde.size(),_values.size(), _oldXTilde.size());
+  assertion(_oldValues.size() == _oldXTilde.size(),_oldValues.size(), _oldXTilde.size());       assertion(_residuals.size() == _oldXTilde.size(),_residuals.size(), _oldXTilde.size());
 
   // assume data structures associated with the LS system can be updated easily.
 
   // scale data values (and secondary data values)
   concatenateCouplingData(cplData);
-
-
-  Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-  _debugOut<<"iteration: "<<its<<" tStep: "<<tSteps<<"   cplData entry:"<<std::endl;
-
-  _debugOut<<"start iteration: "<<std::endl;
-  _debugOut<<"     values: "<<_values.format(CommaInitFmt)<<std::endl;
-  //_debugOut<<"id: "<<id<<"     values: ["<<values(0)<<", "<<values(values.size()/2-1)<<" ][ "<< values(values.size()/2)<<", "<<values(values.size()-1)<<"]" <<std::endl;
-  Eigen::VectorXd s4 = _values.head(_values.size()/2);
-  Eigen::VectorXd s5 = _values.tail(_values.size()/2);
-  //_debugOut<<"   displ: "<<s4.norm()<<" press: "<<s5.norm()<<std::endl;
-  _debugOut<<" old values: "<<_oldValues.format(CommaInitFmt)<<std::endl;
-  _debugOut<<"designspec : "<<_designSpecification.format(CommaInitFmt)<<std::endl;
-  //_debugOut<<"id: "<<id<<"     values: ["<<oldValues(0)<<", "<<oldValues(oldValues.size()/2-1)<<" ][ "<< oldValues(oldValues.size()/2)<<", "<<oldValues(oldValues.size()-1)<<"]" <<std::endl;
-  _debugOut<<"\n";
 
   /** update the difference matrices V,W  includes:
    * scaling of values
@@ -424,20 +360,17 @@ void BaseQNPostProcessing::performPostProcessing
    */
   updateDifferenceMatrices(cplData);
 
-  _debugOut<<"residuals  : "<<_residuals.format(CommaInitFmt)<<std::endl;
-
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
     preciceDebug("   Performing underrelaxation");
-    _oldXTilde = _values; // Store x tilde
-    _oldResiduals = _residuals; // Store current residual
 
-    // Perform constant relaxation
-    // with residual: x_new = x_old + omega * (res-q)
-    _residuals *= _initialRelaxation;
-    _residuals -= (_designSpecification * _initialRelaxation);
-    _residuals += _oldValues;
-    _values = _residuals;
+    // store output x_tilde and residual
+    _oldXTilde = _values;
+    _oldResiduals = _residuals;
 
+    // Perform constant relaxation with residual: x_new = x_old + omega * (res-q)
+    _values = _oldValues + _initialRelaxation * (_residuals - _designSpecification);
+
+    // secondary data
     computeUnderrelaxationSecondaryData(cplData);
   } else {
     preciceDebug("   Performing quasi-Newton Step");
@@ -537,45 +470,14 @@ void BaseQNPostProcessing::performPostProcessing
       preciceError(__func__, "The coupling iteration in time step "<<tSteps<<
           " failed to converge and NaN values occurred throughout the coupling process. ");
     }
-    _debugOut<<"    xUpdate: "<<xUpdate.format(CommaInitFmt)<<std::endl;
   }
 
-
-  _debugOut<<"finished update: "<<std::endl;
-  _debugOut<<"     values: "<<_values.format(CommaInitFmt)<<std::endl;
-  //_debugOut<<"id: "<<id<<"     values: ["<<values(0)<<", "<<values(values.size()/2-1)<<" ][ "<< values(values.size()/2)<<", "<<values(values.size()-1)<<"]" <<std::endl;
-  Eigen::VectorXd s1 = _values.head(_values.size()/2);
-  Eigen::VectorXd s2 = _values.tail(_values.size()/2);
-  //_debugOut<<"   displ: "<<s1.norm()<<" press: "<<s2.norm()<<std::endl;
-  _debugOut<<" old values: "<<_oldValues.format(CommaInitFmt)<<std::endl;
-//  _debugOut<<"residuals end: "<<_residuals.format(CommaInitFmt)<<std::endl;
-  //_debugOut<<"id: "<<id<<"     values: ["<<oldValues(0)<<", "<<oldValues(oldValues.size()/2-1)<<" ][ "<< oldValues(oldValues.size()/2)<<", "<<oldValues(oldValues.size()-1)<<"]" <<std::endl;
-  _debugOut<<"\n";
-
+  // split coupling data and write back
   splitCouplingData(cplData);
-
-
-  /*
-  _debugOut<<"finished update: "<<std::endl;
-    for (int id : _dataIDs) {
-        const auto& values = *cplData[id]->values;
-        const auto& oldValues = cplData[id]->oldValues.col(0);
-
-        _debugOut<<"id: "<<id<<"     values: "<<values.format(CommaInitFmt)<<std::endl;
-        //_debugOut<<"id: "<<id<<"     values: ["<<values(0)<<", "<<values(values.size()/2-1)<<" ][ "<< values(values.size()/2)<<", "<<values(values.size()-1)<<"]" <<std::endl;
-        Eigen::VectorXd s1 = values.head(values.size()/2);
-        Eigen::VectorXd s2 = values.tail(values.size()/2);
-        //_debugOut<<"   displ: "<<s1.norm()<<" press: "<<s2.norm()<<std::endl;
-        _debugOut<<"id: "<<id<<" old values: "<<oldValues.format(CommaInitFmt)<<std::endl;
-        //_debugOut<<"id: "<<id<<"     values: ["<<oldValues(0)<<", "<<oldValues(oldValues.size()/2-1)<<" ][ "<< oldValues(oldValues.size()/2)<<", "<<oldValues(oldValues.size()-1)<<"]" <<std::endl;
-      }
-    _debugOut<<"\n";
-  */
 
   // number of iterations (usually equals number of columns in LS-system)
   its++;
   _firstIteration = false;
-//  e.stop(true);
 }
 
 
@@ -599,7 +501,6 @@ void BaseQNPostProcessing::applyFilter()
     }
     assertion(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
-//  e.stop(true);
 }
 
 
@@ -634,11 +535,9 @@ void BaseQNPostProcessing::splitCouplingData
   for (int id : _dataIDs) {
     int size = cplData[id]->values->size();
     auto& valuesPart = *(cplData[id]->values);
-    //Eigen::VectorXd& oldValuesPart = cplData[id]->oldValues.col(0);
-    cplData[id]->oldValues.col(0) = _oldValues.segment(offset, size); // TODO: check if this is correct
+    cplData[id]->oldValues.col(0) = _oldValues.segment(offset, size);
     for (int i = 0; i < size; i++) {
       valuesPart(i) = _values(i + offset);
-      //oldValuesPart(i) = _oldValues(i + offset);
     }
     offset += size;
   }

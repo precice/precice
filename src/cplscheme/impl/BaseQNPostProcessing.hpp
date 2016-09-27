@@ -258,7 +258,7 @@ protected:
    /// @brief write some debug/post processing info to file
    std::ostringstream _infostringstream;
    std::fstream _infostream;
-   std::fstream _debugOut;
+   //std::fstream _debugOut;
 
 
    /** @brief: computes number of cols in least squares system, i.e, number of cols in

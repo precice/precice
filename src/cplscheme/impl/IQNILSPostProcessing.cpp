@@ -73,7 +73,6 @@ void IQNILSPostProcessing::initialize
       utils::append(_secondaryOldXTildes[pair.first], (Eigen::VectorXd) Eigen::VectorXd::Zero(secondaryEntries));
     }
   }
-//  e.stop(true);
 }
 
 
@@ -131,7 +130,6 @@ void IQNILSPostProcessing::updateDifferenceMatrices
   
   // call the base method for common update of V, W matrices
   BaseQNPostProcessing::updateDifferenceMatrices(cplData);
-//  e.stop(true);
 }
 
 
@@ -149,12 +147,11 @@ void IQNILSPostProcessing::computeUnderrelaxationSecondaryData
     // Perform underrelaxation with initial relaxation factor for secondary data
     for (int id: _secondaryDataIDs){
       PtrCouplingData data = cplData[id];
-      Eigen::VectorXd& values = *(data->values);
-      values *= _initialRelaxation;                   // new * omg
-      Eigen::VectorXd& secResiduals = _secondaryResiduals[id];
-      secResiduals = data->oldValues.col(0);    // old
-      secResiduals *= 1.0 - _initialRelaxation;       // (1-omg) * old
-      values += secResiduals;                      // (1-omg) * old + new * omg
+      auto& values = *(data->values);
+      auto& secResiduals = _secondaryResiduals[id];
+      secResiduals = (1.0 - _initialRelaxation) * data->oldValues.col(0);    // old
+
+      values +=  (values * _initialRelaxation) + secResiduals;
     }
 }
 
@@ -231,20 +228,17 @@ void IQNILSPostProcessing::computeQNUpdate
 
 	preciceDebug("   Apply Newton factors");
 
-	Eigen::IOFormat CommaInitFmt(Eigen::StreamPrecision, Eigen::DontAlignCols, ", ", ", ", "", "", " << ", ";");
-	_debugOut<<"factors c: "<<c.format(CommaInitFmt)<<std::endl;
-
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
 	xUpdate = ((_matrixW-_matrixV) + 1.*_matrixV) * c;
 	//xUpdate = _matrixW * c;
 
 
-	//preciceDebug("c = " << c);
+	preciceDebug("c = " << c);
 
 
-    /**
-     *  perform QN-Update step for the secondary Data
-     */
+  /**
+   *  perform QN-Update step for the secondary Data
+   */
 
 	// If the previous time step converged within one single iteration, nothing was added
 	// to the LS system matrices and they need to be restored from the backup at time T-2
@@ -276,7 +270,6 @@ void IQNILSPostProcessing::computeQNUpdate
 			_secondaryMatricesW[id].resize(0,0);
 		}
 	}
-//	e.stop(true);
 }
 
 
