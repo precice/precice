@@ -97,6 +97,7 @@ void CommunicateMesh:: receiveMesh
   std::map<int, mesh::Vertex*> vertexMap;
   int numberOfVertices = 0;
   _communication->receive ( numberOfVertices, rankSender);
+  DEBUG("Number of vertices to receive: "<< numberOfVertices);
 
   if(numberOfVertices>0){
     double vertexCoords[numberOfVertices*dim];
@@ -115,6 +116,7 @@ void CommunicateMesh:: receiveMesh
   int numberOfEdges = 0;
   std::vector<mesh::Edge*> edges;
   _communication->receive ( numberOfEdges, rankSender);
+  DEBUG("Number of edges to receive: "<< numberOfEdges);
   if(numberOfEdges>0){
     int vertexIDs[numberOfVertices];
     _communication->receive(vertexIDs,numberOfVertices,rankSender);
@@ -122,7 +124,7 @@ void CommunicateMesh:: receiveMesh
       vertexMap[vertexIDs[i]] = vertices[i];
     }
 
-    int edgeIDs[numberOfEdges];
+    int edgeIDs[numberOfEdges*2];
     _communication->receive(edgeIDs,numberOfEdges*2,rankSender);
     for( int i=0; i < numberOfEdges; i++){
       assertion ( vertexMap.find(edgeIDs[i*2]) != vertexMap.end() );
@@ -136,6 +138,8 @@ void CommunicateMesh:: receiveMesh
   if ( dim == 3 ){
     int numberOfTriangles = 0;
     _communication->receive ( numberOfTriangles, rankSender );
+    DEBUG("Number of Triangles to receive: " << numberOfTriangles);
+    DEBUG("Number of Edges: " << edges.size());
     if (numberOfTriangles > 0){
       assertion ( (edges.size() > 0) || (numberOfTriangles == 0) );
       int edgeIDs[numberOfEdges];
@@ -145,7 +149,7 @@ void CommunicateMesh:: receiveMesh
         edgeMap[edgeIDs[i]] = edges[i];
       }
 
-      int triangleIDs[numberOfTriangles];
+      int triangleIDs[numberOfTriangles*3];
       _communication->receive(triangleIDs,numberOfTriangles*3,rankSender);
 
       for( int i=0; i < numberOfTriangles; i++){
