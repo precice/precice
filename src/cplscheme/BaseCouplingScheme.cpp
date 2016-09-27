@@ -399,6 +399,8 @@ void BaseCouplingScheme:: setExtrapolationOrder
 }
 
 // TODO: extrapolation of data should only be done for the fine cplData -> then copied to the coarse cplData
+// EDIT: should work if fine model output is registered to coarse model values and old values in manifold mapping
+//       iterationsConverged()
 void BaseCouplingScheme::extrapolateData(DataMap& data)
 {
   preciceTrace1("extrapolateData()", _timesteps);
@@ -733,7 +735,7 @@ void BaseCouplingScheme::newConvergenceMeasurements(int level)
   preciceTrace("newConvergenceMeasurements()");
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.measure.get() != nullptr);
-    if(convMeasure.level == level)
+    if(convMeasure.level >= level)
       convMeasure.measure->newMeasurementSeries();
   }
 }
