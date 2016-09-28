@@ -184,9 +184,7 @@ elif not env["mpi"]:
 
 # ====== Sockets ======
 if env["sockets"]:
-    pthreadLibPath = checkset_var('PRECICE_PTHREAD_LIB_PATH', "/usr/lib")
     pthreadLib = checkset_var('PRECICE_PTHREAD_LIB', "pthread")
-    pthreadIncPath =  checkset_var('PRECICE_PTHREAD_INC_PATH', '/usr/include')
 
     if sys.platform.startswith('win') or sys.platform.startswith('msys'):
         socketLibPath = checkset_var('PRECICE_SOCKET_LIB_PATH', "/mingw64/lib")
@@ -201,10 +199,7 @@ if env["sockets"]:
             if not conf.CheckHeader('winsock2.h'):
                 errorMissingHeader('winsock2.h', 'Windows Sockets 2')
 
-    
-    env.AppendUnique(LIBPATH = [pthreadLibPath])
     uniqueCheckLib(conf, pthreadLib)
-    env.AppendUnique(CPPPATH = [pthreadIncPath])
     if pthreadLib == 'pthread':
         if not conf.CheckCXXHeader('pthread.h'):
             errorMissingHeader('pthread.h', 'POSIX Threads')
@@ -214,14 +209,12 @@ else:
 
 # ====== Python ======
 if env["python"]:
-    pythonLibPath = checkset_var('PRECICE_PYTHON_LIB_PATH', '/usr/lib/')
     pythonLib = checkset_var('PRECICE_PYTHON_LIB', "python2.7")
     pythonIncPath = checkset_var('PRECICE_PYTHON_INC_PATH', '/usr/include/python2.7/')
     numpyIncPath = checkset_var('PRECICE_NUMPY_INC_PATH',  '/usr/include/python2.7/numpy/')
     
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
     env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
-    env.AppendUnique(LIBPATH = [pythonLibPath])
     uniqueCheckLib(conf, pythonLib)
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
     if not conf.CheckCXXHeader('Python.h'):
