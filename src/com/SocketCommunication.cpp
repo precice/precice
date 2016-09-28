@@ -1,7 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at
-// http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NO_SOCKETS
 
 #include "SocketCommunication.hpp"
@@ -23,7 +19,7 @@ namespace com {
 
 namespace asio = boost::asio;
 
-tarch::logging::Log SocketCommunication::_log(
+logging::Logger SocketCommunication::_log(
     "precice::com::SocketCommunication");
 
 SocketCommunication::SocketCommunication(unsigned short portNumber,
@@ -50,7 +46,7 @@ SocketCommunication::SocketCommunication(std::string const& addressDirectory)
 }
 
 SocketCommunication::~SocketCommunication() {
-  preciceTrace1("~SocketCommunication()", _isConnected);
+  preciceTrace("~SocketCommunication()", _isConnected);
 
   closeConnection();
 }
@@ -73,7 +69,7 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
                                       std::string const& nameRequester,
                                       int acceptorProcessRank,
                                       int acceptorCommunicatorSize) {
-  preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+  preciceTrace("acceptConnection()", nameAcceptor, nameRequester);
 
   preciceCheck(acceptorCommunicatorSize == 1,
                "acceptConnection()",
@@ -118,13 +114,13 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
 
     p.write(address);
 
-    preciceDebug("Accept connection at " << address);
+    DEBUG("Accept connection at " << address);
 
     PtrSocket socket(new Socket(*_ioService));
 
     acceptor.accept(*socket);
 
-    preciceDebug("Accepted connection at " << address);
+    DEBUG("Accepted connection at " << address);
 
     int remoteRank = -1;
     int remoteSize = 0;
@@ -153,7 +149,7 @@ SocketCommunication::acceptConnection(std::string const& nameAcceptor,
 
       acceptor.accept(*socket);
 
-      preciceDebug("Accepted connection at " << address);
+      DEBUG("Accepted connection at " << address);
 
       asio::read(*socket, asio::buffer(&remoteRank, sizeof(int)));
       asio::read(*socket, asio::buffer(&remoteSize, sizeof(int)));
@@ -191,7 +187,7 @@ void
 SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
                                               std::string const& nameRequester,
                                               int requesterCommunicatorSize) {
-  preciceTrace2("acceptConnectionAsServer()", nameAcceptor, nameRequester);
+  preciceTrace("acceptConnectionAsServer()", nameAcceptor, nameRequester);
 
   preciceCheck(requesterCommunicatorSize > 0,
                "acceptConnectionAsServer()",
@@ -238,7 +234,7 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
 
     p.write(address);
 
-    preciceDebug("Accept connection at " << address);
+    DEBUG("Accept connection at " << address);
 
     _sockets.resize(_remoteCommunicatorSize);
 
@@ -248,7 +244,7 @@ SocketCommunication::acceptConnectionAsServer(std::string const& nameAcceptor,
 
       acceptor.accept(*socket);
 
-      preciceDebug("Accepted connection at " << address);
+      DEBUG("Accepted connection at " << address);
 
       preciceCheck(_sockets[remoteRank].use_count() == 0,
                    "acceptConnectionAsServer()",
@@ -284,7 +280,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
                                        std::string const& nameRequester,
                                        int requesterProcessRank,
                                        int requesterCommunicatorSize) {
-  preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
+  preciceTrace("requestConnection()", nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
@@ -299,7 +295,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
 
     p.read(address);
 
-    preciceDebug("Request connection to " << address);
+    DEBUG("Request connection to " << address);
 
     std::string ipAddress = address.substr(0, address.find(":"));
     std::string portNumber = address.substr(
@@ -333,7 +329,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
       }
     }
 
-    preciceDebug("Requested connection to " << address);
+    DEBUG("Requested connection to " << address);
 
     _sockets.push_back(socket);
 
@@ -374,7 +370,7 @@ SocketCommunication::requestConnection(std::string const& nameAcceptor,
 int
 SocketCommunication::requestConnectionAsClient(
     std::string const& nameAcceptor, std::string const& nameRequester) {
-  preciceTrace2("requestConnectionAsClient()", nameAcceptor, nameRequester);
+  preciceTrace("requestConnectionAsClient()", nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
@@ -389,7 +385,7 @@ SocketCommunication::requestConnectionAsClient(
 
     p.read(address);
 
-    preciceDebug("Request connection to " << address);
+    DEBUG("Request connection to " << address);
 
     std::string ipAddress = address.substr(0, address.find(":"));
     std::string portNumber = address.substr(
@@ -423,7 +419,7 @@ SocketCommunication::requestConnectionAsClient(
       }
     }
 
-    preciceDebug("Requested connection to " << address);
+    DEBUG("Requested connection to " << address);
 
     _sockets.push_back(socket);
 
@@ -493,7 +489,7 @@ SocketCommunication::finishSendPackage() {
 
 int
 SocketCommunication::startReceivePackage(int rankSender) {
-  preciceTrace1("startReceivePackage()", rankSender);
+  preciceTrace("startReceivePackage()", rankSender);
 
   return rankSender;
 }
@@ -504,7 +500,7 @@ SocketCommunication::finishReceivePackage() {
 
 void
 SocketCommunication::send(std::string const& itemToSend, int rankReceiver) {
-  preciceTrace2("send(string)", itemToSend, rankReceiver);
+  preciceTrace("send(string)", itemToSend, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -525,7 +521,7 @@ SocketCommunication::send(std::string const& itemToSend, int rankReceiver) {
 
 void
 SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
-  preciceTrace2("send(int*)", size, rankReceiver);
+  preciceTrace("send(int*)", size, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -544,7 +540,7 @@ SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
 
 Request::SharedPointer
 SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
-  preciceTrace2("aSend(int*)", size, rankReceiver);
+  preciceTrace("aSend(int*)", size, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -570,7 +566,7 @@ SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
 
 void
 SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
-  preciceTrace2("send(double*)", size, rankReceiver);
+  preciceTrace("send(double*)", size, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -589,7 +585,7 @@ SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
 
 Request::SharedPointer
 SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
-  preciceTrace2("aSend(double*)", size, rankReceiver);
+  preciceTrace("aSend(double*)", size, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -615,7 +611,7 @@ SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
 
 void
 SocketCommunication::send(double itemToSend, int rankReceiver) {
-  preciceTrace2("send(double)", itemToSend, rankReceiver);
+  preciceTrace("send(double)", itemToSend, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -639,7 +635,7 @@ SocketCommunication::aSend(double* itemToSend, int rankReceiver) {
 
 void
 SocketCommunication::send(int itemToSend, int rankReceiver) {
-  preciceTrace2("send(int)", itemToSend, rankReceiver);
+  preciceTrace("send(int)", itemToSend, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -663,7 +659,7 @@ SocketCommunication::aSend(int* itemToSend, int rankReceiver) {
 
 void
 SocketCommunication::send(bool itemToSend, int rankReceiver) {
-  preciceTrace2("send(bool)", itemToSend, rankReceiver);
+  preciceTrace("send(bool)", itemToSend, rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -682,7 +678,7 @@ SocketCommunication::send(bool itemToSend, int rankReceiver) {
 
 Request::SharedPointer
 SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
-  preciceTrace1("aSend(bool*)", rankReceiver);
+  preciceTrace("aSend(bool*)", rankReceiver);
 
   rankReceiver = rankReceiver - _rankOffset;
 
@@ -708,7 +704,7 @@ SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
 
 void
 SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
-  preciceTrace1("receive(string)", rankSender);
+  preciceTrace("receive(string)", rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -732,7 +728,7 @@ SocketCommunication::receive(std::string& itemToReceive, int rankSender) {
 
 void
 SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
-  preciceTrace2("receive(int*)", size, rankSender);
+  preciceTrace("receive(int*)", size, rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -751,7 +747,7 @@ SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
 
 Request::SharedPointer
 SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
-  preciceTrace2("aReceive(int*)", size, rankSender);
+  preciceTrace("aReceive(int*)", size, rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -777,7 +773,7 @@ SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
 
 void
 SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
-  preciceTrace2("receive(double*)", size, rankSender);
+  preciceTrace("receive(double*)", size, rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -798,7 +794,7 @@ Request::SharedPointer
 SocketCommunication::aReceive(double* itemsToReceive,
                               int size,
                               int rankSender) {
-  preciceTrace2("aReceive(double*)", size, rankSender);
+  preciceTrace("aReceive(double*)", size, rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -824,7 +820,7 @@ SocketCommunication::aReceive(double* itemsToReceive,
 
 void
 SocketCommunication::receive(double& itemToReceive, int rankSender) {
-  preciceTrace1("receive(double)", rankSender);
+  preciceTrace("receive(double)", rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -848,7 +844,7 @@ SocketCommunication::aReceive(double* itemToReceive, int rankSender) {
 
 void
 SocketCommunication::receive(int& itemToReceive, int rankSender) {
-  preciceTrace1("receive(int)", rankSender);
+  preciceTrace("receive(int)", rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -872,7 +868,7 @@ SocketCommunication::aReceive(int* itemToReceive, int rankSender) {
 
 void
 SocketCommunication::receive(bool& itemToReceive, int rankSender) {
-  preciceTrace1("receive(bool)", rankSender);
+  preciceTrace("receive(bool)", rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -891,7 +887,7 @@ SocketCommunication::receive(bool& itemToReceive, int rankSender) {
 
 Request::SharedPointer
 SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
-  preciceTrace1("aReceive(bool*)", rankSender);
+  preciceTrace("aReceive(bool*)", rankSender);
 
   rankSender = rankSender - _rankOffset;
 
@@ -927,7 +923,7 @@ SocketCommunication::getIpAddress() {
 
   assertion(querySocket >= 0);
 
-  preciceDebug("Looking for IP address of network \"" << _networkName << "\"");
+  DEBUG("Looking for IP address of network \"" << _networkName << "\"");
 
   struct ifreq request;
   struct if_nameindex* nameInterface = if_nameindex();
@@ -951,7 +947,7 @@ SocketCommunication::getIpAddress() {
     request.ifr_name[ifNameLength] = 0; // Add C-string 0
 
     if (ioctl(querySocket, SIOCGIFADDR, &request) >= 0) {
-      preciceDebug(itNameInterface->if_name
+      DEBUG(itNameInterface->if_name
                    << ": " << inet_ntoa(((struct sockaddr_in*)&request.ifr_addr)
                                             ->sin_addr));
 

@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NO_PYTHON
 #include <Python.h>
 #include <numpy/arrayobject.h>
@@ -14,7 +11,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log PythonAction:: _log ( "precice::action::PythonAction" );
+logging::Logger PythonAction:: _log ( "precice::action::PythonAction" );
 
 PythonAction:: PythonAction
 (
@@ -71,7 +68,7 @@ void PythonAction:: performAction
   double fullDt)
 {
 # ifndef PRECICE_NO_PYTHON
-  preciceTrace4("performAction()", time, dt, computedPartFullDt, fullDt);
+  preciceTrace("performAction()", time, dt, computedPartFullDt, fullDt);
 
   if (not _isInitialized) initialize();
 

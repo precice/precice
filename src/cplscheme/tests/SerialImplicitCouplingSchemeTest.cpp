@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SerialImplicitCouplingSchemeTest.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
@@ -35,7 +32,7 @@ namespace tests {
 
 using utils::Vector3D;
 
-tarch::logging::Log SerialImplicitCouplingSchemeTest::
+logging::Logger SerialImplicitCouplingSchemeTest::
   _log ( "precice::cplscheme::tests::SerialImplicitCouplingSchemeTest" );
 
 
@@ -61,7 +58,7 @@ void SerialImplicitCouplingSchemeTest:: run ()
     testMethod(testExtrapolateData);
   }
   typedef utils::Parallel Par;
-  preciceDebug("CommunicatorSize: " << Par::getCommunicatorSize());
+  DEBUG("CommunicatorSize: " << Par::getCommunicatorSize());
   if (Par::getCommunicatorSize() > 1){
     // Do only use process 0 and 1 for the following tests
     std::vector<int> ranks;
@@ -453,7 +450,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
 //void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureAsync ()
 //{
 //   utils::Parallel::synchronizeProcesses ();
-//   preciceDebug ( "testMinIterConvergenceMeasure()", "Entering" );
+//   DEBUG ( "testMinIterConvergenceMeasure()", "Entering" );
 //
 //   // Create a data configuration, to simplify configuration of data
 //   mesh::PtrDataConfiguration dataConfig ( new mesh::DataConfiguration() );
@@ -530,7 +527,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
 ////      runCoupling ( cplScheme, nameParticipant1, dataConfig, validIterations );
 ////   }
 //
-//   preciceDebug ( "testMinIterConvergenceMeasure()", "Leaving" );
+//   DEBUG ( "testMinIterConvergenceMeasure()", "Leaving" );
 //}
 
 void SerialImplicitCouplingSchemeTest:: runCoupling
@@ -540,7 +537,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
   const mesh::MeshConfiguration& meshConfig,
   const std::vector<int>&        validIterations )
 {
-  preciceTrace1 ( "runCoupling", nameParticipant );
+  preciceTrace ( "runCoupling", nameParticipant );
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
   validateEquals ( mesh->data().size(), 2 );
@@ -576,19 +573,19 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
 
     while ( cplScheme.isCouplingOngoing() ) {
       dataValues0[index] += stepsizeData0;
-      preciceDebug ( "Wrote data with stepsize " << stepsizeData0 );
+      DEBUG ( "Wrote data with stepsize " << stepsizeData0 );
       // The max timestep length is required to be obeyed.
       double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
       cplScheme.addComputedTime ( maxLengthTimestep );
       cplScheme.advance();
       iterationCount++;
-      preciceDebug ( "increased iterations to " << iterationCount
+      DEBUG ( "increased iterations to " << iterationCount
                      << ", limit < " << *iterValidIterations );
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
       if ( cplScheme.isCouplingTimestepComplete() ) {
-        preciceDebug ( "timestep complete" );
+        DEBUG ( "timestep complete" );
         // Advance participant time and timestep
         computedTime += maxLengthTimestep;
         computedTimesteps ++;
@@ -616,7 +613,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         stepsizeData0 = initialStepsizeData0;
       }
       else { // coupling timestep is not yet complete
-        preciceDebug ( "timestep not complete" );
+        DEBUG ( "timestep not complete" );
         validate ( cplScheme.isCouplingOngoing() );
         validate ( iterationCount < *iterValidIterations );
         validate ( cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -626,8 +623,9 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         // to achieve a predictable convergence.
         stepsizeData0 -= 1.0;
       }
-      // In every coupling cycle, data is sent
-      validate ( cplScheme.hasDataBeenExchanged() );
+      // the first participant always receives new data
+      //if(cplScheme.isCouplingOngoing())
+        validate ( cplScheme.hasDataBeenExchanged() );
     }
     cplScheme.finalize (); // Ends the coupling scheme
     validateNumericalEquals ( computedTime, 0.3 );
@@ -653,19 +651,19 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
       currentData += stepsizeData1;
       dataValues1.segment(index * 3, 3) = currentData;
       //tarch::la::slice<3>(dataValues1,index*3) = currentData;
-      preciceDebug ( "Wrote data with stepsize " << stepsizeData1 );
+      DEBUG ( "Wrote data with stepsize " << stepsizeData1 );
       // The max timestep length is required to be obeyed.
       double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
       cplScheme.addComputedTime ( maxLengthTimestep );
       cplScheme.advance();
       iterationCount++;
-      preciceDebug ( "increased iterations to " << iterationCount
+      DEBUG ( "increased iterations to " << iterationCount
         << ", limit < " << *iterValidIterations );
       // A coupling timestep is complete, when the coupling iterations are
       // globally converged and if subcycling steps have filled one global
       // timestep.
       if ( cplScheme.isCouplingTimestepComplete() ) {
-        preciceDebug ( "timestep complete" );
+        DEBUG ( "timestep complete" );
         // Advance participant time and timestep
         computedTime += maxLengthTimestep;
         computedTimesteps ++;
@@ -693,7 +691,7 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         stepsizeData1 = initialStepsizeData1;
       }
       else { // coupling timestep is not yet complete
-        preciceDebug ( "timestep not complete" );
+        DEBUG ( "timestep not complete" );
         validate ( cplScheme.isCouplingOngoing() );
         validate ( iterationCount < *iterValidIterations );
         validate ( cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
@@ -706,8 +704,9 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
         //stepsizeData1 -= 1.0;
         stepsizeData1 -= Eigen::Vector3d::Constant(1.0);
       }
-      // In every coupling cycle, data is sent
-      validate ( cplScheme.hasDataBeenExchanged() );
+      // only check if data is received
+      if(cplScheme.isCouplingOngoing())
+        validate ( cplScheme.hasDataBeenExchanged() );
     }
     cplScheme.finalize (); // Ends the coupling scheme
     validateNumericalEquals ( computedTime, 0.3 );
@@ -901,7 +900,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
   const mesh::MeshConfiguration& meshConfig,
   const std::vector<int>&        validIterations )
 {
-  preciceTrace1 ( "runCouplingWithSubcycling()", nameParticipant );
+  preciceTrace ( "runCouplingWithSubcycling()", nameParticipant );
 
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
@@ -988,7 +987,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
           stepsizeData0 -= 1.0;
           subcyclingStep = 0; // Subcycling steps
           iterationCount++; // Implicit coupling iterations
-          //precicePrint ( "increased iterations to " << iterationCount );
+          //INFO ( "increased iterations to " << iterationCount );
         }
         else { // If subcycling
           validate ( iterationCount <= *iterValidIterations );
@@ -1034,7 +1033,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
       // globally converged and if subcycling steps have filled one global
       // timestep.
       if ( cplScheme.isCouplingTimestepComplete() ){
-        //            precicePrint ( "timestep complete" );
+        //            INFO ( "timestep complete" );
         // Advance participant time and timestep
         computedTime += maxTimestepLength;
         computedTimesteps ++;
@@ -1077,7 +1076,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
           stepsizeData1 -= 1.0;
           subcyclingStep = 0; // Subcycling steps
           iterationCount++; // Implicit coupling iterations
-          //precicePrint ( "increased iterations to " << iterationCount );
+          //INFO ( "increased iterations to " << iterationCount );
         }
         else { // If subcycling
           validate ( iterationCount <= *iterValidIterations );

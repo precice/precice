@@ -1,11 +1,8 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_GEOMETRY_GEOMETRY_HPP_
 #define PRECICE_GEOMETRY_GEOMETRY_HPP_
 
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "com/CommunicateMesh.hpp"
 #include "com/Communication.hpp"
 
@@ -93,7 +90,7 @@ protected:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Offset of reference point of geometry from zero point
   utils::DynVector _offset;

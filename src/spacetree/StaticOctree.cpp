@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "StaticOctree.hpp"
 #include "spacetree/impl/StaticTraversal.hpp"
 #include "spacetree/impl/Environment.hpp"
@@ -10,7 +7,7 @@
 namespace precice {
 namespace spacetree {
 
-tarch::logging::Log StaticOctree:: _log("precice::spacetree::StaticOctree");
+logging::Logger StaticOctree::_log("precice::spacetree::StaticOctree");
 
 StaticOctree:: StaticOctree
 (
@@ -30,7 +27,7 @@ void StaticOctree:: addMesh
 (
   const mesh::PtrMesh& mesh )
 {
-  preciceTrace1("addMesh()", mesh->getName());
+  preciceTrace("addMesh()", mesh->getName());
   assertion(_rootCell.content().empty()); // Spacetree is not initialized yet
   _meshes.push_back(mesh);
   mesh->addListener(*this);
@@ -64,7 +61,7 @@ void StaticOctree:: initialize()
   int sides = (dim == 2) ? 4 : 6;
   impl::Environment env(twoPowerDim, sides);
   if ( dim == 2 ){
-    preciceDebug( "Setting 2D environment cell neighbor indices" );
+    DEBUG( "Setting 2D environment cell neighbor indices" );
     tarch::la::DynamicVector<int> indices(2);
     indices[0] = 1; indices[1] = 2; // Neighbors cell 0
     env.setNeighborCellIndices(0, indices);
@@ -85,7 +82,7 @@ void StaticOctree:: initialize()
     env.setNeighborSideIndices(3, indices);
   }
   else {
-    preciceDebug( "Setting 3D environment cell neighbor indices" );
+    DEBUG( "Setting 3D environment cell neighbor indices" );
     assertion ( dim == 3, dim );
     tarch::la::DynamicVector<int> indices(3);
     assignList(indices) = 1, 2, 4; // Cell 0
@@ -128,7 +125,7 @@ void StaticOctree:: initialize()
 
 void StaticOctree:: meshChanged ( mesh::Mesh& mesh )
 {
-  preciceTrace1("meshChanged()", mesh.getName());
+  preciceTrace("meshChanged()", mesh.getName());
   _meshChanged = true;
 }
 
@@ -136,9 +133,9 @@ int StaticOctree:: searchPosition
 (
   const utils::DynVector& point )
 {
-  preciceTrace1 ( "searchPosition()", point );
+  preciceTrace ( "searchPosition()", point );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -151,9 +148,9 @@ void StaticOctree:: searchDistance
 (
   query::FindClosest& findClosest )
 {
-  preciceTrace1 ( "searchDistance()", findClosest.getSearchPoint() );
+  preciceTrace ( "searchDistance()", findClosest.getSearchPoint() );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -166,10 +163,10 @@ int StaticOctree:: searchContent
 (
   query::FindVoxelContent& findContent )
 {
-  preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
+  preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
@@ -182,7 +179,7 @@ void StaticOctree:: accept ( Visitor& visitor )
 {
   preciceTrace("accept()");
   if (_meshChanged){
-    preciceDebug("A mesh has changed recently, rebuilding spacetree");
+    DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }

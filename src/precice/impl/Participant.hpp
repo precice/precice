@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_IMPL_COUPLINGPARTICIPANT_HPP_
-#define PRECICE_IMPL_COUPLINGPARTICIPANT_HPP_
+#pragma once
 
 #include "precice/Constants.hpp"
 #include "SharedPointer.hpp"
@@ -16,7 +12,7 @@
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
 #include "boost/tuple/tuple.hpp"
@@ -183,7 +179,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   static int _participantsSize;
 
@@ -258,5 +254,3 @@ bool Participant:: isDataValid
 }
 
 }} // namespace precice, impl
-
-#endif /* PRECICE_IMPL_COUPLINGPARTICIPANT_HPP_ */

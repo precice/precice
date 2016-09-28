@@ -1,0 +1,27 @@
+# Section headers can be arbitrary, but unique
+
+# Filter documentation: http://www.boost.org/doc/libs/1_61_0/libs/log/doc/html/log/detailed/utilities.html#log.detailed.utilities.setup.filter_formatter
+# Default filter is %Severity% > debug
+
+# Enabled defaults to True. Value can be (true, 0, 1, yes), case-insensitive. Otherwise false
+
+# This can produce a really large debug.log
+[FullDebugOutputToFile]
+Filter = 
+Type = file
+Output = debug.log
+Enabled = False
+
+# Enable trace and debug only for the mapping module
+[TraceJustForOneModule]
+Filter = (%Severity% > debug) or (%Module% contains mapping)
+Type = stream
+Output = stdout
+Enabled = False
+
+# Warnings and higher to standard error
+[OnlyWarningsAndAbove]
+Filter = %Severity% > warning
+Type = stream
+Output = stderr
+Enabled = False

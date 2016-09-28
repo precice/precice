@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "TXTTableWriter.hpp"
 #include "utils/Helpers.hpp"
 #include <iomanip>
@@ -8,7 +5,7 @@
 namespace precice {
 namespace io {
 
-tarch::logging::Log TXTTableWriter:: _log ( "precice::io::TXTTableWriter" );
+logging::Logger TXTTableWriter:: _log ( "precice::io::TXTTableWriter" );
 
 TXTTableWriter:: TXTTableWriter
 (

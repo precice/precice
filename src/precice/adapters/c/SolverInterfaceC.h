@@ -1,6 +1,3 @@
-/* Copyright (C) 2011 Technische Universitaet Muenchen
- * This file is part of the preCICE project. For conditions of distribution and
- * use, please see the license notice at http://www5.in.tum.de/wiki/index.php/precice_c_License */
 #ifndef PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_
 #define PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_
 
@@ -29,6 +26,11 @@ void precicec_createSolverInterface (
  * @return Maximal length of first timestep to be computed by solver.
  */
 double precicec_initialize();
+
+/**
+ * @brief Initializes coupling data.
+ */
+void precicec_initialize_data();
 
 /**
  * @brief Exchanges data between solver and coupling supervisor.

@@ -1,11 +1,3 @@
-/*
- * QRFactorization.cpp
- *
- *  Created on: June 16, 2016
- *      Author: Klaudius Scheufele
- */
-
-// Copyright (C) 2015 Universität Stuttgart
 #include "QRFactorization.hpp"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "utils/Dimensions.hpp"
@@ -23,7 +15,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log QRFactorization::
+logging::Logger QRFactorization::
       _log("precice::cplscheme::impl::QRFactorization");
 
       
@@ -230,7 +222,7 @@ void QRFactorization::deleteColumn(int k)
 // ATTENTION: This method works on the memory of vector v, thus changes the vector v.
 bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singularityLimit)
 {
-  preciceTrace1("insertColumn()", k);
+  preciceTrace("insertColumn()", k);
 
   EigenVector v(vec);
 
@@ -257,7 +249,7 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
   // - or the system is quadratic, thus no further column can be orthogonalized (||v_orth|| = rho_orth = 0)
   // - or ||v_orth|| = rho_orth extremely small (almost zero), thus the column v is not very orthogonal to Q, discard
   if(rho_orth <= std::numeric_limits<double>::min()  || err < 0){
-    preciceDebug("The ratio ||v_orth|| / ||v|| is extremely small and either the orthogonalization process of column v failed or the system is quadratic.");
+    DEBUG("The ratio ||v_orth|| / ||v|| is extremely small and either the orthogonalization process of column v failed or the system is quadratic.");
 
     // necessary for applyFilter with the QR-2 filer. In this case, the new column is not inserted, but discarded.
     _cols--;
@@ -270,7 +262,7 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
   // rho_orth: the norm of the orthogonalized (but not normalized) column
   // rho0:     the norm of the initial column that is to be inserted
   if(applyFilter && (rho0 * singularityLimit  > rho_orth)){
-	preciceDebug("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: "<<rho0*singularityLimit<<" > "<<rho_orth);
+	DEBUG("discarding column as it is filtered out by the QR2-filter: rho0*eps > rho_orth: "<<rho0*singularityLimit<<" > "<<rho_orth);
     _cols--;
     return false;
   }
@@ -407,7 +399,7 @@ int QRFactorization::orthogonalize(
 
     // take correct action if v_orth is null
     if (rho1 <= std::numeric_limits<double>::min()) {
-      preciceDebug("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.")
+      DEBUG("The norm of v_orthogonal is almost zero, i.e., failed to orthogonalize column v; discard.");
       null = true;
       rho1 = 1;
       termination = true;
@@ -559,7 +551,7 @@ int QRFactorization::orthogonalize_stable(
 			// discard information from column, use any unit vector orthogonal to Q
 			if (!restart && rho1 <= rho * _sigma) {
 			  preciceWarning("orthogonalize()", "The new column is in the range of Q, thus not possible to orthogonalize. Try to insert a unit vector that is orthogonal to the columns space of Q.");
-				//preciceDebug("[QR-dec] - reorthogonalization");
+				//DEBUG("[QR-dec] - reorthogonalization");
 				if (_fstream_set)   (*_infostream) << "[QR-dec] - reorthogonalization"<< std::endl;
 
 				restart = true;
@@ -781,7 +773,7 @@ void QRFactorization::reset(
      bool inserted = insertColumn(k,v);
      if(not inserted){
        k--;
-       preciceDebug("column "<<col<<" has not been inserted in the QR-factorization, failed to orthogonalize.");
+       DEBUG("column "<<col<<" has not been inserted in the QR-factorization, failed to orthogonalize.");
      }
   }
   assertion(_R.rows() == _cols, _R.rows(), _cols);

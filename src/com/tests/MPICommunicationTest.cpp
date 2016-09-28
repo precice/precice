@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "MPICommunicationTest.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "utils/Parallel.hpp"
@@ -17,7 +14,7 @@ namespace precice {
 namespace com {
 namespace tests {
 
-tarch::logging::Log MPICommunicationTest::_log(
+logging::Logger MPICommunicationTest::_log(
     "precice::com::tests::MPICommunicationTest");
 
 MPICommunicationTest::MPICommunicationTest()

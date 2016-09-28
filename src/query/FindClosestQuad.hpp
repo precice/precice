@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_QUERY_FINDCLOSESTQUAD_HPP_
 #define PRECICE_QUERY_FINDCLOSESTQUAD_HPP_
 
@@ -84,7 +81,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Search point coordinates.
   utils::DynVector _searchPoint;

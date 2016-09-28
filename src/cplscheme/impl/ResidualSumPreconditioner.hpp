@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #pragma once
 
 #include "Preconditioner.hpp"
@@ -22,12 +19,13 @@ class ResidualSumPreconditioner : public Preconditioner
 public:
 
   ResidualSumPreconditioner(
-      std::vector<int> dimensions,
       int maxNonConstTimesteps);
   /**
    * @brief Destructor, empty.
    */
   virtual ~ResidualSumPreconditioner() {}
+
+  virtual void initialize(std::vector<size_t>& svs);
 
 private:
 
@@ -38,7 +36,7 @@ private:
    */
   virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res);
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::vector<double> _residualSum;
 

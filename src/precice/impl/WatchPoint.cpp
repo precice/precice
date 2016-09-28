@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "WatchPoint.hpp"
 #include "query/FindClosestVertex.hpp"
 #include "query/FindClosestEdge.hpp"
@@ -19,7 +16,7 @@
 namespace precice {
 namespace impl {
 
-tarch::logging::Log WatchPoint:: _log ( "precice::impl::WatchPoint" );
+logging::Logger WatchPoint:: _log ( "precice::impl::WatchPoint" );
 
 WatchPoint:: WatchPoint
 (
@@ -80,7 +77,7 @@ void WatchPoint:: initialize()
     }
   }
 
-  preciceDebug("Rank: " << utils::MasterSlave::_rank << ", isClosest: " << _isClosest);
+  DEBUG("Rank: " << utils::MasterSlave::_rank << ", isClosest: " << _isClosest);
 
   if(_isClosest){
 

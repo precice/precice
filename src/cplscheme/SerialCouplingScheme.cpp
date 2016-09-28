@@ -6,7 +6,7 @@
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log SerialCouplingScheme::_log("precice::cplscheme::SerialCouplingScheme" );
+logging::Logger SerialCouplingScheme::_log("precice::cplscheme::SerialCouplingScheme" );
 
 SerialCouplingScheme::SerialCouplingScheme
 (
@@ -38,7 +38,7 @@ void SerialCouplingScheme::initialize
   double startTime,
   int    startTimestep)
 {
-  preciceTrace2("initialize()", startTime, startTimestep);
+  preciceTrace("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
   assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
@@ -71,7 +71,7 @@ void SerialCouplingScheme::initialize
     if (pair.second->initialize) {
       preciceCheck(not doesFirstStep(), "initialize()",
                    "Only second participant can initialize data!");
-      preciceDebug("Initialized data to be written");
+      DEBUG("Initialized data to be written");
       setHasToSendInitData(true);
       break;
     }
@@ -81,7 +81,7 @@ void SerialCouplingScheme::initialize
     if (pair.second->initialize) {
       preciceCheck(doesFirstStep(), "initialize()",
                    "Only first participant can receive initial data!");
-      preciceDebug("Initialized data to be received");
+      DEBUG("Initialized data to be received");
       setHasToReceiveInitData(true);
     }
   }
@@ -89,7 +89,7 @@ void SerialCouplingScheme::initialize
   // If the second participant initializes data, the first receive for the
   // second participant is done in initializeData() instead of initialize().
   if (not doesFirstStep() && not hasToSendInitData() && isCouplingOngoing()) {
-    preciceDebug("Receiving data");
+    DEBUG("Receiving data");
     getM2N()->startReceivePackage(0);
     receiveAndSetDt();
     receiveData(getM2N());
@@ -117,7 +117,7 @@ void SerialCouplingScheme::initializeData()
     return;
   }
 
-  preciceDebug("Initializing Data ...");
+  DEBUG("Initializing Data ...");
 
   preciceCheck(not (hasToSendInitData() && isActionRequired(constants::actionWriteInitialData())),
                "initializeData()", "InitialData has to be written to preCICE before calling initializeData()");
@@ -126,9 +126,8 @@ void SerialCouplingScheme::initializeData()
 
   if (hasToReceiveInitData() && isCouplingOngoing() )  {
     assertion(doesFirstStep());
-    preciceDebug("Receiving data");
+    DEBUG("Receiving data");
     getM2N()->startReceivePackage(0);
-    receiveAndSetDt();
     receiveData(getM2N());
     getM2N()->finishReceivePackage();
     setHasDataBeenExchanged(true);
@@ -148,6 +147,7 @@ void SerialCouplingScheme::initializeData()
     // here, which receives the data on call of initialize().
     sendData(getM2N());
     getM2N()->startReceivePackage(0);
+    receiveAndSetDt();
     // This receive replaces the receive in initialize().
     receiveData(getM2N());
     getM2N()->finishReceivePackage();
@@ -161,7 +161,7 @@ void SerialCouplingScheme::initializeData()
 
 void SerialCouplingScheme::advance()
 {
-  preciceTrace2("advance()", getTimesteps(), getTime());
+  preciceTrace("advance()", getTimesteps(), getTime());
   for (DataMap::value_type & pair : getReceiveData()) {
     Eigen::VectorXd& values = *pair.second->values;
 #     ifdef Debug
@@ -170,7 +170,7 @@ void SerialCouplingScheme::advance()
       for (int i=0; (i < max) && (i < 10); i++){
         stream << values[i] << " ";
       }
-      preciceDebug("Begin advance, first New Values: " << stream.str() );
+      DEBUG("Begin advance, first New Values: " << stream.str() );
 #     endif
   }
   checkCompletenessRequiredActions();
@@ -185,20 +185,20 @@ void SerialCouplingScheme::advance()
     if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       setIsCouplingTimestepComplete(true);
       setTimesteps(getTimesteps() + 1);
-      preciceDebug("Sending data...");
+      DEBUG("Sending data...");
       getM2N()->startSendPackage(0);
       sendDt();
       sendData(getM2N());
       getM2N()->finishSendPackage();
 
       if (isCouplingOngoing() || doesFirstStep()) {
-        preciceDebug("Receiving data...");
+        DEBUG("Receiving data...");
         getM2N()->startReceivePackage(0);
         receiveAndSetDt();
         receiveData(getM2N());
         getM2N()->finishReceivePackage();
+        setHasDataBeenExchanged(true);
       }
-      setHasDataBeenExchanged(true);
       setComputedTimestepPart(0.0);
     }
   }
@@ -208,7 +208,7 @@ void SerialCouplingScheme::advance()
     bool doOnlySolverEvaluation = false;
 
     if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-      preciceDebug("Computed full length of iteration");
+      DEBUG("Computed full length of iteration");
       if (doesFirstStep()) {
         getM2N()->startSendPackage(0);
         sendDt();
@@ -227,6 +227,7 @@ void SerialCouplingScheme::advance()
         receiveData(getM2N());
         //}
         getM2N()->finishReceivePackage();
+        setHasDataBeenExchanged(true);
       }
       else {
 
@@ -238,7 +239,7 @@ void SerialCouplingScheme::advance()
         // measure convergence of coupling iteration
         // measure convergence for coarse model optimization
         if(_isCoarseModelOptimizationActive){
-          preciceDebug("measure convergence of coarse model optimization.");
+          DEBUG("measure convergence of coarse model optimization.");
           // in case of multilevel post processing only: measure the convergence of the coarse model optimization
           convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
           // Stop, when maximal iteration count (given in config) is reached
@@ -260,7 +261,7 @@ void SerialCouplingScheme::advance()
         }
         // measure convergence of coupling iteration
         else{
-          preciceDebug("measure convergence.");
+          DEBUG("measure convergence.");
           doOnlySolverEvaluation = false;
 
           // measure convergence of the coupling iteration,
@@ -354,19 +355,19 @@ void SerialCouplingScheme::advance()
           receiveAndSetDt();
           receiveData(getM2N());
           getM2N()->finishReceivePackage();
+          setHasDataBeenExchanged(true);
         }
       }
 
       if (not convergence) {
-        preciceDebug("No convergence achieved");
+        DEBUG("No convergence achieved");
         requireAction(constants::actionReadIterationCheckpoint());
       }
       else {
-        preciceDebug("Convergence achieved");
+        DEBUG("Convergence achieved");
         advanceTXTWriters();
       }
       updateTimeAndIterations(convergence, convergenceCoarseOptimization);
-      setHasDataBeenExchanged(true);
       setComputedTimestepPart(0.0);
     } //subcycling completed
 

@@ -1,10 +1,7 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #pragma once
 
 #include "m2n/M2N.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
 
 #include <boost/tuple/tuple.hpp>
@@ -58,7 +55,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    const std::string TAG;
    const std::string ATTR_TYPE;

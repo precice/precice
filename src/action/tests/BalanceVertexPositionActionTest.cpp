@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "BalanceVertexPositionActionTest.hpp"
 #include "action/BalanceVertexPositionAction.hpp"
 #include "action/config/ActionConfiguration.hpp"
@@ -20,7 +17,7 @@ namespace precice {
 namespace action {
 namespace tests {
 
-tarch::logging::Log BalanceVertexPositionActionTest::
+logging::Logger BalanceVertexPositionActionTest::
   _log ( "precice::action::tests::BalanceVertexPositionActionTest" );
 
 BalanceVertexPositionActionTest:: BalanceVertexPositionActionTest ()
@@ -66,8 +63,9 @@ void BalanceVertexPositionActionTest:: testSmoothCircle ()
   mesh->createEdge ( mesh->vertices()[size-1], mesh->vertices()[0] );
   mesh->computeState();
   io::ExportVTK exportVTK ( true );
+  std::string location = "";
   exportVTK.doExport ( "BalanceVertexPositionActionTest-testSmoothCircle-init.vtk",
-                       *mesh );
+                       location, *mesh );
   action::BalanceVertexPositionAction balance (
       action::Action::ALWAYS_PRIOR, mesh, 1e-10, 100 );
 
@@ -75,7 +73,7 @@ void BalanceVertexPositionActionTest:: testSmoothCircle ()
   balance.performAction(dummy, dummy, dummy, dummy);
 
   exportVTK.doExport("BalanceVertexPositionActionTest-testSmoothCircle-1.vtk",
-                     *mesh);
+                     location, *mesh);
 }
 
 void BalanceVertexPositionActionTest:: testSmoothSphere ()
@@ -84,16 +82,17 @@ void BalanceVertexPositionActionTest:: testSmoothSphere ()
   mesh::PtrMesh mesh ( new mesh::Mesh("Mesh", 3, false) );
   geometry::Sphere sphere ( utils::Vector3D(0.0), 0.1, 1.0 );
   sphere.create ( *mesh );
+  std::string location = "";
 
   io::ExportVTK exportVTK ( true );
   exportVTK.doExport ( "BalanceVertexPositionActionTest-testSmoothSphere-init.vtk",
-                       *mesh );
+                       location, *mesh );
   action::BalanceVertexPositionAction balance (
       action::Action::ALWAYS_PRIOR, mesh, 1e-10, 100 );
   double dummy = 0.0;
   balance.performAction(dummy, dummy, dummy, dummy);
   std::string name = "BalanceVertexPositionActionTest-testSmoothSphere-smooth.vtk";
-  exportVTK.doExport(name, *mesh);
+  exportVTK.doExport(name, location, *mesh);
 }
 
 void BalanceVertexPositionActionTest:: testSmoothHexahedron()
@@ -153,15 +152,16 @@ void BalanceVertexPositionActionTest:: testSmoothHexahedron()
 
   mesh->computeState();
   io::ExportVTK exportVTK(true);
+  std::string location = "";
   exportVTK.doExport("BalanceVertexPositionActionTest-testSmoothHexahedron-init.vtk",
-                     *mesh);
+                     location, *mesh);
   action::BalanceVertexPositionAction balance(
       action::Action::ALWAYS_PRIOR, mesh, 1e-10, 100);
 
   double dummy = 0.0;
   balance.performAction(dummy, dummy, dummy, dummy);
   std::string name = "BalanceVertexPositionActionTest-testSmoothHexahedron-smooth.vtk";
-  exportVTK.doExport(name, *mesh);
+  exportVTK.doExport(name, location, *mesh);
 }
 
 void BalanceVertexPositionActionTest:: testConfiguration()

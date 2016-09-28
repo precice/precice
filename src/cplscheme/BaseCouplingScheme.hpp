@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_CPLSCHEME_BASECOUPLINGSCHEME_HPP_
-#define PRECICE_CPLSCHEME_BASECOUPLINGSCHEME_HPP_
+#pragma once
 
 #include "CouplingScheme.hpp"
 #include "CouplingData.hpp"
@@ -12,7 +8,7 @@
 #include "m2n/M2N.hpp"
 #include "com/Constants.hpp"
 #include "utils/PointerVector.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "Eigen/Dense"
@@ -510,7 +506,7 @@ private:
   bool _participantReceivesDt;
 
   /// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _maxTime;
 
@@ -586,5 +582,3 @@ private:
 };
 
 }} // namespace precice, cplscheme
-
-#endif /* PRECICE_CPLSCHEME_BASECOUPLINGSCHEME_HPP_ */

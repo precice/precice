@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_TESTS_TESTCASECOLLECTION_H_
 #define _TARCH_TESTS_TESTCASECOLLECTION_H_
 
@@ -9,7 +6,7 @@
 #endif
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 #include <list>
 
@@ -44,7 +41,7 @@ class tarch::tests::TestCaseCollection: public tarch::tests::TestCase {
     /**
      * Log interface the class writes to.
      */
-    static tarch::logging::Log _log;
+    static precice::logging::Logger _log;
 
     /**
      * Tells whether the testcases contained should be deleted uppon destruction of this object.

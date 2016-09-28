@@ -15,7 +15,7 @@
 #include <string>
 #include <sstream>
 #include "tarch/argument/Argument.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace tarch {
  namespace argument {
@@ -46,7 +46,7 @@ public:
 	bool isValid() const;
 
 private:
-	static tarch::logging::Log _log;
+	static precice::logging::Log _log;
 	tarch::argument::Argument getArgument(std::string argumentId) const;
 	std::string             _name;
 	unsigned int            _nrArgs;

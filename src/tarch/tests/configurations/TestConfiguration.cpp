@@ -11,7 +11,7 @@
 registerTopLevelConfiguration(tarch::tests::configurations::TestConfiguration)
 
 
-tarch::logging::Log tarch::tests::configurations::TestConfiguration::_log("tarch::tests::configurations::TestConfiguration");
+precice::logging::Logger tarch::tests::configurations::TestConfiguration::_log("tarch::tests::configurations::TestConfiguration");
 
 
 tarch::tests::configurations::TestConfiguration::TestConfiguration():
@@ -76,7 +76,7 @@ void tarch::tests::configurations::TestConfiguration::parseSubtag( tarch::irr::i
     (xmlReader->getNodeType()!=irr::io::EXN_ELEMENT_END) ||
     (xmlReader->getNodeName()!=getTag())
   ) {
-    _log.error(
+    preciceWarning(
       "parseSubtag(...)",
       "expected closing tag for " + getTag() +
       ", but received tag <" + xmlReader->getNodeName() + ">"
@@ -85,10 +85,10 @@ void tarch::tests::configurations::TestConfiguration::parseSubtag( tarch::irr::i
   }
 
   if (!_logConfiguration.isValid()) {
-    _log.error( "parse(...)", "subtag <" + _logConfiguration.getTag() + "> missing or invalid." );
+    preciceWarning( "parse(...)", "subtag <" + _logConfiguration.getTag() + "> missing or invalid." );
   }
   if (!_logFormatConfiguration.isValid()) {
-    _log.error( "parse(...)", "subtag <" + _logFormatConfiguration.getTag() + "> missing or invalid." );
+    preciceWarning( "parse(...)", "subtag <" + _logFormatConfiguration.getTag() + "> missing or invalid." );
   }
 }
 

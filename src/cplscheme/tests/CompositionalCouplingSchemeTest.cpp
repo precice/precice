@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CompositionalCouplingSchemeTest.hpp"
 #include "DummyCouplingScheme.hpp"
 #include "../SharedPointer.hpp"
@@ -31,7 +28,7 @@ namespace tests {
 
 using utils::Vector3D;
 
-tarch::logging::Log CompositionalCouplingSchemeTest::
+logging::Logger CompositionalCouplingSchemeTest::
    _log ( "precice::cplscheme::tests::CompositionalCouplingSchemeTest" );
 
 CompositionalCouplingSchemeTest:: CompositionalCouplingSchemeTest()
@@ -76,7 +73,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
   { // Test one explicit dummy coupling scheme
-    preciceDebug("Test E");
+    DEBUG("Test E");
     int numberIterations = 1;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme(
@@ -94,7 +91,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme->getTimesteps()-1, 10);
   }
   { // Test one implicit dummy coupling scheme
-    preciceDebug("Test I(2)");
+    DEBUG("Test I(2)");
     int numberIterations = 2;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme(
@@ -112,7 +109,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme->getTimesteps()-1, 10);
   }
   { // Test two explicit dummy coupling schemes
-    preciceDebug("Test E, E");
+    DEBUG("Test E, E");
     int numberIterations = 1;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -134,7 +131,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test three explicit dummy coupling schemes
-    preciceDebug("Test E, E, E");
+    DEBUG("Test E, E, E");
     int numberIterations = 1;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -160,7 +157,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test two implicit dummy coupling schemes
-    preciceDebug("Test I(2), I(2)");
+    DEBUG("Test I(2), I(2)");
     int numberIterations = 2;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -190,7 +187,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test two implicit dummy coupling schemes with different iteration number
-    preciceDebug("Test I(2), I(3)");
+    DEBUG("Test I(2), I(3)");
     int numberIterations = 2;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -225,7 +222,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test three implicit dummy coupling schemes
-    preciceDebug("Test I(2), I(2), I(2)");
+    DEBUG("Test I(2), I(2), I(2)");
     int numberIterations = 2;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -261,7 +258,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test three implicit dummy coupling schemes
-    preciceDebug("Test I(3), I(4), I(2)");
+    DEBUG("Test I(3), I(4), I(2)");
     int numberIterations = 3;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -309,7 +306,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test E, I(2)
-    preciceDebug("Test E, I(2)");
+    DEBUG("Test E, I(2)");
     int numberIterations = 1;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -340,7 +337,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test I(2), E
-    preciceDebug("Test I(2), E");
+    DEBUG("Test I(2), E");
     int numberIterations = 2;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -371,7 +368,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test E, I(3)
-    preciceDebug("Test E, I(3)");
+    DEBUG("Test E, I(3)");
     int numberIterations = 1;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -402,7 +399,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test I(3), E
-    preciceDebug("Test I(3), E");
+    DEBUG("Test I(3), E");
     int numberIterations = 3;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -433,7 +430,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme2->getTimesteps()-1, 10);
   }
   { // Test E, I(2), I(2)
-    preciceDebug("Test E, I(2), I(2)");
+    DEBUG("Test E, I(2), I(2)");
     int numberIterations = 1;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -470,7 +467,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test E, I(2), I(3)
-    preciceDebug("Test E, I(2), I(3)");
+    DEBUG("Test E, I(2), I(3)");
     int numberIterations = 1;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -513,7 +510,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test I(2), I(2), E
-    preciceDebug("Test I(2), I(2), E");
+    DEBUG("Test I(2), I(2), E");
     int numberIterations = 2;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -554,7 +551,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme3->getTimesteps()-1, 10);
   }
   { // Test I(2), I(2), E
-    preciceDebug("Test I(3), I(2), E");
+    DEBUG("Test I(3), I(2), E");
     int numberIterations = 3;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -603,7 +600,7 @@ void CompositionalCouplingSchemeTest:: testDummySchemeCompositions()
     validateEquals(scheme3->getTimesteps()-1, 10);
   }
   {
-    preciceDebug("Test I(3), E, I(2)");
+    DEBUG("Test I(3), E, I(2)");
     int numberIterations = 3;
     int maxTimesteps = 10;
     PtrCouplingScheme scheme1(
@@ -675,7 +672,7 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
 (
   const std::string& configFilename)
 {
-  preciceTrace1("setupThreeSolverCoupling()", configFilename);
+  preciceTrace("setupThreeSolverCoupling()", configFilename);
   using namespace mesh;
   utils::Parallel::synchronizeProcesses();
   assertion(utils::Parallel::getCommunicatorSize() > 1);
@@ -733,7 +730,7 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
   const std::string&         participantName,
   mesh::PtrMeshConfiguration meshConfig )
 {
-  preciceTrace1("runThreeSolverCoupling()", participantName);
+  preciceTrace("runThreeSolverCoupling()", participantName);
 
   validateEquals(meshConfig->meshes().size(), 1);
   mesh::PtrMesh mesh = meshConfig->meshes()[0];
@@ -831,7 +828,8 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
       }
       validateNumericalEquals(computedTime, cplScheme->getTime());
       validateEquals(computedTimesteps, cplScheme->getTimesteps()-1);
-      validate(cplScheme->hasDataBeenExchanged());
+      if(cplScheme->isCouplingOngoing())
+        validate(cplScheme->hasDataBeenExchanged());
     }
     cplScheme->finalize();
     validateEquals(computedTimesteps, 10);
@@ -848,7 +846,7 @@ void CompositionalCouplingSchemeTest:: connect
   const std::string&     localParticipant,
   m2n::M2N::SharedPointer& communication ) const
 {
-  preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
+  preciceTrace ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::splitCommunicator( localParticipant );

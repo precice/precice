@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "FindClosestEdge.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
@@ -10,7 +7,7 @@
 namespace precice {
 namespace query {
 
-tarch::logging::Log FindClosestEdge:: _log ( "precice::query::FindClosestEdge" );
+logging::Logger FindClosestEdge::_log("precice::query::FindClosestEdge");
 
 const utils::DynVector& FindClosestEdge:: getSearchPoint() const
 {
@@ -57,7 +54,7 @@ double FindClosestEdge:: getProjectionPointParameter
 
 void FindClosestEdge:: find ( mesh::Edge& edge )
 {
-  preciceTrace2 ( "find()", edge.vertex(0).getCoords(), edge.vertex(1).getCoords() );
+  preciceTrace ( "find()", edge.vertex(0).getCoords(), edge.vertex(1).getCoords() );
   // Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
   boost::array<double,2> barycentricCoords;
   int dimensions = edge.getDimensions();

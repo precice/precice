@@ -1,11 +1,8 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_IO_EXPORTVRML_HPP_
 #define PRECICE_IO_EXPORTVRML_HPP_
 
 #include "Export.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <string>
 #include <map>
 
@@ -45,7 +42,8 @@ public:
    * @brief Perform writing to VRML file
    */
   virtual void doExport (
-    const std::string& filname,
+    const std::string& name,
+    const std::string& location,
     mesh::Mesh&        mesh );
 
   /**
@@ -60,7 +58,7 @@ public:
 private:
 
   /// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   void openFile (
     std::ofstream&     outFile,

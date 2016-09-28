@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_LA_GRAMSCHMIDT_CPPH_
 #define _TARCH_LA_GRAMSCHMIDT_CPPH_
 
@@ -86,7 +83,7 @@ template<typename Matrix>
 //      RTraits::elem(k,k,R) = norm ( Acolk );
 //
 //      // Normalize k-th column of matrix Q
-////      precicePrint ( "Assigning matrix columns!" );
+////      INFO ( "Assigning matrix columns!" );
 ////      assign ( Qcolk, Acolk );
 //      assign ( Qcolk, Acolk );
 //      Qcolk /= RTraits::celem(k,k,R);

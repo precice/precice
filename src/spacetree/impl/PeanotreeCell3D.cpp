@@ -1,13 +1,10 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "PeanotreeCell3D.hpp"
 
 namespace precice {
 namespace spacetree {
 namespace impl {
 
-tarch::logging::Log PeanotreeCell3D:: _log("precice::spacetree::impl::PeanotreeCell3D");
+logging::Logger PeanotreeCell3D:: _log("precice::spacetree::impl::PeanotreeCell3D");
 
 const double PeanotreeCell3D::_oneThird(1.0/3.0);
 
@@ -49,7 +46,7 @@ void PeanotreeCell3D:: refine
   const utils::DynVector& cellCenter,
   const utils::DynVector& cellHalflengths )
 {
-  preciceTrace2 ( "refine()", cellCenter, cellHalflengths );
+  preciceTrace ( "refine()", cellCenter, cellHalflengths );
   assertion ( _content != nullptr );
   assertion ( _childs.size() == 0, _childs.size() );
   int dim = cellCenter.size();
@@ -58,7 +55,7 @@ void PeanotreeCell3D:: refine
   utils::DynVector newCenter(dim);
   utils::DynVector newHalflengths(dim, 1.0 / 3.0 * cellHalflengths[0]);
   for ( int i=0; i < threePowerD; i++ ){
-    preciceDebug ( "Creating child " << i );
+    DEBUG ( "Creating child " << i );
     newCenter = PEANO_FINE_CELL_CENTER_POSITIONS_3D[i];
     newCenter *= newHalflengths[0];
     newCenter += cellCenter;
@@ -100,7 +97,7 @@ void PeanotreeCell3D:: getChildData
   utils::DynVector&       childCenter,
   utils::DynVector&       childHalflengths )
 {
-  preciceTrace3 ( "getChildData()", childIndex, cellCenter, cellHalflengths );
+  preciceTrace ( "getChildData()", childIndex, cellCenter, cellHalflengths );
   assign(childHalflengths) = 0.5 * cellHalflengths[0];
   childCenter = utils::delinearize(childIndex, childCenter.size());
   childCenter *= childHalflengths[0];

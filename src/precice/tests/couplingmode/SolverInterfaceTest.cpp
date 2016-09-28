@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SolverInterfaceTest.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/impl/Participant.hpp"
@@ -13,6 +10,7 @@
 #include "tarch/la/WrappedVector.h"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
+#include <fstream>
 
 #include "tarch/tests/TestCaseFactory.h"
 registerIntegrationTest(precice::tests::SolverInterfaceTest)
@@ -20,7 +18,7 @@ registerIntegrationTest(precice::tests::SolverInterfaceTest)
 namespace precice {
 namespace tests {
 
-tarch::logging::Log SolverInterfaceTest:: _log("precice::tests::SolverInterfaceTest");
+logging::Logger SolverInterfaceTest:: _log("precice::tests::SolverInterfaceTest");
 
 SolverInterfaceTest:: SolverInterfaceTest()
 :
@@ -103,7 +101,7 @@ void SolverInterfaceTest:: configureSolverInterface
   const std::string& configFilename,
   SolverInterface&   interface )
 {
-  preciceTrace1("configureSolverInterface()", configFilename);
+  preciceTrace("configureSolverInterface()", configFilename);
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
@@ -1182,7 +1180,7 @@ void SolverInterfaceTest:: runSolver
    int&               timestepsComputed,
    double&            timeComputed )
 {
-  preciceTrace2("runSolver()", solverName, configurationFileName);
+  preciceTrace("runSolver()", solverName, configurationFileName);
   timestepsComputed = 0;
   timeComputed = 0.0;
   SolverInterface couplingInterface(solverName, 0, 1);
@@ -1215,7 +1213,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
   using tarch::la::equals;
 
   for (int dim=2; dim < 3; dim++){
-    preciceDebug("Running " << dim << "D test");
+    DEBUG("Running " << dim << "D test");
     SolverInterface interface(solverName, 0, 1);
     if (dim == 2){
       configureSolverInterface(config2D, interface);
@@ -1276,7 +1274,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
       validate(interface.isWriteDataRequired(maxDt));
       validate(interface.isReadDataAvailable());
       interface.mapReadDataTo(meshDisplID);
-      //precicePrint("1: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
+      //INFO("1: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
       force += 1.0;
       for (size_t i=0; i < size; i++){
         interface.readVectorData(dataDisplID, i, raw(displ));
@@ -1288,7 +1286,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
       validate(interface.isWriteDataRequired(maxDt));
       validate(interface.isReadDataAvailable());
       interface.mapReadDataTo(meshDisplID);
-      //precicePrint("2: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
+      //INFO("2: mapped data: " << interface._impl->_accessor->dataContext(dataDisplID).data->values());
       for (size_t i=0; i < size; i++){
         interface.readVectorData(dataDisplID, i, raw(displ));
         validateNumericalEquals(displ[0], 2.0*(positions[i][0] + 0.1));
@@ -1338,7 +1336,7 @@ void SolverInterfaceTest:: testStationaryMappingWithSolverMesh()
       maxDt = interface.advance(maxDt);
 
       validate(interface.isWriteDataRequired(maxDt));
-      validate(interface.isReadDataAvailable());
+      validate(not interface.isReadDataAvailable()); //second participant has no new data after last advance
       for (size_t i=0; i < size; i++){
         interface.readVectorData(dataDisplID, i, raw(force));
       }
@@ -1574,7 +1572,7 @@ void SolverInterfaceTest:: runThreeSolvers
   const std::string&      configFilename,
   const std::vector<int>& expectedCallsOfAdvance )
 {
-  preciceTrace2("runThreeSolvers", configFilename, expectedCallsOfAdvance);
+  preciceTrace("runThreeSolvers", configFilename, expectedCallsOfAdvance);
 
   int rank = utils::Parallel::getProcessRank();
   assertion((rank == 0) || (rank == 1) || (rank == 2), rank);
@@ -1844,8 +1842,8 @@ void SolverInterfaceTest:: testNASTINMeshRestart()
   restartFiles.push_back("precice_checkpoint_SOLIDZ_simstate.txt");
 
   for (std::string& restartFile : restartFiles){
-    std::ifstream  src((_pathToTests + restartFile).c_str(), std::ifstream::in);
-    std::ofstream  dst(restartFile.c_str(), std::ifstream::out);
+    std::ifstream  src(_pathToTests + restartFile, std::ifstream::in);
+    std::ofstream  dst(restartFile, std::ifstream::out);
     dst << src.rdbuf();
   }
 

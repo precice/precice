@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 extern "C" {
 #include "SolverInterfaceC.h"
 }
@@ -31,6 +28,12 @@ double precicec_initialize()
 {
   assertion ( impl != nullptr );
   return impl->initialize ();
+}
+
+void precicec_initialize_data()
+{
+  assertion ( impl != nullptr );
+  impl->initializeData ();
 }
 
 double precicec_advance( double computedTimestepLength )

@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CuboidTest.hpp"
 #include "geometry/Cuboid.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
@@ -26,7 +23,7 @@ namespace precice {
 namespace geometry {
 namespace tests {
 
-tarch::logging::Log CuboidTest:: _log ( "precice::geometry::tests::CuboidTest" );
+logging::Logger CuboidTest:: _log ( "precice::geometry::tests::CuboidTest" );
 
 CuboidTest:: CuboidTest ()
 :
@@ -61,7 +58,8 @@ void CuboidTest:: testCreation ()
     io::ExportVTK exportVTK(true);
     std::ostringstream name;
     name << "geometry-CuboidTest-dim" << dim;
-    exportVTK.doExport(name.str(), mesh);
+    std::string location = "";
+    exportVTK.doExport(name.str(), location, mesh);
   }
 }
 
@@ -72,7 +70,7 @@ void CuboidTest:: testConfiguration()
 
   for (int dim=2; dim <= 3; dim++){
     std::string xmlFilename = utils::Globals::getPathToSources() + "/geometry/tests/";
-    preciceDebug("dim = " << dim);
+    DEBUG("dim = " << dim);
     if (dim == 2){
       xmlFilename += "cuboid2d.xml";
     }
@@ -157,7 +155,7 @@ void CuboidTest:: testSubIDs2D ()
       validate ( utils::contained(idSide1, geometryIDs) );
     }
     else {
-      preciceDebug ( "Wrong coords = " << vertex.getCoords() );
+      DEBUG ( "Wrong coords = " << vertex.getCoords() );
       validate ( false );
     }
   }
@@ -183,7 +181,7 @@ void CuboidTest:: testSubIDs2D ()
       validate ( utils::contained(id, geometryIDs) );
     }
     else {
-      preciceDebug ( "Wrong center = " << edge.getCenter() );
+      DEBUG ( "Wrong center = " << edge.getCenter() );
       validate ( false );
     }
   }
@@ -264,7 +262,7 @@ void CuboidTest:: testSubIDs3D ()
       validate ( contained(idSide5, geometryIDs) );
     }
     else {
-      preciceDebug ( "Wrong coords = " << vertex.getCoords() );
+      DEBUG ( "Wrong coords = " << vertex.getCoords() );
       validate ( false );
     }
 
@@ -360,7 +358,7 @@ void CuboidTest:: testSubIDs3D ()
         validate ( contained(idSide1, geometryIDs) );
       }
       else {
-        preciceDebug ( "Wrong coords = " << edge.getCenter() );
+        DEBUG ( "Wrong coords = " << edge.getCenter() );
         validate ( false );
       }
     }
@@ -397,7 +395,7 @@ void CuboidTest:: testSubIDs3D ()
         validate ( contained(idSide5, geometryIDs) );
       }
       else {
-        preciceDebug ( "Wrong triangle center = " << triangle.getCenter() );
+        DEBUG ( "Wrong triangle center = " << triangle.getCenter() );
         validate ( false );
       }
     }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <vector>
 #include <string>
 
@@ -127,7 +127,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   static Communicator _globalCommunicator;
 

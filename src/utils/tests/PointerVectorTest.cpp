@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "PointerVectorTest.hpp"
 #include "../PointerVector.hpp"
 #include "../Parallel.hpp"
@@ -13,7 +10,7 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-tarch::logging::Log PointerVectorTest:: _log ( "precice::utils::tests::PointerVectoTest" );
+logging::Logger PointerVectorTest:: _log ( "precice::utils::tests::PointerVectoTest" );
 
 PointerVectorTest:: PointerVectorTest ()
 :

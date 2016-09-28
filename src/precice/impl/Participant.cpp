@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "Participant.hpp"
 #include "DataContext.hpp"
 #include "MeshContext.hpp"
@@ -14,7 +11,7 @@
 namespace precice {
 namespace impl {
 
-tarch::logging::Log Participant:: _log ( "precice::impl::Participant" );
+logging::Logger Participant:: _log ( "precice::impl::Participant" );
 
 int Participant:: _participantsSize = 0;
 
@@ -93,7 +90,7 @@ void Participant:: useMesh
   bool                                   provideMesh,
   bool                                   doesPreFiltering)
 {
-  preciceTrace3 ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
+  preciceTrace ( "useMesh()", _name,  mesh->getName(), mesh->getID() );
   checkDuplicatedUse(mesh);
   assertion ( mesh->getID() < (int)_meshContexts.size() );
   MeshContext* context = new MeshContext(mesh->getDimensions());
@@ -193,7 +190,7 @@ DataContext& Participant:: dataContext
 (
   int dataID )
 {
-  preciceTrace2 ( "dataContext(id)", dataID, _dataContexts.size() );
+  preciceTrace ( "dataContext(id)", dataID, _dataContexts.size() );
   assertion ( (dataID >= 0) && (dataID < (int)_dataContexts.size()) );
   assertion ( _dataContexts[dataID] != nullptr );
   return *_dataContexts[dataID];
@@ -248,7 +245,7 @@ MeshContext& Participant:: meshContext
 (
   int meshID )
 {
-  preciceTrace2("meshContext()", meshID, _meshContexts.size());
+  preciceTrace("meshContext()", meshID, _meshContexts.size());
   assertion((meshID >= 0) && (meshID < (int)_meshContexts.size()),
              meshID, _meshContexts.size());
   assertion(_meshContexts[meshID] != nullptr);
@@ -308,7 +305,7 @@ void Participant:: checkDuplicatedData
 (
   const mesh::PtrData& data )
 {
-  preciceTrace2 ( "checkDuplicatedData()", data->getID(), _dataContexts.size() );
+  preciceTrace ( "checkDuplicatedData()", data->getID(), _dataContexts.size() );
   assertion ( data->getID() < (int)_dataContexts.size(), data->getID(), _dataContexts.size() );
   preciceCheck ( _dataContexts[data->getID()] == nullptr, "checkDuplicatedData()",
                  "Participant \"" << _name << "\" can read/write data \""
@@ -342,7 +339,6 @@ void Participant:: setUseMaster(bool useMaster)
 {
   _useMaster = useMaster;
 }
-
 
 
 }} // namespace precice, impl

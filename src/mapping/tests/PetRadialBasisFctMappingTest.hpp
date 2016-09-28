@@ -2,7 +2,7 @@
 #pragma once
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
 
 
@@ -51,7 +51,7 @@ private:
   const double tolerance;
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   void testDistributedConsistent2DV1();
   void testDistributedConsistent2DV2();
@@ -61,6 +61,7 @@ private:
   void testDistributedConservative2DV2();
   void testDistributedConservative2DV3();
   void testDistributedConservative2DV4();
+  void testDistributedConservative2DV5();
 
   void testPetThinPlateSplines();
 
@@ -89,6 +90,8 @@ private:
   void testDeadAxis2D();
 
   void testDeadAxis3D();
+
+  void testSolutionCaching();
 
   struct VertexSpecification
   {

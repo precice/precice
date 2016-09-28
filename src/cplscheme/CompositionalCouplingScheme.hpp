@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_CPLSCHEME_COMPOSITIONALCOUPLINGSCHEME_HPP_
-#define PRECICE_CPLSCHEME_COMPOSITIONALCOUPLINGSCHEME_HPP_
+#pragma once
 
 #include "CouplingScheme.hpp"
 #include "Constants.hpp"
@@ -10,7 +6,7 @@
 
 #include "com/Communication.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 #include <vector>
 #include <list>
@@ -339,7 +335,7 @@ private:
   //typedef std::list<PtrCouplingScheme>::const_iterator ConstSchemesIt;
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Coupling schemes to be executed in parallel.
   Schemes _couplingSchemes;
@@ -374,5 +370,3 @@ private:
 };
 
 }} // namespace precice, cplscheme
-
-#endif /* PRECICE_CPLSCHEME_COMPOSITIONALCOUPLINGSCHEME_HPP_ */

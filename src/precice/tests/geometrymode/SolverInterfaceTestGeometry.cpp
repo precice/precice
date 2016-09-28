@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SolverInterfaceTestGeometry.hpp"
 #include "precice/Constants.hpp"
 #include "precice/config/SolverInterfaceConfiguration.hpp"
@@ -18,6 +15,7 @@
 #include <vector>
 #include <set>
 #include <algorithm>
+#include <fstream>
 #include <boost/range/algorithm.hpp>
 
 #include "tarch/tests/TestCaseFactory.h"
@@ -28,7 +26,7 @@ namespace tests {
 
 using namespace tarch::la;
 
-tarch::logging::Log SolverInterfaceTestGeometry::
+logging::Logger SolverInterfaceTestGeometry::
     _log ( "precice::tests::SolverInterfaceTestGeometry" );
 
 SolverInterfaceTestGeometry:: SolverInterfaceTestGeometry ()
@@ -86,7 +84,7 @@ void SolverInterfaceTestGeometry:: configureSolverInterface
   const std::string& configFilename,
   SolverInterface&   interface )
 {
-  preciceTrace1 ( "configureSolverInterface()", configFilename );
+  preciceTrace ( "configureSolverInterface()", configFilename );
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
@@ -100,7 +98,7 @@ void SolverInterfaceTestGeometry:: testConfiguration()
 {
   preciceTrace ( "testConfiguration()" );
   mesh::Mesh::resetGeometryIDsGlobally ();
-  preciceDebug ( "Test 2D configuration");
+  DEBUG ( "Test 2D configuration");
   { // 2D
     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
     configureSolverInterface (
@@ -109,7 +107,7 @@ void SolverInterfaceTestGeometry:: testConfiguration()
     geoInterface.initialize ();
     geoInterface.exportMesh ( "testConfiguration2D" );
   }
-  preciceDebug ( "Test 3D configuration");
+  DEBUG ( "Test 3D configuration");
   { // 3D
     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
     configureSolverInterface (
@@ -654,16 +652,16 @@ void SolverInterfaceTestGeometry:: testConservativeStationaryDataMapping()
   precice.writeBlockVectorData(dataID, 4, indices, values);
 
   precice.initialize();
-  preciceDebug ( "preCICE initialized");
+  DEBUG ( "preCICE initialized");
   precice.mapWriteDataFrom(meshID);
   // Validate results
   impl::PtrParticipant p = precice._impl->_accessor;
-  preciceDebug ( "Participant found");
+  DEBUG ( "Participant found");
   validate(p != nullptr);
-  preciceDebug ( "dataContexts: " << p->_dataContexts << " and dataID: " << dataID);
+  DEBUG ( "dataContexts: " << p->_dataContexts << " and dataID: " << dataID);
   validate(p->_dataContexts[dataID] != nullptr);
   mesh::PtrData data = p->_dataContexts[dataID]->toData;
-  preciceDebug ( "ToData found");
+  DEBUG ( "ToData found");
   validate(data.get() != nullptr);
   auto& writtenValues = data->values();
 
@@ -1282,14 +1280,14 @@ void SolverInterfaceTestGeometry:: testBug5()
 
   assign(h) = 3.950617283950000e-2;
   assignList(point) = 4.343209876543000, 4.0666666666666666, 4.106172839509999;
-//  precicePrint("----------------------------- START");
+//  INFO("----------------------------- START");
   voxelPos = interface.inquireVoxelPosition(raw(point), raw(h), false, meshIDs);
-//  precicePrint("----------------------------- END, pos = " << voxelPos.position()
+//  INFO("----------------------------- END, pos = " << voxelPos.position()
 //               << ", ids.size = " << voxelPos.meshIDs().size());
   //mesh::Mesh found("Found", 3, false);
 //  EdgeIterator it = voxelPos.contentHandle().edges().begin();
 //  for (;it != voxelPos.contentHandle().edges().end(); it++){
-//    precicePrint("Edge from " << wrap<3>(it.vertexCoords(0)) << " to " <<
+//    INFO("Edge from " << wrap<3>(it.vertexCoords(0)) << " to " <<
 //                 wrap<3>(it.vertexCoords(1)));
 //    mesh::Vertex& v0 = found.createVertex(wrap<3>(it.vertexCoords(0)));
 //    mesh::Vertex& v1 = found.createVertex(wrap<3>(it.vertexCoords(1)));

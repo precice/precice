@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NEWSPACETREE_DYNAMICTRAVERSAL_HPP_
 #define PRECICE_NEWSPACETREE_DYNAMICTRAVERSAL_HPP_
 
@@ -10,7 +7,7 @@
 #include "query/FindVoxelContent.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Helpers.hpp"
 #include <list>
 #include <memory>
@@ -71,7 +68,7 @@ private:
       uncachedCellCenters() {}
   };
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::shared_ptr<SearchPositionResult> searchPositionInternal (
     CELL_T&                 cell,
@@ -119,7 +116,7 @@ private:
 // ----------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template<typename CELL_T>
-tarch::logging::Log DynamicTraversal<CELL_T>::
+logging::Logger DynamicTraversal<CELL_T>::
   _log("precice::spacetree::impl::DynamicTraversal");
 
 template<typename CELL_T>
@@ -131,7 +128,7 @@ int DynamicTraversal<CELL_T>:: searchPosition
   const utils::DynVector& cellHalflengths,
   double                  refinementLimit )
 {
-  preciceTrace4("searchPosition()", searchPoint, cellCenter, cellHalflengths,
+  preciceTrace("searchPosition()", searchPoint, cellCenter, cellHalflengths,
                 refinementLimit);
   typedef std::shared_ptr<SearchPositionResult> PtrResult;
   PtrResult result = searchPositionInternal(cell, searchPoint, cellCenter,
@@ -146,7 +143,7 @@ int DynamicTraversal<CELL_T>:: searchPosition
   centerIter = result->uncachedCellCenters.begin();
   while (cellIter != result->uncachedCells.end()){
     assertion(centerIter != result->uncachedCellCenters.end());
-    preciceDebug("Computing position of cell at center " << *centerIter);
+    DEBUG("Computing position of cell at center " << *centerIter);
     assertion((*cellIter)->getPosition() == Spacetree::positionUndefined());
     assertion((*cellIter)->content().empty());
     PtrResult tempResult = searchPositionInternal(cell, *centerIter, cellCenter,
@@ -157,7 +154,7 @@ int DynamicTraversal<CELL_T>:: searchPosition
     cellIter++;
     centerIter++;
   }
-  preciceDebug("Return position = " << result->position);
+  DEBUG("Return position = " << result->position);
   return result->position;
 }
 
@@ -170,22 +167,22 @@ bool DynamicTraversal<CELL_T>:: searchDistance
   const utils::DynVector& cellHalflengths,
   double                  refinementLimit )
 {
-  preciceTrace3 ( "searchDistance()", cellCenter, cellHalflengths, refinementLimit );
+  preciceTrace ( "searchDistance()", cellCenter, cellHalflengths, refinementLimit );
   if ( cell.isLeaf() ){
-    preciceDebug ( "  Leaf" );
+    DEBUG ( "  Leaf" );
     if ( cell.needsRefinement(cellHalflengths, refinementLimit) ){
-      preciceDebug ( "    Needs refinement" );
+      DEBUG ( "    Needs refinement" );
       assertion ( not cell.content().empty() );
       cell.refine(cellCenter, cellHalflengths);
     }
     else {
-      preciceDebug ( "    Needs no refinement, apply findClosest" );
+      DEBUG ( "    Needs no refinement, apply findClosest" );
       findClosest ( cell.content() );
     }
   }
 
   if ( not cell.isLeaf() ) {
-    preciceDebug ( "  Node" );
+    DEBUG ( "  Node" );
     int childIndex = cell.getChildIndex (findClosest.getSearchPoint(), cellCenter,
                                          cellHalflengths);
     utils::DynVector newCenter(cellCenter);
@@ -205,10 +202,10 @@ bool DynamicTraversal<CELL_T>:: searchDistance
                                          findClosest.getSearchPoint());
     using tarch::la::greater;
     bool isAmbiguous = greater ( findClosest.getEuclidianDistance(), distance );
-    preciceDebug ( "  hasfound, return ambiguous = " << isAmbiguous );
+    DEBUG ( "  hasfound, return ambiguous = " << isAmbiguous );
     return isAmbiguous;
   }
-  preciceDebug ( "  return ambiguous or not found" );
+  DEBUG ( "  return ambiguous or not found" );
   return true;
 }
 
@@ -221,20 +218,20 @@ int DynamicTraversal<CELL_T>:: searchContent
   const utils::DynVector&  cellHalflengths,
   double                   refinementLimit )
 {
-  preciceTrace2 ( "searchContent()", findContent.getVoxelCenter(),
+  preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
                   findContent.getVoxelHalflengths() );
   std::shared_ptr<SearchContentResult> result = searchContentInternal (
       cell, findContent, cellCenter, cellHalflengths, refinementLimit );
   assertion ( result.use_count() > 0 );
   if ( result->position == Spacetree::positionUndefined() ){
-    preciceDebug("Position undefined after searchContentInternal()");
+    DEBUG("Position undefined after searchContentInternal()");
     // Compute positions of empty cells
     typename std::list<CELL_T*>::iterator cellIter;
     std::list<utils::DynVector>::iterator centerIter;
     cellIter = result->uncachedCells.begin();
     centerIter = result->uncachedCellCenters.begin();
     while ( cellIter != result->uncachedCells.end() ){
-      preciceDebug ( "Computing position of uncached cell at center " << *centerIter );
+      DEBUG ( "Computing position of uncached cell at center " << *centerIter );
       assertion ( (*cellIter)->getPosition() == Spacetree::positionUndefined() );
       query::FindClosest findDistance ( *centerIter );
       searchDistance ( cell, findDistance, cellCenter, cellHalflengths, refinementLimit );
@@ -244,7 +241,7 @@ int DynamicTraversal<CELL_T>:: searchContent
       (*cellIter)->setPosition ( pos );
       if ( result->position == Spacetree::positionUndefined() ){
         // Set only once, since all positions have to coincide for the voxel
-        preciceDebug ( "Set result position to " << pos );
+        DEBUG ( "Set result position to " << pos );
         result->position = pos;
       }
 #     ifdef Asserts
@@ -260,7 +257,7 @@ int DynamicTraversal<CELL_T>:: searchContent
 
     // Some/all searched cells had content, but not in the search voxel
     if ( result->position == Spacetree::positionUndefined() ){
-      preciceDebug ( "Computing position of search voxel" );
+      DEBUG ( "Computing position of search voxel" );
       query::FindClosest findDistance ( findContent.getVoxelCenter() );
       searchDistance ( cell, findDistance, cellCenter, cellHalflengths, refinementLimit );
       double distance = findDistance.getClosest().distance;
@@ -271,7 +268,7 @@ int DynamicTraversal<CELL_T>:: searchContent
   }
 
   assertion ( result->position != Spacetree::positionUndefined() );
-  preciceDebug("return content().size() = " << findContent.content().size()
+  DEBUG("return content().size() = " << findContent.content().size()
                << ", position = " << result->position);
   return result->position;
 }
@@ -286,39 +283,39 @@ DynamicTraversal<CELL_T>:: searchPositionInternal
   const utils::DynVector& cellHalflengths,
   double                  refinementLimit )
 {
-  preciceTrace4("searchPositionInternal()", searchPoint, cellCenter,
+  preciceTrace("searchPositionInternal()", searchPoint, cellCenter,
                 cellHalflengths, refinementLimit);
   using namespace tarch::la;
   std::shared_ptr<SearchPositionResult> data;
   double distance = 0.0;
   if (cell.isLeaf()){
-    preciceDebug("  Leaf");
+    DEBUG("  Leaf");
     if (cell.needsRefinement(cellHalflengths, refinementLimit)){
-      preciceDebug("    Needs refinement");
+      DEBUG("    Needs refinement");
       assertion(not cell.content().empty());
       cell.refine(cellCenter, cellHalflengths);
     }
     else {
-      preciceDebug("    Needs no refinement");
+      DEBUG("    Needs no refinement");
       assertion(data.use_count() == 0);
       data = std::shared_ptr<SearchPositionResult> (
              new SearchPositionResult(searchPoint) );
       if (cell.getPosition() == Spacetree::positionOnGeometry()){
-        preciceDebug("    Has content");
+        DEBUG("    Has content");
         //query::FindClosest findClosest ( searchPoint );
         data->findClosest(cell.content());
         if (data->findClosest.hasFound()){
-          preciceDebug("    Found elements");
+          DEBUG("    Found elements");
           distance = data->findClosest.getClosest().distance;
           data->position = Spacetree::positionOnGeometry(); // May by altered later
         }
       }
       else {
-        preciceDebug("    Is empty");
+        DEBUG("    Is empty");
         assertion(cell.content().empty());
         data->position = cell.getPosition();
         if (data->position == Spacetree::positionUndefined()){
-          preciceDebug("    Has undefined position");
+          DEBUG("    Has undefined position");
           data->uncachedCells.push_back(&cell);
           data->uncachedCellCenters.push_back(cellCenter);
         }
@@ -327,7 +324,7 @@ DynamicTraversal<CELL_T>:: searchPositionInternal
   }
 
   if (not cell.isLeaf()){ // could be a leaf on entrance to searchPositionInternal
-    preciceDebug("  Node");
+    DEBUG("  Node");
     assertion(cell.getPosition() == Spacetree::positionOnGeometry());
     int childIndex = cell.getChildIndex(searchPoint, cellCenter, cellHalflengths);
     utils::DynVector newCenter(cellCenter);
@@ -339,10 +336,10 @@ DynamicTraversal<CELL_T>:: searchPositionInternal
     data = searchPositionInternal(subtree, searchPoint, newCenter, newHalflengths,
                                   refinementLimit);
     if ((data->position == Spacetree::positionUndefined()) || data->ambiguous){
-      preciceDebug("    Did not find elements or ambiguous, visit others");
+      DEBUG("    Did not find elements or ambiguous, visit others");
       visitRemainingCells(subtree, cell, data->findClosest);
       if (data->findClosest.hasFound()){
-        preciceDebug("    Found elements in others");
+        DEBUG("    Found elements in others");
         distance = data->findClosest.getClosest().distance;
         data->position = Spacetree::positionOnGeometry();
         data->ambiguous = false;
@@ -352,7 +349,7 @@ DynamicTraversal<CELL_T>:: searchPositionInternal
 
   // Set inside/outside and check for ambiguities
   if (not equals(distance, 0.0)){
-    preciceDebug("  Checking for ambiguities of found objects");
+    DEBUG("  Checking for ambiguities of found objects");
     assertion(data.use_count() > 0);
     if (greater(distance, 0.0)){
       data->position = Spacetree::positionOutsideOfGeometry();
@@ -360,15 +357,15 @@ DynamicTraversal<CELL_T>:: searchPositionInternal
     else if (tarch::la::greater(0.0, distance)){
       data->position = Spacetree::positionInsideOfGeometry();
     }
-    preciceDebug("  found pos = " << data->position);
+    DEBUG("  found pos = " << data->position);
     double distanceToBound =  distanceToBoundary(cellCenter, cellHalflengths,
                                                  searchPoint);
     if (greater(std::abs(distance), distanceToBound)){
-      preciceDebug("  is ambigious");
+      DEBUG("  is ambigious");
       data->ambiguous = true;
     }
   }
-  preciceDebug("  return position = " << data->position << ", ambiguous = "
+  DEBUG("  return position = " << data->position << ", ambiguous = "
                << data->ambiguous);
   return data;
 }
@@ -383,30 +380,30 @@ DynamicTraversal<CELL_T>:: searchContentInternal
   const utils::DynVector&  cellHalflengths,
   double                   refinementLimit )
 {
-  preciceTrace4 ( "searchContentInternal()", cellCenter, cellHalflengths,
+  preciceTrace ( "searchContentInternal()", cellCenter, cellHalflengths,
                   findContent.getVoxelCenter(), findContent.getVoxelHalflengths() );
   if ( cell.isLeaf() ){
-    preciceDebug ( "Leaf..." );
+    DEBUG ( "Leaf..." );
     if ( cell.needsRefinement(cellHalflengths, refinementLimit) ){
-      preciceDebug ( "Needs refinement..." );
+      DEBUG ( "Needs refinement..." );
       cell.refine(cellCenter, cellHalflengths);
     }
     else {
-      preciceDebug ( "Don't needs refinement..." );
+      DEBUG ( "Don't needs refinement..." );
       std::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
       if ( (cell.getPosition() == Spacetree::positionOutsideOfGeometry())
            || (cell.getPosition() == Spacetree::positionInsideOfGeometry()) )
       {
-        preciceDebug ( "empty, position = " << cell.getPosition() );
+        DEBUG ( "empty, position = " << cell.getPosition() );
         data->position = cell.getPosition();
       }
       else if ( cell.getPosition() == Spacetree::positionUndefined() ) {
-        preciceDebug ( "empty, undefined position" );
+        DEBUG ( "empty, undefined position" );
         data->uncachedCells.push_back(&cell);
         data->uncachedCellCenters.push_back(cellCenter);
       }
       else {
-        preciceDebug ( "content size = " << cell.content().size() );
+        DEBUG ( "content size = " << cell.content().size() );
         assertion ( cell.getPosition() == Spacetree::positionOnGeometry() );
         assertion ( not cell.content().empty() );
         bool set = isCovered ( cellCenter, cellHalflengths,
@@ -414,26 +411,26 @@ DynamicTraversal<CELL_T>:: searchContentInternal
                                findContent.getVoxelHalflengths() );
         set &= findContent.getBoundaryInclusion() == query::FindVoxelContent::INCLUDE_BOUNDARY;
         if ( set ){
-          preciceDebug ( "Is covered by voxel..." );
+          DEBUG ( "Is covered by voxel..." );
           findContent.content().add ( cell.content() );
           data->position = Spacetree::positionOnGeometry();
         }
         else {
-          preciceDebug ( "Isn't covered by voxel..." );
+          DEBUG ( "Isn't covered by voxel..." );
           findContent ( cell.content() );
           if ( not findContent.content().empty() ) {
             data->position = Spacetree::positionOnGeometry();
           }
         }
       }
-      preciceDebug ( "return size = " << findContent.content().size()
+      DEBUG ( "return size = " << findContent.content().size()
                      << ", pos = " << data->position );
       return data;
     }
   }
 
   if ( not cell.isLeaf() ){
-    preciceDebug ( "Node..." );
+    DEBUG ( "Node..." );
     int searchCount = 0;
     std::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
     utils::DynVector childCenter(cellCenter.size());
@@ -497,13 +494,13 @@ bool DynamicTraversal<CELL_T>:: isCovered
   const utils::DynVector& voxelCenter,
   const utils::DynVector& voxelHalflengths ) const
 {
-  preciceTrace4 ( "isCovered()", cellCenter, cellHalflengths, voxelCenter,
+  preciceTrace ( "isCovered()", cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   utils::DynVector coverage ( cellCenter );
   coverage -= voxelCenter;
   tarch::la::abs ( coverage, coverage );
   coverage += cellHalflengths;
-  preciceDebug ( "return " << not tarch::la::oneGreater(coverage, voxelHalflengths) );
+  DEBUG ( "return " << not tarch::la::oneGreater(coverage, voxelHalflengths) );
   return not tarch::la::oneGreater(coverage, voxelHalflengths);
 }
 
@@ -515,13 +512,13 @@ bool DynamicTraversal<CELL_T>:: isOverlapped
   const utils::DynVector& voxelCenter,
   const utils::DynVector& voxelHalflengths ) const
 {
-  preciceTrace4 ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
+  preciceTrace ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
                   voxelHalflengths );
   utils::DynVector overlap = cellCenter;
   overlap -= voxelCenter;
   tarch::la::abs ( overlap, overlap );
   overlap -= cellHalflengths;
-  preciceDebug ( "return = " << tarch::la::allGreater(voxelHalflengths, overlap) );
+  DEBUG ( "return = " << tarch::la::allGreater(voxelHalflengths, overlap) );
   return tarch::la::allGreater(voxelHalflengths, overlap);
 }
 
@@ -534,7 +531,7 @@ void DynamicTraversal<CELL_T>:: visitAllCells
 {
   //preciceTrace ( "visitAllCells()" );
   if ( cell.isLeaf() ){
-    //preciceDebug ( "  Applying visitor to leaf cell content with size = "
+    //DEBUG ( "  Applying visitor to leaf cell content with size = "
     //               << cell.content().size() );
     visitor(cell.content());
   }

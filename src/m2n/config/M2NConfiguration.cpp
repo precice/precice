@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/DistributedComFactory.hpp"
@@ -18,7 +15,7 @@
 namespace precice {
 namespace m2n {
 
-tarch::logging::Log M2NConfiguration::
+logging::Logger M2NConfiguration::
    _log("precice::m2n::M2NConfiguration");
 
 M2NConfiguration:: M2NConfiguration

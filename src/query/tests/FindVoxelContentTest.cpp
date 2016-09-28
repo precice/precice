@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "FindVoxelContentTest.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -20,7 +17,7 @@ namespace precice {
 namespace query {
 namespace tests {
 
-tarch::logging::Log FindVoxelContentTest::
+logging::Logger FindVoxelContentTest::
    _log("precice::query::tests::FindVoxelContentTest");
 
 FindVoxelContentTest:: FindVoxelContentTest()
@@ -69,7 +66,7 @@ void FindVoxelContentTest:: performTestVertices
   bool                    positive,
   const utils::DynVector& offset)
 {
-  preciceTrace3("performTestVertices()", testDim, positive, offset);
+  preciceTrace("performTestVertices()", testDim, positive, offset);
   int dim = offset.size();
   using utils::DynVector;
   assertion(not tarch::la::oneGreater(offset, DynVector(dim,1.0)));
@@ -201,7 +198,7 @@ void FindVoxelContentTest:: performTestEdges
   bool                    positive,
   const utils::DynVector& offset)
 {
-  preciceTrace3("performTestEdges()", testDim, positive, offset);
+  preciceTrace("performTestEdges()", testDim, positive, offset);
   int dim = offset.size();
   using utils::DynVector;
   assertion(not tarch::la::oneGreater(offset, DynVector(dim,1.0)));
@@ -369,7 +366,7 @@ void FindVoxelContentTest:: performTestTriangles
   int  secondDimension,
   bool positive)
 {
-  preciceTrace2("performTestTriangles()", testDim, positive);
+  preciceTrace("performTestTriangles()", testDim, positive);
   int dim = 3;
   using utils::Vector3D;
   assertion(testDim != secondDimension);
@@ -697,7 +694,7 @@ void FindVoxelContentTest:: performTestTriangles
   mesh.computeState();
   findIncluded(mesh);
 //  if((sign = -1) && (testDim == 1) && (secondDimension == 2) && (thirdDimension == 0)){
-//    precicePrint("------------------------------ sign = " << sign << ", testDim = " << testDim
+//    INFO("------------------------------ sign = " << sign << ", testDim = " << testDim
 //                   << ", secondDimension = " << secondDimension << ", thirdDimension = " << thirdDimension);
 //  }
   findExcluded(mesh);
@@ -705,7 +702,7 @@ void FindVoxelContentTest:: performTestTriangles
   validateEquals(size, 15);
   size = findExcluded.content().triangles().size();
   //if((sign = -1) && (testDim == 1) && (secondDimension == 2) && (thirdDimension == 0)){
-//    precicePrint("############################## triangles = " << size);
+//    INFO("############################## triangles = " << size);
   //}
 //  if(size != 9){
 //    preciceError("sadf", "Aus die Mausss");
@@ -1203,7 +1200,8 @@ void FindVoxelContentTest:: testQueryCube ()
   mesh.computeState();
 
   io::ExportVTK exportMesh(true);
-  exportMesh.doExport("FindVoxelContentTest-testQueryCube", mesh);
+  std::string location = "";
+  exportMesh.doExport("FindVoxelContentTest-testQueryCube", location, mesh);
 
   // Query mesh
   Vector3D center(0.0);

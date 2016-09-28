@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "utils/xml/XMLTag.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
@@ -9,7 +6,7 @@
 namespace precice {
 namespace utils {
 
-tarch::logging::Log precice::utils::XMLTag:: _log ("precice::utils::XMLTag");
+logging::Logger precice::utils::XMLTag:: _log ("precice::utils::XMLTag");
 
 XMLTag:: XMLTag
 (
@@ -62,7 +59,7 @@ void XMLTag:: addSubtag
 (
   const XMLTag& tag )
 {
-  preciceTrace1("addSubtag()", tag._fullName);
+  preciceTrace("addSubtag()", tag._fullName);
   assertion (tag._name != std::string(""));
   if (not tag._namespace.empty()){
     _configuredNamespaces[tag._namespace] = false;
@@ -91,7 +88,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<double>& attribute )
 {
-  preciceTrace1 ( "addAttribute<double>()", attribute.getName() );
+  preciceTrace ( "addAttribute<double>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _doubleAttributes.insert(std::pair<std::string,XMLAttribute<double> >
@@ -102,7 +99,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<int>& attribute )
 {
-  preciceTrace1 ( "addAttribute<int>()", attribute.getName() );
+  preciceTrace ( "addAttribute<int>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _intAttributes.insert ( std::pair<std::string,
@@ -113,7 +110,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<std::string>& attribute )
 {
-  preciceTrace1 ( "addAttribute<string>()", attribute.getName() );
+  preciceTrace ( "addAttribute<string>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _stringAttributes.insert ( std::pair<std::string,XMLAttribute<std::string> >
@@ -124,7 +121,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<bool>& attribute )
 {
-  preciceTrace1 ( "addAttribute<bool>()", attribute.getName() );
+  preciceTrace ( "addAttribute<bool>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _booleanAttributes.insert ( std::pair<std::string,XMLAttribute<bool> >
@@ -135,7 +132,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<utils::Vector2D>& attribute )
 {
-  preciceTrace1 ( "addAttribute<Vector2D>()", attribute.getName() );
+  preciceTrace ( "addAttribute<Vector2D>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _vector2DAttributes.insert ( std::pair<std::string,XMLAttribute<utils::Vector2D> >
@@ -146,7 +143,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<utils::Vector3D>& attribute )
 {
-  preciceTrace1 ( "addAttribute<Vector3D>()", attribute.getName() );
+  preciceTrace ( "addAttribute<Vector3D>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _vector3DAttributes.insert(std::pair<std::string,XMLAttribute<utils::Vector3D> >
@@ -157,7 +154,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<utils::DynVector>& attribute )
 {
-  preciceTrace1 ( "addAttribute<DynVector>()", attribute.getName() );
+  preciceTrace ( "addAttribute<DynVector>()", attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _dynVectorAttributes.insert (
@@ -222,12 +219,12 @@ void XMLTag:: parse
 (
   XMLTag::XMLReader* xmlReader )
 {
-  preciceTrace1("parse()", _fullName);
+  preciceTrace("parse()", _fullName);
   try {
     resetAttributes();
     if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
       assertion(xmlReader->getNodeName() != nullptr);
-      preciceDebug("reading attributes of tag " << xmlReader->getNodeName());
+      DEBUG("reading attributes of tag " << xmlReader->getNodeName());
       readAttributes(xmlReader);
       _listener.xmlTagCallback(*this);
     }
@@ -236,14 +233,14 @@ void XMLTag:: parse
       while (xmlReader->read()){
         if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
           assertion(xmlReader->getNodeName() != nullptr);
-          preciceDebug("reading subtag " << xmlReader->getNodeName()
+          DEBUG("reading subtag " << xmlReader->getNodeName()
                        << " of tag " << _fullName);
           parseSubtag(xmlReader);
         }
         else if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT_END){
           assertion(xmlReader->getNodeName() != nullptr);
           if (std::string(xmlReader->getNodeName()) == _fullName){
-            preciceDebug("end of tag " << xmlReader->getNodeName());
+            DEBUG("end of tag " << xmlReader->getNodeName());
             areAllSubtagsConfigured();
             _configured = true;
             _listener.xmlEndTagCallback(*this);
@@ -285,7 +282,7 @@ void XMLTag:: parseSubtag
 (
   XMLTag::XMLReader* xmlReader )
 {
-  preciceTrace1("parseSubtag()", _fullName);
+  preciceTrace("parseSubtag()", _fullName);
   bool success = false;
   for (XMLTag* tag : _subtags){
     if (std::string(xmlReader->getNodeName()) == tag->getFullName()){
@@ -379,7 +376,7 @@ utils::DynVector XMLTag:: getDynVectorAttributeValue
   const std::string& name,
   int                dimensions ) const
 {
-  preciceTrace2("getDynVectorAttributeValue()", name, dimensions);
+  preciceTrace("getDynVectorAttributeValue()", name, dimensions);
   std::map<std::string,XMLAttribute<utils::DynVector> >::const_iterator iter;
   iter = _dynVectorAttributes.find(name);
   assertion (iter  != _dynVectorAttributes.end());
@@ -396,7 +393,7 @@ utils::DynVector XMLTag:: getDynVectorAttributeValue
   for (int i=0; i < dimensions; i++){
     result[i] = parsed[i];
   }
-  preciceDebug("Returning value = " << result);
+  DEBUG("Returning value = " << result);
   return result;
 }
 
@@ -586,7 +583,7 @@ std::string XMLTag:: printDocumentation
   int linewidth,
   int indentation ) const
 {
-  preciceTrace1("printDocumentation()", indentation);
+  preciceTrace("printDocumentation()", indentation);
   std::string indent;
   for (int i=0; i < indentation; i++){
     indent += " ";
@@ -749,8 +746,8 @@ void configure
   XMLTag&            tag,
   const std::string& configurationFilename )
 {
-  tarch::logging::Log _log("precice::utils");
-  preciceTrace2("configure()", tag.getFullName(), configurationFilename);
+  logging::Logger _log("precice::utils");
+  preciceTrace("configure()", tag.getFullName(), configurationFilename);
   //bool success = false;
   tarch::irr::io::IrrXMLReader* xmlReader =
     tarch::irr::io::createIrrXMLReader(configurationFilename.c_str());

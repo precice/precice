@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "RadialBasisFctMappingTest.hpp"
 #include "mapping/RadialBasisFctMapping.hpp"
 #include "mesh/Mesh.hpp"
@@ -17,7 +14,7 @@ namespace precice {
 namespace mapping {
 namespace tests {
 
-tarch::logging::Log RadialBasisFctMappingTest::
+logging::Logger RadialBasisFctMappingTest::
   _log ( "precice::mapping::tests::RadialBasisFctMappingTest" );
 
 RadialBasisFctMappingTest:: RadialBasisFctMappingTest()

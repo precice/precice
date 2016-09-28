@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "WatchPointTest.hpp"
 #include "../impl/WatchPoint.hpp"
 #include "mesh/Vertex.hpp"
@@ -16,7 +13,7 @@ registerTest(precice::tests::WatchPointTest)
 namespace precice {
 namespace tests {
 
-tarch::logging::Log WatchPointTest:: _log ( "precice::tests::WatchPointTest" );
+logging::Logger WatchPointTest:: _log ( "precice::tests::WatchPointTest" );
 
 WatchPointTest:: WatchPointTest()
 :

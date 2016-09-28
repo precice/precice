@@ -15,7 +15,7 @@
 #include "ParallelMatrixOperations.hpp"
 #include "QRFactorization.hpp"
 #include "Preconditioner.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
 #include <Eigen/Dense>
@@ -181,7 +181,7 @@ public:
      _psi.conservativeResize(_rows, _cols);
      _phi.conservativeResize(_rows, _cols);
      _sigma.conservativeResize(_cols);
-     preciceDebug("SVD factorization of Jacobian is truncated to "<<_cols<<" DOFs. Cut off "<<waste<<" DOFs");
+     DEBUG("SVD factorization of Jacobian is truncated to "<<_cols<<" DOFs. Cut off "<<waste<<" DOFs");
 
      _initialSVD = true;
    }
@@ -266,7 +266,7 @@ private:
   void computeQRdecomposition(Matrix const& A, Matrix & Q, Matrix & R);
 
   /// @brief: Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /// @brief: preconditioner for least-squares system if vectorial system is used.
   PtrPreconditioner _preconditioner;

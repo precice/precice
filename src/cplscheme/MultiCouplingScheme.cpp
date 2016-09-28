@@ -8,7 +8,7 @@
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log MultiCouplingScheme::_log("precice::cplscheme::MultiCouplingScheme" );
+logging::Logger MultiCouplingScheme::_log("precice::cplscheme::MultiCouplingScheme" );
 
 MultiCouplingScheme::MultiCouplingScheme
 (
@@ -41,7 +41,7 @@ void MultiCouplingScheme::initialize
   double startTime,
   int    startTimestep )
 {
-  preciceTrace2("initialize()", startTime, startTimestep);
+  preciceTrace("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
   assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
@@ -141,7 +141,7 @@ void MultiCouplingScheme::initializeData()
 
 void MultiCouplingScheme::advance()
 {
-  preciceTrace2("advance()", getTimesteps(), getTime());
+  preciceTrace("advance()", getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
@@ -151,7 +151,7 @@ void MultiCouplingScheme::advance()
   setIsCouplingTimestepComplete(false);
   bool convergence = false;
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-    preciceDebug("Computed full length of iteration");
+    DEBUG("Computed full length of iteration");
 
     receiveData();
 
@@ -192,11 +192,11 @@ void MultiCouplingScheme::advance()
     sendData();
 
     if (not convergence) {
-      preciceDebug("No convergence achieved");
+      DEBUG("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
     }
     else {
-      preciceDebug("Convergence achieved");
+      DEBUG("Convergence achieved");
       advanceTXTWriters();
     }
     updateTimeAndIterations(convergence);
@@ -312,7 +312,7 @@ CouplingData* MultiCouplingScheme:: getData
 (
   int dataID)
 {
-  preciceTrace1("getData()", dataID);
+  preciceTrace("getData()", dataID);
   DataMap::iterator iter = _allData.find(dataID);
   if (iter != _allData.end()) {
     return  &(*(iter->second));

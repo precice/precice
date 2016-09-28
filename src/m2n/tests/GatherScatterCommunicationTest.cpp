@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NO_MPI
 
 #include "GatherScatterCommunicationTest.hpp"
@@ -22,7 +19,7 @@ namespace precice {
 namespace m2n {
 namespace tests {
 
-tarch::logging::Log GatherScatterCommunicationTest::
+logging::Logger GatherScatterCommunicationTest::
   _log ( "precice::m2n::tests::GatherScatterCommunicationTest" );
 
 GatherScatterCommunicationTest:: GatherScatterCommunicationTest ()
@@ -95,7 +92,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     masterSlaveCom->requestConnection( "Part2Master", "Part2Slaves", 1, 2 );
   }
 
-  preciceDebug("Initialized and MasterSlave connection set up");
+  DEBUG("Initialized and MasterSlave connection set up");
   utils::Parallel::synchronizeProcesses();
 
   if(utils::Parallel::getProcessRank() == 0){//Part1
@@ -111,7 +108,7 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
     m2n->requestMasterConnection ( "Part1", "Part2Master");
   }
 
-  preciceDebug("MasterMaster connection set up");
+  DEBUG("MasterMaster connection set up");
   utils::Parallel::synchronizeProcesses();
 
   int dimensions = 2;

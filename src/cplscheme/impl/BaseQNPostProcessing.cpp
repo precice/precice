@@ -1,13 +1,3 @@
-/*
- * BaseQNPostProcessing.cpp
- *
- *  Created on: Dez 5, 2015
- *      Author: Klaudius Scheufele
- */
-
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "BaseQNPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
@@ -31,7 +21,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log BaseQNPostProcessing::
+logging::Logger BaseQNPostProcessing::
 _log("precice::cplscheme::impl::BaseQNPostProcessing");
 
 
@@ -72,6 +62,10 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _singularityLimit(singularityLimit),
   _matrixCols(),
   _dimOffsets(),
+  _infostringstream(std::ostringstream::ate),
+  _infostream(),
+  its(0),
+  tSteps(0),
   _values(),
   _oldValues(),
   _oldResiduals(),
@@ -79,11 +73,7 @@ BaseQNPostProcessing::BaseQNPostProcessing
   _matrixVBackup(),
   _matrixWBackup(),
   _matrixColsBackup(),
-  its(0),
-  tSteps(0),
-  _nbDelCols(0),
-  _infostringstream(std::ostringstream::ate),
-  _infostream()
+  _nbDelCols(0)
   //_debugOut()
 {
   preciceCheck((_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
@@ -113,17 +103,19 @@ BaseQNPostProcessing::BaseQNPostProcessing
 void BaseQNPostProcessing::initialize(
     DataMap& cplData)
 {
-  preciceTrace1("initialize()", cplData.size());
+  preciceTrace("initialize()", cplData.size());
 
 
   //std::stringstream sss; sss<<"debugOutput-rank-"<<utils::MasterSlave::_rank; _debugOut.open(sss.str(), std::ios_base::out); _debugOut << std::setprecision(16);
 
   size_t entries = 0;
+  std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   for (auto & elem : _dataIDs) {
     preciceCheck(utils::contained(elem, cplData), "initialize()",
         "Data with ID " << elem << " is not contained in data " "given at initialization!");
     entries += cplData[elem]->values->size();
+    subVectorSizes.push_back(cplData[elem]->values->size());
   }
 
   _matrixCols.push_front(0);
@@ -172,7 +164,7 @@ void BaseQNPostProcessing::initialize(
       }
       _dimOffsets[i + 1] = accumulatedNumberOfUnknowns;
     }
-    preciceDebug("Number of unknowns at the interface (global): "<<_dimOffsets.back());
+    DEBUG("Number of unknowns at the interface (global): "<<_dimOffsets.back());
     if (utils::MasterSlave::_masterMode){
       _infostringstream<<"\n--------\n DOFs (global): "<<_dimOffsets.back()<<"\n offsets: "<<_dimOffsets<<std::endl;
     }
@@ -205,7 +197,7 @@ void BaseQNPostProcessing::initialize(
     }
   }
 
-  _preconditioner->initialize(entries);
+  _preconditioner->initialize(subVectorSizes);
 }
 
 
@@ -275,7 +267,7 @@ void BaseQNPostProcessing::updateDifferenceMatrices
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
     // do nothing: constant relaxation
   } else {
-    preciceDebug("   Update Difference Matrices");
+    DEBUG("   Update Difference Matrices");
     if (not _firstIteration) {
       // Update matrices V, W with newest information
 
@@ -342,7 +334,7 @@ void BaseQNPostProcessing::performPostProcessing
 (
     DataMap& cplData)
 {
-  preciceTrace2("performPostProcessing()", _dataIDs.size(), cplData.size());
+  preciceTrace("performPostProcessing()", _dataIDs.size(), cplData.size());
   Event e("Base-QN_performPostProcessing()", true, true); // time measurement, barrier
 
   assertion(_oldResiduals.size() == _oldXTilde.size(),_oldResiduals.size(), _oldXTilde.size()); assertion(_values.size() == _oldXTilde.size(),_values.size(), _oldXTilde.size());
@@ -361,7 +353,8 @@ void BaseQNPostProcessing::performPostProcessing
   updateDifferenceMatrices(cplData);
 
   if (_firstIteration && (_firstTimeStep || _forceInitialRelaxation)) {
-    preciceDebug("   Performing underrelaxation");
+
+    DEBUG("   Performing underrelaxation");
 
     // store output x_tilde and residual
     _oldXTilde = _values;
@@ -373,12 +366,12 @@ void BaseQNPostProcessing::performPostProcessing
     // secondary data
     computeUnderrelaxationSecondaryData(cplData);
   } else {
-    preciceDebug("   Performing quasi-Newton Step");
+    DEBUG("   Performing quasi-Newton Step");
 
     // If the previous time step converged within one single iteration, nothing was added
     // to the LS system matrices and they need to be restored from the backup at time T-2
     if (not _firstTimeStep && (getLSSystemCols() < 1) && (_timestepsReused == 0) && not _forceInitialRelaxation) {
-      preciceDebug("   Last time step converged after one iteration. Need to restore the matrices from backup.");
+      DEBUG("   Last time step converged after one iteration. Need to restore the matrices from backup.");
 
       _matrixCols = _matrixColsBackup;
       _matrixV = _matrixVBackup;
@@ -483,7 +476,7 @@ void BaseQNPostProcessing::performPostProcessing
 
 void BaseQNPostProcessing::applyFilter()
 {
-  preciceTrace1(__func__,_filter);
+  preciceTrace(__func__,_filter);
   Event e("Base-QN_applyFilter()", true, true); // time measurement, barrier
 
   if (_filter == PostProcessing::NOFILTER) {
@@ -497,7 +490,7 @@ void BaseQNPostProcessing::applyFilter()
 
       removeMatrixColumn(delIndices[i]);
 
-      preciceDebug(" Filter: removing column with index " << delIndices[i] <<" in iteration " << its<< " of time step: " << tSteps);
+      DEBUG(" Filter: removing column with index " << delIndices[i] <<" in iteration " << its<< " of time step: " << tSteps);
     }
     assertion(_matrixV.cols() == _qrV.cols(), _matrixV.cols(), _qrV.cols());
   }
@@ -588,7 +581,7 @@ void BaseQNPostProcessing::iterationsConverged
   for (int cols: _matrixCols) {
     stream << cols << ", ";
   }
-  preciceDebug(stream.str());
+  DEBUG(stream.str());
 # endif // Debug
 
 
@@ -624,7 +617,7 @@ void BaseQNPostProcessing::iterationsConverged
   else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
     assertion(toRemove > 0, toRemove);
-    preciceDebug("Removing " << toRemove << " cols from least-squares system with "<< getLSSystemCols() << " cols");
+    DEBUG("Removing " << toRemove << " cols from least-squares system with "<< getLSSystemCols() << " cols");
     assertion(_matrixV.cols() == _matrixW.cols(), _matrixV.cols(), _matrixW.cols());
     assertion(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
@@ -653,7 +646,7 @@ void BaseQNPostProcessing::removeMatrixColumn
 (
     int columnIndex)
 {
-  preciceTrace2("removeMatrixColumn()", columnIndex, _matrixV.cols());
+  preciceTrace("removeMatrixColumn()", columnIndex, _matrixV.cols());
 
   // debugging information, can be removed
   _nbDelCols++;

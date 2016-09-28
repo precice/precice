@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ExportAndReimportVRMLTest.hpp"
 #include "io/ExportVRML.hpp"
 #include "io/ImportVRML.hpp"
@@ -27,7 +24,7 @@ namespace io {
 namespace tests {
 
 
-tarch::logging::Log ExportAndReimportVRMLTest::
+logging::Logger ExportAndReimportVRMLTest::
    _log ( "precice::io::tests::ExportAndReimportVRMLTest" );
 
 ExportAndReimportVRMLTest:: ExportAndReimportVRMLTest()
@@ -169,7 +166,8 @@ void ExportAndReimportVRMLTest:: testReimportDriftRatchet()
   importMesh.doImport("io-ExportVRMLTest-testExportCuboid-3d.wrl", mesh);
   mesh.computeState();
   ExportVTK exportVTK(true);
-  exportVTK.doExport("io-ExportAndReimportVRMLTest-testReimportDriftRatchet.vtk", mesh);
+  std::string location = "";
+  exportVTK.doExport("io-ExportAndReimportVRMLTest-testReimportDriftRatchet.vtk", location, mesh);
 }
 
 

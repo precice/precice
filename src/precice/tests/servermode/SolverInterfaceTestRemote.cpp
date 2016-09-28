@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SolverInterfaceTestRemote.hpp"
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
@@ -17,7 +14,7 @@ registerIntegrationTest(precice::tests::SolverInterfaceTestRemote)
 namespace precice {
 namespace tests {
 
-tarch::logging::Log SolverInterfaceTestRemote::
+logging::Logger SolverInterfaceTestRemote::
    _log("precice::tests::SolverInterfaceTestRemote");
 
 SolverInterfaceTestRemote:: SolverInterfaceTestRemote()
@@ -79,7 +76,7 @@ void SolverInterfaceTestRemote:: configureSolverInterface
   const std::string& configFilename,
   SolverInterface&   interface )
 {
-  preciceTrace1("configureSolverInterface()", configFilename);
+  preciceTrace("configureSolverInterface()", configFilename);
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();

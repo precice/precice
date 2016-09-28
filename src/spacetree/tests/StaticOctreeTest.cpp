@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "StaticOctreeTest.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/Parallel.hpp"
@@ -12,7 +9,7 @@ namespace precice {
 namespace spacetree {
 namespace tests {
 
-tarch::logging::Log StaticOctreeTest::
+logging::Logger StaticOctreeTest::
   _log("precice::spacetree::tests::StaticOctreeTest");
 
 void StaticOctreeTest:: run()
@@ -39,42 +36,42 @@ void StaticOctreeTest:: run()
     SpacetreeTestScenarios testScenarios(testName, factory);
 
     if (evenTasks){
-      preciceDebug ( "test search position" );
+      DEBUG ( "test search position" );
       testScenarios.testSearchPosition();
     }
 
     if (oddTasks){
-      preciceDebug ( "test search distance" );
+      DEBUG ( "test search distance" );
       testScenarios.testSearchDistance();
     }
 
     if (evenTasks){
-      preciceDebug ( "test neighbor search" );
+      DEBUG ( "test neighbor search" );
       testScenarios.testNeighborSearch();
     }
 
     if (oddTasks){
-      preciceDebug ( "test search content vertices" );
+      DEBUG ( "test search content vertices" );
       testScenarios.testSearchContentVertices();
     }
 
     if (evenTasks){
-      preciceDebug ( "test search content edges" );
+      DEBUG ( "test search content edges" );
       testScenarios.testSearchContentEdges();
     }
 
     if (oddTasks){
-      preciceDebug ( "test search content triangles" );
+      DEBUG ( "test search content triangles" );
       testScenarios.testSearchContentTriangles();
     }
 
     if (evenTasks){
-      preciceDebug ( "test search voxel position" );
+      DEBUG ( "test search voxel position" );
       testScenarios.testVoxelPosition();
     }
 
     if (oddTasks){
-      preciceDebug ( "test splitting voxels" );
+      DEBUG ( "test splitting voxels" );
       testScenarios.testSplittingVoxels();
     }
     validate(testScenarios.getNumberOfErrors() == 0);

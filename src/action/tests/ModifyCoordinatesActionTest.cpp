@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ModifyCoordinatesActionTest.hpp"
 #include "action/ModifyCoordinatesAction.hpp"
 #include "geometry/Cuboid.hpp"
@@ -18,7 +15,7 @@ namespace precice {
 namespace action {
 namespace tests {
 
-tarch::logging::Log ModifyCoordinatesActionTest::
+logging::Logger ModifyCoordinatesActionTest::
    _log ( "precice::action::tests::ModifyCoordinatesActionTest" );
 
 ModifyCoordinatesActionTest:: ModifyCoordinatesActionTest ()
@@ -36,7 +33,7 @@ void ModifyCoordinatesActionTest:: run ()
 
 //void ModifyCoordinatesActionTest:: testSetAsDisplacement ()
 //{
-//   preciceDebug ( "testSetAsDisplacement()", "Entering" );
+//   DEBUG ( "testSetAsDisplacement()", "Entering" );
 //
 //   // Create geometryContext by faking a geometry but not using it to create
 //   // the mesh. The mesh is created by hand, such that references to the vertices
@@ -89,7 +86,7 @@ void ModifyCoordinatesActionTest:: run ()
 //   validate ( tarch::la::equals(edge.getNormal(), normalizedNormal),
 //              "testSetAsDisplacement" );
 //
-//   preciceDebug ( "testSetAsDisplacement()", "Leaving" );
+//   DEBUG ( "testSetAsDisplacement()", "Leaving" );
 //}
 
 void ModifyCoordinatesActionTest:: testAddToCoordinates ()

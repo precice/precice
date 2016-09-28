@@ -4,10 +4,11 @@
 #include "tarch/configuration/ConfigurationRegistry.h"
 #include "tarch/configuration/TopLevelConfiguration.h"
 #include "tarch/irr/XML.h"
-#include "utils/assertion.hpp"
+//#include "utils/assertion.hpp"
+//#include "logging/LogMacros.hpp"
+#include "utils/Globals.hpp"
 
-
-tarch::logging::Log tarch::configuration::ConfigurationRegistry::_log("tarch::configuration::ConfigurationRegistry");
+precice::logging::Logger tarch::configuration::ConfigurationRegistry::_log("tarch::configuration::ConfigurationRegistry");
 
 tarch::configuration::ConfigurationRegistry::ConfigurationRegistry():
 //_log("tarch::configuration::ConfigurationRegistry"),
@@ -31,7 +32,7 @@ tarch::configuration::ConfigurationRegistry::readConfiguration(
       }
       else
       if ( _topLevelTags.find(currentTag)==_topLevelTags.end() ) {
-        _log.error(
+        preciceWarning(
           "readConfiguration(tarch::irr::io::IrrXMLReader,std::string)",
           "invalid top level tag. Received <" + currentTag + "> but expected <"
           + topLevelTag + "> or any top level tag"
@@ -60,7 +61,7 @@ tarch::configuration::ConfigurationRegistry::readConfiguration(
     (xmlReader->getNodeName()!=topLevelTag)
     )
   ) {
-    _log.error(
+    preciceWarning(
       "parseSubtag(...)",
       "expected closing tag for " + topLevelTag +
       ", but received tag <" + xmlReader->getNodeName() + ">"
@@ -120,7 +121,7 @@ void tarch::configuration::ConfigurationRegistry::enlistAvailableTopLevelTags() 
   for (const auto & elem : _topLevelTags) {
     msg << "<" << elem.first << "> ";
   }
-  _log.info( "enlistAvailableTopLevelTags()", msg.str() );
+  preciceInfo( "enlistAvailableTopLevelTags()", msg.str() );
 }
 
 
@@ -140,7 +141,7 @@ tarch::configuration::ConfigurationRegistry::readFile(
     tarch::irr::io::createIrrXMLReader( filename.c_str() );
   
   if ( (xmlReader==nullptr) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
-    _log.error( "readFile(std::string,std::string)", "was not able to read input file " + filename );
+    preciceWarning( "readFile(std::string,std::string)", "was not able to read input file " + filename );
     return std::list<tarch::configuration::TopLevelConfiguration*>();
   }
   
@@ -156,7 +157,7 @@ tarch::configuration::ConfigurationRegistry::readString(
     tarch::irr::io::createIrrXMLReaderFromString( configString );
   
   if ( (xmlReader==nullptr) || (! xmlReader->read()) || (xmlReader->getNodeType()==irr::io::EXN_NONE) ) {
-    _log.error( "readString(std::string,std::string)", "was not able to read input string" );
+    preciceWarning( "readString(std::string,std::string)", "was not able to read input string" );
     return std::list<tarch::configuration::TopLevelConfiguration*>();
   }
   

@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_PLOTTER_GRIDDATA_UNSTRUCTURED_UNSTRUCTURED_GRID_WRITER_H_
 #define _TARCH_PLOTTER_GRIDDATA_UNSTRUCTURED_UNSTRUCTURED_GRID_WRITER_H_
 

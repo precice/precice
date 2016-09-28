@@ -1,11 +1,8 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_CPLSCHEME_UNCOUPLEDCOUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_UNCOUPLEDCOUPLINGSCHEME_HPP_
 
 #include "BaseCouplingScheme.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -81,7 +78,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Name of participant starting the explicit coupling scheme.
   std::string _participant;

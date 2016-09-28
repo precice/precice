@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_IO_IMPL_VRML10PARSER_HPP_
 #define PRECICE_IO_IMPL_VRML10PARSER_HPP_
 
@@ -9,7 +6,7 @@
 #include "mesh/PropertyContainer.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>
 #include <boost/spirit/include/phoenix_operator.hpp>
@@ -51,7 +48,7 @@ struct VRML10Parser : public qi::grammar<ITERATOR_T, qi::space_type>
    };
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    // @brief The entry point for parsing.
    qi::rule<ITERATOR_T, qi::space_type> start;
@@ -166,7 +163,7 @@ struct VRML10Parser : public qi::grammar<ITERATOR_T, qi::space_type>
 
 
 template< typename ITERATOR_T >
-tarch::logging::Log VRML10Parser<ITERATOR_T>:: _log ( "precice::io::impl::VRML10Parser" );
+logging::Logger VRML10Parser<ITERATOR_T>:: _log ( "precice::io::impl::VRML10Parser" );
 
 template< typename ITERATOR_T >
 VRML10Parser<ITERATOR_T>:: VRML10Parser
@@ -393,7 +390,7 @@ template< typename ITERATOR_T >
 void VRML10Parser<ITERATOR_T>:: debug ( const std::string & message )
 {
   std::string preciceMethodName ("debug()");
-  preciceDebug ( message );
+  DEBUG ( message );
 }
 
 template< typename ITERATOR_T >

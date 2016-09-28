@@ -1,12 +1,9 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _PLOTTER_CONFIGURATION_PLOTTERCONFIGURATION_H_
 #define _PLOTTER_CONFIGURATION_PLOTTERCONFIGURATION_H_
 
 
 #include "tarch/configuration/Configuration.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 
 
@@ -39,7 +36,7 @@ class tarch::plotter::griddata::unstructured::configuration::UnstructuredGridPlo
     /**
      * Logging device.
      */
-    static tarch::logging::Log _log;
+    static logging::Logger _log;
 
     const static std::string PLOTTER_IDENTIFIER_VTK_TEXTFILE;
     const static std::string ATTRIBUTE_PATH;

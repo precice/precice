@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SimulationStateIO.hpp"
 #include "utils/Globals.hpp"
 #ifndef PRECICE_NO_SPIRIT2
@@ -30,7 +27,7 @@ const std::string& SimulationStateIO:: standardFileExtension()
   return ext;
 }
 
-tarch::logging::Log SimulationStateIO:: _log("precice::io::SimulationStateIO");
+logging::Logger SimulationStateIO:: _log("precice::io::SimulationStateIO");
 
 SimulationStateIO:: SimulationStateIO
 (

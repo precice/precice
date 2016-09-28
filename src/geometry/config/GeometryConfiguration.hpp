@@ -1,15 +1,11 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef GEOMETRY_CONFIG_GEOMETRYCONFIGURATION_HPP_
-#define GEOMETRY_CONFIG_GEOMETRYCONFIGURATION_HPP_
+#pragma once
 
 #include "geometry/Geometry.hpp"
 #include "geometry/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include <vector>
 #include <set>
 #include "boost/tuple/tuple.hpp"
@@ -90,7 +86,7 @@ public:
 private:
 
    // @brief Log device
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    // @brief XML tag corresponding to class
    const std::string TAG;
@@ -208,5 +204,3 @@ private:
 };
 
 }} // namespace precice, geoemtry
-
-#endif /*GEOMETRY_CONFIG_GEOMETRYCONFIGURATION_HPP_*/

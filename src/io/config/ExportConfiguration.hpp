@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_IO_EXPORTCONFIGURATION_HPP_
 #define PRECICE_IO_EXPORTCONFIGURATION_HPP_
 
@@ -8,7 +5,7 @@
 #include "io/Constants.hpp"
 #include "io/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "precice/Constants.hpp"
 #include <string>
 #include <list>
@@ -49,7 +46,7 @@ public:
   /**
    * @brief Returns the configured export context, valid if isValid() is true.
    */
-  const std::list<ExportContext>& exportContexts() const { return _contexts; }
+  std::list<ExportContext>& exportContexts() { return _contexts; }
 
   /**
    * @brief Callback function required for use of automatic configuration.
@@ -72,7 +69,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   const std::string TAG;
 

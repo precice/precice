@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 //#ifndef PRECICE_NO_MPI
 
 #include "MasterSlave.hpp"
@@ -24,18 +21,18 @@ bool MasterSlave::_slaveMode = false;
 com::Communication::SharedPointer MasterSlave::_communication;
 
 
-tarch::logging::Log MasterSlave:: _log ( "precice::utils::MasterSlave" );
+logging::Logger MasterSlave:: _log ( "precice::utils::MasterSlave" );
 
 void MasterSlave:: configure(int rank, int size)
 {
-  preciceTrace2("initialize()", rank, size);
+  preciceTrace("initialize()", rank, size);
   preciceCheck(size>=2, "initialize()", "You cannot use a master with a serial participant.");
   _rank = rank;
   _size = size;
   assertion(_rank != -1 && _size != -1);
   _masterMode = (rank==0);
   _slaveMode = (rank!=0);
-  preciceDebug("slaveMode: " << _slaveMode <<", masterMode: " << _masterMode);
+  DEBUG("slaveMode: " << _slaveMode <<", masterMode: " << _masterMode);
 }
 
 double MasterSlave:: l2norm(const DynVector& vec)

@@ -17,7 +17,7 @@ namespace precice {
 namespace geometry {
 namespace impl {
 
-tarch::logging::Log PreFilterPostFilterDecomposition:: _log ( "precice::geometry::PreFilterPostFilterDecomposition" );
+logging::Logger PreFilterPostFilterDecomposition:: _log ( "precice::geometry::PreFilterPostFilterDecomposition" );
 
 PreFilterPostFilterDecomposition:: PreFilterPostFilterDecomposition
 (
@@ -31,7 +31,7 @@ PreFilterPostFilterDecomposition:: PreFilterPostFilterDecomposition
 void PreFilterPostFilterDecomposition:: decompose(
   mesh::Mesh& seed)
 {
-  preciceTrace1 ( "decompose()", utils::MasterSlave::_rank );
+  preciceTrace ( "decompose()", utils::MasterSlave::_rank );
   using tarch::la::raw;
 
   std::map<int,std::vector<int> > boundingVertexDistribution;
@@ -47,7 +47,7 @@ void PreFilterPostFilterDecomposition:: preFilter(
   mesh::Mesh& seed,
   std::map<int,std::vector<int> >& boundingVertexDistribution)
 {
-  preciceTrace1 ( "preFilter()", utils::MasterSlave::_rank );
+  preciceTrace ( "preFilter()", utils::MasterSlave::_rank );
   preciceInfo("preFilter()", "Pre-filter mesh " << seed.getName() );
   Event e("pre-filter mesh");
 
@@ -75,7 +75,7 @@ void PreFilterPostFilterDecomposition:: preFilter(
       assertion(_safetyFactor>=0.0);
       _safetyGap *= _safetyFactor;
 
-      preciceDebug("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
+      DEBUG("From slave " << rankSlave << ", bounding mesh: " << _bb[0].first
                    << ", " << _bb[0].second << " and " << _bb[1].first << ", " << _bb[1].second);
       mesh::Mesh slaveMesh("SlaveMesh", _dimensions, seed.isFlipNormals());
       boundingVertexDistribution[rankSlave] = filterMesh(seed, slaveMesh);
@@ -95,7 +95,7 @@ void PreFilterPostFilterDecomposition:: preFilter(
     boundingVertexDistribution[0] = filterMesh(seed, filteredMesh);
     seed.clear(); //clear global mesh on master
     seed.addMesh(filteredMesh);
-    preciceDebug("Master mesh after filtering, #vertices " << seed.vertices().size());
+    DEBUG("Master mesh after filtering, #vertices " << seed.vertices().size());
   }
 }
 
@@ -103,7 +103,7 @@ void PreFilterPostFilterDecomposition:: postFilter(
   mesh::Mesh& seed,
   std::vector<int>& filteredVertexPositions)
 {
-  preciceTrace1 ( "postFilter()", utils::MasterSlave::_rank );
+  preciceTrace ( "postFilter()", utils::MasterSlave::_rank );
   preciceInfo("postFilter()", "Post-filter mesh " << seed.getName() );
   Event e("post-filter mesh");
 
@@ -121,7 +121,7 @@ void PreFilterPostFilterDecomposition:: feedback(
   std::map<int,std::vector<int> >& boundingVertexDistribution,
   std::vector<int>& filteredVertexPositions)
 {
-  preciceTrace1 ( "feedback()", utils::MasterSlave::_rank );
+  preciceTrace ( "feedback()", utils::MasterSlave::_rank );
   preciceInfo("feedback()", "Feedback mesh " << seed.getName() );
   Event e("feedback mesh");
 

@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "TXTWriterReaderTest.hpp"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
@@ -16,7 +13,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-tarch::logging::Log TXTWriterReaderTest:: _log ( "precice::io::tests::TXTWriterReaderTest" );
+logging::Logger TXTWriterReaderTest:: _log ( "precice::io::tests::TXTWriterReaderTest" );
 
 TXTWriterReaderTest:: TXTWriterReaderTest()
 :

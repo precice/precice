@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ActionConfiguration.hpp"
 #include "utils/xml/XMLAttribute.hpp"
 #include "utils/xml/ValidatorEquals.hpp"
@@ -18,7 +15,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log ActionConfiguration::
+logging::Logger ActionConfiguration::
   _log("precice::config::ActionConfiguration");
 
 //const std::string& ActionConfiguration:: getTag()
@@ -281,7 +278,7 @@ void ActionConfiguration:: xmlTagCallback
 (
   utils::XMLTag& callingTag )
 {
-  preciceTrace1("xmlTagCallback()", callingTag.getName());
+  preciceTrace("xmlTagCallback()", callingTag.getName());
   if (callingTag.getNamespace() == TAG){
     _configuredAction = ConfiguredAction();
     _configuredAction.type = callingTag.getName();
@@ -348,7 +345,7 @@ int ActionConfiguration:: getUsedMeshID() const
 //  utils::XMLTag&     callingTag,
 //  const std::string& type )
 //{
-//  preciceTrace1 ( "addSubtags()", callingTag.getName() );
+//  preciceTrace ( "addSubtags()", callingTag.getName() );
 //  assertion ( type != std::string("") );
 //  using utils::XMLTag;
 //  using utils::XMLAttribute;
@@ -518,7 +515,7 @@ void ActionConfiguration:: createAction()
 
 action::Action::Timing ActionConfiguration:: getTiming () const
 {
-  preciceTrace1 ( "getTiming()", _configuredAction.timing );
+  preciceTrace ( "getTiming()", _configuredAction.timing );
   action::Action::Timing timing;
   if ( _configuredAction.timing == VALUE_REGULAR_PRIOR ){
     timing = action::Action::ALWAYS_PRIOR;

@@ -1,13 +1,3 @@
-/*
- * MMPostProcessing.cpp
- *
- *  Created on: Sep 18, 2015
- *      Author: Klaudius Scheufele
- */
-
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "MMPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
@@ -27,7 +17,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log MMPostProcessing::
+logging::Logger MMPostProcessing::
 _log("precice::cplscheme::impl::MMPostProcessing");
 
 /* ----------------------------------------------------------------------------
@@ -106,9 +96,10 @@ MMPostProcessing::MMPostProcessing
 void MMPostProcessing::initialize(
     DataMap& cplData)
 {
-  preciceTrace1(__func__, cplData.size());
+  preciceTrace(__func__, cplData.size());
   size_t entries = 0;
   size_t coarseEntries = 0;
+  std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   assertion(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
   assertion(_dataIDs.size() == 0, _dataIDs.size());
@@ -120,6 +111,7 @@ void MMPostProcessing::initialize(
     preciceCheck(utils::contained(elem, cplData), "initialize()",
         "Data with ID " << elem << " is not contained in data " "given at initialization!");
     entries += cplData[elem]->values->size();
+    subVectorSizes.push_back(cplData[elem]->values->size());
   }
 
   for (auto & elem : _coarseDataIDs) {
@@ -211,7 +203,7 @@ void MMPostProcessing::initialize(
     }
   }
 
-  _preconditioner->initialize(entries);
+    _preconditioner->initialize(subVectorSizes);
 
   if (_estimateJacobian) {
     _MMMappingMatrix = Eigen::MatrixXd::Zero(getLSSystemRows(), entries);
@@ -346,7 +338,7 @@ void MMPostProcessing::updateDifferenceMatrices(
    */
   if (not _firstIteration)
   {
-    preciceDebug("   Update Difference Matrices C and F with coarse and fine model responses");
+    DEBUG("   Update Difference Matrices C and F with coarse and fine model responses");
     assertion(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
     assertion(getLSSystemCols() <= _maxIterationsUsed,getLSSystemCols(), _maxIterationsUsed);
 
@@ -396,7 +388,7 @@ void MMPostProcessing::updateDifferenceMatrices(
 void MMPostProcessing::performPostProcessing(
     DataMap& cplData)
 {
-  preciceTrace2(__func__, _dataIDs.size(), cplData.size());
+  preciceTrace(__func__, _dataIDs.size(), cplData.size());
 
   //assertion(_fineDataIDs.size() == _scalings.size(), _fineDataIDs.size(), _scalings.size());
   assertion(_fineOldResiduals.size() == _fineResiduals.size(),_fineOldResiduals.size(), _fineResiduals.size());
@@ -463,8 +455,6 @@ void MMPostProcessing::performPostProcessing(
      */
     computeCoarseModelDesignSpecifiaction();
 
-    preciceDebug("coarse model design sepc (scaled): "<<_coarseModel_designSpecification.norm());
-
     assertion(isSet(_coarseModel_designSpecification)); // the coarse model design specification is computed within the MM cycle and should therefore be set and valid
 
 
@@ -514,10 +504,6 @@ void MMPostProcessing::performPostProcessing(
       coarseCplData.insert(pair);
     }
 
-    Eigen::VectorXd s1 = _coarseModel_designSpecification.head((int)_coarseModel_designSpecification.size()/2);
-    Eigen::VectorXd s2 = _coarseModel_designSpecification.tail((int)_coarseModel_designSpecification.size()/2);
-    preciceDebug("coarse model design sepc: "<<_coarseModel_designSpecification.norm()<<" displ: "<<s1.norm()<<" pressure: "<<s2.norm());
-
     // no preconditioning, i.e. scaling of input/output data. This is done in the coarse optimization routine, only for the coarse cplData.
     // the _coarseModel_designSpecification is scaled back at this point
 
@@ -556,10 +542,8 @@ void MMPostProcessing::performPostProcessing(
           "the given maximum number of allowed iterations: "<<_maxIterCoarseModelOpt);
     }
   }
-
-
-  preciceDebug("  * Manifold Mapping Iterations: "<<its);
-  preciceDebug("  * Coarse Model Optimization Iterations: "<<_iterCoarseModelOpt);
+  DEBUG("  * Manifold Mapping Iterations: "<<its);
+  DEBUG("  * Coarse Model Optimization Iterations: "<<_iterCoarseModelOpt);
 }
 
 
@@ -788,7 +772,7 @@ void MMPostProcessing::iterationsConverged
   for (int cols : _matrixCols) {
     stream << cols << ", ";
   }
-  preciceDebug(stream.str());
+  DEBUG(stream.str());
 # endif // Debug
 
   if (_timestepsReused == 0) {
@@ -799,7 +783,7 @@ void MMPostProcessing::iterationsConverged
   else if ((int) _matrixCols.size() > _timestepsReused) {
     int toRemove = _matrixCols.back();
     assertion(toRemove > 0, toRemove);
-    preciceDebug("Removing " << toRemove << " cols from mannifold mapping least-squares system with "<< getLSSystemCols() << " cols");
+    DEBUG("Removing " << toRemove << " cols from mannifold mapping least-squares system with "<< getLSSystemCols() << " cols");
     assertion(_matrixF.cols() == _matrixC.cols(), _matrixF.cols(), _matrixC.cols());
     assertion(getLSSystemCols() > toRemove, getLSSystemCols(), toRemove);
 
@@ -825,7 +809,7 @@ void MMPostProcessing::removeMatrixColumn
 (
     int columnIndex)
 {
-  preciceTrace2(__func__, columnIndex, _matrixF.cols());
+  preciceTrace(__func__, columnIndex, _matrixF.cols());
 
   // debugging information, can be removed
   deletedColumns++;

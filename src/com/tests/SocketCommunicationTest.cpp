@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 #ifndef PRECICE_NO_SOCKETS
 
@@ -18,7 +15,7 @@ namespace precice {
 namespace com {
 namespace tests {
 
-tarch::logging::Log SocketCommunicationTest:: _log ("precice::com::tests::SocketCommunicationTest");
+logging::Logger SocketCommunicationTest:: _log ("precice::com::tests::SocketCommunicationTest");
 
 SocketCommunicationTest:: SocketCommunicationTest()
 :
@@ -139,7 +136,7 @@ void SocketCommunicationTest:: testParallelClient()
   SocketCommunication com;
   int rank = utils::Parallel::getProcessRank();
   if ( rank == 0 ){
-    preciceDebug("branch rank 0");
+    DEBUG("branch rank 0");
     com.acceptConnection("server", "client", 0, 1);
     validateEquals ( com.getRemoteCommunicatorSize(), 2 );
     std::string msg;
@@ -154,7 +151,7 @@ void SocketCommunicationTest:: testParallelClient()
     com.closeConnection();
   }
   else if ( (rank == 1) || (rank == 2) ){
-    preciceDebug("branch rank 1, 2");
+    DEBUG("branch rank 1, 2");
     com.requestConnection("server", "client", rank-1, 2);
     validateEquals ( com.getRemoteCommunicatorSize(), 1 );
     std::ostringstream rankMsg;

@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "FindClosest.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
@@ -12,7 +9,7 @@
 namespace precice {
 namespace query {
 
-tarch::logging::Log FindClosest:: _log("precice::query::FindClosest");
+logging::Logger FindClosest:: _log("precice::query::FindClosest");
 
 bool FindClosest:: hasFound() const
 {
@@ -36,7 +33,7 @@ const utils::DynVector& FindClosest:: getSearchPoint() const
 
 bool FindClosest:: determineClosest()
 {
-  preciceTrace1 ( "determineClosest()", _searchpoint );
+  preciceTrace ( "determineClosest()", _searchpoint );
   using tarch::la::greater;
   _closest = ClosestElement(_searchpoint.size());
   _closest.distance = std::numeric_limits<double>::max();

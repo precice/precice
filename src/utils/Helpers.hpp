@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_UTILS_HELPERS_HPP_
 #define PRECICE_UTILS_HELPERS_HPP_
 
@@ -12,7 +9,6 @@
 #include <set>
 #include <list>
 #include "Parallel.hpp"
-#include "Tracer.hpp"
 
 namespace precice {
 namespace utils {
@@ -90,6 +86,12 @@ std::string getTypeName(const std::string& var);
 std::string getTypeName(const bool& var);
 
 std::string getTypeName(const int& var);
+
+/**
+ * @brief Returns true if machine is big-endian
+ * needed for parallel vtk output
+ */
+bool isMachineBigEndian();
 
 /**
  * @brief Enables overload of operator() and operator, to fill STL containers.

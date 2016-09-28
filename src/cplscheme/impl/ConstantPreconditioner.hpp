@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #pragma once
 
 #include "Preconditioner.hpp"
@@ -21,7 +18,6 @@ class ConstantPreconditioner : public Preconditioner
 public:
 
   ConstantPreconditioner(
-      std::vector<int> dimensions,
       std::vector<double> factors
   );
   /**
@@ -29,7 +25,7 @@ public:
    */
   virtual ~ConstantPreconditioner() {}
 
-  virtual void initialize(int N);
+  virtual void initialize(std::vector<size_t>& svs);
 
 private:
 
@@ -41,7 +37,7 @@ private:
   virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res);
 
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // constant user-defined factors to scale the quasi-Newton system
   std::vector<double> _factors;

@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #if !defined(_TARCH_LOGGING_CCA_LOGGER_H_) && defined(CCA)
 #define _TARCH_LOGGING_CCA_LOGGER_H_
 

@@ -1,12 +1,9 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_TESTS_SOLVERINTERFACETESTGEOMETRY_HPP_
 #define PRECICE_TESTS_SOLVERINTERFACETESTGEOMETRY_HPP_
 
 #include "precice/SolverInterface.hpp"
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "precice/SolverInterface.hpp"
 
 namespace precice {
@@ -32,7 +29,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::string _pathToTests;
 

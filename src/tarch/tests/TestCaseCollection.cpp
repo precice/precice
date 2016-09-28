@@ -2,9 +2,9 @@
 #include "mpi.h"
 #endif
 #include "tarch/tests/TestCaseCollection.h"
+#include "utils/Globals.hpp"
 
-
-tarch::logging::Log tarch::tests::TestCaseCollection::_log("tarch::tests::TestCaseCollection");
+precice::logging::Logger tarch::tests::TestCaseCollection::_log("tarch::tests::TestCaseCollection");
 
 
 tarch::tests::TestCaseCollection::TestCaseCollection():
@@ -37,7 +37,7 @@ void tarch::tests::TestCaseCollection::setUp() {
 
 
 void tarch::tests::TestCaseCollection::run() {
-  logTraceInWith1Argument( "run()", _testCaseName );
+  preciceTrace( "run()", _testCaseName );
   std::string logInformation = "running test case collection \"" + _testCaseName + "\" ";
   for (auto currentTestCase : _testCases) {
     
@@ -59,9 +59,8 @@ void tarch::tests::TestCaseCollection::run() {
     logInformation += " failed";
   }
   if (_writeToLog) {
-    _log.info("run()",logInformation );
+    preciceInfo("run()",logInformation );
   }
-  logTraceOutWith2Arguments( "run()", _testCaseName, _errors );
 
   /*
    * suggested replacement for the code above

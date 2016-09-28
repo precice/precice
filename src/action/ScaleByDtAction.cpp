@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ScaleByDtAction.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Edge.hpp"
@@ -13,7 +10,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log ScaleByDtAction:: _log ( "precice::action::ScaleByDtAction" );
+logging::Logger ScaleByDtAction:: _log ( "precice::action::ScaleByDtAction" );
 
 ScaleByDtAction:: ScaleByDtAction
 (
@@ -39,20 +36,20 @@ void ScaleByDtAction:: performAction
   double computedPartFullDt,
   double fullDt )
 {
-  preciceTrace3("performAction()", dt, computedPartFullDt, fullDt);
+  preciceTrace("performAction()", dt, computedPartFullDt, fullDt);
   auto& sourceValues = _sourceData->values();
   auto& targetValues = _targetData->values();
   assertion(sourceValues.size() == targetValues.size(),
              sourceValues.size(), targetValues.size());
   if (_scaling == SCALING_BY_COMPUTED_DT_RATIO){
     double scaling = dt / fullDt;
-    preciceDebug("Scale by computed dt ratio " << scaling);
+    DEBUG("Scale by computed dt ratio " << scaling);
     for (int i=0; i < targetValues.size(); i++){
       targetValues[i] = sourceValues[i] * scaling;
     }
   }
   else if (_scaling == SCALING_BY_DT){
-    preciceDebug("Scale by dt " << fullDt);
+    DEBUG("Scale by dt " << fullDt);
     for ( int i=0; i < targetValues.size(); i++ ){
       targetValues[i] = sourceValues[i] * fullDt;
     }
@@ -60,7 +57,7 @@ void ScaleByDtAction:: performAction
   else {
     assertion(_scaling == SCALING_BY_COMPUTED_DT_PART_RATIO, _scaling);
     double scaling = computedPartFullDt / fullDt;
-    preciceDebug("Scale by computed dt part ratio " << scaling);
+    DEBUG("Scale by computed dt part ratio " << scaling);
     for (int i=0; i < targetValues.size(); i++){
       targetValues[i] = sourceValues[i] * scaling;
     }

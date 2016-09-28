@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "Decomposition.hpp"
 #include "utils/EventTimings.hpp"
 #include "utils/Helpers.hpp"
@@ -14,7 +11,7 @@ namespace precice {
 namespace geometry {
 namespace impl {
 
-tarch::logging::Log Decomposition:: _log ( "precice::geometry::Decomposition" );
+logging::Logger Decomposition:: _log ( "precice::geometry::Decomposition" );
 
 Decomposition:: Decomposition
 (
@@ -62,9 +59,9 @@ void Decomposition:: clearBoundingMappings()
 }
 
 std::vector<int> Decomposition:: filterMesh(mesh::Mesh& seed, mesh::Mesh& filteredMesh){
-  preciceTrace1 ( "filterMesh()", utils::MasterSlave::_rank );
+  preciceTrace ( "filterMesh()", utils::MasterSlave::_rank );
 
-  preciceDebug("Bounding mesh. #vertices: " << seed.vertices().size()
+  DEBUG("Bounding mesh. #vertices: " << seed.vertices().size()
                <<", #edges: " << seed.edges().size()
                <<", #triangles: " << seed.triangles().size() << ", rank: " << utils::MasterSlave::_rank);
 
@@ -107,7 +104,7 @@ std::vector<int> Decomposition:: filterMesh(mesh::Mesh& seed, mesh::Mesh& filter
     }
   }
 
-  preciceDebug("Filtered mesh. #vertices: " << filteredMesh.vertices().size()
+  DEBUG("Filtered mesh. #vertices: " << filteredMesh.vertices().size()
                <<", #edges: " << filteredMesh.edges().size()
                <<", #triangles: " << filteredMesh.triangles().size() << ", rank: " << utils::MasterSlave::_rank);
 

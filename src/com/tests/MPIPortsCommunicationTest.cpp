@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 #ifndef PRECICE_NO_MPI
 
@@ -20,7 +17,7 @@ namespace precice {
 namespace com {
 namespace tests {
 
-tarch::logging::Log MPIPortsCommunicationTest::_log(
+logging::Logger MPIPortsCommunicationTest::_log(
     "precice::com::tests::MPIPortsCommunicationTest");
 
 MPIPortsCommunicationTest::MPIPortsCommunicationTest()

@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SolverInterfaceConfiguration.hpp"
 #include "ParticipantConfiguration.hpp"
 #include "precice/impl/Participant.hpp"
@@ -22,7 +19,7 @@
 namespace precice {
 namespace config {
 
-tarch::logging::Log SolverInterfaceConfiguration:: _log("precice::config::SolverInterfaceConfiguration");
+logging::Logger SolverInterfaceConfiguration:: _log("precice::config::SolverInterfaceConfiguration");
 
 SolverInterfaceConfiguration:: SolverInterfaceConfiguration
 (
@@ -99,7 +96,7 @@ void SolverInterfaceConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1("xmlTagCallback()", tag.getName());
+  preciceTrace("xmlTagCallback()", tag.getName());
   if (tag.getName() == TAG){
     _dimensions = tag.getIntAttributeValue(ATTR_DIMENSIONS);
     _geometryMode = tag.getBooleanAttributeValue(ATTR_GEOMETRY_MODE);
@@ -119,7 +116,7 @@ void SolverInterfaceConfiguration:: xmlEndTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1("xmlEndTagCallback()", tag.getName());
+  preciceTrace("xmlEndTagCallback()", tag.getName());
   if (tag.getName() == TAG){
     _meshConfiguration->setMeshSubIDs();
     if (_geometryMode ){

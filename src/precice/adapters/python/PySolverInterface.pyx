@@ -115,7 +115,7 @@ cdef class PySolverInterface:
 
    # initialize
    def initialize (self):
-      self.thisptr.initialize ()
+      return self.thisptr.initialize ()
 
    # initialize data
    def initializeData (self):

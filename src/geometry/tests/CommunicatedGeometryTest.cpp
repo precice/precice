@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NO_MPI
 
 #include "CommunicatedGeometryTest.hpp"
@@ -29,7 +26,7 @@ namespace precice {
 namespace geometry {
 namespace tests {
 
-tarch::logging::Log CommunicatedGeometryTest::
+logging::Logger CommunicatedGeometryTest::
   _log ( "precice::geometry::tests::CommunicatedGeometryTest" );
 
 CommunicatedGeometryTest:: CommunicatedGeometryTest ()

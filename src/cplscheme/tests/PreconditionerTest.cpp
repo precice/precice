@@ -19,7 +19,7 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-tarch::logging::Log PreconditionerTest::
+logging::Logger PreconditionerTest::
    _log ( "precice::cplscheme::tests::PreconditionerTest" );
 
 PreconditionerTest::PreconditionerTest ()
@@ -56,6 +56,7 @@ void PreconditionerTest::run ()
     testMethod (testResSumPreconditioner);
     testMethod (testValuePreconditioner);
     testMethod (testConstPreconditioner);
+    testMethod (testMultilpleMeshes);
   }
 }
 
@@ -94,6 +95,14 @@ void PreconditionerTest::setUp()
   _compareDataResSum.append(3.35416906103434157558e+04);
   _compareDataResSum.append(3.50007001329973377324e+00);
   _compareDataResSum.append(4.00008001519969536020e+00);
+  _compareDataResSum2.append(1.58113093108981217938e+02);
+  _compareDataResSum2.append(3.16226186217962435876e+02);
+  _compareDataResSum2.append(4.74339279326943596971e+02);
+  _compareDataResSum2.append(4.00008000319945455914e+00);
+  _compareDataResSum2.append(5.00010000399932064141e+00);
+  _compareDataResSum2.append(6.00012000479918228280e+00);
+  _compareDataResSum2.append(7.00014000559904481236e+00);
+  _compareDataResSum2.append(8.00016000639890734192e+00);
   _compareDataValue.append(4.47213595499957927704e-01);
   _compareDataValue.append(8.94427190999915855407e-01);
   _compareDataValue.append(3.23498319610315276940e-01);
@@ -110,24 +119,22 @@ void PreconditionerTest::setUp()
   _compareDataConstant.append(2.99999999999999955591e+00);
   _compareDataConstant.append(6.99999999999999883585e+05);
   _compareDataConstant.append(7.99999999999999650754e+05);
-
 }
 
 void PreconditionerTest::testResPreconditioner ()
 {
   preciceTrace("testResPreconditioner()");
-  std::vector<int> dims;
-  dims.push_back(1);
-  dims.push_back(2);
-  dims.push_back(1);
+  std::vector<size_t> svs;
+  svs.push_back(2);
+  svs.push_back(4);
+  svs.push_back(2);
 
-  impl::ResidualPreconditioner precond(dims, -1);
+  impl::ResidualPreconditioner precond(-1);
 
-  int numberOfRows = 8;
-  precond.initialize(numberOfRows);
+  precond.initialize(svs);
   DataValues backup = _data;
 
-  preciceDebug("New iteration");
+  DEBUG("New iteration");
   //should change
   precond.update(false, _data, _res);
   validate(precond.requireNewQR());
@@ -137,7 +144,7 @@ void PreconditionerTest::testResPreconditioner ()
   precond.revert(_data);
   validateVector(_data, backup);
 
-  preciceDebug("New timestep");
+  DEBUG("New timestep");
   //should not change weights
   precond.update(true, _data, _res*10);
   validate(not precond.requireNewQR());
@@ -150,18 +157,17 @@ void PreconditionerTest::testResPreconditioner ()
 void PreconditionerTest::testResSumPreconditioner ()
 {
   preciceTrace("testResSumPreconditioner()");
-  std::vector<int> dims;
-  dims.push_back(1);
-  dims.push_back(2);
-  dims.push_back(1);
+  std::vector<size_t> svs;
+  svs.push_back(2);
+  svs.push_back(4);
+  svs.push_back(2);
 
-  impl::ResidualSumPreconditioner precond(dims, -1);
+  impl::ResidualSumPreconditioner precond(-1);
 
-  int numberOfRows = 8;
-  precond.initialize(numberOfRows);
+  precond.initialize(svs);
   DataValues backup = _data;
 
-  preciceDebug("New iteration");
+  DEBUG("New iteration");
   //should change, update twice to really test the summation
   precond.update(false, _data, _res);
   precond.update(false, _data, _res*2);
@@ -173,7 +179,7 @@ void PreconditionerTest::testResSumPreconditioner ()
   precond.revert(_data);
   validateVector(_data, backup);
 
-  preciceDebug("New timestep");
+  DEBUG("New timestep");
   //should not change weights
   precond.update(true, _data, _res*10);
   validate(not precond.requireNewQR());
@@ -186,18 +192,17 @@ void PreconditionerTest::testResSumPreconditioner ()
 void PreconditionerTest::testValuePreconditioner ()
 {
   preciceTrace("testValuePreconditioner()");
-  std::vector<int> dims;
-  dims.push_back(1);
-  dims.push_back(2);
-  dims.push_back(1);
+  std::vector<size_t> svs;
+  svs.push_back(2);
+  svs.push_back(4);
+  svs.push_back(2);
 
-  impl::ValuePreconditioner precond(dims, -1);
+  impl::ValuePreconditioner precond(-1);
 
-  int numberOfRows = 8;
-  precond.initialize(numberOfRows);
+  precond.initialize(svs);
   DataValues backup = _data;
 
-  preciceDebug("New iteration");
+  DEBUG("New iteration");
   //should change, since first timestep
   precond.update(false, _data, _res);
   validate(precond.requireNewQR());
@@ -208,7 +213,7 @@ void PreconditionerTest::testValuePreconditioner ()
   validateVector(_data, backup);
 
   //now no change
-  preciceDebug("Another new iteration");
+  DEBUG("Another new iteration");
   precond.update(false, _data, _res);
   validate(not precond.requireNewQR());
   precond.apply(_data);
@@ -216,7 +221,7 @@ void PreconditionerTest::testValuePreconditioner ()
   precond.revert(_data);
   validateVector(_data, backup);
 
-  preciceDebug("New timestep");
+  DEBUG("New timestep");
   //should change weights
   precond.update(true, _data*2, _res);
   validate(precond.requireNewQR());
@@ -226,23 +231,22 @@ void PreconditionerTest::testValuePreconditioner ()
 void PreconditionerTest::testConstPreconditioner ()
 {
   preciceTrace("testConstPreconditioner()");
-  std::vector<int> dims;
-  dims.push_back(1);
-  dims.push_back(2);
-  dims.push_back(1);
+  std::vector<size_t> svs;
+  svs.push_back(2);
+  svs.push_back(4);
+  svs.push_back(2);
 
   std::vector<double> factors;
   factors.push_back(1e3);
   factors.push_back(2.0);
   factors.push_back(1e-5);
 
-  impl::ConstantPreconditioner precond(dims, factors);
+  impl::ConstantPreconditioner precond(factors);
 
-  int numberOfRows = 8;
-  precond.initialize(numberOfRows); //new weights already computed here
+  precond.initialize(svs); //new weights already computed here
   DataValues backup = _data;
 
-  preciceDebug("New iteration");
+  DEBUG("New iteration");
   // should have no effect
   precond.update(false, _data, _res);
   validate(not precond.requireNewQR());
@@ -251,7 +255,7 @@ void PreconditionerTest::testConstPreconditioner ()
   precond.revert(_data);
   validateVector(_data, backup);
 
-  preciceDebug("New timestep");
+  DEBUG("New timestep");
   //should not change weights
   precond.update(true, _data, _res);
   validate(not precond.requireNewQR());
@@ -371,12 +375,12 @@ void PreconditionerTest::testParallelMatrixScaling ()
   x_back = x;
 
 
-  std::vector<int> dims;
-  dims.push_back(1);
+  std::vector<size_t> svs;
+  svs.push_back(localN);
 
 
-  impl::ValuePreconditioner precond(dims, -1);
-  precond.initialize(localN);
+  impl::ValuePreconditioner precond(-1);
+  precond.initialize(svs);
   precond.update(true,x,x);
   validate(precond.requireNewQR());
 
@@ -412,6 +416,38 @@ void PreconditionerTest::validateVector (DataValues& data, DataValues& compare)
   for(int i=0; i<data.size(); i++){
     validateWithParams2(tarch::la::equals(data(i), compare(i),1e-8), data(i), compare(i));
   }
+}
+
+void PreconditionerTest::testMultilpleMeshes ()
+{
+  preciceTrace("testMultilpleMeshes()");
+  std::vector<size_t> svs;
+  svs.push_back(3);
+  svs.push_back(5);
+
+  impl::ResidualSumPreconditioner precond(-1);
+
+  precond.initialize(svs);
+  DataValues backup = _data;
+
+  DEBUG("New iteration");
+  //should change
+  precond.update(false, _data, _res);
+  validate(precond.requireNewQR());
+  precond.newQRfulfilled();
+  precond.apply(_data);
+  validateVector(_data, _compareDataResSum2);
+  precond.revert(_data);
+  validateVector(_data, backup);
+
+  DEBUG("New timestep");
+  //should not change weights
+  precond.update(true, _data, _res*10);
+  validate(not precond.requireNewQR());
+  precond.apply(_data);
+  validateVector(_data, _compareDataResSum2);
+  precond.revert(_data);
+  validateVector(_data, backup);
 }
 
 

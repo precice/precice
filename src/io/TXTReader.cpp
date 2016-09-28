@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "TXTReader.hpp"
 #include "utils/Globals.hpp"
 #include "tarch/la/DynamicMatrix.h"
@@ -9,7 +6,7 @@
 namespace precice {
 namespace io {
 
-tarch::logging::Log TXTReader:: _log ( "precice::io::TXTReader" );
+logging::Logger TXTReader:: _log ( "precice::io::TXTReader" );
 
 TXTReader:: TXTReader
 (

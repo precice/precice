@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 
 <precice-configuration>
-   <log-filter target="debug" component="precice" switch="off" />
+   
    <solver-interface geometry-mode="on" dimensions="3">
       <spacetree:static-octree name="Tree" max-meshwidth="9.0/64" 
                  offset="-1.7166666666666666; 0.2166666666666666; 0.25" 

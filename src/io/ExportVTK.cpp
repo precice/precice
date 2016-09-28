@@ -11,11 +11,12 @@
 #include "Eigen/Dense"
 #include <iostream>
 #include <fstream>
+#include <boost/filesystem.hpp>
 
 namespace precice {
 namespace io {
 
-tarch::logging::Log ExportVTK:: _log("precice::io::ExportVTK");
+logging::Logger ExportVTK:: _log("precice::io::ExportVTK");
 
 ExportVTK:: ExportVTK
 (
@@ -32,17 +33,25 @@ int ExportVTK:: getType() const
 
 void ExportVTK:: doExport
 (
-  const std::string& filename,
+  const std::string& name,
+  const std::string& location,
   mesh::Mesh&        mesh)
 {
-  preciceTrace2("doExport()", filename, mesh.getName());
-  assertion(filename != std::string(""));
-  std::ofstream outFile;
-  initializeWriting(filename, outFile);
-  writeHeader(outFile);
-  exportGeometry(outFile, mesh);
-  exportData(outFile, mesh);
-  outFile.close();
+  preciceTrace("doExport()", name, location, mesh.getName());
+  assertion(name != std::string(""));
+
+  namespace fs = boost::filesystem;
+  fs::path outfile(location);
+  outfile = outfile / fs::path(name + ".vtk");
+  std::ofstream outstream(outfile.string(), std::ios::trunc);
+  preciceCheck(outstream, "doExport()", "Could not open file \"" << outfile.c_str()
+                 << "\" for VTK export!");
+
+  initializeWriting(outstream);
+  writeHeader(outstream);
+  exportGeometry(outstream, mesh);
+  exportData(outstream, mesh);
+  outstream.close();
 }
 
 void ExportVTK::exportGeometry
@@ -50,7 +59,7 @@ void ExportVTK::exportGeometry
   std::ofstream& outFile,
   mesh::Mesh&    mesh)
 {
-  preciceTrace1("exportGeometry()", mesh.getName());
+  preciceTrace("exportGeometry()", mesh.getName());
 
   // Plot vertices
   outFile << "POINTS " << mesh.vertices().size() << " float "<<std::endl << std::endl;
@@ -204,18 +213,12 @@ void ExportVTK:: exportData
 
 void ExportVTK:: initializeWriting
 (
-  const std::string& filename,
   std::ofstream&     filestream)
 {
-  std::string fullFilename(filename);
   //size_t pos = fullFilename.rfind(".vtk");
   //if ((pos == std::string::npos) || (pos != fullFilename.size()-4)){
   //  fullFilename += ".vtk";
   //}
-  utils::checkAppendExtension(fullFilename, ".vtk");
-  filestream.open(fullFilename.c_str());
-  preciceCheck(filestream, "doExport()", "Could not open file \"" << fullFilename
-                 << "\" for VTK export!");
   filestream.setf(std::ios::showpoint);
   filestream.setf(std::ios::scientific);
   filestream << std::setprecision(16);

@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 #include "FileCommunication.hpp"
 
@@ -13,7 +10,7 @@
 namespace precice {
 namespace com {
 
-tarch::logging::Log FileCommunication:: _log ( "precice::com::FileCommunication" );
+logging::Logger FileCommunication:: _log ( "precice::com::FileCommunication" );
 
 FileCommunication:: FileCommunication
 (
@@ -50,7 +47,7 @@ FileCommunication:: FileCommunication
 }
 
 FileCommunication::~FileCommunication() {
-  preciceTrace1("~FileCommunication()", _isConnected);
+  preciceTrace("~FileCommunication()", _isConnected);
 
   closeConnection();
 }
@@ -67,7 +64,7 @@ void FileCommunication:: acceptConnection
   int                acceptorProcessRank,
   int                acceptorCommunicatorSize )
 {
-  preciceTrace2 ( "acceptConnection()", nameAcceptor, nameRequester );
+  preciceTrace ( "acceptConnection()", nameAcceptor, nameRequester );
   _nameLocal = nameAcceptor;
   _nameRemote = nameRequester;
   assertion ( (acceptorProcessRank >= 0) && (acceptorProcessRank <= acceptorCommunicatorSize),
@@ -92,7 +89,7 @@ void FileCommunication:: requestConnection
   int                requesterProcessRank,
   int                requesterCommunicatorSize )
 {
-  preciceTrace2 ( "requestConnection()", nameAcceptor, nameRequester );
+  preciceTrace ( "requestConnection()", nameAcceptor, nameRequester );
   _nameLocal = nameRequester;
   _nameRemote = nameAcceptor;
   assertion ( (requesterProcessRank >= 0) && (requesterProcessRank <= requesterCommunicatorSize),
@@ -302,7 +299,7 @@ void FileCommunication:: receive
                  "Receive type is different than string!" );
   int size = 0;
   _receiveFile.read ( (char*)&size, sizeof(int) );
-  preciceDebug ( "Size = " << size );
+  DEBUG ( "Size = " << size );
   assertion ( size < 500, size );
   char* message = new char[size];
   _receiveFile.read ( message, size );
@@ -316,7 +313,7 @@ void FileCommunication:: receive
   int  size,
   int  rankSender )
 {
-  preciceTrace2 ( "receive(int*)", size, rankSender );
+  preciceTrace ( "receive(int*)", size, rankSender );
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -339,7 +336,7 @@ void FileCommunication:: receive
   int     size,
   int     rankSender )
 {
-  preciceTrace2 ( "receive(double*)", size, rankSender );
+  preciceTrace ( "receive(double*)", size, rankSender );
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -361,7 +358,7 @@ void FileCommunication:: receive
    double& itemToReceive,
    int     rankSender )
 {
-  preciceTrace1 ( "receive(double)", rankSender );
+  preciceTrace ( "receive(double)", rankSender );
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -380,7 +377,7 @@ void FileCommunication:: receive
   int& itemToReceive,
   int  rankSender )
 {
-  preciceTrace1 ( "receive(int)", rankSender );
+  preciceTrace ( "receive(int)", rankSender );
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -399,7 +396,7 @@ void FileCommunication:: receive
   bool& itemToReceive,
   int   rankSender )
 {
-  preciceTrace1 ( "receive(bool)", rankSender );
+  preciceTrace ( "receive(bool)", rankSender );
   assertion ( _receiveFile.is_open() );
   int type;
   _receiveFile.read ( (char*)&type, sizeof(int) );
@@ -418,7 +415,7 @@ void FileCommunication:: makeSendFileAvailable
   int rank,
   int index )
 {
-  preciceTrace2 ( "makeSendFileAvailable()", rank, index );
+  preciceTrace ( "makeSendFileAvailable()", rank, index );
   std::string filenameHidden = getSendFilename (true, rank, index);
   std::string filename = getSendFilename (false, rank, index);
   if (rename(filenameHidden.c_str(), filename.c_str()) != 0){
@@ -433,10 +430,10 @@ void FileCommunication:: makeReceiveFileUnavailable
   int rank,
   int index )
 {
-  preciceTrace2 ( "makeReceiveFileUnavailable()", rank, index );
+  preciceTrace ( "makeReceiveFileUnavailable()", rank, index );
   std::string filenameHidden = getReceiveFilename (true, rank, index);
   std::string filename = getReceiveFilename (false, rank, index);
-  preciceDebug ( "Rename file \"" << filename << "\" to \"" << filenameHidden
+  DEBUG ( "Rename file \"" << filename << "\" to \"" << filenameHidden
                  << "\"" );
   while ( rename(filename.c_str(), filenameHidden.c_str()) != 0 ){
   }
@@ -447,7 +444,7 @@ void FileCommunication:: removeReceiveFile
   int rank,
   int index )
 {
-  preciceTrace2 ( "removeReceiveFile()", rank, index );
+  preciceTrace ( "removeReceiveFile()", rank, index );
   if ( remove(getReceiveFilename(true,rank,index).c_str() ) != 0){
     preciceError ( "removeReceiveFile()", "Could not remove receive file \""
                    << getReceiveFilename(true,rank,index) << "\"!" );

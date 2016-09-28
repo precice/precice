@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ExportVTKTest.hpp"
 #include "io/ExportVTK.hpp"
 #include "mesh/Triangle.hpp"
@@ -19,7 +16,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-tarch::logging::Log ExportVTKTest:: _log ("precice::io::ExportVTKTest");
+logging::Logger ExportVTKTest:: _log ("precice::io::ExportVTKTest");
 
 ExportVTKTest:: ExportVTKTest()
 :
@@ -58,7 +55,8 @@ void ExportVTKTest:: testExportPolygonalMesh()
   ExportVTK exportVTK(exportNormals);
   std::ostringstream filename;
   filename << "io-ExportVTKTest-testExportPolygonalMesh";
-  exportVTK.doExport ( filename.str(), mesh );
+  std::string location = "";
+  exportVTK.doExport ( filename.str(), location, mesh );
 }
 
 void ExportVTKTest:: testExportTriangulatedMesh()
@@ -84,7 +82,8 @@ void ExportVTKTest:: testExportTriangulatedMesh()
   ExportVTK exportVTK(exportNormals);
   std::ostringstream filename;
   filename << "io-ExportVTKTest-testExportTriangulatedMesh";
-  exportVTK.doExport ( filename.str(), mesh );
+  std::string location = "";
+  exportVTK.doExport ( filename.str(), location, mesh );
 }
 
 void ExportVTKTest:: testExportQuadMesh()
@@ -137,7 +136,8 @@ void ExportVTKTest:: testExportQuadMesh()
   ExportVTK exportVTK(exportNormals);
   std::ostringstream filename;
   filename << "io-ExportVTKTest-testExportQuadMesh";
-  exportVTK.doExport(filename.str(), mesh);
+  std::string location = "";
+  exportVTK.doExport(filename.str(), location, mesh);
 }
 
 }}} // namespace precice, io, tests

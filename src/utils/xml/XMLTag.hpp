@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_UTILS_XMLTAG_HPP_
 #define PRECICE_UTILS_XMLTAG_HPP_
 
@@ -12,6 +9,7 @@
 #include <map>
 #include <vector>
 #include <set>
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace utils {
@@ -44,7 +42,7 @@ public:
      * @brief Callback at end of XML tag and at end of subtag.
      *
      * At this callback, the attributes and all subtags of callingTag are parsed.
-     * This callback is first done for the listener, and then for th parent tag
+     * This callback is first done for the listener, and then for the parent tag
      * listener (if existing).
      */
     virtual void xmlEndTagCallback ( XMLTag& callingTag ) =0;
@@ -208,7 +206,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    Listener& _listener;
 
@@ -301,7 +299,7 @@ void configure (
 //  CONFIG_T&          configuration,
 //  const std::string& configurationFilename )
 //{
-//  tarch::logging::Log _log ( "precice::utils" );
+//  logging::Logger _log ( "precice::utils" );
 //  bool success = false;
 //  tarch::irr::io::IrrXMLReader * xmlReader =
 //    tarch::irr::io::createIrrXMLReader ( configurationFilename.c_str() );

@@ -1,8 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at
-// http://www5.in.tum.de/wiki/index.php/PreCICE_License
-
 #ifndef PRECICE_NO_MPI
 
 #include "MPICommunication.hpp"
@@ -42,20 +37,20 @@ MPI_Datatype MPI_Select_unsigned_integer_datatype<8>::datatype = MPI_UNSIGNED_LO
 
 namespace precice {
 namespace com {
-tarch::logging::Log MPICommunication::_log("precice::com::MPICommunication");
+logging::Logger MPICommunication::_log("precice::com::MPICommunication");
 
 MPICommunication::MPICommunication() {
 }
 
 void
 MPICommunication::send(std::string const& itemToSend, int rankReceiver) {
-  preciceTrace2("send()", itemToSend, rankReceiver);
+  preciceTrace("send()", itemToSend, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
   int length = itemToSend.size();
-  preciceDebug("Message length: " << length);
+  DEBUG("Message length: " << length);
   // const_cast is needed because MPI_Send expects a void* as first argument.
   char* cstr = const_cast<char*>(itemToSend.c_str());
-  preciceDebug("Message: " + std::string(cstr));
+  DEBUG("Message: " + std::string(cstr));
   MPI_Send(cstr,
            length + 1,
            MPI_CHAR,
@@ -66,7 +61,7 @@ MPICommunication::send(std::string const& itemToSend, int rankReceiver) {
 
 void
 MPICommunication::send(int* itemsToSend, int size, int rankReceiver) {
-  preciceTrace1("send(int*)", size);
+  preciceTrace("send(int*)", size);
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(itemsToSend,
            size,
@@ -78,7 +73,7 @@ MPICommunication::send(int* itemsToSend, int size, int rankReceiver) {
 
 Request::SharedPointer
 MPICommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
-  preciceTrace1("aSend(int*)", size);
+  preciceTrace("aSend(int*)", size);
   rankReceiver = rankReceiver - _rankOffset;
 
   MPI_Request request;
@@ -96,7 +91,7 @@ MPICommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
 
 void
 MPICommunication::send(double* itemsToSend, int size, int rankReceiver) {
-  preciceTrace1("send(double*)", size);
+  preciceTrace("send(double*)", size);
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(itemsToSend,
            size,
@@ -108,7 +103,7 @@ MPICommunication::send(double* itemsToSend, int size, int rankReceiver) {
 
 Request::SharedPointer
 MPICommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
-  preciceTrace1("aSend(double*)", size);
+  preciceTrace("aSend(double*)", size);
   rankReceiver = rankReceiver - _rankOffset;
 
   MPI_Request request;
@@ -126,7 +121,7 @@ MPICommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
 
 void
 MPICommunication::send(double itemToSend, int rankReceiver) {
-  preciceTrace2("send(double)", itemToSend, rankReceiver);
+  preciceTrace("send(double)", itemToSend, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(&itemToSend,
            1,
@@ -143,7 +138,7 @@ MPICommunication::aSend(double* itemToSend, int rankReceiver) {
 
 void
 MPICommunication::send(int itemToSend, int rankReceiver) {
-  preciceTrace2("send(int)", itemToSend, rankReceiver);
+  preciceTrace("send(int)", itemToSend, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(&itemToSend,
            1,
@@ -160,7 +155,7 @@ MPICommunication::aSend(int* itemToSend, int rankReceiver) {
 
 void
 MPICommunication::send(bool itemToSend, int rankReceiver) {
-  preciceTrace2("send(bool)", itemToSend, rankReceiver);
+  preciceTrace("send(bool)", itemToSend, rankReceiver);
   rankReceiver = rankReceiver - _rankOffset;
   MPI_Send(&itemToSend,
            1,
@@ -190,13 +185,13 @@ MPICommunication::aSend(bool* itemToSend, int rankReceiver) {
 
 void
 MPICommunication::receive(std::string& itemToReceive, int rankSender) {
-  preciceTrace2("receive(string)", itemToReceive, rankSender);
+  preciceTrace("receive(string)", itemToReceive, rankSender);
   rankSender = rankSender - _rankOffset;
   int length;
   MPI_Status status;
   MPI_Probe(rank(rankSender), 0, communicator(rankSender), &status);
   MPI_Get_count(&status, MPI_CHAR, &length);
-  preciceDebug("Stringlength = " << length);
+  DEBUG("Stringlength = " << length);
   char cstr[length];
   MPI_Recv(cstr,
            length,
@@ -206,12 +201,12 @@ MPICommunication::receive(std::string& itemToReceive, int rankSender) {
            communicator(rankSender),
            MPI_STATUS_IGNORE);
   itemToReceive = std::string(cstr);
-  preciceDebug("Received \"" << itemToReceive << "\" from rank " << rankSender);
+  DEBUG("Received \"" << itemToReceive << "\" from rank " << rankSender);
 }
 
 void
 MPICommunication::receive(int* itemsToReceive, int size, int rankSender) {
-  preciceTrace1("receive(int*)", size);
+  preciceTrace("receive(int*)", size);
   rankSender = rankSender - _rankOffset;
   MPI_Status status;
   MPI_Recv(itemsToReceive,
@@ -225,7 +220,7 @@ MPICommunication::receive(int* itemsToReceive, int size, int rankSender) {
 
 Request::SharedPointer
 MPICommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
-  preciceTrace1("aReceive(int*)", size);
+  preciceTrace("aReceive(int*)", size);
   rankSender = rankSender - _rankOffset;
 
   MPI_Request request;
@@ -243,7 +238,7 @@ MPICommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
 
 void
 MPICommunication::receive(double* itemsToReceive, int size, int rankSender) {
-  preciceTrace1("receive(double*)", size);
+  preciceTrace("receive(double*)", size);
   rankSender = rankSender - _rankOffset;
   MPI_Status status;
   MPI_Recv(itemsToReceive,
@@ -257,7 +252,7 @@ MPICommunication::receive(double* itemsToReceive, int size, int rankSender) {
 
 Request::SharedPointer
 MPICommunication::aReceive(double* itemsToReceive, int size, int rankSender) {
-  preciceTrace1("aReceive(double*)", size);
+  preciceTrace("aReceive(double*)", size);
   rankSender = rankSender - _rankOffset;
 
   MPI_Request request;
@@ -275,7 +270,7 @@ MPICommunication::aReceive(double* itemsToReceive, int size, int rankSender) {
 
 void
 MPICommunication::receive(double& itemToReceive, int rankSender) {
-  preciceTrace1("receive(double)", rankSender);
+  preciceTrace("receive(double)", rankSender);
   rankSender = rankSender - _rankOffset;
   MPI_Status status;
   MPI_Recv(&itemToReceive,
@@ -285,7 +280,7 @@ MPICommunication::receive(double& itemToReceive, int rankSender) {
            0,
            communicator(rankSender),
            &status);
-  preciceDebug("Received " << itemToReceive << " from rank "
+  DEBUG("Received " << itemToReceive << " from rank "
                            << rankSender);
 }
 
@@ -296,7 +291,7 @@ MPICommunication::aReceive(double* itemToReceive, int rankSender) {
 
 void
 MPICommunication::receive(int& itemToReceive, int rankSender) {
-  preciceTrace1("receive(int)", rankSender);
+  preciceTrace("receive(int)", rankSender);
   rankSender = rankSender - _rankOffset;
   MPI_Status status;
   MPI_Recv(&itemToReceive,
@@ -306,7 +301,7 @@ MPICommunication::receive(int& itemToReceive, int rankSender) {
            0,
            communicator(rankSender),
            &status);
-  preciceDebug("Received " << itemToReceive << " from rank "
+  DEBUG("Received " << itemToReceive << " from rank "
                            << rankSender);
 }
 
@@ -317,7 +312,7 @@ MPICommunication::aReceive(int* itemToReceive, int rankSender) {
 
 void
 MPICommunication::receive(bool& itemToReceive, int rankSender) {
-  preciceTrace1("receive(bool)", rankSender);
+  preciceTrace("receive(bool)", rankSender);
   rankSender = rankSender - _rankOffset;
   MPI_Status status;
   MPI_Recv(&itemToReceive,
@@ -327,13 +322,13 @@ MPICommunication::receive(bool& itemToReceive, int rankSender) {
            0,
            communicator(rankSender),
            &status);
-  preciceDebug("Received " << itemToReceive << " from rank "
+  DEBUG("Received " << itemToReceive << " from rank "
                            << rankSender);
 }
 
 Request::SharedPointer
 MPICommunication::aReceive(bool* itemToReceive, int rankSender) {
-  preciceTrace1("aReceive(bool*)", rankSender);
+  preciceTrace("aReceive(bool*)", rankSender);
   rankSender = rankSender - _rankOffset;
 
   MPI_Request request;

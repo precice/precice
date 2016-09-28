@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "AitkenPostProcessing.hpp"
 #include "../CouplingData.hpp"
 #include "mesh/Data.hpp"
@@ -19,7 +16,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log AitkenPostProcessing::
+logging::Logger AitkenPostProcessing::
   _log ( "precice::cplscheme::AitkenPostProcessing" );
 
 AitkenPostProcessing:: AitkenPostProcessing
@@ -110,7 +107,7 @@ void AitkenPostProcessing:: performPostProcessing
     _aitkenFactor = -_aitkenFactor * (nominator / denominator);
   }
 
-  preciceDebug("AitkenFactor: " << _aitkenFactor);
+  DEBUG("AitkenFactor: " << _aitkenFactor);
 
   // Perform relaxation with aitken factor
   double omega = _aitkenFactor;

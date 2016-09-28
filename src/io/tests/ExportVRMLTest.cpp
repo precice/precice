@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ExportVRMLTest.hpp"
 #include "io/ExportVRML.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -27,7 +24,7 @@ namespace tests {
 
 using namespace std;
 
-tarch::logging::Log ExportVRMLTest:: _log ("precice::io::ExportVRMLTest");
+logging::Logger ExportVRMLTest:: _log ("precice::io::ExportVRMLTest");
 
 ExportVRMLTest:: ExportVRMLTest()
 :
@@ -64,7 +61,8 @@ void ExportVRMLTest:: testExportDriftRatchet()
     ratchet.create ( mesh );
     std::ostringstream stream;
     stream << "io-ExportVRMLTest-testExportDriftRatchet-" << dim << "d.wrl";
-    ex.doExport( stream.str(), mesh );
+    std::string location = "";
+    ex.doExport( stream.str(), location, mesh );
   }
 }
 
@@ -94,11 +92,12 @@ void ExportVRMLTest:: testExportCuboid()
     mesh.createData ( "Data", dim );
     cuboid.create ( mesh );
 
-    preciceDebug ( "Mesh vertices = " << mesh.vertices().size() );
+    DEBUG ( "Mesh vertices = " << mesh.vertices().size() );
     std::ostringstream stream;
     stream << "io-ExportVRMLTest-testExportCuboid-" << dim << "d.wrl";
     ExportVRML ex(false);
-    ex.doExport ( stream.str(), mesh );
+    std::string location = "";
+    ex.doExport ( stream.str(), location, mesh );
   }
 }
 

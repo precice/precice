@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_CPLSCHEME_POSTPROCESSINGCONFIGURATION_HPP_
 #define PRECICE_CPLSCHEME_POSTPROCESSINGCONFIGURATION_HPP_
 
@@ -10,7 +7,7 @@
 #include "precice/config/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -79,7 +76,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    const std::string TAG;
    const std::string TAG_RELAX;

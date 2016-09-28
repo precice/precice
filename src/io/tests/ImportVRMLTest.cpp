@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ImportVRMLTest.hpp"
 #include "io/ImportVRML.hpp"
 #include "io/ExportVTK.hpp"
@@ -22,7 +19,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-tarch::logging::Log ImportVRMLTest:: _log ( "precice::io::ImportVRMLTest" );
+logging::Logger ImportVRMLTest:: _log ( "precice::io::ImportVRMLTest" );
 
 ImportVRMLTest::ImportVRMLTest ()
 :
@@ -100,7 +97,8 @@ void ImportVRMLTest:: testImportSquare()
   mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
-  out.doExport("ImportVRMLTest2D", mesh);
+  std::string location = "";
+  out.doExport("ImportVRMLTest2D",location, mesh);
 }
 
 void ImportVRMLTest:: testImportCube()
@@ -116,7 +114,8 @@ void ImportVRMLTest:: testImportCube()
   mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
-  out.doExport("ImportVRMLTest-Cube", mesh);
+  std::string location = "";
+  out.doExport("ImportVRMLTest-Cube", location, mesh);
 }
 
 void ImportVRMLTest:: testImportSphere()
@@ -129,7 +128,8 @@ void ImportVRMLTest:: testImportSphere()
   mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
-  out.doExport("ImportVRMLTest-Sphere", mesh);
+  std::string location = "";
+  out.doExport("ImportVRMLTest-Sphere",location, mesh);
 }
 
 void ImportVRMLTest:: testImportApe ()
@@ -142,7 +142,8 @@ void ImportVRMLTest:: testImportApe ()
   mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
-  out.doExport("ImportVRMLTest-Ape", mesh);
+  std::string location = "";
+  out.doExport("ImportVRMLTest-Ape", location, mesh);
 }
 
 void ImportVRMLTest:: testImportBunny()
@@ -155,7 +156,8 @@ void ImportVRMLTest:: testImportBunny()
   mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
-  out.doExport("ImportVRMLTest-Bunny", mesh);
+  std::string location = "";
+  out.doExport("ImportVRMLTest-Bunny", location, mesh);
 }
 
 void ImportVRMLTest:: testImportDragon()
@@ -168,7 +170,8 @@ void ImportVRMLTest:: testImportDragon()
   mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
-  out.doExport("ImportVRMLTest-Dragon", mesh);
+  std::string location = "";
+  out.doExport("ImportVRMLTest-Dragon", location, mesh);
 }
 
 void ImportVRMLTest:: testImportReactorPipe()
@@ -181,7 +184,8 @@ void ImportVRMLTest:: testImportReactorPipe()
   mesh.computeState();
   bool exportNormals = true;
   ExportVTK out(exportNormals);
-  out.doExport("ImportVRMLTest-ReactorPipeCut", mesh);
+  std::string location = "";
+  out.doExport("ImportVRMLTest-ReactorPipeCut", location, mesh);
 }
 
 }}} // namespace precice, io, tests

@@ -5,7 +5,7 @@
 namespace precice {
 namespace mapping {
 
-tarch::logging::Log NearestNeighborMapping::
+logging::Logger NearestNeighborMapping::
   _log ( "precice::mapping::NearestNeighborMapping" );
 
 NearestNeighborMapping:: NearestNeighborMapping
@@ -23,11 +23,11 @@ NearestNeighborMapping:: NearestNeighborMapping
 
 void NearestNeighborMapping:: computeMapping()
 {
-  preciceTrace1("computeMapping()", input()->vertices().size());
+  preciceTrace("computeMapping()", input()->vertices().size());
   assertion(input().get() != nullptr);
   assertion(output().get() != nullptr);
   if (getConstraint() == CONSISTENT){
-    preciceDebug("Compute consistent mapping");
+    DEBUG("Compute consistent mapping");
     size_t verticesSize = output()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& outputVertices = output()->vertices();
@@ -41,7 +41,7 @@ void NearestNeighborMapping:: computeMapping()
   }
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
-    preciceDebug("Compute conservative mapping");
+    DEBUG("Compute conservative mapping");
     size_t verticesSize = input()->vertices().size();
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& inputVertices = input()->vertices();
@@ -58,7 +58,7 @@ void NearestNeighborMapping:: computeMapping()
 
 bool NearestNeighborMapping:: hasComputedMapping() const
 {
-  preciceTrace1("hasComputedMapping()", _hasComputedMapping);
+  preciceTrace("hasComputedMapping()", _hasComputedMapping);
   return _hasComputedMapping;
 }
 
@@ -74,7 +74,7 @@ void NearestNeighborMapping:: map
   int inputDataID,
   int outputDataID )
 {
-  preciceTrace2 ( "map()", inputDataID, outputDataID );
+  preciceTrace ( "map()", inputDataID, outputDataID );
   const Eigen::VectorXd& inputValues = input()->data(inputDataID)->values();
   Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();
   //assign(outputValues) = 0.0;
@@ -86,7 +86,7 @@ void NearestNeighborMapping:: map
   assertion ( outputValues.size() / valueDimensions == (int)output()->vertices().size(),
                outputValues.size(), valueDimensions, output()->vertices().size() );
   if (getConstraint() == CONSISTENT){
-    preciceDebug("Map consistent");
+    DEBUG("Map consistent");
     size_t outSize = output()->vertices().size();
     for ( size_t i=0; i < outSize; i++ ){
       int inputIndex = _vertexIndices[i] * valueDimensions;
@@ -97,7 +97,7 @@ void NearestNeighborMapping:: map
   }
   else {
     assertion(getConstraint() == CONSERVATIVE, getConstraint());
-    preciceDebug("Map conservative");
+    DEBUG("Map conservative");
     size_t inSize = input()->vertices().size();
     for ( size_t i=0; i < inSize; i++ ){
       int outputIndex = _vertexIndices[i] * valueDimensions;

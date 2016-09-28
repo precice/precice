@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_QUERY_FINDCLOSEST_HPP_
-#define PRECICE_QUERY_FINDCLOSEST_HPP_
+#pragma once
 
 #include "FindClosestVertex.hpp"
 #include "FindClosestEdge.hpp"
@@ -10,7 +6,6 @@
 #include "FindClosestQuad.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/logging/Log.h"
 #include <map>
 
 namespace precice {
@@ -103,7 +98,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /// Finds closest distance to Vertex objects.
   FindClosestVertex _findClosestVertex;
@@ -161,5 +156,3 @@ bool FindClosest:: operator()
 }
 
 }} // namespace precice, query
-
-#endif /* PRECICE_QUERY_FINDCLOSEST_HPP_ */

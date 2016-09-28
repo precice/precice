@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 #include "DummyCouplingScheme.hpp"
 #include "../Constants.hpp"
@@ -10,7 +7,7 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-tarch::logging::Log DummyCouplingScheme::
+logging::Logger DummyCouplingScheme::
    _log("precice::cplscheme::tests::DummyCouplingScheme");
 
 DummyCouplingScheme:: DummyCouplingScheme
@@ -31,7 +28,7 @@ void DummyCouplingScheme:: initialize
   double startTime,
   int    startTimesteps )
 {
-  preciceTrace2("initialize()", startTime, startTimesteps);
+  preciceTrace("initialize()", startTime, startTimesteps);
   assertion(not _isInitialized);
   _isInitialized = true;
   _isOngoing = true;
@@ -41,7 +38,7 @@ void DummyCouplingScheme:: initialize
 
 void DummyCouplingScheme:: advance()
 {
-  preciceTrace2("advance()", _iterations, _timesteps);
+  preciceTrace("advance()", _iterations, _timesteps);
   assertion(_isInitialized);
   assertion(_isOngoing);
   if (_iterations == _numberIterations){
@@ -71,22 +68,22 @@ bool DummyCouplingScheme:: isActionRequired
 (
   const std::string& actionName ) const
 {
-  preciceTrace1("isActionRequired()", actionName);
+  preciceTrace("isActionRequired()", actionName);
   if (_numberIterations > 1){
     if (actionName == constants::actionWriteIterationCheckpoint()){
       if (_iterations == 1) {
-        preciceDebug("return true");
+        DEBUG("return true");
         return true;
       }
     }
     else if (actionName == constants::actionReadIterationCheckpoint()){
       if (_iterations != 1) {
-        preciceDebug("return true");
+        DEBUG("return true");
         return true;
       }
     }
   }
-  preciceDebug("return false");
+  DEBUG("return false");
   return false;
 }
 

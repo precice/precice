@@ -1,13 +1,10 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "UncoupledScheme.hpp"
 #include "com/Communication.hpp"
 
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log UncoupledScheme::
+logging::Logger UncoupledScheme::
   _log ( "precice::cplscheme::UncoupledScheme" );
 
 UncoupledScheme:: UncoupledScheme
@@ -27,7 +24,7 @@ void UncoupledScheme:: initialize
   double startTime,
   int    startTimestep )
 {
-  preciceTrace2 ( "initialize()", startTime, startTimestep );
+  preciceTrace ( "initialize()", startTime, startTimestep );
   setTime ( startTime );
   setTimesteps ( startTimestep );
   assertion ( tarch::la::greaterEquals(startTime, 0.0), startTime );
@@ -44,7 +41,7 @@ void UncoupledScheme:: addComputedTime
 (
   double timeToAdd )
 {
-  preciceTrace1("addComputedTime()", timeToAdd);
+  preciceTrace("addComputedTime()", timeToAdd);
   preciceCheck ( isCouplingOngoing(), "addComputedTime()",
                  "Invalid call of addComputedTime() after simulation end!" );
 # ifdef Asserts
@@ -69,6 +66,7 @@ void UncoupledScheme:: advance()
     //  setMaxLengthNextTimestep ( getMaxTime() - getTime() );
     //}
   setComputedTimestepPart(0.0);
+  setHasDataBeenExchanged(true); //to always map data in advance
   //}
 }
 

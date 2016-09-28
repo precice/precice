@@ -1,16 +1,9 @@
-/*
- * ParallelMatrixOperations.hpp
- *
- *  Created on: Aug 21, 2015
- *      Author: Klaudius Scheufele
- */
-// Copyright (C) 2015 Universität Stuttgart
 #ifndef PRECICE_NO_MPI
 #ifndef PARALLELMATRIXOPERATIONS_HPP_
 #define PARALLELMATRIXOPERATIONS_HPP_
 
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
@@ -194,7 +187,7 @@ public:
 private:
 
    // @brief Logging device.
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    // @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
    void _multiplyNM(

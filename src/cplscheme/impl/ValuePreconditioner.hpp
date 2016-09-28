@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #pragma once
 
 #include "Preconditioner.hpp"
@@ -21,7 +18,6 @@ class ValuePreconditioner : public Preconditioner
 public:
 
   ValuePreconditioner(
-      std::vector<int> dimensions,
       int maxNonConstTimesteps);
   /**
    * @brief Destructor, empty.
@@ -38,7 +34,7 @@ private:
    */
   virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res);
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   bool _firstTimestep;
 };

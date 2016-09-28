@@ -4,7 +4,7 @@
 
 #include "com/Communication.hpp"
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace utils {
@@ -76,7 +76,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
 };
 

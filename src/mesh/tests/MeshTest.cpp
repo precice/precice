@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "MeshTest.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
@@ -24,7 +21,7 @@ namespace precice {
 namespace mesh {
 namespace tests {
 
-tarch::logging::Log MeshTest:: _log("precice::mesh::MeshTest");
+logging::Logger MeshTest:: _log("precice::mesh::MeshTest");
 
 MeshTest:: MeshTest()
 :
@@ -340,7 +337,7 @@ void MeshTest:: testDemonstration ()
 {
   preciceTrace ( "testDemonstration()" );
   for ( int dim=2; dim <= 3; dim++ ){
-    preciceDebug ( "dim = " << dim );
+    DEBUG ( "dim = " << dim );
     // Create mesh object
     std::string meshName ( "MyMesh" );
     bool flipNormals = false; // The normals of triangles, edges, vertices

@@ -1,11 +1,8 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_UTILS_TESTS_XMLTEST_HPP_
 #define PRECICE_UTILS_TESTS_XMLTEST_HPP_
 
 #include "tarch/tests/TestCase.h"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "utils/Dimensions.hpp"
 
@@ -46,7 +43,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::string _testDirectory;
 

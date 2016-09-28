@@ -8,7 +8,7 @@
 namespace precice {
 namespace utils {
 
-tarch::logging::Log Petsc:: _log ( "precice::utils::Petsc" );
+logging::Logger Petsc:: _log ( "precice::utils::Petsc" );
 
 bool Petsc::weInitialized = false;
 
@@ -55,6 +55,19 @@ namespace precice {
 namespace utils {
 namespace petsc {
 
+void openViewer(PetscViewer & viewer, std::string filename, VIEWERFORMAT format)
+{
+  PetscErrorCode ierr = 0;
+  if (format == ASCII) {
+    ierr = PetscViewerASCIIOpen(PETSC_COMM_WORLD, filename.c_str(), &viewer); CHKERRV(ierr);
+  }
+  else if (format == BINARY) {
+    ierr = PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_WRITE, &viewer); CHKERRV(ierr);
+  }
+}
+
+/////////////////////////////////////////////////////////////////////////
+
 Vector::Vector(MPI_Comm comm, std::string name)
 {
   PetscErrorCode ierr = 0;
@@ -80,10 +93,10 @@ Vector::Vector(Mat &m, std::string name, LEFTRIGHT type)
   // MatGetVecs is deprecated, we keep it due to the old PETSc version at the SuperMUC.
   PetscErrorCode ierr = 0;
   if (type == LEFTRIGHT::LEFT) {
-    ierr = MatGetVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
+    ierr = MatCreateVecs(m, nullptr, &vector); CHKERRV(ierr); // a vector with the same number of rows
   }
   else {
-    ierr = MatGetVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
+    ierr = MatCreateVecs(m, &vector, nullptr); CHKERRV(ierr); // a vector with the same number of cols
   }
   setName(name);
 }
@@ -99,6 +112,11 @@ Vector::~Vector()
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized) // If PetscFinalize is called before ~Vector
     ierr = VecDestroy(&vector); CHKERRV(ierr);
+}
+
+Vector::operator Vec&()
+{
+  return vector;
 }
 
 void Vector::init(PetscInt rows)
@@ -199,22 +217,22 @@ std::pair<PetscInt, PetscInt> Vector::ownerRange()
   return std::make_pair(range_start, range_end);
 }
   
-void Vector::write(std::string filename)
+void Vector::write(std::string filename, VIEWERFORMAT format)
 {
   PetscErrorCode ierr = 0;
-  PetscViewer fd;
-  PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_WRITE, &fd); CHKERRV(ierr);
-  VecView(vector, fd); CHKERRV(ierr);
-  PetscViewerDestroy(&fd);
+  PetscViewer viewer;
+  openViewer(viewer, filename, format);
+  VecView(vector, viewer); CHKERRV(ierr);
+  PetscViewerDestroy(&viewer);
 }
 
-void Vector::read(std::string filename)
+void Vector::read(std::string filename, VIEWERFORMAT format)
 {
    PetscErrorCode ierr = 0;
-   PetscViewer fd;
-   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_READ, &fd); CHKERRV(ierr);
-   VecLoad(vector, fd); CHKERRV(ierr); CHKERRV(ierr);
-   PetscViewerDestroy(&fd);
+   PetscViewer viewer;
+   openViewer(viewer, filename, format);
+   VecLoad(vector, viewer); CHKERRV(ierr); CHKERRV(ierr);
+   PetscViewerDestroy(&viewer);
 }
 
 void Vector::view()
@@ -241,6 +259,11 @@ Matrix::~Matrix()
   PetscInitialized(&petscIsInitialized);
   if (petscIsInitialized) // If PetscFinalize is called before ~Matrix
     ierr = MatDestroy(&matrix); CHKERRV(ierr);
+}
+
+Matrix::operator Mat&()
+{
+  return matrix;
 }
 
 void Matrix::assemble(MatAssemblyType type)
@@ -351,22 +374,22 @@ std::pair<PetscInt, PetscInt> Matrix::ownerRangeColumn()
   return std::make_pair(range_start, range_end);
 }
 
-void Matrix::write(std::string filename)
+void Matrix::write(std::string filename, VIEWERFORMAT format)
 {
   PetscErrorCode ierr = 0;
-  PetscViewer fd;
-  PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_WRITE, &fd); CHKERRV(ierr);
-  MatView(matrix, fd); CHKERRV(ierr);
-  PetscViewerDestroy(&fd);
+  PetscViewer viewer;
+  openViewer(viewer, filename, format);
+  ierr = MatView(matrix, viewer); CHKERRV(ierr);
+  PetscViewerDestroy(&viewer);
 }
 
-void Matrix::read(std::string filename)
+void Matrix::read(std::string filename, VIEWERFORMAT format)
 {
    PetscErrorCode ierr = 0;
-   PetscViewer fd;
-   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filename.c_str(), FILE_MODE_READ, &fd); CHKERRV(ierr);
-   MatLoad(matrix, fd); CHKERRV(ierr); CHKERRV(ierr);
-   PetscViewerDestroy(&fd);
+   PetscViewer viewer;
+   openViewer(viewer, filename, format);
+   ierr = MatLoad(matrix, viewer); CHKERRV(ierr);
+   PetscViewerDestroy(&viewer);
 }
 
 void Matrix::view()
@@ -375,8 +398,9 @@ void Matrix::view()
   PetscViewer viewer;
   ierr = PetscViewerCreate(communicator, &viewer); CHKERRV(ierr);
   ierr = PetscViewerSetType(viewer, PETSCVIEWERASCII); CHKERRV(ierr); 
-  ierr = PetscViewerSetFormat(viewer, PETSC_VIEWER_ASCII_DENSE); CHKERRV(ierr);
+  ierr = PetscViewerPushFormat(viewer, PETSC_VIEWER_ASCII_DENSE); CHKERRV(ierr);
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
+  ierr = PetscViewerPopFormat(viewer); CHKERRV(ierr);
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr); 
 }
 
@@ -393,6 +417,8 @@ void Matrix::viewDraw()
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr);
   ierr = PetscDrawDestroy(&draw); CHKERRV(ierr); 
 }
+
+
 
 }}} // namespace precice, utils, petsc
 

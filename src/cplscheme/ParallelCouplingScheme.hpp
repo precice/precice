@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseCouplingScheme.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 
 namespace precice {
@@ -24,7 +24,7 @@ public:
     int                   maxIterations = 1);
 
   /// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   virtual void initialize(double startTime, int startTimestep);
 

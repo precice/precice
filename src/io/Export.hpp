@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_IO_EXPORT_HPP_
 #define PRECICE_IO_EXPORT_HPP_
 
@@ -48,10 +45,12 @@ public:
    * @brief Does export. Has to be implemented in subclass.
    *
    * @param name [IN] Filename (without path).
+   * @param name [IN] Location (path without filename).
    * @param mesh [IN] Mesh to be exported.
    */
   virtual void doExport (
     const std::string& name,
+    const std::string& location,
     mesh::Mesh&        mesh ) =0;
 };
 

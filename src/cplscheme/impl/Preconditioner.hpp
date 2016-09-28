@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #pragma once
 
 #include "utils/Dimensions.hpp"
@@ -36,13 +33,11 @@ public:
   typedef Eigen::MatrixXd EigenMatrix;
 
   Preconditioner(
-      std::vector<int> dimensions,
       int maxNonConstTimesteps)
   :
     _weights(),
     _invWeights(),
-    _dimensions(dimensions),
-    _sizeOfSubVector(-1),
+    _subVectorSizes(),
     _maxNonConstTimesteps(maxNonConstTimesteps),
     _nbNonConstTimesteps(0),
     _requireNewQR(false),
@@ -61,20 +56,19 @@ public:
    * @brief initialize the preconditioner
    * @param size of the pp system (e.g. rows of V)
    */
-  virtual void initialize(int N){
-    preciceTrace1("initialize()", N);
+  virtual void initialize(std::vector<size_t>& svs){
+    TRACE();
 
     assertion(_weights.size()==0);
+    _subVectorSizes = svs;
+
+    size_t N = 0;
+    for(auto elem : _subVectorSizes){
+      N += elem;
+    }
     // cannot do this already in the constructor as the size is unknown at that point
     _weights.resize(N, 1.0);
     _invWeights.resize(N, 1.0);
-
-    int numberOfParts = 0;
-    for (int dim : _dimensions){
-      numberOfParts += dim;
-    }
-    _sizeOfSubVector = N / numberOfParts;
-    assertion(numberOfParts * _sizeOfSubVector == N);
   }
 
   /**
@@ -332,7 +326,7 @@ public:
    * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
    */
   void update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res){
-    preciceTrace2(__func__, _nbNonConstTimesteps, _freezed);
+    preciceTrace(__func__, _nbNonConstTimesteps, _freezed);
 
     // if number of allowed non-const time steps is exceeded, do not update weights
     if(_freezed)
@@ -351,7 +345,7 @@ public:
 
   //@brief: returns true if a QR decomposition from scratch is necessary
   bool requireNewQR(){
-    preciceTrace1("requireNewQR()", _requireNewQR);
+    preciceTrace("requireNewQR()", _requireNewQR);
     return _requireNewQR;
   }
 
@@ -395,8 +389,8 @@ protected:
   //@brief dimension (scalar or vectorial) of each sub-vector
   std::vector<int> _dimensions;
 
-  //@brief size of a scalar sub-vector (aka number of vertices)
-  int _sizeOfSubVector;
+  //@brief sizes of each sub-vector, i.e. each coupling data
+  std::vector<size_t> _subVectorSizes;
 
   /** @brief maximum number of non-const time steps, i.e., after this number of time steps,
    *  the preconditioner is freezed with the current weights and becomes a constant preconditioner
@@ -427,7 +421,7 @@ protected:
   // note: For the current used preconditioners all weights are the same for each proc as
   //       the weights are computed per value or residual block.
   void communicateGlobalWeights(){
-    preciceTrace2("communicateGlobalWeights()", _weights.size(), _globalWeights.size());
+    preciceTrace("communicateGlobalWeights()", _weights.size(), _globalWeights.size());
     assertion(_weights.size()==_invWeights.size());
     assertion(_globalWeights.size()==_globalInvWeights.size());
     assertion(_needsGlobalWeights);
@@ -487,7 +481,7 @@ protected:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
 };
 

@@ -1,10 +1,3 @@
-/*
- * ParallelMatrixOperations.cpp
- *
- *  Created on: Aug 21, 2015
- *      Author: Klaudius Scheufele
- */
-// Copyright (C) 2015 Universität Stuttgart
 #ifndef PRECICE_NO_MPI
 
 #include "ParallelMatrixOperations.hpp"
@@ -17,7 +10,7 @@
 #include "utils/MasterSlave.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Communication.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "Eigen/Dense"
 
 
@@ -25,7 +18,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log ParallelMatrixOperations::
+logging::Logger ParallelMatrixOperations::
       _log("precice::cplscheme::impl::ParallelMatrixOperations");
 
 

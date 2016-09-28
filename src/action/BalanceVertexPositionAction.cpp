@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "BalanceVertexPositionAction.hpp"
 #include "utils/Globals.hpp"
 #include "tarch/la/Scalar.h"
@@ -14,7 +11,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log BalanceVertexPositionAction::
+logging::Logger BalanceVertexPositionAction::
   _log ( "precice::action::BalanceVertexPositionAction" );
 
 BalanceVertexPositionAction:: BalanceVertexPositionAction
@@ -44,7 +41,7 @@ void BalanceVertexPositionAction:: performAction
   double computedPartFullDt,
   double fullDt )
 {
-  preciceTrace3("performAction()", dt, computedPartFullDt, fullDt);
+  preciceTrace("performAction()", dt, computedPartFullDt, fullDt);
   preciceCheck (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode,
       "BalanceVertexPositionAction()", "BalanceVertexPositionAction is not yet supported "
           << " for a usage with a Master")
@@ -175,7 +172,7 @@ void BalanceVertexPositionAction:: performAction
       }
     }
     mesh->computeState();
-    //precicePrint ( "Error measure = " << errorMeasure );
+    //INFO ( "Error measure = " << errorMeasure );
     errorMeasure = std::sqrt(errorMeasure);
     iterations ++;
   }

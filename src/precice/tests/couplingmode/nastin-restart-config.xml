@@ -1,16 +1,6 @@
 <?xml version="1.0"?>
 
 <precice-configuration>
-   <log-filter target="debug" component="" switch="off"/>
-   <log-filter target="debug" component="precice::cplscheme::BaseCouplingScheme" switch="off"/>
-   <log-filter target="debug" component="precice::impl::SolverInterfaceImpl" switch="on"/>
-   <log-filter target="debug" component="precice::geometry::CommunicatedGeometry" switch="off"/>
-   <log-filter target="info"  component="" switch="on"/>
-
-   <log-output column-separator=" | " log-time-stamp="no"  
-               log-time-stamp-human-readable="yes" log-machine-name="no" 
-               log-message-type="no" log-trace="yes"/> 
-   
    <solver-interface dimensions="2" restart-mode="1">   
       <data:vector name="Forces"/>  
       <data:vector name="Displacements"/> 

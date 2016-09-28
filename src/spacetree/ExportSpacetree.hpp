@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_NEWSPACETREE_EXPORTSPACETREE_HPP_
 #define PRECICE_NEWSPACETREE_EXPORTSPACETREE_HPP_
 
@@ -24,7 +21,7 @@ public:
    /**
     * @brief Constructor, defining vtk filename.
     */
-   ExportSpacetree ( const std::string& filename );
+   ExportSpacetree ( const std::string& location, const std::string& filename );
 
    virtual ~ExportSpacetree() {}
 
@@ -47,6 +44,8 @@ public:
 //   void doExport ( const Spacetree& spacetree );
 
 private:
+
+   std::string _location;
 
    std::string _filename;
 

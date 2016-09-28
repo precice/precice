@@ -1,8 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
-#ifndef PRECICE_QUERY_FINDCLOSESTEDGE_HPP_
-#define PRECICE_QUERY_FINDCLOSESTEDGE_HPP_
+#pragma once
 
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
@@ -58,7 +54,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   utils::DynVector _searchPoint;
 
@@ -109,5 +105,4 @@ bool FindClosestEdge:: operator()
 
 }} // namespace precice, query
 
-#endif /* PRECICE_QUERY_FINDCLOSESTEDGE_HPP_ */
 

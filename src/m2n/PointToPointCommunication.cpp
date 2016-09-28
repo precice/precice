@@ -1,8 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at
-// http://www5.in.tum.de/wiki/index.php/PreCICE_License
-
 #include "PointToPointCommunication.hpp"
 
 #include "mesh/Mesh.hpp"
@@ -360,7 +355,7 @@ PointToPointCommunication::eventNamePrefix() {
   return _prefix;
 }
 
-tarch::logging::Log PointToPointCommunication::_log(
+logging::Logger PointToPointCommunication::_log(
     "precice::m2n::PointToPointCommunication");
 
 PointToPointCommunication::PointToPointCommunication(
@@ -374,7 +369,7 @@ PointToPointCommunication::PointToPointCommunication(
 }
 
 PointToPointCommunication::~PointToPointCommunication() {
-  preciceTrace1("~PointToPointCommunication()", _isConnected);
+  preciceTrace("~PointToPointCommunication()", _isConnected);
 
   closeConnection();
 }
@@ -387,9 +382,13 @@ PointToPointCommunication::isConnected() {
 void
 PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
                                             std::string const& nameRequester) {
-  preciceTrace2("acceptConnection()", nameAcceptor, nameRequester);
+  preciceTrace("acceptConnection()", nameAcceptor, nameRequester);
 
   preciceCheck(not isConnected(), "acceptConnection()", "Already connected!");
+
+  preciceCheck(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode, "acceptConnection()",
+      "You can only use a point-to-point communication between two participants which both use a master. Please use " <<
+      "distribution-type gather-scatter instead.");
 
   std::map<int, std::vector<int>>& vertexDistribution =
       _mesh->getVertexDistribution();
@@ -534,9 +533,13 @@ PointToPointCommunication::acceptConnection(std::string const& nameAcceptor,
 void
 PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
                                              std::string const& nameRequester) {
-  preciceTrace2("requestConnection()", nameAcceptor, nameRequester);
+  preciceTrace("requestConnection()", nameAcceptor, nameRequester);
 
   preciceCheck(not isConnected(), "requestConnection()", "Already connected!");
+
+  preciceCheck(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode, "acceptConnection()",
+      "You can only use a point-to-point communication between two participants which both use a master. Please use " <<
+      "distribution-type gather-scatter instead.");
 
   std::map<int, std::vector<int>>& vertexDistribution =
       _mesh->getVertexDistribution();

@@ -1,19 +1,10 @@
-/*
- * MMPostProcessing.hpp
- *
- *  Created on: Sep 18, 2015
- *      Author: Klaudius Scheufele
- */
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef MMPOSTPROCESSING_HPP_
 #define MMPOSTPROCESSING_HPP_
 
 #include "PostProcessing.hpp"
 #include "SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "QRFactorization.hpp"
 #include "Preconditioner.hpp"
 #include "Eigen/Dense"
@@ -150,7 +141,7 @@ public:
 private:
 
   /// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /// @brief coarse model optimization method
   impl::PtrPostProcessing _coarseModelOptimization;

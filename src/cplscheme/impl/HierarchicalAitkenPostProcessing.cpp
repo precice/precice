@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "HierarchicalAitkenPostProcessing.hpp"
 #include "../CouplingData.hpp"
 #include "utils/Globals.hpp"
@@ -11,7 +8,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log HierarchicalAitkenPostProcessing::
+logging::Logger HierarchicalAitkenPostProcessing::
   _log ( "precice::cplscheme::HierarchicalAitkenPostProcessing" );
 
 HierarchicalAitkenPostProcessing:: HierarchicalAitkenPostProcessing
@@ -56,7 +53,7 @@ void HierarchicalAitkenPostProcessing:: initialize
     entriesCurrentLevel *= 2;
   }
   assertion ( totalEntries == entries );
-//  precicePrint ( "HierarchicalAitkenPostProcessing: level count = " << _aitkenFactors.size() );
+//  INFO ( "HierarchicalAitkenPostProcessing: level count = " << _aitkenFactors.size() );
 
   // Append column for old values if not done by coupling scheme yet
   for (DataMap::value_type& pair : cplData) {
@@ -93,12 +90,12 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
   std::vector<double> nominators ( _aitkenFactors.size(), 0.0 );
   std::vector<double> denominators ( _aitkenFactors.size(), 0.0 );
 
-//  precicePrint ( "" );
-//  precicePrint ( "values = " << values );
-//  precicePrint ( "oldValues = " << oldValues );
-//  precicePrint ( "residual = " << residual );
-//  precicePrint ( "_residual = " << _residual );
-//  precicePrint ( "residualDelta = " << residualDelta );
+//  INFO ( "" );
+//  INFO ( "values = " << values );
+//  INFO ( "oldValues = " << oldValues );
+//  INFO ( "residual = " << residual );
+//  INFO ( "_residual = " << _residual );
+//  INFO ( "residualDelta = " << residualDelta );
 
   // Hierarchize entries
   size_t entries = residual.size ();
@@ -124,10 +121,10 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
     entriesCurrentLevel /= 2;
   }
   assertion ( treatedEntries == entries );
-//  precicePrint ( "hierarchized values = " << values );
-//  precicePrint ( "hierarchized oldValues = " << oldValues );
-//  precicePrint ( "hierarchized _residual = " << _residual );
-//  precicePrint ( "hierarchized residualDelta = " << residualDelta );
+//  INFO ( "hierarchized values = " << values );
+//  INFO ( "hierarchized oldValues = " << oldValues );
+//  INFO ( "hierarchized _residual = " << _residual );
+//  INFO ( "hierarchized residualDelta = " << residualDelta );
 
   // Compute and perform relaxation with aitken factor
   nominators[0] = _residual(0) * residualDelta(0) +
@@ -190,7 +187,7 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 //  }
 //  _residual = residual; // Overwrite old residual by current one
 
-//  precicePrint ( "relaxed hierarchized values = " << values );
+//  INFO ( "relaxed hierarchized values = " << values );
 
 
   // Dehierarchization
@@ -210,8 +207,8 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
     entriesCurrentLevel *= 2;
   }
   assertion ( treatedEntries == entries );
-//  precicePrint ( "relaxed values = " << values );
-//  precicePrint ( "oldValues = " << oldValues );
+//  INFO ( "relaxed values = " << values );
+//  INFO ( "oldValues = " << oldValues );
 
 
   // save back oldValues in cplData. Eigen does not allow call by ref for blocks (cols, rows), thus explicitly write back
@@ -244,10 +241,10 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 //  std::vector<double> nominators ( _aitkenFactors.size(), 0.0 );
 //  std::vector<double> denominators ( _aitkenFactors.size(), 0.0 );
 //
-//  precicePrint ( "values = " << values );
-//  precicePrint ( "oldValues = " << oldValues );
-//  precicePrint ( "_residual = " << _residual );
-//  precicePrint ( "residualDelta = " << residualDelta );
+//  INFO ( "values = " << values );
+//  INFO ( "oldValues = " << oldValues );
+//  INFO ( "_residual = " << _residual );
+//  INFO ( "residualDelta = " << residualDelta );
 //
 //  // Hierarchize entries and compute aitken factors
 //  size_t entries = residual.size ();
@@ -259,7 +256,7 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 //  size_t entriesCurrentLevel = std::pow(2.0, _aitkenFactors.size() - 1);
 //  for ( size_t level=_aitkenFactors.size()-1; level > 0; level-- ) {
 //    size_t stepsize = (entries + 1) / std::pow(2.0, level);
-//    precicePrint ( "Level = " << level << ", treatedEntries = " << treatedEntries
+//    INFO ( "Level = " << level << ", treatedEntries = " << treatedEntries
 //                   << ", stepsize = " << stepsize );
 //    assertion ( stepsize % 2 == 0 );
 //
@@ -275,7 +272,7 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 //    // Middle entries
 //    size_t index = indexLeft + stepsize;
 //    for ( size_t i=2; i < entriesCurrentLevel; i++ ) {
-////      precicePrint ( "2" );
+////      INFO ( "2" );
 //      _residual[index] -= ( _residual[index - stepsize/2] +
 //                            _residual[index + stepsize/2] ) / 2.0;
 //      residualDelta[index] -= ( residualDelta[index - stepsize/2] +
@@ -303,10 +300,10 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 //    entriesCurrentLevel /= 2;
 //  }
 //  assertion ( treatedEntries == entries );
-//  precicePrint ( "hierarchized values = " << values );
-//  precicePrint ( "hierarchized oldValues = " << oldValues );
-//  precicePrint ( "hierarchized _residual = " << _residual );
-//  precicePrint ( "hierarchized residualDelta = " << residualDelta );
+//  INFO ( "hierarchized values = " << values );
+//  INFO ( "hierarchized oldValues = " << oldValues );
+//  INFO ( "hierarchized _residual = " << _residual );
+//  INFO ( "hierarchized residualDelta = " << residualDelta );
 //
 //  _residual = residual;
 //
@@ -330,7 +327,7 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 //    entriesCurrentLevel *= 2;
 //  }
 //  assertion ( treatedEntries == entries );
-//  precicePrint ( "relaxed hierarchized values = " << values );
+//  INFO ( "relaxed hierarchized values = " << values );
 //
 //  // Dehierarchization
 //  treatedEntries = 1;
@@ -354,8 +351,8 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 //    entriesCurrentLevel *= 2;
 //  }
 //  assertion ( treatedEntries == entries );
-//  precicePrint ( "relaxed values = " << values );
-//  precicePrint ( "oldValues = " << oldValues );
+//  INFO ( "relaxed values = " << values );
+//  INFO ( "oldValues = " << oldValues );
 //
 //  _iterationCounter ++;
 //}
@@ -377,12 +374,12 @@ void HierarchicalAitkenPostProcessing:: computeAitkenFactor
   using namespace tarch::la;
   // Select/compute aitken factor depending on current iteration count
   if ( _iterationCounter == 0 ) {
-    //precicePrint ( "First iteration (nom = " << nominator << ", den = " << denominator );
+    //INFO ( "First iteration (nom = " << nominator << ", den = " << denominator );
     _aitkenFactors[level] = sign(_aitkenFactors[level]) * min(
         Vector<2,double>(_initialRelaxation, std::abs(_aitkenFactors[level])));
   }
   else {
-    //precicePrint ( "Aitken factor = - " << _aitkenFactors[level] << " * "
+    //INFO ( "Aitken factor = - " << _aitkenFactors[level] << " * "
     //               << nominator << " / " << denominator );
     if ( equals(std::sqrt(denominator), 0.0) ) {
       _aitkenFactors[level] = 1.0;
@@ -391,7 +388,7 @@ void HierarchicalAitkenPostProcessing:: computeAitkenFactor
       _aitkenFactors[level] = -_aitkenFactors[level] * (nominator / denominator);
     }
   }
-  //precicePrint ( "Level " << level << " relaxation factor = " << _aitkenFactors[level] );
+  //INFO ( "Level " << level << " relaxation factor = " << _aitkenFactors[level] );
 }
 
 /** ---------------------------------------------------------------------------------------------

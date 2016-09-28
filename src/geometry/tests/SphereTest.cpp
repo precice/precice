@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SphereTest.hpp"
 #include "geometry/Sphere.hpp"
 #include "io/ExportVTK.hpp"
@@ -15,7 +12,7 @@ namespace precice {
 namespace geometry {
 namespace tests {
 
-tarch::logging::Log SphereTest:: _log ( "precice::geometry::tests::SphereTest" );
+logging::Logger SphereTest:: _log ( "precice::geometry::tests::SphereTest" );
 
 SphereTest:: SphereTest ()
 :
@@ -37,7 +34,8 @@ void SphereTest:: run ()
       io::ExportVTK exportVTK(true);
       std::ostringstream filename;
       filename << "geometry-SphereTest-" << dim;
-      exportVTK.doExport ( filename.str(), mesh );
+      std::string location = "";
+      exportVTK.doExport ( filename.str(), location, mesh );
     }
   }
 }

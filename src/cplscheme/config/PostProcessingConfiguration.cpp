@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "PostProcessingConfiguration.hpp"
 #include "cplscheme/impl/ConstantRelaxationPostProcessing.hpp"
 #include "cplscheme/impl/AitkenPostProcessing.hpp"
@@ -28,7 +25,7 @@
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log PostProcessingConfiguration::
+logging::Logger PostProcessingConfiguration::
       _log ( "precice::cplscheme::PostProcessingConfiguration" );
 
 //const std::string & PostProcessingConfiguration:: getTag ()
@@ -207,7 +204,7 @@ void PostProcessingConfiguration:: xmlTagCallback
 (
   utils::XMLTag& callingTag )
 {
-  preciceTrace1("xmlTagCallback()", callingTag.getFullName());
+  preciceTrace("xmlTagCallback()", callingTag.getFullName());
 
   if (callingTag.getNamespace() == TAG){
       _config.type = callingTag.getName();
@@ -310,21 +307,11 @@ void PostProcessingConfiguration:: xmlEndTagCallback
 (
   utils::XMLTag& callingTag )
 {
-  preciceTrace1("xmlEndTagCallback()", callingTag.getName());
+  preciceTrace("xmlEndTagCallback()", callingTag.getName());
   if (callingTag.getNamespace() == TAG){
 
     //create preconditioner
     if (callingTag.getName() == VALUE_IQNILS || callingTag.getName() == VALUE_MVQN ||  callingTag.getName() == VALUE_ManifoldMapping){
-      std::vector<int> dims;
-      for (int id : _config.dataIDs){
-        for(mesh::PtrMesh mesh : _meshConfig->meshes() ) {
-          for (mesh::PtrData data : mesh->data() ) {
-            if(data->getID() == id){
-              dims.push_back(data->getDimensions());
-            }
-          }
-        }
-      }
 
       // if imvj restart-mode is of type RS-SVD, max number of non-const preconditioned time steps is limited by the chunksize
       if(callingTag.getName() == VALUE_MVQN && _config.imvjRestartType > 0)
@@ -337,16 +324,16 @@ void PostProcessingConfiguration:: xmlEndTagCallback
         for (int id : _config.dataIDs){
           factors.push_back(_config.scalings[id]);
         }
-        _preconditioner = impl::PtrPreconditioner(new impl::ConstantPreconditioner(dims, factors));
+        _preconditioner = impl::PtrPreconditioner(new impl::ConstantPreconditioner(factors));
       }
       else if(_config.preconditionerType == VALUE_VALUE_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ValuePreconditioner(dims, _config.precond_nbNonConstTSteps));
+        _preconditioner = impl::PtrPreconditioner (new impl::ValuePreconditioner(_config.precond_nbNonConstTSteps));
       }
       else if(_config.preconditionerType == VALUE_RESIDUAL_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ResidualPreconditioner(dims, _config.precond_nbNonConstTSteps));
+        _preconditioner = impl::PtrPreconditioner (new impl::ResidualPreconditioner(_config.precond_nbNonConstTSteps));
       }
       else if(_config.preconditionerType == VALUE_RESIDUAL_SUM_PRECONDITIONER){
-        _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(dims, _config.precond_nbNonConstTSteps));
+        _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(_config.precond_nbNonConstTSteps));
       }
       else{
         // no preconditioner defined
@@ -354,7 +341,7 @@ void PostProcessingConfiguration:: xmlEndTagCallback
         for (int id = 0; id < (int)_config.dataIDs.size(); ++id) {
           factors.push_back(1.0);
         }
-        _preconditioner = impl::PtrPreconditioner (new impl::ConstantPreconditioner(dims, factors));
+        _preconditioner = impl::PtrPreconditioner (new impl::ConstantPreconditioner(factors));
       }
     }
 

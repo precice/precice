@@ -14,7 +14,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <string>
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace tarch {
   namespace argument {
@@ -42,7 +42,7 @@ public:
 	bool isValid() const;
 
 private:
-	static tarch::logging::Log _log;
+	static logging::Logger _log;
 	std::string _name;
 	TYPE        _type;
 	char*       _argument;

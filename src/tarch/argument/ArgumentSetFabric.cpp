@@ -14,7 +14,7 @@
 
 using namespace tarch::argument;
 
-tarch::logging::Log ArgumentSetFabric::_log("ArgumentSetFabric()");
+precice::logging::Logger ArgumentSetFabric::_log("ArgumentSetFabric()");
 std::vector<ArgumentSet> ArgumentSetFabric::_argumentSets;
 bool ArgumentSetFabric::_isInitialized(false);
 
@@ -28,7 +28,7 @@ ArgumentSetFabric::~ArgumentSetFabric() {
 void ArgumentSetFabric::print() {
   std::stringstream ss;
   print(ss);
-  _log.info("print",ss.str());
+  preciceInfo("print",ss.str());
 }
 
 void ArgumentSetFabric::print(std::stringstream& ss) {
@@ -48,7 +48,7 @@ void ArgumentSetFabric::printDefaultArguments(std::stringstream& ss) {
 void ArgumentSetFabric::printDefaultArguments() {
   std::stringstream ss;
   printDefaultArguments(ss);
-  _log.info("print",ss.str());
+  preciceInfo("print",ss.str());
 }
 
 void ArgumentSetFabric::printAllPossibleConfigurationsAndExit() {
@@ -56,7 +56,7 @@ void ArgumentSetFabric::printAllPossibleConfigurationsAndExit() {
   ss << "ERROR! ArgumentSet not found!! Available configurations:\n";
   print(ss);
   assertion(false, ss.str());
-  _log.error("getArgumentSet",ss.str());
+  preciceWarnung("getArgumentSet",ss.str());
   exit(ASSERTION_EXIT_CODE);
 }
 
@@ -72,7 +72,7 @@ ArgumentSet ArgumentSetFabric::getSpecificSet(unsigned int argc, char* argv[]) {
       ss << "\nArgumentSet ";
       (*it).printDefaultArguments(ss);
       ss <<"was selected.";
-      _log.debug("getArgumentSet", ss.str());
+      DEBUG("getArgumentSet", ss.str());
 #endif
       (*it).initialize(argc, argv);
       return *it;
@@ -102,21 +102,21 @@ ArgumentSet ArgumentSetFabric::getSpecificSet(unsigned int argc, char* argv[]) {
 
 ArgumentSet ArgumentSetFabric::getArgumentSet(unsigned int argc, char* argv[]) {
   if(!_isInitialized) {
-    _log.error("getArgumentSet","ArgumentSetFabric is not initialized. You have to add Argumentsets to initialize it before "
+    preciceWarnung("getArgumentSet","ArgumentSetFabric is not initialized. You have to add Argumentsets to initialize it before "
         "trying to receiving a configuration.");
   }
 #ifdef Debug
   std::stringstream ss;
   ss << "The configured argument sets are: " <<std::endl;
   printDefaultArguments(ss);
-  _log.debug("getArgumentSet", ss.str());
+  DEBUG("getArgumentSet", ss.str());
 #endif
 
   /*
    * Find user specified argument set
    */
   ArgumentSet argumentSet = getSpecificSet(argc, argv);
-  _log.debug("getArgumentSet()","Argument set successfully returned.");
+  DEBUG("getArgumentSet()","Argument set successfully returned.");
   return argumentSet;
 }
 

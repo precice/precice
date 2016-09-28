@@ -1,10 +1,7 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_IO_TXTREADER_HPP_
 #define PRECICE_IO_TXTREADER_HPP_
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/traits/IsMatrix.h"
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/MatrixTraits.h"
@@ -85,7 +82,7 @@ public:
 private:
 
   /// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /// @brief Filestream.
   std::ifstream _file;

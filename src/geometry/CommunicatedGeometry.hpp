@@ -5,7 +5,7 @@
 #include "mapping/SharedPointer.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "impl/Decomposition.hpp"
 #include "impl/SharedPointer.hpp"
 #include <string>
@@ -57,7 +57,7 @@ private:
     mesh::Mesh& seed);
 
   /// Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   std::string _accessorName;
 

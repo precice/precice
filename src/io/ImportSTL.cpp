@@ -5,7 +5,7 @@
 namespace precice {
 namespace io {
 
-tarch::logging::Log ImportSTL:: _log("precice::io::ImportSTL");
+logging::Logger ImportSTL:: _log("precice::io::ImportSTL");
 
 ImportSTL:: ImportSTL
 (
@@ -22,7 +22,7 @@ void ImportSTL:: doImport
   const std::string& name,
   mesh::Mesh&        mesh )
 {
-  preciceTrace1("doImport()", name);
+  preciceTrace("doImport()", name);
   assertion(mesh.getDimensions() == 3, mesh.getDimensions());
   // TODO
 }

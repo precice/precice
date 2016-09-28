@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "CommunicateMesh.hpp"
 #include "Communication.hpp"
 #include "mesh/Mesh.hpp"
@@ -15,7 +12,7 @@
 namespace precice {
 namespace com {
 
-tarch::logging::Log CommunicateMesh:: _log ( "precice::com::CommunicateMesh" );
+logging::Logger CommunicateMesh:: _log ( "precice::com::CommunicateMesh" );
 
 CommunicateMesh:: CommunicateMesh
 (
@@ -29,7 +26,7 @@ void CommunicateMesh:: sendMesh
   const mesh::Mesh& mesh,
   int               rankReceiver )
 {
-  preciceTrace2 ( "sendGeometry()", mesh.getName(), rankReceiver );
+  preciceTrace ( "sendGeometry()", mesh.getName(), rankReceiver );
   using tarch::la::raw;
   int dim = mesh.getDimensions();
 
@@ -92,7 +89,7 @@ void CommunicateMesh:: receiveMesh
   mesh::Mesh& mesh,
   int         rankSender )
 {
-  preciceTrace2 ( "receiveMesh()", mesh.getName(), rankSender );
+  preciceTrace ( "receiveMesh()", mesh.getName(), rankSender );
   using tarch::la::raw;
   int dim = mesh.getDimensions();
 
@@ -100,6 +97,7 @@ void CommunicateMesh:: receiveMesh
   std::map<int, mesh::Vertex*> vertexMap;
   int numberOfVertices = 0;
   _communication->receive ( numberOfVertices, rankSender);
+  DEBUG("Number of vertices to receive: "<< numberOfVertices);
 
   if(numberOfVertices>0){
     double vertexCoords[numberOfVertices*dim];
@@ -118,6 +116,7 @@ void CommunicateMesh:: receiveMesh
   int numberOfEdges = 0;
   std::vector<mesh::Edge*> edges;
   _communication->receive ( numberOfEdges, rankSender);
+  DEBUG("Number of edges to receive: "<< numberOfEdges);
   if(numberOfEdges>0){
     int vertexIDs[numberOfVertices];
     _communication->receive(vertexIDs,numberOfVertices,rankSender);
@@ -125,7 +124,7 @@ void CommunicateMesh:: receiveMesh
       vertexMap[vertexIDs[i]] = vertices[i];
     }
 
-    int edgeIDs[numberOfEdges];
+    int edgeIDs[numberOfEdges*2];
     _communication->receive(edgeIDs,numberOfEdges*2,rankSender);
     for( int i=0; i < numberOfEdges; i++){
       assertion ( vertexMap.find(edgeIDs[i*2]) != vertexMap.end() );
@@ -139,6 +138,8 @@ void CommunicateMesh:: receiveMesh
   if ( dim == 3 ){
     int numberOfTriangles = 0;
     _communication->receive ( numberOfTriangles, rankSender );
+    DEBUG("Number of Triangles to receive: " << numberOfTriangles);
+    DEBUG("Number of Edges: " << edges.size());
     if (numberOfTriangles > 0){
       assertion ( (edges.size() > 0) || (numberOfTriangles == 0) );
       int edgeIDs[numberOfEdges];
@@ -148,7 +149,7 @@ void CommunicateMesh:: receiveMesh
         edgeMap[edgeIDs[i]] = edges[i];
       }
 
-      int triangleIDs[numberOfTriangles];
+      int triangleIDs[numberOfTriangles*3];
       _communication->receive(triangleIDs,numberOfTriangles*3,rankSender);
 
       for( int i=0; i < numberOfTriangles; i++){
@@ -169,7 +170,7 @@ void CommunicateMesh:: broadcastSendMesh
 (
   const mesh::Mesh& mesh )
 {
-  preciceTrace1 ( "broadcastSendMesh()", mesh.getName() );
+  preciceTrace ( "broadcastSendMesh()", mesh.getName() );
   using tarch::la::raw;
   int dim = mesh.getDimensions();
 
@@ -231,7 +232,7 @@ void CommunicateMesh:: broadcastReceiveMesh
 (
   mesh::Mesh& mesh)
 {
-  preciceTrace1 ( "broadcastReceiveMesh()", mesh.getName() );
+  preciceTrace ( "broadcastReceiveMesh()", mesh.getName() );
   using tarch::la::raw;
   int dim = mesh.getDimensions();
   int rankBroadcaster = 0;
@@ -307,7 +308,7 @@ void CommunicateMesh:: broadcastReceiveMesh
 void CommunicateMesh:: sendBoundingBox (
   const mesh::Mesh::BoundingBox & bb,
   int                rankReceiver ){
-  preciceTrace1 ( "sendBoundingBox()", rankReceiver );
+  preciceTrace ( "sendBoundingBox()", rankReceiver );
   int dim = bb.size();
   for(int d=0; d<dim; d++){
     _communication->send(bb[d].first, rankReceiver);
@@ -318,7 +319,7 @@ void CommunicateMesh:: sendBoundingBox (
 void CommunicateMesh:: receiveBoundingBox (
   mesh::Mesh::BoundingBox & bb,
   int          rankSender ){
-  preciceTrace1 ( "receiveBoundingBox()", rankSender );
+  preciceTrace ( "receiveBoundingBox()", rankSender );
   int dim = bb.size();
   for(int d=0; d<dim; d++){
     _communication->receive(bb[d].first, rankSender);

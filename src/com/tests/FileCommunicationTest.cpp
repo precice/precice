@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "FileCommunicationTest.hpp"
 #include "com/FileCommunication.hpp"
 #include "utils/Globals.hpp"
@@ -15,7 +12,7 @@ namespace precice {
 namespace com {
 namespace tests {
 
-tarch::logging::Log FileCommunicationTest::
+logging::Logger FileCommunicationTest::
   _log ( "precice::com::tests::FileCommunicationTest" );
 
 FileCommunicationTest:: FileCommunicationTest()

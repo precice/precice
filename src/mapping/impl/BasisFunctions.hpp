@@ -2,6 +2,7 @@
 
 #include "utils/Globals.hpp"
 
+
 namespace precice {
 namespace mapping {
 
@@ -96,7 +97,7 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _cPow2;
 };
@@ -164,7 +165,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /// Below that value the function is supposed to be zero. Defines the support radius if not explicitely given
   const double cutoffThreshold = 1e-9;
@@ -218,7 +219,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _r;
 };
@@ -259,7 +260,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _r;
 };
@@ -302,7 +303,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   double _r;
 };

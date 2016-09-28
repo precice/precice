@@ -1,8 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at
-// http://www5.in.tum.de/wiki/index.php/PreCICE_License
-
 #ifndef PRECICE_NO_SOCKETS
 
 #ifndef PRECICE_COM_SOCKET_COMMUNICATION_HPP_
@@ -10,7 +5,7 @@
 
 #include "com/Communication.hpp"
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/PointerVector.hpp"
 #include <boost/asio/io_service.hpp>
 
@@ -259,7 +254,7 @@ public:
   virtual Request::SharedPointer aReceive(bool* itemToReceive, int rankSender);
 
 private:
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Port used for socket connection.
   unsigned short _portNumber;

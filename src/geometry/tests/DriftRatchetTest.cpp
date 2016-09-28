@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "DriftRatchetTest.hpp"
 #include "geometry/DriftRatchet.hpp"
 #include "mesh/Mesh.hpp"
@@ -17,7 +14,7 @@ namespace precice {
 namespace geometry {
 namespace tests {
 
-tarch::logging::Log DriftRatchetTest:: _log ( "precice::geometry::tests::DriftRatchetTest" );
+logging::Logger DriftRatchetTest:: _log ( "precice::geometry::tests::DriftRatchetTest" );
 
 DriftRatchetTest:: DriftRatchetTest (void)
 :
@@ -41,12 +38,13 @@ void DriftRatchetTest:: run ()
           geometry::DriftRatchet::getDefaultShapeParameter(),
           length, pores, 0, 1, 2 );
       driftRatchet.create ( mesh );
-      preciceDebug ( "Created Container with " << mesh.triangles().size()
+      DEBUG ( "Created Container with " << mesh.triangles().size()
                      << " triangles and " << mesh.vertices().size() << " vertices" );
       io::ExportVTK exportVTK(true);
       std::ostringstream filename;
       filename << "geometry-DriftRatchetTest-" << dim;
-      exportVTK.doExport ( filename.str(), mesh );
+      std::string location = "";
+      exportVTK.doExport ( filename.str(), location, mesh );
     }
   }
 }

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace utils {
@@ -27,7 +27,7 @@ private:
   /// Whether we have initialized Petsc or if it was initialized by an application calling us.
   static bool weInitialized;
   
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 };
 }} // namespace precice, utils
 
@@ -43,6 +43,8 @@ private:
 namespace precice {
 namespace utils {
 namespace petsc {
+
+enum VIEWERFORMAT { ASCII, BINARY };
 
 class Matrix;
 
@@ -77,6 +79,9 @@ public:
 
   ~Vector();
 
+  /// Enables implicit conversion into a reference to a PETSc Vec type
+  operator Vec&();
+
   /// Sets the size and calls VecSetFromOptions
   void init(PetscInt rows);
 
@@ -100,11 +105,11 @@ public:
   /// Returns a pair that mark the beginning and end of the vectors ownership range. Use first und second to access.
   std::pair<PetscInt, PetscInt> ownerRange();
 
-  /// Writes the vector to the PETSc binary format
-  void write(std::string filename);
+  /// Writes the vector to file.
+  void write(std::string filename, VIEWERFORMAT format = ASCII);
 
-  /// Reads the vector from the PETSc binary format
-  void read(std::string filename);
+  /// Reads the vector from file.
+  void read(std::string filename, VIEWERFORMAT format = ASCII);
 
   void view();
 };
@@ -127,6 +132,9 @@ public:
   Matrix(MPI_Comm comm = PETSC_COMM_WORLD, std::string name = "");
 
   ~Matrix();
+
+  /// Enables implicit conversion into a reference to a PETSc Mat type
+  operator Mat&();
 
   void assemble(MatAssemblyType type = MAT_FINAL_ASSEMBLY);
     
@@ -164,11 +172,11 @@ public:
   /// Returns a pair that mark the beginning and end of the matrix' column ownership range.
   std::pair<PetscInt, PetscInt> ownerRangeColumn();
   
-  /// Writes the matrix to PETSc the binary format
-  void write(std::string filename);
+  /// Writes the matrix to file.
+  void write(std::string filename, VIEWERFORMAT format = ASCII);
 
-  /// Reads the matrix from PETSc the binary format
-  void read(std::string filename);
+  /// Reads the matrix from file.
+  void read(std::string filename, VIEWERFORMAT format = ASCII);
 
   /// Prints the matrix
   void view();

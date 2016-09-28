@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #pragma once
 
 #include "tarch/tests/TestCase.h"
@@ -82,14 +79,17 @@ private:
 
   void validateVector(DataValues& data, DataValues& compare);
 
+  void testMultilpleMeshes ();
+
   DataValues _data;
   DataValues _res;
   DataValues _compareDataRes;
   DataValues _compareDataResSum;
+  DataValues _compareDataResSum2;
   DataValues _compareDataValue;
   DataValues _compareDataConstant;
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 };
 
 }}} // namespace precice, cplscheme, tests

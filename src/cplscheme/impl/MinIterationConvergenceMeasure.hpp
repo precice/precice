@@ -1,12 +1,9 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_CPLSCHEME_MINITERATIONCONVERGENCEMEASURE_HPP_
 #define PRECICE_CPLSCHEME_MINITERATIONCONVERGENCEMEASURE_HPP_
 
 #include "ConvergenceMeasure.hpp"
 #include "cplscheme/CouplingData.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -32,7 +29,7 @@ public:
      _isConvergence = _minimumIterationCount <= _currentIteration
                       ? true
                       : false;
-     preciceDebug("Iteration number = " << _currentIteration
+     DEBUG("Iteration number = " << _currentIteration
                   << ", convergence = " << _isConvergence);
    }
 
@@ -54,7 +51,7 @@ public:
 
 private:
 
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   int _minimumIterationCount;
 

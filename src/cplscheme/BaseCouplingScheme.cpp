@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "BaseCouplingScheme.hpp"
 #include "mesh/Mesh.hpp"
 #include "com/Communication.hpp"
@@ -21,7 +18,7 @@
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log BaseCouplingScheme::
+logging::Logger BaseCouplingScheme::
 _log("precice::cplscheme::BaseCouplingScheme");
 
 BaseCouplingScheme:: BaseCouplingScheme
@@ -179,7 +176,7 @@ void BaseCouplingScheme:: receiveAndSetDt()
   if (participantReceivesDt()){
     double dt = UNDEFINED_TIMESTEP_LENGTH;
     getM2N()->receive(dt);
-    preciceDebug("Received timestep length of " << dt);
+    DEBUG("Received timestep length of " << dt);
     assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
     setTimestepLength(dt);
   }
@@ -188,7 +185,7 @@ void BaseCouplingScheme:: receiveAndSetDt()
 void BaseCouplingScheme:: sendDt(){
   preciceTrace("sendDt()");
   if (participantSetsDt()){
-    preciceDebug("sending timestep length of " << getComputedTimestepPart());
+    DEBUG("sending timestep length of " << getComputedTimestepPart());
     getM2N()->send(getComputedTimestepPart());
   }
 }
@@ -238,7 +235,7 @@ void BaseCouplingScheme:: sendState
   com::Communication::SharedPointer communication,
   int                   rankReceiver)
 {
-  preciceTrace1("sendState()", rankReceiver);
+  preciceTrace("sendState()", rankReceiver);
   communication->startSendPackage(rankReceiver );
   assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
@@ -270,7 +267,7 @@ void BaseCouplingScheme:: receiveState
   com::Communication::SharedPointer communication,
   int                   rankSender)
 {
-  preciceTrace1("receiveState()", rankSender);
+  preciceTrace("receiveState()", rankSender);
   communication->startReceivePackage(rankSender);
   assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
@@ -319,7 +316,7 @@ std::vector<int> BaseCouplingScheme:: sendData
     m2n->send(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     sentDataIDs.push_back(pair.first);
   }
-  preciceDebug("Number of sent data sets = " << sentDataIDs.size());
+  DEBUG("Number of sent data sets = " << sentDataIDs.size());
   return sentDataIDs;
 }
 
@@ -338,7 +335,7 @@ std::vector<int> BaseCouplingScheme:: receiveData
     m2n->receive(pair.second->values->data(), size, pair.second->mesh->getID(), pair.second->dimension);
     receivedDataIDs.push_back(pair.first);
   }
-  preciceDebug("Number of received data sets = " << receivedDataIDs.size());
+  DEBUG("Number of received data sets = " << receivedDataIDs.size());
 
   return receivedDataIDs;
 }
@@ -360,7 +357,7 @@ CouplingData* BaseCouplingScheme:: getSendData
 (
   int dataID)
 {
-  preciceTrace1("getSendData()", dataID);
+  preciceTrace("getSendData()", dataID);
   DataMap::iterator iter = _sendData.find(dataID);
   if (iter != _sendData.end()) {
     return  &(*(iter->second));
@@ -372,7 +369,7 @@ CouplingData* BaseCouplingScheme:: getReceiveData
 (
   int dataID)
 {
-  preciceTrace1("getReceiveData()", dataID);
+  preciceTrace("getReceiveData()", dataID);
   DataMap::iterator iter = _receiveData.find(dataID);
   if (iter != _receiveData.end()) {
     return  &(*(iter->second));
@@ -403,11 +400,11 @@ void BaseCouplingScheme:: setExtrapolationOrder
 //       iterationsConverged()
 void BaseCouplingScheme::extrapolateData(DataMap& data)
 {
-  preciceTrace1("extrapolateData()", _timesteps);
+  preciceTrace("extrapolateData()", _timesteps);
   if ((_extrapolationOrder == 1) || getTimesteps() == 2) { //timesteps is increased before extrapolate is called
     preciceInfo("extrapolateData()", "Performing first order extrapolation" );
     for (DataMap::value_type & pair : data) {
-      preciceDebug("Extrapolate data: " << pair.first);
+      DEBUG("Extrapolate data: " << pair.first);
       assertion(pair.second->oldValues.cols() > 1 );
       Eigen::VectorXd & values = *pair.second->values;
       pair.second->oldValues.col(0) = values;     // = x^t
@@ -451,7 +448,7 @@ void BaseCouplingScheme:: addComputedTime
 (
   double timeToAdd )
 {
-  preciceTrace2("addComputedTime()", timeToAdd, _time);
+  preciceTrace("addComputedTime()", timeToAdd, _time);
   preciceCheck(isCouplingOngoing(), "addComputedTime()",
            "Invalid call of addComputedTime() after simulation end!");
 
@@ -471,7 +468,7 @@ bool BaseCouplingScheme:: willDataBeExchanged
 (
   double lastSolverTimestepLength) const
 {
-  preciceTrace1("willDataBeExchanged()", lastSolverTimestepLength);
+  preciceTrace("willDataBeExchanged()", lastSolverTimestepLength);
   double remainder = getThisTimestepRemainder() - lastSolverTimestepLength;
   return not tarch::la::greater(remainder, 0.0, _eps);
 }
@@ -520,7 +517,7 @@ double BaseCouplingScheme:: getThisTimestepRemainder() const
   if (not tarch::la::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)){
     remainder = _timestepLength - _computedTimestepPart;
   }
-  preciceDebug("return " << remainder);
+  DEBUG("return " << remainder);
   return remainder;
 }
 
@@ -670,7 +667,7 @@ int BaseCouplingScheme:: getValidDigits () const
 void BaseCouplingScheme::setupDataMatrices(DataMap& data)
 {
   preciceTrace("setupDataMatrices()");
-  preciceDebug("Data size: " << data.size());
+  DEBUG("Data size: " << data.size());
   // Reserve storage for convergence measurement of send and receive data values
   for (ConvergenceMeasure& convMeasure : _convergenceMeasures) {
     assertion(convMeasure.data != nullptr);
@@ -683,7 +680,7 @@ void BaseCouplingScheme::setupDataMatrices(DataMap& data)
   if (_extrapolationOrder > 0){
     for (DataMap::value_type& pair : data) {
       int cols = pair.second->oldValues.cols();
-      preciceDebug("Add cols: " << pair.first << ", cols: " << cols);
+      DEBUG("Add cols: " << pair.first << ", cols: " << cols);
       assertion(cols <= 1, cols);
       utils::append( pair.second->oldValues,
             (Eigen::MatrixXd) Eigen::MatrixXd::Zero(pair.second->values->size(), _extrapolationOrder + 1 - cols));
@@ -1018,13 +1015,13 @@ void BaseCouplingScheme:: updateTimeAndIterations
 
 void BaseCouplingScheme:: timestepCompleted()
 {
-  preciceTrace2("timestepCompleted()", getTimesteps(), getTime());
+  preciceTrace("timestepCompleted()", getTimesteps(), getTime());
   preciceInfo("timestepCompleted()", "Timestep completed");
   setIsCouplingTimestepComplete(true);
   setTimesteps(getTimesteps() + 1 );
   //setTime(getTimesteps() * getTimestepLength() ); // Removes numerical errors
   if (isCouplingOngoing()) {
-    preciceDebug("Setting require create checkpoint");
+    DEBUG("Setting require create checkpoint");
     requireAction(constants::actionWriteIterationCheckpoint());
   }
 }

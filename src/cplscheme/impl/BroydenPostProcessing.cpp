@@ -1,12 +1,3 @@
-/*
- * BroydenPostProcessing.cpp
- *
- *  Created on: Dez 5, 2015
- *      Author: Klaudius Scheufele
- */
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "BroydenPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
@@ -33,7 +24,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-// tarch::logging::Log BroydenPostProcessing::
+// logging::Logger BroydenPostProcessing::
  //      _log("precice::cplscheme::impl::BroydenPostProcessing");
 
       
@@ -115,15 +106,15 @@ void BroydenPostProcessing::computeQNUpdate
 {
   preciceTrace("computeQNUpdate()");
   
-  preciceDebug("currentColumns="<<_currentColumns);  
+  DEBUG("currentColumns="<<_currentColumns);  
   if(_currentColumns > 1)
   {
-     preciceError(__func__, "truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.";)
-     preciceDebug("compute update with QR-dec");
+     preciceError(__func__, "truncated IMVJ no longer supported, needs to be parallelized and datastructures need to be changed to Eigen datastructures.");
+     DEBUG("compute update with QR-dec");
      //computeNewtonFactorsQRDecomposition(cplData, xUpdate);
   }else
   {
-    preciceDebug("compute update with Broyden");
+    DEBUG("compute update with Broyden");
     // ------------- update inverse Jacobian -----------
     // ------------- Broyden Update
     //
@@ -134,17 +125,17 @@ void BroydenPostProcessing::computeQNUpdate
     Eigen::VectorXd w = _matrixW.col(0);
     Eigen::MatrixXd JUpdate = Eigen::MatrixXd::Zero(_invJacobian.rows(),_invJacobian.cols());
 
-    preciceDebug("took latest column of V,W");
+    DEBUG("took latest column of V,W");
 
     double dotproductV = v.dot(v);
     Eigen::VectorXd tmp = _oldInvJacobian * v;    // J_inv*v
     tmp = w - tmp;                        // (w-J_inv*v)
     tmp = tmp/dotproductV;                // (w-J_inv*v)/|v|_l2
-    preciceDebug("did step (W-J_inv*v)/|v|");
+    DEBUG("did step (W-J_inv*v)/|v|");
 
     assertion(tmp.size() == v.size(), tmp.size(), v.size());
     JUpdate = tmp * v.transpose();
-    preciceDebug("multiplied (w-J_inv*v)/|v| * v^T");
+    DEBUG("multiplied (w-J_inv*v)/|v| * v^T");
 
     assertion(_invJacobian.rows() == JUpdate.rows(), _invJacobian.rows(), JUpdate.rows());
     _invJacobian = _oldInvJacobian + JUpdate;

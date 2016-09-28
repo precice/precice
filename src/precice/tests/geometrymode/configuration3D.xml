@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 
 <precice-configuration>
-   <log-filter target="" component="" switch="off" />
    <solver-interface geometry-mode="yes" dimensions="3">
       <data:vector name="Forces" />
       <data:vector name="Velocities" />
@@ -20,8 +19,8 @@
          <use-mesh name="box-obstacle" />
          <write-data name="Forces"     mesh="box-obstacle" />
          <read-data  name="Velocities" mesh="box-obstacle" />
-         <export:vtk timestep-interval="10" trigger-solver="on" directory="location1"/>
-         <export:vtk directory="location2"/>
+         <export:vtk timestep-interval="10" trigger-solver="on" directory=""/>
+         <export:vtk directory=""/>
       </participant>
    </solver-interface>
 </precice-configuration>

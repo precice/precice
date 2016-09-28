@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_CPLSCHEME_COUPLINGSCHEME_HPP_
 #define PRECICE_CPLSCHEME_COUPLINGSCHEME_HPP_
 
@@ -115,6 +112,7 @@ public:
   virtual bool willDataBeExchanged(double lastSolverTimestepLength) const =0;
 
   /// @brief Returns true, if data has been exchanged in last call of advance().
+  /// actually, this only means that data has been received, data is always sent
   virtual bool hasDataBeenExchanged() const =0;
 
   /// @brief Returns the currently computed time of the coupling scheme.

@@ -7,7 +7,7 @@
 namespace precice {
 namespace cplscheme {
 
-tarch::logging::Log ParallelCouplingScheme::_log("precice::cplscheme::ParallelCouplingScheme" );
+logging::Logger ParallelCouplingScheme::_log("precice::cplscheme::ParallelCouplingScheme" );
 
 ParallelCouplingScheme::ParallelCouplingScheme
 (
@@ -40,7 +40,7 @@ void ParallelCouplingScheme::initialize
   double startTime,
   int    startTimestep )
 {
-  preciceTrace2("initialize()", startTime, startTimestep);
+  preciceTrace("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
   assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
@@ -178,13 +178,13 @@ void ParallelCouplingScheme::explicitAdvance()
     setTimesteps(getTimesteps() + 1);
 
     if (doesFirstStep()) {
-      preciceDebug("Sending data...");
+      DEBUG("Sending data...");
       getM2N()->startSendPackage(0);
       sendDt();
       sendData(getM2N());
       getM2N()->finishSendPackage();
 
-      preciceDebug("Receiving data...");
+      DEBUG("Receiving data...");
       getM2N()->startReceivePackage(0);
       receiveAndSetDt();
       receiveData(getM2N());
@@ -192,14 +192,14 @@ void ParallelCouplingScheme::explicitAdvance()
       setHasDataBeenExchanged(true);
     }
     else { //second participant
-      preciceDebug("Receiving data...");
+      DEBUG("Receiving data...");
       getM2N()->startReceivePackage(0);
       receiveAndSetDt();
       receiveData(getM2N());
       getM2N()->finishReceivePackage();
       setHasDataBeenExchanged(true);
 
-      preciceDebug("Sending data...");
+      DEBUG("Sending data...");
       getM2N()->startSendPackage(0);
       sendDt();
       sendData(getM2N());
@@ -213,7 +213,7 @@ void ParallelCouplingScheme::explicitAdvance()
 
 void ParallelCouplingScheme::implicitAdvance()
 {
-  preciceTrace2("advance()", getTimesteps(), getTime());
+  preciceTrace("advance()", getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
@@ -225,7 +225,7 @@ void ParallelCouplingScheme::implicitAdvance()
   bool convergenceCoarseOptimization = true;
   bool doOnlySolverEvaluation = false;
   if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
-    preciceDebug("Computed full length of iteration");
+    DEBUG("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
       getM2N()->startSendPackage(0);
       sendData(getM2N());
@@ -247,6 +247,7 @@ void ParallelCouplingScheme::implicitAdvance()
       // DIRTY HACK for manifold mapping
       auto fine_IDs = getPostProcessing()->getDataIDs();
       auto& allData = getAllData();
+      // TODO: make this error safe ... should be receive data or something.... and then check whether it is fine data
       Eigen::VectorXd storeOldInput = (*allData.at( fine_IDs[1] )->values);
 
       getM2N()->startReceivePackage(0);
@@ -261,7 +262,7 @@ void ParallelCouplingScheme::implicitAdvance()
 
       // measure convergence for coarse model optimization
       if(_isCoarseModelOptimizationActive){
-        preciceDebug("measure convergence of coarse model optimization.");
+        DEBUG("measure convergence of coarse model optimization.");
         // in case of multilevel post processing only: measure the convergence of the coarse model optimization
         convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
         // Stop, when maximal iteration count (given in config) is reached
@@ -279,6 +280,7 @@ void ParallelCouplingScheme::implicitAdvance()
           // the fine model evaluation needs the same input as the coarse model, just before convegrence
           // precice's send and receive of data automatically overrides the data, as there is different data for the respective
           // id present at the first participants side.
+          // TODO: make this error safe ... should be receive data or something.... and then check whether it is fine data
           (*allData.at( fine_IDs[1] )->values) = storeOldInput;
 
           // reset the convergence measures for the coarse model optimization
@@ -289,7 +291,7 @@ void ParallelCouplingScheme::implicitAdvance()
       }
       // measure convergence of coupling iteration
       else{
-        preciceDebug("measure convergence.");
+        DEBUG("measure convergence.");
         doOnlySolverEvaluation = false;
 
         // measure convergence of the coupling iteration,
@@ -366,11 +368,11 @@ void ParallelCouplingScheme::implicitAdvance()
 
     // both participants
     if (not convergence) {
-      preciceDebug("No convergence achieved");
+      DEBUG("No convergence achieved");
       requireAction(constants::actionReadIterationCheckpoint());
     }
     else {
-      preciceDebug("Convergence achieved");
+      DEBUG("Convergence achieved");
       advanceTXTWriters();
     }
     updateTimeAndIterations(convergence, convergenceCoarseOptimization);

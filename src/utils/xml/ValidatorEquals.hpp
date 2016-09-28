@@ -1,11 +1,8 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_UTILS_VALIDATOREQUALS_HPP_
 #define PRECICE_UTILS_VALIDATOREQUALS_HPP_
 
 #include "Validator.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "utils/Helpers.hpp"
 
 namespace precice {
@@ -30,7 +27,7 @@ public:
 
    virtual bool validateValue ( const VALUE_T& value )
    {
-     preciceTrace1("validateValue()", value);
+     preciceTrace("validateValue()", value);
      return value == _valueToEqual;
    }
 
@@ -57,7 +54,7 @@ public:
 
 private:
 
-   static tarch::logging::Log _log;
+   static logging::Logger _log;
 
    ValidatorEquals ( const ValidatorEquals<VALUE_T>& rhs );
 
@@ -67,8 +64,8 @@ private:
 };
 
 template<typename VALUE_T>
-tarch::logging::Log precice::utils::ValidatorEquals<VALUE_T>::
-   _log = tarch::logging::Log ("precice::utils::ValidatorEquals");
+logging::Logger precice::utils::ValidatorEquals<VALUE_T>::
+   _log = logging::Logger ("precice::utils::ValidatorEquals");
 
 }} // namespace precice, utils
 

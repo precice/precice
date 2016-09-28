@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ConstantRelaxationPostProcessing.hpp"
 #include "../CouplingData.hpp"
 #include "mesh/Data.hpp"
@@ -16,7 +13,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-tarch::logging::Log ConstantRelaxationPostProcessing::
+logging::Logger ConstantRelaxationPostProcessing::
   _log("precice::cplscheme::ConstantRelaxationPostProcessing");
 
 ConstantRelaxationPostProcessing:: ConstantRelaxationPostProcessing
@@ -71,7 +68,7 @@ void ConstantRelaxationPostProcessing:: performPostProcessing
     const auto& oldValues = pair.second->oldValues.col(0);
     values *= omega;
     values += oldValues * oneMinusOmega;
-    preciceDebug("pp values" << values);
+    DEBUG("pp values" << values);
   }
 }
 

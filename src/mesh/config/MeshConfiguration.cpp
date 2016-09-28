@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "MeshConfiguration.hpp"
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/Mesh.hpp"
@@ -11,7 +8,7 @@
 namespace precice {
 namespace mesh {
 
-tarch::logging::Log MeshConfiguration:: _log ( "precice::mesh::MeshConfiguration" );
+logging::Logger MeshConfiguration:: _log ( "precice::mesh::MeshConfiguration" );
 
 //const std::string& MeshConfiguration:: getTag ()
 //{
@@ -90,7 +87,7 @@ void MeshConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace1("setDimensions()", dimensions);
+  preciceTrace("setDimensions()", dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -132,7 +129,7 @@ void MeshConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1("xmlTagCallback()", tag.getName());
+  preciceTrace("xmlTagCallback()", tag.getName());
   if (tag.getName() == TAG){
     assertion(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
@@ -266,7 +263,7 @@ void MeshConfiguration:: addNeededMesh(
   const std::string& participant,
   const std::string& mesh)
 {
-  preciceTrace2 ( "addNeededMesh()", participant, mesh );
+  preciceTrace ( "addNeededMesh()", participant, mesh );
   if(_neededMeshes.count(participant)==0){
     std::vector<std::string> meshes;
     meshes.push_back(mesh);

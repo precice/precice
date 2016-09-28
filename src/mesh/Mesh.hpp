@@ -1,11 +1,11 @@
 #pragma once
 
+
 #include "mesh/Group.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Vertex.hpp"
-#include "tarch/logging/Log.h"
 #include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
@@ -208,6 +208,7 @@ public:
 
   PropertyContainer& getPropertyContainer ( const std::string subIDName );
 
+  /// Returns the name of the mesh, as set in the config file.
   const std::string& getName() const;
 
   bool isFlipNormals() const;
@@ -319,7 +320,7 @@ public:
 private:
 
   /// Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   /// Provides unique IDs for all geometry objects
   static utils::ManageUniqueIDs* _managerPropertyIDs;

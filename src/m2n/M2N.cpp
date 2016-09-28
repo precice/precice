@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 #include "M2N.hpp"
 
@@ -22,7 +19,7 @@ extern bool testMode;
 
 namespace m2n {
 
-tarch::logging::Log M2N::_log("precice::m2n::M2N");
+logging::Logger M2N::_log("precice::m2n::M2N");
 
 M2N:: M2N(  com::Communication::SharedPointer masterCom, DistributedComFactory::SharedPointer distrFactory )
 :
@@ -49,7 +46,7 @@ void M2N:: acceptMasterConnection (
   const std::string& nameAcceptor,
   const std::string& nameRequester)
 {
-  preciceTrace2("acceptMasterConnection()", nameAcceptor, nameRequester);
+  preciceTrace("acceptMasterConnection()", nameAcceptor, nameRequester);
 
   //Event e("M2N::acceptMasterConnection");
 
@@ -66,7 +63,7 @@ void M2N:: requestMasterConnection (
   const std::string& nameAcceptor,
   const std::string& nameRequester)
 {
-  preciceTrace2("requestMasterConnection()", nameAcceptor, nameRequester);
+  preciceTrace("requestMasterConnection()", nameAcceptor, nameRequester);
 
   if(not utils::MasterSlave::_slaveMode){
     assertion(_masterCom.use_count()>0);
@@ -86,7 +83,7 @@ void M2N:: acceptSlavesConnection (
   const std::string& nameAcceptor,
   const std::string& nameRequester)
 {
-  preciceTrace2("acceptSlavesConnection()", nameAcceptor, nameRequester);
+  preciceTrace("acceptSlavesConnection()", nameAcceptor, nameRequester);
   _areSlavesConnected = true;
   for( const auto& pair : _distComs){
     pair.second->acceptConnection(nameAcceptor, nameRequester);
@@ -99,7 +96,7 @@ void M2N:: requestSlavesConnection (
   const std::string& nameAcceptor,
   const std::string& nameRequester)
 {
-  preciceTrace2("requestSlavesConnection()", nameAcceptor, nameRequester);
+  preciceTrace("requestSlavesConnection()", nameAcceptor, nameRequester);
   _areSlavesConnected = true;
   for( const auto& pair : _distComs){
     pair.second->requestConnection(nameAcceptor, nameRequester);
@@ -205,7 +202,7 @@ void M2N:: send (
 void M2N:: send (
   bool   itemToSend)
 {
-  preciceTrace1("send(bool)", utils::MasterSlave::_rank);
+  preciceTrace("send(bool)", utils::MasterSlave::_rank);
   if(not utils::MasterSlave::_slaveMode){
     _masterCom->send(itemToSend, 0);
   }
@@ -215,7 +212,7 @@ void M2N:: send (
 void M2N:: send (
   double itemToSend)
 {
-  preciceTrace1("send(double)", utils::MasterSlave::_rank);
+  preciceTrace("send(double)", utils::MasterSlave::_rank);
   if(not utils::MasterSlave::_slaveMode){
     _masterCom->send(itemToSend, 0);
   }
@@ -257,28 +254,28 @@ void M2N:: receive (
 void M2N:: receive (
   bool&  itemToReceive )
 {
-  preciceTrace1("receive(bool)", utils::MasterSlave::_rank);
+  preciceTrace("receive(bool)", utils::MasterSlave::_rank);
   if(not utils::MasterSlave::_slaveMode){
     _masterCom->receive(itemToReceive, 0);
   }
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  preciceDebug("receive(bool): " << itemToReceive);
+  DEBUG("receive(bool): " << itemToReceive);
 }
 
 
 void M2N:: receive (
   double&  itemToReceive)
 {
-  preciceTrace1("receive(double)", utils::MasterSlave::_rank);
+  preciceTrace("receive(double)", utils::MasterSlave::_rank);
   if(not utils::MasterSlave::_slaveMode){ //coupling mode
     _masterCom->receive(itemToReceive, 0);
   }
 
   utils::MasterSlave::broadcast(itemToReceive);
 
-  preciceDebug("receive(double): " << itemToReceive);
+  DEBUG("receive(double): " << itemToReceive);
 }
 
 

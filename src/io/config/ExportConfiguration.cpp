@@ -1,9 +1,4 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ExportConfiguration.hpp"
-#include "io/ExportVTK.hpp"
-#include "io/ExportVRML.hpp"
 #include "io/Export.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
@@ -15,7 +10,7 @@
 namespace precice {
 namespace io {
 
-tarch::logging::Log ExportConfiguration:: _log("precice::io::ExportConfiguration");
+logging::Logger ExportConfiguration:: _log("precice::io::ExportConfiguration");
 
 //const std::string& ExportConfiguration:: getTag()
 //{
@@ -163,29 +158,19 @@ void ExportConfiguration:: xmlTagCallback
     //context.plotNeighbors = tag.getBooleanAttributeValue(ATTR_NEIGHBORS);
     context.triggerSolverPlot =  tag.getBooleanAttributeValue(ATTR_TRIGGER_SOLVER);
     context.timestepInterval = tag.getIntAttributeValue(ATTR_TIMESTEP_INTERVAL);
-    bool plotNormals = tag.getBooleanAttributeValue(ATTR_NORMALS);
+    context.plotNormals = tag.getBooleanAttributeValue(ATTR_NORMALS);
     context.exportSpacetree = tag.getBooleanAttributeValue(ATTR_SPACETREE);
     context.everyIteration = tag.getBooleanAttributeValue(ATTR_EVERY_ITERATION);
-    std::string type = tag.getName();
+    context.type = tag.getName();
     if ((context.timestepInterval == -1) &&  context.triggerSolverPlot){
       std::string error = "Attribute timestep interval has to be set when ";
       error += "trigger-solver is activated";
       throw error;
     }
-    PtrExport exporter;
-    if (type == VALUE_VTK){
-      exporter = PtrExport(new ExportVTK(plotNormals));
-    }
-    else if (type == VALUE_VRML){
-      exporter = PtrExport (new ExportVRML(plotNormals));
-    }
-    else {
-      preciceError("xmlTagCallback()", "Unknown export type!");
-    }
-    context.exporter = exporter;
     _contexts.push_back(context);
   }
 }
+
 
 }} // namespace precice, io
 

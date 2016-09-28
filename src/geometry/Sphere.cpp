@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "Sphere.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
@@ -12,7 +9,7 @@
 namespace precice {
 namespace geometry {
 
-tarch::logging::Log Sphere:: _log ( "precice::geometry::Sphere" );
+logging::Logger Sphere:: _log ( "precice::geometry::Sphere" );
 
 Sphere:: Sphere
 (
@@ -70,7 +67,7 @@ void Sphere:: specializedCreate
     // equilateral triangles (see http://en.wikipedia.org/wiki/Icosahedron).
     // The icosahedron is constructed from the corner vertices of 3 rectangles.
     double l = 4.0 * _radius / std::sqrt(10.0 + 2.0 * std::sqrt(5));
-    //precicePrint ( "l = " << l );
+    //INFO ( "l = " << l );
     double goldenRatio = ( 1.0 + std::sqrt(5) ) / 2.0;
     double h = l * goldenRatio;
 

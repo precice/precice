@@ -1,13 +1,10 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_CONFIGURATION_CONFIGURATION_REGISTRY_H_
 #define _TARCH_CONFIGURATION_CONFIGURATION_REGISTRY_H_
 
 #ifdef Parallel
 #include <mpi.h>
 #endif
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/configuration/BaseTopLevelConfigurationFactory.h"
 #include <string>
 #include <map>
@@ -49,7 +46,7 @@ class tarch::configuration::ConfigurationRegistry {
     /**
      * Log device for the configuration component.
      */
-    static tarch::logging::Log _log;
+    static precice::logging::Logger _log;
 
     typedef std::map<std::string,TopLevelConfiguration*> TopLevelConfigurationContainer;
 

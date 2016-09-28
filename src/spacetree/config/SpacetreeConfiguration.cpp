@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "SpacetreeConfiguration.hpp"
 #include "spacetree/DynamicOctree.hpp"
 #include "spacetree/StaticOctree.hpp"
@@ -16,7 +13,7 @@
 namespace precice {
 namespace spacetree {
 
-tarch::logging::Log SpacetreeConfiguration:: _log ( "precice::spacetree::SpacetreeConfiguration" );
+logging::Logger SpacetreeConfiguration:: _log ( "precice::spacetree::SpacetreeConfiguration" );
 
 //const std::string& SpacetreeConfiguration:: getTag()
 //{
@@ -90,7 +87,7 @@ void SpacetreeConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace1("setDimensions()", dimensions);
+  preciceTrace("setDimensions()", dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -160,7 +157,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
   const utils::DynVector& halflengths,
   double                  maxMeshwidth ) const
 {
-  preciceTrace4("getSpacetree()", type, offset, halflengths, maxMeshwidth);
+  preciceTrace("getSpacetree()", type, offset, halflengths, maxMeshwidth);
   assertion(_dimensions != 0);
   Spacetree* spacetree = nullptr;
   assertion ( offset.size() == halflengths.size(), offset.size(), halflengths.size() );
@@ -194,7 +191,7 @@ void SpacetreeConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace1 ( "xmlTagCallback()", tag.getName() );
+  preciceTrace ( "xmlTagCallback()", tag.getName() );
   if (tag.getNamespace() == TAG){
     assertion(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);

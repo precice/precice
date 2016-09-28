@@ -1,18 +1,8 @@
-/*
- * QRFactorization.hpp
- *
- *  Created on: June 16, 2016
- *      Author: Klaudius Scheufele
- */
-
-// Copyright (C) 2015 Universität Stuttgart
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_QRFACTORIZATION_HPP_
 #define PRECICE_QRFACTORIZATION_HPP_
 
 #include "mesh/SharedPointer.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/DynamicColumnMatrix.h"
 #include "tarch/la/DynamicMatrix.h"
 #include "tarch/la/DynamicVector.h"
@@ -237,7 +227,7 @@ private:
   
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   EigenMatrix _Q;
   EigenMatrix _R;

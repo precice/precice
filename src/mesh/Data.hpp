@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_MESH_DATA_HPP_
 #define PRECICE_MESH_DATA_HPP_
 
@@ -8,7 +5,7 @@
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 #include "tarch/la/DynamicVector.h"
 #include "Eigen/Dense"
 #include <string>
@@ -87,9 +84,7 @@ public:
    */
   const Eigen::VectorXd& values () const;
 
-  /**
-   * @brief Returns the name of the data set.
-   */
+  /// Returns the name of the data set, as set in the config file.
   const std::string& getName () const;
 
   /**
@@ -116,12 +111,11 @@ public:
 private:
 
   // @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   // @brief Counter for existing Data objects.
   static size_t _dataCount;
 
-  // @brief
   Eigen::VectorXd _values;
 
   // @brief Name of the data set.

@@ -1,6 +1,3 @@
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #ifndef _TARCH_LA_VECTOR_OPERATIONS_H_
 #define _TARCH_LA_VECTOR_OPERATIONS_H_
 
@@ -150,6 +147,7 @@ namespace tarch {
 } // namespace tarch
 
 
+namespace std {
 
 /**
  * Streams the component values into a comma separated representation.
@@ -158,6 +156,8 @@ template<typename Vector>
   typename std::enable_if< tarch::la::IsVector<Vector>::value,
   std::ostream&
 >::type operator<< (std::ostream & os, const Vector & vector);
+
+}
 
 #include "VectorOperations.cpph"
 

@@ -17,7 +17,7 @@ namespace precice {
 namespace geometry {
 namespace impl {
 
-tarch::logging::Log BroadcastFilterDecomposition:: _log ( "precice::geometry::BroadcastFilterDecomposition" );
+logging::Logger BroadcastFilterDecomposition:: _log ( "precice::geometry::BroadcastFilterDecomposition" );
 
 BroadcastFilterDecomposition:: BroadcastFilterDecomposition
 (
@@ -30,7 +30,7 @@ BroadcastFilterDecomposition:: BroadcastFilterDecomposition
 void BroadcastFilterDecomposition:: decompose(
   mesh::Mesh& seed)
 {
-  preciceTrace1 ( "decompose()", utils::MasterSlave::_rank );
+  preciceTrace ( "decompose()", utils::MasterSlave::_rank );
   using tarch::la::raw;
 
   std::map<int,std::vector<int> > boundingVertexDistribution;
@@ -44,7 +44,7 @@ void BroadcastFilterDecomposition:: decompose(
 void BroadcastFilterDecomposition:: broadcast(
   mesh::Mesh& seed)
 {
-  preciceTrace1 ( "broadcast()", utils::MasterSlave::_rank );
+  preciceTrace ( "broadcast()", utils::MasterSlave::_rank );
   preciceInfo("broadcast()", "Broadcast mesh " << seed.getName() );
   Event e("broadcast mesh");
 
@@ -63,12 +63,12 @@ void BroadcastFilterDecomposition:: filter(
   mesh::Mesh& seed,
   std::vector<int>& filteredVertexPositions)
 {
-  preciceTrace1 ( "filter()", utils::MasterSlave::_rank );
+  preciceTrace ( "filter()", utils::MasterSlave::_rank );
   preciceInfo("filter()", "Filter mesh " << seed.getName() );
   Event e("filter mesh");
 
   // first, bounding box filter
-  preciceDebug("First Filter BB, #vertices " << seed.vertices().size());
+  DEBUG("First Filter BB, #vertices " << seed.vertices().size());
   assertion(not _filterByMapping);
   _bb = mesh::Mesh::BoundingBox (_dimensions,
                    std::make_pair(std::numeric_limits<double>::max(), std::numeric_limits<double>::lowest()));
@@ -83,7 +83,7 @@ void BroadcastFilterDecomposition:: filter(
   std::vector<int> tmpVertexPostitions = filterMesh(seed, filteredMesh);
 
   // second, mapping filter
-  preciceDebug("Second Filter Mapping, #vertices " << filteredMesh.vertices().size());
+  DEBUG("Second Filter Mapping, #vertices " << filteredMesh.vertices().size());
   _filterByMapping = true;
   seed.clear();
   seed.addMesh(filteredMesh);
@@ -96,7 +96,7 @@ void BroadcastFilterDecomposition:: filter(
   clearBoundingMappings();
 
   //merge the 2 filters
-  preciceDebug("Merge Filters, #vertices " << filteredMesh.vertices().size());
+  DEBUG("Merge Filters, #vertices " << filteredMesh.vertices().size());
   for(size_t i=0;i<filteredVertexPositions.size();i++){
     filteredVertexPositions[i] = tmpVertexPostitions[filteredVertexPositions[i]];
   }
@@ -107,7 +107,7 @@ void BroadcastFilterDecomposition:: feedback(
   mesh::Mesh& seed,
   std::vector<int>& filteredVertexPositions)
 {
-  preciceTrace1 ( "feedback()", utils::MasterSlave::_rank );
+  preciceTrace ( "feedback()", utils::MasterSlave::_rank );
   preciceInfo("feedback()", "Feedback mesh " << seed.getName() );
 
   int numberOfVertices = filteredVertexPositions.size();

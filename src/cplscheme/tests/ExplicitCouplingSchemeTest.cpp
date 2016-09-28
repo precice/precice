@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ExplicitCouplingSchemeTest.hpp"
 #include "cplscheme/SerialCouplingScheme.hpp"
 #include "cplscheme/config/CouplingSchemeConfiguration.hpp"
@@ -31,7 +28,7 @@ namespace tests {
 
 using utils::Vector3D;
 
-tarch::logging::Log ExplicitCouplingSchemeTest::_log ( "precice::cplscheme::tests::ExplicitCouplingSchemeTest" );
+logging::Logger ExplicitCouplingSchemeTest::_log ( "precice::cplscheme::tests::ExplicitCouplingSchemeTest" );
 
 ExplicitCouplingSchemeTest:: ExplicitCouplingSchemeTest ()
 :
@@ -402,7 +399,7 @@ void ExplicitCouplingSchemeTest:: runSimpleExplicitCoupling
   const std::string&             participantName,
   const mesh::MeshConfiguration& meshConfig )
 {
-  preciceTrace1 ( "runSimpleExplicitCoupling()", participantName );
+  preciceTrace ( "runSimpleExplicitCoupling()", participantName );
 
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
@@ -624,7 +621,7 @@ void ExplicitCouplingSchemeTest:: runExplicitCouplingWithSubcycling
   const std::string&             participantName,
   const mesh::MeshConfiguration& meshConfig )
 {
-  preciceTrace1 ( "runExplicitCouplingWithSubcycling", participantName );
+  preciceTrace ( "runExplicitCouplingWithSubcycling", participantName );
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
   validateEquals ( mesh->data().size(), 2 );
@@ -767,7 +764,7 @@ void ExplicitCouplingSchemeTest:: connect
   const std::string&     localParticipant,
   m2n::M2N::SharedPointer& communication ) const
 {
-  preciceTrace3 ( "connect()", participant0, participant1, localParticipant );
+  preciceTrace ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );
   utils::Parallel::splitCommunicator( localParticipant );

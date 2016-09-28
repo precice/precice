@@ -2,7 +2,7 @@
 
 <precice-configuration>
 
-   <log-filter target="debug" component="precice" switch="off" />
+   
    <log-filter target="info" component="" switch="on" />
    
    <log-output column-separator=" | " log-time-stamp="no"  

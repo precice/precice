@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 
 /*
  *  Created on: Aug 4, 2015
@@ -45,7 +42,7 @@ namespace tests {
 
 using utils::Vector3D;
 
-tarch::logging::Log PostProcessingMasterSlaveTest::
+logging::Logger PostProcessingMasterSlaveTest::
   _log ( "precice::cplscheme::tests::PostProcessingMasterSlaveTest" );
 
 PostProcessingMasterSlaveTest:: PostProcessingMasterSlaveTest ()
@@ -129,9 +126,7 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 	dataIDs.push_back(1);
 	std::vector<double> factors;
   factors.resize(2,1.0);
-  std::vector<int> dims;
-  dims.resize(2,1);
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(dims,factors));
+  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
 	std::vector<int> vertexOffsets {4, 8, 8 , 10};
 
 	mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
@@ -494,9 +489,7 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	dataIDs.push_back(1);
 	std::vector<double> factors;
   factors.resize(2,1.0);
-  std::vector<int> dims;
-  dims.resize(2,1);
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(dims,factors));
+  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
 	std::vector<int> vertexOffsets {4, 8, 8 , 10};
 
 	mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
@@ -839,10 +832,7 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
   std::vector<int> dataIDs;
   dataIDs.push_back(4);
   dataIDs.push_back(5);
-  std::vector<int> dims;
-  dims.push_back(2);
-  dims.push_back(2);
-  impl::PtrPreconditioner _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(dims, -1));
+  impl::PtrPreconditioner _preconditioner = impl::PtrPreconditioner (new impl::ResidualSumPreconditioner(-1));
   std::vector<int> vertexOffsets {0, 11, 22};
 
   mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 2, false) );

@@ -1,9 +1,6 @@
 #ifndef PRECICE_NO_MPI
 #include "mpi.h"
 #endif
-// Copyright (C) 2009 Technische Universitaet Muenchen
-// This file is part of the Peano project. For conditions of distribution and
-// use, please see the copyright notice at www5.in.tum.de/peano
 #include "MatrixVectorTest.h"
 #include "tarch/la/Matrix.h"
 #include "tarch/la/DynamicMatrix.h"

@@ -1,17 +1,14 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "utils/Globals.hpp"
 #include "tarch/logging/Log.h"
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
 #include "tarch/configuration/ConfigurationRegistry.h"
 #include "tarch/configuration/TopLevelConfiguration.h"
-#include "tarch/logging/CommandLineLogger.h"
 #include "precice/impl/SolverInterfaceImpl.hpp"
 #include "precice/config/Configuration.hpp"
 #include <iostream>
 
+#include "logging/Logger.hpp"
 namespace precice {
 extern bool testMode;
 }
@@ -19,8 +16,8 @@ extern bool testMode;
 void printUsage()
 {
   std::cout << "Usage:" << std::endl << std::endl;
-  std::cout << "Run tests          :  ./binprecice test ConfigurationName PathToSrc" << std::endl;
-  std::cout << "Run server         :  ./binprecice server ParticipantName ConfigurationName" << std::endl;
+  std::cout << "Run tests          :  ./binprecice test ConfigurationName PathToSrc [LogConfFile]" << std::endl;
+  std::cout << "Run server         :  ./binprecice server ParticipantName ConfigurationName [LogConfFile]" << std::endl;
   std::cout << "Print XML reference:  ./binprecice xml Linewidth" << std::endl;
 }
 
@@ -42,24 +39,17 @@ void printMPITestWarning(){
 
 int main ( int argc, char** argv )
 {
-  // By default, debugging is turned on with a filter list entry. This removes
-  // entry and turns off all debug messages until configuration.
-  using namespace tarch::logging;
-  CommandLineLogger::getInstance().clearFilterList();
-  CommandLineLogger::FilterListEntry filter("", true); // All off
-  CommandLineLogger::getInstance().addFilterListEntry(filter);
-
+  
   using namespace tarch::configuration;
-  tarch::logging::Log log("");
-
-  precice::utils::Parallel::initializeMPI(&argc, &argv);
-  precice::utils::Petsc::initialize(&argc, &argv);
-
+  
   bool runTests = false;
   bool runServer = false;
   bool runHelp = false;
+  bool hasLogConfFile = false;
 
   bool wrongParameters = true;
+  
+
 
   if (argc >= 3) {
     std::string action(argv[1]);
@@ -70,11 +60,17 @@ int main ( int argc, char** argv )
     if ( action == "server" and argc >= 4 ) {
       wrongParameters = false;
       runServer = true;
+      if (argc >= 5){
+        hasLogConfFile = true;
+      }
     }
     if ( action == "test" and argc >= 4 ) {
       wrongParameters = false;
       runTests = true;
       precice::testMode = true;
+      if (argc >= 5){
+        hasLogConfFile = true;
+      }
     }
   }
 
@@ -82,6 +78,17 @@ int main ( int argc, char** argv )
     printUsage();
     return 1;
   }
+
+  if (hasLogConfFile){
+    precice::logging::setupLogging(argv[4]);
+  } else {
+    precice::logging::setupLogging();
+  }
+
+  precice::utils::Parallel::initializeMPI(&argc, &argv);
+  precice::logging::setMPIRank(precice::utils::Parallel::getProcessRank());
+
+  precice::utils::Petsc::initialize(&argc, &argv);
 
   if (runTests){
     assertion(not runServer);
@@ -99,7 +106,7 @@ int main ( int argc, char** argv )
     std::list<TopLevelConfiguration*> configs =
       ConfigurationRegistry::getInstance().readFile(configFile, "configuration");
     if (configs.empty()) {
-      log.error("main()", "config file " + configFile + " not found or invalid!");
+      std::cerr << "Config file " << configFile << " not found or invalid!" << std::endl;
       return 1;
     }
     printMPITestWarning();
@@ -123,7 +130,7 @@ int main ( int argc, char** argv )
     std::cout << "  Configuration = " << configFile << std::endl;
     int size = precice::utils::Parallel::getCommunicatorSize();
     if ( size != 1 ){
-      log.error( "main()", "Server can be run with only one process!" );
+      std::cerr << "Server can be run with only one process!" << std::endl;
     }
     precice::impl::SolverInterfaceImpl server ( participantName, 0, 1, true );
     server.configure(configFile);
@@ -134,15 +141,12 @@ int main ( int argc, char** argv )
     assertion(not runServer);
     assertion(not runTests);
     int linewidth = atoi(argv[2]);
-    //CommandLineLogger::FilterListEntry filter2("debug", false); // debug on
-    //CommandLineLogger::getInstance().addFilterListEntry(filter2);
     std::cout << "<?xml version=\"1.0\"?>" << std::endl << std::endl
               << "<!-- preCICE XML configuration reference"
               << std::endl << std::endl
               << "     Configuration outline:"     << std::endl << std::endl
               << "     <precice-configuration>"    << std::endl
-              << "        <log-filter .../>"       << std::endl
-              << "        <log-output .../>"       << std::endl
+              << "        <log .../>"              << std::endl
               << "        <solver-interface>"      << std::endl
               << "           <data .../>"          << std::endl
               << "           <spacetree .../>"     << std::endl

@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_IO_EXPORTCONTEXT_HPP_
 #define PRECICE_IO_EXPORTCONTEXT_HPP_
 
@@ -35,6 +32,12 @@ struct ExportContext
   // @brief If true, export is done in every iteration (also implicit).
   bool everyIteration;
 
+  // @brief type of the exporter (e.g. vtk).
+  std::string type;
+
+  // @brief If true, normals are plotted.
+  bool plotNormals;
+
   /**
    * @brief Constructor.
    */
@@ -46,7 +49,9 @@ struct ExportContext
     //plotNeighbors ( false ),
     //plotNormals(true),
     exportSpacetree(false),
-    everyIteration(false)
+    everyIteration(false),
+    type(),
+    plotNormals(false)
   {}
 };
 

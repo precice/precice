@@ -1,7 +1,7 @@
 #pragma once
 
 #include "BaseCouplingScheme.hpp"
-#include "tarch/logging/Log.h"
+#include "logging/Logger.hpp"
 
 namespace precice { namespace cplscheme { namespace tests {
 class SerialImplicitCouplingSchemeTest;
@@ -48,7 +48,7 @@ public:
   virtual void advance();
 
   /// @brief Logging device.
-  static tarch::logging::Log _log;
+  static logging::Logger _log;
 
   friend class tests::SerialImplicitCouplingSchemeTest;
 

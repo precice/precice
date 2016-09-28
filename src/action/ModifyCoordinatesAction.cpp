@@ -1,6 +1,3 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #include "ModifyCoordinatesAction.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
@@ -14,7 +11,7 @@
 namespace precice {
 namespace action {
 
-tarch::logging::Log ModifyCoordinatesAction::
+logging::Logger ModifyCoordinatesAction::
   _log ( "precice::action::ModifyCoordinatesAction" );
 
 
@@ -43,7 +40,7 @@ void ModifyCoordinatesAction:: performAction
   int dim = getMesh()->getDimensions();
   utils::DynVector data(dim);
   if ( _mode == ADD_TO_COORDINATES_MODE ) {
-    preciceDebug ( "Adding data to coordinates" );
+    DEBUG ( "Adding data to coordinates" );
     for (mesh::Vertex & vertex : getMesh()->vertices()) {
       for ( int i=0; i < dim; i++ ){
         data[i] = values[vertex.getID()*dim + i];
@@ -53,7 +50,7 @@ void ModifyCoordinatesAction:: performAction
     }
   }
   else if ( _mode == SUBTRACT_FROM_COORDINATES_MODE ){
-    preciceDebug ( "Subtracting data from coordinates" );
+    DEBUG ( "Subtracting data from coordinates" );
     for (mesh::Vertex &vertex : getMesh()->vertices()) {
       data = vertex.getCoords();
       for ( int i=0; i < dim; i++ ){
