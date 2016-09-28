@@ -232,10 +232,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 
   _lu = matrixCLU.partialPivLu();
   
-  int determinant = _lu.determinant();
+  double determinant = _lu.determinant();
 
-  if (determinant == 0){
-    preciceWarning("computeMapping()", "Interpolation matrix C has determinant of 0, e.g. is not regular.");
+  if (tarch::la::equals(determinant, 0.0)) {
+    ERROR("Interpolation matrix C has determinant of 0, i.e.. is not regular.");
   }
   
   _hasComputedMapping = true;
