@@ -142,7 +142,10 @@ if env["petsc"]:
     env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
     env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
-    uniqueCheckLib(conf, "petsc")
+    if env["platform"] == "hazelhen":
+        uniqueCheckLib(conf, "craypetsc_gnu_real")
+    else:
+        uniqueCheckLib(conf, "petsc")
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
