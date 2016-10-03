@@ -154,6 +154,9 @@ if env["build"] == "debug":
     env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
 
 # ====== Boost ======
+env.Append(CPPPATH = [os.environ['BOOST_ROOT']+'/include'])
+env.Append(LIBPATH = [os.environ['BOOST_ROOT']+'/lib'])
+
 env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3'])
 uniqueCheckLib(conf, "boost_log")
 uniqueCheckLib(conf, "boost_log_setup")
