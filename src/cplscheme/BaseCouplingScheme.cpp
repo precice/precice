@@ -37,8 +37,9 @@ BaseCouplingScheme:: BaseCouplingScheme
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _iterations(-1),
-  _iterationsCoarseOptimization(-1),
-  _totalIterationsCoarseOptimization(-1),
+  _iterationsCoarseOptSum(-1),
+  _iterationsCoarseOpt(),
+  _totalIterationsCoarseOptSum(-1),
   _maxIterations(-1),
   _totalIterations(-1),
   _timesteps(0),
@@ -73,6 +74,8 @@ BaseCouplingScheme:: BaseCouplingScheme
   preciceCheck((_validDigits >= 1) && (_validDigits < 17),
            "BaseCouplingScheme()", "Valid digits of timestep length has to be "
            << "between 1 and 16!");
+
+  _iterationsCoarseOpt.push_back(0);
 }
 
 BaseCouplingScheme::BaseCouplingScheme
@@ -100,8 +103,9 @@ BaseCouplingScheme::BaseCouplingScheme
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _iterations(1),
-  _iterationsCoarseOptimization(1),
-  _totalIterationsCoarseOptimization(1),
+  _iterationsCoarseOptSum(1),
+  _iterationsCoarseOpt(),
+  _totalIterationsCoarseOptSum(1),
   _maxIterations(maxIterations),
   _totalIterations(1),
   _timesteps(1),
@@ -167,6 +171,7 @@ BaseCouplingScheme::BaseCouplingScheme
            "ImplicitCouplingState()",
            "Maximal iteration limit has to be larger than zero!");
 
+  _iterationsCoarseOpt.push_back(1);
 }
 
 
@@ -256,7 +261,7 @@ void BaseCouplingScheme:: sendState
   }
   communication->send(_maxIterations, rankReceiver );
   communication->send(_iterations, rankReceiver );
-  communication->send(_iterationsCoarseOptimization, rankReceiver ); // new, correct?? TODO
+  communication->send(_iterationsCoarseOptSum, rankReceiver ); // new, correct?? TODO
   communication->send(_totalIterations, rankReceiver );
   communication->finishSendPackage();
 
@@ -295,7 +300,7 @@ void BaseCouplingScheme:: receiveState
   communication->receive(subIteration, rankSender);
   _iterations = subIteration;
   communication->receive(subIteration, rankSender);       // new, correct?? TODO
-  _iterationsCoarseOptimization = subIteration;           // new, correct? TODO
+  _iterationsCoarseOptSum = subIteration;           // new, correct? TODO
   communication->receive(_totalIterations, rankSender);
   communication->finishReceivePackage();
 
@@ -574,7 +579,7 @@ void BaseCouplingScheme:: requireAction
   _actions.insert(actionName);
 }
 
-// TODO: insert _iterationsCoarseOptimization in print state
+// TODO: insert _iterationsCoarseOptSum in print state
 std::string BaseCouplingScheme::printCouplingState() const
 {
   bool manifoldmapping = false;
@@ -587,7 +592,7 @@ std::string BaseCouplingScheme::printCouplingState() const
     os << "fine it " << _iterations;
     if (getMaxIterations() != -1 )
        os << " of " << getMaxIterations();
-    os << " | coarse it " << _iterationsCoarseOptimization;
+    os << " | coarse it " << _iterationsCoarseOpt.back();
   }else{
     os << "it " << _iterations;
     if (getMaxIterations() != -1 )
@@ -861,8 +866,9 @@ void BaseCouplingScheme::initializeTXTWriters()
     _iterationsWriter.addData("Total_Iterations", io::TXTTableWriter::INT );
     _iterationsWriter.addData("Iterations", io::TXTTableWriter::INT );
     if(hasCoarseModelOptimization){
-      _iterationsWriter.addData("Total_Iterations_Surrogate_Model", io::TXTTableWriter::INT );
-      _iterationsWriter.addData("Iterations_Surrogate_Model", io::TXTTableWriter::INT );
+      _iterationsWriter.addData("Total_Evals_Surrogate_Model", io::TXTTableWriter::INT );
+      _iterationsWriter.addData("Evals_Surrogate_Model", io::TXTTableWriter::INT );
+      _iterationsWriter.addData("Iterations_Surrogate_Model_Opt", io::TXTTableWriter::STRING );
     }
     _iterationsWriter.addData("Convergence", io::TXTTableWriter::INT );
 
@@ -899,8 +905,15 @@ void BaseCouplingScheme::advanceTXTWriters()
     _iterationsWriter.writeData("Total_Iterations", _totalIterations);
     _iterationsWriter.writeData("Iterations", _iterations);
     if(hasCoarseModelOptimization){
-     _iterationsWriter.writeData("Total_Iterations_Surrogate_Model", _totalIterationsCoarseOptimization );
-     _iterationsWriter.writeData("Iterations_Surrogate_Model", _iterationsCoarseOptimization);
+     _iterationsWriter.writeData("Total_Evals_Surrogate_Model", _totalIterationsCoarseOptSum );
+     _iterationsWriter.writeData("Evals_Surrogate_Model", _iterationsCoarseOptSum);
+     std::stringstream s; s<<"[";
+     for(size_t i = 0; i < _iterationsCoarseOpt.size(); i++){
+       s << _iterationsCoarseOpt.at(i);
+       if (i<_iterationsCoarseOpt.size()-1) s <<", ";
+     }
+     s <<"]";
+     _iterationsWriter.writeData("Iterations_Surrogate_Model_Opt", s.str());
     }
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter.writeData("Convergence", converged);
@@ -979,9 +992,6 @@ void BaseCouplingScheme:: updateTimeAndIterations
   if (getPostProcessing().get() != nullptr) {
     manifoldmapping = _postProcessing->isMultilevelBasedApproach();
   }
-
-  //std::cout<<"fine conv: "<<convergence<<" | coarse conv: "<<convergenceCoarseOptimization<<" | fine its: "<<_iterations<<" | coarse its: "<<_iterationsCoarseOptimization<<std::endl;
-
   if(not convergence){
 
     // The computed timestep part equals the timestep length, since the
@@ -995,22 +1005,25 @@ void BaseCouplingScheme:: updateTimeAndIterations
       if(not _isCoarseModelOptimizationActive){
         _totalIterations++;
         _iterations++;
+
+        _iterationsCoarseOpt.push_back(0); // counts the iterations per coarse model opt, not the sum of coarse model evals per time step
       }
     }else{
       // in case of multilevel PP: increment the iteration count of the surrogate model
-      _iterationsCoarseOptimization++;
-      _totalIterationsCoarseOptimization++;
+      _iterationsCoarseOptSum++;
+      _iterationsCoarseOpt.back()++;
+      _totalIterationsCoarseOptSum++;
     }
   } else{
 
-    _totalIterationsCoarseOptimization++;
+    _totalIterationsCoarseOptSum++;
     if (not manifoldmapping) _totalIterations++;
 
-    _iterationsCoarseOptimization = 1;
-    //_iterations =  1;
+    _iterationsCoarseOptSum = 1;
+    _iterationsCoarseOpt.clear();
+    _iterationsCoarseOpt.push_back(1);
     _iterations =  manifoldmapping ? 0 : 1; //CHANGED
   }
-  std::cout<<"fine conv: "<<convergence<<" | coarse conv: "<<convergenceCoarseOptimization<<" | coarse model active: "<<_isCoarseModelOptimizationActive<<" | fine its: "<<_iterations<<" | coarse its: "<<_iterationsCoarseOptimization<<std::endl;
 }
 
 void BaseCouplingScheme:: timestepCompleted()
@@ -1030,7 +1043,7 @@ bool BaseCouplingScheme:: maxIterationsReached(){
   if(not _isCoarseModelOptimizationActive){
     return _iterations == _maxIterations;
   }else{
-    return _iterationsCoarseOptimization == _maxIterations;
+    return _iterationsCoarseOptSum == _maxIterations;
   }
 }
 

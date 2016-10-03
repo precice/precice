@@ -492,7 +492,10 @@ protected:
   int _deletedColumnsPPFiltering;
 
   /// @brief Number of  coarse model optimization iterations in current time step.
-  int _iterationsCoarseOptimization;
+  int _iterationsCoarseOptSum;
+
+  /// @brief Number of  coarse model optimization iterations in coarse model opt
+  std::vector<int> _iterationsCoarseOpt;
 
 private:
 
@@ -516,7 +519,7 @@ private:
   int _iterations;
 
   /// @brief Number of accumulated coarse model optimization iterations in current time step.
-  int _totalIterationsCoarseOptimization;
+  int _totalIterationsCoarseOptSum;
 
   /// @brief Limit of iterations during one time step.
   int _maxIterations;

@@ -43,7 +43,7 @@ void TXTTableWriter:: addData
   assertion ( not utils::contained(data, _data), data.name, data.type );
   _data.push_back ( data );
   assertion ( _outputStream.is_open() );
-  if ( (type == INT) || (type == DOUBLE) ) {
+  if ( (type == INT) || (type == DOUBLE) || (type == STRING) ) {
     _outputStream << name << "  ";
   }
   else if ( type == VECTOR2D ){
@@ -72,6 +72,25 @@ void TXTTableWriter:: writeData
   }
   assertion ( _writeIterator->name == name, _writeIterator->name, name );
   assertion ( _writeIterator->type == INT, _writeIterator->type );
+  _outputStream << value << "  ";
+  _writeIterator ++;
+  if ( _writeIterator == _data.end() ) {
+    _outputStream.flush ();
+  }
+}
+
+void TXTTableWriter:: writeData
+(
+  const std::string& name,
+  const std::string& value )
+{
+  assertion ( not _data.empty() );
+  if ( _writeIterator == _data.end() ) {
+    _writeIterator = _data.begin();
+    _outputStream << "\n";
+  }
+  assertion ( _writeIterator->name == name, _writeIterator->name, name );
+  assertion ( _writeIterator->type == STRING, _writeIterator->type );
   _outputStream << value << "  ";
   _writeIterator ++;
   if ( _writeIterator == _data.end() ) {

@@ -27,6 +27,7 @@ public:
   enum DataType {
     INT,
     DOUBLE,
+    STRING,
     VECTOR2D,
     VECTOR3D
   };
@@ -69,6 +70,15 @@ public:
   void writeData (
     const std::string& name,
     double             value );
+
+  /**
+   * @brief Writes a string value associated to the entry name.
+   *
+   * The write order is fixed by the order addData() is called.
+   */
+  void writeData (
+    const std::string& name,
+    const std::string& value );
 
   /**
    * @brief Writes a vector data value associated to the entry name.

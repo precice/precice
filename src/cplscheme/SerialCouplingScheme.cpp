@@ -329,7 +329,7 @@ void SerialCouplingScheme::advance()
           // otherwise the fine input data would be zero in this case, neither anything has been computed so far for the fine
           // model nor the post processing did any data registration
           // ATTENTION: assumes that coarse data is defined after fine data in same ordering.
-          if(_iterationsCoarseOptimization == 1   && getPostProcessing().get() != nullptr){
+          if(_iterationsCoarseOptSum == 1   && getPostProcessing().get() != nullptr){
             auto fineIDs = getPostProcessing()->getDataIDs();
             for (auto& fineID : fineIDs) {
               (*getSendData(fineID)->values) = getSendData(fineID+fineIDs.size()+1)->oldValues.col(0);
