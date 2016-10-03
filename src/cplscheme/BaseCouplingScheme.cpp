@@ -702,8 +702,8 @@ void BaseCouplingScheme::setIterationPostProcessing
     if(_postProcessing->isMultilevelBasedApproach()){
       _postProcessing->setCoarseModelOptimizationActive(&_isCoarseModelOptimizationActive);
       // also initialize the iteration counters with 0, as scheme starts with coarse model evaluation
-   //   _iterations = 0;  // CHANGED
-   //   _totalIterations = 0;
+      _iterations = 0;  // CHANGED
+      _totalIterations = 0;
     }
  }
 
@@ -1007,8 +1007,8 @@ void BaseCouplingScheme:: updateTimeAndIterations
     if (not manifoldmapping) _totalIterations++;
 
     _iterationsCoarseOptimization = 1;
-    _iterations =  1;
-    //_iterations =  manifoldmapping ? 0 : 1; CHANGED
+    //_iterations =  1;
+    _iterations =  manifoldmapping ? 0 : 1; //CHANGED
   }
   std::cout<<"fine conv: "<<convergence<<" | coarse conv: "<<convergenceCoarseOptimization<<" | coarse model active: "<<_isCoarseModelOptimizationActive<<" | fine its: "<<_iterations<<" | coarse its: "<<_iterationsCoarseOptimization<<std::endl;
 }
