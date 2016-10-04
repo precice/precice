@@ -39,9 +39,9 @@ void ExportVTKTest:: testExportPolygonalMesh()
   int dim=2;
   bool invertNormals = false;
   mesh::Mesh mesh ("MyMesh", dim, invertNormals);
-  mesh::Vertex& v1 = mesh.createVertex ( utils::DynVector(dim, 0.0) );
-  mesh::Vertex& v2 = mesh.createVertex ( utils::DynVector(dim, 1.0) );
-  utils::DynVector coords3(dim, 0.0);
+  mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 0.0) );
+  mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1.0) );
+  Eigen::VectorXd coords3 = Eigen::VectorXd::Constant(dim, 0.0);
   coords3[0] = 1.0;
   mesh::Vertex& v3 = mesh.createVertex(coords3);
 
@@ -66,8 +66,8 @@ void ExportVTKTest:: testExportTriangulatedMesh()
   int dim = 3;
   bool invertNormals = false;
   mesh::Mesh mesh ("MyMesh", dim, invertNormals);
-  mesh::Vertex& v1 = mesh.createVertex ( utils::DynVector(dim, 0.0) );
-  mesh::Vertex& v2 = mesh.createVertex ( utils::DynVector(dim, 1.0) );
+  mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 0.0) );
+  mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1.0) );
   utils::DynVector coords3(dim, 0.0);
   coords3[0] = 1.0;
   mesh::Vertex& v3 = mesh.createVertex(coords3);
@@ -94,15 +94,15 @@ void ExportVTKTest:: testExportQuadMesh()
   bool invertNormals = false;
   Mesh mesh("QuadMesh", dim, invertNormals);
   // z=0 plane
-  Vertex& v0 = mesh.createVertex(utils::Vector3D(0.0, 0.0, 0.0));
-  Vertex& v1 = mesh.createVertex(utils::Vector3D(1.0, 0.0, 0.0));
-  Vertex& v2 = mesh.createVertex(utils::Vector3D(1.0, 1.0, 0.0));
-  Vertex& v3 = mesh.createVertex(utils::Vector3D(0.0, 1.0, 0.0));
+  Vertex& v0 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  Vertex& v1 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  Vertex& v2 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  Vertex& v3 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
   // z=1 plane
-  Vertex& v4 = mesh.createVertex(utils::Vector3D(0.0, 0.0, 1.0));
-  Vertex& v5 = mesh.createVertex(utils::Vector3D(1.0, 0.0, 1.0));
-  Vertex& v6 = mesh.createVertex(utils::Vector3D(1.0, 1.0, 1.0));
-  Vertex& v7 = mesh.createVertex(utils::Vector3D(0.0, 1.0, 1.0));
+  Vertex& v4 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+  Vertex& v5 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
+  Vertex& v6 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  Vertex& v7 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
 
   // z=0 plane
   Edge& e0 = mesh.createEdge(v0, v1);

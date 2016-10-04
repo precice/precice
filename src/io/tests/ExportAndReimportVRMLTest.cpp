@@ -12,6 +12,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Dimensions.hpp"
+#include "math/math.hpp"
 #include "tarch/la/WrappedVector.h"
 #include <map>
 #include <string>
@@ -69,8 +70,8 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
   // Query mesh information
   size_t vertexCount = mesh.vertices().size();
   size_t edgeCount = mesh.edges().size();
-  utils::Vector2D coordsVertexOne(mesh.vertices()[0].getCoords());
-  utils::Vector2D coordsVertexN(mesh.vertices()[vertexCount-1].getCoords());
+  Eigen::Vector2d coordsVertexOne(mesh.vertices()[0].getCoords());
+  Eigen::Vector2d coordsVertexN(mesh.vertices()[vertexCount-1].getCoords());
   Eigen::VectorXd dataOne = Eigen::VectorXd::Constant(2, 2.0);
   Eigen::VectorXd dataN = Eigen::VectorXd::Constant(2, 4.0);
   int vertex0ID = mesh.vertices()[0].getID();
@@ -100,22 +101,22 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
   // Validate mesh information
   validateEquals(reimportedMesh.vertices().size(), vertexCount);
   validateEquals(reimportedMesh.edges().size(), edgeCount);
-  validate(tarch::la::equals(reimportedMesh.vertices()[0].getCoords(),
-                             coordsVertexOne));
-  validate(tarch::la::equals(
-           reimportedMesh.vertices()[vertexCount-1].getCoords(), coordsVertexN));
+  validate(math::equals(reimportedMesh.vertices()[0].getCoords(),
+                        coordsVertexOne));
+  validate(math::equals(
+             reimportedMesh.vertices()[vertexCount-1].getCoords(), coordsVertexN));
   auto& values = reimportedData->values();
   int vertexID = reimportedMesh.vertices()[0].getID();
   validateNumericalEquals(values(vertexID), dataOne[0]);
   validateNumericalEquals(values(vertexID), dataOne[1]);
-  utils::Vector2D readDataOne;
-  utils::Vector2D readDataN;
+  Eigen::Vector2d readDataOne;
+  Eigen::Vector2d readDataN;
   for (size_t i=0; i < 2; i++){
     readDataOne[i] = data->values()[vertex0ID * 2 + i];
     readDataN[i] = data->values()[vertexNID * 2 + i];
   }
-  validate(tarch::la::equals(readDataOne, utils::DynVector(dataOne)));
-  validate(tarch::la::equals(readDataN, utils::DynVector(dataN)));
+  validate(math::equals(readDataOne, Eigen::VectorXd(dataOne)));
+  validate(math::equals(readDataN, Eigen::VectorXd(dataN)));
 
   validateEquals(reimportedMesh.propertyContainers().size(), 3);
   std::vector<int> properties;

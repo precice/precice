@@ -27,7 +27,7 @@ void Geometry:: create
   specializedCreate ( seed );
   utils::DynVector zero ( seed.getDimensions(), 0.0 );
   if ( not tarch::la::equals(getOffset(), zero) ) {
-    utils::DynVector temp ( seed.getDimensions() );
+    Eigen::VectorXd temp( seed.getDimensions() );
     for (mesh::Vertex& vertex : seed.vertices()) {
       temp = _offset;
       temp += vertex.getCoords();

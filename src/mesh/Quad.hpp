@@ -101,14 +101,14 @@ public:
    *
    * Prerequesits: The normal has to be computed and set from outside before.
    */
-  const utils::DynVector& getNormal() const;
+  const Eigen::VectorXd& getNormal() const;
 
   /**
    * @brief Returns the barycenter of the quad.
    *
    * Prerequesits: The center has to be computed and set from outside before.
    */
-  const utils::DynVector& getCenter() const;
+  const Eigen::VectorXd& getCenter() const;
 
   /**
    * @brief Returns the radius of the circle enclosing the quad.
@@ -128,11 +128,11 @@ private:
   // @brief ID of the edge.
   int _id;
 
-  // @brief Normal vector of the quad.
-  utils::DynVector _normal;
+  /// Normal vector of the quad.
+  Eigen::VectorXd _normal;
 
-  // @brief Center point of the quad.
-  utils::DynVector _center;
+  /// Center point of the quad.
+  Eigen::VectorXd _center;
 
   // @brief Minimal radius of circle enclosing the quad.
   double _enclosingRadius;

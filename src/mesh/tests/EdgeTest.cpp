@@ -29,16 +29,15 @@ void EdgeTest:: test ()
 {
    preciceTrace ( "test()" );
 
-   using utils::Vector3D;
-   Vertex v1 ( Vector3D(0.0), 0 );
-   Vertex v2 ( Vector3D(1.0), 1 );
+   Vertex v1 ( Eigen::Vector3d::Constant(0.0), 0 );
+   Vertex v2 ( Eigen::Vector3d::Constant(1.0), 1 );
 //   VertexTuple vertices = { Vertex(Vector(0.0)), Vertex(Vector(1.0)) };
    Edge edge ( v1, v2, 0 );
 
-   Vector3D coords1 = edge.vertex(0).getCoords();
-   Vector3D coords2 = edge.vertex(1).getCoords();
-   validate ( tarch::la::equals(coords1, Vector3D(0.0)) );
-   validate ( tarch::la::equals(coords2, Vector3D(1.0)) );
+   Eigen::VectorXd coords1 = edge.vertex(0).getCoords();
+   Eigen::VectorXd coords2 = edge.vertex(1).getCoords();
+   validate ( coords1 == Eigen::Vector3d::Constant(0.0) );
+   validate ( coords2 == Eigen::Vector3d::Constant(1.0) );
 
    Edge edge2 ( v1, v2, 1 );
 }

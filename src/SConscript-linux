@@ -1,21 +1,32 @@
-# This is file src/Sconscript
-
-sourcesUtils = [
-    Glob('utils/*.cpp'),
-    Glob('utils/xml/*.cpp'),
-    Glob('utils/tests/*.cpp')
+sourcesAction = [
+    Glob('action/*.cpp'),
+    Glob('action/config/*.cpp'),
+    Glob('action/tests/*.cpp')
 ]
 
-sourcesMesh = [
-    Glob('mesh/*.cpp'),
-    Glob('mesh/tests/*.cpp'),
-    Glob('mesh/impl/*.cpp'),
-    Glob('mesh/config/*.cpp')
+sourcesCom = [
+    Glob('com/*.cpp'),
+    Glob('com/impl/*.cpp'),
+    Glob('com/config/*.cpp'),
+    Glob('com/tests/*.cpp')
 ]
 
-sourcesMeshNew = [
-    Glob('meshnew/*.cpp'),
-    Glob('meshnew/tests/*.cpp')
+sourcesCplscheme = [
+    Glob('cplscheme/*.cpp'),
+    Glob('cplscheme/impl/*.cpp'),
+    Glob('cplscheme/config/*.cpp'),
+    Glob('cplscheme/tests/*.cpp')
+]
+
+sourcesDrivers = [
+    Glob('drivers/*.cpp')
+]
+
+sourcesGeometry = [
+    Glob('geometry/*.cpp'),
+    Glob('geometry/config/*.cpp'),
+    Glob('geometry/tests/*.cpp'),
+    Glob('geometry/impl/*.cpp')
 ]
 
 sourcesIO = [
@@ -25,11 +36,33 @@ sourcesIO = [
     Glob('io/tests/*.cpp')
 ]
 
-sourcesGeometry = [
-    Glob('geometry/*.cpp'),
-    Glob('geometry/config/*.cpp'),
-    Glob('geometry/tests/*.cpp'),
-    Glob('geometry/impl/*.cpp')
+sourcesLogging = [
+    Glob('logging/*.cpp'),
+    Glob('logging/config/*.cpp')
+]
+
+sourcesM2N = [
+    Glob('m2n/*.cpp'),
+    Glob('m2n/tests/*.cpp'),
+    Glob('m2n/config/*.cpp')
+]
+
+sourcesMapping = [
+    Glob('mapping/*.cpp'),
+    Glob('mapping/impl/*.cpp'),
+    Glob('mapping/config/*.cpp'),
+    Glob('mapping/tests/*.cpp')
+]
+
+sourcesMath = [
+    Glob('math/*.cpp')
+]
+
+sourcesMesh = [
+    Glob('mesh/*.cpp'),
+    Glob('mesh/tests/*.cpp'),
+    Glob('mesh/impl/*.cpp'),
+    Glob('mesh/config/*.cpp')
 ]
 
 sourcesQuery = [
@@ -44,39 +77,6 @@ sourcesSpacetree = [
     Glob('spacetree/tests/*.cpp')
 ]
 
-sourcesMapping = [
-    Glob('mapping/*.cpp'),
-    Glob('mapping/impl/*.cpp'),
-    Glob('mapping/config/*.cpp'),
-    Glob('mapping/tests/*.cpp')
-]
-
-sourcesCom = [
-    Glob('com/*.cpp'),
-    Glob('com/impl/*.cpp'),
-    Glob('com/config/*.cpp'),
-    Glob('com/tests/*.cpp')
-]
-
-sourcesM2N = [
-    Glob('m2n/*.cpp'),
-    Glob('m2n/tests/*.cpp'),
-    Glob('m2n/config/*.cpp')
-]
-
-sourcesCplscheme = [
-    Glob('cplscheme/*.cpp'),
-    Glob('cplscheme/impl/*.cpp'),
-    Glob('cplscheme/config/*.cpp'),
-    Glob('cplscheme/tests/*.cpp')
-]
-
-sourcesAction = [
-    Glob('action/*.cpp'),
-    Glob('action/config/*.cpp'),
-    Glob('action/tests/*.cpp')
-]
-
 sourcesPrecice = [
     Glob('precice/*.cpp'),
     Glob('precice/impl/*.cpp'),
@@ -87,15 +87,6 @@ sourcesPrecice = [
     Glob('precice/tests/servermode/*.cpp'),
     Glob('precice/adapters/c/*.cpp'),
     Glob('precice/adapters/fortran/*.cpp')
-]
-
-sourcesDrivers = [
-    Glob('drivers/*.cpp')
-]
-
-sourcesLogging = [
-    Glob('logging/*.cpp'),
-    Glob('logging/config/*.cpp')
 ]
 
 sourcesTarchLA = [
@@ -128,21 +119,28 @@ sourcesTarch = [
    sourcesTarchTests,
 ]
 
+sourcesUtils = [
+    Glob('utils/*.cpp'),
+    Glob('utils/xml/*.cpp'),
+    Glob('utils/tests/*.cpp')
+]
+
 sourcesAllNoMain = [
-    sourcesTarch,
-    sourcesUtils,
-    sourcesMesh,
-    sourcesIO,
+    sourcesAction,
+    sourcesCom,
+    sourcesCplscheme,
     sourcesGeometry,
+    sourcesIO,
+    sourcesLogging,
+    sourcesM2N,
+    sourcesMath,
+    sourcesMapping,
+    sourcesMesh,
+    sourcesPrecice,
     sourcesQuery,
     sourcesSpacetree,
-    sourcesMapping,
-    sourcesCom,
-    sourcesM2N,
-    sourcesCplscheme,
-    sourcesAction,
-    sourcesPrecice,
-    sourcesLogging,
+    sourcesUtils,
+    sourcesTarch,
 ]
 
 sourcesAll = [

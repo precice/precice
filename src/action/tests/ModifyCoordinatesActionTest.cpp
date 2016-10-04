@@ -7,6 +7,7 @@
 #include "mesh/Edge.hpp"
 #include "utils/Parallel.hpp"
 #include "tarch/la/WrappedVector.h"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::action::tests::ModifyCoordinatesActionTest)
@@ -93,15 +94,14 @@ void ModifyCoordinatesActionTest:: testAddToCoordinates ()
 {
    preciceTrace ( "testAddToCoordinates()" );
    using namespace mesh;
-   using utils::Vector2D;
    // Create geometryContext by faking a geometry but not using it to create
    // the mesh. The mesh is created by hand, such that references to the vertices
    // to be displaced are obtained.
    PtrMesh mesh ( new Mesh("Mesh", 2, false) );
    PtrData data = mesh->createData ( "test-data", 2 );
    int dataID = data->getID ();
-   Vertex& v0 = mesh->createVertex ( Vector2D(0.0) );
-   Vertex& v1 = mesh->createVertex ( Vector2D(1.0) );
+   Vertex& v0 = mesh->createVertex ( Eigen::Vector2d::Zero() );
+   Vertex& v1 = mesh->createVertex ( Eigen::Vector2d::Constant(1.0) );
    Edge & edge = mesh->createEdge ( v0, v1 );
    mesh->computeState();
    mesh->allocateDataValues ();
@@ -113,11 +113,11 @@ void ModifyCoordinatesActionTest:: testAddToCoordinates ()
       action::ModifyCoordinatesAction::ADD_TO_COORDINATES_MODE );
 
    // Validate coordinates of mesh before modifying it
-   validate ( tarch::la::equals(v0.getCoords(), Vector2D(0.0)) );
-   validate ( tarch::la::equals(v1.getCoords(), Vector2D(1.0)) );
-   Vector2D normalizedNormal( Vector2D(0.5, -0.5) );
-   normalizedNormal = normalizedNormal / tarch::la::norm2(normalizedNormal);
-   validate ( tarch::la::equals(edge.getNormal(), normalizedNormal) );
+   validate ( math::equals(v0.getCoords(), Eigen::Vector2d::Constant(0.0)) );
+   validate ( math::equals(v1.getCoords(), Eigen::Vector2d::Constant(1.0)) );
+   Eigen::Vector2d normalizedNormal(0.5, -0.5);
+   normalizedNormal.normalize();
+   validate ( math::equals(edge.getNormal(), normalizedNormal) );
 
    // Set displacements
    values.segment(v0.getID()*2, 2) = Eigen::VectorXd::Constant(2, 2.0);
@@ -129,26 +129,25 @@ void ModifyCoordinatesActionTest:: testAddToCoordinates ()
    modifyCoordinates.performAction(0.0, 0.0, 0.0, 0.0);
 
    // Validate coordinates of mesh after modifying it
-   validate(tarch::la::equals(v0.getCoords(), Vector2D(2.0)));
-   validate(tarch::la::equals(v1.getCoords(), Vector2D(-1.0)));
-   normalizedNormal = Vector2D(-0.5, 0.5);
-   normalizedNormal = normalizedNormal / tarch::la::norm2(normalizedNormal);
-   validate(tarch::la::equals(edge.getNormal(), normalizedNormal));
+   validate(math::equals(v0.getCoords(), Eigen::Vector2d::Constant(2.0)));
+   validate(math::equals(v1.getCoords(), Eigen::Vector2d::Constant(-1.0)));
+   normalizedNormal << -0.5, 0.5;
+   normalizedNormal.normalize();
+   validate(math::equals(edge.getNormal(), normalizedNormal));
 }
 
 void ModifyCoordinatesActionTest:: testSubtractFromCoordinates ()
 {
    preciceTrace ( "testSubtractFromCoordinates()" );
    using namespace mesh;
-   using utils::Vector2D;
    // Create geometryContext by faking a geometry but not using it to create
    // the mesh. The mesh is created by hand, such that references to the vertices
    // to be displaced are obtained.
    PtrMesh mesh ( new Mesh("Mesh", 2, false) );
    PtrData data = mesh->createData ( "test-data", 2 );
    int dataID = data->getID ();
-   Vertex& v0 = mesh->createVertex ( Vector2D(0.0) );
-   Vertex& v1 = mesh->createVertex ( Vector2D(1.0) );
+   Vertex& v0 = mesh->createVertex ( Eigen::Vector2d::Constant(0.0) );
+   Vertex& v1 = mesh->createVertex ( Eigen::Vector2d::Constant(1.0) );
    Edge& edge = mesh->createEdge ( v0, v1 );
    mesh->computeState();
    mesh->allocateDataValues ();
@@ -161,27 +160,27 @@ void ModifyCoordinatesActionTest:: testSubtractFromCoordinates ()
 //   modifyCoordinates.loadMeshContext ( meshContext );
 
    // Validate coordinates of mesh before modifying it
-   validate ( tarch::la::equals(v0.getCoords(), Vector2D(0.0)) );
-   validate ( tarch::la::equals(v1.getCoords(), Vector2D(1.0)) );
-   Vector2D normalizedNormal( Vector2D(0.5, -0.5) );
-   normalizedNormal = normalizedNormal / tarch::la::norm2(normalizedNormal);
-   validate ( tarch::la::equals(edge.getNormal(), normalizedNormal) );
+   validate ( math::equals(v0.getCoords(), Eigen::Vector2d::Constant(0.0)) );
+   validate ( math::equals(v1.getCoords(), Eigen::Vector2d::Constant(1.0)) );
+   Eigen::Vector2d normalizedNormal(0.5, -0.5);
+   normalizedNormal.normalize();
+   validate ( math::equals(edge.getNormal(), normalizedNormal) );
 
    // Set displacements
    values.segment(v0.getID()*2, 2) = Eigen::VectorXd::Constant(2, -2.0);
    values.segment(v1.getID()*2, 2) = Eigen::VectorXd::Constant(2, 2.0);
-   //tarch::la::slice<2>(values,v0.getID()*2) = Vector2D(-2.0);
-   //tarch::la::slice<2>(values,v1.getID()*2) = Vector2D(2.0);
+   //tarch::la::slice<2>(values,v0.getID()*2) = Eigen::Vector2d(-2.0);
+   //tarch::la::slice<2>(values,v1.getID()*2) = Eigen::Vector2d(2.0);
 
    // Apply displacements to  node coordinates
    modifyCoordinates.performAction(0.0, 0.0, 0.0, 0.0);
 
    // Validate coordinates of mesh after modifying it
-   validate ( tarch::la::equals(v0.getCoords(), Vector2D(2.0)) );
-   validate ( tarch::la::equals(v1.getCoords(), Vector2D(-1.0)) );
-   normalizedNormal = Vector2D(-0.5, 0.5);
-   normalizedNormal = normalizedNormal / tarch::la::norm2(normalizedNormal);
-   validate ( tarch::la::equals(edge.getNormal(), normalizedNormal) );
+   validate ( math::equals(v0.getCoords(), Eigen::Vector2d::Constant(2.0)) );
+   validate ( math::equals(v1.getCoords(), Eigen::Vector2d::Constant(-1.0)) );
+   normalizedNormal << -0.5, 0.5;
+   normalizedNormal.normalize();
+   validate ( math::equals(edge.getNormal(), normalizedNormal) );
 }
 
 }}} // namespace precice, action, tests

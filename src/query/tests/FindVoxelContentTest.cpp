@@ -323,8 +323,8 @@ void FindVoxelContentTest:: testZeroVoxel ()
   int dim = 2;
   using utils::Vector2D;
   mesh::Mesh mesh("Mesh", dim, false);
-  mesh::Vertex& v1 = mesh.createVertex (Vector2D(2.0, 0.0));
-  mesh::Vertex& v2 = mesh.createVertex (Vector2D(2.0, 1.0));
+  mesh::Vertex& v1 = mesh.createVertex (Eigen::Vector2d(2.0, 0.0));
+  mesh::Vertex& v2 = mesh.createVertex (Eigen::Vector2d(2.0, 1.0));
   mesh.createEdge (v1, v2);
   Vector2D center (1.0, 1.0);
   Vector2D halflengths (0.0, 0.0);
@@ -335,8 +335,8 @@ void FindVoxelContentTest:: testZeroVoxel ()
   size_t numberContained = find.content().size();
   validateEquals (numberContained, 0);
 
-  mesh.createVertex (Vector2D(1.0, 1.1));
-  mesh.createVertex (Vector2D(1.0, 1.0));
+  mesh.createVertex (Eigen::Vector2d(1.0, 1.1));
+  mesh.createVertex (Eigen::Vector2d(1.0, 1.0));
   query::FindVoxelContent find2 (
     center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
   find2(mesh);
@@ -372,9 +372,9 @@ void FindVoxelContentTest:: performTestTriangles
   assertion(testDim != secondDimension);
   bool flipNormals = false;
   mesh::Mesh mesh("TestMesh", dim, flipNormals);
-  Vector3D coords0(0.0);
-  Vector3D coords1(0.0);
-  Vector3D coords2(0.0);
+  Eigen::Vector3d coords0 = Eigen::Vector3d::Zero();
+  Eigen::Vector3d coords1 = Eigen::Vector3d::Zero();
+  Eigen::Vector3d coords2 = Eigen::Vector3d::Zero();
   mesh::Vertex& v0 = mesh.createVertex(coords0);
   mesh::Vertex& v1 = mesh.createVertex(coords1);
   mesh::Vertex& v2 = mesh.createVertex(coords2);
@@ -753,14 +753,14 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
   preciceTrace("testCompletelyInsideTriangles()");
   int dim = 3;
   using utils::Vector3D;
-  Vector3D voxelCenter(0.0);
-  Vector3D voxelHalflengths(1.0);
+  Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
+  Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1);
 
   // Test1
   mesh::Mesh mesh("Mesh", dim, true);
-  mesh::Vertex* v0 = & mesh.createVertex(Vector3D(0.0, 0.0, 0.0));
-  mesh::Vertex* v1 = & mesh.createVertex(Vector3D(0.5, 0.5, 0.5));
-  mesh::Vertex* v2 = & mesh.createVertex(Vector3D(0.5, 0.0, 0.5));
+  mesh::Vertex* v0 = & mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  mesh::Vertex* v1 = & mesh.createVertex(Eigen::Vector3d(0.5, 0.5, 0.5));
+  mesh::Vertex* v2 = & mesh.createVertex(Eigen::Vector3d(0.5, 0.0, 0.5));
   mesh::Edge* e0 = & mesh.createEdge(*v0, *v1);
   mesh::Edge* e1 = & mesh.createEdge(*v1, *v2);
   mesh::Edge* e2 = & mesh.createEdge(*v2, *v0);
@@ -774,9 +774,9 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
   validateEquals(count, 1);
 
   // Test 2
-  v0 = & mesh.createVertex(Vector3D(0.9, 0.0, 0.0));
-  v1 = & mesh.createVertex(Vector3D(0.9, 0.9, 0.0));
-  v2 = & mesh.createVertex(Vector3D(0.9, 0.9, 0.9));
+  v0 = & mesh.createVertex(Eigen::Vector3d(0.9, 0.0, 0.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(0.9, 0.9, 0.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(0.9, 0.9, 0.9));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -789,9 +789,9 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
   validateEquals(count, 2);
 
   // Test 3
-  v0 = & mesh.createVertex(Vector3D(-0.9, 0.0, 0.0));
-  v1 = & mesh.createVertex(Vector3D(-0.9, -0.9, 0.0));
-  v2 = & mesh.createVertex(Vector3D(-0.9, -0.9, -0.9));
+  v0 = & mesh.createVertex(Eigen::Vector3d(-0.9, 0.0, 0.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(-0.9, -0.9, 0.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(-0.9, -0.9, -0.9));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -800,7 +800,7 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
 
   find.clear ();
   find(mesh);
-  count = find.content().triangles().size ();
+  count = find.content().triangles().size();
   validateEquals(count, 3);
 }
 
@@ -809,14 +809,14 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
   preciceTrace("testCompletelyOutsideTriangles()");
   int dim = 3;
   using utils::Vector3D;
-  Vector3D voxelCenter(0.0);
-  Vector3D voxelHalflengths(1.0);
+  Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
+  Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1.0);
 
   // Test1
   mesh::Mesh mesh("Mesh", dim, true);
-  mesh::Vertex* v0 = & mesh.createVertex(Vector3D(2.0, 2.0, 2.0));
-  mesh::Vertex* v1 = & mesh.createVertex(Vector3D(2.5, 2.5, 2.5));
-  mesh::Vertex* v2 = & mesh.createVertex(Vector3D(2.5, 2.0, 2.5));
+  mesh::Vertex* v0 = & mesh.createVertex(Eigen::Vector3d(2.0, 2.0, 2.0));
+  mesh::Vertex* v1 = & mesh.createVertex(Eigen::Vector3d(2.5, 2.5, 2.5));
+  mesh::Vertex* v2 = & mesh.createVertex(Eigen::Vector3d(2.5, 2.0, 2.5));
   mesh::Edge* e0 = & mesh.createEdge(*v0, *v1);
   mesh::Edge* e1 = & mesh.createEdge(*v1, *v2);
   mesh::Edge* e2 = & mesh.createEdge(*v2, *v0);
@@ -830,9 +830,9 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
   validateEquals(count, 0);
 
   // Test 2
-  v0 = & mesh.createVertex(Vector3D(1.1, 0.0, 0.0));
-  v1 = & mesh.createVertex(Vector3D(1.1, 1.1, 0.0));
-  v2 = & mesh.createVertex(Vector3D(1.1, 1.1, 1.1));
+  v0 = & mesh.createVertex(Eigen::Vector3d(1.1, 0.0, 0.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(1.1, 1.1, 0.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(1.1, 1.1, 1.1));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -845,9 +845,9 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
   validateEquals(count, 0);
 
   // Test 3
-  v0 = & mesh.createVertex(Vector3D(-1.1,  0.0,  0.0));
-  v1 = & mesh.createVertex(Vector3D(-1.1, -1.1,  0.0));
-  v2 = & mesh.createVertex(Vector3D(-1.1, -1.1, -1.1));
+  v0 = & mesh.createVertex(Eigen::Vector3d(-1.1,  0.0,  0.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(-1.1, -1.1,  0.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(-1.1, -1.1, -1.1));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -865,14 +865,14 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   preciceTrace("testIntersectingTriangles()");
   int dim = 3;
   using utils::Vector3D;
-  Vector3D voxelCenter(0.0);
-  Vector3D voxelHalflengths(1.0);
+  Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
+  Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1.0);
 
   // Test1
   mesh::Mesh mesh("Mesh", dim, true);
-  mesh::Vertex* v0 = & mesh.createVertex(Vector3D(0.5, 0.0, 0.0));
-  mesh::Vertex* v1 = & mesh.createVertex(Vector3D(2.0, 1.0, 1.0));
-  mesh::Vertex* v2 = & mesh.createVertex(Vector3D(2.0, -1.0, -1.0));
+  mesh::Vertex* v0 = & mesh.createVertex(Eigen::Vector3d(0.5, 0.0, 0.0));
+  mesh::Vertex* v1 = & mesh.createVertex(Eigen::Vector3d(2.0, 1.0, 1.0));
+  mesh::Vertex* v2 = & mesh.createVertex(Eigen::Vector3d(2.0, -1.0, -1.0));
   mesh::Edge* e0 = & mesh.createEdge(*v0, *v1);
   mesh::Edge* e1 = & mesh.createEdge(*v1, *v2);
   mesh::Edge* e2 = & mesh.createEdge(*v2, *v0);
@@ -886,9 +886,9 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   validateEquals(count, 1);
 
   // Test 2
-  v0 = & mesh.createVertex(Vector3D(-0.5, 0.0, 0.0));
-  v1 = & mesh.createVertex(Vector3D(-2.0, 1.0, 1.0));
-  v2 = & mesh.createVertex(Vector3D(-2.0, -1.0, -1.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(-0.5, 0.0, 0.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(-2.0, 1.0, 1.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(-2.0, -1.0, -1.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -901,9 +901,9 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   validateEquals(count, 2);
 
   // Test 3
-  v0 = & mesh.createVertex(Vector3D(0.0, 0.5, 0.0));
-  v1 = & mesh.createVertex(Vector3D(1.0, 2.0, 1.0));
-  v2 = & mesh.createVertex(Vector3D(-1.0, 2.0, -1.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(0.0, 0.5, 0.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(1.0, 2.0, 1.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(-1.0, 2.0, -1.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -916,9 +916,9 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   validateEquals(count, 3);
 
   // Test 4
-  v0 = & mesh.createVertex(Vector3D(0.0, -0.5, 0.0));
-  v1 = & mesh.createVertex(Vector3D(1.0, -2.0, 1.0));
-  v2 = & mesh.createVertex(Vector3D(-1.0, -2.0, -1.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(0.0, -0.5, 0.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(1.0, -2.0, 1.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(-1.0, -2.0, -1.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -931,9 +931,9 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   validateEquals(count, 4);
 
   // Test 5
-  v0 = & mesh.createVertex(Vector3D(0.0, 0.0, 0.5));
-  v1 = & mesh.createVertex(Vector3D(1.0, 1.0, 2.0));
-  v2 = & mesh.createVertex(Vector3D(-1.0, -1.0, 2.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.5));
+  v1 = & mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 2.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(-1.0, -1.0, 2.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -946,9 +946,9 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   validateEquals(count, 5);
 
   // Test 6
-  v0 = & mesh.createVertex(Vector3D(0.0, 0.0, -0.5));
-  v1 = & mesh.createVertex(Vector3D(1.0, 1.0, -2.0));
-  v2 = & mesh.createVertex(Vector3D(-1.0, -1.0, -2.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(0.0, 0.0, -0.5));
+  v1 = & mesh.createVertex(Eigen::Vector3d(1.0, 1.0, -2.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(-1.0, -1.0, -2.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -961,9 +961,9 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
   validateEquals(count, 6);
 
   // Test 6, triangle cuts out corner of voxel, no triangle vertices contained
-  v0 = & mesh.createVertex(Vector3D(0.5, 1.5, -0.0));
-  v1 = & mesh.createVertex(Vector3D(0.5, 0.5, -1.5));
-  v2 = & mesh.createVertex(Vector3D(1.5, 0.5, -0.5));
+  v0 = & mesh.createVertex(Eigen::Vector3d(0.5, 1.5, -0.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(0.5, 0.5, -1.5));
+  v2 = & mesh.createVertex(Eigen::Vector3d(1.5, 0.5, -0.5));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -981,14 +981,14 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   preciceTrace("testTouchingTriangles()");
   int dim = 3;
   using utils::Vector3D;
-  Vector3D voxelCenter(0.0);
-  Vector3D voxelHalflengths(1.0);
+  Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
+  Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1.0);
 
   // Test1, first triangle vertex touches voxel side
   mesh::Mesh mesh("Mesh", dim, true);
-  mesh::Vertex* v0 = & mesh.createVertex(Vector3D(1.0, 0.0, 0.0));
-  mesh::Vertex* v1 = & mesh.createVertex(Vector3D(2.0, 1.0, 1.0));
-  mesh::Vertex* v2 = & mesh.createVertex(Vector3D(2.0, -1.0, -1.0));
+  mesh::Vertex* v0 = & mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  mesh::Vertex* v1 = & mesh.createVertex(Eigen::Vector3d(2.0, 1.0, 1.0));
+  mesh::Vertex* v2 = & mesh.createVertex(Eigen::Vector3d(2.0, -1.0, -1.0));
   mesh::Edge* e0 = & mesh.createEdge(*v0, *v1);
   mesh::Edge* e1 = & mesh.createEdge(*v1, *v2);
   mesh::Edge* e2 = & mesh.createEdge(*v2, *v0);
@@ -1007,9 +1007,9 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   validateEquals(count, 0);
 
   // Test2, second triangle vertex touches voxel side
-  v0 = & mesh.createVertex(Vector3D(1.0, -2.0, 1.0));
-  v1 = & mesh.createVertex(Vector3D(0.0, -1.0, 0.0));
-  v2 = & mesh.createVertex(Vector3D(1.0, -2.0, -1.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(1.0, -2.0, 1.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(0.0, -1.0, 0.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(1.0, -2.0, -1.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -1026,9 +1026,9 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   validateEquals(count, 0);
 
   // Test3, third triangle vertex touches voxel side
-  v0 = & mesh.createVertex(Vector3D(-1.0, 0.0, 2.0));
-  v1 = & mesh.createVertex(Vector3D(1.0, 0.0, 2.0));
-  v2 = & mesh.createVertex(Vector3D(0.0, 0.0, 1.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(-1.0, 0.0, 2.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 2.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -1045,9 +1045,9 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   validateEquals(count, 0);
 
   // Test4, triangle edge touches voxel side
-  v0 = & mesh.createVertex(Vector3D(1.0, -1.0, -1.0));
-  v1 = & mesh.createVertex(Vector3D(1.0, 1.0, 1.0));
-  v2 = & mesh.createVertex(Vector3D(2.0, 0.0, 0.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(1.0, -1.0, -1.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(2.0, 0.0, 0.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -1064,9 +1064,9 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   validateEquals(count, 0);
 
   // Test5, triangle edge touches voxel edge in one point
-  v0 = & mesh.createVertex(Vector3D(2.0, 0.0, 0.0));
-  v1 = & mesh.createVertex(Vector3D(0.0, 2.0, 0.0));
-  v2 = & mesh.createVertex(Vector3D(2.0, 2.0, 0.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(2.0, 0.0, 0.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d(0.0, 2.0, 0.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(2.0, 2.0, 0.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -1083,9 +1083,9 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   validateEquals(count, 0);
 
   // Test6, triangle edge overlays with voxel edge
-  v0 = & mesh.createVertex(Vector3D(-2.0, -1.0, 1.0));
-  v1 = & mesh.createVertex(Vector3D( 0.0, -1.0, 1.0));
-  v2 = & mesh.createVertex(Vector3D(-1.0,  2.0, 2.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(-2.0, -1.0, 1.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d( 0.0, -1.0, 1.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d(-1.0,  2.0, 2.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -1102,9 +1102,9 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   validateEquals(count, 0);
 
   // Test6, triangle is contained in voxel side
-  v0 = & mesh.createVertex(Vector3D(-0.5, -1.0, 0.0));
-  v1 = & mesh.createVertex(Vector3D( 0.5, -1.0, 0.0));
-  v2 = & mesh.createVertex(Vector3D( 0.5, -1.0, 0.5));
+  v0 = & mesh.createVertex(Eigen::Vector3d(-0.5, -1.0, 0.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d( 0.5, -1.0, 0.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d( 0.5, -1.0, 0.5));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -1121,9 +1121,9 @@ void FindVoxelContentTest:: testTouchingTriangles ()
   validateEquals(count, 0);
 
   // Test6, voxel side is contained in triangle
-  v0 = & mesh.createVertex(Vector3D(-5.0, -5.0, 1.0));
-  v1 = & mesh.createVertex(Vector3D( 5.0, -5.0, 1.0));
-  v2 = & mesh.createVertex(Vector3D( 0.0,  5.0, 1.0));
+  v0 = & mesh.createVertex(Eigen::Vector3d(-5.0, -5.0, 1.0));
+  v1 = & mesh.createVertex(Eigen::Vector3d( 5.0, -5.0, 1.0));
+  v2 = & mesh.createVertex(Eigen::Vector3d( 0.0,  5.0, 1.0));
   e0 = & mesh.createEdge(*v0, *v1);
   e1 = & mesh.createEdge(*v1, *v2);
   e2 = & mesh.createEdge(*v2, *v0);
@@ -1148,14 +1148,14 @@ void FindVoxelContentTest:: testQueryCube ()
   using utils::Vector3D;
   bool flipNormals = false;
   Mesh mesh("TestMesh", dim, flipNormals);
-  Vertex& v000 = mesh.createVertex(Vector3D(0.0, 0.0, 0.0));
-  Vertex& v001 = mesh.createVertex(Vector3D(0.0, 0.0, 1.0));
-  Vertex& v010 = mesh.createVertex(Vector3D(0.0, 1.0, 0.0));
-  Vertex& v011 = mesh.createVertex(Vector3D(0.0, 1.0, 1.0));
-  Vertex& v100 = mesh.createVertex(Vector3D(1.0, 0.0, 0.0));
-  Vertex& v101 = mesh.createVertex(Vector3D(1.0, 0.0, 1.0));
-  Vertex& v110 = mesh.createVertex(Vector3D(1.0, 1.0, 0.0));
-  Vertex& v111 = mesh.createVertex(Vector3D(1.0, 1.0, 1.0));
+  Vertex& v000 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  Vertex& v001 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+  Vertex& v010 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  Vertex& v011 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
+  Vertex& v100 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  Vertex& v101 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
+  Vertex& v110 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  Vertex& v111 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
 
   Edge& e000to100 = mesh.createEdge(v000, v100);
   Edge& e010to110 = mesh.createEdge(v010, v110);

@@ -28,8 +28,6 @@
 #include "cplscheme/Constants.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "tarch/la/Vector.h"
-#include "tarch/la/WrappedVector.h"
 #include <string.h>
 #include "utils/EigenHelperFunctions.hpp"
 
@@ -39,8 +37,6 @@ registerTest(precice::cplscheme::tests::PostProcessingMasterSlaveTest)
 namespace precice {
 namespace cplscheme {
 namespace tests {
-
-using utils::Vector3D;
 
 logging::Logger PostProcessingMasterSlaveTest::
   _log ( "precice::cplscheme::tests::PostProcessingMasterSlaveTest" );

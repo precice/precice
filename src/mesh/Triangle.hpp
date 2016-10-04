@@ -1,12 +1,12 @@
-#ifndef PRECICE_MESH_TRIANGLE_HPP_
-#define PRECICE_MESH_TRIANGLE_HPP_
+#pragma once
 
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Edge.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
-#include "boost/noncopyable.hpp"
-#include "boost/array.hpp"
+#include <boost/noncopyable.hpp>
+#include <boost/array.hpp>
+#include <Eigen/Dense>
 
 namespace precice {
   namespace mesh {
@@ -100,14 +100,14 @@ public:
    *
    * Prerequesits: The normal has to be computed and set from outside before.
    */
-  const utils::DynVector& getNormal () const;
+  const Eigen::VectorXd& getNormal () const;
 
   /**
    * @brief Returns the barycenter of the triangle.
    *
    * Prerequesits: The center has to be computed and set from outside before.
    */
-  const utils::DynVector& getCenter () const;
+  const Eigen::VectorXd& getCenter () const;
 
   /**
    * @brief Returns the radius of the circle enclosing the triangle.
@@ -128,11 +128,11 @@ private:
   // @brief ID of the edge.
   int _id;
 
-  // @brief Normal vector of the triangle.
-  utils::DynVector _normal;
+  /// Normal vector of the triangle.
+  Eigen::VectorXd _normal;
 
-  // @brief Center point of the triangle.
-  utils::DynVector _center;
+  /// Center point of the triangle.
+  Eigen::VectorXd _center;
 
   // @brief Minimal radius of circle enclosing the triangle.
   double _enclosingRadius;
@@ -188,5 +188,3 @@ inline int Triangle:: getID() const
 }
 
 }} // namespace precice, mesh
-
-#endif /* PRECICE_MESH_TRIANGLE_HPP_ */

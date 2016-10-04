@@ -11,6 +11,7 @@
 #include "tarch/la/WrappedVector.h"
 #include "com/MPIDirectCommunication.hpp"
 #include "tarch/tests/TestCaseFactory.h"
+#include "math/math.hpp"
 #include "Eigen/Dense"
 
 
@@ -90,14 +91,17 @@ void MeshTest:: testSubIDs()
 void MeshTest:: testComputeState()
 {
   preciceTrace ("testComputeState()");
+  using Eigen::Vector2d;
+  using Eigen::Vector3d;
+  using math::equals;
   bool flipNormals = true;
   { // 2D
     using utils::Vector2D;
     Mesh mesh ( "MyMesh", 2, flipNormals );
     // Create mesh
-    Vertex& v1 = mesh.createVertex ( Vector2D(0.0, 0.0) );
-    Vertex& v2 = mesh.createVertex ( Vector2D(1.0, 0.0) );
-    Vertex& v3 = mesh.createVertex ( Vector2D(1.0, 1.0) );
+    Vertex& v1 = mesh.createVertex ( Vector2d(0.0, 0.0) );
+    Vertex& v2 = mesh.createVertex ( Vector2d(1.0, 0.0) );
+    Vertex& v3 = mesh.createVertex ( Vector2d(1.0, 1.0) );
     //
     //
     // *****
@@ -109,26 +113,25 @@ void MeshTest:: testComputeState()
     mesh.computeState();
 
     // Perform test validations
-    using tarch::la::equals;
-    validate ( equals(e1.getCenter(), Vector2D(0.5, 0.0)) );
-    validate ( equals(e2.getCenter(), Vector2D(1.0, 0.5)) );
+    validate ( equals(e1.getCenter(), Vector2d(0.5, 0.0)) );
+    validate ( equals(e2.getCenter(), Vector2d(1.0, 0.5)) );
     validateNumericalEquals ( e1.getEnclosingRadius(), 0.5 );
     validateNumericalEquals ( e2.getEnclosingRadius(), 0.5 );
-    validate ( equals(e1.getNormal(), Vector2D(0.0, 1.0)) );
-    validate ( equals(e2.getNormal(), Vector2D(-1.0, 0.0)) );
-    validate ( equals(v1.getNormal(), Vector2D(0.0, 1.0)) );
-    validate ( equals(v2.getNormal(), Vector2D(-std::sqrt(0.5), std::sqrt(0.5))) );
-    validate ( equals(v3.getNormal(), Vector2D(-1.0, 0.0)) );
+    validate ( equals(e1.getNormal(), Vector2d(0.0, 1.0)) );
+    validate ( equals(e2.getNormal(), Vector2d(-1.0, 0.0)) );
+    validate ( equals(v1.getNormal(), Vector2d(0.0, 1.0)) );
+    validate ( equals(v2.getNormal(), Vector2d(-std::sqrt(0.5), std::sqrt(0.5))) );
+    validate ( equals(v3.getNormal(), Vector2d(-1.0, 0.0)) );
   }
 
   { // 3D triangle
     using utils::Vector3D;
     Mesh mesh ( "MyMesh", 3, flipNormals );
     // Create mesh
-    Vertex& v1 = mesh.createVertex ( Vector3D(0.0, 0.0, 0.0) );
-    Vertex& v2 = mesh.createVertex ( Vector3D(1.0, 0.0, 1.0) );
-    Vertex& v3 = mesh.createVertex ( Vector3D(1.0, 1.0, 1.0) );
-    Vertex& v4 = mesh.createVertex ( Vector3D(2.0, 0.0, 2.0) );
+    Vertex& v1 = mesh.createVertex ( Vector3d(0.0, 0.0, 0.0) );
+    Vertex& v2 = mesh.createVertex ( Vector3d(1.0, 0.0, 1.0) );
+    Vertex& v3 = mesh.createVertex ( Vector3d(1.0, 1.0, 1.0) );
+    Vertex& v4 = mesh.createVertex ( Vector3d(2.0, 0.0, 2.0) );
     Edge& e1 = mesh.createEdge ( v1, v2 );
     Edge& e2 = mesh.createEdge ( v2, v3 );
     Edge& e3 = mesh.createEdge ( v3, v1 );
@@ -148,25 +151,24 @@ void MeshTest:: testComputeState()
     mesh.computeState();
 
     // Perform test validations
-    using tarch::la::equals;
-    validate ( equals(e1.getCenter(), Vector3D(0.5, 0.0, 0.5)) );
-    validate ( equals(e2.getCenter(), Vector3D(1.0, 0.5, 1.0)) );
-    validate ( equals(e3.getCenter(), Vector3D(0.5, 0.5, 0.5)) );
-    validate ( equals(e4.getCenter(), Vector3D(1.5, 0.0, 1.5)) );
-    validate ( equals(e5.getCenter(), Vector3D(1.5, 0.5, 1.5)) );
+    validate ( equals(e1.getCenter(), Vector3d(0.5, 0.0, 0.5)) );
+    validate ( equals(e2.getCenter(), Vector3d(1.0, 0.5, 1.0)) );
+    validate ( equals(e3.getCenter(), Vector3d(0.5, 0.5, 0.5)) );
+    validate ( equals(e4.getCenter(), Vector3d(1.5, 0.0, 1.5)) );
+    validate ( equals(e5.getCenter(), Vector3d(1.5, 0.5, 1.5)) );
     validateNumericalEquals ( e1.getEnclosingRadius(), std::sqrt(2.0)*0.5 );
     validateNumericalEquals ( e2.getEnclosingRadius(), 0.5 );
     validateNumericalEquals ( e3.getEnclosingRadius(), std::sqrt(3.0)*0.5 );
     validateNumericalEquals ( e4.getEnclosingRadius(), std::sqrt(2.0)*0.5 );
     validateNumericalEquals ( e5.getEnclosingRadius(), std::sqrt(3.0)*0.5 );
 
-    validate ( equals(t1.getCenter(), Vector3D(2.0/3.0, 1.0/3.0, 2.0/3.0)) );
-    validate ( equals(t2.getCenter(), Vector3D(4.0/3.0, 1.0/3.0, 4.0/3.0)) );
+    validate ( equals(t1.getCenter(), Vector3d(2.0/3.0, 1.0/3.0, 2.0/3.0)) );
+    validate ( equals(t2.getCenter(), Vector3d(4.0/3.0, 1.0/3.0, 4.0/3.0)) );
     validateNumericalEquals ( t1.getEnclosingRadius(), 1.0 );
     validateNumericalEquals ( t2.getEnclosingRadius(), 1.0 );
-    Vector3D normal ( 1.0, 0.0, -1.0 );
-    normal = normal / tarch::la::norm2(normal);
-    validateNumericalEquals ( tarch::la::norm2(normal), 1.0 );
+    Vector3d normal ( 1.0, 0.0, -1.0 );
+    normal = normal.normalized();
+    validateNumericalEquals ( normal.norm(), 1.0 );
     validate ( equals(t1.getNormal(), normal) );
     validate ( equals(t2.getNormal(), normal) );
 
@@ -182,16 +184,15 @@ void MeshTest:: testComputeState()
   }
 
   { // 3D quad
-    using utils::Vector3D;
     Mesh mesh("MyMesh", 3, flipNormals);
     // Create mesh (Two rectangles with a common edge at z-axis. One extends in
     // x-y-plane (2 long), the other in y-z-plane (1 long))
-    Vertex& v0 = mesh.createVertex(Vector3D(0.0, 0.0, 0.0));
-    Vertex& v1 = mesh.createVertex(Vector3D(2.0, 0.0, 0.0));
-    Vertex& v2 = mesh.createVertex(Vector3D(2.0, 1.0, 0.0));
-    Vertex& v3 = mesh.createVertex(Vector3D(0.0, 1.0, 0.0));
-    Vertex& v4 = mesh.createVertex(Vector3D(0.0, 0.0, 1.0));
-    Vertex& v5 = mesh.createVertex(Vector3D(0.0, 1.0, 1.0));
+    Vertex& v0 = mesh.createVertex(Vector3d(0.0, 0.0, 0.0));
+    Vertex& v1 = mesh.createVertex(Vector3d(2.0, 0.0, 0.0));
+    Vertex& v2 = mesh.createVertex(Vector3d(2.0, 1.0, 0.0));
+    Vertex& v3 = mesh.createVertex(Vector3d(0.0, 1.0, 0.0));
+    Vertex& v4 = mesh.createVertex(Vector3d(0.0, 0.0, 1.0));
+    Vertex& v5 = mesh.createVertex(Vector3d(0.0, 1.0, 1.0));
     Edge& e0 = mesh.createEdge(v0, v1);
     Edge& e1 = mesh.createEdge(v1, v2);
     Edge& e2 = mesh.createEdge(v2, v3);
@@ -205,15 +206,13 @@ void MeshTest:: testComputeState()
     mesh.computeState();
 
     // Perform test validations
-    using tarch::la::equals;
-
-    validate(equals(e0.getCenter(), Vector3D(1.0, 0.0, 0.0)));
-    validate(equals(e1.getCenter(), Vector3D(2.0, 0.5, 0.0)));
-    validate(equals(e2.getCenter(), Vector3D(1.0, 1.0, 0.0)));
-    validate(equals(e3.getCenter(), Vector3D(0.0, 0.5, 0.0)));
-    validate(equals(e4.getCenter(), Vector3D(0.0, 0.0, 0.5)));
-    validate(equals(e5.getCenter(), Vector3D(0.0, 0.5, 1.0)));
-    validate(equals(e6.getCenter(), Vector3D(0.0, 1.0, 0.5)));
+    validate(equals(e0.getCenter(), Vector3d(1.0, 0.0, 0.0)));
+    validate(equals(e1.getCenter(), Vector3d(2.0, 0.5, 0.0)));
+    validate(equals(e2.getCenter(), Vector3d(1.0, 1.0, 0.0)));
+    validate(equals(e3.getCenter(), Vector3d(0.0, 0.5, 0.0)));
+    validate(equals(e4.getCenter(), Vector3d(0.0, 0.0, 0.5)));
+    validate(equals(e5.getCenter(), Vector3d(0.0, 0.5, 1.0)));
+    validate(equals(e6.getCenter(), Vector3d(0.0, 1.0, 0.5)));
 
     validateNumericalEquals(e0.getEnclosingRadius(), 1.0);
     validateNumericalEquals(e1.getEnclosingRadius(), 0.5);
@@ -223,22 +222,22 @@ void MeshTest:: testComputeState()
     validateNumericalEquals(e5.getEnclosingRadius(), 0.5);
     validateNumericalEquals(e6.getEnclosingRadius(), 0.5);
 
-    validate(equals(q0.getCenter(), Vector3D(1.0, 0.5, 0.0)));
-    validate(equals(q1.getCenter(), Vector3D(0.0, 0.5, 0.5)));
+    validate(equals(q0.getCenter(), Vector3d(1.0, 0.5, 0.0)));
+    validate(equals(q1.getCenter(), Vector3d(0.0, 0.5, 0.5)));
 
     validateNumericalEquals(q0.getEnclosingRadius(), sqrt(1.25));
     validateNumericalEquals(q1.getEnclosingRadius(), sqrt(0.5));
 
-    Vector3D normal0(0.0, 0.0, -1.0);
+    Vector3d normal0(0.0, 0.0, -1.0);
     validateWithParams1(equals(q0.getNormal(), normal0), q0.getNormal());
-    Vector3D normal1(1.0, 0.0, 0.0);
+    Vector3d normal1(1.0, 0.0, 0.0);
     validateWithParams1(equals(q1.getNormal(), normal1), q1.getNormal());
 
     validate(equals(e0.getNormal(), normal0));
     validate(equals(e1.getNormal(), normal0));
     validate(equals(e2.getNormal(), normal0));
-    Vector3D normal0and1(2.0*normal0 + normal1);
-    normal0and1 /= norm2(normal0and1);
+    Vector3d normal0and1(2.0*normal0 + normal1);
+    normal0and1 = normal0and1.normalized();
     validateWithParams2(equals(e3.getNormal(), normal0and1), e3.getNormal(), normal0and1);
     validate(equals(e4.getNormal(), normal1));
     validate(equals(e5.getNormal(), normal1));

@@ -394,7 +394,7 @@ void SolverInterfaceTestGeometry:: testDataActions()
   int dataID = geo.getDataID("VectorData", meshID);
   geo.initialize();
   mesh::PtrMesh mesh = impl->_accessor->meshContext(meshID).mesh;
-  std::vector<utils::Vector3D> coords ( mesh->vertices().size() );
+  std::vector<Eigen::Vector3d> coords ( mesh->vertices().size() );
   for ( size_t i=0; i < mesh->vertices().size(); i++ ){
     coords[i] = mesh->vertices()[i].getCoords();
   }
@@ -405,13 +405,15 @@ void SolverInterfaceTestGeometry:: testDataActions()
   geo.advance ( 1.0 );
 
   for ( size_t i=0; i < mesh->vertices().size(); i++ ){
-    validate ( equals(coords[i] + 1.0, mesh->vertices()[i].getCoords()) );
+    validate ( math::equals(coords[i] + Eigen::VectorXd::Constant(coords[i].size(), 1.0),
+                            mesh->vertices()[i].getCoords()) );
   }
 
   geo.advance ( 1.0 );
 
   for ( size_t i=0; i < mesh->vertices().size(); i++ ){
-    validate ( equals(coords[i] + 2.0, mesh->vertices()[i].getCoords()) );
+    validate ( math::equals(coords[i] + Eigen::VectorXd::Constant(coords[i].size(), 2.0),
+                            mesh->vertices()[i].getCoords()) );
   }
 
   geo.finalize ();

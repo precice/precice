@@ -172,7 +172,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 
   // Fill upper right part (due to symmetry) of _matrixCLU with values
   int i = 0;
-  utils::DynVector difference(dimensions);
+  Eigen::VectorXd difference(dimensions);
   for (const mesh::Vertex& iVertex : inMesh->vertices()) {
     for (int j = iVertex.getID(); j < inputSize; j++) {
       difference = iVertex.getCoords();

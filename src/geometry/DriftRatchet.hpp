@@ -150,7 +150,7 @@ private:
     mesh::PropertyContainer* propertyContainer,
     mesh::Vertex*            cutVertices[],
     mesh::Edge*              cutEdges[],
-    const utils::DynVector & center,
+    const Eigen::VectorXd&   center,
     double                   radius);
 
   void createRightWall ( mesh::Mesh              & mesh,

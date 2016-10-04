@@ -31,7 +31,7 @@ void Sphere:: specializedCreate
   int dimensions = seed.getDimensions();
   assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
   if ( dimensions == 2 ){
-    utils::Vector2D start(0.0);
+    Eigen::Vector2d start = Eigen::Vector2d::Zero();
     start(0) += _radius;
     Vertex * oldUpper = &seed.createVertex ( -1.0 * start );
     Vertex * oldLower = oldUpper;
@@ -44,9 +44,9 @@ void Sphere:: specializedCreate
       latitude = _radius * ( 1.0 - std::cos(i * angleInc) );
       currentRadius = _radius * std::sin (i * angleInc);
       Vertex* newUpper = & seed.createVertex(
-          utils::Vector2D(-_radius + latitude, currentRadius));
+        Eigen::Vector2d(-_radius + latitude, currentRadius));
       Vertex* newLower = & seed.createVertex(
-          utils::Vector2D(-_radius + latitude, -1.0 * currentRadius));
+        Eigen::Vector2d(-_radius + latitude, -1.0 * currentRadius));
       seed.createEdge ( *newUpper, *oldUpper );
       seed.createEdge ( *oldLower, *newLower );
       oldUpper = newUpper;
@@ -78,30 +78,30 @@ void Sphere:: specializedCreate
     //         |---- h ---|
     h /= 2.0;
     l /= 2.0;
-    Vertex * xy0 = & seed.createVertex ( utils::Vector3D(-h, -l, 0.0) );
-    Vertex * xy1 = & seed.createVertex ( utils::Vector3D(h, -l, 0.0) );
-    Vertex * xy2 = & seed.createVertex ( utils::Vector3D(-h, l, 0.0) );
-    Vertex * xy3 = & seed.createVertex ( utils::Vector3D(h, l, 0.0) );
+    Vertex * xy0 = & seed.createVertex ( Eigen::Vector3d(-h, -l, 0.0) );
+    Vertex * xy1 = & seed.createVertex ( Eigen::Vector3d(h, -l, 0.0) );
+    Vertex * xy2 = & seed.createVertex ( Eigen::Vector3d(-h, l, 0.0) );
+    Vertex * xy3 = & seed.createVertex ( Eigen::Vector3d(h, l, 0.0) );
 
     // Second rectangle lies in zy-plane:
     // ^ z     2----------3 -
     // |       |          | l
     // --> y   0----------1 -
     //         |---- h ---|
-    Vertex * yz0 = & seed.createVertex ( utils::Vector3D(0.0, -h, -l) );
-    Vertex * yz1 = & seed.createVertex ( utils::Vector3D(0.0, h, -l) );
-    Vertex * yz2 = & seed.createVertex ( utils::Vector3D(0.0, -h, l) );
-    Vertex * yz3 = & seed.createVertex ( utils::Vector3D(0.0, h, l) );
+    Vertex * yz0 = & seed.createVertex ( Eigen::Vector3d(0.0, -h, -l) );
+    Vertex * yz1 = & seed.createVertex ( Eigen::Vector3d(0.0, h, -l) );
+    Vertex * yz2 = & seed.createVertex ( Eigen::Vector3d(0.0, -h, l) );
+    Vertex * yz3 = & seed.createVertex ( Eigen::Vector3d(0.0, h, l) );
 
     // Second rectangle lies in zx-plane:
     // ^ x     2----------3 -
     // |       |          | l
     // --> z   0----------1 -
     //         |---- h ---|
-    Vertex * zx0 = & seed.createVertex ( utils::Vector3D(-l, 0.0, -h) );
-    Vertex * zx1 = & seed.createVertex ( utils::Vector3D(-l, 0.0, h) );
-    Vertex * zx2 = & seed.createVertex ( utils::Vector3D(l, 0.0, -h) );
-    Vertex * zx3 = & seed.createVertex ( utils::Vector3D(l, 0.0, h) );
+    Vertex * zx0 = & seed.createVertex ( Eigen::Vector3d(-l, 0.0, -h) );
+    Vertex * zx1 = & seed.createVertex ( Eigen::Vector3d(-l, 0.0, h) );
+    Vertex * zx2 = & seed.createVertex ( Eigen::Vector3d(l, 0.0, -h) );
+    Vertex * zx3 = & seed.createVertex ( Eigen::Vector3d(l, 0.0, h) );
 
     // Add triangles of edge xy0-2
     triangles.push_back ( std::make_tuple(xy0, xy2, zx0) );
@@ -278,7 +278,7 @@ void Sphere:: specializedCreate
         */
 
          //      assertion ( triangles.size() < 1000 ); // TODO remove
-        double length = tarch::la::norm2 ( v20->getCoords() - v01->getCoords() );
+        double length = (v20->getCoords() - v01->getCoords()).norm();
         sidelength = length > sidelength ? length : sidelength;
       }
     }
@@ -323,17 +323,17 @@ mesh::Vertex* Sphere:: getVertex
   }
   mesh::Vertex* vertex = nullptr;
   if ( seed.getDimensions() == 2 ){ // 2D
-    utils::Vector2D coords ( v0.getCoords() );
+    Eigen::Vector2d coords ( v0.getCoords() );
     coords += v1.getCoords();
     coords /= 2.0;
-    coords *= _radius / tarch::la::norm2(coords);
+    coords *= _radius / coords.norm();
     vertex = &seed.createVertex ( coords );
   }
   else { // 3D
-    utils::Vector3D coords ( v0.getCoords() );
+    Eigen::Vector3d coords ( v0.getCoords() );
     coords += v1.getCoords();
     coords /= 2.0;
-    coords *= _radius / tarch::la::norm2(coords);
+    coords *= _radius / coords.norm();
     vertex = &seed.createVertex ( coords );
   }
   dividedEdges[index] = vertex;

@@ -5,6 +5,7 @@
 #include "logging/Logger.hpp"
 #include "utils/Dimensions.hpp"
 #include "mesh/SharedPointer.hpp"
+#include <Eigen/Dense>
 
 namespace precice {
 namespace geometry {
@@ -45,7 +46,7 @@ private:
    double _discretizationWidth;
 
    // @brief Sidelengths of the cuboid
-   utils::DynVector _sidelengths;
+  Eigen::VectorXd _sidelengths;
 };
 
 }} // namespace precice, geometry

@@ -182,11 +182,10 @@ void GeometryTestScenarios:: createMesh
 {
   using namespace mesh;
   if (mesh.getDimensions() == 2){
-    using utils::Vector2D;
-    Vertex& v00 = mesh.createVertex(Vector2D(-1.0, -1.0));
-    Vertex& v10 = mesh.createVertex(Vector2D( 1.0, -1.0));
-    Vertex& v01 = mesh.createVertex(Vector2D(-1.0,  1.0));
-    Vertex& v11 = mesh.createVertex(Vector2D( 1.0,  1.0));
+    Vertex& v00 = mesh.createVertex(Eigen::Vector2d(-1.0, -1.0));
+    Vertex& v10 = mesh.createVertex(Eigen::Vector2d( 1.0, -1.0));
+    Vertex& v01 = mesh.createVertex(Eigen::Vector2d(-1.0,  1.0));
+    Vertex& v11 = mesh.createVertex(Eigen::Vector2d( 1.0,  1.0));
     mesh.createEdge(v00, v10);
     mesh.createEdge(v10, v11);
     mesh.createEdge(v11, v01);
@@ -194,15 +193,14 @@ void GeometryTestScenarios:: createMesh
   }
   else {
     assertion(mesh.getDimensions() == 3, mesh.getDimensions());
-    using utils::Vector3D;
-    Vertex& v000 = mesh.createVertex(Vector3D(-1.0, -1.0, -1.0));
-    Vertex& v001 = mesh.createVertex(Vector3D(-1.0, -1.0,  1.0));
-    Vertex& v010 = mesh.createVertex(Vector3D(-1.0,  1.0, -1.0)); //
-    Vertex& v011 = mesh.createVertex(Vector3D(-1.0,  1.0,  1.0));
-    Vertex& v100 = mesh.createVertex(Vector3D( 1.0, -1.0, -1.0)); //
-    Vertex& v101 = mesh.createVertex(Vector3D( 1.0, -1.0,  1.0));
-    Vertex& v110 = mesh.createVertex(Vector3D( 1.0,  1.0, -1.0));
-    Vertex& v111 = mesh.createVertex(Vector3D( 1.0,  1.0,  1.0));
+    Vertex& v000 = mesh.createVertex(Eigen::Vector3d(-1.0, -1.0, -1.0));
+    Vertex& v001 = mesh.createVertex(Eigen::Vector3d(-1.0, -1.0,  1.0));
+    Vertex& v010 = mesh.createVertex(Eigen::Vector3d(-1.0,  1.0, -1.0)); //
+    Vertex& v011 = mesh.createVertex(Eigen::Vector3d(-1.0,  1.0,  1.0));
+    Vertex& v100 = mesh.createVertex(Eigen::Vector3d( 1.0, -1.0, -1.0)); //
+    Vertex& v101 = mesh.createVertex(Eigen::Vector3d( 1.0, -1.0,  1.0));
+    Vertex& v110 = mesh.createVertex(Eigen::Vector3d( 1.0,  1.0, -1.0));
+    Vertex& v111 = mesh.createVertex(Eigen::Vector3d( 1.0,  1.0,  1.0));
 
     Edge& e000to100 = mesh.createEdge(v000, v100);
     Edge& e010to110 = mesh.createEdge(v010, v110);

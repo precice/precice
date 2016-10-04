@@ -119,12 +119,12 @@ void Quad:: setEnclosingRadius
   _enclosingRadius = radius;
 }
 
-const utils::DynVector& Quad:: getNormal() const
+const Eigen::VectorXd& Quad:: getNormal() const
 {
   return _normal;
 }
 
-const utils::DynVector& Quad:: getCenter() const
+const Eigen::VectorXd& Quad:: getCenter() const
 {
   return _center;
 }

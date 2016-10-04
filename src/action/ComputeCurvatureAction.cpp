@@ -37,13 +37,13 @@ void ComputeCurvatureAction:: performAction
   if ( getMesh()->getDimensions() == 2 ){
     dataValues = Eigen::VectorXd::Zero(dataValues.size());
     //assign(dataValues) = 0.0;
-    utils::Vector2D tangent;
+    Eigen::Vector2d tangent;
     for (mesh::Edge & edge : getMesh()->edges()) {
       mesh::Vertex& v0 = edge.vertex(0);
       mesh::Vertex& v1 = edge.vertex(1);
       tangent = v1.getCoords();
       tangent -= v0.getCoords();
-      tangent /= norm2(tangent);
+      tangent /= tangent.norm();
       for(int d=0; d < 2; d++) {
         dataValues[v0.getID()*2 + d] += tangent[d];
         dataValues[v1.getID()*2 + d] -= tangent[d];
@@ -65,7 +65,7 @@ void ComputeCurvatureAction:: performAction
         mesh::Vertex& v0 = tri.vertex(i);
         mesh::Vertex& v1 = tri.vertex((i+1) % 3);
         edge = v1.getCoords();
-        edge -= v0.getCoords();
+        edge -= static_cast<utils::Vector3D>(v0.getCoords());
         cross (edge, normal, contribution);
         for ( int d=0; d < 3; d++ ) {
           dataValues[v0.getID() * 3 + d] -= 0.25 * contribution[d];

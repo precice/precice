@@ -27,14 +27,13 @@ void MergeTest:: run ()
 {
   PRECICE_MASTER_ONLY {
     preciceTrace("run()");
-    using utils::Vector3D;
     // Create visitables
     int dim = 3;
     Mesh mesh("MyMesh", dim, false);
-    Vertex& v0 = mesh.createVertex(utils::Vector3D(0.0));
-    Vertex& v1 = mesh.createVertex(utils::Vector3D(0.0));
-    Vertex& v2 = mesh.createVertex(utils::Vector3D(0.0));
-    Vertex& v3 = mesh.createVertex(utils::Vector3D(0.0));
+    Vertex& v0 = mesh.createVertex(Eigen::Vector3d::Zero());
+    Vertex& v1 = mesh.createVertex(Eigen::Vector3d::Zero());
+    Vertex& v2 = mesh.createVertex(Eigen::Vector3d::Zero());
+    Vertex& v3 = mesh.createVertex(Eigen::Vector3d::Zero());
     Edge& e0 = mesh.createEdge(v0, v1);
     Edge& e1 = mesh.createEdge(v1, v2);
     Edge& e2 = mesh.createEdge(v2, v0);

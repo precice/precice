@@ -19,8 +19,6 @@
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/la/Vector.h"
-#include "tarch/la/WrappedVector.h"
 #include "Eigen/Core"
 
 #include "tarch/tests/TestCaseFactory.h"
@@ -108,7 +106,7 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   PtrMesh mesh(new Mesh("MyMesh", 3, false));
   PtrData data = mesh->createData("MyData", 1);
   int dataID = data->getID();
-  mesh->createVertex(Vector3D(0.0));
+  mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   validateEquals(data->values().size(), 1);
 
@@ -211,7 +209,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    mesh::PtrMesh mesh ( new Mesh("mesh", 3, false) );
    mesh->createData ( "data0", 1 );
    mesh->createData ( "data1", 3 );
-   mesh->createVertex ( Vector3D(0.0) );
+   mesh->createVertex ( Eigen::Vector3d::Zero() );
    mesh->allocateDataValues ();
    meshConfig.addMesh ( mesh );
 
@@ -397,7 +395,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
    mesh::PtrMesh mesh ( new mesh::Mesh("mesh", 3, false) );
    mesh->createData ( "data0", 1 );
    mesh->createData ( "data1", 3 );
-   mesh->createVertex ( Vector3D(0.0) );
+   mesh->createVertex ( Eigen::Vector3d::Zero() );
    mesh->allocateDataValues ();
    meshConfig.addMesh ( mesh );
 
@@ -732,7 +730,7 @@ void SerialImplicitCouplingSchemeTest::
    mesh::PtrMesh mesh ( new mesh::Mesh("mesh", 3, false) );
    mesh->createData ( "data0", 1 );
    mesh->createData ( "data1", 3 );
-   mesh->createVertex ( Vector3D(0.0) );
+   mesh->createVertex ( Eigen::Vector3d::Zero() );
    mesh->allocateDataValues ();
    meshConfig.addMesh ( mesh );
 
@@ -801,7 +799,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
   mesh->createData("Data0", 1);
   mesh->createData("Data1", 3);
-  mesh->createVertex(Vector3D(0.0));
+  mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
 

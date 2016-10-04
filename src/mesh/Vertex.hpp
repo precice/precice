@@ -68,15 +68,11 @@ public:
    */
   int getID() const;
 
-  /**
-   * @brief Returns the coordinates of the vertex.
-   */
-  const utils::DynVector& getCoords() const;
+  /// Returns the coordinates of the vertex.
+  const Eigen::VectorXd& getCoords() const;
 
-  /**
-   * @brief Returns the normal of the vertex.
-   */
-  const utils::DynVector& getNormal() const;
+  /// Returns the normal of the vertex.
+  const Eigen::VectorXd& getNormal() const;
 
   /**
    * @brief Returns (possibly NULL) pointer to parent const Mesh object.
@@ -101,11 +97,11 @@ private:
   // @brief Unique (among vertices in one mesh) ID of the vertex.
   int _id;
 
-  // @brief Coordinates of the vertex.
-  utils::DynVector _coords;
+  /// Coordinates of the vertex.
+  Eigen::VectorXd _coords;
 
-  // @brief Normal of the vertex.
-  utils::DynVector _normal;
+  /// Normal of the vertex.
+  Eigen::VectorXd _normal;
 
   // @brief global (unique) index for parallel simulations
   int _globalIndex;
@@ -128,7 +124,7 @@ Vertex:: Vertex
   PropertyContainer (),
   _id ( id ),
   _coords ( coordinates ),
-  _normal ( _coords.size(), 0.0 ),
+  _normal ( Eigen::VectorXd::Constant(_coords.size(), 0.0) ),
   _globalIndex(-1),
   _owner(true),
   _mesh ( NULL )
@@ -143,7 +139,7 @@ Vertex:: Vertex (
   PropertyContainer (),
   _id ( id ),
   _coords ( coordinates ),
-  _normal ( _coords.size(), 0.0 ),
+  _normal ( Eigen::VectorXd::Constant(_coords.size(), 0.0) ),
   _globalIndex(-1),
   _owner(true),
   _mesh ( & mesh )
@@ -172,7 +168,7 @@ inline int Vertex:: getID() const
   return _id;
 }
 
-inline const utils::DynVector& Vertex:: getCoords() const
+inline const Eigen::VectorXd& Vertex::getCoords() const
 {
   return _coords;
 }

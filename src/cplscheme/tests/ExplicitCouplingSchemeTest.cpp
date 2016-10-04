@@ -16,7 +16,6 @@
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "tarch/la/WrappedVector.h"
 #include "Eigen/Core"
 
 #include "tarch/tests/TestCaseFactory.h"
@@ -82,7 +81,7 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
   mesh::PtrMesh mesh ( new mesh::Mesh("mesh", 3, false) );
   mesh->createData ( "data0", 1 );
   mesh->createData ( "data1", 3 );
-  mesh->createVertex ( Vector3D(0.0) );
+  mesh->createVertex ( Eigen::Vector3d::Zero() );
   mesh->allocateDataValues ();
   meshConfig.addMesh ( mesh );
 
@@ -535,7 +534,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
   mesh::PtrMesh mesh ( new mesh::Mesh("mesh", 3, false) );
   mesh->createData ( "data0", 1 );
   mesh->createData ( "data1", 3 );
-  mesh->createVertex ( Vector3D(0.0) );
+  mesh->createVertex ( Eigen::Vector3d::Zero() );
   mesh->allocateDataValues ();
   meshConfig.addMesh ( mesh );
 

@@ -9,6 +9,7 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include "Eigen/Dense"
+#include "math/math.hpp"
 #include <string>
 #include <map>
 
@@ -50,7 +51,6 @@ void ImportVRMLTest:: run ()
 void ImportVRMLTest:: testImportSquare()
 {
   preciceTrace("testImportSquare()");
-  using utils::Vector2D;
   int dim = 2;
   mesh::Mesh mesh("MyMesh", dim, false);
   mesh::PtrData dataForces = mesh.createData("Forces", dim);
@@ -66,20 +66,20 @@ void ImportVRMLTest:: testImportSquare()
   validateEquals(mesh.edges().size(), 4);
 
   // Validate vertex coordinates
-  validate(equals(mesh.vertices()[0].getCoords(),Vector2D(0.0, 0.0)));
-  validate(equals(mesh.vertices()[1].getCoords(),Vector2D(1.0, 0.0)));
-  validate(equals(mesh.vertices()[2].getCoords(),Vector2D(1.0, 1.0)));
-  validate(equals(mesh.vertices()[3].getCoords(),Vector2D(0.0, 1.0)));
+  validate(math::equals(mesh.vertices()[0].getCoords(),Eigen::Vector2d(0.0, 0.0)));
+  validate(math::equals(mesh.vertices()[1].getCoords(),Eigen::Vector2d(1.0, 0.0)));
+  validate(math::equals(mesh.vertices()[2].getCoords(),Eigen::Vector2d(1.0, 1.0)));
+  validate(math::equals(mesh.vertices()[3].getCoords(),Eigen::Vector2d(0.0, 1.0)));
 
   // Validate edge vertex coordinates
-  validate(equals(mesh.edges()[0].vertex(0).getCoords(), Vector2D(0.0, 0.0)));
-  validate(equals(mesh.edges()[0].vertex(1).getCoords(), Vector2D(1.0, 0.0)));
-  validate(equals(mesh.edges()[1].vertex(0).getCoords(), Vector2D(1.0, 0.0)));
-  validate(equals(mesh.edges()[1].vertex(1).getCoords(), Vector2D(1.0, 1.0)));
-  validate(equals(mesh.edges()[2].vertex(0).getCoords(), Vector2D(1.0, 1.0)));
-  validate(equals(mesh.edges()[2].vertex(1).getCoords(), Vector2D(0.0, 1.0)));
-  validate(equals(mesh.edges()[3].vertex(0).getCoords(), Vector2D(0.0, 1.0)));
-  validate(equals(mesh.edges()[3].vertex(1).getCoords(), Vector2D(0.0, 0.0)));
+  validate(math::equals(mesh.edges()[0].vertex(0).getCoords(), Eigen::Vector2d(0.0, 0.0)));
+  validate(math::equals(mesh.edges()[0].vertex(1).getCoords(), Eigen::Vector2d(1.0, 0.0)));
+  validate(math::equals(mesh.edges()[1].vertex(0).getCoords(), Eigen::Vector2d(1.0, 0.0)));
+  validate(math::equals(mesh.edges()[1].vertex(1).getCoords(), Eigen::Vector2d(1.0, 1.0)));
+  validate(math::equals(mesh.edges()[2].vertex(0).getCoords(), Eigen::Vector2d(1.0, 1.0)));
+  validate(math::equals(mesh.edges()[2].vertex(1).getCoords(), Eigen::Vector2d(0.0, 1.0)));
+  validate(math::equals(mesh.edges()[3].vertex(0).getCoords(), Eigen::Vector2d(0.0, 1.0)));
+  validate(math::equals(mesh.edges()[3].vertex(1).getCoords(), Eigen::Vector2d(0.0, 0.0)));
 
   // Validate data sets
   Eigen::VectorXd& forces = mesh.data(dataIDForces)->values();

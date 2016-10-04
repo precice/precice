@@ -134,22 +134,22 @@ void CuboidTest:: testSubIDs2D ()
   for (mesh::Vertex& vertex : mesh.vertices()) {
     std::vector<int> geometryIDs;
     vertex.getProperties ( vertex.INDEX_GEOMETRY_ID, geometryIDs );
-    if ( equals(vertex.getCoords(), Vector2D(0.0, 0.0)) ) {
+    if ( math::equals(vertex.getCoords(), Eigen::Vector2d(0, 0)) ) {
       validateEquals ( geometryIDs.size(), 2 );
       validate ( utils::contained(id, geometryIDs) );
       validate ( utils::contained(idSide2, geometryIDs) );
     }
-    else if ( equals(vertex.getCoords(), Vector2D(0.0, 1.0)) ) {
+    else if ( math::equals(vertex.getCoords(), Eigen::Vector2d(0.0, 1.0)) ) {
       validateEquals ( geometryIDs.size(), 1 );
       validate ( utils::contained(id, geometryIDs) );
     }
-    else if ( equals(vertex.getCoords(), Vector2D(1.0, 0.0)) ) {
+    else if ( math::equals(vertex.getCoords(), Eigen::Vector2d(1.0, 0.0)) ) {
       validateEquals ( geometryIDs.size(), 3 );
       validate ( utils::contained(id, geometryIDs) );
       validate ( utils::contained(idSide1, geometryIDs) );
       validate ( utils::contained(idSide2, geometryIDs) );
     }
-    else if ( equals(vertex.getCoords(), Vector2D(1.0, 1.0)) ) {
+    else if ( math::equals(vertex.getCoords(), Eigen::Vector2d(1.0, 1.0)) ) {
       validateEquals ( geometryIDs.size(), 2 );
       validate ( utils::contained(id, geometryIDs) );
       validate ( utils::contained(idSide1, geometryIDs) );
@@ -164,19 +164,19 @@ void CuboidTest:: testSubIDs2D ()
   for (mesh::Edge& edge : mesh.edges()) {
     std::vector<int> geometryIDs;
     edge.getProperties ( edge.INDEX_GEOMETRY_ID, geometryIDs );
-    if ( equals(edge.getCenter(), Vector2D(0.5, 0.0)) ) {
+    if ( math::equals(edge.getCenter(), Eigen::Vector2d(0.5, 0.0)) ) {
       validateEquals ( geometryIDs.size(), 2 );
       validate ( utils::contained(idSide2, geometryIDs) );
     }
-    else if ( equals(edge.getCenter(), Vector2D(0.0, 0.5)) ) {
+    else if ( math::equals(edge.getCenter(), Eigen::Vector2d(0.0, 0.5)) ) {
       validateEquals ( geometryIDs.size(), 1 );
       validate ( utils::contained(id, geometryIDs) );
     }
-    else if ( equals(edge.getCenter(), Vector2D(1.0, 0.5)) ) {
+    else if ( math::equals(edge.getCenter(), Eigen::Vector2d(1.0, 0.5)) ) {
       validateEquals ( geometryIDs.size(), 2 );
       validate ( utils::contained(idSide1, geometryIDs) );
     }
-    else if ( equals(edge.getCenter(), Vector2D(0.5, 1.0)) ) {
+    else if ( math::equals(edge.getCenter(), Eigen::Vector2d(0.5, 1.0)) ) {
       validateEquals ( geometryIDs.size(), 1 );
       validate ( utils::contained(id, geometryIDs) );
     }
@@ -217,45 +217,45 @@ void CuboidTest:: testSubIDs3D ()
   for (mesh::Vertex& vertex : mesh.vertices()) {
     std::vector<int> geometryIDs;
     vertex.getProperties ( vertex.INDEX_GEOMETRY_ID, geometryIDs );
-    if ( equals(vertex.getCoords(), Vector3D(0.0, 0.0, 0.0)) ) {
+    if ( math::equals(vertex.getCoords(), Eigen::Vector3d(0.0, 0.0, 0.0)) ) {
       validateEquals ( geometryIDs.size(), 2 );
       validate ( contained(baseID, geometryIDs) );
       validate ( contained(idSide2, geometryIDs) );
     }
-    else if ( equals(vertex.getCoords(),Vector3D(0.0, 0.0, 1.0)) ) {
+    else if ( math::equals(vertex.getCoords(),Eigen::Vector3d(0.0, 0.0, 1.0)) ) {
       validateEquals ( geometryIDs.size(), 3 );
       validate ( contained(baseID, geometryIDs) );
       validate ( contained(idSide2, geometryIDs) );
       validate ( contained(idSide5, geometryIDs) );
     }
-    else if ( equals(vertex.getCoords(),Vector3D(0.0, 1.0, 0.0)) ) {
+    else if ( math::equals(vertex.getCoords(),Eigen::Vector3d(0.0, 1.0, 0.0)) ) {
       validateEquals ( geometryIDs.size(), 1 );
       validate ( contained(baseID, geometryIDs) );
     }
-    else if ( equals(vertex.getCoords(),Vector3D(0.0, 1.0, 1.0)) ) {
+    else if ( math::equals(vertex.getCoords(),Eigen::Vector3d(0.0, 1.0, 1.0)) ) {
       validateEquals ( geometryIDs.size(), 2 );
       validate ( contained(baseID, geometryIDs) );
       validate ( contained(idSide5, geometryIDs) );
     }
-    else if ( equals(vertex.getCoords(),Vector3D(1.0, 0.0, 0.0)) ) {
+    else if ( math::equals(vertex.getCoords(),Eigen::Vector3d(1.0, 0.0, 0.0)) ) {
       validateEquals ( geometryIDs.size(), 3 );
       validate ( contained(baseID, geometryIDs) );
       validate ( contained(idSide1, geometryIDs) );
       validate ( contained(idSide2, geometryIDs) );
     }
-    else if ( equals(vertex.getCoords(),Vector3D(1.0, 0.0, 1.0)) ) {
+    else if ( math::equals(vertex.getCoords(),Eigen::Vector3d(1.0, 0.0, 1.0)) ) {
       validateEquals ( geometryIDs.size(), 4 );
       validate ( contained(baseID, geometryIDs) );
       validate ( contained(idSide1, geometryIDs) );
       validate ( contained(idSide2, geometryIDs) );
       validate ( contained(idSide5, geometryIDs) );
     }
-    else if ( equals(vertex.getCoords(),Vector3D(1.0, 1.0, 0.0)) ) {
+    else if ( math::equals(vertex.getCoords(),Eigen::Vector3d(1.0, 1.0, 0.0)) ) {
       validateEquals ( geometryIDs.size(), 2 );
       validate ( contained(baseID, geometryIDs) );
       validate ( contained(idSide1, geometryIDs) );
     }
-    else if ( equals(vertex.getCoords(),Vector3D(1.0, 1.0, 1.0)) ) {
+    else if ( math::equals(vertex.getCoords(),Eigen::Vector3d(1.0, 1.0, 1.0)) ) {
       validateEquals ( geometryIDs.size(), 3 );
       validate ( contained(baseID, geometryIDs) );
       validate ( contained(idSide1, geometryIDs) );
@@ -270,89 +270,89 @@ void CuboidTest:: testSubIDs3D ()
     for (mesh::Edge & edge : mesh.edges()) {
       std::vector<int> geometryIDs;
       edge.getProperties ( edge.INDEX_GEOMETRY_ID, geometryIDs );
-      if ( equals(edge.getCenter(),Vector3D(0.5, 0.0, 0.0)) ) {
+      if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.5, 0.0, 0.0)) ) {
         validateEquals ( geometryIDs.size(), 2 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide2, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.0, 0.5, 0.0)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.0, 0.5, 0.0)) ) {
         validateEquals ( geometryIDs.size(), 1 );
         validate ( contained(baseID, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.0, 0.0, 0.5)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.0, 0.0, 0.5)) ) {
         validateEquals ( geometryIDs.size(), 2 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide2, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.0, 0.5, 0.5)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.0, 0.5, 0.5)) ) {
         validateEquals ( geometryIDs.size(), 1 );
         validate ( contained(baseID, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.5, 0.5, 0.0)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.5, 0.5, 0.0)) ) {
         validateEquals ( geometryIDs.size(), 1 );
         validate ( contained(baseID, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.5, 0.0, 0.5)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.5, 0.0, 0.5)) ) {
         validateEquals ( geometryIDs.size(), 2 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide2, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.5, 1.0, 0.0)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.5, 1.0, 0.0)) ) {
         validateEquals ( geometryIDs.size(), 1 );
         validate ( contained(baseID, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.5, 1.0, 1.0)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.5, 1.0, 1.0)) ) {
         validateEquals ( geometryIDs.size(), 2 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide5, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.5, 1.0, 0.5)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.5, 1.0, 0.5)) ) {
         validateEquals ( geometryIDs.size(), 1 );
         validate ( contained(baseID, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.0, 1.0, 0.5)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.0, 1.0, 0.5)) ) {
         validateEquals ( geometryIDs.size(), 1 );
         validate ( contained(baseID, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.0, 0.5, 1.0)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.0, 0.5, 1.0)) ) {
         validateEquals ( geometryIDs.size(), 2 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide5, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.5, 0.0, 1.0)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.5, 0.0, 1.0)) ) {
         validateEquals ( geometryIDs.size(), 3 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide2, geometryIDs) );
         validate ( contained(idSide5, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(0.5, 0.5, 1.0)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(0.5, 0.5, 1.0)) ) {
         validateEquals ( geometryIDs.size(), 2 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide5, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(1.0, 0.0, 0.5)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(1.0, 0.0, 0.5)) ) {
         validateEquals ( geometryIDs.size(), 3 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide2, geometryIDs) );
         validate ( contained(idSide1, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(1.0, 0.5, 0.0)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(1.0, 0.5, 0.0)) ) {
         validateEquals ( geometryIDs.size(), 2 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide1, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(1.0, 1.0, 0.5)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(1.0, 1.0, 0.5)) ) {
         validateEquals ( geometryIDs.size(), 2 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide1, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(1.0, 0.5, 1.0)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(1.0, 0.5, 1.0)) ) {
         validateEquals ( geometryIDs.size(), 3 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide1, geometryIDs) );
         validate ( contained(idSide5, geometryIDs) );
       }
-      else if ( equals(edge.getCenter(),Vector3D(1.0, 0.5, 0.5)) ) {
+      else if ( math::equals(edge.getCenter(),Eigen::Vector3d(1.0, 0.5, 0.5)) ) {
         validateEquals ( geometryIDs.size(), 2 );
         validate ( contained(baseID, geometryIDs) );
         validate ( contained(idSide1, geometryIDs) );
@@ -367,7 +367,7 @@ void CuboidTest:: testSubIDs3D ()
     for (mesh::Triangle & triangle : mesh.triangles()) {
       std::vector<int> geometryIDs;
       triangle.getProperties ( triangle.INDEX_GEOMETRY_ID, geometryIDs );
-      if ( tarch::la::equals(triangle.getCenter()(0), 0.0) ) {
+      if ( tarch::la::equals(triangle.getCenter()[0], 0.0) ) {
         validateEquals ( geometryIDs.size(), 1 );
         validate ( contained(baseID, geometryIDs) );
       }

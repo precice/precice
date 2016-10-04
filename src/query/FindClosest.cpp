@@ -59,7 +59,7 @@ bool FindClosest:: determineClosest()
   if ( closestType == 0 ) { // Vertex
     mesh::Vertex& vertex = _findClosestVertex.getClosestVertex ();
     vertex.getProperties ( vertex.INDEX_GEOMETRY_ID, _closest.meshIDs );
-    _closest.vectorToElement = vertex.getCoords() - _searchpoint;
+    _closest.vectorToElement = static_cast<utils::DynVector>(vertex.getCoords()) - _searchpoint;
     normal = vertex.getNormal();
     InterpolationElement element;
     element.element = & vertex;

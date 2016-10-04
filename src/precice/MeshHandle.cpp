@@ -97,7 +97,7 @@ const double* VertexIterator:: vertexCoords()
 //    _impl->coords[dim] = (*_impl->iterator).getCoords()[dim];
 //  }
 //  return _impl->coords;
-  return tarch::la::raw((*_impl->iterator).getCoords());
+  return (*_impl->iterator).getCoords().data();
 }
 
 int VertexIterator:: vertexID()

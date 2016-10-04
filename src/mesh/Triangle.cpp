@@ -104,12 +104,12 @@ void Triangle:: setEnclosingRadius
   _enclosingRadius = radius;
 }
 
-const utils::DynVector& Triangle:: getNormal() const
+const Eigen::VectorXd& Triangle:: getNormal() const
 {
   return _normal;
 }
 
-const utils::DynVector& Triangle:: getCenter() const
+const Eigen::VectorXd& Triangle:: getCenter() const
 {
   return _center;
 }

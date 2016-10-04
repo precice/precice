@@ -33,9 +33,9 @@ void PythonActionTest:: testAllMethods()
 {
   preciceTrace("testAllMethods()");
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
-  mesh->createVertex(utils::Vector3D(1.0));
-  mesh->createVertex(utils::Vector3D(2.0));
-  mesh->createVertex(utils::Vector3D(3.0));
+  mesh->createVertex(Eigen::Vector3d::Constant(1.0));
+  mesh->createVertex(Eigen::Vector3d::Constant(2.0));
+  mesh->createVertex(Eigen::Vector3d::Constant(3.0));
   int targetID = mesh->createData("TargetData",1)->getID();
   int sourceID = mesh->createData("SourceData",1)->getID();
   mesh->allocateDataValues();
@@ -72,7 +72,7 @@ void PythonActionTest:: testOmitMethods()
   {
     DEBUG("Test 2");
     mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
-    mesh->createVertex(utils::Vector3D(0.0));
+    mesh->createVertex(Eigen::Vector3d::Zero());
     mesh::PtrData data = mesh->createData("TargetData", 1);
     mesh->allocateDataValues();
     PythonAction action(PythonAction::ALWAYS_PRIOR, path, "TestOmitAction2",
@@ -82,7 +82,7 @@ void PythonActionTest:: testOmitMethods()
   {
     DEBUG("Test 3");
     mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
-    mesh->createVertex(utils::Vector3D(0.0));
+    mesh->createVertex(Eigen::Vector3d::Zero());
     mesh::PtrData data = mesh->createData("SourceData", 1);
     mesh->allocateDataValues();
     PythonAction action(PythonAction::ALWAYS_PRIOR, path, "TestOmitAction3",

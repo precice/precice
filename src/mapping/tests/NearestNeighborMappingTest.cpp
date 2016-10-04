@@ -42,8 +42,8 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
   PtrData inDataVector = inMesh->createData("InDataVector", 2);
   int inDataScalarID = inDataScalar->getID();
   int inDataVectorID = inDataVector->getID();
-  Vertex& inVertex0 = inMesh->createVertex(Vector2D(0.0));
-  Vertex& inVertex1 = inMesh->createVertex(Vector2D(1.0));
+  Vertex& inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex& inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
   inMesh->allocateDataValues();
   Eigen::VectorXd& inValuesScalar = inDataScalar->values();
   Eigen::VectorXd& inValuesVector = inDataVector->values();
@@ -56,8 +56,8 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
   PtrData outDataVector = outMesh->createData("OutDataVector", 2);
   int outDataScalarID = outDataScalar->getID();
   int outDataVectorID = outDataVector->getID();
-  Vertex& outVertex0 = outMesh->createVertex(Vector2D(0.0));
-  Vertex& outVertex1 = outMesh->createVertex(Vector2D(1.0));
+  Vertex& outVertex0 = outMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex& outVertex1 = outMesh->createVertex(Eigen::Vector2d::Constant(1.0));
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
@@ -78,8 +78,8 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
                             inValuesVector, outValuesVector);
 
   // Map data with almost coinciding vertices, has to result in equal values.
-  inVertex0.setCoords(outVertex0.getCoords() + Vector2D(0.1));
-  inVertex1.setCoords(outVertex1.getCoords() + Vector2D(0.1));
+  inVertex0.setCoords(outVertex0.getCoords() + Eigen::Vector2d::Constant(0.1));
+  inVertex1.setCoords(outVertex1.getCoords() + Eigen::Vector2d::Constant(0.1));
   mapping.computeMapping();
   mapping.map(inDataScalarID, outDataScalarID);
   validateEquals(mapping.hasComputedMapping(), true);
@@ -120,16 +120,14 @@ void NearestNeighborMappingTest:: testConservativeNonIncremental()
 {
   preciceTrace("testConservativeNonIncremental()");
   using namespace mesh;
-  using namespace tarch::la;
-  using utils::Vector2D;
   int dimensions = 2;
 
   // Create mesh to map from
   PtrMesh inMesh(new Mesh("InMesh", dimensions, false));
   PtrData inData = inMesh->createData("InData", 1);
   int inDataID = inData->getID();
-  Vertex& inVertex0 = inMesh->createVertex(Vector2D(0.0));
-  Vertex& inVertex1 = inMesh->createVertex(Vector2D(1.0));
+  Vertex& inVertex0 = inMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex& inVertex1 = inMesh->createVertex(Eigen::Vector2d::Constant(1.0));
   inMesh->allocateDataValues();
   Eigen::VectorXd& inValues = inData->values();
   inValues(0) = 1.0;
@@ -139,8 +137,8 @@ void NearestNeighborMappingTest:: testConservativeNonIncremental()
   PtrMesh outMesh(new Mesh("OutMesh", dimensions, false));
   PtrData outData = outMesh->createData("OutData", 1);
   int outDataID = outData->getID();
-  Vertex& outVertex0 = outMesh->createVertex(Vector2D(0.0));
-  Vertex& outVertex1 = outMesh->createVertex(Vector2D(1.0));
+  Vertex& outVertex0 = outMesh->createVertex(Eigen::Vector2d::Constant(0.0));
+  Vertex& outVertex1 = outMesh->createVertex(Eigen::Vector2d::Constant(1.0));
   outMesh->allocateDataValues();
 
   // Setup mapping with mapping coordinates and geometry used
@@ -159,8 +157,8 @@ void NearestNeighborMappingTest:: testConservativeNonIncremental()
   outValues = Eigen::VectorXd::Constant(outValues.size(), 0.0);
 
   // Map data with almost coinciding vertices, has to result in equal values.
-  inVertex0.setCoords(outVertex0.getCoords() + Vector2D(0.1));
-  inVertex1.setCoords(outVertex1.getCoords() + Vector2D(0.1));
+  inVertex0.setCoords(outVertex0.getCoords() + Eigen::Vector2d::Constant(0.1));
+  inVertex1.setCoords(outVertex1.getCoords() + Eigen::Vector2d::Constant(0.1));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   validateEquals(mapping.hasComputedMapping(), true);
@@ -181,7 +179,7 @@ void NearestNeighborMappingTest:: testConservativeNonIncremental()
   outValues = Eigen::VectorXd::Constant(outValues.size(), 0.0);
 
   // Map data with coinciding output vertices, has to result in double values.
-  outVertex1.setCoords(Vector2D(-1.0));
+  outVertex1.setCoords(Eigen::Vector2d::Constant(-1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   validateEquals(mapping.hasComputedMapping(), true);

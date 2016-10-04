@@ -26,12 +26,11 @@ void GroupTest:: run()
 {
   PRECICE_MASTER_ONLY {
     preciceTrace("run()");
-    using utils::Vector3D;
     Group group;
-    Vertex vertex0(Vector3D(0.0), 0);
-    Vertex vertex1(Vector3D(1.0), 1);
-    Vertex vertex2(Vector3D(2.0), 2);
-    Vertex vertex3(Vector3D(3.0), 3);
+    Vertex vertex0(Eigen::Vector3d::Constant(0.0), 0);
+    Vertex vertex1(Eigen::Vector3d::Constant(1.0), 1);
+    Vertex vertex2(Eigen::Vector3d::Constant(2.0), 2);
+    Vertex vertex3(Eigen::Vector3d::Constant(3.0), 3);
     group.add(vertex0);
     group.add(vertex1);
     group.add(vertex2);
@@ -39,10 +38,10 @@ void GroupTest:: run()
 
     validateEquals(group.size(), 4);
 
-    Vector3D coords(0.0);
+    Eigen::Vector3d coords = Eigen::Vector3d::Zero();
     for (Vertex& v : group.vertices()){
-      validate(tarch::la::equals(v.getCoords(), coords));
-      coords += Vector3D(1.0);
+      validate(v.getCoords() == coords);
+      coords += Eigen::Vector3d::Constant(1.0);
     }
 
     Edge edge0(vertex0, vertex1, 0);
@@ -56,10 +55,10 @@ void GroupTest:: run()
 
     validateEquals(group.size(), 8);
 
-    coords = Vector3D(0.0);
+    coords = Eigen::Vector3d::Constant(0.0);
     for (Edge& e : group.edges()){
-      validate(tarch::la::equals(e.vertex(0).getCoords(), coords));
-      coords += Vector3D(1.0);
+      validate( e.vertex(0).getCoords() == coords);
+      coords += Eigen::Vector3d::Constant(1.0);
     }
 
     Triangle triangle0(edge0, edge1, edge2, 0);

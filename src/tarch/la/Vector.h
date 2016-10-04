@@ -8,6 +8,7 @@
 #include "tarch/la/VectorOperations.h"
 #include "tarch/la/VectorScalarOperations.h"
 #include "tarch/la/VectorVectorOperations.h"
+#include <Eigen/Dense>
 
 namespace tarch {
 namespace la {
@@ -37,6 +38,10 @@ public:
     Vector<Size,Scalar>&
   >::type operator= (const VECTOR& toAssign);
 
+  Vector<Size,Scalar> operator= (const Eigen::Matrix<Scalar, Size, 1>& eigenVec);
+
+  Vector<Size,Scalar> operator= (const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& eigenVec);
+  
   /**
    * Assignment operator for list of comma separated scalar values, that has to
    * match the number of components of the vector. Otherwise a runtime assertion
@@ -85,6 +90,10 @@ public:
           const Scalar& initialValue1,
           const Scalar& initialValue2,
           const Scalar& initialValue3);
+
+  Vector (const Eigen::Matrix<Scalar, Size, 1>& eigenVec);
+
+  Vector (const Eigen::Matrix<Scalar, Eigen::Dynamic, 1>& eigenVec);
 
   /**
    * Returns the number of components of the vector.

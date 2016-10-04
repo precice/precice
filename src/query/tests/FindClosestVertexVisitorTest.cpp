@@ -3,7 +3,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Parallel.hpp"
-
+#include "math/math.hpp"
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::query::tests::FindClosestVertexVisitorTest)
 
@@ -25,13 +25,13 @@ void FindClosestVertexVisitorTest:: run ()
     preciceTrace ( "run()" );
     using utils::Vector2D;
     mesh::Mesh mesh ( "Mesh", 2, false );
-    mesh.createVertex ( Vector2D(0.0, 0.0) );
-    mesh.createVertex ( Vector2D(0.0, 5.0) );
+    mesh.createVertex ( Eigen::Vector2d(0.0, 0.0) );
+    mesh.createVertex ( Eigen::Vector2d(0.0, 5.0) );
     FindClosestVertex find ( Vector2D(1.0, 0.0) );
     bool found = find ( mesh );
     validate ( found );
     mesh::Vertex& closestVertex = find.getClosestVertex();
-    validate ( tarch::la::equals(closestVertex.getCoords(), Vector2D(0.0,0.0)) );
+    validate ( math::equals(closestVertex.getCoords(), Eigen::Vector2d(0.0,0.0)) );
     double distance = find.getEuclidianDistance ();
     validateEquals (distance, 1.0);
   }

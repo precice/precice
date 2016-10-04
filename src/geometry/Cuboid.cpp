@@ -34,15 +34,13 @@ void Cuboid:: specializedCreate
   if ( dimensions == 2 ){
     using utils::Vector2D;
     // Create corners
-    boost::array<Vector2D,4> cornerCoords;
+    boost::array<Eigen::Vector2d, 4> cornerCoords;
     boost::array<mesh::Vertex*,4> cornerVertices;
-    Vector2D halfSidelengths ( _sidelengths );
+    Eigen::Vector2d halfSidelengths ( _sidelengths );
     halfSidelengths *= 0.5;
     for ( int i=0; i < 4; i++ ) {
-      Vector2D result;
-      Vector2D delinearized = utils::delinearize(i, 2);
-      multiplyComponents(delinearized, halfSidelengths, result);
-      cornerCoords[i] = result + halfSidelengths;
+      Eigen::Vector2d delinearized(utils::delinearize(i, 2)[0], utils::delinearize(i, 2)[1]);
+      cornerCoords[i] = delinearized.cwiseProduct(halfSidelengths) + halfSidelengths;
       cornerVertices[i] = &seed.createVertex ( cornerCoords[i] );
     }
 
@@ -73,8 +71,8 @@ void Cuboid:: specializedCreate
     }
     for ( int i=1; i < vertexCount[0]; i++ ) {
       mesh::Vertex* newVertex = & seed.createVertex (
-        Vector2D(cornerCoords[0](0) + ((double)i / (double)vertexCount[0]) * _sidelengths[0],
-                 cornerCoords[0](1)) );
+        Eigen::Vector2d(cornerCoords[0](0) + ((double)i / (double)vertexCount[0]) * _sidelengths[0],
+                        cornerCoords[0](1)) );
       mesh::Edge& edge = seed.createEdge ( *oldVertex, *newVertex );
       if ( hasIDSide2 ) {
         edge.addParent ( *parent );
@@ -98,8 +96,8 @@ void Cuboid:: specializedCreate
     }
     for ( int i=1; i < vertexCount[0]; i++ ) {
       mesh::Vertex* newVertex = & seed.createVertex (
-        Vector2D(cornerCoords[3](0) - ((double)i / (double)vertexCount[0]) * _sidelengths[0],
-                 cornerCoords[3](1)) );
+        Eigen::Vector2d(cornerCoords[3](0) - ((double)i / (double)vertexCount[0]) * _sidelengths[0],
+                      cornerCoords[3](1)) );
       mesh::Edge& edge = seed.createEdge (*oldVertex, *newVertex);
       if ( hasIDSide3 ) {
         edge.addParent ( *parent );
@@ -123,8 +121,8 @@ void Cuboid:: specializedCreate
     }
     for ( int i=1; i < vertexCount[1]; i++ ) {
       mesh::Vertex* newVertex = & seed.createVertex (
-        Vector2D(cornerCoords[2](0),
-                 cornerCoords[2](1) - ((double)i / (double)vertexCount[1]) * _sidelengths[1]) );
+        Eigen::Vector2d(cornerCoords[2](0),
+                        cornerCoords[2](1) - ((double)i / (double)vertexCount[1]) * _sidelengths[1]) );
       mesh::Edge& edge = seed.createEdge ( *oldVertex, *newVertex );
       if ( hasIDSide0 ) {
         edge.addParent ( *parent );
@@ -148,8 +146,8 @@ void Cuboid:: specializedCreate
     }
     for ( int i=1; i < vertexCount[1]; i++ ) {
       mesh::Vertex * newVertex = & seed.createVertex (
-        Vector2D(cornerCoords[1](0),
-                 cornerCoords[1](1) + ((double)i / (double)vertexCount[1]) * _sidelengths[1]) );
+        Eigen::Vector2d(cornerCoords[1](0),
+                        cornerCoords[1](1) + ((double)i / (double)vertexCount[1]) * _sidelengths[1]) );
       mesh::Edge& edge = seed.createEdge ( *oldVertex, *newVertex );
       if ( hasIDSide1 ) {
         edge.addParent ( *parent );
@@ -167,15 +165,15 @@ void Cuboid:: specializedCreate
     assertion ( dimensions == 3, dimensions );
     using utils::Vector3D;
     // Create corners
-    boost::array<Vector3D,8> cornerCoords;
+    boost::array<Eigen::Vector3d,8> cornerCoords;
     boost::array<mesh::Vertex*,8> cornerVertices;
-    Vector3D halfSidelengths ( _sidelengths );
+    Eigen::Vector3d halfSidelengths ( _sidelengths );
     halfSidelengths *= 0.5;
     for ( int i=0; i < 8; i++ ){
-      Vector3D result;
-      Vector3D delinearized = utils::delinearize(i, 3);
-      multiplyComponents(delinearized, halfSidelengths, result);
-      cornerCoords[i] = result + halfSidelengths;
+      Eigen::Vector3d delinearized(utils::delinearize(i, 3)[0],
+                                   utils::delinearize(i, 3)[1],
+                                   utils::delinearize(i, 3)[2]);
+      cornerCoords[i] = delinearized.cwiseProduct(halfSidelengths) + halfSidelengths;
       cornerVertices[i] = &seed.createVertex ( cornerCoords[i] );
     }
 

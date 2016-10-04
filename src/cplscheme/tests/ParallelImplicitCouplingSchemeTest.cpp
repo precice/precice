@@ -25,10 +25,9 @@
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "utils/Dimensions.hpp"
-#include "tarch/la/Vector.h"
-#include "tarch/la/WrappedVector.h"
 #include "Eigen/Core"
 #include "utils/EigenHelperFunctions.hpp"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::cplscheme::tests::ParallelImplicitCouplingSchemeTest)
@@ -120,7 +119,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
   mesh->createData("Data0", 1);
   mesh->createData("Data1", 3);
-  mesh->createVertex(Vector3D(0.0));
+  mesh->createVertex(Eigen::Vector3d::Zero());
   mesh->allocateDataValues();
   meshConfig.addMesh(mesh);
 
@@ -180,7 +179,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
     auto& values = mesh->data(1)->values();
-    validateWithParams1(tarch::la::equals(utils::DynVector(values), Vector3D(1.0, 2.0, 3.0)), utils::DynVector(values));
+    validateWithParams1(math::equals(utils::DynVector(values), Eigen::Vector3d(1.0, 2.0, 3.0)), utils::DynVector(values));
 
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
@@ -200,10 +199,10 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
     Eigen::VectorXd v(3); v << 1.0, 2.0, 3.0;
     mesh->data(1)->values() = v;
     cplScheme.performedAction(constants::actionWriteInitialData());
-    validateWithParams1(tarch::la::equals(values(0), 0.0), utils::DynVector(values));
+    validateWithParams1(math::equals(values(0), 0.0), utils::DynVector(values));
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    validateWithParams1(tarch::la::equals(values(0), 4.0), utils::DynVector(values));
+    validateWithParams1(math::equals(values(0), 4.0), utils::DynVector(values));
 
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){

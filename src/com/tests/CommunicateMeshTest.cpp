@@ -77,9 +77,9 @@ void CommunicateMeshTest:: testTwoSolvers ()
         comMesh.sendMesh ( mesh, 0 );
         validateEquals ( mesh.vertices().size(), 3 );
         validateEquals ( mesh.edges().size(), 3 );
-        validate ( equals(mesh.vertices()[0].getCoords(), DynVector(dim,0.0)) );
-        validate ( equals(mesh.vertices()[1].getCoords(), DynVector(dim,1.0)) );
-        validate ( equals(mesh.vertices()[2].getCoords(), DynVector(dim,2.0)) );
+        validate ( math::equals(mesh.vertices()[0].getCoords(), DynVector(dim,0.0)) );
+        validate ( math::equals(mesh.vertices()[1].getCoords(), DynVector(dim,1.0)) );
+        validate ( math::equals(mesh.vertices()[2].getCoords(), DynVector(dim,2.0)) );
       }
       else if ( utils::Parallel::getProcessRank() == 1 ) {
         mesh.createVertex ( DynVector(dim,9.0) ); // new version receiveMesh can also deal with delta meshes
@@ -88,20 +88,20 @@ void CommunicateMeshTest:: testTwoSolvers ()
         comMesh.receiveMesh ( mesh, 0 );
         validateEquals ( mesh.vertices().size(), 4 );
         validateEquals ( mesh.edges().size(), 3 );
-        validate ( equals(mesh.vertices()[0].getCoords(), DynVector(dim,9.0)) );
-        validate ( equals(mesh.vertices()[1].getCoords(), DynVector(dim,0.0)) );
-        validate ( equals(mesh.vertices()[2].getCoords(), DynVector(dim,1.0)) );
-        validate ( equals(mesh.vertices()[3].getCoords(), DynVector(dim,2.0)) );
+        validate ( math::equals(mesh.vertices()[0].getCoords(), DynVector(dim,9.0)) );
+        validate ( math::equals(mesh.vertices()[1].getCoords(), DynVector(dim,0.0)) );
+        validate ( math::equals(mesh.vertices()[2].getCoords(), DynVector(dim,1.0)) );
+        validate ( math::equals(mesh.vertices()[3].getCoords(), DynVector(dim,2.0)) );
 
       }
       com->closeConnection ();
 
-      validate ( equals(mesh.edges()[0].vertex(0).getCoords(), DynVector(dim,0.0)) );
-      validate ( equals(mesh.edges()[0].vertex(1).getCoords(), DynVector(dim,1.0)) );
-      validate ( equals(mesh.edges()[1].vertex(0).getCoords(), DynVector(dim,1.0)) );
-      validate ( equals(mesh.edges()[1].vertex(1).getCoords(), DynVector(dim,2.0)) );
-      validate ( equals(mesh.edges()[2].vertex(0).getCoords(), DynVector(dim,2.0)) );
-      validate ( equals(mesh.edges()[2].vertex(1).getCoords(), DynVector(dim,0.0)) );
+      validate ( math::equals(mesh.edges()[0].vertex(0).getCoords(), DynVector(dim,0.0)) );
+      validate ( math::equals(mesh.edges()[0].vertex(1).getCoords(), DynVector(dim,1.0)) );
+      validate ( math::equals(mesh.edges()[1].vertex(0).getCoords(), DynVector(dim,1.0)) );
+      validate ( math::equals(mesh.edges()[1].vertex(1).getCoords(), DynVector(dim,2.0)) );
+      validate ( math::equals(mesh.edges()[2].vertex(0).getCoords(), DynVector(dim,2.0)) );
+      validate ( math::equals(mesh.edges()[2].vertex(1).getCoords(), DynVector(dim,0.0)) );
       utils::Parallel::clearGroups();
       utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
     }

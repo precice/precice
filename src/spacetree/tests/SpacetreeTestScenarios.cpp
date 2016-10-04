@@ -36,15 +36,15 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Create mesh
     bool flipNormals = false;
     mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
-    mesh::Vertex& v0 = mesh->createVertex(Vector2D(0.0, 0.0));
-    mesh::Vertex& v00 = mesh->createVertex(Vector2D(0.3, 0.0));
-    mesh::Vertex& v01 = mesh->createVertex(Vector2D(0.7, 0.0));
-    mesh::Vertex& v1 = mesh->createVertex(Vector2D(1.0, 0.0));
-    mesh::Vertex& v2 = mesh->createVertex(Vector2D(1.0, 1.0));
-    mesh::Vertex& v3 = mesh->createVertex(Vector2D(0.0, 1.0));
-    mesh::Vertex& v30 = mesh->createVertex(Vector2D(0.0, 0.85));
-    mesh::Vertex& v31 = mesh->createVertex(Vector2D(0.0, 0.7));
-    mesh::Vertex& v32 = mesh->createVertex(Vector2D(0.0, 0.3));
+    mesh::Vertex& v0 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+    mesh::Vertex& v00 = mesh->createVertex(Eigen::Vector2d(0.3, 0.0));
+    mesh::Vertex& v01 = mesh->createVertex(Eigen::Vector2d(0.7, 0.0));
+    mesh::Vertex& v1 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+    mesh::Vertex& v2 = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
+    mesh::Vertex& v3 = mesh->createVertex(Eigen::Vector2d(0.0, 1.0));
+    mesh::Vertex& v30 = mesh->createVertex(Eigen::Vector2d(0.0, 0.85));
+    mesh::Vertex& v31 = mesh->createVertex(Eigen::Vector2d(0.0, 0.7));
+    mesh::Vertex& v32 = mesh->createVertex(Eigen::Vector2d(0.0, 0.3));
     mesh->createEdge(v0, v00);
     mesh->createEdge(v00, v01);
     mesh->createEdge(v01, v1);
@@ -409,14 +409,14 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Create mesh
     bool flipNormals = false;
     mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
-    mesh::Vertex& v000 = mesh->createVertex ( Vector3D(0.0, 0.0, 0.0) );
-    mesh::Vertex& v001 = mesh->createVertex ( Vector3D(0.0, 0.0, 1.0) );
-    mesh::Vertex& v010 = mesh->createVertex ( Vector3D(0.0, 1.0, 0.0) );
-    mesh::Vertex& v011 = mesh->createVertex ( Vector3D(0.0, 1.0, 1.0) );
-    mesh::Vertex& v100 = mesh->createVertex ( Vector3D(1.0, 0.0, 0.0) );
-    mesh::Vertex& v101 = mesh->createVertex ( Vector3D(1.0, 0.0, 1.0) );
-    mesh::Vertex& v110 = mesh->createVertex ( Vector3D(1.0, 1.0, 0.0) );
-    mesh::Vertex& v111 = mesh->createVertex ( Vector3D(1.0, 1.0, 1.0) );
+    mesh::Vertex& v000 = mesh->createVertex ( Eigen::Vector3d(0.0, 0.0, 0.0) );
+    mesh::Vertex& v001 = mesh->createVertex ( Eigen::Vector3d(0.0, 0.0, 1.0) );
+    mesh::Vertex& v010 = mesh->createVertex ( Eigen::Vector3d(0.0, 1.0, 0.0) );
+    mesh::Vertex& v011 = mesh->createVertex ( Eigen::Vector3d(0.0, 1.0, 1.0) );
+    mesh::Vertex& v100 = mesh->createVertex ( Eigen::Vector3d(1.0, 0.0, 0.0) );
+    mesh::Vertex& v101 = mesh->createVertex ( Eigen::Vector3d(1.0, 0.0, 1.0) );
+    mesh::Vertex& v110 = mesh->createVertex ( Eigen::Vector3d(1.0, 1.0, 0.0) );
+    mesh::Vertex& v111 = mesh->createVertex ( Eigen::Vector3d(1.0, 1.0, 1.0) );
 
     mesh::Edge& e000to100 = mesh->createEdge ( v000, v100 );
     mesh::Edge& e010to110 = mesh->createEdge ( v010, v110 );
@@ -973,15 +973,15 @@ void SpacetreeTestScenarios:: testSearchDistance()
     // Create mesh
     bool flipNormals = false;
     mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
-    mesh::Vertex& v0 = mesh->createVertex ( Vector2D(0.0, 0.0) );
-    mesh::Vertex& v00 = mesh->createVertex ( Vector2D(0.3, 0.0) );
-    mesh::Vertex& v01 = mesh->createVertex ( Vector2D(0.7, 0.0) );
-    mesh::Vertex& v1 = mesh->createVertex ( Vector2D(1.0, 0.0) );
-    mesh::Vertex& v2 = mesh->createVertex ( Vector2D(1.0, 1.0) );
-    mesh::Vertex& v3 = mesh->createVertex ( Vector2D(0.0, 1.0) );
-    mesh::Vertex& v30 = mesh->createVertex ( Vector2D(0.0, 0.85) );
-    mesh::Vertex& v31 = mesh->createVertex ( Vector2D(0.0, 0.7) );
-    mesh::Vertex& v32 = mesh->createVertex ( Vector2D(0.0, 0.3) );
+    mesh::Vertex& v0 = mesh->createVertex ( Eigen::Vector2d(0.0, 0.0) );
+    mesh::Vertex& v00 = mesh->createVertex ( Eigen::Vector2d(0.3, 0.0) );
+    mesh::Vertex& v01 = mesh->createVertex ( Eigen::Vector2d(0.7, 0.0) );
+    mesh::Vertex& v1 = mesh->createVertex ( Eigen::Vector2d(1.0, 0.0) );
+    mesh::Vertex& v2 = mesh->createVertex ( Eigen::Vector2d(1.0, 1.0) );
+    mesh::Vertex& v3 = mesh->createVertex ( Eigen::Vector2d(0.0, 1.0) );
+    mesh::Vertex& v30 = mesh->createVertex ( Eigen::Vector2d(0.0, 0.85) );
+    mesh::Vertex& v31 = mesh->createVertex ( Eigen::Vector2d(0.0, 0.7) );
+    mesh::Vertex& v32 = mesh->createVertex ( Eigen::Vector2d(0.0, 0.3) );
     mesh->createEdge ( v0, v00 );
     mesh->createEdge ( v00, v01 );
     mesh->createEdge ( v01, v1 );
@@ -1084,14 +1084,14 @@ void SpacetreeTestScenarios:: testSearchDistance()
     // Create mesh
     bool flipNormals = false;
     mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
-    mesh::Vertex& v000 = mesh->createVertex ( Vector3D(0.0, 0.0, 0.0) );
-    mesh::Vertex& v001 = mesh->createVertex ( Vector3D(0.0, 0.0, 1.0) );
-    mesh::Vertex& v010 = mesh->createVertex ( Vector3D(0.0, 1.0, 0.0) );
-    mesh::Vertex& v011 = mesh->createVertex ( Vector3D(0.0, 1.0, 1.0) );
-    mesh::Vertex& v100 = mesh->createVertex ( Vector3D(1.0, 0.0, 0.0) );
-    mesh::Vertex& v101 = mesh->createVertex ( Vector3D(1.0, 0.0, 1.0) );
-    mesh::Vertex& v110 = mesh->createVertex ( Vector3D(1.0, 1.0, 0.0) );
-    mesh::Vertex& v111 = mesh->createVertex ( Vector3D(1.0, 1.0, 1.0) );
+    mesh::Vertex& v000 = mesh->createVertex ( Eigen::Vector3d(0.0, 0.0, 0.0) );
+    mesh::Vertex& v001 = mesh->createVertex ( Eigen::Vector3d(0.0, 0.0, 1.0) );
+    mesh::Vertex& v010 = mesh->createVertex ( Eigen::Vector3d(0.0, 1.0, 0.0) );
+    mesh::Vertex& v011 = mesh->createVertex ( Eigen::Vector3d(0.0, 1.0, 1.0) );
+    mesh::Vertex& v100 = mesh->createVertex ( Eigen::Vector3d(1.0, 0.0, 0.0) );
+    mesh::Vertex& v101 = mesh->createVertex ( Eigen::Vector3d(1.0, 0.0, 1.0) );
+    mesh::Vertex& v110 = mesh->createVertex ( Eigen::Vector3d(1.0, 1.0, 0.0) );
+    mesh::Vertex& v111 = mesh->createVertex ( Eigen::Vector3d(1.0, 1.0, 1.0) );
 
     mesh::Edge& e000to100 = mesh->createEdge ( v000, v100 );
     mesh::Edge& e010to110 = mesh->createEdge ( v010, v110 );
@@ -1849,9 +1849,9 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   assertion ( testDim != secondDimension );
   bool flipNormals = false;
   mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
-  utils::Vector3D coords0(0.0);
-  utils::Vector3D coords1(0.0);
-  utils::Vector3D coords2(0.0);
+  Eigen::Vector3d coords0 = Eigen::Vector3d::Zero();
+  Eigen::Vector3d coords1 = Eigen::Vector3d::Zero();
+  Eigen::Vector3d coords2 = Eigen::Vector3d::Zero();
   mesh::Vertex& v0 = mesh->createVertex(coords0);
   mesh::Vertex& v1 = mesh->createVertex(coords1);
   mesh::Vertex& v2 = mesh->createVertex(coords2);

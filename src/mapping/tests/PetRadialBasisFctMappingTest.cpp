@@ -714,20 +714,19 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping(Mapping& mapp
 {
   preciceTrace ( "perform3DTestConsistentMapping()" );
   int dimensions = 3;
-  using utils::Vector3D;
-
+  
   // Create mesh to map from
   mesh::PtrMesh inMesh(new mesh::Mesh("InMesh", dimensions, false));
   mesh::PtrData inData = inMesh->createData("InData", 1);
   int inDataID = inData->getID();
-  inMesh->createVertex(Vector3D(0.0, 0.0, 0.0));
-  inMesh->createVertex(Vector3D(1.0, 0.0, 0.0));
-  inMesh->createVertex(Vector3D(0.0, 1.0, 0.0));
-  inMesh->createVertex(Vector3D(1.0, 1.0, 0.0));
-  inMesh->createVertex(Vector3D(0.0, 0.0, 1.0));
-  inMesh->createVertex(Vector3D(1.0, 0.0, 1.0));
-  inMesh->createVertex(Vector3D(0.0, 1.0, 1.0));
-  inMesh->createVertex(Vector3D(1.0, 1.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+  inMesh->createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
+  inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
   inMesh->allocateDataValues();
   addGlobalIndex(inMesh);
   
@@ -738,7 +737,7 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping(Mapping& mapp
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false));
   mesh::PtrData outData = outMesh->createData("OutData", 1);
   int outDataID = outData->getID();
-  mesh::Vertex& vertex = outMesh->createVertex(Vector3D(0.0));
+  mesh::Vertex& vertex = outMesh->createVertex(Eigen::Vector3d::Zero());
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
 
@@ -746,98 +745,98 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping(Mapping& mapp
   mapping.setMeshes(inMesh, outMesh);
   validateEquals(mapping.hasComputedMapping(), false);
 
-  vertex.setCoords(Vector3D(0.0, 0.0, 0.0));
+  vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   double value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 1.0, tolerance);
 
-  vertex.setCoords(Vector3D(0.0, 0.5, 0.0));
+  vertex.setCoords(Eigen::Vector3d(0.0, 0.5, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 1.0, tolerance);
 
-  vertex.setCoords(Vector3D(0.5, 0.5, 0.0));
+  vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEquals(value, 1.0);
 
-  vertex.setCoords(Vector3D(1.0, 0.0, 0.0));
+  vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 1.0, tolerance);
 
-  vertex.setCoords(Vector3D(1.0, 1.0, 0.0));
+  vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 0.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 1.0, tolerance);
 
-  vertex.setCoords(Vector3D(0.0, 0.0, 1.0));
+  vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 2.0, tolerance);
 
-  vertex.setCoords(Vector3D(1.0, 0.0, 1.0));
+  vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 2.0, tolerance);
 
-  vertex.setCoords(Vector3D(1.0, 1.0, 1.0));
+  vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 2.0, tolerance);
 
-  vertex.setCoords(Vector3D(0.5, 0.5, 1.0));
+  vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 1.0));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEquals(value, 2.0);
 
-  vertex.setCoords(Vector3D(0.0, 0.0, 0.5));
+  vertex.setCoords(Eigen::Vector3d(0.0, 0.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 1.5, tolerance);
 
-  vertex.setCoords(Vector3D(1.0, 0.0, 0.5));
+  vertex.setCoords(Eigen::Vector3d(1.0, 0.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 1.5, tolerance );
 
-  vertex.setCoords(Vector3D(0.0, 1.0, 0.5));
+  vertex.setCoords(Eigen::Vector3d(0.0, 1.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 1.5, tolerance);
 
-  vertex.setCoords(Vector3D(1.0, 1.0, 0.5));
+  vertex.setCoords(Eigen::Vector3d(1.0, 1.0, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];
   validateEquals(mapping.hasComputedMapping(), true);
   validateNumericalEqualsWithEps(value, 1.5, tolerance);
 
-  vertex.setCoords(Vector3D(0.5, 0.5, 0.5));
+  vertex.setCoords(Eigen::Vector3d(0.5, 0.5, 0.5));
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   value = outData->values()[0];

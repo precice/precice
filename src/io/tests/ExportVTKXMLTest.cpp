@@ -172,11 +172,11 @@ void ExportVTKXMLTest:: testExportQuadMesh()
   }
   else if(utils::Parallel::getProcessRank() == 1){
     // z=0 plane
-    Vertex& v0 = mesh.createVertex(utils::Vector3D(0.0, 0.0, 0.0));
-    Vertex& v1 = mesh.createVertex(utils::Vector3D(1.0, 0.0, 0.0));
+    Vertex& v0 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
+    Vertex& v1 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
     // z=1 plane
-    Vertex& v4 = mesh.createVertex(utils::Vector3D(0.0, 0.0, 1.0));
-    Vertex& v5 = mesh.createVertex(utils::Vector3D(1.0, 0.0, 1.0));
+    Vertex& v4 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 1.0));
+    Vertex& v5 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
     // z=0 plane
     Edge& e0 = mesh.createEdge(v0, v1);
     // z=1 plane
@@ -189,13 +189,13 @@ void ExportVTKXMLTest:: testExportQuadMesh()
   }
   else if(utils::Parallel::getProcessRank() == 2){
     // z=0 plane
-    Vertex& v1 = mesh.createVertex(utils::Vector3D(1.0, 0.0, 0.0));
-    Vertex& v2 = mesh.createVertex(utils::Vector3D(1.0, 1.0, 0.0));
-    Vertex& v3 = mesh.createVertex(utils::Vector3D(0.0, 1.0, 0.0));
+    Vertex& v1 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 0.0));
+    Vertex& v2 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 0.0));
+    Vertex& v3 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 0.0));
     // z=1 plane
-    Vertex& v5 = mesh.createVertex(utils::Vector3D(1.0, 0.0, 1.0));
-    Vertex& v6 = mesh.createVertex(utils::Vector3D(1.0, 1.0, 1.0));
-    Vertex& v7 = mesh.createVertex(utils::Vector3D(0.0, 1.0, 1.0));
+    Vertex& v5 = mesh.createVertex(Eigen::Vector3d(1.0, 0.0, 1.0));
+    Vertex& v6 = mesh.createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
+    Vertex& v7 = mesh.createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
     // z=0 plane
     Edge& e1 = mesh.createEdge(v1, v2);
     Edge& e2 = mesh.createEdge(v2, v3);

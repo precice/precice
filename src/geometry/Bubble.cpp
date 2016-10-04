@@ -35,7 +35,7 @@ void Bubble:: specializedCreate
   if ( dimensions == 2 ){
     double currentRadius = _radius * (1.0 - _deformation / 4.0 + _deformation * 0.5
                            * (3.0 * std::pow(std::cos (0.0),2) - 1.0) );
-    utils::Vector2D start(0.0);
+    Eigen::Vector2d start = Eigen::Vector2d::Zero(0.0);
     start(0) += currentRadius;
     Vertex* oldUpper = &seed.createVertex ( -1.0 * start );
     Vertex * oldLower = oldUpper;
@@ -49,8 +49,8 @@ void Bubble:: specializedCreate
                            * (3.0 * std::pow(std::cos (i * angleInc),2) - 1.0) );
       x = - currentRadius * std::cos (i * angleInc);
       y =   currentRadius * std::sin (i * angleInc);
-      Vertex* newUpper = & seed.createVertex ( utils::Vector2D(x, y) );
-      Vertex* newLower = & seed.createVertex ( utils::Vector2D(x, -y) );
+      Vertex* newUpper = & seed.createVertex ( Eigen::Vector2d(x, y) );
+      Vertex* newLower = & seed.createVertex ( Eigen::Vector2d(x, -y) );
       seed.createEdge ( *newUpper, *oldUpper );
       seed.createEdge ( *oldLower, *newLower );
       oldUpper = newUpper;
@@ -83,10 +83,10 @@ mesh::Vertex* Bubble:: getVertex
   if ( iter != dividedEdges.end() ) {
     return iter->second;
   }
-  utils::Vector2D coords ( v0.getCoords() );
+  Eigen::Vector2d coords ( v0.getCoords() );
   coords += v1.getCoords();
   coords /= 2.0;
-  coords *= _radius / tarch::la::norm2(coords);
+  coords *= _radius / coords.norm();
   mesh::Vertex* vertex = & seed.createVertex ( coords );
   dividedEdges[index] = vertex;
   return vertex;

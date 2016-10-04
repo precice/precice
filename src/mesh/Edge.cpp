@@ -14,12 +14,12 @@ Edge:: Edge
   PropertyContainer (),
   _vertices ( boost::assign::list_of(&vertexOne)(&vertexTwo).to_array(_vertices) ),
   _id ( id ),
-  _normal ( vertexOne.getDimensions(), 0.0 ),
-  _center ( vertexOne.getDimensions(), 0.0 ),
+  _normal ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) ),
+  _center ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) ),
   _enclosingRadius ( 0.0 )
 {
   assertion ( vertexOne.getDimensions() == vertexTwo.getDimensions(),
-               vertexOne.getDimensions(), vertexTwo.getDimensions() );
+              vertexOne.getDimensions(), vertexTwo.getDimensions() );
 }
 
 //int Edge:: getDimensions() const
@@ -73,7 +73,7 @@ int Edge:: getID () const
   return _id;
 }
 
-const utils::DynVector& Edge:: getCenter () const
+const Eigen::VectorXd& Edge::getCenter () const
 {
   return _center;
 }

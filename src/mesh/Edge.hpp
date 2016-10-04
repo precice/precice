@@ -5,6 +5,7 @@
 #include "mesh/Vertex.hpp"
 #include "boost/array.hpp"
 #include "boost/noncopyable.hpp"
+#include <Eigen/Dense>
 
 namespace precice {
 namespace mesh {
@@ -77,12 +78,12 @@ public:
   /**
    * @brief Returns the normal of the edge.
    */
-  const utils::DynVector& getNormal () const;
+  const Eigen::VectorXd& getNormal () const;
 
   /**
    * @brief Returns the center of the edge.
    */
-  const utils::DynVector& getCenter () const;
+  const Eigen::VectorXd& getCenter () const;
 
   /**
    * @brief Returns the radius of the enclosing circle of the edge.
@@ -97,11 +98,11 @@ private:
   // @brief Unique (among edges) ID of the edge.
   int _id;
 
-  // @brief Normal of the edge.
-  utils::DynVector _normal;
+  /// Normal of the edge.
+  Eigen::VectorXd _normal;
 
-  // @brief Center of the edge.
-  utils::DynVector _center;
+  /// Center of the edge.
+  Eigen::VectorXd _center;
 
   // @brief Radius of the enclosing circle.
   double _enclosingRadius;
@@ -150,7 +151,7 @@ void Edge:: setCenter
   _center = center;
 }
 
-inline const utils::DynVector& Edge:: getNormal () const
+inline const Eigen::VectorXd& Edge::getNormal () const
 {
   return _normal;
 }

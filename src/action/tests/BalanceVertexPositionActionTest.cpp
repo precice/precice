@@ -43,9 +43,9 @@ void BalanceVertexPositionActionTest:: testSmoothCircle ()
   int nodes = 10;
   double circumference = 2.0 * math::PI; // radius = 1
   double h = circumference / (2.0 * nodes); // angle resolution
-  mesh->createVertex ( Vector2D(1.0, 0.0) );
+  mesh->createVertex ( Eigen::Vector2d(1.0, 0.0) );
   for ( int i=1; i < nodes; i++ ){
-    Vector2D coord ( std::cos((double)i * h), std::sin((double)i * h) );
+    Eigen::Vector2d coord ( std::cos((double)i * h), std::sin((double)i * h) );
     mesh::Vertex& v0 = mesh->vertices()[i-1];
     mesh::Vertex& v1 = mesh->createVertex ( coord );
     mesh->createEdge ( v0, v1 );
@@ -54,7 +54,7 @@ void BalanceVertexPositionActionTest:: testSmoothCircle ()
   nodes = 20;
   h = circumference / (2.0 * nodes);
   for ( int i=0; i < nodes; i++ ){
-    Vector2D coord ( std::cos(math::PI + (double)i * h), std::sin(math::PI + (double)i * h) );
+    Eigen::Vector2d coord ( std::cos(math::PI + (double)i * h), std::sin(math::PI + (double)i * h) );
     mesh::Vertex & v0 = mesh->vertices()[size-1 + i];
     mesh::Vertex & v1 = mesh->createVertex ( coord );
     mesh->createEdge ( v0, v1 );
@@ -100,18 +100,16 @@ void BalanceVertexPositionActionTest:: testSmoothHexahedron()
   preciceTrace("testSmoothHexahedron()");
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
 
-  using namespace tarch::la;
-  using utils::Vector3D;
   using namespace mesh;
 
-  Vertex& v000 = mesh->createVertex(Vector3D(-2.0, -1.0, -1.0));
-  Vertex& v001 = mesh->createVertex(Vector3D(-2.0, -1.0,  1.0));
-  Vertex& v010 = mesh->createVertex(Vector3D(-2.0,  1.0, -1.0));
-  Vertex& v011 = mesh->createVertex(Vector3D(-2.0,  1.0,  1.0));
-  Vertex& v100 = mesh->createVertex(Vector3D( 2.0, -1.0, -1.0));
-  Vertex& v101 = mesh->createVertex(Vector3D( 2.0, -1.0,  1.0));
-  Vertex& v110 = mesh->createVertex(Vector3D( 2.0,  1.0, -1.0));
-  Vertex& v111 = mesh->createVertex(Vector3D( 2.0,  1.0,  1.0));
+  Vertex& v000 = mesh->createVertex(Eigen::Vector3d(-2.0, -1.0, -1.0));
+  Vertex& v001 = mesh->createVertex(Eigen::Vector3d(-2.0, -1.0,  1.0));
+  Vertex& v010 = mesh->createVertex(Eigen::Vector3d(-2.0,  1.0, -1.0));
+  Vertex& v011 = mesh->createVertex(Eigen::Vector3d(-2.0,  1.0,  1.0));
+  Vertex& v100 = mesh->createVertex(Eigen::Vector3d( 2.0, -1.0, -1.0));
+  Vertex& v101 = mesh->createVertex(Eigen::Vector3d( 2.0, -1.0,  1.0));
+  Vertex& v110 = mesh->createVertex(Eigen::Vector3d( 2.0,  1.0, -1.0));
+  Vertex& v111 = mesh->createVertex(Eigen::Vector3d( 2.0,  1.0,  1.0));
 
   Edge& e000to100 = mesh->createEdge(v000, v100);
   Edge& e010to110 = mesh->createEdge(v010, v110);

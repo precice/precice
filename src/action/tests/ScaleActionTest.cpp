@@ -43,9 +43,9 @@ void ScaleActionTest:: testDivideByArea()
    PtrMesh mesh(new Mesh("Mesh", 2, true));
    PtrData data = mesh->createData("test-data", 1);
    int dataID = data->getID();
-   Vertex& v0 = mesh->createVertex(utils::Vector2D(0.0, 0.0));
-   Vertex& v1 = mesh->createVertex(utils::Vector2D(1.0, 0.0));
-   Vertex& v2 = mesh->createVertex(utils::Vector2D(1.0, 1.0));
+   Vertex& v0 = mesh->createVertex(Eigen::Vector2d(0.0, 0.0));
+   Vertex& v1 = mesh->createVertex(Eigen::Vector2d(1.0, 0.0));
+   Vertex& v2 = mesh->createVertex(Eigen::Vector2d(1.0, 1.0));
    mesh->createEdge(v0, v1);
    mesh->createEdge(v1, v2);
    mesh->computeState();
@@ -80,9 +80,9 @@ void ScaleActionTest:: testScaleByComputedTimestepLength()
   PtrData targetData = mesh->createData("TargetData", 1);
   int sourceDataID = sourceData->getID();
   int targetDataID = targetData->getID();
-  mesh->createVertex(utils::Vector3D(0.0));
-  mesh->createVertex(utils::Vector3D(1.0));
-  mesh->createVertex(utils::Vector3D(2.0));
+  mesh->createVertex(Eigen::Vector3d::Constant(0.0));
+  mesh->createVertex(Eigen::Vector3d::Constant(1.0));
+  mesh->createVertex(Eigen::Vector3d::Constant(2.0));
 //  mesh->computeState ();
   mesh->allocateDataValues();
   auto& sourceValues = sourceData->values();
@@ -138,9 +138,9 @@ void ScaleActionTest:: testScaleByComputedTimestepPartLength()
   PtrData targetData = mesh->createData("TargetData", 1);
   int sourceDataID = sourceData->getID();
   int targetDataID = targetData->getID();
-  mesh->createVertex(utils::Vector3D(0.0));
-  mesh->createVertex(utils::Vector3D(1.0));
-  mesh->createVertex(utils::Vector3D(2.0));
+  mesh->createVertex(Eigen::Vector3d::Constant(0.0));
+  mesh->createVertex(Eigen::Vector3d::Constant(1.0));
+  mesh->createVertex(Eigen::Vector3d::Constant(2.0));
   mesh->allocateDataValues();
   auto& sourceValues = sourceData->values();
   auto& targetValues = targetData->values();

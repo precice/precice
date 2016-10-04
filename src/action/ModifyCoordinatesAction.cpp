@@ -35,10 +35,9 @@ void ModifyCoordinatesAction:: performAction
   double fullDt )
 {
   preciceTrace ( "performAction()" );
-  using tarch::la::slice;
   auto& values = _data->values();
   int dim = getMesh()->getDimensions();
-  utils::DynVector data(dim);
+  Eigen::VectorXd data(dim);
   if ( _mode == ADD_TO_COORDINATES_MODE ) {
     DEBUG ( "Adding data to coordinates" );
     for (mesh::Vertex & vertex : getMesh()->vertices()) {

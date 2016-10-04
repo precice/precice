@@ -154,17 +154,18 @@ void FindVoxelContent:: checkEdge
     }
     // Test projection in edge normal plane
     // Further remove suitable dimension to work in 1D
-    int dim = indexMax(abs(edge.getNormal())); // 1D dimensions
-    double projEdge = dot(edge.getNormal(), a) * edge.getNormal()[dim];
+    utils::DynVector edgeNormal = edge.getNormal();
+    int dim = indexMax(abs(edgeNormal)); // 1D dimensions
+    double projEdge = dot(edgeNormal, a) * edgeNormal[dim];
     tarch::la::Vector<4,double> projVoxel;
     Vector2D corner ( -_voxelHalflengths[0], -_voxelHalflengths[1] );
-    projVoxel[0] = dot(edge.getNormal(), corner) * edge.getNormal()[dim];
+    projVoxel[0] = dot(edgeNormal, corner) * edgeNormal[dim];
     assignList(corner) = _voxelHalflengths[0], -_voxelHalflengths[1];
-    projVoxel[1] = dot(edge.getNormal(), corner) * edge.getNormal()[dim];
+    projVoxel[1] = dot(edgeNormal, corner) * edgeNormal[dim];
     assignList(corner) = -_voxelHalflengths[0], _voxelHalflengths[1];
-    projVoxel[2] = dot(edge.getNormal(), corner) * edge.getNormal()[dim];
+    projVoxel[2] = dot(edgeNormal, corner) * edgeNormal[dim];
     assignList(corner) = _voxelHalflengths[0], _voxelHalflengths[1];
-    projVoxel[3] = dot(edge.getNormal(), corner) * edge.getNormal()[dim];
+    projVoxel[3] = dot(edgeNormal, corner) * edgeNormal[dim];
     double voxelMax = max(projVoxel);
     double voxelMin = min(projVoxel);
     if ( greater(projEdge, voxelMax-eps) || smaller(projEdge-eps, voxelMin) ){

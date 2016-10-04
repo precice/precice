@@ -141,7 +141,7 @@ void WatchPoint:: exportPointData
     using utils::Vector3D;
     _txtWriter.writeData("Time", time);
     // Export watch point coordinates
-    utils::DynVector coords(_mesh->getDimensions(), 0.0);
+    Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
     for (size_t i=0; i < _vertices.size(); i++){
       coords += _weights[i] * _vertices[i]->getCoords();
     }

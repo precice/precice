@@ -100,7 +100,7 @@ int Vertex:: getDimensions() const
 //  _normal = normal;
 //}
 
-const utils::DynVector& Vertex:: getNormal () const
+const Eigen::VectorXd& Vertex::getNormal () const
 {
   return _normal;
 }

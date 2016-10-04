@@ -323,8 +323,8 @@ void Mesh:: computeState()
   }
 
   // Compute edge centers, enclosing radius, and (in 2D) edge normals
-  DynVector center(_dimensions);
-  DynVector distanceToCenter(_dimensions);
+  Eigen::VectorXd center(_dimensions);
+  Eigen::VectorXd distanceToCenter(_dimensions);
   for (Edge& edge : _content.edges()) {
     center = edge.vertex(0).getCoords();
     center += edge.vertex(1).getCoords();
@@ -332,16 +332,16 @@ void Mesh:: computeState()
     edge.setCenter(center);
     distanceToCenter = edge.vertex(0).getCoords();
     distanceToCenter -= edge.getCenter();
-    edge.setEnclosingRadius(tarch::la::norm2(distanceToCenter));
+    edge.setEnclosingRadius(distanceToCenter.norm());
     if (_dimensions == 2 && computeNormals){
       // Compute normal
-      Vector2D vectorA = edge.vertex(1).getCoords();
+      Eigen::VectorXd vectorA = edge.vertex(1).getCoords();
       vectorA -= edge.vertex(0).getCoords();
-      Vector2D normal(-1.0 *vectorA[1], vectorA[0]);
+      Eigen::Vector2d normal(-1.0 *vectorA[1], vectorA[0]);
       if (not _flipNormals){
         normal *= -1.0; // Invert direction if counterclockwise
       }
-      double length = tarch::la::norm2(normal);
+      double length = normal.norm();
       assertion(tarch::la::greater(length, 0.0));
       normal /= length;   // Scale normal vector to length 1
       edge.setNormal(normal);
@@ -349,7 +349,7 @@ void Mesh:: computeState()
       // Accumulate normal in associated vertices
       normal *= edge.getEnclosingRadius() * 2.0; // Weight by length
       for (int i=0; i < 2; i++){
-        Vector2D vertexNormal = edge.vertex(i).getNormal();
+        Eigen::VectorXd vertexNormal = edge.vertex(i).getNormal();
         vertexNormal += normal;
         edge.vertex(i).setNormal(vertexNormal);
       }
@@ -360,52 +360,42 @@ void Mesh:: computeState()
   if (_dimensions == 3){
     // Compute triangle centers, radius, and normals
     for (Triangle& triangle : _content.triangles()) {
-      assertion(not math::equals(triangle.vertex(0).getCoords(),
-                 triangle.vertex(1).getCoords()), triangle.vertex(0).getCoords(),
-                 triangle.getID());
-      assertion(not math::equals(triangle.vertex(1).getCoords(),
-                 triangle.vertex(2).getCoords()), triangle.vertex(1).getCoords(),
-                 triangle.getID());
-      assertion(not math::equals(triangle.vertex(2).getCoords(),
-                 triangle.vertex(0).getCoords()), triangle.vertex(2).getCoords(),
-                 triangle.getID());
+      assertion(not math::equals(triangle.vertex(0).getCoords(), triangle.vertex(1).getCoords()),
+                triangle.vertex(0).getCoords(),
+                triangle.getID());
+      assertion(not math::equals(triangle.vertex(1).getCoords(), triangle.vertex(2).getCoords()), triangle.vertex(1).getCoords(),
+                triangle.getID());
+      assertion(not math::equals(triangle.vertex(2).getCoords(), triangle.vertex(0).getCoords()),
+                triangle.vertex(2).getCoords(),
+                triangle.getID());
 
       // Compute barycenter by using edge centers, since vertex order is not
       // guaranteed.
-      Vector3D center;
-      center = triangle.edge(0).getCenter();
+      auto center = triangle.edge(0).getCenter();
       center += triangle.edge(1).getCenter();
       center += triangle.edge(2).getCenter();
       center /= 3.0;
       triangle.setCenter(center);
 
       // Compute enclosing radius centered at barycenter
-      Vector3D toCenter;
-      toCenter = triangle.getCenter();
-      toCenter -= triangle.vertex(0).getCoords();
-      double distance0 = tarch::la::norm2(toCenter);
-      toCenter = triangle.getCenter();
-      toCenter -= triangle.vertex(1).getCoords();
-      double distance1 = tarch::la::norm2(toCenter);
-      toCenter = triangle.getCenter();
-      toCenter -= triangle.vertex(2).getCoords();
-      double distance2 = tarch::la::norm2(toCenter);
-      double maxDistance = distance0;
-      maxDistance = distance1 > maxDistance ? distance1 : maxDistance;
-      maxDistance = distance2 > maxDistance ? distance2 : maxDistance;
+      Eigen::Vector3d toCenter = triangle.getCenter() - triangle.vertex(0).getCoords();
+      double distance0 = toCenter.norm();
+      toCenter = triangle.getCenter() - triangle.vertex(1).getCoords();
+      double distance1 = toCenter.norm();
+      toCenter = triangle.getCenter() - triangle.vertex(2).getCoords();
+      double distance2 = toCenter.norm();
+      double maxDistance = std::max( {distance0, distance1, distance2} );
+      // maxDistance = distance1 > maxDistance ? distance1 : maxDistance;
+      // maxDistance = distance2 > maxDistance ? distance2 : maxDistance;
+      
       triangle.setEnclosingRadius(maxDistance);
 
       // Compute normals
       if (computeNormals){
-        Vector3D vectorA;
-        Vector3D vectorB;
-        vectorA = triangle.edge(1).getCenter(); // edge() is faster than vertex()
-        vectorA -= triangle.edge(0).getCenter();
-        vectorB = triangle.edge(2).getCenter();
-        vectorB -= triangle.edge(0).getCenter();
+        Eigen::Vector3d vectorA = triangle.edge(1).getCenter() - triangle.edge(0).getCenter(); // edge() is faster than vertex()
+        Eigen::Vector3d vectorB = triangle.edge(2).getCenter() - triangle.edge(0).getCenter();
         // Compute cross-product of vector A and vector B
-        Vector3D normal;
-        normal = tarch::la::cross(vectorA, vectorB, normal);
+        auto normal = vectorA.cross(vectorB);
         if ( _flipNormals ){
           normal *= -1.0; // Invert direction if counterclockwise
         }
@@ -417,7 +407,7 @@ void Mesh:: computeState()
         }
 
         // Normalize triangle normal
-        double length = tarch::la::norm2(normal);
+        double length = normal.norm();
         normal /= length;
         triangle.setNormal(normal);
       }
@@ -425,47 +415,41 @@ void Mesh:: computeState()
 
     // Compute quad centers, radius, and normals
     for (Quad& quad : _content.quads()) {
-      assertion(not math::equals(quad.vertex(0).getCoords(),
-                 quad.vertex(1).getCoords()), quad.vertex(0).getCoords(),
-                 quad.getID());
-      assertion(not math::equals(quad.vertex(1).getCoords(),
-                 quad.vertex(2).getCoords()), quad.vertex(1).getCoords(),
-                 quad.getID());
-      assertion(not math::equals(quad.vertex(2).getCoords(),
-                 quad.vertex(3).getCoords()), quad.vertex(2).getCoords(),
-                 quad.getID());
-      assertion(not math::equals(quad.vertex(3).getCoords(),
-                 quad.vertex(0).getCoords()), quad.vertex(3).getCoords(),
-                 quad.getID());
+      assertion(not math::equals(quad.vertex(0).getCoords(), quad.vertex(1).getCoords()),
+                quad.vertex(0).getCoords(),
+                quad.getID());
+      assertion(not math::equals(quad.vertex(1).getCoords(), quad.vertex(2).getCoords()),
+                quad.vertex(1).getCoords(),
+                quad.getID());
+      assertion(not math::equals(quad.vertex(2).getCoords(), quad.vertex(3).getCoords()),
+                quad.vertex(2).getCoords(),
+                quad.getID());
+      assertion(not math::equals(quad.vertex(3).getCoords(), quad.vertex(0).getCoords()),
+                quad.vertex(3).getCoords(),
+                quad.getID());
 
       // Compute barycenter by using edge centers, since vertex order is not
       // guaranteed.
-      Vector3D center;
-      center = quad.edge(0).getCenter();
-      center += quad.edge(1).getCenter();
-      center += quad.edge(2).getCenter();
-      center += quad.edge(3).getCenter();
+      Eigen::VectorXd center = quad.edge(0).getCenter() +
+        quad.edge(1).getCenter() +
+        quad.edge(2).getCenter() +
+        quad.edge(3).getCenter();
       center /= 4.0;
       quad.setCenter(center);
 
       // Compute enclosing radius centered at barycenter
-      Vector3D toCenter;
-      toCenter = quad.getCenter();
-      toCenter -= quad.vertex(0).getCoords();
-      double distance0 = tarch::la::norm2(toCenter);
-      toCenter = quad.getCenter();
-      toCenter -= quad.vertex(1).getCoords();
-      double distance1 = tarch::la::norm2(toCenter);
-      toCenter = quad.getCenter();
-      toCenter -= quad.vertex(2).getCoords();
-      double distance2 = tarch::la::norm2(toCenter);
-      toCenter = quad.getCenter();
-      toCenter -= quad.vertex(3).getCoords();
-      double distance3 = tarch::la::norm2(toCenter);
-      double maxDistance = distance0;
-      maxDistance = distance1 > maxDistance ? distance1 : maxDistance;
-      maxDistance = distance2 > maxDistance ? distance2 : maxDistance;
-      maxDistance = distance3 > maxDistance ? distance3 : maxDistance;
+      Eigen::Vector3d toCenter = quad.getCenter() - quad.vertex(0).getCoords();
+      double distance0 = toCenter.norm();
+      toCenter = quad.getCenter() - quad.vertex(1).getCoords();
+      double distance1 = toCenter.norm();
+      toCenter = quad.getCenter() - quad.vertex(2).getCoords();
+      double distance2 = toCenter.norm();
+      toCenter = quad.getCenter() - quad.vertex(3).getCoords();
+      double distance3 = toCenter.norm();
+      double maxDistance = std::max( {distance0, distance1, distance2, distance3} );
+      // maxDistance = distance1 > maxDistance ? distance1 : maxDistance;
+      // maxDistance = distance2 > maxDistance ? distance2 : maxDistance;
+      // maxDistance = distance3 > maxDistance ? distance3 : maxDistance;
       quad.setEnclosingRadius(maxDistance);
 
 
@@ -478,27 +462,17 @@ void Mesh:: computeState()
         // and divided by 2 to get the area of the overall quad, since the length
         // does correspond to the parallelogram spanned by the vectors of the
         // cross product, which is twice the area of the corresponding triangles.
-        Vector3D vectorA;
-        Vector3D vectorB;
-        vectorA = quad.vertex(2).getCoords();
-        vectorA -= quad.vertex(1).getCoords();
-        vectorB = quad.vertex(0).getCoords();
-        vectorB -= quad.vertex(1).getCoords();
+        Eigen::Vector3d vectorA = quad.vertex(2).getCoords() - quad.vertex(1).getCoords();
+        Eigen::Vector3d vectorB = quad.vertex(0).getCoords() - quad.vertex(1).getCoords();
         // Compute cross-product of vector A and vector B
-        Vector3D normal;
-        tarch::la::cross(vectorA, vectorB, normal);
-
-        vectorA = quad.vertex(0).getCoords();
-        vectorA -= quad.vertex(3).getCoords();
-        vectorB = quad.vertex(2).getCoords();
-        vectorB -= quad.vertex(3).getCoords();
-        Vector3D normalSecondPart;
-        tarch::la::cross(vectorA, vectorB, normalSecondPart);
-
-        assertion(math::equals(
-                   normal/tarch::la::norm2(normal),
-                   normalSecondPart/tarch::la::norm2(normalSecondPart)),
-                   normal, normalSecondPart);
+        auto normal = vectorA.cross(vectorB);
+        
+        vectorA = quad.vertex(0).getCoords() - quad.vertex(3).getCoords();
+        vectorB = quad.vertex(2).getCoords() - quad.vertex(3).getCoords();
+        auto normalSecondPart = vectorA.cross(vectorB);
+        
+        assertion(math::equals(normal.normalized(), normalSecondPart.normalized()),
+                  normal, normalSecondPart);
         normal += normalSecondPart;
         normal *= 0.5;
 
@@ -513,8 +487,9 @@ void Mesh:: computeState()
         }
 
         // Normalize quad normal
-        double length = tarch::la::norm2(normal);
-        normal /= length;
+        // double length = normal.norm();
+        // normal /= length;
+        normal = normal.normalized();
         quad.setNormal(normal);
       }
     }
@@ -522,7 +497,7 @@ void Mesh:: computeState()
     // Normalize edge normals (only done in 3D)
     if (computeNormals){
       for (Edge& edge : _content.edges()) {
-        double length = tarch::la::norm2(edge.getNormal());
+        double length = edge.getNormal().norm();
         assertion(tarch::la::greater(length,0.0),
           "Edge vertex coords: (" << edge.vertex(0).getCoords() << "), ("
           << edge.vertex(1).getCoords()
@@ -540,7 +515,7 @@ void Mesh:: computeState()
 
   for (Vertex& vertex : _content.vertices()) {
     if (computeNormals) {
-      double length = tarch::la::norm2(vertex.getNormal());
+      double length = vertex.getNormal().norm();
       // i (benjamin) changed this since there can be cases where a node has no edge though
       // the mesh has edges in general, e.g. after filtering
       //assertion(tarch::la::greater(length,0.0));

@@ -6,7 +6,6 @@
 #include "mesh/PropertyContainer.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/String.hpp"
-#include "tarch/la/WrappedVector.h"
 #ifndef PRECICE_NO_SPIRIT2
 #include <boost/spirit/include/qi_parse.hpp>
 #include <boost/spirit/include/support_multi_pass.hpp>
@@ -90,8 +89,9 @@ void ImportVRML:: doImport
     if (dimensions == 2){
       for (size_t i=0; i < vrmlParser.coordinates.size(); i+=2){
         assertion(i + 1 < vrmlParser.coordinates.size(),
-                   i + 1, vrmlParser.coordinates.size());
-        vertices += &mesh.createVertex(wrap<2,double>(&vrmlParser.coordinates[i]));
+                  i + 1, vrmlParser.coordinates.size());
+        vertices += &mesh.createVertex(Eigen::Vector2d(vrmlParser.coordinates[i],
+                                                       vrmlParser.coordinates[i+1]));
       }
       // Construct edge indices from parsed data.
       // The parsed data has the form: i0, ..., in, -1, i0, ..., im, -1, ...., -1
@@ -114,7 +114,9 @@ void ImportVRML:: doImport
       for (size_t i=0; i < vrmlParser.coordinates.size(); i+=3){
         assertion(i + 2 < vrmlParser.coordinates.size(),
                    i + 2, vrmlParser.coordinates.size());
-        vertices += &mesh.createVertex(wrap<3,double>(&vrmlParser.coordinates[i]));
+        vertices += &mesh.createVertex(Eigen::Vector3d(vrmlParser.coordinates[i],
+                                                       vrmlParser.coordinates[i+1],
+                                                       vrmlParser.coordinates[i+2]));
       }
 
       // Construct triangle indices from parsed data.

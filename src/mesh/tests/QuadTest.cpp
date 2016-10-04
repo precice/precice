@@ -31,11 +31,11 @@ void QuadTest:: run ()
 void QuadTest:: test()
 {
   preciceTrace("test");
-  using utils::Vector3D;
-  Vector3D coords0(0.0, 0.0, 0.0);
-  Vector3D coords1(1.0, 0.0, 0.0);
-  Vector3D coords2(1.0, 1.0, 0.0);
-  Vector3D coords3(0.0, 1.0, 0.0);
+  using Eigen::Vector3d;
+  Vector3d coords0(0.0, 0.0, 0.0);
+  Vector3d coords1(1.0, 0.0, 0.0);
+  Vector3d coords2(1.0, 1.0, 0.0);
+  Vector3d coords3(0.0, 1.0, 0.0);
   {
     Vertex v0(coords0, 0);
     Vertex v1(coords1, 1);

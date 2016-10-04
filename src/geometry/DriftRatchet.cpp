@@ -126,16 +126,15 @@ void DriftRatchet:: createLeftWall
 {
   int dimensions = mesh.getDimensions();
   if ( dimensions == 2 ){
-    using utils::Vector2D;
     double radius = getRadius ( 0.0 );
-    Vector2D center ( 0.0 );
+    Eigen::Vector2d center = Eigen::Vector2d::Zero();
     mesh::Vertex& centerVertex = mesh.createVertex ( center );
     if ( propertyContainer != nullptr ) {
        centerVertex.addParent ( *propertyContainer );
     }
-    Vector2D upperPoint ( center(0), center(1) + radius );
+    Eigen::Vector2d upperPoint( center(0), center(1) + radius );
     cutVertices[0] = & mesh.createVertex ( upperPoint );
-    Vector2D lowerPoint ( center(0), center(1) - radius);
+    Eigen::Vector2d lowerPoint ( center(0), center(1) - radius);
     cutVertices[1] = & mesh.createVertex ( lowerPoint );
     mesh::Edge& e0 = mesh.createEdge ( *cutVertices[0], centerVertex);
     mesh::Edge& e1 = mesh.createEdge ( centerVertex, *cutVertices[1] );
@@ -151,7 +150,7 @@ void DriftRatchet:: createLeftWall
     int vertexCount = getNumberOfVerticesPerCut ( _discretizationWidth );
     double angle = 2.0 * math::PI / static_cast<double>(vertexCount);
     double radius = getRadius ( 0.0 );
-    Vector3D center(0.0);
+    Eigen::Vector3d center = Eigen::Vector3d::Zero();
     mesh::Vertex& centerVertex = mesh.createVertex ( center );
     if ( propertyContainer != nullptr ) {
        centerVertex.addParent ( *propertyContainer );
@@ -159,7 +158,7 @@ void DriftRatchet:: createLeftWall
 
     // Create vertices
     for ( int i=0; i < vertexCount; i++ ) {
-      Vector3D currentPoint ( center );
+      Eigen::Vector3d currentPoint ( center );
       double y = std::cos(currentAngle) * radius;
       currentPoint(1) += y;
       double z = std::sin(currentAngle) * radius;
@@ -230,13 +229,13 @@ void DriftRatchet:: createBodyWallSection
    mesh::PropertyContainer* propertyContainer,
    mesh::Vertex*            cutVertices[],
    mesh::Edge*              cutEdges[],
-   const utils::DynVector&  center,
+   const Eigen::VectorXd&   center,
    double                   radius )
 {
   int dimensions = mesh.getDimensions();
   if ( dimensions == 2 ){
-    utils::Vector2D upperPoint ( center[0], center[1] + radius );
-    utils::Vector2D lowerPoint ( center[0], center[1] - radius );
+    Eigen::Vector2d upperPoint ( center[0], center[1] + radius );
+    Eigen::Vector2d lowerPoint ( center[0], center[1] - radius );
     mesh::Vertex& upperVertex = mesh.createVertex ( upperPoint );
     mesh::Vertex& lowerVertex = mesh.createVertex ( lowerPoint );
     mesh::Edge& e0 = mesh.createEdge ( upperVertex, *cutVertices[0] );
@@ -259,7 +258,7 @@ void DriftRatchet:: createBodyWallSection
     // Create vertices
     mesh::Vertex ** newCutVertices = new mesh::Vertex * [vertexCount];
     for ( int i=0; i < vertexCount; i++ ) {
-      utils::Vector3D currentCenter ( center );
+      Eigen::Vector3d currentCenter ( center );
       double y = std::cos(currentAngle) * radius;
       currentCenter(1) += y;
       double z = std::sin(currentAngle) * radius;
@@ -333,8 +332,8 @@ void DriftRatchet:: createRightWall
 {
   int dimensions = mesh.getDimensions();
   if ( dimensions == 2 ){
-    utils::Vector2D center ( 0.0 );
-    center(0) += _length;
+    Eigen::Vector2d center = Eigen::Vector2d::Zero();
+    center[0] += _length;
     mesh::Vertex& centerVertex = mesh.createVertex ( center );
     if ( propertyContainer != nullptr ) {
       centerVertex.addParent ( *propertyContainer );
@@ -348,8 +347,8 @@ void DriftRatchet:: createRightWall
   }
   else {
     assertion ( dimensions == 3, dimensions );
-    utils::Vector3D center ( 0.0 );
-    center(0) += _length;
+    Eigen::Vector3d center = Eigen::Vector3d::Zero();
+    center[0] += _length;
     mesh::Vertex& centerVertex = mesh.createVertex ( center );
     if ( propertyContainer != nullptr ) {
       centerVertex.addParent ( *propertyContainer );

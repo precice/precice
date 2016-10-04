@@ -73,7 +73,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
     // Same for intersecting normal from searchpoint: q(t) = c + t(d - c)
     c = _searchPoint;
     d = _searchPoint;
-    d += edge.getNormal();
+    d += static_cast<Vector2D>(edge.getNormal());
     collinear = utils::GeometryComputations::collinear ( a, b, c );
     if ( collinear ) {
       // From p(s) = a + s(b-a) we get: s = (p(s) - a) / (b-a)
@@ -87,8 +87,8 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
   else { // 3D
     assertion ( dimensions == 3, dimensions );
     // Get parameters for parametric triangle representation: p(s) = a + s(b-a)
-    Vector3D a3D = edge.vertex(0).getCoords();
-    Vector3D b3D = edge.vertex(1).getCoords();
+    Vector3D a3D = static_cast<Eigen::Vector3d>(edge.vertex(0).getCoords());
+    Vector3D b3D = static_cast<Eigen::Vector3d>(edge.vertex(1).getCoords());
     Vector3D c3D = _searchPoint;
     Vector3D ab3D = b3D - a3D;
     Vector3D ac3D = c3D - a3D;
@@ -154,9 +154,9 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
     }
     else {
       projected = edge.vertex(1).getCoords();  // = b
-      projected -= edge.vertex(0).getCoords(); // = b - a
+      projected -= static_cast<utils::DynVector>(edge.vertex(0).getCoords()); // = b - a
       projected *= barycentricCoords[0];       // = bary0 * (b - a)
-      projected += edge.vertex(0).getCoords(); // = a + bary0 * (b - a)
+      projected += static_cast<utils::DynVector>(edge.vertex(0).getCoords()); // = a + bary0 * (b - a)
     }
   }
 

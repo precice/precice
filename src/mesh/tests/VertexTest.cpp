@@ -2,7 +2,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Parallel.hpp"
-
+#include "math/math.hpp"
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mesh::tests::VertexTest)
 
@@ -27,18 +27,17 @@ void VertexTest:: run ()
 void VertexTest:: test ()
 {
   preciceTrace ( "test()" );
-  using tarch::la::equals;
+  
+  Vertex vertex ( Eigen::Vector3d::Constant(1.0), 0 );
 
-  Vertex vertex ( utils::Vector3D(1.0), 0 );
-
-  utils::Vector3D coords = vertex.getCoords();
-  validate ( tarch::la::equals(coords, utils::Vector3D(1.0)) );
+  Eigen::Vector3d coords = vertex.getCoords();
+  validate ( math::equals(coords, Eigen::Vector3d::Constant(1.0)) );
 
   int id = vertex.getID ();
   validateEquals ( id, 0 );
 
-  utils::Vector3D normal = vertex.getNormal ();
-  validate ( tarch::la::equals(normal, utils::Vector3D(0.0)) );
+  Eigen::Vector3d normal = vertex.getNormal();
+  validate ( math::equals(normal, Eigen::Vector3d::Zero()) );
 
   void* mesh = static_cast<void*> ( vertex.mesh() );
   // Can be replaced by nullptr as soon as we have C++11 available.

@@ -69,7 +69,7 @@ void BalanceVertexPositionAction:: performAction
         mesh::Vertex& v0 = edge.vertex(0);
         mesh::Vertex& v1 = edge.vertex(1);
         Vector2D ab = v0.getCoords();
-        ab -= v1.getCoords();
+        ab -= static_cast<Vector2D>(v1.getCoords());
         assertion ( v0.getID() < pullVectors.size(), v0.getID() );
         assertion ( v1.getID() < pullVectors.size(), v1.getID() );
         pullVectors[v0.getID()] -= ab;
@@ -88,17 +88,19 @@ void BalanceVertexPositionAction:: performAction
         assertion ( v1.getID() < pullVectors.size(), v1.getID() );
         assertion ( v2.getID() < pullVectors.size(), v2.getID() );
         double area = utils::GeometryComputations::triangleArea (
-                      v0.getCoords(), v1.getCoords(), v2.getCoords() );
+          static_cast<Vector3D>(v0.getCoords()),
+          static_cast<Vector3D>(v1.getCoords()),
+          static_cast<Vector3D>(v2.getCoords()));
         Vector3D pullVector = triangle.getCenter();
-        pullVector -= v0.getCoords();
+        pullVector -= static_cast<Vector3D>(v0.getCoords());
         pullVector *= area;
         pullVectors[v0.getID()] += pullVector;
         pullVector = triangle.getCenter();
-        pullVector -= v1.getCoords();
+        pullVector -= static_cast<Vector3D>(v1.getCoords());
         pullVector *= area;
         pullVectors[v1.getID()] += pullVector;
         pullVector = triangle.getCenter();
-        pullVector -= v2.getCoords();
+        pullVector -= static_cast<Vector3D>(v2.getCoords());
         pullVector *= area;
         pullVectors[v2.getID()] += pullVector;
         pullVectorScalings[v0.getID()] += area;
@@ -125,7 +127,7 @@ void BalanceVertexPositionAction:: performAction
         // Same for intersecting normal from point to line: q(t) = c + t(d - c)
         Vector2D c = point;
         Vector2D d = point;
-        d += vertex.getNormal();
+        d += static_cast<utils::DynVector>(vertex.getNormal());
         // Compute denominator for solving 2x2 equation system
         double D = a(0)*(d(1)-c(1)) + b(0)*(c(1)-d(1)) + d(0)*ab(1) - c(0)*ab(1);
         assertion ( not equals(D, 0.0), a, b, c, d, ab );   // D == 0 would imply "normal // edge"
@@ -139,7 +141,7 @@ void BalanceVertexPositionAction:: performAction
 
         // Compute error measure
         Vector2D coordDelta ( projectedPoint );
-        coordDelta -= vertex.getCoords();
+        coordDelta -= static_cast<utils::DynVector>(vertex.getCoords());
         errorMeasure += tarch::la::dot(coordDelta, coordDelta);
         vertex.setCoords ( projectedPoint );
       }
@@ -166,7 +168,7 @@ void BalanceVertexPositionAction:: performAction
 
         // Compute error measure
         Vector3D coordDelta ( projectedPoint );
-        coordDelta -= vertex.getCoords();
+        coordDelta -= static_cast<utils::DynVector>(vertex.getCoords());
         errorMeasure += tarch::la::dot(coordDelta, coordDelta);
         vertex.setCoords ( projectedPoint );
       }

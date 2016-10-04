@@ -8,6 +8,7 @@
 #include "mesh/PropertyContainer.hpp"
 #include "io/ExportVTK.hpp"
 #include "utils/Parallel.hpp"
+#include "math/math.hpp"
 #include <vector>
 #include <memory>
 
@@ -192,8 +193,8 @@ void FindClosestTest:: testFindClosestDistanceToEdges3D ()
    using utils::Vector3D;
    // Create geometry consisting of two vertices and an edge
    mesh::Mesh mesh ( "Mesh", dim, false );
-   mesh::Vertex& v1 = mesh.createVertex ( Vector3D(-1.0, -1.0, 0.0) );
-   mesh::Vertex& v2 = mesh.createVertex ( Vector3D( 1.0,  1.0, 0.0) );
+   mesh::Vertex& v1 = mesh.createVertex ( Eigen::Vector3d(-1.0, -1.0, 0.0) );
+   mesh::Vertex& v2 = mesh.createVertex ( Eigen::Vector3d( 1.0,  1.0, 0.0) );
    mesh::Edge& edge = mesh.createEdge ( v1, v2 );
    utils::DynVector normal(dim);
    assignList(normal) = -1.0, 1.0, 0.0;
@@ -207,13 +208,13 @@ void FindClosestTest:: testFindClosestDistanceToEdges3D ()
                          location, mesh );
 
    // Create query points
-   std::vector<Vector3D> queryPoints;
+   std::vector<Eigen::Vector3d> queryPoints;
    // Query point 0 lies outside of the geometry
-   queryPoints.push_back ( Vector3D(-0.5,  0.0,  0.0) );
-   queryPoints.push_back ( Vector3D( 0.0,  0.5,  0.0) );
-   queryPoints.push_back ( Vector3D(-0.5,  0.5,  0.0) );
-   queryPoints.push_back ( Vector3D(-0.5,  0.5, -0.5) );
-   queryPoints.push_back ( Vector3D(-0.5,  0.5,  0.5) );
+   queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.0,  0.0) );
+   queryPoints.push_back ( Eigen::Vector3d( 0.0,  0.5,  0.0) );
+   queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.5,  0.0) );
+   queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.5, -0.5) );
+   queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.5,  0.5) );
 
    // Create query objects
    std::vector<query::FindClosest*> finds;
@@ -225,7 +226,7 @@ void FindClosestTest:: testFindClosestDistanceToEdges3D ()
    ExportVTKNeighbors exportNeighbors;
    for ( size_t i=0; i < finds.size(); i++ ) {
       validate ( (*finds[i])(mesh) );
-      exportNeighbors.addNeighbors ( queryPoints[i], finds[i]->getClosest() );
+      exportNeighbors.addNeighbors ( static_cast<utils::DynVector>(queryPoints[i]), finds[i]->getClosest() );
    }
 
    exportNeighbors.exportNeighbors (
@@ -235,11 +236,11 @@ void FindClosestTest:: testFindClosestDistanceToEdges3D ()
    validateNumericalEquals ( finds[0]->getClosest().distance, std::sqrt(1.0/8.0) );
    validateNumericalEquals ( finds[1]->getClosest().distance, std::sqrt(1.0/8.0) );
    validateNumericalEquals ( finds[2]->getClosest().distance,
-                             tarch::la::norm2(Vector3D(0.5, -0.5, 0.0)) );
+                             Eigen::Vector3d(0.5, -0.5, 0.0).norm() );
    validateNumericalEquals ( finds[3]->getClosest().distance,
-                             tarch::la::norm2(Vector3D(0.5, -0.5, 0.5)) );
+                             Eigen::Vector3d(0.5, -0.5, 0.5).norm() );
    validateNumericalEquals ( finds[4]->getClosest().distance,
-                             tarch::la::norm2(Vector3D(0.5, -0.5, -0.5)) );
+                             Eigen::Vector3d(0.5, -0.5, -0.5).norm() );
 
    // Clean up
    for (auto & find : finds) {
@@ -255,9 +256,9 @@ void FindClosestTest:: testFindClosestDistanceToTriangles ()
 
   // Create mesh to query
   mesh::Mesh mesh ( "Mesh", 3, true );
-  mesh::Vertex& v0 = mesh.createVertex ( Vector3D(0.0, 0.0, 0.0) );
-  mesh::Vertex& v1 = mesh.createVertex ( Vector3D(1.0, 1.0, 0.0) );
-  mesh::Vertex& v2 = mesh.createVertex ( Vector3D(1.0, 1.0, 1.0) );
+  mesh::Vertex& v0 = mesh.createVertex ( Eigen::Vector3d(0.0, 0.0, 0.0) );
+  mesh::Vertex& v1 = mesh.createVertex ( Eigen::Vector3d(1.0, 1.0, 0.0) );
+  mesh::Vertex& v2 = mesh.createVertex ( Eigen::Vector3d(1.0, 1.0, 1.0) );
   mesh::Edge& e0 = mesh.createEdge ( v0, v1 );
   mesh::Edge& e1 = mesh.createEdge ( v1, v2 );
   mesh::Edge& e2 = mesh.createEdge ( v2, v0 );
@@ -265,19 +266,19 @@ void FindClosestTest:: testFindClosestDistanceToTriangles ()
   mesh.computeState();
 
   // Prepare and issue queries
-  std::vector<Vector3D> queries;
-  queries.push_back ( Vector3D( 0.6,  0.6,  0.5) ); //  0: on triangle middle
-  queries.push_back ( Vector3D( 0.0,  0.0,  0.0) ); //  1: on vertex0
-  queries.push_back ( Vector3D( 1.0,  1.0,  0.0) ); //  2: on vertex1
-  queries.push_back ( Vector3D( 1.0,  1.0,  1.0) ); //  3: on vertex2
-  queries.push_back ( Vector3D( 0.5,  0.5,  0.0) ); //  4: on edge0
-  queries.push_back ( Vector3D( 1.0,  1.0,  0.5) ); //  5: on edge1
-  queries.push_back ( Vector3D( 0.5,  0.5,  0.5) ); //  6: on edge2
-  queries.push_back ( Vector3D( 0.0,  1.0,  0.3) ); //  7: outside triangle
-  queries.push_back ( Vector3D( 1.0,  0.0,  0.3) ); //  8: inside triangle
-  queries.push_back ( Vector3D(-0.5, -0.5, -0.5) ); //  9: outside vertex0
-  queries.push_back ( Vector3D( 1.5,  1.5, -0.5) ); // 10: outside vertex1
-  queries.push_back ( Vector3D( 1.5,  1.5,  1.5) ); // 11: outside vertex2
+  std::vector<Eigen::Vector3d> queries;
+  queries.push_back ( Eigen::Vector3d( 0.6,  0.6,  0.5) ); //  0: on triangle middle
+  queries.push_back ( Eigen::Vector3d( 0.0,  0.0,  0.0) ); //  1: on vertex0
+  queries.push_back ( Eigen::Vector3d( 1.0,  1.0,  0.0) ); //  2: on vertex1
+  queries.push_back ( Eigen::Vector3d( 1.0,  1.0,  1.0) ); //  3: on vertex2
+  queries.push_back ( Eigen::Vector3d( 0.5,  0.5,  0.0) ); //  4: on edge0
+  queries.push_back ( Eigen::Vector3d( 1.0,  1.0,  0.5) ); //  5: on edge1
+  queries.push_back ( Eigen::Vector3d( 0.5,  0.5,  0.5) ); //  6: on edge2
+  queries.push_back ( Eigen::Vector3d( 0.0,  1.0,  0.3) ); //  7: outside triangle
+  queries.push_back ( Eigen::Vector3d( 1.0,  0.0,  0.3) ); //  8: inside triangle
+  queries.push_back ( Eigen::Vector3d(-0.5, -0.5, -0.5) ); //  9: outside vertex0
+  queries.push_back ( Eigen::Vector3d( 1.5,  1.5, -0.5) ); // 10: outside vertex1
+  queries.push_back ( Eigen::Vector3d( 1.5,  1.5,  1.5) ); // 11: outside vertex2
   std::vector< std::shared_ptr<FindClosest> > findVisitors;
   for ( size_t i=0; i < queries.size(); i++ ) {
     std::shared_ptr<FindClosest> find ( new FindClosest(queries[i]) );
@@ -289,26 +290,25 @@ void FindClosestTest:: testFindClosestDistanceToTriangles ()
   for ( size_t i=0; i < 7; i++ ) {
     validateNumericalEquals ( findVisitors[i]->getClosest().distance, 0.0 );
   }
-  Vector3D expect;
-  assignList(expect) = 0.5, -0.5, 0.0;
-  validate (equals(findVisitors[7]->getClosest().vectorToElement, expect));
-  validateNumericalEquals (findVisitors[7]->getClosest().distance, norm2(expect));
-  assignList(expect) = -0.5, 0.5, 0.0;
-  validate ( equals(findVisitors[8]->getClosest().vectorToElement, expect) );
+  Eigen::Vector3d expect(0.5, -0.5, 0.0);
+  validate (math::equals(findVisitors[7]->getClosest().vectorToElement, expect));
+  validateNumericalEquals (findVisitors[7]->getClosest().distance, expect.norm());
+  expect << -0.5, 0.5, 0.0;
+  validate (math::equals(findVisitors[8]->getClosest().vectorToElement, expect) );
   validateNumericalEquals ( findVisitors[8]->getClosest().distance,
-                            -1.0 * norm2(expect) );
-  assignList(expect) = 0.5, 0.5, 0.5;
-  validate ( equals(findVisitors[9]->getClosest().vectorToElement, expect) );
+                            -1.0 * expect.norm() );
+  expect << 0.5, 0.5, 0.5;
+  validate ( math::equals(findVisitors[9]->getClosest().vectorToElement, expect) );
   validateNumericalEquals ( std::abs(findVisitors[9]->getClosest().distance),
-                            norm2(expect) );
-  assignList(expect) = -0.5, -0.5, 0.5;
-  validate ( equals(findVisitors[10]->getClosest().vectorToElement, expect) );
+                            expect.norm() );
+  expect << -0.5, -0.5, 0.5;
+  validate ( math::equals(findVisitors[10]->getClosest().vectorToElement, expect) );
   validateNumericalEquals ( std::abs(findVisitors[10]->getClosest().distance),
-                            norm2(expect) );
-  assignList(expect) = -0.5, -0.5, -0.5;
-  validate ( equals(findVisitors[11]->getClosest().vectorToElement, expect) );
+                            expect.norm() );
+  expect << -0.5, -0.5, -0.5;
+  validate ( math::equals(findVisitors[11]->getClosest().vectorToElement, expect) );
   validateNumericalEquals ( std::abs(findVisitors[11]->getClosest().distance),
-                            norm2(expect) );
+                            expect.norm() );
 }
 
 
@@ -318,36 +318,36 @@ void FindClosestTest:: testFindClosestDistanceToTrianglesAndVertices ()
   int dim = 2;
   using utils::Vector2D;
   mesh::Mesh mesh ( "Mesh", dim, false );
-  mesh::Vertex& vertex1 = mesh.createVertex (Vector2D(0.0, 0.0));
-  vertex1.setNormal (Vector2D(-0.5, 0.5));
+  mesh::Vertex& vertex1 = mesh.createVertex (Eigen::Vector2d(0.0, 0.0));
+  vertex1.setNormal (Eigen::Vector2d(-0.5, 0.5));
 
-  mesh::Vertex& vertex2 = mesh.createVertex (Vector2D(1.0, 0.0));
-  vertex2.setNormal (Vector2D(0.5, 0.5));
+  mesh::Vertex& vertex2 = mesh.createVertex (Eigen::Vector2d(1.0, 0.0));
+  vertex2.setNormal (Eigen::Vector2d(0.5, 0.5));
 
   mesh::Edge& edge = mesh.createEdge (vertex1, vertex2);
-  edge.setNormal (Vector2D(0.0, 1.0));
+  edge.setNormal (Eigen::Vector2d(0.0, 1.0));
 
-  query::FindClosest find (Vector2D(0.0, 0.0));
+  query::FindClosest find (Eigen::Vector2d(0.0, 0.0));
   find ( mesh );
   double distance = find.getClosest().distance;
   validateNumericalEquals (distance, 0.0);
 
-  query::FindClosest find2 (Vector2D(0.5, 0.0));
+  query::FindClosest find2 (Eigen::Vector2d(0.5, 0.0));
   find2 ( mesh );
   distance = find2.getClosest().distance;
   validateNumericalEquals (distance, 0.0);
 
-  query::FindClosest find3 (Vector2D(0.5, 0.1));
+  query::FindClosest find3 (Eigen::Vector2d(0.5, 0.1));
   find3 ( mesh );
   distance = find3.getClosest().distance;
   validateNumericalEquals (distance, 0.1);
 
-  query::FindClosest find4 (Vector2D(0.0, 1.5));
+  query::FindClosest find4 (Eigen::Vector2d(0.0, 1.5));
   find4 ( mesh );
   distance = find4.getClosest().distance;
   validateNumericalEquals (distance, 1.5);
 
-  query::FindClosest find5 (Vector2D(0.5, -1.0));
+  query::FindClosest find5 (Eigen::Vector2d(0.5, -1.0));
   find5 ( mesh );
   distance = find5.getClosest().distance;
   validateNumericalEquals (distance, -1.0);
@@ -468,13 +468,13 @@ void FindClosestTest:: testWeigthsOfVertices ()
   // Create geometry
   mesh::Mesh mesh ( "Mesh", dim, true );
   mesh.setProperty (mesh.INDEX_GEOMETRY_ID, 0);
-  mesh::Vertex& vertex1 = mesh.createVertex (Vector2D(0.0, 0.0));
-  mesh::Vertex& vertex2 = mesh.createVertex (Vector2D(1.0, 0.0));
+  mesh::Vertex& vertex1 = mesh.createVertex (Eigen::Vector2d(0.0, 0.0));
+  mesh::Vertex& vertex2 = mesh.createVertex (Eigen::Vector2d(1.0, 0.0));
   mesh.createEdge (vertex1, vertex2);
   mesh.computeState();
 
   // Query elements
-  query::FindClosest findClosest (Vector2D(0.3, 1.0));
+  query::FindClosest findClosest (Eigen::Vector2d(0.3, 1.0));
   findClosest ( mesh );
   const query::ClosestElement& closest = findClosest.getClosest ();
 
@@ -484,8 +484,8 @@ void FindClosestTest:: testWeigthsOfVertices ()
     dynamic_cast<mesh::Vertex* const> (closest.interpolationElements[0].element);
   mesh::Vertex* pointerVertex2 =
     dynamic_cast<mesh::Vertex*> (closest.interpolationElements[1].element);
-  validate ( equals(pointerVertex1->getCoords(), Vector2D(0.0, 0.0)) );
-  validate ( equals(pointerVertex2->getCoords(), Vector2D(1.0, 0.0)) );
+  validate ( math::equals(pointerVertex1->getCoords(), Eigen::Vector2d(0.0, 0.0)) );
+  validate ( math::equals(pointerVertex2->getCoords(), Eigen::Vector2d(1.0, 0.0)) );
   validateNumericalEquals ( closest.interpolationElements[0].weight, 0.7 );
   validateNumericalEquals ( closest.interpolationElements[1].weight, 0.3 );
 }
