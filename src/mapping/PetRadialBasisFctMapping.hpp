@@ -90,7 +90,7 @@ private:
 
   ISLocalToGlobalMapping _ISmapping;
 
-  double _solverRtol;
+  const double _solverRtol;
 
   /// true if the mapping along some axis should be ignored
   bool* _deadAxis;
