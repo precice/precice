@@ -266,9 +266,10 @@ void ParallelCouplingScheme::implicitAdvance()
         // in case of multilevel post processing only: measure the convergence of the coarse model optimization
         convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
         // Stop, when maximal iteration count (given in config) is reached
-        if (maxIterationsReached())
+        if (maxIterationsReached()){
           convergenceCoarseOptimization = true;
-
+          preciceWarning(__func__,"Coarse model optimization didn't converge within the prescribed maximum number of iterations. The simulation may crash!");
+        }
         convergence = false;
         // in case of multilevel PP only: if coarse model optimization converged
         // steering the requests for evaluation of coarse and fine model, respectively
@@ -297,7 +298,10 @@ void ParallelCouplingScheme::implicitAdvance()
         // measure convergence of the coupling iteration,
         convergence = measureConvergence(designSpecifications);
         // Stop, when maximal iteration count (given in config) is reached
-        if (maxIterationsReached())   convergence = true;
+        if (maxIterationsReached()){
+          convergence = true;
+          preciceWarning(__func__,"The coupling didn't converge within the prescribed maximum number of iterations. The simulation may crash!");
+        }
       }
 
       // passed by reference, modified in MM post processing. No-op for all other post-processings

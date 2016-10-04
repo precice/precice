@@ -542,7 +542,6 @@ void MMPostProcessing::performPostProcessing(
           "the given maximum number of allowed iterations: "<<_maxIterCoarseModelOpt);
     }
   }
-  std::cout<<"  * Manifold Mapping Iterations: "<<its<<"\n"<<"  * Coarse Model Optimization Iterations: "<<_iterCoarseModelOpt<<std::endl;
   DEBUG("  * Manifold Mapping Iterations: "<<its);
   DEBUG("  * Coarse Model Optimization Iterations: "<<_iterCoarseModelOpt);
 }

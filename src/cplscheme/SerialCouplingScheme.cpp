@@ -243,8 +243,10 @@ void SerialCouplingScheme::advance()
           // in case of multilevel post processing only: measure the convergence of the coarse model optimization
           convergenceCoarseOptimization = measureConvergenceCoarseModelOptimization(designSpecifications);
           // Stop, when maximal iteration count (given in config) is reached
-          if (maxIterationsReached())
+          if (maxIterationsReached()){
             convergenceCoarseOptimization = true;
+            preciceWarning(__func__,"Coarse model optimization didn't converge within the prescribed maximum number of iterations. The simulation may crash!");
+          }
 
           convergence = false;
           // in case of multilevel PP only: if coarse model optimization converged
@@ -267,7 +269,10 @@ void SerialCouplingScheme::advance()
           // measure convergence of the coupling iteration,
           convergence = measureConvergence(designSpecifications);
           // Stop, when maximal iteration count (given in config) is reached
-          if (maxIterationsReached())   convergence = true;
+          if (maxIterationsReached()){
+            convergence = true;
+            preciceWarning(__func__,"The coupling didn't converge within the prescribed maximum number of iterations. The simulation may crash!");
+          }
         }
 
         // passed by reference, modified in MM post processing. No-op for all other post-processings
@@ -313,12 +318,7 @@ void SerialCouplingScheme::advance()
           /*
           // TODO: (Edit: Done in the solver now) need to copy coarse old values to fine old values, as first solver always sends zeros to the second solver (as pressure vals)
           //       in the serial scheme, only the sendData is registered in MM PP, we also need to register the pressure values, i.e.
-          //       old fine pressure vals = old coarse pressure vals TODO: find better solution,
-          //auto fineIDs = getPostProcessing()->getDataIDs();
-          //for(auto id: fineIDs){
-          //  std::cout<<"id: "<<id<<", fineIds.size(): "<<fineIDs.size()<<std::endl;
-          //  getReceiveData(id)->oldValues.column(0) = getReceiveData(id+fineIDs.size())->oldValues.column(0);
-          //}
+          //       old fine pressure vals = old coarse pressure vals
            */
 
         // only fine model solver evaluation is done, no PP
