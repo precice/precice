@@ -6,7 +6,7 @@
 #include "io/TXTWriter.hpp"
 
 #include "Eigen/Core"
-#include "Eigen/LU"
+#include "Eigen/QR"
 
 namespace precice {
 namespace mapping {
@@ -69,7 +69,7 @@ private:
 
   Eigen::MatrixXd _matrixA;
 
-  Eigen::PartialPivLU<Eigen::MatrixXd> _lu;
+  Eigen::ColPivHouseholderQR<Eigen::MatrixXd> _qr;
   
   /// true if the mapping along some axis should be ignored
   bool* _deadAxis;
@@ -82,14 +82,15 @@ private:
     if (getDimensions() == 2) {
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
-      preciceCheck(not (xDead && yDead), "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
-      if (zDead) preciceWarning("setDeadAxis()", "Setting the z-axis to dead on a 2 dimensional problem has not effect and will be ignored.");
+      CHECK(not (xDead && yDead), "You cannot choose all axis to be dead for a RBF mapping");
+      if (zDead)
+        WARN("Setting the z-axis to dead on a 2 dimensional problem has not effect and will be ignored.");
     }
     else if (getDimensions() == 3) {
       _deadAxis[0] = xDead;
       _deadAxis[1] = yDead;
       _deadAxis[2] = zDead;
-      preciceCheck(not (xDead && yDead && zDead), "setDeadAxis()", "You cannot choose all axis to be dead for a RBF mapping");
+      CHECK(not (xDead && yDead && zDead), "You cannot choose all axis to be dead for a RBF mapping");
     }
     else {
       assertion(false);
@@ -227,13 +228,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
   computeIndex++;
 # endif // PRECICE_STATISTICS
 
-  _lu = matrixCLU.partialPivLu();
+  _qr = matrixCLU.colPivHouseholderQr();
   
-  double determinant = _lu.determinant();
-
-  if (tarch::la::equals(determinant, 0.0)) {
-    ERROR("Interpolation matrix C has determinant of 0, i.e.. is not regular.");
-  }
+  if (not _qr.isInvertible())
+    ERROR("Interpolation matrix C is not invertible.");
   
   _hasComputedMapping = true;
 }
@@ -247,9 +245,9 @@ bool RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: hasComputedMapping() const
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
-  preciceTrace("clear()");
+  TRACE();
   _matrixA = Eigen::MatrixXd();
-  _lu = Eigen::PartialPivLU<Eigen::MatrixXd>();
+  _qr = Eigen::ColPivHouseholderQR<Eigen::MatrixXd>();
   _hasComputedMapping = false;
 }
 
@@ -299,7 +297,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 #     endif
 
       Au = _matrixA.transpose() * in;
-      out = _lu.solve(Au);
+      out = _qr.solve(Au);
 
       // Copy mapped data to output data values
 #     ifdef PRECICE_STATISTICS
@@ -327,7 +325,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
         in[i] = inValues(i*valueDim + dim);
       }
 
-      p = _lu.solve(in);
+      p = _qr.solve(in);
       out = _matrixA * p;
 
       // Copy mapped data to ouptut data values
