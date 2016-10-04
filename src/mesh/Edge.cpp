@@ -1,6 +1,5 @@
 #include "Edge.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "boost/assign.hpp"
 
 namespace precice {
 namespace mesh {
@@ -12,7 +11,7 @@ Edge:: Edge
   int     id )
 :
   PropertyContainer (),
-  _vertices ( boost::assign::list_of(&vertexOne)(&vertexTwo).to_array(_vertices) ),
+  _vertices( {&vertexOne, &vertexTwo} ),
   _id ( id ),
   _normal ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) ),
   _center ( Eigen::VectorXd::Constant(vertexOne.getDimensions(), 0.0) ),

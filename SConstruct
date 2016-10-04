@@ -163,9 +163,6 @@ uniqueCheckLib(conf, "boost_filesystem")
 uniqueCheckLib(conf, "boost_program_options")
 env.Append(CPPDEFINES=["BOOST_LOG_DYN_LINK"])
 
-if not conf.CheckCXXHeader('boost/array.hpp'):
-    errorMissingHeader('boost/array.hpp', 'Boost')
-
 if not conf.CheckCXXHeader('boost/vmd/is_empty.hpp'):
     errorMissingHeader('boost/vmd/is_empty.hpp', 'Boost Variadic Macro Data Library')
 

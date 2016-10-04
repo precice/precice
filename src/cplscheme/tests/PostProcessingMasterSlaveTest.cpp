@@ -28,7 +28,6 @@
 #include "cplscheme/Constants.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include <string.h>
 #include "utils/EigenHelperFunctions.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"

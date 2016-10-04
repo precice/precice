@@ -3,7 +3,7 @@
 
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
-#include "boost/array.hpp"
+#include <array>
 #include "boost/noncopyable.hpp"
 #include <Eigen/Dense>
 
@@ -93,7 +93,7 @@ public:
 private:
 
   // @brief Pointers to Vertex objects defining the edge.
-  boost::array<Vertex*,2> _vertices;
+  std::array<Vertex*,2> _vertices;
 
   // @brief Unique (among edges) ID of the edge.
   int _id;

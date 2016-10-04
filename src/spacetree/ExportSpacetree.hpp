@@ -2,11 +2,9 @@
 #define PRECICE_NEWSPACETREE_EXPORTSPACETREE_HPP_
 
 #include "spacetree/Spacetree.hpp"
-#include "boost/array.hpp"
 #include "utils/Dimensions.hpp"
 #include <string>
 #include <list>
-#include <cmath>
 
 namespace precice {
 namespace spacetree {

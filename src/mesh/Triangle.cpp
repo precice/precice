@@ -2,7 +2,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "boost/assign.hpp"
 
 namespace precice {
 namespace mesh {
@@ -15,7 +14,7 @@ Triangle:: Triangle
   int   id )
 :
   PropertyContainer (),
-  _edges (boost::assign::list_of(&edgeOne)(&edgeTwo)(&edgeThree).to_array(_edges)),
+  _edges( { &edgeOne, &edgeTwo, &edgeThree} ),
   _vertexMap (),
   _id ( id ),
   _normal ( edgeOne.getDimensions() ),

@@ -6,7 +6,7 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include "boost/noncopyable.hpp"
-#include "boost/array.hpp"
+#include <array>
 
 namespace precice {
   namespace mesh {
@@ -120,10 +120,10 @@ public:
 private:
 
   // @brief Edges defining the quad.
-  boost::array<Edge*,4> _edges;
+  std::array<Edge*,4> _edges;
 
   // @brief Decider for choosing unique vertices from _edges.
-  boost::array<int,4> _vertexMap;
+  std::array<int,4> _vertexMap;
 
   // @brief ID of the edge.
   int _id;

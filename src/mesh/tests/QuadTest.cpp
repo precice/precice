@@ -5,7 +5,6 @@
 #include "utils/Parallel.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
-#include "boost/array.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mesh::tests::QuadTest)

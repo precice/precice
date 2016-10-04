@@ -2,9 +2,8 @@
 
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
-#include "boost/array.hpp"
+#include <array>
 #include "utils/Globals.hpp"
-#include "boost/assign.hpp"
 #include <limits>
 
 namespace precice {
@@ -62,7 +61,7 @@ private:
 
   utils::DynVector _vectorToProjectionPoint;
 
-  boost::array<double,2> _parametersProjectionPoint;
+  std::array<double,2> _parametersProjectionPoint;
 
   mesh::Edge* _closestEdge;
 
@@ -81,9 +80,7 @@ FindClosestEdge:: FindClosestEdge
   _searchPoint ( searchPoint ),
   _shortestDistance ( std::numeric_limits<double>::max() ),
   _vectorToProjectionPoint ( searchPoint.size(), std::numeric_limits<double>::max() ),
-  _parametersProjectionPoint (
-      boost::assign::list_of(_shortestDistance)(_shortestDistance).to_array(
-      _parametersProjectionPoint)),
+  _parametersProjectionPoint( {_shortestDistance , _shortestDistance} ),
   _closestEdge ( NULL )
 {
   assertion ( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),

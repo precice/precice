@@ -5,7 +5,7 @@
 #include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include <boost/noncopyable.hpp>
-#include <boost/array.hpp>
+#include <array>
 #include <Eigen/Dense>
 
 namespace precice {
@@ -119,10 +119,10 @@ public:
 private:
 
   // @brief Edges defining the triangle.
-  boost::array<Edge*,3> _edges;
+  std::array<Edge*,3> _edges;
 
   // @brief Decider for choosing unique vertices from _edges.
-  boost::array<int,3> _vertexMap;
+  std::array<int,3> _vertexMap;
 //  bool _vertexDeciderFirst;
 
   // @brief ID of the edge.

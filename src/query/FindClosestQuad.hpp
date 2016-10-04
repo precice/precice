@@ -3,8 +3,7 @@
 
 #include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
-#include "boost/array.hpp"
-#include "boost/assign.hpp"
+#include <array>
 #include <limits>
 
 namespace precice {
@@ -93,7 +92,7 @@ private:
   utils::DynVector _vectorToProjectionPoint;
 
   // @brief Quad coordinates of the projection point.
-  boost::array<double,4> _parametersProjectionPoint; // Does this make sense?
+  std::array<double,4> _parametersProjectionPoint; // Does this make sense?
 
   // @brief Pointer to found Quad object.
   mesh::Quad* _closestQuad;
@@ -111,9 +110,7 @@ FindClosestQuad:: FindClosestQuad
   _searchPoint ( searchPoint ),
   _shortestDistance ( std::numeric_limits<double>::max() ),
   _vectorToProjectionPoint ( _searchPoint.size(), std::numeric_limits<double>::max() ),
-  _parametersProjectionPoint ( boost::assign::list_of
-      (_shortestDistance)(_shortestDistance)(_shortestDistance)(_shortestDistance)
-      .to_array(_parametersProjectionPoint)),
+  _parametersProjectionPoint( {_shortestDistance ,_shortestDistance, _shortestDistance, _shortestDistance} ),
   _closestQuad ( NULL )
 {}
 

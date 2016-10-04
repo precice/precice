@@ -3,8 +3,7 @@
 
 #include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
-#include "boost/array.hpp"
-#include "boost/assign.hpp"
+#include <array>
 #include <limits>
 
 namespace precice {
@@ -93,7 +92,7 @@ private:
   utils::DynVector _vectorToProjectionPoint;
 
   // @brief Barycentric coordinates of the projection point.
-  boost::array<double,3> _parametersProjectionPoint;
+  std::array<double,3> _parametersProjectionPoint;
 
   // @brief Pointer to found Triangle object.
   mesh::Triangle* _closestTriangle;
@@ -111,8 +110,7 @@ FindClosestTriangle:: FindClosestTriangle
   _searchPoint ( searchPoint ),
   _shortestDistance ( std::numeric_limits<double>::max() ),
   _vectorToProjectionPoint ( _searchPoint.size(), std::numeric_limits<double>::max() ),
-  _parametersProjectionPoint ( boost::assign::list_of(_shortestDistance)
-      (_shortestDistance)(_shortestDistance).to_array(_parametersProjectionPoint)),
+  _parametersProjectionPoint( {_shortestDistance, _shortestDistance, _shortestDistance } ),
   _closestTriangle ( NULL )
 {}
 
