@@ -462,7 +462,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyEnd(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   KSPSetOperators(_solver, _matrixC, _matrixC); CHKERRV(ierr);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
-  // KSPSetInitialGuessNonzero(_solver, PETSC_TRUE); CHKERRV(ierr); // Reuse the results from the last iteration, held in the out vector.
+  KSPSetInitialGuessNonzero(_solver, PETSC_TRUE); CHKERRV(ierr); // Reuse the results from the last iteration, held in the out vector.
   KSPSetFromOptions(_solver);
 
   // if (totalNNZ > static_cast<size_t>(20*n)) {
@@ -481,8 +481,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   DEBUG("Number of mallocs for matrix A = " << _matrixA.getInfo(MAT_LOCAL).mallocs);
   DEBUG("Non-zeros allocated / used / unused for matrix A = " << _matrixA.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixA.getInfo(MAT_LOCAL).nz_used << " / " << _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
 
-  _matrixC.write("pet.matrixC.ascii", petsc::ASCII);
-  // _matrixC.write("pet.matrixC.binary", petsc::BINARY);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -561,13 +559,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         ERROR("RBF linear system has not converged.");
       }
       
-      // petsc::Vector res(_matrixC, "Residual");
-      // PetscReal resNorm;
-      // MatResidual(_matrixC, Au, out, res);
-      // VecNorm(res, NORM_2, &resNorm);
-      // res.view();
-      // DEBUG("Residual norm = " << resNorm);
-      
       VecChop(out, 1e-9);
 
       // Copy mapped data to output data values
@@ -605,17 +596,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       }
       in.assemble();
       INFO("previousSolution.size before = " << previousSolution.size());
-      // petsc::Vector& p = std::get<0>(  // Save and reuse the solution from the previous iteration
-      //   previousSolution.emplace(std::piecewise_construct,
-      //                            std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-      //                            std::forward_as_tuple(_matrixC, "p"))
-      //   )->second;
-      petsc::Vector p(_matrixC, "p");
-      // in.write("pet.in", petsc::BINARY);
-      // p.write("pet.p0", petsc::BINARY);
+      petsc::Vector& p = std::get<0>(  // Save and reuse the solution from the previous iteration
+        previousSolution.emplace(std::piecewise_construct,
+                                 std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
+                                 std::forward_as_tuple(_matrixC, "p"))
+        )->second;
+      
       ierr = KSPSolve(_solver, in, p); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
-      // p.write("pet.p1", petsc::BINARY);
       if (convReason < 0) {
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
         ERROR("RBF linear system has not converged.");
