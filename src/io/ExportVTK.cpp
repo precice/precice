@@ -42,7 +42,7 @@ void ExportVTK:: doExport
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
-  outfile = outfile / fs::path(name);
+  outfile = outfile / fs::path(name + ".vtk");
   std::ofstream outstream(outfile.string(), std::ios::trunc);
   preciceCheck(outstream, "doExport()", "Could not open file \"" << outfile.c_str()
                  << "\" for VTK export!");

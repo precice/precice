@@ -252,8 +252,7 @@ void SolverInterfaceImpl:: configure
 double SolverInterfaceImpl:: initialize()
 {
   preciceTrace("initialize()");
-  //Event e("initialize", not precice::testMode);
-  Event e("initialize");
+  Event e("initialize", not precice::testMode);
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "initialize"
@@ -385,8 +384,7 @@ double SolverInterfaceImpl:: initialize()
 void SolverInterfaceImpl:: initializeData ()
 {
   preciceTrace("initializeData()" );
-//  Event e("initializeData", not precice::testMode);
-  Event e("initializeData");
+  Event e("initializeData", not precice::testMode);
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "initializeData"
@@ -430,7 +428,7 @@ double SolverInterfaceImpl:: advance
 {
   preciceTrace("advance()", computedTimestepLength);
 
-  Event e("advance");
+  Event e("advance", not precice::testMode);
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
       "advance"
@@ -445,8 +443,6 @@ double SolverInterfaceImpl:: advance
   else {
 #   ifdef Debug
     if(utils::MasterSlave::_masterMode || utils::MasterSlave::_slaveMode){
-      Event e("advance/syncTimestep", not precice::testMode);
-
       syncTimestep(computedTimestepLength);
     }
 #   endif
@@ -499,7 +495,9 @@ double SolverInterfaceImpl:: advance
     }
     performDataActions(timings, time, computedTimestepLength, timestepPart, timestepLength);
 
-    mapReadData();
+    if (_couplingScheme->hasDataBeenExchanged()){
+      mapReadData();
+    }
 
     preciceInfo("advance()", _couplingScheme->printCouplingState());
 

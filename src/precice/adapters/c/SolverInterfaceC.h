@@ -28,6 +28,11 @@ void precicec_createSolverInterface (
 double precicec_initialize();
 
 /**
+ * @brief Initializes coupling data.
+ */
+void precicec_initialize_data();
+
+/**
  * @brief Exchanges data between solver and coupling supervisor.
  *
  * @param computedTimestepLength [IN] Length of timestep computed by solver.

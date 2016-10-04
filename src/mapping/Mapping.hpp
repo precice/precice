@@ -1,14 +1,6 @@
 #pragma once
 
-#include "SharedPointer.hpp"
-#include "mesh/PropertyContainer.hpp"
-#include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
-#include "query/FindClosest.hpp"
-#include "spacetree/SharedPointer.hpp"
-#include "utils/Dimensions.hpp"
-#include "utils/Helpers.hpp"
-#include <vector>
 
 namespace precice {
   namespace mesh {

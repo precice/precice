@@ -18,7 +18,6 @@ class ValuePreconditioner : public Preconditioner
 public:
 
   ValuePreconditioner(
-      std::vector<int> dimensions,
       int maxNonConstTimesteps);
   /**
    * @brief Destructor, empty.

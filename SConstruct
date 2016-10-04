@@ -142,7 +142,10 @@ if env["petsc"]:
     env.Append(CPPPATH = [os.path.join( PETSC_DIR, "include"),
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
     env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
-    uniqueCheckLib(conf, "petsc")
+    if env["platform"] == "hazelhen":
+        uniqueCheckLib(conf, "craypetsc_gnu_real")
+    else:
+        uniqueCheckLib(conf, "petsc")
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
@@ -154,6 +157,12 @@ if env["build"] == "debug":
     env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
 
 # ====== Boost ======
+# Needed for correct linking on Hazel Hen
+# Otherwise it would link partly to old system boost, partly to newer modules boost
+if env["platform"] == "hazelhen":
+    env.Append(CPPPATH = [os.environ['BOOST_ROOT'] + '/include'])
+    env.Append(LIBPATH = [os.environ['BOOST_ROOT'] + '/lib'])
+
 env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3'])
 uniqueCheckLib(conf, "boost_log")
 uniqueCheckLib(conf, "boost_log_setup")
@@ -185,9 +194,7 @@ elif not env["mpi"]:
 
 # ====== Sockets ======
 if env["sockets"]:
-    pthreadLibPath = checkset_var('PRECICE_PTHREAD_LIB_PATH', "/usr/lib")
     pthreadLib = checkset_var('PRECICE_PTHREAD_LIB', "pthread")
-    pthreadIncPath =  checkset_var('PRECICE_PTHREAD_INC_PATH', '/usr/include')
 
     if sys.platform.startswith('win') or sys.platform.startswith('msys'):
         socketLibPath = checkset_var('PRECICE_SOCKET_LIB_PATH', "/mingw64/lib")
@@ -202,10 +209,7 @@ if env["sockets"]:
             if not conf.CheckHeader('winsock2.h'):
                 errorMissingHeader('winsock2.h', 'Windows Sockets 2')
 
-    
-    env.AppendUnique(LIBPATH = [pthreadLibPath])
     uniqueCheckLib(conf, pthreadLib)
-    env.AppendUnique(CPPPATH = [pthreadIncPath])
     if pthreadLib == 'pthread':
         if not conf.CheckCXXHeader('pthread.h'):
             errorMissingHeader('pthread.h', 'POSIX Threads')
@@ -215,14 +219,12 @@ else:
 
 # ====== Python ======
 if env["python"]:
-    pythonLibPath = checkset_var('PRECICE_PYTHON_LIB_PATH', '/usr/lib/')
     pythonLib = checkset_var('PRECICE_PYTHON_LIB', "python2.7")
     pythonIncPath = checkset_var('PRECICE_PYTHON_INC_PATH', '/usr/include/python2.7/')
     numpyIncPath = checkset_var('PRECICE_NUMPY_INC_PATH',  '/usr/include/python2.7/numpy/')
     
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
     env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
-    env.AppendUnique(LIBPATH = [pythonLibPath])
     uniqueCheckLib(conf, pythonLib)
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
     if not conf.CheckCXXHeader('Python.h'):
@@ -274,6 +276,7 @@ bin = env.Program (
     target = buildpath + '/binprecice',
     source = [sourcesPreCICEMain]
 )
+env.Alias("bin", bin)
 
 # Creates a symlink that always points to the latest build
 symlink = env.Command(

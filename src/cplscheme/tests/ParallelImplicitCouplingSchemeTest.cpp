@@ -255,9 +255,7 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
   dataIDs.push_back(1);
   std::vector<double> factors;
   factors.resize(2,1.0);
-  std::vector<int> dims;
-  dims.resize(2,1);
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(dims,factors));
+  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
 
   std::map<int, double> scalings;
   scalings.insert(std::make_pair(0,1.0));
@@ -367,9 +365,7 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   dataIDs.push_back(1);
   std::vector<double> factors;
   factors.resize(2,1.0);
-  std::vector<int> dims;
-  dims.resize(2,1);
-  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(dims,factors));
+  impl::PtrPreconditioner prec(new impl::ConstantPreconditioner(factors));
   mesh::PtrMesh dummyMesh ( new mesh::Mesh("dummyMesh", 3, false) );
 
   

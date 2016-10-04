@@ -30,6 +30,12 @@ double precicec_initialize()
   return impl->initialize ();
 }
 
+void precicec_initialize_data()
+{
+  assertion ( impl != nullptr );
+  impl->initializeData ();
+}
+
 double precicec_advance( double computedTimestepLength )
 {
   assertion ( impl != nullptr );

@@ -66,6 +66,7 @@ void UncoupledScheme:: advance()
     //  setMaxLengthNextTimestep ( getMaxTime() - getTime() );
     //}
   setComputedTimestepPart(0.0);
+  setHasDataBeenExchanged(true); //to always map data in advance
   //}
 }
 

@@ -4,8 +4,6 @@
 #include "impl/BasisFunctions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "io/TXTWriter.hpp"
-#include <limits>
-#include <typeinfo>
 
 #include "Eigen/Core"
 #include "Eigen/LU"
@@ -32,8 +30,8 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param constraint [IN] Specifies mapping to be consistent or conservative.
-   * @param function [IN] Radial basis function used for mapping.
+   * @param[in] constraint Specifies mapping to be consistent or conservative.
+   * @param[in] function Radial basis function used for mapping.
    */
   RadialBasisFctMapping (
     Constraint              constraint,
@@ -135,11 +133,10 @@ RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: ~RadialBasisFctMapping()
 template<typename RADIAL_BASIS_FUNCTION_T>
 void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 {
-  preciceTrace("computeMapping()");
+  TRACE();
 
-  preciceCheck(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
-               "computeMapping()", "RBF mapping  "
-               << " is not yet supported for a participant in master mode");
+  CHECK(not utils::MasterSlave::_slaveMode && not utils::MasterSlave::_masterMode,
+        "RBF mapping is not supported for a participant in master mode, use petrbf instead");
 
   assertion(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());
@@ -232,10 +229,10 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: computeMapping()
 
   _lu = matrixCLU.partialPivLu();
   
-  int determinant = _lu.determinant();
+  double determinant = _lu.determinant();
 
-  if (determinant == 0){
-    preciceWarning("computeMapping()", "Interpolation matrix C has determinant of 0, e.g. is not regular.");
+  if (tarch::la::equals(determinant, 0.0)) {
+    ERROR("Interpolation matrix C has determinant of 0, i.e.. is not regular.");
   }
   
   _hasComputedMapping = true;
@@ -262,7 +259,7 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
   int inputDataID,
   int outputDataID )
 {
-  preciceTrace("map()", inputDataID, outputDataID);
+  TRACE(inputDataID, outputDataID);
   assertion(_hasComputedMapping);
   assertion(input()->getDimensions() == output()->getDimensions(),
              input()->getDimensions(), output()->getDimensions());

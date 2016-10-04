@@ -58,12 +58,13 @@ void LogConfiguration::xmlTagCallback
   utils::XMLTag& tag )
 {
   preciceTrace("xmlTagCallback()", tag.getFullName());
-  if (tag.getName() == "sink") {
+  if (tag.getName() == "sink" and tag.getBooleanAttributeValue("enabled")) {
     precice::logging::BackendConfiguration config;
     config.setOption("type", tag.getStringAttributeValue("type"));
     config.setOption("output", tag.getStringAttributeValue("output"));
     config.setOption("filter", tag.getStringAttributeValue("filter"));
     config.setOption("format", tag.getStringAttributeValue("format"));
+    config.setOption("enabled", "true"); // Not necessare, but correct.
     _logconfig.push_back(config);
   }
 }

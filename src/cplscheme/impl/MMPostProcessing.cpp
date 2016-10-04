@@ -99,6 +99,7 @@ void MMPostProcessing::initialize(
   preciceTrace(__func__, cplData.size());
   size_t entries = 0;
   size_t coarseEntries = 0;
+  std::vector<size_t> subVectorSizes; //needed for preconditioner
 
   assertion(_fineDataIDs.size() == _coarseDataIDs.size(), _fineDataIDs.size(), _coarseDataIDs.size());
   assertion(_dataIDs.size() == 0, _dataIDs.size());
@@ -110,6 +111,7 @@ void MMPostProcessing::initialize(
     preciceCheck(utils::contained(elem, cplData), "initialize()",
         "Data with ID " << elem << " is not contained in data " "given at initialization!");
     entries += cplData[elem]->values->size();
+    subVectorSizes.push_back(cplData[elem]->values->size());
   }
 
   for (auto & elem : _coarseDataIDs) {
@@ -209,7 +211,7 @@ void MMPostProcessing::initialize(
     }
   }
 
-  _preconditioner->initialize(entries);
+  _preconditioner->initialize(subVectorSizes);
 }
 
 
