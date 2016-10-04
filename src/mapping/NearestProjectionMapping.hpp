@@ -4,6 +4,8 @@
 #include <list>
 #include <vector>
 #include "logging/Logger.hpp"
+#include "query/FindClosest.hpp"
+
 namespace precice {
 namespace mapping {
 

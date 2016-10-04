@@ -1,30 +1,26 @@
 #pragma once
 #ifndef PRECICE_NO_PETSC
 
-#include <limits>
-#include <typeinfo>
+#include "mapping/Mapping.hpp"
+
 #include <map>
 
-#include "mapping/Mapping.hpp"
 #include "impl/BasisFunctions.hpp"
-#include "tests/PetRadialBasisFctMappingTest.hpp"
-#include "utils/MasterSlave.hpp"
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
+#include "utils/EventTimings.hpp"
 
 #include "petscmat.h"
 #include "petscksp.h"
 #include "petsclog.h"
 
-#include <iostream>
-using std::cout;
-using std::endl;
-#include "utils/prettyprint.hpp"
-#include "utils/EventTimings.hpp"
-
-
 namespace precice {
 namespace mapping {
+
+namespace tests {
+class PetRadialBasisFctMappingTest; // Forward declaration to friend the class
+}
+
 
 /**
  * @brief Mapping with radial basis functions using the Petsc library to solve the resulting system.
@@ -466,7 +462,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatAssemblyEnd(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   KSPSetOperators(_solver, _matrixC, _matrixC); CHKERRV(ierr);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
-  KSPSetInitialGuessNonzero(_solver, PETSC_TRUE); CHKERRV(ierr); // Reuse the results from the last iteration, held in the out vector.
+  // KSPSetInitialGuessNonzero(_solver, PETSC_TRUE); CHKERRV(ierr); // Reuse the results from the last iteration, held in the out vector.
   KSPSetFromOptions(_solver);
 
   // if (totalNNZ > static_cast<size_t>(20*n)) {
@@ -484,6 +480,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   DEBUG("Non-zeros allocated / used / unused for matrix C = " << _matrixC.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixC.getInfo(MAT_LOCAL).nz_used << " / " << _matrixC.getInfo(MAT_LOCAL).nz_unneeded);
   DEBUG("Number of mallocs for matrix A = " << _matrixA.getInfo(MAT_LOCAL).mallocs);
   DEBUG("Non-zeros allocated / used / unused for matrix A = " << _matrixA.getInfo(MAT_LOCAL).nz_allocated << " / " << _matrixA.getInfo(MAT_LOCAL).nz_used << " / " << _matrixA.getInfo(MAT_LOCAL).nz_unneeded);
+
+  _matrixC.write("pet.matrixC.ascii", petsc::ASCII);
+  // _matrixC.write("pet.matrixC.binary", petsc::BINARY);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -605,15 +604,18 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         count++;
       }
       in.assemble();
-      
-      petsc::Vector& p = std::get<0>(  // Save and reuse the solution from the previous iteration
-        previousSolution.emplace(std::piecewise_construct,
-                                 std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
-                                 std::forward_as_tuple(_matrixC, "p"))
-        )->second;
-      
+      INFO("previousSolution.size before = " << previousSolution.size());
+      // petsc::Vector& p = std::get<0>(  // Save and reuse the solution from the previous iteration
+      //   previousSolution.emplace(std::piecewise_construct,
+      //                            std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
+      //                            std::forward_as_tuple(_matrixC, "p"))
+      //   )->second;
+      petsc::Vector p(_matrixC, "p");
+      // in.write("pet.in", petsc::BINARY);
+      // p.write("pet.p0", petsc::BINARY);
       ierr = KSPSolve(_solver, in, p); CHKERRV(ierr);
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
+      // p.write("pet.p1", petsc::BINARY);
       if (convReason < 0) {
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
         ERROR("RBF linear system has not converged.");

@@ -2,7 +2,6 @@
 
 #include "utils/Globals.hpp"
 
-
 namespace precice {
 namespace mapping {
 
@@ -78,9 +77,8 @@ public:
   InverseMultiquadrics ( double c )
     : _cPow2(std::pow(c, 2))
   {
-    preciceCheck(tarch::la::greater(c, 0.0), "InverseMultiquadrics()",
-                 "Shape parameter for radial-basis-function inverse multiquadric"
-                 << " has to be larger than zero!");
+    CHECK(tarch::la::greater(c, 0.0),
+          "Shape parameter for radial-basis-function inverse multiquadric has to be larger than zero!");
   }
 
   bool hasCompactSupport() const
@@ -140,9 +138,8 @@ public:
   Gaussian (const double shape, const double supportRadius = std::numeric_limits<double>::infinity() )
     : _shape(shape)
   {
-    preciceCheck(tarch::la::greater(_shape, 0.0), "Gaussian()",
-                 "Shape parameter for radial-basis-function gaussian"
-                 << " has to be larger than zero!");
+    CHECK(tarch::la::greater(_shape, 0.0),
+          "Shape parameter for radial-basis-function gaussian has to be larger than zero!");
 
     _deltaY = hasCompactSupport() ? evaluate(supportRadius) : 0;
     double threshold = std::sqrt( -std::log(cutoffThreshold) ) / shape;
@@ -241,9 +238,8 @@ public:
   CompactPolynomialC0 ( double supportRadius )
     : _r(supportRadius)
   {
-    preciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC0()",
-                 "Support radius for radial-basis-function compact polynomial c0"
-                 << " has to be larger than zero!");
+    CHECK(tarch::la::greater(_r, 0.0),
+          "Support radius for radial-basis-function compact polynomial c0 has to be larger than zero!");
   }
 
   bool hasCompactSupport() const
@@ -282,9 +278,8 @@ public:
   CompactPolynomialC6 ( double supportRadius )
     : _r(supportRadius)
   {
-    preciceCheck(tarch::la::greater(_r, 0.0), "CompactPolynomialC6()",
-                 "Support radius for radial-basis-function compact polynomial c6"
-                 << " has to be larger than zero!");
+    CHECK(tarch::la::greater(_r, 0.0),
+          "Support radius for radial-basis-function compact polynomial c6 has to be larger than zero!");
   }
 
   bool hasCompactSupport() const
