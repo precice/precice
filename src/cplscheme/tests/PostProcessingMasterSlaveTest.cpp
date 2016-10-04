@@ -444,7 +444,7 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 {
 	preciceTrace ( "testVIQNIMVJpp" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
+	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIDirectCommunication());
 	utils::MasterSlave::_communication = masterSlaveCom;
 
 	utils::Parallel::synchronizeProcesses();

@@ -214,13 +214,13 @@ void IQNILSPostProcessing::computeQNUpdate
 	e_qrsolve.stop();
 
 	// REOMVE!!
-	c = _matrixV.householderQr().solve(-_residuals);
+	//c = _matrixV.householderQr().solve(-_residuals);
 
 
 	DEBUG("   Apply Newton factors");
 	// compute x updates from W and coefficients c, i.e, xUpdate = c*W
-	xUpdate = ((_matrixW-_matrixV) + 1.*_matrixV) * c;
-	//xUpdate = _matrixW * c;
+	//xUpdate = ((_matrixW-_matrixV) + 1.*_matrixV) * c;
+	xUpdate = _matrixW * c;
 
 	//DEBUG("c = " << c);
 

@@ -245,10 +245,13 @@ void ParallelCouplingScheme::implicitAdvance()
     else { // second participant
 
       // DIRTY HACK for manifold mapping
-      auto fine_IDs = getPostProcessing()->getDataIDs();
-      auto& allData = getAllData();
-      // TODO: make this error safe ... should be receive data or something.... and then check whether it is fine data
-      Eigen::VectorXd storeOldInput = (*allData.at( fine_IDs[1] )->values);
+      Eigen::VectorXd storeOldInput;
+      if(getPostProcessing().get() != nullptr && getPostProcessing()->isMultilevelBasedApproach()){
+        const auto& allData = getAllData();
+        const auto& fine_IDs = getPostProcessing()->getDataIDs();
+        // TODO: make this error safe ... should be receive data or something.... and then check whether it is fine data
+        storeOldInput = (*allData.at( fine_IDs[1] )->values);
+      }
 
       getM2N()->startReceivePackage(0);
       receiveData(getM2N());
@@ -282,6 +285,8 @@ void ParallelCouplingScheme::implicitAdvance()
           // precice's send and receive of data automatically overrides the data, as there is different data for the respective
           // id present at the first participants side.
           // TODO: make this error safe ... should be receive data or something.... and then check whether it is fine data
+          auto& allData = getAllData();
+          const auto& fine_IDs = getPostProcessing()->getDataIDs();
           (*allData.at( fine_IDs[1] )->values) = storeOldInput;
 
           // reset the convergence measures for the coarse model optimization
