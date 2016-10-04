@@ -52,7 +52,8 @@ public:
     bool                    xDead,
     bool                    yDead,
     bool                    zDead,
-    double                  solverRtol = 1e-9);
+    double                  solverRtol = 1e-9,
+    bool                    usePolynom = true);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
@@ -94,6 +95,9 @@ private:
   /// true if the mapping along some axis should be ignored
   bool* _deadAxis;
 
+  /// Toggles the use of the additonal polynomial
+  const bool _polynomial;
+
   virtual bool doesVertexContribute(int vertexID) const override;
 
   void incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end);
@@ -116,14 +120,16 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   bool                    xDead,
   bool                    yDead,
   bool                    zDead,
-  double                  solverRtol)
+  double                  solverRtol,
+  bool                    polynomial)
   :
   Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
   _matrixC(PETSC_COMM_WORLD, "C"),
   _matrixA(PETSC_COMM_WORLD, "A"),
-  _solverRtol(solverRtol)
+  _solverRtol(solverRtol),
+  _polynomial(polynomial)
 {
   setInputRequirement(VERTEX);
   setOutputRequirement(VERTEX);
@@ -187,7 +193,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   for (int d=0; d<dimensions; d++) {
     if (_deadAxis[d]) deadDimensions +=1;
   }
-  size_t polyparams = 1 + dimensions - deadDimensions;
+  size_t polyparams = _polynomial ? 1 + dimensions - deadDimensions : 0;
 
   // Indizes that are used to build the Petsc Index set
   std::vector<int> myIndizes;
@@ -314,23 +320,25 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       continue;
 
     int row = inVertex.getGlobalIndex() + polyparams;
-
-    // -- SETS THE POLYNOM PART OF THE MATRIX --
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
     PetscScalar colVals[_matrixC.getSize().second]; // holds the values of the entries
+    
+    // -- SETS THE POLYNOM PART OF THE MATRIX --
     PetscInt polyRow = 0, polyCol = row;
-    PetscScalar y = 1;
-    ierr = MatSetValuesLocal(_matrixC, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
-    int actualDim = 0;
-    for (int dim = 0; dim < dimensions; dim++) {
-      if (not _deadAxis[dim]) {
-        y = inVertex.getCoords()[dim];
-        polyRow = 1 + actualDim;
-        actualDim++;
-        ierr = MatSetValuesLocal(_matrixC, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+    if (_polynomial) {
+      PetscScalar y = 1;
+      ierr = MatSetValuesLocal(_matrixC, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+      int actualDim = 0;
+      for (int dim = 0; dim < dimensions; dim++) {
+        if (not _deadAxis[dim]) {
+          y = inVertex.getCoords()[dim];
+          polyRow = 1 + actualDim;
+          actualDim++;
+          ierr = MatSetValuesLocal(_matrixC, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+        }
       }
     }
-
+    
     // -- SETS THE COEFFICIENTS --
     PetscInt colNum = 0;  // holds the number of columns
     for (mesh::Vertex& vj : inMesh->vertices()) {
@@ -423,15 +431,17 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     const mesh::Vertex& oVertex = outMesh->vertices()[it - _matrixA.ownerRange().first];
 
     // -- SET THE POLYNOM PART OF THE MATRIX --
-    PetscInt polyRow = it, polyCol = 0;
-    PetscScalar y = 1;
-    ierr = MatSetValuesLocal(_matrixA, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
-    for (int dim = 0; dim < dimensions; dim++) {
-      if (not _deadAxis[dim]) {
-        y = oVertex.getCoords()[dim];
-        polyCol++;
-        // DEBUG("Filling A with polyparams: polyRow = " << polyRow << ", polyCol = " << polyCol << " Preallocation = " << nnzA[polyRow]);
-        ierr = MatSetValuesLocal(_matrixA, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr); // das zusammen mit den MatSetValuesLocal unten machen
+    if (_polynomial) {
+      PetscInt polyRow = it, polyCol = 0;
+      PetscScalar y = 1;
+      ierr = MatSetValuesLocal(_matrixA, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+      for (int dim = 0; dim < dimensions; dim++) {
+        if (not _deadAxis[dim]) {
+          y = oVertex.getCoords()[dim];
+          polyCol++;
+          // DEBUG("Filling A with polyparams: polyRow = " << polyRow << ", polyCol = " << polyCol << " Preallocation = " << nnzA[polyRow]);
+          ierr = MatSetValuesLocal(_matrixA, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr); // das zusammen mit den MatSetValuesLocal unten machen
+        }
       }
     }
 

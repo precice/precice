@@ -89,8 +89,9 @@ MappingConfiguration:: MappingConfiguration
   XMLAttribute<bool> attrZDead(ATTR_Z_DEAD);
   attrZDead.setDocumentation("If set to true, the z axis will be ignored for the mapping");
   attrZDead.setDefaultValue(false);
-
-
+  XMLAttribute<bool> attrPolynomial("polynomial");
+  attrPolynomial.setDocumentation("Toggles use of the global polynomial");
+  attrPolynomial.setDefaultValue(true);
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
@@ -168,6 +169,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrXDead);
     tag.addAttribute(attrYDead);
     tag.addAttribute(attrZDead);
+    tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
   {
@@ -177,6 +179,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrXDead);
     tag.addAttribute(attrYDead);
     tag.addAttribute(attrZDead);
+    tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
   {
@@ -186,6 +189,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrXDead);
     tag.addAttribute(attrYDead);
     tag.addAttribute(attrZDead);
+    tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
   {
@@ -194,6 +198,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrXDead);
     tag.addAttribute(attrYDead);
     tag.addAttribute(attrZDead);
+    tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
   {
@@ -203,6 +208,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrXDead);
     tag.addAttribute(attrYDead);
     tag.addAttribute(attrZDead);
+    tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
   {
@@ -212,6 +218,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrXDead);
     tag.addAttribute(attrYDead);
     tag.addAttribute(attrZDead);
+    tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
   {
@@ -221,6 +228,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrXDead);
     tag.addAttribute(attrYDead);
     tag.addAttribute(attrZDead);
+    tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
   {
@@ -230,6 +238,7 @@ MappingConfiguration:: MappingConfiguration
     tag.addAttribute(attrXDead);
     tag.addAttribute(attrYDead);
     tag.addAttribute(attrZDead);
+    tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
 
@@ -357,9 +366,9 @@ void MappingConfiguration:: xmlTagCallback
     double shapeParameter = 0.0;
     double supportRadius = 0.0;
     double solverRtol = 1e-9;
-    bool xDead = false;
-    bool yDead = false;
-    bool zDead = false;
+    bool xDead = false, yDead = false, zDead = false;
+    bool polynomial = true;
+    
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
     }
@@ -378,10 +387,14 @@ void MappingConfiguration:: xmlTagCallback
     if (tag.hasAttribute(ATTR_Z_DEAD)){
       zDead = tag.getBooleanAttributeValue(ATTR_Z_DEAD);
     }
+    if (tag.hasAttribute("polynomial")) {
+      polynomial = tag.getBooleanAttributeValue("polynomial");
+    }
         
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
-      fromMesh, toMesh, timing, shapeParameter, supportRadius, solverRtol,
-      xDead, yDead, zDead);
+                                                        fromMesh, toMesh, timing,
+                                                        shapeParameter, supportRadius, solverRtol,
+                                                        xDead, yDead, zDead, polynomial);
     checkDuplicates ( configuredMapping );
     _mappings.push_back ( configuredMapping );
   }
@@ -439,7 +452,8 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   double             solverRtol,
   bool               xDead,
   bool               yDead,
-  bool               zDead) const
+  bool               zDead,
+  bool               polynomial) const
 {
   preciceTrace("createMapping()", direction, type, timing,
                 shapeParameter, supportRadius);
@@ -556,59 +570,58 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<ThinPlateSplines>(constraintValue, dimensions, ThinPlateSplines(),
-                                                     xDead, yDead, zDead, solverRtol) );
+                                                     xDead, yDead, zDead, solverRtol, polynomial) );
   }
   else if (type == VALUE_PETRBF_MULTIQUADRICS){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<Multiquadrics>(
         constraintValue, dimensions, Multiquadrics(shapeParameter),
-        xDead, yDead, zDead, solverRtol) );
+        xDead, yDead, zDead, solverRtol, polynomial) );
   }
   else if (type == VALUE_PETRBF_INV_MULTIQUADRICS){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<InverseMultiquadrics>(
         constraintValue, dimensions, InverseMultiquadrics(shapeParameter),
-        xDead, yDead, zDead, solverRtol) );
+        xDead, yDead, zDead, solverRtol, polynomial) );
   }
   else if (type == VALUE_PETRBF_VOLUME_SPLINES){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<VolumeSplines>(constraintValue, dimensions, VolumeSplines(),
-                                                  xDead, yDead, zDead, solverRtol) );
+                                                  xDead, yDead, zDead, solverRtol, polynomial) );
   }
   else if (type == VALUE_PETRBF_GAUSSIAN){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping(
         new PetRadialBasisFctMapping<Gaussian>(
           constraintValue, dimensions, Gaussian(shapeParameter),
-          xDead, yDead, zDead, solverRtol));
+          xDead, yDead, zDead, solverRtol, polynomial));
   }
   else if (type == VALUE_PETRBF_CTPS_C2){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactThinPlateSplinesC2>(
         constraintValue, dimensions, CompactThinPlateSplinesC2(supportRadius),
-        xDead, yDead, zDead, solverRtol) );
+        xDead, yDead, zDead, solverRtol, polynomial) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C0){
     utils::Petsc::initialize(&argc, &argv);
     configuredMapping.mapping = PtrMapping (
       new PetRadialBasisFctMapping<CompactPolynomialC0>(
         constraintValue, dimensions, CompactPolynomialC0(supportRadius),
-        xDead, yDead, zDead, solverRtol) );
+        xDead, yDead, zDead, solverRtol, polynomial) );
   }
   else if (type == VALUE_PETRBF_CPOLYNOMIAL_C6){
     utils::Petsc::initialize(&argc, &argv);
-    configuredMapping.mapping = PtrMapping (
-      new PetRadialBasisFctMapping<CompactPolynomialC6>(
+    configuredMapping.mapping = PtrMapping (new PetRadialBasisFctMapping<CompactPolynomialC6>(
         constraintValue, dimensions, CompactPolynomialC6(supportRadius),
-        xDead, yDead, zDead, solverRtol) );
+        xDead, yDead, zDead, solverRtol, polynomial) );
   }
 # endif
   else {
-    preciceError ( "getMapping()", "Unknown mapping type!" );
+    ERROR("Unknown mapping type!");
   }
   assertion ( configuredMapping.mapping.use_count() > 0 );
   #ifndef PRECICE_NO_PETSC
