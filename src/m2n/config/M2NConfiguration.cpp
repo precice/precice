@@ -150,7 +150,7 @@ m2n::M2N::SharedPointer M2NConfiguration:: getM2N
   const std::string& from,
   const std::string& to )
 {
-  using boost::get;
+  using std::get;
   for (M2NTuple & tuple : _m2ns){
     if ((get<1>(tuple) == from) && (get<2>(tuple) == to)){
       return get<0>(tuple);
@@ -241,7 +241,7 @@ void M2NConfiguration:: xmlTagCallback
     assertion(distrFactory.get() != nullptr);
 
     m2n::M2N::SharedPointer m2n = m2n::M2N::SharedPointer(new m2n::M2N(com, distrFactory));
-    _m2ns.push_back(boost::make_tuple(m2n, from, to));
+    _m2ns.push_back(std::make_tuple(m2n, from, to));
   }
 }
 
@@ -250,7 +250,7 @@ void M2NConfiguration:: checkDuplicates
   const std::string& from,
   const std::string& to )
 {
-  using boost::get;
+  using std::get;
   bool alreadyAdded = false;
   for (M2NTuple& tuple : _m2ns){
     alreadyAdded |= (get<1>(tuple) == from) && (get<2>(tuple) == to);

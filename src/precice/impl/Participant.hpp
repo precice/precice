@@ -15,8 +15,6 @@
 #include "logging/Logger.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
-#include "boost/tuple/tuple.hpp"
-#include <map>
 #include <string>
 
 namespace precice {

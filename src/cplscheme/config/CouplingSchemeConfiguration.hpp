@@ -14,7 +14,7 @@
 #include "logging/Logger.hpp"
 #include <vector>
 #include <string>
-#include "boost/tuple/tuple.hpp"
+#include <tuple>
 #include "precice/impl/MeshContext.hpp"
 
 namespace precice {
@@ -154,10 +154,10 @@ private:
     int validDigits;
     constants::TimesteppingMethod dtMethod;
     // @brief Tuples of exchange data, mesh, and participant name.
-    typedef boost::tuple<mesh::PtrData, mesh::PtrMesh,std::string, std::string,bool> Exchange;
+    typedef std::tuple<mesh::PtrData, mesh::PtrMesh,std::string, std::string,bool> Exchange;
     std::vector<Exchange> exchanges;
     // @brief Tuples of data ID, mesh ID, and convergence measure.
-    std::vector<boost::tuple<int, bool, std::string, int, impl::PtrConvergenceMeasure> > convMeasures;
+    std::vector<std::tuple<int, bool, std::string, int, impl::PtrConvergenceMeasure> > convMeasures;
     int maxIterations;
     int extrapolationOrder;
 

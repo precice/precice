@@ -4,7 +4,7 @@
 #include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
 
-#include <boost/tuple/tuple.hpp>
+#include <tuple>
 
 #include <memory>
 #include <string>
@@ -21,7 +21,7 @@ class M2NConfiguration : public utils::XMLTag::Listener
 public:
    using SharedPointer = std::shared_ptr<M2NConfiguration>;
 
-   typedef boost::tuple<m2n::M2N::SharedPointer,std::string,std::string> M2NTuple;
+   typedef std::tuple<m2n::M2N::SharedPointer,std::string,std::string> M2NTuple;
 
 public:
    /**
