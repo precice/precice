@@ -105,7 +105,7 @@ void SolverInterfaceTest:: configureSolverInterface
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
-  precice::utils::Events_Clear();
+  precice::utils::EventRegistry::clear();
   utils::MasterSlave::reset();
   config::Configuration config;
   utils::configure(config.getXMLTag(), configFilename);

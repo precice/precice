@@ -10,7 +10,7 @@ namespace utils {
 /// Represents an event that can be started and stopped.
 /** Additionally to the duration there is a special property that can be set for a event.
 A property is a a key-value pair with a numerical value that can be used to trace certain events,
-like MPI calls in an event. It intended to be set by the user. */
+like MPI calls in an event. It is intended to be set by the user. */
 class Event
 {
 public:
@@ -39,10 +39,7 @@ public:
   /// Gets the duration of the event.
   Clock::duration getDuration();
 
-  /// Map of additional properties that can be set by the user.
-  std::map<std::string, double> properties;
-
-  /// Adds the value to the propety.
+  /// Adds value to the global property store..
   void addProp(std::string property, double value);
 
 private:
@@ -54,7 +51,7 @@ private:
 };
 
 
-/// Class that aggregates data (durations and properties) for a specific event.
+/// Class that aggregates durations for a specific event.
 class EventData
 {
 public:
@@ -78,10 +75,6 @@ public:
 
   /// Get the time percentage that the total time of this event took in relation to the globalDuration.
   int getTimePercentage(Event::Clock::duration globalDuration);
-
-  /// Aggregated properties for this event
-  using Properties = std::map<std::string, double>;
-  Properties properties;
 
 private:
   int count = 0;
@@ -114,6 +107,9 @@ public:
   /// Records the event.
   static void put(Event* event);
 
+  /// Adds value to the global property store.
+  static void addProp(std::string property, double value);
+
   /// Prints the result table to an arbitrary stream.
   /** terse enabled a more machine readable format with one event per line, seperated by whitespace. */
   static void print(std::ostream &out, bool terse = false);
@@ -131,15 +127,9 @@ private:
   static Event::Clock::time_point globalStart;
   static Event::Clock::time_point globalStop;
   static std::map<std::string, EventData> events;
+
+  /// Map of additional properties that can be set by the user.
+  static std::map<std::string, double> properties;
 };
-
-/// Convenience function that calls EventRegistry::initalize
-void Events_Init();
-
-/// Convenience function that calls EventRegistry::finalize
-void Events_Finalize();
-
-/// Convenience function that calls EventRegistry::clear
-void Events_Clear();
 
 }} // namespace precice::utils
