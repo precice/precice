@@ -30,8 +30,7 @@ public:
   typedef tarch::la::DynamicVector<double> DataValues;
   typedef std::map<int,PtrCouplingData> DataMap;
   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-  typedef Eigen::MatrixXd EigenMatrix;
-
+  
   Preconditioner(
       int maxNonConstTimesteps)
   :
@@ -90,7 +89,7 @@ public:
    * @brief Apply preconditioner to matrix
    * @param transpose: false = from left, true = from right
    */
-  void apply(EigenMatrix& M, bool transpose){
+  void apply(Eigen::MatrixXd& M, bool transpose){
     preciceTrace(__func__);
     if(transpose){
       assertion(M.cols()==(int)_weights.size(), M.cols(), _weights.size());
@@ -114,7 +113,7 @@ public:
    * @brief Apply inverse preconditioner to matrix
    * @param transpose: false = from left, true = from right
    */
-  void revert(EigenMatrix& M, bool transpose){
+  void revert(Eigen::MatrixXd& M, bool transpose){
     preciceTrace(__func__);
     //assertion(_needsGlobalWeights);
     if (transpose) {

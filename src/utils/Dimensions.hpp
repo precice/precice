@@ -10,8 +10,6 @@ namespace utils {
 
 typedef tarch::la::DynamicVector<double> DynVector;
 typedef tarch::la::DynamicMatrix<double> DynMatrix;
-typedef Eigen::MatrixXd EigenMatrix;
-typedef Eigen::VectorXd EigenVector;
 typedef tarch::la::Vector<2,double>      Vector2D;
 typedef tarch::la::Vector<3,double>      Vector3D;
 

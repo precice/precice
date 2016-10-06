@@ -31,13 +31,6 @@ namespace impl {
 class QRFactorization
 {
 public:
-   
-  // Eigen
-  typedef Eigen::MatrixXd EigenMatrix;
-  typedef Eigen::VectorXd EigenVector;
-
-  
-  
   /**
    * @brief Constructor.
    * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
@@ -54,7 +47,7 @@ public:
    * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
    QRFactorization (
-      EigenMatrix A,
+      Eigen::MatrixXd A,
       int filter,
       double omega=0,
       double theta=1./0.7,
@@ -66,8 +59,8 @@ public:
    * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
    QRFactorization (
-      EigenMatrix Q,
-      EigenMatrix R,
+      Eigen::MatrixXd Q,
+      Eigen::MatrixXd R,
       int rows,
       int cols,
       int filter,
@@ -91,8 +84,8 @@ public:
     * @brief resets the QR factorization to the given factorization Q, R
     */
    void reset(
-	EigenMatrix const &Q,
-	EigenMatrix const &R,
+	Eigen::MatrixXd const &Q,
+	Eigen::MatrixXd const &R,
 	int rows, 
 	int cols,
 	double omega=0,
@@ -103,7 +96,7 @@ public:
     * @brief resets the QR factorization to be the factorization of A = QR
     */
    void reset(
-	EigenMatrix const& A,
+	Eigen::MatrixXd const& A,
 	int globalRows,
 	double omega=0,
   double theta=1./0.7,
@@ -114,7 +107,7 @@ public:
     * @brief inserts a new column at arbitrary position and updates the QR factorization
     * This function works on the memory of v, thus changes the Vector v.
     */
-   bool insertColumn(int k, const EigenVector& v, double singularityLimit = 0);
+   bool insertColumn(int k, const Eigen::VectorXd& v, double singularityLimit = 0);
    
    /**
    * @brief updates the factorization A=Q[1:n,1:m]R[1:m,1:n] when the kth column of A is deleted. 
@@ -127,14 +120,14 @@ public:
     * and updates the QR factorization.
     * This function works on the memory of v, thus changes the Vector v.
     */
-   void pushFront(const EigenVector& v);
+   void pushFront(const Eigen::VectorXd& v);
    
    /**
     * @brief inserts a new column at position _cols-1, i.e., appends a column at the end
     * and updates the QR factorization
     * This function works on the memory of v, thus changes the Vector v.
     */
-   void pushBack(const EigenVector& v);
+   void pushBack(const Eigen::VectorXd& v);
    
    
    /**
@@ -154,17 +147,17 @@ public:
     * to the defined filter technique. This is done to ensure good conditioning
     * @param [out] delIndices - a vector of indices of deleted columns from the LS-system
     */
-   void applyFilter(double singularityLimit, std::vector<int>& delIndices, EigenMatrix& V);
+   void applyFilter(double singularityLimit, std::vector<int>& delIndices, Eigen::MatrixXd& V);
 
    /**
     * @brief returns a matrix representation of the orthogonal matrix Q
     */
-   EigenMatrix& matrixQ();
+   Eigen::MatrixXd& matrixQ();
 
    /**
     * @brief returns a matrix representation of the upper triangular matrix R
     */
-   EigenMatrix& matrixR();
+   Eigen::MatrixXd& matrixR();
    
    // @brief returns the number of columns in the QR-decomposition
    int cols();
@@ -198,7 +191,7 @@ private:
   *   If ||v_orth|| / ||v|| <= std::numeric_limit, a unit vector that is orthogonal to Q is inserted
   *   and rho is set to 0. i.e., R has a zero on the diagonal in the respective column.
   */
-  int orthogonalize_stable(EigenVector& v, EigenVector& r, double &rho, int colNum);
+  int orthogonalize_stable(Eigen::VectorXd& v, Eigen::VectorXd& r, double &rho, int colNum);
 
   /**
    * @short assuming Q(1:n,1:m) has nearly orthonormal columns, this procedure
@@ -212,7 +205,7 @@ private:
   *   Difference to the method orthogonalize_stable():
   *   if ||v_orth||/||v|| approx 0, no unit vector is inserted.
    */
-  int orthogonalize(EigenVector& v, EigenVector& r, double &rho, int colNum);
+  int orthogonalize(Eigen::VectorXd& v, Eigen::VectorXd& r, double &rho, int colNum);
   
   /**
   * @short computes parameters for givens matrix G for which  (x,y)G = (z,0). replaces (x,y) by (z,0)
@@ -223,14 +216,14 @@ private:
   *  @short this procedure replaces the two column matrix [p(k:l-1), q(k:l-1)] by [p(k:l), q(k:l)]*G, 
   *  where G is the Givens matrix grot, determined by sigma and gamma. 
   */
-  void applyReflector(const givensRot &grot, int k, int l, EigenVector& p, EigenVector& q);
+  void applyReflector(const givensRot &grot, int k, int l, Eigen::VectorXd& p, Eigen::VectorXd& q);
   
 
   // @brief Logging device.
   static logging::Logger _log;
 
-  EigenMatrix _Q;
-  EigenMatrix _R;
+  Eigen::MatrixXd _Q;
+  Eigen::MatrixXd _R;
   
   int _rows;
   int _cols;

@@ -1,6 +1,5 @@
 #include "QRFactorization.hpp"
 #include "tarch/la/MatrixVectorOperations.h"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include "tarch/la/Scalar.h"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
@@ -15,18 +14,16 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-logging::Logger QRFactorization::
-      _log("precice::cplscheme::impl::QRFactorization");
-
-      
+logging::Logger QRFactorization::_log("precice::cplscheme::impl::QRFactorization");
+     
 
       
 /**
  * Constructor
  */
 QRFactorization::QRFactorization(
-  EigenMatrix Q, 
-  EigenMatrix R, 
+  Eigen::MatrixXd Q, 
+  Eigen::MatrixXd R, 
   int rows, 
   int cols, 
   int filter,
@@ -58,7 +55,7 @@ QRFactorization::QRFactorization(
  * Constructor
  */
 QRFactorization::QRFactorization(
-  EigenMatrix A, 
+  Eigen::MatrixXd A, 
   int filter,
   double omega, 
   double theta, 
@@ -79,7 +76,7 @@ QRFactorization::QRFactorization(
   int m = A.cols();
   for (int k=0; k<m; k++)
   {
-     EigenVector v = A.col(k);
+     Eigen::VectorXd v = A.col(k);
      insertColumn(k,v);
   }
   //assertion(_R.rows() == _cols, _R.rows(), _cols);
@@ -112,7 +109,7 @@ QRFactorization::QRFactorization(
 {}
 
       
-void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& delIndices, EigenMatrix& V)
+void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& delIndices, Eigen::MatrixXd& V)
 {
 	preciceTrace("applyFilter()");
 	delIndices.resize(0);
@@ -158,7 +155,7 @@ void QRFactorization::applyFilter(double singularityLimit, std::vector<int>& del
 		  // which is at position 0 in _matrixV (latest information is never filtered out!)
 		  for (int k=0; k < V.cols(); k++)
 		  {
-		     EigenVector v = V.col(k);
+		     Eigen::VectorXd v = V.col(k);
 		     // this is the same as pushBack(v) as _cols grows within the insertion process
 		     bool inserted = insertColumn(_cols, v, singularityLimit);
 		     if (!inserted){
@@ -188,13 +185,13 @@ void QRFactorization::deleteColumn(int k)
   {
     QRFactorization::givensRot grot;
     computeReflector(grot, _R(l,l+1), _R(l+1,l+1));
-    EigenVector Rr1 = _R.row(l);
-    EigenVector Rr2 = _R.row(l+1);
+    Eigen::VectorXd Rr1 = _R.row(l);
+    Eigen::VectorXd Rr2 = _R.row(l+1);
     applyReflector(grot, l+2, _cols, Rr1, Rr2);
     _R.row(l) = Rr1;
     _R.row(l+1) = Rr2;
-    EigenVector Qc1 = _Q.col(l);
-    EigenVector Qc2 = _Q.col(l+1);
+    Eigen::VectorXd Qc1 = _Q.col(l);
+    Eigen::VectorXd Qc2 = _Q.col(l+1);
     applyReflector(grot, 0, _rows, Qc1, Qc2);
     _Q.col(l) = Qc1;
     _Q.col(l+1) = Qc2;
@@ -220,11 +217,11 @@ void QRFactorization::deleteColumn(int k)
 
       
 // ATTENTION: This method works on the memory of vector v, thus changes the vector v.
-bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singularityLimit)
+bool QRFactorization::insertColumn(int k, const Eigen::VectorXd& vec, double singularityLimit)
 {
   preciceTrace("insertColumn()", k);
 
-  EigenVector v(vec);
+  Eigen::VectorXd v(vec);
 
   if(_cols == 0)
     _rows = v.size();
@@ -238,7 +235,7 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
   _cols++;
 
   // orthogonalize v to columns of Q
-  EigenVector u(_cols);
+  Eigen::VectorXd u(_cols);
   double rho_orth = 0., rho0 = 0.;
   if(applyFilter) rho0 = utils::MasterSlave::l2norm(v);
 
@@ -270,8 +267,8 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
 
   // resize R(1:m, 1:m) -> R(1:m+1, 1:m+1)
   _R.conservativeResize(_cols,_cols);
-  _R.col(_cols-1) = EigenVector::Zero(_cols);
-  _R.row(_cols-1) = EigenVector::Zero(_cols);
+  _R.col(_cols-1) = Eigen::VectorXd::Zero(_cols);
+  _R.row(_cols-1) = Eigen::VectorXd::Zero(_cols);
   
   for(int j=_cols-2; j >= k; j--)
   {
@@ -301,13 +298,13 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
   {
     QRFactorization::givensRot grot;
     computeReflector(grot, u(l), u(l+1));
-    EigenVector Rr1 = _R.row(l);
-    EigenVector Rr2 = _R.row(l+1);
+    Eigen::VectorXd Rr1 = _R.row(l);
+    Eigen::VectorXd Rr2 = _R.row(l+1);
     applyReflector(grot, l+1, _cols, Rr1, Rr2);
     _R.row(l) = Rr1;
     _R.row(l+1) = Rr2;
-    EigenVector Qc1 = _Q.col(l);
-    EigenVector Qc2 = _Q.col(l+1);
+    Eigen::VectorXd Qc1 = _Q.col(l);
+    Eigen::VectorXd Qc2 = _Q.col(l+1);
     applyReflector(grot, 0, _rows, Qc1, Qc2);
     _Q.col(l) = Qc1;
     _Q.col(l+1) = Qc2;
@@ -333,8 +330,8 @@ bool QRFactorization::insertColumn(int k, const EigenVector& vec, double singula
  *   returned and the new column should not be inserted into the system.
  */
 int QRFactorization::orthogonalize(
-  EigenVector& v,
-  EigenVector& r,
+  Eigen::VectorXd& v,
+  Eigen::VectorXd& r,
   double& rho,
   int colNum)
 {
@@ -349,9 +346,9 @@ int QRFactorization::orthogonalize(
    bool null = false;
    bool termination = false;
    double rho0 = 0., rho1 = 0.;
-   EigenVector u = EigenVector::Zero(_rows);
-   EigenVector s = EigenVector::Zero(colNum);
-   r = EigenVector::Zero(_cols);
+   Eigen::VectorXd u = Eigen::VectorXd::Zero(_rows);
+   Eigen::VectorXd s = Eigen::VectorXd::Zero(colNum);
+   r = Eigen::VectorXd::Zero(_cols);
 
    rho = utils::MasterSlave::l2norm(v); // distributed l2norm
    rho0 = rho;
@@ -359,11 +356,11 @@ int QRFactorization::orthogonalize(
   while (!termination) {
 
     // take a gram-schmidt iteration
-    u = EigenVector::Zero(_rows);
+    u = Eigen::VectorXd::Zero(_rows);
     for (int j = 0; j < colNum; j++) {
 
       // dot-product <_Q(:,j), v >
-      EigenVector Qc = _Q.col(j);
+      Eigen::VectorXd Qc = _Q.col(j);
 
       // dot product <_Q(:,j), v> =: r_ij
       double r_ij = utils::MasterSlave::dot(Qc, v);
@@ -392,7 +389,7 @@ int QRFactorization::orthogonalize(
     // rows on the processor.
     if (_globalRows == colNum) {
       preciceWarning("orthogonalize()", "The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
-      v = EigenVector::Zero(_rows);
+      v = Eigen::VectorXd::Zero(_rows);
       rho = 0.;
       return k;
     }
@@ -451,8 +448,8 @@ int QRFactorization::orthogonalize(
  *   returned and the new column should not be inserted into the system.
  */
 int QRFactorization::orthogonalize_stable(
-  EigenVector& v, 
-  EigenVector& r, 
+  Eigen::VectorXd& v, 
+  Eigen::VectorXd& r, 
   double& rho,
   int colNum)
 {
@@ -472,22 +469,22 @@ int QRFactorization::orthogonalize_stable(
    bool termination = false;
    double rho0 = 0., rho1 = 0.;
    double t = 0;
-   EigenVector u = EigenVector::Zero(_rows);
-   EigenVector s = EigenVector::Zero(colNum);
-   r = EigenVector::Zero(_cols);
+   Eigen::VectorXd u = Eigen::VectorXd::Zero(_rows);
+   Eigen::VectorXd s = Eigen::VectorXd::Zero(colNum);
+   r = Eigen::VectorXd::Zero(_cols);
    
    rho = utils::MasterSlave::l2norm(v); // distributed l2norm
    rho0 = rho;
    int k = 0;
 	while (!termination) {
 		// take a gram-schmidt iteration, ignoring r on later steps if previous v was null
-		u = EigenVector::Zero(_rows);
+		u = Eigen::VectorXd::Zero(_rows);
 		for (int j = 0; j < colNum; j++) {
 
 			/*
 			 * dot-product <_Q(:,j), v >
 			 */
-			EigenVector Qc = _Q.col(j);
+			Eigen::VectorXd Qc = _Q.col(j);
 
 			// dot product <_Q(:,j), v> =: r_ij
 			double ss = utils::MasterSlave::dot(Qc, v);
@@ -521,7 +518,7 @@ int QRFactorization::orthogonalize_stable(
 		// rows on the processor.
 		if (_globalRows == colNum) {
 			preciceWarning("orthogonalize()", "The least-squares system matrix is quadratic, i.e., the new column cannot be orthogonalized (and thus inserted) to the LS-system.\nOld columns need to be removed.");
-			v = EigenVector::Zero(_rows);
+			v = Eigen::VectorXd::Zero(_rows);
 			rho = 0.;
 			return k;
 		}
@@ -563,7 +560,7 @@ int QRFactorization::orthogonalize_stable(
 				 *  Note: the new information from v is discarded. Q is made orthogonal
 				 *        as good as possible.
 				 */
-				u = EigenVector::Zero(_rows);
+				u = Eigen::VectorXd::Zero(_rows);
 				for (int j = 0; j < colNum; j++) {
 					for (int i = 0; i < _rows; i++) {
 						u(i) = u(i) + _Q(i, j) * _Q(i, j);
@@ -611,7 +608,7 @@ int QRFactorization::orthogonalize_stable(
 					rho1 = 1;
 				}
 				// reinitialize v and k
-				v = EigenVector::Zero(_rows);
+				v = Eigen::VectorXd::Zero(_rows);
 
 				// insert rho1 at position k with smallest u(i) = Q(i,:) * Q(i,:)
 				if (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode) {
@@ -675,8 +672,8 @@ void QRFactorization::applyReflector(
   const QRFactorization::givensRot& grot, 
   int k, 
   int l, 
-  EigenVector& p, 
-  EigenVector& q)
+  Eigen::VectorXd& p, 
+  Eigen::VectorXd& q)
 {
   double nu = grot.sigma/(1.+grot.gamma);
   for(int j=k; j<l; j++)
@@ -696,12 +693,12 @@ void QRFactorization::setGlobalRows( int gr)
 }
 
 
-QRFactorization::EigenMatrix& QRFactorization::matrixQ()
+Eigen::MatrixXd& QRFactorization::matrixQ()
 {
   return _Q;
 }
 
-QRFactorization::EigenMatrix& QRFactorization::matrixR()
+Eigen::MatrixXd& QRFactorization::matrixR()
 {
   return _R;
 }
@@ -726,8 +723,8 @@ void QRFactorization::reset()
 }
 
 void QRFactorization::reset(
-  EigenMatrix const& Q,
-  EigenMatrix const& R,
+  Eigen::MatrixXd const& Q,
+  Eigen::MatrixXd const& R,
   int rows, 
   int cols, 
   double omega, 
@@ -749,7 +746,7 @@ void QRFactorization::reset(
 }
 
 void QRFactorization::reset(
-  EigenMatrix const& A,
+  Eigen::MatrixXd const& A,
   int globalRows,
   double omega, 
   double theta, 
@@ -769,7 +766,7 @@ void QRFactorization::reset(
   int col = 0, k = 0;
   for (; col<m; k++, col++)
   {
-     EigenVector v = A.col(col);
+     Eigen::VectorXd v = A.col(col);
      bool inserted = insertColumn(k,v);
      if(not inserted){
        k--;
@@ -784,12 +781,12 @@ void QRFactorization::reset(
 }
 
 
-void QRFactorization::pushFront(const EigenVector& v)
+void QRFactorization::pushFront(const Eigen::VectorXd& v)
 {
   insertColumn(0, v);
 }
 
-void QRFactorization::pushBack(const EigenVector& v)
+void QRFactorization::pushBack(const Eigen::VectorXd& v)
 {
   insertColumn(_cols, v);
 }

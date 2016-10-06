@@ -74,7 +74,7 @@ double MasterSlave:: l2norm(const DynVector& vec)
   return sqrt(globalSum2);
 }
 
-double MasterSlave:: l2norm(const EigenVector& vec)
+double MasterSlave:: l2norm(const Eigen::VectorXd& vec)
 {
   preciceTrace("l2norm()");
 
@@ -153,7 +153,7 @@ double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
   return globalSum;
 }
 
-double MasterSlave:: dot(const EigenVector& vec1, const EigenVector& vec2)
+double MasterSlave:: dot(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec2)
 {
   preciceTrace("dot()");
 

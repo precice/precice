@@ -3,7 +3,6 @@
 #include "tarch/tests/TestCase.h"
 #include <tarch/la/DynamicColumnMatrix.h>
 #include <tarch/la/DynamicVector.h>
-#include <Eigen/Dense>
 #include "utils/Globals.hpp"
 
 namespace precice {
@@ -27,8 +26,7 @@ public:
   //see post-processing definitions
   typedef tarch::la::DynamicVector<double> DataValues;
   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-  typedef Eigen::MatrixXd EigenMatrix;
-
+  
   /**
    * Constructor.
    */
