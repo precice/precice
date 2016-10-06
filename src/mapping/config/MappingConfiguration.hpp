@@ -167,7 +167,8 @@ private:
     double             solverRtol,
     bool               xDead,
     bool               yDead,
-    bool               zDead) const;
+    bool               zDead,
+    bool               polynomial) const;
 
   void checkDuplicates ( const ConfiguredMapping& mapping );
 

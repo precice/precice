@@ -50,10 +50,7 @@
 #include "utils/MasterSlave.hpp"
 #include "mapping/Mapping.hpp"
 #include <set>
-#include <limits>
 #include <cstring>
-#include <algorithm>
-#include "boost/tuple/tuple.hpp"
 #include "Eigen/Dense"
 
 #include <signal.h> // used for installing crash handler
@@ -109,7 +106,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
                "Accessor process index has to be smaller than accessor process "
                << "size (given as " << _accessorProcessRank << ")!");
 
-  precice::utils::Events_Init();
+  precice::utils::EventRegistry::initialize();
 
   /* When precice stops abruptly, e.g. an external solver crashes, the
      SolverInterfaceImpl destructor is never called. Since we still want
@@ -574,7 +571,7 @@ void SolverInterfaceImpl:: finalize()
   }
 
   // Stop and print Event logging
-  precice::utils::Events_Finalize();
+  precice::utils::EventRegistry::finalize();
   if (not precice::utils::MasterSlave::_slaveMode) {
     precice::utils::EventRegistry r;
     r.print();
@@ -1845,12 +1842,12 @@ void SolverInterfaceImpl:: configureM2Ns
   for (M2NTuple m2nTuple : config->m2ns()) {
     std::string comPartner("");
     bool isRequesting = false;
-    if (boost::get<1>(m2nTuple) == _accessorName){
-      comPartner = boost::get<2>(m2nTuple);
+    if (std::get<1>(m2nTuple) == _accessorName){
+      comPartner = std::get<2>(m2nTuple);
       isRequesting = true;
     }
-    else if (boost::get<2>(m2nTuple) == _accessorName){
-      comPartner = boost::get<1>(m2nTuple);
+    else if (std::get<2>(m2nTuple) == _accessorName){
+      comPartner = std::get<1>(m2nTuple);
     }
     if (not comPartner.empty()){
       for (const impl::PtrParticipant& participant : _participants) {
@@ -1859,9 +1856,9 @@ void SolverInterfaceImpl:: configureM2Ns
             comPartner += "Server";
           }
           assertion(not utils::contained(comPartner, _m2ns), comPartner);
-          assertion(boost::get<0>(m2nTuple).use_count() > 0);
+          assertion(std::get<0>(m2nTuple).use_count() > 0);
           M2NWrap m2nWrap;
-          m2nWrap.m2n = boost::get<0>(m2nTuple);
+          m2nWrap.m2n = std::get<0>(m2nTuple);
           m2nWrap.isRequesting = isRequesting;
           _m2ns[comPartner] = m2nWrap;
         }
@@ -1969,7 +1966,6 @@ void SolverInterfaceImpl:: prepareGeometry
 {
   preciceTrace("prepareGeometry()", meshContext.mesh->getName());
   assertion ( not _clientMode );
-  using boost::get;
   mesh::PtrMesh mesh = meshContext.mesh;
   assertion(mesh.use_count() > 0);
   std::string meshName(mesh->getName());
@@ -2001,7 +1997,6 @@ void SolverInterfaceImpl:: createGeometry
 {
   preciceTrace("createGeometry()", meshContext.mesh->getName());
   assertion ( not _clientMode );
-  using boost::get;
   mesh::PtrMesh mesh = meshContext.mesh;
   assertion(mesh.use_count() > 0);
   std::string meshName(mesh->getName());

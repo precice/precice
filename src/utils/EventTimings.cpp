@@ -71,7 +71,7 @@ void Event::stop(bool barrier)
 
 void Event::addProp(std::string property, double value)
 {
-  properties[property] += value;
+  EventRegistry::addProp(property, value);
 }
 
 
@@ -91,12 +91,9 @@ void EventData::put(Event* event)
     total += duration;
     min = std::min(duration, min);
     max = std::max(duration, max);
-
-    for (auto p : event->properties) {
-      properties[p.first] += p.second;
-    }
   }
 }
+
 
 int EventData::getAvg()
 {
@@ -136,6 +133,7 @@ std::map<std::string, EventData> EventRegistry::events;
 Event::Clock::time_point EventRegistry::globalStart;
 Event::Clock::time_point EventRegistry::globalStop;
 bool EventRegistry::initialized = false;
+std::map<std::string, double> EventRegistry::properties;
 
 void EventRegistry::initialize()
 {
@@ -152,6 +150,7 @@ void EventRegistry::finalize()
 void EventRegistry::clear()
 {
   events.clear();
+  properties.clear();
 }
 
 void EventRegistry::signal_handler(int signal)
@@ -170,13 +169,18 @@ void EventRegistry::put(Event* event)
   events[event->name] = data;
 }
 
+void EventRegistry::addProp(std::string property, double value)
+{
+  properties[property] += value;
+}
+
+
 void EventRegistry::print(std::ostream &out, bool terse)
 {
   if (not precice::utils::MasterSlave::_slaveMode and not precice::testMode) {
     using std::endl;
     using std::setw; using std::setprecision;
     using std::left; using std::right;
-    EventData::Properties allProps;
     Event::Clock::duration globalDuration = globalStop - globalStart;
 
     std::time_t currentTime = std::time(nullptr);
@@ -201,19 +205,12 @@ void EventRegistry::print(std::ostream &out, bool terse)
             << setw(12) << e.second.getAvg()
             << setw(10)  << e.second.getTimePercentage(globalDuration)
             << "\n";
-        for (auto p : e.second.properties) {
-          allProps[p.first] += p.second;
-
-          out << "  " << setw(12) << left << p.first
-              << setw(12) << right << std::fixed << std::setprecision(5) << p.second
-              << "\n";
-        }
         out << "\n";
       }
 
       out << "Properties from all Events, accumulated" << "\n";
       out << "---------------------------------------" << "\n";
-      for (auto a : allProps) {
+      for (auto a : properties) {
         out << setw(14) << left << a.first << right
             << setw(12) << std::fixed << std::setprecision(5) << a.second << "\n";
       }
@@ -222,6 +219,10 @@ void EventRegistry::print(std::ostream &out, bool terse)
     {
       out << "# Run finished at: " << std::asctime(std::localtime(&currentTime))
           << "# Number of processors: " << Parallel::getCommunicatorSize() << std::endl;
+
+      for (auto a : properties) {
+        out << "# Property " << a.first << ": " << a.second << std::endl;
+      }
       
       auto global = std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count();
 
@@ -265,21 +266,6 @@ void EventRegistry::printGlobalDuration()
   std::cout << "Global Duration = "
             << std::chrono::duration_cast<std::chrono::milliseconds>(
               globalDuration).count() << "ms" << std::endl;
-}
-
-void Events_Init()
-{
-  EventRegistry::initialize();
-}
-
-void Events_Finalize()
-{
-  EventRegistry::finalize();
-}
-
-void Events_Clear()
-{
-  EventRegistry::clear();
 }
 
 }} // namespace precice::utils

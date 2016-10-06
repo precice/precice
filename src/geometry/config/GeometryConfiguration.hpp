@@ -8,7 +8,7 @@
 #include "logging/Logger.hpp"
 #include <vector>
 #include <set>
-#include "boost/tuple/tuple.hpp"
+#include <tuple>
 #include <string>
 
 namespace precice {
