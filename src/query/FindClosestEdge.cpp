@@ -56,7 +56,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
 {
   preciceTrace ( "find()", edge.vertex(0).getCoords(), edge.vertex(1).getCoords() );
   // Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
-  boost::array<double,2> barycentricCoords;
+  std::array<double,2> barycentricCoords;
   int dimensions = edge.getDimensions();
   assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
   utils::DynVector projected(dimensions, 0.0);

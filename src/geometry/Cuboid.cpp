@@ -33,8 +33,8 @@ void Cuboid:: specializedCreate
   if ( dimensions == 2 ){
     using utils::Vector2D;
     // Create corners
-    boost::array<Eigen::Vector2d, 4> cornerCoords;
-    boost::array<mesh::Vertex*,4> cornerVertices;
+    std::array<Eigen::Vector2d, 4> cornerCoords;
+    std::array<mesh::Vertex*,4> cornerVertices;
     Eigen::Vector2d halfSidelengths ( _sidelengths );
     halfSidelengths *= 0.5;
     for ( int i=0; i < 4; i++ ) {
@@ -164,8 +164,8 @@ void Cuboid:: specializedCreate
     assertion ( dimensions == 3, dimensions );
     using utils::Vector3D;
     // Create corners
-    boost::array<Eigen::Vector3d,8> cornerCoords;
-    boost::array<mesh::Vertex*,8> cornerVertices;
+    std::array<Eigen::Vector3d,8> cornerCoords;
+    std::array<mesh::Vertex*,8> cornerVertices;
     Eigen::Vector3d halfSidelengths ( _sidelengths );
     halfSidelengths *= 0.5;
     for ( int i=0; i < 8; i++ ){
@@ -191,7 +191,7 @@ void Cuboid:: specializedCreate
     mesh::PropertyContainer* parent = nullptr;
 
     // Create cuboid edges
-    boost::array<mesh::Edge*,12> edges;
+    std::array<mesh::Edge*,12> edges;
     for ( int edgeIndex=0; edgeIndex < 12; edgeIndex++ ){
       int index0 = utils::IndexMaps<3>::CUBOID_EDGE_VERTICES[edgeIndex][0];
       int index1 = utils::IndexMaps<3>::CUBOID_EDGE_VERTICES[edgeIndex][1];
