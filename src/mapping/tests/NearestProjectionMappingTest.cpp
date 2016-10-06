@@ -13,8 +13,7 @@ namespace precice {
 namespace mapping {
 namespace tests {
 
-logging::Logger NearestProjectionMappingTest::
-  _log ("precice::mapping::tests::NearestProjectionMappingTest");
+logging::Logger NearestProjectionMappingTest::_log("precice::mapping::tests::NearestProjectionMappingTest");
 
 NearestProjectionMappingTest:: NearestProjectionMappingTest()
 :
@@ -31,9 +30,8 @@ void NearestProjectionMappingTest:: run()
 
 void NearestProjectionMappingTest:: testConservativeNonIncremental()
 {
-  preciceTrace ( "testConservativeNonIncremental()" );
+  TRACE();
   using namespace mesh;
-  using utils::Vector2D;
   int dimensions = 2;
 
   // Setup geometry to map to
@@ -97,9 +95,8 @@ void NearestProjectionMappingTest:: testConservativeNonIncremental()
 
 void NearestProjectionMappingTest:: testConsistentNonIncremental()
 {
-  preciceTrace ( "testConsistentNonIncremental()" );
+  TRACE();
   using namespace mesh;
-  using utils::Vector2D;
   int dimensions = 2;
 
   // Create mesh to map from

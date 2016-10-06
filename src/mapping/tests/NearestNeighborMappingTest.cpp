@@ -4,7 +4,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Data.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mapping::tests::NearestNeighborMappingTest)
@@ -13,8 +13,7 @@ namespace precice {
 namespace mapping {
 namespace tests {
 
-logging::Logger NearestNeighborMappingTest::
-  _log ( "precice::mapping::tests::NearestNeighborMappingTest" );
+logging::Logger NearestNeighborMappingTest::_log("precice::mapping::tests::NearestNeighborMappingTest");
 
 NearestNeighborMappingTest:: NearestNeighborMappingTest()
 :
@@ -31,9 +30,8 @@ void NearestNeighborMappingTest:: run()
 
 void NearestNeighborMappingTest:: testConsistentNonIncremental()
 {
-  preciceTrace("testConsistentNonIncremental()");
+  TRACE();
   using namespace mesh;
-  using utils::Vector2D;
   int dimensions = 2;
 
   // Create mesh to map from
@@ -74,8 +72,8 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
   validateNumericalEquals(outValuesScalar(1), inValuesScalar(1));
   mapping.map(inDataVectorID, outDataVectorID);
   const Eigen::VectorXd& outValuesVector = outDataVector->values();
-  validateWithParams2(tarch::la::equals(utils::DynVector(inValuesVector), utils::DynVector(outValuesVector)),
-                            inValuesVector, outValuesVector);
+  validateWithParams2(math::equals(inValuesVector, outValuesVector),
+                      inValuesVector, outValuesVector);
 
   // Map data with almost coinciding vertices, has to result in equal values.
   inVertex0.setCoords(outVertex0.getCoords() + Eigen::Vector2d::Constant(0.1));
@@ -86,8 +84,8 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
   validateNumericalEquals(outValuesScalar(0), inValuesScalar(0));
   validateNumericalEquals(outValuesScalar(1), inValuesScalar(1));
   mapping.map(inDataVectorID, outDataVectorID);
-  validateWithParams2(tarch::la::equals(utils::DynVector(inValuesVector), utils::DynVector(outValuesVector)),
-                            inValuesVector, outValuesVector);
+  validateWithParams2(math::equals(inValuesVector, outValuesVector),
+                      inValuesVector, outValuesVector);
 
   // Map data with exchanged vertices, has to result in exchanged values.
   inVertex0.setCoords(outVertex1.getCoords());
@@ -98,9 +96,8 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
   validateNumericalEquals(outValuesScalar(1), inValuesScalar(0));
   validateNumericalEquals(outValuesScalar(0), inValuesScalar(1));
   mapping.map(inDataVectorID, outDataVectorID);
-  utils::DynVector expected(4);
-  expected = 3.0, 4.0, 1.0, 2.0;
-  validateWithParams2(tarch::la::equals(expected, utils::DynVector(outValuesVector)),
+  Eigen::Vector4d expected(3.0, 4.0, 1.0, 2.0);
+  validateWithParams2(math::equals(expected, outValuesVector),
                       expected, outValuesVector);
 
   // Map data with coinciding output vertices, has to result in same values.
@@ -111,14 +108,14 @@ void NearestNeighborMappingTest:: testConsistentNonIncremental()
   validateNumericalEquals(outValuesScalar(1), inValuesScalar(1));
   validateNumericalEquals(outValuesScalar(0), inValuesScalar(1));
   mapping.map(inDataVectorID, outDataVectorID);
-  expected = 3.0, 4.0, 3.0, 4.0;
-  validateWithParams2(tarch::la::equals(expected, utils::DynVector(outValuesVector)),
+  expected << 3.0, 4.0, 3.0, 4.0;
+  validateWithParams2(math::equals(expected, outValuesVector),
                       expected, outValuesVector);
 }
 
 void NearestNeighborMappingTest:: testConservativeNonIncremental()
 {
-  preciceTrace("testConservativeNonIncremental()");
+  TRACE();
   using namespace mesh;
   int dimensions = 2;
 

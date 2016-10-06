@@ -8,7 +8,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
-#include "tarch/la/ScalarOperations.h"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mapping::tests::PetRadialBasisFctMappingTest)
@@ -679,28 +679,28 @@ void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping(Mapping& ma
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.5, 0.5, 1.0, 1.0), tolerance) );
+  validate ( math::equals(values, Eigen::Vector4d(0.5, 0.5, 1.0, 1.0), tolerance) );
 
   vertex0.setCoords ( Vector2d(0.0, 0.5) );
   vertex1.setCoords ( Vector2d(1.0, 0.5) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.5, 1.0, 1.0, 0.5), tolerance) );
+  validate ( math::equals(values, Eigen::Vector4d(0.5, 1.0, 1.0, 0.5), tolerance) );
 
   vertex0.setCoords ( Vector2d(0.0, 1.0) );
   vertex1.setCoords ( Vector2d(1.0, 0.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.0, 2.0, 0.0, 1.0), tolerance) );
+  validate ( math::equals(values, Eigen::Vector4d(0.0, 2.0, 0.0, 1.0), tolerance) );
   
   vertex0.setCoords ( Vector2d(0.0, 0.0) );
   vertex1.setCoords ( Vector2d(1.0, 1.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(1.0, 0.0, 2.0, 0.0), tolerance) );
+  validate ( math::equals(values, Eigen::Vector4d(1.0, 0.0, 2.0, 0.0), tolerance) );
 
   vertex0.setCoords ( Vector2d(0.4, 0.5) );
   vertex1.setCoords ( Vector2d(0.6, 0.5) );

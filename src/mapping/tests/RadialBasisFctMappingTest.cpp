@@ -5,7 +5,7 @@
 #include "mesh/Vertex.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
-#include "tarch/la/ScalarOperations.h"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mapping::tests::RadialBasisFctMappingTest)
@@ -14,11 +14,10 @@ namespace precice {
 namespace mapping {
 namespace tests {
 
-logging::Logger RadialBasisFctMappingTest::
-  _log ( "precice::mapping::tests::RadialBasisFctMappingTest" );
+logging::Logger RadialBasisFctMappingTest::_log("precice::mapping::tests::RadialBasisFctMappingTest");
 
 RadialBasisFctMappingTest:: RadialBasisFctMappingTest()
-:
+  :
   TestCase ( "precice::mapping::tests::RadialBasisFctMappingTest" )
 {}
 
@@ -38,7 +37,7 @@ void RadialBasisFctMappingTest:: run()
 
 void RadialBasisFctMappingTest:: testThinPlateSplines()
 {
-  preciceTrace ( "testThinPlateSplines" );
+  TRACE();
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -55,7 +54,7 @@ void RadialBasisFctMappingTest:: testThinPlateSplines()
 
 void RadialBasisFctMappingTest:: testMultiquadrics()
 {
-  preciceTrace ( "testMultiquadrics" );
+  TRACE();
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -72,7 +71,7 @@ void RadialBasisFctMappingTest:: testMultiquadrics()
 
 void RadialBasisFctMappingTest:: testInverseMultiquadrics()
 {
-  preciceTrace ( "testInverseMultiquadrics" );
+  TRACE();
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -89,7 +88,7 @@ void RadialBasisFctMappingTest:: testInverseMultiquadrics()
 
 void RadialBasisFctMappingTest:: testVolumeSplines()
 {
-  preciceTrace ( "testVolumeSplines" );
+  TRACE();
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -106,7 +105,7 @@ void RadialBasisFctMappingTest:: testVolumeSplines()
 
 void RadialBasisFctMappingTest:: testGaussian()
 {
-  preciceTrace ( "testGaussian" );
+  TRACE();
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -123,7 +122,7 @@ void RadialBasisFctMappingTest:: testGaussian()
 
 void RadialBasisFctMappingTest:: testCompactThinPlateSplinesC2()
 {
-  preciceTrace ( "testCompactThinPlateSplinesC2" );
+  TRACE();
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -142,7 +141,7 @@ void RadialBasisFctMappingTest:: testCompactThinPlateSplinesC2()
 
 void RadialBasisFctMappingTest:: testCompactPolynomialC0()
 {
-  preciceTrace ( "testCompactPolynomialC0" );
+  TRACE();
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -161,7 +160,7 @@ void RadialBasisFctMappingTest:: testCompactPolynomialC0()
 
 void RadialBasisFctMappingTest:: testCompactPolynomialC6()
 {
-  preciceTrace ( "testCompactPolynomialC6" );
+  TRACE();
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -182,10 +181,9 @@ void RadialBasisFctMappingTest:: perform2DTestConsistentMapping
 (
   Mapping& mapping )
 {
-  preciceTrace ( "perform2DTestConsistentMapping()" );
+  TRACE();
   int dimensions = 2;
-  using utils::Vector2D;
-
+  
   // Create mesh to map from
   mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
   mesh::PtrData inData = inMesh->createData ( "InData", 1 );
@@ -195,12 +193,7 @@ void RadialBasisFctMappingTest:: perform2DTestConsistentMapping
   inMesh->createVertex ( Eigen::Vector2d(1.0, 1.0) );
   inMesh->createVertex ( Eigen::Vector2d(0.0, 1.0) );
   inMesh->allocateDataValues ();
-  //tarch::la::Vector<4,double> assignValues;
-  //assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
-  Eigen::VectorXd assignValues(4);
-  assignValues << 1.0, 2.0, 2.0, 1.0;
-  Eigen::VectorXd& values = inData->values();
-  values = assignValues;
+  inData->values() << 1.0, 2.0, 2.0, 1.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false) );
@@ -281,7 +274,7 @@ void RadialBasisFctMappingTest:: perform2DTestConservativeMapping
 (
   Mapping& mapping )
 {
-  preciceTrace ( "perform2DTestConservativeMapping()" );
+  TRACE();
   int dimensions = 2;
   
   // Create mesh to map from
@@ -312,42 +305,42 @@ void RadialBasisFctMappingTest:: perform2DTestConservativeMapping
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.5, 0.5, 1.0, 1.0)) );
+  validate ( math::equals(values, Eigen::Vector4d(0.5, 0.5, 1.0, 1.0)) );
 
   vertex0.setCoords ( Eigen::Vector2d(0.0, 0.5) );
   vertex1.setCoords ( Eigen::Vector2d(1.0, 0.5) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.5, 1.0, 1.0, 0.5)) );
+  validate ( math::equals( values, Eigen::Vector4d(0.5, 1.0, 1.0, 0.5)) );
 
   vertex0.setCoords ( Eigen::Vector2d(0.0, 1.0) );
   vertex1.setCoords ( Eigen::Vector2d(1.0, 0.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(0.0, 2.0, 0.0, 1.0)) );
+  validate ( math::equals(values, Eigen::Vector4d(0.0, 2.0, 0.0, 1.0)) );
 
   vertex0.setCoords ( Eigen::Vector2d(0.0, 0.0) );
   vertex1.setCoords ( Eigen::Vector2d(1.0, 1.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validate ( equals(utils::DynVector(values), tarch::la::Vector<4,double>(1.0, 0.0, 2.0, 0.0)) );
+  validate ( math::equals(values, Eigen::Vector4d(1.0, 0.0, 2.0, 0.0)) );
 
   vertex0.setCoords ( Eigen::Vector2d(0.4, 0.5) );
   vertex1.setCoords ( Eigen::Vector2d(0.6, 0.5) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   validateEquals ( mapping.hasComputedMapping(), true );
-  validateNumericalEquals ( sum(utils::DynVector(values)), 3.0 );
+  validateNumericalEquals ( values.sum(), 3.0 );
 }
 
 void RadialBasisFctMappingTest:: perform3DTestConsistentMapping
 (
   Mapping& mapping )
 {
-  preciceTrace ( "perform3DTestConsistentMapping()" );
+  TRACE();
   int dimensions = 3;
   
   // Create mesh to map from
@@ -363,9 +356,7 @@ void RadialBasisFctMappingTest:: perform3DTestConsistentMapping
   inMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
   inMesh->createVertex(Eigen::Vector3d(1.0, 1.0, 1.0));
   inMesh->allocateDataValues();
-  Eigen::VectorXd& values = inData->values();
-  //assignList(values) = 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
-  values << 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
+  inData->values() << 1.0, 1.0, 1.0, 1.0, 2.0, 2.0, 2.0, 2.0;
 
   // Create mesh to map to
   mesh::PtrMesh outMesh(new mesh::Mesh("OutMesh", dimensions, false));
@@ -481,7 +472,7 @@ void RadialBasisFctMappingTest:: perform3DTestConservativeMapping
 (
   Mapping& mapping )
 {
-  preciceTrace ( "perform3DTestConservativeMapping()" );
+  TRACE();
   int dimensions = 3;
   
   // Create mesh to map from
@@ -491,7 +482,6 @@ void RadialBasisFctMappingTest:: perform3DTestConservativeMapping
   mesh::Vertex& vertex0 = inMesh->createVertex(Eigen::Vector3d::Zero());
   mesh::Vertex& vertex1 = inMesh->createVertex(Eigen::Vector3d::Zero());
   inMesh->allocateDataValues();
-  //assignList(inData->values()) = 1.0, 2.0;
   inData->values() << 1.0, 2.0;
 
   // Create mesh to map to
@@ -508,7 +498,7 @@ void RadialBasisFctMappingTest:: perform3DTestConservativeMapping
   outMesh->createVertex(Eigen::Vector3d(0.0, 1.0, 1.0));
   outMesh->allocateDataValues();
   Eigen::VectorXd& values = outData->values();
-  double expectedSum = sum(utils::DynVector(inData->values()));
+  double expectedSum = inData->values().sum();
 
   mapping.setMeshes(inMesh, outMesh);
   validateEquals(mapping.hasComputedMapping(), false);
@@ -518,52 +508,22 @@ void RadialBasisFctMappingTest:: perform3DTestConservativeMapping
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   validateEquals(mapping.hasComputedMapping(), true);
-  validateWithParams1(tarch::la::equals(sum(utils::DynVector(values)), expectedSum), utils::DynVector(values));
-
-//  vertex0.setCoords ( Eigen::Vector2d(0.0, 0.5) );
-//  vertex1.setCoords ( Eigen::Vector2d(1.0, 0.5) );
-//  mapping.computeMapping ();
-//  mapping.map ( inDataID, outDataID );
-//  validateEquals ( mapping.hasComputedMapping(), true );
-//  validate ( equals(values, tarch::la::Vector<4,double>(0.5, 1.0, 1.0, 0.5)) );
-//
-//  vertex0.setCoords ( Eigen::Vector2d(0.0, 1.0) );
-//  vertex1.setCoords ( Eigen::Vector2d(1.0, 0.0) );
-//  mapping.computeMapping ();
-//  mapping.map ( inDataID, outDataID );
-//  validateEquals ( mapping.hasComputedMapping(), true );
-//  validate ( equals(values, tarch::la::Vector<4,double>(0.0, 2.0, 0.0, 1.0)) );
-//
-//  vertex0.setCoords ( Eigen::Vector2d(0.0, 0.0) );
-//  vertex1.setCoords ( Eigen::Vector2d(1.0, 1.0) );
-//  mapping.computeMapping ();
-//  mapping.map ( inDataID, outDataID );
-//  validateEquals ( mapping.hasComputedMapping(), true );
-//  validate ( equals(values, tarch::la::Vector<4,double>(1.0, 0.0, 2.0, 0.0)) );
-//
-//  vertex0.setCoords ( Eigen::Vector2d(0.4, 0.5) );
-//  vertex1.setCoords ( Eigen::Vector2d(0.6, 0.5) );
-//  mapping.computeMapping ();
-//  mapping.map ( inDataID, outDataID );
-//  validateEquals ( mapping.hasComputedMapping(), true );
-//  validateNumericalEquals ( sum(values), 3.0 );
+  validateWithParams1(math::equals(values.sum(), expectedSum), values);
 }
 
 
-void RadialBasisFctMappingTest:: testDeadAxis2D
-()
+void RadialBasisFctMappingTest:: testDeadAxis2D()
 {
-  preciceTrace ( "testDeadAxis2D()" );
+  TRACE();
   int dimensions = 2;
-  using utils::Vector2D;
-
+  
   bool xDead = false;
   bool yDead = true;
   bool zDead = false;
 
   ThinPlateSplines fct;
   RadialBasisFctMapping<ThinPlateSplines> mapping(Mapping::CONSISTENT, dimensions, fct,
-      xDead, yDead, zDead);
+                                                  xDead, yDead, zDead);
 
   // Create mesh to map from
   mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
@@ -574,13 +534,8 @@ void RadialBasisFctMappingTest:: testDeadAxis2D
   inMesh->createVertex ( Eigen::Vector2d(2.0, 1.0) );
   inMesh->createVertex ( Eigen::Vector2d(3.0, 1.0) );
   inMesh->allocateDataValues ();
-  //tarch::la::Vector<4,double> assignValues;
-  //assignList(assignValues) = 1.0, 2.0, 2.0, 1.0;
-  Eigen::VectorXd assignValues(4);
-  assignValues << 1.0, 2.0, 2.0, 1.0;
-  Eigen::VectorXd& values = inData->values();
-  values = assignValues;
-
+  inData->values() << 1.0, 2.0, 2.0, 1.0;
+  
   // Create mesh to map to
   mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false) );
   mesh::PtrData outData = outMesh->createData ( "OutData", 1 );
@@ -600,10 +555,9 @@ void RadialBasisFctMappingTest:: testDeadAxis2D
   validateNumericalEquals ( value, 1.0 );
 }
 
-void RadialBasisFctMappingTest:: testDeadAxis3D
-()
+void RadialBasisFctMappingTest:: testDeadAxis3D()
 {
-  preciceTrace ( "testDeadAxis3D()" );
+  TRACE();
   int dimensions = 3;
   using Eigen::Vector3d;
 
@@ -624,13 +578,8 @@ void RadialBasisFctMappingTest:: testDeadAxis3D
   inMesh->createVertex ( Vector3d(0.0, 3.0, 1.0) );
   inMesh->createVertex ( Vector3d(1.0, 3.0, 1.0) );
   inMesh->allocateDataValues ();
-  //tarch::la::Vector<4,double> assignValues;
-  //assignList(assignValues) = 1.0, 2.0, 3.0, 4.0;
-  Eigen::VectorXd assignValues(4);
-  assignValues << 1.0, 2.0, 3.0, 4.0;
-  Eigen::VectorXd& values = inData->values();
-  values = assignValues;
-
+  inData->values() << 1.0, 2.0, 3.0, 4.0;
+  
   // Create mesh to map to
   mesh::PtrMesh outMesh ( new mesh::Mesh("OutMesh", dimensions, false) );
   mesh::PtrData outData = outMesh->createData ( "OutData", 1 );
