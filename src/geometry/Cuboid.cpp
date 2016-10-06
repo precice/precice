@@ -4,7 +4,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/PropertyContainer.hpp"
-#include "utils/Dimensions.hpp"
 
 namespace precice {
 namespace geometry {
@@ -13,9 +12,9 @@ logging::Logger Cuboid:: _log ( "precice::geometry::Cuboid" );
 
 Cuboid:: Cuboid
 (
-  const utils::DynVector& offset,
-  double                  discretizationWidth,
-  const utils::DynVector& sidelengths )
+  const Eigen::VectorXd& offset,
+  double                 discretizationWidth,
+  const Eigen::VectorXd& sidelengths )
 :
   Geometry ( offset ),
   _discretizationWidth ( discretizationWidth ),
@@ -26,7 +25,7 @@ void Cuboid:: specializedCreate
 (
   mesh::Mesh& seed )
 {
-  preciceTrace ( "specializedCreate()" );
+  TRACE();
   std::string nameSubID ( seed.getName() + "-side-" );
   int dimensions = seed.getDimensions();
   assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
@@ -45,8 +44,8 @@ void Cuboid:: specializedCreate
     }
 
     // Determine mesh width h
-    tarch::la::Vector<2,int> vertexCount;
-    Vector2D h;
+    Eigen::Vector2i vertexCount;
+    Eigen::Vector2d h;
     for ( int i=0; i < 2; i++) {
       vertexCount[i] = (int)std::floor ( _sidelengths(i) / _discretizationWidth );
       if ( vertexCount(i) > 0.0 ) {

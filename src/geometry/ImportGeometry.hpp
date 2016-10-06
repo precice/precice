@@ -25,14 +25,14 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param name [IN] Unique name for the geometry.
-   * @param isVolumeEnclosed [IN] Default normal direction, if true.
-   * @param offset [IN] Homogeneous offset of mesh nodes.
-   * @param fileName [IN] Path and name of the file to be imported.
-   * @param fileType [IN] Type of the file to be imported.
+   * @param[in] name Unique name for the geometry.
+   * @param[in] isVolumeEnclosed Default normal direction, if true.
+   * @param[in] offset Homogeneous offset of mesh nodes.
+   * @param[in] fileName Path and name of the file to be imported.
+   * @param[in] fileType Type of the file to be imported.
    */
   ImportGeometry (
-   const utils::DynVector& offset,
+   const Eigen::VectorXd&  offset,
    const std::string&      fileName,
    FileType                fileType,
    bool                    importCheckpoint,

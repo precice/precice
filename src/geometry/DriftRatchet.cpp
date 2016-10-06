@@ -50,7 +50,7 @@ double DriftRatchet:: getDefaultMaxRadius ()
 
 DriftRatchet:: DriftRatchet
 (
-  const utils::DynVector& offset,
+  const Eigen::VectorXd&  offset,
   double                  discretizationWidth,
   double                  maxRadius,
   double                  minRadius,
@@ -210,7 +210,7 @@ void DriftRatchet:: createBodyWall
    double xStepInImage = _length / (double)sectionCount;
    double xStepInPreImage = (_pores * getCharacteristicLength(_maxRadius)) / (double)sectionCount;
    int dimensions = mesh.getDimensions();
-   utils::DynVector currentCenter ( dimensions, 0.0 );
+   Eigen::VectorXd currentCenter = Eigen::VectorXd::Constant(dimensions, 0.0);
    currentXInImage    += xStepInImage;
    currentXInPreImage += xStepInPreImage;
    for ( int i=0; i < sectionCount; i++ ) {

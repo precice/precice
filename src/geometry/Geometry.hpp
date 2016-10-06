@@ -1,10 +1,8 @@
 #ifndef PRECICE_GEOMETRY_GEOMETRY_HPP_
 #define PRECICE_GEOMETRY_GEOMETRY_HPP_
 
-#include "utils/Dimensions.hpp"
 #include "logging/Logger.hpp"
-#include "com/CommunicateMesh.hpp"
-#include "com/Communication.hpp"
+#include <Eigen/Dense>
 
 namespace precice {
    namespace mesh {
@@ -32,12 +30,11 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param name [IN] Unique name for the geometry.
-   * @param isVolumeEnclosed [IN] If true, the volume of the geometry is inside
-   *                              of its (closed) surface.
-   * @param offset [IN] Constant offset of all vertex coordinates.
+   * @param[in] name  Unique name for the geometry.
+   * @param[in] isVolumeEnclosed  If true, the volume of the geometry is inside of its (closed) surface.
+   * @param[in] offset Constant offset of all vertex coordinates.
    */
-  Geometry ( const utils::DynVector& offset );
+  Geometry ( const Eigen::VectorXd& offset );
 
   /**
    * @brief Destructor.
@@ -58,7 +55,7 @@ public:
   /**
    * @brief Sets an offset from zero for the geometry.
    */
-  void setOffset ( const utils::DynVector& offset )
+  void setOffset ( const Eigen::VectorXd& offset )
   {
     _offset = offset;
   }
@@ -66,7 +63,7 @@ public:
   /**
    * @brief Returns the offset of the geometry from zero.
    */
-  const utils::DynVector& getOffset () const
+  const Eigen::VectorXd& getOffset () const
   {
     return _offset;
   }
@@ -93,7 +90,7 @@ private:
   static logging::Logger _log;
 
   // @brief Offset of reference point of geometry from zero point
-  utils::DynVector _offset;
+  Eigen::VectorXd _offset;
 
 };
 

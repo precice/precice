@@ -2,7 +2,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
-#include <list>
 #include "math/math.hpp"
 
 namespace precice {
@@ -12,7 +11,7 @@ logging::Logger Bubble:: _log ( "precice::geometry::Bubble" );
 
 Bubble:: Bubble
 (
-  const utils::DynVector& offset,
+  const Eigen::VectorXd& offset,
   double                  discretizationWidth,
   double                  radius,
   double                  deformation )

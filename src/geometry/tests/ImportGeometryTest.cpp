@@ -8,7 +8,6 @@
 #include "com/config/CommunicationConfiguration.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::geometry::tests::ImportGeometryTest)
@@ -17,8 +16,7 @@ namespace precice {
 namespace geometry {
 namespace tests {
 
-logging::Logger ImportGeometryTest::
-  _log ( "precice::geometry::tests::ImportGeometryTest" );
+logging::Logger ImportGeometryTest:: _log("precice::geometry::tests::ImportGeometryTest");
 
 ImportGeometryTest:: ImportGeometryTest ()
 :
@@ -36,11 +34,8 @@ void ImportGeometryTest:: run ()
 
 void ImportGeometryTest:: testImportVRMLConfig ()
 {
-  preciceTrace ( "testImportVRMLConfig" );
-  using namespace boost;
-
-  std::string xmlFilename ( utils::Globals::getPathToSources() +
-    "/geometry/tests/import-vrml-config.xml" );
+  TRACE();
+  std::string xmlFilename ( utils::Globals::getPathToSources() + "/geometry/tests/import-vrml-config.xml" );
   utils::XMLTag tag = utils::getRootTag();
   mesh::PtrDataConfiguration dataConfig ( new mesh::DataConfiguration(tag) );
   dataConfig->setDimensions(3);
@@ -60,7 +55,7 @@ void ImportGeometryTest:: testImportVRMLConfig ()
   PtrGeometry geo = geoConfig.getGeometry ( "VRMLGeometry" );
   mesh::PtrMesh mesh = meshConfig->meshes()[0];
   validateEquals ( mesh->getName(), std::string("VRMLGeometry") );
-  validate ( tarch::la::equals(geo->getOffset(), utils::Vector3D(0.0)) );
+  validate ( math::equals(geo->getOffset(), Eigen::Vector3d::Zero()) );
   validateEquals ( mesh->data().size(), 1 );
 }
 

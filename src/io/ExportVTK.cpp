@@ -5,10 +5,8 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
 #include "utils/Globals.hpp"
-#include "utils/String.hpp"
 #include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
-#include "tarch/la/WrappedVector.h"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include <iostream>
 #include <fstream>
 #include <boost/filesystem.hpp>
@@ -182,7 +180,7 @@ void ExportVTK:: exportData
   for (mesh::PtrData data : mesh.data()) { // Plot vertex data
     Eigen::VectorXd& values = data->values();
     if(data->getDimensions() > 1) {
-      utils::DynVector viewTemp(data->getDimensions());
+      Eigen::VectorXd viewTemp(data->getDimensions());
       outFile << "VECTORS " << data->getName() << " float" << std::endl;
       for (mesh::Vertex& vertex : mesh.vertices()) {
         int offset = vertex.getID() * data->getDimensions();
@@ -235,7 +233,7 @@ void ExportVTK:: writeHeader
 
 void ExportVTK:: writeVertex
 (
-  const utils::DynVector& position,
+  const Eigen::VectorXd&  position,
   std::ostream&           outFile)
 {
   if(position.size() == 2) {

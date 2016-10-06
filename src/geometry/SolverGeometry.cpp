@@ -4,7 +4,6 @@
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/MasterSlave.hpp"
-#include <vector>
 
 namespace precice {
 namespace geometry {
@@ -13,7 +12,7 @@ logging::Logger SolverGeometry:: _log ( "precice::geometry::SolverGeometry" );
 
 SolverGeometry:: SolverGeometry
 (
-  const utils::DynVector&  offset)
+  const Eigen::VectorXd& offset)
 :
   Geometry ( offset )
 {
@@ -25,7 +24,7 @@ void SolverGeometry:: specializedCreate
 (
   mesh::Mesh& seed )
 {
-  preciceTrace ( "specializedCreate()", seed.getName() );
+  TRACE(seed.getName());
 
   //generate vertexDistribution also for non-communicated geometries as this information
   //is needed to assign global indices resp. vertexOffsets

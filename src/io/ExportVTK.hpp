@@ -3,9 +3,8 @@
 
 #include "Export.hpp"
 #include "logging/Logger.hpp"
-#include "tarch/la/Vector.h"
-#include "utils/Dimensions.hpp"
 #include <string>
+#include <Eigen/Dense>
 
 namespace precice {
    namespace mesh {
@@ -28,8 +27,8 @@ public:
   /**
    * @brief Standard constructor
    *
-   * @param filename  [IN] Name of the vtk file (including file extension)
-   * @param container [IN] Container holding geometry to be visualized
+   * @param[in] filename  Name of the vtk file (including file extension)
+   * @param[in] container Container holding geometry to be visualized
    */
   ExportVTK ( bool exportNormals );
 
@@ -52,7 +51,7 @@ public:
   static void writeHeader ( std::ostream& outFile );
 
   static void writeVertex (
-    const utils::DynVector& position,
+    const Eigen::VectorXd&  position,
     std::ostream&           outFile );
 
   static void writeLine (

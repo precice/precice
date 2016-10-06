@@ -78,9 +78,9 @@ void BalanceVertexPositionActionTest:: testSmoothCircle ()
 
 void BalanceVertexPositionActionTest:: testSmoothSphere ()
 {
-  preciceTrace ( "testSmoothSphere()" );
+  TRACE();
   mesh::PtrMesh mesh ( new mesh::Mesh("Mesh", 3, false) );
-  geometry::Sphere sphere ( utils::Vector3D(0.0), 0.1, 1.0 );
+  geometry::Sphere sphere ( Eigen::Vector3d::Zero(), 0.1, 1.0 );
   sphere.create ( *mesh );
   std::string location = "";
 

@@ -2,17 +2,11 @@
 #include "io/ExportVRML.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Data.hpp"
-#include "mesh/Triangle.hpp"
-#include "mesh/Edge.hpp"
-#include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
 #include "geometry/DriftRatchet.hpp"
 #include "geometry/Cuboid.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
-#include <iostream>
-#include <map>
 #include <string>
 
 #include "tarch/tests/TestCaseFactory.h"
@@ -41,7 +35,7 @@ void ExportVRMLTest:: run()
 
 void ExportVRMLTest:: testExportDriftRatchet()
 {
-  preciceTrace ( "testExportDriftRatchet" );
+  TRACE();
   for ( int dim=2; dim <= 3; dim++ ){
     ExportVRML ex(false);
     bool flipNormals = false;
@@ -68,14 +62,14 @@ void ExportVRMLTest:: testExportDriftRatchet()
 
 void ExportVRMLTest:: testExportCuboid()
 {
-  preciceTrace ( "testExportCuboid" );
+  TRACE();
   for ( int dim=2; dim <= 3; dim++ ){
     mesh::Mesh::resetGeometryIDsGlobally ();
     bool flipNormals = false;
     mesh::Mesh mesh ( "test-cuboid", dim, flipNormals );
-    utils::DynVector offset(dim, 0.0);
+    Eigen::VectorXd offset = Eigen::VectorXd::Constant(dim, 0.0);
     double h = 1.0;
-    utils::DynVector length(dim, 5.0);
+    Eigen::VectorXd length = Eigen::VectorXd::Constant(dim, 5.0);
     geometry::Cuboid cuboid ( offset, h, length );
 
     std::string name ( "side-0" );

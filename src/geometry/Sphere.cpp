@@ -13,7 +13,7 @@ logging::Logger Sphere:: _log ( "precice::geometry::Sphere" );
 
 Sphere:: Sphere
 (
-  const utils::DynVector& offset,
+  const Eigen::VectorXd&  offset,
   double                  discretizationWidth,
   double                  radius )
 :
@@ -26,7 +26,7 @@ void Sphere:: specializedCreate
 (
   mesh::Mesh& seed )
 {
-  preciceTrace ( "specializedCreate()" );
+  TRACE();
   using namespace mesh;
   int dimensions = seed.getDimensions();
   assertion ( (dimensions == 2) || (dimensions == 3), dimensions );

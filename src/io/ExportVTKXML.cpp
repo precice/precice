@@ -37,7 +37,7 @@ void ExportVTKXML:: doExport
   const std::string& location,
   mesh::Mesh&        mesh)
 {
-  preciceTrace("doExport()", name, location, mesh.getName());
+  TRACE(name, location, mesh.getName());
   std::ofstream outFile;
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
   processDataNamesAndDimensions(mesh);
@@ -273,7 +273,7 @@ void ExportVTKXML:: exportData
     outFile << "\" format=\"ascii\">" << std::endl;
     outFile << "               ";
     if(dataDimensions > 1) {
-      utils::DynVector viewTemp(dataDimensions);
+      Eigen::VectorXd viewTemp(dataDimensions);
       int counter = 0;
       for (mesh::Vertex& vertex : mesh.vertices()) {
         int offset = counter * dataDimensions;
@@ -303,8 +303,8 @@ void ExportVTKXML:: exportData
 
 void ExportVTKXML::writeVertex
 (
-  const utils::DynVector& position,
-  std::ofstream&           outFile)
+  const Eigen::VectorXd& position,
+  std::ofstream&         outFile)
 {
   outFile << "               ";
   for (int i = 0; i < position.size(); i++){

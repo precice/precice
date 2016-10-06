@@ -6,7 +6,7 @@
 #include "utils/Globals.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "math/math.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 
 namespace precice {
 namespace mesh {

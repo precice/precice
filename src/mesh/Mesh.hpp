@@ -9,11 +9,9 @@
 #include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
-#include "utils/MasterSlave.hpp"
-#include "boost/utility.hpp"
-#include "boost/noncopyable.hpp"
-#include "tarch/la/DynamicVector.h"
+#include <boost/noncopyable.hpp>
 #include <map>
+#include <list>
 #include <vector>
 
 namespace precice {

@@ -1,5 +1,4 @@
 #include "Edge.hpp"
-#include "utils/ManageUniqueIDs.hpp"
 
 namespace precice {
 namespace mesh {

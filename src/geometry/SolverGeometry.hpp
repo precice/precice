@@ -2,11 +2,7 @@
 #define PRECICE_GEOMETRY_SOLVERGEOMETRY_HPP_
 
 #include "Geometry.hpp"
-#include "com/Communication.hpp"
-#include "utils/Dimensions.hpp"
 #include "logging/Logger.hpp"
-#include <string>
-#include <map>
 
 namespace precice {
 namespace geometry {
@@ -20,7 +16,7 @@ class SolverGeometry : public Geometry
 public:
 
   SolverGeometry (
-    const utils::DynVector& offset);
+    const Eigen::VectorXd& offset);
 
   virtual ~SolverGeometry() {}
 

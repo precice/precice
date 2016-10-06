@@ -24,7 +24,7 @@ class CommunicatedGeometry : public Geometry
 public:
 
   CommunicatedGeometry (
-    const utils::DynVector& offset,
+    const Eigen::VectorXd&  offset,
     const std::string&      accessor,
     const std::string&      provider,
     impl::PtrDecomposition  decomposition);

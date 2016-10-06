@@ -10,7 +10,7 @@ namespace geometry {
 
 ImportGeometry:: ImportGeometry
 (
-  const utils::DynVector& offset,
+  const Eigen::VectorXd&  offset,
   const std::string&      fileName,
   FileType                fileType,
   bool                    importCheckpoint,

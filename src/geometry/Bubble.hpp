@@ -2,8 +2,6 @@
 #define PRECICE_GEOMETRY_BUBBLE_HPP_
 
 #include "Geometry.hpp"
-#include "utils/Helpers.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include <map>
 
@@ -43,13 +41,13 @@ public:
    /**
     * @brief Standard constructor
     *
-    * @param radius      [IN] Radius of the (undeformed) bubble
-    * @param offset      [IN] Offset of the bubble's center from the origin
-    * @param deformation [IN] Deformation of bubble. Between -4/3 (= "8" like
-    *                         shape) and 4/3 (= "oo" like shape). Value 0 results
-    *                         in a perfect sphere with specified radius.
+    * @param[in] radius      Radius of the (undeformed) bubble
+    * @param[in] offset      Offset of the bubble's center from the origin
+    * @param[in] deformation Deformation of bubble. Between -4/3 (= "8" like
+    *                        shape) and 4/3 (= "oo" like shape). Value 0 results
+    *                        in a perfect sphere with specified radius.
     */
-   Bubble ( const utils::DynVector& offset,
+  Bubble ( const Eigen::VectorXd&   offset,
             double                  discretizationWidth,
             double                  radius,
             double                  deformation );
@@ -64,9 +62,7 @@ protected:
    /**
     * @brief Creates the triangulated mesh of the bubblee into a container
     */
-//   virtual mesh::PtrMesh specializedCreate ();
-
-   virtual void specializedCreate ( mesh::Mesh& seed );
+  virtual void specializedCreate ( mesh::Mesh& seed );
 
 private:
 

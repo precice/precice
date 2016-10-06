@@ -1,14 +1,11 @@
-// Copyright (C) 2011 Technische Universitaet Muenchen
-// This file is part of the preCICE project. For conditions of distribution and
-// use, please see the license notice at http://www5.in.tum.de/wiki/index.php/PreCICE_License
 #ifndef PRECICE_IO_EXPORTVTKXML_HPP_
 #define PRECICE_IO_EXPORTVTKXML_HPP_
 
 #include "Export.hpp"
 #include "logging/Logger.hpp"
-#include "tarch/la/Vector.h"
-#include "utils/Dimensions.hpp"
+#include <vector>
 #include <string>
+#include <Eigen/Dense>
 
 namespace precice {
    namespace mesh {
@@ -53,8 +50,8 @@ public:
     mesh::Mesh&        mesh );
 
   static void writeVertex (
-    const utils::DynVector& position,
-    std::ofstream&           outFile );
+    const Eigen::VectorXd& position,
+    std::ofstream&         outFile );
 
   static void writeLine (
     mesh::Edge&    edge,

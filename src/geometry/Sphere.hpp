@@ -36,11 +36,11 @@ public:
    /**
     * @brief Standard constructor
     *
-    * @param radius  [IN] Radius of the sphere
-    * @param offset  [IN] Offset of the sphere's center from the origin
+    * @param[in] radius Radius of the sphere
+    * @param[in] offset Offset of the sphere's center from the origin
     */
    Sphere (
-     const utils::DynVector& offset,
+     const Eigen::VectorXd&  offset,
      double                  discretizationWidth,
      double                  radius );
 

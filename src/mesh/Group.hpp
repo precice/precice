@@ -1,8 +1,6 @@
 #ifndef PRECICE_MESH_GROUP_HPP_
 #define PRECICE_MESH_GROUP_HPP_
 
-#include "mesh/SharedPointer.hpp"
-#include "utils/Helpers.hpp"
 #include "utils/PointerVector.hpp"
 
 namespace precice {

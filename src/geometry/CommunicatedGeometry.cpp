@@ -7,9 +7,6 @@
 #include "mesh/SharedPointer.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/EventTimings.hpp"
-
-using precice::utils::Event;
 
 namespace precice {
 namespace geometry {
@@ -18,7 +15,7 @@ logging::Logger CommunicatedGeometry:: _log ( "precice::geometry::CommunicatedGe
 
 CommunicatedGeometry:: CommunicatedGeometry
 (
-  const utils::DynVector& offset,
+  const Eigen::VectorXd&  offset,
   const std::string&      accessor,
   const std::string&      provider,
   impl::PtrDecomposition  decomposition)
@@ -29,7 +26,7 @@ CommunicatedGeometry:: CommunicatedGeometry
   _receivers (),
   _decomposition(decomposition)
 {
-  preciceTrace ( "CommunicatedGeometry()", accessor, provider );
+  TRACE(accessor, provider);
 }
 
 void CommunicatedGeometry:: addReceiver
@@ -37,7 +34,7 @@ void CommunicatedGeometry:: addReceiver
   const std::string&     receiver,
   m2n::M2N::SharedPointer m2n)
 {
-  preciceTrace ( "addReceiver()", receiver );
+  TRACE(receiver);
   assertion ( m2n.get() != nullptr );
   preciceCheck ( ! utils::contained(receiver, _receivers),
                  "addReceiver()", "Receiver \"" << receiver
@@ -52,7 +49,7 @@ void CommunicatedGeometry:: prepare
 (
   mesh::Mesh& seed )
 {
-  preciceTrace ( "prepare()", seed.getName() );
+  TRACE(seed.getName());
   preciceCheck ( not _receivers.empty(), "specializedCreate()",
                  "No receivers specified for communicated geometry to create "
                  << "mesh \"" << seed.getName() << "\"!" );
@@ -74,7 +71,7 @@ void CommunicatedGeometry:: specializedCreate
 (
   mesh::Mesh& seed )
 {
-  preciceTrace ( "specializedCreate()", seed.getName() );
+  TRACE(seed.getName());
   if ( utils::contained(_accessorName, _receivers) ) {
     if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode){
       _decomposition->decompose(seed);
@@ -86,7 +83,7 @@ void CommunicatedGeometry:: specializedCreate
 void CommunicatedGeometry:: sendMesh(
   mesh::Mesh& seed)
 {
-  preciceTrace ( "sendMesh()", utils::MasterSlave::_rank );
+  TRACE(utils::MasterSlave::_rank );
   // Temporary globalMesh such that the master also keeps his local mesh (seed)
   mesh::Mesh globalMesh(seed.getName(), seed.getDimensions(), seed.isFlipNormals());
 
@@ -97,7 +94,6 @@ void CommunicatedGeometry:: sendMesh(
   // Gather Mesh
   preciceInfo("sendMesh()", "Gather mesh " << seed.getName() );
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ) {
-//    Event e("gather mesh");
     if (utils::MasterSlave::_slaveMode) {
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh( seed, 0 );
     }
@@ -127,7 +123,7 @@ void CommunicatedGeometry:: sendMesh(
   }
 
   // Send (global) Mesh
-  preciceInfo("sendMesh()", "Send global mesh " << seed.getName());
+  INFO("Send global mesh " << seed.getName());
 //  Event e("send global mesh");
   if (not utils::MasterSlave::_slaveMode) {
     preciceCheck ( globalMesh.vertices().size() > 0,
@@ -144,9 +140,8 @@ void CommunicatedGeometry:: sendMesh(
 void CommunicatedGeometry:: receiveMesh(
   mesh::Mesh& seed)
 {
-  preciceInfo("receiveMesh()", "Receive global mesh " << seed.getName() );
+  INFO("Receive global mesh " << seed.getName());
   if (not utils::MasterSlave::_slaveMode) {
-//    Event e("receive global mesh");
     assertion ( seed.vertices().size() == 0 );
     assertion ( utils::contained(_accessorName, _receivers) );
     m2n::M2N::SharedPointer m2n ( _receivers[_accessorName] );

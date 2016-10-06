@@ -4,6 +4,7 @@
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
+#include "math/math.hpp"
 
 namespace precice {
 namespace geometry {
@@ -12,7 +13,7 @@ logging::Logger Geometry:: _log ( "precice::geometry::Geometry" );
 
 Geometry:: Geometry
 (
-  const utils::DynVector& offset )
+  const Eigen::VectorXd& offset )
 :
   _offset (offset)
 {}
@@ -21,12 +22,12 @@ void Geometry:: create
 (
   mesh::Mesh& seed )
 {
-  preciceTrace ( "create()", seed.getName() );
+  TRACE(seed.getName());
   assertion ( seed.getDimensions() == _offset.size(), seed.getDimensions(),
                _offset.size() );
   specializedCreate ( seed );
-  utils::DynVector zero ( seed.getDimensions(), 0.0 );
-  if ( not tarch::la::equals(getOffset(), zero) ) {
+  
+  if ( not math::equals(getOffset(), Eigen::VectorXd::Zero(seed.getDimensions())) ) {
     Eigen::VectorXd temp( seed.getDimensions() );
     for (mesh::Vertex& vertex : seed.vertices()) {
       temp = _offset;

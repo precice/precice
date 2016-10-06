@@ -24,9 +24,9 @@ public:
     * @param sidelengths Lengths of the sides of the cuboid
     */
    Cuboid (
-     const utils::DynVector& offset,
-     double                  discretizationWidth,
-     const utils::DynVector& sidelengths );
+     const Eigen::VectorXd& offset,
+     double                 discretizationWidth,
+     const Eigen::VectorXd& sidelengths );
 
    /**
     * @brief Destructor

@@ -2,8 +2,6 @@
 #define PRECICE_GEOMETRY_DRIFTRATCHET_HPP_
 
 #include "Geometry.hpp"
-#include "utils/Helpers.hpp"
-#include "utils/Dimensions.hpp"
 
 namespace precice {
    namespace mesh {
@@ -62,7 +60,7 @@ public:
    *             axially symmetric shape.
    */
   DriftRatchet(
-    const utils::DynVector& offset,
+    const Eigen::VectorXd&  offset,
     double                  discretizationWidth,
     double                  maxRadius,
     double                  minRadius,

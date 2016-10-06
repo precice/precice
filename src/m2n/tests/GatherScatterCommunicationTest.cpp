@@ -11,6 +11,7 @@
 #include "utils/MasterSlave.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
+#include "utils/Helpers.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::m2n::tests::GatherScatterCommunicationTest)
