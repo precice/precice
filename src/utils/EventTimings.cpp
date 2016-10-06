@@ -219,6 +219,10 @@ void EventRegistry::print(std::ostream &out, bool terse)
     {
       out << "# Run finished at: " << std::asctime(std::localtime(&currentTime))
           << "# Number of processors: " << Parallel::getCommunicatorSize() << std::endl;
+
+      for (auto a : properties) {
+        out << "# Property " << a.first << ": " << a.second << std::endl;
+      }
       
       auto global = std::chrono::duration_cast<std::chrono::milliseconds>(globalDuration).count();
 
