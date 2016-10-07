@@ -6,8 +6,6 @@
 #include "m2n/M2N.hpp"
 #include "m2n/DistributedComFactory.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
-#include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
@@ -116,16 +114,16 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
   int numberOfVertices = 6;
   bool flipNormals = false;
   int valueDimension = 1;
-  utils::DynVector offset ( dimensions, 0.0 );
-
+  Eigen::VectorXd offset = Eigen::VectorXd::Zero(dimensions);
+  
   if (utils::Parallel::getProcessRank() == 0){ //Part1
     mesh::PtrMesh pMesh(new mesh::Mesh("Mesh", dimensions, flipNormals));
     m2n->createDistributedCommunication(pMesh);
     m2n->acceptSlavesConnection ( "Part1", "Part2Master");
-    utils::DynVector values(numberOfVertices);
-    assignList(values) = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
-    m2n->send(tarch::la::raw(values),numberOfVertices,pMesh->getID(),valueDimension);
-    m2n->receive(tarch::la::raw(values),numberOfVertices,pMesh->getID(),valueDimension);
+    Eigen::VectorXd values = Eigen::VectorXd::Zero(numberOfVertices);
+    values << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0;
+    m2n->send(values.data(),numberOfVertices,pMesh->getID(),valueDimension);
+    m2n->receive(values.data(),numberOfVertices,pMesh->getID(),valueDimension);
     validate(values[0]==2.0);
     validate(values[1]==4.0);
     validate(values[2]==6.0);
@@ -149,30 +147,28 @@ void GatherScatterCommunicationTest:: testSendReceiveAll ()
       pMesh->getVertexDistribution()[2].push_back(4);
       pMesh->getVertexDistribution()[2].push_back(5);
 
-      utils::DynVector values(3);
-      assignList(values) = 0.0, 0.0, 0.0;
-      m2n->receive(tarch::la::raw(values),3,pMesh->getID(),valueDimension);
+      Eigen::Vector3d values(0.0, 0.0, 0.0);
+      m2n->receive(values.data(),3,pMesh->getID(),valueDimension);
       validate(values[0]==1.0);
       validate(values[1]==2.0);
       validate(values[2]==4.0);
       values = values * 2;
-      m2n->send(tarch::la::raw(values),3,pMesh->getID(),valueDimension);
+      m2n->send(values.data(),3,pMesh->getID(),valueDimension);
     }
     else if(utils::Parallel::getProcessRank() == 2){//Slave1
-      utils::DynVector values(0);
-      m2n->receive(tarch::la::raw(values),0,pMesh->getID(),valueDimension);
-      m2n->send(tarch::la::raw(values),0,pMesh->getID(),valueDimension);
+      Eigen::VectorXd values;
+      m2n->receive(values.data(),0,pMesh->getID(),valueDimension);
+      m2n->send(values.data(),0,pMesh->getID(),valueDimension);
     }
     else if(utils::Parallel::getProcessRank() == 3){//Slave2
-      utils::DynVector values(4);
-      assignList(values) = 0.0, 0.0, 0.0, 0.0;
-      m2n->receive(tarch::la::raw(values),4,pMesh->getID(),valueDimension);
+      Eigen::Vector4d values(0.0, 0.0, 0.0, 0.0);
+      m2n->receive(values.data(),4,pMesh->getID(),valueDimension);
       validate(values[0]==3.0);
       validate(values[1]==4.0);
       validate(values[2]==5.0);
       validate(values[3]==6.0);
       values = values * 2;
-      m2n->send(tarch::la::raw(values),4,pMesh->getID(),valueDimension);
+      m2n->send(values.data(),4,pMesh->getID(),valueDimension);
     }
   }
 
