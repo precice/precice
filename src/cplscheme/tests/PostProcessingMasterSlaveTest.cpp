@@ -47,7 +47,7 @@ PostProcessingMasterSlaveTest:: PostProcessingMasterSlaveTest ()
 
 void PostProcessingMasterSlaveTest:: run ()
 {
-  preciceTrace ( "run" );
+  TRACE();
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 3){
     std::vector<int> ranksWanted;
@@ -79,7 +79,8 @@ void PostProcessingMasterSlaveTest:: run ()
 void PostProcessingMasterSlaveTest::testVIQNILSpp()
 {
 
-	preciceTrace ( "testVIQNPP" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
+        TRACE();
+        assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
 	com::Communication::SharedPointer masterSlaveCom =
 			com::Communication::SharedPointer(
@@ -437,7 +438,7 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 
 void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 {
-	preciceTrace ( "testVIQNIMVJpp" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
+        TRACE(); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
 	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
 	utils::MasterSlave::_communication = masterSlaveCom;
@@ -786,7 +787,7 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 
 void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
 {
-  preciceTrace (__func__); assertion ( utils::Parallel::getCommunicatorSize() == 3 );
+  TRACE(); assertion ( utils::Parallel::getCommunicatorSize() == 3 );
 
   com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;

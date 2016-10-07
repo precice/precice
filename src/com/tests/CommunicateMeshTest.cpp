@@ -6,7 +6,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include "math/math.hpp"
 
@@ -39,7 +38,7 @@ void CommunicateMeshTest:: run ()
 
 void CommunicateMeshTest:: testTwoSolvers ()
 {
-  preciceTrace ( "testTwoSolvers" );
+  TRACE();
   using utils::DynVector;
   utils::Parallel::synchronizeProcesses ();
   assertion ( utils::Parallel::getCommunicatorSize() > 1 );
@@ -52,9 +51,9 @@ void CommunicateMeshTest:: testTwoSolvers ()
     // Build mesh to communicate for rank0
     mesh::Mesh mesh ( "MyMesh", dim, false );
     if ( utils::Parallel::getProcessRank() == 0 ){
-      mesh::Vertex& v0 = mesh.createVertex ( DynVector(dim,0.0) );
-      mesh::Vertex& v1 = mesh.createVertex ( DynVector(dim,1.0) );
-      mesh::Vertex& v2 = mesh.createVertex ( DynVector(dim,2.0) );
+      mesh::Vertex& v0 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 0) );
+      mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1) );
+      mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 2) );
 
       mesh.createEdge ( v0, v1 );
       mesh.createEdge ( v1, v2 );
@@ -77,31 +76,31 @@ void CommunicateMeshTest:: testTwoSolvers ()
         comMesh.sendMesh ( mesh, 0 );
         validateEquals ( mesh.vertices().size(), 3 );
         validateEquals ( mesh.edges().size(), 3 );
-        validate ( math::equals(mesh.vertices()[0].getCoords(), DynVector(dim,0.0)) );
-        validate ( math::equals(mesh.vertices()[1].getCoords(), DynVector(dim,1.0)) );
-        validate ( math::equals(mesh.vertices()[2].getCoords(), DynVector(dim,2.0)) );
+        validate ( math::equals(mesh.vertices()[0].getCoords(), Eigen::VectorXd::Constant(dim, 0) ));
+        validate ( math::equals(mesh.vertices()[1].getCoords(), Eigen::VectorXd::Constant(dim, 1) ));
+        validate ( math::equals(mesh.vertices()[2].getCoords(), Eigen::VectorXd::Constant(dim, 2) ));
       }
       else if ( utils::Parallel::getProcessRank() == 1 ) {
-        mesh.createVertex ( DynVector(dim,9.0) ); // new version receiveMesh can also deal with delta meshes
+        mesh.createVertex ( Eigen::VectorXd::Constant(dim, 9) ); // new version receiveMesh can also deal with delta meshes
         utils::Parallel::splitCommunicator(participant1 );
         com->requestConnection ( participant0, participant1, 0, 1 );
         comMesh.receiveMesh ( mesh, 0 );
         validateEquals ( mesh.vertices().size(), 4 );
         validateEquals ( mesh.edges().size(), 3 );
-        validate ( math::equals(mesh.vertices()[0].getCoords(), DynVector(dim,9.0)) );
-        validate ( math::equals(mesh.vertices()[1].getCoords(), DynVector(dim,0.0)) );
-        validate ( math::equals(mesh.vertices()[2].getCoords(), DynVector(dim,1.0)) );
-        validate ( math::equals(mesh.vertices()[3].getCoords(), DynVector(dim,2.0)) );
+        validate ( math::equals(mesh.vertices()[0].getCoords(), Eigen::VectorXd::Constant(dim, 9) ));
+        validate ( math::equals(mesh.vertices()[1].getCoords(), Eigen::VectorXd::Constant(dim, 0) ));
+        validate ( math::equals(mesh.vertices()[2].getCoords(), Eigen::VectorXd::Constant(dim, 1) ));
+        validate ( math::equals(mesh.vertices()[3].getCoords(), Eigen::VectorXd::Constant(dim, 2) ));
 
       }
       com->closeConnection ();
 
-      validate ( math::equals(mesh.edges()[0].vertex(0).getCoords(), DynVector(dim,0.0)) );
-      validate ( math::equals(mesh.edges()[0].vertex(1).getCoords(), DynVector(dim,1.0)) );
-      validate ( math::equals(mesh.edges()[1].vertex(0).getCoords(), DynVector(dim,1.0)) );
-      validate ( math::equals(mesh.edges()[1].vertex(1).getCoords(), DynVector(dim,2.0)) );
-      validate ( math::equals(mesh.edges()[2].vertex(0).getCoords(), DynVector(dim,2.0)) );
-      validate ( math::equals(mesh.edges()[2].vertex(1).getCoords(), DynVector(dim,0.0)) );
+      validate ( math::equals(mesh.edges()[0].vertex(0).getCoords(), Eigen::VectorXd::Constant(dim, 0) ));
+      validate ( math::equals(mesh.edges()[0].vertex(1).getCoords(), Eigen::VectorXd::Constant(dim, 1) ));
+      validate ( math::equals(mesh.edges()[1].vertex(0).getCoords(), Eigen::VectorXd::Constant(dim, 1) ));
+      validate ( math::equals(mesh.edges()[1].vertex(1).getCoords(), Eigen::VectorXd::Constant(dim, 2) ));
+      validate ( math::equals(mesh.edges()[2].vertex(0).getCoords(), Eigen::VectorXd::Constant(dim, 2) ));
+      validate ( math::equals(mesh.edges()[2].vertex(1).getCoords(), Eigen::VectorXd::Constant(dim, 0) ));
       utils::Parallel::clearGroups();
       utils::Parallel::setGlobalCommunicator(utils::Parallel::getCommunicatorWorld());
     }

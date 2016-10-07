@@ -3,13 +3,9 @@
 #ifndef PRECICE_COM_MPI_COMMUNICATION_HPP_
 #define PRECICE_COM_MPI_COMMUNICATION_HPP_
 
-#include "Communication.hpp"
-
-#include "mesh/Data.hpp"
-#include "logging/Logger.hpp"
-#include "utils/Dimensions.hpp"
-
 #include <mpi.h>
+#include "Communication.hpp"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace com {

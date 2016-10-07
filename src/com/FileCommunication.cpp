@@ -1,11 +1,9 @@
-
 #include "FileCommunication.hpp"
 
 #include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
 
 #include <iomanip>
-#include <stdio.h>
 
 namespace precice {
 namespace com {

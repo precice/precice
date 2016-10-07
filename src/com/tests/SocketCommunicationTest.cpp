@@ -4,9 +4,8 @@
 #include "SocketCommunicationTest.hpp"
 #include "com/SocketCommunication.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
-#include "tarch/la/DynamicVector.h"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::com::tests::SocketCommunicationTest)
@@ -15,7 +14,7 @@ namespace precice {
 namespace com {
 namespace tests {
 
-logging::Logger SocketCommunicationTest:: _log ("precice::com::tests::SocketCommunicationTest");
+logging::Logger SocketCommunicationTest:: _log("precice::com::tests::SocketCommunicationTest");
 
 SocketCommunicationTest:: SocketCommunicationTest()
 :
@@ -40,7 +39,7 @@ void SocketCommunicationTest:: run()
 
 void SocketCommunicationTest:: testSendAndReceive()
 {
-  preciceTrace ( "testSendAndReceiveString()" );
+  TRACE();
   SocketCommunication com;
   if ( utils::Parallel::getProcessRank() == 0 ){
     com.acceptConnection("process0", "process1", 0, 1);
@@ -51,18 +50,18 @@ void SocketCommunicationTest:: testSendAndReceive()
       validate ( msg == std::string("testTwo") );
     }
     {
-      utils::DynVector msg(3, 0.0);
-      com.receive (tarch::la::raw(msg), msg.size(), 0);
-      validate ( tarch::la::equals(msg, utils::Vector3D(1.0)) );
-      msg = utils::Vector3D (2.0);
-      com.send (tarch::la::raw(msg), msg.size(), 0);
+      Eigen::Vector3d msg = Eigen::Vector3d::Constant(0);
+      com.receive (msg.data(), msg.size(), 0);
+      validate ( math::equals(msg, Eigen::Vector3d::Constant(1)) );
+      msg = Eigen::Vector3d::Constant(2);
+      com.send (msg.data(), msg.size(), 0);
     }
     {
-      tarch::la::DynamicVector<int> msg(4, 0);
-      com.receive (tarch::la::raw(msg), msg.size(), 0);
-      validate ( tarch::la::equals(msg, tarch::la::DynamicVector<int>(4, 1)) );
-      assign(msg) = 0;
-      com.send (tarch::la::raw(msg), msg.size(), 0);
+      Eigen::Vector4i msg = Eigen::Vector4i::Constant(0);
+      com.receive (msg.data(), msg.size(), 0);
+      validate ( math::equals(msg, Eigen::Vector4i::Constant(1)) );
+      msg = Eigen::Vector4i::Constant(0);
+      com.send (msg.data(), msg.size(), 0);
     }
     {
       double msg = 0.0;
@@ -94,16 +93,16 @@ void SocketCommunicationTest:: testSendAndReceive()
       com.send (msg, 0);
     }
     {
-      utils::DynVector msg(3, 1.0);
-      com.send (tarch::la::raw(msg), msg.size(), 0);
-      com.receive (tarch::la::raw(msg), msg.size(), 0);
-      validate ( tarch::la::equals(msg, utils::Vector3D(2.0)) );
+      Eigen::Vector3d msg = Eigen::Vector3d::Constant(1);
+      com.send (msg.data(), msg.size(), 0);
+      com.receive (msg.data(), msg.size(), 0);
+      validate ( math::equals(msg, Eigen::Vector3d::Constant(2)) );
     }
     {
-      tarch::la::DynamicVector<int> msg(4, 1);
-      com.send (tarch::la::raw(msg), msg.size(), 0);
-      com.receive (tarch::la::raw(msg), msg.size(), 0);
-      validate ( tarch::la::equals(msg, tarch::la::DynamicVector<int>(4, 0)) );
+      Eigen::Vector4i msg = Eigen::Vector4i::Constant(1);
+      com.send (msg.data(), msg.size(), 0);
+      com.receive (msg.data(), msg.size(), 0);
+      validate ( math::equals(msg, Eigen::Vector4i::Zero()) );
     }
     {
       double msg = 1.0;
@@ -132,7 +131,7 @@ void SocketCommunicationTest:: testSendAndReceive()
 
 void SocketCommunicationTest:: testParallelClient()
 {
-  preciceTrace ( "testParallelClient()" );
+  TRACE();
   SocketCommunication com;
   int rank = utils::Parallel::getProcessRank();
   if ( rank == 0 ){

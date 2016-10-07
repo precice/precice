@@ -8,7 +8,6 @@
 #include "logging/Logger.hpp"
 
 #include <string>
-#include <vector>
 
 namespace precice {
 namespace com {
@@ -57,7 +56,7 @@ public:
   acceptConnectionAsServer(std::string const& nameAcceptor,
                            std::string const& nameRequester,
                            int requesterCommunicatorSize) {
-    preciceError("acceptConnectionAsServer()", "Not implemented!");
+    ERROR("Not implemented!");
   }
 
   /**
@@ -71,7 +70,7 @@ public:
   virtual int
   requestConnectionAsClient(std::string const& nameAcceptor,
                             std::string const& nameRequester) {
-    preciceError("requestConnectionAsClient()", "Not implemented!");
+    ERROR("Not implemented!");
   }
 
   /**

@@ -5,13 +5,10 @@
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 
-#include <map>
-
 namespace precice {
 namespace com {
 
-logging::Logger MPIDirectCommunication::_log(
-    "precice::com::MPIDirectCommunication");
+logging::Logger MPIDirectCommunication::_log("precice::com::MPIDirectCommunication");
 
 MPIDirectCommunication::MPIDirectCommunication()
     : _communicator(utils::Parallel::getGlobalCommunicator())

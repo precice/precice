@@ -10,11 +10,7 @@
 #include "mesh/PropertyContainer.hpp"
 #include "geometry/Cuboid.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "math/math.hpp"
-#include "tarch/la/WrappedVector.h"
-#include <map>
 #include <string>
 
 #include "tarch/tests/TestCaseFactory.h"
@@ -25,8 +21,7 @@ namespace io {
 namespace tests {
 
 
-logging::Logger ExportAndReimportVRMLTest::
-   _log ( "precice::io::tests::ExportAndReimportVRMLTest" );
+logging::Logger ExportAndReimportVRMLTest::_log("precice::io::tests::ExportAndReimportVRMLTest");
 
 ExportAndReimportVRMLTest:: ExportAndReimportVRMLTest()
 :
@@ -45,15 +40,15 @@ void ExportAndReimportVRMLTest:: run()
 
 void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
 {
-  preciceTrace("testInternallyCreatedGeometry()");
+  TRACE();
   mesh::Mesh::resetGeometryIDsGlobally();
   // Create geometry
   bool flipNormals = false;
   int dim = 2;
   mesh::Mesh mesh("TestCuboid", dim, flipNormals);
-  utils::DynVector offset(2, 0.0);
+  Eigen::Vector2d offset = Eigen::Vector2d::Zero();
   double dx = 1.0;
-  utils::DynVector length(2, 1.0);
+  Eigen::Vector2d length = Eigen::Vector2d::Constant(1);
   geometry::Cuboid cuboid(offset, dx, length);
   // Set geoemtry sub-ids
   std::string nameSubID0("side-0");
@@ -161,7 +156,7 @@ void ExportAndReimportVRMLTest:: testInternallyCreatedGeometry()
 
 void ExportAndReimportVRMLTest:: testReimportDriftRatchet()
 {
-  preciceTrace("testReimportDriftRatchet()");
+  TRACE();
   mesh::Mesh mesh("test-cuboid", 3, false);
   io::ImportVRML importMesh("");
   importMesh.doImport("io-ExportVRMLTest-testExportCuboid-3d.wrl", mesh);

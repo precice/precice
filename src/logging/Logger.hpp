@@ -1,5 +1,6 @@
 #pragma once
 
+
 #include <string>
 
 #include <boost/log/trivial.hpp>
@@ -14,3 +15,7 @@ public:
 };
 
 }} // namespace precice, logging
+
+// Include LogMacros here, because using it works only together with a Logger
+#include "LogMacros.hpp" 
+

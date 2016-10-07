@@ -3,7 +3,6 @@
 
 #include "Request.hpp"
 
-#include <memory>
 #include "logging/Logger.hpp"
 
 namespace precice {

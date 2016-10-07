@@ -2,12 +2,8 @@
 #define PRECICE_IO_IMPORTVRML_HPP_
 
 #include "Import.hpp"
-#include "utils/Dimensions.hpp"
 #include "impl/VRML10Parser.hpp"
-#include "utils/Dimensions.hpp"
-#include "utils/Helpers.hpp"
 #include "logging/Logger.hpp"
-#include <map>
 
 namespace precice {
   namespace mesh {

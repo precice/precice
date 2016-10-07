@@ -5,7 +5,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include <map>
 #include <vector>
 
@@ -103,7 +102,7 @@ void CommunicateMesh:: receiveMesh
     double vertexCoords[numberOfVertices*dim];
     _communication->receive(vertexCoords,numberOfVertices*dim,rankSender);
     for ( int i=0; i < numberOfVertices; i++ ){
-      utils::DynVector coords(dim);
+      Eigen::VectorXd coords(dim);
       for ( int d=0; d < dim; d++){
         coords[d] = vertexCoords[i*dim+d];
       }
@@ -246,7 +245,7 @@ void CommunicateMesh:: broadcastReceiveMesh
     double vertexCoords[numberOfVertices*dim];
     _communication->broadcast(vertexCoords,numberOfVertices*dim,rankBroadcaster);
     for ( int i=0; i < numberOfVertices; i++ ){
-      utils::DynVector coords(dim);
+      Eigen::VectorXd coords(dim);
       for ( int d=0; d < dim; d++){
         coords[d] = vertexCoords[i*dim+d];
       }
