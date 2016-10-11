@@ -6,12 +6,9 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include "math/math.hpp"
-#include <string>
-#include <map>
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::io::tests::ImportVRMLTest)

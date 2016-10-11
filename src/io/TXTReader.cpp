@@ -1,7 +1,5 @@
 #include "TXTReader.hpp"
-#include "utils/Globals.hpp"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/DynamicVector.h"
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace io {
@@ -16,8 +14,7 @@ TXTReader:: TXTReader
 {
   _file.open(filename.c_str());
   if (not _file){
-    preciceError("TXTReader()", "Could not open file \"" << filename
-                 << "\" for txt reading!");
+    ERROR("Could not open file \"" << filename << "\" for txt reading!");
   }
   _file.setf(std::ios::showpoint);
   _file.setf(std::ios::fixed);
@@ -30,8 +27,6 @@ TXTReader:: ~TXTReader()
     _file.close();
   }
 }
-
-
 
 
 }} // namespace precice, io

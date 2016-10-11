@@ -1,10 +1,8 @@
 #include "TXTWriterReaderTest.hpp"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/DynamicVector.h"
-#include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::io::tests::TXTWriterReaderTest)
@@ -29,75 +27,55 @@ void TXTWriterReaderTest:: run()
 
 void TXTWriterReaderTest:: test()
 {
-  preciceTrace("test()");
+  TRACE();
   {
-    tarch::la::DynamicMatrix<double> matrix1(1, 2);
-    assignList(matrix1) = 1.0, 2.0;
+    Eigen::Matrix<double, 1, 2> output(1,2);
     TXTWriter txtWriter("TXTWriterReaderTest-matrix-1by2.txt");
-    txtWriter.write (matrix1);
-  }
-  {
-    tarch::la::DynamicMatrix<double> matrix1(1, 2);
-    tarch::la::DynamicMatrix<double> expected(1, 2);
-    assignList(expected) = 1.0, 2.0;
+    txtWriter.write(output);
+    Eigen::Matrix<double, 1, 2> input(1,2);
     TXTReader txtReader("TXTWriterReaderTest-matrix-1by2.txt");
-    txtReader.read(matrix1);
-    validateWithMessage(tarch::la::equals(matrix1, expected), matrix1);
+    txtReader.read(input);
+    validateWithMessage(math::equals(output, input), input);
   }
 
   {
-    tarch::la::DynamicMatrix<double> matrix2 (2, 1);
-    assignList(matrix2) = 1.0, 2.0;
+    Eigen::Matrix<double, 2, 1> output(1, 2);
     TXTWriter txtWriter("TXTWriterReaderTest-matrix-2by1.txt");
-    txtWriter.write(matrix2);
-  }
-  {
-    tarch::la::DynamicMatrix<double> matrix2(2, 1);
-    tarch::la::DynamicMatrix<double> expected(2, 1);
-    assignList(expected) = 1.0, 2.0;
+    txtWriter.write(output);
+    Eigen::Matrix<double, 2, 1> input(1, 2); 
     TXTReader txtReader("TXTWriterReaderTest-matrix-2by1.txt");
-    txtReader.read(matrix2);
-    validateWithMessage(tarch::la::equals(matrix2, expected), matrix2);
+    txtReader.read(input);
+    validateWithMessage(math::equals(output, input), input);
   }
 
   {
-    tarch::la::DynamicMatrix<double> matrix3 (3, 3);
-    assignList(matrix3) = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
+    Eigen::Matrix<double, 3, 3> matOutput;
+    matOutput << 1,2,3,4,5,6,7,8,9;
     TXTWriter txtWriter("TXTWriterReaderTest-matrix-3by3.txt");
-    txtWriter.write(matrix3);
-
-    tarch::la::DynamicVector<double> vector1 (1);
-    assignList(vector1) = 1.0;
-    txtWriter.write(vector1);
-  }
-  {
-    tarch::la::DynamicMatrix<double> matrix3 (3, 3);
-    tarch::la::DynamicMatrix<double> expectedMatrix3(3, 3);
-    assignList(expectedMatrix3) = 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0;
+    txtWriter.write(matOutput);
+    
+    Eigen::VectorXd vecOutput = Eigen::VectorXd::Constant(1, 1);
+    txtWriter.write(vecOutput);
+  
+    Eigen::Matrix<double, 3, 3> matInput;
     TXTReader txtReader("TXTWriterReaderTest-matrix-3by3.txt");
-    txtReader.read(matrix3);
-    validateWithMessage(tarch::la::equals(matrix3, expectedMatrix3), matrix3);
+    txtReader.read(matInput);
+    validateWithMessage(math::equals(matOutput, matInput), matInput);
 
-    tarch::la::DynamicVector<double> vector1(1);
-    tarch::la::DynamicVector<double> expectedVector1(1);
-    assignList(expectedVector1) = 1.0;
-    txtReader.read(vector1);
-    validateWithMessage(tarch::la::equals(vector1, expectedVector1), vector1);
+    Eigen::VectorXd vecInput(1);
+    txtReader.read(vecInput);
+    validateWithMessage(math::equals(vecOutput, vecInput), vecInput);
   }
 
   {
-    tarch::la::DynamicVector<double> vector2(3);
-    assignList(vector2) = 1.0, 2.0, 3.0;
+    Eigen::Vector3d output(1, 2, 3);
     TXTWriter txtWriter("TXTWriterReaderTest-vector-3.txt");
-    txtWriter.write(vector2);
-  }
-  {
-    tarch::la::DynamicVector<double> vector2(3);
-    tarch::la::DynamicVector<double> expected(3);
-    assignList(expected) = 1.0, 2.0, 3.0;
+    txtWriter.write(output);
+
+    Eigen::Vector3d input;
     TXTReader txtReader("TXTWriterReaderTest-vector-3.txt");
-    txtReader.read(vector2);
-    validateWithMessage(tarch::la::equals(vector2, expected), vector2);
+    txtReader.read(input);
+    validateWithMessage(math::equals(output, input), input);
   }
 
 }

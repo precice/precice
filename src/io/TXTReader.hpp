@@ -6,17 +6,9 @@
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/MatrixTraits.h"
 #include "tarch/la/traits/VectorTraits.h"
-#include "Eigen/Core"
+#include <Eigen/Core>
 #include <string>
 #include <fstream>
-#include <type_traits>
-
-namespace tarch {
-  namespace la {
-    template<typename Scalar> class DynamicMatrix;
-    template<typename Scalar> class DynamicVector;
-  }
-}
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -33,18 +25,16 @@ public:
   /**
    * @brief Constructor, opens file and sets format.
    */
-  TXTReader(const std::string& filename);
+  explicit TXTReader(const std::string& filename);
 
   /**
    * @brief Destructor, closes file.
    */
   ~TXTReader();
 
-  /**
-   * @brief Writes (appends) the matrix to the file.
-   */
+  /// Reads the matrix from the file.
   template<typename MATRIX>
-    typename std::enable_if<tarch::la::IsMatrix<MATRIX>::value
+  typename std::enable_if<tarch::la::IsMatrix<MATRIX>::value
   >::type read(MATRIX& matrix)
   {
     typedef tarch::la::MatrixTraits<MATRIX> T;
@@ -55,11 +45,9 @@ public:
     }
   }
 
-  /**
-   * @brief Writes (appends) the vector to the file.
-   */
+  /// Reads the vector from the file.
   template<typename VECTOR>
-    typename std::enable_if<tarch::la::IsVector<VECTOR>::value
+  typename std::enable_if<tarch::la::IsVector<VECTOR>::value
   >::type read(VECTOR& vector)
   {
     typedef tarch::la::VectorTraits<VECTOR> T;
@@ -68,15 +56,18 @@ public:
     }
   }
 
-  /**
-   * @brief Writes (appends) the matrix to the file.
-   */
-// void read(const Eigen::MatrixXd& matrix);
-
-  /**
-   * @brief Writes (appends) the matrix to the file.
-   */
-// void read(const Eigen::VectorXd& vec);
+  /// Reads the Eigen::Matrix from the file.
+  template<typename Scalar, int Rows, int Cols>
+  void read(Eigen::Matrix<Scalar, Rows, Cols>& matrix)
+  {
+    for (long i = 0; i < matrix.rows(); i++) {
+      for (long j = 0; j < matrix.cols(); j++) {
+        double scalar;
+        _file >> scalar;
+        matrix(i,j) = scalar;
+      }
+    }
+  }
 
 
 private:

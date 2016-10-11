@@ -4,8 +4,6 @@
 #ifndef PRECICE_NO_SPIRIT2
 
 #include "mesh/PropertyContainer.hpp"
-#include "utils/Dimensions.hpp"
-#include "utils/Helpers.hpp"
 #include "logging/Logger.hpp"
 #include <boost/spirit/include/qi.hpp>
 #include <boost/spirit/include/phoenix_core.hpp>

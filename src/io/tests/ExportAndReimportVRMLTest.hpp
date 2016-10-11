@@ -3,7 +3,6 @@
 
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
-#include <string>
 
 namespace precice {
 namespace io {

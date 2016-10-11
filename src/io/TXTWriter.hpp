@@ -6,10 +6,9 @@
 #include "tarch/la/traits/IsVector.h"
 #include "tarch/la/traits/MatrixTraits.h"
 #include "tarch/la/traits/VectorTraits.h"
-#include "Eigen/Core"
+#include <Eigen/Core>
 #include <string>
 #include <fstream>
-#include <type_traits>
 
 namespace tarch {
   namespace la {
@@ -33,7 +32,7 @@ public:
   /**
    * @brief Constructor, opens file and sets format.
    */
-  TXTWriter(const std::string& filename);
+  explicit TXTWriter(const std::string& filename);
 
   /**
    * @brief Destructor, closes file.
@@ -44,7 +43,7 @@ public:
    * @brief Writes (appends) the matrix to the file.
    */
   template<typename MATRIX>
-    typename std::enable_if<tarch::la::IsMatrix<MATRIX>::value
+  typename std::enable_if<tarch::la::IsMatrix<MATRIX>::value
   >::type write(const MATRIX& matrix)
   {
     typedef tarch::la::MatrixTraits<MATRIX> T;
@@ -60,7 +59,7 @@ public:
    * @brief Writes (appends) the vector to the file.
    */
   template<typename VECTOR>
-    typename std::enable_if<tarch::la::IsVector<VECTOR>::value
+  typename std::enable_if<tarch::la::IsVector<VECTOR>::value
   >::type write(const VECTOR& vector)
   {
     typedef tarch::la::VectorTraits<VECTOR> T;
@@ -70,17 +69,18 @@ public:
     _file << std::endl;
   }
 
-  /**
-   * @brief Writes (appends) the matrix to the file.
-   */
- //void write(const Eigen::MatrixXd& matrix);
+  ///Writes (appends) the matrix to the file.
+  void write(const Eigen::MatrixXd& matrix)
+  {
+    for (long i = 0; i < matrix.rows(); i++) {
+      for (long j = 0; j < matrix.cols(); j++) {
+        _file << matrix(i, j) << " ";
+      }
+    }
+    _file << std::endl;
+  }
 
-  /**
-   * @brief Writes (appends) the matrix to the file.
-   */
- //void write(const Eigen::VectorXd& vec);
-
-
+  
 private:
 
   // @brief Logging device.

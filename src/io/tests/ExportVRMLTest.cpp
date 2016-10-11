@@ -41,7 +41,7 @@ void ExportVRMLTest:: testExportDriftRatchet()
     bool flipNormals = false;
     mesh::Mesh mesh ( "Ratchet", dim, flipNormals );
     geometry::DriftRatchet ratchet (
-      utils::DynVector(dim, 0.0), // offset
+      Eigen::VectorXd::Zero(dim), // offset
       0.1,         // discretization width
       geometry::DriftRatchet::getDefaultMaxRadius(),
       geometry::DriftRatchet::getDefaultMinRadius(geometry::DriftRatchet::getDefaultMaxRadius()),

@@ -61,14 +61,14 @@ void ExportVTKTest:: testExportPolygonalMesh()
 
 void ExportVTKTest:: testExportTriangulatedMesh()
 {
-  preciceTrace ( "testExportTriangulatedMesh" );
+  TRACE();
 
   int dim = 3;
   bool invertNormals = false;
   mesh::Mesh mesh ("MyMesh", dim, invertNormals);
   mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 0.0) );
   mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1.0) );
-  utils::DynVector coords3(dim, 0.0);
+  Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
   coords3[0] = 1.0;
   mesh::Vertex& v3 = mesh.createVertex(coords3);
 

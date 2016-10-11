@@ -5,8 +5,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
 #include "utils/Globals.hpp"
-#include "Eigen/Dense"
-#include <iostream>
+#include <Eigen/Dense>
 #include <string>
 #include <fstream>
 #include <boost/filesystem.hpp>

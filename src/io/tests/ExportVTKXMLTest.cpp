@@ -7,7 +7,6 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "com/MPIDirectCommunication.hpp"
@@ -54,9 +53,9 @@ void ExportVTKXMLTest:: testExportPolygonalMesh()
   mesh::Mesh mesh ("MyMesh", dim, invertNormals);
 
   if (utils::Parallel::getProcessRank() == 0){
-    mesh::Vertex& v1 = mesh.createVertex ( utils::DynVector(dim, 0.0) );
-    mesh::Vertex& v2 = mesh.createVertex ( utils::DynVector(dim, 1.0) );
-    utils::DynVector coords3(dim, 0.0);
+    mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Zero(dim) );
+    mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1) );
+    Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
     coords3[0] = 1.0;
     mesh::Vertex& v3 = mesh.createVertex(coords3);
 
@@ -72,9 +71,9 @@ void ExportVTKXMLTest:: testExportPolygonalMesh()
 
   }
   else if(utils::Parallel::getProcessRank() == 2){
-    mesh::Vertex& v1 = mesh.createVertex ( utils::DynVector(dim, 1.0) );
-    mesh::Vertex& v2 = mesh.createVertex ( utils::DynVector(dim, 2.0) );
-    utils::DynVector coords3(dim, 0.0);
+    mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1) );
+    mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 2) );
+    Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
     coords3[1] = 1.0;
     mesh::Vertex& v3 = mesh.createVertex(coords3);
 
@@ -83,7 +82,7 @@ void ExportVTKXMLTest:: testExportPolygonalMesh()
     mesh.createEdge (v3, v1);
   }
   else if(utils::Parallel::getProcessRank() == 3){
-    mesh.createVertex ( utils::DynVector(dim, 3.0) );
+    mesh.createVertex ( Eigen::VectorXd::Constant(dim, 3.0) );
   }
 
   mesh.computeState();
@@ -107,9 +106,9 @@ void ExportVTKXMLTest:: testExportTriangulatedMesh()
   mesh::Mesh mesh ("MyMesh", dim, invertNormals);
 
   if (utils::Parallel::getProcessRank() == 0){
-    mesh::Vertex& v1 = mesh.createVertex ( utils::DynVector(dim, 0.0) );
-    mesh::Vertex& v2 = mesh.createVertex ( utils::DynVector(dim, 1.0) );
-    utils::DynVector coords3(dim, 0.0);
+    mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Zero(dim) );
+    mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1) );
+    Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
     coords3[0] = 1.0;
     mesh::Vertex& v3 = mesh.createVertex(coords3);
 
@@ -127,9 +126,9 @@ void ExportVTKXMLTest:: testExportTriangulatedMesh()
 
   }
   else if(utils::Parallel::getProcessRank() == 2){
-    mesh::Vertex& v1 = mesh.createVertex ( utils::DynVector(dim, 1.0) );
-    mesh::Vertex& v2 = mesh.createVertex ( utils::DynVector(dim, 2.0) );
-    utils::DynVector coords3(dim, 0.0);
+    mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1) );
+    mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 2) );
+    Eigen::VectorXd coords3 = Eigen::VectorXd::Zero(dim);
     coords3[1] = 1.0;
     mesh::Vertex& v3 = mesh.createVertex(coords3);
 
@@ -139,7 +138,7 @@ void ExportVTKXMLTest:: testExportTriangulatedMesh()
     mesh.createTriangle (e1, e2, e3);
   }
   else if(utils::Parallel::getProcessRank() == 3){
-    mesh.createVertex ( utils::DynVector(dim, 3.0) );
+    mesh.createVertex ( Eigen::VectorXd::Constant(dim, 3.0) );
   }
 
   mesh.computeState();

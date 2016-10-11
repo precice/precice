@@ -4,11 +4,10 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/PropertyContainer.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/String.hpp"
 #include "utils/Globals.hpp"
 #include <iostream>
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include <fstream>
 #include <map>
 #include <boost/filesystem.hpp>
@@ -40,8 +39,7 @@ void ExportVRML:: doExport
   fs::path outfile(location);
   outfile = outfile / fs::path(name);
   std::ofstream outstream(outfile.string(), std::ios::trunc);
-  preciceCheck(outstream, "doExport()", "Could not open file \"" << outfile.c_str()
-                 << "\" for VTK export!");
+  CHECK(outstream, "Could not open file \"" << outfile.c_str() << "\" for VTK export!");
 
   writeHeader(outstream);
   writeGeometry(outstream, mesh);
@@ -72,8 +70,7 @@ void ExportVRML:: openFile
   const std::string& filename ) const
 {
   outFile.open ( filename.c_str() );
-  preciceCheck ( outFile, "openFile()", "Could not open file \"" << filename
-                 << "\" for VRML export!" );
+  CHECK(outFile, "Could not open file \"" << filename << "\" for VRML export!" );
   outFile.setf(std::ios::showpoint);
   outFile.setf(std::ios::scientific);
   outFile << std::setprecision(16);
