@@ -1,9 +1,8 @@
 #include "MPICommunicationTest.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
-
+#include "math/math.hpp"
 #include "tarch/tests/TestCaseFactory.h"
 
 using precice::utils::Parallel;
@@ -76,17 +75,17 @@ MPICommunicationTest::testSendAndReceiveVector() {
   MPIPortsCommunication com;
   if (utils::Parallel::getProcessRank() == 0) {
     com.acceptConnection("A", "R", 0, 1);
-    utils::DynVector msg(3, 1.0);
-    com.send(tarch::la::raw(msg), msg.size(), 0);
-    com.receive(tarch::la::raw(msg), msg.size(), 0);
-    validate(tarch::la::equals(msg, utils::Vector3D(2.0)));
+    Eigen::Vector3d msg(1, 1, 1);
+    com.send(msg.data(), msg.size(), 0);
+    com.receive(msg.data(), msg.size(), 0);
+    validate(math::equals(msg, Eigen::Vector3d::Constant(2)));
   } else if (utils::Parallel::getProcessRank() == 1) {
     com.requestConnection("A", "R", 0, 1);
-    utils::DynVector msg(3, 0.0);
-    com.receive(tarch::la::raw(msg), msg.size(), 0);
-    validate(tarch::la::equals(msg, utils::Vector3D(1.0)));
-    msg = utils::Vector3D(2.0);
-    com.send(tarch::la::raw(msg), msg.size(), 0);
+    Eigen::Vector3d msg(0, 0, 0);
+    com.receive(msg.data(), msg.size(), 0);
+    validate(math::equals(msg, Eigen::Vector3d::Constant(1)));
+    msg = Eigen::Vector3d::Constant(2);
+    com.send(msg.data(), msg.size(), 0);
   }
   utils::Parallel::clearGroups();
 }

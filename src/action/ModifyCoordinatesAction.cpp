@@ -5,8 +5,6 @@
 #include "geometry/Geometry.hpp"
 #include "spacetree/Spacetree.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
-#include "tarch/la/WrappedVector.h"
 
 namespace precice {
 namespace action {

@@ -3,11 +3,9 @@
 
 #include "SharedPointer.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
 #include "logging/Logger.hpp"
-#include "tarch/la/DynamicVector.h"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include <string>
 
 namespace precice {

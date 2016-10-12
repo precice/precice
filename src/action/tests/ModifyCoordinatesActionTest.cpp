@@ -6,7 +6,6 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "utils/Parallel.hpp"
-#include "tarch/la/WrappedVector.h"
 #include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"

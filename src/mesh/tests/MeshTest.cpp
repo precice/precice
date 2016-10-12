@@ -7,13 +7,10 @@
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Data.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
-#include "tarch/la/WrappedVector.h"
 #include "com/MPIDirectCommunication.hpp"
 #include "tarch/tests/TestCaseFactory.h"
 #include "math/math.hpp"
-#include "Eigen/Dense"
-
+#include <Eigen/Dense>
 
 
 registerTest(precice::mesh::tests::MeshTest)
@@ -55,12 +52,12 @@ void MeshTest:: run()
 
 void MeshTest:: testBasicSetup()
 {
-  preciceTrace("testBasicSetup()");
+  TRACE();
   for (int dim=2; dim <= 3; dim++){
     Mesh mesh("MyMesh", dim, false);
-    Vertex& v1 = mesh.createVertex(utils::DynVector(dim, 0.0));
-    Vertex& v2 = mesh.createVertex(utils::DynVector(dim, 1.0));
-    Vertex& v3 = mesh.createVertex(utils::DynVector(dim, 2.0)); // ill-shaped triangle
+    Vertex& v1 = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
+    Vertex& v2 = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
+    Vertex& v3 = mesh.createVertex(Eigen::VectorXd::Constant(dim, 2.0)); // ill-shaped triangle
     Edge& e1 = mesh.createEdge(v1, v2);
     Edge& e2 = mesh.createEdge(v2, v3);
     Edge& e3 = mesh.createEdge(v3, v1);
@@ -70,11 +67,11 @@ void MeshTest:: testBasicSetup()
 
 void MeshTest:: testSubIDs()
 {
-  preciceTrace("testSubIDs()");
+  TRACE();
   for (int dim=2; dim <= 3; dim++){
     Mesh mesh("MyMesh", dim, false);
-    Vertex& v0 = mesh.createVertex(utils::DynVector(dim, 0.0));
-    Vertex& v1 = mesh.createVertex(utils::DynVector(dim, 1.0));
+    Vertex& v0 = mesh.createVertex(Eigen::VectorXd::Constant(dim, 0.0));
+    Vertex& v1 = mesh.createVertex(Eigen::VectorXd::Constant(dim, 1.0));
     PropertyContainer& cont0 = mesh.setSubID("subID0");
     PropertyContainer& cont1 = mesh.setSubID("subID1");
     v0.addParent(cont0);
@@ -90,7 +87,7 @@ void MeshTest:: testSubIDs()
 
 void MeshTest:: testComputeState()
 {
-  preciceTrace ("testComputeState()");
+  TRACE();
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   using math::equals;
@@ -255,13 +252,9 @@ void MeshTest:: testComputeState()
 void MeshTest::testBoundingBoxCOG()
 {
   {
-    utils::DynVector coords0(2);
-    utils::DynVector coords1(2);
-    utils::DynVector coords2(2);
-
-    coords0 =  2.0, 0.0;
-    coords1 = -1.0, 4.0;
-    coords2 =  0.0, 1.0;
+    Eigen::Vector2d coords0(2, 0);
+    Eigen::Vector2d coords1(-1, 4);
+    Eigen::Vector2d coords2(0, 1);
 
     Mesh mesh ("2D Testmesh", 2, false );
     mesh.createVertex(coords0);
@@ -291,15 +284,10 @@ void MeshTest::testBoundingBoxCOG()
   }
 
   {
-    utils::DynVector coords0(3);
-    utils::DynVector coords1(3);
-    utils::DynVector coords2(3);
-    utils::DynVector coords3(3);
-
-    coords0 =  2.0, 0.0, -3.0;
-    coords1 = -1.0, 4.0,  8.0;
-    coords2 =  0.0, 1.0, -2.0;
-    coords3 =  3.5, 2.0, -2.0;
+    Eigen::Vector3d coords0(2, 0, -3);
+    Eigen::Vector3d coords1(-1, 4, 8);
+    Eigen::Vector3d coords2(0, 1, -2);
+    Eigen::Vector3d coords3(3.5, 2, -2);
 
     Mesh mesh ("3D Testmesh", 3, false );
     mesh.createVertex(coords0);
@@ -348,18 +336,18 @@ void MeshTest:: testDemonstration ()
     validateEquals(mesh.isFlipNormals(), flipNormals);
 
     // Create mesh vertices
-    utils::DynVector coords0(dim);
-    utils::DynVector coords1(dim);
-    utils::DynVector coords2(dim);
+    Eigen::VectorXd coords0(dim);
+    Eigen::VectorXd coords1(dim);
+    Eigen::VectorXd coords2(dim);
     if (dim == 2){
-      coords0 = 0.0, 0.0;
-      coords1 = 1.0, 0.0;
-      coords2 = 0.0, 1.0;
+      coords0 << 0.0, 0.0;
+      coords1 << 1.0, 0.0;
+      coords2 << 0.0, 1.0;
     }
     else {
-      coords0 = 0.0, 0.0, 0.0;
-      coords1 = 1.0, 0.0, 0.0;
-      coords2 = 0.0, 0.0, 1.0;
+      coords0 << 0.0, 0.0, 0.0;
+      coords1 << 1.0, 0.0, 0.0;
+      coords2 << 0.0, 0.0, 1.0;
     }
     Vertex& v0 = mesh.createVertex(coords0);
     Vertex& v1 = mesh.createVertex(coords1);
@@ -494,7 +482,6 @@ void MeshTest:: testDemonstration ()
     Eigen::VectorXd& dataValues = data->values();
     validateEquals ( dataValues.size(), 3 * dim );
     validateEquals ( v0.getID(), 0 );
-    using tarch::la::slice;
     Eigen::VectorXd value = Eigen::VectorXd::Zero(dim);
     for ( int i=0; i < dim; i++ ){
       value(i) = dataValues(v0.getID() * dim + i);
@@ -553,21 +540,21 @@ void MeshTest:: testDistribution()
   Mesh mesh ( meshName, dim, flipNormals );
 
   if (utils::Parallel::getProcessRank() == 0) { //Master
-    utils::DynVector position(dim);
-    assignList(position) = 0.0, 0.0;
+    Eigen::VectorXd position(dim);
+    position << 0.0, 0.0;
     mesh.createVertex(position);
-    assignList(position) = 1.0, 0.0;
+    position <<1.0, 0.0;
     mesh.createVertex(position);
   } else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-    utils::DynVector position(dim);
-    assignList(position) = 1.0, 0.0;
+    Eigen::VectorXd position(dim);
+    position << 1.0, 0.0;
     mesh.createVertex(position);
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
   } else if (utils::Parallel::getProcessRank() == 3) { //Slave3
-    utils::DynVector position(dim);
-    assignList(position) = 1.0, 0.0;
+    Eigen::VectorXd position(dim);
+    position << 1.0, 0.0;
     mesh.createVertex(position);
-    assignList(position) = 2.0, 0.0;
+    position << 2.0, 0.0;
     mesh.createVertex(position);
   }
 

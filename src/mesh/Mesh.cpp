@@ -302,11 +302,8 @@ void Mesh:: allocateDataValues()
 
 void Mesh:: computeState()
 {
-  preciceTrace("computeState()");
+  TRACE();
   assertion(_dimensions==2 || _dimensions==3, _dimensions);
-  using utils::DynVector;
-  using utils::Vector2D;
-  using utils::Vector3D;
 
   // Compute normals only if faces to derive normal information are available
   bool computeNormals = true;
@@ -723,7 +720,7 @@ void Mesh:: addMesh(
   std::map<int, Vertex*> vertexMap;
   std::map<int, Edge*> edgeMap;
 
-  utils::DynVector coords(_dimensions);
+  Eigen::VectorXd coords(_dimensions);
   for ( const Vertex& vertex : deltaMesh.vertices() ){
     coords = vertex.getCoords();
     Vertex& v = createVertex (coords);

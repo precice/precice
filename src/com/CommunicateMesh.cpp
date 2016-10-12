@@ -26,7 +26,6 @@ void CommunicateMesh:: sendMesh
   int               rankReceiver )
 {
   preciceTrace ( "sendGeometry()", mesh.getName(), rankReceiver );
-  using tarch::la::raw;
   int dim = mesh.getDimensions();
 
   int numberOfVertices = mesh.vertices().size();
@@ -89,7 +88,6 @@ void CommunicateMesh:: receiveMesh
   int         rankSender )
 {
   preciceTrace ( "receiveMesh()", mesh.getName(), rankSender );
-  using tarch::la::raw;
   int dim = mesh.getDimensions();
 
   std::vector<mesh::Vertex*> vertices;
@@ -170,7 +168,6 @@ void CommunicateMesh:: broadcastSendMesh
   const mesh::Mesh& mesh )
 {
   preciceTrace ( "broadcastSendMesh()", mesh.getName() );
-  using tarch::la::raw;
   int dim = mesh.getDimensions();
 
   int numberOfVertices = mesh.vertices().size();
@@ -232,7 +229,6 @@ void CommunicateMesh:: broadcastReceiveMesh
   mesh::Mesh& mesh)
 {
   preciceTrace ( "broadcastReceiveMesh()", mesh.getName() );
-  using tarch::la::raw;
   int dim = mesh.getDimensions();
   int rankBroadcaster = 0;
 
