@@ -31,7 +31,7 @@ struct BackendConfiguration
 using LoggingConfiguration = std::vector<BackendConfiguration>;
 
 void setupLogging(std::string logConfigFile = "log.conf");
-void setupLogging(LoggingConfiguration configs);
+void setupLogging(LoggingConfiguration configs, bool enabled = true);
 
 /// Sets the current MPI rank as a logging attribute
 void setMPIRank(const int rank);

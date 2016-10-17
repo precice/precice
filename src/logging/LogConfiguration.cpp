@@ -133,31 +133,33 @@ void BackendConfiguration::setOption(std::string key, std::string value)
 }
 
 
-void setupLogging(LoggingConfiguration configs)
+void setupLogging(LoggingConfiguration configs, bool enabled)
 {
-  using namespace boost::log;
-  register_formatter_factory("TimeStamp", boost::make_shared<timestamp_formatter_factory>());
-  register_simple_formatter_factory<trivial::severity_level, char>("Severity");
-  register_simple_filter_factory<trivial::severity_level, char>("Severity");
+  namespace bl = boost::log;
+  bl::register_formatter_factory("TimeStamp", boost::make_shared<timestamp_formatter_factory>());
+  bl::register_simple_formatter_factory<bl::trivial::severity_level, char>("Severity");
+  bl::register_simple_filter_factory<bl::trivial::severity_level, char>("Severity");
 
   // Possible, longer output format. Currently unused.
   auto fmtStream =
-    expressions::stream
-     << "(" << expressions::attr<int>("Rank") << ") "
-     << expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S") << " "
-     << expressions::attr<std::string>("File") << ":"
-     << expressions::attr<int>("Line")
-     << " [" << expressions::attr<std::string>("Module") << "] in "
-     << expressions::attr<std::string>("Function") << ": "
-     << expressions::message;
+    bl::expressions::stream
+    << "(" << bl::expressions::attr<int>("Rank") << ") "
+    << bl::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%H:%M:%S") << " "
+    << bl::expressions::attr<std::string>("File") << ":"
+    << bl::expressions::attr<int>("Line")
+    << " [" << bl::expressions::attr<std::string>("Module") << "] in "
+    << bl::expressions::attr<std::string>("Function") << ": "
+    << bl::expressions::message;
 
+  // Reset
+  bl::core::get()->remove_all_sinks();
+  bl::core::get()->reset_filter();
+
+  bl::core::get()->set_logging_enabled(enabled);
+  
   // Add the default config
   if (configs.empty())
     configs.emplace_back();
-
-  // Reset
-  boost::log::core::get()->remove_all_sinks();
-  boost::log::core::get()->reset_filter();
   
   for (const auto& config : configs) {
     boost::shared_ptr<StreamBackend> backend;
