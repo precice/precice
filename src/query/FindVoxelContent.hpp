@@ -27,14 +27,13 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param voxelCenter     [IN] Coordinates of the voxel center
-   * @param halflengths     [IN] Half of the sidelengths of the voxel
-   * @param includeTouching [IN] Decides whether touching objects are included
+   * @param[in] voxelCenter      Coordinates of the voxel center
+   * @param[in] halflengths      Half of the sidelengths of the voxel
+   * @param[in] includeTouching  Decides whether touching objects are included
    */
-  template<typename VECTORA_T, typename VECTORB_T>
   FindVoxelContent(
-    const VECTORA_T&  voxelCenter,
-    const VECTORB_T&  halflengths,
+    const Eigen::VectorXd&  voxelCenter,
+    const Eigen::VectorXd&  halflengths,
     BoundaryInclusion boundaryInclusion );
 
   /**
@@ -49,12 +48,12 @@ public:
   /**
    * @brief Returns voxel center coordinates
    */
-  const utils::DynVector& getVoxelCenter() const;
+  const Eigen::VectorXd& getVoxelCenter() const;
 
   /**
    * @brief Returns halflength of voxel
    */
-  const utils::DynVector& getVoxelHalflengths() const;
+  const Eigen::VectorXd& getVoxelHalflengths() const;
 
   /**
    * @brief Returns true, if touching objects are included in content
@@ -73,10 +72,10 @@ private:
   static logging::Logger _log;
 
   // @brief Center point of the voxel
-  utils::DynVector _voxelCenter;
+  Eigen::VectorXd _voxelCenter;
 
   // @brief Half the sidelengths of the voxel
-  utils::DynVector _voxelHalflengths;
+  Eigen::VectorXd _voxelHalflengths;
 
   // @brief Determines, whether objects that touch the voxel are contained
   BoundaryInclusion _boundaryInclusion;
@@ -97,39 +96,21 @@ private:
    * @brief Returns true, if a plane square and a segment intersect.
    */
   bool computeIntersection(
-    const utils::Vector3D&  squareCenter,
-    const utils::DynVector& halflengths,
+    const Eigen::Vector3d&  squareCenter,
+    const Eigen::VectorXd&  halflengths,
     int                     squareNormalDirection,
-    const utils::Vector3D&  firstPointSegment,
-    const utils::Vector3D&  secondPointSegment,
+    const Eigen::Vector3d&  firstPointSegment,
+    const Eigen::Vector3d&  secondPointSegment,
     bool                    countTouchingAsIntersection ) const;
 
   bool computeIntersection(
     const mesh::Triangle&  triangle,
-    const utils::Vector3D& firstPointSegment,
-    const utils::Vector3D& secondPointSegment,
+    const Eigen::Vector3d& firstPointSegment,
+    const Eigen::Vector3d& secondPointSegment,
     bool                   countTouchingAsIntersection );
 };
 
 // ---------------------------------------------------------- HEAER DEFINITIONS
-
-template<typename VECTORA_T, typename VECTORB_T>
-FindVoxelContent:: FindVoxelContent
-(
-  const VECTORA_T&  voxelCenter,
-  const VECTORB_T&  halflengths,
-  BoundaryInclusion boundaryInclusion )
-:
-  _voxelCenter ( voxelCenter ),
-  _voxelHalflengths ( halflengths ),
-  _boundaryInclusion ( boundaryInclusion ),
-  _dimensions ( voxelCenter.size() ),
-  _content ()
-{
-  assertion ( voxelCenter.size() == halflengths.size(),
-               voxelCenter.size(), halflengths.size() );
-  assertion ( (_dimensions == 2) || (_dimensions == 3), _dimensions );
-}
 
 template< typename CONTAINER_T >
 bool FindVoxelContent:: operator()

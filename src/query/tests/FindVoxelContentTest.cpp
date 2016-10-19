@@ -5,10 +5,10 @@
 #include "mesh/Triangle.hpp"
 #include "query/FindVoxelContent.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include "io/ExportVTK.hpp"
 #include "query/ExportVTKVoxelQueries.hpp"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::query::tests::FindVoxelContentTest)
@@ -17,8 +17,7 @@ namespace precice {
 namespace query {
 namespace tests {
 
-logging::Logger FindVoxelContentTest::
-   _log("precice::query::tests::FindVoxelContentTest");
+logging::Logger FindVoxelContentTest::_log("precice::query::tests::FindVoxelContentTest");
 
 FindVoxelContentTest:: FindVoxelContentTest()
 :
@@ -42,18 +41,18 @@ void FindVoxelContentTest:: run()
 
 void FindVoxelContentTest:: testVertices()
 {
-  preciceTrace("testVertices()");
+  TRACE();
   for (int dim=2; dim <= 3; dim++){
     for (int testDim=0; testDim < dim; testDim++){
       bool positiveDirection = true;
       bool negativeDirection = false;
-      utils::DynVector offset(dim, 0.0);
+      Eigen::VectorXd offset = Eigen::VectorXd::Zero(dim);
       performTestVertices(testDim, positiveDirection, offset);
       performTestVertices(testDim, negativeDirection, offset);
-      assign(offset) = -1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE;
+      offset = Eigen::VectorXd::Constant(dim, -1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
       performTestVertices(testDim, positiveDirection, offset);
       performTestVertices(testDim, negativeDirection, offset);
-      assign(offset) = 1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE;
+      offset = Eigen::VectorXd::Constant(dim, 1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
       performTestVertices(testDim, positiveDirection, offset);
       performTestVertices(testDim, negativeDirection, offset);
     }
@@ -64,24 +63,21 @@ void FindVoxelContentTest:: performTestVertices
 (
   int                     testDim,
   bool                    positive,
-  const utils::DynVector& offset)
+  const Eigen::VectorXd&  offset)
 {
   preciceTrace("performTestVertices()", testDim, positive, offset);
   int dim = offset.size();
-  using utils::DynVector;
-  assertion(not tarch::la::oneGreater(offset, DynVector(dim,1.0)));
-  assertion(tarch::la::allGreater(offset, DynVector(dim,-1.0)));
+  assertion(not math::oneGreater(offset, Eigen::VectorXd::Constant(dim,1.0)));
+  assertion(math::allGreater(offset, Eigen::VectorXd::Constant(dim,-1.0)));
   bool flipNormals = false;
   mesh::Mesh mesh( "TestMesh", dim, flipNormals);
-  DynVector coords(offset);
+  Eigen::VectorXd coords(offset);
   mesh::Vertex& vertex = mesh.createVertex(coords);
 
-  DynVector center(dim, 0.0);
-  DynVector halflengths(dim, 1.0);
-  FindVoxelContent::BoundaryInclusion includeBounds =
-      FindVoxelContent::INCLUDE_BOUNDARY;
-  FindVoxelContent::BoundaryInclusion excludeBounds =
-      FindVoxelContent::EXCLUDE_BOUNDARY;
+  Eigen::VectorXd center = Eigen::VectorXd::Zero(dim);
+  Eigen::VectorXd halflengths = Eigen::VectorXd::Constant(dim, 1.0);
+  FindVoxelContent::BoundaryInclusion includeBounds = FindVoxelContent::INCLUDE_BOUNDARY;
+  FindVoxelContent::BoundaryInclusion excludeBounds = FindVoxelContent::EXCLUDE_BOUNDARY;
   query::FindVoxelContent findIncluded(center, halflengths, includeBounds);
   query::FindVoxelContent findExcluded(center, halflengths, excludeBounds);
 
@@ -102,7 +98,7 @@ void FindVoxelContentTest:: performTestVertices
   validateEquals(size, 0);
 
   // Outside eps
-  coords[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   vertex.setCoords(coords);
   findIncluded(mesh);
   findExcluded(mesh);
@@ -112,7 +108,7 @@ void FindVoxelContentTest:: performTestVertices
   validateEquals(size, 0);
 
   // Outside eps
-  coords[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   vertex.setCoords(coords);
   findIncluded(mesh);
   findExcluded(mesh);
@@ -122,7 +118,7 @@ void FindVoxelContentTest:: performTestVertices
   validateEquals(size, 0);
 
   // Touching + eps
-  coords[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
   vertex.setCoords(coords);
   findIncluded(mesh);
   findExcluded(mesh);
@@ -142,7 +138,7 @@ void FindVoxelContentTest:: performTestVertices
   validateEquals(size, 0);
 
   // Touching - eps
-  coords[testDim] = sign * (1.0 - tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords[testDim] = sign * (1.0 - math::NUMERICAL_ZERO_DIFFERENCE);
   vertex.setCoords(coords);
   findIncluded(mesh);
   findExcluded(mesh);
@@ -152,7 +148,7 @@ void FindVoxelContentTest:: performTestVertices
   validateEquals(size, 0);
 
   // Inside eps
-  coords[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   vertex.setCoords(coords);
   findIncluded(mesh);
   findExcluded(mesh);
@@ -179,13 +175,13 @@ void FindVoxelContentTest:: testEdges()
     for(int testDim=0; testDim < dim; testDim++){
       bool positiveDirection = true;
       bool negativeDirection = false;
-      utils::DynVector offset(dim, 0.0);
+      Eigen::VectorXd offset = Eigen::VectorXd::Zero(dim);
       performTestEdges(testDim, positiveDirection, offset);
       performTestEdges(testDim, negativeDirection, offset);
-      assign(offset) = -1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE;
+      offset = Eigen::VectorXd::Constant(dim, -1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
       performTestEdges(testDim, positiveDirection, offset);
       performTestEdges(testDim, negativeDirection, offset);
-      assign(offset) = 1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE;
+      offset = Eigen::VectorXd::Constant(dim, 1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
       performTestEdges(testDim, positiveDirection, offset);
       performTestEdges(testDim, negativeDirection, offset);
     }
@@ -196,27 +192,24 @@ void FindVoxelContentTest:: performTestEdges
 (
   int                     testDim,
   bool                    positive,
-  const utils::DynVector& offset)
+  const Eigen::VectorXd&  offset)
 {
-  preciceTrace("performTestEdges()", testDim, positive, offset);
+  TRACE(testDim, positive, offset);
   int dim = offset.size();
-  using utils::DynVector;
-  assertion(not tarch::la::oneGreater(offset, DynVector(dim,1.0)));
-  assertion(tarch::la::allGreater(offset, DynVector(dim,-1.0)));
+  assertion(not math::oneGreater(offset, Eigen::VectorXd::Constant(dim,1.0)));
+  assertion(math::allGreater(offset, Eigen::VectorXd::Constant(dim,-1.0)));
   bool flipNormals = false;
   mesh::Mesh mesh("TestMesh", dim, flipNormals);
-  DynVector coords0(offset);
-  DynVector coords1(offset);
+  Eigen::VectorXd coords0(offset);
+  Eigen::VectorXd coords1(offset);
   mesh::Vertex& v0 = mesh.createVertex(coords0);
   mesh::Vertex& v1 = mesh.createVertex(coords1);
   mesh.createEdge(v0, v1);
 
-  DynVector center(dim, 0.0);
-  DynVector halflengths(dim, 1.0);
-  FindVoxelContent::BoundaryInclusion includeBounds =
-      FindVoxelContent::INCLUDE_BOUNDARY;
-  FindVoxelContent::BoundaryInclusion excludeBounds =
-      FindVoxelContent::EXCLUDE_BOUNDARY;
+  Eigen::VectorXd center = Eigen::VectorXd::Zero(dim);
+  Eigen::VectorXd halflengths = Eigen::VectorXd::Constant(dim, 1);
+  FindVoxelContent::BoundaryInclusion includeBounds = FindVoxelContent::INCLUDE_BOUNDARY;
+  FindVoxelContent::BoundaryInclusion excludeBounds = FindVoxelContent::EXCLUDE_BOUNDARY;
   query::FindVoxelContent findIncluded(center, halflengths, includeBounds);
   query::FindVoxelContent findExcluded(center, halflengths, excludeBounds);
 
@@ -239,7 +232,7 @@ void FindVoxelContentTest:: performTestEdges
   validateEquals(sizeEdges, 0);
 
   // Outside eps
-  coords0[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
@@ -265,7 +258,7 @@ void FindVoxelContentTest:: performTestEdges
   validateEquals(sizeEdges, 0);
 
   // Outside touching eps
-  coords0[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
@@ -291,7 +284,7 @@ void FindVoxelContentTest:: performTestEdges
   validateEquals(sizeEdges, 1);
 
   // Intersecting eps
-  coords0[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
@@ -319,15 +312,14 @@ void FindVoxelContentTest:: performTestEdges
 
 void FindVoxelContentTest:: testZeroVoxel ()
 {
-  preciceTrace("testZeroVoxel()");
+  TRACE();
   int dim = 2;
-  using utils::Vector2D;
   mesh::Mesh mesh("Mesh", dim, false);
   mesh::Vertex& v1 = mesh.createVertex (Eigen::Vector2d(2.0, 0.0));
   mesh::Vertex& v2 = mesh.createVertex (Eigen::Vector2d(2.0, 1.0));
   mesh.createEdge (v1, v2);
-  Vector2D center (1.0, 1.0);
-  Vector2D halflengths (0.0, 0.0);
+  Eigen::Vector2d center (1.0, 1.0);
+  Eigen::Vector2d halflengths (0.0, 0.0);
 
   query::FindVoxelContent find (
     center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
@@ -346,7 +338,7 @@ void FindVoxelContentTest:: testZeroVoxel ()
 
 void FindVoxelContentTest:: testTriangles ()
 {
-  preciceTrace("testTriangles()");
+  TRACE();
   for(int testDim=0; testDim < 3; testDim++) {
     bool positiveDirection = true;
     bool negativeDirection = false;
@@ -366,9 +358,8 @@ void FindVoxelContentTest:: performTestTriangles
   int  secondDimension,
   bool positive)
 {
-  preciceTrace("performTestTriangles()", testDim, positive);
+  TRACE(testDim, positive);
   int dim = 3;
-  using utils::Vector3D;
   assertion(testDim != secondDimension);
   bool flipNormals = false;
   mesh::Mesh mesh("TestMesh", dim, flipNormals);
@@ -383,8 +374,8 @@ void FindVoxelContentTest:: performTestTriangles
   mesh::Edge& e2 = mesh.createEdge(v2, v0);
   mesh.createTriangle(e0, e1, e2);
 
-  Vector3D center(0.0);
-  Vector3D halflengths(1.0);
+  Eigen::Vector3d center = Eigen::Vector3d::Constant(0.0);
+  Eigen::Vector3d halflengths = Eigen::Vector3d::Constant(1.0);
   FindVoxelContent::BoundaryInclusion includeBounds =
       FindVoxelContent::INCLUDE_BOUNDARY;
   FindVoxelContent::BoundaryInclusion excludeBounds =
@@ -422,7 +413,7 @@ void FindVoxelContentTest:: performTestTriangles
   validateEquals(size, 0);
 
   // Outside eps vertex
-  coords0[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   coords2[testDim] = sign * 1.5;
   coords2[secondDimension] = sign * 0.5;
@@ -438,9 +429,9 @@ void FindVoxelContentTest:: performTestTriangles
   validateEquals(size, 0);
 
   // Outside eps edge
-  coords0[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
-  coords2[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords2[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords2[secondDimension] = sign * 0.5;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
@@ -454,7 +445,7 @@ void FindVoxelContentTest:: performTestTriangles
   validateEquals(size, 0);
 
   // Touching eps vertex
-  coords0[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   coords2[testDim] = sign * 1.5;
   coords2[secondDimension] = sign * 0.5;
@@ -470,9 +461,9 @@ void FindVoxelContentTest:: performTestTriangles
   validateEquals(size, 0);
 
   // Touching eps edge
-  coords0[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
-  coords2[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords2[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
   coords2[secondDimension] = sign * 0.5;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
@@ -518,7 +509,7 @@ void FindVoxelContentTest:: performTestTriangles
   validateEquals(size, 0);
 
   // Intersecting eps vertex
-  coords0[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   coords2[testDim] = sign * 1.5;
   coords2[secondDimension] = sign * 0.5;
@@ -534,9 +525,9 @@ void FindVoxelContentTest:: performTestTriangles
   validateEquals(size, 1);
 
   // Intersecting eps edge
-  coords0[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
-  coords2[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords2[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords2[secondDimension] = sign * 0.5;
   v0.setCoords(coords0);
   v1.setCoords(coords1);
@@ -752,7 +743,6 @@ void FindVoxelContentTest:: testCompletelyInsideTriangles ()
 {
   preciceTrace("testCompletelyInsideTriangles()");
   int dim = 3;
-  using utils::Vector3D;
   Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
   Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1);
 
@@ -808,7 +798,6 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
 {
   preciceTrace("testCompletelyOutsideTriangles()");
   int dim = 3;
-  using utils::Vector3D;
   Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
   Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1.0);
 
@@ -862,9 +851,8 @@ void FindVoxelContentTest:: testCompletelyOutsideTriangles ()
 
 void FindVoxelContentTest:: testIntersectingTriangles ()
 {
-  preciceTrace("testIntersectingTriangles()");
+  TRACE();
   int dim = 3;
-  using utils::Vector3D;
   Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
   Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1.0);
 
@@ -978,9 +966,8 @@ void FindVoxelContentTest:: testIntersectingTriangles ()
 
 void FindVoxelContentTest:: testTouchingTriangles ()
 {
-  preciceTrace("testTouchingTriangles()");
+  TRACE();
   int dim = 3;
-  using utils::Vector3D;
   Eigen::Vector3d voxelCenter = Eigen::Vector3d::Zero();
   Eigen::Vector3d voxelHalflengths = Eigen::Vector3d::Constant(1.0);
 
@@ -1142,10 +1129,9 @@ void FindVoxelContentTest:: testTouchingTriangles ()
 
 void FindVoxelContentTest:: testQueryCube ()
 {
-  preciceTrace("testQueryCube()");
+  TRACE();
   using namespace mesh;
   int dim = 3;
-  using utils::Vector3D;
   bool flipNormals = false;
   Mesh mesh("TestMesh", dim, flipNormals);
   Vertex& v000 = mesh.createVertex(Eigen::Vector3d(0.0, 0.0, 0.0));
@@ -1204,13 +1190,13 @@ void FindVoxelContentTest:: testQueryCube ()
   exportMesh.doExport("FindVoxelContentTest-testQueryCube", location, mesh);
 
   // Query mesh
-  Vector3D center(0.0);
-  Vector3D halflengths(0.0);
+  Eigen::Vector3d center = Eigen::Vector3d::Zero();
+  Eigen::Vector3d halflengths = Eigen::Vector3d::Zero();
 
   // Vertex queries with halflengths = 1.0/3.0
   {
-    assignList(center) = 1.0/3.0, 1.0/3.0, 1.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 1.0/3.0, 1.0/3.0, 1.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1221,8 +1207,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 2.0/3.0, 1.0/3.0, 1.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 2.0/3.0, 1.0/3.0, 1.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1233,8 +1219,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/3.0, 2.0/3.0, 1.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 1.0/3.0, 2.0/3.0, 1.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1245,8 +1231,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 2.0/3.0, 2.0/3.0, 1.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 2.0/3.0, 2.0/3.0, 1.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1257,8 +1243,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/3.0, 1.0/3.0, 2.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 1.0/3.0, 1.0/3.0, 2.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1269,8 +1255,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 2.0/3.0, 1.0/3.0, 2.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 2.0/3.0, 1.0/3.0, 2.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1281,8 +1267,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/3.0, 2.0/3.0, 2.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 1.0/3.0, 2.0/3.0, 2.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1293,8 +1279,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 2.0/3.0, 2.0/3.0, 2.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 2.0/3.0, 2.0/3.0, 2.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1307,8 +1293,8 @@ void FindVoxelContentTest:: testQueryCube ()
 
   // z = 1.0/6.0 plane
   {
-    assignList(center) = 1.0/6.0, 1.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 1.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1319,8 +1305,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 1.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 1.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1331,8 +1317,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 1.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 1.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1343,8 +1329,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 0.5, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 0.5, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1355,8 +1341,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 0.5, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 0.5, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1367,8 +1353,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 0.5, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 0.5, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1379,8 +1365,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 5.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 5.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1391,8 +1377,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 5.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 5.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1403,8 +1389,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 5.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 5.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1417,8 +1403,8 @@ void FindVoxelContentTest:: testQueryCube ()
 
   // z = 0.5 plane
   {
-    assignList(center) = 1.0/6.0, 1.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 1.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1429,8 +1415,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 1.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 1.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1441,8 +1427,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 1.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 1.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1453,8 +1439,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 0.5, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 0.5, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1465,8 +1451,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 0.5, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 0.5, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1477,8 +1463,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 0.5, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 0.5, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1489,8 +1475,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 5.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 5.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1501,8 +1487,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 5.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 5.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1513,8 +1499,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 5.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 5.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1527,8 +1513,8 @@ void FindVoxelContentTest:: testQueryCube ()
 
   // z = 5.0/6.0 plane
   {
-    assignList(center) = 1.0/6.0, 1.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 1.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1539,8 +1525,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 1.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 1.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1551,8 +1537,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 1.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 1.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1563,8 +1549,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 0.5, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 0.5, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1575,8 +1561,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 0.5, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 0.5, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1587,8 +1573,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 0.5, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 0.5, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1599,8 +1585,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 5.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 5.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1611,8 +1597,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 5.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 5.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1623,8 +1609,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 5.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 5.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1637,8 +1623,8 @@ void FindVoxelContentTest:: testQueryCube ()
 
   // Query voxel equals mesh outline
   {
-    assignList(center) = 0.5, 0.5, 0.5;
-    assign(halflengths) = 0.5;
+    center << 0.5, 0.5, 0.5;
+    halflengths = Eigen::Vector3d::Constant(0.5);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1659,8 +1645,8 @@ void FindVoxelContentTest:: testQueryCube ()
 
   // Vertex queries with halflengths = 1.0/3.0
   {
-    assignList(center) = 1.0/3.0, 1.0/3.0, 1.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 1.0/3.0, 1.0/3.0, 1.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1671,8 +1657,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 2.0/3.0, 1.0/3.0, 1.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 2.0/3.0, 1.0/3.0, 1.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1683,8 +1669,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/3.0, 2.0/3.0, 1.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 1.0/3.0, 2.0/3.0, 1.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1695,8 +1681,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 2.0/3.0, 2.0/3.0, 1.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 2.0/3.0, 2.0/3.0, 1.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1707,8 +1693,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/3.0, 1.0/3.0, 2.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 1.0/3.0, 1.0/3.0, 2.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1719,8 +1705,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 2.0/3.0, 1.0/3.0, 2.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 2.0/3.0, 1.0/3.0, 2.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1731,8 +1717,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/3.0, 2.0/3.0, 2.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 1.0/3.0, 2.0/3.0, 2.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1743,8 +1729,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 2.0/3.0, 2.0/3.0, 2.0/3.0;
-    assign(halflengths) = 1.0/3.0;
+    center << 2.0/3.0, 2.0/3.0, 2.0/3.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/3.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1757,8 +1743,8 @@ void FindVoxelContentTest:: testQueryCube ()
 
   // z = 1.0/6.0 plane
   {
-    assignList(center) = 1.0/6.0, 1.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 1.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1769,8 +1755,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 1.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 1.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1781,8 +1767,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 1.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 1.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1793,8 +1779,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 0.5, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 0.5, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1805,8 +1791,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 0.5, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 0.5, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1817,8 +1803,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 0.5, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 0.5, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1829,8 +1815,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 5.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 5.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1841,8 +1827,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 5.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 5.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1853,8 +1839,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 5.0/6.0, 1.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 5.0/6.0, 1.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1867,8 +1853,8 @@ void FindVoxelContentTest:: testQueryCube ()
 
   // z = 0.5 plane
   {
-    assignList(center) = 1.0/6.0, 1.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 1.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1879,8 +1865,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 1.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 1.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1891,8 +1877,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 1.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 1.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1903,8 +1889,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 0.5, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 0.5, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1915,8 +1901,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 0.5, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 0.5, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1927,8 +1913,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 0.5, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 0.5, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1939,8 +1925,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 5.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 5.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1951,8 +1937,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 5.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 5.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1963,8 +1949,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 5.0/6.0, 0.5;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 5.0/6.0, 0.5;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1977,8 +1963,8 @@ void FindVoxelContentTest:: testQueryCube ()
 
   // z = 5.0/6.0 plane
   {
-    assignList(center) = 1.0/6.0, 1.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 1.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -1989,8 +1975,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 1.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 1.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -2001,8 +1987,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 1.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 1.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -2013,8 +1999,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 0.5, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 0.5, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -2025,8 +2011,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 0.5, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 0.5, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -2037,8 +2023,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 0.5, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 0.5, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -2049,8 +2035,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 1.0/6.0, 5.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 1.0/6.0, 5.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -2061,8 +2047,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 0.5, 5.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 0.5, 5.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -2073,8 +2059,8 @@ void FindVoxelContentTest:: testQueryCube ()
     validate(findExcluded.content().size() == 0);
   }
   {
-    assignList(center) = 5.0/6.0, 5.0/6.0, 5.0/6.0;
-    assign(halflengths) = 1.0/6.0;
+    center << 5.0/6.0, 5.0/6.0, 5.0/6.0;
+    halflengths = Eigen::Vector3d::Constant(1.0/6.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -2087,8 +2073,8 @@ void FindVoxelContentTest:: testQueryCube ()
 
   // Query voxel equals mesh outline
   {
-    assignList(center) = 0.5, 0.5, 0.5;
-    assign(halflengths) = 0.5;
+    center << 0.5, 0.5, 0.5;
+    halflengths = Eigen::Vector3d::Constant(0.5);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
@@ -2103,15 +2089,14 @@ void FindVoxelContentTest:: testQueryCube ()
 
   // Special query that gave error in real scenario
   {
-    assignList(center) = 1.0/9.0, 8.0/9.0, -5.5511151231257827e-17;
-    assign(halflengths) = 1.0/9.0;
+    center << 1.0/9.0, 8.0/9.0, -5.5511151231257827e-17;
+    halflengths = Eigen::Vector3d::Constant(1.0/9.0);
     query::FindVoxelContent findIncluded (
        center, halflengths, FindVoxelContent::INCLUDE_BOUNDARY);
     query::FindVoxelContent findExcluded (
        center, halflengths, FindVoxelContent::EXCLUDE_BOUNDARY);
     findIncluded(mesh);
     findExcluded(mesh);
-//    std::abort();
     ExportVTKVoxelQueries exportQueries;
     exportQueries.addQuery(center, halflengths, 0);
     exportQueries.exportQueries("FindVoxelContentTest-testQueryCube-queries");

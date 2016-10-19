@@ -1,6 +1,7 @@
 #include "NearestNeighborMapping.hpp"
 #include "query/FindClosestVertex.hpp"
-#include "Eigen/Dense"
+#include "utils/Helpers.hpp"
+#include <Eigen/Dense>
 
 namespace precice {
 namespace mapping {
@@ -23,7 +24,7 @@ NearestNeighborMapping:: NearestNeighborMapping
 
 void NearestNeighborMapping:: computeMapping()
 {
-  preciceTrace("computeMapping()", input()->vertices().size());
+  TRACE(input()->vertices().size());
   assertion(input().get() != nullptr);
   assertion(output().get() != nullptr);
   if (getConstraint() == CONSISTENT){
@@ -32,7 +33,7 @@ void NearestNeighborMapping:: computeMapping()
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& outputVertices = output()->vertices();
     for ( size_t i=0; i < verticesSize; i++ ){
-      const utils::DynVector& coords = outputVertices[i].getCoords();
+      const Eigen::VectorXd& coords = outputVertices[i].getCoords();
       query::FindClosestVertex find(coords); // Search for the output vertex ...
       find(*input()); // ... inside the input mesh
       assertion(find.hasFound());
@@ -46,7 +47,7 @@ void NearestNeighborMapping:: computeMapping()
     _vertexIndices.resize(verticesSize);
     const mesh::Mesh::VertexContainer& inputVertices = input()->vertices();
     for ( size_t i=0; i < verticesSize; i++ ){
-      const utils::DynVector& coords = inputVertices[i].getCoords();
+      const Eigen::VectorXd& coords = inputVertices[i].getCoords();
       query::FindClosestVertex find(coords); // Search for the input vertex ...
       find(*output()); // ... inside the output mesh
       assertion(find.hasFound());
@@ -58,7 +59,7 @@ void NearestNeighborMapping:: computeMapping()
 
 bool NearestNeighborMapping:: hasComputedMapping() const
 {
-  preciceTrace("hasComputedMapping()", _hasComputedMapping);
+  TRACE(_hasComputedMapping);
   return _hasComputedMapping;
 }
 
@@ -74,7 +75,7 @@ void NearestNeighborMapping:: map
   int inputDataID,
   int outputDataID )
 {
-  preciceTrace ( "map()", inputDataID, outputDataID );
+  TRACE(inputDataID, outputDataID);
   const Eigen::VectorXd& inputValues = input()->data(inputDataID)->values();
   Eigen::VectorXd& outputValues = output()->data(outputDataID)->values();
   //assign(outputValues) = 0.0;

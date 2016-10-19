@@ -1,7 +1,5 @@
 #pragma once
 
-#include "utils/Dimensions.hpp"
-#include "utils/Helpers.hpp"
 #include <array>
 #include "utils/Globals.hpp"
 #include <limits>
@@ -25,8 +23,7 @@ class FindClosestEdge
 {
 public:
 
-  template<typename VECTOR_T>
-  FindClosestEdge ( const VECTOR_T& searchPoint );
+  FindClosestEdge ( const Eigen::VectorXd& searchPoint );
 
   /**
    * @brief Finds the closest Edge object contained in the given Mesh object.
@@ -36,7 +33,7 @@ public:
   template<typename CONTAINER_T>
   bool operator() ( CONTAINER_T& container );
 
-  const utils::DynVector& getSearchPoint() const;
+  const Eigen::VectorXd& getSearchPoint() const;
 
   bool hasFound() const;
 
@@ -44,22 +41,20 @@ public:
 
   mesh::Edge& getClosestEdge();
 
-  const utils::DynVector& getVectorToProjectionPoint() const;
+  const Eigen::VectorXd& getVectorToProjectionPoint() const;
 
-  /**
-   * @brief Returns parametric description value (index 0,1) of projected point.
-   */
+  /// Returns parametric description value (index 0,1) of projected point.
   double getProjectionPointParameter ( int index ) const;
 
 private:
 
   static logging::Logger _log;
 
-  utils::DynVector _searchPoint;
+  Eigen::VectorXd _searchPoint;
 
   double _shortestDistance;
 
-  utils::DynVector _vectorToProjectionPoint;
+  Eigen::VectorXd _vectorToProjectionPoint;
 
   std::array<double,2> _parametersProjectionPoint;
 
@@ -72,21 +67,6 @@ private:
 
 // --------------------------------------------------------- HEADER DEFINITIONS
 
-template<typename VECTOR_T>
-FindClosestEdge:: FindClosestEdge
-(
-  const VECTOR_T& searchPoint )
-:
-  _searchPoint ( searchPoint ),
-  _shortestDistance ( std::numeric_limits<double>::max() ),
-  _vectorToProjectionPoint ( searchPoint.size(), std::numeric_limits<double>::max() ),
-  _parametersProjectionPoint( {_shortestDistance , _shortestDistance} ),
-  _closestEdge ( NULL )
-{
-  assertion ( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
-               _searchPoint.size() );
-}
-
 template<typename CONTAINER_T>
 bool FindClosestEdge:: operator()
 (
@@ -97,7 +77,7 @@ bool FindClosestEdge:: operator()
     find ( edge );
     index ++;
   }
-  return _closestEdge != NULL;
+  return _closestEdge != nullptr;
 }
 
 }} // namespace precice, query

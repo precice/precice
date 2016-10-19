@@ -4,6 +4,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
 #include "utils/Globals.hpp"
+#include "math/math.hpp"
 #include <limits>
 
 namespace precice {
@@ -26,15 +27,15 @@ double FindClosest:: getEuclidianDistance()
   return std::abs(_closest.distance);
 }
 
-const utils::DynVector& FindClosest:: getSearchPoint() const
+const Eigen::VectorXd& FindClosest:: getSearchPoint() const
 {
   return _searchpoint;
 }
 
 bool FindClosest:: determineClosest()
 {
-  preciceTrace ( "determineClosest()", _searchpoint );
-  using tarch::la::greater;
+  TRACE(_searchpoint);
+  using math::greater;
   _closest = ClosestElement(_searchpoint.size());
   _closest.distance = std::numeric_limits<double>::max();
   int closestType = -1;
@@ -55,11 +56,11 @@ bool FindClosest:: determineClosest()
     closestType = 3;
   }
   // Assign all properties to _closest
-  utils::DynVector normal ( _searchpoint.size(), 0.0 );
+  Eigen::VectorXd normal = Eigen::VectorXd::Zero(_searchpoint.size());
   if ( closestType == 0 ) { // Vertex
     mesh::Vertex& vertex = _findClosestVertex.getClosestVertex ();
     vertex.getProperties ( vertex.INDEX_GEOMETRY_ID, _closest.meshIDs );
-    _closest.vectorToElement = static_cast<utils::DynVector>(vertex.getCoords()) - _searchpoint;
+    _closest.vectorToElement = vertex.getCoords() - _searchpoint;
     normal = vertex.getNormal();
     InterpolationElement element;
     element.element = & vertex;
@@ -117,8 +118,8 @@ bool FindClosest:: determineClosest()
   else {
     return false;
   }
-  // Flip sign of distance, depending on normal of closest element
-  if ( tarch::la::dot(_closest.vectorToElement, normal) > 0.0) {
+// Flip sign of distance, depending on normal of closest element
+if (_closest.vectorToElement.dot(normal) > 0.0) {
     _closest.distance *= -1.0;
   }
   return true;

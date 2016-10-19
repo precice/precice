@@ -250,9 +250,7 @@ void FindClosestTest:: testFindClosestDistanceToEdges3D ()
 
 void FindClosestTest:: testFindClosestDistanceToTriangles ()
 {
-  preciceTrace ( "testFindClosestDistanceToTriangles()" );
-  using namespace tarch::la;
-  using utils::Vector3D;
+  TRACE();
 
   // Create mesh to query
   mesh::Mesh mesh ( "Mesh", 3, true );
@@ -460,10 +458,8 @@ void FindClosestTest:: testMultipleGeometryIDs ()
 
 void FindClosestTest:: testWeigthsOfVertices ()
 {
-  preciceTrace ( "testWeigthsOfVertices()" );
+  TRACE();
   int dim = 2;
-  using namespace tarch::la;
-  using utils::Vector2D;
 
   // Create geometry
   mesh::Mesh mesh ( "Mesh", dim, true );

@@ -1,6 +1,5 @@
 #include "ExportVTKVoxelQueries.hpp"
 //#include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
-#include "boost/scoped_ptr.hpp"
 #include "utils/Globals.hpp"
 
 namespace precice {
@@ -8,8 +7,8 @@ namespace query {
 
 void ExportVTKVoxelQueries:: addQuery
 (
-   const utils::DynVector& voxelCenter,
-   const utils::DynVector& voxelHalflengths,
+   const Eigen::VectorXd& voxelCenter,
+   const Eigen::VectorXd& voxelHalflengths,
    int                     containedElementsCount )
 {
    _voxelCenters.push_back ( voxelCenter );

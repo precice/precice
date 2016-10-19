@@ -1,7 +1,6 @@
 #ifndef PRECICE_QUERY_FINDCLOSESTQUAD_HPP_
 #define PRECICE_QUERY_FINDCLOSESTQUAD_HPP_
 
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include <array>
 #include <limits>
@@ -28,11 +27,9 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param searchPoint [IN] Origin from which the closest Quad object
-   *        should be found.
+   * @param[in] searchPoint Origin from which the closest Quad object should be found.
    */
-  template<typename VECTOR_T>
-  FindClosestQuad ( const VECTOR_T& searchPoint );
+  FindClosestQuad ( const Eigen::VectorXd& searchPoint );
 
   /**
    * @brief Searches for the closest quad on the given mesh object.
@@ -45,7 +42,7 @@ public:
   /**
    * @brief Returns the coordinates of the search point.
    */
-  const utils::DynVector& getSearchPoint() const;
+  const Eigen::VectorXd& getSearchPoint() const;
 
   /**
    * @brief Returns true, if a closest quad has been found.
@@ -71,7 +68,7 @@ public:
    *
    * Precondition: Find has been called and returned true.
    */
-  const utils::DynVector& getVectorToProjectionPoint() const;
+  const Eigen::VectorXd& getVectorToProjectionPoint() const;
 
   /**
    * @brief Returns parametric description value (index 0, 1, 2) of proj. point.
@@ -82,14 +79,14 @@ private:
 
   static logging::Logger _log;
 
-  // @brief Search point coordinates.
-  utils::DynVector _searchPoint;
+  /// Search point coordinates.
+  Eigen::VectorXd _searchPoint;
 
   // @brief Shortest distance to the found Quad object.
   double _shortestDistance;
 
   // @brief Vector from search point to projection point.
-  utils::DynVector _vectorToProjectionPoint;
+  Eigen::VectorXd _vectorToProjectionPoint;
 
   // @brief Quad coordinates of the projection point.
   std::array<double,4> _parametersProjectionPoint; // Does this make sense?
@@ -101,18 +98,6 @@ private:
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
-
-template<typename VECTOR_T>
-FindClosestQuad:: FindClosestQuad
-(
-  const VECTOR_T& searchPoint )
-:
-  _searchPoint ( searchPoint ),
-  _shortestDistance ( std::numeric_limits<double>::max() ),
-  _vectorToProjectionPoint ( _searchPoint.size(), std::numeric_limits<double>::max() ),
-  _parametersProjectionPoint( {_shortestDistance ,_shortestDistance, _shortestDistance, _shortestDistance} ),
-  _closestQuad ( NULL )
-{}
 
 template<typename CONTAINER_T>
 bool FindClosestQuad:: operator() ( CONTAINER_T& container )

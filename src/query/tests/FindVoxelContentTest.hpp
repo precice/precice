@@ -44,14 +44,14 @@ private:
   /**
    * @brief Performs vertex tests paramterized to one dimension.
    *
-   * @param dimension [in] Coordinate dimension varied in the tests.
-   * @param positive [in] Sign of coordinates used (i.e. side of mesh queried).
-   * @param offset [in] Offset of dimensions not varied (-1 < offset < 1).
+   * @param[in] dimension Coordinate dimension varied in the tests.
+   * @param[in] positive  Sign of coordinates used (i.e. side of mesh queried).
+   * @param[in] offset Offset of dimensions not varied (-1 < offset < 1).
    */
   void performTestVertices (
     int                     testDim,
     bool                    positive,
-    const utils::DynVector& offset );
+    const Eigen::VectorXd&  offset );
 
   /**
    * @brief Calls performTestEdges() with different parameters.
@@ -61,14 +61,14 @@ private:
   /**
    * @brief Performs edge tests parametrized to one dimension.
    *
-   * @param dimension [in] Coordinate dimension varied in the tests.
-   * @param positive [in] Sign of coordinates used (i.e. side of mesh queried).
-   * @param offset [in] Offset of dimensions not varied (-1 < offset < 1).
+   * @param[in] dimension Coordinate dimension varied in the tests.
+   * @param[in] positive Sign of coordinates used (i.e. side of mesh queried).
+   * @param[in] offset Offset of dimensions not varied (-1 < offset < 1).
    */
   void performTestEdges (
     int                     testDim,
     bool                    positive,
-    const utils::DynVector& offset );
+    const Eigen::VectorXd&  offset );
 
   void testZeroVoxel();
 

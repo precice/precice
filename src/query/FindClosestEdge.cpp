@@ -9,7 +9,21 @@ namespace query {
 
 logging::Logger FindClosestEdge::_log("precice::query::FindClosestEdge");
 
-const utils::DynVector& FindClosestEdge:: getSearchPoint() const
+FindClosestEdge:: FindClosestEdge
+(
+  const Eigen::VectorXd& searchPoint )
+:
+  _searchPoint ( searchPoint ),
+  _shortestDistance ( std::numeric_limits<double>::max() ),
+  _vectorToProjectionPoint ( Eigen::VectorXd::Constant(searchPoint.size(), std::numeric_limits<double>::max()) ),
+  _parametersProjectionPoint( {_shortestDistance , _shortestDistance} ),
+  _closestEdge ( NULL )
+{
+  assertion ( (_searchPoint.size() == 2) || (_searchPoint.size() == 3),
+               _searchPoint.size() );
+}
+
+const Eigen::VectorXd& FindClosestEdge:: getSearchPoint() const
 {
   return _searchPoint;
 }
@@ -30,7 +44,7 @@ mesh::Edge& FindClosestEdge:: getClosestEdge()
   return *_closestEdge;
 }
 
-const utils::DynVector& FindClosestEdge:: getVectorToProjectionPoint() const
+const Eigen::VectorXd& FindClosestEdge:: getVectorToProjectionPoint() const
 {
   return _vectorToProjectionPoint;
 }
@@ -55,14 +69,14 @@ double FindClosestEdge:: getProjectionPointParameter
 void FindClosestEdge:: find ( mesh::Edge& edge )
 {
   preciceTrace ( "find()", edge.vertex(0).getCoords(), edge.vertex(1).getCoords() );
+  using Eigen::Vector2d; using Eigen::Vector3d;
   // Methodology of book "Computational Geometry", Joseph O' Rourke, Chapter 7.2
   std::array<double,2> barycentricCoords;
   int dimensions = edge.getDimensions();
   assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
-  utils::DynVector projected(dimensions, 0.0);
+  Eigen::VectorXd projected = Eigen::VectorXd::Zero(dimensions);
   bool collinear = false;
-  using utils::Vector2D; using utils::Vector3D;
-  Vector2D a, b, ab, c, d;
+  Vector2d a, b, ab, c, d;
 
   if ( dimensions == 2 ){
     // Get parameters for parametric edge representation: p(s) = a + s(b-a)
@@ -73,12 +87,13 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
     // Same for intersecting normal from searchpoint: q(t) = c + t(d - c)
     c = _searchPoint;
     d = _searchPoint;
-    d += static_cast<Vector2D>(edge.getNormal());
+    d += edge.getNormal();
     collinear = utils::GeometryComputations::collinear ( a, b, c );
     if ( collinear ) {
       // From p(s) = a + s(b-a) we get: s = (p(s) - a) / (b-a)
-      int iMax = tarch::la::indexMax ( tarch::la::abs(ab) );
-      assertion ( ! tarch::la::equals(ab(iMax), 0.0) );
+      int iMax;
+      ab.cwiseAbs().maxCoeff(&iMax);
+      assertion ( ! math::equals(ab(iMax), 0.0) );
       barycentricCoords[0] = (_searchPoint(iMax) - a(iMax)) / ab(iMax);
       barycentricCoords[1] = 1.0 - barycentricCoords[0];
       projected = _searchPoint;
@@ -87,28 +102,29 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
   else { // 3D
     assertion ( dimensions == 3, dimensions );
     // Get parameters for parametric triangle representation: p(s) = a + s(b-a)
-    Vector3D a3D = static_cast<Eigen::Vector3d>(edge.vertex(0).getCoords());
-    Vector3D b3D = static_cast<Eigen::Vector3d>(edge.vertex(1).getCoords());
-    Vector3D c3D = _searchPoint;
-    Vector3D ab3D = b3D - a3D;
-    Vector3D ac3D = c3D - a3D;
+    Vector3d a3D = edge.vertex(0).getCoords();
+    Vector3d b3D = edge.vertex(1).getCoords();
+    Vector3d c3D = _searchPoint;
+    Vector3d ab3D = b3D - a3D;
+    Vector3d ac3D = c3D - a3D;
     collinear = utils::GeometryComputations::collinear ( a3D, b3D, c3D );
     if ( collinear ) {
       // From p(s) = a + s(b-a) we get: s = (p(s) - a) / (b-a)
-      Vector3D ab3Dabs ( ab3D );
-      int iMax = tarch::la::indexMax ( tarch::la::abs(ab3D, ab3Dabs) );
-      assertion ( ! tarch::la::equals(ab3D[iMax], 0.0) );
+      int iMax;
+      ab3D.cwiseAbs().maxCoeff(&iMax);
+      assertion ( ! math::equals(ab3D[iMax], 0.0) );
       barycentricCoords[0] =
-          (_searchPoint(iMax) - edge.vertex(0).getCoords()(iMax)) / ab3D(iMax);
+        (_searchPoint(iMax) - edge.vertex(0).getCoords()(iMax)) / ab3D(iMax);
       barycentricCoords[1] = 1.0 - barycentricCoords[0];
       projected = _searchPoint;
     }
     else {
       // Project parameters to 2D, where the projection plane is determined from
       // the normal direction, in order to prevent "faulty" projections.
-      Vector3D normal;
-      tarch::la::cross(ab3D,ac3D,normal);
-      int indexToRemove = tarch::la::indexMax ( tarch::la::abs(normal,normal) );
+      Vector3d normal;
+      normal = ab3D.cross(ac3D);
+      int indexToRemove;
+      normal.cwiseAbs().maxCoeff(&indexToRemove);
       int indices[2];
       if (indexToRemove == 0){
         indices[0] = 1;
@@ -123,12 +139,12 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
         indices[0] = 0;
         indices[1] = 1;
       }
-      assignList(a) = a3D[indices[0]], a3D[indices[1]];
-      assignList(b) = b3D[indices[0]], b3D[indices[1]];
-      assignList(ab) = ab3D[indices[0]], ab3D[indices[1]];
-      assignList(c) = c3D[indices[0]], c3D[indices[1]];
+      a << a3D[indices[0]], a3D[indices[1]];
+      b << b3D[indices[0]], b3D[indices[1]];
+      ab << ab3D[indices[0]], ab3D[indices[1]];
+      c << c3D[indices[0]], c3D[indices[1]];
       // 3D normal might be projected out, hence, compute new 2D edge normal
-      Vector2D normal2D ( -1.0 * ab(1), ab(0) );
+      Vector2d normal2D ( -1.0 * ab(1), ab(0) );
       d = c + normal2D;
     }
   }
@@ -136,7 +152,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
   if ( not collinear ){
     // Compute denominator for solving 2x2 equation system
     double D = a(0)*(d(1)-c(1)) + b(0)*(c(1)-d(1)) + d(0)*ab(1) - c(0)*ab(1);
-    assertion ( not tarch::la::equals(D, 0.0), a, b, c, d, ab );   // D == 0 would imply "normal // edge"
+    assertion ( not math::equals(D, 0.0), a, b, c, d, ab );   // D == 0 would imply "normal // edge"
 
     // Compute triangle segment parameter s, which is in [0, 1], if the
     // intersection point is within the triangle.
@@ -154,24 +170,24 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
     }
     else {
       projected = edge.vertex(1).getCoords();  // = b
-      projected -= static_cast<utils::DynVector>(edge.vertex(0).getCoords()); // = b - a
+      projected -= edge.vertex(0).getCoords(); // = b - a
       projected *= barycentricCoords[0];       // = bary0 * (b - a)
-      projected += static_cast<utils::DynVector>(edge.vertex(0).getCoords()); // = a + bary0 * (b - a)
+      projected += edge.vertex(0).getCoords(); // = a + bary0 * (b - a)
     }
   }
 
   bool inside = true;
   for (int i=0; i < 2; i++) {
-    if( barycentricCoords[i] < - tarch::la::NUMERICAL_ZERO_DIFFERENCE) {
+    if( barycentricCoords[i] < - math::NUMERICAL_ZERO_DIFFERENCE) {
       inside = false;
     }
   }
 
   // if valid, compute distance to triangle and evtl. store distance
   if (inside) {
-    utils::DynVector distanceVector = projected;
+    Eigen::VectorXd distanceVector = projected;
     distanceVector -= _searchPoint;
-    double distance = tarch::la::norm2 ( distanceVector );
+    double distance = distanceVector.norm();
     if ( _shortestDistance > distance ) {
       _shortestDistance = distance;
       _vectorToProjectionPoint = distanceVector;

@@ -4,9 +4,6 @@
 #include "FindClosestEdge.hpp"
 #include "FindClosestTriangle.hpp"
 #include "FindClosestQuad.hpp"
-#include "mesh/PropertyContainer.hpp"
-#include "utils/Dimensions.hpp"
-#include <map>
 
 namespace precice {
    namespace mesh {
@@ -38,14 +35,14 @@ struct ClosestElement
 {
   std::vector<int> meshIDs;
   double distance;
-  utils::DynVector vectorToElement;
+  Eigen::VectorXd vectorToElement;
   std::vector<InterpolationElement> interpolationElements;
 
-//  ClosestElement ()
-//  : meshIDs(), distance(0.0), vectorToElement(), interpolationElements() {}
-
   ClosestElement (int dim)
-  : meshIDs(), distance(0.0), vectorToElement(dim,0.0), interpolationElements() {}
+  : meshIDs(),
+    distance(0.0),
+    vectorToElement(Eigen::VectorXd::Zero(dim)),
+    interpolationElements() {}
 };
 
 
@@ -72,7 +69,7 @@ public:
   /**
    * @brief Constructor, searchpoint can be specified only there
    *
-   * @param searchpoint [IN] Point from where distances to objects are measured
+   * @param[in] searchpoint Point from where distances to objects are measured
    */
   template<typename VECTOR_T>
   FindClosest ( const VECTOR_T& searchpoint );
@@ -91,7 +88,7 @@ public:
   double getEuclidianDistance();
 
   /// Returns search point
-  const utils::DynVector& getSearchPoint() const;
+  const Eigen::VectorXd& getSearchPoint() const;
 
   /// Resets the found visitables, not done automatically
   void reset();
@@ -116,7 +113,7 @@ private:
   ClosestElement _closest;
 
   /// Search point, from where distances to objects are measured
-  const utils::DynVector _searchpoint;
+  const Eigen::VectorXd _searchpoint;
 
   /**
    * @brief Determines the closest element from all FindXY member objects.

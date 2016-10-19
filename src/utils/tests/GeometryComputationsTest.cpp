@@ -1,8 +1,6 @@
 #include "GeometryComputationsTest.hpp"
 #include "../GeometryComputations.hpp"
-#include "../Dimensions.hpp"
 #include "../Parallel.hpp"
-#include "../Helpers.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::utils::tests::GeometryComputationsTest)
@@ -11,8 +9,7 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-logging::Logger GeometryComputationsTest::
-    _log ("precice::utils::GeometryComputationsTest");
+logging::Logger GeometryComputationsTest::_log ("precice::utils::GeometryComputationsTest");
 
 GeometryComputationsTest:: GeometryComputationsTest ()
 :
@@ -35,18 +32,18 @@ void GeometryComputationsTest:: run ()
 
 void GeometryComputationsTest:: testCollinear ()
 {
-  preciceTrace ( "testCollinear()" );
+  TRACE();
   // 2D test setup
-  tarch::la::Vector<2,double> a2D (0.0);
-  tarch::la::Vector<2,double> b2D (1.0);
-  tarch::la::Vector<2,double> collinearPoint2D (0.5);
-  tarch::la::Vector<2,double> notCollinearPoint2D (0.5, 0.6);
+  Eigen::Vector2d a2D (0, 0);
+  Eigen::Vector2d b2D (1, 1);
+  Eigen::Vector2d collinearPoint2D (0.5, 0.5);
+  Eigen::Vector2d notCollinearPoint2D (0.5, 0.6);
 
   // 3D test setup
-  tarch::la::Vector<3,double> a3D (0.0);
-  tarch::la::Vector<3,double> b3D (1.0);
-  tarch::la::Vector<3,double> collinearPoint3D (0.5);
-  tarch::la::Vector<3,double> notCollinearPoint3D (0.5, 0.6, 0.5);
+  Eigen::Vector3d a3D (0, 0, 0);
+  Eigen::Vector3d b3D (1, 1, 1);
+  Eigen::Vector3d collinearPoint3D (0.5, 0.5, 0.5);
+  Eigen::Vector3d notCollinearPoint3D (0.5, 0.6, 0.5);
 
   // 2D test validations
   validate ( GeometryComputations::collinear(a2D, b2D, collinearPoint2D) );
@@ -59,29 +56,29 @@ void GeometryComputationsTest:: testCollinear ()
 
 void GeometryComputationsTest:: testBetween ()
 {
-  preciceTrace ( "testBetween()" );
+  TRACE();
   for ( int dim=2; dim <= 3; dim++ ){
-    utils::DynVector a(dim);
-    utils::DynVector b(dim);
-    utils::DynVector betweenPoint(dim);
-    utils::DynVector betweenLimitPoint(dim);
-    utils::DynVector collinearOutsidePoint(dim);
-    utils::DynVector outsidePoint(dim);
+    Eigen::VectorXd a(dim);
+    Eigen::VectorXd b(dim);
+    Eigen::VectorXd betweenPoint(dim);
+    Eigen::VectorXd betweenLimitPoint(dim);
+    Eigen::VectorXd collinearOutsidePoint(dim);
+    Eigen::VectorXd outsidePoint(dim);
     if ( dim == 2 ){
-      assignList(a) = 0.0, 0.0;
-      assignList(b) = 1.0, 1.0;
-      assignList(betweenPoint) = 0.5, 0.5;
-      assignList(betweenLimitPoint) = 1.0, 1.0;
-      assignList(collinearOutsidePoint) = 2.0, 2.0;
-      assignList(outsidePoint) = 0.5, 0.4;
+      a << 0.0, 0.0;
+      b << 1.0, 1.0;
+      betweenPoint << 0.5, 0.5;
+      betweenLimitPoint << 1.0, 1.0;
+      collinearOutsidePoint << 2.0, 2.0;
+      outsidePoint << 0.5, 0.4;
     }
     else {
-      assignList(a) = 0.0, 0.0, 0.0;
-      assignList(b) = 1.0, 1.0, 1.0;
-      assignList(betweenPoint) = 0.5, 0.5, 0.5;
-      assignList(betweenLimitPoint) = 1.0, 1.0, 1.0;
-      assignList(collinearOutsidePoint) = 2.0, 2.0, 2.0;
-      assignList(outsidePoint) = 0.5, 0.4, 0.5;
+      a << 0.0, 0.0, 0.0;
+      b << 1.0, 1.0, 1.0;
+      betweenPoint << 0.5, 0.5, 0.5;
+      betweenLimitPoint << 1.0, 1.0, 1.0;
+      collinearOutsidePoint << 2.0, 2.0, 2.0;
+      outsidePoint << 0.5, 0.4, 0.5;
     }
     validate(utils::GeometryComputations::between(a, b, betweenPoint));
     validate(utils::GeometryComputations::between(a, b, betweenLimitPoint));
@@ -92,27 +89,27 @@ void GeometryComputationsTest:: testBetween ()
 
 void GeometryComputationsTest:: testTriangleArea ()
 {
-  preciceTrace ( "testTriangleArea()" );
+  TRACE()
   { // 2D
-    utils::Vector2D a, b, c;
+    Eigen::Vector2d a, b, c;
     double area;
-    assignList(a) = 0.0, 0.0;
-    assignList(b) = 1.0, 0.0;
-    assignList(c) = 0.0, 1.0;
+    a << 0.0, 0.0;
+    b << 1.0, 0.0;
+    c << 0.0, 1.0;
     area = utils::GeometryComputations::triangleArea(a, b, c);
     validateNumericalEquals (area, 0.5);
 
-    assignList(b) = 0.0, 1.0;
-    assignList(c) = 1.0, 0.0;
+    b << 0.0, 1.0;
+    c << 1.0, 0.0;
     area = utils::GeometryComputations::triangleArea(a, b, c);
     validateNumericalEquals (area, -0.5);
   }
   { // 3D
-    utils::Vector3D a, b, c;
+    Eigen::Vector3d a, b, c;
     double area;
-    assignList(a) = 0.0, 0.0, 0.0;
-    assignList(b) = 1.0, 0.0, 1.0;
-    assignList(c) = 1.0, 1.0, 1.0;
+    a << 0.0, 0.0, 0.0;
+    b << 1.0, 0.0, 1.0;
+    c << 1.0, 1.0, 1.0;
     area = utils::GeometryComputations::triangleArea(a, b, c);
     validateNumericalEquals (area, 0.5 * sqrt(2.0));
   }
@@ -120,11 +117,9 @@ void GeometryComputationsTest:: testTriangleArea ()
 
 void GeometryComputationsTest:: testSegmentsIntersect ()
 {
-  preciceTrace ( "testSegmentsIntersect" );
+  TRACE();
   typedef GeometryComputations GeoComp;
-  utils::Vector2D a(0.0), b(0.0), c(0.0), d(0.5);
-  assignList(b) = 1.0, 0.0;
-  assignList(c) = 0.5, 0.0;
+  Eigen::Vector2d a(0,0), b(1,0), c(0.5,0), d(0,0.5);
   validate ( GeoComp::segmentsIntersect(a,b,c,d,true));
   validate ( ! GeoComp::segmentsIntersect(a,b,c,d,false));
 
@@ -132,120 +127,120 @@ void GeometryComputationsTest:: testSegmentsIntersect ()
   validate ( GeoComp::segmentsIntersect(a,b,c,d,false));
 
   // Test case motivated from bug
-  assignList(a) = 0.23104429, 1.87753905;
-  assignList(b) = 0.22608634, 1.88114120;
-  assignList(c) = 0.23058985, 1.87733882;
-  assignList(d) = 0.23058985, 1.87846349;
+  a << 0.23104429, 1.87753905;
+  b << 0.22608634, 1.88114120;
+  c << 0.23058985, 1.87733882;
+  d << 0.23058985, 1.87846349;
   validate ( GeoComp::segmentsIntersect(a,b,c,d,false));
 
   // Another bug motivated test, T-intersection slightly above numerical accuracy
-  assignList(a) = 1.0, 1.0;
-  assignList(b) = 0.0, 1.0;
-  assignList(c) = 1.0 - (10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE), 1.1;
-  assignList(d) = 1.0 - (10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE), 0.9;
+  a << 1.0, 1.0;
+  b << 0.0, 1.0;
+  c << 1.0 - (10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE), 1.1;
+  d << 1.0 - (10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE), 0.9;
   validate ( GeoComp::segmentsIntersect(a,b,c,d,false) );
   validate ( GeoComp::segmentsIntersect(c,d,a,b,false) );
 }
 
 void GeometryComputationsTest:: testSegmentPlaneIntersection ()
 {
-  preciceTrace ( "testSegmentPlaneIntersection()" );
-  using utils::Vector3D;
-  Vector3D planeNormal ( 1.0 );
-  Vector3D pointOnPlane ( 0.0 );
-  Vector3D firstSegmentPoint ( 1.0 );
-  Vector3D secondSegmentPoint ( -1.0 );
-  Vector3D intersectionPoint ( 1.0 );
-  Vector3D expected ( 0.0 );
+  TRACE();
+  using Eigen::Vector3d;
+  Vector3d planeNormal = Vector3d::Constant ( 1.0 );
+  Vector3d pointOnPlane = Vector3d::Constant ( 0.0 );
+  Vector3d firstSegmentPoint = Vector3d::Constant ( 1.0 );
+  Vector3d secondSegmentPoint = Vector3d::Constant ( -1.0 );
+  Vector3d intersectionPoint = Vector3d::Constant ( 1.0 );
+  Vector3d expected = Vector3d::Constant ( 0.0 );
 
   // True intersection
   int result = GeometryComputations::segmentPlaneIntersection (
       pointOnPlane, planeNormal, firstSegmentPoint,
       secondSegmentPoint, intersectionPoint );
   validateEquals ( result, GeometryComputations::INTERSECTION );
-  validate ( tarch::la::equals(intersectionPoint, expected) );
+  validate ( math::equals(intersectionPoint, expected) );
 
   // Touching second segment vertex
-  secondSegmentPoint = Vector3D ( 0.0 );
+  secondSegmentPoint = Vector3d::Constant ( 0.0 );
   result = GeometryComputations::segmentPlaneIntersection (
       pointOnPlane, planeNormal, firstSegmentPoint,
       secondSegmentPoint, intersectionPoint );
   validateEquals ( result, GeometryComputations::TOUCHING );
-  validate ( tarch::la::equals(intersectionPoint, expected) );
+  validate ( math::equals(intersectionPoint, expected) );
 
   // Touching first segment vertex
-  firstSegmentPoint = Vector3D ( 0.0 );
-  secondSegmentPoint = Vector3D ( -1.0 );
+  firstSegmentPoint = Vector3d::Constant ( 0.0 );
+  secondSegmentPoint = Vector3d::Constant ( -1.0 );
   result = GeometryComputations::segmentPlaneIntersection (
       pointOnPlane, planeNormal, firstSegmentPoint,
       secondSegmentPoint, intersectionPoint );
   validateEquals ( result, GeometryComputations::TOUCHING );
-  validate ( tarch::la::equals(intersectionPoint, expected) );
+  validate ( math::equals(intersectionPoint, expected) );
 
   // Parallel segment with distance to plain
-  firstSegmentPoint = Vector3D ( 0.0, 0.0, -3.0 );
-  intersectionPoint = Vector3D ( 1.0, 2.0, 3.0 ); // should not be modified
+  firstSegmentPoint << 0.0, 0.0, -3.0;
+  intersectionPoint << 1.0, 2.0, 3.0; // should not be modified
   expected = intersectionPoint;
   result = GeometryComputations::segmentPlaneIntersection (
       pointOnPlane, planeNormal, firstSegmentPoint,
       secondSegmentPoint, intersectionPoint );
   validateEquals ( result, GeometryComputations::NO_INTERSECTION );
-  validate ( tarch::la::equals(intersectionPoint, expected) );
+  validate ( math::equals(intersectionPoint, expected) );
 
   // Parallel segment contained in plane
-  firstSegmentPoint = Vector3D ( 0.0, 0.0, 0.0 );
-  secondSegmentPoint = Vector3D ( 1.0, 1.0, -2.0 );
+  firstSegmentPoint << 0.0, 0.0, 0.0;
+  secondSegmentPoint << 1.0, 1.0, -2.0;
   result = GeometryComputations::segmentPlaneIntersection (
       pointOnPlane, planeNormal, firstSegmentPoint,
       secondSegmentPoint, intersectionPoint );
   validateEquals ( result, GeometryComputations::CONTAINED );
-  validate ( tarch::la::equals(intersectionPoint, expected) );
+  validate ( math::equals(intersectionPoint, expected) );
 
   // Segment ending before intersection
-  firstSegmentPoint = Vector3D ( -2.0, -2.0, -2.0 );
-  secondSegmentPoint = Vector3D ( -1.0, -1.0, -1.0 );
+  firstSegmentPoint << -2.0, -2.0, -2.0;
+  secondSegmentPoint << -1.0, -1.0, -1.0;
   result = GeometryComputations::segmentPlaneIntersection (
       pointOnPlane, planeNormal, firstSegmentPoint,
       secondSegmentPoint, intersectionPoint );
   validateEquals ( result, GeometryComputations::NO_INTERSECTION );
-  validate ( tarch::la::equals(intersectionPoint, expected) );
+  validate ( math::equals(intersectionPoint, expected) );
 
   // Segment ending before intersection (inversed segment points)
-  firstSegmentPoint = Vector3D ( -1.0, -1.0, -1.0 );
-  secondSegmentPoint = Vector3D ( -2.0, -2.0, -2.0 );
+  firstSegmentPoint <<-1.0, -1.0, -1.0;
+  secondSegmentPoint << -2.0, -2.0, -2.0;
   result = GeometryComputations::segmentPlaneIntersection (
       pointOnPlane, planeNormal, firstSegmentPoint,
       secondSegmentPoint, intersectionPoint );
   validateEquals ( result, GeometryComputations::NO_INTERSECTION );
-  validate ( tarch::la::equals(intersectionPoint, expected) );
+  validate ( math::equals(intersectionPoint, expected) );
 }
 
 void GeometryComputationsTest:: testProjectVector ()
 {
-  preciceTrace ( "testProjectVector()" );
-  tarch::la::Vector<3,double> vector3D ( 1.0, 2.0, 3.0 );
-  tarch::la::Vector<2,double> vector2D;
-  tarch::la::Vector<2,double> vectorExpected ( 1.0, 2.0 );
+  TRACE();
+  Eigen::Vector3d vector3D ( 1.0, 2.0, 3.0 );
+  Eigen::Vector2d vector2D;
+  Eigen::Vector2d vectorExpected ( 1.0, 2.0 );
 
   vector2D = GeometryComputations::projectVector ( vector3D, 2 );
-  validate ( tarch::la::equals(vector2D, vectorExpected) );
+  validate ( math::equals(vector2D, vectorExpected) );
 
   vector2D = GeometryComputations::projectVector ( vector3D, 1 );
-  assignList(vectorExpected) = 1.0, 3.0;
-  validate ( tarch::la::equals(vector2D, vectorExpected) );
+  vectorExpected << 1.0, 3.0;
+  validate ( math::equals(vector2D, vectorExpected) );
 
   vector2D = GeometryComputations::projectVector ( vector3D, 0 );
-  assignList(vectorExpected) = 2.0, 3.0;
-  validate ( tarch::la::equals(vector2D, vectorExpected) );
+  vectorExpected << 2.0, 3.0;
+  validate ( math::equals(vector2D, vectorExpected) );
 }
 
 void GeometryComputationsTest:: testContainedInTriangle ()
 {
-  preciceTrace ( "testContainedInTriangle()" );
-  tarch::la::Vector<2,double> triangleVertex0 ( 0.0, 0.0 );
-  tarch::la::Vector<2,double> triangleVertex1 ( 1.0, 0.0 );
-  tarch::la::Vector<2,double> triangleVertex2 ( 0.0, 1.0 );
-  tarch::la::Vector<2,double> point ( 0.25, 0.25 );
+  TRACE();
+  Eigen::Vector2d triangleVertex0 ( 0.0, 0.0 );
+  Eigen::Vector2d triangleVertex1 ( 1.0, 0.0 );
+  Eigen::Vector2d triangleVertex2 ( 0.0, 1.0 );
+  Eigen::Vector2d point ( 0.25, 0.25 );
 
   // Contained point
   int result = GeometryComputations::containedInTriangle (
@@ -253,45 +248,45 @@ void GeometryComputationsTest:: testContainedInTriangle ()
   validateEquals ( result, GeometryComputations::CONTAINED );
 
   // Not contained points
-  assignList(point) = -1.0, -1.0;
+  point << -1.0, -1.0;
   result = GeometryComputations::containedInTriangle (
       triangleVertex0, triangleVertex1, triangleVertex2, point );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
-  assignList(point) = 1.0, 1.0;
+  point << 1.0, 1.0;
   result = GeometryComputations::containedInTriangle (
       triangleVertex0, triangleVertex1, triangleVertex2, point );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
-  assignList(point) = 2.0, 0.0;
+  point << 2.0, 0.0;
   result = GeometryComputations::containedInTriangle (
       triangleVertex0, triangleVertex1, triangleVertex2, point );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
-  assignList(point) = 0.0, 2.0;
+  point << 0.0, 2.0;
   result = GeometryComputations::containedInTriangle (
       triangleVertex0, triangleVertex1, triangleVertex2, point );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
   // Touching points
-  assignList(point) = 0.0, 0.0;
+  point << 0.0, 0.0;
   result = GeometryComputations::containedInTriangle (
       triangleVertex0, triangleVertex1, triangleVertex2, point );
   validateEquals ( result, GeometryComputations::TOUCHING );
-  assignList(point) = 1.0, 0.0;
+  point << 1.0, 0.0;
   result = GeometryComputations::containedInTriangle (
       triangleVertex0, triangleVertex1, triangleVertex2, point );
   validateEquals ( result, GeometryComputations::TOUCHING );
-  assignList(point) = 0.0, 1.0;
+  point << 0.0, 1.0;
   result = GeometryComputations::containedInTriangle (
       triangleVertex0, triangleVertex1, triangleVertex2, point );
   validateEquals ( result, GeometryComputations::TOUCHING );
-  assignList(point) = 0.5, 0.0;
+  point << 0.5, 0.0;
   result = GeometryComputations::containedInTriangle (
       triangleVertex0, triangleVertex1, triangleVertex2, point );
   validateEquals ( result, GeometryComputations::TOUCHING );
-  assignList(point) = 0.0, 0.5;
+  point << 0.0, 0.5;
   result = GeometryComputations::containedInTriangle (
       triangleVertex0, triangleVertex1, triangleVertex2, point );
   validateEquals ( result, GeometryComputations::TOUCHING );
-  assignList(point) = 0.5, 0.5;
+  point << 0.5, 0.5;
   result = GeometryComputations::containedInTriangle (
       triangleVertex0, triangleVertex1, triangleVertex2, point );
   validateEquals ( result, GeometryComputations::TOUCHING );

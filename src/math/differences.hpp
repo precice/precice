@@ -1,5 +1,6 @@
 #pragma once
 
+#include <Eigen/Dense>
 #include "tarch/la/DynamicVector.h"
 #include "tarch/la/Vector.h"
 
@@ -96,5 +97,81 @@ constexpr bool equals (const Eigen::MatrixBase<DerivedA>& A,
 
 bool equals(const double a, const double b, const double tolerance = NUMERICAL_ZERO_DIFFERENCE);
 
+template<class DerivedA, class DerivedB>
+bool oneGreater(const Eigen::MatrixBase<DerivedA> & A,
+                const Eigen::MatrixBase<DerivedB> & B,
+                double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+{
+  assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
+  assertion(A.rows() == B.rows(), "Matrices with different number of cols can't be compared.");
+  for (int col = 0; col < A.cols(); ++col)
+    for (int row = 0; row < A.rows(); ++row)
+      if ( A(row, col) - B(row, col) > tolerance )
+        return true;
+  
+  return false;
+}
 
-} }
+template<class DerivedA, class DerivedB>
+bool oneGreaterEquals(const Eigen::MatrixBase<DerivedA> & A,
+                      const Eigen::MatrixBase<DerivedB> & B,
+                      double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+{
+  assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
+  assertion(A.rows() == B.rows(), "Matrices with different number of cols can't be compared.");
+  for (int col = 0; col < A.cols(); ++col)
+    for (int row = 0; row < A.rows(); ++row) {
+      if ( A(row, col) - B(row, col) >= -tolerance )
+        return true;
+    }
+  return false;
+}
+
+
+template<class DerivedA, class DerivedB>
+bool allGreater(const Eigen::MatrixBase<DerivedA> & A,
+                const Eigen::MatrixBase<DerivedB> & B,
+                double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+{
+  assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
+  assertion(A.rows() == B.rows(), "Matrices with different number of cols can't be compared.");
+  for (int col = 0; col < A.cols(); ++col)
+    for (int row = 0; row < A.rows(); ++row)
+      if ( A(row, col) - B(row, col) <= tolerance )
+        return false;
+  
+  return true;
+}
+
+template<class DerivedA, class DerivedB>
+bool allGreaterEquals(const Eigen::MatrixBase<DerivedA> & A,
+                      const Eigen::MatrixBase<DerivedB> & B,
+                      double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+{
+  assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
+  assertion(A.rows() == B.rows(), "Matrices with different number of cols can't be compared.");
+  for (int col = 0; col < A.cols(); ++col)
+    for (int row = 0; row < A.rows(); ++row)
+      if ( A(row, col) - B(row, col) < -tolerance )
+        return false;
+  
+  return true;
+}
+
+template<class Scalar>
+typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>
+::type greater(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+{
+  return A - B > tolerance;
+}
+
+template<class Scalar>
+typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>
+::type smaller(Scalar A, Scalar B, double tolerance = NUMERICAL_ZERO_DIFFERENCE)
+{
+  return A - B < -tolerance;
+}
+
+
+}
+}

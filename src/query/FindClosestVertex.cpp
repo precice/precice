@@ -5,7 +5,16 @@
 namespace precice {
 namespace query {
 
-const utils::DynVector& FindClosestVertex:: getSearchPoint() const
+FindClosestVertex:: FindClosestVertex
+(
+  const Eigen::VectorXd& searchPoint )
+:
+  _searchPoint (searchPoint),
+  _shortestDistance (std::numeric_limits<double>::max()),
+  _closestVertex (NULL)
+{}
+
+const Eigen::VectorXd& FindClosestVertex:: getSearchPoint() const
 {
   return _searchPoint;
 }

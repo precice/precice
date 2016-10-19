@@ -1,9 +1,77 @@
 #include "GeometryComputations.hpp"
 #include "tarch/la/VectorVectorOperations.h"
+#include "math/math.hpp"
 
 namespace precice {
 namespace utils {
 
+bool GeometryComputations::segmentsIntersect
+(
+  const Eigen::Ref<const Eigen::Vector2d>& a,
+  const Eigen::Ref<const Eigen::Vector2d>& b,
+  const Eigen::Ref<const Eigen::Vector2d>& c,
+  const Eigen::Ref<const Eigen::Vector2d>& d,
+  bool countTouchingAsIntersection)
+{
+  assertion ( a.size() == 2, a.size() );
+  assertion ( b.size() == 2, b.size() );
+  assertion ( c.size() == 2, c.size() );
+  assertion ( d.size() == 2, d.size() );
+
+  if ( countTouchingAsIntersection ) {
+    if ( between(a, b, c) ) {
+      return true;
+    }
+    else if ( between(a, b, d) ) {
+      return true;
+    }
+    else if ( between(c, d, a) ) {
+      return true;
+    }
+    else if ( between(c, d, b) ) {
+      return true;
+    }
+  }
+
+  double abc = triangleArea(a, b, c);
+  double abd = triangleArea(a, b, d);
+  double cda = triangleArea(c, d, a);
+  double cdb = triangleArea(c, d, b);
+
+  using tarch::la::norm2;
+  double circABC = (a-b).norm() + (b-c).norm() + (c-a).norm();
+  double circABD = (a-b).norm() + (b-d).norm() + (d-a).norm();
+  double circCDA = (c-d).norm() + (d-a).norm() + (a-c).norm();
+  double circCDB = (c-d).norm() + (d-b).norm() + (b-c).norm();
+
+  abc /= circABC;
+  abd /= circABD;
+  cda /= circCDA;
+  cdb /= circCDB;
+
+  // Check, if one point lies on line defined by segment and the other not (-> xor).
+  // If true, either one point is between, which means the segments are
+  // touching only, or the segments are neither touching nor intersecting
+  // (-> false). This case of touching segments is detected in the beginning
+  // of this function, if countTouchingAsIntersection is true. Otherwise,
+  // it should not be counted (-> false).
+  if ( xOR(std::abs(abc) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE,
+           std::abs(abd) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE) ) {
+    return false;
+  }
+  if ( xOR(std::abs(cda) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE,
+           std::abs(cdb) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE) ) {
+    return false;
+  }
+
+  // Check, whether the segments are intersecting in the real sense.
+  bool isFirstSegmentBetween = xOR (abc > - tarch::la::NUMERICAL_ZERO_DIFFERENCE,
+                                    abd > - tarch::la::NUMERICAL_ZERO_DIFFERENCE );
+  bool isSecondSegmentBetween = xOR (cda > - tarch::la::NUMERICAL_ZERO_DIFFERENCE,
+                                     cdb > - tarch::la::NUMERICAL_ZERO_DIFFERENCE );
+  
+  return isFirstSegmentBetween && isSecondSegmentBetween;
+}
 
 bool GeometryComputations:: lineIntersection
 (
@@ -34,17 +102,17 @@ bool GeometryComputations:: lineIntersection
 
 GeometryComputations::ResultConstants GeometryComputations:: segmentPlaneIntersection
 (
-   const tarch::la::Vector<3,double> & pointOnPlane,
-   const tarch::la::Vector<3,double> & planeNormal,
-   const tarch::la::Vector<3,double> & firstPointSegment,
-   const tarch::la::Vector<3,double> & secondPointSegment,
-   tarch::la::Vector<3,double>       & intersectionPoint )
+  const Eigen::Vector3d & pointOnPlane,
+  const Eigen::Vector3d & planeNormal,
+  const Eigen::Vector3d & firstPointSegment,
+  const Eigen::Vector3d & secondPointSegment,
+  Eigen::Vector3d       & intersectionPoint )
 {
    // Methodology of "Computation Geometry in C", Joseph O'Rourke, Chapter 7.3.1
 
    // The plane is represented by: p(x,y,z) dot planeNormal = d  (1)
    // We need to compute d by using pointOnPlane as p(x,y,z):
-   double d = pointOnPlane * planeNormal;
+  double d = pointOnPlane.dot(planeNormal);
 
    // The segment is represented by:
    // firstPointSegment + (secondPointSegment - firstPointSegement) * t (2)
@@ -55,11 +123,11 @@ GeometryComputations::ResultConstants GeometryComputations:: segmentPlaneInterse
    // If the denominator of (3) equals 0, the segment is parallel to the plane.
    // If, in addition, the denominator of (3) equals 0, the segment lies in the
    // plane. Otherwise we can compute a point of intersection.
-   tarch::la::Vector<3,double> segmentVec ( secondPointSegment - firstPointSegment );
-   double nominator = d - firstPointSegment * planeNormal;
-   double denominator = segmentVec * planeNormal;
-   if ( tarch::la::equals(denominator, 0.0) ) {
-      if ( tarch::la::equals(nominator, 0.0) ) {
+   Eigen::Vector3d segmentVec ( secondPointSegment - firstPointSegment );
+   double nominator = d - firstPointSegment.dot(planeNormal);
+   double denominator = segmentVec.dot(planeNormal);
+   if ( math::equals(denominator, 0.0) ) {
+      if ( math::equals(nominator, 0.0) ) {
          return CONTAINED;
       }
       else {
@@ -78,13 +146,35 @@ GeometryComputations::ResultConstants GeometryComputations:: segmentPlaneInterse
 
    // If t equals 1 or 0, the segment is just touching the plane, otherwise, a
    // real intersection is happening.
-   if ( tarch::la::equals(t, 0.0) || tarch::la::equals(t, 1.0) ) {
+   if ( math::equals(t, 0.0) || math::equals(t, 1.0) ) {
       return TOUCHING;
    }
 
    return INTERSECTION;
 }
 
+double GeometryComputations::triangleArea
+(
+  const Eigen::VectorXd& a,
+  const Eigen::VectorXd& b,
+  const Eigen::VectorXd& c )
+{
+  assertion ( a.size() == b.size(), a.size(), b.size() );
+  assertion ( b.size() == c.size(), b.size(), c.size() );
+  if ( a.size() == 2 ){
+    Eigen::Vector2d A = b;
+    A -= a;
+    Eigen::Vector2d B = c;
+    B -= a;
+    return 0.5 * (A(0)*B(1) - A(1)*B(0));
+  }
+  else {
+    assertion ( a.size() == 3, a.size() );
+    Eigen::Vector3d A = b; A -= a;
+    Eigen::Vector3d B = c; B -= a;
+    return 0.5 * A.cross(B).norm();
+  }
+}
 
 double GeometryComputations:: tetraVolume
 (
@@ -97,14 +187,14 @@ double GeometryComputations:: tetraVolume
   return -1.0;
 }
 
-tarch::la::Vector<2,double> GeometryComputations:: projectVector
+Eigen::Vector2d GeometryComputations:: projectVector
 (
-   const tarch::la::Vector<3,double> & vector,
-   int indexDimensionToRemove )
+  const Eigen::Vector3d & vector,
+  int indexDimensionToRemove )
 {
    assertion ( indexDimensionToRemove >= 0 );
    assertion ( indexDimensionToRemove < 3 );
-   tarch::la::Vector<2, double> projectedVector;
+   Eigen::Vector2d projectedVector;
    int reducedDim = 0;
    for (int dim=0; dim < 3; dim++) {
       if ( indexDimensionToRemove == dim ) {
@@ -116,24 +206,23 @@ tarch::la::Vector<2,double> GeometryComputations:: projectVector
    return projectedVector;
 }
 
-int GeometryComputations:: containedInTriangle
+int GeometryComputations::containedInTriangle
 (
-  const tarch::la::Vector<2,double> & triangleVertex0,
-  const tarch::la::Vector<2,double> & triangleVertex1,
-  const tarch::la::Vector<2,double> & triangleVertex2,
-  const tarch::la::Vector<2,double> & testPoint )
+  const Eigen::Vector2d & triangleVertex0,
+  const Eigen::Vector2d & triangleVertex1,
+  const Eigen::Vector2d & triangleVertex2,
+  const Eigen::Vector2d & testPoint )
 {
-  using namespace tarch::la;
   double area0 = triangleArea ( triangleVertex0, triangleVertex1, testPoint );
   double area1 = triangleArea ( triangleVertex1, triangleVertex2, testPoint );
   double area2 = triangleArea ( triangleVertex2, triangleVertex0, testPoint );
 
-  double length01 = norm2 ( triangleVertex0 - triangleVertex1 );
-  double length12 = norm2 ( triangleVertex1 - triangleVertex2 );
-  double length20 = norm2 ( triangleVertex2 - triangleVertex0 );
-  double length1t = norm2 ( triangleVertex1 - testPoint );
-  double length2t = norm2 ( triangleVertex2 - testPoint );
-  double length0t = norm2 ( triangleVertex0 - testPoint );
+  double length01 = ( triangleVertex0 - triangleVertex1 ).norm();
+  double length12 = ( triangleVertex1 - triangleVertex2 ).norm();
+  double length20 = ( triangleVertex2 - triangleVertex0 ).norm();
+  double length1t = ( triangleVertex1 - testPoint ).norm();
+  double length2t = ( triangleVertex2 - testPoint ).norm();
+  double length0t = ( triangleVertex0 - testPoint ).norm();
   double scale0 = length01 + length1t + length0t;
   double scale1 = length12 + length2t + length1t;
   double scale2 = length20 + length0t + length2t;
@@ -141,9 +230,9 @@ int GeometryComputations:: containedInTriangle
   area1 /= scale1;
   area2 /= scale2;
 
-  int sign0 = sign(area0);
-  int sign1 = sign(area1);
-  int sign2 = sign(area2);
+  int sign0 = tarch::la::sign(area0);
+  int sign1 = tarch::la::sign(area1);
+  int sign2 = tarch::la::sign(area2);
   int absSumSigns = std::abs( sign0 + sign1 + sign2 );
   if ( absSumSigns == 3 ) {
     // In triangle

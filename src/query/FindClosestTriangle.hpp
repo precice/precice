@@ -1,7 +1,6 @@
 #ifndef PRECICE_QUERY_FINDCLOSESTTRIANGLE_HPP_
 #define PRECICE_QUERY_FINDCLOSESTTRIANGLE_HPP_
 
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include <array>
 #include <limits>
@@ -28,11 +27,10 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param searchPoint [IN] Origin from which the closest Triangle object
+   * @param[in] searchPoint Origin from which the closest Triangle object
    *        should be found.
    */
-  template<typename VECTOR_T>
-  FindClosestTriangle ( const VECTOR_T& searchPoint );
+  FindClosestTriangle ( const Eigen::VectorXd& searchPoint );
 
   /**
    * @brief Searches for the closest triangle on the given mesh object.
@@ -45,7 +43,7 @@ public:
   /**
    * @brief Returns the coordinates of the search point.
    */
-  const utils::DynVector& getSearchPoint() const;
+  const Eigen::VectorXd& getSearchPoint() const;
 
   /**
    * @brief Returns true, if a closest triangle has been found.
@@ -71,7 +69,7 @@ public:
    *
    * Precondition: Find has been called and returned true.
    */
-  const utils::DynVector& getVectorToProjectionPoint() const;
+  const Eigen::VectorXd& getVectorToProjectionPoint() const;
 
   /**
    * @brief Returns parametric description value (index 0, 1, 2) of proj. point.
@@ -83,13 +81,13 @@ private:
   static logging::Logger _log;
 
   // @brief Search point coordinates.
-  utils::DynVector _searchPoint;
+  Eigen::VectorXd _searchPoint;
 
   // @brief Shortest distance to the found Triangle object.
   double _shortestDistance;
 
   // @brief Vector from search point to projection point.
-  utils::DynVector _vectorToProjectionPoint;
+  Eigen::VectorXd _vectorToProjectionPoint;
 
   // @brief Barycentric coordinates of the projection point.
   std::array<double,3> _parametersProjectionPoint;
@@ -101,18 +99,6 @@ private:
 };
 
 // --------------------------------------------------------- HEADER DEFINITIONS
-
-template<typename VECTOR_T>
-FindClosestTriangle:: FindClosestTriangle
-(
-  const VECTOR_T& searchPoint )
-:
-  _searchPoint ( searchPoint ),
-  _shortestDistance ( std::numeric_limits<double>::max() ),
-  _vectorToProjectionPoint ( _searchPoint.size(), std::numeric_limits<double>::max() ),
-  _parametersProjectionPoint( {_shortestDistance, _shortestDistance, _shortestDistance } ),
-  _closestTriangle ( NULL )
-{}
 
 template<typename CONTAINER_T>
 bool FindClosestTriangle:: operator() ( CONTAINER_T& container )

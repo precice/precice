@@ -1,8 +1,6 @@
 #ifndef PRECICE_QUERY_FINDCLOSESTVERTEX_HPP_
 #define PRECICE_QUERY_FINDCLOSESTVERTEX_HPP_
 
-#include "utils/Dimensions.hpp"
-#include "utils/Helpers.hpp"
 #include "mesh/Vertex.hpp"
 #include <limits>
 
@@ -21,10 +19,9 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param searchPoint [IN] Coordinates of origin of search for closest point.
+   * @param[in] searchPoint Coordinates of origin of search for closest point.
    */
-  template<typename VECTOR_T>
-  FindClosestVertex ( const VECTOR_T& searchPoint );
+  FindClosestVertex ( const Eigen::VectorXd& searchPoint );
 
   /**
    * @brief Searches among all Vertex objects hold by the given Mesh object.
@@ -38,7 +35,7 @@ public:
   /**
    * @brief Returns the coordinates of the search point.
    */
-  const utils::DynVector& getSearchPoint() const;
+  const Eigen::VectorXd& getSearchPoint() const;
 
   bool hasFound() const;
 
@@ -59,7 +56,7 @@ public:
 private:
 
   // @brief Origin of search for closest vertex.
-  utils::DynVector _searchPoint;
+  Eigen::VectorXd _searchPoint;
 
   // @brief Distance to closest Vertex object found.
   double _shortestDistance;
@@ -70,28 +67,18 @@ private:
 
 // --------------------------------------------------------- HEADER DEFINITIONS
 
-template<typename VECTOR_T>
-FindClosestVertex:: FindClosestVertex
-(
-  const VECTOR_T& searchPoint )
-:
-  _searchPoint (searchPoint),
-  _shortestDistance (std::numeric_limits<double>::max()),
-  _closestVertex (NULL)
-{}
-
 template<typename CONTAINER_T>
 bool FindClosestVertex:: operator()
 (
   CONTAINER_T& container )
 {
-  utils::DynVector vectorDistance(_searchPoint.size(), 0.0);
+  Eigen::VectorXd vectorDistance = Eigen::VectorXd::Zero(_searchPoint.size());
   for ( mesh::Vertex& vertex : container.vertices() ) {
     assertion ( vertex.getDimensions() == _searchPoint.size(),
-                 vertex.getDimensions(), _searchPoint.size() );
+                vertex.getDimensions(), _searchPoint.size() );
     vectorDistance = vertex.getCoords();
     vectorDistance -= _searchPoint;
-    double distance = tarch::la::norm2(vectorDistance);
+    double distance = vectorDistance.norm();
     if ( distance < _shortestDistance) {
       _shortestDistance = distance;
       _closestVertex = &vertex;

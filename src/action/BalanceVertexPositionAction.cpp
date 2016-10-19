@@ -88,9 +88,9 @@ void BalanceVertexPositionAction:: performAction
         assertion ( v1.getID() < pullVectors.size(), v1.getID() );
         assertion ( v2.getID() < pullVectors.size(), v2.getID() );
         double area = utils::GeometryComputations::triangleArea (
-          static_cast<Vector3D>(v0.getCoords()),
-          static_cast<Vector3D>(v1.getCoords()),
-          static_cast<Vector3D>(v2.getCoords()));
+          v0.getCoords(),
+          v1.getCoords(),
+          v2.getCoords());
         Vector3D pullVector = triangle.getCenter();
         pullVector -= static_cast<Vector3D>(v0.getCoords());
         pullVector *= area;

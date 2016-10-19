@@ -2,7 +2,6 @@
 #define PRECICE_QUERY_EXPORTVTKNEIGHBORS_HPP_
 
 #include "FindClosest.hpp"
-#include "utils/Dimensions.hpp"
 #include <string>
 
 namespace precice {
@@ -24,11 +23,11 @@ public:
    /**
     * @brief Adds a neighborhood relation already computed.
     *
-    * @param queryPoint [IN] Point whose next neighbor was determined.
-    * @param neighborPoint [IN] ClosestNeighbor of queryPoint.
+    * @param[in] queryPoint Point whose next neighbor was determined.
+    * @param[in] neighborPoint ClosestNeighbor of queryPoint.
     */
    void addNeighbors (
-     const utils::DynVector& queryPoint,
+     const Eigen::VectorXd&  queryPoint,
      const ClosestElement&   closestNeighbor );
 
    /**
@@ -43,8 +42,8 @@ public:
 
 private:
 
-   // @brief Results of performed searches
-   std::vector<std::pair<utils::DynVector,query::ClosestElement> >   _neighbors;
+   /// Results of performed searches
+  std::vector<std::pair<Eigen::VectorXd, query::ClosestElement>> _neighbors;
 };
 
 }} // namespace precice, query

@@ -1005,7 +1005,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
     // Perform tests
     //query::ExportVTKNeighbors exportNeighbors;
     {
-      Vector2D pos ( 0.3, 0.3 );
+      Eigen::Vector2d pos ( 0.3, 0.3 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1013,7 +1013,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector2D pos ( 0.5, 0.5 );
+      Eigen::Vector2d pos ( 0.5, 0.5 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1021,7 +1021,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector2D pos ( 0.7, 0.7 );
+      Eigen::Vector2d pos ( 0.7, 0.7 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1029,7 +1029,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector2D pos ( -0.1, 1.0 );
+      Eigen::Vector2d pos ( -0.1, 1.0 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1037,7 +1037,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector2D pos ( 1.0, 1.1 );
+      Eigen::Vector2d pos ( 1.0, 1.1 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1045,7 +1045,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector2D pos ( 0.5, 1.2 );
+      Eigen::Vector2d pos ( 0.5, 1.2 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1053,7 +1053,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector2D pos ( -0.4, 0.7 );
+      Eigen::Vector2d pos ( -0.4, 0.7 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1061,7 +1061,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector2D pos ( 0.7, -0.5 );
+      Eigen::Vector2d pos ( 0.7, -0.5 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1144,7 +1144,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
     // Perform tests
 //    query::ExportVTKNeighbors exportNeighbors;
     {
-      Vector3D pos ( 0.3 );
+      Eigen::Vector3d pos = Eigen::Vector3d::Constant(0.3);
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1152,7 +1152,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector3D pos ( 0.7 );
+      Eigen::Vector3d pos = Eigen::Vector3d::Constant(0.7);
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1160,7 +1160,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector3D pos ( 0.5 );
+      Eigen::Vector3d pos = Eigen::Vector3d::Constant(0.5);
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1168,7 +1168,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector3D pos ( 0.5, 0.5, 0.8 );
+      Eigen::Vector3d pos ( 0.5, 0.5, 0.8 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1176,7 +1176,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector3D pos ( 0.5, 0.8, 0.5 );
+      Eigen::Vector3d pos ( 0.5, 0.8, 0.5 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1184,7 +1184,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
       //exportNeighbors.addNeighbors ( pos, closest );
     }
     {
-      Vector3D pos ( 0.8, 0.5, 0.5 );
+      Eigen::Vector3d pos ( 0.8, 0.5, 0.5 );
       query::FindClosest search ( pos );
       spacetree->searchDistance ( search );
       query::ClosestElement closest = search.getClosest ();
@@ -1225,30 +1225,30 @@ void SpacetreeTestScenarios:: testNeighborSearch()
   //query::ExportVTKNeighbors exportNeighborsSpacetree;
   //query::ExportVTKNeighbors exportNeighbors;
 
-  Vector2D point ( 0.0 );
-  Vector2D point2 ( sphereRadius + sphereRadius / 20.0, 0.0 );
-  Vector2D point3 ( sphereRadius, sphereRadius );
-  Vector2D point4 ( sphereRadius * 0.8, sphereRadius * -0.85 );
-  Vector2D point5 ( sphereRadius * 0.1, sphereRadius * -0.5 );
+  Eigen::Vector2d point ( 0, 0 );
+  Eigen::Vector2d point2 ( sphereRadius + sphereRadius / 20.0, 0.0 );
+  Eigen::Vector2d point3 ( sphereRadius, sphereRadius );
+  Eigen::Vector2d point4 ( sphereRadius * 0.8, sphereRadius * -0.85 );
+  Eigen::Vector2d point5 ( sphereRadius * 0.1, sphereRadius * -0.5 );
   double width = 6.0 * sphereRadius;
   int steps = 20;
   double stepWidth = width/(double)steps;
   for ( int i=0; i < steps; i++ ) {
-    Vector2D point_i (-width/2.0 + (double)i*stepWidth, sphereRadius * 1.5);
+    Eigen::Vector2d point_i (-width/2.0 + (double)i*stepWidth, sphereRadius * 1.5);
     query::FindClosest findNeighbors0 ( point_i );
     findNeighbors0 ( *mesh );
     //exportNeighbors.addNeighbors ( point_i, findNeighbors0.getClosest() );
     findNeighbors0.reset ();
     spacetree->searchDistance ( findNeighbors0 );
     //exportNeighborsspacetree->addNeighbors ( point_i, findNeighbors0.getClosest() );
-    assignList(point_i) = -width/2.0 + (double)i*stepWidth, - sphereRadius * 0.8;
+    point_i << -width/2.0 + (double)i*stepWidth, - sphereRadius * 0.8;
     query::FindClosest findNeighbors1 ( point_i );
     findNeighbors1 ( *mesh );
     //exportNeighbors.addNeighbors ( point_i, findNeighbors1.getClosest() );
     findNeighbors1.reset ();
     spacetree->searchDistance ( findNeighbors1 );
     //exportNeighborsspacetree->addNeighbors ( point_i, findNeighbors1.getClosest() );
-    assignList(point_i) = -width/2.0 + (double)i*stepWidth, - sphereRadius * 0.2;
+    point_i << -width/2.0 + (double)i*stepWidth, - sphereRadius * 0.2;
     query::FindClosest findNeighbors2 ( point_i );
     findNeighbors2 ( *mesh );
     //exportNeighbors.addNeighbors ( point_i, findNeighbors2.getClosest() );
@@ -2389,6 +2389,7 @@ void SpacetreeTestScenarios:: testVoxelPosition()
   preciceTrace ( "testVoxelPosition()" );
   int dim = 2;
   using utils::Vector2D;
+  using Eigen::Vector2d;
   // geometry is a cuboid with offset (-3, -4) and sidelength 8
   utils::DynVector offset ( Vector2D(-3.0, -4.0) );
   utils::DynVector cuboidSidelength ( dim, 8.0 );
@@ -2408,24 +2409,24 @@ void SpacetreeTestScenarios:: testVoxelPosition()
   spacetree->initialize();
 
   // voxels
-  Vector2D voxelCenter1 (3.5, 1.5);
-  Vector2D voxelHalflengths1 (1.5, 1.5);
-  Vector2D voxelCenter2 (-3.0, 0.0);
-  Vector2D voxelHalflengths2 (1.0, 1.0);
-  Vector2D voxelCenter3 (-4.5, -4.0);
-  Vector2D voxelHalflengths3 (0.5, 1.0);
-  Vector2D voxelCenter4 (5.5, -4.5);
-  Vector2D voxelHalflengths4 (0.5, 0.5);
-  Vector2D voxelCenter5 (2.0, -2.0);
-  Vector2D voxelHalflengths5 (1.0, 1.0);
-  Vector2D voxelCenter6 (1.0, 0.0);
-  Vector2D voxelHalflengths6 (1.0, 1.0);
-  Vector2D voxelCenter7 (-2.6, 2.5);
-  Vector2D voxelHalflengths7 (0.5, 0.5);
-  Vector2D voxelCenter8 (-3.4, -2.5);
-  Vector2D voxelHalflengths8 (0.5, 0.5);
-  Vector2D voxelCenter9 (-4.5, 1.5);
-  Vector2D voxelHalflengths9 (1.5, 1.5);
+  Vector2d voxelCenter1 (3.5, 1.5);
+  Vector2d voxelHalflengths1 (1.5, 1.5);
+  Vector2d voxelCenter2 (-3.0, 0.0);
+  Vector2d voxelHalflengths2 (1.0, 1.0);
+  Vector2d voxelCenter3 (-4.5, -4.0);
+  Vector2d voxelHalflengths3 (0.5, 1.0);
+  Vector2d voxelCenter4 (5.5, -4.5);
+  Vector2d voxelHalflengths4 (0.5, 0.5);
+  Vector2d voxelCenter5 (2.0, -2.0);
+  Vector2d voxelHalflengths5 (1.0, 1.0);
+  Vector2d voxelCenter6 (1.0, 0.0);
+  Vector2d voxelHalflengths6 (1.0, 1.0);
+  Vector2d voxelCenter7 (-2.6, 2.5);
+  Vector2d voxelHalflengths7 (0.5, 0.5);
+  Vector2d voxelCenter8 (-3.4, -2.5);
+  Vector2d voxelHalflengths8 (0.5, 0.5);
+  Vector2d voxelCenter9 (-4.5, 1.5);
+  Vector2d voxelHalflengths9 (1.5, 1.5);
 
   query::FindVoxelContent voxel1 (
     voxelCenter1, voxelHalflengths1, query::FindVoxelContent::INCLUDE_BOUNDARY );
@@ -2491,15 +2492,15 @@ void SpacetreeTestScenarios:: testVoxelPosition()
 
 //  // closest element from center of voxels to geometry
 //  query::ExportVTKNeighbors exportNeighborsSpacetree;
-//  Vector2D point1 (3.5, 1.5);
-//  Vector2D point2 (-3.0, 0.0);
-//  Vector2D point3 (-4.5, -4.0);
-//  Vector2D point4 (5.5, -4.5);
-//  Vector2D point5 (2.0, -2.0);
-//  Vector2D point6 (1.0, 0.0);
-//  Vector2D point7 (-2.6, 2.5);
-//  Vector2D point8 (-3.4, -2.5);
-//  Vector2D point9 (-4.5, 1.5);
+//  Vector2d point1 (3.5, 1.5);
+//  Vector2d point2 (-3.0, 0.0);
+//  Vector2d point3 (-4.5, -4.0);
+//  Vector2d point4 (5.5, -4.5);
+//  Vector2d point5 (2.0, -2.0);
+//  Vector2d point6 (1.0, 0.0);
+//  Vector2d point7 (-2.6, 2.5);
+//  Vector2d point8 (-3.4, -2.5);
+//  Vector2d point9 (-4.5, 1.5);
 //
 //  query::FindClosest find1 ( point1 );
 //  query::FindClosest find2 ( point2 );
@@ -2541,8 +2542,8 @@ void SpacetreeTestScenarios:: testSplittingVoxels()
 {
   preciceTrace ( "testSplittingVoxels()" );
   int dim = 2;
-  using utils::Vector2D;
-  utils::DynVector cuboidOffset ( Vector2D(-5.0, -4.5) );
+  using Eigen::Vector2d;
+  utils::DynVector cuboidOffset ( Vector2d(-5.0, -4.5) );
   utils::DynVector cuboidSidelength ( dim, 8.0 );
   bool flipNormals = true;
   mesh::PtrMesh mesh(new mesh::Mesh("test-cuboid", dim, flipNormals));
@@ -2559,24 +2560,24 @@ void SpacetreeTestScenarios:: testSplittingVoxels()
   spacetree->initialize();
 
   // voxels
-  Vector2D voxelCenter1 (-3, 3.5);
-  Vector2D voxelHalflengths1 (1, 1.5);
-  Vector2D voxelCenter2 (2.5, 4.5);
-  Vector2D voxelHalflengths2 (1.5, 0.5);
-  Vector2D voxelCenter3 (-4.5, -0.5);
-  Vector2D voxelHalflengths3 (0.5, 1.5);
-  Vector2D voxelCenter4 (0.0, 0.5);
-  Vector2D voxelHalflengths4 (2.0, 1.5);
-  Vector2D voxelCenter5 (4.5, 0.0);
-  Vector2D voxelHalflengths5 (1.5, 3.0);
-  Vector2D voxelCenter6 (-3.75, -4.5);
-  Vector2D voxelHalflengths6 (0.75, 1.5);
-  Vector2D voxelCenter7 (-3, -4);
-  Vector2D voxelHalflengths7 (1.0, 2.0);
-  Vector2D voxelCenter8 (3.0, -4.5);
-  Vector2D voxelHalflengths8 (2.0, 0.5);
-  Vector2D voxelCenter9 (5.5, 5.0);
-  Vector2D voxelHalflengths9 (0.5, 1.0);
+  Vector2d voxelCenter1 (-3, 3.5);
+  Vector2d voxelHalflengths1 (1, 1.5);
+  Vector2d voxelCenter2 (2.5, 4.5);
+  Vector2d voxelHalflengths2 (1.5, 0.5);
+  Vector2d voxelCenter3 (-4.5, -0.5);
+  Vector2d voxelHalflengths3 (0.5, 1.5);
+  Vector2d voxelCenter4 (0.0, 0.5);
+  Vector2d voxelHalflengths4 (2.0, 1.5);
+  Vector2d voxelCenter5 (4.5, 0.0);
+  Vector2d voxelHalflengths5 (1.5, 3.0);
+  Vector2d voxelCenter6 (-3.75, -4.5);
+  Vector2d voxelHalflengths6 (0.75, 1.5);
+  Vector2d voxelCenter7 (-3, -4);
+  Vector2d voxelHalflengths7 (1.0, 2.0);
+  Vector2d voxelCenter8 (3.0, -4.5);
+  Vector2d voxelHalflengths8 (2.0, 0.5);
+  Vector2d voxelCenter9 (5.5, 5.0);
+  Vector2d voxelHalflengths9 (0.5, 1.0);
 
   typedef Spacetree Spacetree;
   query::FindVoxelContent voxel1 (

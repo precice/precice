@@ -2,16 +2,25 @@
 #include "mesh/Quad.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/GeometryComputations.hpp"
-#include "tarch/la/Matrix.h"
 
 namespace precice {
 namespace query {
 
 logging::Logger FindClosestQuad:: _log ( "precice::query::FindClosestQuad" );
 
-const utils::DynVector& FindClosestQuad:: getSearchPoint() const
+FindClosestQuad:: FindClosestQuad
+(
+  const Eigen::VectorXd& searchPoint )
+:
+  _searchPoint ( searchPoint ),
+  _shortestDistance ( std::numeric_limits<double>::max() ),
+  _vectorToProjectionPoint ( Eigen::VectorXd::Constant(_searchPoint.size(), std::numeric_limits<double>::max()) ),
+  _parametersProjectionPoint( {_shortestDistance ,_shortestDistance, _shortestDistance, _shortestDistance} ),
+  _closestQuad ( nullptr )
+{}
+
+const Eigen::VectorXd& FindClosestQuad:: getSearchPoint() const
 {
   return _searchPoint;
 }
@@ -32,7 +41,7 @@ mesh::Quad & FindClosestQuad:: getClosestQuad()
   return *_closestQuad;
 }
 
-const utils::DynVector& FindClosestQuad:: getVectorToProjectionPoint() const
+const Eigen::VectorXd& FindClosestQuad:: getVectorToProjectionPoint() const
 {
   return _vectorToProjectionPoint;
 }
@@ -48,9 +57,7 @@ void FindClosestQuad:: find
 (
   mesh::Quad& quad )
 {
-  using utils::Vector2D; using utils::Vector3D;
-  using namespace tarch::la;
-
+  ERROR("Not implemented.");
   // TODO implement functionality
 
   // From triangle code:

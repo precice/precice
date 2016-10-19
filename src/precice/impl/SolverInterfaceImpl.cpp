@@ -797,20 +797,20 @@ ClosestMesh SolverInterfaceImpl:: inquireClosestMesh
            closestMesh.position() == positionOutsideOfGeometry() )
       {
         if ( closestMesh.distance() > element.distance ) {
-          closestMesh.setDistanceVector ( tarch::la::raw(element.vectorToElement) );
+          closestMesh.setDistanceVector ( element.vectorToElement.data() );
           closestMesh.meshIDs() = element.meshIDs;
         }
       }
       else if ( element.distance < - tarch::la::NUMERICAL_ZERO_DIFFERENCE ) {
         closestMesh.setPosition ( positionInsideOfGeometry() );
         if ( closestMesh.distance() > std::abs(element.distance) ) {
-          closestMesh.setDistanceVector ( tarch::la::raw(element.vectorToElement) );
+          closestMesh.setDistanceVector ( element.vectorToElement.data() );
           closestMesh.meshIDs() = element.meshIDs;
         }
       }
       else if ( closestMesh.position() != positionInsideOfGeometry() ){
         closestMesh.setPosition ( positionOnGeometry() );
-        closestMesh.setDistanceVector ( tarch::la::raw(element.vectorToElement) );
+        closestMesh.setDistanceVector ( element.vectorToElement.data() );
         closestMesh.meshIDs() = element.meshIDs;
       }
       //if ( _accessor->exportContext().plotNeighbors ){

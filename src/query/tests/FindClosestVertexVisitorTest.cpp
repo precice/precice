@@ -11,8 +11,7 @@ namespace precice {
 namespace query {
 namespace tests {
 
-logging::Logger FindClosestVertexVisitorTest::
-   _log ("precice::query::FindClosestVertexVisitorTest");
+logging::Logger FindClosestVertexVisitorTest::_log("precice::query::FindClosestVertexVisitorTest");
 
 FindClosestVertexVisitorTest:: FindClosestVertexVisitorTest ()
 :
@@ -22,16 +21,15 @@ FindClosestVertexVisitorTest:: FindClosestVertexVisitorTest ()
 void FindClosestVertexVisitorTest:: run ()
 {
   PRECICE_MASTER_ONLY {
-    preciceTrace ( "run()" );
-    using utils::Vector2D;
+    TRACE();
     mesh::Mesh mesh ( "Mesh", 2, false );
     mesh.createVertex ( Eigen::Vector2d(0.0, 0.0) );
     mesh.createVertex ( Eigen::Vector2d(0.0, 5.0) );
-    FindClosestVertex find ( Vector2D(1.0, 0.0) );
+    FindClosestVertex find ( Eigen::Vector2d(1, 0) );
     bool found = find ( mesh );
     validate ( found );
     mesh::Vertex& closestVertex = find.getClosestVertex();
-    validate ( math::equals(closestVertex.getCoords(), Eigen::Vector2d(0.0,0.0)) );
+    validate ( math::equals(closestVertex.getCoords(), Eigen::Vector2d(0,0)) );
     double distance = find.getEuclidianDistance ();
     validateEquals (distance, 1.0);
   }

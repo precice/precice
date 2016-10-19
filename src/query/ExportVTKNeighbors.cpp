@@ -1,14 +1,13 @@
 #include "ExportVTKNeighbors.hpp"
 //#include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
-#include "boost/scoped_ptr.hpp"
 
 namespace precice {
 namespace query {
 
 void ExportVTKNeighbors:: addNeighbors
 (
-  const utils::DynVector& queryPoint,
-  const ClosestElement&   closestNeighbor )
+  const Eigen::VectorXd& queryPoint,
+  const ClosestElement&  closestNeighbor )
 {
 //  _neighbors += std::pair<utils::DynVector,ClosestElement>(queryPoint,closestNeighbor);
 }

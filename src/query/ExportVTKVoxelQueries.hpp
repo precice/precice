@@ -1,9 +1,9 @@
 #ifndef PRECICE_QUERY_EXPORTVTKVOXELQUERIES_HPP_
 #define PRECICE_QUERY_EXPORTVTKVOXELQUERIES_HPP_
 
-#include "utils/Dimensions.hpp"
 #include <vector>
 #include <string>
+#include <Eigen/Dense>
 
 namespace precice {
 namespace mesh {
@@ -27,9 +27,9 @@ class ExportVTKVoxelQueries
 public:
 
    void addQuery (
-      const utils::DynVector& voxelCenter,
-      const utils::DynVector& voxelHalflengths,
-      int                     containedElementsCount );
+      const Eigen::VectorXd& voxelCenter,
+      const Eigen::VectorXd& voxelHalflengths,
+      int                    containedElementsCount );
 
    /**
     * @brief Writes performed queries' results into vtk file
@@ -46,10 +46,10 @@ public:
 private:
 
    // @brief Stores voxel centers queried
-   std::vector<utils::DynVector> _voxelCenters;
+   std::vector<Eigen::VectorXd> _voxelCenters;
 
    // @brief Stores voxel halflengths queried
-   std::vector<utils::DynVector> _voxelHalflengths;
+   std::vector<Eigen::VectorXd> _voxelHalflengths;
 
    // @brief Stores in queried voxels contained visitables
    std::vector<int> _containedElementCount;
