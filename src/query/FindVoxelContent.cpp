@@ -154,19 +154,19 @@ void FindVoxelContent::checkEdge( mesh::Edge& edge )
     Vector3d sepAxis(0.0, -edgeVector[2], edgeVector[1]); // Dim 0
     // Edge is projected onto separation axis by dot product:
     double proj = sepAxis[1]*a[1] + sepAxis[2]*a[2];
-    double radius = _voxelHalflengths[1]*abs(sepAxis[1]) + _voxelHalflengths[2]*abs(sepAxis[2]);
+    double radius = _voxelHalflengths[1]*std::abs(sepAxis[1]) + _voxelHalflengths[2]*std::abs(sepAxis[2]);
     if (greater(proj, radius-eps) || smaller(proj-eps, -radius)){
       if (radius > 0.0) return;
     }
     sepAxis << edgeVector[2], 0.0, -edgeVector[0]; // Dim 1
     proj = sepAxis[0]*a[0] + sepAxis[2]*a[2];
-    radius = _voxelHalflengths[0]*abs(sepAxis[0]) + _voxelHalflengths[2]*abs(sepAxis[2]);
+    radius = _voxelHalflengths[0]*std::abs(sepAxis[0]) + _voxelHalflengths[2]*std::abs(sepAxis[2]);
     if (greater(proj, radius-eps) || smaller(proj-eps, -radius)){
       if (radius > 0.0) return;
     }
     sepAxis << -edgeVector[1], edgeVector[0], 0.0; // Dim 2
     proj = sepAxis[0]*a[0] + sepAxis[1]*a[1];
-    radius = _voxelHalflengths[0]*abs(sepAxis[0]) + _voxelHalflengths[1]*abs(sepAxis[1]);
+    radius = _voxelHalflengths[0]*std::abs(sepAxis[0]) + _voxelHalflengths[1]*std::abs(sepAxis[1]);
     if (greater(proj, radius-eps) || smaller(proj-eps, -radius)){
       if (radius > 0.0) return;
     }
@@ -185,6 +185,7 @@ void FindVoxelContent:: checkTriangle
   using math::greater; using math::smaller;
   using Eigen::Vector3d;
   using Eigen::Vector2d;
+  using std::abs;
 
   // Use Separating axis theorem to find intersection
 
@@ -267,7 +268,7 @@ void FindVoxelContent:: checkTriangle
   Vector2d projTriVert;
   projTriVert[0] = sepAxis[1]*vertices[0][1] + sepAxis[2]*vertices[0][2];
   projTriVert[1] = sepAxis[1]*vertices[2][1] + sepAxis[2]*vertices[2][2];
-  double radius = h[1]*std::abs(sepAxis[1]) + h[2]*std::abs(sepAxis[2]);
+  double radius = h[1]*abs(sepAxis[1]) + h[2]*abs(sepAxis[2]);
   if (greater(projTriVert.minCoeff(), radius-eps) || smaller(projTriVert.maxCoeff()-eps, -radius)){
     if (greater(radius, 0.0)) return;
   }
