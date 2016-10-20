@@ -75,7 +75,7 @@ private:
   bool* _deadAxis;
 
   /// Deletes all dead directions from fullVector and returns a vector of reduced dimensionality.
-  Eigen::VectorXd reduceVector(const utils::DynVector& fullVector);
+  Eigen::VectorXd reduceVector(const Eigen::VectorXd& fullVector);
   
   void setDeadAxis(bool xDead, bool yDead, bool zDead)
   {
@@ -338,9 +338,9 @@ void RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: map
 
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: reduceVector
+Eigen::VectorXd RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::reduceVector
 (
-  const utils::DynVector& fullVector)
+  const Eigen::VectorXd& fullVector)
 {
   int deadDimensions = 0;
   for (int d = 0; d < getDimensions(); d++) {

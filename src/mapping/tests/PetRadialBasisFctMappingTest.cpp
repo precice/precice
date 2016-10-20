@@ -64,7 +64,7 @@ void PetRadialBasisFctMappingTest:: run()
 /// Test with a homogenous distribution of mesh amoung ranks
 void PetRadialBasisFctMappingTest::testDistributedConsistent2DV1()
 {
-  preciceTrace("testDistributedConsistent2DV1");
+  TRACE();
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
@@ -106,7 +106,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV1()
 /// Using a more heterogenous distributon of vertices and owner
 void PetRadialBasisFctMappingTest::testDistributedConsistent2DV2()
 {
-  preciceTrace("testDistributedConsistent2DV2");
+  TRACE();
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
@@ -149,7 +149,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV2()
 /// Test with a very heterogenous distributed and non-continues ownership
 void PetRadialBasisFctMappingTest::testDistributedConsistent2DV3()
 {
-  preciceTrace("testDistributedConsistent2DV3");
+  TRACE();
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
@@ -199,7 +199,7 @@ void PetRadialBasisFctMappingTest::testDistributedConsistent2DV3()
 /// Test with a homogenous distribution of mesh amoung ranks
 void PetRadialBasisFctMappingTest::testDistributedConservative2DV1()
 {
-  preciceTrace("testDistributedConservative2DV1");
+  TRACE();
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
@@ -239,7 +239,7 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2DV1()
 /// Using a more heterogenous distribution of vertices and owner
 void PetRadialBasisFctMappingTest::testDistributedConservative2DV2()
 {
-  preciceTrace("testDistributedConservative2DV2");
+  TRACE();
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
@@ -281,7 +281,7 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2DV2()
 /// Using meshes of different sizes, inMesh is smaller then outMesh
 void PetRadialBasisFctMappingTest::testDistributedConservative2DV3()
 {
-  preciceTrace("testDistributedConservative2DV3");
+  TRACE();
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(2.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
@@ -322,7 +322,7 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2DV3()
 /// Using meshes of different sizes, outMesh is smaller then inMesh
 void PetRadialBasisFctMappingTest::testDistributedConservative2DV4()
 {
-  preciceTrace("testDistributedConservative2DV4");
+  TRACE();
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(4.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
@@ -365,7 +365,7 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2DV4()
 /// Tests a non-contigous owner distributed at the outMesh
 void PetRadialBasisFctMappingTest::testDistributedConservative2DV5()
 {
-  preciceTrace("testDistributedConservative2DV1");
+  TRACE();
   assertion(utils::Parallel::getCommunicatorSize() == 4);
   Gaussian fct(5.0);
   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
@@ -405,7 +405,7 @@ void PetRadialBasisFctMappingTest::testDistributedConservative2DV5()
 
 void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
 {
-  preciceTrace ( "testPetThinPlateSplines" );
+  TRACE();
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -422,7 +422,7 @@ void PetRadialBasisFctMappingTest:: testPetThinPlateSplines()
 
 void PetRadialBasisFctMappingTest:: testPetMultiquadrics()
 {
-  preciceTrace ( "testPetMultiquadrics" );
+  TRACE();
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -439,7 +439,7 @@ void PetRadialBasisFctMappingTest:: testPetMultiquadrics()
 
 void PetRadialBasisFctMappingTest:: testPetInverseMultiquadrics()
 {
-  preciceTrace ( "testInverseMultiquadrics" );
+  TRACE();
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -456,7 +456,7 @@ void PetRadialBasisFctMappingTest:: testPetInverseMultiquadrics()
 
 void PetRadialBasisFctMappingTest:: testPetVolumeSplines()
 {
-  preciceTrace ( "testVolumeSplines" );
+  TRACE();
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -473,7 +473,7 @@ void PetRadialBasisFctMappingTest:: testPetVolumeSplines()
 
 void PetRadialBasisFctMappingTest:: testPetGaussian()
 {
-  preciceTrace ( "testGaussian" );
+  TRACE();
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -490,7 +490,7 @@ void PetRadialBasisFctMappingTest:: testPetGaussian()
 
 void PetRadialBasisFctMappingTest:: testPetCompactThinPlateSplinesC2()
 {
-  preciceTrace ( "testCompactThinPlateSplinesC2" );
+  TRACE();
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -509,7 +509,7 @@ void PetRadialBasisFctMappingTest:: testPetCompactThinPlateSplinesC2()
 
 void PetRadialBasisFctMappingTest:: testPetCompactPolynomialC0()
 {
-  preciceTrace ( "testCompactPolynomialC0" );
+  TRACE();
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -528,7 +528,7 @@ void PetRadialBasisFctMappingTest:: testPetCompactPolynomialC0()
 
 void PetRadialBasisFctMappingTest:: testPetCompactPolynomialC6()
 {
-  preciceTrace ( "testCompactPolynomialC6" );
+  TRACE();
   double supportRadius = 1.2;
   bool xDead = false;
   bool yDead = false;
@@ -547,7 +547,7 @@ void PetRadialBasisFctMappingTest:: testPetCompactPolynomialC6()
 
 void PetRadialBasisFctMappingTest:: perform2DTestConsistentMapping(Mapping& mapping)
 {
-  preciceTrace ( "perform2DTestConsistentMapping()" );
+  TRACE();
   int dimensions = 2;
   using Eigen::Vector2d;
 
@@ -644,7 +644,7 @@ void PetRadialBasisFctMappingTest:: perform2DTestConsistentMapping(Mapping& mapp
 
 void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping(Mapping& mapping)
 {
-  preciceTrace ( "perform2DTestConservativeMapping()" );
+  TRACE();
   int dimensions = 2;
   using Eigen::Vector2d;
 
@@ -712,7 +712,7 @@ void PetRadialBasisFctMappingTest:: perform2DTestConservativeMapping(Mapping& ma
 
 void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping(Mapping& mapping)
 {
-  preciceTrace ( "perform3DTestConsistentMapping()" );
+  TRACE();
   int dimensions = 3;
   
   // Create mesh to map from
@@ -846,7 +846,7 @@ void PetRadialBasisFctMappingTest:: perform3DTestConsistentMapping(Mapping& mapp
 
 void PetRadialBasisFctMappingTest:: perform3DTestConservativeMapping(Mapping& mapping)
 {
-  preciceTrace ( "perform3DTestConservativeMapping()" );
+  TRACE();
   using Eigen::Vector3d;
   int dimensions = 3;
 
@@ -886,12 +886,12 @@ void PetRadialBasisFctMappingTest:: perform3DTestConservativeMapping(Mapping& ma
   mapping.computeMapping();
   mapping.map(inDataID, outDataID);
   validateEquals(mapping.hasComputedMapping(), true);
-  validateWithParams1(tarch::la::equals(values.sum(), expectedSum, tolerance), values);
+  validateWithParams1(math::equals(values.sum(), expectedSum, tolerance), values);
 }
 
 void PetRadialBasisFctMappingTest:: testDeadAxis2D()
 {
-  preciceTrace ( "testDeadAxis2D()" );
+  TRACE();
   using Eigen::Vector2d;
   int dimensions = 2;
   
@@ -939,7 +939,7 @@ void PetRadialBasisFctMappingTest:: testDeadAxis2D()
 
 void PetRadialBasisFctMappingTest:: testDeadAxis3D()
 {
-  preciceTrace ( "testDeadAxis3D()" );
+  TRACE();
   using Eigen::Vector3d;
   int dimensions = 3;
 
@@ -992,7 +992,7 @@ void PetRadialBasisFctMappingTest:: testDeadAxis3D()
 
 void PetRadialBasisFctMappingTest::testSolutionCaching()
 {
-  preciceTrace("testSolutionCaching()");
+  TRACE();
   using Eigen::Vector2d;
   int dimensions = 2;
   
@@ -1070,7 +1070,7 @@ void PetRadialBasisFctMappingTest::getDistributedMesh(MeshSpecification const & 
                                                       mesh::PtrData& data,
                                                       int globalIndexOffset)
 {
-  preciceTrace("getDistributedMesh");
+  TRACE();
   using Par = utils::Parallel;
   Eigen::VectorXd d;
 
@@ -1104,7 +1104,7 @@ void PetRadialBasisFctMappingTest::testDistributed(Mapping& mapping,
                                                    MeshSpecification outMeshSpec,
                                                    ReferenceSpecification referenceSpec,
                                                    int inGlobalIndexOffset)                                        {
-  preciceTrace("testDistributed");
+  TRACE();
   using Par = utils::Parallel;
   assertion(Par::getCommunicatorSize() == 4);
   int meshDimension = inMeshSpec[0].position.size();

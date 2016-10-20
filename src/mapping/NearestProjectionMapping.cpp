@@ -1,12 +1,11 @@
 #include "NearestProjectionMapping.hpp"
 #include "query/FindClosest.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 
 namespace precice {
 namespace mapping {
 
-logging::Logger NearestProjectionMapping::
-  _log ( "precice::mapping::NearestProjectionMapping" );
+logging::Logger NearestProjectionMapping::_log ("precice::mapping::NearestProjectionMapping");
 
 NearestProjectionMapping:: NearestProjectionMapping
 (
@@ -30,8 +29,7 @@ NearestProjectionMapping:: NearestProjectionMapping
 
 void NearestProjectionMapping:: computeMapping()
 {
-  preciceTrace("computeMapping()", input()->vertices().size(),
-                output()->vertices().size());
+  TRACE(input()->vertices().size(), output()->vertices().size());
   if (getConstraint() == CONSISTENT){
     DEBUG("Compute consistent mapping");
     _weights.resize(output()->vertices().size());
@@ -71,7 +69,7 @@ bool NearestProjectionMapping:: hasComputedMapping() const
 
 void NearestProjectionMapping:: clear()
 {
-  preciceTrace("clear()");
+  TRACE();
   _weights.clear();
   _hasComputedMapping = false;
 }
@@ -81,7 +79,7 @@ void NearestProjectionMapping:: map
   int inputDataID,
   int outputDataID )
 {
-  preciceTrace("map()", inputDataID, outputDataID);
+  TRACE(inputDataID, outputDataID);
   mesh::PtrData inData = input()->data(inputDataID);
   mesh::PtrData outData = output()->data(outputDataID);
   const Eigen::VectorXd& inValues = inData->values();
@@ -130,7 +128,7 @@ void NearestProjectionMapping:: map
 bool NearestProjectionMapping::doesVertexContribute(
   int vertexID) const
 {
-  preciceTrace("doesVertexContribute()", vertexID);
+  TRACE(vertexID);
   if (getConstraint() == CONSISTENT) {
     for (size_t i=0; i < output()->vertices().size(); i++) {
       const InterpolationElements& elems = _weights[i];

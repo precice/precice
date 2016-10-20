@@ -5,6 +5,7 @@
 
 #include <map>
 
+#include "math/math.hpp"
 #include "impl/BasisFunctions.hpp"
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
@@ -263,7 +264,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = ISDestroy(&ISidentityGlobal); CHKERRV(ierr);
   ierr = ISLocalToGlobalMappingDestroy(&ISidentityMapping); CHKERRV(ierr);
 
-  utils::DynVector distance(dimensions);
+  Eigen::VectorXd distance(dimensions);
 
   // We do preallocating of the matrices C and A. That means we traverse the input data once, just
   // to know where we have entries in the sparse matrix. This information petsc can use to
@@ -348,8 +349,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
           distance[d] = 0;
         }
       }
-      double coeff = _basisFunction.evaluate(norm2(distance));
-      if (not tarch::la::equals(coeff, 0.0)) {
+      double coeff = _basisFunction.evaluate(distance.norm());
+      if (not math::equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
         colIdx[colNum] = vj.getGlobalIndex() + polyparams; // column of entry is the globalIndex
         colNum++;
@@ -452,8 +453,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         if (_deadAxis[d])
           distance[d] = 0;
       }
-      double coeff = _basisFunction.evaluate(norm2(distance));
-      if (not tarch::la::equals(coeff, 0.0)) {
+      double coeff = _basisFunction.evaluate(distance.norm());
+      if (not math::equals(coeff, 0.0)) {
         colVals[colNum] = coeff;
         colIdx[colNum] = inVertex.getGlobalIndex() + polyparams;
         colNum++;

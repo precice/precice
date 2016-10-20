@@ -4,7 +4,6 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/PropertyContainer.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/String.hpp"
 #ifndef PRECICE_NO_SPIRIT2
 #include <boost/spirit/include/qi_parse.hpp>
@@ -28,8 +27,7 @@ ImportVRML:: ImportVRML
   _createMesh(true)
 {
 # ifdef PRECICE_NO_SPIRIT2
-  preciceError("ImportVRML()",
-               "VRML import can only be used with Boost.Spirit V2.0!");
+  ERROR("VRML import can only be used with Boost.Spirit V2.0!");
 # endif
 }
 
@@ -59,15 +57,13 @@ void ImportVRML:: doImport
   bool               isCheckpoint )
 {
 # ifndef PRECICE_NO_SPIRIT2
-  using namespace tarch::la;
   int dimensions = mesh.getDimensions();
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
 
   // Create input filestream to VRML file
   std::string filename(getLocation() + name);
   std::ifstream in(utils::checkAppendExtension(filename, ".wrl").c_str());
-  preciceCheck(in.is_open(), "doImport()",
-               "Could not open input file " << filename << "!");
+  CHECK(in.is_open(), "Could not open input file " << filename << "!");
 
   // Wrap input file stream into a multi pass iterator (requirement)
   typedef std::istreambuf_iterator<char> FileIter;

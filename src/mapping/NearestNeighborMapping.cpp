@@ -6,8 +6,7 @@
 namespace precice {
 namespace mapping {
 
-logging::Logger NearestNeighborMapping::
-  _log ( "precice::mapping::NearestNeighborMapping" );
+logging::Logger NearestNeighborMapping::_log("precice::mapping::NearestNeighborMapping");
 
 NearestNeighborMapping:: NearestNeighborMapping
 (
@@ -65,7 +64,7 @@ bool NearestNeighborMapping:: hasComputedMapping() const
 
 void NearestNeighborMapping:: clear()
 {
-  preciceTrace("clear()");
+  TRACE();
   _vertexIndices.clear();
   _hasComputedMapping = false;
 }
