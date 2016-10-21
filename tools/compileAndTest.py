@@ -3,19 +3,25 @@
 Compiles and tests preCICE. Can be used with git bisect run or alike.
 Return 0 on success, 1 on failure and 125 on compilation failure which tells git bisect to skip that commit (neither mark it as good or bad)
 
-To ensure a clean test it deletes and recreates the ./tests directory.
+To ensure a clean test it can delete and recreate the ./tests directory.
 """
 import argparse, os, shutil, subprocess, sys
 
-def run_test(cmd):
-    print("Running: ", cmd)
+def run_test(cmd, keep_test):
+    if not keep_test:
+        try:
+            print("Removing ./tests")
+            shutil.rmtree("./tests")
+        except FileNotFoundError:
+            pass
+
     try:
-        shutil.rmtree("./tests")
-    except FileNotFoundError:
+        os.makedirs("./tests")
+    except FileExistsError:
         pass
     
-    os.makedirs("./tests")
     os.chdir("./tests")
+    print("Running: ", cmd)
     ret_code = subprocess.call(cmd, shell = True)
     os.chdir("..")
     
@@ -27,12 +33,19 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 
 parser.add_argument('-c', '--compile', help="Compile preCICE", dest='compile', action='store_true')
 parser.add_argument('-r', '--removebuild', help="Remove build/ and .scon* files before compiling", dest='remove_build', action='store_true')
+parser.add_argument('-k', '--keeptest', help="Do not remove test directory for earch test run", dest='keep_test', action='store_true')
 parser.add_argument('-u', help="Run unit tests.", dest='run_unit', action="store_true")
 parser.add_argument('-i', help="Run integration tests.", dest='run_integration', action="store_true")
 parser.add_argument('-j', help="Number of CPUs to compile on", dest='compile_cpus', default=4)
 parser.add_argument('-p', help="Number of MPI procs. Setting to 1 means to not use MPI at all. This does not affect the build process.", type=int, dest='mpi_procs', default=4)
 parser.add_argument('--unitconfig', help="Configuration to use for unit tests", dest="unit_test_config", default=".ci-test-config.xml")
 parser.add_argument('--integrationconfig', help="Configuration to use for integration tests", dest="integration_test_config", default=".ci-integration-test-config.xml")
+parser.add_argument('--logconfig', "-l", help="Log config file", default = "")
+
+if len(sys.argv) < 2:
+    parser.print_help()
+    sys.exit(1)
+    
 args = parser.parse_args()
 
 
@@ -54,10 +67,14 @@ if args.compile:
 mpi_cmd = "mpirun -n %s" % args.mpi_procs if args.mpi_procs > 1 else ""
 
 if args.run_unit:
-    run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src".format(mpi = mpi_cmd, config=args.unit_test_config)
-    run_test(run_cmd)
+    run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src {logconfig}".format(mpi = mpi_cmd,
+                                                                                          config = args.unit_test_config,
+                                                                                          logconfig = args.logconfig)
+    run_test(run_cmd, args.keep_test)
 
 if args.run_integration:
-    run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src".format(mpi = mpi_cmd, config=args.integration_test_config)
-    run_test(run_cmd)
+    run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src {logconfig}".format(mpi = mpi_cmd,
+                                                                                          config = args.integration_test_config,
+                                                                                          logconfig = args.logconfig)
+    run_test(run_cmd, args.keep_test)
 
