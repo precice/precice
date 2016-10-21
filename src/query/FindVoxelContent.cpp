@@ -350,7 +350,7 @@ bool FindVoxelContent:: computeIntersection
         firstPointSegment, secondPointSegment, countTouchingAsIntersection);
   
   assertion ( (squareNormalDirection >= 0) && (squareNormalDirection < 3) );
-  typedef utils::GeometryComputations GeoComp;
+  typedef math::GeometryComputations GeoComp;
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   Vector3d normal = Vector3d::Zero();
@@ -465,7 +465,7 @@ bool FindVoxelContent:: computeIntersection
 {
   TRACE(triangle.vertex(0).getCoords(), triangle.vertex(1).getCoords(), triangle.vertex(2).getCoords(),
         firstPointEdge, secondPointEdge, countTouchingAsIntersection );
-  typedef utils::GeometryComputations Geocomp;
+  typedef math::GeometryComputations Geocomp;
   using Eigen::Vector2d;
   using Eigen::Vector3d;
   Vector3d pointOfIntersection;

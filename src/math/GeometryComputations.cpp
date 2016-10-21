@@ -3,7 +3,7 @@
 #include "utils/Helpers.hpp"
 
 namespace precice {
-namespace utils {
+namespace math {
 
 bool GeometryComputations::segmentsIntersect
 (
@@ -54,6 +54,8 @@ bool GeometryComputations::segmentsIntersect
   // (-> false). This case of touching segments is detected in the beginning
   // of this function, if countTouchingAsIntersection is true. Otherwise,
   // it should not be counted (-> false).
+  using utils::xOR;
+  
   if ( xOR(std::abs(abc) <= math::NUMERICAL_ZERO_DIFFERENCE,
            std::abs(abd) <= math::NUMERICAL_ZERO_DIFFERENCE) ) {
     return false;

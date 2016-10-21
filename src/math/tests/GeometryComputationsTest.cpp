@@ -9,11 +9,11 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-logging::Logger GeometryComputationsTest::_log ("precice::utils::GeometryComputationsTest");
+logging::Logger GeometryComputationsTest::_log ("precice::math::GeometryComputationsTest");
 
 GeometryComputationsTest:: GeometryComputationsTest ()
 :
-  TestCase ("utils::GeometryComputationsTest")
+  TestCase ("math::GeometryComputationsTest")
 {}
 
 void GeometryComputationsTest:: run ()
@@ -99,10 +99,10 @@ void GeometryComputationsTest:: testBetween ()
       collinearOutsidePoint << 2.0, 2.0, 2.0;
       outsidePoint << 0.5, 0.4, 0.5;
     }
-    validate(utils::GeometryComputations::between(a, b, betweenPoint));
-    validate(utils::GeometryComputations::between(a, b, betweenLimitPoint));
-    validate(! utils::GeometryComputations::between(a, b, collinearOutsidePoint));
-    validate(! utils::GeometryComputations::between(a, b, outsidePoint));
+    validate(math::GeometryComputations::between(a, b, betweenPoint));
+    validate(math::GeometryComputations::between(a, b, betweenLimitPoint));
+    validate(! math::GeometryComputations::between(a, b, collinearOutsidePoint));
+    validate(! math::GeometryComputations::between(a, b, outsidePoint));
   }
 }
 
@@ -115,12 +115,12 @@ void GeometryComputationsTest:: testTriangleArea ()
     a << 0.0, 0.0;
     b << 1.0, 0.0;
     c << 0.0, 1.0;
-    area = utils::GeometryComputations::triangleArea(a, b, c);
+    area = math::GeometryComputations::triangleArea(a, b, c);
     validateNumericalEquals (area, 0.5);
 
     b << 0.0, 1.0;
     c << 1.0, 0.0;
-    area = utils::GeometryComputations::triangleArea(a, b, c);
+    area = math::GeometryComputations::triangleArea(a, b, c);
     validateNumericalEquals (area, -0.5);
   }
   { // 3D
@@ -129,7 +129,7 @@ void GeometryComputationsTest:: testTriangleArea ()
     a << 0.0, 0.0, 0.0;
     b << 1.0, 0.0, 1.0;
     c << 1.0, 1.0, 1.0;
-    area = utils::GeometryComputations::triangleArea(a, b, c);
+    area = math::GeometryComputations::triangleArea(a, b, c);
     validateNumericalEquals (area, 0.5 * sqrt(2.0));
   }
 }

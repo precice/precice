@@ -3,7 +3,7 @@
 #include "math/math.hpp"
 
 namespace precice {
-namespace utils {
+namespace math {
 
 
 /// Provides computational geometry operations.

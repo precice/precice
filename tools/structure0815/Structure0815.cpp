@@ -234,7 +234,7 @@ void Structure0815:: computeCharacteristics
         coords1[i] = _vertices[_faces[index+1] * _dim + i];
         coords1[i] += _displacements[_faces[index+1] * _dim + i];
       }
-      typedef precice::utils::GeometryComputations GeoComp;
+      typedef precice::math::GeometryComputations GeoComp;
       double area = GeoComp::triangleArea(zero, coords0, coords1);
       area = std::abs(area); // since it comes out signed from cross-prod
       totalVolume += area;

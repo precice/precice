@@ -88,7 +88,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
     c = _searchPoint;
     d = _searchPoint;
     d += edge.getNormal();
-    collinear = utils::GeometryComputations::collinear ( a, b, c );
+    collinear = math::GeometryComputations::collinear ( a, b, c );
     if ( collinear ) {
       // From p(s) = a + s(b-a) we get: s = (p(s) - a) / (b-a)
       int iMax;
@@ -107,7 +107,7 @@ void FindClosestEdge:: find ( mesh::Edge& edge )
     Vector3d c3D = _searchPoint;
     Vector3d ab3D = b3D - a3D;
     Vector3d ac3D = c3D - a3D;
-    collinear = utils::GeometryComputations::collinear ( a3D, b3D, c3D );
+    collinear = math::GeometryComputations::collinear ( a3D, b3D, c3D );
     if ( collinear ) {
       // From p(s) = a + s(b-a) we get: s = (p(s) - a) / (b-a)
       int iMax;

@@ -76,7 +76,7 @@ void BalanceVertexPositionAction:: performAction
         assertion ( v0.getID() < pullVectors.size(), v0.getID() );
         assertion ( v1.getID() < pullVectors.size(), v1.getID() );
         assertion ( v2.getID() < pullVectors.size(), v2.getID() );
-        double area = utils::GeometryComputations::triangleArea (
+        double area = math::GeometryComputations::triangleArea (
           v0.getCoords(),
           v1.getCoords(),
           v2.getCoords());
