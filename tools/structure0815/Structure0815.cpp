@@ -1,5 +1,5 @@
 #include "Structure0815.hpp"
-#include "utils/GeometryComputations.hpp"
+#include "math/GeometryComputations.hpp"
 
 Structure0815:: Structure0815
 (

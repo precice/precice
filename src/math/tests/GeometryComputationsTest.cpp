@@ -54,6 +54,25 @@ void GeometryComputationsTest:: testCollinear ()
   validate ( ! GeometryComputations::collinear(a3D, b3D, notCollinearPoint3D) );
 }
 
+void GeometryComputationsTest::testTetraVolume()
+{
+  TRACE();
+  Eigen::Vector3d a(1,2,3);
+  Eigen::Vector3d b(3,2,1);
+  Eigen::Vector3d c(4,5,6);
+  Eigen::Vector3d d(6,5,4);
+  validateEquals( GeometryComputations::tetraVolume(a, b, c, d), 0 );
+
+  a << 5, 0, 0;
+  b << 0, -3, -3;
+  c << 0, 3, 4;
+  d << -1, -2, 6;
+  validateEquals( GeometryComputations::tetraVolume(a, b, c, d), 232 );
+
+  d << -1.47, -4.1, 8.3;
+  validateEquals( GeometryComputations::tetraVolume(a, b, c, d), 373.3 );
+}
+
 void GeometryComputationsTest:: testBetween ()
 {
   TRACE();
@@ -294,407 +313,407 @@ void GeometryComputationsTest:: testContainedInTriangle ()
 
 void GeometryComputationsTest:: testContainedInHyperrectangle ()
 {
-  preciceTrace ( "testContainedInHyperrectangle()" );
+  TRACE();
   // 2D
-  tarch::la::Vector<2, double> center2D ( 0.0, 0.0 );
-  tarch::la::Vector<2, double> sidelengths2D ( 1.0, 1.0 );
-
+  Eigen::Vector2d center2D(0, 0);
+  Eigen::Vector2d sidelengths2D(1, 1);
+  
   // Not contained 2D
-  tarch::la::Vector<2, double> testPoint2D ( 2.0, 2.0 );
+  Eigen::Vector2d testPoint2D(2, 2);
   int result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint2D) = -2.0, -2.0;
+  testPoint2D << -2.0, -2.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint2D) = 2.0, -2.0;
+  testPoint2D << 2.0, -2.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint2D) = -2.0, 2.0;
+  testPoint2D << -2.0, 2.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint2D) = 2.0, 0.0;
+  testPoint2D << 2.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint2D) = -2.0, 0.0;
+  testPoint2D << -2.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint2D) = 0.0, 2.0;
+  testPoint2D << 0.0, 2.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint2D) = 0.0, -2.0;
+  testPoint2D << 0.0, -2.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
   // Contained 2D
-  assignList(testPoint2D) = 0.0, 0.0;
+  testPoint2D << 0.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint2D) = 0.25, 0.25;
+  testPoint2D << 0.25, 0.25;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint2D) = -0.25, 0.25;
+  testPoint2D << -0.25, 0.25;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint2D) = 0.25, -0.25;
+  testPoint2D << 0.25, -0.25;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint2D) = -0.25, -0.25;
+  testPoint2D << -0.25, -0.25;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint2D) = 0.49999999999, 0.49999999999;
+  testPoint2D << 0.49999999999, 0.49999999999;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint2D) = -0.49999999999, -0.49999999999;
+  testPoint2D << -0.49999999999, -0.49999999999;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
   // Touching 2D
-  assignList(testPoint2D) = 0.5, 0.5;
+  testPoint2D << 0.5, 0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = -0.5, 0.5;
+  testPoint2D << -0.5, 0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.5, -0.5;
+  testPoint2D << 0.5, -0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = -0.5, -0.5;
+  testPoint2D << -0.5, -0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.4999999999999999, 0.4999999999999999;
+  testPoint2D << 0.4999999999999999, 0.4999999999999999;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.500000000000001, 0.500000000000001;
+  testPoint2D << 0.500000000000001, 0.500000000000001;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = -0.500000000000001, -0.500000000000001;
+  testPoint2D << -0.500000000000001, -0.500000000000001;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.5, 0.0;
+  testPoint2D << 0.5, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = -0.5, 0.0;
+  testPoint2D << -0.5, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.0, 0.5;
+  testPoint2D << 0.0, 0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.0, -0.5;
+  testPoint2D << 0.0, -0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.5, 0.0;
+  testPoint2D << 0.5, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = -0.5, 0.0;
+  testPoint2D << -0.5, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.0, 0.499999999999999;
+  testPoint2D << 0.0, 0.499999999999999;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.0, -0.499999999999999;
+  testPoint2D << 0.0, -0.499999999999999;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.0, 0.500000000000001;
+  testPoint2D << 0.0, 0.500000000000001;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.0, -0.500000000000001;
+  testPoint2D << 0.0, -0.500000000000001;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.499999999999999, 0.0;
+  testPoint2D << 0.499999999999999, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = -0.499999999999999, 0.0;
+  testPoint2D << -0.499999999999999, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = 0.500000000000001, 0.0;
+  testPoint2D << 0.500000000000001, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint2D) = -0.500000000000001, 0.0;
+  testPoint2D << -0.500000000000001, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths2D, center2D, testPoint2D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
   // 3D
-  tarch::la::Vector<3, double> center3D ( 0.0 );
-  tarch::la::Vector<3, double> sidelengths3D ( 1.0 );
+  Eigen::Vector3d center3D = Eigen::Vector3d::Zero();
+  Eigen::Vector3d sidelengths3D = Eigen::Vector3d::Constant(1.0);
 
   // Not contained 3D
-  tarch::la::Vector<3, double> testPoint3D ( 2.0, 2.0, 2.0 );
+  Eigen::Vector3d testPoint3D(2, 2, 2);
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint3D) = -2.0, -2.0, -2.0;
+  testPoint3D << -2.0, -2.0, -2.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint3D) = 2.0, -2.0, 2.0;
+  testPoint3D << 2.0, -2.0, 2.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint3D) = -2.0, 2.0, 2.0;
+  testPoint3D << -2.0, 2.0, 2.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint3D) = 2.0, 0.0, 0.0;
+  testPoint3D << 2.0, 0.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint3D) = -2.0, 0.0, 0.0;
+  testPoint3D << -2.0, 0.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint3D) = 0.0, 2.0, 0.0;
+  testPoint3D << 0.0, 2.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint3D) = 0.0, 0.0, 2.0;
+  testPoint3D << 0.0, 0.0, 2.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
-  assignList(testPoint3D) = 0.0, 0.0, -2.0;
+  testPoint3D << 0.0, 0.0, -2.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::NOT_CONTAINED );
 
   // Contained 3D
-  assignList(testPoint3D) = 0.0, 0.0, 0.0;
+  testPoint3D << 0.0, 0.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint3D) = 0.25, 0.25, 0.25;
+  testPoint3D << 0.25, 0.25, 0.25;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint3D) = -0.25, 0.25, 0.25;
+  testPoint3D << -0.25, 0.25, 0.25;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint3D) = 0.25, -0.25, 0.25;
+  testPoint3D << 0.25, -0.25, 0.25;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint3D) = -0.25, -0.25, 0.25;
+  testPoint3D << -0.25, -0.25, 0.25;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint3D) = 0.25, 0.25, -0.25;
+  testPoint3D << 0.25, 0.25, -0.25;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint3D) = 0.49999999999, 0.49999999999, 0.49999999999;
+  testPoint3D << 0.49999999999, 0.49999999999, 0.49999999999;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
-  assignList(testPoint3D) = -0.49999999999, -0.49999999999, -0.49999999999;
+  testPoint3D << -0.49999999999, -0.49999999999, -0.49999999999;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::CONTAINED );
 
   // Touching 3D
-  assignList(testPoint3D) = 0.5, 0.5, 0.5;
+  testPoint3D << 0.5, 0.5, 0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = -0.5, 0.5, 0.5;
+  testPoint3D << -0.5, 0.5, 0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.5, -0.5, 0.5;
+  testPoint3D << 0.5, -0.5, 0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = -0.5, -0.5, -0.5;
+  testPoint3D << -0.5, -0.5, -0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.4999999999999999, 0.4999999999999999, 0.4999999999999999;
+  testPoint3D << 0.4999999999999999, 0.4999999999999999, 0.4999999999999999;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.500000000000001, 0.500000000000001, 0.500000000000001;
+  testPoint3D << 0.500000000000001, 0.500000000000001, 0.500000000000001;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = -0.500000000000001, -0.500000000000001, -0.500000000000001;
+  testPoint3D << -0.500000000000001, -0.500000000000001, -0.500000000000001;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.5, 0.0, 0.0;
+  testPoint3D << 0.5, 0.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = -0.5, 0.0, 0.0;
+  testPoint3D << -0.5, 0.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.0, 0.5, 0.0;
+  testPoint3D << 0.0, 0.5, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.0, -0.5, 0.0;
+  testPoint3D << 0.0, -0.5, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.5, 0.0, -0.5;
+  testPoint3D << 0.5, 0.0, -0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = -0.5, 0.0, 0.5;
+  testPoint3D << -0.5, 0.0, 0.5;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.0, 0.499999999999999, 0.0;
+  testPoint3D << 0.0, 0.499999999999999, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.0, -0.499999999999999, 0.0;
+  testPoint3D << 0.0, -0.499999999999999, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.0, 0.500000000000001, 0.0;
+  testPoint3D << 0.0, 0.500000000000001, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.0, -0.500000000000001, 0.0;
+  testPoint3D << 0.0, -0.500000000000001, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.499999999999999, 0.0, 0.0;
+  testPoint3D << 0.499999999999999, 0.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = -0.499999999999999, 0.0, 0.0;
+  testPoint3D << -0.499999999999999, 0.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.500000000000001, 0.0, 0.0;
+  testPoint3D << 0.500000000000001, 0.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = -0.500000000000001, 0.0, 0.0;
+  testPoint3D << -0.500000000000001, 0.0, 0.0;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.0, 0.0, 0.499999999999999;
+  testPoint3D << 0.0, 0.0, 0.499999999999999;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.0, 0.0, -0.499999999999999;
+  testPoint3D << 0.0, 0.0, -0.499999999999999;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.0, 0.0, 0.500000000000001;
+  testPoint3D << 0.0, 0.0, 0.500000000000001;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );
 
-  assignList(testPoint3D) = 0.0, 0.0, -0.500000000000001;
+  testPoint3D << 0.0, 0.0, -0.500000000000001;
   result = GeometryComputations::containedInHyperrectangle (
     sidelengths3D, center3D, testPoint3D );
   validateEquals ( result, GeometryComputations::TOUCHING );

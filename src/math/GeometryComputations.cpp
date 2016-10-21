@@ -1,6 +1,6 @@
 #include "GeometryComputations.hpp"
-#include "tarch/la/VectorVectorOperations.h"
 #include "math/math.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace utils {
@@ -38,7 +38,6 @@ bool GeometryComputations::segmentsIntersect
   double cda = triangleArea(c, d, a);
   double cdb = triangleArea(c, d, b);
 
-  using tarch::la::norm2;
   double circABC = (a-b).norm() + (b-c).norm() + (c-a).norm();
   double circABD = (a-b).norm() + (b-d).norm() + (d-a).norm();
   double circCDA = (c-d).norm() + (d-a).norm() + (a-c).norm();
@@ -55,31 +54,31 @@ bool GeometryComputations::segmentsIntersect
   // (-> false). This case of touching segments is detected in the beginning
   // of this function, if countTouchingAsIntersection is true. Otherwise,
   // it should not be counted (-> false).
-  if ( xOR(std::abs(abc) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE,
-           std::abs(abd) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE) ) {
+  if ( xOR(std::abs(abc) <= math::NUMERICAL_ZERO_DIFFERENCE,
+           std::abs(abd) <= math::NUMERICAL_ZERO_DIFFERENCE) ) {
     return false;
   }
-  if ( xOR(std::abs(cda) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE,
-           std::abs(cdb) <= tarch::la::NUMERICAL_ZERO_DIFFERENCE) ) {
+  if ( xOR(std::abs(cda) <= math::NUMERICAL_ZERO_DIFFERENCE,
+           std::abs(cdb) <= math::NUMERICAL_ZERO_DIFFERENCE) ) {
     return false;
   }
 
   // Check, whether the segments are intersecting in the real sense.
-  bool isFirstSegmentBetween = xOR (abc > - tarch::la::NUMERICAL_ZERO_DIFFERENCE,
-                                    abd > - tarch::la::NUMERICAL_ZERO_DIFFERENCE );
-  bool isSecondSegmentBetween = xOR (cda > - tarch::la::NUMERICAL_ZERO_DIFFERENCE,
-                                     cdb > - tarch::la::NUMERICAL_ZERO_DIFFERENCE );
+  bool isFirstSegmentBetween = xOR (abc > - math::NUMERICAL_ZERO_DIFFERENCE,
+                                    abd > - math::NUMERICAL_ZERO_DIFFERENCE );
+  bool isSecondSegmentBetween = xOR (cda > - math::NUMERICAL_ZERO_DIFFERENCE,
+                                     cdb > - math::NUMERICAL_ZERO_DIFFERENCE );
   
   return isFirstSegmentBetween && isSecondSegmentBetween;
 }
 
-bool GeometryComputations:: lineIntersection
+bool GeometryComputations::lineIntersection
 (
-   const tarch::la::Vector<2,double> & a,
-   const tarch::la::Vector<2,double> & b,
-   const tarch::la::Vector<2,double> & c,
-   const tarch::la::Vector<2,double> & d,
-   tarch::la::Vector<2,double>       & intersectionPoint )
+  const Eigen::Ref<const Eigen::Vector2d>& a,
+  const Eigen::Ref<const Eigen::Vector2d>& b,
+  const Eigen::Ref<const Eigen::Vector2d>& c,
+  const Eigen::Ref<const Eigen::Vector2d>& d,
+  Eigen::Ref<Eigen::Vector2d>& intersectionPoint)
 {
    // Compute denominator for solving 2x2 equation system
    double D = a(0)*(d(1)-c(1)) +
@@ -88,7 +87,7 @@ bool GeometryComputations:: lineIntersection
               c(0)*(a(1)-b(1));
 
    // If D==0, the two lines are parallel
-   if ( tarch::la::equals(D, 0.0) ) {
+   if ( math::equals(D, 0.0) ) {
       return false;
    }
 
@@ -138,7 +137,7 @@ GeometryComputations::ResultConstants GeometryComputations:: segmentPlaneInterse
 
    // If t is larger than 1 or smaller than zero, the intersection is not within
    // the line segment
-   if ( tarch::la::greater(t, 1.0) || tarch::la::greater(0.0, t) ) {
+   if ( math::greater(t, 1.0) || math::greater(0.0, t) ) {
       return NO_INTERSECTION;
    }
 
@@ -176,18 +175,17 @@ double GeometryComputations::triangleArea
   }
 }
 
-double GeometryComputations:: tetraVolume
+double GeometryComputations::tetraVolume
 (
-  const tarch::la::Vector<3,double> & a,
-  const tarch::la::Vector<3,double> & b,
-  const tarch::la::Vector<3,double> & c,
-  const tarch::la::Vector<3,double> & d )
+  const Eigen::Vector3d & a,
+  const Eigen::Vector3d & b,
+  const Eigen::Vector3d & c,
+  const Eigen::Vector3d & d )
 {
-  // TODO compute volume of tetraheder
-  return -1.0;
+  return std::abs( (a-d).dot((b-d).cross(c-d)) ) / 6.0;
 }
 
-Eigen::Vector2d GeometryComputations:: projectVector
+Eigen::Vector2d GeometryComputations::projectVector
 (
   const Eigen::Vector3d & vector,
   int indexDimensionToRemove )
@@ -230,9 +228,9 @@ int GeometryComputations::containedInTriangle
   area1 /= scale1;
   area2 /= scale2;
 
-  int sign0 = tarch::la::sign(area0);
-  int sign1 = tarch::la::sign(area1);
-  int sign2 = tarch::la::sign(area2);
+  int sign0 = math::sign(area0);
+  int sign1 = math::sign(area1);
+  int sign2 = math::sign(area2);
   int absSumSigns = std::abs( sign0 + sign1 + sign2 );
   if ( absSumSigns == 3 ) {
     // In triangle

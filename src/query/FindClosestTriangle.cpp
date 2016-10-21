@@ -2,7 +2,7 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/GeometryComputations.hpp"
+#include "math/GeometryComputations.hpp"
 #include "math/math.hpp"
 
 namespace precice {

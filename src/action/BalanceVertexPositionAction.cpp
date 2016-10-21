@@ -4,7 +4,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
-#include "utils/GeometryComputations.hpp"
+#include "math/GeometryComputations.hpp"
 #include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 

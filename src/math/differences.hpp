@@ -167,9 +167,25 @@ typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>
 
 template<class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>
-::type smaller(Scalar A, Scalar B, double tolerance = NUMERICAL_ZERO_DIFFERENCE)
+::type greaterEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+{
+  return A - B >= -tolerance;
+}
+
+
+template<class Scalar>
+typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>
+::type smaller(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
   return A - B < -tolerance;
+}
+
+
+template<class Scalar>
+typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>
+::type smallerEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+{
+  return A - B <= -tolerance;
 }
 
 

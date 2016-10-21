@@ -2,7 +2,7 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/GeometryComputations.hpp"
+#include "math/GeometryComputations.hpp"
 
 namespace precice {
 namespace query {

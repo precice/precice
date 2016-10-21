@@ -1,5 +1,5 @@
 #include "FindVoxelContent.hpp"
-#include "utils/GeometryComputations.hpp"
+#include "math/GeometryComputations.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
