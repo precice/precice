@@ -1,18 +1,14 @@
 #include "BalanceVertexPositionAction.hpp"
-#include "utils/Globals.hpp"
-#include "tarch/la/Scalar.h"
 #include "mesh/Mesh.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "math/GeometryComputations.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 
 namespace precice {
 namespace action {
 
-logging::Logger BalanceVertexPositionAction::
-  _log ( "precice::action::BalanceVertexPositionAction" );
+logging::Logger BalanceVertexPositionAction::_log("precice::action::BalanceVertexPositionAction");
 
 BalanceVertexPositionAction:: BalanceVertexPositionAction
 (
@@ -25,12 +21,12 @@ BalanceVertexPositionAction:: BalanceVertexPositionAction
   _eps(convergenceLimit),
   _maxIterations(maxIterations)
 {
-  preciceCheck ( tarch::la::greater(_eps,0.0), "BalanceVertexPositionAction()",
-      "Convergence limit has to be larger than " << tarch::la::NUMERICAL_ZERO_DIFFERENCE
-      << " for balance-vertex-position action!");
-  preciceCheck ( maxIterations > 0, "BalanceVertexPositionAction()",
-      "Maximum iteration number has to be larger than 0 for "
-      << "balance-vertex-position action!" );
+  CHECK ( math::greater(_eps,0.0),
+          "Convergence limit has to be larger than " << math::NUMERICAL_ZERO_DIFFERENCE
+          << " for balance-vertex-position action!");
+  CHECK ( maxIterations > 0,
+          "Maximum iteration number has to be larger than 0 for "
+          << "balance-vertex-position action!" );
 }
 
 
@@ -41,35 +37,28 @@ void BalanceVertexPositionAction:: performAction
   double computedPartFullDt,
   double fullDt )
 {
-  preciceTrace("performAction()", dt, computedPartFullDt, fullDt);
-  preciceCheck (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode,
-      "BalanceVertexPositionAction()", "BalanceVertexPositionAction is not yet supported "
-          << " for a usage with a Master")
+  TRACE(dt, computedPartFullDt, fullDt);
+  CHECK(not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode,
+        "BalanceVertexPositionAction is not yet supported for a usage with a Master")
   mesh::PtrMesh mesh = getMesh();
   assertion(mesh.get() != nullptr);
-  using utils::DynVector;
-  using utils::Vector2D;
-  using utils::Vector3D;
-  using namespace tarch::la;
-  DynamicVector<DynVector> pullVectors ( mesh->vertices().size() );
-  DynVector pullVectorScalings ( mesh->vertices().size() );
+  using Eigen::VectorXd;
+  using Eigen::Vector2d;
+  using Eigen::Vector3d;
   int dimension = mesh->getDimensions();
-  for ( int i=0; i < pullVectors.size(); i++ ){
-    pullVectors[i].append (dimension, 0.0);
-  }
   double errorMeasure = _eps * 10.0;
   int iterations = 0;
   while ( (errorMeasure > _eps) && (iterations < _maxIterations) ){
     errorMeasure = 0.0;
-    assign(pullVectors) = DynVector(dimension, 0.0);
-    assign(pullVectorScalings) = 0.0;
+    std::vector<VectorXd> pullVectors ( mesh->vertices().size(), VectorXd::Zero(dimension) );
+    VectorXd pullVectorScalings = VectorXd::Zero(mesh->vertices().size());
     // Gather pull vectors
-    if ( dimension == 2 ){
+    if ( dimension == 2 ) {
       for (mesh::Edge& edge : mesh->edges() ) {
         mesh::Vertex& v0 = edge.vertex(0);
         mesh::Vertex& v1 = edge.vertex(1);
-        Vector2D ab = v0.getCoords();
-        ab -= static_cast<Vector2D>(v1.getCoords());
+        Vector2d ab = v0.getCoords();
+        ab -= v1.getCoords();
         assertion ( v0.getID() < pullVectors.size(), v0.getID() );
         assertion ( v1.getID() < pullVectors.size(), v1.getID() );
         pullVectors[v0.getID()] -= ab;
@@ -91,16 +80,16 @@ void BalanceVertexPositionAction:: performAction
           v0.getCoords(),
           v1.getCoords(),
           v2.getCoords());
-        Vector3D pullVector = triangle.getCenter();
-        pullVector -= static_cast<Vector3D>(v0.getCoords());
+        Vector3d pullVector = triangle.getCenter();
+        pullVector -= v0.getCoords();
         pullVector *= area;
         pullVectors[v0.getID()] += pullVector;
         pullVector = triangle.getCenter();
-        pullVector -= static_cast<Vector3D>(v1.getCoords());
+        pullVector -= v1.getCoords();
         pullVector *= area;
         pullVectors[v1.getID()] += pullVector;
         pullVector = triangle.getCenter();
-        pullVector -= static_cast<Vector3D>(v2.getCoords());
+        pullVector -= v2.getCoords();
         pullVector *= area;
         pullVectors[v2.getID()] += pullVector;
         pullVectorScalings[v0.getID()] += area;
@@ -115,61 +104,61 @@ void BalanceVertexPositionAction:: performAction
     // Project pull vector to get vertex displacement
     for (mesh::Vertex& vertex : mesh->vertices()) {
       if ( dimension == 2 ){
-        Vector2D point = vertex.getCoords();
+        Vector2d point = vertex.getCoords();
         assertion ( vertex.getID() < pullVectors.size(), vertex.getID() );
         point += pullVectors[vertex.getID()];
-        Vector2D a = vertex.getCoords();
+        Vector2d a = vertex.getCoords();
         // Get parameters for parametric representation of line orthogonal to vertex
         // normal: p(s) = a + s(b-a)
-        Vector2D ab ( -vertex.getNormal()[1], vertex.getNormal()[0] );
-        Vector2D b = a;
+        Vector2d ab ( -vertex.getNormal()[1], vertex.getNormal()[0] );
+        Vector2d b = a;
         b += ab;
         // Same for intersecting normal from point to line: q(t) = c + t(d - c)
-        Vector2D c = point;
-        Vector2D d = point;
-        d += static_cast<utils::DynVector>(vertex.getNormal());
+        Vector2d c = point;
+        Vector2d d = point;
+        d += vertex.getNormal();
         // Compute denominator for solving 2x2 equation system
         double D = a(0)*(d(1)-c(1)) + b(0)*(c(1)-d(1)) + d(0)*ab(1) - c(0)*ab(1);
-        assertion ( not equals(D, 0.0), a, b, c, d, ab );   // D == 0 would imply "normal // edge"
+        assertion ( not math::equals(D, 0.0), a, b, c, d, ab );   // D == 0 would imply "normal // edge"
         // Compute parameter of intersection point on line ab
         double param = (a(0)*(d(1)-c(1)) + c(0)*(a(1)-d(1)) + d(0)*(c(1)-a(1))) / D;
 
         // Compute coordinates of projected point:
-        DynVector projectedPoint = ab;
+        VectorXd projectedPoint = ab;
         projectedPoint *= param;
         projectedPoint += a;
 
         // Compute error measure
-        Vector2D coordDelta ( projectedPoint );
-        coordDelta -= static_cast<utils::DynVector>(vertex.getCoords());
-        errorMeasure += tarch::la::dot(coordDelta, coordDelta);
+        Vector2d coordDelta ( projectedPoint );
+        coordDelta -= vertex.getCoords();
+        errorMeasure += coordDelta.dot(coordDelta);
         vertex.setCoords ( projectedPoint );
       }
       else {
         assertion ( dimension == 3, dimension );
-        Vector3D point = vertex.getCoords();
+        Vector3d point = vertex.getCoords();
         assertion ( vertex.getID() < pullVectors.size(), vertex.getID() );
         point += pullVectors[vertex.getID()];
-        Vector3D a = vertex.getCoords();
+        Vector3d a = vertex.getCoords();
         // Parametric representation for plane orthogonal to vertex normal:
         // (x, y, z) * normal = d
-        Vector3D normal = vertex.getNormal ();
-        double d = dot ( normal, a );
+        Vector3d normal = vertex.getNormal ();
+        double d = normal.dot(a);
 
         // Parametric description of line from point, orthogonal to plane:
         // point + t * normal = x     (where t is parameter)
         // Determine t such that x lies on plane:
-        double t = d - dot(point, normal) / dot(normal, normal);
+        double t = d - point.dot(normal) / normal.dot(normal);
 
         // Compute projected point with parameter t:
-        DynVector projectedPoint = vertex.getNormal();
+        VectorXd projectedPoint = vertex.getNormal();
         projectedPoint *= t;
         projectedPoint += point;
 
         // Compute error measure
-        Vector3D coordDelta ( projectedPoint );
-        coordDelta -= static_cast<utils::DynVector>(vertex.getCoords());
-        errorMeasure += tarch::la::dot(coordDelta, coordDelta);
+        Vector3d coordDelta = projectedPoint;
+        coordDelta -= vertex.getCoords();
+        errorMeasure += coordDelta.dot(coordDelta);
         vertex.setCoords ( projectedPoint );
       }
     }

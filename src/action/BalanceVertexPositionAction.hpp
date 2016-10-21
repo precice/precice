@@ -1,8 +1,6 @@
-#ifndef PRECICE_ACTION_BALANCEVERTEXPOSITIONACTION_HPP_
-#define PRECICE_ACTION_BALANCEVERTEXPOSITIONACTION_HPP_
+#pragma once
 
 #include "action/Action.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
 namespace precice {
@@ -49,5 +47,3 @@ private:
 };
 
 }} // namespace precice, action
-
-#endif /* PRECICE_ACTION_BALANCEVERTEXPOSITIONACTION_HPP_ */

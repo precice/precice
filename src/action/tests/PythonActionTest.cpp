@@ -1,8 +1,8 @@
 #include "PythonActionTest.hpp"
 #include "action/PythonAction.hpp"
-#include "utils/Globals.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Data.hpp"
+#include "math/math.hpp"
 
 #ifndef PRECICE_NO_PYTHON
 #include "tarch/tests/TestCaseFactory.h"
@@ -13,8 +13,7 @@ namespace precice {
 namespace action {
 namespace tests {
 
-logging::Logger PythonActionTest::
-  _log("precice::action::tests::PythonActionTest");
+logging::Logger PythonActionTest::_log("precice::action::tests::PythonActionTest");
 
 PythonActionTest:: PythonActionTest()
 :
@@ -31,7 +30,7 @@ void PythonActionTest:: run()
 
 void PythonActionTest:: testAllMethods()
 {
-  preciceTrace("testAllMethods()");
+  TRACE();
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
   mesh->createVertex(Eigen::Vector3d::Constant(1.0));
   mesh->createVertex(Eigen::Vector3d::Constant(2.0));
@@ -44,23 +43,18 @@ void PythonActionTest:: testAllMethods()
                       targetID, sourceID);
   mesh->data(sourceID)->values() << 0.1, 0.2, 0.3;
   mesh->data(targetID)->values() = Eigen::VectorXd::Zero(mesh->data(targetID)->values().size());
-  //assignList(mesh->data(sourceID)->values()) = 0.1, 0.2, 0.3;
-  //assign(mesh->data(targetID)->values()) = 0.0;
   action.performAction(0.0, 0.0, 0.0, 0.0);
-  tarch::la::Vector<3,double> result(2.1, 3.2, 4.3);
-  validateWithMessage(tarch::la::equals(utils::DynVector(mesh->data(targetID)->values()), result),
-                      utils::DynVector(mesh->data(targetID)->values()));
+  Eigen::Vector3d result(2.1, 3.2, 4.3);
+  validateWithMessage(math::equals(mesh->data(targetID)->values(), result), mesh->data(targetID)->values());
   mesh->data(sourceID)->values() = Eigen::VectorXd::Zero(mesh->data(sourceID)->values().size());
-  //assign(mesh->data(sourceID)->values()) = 0.0;
-  assignList(result) = 1.0, 2.0, 3.0;
+  result << 1.0, 2.0, 3.0;
   action.performAction(0.0, 0.0, 0.0, 0.0);
-  validateWithMessage(tarch::la::equals(utils::DynVector(mesh->data(targetID)->values()), result),
-                      utils::DynVector(mesh->data(targetID)->values()));
+  validateWithMessage(math::equals(mesh->data(targetID)->values(), result), mesh->data(targetID)->values());
 }
 
 void PythonActionTest:: testOmitMethods()
 {
-  preciceTrace("testOmitMethods()");
+  TRACE();
   std::string path = utils::Globals::getPathToSources() + "/action/tests/";
   {
     DEBUG("Test 1");

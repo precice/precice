@@ -17,8 +17,7 @@ namespace precice {
 namespace action {
 namespace tests {
 
-logging::Logger BalanceVertexPositionActionTest::
-  _log ( "precice::action::tests::BalanceVertexPositionActionTest" );
+logging::Logger BalanceVertexPositionActionTest::_log ( "precice::action::tests::BalanceVertexPositionActionTest" );
 
 BalanceVertexPositionActionTest:: BalanceVertexPositionActionTest ()
 :
@@ -35,11 +34,8 @@ void BalanceVertexPositionActionTest:: run ()
 
 void BalanceVertexPositionActionTest:: testSmoothCircle ()
 {
-  preciceTrace ( "testSmoothCircle()" );
+  TRACE();
   mesh::PtrMesh mesh ( new mesh::Mesh("Mesh", 2, false) );
-
-  using namespace tarch::la;
-  using utils::Vector2D;
   int nodes = 10;
   double circumference = 2.0 * math::PI; // radius = 1
   double h = circumference / (2.0 * nodes); // angle resolution
@@ -97,7 +93,7 @@ void BalanceVertexPositionActionTest:: testSmoothSphere ()
 
 void BalanceVertexPositionActionTest:: testSmoothHexahedron()
 {
-  preciceTrace("testSmoothHexahedron()");
+  TRACE();
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 3, false));
 
   using namespace mesh;

@@ -1,5 +1,4 @@
-#ifndef PRECICE_TESTS_BALANCEVERTEXPOSITIONACTIONTEST_HPP_
-#define PRECICE_TESTS_BALANCEVERTEXPOSITIONACTIONTEST_HPP_
+#pragma once
 
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
@@ -38,4 +37,3 @@ private:
 
 }}} // namespace precice, action, tests
 
-#endif /* PRECICE_TESTS_BALANCEVERTEXPOSITIONACTIONTEST_HPP_ */

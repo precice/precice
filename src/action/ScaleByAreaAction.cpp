@@ -3,8 +3,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/Dimensions.hpp"
-#include "utils/Globals.hpp"
 
 namespace precice {
 namespace action {
@@ -30,11 +28,10 @@ void ScaleByAreaAction:: performAction
   double computedPartFullDt,
   double fullDt )
 {
-  preciceTrace("performAction()");
-  preciceCheck(getMesh()->getDimensions() == 2, "performAction()",
-                 "Not implemented for dimension != 2!");
+  TRACE();
+  CHECK(getMesh()->getDimensions() == 2, "Not implemented for dimension != 2!");
   auto& targetValues = _targetData->values();
-  utils::DynVector areas(getMesh()->vertices().size(), 0.0);
+  Eigen::VectorXd areas = Eigen::VectorXd::Constant(getMesh()->vertices().size(), 0.0);
   for (mesh::Edge & edge : getMesh()->edges()){
     areas[edge.vertex(0).getID()] += edge.getEnclosingRadius();
     areas[edge.vertex(1).getID()] += edge.getEnclosingRadius();

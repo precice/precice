@@ -1,5 +1,4 @@
-#ifndef PRECICE_ITESTS_SCALEACTIONTEST_HPP_
-#define PRECICE_ITESTS_SCALEACTIONTEST_HPP_
+#pragma once
 
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
@@ -61,4 +60,3 @@ private:
 
 }}} // namespace precice, action, tests
 
-#endif /* PRECICE_ITESTS_SCALEACTIONTEST_HPP_ */
