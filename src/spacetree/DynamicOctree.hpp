@@ -2,7 +2,6 @@
 
 #include "spacetree/Spacetree.hpp"
 #include "spacetree/impl/OctreeCell.hpp"
-#include "utils/Dimensions.hpp"
 #include <vector>
 
 namespace precice {
@@ -16,7 +15,7 @@ class DynamicOctree : public Spacetree
 public:
 
   DynamicOctree (
-    const utils::DynVector& center,
+    const Eigen::VectorXd& center,
     double halflength,
     double refinementLimit );
 
@@ -30,7 +29,7 @@ public:
 
   virtual void meshChanged ( mesh::Mesh& mesh );
 
-  virtual int searchPosition ( const utils::DynVector& point );
+  virtual int searchPosition ( const Eigen::VectorXd& point );
 
   /**
    * @brief Spacetree accelerated distance search.
@@ -53,7 +52,7 @@ private:
   // @brief Contained meshes.
   std::vector<mesh::PtrMesh> _meshes;
 
-  utils::DynVector _center;
+  Eigen::VectorXd _center;
 
   double _halflength;
 

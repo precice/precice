@@ -1,5 +1,4 @@
 #include "spacetree/impl/Environment.hpp"
-#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace spacetree {
@@ -7,25 +6,40 @@ namespace impl {
 
 logging::Logger Environment:: _log("precice::spacetree::impl::Environment");
 
+Environment::Environment ( int cellSize, int neighborCellSize )
+  :
+    _neighborCellIndices(cellSize),
+    _neighborSideIndices(cellSize),
+    _position(Spacetree::positionUndefined()),
+    _neighborCellPositions(neighborCellSize)
+  {}
+
+
 Environment:: Environment
 (
   const Environment& toCopy )
 :
-  _neighborCellIndices(toCopy._neighborCellIndices.size()),
-  _neighborSideIndices(toCopy._neighborSideIndices.size()),
+  _neighborCellIndices(toCopy._neighborCellIndices),
+  _neighborSideIndices(toCopy._neighborSideIndices),
   _position(toCopy._position),
   _neighborCellPositions(toCopy._neighborCellPositions)
+{}
+
+const Eigen::VectorXi& Environment::getNeighborCellIndices ( int cellIndex ) const
 {
-  //preciceTrace ( "Environment(Environment)" );
-  for ( int i=0; i < _neighborCellIndices.size(); i++ ){
-    assertion ( toCopy._neighborCellIndices[i].size() > 0, i );
-    _neighborCellIndices[i].append(toCopy._neighborCellIndices[i]);
-  }
-  for ( int i=0; i < _neighborSideIndices.size(); i++ ){
-    assertion ( toCopy._neighborSideIndices[i].size() > 0, i );
-    _neighborSideIndices[i].append(toCopy._neighborSideIndices[i]);
-  }
+  assertion((cellIndex >= 0) && (cellIndex < _neighborCellIndices.size()),
+            cellIndex, _neighborCellIndices.size());
+  return _neighborCellIndices[cellIndex];
 }
+
+const Eigen::VectorXi& Environment::getNeighborSideIndices ( int cellIndex ) const
+{
+  assertion((cellIndex >= 0) && (cellIndex < _neighborSideIndices.size()),
+            cellIndex, _neighborSideIndices.size());
+  return _neighborSideIndices[cellIndex];
+}
+
+
 
 void Environment:: computePosition()
 {

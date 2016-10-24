@@ -10,7 +10,7 @@ logging::Logger DynamicOctree::_log("precice::spacetree::DynamicOctree");
 
 DynamicOctree:: DynamicOctree
 (
-  const utils::DynVector& center,
+  const Eigen::VectorXd& center,
   double halflength,
   double refinementLimit )
 :
@@ -26,7 +26,7 @@ void DynamicOctree:: addMesh
 (
   const mesh::PtrMesh& mesh )
 {
-  preciceTrace("addMesh()", mesh->getName());
+  TRACE(mesh->getName());
   assertion(_rootCell.content().empty()); // Spacetree is not initialized yet
   _meshes.push_back(mesh);
   mesh->addListener(*this);
@@ -39,11 +39,12 @@ const std::vector<mesh::PtrMesh>& DynamicOctree:: meshes() const
 
 void DynamicOctree:: initialize()
 {
-  preciceTrace("initialize()");
+  TRACE();
   assertion(_rootCell.content().empty()); // Spacetree is not initialized yet
   int dim = _center.size();
-  query::FindVoxelContent findVoxel ( _center, utils::DynVector(dim,_halflength),
-      query::FindVoxelContent::INCLUDE_BOUNDARY );
+  query::FindVoxelContent findVoxel(_center,
+                                    Eigen::VectorXd::Constant(dim,_halflength),
+                                    query::FindVoxelContent::INCLUDE_BOUNDARY );
   int size = 0;
   for (mesh::PtrMesh mesh : _meshes){
     assertion(mesh->getDimensions() == dim, mesh->getDimensions(), dim);
@@ -52,8 +53,7 @@ void DynamicOctree:: initialize()
   }
   _rootCell.content().add(findVoxel.content());
   _rootCell.setPosition(positionOnGeometry());
-  preciceCheck((int)_rootCell.content().size() == size, "initialize()",
-               "Not all meshes are contained in the spacetree!");
+  CHECK((int)_rootCell.content().size() == size, "Not all meshes are contained in the spacetree!");
   _meshChanged = false;
 }
 
@@ -61,22 +61,23 @@ void DynamicOctree:: meshChanged
 (
   mesh::Mesh& mesh )
 {
-  preciceTrace ( "meshChanged()", mesh.getName() );
+  TRACE(mesh.getName() );
   _meshChanged = true;
 }
 
 int DynamicOctree:: searchPosition
 (
-  const utils::DynVector& point )
+  const Eigen::VectorXd& point )
 {
-  preciceTrace("searchPosition()", point);
+  TRACE(point);
   if (_meshChanged){
     DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
   impl::DynamicTraversal<impl::OctreeCell> traversal;
-  utils::DynVector halflengths(point.size(), _halflength);
+  Eigen::VectorXd halflengths = Eigen::VectorXd::Constant(point.size(), _halflength);
+
   return traversal.searchPosition ( _rootCell, point, _center, halflengths,
                                     _refinementLimit );
 }
@@ -85,14 +86,15 @@ void DynamicOctree:: searchDistance
 (
   query::FindClosest& findClosest )
 {
-  preciceTrace ( "searchDistance()", findClosest.getSearchPoint() );
+  TRACE(findClosest.getSearchPoint() );
   if (_meshChanged){
     DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
   impl::DynamicTraversal<impl::OctreeCell> traversal;
-  utils::DynVector halflengths(findClosest.getSearchPoint().size(), _halflength);
+  Eigen::VectorXd halflengths = Eigen::VectorXd::Constant(findClosest.getSearchPoint().size(), _halflength);
+
   traversal.searchDistance ( _rootCell, findClosest, _center, halflengths,
                              _refinementLimit );
 }
@@ -101,34 +103,33 @@ int DynamicOctree:: searchContent
 (
   query::FindVoxelContent& findContent )
 {
-  preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
-                  findContent.getVoxelHalflengths() );
+  TRACE(findContent.getVoxelCenter(), findContent.getVoxelHalflengths() );
   if (_meshChanged){
     DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
   impl::DynamicTraversal<impl::OctreeCell> traversal;
-  utils::DynVector halflengths(findContent.getVoxelCenter().size(), _halflength);
+  Eigen::VectorXd halflengths = Eigen::VectorXd::Constant(findContent.getVoxelCenter().size(), _halflength);
   return traversal.searchContent ( _rootCell, findContent, _center, halflengths,
                                    _refinementLimit );
 }
 
 void DynamicOctree:: accept ( Visitor& visitor )
 {
-  preciceTrace("accept()");
+  TRACE();
   if (_meshChanged){
     DEBUG("A mesh has changed recently, rebuilding spacetree");
     clear();
     initialize();
   }
-  utils::DynVector halflengths(_center.size(), _halflength);
+  Eigen::VectorXd halflengths = Eigen::VectorXd::Constant(_center.size(), _halflength);
   _rootCell.accept(visitor, _center, halflengths);
 }
 
 void DynamicOctree:: clear()
 {
-  preciceTrace("clear()");
+  TRACE();
   _rootCell.clear();
   assertion(_rootCell.content().empty());
 }

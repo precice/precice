@@ -1,14 +1,6 @@
-/*
- * EigenHelperFunctions.hpp
- *
- *  Created on: Dec 7, 2015
- *      Author: scheufks
- */
+#pragma once
 
-#ifndef EIGENHELPERFUNCTIONS_HPP_
-#define EIGENHELPERFUNCTIONS_HPP_
-
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include "Globals.hpp"
 
 namespace precice {
@@ -56,4 +48,3 @@ void append(
 }
 
 }}
-#endif /* EIGENHELPERFUNCTIONS_HPP_ */

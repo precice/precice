@@ -6,7 +6,7 @@
 #include "tarch/la/MatrixOperations.h"
 #include "tarch/la/MatrixVectorOperations.h"
 #include "tarch/la/MatrixMatrixOperations.h"
-#include "Eigen/Core"
+#include <Eigen/Core>
 #include <vector>
 
 namespace tarch {

@@ -18,27 +18,27 @@ std::string getTypeName(const Vector3D& var)
   return std::string("3d-vector");
 }
 
-const utils::DynVector DELINEARIZE_2D[4] =
+const Eigen::VectorXd DELINEARIZE_2D[8] =
 {
- utils::DynVector(utils::Vector2D(-1.0, -1.0)),
- utils::DynVector(utils::Vector2D( 1.0, -1.0)),
- utils::DynVector(utils::Vector2D(-1.0,  1.0)),
- utils::DynVector(utils::Vector2D( 1.0,  1.0))
+ Eigen::VectorXd(Eigen::Vector2d(-1.0, -1.0)),
+ Eigen::VectorXd(Eigen::Vector2d( 1.0, -1.0)),
+ Eigen::VectorXd(Eigen::Vector2d(-1.0,  1.0)),
+ Eigen::VectorXd(Eigen::Vector2d( 1.0,  1.0))
 };
 
-const utils::DynVector DELINEARIZE_3D[8] =
+const Eigen::VectorXd DELINEARIZE_3D[8] =
 {
- utils::DynVector(utils::Vector3D(-1.0, -1.0, -1.0)),
- utils::DynVector(utils::Vector3D( 1.0, -1.0, -1.0)),
- utils::DynVector(utils::Vector3D(-1.0,  1.0, -1.0)),
- utils::DynVector(utils::Vector3D( 1.0,  1.0, -1.0)),
- utils::DynVector(utils::Vector3D(-1.0, -1.0,  1.0)),
- utils::DynVector(utils::Vector3D( 1.0, -1.0,  1.0)),
- utils::DynVector(utils::Vector3D(-1.0,  1.0,  1.0)),
- utils::DynVector(utils::Vector3D( 1.0,  1.0,  1.0))
+ Eigen::VectorXd(Eigen::Vector3d(-1.0, -1.0, -1.0)),
+ Eigen::VectorXd(Eigen::Vector3d( 1.0, -1.0, -1.0)),
+ Eigen::VectorXd(Eigen::Vector3d(-1.0,  1.0, -1.0)),
+ Eigen::VectorXd(Eigen::Vector3d( 1.0,  1.0, -1.0)),
+ Eigen::VectorXd(Eigen::Vector3d(-1.0, -1.0,  1.0)),
+ Eigen::VectorXd(Eigen::Vector3d( 1.0, -1.0,  1.0)),
+ Eigen::VectorXd(Eigen::Vector3d(-1.0,  1.0,  1.0)),
+ Eigen::VectorXd(Eigen::Vector3d( 1.0,  1.0,  1.0))
 };
 
-const utils::DynVector& delinearize
+const Eigen::VectorXd& delinearize
 (
   int toDelinearize,
   int dimensions )
@@ -53,6 +53,7 @@ const utils::DynVector& delinearize
     return DELINEARIZE_3D[toDelinearize];
   }
 }
+
 
 const int IndexMaps<2>:: CUBOID_EDGE_VERTICES[4][2] =
 {

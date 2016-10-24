@@ -112,10 +112,10 @@ private:
   //bool _isValid;
 
   PtrSpacetree getSpacetree (
-    const std::string&      type,
-    const utils::DynVector& offset,
-    const utils::DynVector& halflengths,
-    double                  maxMeshwidth ) const;
+    const std::string&     type,
+    const Eigen::VectorXd& offset,
+    const Eigen::VectorXd& halflengths,
+    double                 maxMeshwidth ) const;
 };
 
 }} // namespace precice, spacetree

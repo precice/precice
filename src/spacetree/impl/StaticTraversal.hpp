@@ -10,6 +10,7 @@
 #include "utils/Dimensions.hpp"
 #include "logging/Logger.hpp"
 #include "utils/Helpers.hpp"
+#include "math/math.hpp"
 #include <list>
 #include <memory>
 
@@ -23,29 +24,29 @@ class StaticTraversal
 public:
 
   void refineAll (
-    CELL_T&                 cell,
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths,
-    double                  refinementLimit,
-    Environment&            environment );
+    CELL_T&                cell,
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths,
+    double                 refinementLimit,
+    Environment&           environment );
 
   int searchPosition (
-    CELL_T&                 cell,
-    const utils::DynVector& searchPoint,
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths );
+    CELL_T&                cell,
+    const Eigen::VectorXd& searchPoint,
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths );
 
   bool searchDistance (
-    CELL_T&                 cell,
-    query::FindClosest&     findClosest,
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths );
+    CELL_T&                cell,
+    query::FindClosest&    findClosest,
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths );
 
   int searchContent (
     CELL_T&                  cell,
     query::FindVoxelContent& findContent,
-    const utils::DynVector&  cellCenter,
-    const utils::DynVector&  cellHalflengths );
+    const Eigen::VectorXd&   cellCenter,
+    const Eigen::VectorXd&   cellHalflengths );
 
 private:
 
@@ -53,8 +54,8 @@ private:
   {
     int position;
     std::list<CELL_T*> cells;
-    std::list<utils::DynVector> cellCenters;
-    std::list<utils::DynVector> cellHalflengths;
+    std::list<Eigen::VectorXd> cellCenters;
+    std::list<Eigen::VectorXd> cellHalflengths;
     std::list<Environment> cellEnvironments;
 
     RefineAllResult()
@@ -67,10 +68,10 @@ private:
     int position;
     bool ambiguous;
     std::list<CELL_T*> uncachedCells;
-    std::list<utils::DynVector> uncachedCellCenters;
+    std::list<Eigen::VectorXd> uncachedCellCenters;
     query::FindClosest findClosest;
 
-    SearchPositionResult ( const utils::DynVector& searchPoint )
+    SearchPositionResult ( const Eigen::VectorXd& searchPoint )
     : position(Spacetree::positionUndefined()), ambiguous(false), uncachedCells(),
       uncachedCellCenters(), findClosest(searchPoint) {}
   };
@@ -79,7 +80,7 @@ private:
   {
     int position;
     std::list<CELL_T*> uncachedCells;
-    std::list<utils::DynVector> uncachedCellCenters;
+    std::list<Eigen::VectorXd> uncachedCellCenters;
 
     SearchContentResult()
     : position(Spacetree::positionUndefined()), uncachedCells(),
@@ -89,48 +90,48 @@ private:
   static logging::Logger _log;
 
   void refineUndefinedCells (
-    RefineAllResult&        refineAllResult,
-    CELL_T&                 cell,
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths,
-    double                  refinementLimit );
+    RefineAllResult&       refineAllResult,
+    CELL_T&                cell,
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths,
+    double                 refinementLimit );
 
   void refineAllInternal (
-    CELL_T&                 cell,
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths,
-    double                  refinementLimit,
-    Environment&            environment,
-    RefineAllResult&        result );
+    CELL_T&                cell,
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths,
+    double                 refinementLimit,
+    Environment&           environment,
+    RefineAllResult&       result );
 
   std::shared_ptr<SearchPositionResult> searchPositionInternal (
-    CELL_T&                 cell,
-    const utils::DynVector& searchPoint,
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths );
+    CELL_T&                cell,
+    const Eigen::VectorXd& searchPoint,
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths );
 
   std::shared_ptr<SearchContentResult> searchContentInternal (
     CELL_T&                  cell,
     query::FindVoxelContent& findContent,
-    const utils::DynVector&  cellCenter,
-    const utils::DynVector&  cellHalflengths );
+    const Eigen::VectorXd&   cellCenter,
+    const Eigen::VectorXd&   cellHalflengths );
 
   double distanceToBoundary (
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths,
-    const utils::DynVector& searchPoint ) const;
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths,
+    const Eigen::VectorXd& searchPoint ) const;
 
   bool isCovered (
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths,
-    const utils::DynVector& voxelCenter,
-    const utils::DynVector& voxelHalflengths ) const;
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths,
+    const Eigen::VectorXd& voxelCenter,
+    const Eigen::VectorXd& voxelHalflengths ) const;
 
   bool isOverlapped (
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths,
-    const utils::DynVector& voxelCenter,
-    const utils::DynVector& voxelHalflengths ) const;
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths,
+    const Eigen::VectorXd& voxelCenter,
+    const Eigen::VectorXd& voxelHalflengths ) const;
 
   template<typename VISITOR_T>
   void visitAllCells (
@@ -154,23 +155,23 @@ template<typename CELL_T>
 void StaticTraversal<CELL_T>:: refineAll
 (
   CELL_T&                 cell,
-  const utils::DynVector& cellCenter,
-  const utils::DynVector& cellHalflengths,
+  const Eigen::VectorXd& cellCenter,
+  const Eigen::VectorXd& cellHalflengths,
   double                  refinementLimit,
   Environment&            env )
 {
-  preciceTrace("refineAll()", cellCenter, cellHalflengths, refinementLimit);
+  TRACE(cellCenter, cellHalflengths, refinementLimit);
   // The environment gives information on the position of the cells surrounding
   // a current cell of consideration. Since a mixture of in- and out-cells is
   // not possible, the 0th component of the environment vector is used to
   // indicate, whether there are only on-geometry, out-geometry (and on), or
   // in-geometry (and on) cells surrounding.
-  utils::DynVector outsidePoint(cellHalflengths);
+  Eigen::VectorXd outsidePoint(cellHalflengths);
   outsidePoint *= 2.0;
   outsidePoint += cellCenter;
   query::FindClosest findClosest(outsidePoint);
   findClosest(cell.content());
-  assertion(not tarch::la::equals(findClosest.getClosest().distance, 0.0));
+  assertion(not math::equals(findClosest.getClosest().distance, 0.0));
   int pos = findClosest.getClosest().distance > 0
             ? Spacetree::positionOutsideOfGeometry()
             : Spacetree::positionInsideOfGeometry();
@@ -185,15 +186,13 @@ template<typename CELL_T>
 void StaticTraversal<CELL_T>:: refineAllInternal
 (
   CELL_T&                 cell,
-  const utils::DynVector& cellCenter,
-  const utils::DynVector& cellHalflengths,
+  const Eigen::VectorXd&  cellCenter,
+  const Eigen::VectorXd&  cellHalflengths,
   double                  refinementLimit,
   Environment&            env,
   RefineAllResult&        result )
 {
-  preciceTrace ( "refineAllInternal()", cellCenter, cellHalflengths,
-                  refinementLimit, env.getNeighborCellPositions() );
-  using namespace tarch::la;
+  TRACE(cellCenter, cellHalflengths, refinementLimit, env.getNeighborCellPositions() );
   bool environmentIncomplete = false;
   if (cell.isLeaf()){
     DEBUG("  Leaf");
@@ -208,13 +207,12 @@ void StaticTraversal<CELL_T>:: refineAllInternal
         CELL_T& childCell = cell.child(i);
         if (childCell.getPosition() == Spacetree::positionUndefined()){
           // Modify environment positions
-          const DynamicVector<int>& cellIndices = env.getNeighborCellIndices(i);
-          const DynamicVector<int>& sideIndices = env.getNeighborSideIndices(i);
+          const auto& cellIndices = env.getNeighborCellIndices(i);
+          const auto& sideIndices = env.getNeighborSideIndices(i);
           assertion(cellIndices.size() == sideIndices.size(),
-                     cellIndices.size(), sideIndices.size());
+                    cellIndices.size(), sideIndices.size());
           for (int j=0; j < (int)cellIndices.size(); j++){
-            env.setNeighborCellPosition(
-                sideIndices[j], cell.child(cellIndices[j]).getPosition());
+            env.setNeighborCellPosition(sideIndices[j], cell.child(cellIndices[j]).getPosition());
           }
           env.computePosition();
           assertion(env.getPosition() != Spacetree::positionUndefined());
@@ -245,21 +243,20 @@ void StaticTraversal<CELL_T>:: refineAllInternal
   else if ( not cell.isLeaf() ){
     DEBUG ( "  Node" );
     assertion ( cell.getPosition() != Spacetree::positionUndefined() );
-    utils::DynVector childCenter(cellCenter.size());
-    utils::DynVector childHalflengths(cellCenter.size());
+    Eigen::VectorXd childCenter(cellCenter.size());
+    Eigen::VectorXd childHalflengths(cellCenter.size());
 
     Environment oldEnvironment(env);
     for ( int i=0; i < cell.getChildCount(); i++ ){
       cell.getChildData(i, cellCenter, cellHalflengths, childCenter, childHalflengths);
       CELL_T& childCell = cell.child(i);
       // Modify environment positions
-      const DynamicVector<int>& cellIndices = env.getNeighborCellIndices(i);
-      const DynamicVector<int>& sideIndices = env.getNeighborSideIndices(i);
+      const auto& cellIndices = env.getNeighborCellIndices(i);
+      const auto& sideIndices = env.getNeighborSideIndices(i);
       assertion ( cellIndices.size() == sideIndices.size(),
-                   cellIndices.size(), sideIndices.size() );
+                  cellIndices.size(), sideIndices.size() );
       for (int j=0; j < (int)cellIndices.size(); j++){
-        env.setNeighborCellPosition(
-            sideIndices[j], cell.child(cellIndices[j]).getPosition());
+        env.setNeighborCellPosition(sideIndices[j], cell.child(cellIndices[j]).getPosition());
       }
       env.computePosition();
       refineAllInternal ( childCell, childCenter, childHalflengths, refinementLimit,
@@ -272,16 +269,16 @@ void StaticTraversal<CELL_T>:: refineAllInternal
 template<typename CELL_T>
 void StaticTraversal<CELL_T>:: refineUndefinedCells
 (
-  RefineAllResult&        refineAllResult,
-  CELL_T&                 cell,
-  const utils::DynVector& cellCenter,
-  const utils::DynVector& cellHalflengths,
-  double                  refinementLimit )
+  RefineAllResult&       refineAllResult,
+  CELL_T&                cell,
+  const Eigen::VectorXd& cellCenter,
+  const Eigen::VectorXd& cellHalflengths,
+  double                 refinementLimit )
 {
-  preciceTrace("refineUndefinedCells()", cellCenter, cellHalflengths, refinementLimit);
+  TRACE(cellCenter, cellHalflengths, refinementLimit);
   typename std::list<CELL_T*>::iterator cellIter;
-  std::list<utils::DynVector>::iterator centerIter;
-  std::list<utils::DynVector>::iterator hIter;
+  std::list<Eigen::VectorXd>::iterator centerIter;
+  std::list<Eigen::VectorXd>::iterator hIter;
   std::list<Environment>::iterator envIter;
   cellIter = refineAllResult.cells.begin();
   centerIter = refineAllResult.cellCenters.begin();
@@ -307,7 +304,7 @@ void StaticTraversal<CELL_T>:: refineUndefinedCells
           DEBUG("    Compute position by findDistance");
           query::FindClosest findDistance ( *centerIter );
           searchDistance ( cell, findDistance, cellCenter, cellHalflengths );
-          assertion(not tarch::la::equals(findDistance.getEuclidianDistance(), 0.0));
+          assertion(not math::equals(findDistance.getEuclidianDistance(), 0.0));
           pos = findDistance.getClosest().distance > 0
                 ? Spacetree::positionOutsideOfGeometry()
                 : Spacetree::positionInsideOfGeometry();
@@ -331,12 +328,12 @@ void StaticTraversal<CELL_T>:: refineUndefinedCells
 template<typename CELL_T>
 int StaticTraversal<CELL_T>:: searchPosition
 (
-  CELL_T&                 cell,
-  const utils::DynVector& searchPoint,
-  const utils::DynVector& cellCenter,
-  const utils::DynVector& cellHalflengths )
+  CELL_T&                cell,
+  const Eigen::VectorXd& searchPoint,
+  const Eigen::VectorXd& cellCenter,
+  const Eigen::VectorXd& cellHalflengths )
 {
-  preciceTrace ( "searchPosition()", searchPoint, cellCenter, cellHalflengths );
+  TRACE(searchPoint, cellCenter, cellHalflengths );
   typedef std::shared_ptr<SearchPositionResult> PtrResult;
   PtrResult result = searchPositionInternal ( cell, searchPoint, cellCenter,
                                               cellHalflengths );
@@ -349,12 +346,12 @@ int StaticTraversal<CELL_T>:: searchPosition
 template<typename CELL_T>
 bool StaticTraversal<CELL_T>:: searchDistance
 (
-  CELL_T&                 cell,
-  query::FindClosest&     findClosest,
-  const utils::DynVector& cellCenter,
-  const utils::DynVector& cellHalflengths )
+  CELL_T&                cell,
+  query::FindClosest&    findClosest,
+  const Eigen::VectorXd& cellCenter,
+  const Eigen::VectorXd& cellHalflengths )
 {
-  preciceTrace ( "searchDistance()", cellCenter, cellHalflengths );
+  TRACE(cellCenter, cellHalflengths );
   if ( cell.isLeaf() ){
     DEBUG ( "  Leaf" );
     findClosest ( cell.content() );
@@ -364,8 +361,8 @@ bool StaticTraversal<CELL_T>:: searchDistance
     DEBUG ( "  Node" );
     int childIndex = cell.getChildIndex (findClosest.getSearchPoint(), cellCenter,
                                          cellHalflengths);
-    utils::DynVector newCenter(cellCenter);
-    utils::DynVector newHalflengths(cellHalflengths);
+    Eigen::VectorXd newCenter(cellCenter);
+    Eigen::VectorXd newHalflengths(cellHalflengths);
     cell.getChildData (childIndex, cellCenter, cellHalflengths, newCenter,
                        newHalflengths);
     CELL_T& subtree = cell.child ( childIndex );
@@ -379,8 +376,7 @@ bool StaticTraversal<CELL_T>:: searchDistance
   if ( findClosest.hasFound() ){
     double distance = distanceToBoundary(cellCenter, cellHalflengths,
                                          findClosest.getSearchPoint());
-    using tarch::la::greater;
-    bool isAmbiguous = greater ( findClosest.getEuclidianDistance(), distance );
+    bool isAmbiguous = math::greater( findClosest.getEuclidianDistance(), distance );
     DEBUG ( "  hasfound, return " << isAmbiguous );
     return isAmbiguous;
   }
@@ -393,11 +389,10 @@ int StaticTraversal<CELL_T>:: searchContent
 (
   CELL_T&                  cell,
   query::FindVoxelContent& findContent,
-  const utils::DynVector&  cellCenter,
-  const utils::DynVector&  cellHalflengths )
+  const Eigen::VectorXd&  cellCenter,
+  const Eigen::VectorXd&  cellHalflengths )
 {
-  preciceTrace ( "searchContent()", findContent.getVoxelCenter(),
-                  findContent.getVoxelHalflengths() );
+  TRACE(findContent.getVoxelCenter(), findContent.getVoxelHalflengths() );
   std::shared_ptr<SearchContentResult> result = searchContentInternal (
       cell, findContent, cellCenter, cellHalflengths );
   assertion ( result.use_count() > 0 );
@@ -409,7 +404,7 @@ int StaticTraversal<CELL_T>:: searchContent
       query::FindClosest findDistance ( findContent.getVoxelCenter() );
       searchDistance ( cell, findDistance, cellCenter, cellHalflengths );
       double distance = findDistance.getClosest().distance;
-      assertion ( not tarch::la::equals(distance, 0.0) );
+      assertion ( not math::equals(distance, 0.0) );
       result->position = distance > 0 ? Spacetree::positionOutsideOfGeometry()
                                       : Spacetree::positionInsideOfGeometry();
     }
@@ -424,14 +419,12 @@ template<typename CELL_T>
 std::shared_ptr<typename StaticTraversal<CELL_T>::SearchPositionResult>
 StaticTraversal<CELL_T>:: searchPositionInternal
 (
-  CELL_T&                 cell,
-  const utils::DynVector& searchPoint,
-  const utils::DynVector& cellCenter,
-  const utils::DynVector& cellHalflengths )
+  CELL_T&                cell,
+  const Eigen::VectorXd& searchPoint,
+  const Eigen::VectorXd& cellCenter,
+  const Eigen::VectorXd& cellHalflengths )
 {
-  preciceTrace ( "searchPositionInternal()", searchPoint, cellCenter,
-                  cellHalflengths );
-  using namespace tarch::la;
+  TRACE(searchPoint, cellCenter, cellHalflengths );
   std::shared_ptr<SearchPositionResult> data;
   double distance = 0.0;
   if ( cell.isLeaf() ){
@@ -461,8 +454,8 @@ StaticTraversal<CELL_T>:: searchPositionInternal
     DEBUG ( "  Node" );
     assertion ( cell.getPosition() == Spacetree::positionOnGeometry() );
     int childIndex = cell.getChildIndex(searchPoint, cellCenter, cellHalflengths);
-    utils::DynVector newCenter(cellCenter);
-    utils::DynVector newHalflengths(cellHalflengths);
+    Eigen::VectorXd newCenter(cellCenter);
+    Eigen::VectorXd newHalflengths(cellHalflengths);
     cell.getChildData (childIndex, cellCenter, cellHalflengths, newCenter,
                        newHalflengths);
     CELL_T& subtree = cell.child(childIndex);
@@ -481,19 +474,19 @@ StaticTraversal<CELL_T>:: searchPositionInternal
   }
 
   // Set inside/outside and check for ambiguities
-  if ( not equals(distance, 0.0) ){
+  if ( not math::equals(distance, 0.0) ){
     DEBUG( "  Checking for ambiguities of found objects");
     assertion ( data.use_count() > 0 );
-    if ( greater(distance, 0.0) ){
+    if ( math::greater(distance, 0.0) ){
       data->position = Spacetree::positionOutsideOfGeometry();
     }
-    else if ( tarch::la::greater(0.0, distance) ){
+    else if ( math::greater(0.0, distance) ){
       data->position = Spacetree::positionInsideOfGeometry();
     }
     DEBUG ( "  found pos = " << data->position );
     double distanceToBound =  distanceToBoundary(cellCenter, cellHalflengths,
                                                  searchPoint);
-    if ( greater(std::abs(distance), distanceToBound) ){
+    if ( math::greater(std::abs(distance), distanceToBound) ){
       DEBUG ( "  is ambigious" );
       data->ambiguous = true;
     }
@@ -509,11 +502,10 @@ StaticTraversal<CELL_T>:: searchContentInternal
 (
   CELL_T&                  cell,
   query::FindVoxelContent& findContent,
-  const utils::DynVector&  cellCenter,
-  const utils::DynVector&  cellHalflengths )
+  const Eigen::VectorXd&  cellCenter,
+  const Eigen::VectorXd&  cellHalflengths )
 {
-  preciceTrace ( "searchContentInternal()", cellCenter, cellHalflengths,
-                  findContent.getVoxelCenter(), findContent.getVoxelHalflengths() );
+  TRACE(cellCenter, cellHalflengths, findContent.getVoxelCenter(), findContent.getVoxelHalflengths() );
   if ( cell.isLeaf() ){
     DEBUG ( "Leaf..." );
     std::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
@@ -555,8 +547,8 @@ StaticTraversal<CELL_T>:: searchContentInternal
     DEBUG ( "Node..." );
     int searchCount = 0;
     std::shared_ptr<SearchContentResult> data ( new SearchContentResult() );
-    utils::DynVector childCenter(cellCenter.size());
-    utils::DynVector childHalflengths(cellCenter.size());
+    Eigen::VectorXd childCenter(cellCenter.size());
+    Eigen::VectorXd childHalflengths(cellCenter.size());
     for ( int i=0; i < cell.getChildCount(); i++ ){
       cell.getChildData(i, cellCenter, cellHalflengths, childCenter, childHalflengths);
       if ( isOverlapped(childCenter, childHalflengths,
@@ -592,52 +584,50 @@ StaticTraversal<CELL_T>:: searchContentInternal
 template<typename CELL_T>
 double StaticTraversal<CELL_T>:: distanceToBoundary
 (
-  const utils::DynVector& cellCenter,
-  const utils::DynVector& cellHalflengths,
-  const utils::DynVector& searchPoint ) const
+  const Eigen::VectorXd& cellCenter,
+  const Eigen::VectorXd& cellHalflengths,
+  const Eigen::VectorXd& searchPoint ) const
 {
-  utils::DynVector centerDiff ( cellCenter );
+  Eigen::VectorXd centerDiff ( cellCenter );
   centerDiff -= searchPoint;
-  tarch::la::abs(centerDiff, centerDiff);
-  double maxDistanceToCenter = tarch::la::max ( centerDiff );
-  assertion ( tarch::la::greaterEquals(cellHalflengths[0], maxDistanceToCenter) );
+  centerDiff = centerDiff.cwiseAbs();
+  double maxDistanceToCenter = centerDiff.maxCoeff();
+  assertion ( math::greaterEquals(cellHalflengths[0], maxDistanceToCenter) );
   return cellHalflengths[0] - maxDistanceToCenter;
 }
 
 template<typename CELL_T>
 bool StaticTraversal<CELL_T>:: isCovered
 (
-  const utils::DynVector& cellCenter,
-  const utils::DynVector& cellHalflengths,
-  const utils::DynVector& voxelCenter,
-  const utils::DynVector& voxelHalflengths ) const
+  const Eigen::VectorXd& cellCenter,
+  const Eigen::VectorXd& cellHalflengths,
+  const Eigen::VectorXd& voxelCenter,
+  const Eigen::VectorXd& voxelHalflengths ) const
 {
-  preciceTrace ( "isCovered()", cellCenter, cellHalflengths, voxelCenter,
-                  voxelHalflengths );
-  utils::DynVector coverage ( cellCenter );
+  TRACE(cellCenter, cellHalflengths, voxelCenter, voxelHalflengths );
+  Eigen::VectorXd coverage ( cellCenter );
   coverage -= voxelCenter;
-  tarch::la::abs ( coverage, coverage );
+  coverage = coverage.cwiseAbs();
   coverage += cellHalflengths;
-  DEBUG ( "return " << not tarch::la::oneGreater(coverage, voxelHalflengths) );
-  return not tarch::la::oneGreater(coverage, voxelHalflengths);
+  DEBUG ( "return " << not math::oneGreater(coverage, voxelHalflengths) );
+  return not math::oneGreater(coverage, voxelHalflengths);
 }
 
 template<typename CELL_T>
 bool StaticTraversal<CELL_T>:: isOverlapped
 (
-  const utils::DynVector& cellCenter,
-  const utils::DynVector& cellHalflengths,
-  const utils::DynVector& voxelCenter,
-  const utils::DynVector& voxelHalflengths ) const
+  const Eigen::VectorXd& cellCenter,
+  const Eigen::VectorXd& cellHalflengths,
+  const Eigen::VectorXd& voxelCenter,
+  const Eigen::VectorXd& voxelHalflengths ) const
 {
-  preciceTrace ( "isOverlapped()", cellCenter, cellHalflengths, voxelCenter,
-                  voxelHalflengths );
-  utils::DynVector overlap = cellCenter;
+  TRACE(cellCenter, cellHalflengths, voxelCenter, voxelHalflengths );
+  Eigen::VectorXd overlap = cellCenter;
   overlap -= voxelCenter;
-  tarch::la::abs ( overlap, overlap );
+  overlap = overlap.cwiseAbs();
   overlap -= cellHalflengths;
-  DEBUG ( "return = " << tarch::la::allGreater(voxelHalflengths, overlap) );
-  return tarch::la::allGreater(voxelHalflengths, overlap);
+  DEBUG ( "return = " << math::allGreater(voxelHalflengths, overlap) );
+  return math::allGreater(voxelHalflengths, overlap);
 }
 
 template<typename CELL_T>

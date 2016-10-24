@@ -19,7 +19,7 @@ std::string getTypeName(const Vector2D& var);
 
 std::string getTypeName(const Vector3D& var);
 
-const utils::DynVector& delinearize (
+const Eigen::VectorXd& delinearize (
   int toDelinearize,
   int dimensions );
 

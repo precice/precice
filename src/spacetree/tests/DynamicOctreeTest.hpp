@@ -3,7 +3,6 @@
 
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
-#include "utils/Dimensions.hpp"
 #include "spacetree/DynamicOctree.hpp"
 #include "spacetree/tests/SpacetreeTestScenarios.hpp"
 
@@ -31,94 +30,25 @@ public:
   /**
    * @brief Runs all tests.
    */
-	virtual void run();
+  virtual void run();
 
 private:
 
   struct DynamicOctreeFactory : public SpacetreeTestScenarios::SpacetreeFactory
   {
     virtual PtrSpacetree createSpacetree (
-      const utils::DynVector& offset,
-      const utils::DynVector& halflengths,
-      double                  refinementLimit )
+      const Eigen::VectorXd& offset,
+      const Eigen::VectorXd& halflengths,
+      double                 refinementLimit )
     {
       return PtrSpacetree(new DynamicOctree(offset, halflengths[0], refinementLimit));
     }
   };
 
-	// @brief Logging device.
-	static logging::Logger _log;
+  // @brief Logging device.
+  static logging::Logger _log;
 
-//	/**
-//	 * Tests method searchPosition().
-//	 */
-//	void testSearchPosition();
-//
-//	void testSearchDistance();
-//
-//	/**
-//	 * @brief Tests finding the closest neighboring point by exporting the
-//	 * results given by the accept() and the acceptSearch() methods.
-//	 */
-//	void testNeighborSearch();
-//
-//	/**
-//	 * @brief Triggers performTestSearchContentVertices() with various parameters.
-//	 */
-//	void testSearchContentVertices();
-//
-//	 /**
-//	   * @brief Tests finding vertices with the searchContent() method.
-//	   */
-//	void performTestSearchContentVertices (
-//	  int                     dimension,
-//	  bool                    positive,
-//	  const utils::DynVector& offset);
-//
-//  /**
-//   * @brief Triggers performTestSearchContentEdges() with various parameters.
-//   */
-//	void testSearchContentEdges();
-//
-//  /**
-//   * @brief Tests finding edges with the searchContent() method.
-//   */
-//	void performTestSearchContentEdges (
-//	  int                     dimension,
-//    bool                    positive,
-//    const utils::DynVector& offset );
-//
-//  /**
-//   * @brief Triggers performTestSearchContentTriangles() with various parameters.
-//   */
-//	void testSearchContentTriangles();
-//
-//  /**
-//   * @brief Tests finding triangles with the searchContent() method.
-//   */
-//	void performTestSearchContentTriangles (
-//    int  dimension,
-//    int  secondDimension,
-//    bool positive );
-//
-//	/**
-//	 * @brief Tests the correctness of some voxel positions obtained by using the
-//	 * acceptVoxel() method. The geometry is  a cuboid.
-//	 */
-//	void testVoxelPosition();
-//
-//
-//	/**
-//	 * @brief Tests the correctness of some voxel positions obtained by splitting
-//	 * the voxels by callling the acceptVoxel() method.
-//	 * The geometry is  a cuboid.
-//	 */
-//	void testSplittingVoxels();
-//
-//	/**
-//	 * @brief Tests reading xml files with configurations for spacetrees.
-//	 */
-//	void testConfiguration();
+
 };
 
 }}} // namespace precice, spacetree, tests

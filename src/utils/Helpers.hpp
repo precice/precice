@@ -87,10 +87,7 @@ std::string getTypeName(const bool& var);
 
 std::string getTypeName(const int& var);
 
-/**
- * @brief Returns true if machine is big-endian
- * needed for parallel vtk output
- */
+/// Returns true if machine is big-endian needed for parallel vtk output
 bool isMachineBigEndian();
 
 /**

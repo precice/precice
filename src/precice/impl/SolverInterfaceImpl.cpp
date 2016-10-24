@@ -51,7 +51,7 @@
 #include "mapping/Mapping.hpp"
 #include <set>
 #include <cstring>
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 
 #include <signal.h> // used for installing crash handler
 

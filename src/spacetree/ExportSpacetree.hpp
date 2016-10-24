@@ -1,8 +1,6 @@
-#ifndef PRECICE_NEWSPACETREE_EXPORTSPACETREE_HPP_
-#define PRECICE_NEWSPACETREE_EXPORTSPACETREE_HPP_
+#pragma once
 
 #include "spacetree/Spacetree.hpp"
-#include "utils/Dimensions.hpp"
 #include <string>
 #include <list>
 
@@ -26,15 +24,15 @@ public:
    void doExport ( Spacetree& toExport );
 
    void nodeCallback (
-     const utils::DynVector& center,
-     const utils::DynVector& halflengths,
-     int                     position );
+     const Eigen::VectorXd& center,
+     const Eigen::VectorXd& halflengths,
+     int                    position );
 
    void leafCallback (
-     const utils::DynVector& center,
-     const utils::DynVector& halflengths,
-     int                     position,
-     const mesh::Group&      content );
+     const Eigen::VectorXd& center,
+     const Eigen::VectorXd& halflengths,
+     int                    position,
+     const mesh::Group&     content );
 
 //   /**
 //    * @brief Exports the cells of the spacetree into a vtk file.
@@ -49,7 +47,7 @@ private:
 
    size_t _vertexCounter;
 
-   std::list<utils::DynVector> _vertices;
+   std::list<Eigen::VectorXd> _vertices;
 
    std::list<std::vector<int> > _cells;
 
@@ -60,4 +58,3 @@ private:
 
 }} // namespace precice, spacetree
 
-#endif // PRECICE_NEWSPACETREE_EXPORTSPACETREE_HPP_

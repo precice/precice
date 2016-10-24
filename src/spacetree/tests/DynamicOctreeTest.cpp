@@ -33,7 +33,7 @@ DynamicOctreeTest:: DynamicOctreeTest()
 
 void DynamicOctreeTest:: run()
 {
-  preciceTrace("run()");
+  TRACE();
   int sizeRanks = utils::Parallel::getCommunicatorSize();
   bool evenTasks = false;
   bool oddTasks = false;

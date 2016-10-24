@@ -1,20 +1,14 @@
-#ifndef PRECICE_NEWSPACETREE_SPACETREE_HPP_
-#define PRECICE_NEWSPACETREE_SPACETREE_HPP_
+#pragma once
 
 #include "spacetree/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/Dimensions.hpp"
 #include "boost/noncopyable.hpp"
 
 namespace precice {
   namespace query {
     class FindClosest;
-    //class FindClosestVertex;
     class FindVoxelContent;
-  }
-  namespace spacetree {
-    //class ExportSpacetree;
-  }
+}
 }
 
 // ---------------------------------------------------------- CLASS DEFINITION
@@ -51,18 +45,18 @@ public:
      * @brief Callback from spacetree node.
      */
     virtual void nodeCallback (
-      const utils::DynVector& center,
-      const utils::DynVector& halflengths,
-      int                     position ) = 0;
+      const Eigen::VectorXd& center,
+      const Eigen::VectorXd& halflengths,
+      int                    position ) = 0;
 
     /**
      * @brief Callback from spacetree leaf.
      */
     virtual void leafCallback (
-      const utils::DynVector& center,
-      const utils::DynVector& halflengths,
-      int                     position,
-      const mesh::Group&      content ) = 0;
+      const Eigen::VectorXd& center,
+      const Eigen::VectorXd& halflengths,
+      int                    position,
+      const mesh::Group&     content ) = 0;
   };
 
   static int positionUndefined() { return 0; }
@@ -101,25 +95,7 @@ public:
    *
    * @return Position (see positionXYZ() methods).
    */
-  virtual int searchPosition ( const utils::DynVector& point ) =0;
-
-  /**
-   * @brief Wrapper for searchPosition(utils::DynVector).
-   */
-  int searchPosition ( const utils::Vector3D& point )
-  {
-    utils::DynVector pointCopy(point);
-    return searchPosition(pointCopy);
-  }
-
-  /**
-   * @brief Wrapper for searchPosition(utils::DynVector).
-   */
-  int searchPosition ( const utils::Vector2D& point )
-  {
-    utils::DynVector pointCopy(point);
-    return searchPosition(pointCopy);
-  }
+  virtual int searchPosition ( const Eigen::VectorXd& point ) =0;
 
   /**
    * @brief Spacetree accelerated distance search.
@@ -144,4 +120,3 @@ public:
 
 }} // namespace precice, spacetree
 
-#endif // PRECICE_NEWSPACETREE_SPACETREE_HPP_

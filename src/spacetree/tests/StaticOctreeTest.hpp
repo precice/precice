@@ -30,23 +30,23 @@ public:
   /**
    * @brief Runs all tests.
    */
-	virtual void run();
+  virtual void run();
 
 private:
 
-	struct StaticOctreeFactory : public SpacetreeTestScenarios::SpacetreeFactory
-	{
+  struct StaticOctreeFactory : public SpacetreeTestScenarios::SpacetreeFactory
+  {
     virtual PtrSpacetree createSpacetree (
-      const utils::DynVector& offset,
-      const utils::DynVector& halflengths,
-      double                  refinementLimit )
+      const Eigen::VectorXd& offset,
+      const Eigen::VectorXd& halflengths,
+      double                 refinementLimit )
     {
       return PtrSpacetree(new StaticOctree(offset, halflengths[0], refinementLimit));
     }
-	};
+  };
 
-	// @brief Logging device.
-	static logging::Logger _log;
+  // @brief Logging device.
+  static logging::Logger _log;
 };
 
 }}} // namespace precice, spacetree, tests

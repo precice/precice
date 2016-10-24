@@ -17,9 +17,9 @@ public:
   struct SpacetreeFactory
   {
     virtual PtrSpacetree createSpacetree (
-      const utils::DynVector& offset,
-      const utils::DynVector& halflengths,
-      double                  refinementLimit ) =0;
+      const Eigen::VectorXd& offset,
+      const Eigen::VectorXd& halflengths,
+      double                 refinementLimit ) =0;
   };
 
   SpacetreeTestScenarios (
@@ -85,7 +85,7 @@ private:
  void performTestSearchContentVertices (
    int                     dimension,
    bool                    positive,
-   const utils::DynVector& offset);
+   const Eigen::VectorXd& offset);
 
  /**
   * @brief Tests finding edges with the searchContent() method.
@@ -93,7 +93,7 @@ private:
  void performTestSearchContentEdges (
    int                     dimension,
    bool                    positive,
-   const utils::DynVector& offset );
+   const Eigen::VectorXd& offset );
 
  /**
   * @brief Tests finding triangles with the searchContent() method.

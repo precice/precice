@@ -7,13 +7,12 @@
 #include "geometry/Sphere.hpp"
 #include "geometry/Cuboid.hpp"
 #include "mesh/Merge.hpp"
-
+#include "math/math.hpp"
 namespace precice {
 namespace spacetree {
 namespace tests {
 
-logging::Logger SpacetreeTestScenarios::
-  _log("precice::spacetree::tests::SpacetreeTestScenarios");
+logging::Logger SpacetreeTestScenarios::_log("precice::spacetree::tests::SpacetreeTestScenarios");
 
 SpacetreeTestScenarios:: SpacetreeTestScenarios
 (
@@ -26,13 +25,13 @@ SpacetreeTestScenarios:: SpacetreeTestScenarios
 
 void SpacetreeTestScenarios:: testSearchPosition()
 {
-  preciceTrace ( "testSearchPosition()" );
+  TRACE();
   typedef Spacetree Tree;
   int min = Tree::minElementsToRefineCell;
   Tree::minElementsToRefineCell = 1;
   int dim = 2;
   { // 2D
-    using utils::Vector2D;
+    using Eigen::Vector2d;
     // Create mesh
     bool flipNormals = false;
     mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
@@ -57,8 +56,8 @@ void SpacetreeTestScenarios:: testSearchPosition()
     mesh->computeState();
 
     // Create and initialize spacetree
-    utils::DynVector center(Vector2D(0.5, 0.5));
-    utils::DynVector halflengths(2, 2.0);
+    Eigen::Vector2d center(0.5, 0.5);
+    Eigen::Vector2d halflengths(2, 2.0);
     double upperRefinementLimit = 0.06125;
     PtrSpacetree spacetree = _factory.createSpacetree(center, halflengths,
                                                       upperRefinementLimit);
@@ -73,148 +72,148 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Outside positions
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.5, -0.5 );
+      Vector2d point ( 1.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.5, 0.0 );
+      Vector2d point ( 1.5, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.5, 0.5 );
+      Vector2d point ( 1.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.5, 1.0 );
+      Vector2d point ( 1.5, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.5, 1.5 );
+      Vector2d point ( 1.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( -0.5, -0.5 );
+      Vector2d point ( -0.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( -0.5, 0.0 );
+      Vector2d point ( -0.5, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( -0.5, 0.5 );
+      Vector2d point ( -0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( -0.5, 1.0 );
+      Vector2d point ( -0.5, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( -0.5, 1.5 );
+      Vector2d point ( -0.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, 1.5 );
+      Vector2d point ( 0.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, -0.5 );
+      Vector2d point ( 0.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
 
     // Outside eps positions
-    double eps = tarch::la::NUMERICAL_ZERO_DIFFERENCE;
+    double eps = math::NUMERICAL_ZERO_DIFFERENCE;
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 + 10.0 * eps, -0.5 );
+      Vector2d point ( 1.0 + 10.0 * eps, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 + 10.0 * eps, 0.0 );
+      Vector2d point ( 1.0 + 10.0 * eps, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 + 10.0 * eps, 0.5 );
+      Vector2d point ( 1.0 + 10.0 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 + 10.0 * eps, 1.0 );
+      Vector2d point ( 1.0 + 10.0 * eps, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 + 10.0 * eps, 1.5 );
+      Vector2d point ( 1.0 + 10.0 * eps, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( -10.0 * eps, -0.5 );
+      Vector2d point ( -10.0 * eps, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( -10.0 * eps, 0.0 );
+      Vector2d point ( -10.0 * eps, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( -10.0 * eps, 0.5 );
+      Vector2d point ( -10.0 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( -10.0 * eps, 1.0 );
+      Vector2d point ( -10.0 * eps, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( -10.0 * eps, 1.5 );
+      Vector2d point ( -10.0 * eps, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, 1.0 + 10.0 * eps );
+      Vector2d point ( 0.5, 1.0 + 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, -0.5 - 10.0 * eps );
+      Vector2d point ( 0.5, -0.5 - 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
@@ -222,43 +221,43 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Touching
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.0, 0.0 );
+      Vector2d point ( 0.0, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, 0.0 );
+      Vector2d point ( 0.5, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0, 0.5 );
+      Vector2d point ( 1.0, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0, 1.0 );
+      Vector2d point ( 1.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, 1.0 );
+      Vector2d point ( 0.5, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.0, 1.0 );
+      Vector2d point ( 0.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.0, 0.5 );
+      Vector2d point ( 0.0, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
@@ -266,49 +265,49 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Touching eps
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.0 + 0.1 * eps, 0.0 );
+      Vector2d point ( 0.0 + 0.1 * eps, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, 0.0 - 0.1 * eps);
+      Vector2d point ( 0.5, 0.0 - 0.1 * eps);
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 + 0.1 * eps, 0.0 );
+      Vector2d point ( 1.0 + 0.1 * eps, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 - 0.1 * eps, 0.5 );
+      Vector2d point ( 1.0 - 0.1 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 + 0.1 * eps, 1.0 + 0.1 * eps);
+      Vector2d point ( 1.0 + 0.1 * eps, 1.0 + 0.1 * eps);
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, 1.0 - 0.1 * eps );
+      Vector2d point ( 0.5, 1.0 - 0.1 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.0 - 0.1 * eps, 1.0 + 0.1 * eps);
+      Vector2d point ( 0.0 - 0.1 * eps, 1.0 + 0.1 * eps);
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.0 - 0.1 * eps, 0.5 );
+      Vector2d point ( 0.0 - 0.1 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
@@ -316,49 +315,49 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Inside eps
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.0 + 10.0 * eps, 0.0 + 10.0 * eps);
+      Vector2d point ( 0.0 + 10.0 * eps, 0.0 + 10.0 * eps);
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, 0.0 + 10.0 * eps );
+      Vector2d point ( 0.5, 0.0 + 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 - 10.0 * eps, 0.0 + 10.0 * eps );
+      Vector2d point ( 1.0 - 10.0 * eps, 0.0 + 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 - 10.0 * eps, 0.5 );
+      Vector2d point ( 1.0 - 10.0 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 1.0 - 10.0 * eps, 1.0 - 10.0 * eps );
+      Vector2d point ( 1.0 - 10.0 * eps, 1.0 - 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, 1.0 - 10.0 * eps );
+      Vector2d point ( 0.5, 1.0 - 10.0 * eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.0 + 10.0 * eps, 1.0 - 10.0 * eps);
+      Vector2d point ( 0.0 + 10.0 * eps, 1.0 - 10.0 * eps);
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.0 + 10.0 * eps, 0.5 );
+      Vector2d point ( 0.0 + 10.0 * eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
@@ -366,31 +365,31 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Inside
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.5, 0.5 );
+      Vector2d point ( 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.1, 0.1 );
+      Vector2d point ( 0.1, 0.1 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.9, 0.9 );
+      Vector2d point ( 0.9, 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.1, 0.9 );
+      Vector2d point ( 0.1, 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  2d test "  << testNumber++);
-      Vector2D point ( 0.9, 0.1 );
+      Vector2d point ( 0.9, 0.1 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
@@ -405,7 +404,7 @@ void SpacetreeTestScenarios:: testSearchPosition()
 
   dim = 3;
   {
-    using utils::Vector3D;
+    using Eigen::Vector3d;
     // Create mesh
     bool flipNormals = false;
     mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
@@ -458,8 +457,8 @@ void SpacetreeTestScenarios:: testSearchPosition()
     mesh->computeState();
 
     // Create and initialize spacetree
-    utils::DynVector center(dim, 0.5);
-    utils::DynVector halflengths(dim, 2.0);
+    Eigen::Vector3d center(0.5, 0.5, 0.5);
+    Eigen::Vector3d halflengths(2, 2, 2);
     double upperRefinementLimit = 0.06125;
     PtrSpacetree spacetree = _factory.createSpacetree( center, halflengths,
                                                        upperRefinementLimit );
@@ -474,172 +473,172 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Outside
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.5, 1.5, 1.5 );
+      Vector3d point ( 1.5, 1.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.5, 1.5, -0.5 );
+      Vector3d point ( 1.5, 1.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.5, -0.5, 1.5 );
+      Vector3d point ( 1.5, -0.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.5, -0.5, -0.5 );
+      Vector3d point ( 1.5, -0.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -0.5, 1.5, 1.5 );
+      Vector3d point ( -0.5, 1.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -0.5, 1.5, -0.5 );
+      Vector3d point ( -0.5, 1.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -0.5, -0.5, 1.5 );
+      Vector3d point ( -0.5, -0.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -0.5, -0.5, -0.5 );
+      Vector3d point ( -0.5, -0.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.5, 0.5, 0.5 );
+      Vector3d point ( 1.5, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -0.5, 0.5, 0.5 );
+      Vector3d point ( -0.5, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 1.5, 0.5 );
+      Vector3d point ( 0.5, 1.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, -0.5, 0.5 );
+      Vector3d point ( 0.5, -0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.5, 1.5 );
+      Vector3d point ( 0.5, 0.5, 1.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.5, -0.5 );
+      Vector3d point ( 0.5, 0.5, -0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
 
     // Outside eps
-    double eps = tarch::la::NUMERICAL_ZERO_DIFFERENCE;
+    double eps = math::NUMERICAL_ZERO_DIFFERENCE;
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 + 10.0*eps, 1.0 + 10.0*eps, 1.0 + 10.0*eps );
+      Vector3d point ( 1.0 + 10.0*eps, 1.0 + 10.0*eps, 1.0 + 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 + 10.0*eps, 1.0 + 10.0*eps, -10.0*eps );
+      Vector3d point ( 1.0 + 10.0*eps, 1.0 + 10.0*eps, -10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 + 10.0*eps, -10.0*eps, 1.0 + 10.0*eps );
+      Vector3d point ( 1.0 + 10.0*eps, -10.0*eps, 1.0 + 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 + 10.0*eps, -10.0*eps, -10.0*eps );
+      Vector3d point ( 1.0 + 10.0*eps, -10.0*eps, -10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -10.0*eps, 1.0 + 10.0*eps, 1.0 + 10.0*eps );
+      Vector3d point ( -10.0*eps, 1.0 + 10.0*eps, 1.0 + 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -10.0*eps, 1.0 + 10.0*eps, -10.0*eps );
+      Vector3d point ( -10.0*eps, 1.0 + 10.0*eps, -10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -10.0*eps, -10.0*eps, 1.0 + 10.0*eps );
+      Vector3d point ( -10.0*eps, -10.0*eps, 1.0 + 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -10.0*eps, -10.0*eps, -10.0*eps );
+      Vector3d point ( -10.0*eps, -10.0*eps, -10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 + 10.0*eps, 0.5, 0.5 );
+      Vector3d point ( 1.0 + 10.0*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -10.0*eps, 0.5, 0.5 );
+      Vector3d point ( -10.0*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 1.0 + 10.0*eps, 0.5 );
+      Vector3d point ( 0.5, 1.0 + 10.0*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, -10.0*eps, 0.5 );
+      Vector3d point ( 0.5, -10.0*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.5, 1.0 + 10.0*eps );
+      Vector3d point ( 0.5, 0.5, 1.0 + 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.5, -10.0*eps );
+      Vector3d point ( 0.5, 0.5, -10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOutsideOfGeometry() );
     }
@@ -647,85 +646,85 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Touching eps
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 + 0.1*eps, 1.0 + 0.1*eps, 1.0 + 0.1*eps );
+      Vector3d point ( 1.0 + 0.1*eps, 1.0 + 0.1*eps, 1.0 + 0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 + 0.1*eps, 1.0 + 0.1*eps, -0.1*eps );
+      Vector3d point ( 1.0 + 0.1*eps, 1.0 + 0.1*eps, -0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 + 0.1*eps, -0.1*eps, 1.0 + 0.1*eps );
+      Vector3d point ( 1.0 + 0.1*eps, -0.1*eps, 1.0 + 0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 + 0.1*eps, -0.1*eps, -0.1*eps );
+      Vector3d point ( 1.0 + 0.1*eps, -0.1*eps, -0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -0.1*eps, 1.0 + 0.1*eps, 1.0 + 0.1*eps );
+      Vector3d point ( -0.1*eps, 1.0 + 0.1*eps, 1.0 + 0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -0.1*eps, 1.0 + 0.1*eps, -0.1*eps );
+      Vector3d point ( -0.1*eps, 1.0 + 0.1*eps, -0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -0.1*eps, -0.1*eps, 1.0 + 0.1*eps );
+      Vector3d point ( -0.1*eps, -0.1*eps, 1.0 + 0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -0.1*eps, -0.1*eps, -0.1*eps );
+      Vector3d point ( -0.1*eps, -0.1*eps, -0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 + 0.1*eps, 0.5, 0.5 );
+      Vector3d point ( 1.0 + 0.1*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( -0.1*eps, 0.5, 0.5 );
+      Vector3d point ( -0.1*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 1.0 + 0.1*eps, 0.5 );
+      Vector3d point ( 0.5, 1.0 + 0.1*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, -0.1*eps, 0.5 );
+      Vector3d point ( 0.5, -0.1*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.5, 1.0 + 0.1*eps );
+      Vector3d point ( 0.5, 0.5, 1.0 + 0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.5, -0.1*eps );
+      Vector3d point ( 0.5, 0.5, -0.1*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
@@ -733,85 +732,85 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Touching
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0, 1.0, 1.0 );
+      Vector3d point ( 1.0, 1.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0, 1.0, 0.0 );
+      Vector3d point ( 1.0, 1.0, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0, 0.0, 1.0 );
+      Vector3d point ( 1.0, 0.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0, 0.0, 0.0 );
+      Vector3d point ( 1.0, 0.0, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.0, 1.0, 1.0 );
+      Vector3d point ( 0.0, 1.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.0, 1.0, 0.0 );
+      Vector3d point ( 0.0, 1.0, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.0, 0.0, 1.0 );
+      Vector3d point ( 0.0, 0.0, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.0, 0.0, 0.0 );
+      Vector3d point ( 0.0, 0.0, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0, 0.5, 0.5 );
+      Vector3d point ( 1.0, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.0, 0.5, 0.5 );
+      Vector3d point ( 0.0, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 1.0, 0.5 );
+      Vector3d point ( 0.5, 1.0, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.0, 0.5 );
+      Vector3d point ( 0.5, 0.0, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.5, 1.0 );
+      Vector3d point ( 0.5, 0.5, 1.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.5, 0.0 );
+      Vector3d point ( 0.5, 0.5, 0.0 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionOnGeometry() );
     }
@@ -819,85 +818,85 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Inside eps
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 - 10.0*eps, 1.0 - 10.0*eps, 1.0 - 10.0*eps );
+      Vector3d point ( 1.0 - 10.0*eps, 1.0 - 10.0*eps, 1.0 - 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 - 10.0*eps, 1.0 - 10.0*eps, 10.0*eps );
+      Vector3d point ( 1.0 - 10.0*eps, 1.0 - 10.0*eps, 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 - 10.0*eps, 10.0*eps, 1.0 - 10.0*eps );
+      Vector3d point ( 1.0 - 10.0*eps, 10.0*eps, 1.0 - 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 - 10.0*eps, 10.0*eps, 10.0*eps );
+      Vector3d point ( 1.0 - 10.0*eps, 10.0*eps, 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 10.0*eps, 1.0 - 10.0*eps, 1.0 - 10.0*eps );
+      Vector3d point ( 10.0*eps, 1.0 - 10.0*eps, 1.0 - 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 10.0*eps, 1.0 - 10.0*eps, 10.0*eps );
+      Vector3d point ( 10.0*eps, 1.0 - 10.0*eps, 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 10.0*eps, 10.0*eps, 1.0 - 10.0*eps );
+      Vector3d point ( 10.0*eps, 10.0*eps, 1.0 - 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 10.0*eps, 10.0*eps, 10.0*eps );
+      Vector3d point ( 10.0*eps, 10.0*eps, 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 1.0 - 10.0*eps, 0.5, 0.5 );
+      Vector3d point ( 1.0 - 10.0*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 10.0*eps, 0.5, 0.5 );
+      Vector3d point ( 10.0*eps, 0.5, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 1.0 - 10.0*eps, 0.5 );
+      Vector3d point ( 0.5, 1.0 - 10.0*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 10.0*eps, 0.5 );
+      Vector3d point ( 0.5, 10.0*eps, 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.5, 1.0 - 10.0*eps );
+      Vector3d point ( 0.5, 0.5, 1.0 - 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5, 0.5, 10.0*eps );
+      Vector3d point ( 0.5, 0.5, 10.0*eps );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
@@ -905,49 +904,49 @@ void SpacetreeTestScenarios:: testSearchPosition()
     // Inside
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.5 );
+      Vector3d point = Vector3d::Constant( 0.5 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.1 );
+      Vector3d point = Vector3d::Constant( 0.1 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.9 );
+      Vector3d point = Vector3d::Constant( 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.1, 0.9, 0.9 );
+      Vector3d point ( 0.1, 0.9, 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.1, 0.1, 0.9 );
+      Vector3d point ( 0.1, 0.1, 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.9, 0.1, 0.1 );
+      Vector3d point ( 0.9, 0.1, 0.1 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.9, 0.9, 0.1 );
+      Vector3d point ( 0.9, 0.9, 0.1 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
     {
       DEBUG("  3d test "  << testNumber++);
-      Vector3D point ( 0.9, 0.1, 0.9 );
+      Vector3d point ( 0.9, 0.1, 0.9 );
       int pos = spacetree->searchPosition ( point );
       validateEquals ( pos, Tree::positionInsideOfGeometry() );
     }
@@ -969,7 +968,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
   Spacetree::minElementsToRefineCell = 1;
   int dim = 2;
   { // 2D
-    using utils::Vector2D;
+    using Eigen::Vector2d;
     // Create mesh
     bool flipNormals = false;
     mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
@@ -994,8 +993,8 @@ void SpacetreeTestScenarios:: testSearchDistance()
     mesh->computeState();
 
     // Create and initialize spacetree
-    utils::DynVector center(Vector2D(0.5, 0.5));
-    utils::DynVector halflengths(2, 1.0);
+    Eigen::Vector2d center(0.5, 0.5);
+    Eigen::Vector2d halflengths(2, 1.0);
     double upperRefinementLimit = 0.06125;
     PtrSpacetree spacetree = _factory.createSpacetree ( center, halflengths,
                                                         upperRefinementLimit );
@@ -1080,7 +1079,7 @@ void SpacetreeTestScenarios:: testSearchDistance()
 
   dim = 3;
   { // 3D
-    using utils::Vector3D;
+    using Eigen::Vector3d;
     // Create mesh
     bool flipNormals = false;
     mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
@@ -1133,8 +1132,8 @@ void SpacetreeTestScenarios:: testSearchDistance()
     mesh->computeState();
 
     // Create and initialize spacetree
-    utils::DynVector center(dim, 0.5);
-    utils::DynVector halflengths(dim, 1.0);
+    Vector3d center(0.5, 0.5, 0.5);
+    Vector3d halflengths(1, 1, 1);
     double upperRefinementLimit = 0.06125;
     PtrSpacetree spacetree = _factory.createSpacetree ( center, halflengths,
                                                         upperRefinementLimit );
@@ -1205,20 +1204,19 @@ void SpacetreeTestScenarios:: testSearchDistance()
 
 void SpacetreeTestScenarios:: testNeighborSearch()
 {
-  preciceTrace ( "testNeighborSearch()" );
-  using utils::Vector2D;
+  TRACE();
   int dim = 2;
   double sphereRadius = 3.0;
   bool flipNormals = true;
   mesh::PtrMesh mesh(new mesh::Mesh("test-sphere", dim, flipNormals));
-  geometry::Sphere(utils::DynVector(dim,0.0), 0.01, sphereRadius).create(*mesh);
+  geometry::Sphere(Eigen::Vector2d::Zero(), 0.01, sphereRadius).create(*mesh);
 
   io::ExportVTK exportVTK(true);
   std::string location = "";
   exportVTK.doExport ( _testName + "-testNeighborSearch-sphere.vtk", location, *mesh );
 
-  utils::DynVector center(dim, 0.0);
-  utils::DynVector h(dim, 10.0);
+  Eigen::Vector2d center(0, 0);
+  Eigen::Vector2d h(10, 10);
   PtrSpacetree spacetree = _factory.createSpacetree ( center, h, 0.05 );
   spacetree->addMesh(mesh);
   spacetree->initialize();
@@ -1307,13 +1305,13 @@ void SpacetreeTestScenarios:: testSearchContentVertices()
     for ( int testDim=0; testDim < dim; testDim++ ) {
       bool positiveDirection = true;
       bool negativeDirection = false;
-      utils::DynVector offset ( dim, 0.0 );
+      Eigen::VectorXd offset = Eigen::VectorXd::Constant( dim, 0.0 );
       performTestSearchContentVertices ( testDim, positiveDirection, offset );
       performTestSearchContentVertices ( testDim, negativeDirection, offset );
-      assign(offset) = -1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE;
+      offset.setConstant(-1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
       performTestSearchContentVertices ( testDim, positiveDirection, offset );
       performTestSearchContentVertices ( testDim, negativeDirection, offset );
-      assign(offset) = 1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE;
+      offset.setConstant(1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
       performTestSearchContentVertices ( testDim, positiveDirection, offset );
       performTestSearchContentVertices ( testDim, negativeDirection, offset );
     }
@@ -1324,21 +1322,21 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
 (
   int                     testDim,
   bool                    positive,
-  const utils::DynVector& offset )
+  const Eigen::VectorXd&  offset )
 {
   preciceTrace ( "performTestSearchContentVertices()", testDim, positive, offset );
   int min = Spacetree::minElementsToRefineCell;
   Spacetree::minElementsToRefineCell = 1;
   int dim = offset.size();
-  assertion ( not tarch::la::oneGreater(offset, utils::DynVector(dim,1.0)) );
-  assertion ( tarch::la::allGreater(offset, utils::DynVector(dim,-1.0)) );
+  assertion ( not math::oneGreater(offset, Eigen::VectorXd::Constant(dim,1.0)) );
+  assertion ( math::allGreater(offset, Eigen::VectorXd::Constant(dim,-1.0)) );
   bool flipNormals = false;
   mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
-  utils::DynVector coords(offset);
+  Eigen::VectorXd coords(offset);
   mesh::Vertex& vertex = mesh->createVertex(coords);
 
-  utils::DynVector center(dim, 0.0);
-  utils::DynVector halflengths(dim, 1.0);
+  Eigen::VectorXd center = Eigen::VectorXd::Constant(dim, 0.0);
+  Eigen::VectorXd halflengths = Eigen::VectorXd::Constant(dim, 1.0);
   query::FindVoxelContent::BoundaryInclusion includeBounds =
       query::FindVoxelContent::INCLUDE_BOUNDARY;
   query::FindVoxelContent::BoundaryInclusion excludeBounds =
@@ -1346,8 +1344,8 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   query::FindVoxelContent findIncluded ( center, halflengths, includeBounds );
   query::FindVoxelContent findExcluded ( center, halflengths, excludeBounds );
 
-  utils::DynVector treeOffset(dim, 0.0);
-  utils::DynVector treeHalflengths(dim, 2.0);
+  Eigen::VectorXd treeOffset = Eigen::VectorXd::Constant(dim, 0.0);
+  Eigen::VectorXd treeHalflengths = Eigen::VectorXd::Constant(dim, 2.0);
   std::vector<double> refinementLimits;
   refinementLimits += 2.0, 1.0, 0.5, 0.25;
   std::vector<PtrSpacetree> treesInc;
@@ -1385,7 +1383,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   }
 
   // Outside eps
-  coords[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
@@ -1404,7 +1402,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   }
 
   // Outside eps
-  coords[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
@@ -1423,7 +1421,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   }
 
   // Touching + eps
-  coords[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
@@ -1463,7 +1461,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   }
 
   // Touching - eps
-  coords[testDim] = sign * (1.0 - tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords[testDim] = sign * (1.0 - math::NUMERICAL_ZERO_DIFFERENCE);
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
@@ -1483,7 +1481,7 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
   }
 
   // Inside eps
-  coords[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   vertex.setCoords(coords);
   mesh->notifyListeners();
   for ( size_t i=0; i < treesInc.size(); i++ ){
@@ -1528,18 +1526,18 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
 
 void SpacetreeTestScenarios:: testSearchContentEdges()
 {
-  preciceTrace("testSearchContentEdges()");
+  TRACE();
   for (int dim=2; dim <= 3; dim++){
     for (int testDim=0; testDim < dim; testDim++){
       bool positiveDirection = true;
       bool negativeDirection = false;
-      utils::DynVector offset(dim, 0.0);
+      Eigen::VectorXd offset = Eigen::VectorXd::Zero(dim);
       performTestSearchContentEdges(testDim, positiveDirection, offset);
       performTestSearchContentEdges(testDim, negativeDirection, offset);
-      assign(offset) = -1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE;
+      offset.setConstant(-1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
       performTestSearchContentEdges(testDim, positiveDirection, offset);
       performTestSearchContentEdges(testDim, negativeDirection, offset);
-      assign(offset) = 1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE;
+      offset.setConstant(1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
       performTestSearchContentEdges(testDim, positiveDirection, offset);
       performTestSearchContentEdges(testDim, negativeDirection, offset);
     }
@@ -1551,10 +1549,10 @@ void SpacetreeTestScenarios:: testSearchContentEdges()
   int dim = 3;
   bool flipNormals = false;
   mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
-  utils::DynVector coords0(dim), coords1(dim), coords2(dim);
-  coords0 = 1.0, 0.0, 1.0;
-  coords1 = 0.0, 1.0, 1.0;
-  coords2 = 1.0, 1.0, 1.0;
+  Eigen::VectorXd coords0(dim), coords1(dim), coords2(dim);
+  coords0 << 1.0, 0.0, 1.0;
+  coords1 << 0.0, 1.0, 1.0;
+  coords2 << 1.0, 1.0, 1.0;
   mesh::Vertex& v0 = mesh->createVertex(coords0);
   mesh::Vertex& v1 = mesh->createVertex(coords1);
   mesh::Vertex& v2 = mesh->createVertex(coords2);
@@ -1564,14 +1562,14 @@ void SpacetreeTestScenarios:: testSearchContentEdges()
   mesh->createTriangle(e2, e1, e0);
   mesh->computeState();
 
-  utils::DynVector center(dim), halflengths(dim);
-  center = 0.5, 0.5, 0.5;
+  Eigen::VectorXd center(dim), halflengths(dim);
+  center << 0.5, 0.5, 0.5;
   halflengths = center;
   PtrSpacetree tree = _factory.createSpacetree(center, halflengths, 1.0/8.0);
   tree->addMesh(mesh);
 
-  center = 0.8125000000000000, 0.8125000000000000, 0.9375000000000000;
-  halflengths = 0.0625000000000000, 0.0625000000000000, 0.0625000000000000;
+  center << 0.8125000000000000, 0.8125000000000000, 0.9375000000000000;
+  halflengths << 0.0625000000000000, 0.0625000000000000, 0.0625000000000000;
   query::FindVoxelContent::BoundaryInclusion includeBounds =
       query::FindVoxelContent::INCLUDE_BOUNDARY;
   query::FindVoxelContent find(center, halflengths, includeBounds);
@@ -1591,18 +1589,18 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
 (
   int                     testDim,
   bool                    positive,
-  const utils::DynVector& offset )
+  const Eigen::VectorXd&  offset )
 {
   preciceTrace ( "performTestSearchContentEdges()", testDim, positive, offset );
   int min = Spacetree::minElementsToRefineCell;
   Spacetree::minElementsToRefineCell = 1;
   int dim = offset.size();
-  assertion ( not tarch::la::oneGreater(offset, utils::DynVector(dim,1.0)) );
-  assertion ( tarch::la::allGreater(offset, utils::DynVector(dim,-1.0)) );
+  assertion ( not math::oneGreater(offset, Eigen::VectorXd::Constant(dim,1.0)) );
+  assertion ( math::allGreater(offset, Eigen::VectorXd::Constant(dim,-1.0)) );
   bool flipNormals = false;
   mesh::PtrMesh mesh(new mesh::Mesh("TestMesh", dim, flipNormals));
-  utils::DynVector coords0(offset);
-  utils::DynVector coords1(offset);
+  Eigen::VectorXd coords0(offset);
+  Eigen::VectorXd coords1(offset);
   mesh::Vertex& v0 = mesh->createVertex(coords0);
   mesh::Vertex& v1 = mesh->createVertex(coords1);
   mesh::Vertex& v2 = mesh->createVertex(coords1);
@@ -1610,8 +1608,8 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   mesh->createEdge(v0, v1);
   mesh->createEdge(v2, v3);
 
-  utils::DynVector center(dim, 0.0);
-  utils::DynVector halflengths(dim, 1.0);
+  Eigen::VectorXd center = Eigen::VectorXd::Constant(dim, 0.0);
+  Eigen::VectorXd halflengths = Eigen::VectorXd::Constant(dim, 1.0);
   query::FindVoxelContent::BoundaryInclusion includeBounds =
       query::FindVoxelContent::INCLUDE_BOUNDARY;
   query::FindVoxelContent::BoundaryInclusion excludeBounds =
@@ -1619,8 +1617,8 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   query::FindVoxelContent findIncluded ( center, halflengths, includeBounds );
   query::FindVoxelContent findExcluded ( center, halflengths, excludeBounds );
 
-  utils::DynVector treeoffset(dim, 0.0);
-  utils::DynVector treeHalflengths(dim, 2.0);
+  Eigen::VectorXd treeoffset = Eigen::VectorXd::Constant(dim, 0.0);
+  Eigen::VectorXd treeHalflengths = Eigen::VectorXd::Constant(dim, 2.0);
   std::vector<double> refinementLimits;
   refinementLimits += 2.0, 1.0, 0.5, 0.25;
   std::vector<PtrSpacetree> treesInc;
@@ -1666,7 +1664,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   }
 
   // Outside eps
-  coords0[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
@@ -1715,7 +1713,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   }
 
   // Outside touching eps
-  coords0[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
@@ -1766,7 +1764,7 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
   }
 
   // Intersecting eps
-  coords0[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
@@ -1860,8 +1858,8 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   mesh::Edge& e2 = mesh->createEdge(v2, v0);
   mesh->createTriangle(e0, e1, e2);
 
-  utils::DynVector center ( dim, 0.0 );
-  utils::DynVector halflengths ( dim, 1.0 );
+  Eigen::VectorXd center = Eigen::VectorXd::Constant(dim, 0.0);
+  Eigen::VectorXd halflengths = Eigen::VectorXd::Constant(dim, 1.0);
   query::FindVoxelContent::BoundaryInclusion includeBounds =
       query::FindVoxelContent::INCLUDE_BOUNDARY;
   query::FindVoxelContent::BoundaryInclusion excludeBounds =
@@ -1869,8 +1867,8 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   query::FindVoxelContent findIncluded ( center, halflengths, includeBounds );
   query::FindVoxelContent findExcluded ( center, halflengths, excludeBounds );
 
-  utils::DynVector treeoffset(dim, 0.0);
-  utils::DynVector treeHalflengths(dim, 5.0);
+  Eigen::VectorXd treeoffset = Eigen::VectorXd::Constant(dim, 0);
+  Eigen::VectorXd treeHalflengths = Eigen::VectorXd::Constant(dim, 5);
   std::vector<double> refinementLimits;
   refinementLimits += 5.0, 2.5, 1.25, 0.625;
   std::vector<PtrSpacetree> treesInc;
@@ -1923,7 +1921,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   }
 
   // Outside eps vertex
-  coords0[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   coords2[testDim] = sign * 1.5;
   coords2[secondDimension] = sign * 0.5;
@@ -1948,9 +1946,9 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   }
 
   // Outside eps edge
-  coords0[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
-  coords2[testDim] = sign * (1.0 + 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords2[testDim] = sign * (1.0 + 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords2[secondDimension] = sign * 0.5;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
@@ -1973,7 +1971,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   }
 
   // Touching eps vertex
-  coords0[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   coords2[testDim] = sign * 1.5;
   coords2[secondDimension] = sign * 0.5;
@@ -1999,9 +1997,9 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   }
 
   // Touching eps edge
-  coords0[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
-  coords2[testDim] = sign * (1.0 + tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords2[testDim] = sign * (1.0 + math::NUMERICAL_ZERO_DIFFERENCE);
   coords2[secondDimension] = sign * 0.5;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
@@ -2077,7 +2075,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   }
 
   // Intersecting eps vertex
-  coords0[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
   coords2[testDim] = sign * 1.5;
   coords2[secondDimension] = sign * 0.5;
@@ -2104,9 +2102,9 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   }
 
   // Intersecting eps edge
-  coords0[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords0[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords1[testDim] = sign * 2.0;
-  coords2[testDim] = sign * (1.0 - 10.0 * tarch::la::NUMERICAL_ZERO_DIFFERENCE);
+  coords2[testDim] = sign * (1.0 - 10.0 * math::NUMERICAL_ZERO_DIFFERENCE);
   coords2[secondDimension] = sign * 0.5;
   v0.setCoords ( coords0 );
   v1.setCoords ( coords1 );
@@ -2386,13 +2384,12 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
 
 void SpacetreeTestScenarios:: testVoxelPosition()
 {
-  preciceTrace ( "testVoxelPosition()" );
+  TRACE();
   int dim = 2;
-  using utils::Vector2D;
   using Eigen::Vector2d;
   // geometry is a cuboid with offset (-3, -4) and sidelength 8
-  utils::DynVector offset ( Vector2D(-3.0, -4.0) );
-  utils::DynVector cuboidSidelength ( dim, 8.0 );
+  Vector2d offset(-3, -4);
+  Vector2d cuboidSidelength(8, 8);
   bool flipNormals = true;
   mesh::PtrMesh mesh(new mesh::Mesh("test-cuboid", dim, flipNormals));
   geometry::Cuboid(offset, 0.01, cuboidSidelength).create(*mesh);
@@ -2402,8 +2399,8 @@ void SpacetreeTestScenarios:: testVoxelPosition()
   exportVTK.doExport ( _testName + "-testVoxelPosition-cuboid", location, *mesh );
 
   //RegularSpacetree spacetree ( Vector(0.0, 0.0), 6.0, 0.05 );
-  utils::DynVector treeOffset(dim, 0.0);
-  utils::DynVector treeH(dim, 6.0);
+  Vector2d treeOffset(0, 0);
+  Vector2d treeH(6, 6);
   PtrSpacetree spacetree = _factory.createSpacetree ( treeOffset, treeH, 2.0 );
   spacetree->addMesh(mesh);
   spacetree->initialize();
@@ -2543,8 +2540,8 @@ void SpacetreeTestScenarios:: testSplittingVoxels()
   preciceTrace ( "testSplittingVoxels()" );
   int dim = 2;
   using Eigen::Vector2d;
-  utils::DynVector cuboidOffset ( Vector2d(-5.0, -4.5) );
-  utils::DynVector cuboidSidelength ( dim, 8.0 );
+  Vector2d cuboidOffset (-5.0, -4.5);
+  Vector2d cuboidSidelength (8, 8);
   bool flipNormals = true;
   mesh::PtrMesh mesh(new mesh::Mesh("test-cuboid", dim, flipNormals));
   geometry::Cuboid(cuboidOffset, 0.01, cuboidSidelength).create(*mesh);
@@ -2553,8 +2550,8 @@ void SpacetreeTestScenarios:: testSplittingVoxels()
   std::string location = "";
   exportVTK.doExport ( _testName + "testSplittingVoxels-cuboid.vtk", location, *mesh );
 
-  utils::DynVector treeOffset(dim, 0.0);
-  utils::DynVector treeH(dim, 6.0);
+  Vector2d treeOffset(0, 0);
+  Vector2d treeH(6, 6);
   PtrSpacetree spacetree = _factory.createSpacetree(treeOffset, treeH, 0.05);
   spacetree->addMesh(mesh);
   spacetree->initialize();

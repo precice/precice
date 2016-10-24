@@ -5,8 +5,8 @@
 #include "utils/MasterSlave.hpp"
 #include "io/TXTWriter.hpp"
 
-#include "Eigen/Core"
-#include "Eigen/QR"
+#include <Eigen/Core>
+#include <Eigen/QR>
 
 namespace precice {
 namespace mapping {

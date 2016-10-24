@@ -1,8 +1,6 @@
 #include "SpacetreeConfiguration.hpp"
 #include "spacetree/DynamicOctree.hpp"
 #include "spacetree/StaticOctree.hpp"
-//#include "spacetree/DynamicPeanotree2D.hpp"
-//#include "spacetree/DynamicPeanotree3D.hpp"
 #include "query/FindVoxelContent.hpp"
 #include "utils/xml/XMLAttribute.hpp"
 #include "utils/xml/ValidatorEquals.hpp"
@@ -146,25 +144,24 @@ const PtrSpacetree& SpacetreeConfiguration:: getSpacetree
       return tree.spacetree;
     }
   }
-  preciceError ( "getSpacetree()", "A spacetree with name \"" << name
-                 << "\" is not defined!" );
+  ERROR("A spacetree with name \"" << name << "\" is not defined!" );
 }
 
 PtrSpacetree SpacetreeConfiguration:: getSpacetree
 (
-  const std::string&      type,
-  const utils::DynVector& offset,
-  const utils::DynVector& halflengths,
-  double                  maxMeshwidth ) const
+  const std::string&     type,
+  const Eigen::VectorXd& offset,
+  const Eigen::VectorXd& halflengths,
+  double                 maxMeshwidth ) const
 {
   preciceTrace("getSpacetree()", type, offset, halflengths, maxMeshwidth);
   assertion(_dimensions != 0);
   Spacetree* spacetree = nullptr;
   assertion ( offset.size() == halflengths.size(), offset.size(), halflengths.size() );
   bool equalHalflengths = true;
-  equalHalflengths &= tarch::la::equals(halflengths(0), halflengths(1));
+  equalHalflengths &= math::equals(halflengths(0), halflengths(1));
   if ( _dimensions == 3 ){
-    equalHalflengths &= tarch::la::equals(halflengths(1), halflengths(2));
+    equalHalflengths &= math::equals(halflengths(1), halflengths(2));
   }
   preciceCheck(equalHalflengths, "getSpacetree()", "All halflengths have to "
                << "be equal for a spacetree of type \"quad\"!");
@@ -196,8 +193,8 @@ void SpacetreeConfiguration:: xmlTagCallback
     assertion(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     std::string type = tag.getName();
-    utils::DynVector offset(_dimensions);
-    utils::DynVector halflengths(_dimensions);
+    Eigen::VectorXd offset(_dimensions);
+    Eigen::VectorXd halflengths(_dimensions);
     offset = tag.getDynVectorAttributeValue("offset", _dimensions);
     halflengths = tag.getDynVectorAttributeValue("halflength", _dimensions);
     double maxMeshwidth = tag.getDoubleAttributeValue("max-meshwidth");

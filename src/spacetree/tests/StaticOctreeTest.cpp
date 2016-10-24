@@ -9,12 +9,11 @@ namespace precice {
 namespace spacetree {
 namespace tests {
 
-logging::Logger StaticOctreeTest::
-  _log("precice::spacetree::tests::StaticOctreeTest");
+logging::Logger StaticOctreeTest::_log("precice::spacetree::tests::StaticOctreeTest");
 
 void StaticOctreeTest:: run()
 {
-  preciceTrace ( "run()" );
+  TRACE();
   int sizeRanks = utils::Parallel::getCommunicatorSize();
   bool evenTasks = false;
   bool oddTasks = false;

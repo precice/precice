@@ -2,7 +2,6 @@
 
 #include "spacetree/Spacetree.hpp"
 #include "spacetree/impl/OctreeCell.hpp"
-#include "utils/Dimensions.hpp"
 
 namespace precice {
 namespace spacetree {
@@ -17,13 +16,13 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param center [IN] Center of the root cell.
-   * @param halflength [IN] Half sidelength of the root cell.
-   * @param refinementLimit [IN] Fully refined cell is guaranteed to have smaller
+   * @param[in] center Center of the root cell.
+   * @param[in] halflength  Half sidelength of the root cell.
+   * @param[in] refinementLimit  Fully refined cell is guaranteed to have smaller
    *        or equal sidelengths.
    */
   StaticOctree (
-    const utils::DynVector& center,
+    const Eigen::VectorXd& center,
     double halflength,
     double refinementLimit );
 
@@ -60,7 +59,7 @@ public:
   /**
    * @brief Searches for the position (inside/outside/on) of a point in space.
    */
-  virtual int searchPosition ( const utils::DynVector& point );
+  virtual int searchPosition ( const Eigen::VectorXd& point );
 
   /**
    * @brief Searches for the distance to the next mesh.
@@ -90,7 +89,7 @@ private:
   std::vector<mesh::PtrMesh> _meshes;
 
   // @brief Center of root cell.
-  utils::DynVector _center;
+  Eigen::VectorXd _center;
 
   // @brief Half sidelengths of root cell.
   double _halflength;

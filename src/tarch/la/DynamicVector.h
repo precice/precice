@@ -9,7 +9,7 @@
 #include "tarch/la/VectorOperations.h"
 #include "tarch/la/VectorScalarOperations.h"
 #include "tarch/la/VectorVectorOperations.h"
-#include "Eigen/Core"
+#include <Eigen/Core>
 
 namespace tarch {
   namespace la {

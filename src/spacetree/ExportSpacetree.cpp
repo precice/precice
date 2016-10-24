@@ -22,8 +22,8 @@ ExportSpacetree:: ExportSpacetree
 
 void ExportSpacetree:: nodeCallback
 (
-  const utils::DynVector& center,
-  const utils::DynVector& halflengths,
+  const Eigen::VectorXd& center,
+  const Eigen::VectorXd& halflengths,
   int                     position )
 {
   // do nothing
@@ -31,17 +31,17 @@ void ExportSpacetree:: nodeCallback
 
 void ExportSpacetree:: leafCallback
 (
-  const utils::DynVector& center,
-  const utils::DynVector& halflengths,
-  int                     position,
-  const mesh::Group&      content )
+  const Eigen::VectorXd& center,
+  const Eigen::VectorXd& halflengths,
+  int                    position,
+  const mesh::Group&     content )
 {
   int dim = center.size();
   int twoPowerDim = std::pow(2.0, dim);
-  utils::DynVector vertex(dim);
+  Eigen::VectorXd vertex(dim);
   std::vector<int> vertexIndices(twoPowerDim);
   for (int i=0; i < twoPowerDim; i++){
-    tarch::la::multiplyComponents(utils::delinearize(i,dim), halflengths, vertex);
+    vertex = utils::delinearize(i, dim).cwiseProduct(halflengths);
     vertex += center;
     _vertices.push_back(vertex);
     vertexIndices[i] = _vertexCounter;
@@ -68,7 +68,7 @@ void ExportSpacetree:: doExport
 
   // Write cell corner vertices
   outstream << "POINTS " << _vertices.size() << " float "<< std::endl << std::endl;
-  for (const utils::DynVector& vertexCoords : _vertices){
+  for (const Eigen::VectorXd& vertexCoords : _vertices){
     io::ExportVTK::writeVertex(vertexCoords, outstream);
   }
   outstream << std::endl;
@@ -125,55 +125,6 @@ void ExportSpacetree:: doExport
 
   outstream.close();
 }
-
-//void ExportSpacetree:: exportCell
-//(
-//  const Spacetree& spacetree )
-//{
-//  int dim = spacetree.getCenter().size();
-//  int twoPowerDim = std::pow(2, dim);
-//  if ( spacetree.isLeaf() ) {
-//    std::vector<int> vertexIndices(twoPowerDim);
-//    for ( int i=0; i < twoPowerDim; i++ ) {
-//      utils::DynVector corner(dim);
-//      tarch::la::multiplyComponents (
-//          utils::delinearize(i,dim), spacetree.getHalflengths(), corner );
-//      corner += spacetree.getCenter();
-//      _vertices.push_back ( corner );
-//      vertexIndices[i] = _vertexCounter;
-//      _vertexCounter ++;
-//    }
-//
-//    _cells.push_back ( vertexIndices );
-//    _cellPositions.push_back ( spacetree.getPosition() );
-//    _cellContents.push_back ( spacetree.getContent().size() );
-//
-////    int cellIndex = -1;
-////    if ( utils::Def::DIM == 2 ) {
-////      _cells.push_back (  );
-////      cellIndex = _cellWriter->plotQuadrangle ( vertexIndices );
-////    }
-////    else {
-////      assertion ( utils::Def::DIM == 3 );
-//////      cellIndex = _cellWriter->plotHexahedron ( vertexIndices );
-////    }
-////    assertion ( cellIndex != -1 );
-////    _cellPositionWriter->plotCell ( cellIndex, spacetree.getPosition() );
-////    _cellContentSizeWriter->plotCell ( cellIndex, spacetree.getContent().size() );
-//
-////#   ifdef PRECICE_STATISTICS
-////    _ambiguoutiesWriter->plotCell ( cellIndex, spacetree.getAmbiguouties() );
-////    _remainingCellsVisitedWriter->plotCell ( cellIndex, spacetree.getRemainingCellsVisits() );
-////    _allCellsVisitedWriter->plotCell ( cellIndex, spacetree.getAllCellsVisits() );
-////    _searchDistanceCallsWriter->plotCell ( cellIndex, spacetree.getSearchDistanceCalls() );
-////#   endif
-//  }
-//  else {
-//    for ( size_t i=0; i < spacetree.getChildCount(); i++ ) {
-//      exportCell ( spacetree.getChild(i) );
-//    }
-//  }
-//}
 
 }}
 

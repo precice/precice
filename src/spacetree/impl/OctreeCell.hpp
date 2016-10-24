@@ -1,11 +1,8 @@
-#ifndef PRECICE_NEWSPACETREE_OCTREECELL_HPP_
-#define PRECICE_NEWSPACETREE_OCTREECELL_HPP_
+#pragma once
 
 #include "spacetree/Spacetree.hpp"
 #include "mesh/Group.hpp"
-#include "utils/PointerVector.hpp"
 #include "logging/Logger.hpp"
-#include "utils/Helpers.hpp"
 #include "query/FindVoxelContent.hpp"
 
 namespace precice {
@@ -42,7 +39,7 @@ public:
   }
 
   bool needsRefinement (
-    const utils::DynVector& cellHalflengths,
+    const Eigen::VectorXd& cellHalflengths,
     double                  refinementLimit );
 
   int getPosition() const
@@ -56,8 +53,8 @@ public:
   }
 
   void refine (
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths );
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths );
 
   int getChildCount()
   {
@@ -71,24 +68,24 @@ public:
   }
 
   int getChildIndex (
-    const utils::DynVector& searchPoint,
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths );
+    const Eigen::VectorXd& searchPoint,
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths );
 
   /**
    * @brief Computes and sets child center and halflengths from parent cell.
    */
   void getChildData (
-    int                     childIndex,
-    const utils::DynVector& cellCenter,
-    const utils::DynVector& cellHalflengths,
-    utils::DynVector&       childCenter,
-    utils::DynVector&       childHalflengths );
+    int                    childIndex,
+    const Eigen::VectorXd& cellCenter,
+    const Eigen::VectorXd& cellHalflengths,
+    Eigen::VectorXd&       childCenter,
+    Eigen::VectorXd&       childHalflengths );
 
   void accept (
     Spacetree::Visitor& visitor,
-    const utils::DynVector& center,
-    const utils::DynVector& halflengths );
+    const Eigen::VectorXd& center,
+    const Eigen::VectorXd& halflengths );
 
   void clear();
 
@@ -105,4 +102,3 @@ private:
 
 }}} // namespace precice, spacetree, impl
 
-#endif /* PRECICE_NEWSPACETREE_OCTREECELL_HPP_ */

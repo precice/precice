@@ -38,7 +38,7 @@ void Cuboid:: specializedCreate
     Eigen::Vector2d halfSidelengths ( _sidelengths );
     halfSidelengths *= 0.5;
     for ( int i=0; i < 4; i++ ) {
-      Eigen::Vector2d delinearized(utils::delinearize(i, 2)[0], utils::delinearize(i, 2)[1]);
+      Eigen::Vector2d delinearized(utils::delinearize(i, 2));
       cornerCoords[i] = delinearized.cwiseProduct(halfSidelengths) + halfSidelengths;
       cornerVertices[i] = &seed.createVertex ( cornerCoords[i] );
     }
@@ -169,9 +169,7 @@ void Cuboid:: specializedCreate
     Eigen::Vector3d halfSidelengths ( _sidelengths );
     halfSidelengths *= 0.5;
     for ( int i=0; i < 8; i++ ){
-      Eigen::Vector3d delinearized(utils::delinearize(i, 3)[0],
-                                   utils::delinearize(i, 3)[1],
-                                   utils::delinearize(i, 3)[2]);
+      Eigen::Vector3d delinearized(utils::delinearize(i, 3));
       cornerCoords[i] = delinearized.cwiseProduct(halfSidelengths) + halfSidelengths;
       cornerVertices[i] = &seed.createVertex ( cornerCoords[i] );
     }

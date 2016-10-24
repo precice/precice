@@ -1,5 +1,4 @@
-#ifndef PRECICE_GEOMETRY_CUBOID_HPP_
-#define PRECICE_GEOMETRY_CUBOID_HPP_
+#pragma once
 
 #include "Geometry.hpp"
 #include "logging/Logger.hpp"
@@ -50,5 +49,3 @@ private:
 };
 
 }} // namespace precice, geometry
-
-#endif /* PRECICE_GEOMETRY_CUBOID_HPP_ */
