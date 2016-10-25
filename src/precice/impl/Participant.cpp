@@ -83,7 +83,7 @@ void Participant:: useMesh
   const mesh::PtrMesh&                   mesh,
   const geometry::PtrGeometry&   geometry,
   const spacetree::PtrSpacetree& spacetree,
-  const utils::DynVector&                localOffset,
+  const Eigen::VectorXd&                 localOffset,
   bool                                   remote,
   const std::string&                     fromParticipant,
   double                                 safetyFactor,

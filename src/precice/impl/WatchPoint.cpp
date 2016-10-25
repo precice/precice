@@ -10,7 +10,6 @@
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "com/Communication.hpp"
-#include "tarch/la/WrappedVector.h"
 #include <limits>
 
 namespace precice {
@@ -20,7 +19,7 @@ logging::Logger WatchPoint:: _log ( "precice::impl::WatchPoint" );
 
 WatchPoint:: WatchPoint
 (
-  const utils::DynVector& pointCoords,
+  const Eigen::VectorXd& pointCoords,
   const mesh::PtrMesh&    meshToWatch,
   const std::string&      exportFilename )
 :
@@ -45,7 +44,7 @@ const mesh::PtrMesh& WatchPoint:: mesh() const
 
 void WatchPoint:: initialize()
 {
-  preciceTrace ( "initialize()");
+  TRACE();
   // Find closest vertex
   if(_mesh->vertices().size()>0){
     query::FindClosestVertex findVertex ( _point );
@@ -154,7 +153,7 @@ void WatchPoint:: exportPointData
     // Export watch point data
     for (auto & elem : _dataToExport){
       if (elem->getDimensions() > 1){
-        utils::DynVector toExport(_mesh->getDimensions(), 0.0);
+        Eigen::VectorXd toExport = Eigen::VectorXd::Zero(_mesh->getDimensions());
         getValue(toExport, elem);
         if (coords.size() == 2){
           _txtWriter.writeData(elem->getName(), Vector2D(toExport));
@@ -175,19 +174,18 @@ void WatchPoint:: exportPointData
 
 void WatchPoint:: getValue
 (
-  utils::DynVector& value,
-  mesh::PtrData&    data )
+  Eigen::VectorXd& value,
+  mesh::PtrData&   data )
 {
   int dim = _mesh->getDimensions();
-  utils::DynVector temp(dim);
+  Eigen::VectorXd temp(dim);
   size_t index = 0;
-  const utils::DynVector& values = data->values();
+  const Eigen::VectorXd& values = data->values();
   for (mesh::Vertex* vertex : _vertices ) {
     int offset = vertex->getID()*dim;
     for ( int i=0; i < dim; i++ ){
       temp[i] = values[offset + i];
     }
-//    assign(temp) = tarch::la::slice<dim>(data->values(), vertex->getID()*dim);
     temp *= _weights[index];
     value += temp;
     index ++;
@@ -200,7 +198,7 @@ void WatchPoint:: getValue
   mesh::PtrData& data  )
 {
   size_t index = 0;
-  const utils::DynVector& values = data->values();
+  const Eigen::VectorXd& values = data->values();
   for (mesh::Vertex* vertex : _vertices ) {
     value += _weights[index] * values[vertex->getID()];
     index ++;

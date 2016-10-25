@@ -12,7 +12,6 @@
 #include "io/Constants.hpp"
 #include "query/ExportVTKNeighbors.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "tarch/la/WrappedVector.h"
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
@@ -34,8 +33,6 @@ namespace precice {
   }
 }
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace impl {
 
@@ -53,9 +50,9 @@ public:
    * of this class. The object has to be configured by one of the configure
    * methods before it has a reasonable state and can be used.
    *
-   * @param accessorName [IN] Name of the solver using the interface. Has to
-   *                          match the name given for a participant in the
-   *                          xml configuration file.
+   * @param[in] accessorName Name of the solver using the interface. Has to
+   *                         match the name given for a participant in the
+   *                         xml configuration file.
    */
   SolverInterfaceImpl (
     const std::string& accessorName,

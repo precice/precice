@@ -130,7 +130,7 @@ VertexIterator VertexHandle:: end() const
   return VertexIterator(_content, false);
 }
 
-size_t VertexHandle:: size() const
+std::size_t VertexHandle:: size() const
 {
   return _content.vertices().size();
 }
@@ -167,10 +167,7 @@ const double* EdgeIterator:: vertexCoords
 (
   int vertexIndex )
 {
-  //using tarch::la::dwrap;
-  //dwrap(_impl->coords) = (*_impl->iterator).vertex(vertexIndex).getCoords();
-  const utils::DynVector& coords = (*_impl->iterator).vertex(vertexIndex).getCoords();
-  return tarch::la::raw(coords);
+  return (*_impl->iterator).vertex(vertexIndex).getCoords().data();
 }
 
 int EdgeIterator:: vertexID
@@ -205,7 +202,7 @@ EdgeIterator EdgeHandle:: end () const
   return EdgeIterator ( _content, false );
 }
 
-size_t EdgeHandle:: size () const
+std::size_t EdgeHandle:: size () const
 {
   return _content.edges().size();
 }
@@ -242,11 +239,7 @@ const double* TriangleIterator:: vertexCoords
 (
   int vertexIndex )
 {
-//  using tarch::la::dwrap;
-//  dwrap(_impl->coords) = (*_impl->iterator).vertex(vertexIndex).getCoords();
-//  return _impl->coords;
-  const utils::DynVector& coords = (*_impl->iterator).vertex(vertexIndex).getCoords();
-  return tarch::la::raw(coords);
+  return (*_impl->iterator).vertex(vertexIndex).getCoords().data();
 }
 
 int TriangleIterator:: vertexID
@@ -282,7 +275,7 @@ TriangleIterator TriangleHandle:: end () const
   return TriangleIterator ( _content, false );
 }
 
-size_t TriangleHandle:: size () const
+std::size_t TriangleHandle:: size () const
 {
   return _content.triangles().size();
 }

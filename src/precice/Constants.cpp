@@ -1,5 +1,4 @@
 #include "Constants.hpp"
-#include "utils/Dimensions.hpp"
 #include "cplscheme/Constants.hpp"
 #include "io/Constants.hpp"
 #include "spacetree/Spacetree.hpp"

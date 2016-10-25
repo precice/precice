@@ -13,7 +13,6 @@
 #include "cplscheme/SharedPointer.hpp"
 #include "utils/Helpers.hpp"
 #include "logging/Logger.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
 #include <string>
 
@@ -56,7 +55,7 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param name [IN] Name of the participant. Has to be unique.
+   * @param[in] name Name of the participant. Has to be unique.
    */
   Participant (
     const std::string&          name,
@@ -125,7 +124,7 @@ public:
     const mesh::PtrMesh&                   mesh,
     const geometry::PtrGeometry&   geometry,
     const spacetree::PtrSpacetree& spacetree,
-    const utils::DynVector&                localOffset,
+    const Eigen::VectorXd&                 localOffset,
     bool                                   remote,
     const std::string&                     fromParticipant,
     double                                 safetyFactor,

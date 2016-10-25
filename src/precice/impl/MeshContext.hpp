@@ -7,7 +7,6 @@
 #include "com/Communication.hpp"
 #include "mapping/Mapping.hpp"
 #include "SharedPointer.hpp"
-#include "utils/Dimensions.hpp"
 #include <vector>
 
 namespace precice {
@@ -44,7 +43,7 @@ struct MeshContext
    bool doesPreFiltering;
 
    // @brief Offset only applied to meshes local to the accessor.
-   utils::DynVector localOffset;
+   Eigen::VectorXd localOffset;
 
    // @brief Geometry creating the mesh. Can be empty.
    geometry::PtrGeometry geometry;
@@ -68,7 +67,7 @@ struct MeshContext
      safetyFactor(-1.0),
      provideMesh ( false ),
      doesPreFiltering ( false ),
-     localOffset ( dimensions, 0.0 ),
+     localOffset ( Eigen::VectorXd::Zero(dimensions) ),
      geometry (),
      fromMappingContext(),
      toMappingContext()

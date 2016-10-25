@@ -18,7 +18,7 @@ namespace precice {
       int position;
 
       // @brief Shortest distance vector to closest mesh.
-      utils::DynVector distanceVector;
+      Eigen::VectorXd distanceVector;
 
       /**
        * @brief Constructor.
@@ -42,9 +42,8 @@ ClosestMesh:: ClosestMesh
 :
   _impl ( new impl::ClosestMeshImplementation(dimensions) )
 {
-
   _impl->position = spacetree::Spacetree::positionUndefined();
-  assign(_impl->distanceVector) = std::numeric_limits<double>::max();
+  _impl->distanceVector.setConstant(std::numeric_limits<double>::max());
 }
 
 ClosestMesh:: ClosestMesh ( const ClosestMesh& toCopy )
@@ -95,7 +94,7 @@ void ClosestMesh:: setPosition
 const double* ClosestMesh:: distanceVector()
 {
   assertion ( _impl != nullptr );
-  return tarch::la::raw(_impl->distanceVector);
+  return _impl->distanceVector.data();
 }
 
 void ClosestMesh:: setDistanceVector
@@ -113,7 +112,7 @@ void ClosestMesh:: setDistanceVector
 double ClosestMesh:: distance ()
 {
   assertion ( _impl != nullptr );
-  return tarch::la::norm2(_impl->distanceVector);
+  return _impl->distanceVector.norm();
 }
 
 } // namespace precice

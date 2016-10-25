@@ -1,11 +1,8 @@
 #include "precice/SolverInterface.hpp"
 #include "precice/impl/SolverInterfaceImpl.hpp"
-#include "tarch/la/WrappedVector.h"
 #include "utils/Globals.hpp"
 
 namespace precice {
-
-using namespace tarch::la;
 
 SolverInterface:: SolverInterface
 (
