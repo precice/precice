@@ -1,15 +1,14 @@
-
-#include "PreconditionerTest.h"
+#include "PreconditionerTest.hpp"
 #include "cplscheme/impl/ResidualPreconditioner.hpp"
 #include "cplscheme/impl/ResidualSumPreconditioner.hpp"
 #include "cplscheme/impl/ValuePreconditioner.hpp"
 #include "cplscheme/impl/ConstantPreconditioner.hpp"
 #include "cplscheme/impl/SharedPointer.hpp"
 #include <Eigen/Dense>
-#include "tarch/la/DynamicMatrix.h"
 #include "utils/MasterSlave.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "utils/Parallel.hpp"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 
@@ -63,62 +62,66 @@ void PreconditionerTest::run ()
 
 void PreconditionerTest::setUp()
 {
-  _data.append(1.0);
-  _data.append(2.0);
-  _data.append(3.0);
-  _data.append(4.0);
-  _data.append(5.0);
-  _data.append(6.0);
-  _data.append(7.0);
-  _data.append(8.0);
-  _res.append(0.1);
-  _res.append(0.1);
-  _res.append(0.001);
-  _res.append(0.001);
-  _res.append(0.001);
-  _res.append(0.001);
-  _res.append(10.0);
-  _res.append(20.0);
-  _compareDataRes.append(7.07106781186547372897e+00);
-  _compareDataRes.append(1.41421356237309474579e+01);
-  _compareDataRes.append(1.50000000000000000000e+03);
-  _compareDataRes.append(2.00000000000000000000e+03);
-  _compareDataRes.append(2.50000000000000000000e+03);
-  _compareDataRes.append(3.00000000000000000000e+03);
-  _compareDataRes.append(3.13049516849970566046e-01);
-  _compareDataRes.append(3.57770876399966353265e-01);
-  _compareDataResSum.append(7.90585229434499154877e+01);
-  _compareDataResSum.append(1.58117045886899830975e+02);
-  _compareDataResSum.append(1.67708453051717078779e+04);
-  _compareDataResSum.append(2.23611270735622783832e+04);
-  _compareDataResSum.append(2.79514088419528488885e+04);
-  _compareDataResSum.append(3.35416906103434157558e+04);
-  _compareDataResSum.append(3.50007001329973377324e+00);
-  _compareDataResSum.append(4.00008001519969536020e+00);
-  _compareDataResSum2.append(1.58113093108981217938e+02);
-  _compareDataResSum2.append(3.16226186217962435876e+02);
-  _compareDataResSum2.append(4.74339279326943596971e+02);
-  _compareDataResSum2.append(4.00008000319945455914e+00);
-  _compareDataResSum2.append(5.00010000399932064141e+00);
-  _compareDataResSum2.append(6.00012000479918228280e+00);
-  _compareDataResSum2.append(7.00014000559904481236e+00);
-  _compareDataResSum2.append(8.00016000639890734192e+00);
-  _compareDataValue.append(4.47213595499957927704e-01);
-  _compareDataValue.append(8.94427190999915855407e-01);
-  _compareDataValue.append(3.23498319610315276940e-01);
-  _compareDataValue.append(4.31331092813753647075e-01);
-  _compareDataValue.append(5.39163866017192239255e-01);
-  _compareDataValue.append(6.46996639220630553879e-01);
-  _compareDataValue.append(6.58504607868518165859e-01);
-  _compareDataValue.append(7.52576694706877713514e-01);
-  _compareDataConstant.append(1.00000000000000002082e-03);
-  _compareDataConstant.append(2.00000000000000004163e-03);
-  _compareDataConstant.append(1.49999999999999977796e+00);
-  _compareDataConstant.append(1.99999999999999955591e+00);
-  _compareDataConstant.append(2.50000000000000044409e+00);
-  _compareDataConstant.append(2.99999999999999955591e+00);
-  _compareDataConstant.append(6.99999999999999883585e+05);
-  _compareDataConstant.append(7.99999999999999650754e+05);
+  _data.resize(8);
+  _data << 1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0;
+
+  _res.resize(8);
+  _res << 0.1, 0.1, 0.001, 0.001, 0.001, 0.001, 10.0, 20.0;
+
+  _compareDataRes.resize(8);
+  _compareDataRes <<
+    7.07106781186547372897e+00,
+    1.41421356237309474579e+01,
+    1.50000000000000000000e+03,
+    2.00000000000000000000e+03,
+    2.50000000000000000000e+03,
+    3.00000000000000000000e+03,
+    3.13049516849970566046e-01,
+    3.57770876399966353265e-01;
+
+  _compareDataResSum.resize(8);
+  _compareDataResSum <<
+    7.90585229434499154877e+01,
+    1.58117045886899830975e+02,
+    1.67708453051717078779e+04,
+    2.23611270735622783832e+04,
+    2.79514088419528488885e+04,
+    3.35416906103434157558e+04,
+    3.50007001329973377324e+00,
+    4.00008001519969536020e+00;
+  
+  _compareDataResSum2.resize(8);
+  _compareDataResSum2 <<
+    1.58113093108981217938e+02,
+    3.16226186217962435876e+02,
+    4.74339279326943596971e+02,
+    4.00008000319945455914e+00,
+    5.00010000399932064141e+00,
+    6.00012000479918228280e+00,
+    7.00014000559904481236e+00,
+    8.00016000639890734192e+00;
+
+  _compareDataValue.resize(8);
+  _compareDataValue <<
+    4.47213595499957927704e-01,
+    8.94427190999915855407e-01,
+    3.23498319610315276940e-01,
+    4.31331092813753647075e-01,
+    5.39163866017192239255e-01,
+    6.46996639220630553879e-01,
+    6.58504607868518165859e-01,
+    7.52576694706877713514e-01;
+  
+  _compareDataConstant.resize(8);
+  _compareDataConstant <<
+    1.00000000000000002082e-03,
+    2.00000000000000004163e-03,
+    1.49999999999999977796e+00,
+    1.99999999999999955591e+00,
+    2.50000000000000044409e+00,
+    2.99999999999999955591e+00,
+    6.99999999999999883585e+05,
+    7.99999999999999650754e+05;
 }
 
 void PreconditionerTest::testResPreconditioner ()
@@ -388,7 +391,7 @@ void PreconditionerTest::testParallelMatrixScaling ()
 
   for(int i=0; i<V.rows(); i++){
     for(int j=0; j<V.cols(); j++){
-      validateWithParams2(tarch::la::equals(V(i,j), V_back(i,j)*0.1), V(i,j), V_back(i,j)*0.1);
+      validateWithParams2(math::equals(V(i,j), V_back(i,j)*0.1), V(i,j), V_back(i,j)*0.1);
     }
   }
 
@@ -396,7 +399,7 @@ void PreconditionerTest::testParallelMatrixScaling ()
 
   for(int i=0; i<V.rows(); i++){
     for(int j=0; j<V.cols(); j++){
-      validateWithParams2(tarch::la::equals(V(i,j), V_back(i,j)), V(i,j), V_back(i,j));
+      validateWithParams2(math::equals(V(i,j), V_back(i,j)), V(i,j), V_back(i,j));
     }
   }
 
@@ -414,7 +417,7 @@ void PreconditionerTest::validateVector (DataValues& data, DataValues& compare)
 {
   validate(data.size()==compare.size());
   for(int i=0; i<data.size(); i++){
-    validateWithParams2(tarch::la::equals(data(i), compare(i),1e-8), data(i), compare(i));
+    validateWithParams2(math::equals(data(i), compare(i),1e-8), data(i), compare(i));
   }
 }
 

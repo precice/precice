@@ -3,9 +3,8 @@
 
 #include "PostProcessing.hpp"
 #include "logging/Logger.hpp"
-#include "tarch/la/DynamicVector.h"
 #include "utils/Globals.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include <vector>
 
 namespace precice {

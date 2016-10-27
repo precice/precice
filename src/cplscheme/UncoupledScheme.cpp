@@ -1,5 +1,6 @@
 #include "UncoupledScheme.hpp"
 #include "com/Communication.hpp"
+#include "math/math.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -27,7 +28,7 @@ void UncoupledScheme:: initialize
   preciceTrace ( "initialize()", startTime, startTimestep );
   setTime ( startTime );
   setTimesteps ( startTimestep );
-  assertion ( tarch::la::greaterEquals(startTime, 0.0), startTime );
+  assertion ( math::greaterEquals(startTime, 0.0), startTime );
   assertion ( startTimestep >= 0, startTimestep );
   setIsInitialized(true);
 }
@@ -45,7 +46,7 @@ void UncoupledScheme:: addComputedTime
   preciceCheck ( isCouplingOngoing(), "addComputedTime()",
                  "Invalid call of addComputedTime() after simulation end!" );
 # ifdef Asserts
-  bool greaterThanZero = tarch::la::greater(timeToAdd, 0.0, _eps);
+  bool greaterThanZero = math::greater(timeToAdd, 0.0, _eps);
   assertion(greaterThanZero, timeToAdd);
 # endif // Asserts
   setComputedTimestepPart(getComputedTimestepPart() + timeToAdd);

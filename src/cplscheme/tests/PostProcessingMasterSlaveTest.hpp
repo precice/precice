@@ -9,8 +9,6 @@
 #include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include <string>
-#include <vector>
 
 namespace precice {
 namespace cplscheme {
@@ -44,8 +42,7 @@ public:
    virtual void run ();
 
    typedef std::map<int,PtrCouplingData> DataMap;
-   typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-
+   
 private:
 
    static logging::Logger _log;

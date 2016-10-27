@@ -27,21 +27,18 @@ void RelativeConvergenceMeasureTest:: run ()
 
 void RelativeConvergenceMeasureTest:: testMeasureData ()
 {
-  preciceTrace ( "testMeasureVectorData()" );
+  TRACE();
+  using Eigen::Vector3d;
   double convergenceLimit = 0.1; // 10%
   impl::RelativeConvergenceMeasure measure ( convergenceLimit );
 
   // Create data sets for old state of data and new state of data
-  utils::DynVector oldValues0 ( 3 );
-  utils::DynVector oldValues1 ( 3 );
-  utils::DynVector oldValues2 ( 3 );
-  utils::DynVector newValues ( 3 );
-  utils::DynVector designSpec ( 3, 0.0 );
-  assignList(oldValues0) = 1.0, 1.0, 1.0;
-  assignList(oldValues1) = 2.0, 2.0, 2.0;
-  assignList(oldValues2) = 2.9, 2.9, 2.9;
-  assignList(newValues) = 3.0, 3.0, 3.0;
-
+  Vector3d oldValues0 (1, 1, 1);
+  Vector3d oldValues1 (2, 2, 2);
+  Vector3d oldValues2 (2.9, 2.9, 2.9);
+  Vector3d newValues (3, 3, 3);
+  Vector3d designSpec ( 0, 0, 0 );
+  
   measure.measure ( oldValues0, newValues, designSpec );
   validate ( ! measure.isConvergence() );
 

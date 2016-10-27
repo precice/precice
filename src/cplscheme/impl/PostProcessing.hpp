@@ -1,7 +1,7 @@
 #ifndef PRECICE_CPLSCHEME_POSTPROCESSING_HPP_
 #define PRECICE_CPLSCHEME_POSTPROCESSING_HPP_
 
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include <map>
 #include <vector>
 #include "../BaseCouplingScheme.hpp"

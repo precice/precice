@@ -5,20 +5,20 @@
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "utils/Dimensions.hpp"
 #include "impl/PostProcessing.hpp"
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include <limits>
 #include <sstream>
+#include "math/math.hpp"
+
 
 namespace precice {
 namespace cplscheme {
 
-logging::Logger BaseCouplingScheme::
-_log("precice::cplscheme::BaseCouplingScheme");
+logging::Logger BaseCouplingScheme::_log("precice::cplscheme::BaseCouplingScheme");
 
 BaseCouplingScheme:: BaseCouplingScheme
 (
@@ -31,12 +31,12 @@ BaseCouplingScheme:: BaseCouplingScheme
   _isCoarseModelOptimizationActive(false),
   _eps(std::pow(10.0, -1 * validDigits)),
   _deletedColumnsPPFiltering(0),
+  _iterationsCoarseOptimization(-1),
   _participantSetsDt(false),
   _participantReceivesDt(false),
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _iterations(-1),
-  _iterationsCoarseOptimization(-1),
   _totalIterationsCoarseOptimization(-1),
   _maxIterations(-1),
   _totalIterations(-1),
@@ -88,18 +88,18 @@ BaseCouplingScheme::BaseCouplingScheme
   constants::TimesteppingMethod dtMethod )
   :
   _isCoarseModelOptimizationActive(false),
-  _deletedColumnsPPFiltering(0),
   _firstParticipant(firstParticipant),
   _secondParticipant(secondParticipant),
   _convergenceMeasures(),
   _eps(std::pow(10.0, -1 * validDigits)),
+  _deletedColumnsPPFiltering(0),
+  _iterationsCoarseOptimization(1),
   _m2n(m2n),
   _participantSetsDt(false),
   _participantReceivesDt(false),
   _maxTime(maxTime),
   _maxTimesteps(maxTimesteps),
   _iterations(1),
-  _iterationsCoarseOptimization(1),
   _totalIterationsCoarseOptimization(1),
   _maxIterations(maxIterations),
   _totalIterations(1),
@@ -171,18 +171,18 @@ BaseCouplingScheme::BaseCouplingScheme
 
 void BaseCouplingScheme:: receiveAndSetDt()
 {
-  preciceTrace("receiveAndSetDt()");
+  TRACE();
   if (participantReceivesDt()){
     double dt = UNDEFINED_TIMESTEP_LENGTH;
     getM2N()->receive(dt);
     DEBUG("Received timestep length of " << dt);
-    assertion(not tarch::la::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
+    assertion(not math::equals(dt, UNDEFINED_TIMESTEP_LENGTH));
     setTimestepLength(dt);
   }
 }
 
 void BaseCouplingScheme:: sendDt(){
-  preciceTrace("sendDt()");
+  TRACE();
   if (participantSetsDt()){
     DEBUG("sending timestep length of " << getComputedTimestepPart());
     getM2N()->send(getComputedTimestepPart());
@@ -196,7 +196,7 @@ void BaseCouplingScheme:: addDataToSend
   mesh::PtrMesh mesh,
   bool          initialize)
 {
-  preciceTrace("addDataToSend()");
+  TRACE();
   int id = data->getID();
   if(! utils::contained(id, _sendData)) {
     PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize, data->getDimensions()));
@@ -215,7 +215,7 @@ void BaseCouplingScheme:: addDataToReceive
   mesh::PtrMesh mesh,
   bool          initialize)
 {
-  preciceTrace("addDataToReceive()");
+  TRACE();
   int id = data->getID();
   if(! utils::contained(id, _receiveData)) {
     PtrCouplingData ptrCplData (new CouplingData(& (data->values()), mesh, initialize, data->getDimensions()));
@@ -234,7 +234,7 @@ void BaseCouplingScheme:: sendState
   com::Communication::SharedPointer communication,
   int                   rankReceiver)
 {
-  preciceTrace("sendState()", rankReceiver);
+  TRACE(rankReceiver);
   communication->startSendPackage(rankReceiver );
   assertion(communication.get() != nullptr);
   assertion(communication->isConnected());
@@ -432,12 +432,12 @@ void BaseCouplingScheme::extrapolateData(DataMap& data)
 
 bool BaseCouplingScheme:: hasTimestepLength() const
 {
-  return not tarch::la::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH);
+  return not math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH);
 }
 
 double BaseCouplingScheme:: getTimestepLength() const
 {
-  assertion(not tarch::la::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH));
+  assertion(not math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH));
   return _timestepLength;
 }
 
@@ -454,7 +454,7 @@ void BaseCouplingScheme:: addComputedTime
   _time += timeToAdd;
 
   // Check validness
-  bool valid = tarch::la::greaterEquals(getThisTimestepRemainder(), 0.0, _eps);
+  bool valid = math::greaterEquals(getThisTimestepRemainder(), 0.0, _eps);
   preciceCheck(valid, "addComputedTime()", "The computed timestep length of "
            << timeToAdd << " exceeds the maximum timestep limit of "
            << _timestepLength - _computedTimestepPart + timeToAdd
@@ -465,9 +465,9 @@ bool BaseCouplingScheme:: willDataBeExchanged
 (
   double lastSolverTimestepLength) const
 {
-  preciceTrace("willDataBeExchanged()", lastSolverTimestepLength);
+  TRACE(lastSolverTimestepLength);
   double remainder = getThisTimestepRemainder() - lastSolverTimestepLength;
-  return not tarch::la::greater(remainder, 0.0, _eps);
+  return not math::greater(remainder, 0.0, _eps);
 }
 
 bool BaseCouplingScheme:: hasDataBeenExchanged() const
@@ -511,7 +511,7 @@ double BaseCouplingScheme:: getThisTimestepRemainder() const
 {
   preciceTrace("getTimestepRemainder()");
   double remainder = 0.0;
-  if (not tarch::la::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)){
+  if (not math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)){
     remainder = _timestepLength - _computedTimestepPart;
   }
   DEBUG("return " << remainder);
@@ -520,8 +520,8 @@ double BaseCouplingScheme:: getThisTimestepRemainder() const
 
 double BaseCouplingScheme:: getNextTimestepMaxLength() const
 {
-  if (tarch::la::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)){
-    if (tarch::la::equals(_maxTime, UNDEFINED_TIME)){
+  if (math::equals(_timestepLength, UNDEFINED_TIMESTEP_LENGTH)){
+    if (math::equals(_maxTime, UNDEFINED_TIME)){
       return std::numeric_limits<double>::max();
     }
     else {
@@ -533,8 +533,7 @@ double BaseCouplingScheme:: getNextTimestepMaxLength() const
 
 bool BaseCouplingScheme:: isCouplingOngoing() const
 {
-  using namespace tarch::la;
-  bool timeLeft = greater(_maxTime, _time, _eps) || equals(_maxTime, UNDEFINED_TIME);
+  bool timeLeft = math::greater(_maxTime, _time, _eps) || math::equals(_maxTime, UNDEFINED_TIME);
   bool timestepsLeft = (_maxTimesteps >= _timesteps)
     || (_maxTimesteps == UNDEFINED_TIMESTEPS);
   return timeLeft && timestepsLeft;
@@ -895,7 +894,7 @@ void BaseCouplingScheme::advanceTXTWriters()
       if(_convergenceMeasures[i].level > 0) continue;
 
       std::stringstream sstm;  sstm << "avgConvRate(" <<i<< ")";
-      if (tarch::la::equals(_firstResiduumNorm[i], 0.)){
+      if (math::equals(_firstResiduumNorm[i], 0.)){
         _iterationsWriter.writeData(sstm.str(), std::numeric_limits<double>::infinity());
       }else{
         double avgConvRate = _convergenceMeasures[i].measure->getNormResidual()/_firstResiduumNorm[i];
@@ -912,14 +911,10 @@ void BaseCouplingScheme:: exportState(const std::string& filenamePrefix ) const
   if (not doesFirstStep()) {
     io::TXTWriter writer(filenamePrefix + "_cplscheme.txt");
     for (const BaseCouplingScheme::DataMap::value_type& dataMap : getSendData()) {
-
-      // TODO: Eigen matrix is convertet to tarch matrix here, as Eigen does not provide a read from file
-      // functionality until now. This should be solved soon, bug #622 and bug #209.
-      // If resolved in newer Eigen relase 3.3, modify TXTWriter and TXTReader
-      writer.write(utils::DynMatrix(dataMap.second->oldValues));
+      writer.write(dataMap.second->oldValues);
     }
     for (const BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
-      writer.write(utils::DynMatrix(dataMap.second->oldValues));
+      writer.write(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != nullptr) {
       _postProcessing->exportState(writer);
@@ -932,20 +927,11 @@ void BaseCouplingScheme:: importState(const std::string& filenamePrefix)
   if (not doesFirstStep()) {
     io::TXTReader reader(filenamePrefix + "_cplscheme.txt");
     for (BaseCouplingScheme::DataMap::value_type& dataMap : getSendData()) {
-
-      // TODO: Eigen matrix is convertet to tarch matrix here, as Eigen does not provide a read from file
-      // functionality until now. This should be solved soon, bug #622 and bug #209.
-      // If resolved in newer Eigen relase 3.3, modify TXTWriter and TXTReader
-      utils::DynMatrix tmp_readMat(dataMap.second->oldValues);
-      reader.read(tmp_readMat);
-      dataMap.second->oldValues = tmp_readMat;
+      reader.read(dataMap.second->oldValues);
     }
     for (BaseCouplingScheme::DataMap::value_type& dataMap : getReceiveData()) {
-
-      utils::DynMatrix tmp_readMat(dataMap.second->oldValues);
-      reader.read(tmp_readMat);
-      reader.read(tmp_readMat);
-      dataMap.second->oldValues = tmp_readMat;
+      reader.read(dataMap.second->oldValues);
+      reader.read(dataMap.second->oldValues);
     }
     if (_postProcessing.get() != nullptr){
       _postProcessing->importState(reader);
@@ -969,7 +955,7 @@ void BaseCouplingScheme:: updateTimeAndIterations
     // The computed timestep part equals the timestep length, since the
     // timestep remainder is zero. Subtract the timestep length do another
     // coupling iteration.
-    assertion(tarch::la::greater(getComputedTimestepPart(), 0.0));
+    assertion(math::greater(getComputedTimestepPart(), 0.0));
     _time = _time - _computedTimestepPart;
 
     // in case of multilevel PP: only increment outer iteration count if surrogate model has converged.

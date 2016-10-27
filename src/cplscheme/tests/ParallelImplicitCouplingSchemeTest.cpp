@@ -24,8 +24,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "utils/Dimensions.hpp"
-#include "Eigen/Core"
+#include <Eigen/Core>
 #include "utils/EigenHelperFunctions.hpp"
 #include "math/math.hpp"
 
@@ -179,7 +178,7 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
     auto& values = mesh->data(1)->values();
-    validateWithParams1(math::equals(utils::DynVector(values), Eigen::Vector3d(1.0, 2.0, 3.0)), utils::DynVector(values));
+    validateWithParams1(math::equals(values, Eigen::Vector3d(1.0, 2.0, 3.0)), values);
 
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
@@ -199,10 +198,10 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
     Eigen::VectorXd v(3); v << 1.0, 2.0, 3.0;
     mesh->data(1)->values() = v;
     cplScheme.performedAction(constants::actionWriteInitialData());
-    validateWithParams1(math::equals(values(0), 0.0), utils::DynVector(values));
+    validateWithParams1(math::equals(values(0), 0.0), values);
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    validateWithParams1(math::equals(values(0), 4.0), utils::DynVector(values));
+    validateWithParams1(math::equals(values(0), 4.0), values);
 
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
@@ -313,14 +312,14 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
 
   pp.performPostProcessing(data);
 
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.02), (*data.at(0)->values)(2));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.03), (*data.at(0)->values)(3));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
+  validateWithParams1(math::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
+  validateWithParams1(math::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
+  validateWithParams1(math::equals((*data.at(0)->values)(2), 1.02), (*data.at(0)->values)(2));
+  validateWithParams1(math::equals((*data.at(0)->values)(3), 1.03), (*data.at(0)->values)(3));
+  validateWithParams1(math::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
+  validateWithParams1(math::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
+  validateWithParams1(math::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
+  validateWithParams1(math::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
 
   Eigen::VectorXd newdvalues;
   utils::append(newdvalues, 10.0);
@@ -331,14 +330,14 @@ void ParallelImplicitCouplingSchemeTest:: testVIQNPP()
 
   pp.performPostProcessing(data);
 
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63401340929692295845e-01), (*data.at(0)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.10309919173607440257e-01), (*data.at(0)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78402117927690717636e+00), (*data.at(0)->values)(2));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.95773243938020513610e+00), (*data.at(0)->values)(3));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.28025852497733944046e-02), (*data.at(1)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.28025852497733944046e-02), (*data.at(1)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.28025852497733944046e-02), (*data.at(1)->values)(2));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 8.28025852497733944046e-02), (*data.at(1)->values)(3));
+  validateWithParams1(math::equals((*data.at(0)->values)(0), -5.63401340929692295845e-01), (*data.at(0)->values)(0));
+  validateWithParams1(math::equals((*data.at(0)->values)(1), 6.10309919173607440257e-01), (*data.at(0)->values)(1));
+  validateWithParams1(math::equals((*data.at(0)->values)(2), 1.78402117927690717636e+00), (*data.at(0)->values)(2));
+  validateWithParams1(math::equals((*data.at(0)->values)(3), 2.95773243938020513610e+00), (*data.at(0)->values)(3));
+  validateWithParams1(math::equals((*data.at(1)->values)(0), 8.28025852497733944046e-02), (*data.at(1)->values)(0));
+  validateWithParams1(math::equals((*data.at(1)->values)(1), 8.28025852497733944046e-02), (*data.at(1)->values)(1));
+  validateWithParams1(math::equals((*data.at(1)->values)(2), 8.28025852497733944046e-02), (*data.at(1)->values)(2));
+  validateWithParams1(math::equals((*data.at(1)->values)(3), 8.28025852497733944046e-02), (*data.at(1)->values)(3));
 
 }
 
@@ -420,16 +419,15 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   
   pp.performPostProcessing(data);
   
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00000000000000000000), (*data.at(0)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01000000000000000888), (*data.at(0)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.02000000000000001776), (*data.at(0)->values)(2));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.03000000000000002665), (*data.at(0)->values)(3));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199000000000000010214), (*data.at(1)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199000000000000010214), (*data.at(1)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199000000000000010214), (*data.at(1)->values)(2));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 0.199000000000000010214), (*data.at(1)->values)(3));
-  
-  
+  validateWithParams1(math::equals((*data.at(0)->values)(0), 1.00000000000000000000), (*data.at(0)->values)(0));
+  validateWithParams1(math::equals((*data.at(0)->values)(1), 1.01000000000000000888), (*data.at(0)->values)(1));
+  validateWithParams1(math::equals((*data.at(0)->values)(2), 1.02000000000000001776), (*data.at(0)->values)(2));
+  validateWithParams1(math::equals((*data.at(0)->values)(3), 1.03000000000000002665), (*data.at(0)->values)(3));
+  validateWithParams1(math::equals((*data.at(1)->values)(0), 0.199000000000000010214), (*data.at(1)->values)(0));
+  validateWithParams1(math::equals((*data.at(1)->values)(1), 0.199000000000000010214), (*data.at(1)->values)(1));
+  validateWithParams1(math::equals((*data.at(1)->values)(2), 0.199000000000000010214), (*data.at(1)->values)(2));
+  validateWithParams1(math::equals((*data.at(1)->values)(3), 0.199000000000000010214), (*data.at(1)->values)(3));
+    
   Eigen::VectorXd newdvalues;
   utils::append(newdvalues, 10.0);
   utils::append(newdvalues, 10.0);
@@ -440,14 +438,14 @@ void ParallelImplicitCouplingSchemeTest:: testMVQNPP()
   
   pp.performPostProcessing(data);
   
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -5.63401340929695848558e-01), (*data.at(0)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 6.10309919173602111186e-01), (*data.at(0)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.78402117927690184729e+00), (*data.at(0)->values)(2));
-  validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.95773243938020247157e+00), (*data.at(0)->values)(3));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 8.28025852497733250157e-02), (*data.at(1)->values)(0));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 8.28025852497733250157e-02), (*data.at(1)->values)(1));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 8.28025852497733250157e-02), (*data.at(1)->values)(2));
-  validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 8.28025852497733250157e-02), (*data.at(1)->values)(3));
+  validateWithParams1(math::equals((*data.at(0)->values)(0), -5.63401340929695848558e-01), (*data.at(0)->values)(0));
+  validateWithParams1(math::equals((*data.at(0)->values)(1), 6.10309919173602111186e-01), (*data.at(0)->values)(1));
+  validateWithParams1(math::equals((*data.at(0)->values)(2), 1.78402117927690184729e+00), (*data.at(0)->values)(2));
+  validateWithParams1(math::equals((*data.at(0)->values)(3), 2.95773243938020247157e+00), (*data.at(0)->values)(3));
+  validateWithParams1(math::equals((*data.at(1)->values)(0), 8.28025852497733250157e-02), (*data.at(1)->values)(0));
+  validateWithParams1(math::equals((*data.at(1)->values)(1), 8.28025852497733250157e-02), (*data.at(1)->values)(1));
+  validateWithParams1(math::equals((*data.at(1)->values)(2), 8.28025852497733250157e-02), (*data.at(1)->values)(2));
+  validateWithParams1(math::equals((*data.at(1)->values)(3), 8.28025852497733250157e-02), (*data.at(1)->values)(3));
 
 }
 

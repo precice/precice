@@ -2,10 +2,9 @@
 #define PRECICE_CPLSCHEME_AIKTENPOSTPROCESSING_HPP_
 
 #include "PostProcessing.hpp"
-#include "utils/Dimensions.hpp"
 #include "logging/Logger.hpp"
 #include "utils/Globals.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 
 #include <map>
 

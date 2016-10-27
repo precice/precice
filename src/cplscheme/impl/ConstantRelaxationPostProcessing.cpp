@@ -2,10 +2,8 @@
 #include "../CouplingData.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "tarch/la/DynamicVector.h"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include "utils/EigenHelperFunctions.hpp"
 //#include "utils/NumericalCompare.hpp"
 

@@ -1,9 +1,7 @@
 #pragma once
 
-#include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/Globals.hpp"
-#include "tarch/la/DynamicColumnMatrix.h"
 #include <Eigen/Dense>
 #include "../SharedPointer.hpp"
 #include <vector>
@@ -26,11 +24,6 @@ class Preconditioner
 {
 public:
 
-  //see post-processing definitions
-  typedef tarch::la::DynamicVector<double> DataValues;
-  typedef std::map<int,PtrCouplingData> DataMap;
-  typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-  
   Preconditioner(
       int maxNonConstTimesteps)
   :
@@ -70,22 +63,6 @@ public:
   }
 
   /**
-   * @brief To transform physical values to balanced values. Matrix version
-   */
-  void apply(DataMatrix& M){
-    preciceTrace("apply()");
-
-    assertion(M.column(0).size()==(int)_weights.size());
-
-    // scale matrix M
-    for(int i=0; i<M.cols(); i++){
-      for(int j=0; j<M.column(0).size(); j++){
-        M(j,i) *= _weights[j];
-      }
-    }
-  }
-
-  /**
    * @brief Apply preconditioner to matrix
    * @param transpose: false = from left, true = from right
    */
@@ -114,7 +91,7 @@ public:
    * @param transpose: false = from left, true = from right
    */
   void revert(Eigen::MatrixXd& M, bool transpose){
-    preciceTrace(__func__);
+    TRACE();
     //assertion(_needsGlobalWeights);
     if (transpose) {
       assertion(M.cols()==(int)_invWeights.size());
@@ -134,54 +111,11 @@ public:
     }
   }
 
-
-
   /**
-   * @brief To transform physical values to balanced values. Vector version
+   * @brief To transform physical values to balanced values. Matrix version
    */
-  void apply(DataValues& v){
-    preciceTrace("apply()");
-    assertion(v.size()==(int)_weights.size());
-
-    // scale residual
-    for(int j=0; j<v.size(); j++){
-      v[j] *= _weights[j];
-    }
-  }
-
-  /**
-   * @brief To transform balanced values back to physical values. Matrix version
-   */
-  void revert(DataMatrix& M){
-    preciceTrace("revert()");
-    assertion(M.column(0).size()==(int)_weights.size());
-
-    // scale matrix M
-    for(int i=0; i<M.cols(); i++){
-      for(int j=0; j<M.column(0).size(); j++){
-        M(j,i) *= _invWeights[j];
-      }
-    }
-  }
-
-  /**
-   * @brief To transform balanced values back to physical values. Vector version
-   */
-  void revert(DataValues& v){
-    preciceTrace("revert()");
-    assertion(v.size()==(int)_weights.size());
-
-    // scale residual
-    for(int j=0; j<v.size(); j++){
-      v[j] *= _invWeights[j];
-    }
-  }
-
-  /**
-     * @brief To transform physical values to balanced values. Matrix version
-     */
     void apply(Eigen::MatrixXd& M){
-      preciceTrace("apply()");
+      TRACE();
       assertion(M.rows()==(int)_weights.size(), M.rows(), (int)_weights.size());
 
       // scale matrix M
@@ -196,7 +130,7 @@ public:
      * @brief To transform physical values to balanced values. Vector version
      */
     void apply(Eigen::VectorXd& v){
-      preciceTrace("apply()");
+      TRACE();
 
       assertion(v.size()==(int)_weights.size());
 
@@ -210,7 +144,7 @@ public:
      * @brief To transform balanced values back to physical values. Matrix version
      */
     void revert(Eigen::MatrixXd& M){
-      preciceTrace("revert()");
+      TRACE();
 
       assertion(M.rows()==(int)_weights.size());
 
@@ -226,7 +160,7 @@ public:
      * @brief To transform balanced values back to physical values. Vector version
      */
     void revert(Eigen::VectorXd& v){
-      preciceTrace("revert()");
+      TRACE();
 
       assertion(v.size()==(int)_weights.size());
 
@@ -239,10 +173,10 @@ public:
   /**
    * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
    *
-   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
+   * @param[in] timestepComplete True if this FSI iteration also completed a timestep
    */
   void update(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res){
-    preciceTrace(__func__, _nbNonConstTimesteps, _freezed);
+    TRACE(_nbNonConstTimesteps, _freezed);
 
     // if number of allowed non-const time steps is exceeded, do not update weights
     if(_freezed)
@@ -261,7 +195,7 @@ public:
 
   //@brief: returns true if a QR decomposition from scratch is necessary
   bool requireNewQR(){
-    preciceTrace("requireNewQR()", _requireNewQR);
+    TRACE(_requireNewQR);
     return _requireNewQR;
   }
 
@@ -310,10 +244,9 @@ protected:
   /**
    * @brief Update the scaling after every FSI iteration and require a new QR decomposition (if necessary)
    *
-   * @param timestepComplete [IN] True if this FSI iteration also completed a timestep
+   * @param[in] timestepComplete True if this FSI iteration also completed a timestep
    */
   virtual void _update_(bool timestepComplete, const Eigen::VectorXd& oldValues, const Eigen::VectorXd& res) =0;
-
 
 private:
 

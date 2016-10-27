@@ -1,14 +1,11 @@
-#ifndef RELATIVECONVERGENCEMEASURE_HPP_
-#define RELATIVECONVERGENCEMEASURE_HPP_
+#pragma once
 
 #include "ConvergenceMeasure.hpp"
 #include "../CouplingData.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/Dimensions.hpp"
-//#include "utils/NumericalCompare.hpp"
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
-#include "tarch/la/ScalarOperations.h"
+#include "math/math.hpp"
 
 namespace precice {
    namespace cplscheme {
@@ -42,7 +39,7 @@ public:
    /**
     * @brief Constructor.
     *
-    * @param convergenceLimitPercent [IN]
+    * @param[in] convergenceLimitPercent
     *        Limit to define convergence relative to the norm of the current
     *        new dataset. Has to be in $] 0 ; 1 ]$.
     */
@@ -100,7 +97,7 @@ public:
    
    virtual double getNormResidual()
    {
-	   if (tarch::la::equals(_norm, 0.))
+	   if (math::equals(_norm, 0.))
 		   return std::numeric_limits<double>::infinity();
 	   else
 		   return _normDiff/_norm;
@@ -121,4 +118,3 @@ private:
 
 }}} // namespace precice, cplscheme, impl
 
-#endif /* RELATIVECONVERGENCEMEASURE_HPP_ */

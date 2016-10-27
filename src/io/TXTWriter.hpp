@@ -39,36 +39,6 @@ public:
    */
   ~TXTWriter();
 
-  /**
-   * @brief Writes (appends) the matrix to the file.
-   */
-  template<typename MATRIX>
-  typename std::enable_if<tarch::la::IsMatrix<MATRIX>::value
-  >::type write(const MATRIX& matrix)
-  {
-    typedef tarch::la::MatrixTraits<MATRIX> T;
-    for (int i=0; i < T::rows(matrix); i++){
-      for (int j=0; j < T::cols(matrix); j++){
-        _file << T::celem(i,j,matrix) << " ";
-      }
-      _file << std::endl;
-    }
-  }
-
-  /**
-   * @brief Writes (appends) the vector to the file.
-   */
-  template<typename VECTOR>
-  typename std::enable_if<tarch::la::IsVector<VECTOR>::value
-  >::type write(const VECTOR& vector)
-  {
-    typedef tarch::la::VectorTraits<VECTOR> T;
-    for (int i=0; i < T::size(vector); i++){
-      _file << T::celem(i,vector) << " ";
-    }
-    _file << std::endl;
-  }
-
   ///Writes (appends) the matrix to the file.
   void write(const Eigen::MatrixXd& matrix)
   {

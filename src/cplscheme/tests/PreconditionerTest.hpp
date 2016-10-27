@@ -1,8 +1,6 @@
 #pragma once
 
 #include "tarch/tests/TestCase.h"
-#include <tarch/la/DynamicColumnMatrix.h>
-#include <tarch/la/DynamicVector.h>
 #include "utils/Globals.hpp"
 
 namespace precice {
@@ -24,9 +22,8 @@ class PreconditionerTest : public tarch::tests::TestCase
 public:
 
   //see post-processing definitions
-  typedef tarch::la::DynamicVector<double> DataValues;
-  typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-  
+  typedef Eigen::VectorXd DataValues;
+    
   /**
    * Constructor.
    */
@@ -68,7 +65,6 @@ private:
    * Tests constant preconditioner.
    */
   void testConstPreconditioner ();
-
 
   /**
    * Test preconditioner on squared matrix (aka old Jacobian) as well as tall and skinny matrix (aka V or W)

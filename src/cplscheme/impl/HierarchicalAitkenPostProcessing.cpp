@@ -2,6 +2,7 @@
 #include "../CouplingData.hpp"
 #include "utils/Globals.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "math/math.hpp"
 #include <limits>
 
 namespace precice {
@@ -34,7 +35,7 @@ void HierarchicalAitkenPostProcessing:: initialize
 (
   DataMap & cplData )
 {
-  preciceTrace ( "initialize()" );
+  TRACE();
   preciceCheck ( utils::contained(*_dataIDs.begin(), cplData), "initialize()",
                  "Data with ID " << *_dataIDs.begin()
                  << " is not contained in data given at initialization!" );
@@ -371,17 +372,16 @@ void HierarchicalAitkenPostProcessing:: computeAitkenFactor
   double nominator,
   double denominator )
 {
-  using namespace tarch::la;
   // Select/compute aitken factor depending on current iteration count
   if ( _iterationCounter == 0 ) {
     //INFO ( "First iteration (nom = " << nominator << ", den = " << denominator );
-    _aitkenFactors[level] = sign(_aitkenFactors[level]) * min(
-        Vector<2,double>(_initialRelaxation, std::abs(_aitkenFactors[level])));
+    _aitkenFactors[level] = math::sign(_aitkenFactors[level]) *
+      std::min(_initialRelaxation, std::abs(_aitkenFactors[level]));
   }
   else {
     //INFO ( "Aitken factor = - " << _aitkenFactors[level] << " * "
     //               << nominator << " / " << denominator );
-    if ( equals(std::sqrt(denominator), 0.0) ) {
+    if ( math::equals(std::sqrt(denominator), 0.0) ) {
       _aitkenFactors[level] = 1.0;
     }
     else {

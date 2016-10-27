@@ -2,17 +2,13 @@
 #ifndef PARALLELMATRIXOPERATIONS_HPP_
 #define PARALLELMATRIXOPERATIONS_HPP_
 
-
 #include "logging/Logger.hpp"
-#include "tarch/la/DynamicColumnMatrix.h"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/DynamicVector.h"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Communication.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 
 namespace precice {
 namespace cplscheme {
@@ -21,12 +17,6 @@ namespace impl {
 class ParallelMatrixOperations
 {
 public:
-
-	// tarch
-	typedef tarch::la::DynamicVector<double> TarchVector;
-	typedef tarch::la::DynamicMatrix<double> TarchMatrix;
-	typedef tarch::la::DynamicColumnMatrix<double> TarchColumnMatrix;
-	
 
   /**
    * @brief Constructor.
@@ -46,65 +36,6 @@ public:
 		   	   	   com::Communication::SharedPointer rightComm,
 		   	   	   bool needcyclicComm);
 
-   /**
-    * @brief multiplies tarch matrices in parallel or serial execution.
-    * 		 This class is specialized for multiplication of matrices in the
-    * 		 coupling scheme.
-    * 		 If leftMatrix.rows() = n_global and the result matrix is of size
-    * 		 (n_global x n_global) a cyclic communication is used and the overall
-    * 		 matrix is computed block-wise and distributed.
-    * 		 If the result matrix is of size (n_global x LS_cols) the multiplication
-    * 		 is based on a dot-product computation.
-    * @param [IN] p - first dimension, i.e., overall (global) number of rows
-    * @param [IN] q - inner dimension
-    * @param [IN] r - second dimension, i.e., overall (global) number cols of result matrix
-    */
-   void multiply(
-       TarchMatrix& leftMatrix,
-		   TarchMatrix& rightMatrix,
-		   TarchMatrix& result,
-		   const std::vector<int>& offsets,
-		   int p, int q, int r);
-
-   void multiply(
-       TarchMatrix& leftMatrix,
-       TarchColumnMatrix& rightMatrix,
-   		 TarchMatrix& result,
-   		 const std::vector<int>& offsets,
-   		 int p, int q, int r);
-   /**
-    * @brief multiplies tarch matrix with tarch vector in parallel or serial execution.
-    * 		 The multiplication is based on a dot-product computation in parallel execution.
-    * @param [IN] p - first dimension, i.e., overall (global) number of rows
-    * @param [IN] q - second dimension, i.e., overall (global) number cols
-    */
-   void multiply(
-       TarchMatrix& A,
-		   TarchVector& v,
-		   TarchVector& result,
-		   const std::vector<int>& offsets,
-		   int p, int q);
-
-   /**
-	* @brief multiplies Eigen matrices in parallel or serial execution.
-	* 		 This class is specialized for multiplication of matrices in the
-	* 		 coupling scheme.
-	* 		 If leftMatrix.rows() = n_global and the result matrix is of size
-	* 		 (n_global x n_global) a cyclic communication is used and the overall
-	* 		 matrix is computed block-wise and distributed.
-	* 		 If the result matrix is of size (n_global x LS_cols) the multiplication
-	* 		 is based on a dot-product computation.
-	* @param [IN] p - first dimension, i.e., overall (global) number of rows
-    * @param [IN] q - inner dimension
-    * @param [IN] r - second dimension, i.e., overall (global) number cols of result matrix
-    * @param [IN] dotProductComputation - computes the (n1 x n2) * (n2 x m) multiplication based
-    * 					on a dot-product computation (low storage requirement, large overhead due to
-    * 					communication set-up) iff parameter is true.
-    * 					Otherwise, the computation is based on a block-wise matrix matrix computation
-    * 					of the local matrices that are communicated and broadcasted (large local storage
-    * 					requirement of (n_global x m), but small overhead due to communication set-up)
-    * 					Default is dot-product based computation.
-	*/
    template<typename Derived1, typename Derived2>
    void multiply(
        Eigen::PlainObjectBase<Derived1>& leftMatrix,
@@ -149,11 +80,16 @@ public:
    }
 
    /** @brief: Method computes the matrix-matrix/matrix-vector product of a (p x q)
-    * matrix that is distributed column-wise (e.g. pseudiInverse Z), with a matrix/vector
+    * matrix that is distributed column-wise (e.g. pseudoInverse Z), with a matrix/vector
     * of size (q x r) with r=1/cols, that is distributed row-wise (e.g. _matrixW, _matrixV, residual).
     *
     * In each case mat-mat or mat-vec product, the result is of size (m x m) or (m x 1), where
     * m is the number of cols, i.e., small such that the result is stored on each proc.
+    *
+    * @param[in] p - first dimension, i.e., overall (global) number of rows
+    * @param[in] q - inner dimension
+    * @param[in] r - second dimension, i.e., overall (global) number cols of result matrix
+    *
     */
    template<typename Derived1, typename Derived2, typename Derived3>
     void multiply(
@@ -180,31 +116,12 @@ public:
   }
 
 
-
 private:
 
    // @brief Logging device.
    static logging::Logger _log;
 
-   // @brief multiplies matrices based on a dot-product computation with a rectangular result matrix
-   void _multiplyNM(
-       TarchMatrix& leftMatrix,
-       TarchMatrix& rightMatrix,
-       TarchMatrix& result,
-       const std::vector<int>& offsets,
-       int p, int q, int r);
-
-   // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
-   void _multiplyNN(
-       TarchMatrix& leftMatrix,
-       TarchMatrix& rightMatrix,
-       TarchMatrix& result,
-       const std::vector<int>& offsets,
-       int p, int q, int r);
-
-
-
-   // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
+  // @brief multiplies matrices based on a cyclic communication and block-wise matrix multiplication with a quadratic result matrix
    template<typename Derived1, typename Derived2>
    void _multiplyNN(
        Eigen::PlainObjectBase<Derived1>& leftMatrix,
