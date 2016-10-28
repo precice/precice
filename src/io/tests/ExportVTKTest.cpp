@@ -5,7 +5,6 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include <sstream>
 

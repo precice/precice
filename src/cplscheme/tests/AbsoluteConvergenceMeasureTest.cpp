@@ -27,23 +27,18 @@ void AbsoluteConvergenceMeasureTest:: run ()
 
 void AbsoluteConvergenceMeasureTest:: testMeasureData ()
 {
-  preciceTrace ( "testMeasureData()" );
-
+  TRACE();
+  using Eigen::Vector3d;
   // Create convergence measure for Vector data
   double convergenceLimit = 9.0;
   impl::AbsoluteConvergenceMeasure measure ( convergenceLimit );
 
   // Create data sets for old state of data and new state of data
-  utils::DynVector oldValues0 ( 3 );
-  utils::DynVector oldValues1 ( 3 );
-  utils::DynVector oldValues2 ( 3 );
-  utils::DynVector newValues  ( 3 );
-  utils::DynVector designSpec ( 3, 0.0 );
-
-  assignList(oldValues0) = -2.0, -1.0, 0.0;
-  assignList(oldValues1) = 2.0, 3.0, 4.0;
-  assignList(oldValues2) = 3.0, 4.0, 5.0;
-  assignList(newValues) = 5.0, 6.0, 7.0;
+  Vector3d oldValues0(-2, -1, 0);
+  Vector3d oldValues1(2, 3, 4);
+  Vector3d oldValues2(3, 4, 5);
+  Vector3d newValues(5, 6, 7);
+  Vector3d designSpec = Vector3d::Zero();
 
   measure.measure ( oldValues0, newValues, designSpec );
   validate ( ! measure.isConvergence() );

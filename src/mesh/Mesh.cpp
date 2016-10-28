@@ -495,7 +495,7 @@ void Mesh:: computeState()
     if (computeNormals){
       for (Edge& edge : _content.edges()) {
         double length = edge.getNormal().norm();
-        assertion(tarch::la::greater(length,0.0),
+        assertion(math::greater(length,0.0),
           "Edge vertex coords: (" << edge.vertex(0).getCoords() << "), ("
           << edge.vertex(1).getCoords()
           << "). Hint: Could be inconsistent triangle/quad orientation or "
@@ -516,7 +516,7 @@ void Mesh:: computeState()
       // i (benjamin) changed this since there can be cases where a node has no edge though
       // the mesh has edges in general, e.g. after filtering
       //assertion(tarch::la::greater(length,0.0));
-      if(tarch::la::greater(length,0.0)){
+      if(math::greater(length,0.0)){
         vertex.setNormal(vertex.getNormal() / length);
       }
     }

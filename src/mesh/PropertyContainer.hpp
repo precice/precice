@@ -1,8 +1,6 @@
-#ifndef PRECICE_CONTAINER_PROPERTYCONTAINER_HPP_
-#define PRECICE_CONTAINER_PROPERTYCONTAINER_HPP_
+#pragma once
 
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "boost/any.hpp"
 #include <map>
 #include <vector>
@@ -202,5 +200,3 @@ void PropertyContainer:: getProperties
 }
 
 }} // namespace precice, mesh
-
-#endif /* PRECICE_CONTAINER_PROPERTYCONTAINER_HPP_ */

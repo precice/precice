@@ -3,6 +3,7 @@
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "math/math.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -42,7 +43,7 @@ void ParallelCouplingScheme::initialize
 {
   preciceTrace("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
-  assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
+  assertion(math::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
@@ -173,7 +174,7 @@ void ParallelCouplingScheme::explicitAdvance()
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
 
-  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
+  if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     setIsCouplingTimestepComplete(true);
     setTimesteps(getTimesteps() + 1);
 
@@ -224,7 +225,7 @@ void ParallelCouplingScheme::implicitAdvance()
   bool convergence = false;
   bool convergenceCoarseOptimization = true;
   bool doOnlySolverEvaluation = false;
-  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
+  if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     DEBUG("Computed full length of iteration");
     if (doesFirstStep()) { //First participant
       getM2N()->startSendPackage(0);

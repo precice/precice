@@ -1,6 +1,7 @@
 #include "UncoupledSchemeTest.hpp"
 #include "cplscheme/UncoupledScheme.hpp"
 #include "utils/Parallel.hpp"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::cplscheme::tests::UncoupledSchemeTest)
@@ -36,7 +37,7 @@ void UncoupledSchemeTest:: testBasics ()
 
   cplscheme.addComputedTime(1.0);
   cplscheme.advance();
-  using tarch::la::equals;
+  using math::equals;
   double maxDt = cplscheme.getNextTimestepMaxLength();
   validateWithParams1 ( equals(maxDt, 9.0), maxDt );
   validate ( cplscheme.isCouplingTimestepComplete() );

@@ -1,6 +1,5 @@
 #include "ComputeCurvatureAction.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Edge.hpp"
@@ -31,7 +30,7 @@ void ComputeCurvatureAction:: performAction
   double computedPartFullDt,
   double fullDt )
 {
-  preciceTrace ( "performAction()" );
+  TRACE();
   auto& dataValues = _data->values();
 
   if ( getMesh()->getDimensions() == 2 ){
@@ -55,9 +54,9 @@ void ComputeCurvatureAction:: performAction
     for (int i=0; i < dataValues.size(); i++) {
       dataValues[i] = 0.0;
     }
-    utils::Vector3D normal;
-    utils::Vector3D edge;
-    utils::Vector3D contribution;
+    Eigen::Vector3d normal;
+    Eigen::Vector3d edge;
+    Eigen::Vector3d contribution;
 
     for (mesh::Triangle& tri : getMesh()->triangles()) {
       normal = tri.getNormal();
@@ -65,8 +64,8 @@ void ComputeCurvatureAction:: performAction
         mesh::Vertex& v0 = tri.vertex(i);
         mesh::Vertex& v1 = tri.vertex((i+1) % 3);
         edge = v1.getCoords();
-        edge -= static_cast<utils::Vector3D>(v0.getCoords());
-        cross (edge, normal, contribution);
+        edge -= v0.getCoords();
+        contribution = edge.cross(normal);
         for ( int d=0; d < 3; d++ ) {
           dataValues[v0.getID() * 3 + d] -= 0.25 * contribution[d];
           dataValues[v1.getID() * 3 + d] -= 0.25 * contribution[d];

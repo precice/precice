@@ -9,8 +9,6 @@
 namespace precice {
 namespace geometry {
 
-using namespace tarch::la;
-
 const int DriftRatchet::MAX_RECURSION_DEPTH = 100;
 
 const int DriftRatchet::INFLOW_GEO_ID = 1;
@@ -402,6 +400,7 @@ double DriftRatchet:: getRadius
 (
   double normalisedX ) const
 {
+   using namespace math;
    assertion( _maxRadius > _minRadius );
    normalisedX = normalisedX - getExtremeCoordinateInAxisDirection(0);
    double recursionParameter = normalisedX / getCharacteristicLength(_maxRadius);

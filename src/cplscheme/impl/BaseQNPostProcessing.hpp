@@ -6,7 +6,7 @@
 #include "logging/Logger.hpp"
 #include "QRFactorization.hpp"
 #include "Preconditioner.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include <deque>
 #include <fstream>
 #include <sstream>

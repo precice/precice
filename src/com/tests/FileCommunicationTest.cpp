@@ -2,8 +2,7 @@
 #include "com/FileCommunication.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
-#include "tarch/la/WrappedVector.h"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::com::tests::FileCommunicationTest)
@@ -36,15 +35,16 @@ void FileCommunicationTest:: run()
 void FileCommunicationTest:: testSimpleSendReceive()
 {
   preciceTrace ( "testSimpleSendReceive()" );
-  using namespace tarch::la;
   int rank = utils::Parallel::getProcessRank();
   bool binaryMode = false;
   FileCommunication comTxt ( binaryMode, "" );
   validateEquals ( comTxt.isConnected(), false );
   std::string requester ( "FileCommunicationTest-testSimpleSendReceive-Requester-txt" );
   std::string acceptor ( "FileCommunicationTest-testSimpleSendReceive-Acceptor-txt" );
-  utils::DynVector doubleVector(3, 0.1234567890123456);
-  int intVector[] = { 1, 2, 3, 4, 5 };
+  Eigen::Vector3d doubleVector = Eigen::Vector3d::Constant(0.1234567890123456);
+  Eigen::Matrix<int, 5, 1> intVector;
+  intVector << 1, 2, 3, 4, 5;
+  // int intVector[] = { 1, 2, 3, 4, 5 };
   int integer = 1;
   double dbl = 1.0;
   bool boolean = true;
@@ -53,8 +53,8 @@ void FileCommunicationTest:: testSimpleSendReceive()
     validate ( comTxt.isConnected() );
     comTxt.startSendPackage ( 0 );
     comTxt.send ( std::string("rank0"), 0 );
-    comTxt.send ( raw(doubleVector), doubleVector.size(), 0 );
-    comTxt.send ( intVector, 5, 0 );
+    comTxt.send ( doubleVector.data(), doubleVector.size(), 0 );
+    comTxt.send ( intVector.data(), 5, 0 );
     comTxt.send ( dbl, 0 );
     comTxt.send ( integer, 0 );
     comTxt.send ( boolean, 0 );
@@ -68,7 +68,8 @@ void FileCommunicationTest:: testSimpleSendReceive()
     std::string message ( "" ) ;
     comTxt.receive ( message, 0 );
     double rawVec[3];
-    assign(wrap<3>(rawVec)) = 0.0;
+    // assign(wrap<3>(rawVec)) = 0.0;
+    Eigen::Map<Eigen::Vector3d>(rawVec).setConstant(0);
     comTxt.receive ( rawVec, 3, 0 );
     int intArrayReceived[] = { 0, 0, 0, 0, 0 };
     comTxt.receive ( intArrayReceived, 5, 0 );
@@ -80,9 +81,9 @@ void FileCommunicationTest:: testSimpleSendReceive()
     comTxt.receive ( booleanReceived, 0 );
     comTxt.finishReceivePackage ();
     validateEquals ( message, std::string("rank0") );
-    validate ( equals(wrap<3>(rawVec), doubleVector) );
-    validate ( equals(wrap<5>(intArrayReceived), wrap<5>(intVector)) );
-    validate ( equals(dblReceived, dbl) );
+    validate ( math::equals(Eigen::Map<Eigen::Vector3d>(rawVec), doubleVector));
+    validate ( math::equals(Eigen::Map<Eigen::Matrix<int, 5, 1>>(intArrayReceived), intVector));
+    validate ( math::equals(dblReceived, dbl) );
     validateEquals ( integerReceived, integer );
     validateEquals ( booleanReceived, boolean );
   }
@@ -99,8 +100,8 @@ void FileCommunicationTest:: testSimpleSendReceive()
     validate ( comBin.isConnected() );
     comBin.startSendPackage ( 0 );
     comBin.send ( std::string("rank0"), 0 );
-    comBin.send ( raw(doubleVector), 3, 0 );
-    comBin.send ( intVector, 5, 0 );
+    comBin.send ( doubleVector.data(), 3, 0 );
+    comBin.send ( intVector.data(), 5, 0 );
     comBin.send ( dbl, 0 );
     comBin.send ( integer, 0 );
     comBin.send ( boolean, 0 );
@@ -114,7 +115,7 @@ void FileCommunicationTest:: testSimpleSendReceive()
     std::string message ( "" ) ;
     comBin.receive ( message, 0 );
     double rawVec[3];
-    assign(wrap<3>(rawVec)) = 0.0;
+    Eigen::Map<Eigen::Vector3d>(rawVec).setConstant(0);
     comBin.receive ( rawVec, 3, 0 );
     int intArrayReceived[] = { 0, 0, 0, 0, 0 };
     comBin.receive ( intArrayReceived, 5, 0 );
@@ -126,9 +127,9 @@ void FileCommunicationTest:: testSimpleSendReceive()
     comBin.receive ( booleanReceived, 0 );
     comBin.finishReceivePackage ();
     validateEquals ( message, std::string("rank0") );
-    validate ( equals(wrap<3>(rawVec), doubleVector) );
-    validate ( equals(wrap<5>(intArrayReceived), wrap<5>(intVector)) );
-    validate ( equals(dblReceived, dbl) );
+    validate ( math::equals(Eigen::Map<Eigen::Vector3d>(rawVec), doubleVector));
+    validate ( math::equals(Eigen::Map<Eigen::Matrix<int, 5, 1>>(intArrayReceived), intVector));
+    validate ( math::equals(dblReceived, dbl) );
     validateEquals ( integerReceived, integer );
     validateEquals ( booleanReceived, boolean );
   }

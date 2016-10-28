@@ -1,7 +1,6 @@
 #ifndef PRECICE_IO_IMPORT_HPP_
 #define PRECICE_IO_IMPORT_HPP_
 
-#include "utils/Dimensions.hpp"
 #include <string>
 #include <map>
 

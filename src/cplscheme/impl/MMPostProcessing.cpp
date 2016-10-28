@@ -1,17 +1,12 @@
 #include "MMPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
-//#include "tarch/la/MatrixVectorOperations.h"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/Dimensions.hpp"
 #include "QRFactorization.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include <string.h>
 //#include "utils/NumericalCompare.hpp"
-
-#include <time.h>
 
 namespace precice {
 namespace cplscheme {

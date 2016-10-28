@@ -4,7 +4,6 @@
 #include "ConvergenceMeasure.hpp"
 #include "../CouplingData.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/Dimensions.hpp"
 #include "logging/Logger.hpp"
 #include <limits>
 #include "utils/MasterSlave.hpp"

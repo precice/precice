@@ -1,9 +1,7 @@
-#ifndef PRECICE_MESH_QUAD_HPP_
-#define PRECICE_MESH_QUAD_HPP_
+#pragma once
 
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Edge.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include "boost/noncopyable.hpp"
 #include <array>
@@ -195,4 +193,3 @@ inline int Quad:: getID() const
 
 }} // namespace precice, mesh
 
-#endif /* PRECICE_MESH_QUAD_HPP_ */

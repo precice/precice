@@ -1,5 +1,6 @@
 #include "ResidualRelativeConvergenceMeasure.hpp"
 #include "utils/Globals.hpp"
+#include "math/math.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -20,10 +21,8 @@ ResidualRelativeConvergenceMeasure:: ResidualRelativeConvergenceMeasure
    _normDiff(0.0),
    _isConvergence ( false )
 {
-   preciceCheck ( tarch::la::greater(_convergenceLimitPercent, 0.0)
-                  && tarch::la::greaterEquals(1.0, _convergenceLimitPercent),
-                  "ResidualRelativeConvergenceMeasure()", "Relative convergence limit "
-                  << "has in ]0;1] !" );
+   CHECK ( math::greater(_convergenceLimitPercent, 0.0) && math::greaterEquals(1.0, _convergenceLimitPercent),
+           "Relative convergence limit has to be in ]0;1] !" );
 }
 
 }}} // namespace precice, cplscheme, impl

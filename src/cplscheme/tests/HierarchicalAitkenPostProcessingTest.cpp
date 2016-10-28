@@ -6,7 +6,7 @@
 #include "utils/Parallel.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
-#include "Eigen/Core"
+#include <Eigen/Core>
 #include "utils/EigenHelperFunctions.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"

@@ -3,9 +3,6 @@
 
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "tarch/la/DynamicColumnMatrix.h"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/DynamicVector.h"
 #include "utils/MasterSlave.hpp"
 #include <Eigen/Dense>
 #include <limits>
@@ -36,7 +33,7 @@ public:
    * @param theta - singularity limit for reothogonalization ||v_orth|| / ||v|| <= 1/theta
    */
    QRFactorization (
-	  int filter=0,
+      int filter=0,
       double omega=0,
       double theta=1./0.7,
       double sigma=std::numeric_limits<double>::min()

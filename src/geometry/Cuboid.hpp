@@ -2,7 +2,6 @@
 
 #include "Geometry.hpp"
 #include "logging/Logger.hpp"
-#include "utils/Dimensions.hpp"
 #include "mesh/SharedPointer.hpp"
 #include <Eigen/Dense>
 

@@ -3,8 +3,6 @@
 
 #include "ConvergenceMeasure.hpp"
 #include "utils/Helpers.hpp"
-#include "utils/Dimensions.hpp"
-//#include "utils/NumericalCompare.hpp"
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 

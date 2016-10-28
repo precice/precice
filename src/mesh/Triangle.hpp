@@ -2,7 +2,6 @@
 
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Edge.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 #include <boost/noncopyable.hpp>
 #include <array>

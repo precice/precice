@@ -3,7 +3,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Quad.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"

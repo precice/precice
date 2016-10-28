@@ -1,6 +1,5 @@
 #include "VertexTest.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Parallel.hpp"
 #include "math/math.hpp"
 #include "tarch/tests/TestCaseFactory.h"

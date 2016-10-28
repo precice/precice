@@ -11,7 +11,7 @@
 #include "logging/Logger.hpp"
 #include "impl/SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include <map>
 
 namespace precice {
@@ -521,7 +521,7 @@ private:
   /// @brief Limit of iterations during one time step.
   int _maxIterations;
 
-  /// @brief Number of total iterations performed.
+  /// Number of total iterations performed.
   int _totalIterations;
 
   int _timesteps;
@@ -534,47 +534,46 @@ private:
   
   std::vector<double> _firstResiduumNorm;
 
-  /// @brief Extrapolation order of coupling data for first iteration of every dt.
+  /// Extrapolation order of coupling data for first iteration of every dt.
   int _extrapolationOrder;
 
   int _validDigits;
 
-  /// @brief True, if local participant is the one starting the explicit scheme.
+  /// True, if local participant is the one starting the explicit scheme.
   bool _doesFirstStep;
 
   int _checkpointTimestepInterval;
 
   bool _isCouplingTimestepComplete;
 
-  /// @brief Post-processing method to speedup iteration convergence.
+  /// Post-processing method to speedup iteration convergence.
   impl::PtrPostProcessing _postProcessing;
 
-  /// @brief to carry initData information from initialize to initData
+  /// To carry initData information from initialize to initData
   bool _hasToSendInitData;
 
-  /// @brief to carry initData information from initialize to initData
+  /// To carry initData information from initialize to initData
   bool _hasToReceiveInitData;
 
-  /// @brief True, if data has been exchanged between solvers.
+  /// True, if data has been exchanged between solvers.
   bool _hasDataBeenExchanged;
 
-  /// @brief True, if coupling has been initialized.
+  /// True, if coupling has been initialized.
   bool _isInitialized;
 
   std::set<std::string> _actions;
 
-  /// @brief Map from data ID -> all send data with that ID
+  /// Map from data ID -> all send data with that ID
   DataMap _sendData;
 
-  /// @brief Map from data ID -> all receive data with that ID
+  /// Map from data ID -> all receive data with that ID
   DataMap _receiveData;
 
-  /// @brief Responsible for monitoring iteration count over timesteps.
+  /// Responsible for monitoring iteration count over timesteps.
   io::TXTTableWriter _iterationsWriter;
 
   /// Writes out coupling convergence within all timesteps.
   io::TXTTableWriter _convergenceWriter;
-
 
   int getVertexOffset(std::map<int,int>& vertexDistribution, int rank, int dim);
 

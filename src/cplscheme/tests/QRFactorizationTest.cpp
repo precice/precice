@@ -1,19 +1,13 @@
 #ifndef PRECICE_NO_MPI
 #include "mpi.h"
 #endif
-#include "QRFactorizationTest.h"
+#include "QRFactorizationTest.hpp"
 #include "cplscheme/impl/QRFactorization.hpp"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
 #include <Eigen/Dense>
-#include "tarch/la/Matrix.h"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/GramSchmidt.h"
-#include "tarch/la/MatrixMatrixOperations.h"
-#include "tarch/la/TransposedMatrix.h"
-#include "tarch/la/ScalarOperations.h"
+#include "math/math.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
-#include <iostream>
 
 registerTest(precice::cplscheme::tests::QRFactorizationTest)
 
@@ -36,27 +30,18 @@ void QRFactorizationTest::testQRFactorization ()
   int m = 6, n = 8;
   int filter = impl::BaseQNPostProcessing::QR1FILTER;
   Eigen::MatrixXd A(n,m);
-  tarch::la::DynamicMatrix<double> dynA (n, m);
-  
+    
   // Set values according to Hilbert matrix.
   for (int i=0; i < n; i++) {
      for (int j=0; j < m; j++) {
         double entry = 1.0 / static_cast<double>(i + j + 1);
         A(i,j) = entry;
-        dynA(i,j) = entry;
-    }
+     }
   }
 
   // compute QR factorization of A via successive inserting of columns
   impl::QRFactorization qr_1(A, filter);
   
-  tarch::la::DynamicMatrix<double> dynAcopy (dynA);
-  tarch::la::DynamicMatrix<double> dynQ (n, m);
-  tarch::la::DynamicMatrix<double> dynR (m, m);
-  
-  // compute QR factorization of A via modifiedGramSchmidt en block
-  tarch::la::modifiedGramSchmidt (dynAcopy, dynQ, dynR);
-
   // test if Q^TQ equals identity 
   testQTQequalsIdentity(qr_1.matrixQ());
   //testQTQequalsIdentity(dynQ);
@@ -192,7 +177,7 @@ void QRFactorizationTest::testQRequalsA(
   //std::cout<<" -- A_prime --\n"<<A_prime<<std::endl;
   for (int i=0; i < A.rows(); i++) {
      for (int j=0; j < A.cols(); j++) {
-        validate (tarch::la::equals(A_prime(i,j), A(i,j)));
+        validate (math::equals(A_prime(i,j), A(i,j)));
      }
   }
 }
@@ -207,36 +192,14 @@ void QRFactorizationTest::testQTQequalsIdentity(
   for (int i=0; i < QTQ.rows(); i++) {
     for (int j=0; j < QTQ.cols(); j++) {
       if (i == j) {
-        validate (tarch::la::equals(QTQ(i,j), 1.0, 1e-12));
+        validate (math::equals(QTQ(i,j), 1.0, 1e-12));
       }
       else {
-        validate (tarch::la::equals(QTQ(i,j), 0.0, 1e-12));
+        validate (math::equals(QTQ(i,j), 0.0, 1e-12));
       }
     }
   }
 }
-
-void QRFactorizationTest::testQTQequalsIdentity(
-  tarch::la::DynamicMatrix< double >& dynQ)
-{
-  tarch::la::DynamicMatrix<double> dynQTQ (dynQ.cols(), dynQ.cols(), 0.0);
-  // compute Q^TQ for modifiedGramSchmidt en block version
-  tarch::la::multiply (tarch::la::transpose(dynQ), dynQ, dynQTQ);
-  
-  // test if Q^TQ equals identity 
-  for (int i=0; i < dynQTQ.rows(); i++) {
-    for (int j=0; j < dynQTQ.cols(); j++) {
-      if (i == j) {
-        validate (tarch::la::equals(dynQTQ(i,j), 1.0, 1e-12));
-      }
-      else {
-        validate (tarch::la::equals(dynQTQ(i,j), 0.0, 1e-12));
-      }
-    }
-  }
-}
-
-
 
 
 }}} // namespace precice, cplscheme

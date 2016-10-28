@@ -1,6 +1,5 @@
 #include "VRML10ParserTest.hpp"
 #include "io/impl/VRML10Parser.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include "utils/Parallel.hpp"
 
@@ -10,7 +9,6 @@
 namespace spirit = boost::spirit;
 #endif // not PRECICE_NO_SPIRIT2
 
-#include <iostream>
 #include <string>
 #include <fstream>
 

@@ -2,6 +2,7 @@
 #include "impl/PostProcessing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "m2n/M2N.hpp"
+#include "math/math.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -40,7 +41,7 @@ void SerialCouplingScheme::initialize
 {
   preciceTrace("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
-  assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
+  assertion(math::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
@@ -182,7 +183,7 @@ void SerialCouplingScheme::advance()
   setIsCouplingTimestepComplete(false);
 
   if (_couplingMode == Explicit) {
-    if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
+    if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       setIsCouplingTimestepComplete(true);
       setTimesteps(getTimesteps() + 1);
       DEBUG("Sending data...");
@@ -207,7 +208,7 @@ void SerialCouplingScheme::advance()
     bool convergenceCoarseOptimization = true;
     bool doOnlySolverEvaluation = false;
 
-    if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
+    if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
       DEBUG("Computed full length of iteration");
       if (doesFirstStep()) {
         getM2N()->startSendPackage(0);

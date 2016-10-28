@@ -1,11 +1,9 @@
-#ifndef PRECICE_CPLSCHEME_COUPLINGDATA_HPP_
-#define PRECICE_CPLSCHEME_COUPLINGDATA_HPP_
+#pragma once
 
 #include "mesh/SharedPointer.hpp"
-#include "tarch/la/DynamicColumnMatrix.h"
 #include "utils/Helpers.hpp"
 #include "mesh/Data.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include <vector>
 
 namespace precice {
@@ -60,5 +58,3 @@ struct CouplingData
 };
 
 }} // namespace precice, cplscheme
-
-#endif /* PRECICE_CPLSCHEME_COUPLINGDATA_HPP_ */

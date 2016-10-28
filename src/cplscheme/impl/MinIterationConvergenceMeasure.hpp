@@ -24,7 +24,7 @@ public:
       const Eigen::VectorXd& newValues,
       const Eigen::VectorXd& designSpecification)
    {
-     preciceTrace("measure()");
+     TRACE();
      _currentIteration++;
      _isConvergence = _minimumIterationCount <= _currentIteration
                       ? true

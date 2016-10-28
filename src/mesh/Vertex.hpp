@@ -2,7 +2,6 @@
 #define PRECICE_MESH_VERTEX_HPP_
 
 #include "mesh/PropertyContainer.hpp"
-#include "utils/Dimensions.hpp"
 #include "boost/noncopyable.hpp"
 #include <map>
 

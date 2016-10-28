@@ -4,7 +4,6 @@
 #include "mesh/Triangle.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/PropertyContainer.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 
 namespace precice {
