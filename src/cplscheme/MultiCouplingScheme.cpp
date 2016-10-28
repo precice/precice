@@ -4,6 +4,7 @@
 #include "com/Communication.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "m2n/M2N.hpp"
+#include "math/math.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -43,7 +44,7 @@ void MultiCouplingScheme::initialize
 {
   preciceTrace("initialize()", startTime, startTimestep);
   assertion(not isInitialized());
-  assertion(tarch::la::greaterEquals(startTime, 0.0), startTime);
+  assertion(math::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
   setTime(startTime);
   setTimesteps(startTimestep);
@@ -150,7 +151,7 @@ void MultiCouplingScheme::advance()
   setHasDataBeenExchanged(false);
   setIsCouplingTimestepComplete(false);
   bool convergence = false;
-  if (tarch::la::equals(getThisTimestepRemainder(), 0.0, _eps)) {
+  if (math::equals(getThisTimestepRemainder(), 0.0, _eps)) {
     DEBUG("Computed full length of iteration");
 
     receiveData();
@@ -233,9 +234,9 @@ void MultiCouplingScheme:: addDataToSend
     _sendDataVector[index].insert(pair);
   }
   else {
-    preciceError("addDataToSend()", "Data \"" << data->getName()
-     << "\" of mesh \"" << mesh->getName() << "\" cannot be "
-     << "added twice for sending!");
+    ERROR("Data \"" << data->getName()
+          << "\" of mesh \"" << mesh->getName() << "\" cannot be "
+          << "added twice for sending!");
   }
 }
 
@@ -253,15 +254,15 @@ void MultiCouplingScheme:: addDataToReceive
     _receiveDataVector[index].insert(pair);
   }
   else {
-    preciceError("addDataToReceive()", "Data \"" << data->getName()
-     << "\" of mesh \"" << mesh->getName() << "\" cannot be "
-     << "added twice for receiving!");
+    ERROR("Data \"" << data->getName()
+          << "\" of mesh \"" << mesh->getName() << "\" cannot be "
+          << "added twice for receiving!");
   }
 }
 
 void MultiCouplingScheme:: sendData()
 {
-  preciceTrace("sendData()");
+  TRACE();
 
   for(size_t i=0;i<_communications.size();i++){
     assertion(_communications[i].get() != nullptr);
@@ -278,7 +279,7 @@ void MultiCouplingScheme:: sendData()
 
 void MultiCouplingScheme:: receiveData()
 {
-  preciceTrace("receiveData()");
+  TRACE();
 
   for(size_t i=0;i<_communications.size();i++){
     assertion(_communications[i].get() != nullptr);
@@ -296,7 +297,7 @@ void MultiCouplingScheme:: receiveData()
 
 void MultiCouplingScheme::setupConvergenceMeasures()
 {
-  preciceTrace("setupConvergenceMeasures()");
+  TRACE();
   assertion(not doesFirstStep());
   preciceCheck(not _convergenceMeasures.empty(), "setupConvergenceMeasures()",
          "At least one convergence measure has to be defined for "

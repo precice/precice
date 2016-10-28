@@ -155,40 +155,6 @@ void PostProcessingConfiguration:: connectTags(
     }
 }
 
-//bool PostProcessingConfiguration:: parseSubtag
-//(
-//  tarch::irr::io::IrrXMLReader * xmlReader )
-//{
-//  preciceTrace("parseSubtag()" );
-//  using namespace utils;
-//
-//  XMLTag tag(TAG, XMLTag::OCCUR_ONCE );
-//
-//  XMLAttribute<std::string> attrType(ATTR_TYPE );
-//  ValidatorEquals<std::string> validConstant(VALUE_CONSTANT );
-//  ValidatorEquals<std::string> validAitken(VALUE_AITKEN );
-//  ValidatorEquals<std::string> validHierarchAitken(VALUE_HIERARCHICAL_AITKEN );
-//  ValidatorEquals<std::string> validIQNILS(VALUE_IQNILS );
-//  attrType.setValidator (
-//    validConstant || validAitken || validHierarchAitken|| validIQNILS );
-//  tag.addAttribute(attrType );value
-//
-//  XMLAttribute<std::string> attrData(ATTR_DATA );
-//  tag.addAttribute(attrData );
-//
-//  XMLAttribute<std::string> attrMesh(ATTR_MESH );
-//  tag.addAttribute(attrMesh );
-//
-//  _isValid = tag.parse(xmlReader, *this );
-//  _config = ConfigurationData ();
-//  return _isValid;
-//}
-
-//bool PostProcessingConfiguration:: isValid() const
-//{
-//  return _isValid;
-//}
-
 impl::PtrPostProcessing PostProcessingConfiguration:: getPostProcessing()
 {
   return _postProcessing;

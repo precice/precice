@@ -88,14 +88,13 @@ constexpr bool equals (const Eigen::MatrixBase<DerivedA>& A,
 // }
 
 
-// Compares two scalar types for equality up to tolerance
-// template<class A, class B>
-// bool equals(const A& a, const B& b, const double tolerance = NUMERICAL_ZERO_DIFFERENCE)
-// {
-//   return boost::math::relative_difference(a, b) <= tolerance;
-// }
-
-bool equals(const double a, const double b, const double tolerance = NUMERICAL_ZERO_DIFFERENCE);
+/// Compares two scalar (arithmetic) types
+template<class Scalar>
+typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>
+::type equals(const Scalar a, const Scalar b, const Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
+{
+  return std::abs(a - b) <= tolerance;
+}
 
 template<class DerivedA, class DerivedB>
 bool oneGreater(const Eigen::MatrixBase<DerivedA> & A,

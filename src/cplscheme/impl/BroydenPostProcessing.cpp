@@ -1,24 +1,11 @@
 #include "BroydenPostProcessing.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
-#include "tarch/la/GramSchmidt.h"
-#include "tarch/la/LUDecomposition.h"
-#include "tarch/la/MatrixVectorOperations.h"
-#include "tarch/la/TransposedMatrix.h"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/EigenHelperFunctions.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include "utils/Globals.hpp"
-#include "tarch/la/Scalar.h"
-#include "io/TXTWriter.hpp"
-#include "io/TXTReader.hpp"
-
-#include <time.h>
-#include <sstream>
-#include <fstream>
-//#include "utils/NumericalCompare.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -56,7 +43,6 @@ void BroydenPostProcessing:: initialize
   // do common QN post processing initialization
   BaseQNPostProcessing::initialize(cplData);
   
-  double init = 0.0;
   size_t entries= _residuals.size();
   
   _invJacobian = Eigen::MatrixXd::Zero(entries, entries);
@@ -88,7 +74,6 @@ void BroydenPostProcessing::updateDifferenceMatrices
 (
   DataMap& cplData)
 {
-  using namespace tarch::la;
   if (_firstIteration && _firstTimeStep) {
   }
   else {
@@ -150,72 +135,6 @@ void BroydenPostProcessing::computeQNUpdate
     _oldInvJacobian = _invJacobian;
   }
 }
-
-/*
-void BroydenPostProcessing::computeNewtonFactorsQRDecomposition
-(PostProcessing::DataMap& cplData, DataValues& xUpdate)
-{
-  preciceTrace("computeNewtonFactorsQRDecomposition()");
-  using namespace tarch::la;
- 
-  // ------------- update inverse Jacobian -----------
-  // J_inv = J_inv_n + (W - J_inv_n*V)*(V^T*V)^-1*V^T
-  // ----------------------------------------- -------
-
-  assertion(_currentColumns <= _matrixV.cols(), _currentColumns, _matrixV.cols());
-  DataMatrix v;
-  DataMatrix Vcopy, _matV, _matW;
-  DataMatrix Q(_matrixV.rows(), _currentColumns, 0.0);
-  DataMatrix R(_currentColumns, _currentColumns, 0.0);
-  
-  for(int i = 0; i < _currentColumns; i++)
-  {
-    Vcopy.append(_matrixV.column(i));
-    _matV.append(_matrixV.column(i));
-    _matW.append(_matrixW.column(i));
-  }
-
-    modifiedGramSchmidt(Vcopy, Q, R);
-  
-    DataValues ytmpVec(_currentColumns, 0.0);
-    DataValues _matrixQRow;
-    for(int i = 0; i < Q.rows(); i++)
-    {
-      for(int j=0; j < Q.cols(); j++){
-      _matrixQRow.append(Q(i,j));
-      }
-      backSubstitution(R, _matrixQRow, ytmpVec);	
-      v.append(ytmpVec);  
-    _matrixQRow.clear();
-    }
- 
-  // tmpMatrix = J_inv_n*V
-  Matrix tmpMatrix(_matrixV.rows(), _currentColumns, 0.0);
-  assertion(_oldInvJacobian.cols() == _matrixV.rows(), _oldInvJacobian.cols(), _matrixV.rows());
-  multiply(_oldInvJacobian, _matV, tmpMatrix);
-  
-  // tmpMatrix = (W-J_inv_n*V)
-  tmpMatrix *= -1.;
-  tmpMatrix = tmpMatrix + _matW;
-
-  // invJacobian = (W - J_inv_n*V)*(V^T*V)^-1*V^T
-  assertion(tmpMatrix.cols() == v.rows(), tmpMatrix.cols(), v.rows());
-  
-  multiply(tmpMatrix, v, _invJacobian);
-  _invJacobian = _invJacobian + _oldInvJacobian;
-  
-  DataValues res_tilde(_residuals.size());
-  for(int i = 0; i < res_tilde.size(); i++)
-   res_tilde(i) = _residuals(i);
-
-  res_tilde *= -1.;
-  
-  // solve delta_x = - J_inv*residuals
-  multiply(_invJacobian, res_tilde, xUpdate);
-}
-*/
-
-
 
 void BroydenPostProcessing:: specializedIterationsConverged
 (

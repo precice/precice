@@ -1,4 +1,5 @@
 #include "AbsoluteConvergenceMeasure.hpp"
+#include "math/math.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -16,9 +17,8 @@ AbsoluteConvergenceMeasure:: AbsoluteConvergenceMeasure
    _normDiff(0.0),
    _isConvergence ( false )
 {
-   preciceCheck ( ! tarch::la::greaterEquals(0.0, _convergenceLimit),
-                  "AbsoluteConvergenceLimit()", "Absolute convergence limit "
-                  << "has to be greater than zero!" );
+   CHECK ( ! math::greaterEquals(0.0, _convergenceLimit),
+           "Absolute convergence limit has to be greater than zero!" );
 }
 
 }}} // namespace precice, cplscheme

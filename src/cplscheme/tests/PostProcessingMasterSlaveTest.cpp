@@ -1,14 +1,7 @@
-
-/*
- *  Created on: Aug 4, 2015
- *      Author: Klaudius Scheufele
- */
-
 #ifndef PRECICE_NO_MPI
 
 #include "PostProcessingMasterSlaveTest.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/Parallel.hpp"
@@ -287,14 +280,14 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 	Eigen::VectorXd newdvalues;
 	if (utils::Parallel::getProcessRank() == 0) { //Master
 
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.02), (*data.at(0)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.03), (*data.at(0)->values)(3));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(2), 1.02), (*data.at(0)->values)(2));
+		validateWithParams1(math::equals((*data.at(0)->values)(3), 1.03), (*data.at(0)->values)(3));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
+		validateWithParams1(math::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
 
 		/*
 		std::cout<<"  Master:"<<std::endl;
@@ -313,14 +306,14 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.04), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.05), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.06), (*data.at(0)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.07), (*data.at(0)->values)(3));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), 1.04), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), 1.05), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(2), 1.06), (*data.at(0)->values)(2));
+		validateWithParams1(math::equals((*data.at(0)->values)(3), 1.07), (*data.at(0)->values)(3));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(2), 0.199), (*data.at(1)->values)(2));
+		validateWithParams1(math::equals((*data.at(1)->values)(3), 0.199), (*data.at(1)->values)(3));
 
 		/*
 		std::cout<<"  Slave 1:"<<std::endl;
@@ -342,10 +335,10 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 
 	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
 
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), 1.00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), 1.01), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 0.199), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 0.199), (*data.at(1)->values)(1));
 
 		/*
 		std::cout<<"  Slave 3:"<<std::endl;
@@ -368,14 +361,14 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 
 	if (utils::Parallel::getProcessRank() == 0) { //Master
 
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), -2.35405379763935940218e-01), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.04402029270655560822e+00), (*data.at(0)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.32344596517704804484e+00), (*data.at(0)->values)(3));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 7.23368584254212854123e-02), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 7.23368584254212854123e-02), (*data.at(1)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 7.23368584254212854123e-02), (*data.at(1)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 7.23368584254212854123e-02), (*data.at(1)->values)(3));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), -2.35405379763935940218e-01), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(2), 1.04402029270655560822e+00), (*data.at(0)->values)(2));
+		validateWithParams1(math::equals((*data.at(0)->values)(3), 2.32344596517704804484e+00), (*data.at(0)->values)(3));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 7.23368584254212854123e-02), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 7.23368584254212854123e-02), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(2), 7.23368584254212854123e-02), (*data.at(1)->values)(2));
+		validateWithParams1(math::equals((*data.at(1)->values)(3), 7.23368584254212854123e-02), (*data.at(1)->values)(3));
 
 /*
 		std::cout<<"  Master:"<<std::endl;
@@ -390,14 +383,14 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 */
 
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 3.60287163764754048145e+00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 4.88229731011803202989e+00), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 6.16172298258852357833e+00), (*data.at(0)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 7.44114865505901601495e+00), (*data.at(0)->values)(3));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 7.23368584254212854123e-02), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 7.23368584254212854123e-02), (*data.at(1)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 7.23368584254212854123e-02), (*data.at(1)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 7.23368584254212854123e-02), (*data.at(1)->values)(3));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), 3.60287163764754048145e+00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), 4.88229731011803202989e+00), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(2), 6.16172298258852357833e+00), (*data.at(0)->values)(2));
+		validateWithParams1(math::equals((*data.at(0)->values)(3), 7.44114865505901601495e+00), (*data.at(0)->values)(3));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 7.23368584254212854123e-02), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 7.23368584254212854123e-02), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(2), 7.23368584254212854123e-02), (*data.at(1)->values)(2));
+		validateWithParams1(math::equals((*data.at(1)->values)(3), 7.23368584254212854123e-02), (*data.at(1)->values)(3));
 
 		/*
 		std::cout<<"  Slave 1:"<<std::endl;
@@ -415,10 +408,10 @@ void PostProcessingMasterSlaveTest::testVIQNILSpp()
 
 	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
 
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), -2.35405379763935940218e-01), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 7.23368584254212854123e-02), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 7.23368584254212854123e-02), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), -2.35405379763935940218e-01), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 7.23368584254212854123e-02), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 7.23368584254212854123e-02), (*data.at(1)->values)(1));
 
 		/*
 		std::cout<<"  Slave 3:"<<std::endl;
@@ -647,14 +640,14 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	Eigen::VectorXd newdvalues;
 	if (utils::Parallel::getProcessRank() == 0) { //Master
 
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00000000000000000000e+00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01000000000000000888e+00), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.02000000000000001776e+00), (*data.at(0)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.03000000000000002665e+00), (*data.at(0)->values)(3));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 1.99000000000000010214e-01), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 1.99000000000000010214e-01), (*data.at(1)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 1.99000000000000010214e-01), (*data.at(1)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 1.99000000000000010214e-01), (*data.at(1)->values)(3));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), 1.00000000000000000000e+00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), 1.01000000000000000888e+00), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(2), 1.02000000000000001776e+00), (*data.at(0)->values)(2));
+		validateWithParams1(math::equals((*data.at(0)->values)(3), 1.03000000000000002665e+00), (*data.at(0)->values)(3));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 1.99000000000000010214e-01), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 1.99000000000000010214e-01), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(2), 1.99000000000000010214e-01), (*data.at(1)->values)(2));
+		validateWithParams1(math::equals((*data.at(1)->values)(3), 1.99000000000000010214e-01), (*data.at(1)->values)(3));
 		/*
 		std::cout<<"  Master:"<<std::endl;
 		std::cout<<"Master: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
@@ -672,14 +665,14 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
 
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.04000000000000003553e+00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.05000000000000004441e+00), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.06000000000000005329e+00), (*data.at(0)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 1.07000000000000006217e+00), (*data.at(0)->values)(3));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 1.99000000000000010214e-01), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 1.99000000000000010214e-01), (*data.at(1)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 1.99000000000000010214e-01), (*data.at(1)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 1.99000000000000010214e-01), (*data.at(1)->values)(3));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), 1.04000000000000003553e+00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), 1.05000000000000004441e+00), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(2), 1.06000000000000005329e+00), (*data.at(0)->values)(2));
+		validateWithParams1(math::equals((*data.at(0)->values)(3), 1.07000000000000006217e+00), (*data.at(0)->values)(3));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 1.99000000000000010214e-01), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 1.99000000000000010214e-01), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(2), 1.99000000000000010214e-01), (*data.at(1)->values)(2));
+		validateWithParams1(math::equals((*data.at(1)->values)(3), 1.99000000000000010214e-01), (*data.at(1)->values)(3));
 		/*
 		std::cout<<"  Slave 1:"<<std::endl;
 		std::cout<<"Slave 1: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
@@ -700,10 +693,10 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 
 	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
 
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 1.00000000000000000000e+00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 1.01000000000000000888e+00), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 1.99000000000000010214e-01), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 1.99000000000000010214e-01), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), 1.00000000000000000000e+00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), 1.01000000000000000888e+00), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 1.99000000000000010214e-01), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 1.99000000000000010214e-01), (*data.at(1)->values)(1));
 		/*
 		std::cout<<"  Slave 3:"<<std::endl;
 		std::cout<<"Slave 3: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
@@ -720,14 +713,14 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 	pp.performPostProcessing(data);
 
 	if (utils::Parallel::getProcessRank() == 0) { //Master
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), -2.35405379763935940218e-01), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 1.04402029270655738458e+00), (*data.at(0)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 2.32344596517704893301e+00), (*data.at(0)->values)(3));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 7.23368584254213131679e-02), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 7.23368584254213131679e-02), (*data.at(1)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 7.23368584254213131679e-02), (*data.at(1)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 7.23368584254213131679e-02), (*data.at(1)->values)(3));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), -2.35405379763935940218e-01), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(2), 1.04402029270655738458e+00), (*data.at(0)->values)(2));
+		validateWithParams1(math::equals((*data.at(0)->values)(3), 2.32344596517704893301e+00), (*data.at(0)->values)(3));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 7.23368584254213131679e-02), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 7.23368584254213131679e-02), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(2), 7.23368584254213131679e-02), (*data.at(1)->values)(2));
+		validateWithParams1(math::equals((*data.at(1)->values)(3), 7.23368584254213131679e-02), (*data.at(1)->values)(3));
 /*
 		std::cout<<"  Master:"<<std::endl;
 		std::cout<<"Master: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
@@ -741,14 +734,14 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 */
 
 	} else if (utils::Parallel::getProcessRank() == 1) { //Slave1
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), 3.60287163764754048145e+00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), 4.88229731011803202989e+00), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(2), 6.16172298258852446651e+00), (*data.at(0)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(3), 7.44114865505901601495e+00), (*data.at(0)->values)(3));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 7.23368584254213131679e-02), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 7.23368584254213131679e-02), (*data.at(1)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(2), 7.23368584254213131679e-02), (*data.at(1)->values)(2));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(3), 7.23368584254213131679e-02), (*data.at(1)->values)(3));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), 3.60287163764754048145e+00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), 4.88229731011803202989e+00), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(2), 6.16172298258852446651e+00), (*data.at(0)->values)(2));
+		validateWithParams1(math::equals((*data.at(0)->values)(3), 7.44114865505901601495e+00), (*data.at(0)->values)(3));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 7.23368584254213131679e-02), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 7.23368584254213131679e-02), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(2), 7.23368584254213131679e-02), (*data.at(1)->values)(2));
+		validateWithParams1(math::equals((*data.at(1)->values)(3), 7.23368584254213131679e-02), (*data.at(1)->values)(3));
 		/*
 		std::cout<<"  Slave 1:"<<std::endl;
 		std::cout<<"Slave 1: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
@@ -765,10 +758,10 @@ void PostProcessingMasterSlaveTest::testVIQNIMVJpp()
 
 	} else if (utils::Parallel::getProcessRank() == 3) { //Slave3
 
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(0)->values)(1), -2.35405379763935940218e-01), (*data.at(0)->values)(1));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(0), 7.23368584254213131679e-02), (*data.at(1)->values)(0));
-		validateWithParams1(tarch::la::equals((*data.at(1)->values)(1), 7.23368584254213131679e-02), (*data.at(1)->values)(1));
+		validateWithParams1(math::equals((*data.at(0)->values)(0), -1.51483105223442748866e+00), (*data.at(0)->values)(0));
+		validateWithParams1(math::equals((*data.at(0)->values)(1), -2.35405379763935940218e-01), (*data.at(0)->values)(1));
+		validateWithParams1(math::equals((*data.at(1)->values)(0), 7.23368584254213131679e-02), (*data.at(1)->values)(0));
+		validateWithParams1(math::equals((*data.at(1)->values)(1), 7.23368584254213131679e-02), (*data.at(1)->values)(1));
 		/*
 		std::cout<<"  Slave 3:"<<std::endl;
 		std::cout<<"Slave 3: (*data.at(0)->values)(0): "<<(*data.at(0)->values)(0)<<std::endl;
@@ -961,14 +954,14 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
 
     // validate values
     for(int i = 0; i < data.at(4)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
+      validateWithParams2(math::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
 
     for(int i = 0; i < data.at(5)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
+      validateWithParams2(math::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
 
     // validate norm
-    validateWithParams1(tarch::la::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
-    validateWithParams1(tarch::la::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
+    validateWithParams1(math::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
+    validateWithParams1(math::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
 
     // update cplData
     dvalues    << 1.790053057185293e-06,  -2.44566429072041e-08,  1.889281703254964e-06,  -1.972492834475447e-07,  1.681634609242917e-06,  -2.373356532433882e-07,  1.585003447958184e-06,  -5.301850772916681e-08,  1.274187257620066e-06,  -2.137488936999111e-07,  1.362955262700412e-06,  -2.762153471191986e-07,  1.249747540920782e-06,  -3.196338173465977e-07,  1.333501893726392e-06,  -3.161541101487353e-07,  1.394538527892028e-06,  -1.166536323805688e-07,  1.488382850875808e-06,  -2.605379508545059e-07,  2.056077021837937e-06,  -1.341692715765341e-07;
@@ -987,15 +980,15 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
 
     // validate values
     for(int i = 0; i < data.at(4)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
+      validateWithParams2(math::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
 
     for(int i = 0; i < data.at(5)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
+      validateWithParams2(math::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
 
 
     // validate norm
-    validateWithParams1(tarch::la::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
-    validateWithParams1(tarch::la::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
+    validateWithParams1(math::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
+    validateWithParams1(math::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
 
     // update cplData
     dvalues    << 1.848184969639987e-06,  -1.983566187932991e-07,  1.952383060128974e-06,  1.050101286643166e-07,  2.020975712018586e-06,  -9.297459906882382e-08,  2.123910878481957e-06,  -3.349554682884977e-08,  0,  0,  0,  0,  7.715047421278781e-07,  2.958323850532032e-07,  6.5137785527863e-07,  -3.40165313149562e-07,  1.498023570500414e-06,  2.492038233690158e-07,  1.395223018993416e-06,  -3.150663149441921e-07,  1.954718171910318e-06,  -3.415637300374603e-08;
@@ -1023,15 +1016,15 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
 
     // validate values
     for(int i = 0; i < data.at(4)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
+      validateWithParams2(math::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
 
     for(int i = 0; i < data.at(5)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
+      validateWithParams2(math::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
 
 
     // validate norm
-    validateWithParams1(tarch::la::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
-    validateWithParams1(tarch::la::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
+    validateWithParams1(math::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
+    validateWithParams1(math::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
 
     // update cplData
     dvalues    << 1.790034504773721e-05,  -2.446591076368466e-07,  1.889267115021718e-05,  -1.972643201602028e-06,  1.681613350812527e-05,  -2.373460013995369e-06,  1.584978895355817e-05,  -5.302446869164338e-07,  1.274157692078479e-05,  -2.137546278211264e-06,  1.362926508984742e-05,  -2.762211725309514e-06,  1.249719424608544e-05,  -3.19640295598053e-06,  1.333474052315949e-05,  -3.16159193819195e-06,  1.394510078525391e-05,  -1.166587691625877e-06,  1.488356439901566e-05,  -2.605456452904905e-06,  2.056070000286195e-05,  -1.341920935569228e-06;
@@ -1051,14 +1044,14 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
 
     // validate values
     for(int i = 0; i < data.at(4)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
+      validateWithParams2(math::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
 
     for(int i = 0; i < data.at(5)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
+      validateWithParams2(math::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
 
     // validate norm
-    validateWithParams1(tarch::la::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
-    validateWithParams1(tarch::la::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
+    validateWithParams1(math::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
+    validateWithParams1(math::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
 
     // update cplData
     dvalues    << 1.848182952307335e-05,  -1.983938722952872e-06,  1.952389995095743e-05,  1.049689886611777e-06,  2.020972044646931e-05,  -9.30012125294331e-07,  2.123911759834233e-05,  -3.352823479948144e-07,  0,  0,  0,  0,  7.715124780435689e-06,  2.958056858428718e-06,  6.513639301665504e-06,  -3.401886529062288e-06,  1.498034283416962e-05,  2.491634858078641e-06,  1.39521486945152e-05,  -3.151050708450101e-06,  1.954707223943552e-05,  -3.417246252999375e-07;
@@ -1087,14 +1080,14 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
 
     // validate values
     for(int i = 0; i < data.at(4)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
+      validateWithParams2(math::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
 
     for(int i = 0; i < data.at(5)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
+      validateWithParams2(math::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
 
     // validate norm
-    validateWithParams1(tarch::la::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
-    validateWithParams1(tarch::la::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
+    validateWithParams1(math::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
+    validateWithParams1(math::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
 
     // update cplData
     dvalues    << 1.659080663925766e-05,  -2.839283676791931e-07,  1.756292801739508e-05,  -1.881726812992964e-06,  1.564798101471437e-05,  -2.265931706775091e-06,  1.470124517392331e-05,  -5.705378156142171e-07,  1.186047603634431e-05,  -2.115667271562722e-06,  1.273027556448604e-05,  -2.674541973319838e-06,  1.165645170777486e-05,  -3.135385366949176e-06,  1.247728214631633e-05,  -3.082564251671268e-06,  1.295443089215965e-05,  -1.185450561958201e-06,  1.387356342346108e-05,  -2.500933334689963e-06,  1.911143938064833e-05,  -1.289577439500651e-06;
@@ -1114,15 +1107,15 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
 
     // validate values
     for(int i = 0; i < data.at(4)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
+      validateWithParams2(math::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
 
     for(int i = 0; i < data.at(5)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
+      validateWithParams2(math::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
 
 
     // validate norm
-    validateWithParams1(tarch::la::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
-    validateWithParams1(tarch::la::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
+    validateWithParams1(math::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
+    validateWithParams1(math::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
 
     // update cplData
     dvalues    << 1.716650969972045e-05,  -1.856138836171773e-06,  1.818701485070425e-05,  9.439657883607802e-07,  1.874709534954619e-05,  -8.85448704675396e-07,  1.975527973304359e-05,  -3.501096287428596e-07,  0,  0,  0,  0,  7.228951427433641e-06,  2.745909101918556e-06,  6.052367643912141e-06,  -3.179587143921995e-06,  1.398276918926419e-05,  2.29762824040882e-06,  1.297587398676e-05,  -2.941551341709183e-06,  1.811863361465251e-05,  -3.546317448342288e-07;
@@ -1152,15 +1145,15 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
 
     // validate values
     for(int i = 0; i < data.at(4)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
+      validateWithParams2(math::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
 
     for(int i = 0; i < data.at(5)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
+      validateWithParams2(math::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
 
 
     // validate norm
-    validateWithParams1(tarch::la::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
-    validateWithParams1(tarch::la::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
+    validateWithParams1(math::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
+    validateWithParams1(math::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
 
     // update cplData
     dvalues    << 1.506845042291629e-05,  -3.295713481574521e-07,  1.601708402767785e-05,  -1.776032790440438e-06,  1.428998106709373e-05,  -2.140925300298825e-06,  1.336604025915203e-05,  -6.173668108734595e-07,  1.083614857997936e-05,  -2.09020895349816e-06,  1.168515223592441e-05,  -2.572621503366579e-06,  1.067901778881212e-05,  -3.064421860106172e-06,  1.14804152344671e-05,  -2.990689693425248e-06,  1.180274523671064e-05,  -1.207361572630013e-06,  1.26994053163659e-05,  -2.379420351559266e-06,  1.742665917249236e-05,  -1.228726437307901e-06;
@@ -1180,14 +1173,14 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
 
     // validate values
     for(int i = 0; i < data.at(4)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
+      validateWithParams2(math::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
 
     for(int i = 0; i < data.at(5)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
+      validateWithParams2(math::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
 
     // validate norm
-    validateWithParams1(tarch::la::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
-    validateWithParams1(tarch::la::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
+    validateWithParams1(math::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
+    validateWithParams1(math::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
 
     // update cplData
     dvalues    << 1.563743909676446e-05,  -1.707572586404205e-06,  1.663287551913161e-05,  8.210579991784308e-07,  1.704678071734513e-05,  -8.336427145015805e-07,  1.803030552728031e-05,  -3.673472962716038e-07,  0,  0,  0,  0,  6.663771864888832e-06,  2.499283366425937e-06,  5.516134032932667e-06,  -2.921164340377279e-06,  1.282308279788757e-05,  2.07209067754735e-06,  1.184094543159743e-05,  -2.698009821996337e-06,  1.645805878055576e-05,  -3.696322259193852e-07;
@@ -1209,46 +1202,72 @@ void PostProcessingMasterSlaveTest::testIMVJ_effUpdate_pp()
     dref = Eigen::VectorXd::Zero(22);
     fref = Eigen::VectorXd::Zero(22);
 
-    dref << 1.275776729912455e-06,  -7.411719120649928e-07,  2.009844043916067e-06,  -8.166362562036991e-07,  1.984295496973031e-06,  -1.006128466370864e-06,  1.268600768904626e-06,  -1.038973060940335e-06,  1.553926578960109e-06,  -1.85501566670221e-06,  2.212932517350836e-06,  -1.645357854619679e-06,  1.820890655907848e-06,  -2.41565468511731e-06,  2.444722110852548e-06,  -2.153167028992053e-06,  1.367377699262639e-06,  -1.402360838056698e-06,  2.058773634931946e-06,  -1.275601072931189e-06,  2.16056223288905e-06,  -6.758668464219906e-07;
-    fref << -0.02494062387644205,  2.834577834421974e-05,  0.02789269969287261,  4.927873553950413e-05,  0.02806450388830189,  4.133693821366594e-05,  -0.02479702682061509,  7.828236584438153e-05,  -0.02470268458079963,  3.17420733502629e-05,  0.0282235973672153,  0.0001624809599050109,  -0.01213681562464092,  -0.01299265397817983,  0.01440494173854578,  -0.01303642911469127,  -0.02467306876921166,  4.955128897708022e-05,  0.02820821342518329,  9.359794339403125e-05,  0.02784148826297314,  7.700134509804057e-05;
+    dref <<
+      1.275776729912441e-06,  -7.411719120649928e-07,  2.009844043916140e-06,  -8.166362562036991e-07,
+      1.98429549697312266297e-06,  -1.006128466370864e-06, 1.26860076890459333335e-06, -1.038973060940335e-06,
+      1.553926578960109e-06,  -1.85501566670221e-06, 2.21293251735091021427e-06, -1.645357854619679e-06,
+      1.820890655907848e-06,  -2.41565468511731e-06, 2.44472211085250353034e-06, -2.153167028992053e-06,
+      1.367377699262639e-06,  -1.402360838056698e-06, 2.05877363493188315457e-06, -1.275601072931189e-06,
+      2.16056223288899190422e-06, -6.758668464219906e-07;
+    
+    fref <<
+      -0.02494062387644205, 2.83457783442084623737e-05, 2.78926996928726099456e-02, 4.927873553950413e-05,
+      0.02806450388830189,  4.133693821366594e-05,  -0.02479702682061509,  7.828236584438153e-05,
+      -0.02470268458079963,  3.17420733502629e-05,  0.0282235973672153,  0.0001624809599050109,
+      -0.01213681562464092,  -0.01299265397817983,  0.01440494173854578,  -0.01303642911469127,
+      -0.02467306876921166,  4.955128897708022e-05,  0.02820821342518329,  9.359794339403125e-05,
+      0.02784148826297314,  7.700134509804057e-05;
+    
     drefNorm = 7.910283453653413e-06;
-    frefNorm = 0.08415800797163485 ;
+    frefNorm = 0.08415800797163485;
 
     // validate values
     for(int i = 0; i < data.at(4)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
+      validateWithParams3(math::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i), i);
 
     for(int i = 0; i < data.at(5)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
+      validateWithParams3(math::equals((*data.at(5)->values)(i), fref(i), 1e-8), (*data.at(5)->values)(i), fref(i), i);
 
     // validate norm
-    validateWithParams1(tarch::la::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
-    validateWithParams1(tarch::la::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
+    validateWithParams1(math::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
+    validateWithParams1(math::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
 
   } else if (utils::Parallel::getProcessRank() == 2) { //Slave2
 
     dref = Eigen::VectorXd::Zero(22);
     fref = Eigen::VectorXd::Zero(22);
 
-    dref << 1.782695896956317e-06,  -3.609665456581163e-07,  2.549165865006206e-06,  -2.9152246796606e-07,  1.641256623136569e-06,  -3.63485032734166e-07,  2.399541139942167e-06,  -5.221960935703056e-07,  0,  0,  0,  0,  1.540562829986484e-06,  2.646900958343007e-07,  6.572995607065404e-07,  -5.789378440843989e-07,  2.312916074266876e-06,  2.909615579312903e-08,  1.556902869800238e-06,  -4.907962897313283e-07,  1.413061366105138e-06,  -5.042593080795539e-07;
-    fref << -0.02407925914468757,  -0.0001962517462601011,  0.02863880264123539,  0.0002189694547629064,  -0.02469057752137756,  -0.0001420431374215673,  0.02806138636325711,  0.0001618659175134536,  -0.01072215615486178,  -0.01066770812537758,  0.01563815124261267,  -0.01570783185165062,  0.03075510899502418,  0.0001765574924817709,  -0.02194129299700746,  -0.0001523229943385313,  0.02962481369149697,  0.0002356081943431588,  -0.02307508702308544,  -0.0002109167490697018,  -0.02495036462961023,  -1.652242148315929e-05;
-    drefNorm = 5.676684399367158e-06 ;
+    dref <<
+      1.782695896956317e-06,  -3.609665456581163e-07,  2.549165865006206e-06, -2.9152246796606e-07,
+      1.641256623136569e-06,  -3.63485032734166e-07,  2.399541139942214e-06, -5.221960935703056e-07,
+      0, 0, 0, 0,
+      1.540562829986484e-06,  2.646900958343007e-07,  6.572995607065404e-07, -5.789378440843989e-07,
+      2.312916074266845e-06,  2.909615579313369e-08, 1.55690286980020939237e-06, -4.907962897313283e-07,
+      1.41306136610511245499e-06, -5.042593080795539e-07;
+    
+    fref <<
+      -0.02407925914468757, -0.0001962517462601011, 2.86388026412357221684e-02, 0.0002189694547629064,
+      -0.02469057752137756, -0.0001420431374215673, 0.02806138636325711, 0.0001618659175134536,
+      -0.01072215615486178, -0.01066770812537758, 0.01563815124261267, -0.01570783185165062,
+      0.03075510899502418, 0.0001765574924817709, -0.02194129299700746, -0.0001523229943385313,
+      0.02962481369149697, 2.35608194343154197722e-04, -0.02307508702308544, -0.0002109167490697018,
+      -0.02495036462961023, -1.65224214831653608282e-05;
+    
+    drefNorm = 5.676684399367158e-06;
     frefNorm = 0.08353026170200345;
 
     // validate values
     for(int i = 0; i < data.at(4)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i));
+      validateWithParams3(math::equals((*data.at(4)->values)(i), dref(i)), (*data.at(4)->values)(i), dref(i), i);
 
     for(int i = 0; i < data.at(5)->values->size(); i++)
-      validateWithParams2(tarch::la::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i));
-
+      validateWithParams3(math::equals((*data.at(5)->values)(i), fref(i)), (*data.at(5)->values)(i), fref(i), i);
 
     // validate norm
-    validateWithParams1(tarch::la::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
-    validateWithParams1(tarch::la::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
+    validateWithParams1(math::equals(data.at(4)->values->norm(), drefNorm), data.at(4)->values->norm());
+    validateWithParams1(math::equals(data.at(5)->values->norm(), frefNorm), data.at(5)->values->norm());
 
   }
-
 
   utils::MasterSlave::_communication->closeConnection();
   utils::MasterSlave::_slaveMode = false;

@@ -4,9 +4,6 @@
 #include "BaseQNPostProcessing.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "tarch/la/DynamicColumnMatrix.h"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/DynamicVector.h"
 #include "io/TXTWriter.hpp"
 #include <deque>
 

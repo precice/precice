@@ -1,5 +1,4 @@
-#ifndef PRECICE_CPLSCHEME_TESTS_PARALLELIMPLICITCOUPLINGSCHEMETEST_HPP_
-#define PRECICE_CPLSCHEME_TESTS_PARALLELIMPLICITCOUPLINGSCHEMETEST_HPP_
+#pragma once
 
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
@@ -8,7 +7,6 @@
 #include "utils/xml/XMLTag.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include <string>
-#include <vector>
 
 namespace precice {
    namespace cplscheme {
@@ -53,8 +51,7 @@ public:
   virtual void run();
 
   typedef std::map<int,PtrCouplingData> DataMap;
-  typedef tarch::la::DynamicColumnMatrix<double> DataMatrix;
-
+  
 private:
 
   // @brief Logging device.
@@ -101,5 +98,3 @@ private:
 };
 
 }}} // namespace precice, cplscheme, tests
-
-#endif /* PRECICE_CPLSCHEME_TESTS_PARALLELIMPLICITCOUPLINGSCHEMETEST_HPP_ */

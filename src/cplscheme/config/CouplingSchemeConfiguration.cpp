@@ -16,7 +16,6 @@
 #include "m2n/M2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/xml/XMLAttribute.hpp"
 #include "utils/xml/ValidatorEquals.hpp"
 #include "utils/xml/ValidatorOr.hpp"

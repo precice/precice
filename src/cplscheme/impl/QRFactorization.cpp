@@ -1,11 +1,8 @@
 #include "QRFactorization.hpp"
-#include "tarch/la/MatrixVectorOperations.h"
 #include "utils/Globals.hpp"
-#include "tarch/la/Scalar.h"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
 
 #include <iostream>
-#include <time.h>
 #include <math.h> 
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector

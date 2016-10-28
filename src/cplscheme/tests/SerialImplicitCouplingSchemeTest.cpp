@@ -18,8 +18,7 @@
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "utils/Dimensions.hpp"
-#include "Eigen/Core"
+#include <Eigen/Core>
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::cplscheme::tests::SerialImplicitCouplingSchemeTest)
@@ -49,7 +48,7 @@ void SerialImplicitCouplingSchemeTest:: setUp ()
 
 void SerialImplicitCouplingSchemeTest:: run ()
 {
-  preciceTrace("run()");
+  TRACE();
 # ifndef PRECICE_NO_MPI
   PRECICE_MASTER_ONLY {
     testMethod(testParseConfigurationWithRelaxation);
@@ -79,7 +78,7 @@ void SerialImplicitCouplingSchemeTest:: run ()
 
 void SerialImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
 {
-  preciceTrace("testParseConfigurationWithRelaxation()");
+  TRACE();
   using namespace mesh;
 
   std::string path(_pathToTests + "serial-implicit-cplscheme-relax-const-config.xml");
@@ -100,7 +99,7 @@ void SerialImplicitCouplingSchemeTest:: testParseConfigurationWithRelaxation()
 
 void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
 {
-  preciceTrace("testExtrapolateData()");
+  TRACE();
   using namespace mesh;
 
   PtrMesh mesh(new Mesh("MyMesh", 3, false));
@@ -192,7 +191,7 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
 
 void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
 {
-   preciceTrace ( "testAbsConvergenceMeasureSynchronized()" );
+   TRACE();
    using namespace mesh;
    utils::Parallel::synchronizeProcesses ();
    assertion ( utils::Parallel::getCommunicatorSize() > 1 );
@@ -331,7 +330,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
 
 void SerialImplicitCouplingSchemeTest:: testConfiguredAbsConvergenceMeasureSynchronized ()
 {
-   preciceTrace ( "testConfiguredAbsoluteConvergenceMeasureSync()" );
+   TRACE();
    using namespace mesh;
    utils::Parallel::synchronizeProcesses ();
    assertion ( utils::Parallel::getCommunicatorSize() > 1 );
@@ -380,7 +379,7 @@ void SerialImplicitCouplingSchemeTest:: testConfiguredAbsConvergenceMeasureSynch
 
 void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronized ()
 {
-   preciceTrace ( "testMinIterConvergenceMeasureSynchronized()" );
+   TRACE();
    utils::Parallel::synchronizeProcesses ();
 
    utils::XMLTag root = utils::getRootTag();
@@ -645,10 +644,8 @@ void SerialImplicitCouplingSchemeTest:: runCoupling
     while ( cplScheme.isCouplingOngoing() ) {
       Eigen::VectorXd currentData(3);
       currentData = dataValues1.segment(index * 3, 3);
-      //assign(currentData) = tarch::la::slice<3>(dataValues1, index *3);
       currentData += stepsizeData1;
       dataValues1.segment(index * 3, 3) = currentData;
-      //tarch::la::slice<3>(dataValues1,index*3) = currentData;
       DEBUG ( "Wrote data with stepsize " << stepsizeData1 );
       // The max timestep length is required to be obeyed.
       double maxLengthTimestep = cplScheme.getNextTimestepMaxLength();
@@ -852,7 +849,7 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
     auto& values = mesh->data(1)->values();
-    validateWithParams1(tarch::la::equals(utils::DynVector(values), Vector3D(1.0, 2.0, 3.0)), utils::DynVector(values));
+    validateWithParams1(math::equals(values, Eigen::Vector3d(1.0, 2.0, 3.0)), values);
     mesh->data(0)->values() = Eigen::VectorXd::Constant(mesh->data(0)->values().size(), 4.0);
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
@@ -870,12 +867,12 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
     validate(cplScheme.isActionRequired(constants::actionWriteInitialData()));
     cplScheme.performedAction(constants::actionWriteInitialData());
     auto& values = mesh->data(0)->values();
-    validateWithParams1(tarch::la::equals(values(0), 0.0), utils::DynVector(values));
+    validateWithParams1(math::equals(values(0), 0.0), values);
     Eigen::VectorXd v(3); v << 1.0, 2.0, 3.0;
     mesh->data(1)->values() = v;
     cplScheme.initializeData();
     validate(cplScheme.hasDataBeenExchanged());
-    validateWithParams1(tarch::la::equals(values(0), 4.0), utils::DynVector(values));
+    validateWithParams1(math::equals(values(0), 4.0), values);
     while (cplScheme.isCouplingOngoing()){
       if (cplScheme.isActionRequired(writeIterationCheckpoint)){
         cplScheme.performedAction(writeIterationCheckpoint);

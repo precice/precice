@@ -5,7 +5,6 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
 #include "utils/EigenHelperFunctions.hpp"
@@ -13,16 +12,12 @@
 #include "com/MPIPortsCommunication.hpp"
 #include "com/SocketCommunication.hpp"
 #include "com/Communication.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 
-#include <time.h>
 #include <sstream>
 #include <fstream>
 #include <cstring>
 
-#include <thread>
-#include <chrono>
-//#include "utils/NumericalCompare.hpp"
 
 using precice::utils::Event;
 using precice::utils::Publisher;
@@ -623,7 +618,7 @@ void MVQNPostProcessing::restartIMVJ()
       _svdJ.update(_WtilChunk[q], _pseudoInverseChunk[q].transpose());
     //  used_storage += 2*_WtilChunk.size();
     }
-    int m = _WtilChunk[q].cols(), n = _WtilChunk[q].rows();
+    // int m = _WtilChunk[q].cols(), n = _WtilChunk[q].rows();
     //used_storage += 2*rankBefore*m + 4*m*n + 2*m*m + (rankBefore+m)*(rankBefore+m) + 2*n*(rankBefore+m);
 
     // drop all stored Wtil^q, Z^q matrices

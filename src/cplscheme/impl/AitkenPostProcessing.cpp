@@ -3,14 +3,12 @@
 #include "mesh/Data.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
-#include "tarch/la/DynamicVector.h"
-#include "tarch/la/MatrixVectorOperations.h"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 #include "utils/EigenHelperFunctions.hpp"
 #include <limits>
+#include "math/math.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -97,7 +95,7 @@ void AitkenPostProcessing:: performPostProcessing
 
   // Select/compute aitken factor depending on current iteration count
   if (_iterationCounter == 0){
-    _aitkenFactor = tarch::la::sign(_aitkenFactor) * min(
+    _aitkenFactor = math::sign(_aitkenFactor) * min(
                     utils::Vector2D(_initialRelaxation, std::abs(_aitkenFactor)));
   }
   else {

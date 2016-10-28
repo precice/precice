@@ -1,14 +1,6 @@
-/*
- * SVDFactorization.cpp
- *
- *  Created on: Feb 5, 2016
- *      Author: Klaudius Scheufele
- */
-
 #ifndef PRECICE_NO_MPI
 
 #include "SVDFactorization.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"

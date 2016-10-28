@@ -2,9 +2,8 @@
 #define PRECICE_CPLSCHEME_CONVERGENCEMEASURE_HPP_
 
 #include "cplscheme/CouplingData.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
-#include "Eigen/Dense"
+#include <Eigen/Dense>
 
 namespace precice {
 namespace cplscheme {
@@ -40,8 +39,8 @@ public:
   /**
    * @brief Performs convergence measurement.
    *
-   * @param oldValues [IN] Old iterate values.
-   * @param newValues [IN] New iterate values.
+   * @param[in] oldValues Old iterate values.
+   * @param[in] newValues New iterate values.
    */
   virtual void measure (
     const Eigen::VectorXd& oldValues,
