@@ -2,7 +2,6 @@
 #define PRECICE_IO_TXTTABLEWRITER_HPP_
 
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include <string>
 #include <vector>
 #include <fstream>

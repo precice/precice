@@ -16,7 +16,6 @@
 #include "m2n/M2N.hpp"
 #include "m2n/GatherScatterComFactory.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"

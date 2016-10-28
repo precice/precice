@@ -1,6 +1,5 @@
 #include "ComputeCurvatureAction.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Edge.hpp"

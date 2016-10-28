@@ -2,7 +2,6 @@
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::mesh::tests::EdgeTest)

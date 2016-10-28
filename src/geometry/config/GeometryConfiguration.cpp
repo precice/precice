@@ -14,21 +14,11 @@
 #include "utils/xml/ValidatorOr.hpp"
 #include "utils/Globals.hpp"
 #include <iostream>
-#include <cstdlib>
-#include <cstring>
 
 namespace precice {
 namespace geometry {
 
-using utils::DynVector;
-
 logging::Logger GeometryConfiguration:: _log ("precice::geometry::GeometryConfiguration");
-
-//const std::string& GeometryConfiguration:: getTag()
-//{
-//  static std::string tag ("geometry");
-//  return tag;
-//}
 
 GeometryConfiguration:: GeometryConfiguration
 (
@@ -355,7 +345,7 @@ bool GeometryConfiguration:: addCuboid()
   assertion(_dimensions != 0);
   assertion ( _readData.mesh != std::string("") );
   assertion ( _readData.discretizationWidth > 0.0 );
-  assertion ( not tarch::la::equals(_readData.length, utils::DynVector(_dimensions, 0.0)) );
+  assertion ( not math::equals(_readData.length, utils::DynVector(_dimensions, 0.0)) );
   checkMeshName ( _readData.mesh );
   Cuboid* cuboidGeometry = new Cuboid ( _readData.offset,
       _readData.discretizationWidth,  _readData.length );

@@ -1,7 +1,5 @@
 #include "TXTWriter.hpp"
 #include "utils/Globals.hpp"
-#include "tarch/la/DynamicMatrix.h"
-#include "tarch/la/DynamicVector.h"
 
 namespace precice {
 namespace io {

@@ -5,7 +5,6 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "io/ExportVTK.hpp"
 #include "math/math.hpp"
 #include "geometry/Sphere.hpp"

@@ -1,23 +1,9 @@
-#ifndef PRECICE_IO_TXTWRITER_HPP_
-#define PRECICE_IO_TXTWRITER_HPP_
+#pragma once
 
 #include "logging/Logger.hpp"
-#include "tarch/la/traits/IsMatrix.h"
-#include "tarch/la/traits/IsVector.h"
-#include "tarch/la/traits/MatrixTraits.h"
-#include "tarch/la/traits/VectorTraits.h"
 #include <Eigen/Core>
 #include <string>
 #include <fstream>
-
-namespace tarch {
-  namespace la {
-    template<typename Scalar> class DynamicMatrix;
-    template<typename Scalar> class DynamicVector;
-  }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
 namespace io {
@@ -62,4 +48,3 @@ private:
 
 }} // namespace precice, io
 
-#endif /* PRECICE_IO_TXTWRITER_HPP_ */

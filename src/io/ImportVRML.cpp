@@ -91,8 +91,6 @@ void ImportVRML:: doImport
       }
       // Construct edge indices from parsed data.
       // The parsed data has the form: i0, ..., in, -1, i0, ..., im, -1, ...., -1
-      //assertion(vrmlParser.indices.size() > 2);
-      std::vector<tarch::la::Vector<2,int> > indices;
       for (size_t i=0; i < vrmlParser.indices.size(); i++){
         if (vrmlParser.indices[i+1] == -1){
           i++;

@@ -6,7 +6,6 @@
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/PointerVector.hpp"
 #include "utils/ManageUniqueIDs.hpp"
 #include <boost/noncopyable.hpp>

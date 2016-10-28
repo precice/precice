@@ -3,7 +3,6 @@
 #include "Geometry.hpp"
 #include "m2n/M2N.hpp"
 #include "mapping/SharedPointer.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "logging/Logger.hpp"
 #include "impl/Decomposition.hpp"

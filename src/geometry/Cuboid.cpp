@@ -174,18 +174,6 @@ void Cuboid:: specializedCreate
       cornerVertices[i] = &seed.createVertex ( cornerCoords[i] );
     }
 
-    // Determine mesh width h
-//    tarch::la::Vector<2,int> vertexCount;
-//    Vector3D h;
-//    for ( int i=0; i < 2; i++) {
-//      vertexCount[i] = (int)std::floor ( _sidelengths(i) / _discretizationWidth );
-//      if ( vertexCount(i) > 0.0 ) {
-//        h(i) = _sidelengths(i) / vertexCount(i);
-//      }
-//      else {
-//        h(i) = _sidelengths(i);
-//      }
-//    }
     mesh::PropertyContainer* parent = nullptr;
 
     // Create cuboid edges

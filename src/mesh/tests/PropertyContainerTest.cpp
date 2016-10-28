@@ -1,6 +1,5 @@
 #include "PropertyContainerTest.hpp"
 #include "mesh/PropertyContainer.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 

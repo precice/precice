@@ -9,7 +9,6 @@
 #include "mesh/config/MeshConfiguration.hpp"
 #include "mesh/Data.hpp"
 #include "utils/Parallel.hpp"
-#include "utils/Dimensions.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::action::tests::ScaleActionTest)

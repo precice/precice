@@ -30,8 +30,7 @@ BroadcastFilterDecomposition:: BroadcastFilterDecomposition
 void BroadcastFilterDecomposition:: decompose(
   mesh::Mesh& seed)
 {
-  preciceTrace ( "decompose()", utils::MasterSlave::_rank );
-  using tarch::la::raw;
+  TRACE(utils::MasterSlave::_rank );
 
   std::map<int,std::vector<int> > boundingVertexDistribution;
   std::vector<int> filteredVertexPositions;

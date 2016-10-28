@@ -1,6 +1,5 @@
 #include "TXTTableWriterTest.hpp"
 #include "io/TXTTableWriter.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/Helpers.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
