@@ -69,12 +69,6 @@ void Event::stop(bool barrier)
   }
 }
 
-void Event::addProp(std::string property, double value)
-{
-  EventRegistry::addProp(property, value);
-}
-
-
 Event::Clock::duration Event::getDuration()
 {
   return duration;
@@ -174,6 +168,10 @@ void EventRegistry::addProp(std::string property, double value)
   properties[property] += value;
 }
 
+void EventRegistry::setProp(std::string property, double value)
+{
+  properties[property] = value;
+}
 
 void EventRegistry::print(std::ostream &out, bool terse)
 {

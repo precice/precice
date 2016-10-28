@@ -39,9 +39,6 @@ public:
   /// Gets the duration of the event.
   Clock::duration getDuration();
 
-  /// Adds value to the global property store..
-  void addProp(std::string property, double value);
-
 private:
   Clock::time_point starttime;
   Clock::time_point stoptime;
@@ -101,17 +98,22 @@ public:
   /// Clears the registry. needed for tests
   static void clear();
 
-  /// Finalize the timings and call print. Can be used as a crash handler to still get some timing results.
+  /// Finalizes the timings and calls print. Can be used as a crash handler to still get some timing results.
   static void signal_handler(int signal);
 
   /// Records the event.
   static void put(Event* event);
 
-  /// Adds value to the global property store.
+  /// Adds a value to the global property store.
+  /** An existing value is added. */ 
   static void addProp(std::string property, double value);
 
+  /// Sets a value in the global property store
+  /** An existing value is overwritten. */ 
+  static void setProp(std::string property, double value);
+
   /// Prints the result table to an arbitrary stream.
-  /** terse enabled a more machine readable format with one event per line, seperated by whitespace. */
+  /** terse enables a more machine readable format with one event per line, seperated by whitespace. */
   static void print(std::ostream &out, bool terse = false);
 
   /// Convenience function: Prints to std::cout

@@ -563,7 +563,14 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         )->second;
       
       ierr = MatMultTranspose(_matrixA, in, Au); CHKERRV(ierr);
+      utils::Event eSolve("PetRBF.solve.conservative");
       ierr = KSPSolve(_solver, Au, out); CHKERRV(ierr);
+      eSolve.stop();
+      
+      PetscInt iterations;
+      KSPGetIterationNumber(_solver, &iterations);
+      utils::EventRegistry::setProp("PetRBF.its.conservative", iterations);
+      
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
       if (convReason < 0) {
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
@@ -616,14 +623,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       utils::Event eSolve("PetRBF.solve.consistent");
       ierr = KSPSolve(_solver, in, p); CHKERRV(ierr);
       eSolve.stop();
+      
+      PetscInt iterations;
+      KSPGetIterationNumber(_solver, &iterations);
+      utils::EventRegistry::setProp("PetRBF.its.consistent", iterations);
+
       ierr = KSPGetConvergedReason(_solver, &convReason); CHKERRV(ierr);
       if (convReason < 0) {
         KSPView(_solver, PETSC_VIEWER_STDOUT_WORLD);
         ERROR("RBF linear system has not converged.");
       }
-      PetscInt iterations;
-      KSPGetIterationNumber(_solver, &iterations);
-      eSolve.addProp("PetRBF.its.consistent", iterations);
 
       ierr = MatMult(_matrixA, p, out); CHKERRV(ierr);
       VecChop(out, 1e-9);
