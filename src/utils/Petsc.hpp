@@ -98,6 +98,7 @@ public:
 
   void fill_with_randoms();
 
+  /// Sorts the LOCAL partion of the vector
   void sort();
 
   void assemble();
@@ -164,7 +165,11 @@ public:
   
   void set_column(Vector &v, int col);
 
+  /// Returns (rows, cols) global size
   std::pair<PetscInt, PetscInt> getSize();
+
+  /// Returns (rows, cols) local size
+  std::pair<PetscInt, PetscInt> getLocalSize();
   
   /// Returns a pair that mark the beginning and end of the matrix' ownership range.
   std::pair<PetscInt, PetscInt> ownerRange();

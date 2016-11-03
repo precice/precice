@@ -192,7 +192,6 @@ void Vector::fill_with_randoms()
 
 void Vector::sort() 
 {
-  // will not work on multiple processors as expected since only local partion will be sorted.
   PetscErrorCode ierr = 0;
   PetscInt size;
   PetscReal *a;
@@ -357,6 +356,13 @@ std::pair<PetscInt, PetscInt> Matrix::getSize()
 {
   PetscInt m, n;
   MatGetSize(matrix, &m, &n);
+  return std::make_pair(m, n);
+}
+
+std::pair<PetscInt, PetscInt> Matrix::getLocalSize()
+{
+  PetscInt m, n;
+  MatGetLocalSize(matrix, &m, &n);
   return std::make_pair(m, n);
 }
 
