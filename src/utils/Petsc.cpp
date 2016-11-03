@@ -383,11 +383,11 @@ void Matrix::write(std::string filename, VIEWERFORMAT format)
   PetscViewerDestroy(&viewer);
 }
 
-void Matrix::read(std::string filename, VIEWERFORMAT format)
+void Matrix::read(std::string filename)
 {
    PetscErrorCode ierr = 0;
    PetscViewer viewer;
-   openViewer(viewer, filename, format);
+   openViewer(viewer, filename, BINARY);
    ierr = MatLoad(matrix, viewer); CHKERRV(ierr);
    PetscViewerDestroy(&viewer);
 }
@@ -413,12 +413,10 @@ void Matrix::viewDraw()
   ierr = PetscViewerSetType(viewer, PETSCVIEWERDRAW); CHKERRV(ierr); 
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
   ierr = PetscViewerDrawGetDraw(viewer, 0, &draw); CHKERRV(ierr);
-  ierr = PetscDrawSetPause(draw, -2); CHKERRV(ierr); // pause on destroy
-  ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr);
+  ierr = PetscDrawSetPause(draw, -1); CHKERRV(ierr); // Wait for user
   ierr = PetscDrawDestroy(&draw); CHKERRV(ierr); 
-}
-
-
+  ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr);
+  }
 
 }}} // namespace precice, utils, petsc
 

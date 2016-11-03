@@ -1,9 +1,7 @@
 #pragma once
 
-
 #include "mesh/Group.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/PointerVector.hpp"
@@ -67,8 +65,8 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param name [IN] Unique name of the mesh.
-   * @param flipNormals [IN] Inverts the standard direction of normals.
+   * @param[in] name Unique name of the mesh.
+   * @param[in] flipNormals Inverts the standard direction of normals.
    */
   Mesh (
     const std::string& name,
@@ -149,9 +147,9 @@ public:
   /**
    * @brief Creates and initializes an Edge object.
    *
-   * @param vertexOne [IN] Reference to first Vertex defining the Edge.
-   * @param vertexTwo [IN] Reference to second Vertex defining the Edge.
-   * @param meshIsParent [IN] If true, the mesh is set as Property parent.
+   * @param[in] vertexOne Reference to first Vertex defining the Edge.
+   * @param[in] vertexTwo Reference to second Vertex defining the Edge.
+   * @param[in] meshIsParent If true, the mesh is set as Property parent.
    */
   Edge& createEdge (
     Vertex& vertexOne,
@@ -160,10 +158,10 @@ public:
   /**
    * @brief Creates and initializes a Triangle object.
    *
-   * @param edgeOne [IN] Reference to first edge defining the Triangle.
-   * @param edgeTwo [IN] Reference to second edge defining the Triangle.
-   * @param edgeThree [IN] Reference to third edge defining the Triangle.
-   * @param meshIsParent [IN] If true, the mesh is set as Property parent.
+   * @param[in] edgeOne Reference to first edge defining the Triangle.
+   * @param[in] edgeTwo Reference to second edge defining the Triangle.
+   * @param[in] edgeThree Reference to third edge defining the Triangle.
+   * @param[in] meshIsParent If true, the mesh is set as Property parent.
    */
   Triangle& createTriangle (
     Edge& edgeOne,
@@ -173,11 +171,11 @@ public:
   /**
    * @brief Creates and initializes a Quad object.
    *
-   * @param edgeOne [IN] Reference to first edge defining the Quad.
-   * @param edgeTwo [IN] Reference to second edge defining the Quad.
-   * @param edgeThree [IN] Reference to third edge defining the Quad.
-   * @param edgeFour [IN] Reference to fourth edge defining the Quad.
-   * @param meshIsParent [IN] If true, the mesh is set as Property parent.
+   * @param[in] edgeOne Reference to first edge defining the Quad.
+   * @param[in] edgeTwo Reference to second edge defining the Quad.
+   * @param[in] edgeThree Reference to third edge defining the Quad.
+   * @param[in] edgeFour Reference to fourth edge defining the Quad.
+   * @param[in] meshIsParent If true, the mesh is set as Property parent.
    */
   Quad& createQuad (
     Edge& edgeOne,

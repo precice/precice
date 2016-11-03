@@ -175,14 +175,14 @@ public:
   /// Writes the matrix to file.
   void write(std::string filename, VIEWERFORMAT format = ASCII);
 
-  /// Reads the matrix from file.
-  void read(std::string filename, VIEWERFORMAT format = ASCII);
+  /// Reads the matrix from file, stored in PETSc binary format
+  void read(std::string filename);
 
   /// Prints the matrix
   void view();
 
   void viewDraw();
-  
+
 };
 
 }}} // namespace precice, utils, petsc

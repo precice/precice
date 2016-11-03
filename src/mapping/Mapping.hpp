@@ -3,17 +3,6 @@
 #include "mesh/Mesh.hpp"
 
 namespace precice {
-  namespace mesh {
-    class Mesh;
-  }
-  namespace spacetree {
-    class Spacetree;
-  }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
-
-namespace precice {
 namespace mapping {
 
 /**
@@ -159,19 +148,19 @@ protected:
 
 private:
 
-  // @brief Determines wether mapping is consistent or conservative.
+  /// Determines wether mapping is consistent or conservative.
   Constraint _constraint;
 
-  // @brief Requirement on input mesh.
+  /// Requirement on input mesh.
   MeshRequirement _inputRequirement;
 
-  // @brief Requirement on output mesh.
+  /// Requirement on output mesh.
   MeshRequirement _outputRequirement;
 
-  // @brief Pointer to input mesh.
+  /// Pointer to input mesh.
   mesh::PtrMesh _input;
 
-  // @brief Pointer to output mesh.
+  /// Pointer to output mesh.
   mesh::PtrMesh _output;
 
   int _dimensions;
