@@ -521,10 +521,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
             input()->getDimensions(), output()->getDimensions());
 
   const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
-  INFO("Mapping " << input()->data(inputDataID)->getName()
-       << " " << constraintName
-       << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-       << " to " << output()->getName() << " (ID " << output()->getID() << ")");
   
   PetscErrorCode ierr = 0;
   KSPConvergedReason convReason;
@@ -547,7 +543,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     
     // Fill input from input data values
     for (int dim=0; dim < valueDim; dim++) {
-      DEBUG("input()->vertices().size() = " << input()->vertices().size());
+      INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
+           << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+           << " to " << output()->getName() << " (ID " << output()->getID() << ") for dimension " << dim);
+  
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
         int globalIndex = input()->vertices()[i].getGlobalIndex();
         VecSetValue(in, globalIndex, inValues[(i)*valueDim + dim], INSERT_VALUES); // Dies besser als VecSetValuesLocal machen
@@ -606,6 +605,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++) {
+      INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
+           << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+           << " to " << output()->getName() << " (ID " << output()->getID() << ") for dimension " << dim);
+      
       // Fill input from input data values
       int count = 0;
       for (const auto& vertex : input()->vertices()) {
