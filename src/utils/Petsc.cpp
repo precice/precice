@@ -420,9 +420,8 @@ void Matrix::viewDraw()
   ierr = MatView(matrix, viewer); CHKERRV(ierr);
   ierr = PetscViewerDrawGetDraw(viewer, 0, &draw); CHKERRV(ierr);
   ierr = PetscDrawSetPause(draw, -1); CHKERRV(ierr); // Wait for user
-  ierr = PetscDrawDestroy(&draw); CHKERRV(ierr); 
   ierr = PetscViewerDestroy(&viewer); CHKERRV(ierr);
-  }
+}
 
 }}} // namespace precice, utils, petsc
 
