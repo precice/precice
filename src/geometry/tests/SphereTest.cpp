@@ -26,7 +26,7 @@ void SphereTest:: run ()
     for ( int dim=2; dim <= 3; dim++ ){
       bool flipNormals = false;
       mesh::Mesh mesh ( "test-sphere", dim, flipNormals );
-      utils::DynVector offset ( dim, 0.0 );
+      Eigen::VectorXd offset = Eigen::VectorXd::Zero(dim);
       double discretizationWidth = 0.1;
       double radius = 1.0;
       Sphere sphere ( offset, discretizationWidth, radius );

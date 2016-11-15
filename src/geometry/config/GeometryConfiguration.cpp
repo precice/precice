@@ -345,7 +345,7 @@ bool GeometryConfiguration:: addCuboid()
   assertion(_dimensions != 0);
   assertion ( _readData.mesh != std::string("") );
   assertion ( _readData.discretizationWidth > 0.0 );
-  assertion ( not math::equals(_readData.length, utils::DynVector(_dimensions, 0.0)) );
+  assertion ( not math::equals(_readData.length, Eigen::VectorXd::Zero(_dimensions)) );
   checkMeshName ( _readData.mesh );
   Cuboid* cuboidGeometry = new Cuboid ( _readData.offset,
       _readData.discretizationWidth,  _readData.length );

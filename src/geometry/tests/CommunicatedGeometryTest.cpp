@@ -99,8 +99,8 @@ void CommunicatedGeometryTest:: testScatterMesh ()
 
   int dimensions = 2;
   bool flipNormals = false;
-  utils::DynVector offset ( dimensions, 0.0 );
-
+  Eigen::VectorXd offset = Eigen::VectorXd::Zero(dimensions);
+  
   if (utils::Parallel::getProcessRank() == 0){ //SOLIDZ
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
@@ -111,23 +111,24 @@ void CommunicatedGeometryTest:: testScatterMesh ()
     geo1.addReceiver("NASTINMaster",m2n);
     geo2.addReceiver("NASTINMaster",m2n);
 
-    utils::DynVector position(dimensions);
-    assignList(position) = 0.0, 0.0;
+    Eigen::VectorXd position(dimensions);
+  
+    position << 0.0, 0.0;
     mesh::Vertex& v1_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v1_2 = pSolidzMesh2->createVertex(position);
-    assignList(position) = 0.0, 1.95;
+    position << 0.0, 1.95;
     mesh::Vertex& v2_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v2_2 = pSolidzMesh2->createVertex(position);
-    assignList(position) = 0.0, 2.1;
+    position << 0.0, 2.1;
     mesh::Vertex& v3_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v3_2 = pSolidzMesh2->createVertex(position);
-    assignList(position) = 0.0, 4.5;
+    position << 0.0, 4.5;
     mesh::Vertex& v4_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v4_2 = pSolidzMesh2->createVertex(position);
-    assignList(position) = 0.0, 5.95;
+    position << 0.0, 5.95;
     mesh::Vertex& v5_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v5_2 = pSolidzMesh2->createVertex(position);
-    assignList(position) = 0.0, 6.1;
+    position << 0.0, 6.1;
     mesh::Vertex& v6_1 = pSolidzMesh1->createVertex(position);
     mesh::Vertex& v6_2 = pSolidzMesh2->createVertex(position);
     pSolidzMesh1->createEdge(v1_1,v2_1);
@@ -169,10 +170,10 @@ void CommunicatedGeometryTest:: testScatterMesh ()
       utils::MasterSlave::_size = 3;
       utils::MasterSlave::_slaveMode = false;
       utils::MasterSlave::_masterMode = true;
-      utils::DynVector position(dimensions);
-      assignList(position) = 0.0, 0.0;
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 0.0;
       pNastinMesh->createVertex(position);
-      assignList(position) = 0.0, 2.0;
+      position << 0.0, 2.0;
       pNastinMesh->createVertex(position);
     }
     else if(utils::Parallel::getProcessRank() == 2){//Slave1
@@ -186,10 +187,10 @@ void CommunicatedGeometryTest:: testScatterMesh ()
       utils::MasterSlave::_size = 3;
       utils::MasterSlave::_slaveMode = true;
       utils::MasterSlave::_masterMode = false;
-      utils::DynVector position(dimensions);
-      assignList(position) = 0.0, 4.0;
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 4.0;
       pNastinMesh->createVertex(position);
-      assignList(position) = 0.0, 6.0;
+      position << 0.0, 6.0;
       pNastinMesh->createVertex(position);
     }
 
@@ -285,8 +286,8 @@ void CommunicatedGeometryTest:: testGatherMesh ()
 
   int dimensions = 2;
   bool flipNormals = false;
-  utils::DynVector offset ( dimensions, 0.0 );
-
+  Eigen::VectorXd offset = Eigen::VectorXd::Zero(dimensions);
+  
   if (utils::Parallel::getProcessRank() == 0){ //NASTIN
     utils::MasterSlave::_slaveMode = false;
     utils::MasterSlave::_masterMode = false;
@@ -307,10 +308,10 @@ void CommunicatedGeometryTest:: testGatherMesh ()
       utils::MasterSlave::_size = 3;
       utils::MasterSlave::_slaveMode = false;
       utils::MasterSlave::_masterMode = true;
-      utils::DynVector position(dimensions);
-      assignList(position) = 0.0, 0.0;
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 0.0;
       mesh::Vertex& v1 = pSolidzMesh->createVertex(position);
-      assignList(position) = 0.0, 1.5;
+      position << 0.0, 1.5;
       mesh::Vertex& v2 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v1,v2);
     }
@@ -325,14 +326,14 @@ void CommunicatedGeometryTest:: testGatherMesh ()
       utils::MasterSlave::_size = 3;
       utils::MasterSlave::_slaveMode = true;
       utils::MasterSlave::_masterMode = false;
-      utils::DynVector position(dimensions);
-      assignList(position) = 0.0, 3.5;
+      Eigen::VectorXd position(dimensions);
+      position << 0.0, 3.5;
       mesh::Vertex& v3 = pSolidzMesh->createVertex(position);
-      assignList(position) = 0.0, 4.5;
+      position << 0.0, 4.5;
       mesh::Vertex& v4 = pSolidzMesh->createVertex(position);
-      assignList(position) = 0.0, 5.5;
+      position << 0.0, 5.5;
       mesh::Vertex& v5 = pSolidzMesh->createVertex(position);
-      assignList(position) = 0.0, 7.0;
+      position << 0.0, 7.0;
       mesh::Vertex& v6 = pSolidzMesh->createVertex(position);
       pSolidzMesh->createEdge(v3,v4);
       pSolidzMesh->createEdge(v4,v5);
