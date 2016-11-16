@@ -21,9 +21,7 @@ namespace precice {
 
 namespace precice {
 
-/**
- * @brief Iterator over vertex coordinates and IDs.
- */
+/// Iterator over vertex coordinates and IDs.
 class VertexIterator
 {
 public:
@@ -57,35 +55,27 @@ private:
   impl::VertexIteratorImplementation* _impl;
 };
 
-/**
- * @brief Offers methods begin() and end() to iterate over all vertices.
- */
+/// Offers methods begin() and end() to iterate over all vertices.
 class VertexHandle
 {
 public:
 
   typedef VertexIterator const_iterator;
 
-  /**
-   * @brief Constructor, reference to mesh object holding vertices required.
-   */
+  /// Constructor, reference to mesh object holding vertices required.
   VertexHandle ( const mesh::Group& content );
 
-  /**
-   * @brief Returns iterator to begin of the geometry's vertices.
-   */
+  /// Returns iterator to begin of the geometry's vertices.
   VertexIterator begin() const;
 
-  /**
-   * @brief Returns iterator to end of the geometry's vertices.
-   */
+  /// Returns iterator to end of the geometry's vertices.
   VertexIterator end() const;
 
   size_t size() const;
 
 private:
 
-  // @brief Group instance holding vertices.
+  /// Group instance holding vertices.
   const mesh::Group& _content;
 };
 

@@ -1,5 +1,4 @@
 #include "precice/MeshHandle.hpp"
-#include "utils/Dimensions.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
@@ -167,10 +166,8 @@ const double* EdgeIterator:: vertexCoords
 (
   int vertexIndex )
 {
-  //using tarch::la::dwrap;
-  //dwrap(_impl->coords) = (*_impl->iterator).vertex(vertexIndex).getCoords();
-  const utils::DynVector& coords = (*_impl->iterator).vertex(vertexIndex).getCoords();
-  return tarch::la::raw(coords);
+  const Eigen::VectorXd& coords = (*_impl->iterator).vertex(vertexIndex).getCoords();
+  return coords.data();
 }
 
 int EdgeIterator:: vertexID
@@ -242,11 +239,8 @@ const double* TriangleIterator:: vertexCoords
 (
   int vertexIndex )
 {
-//  using tarch::la::dwrap;
-//  dwrap(_impl->coords) = (*_impl->iterator).vertex(vertexIndex).getCoords();
-//  return _impl->coords;
-  const utils::DynVector& coords = (*_impl->iterator).vertex(vertexIndex).getCoords();
-  return tarch::la::raw(coords);
+  const Eigen::VectorXd& coords = (*_impl->iterator).vertex(vertexIndex).getCoords();
+  return coords.data();
 }
 
 int TriangleIterator:: vertexID

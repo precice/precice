@@ -408,12 +408,11 @@ void SolverInterfaceTest:: testExplicitWithDataInitialization()
 
 void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
 {
-  preciceTrace("testExplicitWithBlockDataExchange()");
-  using namespace tarch::la;
+  TRACE();
   assertion(utils::Parallel::getCommunicatorSize() > 1);
   mesh::Mesh::resetGeometryIDsGlobally();
   double counter = 0.0;
-  using utils::Vector3D;
+  using Eigen::Vector3d;
 
   if (utils::Parallel::getProcessRank() == 0){
     SolverInterface cplInterface("SolverOne", 0, 1);
@@ -427,20 +426,20 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
     int temperaturesID = cplInterface.getDataID("Temperatures", meshOneID);
     VertexHandle vertices = cplInterface.getMeshHandle("Test-Square").vertices();
     int size = vertices.size();
-    DynamicVector<double> writePositions(size*3);
-    DynamicVector<double> getWritePositions(size*3);
-    DynamicVector<double> forces(size*3);
-    DynamicVector<double> pressures(size);
-    DynamicVector<int> writeIDs(size);
-    DynamicVector<int> getWriteIDs(size);
-    DynamicVector<double> readPositions(size*3);
-    DynamicVector<double> getReadPositions(size*3);
-    DynamicVector<double> velocities(size*3);
-    DynamicVector<double> temperatures(size);
-    DynamicVector<double> expectedVelocities(size*3);
-    DynamicVector<double> expectedTemperatures(size);
-    DynamicVector<int> readIDs(size);
-    DynamicVector<int> getReadIDs(size);
+    Eigen::VectorXd writePositions(size*3);
+    Eigen::VectorXd getWritePositions(size*3);
+    Eigen::VectorXd forces(size*3);
+    Eigen::VectorXd pressures(size);
+    Eigen::VectorXi writeIDs(size);
+    Eigen::VectorXi getWriteIDs(size);
+    Eigen::VectorXd readPositions(size*3);
+    Eigen::VectorXd getReadPositions(size*3);
+    Eigen::VectorXd velocities(size*3);
+    Eigen::VectorXd temperatures(size);
+    Eigen::VectorXd expectedVelocities(size*3);
+    Eigen::VectorXd expectedTemperatures(size);
+    Eigen::VectorXi readIDs(size);
+    Eigen::VectorXi getReadIDs(size);
 
     while (cplInterface.isCouplingOngoing()){
       cplInterface.resetMesh(meshOneID);
@@ -449,24 +448,26 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
           writePositions[it.vertexID()*3 + dim] = it.vertexCoords()[dim];
         }
       }
-      cplInterface.setMeshVertices(meshOneID, size, raw(writePositions),
-                                     raw(writeIDs));
+      cplInterface.setMeshVertices(meshOneID, size, writePositions.data(),
+                                   writeIDs.data());
       for (VertexIterator it = vertices.begin(); it != vertices.end(); it++){
-        Vector3D force ( Vector3D(counter) + wrap<3,double>(it.vertexCoords()) );
+        // Vector3d force ( Vector3D(counter) + wrap<3,double>(it.vertexCoords()) );
+        Vector3d force ( Vector3d::Constant(counter) +
+                         Eigen::Map<const Vector3d>(it.vertexCoords()) );
         for (int dim=0; dim<3; dim++) forces[it.vertexID()*3+dim] = force[dim];
         pressures[it.vertexID()] = counter + it.vertexCoords()[0];
       }
-      cplInterface.writeBlockVectorData(forcesID, size, raw(writeIDs), raw(forces));
-      cplInterface.writeBlockScalarData(pressuresID, size, raw(writeIDs), raw(pressures));
+      cplInterface.writeBlockVectorData(forcesID, size, writeIDs.data(), forces.data());
+      cplInterface.writeBlockScalarData(pressuresID, size, writeIDs.data(), pressures.data());
 
-      cplInterface.getMeshVertices(meshOneID, size, raw(writeIDs),
-                                     raw(getWritePositions));
-      validateWithParams2(equals(writePositions, getWritePositions),
+      cplInterface.getMeshVertices(meshOneID, size, writeIDs.data(),
+                                   getWritePositions.data());
+      validateWithParams2(math::equals(writePositions, getWritePositions),
                           writePositions, getWritePositions);
 
-      cplInterface.getMeshVertexIDsFromPositions(meshOneID, size, raw(writePositions),
-                                           raw(getWriteIDs));
-      validateWithParams2(equals(writeIDs, getWriteIDs), writeIDs, getWriteIDs);
+      cplInterface.getMeshVertexIDsFromPositions(meshOneID, size, writePositions.data(),
+                                                 getWriteIDs.data());
+      validateWithParams2(math::equals(writeIDs, getWriteIDs), writeIDs, getWriteIDs);
       //cplInterface.mapWrittenData(meshID);
       maxDt = cplInterface.advance(maxDt);
       if (cplInterface.isCouplingOngoing()){
@@ -479,15 +480,15 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
           expectedTemperatures[it.vertexID()] = counter + it.vertexCoords()[0];
         }
         cplInterface.resetMesh(meshOneID);
-        cplInterface.setMeshVertices(meshOneID, size, raw(readPositions), raw(readIDs));
+        cplInterface.setMeshVertices(meshOneID, size, readPositions.data(), readIDs.data());
         cplInterface.mapReadDataTo(meshOneID);
-        cplInterface.readBlockVectorData(velocitiesID, size, raw(readIDs),
-                                         raw(velocities));
-        cplInterface.readBlockScalarData(temperaturesID, size, raw(readIDs),
-                                         raw(temperatures));
-        validateWithParams2(equals(velocities, expectedVelocities),
+        cplInterface.readBlockVectorData(velocitiesID, size, readIDs.data(),
+                                         velocities.data());
+        cplInterface.readBlockScalarData(temperaturesID, size, readIDs.data(),
+                                         temperatures.data());
+        validateWithParams2(math::equals(velocities, expectedVelocities),
                             velocities, expectedVelocities);
-        validateWithParams2(equals(temperatures, expectedTemperatures),
+        validateWithParams2(math::equals(temperatures, expectedTemperatures),
                             temperatures, expectedTemperatures);
 
         counter += 1.0;
@@ -509,31 +510,31 @@ void SolverInterfaceTest:: testExplicitWithBlockDataExchange()
     // SolverTwo does not start the coupled simulation and has, hence,
     // already received the first data to be validated.
     for ( VertexIterator it = vertices.begin(); it != vertices.end(); it++ ){
-      Vector3D force ( 0.0 );
+      Vector3d force = Vector3d::Zero();
       double pressure = 0.0;
-      cplInterface.readVectorData(forcesID, it.vertexID(), raw(force));
+      cplInterface.readVectorData(forcesID, it.vertexID(), force.data());
       cplInterface.readScalarData(pressuresID, it.vertexID(), pressure);
-      validate(equals(force, Vector3D(counter) + wrap<3,double>(it.vertexCoords())) );
-      validate(equals(pressure, counter + it.vertexCoords()[0]));
+      validate(math::equals(force, Vector3d::Constant(counter) + Eigen::Map<const Vector3d>(it.vertexCoords())) );
+      validate(math::equals(pressure, counter + it.vertexCoords()[0]));
     }
     counter += 1.0;
 
     while ( cplInterface.isCouplingOngoing() ) {
       for ( VertexIterator it = vertices.begin(); it != vertices.end(); it++ ){
-        Vector3D vel ( Vector3D(counter - 1.0) + wrap<3,double>(it.vertexCoords()) );
-        cplInterface.writeVectorData ( velocitiesID, it.vertexID(), raw(vel) );
+        Vector3d vel ( Vector3d::Constant(counter - 1.0) + Eigen::Map<const Vector3d>(it.vertexCoords()) );
+        cplInterface.writeVectorData ( velocitiesID, it.vertexID(), vel.data() );
         double temperature = counter - 1.0 + it.vertexCoords()[0];
         cplInterface.writeScalarData(temperaturesID, it.vertexID(), temperature);
       }
       maxDt = cplInterface.advance ( maxDt );
       if ( cplInterface.isCouplingOngoing() ) {
         for ( VertexIterator it = vertices.begin(); it != vertices.end(); it++ ){
-          Vector3D force ( 0.0 );
+          Vector3d force = Vector3d::Zero();
           double pressure = 0.0;
-          cplInterface.readVectorData(forcesID, it.vertexID(), raw(force));
+          cplInterface.readVectorData(forcesID, it.vertexID(), force.data());
           cplInterface.readScalarData(pressuresID, it.vertexID(), pressure);
-          validate ( equals(force, Vector3D(counter) + wrap<3,double>(it.vertexCoords())) );
-          validate(equals(pressure, counter + it.vertexCoords()[0]));
+          validate ( math::equals(force, Vector3d::Constant(counter) + Eigen::Map<const Vector3d>(it.vertexCoords())) );
+          validate(math::equals(pressure, counter + it.vertexCoords()[0]));
         }
         counter += 1.0;
       }

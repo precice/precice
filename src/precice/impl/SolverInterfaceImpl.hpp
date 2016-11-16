@@ -7,12 +7,10 @@
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "action/Action.hpp"
-#include "utils/Dimensions.hpp"
 #include "boost/noncopyable.hpp"
 #include "io/Constants.hpp"
 #include "query/ExportVTKNeighbors.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "tarch/la/WrappedVector.h"
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
@@ -33,8 +31,6 @@ namespace precice {
     class SolverInterfaceTestGeometry;
   }
 }
-
-// ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
 namespace impl {

@@ -10,7 +10,6 @@
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "com/Communication.hpp"
-#include "tarch/la/WrappedVector.h"
 #include <limits>
 
 namespace precice {
@@ -20,7 +19,7 @@ logging::Logger WatchPoint:: _log ( "precice::impl::WatchPoint" );
 
 WatchPoint:: WatchPoint
 (
-  const utils::DynVector& pointCoords,
+  const Eigen::VectorXd&  pointCoords,
   const mesh::PtrMesh&    meshToWatch,
   const std::string&      exportFilename )
 :
@@ -137,8 +136,6 @@ void WatchPoint:: exportPointData
 {
   if(_isClosest){
     assertion(_vertices.size() == _weights.size());
-    using utils::Vector2D;
-    using utils::Vector3D;
     _txtWriter.writeData("Time", time);
     // Export watch point coordinates
     Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
@@ -146,21 +143,21 @@ void WatchPoint:: exportPointData
       coords += _weights[i] * _vertices[i]->getCoords();
     }
     if (coords.size() == 2){
-      _txtWriter.writeData("Coordinate", Vector2D(coords));
+      _txtWriter.writeData("Coordinate", Eigen::Vector2d(coords));
     }
     else {
-      _txtWriter.writeData("Coordinate", Vector3D(coords));
+      _txtWriter.writeData("Coordinate", Eigen::Vector3d(coords));
     }
     // Export watch point data
     for (auto & elem : _dataToExport){
       if (elem->getDimensions() > 1){
-        utils::DynVector toExport(_mesh->getDimensions(), 0.0);
+        Eigen::VectorXd toExport = Eigen::VectorXd::Zero(_mesh->getDimensions());
         getValue(toExport, elem);
         if (coords.size() == 2){
-          _txtWriter.writeData(elem->getName(), Vector2D(toExport));
+          _txtWriter.writeData(elem->getName(), Eigen::Vector2d(toExport));
         }
         else {
-          _txtWriter.writeData(elem->getName(), Vector3D(toExport));
+          _txtWriter.writeData(elem->getName(), Eigen::Vector3d(toExport));
         }
 
       }
@@ -175,19 +172,18 @@ void WatchPoint:: exportPointData
 
 void WatchPoint:: getValue
 (
-  utils::DynVector& value,
+  Eigen::VectorXd&  value,
   mesh::PtrData&    data )
 {
   int dim = _mesh->getDimensions();
-  utils::DynVector temp(dim);
+  Eigen::VectorXd temp(dim);
   size_t index = 0;
-  const utils::DynVector& values = data->values();
+  const Eigen::VectorXd& values = data->values();
   for (mesh::Vertex* vertex : _vertices ) {
     int offset = vertex->getID()*dim;
     for ( int i=0; i < dim; i++ ){
       temp[i] = values[offset + i];
     }
-//    assign(temp) = tarch::la::slice<dim>(data->values(), vertex->getID()*dim);
     temp *= _weights[index];
     value += temp;
     index ++;
@@ -200,7 +196,7 @@ void WatchPoint:: getValue
   mesh::PtrData& data  )
 {
   size_t index = 0;
-  const utils::DynVector& values = data->values();
+  const Eigen::VectorXd& values = data->values();
   for (mesh::Vertex* vertex : _vertices ) {
     value += _weights[index] * values[vertex->getID()];
     index ++;

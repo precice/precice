@@ -7,15 +7,12 @@
 #include "com/Communication.hpp"
 #include "mapping/Mapping.hpp"
 #include "SharedPointer.hpp"
-#include "utils/Dimensions.hpp"
 #include <vector>
 
 namespace precice {
 namespace impl {
 
-/**
- * @brief Stores a mesh and related objects and data.
- */
+/// Stores a mesh and related objects and data.
 struct MeshContext
 {
 
@@ -43,8 +40,8 @@ struct MeshContext
    // @brief True, if mesh is decomposed based on PreFilter-PostFilter strategy.
    bool doesPreFiltering;
 
-   // @brief Offset only applied to meshes local to the accessor.
-   utils::DynVector localOffset;
+   /// Offset only applied to meshes local to the accessor.
+   Eigen::VectorXd localOffset;
 
    // @brief Geometry creating the mesh. Can be empty.
    geometry::PtrGeometry geometry;
@@ -55,9 +52,6 @@ struct MeshContext
    // @brief Mapping used when mapping data to the mesh. Can be empty.
    MappingContext toMappingContext;
 
-   /**
-    * @brief Constructor.
-    */
    MeshContext ( int dimensions )
    :
      mesh (),
@@ -68,7 +62,7 @@ struct MeshContext
      safetyFactor(-1.0),
      provideMesh ( false ),
      doesPreFiltering ( false ),
-     localOffset ( dimensions, 0.0 ),
+     localOffset ( Eigen::VectorXd::Zero(dimensions) ),
      geometry (),
      fromMappingContext(),
      toMappingContext()

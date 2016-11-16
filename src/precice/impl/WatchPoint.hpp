@@ -3,7 +3,6 @@
 #include "SharedPointer.hpp"
 #include "io/TXTTableWriter.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/Dimensions.hpp"
 #include "logging/Logger.hpp"
 #include <string>
 #include <vector>
@@ -29,10 +28,10 @@ public:
    /**
     * @brief Constructor.
     *
-    * @param meshToWatch [IN] Mesh to be watched, can be empty on construction.
+    * @param[in] meshToWatch Mesh to be watched, can be empty on construction.
     */
    WatchPoint (
-     const utils::DynVector& pointCoords,
+     const Eigen::VectorXd& pointCoords,
      const mesh::PtrMesh&    meshToWatch,
      const std::string&      exportFilename );
 
@@ -52,10 +51,9 @@ public:
 
 private:
 
-   // @brief Logging device.
    static logging::Logger _log;
 
-   utils::DynVector _point;
+   Eigen::VectorXd _point;
 
    mesh::PtrMesh _mesh;
 
@@ -73,7 +71,7 @@ private:
    bool _isClosest;
 
    void getValue (
-     utils::DynVector& value,
+     Eigen::VectorXd&  value,
      mesh::PtrData&    data );
 
    void getValue (

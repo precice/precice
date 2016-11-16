@@ -1,28 +1,22 @@
 #include "ClosestMesh.hpp"
-#include "utils/Dimensions.hpp"
 #include "spacetree/Spacetree.hpp"
 #include <limits>
 
 namespace precice {
   namespace impl {
 
-    /**
-     * @brief Holds data of ClosestMesh to hide it from interface of ClosestMesh.
-     */
+    /// Holds data of ClosestMesh to hide it from interface of ClosestMesh.
     struct ClosestMeshImplementation
     {
-      // @brief Geometry IDs of the closest geometry.
+      /// Geometry IDs of the closest geometry.
       std::vector<int> meshIDs;
 
-      // @brief Position of the query point relative to the closest geometry.
+      /// Position of the query point relative to the closest geometry.
       int position;
 
-      // @brief Shortest distance vector to closest mesh.
-      utils::DynVector distanceVector;
+      /// Shortest distance vector to closest mesh.
+      Eigen::VectorXd distanceVector;
 
-      /**
-       * @brief Constructor.
-       */
       ClosestMeshImplementation ( int dimensions )
       :
         meshIDs(),
@@ -44,7 +38,7 @@ ClosestMesh:: ClosestMesh
 {
 
   _impl->position = spacetree::Spacetree::positionUndefined();
-  assign(_impl->distanceVector) = std::numeric_limits<double>::max();
+  _impl->distanceVector.setConstant(std::numeric_limits<double>::max());
 }
 
 ClosestMesh:: ClosestMesh ( const ClosestMesh& toCopy )
@@ -95,7 +89,7 @@ void ClosestMesh:: setPosition
 const double* ClosestMesh:: distanceVector()
 {
   assertion ( _impl != nullptr );
-  return tarch::la::raw(_impl->distanceVector);
+  return _impl->distanceVector.data();
 }
 
 void ClosestMesh:: setDistanceVector
@@ -113,7 +107,7 @@ void ClosestMesh:: setDistanceVector
 double ClosestMesh:: distance ()
 {
   assertion ( _impl != nullptr );
-  return tarch::la::norm2(_impl->distanceVector);
+  return _impl->distanceVector.norm();
 }
 
 } // namespace precice

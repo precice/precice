@@ -5,9 +5,9 @@
 #include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "utils/Dimensions.hpp"
 #include <set>
 #include <list>
+#include <Eigen/Dense>
 
 namespace precice {
   namespace impl {
@@ -15,14 +15,10 @@ namespace precice {
   }
 }
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace impl {
 
-/**
- * @brief Takes requests from clients and handles requests on server side.
- */
+/// Takes requests from clients and handles requests on server side.
 class RequestManager
 {
 public:
@@ -72,14 +68,14 @@ public:
    * @brief Requests inquire position from server.
    */
   int requestInquirePosition (
-    utils::DynVector&    point,
+    Eigen::VectorXd&     point,
     const std::set<int>& meshIDs );
 
   /**
    * @brief Requests inquire closest mesh from server.
    */
   void requestInquireClosestMesh (
-    utils::DynVector&    point,
+    Eigen::VectorXd&     point,
     const std::set<int>& meshIDs,
     ClosestMesh&         closest );
 
@@ -87,8 +83,8 @@ public:
    * @brief Requests inquire voxel position from server.
    */
   void requestInquireVoxelPosition (
-    utils::DynVector&    voxelCenter,
-    utils::DynVector&    voxelHalflengths,
+    Eigen::VectorXd&     voxelCenter,
+    Eigen::VectorXd&     voxelHalflengths,
     bool                 includeBoundaries,
     const std::set<int>& meshIDs,
     VoxelPosition&       voxelPosition );
@@ -98,7 +94,7 @@ public:
    */
   int requestSetMeshVertex (
     int               meshID,
-    utils::DynVector& position );
+    Eigen::VectorXd&  position );
 
   /**
    * @brief Requests get size of vertices of preCICE mesh.

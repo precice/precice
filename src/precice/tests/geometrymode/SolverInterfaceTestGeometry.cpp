@@ -135,33 +135,33 @@ void SolverInterfaceTestGeometry:: testSearchQuery()
     geoInterface.initialize();
 
     int meshID = geoInterface.getMeshID("SolverMesh");
-    utils::DynVector pos(dim,0.0);
-    assign(pos) = 50.0;
-    geoInterface.setMeshVertex(meshID,raw(pos));
+    Eigen::VectorXd pos = Eigen::VectorXd::Zero(dim);
+    pos.setConstant(50);
+    geoInterface.setMeshVertex(meshID, pos.data());
 
     _geoID = geoInterface.getMeshID("itest-cuboid");
 
     std::set<int> ids;
-    assign(pos) = 0.0;
-    ClosestMesh closest = geoInterface.inquireClosestMesh (raw(pos), ids);
+    pos.setConstant(0);
+    ClosestMesh closest = geoInterface.inquireClosestMesh (pos.data(), ids);
     validateEquals ( closest.meshIDs().size(), 1 );
     validateEquals ( closest.meshIDs()[0], _geoID );
     validateEquals ( closest.position(), constants::positionOutsideOfGeometry() );
 
-    assign(pos) = 4.0;
-    closest = geoInterface.inquireClosestMesh (raw(pos), ids);
+    pos.setConstant(4);
+    closest = geoInterface.inquireClosestMesh (pos.data(), ids);
     validateEquals ( closest.meshIDs().size(), 1 );
     validateEquals ( closest.meshIDs()[0], _geoID );
     validateEquals ( closest.position(), constants::positionOutsideOfGeometry() );
 
-    assign(pos) = 5.0;
-    closest = geoInterface.inquireClosestMesh (raw(pos), ids);
+    pos.setConstant(5);
+    closest = geoInterface.inquireClosestMesh (pos.data(), ids);
     validateEquals ( closest.meshIDs().size(), 1 );
     //validateEquals ( closest.meshIDs()[0], _geoID );  // why does this not work
     validateEquals ( closest.position(), constants::positionOnGeometry() );
 
-    assign(pos) = 6.0;
-    closest = geoInterface.inquireClosestMesh ( raw(pos), ids );
+    pos.setConstant(6);
+    closest = geoInterface.inquireClosestMesh ( pos.data(), ids );
     validateEquals ( closest.meshIDs().size(), 1 );
     validateEquals ( closest.meshIDs()[0], _geoID );
     validateEquals ( closest.position(), constants::positionInsideOfGeometry() );
