@@ -7,7 +7,6 @@
 #include "utils/Globals.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "query/tests/GeometryTestScenarios.hpp"
-#include "tarch/la/WrappedVector.h"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerIntegrationTest(precice::tests::SolverInterfaceTestRemote)
@@ -89,9 +88,7 @@ void SolverInterfaceTestRemote:: configureSolverInterface
 
 void SolverInterfaceTestRemote:: testGeometryMode()
 {
-  preciceTrace("testGeometryMode()");
-  using namespace tarch::la;
-  using utils::DynVector;
+  TRACE();
   for (int dim=2; dim <= 3; dim++){
     std::string configFilename;
     if (dim == 2){
@@ -108,12 +105,12 @@ void SolverInterfaceTestRemote:: testGeometryMode()
 
       int meshIDScalar = interface.getMeshID ( "AccessorMeshScalar" );
       int meshIDVector = interface.getMeshID ( "AccessorMeshVector" );
-      DynVector pos(dim, 4.0);
-      int posIndex1 = interface.setMeshVertex ( meshIDScalar, raw(pos) );
-      assign(pos) = 3.0;
-      int posIndex2 = interface.setMeshVertex ( meshIDScalar, raw(pos) );
-      assign(pos) = 3.0;
-      int posIndex3 = interface.setMeshVertex ( meshIDVector, raw(pos) );
+      Eigen::VectorXd pos = Eigen::VectorXd::Constant(dim, 4.0);
+      int posIndex1 = interface.setMeshVertex ( meshIDScalar, pos.data() );
+      pos.setConstant(3);
+      int posIndex2 = interface.setMeshVertex ( meshIDScalar, pos.data() );
+      pos.setConstant(3);
+      int posIndex3 = interface.setMeshVertex ( meshIDVector, pos.data() );
 
       interface.initialize();
       interface.initializeData(); // is skipped due to geometry mode
@@ -124,12 +121,12 @@ void SolverInterfaceTestRemote:: testGeometryMode()
 
       // Test inquireClosestMesh()
       const GeoTests::PointQueryScenario& pointScen = geoTests.pointQueryScenario(dim);
-      std::list<DynVector>::const_iterator coordIter = pointScen.queryCoords.begin();
+      std::list<Eigen::VectorXd>::const_iterator coordIter = pointScen.queryCoords.begin();
       std::list<double>::const_iterator distIter = pointScen.validDistances.begin();
-      std::list<DynVector>::const_iterator distVectorIter = pointScen.validDistanceVectors.begin();
-      DynVector distanceVec(dim);
+      std::list<Eigen::VectorXd>::const_iterator distVectorIter = pointScen.validDistanceVectors.begin();
+      Eigen::VectorXd distanceVec(dim);
       while (coordIter != pointScen.queryCoords.end()){
-        ClosestMesh closest = interface.inquireClosestMesh(raw(*coordIter), ids);
+        ClosestMesh closest = interface.inquireClosestMesh(coordIter->data(), ids);
         for(int i=0; i<dim; i++) distanceVec[i] = closest.distanceVector()[i];
         //validate(equals(*distVectorIter, distanceVec));
         //validate(equals(*distIter, closest.distance()));
@@ -143,7 +140,7 @@ void SolverInterfaceTestRemote:: testGeometryMode()
       coordIter = posScen.queryCoords.begin();
       std::list<int>::const_iterator posIter = posScen.validPositions.begin();
       while ( coordIter != posScen.queryCoords.end() ){
-        int position = interface.inquirePosition ( raw(*coordIter), ids );
+        int position = interface.inquirePosition ( coordIter->data(), ids );
         validateEquals ( position, *posIter );
         coordIter ++;
         posIter ++;
@@ -151,13 +148,13 @@ void SolverInterfaceTestRemote:: testGeometryMode()
 
       // Test inquireVoxelPosition()
       const GeoTests::VoxelQueryScenario& voxelScen = geoTests.voxelQueryScenario(dim);
-      std::list<DynVector>::const_iterator centerIter = voxelScen.queryCenters.begin();
-      std::list<DynVector>::const_iterator hIter = voxelScen.queryHalflengths.begin();
+      std::list<Eigen::VectorXd>::const_iterator centerIter = voxelScen.queryCenters.begin();
+      std::list<Eigen::VectorXd>::const_iterator hIter = voxelScen.queryHalflengths.begin();
       std::list<bool>::const_iterator includeBoundsIter = voxelScen.includeBoundaries.begin();
       posIter = voxelScen.validPositions.begin();
       while ( centerIter != voxelScen.queryCenters.end() ){
-        VoxelPosition pos = interface.inquireVoxelPosition ( raw(*centerIter),
-                            raw(*hIter), *includeBoundsIter, ids );
+        VoxelPosition pos = interface.inquireVoxelPosition ( centerIter->data(),
+                                                             hIter->data(), *includeBoundsIter, ids );
         validateEquals ( pos.position(), *posIter );
         centerIter ++;
         hIter ++;
@@ -165,10 +162,7 @@ void SolverInterfaceTestRemote:: testGeometryMode()
         posIter ++;
       }
 
-
-
       // Test write data
-
       int dataID = interface.getDataID ( "ScalarData", meshIDScalar );
       double value = 1.0;
       interface.writeScalarData ( dataID, posIndex1, value );
@@ -177,9 +171,9 @@ void SolverInterfaceTestRemote:: testGeometryMode()
 
       // Test read data (not really good test...)
       dataID = interface.getDataID ( "VectorData", meshIDVector );
-      DynVector readValue(dim, 2.0);
-      interface.readVectorData ( dataID, posIndex3, raw(readValue) );
-      validate ( equals(readValue, DynVector(dim,0.0)) );
+      Eigen::VectorXd readValue = Eigen::VectorXd::Constant(dim, 2);
+      interface.readVectorData ( dataID, posIndex3, readValue.data() );
+      validate ( math::equals(readValue, Eigen::VectorXd::Zero(dim)) );
 
       // Test exporting mesh
       interface.exportMesh ( "remote" );
@@ -208,9 +202,7 @@ void SolverInterfaceTestRemote:: testGeometryMode()
 
 void SolverInterfaceTestRemote:: testGeometryModeParallel()
 {
-  preciceTrace("testGeometryModeParalell()");
-  using namespace tarch::la;
-  using utils::DynVector;
+  TRACE();  
   for ( int dim=2; dim <= 3; dim++ ){
     std::string configFilename;
     if (dim == 2){
@@ -235,15 +227,15 @@ void SolverInterfaceTestRemote:: testGeometryModeParallel()
 
       // Test inquireClosestMesh()
       const GeoTests::PointQueryScenario& pointScen = geoTests.pointQueryScenario(dim);
-      std::list<DynVector>::const_iterator coordIter = pointScen.queryCoords.begin();
+      std::list<Eigen::VectorXd>::const_iterator coordIter = pointScen.queryCoords.begin();
       std::list<double>::const_iterator distIter = pointScen.validDistances.begin();
-      std::list<DynVector>::const_iterator distVectorIter = pointScen.validDistanceVectors.begin();
-      DynVector distanceVec(dim);
+      std::list<Eigen::VectorXd>::const_iterator distVectorIter = pointScen.validDistanceVectors.begin();
+      Eigen::VectorXd distanceVec(dim);
       while ( coordIter != pointScen.queryCoords.end() ){
-        ClosestMesh closest = interface.inquireClosestMesh ( raw(*coordIter), ids );
+        ClosestMesh closest = interface.inquireClosestMesh ( coordIter->data(), ids );
         for(int i=0; i<dim; i++) distanceVec[i] = closest.distanceVector()[i];
-        validate ( equals(*distVectorIter, distanceVec) );
-        validate ( equals(*distIter, closest.distance()) );
+        validate ( math::equals(*distVectorIter, distanceVec) );
+        validate ( math::equals(*distIter, closest.distance()) );
         coordIter ++;
         distIter ++;
         distVectorIter ++;
@@ -254,7 +246,7 @@ void SolverInterfaceTestRemote:: testGeometryModeParallel()
       coordIter = posScen.queryCoords.begin();
       std::list<int>::const_iterator posIter = posScen.validPositions.begin();
       while ( coordIter != posScen.queryCoords.end() ){
-        int position = interface.inquirePosition ( raw(*coordIter), ids );
+        int position = interface.inquirePosition (coordIter->data(), ids );
         validateEquals ( position, *posIter );
         coordIter ++;
         posIter ++;
@@ -262,13 +254,13 @@ void SolverInterfaceTestRemote:: testGeometryModeParallel()
 
       // Test inquireVoxelPosition()
       const GeoTests::VoxelQueryScenario& voxelScen = geoTests.voxelQueryScenario(dim);
-      std::list<DynVector>::const_iterator centerIter = voxelScen.queryCenters.begin();
-      std::list<DynVector>::const_iterator hIter = voxelScen.queryHalflengths.begin();
+      std::list<Eigen::VectorXd>::const_iterator centerIter = voxelScen.queryCenters.begin();
+      std::list<Eigen::VectorXd>::const_iterator hIter = voxelScen.queryHalflengths.begin();
       std::list<bool>::const_iterator includeBoundsIter = voxelScen.includeBoundaries.begin();
       posIter = voxelScen.validPositions.begin();
       while ( centerIter != voxelScen.queryCenters.end() ){
-        VoxelPosition pos = interface.inquireVoxelPosition ( raw(*centerIter),
-                            raw(*hIter), *includeBoundsIter, ids );
+        VoxelPosition pos = interface.inquireVoxelPosition ( centerIter->data(),
+                                                             hIter->data(), *includeBoundsIter, ids );
         validateEquals ( pos.position(), *posIter );
         centerIter ++;
         hIter ++;
@@ -280,14 +272,14 @@ void SolverInterfaceTestRemote:: testGeometryModeParallel()
       int meshIDVector = interface.getMeshID ( "AccessorMeshVector" );
 
       // Test write data
-      DynVector pos(dim, 0.0);
-      int posIndex = interface.setMeshVertex(meshIDScalar, raw(pos));
+      Eigen::VectorXd pos = Eigen::VectorXd::Zero(dim);
+      int posIndex = interface.setMeshVertex(meshIDScalar, pos.data());
       int dataID = interface.getDataID("ScalarData", meshIDScalar);
       double value = 1.0;
       interface.writeScalarData(dataID, posIndex, value);
 
-      assign(pos) = 1.0;
-      posIndex = interface.setMeshVertex(meshIDScalar, raw(pos));
+      pos.setConstant(1);
+      posIndex = interface.setMeshVertex(meshIDScalar, pos.data());
       value = 2.0;
       interface.writeScalarData(dataID, posIndex, value);
 
@@ -296,12 +288,12 @@ void SolverInterfaceTestRemote:: testGeometryModeParallel()
       utils::Parallel::synchronizeLocalProcesses();
 
       // Test read data (not really good test...)
-      assign(pos) = 0.0;
-      posIndex = interface.setMeshVertex(meshIDVector, raw(pos));
+      pos.setConstant(0);
+      posIndex = interface.setMeshVertex(meshIDVector, pos.data());
       dataID = interface.getDataID("VectorData", meshIDVector);
-      DynVector readValue(dim, 4.0);
-      interface.readVectorData(dataID, posIndex, raw(readValue));
-      validate(equals(readValue, DynVector(dim,0.0)));
+      Eigen::VectorXd readValue = Eigen::VectorXd::Constant(dim, 4.0);
+      interface.readVectorData(dataID, posIndex, readValue.data());
+      validate(math::equals(readValue, Eigen::VectorXd::Zero(dim)));
 
       // Test exporting mesh
       std::ostringstream filename;
@@ -332,9 +324,7 @@ void SolverInterfaceTestRemote:: testGeometryModeParallel()
 
 void SolverInterfaceTestRemote:: testGeometryModeParallelStationaryMapping()
 {
-  preciceTrace("testGeometryModeParallelStationaryMapping()");
-  using namespace tarch::la;
-  using utils::DynVector;
+  TRACE();  
   for ( int dim=2; dim <= 2; dim++ ){ // LIMITED TO 2D!!!!!!
     std::string configFilename;
     if (dim == 2){
@@ -352,7 +342,7 @@ void SolverInterfaceTestRemote:: testGeometryModeParallelStationaryMapping()
       interface.initializeData(); // is skipped due to geometry mode
 
       // Test write data
-      DynVector pos(dim, 0.0);
+      Eigen::VectorXd pos = Eigen::VectorXd::Zero(dim);
       int meshIDVector = interface.getMeshID ( "AccessorMeshVector" );
       int indices[4];
 
@@ -362,23 +352,23 @@ void SolverInterfaceTestRemote:: testGeometryModeParallelStationaryMapping()
 
       if (rank == 0){
         pos[0] = 0.0; pos[1] = 0.0;
-        indices[0] = interface.setMeshVertex(meshIDVector, raw(pos));
+        indices[0] = interface.setMeshVertex(meshIDVector, pos.data());
         pos[0] = 1.0; pos[1] = 0.0;
-        indices[2] = interface.setMeshVertex(meshIDVector, raw(pos));
+        indices[2] = interface.setMeshVertex(meshIDVector, pos.data());
         pos[0] = 1.0; pos[1] = 1.0;
-        indices[3] = interface.setMeshVertex(meshIDVector, raw(pos));
+        indices[3] = interface.setMeshVertex(meshIDVector, pos.data());
         pos[0] = 0.0; pos[1] = 1.0;
-        indices[1] = interface.setMeshVertex(meshIDVector, raw(pos));
+        indices[1] = interface.setMeshVertex(meshIDVector, pos.data());
       }
       else {
         pos[0] = 0.5; pos[1] = 0.0;
-        indices[0] = interface.setMeshVertex(meshIDVector, raw(pos));
+        indices[0] = interface.setMeshVertex(meshIDVector, pos.data());
         pos[0] = 1.0; pos[1] = 0.5;
-        indices[2] = interface.setMeshVertex(meshIDVector, raw(pos));
+        indices[2] = interface.setMeshVertex(meshIDVector, pos.data());
         pos[0] = 0.5; pos[1] = 1.0;
-        indices[3] = interface.setMeshVertex(meshIDVector, raw(pos));
+        indices[3] = interface.setMeshVertex(meshIDVector, pos.data());
         pos[0] = 0.0; pos[1] = 0.5;
-        indices[1] = interface.setMeshVertex(meshIDVector, raw(pos));
+        indices[1] = interface.setMeshVertex(meshIDVector, pos.data());
       }
 
       double vectorValues[] = {1.0, 1.0, 3.0, 3.0, 4.0, 4.0, 2.0, 2.0};
@@ -416,7 +406,7 @@ void SolverInterfaceTestRemote:: testGeometryModeParallelStationaryMapping()
 
 void SolverInterfaceTestRemote:: testCouplingModeWithOneServer()
 {
-  preciceTrace( "testCouplingModeWithOneServer()" );
+  TRACE();
   int rank = utils::Parallel::getProcessRank();
   std::string configFile = _pathToTests + "cplmode-1.xml";
   if ( rank == 0 ){
@@ -469,8 +459,7 @@ void SolverInterfaceTestRemote:: testCouplingModeWithOneServer()
 
 void SolverInterfaceTestRemote:: testCouplingModeParallelWithOneServer()
 {
-  preciceTrace( "testCouplingModeParallelWithOneServer()" );
-  using namespace tarch::la;
+  TRACE();
   int rank = utils::Parallel::getProcessRank();
   std::string configFile = _pathToTests + "cplmode-1.xml";
   if (rank == 0){
@@ -487,8 +476,8 @@ void SolverInterfaceTestRemote:: testCouplingModeParallelWithOneServer()
     int dataSize = 4;
     int indices[] = {0, 1, 2, 3};
     double vectorValues[] = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0};
-    utils::DynVector expect(8);
-    assignList(expect) = 1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0;
+    Eigen::Matrix<double, 8, 1> expect;
+    expect << 1.0, 2.0, 1.0, 2.0, 1.0, 2.0, 1.0, 2.0;
     while (interface.isCouplingOngoing()){
       time += dt;
       timesteps++;
@@ -497,9 +486,8 @@ void SolverInterfaceTestRemote:: testCouplingModeParallelWithOneServer()
       }
       dt = interface.advance(dt);
       interface.readBlockVectorData(vectorDataID, dataSize, indices, vectorValues);
-      validateWithParams2(equals(wrap<8>(vectorValues), expect),
-                          wrap<8>(vectorValues), expect);
-      assign(wrap<8>(vectorValues)) = 0.0;
+      validate(math::equals(Eigen::Map<Eigen::Matrix<double, 8, 1>>(vectorValues), expect));              
+      Eigen::Map<Eigen::Matrix<double, 8, 1>>(vectorValues).setConstant(0);
     }
     interface.finalize();
     validateNumericalEquals(time, 5.0);

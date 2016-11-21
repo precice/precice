@@ -63,7 +63,6 @@ GeometryTestScenarios:: pointQueryScenario
 (
   int dim )
 {
-  using utils::DynVector;
   if ( _pointQueryScenario == nullptr ){
     _pointQueryScenario = new PointQueryScenario(dim);
 
@@ -73,9 +72,9 @@ GeometryTestScenarios:: pointQueryScenario
 
     // Create query positions and valid results
     for ( int testDim=0; testDim < dim; testDim++ ){
-      DynVector coord ( dim, 0.0 );
+      Eigen::VectorXd coord = Eigen::VectorXd::Zero(dim);
       double distance = 0.0;
-      DynVector vector ( dim, 0.0 );
+      Eigen::VectorXd vector = Eigen::VectorXd::Zero(dim);
 
       coord[testDim] = 0.1;
       distance = 0.9;
@@ -101,7 +100,7 @@ GeometryTestScenarios:: positionQueryScenario
 (
   int dim )
 {
-  using utils::DynVector;
+  using Eigen::VectorXd;
   if ( _positionQueryScenario == nullptr ){
     _positionQueryScenario = new PositionQueryScenario(dim);
 
@@ -110,12 +109,12 @@ GeometryTestScenarios:: positionQueryScenario
     createMesh ( mesh );
 
     // Create query positions and valid results
-    std::list<DynVector>& coords = _positionQueryScenario->queryCoords;
+    std::list<VectorXd>& coords = _positionQueryScenario->queryCoords;
     std::list<int>& positions = _positionQueryScenario->validPositions;
 
     for ( int testDim=0; testDim < dim; testDim++ ){
-      DynVector coord ( dim, 0.0 );
-
+      VectorXd coord = VectorXd::Zero(dim);
+      
       coord[testDim] = 0.1;
       coords.push_back ( coord );
       positions.push_back ( constants::positionInsideOfGeometry() );
@@ -137,7 +136,7 @@ GeometryTestScenarios:: voxelQueryScenario
 (
   int dim )
 {
-  using utils::DynVector;
+  using Eigen::VectorXd;
   if ( _voxelQueryScenario == nullptr ){
     _voxelQueryScenario = new VoxelQueryScenario(dim);
 
@@ -146,14 +145,14 @@ GeometryTestScenarios:: voxelQueryScenario
     createMesh ( mesh );
 
     // Create query positions and valid results
-    std::list<DynVector>& queryCenters = _voxelQueryScenario->queryCenters;
-    std::list<DynVector>& queryHalflengths = _voxelQueryScenario->queryHalflengths;
+    std::list<VectorXd>& queryCenters = _voxelQueryScenario->queryCenters;
+    std::list<VectorXd>& queryHalflengths = _voxelQueryScenario->queryHalflengths;
     std::list<bool>& includeBoundaries = _voxelQueryScenario->includeBoundaries;
     std::list<int>& positions = _voxelQueryScenario->validPositions;
     for ( int testDim=0; testDim < dim; testDim++ ){
-      DynVector center ( dim, 0.0 );
-      DynVector halflengths ( dim, 0.1 );
-
+      VectorXd center = VectorXd::Zero(dim);
+      VectorXd halflengths = VectorXd::Constant(dim, 0.1);
+      
       center[testDim] = 0.1;
       queryCenters.push_back ( center );
       queryHalflengths.push_back ( halflengths );
@@ -244,9 +243,9 @@ void GeometryTestScenarios:: createMesh
 
 void GeometryTestScenarios:: addToPointQueryScenario
 (
-  const utils::DynVector& queryCoord,
-  double                  validDistance,
-  const utils::DynVector& validDistanceVector )
+  const Eigen::VectorXd& queryCoord,
+  double                 validDistance,
+  const Eigen::VectorXd& validDistanceVector )
 {
   assertion ( _pointQueryScenario != nullptr );
   _pointQueryScenario->queryCoords.push_back ( queryCoord );

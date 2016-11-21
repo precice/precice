@@ -16,9 +16,6 @@ class GeometryTestScenarios
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
   GeometryTestScenarios();
 
   /**
@@ -31,9 +28,9 @@ public:
    */
   struct PointQueryScenario {
     mesh::Mesh mesh;
-    std::list<utils::DynVector> queryCoords;
+    std::list<Eigen::VectorXd> queryCoords;
     std::list<double> validDistances;
-    std::list<utils::DynVector> validDistanceVectors;
+    std::list<Eigen::VectorXd> validDistanceVectors;
     PointQueryScenario ( int dim );
   };
 
@@ -47,7 +44,7 @@ public:
    */
   struct PositionQueryScenario {
     mesh::Mesh mesh;
-    std::list<utils::DynVector> queryCoords;
+    std::list<Eigen::VectorXd> queryCoords;
     std::list<int> validPositions;
     PositionQueryScenario ( int dim );
   };
@@ -62,8 +59,8 @@ public:
    */
   struct VoxelQueryScenario {
     mesh::Mesh mesh;
-    std::list<utils::DynVector> queryCenters;
-    std::list<utils::DynVector> queryHalflengths;
+    std::list<Eigen::VectorXd> queryCenters;
+    std::list<Eigen::VectorXd> queryHalflengths;
     std::list<bool> includeBoundaries;
     std::list<int> validPositions;
     VoxelQueryScenario ( int dim );
@@ -94,9 +91,9 @@ private:
    * @brief Adds a query with results to the point query scenario.
    */
   void addToPointQueryScenario (
-    const utils::DynVector& queryCoord,
-    double               validDistance,
-    const utils::DynVector& validDistanceVector );
+    const Eigen::VectorXd& queryCoord,
+    double                 validDistance,
+    const Eigen::VectorXd& validDistanceVector );
 };
 
 }}} // namespace precice, query, tests
