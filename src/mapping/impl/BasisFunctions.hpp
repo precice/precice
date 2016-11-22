@@ -137,7 +137,8 @@ class Gaussian
 public:
 
   Gaussian (const double shape, const double supportRadius = std::numeric_limits<double>::infinity() )
-    : _shape(shape)
+    : _shape(shape),
+      _supportRadius(supportRadius)
   {
     CHECK(math::greater(_shape, 0.0),
           "Shape parameter for radial-basis-function gaussian has to be larger than zero!");
@@ -170,7 +171,7 @@ private:
 
   double _shape;
 
-  /// Either the explicitely set (from cutoffThreshold) or computed supportRadius
+  /// Either explicitely set (from cutoffThreshold) or computed supportRadius
   double _supportRadius;
 
   double _deltaY = 0;
