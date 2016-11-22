@@ -47,13 +47,11 @@ public:
   /**
    * @brief the l2 norm of a vector is calculated on distributed data.
    */
-  static double l2norm(const DynVector& vec);
   static double l2norm(const Eigen::VectorXd& vec);
 
   /**
    * @brief the dot product of 2 vectors is calculated on distributed data.
    */
-  static double dot(const DynVector& vec1, const DynVector& vec2);
   static double dot(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec2);
 
   static void reset();

@@ -80,22 +80,6 @@ int Triangle:: getDimensions() const
   return _edges[0]->getDimensions();
 }
 
-//void Triangle:: setNormal
-//(
-//  const utils::DynVector& normal )
-//{
-//  assertion ( normal.size() == getDimensions(), normal.size(), getDimensions() );
-//  _normal = normal;
-//}
-//
-//void Triangle:: setCenter
-//(
-//  const utils::DynVector& center )
-//{
-//  assertion ( center.size() == getDimensions(), center.size(), getDimensions() );
-//  _center = center;
-//}
-
 void Triangle:: setEnclosingRadius
 (
   double radius )

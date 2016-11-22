@@ -27,8 +27,6 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-using utils::Vector3D;
-
 logging::Logger SerialImplicitCouplingSchemeTest::
   _log ( "precice::cplscheme::tests::SerialImplicitCouplingSchemeTest" );
 
@@ -895,7 +893,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
   const mesh::MeshConfiguration& meshConfig,
   const std::vector<int>&        validIterations )
 {
-  preciceTrace ( "runCouplingWithSubcycling()", nameParticipant );
+  TRACE(nameParticipant );
 
   validateEquals ( meshConfig.meshes().size(), 1 );
   mesh::PtrMesh mesh = meshConfig.meshes()[0];
@@ -903,8 +901,8 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
   validate ( mesh->vertices().size() > 0 );
   double initialStepsizeData0 = 5.0;
   double stepsizeData0 = 5.0;
-  Vector3D initialStepsizeData1 ( 5.0 );
-  Vector3D stepsizeData1 ( 5.0 );
+  Eigen::Vector3d initialStepsizeData1 = Eigen::Vector3d::Constant ( 5.0 );
+  Eigen::Vector3d stepsizeData1 = Eigen::Vector3d::Constant( 5.0 );
   double computedTime = 0.0;
   int computedTimesteps = 0;
   std::string nameParticipant0 ( "participant0" );
@@ -1068,7 +1066,7 @@ void SerialImplicitCouplingSchemeTest:: runCouplingWithSubcycling
           validate ( ! cplScheme.isActionRequired(MY_READ_CHECKPOINT) );
           // The written data value is decreased in a regular manner, in order
           // to achieve a predictable convergence.
-          stepsizeData1 -= 1.0;
+          stepsizeData1.array() -= 1.0;
           subcyclingStep = 0; // Subcycling steps
           iterationCount++; // Implicit coupling iterations
           //INFO ( "increased iterations to " << iterationCount );

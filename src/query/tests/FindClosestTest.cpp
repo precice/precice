@@ -306,9 +306,8 @@ void FindClosestTest:: testFindClosestDistanceToTriangles ()
 
 void FindClosestTest:: testFindClosestDistanceToTrianglesAndVertices ()
 {
-  preciceTrace ( "testFindClosestDistanceToTrianglesAndVertices()" );
+  TRACE();
   int dim = 2;
-  using utils::Vector2D;
   mesh::Mesh mesh ( "Mesh", dim, false );
   mesh::Vertex& vertex1 = mesh.createVertex (Eigen::Vector2d(0.0, 0.0));
   vertex1.setNormal (Eigen::Vector2d(-0.5, 0.5));

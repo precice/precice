@@ -39,7 +39,6 @@ void CommunicateMeshTest:: run ()
 void CommunicateMeshTest:: testTwoSolvers ()
 {
   TRACE();
-  using utils::DynVector;
   utils::Parallel::synchronizeProcesses ();
   assertion ( utils::Parallel::getCommunicatorSize() > 1 );
   mesh::PropertyContainer::resetPropertyIDCounter ();

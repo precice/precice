@@ -29,13 +29,13 @@ void PropertyContainerTest:: run ()
 
 void PropertyContainerTest:: testSinglePropertyContainer ()
 {
-  preciceTrace  ( "testSinglePropertyContainer()" );
+  TRACE();
 
   PropertyContainer propertyContainer;
   int propertyIndex = 0;
   int integerValue = 1;
   double doubleValue = 2.0;
-  utils::Vector3D vectorValue (0.0, 1.0, 2.0);
+  Eigen::Vector3d vectorValue (0.0, 1.0, 2.0);
 
   validate ( not propertyContainer.hasProperty(propertyIndex) );
 
@@ -50,7 +50,7 @@ void PropertyContainerTest:: testSinglePropertyContainer ()
   propertyContainer.setProperty ( propertyIndex, vectorValue );
   for ( int dim=0; dim < 3; dim++ ) {
     validateNumericalEquals (
-      propertyContainer.getProperty<utils::Vector3D>(propertyIndex)(dim),
+      propertyContainer.getProperty<Eigen::Vector3d>(propertyIndex)(dim),
       static_cast<double>(dim) );
   }
 
@@ -60,7 +60,7 @@ void PropertyContainerTest:: testSinglePropertyContainer ()
 
 void PropertyContainerTest:: testHierarchicalPropertyContainers ()
 {
-  preciceTrace ( "testHierarchicalPropertyContainers" );
+  TRACE();
 
   PropertyContainer parent, child;
   int index = 0;

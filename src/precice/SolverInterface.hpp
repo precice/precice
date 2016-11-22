@@ -386,9 +386,9 @@ public:
   /**
    * @brief Gets mesh vertex IDs from positions.
    *
-   * @param size [IN] Number of positions, ids.
-   * @param positions [IN] Positions (x,y,z,x,y,z,...) to find ids for.
-   * @param ids [OUT] IDs corresponding to positions.
+   * @param[in] size Number of positions, ids.
+   * @param[in] positions Positions (x,y,z,x,y,z,...) to find ids for.
+   * @param[in] ids IDs corresponding to positions.
    */
   void getMeshVertexIDsFromPositions (
     int     meshID,
@@ -486,9 +486,9 @@ public:
    *
    * The exact mapping and communication must be specified in XYZ.
    *
-   * @param dataID       [IN] ID of the data to be written, e.g. 1 = forces
-   * @param dataPosition [IN] Position (coordinate, e.g.) of data to be written
-   * @param dataValue    [IN] Value of the data to be written
+   * @param[in] dataID       ID of the data to be written, e.g. 1 = forces
+   * @param[in] dataPosition Position (coordinate, e.g.) of data to be written
+   * @param[in] dataValu     Value of the data to be written
    */
   void writeVectorData (
     int           dataID,

@@ -31,7 +31,6 @@ void Cuboid:: specializedCreate
   assertion ( (dimensions == 2) || (dimensions == 3), dimensions );
   assertion ( dimensions == _sidelengths.size(), dimensions, _sidelengths.size() );
   if ( dimensions == 2 ){
-    using utils::Vector2D;
     // Create corners
     std::array<Eigen::Vector2d, 4> cornerCoords;
     std::array<mesh::Vertex*,4> cornerVertices;
@@ -162,7 +161,6 @@ void Cuboid:: specializedCreate
 
   else { // Create 3D Hexahedron
     assertion ( dimensions == 3, dimensions );
-    using utils::Vector3D;
     // Create corners
     std::array<Eigen::Vector3d,8> cornerCoords;
     std::array<mesh::Vertex*,8> cornerVertices;

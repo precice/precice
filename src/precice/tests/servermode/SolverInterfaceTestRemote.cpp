@@ -508,7 +508,7 @@ void SolverInterfaceTestRemote:: testCouplingModeParallelWithOneServer()
     while (interface.isCouplingOngoing()){
       double value = 0.0;
       interface.readScalarData(scalarDataID, 0, value);
-      validateWithParams1(tarch::la::equals(value, 1.0), value);
+      validateWithParams1(math::equals(value, 1.0), value);
       interface.writeBlockVectorData(vectorDataID, dataSize, indices, vectorValues);
       time += dt;
       timesteps++;

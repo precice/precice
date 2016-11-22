@@ -25,8 +25,6 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-using utils::Vector3D;
-
 logging::Logger CompositionalCouplingSchemeTest::
    _log ( "precice::cplscheme::tests::CompositionalCouplingSchemeTest" );
 
@@ -729,14 +727,14 @@ void CompositionalCouplingSchemeTest:: runThreeSolverCoupling
   const std::string&         participantName,
   mesh::PtrMeshConfiguration meshConfig )
 {
-  preciceTrace("runThreeSolverCoupling()", participantName);
+  TRACE(participantName);
 
   validateEquals(meshConfig->meshes().size(), 1);
   mesh::PtrMesh mesh = meshConfig->meshes()[0];
   validateEquals(mesh->data().size(), 3);
   validate(mesh->vertices().size() > 0);
-  Vector3D valueData1(1.0);
-  Vector3D valueData2(1.0);
+  Eigen::Vector3d valueData1 = Eigen::Vector3d::Constant(1.0);
+  Eigen::Vector3d valueData2 = Eigen::Vector3d::Constant(1.0);
 
   std::string readIterationCheckpoint(constants::actionReadIterationCheckpoint());
   std::string writeIterationCheckpoint(constants::actionWriteIterationCheckpoint());

@@ -2,10 +2,12 @@
 
 #include "math/differences.hpp"
 #include "math/constants.hpp"
+#include "math/la.hpp"
 
 namespace precice {
 namespace math {
 
+/// Return the sign, one of {-1, 0, 1}
 inline int sign (double number)
 {
   if ( greater(number, 0.0) ) {

@@ -72,7 +72,7 @@ void AitkenPostProcessing:: performPostProcessing
 (
   DataMap& cplData )
 {
-  preciceTrace("performPostProcessing()");
+  TRACE();
 
   // Compute aitken relaxation factor
   assertion(utils::contained(*_dataIDs.begin(), cplData));
@@ -95,8 +95,7 @@ void AitkenPostProcessing:: performPostProcessing
 
   // Select/compute aitken factor depending on current iteration count
   if (_iterationCounter == 0){
-    _aitkenFactor = math::sign(_aitkenFactor) * min(
-                    utils::Vector2D(_initialRelaxation, std::abs(_aitkenFactor)));
+    _aitkenFactor = math::sign(_aitkenFactor) * std::min(_initialRelaxation, std::abs(_aitkenFactor));
   }
   else {
     // compute fraction of aitken factor with residuals and residual deltas

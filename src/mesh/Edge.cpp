@@ -20,45 +20,6 @@ Edge:: Edge
               vertexOne.getDimensions(), vertexTwo.getDimensions() );
 }
 
-//int Edge:: getDimensions() const
-//{
-//  return _vertices[0]->getDimensions();
-//}
-
-//Vertex& Edge:: vertex
-//(
-//  int i )
-//{
-//  assertion ( (i == 0) || (i == 1), i );
-//  return *_vertices[i];
-//}
-//
-//const Vertex& Edge:: vertex
-//(
-//  int i ) const
-//{
-//  assertion ( (i==0) || (i==1), i );
-//  return *_vertices[i];
-//}
-
-//void Edge:: setNormal
-//(
-//  const utils::DynVector& normal )
-//{
-//  assertion ( normal.size() == _vertices[0]->getDimensions(), normal,
-//               _vertices[0]->getDimensions() );
-//  _normal = normal;
-//}
-
-//void Edge:: setCenter
-//(
-//  const utils::DynVector& center )
-//{
-//  assertion ( center.size() == _vertices[0]->getDimensions(), center,
-//               _vertices[0]->getDimensions() );
-//  _center = center;
-//}
-
 void Edge:: setEnclosingRadius
 (
   double radius )

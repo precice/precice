@@ -101,7 +101,7 @@ void TXTTableWriter:: writeData
 void TXTTableWriter:: writeData
 (
   const std::string&     name,
-  const utils::Vector2D& value )
+  const Eigen::Vector2d& value )
 {
   assertion ( not _data.empty() );
   if ( _writeIterator == _data.end() ) {
@@ -122,7 +122,7 @@ void TXTTableWriter:: writeData
 void TXTTableWriter:: writeData
 (
   const std::string&     name,
-  const utils::Vector3D& value )
+  const Eigen::Vector3d& value )
 {
   assertion ( not _data.empty() );
   if ( _writeIterator == _data.end() ) {
