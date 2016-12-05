@@ -27,7 +27,6 @@ void WatchPointTest:: run ()
     using namespace mesh;
     int dim = 2;
     using Eigen::VectorXd;
-
     // Setup geometry
     std::string name ( "rectangle" );
     bool flipNormals = false;

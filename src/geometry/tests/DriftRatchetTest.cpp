@@ -5,7 +5,6 @@
 #include "mesh/SharedPointer.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
-#include "boost/smart_ptr.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::geometry::tests::DriftRatchetTest)
@@ -34,9 +33,9 @@ void DriftRatchetTest:: run ()
       double discretizationWidth = 0.5;
       double minRadius = geometry::DriftRatchet::getDefaultMinRadius(maxRadius);
       geometry::DriftRatchet driftRatchet (
-          utils::DynVector(dim,0.0), discretizationWidth, maxRadius, minRadius,
-          geometry::DriftRatchet::getDefaultShapeParameter(),
-          length, pores, 0, 1, 2 );
+        Eigen::VectorXd::Zero(dim), discretizationWidth, maxRadius, minRadius,
+        geometry::DriftRatchet::getDefaultShapeParameter(),
+        length, pores, 0, 1, 2 );
       driftRatchet.create ( mesh );
       DEBUG ( "Created Container with " << mesh.triangles().size()
                      << " triangles and " << mesh.vertices().size() << " vertices" );

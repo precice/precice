@@ -238,7 +238,7 @@ void SolverInterfaceImpl:: configure
 
 double SolverInterfaceImpl:: initialize()
 {
-  preciceTrace("initialize()");
+  TRACE();
   Event e("initialize", not precice::testMode);
 
   m2n::PointToPointCommunication::ScopedSetEventNamePrefix ssenp(
@@ -413,7 +413,7 @@ double SolverInterfaceImpl:: advance
 (
   double computedTimestepLength )
 {
-  preciceTrace("advance()", computedTimestepLength);
+  TRACE(computedTimestepLength);
 
   Event e("advance", not precice::testMode);
 
@@ -578,7 +578,7 @@ void SolverInterfaceImpl:: finalize()
 
 int SolverInterfaceImpl:: getDimensions() const
 {
-  preciceTrace ( "getDimensions()", _dimensions );
+  TRACE(_dimensions );
   return _dimensions;
 }
 
@@ -1574,6 +1574,7 @@ void SolverInterfaceImpl:: writeVectorData
   }
   else {
     CHECK(_accessor->isDataUsed(fromDataID), "You try to write to data that is not defined for " << _accessor->getName());
+
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.get() != nullptr);
     auto& values = context.fromData->values();
@@ -1593,7 +1594,7 @@ void SolverInterfaceImpl:: writeBlockScalarData
   int*    valueIndices,
   double* values )
 {
-  preciceTrace("writeBlockScalarData()", fromDataID, size);
+  TRACE(fromDataID, size);
   if (size == 0)
     return;
   assertion(valueIndices != nullptr);
@@ -1602,8 +1603,8 @@ void SolverInterfaceImpl:: writeBlockScalarData
     _requestManager->requestWriteBlockScalarData(fromDataID, size, valueIndices, values);
   }
   else {
-    preciceCheck(_accessor->isDataUsed(fromDataID), "writeBlockScalarData()",
-                 "You try to write to data that is not defined for " << _accessor->getName());
+    CHECK(_accessor->isDataUsed(fromDataID),
+          "You try to write to data that is not defined for " << _accessor->getName());
     DataContext& context = _accessor->dataContext(fromDataID);
     assertion(context.toData.get() != nullptr);
     auto& valuesInternal = context.fromData->values();
@@ -1858,15 +1859,16 @@ void SolverInterfaceImpl:: configureSolverGeometries
   const m2n::M2NConfiguration::SharedPointer& m2nConfig )
 {
   preciceTrace ( "configureSolverGeometries()" );
+  Eigen::VectorXd offset = Eigen::VectorXd::Zero(_dimensions);
   for (MeshContext* context : _accessor->usedMeshContexts()) {
     if ( context->provideMesh ) { // Accessor provides geometry
-      preciceCheck ( context->receiveMeshFrom.empty(), "configureSolverGeometries()",
-                     "Participant \"" << _accessorName << "\" cannot provide "
-                     << "and receive mesh " << context->mesh->getName() << "!" );
-      preciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",
-                           "Participant \"" << _accessorName << "\" cannot provide "
-                           << "the geometry of mesh \"" << context->mesh->getName()
-                           << " in addition to a defined geometry!" );
+      CHECK ( context->receiveMeshFrom.empty(),
+              "Participant \"" << _accessorName << "\" cannot provide "
+              << "and receive mesh " << context->mesh->getName() << "!" );
+      CHECK ( context->geometry.use_count() == 0,
+              "Participant \"" << _accessorName << "\" cannot provide "
+              << "the geometry of mesh \"" << context->mesh->getName()
+              << " in addition to a defined geometry!" );
 
       bool addedReceiver = false;
       geometry::CommunicatedGeometry* comGeo = nullptr;
@@ -1876,7 +1878,6 @@ void SolverInterfaceImpl:: configureSolverGeometries
           doesReceive &= receiverContext->mesh->getName() == context->mesh->getName();
           if ( doesReceive ){
             DEBUG ( "   ... receiver " << receiver );
-            Eigen::VectorXd offset = Eigen::VectorXd::Zero(_dimensions);
             std::string provider ( _accessorName );
 
             if(!addedReceiver){
@@ -1904,7 +1905,6 @@ void SolverInterfaceImpl:: configureSolverGeometries
       }
       if(!addedReceiver){
         DEBUG ( "No receiver found, create SolverGeometry");
-        Eigen::VectorXd offset = Eigen::VectorXd::Zero(_dimensions);
         context->geometry = geometry::PtrGeometry ( new geometry::SolverGeometry ( offset) );
       }
 
@@ -1912,10 +1912,8 @@ void SolverInterfaceImpl:: configureSolverGeometries
 
     }
     else if ( not context->receiveMeshFrom.empty()) { // Accessor receives geometry
-      CHECK(not context->provideMesh,
-            "Participant \"" << _accessorName << "\" cannot provide "
-            << "and receive mesh " << context->mesh->getName() << "!" );
-      Eigen::VectorXd offset = Eigen::VectorXd::Zero(_dimensions);
+      CHECK ( not context->provideMesh, "Participant \"" << _accessorName << "\" cannot provide "
+                     << "and receive mesh " << context->mesh->getName() << "!" );
       std::string receiver ( _accessorName );
       std::string provider ( context->receiveMeshFrom );
       DEBUG ( "Receiving mesh from " << provider );

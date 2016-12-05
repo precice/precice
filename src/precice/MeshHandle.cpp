@@ -1,5 +1,4 @@
 #include "precice/MeshHandle.hpp"
-#include "utils/Dimensions.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"

@@ -93,7 +93,6 @@ void MeshTest:: testComputeState()
   using math::equals;
   bool flipNormals = true;
   { // 2D
-    using utils::Vector2D;
     Mesh mesh ( "MyMesh", 2, flipNormals );
     // Create mesh
     Vertex& v1 = mesh.createVertex ( Vector2d(0.0, 0.0) );
@@ -122,7 +121,6 @@ void MeshTest:: testComputeState()
   }
 
   { // 3D triangle
-    using utils::Vector3D;
     Mesh mesh ( "MyMesh", 3, flipNormals );
     // Create mesh
     Vertex& v1 = mesh.createVertex ( Vector3d(0.0, 0.0, 0.0) );

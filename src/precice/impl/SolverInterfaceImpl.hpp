@@ -7,7 +7,6 @@
 #include "precice/impl/SharedPointer.hpp"
 #include "precice/impl/DataContext.hpp"
 #include "action/Action.hpp"
-#include "utils/Dimensions.hpp"
 #include "boost/noncopyable.hpp"
 #include "io/Constants.hpp"
 #include "query/ExportVTKNeighbors.hpp"

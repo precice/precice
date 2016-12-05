@@ -42,7 +42,7 @@ public:
 
 private:
 
-   /// Results of performed searches
+  /// Results of performed searches
   std::vector<std::pair<Eigen::VectorXd, query::ClosestElement>> _neighbors;
 };
 

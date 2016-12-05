@@ -143,7 +143,6 @@ void DriftRatchet:: createLeftWall
   }
   else {
     assertion ( dimensions == 3, dimensions );
-    using utils::Vector3D;
     double currentAngle = 0.0;
     int vertexCount = getNumberOfVerticesPerCut ( _discretizationWidth );
     double angle = 2.0 * math::PI / static_cast<double>(vertexCount);

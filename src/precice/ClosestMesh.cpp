@@ -1,28 +1,22 @@
 #include "ClosestMesh.hpp"
-#include "utils/Dimensions.hpp"
 #include "spacetree/Spacetree.hpp"
 #include <limits>
 
 namespace precice {
   namespace impl {
 
-    /**
-     * @brief Holds data of ClosestMesh to hide it from interface of ClosestMesh.
-     */
+    /// Holds data of ClosestMesh to hide it from interface of ClosestMesh.
     struct ClosestMeshImplementation
     {
-      // @brief Geometry IDs of the closest geometry.
+      /// Geometry IDs of the closest geometry.
       std::vector<int> meshIDs;
 
-      // @brief Position of the query point relative to the closest geometry.
+      /// Position of the query point relative to the closest geometry.
       int position;
 
-      // @brief Shortest distance vector to closest mesh.
+      /// Shortest distance vector to closest mesh.
       Eigen::VectorXd distanceVector;
 
-      /**
-       * @brief Constructor.
-       */
       ClosestMeshImplementation ( int dimensions )
       :
         meshIDs(),

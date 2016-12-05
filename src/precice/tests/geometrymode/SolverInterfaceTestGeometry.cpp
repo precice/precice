@@ -11,20 +11,16 @@
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "io/ExportVTK.hpp"
-#include "tarch/la/WrappedVector.h"
 #include <vector>
 #include <set>
 #include <algorithm>
 #include <fstream>
-#include <boost/range/algorithm.hpp>
 
 #include "tarch/tests/TestCaseFactory.h"
 registerIntegrationTest(precice::tests::SolverInterfaceTestGeometry)
 
 namespace precice {
 namespace tests {
-
-using namespace tarch::la;
 
 logging::Logger SolverInterfaceTestGeometry::
     _log ( "precice::tests::SolverInterfaceTestGeometry" );
@@ -43,7 +39,7 @@ void SolverInterfaceTestGeometry:: setUp ()
 
 void SolverInterfaceTestGeometry:: run()
 {
-  preciceTrace("run ()");
+  TRACE();
   std::vector<int> ranks;
   ranks += 0;
   typedef utils::Parallel Par;
@@ -84,7 +80,7 @@ void SolverInterfaceTestGeometry:: configureSolverInterface
   const std::string& configFilename,
   SolverInterface&   interface )
 {
-  preciceTrace ( "configureSolverInterface()", configFilename );
+  TRACE(configFilename);
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   impl::Participant::resetParticipantCount();
@@ -96,7 +92,7 @@ void SolverInterfaceTestGeometry:: configureSolverInterface
 
 void SolverInterfaceTestGeometry:: testConfiguration()
 {
-  preciceTrace ( "testConfiguration()" );
+  TRACE();
   mesh::Mesh::resetGeometryIDsGlobally ();
   DEBUG ( "Test 2D configuration");
   { // 2D
@@ -120,8 +116,8 @@ void SolverInterfaceTestGeometry:: testConfiguration()
 
 void SolverInterfaceTestGeometry:: testSearchQuery()
 {
-  preciceTrace ( "testSearchQuery()" );
-  for ( int dim=2; dim <= 3; dim++ ){
+  TRACE();
+  for ( int dim=2; dim <= 3; dim++ ) {
     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
     if (dim == 2){
       configureSolverInterface ( _pathToTests + "2D.xml",
@@ -131,37 +127,37 @@ void SolverInterfaceTestGeometry:: testSearchQuery()
       configureSolverInterface ( _pathToTests + "3D.xml",
                                  geoInterface );
     }
-
+    
     geoInterface.initialize();
 
     int meshID = geoInterface.getMeshID("SolverMesh");
-    utils::DynVector pos(dim,0.0);
-    assign(pos) = 50.0;
-    geoInterface.setMeshVertex(meshID,raw(pos));
+    Eigen::VectorXd pos = Eigen::VectorXd::Zero(dim);
+    pos.setConstant(50);
+    geoInterface.setMeshVertex(meshID, pos.data());
 
     _geoID = geoInterface.getMeshID("itest-cuboid");
 
     std::set<int> ids;
-    assign(pos) = 0.0;
-    ClosestMesh closest = geoInterface.inquireClosestMesh (raw(pos), ids);
+    pos.setConstant(0);
+    ClosestMesh closest = geoInterface.inquireClosestMesh (pos.data(), ids);
     validateEquals ( closest.meshIDs().size(), 1 );
     validateEquals ( closest.meshIDs()[0], _geoID );
     validateEquals ( closest.position(), constants::positionOutsideOfGeometry() );
 
-    assign(pos) = 4.0;
-    closest = geoInterface.inquireClosestMesh (raw(pos), ids);
+    pos.setConstant(4);
+    closest = geoInterface.inquireClosestMesh (pos.data(), ids);
     validateEquals ( closest.meshIDs().size(), 1 );
     validateEquals ( closest.meshIDs()[0], _geoID );
     validateEquals ( closest.position(), constants::positionOutsideOfGeometry() );
 
-    assign(pos) = 5.0;
-    closest = geoInterface.inquireClosestMesh (raw(pos), ids);
+    pos.setConstant(5);
+    closest = geoInterface.inquireClosestMesh (pos.data(), ids);
     validateEquals ( closest.meshIDs().size(), 1 );
     //validateEquals ( closest.meshIDs()[0], _geoID );  // why does this not work
     validateEquals ( closest.position(), constants::positionOnGeometry() );
 
-    assign(pos) = 6.0;
-    closest = geoInterface.inquireClosestMesh ( raw(pos), ids );
+    pos.setConstant(6);
+    closest = geoInterface.inquireClosestMesh ( pos.data(), ids );
     validateEquals ( closest.meshIDs().size(), 1 );
     validateEquals ( closest.meshIDs()[0], _geoID );
     validateEquals ( closest.position(), constants::positionInsideOfGeometry() );
@@ -179,214 +175,213 @@ void SolverInterfaceTestGeometry:: testSearchQuery()
 
 void SolverInterfaceTestGeometry:: testVoxelQuery()
 {
-   preciceTrace("testVoxelQuery()");
+  TRACE();
+  
+  for ( int dim=2; dim <= 3; dim++ ){
+    SolverInterface geoInterface ( "TestAccessor", 0, 1 );
+    if (dim == 2){
+      configureSolverInterface ( _pathToTests + "2D.xml",
+                                 geoInterface );
+    }
+    else {
+      configureSolverInterface ( _pathToTests + "3D.xml",
+                                 geoInterface );
+    }
 
-   for ( int dim=2; dim <= 3; dim++ ){
-     SolverInterface geoInterface ( "TestAccessor", 0, 1 );
-     if (dim == 2){
-       configureSolverInterface ( _pathToTests + "2D.xml",
-                                  geoInterface );
-     }
-     else {
-       configureSolverInterface ( _pathToTests + "3D.xml",
-                                  geoInterface );
-     }
+    geoInterface.initialize();
 
-     geoInterface.initialize();
-
-     int meshID = geoInterface.getMeshID("SolverMesh");
-     utils::DynVector posVertex(dim,50.0);
-     geoInterface.setMeshVertex(meshID,raw(posVertex));
+    int meshID = geoInterface.getMeshID("SolverMesh");
+    Eigen::VectorXd posVertex = Eigen::VectorXd::Constant(dim,50.0);
+    geoInterface.setMeshVertex(meshID, posVertex.data());
 
 
-     _geoID = geoInterface.getMeshID ("itest-cuboid");
+    _geoID = geoInterface.getMeshID ("itest-cuboid");
 
-     // Voxel completely contained in center
-     std::set<int> ids;
-     bool include = false;
-     utils::DynVector center(dim, 0.0);
-     utils::DynVector h(dim, 0.1);
-     VoxelPosition pos = geoInterface.inquireVoxelPosition (
-                         raw(center), raw(h), include, ids );
-     validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+    // Voxel completely contained in center
+    std::set<int> ids;
+    bool include = false;
+    Eigen::VectorXd center = Eigen::VectorXd::Zero(dim);
+    Eigen::VectorXd h = Eigen::VectorXd::Constant(dim, 0.1);
+    VoxelPosition pos = geoInterface.inquireVoxelPosition (
+      center.data(), h.data(), include, ids );
+    validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
-     if (dim == 2){
-       // Voxels in corners
-       assignList(center) = -4.0, -4.0;
-       assignList(h) = 1.0, 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids);
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 4.0, -4.0;
-       assignList(h) = 1.0, 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = -4.0, 4.0;
-       assignList(h) = 1.0, 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 4.0, 4.0;
-       assignList(h) = 1.0, 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+    if (dim == 2){
+      // Voxels in corners
+      center << -4.0, -4.0;
+      h << 1.0, 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids);
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 4.0, -4.0;
+      h << 1.0, 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << -4.0, 4.0;
+      h << 1.0, 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 4.0, 4.0;
+      h << 1.0, 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
-       // Voxels on sides (outside of geometry)
-       assignList(center) = -4.0, 0.0;
-       assignList(h) = 1.0, 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 4.0, 0.0;
-       assignList(h) = 1.0, 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = -4.0, 4.0;
-       assignList(h) = 1.0, 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 4.0, 4.0;
-       assignList(h) = 1.0, 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = -4.0, 0.0;
-       assignList(h) = 1.0 + (tarch::la::NUMERICAL_ZERO_DIFFERENCE/2.0), 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      // Voxels on sides (outside of geometry)
+      center << -4.0, 0.0;
+      h << 1.0, 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 4.0, 0.0;
+      h << 1.0, 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << -4.0, 4.0;
+      h << 1.0, 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 4.0, 4.0;
+      h << 1.0, 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << -4.0, 0.0;
+      h << 1.0 + (math::NUMERICAL_ZERO_DIFFERENCE/2.0), 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
-       // Voxels on sides (inside of geometry)
-       assignList(center) = -6.0, 0.0;
-       assignList(h) = 1.0, 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 6.0, 0.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = -6.0, 6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 6.0, 6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      // Voxels on sides (inside of geometry)
+      center << -6.0, 0.0;
+      h << 1.0, 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 6.0, 0.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << -6.0, 6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 6.0, 6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
 
-       assignList(center) = 5.0, 5.0;
-       assignList(h) = 5.0, 5.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.meshIDs().size(), 1 );
-       validateEquals ( pos.meshIDs()[0], _geoID );
-       geoInterface.exportMesh ("SolverInterfaceTestGeometry-testVoxelQuery-2D");
-     }
-     else { // 3D
-       // Voxels in corners (outside of geometry)
-       assignList(center) = -4.0, -4.0, -4.0;
-       assignList(h) = 1.0, 1.0, 1.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 4.0, -4.0, -4.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = -4.0, 4.0, -4.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 4.0, 4.0, -4.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = -4.0, -4.0, 4.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 4.0, -4.0, 4.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = -4.0, 4.0, 4.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 4.0, 4.0, 4.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 5.0, 5.0;
+      h << 5.0, 5.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.meshIDs().size(), 1 );
+      validateEquals ( pos.meshIDs()[0], _geoID );
+      geoInterface.exportMesh ("SolverInterfaceTestGeometry-testVoxelQuery-2D");
+    }
+    else { // 3D
+      // Voxels in corners (outside of geometry)
+      center << -4.0, -4.0, -4.0;
+      h << 1.0, 1.0, 1.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 4.0, -4.0, -4.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << -4.0, 4.0, -4.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 4.0, 4.0, -4.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << -4.0, -4.0, 4.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 4.0, -4.0, 4.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << -4.0, 4.0, 4.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 4.0, 4.0, 4.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
-       // Voxels in corners (inside of geometry)
-       assignList(center) = -6.0, -6.0, -6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 6.0, -6.0, -6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = -6.0, 6.0, -6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 6.0, 6.0, -6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = -6.0, -6.0, 6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 6.0, -6.0, 6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = -6.0, 6.0, 6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 6.0, 6.0, 6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      // Voxels in corners (inside of geometry)
+      center << -6.0, -6.0, -6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 6.0, -6.0, -6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << -6.0, 6.0, -6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 6.0, 6.0, -6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << -6.0, -6.0, 6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 6.0, -6.0, 6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << -6.0, 6.0, 6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 6.0, 6.0, 6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
 
-       // Voxels on sides (outside of geometry)
-       assignList(center) = -4.0, 0.0, 0.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry());
-       assignList(center) = 4.0, 0.0, 0.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 0.0, -4.0, 0.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 0.0, 4.0, 0.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 0.0, 0.0, -4.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-       assignList(center) = 0.0, 0.0, 4.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      // Voxels on sides (outside of geometry)
+      center << -4.0, 0.0, 0.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry());
+      center << 4.0, 0.0, 0.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 0.0, -4.0, 0.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 0.0, 4.0, 0.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 0.0, 0.0, -4.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+      center << 0.0, 0.0, 4.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
-       // Voxels on sides (inside of geometry)
-       assignList(center) = -6.0, 0.0, 0.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 6.0, 0.0, 0.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 0.0, -6.0, 0.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 0.0, 6.0, 0.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 0.0, 0.0, -6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-       assignList(center) = 0.0, 0.0, 6.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      // Voxels on sides (inside of geometry)
+      center << -6.0, 0.0, 0.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 6.0, 0.0, 0.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 0.0, -6.0, 0.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 0.0, 6.0, 0.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 0.0, 0.0, -6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
+      center << 0.0, 0.0, 6.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
 
-       // Voxels on geometry
-       assignList(center) = 5.0, 5.0, 5.0;
-       assignList(h) = 5.0, 5.0, 5.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.meshIDs().size(), 1 );
-       validateEquals ( pos.meshIDs()[0], _geoID );
+      // Voxels on geometry
+      center << 5.0, 5.0, 5.0;
+      h << 5.0, 5.0, 5.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.meshIDs().size(), 1 );
+      validateEquals ( pos.meshIDs()[0], _geoID );
 
-       assignList(center) = -5.0, -5.0, -5.0;
-       pos = geoInterface.inquireVoxelPosition (raw(center), raw(h), include, ids );
-       validateEquals ( pos.meshIDs().size(), 1 );
-       validateEquals ( pos.meshIDs()[0], _geoID );
-       geoInterface.exportMesh ("SolverInterfaceTestGeometry-testVoxelQuery-3D");
-     }
-   }
+      center << -5.0, -5.0, -5.0;
+      pos = geoInterface.inquireVoxelPosition (center.data(), h.data(), include, ids );
+      validateEquals ( pos.meshIDs().size(), 1 );
+      validateEquals ( pos.meshIDs()[0], _geoID );
+      geoInterface.exportMesh ("SolverInterfaceTestGeometry-testVoxelQuery-3D");
+    }
+  }
 }
 
 void SolverInterfaceTestGeometry:: testDataActions()
 {
-  preciceTrace("testDataActions()");
-  using namespace tarch::la;
+  TRACE();
   SolverInterface geo("Accessor", 0, 1);
   configureSolverInterface(_pathToTests + "testDataActions.xml", geo);
   impl::SolverInterfaceImpl* impl = geo._impl.get();
@@ -421,8 +416,8 @@ void SolverInterfaceTestGeometry:: testDataActions()
 
 void SolverInterfaceTestGeometry:: testVoxelQueryMultipleGeometryIDs()
 {
-  preciceTrace ( "testVoxelQueryMultipleGeometryIDsest()" );
-  using utils::Vector2D;
+  TRACE();
+  using Eigen::Vector2d;
   SolverInterface geoInterface ( "TestAccessor", 0, 1 );
   configureSolverInterface (
       _pathToTests + "testMultipleGeometryIDs.xml",
@@ -442,7 +437,7 @@ void SolverInterfaceTestGeometry:: testVoxelQueryMultipleGeometryIDs()
 
   std::set<int> ids;
   VoxelPosition pos = geoInterface.inquireVoxelPosition (
-    raw(Vector2D(0.0, 0.0)), raw(Vector2D(1.0, 1.0)), false, ids );
+    Vector2d(0, 0).data(), Vector2d(1.0, 1.0).data(), false, ids );
   validateEquals ( pos.position(), constants::positionOnGeometry() );
   validateEquals ( pos.meshIDs().size(), 2 );
   if ( pos.meshIDs()[0] == idQuad0Base ) {
@@ -453,8 +448,8 @@ void SolverInterfaceTestGeometry:: testVoxelQueryMultipleGeometryIDs()
     validateEquals ( pos.meshIDs()[1], idQuad0Base );
   }
 
-  pos = geoInterface.inquireVoxelPosition ( raw(Vector2D(5.0, 5.0)),
-                                            raw(Vector2D(1.5, 1.5)),
+  pos = geoInterface.inquireVoxelPosition ( Vector2d(5.0, 5.0).data(),
+                                            Vector2d(1.5, 1.5).data(),
                                             false, ids );
   validateEquals ( pos.position(), constants::positionOnGeometry() );
   validateEquals ( pos.meshIDs().size(), 5 );
@@ -475,30 +470,28 @@ void SolverInterfaceTestGeometry:: testVoxelQueryMultipleGeometryIDs()
 
 void SolverInterfaceTestGeometry:: testVoxelQueryDFGChannel()
 {
-  preciceTrace ( "testVoxelQueryDFGChannel()" );
-  using utils::Vector2D;
+  TRACE();
   SolverInterface geoInterface ( "TestAccessor", 0, 1 );
-  configureSolverInterface (
-      _pathToTests + "dfgchannel.xml", geoInterface );
+  configureSolverInterface ( _pathToTests + "dfgchannel.xml", geoInterface );
   validateEquals ( geoInterface.getDimensions(), 2 );
   geoInterface.initialize();
   _geoID = geoInterface.getMeshID ("itest-dfg-cuboid");
-  Vector2D inquiryCenter (0.41/9.0, (46.0 * 0.41) / 9.0);
-  Vector2D inquiryHalflengths (0.41/9.0, 0.41/9.0);
+  Eigen::Vector2d inquiryCenter (0.41/9.0, (46.0 * 0.41) / 9.0);
+  Eigen::Vector2d inquiryHalflengths (0.41/9.0, 0.41/9.0);
   std::set<int> ids;
   VoxelPosition pos = geoInterface.inquireVoxelPosition (
-    raw(inquiryCenter), raw(inquiryHalflengths), false, ids );
+    inquiryCenter.data(), inquiryHalflengths.data(), false, ids );
   validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
 
-  assignList(inquiryCenter) = 0.0455556, 2.09556;
-  assignList(inquiryHalflengths) = 0.0455556, 0.0455556;
-  pos = geoInterface.inquireVoxelPosition ( raw(inquiryCenter), raw(inquiryHalflengths),
+  inquiryCenter << 0.0455556, 2.09556;
+  inquiryHalflengths << 0.0455556, 0.0455556;
+  pos = geoInterface.inquireVoxelPosition ( inquiryCenter.data(), inquiryHalflengths.data(),
     false, ids );
   validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
 
-  assignList(inquiryCenter) = 0.41/9.0, (44.0 * 0.41) / 9.0;
-  assignList(inquiryHalflengths) = 0.41/9.0, 0.41/9.0;
-  pos = geoInterface.inquireVoxelPosition ( raw(inquiryCenter), raw(inquiryHalflengths),
+  inquiryCenter << 0.41/9.0, (44.0 * 0.41) / 9.0;
+  inquiryHalflengths << 0.41/9.0, 0.41/9.0;
+  pos = geoInterface.inquireVoxelPosition ( inquiryCenter.data(), inquiryHalflengths.data(),
     false, ids );
   validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
@@ -507,126 +500,119 @@ void SolverInterfaceTestGeometry:: testVoxelQueryDFGChannel()
 
 void SolverInterfaceTestGeometry:: testVoxelQueryFSIChannel()
 {
-  preciceTrace ( "testVoxelQueryFSIChannel()" );
-  using utils::Vector2D;
+  TRACE();
   SolverInterface geoInterface ( "TestAccessor", 0, 1 );
   configureSolverInterface (
       _pathToTests + "fsichannel.xml", geoInterface );
   validateEquals ( geoInterface.getDimensions(), 2 );
   geoInterface.initialize();
   geoInterface.exportMesh ("SolverInterfaceTestGeometry-testVoxelQueryFSIChannel");
-  Vector2D inquiryCenter (0.230027434842249633995, 1.87790123456790114531);
-  Vector2D inquiryHalflengths (0.000562414);
+  Eigen::Vector2d inquiryCenter (0.230027434842249633995, 1.87790123456790114531);
+  Eigen::Vector2d inquiryHalflengths = Eigen::Vector2d::Constant(0.000562414);
   std::set<int> ids;
   VoxelPosition pos = geoInterface.inquireVoxelPosition (
-                      raw(inquiryCenter), raw(inquiryHalflengths), false, ids );
+    inquiryCenter.data(), inquiryHalflengths.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOnGeometry() );
 }
 
 void SolverInterfaceTestGeometry:: testVoxelQueryChannelFour ()
 {
-   preciceTrace ( "testVoxelQueryChannelFour()");
-   SolverInterface geoInterface ( "TestAccessor", 0, 1 );
-   configureSolverInterface (
-         _pathToTests + "four.xml", geoInterface );
-   validateEquals ( geoInterface.getDimensions(), 2 );
-   geoInterface.initialize();
-
-   utils::Vector2D inquiryCenter (-4.44089e-16, -4.44089e-16);
-   std::set<int> ids;
-   using tarch::la::raw;
-   ClosestMesh closest = geoInterface.inquireClosestMesh ( raw(inquiryCenter), ids );
-   validateEquals ( closest.position(), constants::positionOnGeometry() );
+  TRACE();
+  SolverInterface geoInterface ( "TestAccessor", 0, 1 );
+  configureSolverInterface ( _pathToTests + "four.xml", geoInterface );
+  validateEquals ( geoInterface.getDimensions(), 2 );
+  geoInterface.initialize();
+  
+  Eigen::Vector2d inquiryCenter (-4.44089e-16, -4.44089e-16);
+  std::set<int> ids;
+  ClosestMesh closest = geoInterface.inquireClosestMesh ( inquiryCenter.data(), ids );
+  validateEquals ( closest.position(), constants::positionOnGeometry() );
 }
 
 void SolverInterfaceTestGeometry:: testVoxelQueryEpsBox()
 {
-  preciceTrace ( "testVoxelQueryEpsBox()" );
-  using namespace tarch::la;
+  TRACE();
   SolverInterface geoInterface ( "TestAccessor", 0, 1 );
-  configureSolverInterface (
-      _pathToTests + "eps-box.xml", geoInterface );
+  configureSolverInterface ( _pathToTests + "eps-box.xml", geoInterface );
   validateEquals ( geoInterface.getDimensions(), 2 );
   geoInterface.initialize();
-  utils::Vector2D center(0.0);
-  center[0] = 1.1;
-  center[1] = 0.9;
-  utils::Vector2D h(0.1);
+  Eigen::Vector2d center(1.1, 0.9);
+  Eigen::Vector2d h = Eigen::Vector2d::Constant(0.1);
   std::set<int> ids;
   VoxelPosition pos = geoInterface.inquireVoxelPosition (
-                      raw(center), raw(h), false, ids );
+    center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
-  center[0] = 1.1 - (NUMERICAL_ZERO_DIFFERENCE / 2.0);
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
-  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-
-  center[1] = 1.0;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
-  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-
-  center[1] = 0.9;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
-  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-
-  center[1] = 0.5;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
-  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-
-  center[1] = 0.4;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
-  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-
-  center[1] = 0.0;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
-  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
-
-  center[0] = 1.1 + (NUMERICAL_ZERO_DIFFERENCE / 2.0);
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  center[0] = 1.1 - (math::NUMERICAL_ZERO_DIFFERENCE / 2.0);
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
   center[1] = 1.0;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
   center[1] = 0.9;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
   center[1] = 0.5;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
   center[1] = 0.4;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
   center[1] = 0.0;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
 
-  center[0] = 1.1 - (5.0 * NUMERICAL_ZERO_DIFFERENCE);
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  center[0] = 1.1 + (math::NUMERICAL_ZERO_DIFFERENCE / 2.0);
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
+  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+
+  center[1] = 1.0;
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
+  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+
+  center[1] = 0.9;
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
+  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+
+  center[1] = 0.5;
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
+  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+
+  center[1] = 0.4;
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
+  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+
+  center[1] = 0.0;
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
+  validateEquals ( pos.position(), constants::positionOutsideOfGeometry() );
+
+  center[0] = 1.1 - (5.0 * math::NUMERICAL_ZERO_DIFFERENCE);
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOnGeometry() );
 
   center[1] = 1.0;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOnGeometry() );
 
   center[1] = 0.9;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOnGeometry() );
 
   center[1] = 0.5;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOnGeometry() );
 
   center[1] = 0.4;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOnGeometry() );
 
   center[1] = 0.0;
-  pos = geoInterface.inquireVoxelPosition ( raw(center), raw(h), false, ids );
+  pos = geoInterface.inquireVoxelPosition ( center.data(), h.data(), false, ids );
   validateEquals ( pos.position(), constants::positionOnGeometry() );
 }
 
@@ -686,20 +672,20 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
   configureSolverInterface(_pathToTests + "mapping-rbf.xml", interface);
   validateEquals(interface.getDimensions(), 2);
   interface.initialize();
-  using utils::Vector2D;
-
+  using Eigen::Vector2d;
+  
   // Set write data for consistent thin plate splines
   {
     int solverMeshID = interface.getMeshID("SolverMesh-ConsistentTPS");
     // set positions
-    Vector2D position ( 0.0, 0.0 );
-    int i0 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 1.0, 0.0;
-    int i1 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 1.0, 1.0;
-    int i2 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 0.0, 1.0;
-    int i3 = interface.setMeshVertex ( solverMeshID, raw(position) );
+    Vector2d position ( 0.0, 0.0 );
+    int i0 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 1.0, 0.0;
+    int i1 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 1.0, 1.0;
+    int i2 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 0.0, 1.0;
+    int i3 = interface.setMeshVertex ( solverMeshID, position.data() );
     int dataID = interface.getDataID ( "ConsistentTPS", solverMeshID );
     double data = 0.0;
     interface.writeScalarData ( dataID, i0, data );
@@ -715,14 +701,14 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
   {
     int solverMeshID = interface.getMeshID("SolverMesh-ConservativeTPS");
     // set positions
-    Vector2D position ( 0.0, 0.0 );
-    int i0 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 1.0, 0.0;
-    int i1 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 1.0, 1.0;
-    int i2 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 0.0, 1.0;
-    int i3 = interface.setMeshVertex ( solverMeshID, raw(position) );
+    Vector2d position ( 0.0, 0.0 );
+    int i0 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 1.0, 0.0;
+    int i1 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 1.0, 1.0;
+    int i2 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 0.0, 1.0;
+    int i3 = interface.setMeshVertex ( solverMeshID, position.data() );
     int dataID = interface.getDataID("ConservativeTPS", solverMeshID);
     double data = 0.0;
     interface.writeScalarData(dataID, i0, data);
@@ -738,46 +724,46 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
   {
     int solverMeshID = interface.getMeshID("SolverMesh-ConsistentVS");
     // set positions
-    Vector2D position ( 0.0, 0.0 );
-    int i0 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 1.0, 0.0;
-    int i1 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 1.0, 1.0;
-    int i2 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 0.0, 1.0;
-    int i3 = interface.setMeshVertex ( solverMeshID, raw(position) );
+    Vector2d position ( 0.0, 0.0 );
+    int i0 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 1.0, 0.0;
+    int i1 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 1.0, 1.0;
+    int i2 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 0.0, 1.0;
+    int i3 = interface.setMeshVertex ( solverMeshID, position.data() );
     int dataID = interface.getDataID ( "ConsistentVS", solverMeshID );
-    Vector2D data ( 0.0, 0.0 );
-    interface.writeVectorData ( dataID, i0, raw(data) );
-    assignList(data) = 2.0, 2.0;
-    interface.writeVectorData ( dataID, i1, raw(data) );
-    assignList(data) = 6.0, 6.0;
-    interface.writeVectorData ( dataID, i2, raw(data) );
-    assignList(data) = 2.0, 2.0;
-    interface.writeVectorData ( dataID, i3, raw(data) );
+    Vector2d data ( 0.0, 0.0 );
+    interface.writeVectorData ( dataID, i0, data.data() );
+    data << 2.0, 2.0;
+    interface.writeVectorData ( dataID, i1, data.data() );
+    data << 6.0, 6.0;
+    interface.writeVectorData ( dataID, i2, data.data() );
+    data << 2.0, 2.0;
+    interface.writeVectorData ( dataID, i3, data.data() );
   }
 
   // Set write data for conservative volume splines
   {
     int solverMeshID = interface.getMeshID("SolverMesh-ConservativeVS");
     // set positions
-    Vector2D position ( 0.0, 0.0 );
-    int i0 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 1.0, 0.0;
-    int i1 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 1.0, 1.0;
-    int i2 = interface.setMeshVertex ( solverMeshID, raw(position) );
-    assignList(position) = 0.0, 1.0;
-    int i3 = interface.setMeshVertex ( solverMeshID, raw(position) );
+    Vector2d position ( 0.0, 0.0 );
+    int i0 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 1.0, 0.0;
+    int i1 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 1.0, 1.0;
+    int i2 = interface.setMeshVertex ( solverMeshID, position.data() );
+    position << 0.0, 1.0;
+    int i3 = interface.setMeshVertex ( solverMeshID, position.data() );
     int dataID = interface.getDataID ( "ConservativeVS", solverMeshID );
-    Vector2D data ( 0.0, 0.0 );
-    interface.writeVectorData ( dataID, i0, raw(data) );
-    assignList(data) = 2.0, 2.0;
-    interface.writeVectorData ( dataID, i1, raw(data) );
-    assignList(data) = 6.0, 6.0;
-    interface.writeVectorData ( dataID, i2, raw(data) );
-    assignList(data) = 2.0, 2.0;
-    interface.writeVectorData ( dataID, i3, raw(data) );
+    Vector2d data ( 0.0, 0.0 );
+    interface.writeVectorData ( dataID, i0, data.data() );
+    data << 2.0, 2.0;
+    interface.writeVectorData ( dataID, i1, data.data() );
+    data << 6.0, 6.0;
+    interface.writeVectorData ( dataID, i2, data.data() );
+    data << 2.0, 2.0;
+    interface.writeVectorData ( dataID, i3, data.data() );
   }
 
   interface.advance(1.0);
@@ -851,7 +837,7 @@ void SolverInterfaceTestGeometry:: testMappingRBF()
 
 void SolverInterfaceTestGeometry:: testPinelli()
 {
-  preciceTrace("testPinelli()");
+  TRACE();
   SolverInterface interface("EOF", 0, 1);
 
   {
@@ -866,39 +852,38 @@ void SolverInterfaceTestGeometry:: testPinelli()
   int dataIdEOFVeloc = interface.getDataID("Velocities",meshIdEOF);
   int dataIdEOFForces = interface.getDataID("Forces",meshIdEOF);
 
-  using utils::Vector2D;
   std::vector<int> vertexIdsEOF;
 
-  Vector2D position ( 0.15, 0.15 );
-  int vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  Eigen::Vector2d position ( 0.15, 0.15 );
+  int vertexId = interface.setMeshVertex ( meshIdEOF, position.data() );
+  vertexIdsEOF.push_back(vertexId);
+  
+  position << 0.15, 0.2;
+  vertexId = interface.setMeshVertex ( meshIdEOF, position.data() );
   vertexIdsEOF.push_back(vertexId);
 
-  assignList(position) = 0.15, 0.2;
-  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  position << 0.15, 0.25;
+  vertexId = interface.setMeshVertex ( meshIdEOF, position.data() );
   vertexIdsEOF.push_back(vertexId);
 
-  assignList(position) = 0.15, 0.25;
-  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  position << 0.2, 0.15;
+  vertexId = interface.setMeshVertex ( meshIdEOF, position.data() );
   vertexIdsEOF.push_back(vertexId);
 
-  assignList(position) = 0.2, 0.15;
-  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  position << 0.2, 0.25;
+  vertexId = interface.setMeshVertex ( meshIdEOF, position.data() );
   vertexIdsEOF.push_back(vertexId);
 
-  assignList(position) = 0.2, 0.25;
-  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  position << 0.25, 0.15;
+  vertexId = interface.setMeshVertex ( meshIdEOF, position.data() );
   vertexIdsEOF.push_back(vertexId);
 
-  assignList(position) = 0.25, 0.15;
-  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  position << 0.25, 0.2;
+  vertexId = interface.setMeshVertex ( meshIdEOF, position.data() );
   vertexIdsEOF.push_back(vertexId);
-
-  assignList(position) = 0.25, 0.2;
-  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
-  vertexIdsEOF.push_back(vertexId);
-
-  assignList(position) = 0.25, 0.25;
-  vertexId = interface.setMeshVertex ( meshIdEOF, raw(position) );
+  
+  position << 0.25, 0.25;
+  vertexId = interface.setMeshVertex ( meshIdEOF, position.data() );
   vertexIdsEOF.push_back(vertexId);
 
   interface.initialize();
@@ -910,7 +895,7 @@ void SolverInterfaceTestGeometry:: testPinelli()
 
   interface.advance(0.1);
 
-  Vector2D totalForce ( 0.0, 0.0 );
+  Eigen::Vector2d totalForce ( 0.0, 0.0 );
 
   for (int vertexID : vertexIdsEOF){
     double data[2] = {0.0,0.0};
@@ -925,11 +910,10 @@ void SolverInterfaceTestGeometry:: testPinelli()
 
 void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
 {
-  preciceTrace ( "testCustomGeometryCreation()" );
-  using tarch::la::wrap;
-  using tarch::la::raw;
+  TRACE();
+  using math::equals;
   { // 2D
-    using utils::Vector2D;
+    using Eigen::Vector2d;
     SolverInterface geo ( "TestAccessor", 0, 1 );
     configureSolverInterface (
         _pathToTests + "solvermesh-2D.xml", geo );
@@ -938,14 +922,14 @@ void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
     int meshID = geo.getMeshID ( meshName );
     geo._impl->_accessor->meshContext(meshID).meshRequirement =
         mapping::Mapping::FULL;
-    Vector2D coords0(0.0, 0.0);
-    Vector2D coords1(1.0, 0.0);
-    Vector2D coords2(1.0, 1.0);
-    Vector2D coords3(0.0, 1.0);
-    int v0 = geo.setMeshVertex ( meshID, raw(coords0) );
-    int v1 = geo.setMeshVertex ( meshID, raw(coords1) );
-    int v2 = geo.setMeshVertex ( meshID, raw(coords2) );
-    int v3 = geo.setMeshVertex ( meshID, raw(coords3) );
+    Vector2d coords0(0.0, 0.0);
+    Vector2d coords1(1.0, 0.0);
+    Vector2d coords2(1.0, 1.0);
+    Vector2d coords3(0.0, 1.0);
+    int v0 = geo.setMeshVertex ( meshID, coords0.data() );
+    int v1 = geo.setMeshVertex ( meshID, coords1.data() );
+    int v2 = geo.setMeshVertex ( meshID, coords2.data() );
+    int v3 = geo.setMeshVertex ( meshID, coords3.data() );
     geo.setMeshEdge ( meshID, v0, v1 );
     geo.setMeshEdge ( meshID, v1, v2 );
     geo.setMeshEdge ( meshID, v2, v3 );
@@ -962,20 +946,20 @@ void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
 
     VertexIterator vertexIter = vertices.begin();
     validateEquals (vertexIter.vertexID(), 0);
-    Vector2D coords;
-    coords = wrap<2,double>(vertexIter.vertexCoords());
+    Vector2d coords;
+    coords = Eigen::Map<const Eigen::Vector2d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords0), coords);
     vertexIter++;
     validateEquals (vertexIter.vertexID(), 1);
-    coords = wrap<2,double>(vertexIter.vertexCoords());
+    coords = Eigen::Map<const Eigen::Vector2d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords1), coords);
     vertexIter++;
     validateEquals (vertexIter.vertexID(), 2);
-    coords = wrap<2,double>(vertexIter.vertexCoords());
+    coords = Eigen::Map<const Eigen::Vector2d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords2), coords);
     vertexIter++;
     validateEquals (vertexIter.vertexID(), 3);
-    coords = wrap<2,double>(vertexIter.vertexCoords());
+    coords = Eigen::Map<const Eigen::Vector2d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords3), coords);
     vertexIter++;
     validate ( not (vertexIter != vertices.end()) );
@@ -999,23 +983,22 @@ void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
   }
 
   { // 3D, Test with manual creation of edges
-    using utils::Vector3D;
+    using Eigen::Vector3d;
     SolverInterface geo ( "TestAccessor", 0, 1 );
     configureSolverInterface (
         _pathToTests + "solvermesh-3D.xml", geo );
     validateEquals ( geo.getDimensions(), 3 );
     std::string meshName = "custom-geometry";
     int meshID = geo.getMeshID ( meshName );
-    geo._impl->_accessor->meshContext(meshID).meshRequirement =
-        mapping::Mapping::FULL;
-    Vector3D coords0(0.0,  0.0, 0.0);
-    Vector3D coords1(0.5, -0.5, 0.5);
-    Vector3D coords2(1.0,  0.0, 1.0);
-    Vector3D coords3(0.5,  0.5, 0.5);
-    int v0 = geo.setMeshVertex ( meshID, raw(coords0) );
-    int v1 = geo.setMeshVertex ( meshID, raw(coords1) );
-    int v2 = geo.setMeshVertex ( meshID, raw(coords2) );
-    int v3 = geo.setMeshVertex ( meshID, raw(coords3) );
+    geo._impl->_accessor->meshContext(meshID).meshRequirement = mapping::Mapping::FULL;
+    Vector3d coords0(0.0,  0.0, 0.0);
+    Vector3d coords1(0.5, -0.5, 0.5);
+    Vector3d coords2(1.0,  0.0, 1.0);
+    Vector3d coords3(0.5,  0.5, 0.5);
+    int v0 = geo.setMeshVertex ( meshID, coords0.data() );
+    int v1 = geo.setMeshVertex ( meshID, coords1.data() );
+    int v2 = geo.setMeshVertex ( meshID, coords2.data() );
+    int v3 = geo.setMeshVertex ( meshID, coords3.data() );
     int e0 = geo.setMeshEdge ( meshID, v0, v1 );
     int e1 = geo.setMeshEdge ( meshID, v1, v2 );
     int e2 = geo.setMeshEdge ( meshID, v2, v3 );
@@ -1034,20 +1017,20 @@ void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
 
     VertexIterator vertexIter = vertices.begin();
     validateEquals (vertexIter.vertexID(), 0);
-    Vector3D coords;
-    coords = wrap<3,double>(vertexIter.vertexCoords());
+    Vector3d coords;
+    coords = Eigen::Map<const Eigen::Vector3d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords0), coords);
     vertexIter++;
     validateEquals (vertexIter.vertexID(), 1);
-    coords = wrap<3,double>(vertexIter.vertexCoords());
+    coords = Eigen::Map<const Eigen::Vector3d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords1), coords);
     vertexIter++;
     validateEquals (vertexIter.vertexID(), 2);
-    coords = wrap<3,double>(vertexIter.vertexCoords());
+    coords = Eigen::Map<const Eigen::Vector3d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords2), coords);
     vertexIter++;
     validateEquals (vertexIter.vertexID(), 3);
-    coords = wrap<3,double>(vertexIter.vertexCoords());
+    coords = Eigen::Map<const Eigen::Vector3d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords3), coords);
     vertexIter++;
     validate (not (vertexIter != vertices.end()));
@@ -1084,23 +1067,21 @@ void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
     geo.exportMesh ( "testCustomGeometryCreation-3D-manual" );
   }
   { // 3D, Test with automatic creation of edges
-    using utils::Vector3D;
+    using Eigen::Vector3d;
     SolverInterface geo ( "TestAccessor", 0, 1 );
-    configureSolverInterface (
-        _pathToTests + "solvermesh-3D.xml", geo );
+    configureSolverInterface ( _pathToTests + "solvermesh-3D.xml", geo );
     validateEquals ( geo.getDimensions(), 3 );
     std::string meshName = "custom-geometry";
     int meshID = geo.getMeshID ( meshName );
-    geo._impl->_accessor->meshContext(meshID).meshRequirement =
-        mapping::Mapping::FULL;
-    Vector3D coords0(0.0,  0.0, 0.0);
-    Vector3D coords1(0.5, -0.5, 0.5);
-    Vector3D coords2(1.0,  0.0, 1.0);
-    Vector3D coords3(0.5,  0.5, 0.5);
-    int v0 = geo.setMeshVertex ( meshID, raw(coords0) );
-    int v1 = geo.setMeshVertex ( meshID, raw(coords1) );
-    int v2 = geo.setMeshVertex ( meshID, raw(coords2) );
-    int v3 = geo.setMeshVertex ( meshID, raw(coords3) );
+    geo._impl->_accessor->meshContext(meshID).meshRequirement = mapping::Mapping::FULL;
+    Vector3d coords0(0.0,  0.0, 0.0);
+    Vector3d coords1(0.5, -0.5, 0.5);
+    Vector3d coords2(1.0,  0.0, 1.0);
+    Vector3d coords3(0.5,  0.5, 0.5);
+    int v0 = geo.setMeshVertex ( meshID, coords0.data() );
+    int v1 = geo.setMeshVertex ( meshID, coords1.data() );
+    int v2 = geo.setMeshVertex ( meshID, coords2.data() );
+    int v3 = geo.setMeshVertex ( meshID, coords3.data() );
     geo.setMeshTriangleWithEdges ( meshID, v0, v1, v3 );
     geo.setMeshTriangleWithEdges ( meshID, v1, v2, v3 );
 
@@ -1114,20 +1095,20 @@ void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
 
     VertexIterator vertexIter = vertices.begin();
     validateEquals (vertexIter.vertexID(), 0);
-    Vector3D coords;
-    coords = wrap<3,double>(vertexIter.vertexCoords());
+    Vector3d coords;
+    coords = Eigen::Map<const Eigen::Vector3d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords0), coords);
     vertexIter++;
     validateEquals (vertexIter.vertexID(), 1);
-    coords = wrap<3,double>(vertexIter.vertexCoords());
+    coords = Eigen::Map<const Eigen::Vector3d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords1), coords);
     vertexIter++;
     validateEquals (vertexIter.vertexID(), 2);
-    coords = wrap<3,double>(vertexIter.vertexCoords());
+    coords = Eigen::Map<const Eigen::Vector3d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords2), coords);
     vertexIter++;
     validateEquals (vertexIter.vertexID(), 3);
-    coords = wrap<3,double>(vertexIter.vertexCoords());
+    coords = Eigen::Map<const Eigen::Vector3d>(vertexIter.vertexCoords());
     validateWithMessage (equals(coords, coords3), coords);
     vertexIter++;
     validate (not (vertexIter != vertices.end()));
@@ -1167,7 +1148,7 @@ void SolverInterfaceTestGeometry:: testCustomGeometryCreation()
 
 void SolverInterfaceTestGeometry:: testBug()
 {
-  preciceTrace("testBug()");
+  TRACE();
 
   {
     std::string filename = "testBug-geometry.wrl";
@@ -1182,81 +1163,77 @@ void SolverInterfaceTestGeometry:: testBug()
   validateEquals ( interface.getDimensions(), 3 );
   std::set<int> meshIDs = interface.getMeshIDs ();
   interface.initialize ();
-  utils::Vector3D center ( 0.0, 0.0, 0.0 );
-  utils::Vector3D h ( 0.0166666666666666 );
-  using tarch::la::raw;
+  Eigen::Vector3d center ( 0.0, 0.0, 0.0 );
+  Eigen::Vector3d h = Eigen::Vector3d::Constant ( 0.0166666666666666 );
   VoxelPosition pos;
-  pos = interface.inquireVoxelPosition ( raw(center), raw(h), false, meshIDs );
+  pos = interface.inquireVoxelPosition ( center.data(), h.data(), false, meshIDs );
   validateEquals ( pos.position(), constants::positionOnGeometry() );
-  assign(center) = -0.01666666666666666;
-  int pointPos = interface.inquirePosition ( raw(center), meshIDs );
+  center.setConstant(-0.01666666666666666);
+  int pointPos = interface.inquirePosition ( center.data(), meshIDs );
   validateEquals ( pointPos, constants::positionInsideOfGeometry() );
 }
 
 void SolverInterfaceTestGeometry:: testBug2()
 {
-  preciceTrace("testBug2()");
+  TRACE();
   SolverInterface interface("Participant-testBug2", 0, 1);
   configureSolverInterface(_pathToTests + "testBug2.xml", interface);
   validateEquals ( interface.getDimensions(), 3 );
   std::set<int> meshIDs = interface.getMeshIDs();
   interface.initialize();
-  utils::Vector3D center(7.6875, 0.7625, 3.7125);
-  utils::Vector3D h(0.0125);
-  using tarch::la::raw;
+  Eigen::Vector3d center(7.6875, 0.7625, 3.7125);
+  Eigen::Vector3d h = Eigen::Vector3d::Constant(0.0125);
   VoxelPosition pos;
-  pos = interface.inquireVoxelPosition ( raw(center), raw(h), false, meshIDs );
+  pos = interface.inquireVoxelPosition ( center.data(), h.data(), false, meshIDs );
   validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-  assignList(center) = 7.675, 0.75, 3.7;
-  assign(h) = 0.025;
-  pos = interface.inquireVoxelPosition ( raw(center), raw(h), false, meshIDs );
+  center << 7.675, 0.75, 3.7;
+  h.setConstant(0.025);
+  pos = interface.inquireVoxelPosition ( center.data(), h.data(), false, meshIDs );
   validateEquals ( pos.position(), constants::positionInsideOfGeometry() );
-  int pointPos = interface.inquirePosition ( raw(center), meshIDs );
+  int pointPos = interface.inquirePosition ( center.data(), meshIDs );
   validateEquals ( pointPos, constants::positionInsideOfGeometry() );
 }
 
 void SolverInterfaceTestGeometry:: testBug3()
 {
-  preciceTrace("testBug3()");
+  TRACE();
   SolverInterface interface("Peano", 0, 1);
   configureSolverInterface(_pathToTests + "testBug3.xml", interface);
   validateEquals(interface.getDimensions(), 3);
   std::set<int> meshIDs = interface.getMeshIDs();
   interface.initialize();
-  using namespace tarch::la;
-
+  
   // This query was buggy
-  utils::Vector3D center(0.22549, 0.5, 0.205882);
-  utils::Vector3D h(0.00980392, 0.00980392, 0.00980392);
+  Eigen::Vector3d center(0.22549, 0.5, 0.205882);
+  Eigen::Vector3d h(0.00980392, 0.00980392, 0.00980392);
   VoxelPosition pos;
-  pos = interface.inquireVoxelPosition(raw(center), raw(h), false, meshIDs);
+  pos = interface.inquireVoxelPosition(center.data(), h.data(), false, meshIDs);
   validateEquals(pos.position(), constants::positionInsideOfGeometry());
 //  interface.exportMesh("testBug3");
 }
 
 void SolverInterfaceTestGeometry:: testBug4()
 {
-  preciceTrace("testBug4()");
+  TRACE();
   SolverInterface interface("Peano", 0, 1);
   configureSolverInterface(_pathToTests + "testBug4.xml", interface);
   validateEquals(interface.getDimensions(), 3);
   std::set<int> meshIDs = interface.getMeshIDs();
   interface.initialize();
   interface.exportMesh("testBug4-init");
-  using namespace tarch::la;
-
+  
   // Completely inside in Peano fluid domain as answered by preCICE
-  utils::Vector3D center(0.275, 0.525, 0.275);
-  utils::Vector3D h(0.025, 0.025, 0.025);
+  Eigen::Vector3d center(0.275, 0.525, 0.275);
+  Eigen::Vector3d h(0.025, 0.025, 0.025);
   VoxelPosition pos;
-  pos = interface.inquireVoxelPosition(raw(center), raw(h), false, meshIDs);
+  pos = interface.inquireVoxelPosition(center.data(), h.data(), false, meshIDs);
   validateEquals(pos.position(), constants::positionInsideOfGeometry());
   //interface.exportMesh("testBug4");
 }
 
 void SolverInterfaceTestGeometry:: testBug5()
 {
-  preciceTrace("testBug5()");
+  TRACE();
 
   {
     std::string filename = "testBug5-geometry.wrl";
@@ -1270,20 +1247,19 @@ void SolverInterfaceTestGeometry:: testBug5()
   validateEquals(interface.getDimensions(), 3);
   std::set<int> meshIDs = interface.getMeshIDs();
   interface.initialize();
-  using namespace tarch::la;
-
+  
   // On geometry in Peano fluid domain as answered wrongly by preCICE
-  utils::Vector3D point(4.7777777777777777, 4.06666666666666666, 4.0666666666666666);
-  int pos = interface.inquirePosition(raw(point), meshIDs);
+  Eigen::Vector3d point(4.7777777777777777, 4.06666666666666666, 4.0666666666666666);
+  int pos = interface.inquirePosition(point.data(), meshIDs);
   validateEquals(pos, constants::positionOutsideOfGeometry());
 
-  utils::Vector3D h(0.3555555555555555);
-  VoxelPosition voxelPos = interface.inquireVoxelPosition(raw(point), raw(h), false, meshIDs);
+  Eigen::Vector3d h = Eigen::Vector3d::Constant(0.3555555555555555);
+  VoxelPosition voxelPos = interface.inquireVoxelPosition(point.data(), h.data(), false, meshIDs);
 
-  assign(h) = 3.950617283950000e-2;
-  assignList(point) = 4.343209876543000, 4.0666666666666666, 4.106172839509999;
+  h.setConstant(3.950617283950000e-2);
+  point << 4.343209876543000, 4.0666666666666666, 4.106172839509999;
 //  INFO("----------------------------- START");
-  voxelPos = interface.inquireVoxelPosition(raw(point), raw(h), false, meshIDs);
+  voxelPos = interface.inquireVoxelPosition(point.data(), h.data(), false, meshIDs);
 //  INFO("----------------------------- END, pos = " << voxelPos.position()
 //               << ", ids.size = " << voxelPos.meshIDs().size());
   //mesh::Mesh found("Found", 3, false);
@@ -1328,14 +1304,14 @@ void SolverInterfaceTestGeometry:: testBug5()
 //  validateEquals(pos, constants::positionOutsideOfGeometry());
 //
 //  utils::Vector3D h(0.3555555555555555);
-//  VoxelPosition voxelPos = interface.inquireVoxelPosition(raw(point), raw(h), false, meshIDs);
+//  VoxelPosition voxelPos = interface.inquireVoxelPosition(raw(point), h.data(), false, meshIDs);
 //  validateEquals(voxelPos.position(), constants::positionOnGeometry());
 //  validateEquals(voxelPos.meshIDs().size(), 0);
 //}
 
 void SolverInterfaceTestGeometry:: testUpdateSpacetree()
 {
-  preciceTrace ( "testUpdateSpacetree()" );
+  TRACE();
   for ( int dim=2; dim <= 3; dim++ ){
     SolverInterface interface("Accessor", 0, 1);
     std::string configName;
@@ -1392,8 +1368,9 @@ void SolverInterfaceTestGeometry:: testUpdateSpacetree()
 
 void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
 {
-  preciceTrace("testMultipleMeshSpacetree()");
-  using namespace tarch::la;
+  TRACE();
+  using math::equals;
+  
   { // Tests A: first mesh no spacetree, second, third spacetree
     SolverInterface interface("Accessor", 0, 1);
     impl::SolverInterfaceImpl* impl = interface._impl.get();
@@ -1409,19 +1386,21 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
 
     std::set<int> inputIDs;
     std::vector<int> outputIDs(3, -1);
-    std::vector<int> expected(3);
+    Eigen::Vector3i expected;
     expected[0] = impl->markedQueryDirectly();
     expected[1] = impl->markedQuerySpacetree();
     expected[2] = impl->markedSkip();
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     expected[0] = impl->markedQueryDirectly();
     expected[1] = impl->markedQuerySpacetree();
     expected[2] = impl->markedSkip();
     std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(allMeshIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.insert(0);
     expected[0] = impl->markedQueryDirectly();
@@ -1429,7 +1408,8 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
     expected[2] = impl->markedSkip();
     std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.clear();
     inputIDs.insert(1);
@@ -1438,16 +1418,18 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
     expected[2] = impl->markedSkip();
     std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.clear();
     inputIDs.insert(2);
     expected[0] = impl->markedSkip();
     expected[1] = impl->markedSkip();
     expected[2] = impl->markedQueryDirectly();
-    boost::fill(outputIDs, -1);
+    std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.clear();
     inputIDs.insert(0);
@@ -1455,9 +1437,10 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
     expected[0] = impl->markedQueryDirectly();
     expected[1] = impl->markedSkip();
     expected[2] = impl->markedQueryDirectly();
-    boost::fill(outputIDs, -1);
+    std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.clear();
     inputIDs.insert(1);
@@ -1465,9 +1448,10 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
     expected[0] = impl->markedSkip();
     expected[1] = impl->markedQuerySpacetree();
     expected[2] = impl->markedSkip();
-    boost::fill(outputIDs, -1);
+    std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.clear();
     inputIDs.insert(0);
@@ -1475,9 +1459,11 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
     expected[0] = impl->markedQueryDirectly();
     expected[1] = impl->markedQueryDirectly();
     expected[2] = impl->markedSkip();
-    boost::fill(outputIDs, -1);
+    std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
+
   }
   { // Tests B: first mesh has spacetree, second, third not
     SolverInterface interface("Accessor", 0, 1);
@@ -1494,19 +1480,21 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
 
     std::set<int> inputIDs;
     std::vector<int> outputIDs(3, -1);
-    std::vector<int> expected(3);
+    Eigen::Vector3i expected;
     expected[0] = impl->markedQuerySpacetree();
     expected[1] = impl->markedQueryDirectly();
     expected[2] = impl->markedQueryDirectly();
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     expected[0] = impl->markedQuerySpacetree();
     expected[1] = impl->markedQueryDirectly();
     expected[2] = impl->markedQueryDirectly();
     std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(allMeshIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.insert(0);
     expected[0] = impl->markedQuerySpacetree();
@@ -1514,7 +1502,8 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
     expected[2] = impl->markedSkip();
     std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.clear();
     inputIDs.insert(1);
@@ -1523,16 +1512,19 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
     expected[2] = impl->markedSkip();
     std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.clear();
     inputIDs.insert(2);
     expected[0] = impl->markedSkip();
     expected[1] = impl->markedSkip();
     expected[2] = impl->markedQueryDirectly();
-    boost::fill(outputIDs, -1);
+    std::fill(outputIDs.begin(), outputIDs.end(), -1);
+    
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.clear();
     inputIDs.insert(0);
@@ -1540,9 +1532,10 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
     expected[0] = impl->markedQuerySpacetree();
     expected[1] = impl->markedSkip();
     expected[2] = impl->markedQueryDirectly();
-    boost::fill(outputIDs, -1);
+    std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.clear();
     inputIDs.insert(1);
@@ -1550,9 +1543,10 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
     expected[0] = impl->markedSkip();
     expected[1] = impl->markedQueryDirectly();
     expected[2] = impl->markedQueryDirectly();
-    boost::fill(outputIDs, -1);
+    std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
 
     inputIDs.clear();
     inputIDs.insert(0);
@@ -1560,9 +1554,10 @@ void SolverInterfaceTestGeometry:: testMultipleMeshSpacetree()
     expected[0] = impl->markedQuerySpacetree();
     expected[1] = impl->markedQueryDirectly();
     expected[2] = impl->markedSkip();
-    boost::fill(outputIDs, -1);
+    std::fill(outputIDs.begin(), outputIDs.end(), -1);
     impl->selectInquiryMeshIDs(inputIDs, outputIDs);
-    validateWithMessage(equals(wrap<3>(&outputIDs[0]), expected), wrap<3>(&outputIDs[0]));
+    validateWithMessage(equals(Eigen::Vector3i(outputIDs.data()), expected),
+                        outputIDs);
   }
 }
 

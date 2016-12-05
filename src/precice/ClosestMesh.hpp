@@ -22,10 +22,7 @@ struct ClosestMesh
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
-  ClosestMesh ( int dimensions );
+  explicit ClosestMesh ( int dimensions );
 
   /**
    * @brief Copy constructor.

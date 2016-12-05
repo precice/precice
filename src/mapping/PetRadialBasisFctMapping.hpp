@@ -169,7 +169,6 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
 }
 
 
-
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 {
@@ -200,10 +199,10 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   std::vector<int> myIndizes;
 
   // Indizes for Q^T, holding the polynom
-  if (utils::MasterSlave::_rank <= 0) // Rank 0 or not in MasterSlave mode
+  if (utils::Parallel::getProcessRank() <= 0) // Rank 0 or not in MasterSlave mode
     for (size_t i = 0; i < polyparams; i++)
       myIndizes.push_back(i); // polyparams reside in the first rows (which are always on rank 0)
-
+  
   // Indizes for the vertices with polyparams offset
   for (const mesh::Vertex& v : inMesh->vertices())
     if (v.isOwner())
@@ -212,7 +211,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   auto inputSize = myIndizes.size();
   auto n = inputSize; // polyparams, if on rank 0, are included here
 
-  if (utils::MasterSlave::_rank <= 0)
+  if (utils::Parallel::getProcessRank <= 0)
     inputSize -= polyparams; // Subtract polyparams on rank 0, so we only have number of vertices.
 
   auto outputSize = outMesh->vertices().size();
@@ -535,7 +534,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     if (_deadAxis[d]) deadDimensions +=1;
   }
   int polyparams = 1 + getDimensions() - deadDimensions;
-  int localPolyparams = utils::MasterSlave::_rank > 0 ? 0 : polyparams; // Set localPolyparams only when root rank
+  int localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams; // Set localPolyparams only when root rank
 
   if (getConstraint() == CONSERVATIVE) {
     petsc::Vector Au(_matrixC, "Au");

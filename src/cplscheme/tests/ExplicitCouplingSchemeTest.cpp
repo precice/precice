@@ -25,8 +25,6 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-using utils::Vector3D;
-
 logging::Logger ExplicitCouplingSchemeTest::_log ( "precice::cplscheme::tests::ExplicitCouplingSchemeTest" );
 
 ExplicitCouplingSchemeTest:: ExplicitCouplingSchemeTest ()

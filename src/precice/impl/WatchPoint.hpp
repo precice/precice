@@ -51,7 +51,6 @@ public:
 
 private:
 
-   // @brief Logging device.
    static logging::Logger _log;
 
    Eigen::VectorXd _point;
@@ -72,8 +71,8 @@ private:
    bool _isClosest;
 
    void getValue (
-     Eigen::VectorXd& value,
-     mesh::PtrData&   data );
+     Eigen::VectorXd&  value,
+     mesh::PtrData&    data );
 
    void getValue (
      double&        value,

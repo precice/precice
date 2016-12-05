@@ -69,7 +69,7 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
 (
   DataMap & cplData )
 {
-  preciceTrace ( "performPostProcessing()" );
+  TRACE();
   typedef Eigen::VectorXd DataValues;
 
   // Compute aitken relaxation factor
@@ -218,145 +218,6 @@ void HierarchicalAitkenPostProcessing:: performPostProcessing
   _iterationCounter ++;
 }
 
-//void HierarchicalAitkenPostProcessing:: performPostProcessing
-//(
-//  DataMap & cplData )
-//{
-//  preciceTrace ( "performPostProcessing()" );
-//  typedef utils::DynVector DataValues;
-//
-//  // Compute aitken relaxation factor
-//  assertion ( utils::contained(_dataID, cplData) );
-//  DataValues & values = *cplData[_dataID].values;
-//  DataValues & oldValues = cplData[_dataID].oldValues.getColumn(0);
-//
-//  // Compute current residuals
-//  DataValues residual ( values );
-//  residual -= oldValues;
-//
-//  // Compute residual deltas and temporarily store it in _residuals
-//  DataValues residualDelta ( _residual );
-//  residualDelta *= -1.0;
-//  residualDelta += residual;
-//
-//  std::vector<double> nominators ( _aitkenFactors.size(), 0.0 );
-//  std::vector<double> denominators ( _aitkenFactors.size(), 0.0 );
-//
-//  INFO ( "values = " << values );
-//  INFO ( "oldValues = " << oldValues );
-//  INFO ( "_residual = " << _residual );
-//  INFO ( "residualDelta = " << residualDelta );
-//
-//  // Hierarchize entries and compute aitken factors
-//  size_t entries = residual.size ();
-//  size_t indexCenter = (entries+1) / 2;
-//  nominators[0] = _residual[indexCenter] * residualDelta[indexCenter];
-//  denominators[0] = residualDelta[indexCenter] * residualDelta[indexCenter];
-//  computeAitkenFactor ( 0, nominators[0], denominators[0] );
-//  size_t treatedEntries = 1;
-//  size_t entriesCurrentLevel = std::pow(2.0, _aitkenFactors.size() - 1);
-//  for ( size_t level=_aitkenFactors.size()-1; level > 0; level-- ) {
-//    size_t stepsize = (entries + 1) / std::pow(2.0, level);
-//    INFO ( "Level = " << level << ", treatedEntries = " << treatedEntries
-//                   << ", stepsize = " << stepsize );
-//    assertion ( stepsize % 2 == 0 );
-//
-//    // Leftmost entry
-//    size_t indexLeft = stepsize/2 - 1;
-//    _residual[indexLeft] -= _residual[indexLeft + stepsize/2] / 2.0;
-//    residualDelta[indexLeft] -= residualDelta[indexLeft + stepsize/2] / 2.0;
-//    values[indexLeft] -= values[indexLeft + stepsize/2] / 2.0;
-//    oldValues[indexLeft] -= oldValues[indexLeft + stepsize/2] / 2.0;
-//    nominators[level] += _residual[indexLeft] * residualDelta[indexLeft];
-//    denominators[level] += residualDelta[indexLeft] * residualDelta[indexLeft];
-//
-//    // Middle entries
-//    size_t index = indexLeft + stepsize;
-//    for ( size_t i=2; i < entriesCurrentLevel; i++ ) {
-////      INFO ( "2" );
-//      _residual[index] -= ( _residual[index - stepsize/2] +
-//                            _residual[index + stepsize/2] ) / 2.0;
-//      residualDelta[index] -= ( residualDelta[index - stepsize/2] +
-//                                residualDelta[index + stepsize/2] ) / 2.0;
-//      values[index] -= ( values[index - stepsize/2] +
-//                         values[index + stepsize/2] ) / 2.0;
-//      oldValues[index] -= ( oldValues[index - stepsize/2] +
-//                            oldValues[index + stepsize/2] ) / 2.0;
-//      nominators[level] += _residual[index] * residualDelta[index];
-//      denominators[level] += residualDelta[index] * residualDelta[index];
-//      index += stepsize;
-//    }
-//
-//    // Rightmost entry
-//    size_t indexRight = entries - stepsize/2;
-//    _residual[indexRight] -= _residual[indexRight - stepsize/2] / 2.0;
-//    residualDelta[indexRight] -= residualDelta[indexRight - stepsize/2] / 2.0;
-//    values[indexRight] -= values[indexRight - stepsize/2] / 2.0;
-//    oldValues[indexRight] -= oldValues[indexRight - stepsize/2] / 2.0;
-//    nominators[level] += _residual[indexRight] * residualDelta[indexRight];
-//    denominators[level] += residualDelta[indexRight] * residualDelta[indexRight];
-//
-//    computeAitkenFactor ( level, nominators[level], denominators[level] );
-//    treatedEntries += entriesCurrentLevel;
-//    entriesCurrentLevel /= 2;
-//  }
-//  assertion ( treatedEntries == entries );
-//  INFO ( "hierarchized values = " << values );
-//  INFO ( "hierarchized oldValues = " << oldValues );
-//  INFO ( "hierarchized _residual = " << _residual );
-//  INFO ( "hierarchized residualDelta = " << residualDelta );
-//
-//  _residual = residual;
-//
-//  // Perform relaxation with aitken factor
-//  treatedEntries = 0;
-//  entriesCurrentLevel = 1;
-//  for ( size_t level=0; level < _aitkenFactors.size(); level++ ) {
-//    double omega = _aitkenFactors[level];
-//    double oneMinusOmega = 1.0 - omega;
-//    for ( DataMap::value_type & pair : cplData ) {
-//      DataValues & values = *pair.second.values;
-//      DataValues & oldValues = pair.second.oldValues.getColumn(0);
-//      size_t stepsize = (entries + 1) / std::pow(2.0, level);
-//      size_t index = stepsize / 2 - 1;
-//      for ( size_t i=0; i < entriesCurrentLevel; i++ ) {
-//        values[index] = values[index] * omega + oldValues[index] * oneMinusOmega;
-//        index += stepsize;
-//      }
-//    }
-//    treatedEntries += entriesCurrentLevel;
-//    entriesCurrentLevel *= 2;
-//  }
-//  assertion ( treatedEntries == entries );
-//  INFO ( "relaxed hierarchized values = " << values );
-//
-//  // Dehierarchization
-//  treatedEntries = 1;
-//  entriesCurrentLevel = 2;
-//  for ( size_t level=1; level < _aitkenFactors.size(); level++ ) {
-//    size_t stepsize = (entries + 1) / std::pow(2.0, level);
-//    size_t index = stepsize / 2 - 1;
-//    values[index] += values[index + stepsize/2] / 2.0;
-//    oldValues[index] += oldValues[index + stepsize/2] / 2.0;
-//    for ( size_t i=1; i < entriesCurrentLevel - 1; i++ ) {
-//      index += stepsize;
-//      values[index] +=
-//          (values[index - stepsize/2] + values[index + stepsize/2]) / 2.0;
-//      oldValues[index] +=
-//          (oldValues[index - stepsize/2] + oldValues[index + stepsize/2]) / 2.0;
-//    }
-//    index += stepsize;
-//    values[index] += values[index - stepsize/2] / 2.0;
-//    oldValues[index] += oldValues[index - stepsize/2] / 2.0;
-//    treatedEntries += entriesCurrentLevel;
-//    entriesCurrentLevel *= 2;
-//  }
-//  assertion ( treatedEntries == entries );
-//  INFO ( "relaxed values = " << values );
-//  INFO ( "oldValues = " << oldValues );
-//
-//  _iterationCounter ++;
-//}
 
 void HierarchicalAitkenPostProcessing:: iterationsConverged
 (
@@ -402,7 +263,7 @@ std::map<int, Eigen::VectorXd> HierarchicalAitkenPostProcessing::getDesignSpecif
 (
   DataMap& cplData)
 {
-  preciceError(__func__, "design specification for Aitken relaxation is not supported yet.");
+  ERROR("Design specification for Aitken relaxation is not supported yet.");
 
   std::map<int, Eigen::VectorXd> designSpecifications;
   int off = 0;

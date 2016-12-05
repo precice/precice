@@ -10,7 +10,6 @@
 #include "utils/Parallel.hpp"
 #include "math/math.hpp"
 #include <vector>
-#include <memory>
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::query::tests::FindClosestTest)
@@ -43,42 +42,42 @@ void FindClosestTest:: run ()
 
 void FindClosestTest:: testFindClosestDistanceToVertices ()
 {
-   preciceTrace ( "testFindClosestDistanceToVertices()" );
-   for ( int dim=2; dim <= 3; dim++ ){
-     DEBUG ( "Dimension = " << dim );
-     mesh::Mesh mesh ( "RootMesh", dim, false );
-     mesh.createVertex ( utils::DynVector(dim, 0.0) );
-     utils::DynVector queryCoords0 ( dim, 0.0 );
-     queryCoords0[0] = 1.0;
-     FindClosest find ( queryCoords0 );
-     find ( mesh );
-     query::ClosestElement closest = find.getClosest();
-     double distance = closest.distance;
-     validateNumericalEquals (distance, 1.0);
-     if ( dim == 3 ){
-       mesh::Mesh mesh3D ( "Mesh3D", dim, false );
-       mesh3D.createVertex ( utils::DynVector(3, 1.0) );
-       FindClosest find2 ( utils::DynVector(3, -1.0) );
-       find2 ( mesh3D );
-       distance = find2.getClosest().distance;
-       validateNumericalEquals ( distance, tarch::la::norm2(utils::DynVector(3,2.0)) );
-     }
-   }
+  TRACE();
+  for ( int dim=2; dim <= 3; dim++ ){
+    DEBUG ( "Dimension = " << dim );
+    mesh::Mesh mesh ( "RootMesh", dim, false );
+    mesh.createVertex ( Eigen::VectorXd::Zero(dim) );
+    Eigen::VectorXd queryCoords0 = Eigen::VectorXd::Zero(dim);
+    queryCoords0[0] = 1.0;
+    FindClosest find ( queryCoords0 );
+    find ( mesh );
+    query::ClosestElement closest = find.getClosest();
+    double distance = closest.distance;
+    validateNumericalEquals (distance, 1.0);
+    if ( dim == 3 ){
+      mesh::Mesh mesh3D ( "Mesh3D", dim, false );
+      mesh3D.createVertex ( Eigen::Vector3d::Constant(1) );
+      FindClosest find2 ( Eigen::Vector3d::Constant(-1) );
+      find2 ( mesh3D );
+      distance = find2.getClosest().distance;
+      validateNumericalEquals ( distance, Eigen::Vector3d::Constant(2).norm() );
+    }
+  }
 }
 
 void FindClosestTest:: testSignOfShortestDistance ()
 {
-  preciceTrace ( "testSignOfShortestDistance()" );
+  TRACE();
   for ( int dim=2; dim <= 3; dim++ ){
     DEBUG ( "Dimension = " << dim );
     mesh::Mesh mesh ( "Mesh", dim, false );
-    mesh::Vertex & vertex = mesh.createVertex ( utils::DynVector(dim, 0.0) );
-    utils::DynVector normal ( dim, 0.0 );
+    mesh::Vertex & vertex = mesh.createVertex ( Eigen::VectorXd::Zero(dim) );
+    Eigen::VectorXd normal = Eigen::VectorXd::Zero(dim);
     normal[0] = 1.0;
     vertex.setNormal ( normal );
 
     // Check point that lies outside of geometry
-    utils::DynVector queryCoords ( dim, 0.0 );
+    Eigen::VectorXd queryCoords = Eigen::VectorXd::Zero(dim);
     queryCoords(0) = 1.0;
     FindClosest find ( queryCoords );
     find ( mesh );
@@ -96,51 +95,49 @@ void FindClosestTest:: testSignOfShortestDistance ()
 
 void FindClosestTest:: testIndependenceOfSignOfShortestDistance ()
 {
-  preciceTrace ( "testIndependenceOfSignOfShortestDistance()" );
-  using utils::DynVector;
+  TRACE();
   for ( int dim=2; dim <= 3; dim++ ){
     DEBUG ( "Dimension = " << dim );
     mesh::Mesh mesh ( "Mesh", dim, false );
-    mesh::Vertex& vertex = mesh.createVertex ( DynVector(dim, 1.0) );
-    vertex.setNormal ( DynVector(dim, 1.0) );
-    mesh::Vertex& vertex2 = mesh.createVertex ( DynVector(dim, -2.0) );
-    vertex2.setNormal ( DynVector(dim, 1.0) );
+    mesh::Vertex& vertex = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1) );
+    vertex.setNormal ( Eigen::VectorXd::Constant(dim, 1) );
+    mesh::Vertex& vertex2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, -2) );
+    vertex2.setNormal ( Eigen::VectorXd::Constant(dim, 1) );
 
-    FindClosest find ( DynVector(dim, 0.0) );
+    FindClosest find ( Eigen::VectorXd::Zero(dim) );
     find ( mesh );
     double distance = find.getClosest().distance;
-    validateEquals ( distance, -1.0 * tarch::la::norm2(DynVector(dim,1.0)));
+    validateEquals ( distance, -1.0 * Eigen::VectorXd::Constant(dim, 1).norm() );
 
     // Invert normal of futher away vertex, should have no influence
-    DynVector normal ( dim, 0.0 );
+    Eigen::VectorXd normal = Eigen::VectorXd::Zero(dim);
     normal[1] = -1.0;
     vertex2.setNormal ( normal );
     find.reset ();
     find ( mesh );
     distance = find.getClosest().distance;
-    validateNumericalEquals (  distance, -1.0 * tarch::la::norm2(DynVector(dim,1.0)) );
+    validateNumericalEquals (  distance, -1.0 *  Eigen::VectorXd::Constant(dim, 1).norm() );
 
     // Invert normal of closer vertex, should invert sign of distance
     vertex.setNormal ( normal );
     find.reset ();
     find ( mesh );
     distance = find.getClosest().distance;
-    validateNumericalEquals ( distance, tarch::la::norm2(DynVector(dim,1.0)) );
+    validateNumericalEquals ( distance,  Eigen::VectorXd::Constant(dim, 1).norm() );
   }
 }
 
 void FindClosestTest:: testFindClosestDistanceToEdges ()
 {
-  preciceTrace ( "testFindClosestDistanceToEdges()" );
-  using utils::DynVector;
+  TRACE();
   for ( int dim=2; dim <= 3; dim++ ){
     DEBUG ( "Dimensions = " << dim );
     // Create geometry consisting of two vertices and an edge
     mesh::Mesh mesh ( "Mesh", dim, false );
-    mesh::Vertex& v1 = mesh.createVertex ( DynVector(dim, -1.0) );
-    mesh::Vertex& v2 = mesh.createVertex ( DynVector(dim, 1.0) );
+    mesh::Vertex& v1 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, -1) );
+    mesh::Vertex& v2 = mesh.createVertex ( Eigen::VectorXd::Constant(dim, 1) );
     mesh::Edge& edge = mesh.createEdge ( v1, v2 );
-    DynVector normal ( dim, -1.0 );
+    Eigen::VectorXd normal = Eigen::VectorXd::Constant(dim, -1);
     normal[1] = 1.0;
     v1.setNormal ( normal );
     v2.setNormal ( normal );
@@ -148,18 +145,18 @@ void FindClosestTest:: testFindClosestDistanceToEdges ()
 
     // Create query points
     // Query point 0 lies outside of the geometry
-    DynVector queryCoords0 ( dim, -1.0 );
+    Eigen::VectorXd queryCoords0 = Eigen::VectorXd::Constant(dim, -1);
     queryCoords0[1] = 1.0;
     // Query point 1 lies inside of the geometry
-    DynVector queryCoords1 ( dim, 1.0 );
+    Eigen::VectorXd queryCoords1 = Eigen::VectorXd::Constant(dim, 1);
     queryCoords1[1] = -1.0;
     // Query point 2 lies on the query edge
-    DynVector queryCoords2 ( dim, 0.0 );
+    Eigen::VectorXd queryCoords2 = Eigen::VectorXd::Constant(dim, 0);
     // Query point 3 lies on the same line as the edge, but above
-    DynVector queryCoords3 ( dim, 2.0 );
+    Eigen::VectorXd queryCoords3 = Eigen::VectorXd::Constant(dim, 2);
     // Query point 4 lies on the same line as the edge, but below
-    DynVector queryCoords4 ( dim, -2.0 );
-
+    Eigen::VectorXd queryCoords4 = Eigen::VectorXd::Constant(dim, -2);
+    
     // Create query objects
     FindClosest find0 ( queryCoords0 );
     FindClosest find1 ( queryCoords1 );
@@ -175,77 +172,74 @@ void FindClosestTest:: testFindClosestDistanceToEdges ()
     find4 ( mesh );
 
     // Evaluate query results
-    using tarch::la::norm2;
-    DynVector expected ( dim, 0.0 );
-    assign(expected) = 1.0;
-    validateNumericalEquals (find0.getClosest().distance, norm2(expected));
-    validateNumericalEquals (find1.getClosest().distance, -1.0 * norm2(expected));
+    Eigen::VectorXd expected = Eigen::VectorXd::Constant(dim, 1);
+    validateNumericalEquals (find0.getClosest().distance, expected.norm());
+    validateNumericalEquals (find1.getClosest().distance, -1.0 * expected.norm());
     validateNumericalEquals (find2.getClosest().distance, 0.0);
-    validateNumericalEquals (std::abs(find3.getClosest().distance), norm2(expected));
-    validateNumericalEquals (std::abs(find4.getClosest().distance), norm2(expected));
+    validateNumericalEquals (std::abs(find3.getClosest().distance), expected.norm());
+    validateNumericalEquals (std::abs(find4.getClosest().distance), expected.norm());
   }
 }
 
 void FindClosestTest:: testFindClosestDistanceToEdges3D ()
 {
-   preciceTrace ( "testFindClosestDistanceToEdges3D()" );
-   int dim = 3;
-   using utils::Vector3D;
-   // Create geometry consisting of two vertices and an edge
-   mesh::Mesh mesh ( "Mesh", dim, false );
-   mesh::Vertex& v1 = mesh.createVertex ( Eigen::Vector3d(-1.0, -1.0, 0.0) );
-   mesh::Vertex& v2 = mesh.createVertex ( Eigen::Vector3d( 1.0,  1.0, 0.0) );
-   mesh::Edge& edge = mesh.createEdge ( v1, v2 );
-   utils::DynVector normal(dim);
-   assignList(normal) = -1.0, 1.0, 0.0;
-   v1.setNormal ( normal );
-   v2.setNormal ( normal );
-   edge.setNormal ( normal );
+  TRACE();
+  int dim = 3;
+  // Create geometry consisting of two vertices and an edge
+  mesh::Mesh mesh ( "Mesh", dim, false );
+  mesh::Vertex& v1 = mesh.createVertex ( Eigen::Vector3d(-1.0, -1.0, 0.0) );
+  mesh::Vertex& v2 = mesh.createVertex ( Eigen::Vector3d( 1.0,  1.0, 0.0) );
+  mesh::Edge& edge = mesh.createEdge ( v1, v2 );
+  Eigen::VectorXd normal(dim);
+  normal << -1.0, 1.0, 0.0;
+  v1.setNormal ( normal );
+  v2.setNormal ( normal );
+  edge.setNormal ( normal );
 
-   io::ExportVTK exportMesh(true);
-   std::string location = "";
-   exportMesh.doExport ( "query-FindClosestTest-testFindClosestDistanceToEdges3D",
-                         location, mesh );
+  io::ExportVTK exportMesh(true);
+  std::string location = "";
+  exportMesh.doExport ( "query-FindClosestTest-testFindClosestDistanceToEdges3D",
+                        location, mesh );
 
-   // Create query points
-   std::vector<Eigen::Vector3d> queryPoints;
-   // Query point 0 lies outside of the geometry
-   queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.0,  0.0) );
-   queryPoints.push_back ( Eigen::Vector3d( 0.0,  0.5,  0.0) );
-   queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.5,  0.0) );
-   queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.5, -0.5) );
-   queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.5,  0.5) );
+  // Create query points
+  std::vector<Eigen::Vector3d> queryPoints;
+  // Query point 0 lies outside of the geometry
+  queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.0,  0.0) );
+  queryPoints.push_back ( Eigen::Vector3d( 0.0,  0.5,  0.0) );
+  queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.5,  0.0) );
+  queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.5, -0.5) );
+  queryPoints.push_back ( Eigen::Vector3d(-0.5,  0.5,  0.5) );
+  
+  // Create query objects
+  std::vector<query::FindClosest*> finds;
+  for (auto & queryPoint : queryPoints) {
+    finds.push_back ( new FindClosest(queryPoint) );
+  }
+  
+  // Perform queries
+  ExportVTKNeighbors exportNeighbors;
+  for ( size_t i=0; i < finds.size(); i++ ) {
+    validate ( (*finds[i])(mesh) );
+    exportNeighbors.addNeighbors ( queryPoints[i], finds[i]->getClosest() );
+  }
+  
+  exportNeighbors.exportNeighbors (
+    "query-FindClosestTest-testFindClosestDistanceToEdges3D-neighbors" );
 
-   // Create query objects
-   std::vector<query::FindClosest*> finds;
-   for (auto & queryPoint : queryPoints) {
-      finds.push_back ( new FindClosest(queryPoint) );
-   }
-
-   // Perform queries
-   ExportVTKNeighbors exportNeighbors;
-   for ( size_t i=0; i < finds.size(); i++ ) {
-      validate ( (*finds[i])(mesh) );
-      exportNeighbors.addNeighbors ( static_cast<utils::DynVector>(queryPoints[i]), finds[i]->getClosest() );
-   }
-
-   exportNeighbors.exportNeighbors (
-      "query-FindClosestTest-testFindClosestDistanceToEdges3D-neighbors" );
-
-   // Evaluate query results
-   validateNumericalEquals ( finds[0]->getClosest().distance, std::sqrt(1.0/8.0) );
-   validateNumericalEquals ( finds[1]->getClosest().distance, std::sqrt(1.0/8.0) );
-   validateNumericalEquals ( finds[2]->getClosest().distance,
-                             Eigen::Vector3d(0.5, -0.5, 0.0).norm() );
-   validateNumericalEquals ( finds[3]->getClosest().distance,
-                             Eigen::Vector3d(0.5, -0.5, 0.5).norm() );
-   validateNumericalEquals ( finds[4]->getClosest().distance,
-                             Eigen::Vector3d(0.5, -0.5, -0.5).norm() );
-
-   // Clean up
-   for (auto & find : finds) {
-      delete find;
-   }
+  // Evaluate query results
+  validateNumericalEquals ( finds[0]->getClosest().distance, std::sqrt(1.0/8.0) );
+  validateNumericalEquals ( finds[1]->getClosest().distance, std::sqrt(1.0/8.0) );
+  validateNumericalEquals ( finds[2]->getClosest().distance,
+                            Eigen::Vector3d(0.5, -0.5, 0.0).norm() );
+  validateNumericalEquals ( finds[3]->getClosest().distance,
+                            Eigen::Vector3d(0.5, -0.5, 0.5).norm() );
+  validateNumericalEquals ( finds[4]->getClosest().distance,
+                            Eigen::Vector3d(0.5, -0.5, -0.5).norm() );
+  
+  // Clean up
+  for (auto & find : finds) {
+    delete find;
+  }
 }
 
 void FindClosestTest:: testFindClosestDistanceToTriangles ()
@@ -312,9 +306,8 @@ void FindClosestTest:: testFindClosestDistanceToTriangles ()
 
 void FindClosestTest:: testFindClosestDistanceToTrianglesAndVertices ()
 {
-  preciceTrace ( "testFindClosestDistanceToTrianglesAndVertices()" );
+  TRACE();
   int dim = 2;
-  using utils::Vector2D;
   mesh::Mesh mesh ( "Mesh", dim, false );
   mesh::Vertex& vertex1 = mesh.createVertex (Eigen::Vector2d(0.0, 0.0));
   vertex1.setNormal (Eigen::Vector2d(-0.5, 0.5));
@@ -395,14 +388,13 @@ void FindClosestTest:: testFindClosestDistanceToTrianglesAndVertices ()
 
 void FindClosestTest:: testMultipleGeometryIDs ()
 {
-  preciceTrace ( "testMultipleGeometryIDs" );
-  using utils::DynVector;
+  TRACE();
   int dim = 2;
   mesh::Mesh mesh ( "Mesh", dim, true );
   query::ExportVTKNeighbors exportNeighbors;
   std::vector<mesh::Vertex*> vertices(dim);
   for (int i=0; i < dim; i++){
-    DynVector vertexCoords (dim, 0.0);
+    Eigen::VectorXd vertexCoords = Eigen::VectorXd::Zero(dim);
     vertexCoords[i] = 1.0;
     vertices[i] = & mesh.createVertex(vertexCoords);
   }
@@ -423,7 +415,7 @@ void FindClosestTest:: testMultipleGeometryIDs ()
   std::vector<std::vector<int> > geoIDs(dim);
   query::ClosestElement closest(dim);
   for (int i=0; i < dim; i++){
-    DynVector query (dim, 0.0);
+    Eigen::VectorXd query = Eigen::VectorXd::Zero(dim);
     query[i] = 2.0;
     FindClosest findClosest ( query );
     validate ( findClosest(mesh) );
@@ -432,7 +424,7 @@ void FindClosestTest:: testMultipleGeometryIDs ()
     distances[i] = closest.distance;
     geoIDs[i] = closest.meshIDs;
   }
-  DynVector query (dim, 0.0);
+  Eigen::VectorXd query = Eigen::VectorXd::Zero(dim);
   FindClosest findClosest ( query );
   validate ( findClosest(mesh) );
   closest = findClosest.getClosest();

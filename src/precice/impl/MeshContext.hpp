@@ -12,9 +12,7 @@
 namespace precice {
 namespace impl {
 
-/**
- * @brief Stores a mesh and related objects and data.
- */
+/// Stores a mesh and related objects and data.
 struct MeshContext
 {
 
@@ -42,7 +40,7 @@ struct MeshContext
    // @brief True, if mesh is decomposed based on PreFilter-PostFilter strategy.
    bool doesPreFiltering;
 
-   // @brief Offset only applied to meshes local to the accessor.
+   /// Offset only applied to meshes local to the accessor.
    Eigen::VectorXd localOffset;
 
    // @brief Geometry creating the mesh. Can be empty.
@@ -54,9 +52,6 @@ struct MeshContext
    // @brief Mapping used when mapping data to the mesh. Can be empty.
    MappingContext toMappingContext;
 
-   /**
-    * @brief Constructor.
-    */
    MeshContext ( int dimensions )
    :
      mesh (),

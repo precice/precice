@@ -19,7 +19,7 @@ logging::Logger WatchPoint:: _log ( "precice::impl::WatchPoint" );
 
 WatchPoint:: WatchPoint
 (
-  const Eigen::VectorXd& pointCoords,
+  const Eigen::VectorXd&  pointCoords,
   const mesh::PtrMesh&    meshToWatch,
   const std::string&      exportFilename )
 :
@@ -136,8 +136,6 @@ void WatchPoint:: exportPointData
 {
   if(_isClosest){
     assertion(_vertices.size() == _weights.size());
-    using utils::Vector2D;
-    using utils::Vector3D;
     _txtWriter.writeData("Time", time);
     // Export watch point coordinates
     Eigen::VectorXd coords = Eigen::VectorXd::Constant(_mesh->getDimensions(), 0.0);
@@ -145,10 +143,10 @@ void WatchPoint:: exportPointData
       coords += _weights[i] * _vertices[i]->getCoords();
     }
     if (coords.size() == 2){
-      _txtWriter.writeData("Coordinate", Vector2D(coords));
+      _txtWriter.writeData("Coordinate", Eigen::Vector2d(coords));
     }
     else {
-      _txtWriter.writeData("Coordinate", Vector3D(coords));
+      _txtWriter.writeData("Coordinate", Eigen::Vector3d(coords));
     }
     // Export watch point data
     for (auto & elem : _dataToExport){
@@ -156,10 +154,10 @@ void WatchPoint:: exportPointData
         Eigen::VectorXd toExport = Eigen::VectorXd::Zero(_mesh->getDimensions());
         getValue(toExport, elem);
         if (coords.size() == 2){
-          _txtWriter.writeData(elem->getName(), Vector2D(toExport));
+          _txtWriter.writeData(elem->getName(), Eigen::Vector2d(toExport));
         }
         else {
-          _txtWriter.writeData(elem->getName(), Vector3D(toExport));
+          _txtWriter.writeData(elem->getName(), Eigen::Vector3d(toExport));
         }
 
       }
@@ -174,8 +172,8 @@ void WatchPoint:: exportPointData
 
 void WatchPoint:: getValue
 (
-  Eigen::VectorXd& value,
-  mesh::PtrData&   data )
+  Eigen::VectorXd&  value,
+  mesh::PtrData&    data )
 {
   int dim = _mesh->getDimensions();
   Eigen::VectorXd temp(dim);

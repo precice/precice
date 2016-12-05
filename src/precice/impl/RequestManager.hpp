@@ -18,9 +18,7 @@ namespace precice {
 namespace precice {
 namespace impl {
 
-/**
- * @brief Takes requests from clients and handles requests on server side.
- */
+/// Takes requests from clients and handles requests on server side.
 class RequestManager
 {
 public:
@@ -95,8 +93,8 @@ public:
    * @brief Requests set position of solver mesh from server.
    */
   int requestSetMeshVertex (
-    int              meshID,
-    Eigen::VectorXd& position );
+    int               meshID,
+    Eigen::VectorXd&  position );
 
   /**
    * @brief Requests get size of vertices of preCICE mesh.

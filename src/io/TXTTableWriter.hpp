@@ -1,5 +1,4 @@
-#ifndef PRECICE_IO_TXTTABLEWRITER_HPP_
-#define PRECICE_IO_TXTTABLEWRITER_HPP_
+#pragma once
 
 #include "utils/Globals.hpp"
 #include <string>
@@ -76,11 +75,11 @@ public:
    */
   void writeData (
     const std::string&     name,
-    const utils::Vector2D& value );
+    const Eigen::Vector2d& value );
 
   void writeData (
     const std::string&     name,
-    const utils::Vector3D& value );
+    const Eigen::Vector3d& value );
 
   /**
    * @brief Closes the file, is automatically called on destruction.
@@ -103,7 +102,6 @@ private:
     }
   };
 
-  // @brief Logging device.
   static logging::Logger _log;
 
   std::vector<Data> _data;
@@ -114,5 +112,3 @@ private:
 };
 
 }} // namespace precice, io
-
-#endif /* PRECICE_IO_TXTTABLEWRITER_HPP_ */

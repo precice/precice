@@ -5,8 +5,6 @@
 #include "EventTimings.hpp"
 #include "Globals.hpp"
 
-#include <math.h>
-
 namespace precice {
 namespace utils {
 
@@ -25,7 +23,7 @@ logging::Logger MasterSlave:: _log ( "precice::utils::MasterSlave" );
 
 void MasterSlave:: configure(int rank, int size)
 {
-  preciceTrace("initialize()", rank, size);
+  TRACE(rank, size);
   preciceCheck(size>=2, "initialize()", "You cannot use a master with a serial participant.");
   _rank = rank;
   _size = size;
@@ -35,48 +33,9 @@ void MasterSlave:: configure(int rank, int size)
   DEBUG("slaveMode: " << _slaveMode <<", masterMode: " << _masterMode);
 }
 
-double MasterSlave:: l2norm(const DynVector& vec)
-{
-  preciceTrace("l2norm()");
-
-  if(not _masterMode && not _slaveMode){ //old case
-    return tarch::la::norm2(vec);
-  }
-
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
-  double localSum2 = 0.0;
-  double globalSum2 = 0.0;
-
-  for(int i=0; i<vec.size(); i++){
-    localSum2 += vec[i]*vec[i];
-  }
-
-  // localSum is modified, do not use afterwards
-  allreduceSum(localSum2, globalSum2, 1);
-
-  /* old loop over all slaves solution
-  if(_slaveMode){
-    _communication->send(localSum2, 0);
-    _communication->receive(globalSum2, 0);
-  }
-  if(_masterMode){
-    globalSum2 += localSum2;
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      _communication->receive(localSum2, rankSlave);
-      globalSum2 += localSum2;
-    }
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      _communication->send(globalSum2, rankSlave);
-    }
-  }
-  */
-  return sqrt(globalSum2);
-}
-
 double MasterSlave:: l2norm(const Eigen::VectorXd& vec)
 {
-  preciceTrace("l2norm()");
+  TRACE();
 
   if(not _masterMode && not _slaveMode){ //old case
     return vec.norm();
@@ -113,49 +72,9 @@ double MasterSlave:: l2norm(const Eigen::VectorXd& vec)
 }
 
 
-double MasterSlave:: dot(const DynVector& vec1, const DynVector& vec2)
-{
-  preciceTrace("dot()");
-
-  if(not _masterMode && not _slaveMode){ //old case
-    return tarch::la::dot(vec1, vec2);
-  }
-
-  assertion(_communication.get() != nullptr);
-  assertion(_communication->isConnected());
-  assertion(vec1.size()==vec2.size(), vec1.size(), vec2.size());
-  double localSum = 0.0;
-  double globalSum = 0.0;
-
-  for(int i=0; i<vec1.size(); i++){
-    localSum += vec1[i]*vec2[i];
-  }
-
-  // localSum is modified, do not use afterwards
-  allreduceSum(localSum, globalSum, 1);
-
-  /* old loop over all slaves solution
-  if(_slaveMode){
-    _communication->send(localSum, 0);
-    _communication->receive(globalSum, 0);
-  }
-  if(_masterMode){
-    globalSum += localSum;
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      _communication->receive(localSum, rankSlave);
-      globalSum += localSum;
-    }
-    for(int rankSlave = 1; rankSlave < _size; rankSlave++){
-      _communication->send(globalSum, rankSlave);
-    }
-  }
-  */
-  return globalSum;
-}
-
 double MasterSlave:: dot(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec2)
 {
-  preciceTrace("dot()");
+  TRACE();
 
   if(not _masterMode && not _slaveMode){ //old case
     return vec1.dot(vec2);
@@ -206,7 +125,7 @@ void MasterSlave:: reset()
 
 void
 MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
-  preciceTrace("reduceSum(double*)");
+  TRACE();
 
   if (not _masterMode && not _slaveMode) {
     return;
@@ -230,7 +149,7 @@ MasterSlave::reduceSum(double* sendData, double* rcvData, int size) {
 
 void
 MasterSlave::reduceSum(int& sendData, int& rcvData, int size) {
-  preciceTrace("reduceSum(int)");
+  TRACE();
 
   if (not _masterMode && not _slaveMode) {
     return;
@@ -254,7 +173,7 @@ MasterSlave::reduceSum(int& sendData, int& rcvData, int size) {
 
 void
 MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
-  preciceTrace("allreduceSum(double*)");
+  TRACE();
 
   if (not _masterMode && not _slaveMode) {
     return;
@@ -278,7 +197,7 @@ MasterSlave::allreduceSum(double* sendData, double* rcvData, int size) {
 
 void
 MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
-  preciceTrace("allreduceSum(double)");
+  TRACE();
 
   if (not _masterMode && not _slaveMode) {
     return;
@@ -302,7 +221,7 @@ MasterSlave::allreduceSum(double& sendData, double& rcvData, int size) {
 
 void
 MasterSlave::allreduceSum(int& sendData, int& rcvData, int size) {
-  preciceTrace("allreduceSum(double)");
+  TRACE();
 
   if (not _masterMode && not _slaveMode) {
     return;
@@ -326,7 +245,7 @@ MasterSlave::allreduceSum(int& sendData, int& rcvData, int size) {
 
 void
 MasterSlave::broadcast(bool& value) {
-  preciceTrace("broadcast(bool&)");
+  TRACE();
 
   if (not _masterMode && not _slaveMode) {
     return;
@@ -351,7 +270,7 @@ MasterSlave::broadcast(bool& value) {
 
 void
 MasterSlave::broadcast(double& value) {
-  preciceTrace("broadcast(double&)");
+  TRACE();
 
   if (not _masterMode && not _slaveMode) {
     return;
@@ -375,7 +294,7 @@ MasterSlave::broadcast(double& value) {
 
 void
 MasterSlave::broadcast(double* values, int size) {
-  preciceTrace("broadcast(double*)");
+  TRACE();
 
   if (not _masterMode && not _slaveMode) {
     return;

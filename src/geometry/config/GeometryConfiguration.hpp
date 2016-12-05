@@ -130,11 +130,11 @@ private:
          type(""),
          mesh(""),
          discretizationWidth(0.0),
-         offset(utils::DynVector(dimensions, 0.0)),
+         offset(Eigen::VectorXd::Zero(dimensions)),
          radius(0.0),
          deformation(0.0),
          scalarLength(0.0),
-         length(utils::DynVector(dimensions, 0.0)),
+         length(Eigen::VectorXd::Zero(dimensions)),
          pores(0.0),
          filename(""),
          filetype("")
@@ -146,13 +146,11 @@ private:
         type = toCopy.type;
         mesh = toCopy.mesh;
         discretizationWidth = toCopy.discretizationWidth;
-        offset.clear();
-        offset.append(toCopy.offset);
+        offset = Eigen::VectorXd(toCopy.offset);
         radius = toCopy.radius;
         deformation = toCopy.deformation;
         scalarLength = toCopy.scalarLength;
-        length.clear();
-        length.append(toCopy.offset);
+        length = Eigen::VectorXd(toCopy.offset);
         pores = toCopy.pores;
         filename = toCopy.filename;
         filetype = toCopy.filetype;
@@ -163,11 +161,11 @@ private:
       std::string type; // Type of geometry
       std::string mesh; // Name of mesh to build with geometry.
       double discretizationWidth;
-      utils::DynVector offset; // Translational displacement of the geometry
+      Eigen::VectorXd offset; // Translational displacement of the geometry
       double radius; // Radius for sphere or drift ratchet or bubble
       double deformation; // Deformation for bubble
       double scalarLength; // Length of drift ratchet
-      utils::DynVector length; // Sidelengths of cuboid
+      Eigen::VectorXd length; // Sidelengths of cuboid
       double pores; // Number of pores for drift ratchet
       std::string filename; // Filename of geometry to import
       std::string filetype;
@@ -175,7 +173,7 @@ private:
 
    ReadData _readData;
 
-   // @brief Geometries configured (besides custom geometries) and meshes.
+   /// Geometries configured (besides custom geometries) and meshes.
    std::vector<PtrGeometry> _geometries;
 
    std::vector<std::string> _meshNames;

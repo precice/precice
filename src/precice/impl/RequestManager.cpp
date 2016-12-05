@@ -299,7 +299,7 @@ void RequestManager:: requestFulfilledAction
 
 int RequestManager:: requestInquirePosition
 (
-  Eigen::VectorXd&    point,
+  Eigen::VectorXd&     point,
   const std::set<int>& meshIDs )
 {
   TRACE(point, meshIDs.size());
@@ -317,7 +317,7 @@ int RequestManager:: requestInquirePosition
 
 void RequestManager:: requestInquireClosestMesh
 (
-  Eigen::VectorXd&    point,
+  Eigen::VectorXd&     point,
   const std::set<int>& meshIDs,
   ClosestMesh&         closest )
 {
@@ -364,7 +364,7 @@ void RequestManager:: requestInquireVoxelPosition
     int i = 0;
     for (int id : meshIDs) {
       idVector[i] = id;
-      i ++;
+      i++;
     }
     _com->send(idVector.data(), (int)meshIDs.size(), 0);
   }
@@ -680,7 +680,7 @@ void RequestManager:: handleRequestInitialze
 (
   const std::list<int>& clientRanks )
 {
-  preciceTrace("handleRequestInitialze()");
+  TRACE()
   _interface.initialize();
   for (int rank : clientRanks) {
     _couplingScheme->sendState(_com, rank);
@@ -691,7 +691,7 @@ void RequestManager:: handleRequestInitialzeData
 (
   const std::list<int>& clientRanks )
 {
-  preciceTrace("handleRequestInitializeData()");
+  TRACE();
   _interface.initializeData();
   for (int rank : clientRanks) {
     _couplingScheme->sendState(_com, rank);
