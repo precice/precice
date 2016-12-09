@@ -35,12 +35,11 @@ void MPIDirectCommunicationTest:: run ()
 
 void MPIDirectCommunicationTest:: testSendReceiveTwoProcesses ()
 {
-  preciceTrace ( "testSendReceiveTwoProcesses()" );
+  TRACE();
   typedef utils::Parallel Par;
   Par::synchronizeProcesses();
 
-  std::vector<int> ranks;
-  ranks += 0, 1;
+  std::vector<int> ranks = {0, 1};
   MPI_Comm comm = Par::getRestrictedCommunicator ( ranks );
   if ( Par::getProcessRank() < 2 ) {
     Par::setGlobalCommunicator(comm);
@@ -77,8 +76,7 @@ void MPIDirectCommunicationTest:: testSendReceiveThreeProcesses ()
   preciceTrace ( "testSendReceiveThreeProcesses()" );
   utils::Parallel::synchronizeProcesses ();
 
-  std::vector<int> ranks;
-  ranks += 0, 1, 2;
+  std::vector<int> ranks = {0, 1, 2};
   MPI_Comm comm = utils::Parallel::getRestrictedCommunicator ( ranks );
   if ( utils::Parallel::getProcessRank() < 3 ) {
     utils::Parallel::setGlobalCommunicator(comm);
@@ -91,7 +89,5 @@ void MPIDirectCommunicationTest:: testSendReceiveThreeProcesses ()
 }
 
 #endif // not PRECICE_NO_MPI
-
-
 
 }}} // namespace precice, com, tests

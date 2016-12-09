@@ -63,9 +63,7 @@ void ParallelImplicitCouplingSchemeTest:: run ()
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 1){
     // Do only use process 0 and 1 for the following tests
-    std::vector<int> ranks;
-    ranks += 0, 1;
-    MPI_Comm comm = Par::getRestrictedCommunicator(ranks);
+    MPI_Comm comm = Par::getRestrictedCommunicator({0, 1});
     if (Par::getProcessRank() <= 1){
       Par::setGlobalCommunicator(comm);
       testMethod(testInitializeData);

@@ -4,9 +4,7 @@
 #include <algorithm>
 #include <vector>
 #include <map>
-#include <stack>
 #include <set>
-#include <list>
 #include "Parallel.hpp"
 
 namespace precice {
@@ -50,7 +48,7 @@ inline bool xOR ( bool lhs, bool rhs )
  * - ELEMENT_T must be comparable by ==
  */
 template <typename ELEMENT_T>
-const bool contained(const ELEMENT_T& element, const std::vector<ELEMENT_T>& vec)
+bool contained(const ELEMENT_T& element, const std::vector<ELEMENT_T>& vec)
 {
   return std::find(vec.begin(), vec.end(), element) != vec.end();
 }
@@ -82,89 +80,5 @@ std::string getTypeName(const int& var);
 /// Returns true if machine is big-endian needed for parallel vtk output
 bool isMachineBigEndian();
 
-/// Enables overload of operator() and operator, to fill STL containers.
-template<typename CONTAINER_T>
-struct AppendIterator
-{
-public:
-
-  /// Constructor, used by appedTo and operator+.
-  AppendIterator ( CONTAINER_T& container )
-  :
-    _container ( container )
-  {};
-
-  /// Enables to chain assignments such as (1)(2)(3).
-  template<typename CONTAINED_T>
-  AppendIterator& operator() ( const CONTAINED_T& right )
-  {
-    _container.insert ( _container.end(), right );
-    return *this;
-  }
-
-  /// Enables to chain assignments such as 1, 2, 3.
-  template<typename CONTAINED_T>
-  AppendIterator& operator, ( const CONTAINED_T& right )
-  {
-    _container.insert ( _container.end(), right );
-    return *this;
-  }
-
-private:
-
-  /// Container class assigned to.
-  CONTAINER_T& _container;
-};
-
-/**
- * @brief Enables to append values to a STL conform container.
- *
- * ! Examples
- * std::list<double> _list;
- * appendTo(_list) (1.0)(2.0)(3.0);
- * appendTo(_list) 4.0, 5.0, 6.0;
- *
- * ! Requirements
- * - CONTAINER_T must offer a function insert(iterator_t i,
- *                                            const CONTAINED_T & item)
- */
-template<typename CONTAINER_T>
-inline AppendIterator<CONTAINER_T> appendTo
-(
-   CONTAINER_T& left )
-{
-   return AppendIterator<CONTAINER_T>(left);
-}
-
 }} // namespace precice, utils
-
-// ------------------------------------------------------------- FREE FUNCTIONS
-
-namespace precice {
-
-/**
- * @brief Enables to append values to a std::vector.
- *
- * ! Examples
- * <code>
- * std::vector<int> _vector;
- * _vector += 1, 2, 3;
- * _vector += (1)(2)(3);
- * </code>
- *
- * ! Requirements
- * - CONTAINER_T must offer a function insert(iterator_t i,
- *                                            const CONTAINED_T & item)
- */
-template< typename CONTAINED_T >
-inline utils::AppendIterator< std::vector<CONTAINED_T> > operator+=
-(
-   std::vector<CONTAINED_T> & left,
-   const CONTAINED_T        & right )
-{
-   left.insert ( left.end(), right );
-   return utils::AppendIterator< std::vector<CONTAINED_T> > ( left );
-}
-
-} // namespace precice
 

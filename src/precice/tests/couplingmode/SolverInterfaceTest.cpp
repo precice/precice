@@ -39,9 +39,7 @@ void SolverInterfaceTest:: run()
   }
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 1){
-    std::vector<int> ranksWanted;
-    ranksWanted += 0, 1;
-    MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    MPI_Comm comm = Par::getRestrictedCommunicator({0, 1});
     if (Par::getProcessRank() <= 1){
       Par::setGlobalCommunicator(comm);
       testMethod(testExplicit);
@@ -69,9 +67,7 @@ void SolverInterfaceTest:: run()
     }
   }
   if (Par::getCommunicatorSize() > 2){
-    std::vector<int> ranksWanted;
-    ranksWanted += 0, 1, 2;
-    MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    MPI_Comm comm = Par::getRestrictedCommunicator({0, 1, 2});
     if (Par::getProcessRank() <= 2){
       Par::setGlobalCommunicator(comm);
       testMethod(testThreeSolvers);
@@ -80,9 +76,7 @@ void SolverInterfaceTest:: run()
   }
   Par::synchronizeProcesses();
   if (Par::getCommunicatorSize() > 3){
-    std::vector<int> ranksWanted;
-    ranksWanted += 0, 1, 2 , 3;
-    MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    MPI_Comm comm = Par::getRestrictedCommunicator({0, 1, 2, 3});
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
       testMethod(testDistributedCommunications)
@@ -1462,12 +1456,12 @@ void SolverInterfaceTest:: testBug()
   std::vector<Vector3d> coords;
   for (int i=0; i < slices; i++){
     double z = (double)i * 1.0;
-    coords += Vector3d( 1.0,  0.0, z),
-              Vector3d( 0.0,  1.0, z),
-              Vector3d(-1.0,  0.0, z),
-              Vector3d( 0.0, -1.0, z);
+    coords.push_back( Vector3d( 1.0,  0.0, z) );
+    coords.push_back( Vector3d( 0.0,  1.0, z) );
+    coords.push_back( Vector3d(-1.0,  0.0, z) );
+    coords.push_back( Vector3d( 0.0, -1.0, z) );
   }
-
+      
   int rank = utils::Parallel::getProcessRank();
   assertion((rank == 0) || (rank == 1), rank);
   std::string solverName = rank == 0 ? "Flite" : "Calculix";
@@ -1532,28 +1526,23 @@ void SolverInterfaceTest:: testThreeSolvers()
 {
   TRACE();
   std::string configFilename(_pathToTests + "three-solver-explicit-explicit.xml");
-  std::vector<int> expectedCallsOfAdvance;
-  expectedCallsOfAdvance += 10, 10, 10;
+  std::vector<int> expectedCallsOfAdvance = {10, 10, 10};
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
 
   configFilename = _pathToTests + "three-solver-implicit-implicit.xml";
-  expectedCallsOfAdvance.clear();
-  expectedCallsOfAdvance += 30, 30, 20;
+  expectedCallsOfAdvance = {30, 30, 20};
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
 
   configFilename = _pathToTests + "three-solver-implicit-explicit.xml";
-  expectedCallsOfAdvance.clear();
-  expectedCallsOfAdvance += 30, 30, 10;
+  expectedCallsOfAdvance = {30, 30, 10};
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
 
   configFilename = _pathToTests + "three-solver-explicit-implicit.xml";
-  expectedCallsOfAdvance.clear();
-  expectedCallsOfAdvance += 30, 10, 30;
+  expectedCallsOfAdvance = {30, 10, 30};
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
 
   configFilename = _pathToTests + "three-solver-parallel.xml";
-  expectedCallsOfAdvance.clear();
-  expectedCallsOfAdvance += 30, 30, 10;
+  expectedCallsOfAdvance = {30, 30, 10};
   runThreeSolvers(configFilename, expectedCallsOfAdvance);
 }
 

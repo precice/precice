@@ -38,9 +38,7 @@ void MeshTest:: run()
 # ifndef PRECICE_NO_MPI
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 3){
-    std::vector<int> ranksWanted;
-    ranksWanted += 0, 1, 2 , 3;
-    MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    MPI_Comm comm = Par::getRestrictedCommunicator({0, 1, 2, 3});
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
       testMethod (testDistribution);

@@ -43,10 +43,8 @@ void ExplicitCouplingSchemeTest:: run ()
 # ifndef PRECICE_NO_MPI
   typedef utils::Parallel Par;
   if ( Par::getCommunicatorSize() > 1 ) {
-    std::vector<int> ranks;
-    ranks += 0, 1;
     // Only use process 0 and 1 for the following tests
-    Par::Communicator comm = Par::getRestrictedCommunicator(ranks);
+    Par::Communicator comm = Par::getRestrictedCommunicator({0, 1});
     if ( Par::getProcessRank() <= 1 ){
       Par::setGlobalCommunicator(comm) ;
       validateEquals(Par::getCommunicatorSize(), 2);

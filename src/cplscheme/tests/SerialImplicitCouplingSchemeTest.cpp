@@ -56,9 +56,7 @@ void SerialImplicitCouplingSchemeTest:: run ()
   DEBUG("CommunicatorSize: " << Par::getCommunicatorSize());
   if (Par::getCommunicatorSize() > 1){
     // Do only use process 0 and 1 for the following tests
-    std::vector<int> ranks;
-    ranks += 0, 1;
-    MPI_Comm comm = Par::getRestrictedCommunicator(ranks);
+    MPI_Comm comm = Par::getRestrictedCommunicator({0, 1});
     if (Par::getProcessRank() <= 1){
       Par::setGlobalCommunicator(comm);
       testMethod(testAbsConvergenceMeasureSynchronized);
@@ -247,8 +245,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
          mesh->data()[1]->getID(), false, false, absoluteConvMeasure1 );
 
    // Expected iterations per implicit timesptep
-   std::vector<int> validIterations;
-   validIterations += 5, 5, 5;
+   std::vector<int> validIterations = {5, 5, 5};
    connect ( "participant0", "participant1", nameLocalParticipant, globalCom );
    runCoupling ( cplScheme, nameLocalParticipant, meshConfig, validIterations );
    globalCom->closeConnection();
@@ -366,8 +363,7 @@ void SerialImplicitCouplingSchemeTest:: testConfiguredAbsConvergenceMeasureSynch
 
    geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
 
-   std::vector<int> validIterations;
-   validIterations += 5, 5, 5;
+   std::vector<int> validIterations = {5, 5, 5};
    connect ( "participant0", "participant1", nameLocalParticipant, m2n );
    runCoupling ( *cplSchemeConfig.getCouplingScheme(nameLocalParticipant),
                  nameLocalParticipant, *meshConfig, validIterations );
@@ -434,8 +430,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
       mesh->data()[1]->getID(), false, false, minIterationConvMeasure1 );
 
    // Expected iterations per implicit timesptep
-   std::vector<int> validIterations;
-   validIterations += 3, 3, 3;
+   std::vector<int> validIterations = {3, 3, 3};
    connect ( "participant0", "participant1", nameLocalParticipant, globalCom );
    runCoupling ( cplScheme, nameLocalParticipant, meshConfig, validIterations );
    globalCom->closeConnection();
@@ -745,13 +740,13 @@ void SerialImplicitCouplingSchemeTest::
       nameLocalParticipant = nameParticipant0;
       sendDataIndex = 0;
       receiveDataIndex = 1;
-      validIterations += 3, 3, 3;
+      validIterations = {3, 3, 3};
    }
    else if ( utils::Parallel::getProcessRank() == 1 ) {
       nameLocalParticipant = nameParticipant1;
       sendDataIndex = 1;
       receiveDataIndex = 0;
-      validIterations += 3, 3, 3;
+      validIterations = {3, 3, 3};
    }
 
    // Create the coupling scheme object

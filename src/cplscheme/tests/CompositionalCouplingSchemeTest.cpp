@@ -47,9 +47,7 @@ void CompositionalCouplingSchemeTest:: run ()
     testMethod(testDummySchemeCompositions);
   }
   if (Par::getCommunicatorSize() > 2){
-    std::vector<int> ranks;
-    ranks += 0, 1, 2;
-    Par::Communicator comm = Par::getRestrictedCommunicator(ranks);
+    Par::Communicator comm = Par::getRestrictedCommunicator({0, 1, 2});
     if (Par::getProcessRank() <= 2){
       Par::setGlobalCommunicator(comm) ;
       validateEquals(Par::getCommunicatorSize(), 3);

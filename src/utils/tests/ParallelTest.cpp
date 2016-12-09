@@ -25,9 +25,7 @@ void ParallelTest:: run ()
   preciceTrace ( "run()" );
   typedef Parallel Par;
   if ( Par::getCommunicatorSize() >= 3 ){
-    std::vector<int> ranksWanted;
-    ranksWanted += 0, 1, 2;
-    MPI_Comm comm = Par::getRestrictedCommunicator(ranksWanted);
+    MPI_Comm comm = Par::getRestrictedCommunicator({0, 1, 2});
     if ( Par::getProcessRank() <= 2 ){
       Par::setGlobalCommunicator(comm);
       std::string group;

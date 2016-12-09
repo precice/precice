@@ -86,8 +86,8 @@ void ImportVRML:: doImport
       for (size_t i=0; i < vrmlParser.coordinates.size(); i+=2){
         assertion(i + 1 < vrmlParser.coordinates.size(),
                   i + 1, vrmlParser.coordinates.size());
-        vertices += &mesh.createVertex(Eigen::Vector2d(vrmlParser.coordinates[i],
-                                                       vrmlParser.coordinates[i+1]));
+        vertices.push_back(&mesh.createVertex(Eigen::Vector2d(vrmlParser.coordinates[i],
+                                                              vrmlParser.coordinates[i+1])));
       }
       // Construct edge indices from parsed data.
       // The parsed data has the form: i0, ..., in, -1, i0, ..., im, -1, ...., -1
@@ -108,9 +108,9 @@ void ImportVRML:: doImport
       for (size_t i=0; i < vrmlParser.coordinates.size(); i+=3){
         assertion(i + 2 < vrmlParser.coordinates.size(),
                    i + 2, vrmlParser.coordinates.size());
-        vertices += &mesh.createVertex(Eigen::Vector3d(vrmlParser.coordinates[i],
-                                                       vrmlParser.coordinates[i+1],
-                                                       vrmlParser.coordinates[i+2]));
+        vertices.push_back(&mesh.createVertex(Eigen::Vector3d(vrmlParser.coordinates[i],
+                                                              vrmlParser.coordinates[i+1],
+                                                              vrmlParser.coordinates[i+2])));
       }
 
       // Construct triangle indices from parsed data.

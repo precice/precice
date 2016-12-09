@@ -38,9 +38,7 @@ void SolverInterfaceTestRemote:: run()
   preciceTrace("run()");
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() >= 2){
-    std::vector<int> ranksWanted;
-    ranksWanted += 0, 1;
-    Par::Communicator comm = Par::getRestrictedCommunicator(ranksWanted);
+    Par::Communicator comm = Par::getRestrictedCommunicator({0 ,1});
     if (Par::getProcessRank() <= 1){
       Par::setGlobalCommunicator(comm);
       testMethod(testGeometryMode);
@@ -48,9 +46,7 @@ void SolverInterfaceTestRemote:: run()
     }
   }
   if (Par::getCommunicatorSize() >= 3){
-    std::vector<int> ranksWanted;
-    ranksWanted += 0, 1, 2;
-    Par::Communicator comm = Par::getRestrictedCommunicator(ranksWanted);
+    Par::Communicator comm = Par::getRestrictedCommunicator({0, 1, 2});
     if ( Par::getProcessRank() <= 2 ){
       Par::setGlobalCommunicator(comm);
       testMethod(testCouplingModeWithOneServer);
@@ -60,9 +56,7 @@ void SolverInterfaceTestRemote:: run()
     }
   }
   if (Par::getCommunicatorSize() >= 4){
-    std::vector<int> ranksWanted;
-    ranksWanted += 0, 1, 2, 3;
-    Par::Communicator comm = Par::getRestrictedCommunicator(ranksWanted);
+    Par::Communicator comm = Par::getRestrictedCommunicator({0, 1, 2, 3});
     if (Par::getProcessRank() <= 3){
       Par::setGlobalCommunicator(comm);
       testMethod(testCouplingModeParallelWithOneServer);

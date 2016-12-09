@@ -30,7 +30,7 @@ ParallelMatrixOperationsTest:: ParallelMatrixOperationsTest ()
 
 void ParallelMatrixOperationsTest:: run ()
 {
-  preciceTrace ( "run" );
+  TRACE();
   typedef utils::Parallel Par;
   if (Par::getCommunicatorSize() > 3){
     std::vector<int> ranksWanted;
@@ -48,7 +48,8 @@ void ParallelMatrixOperationsTest:: run ()
 
 void ParallelMatrixOperationsTest::testParVectorOperations()
 {
-  preciceTrace ( "testParVectorOperations" );assertion ( utils::Parallel::getCommunicatorSize() == 4 );
+  TRACE();
+  assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
   com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;

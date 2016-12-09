@@ -60,8 +60,7 @@ void CommunicateMeshTest:: testTwoSolvers ()
     }
 
     // Create mesh communicator
-    std::vector<int> involvedRanks;
-    involvedRanks += 0, 1;
+    std::vector<int> involvedRanks = {0, 1};
     MPI_Comm comm = utils::Parallel::getRestrictedCommunicator ( involvedRanks );
     if ( utils::Parallel::getProcessRank() < 2 ) {
       utils::Parallel::setGlobalCommunicator ( comm );

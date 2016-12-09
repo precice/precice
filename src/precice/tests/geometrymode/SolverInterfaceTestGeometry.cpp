@@ -40,10 +40,8 @@ void SolverInterfaceTestGeometry:: setUp ()
 void SolverInterfaceTestGeometry:: run()
 {
   TRACE();
-  std::vector<int> ranks;
-  ranks += 0;
   typedef utils::Parallel Par;
-  Par::Communicator comm = Par::getRestrictedCommunicator(ranks);
+  Par::Communicator comm = Par::getRestrictedCommunicator({0});
   PRECICE_MASTER_ONLY {
     preciceTrace("run master ()");
     Par::setGlobalCommunicator(comm);

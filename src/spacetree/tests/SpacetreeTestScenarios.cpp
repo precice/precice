@@ -1346,14 +1346,13 @@ void SpacetreeTestScenarios:: performTestSearchContentVertices
 
   Eigen::VectorXd treeOffset = Eigen::VectorXd::Constant(dim, 0.0);
   Eigen::VectorXd treeHalflengths = Eigen::VectorXd::Constant(dim, 2.0);
-  std::vector<double> refinementLimits;
-  refinementLimits += 2.0, 1.0, 0.5, 0.25;
+  std::vector<double> refinementLimits = {2.0, 1.0, 0.5, 0.25};
   std::vector<PtrSpacetree> treesInc;
   std::vector<PtrSpacetree> treesExc;
   for ( double limit : refinementLimits ) {
-    treesInc +=_factory.createSpacetree(treeOffset, treeHalflengths, limit);
+    treesInc.push_back(_factory.createSpacetree(treeOffset, treeHalflengths, limit));
     treesInc.back()->addMesh(mesh);
-    treesExc += _factory.createSpacetree(treeOffset, treeHalflengths, limit);
+    treesExc.push_back(_factory.createSpacetree(treeOffset, treeHalflengths, limit));
     treesExc.back()->addMesh(mesh);
   }
 
@@ -1619,14 +1618,13 @@ void SpacetreeTestScenarios:: performTestSearchContentEdges
 
   Eigen::VectorXd treeoffset = Eigen::VectorXd::Constant(dim, 0.0);
   Eigen::VectorXd treeHalflengths = Eigen::VectorXd::Constant(dim, 2.0);
-  std::vector<double> refinementLimits;
-  refinementLimits += 2.0, 1.0, 0.5, 0.25;
+  std::vector<double> refinementLimits = {2.0, 1.0, 0.5, 0.25};
   std::vector<PtrSpacetree> treesInc;
   std::vector<PtrSpacetree> treesExc;
   for ( double limit : refinementLimits ) {
-    treesInc += _factory.createSpacetree(treeoffset, treeHalflengths, limit);
+    treesInc.push_back(_factory.createSpacetree(treeoffset, treeHalflengths, limit));
     treesInc.back()->addMesh(mesh);
-    treesExc += _factory.createSpacetree(treeoffset, treeHalflengths, limit);
+    treesExc.push_back(_factory.createSpacetree(treeoffset, treeHalflengths, limit));
     treesExc.back()->addMesh(mesh);
   }
 
@@ -1840,7 +1838,7 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
   int  secondDimension,
   bool positive )
 {
-  preciceTrace ( "performTestSearchContentTriangles()", testDim, positive );
+  TRACE(testDim, positive );
   int min = Spacetree::minElementsToRefineCell;
   Spacetree::minElementsToRefineCell = 1;
   int dim = 3;
@@ -1869,14 +1867,13 @@ void SpacetreeTestScenarios:: performTestSearchContentTriangles
 
   Eigen::VectorXd treeoffset = Eigen::VectorXd::Constant(dim, 0);
   Eigen::VectorXd treeHalflengths = Eigen::VectorXd::Constant(dim, 5);
-  std::vector<double> refinementLimits;
-  refinementLimits += 5.0, 2.5, 1.25, 0.625;
+  std::vector<double> refinementLimits = {5.0, 2.5, 1.25, 0.625};
   std::vector<PtrSpacetree> treesInc;
   std::vector<PtrSpacetree> treesExc;
   for ( double limit : refinementLimits ) {
-    treesInc += _factory.createSpacetree(treeoffset, treeHalflengths, limit);
+    treesInc.push_back( _factory.createSpacetree(treeoffset, treeHalflengths, limit));
     treesInc.back()->addMesh(mesh);
-    treesExc += _factory.createSpacetree(treeoffset, treeHalflengths, limit);
+    treesExc.push_back(_factory.createSpacetree(treeoffset, treeHalflengths, limit));
     treesExc.back()->addMesh(mesh);
   }
 
