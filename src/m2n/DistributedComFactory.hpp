@@ -7,13 +7,10 @@
 namespace precice {
 namespace m2n {
 class DistributedComFactory {
+  
 public:
   using SharedPointer = std::shared_ptr<DistributedComFactory>;
 
-public:
-  /**
-   * @brief Destructor.
-   */
   virtual ~DistributedComFactory(){};
 
   virtual DistributedCommunication::SharedPointer newDistributedCommunication(

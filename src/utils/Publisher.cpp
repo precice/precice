@@ -12,7 +12,7 @@ namespace utils {
 
 std::string Publisher::_pdp;
 
-Stack<std::string> Publisher::_dps;
+std::stack<std::string> Publisher::_dps;
 
 std::string Publisher::_prefix;
 

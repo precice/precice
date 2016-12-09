@@ -29,7 +29,7 @@ MPIPortsCommunication::MPIPortsCommunication(
 }
 
 MPIPortsCommunication::~MPIPortsCommunication() {
-  preciceTrace("~MPIPortsCommunication()", _isConnected);
+  TRACE(_isConnected);
 
   closeConnection();
 }
@@ -40,8 +40,7 @@ MPIPortsCommunication::isConnected() {
 }
 
 size_t MPIPortsCommunication::getRemoteCommunicatorSize() {
-  preciceTrace("getRemoteCommunicatorSize()");
-
+  TRACE();
   assertion(isConnected());
 
   return _communicators.size();
@@ -52,11 +51,10 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
                                         std::string const& nameRequester,
                                         int acceptorProcessRank,
                                         int acceptorCommunicatorSize) {
-  preciceTrace("acceptConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
-  preciceCheck(acceptorCommunicatorSize == 1,
-               "acceptConnection()",
-               "Acceptor of MPI port connection can only have one process!");
+  CHECK(acceptorCommunicatorSize == 1,
+        "Acceptor of MPI port connection can only have one process!");
 
   assertion(not isConnected());
 
@@ -90,7 +88,7 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
   DEBUG("Accepted connection at " << address);
 
   int requesterProcessRank = -1;
-  int requesterCommunicatorSize = 0;
+  size_t requesterCommunicatorSize = 0;
 
   MPI_Recv(&requesterProcessRank,
            1,
@@ -107,10 +105,8 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
            communicator,
            MPI_STATUS_IGNORE);
 
-  preciceCheck(requesterCommunicatorSize > 0,
-               "acceptConnection()",
-               "Requester communicator "
-                   << "size has to be > 0!");
+  CHECK(requesterCommunicatorSize > 0,
+        "Requester communicator " << "size has to be > 0!");
 
   _communicators.resize(requesterCommunicatorSize, MPI_COMM_NULL);
 
@@ -118,7 +114,7 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
 
   _isConnected = true;
 
-  for (int i = 1; i < requesterCommunicatorSize; ++i) {
+  for (size_t i = 1; i < requesterCommunicatorSize; ++i) {
     MPI_Comm_accept(_portName, MPI_INFO_NULL, 0, MPI_COMM_SELF, &communicator);
 
     DEBUG("Accepted connection at " << address);
@@ -138,13 +134,10 @@ MPIPortsCommunication::acceptConnection(std::string const& nameAcceptor,
              communicator,
              MPI_STATUS_IGNORE);
 
-    preciceCheck(requesterCommunicatorSize == _communicators.size(),
-                 "acceptConnection()",
-                 "Requester communicator sizes are inconsistent!");
-    preciceCheck(_communicators[requesterProcessRank] == MPI_COMM_NULL,
-                 "acceptConnection()",
-                 "Duplicate request to connect by same rank ("
-                     << requesterProcessRank << ")!");
+    CHECK(requesterCommunicatorSize == _communicators.size(),
+          "Requester communicator sizes are inconsistent!");
+    CHECK(_communicators[requesterProcessRank] == MPI_COMM_NULL,
+          "Duplicate request to connect by same rank (" << requesterProcessRank << ")!");
 
     _communicators[requesterProcessRank] = communicator;
 
@@ -157,12 +150,9 @@ MPIPortsCommunication::acceptConnectionAsServer(
     std::string const& nameAcceptor,
     std::string const& nameRequester,
     int requesterCommunicatorSize) {
-  preciceTrace("acceptConnectionAsServer()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
-  preciceCheck(requesterCommunicatorSize > 0,
-               "acceptConnectionAsServer()",
-               "Requester communicator "
-                   << "size has to be > 0!");
+  CHECK(requesterCommunicatorSize > 0, "Requester communicator size has to be > 0!");
 
   assertion(not isConnected());
 
@@ -178,8 +168,7 @@ MPIPortsCommunication::acceptConnectionAsServer(
   MPI_Open_port(MPI_INFO_NULL, _portName);
 
   std::string address(_portName);
-  std::string addressFileName("." + nameRequester + "-" + nameAcceptor +
-                              ".address");
+  std::string addressFileName("." + nameRequester + "-" + nameAcceptor + ".address");
 
   Publisher::ScopedChangePrefixDirectory scpd(_addressDirectory);
 
@@ -200,10 +189,9 @@ MPIPortsCommunication::acceptConnectionAsServer(
 
     DEBUG("Accepted connection at " << address);
 
-    preciceCheck(_communicators[requesterProcessRank] == MPI_COMM_NULL,
-                 "acceptConnectionAsServer()",
-                 "Duplicate request to connect by same rank ("
-                     << requesterProcessRank << ")!");
+    CHECK(_communicators[requesterProcessRank] == MPI_COMM_NULL,
+          "Duplicate request to connect by same rank ("
+          << requesterProcessRank << ")!");
 
     _communicators[requesterProcessRank] = communicator;
 
@@ -226,7 +214,7 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
                                          std::string const& nameRequester,
                                          int requesterProcessRank,
                                          int requesterCommunicatorSize) {
-  preciceTrace("requestConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
@@ -269,7 +257,7 @@ MPIPortsCommunication::requestConnection(std::string const& nameAcceptor,
 int
 MPIPortsCommunication::requestConnectionAsClient(
     std::string const& nameAcceptor, std::string const& nameRequester) {
-  preciceTrace("requestConnectionAsClient()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
 
   assertion(not isConnected());
 
@@ -333,12 +321,7 @@ MPIPortsCommunication::requestConnectionAsClient(
     }
 
     if (i >= 500) {
-      preciceError("requestConnectionAsClient()",
-                   "Oops, we have a deadlock here..."
-                   " "
-                   "Now terminating, retry please!");
-
-      exit(1);
+      ERROR("Oops, we have a deadlock here... Now terminating, retry please!");
     }
   }
 
@@ -347,7 +330,7 @@ MPIPortsCommunication::requestConnectionAsClient(
 
 void
 MPIPortsCommunication::closeConnection() {
-  preciceTrace("closeConnection()", _communicators.size());
+  TRACE(_communicators.size());
 
   if (not isConnected())
     return;
@@ -375,7 +358,7 @@ int
 MPIPortsCommunication::rank(int rank) {
   return 0;
 }
-}
-} // namespace precice, com
+
+}} // namespace precice, com
 
 #endif // not PRECICE_NO_MPI

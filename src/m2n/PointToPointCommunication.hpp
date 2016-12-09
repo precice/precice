@@ -1,5 +1,4 @@
-#ifndef PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_
-#define PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_
+#pragma once
 
 #include "DistributedCommunication.hpp"
 
@@ -52,28 +51,24 @@ public:
    */
   virtual ~PointToPointCommunication();
 
-  /**
-   * @brief Returns true, if a connection to a remote participant has been
-   *        established.
-   */
+  /// Returns true, if a connection to a remote participant has been established.
   virtual bool isConnected();
 
   /**
    * @brief Accepts connection from participant, which has to call
    *        requestConnection().
    *
-   * @param nameAcceptor [IN] Name of calling participant.
-   * @param nameRequester [IN] Name of remote participant to connect to.
+   * @param[in] nameAcceptor  Name of calling participant.
+   * @param[in] nameRequester Name of remote participant to connect to.
    */
   virtual void acceptConnection(std::string const& nameAcceptor,
                                 std::string const& nameRequester);
 
   /**
-   * @brief Requests connection from participant, which has to call
-   *        acceptConnection().
+   * @brief Requests connection from participant, which has to call acceptConnection().
    *
-   * @param nameAcceptor [IN] Name of remote participant to connect to.
-   * @param nameReuester [IN] Name of calling participant.
+   * @param[in] nameAcceptor Name of remote participant to connect to.
+   * @param[in] nameRequester Name of calling participant.
    */
   virtual void requestConnection(std::string const& nameAcceptor,
                                  std::string const& nameRequester);
@@ -140,7 +135,6 @@ private:
 
   bool _isConnected;
 };
-}
-} // namespace precice, m2n
 
-#endif /* PRECICE_M2N_POINT_TO_POINT_COMMUNICATION_HPP_ */
+}} // namespace precice, m2n
+

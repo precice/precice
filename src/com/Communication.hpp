@@ -52,10 +52,7 @@ public:
   virtual ~Communication() {
   }
 
-  /**
-   * @brief Returns true, if a connection to a remote participant has been
-   * setup.
-   */
+  /// Returns true, if a connection to a remote participant has been setup.
   virtual bool isConnected() = 0;
 
   /**
@@ -69,8 +66,8 @@ public:
    * @brief Connects to another participant, which has to call
    * requestConnection().
    *
-   * @param nameAcceptor [IN] Name of calling participant.
-   * @param nameRequester [IN] Name of remote participant to connect to.
+   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] nameRequester Name of remote participant to connect to.
    */
   virtual void acceptConnection(std::string const& nameAcceptor,
                                 std::string const& nameRequester,
@@ -85,8 +82,8 @@ public:
    * @brief Connects to another participant, which has to call
    * acceptConnection().
    *
-   * @param nameAcceptor [IN] Name of remote participant to connect to.
-   * @param nameReuester [IN] Name of calling participant.
+   * @param[in] nameAcceptor Name of remote participant to connect to.
+   * @param[in] nameReuester Name of calling participant.
    */
   virtual void requestConnection(std::string const& nameAcceptor,
                                  std::string const& nameRequester,

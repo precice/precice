@@ -1,5 +1,4 @@
-#ifndef PRECICE_M2N_DISTRIBUTED_COMMUNICATION_HPP_
-#define PRECICE_M2N_DISTRIBUTED_COMMUNICATION_HPP_
+#pragma once
 
 #include "mesh/SharedPointer.hpp"
 
@@ -34,7 +33,7 @@ public:
 
 public:
 
-  DistributedCommunication(mesh::PtrMesh mesh)
+  explicit DistributedCommunication(mesh::PtrMesh mesh)
   :
   _mesh(mesh)
   {}
@@ -44,16 +43,14 @@ public:
    */
   virtual ~DistributedCommunication() {}
 
-  /**
-   * @brief Returns true, if a connection to a remote participant has been setup.
-   */
+  /// Returns true, if a connection to a remote participant has been setup.
   virtual bool isConnected() =0;
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
    *
-   * @param nameAcceptor [IN] Name of calling participant.
-   * @param nameRequester [IN] Name of remote participant to connect to.
+   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] nameRequester Name of remote participant to connect to.
    */
   virtual void acceptConnection (
     const std::string& nameAcceptor,
@@ -62,8 +59,8 @@ public:
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
    *
-   * @param nameAcceptor [IN] Name of remote participant to connect to.
-   * @param nameReuester [IN] Name of calling participant.
+   * @param[in] nameAcceptor Name of remote participant to connect to.
+   * @param[in] nameRequester Name of calling participant.
    */
   virtual void requestConnection (
     const std::string& nameAcceptor,
@@ -76,17 +73,13 @@ public:
    */
   virtual void closeConnection() =0;
 
-  /**
-   * @brief Sends an array of double values from all slaves (different for each slave).
-   */
+  /// Sends an array of double values from all slaves (different for each slave).
   virtual void send (
     double* itemsToSend,
     size_t     size,
     int     valueDimension) =0;
 
-  /**
-   * @brief All slaves receive an array of doubles (different for each slave).
-   */
+  /// All slaves receive an array of doubles (different for each slave).
   virtual void receive (
     double* itemsToReceive,
     size_t     size,
@@ -94,7 +87,9 @@ public:
 
 protected:
   /**
-   * @brief mesh that dictates the distribution of this mapping TODO maybe change this directly to vertexDistribution
+   * @brief mesh that dictates the distribution of this mapping
+   *
+   * @todo maybe change this directly to vertexDistribution
    */
   mesh::PtrMesh _mesh;
 };
@@ -103,4 +98,3 @@ protected:
 
 }} // namespace precice, m2n
 
-#endif /* PRECICE_M2N_DISTRIBUTED_COMMUNICATION_HPP_ */

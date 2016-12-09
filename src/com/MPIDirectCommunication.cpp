@@ -36,15 +36,15 @@ MPIDirectCommunication::acceptConnection(std::string const& nameAcceptor,
                                          std::string const& nameRequester,
                                          int acceptorProcessRank,
                                          int acceptorCommunicatorSize) {
-  preciceTrace("acceptConnection()", nameAcceptor, nameRequester);
+  TRACE(nameAcceptor, nameRequester);
   assertion(not isConnected());
 
   utils::Parallel::splitCommunicator(nameAcceptor);
 
-  preciceCheck(utils::Parallel::getCommunicatorSize() > 1,
-               "acceptConnection()",
-               "ERROR: MPI communication direct (i.e. single) can be only "
-                   << "used with more than one process in base communicator!");
+  CHECK(utils::Parallel::getCommunicatorSize() > 1,
+        "ERROR: MPI communication direct (i.e. single) can be only "
+        << "used with more than one process in base communicator!");
+  
   _globalCommunicator = utils::Parallel::getGlobalCommunicator();
   _localCommunicator = utils::Parallel::getLocalCommunicator();
   MPI_Intercomm_create(
@@ -59,7 +59,7 @@ MPIDirectCommunication::acceptConnection(std::string const& nameAcceptor,
 
 void
 MPIDirectCommunication::closeConnection() {
-  preciceTrace("closeConnection()");
+  TRACE()
 
   if (not isConnected())
     return;
@@ -79,10 +79,10 @@ MPIDirectCommunication::requestConnection(std::string const& nameAcceptor,
 
   utils::Parallel::splitCommunicator(nameRequester);
 
-  preciceCheck(utils::Parallel::getCommunicatorSize() > 1,
-               "requestConnection()",
-               "ERROR: MPI communication direct (i.e. single) can be only "
-                   << "used with more than one process in base communicator!");
+  CHECK(utils::Parallel::getCommunicatorSize() > 1,
+        "ERROR: MPI communication direct (i.e. single) can be only "
+        << "used with more than one process in base communicator!");
+  
   _globalCommunicator = utils::Parallel::getGlobalCommunicator();
   _localCommunicator = utils::Parallel::getLocalCommunicator();
   MPI_Intercomm_create(
@@ -97,7 +97,7 @@ MPIDirectCommunication::requestConnection(std::string const& nameAcceptor,
 
 int
 MPIDirectCommunication::getGroupID(std::string const& accessorName) {
-  preciceTrace("getGroupID()", accessorName);
+  TRACE(accessorName);
   typedef utils::Parallel Par;
   const std::vector<Par::AccessorGroup>& _groups = Par::getAccessorGroups();
   for (const Par::AccessorGroup& group : _groups) {
@@ -106,8 +106,7 @@ MPIDirectCommunication::getGroupID(std::string const& accessorName) {
       return group.id;
     }
   }
-  preciceError("getGroupID()",
-               "Unknown accessor name \"" << accessorName << "\"!");
+  ERROR("Unknown accessor name \"" << accessorName << "\"!");
 }
 
 int

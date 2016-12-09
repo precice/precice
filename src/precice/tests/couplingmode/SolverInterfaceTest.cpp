@@ -858,7 +858,6 @@ void SolverInterfaceTest:: testExplicitWithCheckpointingStatMapping()
     /*int forcesID = */ couplingInterface.getDataID("Forces", meshOneID);
     validateEquals(solverOne->_meshContexts.size(), 2);
     mesh::PtrMesh mesh = solverOne->_meshContexts[0]->mesh;
-    Eigen::Vector2d integral = Eigen::Vector2d::Zero();
     validate(couplingInterface.isActionRequired(actionReadSimulationCheckpoint()));
     couplingInterface.fulfilledAction(actionReadSimulationCheckpoint());
 

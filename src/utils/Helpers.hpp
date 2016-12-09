@@ -1,5 +1,4 @@
-#ifndef PRECICE_UTILS_HELPERS_HPP_
-#define PRECICE_UTILS_HELPERS_HPP_
+#pragma once
 
 #include <cstdlib>
 #include <algorithm>
@@ -13,21 +12,14 @@
 namespace precice {
 namespace utils {
 
-/**
- * @brief Returns true, if numerical truncation happens in case of type
- *        conversion.
- */
+/// Returns true, if numerical truncation happens in case of type conversion.
 template <class Out, class In>
 inline bool isTruncated(In in) {
   return (                  in > std::numeric_limits<Out>::max()) ||
          (In(-1) < In(0) && in < std::numeric_limits<Out>::min());
 }
 
-/**
- * @brief Exclusive "or" logical operation.
- *
- * @brief Returns true, if either lhs or rhs are true.
- */
+/// Exclusive "or" logical operation. Returns true, if either lhs or rhs are true.
 inline bool xOR ( bool lhs, bool rhs )
 {
    return (lhs && (!rhs)) || ((!lhs) && rhs);
@@ -90,25 +82,19 @@ std::string getTypeName(const int& var);
 /// Returns true if machine is big-endian needed for parallel vtk output
 bool isMachineBigEndian();
 
-/**
- * @brief Enables overload of operator() and operator, to fill STL containers.
- */
+/// Enables overload of operator() and operator, to fill STL containers.
 template<typename CONTAINER_T>
 struct AppendIterator
 {
 public:
 
-  /**
-   * @brief Constructor, used by appedTo and operator+.
-   */
+  /// Constructor, used by appedTo and operator+.
   AppendIterator ( CONTAINER_T& container )
   :
     _container ( container )
   {};
 
-  /**
-   * @brief Enables to chain assignments such as (1)(2)(3).
-   */
+  /// Enables to chain assignments such as (1)(2)(3).
   template<typename CONTAINED_T>
   AppendIterator& operator() ( const CONTAINED_T& right )
   {
@@ -116,9 +102,7 @@ public:
     return *this;
   }
 
-  /**
-   * @brief Enables to chain assignments such as 1, 2, 3.
-   */
+  /// Enables to chain assignments such as 1, 2, 3.
   template<typename CONTAINED_T>
   AppendIterator& operator, ( const CONTAINED_T& right )
   {
@@ -128,7 +112,7 @@ public:
 
 private:
 
-  // @brief Container class assigned to.
+  /// Container class assigned to.
   CONTAINER_T& _container;
 };
 
@@ -151,33 +135,6 @@ inline AppendIterator<CONTAINER_T> appendTo
 {
    return AppendIterator<CONTAINER_T>(left);
 }
-
-template <class T, class Container = std::deque<T> >
-class Stack : public std::stack<T, Container> {
-public:
-  typedef typename Container::iterator iterator;
-  typedef typename Container::const_iterator const_iterator;
-
-  iterator
-  begin() {
-    return this->c.begin();
-  }
-
-  iterator
-  end() {
-    return this->c.end();
-  }
-
-  const_iterator
-  begin() const {
-    return this->c.begin();
-  }
-
-  const_iterator
-  end() const {
-    return this->c.end();
-  }
-};
 
 }} // namespace precice, utils
 
@@ -211,4 +168,3 @@ inline utils::AppendIterator< std::vector<CONTAINED_T> > operator+=
 
 } // namespace precice
 
-#endif /* PRECICE_UTILS_HELPERS_HPP_ */

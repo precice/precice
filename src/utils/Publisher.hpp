@@ -1,9 +1,7 @@
-#ifndef PRECICE_UTILS_PUBLISHER_HPP_
-#define PRECICE_UTILS_PUBLISHER_HPP_
-
-#include "Helpers.hpp"
+#pragma once
 
 #include <string>
+#include <stack>
 
 namespace precice {
 namespace utils {
@@ -12,14 +10,14 @@ namespace utils {
  * @brief Publisher Class. This utility class can be used to publish connection information and
  * was established to separate technical details from the communication.
  * Sub-folders can be used to allow for a more efficient reading and writing.
- * TODO: implementation should be substituted by a proper publishing strategy, not via files.
- * (to allow for exa-scale one day)
  *
+ * @todo implementation should be substituted by a proper publishing strategy, not via files.
+ * (to allow for exa-scale one day)
  */
 class Publisher {
 public:
   struct ScopedSetEventNamePrefix {
-    ScopedSetEventNamePrefix(std::string const& prefix);
+    explicit ScopedSetEventNamePrefix(std::string const& prefix);
 
     ~ScopedSetEventNamePrefix();
 
@@ -28,17 +26,16 @@ public:
   };
 
   struct ScopedPushDirectory {
-    ScopedPushDirectory(std::string const& dp);
+    explicit ScopedPushDirectory(std::string const& dp);
 
     ~ScopedPushDirectory();
   };
 
   struct ScopedChangePrefixDirectory {
-    ScopedChangePrefixDirectory(std::string const& pdp);
+    explicit ScopedChangePrefixDirectory(std::string const& pdp);
 
     ~ScopedChangePrefixDirectory();
 
-  private:
     std::string _pdp;
   };
 
@@ -66,7 +63,7 @@ public:
   static std::string const& eventNamePrefix();
 
 public:
-  Publisher(std::string const& fp);
+  explicit Publisher(std::string const& fp);
 
   void read(std::string& data) const;
 
@@ -77,10 +74,9 @@ public:
 private:
   static std::string buildFilePath(std::string const& fp);
 
-private:
   static std::string _pdp;
 
-  static Stack<std::string> _dps;
+  static std::stack<std::string> _dps;
 
   static std::string _prefix;
 
@@ -90,12 +86,10 @@ private:
 
 class ScopedPublisher : public Publisher {
 public:
-  ScopedPublisher(std::string const& fp);
+  explicit ScopedPublisher(std::string const& fp);
 
   ~ScopedPublisher();
 };
 
 } // namespace utils
 } // namespace precice
-
-#endif /* PRECICE_UTILS_PUBLISHER_HPP_ */

@@ -19,20 +19,11 @@ namespace com {
  */
 class MPIPortsCommunication : public MPICommunication {
 public:
-  /**
-   * @brief Constructor.
-   */
-  MPIPortsCommunication(std::string const& addressDirectory = ".");
+  explicit MPIPortsCommunication(std::string const& addressDirectory = ".");
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~MPIPortsCommunication();
 
-  /**
-   * @brief Returns true, if a connection to a remote participant has been
-   * setup.
-   */
+  /// Returns true, if a connection to a remote participant has been setup.
   virtual bool isConnected();
 
   /**
@@ -42,9 +33,7 @@ public:
    */
   virtual size_t getRemoteCommunicatorSize();
 
-  /**
-   * @brief See precice::com::Communication::acceptConnection().
-   */
+  /// See precice::com::Communication::acceptConnection().
   virtual void acceptConnection(std::string const& nameAcceptor,
                                 std::string const& nameRequester,
                                 int acceptorProcessRank,
@@ -54,9 +43,7 @@ public:
                                         std::string const& nameRequester,
                                         int requesterCommunicatorSize);
 
-  /**
-   * @brief See precice::com::Communication::requestConnection().
-   */
+  /// See precice::com::Communication::requestConnection().
   virtual void requestConnection(std::string const& nameAcceptor,
                                  std::string const& nameRequester,
                                  int requesterProcessRank,
@@ -75,19 +62,18 @@ private:
 
   virtual int rank(int rank);
 
-  // @brief Logging device.
   static logging::Logger _log;
 
   std::string _addressDirectory;
 
   std::vector<MPI_Comm> _communicators;
 
-  // @brief Name of the port used for connection.
+  /// Name of the port used for connection.
   char _portName[MPI_MAX_PORT_NAME];
 
   bool _isAcceptor;
 
-  // @brief Flag indicating a connection.
+  /// Flag indicating a connection.
   bool _isConnected;
 };
 }
