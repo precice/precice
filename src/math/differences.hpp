@@ -106,13 +106,9 @@ bool oneGreater(const Eigen::MatrixBase<DerivedA> & A,
                 double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  assertion(A.rows() == B.rows(), "Matrices with different number of cols can't be compared.");
-  for (int col = 0; col < A.cols(); ++col)
-    for (int row = 0; row < A.rows(); ++row)
-      if ( A(row, col) - B(row, col) > tolerance )
-        return true;
+  assertion(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
   
-  return false;
+  return ((A-B).array() > tolerance).any();
 }
 
 template<class DerivedA, class DerivedB>
@@ -121,13 +117,9 @@ bool oneGreaterEquals(const Eigen::MatrixBase<DerivedA> & A,
                       double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  assertion(A.rows() == B.rows(), "Matrices with different number of cols can't be compared.");
-  for (int col = 0; col < A.cols(); ++col)
-    for (int row = 0; row < A.rows(); ++row) {
-      if ( A(row, col) - B(row, col) >= -tolerance )
-        return true;
-    }
-  return false;
+  assertion(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
+  
+  return ((A-B).array() >= -tolerance).any();
 }
 
 
@@ -137,13 +129,9 @@ bool allGreater(const Eigen::MatrixBase<DerivedA> & A,
                 double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  assertion(A.rows() == B.rows(), "Matrices with different number of cols can't be compared.");
-  for (int col = 0; col < A.cols(); ++col)
-    for (int row = 0; row < A.rows(); ++row)
-      if ( A(row, col) - B(row, col) <= tolerance )
-        return false;
+  assertion(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
   
-  return true;
+  return ((A-B).array() > tolerance).all();
 }
 
 template<class DerivedA, class DerivedB>
@@ -152,13 +140,9 @@ bool allGreaterEquals(const Eigen::MatrixBase<DerivedA> & A,
                       double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
 {
   assertion(A.rows() == B.rows(), "Matrices with different number of rows can't be compared.");
-  assertion(A.rows() == B.rows(), "Matrices with different number of cols can't be compared.");
-  for (int col = 0; col < A.cols(); ++col)
-    for (int row = 0; row < A.rows(); ++row)
-      if ( A(row, col) - B(row, col) < -tolerance )
-        return false;
+  assertion(A.cols() == B.cols(), "Matrices with different number of cols can't be compared.");
   
-  return true;
+  return ((A-B).array() >= tolerance).all();
 }
 
 template<class Scalar>
