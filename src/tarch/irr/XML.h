@@ -365,6 +365,20 @@ namespace tarch {
         ){
           return getAttributeValueAsDynamicDoubleVector(attributeName.c_str());
         }
+
+         /**
+         * Reads an attribute with the given name which is of Eigen::VectorXd
+         * type from the xmlReader and stores it in the vector.
+         *
+         * @param attributeName - name of attribute
+         * attributeName = [0.0 1.0 1.5]
+         */
+        inline Eigen::VectorXd getAttributeValueAsEigenVectorXd(
+            const std::string& attributeName
+        ){
+          return getAttributeValueAsEigenVectorXd(attributeName.c_str());
+        }
+        
         /**
          * Reads an attribute with the given name which is of tarch::la::DynamicVector<double>
          * type from the xmlReader and stores it in the vector.
@@ -406,6 +420,47 @@ namespace tarch {
           return vec;
         }
 
+         /**
+         * Reads an attribute with the given name which is of Eigen::VectorXd
+         * type from the xmlReader and stores it in the vector.
+         *
+         * @param attributeName - name of attribute
+         * attributeName = [0.0 1.0 1.5]
+         */
+        Eigen::VectorXd getAttributeValueAsEigenVectorXd(
+            const char_type* attributeName
+        ){
+          tarch::la::DynamicVector<double> vec;
+          const char_type* attributeValue = getAttributeValue(attributeName);
+          if (attributeValue==0) return vec;
+
+          std::string valueString(attributeValue);
+          bool componentsLeft = true;
+          int i =0;
+          while (componentsLeft){
+            std::string tmp1(valueString);
+            // erase entries before i-th entry
+            for (int j = 0; j < i; j++){
+              if (tmp1.find(";") != std::string::npos){
+                tmp1.erase(0,tmp1.find(";")+1);
+              }
+              else {
+                componentsLeft = false;
+              }
+            }
+            // if we are not in the last vector component...
+            if (tmp1.find(";") != std::string::npos){
+              // ..., erase entries after i-th entry
+              tmp1.erase(tmp1.find(";"),tmp1.size());
+            }
+            if (componentsLeft){
+              vec.append(convertValueStringToDouble(tmp1));
+            }
+            i++;
+          }
+          return vec;
+        }        
+        
         /**
          * Reads an attribute with the given name which is of (double) vector type from
          * the xmlReader and stores it in the vector. The dimension of the vector is

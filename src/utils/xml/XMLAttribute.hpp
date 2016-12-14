@@ -1,5 +1,4 @@
-#ifndef PRECICE_UTILS_XMLATTRIBUTE_HPP_
-#define PRECICE_UTILS_XMLATTRIBUTE_HPP_
+#pragma once
 
 #include <type_traits>
 
@@ -13,7 +12,6 @@
 
 namespace precice {
 namespace utils {
-
 
 
 template<typename ATTRIBUTE_T>
@@ -36,9 +34,7 @@ public:
 
   virtual ~XMLAttribute() { delete _validator; };
 
-  /**
-   * @brief Sets a documentation string for the attribute.
-   */
+  /// Sets a documentation string for the attribute.
   void setDocumentation ( const std::string& documentation );
 
   const std::string& getUserDocumentation() const
@@ -80,6 +76,11 @@ public:
     XMLReader*        xmlReader,
     utils::DynVector& value );
 
+  void readValueSpecific (
+    XMLReader*        xmlReader,
+    Eigen::VectorXd&  value );
+
+  
   const std::string& getName() const { return _name; };
 
   const ATTRIBUTE_T& getValue() const { return _value; };
@@ -88,9 +89,7 @@ public:
 
   bool isRead () const { return _read; };
 
-  /**
-   * @brief Returns a documentation string about the attribute.
-   */
+  /// Returns a documentation string about the attribute.
   std::string printDocumentation() const;
 
 private:
@@ -113,20 +112,24 @@ private:
 
   Validator<ATTRIBUTE_T>* _validator;
 
-  /**
-   * @brief Sets non utils::DynVector type values.
-   */
+  /// Sets non utils::DynVector and non Eigen::VectorXd type values.
   template<typename VALUE_T>
   typename std::enable_if<
-    std::is_same<VALUE_T,ATTRIBUTE_T>::value && not std::is_same<VALUE_T,utils::DynVector>::value, void>
+    std::is_same<VALUE_T,ATTRIBUTE_T>::value &&
+    not std::is_same<VALUE_T,utils::DynVector>::value &&
+    not std::is_same<VALUE_T,Eigen::VectorXd>::value, void>
     ::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
 
-  /**
-   * @brief Sets utils::DynVector type values by clearing and append.
-   */
+  /// Sets utils::DynVector type values by clearing and append.
   template<typename VALUE_T>
   typename std::enable_if<
     std::is_same<VALUE_T,ATTRIBUTE_T>::value && std::is_same<VALUE_T,utils::DynVector>::value, void>
+    ::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
+
+  /// Sets Eigen::VectorXd type values by clearing and copy.
+  template<typename VALUE_T>
+  typename std::enable_if<
+    std::is_same<VALUE_T,ATTRIBUTE_T>::value && std::is_same<VALUE_T,Eigen::VectorXd>::value, void>
     ::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
 };
 
@@ -225,7 +228,7 @@ void XMLAttribute<ATTRIBUTE_T>:: readValue
 (
   XMLReader* xmlReader )
 {
-  preciceTrace("readValue()", _name);
+  TRACE(_name);
   if (_read) throw "Attribute \"" + _name + "\" is defined multiple times";
   if (xmlReader->getAttributeValue(getName().c_str()) == 0) {
     if (not _hasDefaultValue){
@@ -313,6 +316,15 @@ void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
 }
 
 template<typename ATTRIBUTE_T>
+void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
+(
+  XMLReader*        xmlReader,
+  Eigen::VectorXd&  value )
+{
+  value = xmlReader->getAttributeValueAsEigenVectorXd(_name.c_str());
+}
+
+template<typename ATTRIBUTE_T>
 std::string XMLAttribute<ATTRIBUTE_T>:: printDocumentation() const
 {
   std::ostringstream doc;
@@ -331,7 +343,8 @@ std::string XMLAttribute<ATTRIBUTE_T>:: printDocumentation() const
 template<typename ATTRIBUTE_T>
 template<typename VALUE_T>
 typename std::enable_if<
-  std::is_same<VALUE_T,ATTRIBUTE_T>::value && not std::is_same<VALUE_T,utils::DynVector>::value, void>
+  std::is_same<VALUE_T,ATTRIBUTE_T>::value &&
+  not std::is_same<VALUE_T,utils::DynVector>::value && not std::is_same<VALUE_T,Eigen::VectorXd>::value, void>
          ::type XMLAttribute<ATTRIBUTE_T>:: set
 (
   ATTRIBUTE_T&   toSet,
@@ -353,6 +366,18 @@ typename std::enable_if<
   toSet.append(setter);
 }
 
+template<typename ATTRIBUTE_T>
+template<typename VALUE_T>
+typename std::enable_if<
+  std::is_same<VALUE_T,ATTRIBUTE_T>::value && std::is_same<VALUE_T,Eigen::VectorXd>::value, void>
+         ::type XMLAttribute<ATTRIBUTE_T>:: set
+  (
+  ATTRIBUTE_T&   toSet,
+  const VALUE_T& setter )
+{
+  toSet = setter;
+}
+
+
 }} // namespace precice, utils
 
-#endif /* PRECICE_UTILS_XMLATTRIBUTE_HPP_ */

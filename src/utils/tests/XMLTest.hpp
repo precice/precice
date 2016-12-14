@@ -10,16 +10,11 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-/**
- * @brief Provides tests for classes in utils/xml/.
- */
+/// Provides tests for classes in utils/xml/.
 class XMLTest : public tarch::tests::TestCase, public XMLTag::Listener
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
   XMLTest();
 
   /**
@@ -50,7 +45,8 @@ private:
   utils::Vector2D _vector2D;
   utils::Vector3D _vector3D;
   utils::DynVector _dynVector;
-
+  Eigen::VectorXd _eigenVectorXd;
+  
   void testAttributeConcatenation();
 
   void testVectorAttributes();

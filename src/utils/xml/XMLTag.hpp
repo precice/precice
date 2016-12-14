@@ -135,6 +135,10 @@ public:
    */
   void addAttribute ( const XMLAttribute<utils::DynVector>& attribute );
 
+  /// Adds a XML attribute by making a copy of the given attribute.
+  void addAttribute ( const XMLAttribute<Eigen::VectorXd>& attribute );
+
+  
   bool hasAttribute ( const std::string& attributeName );
 
   //void removeAttribute ( const std::string& attributeName );
@@ -146,9 +150,7 @@ public:
    */
   const std::string& getName() const { return _name; }
 
-  /**
-   * @brief Returns xml namespace.
-   */
+  /// Returns xml namespace.
   const std::string& getNamespace() const { return _namespace; }
 
   /**
@@ -176,30 +178,38 @@ public:
    * If the parsed vector has less dimensions then required, an error message
    * is thrown.
    *
-   * @param name [IN] Name of attribute.
-   * @param dimensions [IN] Dimensions of the dynamic vector to be returnded.
+   * @param[in] name Name of attribute.
+   * @param[in] dimensions Dimensions of the dynamic vector to be returned.
    */
   utils::DynVector getDynVectorAttributeValue (
     const std::string& name,
     int                dimensions ) const;
 
   /**
-   * @brief Parses the information from the xmlReader and calls XMLListener.
+   * @brief Returns Eigen vector attribute value with given dimensions.
+   *
+   * If the parsed vector has less dimensions then required, an error message
+   * is thrown.
+   *
+   * @param[in] name Name of attribute.
+   * @param[in] dimensions Dimensions of the vector to be returned.
    */
+  Eigen::VectorXd getEigenVectorXdAttributeValue (
+    const std::string& name,
+    int                dimensions ) const;
+
+  
+  /// Parses the information from the xmlReader and calls XMLListener.
   void parse ( XMLReader* xmlReader );
 
   bool isConfigured() const { return _configured; }
 
   Occurrence getOccurrence() const { return _occurrence; }
 
-  /**
-   * @brief Removes all attributes and subtags
-   */
+  /// Removes all attributes and subtags
   void clear();
 
-  /**
-   * @brief Prints a documentation string for this tag.
-   */
+  /// Prints a documentation string for this tag.
   std::string printDocumentation (
     int linewidth,
     int indentation ) const;
@@ -210,13 +220,13 @@ private:
 
    Listener& _listener;
 
-   // @brief Name of the tag.
+   /// Name of the tag.
    std::string _name;
 
-   // @brief XML namespace of the tag.
+   /// XML namespace of the tag.
    std::string _namespace;
 
-   // @brief Combination of name and namespace: _namespace + ":" + _name
+   /// Combination of name and namespace: _namespace + ":" + _name
    std::string _fullName;
 
    std::string _doc;
@@ -246,6 +256,8 @@ private:
    std::map<std::string,XMLAttribute<utils::Vector3D> > _vector3DAttributes;
 
    std::map<std::string,XMLAttribute<utils::DynVector> > _dynVectorAttributes;
+
+  std::map<std::string,XMLAttribute<Eigen::VectorXd> > _eigenVectorXdAttributes;
 
    void readAttributes ( XMLReader* xmlReader );
 

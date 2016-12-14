@@ -3,4 +3,5 @@
 <configuration>
     <test-vector2d-attributes value="1.0; 2.0" />
     <test-vector3d-attributes value="1.0; 2.0; 3.0" />
+    <test-eigen-vectorxd-attributes value="3.0; 2.0; 1.0" />
 </configuration>  

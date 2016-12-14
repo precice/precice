@@ -31,7 +31,8 @@ XMLTag:: XMLTag
   _booleanAttributes(),
   _vector2DAttributes(),
   _vector3DAttributes(),
-  _dynVectorAttributes()
+  _dynVectorAttributes(),
+  _eigenVectorXdAttributes()
 {
   if (not _namespace.empty()){
     _fullName = _namespace + ":" + _name;
@@ -161,6 +162,19 @@ void XMLTag:: addAttribute
       std::pair<std::string,XMLAttribute<utils::DynVector> >
       (attribute.getName(), attribute) );
 }
+
+void XMLTag:: addAttribute
+(
+  const XMLAttribute<Eigen::VectorXd>& attribute )
+{
+  TRACE(attribute.getName() );
+  assertion(not utils::contained(attribute.getName(), _attributes));
+  _attributes.insert(attribute.getName());
+  _eigenVectorXdAttributes.insert (
+    std::pair<std::string,XMLAttribute<Eigen::VectorXd> >
+    (attribute.getName(), attribute) );
+}
+
 
 bool XMLTag:: hasAttribute
 (
@@ -397,6 +411,31 @@ utils::DynVector XMLTag:: getDynVectorAttributeValue
   return result;
 }
 
+Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue
+(
+  const std::string& name,
+  int                dimensions ) const
+{
+  TRACE(name, dimensions);
+  // std::map<std::string, XMLAttribute<utils::DynVector> >::const_iterator iter;
+  auto iter = _eigenVectorXdAttributes.find(name);
+  assertion (iter  != _eigenVectorXdAttributes.end());
+  CHECK(iter->second.getValue().size() >= dimensions,
+        "Vector attribute \"" << name << "\" of tag <" << getFullName()
+        << "> has less dimensions than required (" << iter->second.getValue().size()
+        << " instead of " << dimensions << ")!" );
+
+  // Read only first "dimensions" components of the parsed vector values
+  Eigen::VectorXd result(dimensions);
+  const Eigen::VectorXd& parsed = iter->second.getValue();
+  for (int i=0; i < dimensions; i++){
+    result[i] = parsed[i];
+  }
+  DEBUG("Returning value = " << result);
+  return result;
+}
+
+
 void XMLTag:: readAttributes
 (
   XMLReader* xmlReader )
@@ -488,6 +527,11 @@ void XMLTag:: readAttributes
   for ( DynVecPair& pair : _dynVectorAttributes ){
     pair.second.readValue(xmlReader);
   }
+
+  typedef std::map<std::string,XMLAttribute<Eigen::VectorXd> >::value_type EigenVectorXdPair;
+  for ( EigenVectorXdPair& pair : _eigenVectorXdAttributes ){
+    pair.second.readValue(xmlReader);
+  }
 }
 
 void XMLTag:: areAllSubtagsConfigured() const
@@ -559,6 +603,12 @@ void XMLTag:: resetAttributes()
     pair.second.setRead(false);
   }
 
+  typedef std::map<std::string,XMLAttribute<Eigen::VectorXd> >::value_type EigenVectorXdPair;
+  for (EigenVectorXdPair& pair : _eigenVectorXdAttributes){
+    pair.second.setRead(false);
+  }
+
+  
   std::vector<XMLTag*>::iterator subtagIter;
   for (XMLTag* tag : _subtags){
     tag->_configured = false;
