@@ -109,7 +109,7 @@ GeometryConfiguration:: GeometryConfiguration
 //  _xmlTag.addAttribute(attrGeometryType);
 
   XMLTag tagOffset(*this, TAG_OFFSET, XMLTag::OCCUR_NOT_OR_ONCE);
-  XMLAttribute<utils::DynVector> attrValue(ATTR_VALUE);
+  XMLAttribute<Eigen::VectorXd> attrValue(ATTR_VALUE);
   tagOffset.addAttribute(attrValue);
 
   for (XMLTag& tag : tags) {
@@ -185,7 +185,7 @@ void GeometryConfiguration:: xmlTagCallback
   else if (tag.getName() == TAG_OFFSET){
     assertion(not _readData.noReadData);
     assertion(_dimensions != 0);
-    _readData.offset = tag.getDynVectorAttributeValue(ATTR_VALUE, _dimensions);
+    _readData.offset = tag.getEigenVectorXdAttributeValue(ATTR_VALUE, _dimensions);
   }
   else if (tag.getName() == TAG_RADIUS){
     assertion(not _readData.noReadData);
@@ -206,7 +206,7 @@ void GeometryConfiguration:: xmlTagCallback
     }
     else if (_readData.type == VALUE_BUILTIN_CUBOID){
       assertion(_dimensions != 0);
-      _readData.length = tag.getDynVectorAttributeValue(ATTR_VALUE, _dimensions);
+      _readData.length = tag.getEigenVectorXdAttributeValue(ATTR_VALUE, _dimensions);
     }
     else {
       assertion(false);
@@ -261,7 +261,7 @@ void GeometryConfiguration:: addTypeSpecificAttributes
   const std::string& type,
   utils::XMLTag&     tag )
 {
-  preciceTrace("addTypeSpecificAttributes()", type);
+  TRACE(type);
   using utils::XMLTag;
   using utils::XMLAttribute;
   using utils::ValidatorEquals;
@@ -274,7 +274,7 @@ void GeometryConfiguration:: addTypeSpecificAttributes
     tag.addSubtag(tagDiscretizationWidth);
 
     XMLTag tagLength(*this, TAG_LENGTH, XMLTag::OCCUR_ONCE);
-    XMLAttribute<utils::DynVector> attrValue(ATTR_VALUE);
+    XMLAttribute<Eigen::VectorXd> attrValue(ATTR_VALUE);
     tagLength.addAttribute(attrValue);
     tag.addSubtag(tagLength);
   }
@@ -449,8 +449,8 @@ void GeometryConfiguration:: checkMeshName
       break;
     }
   }
-  preciceCheck ( found, "checkMesh()", "Geometry references mesh \""
-      << meshName << "\", which is not given in configuration!" );
+  CHECK( found, "Geometry references mesh \""
+         << meshName << "\", which is not given in configuration!" );
 }
 
 

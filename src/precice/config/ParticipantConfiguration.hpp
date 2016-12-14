@@ -66,9 +66,7 @@ public:
     const impl::PtrParticipant&             participant,
     const mapping::PtrMappingConfiguration& mappingConfig );
 
-  /**
-   * @brief Returns all configured participants.
-   */
+  /// Returns all configured participants.
   const std::vector<impl::PtrParticipant>& getParticipants() const;
 
 private:
@@ -77,10 +75,9 @@ private:
   {
     std::string name;
     std::string nameMesh;
-    utils::DynVector coordinates;
+    Eigen::VectorXd coordinates;
   };
 
-  // @brief Logging device.
   static logging::Logger _log;
 
   const std::string TAG;

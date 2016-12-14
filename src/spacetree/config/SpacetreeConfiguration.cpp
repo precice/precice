@@ -67,9 +67,9 @@ SpacetreeConfiguration:: SpacetreeConfiguration
 //  tagSpacetree.addAttribute(attrType);
 
 
-  utils::XMLAttribute<utils::DynVector> attrOffset("offset");
-  attrOffset.setDefaultValue (utils::DynVector(3, 0.0));
-  utils::XMLAttribute<utils::DynVector> attrHalflength("halflength");
+  utils::XMLAttribute<Eigen::VectorXd> attrOffset("offset");
+  attrOffset.setDefaultValue (Eigen::VectorXd::Constant(3, 0));
+  utils::XMLAttribute<Eigen::VectorXd> attrHalflength("halflength");
   utils::XMLAttribute<double> attrMaxMeshwidth ("max-meshwidth");
 
   for (XMLTag& tag : tags){
@@ -85,7 +85,7 @@ void SpacetreeConfiguration:: setDimensions
 (
   int dimensions )
 {
-  preciceTrace("setDimensions()", dimensions);
+  TRACE(dimensions);
   assertion((dimensions == 2) || (dimensions == 3), dimensions);
   _dimensions = dimensions;
 }
@@ -154,7 +154,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
   const Eigen::VectorXd& halflengths,
   double                 maxMeshwidth ) const
 {
-  preciceTrace("getSpacetree()", type, offset, halflengths, maxMeshwidth);
+  TRACE(type, offset, halflengths, maxMeshwidth);
   assertion(_dimensions != 0);
   Spacetree* spacetree = nullptr;
   assertion ( offset.size() == halflengths.size(), offset.size(), halflengths.size() );
@@ -178,7 +178,7 @@ PtrSpacetree SpacetreeConfiguration:: getSpacetree
 //    spacetree = new DynamicPeanotree3D( offset, halflengths(0), maxMeshwidth);
 //  }
   else {
-    preciceError("getSpacetree()", "Unknown spacetree type \"" << type << "\"!");
+    ERROR("Unknown spacetree type \"" << type << "\"!");
   }
   assertion(spacetree != nullptr);
   return PtrSpacetree(spacetree);
@@ -188,15 +188,15 @@ void SpacetreeConfiguration:: xmlTagCallback
 (
   utils::XMLTag& tag )
 {
-  preciceTrace ( "xmlTagCallback()", tag.getName() );
+  TRACE(tag.getName() );
   if (tag.getNamespace() == TAG){
     assertion(_dimensions != 0);
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
     std::string type = tag.getName();
     Eigen::VectorXd offset(_dimensions);
     Eigen::VectorXd halflengths(_dimensions);
-    offset = tag.getDynVectorAttributeValue("offset", _dimensions);
-    halflengths = tag.getDynVectorAttributeValue("halflength", _dimensions);
+    offset = tag.getEigenVectorXdAttributeValue("offset", _dimensions);
+    halflengths = tag.getEigenVectorXdAttributeValue("halflength", _dimensions);
     double maxMeshwidth = tag.getDoubleAttributeValue("max-meshwidth");
     for (const ConfiguredSpacetree& tree : _spacetrees){
       if (tree.name == name){

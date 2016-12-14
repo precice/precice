@@ -138,7 +138,7 @@ ParticipantConfiguration:: ParticipantConfiguration
   doc = "Mesh to be watched.";
   attrMesh.setDocumentation(doc);
   tagWatchPoint.addAttribute(attrMesh);
-  XMLAttribute<utils::DynVector> attrCoordinate(ATTR_COORDINATE);
+  XMLAttribute<Eigen::VectorXd> attrCoordinate(ATTR_COORDINATE);
   doc = "The coordinates of the watch point. I the watch point is not put exactly ";
   doc += "on the mesh to observe, the closest projection of the point onto the ";
   doc += "mesh is considered instead, and values/coordinates are interpolated ";
@@ -152,11 +152,11 @@ ParticipantConfiguration:: ParticipantConfiguration
   tagUseMesh.setDocumentation(doc);
   attrName.setDocumentation("Name of the mesh.");
   tagUseMesh.addAttribute(attrName);
-  XMLAttribute<utils::DynVector> attrLocalOffset(ATTR_LOCAL_OFFSET);
+  XMLAttribute<Eigen::VectorXd> attrLocalOffset(ATTR_LOCAL_OFFSET);
   doc = "The mesh can have an offset only applied for the local participant. ";
   doc += "Vector-valued example: '1.0; 0.0; 0.0'";
   attrLocalOffset.setDocumentation(doc);
-  attrLocalOffset.setDefaultValue(utils::DynVector(3, 0.0));
+  attrLocalOffset.setDefaultValue(Eigen::VectorXd::Constant(3, 0));
   tagUseMesh.addAttribute(attrLocalOffset);
 
   XMLAttribute<std::string> attrFrom(ATTR_FROM);
@@ -460,8 +460,8 @@ void ParticipantConfiguration:: xmlTagCallback
   else if (tag.getName() == TAG_USE_MESH){
     assertion(_dimensions != 0); // setDimensions() has been called
     std::string name = tag.getStringAttributeValue(ATTR_NAME);
-    utils::DynVector offset(_dimensions);
-    offset = tag.getDynVectorAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
+    Eigen::VectorXd offset(_dimensions);
+    offset = tag.getEigenVectorXdAttributeValue(ATTR_LOCAL_OFFSET, _dimensions);
     std::string from = tag.getStringAttributeValue(ATTR_FROM);
     double safetyFactor = tag.getDoubleAttributeValue(ATTR_SAFETY_FACTOR);
     std::string decomposition = tag.getStringAttributeValue(ATTR_DECOMPOSITION);
@@ -527,8 +527,7 @@ void ParticipantConfiguration:: xmlTagCallback
     WatchPointConfig config;
     config.name = tag.getStringAttributeValue(ATTR_NAME);
     config.nameMesh = tag.getStringAttributeValue(ATTR_MESH);
-    config.coordinates.append(
-        tag.getDynVectorAttributeValue(ATTR_COORDINATE, _dimensions));
+    config.coordinates = tag.getEigenVectorXdAttributeValue(ATTR_COORDINATE, _dimensions);
     _watchPointConfigs.push_back(config);
   }
   else if (tag.getNamespace() == TAG_SERVER){

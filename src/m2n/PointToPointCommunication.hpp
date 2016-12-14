@@ -39,16 +39,11 @@ public:
   static std::string const& eventNamePrefix();
 
 public:
-  /**
-   * @brief Constructor.
-   */
+  
   PointToPointCommunication(
       com::CommunicationFactory::SharedPointer communicationFactory,
       mesh::PtrMesh mesh);
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~PointToPointCommunication();
 
   /// Returns true, if a connection to a remote participant has been established.
