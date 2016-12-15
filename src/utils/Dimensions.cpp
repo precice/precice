@@ -1,22 +1,8 @@
 #include "Dimensions.hpp"
+#include "assertion.hpp"
 
 namespace precice {
 namespace utils {
-
-std::string getTypeName(const DynVector& var)
-{
-  return std::string("vector");
-}
-
-std::string getTypeName(const Vector2D& var)
-{
-  return std::string("2d-vector");
-}
-
-std::string getTypeName(const Vector3D& var)
-{
-  return std::string("3d-vector");
-}
 
 const Eigen::VectorXd DELINEARIZE_2D[8] =
 {

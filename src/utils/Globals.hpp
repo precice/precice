@@ -12,9 +12,7 @@
 namespace precice {
 namespace utils {
 
-/**
- * @brief Holds global information.
- */
+/// Holds global information.
 class Globals
 {
 public:

@@ -1,9 +1,7 @@
-#ifndef PRECICE_UTILS_XMLTAG_HPP_
-#define PRECICE_UTILS_XMLTAG_HPP_
+#pragma once
 
 #include "XMLAttribute.hpp"
 #include "utils/Globals.hpp"
-#include "utils/Dimensions.hpp"
 #include "tarch/irr/XML.h"
 #include <string>
 #include <map>
@@ -15,18 +13,14 @@ namespace precice {
 namespace utils {
 
 
-/**
- * @brief Represents an XML tag to be configured automatically.
- */
+/// Represents an XML tag to be configured automatically.
 class XMLTag
 {
 public:
 
   typedef tarch::irr::io::IrrXMLReader XMLReader;
 
-  /**
-   * @brief Callback interface for configuration classes using XMLTag.
-   */
+  /// Callback interface for configuration classes using XMLTag.
   struct Listener
   {
     virtual ~Listener() {};
@@ -48,9 +42,7 @@ public:
     virtual void xmlEndTagCallback ( XMLTag& callingTag ) =0;
   };
 
-  /**
-   * @brief Types of occurrences of an XML tag.
-   */
+  /// Types of occurrences of an XML tag.
   enum Occurrence {
     OCCUR_NOT_OR_ONCE,
     OCCUR_ONCE,
@@ -62,12 +54,10 @@ public:
   /**
    * @brief Standard constructor
    *
-   * @param listener [IN] Configuration listener receiving callbacks from this
-   *        tag.
-   * @param name [IN] Name of the XML tag.
-   * @param occurrence [IN] Defines the occurrences of the tag in the configuration.
-   * @param xmlNamespace [IN] Defines a prefix/namespace for the tag. Tags with
-   *        equal namespace or treated as group.
+   * @param[in] listener Configuration listener receiving callbacks from this tag.
+   * @param[in] name Name of the XML tag.
+   * @param[in] occurrence Defines the occurrences of the tag in the configuration.
+   * @param[in] xmlNamespace Defines a prefix/namespace for the tag. Tags with equal namespace or treated as group.
    */
   XMLTag (
     Listener&          listener,
@@ -90,54 +80,26 @@ public:
    */
   void addNamespace( const std::string& namespaceName );
 
-  /**
-   * @brief Adds an XML tag as subtag by making a copy of the given tag.
-   */
+  /// Adds an XML tag as subtag by making a copy of the given tag.
   void addSubtag ( const XMLTag& tag );
 
-  /**
-   * @brief Removes the XML subtag with given name
-   */
+  /// Removes the XML subtag with given name
   //void removeSubtag ( const std::string& tagName );
 
-  /**
-   * @brief Adds a XML attribute by making a copy of the given attribute.
-   */
+  /// Adds a XML attribute by making a copy of the given attribute.
   void addAttribute ( const XMLAttribute<double>& attribute );
 
-  /**
-   * @brief Adds a XML attribute by making a copy of the given attribute.
-   */
+  // Adds a XML attribute by making a copy of the given attribute.
   void addAttribute ( const XMLAttribute<int>& attribute );
 
-  /**
-   * @brief Adds a XML attribute by making a copy of the given attribute.
-   */
+  /// Adds a XML attribute by making a copy of the given attribute.
   void addAttribute ( const XMLAttribute<std::string>& attribute );
 
-  /**
-   * @brief Adds a XML attribute by making a copy of the given attribute.
-   */
+  /// Adds a XML attribute by making a copy of the given attribute.
   void addAttribute ( const XMLAttribute<bool>& attribute );
-
-  /**
-   * @brief Adds a XML attribute by making a copy of the given attribute.
-   */
-  void addAttribute ( const XMLAttribute<utils::Vector2D>& attributue );
-
-  /**
-   * @brief Adds a XML attribute by making a copy of the given attribute.
-   */
-  void addAttribute ( const XMLAttribute<utils::Vector3D>& attributue );
-
-  /**
-   * @brief Adds a XML attribute by making a copy of the given attribute.
-   */
-  void addAttribute ( const XMLAttribute<utils::DynVector>& attribute );
 
   /// Adds a XML attribute by making a copy of the given attribute.
   void addAttribute ( const XMLAttribute<Eigen::VectorXd>& attribute );
-
   
   bool hasAttribute ( const std::string& attributeName );
 
@@ -168,23 +130,6 @@ public:
 
   bool getBooleanAttributeValue ( const std::string& name ) const;
 
-  const utils::Vector2D& getVector2DAttributeValue ( const std::string& name ) const;
-
-  const utils::Vector3D& getVector3DAttributeValue ( const std::string& name ) const;
-
-  /**
-   * @brief Returns dynamic vector attribute value with given dimensions.
-   *
-   * If the parsed vector has less dimensions then required, an error message
-   * is thrown.
-   *
-   * @param[in] name Name of attribute.
-   * @param[in] dimensions Dimensions of the dynamic vector to be returned.
-   */
-  utils::DynVector getDynVectorAttributeValue (
-    const std::string& name,
-    int                dimensions ) const;
-
   /**
    * @brief Returns Eigen vector attribute value with given dimensions.
    *
@@ -197,7 +142,6 @@ public:
   Eigen::VectorXd getEigenVectorXdAttributeValue (
     const std::string& name,
     int                dimensions ) const;
-
   
   /// Parses the information from the xmlReader and calls XMLListener.
   void parse ( XMLReader* xmlReader );
@@ -216,65 +160,57 @@ public:
 
 private:
 
-   static logging::Logger _log;
+  static logging::Logger _log;
 
-   Listener& _listener;
+  Listener& _listener;
 
-   /// Name of the tag.
-   std::string _name;
+  /// Name of the tag.
+  std::string _name;
 
-   /// XML namespace of the tag.
-   std::string _namespace;
+  /// XML namespace of the tag.
+  std::string _namespace;
 
-   /// Combination of name and namespace: _namespace + ":" + _name
-   std::string _fullName;
+  /// Combination of name and namespace: _namespace + ":" + _name
+  std::string _fullName;
 
-   std::string _doc;
+  std::string _doc;
 
-   bool _configured;
+  bool _configured;
 
-   Occurrence _occurrence;
+  Occurrence _occurrence;
 
-   std::vector<std::string> _namespaces;
+  std::vector<std::string> _namespaces;
 
-   std::vector<XMLTag*> _subtags;
+  std::vector<XMLTag*> _subtags;
 
-   std::map<std::string,bool> _configuredNamespaces;
+  std::map<std::string,bool> _configuredNamespaces;
 
-   std::set<std::string> _attributes;
+  std::set<std::string> _attributes;
 
-   std::map<std::string,XMLAttribute<double> > _doubleAttributes;
+  std::map<std::string,XMLAttribute<double> > _doubleAttributes;
 
-   std::map<std::string,XMLAttribute<int> > _intAttributes;
+  std::map<std::string,XMLAttribute<int> > _intAttributes;
 
-   std::map<std::string,XMLAttribute<std::string> > _stringAttributes;
+  std::map<std::string,XMLAttribute<std::string> > _stringAttributes;
 
-   std::map<std::string,XMLAttribute<bool> > _booleanAttributes;
-
-   std::map<std::string,XMLAttribute<utils::Vector2D> > _vector2DAttributes;
-
-   std::map<std::string,XMLAttribute<utils::Vector3D> > _vector3DAttributes;
-
-   std::map<std::string,XMLAttribute<utils::DynVector> > _dynVectorAttributes;
+  std::map<std::string,XMLAttribute<bool> > _booleanAttributes;
 
   std::map<std::string,XMLAttribute<Eigen::VectorXd> > _eigenVectorXdAttributes;
 
-   void readAttributes ( XMLReader* xmlReader );
+  void readAttributes ( XMLReader* xmlReader );
 
-   void parseSubtag ( XMLReader*  xmlReader );
+  void parseSubtag ( XMLReader*  xmlReader );
 
-   void areAllSubtagsConfigured() const;
+  void areAllSubtagsConfigured() const;
 
-   void resetAttributes();
+  void resetAttributes();
 
-   std::string getOccurrenceString ( Occurrence occurrence ) const;
+  std::string getOccurrenceString ( Occurrence occurrence ) const;
 };
 
 // ------------------------------------------------------ HEADER IMPLEMENTATION
 
-/**
- * @brief No operation listener for tests.
- */
+/// No operation listener for tests.
 struct NoPListener : public XMLTag::Listener
 {
   virtual void xmlTagCallback ( XMLTag& callingTag ) {}
@@ -359,4 +295,3 @@ void configure (
 //  std::ostream&                 os,
 //  const precice::utils::XMLTag& tag );
 
-#endif /* PRECICE_UTILS_XMLTAG_HPP_ */

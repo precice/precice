@@ -1,9 +1,7 @@
-#ifndef PRECICE_UTILS_VALIDATOREQUALS_HPP_
-#define PRECICE_UTILS_VALIDATOREQUALS_HPP_
+#pragma once
 
 #include "Validator.hpp"
 #include "logging/Logger.hpp"
-#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace utils {
@@ -64,9 +62,6 @@ private:
 };
 
 template<typename VALUE_T>
-logging::Logger precice::utils::ValidatorEquals<VALUE_T>::
-   _log = logging::Logger ("precice::utils::ValidatorEquals");
+logging::Logger precice::utils::ValidatorEquals<VALUE_T>::_log = logging::Logger ("precice::utils::ValidatorEquals");
 
 }} // namespace precice, utils
-
-#endif /* PRECICE_UTILS_VALIDATOREQUALS_HPP_ */

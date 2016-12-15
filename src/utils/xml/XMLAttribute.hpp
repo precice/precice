@@ -1,13 +1,9 @@
 #pragma once
 
-#include <type_traits>
-
 #include "Validator.hpp"
 #include "tarch/irr/XML.h"
 #include "logging/Logger.hpp"
-#include "utils/Dimensions.hpp"
-#include "utils/Helpers.hpp"
-#include "utils/Globals.hpp"
+#include "utils/TypeNames.hpp"
 #include <string>
 
 namespace precice {
@@ -65,18 +61,6 @@ public:
     bool&      value );
 
   void readValueSpecific (
-    XMLReader*       xmlReader,
-    utils::Vector2D& value );
-
-  void readValueSpecific (
-    XMLReader*       xmlReader,
-    utils::Vector3D& value );
-
-  void readValueSpecific (
-    XMLReader*        xmlReader,
-    utils::DynVector& value );
-
-  void readValueSpecific (
     XMLReader*        xmlReader,
     Eigen::VectorXd&  value );
 
@@ -112,18 +96,10 @@ private:
 
   Validator<ATTRIBUTE_T>* _validator;
 
-  /// Sets non utils::DynVector and non Eigen::VectorXd type values.
+  /// Sets non Eigen::VectorXd type values.
   template<typename VALUE_T>
   typename std::enable_if<
-    std::is_same<VALUE_T,ATTRIBUTE_T>::value &&
-    not std::is_same<VALUE_T,utils::DynVector>::value &&
-    not std::is_same<VALUE_T,Eigen::VectorXd>::value, void>
-    ::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
-
-  /// Sets utils::DynVector type values by clearing and append.
-  template<typename VALUE_T>
-  typename std::enable_if<
-    std::is_same<VALUE_T,ATTRIBUTE_T>::value && std::is_same<VALUE_T,utils::DynVector>::value, void>
+    std::is_same<VALUE_T,ATTRIBUTE_T>::value && not std::is_same<VALUE_T,Eigen::VectorXd>::value, void>
     ::type set ( ATTRIBUTE_T& toSet, const VALUE_T& setter );
 
   /// Sets Eigen::VectorXd type values by clearing and copy.
@@ -290,34 +266,6 @@ void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
 template<typename ATTRIBUTE_T>
 void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
 (
-  XMLReader*       xmlReader,
-  utils::Vector2D& value )
-{
-  value = xmlReader->getAttributeValueAsDoubleVector<2>(_name.c_str());
-}
-
-template<typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
-(
-  XMLReader*       xmlReader,
-  utils::Vector3D& value )
-{
-  value = xmlReader->getAttributeValueAsDoubleVector<3>(_name.c_str());
-}
-
-template<typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
-(
-  XMLReader*        xmlReader,
-  utils::DynVector& value )
-{
-  value.clear();
-  value.append(xmlReader->getAttributeValueAsDynamicDoubleVector(_name.c_str()));
-}
-
-template<typename ATTRIBUTE_T>
-void XMLAttribute<ATTRIBUTE_T>:: readValueSpecific
-(
   XMLReader*        xmlReader,
   Eigen::VectorXd&  value )
 {
@@ -343,27 +291,13 @@ std::string XMLAttribute<ATTRIBUTE_T>:: printDocumentation() const
 template<typename ATTRIBUTE_T>
 template<typename VALUE_T>
 typename std::enable_if<
-  std::is_same<VALUE_T,ATTRIBUTE_T>::value &&
-  not std::is_same<VALUE_T,utils::DynVector>::value && not std::is_same<VALUE_T,Eigen::VectorXd>::value, void>
+  std::is_same<VALUE_T,ATTRIBUTE_T>::value && not std::is_same<VALUE_T,Eigen::VectorXd>::value, void>
          ::type XMLAttribute<ATTRIBUTE_T>:: set
 (
   ATTRIBUTE_T&   toSet,
   const VALUE_T& setter )
 {
   toSet = setter;
-}
-
-template<typename ATTRIBUTE_T>
-template<typename VALUE_T>
-typename std::enable_if<
-  std::is_same<VALUE_T,ATTRIBUTE_T>::value && std::is_same<VALUE_T,utils::DynVector>::value, void>
-         ::type XMLAttribute<ATTRIBUTE_T>:: set
-  (
-  ATTRIBUTE_T&   toSet,
-  const VALUE_T& setter )
-{
-  toSet.clear();
-  toSet.append(setter);
 }
 
 template<typename ATTRIBUTE_T>

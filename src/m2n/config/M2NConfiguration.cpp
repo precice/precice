@@ -8,6 +8,7 @@
 #include "com/FileCommunication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "utils/Globals.hpp"
+#include "utils/Helpers.hpp"
 #include "utils/xml/XMLAttribute.hpp"
 #include "utils/xml/ValidatorEquals.hpp"
 #include "utils/xml/ValidatorOr.hpp"

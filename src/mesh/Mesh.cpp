@@ -339,7 +339,7 @@ void Mesh:: computeState()
         normal *= -1.0; // Invert direction if counterclockwise
       }
       double length = normal.norm();
-      assertion(tarch::la::greater(length, 0.0));
+      assertion(math::greater(length, 0.0));
       normal /= length;   // Scale normal vector to length 1
       edge.setNormal(normal);
 

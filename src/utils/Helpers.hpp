@@ -5,7 +5,6 @@
 #include <vector>
 #include <map>
 #include <set>
-#include "Parallel.hpp"
 
 namespace precice {
 namespace utils {
@@ -22,24 +21,6 @@ inline bool xOR ( bool lhs, bool rhs )
 {
    return (lhs && (!rhs)) || ((!lhs) && rhs);
 }
-
-///**
-// * @brief Returns the corresponding zero value/object to value_t.
-// */
-//template< typename value_t >
-//inline value_t getZero() { return value_t(0.0); }
-//
-///**
-// * @brief Template specialization to handle primitive type double.
-// */
-//template<>
-//inline double getZero<double>() { return 0.0; };
-//
-///**
-// * @brief Template specialization to handle primitive type int.
-// */
-//template<>
-//inline int getZero<int>() { return 0; };
 
 /**
  * @brief Returns true, if given element is in vector, otherwise false.
@@ -68,14 +49,6 @@ bool contained (
 {
   return set.find(key) != set.end();
 }
-
-std::string getTypeName(const double& var);
-
-std::string getTypeName(const std::string& var);
-
-std::string getTypeName(const bool& var);
-
-std::string getTypeName(const int& var);
 
 /// Returns true if machine is big-endian needed for parallel vtk output
 bool isMachineBigEndian();

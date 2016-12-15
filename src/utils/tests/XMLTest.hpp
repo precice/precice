@@ -1,10 +1,8 @@
-#ifndef PRECICE_UTILS_TESTS_XMLTEST_HPP_
-#define PRECICE_UTILS_TESTS_XMLTEST_HPP_
+#pragma once
 
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
-#include "utils/Dimensions.hpp"
 
 namespace precice {
 namespace utils {
@@ -42,9 +40,6 @@ private:
 
   std::string _testDirectory;
 
-  utils::Vector2D _vector2D;
-  utils::Vector3D _vector3D;
-  utils::DynVector _dynVector;
   Eigen::VectorXd _eigenVectorXd;
   
   void testAttributeConcatenation();
@@ -56,4 +51,3 @@ private:
 
 }}} // namespace precice, utils, tests
 
-#endif /* PRECICE_UTILS_TESTS_XMLTEST_HPP_ */

@@ -8,6 +8,7 @@
 # endif // not PRECICE_NO_SOCKETS
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLAttribute.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace com {

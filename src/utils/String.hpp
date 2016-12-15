@@ -1,7 +1,5 @@
-#ifndef PRECICE_UTILS_STRING_HPP_
-#define PRECICE_UTILS_STRING_HPP_
+#pragma once
 
-#include <vector>
 #include <string>
 
 namespace precice {
@@ -17,10 +15,7 @@ std::string wrapText (
  *
  * @return filename with extension.
  */
-std::string& checkAppendExtension (
-  std::string& filename,
-  const std::string& extension );
+std::string & checkAppendExtension(std::string& filename, const std::string& extension);
 
 }} // namespace precice, utils
 
-#endif /* PRECICE_UTILS_STRING_HPP_ */

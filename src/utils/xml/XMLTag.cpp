@@ -1,5 +1,4 @@
 #include "utils/xml/XMLTag.hpp"
-#include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
 #include "utils/String.hpp"
 
@@ -29,9 +28,6 @@ XMLTag:: XMLTag
   _intAttributes(),
   _stringAttributes(),
   _booleanAttributes(),
-  _vector2DAttributes(),
-  _vector3DAttributes(),
-  _dynVectorAttributes(),
   _eigenVectorXdAttributes()
 {
   if (not _namespace.empty()){
@@ -60,7 +56,7 @@ void XMLTag:: addSubtag
 (
   const XMLTag& tag )
 {
-  preciceTrace("addSubtag()", tag._fullName);
+  TRACE(tag._fullName);
   assertion (tag._name != std::string(""));
   if (not tag._namespace.empty()){
     _configuredNamespaces[tag._namespace] = false;
@@ -89,7 +85,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<double>& attribute )
 {
-  preciceTrace ( "addAttribute<double>()", attribute.getName() );
+  TRACE(attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _doubleAttributes.insert(std::pair<std::string,XMLAttribute<double> >
@@ -100,7 +96,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<int>& attribute )
 {
-  preciceTrace ( "addAttribute<int>()", attribute.getName() );
+  TRACE(attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _intAttributes.insert ( std::pair<std::string,
@@ -111,7 +107,7 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<std::string>& attribute )
 {
-  preciceTrace ( "addAttribute<string>()", attribute.getName() );
+  TRACE(attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _stringAttributes.insert ( std::pair<std::string,XMLAttribute<std::string> >
@@ -122,45 +118,11 @@ void XMLTag:: addAttribute
 (
   const XMLAttribute<bool>& attribute )
 {
-  preciceTrace ( "addAttribute<bool>()", attribute.getName() );
+  TRACE(attribute.getName() );
   assertion(not utils::contained(attribute.getName(), _attributes));
   _attributes.insert(attribute.getName());
   _booleanAttributes.insert ( std::pair<std::string,XMLAttribute<bool> >
       (attribute.getName(), attribute));
-}
-
-void XMLTag:: addAttribute
-(
-  const XMLAttribute<utils::Vector2D>& attribute )
-{
-  preciceTrace ( "addAttribute<Vector2D>()", attribute.getName() );
-  assertion(not utils::contained(attribute.getName(), _attributes));
-  _attributes.insert(attribute.getName());
-  _vector2DAttributes.insert ( std::pair<std::string,XMLAttribute<utils::Vector2D> >
-      (attribute.getName(), attribute));
-}
-
-void XMLTag:: addAttribute
-(
-  const XMLAttribute<utils::Vector3D>& attribute )
-{
-  preciceTrace ( "addAttribute<Vector3D>()", attribute.getName() );
-  assertion(not utils::contained(attribute.getName(), _attributes));
-  _attributes.insert(attribute.getName());
-  _vector3DAttributes.insert(std::pair<std::string,XMLAttribute<utils::Vector3D> >
-                             (attribute.getName(), attribute));
-}
-
-void XMLTag:: addAttribute
-(
-  const XMLAttribute<utils::DynVector>& attribute )
-{
-  preciceTrace ( "addAttribute<DynVector>()", attribute.getName() );
-  assertion(not utils::contained(attribute.getName(), _attributes));
-  _attributes.insert(attribute.getName());
-  _dynVectorAttributes.insert (
-      std::pair<std::string,XMLAttribute<utils::DynVector> >
-      (attribute.getName(), attribute) );
 }
 
 void XMLTag:: addAttribute
@@ -175,20 +137,10 @@ void XMLTag:: addAttribute
     (attribute.getName(), attribute) );
 }
 
-
 bool XMLTag:: hasAttribute
 (
   const std::string& attributeName )
 {
-//  bool has = false;
-//  using utils::contained;
-//  if (contained(attributeName, _intAttributes)) has = true;
-//  else if (contained(attributeName, _doubleAttributes)) has = true;
-//  else if (contained(attributeName, _stringAttributes)) has = true;
-//  else if (contained(attributeName, _booleanAttributes)) has = true;
-//  else if (contained(attributeName, _vector2DAttributes)) has = true;
-//  else if (contained(attributeName, _vector3DAttributes)) has = true;
-//  else if (contained(attributeName, _dynVectorAttributes)) has = true;
   return utils::contained(attributeName, _attributes);
 }
 
@@ -233,7 +185,7 @@ void XMLTag:: parse
 (
   XMLTag::XMLReader* xmlReader )
 {
-  preciceTrace("parse()", _fullName);
+  TRACE(_fullName);
   try {
     resetAttributes();
     if (xmlReader->getNodeType() == tarch::irr::io::EXN_ELEMENT){
@@ -296,7 +248,7 @@ void XMLTag:: parseSubtag
 (
   XMLTag::XMLReader* xmlReader )
 {
-  preciceTrace("parseSubtag()", _fullName);
+  TRACE(_fullName);
   bool success = false;
   for (XMLTag* tag : _subtags){
     if (std::string(xmlReader->getNodeName()) == tag->getFullName()){
@@ -304,8 +256,7 @@ void XMLTag:: parseSubtag
           && (tag->getOccurrence() == OCCUR_ONCE
               || tag->getOccurrence() == OCCUR_NOT_OR_ONCE))
       {
-        std::string error = "Tag <" + tag->getFullName() +
-                            "> is not allowed to occur multiple times";
+        std::string error = "Tag <" + tag->getFullName() + "> is not allowed to occur multiple times";
         throw error;
       }
       tag->parse(xmlReader);
@@ -365,52 +316,6 @@ bool XMLTag:: getBooleanAttributeValue
   return iter->second.getValue();
 }
 
-const utils::Vector2D& XMLTag:: getVector2DAttributeValue
-(
-  const std::string& name ) const
-{
-  std::map<std::string,XMLAttribute<utils::Vector2D> >::const_iterator iter;
-  iter = _vector2DAttributes.find(name);
-  assertion (iter  != _vector2DAttributes.end());
-  return iter->second.getValue();
-}
-
-const utils::Vector3D& XMLTag:: getVector3DAttributeValue
-(
-  const std::string& name ) const
-{
-  std::map<std::string,XMLAttribute<utils::Vector3D> >::const_iterator iter;
-  iter = _vector3DAttributes.find(name);
-  assertion (iter  != _vector3DAttributes.end());
-  return iter->second.getValue();
-}
-
-utils::DynVector XMLTag:: getDynVectorAttributeValue
-(
-  const std::string& name,
-  int                dimensions ) const
-{
-  preciceTrace("getDynVectorAttributeValue()", name, dimensions);
-  std::map<std::string,XMLAttribute<utils::DynVector> >::const_iterator iter;
-  iter = _dynVectorAttributes.find(name);
-  assertion (iter  != _dynVectorAttributes.end());
-  preciceCheck(iter->second.getValue().size() >= dimensions,
-               "getDynVectorAttributeValue()", "Vector attribute \""
-               << name << "\" of tag <" << getFullName()
-               << "> has less dimensions than required ("
-               << iter->second.getValue().size() << " instead of "
-               << dimensions << ")!" );
-
-  // Read only first "dimensions" components of the parsed vector values
-  utils::DynVector result(dimensions);
-  const utils::DynVector& parsed = iter->second.getValue();
-  for (int i=0; i < dimensions; i++){
-    result[i] = parsed[i];
-  }
-  DEBUG("Returning value = " << result);
-  return result;
-}
-
 Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue
 (
   const std::string& name,
@@ -435,12 +340,11 @@ Eigen::VectorXd XMLTag::getEigenVectorXdAttributeValue
   return result;
 }
 
-
 void XMLTag:: readAttributes
 (
   XMLReader* xmlReader )
 {
-  preciceTrace("readAttributes()");
+  TRACE();
 //  using utils::contained;
 //  std::set<std::string> readNames;
   for (int i=0; i < xmlReader->getAttributeCount(); i++){
@@ -493,43 +397,23 @@ void XMLTag:: readAttributes
 //    }
 //  }
 
-  typedef std::map<std::string,XMLAttribute<double> >::value_type DoublePair;
-  for (DoublePair & pair : _doubleAttributes){
+  for (auto & pair : _doubleAttributes){
      pair.second.readValue(xmlReader);
   }
 
-  typedef std::map<std::string,XMLAttribute<int> >::value_type IntPair;
-  for ( IntPair & pair : _intAttributes){
+  for ( auto & pair : _intAttributes){
     pair.second.readValue(xmlReader);
   }
 
-  typedef std::map<std::string,XMLAttribute<std::string> >::value_type StringPair;
-  for ( StringPair & pair : _stringAttributes ){
+  for ( auto & pair : _stringAttributes ){
     pair.second.readValue(xmlReader);
   }
 
-  typedef std::map<std::string,XMLAttribute<bool> >::value_type BoolPair;
-  for ( BoolPair & pair : _booleanAttributes ){
+  for ( auto & pair : _booleanAttributes ){
     pair.second.readValue(xmlReader);
   }
 
-  typedef std::map<std::string,XMLAttribute<utils::Vector2D> >::value_type Vec2DPair;
-  for ( Vec2DPair& pair : _vector2DAttributes ){
-    pair.second.readValue(xmlReader);
-  }
-
-  typedef std::map<std::string,XMLAttribute<utils::Vector3D> >::value_type Vec3DPair;
-  for ( Vec3DPair& pair : _vector3DAttributes ){
-    pair.second.readValue(xmlReader);
-  }
-
-  typedef std::map<std::string,XMLAttribute<utils::DynVector> >::value_type DynVecPair;
-  for ( DynVecPair& pair : _dynVectorAttributes ){
-    pair.second.readValue(xmlReader);
-  }
-
-  typedef std::map<std::string,XMLAttribute<Eigen::VectorXd> >::value_type EigenVectorXdPair;
-  for ( EigenVectorXdPair& pair : _eigenVectorXdAttributes ){
+  for ( auto & pair : _eigenVectorXdAttributes ){
     pair.second.readValue(xmlReader);
   }
 }
@@ -563,51 +447,29 @@ void XMLTag:: resetAttributes()
 {
   _configured = false;
 
-  typedef std::map<std::string,bool>::value_type Pair;
-  for (Pair& pair : _configuredNamespaces){
+  for (auto & pair : _configuredNamespaces){
     pair.second = false;
   }
 
-  typedef std::map<std::string,XMLAttribute<double> >::value_type DoublePair;
-  for (DoublePair& pair : _doubleAttributes){
+  for (auto & pair : _doubleAttributes){
     pair.second.setRead(false);
   }
 
-  typedef std::map<std::string,XMLAttribute<int> >::value_type IntPair;
-  for (IntPair& pair : _intAttributes){
+  for (auto & pair : _intAttributes){
     pair.second.setRead(false);
   }
 
-  typedef std::map<std::string,XMLAttribute<std::string> >::value_type StringPair;
-  for (StringPair& pair : _stringAttributes){
+  for (auto & pair : _stringAttributes){
     pair.second.setRead(false);
   }
 
-  typedef std::map<std::string,XMLAttribute<bool> >::value_type BoolPair;
-  for (BoolPair& pair : _booleanAttributes){
+  for (auto & pair : _booleanAttributes){
     pair.second.setRead(false);
   }
 
-  typedef std::map<std::string,XMLAttribute<utils::Vector2D> >::value_type Vec2DPair;
-  for (Vec2DPair& pair : _vector2DAttributes){
+  for (auto & pair : _eigenVectorXdAttributes){
     pair.second.setRead(false);
   }
-
-  typedef std::map<std::string,XMLAttribute<utils::Vector3D> >::value_type Vec3DPair;
-  for (Vec3DPair& pair : _vector3DAttributes){
-    pair.second.setRead(false);
-  }
-
-  typedef std::map<std::string,XMLAttribute<utils::DynVector> >::value_type DynVecPair;
-  for (DynVecPair& pair : _dynVectorAttributes){
-    pair.second.setRead(false);
-  }
-
-  typedef std::map<std::string,XMLAttribute<Eigen::VectorXd> >::value_type EigenVectorXdPair;
-  for (EigenVectorXdPair& pair : _eigenVectorXdAttributes){
-    pair.second.setRead(false);
-  }
-
   
   std::vector<XMLTag*>::iterator subtagIter;
   for (XMLTag* tag : _subtags){
@@ -622,9 +484,6 @@ void XMLTag:: clear()
    _intAttributes.clear();
    _stringAttributes.clear();
    _booleanAttributes.clear();
-   _vector2DAttributes.clear();
-   _vector3DAttributes.clear();
-   _dynVectorAttributes.clear();
    _subtags.clear();
 }
 
@@ -633,14 +492,13 @@ std::string XMLTag:: printDocumentation
   int linewidth,
   int indentation ) const
 {
-  preciceTrace("printDocumentation()", indentation);
+  TRACE(indentation);
   std::string indent;
   for (int i=0; i < indentation; i++){
     indent += " ";
   }
 
   std::ostringstream doc;
-  //std::ostringstream tagDoc;
   doc << indent << "<!-- TAG " << _fullName << std::endl;
   if (not _doc.empty()){
     std::string indentedDoc = indent + "         " + _doc;
@@ -649,12 +507,7 @@ std::string XMLTag:: printDocumentation
   }
   doc << indent << "         (can occur " << getOccurrenceString(_occurrence) << " times)";
 
-//  if (not _attributes.empty()){
-//    doc << std::endl << indent << "     Attribute documentation:";
-//  }
-
-  typedef std::map<std::string,XMLAttribute<double> >::value_type DoublePair;
-  for (const DoublePair& pair : _doubleAttributes){
+  for (const auto & pair : _doubleAttributes){
     std::ostringstream attrDoc;
     doc << std::endl;
     attrDoc << indent << "     ATTR " << pair.first << ": "
@@ -662,8 +515,7 @@ std::string XMLTag:: printDocumentation
     doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
-  typedef std::map<std::string,XMLAttribute<int> >::value_type IntPair;
-  for (const IntPair& pair : _intAttributes){
+  for (const auto & pair : _intAttributes){
     std::ostringstream attrDoc;
     doc << std::endl;
     attrDoc << indent << "     ATTR " << pair.first << ": "
@@ -671,8 +523,7 @@ std::string XMLTag:: printDocumentation
     doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
-  typedef std::map<std::string,XMLAttribute<std::string> >::value_type StringPair;
-  for (const StringPair& pair : _stringAttributes){
+  for (const auto & pair : _stringAttributes){
     std::ostringstream attrDoc;
     doc << std::endl;
     attrDoc << indent << "     ATTR " << pair.first << ": "
@@ -680,8 +531,7 @@ std::string XMLTag:: printDocumentation
     doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
-  typedef std::map<std::string,XMLAttribute<bool> >::value_type BoolPair;
-  for (const BoolPair& pair : _booleanAttributes){
+  for (const auto & pair : _booleanAttributes){
     std::ostringstream attrDoc;
     doc << std::endl;
     attrDoc << indent << "     ATTR " << pair.first << ": "
@@ -689,33 +539,14 @@ std::string XMLTag:: printDocumentation
     doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
 
-  typedef std::map<std::string,XMLAttribute<utils::Vector2D> >::value_type Vec2DPair;
-  for (const Vec2DPair& pair : _vector2DAttributes){
+  for (const auto & pair : _eigenVectorXdAttributes){
     std::ostringstream attrDoc;
     doc << std::endl;
     attrDoc << indent << "     ATTR " << pair.first << ": "
             << pair.second.getUserDocumentation();
     doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
   }
-
-  typedef std::map<std::string,XMLAttribute<utils::Vector3D> >::value_type Vec3DPair;
-  for (const Vec3DPair& pair : _vector3DAttributes){
-    std::ostringstream attrDoc;
-    doc << std::endl;
-    attrDoc << indent << "     ATTR " << pair.first << ": "
-            << pair.second.getUserDocumentation();
-    doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
-  }
-
-  typedef std::map<std::string,XMLAttribute<utils::DynVector> >::value_type DynVecPair;
-  for (const DynVecPair& pair : _dynVectorAttributes){
-    std::ostringstream attrDoc;
-    doc << std::endl;
-    attrDoc << indent << "     ATTR " << pair.first << ": "
-            << pair.second.getUserDocumentation();
-    doc << wrapText(attrDoc.str(), linewidth, indentation + 10);
-  }
-
+ 
   doc << " -->" << std::endl;
   std::ostringstream tagHead;
   tagHead << indent << "<" << _fullName;
@@ -725,44 +556,26 @@ std::string XMLTag:: printDocumentation
     tagHead << " xmlns:" << namespaceName << "=\"precice." << namespaceName << "\"";
   }
 
-  typedef std::map<std::string,XMLAttribute<double> >::value_type DoublePair;
-  for (const DoublePair& pair : _doubleAttributes){
-    //std::ostringstream attrDoc;
-    //doc << std::endl;
-    tagHead << indent << "   " << pair.second.printDocumentation();
-    //doc << wrapText(attrDoc.str(), linewidth, indentation + 6);
-  }
-
-  typedef std::map<std::string,XMLAttribute<int> >::value_type IntPair;
-  for (const IntPair& pair : _intAttributes){
+  for (const auto & pair : _doubleAttributes){
     tagHead << indent << "   " << pair.second.printDocumentation();
   }
 
-  typedef std::map<std::string,XMLAttribute<std::string> >::value_type StringPair;
-  for (const StringPair& pair : _stringAttributes){
+  for (const auto & pair : _intAttributes){
     tagHead << indent << "   " << pair.second.printDocumentation();
   }
 
-  typedef std::map<std::string,XMLAttribute<bool> >::value_type BoolPair;
-  for (const BoolPair& pair : _booleanAttributes){
+  for (const auto & pair : _stringAttributes){
     tagHead << indent << "   " << pair.second.printDocumentation();
   }
 
-  typedef std::map<std::string,XMLAttribute<utils::Vector2D> >::value_type Vec2DPair;
-  for (const Vec2DPair& pair : _vector2DAttributes){
+  for (const auto & pair : _booleanAttributes){
     tagHead << indent << "   " << pair.second.printDocumentation();
   }
 
-  typedef std::map<std::string,XMLAttribute<utils::Vector3D> >::value_type Vec3DPair;
-  for (const Vec3DPair& pair : _vector3DAttributes){
+  for (const auto & pair : _eigenVectorXdAttributes){
     tagHead << indent << "   " << pair.second.printDocumentation();
   }
-
-  typedef std::map<std::string,XMLAttribute<utils::DynVector> >::value_type DynVecPair;
-  for (const DynVecPair& pair : _dynVectorAttributes){
-    tagHead << indent << "   " << pair.second.printDocumentation();
-  }
-
+  
   doc << wrapText(tagHead.str(), linewidth, indentation + 3);
 
   if (not _subtags.empty()){
@@ -797,20 +610,14 @@ void configure
   const std::string& configurationFilename )
 {
   logging::Logger _log("precice::utils");
-  preciceTrace("configure()", tag.getFullName(), configurationFilename);
-  //bool success = false;
-  tarch::irr::io::IrrXMLReader* xmlReader =
-    tarch::irr::io::createIrrXMLReader(configurationFilename.c_str());
-  preciceCheck(xmlReader != nullptr, "configure()",
-               "Could not create XML reader for file \"" << configurationFilename
-               << "\"!");
-  preciceCheck(xmlReader->read(), "configure()",
-               "XML reader doesn't recognize a valid XML tag in file \""
-               << configurationFilename << "\"!" );
-  preciceCheck(xmlReader->getNodeType() != tarch::irr::io::EXN_NONE, "configure()",
-               "XML reader found only invalid XML tag in file \""
-               << configurationFilename << "\"!" );
-  //bool foundTag = false;
+  TRACE(tag.getFullName(), configurationFilename);
+    tarch::irr::io::IrrXMLReader* xmlReader = tarch::irr::io::createIrrXMLReader(configurationFilename.c_str());
+  CHECK(xmlReader != nullptr,
+        "Could not create XML reader for file \"" << configurationFilename << "\"!");
+  CHECK(xmlReader->read(),
+        "XML reader doesn't recognize a valid XML tag in file \"" << configurationFilename << "\"!" );
+  CHECK(xmlReader->getNodeType() != tarch::irr::io::EXN_NONE,
+        "XML reader found only invalid XML tag in file \"" << configurationFilename << "\"!" );
   NoPListener nopListener;
   XMLTag root(nopListener, "", XMLTag::OCCUR_ONCE);
   root.addSubtag(tag);
@@ -818,8 +625,7 @@ void configure
     root.parse(xmlReader);
   }
   catch (std::string errorMsg){
-    preciceError("configure()", "Parsing XML file \""
-                 << configurationFilename << "\"" << std::endl << errorMsg);
+    ERROR("Parsing XML file \"" << configurationFilename << "\"" << std::endl << errorMsg);
   }
 
 //  while (xmlReader->read()){
@@ -864,7 +670,7 @@ std::string XMLTag:: getOccurrenceString ( Occurrence occurrence ) const
   else if (occurrence == OCCUR_ONCE_OR_MORE){
     return std::string("1..*");
   }
-  preciceError("getOccurrenceString()", "Unknown occurrence type = " << occurrence);
+  ERROR("Unknown occurrence type = " << occurrence);
   return "";
 }
 

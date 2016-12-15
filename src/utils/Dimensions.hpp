@@ -1,23 +1,9 @@
 #pragma once
 
-#include "tarch/la/Vector.h"
-#include "tarch/la/DynamicVector.h"
-#include "tarch/la/DynamicMatrix.h"
 #include <Eigen/Dense>
 
 namespace precice {
 namespace utils {
-
-typedef tarch::la::DynamicVector<double> DynVector;
-typedef tarch::la::DynamicMatrix<double> DynMatrix;
-typedef tarch::la::Vector<2,double>      Vector2D;
-typedef tarch::la::Vector<3,double>      Vector3D;
-
-std::string getTypeName(const DynVector& var);
-
-std::string getTypeName(const Vector2D& var);
-
-std::string getTypeName(const Vector3D& var);
 
 const Eigen::VectorXd& delinearize (
   int toDelinearize,
@@ -37,7 +23,7 @@ int linearize
   return index;
 }
 
-/// @brief Provides mappings of indices for dimensions 2 and 3.
+/// Provides mappings of indices for dimensions 2 and 3.
 template< int dimension > struct IndexMaps {};
 
 template<> struct IndexMaps<2>
