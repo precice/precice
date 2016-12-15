@@ -1,13 +1,18 @@
 #include "Structure0815.hpp"
+
+#include "math/math.hpp"
 #include "math/GeometryComputations.hpp"
+
+using Eigen::VectorXd;
+using Eigen::Vector3d;
 
 Structure0815:: Structure0815
 (
   int              dim,
   double           density,
-  const DynVector& gravity,
-  const DynVector& vertices,
-  const tarch::la::DynamicVector<int> faces )
+  const VectorXd& gravity,
+  const VectorXd& vertices,
+  const Eigen::VectorXi faces )
 :
   TIMESTEPS("Timesteps"),
   TIME("Time"),
@@ -17,22 +22,22 @@ Structure0815:: Structure0815
   _dim(dim),
   _density(density),
   _gravity(gravity),
-  _centerOfGravity(dim, 0.0),
+  _centerOfGravity(VectorXd::Constant(dim, 0.0)),
   _totalMass(0.0),
   _time(0.0),
   _timesteps(0),
   _vertices(vertices),
   _faces(faces),
-  _forces(vertices.size(), 0.0),
-  _velocities(vertices.size(), 0.0),
-  _oldVelocities(vertices.size(), 0.0),
-  _velocityDeltas(vertices.size(), 0.0),
-  _displacements(vertices.size(), 0.0),
-  _oldDisplacements(vertices.size(), 0.0),
-  _displacementDeltas(vertices.size(), 0.0),
-  _fixedTranslationDirections(dim, false),
+  _forces(VectorXd::Zero(vertices.size())),
+  _velocities(VectorXd::Zero(vertices.size())),
+  _oldVelocities(VectorXd::Zero(vertices.size())),
+  _velocityDeltas(VectorXd::Zero(vertices.size())),
+  _displacements(VectorXd::Zero(vertices.size())),
+  _oldDisplacements(VectorXd::Zero(vertices.size())),
+  _displacementDeltas(VectorXd::Zero(vertices.size())),
+  _fixedTranslationDirections(Eigen::Matrix<bool, Eigen::Dynamic, 1>::Constant(dim, false)),
   _fixed(false),
-  _fixture(dim, 0.0),
+  _fixture(VectorXd::Constant(dim, 0.0)),
   _fixedCharacteristics(false),
   _statisticsWriter("structure0815-statistics.txt")
 {
@@ -56,12 +61,12 @@ Structure0815:: Structure0815
   _statisticsWriter.writeData(TIMESTEPS, _timesteps);
   _statisticsWriter.writeData(TIME, _time);
   if (dim == 2){
-    precice::utils::Vector2D centerOfGravity(_centerOfGravity);
+    Eigen::Vector2d centerOfGravity(_centerOfGravity);
     _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity);
   }
   else {
     assertion(_dim == 3, _dim);
-    precice::utils::Vector3D centerOfGravity(_centerOfGravity);
+    Eigen::Vector3d centerOfGravity(_centerOfGravity);
     _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity);
   }
   _statisticsWriter.writeData(TOTALMASS, _totalMass);
@@ -70,7 +75,7 @@ Structure0815:: Structure0815
 
 void Structure0815:: fixPoint
 (
-  const DynVector& fixture )
+  const VectorXd& fixture )
 {
   _fixed = true;
   _fixture = fixture;
@@ -79,7 +84,7 @@ void Structure0815:: fixPoint
 
 void Structure0815:: fixTranslations
 (
-  const tarch::la::DynamicVector<bool>& fixedDirections )
+  const Eigen::Matrix<bool, Eigen::Dynamic, 1>& fixedDirections )
 {
   _fixedTranslationDirections = fixedDirections;
   STRUCTURE_INFO("Fixed translations: " << fixedDirections);
@@ -87,7 +92,7 @@ void Structure0815:: fixTranslations
 
 void Structure0815:: fixCharacteristics
 (
-  const DynVector& centerOfGravity,
+  const VectorXd& centerOfGravity,
   double           totalVolume )
 {
   _fixedCharacteristics = true;
@@ -103,13 +108,13 @@ void Structure0815:: iterate
 (
   double dt )
 {
-  DynVector zero(_dim, 0.0);
-  DynVector force(3, 0.0);
-  DynVector totalForce(_gravity);
+  VectorXd zero = VectorXd::Zero(_dim);
+  Vector3d force = Vector3d::Zero();
+  VectorXd totalForce(_gravity);
   totalForce *= _totalMass; // Makes gravity acceleration a force
-  DynVector r(3, 0.0); // Distance vector from center of gravity
-  DynVector totalTorque(3, 0.0); // Always init with three components
-  DynVector torque(3, 0.0);
+  Vector3d r = Vector3d::Zero(); // Distance vector from center of gravity
+  Vector3d totalTorque = Vector3d::Zero(); // Always init with three components
+  Vector3d torque = Vector3d::Zero();
 
   int verticesSize = _vertices.size() / _dim;
   for (int iVertex=0; iVertex < verticesSize; iVertex++){
@@ -122,7 +127,7 @@ void Structure0815:: iterate
     for (int i=0; i<_dim; i++){
       r[i] = _vertices[iVertex*_dim + i] - _centerOfGravity[i];
     }
-    tarch::la::cross(r, force, torque);
+    torque = r.cross(force);
     totalTorque += torque;
   }
 
@@ -131,7 +136,7 @@ void Structure0815:: iterate
   //STRUCTURE_DEBUG("Center of gravity = " << _centerOfGravity);
   STRUCTURE_DEBUG("Total torque = " << totalTorque);
 
-  DynVector translVelocityDelta(zero);
+  VectorXd translVelocityDelta(zero);
   if (not _fixed){
     // Compute values of next timestep
     translVelocityDelta = (totalForce / _totalMass) * dt;
@@ -144,11 +149,11 @@ void Structure0815:: iterate
   }
 
   // Set values of next timestep
-  DynVector rotForce(3, 0.0);
-  DynVector rotVelocityDelta(zero);
-  DynVector writeVelocity(zero);
-  DynVector writeDisplacement(zero);
-  DynVector velocityDelta(zero);
+  Vector3d rotForce = Vector3d::Zero();
+  VectorXd rotVelocityDelta(zero);
+  VectorXd writeVelocity(zero);
+  VectorXd writeDisplacement(zero);
+  VectorXd velocityDelta(zero);
   double normR = 0.0;
   for (int iVertex=0; iVertex < verticesSize; iVertex++){
     int index = iVertex *_dim;
@@ -156,9 +161,9 @@ void Structure0815:: iterate
     for (int i=0; i<_dim; i++){
       r[i] = _vertices[index + i] - _centerOfGravity[i];
     }
-    normR = tarch::la::norm2(r);
+    normR = r.norm();
 
-    tarch::la::cross(totalTorque, r, rotForce);
+    rotForce = totalTorque.cross(r);
     //rotForce[0] = torque * -1.0 * r[1]; // TODO
     //rotForce[1] = torque * r[0]; // TODO
     for (int i=0; i < _dim; i++){
@@ -187,7 +192,7 @@ void Structure0815:: timestep(double dt)
   _time += dt;
   _timesteps++;
 
-  DynVector centerOfGravity(_dim, 0.0);
+  VectorXd centerOfGravity = VectorXd::Zero(_dim);
   double totalMass = 0.0;
   double totalVolume = 0.0;
   if (not _fixedCharacteristics){
@@ -200,12 +205,12 @@ void Structure0815:: timestep(double dt)
   _statisticsWriter.writeData(TIMESTEPS, _timesteps);
   _statisticsWriter.writeData(TIME, _time);
   if (_dim == 2){
-    precice::utils::Vector2D centerOfGravity2D(centerOfGravity);
+    Eigen::Vector2d centerOfGravity2D(centerOfGravity);
     _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity2D);
   }
   else {
     assertion(_dim == 3, _dim);
-    precice::utils::Vector3D centerOfGravity3D(centerOfGravity);
+    Eigen::Vector3d centerOfGravity3D(centerOfGravity);
     _statisticsWriter.writeData(CENTEROFGRAVITY, centerOfGravity3D);
   }
   _statisticsWriter.writeData(TOTALMASS, totalMass);
@@ -214,18 +219,18 @@ void Structure0815:: timestep(double dt)
 
 void Structure0815:: computeCharacteristics
 (
-  DynVector& centerOfGravity,
+  VectorXd& centerOfGravity,
   double&    totalMass,
   double&    totalVolume )
 {
-  DynVector zero(_dim, 0.0);
+  VectorXd zero = VectorXd::Zero(_dim);
   centerOfGravity = zero;
   totalMass = 0.0;
   totalVolume = 0.0;
 
   if (_dim == 2){
-    DynVector coords0(zero);
-    DynVector coords1(zero);
+    VectorXd coords0(zero);
+    VectorXd coords1(zero);
     for (int iEdge=0; iEdge < _faces.size()/2; iEdge++){
       int index = iEdge * 2;
       for (int i=0; i<_dim; i++){
@@ -238,20 +243,20 @@ void Structure0815:: computeCharacteristics
       double area = GeoComp::triangleArea(zero, coords0, coords1);
       area = std::abs(area); // since it comes out signed from cross-prod
       totalVolume += area;
-      if (not tarch::la::equals(area, 0.0)){
+      if (not precice::math::equals(area, 0.0)){
         centerOfGravity += (coords0 + coords1) * area / 3.0;
       }
     }
   }
   else {
     assertion(_dim == 3, _dim);
-    DynVector coords0(zero);
-    DynVector coords1(zero);
-    DynVector coords2(zero);
-    DynVector vec01(zero);
-    DynVector vec02(zero);
-    DynVector vec03(zero);
-    DynVector crossVec(zero);
+    VectorXd coords0(zero);
+    VectorXd coords1(zero);
+    VectorXd coords2(zero);
+    Vector3d vec01(zero);
+    Vector3d vec02(zero);
+    VectorXd vec03(zero);
+    Vector3d crossVec(zero);
     for (int iTriangle=0; iTriangle < _faces.size()/3; iTriangle++){
       int index = iTriangle * 3;
       for (int i=0; i<_dim; i++){
@@ -268,11 +273,11 @@ void Structure0815:: computeCharacteristics
       vec02 -= coords0;
       vec03 = zero;
       vec03 -= coords0;
-      crossVec = tarch::la::cross(vec01, vec02, crossVec);
-      double volume = tarch::la::dot(crossVec, vec03) / 6.0;
+      crossVec = vec01.cross(vec02);
+      double volume = crossVec.dot(vec03) / 6.0;
       volume = std::abs(volume);
       totalVolume += volume;
-      if (not tarch::la::equals(volume, 0.0)){
+      if (not precice::math::equals(volume, 0.0)){
         centerOfGravity += (coords0 + coords1 + coords2) * volume / 4.0;
       }
     }

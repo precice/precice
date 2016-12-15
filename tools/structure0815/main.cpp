@@ -8,14 +8,13 @@
 #include "tarch/la/WrappedVector.h"
 #include "utils/Globals.hpp"
 
-using precice::utils::DynVector;
-using precice::utils::Vector2D;
+
+using Eigen::VectorXd;
+using Eigen::Vector2d;
+
 using namespace precice;
 using tarch::la::raw;
 
-/**
- * @brief Runs structure0815
- */
 int main(int argc, char **argv)
 {
   STRUCTURE_INFO("Starting Structure0815");
@@ -43,7 +42,7 @@ int main(int argc, char **argv)
 
   int dimensions = cplInterface.getDimensions();
   double density = 500.0;
-  DynVector gravity (dimensions, 0.0); //-9.81;
+  VectorXd gravity (dimensions, 0.0); //-9.81;
   gravity(1) = -9.81;
 
   STRUCTURE_INFO("Density = " << density);
@@ -79,8 +78,8 @@ int main(int argc, char **argv)
     velocityDeltasID = cplInterface.getDataID("VelocityDeltas");
   }
 
-  DynVector nodes(handle.vertices().size()*dimensions);
-  tarch::la::DynamicVector<int> faces;
+  VectorXd nodes(handle.vertices().size()*dimensions);
+  Eigen::VectorXi faces;
   size_t iVertex = 0;
   VertexHandle vertices = handle.vertices();
   foriter (VertexIterator, it, vertices){
@@ -113,7 +112,7 @@ int main(int argc, char **argv)
     }
   }
 
-  tarch::la::DynamicVector<int> vertexIDs(handle.vertices().size());
+  Eigen::VectorXi vertexIDs(handle.vertices().size());
   for (int i=0; i < handle.vertices().size(); i++){
     vertexIDs[i] = i;
   }
@@ -122,13 +121,13 @@ int main(int argc, char **argv)
 
   bool fixStructure = false;
   if (fixStructure){ // Fix the structure (only rotations possible)
-    DynVector fixture(dimensions, 0.0);
+    VectorXd fixture = VectorXd::Zero(dimensions);
     structure.fixPoint(fixture);
   }
 
   bool fixTranslations = true;
   if (fixTranslations){
-    tarch::la::DynamicVector<bool> fixedDirections(dimensions, false);
+    Eigen::Matrix<bool, Eigen::Dynamic, 1> fixedDirections = Eigen::Matrix<bool, Eigen::Dynamic, 1>::Constant(dimensions, false);
     fixedDirections[0] = true;
     structure.fixTranslations(fixedDirections);
   }
@@ -179,15 +178,15 @@ int main(int argc, char **argv)
 //    centerOfGravity /= totalVolume;
 
     // Anti-motion devices are facing downwards (rotated by 90 degrees)
-    DynVector centerOfGravity(2, 0.0);
+    Vector2d centerOfGravity = Vector2d::Zero();
     double volumeLeftLeg = 0.0001;
     double volumeRightLeg = 0.0001;
     double volumeTrunk = 0.05;
     double totalVolume = volumeLeftLeg + volumeRightLeg + volumeTrunk;
 
-    Vector2D cogLeftLeg(-0.2475, -0.01);
-    Vector2D cogRightLeg(0.2475, -0.01);
-    Vector2D cogTrunk(0.0,0.05);
+    Vector2d cogLeftLeg(-0.2475, -0.01);
+    Vector2d cogRightLeg(0.2475, -0.01);
+    Vector2d cogTrunk(0.0,0.05);
 
     centerOfGravity = cogLeftLeg * volumeLeftLeg;
     centerOfGravity += cogRightLeg * volumeRightLeg;
@@ -204,21 +203,21 @@ int main(int argc, char **argv)
       cplInterface.fulfilledAction(writeCheckpoint);
     }
 
-    cplInterface.readBlockVectorData(forcesID, vertexIDs.size(), raw(vertexIDs), raw(structure.forces()));
+    cplInterface.readBlockVectorData(forcesID, vertexIDs.size(), vertexIDs.data(), structure.forces().data());
 
     structure.iterate(dt);
 
     if (velocitiesID != -1){
-      cplInterface.writeBlockVectorData(velocitiesID, vertexIDs.size(), raw(vertexIDs), raw(structure.velocities()));
+      cplInterface.writeBlockVectorData(velocitiesID, vertexIDs.size(), vertexIDs.data(), structure.velocities().data());
     }
     if (displacementsID != -1){
-      cplInterface.writeBlockVectorData(displacementsID, vertexIDs.size(), raw(vertexIDs), raw(structure.displacements()));
+      cplInterface.writeBlockVectorData(displacementsID, vertexIDs.size(), vertexIDs.data(), structure.displacements().data());
     }
     if (displDeltasID != -1){
-      cplInterface.writeBlockVectorData(displDeltasID, vertexIDs.size(), raw(vertexIDs), raw(structure.displacementDeltas()));
+      cplInterface.writeBlockVectorData(displDeltasID, vertexIDs.size(), vertexIDs.data(), structure.displacementDeltas().data()));
     }
     if (velocityDeltasID != -1){
-      cplInterface.writeBlockVectorData(velocityDeltasID, vertexIDs.size(), raw(vertexIDs), raw(structure.velocityDeltas()));
+      cplInterface.writeBlockVectorData(velocityDeltasID, vertexIDs.size(), vertexIDs.data(), structure.velocityDeltas().data());
     }
 
     dt = cplInterface.advance(dt);

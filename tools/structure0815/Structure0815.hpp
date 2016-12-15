@@ -6,7 +6,7 @@
 #include "utils/Dimensions.hpp"
 #include "io/TXTTableWriter.hpp"
 
-using precice::utils::DynVector;
+using Eigen::VectorXd;
 
 /**
  * @brief Rigid body motion structure solver for 2D and 3D.
@@ -33,19 +33,15 @@ public:
   Structure0815(
     int              dim,
     double           density,
-    const DynVector& gravity,
-    const DynVector& vertices,
-    const tarch::la::DynamicVector<int> faces );
+    const VectorXd& gravity,
+    const VectorXd& vertices,
+    const Eigen::VectorXi faces );
 
-  /**
-   * @brief Only allows rotations around the point of fixture.
-   */
-  void fixPoint(const DynVector& fixture);
+  /// Only allows rotations around the point of fixture.
+  void fixPoint(const VectorXd& fixture);
 
-  /**
-   * @brief Fixes translations in given directions.
-   */
-  void fixTranslations(const tarch::la::DynamicVector<bool>& fixedDirections);
+  /// Fixes translations in given directions.
+  void fixTranslations(const Eigen::Matrix<bool, Eigen::Dynamic, 1>& fixedDirections);
 
   /**
    * @brief Sets the centerOfGravity and totalVolume manually.
@@ -54,30 +50,26 @@ public:
    * every node is visible from the origin.
    */
   void fixCharacteristics(
-    const DynVector& centerOfGravity,
+    const VectorXd& centerOfGravity,
     double           totalVolume);
 
-  DynVector& forces() { return _forces; }
+  VectorXd& forces() { return _forces; }
 
-  DynVector& displacements() { return _displacements; }
+  VectorXd& displacements() { return _displacements; }
 
-  DynVector& velocities() { return _velocities; }
+  VectorXd& velocities() { return _velocities; }
 
-  DynVector& displacementDeltas() { return _displacementDeltas; }
+  VectorXd& displacementDeltas() { return _displacementDeltas; }
 
-  DynVector& velocityDeltas() { return _velocityDeltas; }
+  VectorXd& velocityDeltas() { return _velocityDeltas; }
 
-  /**
-   * @brief Performs an iteration from the last timestep.
-   */
+  /// Performs an iteration from the last timestep.
   void iterate(double dt);
 
-  /**
-   * @brief Overwrites old timestep values with the current iteration.
-   */
+  /// Overwrites old timestep values with the current iteration.
   void timestep(double dt);
 
-  const DynVector& getCenterOfGravity() const { return _centerOfGravity; }
+  const VectorXd& getCenterOfGravity() const { return _centerOfGravity; }
 
   double getMass() const { return _totalMass; }
 
@@ -92,23 +84,23 @@ private:
 
   int _dim;
   double _density;
-  DynVector _gravity;
-  DynVector _centerOfGravity;
+  VectorXd _gravity;
+  VectorXd _centerOfGravity;
   double _totalMass;
   double _time;
   int _timesteps;
-  DynVector _vertices;
-  tarch::la::DynamicVector<int> _faces;
-  DynVector _forces;
-  DynVector _velocities;
-  DynVector _oldVelocities;
-  DynVector _velocityDeltas;
-  DynVector _displacements;
-  DynVector _oldDisplacements;
-  DynVector _displacementDeltas;
-  tarch::la::DynamicVector<bool> _fixedTranslationDirections;
+  VectorXd _vertices;
+  Eigen::VectorXi _faces;
+  VectorXd _forces;
+  VectorXd _velocities;
+  VectorXd _oldVelocities;
+  VectorXd _velocityDeltas;
+  VectorXd _displacements;
+  VectorXd _oldDisplacements;
+  VectorXd _displacementDeltas;
+  Eigen::Matrix<bool, Eigen::Dynamic, 1> _fixedTranslationDirections;
   bool _fixed;
-  DynVector _fixture;
+  VectorXd _fixture;
   bool _fixedCharacteristics;
   precice::io::TXTTableWriter _statisticsWriter;
 
@@ -118,7 +110,7 @@ private:
    * Does not store the values in the member variables.
    */
   void computeCharacteristics (
-    DynVector& centerOfGravity,
+    VectorXd&  centerOfGravity,
     double&    totalMass,
     double&    totalVolume );
 };
