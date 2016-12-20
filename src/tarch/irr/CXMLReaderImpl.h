@@ -16,7 +16,7 @@
 
 #include <sstream>
 #include <limits>
-
+#include "utils/Helpers.hpp"
 
 
 #ifdef _DEBUG
@@ -235,7 +235,7 @@ class CXMLReaderImpl : public IIrrXMLReader<char_type, superclass> {
     if (!attr)
       return 0;
 
-    return IIrrXMLReader<char_type, superclass>::convertValueStringToBool( std::string(attr->Value.c_str()) );
+    return precice::utils::convertStringToBool( std::string(attr->Value.c_str()) );
   }
 
 
@@ -243,7 +243,7 @@ class CXMLReaderImpl : public IIrrXMLReader<char_type, superclass> {
     const char_type* attrvalue = getAttributeValue(idx);
     if (!attrvalue)
       return 0;
-    return IIrrXMLReader<char_type, superclass>::convertValueStringToBool( std::string(attrvalue) );
+    return precice::utils::convertStringToBool( std::string(attrvalue) );
   }
 
 

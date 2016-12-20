@@ -72,7 +72,7 @@ public:
 
   /// Delete copy and assignement constructor
   /** Copying and assignement of this class would involve copying the pointer to
-   * the PETSc object and finallly cause double destruction of it.
+      the PETSc object and finallly cause double destruction of it.
    */
   Vector(const Vector&) = delete;
   Vector& operator=(const Vector&) = delete;
@@ -123,10 +123,10 @@ public:
 
   MPI_Comm communicator;
 
-  /// Delete copy and assignement constructor
-  /* Copying and assignement of this class would involve copying the pointer to
-   * the PETSc object and finallly cause double destruction of it.
-   */
+  /// Delete copy and assignment constructor
+  /** Copying and assignment of this class would involve copying the pointer to
+      the PETSc object and finallly cause double destruction of it.
+  */
   Matrix(const Matrix&) = delete;
   Matrix& operator=(const Matrix&) = delete;
 
@@ -155,8 +155,7 @@ public:
   std::string getName();
 
   /// Get the MatInfo struct for the matrix.
-  /* See http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatInfo.html for description of fields.
-   */
+  /** See http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/Mat/MatInfo.html for description of fields. */
   MatInfo getInfo(MatInfoType flag);
   
   void setValue(PetscInt row, PetscInt col, PetscScalar value);

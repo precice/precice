@@ -2,12 +2,9 @@
 
 #include <string>
 #include <vector>
-#include <boost/log/utility/setup/filter_parser.hpp>
-#include <boost/log/utility/setup/formatter_parser.hpp>
 
 namespace precice {
 namespace logging {
-
 
 /// Holds the configuration for one logging backend (sink) and takes care of default values.
 struct BackendConfiguration
@@ -30,10 +27,13 @@ struct BackendConfiguration
 /// Holds the configuration of the logging system
 using LoggingConfiguration = std::vector<BackendConfiguration>;
 
-void setupLogging(std::string logConfigFile = "log.conf");
+/// Configures the logging from a log file
+void setupLogging(std::string const & logConfigFile = "log.conf");
+
+/// Configures the logging from a LoggingConfiguration
 void setupLogging(LoggingConfiguration configs, bool enabled = true);
 
 /// Sets the current MPI rank as a logging attribute
-void setMPIRank(const int rank);
+void setMPIRank(int const rank);
 
 }} // namespace precice, logging
