@@ -10,16 +10,12 @@
 namespace precice {
 namespace mapping {
 
-/**
- * @brief Performs XML configuration and holds configured mappings.
- */
+/// Performs XML configuration and holds configured mappings.
 class MappingConfiguration : public utils::XMLTag::Listener
 {
 public:
 
-  /**
-   * @brief Constants defining the direction of a mapping.
-   */
+  /// Constants defining the direction of a mapping.
   enum Direction
   {
     WRITE,
@@ -33,29 +29,21 @@ public:
     ON_DEMAND
   };
 
-  /**
-   * @brief Configuration data for one mapping.
-   */
+  /// Configuration data for one mapping.
   struct ConfiguredMapping
   {
-    // @brief Mapping object.
+    /// Mapping object.
     PtrMapping mapping;
-    // @brief Remote mesh to map from
+    /// Remote mesh to map from
     mesh::PtrMesh fromMesh;
-    // @brief Remote mesh to map to
+    /// Remote mesh to map to
     mesh::PtrMesh toMesh;
-    // @brief Direction of mapping (important to set input and output mesh).
+    /// Direction of mapping (important to set input and output mesh).
     Direction direction;
-    // @brief When the mapping should be executed.
+    /// When the mapping should be executed.
     Timing timing;
   };
 
-  // @brief Name of xml tag for this class in configuration file
-  //static const std::string& getTag();
-
-  /**
-   * @brief Constructor.
-   */
   MappingConfiguration (
     utils::XMLTag&                    parent,
     const mesh::PtrMeshConfiguration& meshConfiguration );
@@ -84,14 +72,10 @@ public:
    */
   //bool isValid() const;
 
-  /**
-   * @brief Returns all configured mappings.
-   */
+  /// Returns all configured mappings.
   const std::vector<ConfiguredMapping>& mappings();
 
-  /**
-   * @brief Adds a mapping to the configuration.
-   */
+  /// Adds a mapping to the configuration.
   void addMapping (
     const PtrMapping&    mapping,
     const mesh::PtrMesh& fromMesh,
@@ -103,7 +87,6 @@ public:
 
 private:
 
-  // @brief Logging device.
   static logging::Logger _log;
 
   const std::string TAG;
@@ -150,8 +133,6 @@ private:
   const std::string VALUE_TIMING_ON_DEMAND;
 
   mesh::PtrMeshConfiguration _meshConfig;
-
-  //bool _isValid;
 
   std::vector<ConfiguredMapping> _mappings;
 
