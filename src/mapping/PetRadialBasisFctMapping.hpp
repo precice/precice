@@ -208,11 +208,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (v.isOwner())
       myIndizes.push_back(v.getGlobalIndex() + polyparams);
 
-  auto inputSize = myIndizes.size();
-  auto n = inputSize; // polyparams, if on rank 0, are included here
-
-  if (utils::Parallel::getProcessRank <= 0)
-    inputSize -= polyparams; // Subtract polyparams on rank 0, so we only have number of vertices.
+  auto n = myIndizes.size(); // polyparams, if on rank 0, are included here
 
   auto outputSize = outMesh->vertices().size();
 
