@@ -99,6 +99,9 @@ private:
   /// Toggles the use of the additonal polynomial
   const bool _polynomial;
 
+  /// Number of coefficients for the polynom. Depends on dimension and number of dead dimensions
+  size_t polyparams;
+
   virtual bool doesVertexContribute(int vertexID) const override;
 
   void incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end);
@@ -152,6 +155,13 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
     assertion(false);
   }
 
+  // Count number of dead dimensions
+  int deadDimensions = 0;
+  for (int d = 0; d < dimensions; d++) {
+    if (_deadAxis[d]) deadDimensions +=1;
+  }
+  polyparams = _polynomial ? 1 + dimensions - deadDimensions : 0;
+
   KSPCreate(PETSC_COMM_WORLD, &_solver);
 }
 
@@ -188,13 +198,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     inMesh = input();
     outMesh = output();
   }
-
-  int deadDimensions = 0;
-  for (int d=0; d<dimensions; d++) {
-    if (_deadAxis[d]) deadDimensions +=1;
-  }
-  size_t polyparams = _polynomial ? 1 + dimensions - deadDimensions : 0;
-
+  
   // Indizes that are used to build the Petsc Index set
   std::vector<int> myIndizes;
 
@@ -529,11 +533,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   int valueDim = input()->data(inputDataID)->getDimensions();
   assertion(valueDim == output()->data(outputDataID)->getDimensions(),
             valueDim, output()->data(outputDataID)->getDimensions());
-  int deadDimensions = 0;
-  for (int d=0; d<getDimensions(); d++) {
-    if (_deadAxis[d]) deadDimensions +=1;
-  }
-  int polyparams = 1 + getDimensions() - deadDimensions;
+
   int localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams; // Set localPolyparams only when root rank
 
   if (getConstraint() == CONSERVATIVE) {
@@ -541,7 +541,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     petsc::Vector in(_matrixA, "in");
     
     // Fill input from input data values
-    for (int dim=0; dim < valueDim; dim++) {
+    for (int dim = 0; dim < valueDim; dim++) {
       INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
            << " from " << input()->getName() << " (ID " << input()->getID() << ")"
            << " to " << output()->getName() << " (ID " << output()->getID() << ") for dimension " << dim);
@@ -611,7 +611,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       // Fill input from input data values
       int count = 0;
       for (const auto& vertex : input()->vertices()) {
-        VecSetValueLocal(in, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); // evtl. besser als VecSetValuesLocal
+        ierr = VecSetValueLocal(in, vertex.getGlobalIndex()+polyparams, inValues[count*valueDim + dim], INSERT_VALUES); CHKERRV(ierr); // evtl. besser als VecSetValuesLocal
         count++;
       }
       in.assemble();
