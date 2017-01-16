@@ -132,6 +132,9 @@ public:
 
   Matrix(MPI_Comm comm = PETSC_COMM_WORLD, std::string name = "");
 
+  /// Move constructor, use the implicitly declared.
+  Matrix(Matrix&& other) = default;
+
   ~Matrix();
 
   /// Enables implicit conversion into a reference to a PETSc Mat type
