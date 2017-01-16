@@ -22,6 +22,17 @@ namespace tests {
 class PetRadialBasisFctMappingTest; // Forward declaration to friend the class
 }
 
+/// How to handle the polynomial?
+/**
+ * ON: Include it in the system matrix
+ * OFF: Omit it altogether
+ * SEPARATE: Compute it separately using least-squares QR.
+ */
+enum class Polynomial {
+  ON,
+  OFF,
+  SEPARATE
+};
 
 /**
  * @brief Mapping with radial basis functions using the Petsc library to solve the resulting system.
@@ -54,7 +65,7 @@ public:
     bool                    yDead,
     bool                    zDead,
     double                  solverRtol = 1e-9,
-    bool                    usePolynom = true);
+    Polynomial              polynomial = Polynomial::ON);
 
   /// Deletes the PETSc objects and the _deadAxis array
   virtual ~PetRadialBasisFctMapping();
@@ -87,7 +98,13 @@ private:
 
   petsc::Matrix _matrixA;
 
+  petsc::Matrix _matrixQ;
+
+  petsc::Matrix _matrixV;
+
   KSP _solver;
+
+  KSP _QRsolver;
 
   ISLocalToGlobalMapping _ISmapping;
 
@@ -97,10 +114,12 @@ private:
   bool* _deadAxis;
 
   /// Toggles the use of the additonal polynomial
-  const bool _polynomial;
+  const Polynomial _polynomial;
 
   /// Number of coefficients for the polynom. Depends on dimension and number of dead dimensions
   size_t polyparams;
+
+  size_t sepPolyparams;
 
   virtual bool doesVertexContribute(int vertexID) const override;
 
@@ -125,13 +144,15 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   bool                    yDead,
   bool                    zDead,
   double                  solverRtol,
-  bool                    polynomial)
+  Polynomial              polynomial)
   :
   Mapping ( constraint, dimensions ),
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
   _matrixC(PETSC_COMM_WORLD, "C"),
   _matrixA(PETSC_COMM_WORLD, "A"),
+  _matrixQ(PETSC_COMM_WORLD, "Q"),
+  _matrixV(PETSC_COMM_WORLD, "V"),
   _solverRtol(solverRtol),
   _polynomial(polynomial)
 {
@@ -160,9 +181,11 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   for (int d = 0; d < dimensions; d++) {
     if (_deadAxis[d]) deadDimensions +=1;
   }
-  polyparams = _polynomial ? 1 + dimensions - deadDimensions : 0;
+  polyparams =    (_polynomial == Polynomial::ON      ) ? 1 + dimensions - deadDimensions : 0;
+  sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
 
   KSPCreate(PETSC_COMM_WORLD, &_solver);
+  KSPCreate(PETSC_COMM_WORLD, &_QRsolver);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
@@ -175,6 +198,7 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::~PetRadialBasisFctMapping()
   if (petscIsInitialized) {
     ierr = ISLocalToGlobalMappingDestroy(&_ISmapping); CHKERRV(ierr);
     ierr = KSPDestroy(&_solver); CHKERRV(ierr);
+    ierr = KSPDestroy(&_QRsolver); CHKERRV(ierr);
   }
 }
 
@@ -185,8 +209,18 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   TRACE();
   precice::utils::Event e(__func__);
 
+  if (_polynomial == Polynomial::ON) {
+    DEBUG("Using integrated polynomial.");
+  }
+  if (_polynomial == Polynomial::OFF) {
+    DEBUG("Using no polynomial.");
+  }
+  if (_polynomial == Polynomial::SEPARATE) {
+    DEBUG("Using seperated polynomial.");
+  }
+  
   assertion(input()->getDimensions() == output()->getDimensions(),
-             input()->getDimensions(), output()->getDimensions());
+            input()->getDimensions(), output()->getDimensions());
   int dimensions = input()->getDimensions();
   mesh::PtrMesh inMesh;
   mesh::PtrMesh outMesh;
@@ -227,6 +261,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatSetOption(_matrixC, MAT_SYMMETRIC, PETSC_TRUE); CHKERRV(ierr);
   ierr = MatSetOption(_matrixC, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
 
+  // Matrix Q: Dense, holds the input mesh for the polynom if set to SEPERATE. Zero size otherwise
+  _matrixQ.reset();
+  _matrixQ.init(n, sepPolyparams, PETSC_DETERMINE, PETSC_DETERMINE, MATDENSE);
+  DEBUG("Set matrix Q to local size " << n << " x " << sepPolyparams);
+
+  // Matrix V: Dense, holds the output mesh for polynom if set to SEPERATE. Zero size otherwise
+  _matrixV.reset();
+  _matrixV.init(outputSize, sepPolyparams, PETSC_DETERMINE, PETSC_DETERMINE, MATDENSE);
+  DEBUG("Set matrix V to local size " << outputSize << " x " << sepPolyparams);    
+    
   // Matrix A: Sparse matrix with outputSize x n local size.
   _matrixA.reset();
   _matrixA.init(outputSize, n, PETSC_DETERMINE, PETSC_DETERMINE, MATAIJ);
@@ -255,6 +299,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   ierr = MatSetLocalToGlobalMapping(_matrixC, _ISmapping, _ISmapping); CHKERRV(ierr); // Set mapping for rows and cols
   ierr = MatSetLocalToGlobalMapping(_matrixA, ISidentityMapping, _ISmapping); CHKERRV(ierr); // Set mapping only for cols, use identity for rows
 
+  ierr = MatSetLocalToGlobalMapping(_matrixQ, _ISmapping, _ISmapping); CHKERRV(ierr);
+  ierr = MatSetLocalToGlobalMapping(_matrixV, ISidentityMapping, _ISmapping); CHKERRV(ierr);
+  
   // Destroy all local index sets and mappings
   ierr = ISDestroy(&ISlocal); CHKERRV(ierr);
   ierr = ISDestroy(&ISlocalInv); CHKERRV(ierr);
@@ -309,6 +356,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   //   ierr = MatMPISBAIJSetPreallocation(_matrixC, 1, 0, nnz, 0, nnz); CHKERRV(ierr);    
   // }
+  
   // -- BEGIN FILL LOOP FOR MATRIX C --
   int logCLoop = 2;
   PetscLogEventRegister("Filling Matrix C", 0, &logCLoop);
@@ -324,21 +372,36 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     PetscScalar colVals[_matrixC.getSize().second]; // holds the values of the entries
     
     // -- SETS THE POLYNOM PART OF THE MATRIX --
-    PetscInt polyRow = 0, polyCol = row;
-    if (_polynomial) {
+    if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
+      PetscInt polyRow = 0, polyCol = row;
       PetscScalar y = 1;
-      ierr = MatSetValuesLocal(_matrixC, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+      
+      Mat m;
+      if (_polynomial == Polynomial::ON) {
+        m = _matrixC.matrix;
+        ierr = MatSetValuesLocal(m, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+      }
+      else if (_polynomial == Polynomial::SEPARATE) {
+        m = _matrixQ.matrix;
+        ierr = MatSetValuesLocal(m, 1, &polyCol, 1, &polyRow, &y, INSERT_VALUES); CHKERRV(ierr);
+      }
+      
       int actualDim = 0;
       for (int dim = 0; dim < dimensions; dim++) {
         if (not _deadAxis[dim]) {
           y = inVertex.getCoords()[dim];
           polyRow = 1 + actualDim;
           actualDim++;
-          ierr = MatSetValuesLocal(_matrixC, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+          if (_polynomial == Polynomial::ON) {
+            ierr = MatSetValuesLocal(m, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+          }
+          else if (_polynomial == Polynomial::SEPARATE) {
+            ierr = MatSetValuesLocal(m, 1, &polyCol, 1, &polyRow, &y, INSERT_VALUES); CHKERRV(ierr);
+          }
         }
       }
     }
-    
+
     // -- SETS THE COEFFICIENTS --
     PetscInt colNum = 0;  // holds the number of columns
     for (mesh::Vertex& vj : inMesh->vertices()) {
@@ -370,6 +433,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
 
   // Begin assembly here, all assembly is ended at the end of this function.
   ierr = MatAssemblyBegin(_matrixC, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
+  ierr = MatAssemblyBegin(_matrixQ, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   
   // -- BEGIN PREALLOC LOOP FOR MATRIX A --
   // {
@@ -431,16 +495,23 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     const mesh::Vertex& oVertex = outMesh->vertices()[it - _matrixA.ownerRange().first];
 
     // -- SET THE POLYNOM PART OF THE MATRIX --
-    if (_polynomial) {
+    if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
+      Mat m;
+      if (_polynomial == Polynomial::ON) {
+        m = _matrixA.matrix;
+      }
+      else if (_polynomial == Polynomial::SEPARATE) {
+        m = _matrixV.matrix;
+      }
       PetscInt polyRow = it, polyCol = 0;
       PetscScalar y = 1;
-      ierr = MatSetValuesLocal(_matrixA, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+      ierr = MatSetValuesLocal(m, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
       for (int dim = 0; dim < dimensions; dim++) {
         if (not _deadAxis[dim]) {
           y = oVertex.getCoords()[dim];
           polyCol++;
           // DEBUG("Filling A with polyparams: polyRow = " << polyRow << ", polyCol = " << polyCol << " Preallocation = " << nnzA[polyRow]);
-          ierr = MatSetValuesLocal(_matrixA, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr); // das zusammen mit den MatSetValuesLocal unten machen
+          ierr = MatSetValuesLocal(m, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr); // das zusammen mit den MatSetValuesLocal unten machen
         }
       }
     }
@@ -469,7 +540,21 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   
   ierr = MatAssemblyBegin(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixC, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
+  ierr = MatAssemblyEnd(_matrixQ, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
   ierr = MatAssemblyEnd(_matrixA, MAT_FINAL_ASSEMBLY); CHKERRV(ierr);
+  _matrixQ.assemble();
+  _matrixV.assemble();
+  
+  // -- CONFIGURE SOLVER FOR POLYNOMIAL --
+  if (_polynomial == Polynomial::SEPARATE) {
+    PC pc;
+    KSPGetPC(_QRsolver, &pc);
+    PCSetType(pc, PCNONE);
+    KSPSetType(_QRsolver, KSPLSQR);
+    KSPSetOperators(_QRsolver, _matrixQ, _matrixQ);
+  }
+  
+  // -- CONFIGURE SOLVER FOR SYSTEM MATRIX --
   KSPSetOperators(_solver, _matrixC, _matrixC); CHKERRV(ierr);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
   KSPSetInitialGuessNonzero(_solver, PETSC_TRUE); CHKERRV(ierr); // Reuse the results from the last iteration, held in the out vector.
@@ -504,6 +589,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: clear()
 {
   _matrixC.reset();
   _matrixA.reset();
+  _matrixQ.reset();
+  _matrixV.reset();
   previousSolution.clear();
   _hasComputedMapping = false;
   // ISmapping destroy??
@@ -594,6 +681,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   else { // Map CONSISTENT
     petsc::Vector out(_matrixA, "out");
     petsc::Vector in(_matrixC, "in");
+    petsc::Vector a(_matrixQ, "a", petsc::Vector::RIGHT); // holds the solution of the LS polynom
         
     ierr = VecSetLocalToGlobalMapping(in, _ISmapping); CHKERRV(ierr);
     const PetscScalar *vecArray;
@@ -603,7 +691,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
            << " from " << input()->getName() << " (ID " << input()->getID() << ")"
            << " to " << output()->getName() << " (ID " << output()->getID() << ") for dimension " << dim);
-      
+
       // Fill input from input data values
       int count = 0;
       for (const auto& vertex : input()->vertices()) {
@@ -611,7 +699,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
         count++;
       }
       in.assemble();
-      INFO("previousSolution.size before = " << previousSolution.size());
+            
+      if (_polynomial == Polynomial::SEPARATE) {
+        KSPSolve(_QRsolver, in, a);
+        VecScale(a, -1);
+        MatMultAdd(_matrixQ, a, in, in); // Subtract the polynomial from the input values
+      }
+      
       petsc::Vector& p = std::get<0>(  // Save and reuse the solution from the previous iteration
         previousSolution.emplace(std::piecewise_construct,
                                  std::forward_as_tuple(inputDataID + outputDataID * 10 + dim * 100),
@@ -621,7 +715,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       utils::Event eSolve("PetRBF.solve.consistent");
       ierr = KSPSolve(_solver, in, p); CHKERRV(ierr);
       eSolve.stop();
-      
+            
       PetscInt iterations;
       KSPGetIterationNumber(_solver, &iterations);
       utils::EventRegistry::setProp("PetRBF.its.consistent", iterations);
@@ -633,8 +727,12 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       }
 
       ierr = MatMult(_matrixA, p, out); CHKERRV(ierr);
+      if (_polynomial == Polynomial::SEPARATE) {
+        ierr = VecScale(a, -1); // scale it back, so wie add the polynom
+        ierr = MatMultAdd(_matrixV, a, out, out); CHKERRV(ierr);
+      }
       VecChop(out, 1e-9);
-
+      
       // Copy mapped data to output data values
       ierr = VecGetArrayRead(out, &vecArray);
       int size = out.getLocalSize();

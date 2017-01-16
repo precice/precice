@@ -10,6 +10,9 @@
 namespace precice {
 namespace mapping {
 
+/// Forward declare kind of polynomial from PetRadialBasisFctMapping.hpp
+enum class Polynomial;
+
 /// Performs XML configuration and holds configured mappings.
 class MappingConfiguration : public utils::XMLTag::Listener
 {
@@ -149,7 +152,7 @@ private:
     bool               xDead,
     bool               yDead,
     bool               zDead,
-    bool               polynomial) const;
+    Polynomial         polynomial) const;
 
   void checkDuplicates ( const ConfiguredMapping& mapping );
 

@@ -82,9 +82,9 @@ MappingConfiguration:: MappingConfiguration
   XMLAttribute<bool> attrZDead(ATTR_Z_DEAD);
   attrZDead.setDocumentation("If set to true, the z axis will be ignored for the mapping");
   attrZDead.setDefaultValue(false);
-  XMLAttribute<bool> attrPolynomial("polynomial");
+  XMLAttribute<std::string> attrPolynomial("polynomial");
   attrPolynomial.setDocumentation("Toggles use of the global polynomial");
-  attrPolynomial.setDefaultValue(true);
+  attrPolynomial.setDefaultValue("on");
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
@@ -243,7 +243,7 @@ void MappingConfiguration:: xmlTagCallback
     double supportRadius = 0.0;
     double solverRtol = 1e-9;
     bool xDead = false, yDead = false, zDead = false;
-    bool polynomial = true;
+    Polynomial polynomial = Polynomial::ON;
     
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -264,9 +264,13 @@ void MappingConfiguration:: xmlTagCallback
       zDead = tag.getBooleanAttributeValue(ATTR_Z_DEAD);
     }
     if (tag.hasAttribute("polynomial")) {
-      polynomial = tag.getBooleanAttributeValue("polynomial");
+      std::string strPolynomial = tag.getStringAttributeValue("polynomial");
+      if (strPolynomial == "separate")
+        polynomial = Polynomial::SEPARATE;
+      else
+        polynomial = utils::convertStringToBool(strPolynomial) ? Polynomial::ON : Polynomial::OFF;
     }
-        
+          
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
                                                         fromMesh, toMesh, timing,
                                                         shapeParameter, supportRadius, solverRtol,
@@ -319,7 +323,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   bool               xDead,
   bool               yDead,
   bool               zDead,
-  bool               polynomial) const
+  Polynomial         polynomial) const
 {
   TRACE(direction, type, timing, shapeParameter, supportRadius);
   using namespace mapping;
