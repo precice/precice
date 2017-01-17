@@ -7,6 +7,7 @@
 
 #include "math/math.hpp"
 #include "impl/BasisFunctions.hpp"
+#include "config/MappingConfiguration.hpp"
 #include "utils/Petsc.hpp"
 namespace petsc = precice::utils::petsc;
 #include "utils/EventTimings.hpp"
@@ -21,18 +22,6 @@ namespace mapping {
 namespace tests {
 class PetRadialBasisFctMappingTest; // Forward declaration to friend the class
 }
-
-/// How to handle the polynomial?
-/**
- * ON: Include it in the system matrix
- * OFF: Omit it altogether
- * SEPARATE: Compute it separately using least-squares QR.
- */
-enum class Polynomial {
-  ON,
-  OFF,
-  SEPARATE
-};
 
 /**
  * @brief Mapping with radial basis functions using the Petsc library to solve the resulting system.
@@ -53,7 +42,9 @@ public:
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
    * @param[in] function Radial basis function used for mapping.
+   * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    * @param[in] solverRtol Relative tolerance for the linear solver.
+   * @param[in] polynomial Type of polynomial augmentation
    *
    * For description on convergence testing and meaning of solverRtol see http://www.mcs.anl.gov/petsc/petsc-current/docs/manualpages/KSP/KSPConvergedDefault.html#KSPConvergedDefault
    */

@@ -10,8 +10,17 @@
 namespace precice {
 namespace mapping {
 
-/// Forward declare kind of polynomial from PetRadialBasisFctMapping.hpp
-enum class Polynomial;
+/// How to handle the polynomial?
+/**
+ * ON: Include it in the system matrix
+ * OFF: Omit it altogether
+ * SEPARATE: Compute it separately using least-squares QR.
+ */
+enum class Polynomial {
+  ON,
+  OFF,
+  SEPARATE
+};
 
 /// Performs XML configuration and holds configured mappings.
 class MappingConfiguration : public utils::XMLTag::Listener
