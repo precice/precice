@@ -479,10 +479,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   precice::utils::Event eFillA("PetRBF.fillA");
 
   for (int it = ownerRangeABegin; it < ownerRangeAEnd; it++) {
-    // hier colIdx, colVals über inMesh->vertices.count dimensionieren?
     PetscInt colNum = 0;
-    PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries MatrixC??
-    PetscScalar colVals[_matrixC.getSize().second]; // holds the values of the entries
+    PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
+    PetscScalar colVals[_matrixA.getSize().second]; // holds the values of the entries
     const mesh::Vertex& oVertex = outMesh->vertices()[it - _matrixA.ownerRange().first];
 
     // -- SET THE POLYNOM PART OF THE MATRIX --
@@ -501,7 +500,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
         if (not _deadAxis[dim]) {
           y = oVertex.getCoords()[dim];
           polyCol++;
-          // DEBUG("Filling A with polyparams: polyRow = " << polyRow << ", polyCol = " << polyCol << " Preallocation = " << nnzA[polyRow]);
           ierr = MatSetValuesLocal(m, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr); // das zusammen mit den MatSetValuesLocal unten machen
         }
       }
@@ -611,7 +609,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   int localPolyparams = utils::Parallel::getProcessRank() > 0 ? 0 : polyparams; // Set localPolyparams only when root rank
 
   if (getConstraint() == CONSERVATIVE) {
-    petsc::Vector Au(_matrixC, "Au");
+    petsc::Vector au(_matrixA, "au", petsc::Vector::RIGHT);
     petsc::Vector in(_matrixA, "in");
     
     // Fill input from input data values
@@ -622,7 +620,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
         int globalIndex = input()->vertices()[i].getGlobalIndex();
-        VecSetValue(in, globalIndex, inValues[(i)*valueDim + dim], INSERT_VALUES); // Dies besser als VecSetValuesLocal machen
+        VecSetValue(in, globalIndex, inValues[i*valueDim + dim], INSERT_VALUES); // Dies besser als VecSetValuesLocal machen
       }
       in.assemble();
 
@@ -634,9 +632,9 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
                                  std::forward_as_tuple(_matrixC, "out"))
         )->second;
       
-      ierr = MatMultTranspose(_matrixA, in, Au); CHKERRV(ierr);
+      ierr = MatMultTranspose(_matrixA, in, au); CHKERRV(ierr);
       utils::Event eSolve("PetRBF.solve.conservative");
-      ierr = KSPSolve(_solver, Au, out); CHKERRV(ierr);
+      ierr = KSPSolve(_solver, au, out); CHKERRV(ierr);
       eSolve.stop();
       
       PetscInt iterations;
