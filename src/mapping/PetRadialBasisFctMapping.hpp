@@ -118,6 +118,9 @@ private:
 
   /// Stores the solution from the previous iteration
   std::map<unsigned int, petsc::Vector> previousSolution;
+
+  /// Prints an INFO about the current mapping
+  void printMappingInfo(int inputDataID, int dim) const;
 };
 
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
@@ -595,8 +598,6 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
   assertion(input()->getDimensions() == output()->getDimensions(),
             input()->getDimensions(), output()->getDimensions());
 
-  const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
-  
   PetscErrorCode ierr = 0;
   KSPConvergedReason convReason;
   auto& inValues = input()->data(inputDataID)->values();
@@ -614,9 +615,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
     
     // Fill input from input data values
     for (int dim = 0; dim < valueDim; dim++) {
-      INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
-           << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-           << " to " << output()->getName() << " (ID " << output()->getID() << ") for dimension " << dim);
+      printMappingInfo(inputDataID, dim);
   
       for (size_t i = 0; i < input()->vertices().size(); i++ ) {
         int globalIndex = input()->vertices()[i].getGlobalIndex();
@@ -677,10 +676,8 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
 
     // For every data dimension, perform mapping
     for (int dim=0; dim < valueDim; dim++) {
-      INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
-           << " from " << input()->getName() << " (ID " << input()->getID() << ")"
-           << " to " << output()->getName() << " (ID " << output()->getID() << ") for dimension " << dim);
-
+      printMappingInfo(inputDataID, dim);
+      
       // Fill input from input data values
       int count = 0;
       for (const auto& vertex : input()->vertices()) {
@@ -744,6 +741,18 @@ bool PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::doesVertexContribute(int
     return true;
 
   return true;
+}
+
+template <typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inputDataID, int dim) const
+{
+  const std::string constraintName = getConstraint() == CONSERVATIVE ? "conservative" : "consistent";
+  const std::string polynomialName = _polynomial == Polynomial::ON ? "on" : _polynomial == Polynomial::OFF ? "off" : "separate";
+
+  INFO("Mapping " << input()->data(inputDataID)->getName() << " " << constraintName
+                  << " from " << input()->getName() << " (ID " << input()->getID() << ")"
+                  << " to " << output()->getName() << " (ID " << output()->getID() << ") "
+                  << "for dimension " << dim << ") with polynomial set to " << polynomialName);
 }
 
 template<typename RADIAL_BASIS_FUNCTION_T>
