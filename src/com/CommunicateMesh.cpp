@@ -261,7 +261,7 @@ void CommunicateMesh:: broadcastReceiveMesh
       vertexMap[vertexIDs[i]] = vertices[i];
     }
 
-    int edgeIDs[numberOfEdges];
+    int edgeIDs[numberOfEdges*2];
     _communication->broadcast(edgeIDs,numberOfEdges*2,rankBroadcaster);
     for( int i=0; i < numberOfEdges; i++){
       assertion ( vertexMap.find(edgeIDs[i*2]) != vertexMap.end() );
@@ -284,7 +284,7 @@ void CommunicateMesh:: broadcastReceiveMesh
         edgeMap[edgeIDs[i]] = edges[i];
       }
 
-      int triangleIDs[numberOfTriangles];
+      int triangleIDs[numberOfTriangles*3];
       _communication->broadcast(triangleIDs,numberOfTriangles*3,rankBroadcaster);
 
       for( int i=0; i < numberOfTriangles; i++){
