@@ -2,14 +2,16 @@ language: cpp
 
 compiler:
   - gcc
-  # - clang
+  - clang
   
 addons:
   apt:
     sources:
       - ubuntu-toolchain-r-test
+      - llvm-toolchain-precise-3.8
     packages:
-      - g++-4.8
+      - g++-6
+      - clang-3.8
       - python-numpy
       - openmpi-bin
       - libopenmpi-dev
@@ -25,7 +27,8 @@ env:
     - MPI=on
 
 before_install:
-  - if [ "$CXX" = "g++" ]; then export CXX="g++-4.8"; fi
+  - if [ "$CXX" = "g++" ]; then export CXX="g++-6"; fi
+  - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8"; fi
   - export OMPI_CXX=$CXX
   - if [ "$MPI" = "on" ]; then export CXX="mpicxx"; fi
 

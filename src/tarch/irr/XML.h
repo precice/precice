@@ -283,20 +283,6 @@ namespace tarch {
         }
 
         /**
-         * Evaluates a string to find out if it represents a bool.
-         *
-         * @author Tobias Weinzierl
-         */
-        bool convertValueStringToBool( const std::string& value ) const {
-          if ( value=="1" ) return true;
-          if ( value=="yes" ) return true;
-          if ( value=="true" ) return true;
-          if ( value=="on" ) return true;
-
-          return false;
-        }
-        
-        /**
          * Reads an attribute with the given name which is of Eigen::VectorXd
          * type from the xmlReader and stores it in the vector.
          *

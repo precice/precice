@@ -13,12 +13,14 @@
 #include <boost/log/support/date_time.hpp>
 
 #include "utils/assertion.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace logging {
 
 /// Function object that does nothing
-/* boost 1.55 ships the empty_deleter that was later renamend to null_deleter. boost 1.54 includes neither.
+/**
+ * boost 1.55 ships the empty_deleter that was later renamend to null_deleter. boost 1.54 includes neither.
  * This functor is used together with boost::shared_ptr to avoid deleting std::cout/cerr.
  * It can be removed and replaced by empty_deleter if boost 1.54 does not need to be supported anymore.
  * Omitting the deleter alltogether causes a double-free or corruption.
@@ -49,7 +51,8 @@ public:
 
 
 /// A simple backends that outputs the message to a stream
-/* Rationale: The original test_ostream_backend from boost suffered from the great amount of code that lies 
+/**
+ * Rationale: The original test_ostream_backend from boost suffered from the great amount of code that lies
  * between the printing of the message and the endline. This leads to high probability that a process switch 
  * occures and the message is severed from the endline.
  */
@@ -70,7 +73,7 @@ public:
 
 
 /// Reads a log file, returns a logging configuration.
-LoggingConfiguration readLogConfFile(std::string filename)
+LoggingConfiguration readLogConfFile(std::string const & filename)
 {
   namespace po = boost::program_options;
   po::options_description desc;
@@ -83,7 +86,7 @@ LoggingConfiguration readLogConfFile(std::string filename)
     po::parsed_options parsed = parse_config_file(ifs, desc, true);
     po::store(parsed, vm);
     po::notify(vm);
-    for (const auto& opt : parsed.options) {
+    for (auto const & opt : parsed.options) {
       std::string section = opt.string_key.substr(0, opt.string_key.find("."));
       std::string key = opt.string_key.substr(opt.string_key.find(".")+1);
       configs[section].setOption(key, opt.value[0]);        
@@ -96,7 +99,7 @@ LoggingConfiguration readLogConfFile(std::string filename)
 
   LoggingConfiguration retVal;
     
-  for (const auto& c : configs)
+  for (auto const & c : configs)
     if (c.second.enabled)
       retVal.push_back(c.second);
 
@@ -124,11 +127,7 @@ void BackendConfiguration::setOption(std::string key, std::string value)
   if (key == "format")
     format = value;
   if (key == "enabled") {
-    boost::algorithm::to_lower(value);
-    if (std::find(std::begin(trueValues), std::end(trueValues), value) == std::end(trueValues))
-      enabled = false;
-    else
-      enabled = true;
+    enabled = utils::convertStringToBool(value);
   }
 }
 
@@ -182,13 +181,13 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
 }
 
 
-void setupLogging(std::string logConfigFile)
+void setupLogging(std::string const & logConfigFile)
 {
   setupLogging(readLogConfFile(logConfigFile));
 }
 
 
-void setMPIRank(const int rank) {
+void setMPIRank(int const rank) {
   boost::log::attribute_cast<boost::log::attributes::mutable_constant<int>>(boost::log::core::get()->get_global_attributes()["Rank"]).set(rank);
 }
 

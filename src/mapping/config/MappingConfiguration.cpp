@@ -18,7 +18,7 @@ logging::Logger MappingConfiguration::_log("precice::config::MappingConfiguratio
 
 MappingConfiguration:: MappingConfiguration
 (
-  utils::XMLTag&                    parent,
+  utils::XMLTag &                   parent,
   const mesh::PtrMeshConfiguration& meshConfiguration )
 :
   TAG("mapping"),
@@ -66,6 +66,7 @@ MappingConfiguration:: MappingConfiguration
 {
   assertion (_meshConfig.use_count() > 0);
   using namespace utils;
+  using ValidString = ValidatorEquals<std::string>;
 
   XMLAttribute<double> attrShapeParam ( ATTR_SHAPE_PARAM );
   XMLAttribute<double> attrSupportRadius ( ATTR_SUPPORT_RADIUS );
@@ -81,56 +82,33 @@ MappingConfiguration:: MappingConfiguration
   XMLAttribute<bool> attrZDead(ATTR_Z_DEAD);
   attrZDead.setDocumentation("If set to true, the z axis will be ignored for the mapping");
   attrZDead.setDefaultValue(false);
-  XMLAttribute<bool> attrPolynomial("polynomial");
+  XMLAttribute<std::string> attrPolynomial("polynomial");
   attrPolynomial.setDocumentation("Toggles use of the global polynomial");
-  attrPolynomial.setDefaultValue(true);
+  attrPolynomial.setDefaultValue("on");
 
   XMLTag::Occurrence occ = XMLTag::OCCUR_ARBITRARY;
   std::list<XMLTag> tags;
   {
-    XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR, occ, TAG);
-    tags.push_back(tag);
-  }
-  {
-    XMLTag tag(*this, VALUE_NEAREST_PROJECTION, occ, TAG);
-    tags.push_back(tag);
-  }
-  {
     XMLTag tag(*this, VALUE_RBF_TPS, occ, TAG);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_MULTIQUADRICS, occ, TAG);
     tag.addAttribute(attrShapeParam);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_INV_MULTIQUADRICS, occ, TAG);
     tag.addAttribute(attrShapeParam);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_VOLUME_SPLINES, occ, TAG);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_GAUSSIAN, occ, TAG);
     tag.addAttribute(attrShapeParam);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
@@ -141,26 +119,17 @@ MappingConfiguration:: MappingConfiguration
   {
     XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C0, occ, TAG);
     tag.addAttribute(attrSupportRadius);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_RBF_CPOLYNOMIAL_C6, occ, TAG);
     tag.addAttribute(attrSupportRadius);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tags.push_back(tag);
   }
   // ---- Petsc RBF declarations ----
   {
     XMLTag tag(*this, VALUE_PETRBF_TPS, occ, TAG);
     tag.addAttribute(attrSolverRtol);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
@@ -168,9 +137,6 @@ MappingConfiguration:: MappingConfiguration
     XMLTag tag(*this, VALUE_PETRBF_MULTIQUADRICS, occ, TAG);
     tag.addAttribute(attrShapeParam);
     tag.addAttribute(attrSolverRtol);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
@@ -178,18 +144,12 @@ MappingConfiguration:: MappingConfiguration
     XMLTag tag(*this, VALUE_PETRBF_INV_MULTIQUADRICS, occ, TAG);
     tag.addAttribute(attrShapeParam);
     tag.addAttribute(attrSolverRtol);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
   {
     XMLTag tag(*this, VALUE_PETRBF_VOLUME_SPLINES, occ, TAG);
     tag.addAttribute(attrSolverRtol);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
@@ -197,9 +157,6 @@ MappingConfiguration:: MappingConfiguration
     XMLTag tag(*this, VALUE_PETRBF_GAUSSIAN, occ, TAG);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrShapeParam);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
@@ -207,9 +164,6 @@ MappingConfiguration:: MappingConfiguration
     XMLTag tag(*this, VALUE_PETRBF_CTPS_C2, occ, TAG);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrSupportRadius);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
@@ -217,9 +171,6 @@ MappingConfiguration:: MappingConfiguration
     XMLTag tag(*this, VALUE_PETRBF_CPOLYNOMIAL_C0, occ, TAG);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrSupportRadius);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
@@ -227,23 +178,31 @@ MappingConfiguration:: MappingConfiguration
     XMLTag tag(*this, VALUE_PETRBF_CPOLYNOMIAL_C6, occ, TAG);
     tag.addAttribute(attrSolverRtol);
     tag.addAttribute(attrSupportRadius);
-    tag.addAttribute(attrXDead);
-    tag.addAttribute(attrYDead);
-    tag.addAttribute(attrZDead);
     tag.addAttribute(attrPolynomial);
     tags.push_back(tag);
   }
-
+  // Add tags that only RBF mappings use
+  for (XMLTag& tag : tags) {
+    tag.addAttribute(attrXDead);
+    tag.addAttribute(attrYDead);
+    tag.addAttribute(attrZDead);
+  }
+  {
+    XMLTag tag(*this, VALUE_NEAREST_NEIGHBOR, occ, TAG);
+    tags.push_back(tag);
+  }
+  {
+    XMLTag tag(*this, VALUE_NEAREST_PROJECTION, occ, TAG);
+    tags.push_back(tag);
+  }
+  
   XMLAttribute<std::string> attrDirection ( ATTR_DIRECTION );
   ValidatorEquals<std::string> validDirectionWrite ( VALUE_WRITE );
   ValidatorEquals<std::string> validDirectionRead ( VALUE_READ );
   attrDirection.setValidator ( validDirectionWrite || validDirectionRead );
 
-
   XMLAttribute<std::string> attrFromMesh(ATTR_FROM);
   XMLAttribute<std::string> attrToMesh(ATTR_TO);
-
-  typedef ValidatorEquals<std::string> ValidString;
 
   XMLAttribute<std::string> attrConstraint(ATTR_CONSTRAINT);
   ValidString validConservative(VALUE_CONSERVATIVE);
@@ -257,7 +216,8 @@ MappingConfiguration:: MappingConfiguration
   ValidString validOnDemand(VALUE_TIMING_ON_DEMAND);
   attrTiming.setValidator(validInitial || validOnAdvance || validOnDemand);
 
-  for (XMLTag& tag : tags){
+  // Add tags that all mappings use and add to parent tag
+  for (XMLTag & tag : tags) {\
     tag.addAttribute(attrDirection);
     tag.addAttribute(attrFromMesh);
     tag.addAttribute(attrToMesh);
@@ -283,7 +243,7 @@ void MappingConfiguration:: xmlTagCallback
     double supportRadius = 0.0;
     double solverRtol = 1e-9;
     bool xDead = false, yDead = false, zDead = false;
-    bool polynomial = true;
+    Polynomial polynomial = Polynomial::ON;
     
     if (tag.hasAttribute(ATTR_SHAPE_PARAM)){
       shapeParameter = tag.getDoubleAttributeValue(ATTR_SHAPE_PARAM);
@@ -304,9 +264,13 @@ void MappingConfiguration:: xmlTagCallback
       zDead = tag.getBooleanAttributeValue(ATTR_Z_DEAD);
     }
     if (tag.hasAttribute("polynomial")) {
-      polynomial = tag.getBooleanAttributeValue("polynomial");
+      std::string strPolynomial = tag.getStringAttributeValue("polynomial");
+      if (strPolynomial == "separate")
+        polynomial = Polynomial::SEPARATE;
+      else
+        polynomial = utils::convertStringToBool(strPolynomial) ? Polynomial::ON : Polynomial::OFF;
     }
-        
+          
     ConfiguredMapping configuredMapping = createMapping(dir, type, constraint,
                                                         fromMesh, toMesh, timing,
                                                         shapeParameter, supportRadius, solverRtol,
@@ -359,7 +323,7 @@ MappingConfiguration::ConfiguredMapping MappingConfiguration:: createMapping
   bool               xDead,
   bool               yDead,
   bool               zDead,
-  bool               polynomial) const
+  Polynomial         polynomial) const
 {
   TRACE(direction, type, timing, shapeParameter, supportRadius);
   using namespace mapping;

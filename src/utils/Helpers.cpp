@@ -1,5 +1,7 @@
 #include "utils/Globals.hpp"
 
+#include  <boost/algorithm/string/case_conv.hpp>
+
 namespace precice {
 namespace utils {
 
@@ -13,10 +15,14 @@ bool isMachineBigEndian()
    return bint.c[0] == 1;
 }
 
-//template<>
-//double getZero ( double ) { return 0.0; }
-//
-//template<>
-//int getZero ( int ) { return 0; }
+bool convertStringToBool(std::string const & value)
+{
+  std::string str = value;
+  boost::algorithm::to_lower(str);
+  if ( str=="1" or str=="yes" or str=="true" or str=="on" )
+    return true;
+  
+  return false;
+}
 
 }}
