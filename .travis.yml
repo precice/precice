@@ -26,6 +26,10 @@ env:
     - MPI=off
     - MPI=on
 
+cache:
+  directories:
+    - $LOCAL_INSTALL
+
 before_install:
   - if [ "$CXX" = "g++" ]; then export CXX="g++-6"; fi
   - if [ "$CXX" = "clang++" ]; then export CXX="clang++-3.8"; fi
@@ -33,16 +37,8 @@ before_install:
   - if [ "$MPI" = "on" ]; then export CXX="mpicxx"; fi
 
 install:
-  - mkdir -p $LOCAL_INSTALL/include $LOCAL_INSTALL/lib
-  - wget http://bitbucket.org/eigen/eigen/get/3.2.5.tar.bz2 -O - | tar xj -C $LOCAL_INSTALL/include --strip-components=1 eigen-eigen-bdd17ee3b1b3/Eigen
-  - wget 'http://downloads.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.tar.bz2' -O - | tar xj
-  - cd boost_1_60_0
-  - export BOOST_SRC=`pwd`
-  - ./bootstrap.sh
-  - ./b2 --with-program_options --with-test --with-filesystem --with-log
-  - ln -s "$BOOST_SRC/boost" $LOCAL_INSTALL/include/
-  - ln -s "$BOOST_SRC/stage/lib/"* $LOCAL_INSTALL/lib/
-
+  - $TRAVIS_BUILD_DIR/tools/travis-install-dependencies.sh $LOCAL_INSTALL
+  
 before_script:
   - mkdir $TRAVIS_BUILD_DIR/tests
 
