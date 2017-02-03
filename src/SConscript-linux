@@ -1,39 +1,34 @@
 sourcesAction = [
     Glob('action/*.cpp'),
-    Glob('action/config/*.cpp'),
-    Glob('action/tests/*.cpp')
+    Glob('action/config/*.cpp')
 ]
 
 sourcesCom = [
     Glob('com/*.cpp'),
     Glob('com/impl/*.cpp'),
-    Glob('com/config/*.cpp'),
-    Glob('com/tests/*.cpp')
+    Glob('com/config/*.cpp')
 ]
 
 sourcesCplscheme = [
     Glob('cplscheme/*.cpp'),
     Glob('cplscheme/impl/*.cpp'),
-    Glob('cplscheme/config/*.cpp'),
-    Glob('cplscheme/tests/*.cpp')
+    Glob('cplscheme/config/*.cpp')
 ]
 
-sourcesDrivers = [
-    Glob('drivers/*.cpp')
+sourcesMain = [
+    Glob('drivers/main.cpp')
 ]
 
 sourcesGeometry = [
     Glob('geometry/*.cpp'),
     Glob('geometry/config/*.cpp'),
-    Glob('geometry/tests/*.cpp'),
     Glob('geometry/impl/*.cpp')
 ]
 
 sourcesIO = [
     Glob('io/*.cpp'),
     Glob('io/impl/*.cpp'),
-    Glob('io/config/*.cpp'),
-    Glob('io/tests/*.cpp')
+    Glob('io/config/*.cpp')
 ]
 
 sourcesLogging = [
@@ -43,15 +38,13 @@ sourcesLogging = [
 
 sourcesM2N = [
     Glob('m2n/*.cpp'),
-    Glob('m2n/tests/*.cpp'),
     Glob('m2n/config/*.cpp')
 ]
 
 sourcesMapping = [
     Glob('mapping/*.cpp'),
     Glob('mapping/impl/*.cpp'),
-    Glob('mapping/config/*.cpp'),
-    Glob('mapping/tests/*.cpp')
+    Glob('mapping/config/*.cpp')
 ]
 
 sourcesMath = [
@@ -60,69 +53,76 @@ sourcesMath = [
 
 sourcesMesh = [
     Glob('mesh/*.cpp'),
-    Glob('mesh/tests/*.cpp'),
     Glob('mesh/impl/*.cpp'),
     Glob('mesh/config/*.cpp')
 ]
 
 sourcesQuery = [
-    Glob('query/*.cpp'),
-    Glob('query/tests/*.cpp')
+    Glob('query/*.cpp')
 ]
 
 sourcesSpacetree = [
     Glob('spacetree/*.cpp'),
     Glob('spacetree/impl/*.cpp'),
-    Glob('spacetree/config/*.cpp'),
-    Glob('spacetree/tests/*.cpp')
+    Glob('spacetree/config/*.cpp')
 ]
 
 sourcesPrecice = [
     Glob('precice/*.cpp'),
     Glob('precice/impl/*.cpp'),
     Glob('precice/config/*.cpp'),
-    Glob('precice/tests/*.cpp'),
-    Glob('precice/tests/geometrymode/*.cpp'),
-    Glob('precice/tests/couplingmode/*.cpp'),
-    Glob('precice/tests/servermode/*.cpp'),
     Glob('precice/adapters/c/*.cpp'),
     Glob('precice/adapters/fortran/*.cpp')
 ]
 
 sourcesTarchLA = [
-   Glob('tarch/la/*.cpp'),
-   Glob('tarch/la/traits/*.cpp'),
-   Glob('tarch/la/tests/*.cpp')
+    Glob('tarch/la/*.cpp'),
+    Glob('tarch/la/traits/*.cpp')
 ]
 
 sourcesTarchMulticore = [
-   Glob('tarch/multicore/*.cpp')
+    Glob('tarch/multicore/*.cpp')
 ]
 
 sourcesTarchLogging = [
-   Glob('tarch/logging/*.cpp'),
-   Glob('tarch/logging/configurations/*.cpp')
-]
-
-sourcesTarchTests = [
-   Glob('tarch/tests/*.cpp'),
-   Glob('tarch/tests/configurations/*.cpp')
+    Glob('tarch/logging/*.cpp'),
+    Glob('tarch/logging/configurations/*.cpp')
 ]
 
 sourcesTarch = [
-   Glob('tarch/configuration/*.cpp'),
-   Glob('tarch/irr/*.cpp'),
-   sourcesTarchLA,
-   sourcesTarchMulticore,
-   sourcesTarchLogging,
-   Glob('tarch/services/*.cpp'),
-   sourcesTarchTests,
+    Glob('tarch/configuration/*.cpp'),
+    Glob('tarch/irr/*.cpp'),
+    sourcesTarchLA,
+    sourcesTarchMulticore,
+    sourcesTarchLogging,
+    Glob('tarch/services/*.cpp'),
+]
+
+sourcesTarchTests = [
+    Glob('tarch/tests/*.cpp'),
+    Glob('tarch/tests/configurations/*.cpp'),
+    Glob('action/tests/*.cpp'),
+    Glob('com/tests/*.cpp'),
+    Glob('cplscheme/tests/*.cpp'),
+    Glob('geometry/tests/*.cpp'),
+    Glob('io/tests/*.cpp'),
+    Glob('m2n/tests/*.cpp'),
+    Glob('mapping/tests/*.cpp'),
+    Glob('mesh/tests/*.cpp'),
+    Glob('query/tests/*.cpp'),
+    Glob('spacetree/tests/*.cpp'),
+    Glob('precice/tests/*.cpp'),
+    Glob('precice/tests/geometrymode/*.cpp'),
+    Glob('precice/tests/couplingmode/*.cpp'),
+    Glob('precice/tests/servermode/*.cpp'),
+    Glob('tarch/la/tests/*.cpp'),
+    Glob('utils/tests/*.cpp')
 ]
 
 sourcesUtils = [
     Glob('utils/*.cpp'),
     Glob('utils/xml/*.cpp'),
-    Glob('utils/tests/*.cpp')
+
 ]
 
 sourcesAllNoMain = [
@@ -143,9 +143,4 @@ sourcesAllNoMain = [
     sourcesTarch,
 ]
 
-sourcesAll = [
-    sourcesAllNoMain,
-    sourcesDrivers
-]
-
-Return ('sourcesAllNoMain', 'sourcesAll')
+Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTarchTests')

@@ -4,7 +4,7 @@ import sys
 
 ##################################################################### FUNCTIONS
 
-def uniqueCheckLib(conf, lib):
+def uniqueCheckLib(lib):
     """ Checks for a library and appends it to env if not already appended. """
     if conf.CheckLib(lib, autoadd=0, language="C++"):
         conf.env.AppendUnique(LIBS = [lib])
@@ -13,9 +13,12 @@ def uniqueCheckLib(conf, lib):
         print "ERROR: Library '" + lib + "' not found!"
         Exit(1)
 
-def errorMissingHeader(header, usage):
-    print "ERROR: Header '" + header + "' (needed for " + usage + ") not found or does not compile!"
-    Exit(1)
+def checkHeader(header, usage):
+    if not conf.CheckCXXHeader(header):
+        print "ERROR: Header '" + str(header) + "' (needed for " + usage + ") not found or does not compile!"
+        Exit(1)
+    else:
+        return True
 
 def print_options(vars):
     """ Print all build option and if they have been modified from their default value. """
@@ -143,16 +146,15 @@ if env["petsc"]:
                           os.path.join( PETSC_DIR, PETSC_ARCH, "include")])
     env.Append(LIBPATH = [os.path.join( PETSC_DIR, PETSC_ARCH, "lib")])
     if env["platform"] == "hazelhen":
-        uniqueCheckLib(conf, "craypetsc_gnu_real")
+        uniqueCheckLib("craypetsc_gnu_real")
     else:
-        uniqueCheckLib(conf, "petsc")
+        uniqueCheckLib("petsc")
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_PETSC'])
     buildpath += "-nopetsc"
 
 # ====== Eigen ======
-if not conf.CheckCXXHeader("Eigen/Dense"):
-    errorMissingHeader("Eigen/Dense", "Eigen")
+checkHeader("Eigen/Dense", "Eigen")
 if env["build"] == "debug":
     env.Append(CPPDEFINES = ['EIGEN_INITIALIZE_MATRICES_BY_NAN'])
 
@@ -163,17 +165,17 @@ if env["platform"] == "hazelhen":
     env.Append(CPPPATH = [os.environ['BOOST_ROOT'] + '/include'])
     env.Append(LIBPATH = [os.environ['BOOST_ROOT'] + '/lib'])
 
-env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3'])
-uniqueCheckLib(conf, "boost_log")
-uniqueCheckLib(conf, "boost_log_setup")
-uniqueCheckLib(conf, "boost_thread")
-uniqueCheckLib(conf, "boost_system")
-uniqueCheckLib(conf, "boost_filesystem")
-uniqueCheckLib(conf, "boost_program_options")
-env.Append(CPPDEFINES=["BOOST_LOG_DYN_LINK"])
+env.Append(CPPDEFINES= ['BOOST_SPIRIT_USE_PHOENIX_V3',
+                        'BOOST_ALL_DYN_LINK'])
 
-if not conf.CheckCXXHeader('boost/vmd/is_empty.hpp'):
-    errorMissingHeader('boost/vmd/is_empty.hpp', 'Boost Variadic Macro Data Library')
+uniqueCheckLib("boost_log")
+uniqueCheckLib("boost_log_setup")
+uniqueCheckLib("boost_thread")
+uniqueCheckLib("boost_system")
+uniqueCheckLib("boost_filesystem")
+uniqueCheckLib("boost_program_options")
+
+checkHeader('boost/vmd/is_empty.hpp', 'Boost Variadic Macro Data Library')
 
 # ====== Spirit2 ======
 if not env["spirit2"]:
@@ -202,17 +204,16 @@ if env["sockets"]:
         socketIncPath =  checkset_var('PRECICE_SOCKET_INC_PATH', '/mingw64/include')
 
         env.AppendUnique(LIBPATH = [socketLibPath])
-        uniqueCheckLib(conf, socketLib)
+        uniqueCheckLib(socketLib)
         env.AppendUnique(CPPPATH = [socketIncPath])
 
         if socketLib == 'ws2_32':
             if not conf.CheckHeader('winsock2.h'):
                 errorMissingHeader('winsock2.h', 'Windows Sockets 2')
 
-    uniqueCheckLib(conf, pthreadLib)
+    uniqueCheckLib(pthreadLib)
     if pthreadLib == 'pthread':
-        if not conf.CheckCXXHeader('pthread.h'):
-            errorMissingHeader('pthread.h', 'POSIX Threads')
+        checkHeader('pthread.h', 'POSIX Threads')
 else:
     env.Append(CPPDEFINES = ['PRECICE_NO_SOCKETS'])
     buildpath += "-nosockets"
@@ -225,13 +226,11 @@ if env["python"]:
     
     # FIXME: Supresses NumPy deprecation warnings. Needs to converted to the newer API.
     env.Append(CPPDEFINES = ['NPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION'])
-    uniqueCheckLib(conf, pythonLib)
+    uniqueCheckLib(pythonLib)
     env.AppendUnique(CPPPATH = [pythonIncPath, numpyIncPath])
-    if not conf.CheckCXXHeader('Python.h'):
-        errorMissingHeader('Python.h', 'Python')
+    checkHeader('Python.h', "Python")
     # Check for numpy header needs python header first to compile
-    if not conf.CheckCXXHeader(['Python.h', 'numpy/arrayobject.h']):
-        errorMissingHeader('numpy/arrayobject.h', 'Python NumPy')
+    checkHeader(['Python.h', 'numpy/arrayobject.h'], "NumPy")
 else:
     buildpath += "-nopython"
     env.Append(CPPDEFINES = ['PRECICE_NO_PYTHON'])
@@ -254,7 +253,7 @@ env = conf.Finish() # Used to check libraries
 
 #--------------------------------------------- Define sources and build targets
 
-(sourcesPreCICE, sourcesPreCICEMain) = SConscript (
+(sourcesAllNoMain, sourcesMain, sourcesTarchTests) = SConscript (
     'src/SConscript-linux',
     variant_dir = buildpath,
     duplicate = 0
@@ -262,19 +261,21 @@ env = conf.Finish() # Used to check libraries
 
 staticlib = env.StaticLibrary (
     target = buildpath + '/libprecice',
-    source = [sourcesPreCICE]
+    source = [sourcesAllNoMain]
 )
 env.Alias("staticlib", staticlib)
 
 solib = env.SharedLibrary (
     target = buildpath + '/libprecice',
-    source = [sourcesPreCICE]
+    source = [sourcesAllNoMain]
 )
 env.Alias("solib", solib)
 
 bin = env.Program (
     target = buildpath + '/binprecice',
-    source = [sourcesPreCICEMain]
+    source = [sourcesAllNoMain,
+              sourcesMain,
+              sourcesTarchTests]
 )
 env.Alias("bin", bin)
 
@@ -285,7 +286,8 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(staticlib, solib, bin, symlink)
+Default(staticlib, bin, solib, symlink)
+
 AlwaysBuild(symlink)
 
 print "Targets:   " + ", ".join([str(i) for i in BUILD_TARGETS])
