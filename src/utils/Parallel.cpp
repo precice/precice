@@ -252,9 +252,11 @@ const Parallel::Communicator& Parallel:: getLocalCommunicator()
   return _localCommunicator;
 }
 
-Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int>& ranks)
+Parallel::Communicator Parallel:: getRestrictedCommunicator
+(
+  const std::vector<int>& ranks )
 {
-  TRACE();
+  preciceTrace ( "getRestrictedCommunicator()" );
   Communicator restrictedCommunicator = getCommunicatorWorld();
 # ifndef PRECICE_NO_MPI
   assertion ( _isInitialized );
@@ -262,16 +264,23 @@ Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int
   // Create group, containing all processes of communicator
   MPI_Group currentGroup;
   MPI_Comm_group ( _globalCommunicator, &currentGroup );
-# ifndef NDEBUG
+  int * ranksArray = new int[ranks.size()];
+# ifdef Debug
   int communicatorSize = 0;
   MPI_Comm_size (_globalCommunicator, &communicatorSize);
   DEBUG ( "Comm size:" << communicatorSize );
   DEBUG ( "ranks size:" << (int)ranks.size() );
-# endif // NDEBUG
+  //   assertion ( (int)ranks.size() < communicatorSize );
+# endif // Debug
+  for ( size_t i=0; i < ranks.size(); i++ ) {
+    DEBUG ( "Adding rank " << ranks[i] );
+    assertion ( ranks[i] >= 0 );
+    ranksArray[i] = ranks[i];
+  }
   // Create subgroup, containing processes contained in ranks
   DEBUG ( "Restrict Group" );
   MPI_Group restrictedGroup;
-  MPI_Group_incl ( currentGroup, ranks.size(), ranks.data(), &restrictedGroup );
+  MPI_Group_incl ( currentGroup, ranks.size(), ranksArray, &restrictedGroup );
 # ifdef Asserts
   int restrictedGroupSize = 0;
   MPI_Group_size ( restrictedGroup, & restrictedGroupSize );
@@ -279,6 +288,7 @@ Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int
 # endif
   // Create communicator, containing process of restrictedGroup
   DEBUG ( "Create Comm" );
+//  MPI_Comm restrictedCommunicator;
   MPI_Comm_create ( _globalCommunicator, restrictedGroup, &restrictedCommunicator );
   DEBUG ( "Barrier" );
   MPI_Barrier ( _globalCommunicator );
@@ -286,6 +296,7 @@ Parallel::Communicator Parallel::getRestrictedCommunicator(const std::vector<int
   MPI_Group_free ( &currentGroup );
   DEBUG ( "Free restricted group" );
   MPI_Group_free ( &restrictedGroup );
+  delete[] ranksArray;
 # endif // not PRECICE_NO_MPI
   return restrictedCommunicator;
 }
