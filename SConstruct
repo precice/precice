@@ -174,6 +174,7 @@ uniqueCheckLib("boost_thread")
 uniqueCheckLib("boost_system")
 uniqueCheckLib("boost_filesystem")
 uniqueCheckLib("boost_program_options")
+uniqueCheckLib("boost_unit_test_framework")
 
 checkHeader('boost/vmd/is_empty.hpp', 'Boost Variadic Macro Data Library')
 
@@ -253,7 +254,7 @@ env = conf.Finish() # Used to check libraries
 
 #--------------------------------------------- Define sources and build targets
 
-(sourcesAllNoMain, sourcesMain, sourcesTarchTests) = SConscript (
+(sourcesAllNoMain, sourcesMain, sourcesTests, sourcesTarchTests) = SConscript (
     'src/SConscript-linux',
     variant_dir = buildpath,
     duplicate = 0
@@ -279,6 +280,13 @@ bin = env.Program (
 )
 env.Alias("bin", bin)
 
+tests = env.Program (
+    target = buildpath + '/testprecice',
+    source = [sourcesAllNoMain,
+              sourcesTests]
+)
+env.Alias("tests", tests)
+
 # Creates a symlink that always points to the latest build
 symlink = env.Command(
     target = "Symlink",
@@ -286,7 +294,7 @@ symlink = env.Command(
     action = "ln -fns {0} {1}".format(os.path.split(buildpath)[-1], os.path.join(os.path.split(buildpath)[0], "last"))
 )
 
-Default(staticlib, bin, solib, symlink)
+Default(staticlib, bin, solib, tests, symlink)
 
 AlwaysBuild(symlink)
 

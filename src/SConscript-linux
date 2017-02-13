@@ -119,6 +119,11 @@ sourcesTarchTests = [
     Glob('utils/tests/*.cpp')
 ]
 
+sourcesTests = [
+    Glob('*/boosttests/*.cpp'),
+    File("testing/main.cpp")
+]
+
 sourcesUtils = [
     Glob('utils/*.cpp'),
     Glob('utils/xml/*.cpp'),
@@ -143,4 +148,4 @@ sourcesAllNoMain = [
     sourcesTarch,
 ]
 
-Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTarchTests')
+Return ('sourcesAllNoMain', 'sourcesMain', 'sourcesTests', 'sourcesTarchTests')
