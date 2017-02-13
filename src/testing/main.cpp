@@ -1,6 +1,8 @@
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 #include "utils/Parallel.hpp"
 #include "utils/Petsc.hpp"
+#include "utils/Globals.hpp"
 #include "logging/LogConfiguration.hpp"
 
 /// Boost test Initialization function:
@@ -29,6 +31,10 @@ int main(int argc, char* argv[])
   utils::Parallel::initializeMPI(&argc, &argv);
   logging::setMPIRank(utils::Parallel::getProcessRank());
   utils::Petsc::initialize(&argc, &argv);
+
+  // Sets path to src directory
+  precice::utils::Globals::setPathToSources(
+    boost::filesystem::path(__FILE__).parent_path().parent_path().string());
   
   int retCode = boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
 
