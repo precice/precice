@@ -5,6 +5,8 @@
 
 #include <boost/program_options.hpp>
 
+#include <boost/core/null_deleter.hpp>
+
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
@@ -17,19 +19,6 @@
 
 namespace precice {
 namespace logging {
-
-/// Function object that does nothing
-/**
- * boost 1.55 ships the empty_deleter that was later renamend to null_deleter. boost 1.54 includes neither.
- * This functor is used together with boost::shared_ptr to avoid deleting std::cout/cerr.
- * It can be removed and replaced by empty_deleter if boost 1.54 does not need to be supported anymore.
- * Omitting the deleter alltogether causes a double-free or corruption.
- */
-struct null_deleter
-{
-  template<typename T> void operator() (T*) const {}
-};
-
 
 /// A custom formatter that handle the TimeStamp format string
 class timestamp_formatter_factory :
@@ -114,7 +103,6 @@ const std::string BackendConfiguration::default_output = "stdout";
 
 void BackendConfiguration::setOption(std::string key, std::string value)
 {
-  const std::vector<std::string> trueValues = {"true", "1", "on", "yes"};
   boost::algorithm::to_lower(key);
   if (key == "type") {
     boost::algorithm::to_lower(value);
@@ -166,9 +154,9 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
       backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(new std::ofstream(config.output)));
     if (config.type == "stream") {
       if (config.output == "stdout")
-        backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cout, null_deleter()));
+        backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cout, boost::null_deleter()));
       if (config.output == "stderr")
-        backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cerr, null_deleter()));
+        backend = boost::make_shared<StreamBackend>(boost::shared_ptr<std::ostream>(&std::cerr, boost::null_deleter()));
     }
     assertion(backend != nullptr, "The logging backend was not initialized properly. Check your log config.");
     backend->auto_flush(true);
