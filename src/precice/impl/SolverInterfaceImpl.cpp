@@ -218,15 +218,10 @@ void SolverInterfaceImpl:: configure
       meshContext->spacetree = spacetreeConfig->getSpacetree(spacetreeName);
     }
   }
-
-  int argc = 1;
-  char* arg = new char[8];
-  strcpy(arg, "precice");
-  char** argv = &arg;
-  utils::Parallel::initializeMPI(&argc, &argv);
+  
+  utils::Parallel::initializeMPI(nullptr, nullptr);
   precice::logging::setMPIRank(utils::Parallel::getProcessRank());
-  delete[] arg;
-
+  
   // Setup communication to server
   if (_clientMode){
     initializeClientServerCommunication();
