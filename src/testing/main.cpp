@@ -33,8 +33,11 @@ int main(int argc, char* argv[])
   utils::Petsc::initialize(&argc, &argv);
 
   // Sets path to src directory
-  precice::utils::Globals::setPathToSources(
-    boost::filesystem::path(__FILE__).parent_path().parent_path().string());
+  // precice::utils::Globals::setPathToSources(
+    // boost::filesystem::path(__FILE__).parent_path().parent_path().string());
+
+  // Evil hack, execution of tests is currently only possible from a subdir of precice, e.g. precice/tests/
+  precice::utils::Globals::setPathToSources("../src");
   
   int retCode = boost::unit_test::unit_test_main( &init_unit_test, argc, argv );
 
