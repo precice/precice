@@ -1,8 +1,8 @@
 #pragma once
 
-#include "spacetree/Spacetree.hpp"
 #include "utils/assertion.hpp"
 #include "logging/Logger.hpp"
+#include <Eigen/Core>
 
 namespace precice {
 namespace spacetree {
@@ -16,9 +16,9 @@ public:
 
   Environment ( const Environment& toCopy );
 
-  const Eigen::VectorXi& getNeighborCellIndices ( int cellIndex ) const;
+  const Eigen::VectorXi& getNeighborCellIndices ( size_t cellIndex ) const;
 
-  const Eigen::VectorXi& getNeighborSideIndices ( int cellIndex ) const;
+  const Eigen::VectorXi& getNeighborSideIndices ( size_t cellIndex ) const;
   
   const Eigen::VectorXi& getNeighborCellPositions() const
   {
@@ -31,27 +31,26 @@ public:
   }
 
   void setNeighborCellIndices (
-    int                                  cellIndex,
+    size_t cellIndex,
     const Eigen::VectorXi& indices )
   {
-    assertion((cellIndex >= 0) && (cellIndex < _neighborCellIndices.size()),
-               cellIndex, _neighborCellIndices.size());
+    assertion(cellIndex < _neighborCellIndices.size(), cellIndex, _neighborCellIndices.size());
     _neighborCellIndices[cellIndex] = indices;
   }
 
   void setNeighborSideIndices (
-    int                                  cellIndex,
+    size_t cellIndex,
     const Eigen::VectorXi& indices )
   {
-    assertion((cellIndex >= 0) && (cellIndex < _neighborSideIndices.size()),
-               cellIndex, _neighborSideIndices.size());
+    assertion(cellIndex < _neighborSideIndices.size(),
+              cellIndex, _neighborSideIndices.size());
     _neighborSideIndices[cellIndex] = indices;
   }
 
-  void setNeighborCellPosition ( int sideIndex, int position )
+  void setNeighborCellPosition ( size_t sideIndex, int position )
   {
-    assertion((sideIndex >= 0) && (sideIndex < _neighborCellPositions.size()),
-               sideIndex, _neighborCellPositions.size());
+    assertion(sideIndex < static_cast<size_t>(_neighborCellPositions.size()),
+              sideIndex, _neighborCellPositions.size());
     _neighborCellPositions[sideIndex] = position;
   }
 

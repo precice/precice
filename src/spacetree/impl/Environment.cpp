@@ -1,4 +1,5 @@
 #include "spacetree/impl/Environment.hpp"
+#include "spacetree/Spacetree.hpp"
 
 namespace precice {
 namespace spacetree {
@@ -25,17 +26,15 @@ Environment:: Environment
   _neighborCellPositions(toCopy._neighborCellPositions)
 {}
 
-const Eigen::VectorXi& Environment::getNeighborCellIndices ( int cellIndex ) const
+const Eigen::VectorXi& Environment::getNeighborCellIndices ( size_t cellIndex ) const
 {
-  assertion((cellIndex >= 0) && (cellIndex < _neighborCellIndices.size()),
-            cellIndex, _neighborCellIndices.size());
+  assertion(cellIndex < _neighborCellIndices.size(), cellIndex, _neighborCellIndices.size());
   return _neighborCellIndices[cellIndex];
 }
 
-const Eigen::VectorXi& Environment::getNeighborSideIndices ( int cellIndex ) const
+const Eigen::VectorXi& Environment::getNeighborSideIndices ( size_t cellIndex ) const
 {
-  assertion((cellIndex >= 0) && (cellIndex < _neighborSideIndices.size()),
-            cellIndex, _neighborSideIndices.size());
+  assertion( cellIndex < _neighborSideIndices.size(), cellIndex, _neighborSideIndices.size());
   return _neighborSideIndices[cellIndex];
 }
 
@@ -43,7 +42,7 @@ const Eigen::VectorXi& Environment::getNeighborSideIndices ( int cellIndex ) con
 
 void Environment:: computePosition()
 {
-  for ( int i=0; i < (int)_neighborCellPositions.size(); i++ ){
+  for ( long i=0; i < _neighborCellPositions.size(); i++ ){
     int pos = _neighborCellPositions[i];
     if (pos == Spacetree::positionUndefined()){
       continue;
@@ -56,8 +55,7 @@ void Environment:: computePosition()
       return;
     }
   }
-  preciceCheck( _position == Spacetree::positionOnGeometry(),
-                "computePosition()", "Could compute position!" );
+  CHECK(_position == Spacetree::positionOnGeometry(), "Could compute position!");
 }
 
 }}} // namespace precice, spacetree, impl
