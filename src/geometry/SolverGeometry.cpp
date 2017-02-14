@@ -1,4 +1,5 @@
 #include "SolverGeometry.hpp"
+#include "com/Communication.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "utils/Globals.hpp"
@@ -16,7 +17,7 @@ SolverGeometry:: SolverGeometry
 :
   Geometry ( offset )
 {
-  preciceTrace ( "SolverGeometry()" );
+  TRACE();
 }
 
 

@@ -532,12 +532,12 @@ void ParticipantConfiguration:: xmlTagCallback
   }
   else if (tag.getNamespace() == TAG_SERVER){
     com::CommunicationConfiguration comConfig;
-    com::Communication::SharedPointer com = comConfig.createCommunication(tag);
+    com::PtrCommunication com = comConfig.createCommunication(tag);
     _participants.back()->setClientServerCommunication(com);
   }
   else if (tag.getNamespace() == TAG_MASTER){
     com::CommunicationConfiguration comConfig;
-    com::Communication::SharedPointer com = comConfig.createCommunication(tag);
+    com::PtrCommunication com = comConfig.createCommunication(tag);
     utils::MasterSlave::_communication = com;
 
     _participants.back()->setUseMaster(true);

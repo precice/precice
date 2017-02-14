@@ -1,11 +1,9 @@
 #pragma once
 
-#include "com/Communication.hpp"
-#include "m2n/M2N.hpp"
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
-#include "utils/xml/XMLTag.hpp"
 #include "cplscheme/SharedPointer.hpp"
+#include "m2n/SharedPointer.hpp"
 #include <string>
 
 namespace precice {
@@ -16,8 +14,6 @@ namespace precice {
       class MeshConfiguration;
    }
 }
-
-// ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
 namespace cplscheme {
@@ -30,14 +26,8 @@ class ParallelImplicitCouplingSchemeTest : public tarch::tests::TestCase
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
   ParallelImplicitCouplingSchemeTest();
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~ParallelImplicitCouplingSchemeTest() {}
 
   /**
@@ -92,7 +82,7 @@ private:
       const std::string&     participant0,
       const std::string&     participant1,
       const std::string&     localParticipant,
-      m2n::M2N::SharedPointer&           communication ) const;
+      m2n::PtrM2N&           communication ) const;
 
 # endif // not PRECICE_NO_MPI
 };

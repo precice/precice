@@ -3,7 +3,6 @@
 #include "BaseCouplingScheme.hpp"
 #include "logging/Logger.hpp"
 
-
 namespace precice {
 namespace cplscheme {
 
@@ -18,12 +17,11 @@ public:
     const std::string&    firstParticipant,
     const std::string&    secondParticipant,
     const std::string&    localParticipant,
-    m2n::M2N::SharedPointer           m2n,
+    m2n::PtrM2N           m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode          cplMode,
     int                   maxIterations = 1);
 
-  /// @brief Logging device.
   static logging::Logger _log;
 
   virtual void initialize(double startTime, int startTimestep);
@@ -34,10 +32,10 @@ public:
 
 
 protected:
-  /// @brief merges send and receive data into one map (for parallel post-processing)
+  /// merges send and receive data into one map (for parallel post-processing)
   virtual void mergeData();
 
-  /// @brief Returns all data (receive and send)
+  /// Returns all data (receive and send)
   DataMap& getAllData()
     {
       assertion(!doesFirstStep(), "Only the second participant should do the post processing." );

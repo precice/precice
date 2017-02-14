@@ -5,7 +5,7 @@
 #include "SocketRequest.hpp"
 
 #include "utils/Publisher.hpp"
-
+#include "utils/assertion.hpp"
 #include <boost/asio.hpp>
 #include <boost/bind.hpp>
 
@@ -57,7 +57,7 @@ SocketCommunication::isConnected() {
 }
 
 size_t SocketCommunication::getRemoteCommunicatorSize() {
-  preciceTrace("getRemoteCommunicatorSize()");
+  TRACE();
 
   assertion(isConnected());
 
@@ -538,7 +538,7 @@ SocketCommunication::send(int* itemsToSend, int size, int rankReceiver) {
   }
 }
 
-Request::SharedPointer
+PtrRequest
 SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
   preciceTrace("aSend(int*)", size, rankReceiver);
 
@@ -549,7 +549,7 @@ SocketCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
              _sockets.size());
   assertion(isConnected());
 
-  Request::SharedPointer request(new SocketRequest);
+  PtrRequest request(new SocketRequest);
 
   try {
     asio::async_write(*_sockets[rankReceiver],
@@ -583,7 +583,7 @@ SocketCommunication::send(double* itemsToSend, int size, int rankReceiver) {
   }
 }
 
-Request::SharedPointer
+PtrRequest
 SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
   preciceTrace("aSend(double*)", size, rankReceiver);
 
@@ -594,7 +594,7 @@ SocketCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
              _sockets.size());
   assertion(isConnected());
 
-  Request::SharedPointer request(new SocketRequest);
+  PtrRequest request(new SocketRequest);
 
   try {
     asio::async_write(*_sockets[rankReceiver],
@@ -628,7 +628,7 @@ SocketCommunication::send(double itemToSend, int rankReceiver) {
   }
 }
 
-Request::SharedPointer
+PtrRequest
 SocketCommunication::aSend(double* itemToSend, int rankReceiver) {
   return aSend(itemToSend, 1, rankReceiver);
 }
@@ -652,7 +652,7 @@ SocketCommunication::send(int itemToSend, int rankReceiver) {
   }
 }
 
-Request::SharedPointer
+PtrRequest
 SocketCommunication::aSend(int* itemToSend, int rankReceiver) {
   return aSend(itemToSend, 1, rankReceiver);
 }
@@ -676,7 +676,7 @@ SocketCommunication::send(bool itemToSend, int rankReceiver) {
   }
 }
 
-Request::SharedPointer
+PtrRequest
 SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
   preciceTrace("aSend(bool*)", rankReceiver);
 
@@ -687,7 +687,7 @@ SocketCommunication::aSend(bool* itemToSend, int rankReceiver) {
              _sockets.size());
   assertion(isConnected());
 
-  Request::SharedPointer request(new SocketRequest);
+  PtrRequest request(new SocketRequest);
 
   try {
     asio::async_write(*_sockets[rankReceiver],
@@ -745,7 +745,7 @@ SocketCommunication::receive(int* itemsToReceive, int size, int rankSender) {
   }
 }
 
-Request::SharedPointer
+PtrRequest
 SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
   preciceTrace("aReceive(int*)", size, rankSender);
 
@@ -756,7 +756,7 @@ SocketCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
              _sockets.size());
   assertion(isConnected());
 
-  Request::SharedPointer request(new SocketRequest);
+  PtrRequest request(new SocketRequest);
 
   try {
     asio::async_read(*_sockets[rankSender],
@@ -790,7 +790,7 @@ SocketCommunication::receive(double* itemsToReceive, int size, int rankSender) {
   }
 }
 
-Request::SharedPointer
+PtrRequest
 SocketCommunication::aReceive(double* itemsToReceive,
                               int size,
                               int rankSender) {
@@ -803,7 +803,7 @@ SocketCommunication::aReceive(double* itemsToReceive,
              _sockets.size());
   assertion(isConnected());
 
-  Request::SharedPointer request(new SocketRequest);
+  PtrRequest request(new SocketRequest);
 
   try {
     asio::async_read(*_sockets[rankSender],
@@ -837,7 +837,7 @@ SocketCommunication::receive(double& itemToReceive, int rankSender) {
   }
 }
 
-Request::SharedPointer
+PtrRequest
 SocketCommunication::aReceive(double* itemToReceive, int rankSender) {
   return aReceive(itemToReceive, 1, rankSender);
 }
@@ -861,7 +861,7 @@ SocketCommunication::receive(int& itemToReceive, int rankSender) {
   }
 }
 
-Request::SharedPointer
+PtrRequest
 SocketCommunication::aReceive(int* itemToReceive, int rankSender) {
   return aReceive(itemToReceive, 1, rankSender);
 }
@@ -885,7 +885,7 @@ SocketCommunication::receive(bool& itemToReceive, int rankSender) {
   }
 }
 
-Request::SharedPointer
+PtrRequest
 SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
   preciceTrace("aReceive(bool*)", rankSender);
 
@@ -896,7 +896,7 @@ SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
              _sockets.size());
   assertion(isConnected());
 
-  Request::SharedPointer request(new SocketRequest);
+  PtrRequest request(new SocketRequest);
 
   try {
     asio::async_read(*_sockets[rankSender],
@@ -913,7 +913,7 @@ SocketCommunication::aReceive(bool* itemToReceive, int rankSender) {
 
 std::string
 SocketCommunication::getIpAddress() {
-  preciceTrace("getIpAddress()");
+  TRACE();
   std::ostringstream oss;
 
 #ifdef _WIN32

@@ -1,11 +1,11 @@
-#ifndef PRECICE_CPLSCHEME_TESTS_SERIALIMPLICITCOUPLINGSCHEMETEST_HPP_
-#define PRECICE_CPLSCHEME_TESTS_SERIALIMPLICITCOUPLINGSCHEMETEST_HPP_
+#pragma once
 
 #include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
+#include "m2n/SharedPointer.hpp"
 #include <string>
 #include <vector>
 
@@ -18,8 +18,6 @@ namespace precice {
    }
 }
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace cplscheme {
 namespace tests {
@@ -31,14 +29,8 @@ class SerialImplicitCouplingSchemeTest : public tarch::tests::TestCase
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
   SerialImplicitCouplingSchemeTest();
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~SerialImplicitCouplingSchemeTest() {}
 
   /**
@@ -186,7 +178,7 @@ private:
     const std::string&     participant0,
     const std::string&     participant1,
     const std::string&     localParticipant,
-    m2n::M2N::SharedPointer& communication ) const;
+    m2n::PtrM2N& communication ) const;
 
 # endif // not PRECICE_NO_MPI
 
@@ -194,4 +186,3 @@ private:
 
 }}} // namespace precice, cplscheme, tests
 
-#endif /* PRECICE_CPLSCHEME_TESTS_SERIALIMPLICITCOUPLINGSCHEMETEST_HPP_ */

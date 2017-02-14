@@ -1,12 +1,10 @@
-#ifndef PRECICE_CPLSCHEME_TESTS_COMPOSITIONALCOUPLINGSCHEMETEST_HPP_
-#define PRECICE_CPLSCHEME_TESTS_COMPOSITIONALCOUPLINGSCHEMETEST_HPP_
+#pragma once
 
 #include "cplscheme/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "com/Communication.hpp"
-#include "m2n/M2N.hpp"
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
+#include "m2n/SharedPointer.hpp"
 #include <string>
 
 namespace precice {
@@ -21,26 +19,16 @@ namespace precice {
 namespace cplscheme {
 namespace tests {
 
-/**
- * @brief Provides unit tests for class CompositionalCouplingScheme.
- */
+/// Provides unit tests for class CompositionalCouplingScheme.
 class CompositionalCouplingSchemeTest : public tarch::tests::TestCase
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
   CompositionalCouplingSchemeTest();
 
-  /**
-   * @brief Destructor, empty.
-   */
   virtual ~CompositionalCouplingSchemeTest() {}
 
-  /**
-   * @brief Sets path to test directory.
-   */
+  /// Sets path to test directory.
   virtual void setUp();
 
   /**
@@ -91,7 +79,7 @@ private:
   /**
    * @brief Takes a configured coupling scheme and performs explicit coupling.
    *
-   * @param participantName [IN] Either "participant0" or "participant1".
+   * @param[in] participantName Either "participant0" or "participant1".
    */
   void runThreeSolverCoupling (
     PtrCouplingScheme          cplScheme0,
@@ -102,7 +90,7 @@ private:
     const std::string&     participant0,
     const std::string&     participant1,
     const std::string&     localParticipant,
-    m2n::M2N::SharedPointer& communication ) const;
+    m2n::PtrM2N& communication ) const;
 
 
 # endif // not PRECICE_NO_MPI
@@ -110,4 +98,3 @@ private:
 
 }}} // namespace precice, cplscheme, tests
 
-#endif /* PRECICE_CPLSCHEME_TESTS_COMPOSITIONALCOUPLINGSCHEMETEST_HPP_ */

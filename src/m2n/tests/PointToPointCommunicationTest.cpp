@@ -7,6 +7,7 @@
 #include "com/MPIPortsCommunicationFactory.hpp"
 #include "com/SocketCommunicationFactory.hpp"
 #include "mesh/Mesh.hpp"
+#include "utils/MasterSlave.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 
@@ -77,7 +78,7 @@ void
 PointToPointCommunicationTest::testSocketCommunication() {
   preciceTrace("testSocketCommunication");
 
-  com::CommunicationFactory::SharedPointer cf(
+  com::PtrCommunicationFactory cf(
       new com::SocketCommunicationFactory);
 
   test(cf);
@@ -88,7 +89,7 @@ void
 PointToPointCommunicationTest::testMPIPortsCommunication() {
   preciceTrace("testMPIDirectCommunication");
 
-  com::CommunicationFactory::SharedPointer cf(
+  com::PtrCommunicationFactory cf(
       new com::MPIPortsCommunicationFactory);
 
   test(cf);
@@ -96,13 +97,13 @@ PointToPointCommunicationTest::testMPIPortsCommunication() {
 
 void
 PointToPointCommunicationTest::test(
-    com::CommunicationFactory::SharedPointer cf) {
+    com::PtrCommunicationFactory cf) {
   assertion(Parallel::getCommunicatorSize() == 4);
 
   validateEquals(Parallel::getCommunicatorSize(), 4);
 
   MasterSlave::_communication =
-      com::Communication::SharedPointer(new com::MPIDirectCommunication);
+      com::PtrCommunication(new com::MPIDirectCommunication);
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 

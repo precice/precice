@@ -1,17 +1,14 @@
 #pragma once
 
-#include "Dimensions.hpp"
-
-#include "com/Communication.hpp"
+#include <Eigen/Core>
+#include "com/SharedPointer.hpp"
 
 #include "logging/Logger.hpp"
 
 namespace precice {
 namespace utils {
 
-/**
- * @brief Utility class for managing Master-Slave operations.
- */
+/// Utility class for managing Master-Slave operations.
 class MasterSlave
 {
 public:
@@ -21,37 +18,24 @@ public:
   /// Number of ranks. This includes ranks from both participants, e.g. minimal size is 2.
   static int _size;
 
-  /// The rank of the master. At this time it is hardcodes to 0.
+  /// The rank of the master. At this time it is hardcoded to 0.
   static int _masterRank;
 
-  /**
-   * @brief True if this process is running the master.
-   */
+  /// True if this process is running the master.
   static bool _masterMode;
-  /**
-   * @brief True if this process is running a slave.
-   */
+  // True if this process is running a slave.
   static bool _slaveMode;
 
-  /**
-   * @brief Communication between the master and all slaves.
-   */
-  static com::Communication::SharedPointer _communication;
+  /// Communication between the master and all slaves.
+  static com::PtrCommunication _communication;
 
-
-  /**
-   * @brief Configure the master-slave communication.
-   */
+  /// Configures the master-slave communication.
   static void configure(int rank, int size);
 
-  /**
-   * @brief the l2 norm of a vector is calculated on distributed data.
-   */
+  /// The l2 norm of a vector is calculated on distributed data.
   static double l2norm(const Eigen::VectorXd& vec);
 
-  /**
-   * @brief the dot product of 2 vectors is calculated on distributed data.
-   */
+  // The dot product of 2 vectors is calculated on distributed data.
   static double dot(const Eigen::VectorXd& vec1, const Eigen::VectorXd& vec2);
 
   static void reset();

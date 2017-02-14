@@ -2,8 +2,7 @@
 
 #include "DistributedCommunication.hpp"
 
-#include "com/Communication.hpp"
-#include "com/CommunicationFactory.hpp"
+#include "com/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
@@ -25,7 +24,7 @@ namespace m2n {
 class PointToPointCommunication : public DistributedCommunication {
 public:
   struct ScopedSetEventNamePrefix {
-    ScopedSetEventNamePrefix(std::string const& prefix);
+    explicit ScopedSetEventNamePrefix(std::string const& prefix);
 
     ~ScopedSetEventNamePrefix();
 
@@ -41,7 +40,7 @@ public:
 public:
   
   PointToPointCommunication(
-      com::CommunicationFactory::SharedPointer communicationFactory,
+      com::PtrCommunicationFactory communicationFactory,
       mesh::PtrMesh mesh);
 
   virtual ~PointToPointCommunication();
@@ -95,7 +94,7 @@ private:
   static std::string _prefix;
 
 private:
-  com::CommunicationFactory::SharedPointer _communicationFactory;
+  com::PtrCommunicationFactory _communicationFactory;
 
   /**
    * @brief Defines mapping between:
@@ -111,8 +110,8 @@ private:
     int localRemoteRank;
     int globalRemoteRank;
     std::vector<int> indices;
-    com::Communication::SharedPointer communication;
-    com::Request::SharedPointer request;
+    com::PtrCommunication communication;
+    com::PtrRequest request;
     size_t offset;
   };
 

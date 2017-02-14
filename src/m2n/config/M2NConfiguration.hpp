@@ -1,6 +1,6 @@
 #pragma once
 
-#include "m2n/M2N.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
 
@@ -21,12 +21,10 @@ class M2NConfiguration : public utils::XMLTag::Listener
 public:
    using SharedPointer = std::shared_ptr<M2NConfiguration>;
 
-   typedef std::tuple<m2n::M2N::SharedPointer,std::string,std::string> M2NTuple;
+   typedef std::tuple<m2n::PtrM2N,std::string,std::string> M2NTuple;
 
 public:
-   /**
-    * @brief Constructor.
-    */
+   
    M2NConfiguration ( utils::XMLTag& parent );
 
    virtual ~M2NConfiguration() {}
@@ -37,7 +35,7 @@ public:
     * Exits with an error message, when no object is configured for the given
     * user names.
     */
-   m2n::M2N::SharedPointer getM2N (
+   m2n::PtrM2N getM2N (
       const std::string& from,
       const std::string& to );
 

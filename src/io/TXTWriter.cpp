@@ -1,5 +1,6 @@
 #include "TXTWriter.hpp"
-#include "utils/Globals.hpp"
+
+#include <iomanip>
 
 namespace precice {
 namespace io {
@@ -14,8 +15,7 @@ TXTWriter:: TXTWriter
 {
   _file.open(filename.c_str());
   if (not _file){
-    preciceError("TXTWriter()", "Could not open file \"" << filename
-                 << "\" for txt writing!");
+    ERROR("Could not open file \"" << filename << "\" for txt writing!");
   }
   _file.setf ( std::ios::showpoint );
   _file.setf ( std::ios::fixed );

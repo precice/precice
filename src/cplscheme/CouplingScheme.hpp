@@ -1,9 +1,8 @@
-#ifndef PRECICE_CPLSCHEME_COUPLINGSCHEME_HPP_
-#define PRECICE_CPLSCHEME_COUPLINGSCHEME_HPP_
+#pragma once
 
 #include "SharedPointer.hpp"
 
-#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 
 #include <string>
 #include <vector>
@@ -221,7 +220,7 @@ public:
    * scheme via sendState and receiveState.
    */
   virtual void sendState (
-    com::Communication::SharedPointer communication,
+    com::PtrCommunication communication,
     int                   rankReceiver ) =0;
 
   /**
@@ -233,11 +232,10 @@ public:
    * scheme via sendState and receiveState.
    */
   virtual void receiveState (
-    com::Communication::SharedPointer communication,
+    com::PtrCommunication communication,
     int                   rankSender ) =0;
 
 };
 
 }} // namespace precice, cplscheme
 
-#endif /* PRECICE_CPLSCHEME_COUPLINGSCHEME_HPP_ */

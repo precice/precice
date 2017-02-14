@@ -1,7 +1,7 @@
 #pragma once
 
 #include "mesh/SharedPointer.hpp"
-#include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
 #include "mesh/Data.hpp"
 #include <Eigen/Dense>
 #include <vector>
@@ -13,18 +13,18 @@ struct CouplingData
 {
   typedef Eigen::MatrixXd DataMatrix;
 
-  /// @brief Data values of current iteration.
+  ///  Data values of current iteration.
   Eigen::VectorXd* values;
 
-  /// @brief Data values of previous iteration (1st col) and previous timesteps.
+  ///  Data values of previous iteration (1st col) and previous timesteps.
   DataMatrix oldValues;
 
   mesh::PtrMesh mesh;
 
-  /// @brief True, if the data values are initialized by a participant.
+  ///  True, if the data values are initialized by a participant.
   bool initialize;
 
-  /// @ dimension of one data value (scalar=1, or vectorial=interface-dimension)
+  /// dimension of one data value (scalar=1, or vectorial=interface-dimension)
   int dimension;
 
   /**
@@ -37,9 +37,6 @@ struct CouplingData
       assertion ( false );
     }
 
-  /**
-   * @brief Constructor.
-   */
   CouplingData (
     Eigen::VectorXd*  values,
     mesh::PtrMesh     mesh,

@@ -1,8 +1,10 @@
 #ifndef PRECICE_NO_SOCKETS
 
-#include "SocketCommunicationFactory.hpp"
-
 #include "SocketCommunication.hpp"
+
+#include "SocketCommunicationFactory.hpp"
+#include "com/SharedPointer.hpp"
+
 
 namespace precice {
 namespace com {
@@ -25,9 +27,8 @@ SocketCommunicationFactory::SocketCommunicationFactory(
     : SocketCommunicationFactory(0, false, "lo", addressDirectory) {
 }
 
-Communication::SharedPointer
-SocketCommunicationFactory::newCommunication() {
-  return Communication::SharedPointer(new SocketCommunication(
+PtrCommunication SocketCommunicationFactory::newCommunication() {
+  return PtrCommunication(new SocketCommunication(
       _portNumber, _reuseAddress, _networkName, _addressDirectory));
 }
 

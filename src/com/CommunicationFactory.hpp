@@ -1,31 +1,21 @@
-#ifndef PRECICE_COM_COMMUNICATION_FACTORY_HPP_
-#define PRECICE_COM_COMMUNICATION_FACTORY_HPP_
+#pragma once
 
-#include "Communication.hpp"
-
-#include <memory>
+#include "com/SharedPointer.hpp"
 #include <stdexcept>
 
 namespace precice {
 namespace com {
 class CommunicationFactory {
-public:
-  using SharedPointer = std::shared_ptr<CommunicationFactory>;
 
 public:
-  /**
-   * @brief Destructor.
-   */
   virtual ~CommunicationFactory(){};
 
-  virtual Communication::SharedPointer newCommunication() = 0;
+  virtual PtrCommunication newCommunication() = 0;
 
   virtual std::string
   addressDirectory() {
     throw std::runtime_error("Not available!");
   }
 };
-}
-} // namespace precice, com
 
-#endif /* PRECICE_COM_COMMUNICATION_FACTORY_HPP_ */
+}} // namespace precice, com

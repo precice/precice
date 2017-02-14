@@ -1,7 +1,7 @@
 #pragma once
 
-#include "utils/Globals.hpp"
-#include "boost/any.hpp"
+#include "utils/assertion.hpp"
+#include <boost/any.hpp>
 #include <map>
 #include <vector>
 
@@ -33,10 +33,12 @@ class PropertyContainer
 {
 public:
 
-   /**
-    * @brief Shortform for the type of a property.
-    */
-   typedef boost::any PropertyType;
+  PropertyContainer();
+
+  virtual ~PropertyContainer() {};
+
+  // Shortform for the type of a property.
+  typedef boost::any PropertyType;
 
    // @brief ID for the property labeling geometry IDs.
    static const int INDEX_GEOMETRY_ID;
@@ -54,17 +56,7 @@ public:
     */
    static void resetPropertyIDCounter();
 
-   /**
-    * @brief Constructor.
-    */
-   PropertyContainer();
-
-   /**
-    * @brief Destructor.
-    */
-   virtual ~PropertyContainer() {};
-
-    /**
+  /**
      * @brief Enables hierarchical property behavior.
      */
     void addParent ( PropertyContainer& parent )

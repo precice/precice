@@ -65,7 +65,7 @@ void CommunicateMeshTest:: testTwoSolvers ()
     if ( utils::Parallel::getProcessRank() < 2 ) {
       utils::Parallel::setGlobalCommunicator ( comm );
       validateEquals ( utils::Parallel::getCommunicatorSize(), 2 );
-      com::Communication::SharedPointer com ( new com::MPIDirectCommunication() );
+      com::PtrCommunication com ( new com::MPIDirectCommunication() );
       CommunicateMesh comMesh ( com );
 
       if ( utils::Parallel::getProcessRank() == 0 ) {

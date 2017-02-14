@@ -34,11 +34,8 @@ public:
    * @param[in] isVolumeEnclosed  If true, the volume of the geometry is inside of its (closed) surface.
    * @param[in] offset Constant offset of all vertex coordinates.
    */
-  Geometry ( const Eigen::VectorXd& offset );
+  explicit Geometry ( const Eigen::VectorXd& offset );
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~Geometry() {}
 
   /**

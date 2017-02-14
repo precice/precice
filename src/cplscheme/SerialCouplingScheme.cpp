@@ -1,6 +1,7 @@
 #include "SerialCouplingScheme.hpp"
 #include "impl/PostProcessing.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/MasterSlave.hpp"
 #include "m2n/M2N.hpp"
 #include "math/math.hpp"
 
@@ -18,7 +19,7 @@ SerialCouplingScheme::SerialCouplingScheme
   const std::string&          firstParticipant,
   const std::string&          secondParticipant,
   const std::string&          localParticipant,
-  m2n::M2N::SharedPointer                 m2n,
+  m2n::PtrM2N                 m2n,
   constants::TimesteppingMethod dtMethod,
   CouplingMode                cplMode,
   int                         maxIterations)
@@ -39,7 +40,7 @@ void SerialCouplingScheme::initialize
   double startTime,
   int    startTimestep)
 {
-  preciceTrace("initialize()", startTime, startTimestep);
+  TRACE(startTime, startTimestep);
   assertion(not isInitialized());
   assertion(math::greaterEquals(startTime, 0.0), startTime);
   assertion(startTimestep >= 0, startTimestep);
@@ -109,9 +110,8 @@ void SerialCouplingScheme::initialize
 
 void SerialCouplingScheme::initializeData()
 {
-  preciceTrace("initializeData()");
-  preciceCheck(isInitialized(), "initializeData()",
-               "initializeData() can be called after initialize() only!");
+  TRACE();
+  CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
 
   if (not hasToSendInitData() && not hasToReceiveInitData()) {
     preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
@@ -162,18 +162,18 @@ void SerialCouplingScheme::initializeData()
 
 void SerialCouplingScheme::advance()
 {
-  preciceTrace("advance()", getTimesteps(), getTime());
+  TRACE(getTimesteps(), getTime());
+  #ifndef NDEBUG
   for (DataMap::value_type & pair : getReceiveData()) {
     Eigen::VectorXd& values = *pair.second->values;
-#     ifdef Debug
-      int max = values.size();
-      std::ostringstream stream;
-      for (int i=0; (i < max) && (i < 10); i++){
-        stream << values[i] << " ";
-      }
-      DEBUG("Begin advance, first New Values: " << stream.str() );
-#     endif
+    int max = values.size();
+    std::ostringstream stream;
+    for (int i=0; (i < max) && (i < 10); i++){
+      stream << values[i] << " ";
+    }
+    DEBUG("Begin advance, first New Values: " << stream.str() );
   }
+  #endif
   checkCompletenessRequiredActions();
 
   preciceCheck(not hasToReceiveInitData() && not hasToSendInitData(), "advance()",

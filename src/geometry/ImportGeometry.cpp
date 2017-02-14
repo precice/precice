@@ -3,7 +3,6 @@
 #include "io/ImportVRML.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/Globals.hpp"
 
 namespace precice {
 namespace geometry {

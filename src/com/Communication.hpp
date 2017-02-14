@@ -1,5 +1,4 @@
-#ifndef PRECICE_COM_COMMUNICATION_HPP_
-#define PRECICE_COM_COMMUNICATION_HPP_
+#pragma once
 
 #include "Request.hpp"
 
@@ -38,8 +37,6 @@ namespace com {
  *    sending is happening on the background.
  */
 class Communication {
-public:
-  using SharedPointer = std::shared_ptr<Communication>;
 
 public:
 
@@ -170,7 +167,7 @@ public:
   /**
    * @brief Asynchronously sends an array of integer values.
    */
-  virtual Request::SharedPointer aSend(int* itemsToSend,
+  virtual PtrRequest aSend(int* itemsToSend,
                                        int size,
                                        int rankReceiver) = 0;
 
@@ -182,7 +179,7 @@ public:
   /**
    * @brief Asynchronously sends an array of double values.
    */
-  virtual Request::SharedPointer aSend(double* itemsToSend,
+  virtual PtrRequest aSend(double* itemsToSend,
                                        int size,
                                        int rankReceiver) = 0;
 
@@ -194,7 +191,7 @@ public:
   /**
    * @brief Asynchronously sends a double to process with given rank.
    */
-  virtual Request::SharedPointer aSend(double* itemToSend,
+  virtual PtrRequest aSend(double* itemToSend,
                                        int rankReceiver) = 0;
 
   /**
@@ -205,7 +202,7 @@ public:
   /**
    * @brief Asynchronously sends an int to process with given rank.
    */
-  virtual Request::SharedPointer aSend(int* itemToSend, int rankReceiver) = 0;
+  virtual PtrRequest aSend(int* itemToSend, int rankReceiver) = 0;
 
   /**
    * @brief Sends a bool to process with given rank.
@@ -215,7 +212,7 @@ public:
   /**
    * @brief Asynchronously sends a bool to process with given rank.
    */
-  virtual Request::SharedPointer aSend(bool* itemToSend, int rankReceiver) = 0;
+  virtual PtrRequest aSend(bool* itemToSend, int rankReceiver) = 0;
 
   /**
    * @brief Receives a std::string from process with given rank.
@@ -230,7 +227,7 @@ public:
   /**
    * @brief Asynchronously receives an array of integer values.
    */
-  virtual Request::SharedPointer aReceive(int* itemsToReceive,
+  virtual PtrRequest aReceive(int* itemsToReceive,
                                           int size,
                                           int rankSender) = 0;
 
@@ -242,7 +239,7 @@ public:
   /**
    * @brief Asynchronously receives an array of double values.
    */
-  virtual Request::SharedPointer aReceive(double* itemsToReceive,
+  virtual PtrRequest aReceive(double* itemsToReceive,
                                           int size,
                                           int rankSender) = 0;
 
@@ -254,7 +251,7 @@ public:
   /**
    * @brief Asynchronously receives a double from process with given rank.
    */
-  virtual Request::SharedPointer aReceive(double* itemToReceive,
+  virtual PtrRequest aReceive(double* itemToReceive,
                                           int rankSender) = 0;
 
   /**
@@ -265,7 +262,7 @@ public:
   /**
    * @brief Asynchronously receives an int from process with given rank.
    */
-  virtual Request::SharedPointer aReceive(int* itemToReceive,
+  virtual PtrRequest aReceive(int* itemToReceive,
                                           int rankSender) = 0;
 
   /**
@@ -276,7 +273,7 @@ public:
   /**
    * @brief Asynchronously receives a bool from process with given rank.
    */
-  virtual Request::SharedPointer aReceive(bool* itemToReceive,
+  virtual PtrRequest aReceive(bool* itemToReceive,
                                           int rankSender) = 0;
 
   /**
@@ -295,17 +292,13 @@ public:
 protected:
   int _rank;
 
-  /**
-   * @brief Rank offset for masters-slave communication, since ranks are from 0
-   * to size - 2
-   */
+  /// Rank offset for masters-slave communication, since ranks are from 0 to size - 2
   int _rankOffset;
 
 private:
-  // @brief Logging device.
+
   static logging::Logger _log;
 };
-}
-} // namespace precice, com
 
-#endif /* PRECICE_COM_COMMUNICATION_HPP_ */
+}} // namespace precice, com
+

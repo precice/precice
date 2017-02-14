@@ -1,10 +1,10 @@
 #include "CommunicateMesh.hpp"
 #include "Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
-#include "utils/Globals.hpp"
 #include <map>
 #include <vector>
 
@@ -15,7 +15,7 @@ logging::Logger CommunicateMesh:: _log ( "precice::com::CommunicateMesh" );
 
 CommunicateMesh:: CommunicateMesh
 (
-  com::Communication::SharedPointer communication )
+  com::PtrCommunication communication )
 :
   _communication ( communication )
 {}

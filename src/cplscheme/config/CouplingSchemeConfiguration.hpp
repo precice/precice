@@ -7,7 +7,6 @@
 #include "cplscheme/impl/SharedPointer.hpp"
 #include "cplscheme/Constants.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "m2n/M2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "precice/config/SharedPointer.hpp"
 #include "utils/xml/XMLTag.hpp"

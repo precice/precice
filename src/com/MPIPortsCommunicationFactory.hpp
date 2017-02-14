@@ -1,9 +1,9 @@
 #ifndef PRECICE_NO_MPI
 
-#ifndef PRECICE_COM_MPI_PORTS_COMMUNICATION_FACTORY_HPP_
-#define PRECICE_COM_MPI_PORTS_COMMUNICATION_FACTORY_HPP_
+#pragma once
 
 #include "CommunicationFactory.hpp"
+#include "com/SharedPointer.hpp"
 
 #include <string>
 
@@ -11,21 +11,18 @@ namespace precice {
 namespace com {
 class MPIPortsCommunicationFactory : public CommunicationFactory {
 public:
-  /**
-   * @brief Constructor.
-   */
-  MPIPortsCommunicationFactory(std::string const& addressDirectory = ".");
 
-  Communication::SharedPointer newCommunication();
+  explicit MPIPortsCommunicationFactory(std::string const& addressDirectory = ".");
+
+  PtrCommunication newCommunication();
 
   std::string addressDirectory();
 
 private:
   std::string _addressDirectory;
 };
-}
-} // namespace precice, com
 
-#endif /* PRECICE_COM_MPI_PORTS_COMMUNICATION_FACTORY_HPP_ */
+}} // namespace precice, com
+
 
 #endif // not PRECICE_NO_MPI

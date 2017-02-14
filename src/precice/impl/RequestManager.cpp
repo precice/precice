@@ -14,7 +14,7 @@ RequestManager:: RequestManager
 (
   bool                  geometryMode,
   SolverInterfaceImpl&  solverInterfaceImpl,
-  com::Communication::SharedPointer clientServerCommunication,
+  com::PtrCommunication clientServerCommunication,
   cplscheme::PtrCouplingScheme couplingScheme)
 :
   _isGeometryMode(geometryMode),
@@ -31,7 +31,7 @@ void RequestManager:: handleRequests()
   std::list<int> clientRanks;
   DEBUG("ClientCommSize " << clientCommSize);
 
-  std::vector<com::Request::SharedPointer> requests(clientCommSize);
+  std::vector<com::PtrRequest> requests(clientCommSize);
   std::vector<int> requestIDs(clientCommSize,-1);
 
   for(int clientRank = 0; clientRank<clientCommSize; clientRank++){

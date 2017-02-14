@@ -2,8 +2,8 @@
 
 namespace precice {
 namespace com {
-void
-Request::wait(std::vector<SharedPointer>& requests) {
+
+void Request::wait(std::vector<PtrRequest>& requests) {
   for (auto request : requests) {
     request->wait();
   }

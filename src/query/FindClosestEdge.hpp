@@ -1,8 +1,8 @@
 #pragma once
 
 #include <array>
-#include "utils/Globals.hpp"
-#include <limits>
+#include <Eigen/Core>
+#include "logging/Logger.hpp"
 
 namespace precice {
   namespace mesh {
@@ -11,19 +11,15 @@ namespace precice {
   }
 }
 
-// ---------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace query {
 
-/**
- * @brief Finds the closest Edge object contained in Mesh objects.
- */
+/// Finds the closest Edge object contained in Mesh objects.
 class FindClosestEdge
 {
 public:
 
-  FindClosestEdge ( const Eigen::VectorXd& searchPoint );
+  explicit FindClosestEdge ( const Eigen::VectorXd& searchPoint );
 
   /**
    * @brief Finds the closest Edge object contained in the given Mesh object.

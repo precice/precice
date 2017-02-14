@@ -3,7 +3,7 @@
 #ifndef PRECICE_M2N_TESTS_POINT_TO_POINT_COMMUNICATION_TEST_HPP_
 #define PRECICE_M2N_TESTS_POINT_TO_POINT_COMMUNICATION_TEST_HPP_
 
-#include "com/CommunicationFactory.hpp"
+#include "com/SharedPointer.hpp"
 
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
@@ -37,7 +37,7 @@ private:
 
   void testMPIPortsCommunication();
 
-  void test(com::CommunicationFactory::SharedPointer cf);
+  void test(com::PtrCommunicationFactory cf);
 };
 }
 }

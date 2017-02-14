@@ -4,6 +4,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/PropertyContainer.hpp"
+#include "utils/Dimensions.hpp"
 
 namespace precice {
 namespace geometry {

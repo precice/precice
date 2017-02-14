@@ -1,4 +1,5 @@
 #include "IQNILSPostProcessing.hpp"
+#include "com/Communication.hpp"
 #include "cplscheme/CouplingData.hpp"
 #include "utils/Globals.hpp"
 #include "mesh/Mesh.hpp"

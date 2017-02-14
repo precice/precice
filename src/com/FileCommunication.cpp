@@ -217,7 +217,7 @@ void FileCommunication:: send
   _sendFile.write ( (char*)itemsToSend, sizeof(int)*size );
 }
 
-Request::SharedPointer
+PtrRequest
 FileCommunication::aSend(int* itemsToSend, int size, int rankReceiver) {
   preciceError("aSend()", "Not implemented!");
 }
@@ -234,7 +234,7 @@ void FileCommunication:: send (
   _sendFile.write ( (char*)itemsToSend, sizeof(double)*size );
 }
 
-Request::SharedPointer
+PtrRequest
 FileCommunication::aSend(double* itemsToSend, int size, int rankReceiver) {
   preciceError("aSend()", "Not implemented!");
 }
@@ -249,7 +249,7 @@ void FileCommunication:: send
   _sendFile.write ( (char*)&itemToSend, sizeof(double) );
 }
 
-Request::SharedPointer
+PtrRequest
 FileCommunication::aSend(double* itemToSend, int rankReceiver) {
   preciceError("aSend()", "Not implemented!");
 }
@@ -264,7 +264,7 @@ void FileCommunication:: send
   _sendFile.write ( (char*)&itemToSend, sizeof(int) );
 }
 
-Request::SharedPointer
+PtrRequest
 FileCommunication::aSend(int* itemToSend, int rankReceiver) {
   preciceError("aSend()", "Not implemented!");
 }
@@ -279,7 +279,7 @@ void FileCommunication:: send
   _sendFile.write ( (char*)&itemToSend, 1 );
 }
 
-Request::SharedPointer
+PtrRequest
 FileCommunication::aSend(bool* itemToSend, int rankReceiver) {
   preciceError("aSend()", "Not implemented!");
 }
@@ -323,7 +323,7 @@ void FileCommunication:: receive
   _receiveFile.read ( (char*)itemsToReceive, sizeof(int)*size );
 }
 
-Request::SharedPointer
+PtrRequest
 FileCommunication::aReceive(int* itemsToReceive, int size, int rankSender) {
   preciceError("aReceive()", "Not implemented!");
 }
@@ -346,7 +346,7 @@ void FileCommunication:: receive
   _receiveFile.read ( (char*)itemsToReceive, sizeof(double)*size );
 }
 
-Request::SharedPointer
+PtrRequest
 FileCommunication::aReceive(double* itemsToReceive, int size, int rankSender) {
   preciceError("aReceive()", "Not implemented!");
 }
@@ -365,7 +365,7 @@ void FileCommunication:: receive
   _receiveFile.read ( (char*)&itemToReceive, sizeof(double) );
 }
 
-Request::SharedPointer
+PtrRequest
 FileCommunication::aReceive(double* itemToReceive, int rankSender) {
   preciceError("aReceive()", "Not implemented!");
 }
@@ -384,7 +384,7 @@ void FileCommunication:: receive
   _receiveFile.read ( (char*)&itemToReceive, sizeof(int) );
 }
 
-Request::SharedPointer
+PtrRequest
 FileCommunication::aReceive(int* itemToReceive, int rankSender) {
   preciceError("aReceive()", "Not implemented!");
 }
@@ -403,7 +403,7 @@ void FileCommunication:: receive
   _receiveFile.read ( (char*)&itemToReceive, sizeof(bool) );
 }
 
-Request::SharedPointer
+PtrRequest
 FileCommunication::aReceive(bool* itemToReceive, int rankSender) {
   preciceError("aReceive()", "Not implemented!");
 }

@@ -1,11 +1,10 @@
-#ifndef PRECICE_CPLSCHEME_TESTS_EXPLICITCOUPLINGSCHEMETEST_HPP_
-#define PRECICE_CPLSCHEME_TESTS_EXPLICITCOUPLINGSCHEMETEST_HPP_
+#pragma once
 
 #include "mesh/SharedPointer.hpp"
 #include "com/Communication.hpp"
-#include "m2n/M2N.hpp"
 #include "tarch/tests/TestCase.h"
 #include "logging/Logger.hpp"
+#include "m2n/SharedPointer.hpp"
 #include <string>
 
 namespace precice {
@@ -136,7 +135,7 @@ private:
      const std::string &      participant0,
      const std::string &      participant1,
      const std::string &      localParticipant,
-     m2n::M2N::SharedPointer & communication ) const;
+     m2n::PtrM2N & communication ) const;
 
 
 #  endif // not PRECICE_NO_MPI
@@ -144,4 +143,3 @@ private:
 
 }}} // namespace precice, cplscheme, tests
 
-#endif /* PRECICE_CPLSCHEME_TESTS_EXPLICITCOUPLINGSCHEMETEST_HPP_ */

@@ -2,7 +2,7 @@
 #define PRECICE_M2N_GATHER_SCATTER_COMMUNICATION_HPP_
 
 #include "DistributedCommunication.hpp"
-#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
 
@@ -19,16 +19,10 @@ class GatherScatterCommunication : public DistributedCommunication
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
   GatherScatterCommunication (
-     com::Communication::SharedPointer com,
+     com::PtrCommunication com,
      mesh::PtrMesh mesh);
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~GatherScatterCommunication();
 
   /**
@@ -69,17 +63,13 @@ public:
    */
   virtual void closeConnection();
 
-  /**
-   * @brief Sends an array of double values from all slaves (different for each slave).
-   */
+  /// Sends an array of double values from all slaves (different for each slave).
   virtual void send (
     double* itemsToSend,
     size_t     size,
     int     valueDimension);
 
-  /**
-   * @brief All slaves receive an array of doubles (different for each slave).
-   */
+  /// All slaves receive an array of doubles (different for each slave).
   virtual void receive (
     double* itemsToReceive,
     size_t     size,
@@ -89,10 +79,8 @@ private:
 
   static logging::Logger _log;
 
-  /**
-   * @brief master to master basic communication
-   */
-  com::Communication::SharedPointer _com;
+  /// master to master basic communication
+  com::PtrCommunication _com;
 
   /**
    * @brief global communication is set up or not

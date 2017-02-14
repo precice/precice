@@ -5,8 +5,8 @@
 #include "mapping/Mapping.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/SharedPointer.hpp"
-#include "utils/Globals.hpp"
 #include "utils/Helpers.hpp"
+#include "impl/Decomposition.hpp"
 
 namespace precice {
 namespace geometry {
@@ -32,16 +32,14 @@ CommunicatedGeometry:: CommunicatedGeometry
 void CommunicatedGeometry:: addReceiver
 (
   const std::string&     receiver,
-  m2n::M2N::SharedPointer m2n)
+  m2n::PtrM2N m2n)
 {
   TRACE(receiver);
   assertion ( m2n.get() != nullptr );
-  preciceCheck ( ! utils::contained(receiver, _receivers),
-                 "addReceiver()", "Receiver \"" << receiver
-                 << "\" has been added already to communicated geometry!" );
-  preciceCheck ( receiver != _providerName, "addReceiver()",
-                 "Receiver \"" << receiver << "\" cannot be the same as "
-                 << "provider in communicated geometry!" );
+  CHECK( ! utils::contained(receiver, _receivers),
+         "Receiver \"" << receiver << "\" has been added already to communicated geometry!" );
+  CHECK ( receiver != _providerName,
+          "Receiver \"" << receiver << "\" cannot be the same as provider in communicated geometry!" );
   _receivers[receiver] = m2n;
 }
 
@@ -50,9 +48,9 @@ void CommunicatedGeometry:: prepare
   mesh::Mesh& seed )
 {
   TRACE(seed.getName());
-  preciceCheck ( not _receivers.empty(), "specializedCreate()",
-                 "No receivers specified for communicated geometry to create "
-                 << "mesh \"" << seed.getName() << "\"!" );
+  CHECK ( not _receivers.empty(),
+          "No receivers specified for communicated geometry to create "
+          << "mesh \"" << seed.getName() << "\"!" );
   if ( _accessorName == _providerName ) {
     sendMesh(seed);
   }
@@ -60,10 +58,10 @@ void CommunicatedGeometry:: prepare
     receiveMesh(seed);
   }
   else {
-    preciceError( "specializedCreate()", "Participant \"" << _accessorName
-                  << "\" uses a communicated geometry to create mesh \""
-                  << seed.getName()
-                  << "\" but is neither provider nor receiver!" );
+    ERROR("Participant \"" << _accessorName
+          << "\" uses a communicated geometry to create mesh \""
+          << seed.getName()
+          << "\" but is neither provider nor receiver!" );
   }
 }
 
@@ -92,7 +90,7 @@ void CommunicatedGeometry:: sendMesh(
   }
 
   // Gather Mesh
-  preciceInfo("sendMesh()", "Gather mesh " << seed.getName() );
+  INFO("Gather mesh " << seed.getName() );
   if (utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode ) {
     if (utils::MasterSlave::_slaveMode) {
       com::CommunicateMesh(utils::MasterSlave::_communication).sendMesh( seed, 0 );
@@ -144,7 +142,7 @@ void CommunicatedGeometry:: receiveMesh(
   if (not utils::MasterSlave::_slaveMode) {
     assertion ( seed.vertices().size() == 0 );
     assertion ( utils::contained(_accessorName, _receivers) );
-    m2n::M2N::SharedPointer m2n ( _receivers[_accessorName] );
+    m2n::PtrM2N m2n ( _receivers[_accessorName] );
     com::CommunicateMesh(m2n->getMasterCommunication()).receiveMesh ( seed, 0 );
     seed.setGlobalNumberOfVertices(seed.vertices().size());
   }

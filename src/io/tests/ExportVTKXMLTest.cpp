@@ -231,8 +231,7 @@ void ExportVTKXMLTest:: setUpMasterSlave()
   preciceTrace ( "setUpMasterSlave" );
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-  com::Communication::SharedPointer masterSlaveCom =
-      com::Communication::SharedPointer(new com::MPIDirectCommunication());
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
   utils::Parallel::synchronizeProcesses();

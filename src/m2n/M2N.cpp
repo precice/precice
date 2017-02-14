@@ -21,7 +21,7 @@ namespace m2n {
 
 logging::Logger M2N::_log("precice::m2n::M2N");
 
-M2N:: M2N(  com::Communication::SharedPointer masterCom, DistributedComFactory::SharedPointer distrFactory )
+M2N:: M2N(  com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory )
 :
   _distComs(),
   _masterCom(masterCom),
@@ -125,7 +125,7 @@ void M2N:: closeConnection()
   }
 }
 
-com::Communication::SharedPointer M2N:: getMasterCommunication()
+com::PtrCommunication M2N:: getMasterCommunication()
 {
   assertion(not utils::MasterSlave::_slaveMode);
   return _masterCom; //TODO maybe it would be a nicer design to not offer this

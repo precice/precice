@@ -1,5 +1,7 @@
 #include "PointToPointCommunication.hpp"
 
+#include "com/Communication.hpp"
+#include "com/CommunicationFactory.hpp"
 #include "mesh/Mesh.hpp"
 #include "utils/EventTimings.hpp"
 #include "utils/Globals.hpp"
@@ -18,7 +20,7 @@ namespace m2n {
 void
 send(std::vector<int> const& v,
      int rankReceiver,
-     com::Communication::SharedPointer communication) {
+     com::PtrCommunication communication) {
   communication->send(static_cast<int>(v.size()), rankReceiver);
   communication->send(const_cast<int*>(&v[0]), v.size(), rankReceiver);
 }
@@ -26,7 +28,7 @@ send(std::vector<int> const& v,
 void
 receive(std::vector<int>& v,
         int rankSender,
-        com::Communication::SharedPointer communication) {
+        com::PtrCommunication communication) {
   v.clear();
 
   int size = 0;
@@ -41,7 +43,7 @@ receive(std::vector<int>& v,
 void
 send(std::map<int, std::vector<int>> const& m,
      int rankReceiver,
-     com::Communication::SharedPointer communication) {
+     com::PtrCommunication communication) {
   communication->send(static_cast<int>(m.size()), rankReceiver);
 
   for (auto const& i : m) {
@@ -56,7 +58,7 @@ send(std::map<int, std::vector<int>> const& m,
 void
 receive(std::map<int, std::vector<int>>& m,
         int rankSender,
-        com::Communication::SharedPointer communication) {
+        com::PtrCommunication communication) {
   m.clear();
 
   int size = 0;
@@ -73,7 +75,7 @@ receive(std::map<int, std::vector<int>>& m,
 
 void
 broadcast(std::vector<int> const& v,
-          com::Communication::SharedPointer communication =
+          com::PtrCommunication communication =
               utils::MasterSlave::_communication) {
   communication->broadcast(static_cast<int>(v.size()));
   communication->broadcast(const_cast<int*>(&v[0]), v.size());
@@ -82,7 +84,7 @@ broadcast(std::vector<int> const& v,
 void
 broadcast(std::vector<int>& v,
           int rankBroadcaster,
-          com::Communication::SharedPointer communication =
+          com::PtrCommunication communication =
               utils::MasterSlave::_communication) {
   v.clear();
 
@@ -97,7 +99,7 @@ broadcast(std::vector<int>& v,
 
 void
 broadcastSend(std::map<int, std::vector<int>> const& m,
-              com::Communication::SharedPointer communication =
+              com::PtrCommunication communication =
                   utils::MasterSlave::_communication) {
   communication->broadcast(static_cast<int>(m.size()));
 
@@ -113,7 +115,7 @@ broadcastSend(std::map<int, std::vector<int>> const& m,
 void
 broadcastReceive(std::map<int, std::vector<int>>& m,
                  int rankBroadcaster,
-                 com::Communication::SharedPointer communication =
+                 com::PtrCommunication communication =
                      utils::MasterSlave::_communication) {
   m.clear();
 
@@ -359,7 +361,7 @@ logging::Logger PointToPointCommunication::_log(
     "precice::m2n::PointToPointCommunication");
 
 PointToPointCommunication::PointToPointCommunication(
-    com::CommunicationFactory::SharedPointer communicationFactory,
+    com::PtrCommunicationFactory communicationFactory,
     mesh::PtrMesh mesh)
     : DistributedCommunication(mesh)
     , _communicationFactory(communicationFactory)
@@ -636,7 +638,7 @@ PointToPointCommunication::requestConnection(std::string const& nameAcceptor,
       "request"
       "/");
 
-  std::vector<com::Request::SharedPointer> requests;
+  std::vector<com::PtrRequest> requests;
 
   requests.reserve(communicationMap.size());
 

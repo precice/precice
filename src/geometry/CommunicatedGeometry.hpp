@@ -1,11 +1,9 @@
 #pragma once
 
 #include "Geometry.hpp"
-#include "m2n/M2N.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "mapping/SharedPointer.hpp"
-#include "utils/MasterSlave.hpp"
 #include "logging/Logger.hpp"
-#include "impl/Decomposition.hpp"
 #include "impl/SharedPointer.hpp"
 #include <string>
 #include <map>
@@ -32,11 +30,9 @@ public:
 
   void addReceiver (
     const std::string& receiver,
-    m2n::M2N::SharedPointer m2n );
+    m2n::PtrM2N m2n );
 
-  /*
-   * @bried Prepare geometry for creation, i.e. communicate mesh
-   */
+  /// Prepare geometry for creation, i.e. communicate mesh
   void prepare ( mesh::Mesh& seed );
 
 protected:
@@ -55,14 +51,13 @@ private:
   void receiveMesh(
     mesh::Mesh& seed);
 
-  /// Logging device.
   static logging::Logger _log;
 
   std::string _accessorName;
 
   std::string _providerName;
 
-  std::map<std::string,m2n::M2N::SharedPointer> _receivers;
+  std::map<std::string, m2n::PtrM2N> _receivers;
 
   impl::PtrDecomposition _decomposition;
 };

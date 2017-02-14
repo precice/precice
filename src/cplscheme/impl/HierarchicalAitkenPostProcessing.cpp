@@ -1,8 +1,8 @@
 #include "HierarchicalAitkenPostProcessing.hpp"
 #include "../CouplingData.hpp"
-#include "utils/Globals.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "math/math.hpp"
+#include "utils/Helpers.hpp"
 #include <limits>
 
 namespace precice {

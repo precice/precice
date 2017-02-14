@@ -1,6 +1,6 @@
 #pragma once
 
-#include "utils/Globals.hpp"
+#include "logging/Logger.hpp"
 #include "math/math.hpp"
 
 namespace precice {

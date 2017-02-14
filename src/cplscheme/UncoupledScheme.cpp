@@ -1,4 +1,5 @@
 #include "UncoupledScheme.hpp"
+#include "com/SharedPointer.hpp"
 #include "com/Communication.hpp"
 #include "math/math.hpp"
 
@@ -83,7 +84,7 @@ std::vector<std::string> UncoupledScheme:: getCouplingPartners() const
 
 void UncoupledScheme:: sendState
 (
-  com::Communication::SharedPointer communication,
+  com::PtrCommunication communication,
   int                   rankReceiver )
 {
   communication->startSendPackage ( rankReceiver );
@@ -93,7 +94,7 @@ void UncoupledScheme:: sendState
 
 void UncoupledScheme:: receiveState
 (
-  com::Communication::SharedPointer communication,
+  com::PtrCommunication communication,
   int                   rankSender )
 {
   communication->startReceivePackage ( rankSender );

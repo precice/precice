@@ -1,9 +1,5 @@
-#ifndef PRECICE_MESH_DATA_HPP_
-#define PRECICE_MESH_DATA_HPP_
+#pragma once
 
-#include "SharedPointer.hpp"
-#include "utils/Globals.hpp"
-#include "utils/PointerVector.hpp"
 #include "logging/Logger.hpp"
 #include <Eigen/Dense>
 #include <string>
@@ -108,10 +104,9 @@ public:
 
 private:
 
-  // @brief Logging device.
   static logging::Logger _log;
 
-  // @brief Counter for existing Data objects.
+  /// Counter for existing Data objects.
   static size_t _dataCount;
 
   Eigen::VectorXd _values;
@@ -132,4 +127,3 @@ private:
 
 }} // namespace precice, mesh
 
-#endif /* PRECICE_MESH_DATA_HPP_ */

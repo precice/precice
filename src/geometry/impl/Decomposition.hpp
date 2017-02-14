@@ -3,19 +3,10 @@
 #include "logging/Logger.hpp"
 #include "mapping/SharedPointer.hpp"
 #include "utils/MasterSlave.hpp"
-#include <map>
 #include <vector>
 #include "mesh/Mesh.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/SharedPointer.hpp"
-
-namespace precice {
-   namespace mesh {
-      class Mesh;
-   }
-}
-
-// ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
 namespace geometry {
@@ -41,20 +32,12 @@ public:
    */
   Decomposition ( int dimensions, double safetyFactor );
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~Decomposition() {}
 
-  /**
-   * @brief Decomposes the geometry.
-   */
+  /// Decomposes the geometry.
   virtual void decompose ( mesh::Mesh& seed ) =0;
 
-  /**
-   * @brief Sets an offset from zero for the geometry.
-   */
-
+  /// Sets an offset from zero for the geometry.
   void setBoundingFromMapping(mapping::PtrMapping mapping);
 
   void setBoundingToMapping(mapping::PtrMapping mapping);

@@ -81,8 +81,8 @@ void ExplicitCouplingSchemeTest:: testSimpleExplicitCoupling()
   mesh->allocateDataValues ();
   meshConfig.addMesh ( mesh );
 
-  com::Communication::SharedPointer communication ( new com::MPIDirectCommunication() );
-  m2n::M2N::SharedPointer globalCom( new m2n::M2N(communication,m2n::DistributedComFactory::SharedPointer()) );
+  com::PtrCommunication communication ( new com::MPIDirectCommunication() );
+  m2n::PtrM2N globalCom( new m2n::M2N(communication,m2n::DistributedComFactory::SharedPointer()) );
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
   double maxTime = 1.0;
@@ -141,7 +141,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredSimpleExplicitCoupling ()
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
+  m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
   geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
   connect ( "participant0", "participant1", localParticipant, m2n );
@@ -182,7 +182,7 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingFirstParticipantSetsDt()
   //validate(geoConfig.isValid());
   //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
-  m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
+  m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
   geoConfig.geometries()[0]->create( *meshConfig->meshes()[0] );
   connect ( "participant0", "participant1", localParticipant, m2n );
@@ -268,7 +268,7 @@ void ExplicitCouplingSchemeTest:: testSerialDataInitialization()
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
+  m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
   geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
   connect("participant0", "participant1", localParticipant, m2n);
@@ -339,7 +339,7 @@ void ExplicitCouplingSchemeTest:: testParallelDataInitialization()
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
+  m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
   geoConfig.geometries()[0]->create(*meshConfig->meshes()[0]);
   connect("participant0", "participant1", localParticipant, m2n);
@@ -533,8 +533,8 @@ void ExplicitCouplingSchemeTest:: testExplicitCouplingWithSubcycling ()
   mesh->allocateDataValues ();
   meshConfig.addMesh ( mesh );
 
-  com::Communication::SharedPointer communication ( new com::MPIDirectCommunication );
-  m2n::M2N::SharedPointer globalCom (new m2n::M2N(communication,m2n::DistributedComFactory::SharedPointer()));
+  com::PtrCommunication communication ( new com::MPIDirectCommunication );
+  m2n::PtrM2N globalCom (new m2n::M2N(communication,m2n::DistributedComFactory::SharedPointer()));
   std::string nameParticipant0 ( "participant0" );
   std::string nameParticipant1 ( "participant1" );
   double maxTime = 1.0;
@@ -599,7 +599,7 @@ void ExplicitCouplingSchemeTest:: testConfiguredExplicitCouplingWithSubcycling (
   //validate(geoConfig.isValid());
   //validate(cplSchemeConfig.isValid());
   meshConfig->setMeshSubIDs();
-  m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
+  m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
   geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
   connect ( "participant0", "participant1", localParticipant, m2n );
@@ -755,7 +755,7 @@ void ExplicitCouplingSchemeTest:: connect
   const std::string&     participant0,
   const std::string&     participant1,
   const std::string&     localParticipant,
-  m2n::M2N::SharedPointer& communication ) const
+  m2n::PtrM2N& communication ) const
 {
   preciceTrace ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );

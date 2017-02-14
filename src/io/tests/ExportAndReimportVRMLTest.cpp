@@ -12,6 +12,7 @@
 #include "utils/Parallel.hpp"
 #include "math/math.hpp"
 #include <string>
+#include "utils/prettyprint.hpp"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerTest(precice::io::tests::ExportAndReimportVRMLTest)

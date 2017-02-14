@@ -21,6 +21,7 @@
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/GatherScatterCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
+#include "m2n/M2N.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
 #include "utils/xml/XMLTag.hpp"
@@ -119,8 +120,8 @@ void ParallelImplicitCouplingSchemeTest:: testInitializeData()
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create a ParallelImplicitCouplingScheme object
-  com::Communication::SharedPointer communication(new com::MPIDirectCommunication);
-  m2n::M2N::SharedPointer globalCom(new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
+  com::PtrCommunication communication(new com::MPIDirectCommunication);
+  m2n::PtrM2N globalCom(new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -219,7 +220,7 @@ void ParallelImplicitCouplingSchemeTest:: connect
   const std::string&      participant0,
   const std::string&      participant1,
   const std::string&      localParticipant,
-  m2n::M2N::SharedPointer& communication ) const
+  m2n::PtrM2N& communication ) const
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );

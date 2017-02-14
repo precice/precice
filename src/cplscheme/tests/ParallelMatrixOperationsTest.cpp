@@ -51,7 +51,7 @@ void ParallelMatrixOperationsTest::testParVectorOperations()
   TRACE();
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-  com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIDirectCommunication());
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
   utils::Parallel::synchronizeProcesses();
@@ -224,7 +224,7 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp()
 {
 	preciceTrace ( "testParallelMatrixMatrixOp" ); assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-	com::Communication::SharedPointer masterSlaveCom = com::Communication::SharedPointer(new com::MPIDirectCommunication());
+	com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
 	utils::MasterSlave::_communication = masterSlaveCom;
 
 	utils::Parallel::synchronizeProcesses();
@@ -251,8 +251,8 @@ void ParallelMatrixOperationsTest::testParallelMatrixMatrixOp()
 		masterSlaveCom->requestConnection("SOLIDZMaster", "SOLIDZSlaves", 2, 3);
 	}
 
-	com::Communication::SharedPointer _cyclicCommLeft = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
-	com::Communication::SharedPointer _cyclicCommRight = com::Communication::SharedPointer(new com::MPIPortsCommunication("."));
+	com::PtrCommunication _cyclicCommLeft = com::PtrCommunication(new com::MPIPortsCommunication("."));
+	com::PtrCommunication _cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication("."));
 
 	// initialize cyclic communication between successive slaves
 	int prevProc = (utils::Parallel::getProcessRank() - 1 < 0) ? utils::Parallel::getCommunicatorSize() - 1 : utils::Parallel::getProcessRank() - 1;

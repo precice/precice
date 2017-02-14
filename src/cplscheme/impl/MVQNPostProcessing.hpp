@@ -106,10 +106,10 @@ private:
    std::deque<int> _matrixCols_RSLS;
 
    /// @brief: Communication between neighboring slaves, backwards
-   com::Communication::SharedPointer _cyclicCommLeft;
+   com::PtrCommunication _cyclicCommLeft;
 
    /// @brief: Communication between neighboring slaves, forward
-   com::Communication::SharedPointer _cyclicCommRight;
+   com::PtrCommunication _cyclicCommRight;
 
    /// @brief: encapsulates matrix-matrix and matrix-vector multiplications for serial and parallel execution
    PtrParMatrixOps _parMatrixOps;

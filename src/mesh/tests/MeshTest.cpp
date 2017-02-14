@@ -7,6 +7,7 @@
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Data.hpp"
 #include "utils/Parallel.hpp"
+#include "utils/MasterSlave.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "tarch/tests/TestCaseFactory.h"
 #include "math/math.hpp"
@@ -487,12 +488,11 @@ void MeshTest:: testDemonstration ()
 
 void MeshTest:: testDistribution()
 {
-  preciceTrace ("testDistribution()");
+  TRACE();
 # ifndef PRECICE_NO_MPI
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-  com::Communication::SharedPointer masterSlaveCom =
-      com::Communication::SharedPointer(new com::MPIDirectCommunication());
+  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
   utils::MasterSlave::_communication = masterSlaveCom;
 
   if (utils::Parallel::getProcessRank() == 0){ //Master

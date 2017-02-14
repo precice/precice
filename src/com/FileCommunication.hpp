@@ -1,5 +1,4 @@
-#ifndef PRECICE_COM_FILE_COMMUNICATION_HPP_
-#define PRECICE_COM_FILE_COMMUNICATION_HPP_
+#pragma once
 
 #include "Communication.hpp"
 
@@ -106,7 +105,7 @@ public:
   /**
    * @brief Asynchronously sends an array of integer values.
    */
-  virtual Request::SharedPointer
+  virtual PtrRequest
   aSend(int* itemsToSend, int size, int rankReceiver);
 
   /**
@@ -117,7 +116,7 @@ public:
   /**
    * @brief Asynchronously sends an array of double values.
    */
-  virtual Request::SharedPointer
+  virtual PtrRequest
   aSend(double* itemsToSend, int size, int rankReceiver);
 
   /**
@@ -128,7 +127,7 @@ public:
   /**
    * @brief Asynchronously sends a double to process with given rank.
    */
-  virtual Request::SharedPointer
+  virtual PtrRequest
   aSend(double* itemToSend, int rankReceiver);
 
   /**
@@ -139,7 +138,7 @@ public:
   /**
    * @brief Asynchronously sends an int to process with given rank.
    */
-  virtual Request::SharedPointer
+  virtual PtrRequest
   aSend(int* itemToSend, int rankReceiver);
 
   /**
@@ -150,7 +149,7 @@ public:
   /**
    * @brief Asynchronously sends a bool to process with given rank.
    */
-  virtual Request::SharedPointer
+  virtual PtrRequest
   aSend(bool* itemToSend, int rankReceiver);
 
   /**
@@ -166,7 +165,7 @@ public:
   /**
    * @brief Asynchronously receives an array of integer values.
    */
-  virtual Request::SharedPointer aReceive(int* itemsToReceive,
+  virtual PtrRequest aReceive(int* itemsToReceive,
                                           int size,
                                           int rankSender);
 
@@ -178,7 +177,7 @@ public:
   /**
    * @brief Asynchronously receives an array of double values.
    */
-  virtual Request::SharedPointer aReceive(double* itemsToReceive,
+  virtual PtrRequest aReceive(double* itemsToReceive,
                                           int size,
                                           int rankSender);
 
@@ -190,7 +189,7 @@ public:
   /**
    * @brief Asynchronously receives a double from process with given rank.
    */
-  virtual Request::SharedPointer aReceive(double* itemToReceive,
+  virtual PtrRequest aReceive(double* itemToReceive,
                                           int rankSender);
 
   /**
@@ -201,7 +200,7 @@ public:
   /**
    * @brief Asynchronously receives an int from process with given rank.
    */
-  virtual Request::SharedPointer aReceive(int* itemToReceive, int rankSender);
+  virtual PtrRequest aReceive(int* itemToReceive, int rankSender);
 
   /**
    * @brief Receives a bool from process with given rank.
@@ -211,7 +210,7 @@ public:
   /**
    * @brief Asynchronously receives a bool from process with given rank.
    */
-  virtual Request::SharedPointer aReceive(bool* itemToReceive, int rankSender);
+  virtual PtrRequest aReceive(bool* itemToReceive, int rankSender);
 
 private:
   // @brief Logging device.
@@ -278,22 +277,21 @@ private:
   /**
    * @brief Returns a filename for send data for the given parameters.
    *
-   * @param hidden [IN] A hidden send file is not ready for reception.
-   * @param rankRemote [IN] Rank number of remote process reading the file.
-   * @param index [IN] Counter of send files, must match on both sides.
+   * @param[in] hidden A hidden send file is not ready for reception.
+   * @param[in] rankRemote Rank number of remote process reading the file.
+   * @param[in] index Counter of send files, must match on both sides.
    */
   std::string getSendFilename(bool hidden, int rankRemote, int index);
 
   /**
    * @brief Returns a filename for receive data for the given parameters.
    *
-   * @param hidden [IN] A hidden receive file is (ready for) being read.
-   * @param rankRemote [IN] Rank number of remote process writing the file.
-   * @param index [IN] Counter of send files, must match on both sides.
+   * @param[in] hidden A hidden receive file is (ready for) being read.
+   * @param[in] rankRemote Rank number of remote process writing the file.
+   * @param[in] index Counter of send files, must match on both sides.
    */
   std::string getReceiveFilename(bool hidden, int rankRemote, int index);
 };
-}
-} // namespace precice, com
 
-#endif /* PRECICE_COM_FILE_COMMUNICATION_HPP_ */
+}} // namespace precice, com
+

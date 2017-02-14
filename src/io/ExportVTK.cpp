@@ -4,7 +4,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
-#include "utils/Globals.hpp"
 #include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
 #include <Eigen/Dense>
 #include <iostream>
@@ -35,15 +34,14 @@ void ExportVTK:: doExport
   const std::string& location,
   mesh::Mesh&        mesh)
 {
-  preciceTrace("doExport()", name, location, mesh.getName());
+  TRACE(name, location, mesh.getName());
   assertion(name != std::string(""));
 
   namespace fs = boost::filesystem;
   fs::path outfile(location);
   outfile = outfile / fs::path(name + ".vtk");
   std::ofstream outstream(outfile.string(), std::ios::trunc);
-  preciceCheck(outstream, "doExport()", "Could not open file \"" << outfile.c_str()
-                 << "\" for VTK export!");
+  CHECK(outstream, "Could not open file \"" << outfile.c_str() << "\" for VTK export!");
 
   initializeWriting(outstream);
   writeHeader(outstream);
@@ -57,7 +55,7 @@ void ExportVTK::exportGeometry
   std::ofstream& outFile,
   mesh::Mesh&    mesh)
 {
-  preciceTrace("exportGeometry()", mesh.getName());
+  TRACE(mesh.getName());
 
   // Plot vertices
   outFile << "POINTS " << mesh.vertices().size() << " float "<<std::endl << std::endl;

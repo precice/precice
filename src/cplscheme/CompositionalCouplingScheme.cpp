@@ -418,7 +418,7 @@ void CompositionalCouplingScheme:: importState
 
 void CompositionalCouplingScheme:: sendState
 (
-  com::Communication::SharedPointer communication,
+  com::PtrCommunication communication,
   int                   rankReceiver )
 {
   preciceTrace("sendState()");
@@ -429,7 +429,7 @@ void CompositionalCouplingScheme:: sendState
 
 void CompositionalCouplingScheme:: receiveState
 (
-  com::Communication::SharedPointer communication,
+  com::PtrCommunication communication,
   int                   rankSender )
 {
   preciceTrace("receiveState()");

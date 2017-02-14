@@ -3,6 +3,7 @@
 #include "MPIPortsCommunicationFactory.hpp"
 
 #include "MPIPortsCommunication.hpp"
+#include "com/SharedPointer.hpp"
 
 namespace precice {
 namespace com {
@@ -14,9 +15,8 @@ MPIPortsCommunicationFactory::MPIPortsCommunicationFactory(
   }
 }
 
-Communication::SharedPointer
-MPIPortsCommunicationFactory::newCommunication() {
-  return Communication::SharedPointer(
+PtrCommunication MPIPortsCommunicationFactory::newCommunication() {
+  return PtrCommunication(
       new MPIPortsCommunication(_addressDirectory));
 }
 

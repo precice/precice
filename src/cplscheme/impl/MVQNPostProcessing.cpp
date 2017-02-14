@@ -131,8 +131,8 @@ void MVQNPostProcessing:: initialize
           }
       #endif
 
-      _cyclicCommLeft = com::Communication::SharedPointer(new com::MPIPortsCommunication());
-      _cyclicCommRight = com::Communication::SharedPointer(new com::MPIPortsCommunication());
+      _cyclicCommLeft = com::PtrCommunication(new com::MPIPortsCommunication());
+      _cyclicCommRight = com::PtrCommunication(new com::MPIPortsCommunication());
       //_cyclicCommLeft = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
       //_cyclicCommRight = com::Communication::SharedPointer(new com::SocketCommunication(0, false, "ib0", "."));
 

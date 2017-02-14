@@ -1,9 +1,10 @@
 #pragma once
 
-#include "utils/Globals.hpp"
 #include <string>
 #include <vector>
 #include <fstream>
+#include <Eigen/Core>
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace io {
@@ -19,9 +20,7 @@ class TXTTableWriter
 {
 public:
 
-  /**
-   * @brief Constants defining possible data types to be written.
-   */
+  /// Constants defining possible data types to be written.
   enum DataType {
     INT,
     DOUBLE,
@@ -29,14 +28,10 @@ public:
     VECTOR3D
   };
 
-  /**
-   * @brief Constructor, opens file.
-   */
-  TXTTableWriter ( const std::string& filename );
+  /// Constructor, opens file.
+  explicit TXTTableWriter ( const std::string& filename );
 
-  /**
-   * @brief Destructor, closes file, if not done yet.
-   */
+  /// Destructor, closes file, if not done yet.
   ~TXTTableWriter();
 
   /**
@@ -81,16 +76,12 @@ public:
     const std::string&     name,
     const Eigen::Vector3d& value );
 
-  /**
-   * @brief Closes the file, is automatically called on destruction.
-   */
+  /// Closes the file, is automatically called on destruction.
   void close();
 
 private:
 
-  /**
-   * @brief Represents one data entry to be written.
-   */
+  /// Represents one data entry to be written.
   struct Data {
 
     std::string name;

@@ -4,6 +4,7 @@
 
 #include "EventTimings.hpp"
 #include "Globals.hpp"
+#include "com/Communication.hpp"
 
 namespace precice {
 namespace utils {
@@ -16,7 +17,7 @@ int MasterSlave::_size = -1;
 int MasterSlave::_masterRank = 0;
 bool MasterSlave::_masterMode = false;
 bool MasterSlave::_slaveMode = false;
-com::Communication::SharedPointer MasterSlave::_communication;
+com::PtrCommunication MasterSlave::_communication;
 
 
 logging::Logger MasterSlave:: _log ( "precice::utils::MasterSlave" );

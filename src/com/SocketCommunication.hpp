@@ -1,22 +1,16 @@
 #ifndef PRECICE_NO_SOCKETS
 
-#ifndef PRECICE_COM_SOCKET_COMMUNICATION_HPP_
-#define PRECICE_COM_SOCKET_COMMUNICATION_HPP_
+#pragma once
 
 #include "com/Communication.hpp"
 
 #include "logging/Logger.hpp"
-#include "utils/PointerVector.hpp"
 #include <boost/asio/io_service.hpp>
 
-#include <condition_variable>
-#include <mutex>
-#include <set>
 #include <thread>
 
 namespace boost {
 namespace asio {
-class io_service;
 namespace ip {
 class tcp;
 }
@@ -32,33 +26,21 @@ class error_code;
 
 namespace precice {
 namespace com {
-/**
- * @brief Implements Communication by using sockets.
- */
+/// Implements Communication by using sockets.
 class SocketCommunication : public Communication {
 public:
-  /**
-   * @brief Constructor.
-   */
+
   SocketCommunication(unsigned short portNumber = 0,
                       bool reuseAddress = false,
                       std::string const& networkName = "lo",
                       std::string const& addressDirectory = ".");
 
-  /**
-   * @brief Constructor.
-   */
-  SocketCommunication(std::string const& addressDirectory);
 
-  /**
-   * @brief Destructor.
-   */
+  explicit SocketCommunication(std::string const& addressDirectory);
+
   virtual ~SocketCommunication();
 
-  /**
-   * @brief Returns true, if a connection to a remote participant has been
-   * setup.
-   */
+  /// Returns true, if a connection to a remote participant has been setup.
   virtual bool isConnected();
 
   /**
@@ -76,8 +58,8 @@ public:
    *this
    * method, while the clients have to call requestConnection().
    *
-   * @param nameAcceptor [IN] Name of calling participant.
-   * @param nameRequester [IN] Name of remote participant to connect to.
+   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] nameRequester Name of remote participant to connect to.
    */
   virtual void acceptConnection(std::string const& nameAcceptor,
                                 std::string const& nameRequester,
@@ -147,7 +129,7 @@ public:
   /**
    * @brief Asynchronously sends an array of integer values.
    */
-  virtual Request::SharedPointer aSend(int* itemsToSend,
+  virtual PtrRequest aSend(int* itemsToSend,
                                        int size,
                                        int rankReceiver);
 
@@ -159,7 +141,7 @@ public:
   /**
    * @brief Asynchronously sends an array of double values.
    */
-  virtual Request::SharedPointer aSend(double* itemsToSend,
+  virtual PtrRequest aSend(double* itemsToSend,
                                        int size,
                                        int rankReceiver);
 
@@ -171,7 +153,7 @@ public:
   /**
    * @brief Asynchronously sends a double to process with given rank.
    */
-  virtual Request::SharedPointer aSend(double* itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(double* itemToSend, int rankReceiver);
 
   /**
    * @brief Sends an int to process with given rank.
@@ -181,7 +163,7 @@ public:
   /**
    * @brief Asynchronously sends an int to process with given rank.
    */
-  virtual Request::SharedPointer aSend(int* itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(int* itemToSend, int rankReceiver);
 
   /**
    * @brief Sends a bool to process with given rank.
@@ -191,7 +173,7 @@ public:
   /**
    * @brief Asynchronously sends a bool to process with given rank.
    */
-  virtual Request::SharedPointer aSend(bool* itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(bool* itemToSend, int rankReceiver);
 
   /**
    * @brief Receives a std::string from process with given rank.
@@ -206,7 +188,7 @@ public:
   /**
    * @brief Asynchronously receives an array of integer values.
    */
-  virtual Request::SharedPointer aReceive(int* itemsToReceive,
+  virtual PtrRequest aReceive(int* itemsToReceive,
                                           int size,
                                           int rankSender);
 
@@ -218,7 +200,7 @@ public:
   /**
    * @brief Asynchronously receives an array of double values.
    */
-  virtual Request::SharedPointer aReceive(double* itemsToReceive,
+  virtual PtrRequest aReceive(double* itemsToReceive,
                                           int size,
                                           int rankSender);
 
@@ -230,7 +212,7 @@ public:
   /**
    * @brief Asynchronously receives a double from process with given rank.
    */
-  virtual Request::SharedPointer aReceive(double* itemToReceive,
+  virtual PtrRequest aReceive(double* itemToReceive,
                                           int rankSender);
 
   /**
@@ -241,17 +223,13 @@ public:
   /**
    * @brief Asynchronously receives an int from process with given rank.
    */
-  virtual Request::SharedPointer aReceive(int* itemToReceive, int rankSender);
+  virtual PtrRequest aReceive(int* itemToReceive, int rankSender);
 
-  /**
-   * @brief Receives a bool from process with given rank.
-   */
+  /// Receives a bool from process with given rank.
   virtual void receive(bool& itemToReceive, int rankSender);
 
-  /**
-   * @brief Asynchronously receives a bool from process with given rank.
-   */
-  virtual Request::SharedPointer aReceive(bool* itemToReceive, int rankSender);
+  /// Asynchronously receives a bool from process with given rank.
+  virtual PtrRequest aReceive(bool* itemToReceive, int rankSender);
 
 private:
   static logging::Logger _log;
@@ -261,10 +239,10 @@ private:
 
   bool _reuseAddress;
 
-  // @brief Name of network to communicate over.
+  /// Name of network to communicate over.
   std::string _networkName;
 
-  // @brief Directory where IP address is exchanged by file.
+  /// Directory where IP address is exchanged by file.
   std::string _addressDirectory;
 
   bool _isConnected;
@@ -291,9 +269,8 @@ private:
 
   std::string getIpAddress();
 };
-}
-} // namespace precice, com
 
-#endif /* PRECICE_COM_SOCKET_COMMUNICATION_HPP_ */
+}} // namespace precice, com
+
 
 #endif // not PRECICE_NO_SOCKETS

@@ -3,12 +3,12 @@
 #include "mesh/Data.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include <Eigen/Dense>
 #include "utils/EigenHelperFunctions.hpp"
 #include <limits>
 #include "math/math.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -30,10 +30,9 @@ AitkenPostProcessing:: AitkenPostProcessing
   _residuals (),
   _designSpecification ()
 {
-  preciceCheck ( (_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
-                 "AitkenPostProcessing()",
-                 "Initial relaxation factor for aitken post processing has to "
-                 << "be larger than zero and smaller or equal than one!" );
+  CHECK ( (_initialRelaxation > 0.0) && (_initialRelaxation <= 1.0),
+          "Initial relaxation factor for aitken post processing has to "
+          << "be larger than zero and smaller or equal than one!" );
 }
 
 void AitkenPostProcessing:: initialize

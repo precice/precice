@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Eigen/Dense>
-#include "Globals.hpp"
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace utils {

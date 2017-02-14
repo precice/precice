@@ -319,13 +319,13 @@ bool Participant:: useServer()
 
 void Participant:: setClientServerCommunication
 (
-  com::Communication::SharedPointer communication )
+  com::PtrCommunication communication )
 {
   assertion ( communication.use_count() > 0 );
   _clientServerCommunication = communication;
 }
 
-com::Communication::SharedPointer Participant:: getClientServerCommunication() const
+com::PtrCommunication Participant:: getClientServerCommunication() const
 {
   return _clientServerCommunication;
 }

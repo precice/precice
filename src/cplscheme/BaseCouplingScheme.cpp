@@ -1,6 +1,8 @@
 #include "BaseCouplingScheme.hpp"
 #include "mesh/Mesh.hpp"
+#include "com/SharedPointer.hpp"
 #include "com/Communication.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
@@ -83,7 +85,7 @@ BaseCouplingScheme::BaseCouplingScheme
   const std::string&    firstParticipant,
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
-  m2n::M2N::SharedPointer           m2n,
+  m2n::PtrM2N           m2n,
   int                   maxIterations,
   constants::TimesteppingMethod dtMethod )
   :
@@ -231,7 +233,7 @@ void BaseCouplingScheme:: addDataToReceive
 
 void BaseCouplingScheme:: sendState
 (
-  com::Communication::SharedPointer communication,
+  com::PtrCommunication communication,
   int                   rankReceiver)
 {
   TRACE(rankReceiver);
@@ -263,7 +265,7 @@ void BaseCouplingScheme:: sendState
 
 void BaseCouplingScheme:: receiveState
 (
-  com::Communication::SharedPointer communication,
+  com::PtrCommunication communication,
   int                   rankSender)
 {
   preciceTrace("receiveState()", rankSender);
@@ -302,7 +304,7 @@ void BaseCouplingScheme:: receiveState
 
 std::vector<int> BaseCouplingScheme:: sendData
 (
-  m2n::M2N::SharedPointer m2n)
+  m2n::PtrM2N m2n)
 {
   preciceTrace("sendData()");
 
@@ -321,7 +323,7 @@ std::vector<int> BaseCouplingScheme:: sendData
 
 std::vector<int> BaseCouplingScheme:: receiveData
 (
-  m2n::M2N::SharedPointer m2n)
+  m2n::PtrM2N m2n)
 {
   preciceTrace("receiveData()");
   std::vector<int> receivedDataIDs;

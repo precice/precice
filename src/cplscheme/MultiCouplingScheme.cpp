@@ -1,10 +1,12 @@
 #include "MultiCouplingScheme.hpp"
 #include "impl/PostProcessing.hpp"
 #include "mesh/Mesh.hpp"
-#include "com/Communication.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/MasterSlave.hpp"
+#include "m2n/SharedPointer.hpp"
 #include "m2n/M2N.hpp"
 #include "math/math.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -18,12 +20,12 @@ MultiCouplingScheme::MultiCouplingScheme
   double                timestepLength,
   int                   validDigits,
   const std::string&    localParticipant,
-  std::vector<m2n::M2N::SharedPointer> communications,
+  std::vector<m2n::PtrM2N> communications,
   constants::TimesteppingMethod dtMethod,
   int                   maxIterations)
   :
   BaseCouplingScheme(maxTime,maxTimesteps,timestepLength,validDigits,"neverFirstParticipant",
-      localParticipant,localParticipant,m2n::M2N::SharedPointer(),maxIterations,dtMethod),
+      localParticipant,localParticipant,m2n::PtrM2N(),maxIterations,dtMethod),
   _communications(communications),
   _allData (),
   _receiveDataVector(),
@@ -91,12 +93,11 @@ void MultiCouplingScheme::initialize
 
 void MultiCouplingScheme::initializeData()
 {
-  preciceTrace("initializeData()");
-  preciceCheck(isInitialized(), "initializeData()",
-               "initializeData() can be called after initialize() only!");
+  TRACE();
+  CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
 
   if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
+    INFO("initializeData is skipped since no data has to be initialized");
     return;
   }
 
@@ -142,7 +143,7 @@ void MultiCouplingScheme::initializeData()
 
 void MultiCouplingScheme::advance()
 {
-  preciceTrace("advance()", getTimesteps(), getTime());
+  TRACE(getTimesteps(), getTime());
   checkCompletenessRequiredActions();
 
   preciceCheck(!hasToReceiveInitData() && !hasToSendInitData(), "advance()",
@@ -174,7 +175,7 @@ void MultiCouplingScheme::advance()
       getPostProcessing()->performPostProcessing(_allData);
     }
 
-    for (m2n::M2N::SharedPointer m2n : _communications) {
+    for (m2n::PtrM2N m2n : _communications) {
       m2n->send(convergence);
       assertion(not _isCoarseModelOptimizationActive);
       m2n->send(_isCoarseModelOptimizationActive); //need to do this to match with ParallelCplScheme

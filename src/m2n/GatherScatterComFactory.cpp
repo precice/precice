@@ -5,7 +5,7 @@
 namespace precice {
 namespace m2n {
 GatherScatterComFactory::GatherScatterComFactory(
-    com::Communication::SharedPointer masterCom)
+    com::PtrCommunication masterCom)
     : _masterCom(masterCom) {
 }
 

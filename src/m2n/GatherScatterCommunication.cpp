@@ -11,7 +11,7 @@ logging::Logger GatherScatterCommunication:: _log("precice::m2n::GatherScatterCo
 
 GatherScatterCommunication:: GatherScatterCommunication
 (
-  com::Communication::SharedPointer com,
+  com::PtrCommunication com,
   mesh::PtrMesh mesh)
 :
   DistributedCommunication(mesh),

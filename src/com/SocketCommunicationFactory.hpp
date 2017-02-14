@@ -1,9 +1,9 @@
 #ifndef PRECICE_NO_SOCKETS
 
-#ifndef PRECICE_COM_SOCKET_COMMUNICATION_FACTORY_HPP_
-#define PRECICE_COM_SOCKET_COMMUNICATION_FACTORY_HPP_
+#pragma once
 
 #include "CommunicationFactory.hpp"
+#include "com/SharedPointer.hpp"
 
 #include <string>
 
@@ -16,9 +16,9 @@ public:
                              std::string const& networkName = "lo",
                              std::string const& addressDirectory = ".");
 
-  SocketCommunicationFactory(std::string const& addressDirectory);
+  explicit SocketCommunicationFactory(std::string const& addressDirectory);
 
-  Communication::SharedPointer newCommunication();
+  PtrCommunication newCommunication();
 
   std::string addressDirectory();
 
@@ -28,9 +28,7 @@ private:
   std::string _networkName;
   std::string _addressDirectory;
 };
-}
-} // namespace precice, com
 
-#endif /* PRECICE_COM_SOCKET_COMMUNICATION_FACTORY_HPP_ */
+}} // namespace precice, com
 
 #endif // not PRECICE_NO_SOCKETS

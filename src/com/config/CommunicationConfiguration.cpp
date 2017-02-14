@@ -31,11 +31,11 @@ CommunicationConfiguration:: CommunicationConfiguration()
   VALUE_SOCKETS("sockets")
 {}
 
-Communication::SharedPointer CommunicationConfiguration:: createCommunication
+PtrCommunication CommunicationConfiguration:: createCommunication
 (
   const utils::XMLTag& tag ) const
 {
-  com::Communication::SharedPointer com;
+  com::PtrCommunication com;
   if (tag.getName() == VALUE_SOCKETS){
 #   ifdef PRECICE_NO_SOCKETS
     std::ostringstream error;
@@ -52,7 +52,7 @@ Communication::SharedPointer CommunicationConfiguration:: createCommunication
                  "16-bit unsigned integer: " << port);
 
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-    com = com::Communication::SharedPointer(new com::SocketCommunication(port, false, network, dir));
+    com = com::PtrCommunication(new com::SocketCommunication(port, false, network, dir));
 #   endif // PRECICE_NO_SOCKETS
   }
   else if (tag.getName() == VALUE_MPI){
@@ -63,7 +63,7 @@ Communication::SharedPointer CommunicationConfiguration:: createCommunication
           << "when preCICE is compiled with argument \"mpi=on\"";
     throw error.str();
 #   else
-    com = com::Communication::SharedPointer(new com::MPIPortsCommunication(dir));
+    com = com::PtrCommunication(new com::MPIPortsCommunication(dir));
 #   endif
   }
   else if (tag.getName() == VALUE_MPI_SINGLE){
@@ -73,12 +73,12 @@ Communication::SharedPointer CommunicationConfiguration:: createCommunication
           << "when preCICE is compiled with argument \"mpi=on\"";
     throw error.str();
 #   else
-    com = com::Communication::SharedPointer(new com::MPIDirectCommunication());
+    com = com::PtrCommunication(new com::MPIDirectCommunication());
 #   endif
   }
   else if (tag.getName() == VALUE_FILES){
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-    com = com::Communication::SharedPointer(new com::FileCommunication(false, dir));
+    com = com::PtrCommunication(new com::FileCommunication(false, dir));
   }
   assertion(com.get() != nullptr);
   return com;

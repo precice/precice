@@ -3,7 +3,6 @@
 #include "BaseCouplingScheme.hpp"
 #include "logging/Logger.hpp"
 
-
 namespace precice {
 namespace cplscheme {
 
@@ -16,12 +15,11 @@ public:
     double                timestepLength,
     int                   validDigits,
     const std::string&    localParticipant,
-    std::vector<m2n::M2N::SharedPointer> communications,
+    std::vector<m2n::PtrM2N> communications,
     constants::TimesteppingMethod dtMethod,
     int                   maxIterations = 1)
     ;
 
-  /// @brief Logging device.
   static logging::Logger _log;
 
   virtual void initialize(double startTime, int startTimestep);
@@ -30,14 +28,14 @@ public:
 
   virtual void advance();
 
-  /// @brief Adds data to be sent on data exchange and possibly be modified during coupling iterations.
+  /// Adds data to be sent on data exchange and possibly be modified during coupling iterations.
   void addDataToSend (
     mesh::PtrData data,
     mesh::PtrMesh mesh,
     bool          initialize,
     int           index);
 
-  /// @brief Adds data to be received on data exchange.
+  /// Adds data to be received on data exchange.
   void addDataToReceive (
     mesh::PtrData data,
     mesh::PtrMesh mesh,
@@ -45,7 +43,7 @@ public:
     int           index);
 
 protected:
-  /// @brief merges send and receive data into one map (for parallel post-processing)
+  /// merges send and receive data into one map (for parallel post-processing)
   virtual void mergeData();
 
 private:
@@ -54,10 +52,10 @@ private:
   void setupConvergenceMeasures();
   CouplingData* getData ( int dataID );
 
-  /// @brief Communication device to the other coupling participant.
-  std::vector<m2n::M2N::SharedPointer> _communications;
+  /// Communication device to the other coupling participant.
+  std::vector<m2n::PtrM2N> _communications;
 
-  /// @brief Map from data ID -> all data (receive and send) with that ID
+  /// Map from data ID -> all data (receive and send) with that ID
   DataMap _allData;
 
   std::vector<DataMap> _receiveDataVector;

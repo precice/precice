@@ -9,9 +9,7 @@
 #include "spacetree/SharedPointer.hpp"
 #include "io/config/ExportConfiguration.hpp"
 #include "io/ExportContext.hpp"
-#include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
-#include "utils/Helpers.hpp"
 #include "logging/Logger.hpp"
 #include "utils/PointerVector.hpp"
 #include <string>
@@ -22,24 +20,17 @@ namespace precice {
     struct MeshContext;
     struct MappingContext;
   }
-  namespace com {
-    class Communication;
-  }
-  namespace tests {
+namespace tests {
     class SolverInterfaceTestGeometry;
     class SolverInterfaceTest;
     class SolverInterfaceTestRemote;
   }
 }
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace impl {
 
-/**
- * @brief Holds coupling state of one participating solver in coupled simulation.
- */
+/// Holds coupling state of one participating solver in coupled simulation.
 class Participant
 {
 public:
@@ -61,14 +52,9 @@ public:
     const std::string&          name,
     mesh::PtrMeshConfiguration& meshConfig );
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~Participant();
 
-  /**
-   * @brief Returns the name of the participant.
-   */
+  /// Returns the name of the participant.
   const std::string& getName() const;
 
   int getID() const;
@@ -117,9 +103,7 @@ public:
 
   std::vector<PtrWatchPoint>& watchPoints();
 
-  /**
-   * @brief Adds a geometry to be used by the participant.
-   */
+  /// Adds a geometry to be used by the participant.
   void useMesh (
     const mesh::PtrMesh&                   mesh,
     const geometry::PtrGeometry&   geometry,
@@ -137,31 +121,21 @@ public:
 
   const std::vector<action::PtrAction>& actions() const;
 
-  /**
-   * @brief Adds an export context to export meshes and data.
-   */
+  /// Adds an export context to export meshes and data.
   void addExportContext ( const io::ExportContext& context );
 
-  /**
-   * @brief Returns all export contexts for exporting meshes and data.
-   */
+  /// Returns all export contexts for exporting meshes and data.
   const std::vector<io::ExportContext>& exportContexts() const;
 
-  /**
-   * @brief Returns true, if the participant uses a precice in form of a server.
-   */
+  /// Returns true, if the participant uses a precice in form of a server.
   bool useServer();
 
-  /**
-   * @brief Sets the client-server com. for the participant.
-   */
-  void setClientServerCommunication ( com::Communication::SharedPointer communication );
+  /// Sets the client-server com. for the participant.
+  void setClientServerCommunication ( com::PtrCommunication communication );
 
-  com::Communication::SharedPointer getClientServerCommunication() const;
+  com::PtrCommunication getClientServerCommunication() const;
 
-  /**
-   * @brief Returns true, if the participant uses a master process.
-   */
+  /// Returns true, if the participant uses a master process.
   bool useMaster();
 
   void setUseMaster(bool useMaster);
@@ -175,7 +149,6 @@ public:
 
 private:
 
-  // @brief Logging device.
   static logging::Logger _log;
 
   static int _participantsSize;
@@ -186,21 +159,21 @@ private:
 
   std::vector<PtrWatchPoint> _watchPoints;
 
-  // @brief Export contexts to export meshes, data, and more.
+  /// Export contexts to export meshes, data, and more.
   std::vector<io::ExportContext> _exportContexts;
 
   std::vector<action::PtrAction> _actions;
 
-  // @brief All mesh contexts involved in a simulation, mesh ID == index.
+  /// All mesh contexts involved in a simulation, mesh ID == index.
   std::vector<MeshContext*> _meshContexts;
 
-  // @brief Read mapping contexts used by the participant.
+  /// Read mapping contexts used by the participant.
   utils::ptr_vector<MappingContext> _readMappingContexts;
 
-  // @brief Write mapping contexts used by the participant.
+  /// Write mapping contexts used by the participant.
   utils::ptr_vector<MappingContext> _writeMappingContexts;
 
-  // @brief Mesh contexts used by the participant.
+  /// Mesh contexts used by the participant.
   std::vector<MeshContext*> _usedMeshContexts;
 
   std::vector<DataContext*> _dataContexts;
@@ -211,11 +184,9 @@ private:
 
   //io::ExportContext _exportContext;
 
-
-  com::Communication::SharedPointer _clientServerCommunication;
+  com::PtrCommunication _clientServerCommunication;
 
   bool _useMaster;
-
 
   template<typename ELEMENT_T>
   bool isDataValid (
@@ -226,7 +197,7 @@ private:
 
   void checkDuplicatedData ( const mesh::PtrData& data );
 
-  // @brief To allow white box tests.
+  /// To allow white box tests.
   friend class tests::SolverInterfaceTest;
   friend class tests::SolverInterfaceTestRemote;
   friend class tests::SolverInterfaceTestGeometry;

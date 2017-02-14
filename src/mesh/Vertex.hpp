@@ -1,9 +1,8 @@
-#ifndef PRECICE_MESH_VERTEX_HPP_
-#define PRECICE_MESH_VERTEX_HPP_
+#pragma once
 
 #include "mesh/PropertyContainer.hpp"
 #include "boost/noncopyable.hpp"
-#include <map>
+#include <Eigen/Core>
 
 namespace precice {
   namespace mesh {
@@ -11,14 +10,10 @@ namespace precice {
   }
 }
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace mesh {
 
-/**
- * @brief Vertex of a mesh.
- */
+/// Vertex of a mesh.
 class Vertex : public PropertyContainer, private boost::noncopyable
 {
 public:
@@ -174,4 +169,3 @@ inline const Eigen::VectorXd& Vertex::getCoords() const
 
 }} // namespace precice, mesh
 
-#endif /* PRECICE_MESH_VERTEX_HPP_ */

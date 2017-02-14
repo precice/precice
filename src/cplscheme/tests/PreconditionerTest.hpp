@@ -24,9 +24,6 @@ public:
   //see post-processing definitions
   typedef Eigen::VectorXd DataValues;
     
-  /**
-   * Constructor.
-   */
   PreconditionerTest ();
 
   /**

@@ -1,5 +1,6 @@
 #include "ExportSpacetree.hpp"
 #include "io/ExportVTK.hpp"
+#include "utils/Dimensions.hpp"
 #include <fstream>
 #include <boost/filesystem.hpp>
 
@@ -24,7 +25,7 @@ void ExportSpacetree:: nodeCallback
 (
   const Eigen::VectorXd& center,
   const Eigen::VectorXd& halflengths,
-  int                     position )
+  int                    position )
 {
   // do nothing
 }

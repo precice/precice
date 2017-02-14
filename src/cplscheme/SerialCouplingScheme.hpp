@@ -35,7 +35,7 @@ public:
     const std::string&          firstParticipant,
     const std::string&          secondParticipant,
     const std::string&          localParticipant,
-    m2n::M2N::SharedPointer                 m2n,
+    m2n::PtrM2N                 m2n,
     constants::TimesteppingMethod dtMethod,
     CouplingMode                cplMode,
     int                         maxIterations = 1
@@ -47,7 +47,6 @@ public:
 
   virtual void advance();
 
-  /// @brief Logging device.
   static logging::Logger _log;
 
   friend class tests::SerialImplicitCouplingSchemeTest;

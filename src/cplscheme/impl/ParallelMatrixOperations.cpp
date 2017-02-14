@@ -4,7 +4,6 @@
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "com/Communication.hpp"
 #include "logging/Logger.hpp"
 #include <Eigen/Dense>
 
@@ -24,8 +23,8 @@ ParallelMatrixOperations::ParallelMatrixOperations() :
 {}
 
 void ParallelMatrixOperations::initialize(
-  com::Communication::SharedPointer leftComm,
-  com::Communication::SharedPointer rightComm,
+  com::PtrCommunication leftComm,
+  com::PtrCommunication rightComm,
   bool needCyclicComm)
 {
   TRACE();

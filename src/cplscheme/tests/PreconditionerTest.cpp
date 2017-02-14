@@ -276,7 +276,7 @@ void PreconditionerTest::testParallelMatrixScaling ()
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
   utils::Parallel::synchronizeProcesses();
 
-  utils::MasterSlave::_communication = com::Communication::SharedPointer(new com::MPIDirectCommunication());
+  utils::MasterSlave::_communication = com::PtrCommunication(new com::MPIDirectCommunication());
 
   utils::MasterSlave::_size = 4;
   utils::MasterSlave::_rank = utils::Parallel::getProcessRank();

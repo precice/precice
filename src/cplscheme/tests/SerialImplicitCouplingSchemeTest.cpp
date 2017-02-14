@@ -111,8 +111,8 @@ void SerialImplicitCouplingSchemeTest:: testExtrapolateData()
   std::string first = "First";
   std::string second = "Second";
   std::string accessor = second;
-  com::Communication::SharedPointer com(new com::MPIDirectCommunication());
-  m2n::M2N::SharedPointer globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
+  com::PtrCommunication com(new com::MPIDirectCommunication());
+  m2n::PtrM2N globalCom(new m2n::M2N(com, m2n::DistributedComFactory::SharedPointer()));
   int maxIterations = 1;
 
   // Test first order extrapolation
@@ -209,8 +209,8 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
    meshConfig.addMesh ( mesh );
 
    // Create all parameters necessary to create an ImplicitCouplingScheme object
-   com::Communication::SharedPointer communication ( new com::MPIDirectCommunication() );
-   m2n::M2N::SharedPointer globalCom(new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
+   com::PtrCommunication communication ( new com::MPIDirectCommunication() );
+   m2n::PtrM2N globalCom(new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
    double maxTime = 1.0;
    int maxTimesteps = 3;
    double timestepLength = 0.1;
@@ -271,7 +271,7 @@ void SerialImplicitCouplingSchemeTest:: testAbsConvergenceMeasureSynchronized ()
 //   meshConfig.addMesh ( mesh );
 //
 //   // Create all parameters necessary to create an ImplicitCouplingScheme object
-//   com::Communication::SharedPointer communication ( new com::MPIDirectCommunication );
+//   com::PtrCommunication communication ( new com::MPIDirectCommunication );
 //   double maxTime = 1.0;
 //   int maxTimesteps = 3;
 //   double timestepLength = 0.1;
@@ -359,7 +359,7 @@ void SerialImplicitCouplingSchemeTest:: testConfiguredAbsConvergenceMeasureSynch
    //validate(geoConfig.isValid());
    //validate(cplSchemeConfig.isValid());
    meshConfig->setMeshSubIDs();
-   m2n::M2N::SharedPointer m2n = m2nConfig->getM2N("participant0", "participant1");
+   m2n::PtrM2N m2n = m2nConfig->getM2N("participant0", "participant1");
 
    geoConfig.geometries()[0]->create ( *meshConfig->meshes()[0] );
 
@@ -393,8 +393,8 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
    meshConfig.addMesh ( mesh );
 
    // Create all parameters necessary to create an ImplicitCouplingScheme object
-   com::Communication::SharedPointer communication ( new com::MPIDirectCommunication );
-   m2n::M2N::SharedPointer globalCom ( new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()) );
+   com::PtrCommunication communication ( new com::MPIDirectCommunication );
+   m2n::PtrM2N globalCom ( new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()) );
    double maxTime = 1.0;
    int maxTimesteps = 3;
    double timestepLength = 0.1;
@@ -455,7 +455,7 @@ void SerialImplicitCouplingSchemeTest:: testMinIterConvergenceMeasureSynchronize
 //   meshConfig.addMesh ( mesh );
 //
 //   // Create all parameters necessary to create an ImplicitCouplingScheme object
-//   com::Communication::SharedPointer communication ( new com::MPIDirectCommunication );
+//   com::PtrCommunication communication ( new com::MPIDirectCommunication );
 //   double maxTime = 1.0;
 //   int maxTimesteps = 3;
 //   double timestepLength = 0.1;
@@ -725,8 +725,8 @@ void SerialImplicitCouplingSchemeTest::
    meshConfig.addMesh ( mesh );
 
    // Create all parameters necessary to create an ImplicitCouplingScheme object
-   com::Communication::SharedPointer communication ( new com::MPIDirectCommunication );
-   m2n::M2N::SharedPointer globalCom ( new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
+   com::PtrCommunication communication ( new com::MPIDirectCommunication );
+   m2n::PtrM2N globalCom ( new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer()));
    double maxTime = 1.0;
    int maxTimesteps = 3;
    double timestepLength = 0.1;
@@ -794,8 +794,8 @@ void SerialImplicitCouplingSchemeTest:: testInitializeData()
   meshConfig.addMesh(mesh);
 
   // Create all parameters necessary to create an ImplicitCouplingScheme object
-  com::Communication::SharedPointer communication(new com::MPIDirectCommunication);
-  m2n::M2N::SharedPointer globalCom ( new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer())  );
+  com::PtrCommunication communication(new com::MPIDirectCommunication);
+  m2n::PtrM2N globalCom ( new m2n::M2N(communication, m2n::DistributedComFactory::SharedPointer())  );
   double maxTime = 1.0;
   int maxTimesteps = 3;
   double timestepLength = 0.1;
@@ -1086,7 +1086,7 @@ void SerialImplicitCouplingSchemeTest:: connect
   const std::string&      participant0,
   const std::string&      participant1,
   const std::string&      localParticipant,
-  m2n::M2N::SharedPointer& communication ) const
+  m2n::PtrM2N& communication ) const
 {
   assertion ( communication.use_count() > 0 );
   assertion ( not communication->isConnected() );

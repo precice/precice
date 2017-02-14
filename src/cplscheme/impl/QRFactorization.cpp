@@ -1,9 +1,10 @@
 #include "QRFactorization.hpp"
+#include "com/Communication.hpp"
 #include "utils/Globals.hpp"
 #include "cplscheme/impl/BaseQNPostProcessing.hpp"
 
 #include <iostream>
-#include <math.h> 
+#include <cmath> 
 #include <algorithm>    // std::sort
 #include <vector>       // std::vector
 

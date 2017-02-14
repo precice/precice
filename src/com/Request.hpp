@@ -1,17 +1,14 @@
-#ifndef PRECICE_COM_REQUEST_HPP_
-#define PRECICE_COM_REQUEST_HPP_
+#pragma once
 
-#include <memory>
+#include "com/SharedPointer.hpp"
 #include <vector>
 
 namespace precice {
 namespace com {
 class Request {
-public:
-  using SharedPointer = std::shared_ptr<Request>;
 
 public:
-  static void wait(std::vector<SharedPointer>& requests);
+  static void wait(std::vector<PtrRequest>& requests);
 
   virtual ~Request();
 
@@ -19,7 +16,5 @@ public:
 
   virtual void wait() = 0;
 };
-}
-} // namespace precice, com
 
-#endif /* PRECICE_COM_REQUEST_HPP_ */
+}} // namespace precice, com

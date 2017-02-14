@@ -4,7 +4,7 @@
 #include "Constants.hpp"
 #include "SharedPointer.hpp"
 
-#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
@@ -289,7 +289,7 @@ public:
    * scheme via sendState and receiveState.
    */
   virtual void sendState (
-   com::Communication::SharedPointer communication,
+   com::PtrCommunication communication,
    int                   rankReceiver );
 
   /**
@@ -301,7 +301,7 @@ public:
    * scheme via sendState and receiveState.
    */
   virtual void receiveState (
-   com::Communication::SharedPointer communication,
+   com::PtrCommunication communication,
    int                   rankSender );
 
 private:

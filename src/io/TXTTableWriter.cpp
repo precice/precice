@@ -1,5 +1,6 @@
 #include "TXTTableWriter.hpp"
 #include "utils/Helpers.hpp"
+#include "utils/assertion.hpp"
 #include <iomanip>
 
 namespace precice {

@@ -91,7 +91,7 @@ Communication::allreduceSum(double* itemsToSend, double* itemsToReceive, int siz
   }
 
   // send reduced result to all slaves
-  std::vector<Request::SharedPointer> requests;
+  std::vector<PtrRequest> requests;
   requests.reserve(getRemoteCommunicatorSize());
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(itemsToReceive, size, rank + _rankOffset);
@@ -130,7 +130,7 @@ Communication::allreduceSum(double& itemsToSend, double& itemsToReceive) {
   }
 
   // send reduced result to all slaves
-  std::vector<Request::SharedPointer> requests;
+  std::vector<PtrRequest> requests;
   requests.reserve(getRemoteCommunicatorSize());
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(&itemsToReceive, 1, rank + _rankOffset);
@@ -169,7 +169,7 @@ Communication::allreduceSum(int& itemsToSend, int& itemsToReceive) {
   }
 
   // send reduced result to all slaves
-  std::vector<Request::SharedPointer> requests;
+  std::vector<PtrRequest> requests;
   requests.reserve(getRemoteCommunicatorSize());
   for (size_t rank = 0; rank < getRemoteCommunicatorSize(); ++rank) {
     auto request = aSend(&itemsToReceive, 1, rank + _rankOffset);
@@ -202,7 +202,7 @@ void
 Communication::broadcast(int* itemsToSend, int size) {
   preciceTrace("broadcast(int*)", size);
 
-  std::vector<Request::SharedPointer> requests;
+  std::vector<PtrRequest> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
 
@@ -226,7 +226,7 @@ void
 Communication::broadcast(int itemToSend) {
   preciceTrace("broadcast(int)");
 
-  std::vector<Request::SharedPointer> requests;
+  std::vector<PtrRequest> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
 
@@ -250,7 +250,7 @@ void
 Communication::broadcast(double* itemsToSend, int size) {
   preciceTrace("broadcast(double*)", size);
 
-  std::vector<Request::SharedPointer> requests;
+  std::vector<PtrRequest> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
 
@@ -273,9 +273,9 @@ Communication::broadcast(double* itemsToReceive,
 
 void
 Communication::broadcast(double itemToSend) {
-  preciceTrace("broadcast(double)");
+  TRACE();
 
-  std::vector<Request::SharedPointer> requests;
+  std::vector<PtrRequest> requests;
 
   requests.reserve(getRemoteCommunicatorSize());
 
@@ -290,13 +290,13 @@ Communication::broadcast(double itemToSend) {
 
 void
 Communication::broadcast(double& itemToReceive, int rankBroadcaster) {
-  preciceTrace("broadcast(double&)");
+  TRACE();
   receive(itemToReceive, rankBroadcaster + _rankOffset);
 }
 
 void
 Communication::broadcast(bool itemToSend) {
-  preciceTrace("broadcast(bool)");
+  TRACE();
 
   int item = itemToSend;
 

@@ -1,9 +1,8 @@
-#ifndef PRECICE_M2N_M2N_HPP_
-#define PRECICE_M2N_M2N_HPP_
+#pragma once
 
 #include "DistributedComFactory.hpp"
 
-#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 
@@ -21,27 +20,22 @@ namespace m2n {
 class M2N
 {
 public:
-  using SharedPointer = std::shared_ptr<M2N>;
 
-public:
-
-  M2N( com::Communication::SharedPointer masterCom, DistributedComFactory::SharedPointer distrFactory);
+  M2N( com::PtrCommunication masterCom, DistributedComFactory::SharedPointer distrFactory);
 
   /**
    * @brief Destructor, empty.
    */
   ~M2N();
 
-  /**
-   * @brief Returns true, if a connection to a remote participant has been setup.
-   */
+  /// Returns true, if a connection to a remote participant has been setup.
   bool isConnected();
 
   /**
    * @brief Connects to another participant, which has to call requestConnection().
    *
-   * @param nameAcceptor [IN] Name of calling participant.
-   * @param nameRequester [IN] Name of remote participant to connect to.
+   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] nameRequester Name of remote participant to connect to.
    */
   void acceptMasterConnection (
     const std::string& nameAcceptor,
@@ -50,8 +44,8 @@ public:
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
    *
-   * @param nameAcceptor [IN] Name of remote participant to connect to.
-   * @param nameReuester [IN] Name of calling participant.
+   * @param[in] nameAcceptor Name of remote participant to connect to.
+   * @param[in] nameReuester Name of calling participant.
    */
   void requestMasterConnection (
     const std::string& nameAcceptor,
@@ -61,8 +55,8 @@ public:
   /**
    * @brief Connects to another participant, which has to call requestConnection().
    *
-   * @param nameAcceptor [IN] Name of calling participant.
-   * @param nameRequester [IN] Name of remote participant to connect to.
+   * @param[in] nameAcceptor Name of calling participant.
+   * @param[in] nameRequester Name of remote participant to connect to.
    */
   void acceptSlavesConnection (
     const std::string& nameAcceptor,
@@ -71,8 +65,8 @@ public:
   /**
    * @brief Connects to another participant, which has to call acceptConnection().
    *
-   * @param nameAcceptor [IN] Name of remote participant to connect to.
-   * @param nameReuester [IN] Name of calling participant.
+   * @param[in] nameAcceptor Name of remote participant to connect to.
+   * @param[in] nameReuester Name of calling participant.
    */
   void requestSlavesConnection (
     const std::string& nameAcceptor,
@@ -88,7 +82,7 @@ public:
   /**
    * @brief Get the basic communication between the 2 masters.
    */
-  com::Communication::SharedPointer getMasterCommunication();
+  com::PtrCommunication getMasterCommunication();
 
 
   void createDistributedCommunication(mesh::PtrMesh mesh);
@@ -158,7 +152,7 @@ private:
 
   std::map<int, DistributedCommunication::SharedPointer> _distComs;
 
-  com::Communication::SharedPointer _masterCom;
+  com::PtrCommunication _masterCom;
 
   DistributedComFactory::SharedPointer _distrFactory;
 
@@ -169,8 +163,4 @@ private:
 
 };
 
-
-
 }} // namespace precice, m2n
-
-#endif /* PRECICE_M2N_M2N_HPP_ */

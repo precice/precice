@@ -12,7 +12,6 @@
 #include "query/ExportVTKNeighbors.hpp"
 #include "cplscheme/SharedPointer.hpp"
 #include "com/Communication.hpp"
-#include "m2n/M2N.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include <string>
 #include <vector>
@@ -35,9 +34,7 @@ namespace precice {
 namespace precice {
 namespace impl {
 
-/**
- * @brief Implementation of solver interface.
- */
+/// Implementation of solver interface.
 class SolverInterfaceImpl : private boost::noncopyable
 {
 public:
@@ -546,7 +543,7 @@ public:
 private:
 
   struct M2NWrap {
-    m2n::M2N::SharedPointer m2n;
+    m2n::PtrM2N m2n;
     bool isRequesting;
   };
 

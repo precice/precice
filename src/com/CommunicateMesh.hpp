@@ -1,43 +1,27 @@
-#ifndef PRECICE_COM_COMMUNICATEMESH_HPP_
-#define PRECICE_COM_COMMUNICATEMESH_HPP_
+#pragma once
 
 #include "logging/Logger.hpp"
 #include "mesh/Mesh.hpp"
-
-namespace precice {
-   namespace mesh {
-      class Mesh;
-   }
-}
-
-// ------------------------------------------------------------ CLASS DEFINTION
+#include "com/SharedPointer.hpp"
 
 namespace precice {
 namespace com {
 
-/**
- * @brief Copies a Mesh object from a sender to a receiver.
- */
+/// Copies a Mesh object from a sender to a receiver.
 class CommunicateMesh
 {
 public:
 
-  /**
-   * @brief Constructor, takes communication to be used in transfer.
-   */
-  CommunicateMesh (
-    com::Communication::SharedPointer communication );
+  /// Constructor, takes communication to be used in transfer.
+  explicit CommunicateMesh (
+    com::PtrCommunication communication );
 
-  /**
-   * @brief Sends a constructed CustomGeometry to the receiver with given rank.
-   */
+  /// Sends a constructed CustomGeometry to the receiver with given rank.
   void sendMesh (
     const mesh::Mesh & mesh,
     int                rankReceiver );
 
-  /**
-   * @brief Copies a CustomGeometry from the sender with given rank.
-   */
+  /// Copies a CustomGeometry from the sender with given rank.
   void receiveMesh (
     mesh::Mesh & mesh,
     int          rankSender );
@@ -59,13 +43,10 @@ public:
 
 private:
 
-  // @brief Logging device.
   static logging::Logger _log;
 
-  // @brief Communication means used for the transfer of the geometry.
-  com::Communication::SharedPointer _communication;
+  /// Communication means used for the transfer of the geometry.
+  com::PtrCommunication _communication;
 };
 
 }} // namespace precice, com
-
-#endif /* PRECICE_COM_COMMUNICATEMESH_HPP_ */

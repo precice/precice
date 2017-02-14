@@ -1,28 +1,24 @@
-#ifndef PRECICE_UTILS_POINTERVECTOR_HPP_
-#define PRECICE_UTILS_POINTERVECTOR_HPP_
+#pragma once
 
-#include "Globals.hpp"
-
-#include "boost/iterator/indirect_iterator.hpp"
-
+#include <boost/iterator/indirect_iterator.hpp>
 #include <vector>
+
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace utils {
 
-/**
- * @brief Wrapper around std::vector for transparent handling of pointer objects.
- */
+/// Wrapper around std::vector for transparent handling of pointer objects.
 template< typename CONTENT_T >
 class ptr_vector
 {
 public:
 
-   // @brief Type of wrapped vector container.
+   /// Type of wrapped vector container.
    typedef std::vector<CONTENT_T*> container;
    typedef CONTENT_T value_type; // necessary to be standard conform
 
-   // @brief Type of iterator hiding pointers.
+   /// Type of iterator hiding pointers.
    typedef boost::indirect_iterator<
               typename container::iterator,
               CONTENT_T*,
@@ -30,7 +26,7 @@ public:
               CONTENT_T&
            > iterator;
 
-   // @brief Type of const_iterator hiding pointers.
+   /// Type of const_iterator hiding pointers.
    typedef boost::indirect_iterator<
               typename container::const_iterator,
               CONTENT_T *,
@@ -38,10 +34,8 @@ public:
               CONTENT_T &
            > const_iterator;
 
-   /**
-    * @brief Returns iterator to first element in vector.
-    */
-   iterator begin ()
+  /// Returns iterator to first element in vector.
+  iterator begin ()
    {
       return iterator(_content.begin());
    }
@@ -158,8 +152,4 @@ private:
    container _content;
 };
 
-// --------------------------------------------------------- HEADER DEFINITIONS
-
 }} // namespace precice, utils
-
-#endif /* PRECICE_UTILS_POINTERVECTOR_HPP_ */

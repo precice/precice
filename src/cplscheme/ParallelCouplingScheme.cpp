@@ -1,8 +1,8 @@
 #include "ParallelCouplingScheme.hpp"
 #include "impl/PostProcessing.hpp"
-#include "com/Communication.hpp"
 #include "m2n/M2N.hpp"
 #include "utils/EigenHelperFunctions.hpp"
+#include "utils/MasterSlave.hpp"
 #include "math/math.hpp"
 
 namespace precice {
@@ -19,7 +19,7 @@ ParallelCouplingScheme::ParallelCouplingScheme
   const std::string&    firstParticipant,
   const std::string&    secondParticipant,
   const std::string&    localParticipant,
-  m2n::M2N::SharedPointer           m2n,
+  m2n::PtrM2N           m2n,
   constants::TimesteppingMethod dtMethod,
   CouplingMode          cplMode,
   int                   maxIterations)
@@ -87,12 +87,11 @@ void ParallelCouplingScheme::initialize
 
 void ParallelCouplingScheme::initializeData()
 {
-  preciceTrace("initializeData()");
-  preciceCheck(isInitialized(), "initializeData()",
-               "initializeData() can be called after initialize() only!");
+  TRACE("initializeData()");
+  CHECK(isInitialized(), "initializeData() can be called after initialize() only!");
 
   if (not hasToSendInitData() && not hasToReceiveInitData()) {
-    preciceInfo("initializeData()", "initializeData is skipped since no data has to be initialized");
+    INFO("initializeData is skipped since no data has to be initialized");
     return;
   }
 

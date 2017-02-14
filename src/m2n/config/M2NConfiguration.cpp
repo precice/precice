@@ -147,7 +147,7 @@ M2NConfiguration:: M2NConfiguration
   }
 }
 
-m2n::M2N::SharedPointer M2NConfiguration:: getM2N
+m2n::PtrM2N M2NConfiguration:: getM2N
 (
   const std::string& from,
   const std::string& to )
@@ -177,8 +177,8 @@ void M2NConfiguration:: xmlTagCallback
     checkDuplicates(from, to);
     std::string distrType = tag.getStringAttributeValue(ATTR_DISTRIBUTION_TYPE);
 
-    com::CommunicationFactory::SharedPointer comFactory;
-    com::Communication::SharedPointer com;
+    com::PtrCommunicationFactory comFactory;
+    com::PtrCommunication com;
     if (tag.getName() == VALUE_SOCKETS){
 #     ifdef PRECICE_NO_SOCKETS
         std::ostringstream error;
@@ -195,7 +195,7 @@ void M2NConfiguration:: xmlTagCallback
                      "16-bit unsigned integer: " << port);
 
         std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-        comFactory = com::CommunicationFactory::SharedPointer(
+        comFactory = com::PtrCommunicationFactory(
             new com::SocketCommunicationFactory(port, false, network, dir));
         com = comFactory->newCommunication();
 #     endif // PRECICE_NO_SOCKETS
@@ -208,7 +208,7 @@ void M2NConfiguration:: xmlTagCallback
               << "when preCICE is compiled with argument \"mpi=on\"";
         throw error.str();
 #     else
-      comFactory = com::CommunicationFactory::SharedPointer(
+      comFactory = com::PtrCommunicationFactory(
           new com::MPIPortsCommunicationFactory(dir));
       com = comFactory->newCommunication();
 #     endif
@@ -220,12 +220,12 @@ void M2NConfiguration:: xmlTagCallback
               << "when preCICE is compiled with argument \"mpi=on\"";
         throw error.str();
 #     else
-        com = com::Communication::SharedPointer(new com::MPIDirectCommunication());
+        com = com::PtrCommunication(new com::MPIDirectCommunication());
 #     endif
     }
     else if (tag.getName() == VALUE_FILES){
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-      com = com::Communication::SharedPointer(new com::FileCommunication(false, dir));
+      com = com::PtrCommunication(new com::FileCommunication(false, dir));
     }
 
     assertion(com.get() != nullptr);
@@ -242,7 +242,7 @@ void M2NConfiguration:: xmlTagCallback
     }
     assertion(distrFactory.get() != nullptr);
 
-    m2n::M2N::SharedPointer m2n = m2n::M2N::SharedPointer(new m2n::M2N(com, distrFactory));
+    m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(com, distrFactory));
     _m2ns.push_back(std::make_tuple(m2n, from, to));
   }
 }

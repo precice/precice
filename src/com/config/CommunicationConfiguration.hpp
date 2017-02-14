@@ -1,6 +1,6 @@
 #pragma once
 
-#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "utils/xml/XMLTag.hpp"
 
@@ -27,7 +27,7 @@ public:
    /**
     * @brief Returns a communication object of given type.
     */
-   Communication::SharedPointer createCommunication ( const utils::XMLTag& tag ) const;
+   PtrCommunication createCommunication ( const utils::XMLTag& tag ) const;
 
 private:
 

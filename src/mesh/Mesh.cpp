@@ -3,6 +3,7 @@
 #include "Triangle.hpp"
 #include "Quad.hpp"
 #include "PropertyContainer.hpp"
+#include "com/Communication.hpp"
 #include "utils/Globals.hpp"
 #include "utils/EigenHelperFunctions.hpp"
 #include "math/math.hpp"

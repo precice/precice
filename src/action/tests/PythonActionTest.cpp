@@ -3,6 +3,7 @@
 #include "mesh/Mesh.hpp"
 #include "mesh/Data.hpp"
 #include "math/math.hpp"
+#include "utils/Globals.hpp"
 
 #ifndef PRECICE_NO_PYTHON
 #include "tarch/tests/TestCaseFactory.h"

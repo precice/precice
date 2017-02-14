@@ -1,11 +1,10 @@
 #ifndef PRECICE_NO_MPI
 
-#ifndef PRECICE_COM_MPI_COMMUNICATION_HPP_
-#define PRECICE_COM_MPI_COMMUNICATION_HPP_
+#pragma once
 
 #include <mpi.h>
-#include "Communication.hpp"
 #include "logging/Logger.hpp"
+#include "com/Communication.hpp"
 
 namespace precice {
 namespace com {
@@ -63,7 +62,7 @@ public:
   /**
    * @brief Asynchronously sends an array of integer values.
    */
-  virtual Request::SharedPointer aSend(int* itemsToSend,
+  virtual PtrRequest aSend(int* itemsToSend,
                                        int size,
                                        int rankReceiver);
 
@@ -75,7 +74,7 @@ public:
   /**
    * @brief Asynchronously sends an array of double values.
    */
-  virtual Request::SharedPointer aSend(double* itemsToSend,
+  virtual PtrRequest aSend(double* itemsToSend,
                                        int size,
                                        int rankReceiver);
 
@@ -89,7 +88,7 @@ public:
   /**
    * @brief Asynchronously sends a double to process with given rank.
    */
-  virtual Request::SharedPointer aSend(double* itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(double* itemToSend, int rankReceiver);
 
   /**
    * @brief Sends an int to process with given rank.
@@ -101,7 +100,7 @@ public:
   /**
    * @brief Asynchronously sends an int to process with given rank.
    */
-  virtual Request::SharedPointer aSend(int* itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(int* itemToSend, int rankReceiver);
 
   /**
    * @brief Sends a bool to process with given rank.
@@ -113,7 +112,7 @@ public:
   /**
    * @brief Asynchronously sends a bool to process with given rank.
    */
-  virtual Request::SharedPointer aSend(bool* itemToSend, int rankReceiver);
+  virtual PtrRequest aSend(bool* itemToSend, int rankReceiver);
 
   /**
    * @brief Receives a std::string from process with given rank.
@@ -130,7 +129,7 @@ public:
   /**
    * @brief Asynchronously receives an array of integer values.
    */
-  virtual Request::SharedPointer aReceive(int* itemsToReceive,
+  virtual PtrRequest aReceive(int* itemsToReceive,
                                           int size,
                                           int rankSender);
 
@@ -142,7 +141,7 @@ public:
   /**
    * @brief Asynchronously receives an array of double values.
    */
-  virtual Request::SharedPointer aReceive(double* itemsToReceive,
+  virtual PtrRequest aReceive(double* itemsToReceive,
                                           int size,
                                           int rankSender);
 
@@ -156,7 +155,7 @@ public:
   /**
    * @brief Asynchronously receives a double from process with given rank.
    */
-  virtual Request::SharedPointer aReceive(double* itemToReceive,
+  virtual PtrRequest aReceive(double* itemToReceive,
                                           int rankSender);
 
   /**
@@ -169,7 +168,7 @@ public:
   /**
    * @brief Asynchronously receives an int from process with given rank.
    */
-  virtual Request::SharedPointer aReceive(int* itemToReceive, int rankSender);
+  virtual PtrRequest aReceive(int* itemToReceive, int rankSender);
 
   /**
    * @brief Receives a bool from process with given rank.
@@ -178,26 +177,21 @@ public:
    */
   virtual void receive(bool& itemToReceive, int rankSender);
 
-  /**
-   * @brief Asynchronously receives a bool from process with given rank.
-   */
-  virtual Request::SharedPointer aReceive(bool* itemToReceive, int rankSender);
+  /// Asynchronously receives a bool from process with given rank.
+  virtual PtrRequest aReceive(bool* itemToReceive, int rankSender);
 
 protected:
-  /**
-   * @brief Returns the communicator.
-   */
+  /// Returns the communicator.
   virtual MPI_Comm& communicator(int rank) = 0;
 
   virtual int rank(int rank) = 0;
 
 private:
-  // @brief Logging device.
+
   static logging::Logger _log;
 };
-}
-} // namespace precice, com
 
-#endif /* PRECICE_COM_COMMUNICATIONMPI_HPP_ */
+}} // namespace precice, com
+
 
 #endif // not PRECICE_NO_MPI

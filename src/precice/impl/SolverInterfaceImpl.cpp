@@ -24,7 +24,6 @@
 #include "spacetree/ExportSpacetree.hpp"
 #include "com/MPIPortsCommunication.hpp"
 #include "com/Constants.hpp"
-#include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
@@ -47,7 +46,6 @@
 #include "utils/MasterSlave.hpp"
 #include "mapping/Mapping.hpp"
 #include <set>
-#include <cstring>
 #include <Eigen/Dense>
 
 #include <signal.h> // used for installing crash handler
@@ -191,7 +189,7 @@ void SolverInterfaceImpl:: configure
   }
 
   if (_serverMode || _clientMode){
-    com::Communication::SharedPointer com = _accessor->getClientServerCommunication();
+    com::PtrCommunication com = _accessor->getClientServerCommunication();
     assertion(com.get() != nullptr);
     _requestManager = new RequestManager(_geometryMode, *this, com, _couplingScheme);
   }
@@ -250,7 +248,7 @@ double SolverInterfaceImpl:: initialize()
       typedef std::map<std::string,M2NWrap>::value_type M2NPair;
       preciceInfo("initialize()", "Setting up master communication to coupling partner/s " );
       for (M2NPair& m2nPair : _m2ns) {
-        m2n::M2N::SharedPointer& m2n = m2nPair.second.m2n;
+        m2n::PtrM2N& m2n = m2nPair.second.m2n;
         std::string localName = _accessorName;
         if (_serverMode) localName += "Server";
         std::string remoteName(m2nPair.first);
@@ -306,7 +304,7 @@ double SolverInterfaceImpl:: initialize()
     typedef std::map<std::string,M2NWrap>::value_type M2NPair;
     preciceInfo("initialize()", "Setting up slaves communication to coupling partner/s " );
     for (M2NPair& m2nPair : _m2ns) {
-      m2n::M2N::SharedPointer& m2n = m2nPair.second.m2n;
+      m2n::PtrM2N& m2n = m2nPair.second.m2n;
       std::string localName = _accessorName;
       std::string remoteName(m2nPair.first);
       preciceCheck(m2n.get() != nullptr, "initialize()",
@@ -1889,7 +1887,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
               context->meshRequirement = receiverContext->meshRequirement;
             }
 
-            m2n::M2N::SharedPointer m2n =
+            m2n::PtrM2N m2n =
                 m2nConfig->getM2N( receiver->getName(), provider );
             comGeo->addReceiver ( receiver->getName(), m2n );
             m2n->createDistributedCommunication(context->mesh);
@@ -1922,7 +1920,7 @@ void SolverInterfaceImpl:: configureSolverGeometries
       }
       geometry::CommunicatedGeometry * comGeo =
           new geometry::CommunicatedGeometry ( offset, receiver, provider, decomp );
-      m2n::M2N::SharedPointer m2n = m2nConfig->getM2N ( receiver, provider );
+      m2n::PtrM2N m2n = m2nConfig->getM2N ( receiver, provider );
       comGeo->addReceiver ( receiver, m2n );
       m2n->createDistributedCommunication(context->mesh);
       preciceCheck ( context->geometry.use_count() == 0, "configureSolverGeometries()",
@@ -2290,7 +2288,7 @@ void SolverInterfaceImpl:: selectInquiryMeshIDs
 void SolverInterfaceImpl:: initializeClientServerCommunication()
 {
   TRACE();
-  com::Communication::SharedPointer com = _accessor->getClientServerCommunication();
+  com::PtrCommunication com = _accessor->getClientServerCommunication();
   assertion(com.get() != nullptr);
   if ( _serverMode ){
     preciceInfo ( "initializeClientServerCom.()", "Setting up communication to client" );

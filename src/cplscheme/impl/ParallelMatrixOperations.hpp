@@ -4,7 +4,7 @@
 
 #include "logging/Logger.hpp"
 #include "com/MPIPortsCommunication.hpp"
-#include "com/Communication.hpp"
+#include "com/SharedPointer.hpp"
 #include "utils/MasterSlave.hpp"
 #include "utils/Parallel.hpp"
 #include "utils/Globals.hpp"
@@ -18,9 +18,6 @@ class ParallelMatrixOperations
 {
 public:
 
-  /**
-   * @brief Constructor.
-   */
 	ParallelMatrixOperations ();
 
    /**
@@ -32,9 +29,9 @@ public:
    /**
     * @brief Initializes the post-processing.
     */
-   void initialize(com::Communication::SharedPointer leftComm,
-		   	   	   com::Communication::SharedPointer rightComm,
-		   	   	   bool needcyclicComm);
+   void initialize(com::PtrCommunication leftComm,
+                   com::PtrCommunication rightComm,
+                   bool needcyclicComm);
 
    template<typename Derived1, typename Derived2>
    void multiply(
@@ -153,8 +150,8 @@ private:
 		//Eigen::MatrixXd leftMatrix_rcv = Eigen::MatrixXd::Zero(rows_rcv, q);
 		Eigen::MatrixXd leftMatrix_rcv(rows_rcv, q);
 
-		com::Request::SharedPointer requestSend;
-		com::Request::SharedPointer requestRcv;
+		com::PtrRequest requestSend;
+		com::PtrRequest requestRcv;
 
 		// initiate asynchronous send operation of leftMatrix (W_til) --> nextProc (this data is needed in cycle 1)    dim: n_local x cols
 		if(leftMatrix.size() > 0)
@@ -319,12 +316,12 @@ private:
 	/**
 	* @brief Communication between neighboring slaves, backwards
 	*/
-	com::Communication::SharedPointer _cyclicCommLeft;
+	com::PtrCommunication _cyclicCommLeft;
 
 	/**
 	* @brief Communication between neighboring slaves, forward
 	*/
-	com::Communication::SharedPointer _cyclicCommRight;
+	com::PtrCommunication _cyclicCommRight;
 
 	bool _needCycliclComm;
 

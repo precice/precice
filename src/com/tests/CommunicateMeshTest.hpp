@@ -15,15 +15,9 @@ class CommunicateMeshTest : public tarch::tests::TestCase
 {
 public:
 
-   /**
-    * @brief Constructor.
-    */
-   CommunicateMeshTest();
+  CommunicateMeshTest();
 
-   /**
-    * @brief Destructor.
-    */
-   virtual ~CommunicateMeshTest() {};
+  virtual ~CommunicateMeshTest() {};
 
    /**
     * @brief Empty.

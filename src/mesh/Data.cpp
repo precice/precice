@@ -1,6 +1,5 @@
 #include "Data.hpp"
 #include "Mesh.hpp"
-#include "utils/Globals.hpp"
 
 namespace precice {
 namespace mesh {

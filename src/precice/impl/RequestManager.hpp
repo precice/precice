@@ -2,8 +2,8 @@
 
 #include "precice/ClosestMesh.hpp"
 #include "precice/VoxelPosition.hpp"
-#include "com/Communication.hpp"
 #include "cplscheme/SharedPointer.hpp"
+#include "com/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include <set>
 #include <list>
@@ -26,7 +26,7 @@ public:
   RequestManager (
     bool                  geometryMode,
     SolverInterfaceImpl&  solverInterfaceImpl,
-    com::Communication::SharedPointer clientServerCommunication,
+    com::PtrCommunication clientServerCommunication,
     cplscheme::PtrCouplingScheme couplingScheme);
 
   /**
@@ -309,7 +309,7 @@ private:
 
   SolverInterfaceImpl& _interface;
 
-  com::Communication::SharedPointer _com;
+  com::PtrCommunication _com;
 
   cplscheme::PtrCouplingScheme _couplingScheme;
 

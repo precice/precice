@@ -2,10 +2,9 @@
 #include "../CouplingData.hpp"
 #include "mesh/Data.hpp"
 #include "mesh/Mesh.hpp"
-#include "utils/Globals.hpp"
 #include <Eigen/Dense>
 #include "utils/EigenHelperFunctions.hpp"
-//#include "utils/NumericalCompare.hpp"
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace cplscheme {

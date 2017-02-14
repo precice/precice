@@ -1,7 +1,6 @@
 #ifndef PRECICE_NO_MPI
 
-#ifndef PRECICE_COM_MPI_DIRECT_COMMUNICATION_HPP_
-#define PRECICE_COM_MPI_DIRECT_COMMUNICATION_HPP_
+#pragma once
 
 #include "MPICommunication.hpp"
 
@@ -154,9 +153,8 @@ private:
    */
   int getLeaderRank(std::string const& accessorName);
 };
-}
-} // namespace precice, com
 
-#endif /* PRECICE_COM_MPI_DIRECT_COMMUNICATION_HPP_ */
+}} // namespace precice, com
+
 
 #endif // not PRECICE_NO_MPI

@@ -11,7 +11,6 @@
 #include "mesh/config/DataConfiguration.hpp"
 #include "mesh/config/MeshConfiguration.hpp"
 #include "geometry/config/GeometryConfiguration.hpp"
-#include "com/Communication.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "m2n/config/M2NConfiguration.hpp"
 #include "m2n/M2N.hpp"
@@ -691,9 +690,9 @@ void CompositionalCouplingSchemeTest:: setupAndRunThreeSolverCoupling
 
   utils::configure(root, configurationPath);
   meshConfig->setMeshSubIDs();
-  m2n::M2N::SharedPointer m2n0 =
+  m2n::PtrM2N m2n0 =
       m2nConfig->getM2N(nameParticipant0, nameParticipant1);
-  m2n::M2N::SharedPointer m2n1 =
+  m2n::PtrM2N m2n1 =
       m2nConfig->getM2N(nameParticipant1, nameParticipant2);
 
   geoConfig->geometries()[0]->create(*meshConfig->meshes()[0]);
@@ -837,7 +836,7 @@ void CompositionalCouplingSchemeTest:: connect
   const std::string&     participant0,
   const std::string&     participant1,
   const std::string&     localParticipant,
-  m2n::M2N::SharedPointer& communication ) const
+  m2n::PtrM2N& communication ) const
 {
   preciceTrace ( "connect()", participant0, participant1, localParticipant );
   assertion ( communication.use_count() > 0 );

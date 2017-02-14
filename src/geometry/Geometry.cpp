@@ -1,7 +1,4 @@
 #include "Geometry.hpp"
-#include "utils/ManageUniqueIDs.hpp"
-#include "utils/Globals.hpp"
-#include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
 #include "mesh/Mesh.hpp"
 #include "math/math.hpp"

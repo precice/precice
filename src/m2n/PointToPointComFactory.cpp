@@ -1,11 +1,12 @@
+#include "PointToPointComFactory.hpp"
 #include "PointToPointCommunication.hpp"
 
-#include "PointToPointComFactory.hpp"
+#include "com/SharedPointer.hpp"
 
 namespace precice {
 namespace m2n {
 
-PointToPointComFactory::PointToPointComFactory(com::CommunicationFactory::SharedPointer comFactory)
+PointToPointComFactory::PointToPointComFactory(com::PtrCommunicationFactory comFactory)
   : _comFactory(comFactory) {}
 
 DistributedCommunication::SharedPointer
