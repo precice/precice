@@ -16,6 +16,11 @@ namespace petsc = precice::utils::petsc;
 #include "petscksp.h"
 #include "petsclog.h"
 
+// Forward declaration to friend the boost test struct
+namespace PetRadialBasisFunctionMapping {
+struct SolutionCaching;
+}
+
 namespace precice {
 namespace mapping {
 
@@ -74,6 +79,9 @@ public:
   virtual void map(int inputDataID, int outputDataID) override;
 
   friend class precice::mapping::tests::PetRadialBasisFctMappingTest;
+
+  friend struct PetRadialBasisFunctionMapping::SolutionCaching;
+
 
 private:
 
