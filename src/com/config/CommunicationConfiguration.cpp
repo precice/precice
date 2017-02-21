@@ -34,7 +34,7 @@ CommunicationConfiguration:: CommunicationConfiguration()
 PtrCommunication CommunicationConfiguration:: createCommunication
 (
   const utils::XMLTag& tag ) const
-{
+{  
   com::PtrCommunication com;
   if (tag.getName() == VALUE_SOCKETS){
 #   ifdef PRECICE_NO_SOCKETS
@@ -52,7 +52,7 @@ PtrCommunication CommunicationConfiguration:: createCommunication
                  "16-bit unsigned integer: " << port);
 
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-    com = com::PtrCommunication(new com::SocketCommunication(port, false, network, dir));
+    com = std::make_shared<com::SocketCommunication>(port, false, network, dir);
 #   endif // PRECICE_NO_SOCKETS
   }
   else if (tag.getName() == VALUE_MPI){
@@ -63,7 +63,7 @@ PtrCommunication CommunicationConfiguration:: createCommunication
           << "when preCICE is compiled with argument \"mpi=on\"";
     throw error.str();
 #   else
-    com = com::PtrCommunication(new com::MPIPortsCommunication(dir));
+    com = std::make_shared<com::MPIPortsCommunication>(dir);
 #   endif
   }
   else if (tag.getName() == VALUE_MPI_SINGLE){
@@ -73,12 +73,13 @@ PtrCommunication CommunicationConfiguration:: createCommunication
           << "when preCICE is compiled with argument \"mpi=on\"";
     throw error.str();
 #   else
-    com = com::PtrCommunication(new com::MPIDirectCommunication());
+    com = std::make_shared<com::MPIDirectCommunication>();
+
 #   endif
   }
   else if (tag.getName() == VALUE_FILES){
     std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-    com = com::PtrCommunication(new com::FileCommunication(false, dir));
+    auto com = std::make_shared<com::FileCommunication>(false, dir);
   }
   assertion(com.get() != nullptr);
   return com;

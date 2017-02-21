@@ -102,8 +102,7 @@ PointToPointCommunicationTest::test(
 
   validateEquals(Parallel::getCommunicatorSize(), 4);
 
-  MasterSlave::_communication =
-      com::PtrCommunication(new com::MPIDirectCommunication);
+  MasterSlave::_communication = std::make_shared<com::MPIDirectCommunication>();
 
   mesh::PtrMesh mesh(new mesh::Mesh("Mesh", 2, true));
 
