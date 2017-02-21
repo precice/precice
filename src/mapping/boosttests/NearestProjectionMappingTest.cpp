@@ -7,6 +7,7 @@
 
 using namespace precice;
 
+BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(NearestProjectionMapping)
 
 BOOST_AUTO_TEST_CASE(testConservativeNonIncremental)                
@@ -150,4 +151,5 @@ BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
   BOOST_TEST ( outData->values()[2] == (valueVertex1 + valueVertex2) * 0.5 );
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

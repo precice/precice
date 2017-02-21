@@ -8,7 +8,8 @@
 using namespace precice;
 using namespace precice::mapping;
 
-BOOST_AUTO_TEST_SUITE(MappingConfigurationTest)
+BOOST_AUTO_TEST_SUITE(MappingTests)
+BOOST_AUTO_TEST_SUITE(Configuration)
 
 BOOST_AUTO_TEST_CASE(Configuration)
 {
@@ -42,4 +43,5 @@ BOOST_AUTO_TEST_CASE(Configuration)
   BOOST_TEST(mappingConfig.mappings()[2].direction == MappingConfiguration::WRITE);
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
