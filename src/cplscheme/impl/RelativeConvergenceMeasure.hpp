@@ -88,7 +88,7 @@ public:
      std::ostringstream os;
      os << "relative convergence measure: ";
      os << "two-norm diff = " << _normDiff;
-     os << ", limit = " << _norm * _convergenceLimitPercent;
+     os << ", relative limit = " << _norm * _convergenceLimitPercent;
      os << ", conv = ";
      if (_isConvergence) os << "true";
      else os << "false";
