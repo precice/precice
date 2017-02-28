@@ -228,10 +228,10 @@ void ExportVTKXMLTest:: testExportQuadMesh()
 
 void ExportVTKXMLTest:: setUpMasterSlave()
 {
-  preciceTrace ( "setUpMasterSlave" );
+  TRACE();
   assertion ( utils::Parallel::getCommunicatorSize() == 4 );
 
-  com::PtrCommunication masterSlaveCom = com::PtrCommunication(new com::MPIDirectCommunication());
+  auto masterSlaveCom = std::make_shared<com::MPIDirectCommunication>();
   utils::MasterSlave::_communication = masterSlaveCom;
 
   utils::Parallel::synchronizeProcesses();

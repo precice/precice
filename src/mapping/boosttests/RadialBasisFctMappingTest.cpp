@@ -9,6 +9,7 @@
 using namespace precice;
 using namespace precice::mapping;
 
+BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(RadialBasisFunctionMapping)
 
 // Forward declarations, see end of file for definitions
@@ -564,4 +565,5 @@ void perform3DTestConservativeMapping(Mapping& mapping)
   BOOST_TEST(values.sum() == expectedSum);
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

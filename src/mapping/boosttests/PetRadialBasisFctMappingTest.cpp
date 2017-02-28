@@ -12,8 +12,8 @@ using namespace precice;
 using namespace precice::mesh;
 using namespace precice::mapping;
 
+BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(PetRadialBasisFunctionMapping)
-
 
 void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
 {
@@ -1116,6 +1116,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching,
 }
 
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif

@@ -9,6 +9,7 @@
 using namespace precice;
 using namespace precice::mesh;
 
+BOOST_AUTO_TEST_SUITE(MappingTests)
 BOOST_AUTO_TEST_SUITE(NearestNeighborMapping)
 
 BOOST_AUTO_TEST_CASE(ConsistentNonIncremental)
@@ -156,4 +157,5 @@ BOOST_AUTO_TEST_CASE(ConservativeNonIncremental)
   BOOST_TEST(outValues(1) == 0.0);
 }
 
+BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()

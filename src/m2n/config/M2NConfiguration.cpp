@@ -189,14 +189,11 @@ void M2NConfiguration:: xmlTagCallback
         std::string network = tag.getStringAttributeValue(ATTR_NETWORK);
         int port = tag.getIntAttributeValue(ATTR_PORT);
 
-        preciceCheck(not utils::isTruncated<unsigned short>(port),
-                     "xmlTagCallback()",
-                     "The value given for the \"port\" attribute is not a "
-                     "16-bit unsigned integer: " << port);
+        CHECK(not utils::isTruncated<unsigned short>(port),
+              "The value given for the \"port\" attribute is not a 16-bit unsigned integer: " << port);
 
         std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-        comFactory = com::PtrCommunicationFactory(
-            new com::SocketCommunicationFactory(port, false, network, dir));
+        comFactory = std::make_shared<com::SocketCommunicationFactory>(port, false, network, dir);
         com = comFactory->newCommunication();
 #     endif // PRECICE_NO_SOCKETS
     }
@@ -208,8 +205,7 @@ void M2NConfiguration:: xmlTagCallback
               << "when preCICE is compiled with argument \"mpi=on\"";
         throw error.str();
 #     else
-      comFactory = com::PtrCommunicationFactory(
-          new com::MPIPortsCommunicationFactory(dir));
+        comFactory = std::make_shared<com::MPIPortsCommunicationFactory>(dir);
       com = comFactory->newCommunication();
 #     endif
     }
@@ -220,29 +216,28 @@ void M2NConfiguration:: xmlTagCallback
               << "when preCICE is compiled with argument \"mpi=on\"";
         throw error.str();
 #     else
-        com = com::PtrCommunication(new com::MPIDirectCommunication());
+        com = std::make_shared<com::MPIDirectCommunication>();
 #     endif
     }
     else if (tag.getName() == VALUE_FILES){
       std::string dir = tag.getStringAttributeValue(ATTR_EXCHANGE_DIRECTORY);
-      com = com::PtrCommunication(new com::FileCommunication(false, dir));
+      com = std::make_shared<com::FileCommunication>(false, dir);
     }
 
     assertion(com.get() != nullptr);
 
-
     DistributedComFactory::SharedPointer distrFactory;
     if(tag.getName() == VALUE_MPI_SINGLE || tag.getName() == VALUE_FILES || distrType == VALUE_GATHER_SCATTER){
       assertion(distrType == VALUE_GATHER_SCATTER);
-      distrFactory = DistributedComFactory::SharedPointer(new GatherScatterComFactory(com));
+      distrFactory = std::make_shared<GatherScatterComFactory>(com);
     }
     else if(distrType == VALUE_POINT_TO_POINT){
       assertion(tag.getName() == VALUE_MPI || tag.getName() == VALUE_SOCKETS);
-      distrFactory = DistributedComFactory::SharedPointer(new PointToPointComFactory(comFactory));
+      distrFactory = std::make_shared<PointToPointComFactory>(comFactory);
     }
     assertion(distrFactory.get() != nullptr);
 
-    m2n::PtrM2N m2n = m2n::PtrM2N(new m2n::M2N(com, distrFactory));
+    auto m2n = std::make_shared<m2n::M2N>(com, distrFactory);
     _m2ns.push_back(std::make_tuple(m2n, from, to));
   }
 }

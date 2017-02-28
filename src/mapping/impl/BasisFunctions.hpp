@@ -44,7 +44,7 @@ class Multiquadrics
 {
 public:
 
-  Multiquadrics ( double c )
+  explicit Multiquadrics ( double c )
     : _cPow2(std::pow(c, 2)) {}
 
   bool hasCompactSupport() const
@@ -75,7 +75,7 @@ class InverseMultiquadrics
 {
 public:
 
-  InverseMultiquadrics ( double c )
+  explicit InverseMultiquadrics ( double c )
     : _cPow2(std::pow(c, 2))
   {
     CHECK(math::greater(c, 0.0),
@@ -192,7 +192,7 @@ class CompactThinPlateSplinesC2
 {
 public:
 
-  CompactThinPlateSplinesC2 ( double supportRadius )
+  explicit CompactThinPlateSplinesC2 ( double supportRadius )
     : _r(supportRadius)
   {
     CHECK(math::greater(_r, 0.0),
@@ -236,7 +236,7 @@ class CompactPolynomialC0
 {
 public:
 
-  CompactPolynomialC0 ( double supportRadius )
+  explicit CompactPolynomialC0 ( double supportRadius )
     : _r(supportRadius)
   {
     CHECK(math::greater(_r, 0.0),
@@ -276,7 +276,7 @@ class CompactPolynomialC6
 {
 public:
 
-  CompactPolynomialC6 ( double supportRadius )
+  explicit CompactPolynomialC6 ( double supportRadius )
     : _r(supportRadius)
   {
     CHECK(math::greater(_r, 0.0),

@@ -185,11 +185,9 @@ if not env["spirit2"]:
 
 # ====== MPI ======
 if env["mpi"]:
+    checkHeader('mpi.h', 'MPI')
     # Skip (deprecated) MPI C++ bindings.
     env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
-
-    if not conf.CheckHeader('mpi.h'):
-        errorMissingHeader('mpi.h', 'MPI')
         
 elif not env["mpi"]:
     env.Append(CPPDEFINES = ['PRECICE_NO_MPI'])
@@ -209,8 +207,7 @@ if env["sockets"]:
         env.AppendUnique(CPPPATH = [socketIncPath])
 
         if socketLib == 'ws2_32':
-            if not conf.CheckHeader('winsock2.h'):
-                errorMissingHeader('winsock2.h', 'Windows Sockets 2')
+            checkHeader('winsock2.h', 'Windows Sockets 2')
 
     uniqueCheckLib(pthreadLib)
     if pthreadLib == 'pthread':

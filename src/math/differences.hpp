@@ -1,10 +1,7 @@
-/*
- * @todo Copy tests from tarch::la
- */
-
 #pragma once
 
 #include <Eigen/Dense>
+#include "utils/assertion.hpp"
 
 namespace precice {
 namespace math {
@@ -97,7 +94,7 @@ template<class Scalar>
 typename std::enable_if<std::is_arithmetic<Scalar>::value, bool>
 ::type smallerEquals(Scalar A, Scalar B, Scalar tolerance = NUMERICAL_ZERO_DIFFERENCE)
 {
-  return A - B <= -tolerance;
+  return A - B <= tolerance;
 }
 
 
