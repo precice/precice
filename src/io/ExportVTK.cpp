@@ -4,7 +4,6 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Triangle.hpp"
 #include "mesh/Quad.hpp"
-#include "tarch/plotter/griddata/unstructured/vtk/VTKTextFileWriter.h"
 #include <Eigen/Dense>
 #include <iostream>
 #include <fstream>

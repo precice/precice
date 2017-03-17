@@ -75,11 +75,6 @@ sourcesPrecice = [
     Glob('precice/adapters/fortran/*.cpp')
 ]
 
-sourcesTarchLA = [
-    Glob('tarch/la/*.cpp'),
-    Glob('tarch/la/traits/*.cpp')
-]
-
 sourcesTarchMulticore = [
     Glob('tarch/multicore/*.cpp')
 ]
@@ -92,7 +87,6 @@ sourcesTarchLogging = [
 sourcesTarch = [
     Glob('tarch/configuration/*.cpp'),
     Glob('tarch/irr/*.cpp'),
-    sourcesTarchLA,
     sourcesTarchMulticore,
     sourcesTarchLogging,
     Glob('tarch/services/*.cpp'),

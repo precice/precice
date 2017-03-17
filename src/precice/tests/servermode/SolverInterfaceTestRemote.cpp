@@ -7,7 +7,6 @@
 #include "utils/Globals.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "query/tests/GeometryTestScenarios.hpp"
-#include "tarch/la/WrappedVector.h"
 
 #include "tarch/tests/TestCaseFactory.h"
 registerIntegrationTest(precice::tests::SolverInterfaceTestRemote)
