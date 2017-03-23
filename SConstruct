@@ -185,7 +185,10 @@ if not env["spirit2"]:
 
 # ====== MPI ======
 if env["mpi"]:
-    checkHeader('mpi.h', 'MPI')
+    if not conf.CheckCXXHeader("mpi.h"):
+        print "mpi.h not found. Maybe try 'compiler=mpicxx' or 'compiler=mpic++' as scons argument?"
+        Exit(1)
+        
     # Skip (deprecated) MPI C++ bindings.
     env.Append(CPPDEFINES = ['MPICH_SKIP_MPICXX'])
         
