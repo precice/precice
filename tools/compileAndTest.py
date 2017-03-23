@@ -34,6 +34,7 @@ parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFo
 parser.add_argument('-c', '--compile', help="Compile preCICE", dest='compile', action='store_true')
 parser.add_argument('-r', '--removebuild', help="Remove build/ and .scon* files before compiling", dest='remove_build', action='store_true')
 parser.add_argument('-k', '--keeptest', help="Do not remove test directory for earch test run", dest='keep_test', action='store_true')
+parser.add_argument('-b', help="Run boost tests.", dest='run_boostttests', action="store_true")
 parser.add_argument('-u', help="Run unit tests.", dest='run_unit', action="store_true")
 parser.add_argument('-i', help="Run integration tests.", dest='run_integration', action="store_true")
 parser.add_argument('-j', help="Number of CPUs to compile on", dest='compile_cpus', default=4)
@@ -58,7 +59,7 @@ if args.compile:
             os.remove(".sconsign.dblite")
         except FileNotFoundError:
             pass
-    COMPILE_CMD = 'scons boost_inst=true mpi=on petsc=on compiler="mpicxx" build=debug -j {cpus}'.format(cpus=args.compile_cpus)
+    COMPILE_CMD = 'scons mpi=on petsc=on compiler="mpicxx" build=debug -j {cpus}'.format(cpus=args.compile_cpus)
     
     if subprocess.call(COMPILE_CMD, shell = True) != 0:
         sys.exit(125) # Cannot compile, 125 means to skip that revision
@@ -66,12 +67,19 @@ if args.compile:
 
 mpi_cmd = "mpirun -n %s" % args.mpi_procs if args.mpi_procs > 1 else ""
 
+# Boost Tests
+if args.run_boostttests:
+    run_cmd = "{mpi} ../build/last/testprecice --color_output".format(mpi = mpi_cmd)
+    run_test(run_cmd, args.keep_test)
+
+# Tarch Unit Tests
 if args.run_unit:
     run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src {logconfig}".format(mpi = mpi_cmd,
                                                                                           config = args.unit_test_config,
                                                                                           logconfig = args.logconfig)
     run_test(run_cmd, args.keep_test)
 
+# Tarch Integration Tests
 if args.run_integration:
     run_cmd = "{mpi} ../build/last/binprecice test ../{config} ../src {logconfig}".format(mpi = mpi_cmd,
                                                                                           config = args.integration_test_config,
