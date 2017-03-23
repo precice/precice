@@ -838,8 +838,6 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines,
 BOOST_AUTO_TEST_CASE(MapMultiquadrics,
                      * testing::OnMaster())
 {
-  size_t rank = precice::utils::Parallel::getProcessRank();
-  std::cout << "TEST BODY, Rank = " << rank << std::endl;
   bool xDead = false;
   bool yDead = false;
   bool zDead = false;
@@ -1003,7 +1001,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2D,
   BOOST_TEST ( mapping.hasComputedMapping() == false );
 
   vertex.setCoords ( Vector2d(0.0, 3.0) );
-  mapping.computeMapping ();
+  mapping.computeMapping();
   mapping.map ( inDataID, outDataID );
   double value = outData->values()[0];
   BOOST_TEST(mapping.hasComputedMapping() == true);
@@ -1091,7 +1089,7 @@ BOOST_AUTO_TEST_CASE(SolutionCaching,
   mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
   mesh::PtrData outData = outMesh->createData( "OutData", 1 );
   int outDataID = outData->getID();
-  mesh::Vertex& vertex = outMesh->createVertex(Vector2d(0,0));
+  outMesh->createVertex(Vector2d(0, 3));
   outMesh->allocateDataValues();
   addGlobalIndex(outMesh);
 
@@ -1099,7 +1097,6 @@ BOOST_AUTO_TEST_CASE(SolutionCaching,
   mapping.setMeshes(inMesh, outMesh);
   BOOST_TEST(mapping.hasComputedMapping() == false );
 
-  vertex.setCoords(Vector2d(0.0, 3.0));
   mapping.computeMapping();
   BOOST_TEST(mapping.previousSolution.size() == 0);
   mapping.map(inDataID, outDataID);
@@ -1115,6 +1112,70 @@ BOOST_AUTO_TEST_CASE(SolutionCaching,
   BOOST_TEST(its == 0);
 }
 
+BOOST_AUTO_TEST_CASE(PolynomialSwitch,
+                     * testing::OnMaster()
+                     * boost::unit_test::tolerance(1e-6))
+{
+  using Eigen::Vector2d;
+  int dimensions = 2;
+  
+  bool xDead = false, yDead = true, zDead = false;
+
+  Gaussian fct(1);
+
+  // Create mesh to map from
+  mesh::PtrMesh inMesh ( new mesh::Mesh("InMesh", dimensions, false) );
+  mesh::PtrData inData = inMesh->createData ( "InData", 1 );
+  int inDataID = inData->getID ();
+  inMesh->createVertex ( Vector2d(1, 1) );  inMesh->createVertex ( Vector2d(1, 1) );
+  inMesh->createVertex ( Vector2d(0, 0) );  inMesh->createVertex ( Vector2d(0, 1) );
+  inMesh->allocateDataValues();
+  addGlobalIndex(inMesh);
+  inData->values() << 1, 1, 1, 1;
+
+  // Create mesh to map to
+  mesh::PtrMesh outMesh( new mesh::Mesh("OutMesh", dimensions, false) );
+  mesh::PtrData outData = outMesh->createData( "OutData", 1 );
+  int outDataID = outData->getID();
+  outMesh->createVertex(Vector2d(5, 5)); // Point is far outside the inMesh
+    
+  outMesh->allocateDataValues();
+  addGlobalIndex(outMesh);
+
+  // Test deactivated polynomial
+  PetRadialBasisFctMapping<Gaussian> mappingOff(Mapping::CONSISTENT, dimensions, fct,
+                                             xDead, yDead, zDead,
+                                             1e-9, Polynomial::OFF);
+  mappingOff.setMeshes(inMesh, outMesh);
+  mappingOff.computeMapping();
+  mappingOff.map(inDataID, outDataID);
+
+  BOOST_TEST ( outData->values()[0] == 0.0 ); // Mapping to 0 since no basis function at (5,5) and no polynomial
+
+  // Test integrated polynomial
+  PetRadialBasisFctMapping<Gaussian> mappingOn(Mapping::CONSISTENT, dimensions, fct,
+                                               xDead, yDead, zDead,
+                                               1e-9, Polynomial::ON);
+
+  mappingOn.setMeshes(inMesh, outMesh);
+  mappingOn.computeMapping();
+  mappingOn.map(inDataID, outDataID);
+
+  BOOST_TEST ( outData->values()[0] == 1.0 ); // Mapping to 1 since there is the polynomial
+
+  // Test separated polynomial
+  PetRadialBasisFctMapping<Gaussian> mappingSep(Mapping::CONSISTENT, dimensions, fct,
+                                               xDead, yDead, zDead,
+                                               1e-9, Polynomial::SEPARATE);
+
+  mappingSep.setMeshes(inMesh, outMesh);
+  mappingSep.computeMapping();
+  mappingSep.map(inDataID, outDataID);
+
+  BOOST_TEST ( outData->values()[0] == 1.0 ); // Mapping to 1 since there is the polynomial
+
+  
+}
 
 BOOST_AUTO_TEST_SUITE_END()
 BOOST_AUTO_TEST_SUITE_END()
