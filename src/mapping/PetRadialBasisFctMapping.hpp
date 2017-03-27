@@ -102,6 +102,8 @@ private:
 
   petsc::Matrix _matrixV;
 
+  petsc::Vector rescalingCoeffs;
+
   KSP _solver;
 
   KSP _QRsolver;
@@ -115,6 +117,9 @@ private:
 
   /// Toggles the use of the additonal polynomial
   const Polynomial _polynomial;
+
+  /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
+  const bool useRescaling = true;
 
   /// Number of coefficients for the polynom. Depends on dimension and number of dead dimensions
   size_t polyparams;
@@ -554,7 +559,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     KSPSetType(_QRsolver, KSPLSQR);
     KSPSetOperators(_QRsolver, _matrixQ, _matrixQ);
   }
-  
+
   // -- CONFIGURE SOLVER FOR SYSTEM MATRIX --
   KSPSetOperators(_solver, _matrixC, _matrixC); CHKERRV(ierr);
   KSPSetTolerances(_solver, _solverRtol, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
@@ -569,6 +574,15 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   //   PCSetType(prec, PCCHOLESKY);
   //   PCFactorSetShiftType(prec, MAT_SHIFT_NONZERO);
   // }
+
+  // -- COMPUTE RESCALING COEFFICIENTS USING THE SYSTEM MATRIX SOLVER --
+  if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
+    petsc::Vector rhs(_matrixC);
+    ierr = MatCreateVecs(_matrixC, nullptr, &rescalingCoeffs.vector); CHKERRV(ierr);
+    VecSet(rhs, 1);
+    rhs.assemble();
+    ierr = KSPSolve(_solver, rhs, rescalingCoeffs); CHKERRV(ierr);
+  }
 
   _hasComputedMapping = true;
 
@@ -722,6 +736,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::map(int inputDataID, int
       }
 
       ierr = MatMult(_matrixA, p, out); CHKERRV(ierr);
+
+      if (useRescaling and (_polynomial == Polynomial::SEPARATE)) {
+        petsc::Vector temp(_matrixA);
+        ierr = MatMult(_matrixA, rescalingCoeffs, temp); CHKERRV(ierr);
+        ierr = VecPointwiseDivide(out, out, temp); CHKERRV(ierr);
+      }
+      
       if (_polynomial == Polynomial::SEPARATE) {
         ierr = VecScale(a, -1); // scale it back, so wie add the polynom
         ierr = MatMultAdd(_matrixV, a, out, out); CHKERRV(ierr);
