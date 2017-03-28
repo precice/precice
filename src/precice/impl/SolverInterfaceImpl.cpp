@@ -97,7 +97,7 @@ SolverInterfaceImpl:: SolverInterfaceImpl
         "Accessor process index has to be smaller than accessor process "
         << "size (given as " << _accessorProcessRank << ")!");
 
-  precice::utils::EventRegistry::initialize();
+  precice::utils::EventRegistry::initialize(accessorName);
 
   /* When precice stops abruptly, e.g. an external solver crashes, the
      SolverInterfaceImpl destructor is never called. Since we still want
@@ -556,9 +556,7 @@ void SolverInterfaceImpl:: finalize()
   // Stop and print Event logging
   precice::utils::EventRegistry::finalize();
   if (not precice::utils::MasterSlave::_slaveMode) {
-    precice::utils::EventRegistry r;
-    r.print();
-    r.print("EventTimings.log", true);
+    precice::utils::EventRegistry::printAll();
   }
 
   // Tear down MPI and PETSc
@@ -577,13 +575,13 @@ int SolverInterfaceImpl:: getDimensions() const
 
 bool SolverInterfaceImpl:: isCouplingOngoing()
 {
-  preciceTrace ( "isCouplingOngoing()" );
+  TRACE();
   return _couplingScheme->isCouplingOngoing();
 }
 
 bool SolverInterfaceImpl:: isReadDataAvailable()
 {
-  preciceTrace ( "isReadDataAvailable()" );
+  TRACE();
   return _couplingScheme->hasDataBeenExchanged();
 }
 
@@ -591,13 +589,13 @@ bool SolverInterfaceImpl:: isWriteDataRequired
 (
   double computedTimestepLength )
 {
-  preciceTrace ( "isWriteDataRequired()", computedTimestepLength );
+  TRACE(computedTimestepLength);
   return _couplingScheme->willDataBeExchanged(computedTimestepLength);
 }
 
 bool SolverInterfaceImpl:: isTimestepComplete()
 {
-  preciceTrace ( "isCouplingTimestepComplete()" );
+  TRACE();
   return _couplingScheme->isCouplingTimestepComplete();
 }
 
@@ -605,7 +603,7 @@ bool SolverInterfaceImpl:: isActionRequired
 (
   const std::string& action )
 {
-  preciceTrace("isActionRequired()", action, _couplingScheme->isActionRequired(action));
+  TRACE(action, _couplingScheme->isActionRequired(action));
   return _couplingScheme->isActionRequired(action);
 }
 
@@ -613,7 +611,7 @@ void SolverInterfaceImpl:: fulfilledAction
 (
   const std::string& action )
 {
-  preciceTrace ( "fulfilledAction()", action );
+  TRACE(action);
   if ( _clientMode ) {
     _requestManager->requestFulfilledAction(action);
   }
@@ -635,7 +633,7 @@ bool SolverInterfaceImpl:: hasMesh
 (
   const std::string& meshName ) const
 {
-  preciceTrace ( "hasMesh()", meshName );
+  TRACE(meshName);
   return utils::contained ( meshName, _meshIDs );
 }
 
@@ -643,15 +641,14 @@ int SolverInterfaceImpl:: getMeshID
 (
   const std::string& meshName )
 {
-  preciceTrace ( "getMeshID()", meshName );
-  preciceCheck( utils::contained(meshName, _meshIDs), "getMeshID()",
-                "Mesh with name \""<< meshName << "\" is not defined!" );
+  TRACE(meshName);
+  CHECK( utils::contained(meshName, _meshIDs), "Mesh with name \""<< meshName << "\" is not defined!" );
   return _meshIDs[meshName];
 }
 
 std::set<int> SolverInterfaceImpl:: getMeshIDs()
 {
-  preciceTrace ( "getMeshIDs()" );
+  TRACE();
   std::set<int> ids;
   for (const impl::MeshContext* context : _accessor->usedMeshContexts()) {
     ids.insert ( context->mesh->getID() );
@@ -663,9 +660,8 @@ bool SolverInterfaceImpl:: hasData
 (
   const std::string& dataName, int meshID )
 {
-  preciceTrace ( "hasData()", dataName, meshID );
-  preciceCheck ( _dataIDs.find(meshID)!=_dataIDs.end(), "hasData()",
-                   "No mesh with meshID \"" << meshID << "\" is defined");
+  TRACE(dataName, meshID );
+  CHECK(_dataIDs.find(meshID)!=_dataIDs.end(), "No mesh with meshID \"" << meshID << "\" is defined");
   std::map<std::string,int>& sub_dataIDs =  _dataIDs[meshID];
   return sub_dataIDs.find(dataName)!= sub_dataIDs.end();
 }
@@ -674,10 +670,9 @@ int SolverInterfaceImpl:: getDataID
 (
   const std::string& dataName, int meshID )
 {
-  preciceTrace ( "getDataID()", dataName, meshID );
-  preciceCheck ( hasData(dataName, meshID), "getDataID()",
-                 "Data with name \"" << dataName << "\" is not defined on mesh with ID \""
-                 << meshID << "\".");
+  TRACE(dataName, meshID );
+  CHECK(hasData(dataName, meshID),
+        "Data with name \"" << dataName << "\" is not defined on mesh with ID \"" << meshID << "\".");
   return _dataIDs[meshID][dataName];
 }
 

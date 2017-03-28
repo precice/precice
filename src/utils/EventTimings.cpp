@@ -126,12 +126,14 @@ int EventData::getTimePercentage(Event::Clock::duration globalDuration)
 std::map<std::string, EventData> EventRegistry::events;
 Event::Clock::time_point EventRegistry::globalStart;
 Event::Clock::time_point EventRegistry::globalStop;
+std::string EventRegistry::applicationName = "";
 bool EventRegistry::initialized = false;
 std::map<std::string, double> EventRegistry::properties;
 
-void EventRegistry::initialize()
+void EventRegistry::initialize(std::string appName)
 {
   globalStart = Event::Clock::now();
+  applicationName = appName;
   initialized = true;
 }
 
@@ -151,8 +153,7 @@ void EventRegistry::signal_handler(int signal)
 {
   if (initialized) {
     finalize();
-    print();
-    print("EventTimings.log", true);
+    printAll();
   }
 }
 
@@ -171,6 +172,20 @@ void EventRegistry::addProp(std::string property, double value)
 void EventRegistry::setProp(std::string property, double value)
 {
   properties[property] = value;
+}
+
+
+void EventRegistry::printAll()
+{
+  print();
+
+  std::string outFile;
+  if (applicationName.empty())
+    outFile = "EventTimings.log";
+  else
+    outFile = "EventTimings-" + applicationName + ".log";
+  
+  print(outFile, true);
 }
 
 void EventRegistry::print(std::ostream &out, bool terse)

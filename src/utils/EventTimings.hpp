@@ -90,7 +90,10 @@ class EventRegistry
 {
 public:
   /// Sets the global start time
-  static void initialize();
+  /**
+   * @param[in] applicationName A name that is added to the logfile to distinguish different participants
+   */
+  static void initialize(std::string appName = "");
 
   /// Sets the global end time
   static void finalize();
@@ -112,6 +115,9 @@ public:
   /** An existing value is overwritten. */ 
   static void setProp(std::string property, double value);
 
+  /// Prints a verbose report to stdout and a terse one to EventTimings-AppName.log
+  static void printAll();
+
   /// Prints the result table to an arbitrary stream.
   /** terse enables a more machine readable format with one event per line, seperated by whitespace. */
   static void print(std::ostream &out, bool terse = false);
@@ -132,6 +138,9 @@ private:
 
   /// Map of additional properties that can be set by the user.
   static std::map<std::string, double> properties;
+
+  /// A name that is added to the logfile to distinguish different participants
+  static std::string applicationName;
 };
 
 }} // namespace precice::utils
