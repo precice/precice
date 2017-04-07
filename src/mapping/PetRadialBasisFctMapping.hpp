@@ -99,13 +99,13 @@ private:
   petsc::Matrix _matrixC;
 
   /// Vandermonde Matrix, constructed from vertices of the input mesh
-  petsc::Matrix _matrixV; 
+  petsc::Matrix _matrixQ;
 
   /// Interpolation evaluation matrix. Evaluated basis function on the output mesh
   petsc::Matrix _matrixA;
 
   /// Coordinates of the output mesh to evaluate the separated polynomial
-  petsc::Matrix _matrixQ;  
+  petsc::Matrix _matrixV;
 
   petsc::Vector rescalingCoeffs;
 
@@ -165,9 +165,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
   _matrixC(PETSC_COMM_WORLD, "C"),
-  _matrixV(PETSC_COMM_WORLD, "V"),
-  _matrixA(PETSC_COMM_WORLD, "A"),
   _matrixQ(PETSC_COMM_WORLD, "Q"),
+  _matrixA(PETSC_COMM_WORLD, "A"),
+  _matrixV(PETSC_COMM_WORLD, "V"),
   _solverRtol(solverRtol),
   _polynomial(polynomial)
 {
