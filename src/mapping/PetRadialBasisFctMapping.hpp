@@ -47,6 +47,7 @@ public:
    * @brief Constructor.
    *
    * @param[in] constraint Specifies mapping to be consistent or conservative.
+   * @param[in] dimension Dimensionality of the meshes
    * @param[in] function Radial basis function used for mapping.
    * @param[in] xDead, yDead, zDead Deactivates mapping along an axis
    * @param[in] solverRtol Relative tolerance for the linear solver.
@@ -94,18 +95,23 @@ private:
   /// Radial basis function type used in interpolation.
   RADIAL_BASIS_FUNCTION_T _basisFunction;
 
+  /// Interpolation system matrix. Evaluated basis function on the input mesh
   petsc::Matrix _matrixC;
 
+  /// Vandermonde Matrix, constructed from vertices of the input mesh
+  petsc::Matrix _matrixV; 
+
+  /// Interpolation evaluation matrix. Evaluated basis function on the output mesh
   petsc::Matrix _matrixA;
 
-  petsc::Matrix _matrixQ;
-
-  petsc::Matrix _matrixV;
+  /// Coordinates of the output mesh to evaluate the separated polynomial
+  petsc::Matrix _matrixQ;  
 
   petsc::Vector rescalingCoeffs;
 
   KSP _solver;
 
+  /// Used to solve the under-determined system for the separated polynomial.
   KSP _QRsolver;
 
   ISLocalToGlobalMapping _ISmapping;
@@ -121,16 +127,17 @@ private:
   /// Toggles use of rescaled basis functions, only active when Polynomial == SEPARATE
   const bool useRescaling = true;
 
-  /// Number of coefficients for the polynom. Depends on dimension and number of dead dimensions
+  /// Number of coefficients for the integrated polynomial. Depends on dimension and number of dead dimensions
   size_t polyparams;
 
+  /// Number of coefficients for the separated polynomial. Depends on dimension and number of dead dimensions
   size_t sepPolyparams;
 
   virtual bool doesVertexContribute(int vertexID) const override;
 
   void incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end);
 
-  /// Stores the solution from the previous iteration
+  /// Caches the solution from the previous iteration, used as starting value for current iteration
   std::map<unsigned int, petsc::Vector> previousSolution;
 
   /// Prints an INFO about the current mapping
@@ -158,9 +165,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   _hasComputedMapping ( false ),
   _basisFunction ( function ),
   _matrixC(PETSC_COMM_WORLD, "C"),
+  _matrixV(PETSC_COMM_WORLD, "V"),
   _matrixA(PETSC_COMM_WORLD, "A"),
   _matrixQ(PETSC_COMM_WORLD, "Q"),
-  _matrixV(PETSC_COMM_WORLD, "V"),
   _solverRtol(solverRtol),
   _polynomial(polynomial)
 {
