@@ -1,7 +1,9 @@
 #ifndef PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_
 #define PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_
 
+#ifdef __cplusplus
 extern "C" {
+#endif
 
 /**
  * @brief Creates the coupling interface and confiures it.
@@ -249,6 +251,8 @@ void precicec_mapReadDataTo ( int toMeshID );
  */
 void precicec_exportMesh ( const char* filenameSuffix );
 
+#ifdef __cplusplus
 }
+#endif
 
 #endif /* PRECICE_ADAPTERS_C_SOLVERINTERFACEC_H_ */
