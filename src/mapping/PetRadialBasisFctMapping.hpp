@@ -383,42 +383,32 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       continue;
 
     int row = inVertex.getGlobalIndex() + polyparams;
+    PetscInt colNum = 0;  // holds the number of columns
     PetscInt colIdx[_matrixC.getSize().second];     // holds the columns indices of the entries
-    PetscScalar colVals[_matrixC.getSize().second]; // holds the values of the entries
+    PetscScalar rowVals[_matrixC.getSize().second]; // holds the values of the entries
     
     // -- SETS THE POLYNOM PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
-      PetscInt polyRow = 0, polyCol = row;
-      PetscScalar y = 1;
+      colIdx[colNum] = colNum;
+      rowVals[colNum++] = 1;
       
-      Mat m;
-      if (_polynomial == Polynomial::ON) {
-        m = _matrixC.matrix;
-        ierr = MatSetValuesLocal(m, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
-      }
-      else if (_polynomial == Polynomial::SEPARATE) {
-        m = _matrixQ.matrix;
-        ierr = MatSetValuesLocal(m, 1, &polyCol, 1, &polyRow, &y, INSERT_VALUES); CHKERRV(ierr);
-      }
-      
-      int actualDim = 0;
       for (int dim = 0; dim < dimensions; dim++) {
         if (not _deadAxis[dim]) {
-          y = inVertex.getCoords()[dim];
-          polyRow = 1 + actualDim;
-          actualDim++;
-          if (_polynomial == Polynomial::ON) {
-            ierr = MatSetValuesLocal(m, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
-          }
-          else if (_polynomial == Polynomial::SEPARATE) {
-            ierr = MatSetValuesLocal(m, 1, &polyCol, 1, &polyRow, &y, INSERT_VALUES); CHKERRV(ierr);
-          }
+          colIdx[colNum] = colNum;
+          rowVals[colNum++] = inVertex.getCoords()[dim];
         }
       }
+      
+      if (_polynomial == Polynomial::ON) {
+        ierr = MatSetValuesLocal(_matrixC, colNum, colIdx, 1, &row, rowVals, INSERT_VALUES); CHKERRV(ierr);
+      }
+      else if (_polynomial == Polynomial::SEPARATE) {
+        ierr = MatSetValuesLocal(_matrixQ, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+      }
+      colNum = 0;
     }
 
-    // -- SETS THE COEFFICIENTS --
-    PetscInt colNum = 0;  // holds the number of columns
+    // -- SETS THE COEFFICIENTS --    
     for (mesh::Vertex& vj : inMesh->vertices()) {
       distance = inVertex.getCoords() - vj.getCoords();
       for (int d = 0; d < dimensions; d++) {
@@ -428,13 +418,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
       double coeff = _basisFunction.evaluate(distance.norm());
       if (not math::equals(coeff, 0.0)) {
-        colVals[colNum] = coeff;
+        rowVals[colNum] = coeff;
         colIdx[colNum] = vj.getGlobalIndex() + polyparams; // column of entry is the globalIndex
         colNum++;
       }
     }
 
-    ierr = MatSetValuesLocal(_matrixC, 1, &row, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = MatSetValuesLocal(_matrixC, 1, &row, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix C");
   eFillC.stop();
@@ -505,30 +495,26 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   for (int it = ownerRangeABegin; it < ownerRangeAEnd; it++) {
     PetscInt colNum = 0;
     PetscInt colIdx[_matrixA.getSize().second];     // holds the columns indices of the entries
-    PetscScalar colVals[_matrixA.getSize().second]; // holds the values of the entries
+    PetscScalar rowVals[_matrixA.getSize().second]; // holds the values of the entries
     const mesh::Vertex& oVertex = outMesh->vertices()[it - _matrixA.ownerRange().first];
 
     // -- SET THE POLYNOM PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
-      Mat m;
-      if (_polynomial == Polynomial::ON) {
-        m = _matrixA.matrix;
-      }
-      else if (_polynomial == Polynomial::SEPARATE) {
-        m = _matrixV.matrix;
-      }
-      PetscInt polyRow = it, polyCol = 0;
-      PetscScalar y = 1;
-      ierr = MatSetValuesLocal(m, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr);
+      Mat m = _polynomial == Polynomial::ON ? _matrixA.matrix : _matrixV.matrix;
+      
+      colIdx[colNum] = colNum;
+      rowVals[colNum++] = 1;
+      
       for (int dim = 0; dim < dimensions; dim++) {
         if (not _deadAxis[dim]) {
-          y = oVertex.getCoords()[dim];
-          polyCol++;
-          ierr = MatSetValuesLocal(m, 1, &polyRow, 1, &polyCol, &y, INSERT_VALUES); CHKERRV(ierr); // das zusammen mit den MatSetValuesLocal unten machen
+          colIdx[colNum] = colNum;
+          rowVals[colNum++] = oVertex.getCoords()[dim];
         }
       }
+      ierr = MatSetValuesLocal(m, 1, &it, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
+      colNum = 0;
     }
-
+    
     // -- SETS THE COEFFICIENTS --
     for (const mesh::Vertex& inVertex : inMesh->vertices()) {
       distance = oVertex.getCoords() - inVertex.getCoords();
@@ -538,13 +524,13 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
       }
       double coeff = _basisFunction.evaluate(distance.norm());
       if (not math::equals(coeff, 0.0)) {
-        colVals[colNum] = coeff;
+        rowVals[colNum] = coeff;
         colIdx[colNum] = inVertex.getGlobalIndex() + polyparams;
         colNum++;
       }
     }
     // DEBUG("Filling A: row = " << it << ", col count = " << colNum);
-    ierr = MatSetValuesLocal(_matrixA, 1, &it, colNum, colIdx, colVals, INSERT_VALUES); CHKERRV(ierr);
+    ierr = MatSetValuesLocal(_matrixA, 1, &it, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
   }
   DEBUG("Finished filling Matrix A");
   eFillA.stop();
