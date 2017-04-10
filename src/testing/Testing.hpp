@@ -2,6 +2,7 @@
 
 #include <boost/test/unit_test.hpp>
 #include "utils/Parallel.hpp"
+#include "math/math.hpp"
 
 #ifndef PRECICE_NO_PETSC
 #include "petscsys.h"
@@ -91,5 +92,38 @@ public:
     OnRanks({0})
   {}
 };
+
+/// equals to be used in tests. Prints both operatorans on failure
+template<class DerivedA, class DerivedB>
+boost::test_tools::predicate_result equals (const Eigen::MatrixBase<DerivedA>& A,
+                                            const Eigen::MatrixBase<DerivedB>& B,
+                                            double tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+{
+  if (not math::equals(A, B, tolerance)) {
+    boost::test_tools::predicate_result res(false);
+    Eigen::IOFormat format;
+    if (A.cols() == 1) {
+      format.rowSeparator = ", ";
+      format.rowPrefix = "  ";
+    }
+    res.message() << "\n" << A.format(format) << " != \n" << B.format(format);
+    return res;
+  }
+  return true;
+}
+
+/// equals to be used in tests. Prints both operatorans on failure
+template<class Scalar>
+typename std::enable_if<std::is_arithmetic<Scalar>::value, boost::test_tools::predicate_result>
+::type equals(const Scalar a, const Scalar b, const Scalar tolerance = math::NUMERICAL_ZERO_DIFFERENCE)
+{
+  if (not math::equals(a, b, tolerance))
+  {
+    boost::test_tools::predicate_result res(false);
+    res.message() << "Not equal: " << a << "!=" << b;
+    return res;
+  }
+  return true;
+}
 
 }} // namespace precice, testing

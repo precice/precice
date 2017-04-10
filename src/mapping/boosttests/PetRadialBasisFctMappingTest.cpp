@@ -394,28 +394,28 @@ void perform2DTestConservativeMapping(Mapping& mapping)
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST ( math::equals(values, Eigen::Vector4d(0.5, 0.5, 1.0, 1.0), tolerance) );
+  BOOST_TEST ( testing::equals(values, Eigen::Vector4d(0.5, 0.5, 1.0, 1.0), tolerance) );
 
   vertex0.setCoords ( Vector2d(0.0, 0.5) );
   vertex1.setCoords ( Vector2d(1.0, 0.5) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST ( math::equals(values, Eigen::Vector4d(0.5, 1.0, 1.0, 0.5), tolerance) );
+  BOOST_TEST ( testing::equals(values, Eigen::Vector4d(0.5, 1.0, 1.0, 0.5), tolerance) );
 
   vertex0.setCoords ( Vector2d(0.0, 1.0) );
   vertex1.setCoords ( Vector2d(1.0, 0.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST ( math::equals(values, Eigen::Vector4d(0.0, 2.0, 0.0, 1.0), tolerance) );
+  BOOST_TEST ( testing::equals(values, Eigen::Vector4d(0.0, 2.0, 0.0, 1.0), tolerance) );
   
   vertex0.setCoords ( Vector2d(0.0, 0.0) );
   vertex1.setCoords ( Vector2d(1.0, 1.0) );
   mapping.computeMapping ();
   mapping.map ( inDataID, outDataID );
   BOOST_TEST(mapping.hasComputedMapping() == true);
-  BOOST_TEST ( math::equals(values, Eigen::Vector4d(1.0, 0.0, 2.0, 0.0), tolerance) );
+  BOOST_TEST ( testing::equals(values, Eigen::Vector4d(1.0, 0.0, 2.0, 0.0), tolerance) );
 
   vertex0.setCoords ( Vector2d(0.4, 0.5) );
   vertex1.setCoords ( Vector2d(0.6, 0.5) );
