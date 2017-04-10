@@ -133,8 +133,12 @@ private:
   /// Number of coefficients for the separated polynomial. Depends on dimension and number of dead dimensions
   size_t sepPolyparams;
 
+  const size_t polynomialDegree = 1;
+
   virtual bool doesVertexContribute(int vertexID) const override;
 
+  void getVandermondeRow(const mesh::Vertex &vertex, PetscInt &colNum, PetscInt colIdx[], PetscScalar rowVals[]) const;
+  
   void incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end);
 
   /// Caches the solution from the previous iteration, used as starting value for current iteration
@@ -196,9 +200,9 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   for (int d = 0; d < dimensions; d++) {
     if (_deadAxis[d]) deadDimensions +=1;
   }
-  polyparams =    (_polynomial == Polynomial::ON      ) ? 1 + dimensions - deadDimensions : 0;
-  sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + dimensions - deadDimensions : 0;
-
+  polyparams =    (_polynomial == Polynomial::ON      ) ? 1 + (polynomialDegree * (dimensions-deadDimensions)) : 0;
+  sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + (polynomialDegree * (dimensions-deadDimensions)) : 0;
+  
   KSPCreate(PETSC_COMM_WORLD, &_solver);
   KSPCreate(PETSC_COMM_WORLD, &_QRsolver);
 }
@@ -231,7 +235,7 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     DEBUG("Using no polynomial.");
   }
   if (_polynomial == Polynomial::SEPARATE) {
-    DEBUG("Using seperated polynomial.");
+    DEBUG("Using separated polynomial.");
   }
   
   assertion(input()->getDimensions() == output()->getDimensions(),
@@ -389,15 +393,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     
     // -- SETS THE POLYNOM PART OF THE MATRIX --
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
-      colIdx[colNum] = colNum;
-      rowVals[colNum++] = 1;
+      // colIdx[colNum] = colNum;
+      // rowVals[colNum++] = 1;
       
-      for (int dim = 0; dim < dimensions; dim++) {
-        if (not _deadAxis[dim]) {
-          colIdx[colNum] = colNum;
-          rowVals[colNum++] = inVertex.getCoords()[dim];
-        }
-      }
+      // for (int dim = 0; dim < dimensions; dim++) {
+      //   if (not _deadAxis[dim]) {
+      //     colIdx[colNum] = colNum;
+      //     rowVals[colNum++] = inVertex.getCoords()[dim];
+      //   }
+      // }
+      getVandermondeRow(inVertex, colNum, colIdx, rowVals);
       
       if (_polynomial == Polynomial::ON) {
         ierr = MatSetValuesLocal(_matrixC, colNum, colIdx, 1, &row, rowVals, INSERT_VALUES); CHKERRV(ierr);
@@ -502,15 +507,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
     if (_polynomial == Polynomial::ON or _polynomial == Polynomial::SEPARATE) {
       Mat m = _polynomial == Polynomial::ON ? _matrixA.matrix : _matrixV.matrix;
       
-      colIdx[colNum] = colNum;
-      rowVals[colNum++] = 1;
+      // colIdx[colNum] = colNum;
+      // rowVals[colNum++] = 1;
       
-      for (int dim = 0; dim < dimensions; dim++) {
-        if (not _deadAxis[dim]) {
-          colIdx[colNum] = colNum;
-          rowVals[colNum++] = oVertex.getCoords()[dim];
-        }
-      }
+      // for (int dim = 0; dim < dimensions; dim++) {
+        // if (not _deadAxis[dim]) {
+          // colIdx[colNum] = colNum;
+          // rowVals[colNum++] = oVertex.getCoords()[dim];
+        // }
+      // }
+      getVandermondeRow(oVertex, colNum, colIdx, rowVals);
       ierr = MatSetValuesLocal(m, 1, &it, colNum, colIdx, rowVals, INSERT_VALUES); CHKERRV(ierr);
       colNum = 0;
     }
@@ -777,6 +783,44 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::printMappingInfo(int inp
                   << " to " << output()->getName() << " (ID " << output()->getID() << ") "
                   << "for dimension " << dim << ") with polynomial set to " << polynomialName);
 }
+
+template<typename RADIAL_BASIS_FUNCTION_T>
+void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::getVandermondeRow(const mesh::Vertex &vertex,
+                                                                          PetscInt &colNum,
+                                                                          PetscInt colIdx[],
+                                                                          PetscScalar rowVals[]) const
+{
+  // Returns {x, y, z, x², y², z², xyz}
+  int dimensions = input()->getDimensions();
+  
+  colIdx[colNum] = colNum;
+  rowVals[colNum++] = 1;
+
+  // Linear terms
+  if (polynomialDegree >= 1) {
+    for (int dim = 0; dim < dimensions; dim++) {
+      if (not _deadAxis[dim]) {
+        colIdx[colNum] = colNum;
+        rowVals[colNum++] = vertex.getCoords()[dim];
+      }
+    }
+  }
+  // Quadratic terms and mixed term
+  if (polynomialDegree >= 2) {
+    PetscScalar mixedTerm = 1;
+    for (int dim = 0; dim < dimensions; dim++) {
+      if (not _deadAxis[dim]) {
+        colIdx[colNum] = colNum;
+        rowVals[colNum++] = std::pow(vertex.getCoords()[dim], 2);
+        mixedTerm *= vertex.getCoords()[dim];
+      }
+    }
+    colIdx[colNum] = colNum;
+    rowVals[colNum++] = mixedTerm;
+  }
+}
+
+
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::incPrealloc(PetscInt* diag, PetscInt* offDiag, int pos, int begin, int end)
