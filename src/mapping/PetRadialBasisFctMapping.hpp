@@ -133,7 +133,7 @@ private:
   /// Number of coefficients for the separated polynomial. Depends on dimension and number of dead dimensions
   size_t sepPolyparams;
 
-  const size_t polynomialDegree = 1;
+  const size_t polynomialDegree = 2;
 
   virtual bool doesVertexContribute(int vertexID) const override;
 
@@ -202,6 +202,10 @@ PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping
   }
   polyparams =    (_polynomial == Polynomial::ON      ) ? 1 + (polynomialDegree * (dimensions-deadDimensions)) : 0;
   sepPolyparams = (_polynomial == Polynomial::SEPARATE) ? 1 + (polynomialDegree * (dimensions-deadDimensions)) : 0;
+  if (_polynomial == Polynomial::ON and polynomialDegree == 2)
+    ++polyparams;
+  if (_polynomial == Polynomial::SEPARATE and polynomialDegree == 2)
+    ++sepPolyparams;
   
   KSPCreate(PETSC_COMM_WORLD, &_solver);
   KSPCreate(PETSC_COMM_WORLD, &_QRsolver);
