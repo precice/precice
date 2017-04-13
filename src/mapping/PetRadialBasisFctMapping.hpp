@@ -283,16 +283,16 @@ void PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::computeMapping()
   DEBUG("Set matrix C to local size " << n << " x " << n);
   ierr = MatSetOption(_matrixC, MAT_SYMMETRIC, PETSC_TRUE); CHKERRV(ierr);
   ierr = MatSetOption(_matrixC, MAT_SYMMETRY_ETERNAL, PETSC_TRUE); CHKERRV(ierr);
-
+  
   // Matrix Q: Dense, holds the input mesh for the polynom if set to SEPERATE. Zero size otherwise
   _matrixQ.reset();
-  _matrixQ.init(n, sepPolyparams, PETSC_DETERMINE, PETSC_DETERMINE, MATDENSE);
-  DEBUG("Set matrix Q to local size " << n << " x " << sepPolyparams);
-
+  _matrixQ.init(n, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
+  DEBUG("Set matrix Q to size " << n << " (local) x " << sepPolyparams) << " (global)";
+  
   // Matrix V: Dense, holds the output mesh for polynom if set to SEPERATE. Zero size otherwise
   _matrixV.reset();
-  _matrixV.init(outputSize, sepPolyparams, PETSC_DETERMINE, PETSC_DETERMINE, MATDENSE);
-  DEBUG("Set matrix V to local size " << outputSize << " x " << sepPolyparams);    
+  _matrixV.init(outputSize, PETSC_DETERMINE, PETSC_DETERMINE, sepPolyparams, MATDENSE);
+  DEBUG("Set matrix V to size " << outputSize << " (local) x " << sepPolyparams) << " (global)";
     
   // Matrix A: Sparse matrix with outputSize x n local size.
   _matrixA.reset();
