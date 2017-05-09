@@ -31,7 +31,7 @@ mpi_link_args = os.popen("mpic++ --showme:link").read().strip().split(' ')
 
 # need to include libs here, because distutils messes up the order
 compile_args = ["-I"+precice_root, "-Wall", "-std=c++11"] + mpi_compile_args
-link_args = ["-L"+precice_root+"/build/last/", "-lprecice", "-lboost_system", "-lboost_filesystem"] + mpi_link_args
+link_args = ["-L"+precice_root+"/build/last/", "-lprecice"] + mpi_link_args
 
 # build precice.so python extension to be added to "PYTHONPATH" later
 setup(
