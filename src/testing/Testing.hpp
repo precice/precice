@@ -8,7 +8,6 @@
 #include "petscsys.h"
 #endif
 
-
 namespace precice { namespace testing {
 
 namespace bt = boost::unit_test;
@@ -18,8 +17,8 @@ using Par = precice::utils::Parallel;
 struct MPICommRestrictFixture {
   explicit MPICommRestrictFixture(std::vector<int> & ranks)
   {
-    // Restriction must always be called on all ranks, otherwise we hang
-    if (static_cast<int>(ranks.size()) == Par::getCommunicatorSize()) {
+    // Restriction MUST always be called on all ranks, otherwise we hang
+    if (static_cast<int>(ranks.size()) < Par::getCommunicatorSize()) {
       Par::setGlobalCommunicator(Par::getRestrictedCommunicator(ranks));
     }
 
@@ -68,10 +67,12 @@ private:
       return;
     }
 
-    // Install the fixture
-    tu.p_fixtures.value.push_back(
-      bt::test_unit_fixture_ptr(
-        new bt::class_based_fixture<MPICommRestrictFixture, std::vector<int>>(_ranks)));
+    // Install the fixture. Disabled because installing the fixture on just a
+    // subset of ranks causes a restriction to be made from a subset of ranks
+    // which means the application will hang.
+    // tu.p_fixtures.value.push_back(
+    //   bt::test_unit_fixture_ptr(
+    //     new bt::class_based_fixture<MPICommRestrictFixture, std::vector<int>>(_ranks)));
 
   }
 
@@ -92,6 +93,61 @@ public:
     OnRanks({0})
   {}
 };
+
+/// Boost.Test decorator that makes the test run only on a specific MPI size
+class OnSize : public bt::decorator::base
+{
+public:
+  explicit OnSize(const int size) :
+    givenSize(size)
+  {}
+  
+  virtual void apply(bt::test_unit& tu)
+  {
+    if (givenSize != Par::getCommunicatorSize()) {
+      bt::framework::get<bt::test_suite>(tu.p_parent_id).remove(tu.p_id);
+      return;
+    }
+  }
+
+  virtual bt::decorator::base_ptr clone() const
+  {
+    return bt::decorator::base_ptr(new OnSize(givenSize));
+  }
+
+  const int givenSize;
+};
+
+
+/// Boost.Test decorator that deleted the test, unless a minimum number of ranks is available.
+/*
+ * This does not restrict the communicator, which must be done by installing the MPICommrestrictFixture.
+ */
+class MinRanks : public bt::decorator::base
+{
+public:
+  explicit MinRanks(const int minimumSize) :
+    minSize(minimumSize)
+  {}
+  
+private:
+
+  virtual void apply(bt::test_unit& tu)
+  {
+    if (minSize > Par::getCommunicatorSize()) {
+      bt::framework::get<bt::test_suite>(tu.p_parent_id).remove(tu.p_id);
+      return;
+    }
+  }
+
+  virtual bt::decorator::base_ptr clone() const
+  {
+    return bt::decorator::base_ptr(new MinRanks(minSize));
+  }
+
+  const int minSize;
+};
+
 
 /// equals to be used in tests. Prints both operatorans on failure
 template<class DerivedA, class DerivedB>

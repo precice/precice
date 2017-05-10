@@ -23,6 +23,10 @@ void addGlobalIndex(mesh::PtrMesh &mesh, int offset = 0)
 }
 
 
+BOOST_AUTO_TEST_SUITE(Parallel,
+                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0,1,2,3})))
+
+
 /// Holds rank, owner, position and value of a single vertex
 struct VertexSpecification
 {
@@ -128,6 +132,358 @@ void testDistributed(Mapping& mapping,
   }
   BOOST_TEST(outData->values().size() == index);
 }
+
+
+/// Test with a homogenous distribution of mesh amoung ranks
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1,
+                     * testing::OnSize(4))
+{
+  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+
+  MPI_Comm comm = utils::Parallel::getRestrictedCommunicator( {0, 1, 2, 3} );
+  utils::Parallel::setGlobalCommunicator(comm);
+  
+  testDistributed(mapping,
+                  { // Consistent mapping: The inMesh is communicated
+                    {-1, 0, {0, 0}, {1}},
+                    {-1, 0, {0, 1}, {2}},
+                    {-1, 1, {1, 0}, {3}},
+                    {-1, 1, {1, 1}, {4}},
+                    {-1, 2, {2, 0}, {5}},
+                    {-1, 2, {2, 1}, {6}},
+                    {-1, 3, {3, 0}, {7}},
+                    {-1, 3, {3, 1}, {8}}
+                  },
+                  { // The outMesh is local, distributed amoung all ranks
+                    {0, -1, {0, 0}, {0}},
+                    {0, -1, {0, 1}, {0}},
+                    {1, -1, {1, 0}, {0}},
+                    {1, -1, {1, 1}, {0}},
+                    {2, -1, {2, 0}, {0}},
+                    {2, -1, {2, 1}, {0}},
+                    {3, -1, {3, 0}, {0}},
+                    {3, -1, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 1} on the first rank, {1, 2} on the second, ...
+                    { 0, {1} },
+                    { 0, {2} },
+                    { 1, {3} },
+                    { 1, {4} },
+                    { 2, {5} },
+                    { 2, {6} },
+                    { 3, {7} },
+                    { 3, {8} }
+                  }
+    );
+}
+
+/// Using a more heterogenous distributon of vertices and owner
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2,
+                     * testing::OnSize(4))
+{
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+  
+  testDistributed(mapping,
+                  { // Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
+                    {-1, 0, {0, 0}, {1}},
+                    {-1, 0, {0, 1}, {2}},
+                    {-1, 1, {1, 0}, {3}},
+                    {-1, 1, {1, 1}, {4}},
+                    {-1, 1, {2, 0}, {5}},
+                    {-1, 3, {2, 1}, {6}},
+                    {-1, 3, {3, 0}, {7}},
+                    {-1, 3, {3, 1}, {8}}
+                  },
+                  { // The outMesh is local, rank 1 is empty
+                    {0, -1, {0, 0}, {0}},
+                    {0, -1, {0, 1}, {0}},
+                    {0, -1, {1, 0}, {0}},
+                    {2, -1, {1, 1}, {0}},
+                    {2, -1, {2, 0}, {0}},
+                    {2, -1, {2, 1}, {0}},
+                    {3, -1, {3, 0}, {0}},
+                    {3, -1, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 1, 2} on the first rank,
+                    // second rank (consistent with the outMesh) is empty, ...
+                    { 0, {1} },
+                    { 0, {2} },
+                    { 0, {3} },
+                    { 2, {4} },
+                    { 2, {5} },
+                    { 2, {6} },
+                    { 3, {7} },
+                    { 3, {8} }
+                  }
+    );
+}
+
+/// Test with a very heterogenous distributed and non-continues ownership
+BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3,
+                     * testing::OnSize(4))
+{
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
+  
+  testDistributed(mapping,
+                  { // Rank 0 has part of the mesh, owns a subpart
+                    {0,  0, {0, 0}, {1}}, {0,  0, {0, 1}, {2}},
+                    {0,  0, {1, 0}, {3}}, {0, -1, {1, 1}, {4}},
+                    {0, -1, {2, 0}, {5}}, {0, -1, {2, 1}, {6}},
+                      // Rank 1 has no vertices
+                      // Rank 2 has the entire mesh, but owns just 3 and 5.
+                    {2, -1, {0, 0}, {1}}, {2, -1, {0, 1}, {2}},
+                    {2, -1, {1, 0}, {3}}, {2,  2, {1, 1}, {4}},
+                    {2, -1, {2, 0}, {5}}, {2,  2, {2, 1}, {6}},
+                    {2, -1, {3, 0}, {7}}, {2, -1, {3, 1}, {8}},
+                      // Rank 3 has the last 4 vertices, owns 4, 6 and 7
+                    {3, 3, {2, 0}, {5}}, {3, -1, {2, 1}, {6}},
+                    {3, 3, {3, 0}, {7}}, {3,  3, {3, 1}, {8}},
+                  },
+                  { // The outMesh is local, rank 1 is empty
+                    {0, -1, {0, 0}, {0}},
+                    {0, -1, {0, 1}, {0}},
+                    {0, -1, {1, 0}, {0}},
+                    {2, -1, {1, 1}, {0}},
+                    {2, -1, {2, 0}, {0}},
+                    {2, -1, {2, 1}, {0}},
+                    {3, -1, {3, 0}, {0}},
+                    {3, -1, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 1, 2} on the first rank,
+                    // second rank (consistent with the outMesh) is empty, ...
+                    { 0, {1} },
+                    { 0, {2} },
+                    { 0, {3} },
+                    { 2, {4} },
+                    { 2, {5} },
+                    { 2, {6} },
+                    { 3, {7} },
+                    { 3, {8} }
+                  },
+                  globalIndexOffsets[utils::Parallel::getProcessRank()]
+    );
+}
+
+/// Test with a homogenous distribution of mesh amoung ranks
+BOOST_AUTO_TEST_CASE(DistributedConservative2DV1,
+                     * testing::OnSize(4))
+{
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  
+  testDistributed(mapping,
+                  { // Conservative mapping: The inMesh is local
+                    {0, -1, {0, 0}, {1}},
+                    {0, -1, {0, 1}, {2}},
+                    {1, -1, {1, 0}, {3}},
+                    {1, -1, {1, 1}, {4}},
+                    {2, -1, {2, 0}, {5}},
+                    {2, -1, {2, 1}, {6}},
+                    {3, -1, {3, 0}, {7}},
+                    {3, -1, {3, 1}, {8}}
+                  },
+                  { // The outMesh is distributed
+                    {-1, 0, {0, 0}, {0}},
+                    {-1, 0, {0, 1}, {0}},
+                    {-1, 1, {1, 0}, {0}},
+                    {-1, 1, {1, 1}, {0}},
+                    {-1, 2, {2, 0}, {0}},
+                    {-1, 2, {2, 1}, {0}},
+                    {-1, 3, {3, 0}, {0}},
+                    {-1, 3, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+                    // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+                    {0, {1}}, {0, {2}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+                    {1, {0}}, {1, {0}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+                    {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
+                    {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
+                  },
+                  utils::Parallel::getProcessRank()*2
+    );
+}
+
+/// Using a more heterogenous distribution of vertices and owner
+BOOST_AUTO_TEST_CASE(DistributedConservative2DV2,
+                     * testing::OnSize(4))
+{
+  assertion(utils::Parallel::getCommunicatorSize() == 4);
+  Gaussian fct(5.0);
+  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+
+  std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
+  
+  testDistributed(mapping,
+                  { // Conservative mapping: The inMesh is local but rank 0 has no vertices
+                    {1, -1, {0, 0}, {1}},
+                    {1, -1, {0, 1}, {2}},
+                    {1, -1, {1, 0}, {3}},
+                    {1, -1, {1, 1}, {4}},
+                    {2, -1, {2, 0}, {5}},
+                    {2, -1, {2, 1}, {6}},
+                    {3, -1, {3, 0}, {7}},
+                    {3, -1, {3, 1}, {8}}
+                  },
+                  { // The outMesh is distributed, rank 0 owns no vertex
+                    {-1, 1, {0, 0}, {0}},
+                    {-1, 1, {0, 1}, {0}},
+                    {-1, 1, {1, 0}, {0}},
+                    {-1, 1, {1, 1}, {0}},
+                    {-1, 2, {2, 0}, {0}},
+                    {-1, 2, {2, 1}, {0}},
+                    {-1, 3, {3, 0}, {0}},
+                    {-1, 3, {3, 1}, {0}}
+                  },
+                  { // Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+                    // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
+                    {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+                    {1, {1}}, {1, {2}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+                    {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
+                    {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
+                  },
+                  globalIndexOffsets[utils::Parallel::getProcessRank()]
+    );
+}
+
+// // /// Using meshes of different sizes, inMesh is smaller then outMesh
+// // void PetRadialBasisFctMappingTest::testDistributedConservative2DV3()
+// // {
+// //   TRACE();
+// //   assertion(utils::Parallel::getCommunicatorSize() == 4);
+// //   Gaussian fct(2.0);
+// //   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+
+// //   std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
+  
+// //   testDistributed(mapping,
+// //                   { // Conservative mapping: The inMesh is local but rank 0 has no vertices
+// //                     {1, -1, {0, 0}, {1}},
+// //                     {1, -1, {1, 0}, {3}},
+// //                     {1, -1, {1, 1}, {4}},
+// //                     {2, -1, {2, 0}, {5}},
+// //                     {2, -1, {2, 1}, {6}},
+// //                     {3, -1, {3, 0}, {7}},
+// //                     {3, -1, {3, 1}, {8}}
+// //                   },
+// //                   { // The outMesh is distributed, rank 0 owns no vertex
+// //                     {-1, 1, {0, 0}, {0}},
+// //                     {-1, 1, {0, 1}, {0}},
+// //                     {-1, 1, {1, 0}, {0}},
+// //                     {-1, 1, {1, 1}, {0}},
+// //                     {-1, 2, {2, 0}, {0}},
+// //                     {-1, 2, {2, 1}, {0}},
+// //                     {-1, 3, {3, 0}, {0}},
+// //                     {-1, 3, {3, 1}, {0}}
+// //                   },
+// //                   { // Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+// //                     // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
+// //                     {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+// //                     {1, {1}}, {1, {0}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+// //                     {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {0}}, {2, {0}}, {2, {0}},
+// //                     {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
+// //                   },
+// //                   globalIndexOffsets[utils::Parallel::getProcessRank()]
+// //     );
+// // }
+
+// // /// Using meshes of different sizes, outMesh is smaller then inMesh
+// // void PetRadialBasisFctMappingTest::testDistributedConservative2DV4()
+// // {
+// //   TRACE();
+// //   assertion(utils::Parallel::getCommunicatorSize() == 4);
+// //   Gaussian fct(4.0);
+// //   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+
+// //   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
+  
+// //   testDistributed(mapping,
+// //                   { // Conservative mapping: The inMesh is local
+// //                     {0, -1, {0, 0}, {1}},
+// //                     {0, -1, {0, 1}, {2}},
+// //                     {1, -1, {1, 0}, {3}},
+// //                     {1, -1, {1, 1}, {4}},
+// //                     {2, -1, {2, 0}, {5}},
+// //                     {2, -1, {2, 1}, {6}},
+// //                     {3, -1, {3, 0}, {7}},
+// //                     {3, -1, {3, 1}, {8}}
+// //                   },
+// //                   { // The outMesh is distributed, rank has no vertex at all
+// //                     {-1, 1, {0, 1}, {0}},
+// //                     {-1, 1, {1, 0}, {0}},
+// //                     {-1, 1, {1, 1}, {0}},
+// //                     {-1, 2, {2, 0}, {0}},
+// //                     {-1, 2, {2, 1}, {0}},
+// //                     {-1, 3, {3, 0}, {0}},
+// //                     {-1, 3, {3, 1}, {0}}
+// //                   },
+// //                   { // Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
+// //                     // {2, 3, 4, 3, 0, 0, 0, 0} on the second, ...
+// //                     {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+// //                     {1, {2.42855}}, {1, {3.61905}}, {1, {4.14286}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+// //                     {2, {0}}, {2, {0}}, {2, {0}}, {2, {5.33335942629867876263}}, {2, {5.85714}}, {2, {0}}, {2, {0}},
+// //                     {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7.04763872499617693990}}, {3, {7.57143}}
+// //                   },
+// //                   globalIndexOffsets[utils::Parallel::getProcessRank()]
+// //     );
+// // }
+// // // Python results:
+// // // 2.42857  3.61905  4.14286  5.33333  5.85714  7.04762  7.57143
+
+// // /// Tests a non-contigous owner distributed at the outMesh
+// // void PetRadialBasisFctMappingTest::testDistributedConservative2DV5()
+// // {
+// //   TRACE();
+// //   assertion(utils::Parallel::getCommunicatorSize() == 4);
+// //   Gaussian fct(5.0);
+// //   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
+  
+// //   testDistributed(mapping,
+// //                   { // Conservative mapping: The inMesh is local
+// //                     {0, -1, {0, 0}, {1}},
+// //                     {0, -1, {0, 1}, {2}},
+// //                     {1, -1, {1, 0}, {3}},
+// //                     {1, -1, {1, 1}, {4}},
+// //                     {2, -1, {2, 0}, {5}},
+// //                     {2, -1, {2, 1}, {6}},
+// //                     {3, -1, {3, 0}, {7}},
+// //                     {3, -1, {3, 1}, {8}}
+// //                   },
+// //                   { // The outMesh is distributed and non-contigous
+// //                     {-1, 0, {0, 0}, {0}},
+// //                     {-1, 1, {0, 1}, {0}},
+// //                     {-1, 1, {1, 0}, {0}},
+// //                     {-1, 0, {1, 1}, {0}},
+// //                     {-1, 2, {2, 0}, {0}},
+// //                     {-1, 2, {2, 1}, {0}},
+// //                     {-1, 3, {3, 0}, {0}},
+// //                     {-1, 3, {3, 1}, {0}}
+// //                   },
+// //                   { // Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
+// //                     // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
+// //                     {0, {1}}, {0, {0}}, {0, {0}}, {0, {4}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
+// //                     {1, {0}}, {1, {2}}, {1, {3}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
+// //                     {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
+// //                     {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
+// //                   },
+// //                   utils::Parallel::getProcessRank()*2
+// //     );
+// // }
+
+BOOST_AUTO_TEST_SUITE_END() // Parallel
+
+BOOST_AUTO_TEST_SUITE(Serial,
+                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0})))
+
 
 void perform2DTestConsistentMapping(Mapping& mapping)
 {
@@ -472,354 +828,7 @@ void perform3DTestConservativeMapping(Mapping& mapping)
 }
 
 
-/// Test with a homogenous distribution of mesh amoung ranks
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV1,
-                     * testing::OnRanks({0, 1, 2, 3}))
-{  
-  utils::Parallel::setGlobalCommunicator(utils::Parallel::getRestrictedCommunicator({0,1,2,3}));
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-  Gaussian fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
-
-  MPI_Comm comm = utils::Parallel::getRestrictedCommunicator( {0, 1, 2, 3} );
-  utils::Parallel::setGlobalCommunicator(comm);
-  
-  testDistributed(mapping,
-                  { // Consistent mapping: The inMesh is communicated
-                    {-1, 0, {0, 0}, {1}},
-                    {-1, 0, {0, 1}, {2}},
-                    {-1, 1, {1, 0}, {3}},
-                    {-1, 1, {1, 1}, {4}},
-                    {-1, 2, {2, 0}, {5}},
-                    {-1, 2, {2, 1}, {6}},
-                    {-1, 3, {3, 0}, {7}},
-                    {-1, 3, {3, 1}, {8}}
-                  },
-                  { // The outMesh is local, distributed amoung all ranks
-                    {0, -1, {0, 0}, {0}},
-                    {0, -1, {0, 1}, {0}},
-                    {1, -1, {1, 0}, {0}},
-                    {1, -1, {1, 1}, {0}},
-                    {2, -1, {2, 0}, {0}},
-                    {2, -1, {2, 1}, {0}},
-                    {3, -1, {3, 0}, {0}},
-                    {3, -1, {3, 1}, {0}}
-                  },
-                  { // Tests for {0, 1} on the first rank, {1, 2} on the second, ...
-                    { 0, {1} },
-                    { 0, {2} },
-                    { 1, {3} },
-                    { 1, {4} },
-                    { 2, {5} },
-                    { 2, {6} },
-                    { 3, {7} },
-                    { 3, {8} }
-                  }
-    );
-}
-
-/// Using a more heterogenous distributon of vertices and owner
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV2,
-                     * testing::OnRanks({0, 1, 2, 3}))
-{
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-  Gaussian fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
-  
-  testDistributed(mapping,
-                  { // Consistent mapping: The inMesh is communicated, rank 2 owns no vertices
-                    {-1, 0, {0, 0}, {1}},
-                    {-1, 0, {0, 1}, {2}},
-                    {-1, 1, {1, 0}, {3}},
-                    {-1, 1, {1, 1}, {4}},
-                    {-1, 1, {2, 0}, {5}},
-                    {-1, 3, {2, 1}, {6}},
-                    {-1, 3, {3, 0}, {7}},
-                    {-1, 3, {3, 1}, {8}}
-                  },
-                  { // The outMesh is local, rank 1 is empty
-                    {0, -1, {0, 0}, {0}},
-                    {0, -1, {0, 1}, {0}},
-                    {0, -1, {1, 0}, {0}},
-                    {2, -1, {1, 1}, {0}},
-                    {2, -1, {2, 0}, {0}},
-                    {2, -1, {2, 1}, {0}},
-                    {3, -1, {3, 0}, {0}},
-                    {3, -1, {3, 1}, {0}}
-                  },
-                  { // Tests for {0, 1, 2} on the first rank,
-                    // second rank (consistent with the outMesh) is empty, ...
-                    { 0, {1} },
-                    { 0, {2} },
-                    { 0, {3} },
-                    { 2, {4} },
-                    { 2, {5} },
-                    { 2, {6} },
-                    { 3, {7} },
-                    { 3, {8} }
-                  }
-    );
-}
-
-/// Test with a very heterogenous distributed and non-continues ownership
-BOOST_AUTO_TEST_CASE(DistributedConsistent2DV3,
-                     * testing::OnRanks({0, 1, 2, 3}))
-{
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-  Gaussian fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSISTENT, 2, fct, false, false, false);
-
-  std::vector<int> globalIndexOffsets = {0, 0, 0, 4};
-  
-  testDistributed(mapping,
-                  { // Rank 0 has part of the mesh, owns a subpart
-                    {0,  0, {0, 0}, {1}}, {0,  0, {0, 1}, {2}},
-                    {0,  0, {1, 0}, {3}}, {0, -1, {1, 1}, {4}},
-                    {0, -1, {2, 0}, {5}}, {0, -1, {2, 1}, {6}},
-                      // Rank 1 has no vertices
-                      // Rank 2 has the entire mesh, but owns just 3 and 5.
-                    {2, -1, {0, 0}, {1}}, {2, -1, {0, 1}, {2}},
-                    {2, -1, {1, 0}, {3}}, {2,  2, {1, 1}, {4}},
-                    {2, -1, {2, 0}, {5}}, {2,  2, {2, 1}, {6}},
-                    {2, -1, {3, 0}, {7}}, {2, -1, {3, 1}, {8}},
-                      // Rank 3 has the last 4 vertices, owns 4, 6 and 7
-                    {3, 3, {2, 0}, {5}}, {3, -1, {2, 1}, {6}},
-                    {3, 3, {3, 0}, {7}}, {3,  3, {3, 1}, {8}},
-                  },
-                  { // The outMesh is local, rank 1 is empty
-                    {0, -1, {0, 0}, {0}},
-                    {0, -1, {0, 1}, {0}},
-                    {0, -1, {1, 0}, {0}},
-                    {2, -1, {1, 1}, {0}},
-                    {2, -1, {2, 0}, {0}},
-                    {2, -1, {2, 1}, {0}},
-                    {3, -1, {3, 0}, {0}},
-                    {3, -1, {3, 1}, {0}}
-                  },
-                  { // Tests for {0, 1, 2} on the first rank,
-                    // second rank (consistent with the outMesh) is empty, ...
-                    { 0, {1} },
-                    { 0, {2} },
-                    { 0, {3} },
-                    { 2, {4} },
-                    { 2, {5} },
-                    { 2, {6} },
-                    { 3, {7} },
-                    { 3, {8} }
-                  },
-                  globalIndexOffsets[utils::Parallel::getProcessRank()]
-    );
-}
-
-/// Test with a homogenous distribution of mesh amoung ranks
-BOOST_AUTO_TEST_CASE(DistributedConservative2DV1,
-                     * testing::OnRanks({0, 1, 2, 3}))
-{
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-  Gaussian fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
-  
-  testDistributed(mapping,
-                  { // Conservative mapping: The inMesh is local
-                    {0, -1, {0, 0}, {1}},
-                    {0, -1, {0, 1}, {2}},
-                    {1, -1, {1, 0}, {3}},
-                    {1, -1, {1, 1}, {4}},
-                    {2, -1, {2, 0}, {5}},
-                    {2, -1, {2, 1}, {6}},
-                    {3, -1, {3, 0}, {7}},
-                    {3, -1, {3, 1}, {8}}
-                  },
-                  { // The outMesh is distributed
-                    {-1, 0, {0, 0}, {0}},
-                    {-1, 0, {0, 1}, {0}},
-                    {-1, 1, {1, 0}, {0}},
-                    {-1, 1, {1, 1}, {0}},
-                    {-1, 2, {2, 0}, {0}},
-                    {-1, 2, {2, 1}, {0}},
-                    {-1, 3, {3, 0}, {0}},
-                    {-1, 3, {3, 1}, {0}}
-                  },
-                  { // Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
-                    // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
-                    {0, {1}}, {0, {2}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
-                    {1, {0}}, {1, {0}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
-                    {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
-                    {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
-                  },
-                  utils::Parallel::getProcessRank()*2
-    );
-}
-
-/// Using a more heterogenous distribution of vertices and owner
-BOOST_AUTO_TEST_CASE(DistributedConservative2DV2,
-                     * testing::OnRanks({0, 1, 2, 3}))
-{
-  assertion(utils::Parallel::getCommunicatorSize() == 4);
-  Gaussian fct(5.0);
-  PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
-
-  std::vector<int> globalIndexOffsets = {0, 0, 4, 6};
-  
-  testDistributed(mapping,
-                  { // Conservative mapping: The inMesh is local but rank 0 has no vertices
-                    {1, -1, {0, 0}, {1}},
-                    {1, -1, {0, 1}, {2}},
-                    {1, -1, {1, 0}, {3}},
-                    {1, -1, {1, 1}, {4}},
-                    {2, -1, {2, 0}, {5}},
-                    {2, -1, {2, 1}, {6}},
-                    {3, -1, {3, 0}, {7}},
-                    {3, -1, {3, 1}, {8}}
-                  },
-                  { // The outMesh is distributed, rank 0 owns no vertex
-                    {-1, 1, {0, 0}, {0}},
-                    {-1, 1, {0, 1}, {0}},
-                    {-1, 1, {1, 0}, {0}},
-                    {-1, 1, {1, 1}, {0}},
-                    {-1, 2, {2, 0}, {0}},
-                    {-1, 2, {2, 1}, {0}},
-                    {-1, 3, {3, 0}, {0}},
-                    {-1, 3, {3, 1}, {0}}
-                  },
-                  { // Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
-                    // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
-                    {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
-                    {1, {1}}, {1, {2}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
-                    {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
-                    {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
-                  },
-                  globalIndexOffsets[utils::Parallel::getProcessRank()]
-    );
-}
-
-// // /// Using meshes of different sizes, inMesh is smaller then outMesh
-// // void PetRadialBasisFctMappingTest::testDistributedConservative2DV3()
-// // {
-// //   TRACE();
-// //   assertion(utils::Parallel::getCommunicatorSize() == 4);
-// //   Gaussian fct(2.0);
-// //   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
-
-// //   std::vector<int> globalIndexOffsets = {0, 0, 3, 5};
-  
-// //   testDistributed(mapping,
-// //                   { // Conservative mapping: The inMesh is local but rank 0 has no vertices
-// //                     {1, -1, {0, 0}, {1}},
-// //                     {1, -1, {1, 0}, {3}},
-// //                     {1, -1, {1, 1}, {4}},
-// //                     {2, -1, {2, 0}, {5}},
-// //                     {2, -1, {2, 1}, {6}},
-// //                     {3, -1, {3, 0}, {7}},
-// //                     {3, -1, {3, 1}, {8}}
-// //                   },
-// //                   { // The outMesh is distributed, rank 0 owns no vertex
-// //                     {-1, 1, {0, 0}, {0}},
-// //                     {-1, 1, {0, 1}, {0}},
-// //                     {-1, 1, {1, 0}, {0}},
-// //                     {-1, 1, {1, 1}, {0}},
-// //                     {-1, 2, {2, 0}, {0}},
-// //                     {-1, 2, {2, 1}, {0}},
-// //                     {-1, 3, {3, 0}, {0}},
-// //                     {-1, 3, {3, 1}, {0}}
-// //                   },
-// //                   { // Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
-// //                     // {1, 2, 2, 3, 0, 0, 0, 0} on the second, ...
-// //                     {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
-// //                     {1, {1}}, {1, {0}}, {1, {3}}, {1, {4}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
-// //                     {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {0}}, {2, {0}}, {2, {0}},
-// //                     {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
-// //                   },
-// //                   globalIndexOffsets[utils::Parallel::getProcessRank()]
-// //     );
-// // }
-
-// // /// Using meshes of different sizes, outMesh is smaller then inMesh
-// // void PetRadialBasisFctMappingTest::testDistributedConservative2DV4()
-// // {
-// //   TRACE();
-// //   assertion(utils::Parallel::getCommunicatorSize() == 4);
-// //   Gaussian fct(4.0);
-// //   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
-
-// //   std::vector<int> globalIndexOffsets = {0, 2, 4, 6};
-  
-// //   testDistributed(mapping,
-// //                   { // Conservative mapping: The inMesh is local
-// //                     {0, -1, {0, 0}, {1}},
-// //                     {0, -1, {0, 1}, {2}},
-// //                     {1, -1, {1, 0}, {3}},
-// //                     {1, -1, {1, 1}, {4}},
-// //                     {2, -1, {2, 0}, {5}},
-// //                     {2, -1, {2, 1}, {6}},
-// //                     {3, -1, {3, 0}, {7}},
-// //                     {3, -1, {3, 1}, {8}}
-// //                   },
-// //                   { // The outMesh is distributed, rank has no vertex at all
-// //                     {-1, 1, {0, 1}, {0}},
-// //                     {-1, 1, {1, 0}, {0}},
-// //                     {-1, 1, {1, 1}, {0}},
-// //                     {-1, 2, {2, 0}, {0}},
-// //                     {-1, 2, {2, 1}, {0}},
-// //                     {-1, 3, {3, 0}, {0}},
-// //                     {-1, 3, {3, 1}, {0}}
-// //                   },
-// //                   { // Tests for {0, 0, 0, 0, 0, 0, 0, 0} on the first rank,
-// //                     // {2, 3, 4, 3, 0, 0, 0, 0} on the second, ...
-// //                     {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
-// //                     {1, {2.42855}}, {1, {3.61905}}, {1, {4.14286}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
-// //                     {2, {0}}, {2, {0}}, {2, {0}}, {2, {5.33335942629867876263}}, {2, {5.85714}}, {2, {0}}, {2, {0}},
-// //                     {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7.04763872499617693990}}, {3, {7.57143}}
-// //                   },
-// //                   globalIndexOffsets[utils::Parallel::getProcessRank()]
-// //     );
-// // }
-// // // Python results:
-// // // 2.42857  3.61905  4.14286  5.33333  5.85714  7.04762  7.57143
-
-// // /// Tests a non-contigous owner distributed at the outMesh
-// // void PetRadialBasisFctMappingTest::testDistributedConservative2DV5()
-// // {
-// //   TRACE();
-// //   assertion(utils::Parallel::getCommunicatorSize() == 4);
-// //   Gaussian fct(5.0);
-// //   PetRadialBasisFctMapping<Gaussian> mapping(Mapping::CONSERVATIVE, 2, fct, false, false, false);
-  
-// //   testDistributed(mapping,
-// //                   { // Conservative mapping: The inMesh is local
-// //                     {0, -1, {0, 0}, {1}},
-// //                     {0, -1, {0, 1}, {2}},
-// //                     {1, -1, {1, 0}, {3}},
-// //                     {1, -1, {1, 1}, {4}},
-// //                     {2, -1, {2, 0}, {5}},
-// //                     {2, -1, {2, 1}, {6}},
-// //                     {3, -1, {3, 0}, {7}},
-// //                     {3, -1, {3, 1}, {8}}
-// //                   },
-// //                   { // The outMesh is distributed and non-contigous
-// //                     {-1, 0, {0, 0}, {0}},
-// //                     {-1, 1, {0, 1}, {0}},
-// //                     {-1, 1, {1, 0}, {0}},
-// //                     {-1, 0, {1, 1}, {0}},
-// //                     {-1, 2, {2, 0}, {0}},
-// //                     {-1, 2, {2, 1}, {0}},
-// //                     {-1, 3, {3, 0}, {0}},
-// //                     {-1, 3, {3, 1}, {0}}
-// //                   },
-// //                   { // Tests for {0, 1, 0, 0, 0, 0, 0, 0} on the first rank,
-// //                     // {0, 0, 2, 3, 0, 0, 0, 0} on the second, ...
-// //                     {0, {1}}, {0, {0}}, {0, {0}}, {0, {4}}, {0, {0}}, {0, {0}}, {0, {0}}, {0, {0}},
-// //                     {1, {0}}, {1, {2}}, {1, {3}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}}, {1, {0}},
-// //                     {2, {0}}, {2, {0}}, {2, {0}}, {2, {0}}, {2, {5}}, {2, {6}}, {2, {0}}, {2, {0}},
-// //                     {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {0}}, {3, {7}}, {3, {8}}
-// //                   },
-// //                   utils::Parallel::getProcessRank()*2
-// //     );
-// // }
-
-
-BOOST_AUTO_TEST_CASE(MapThinPlateSplines,
-                     * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(MapThinPlateSplines)
 {
   bool xDead = false;
   bool yDead = false;
@@ -835,8 +844,7 @@ BOOST_AUTO_TEST_CASE(MapThinPlateSplines,
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
-BOOST_AUTO_TEST_CASE(MapMultiquadrics,
-                     * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(MapMultiquadrics)
 {
   bool xDead = false;
   bool yDead = false;
@@ -852,8 +860,7 @@ BOOST_AUTO_TEST_CASE(MapMultiquadrics,
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
-BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics,
-                     * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics)
 {
   bool xDead = false;
   bool yDead = false;
@@ -869,8 +876,7 @@ BOOST_AUTO_TEST_CASE(MapInverseMultiquadrics,
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
-BOOST_AUTO_TEST_CASE(MapVolumeSplines,
-                     * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(MapVolumeSplines)
 {
   bool xDead = false;
   bool yDead = false;
@@ -886,8 +892,7 @@ BOOST_AUTO_TEST_CASE(MapVolumeSplines,
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
-BOOST_AUTO_TEST_CASE(MapGaussian,
-                     * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(MapGaussian)
 {
   bool xDead = false;
   bool yDead = false;
@@ -903,8 +908,7 @@ BOOST_AUTO_TEST_CASE(MapGaussian,
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
-BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2,
-                     * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2)
 {
   double supportRadius = 1.2;
   bool xDead = false;
@@ -922,8 +926,7 @@ BOOST_AUTO_TEST_CASE(MapCompactThinPlateSplinesC2,
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
-BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0,
-                     * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0)
 {
   double supportRadius = 1.2;
   bool xDead = false;
@@ -941,8 +944,7 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC0,
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
-BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6,
-                     * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6)
 {
   double supportRadius = 1.2;
   bool xDead = false;
@@ -960,8 +962,7 @@ BOOST_AUTO_TEST_CASE(MapPetCompactPolynomialC6,
   perform3DTestConservativeMapping(conservativeMap3D);
 }
 
-BOOST_AUTO_TEST_CASE(DeadAxis2D,
-                     * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(DeadAxis2)
 {
   using Eigen::Vector2d;
   int dimensions = 2;
@@ -1008,8 +1009,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis2D,
   BOOST_TEST ( value == 1.0 );
 }
 
-BOOST_AUTO_TEST_CASE(DeadAxis3D,
-                     * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(DeadAxis3D)
 {
   using Eigen::Vector3d;
   int dimensions = 3;
@@ -1061,8 +1061,7 @@ BOOST_AUTO_TEST_CASE(DeadAxis3D,
   BOOST_TEST ( outData->values()[3] == 4.3 );
 }
 
-BOOST_AUTO_TEST_CASE(SolutionCaching,
-                      * testing::OnMaster())
+BOOST_AUTO_TEST_CASE(SolutionCaching)
                      
 {
   using Eigen::Vector2d;
@@ -1113,7 +1112,6 @@ BOOST_AUTO_TEST_CASE(SolutionCaching,
 }
 
 BOOST_AUTO_TEST_CASE(PolynomialSwitch,
-                     * testing::OnMaster()
                      * boost::unit_test::tolerance(1e-6))
 {
   using Eigen::Vector2d;
@@ -1173,11 +1171,11 @@ BOOST_AUTO_TEST_CASE(PolynomialSwitch,
   mappingSep.map(inDataID, outDataID);
 
   BOOST_TEST ( outData->values()[0] == 1.0 ); // Mapping to 1 since there is the polynomial
-
-  
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END() // Serial
+
+BOOST_AUTO_TEST_SUITE_END() // PetRadialBasisFunctionMapping
 BOOST_AUTO_TEST_SUITE_END()
 
 #endif

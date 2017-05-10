@@ -19,8 +19,9 @@ namespace petsc = precice::utils::petsc;
 // Forward declaration to friend the boost test struct
 namespace MappingTests {
 namespace PetRadialBasisFunctionMapping {
+namespace Serial {
 struct SolutionCaching;
-}}
+}}}
 
 namespace precice {
 namespace mapping {
@@ -80,9 +81,7 @@ public:
   /// Maps input data to output data from input mesh to output mesh.
   virtual void map(int inputDataID, int outputDataID) override;
 
-  friend class precice::mapping::tests::PetRadialBasisFctMappingTest;
-
-  friend struct MappingTests::PetRadialBasisFunctionMapping::SolutionCaching;
+  friend struct MappingTests::PetRadialBasisFunctionMapping::Serial::SolutionCaching;
 
 
 private:
