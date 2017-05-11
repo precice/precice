@@ -1,6 +1,0 @@
-# Invoke serial fluent by: fluent 2ddp -g < steer-fluent.txt
-# Invoke parallel fluent (4 procs) by: fluent 2ddp -t4 -mpi=openmpi < steer-fluent.txt
-rc fluent.cas
-file/read-journal init-fsi.scm
-file/read-journal solve-fsi.scm
-exit
