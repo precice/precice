@@ -39,7 +39,10 @@ struct MPICommRestrictFixture {
 };
 
 
-/// Boost.Test decorator that makes the test run only on specfic ranks and restricts the MPI communicator
+/// Boost.Test decorator that makes the test run only on specfic ranks.
+/*
+ * This does not restrict the communicator, which must be done by installing the MPICommrestrictFixture.
+ */
 class OnRanks : public bt::decorator::base
 {
 public:
@@ -119,7 +122,7 @@ public:
 };
 
 
-/// Boost.Test decorator that deleted the test, unless a minimum number of ranks is available.
+/// Boost.Test decorator that deletes the test, unless a minimum number of ranks is available.
 /*
  * This does not restrict the communicator, which must be done by installing the MPICommrestrictFixture.
  */

@@ -2,18 +2,20 @@
 
 #include "com/CommunicateMesh.hpp"
 #include "com/MPIDirectCommunication.hpp"
+#include "math/math.hpp"
 #include "mesh/Edge.hpp"
 #include "mesh/Mesh.hpp"
 #include "mesh/PropertyContainer.hpp"
 #include "mesh/Vertex.hpp"
-#include "utils/Parallel.hpp"
-#include "math/math.hpp"
 #include "testing/Testing.hpp"
+#include "utils/Parallel.hpp"
 
 using namespace precice;
 using namespace precice::com;
 
 BOOST_AUTO_TEST_SUITE(Communication)
+
+BOOST_AUTO_TEST_SUITE(Mesh)
 
 BOOST_AUTO_TEST_CASE(twoSolvers,
                      *testing::MinRanks(2))
@@ -81,6 +83,8 @@ BOOST_AUTO_TEST_CASE(twoSolvers,
     }
   }
 }
-BOOST_AUTO_TEST_SUITE_END()
+BOOST_AUTO_TEST_SUITE_END() // Mesh
+
+BOOST_AUTO_TEST_SUITE_END() // Communication
 
 #endif // not PRECICE_NO_MPI
