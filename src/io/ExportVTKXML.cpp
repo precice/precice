@@ -275,6 +275,7 @@ void ExportVTKXML:: exportData
       Eigen::VectorXd viewTemp(dataDimensions);
       int counter = 0;
       for (mesh::Vertex& vertex : mesh.vertices()) {
+        std::ignore = vertex; // Silence unused variable warning
         int offset = counter * dataDimensions;
         for(int i=0; i < dataDimensions; i++){
           viewTemp[i] = values(offset + i);
@@ -291,6 +292,7 @@ void ExportVTKXML:: exportData
     } else if(dataDimensions == 1) {
       int counter = 0;
       for (mesh::Vertex& vertex : mesh.vertices()) {
+        std::ignore = vertex; // Silence unused variable warning
         outFile << values(counter) << " ";
         counter++;
       }
