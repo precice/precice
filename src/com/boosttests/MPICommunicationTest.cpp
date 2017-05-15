@@ -12,7 +12,8 @@ BOOST_AUTO_TEST_SUITE(Communication)
 
 BOOST_AUTO_TEST_SUITE(MPICommunication,
                       * testing::MinRanks(2)
-                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0,1})))
+                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0,1}))
+                      * boost::unit_test::disabled())
 
 
 BOOST_AUTO_TEST_CASE(SendAndReceiveString)
