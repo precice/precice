@@ -1,8 +1,8 @@
 #ifndef PRECICE_NO_MPI
 
 #include "com/MPIPortsCommunication.hpp"
-#include "utils/Parallel.hpp"
 #include "testing/Testing.hpp"
+#include "utils/Parallel.hpp"
 
 using Par = precice::utils::Parallel;
 using namespace precice;
@@ -12,13 +12,12 @@ BOOST_AUTO_TEST_SUITE(Communication)
 
 BOOST_AUTO_TEST_SUITE(MPICommunication,
                       * testing::MinRanks(2)
-                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0,1}))
+                      * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1}))
                       * boost::unit_test::disabled())
-
 
 BOOST_AUTO_TEST_CASE(SendAndReceiveString)
 {
-  if (Par::getCommunicatorSize() != 2 )
+  if (Par::getCommunicatorSize() != 2)
     return;
 
   std::cout << "I continued" << std::endl;
@@ -44,9 +43,9 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveString)
 
 BOOST_AUTO_TEST_CASE(SendAndReceiveVector)
 {
-  if (Par::getCommunicatorSize() != 2 )
+  if (Par::getCommunicatorSize() != 2)
     return;
-  
+
   utils::Parallel::synchronizeProcesses();
   MPIPortsCommunication com;
   if (utils::Parallel::getProcessRank() == 0) {
@@ -68,9 +67,9 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveVector)
 
 BOOST_AUTO_TEST_CASE(SendAndReceiveInteger)
 {
-  if (Par::getCommunicatorSize() != 2 )
+  if (Par::getCommunicatorSize() != 2)
     return;
-  
+
   utils::Parallel::synchronizeProcesses();
   MPIPortsCommunication com;
   if (utils::Parallel::getProcessRank() == 0) {
@@ -89,7 +88,6 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveInteger)
   }
   utils::Parallel::clearGroups();
 }
-
 
 BOOST_AUTO_TEST_SUITE_END() // MPICommunication
 
