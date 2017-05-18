@@ -45,13 +45,11 @@ struct MPICommRestrictFixture {
 struct SyncProcessesFixture {
   SyncProcessesFixture()
   {
-    std::cout << "STARTING FIXTURE, SYNCING PROCESSES" << std::endl;
     Par::synchronizeProcesses();
   }
 
   ~SyncProcessesFixture()
   {
-    std::cout << "STARTING FIXTURE, SYNCING PROCESSES" << std::endl;
     Par::synchronizeProcesses();
   }
 };

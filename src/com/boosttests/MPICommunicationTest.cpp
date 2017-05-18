@@ -20,7 +20,6 @@ BOOST_AUTO_TEST_CASE(SendAndReceiveString)
   if (Par::getCommunicatorSize() != 2)
     return;
 
-  std::cout << "I continued" << std::endl;
   utils::Parallel::synchronizeProcesses();
   MPIPortsCommunication com;
   if (utils::Parallel::getProcessRank() == 0) {
