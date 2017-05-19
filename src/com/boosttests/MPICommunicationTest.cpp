@@ -10,6 +10,7 @@ using namespace precice::com;
 
 BOOST_AUTO_TEST_SUITE(Communication)
 
+// Tests disabled because they fail on Travis, nowhere else
 BOOST_AUTO_TEST_SUITE(MPICommunication,
                       * testing::MinRanks(2)
                       * boost::unit_test::fixture<testing::MPICommRestrictFixture>(std::vector<int>({0, 1}))
