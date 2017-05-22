@@ -9,7 +9,7 @@ using namespace precice::com;
 BOOST_AUTO_TEST_SUITE(Communication)
 
 BOOST_AUTO_TEST_SUITE(File,
-                      *testing::OnRanks({0, 1}))
+                      *testing::OnRanks({0, 1}) * boost::unit_test::disabled())
 
 BOOST_AUTO_TEST_CASE(SimpleSendReceive)
 {
