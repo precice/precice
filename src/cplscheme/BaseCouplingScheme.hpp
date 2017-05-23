@@ -285,10 +285,6 @@ protected:
   /// Sends the timestep length, if this participant is the one to send
   void sendDt();
 
-  io::TXTTableWriter& getIterationsWriter() {
-    return _iterationsWriter;
-  }
-
   /// @return True, if local participant is the one starting the scheme.
   bool doesFirstStep() const {
     return _doesFirstStep;
@@ -394,6 +390,9 @@ protected:
 
   /// @brief Second participant name.
   std::string _secondParticipant;
+
+  /// @brief Local participant name.
+  std::string _localParticipant;
 
   /// @return Communication device to the other coupling participant.
   m2n::PtrM2N getM2N() {
@@ -568,10 +567,10 @@ private:
   DataMap _receiveData;
 
   /// Responsible for monitoring iteration count over timesteps.
-  io::TXTTableWriter _iterationsWriter;
+  std::shared_ptr<io::TXTTableWriter> _iterationsWriter;
 
   /// Writes out coupling convergence within all timesteps.
-  io::TXTTableWriter _convergenceWriter;
+  std::shared_ptr<io::TXTTableWriter> _convergenceWriter;
 
   int getVertexOffset(std::map<int,int>& vertexDistribution, int rank, int dim);
 
