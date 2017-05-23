@@ -38,7 +38,7 @@ parser.add_argument('-b', help="Run boost tests.", dest='run_boostttests', actio
 parser.add_argument('-u', help="Run unit tests.", dest='run_unit', action="store_true")
 parser.add_argument('-i', help="Run integration tests.", dest='run_integration', action="store_true")
 parser.add_argument('-j', help="Number of CPUs to compile on", dest='compile_cpus', default=4)
-parser.add_argument('-p', help="Number of MPI procs. Setting to 1 means to not use MPI at all. This does not affect the build process.", dest='mpi_procs', default=4)
+parser.add_argument('-p', help="Number of MPI procs. Setting to 1 means to not use MPI at all. This does not affect the build process.", type=int, dest='mpi_procs', default=4)
 parser.add_argument("-s", "--split", help="Redirect output to a process-unique file testout.N", dest="split_output", action="store_true")
 parser.add_argument('--unitconfig', help="Configuration to use for unit tests", dest="unit_test_config", default=".ci-test-config.xml")
 parser.add_argument('--integrationconfig', help="Configuration to use for integration tests", dest="integration_test_config", default=".ci-integration-test-config.xml")
@@ -66,7 +66,7 @@ if args.compile:
         sys.exit(125) # Cannot compile, 125 means to skip that revision
 
 
-mpi_cmd = "mpirun -n {procs} {output_filename}".format(procs = args.mpi_procs if args.mpi_procs > 1 else "",
+mpi_cmd = "mpirun -n {procs} {output_filename}".format(procs = args.mpi_procs,
                                                        output_filename = "--output-filename 'testout'" if args.split_output else "")
 
 
