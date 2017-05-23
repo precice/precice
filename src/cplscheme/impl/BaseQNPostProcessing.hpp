@@ -81,11 +81,12 @@ public:
     * @brief Destructor, empty.
     */
    virtual ~BaseQNPostProcessing() {
-     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)){
-       _infostream.open("postProcessingInfo.txt", std::ios_base::out);
-       _infostream << std::setprecision(16);
-       _infostream << _infostringstream.str();
-     }
+     // not necessary for user, only for developer, if needed, this should be configurable
+//     if (utils::MasterSlave::_masterMode || (not utils::MasterSlave::_masterMode && not utils::MasterSlave::_slaveMode)){
+//       _infostream.open("postProcessingInfo.txt", std::ios_base::out);
+//       _infostream << std::setprecision(16);
+//       _infostream << _infostringstream.str();
+//     }
    }
 
    /**

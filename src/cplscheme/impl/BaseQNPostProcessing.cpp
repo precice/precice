@@ -82,10 +82,6 @@ BaseQNPostProcessing::BaseQNPostProcessing
   preciceCheck(_timestepsReused >= 0, "BaseQNPostProcessing()",
       "Number of old timesteps to be reused for QN "
       << "post-processing has to be >= 0!");
-
-  //_infostream.open("postProcessingInfo.txt", std::ios_base::out);
-  //_infostream << std::setprecision(16);
-  //_qrV.setfstream(&_infostream);
 }
 
 
