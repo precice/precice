@@ -750,6 +750,7 @@ bool BaseCouplingScheme:: measureConvergence
     std::map<int, Eigen::VectorXd>& designSpecifications)
 {
   preciceTrace(__func__);
+  assertion(not doesFirstStep());
   bool allConverged = true;
   bool oneSuffices = false;
   assertion(_convergenceMeasures.size() > 0);
@@ -842,7 +843,9 @@ void BaseCouplingScheme::initializeTXTWriters()
   if(not utils::MasterSlave::_slaveMode){
 
     _iterationsWriter = std::make_shared<io::TXTTableWriter>("iterations-" + _localParticipant + ".txt");
-    _convergenceWriter = std::make_shared<io::TXTTableWriter>("convergence-" + _localParticipant + ".txt");
+    if(not doesFirstStep()){
+      _convergenceWriter = std::make_shared<io::TXTTableWriter>("convergence-" + _localParticipant + ".txt");
+    }
 
     // check if coarse model optimization exists
     bool hasCoarseModelOptimization = false;
@@ -858,22 +861,26 @@ void BaseCouplingScheme::initializeTXTWriters()
     }
     _iterationsWriter->addData("Convergence", io::TXTTableWriter::INT );
 
-    _convergenceWriter->addData("Timestep", io::TXTTableWriter::INT );
-    _convergenceWriter->addData("Iteration", io::TXTTableWriter::INT );
+    if(not doesFirstStep()){
+      _convergenceWriter->addData("Timestep", io::TXTTableWriter::INT );
+      _convergenceWriter->addData("Iteration", io::TXTTableWriter::INT );
+    }
 
     int i = -1;
-    for (ConvergenceMeasure& convMeasure : _convergenceMeasures) 
-    {
-       i++;
-       // only for fine model optimization, i.e., coupling
-       if(convMeasure.level > 0) continue;
-       std::stringstream sstm, sstm2;
-       sstm << "avgConvRate(" <<i<<")";
-       sstm2 << "resNorm(" <<i<< ")";
-       _iterationsWriter->addData(sstm.str(), io::TXTTableWriter::DOUBLE);
-       _convergenceWriter->addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
+    if(not doesFirstStep()){
+      for (ConvergenceMeasure& convMeasure : _convergenceMeasures)
+      {
+         i++;
+         // only for fine model optimization, i.e., coupling
+         if(convMeasure.level > 0) continue;
+         std::stringstream sstm, sstm2;
+         sstm << "avgConvRate(" <<i<<")";
+         sstm2 << "resNorm(" <<i<< ")";
+         _iterationsWriter->addData(sstm.str(), io::TXTTableWriter::DOUBLE);
+         _convergenceWriter->addData(sstm2.str(), io::TXTTableWriter::DOUBLE);
+      }
+      _iterationsWriter->addData("deleted_Columns", io::TXTTableWriter::INT );
     }
-    _iterationsWriter->addData("deleted_Columns", io::TXTTableWriter::INT );
   }
 }
 
@@ -897,20 +904,22 @@ void BaseCouplingScheme::advanceTXTWriters()
     int converged = _iterations < _maxIterations ? 1 : 0;
     _iterationsWriter->writeData("Convergence", converged);
 
-    for (size_t i = 0; i<_convergenceMeasures.size();i++) {
+    if(not doesFirstStep()){
+      for (size_t i = 0; i<_convergenceMeasures.size();i++) {
 
-      // only for fine model optimization, i.e., coupling
-      if(_convergenceMeasures[i].level > 0) continue;
+        // only for fine model optimization, i.e., coupling
+        if(_convergenceMeasures[i].level > 0) continue;
 
-      std::stringstream sstm;  sstm << "avgConvRate(" <<i<< ")";
-      if (math::equals(_firstResiduumNorm[i], 0.)){
-        _iterationsWriter->writeData(sstm.str(), std::numeric_limits<double>::infinity());
-      }else{
-        double avgConvRate = _convergenceMeasures[i].measure->getNormResidual()/_firstResiduumNorm[i];
-		    _iterationsWriter->writeData(sstm.str(), std::pow(avgConvRate, 1./(double)_iterations));
+        std::stringstream sstm;  sstm << "avgConvRate(" <<i<< ")";
+        if (math::equals(_firstResiduumNorm[i], 0.)){
+          _iterationsWriter->writeData(sstm.str(), std::numeric_limits<double>::infinity());
+        }else{
+          double avgConvRate = _convergenceMeasures[i].measure->getNormResidual()/_firstResiduumNorm[i];
+          _iterationsWriter->writeData(sstm.str(), std::pow(avgConvRate, 1./(double)_iterations));
+        }
       }
+      _iterationsWriter->writeData("deleted_Columns", _deletedColumnsPPFiltering);
     }
-    _iterationsWriter->writeData("deleted_Columns", _deletedColumnsPPFiltering);
   }
 }
 
