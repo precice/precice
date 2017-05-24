@@ -102,7 +102,8 @@ SolverInterfaceImpl:: SolverInterfaceImpl
   /* When precice stops abruptly, e.g. an external solver crashes, the
      SolverInterfaceImpl destructor is never called. Since we still want
      to print the timings, we install the signal handler here. */
-  signal(SIGSEGV, precice::utils::terminationSignalHandler);
+  // Disable SIGSEGV handler, because we don't want to interfere with crash backtrace.
+  // signal(SIGSEGV, precice::utils::terminationSignalHandler);
   signal(SIGABRT, precice::utils::terminationSignalHandler);
   signal(SIGTERM, precice::utils::terminationSignalHandler);
   // signal(SIGINT,  precice::utils::terminationSignalHandler);
