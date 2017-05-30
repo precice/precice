@@ -13,7 +13,7 @@ namespace impl
 {
 
 logging::Logger ParallelMatrixOperations::
-    _log("precice::cplscheme::impl::ParallelMatrixOperations");
+    _log("cplscheme::impl::ParallelMatrixOperations");
 
 ParallelMatrixOperations::ParallelMatrixOperations()
     : _cyclicCommLeft(nullptr),

@@ -7,7 +7,7 @@
 namespace precice {
 namespace query {
 
-logging::Logger FindClosestEdge::_log("precice::query::FindClosestEdge");
+logging::Logger FindClosestEdge::_log("query::FindClosestEdge");
 
 FindClosestEdge:: FindClosestEdge
 (

@@ -18,7 +18,7 @@ namespace precice {
 namespace m2n {
 
 logging::Logger M2NConfiguration::
-   _log("precice::m2n::M2NConfiguration");
+   _log("m2n::M2NConfiguration");
 
 M2NConfiguration:: M2NConfiguration
 (

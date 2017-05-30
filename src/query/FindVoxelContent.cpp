@@ -9,7 +9,7 @@
 namespace precice {
 namespace query {
 
-logging::Logger FindVoxelContent::_log("precice::query::FindVoxelContent");
+logging::Logger FindVoxelContent::_log("query::FindVoxelContent");
 
 FindVoxelContent:: FindVoxelContent
 (

@@ -7,7 +7,7 @@ namespace precice {
 namespace cplscheme {
 
 logging::Logger CompositionalCouplingScheme::
-   _log("precice::cplscheme::CompositionalCouplingScheme");
+   _log("cplscheme::CompositionalCouplingScheme");
 
 CompositionalCouplingScheme:: CompositionalCouplingScheme()
 :
@@ -550,7 +550,7 @@ void CompositionalCouplingScheme:: advanceActiveCouplingSchemes()
 //namespace cplscheme {
 //
 //logging::Logger CompositionalCouplingScheme::
-//   _log("precice::cplscheme::CompositionalCouplingScheme");
+//   _log("cplscheme::CompositionalCouplingScheme");
 //
 //CompositionalCouplingScheme:: CompositionalCouplingScheme()
 //:

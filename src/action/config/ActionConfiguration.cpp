@@ -16,7 +16,7 @@ namespace precice {
 namespace action {
 
 logging::Logger ActionConfiguration::
-  _log("precice::config::ActionConfiguration");
+  _log("config::ActionConfiguration");
 
 //const std::string& ActionConfiguration:: getTag()
 //{

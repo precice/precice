@@ -16,7 +16,7 @@ namespace precice {
 namespace geometry {
 namespace tests {
 
-logging::Logger ImportGeometryTest:: _log("precice::geometry::tests::ImportGeometryTest");
+logging::Logger ImportGeometryTest:: _log("geometry::tests::ImportGeometryTest");
 
 ImportGeometryTest:: ImportGeometryTest ()
 :

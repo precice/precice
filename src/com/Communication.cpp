@@ -6,7 +6,7 @@
 
 namespace precice {
 namespace com {
-logging::Logger Communication::_log("precice::com::Communication");
+logging::Logger Communication::_log("com::Communication");
 
 
 /**

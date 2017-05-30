@@ -18,7 +18,7 @@ namespace tests {
 
 using namespace std;
 
-logging::Logger ExportVRMLTest:: _log ("precice::io::ExportVRMLTest");
+logging::Logger ExportVRMLTest:: _log ("io::ExportVRMLTest");
 
 ExportVRMLTest:: ExportVRMLTest()
 :

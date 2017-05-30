@@ -12,7 +12,7 @@ namespace precice {
 namespace spacetree {
 namespace tests {
 
-logging::Logger SpacetreeTestScenarios::_log("precice::spacetree::tests::SpacetreeTestScenarios");
+logging::Logger SpacetreeTestScenarios::_log("spacetree::tests::SpacetreeTestScenarios");
 
 SpacetreeTestScenarios:: SpacetreeTestScenarios
 (

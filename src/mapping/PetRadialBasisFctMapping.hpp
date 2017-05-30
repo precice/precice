@@ -146,7 +146,7 @@ private:
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-logging::Logger PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::_log("precice::mapping::PetRadialBasisFctMapping");
+logging::Logger PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::_log("mapping::PetRadialBasisFctMapping");
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 PetRadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::PetRadialBasisFctMapping

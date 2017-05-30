@@ -10,7 +10,7 @@
 namespace precice {
 namespace io {
 
-logging::Logger ExportConfiguration:: _log("precice::io::ExportConfiguration");
+logging::Logger ExportConfiguration:: _log("io::ExportConfiguration");
 
 //const std::string& ExportConfiguration:: getTag()
 //{

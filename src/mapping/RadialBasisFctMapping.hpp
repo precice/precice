@@ -102,7 +102,7 @@ private:
 // --------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template<typename RADIAL_BASIS_FUNCTION_T>
-precice::logging::Logger RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::_log("precice::mapping::RadialBasisFctMapping");
+precice::logging::Logger RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>::_log("mapping::RadialBasisFctMapping");
 
 template<typename RADIAL_BASIS_FUNCTION_T>
 RadialBasisFctMapping<RADIAL_BASIS_FUNCTION_T>:: RadialBasisFctMapping

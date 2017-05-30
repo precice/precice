@@ -5,7 +5,7 @@
 namespace precice {
 namespace mapping {
 
-logging::Logger NearestProjectionMapping::_log ("precice::mapping::NearestProjectionMapping");
+logging::Logger NearestProjectionMapping::_log ("mapping::NearestProjectionMapping");
 
 NearestProjectionMapping:: NearestProjectionMapping
 (

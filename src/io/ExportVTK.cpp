@@ -12,7 +12,7 @@
 namespace precice {
 namespace io {
 
-logging::Logger ExportVTK:: _log("precice::io::ExportVTK");
+logging::Logger ExportVTK:: _log("io::ExportVTK");
 
 ExportVTK:: ExportVTK
 (

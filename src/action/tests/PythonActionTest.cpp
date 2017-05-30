@@ -14,11 +14,11 @@ namespace precice {
 namespace action {
 namespace tests {
 
-logging::Logger PythonActionTest::_log("precice::action::tests::PythonActionTest");
+logging::Logger PythonActionTest::_log("action::tests::PythonActionTest");
 
 PythonActionTest:: PythonActionTest()
 :
-  TestCase("precice::action::tests::PythonActionTest")
+  TestCase("action::tests::PythonActionTest")
 {}
 
 void PythonActionTest:: run()

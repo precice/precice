@@ -17,7 +17,7 @@ namespace tests {
 
 QRFactorizationTest::QRFactorizationTest ()
 :
-  TestCase ("precice::cplscheme::QRFactorizationTest")
+  TestCase ("cplscheme::QRFactorizationTest")
 {}
 
 void QRFactorizationTest::run ()

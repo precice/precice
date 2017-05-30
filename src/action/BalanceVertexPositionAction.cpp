@@ -8,7 +8,7 @@
 namespace precice {
 namespace action {
 
-logging::Logger BalanceVertexPositionAction::_log("precice::action::BalanceVertexPositionAction");
+logging::Logger BalanceVertexPositionAction::_log("action::BalanceVertexPositionAction");
 
 BalanceVertexPositionAction:: BalanceVertexPositionAction
 (

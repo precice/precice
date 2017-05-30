@@ -19,7 +19,7 @@
 namespace precice {
 namespace config {
 
-logging::Logger SolverInterfaceConfiguration:: _log("precice::config::SolverInterfaceConfiguration");
+logging::Logger SolverInterfaceConfiguration:: _log("config::SolverInterfaceConfiguration");
 
 SolverInterfaceConfiguration:: SolverInterfaceConfiguration
 (

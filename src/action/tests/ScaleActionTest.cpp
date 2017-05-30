@@ -18,11 +18,11 @@ namespace action {
 namespace tests {
 
 logging::Logger ScaleActionTest::
-  _log ("precice::action::tests::ScaleActionTest");
+  _log ("action::tests::ScaleActionTest");
 
 ScaleActionTest:: ScaleActionTest()
 :
-   TestCase ("precice::action::tests::ScaleActionTest")
+   TestCase ("action::tests::ScaleActionTest")
 {}
 
 void ScaleActionTest:: run()

@@ -29,7 +29,7 @@ namespace cplscheme {
 using precice::impl::PtrParticipant;
 
 logging::Logger CouplingSchemeConfiguration::
-   _log("precice::cplscheme::CouplingSchemeConfiguration");
+   _log("cplscheme::CouplingSchemeConfiguration");
 
 CouplingSchemeConfiguration:: CouplingSchemeConfiguration
 (

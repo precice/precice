@@ -20,7 +20,7 @@ namespace precice {
 namespace mesh {
 namespace tests {
 
-logging::Logger MeshTest:: _log("precice::mesh::MeshTest");
+logging::Logger MeshTest:: _log("mesh::MeshTest");
 
 MeshTest:: MeshTest()
 :

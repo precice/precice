@@ -11,7 +11,7 @@ namespace cplscheme {
 namespace impl {
 
 logging::Logger ConstantRelaxationPostProcessing::
-  _log("precice::cplscheme::ConstantRelaxationPostProcessing");
+  _log("cplscheme::ConstantRelaxationPostProcessing");
 
 ConstantRelaxationPostProcessing:: ConstantRelaxationPostProcessing
 (

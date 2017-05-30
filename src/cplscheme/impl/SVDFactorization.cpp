@@ -13,7 +13,7 @@ namespace cplscheme {
 namespace impl {
 
 logging::Logger SVDFactorization::
-      _log("precice::cplscheme::impl::SVDFactorization");
+      _log("cplscheme::impl::SVDFactorization");
 
 
 SVDFactorization::SVDFactorization(

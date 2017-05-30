@@ -19,7 +19,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-logging::Logger ExportVTKXMLTest:: _log ("precice::io::ExportVTKXMLTest");
+logging::Logger ExportVTKXMLTest:: _log ("io::ExportVTKXMLTest");
 
 ExportVTKXMLTest:: ExportVTKXMLTest()
 :

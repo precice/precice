@@ -23,7 +23,7 @@ logging::Logger PreconditionerTest::
 
 PreconditionerTest::PreconditionerTest ()
 :
-  TestCase ("precice::cplscheme::PreconditionerTest"),
+  TestCase ("cplscheme::PreconditionerTest"),
   _data(),
   _res(),
   _compareDataRes(),

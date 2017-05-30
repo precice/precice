@@ -20,7 +20,7 @@
 namespace precice {
 namespace cplscheme {
 
-logging::Logger BaseCouplingScheme::_log("precice::cplscheme::BaseCouplingScheme");
+logging::Logger BaseCouplingScheme::_log("cplscheme::BaseCouplingScheme");
 
 BaseCouplingScheme:: BaseCouplingScheme
 (

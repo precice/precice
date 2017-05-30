@@ -14,7 +14,7 @@ namespace precice {
 namespace com {
 
 logging::Logger CommunicationConfiguration::
-   _log("precice::com::CommunicationConfiguration");
+   _log("com::CommunicationConfiguration");
 
 CommunicationConfiguration:: CommunicationConfiguration()
 :

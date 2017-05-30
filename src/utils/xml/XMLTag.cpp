@@ -5,7 +5,7 @@
 namespace precice {
 namespace utils {
 
-logging::Logger precice::utils::XMLTag:: _log ("precice::utils::XMLTag");
+logging::Logger precice::utils::XMLTag:: _log ("utils::XMLTag");
 
 XMLTag:: XMLTag
 (
@@ -609,7 +609,7 @@ void configure
   XMLTag&            tag,
   const std::string& configurationFilename )
 {
-  logging::Logger _log("precice::utils");
+  logging::Logger _log("utils");
   TRACE(tag.getFullName(), configurationFilename);
     tarch::irr::io::IrrXMLReader* xmlReader = tarch::irr::io::createIrrXMLReader(configurationFilename.c_str());
   CHECK(xmlReader != nullptr,

@@ -149,7 +149,7 @@ private:
 
 template<typename CELL_T>
 logging::Logger StaticTraversal<CELL_T>::
-  _log("precice::spacetree::impl::StaticTraversal");
+  _log("spacetree::impl::StaticTraversal");
 
 template<typename CELL_T>
 void StaticTraversal<CELL_T>:: refineAll

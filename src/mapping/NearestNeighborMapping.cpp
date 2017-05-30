@@ -6,7 +6,7 @@
 namespace precice {
 namespace mapping {
 
-logging::Logger NearestNeighborMapping::_log("precice::mapping::NearestNeighborMapping");
+logging::Logger NearestNeighborMapping::_log("mapping::NearestNeighborMapping");
 
 NearestNeighborMapping:: NearestNeighborMapping
 (

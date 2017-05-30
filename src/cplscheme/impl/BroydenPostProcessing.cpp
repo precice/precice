@@ -12,7 +12,7 @@ namespace cplscheme {
 namespace impl {
 
 // logging::Logger BroydenPostProcessing::
- //      _log("precice::cplscheme::impl::BroydenPostProcessing");
+ //      _log("cplscheme::impl::BroydenPostProcessing");
 
       
 BroydenPostProcessing:: BroydenPostProcessing

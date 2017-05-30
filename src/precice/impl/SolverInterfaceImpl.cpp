@@ -63,7 +63,7 @@ bool testMode = false;
 
 namespace impl {
 
-logging::Logger SolverInterfaceImpl::_log ("precice::impl::SolverInterfaceImpl");
+logging::Logger SolverInterfaceImpl::_log ("impl::SolverInterfaceImpl");
 
 SolverInterfaceImpl:: SolverInterfaceImpl
 (

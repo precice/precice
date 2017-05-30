@@ -15,7 +15,7 @@ namespace precice {
 namespace tests {
 
 logging::Logger SolverInterfaceTestRemote::
-   _log("precice::tests::SolverInterfaceTestRemote");
+   _log("tests::SolverInterfaceTestRemote");
 
 SolverInterfaceTestRemote:: SolverInterfaceTestRemote()
 :

@@ -14,11 +14,11 @@ namespace precice {
 namespace utils {
 namespace tests {
 
-logging::Logger XMLTest:: _log("precice::utils::XMLTest");
+logging::Logger XMLTest:: _log("utils::XMLTest");
 
 XMLTest:: XMLTest()
 :
-  tarch::tests::TestCase("precice::utils::tests::XMLTest"),
+  tarch::tests::TestCase("utils::tests::XMLTest"),
   _testDirectory(""),
   _eigenVectorXd()
 {}

@@ -14,7 +14,7 @@
 namespace precice {
 namespace mapping {
 
-logging::Logger MappingConfiguration::_log("precice::config::MappingConfiguration");
+logging::Logger MappingConfiguration::_log("config::MappingConfiguration");
 
 MappingConfiguration:: MappingConfiguration
 (

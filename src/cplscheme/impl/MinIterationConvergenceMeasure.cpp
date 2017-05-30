@@ -6,7 +6,7 @@ namespace cplscheme {
 namespace impl {
 
 logging::Logger MinIterationConvergenceMeasure::
-  _log("precice::cplscheme::MinIterationConvergenceMeasure");
+  _log("cplscheme::MinIterationConvergenceMeasure");
 
 MinIterationConvergenceMeasure:: MinIterationConvergenceMeasure
 (

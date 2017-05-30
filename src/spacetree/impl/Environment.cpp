@@ -5,7 +5,7 @@ namespace precice {
 namespace spacetree {
 namespace impl {
 
-logging::Logger Environment:: _log("precice::spacetree::impl::Environment");
+logging::Logger Environment:: _log("spacetree::impl::Environment");
 
 Environment::Environment ( int cellSize, int neighborCellSize )
   :

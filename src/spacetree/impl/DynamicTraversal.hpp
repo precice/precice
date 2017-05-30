@@ -112,7 +112,7 @@ private:
 // ----------------------------------------------------- HEADER IMPLEMENTATIONS
 
 template<typename CELL_T>
-logging::Logger DynamicTraversal<CELL_T>::_log("precice::spacetree::impl::DynamicTraversal");
+logging::Logger DynamicTraversal<CELL_T>::_log("spacetree::impl::DynamicTraversal");
 
 template<typename CELL_T>
 int DynamicTraversal<CELL_T>:: searchPosition

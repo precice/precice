@@ -110,7 +110,7 @@ private:
 };
 
 template<typename ATTRIBUTE_T>
-logging::Logger XMLAttribute<ATTRIBUTE_T>:: _log ("precice::utils::XMLAttribute");
+logging::Logger XMLAttribute<ATTRIBUTE_T>:: _log ("utils::XMLAttribute");
 
 template<typename ATTRIBUTE_T>
 XMLAttribute<ATTRIBUTE_T>:: XMLAttribute()

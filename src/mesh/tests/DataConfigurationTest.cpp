@@ -12,7 +12,7 @@ namespace mesh {
 namespace tests {
 
 logging::Logger DataConfigurationTest::
-  _log("precice::mesh::tests::DataConfigurationTest");
+  _log("mesh::tests::DataConfigurationTest");
 
 DataConfigurationTest:: DataConfigurationTest ()
 :

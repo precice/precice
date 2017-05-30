@@ -8,7 +8,7 @@ namespace cplscheme {
 namespace tests {
 
 logging::Logger DummyCouplingScheme::
-   _log("precice::cplscheme::tests::DummyCouplingScheme");
+   _log("cplscheme::tests::DummyCouplingScheme");
 
 DummyCouplingScheme:: DummyCouplingScheme
 (

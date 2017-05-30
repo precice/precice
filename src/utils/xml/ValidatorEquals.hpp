@@ -62,6 +62,6 @@ private:
 };
 
 template<typename VALUE_T>
-logging::Logger precice::utils::ValidatorEquals<VALUE_T>::_log = logging::Logger ("precice::utils::ValidatorEquals");
+logging::Logger precice::utils::ValidatorEquals<VALUE_T>::_log = logging::Logger ("utils::ValidatorEquals");
 
 }} // namespace precice, utils

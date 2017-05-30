@@ -10,7 +10,7 @@ namespace precice
 namespace com
 {
 
-logging::Logger MPIDirectCommunication::_log("precice::com::MPIDirectCommunication");
+logging::Logger MPIDirectCommunication::_log("com::MPIDirectCommunication");
 
 MPIDirectCommunication::MPIDirectCommunication()
     : _communicator(utils::Parallel::getGlobalCommunicator()), _globalCommunicator(utils::Parallel::getGlobalCommunicator()), _localCommunicator(utils::Parallel::getGlobalCommunicator()), _isConnected(false)

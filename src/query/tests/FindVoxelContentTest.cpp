@@ -17,7 +17,7 @@ namespace precice {
 namespace query {
 namespace tests {
 
-logging::Logger FindVoxelContentTest::_log("precice::query::tests::FindVoxelContentTest");
+logging::Logger FindVoxelContentTest::_log("query::tests::FindVoxelContentTest");
 
 FindVoxelContentTest:: FindVoxelContentTest()
 :

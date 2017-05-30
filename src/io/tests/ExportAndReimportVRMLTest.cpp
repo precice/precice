@@ -22,7 +22,7 @@ namespace io {
 namespace tests {
 
 
-logging::Logger ExportAndReimportVRMLTest::_log("precice::io::tests::ExportAndReimportVRMLTest");
+logging::Logger ExportAndReimportVRMLTest::_log("io::tests::ExportAndReimportVRMLTest");
 
 ExportAndReimportVRMLTest:: ExportAndReimportVRMLTest()
 :

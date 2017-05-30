@@ -11,7 +11,7 @@
 namespace precice {
 namespace cplscheme {
 
-logging::Logger MultiCouplingScheme::_log("precice::cplscheme::MultiCouplingScheme" );
+logging::Logger MultiCouplingScheme::_log("cplscheme::MultiCouplingScheme" );
 
 MultiCouplingScheme::MultiCouplingScheme
 (

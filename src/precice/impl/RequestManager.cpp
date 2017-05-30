@@ -8,7 +8,7 @@
 namespace precice {
 namespace impl {
 
-logging::Logger RequestManager::_log("precice::impl::RequestManager");
+logging::Logger RequestManager::_log("impl::RequestManager");
 
 RequestManager:: RequestManager
 (

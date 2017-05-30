@@ -8,7 +8,7 @@ namespace precice {
 namespace spacetree {
 namespace impl {
 
-logging::Logger OctreeCell:: _log("precice::spacetree::impl::OctreeCell");
+logging::Logger OctreeCell:: _log("spacetree::impl::OctreeCell");
 
 OctreeCell:: OctreeCell()
 :

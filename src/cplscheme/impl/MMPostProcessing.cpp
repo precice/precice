@@ -14,7 +14,7 @@ namespace cplscheme {
 namespace impl {
 
 logging::Logger MMPostProcessing::
-_log("precice::cplscheme::impl::MMPostProcessing");
+_log("cplscheme::impl::MMPostProcessing");
 
 /* ----------------------------------------------------------------------------
  *     Constructor

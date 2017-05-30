@@ -37,7 +37,7 @@ MPI_Datatype MPI_Select_unsigned_integer_datatype<8>::datatype = MPI_UNSIGNED_LO
 
 namespace precice {
 namespace com {
-logging::Logger MPICommunication::_log("precice::com::MPICommunication");
+logging::Logger MPICommunication::_log("com::MPICommunication");
 
 MPICommunication::MPICommunication() {
 }

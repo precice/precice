@@ -4,7 +4,7 @@
 namespace precice {
 namespace config {
 
-logging::Logger Configuration:: _log("precice::config::Configuration");
+logging::Logger Configuration:: _log("config::Configuration");
 
 Configuration:: Configuration()
 :

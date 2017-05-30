@@ -15,7 +15,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-logging::Logger ExportVTKTest:: _log ("precice::io::ExportVTKTest");
+logging::Logger ExportVTKTest:: _log ("io::ExportVTKTest");
 
 ExportVTKTest:: ExportVTKTest()
 :

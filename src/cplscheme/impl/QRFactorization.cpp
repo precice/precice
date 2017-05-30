@@ -12,7 +12,7 @@ namespace precice {
 namespace cplscheme {
 namespace impl {
 
-logging::Logger QRFactorization::_log("precice::cplscheme::impl::QRFactorization");
+logging::Logger QRFactorization::_log("cplscheme::impl::QRFactorization");
      
 
       

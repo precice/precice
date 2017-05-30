@@ -18,7 +18,7 @@
 namespace precice {
 namespace geometry {
 
-logging::Logger GeometryConfiguration:: _log ("precice::geometry::GeometryConfiguration");
+logging::Logger GeometryConfiguration:: _log ("geometry::GeometryConfiguration");
 
 GeometryConfiguration:: GeometryConfiguration
 (

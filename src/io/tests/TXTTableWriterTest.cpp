@@ -9,7 +9,7 @@ namespace precice {
 namespace io {
 namespace tests {
 
-logging::Logger TXTTableWriterTest:: _log ("precice::io::tests::TXTTableWriterTest");
+logging::Logger TXTTableWriterTest:: _log ("io::tests::TXTTableWriterTest");
 
 TXTTableWriterTest:: TXTTableWriterTest ():
   TestCase ( "precice::io::tests::TXTTableWriterTest" )

@@ -12,7 +12,7 @@
 namespace precice {
 namespace mesh {
 
-logging::Logger Mesh:: _log("precice::mesh::Mesh");
+logging::Logger Mesh:: _log("mesh::Mesh");
 
 utils::ManageUniqueIDs* Mesh:: _managerPropertyIDs = nullptr;
 

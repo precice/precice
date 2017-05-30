@@ -7,7 +7,7 @@
 namespace precice {
 namespace spacetree {
 
-logging::Logger StaticOctree::_log("precice::spacetree::StaticOctree");
+logging::Logger StaticOctree::_log("spacetree::StaticOctree");
 
 StaticOctree:: StaticOctree
 (

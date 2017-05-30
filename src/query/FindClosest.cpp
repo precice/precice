@@ -10,7 +10,7 @@
 namespace precice {
 namespace query {
 
-logging::Logger FindClosest:: _log("precice::query::FindClosest");
+logging::Logger FindClosest:: _log("query::FindClosest");
 
 bool FindClosest:: hasFound() const
 {

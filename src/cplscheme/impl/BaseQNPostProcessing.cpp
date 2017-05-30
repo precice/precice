@@ -18,7 +18,7 @@ namespace cplscheme {
 namespace impl {
 
 logging::Logger BaseQNPostProcessing::
-_log("precice::cplscheme::impl::BaseQNPostProcessing");
+_log("cplscheme::impl::BaseQNPostProcessing");
 
 
 /* ----------------------------------------------------------------------------

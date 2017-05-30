@@ -17,7 +17,7 @@ registerIntegrationTest(precice::tests::SolverInterfaceTest)
 namespace precice {
 namespace tests {
 
-logging::Logger SolverInterfaceTest:: _log("precice::tests::SolverInterfaceTest");
+logging::Logger SolverInterfaceTest:: _log("tests::SolverInterfaceTest");
 
 SolverInterfaceTest:: SolverInterfaceTest()
 :

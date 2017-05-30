@@ -22,7 +22,7 @@ namespace cplscheme {
 namespace impl {
 
 // logging::Logger IQNILSPostProcessing::
-//       _log("precice::cplscheme::impl::IQNILSPostProcessing");
+//       _log("cplscheme::impl::IQNILSPostProcessing");
 
 IQNILSPostProcessing:: IQNILSPostProcessing
 (
