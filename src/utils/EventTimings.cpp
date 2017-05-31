@@ -20,6 +20,8 @@ extern bool testMode;
 namespace precice {
 namespace utils {
 
+logging::Logger Event::_log("utils::Events");
+
 Event::Event(std::string eventName, Clock::duration eventDuration)
   : name(eventName),
     duration(eventDuration),
@@ -54,6 +56,7 @@ void Event::start(bool barrier)
 
   isStarted = true;
   starttime = Clock::now();
+  DEBUG("Started event " << name);
 }
 
 void Event::stop(bool barrier)
@@ -66,6 +69,7 @@ void Event::stop(bool barrier)
     isStarted = false;
     duration = Clock::duration(stoptime - starttime);
     EventRegistry::put(this);
+    DEBUG("Stopped event " << name);
   }
 }
 

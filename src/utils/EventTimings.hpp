@@ -3,6 +3,7 @@
 #include <chrono>
 #include <map>
 #include <string>
+#include "logging/Logger.hpp"
 
 namespace precice {
 namespace utils {
@@ -45,6 +46,8 @@ private:
   Clock::duration duration = Clock::duration::zero();
   bool isStarted = false;
   bool _barrier = false;
+
+  static logging::Logger _log;
 };
 
 
