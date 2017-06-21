@@ -14,7 +14,6 @@
 #include "utils/xml/XMLAttribute.hpp"
 #include "utils/xml/ValidatorEquals.hpp"
 #include "utils/xml/ValidatorOr.hpp"
-#include "utils/Dimensions.hpp"
 #include "utils/MasterSlave.hpp"
 #include "com/MPIDirectCommunication.hpp"
 #include "com/MPIPortsCommunication.hpp"

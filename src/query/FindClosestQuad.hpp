@@ -1,9 +1,8 @@
-#ifndef PRECICE_QUERY_FINDCLOSESTQUAD_HPP_
-#define PRECICE_QUERY_FINDCLOSESTQUAD_HPP_
+#pragma once
 
-#include "utils/Globals.hpp"
 #include <array>
-#include <limits>
+#include <Eigen/Core>
+#include "logging/Logger.hpp"
 
 namespace precice {
   namespace mesh {
@@ -29,7 +28,7 @@ public:
    *
    * @param[in] searchPoint Origin from which the closest Quad object should be found.
    */
-  FindClosestQuad ( const Eigen::VectorXd& searchPoint );
+  explicit FindClosestQuad ( const Eigen::VectorXd& searchPoint );
 
   /**
    * @brief Searches for the closest quad on the given mesh object.
@@ -110,5 +109,4 @@ bool FindClosestQuad:: operator() ( CONTAINER_T& container )
 
 }} // namespace precice, query
 
-#endif /* PRECICE_QUERY_FINDCLOSESTQUAD_HPP_ */
 

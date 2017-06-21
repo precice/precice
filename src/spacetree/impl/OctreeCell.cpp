@@ -3,6 +3,7 @@
 #include "mesh/Edge.hpp"
 #include "mesh/Vertex.hpp"
 #include "math/math.hpp"
+#include "utils/Dimensions.hpp"
 
 namespace precice {
 namespace spacetree {

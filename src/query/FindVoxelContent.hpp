@@ -1,24 +1,17 @@
 #pragma once
 
 #include "mesh/Group.hpp"
-#include "utils/Dimensions.hpp"
-#include "utils/Helpers.hpp"
-#include <vector>
+#include <Eigen/Core>
 
 namespace precice {
 namespace query {
 
-/**
- * @brief Find visitables that are contained in a given voxel.
- *
- */
+/// Find visitables that are contained in a given voxel.
 class FindVoxelContent
 {
 public:
 
-  /**
-   * @brief Deciders to include/exclude elements touching the voxels bounds.
-   */
+  /// Deciders to include/exclude elements touching the voxels bounds.
   enum BoundaryInclusion {
     INCLUDE_BOUNDARY,
     EXCLUDE_BOUNDARY
@@ -45,24 +38,16 @@ public:
   template<typename CONTAINER_T>
   bool operator()( CONTAINER_T& container );
 
-  /**
-   * @brief Returns voxel center coordinates
-   */
+  /// Returns voxel center coordinates
   const Eigen::VectorXd& getVoxelCenter() const;
 
-  /**
-   * @brief Returns halflength of voxel
-   */
+  /// Returns halflength of voxel
   const Eigen::VectorXd& getVoxelHalflengths() const;
 
-  /**
-   * @brief Returns true, if touching objects are included in content
-   */
+  /// Returns true, if touching objects are included in content
   BoundaryInclusion getBoundaryInclusion() const;
 
-  /**
-   * @brief Returns a Group with all contained visitables
-   */
+  /// Returns a Group with all contained visitables
   mesh::Group& content();
 
   void clear();
@@ -71,19 +56,19 @@ private:
 
   static logging::Logger _log;
 
-  // @brief Center point of the voxel
+  /// Center point of the voxel
   Eigen::VectorXd _voxelCenter;
 
-  // @brief Half the sidelengths of the voxel
+  /// Half the sidelengths of the voxel
   Eigen::VectorXd _voxelHalflengths;
 
-  // @brief Determines, whether objects that touch the voxel are contained
+  /// Determines, whether objects that touch the voxel are contained
   BoundaryInclusion _boundaryInclusion;
 
-  // @brief Spatial dimensions of the voxel (2D or 3D).
+  /// Spatial dimensions of the voxel (2D or 3D).
   int _dimensions;
 
-  // @brief Contained and partially contained visitables of the voxel
+  /// Contained and partially contained visitables of the voxel
   mesh::Group _content;
 
   void checkVertex( mesh::Vertex& vertex );
@@ -92,9 +77,7 @@ private:
 
   void checkTriangle( mesh::Triangle& triangle );
 
-  /**
-   * @brief Returns true, if a plane square and a segment intersect.
-   */
+  /// Returns true, if a plane square and a segment intersect.
   bool computeIntersection(
     const Eigen::Vector3d&  squareCenter,
     const Eigen::VectorXd&  halflengths,

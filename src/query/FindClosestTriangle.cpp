@@ -31,7 +31,7 @@ bool FindClosestTriangle:: hasFound() const
   return _closestTriangle != nullptr;
 }
 
-double FindClosestTriangle:: getEuclidianDistance()
+double FindClosestTriangle:: getEuclidianDistance() const
 {
   return _shortestDistance;
 }
@@ -47,9 +47,7 @@ const Eigen::VectorXd& FindClosestTriangle:: getVectorToProjectionPoint() const
   return _vectorToProjectionPoint;
 }
 
-double FindClosestTriangle:: getProjectionPointParameter
-(
-  int index ) const
+double FindClosestTriangle:: getProjectionPointParameter(int index ) const
 {
   return _parametersProjectionPoint[index];
 }

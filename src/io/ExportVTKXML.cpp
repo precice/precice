@@ -37,7 +37,6 @@ void ExportVTKXML:: doExport
   mesh::Mesh&        mesh)
 {
   TRACE(name, location, mesh.getName());
-  std::ofstream outFile;
   assertion(utils::MasterSlave::_slaveMode || utils::MasterSlave::_masterMode);
   processDataNamesAndDimensions(mesh);
   if (utils::MasterSlave::_masterMode) {
@@ -81,8 +80,7 @@ void ExportVTKXML::writeMasterFile
   outfile = outfile / fs::path(name + "_master.pvtu");
   std::ofstream outMasterFile(outfile.string(), std::ios::trunc);
 
-  preciceCheck(outMasterFile, "doExport()", "Could not open master file \"" << outfile.c_str()
-    << "\" for VTKXML export!");
+  CHECK(outMasterFile, "Could not open master file \"" << outfile.c_str() << "\" for VTKXML export!");
 
   outMasterFile << "<?xml version=\"1.0\"?>" << std::endl;
   outMasterFile << "<VTKFile type=\"PUnstructuredGrid\" version=\"0.1\" byte_order=\"";
@@ -151,9 +149,7 @@ void ExportVTKXML::writeSubFile
   outfile = outfile / fs::path(name + "_r" + std::to_string(utils::MasterSlave::_rank) + ".vtu");
   std::ofstream outSubFile(outfile.string(), std::ios::trunc);
 
-  preciceCheck(outSubFile, "doExport()", "Could not open slave file \"" << outfile.c_str()
-    << "\" for VTKXML export!");
-
+  CHECK(outSubFile, "Could not open slave file \"" << outfile.c_str() << "\" for VTKXML export!");
 
   outSubFile << "<?xml version=\"1.0\"?>" << std::endl;
   outSubFile << "<VTKFile type=\"UnstructuredGrid\" version=\"0.1\" byte_order=\"";
@@ -273,10 +269,8 @@ void ExportVTKXML:: exportData
     outFile << "               ";
     if(dataDimensions > 1) {
       Eigen::VectorXd viewTemp(dataDimensions);
-      int counter = 0;
-      for (mesh::Vertex& vertex : mesh.vertices()) {
-        std::ignore = vertex; // Silence unused variable warning
-        int offset = counter * dataDimensions;
+      for (size_t count = 0; count < mesh.vertices().size(); count++) {
+        size_t offset = count * dataDimensions;
         for(int i=0; i < dataDimensions; i++){
           viewTemp[i] = values(offset + i);
         }
@@ -287,14 +281,11 @@ void ExportVTKXML:: exportData
           outFile << "0.0" << " "; //2D data needs to be 3D for vtk
         }
         outFile << " ";
-        counter++;
       }
-    } else if(dataDimensions == 1) {
-      int counter = 0;
-      for (mesh::Vertex& vertex : mesh.vertices()) {
-        std::ignore = vertex; // Silence unused variable warning
-        outFile << values(counter) << " ";
-        counter++;
+    }
+    else if(dataDimensions == 1) {
+      for (size_t count = 0; count < mesh.vertices().size(); count++) {
+        outFile << values(count) << " ";
       }
     }
     outFile << std::endl << "            </DataArray>" << std::endl;

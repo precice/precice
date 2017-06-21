@@ -1,9 +1,8 @@
-#ifndef PRECICE_QUERY_FINDCLOSESTTRIANGLE_HPP_
-#define PRECICE_QUERY_FINDCLOSESTTRIANGLE_HPP_
+#pragma once
 
-#include "utils/Globals.hpp"
 #include <array>
-#include <limits>
+#include <Eigen/Core>
+#include "logging/Logger.hpp"
 
 namespace precice {
   namespace mesh {
@@ -30,7 +29,7 @@ public:
    * @param[in] searchPoint Origin from which the closest Triangle object
    *        should be found.
    */
-  FindClosestTriangle ( const Eigen::VectorXd& searchPoint );
+  explicit FindClosestTriangle ( const Eigen::VectorXd& searchPoint );
 
   /**
    * @brief Searches for the closest triangle on the given mesh object.
@@ -55,8 +54,8 @@ public:
    *
    * Precondition: Find has been called and returned true.
    */
-  double getEuclidianDistance();
-
+  double getEuclidianDistance() const;
+  
   /**
    * @brief Returns the found triangle.
    *
@@ -80,19 +79,19 @@ private:
 
   static logging::Logger _log;
 
-  // @brief Search point coordinates.
+  /// Search point coordinates.
   Eigen::VectorXd _searchPoint;
 
-  // @brief Shortest distance to the found Triangle object.
+  /// Shortest distance to the found Triangle object.
   double _shortestDistance;
 
-  // @brief Vector from search point to projection point.
+  /// Vector from search point to projection point.
   Eigen::VectorXd _vectorToProjectionPoint;
 
-  // @brief Barycentric coordinates of the projection point.
+  /// Barycentric coordinates of the projection point.
   std::array<double,3> _parametersProjectionPoint;
 
-  // @brief Pointer to found Triangle object.
+  /// Pointer to found Triangle object.
   mesh::Triangle* _closestTriangle;
 
   void find ( mesh::Triangle& triangle );
@@ -110,6 +109,4 @@ bool FindClosestTriangle:: operator() ( CONTAINER_T& container )
 }
 
 }} // namespace precice, query
-
-#endif /* PRECICE_QUERY_FINDCLOSESTTRIANGLE_HPP_ */
 

@@ -1,8 +1,6 @@
-#ifndef PRECICE_QUERY_FINDCLOSESTVERTEX_HPP_
-#define PRECICE_QUERY_FINDCLOSESTVERTEX_HPP_
+#pragma once
 
 #include "mesh/Vertex.hpp"
-#include <limits>
 
 // ---------------------------------------------------------- CLASS DEFINITION
 
@@ -21,7 +19,7 @@ public:
    *
    * @param[in] searchPoint Coordinates of origin of search for closest point.
    */
-  FindClosestVertex ( const Eigen::VectorXd& searchPoint );
+  explicit FindClosestVertex ( const Eigen::VectorXd& searchPoint );
 
   /**
    * @brief Searches among all Vertex objects hold by the given Mesh object.
@@ -89,5 +87,4 @@ bool FindClosestVertex:: operator()
 
 }} // namespace precice, query
 
-#endif /* PRECICE_QUERY_FINDCLOSESTVERTEX_HPP_ */
 

@@ -1,7 +1,6 @@
 #ifndef PRECICE_NEWSPACETREE_SPACETREECONFIGURATION_HPP_
 #define PRECICE_NEWSPACETREE_SPACETREECONFIGURATION_HPP_
 
-#include "utils/Dimensions.hpp"
 #include "utils/xml/XMLTag.hpp"
 #include "spacetree/SharedPointer.hpp"
 #include <string>

@@ -1,5 +1,4 @@
-#ifndef PRECICE_IO_EXPORTVTK_HPP_
-#define PRECICE_IO_EXPORTVTK_HPP_
+#pragma once
 
 #include "Export.hpp"
 #include "logging/Logger.hpp"
@@ -12,14 +11,10 @@ namespace precice {
    }
 }
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace io {
 
-/**
- * @brief Writes polygonal, triangle, or quadrangle meshes to vtk files.
- */
+/// Writes polygonal, triangle, or quadrangle meshes to vtk files.
 class ExportVTK : public Export
 {
 public:
@@ -30,16 +25,12 @@ public:
    * @param[in] filename  Name of the vtk file (including file extension)
    * @param[in] container Container holding geometry to be visualized
    */
-  ExportVTK ( bool exportNormals );
+  explicit ExportVTK ( bool exportNormals );
 
-  /**
-   * @brief Returns the VTK type ID.
-   */
+  /// Returns the VTK type ID.
   virtual int getType() const;
 
-  /**
-   * @brief Perform writing to vtk file
-   */
+  /// Perform writing to vtk file
   virtual void doExport (
     const std::string& name,
     const std::string& location,
@@ -88,5 +79,3 @@ private:
 };
 
 }} // namespace precice, io
-
-#endif /* PRECICE_IO_EXPORTVTK_HPP_ */

@@ -1,5 +1,4 @@
-#ifndef PRECICE_NEWSPACETREE_STATICTRAVERSAL_HPP_
-#define PRECICE_NEWSPACETREE_STATICTRAVERSAL_HPP_
+#pragma once
 
 #include "spacetree/Spacetree.hpp"
 #include "spacetree/impl/Environment.hpp"
@@ -7,12 +6,12 @@
 #include "query/FindClosest.hpp"
 #include "query/FindVoxelContent.hpp"
 #include "utils/PointerVector.hpp"
-#include "utils/Dimensions.hpp"
+// #include "utils/Dimensions.hpp"
 #include "logging/Logger.hpp"
-#include "utils/Helpers.hpp"
+// #include "utils/Helpers.hpp"
 #include "math/math.hpp"
 #include <list>
-#include <memory>
+// #include <memory>
 
 namespace precice {
 namespace spacetree {
@@ -645,4 +644,3 @@ void StaticTraversal<CELL_T>:: visitRemainingCells
 
 }}} // namespace precice, spacetree, impl
 
-#endif /* PRECICE_NEWSPACETREE_STATICTRAVERSAL_HPP_ */

@@ -11,11 +11,8 @@ namespace precice {
    }
 }
 
-// ----------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace mesh {
-
 
 
 /**
@@ -40,13 +37,11 @@ public:
   // Shortform for the type of a property.
   typedef boost::any PropertyType;
 
-   // @brief ID for the property labeling geometry IDs.
+   /// ID for the property labeling geometry IDs.
    static const int INDEX_GEOMETRY_ID;
 
-   /**
-    * @brief Returns a new, globally unique property ID.
-    */
-   static int getFreePropertyID();
+  /// Returns a new, globally unique property ID.
+  static int getFreePropertyID();
 
    /**
     * @brief Resets the ID counter of all properties.
@@ -56,9 +51,7 @@ public:
     */
    static void resetPropertyIDCounter();
 
-  /**
-     * @brief Enables hierarchical property behavior.
-     */
+    /// Enables hierarchical property behavior.
     void addParent ( PropertyContainer& parent )
     {
        _parents.push_back(& parent);
@@ -80,8 +73,8 @@ public:
     /**
      * @brief Create (if not existing) and set property value.
      *
-     * @param propertyID [IN] ID of the property.
-     * @param value [IN] Value to be set for the property.
+     * @param[in] propertyID ID of the property.
+     * @param[in] value Value to be set for the property.
      */
     template< typename value_t >
     void setProperty ( int             propertyID,
@@ -104,7 +97,7 @@ public:
      * This allows temporary variables for container objects.
      * Gives an error, when the property does not exist.
      *
-     * @param index [IN] Index of the property to delete
+     * @param[in] index Index of the property to delete
      * @return true, if property existed, false if not
      */
     bool deleteProperty ( int propertyID );
@@ -130,16 +123,15 @@ public:
 
 private:
 
-   // @brief Logging device.
-   static logging::Logger _log;
+  static logging::Logger _log;
 
-   // @brief Manager to ensure unique identification of all properties.
+   /// Manager to ensure unique identification of all properties.
    static utils::ManageUniqueIDs * _manageUniqueIDs;
 
-   // @brief Properties (local for every instance)
+   /// Properties (local for every instance)
    std::map<int, PropertyType> _properties;
 
-   // @brief Must be set, if hierarchical properties are wanted
+   /// Must be set, if hierarchical properties are wanted
    std::vector<PropertyContainer *> _parents;
 };
 

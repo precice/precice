@@ -10,8 +10,6 @@ namespace precice {
   }
 }
 
-// ---------------------------------------------------------- CLASS DEFINITION
-
 namespace precice {
 namespace io {
 
@@ -25,28 +23,23 @@ public:
   /**
    * @brief Constructor.
    *
-   * @param location [IN] Location of export, filepath, e.g.
-   * @param name [IN] Name of the export, filename, e.g.
-   * @param exportable [IN] Vistable/s to be exported.
+   * @param[in] location  Location of export, filepath, e.g.
+   * @param[in] name Name of the export, filename, e.g.
+   * @param[in] exportable Vistable/s to be exported.
    */
   //Export();
 
-  /**
-   * @brief Destructor.
-   */
   virtual ~Export() {}
 
-  /**
-   * @brief Returns the export type ID.
-   */
+  /// Returns the export type ID.
   virtual int getType() const =0;
 
   /**
    * @brief Does export. Has to be implemented in subclass.
    *
-   * @param name [IN] Filename (without path).
-   * @param name [IN] Location (path without filename).
-   * @param mesh [IN] Mesh to be exported.
+   * @param[in] name Filename (without path).
+   * @param[in] name Location (path without filename).
+   * @param[in] mesh Mesh to be exported.
    */
   virtual void doExport (
     const std::string& name,

@@ -1,5 +1,4 @@
-#ifndef PRECICE_IO_EXPORTVTKXML_HPP_
-#define PRECICE_IO_EXPORTVTKXML_HPP_
+#pragma once
 
 #include "Export.hpp"
 #include "logging/Logger.hpp"
@@ -15,8 +14,6 @@ namespace precice {
       class Triangle;
    }
 }
-
-// ----------------------------------------------------------- CLASS DEFINITION
 
 namespace precice {
 namespace io {
@@ -35,15 +32,10 @@ public:
    */
   ExportVTKXML ( bool writeNormals);
 
-  /**
-   * @brief Returns the VTK type ID.
-   */
+  /// Returns the VTK type ID.
   virtual int getType() const;
 
-
-  /**
-   * @brief Perform writing to vtk file
-   */
+  /// Perform writing to vtk file
   virtual void doExport (
     const std::string& name,
     const std::string& location,
@@ -67,19 +59,18 @@ public:
 
 private:
 
-   // @brief Logging device.
    static logging::Logger _log;
 
-   // @brief By default set true: plot vertex normals, false: no normals plotting
+   /// By default set true: plot vertex normals, false: no normals plotting
    bool _writeNormals;
 
-   // @ brief dimensions of mesh
+   /// dimensions of mesh
    int _meshDimensions;
 
-   // @brief List of names of all scalar data on mesh
+   /// List of names of all scalar data on mesh
    std::vector<std::string> _scalarDataNames;
 
-   // @brief List of names of all vector data on mesh
+   /// List of names of all vector data on mesh
    std::vector<std::string> _vectorDataNames;
 
    /**
@@ -118,5 +109,3 @@ private:
 };
 
 }} // namespace precice, io
-
-#endif /* PRECICE_IO_EXPORTVTKXML_HPP_ */
