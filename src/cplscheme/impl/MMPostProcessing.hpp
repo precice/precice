@@ -1,16 +1,11 @@
-#ifndef MMPOSTPROCESSING_HPP_
-#define MMPOSTPROCESSING_HPP_
+#pragma once
 
 #include "PostProcessing.hpp"
 #include "SharedPointer.hpp"
-#include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
-#include "QRFactorization.hpp"
 #include "Preconditioner.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <deque>
-#include <fstream>
-#include <string.h>
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -318,4 +313,3 @@ private:
 }
 } // namespace precice, cplscheme, impl
 
-#endif /* MMPOSTPROCESSING_HPP_ */

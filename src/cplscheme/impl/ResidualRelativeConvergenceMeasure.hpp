@@ -1,9 +1,7 @@
-#ifndef PRECICE_CPLSCHEME_RESIDUALRELATIVECONVERGENCEMEASURE_HPP_
-#define PRECICE_CPLSCHEME_RESIDUALRELATIVECONVERGENCEMEASURE_HPP_
+#pragma once
 
 #include "ConvergenceMeasure.hpp"
 #include "../CouplingData.hpp"
-#include "utils/Helpers.hpp"
 #include "logging/Logger.hpp"
 #include <limits>
 #include "utils/MasterSlave.hpp"
@@ -110,4 +108,3 @@ private:
 
 }}} // namespace precice, cplscheme, impl
 
-#endif /* PRECICE_CPLSCHEME_RESIDUALRELATIVECONVERGENCEMEASURE_HPP_ */

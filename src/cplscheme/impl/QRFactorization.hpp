@@ -1,12 +1,10 @@
-#ifndef PRECICE_QRFACTORIZATION_HPP_
-#define PRECICE_QRFACTORIZATION_HPP_
+#pragma once
 
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <limits>
-#include <deque>
 #include <fstream>
 
 
@@ -240,4 +238,3 @@ private:
 
 }}} // namespace precice, cplscheme, impl
 
-#endif /* PRECICE_QRFACTORIZATION_HPP_ */

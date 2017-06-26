@@ -1,11 +1,6 @@
-#ifndef PRECICE_CPLSCHEME_BROYDENPOSTPROCESSING_HPP_
-#define PRECICE_CPLSCHEME_BROYDENPOSTPROCESSING_HPP_
+#pragma once
 
 #include "BaseQNPostProcessing.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "logging/Logger.hpp"
-#include "io/TXTWriter.hpp"
-#include <deque>
 
 // ----------------------------------------------------------- CLASS DEFINITION
 
@@ -90,6 +85,4 @@ private:
 };
 
 }}} // namespace precice, cplscheme, impl
-
-#endif /* PRECICE_CPLSCHEME_BROYDENPOSTPROCESSING_HPP_ */
 

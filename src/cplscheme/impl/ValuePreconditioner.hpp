@@ -1,9 +1,6 @@
 #pragma once
 
 #include "Preconditioner.hpp"
-#include "utils/Helpers.hpp"
-#include "utils/Globals.hpp"
-#include "../SharedPointer.hpp"
 
 namespace precice {
 namespace cplscheme {

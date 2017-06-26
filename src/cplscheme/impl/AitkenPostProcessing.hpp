@@ -1,10 +1,8 @@
-#ifndef PRECICE_CPLSCHEME_AIKTENPOSTPROCESSING_HPP_
-#define PRECICE_CPLSCHEME_AIKTENPOSTPROCESSING_HPP_
+#pragma once
 
 #include "PostProcessing.hpp"
 #include "logging/Logger.hpp"
-#include "utils/Globals.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 #include <map>
 
@@ -62,4 +60,3 @@ private:
 }
 } // namespace precice, cplscheme, impl
 
-#endif /* PRECICE_CPLSCHEME_AIKTENPOSTPROCESSING_HPP_ */

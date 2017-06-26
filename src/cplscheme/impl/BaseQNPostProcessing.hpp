@@ -1,17 +1,14 @@
-#ifndef PRECICE_CPLSCHEME_BASEQNPOSTPROCESSING_HPP_
-#define PRECICE_CPLSCHEME_BASEQNPOSTPROCESSING_HPP_
+#pragma once
 
 #include "PostProcessing.hpp"
 #include "mesh/SharedPointer.hpp"
 #include "logging/Logger.hpp"
 #include "QRFactorization.hpp"
 #include "Preconditioner.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <deque>
 #include <fstream>
 #include <sstream>
-#include <string.h>
-
 
 
 /* ****************************************************************************
@@ -328,5 +325,3 @@ private:
 };
 
 }}} // namespace precice, cplscheme, impl
-
-#endif /* PRECICE_CPLSCHEME_BASEQNPOSTPROCESSING_HPP_ */

@@ -1,9 +1,6 @@
 #pragma once
 
 #include "Preconditioner.hpp"
-#include "utils/Helpers.hpp"
-#include "utils/Globals.hpp"
-#include "../SharedPointer.hpp"
 
 namespace precice {
 namespace cplscheme {
@@ -16,9 +13,8 @@ class ConstantPreconditioner : public Preconditioner
 {
 public:
 
-  ConstantPreconditioner(
-      std::vector<double> factors
-  );
+  explicit ConstantPreconditioner(std::vector<double> factors);
+  
   /**
    * @brief Destructor, empty.
    */

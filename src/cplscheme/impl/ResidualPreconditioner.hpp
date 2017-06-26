@@ -1,10 +1,7 @@
 #pragma once
 
 #include "Preconditioner.hpp"
-#include "utils/Helpers.hpp"
-#include "utils/Globals.hpp"
-#include <Eigen/Dense>
-#include "../SharedPointer.hpp"
+#include <Eigen/Core>
 
 namespace precice {
 namespace cplscheme {

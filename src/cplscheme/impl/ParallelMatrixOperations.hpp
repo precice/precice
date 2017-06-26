@@ -6,8 +6,8 @@
 #include "logging/Logger.hpp"
 #include "utils/Globals.hpp"
 #include "utils/MasterSlave.hpp"
-#include "utils/Parallel.hpp"
-#include <Eigen/Dense>
+// #include "utils/Parallel.hpp"
+#include <Eigen/Core>
 
 namespace precice
 {

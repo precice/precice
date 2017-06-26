@@ -1,8 +1,6 @@
-#ifndef ABSOLUTECONVERGENCEMEASURE_HPP_
-#define ABSOLUTECONVERGENCEMEASURE_HPP_
+#pragma once
 
 #include "ConvergenceMeasure.hpp"
-#include "utils/Helpers.hpp"
 #include "logging/Logger.hpp"
 #include "utils/MasterSlave.hpp"
 
@@ -93,5 +91,3 @@ private:
 };
 
 }}} // namespace precice, cplscheme, impl
-
-#endif /* ABSOLUTECONVERGENCEMEASURE_HPP_ */

@@ -10,7 +10,6 @@
 #ifndef SVDFACTORIZATION_HPP_
 #define SVDFACTORIZATION_HPP_
 
-#include "mesh/SharedPointer.hpp"
 #include "SharedPointer.hpp"
 #include "ParallelMatrixOperations.hpp"
 #include "QRFactorization.hpp"
@@ -19,7 +18,6 @@
 #include "utils/MasterSlave.hpp"
 #include "utils/EventTimings.hpp"
 #include <Eigen/Dense>
-#include <limits>
 #include <fstream>
 
 

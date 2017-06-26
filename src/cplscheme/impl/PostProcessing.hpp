@@ -1,7 +1,6 @@
-#ifndef PRECICE_CPLSCHEME_POSTPROCESSING_HPP_
-#define PRECICE_CPLSCHEME_POSTPROCESSING_HPP_
+#pragma once
 
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <map>
 #include <vector>
 #include "../BaseCouplingScheme.hpp"
@@ -106,4 +105,3 @@ public:
 
 }}} // namespace precice, cplscheme, impl
 
-#endif /* PRECICE_CPLSCHEME_POSTPROCESSING_HPP_ */

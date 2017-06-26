@@ -1,9 +1,6 @@
-#ifndef PRECICE_CPLSCHEME_CONVERGENCEMEASURE_HPP_
-#define PRECICE_CPLSCHEME_CONVERGENCEMEASURE_HPP_
+#pragma once
 
-#include "cplscheme/CouplingData.hpp"
-#include "utils/Helpers.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 
 namespace precice {
 namespace cplscheme {
@@ -65,5 +62,3 @@ public:
 };
 
 }}} // namespace precice, cplscheme, impl
-
-#endif /* PRECICE_CPLSCHEME_CONVERGENCEMEASURE_HPP_ */

@@ -11,11 +11,11 @@
 #include "impl/ConvergenceMeasure.hpp"
 #include "io/TXTWriter.hpp"
 #include "io/TXTReader.hpp"
-#include <Eigen/Dense>
+#include <Eigen/Core>
 #include <limits>
 #include <sstream>
 #include "math/math.hpp"
-
+#include "utils/Helpers.hpp"
 
 namespace precice {
 namespace cplscheme {

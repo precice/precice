@@ -1,5 +1,4 @@
-#ifndef PRECICE_CPLSCHEME_CONSTANTRELAXATIONPOSTPROCESSING_HPP_
-#define PRECICE_CPLSCHEME_CONSTANTRELAXATIONPOSTPROCESSING_HPP_
+#pragma once
 
 #include "PostProcessing.hpp"
 #include "logging/Logger.hpp"
@@ -52,4 +51,3 @@ private:
 
 }}} // namespace precice, cplscheme, impl
 
-#endif /* PRECICE_CPLSCHEME_CONSTANTRELAXATIONPOSTPROCESSING_HPP_ */

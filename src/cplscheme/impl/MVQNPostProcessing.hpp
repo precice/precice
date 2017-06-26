@@ -1,13 +1,9 @@
 #ifndef PRECICE_NO_MPI
 
-#ifndef PRECICE_CPLSCHEME_MVQNPOSTPROCESSING_HPP_
-#define PRECICE_CPLSCHEME_MVQNPOSTPROCESSING_HPP_
+#pragma once
 
 #include "BaseQNPostProcessing.hpp"
-#include "mesh/SharedPointer.hpp"
-#include "logging/Logger.hpp"
-#include "com/Communication.hpp"
-#include "io/TXTWriter.hpp"
+#include "com/SharedPointer.hpp"
 #include "ParallelMatrixOperations.hpp"
 #include "SVDFactorization.hpp"
 #include <deque>
@@ -216,5 +212,4 @@ private:
 
 }}} // namespace precice, cplscheme, impl
 
-#endif /* PRECICE_CPLSCHEME_MVQNPOSTPROCESSING_HPP_ */
 #endif /* PRECICE_NO_MPI */
