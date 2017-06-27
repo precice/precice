@@ -81,6 +81,18 @@ void BroadcastFilterDecomposition:: filter(
   mesh::Mesh filteredMesh("FilteredMesh", _dimensions, seed.isFlipNormals());
   std::vector<int> tmpVertexPostitions = filterMesh(seed, filteredMesh);
 
+  if((_boundingFromMapping.use_count()>0 && _boundingFromMapping->getOutputMesh()->vertices().size()>0) ||
+     (_boundingToMapping.use_count()>0 && _boundingToMapping->getInputMesh()->vertices().size()>0)){
+       // this rank has vertices at the coupling interface
+       // then, also the filtered mesh should still have vertices
+    std::string msg = "The re-partitioning completely filtered out the mesh received on this rank at the coupling interface. "
+        "Most probably, the coupling interfaces of your coupled participants do not match geometry-wise. "
+        "Please check your geometry setup again. Small overlaps or gaps are no problem. "
+        "If your geometry setup is correct and if you have very different mesh resolutions on both sides, increasing the safety-factor "
+        "of the decomposition strategy might be necessary.";
+    CHECK(filteredMesh.vertices().size()>0, msg);
+  }
+
   // second, mapping filter
   DEBUG("Second Filter Mapping, #vertices " << filteredMesh.vertices().size());
   _filterByMapping = true;
