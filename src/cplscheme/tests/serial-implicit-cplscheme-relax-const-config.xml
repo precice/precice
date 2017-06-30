@@ -34,7 +34,6 @@
       <exchange data="data0" mesh="mesh" from="participant0" to="participant1" />
       <exchange data="data1" mesh="mesh" from="participant1" to="participant0"/>
       <post-processing:constant>
-      	 <data name="data0" mesh="mesh"/>
          <relaxation value="0.01" />
       </post-processing:constant>
       <absolute-convergence-measure 

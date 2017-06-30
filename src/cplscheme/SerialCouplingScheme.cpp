@@ -55,12 +55,12 @@ void SerialCouplingScheme::initialize
         setupDataMatrices(getSendData()); // Reserve memory and initialize data with zero
       }
       if (getPostProcessing().get() != nullptr) {
-        preciceCheck(getPostProcessing()->getDataIDs().size()==1 ,"initialize()",
-                     "For serial coupling, the number of coupling data vectors has to be 1");
+        preciceCheck(getPostProcessing()->getDataIDs().size()<2 ,"initialize()",
+                     "For serial coupling, the number of post-processing data vectors has to be 1 (or 0 for constant underrelaxation)");
         getPostProcessing()->initialize(getSendData()); // Reserve memory, initialize
       }
     }
-    else if (getPostProcessing().get() != nullptr) {
+    else if (getPostProcessing().get() != nullptr && getPostProcessing()->getDataIDs().size()>0) {
       int dataID = *(getPostProcessing()->getDataIDs().begin());
       preciceCheck(getSendData(dataID) == nullptr, "initialize()",
                    "In case of serial coupling, post-processing can be defined for "

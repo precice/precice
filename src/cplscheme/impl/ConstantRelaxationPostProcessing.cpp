@@ -33,7 +33,7 @@ void ConstantRelaxationPostProcessing:: initialize
 (
   DataMap& cplData )
 {
-  preciceCheck(utils::contained(*_dataIDs.begin(), cplData), "initialize()",
+  preciceCheck(_dataIDs.size()==0 || utils::contained(*_dataIDs.begin(), cplData), "initialize()",
                "Data with ID " << *_dataIDs.begin()
                << " is not contained in data given at initialization!");
 

@@ -412,12 +412,12 @@ void PostProcessingConfiguration:: addTypeSpecificSubtags
     tagRelax.addAttribute(attrValue );
     tag.addSubtag(tagRelax );
 
-    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
-    XMLAttribute<std::string> attrName(ATTR_NAME);
-    XMLAttribute<std::string> attrMesh(ATTR_MESH);
-    tagData.addAttribute(attrName);
-    tagData.addAttribute(attrMesh);
-    tag.addSubtag(tagData);
+//    XMLTag tagData(*this, TAG_DATA, XMLTag::OCCUR_ONCE_OR_MORE );
+//    XMLAttribute<std::string> attrName(ATTR_NAME);
+//    XMLAttribute<std::string> attrMesh(ATTR_MESH);
+//    tagData.addAttribute(attrName);
+//    tagData.addAttribute(attrMesh);
+//    tag.addSubtag(tagData);
   }
   else if (tag.getName() == VALUE_AITKEN){
     XMLTag tagInitRelax(*this, TAG_INIT_RELAX, XMLTag::OCCUR_ONCE );
