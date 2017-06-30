@@ -16,3 +16,4 @@ GRTAGS
 GPATH
 src/precice/adapters/python/PySolverInterface.cpp
 src/precice/adapters/python/PySolverInterface.so
+src/Eigen/
