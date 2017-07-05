@@ -20,7 +20,7 @@
 namespace precice {
 namespace logging {
 
-/// A custom formatter that handle the TimeStamp format string
+/// A custom formatter that handles the TimeStamp format string
 class timestamp_formatter_factory :
     public boost::log::basic_formatter_factory<char, boost::posix_time::ptime>
 {
@@ -38,10 +38,60 @@ public:
   }
 };
 
+/// A custom formatter that handles the colorized Severity formatting
+class colorized_severity_formatter_factory :
+    public boost::log::formatter_factory<char>
+{
+public:
+  formatter_type create_formatter(boost::log::attribute_name const& name, args_map const& args)
+  {
+    namespace expr = boost::log::expressions;
+    auto severity = expr::attr<boost::log::trivial::severity_level>("Severity");
+    
+    return expr::stream
+      << expr::if_(severity == boost::log::trivial::severity_level::error)
+      [
+        expr::stream << "\033[31m"  //red
+        << "ERROR: "
+        ]
+      << expr::if_(severity == boost::log::trivial::severity_level::warning)
+       [
+        expr::stream << "\033[36m"  //cyan
+        << "WARNING: "
+         ]
+      << "\033[0m";
+  }
+};
+
+/// A custom formatter that handles non-colorized Severity formatting
+class severity_formatter_factory :
+    public boost::log::formatter_factory<char>
+{
+public:
+  formatter_type create_formatter(boost::log::attribute_name const& name, args_map const& args)
+  {
+    namespace expr = boost::log::expressions;
+    auto severity = expr::attr<boost::log::trivial::severity_level>("Severity");
+
+    return expr::stream
+      << expr::if_(severity == boost::log::trivial::severity_level::error)
+      [
+        expr::stream
+        << "ERROR: "
+        ]
+      << expr::if_(severity == boost::log::trivial::severity_level::warning)
+       [
+        expr::stream
+        << "WARNING: "
+         ];
+  }
+};
+
+
 
 /// A simple backends that outputs the message to a stream
 /**
- * Rationale: The original test_ostream_backend from boost suffered from the great amount of code that lies
+ * Rationale: The original text_ostream_backend from boost suffered from the great amount of code that lies
  * between the printing of the message and the endline. This leads to high probability that a process switch 
  * occures and the message is severed from the endline.
  */
@@ -97,7 +147,7 @@ LoggingConfiguration readLogConfFile(std::string const & filename)
 
 // Default values for filter and format. They are also used from config/LogConfiguration.cpp
 const std::string BackendConfiguration::default_filter = "%Severity% > debug";
-const std::string BackendConfiguration::default_formatter = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%Line% in %Function%: %Message%";
+const std::string BackendConfiguration::default_formatter = "(%Rank%) %TimeStamp(format=\"%H:%M:%S\")% [%Module%]:%Line% in %Function%: %ColorizedSeverity%%Message%";
 const std::string BackendConfiguration::default_type = "stream";
 const std::string BackendConfiguration::default_output = "stdout";
 
@@ -124,7 +174,8 @@ void setupLogging(LoggingConfiguration configs, bool enabled)
 {
   namespace bl = boost::log;
   bl::register_formatter_factory("TimeStamp", boost::make_shared<timestamp_formatter_factory>());
-  bl::register_simple_formatter_factory<bl::trivial::severity_level, char>("Severity");
+  bl::register_formatter_factory("ColorizedSeverity", boost::make_shared<colorized_severity_formatter_factory>());
+  bl::register_formatter_factory("Severity", boost::make_shared<severity_formatter_factory>());
   bl::register_simple_filter_factory<bl::trivial::severity_level, char>("Severity");
 
   // Possible, longer output format. Currently unused.
