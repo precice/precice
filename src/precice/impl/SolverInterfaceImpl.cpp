@@ -160,20 +160,20 @@ void SolverInterfaceImpl:: configure
   configureM2Ns(config.getM2NConfiguration());
 
   if (_serverMode){
-    INFO("[PRECICE] Run in server mode");
+    INFO("Run in server mode");
   }
   if (_clientMode){
-    INFO("[PRECICE] Run in client mode");
+    INFO("Run in client mode");
   }
 
   if (_geometryMode){
-    preciceInfo("configure()", "[PRECICE] Run in geometry mode");
+    preciceInfo("configure()", "Run in geometry mode");
     preciceCheck(_participants.size() == 1, "configure()",
                  "Only one participant can be defined in geometry mode!");
     configureSolverGeometries(config.getM2NConfiguration());
   }
   else if (not _clientMode){
-    preciceInfo("configure()", "[PRECICE] Run in coupling mode");
+    preciceInfo("configure()", "Run in coupling mode");
     preciceCheck(_participants.size() > 1,
                  "configure()", "At least two participants need to be defined!");
     configureSolverGeometries(config.getM2NConfiguration());
