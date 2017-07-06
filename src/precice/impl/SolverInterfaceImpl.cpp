@@ -123,7 +123,6 @@ void SolverInterfaceImpl:: configure
 (
   const std::string& configurationFileName )
 {
-  TRACE(configurationFileName);
   mesh::Mesh::resetGeometryIDsGlobally();
   mesh::Data::resetDataCount();
   Participant::resetParticipantCount();
@@ -131,7 +130,9 @@ void SolverInterfaceImpl:: configure
   config::Configuration config;
   utils::configure(config.getXMLTag(), configurationFileName);
   //preciceCheck ( config.isValid(), "configure()", "Invalid configuration file!" );
-
+  if(_accessorProcessRank==0){
+    INFO("Configuring preCICE with configuration: \"" << configurationFileName << "\"" );
+  }
   configure(config.getSolverInterfaceConfiguration());
 }
 
